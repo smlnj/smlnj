@@ -1,0 +1,40 @@
+name: "SML/NJ Feature Request Form"
+description: "Suggest an idea for a new feature for SML/NJ"
+title: "<title>"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Please use this form to request new features for the
+        [**Standard ML of New Jersey**](https://smlnj.org) system.
+
+        If you want to report a bug, please use the
+        [bug-report form](https://github.com/smlnj/smlnj/issues/new?template=bug_report).
+
+        Also, before creating a request, please search the
+        [open issues](https://github.com/smlnj/smlnj/issues) to see if your
+        suggestion has already been reported (if so, please add your request to the existing
+        issue).
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >
+        **Is your feature request related to a problem? Please describe.**
+        A clear and concise description of what the problem is.
+
+        **Describe the solution you would like**
+        A clear and concise description of what you want to happen.
+
+        **Describe alternatives you've considered**
+        A clear and concise description of any alternative solutions or features you
+        have considered.
+
+        **Additional context**
+        Add any other context about the feature request here.
+    validations:
+      required: true
+      description: >
+        Please provide any additional information that may help us diagnose and fix
+        the problem.

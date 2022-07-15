@@ -1,0 +1,152 @@
+name: "SML/NJ Bug Report Form"
+description: "Submit a bug report"
+title: "Summary description of bug"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        # Instructions
+
+        Please use this form to report problems in the **legacy** version of
+        [**Standard ML of New Jersey**](https://smlnj.org).
+
+        To request a feature, please use the
+        [feature-request form](https://github.com/smlnj/smlnj/issues/new?template=feature_request).
+
+        Also, before creating a new bug report, please search the
+        [open issues](https://github.com/smlnj/smlnj/issues) to see if your
+        problem has already been reported (if so, please add your information to the existing
+        issue).
+  - type: markdown
+    attributes:
+      value: >
+        # System Information
+
+        Please provide information about your system
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of SML/NJ are you using?
+      options:
+        - "2021.1"
+    validations:
+      required: true
+  - type: checkboxes
+    id: operating_system
+    attributes:
+      label: Operating System
+      description: What operating system exhibits the bug?  (You may specify more than one.)
+      options:
+        - label: Any
+        - label: Linux
+        - label: macOS
+        - label: Windows
+        - label: "Other Unix"
+    validations:
+      required: true
+  - type: input
+    id: os_version
+    attributes:
+      label: OS Version
+      description: >
+        Additonal information about the OS; *e.g.*, "Windows 10" or "macOS Monterey."
+  - type: checkboxes
+    id: architecture
+    attributes:
+      label: Processor
+      description: What processor exhibits the bug? (You may specify more than one.)
+      options:
+        - label: "Any"
+        - label: "Arm (using Rosetta)"
+        - label: "x86-64 (64-bit)"
+        - label: "Other"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >
+        # The Problem
+
+        Please provide information about the problem.
+  - type: dropdown
+    attributes:
+      label: System Component
+      description: >
+        Which component of the SML/NJ system is affected by the bug?
+        Select "Command-line tool" for other programs, such **ml-antlr**,
+        **ml-yacc**, or **nlffi-gen**, that are included in the **SML/NJ**
+        distribution.
+      options:
+        - Installation
+        - Core system
+        - Compilation manager (CM)
+        - Basis Library
+        - SML/NJ Library
+        - Foreign-Function Interface (FFI)
+        - Command-line tool
+        - Concurrent ML (CML)
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Severity
+      description: How severe is the bug?
+      options:
+        - Cosmetic
+        - Minor
+        - Major
+        - Critical
+    validations:
+      required: true
+  - type : textarea
+    id: description
+    attributes:
+      label: Description
+      description: Provide a short description of what the problem is.
+    validations:
+      required: true
+  - type : textarea
+    id: transcript
+    attributes:
+      label: Transcript
+      description: Please include a transcript of the bad behavior here.
+  - type : textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: Explain how you think things should work.
+  - type : textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: >
+        Explain how to reproduce the problem.  Include sample code (the smaller, the
+        better) that exhibits the problem, when ppropriate.  If reproducing the bug
+        requires a large system, you can drag a text/zip/gzip file here or provide a
+        download link for getting the code that exhibits the bug.
+    validations:
+      required: true
+  - type : markdown
+    attributes:
+      value: >
+        # Additional Information
+  - type : textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: >
+        Please provide any additional information that may help us diagnose and fix
+        the problem.
+  - type: input
+    id: email
+    attributes:
+      label: Email address
+      description: >
+        Please provide an email address to allow us to contact you
+        if we require additional information.
+    validations:
+      required: true
