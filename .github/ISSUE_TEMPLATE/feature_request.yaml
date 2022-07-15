@@ -10,7 +10,7 @@ body:
         [**Standard ML of New Jersey**](https://smlnj.org) system.
 
         If you want to report a bug, please use the
-        [bug-report form](https://github.com/smlnj/smlnj/issues/new?template=bug_report).
+        [bug-report form](https://github.com/smlnj/smlnj/issues/new?template=bug_report.yaml).
 
         Also, before creating a request, please search the
         [open issues](https://github.com/smlnj/smlnj/issues) to see if your
