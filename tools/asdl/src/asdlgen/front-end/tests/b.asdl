@@ -1,0 +1,6 @@
+-- b.asdl
+--
+
+include : d.asdl
+
+module B (import D) { t = (uint, D.t) }

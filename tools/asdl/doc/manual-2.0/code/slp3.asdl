@@ -1,0 +1,17 @@
+module Slp {
+
+pos = (string? file, int line, int offset)
+
+stm = Compound(pos p, stm head, stm next)
+    | Assign(pos p, identifier id, exp exp) 
+    | Print(pos p, exp* args)
+ 
+real = (int mantissa, int exp)
+  
+exp = Id(real? value, identifier id)
+    | Num(real? value, int v)
+    | Op(real? value, exp lexp, binop bop, exp rexp)
+
+binop = Plus | Minus | Times | Div
+
+}

@@ -1,0 +1,35 @@
+-- test-spec.asdl
+--
+-- This specification tests the basic features of ASDL
+--
+
+module TestSpec {
+-- a singleton enumeration
+  unit = UNIT
+
+-- a singleton sum type
+  wrap_bool = WRAP(bool)
+
+-- an enumeration
+  color = RED | GREEN | BLUE
+
+-- a non-recursive sum type
+  value = BOOL(bool) | INT(integer) | STRING(string)
+
+-- a recursive sum type
+  nat = ZERO | SUCC(nat)
+
+-- an unlabeled product type
+  pos = (integer , integer)
+
+-- a labeled product type
+  coord = (integer x, integer y)
+
+-- a sum type with products
+  tree = EMPTY
+       | NODE(string value, tree left, tree right)
+
+-- a tuple of everything
+  everything = (unit, wrap_bool, color, value, nat, pos, coord, tree)
+}
+

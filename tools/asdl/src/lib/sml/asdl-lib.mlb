@@ -1,0 +1,33 @@
+(* asdl-lib.mlb
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+local
+
+  $(SML_LIB)/basis/basis.mlb
+  $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+
+  asdl.sig
+  asdl.sml
+  asdl-read-pickle.sig
+  asdl-write-pickle.sig
+  asdl-pickle.sig
+  asdl-memory-pickle.sml
+  asdl-file-pickle.sml
+  asdl-sexp-pickle.sml
+
+in
+
+  signature ASDL
+  signature ASDL_READ_PICKLE
+  signature ASDL_WRITE_PICKLE
+  signature ASDL_PICKLE
+
+  structure ASDL
+  structure ASDLMemoryPickle
+  structure ASDLFilePickle
+  structure ASDLSExpPickle
+
+end

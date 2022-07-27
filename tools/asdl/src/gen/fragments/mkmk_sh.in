@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# wrapper script for MkFrags.mkMakefile function
+#
+
+PROG=mkmk
+
+if [ $# != 1 ] ; then
+  echo "usage: $PROG.sh <dir>"
+  exit 1
+fi
+
+DIR=$1
+
+SRC=@ASDL_SRCDIR@/gen/fragments/sources.cm
+
+if test "@SML@" = "smlnj" ; then
+@SMLNJ_CMD@ @SMLNJ_SIZE@ $SRC 2> /dev/null 1>/dev/null <<XXXX
+MkFrags.mkMakefile "$DIR";
+XXXX
+exit $?
+elif test "@SML@" = "mlton" ; then
+  HERE=$(pwd)
+  cd @ASDL_SRCDIR@/gen/fragments
+  make -s $PROG || exit $1
+  cd $HERE
+  @ASDL_SRCDIR@/gen/fragments/$PROG $DIR || exit $1
+  exit 0
+else
+  echo "unknown SML implementation"
+  exit 1
+fi

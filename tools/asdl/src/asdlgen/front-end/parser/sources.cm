@@ -1,0 +1,24 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Parser
+  structure ParseTree
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/ml-lpt-lib.cm
+
+  ../common/sources.cm
+
+  parse-tree.sml
+  parser.sml
+
+  asdl.grm : ML-Antlr
+  asdl.lex : ML-ULex

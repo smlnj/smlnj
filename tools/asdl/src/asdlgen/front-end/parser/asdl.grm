@@ -1,0 +1,225 @@
+(* asdl.grm
+ *
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * ML-Antlr grammar for ASDL.
+ *)
+
+%name ASDL;
+
+%start Root;
+
+%tokens
+    : KW_alias			("alias")
+    | KW_attributes		("attributes")
+    | KW_import 		("import")
+    | KW_include		("include")
+    | KW_module			("module")
+    | KW_primitive		("primitive")
+    | KW_view			("view")
+    | LPAREN			("(")
+    | RPAREN			(")")
+    | LBRACK			("[")
+    | RBRACK			("]")
+    | LBRACE			("{")
+    | RBRACE			("}")
+    | LEQ			("<=")
+    | COMMA			(",")
+    | DOT			(".")
+    | SEQUENCE			("*")
+    | OPTIONAL			("?")
+    | SHARED			("!")
+    | EQ			("=")
+    | PIPE			("|")
+    | FILE			("<file>")
+    | CODE of string		(* raw code *)
+    | LID of Atom.atom		(* lower-case identifier *)
+    | UID of Atom.atom		(* upper-case identifier *)
+    ;
+
+%keywords KW_alias, KW_attributes, KW_import, KW_include, KW_module, KW_primitive, KW_view;
+
+%defs (
+  structure PT = ParseTree
+
+  val aliasId = Atom.atom "alias"
+  val attributesId = Atom.atom "attributes"
+  val importId = Atom.atom "import"
+  val includeId = Atom.atom "include"
+  val moduleId = Atom.atom "module"
+  val primitiveId = Atom.atom "primitive"
+  val viewId = Atom.atom "view"
+
+(* apply a mark constructor to a span and a tree *)
+  fun mark cons (span : AntlrStreamPos.span, tr) = cons{span = span, tree = tr}
+
+  fun markId (span : AntlrStreamPos.span, id) = {span = span, tree = id}
+);
+
+Root
+	: Include* MarkDecl+
+		=> (PT.File{includes = Include, decls = MarkDecl})
+	;
+
+Include
+	: "include" CODE	=> ({span = FULL_SPAN, tree = CODE})
+	;
+
+MarkDecl
+	: Decl			=> (mark PT.D_Mark (FULL_SPAN, Decl))
+	;
+
+Decl
+	: "module" Id ModuleImport "{" TypeDecl* "}"
+		=> (PT.D_Module{name = Id, imports = ModuleImport, decls = TypeDecl})
+	| "primitive" "module" Id "{" Id* "}"
+		=> (PT.D_Primitive{name = Id1, exports = Id2})
+	| "view" Id "{" MarkViewEntry* "}"
+		=> (PT.D_View{name = Id, entries = MarkViewEntry})
+	;
+
+ModuleImport
+	: (* empty *)		=> ([])
+	| "(" Import+ ")"	=> (Import)
+	;
+
+Import
+	: "import" Id ("alias" Id)?
+		=> (mark PT.Import_Mark (FULL_SPAN, PT.Import{module = Id, alias=SR}))
+	;
+
+TypeDecl
+	: TyId "=" TypeDef
+		=> (mark PT.TD_Mark (FULL_SPAN, TypeDef TyId))
+	;
+
+TypeDef
+	: QualId TyCon?
+		=> (fn id => PT.TD_Alias{name = id, def = (QualId, TyCon)})
+	| Constructors ( "attributes" "(" Fields ")" )?
+		=> (fn id => PT.TD_Sum{
+			name = id,
+			attribs = case SR of NONE => [] | SOME flds => flds,
+			cons = Constructors
+		      })
+	| "(" Fields ")"
+		=> (fn id => PT.TD_Product{name = id, fields = Fields})
+	;
+
+QualId
+	: TyId
+		=> (NONE, TyId)
+	| Id "." TyId
+		=> (SOME Id, TyId)
+	;
+
+Constructors
+	: Constructor ( "|" Constructor )*
+		=> (Constructor :: SR)
+	;
+
+Constructor
+	: ConId optFields
+		=> (mark PT.Cons_Mark (FULL_SPAN, PT.Cons(ConId, optFields)))
+	;
+
+optFields
+	: (* empty *)		=> ([])
+	| "(" Fields ")"	=> (Fields)
+	;
+
+Fields
+	: Field ( "," Field )*
+		=> (Field :: SR)
+	;
+
+Field
+	: QualId TyCon? Id?
+		=> (let
+		    val fld = PT.Field{typ=QualId, tycon=TyCon, label=Id}
+		    in
+		      mark PT.Field_Mark (FULL_SPAN, fld)
+		    end)
+	;
+
+TyCon
+	: "?"			=> (PT.Optional)
+	| "*"			=> (PT.Sequence)
+	| "!"			=> (PT.Shared)
+	;
+
+(* we allow keywords to be used as identifiers *)
+Id	: LID			=> (markId (FULL_SPAN, LID))
+	| UID			=> (markId (FULL_SPAN, UID))
+	| Keyword		=> (markId (FULL_SPAN, Keyword))
+	;
+
+TyId	: LID			=> (markId (FULL_SPAN, LID))
+	| Keyword		=> (markId (FULL_SPAN, Keyword))
+	;
+
+ConId	: UID			=> (markId (FULL_SPAN, UID))
+	;
+
+Keyword	: "alias"		=> (aliasId)
+	| "attributes"		=> (attributesId)
+	| "import"		=> (importId)
+	| "include"		=> (includeId)
+	| "module"		=> (moduleId)
+	| "primitive"		=> (primitiveId)
+	| "view"		=> (viewId)
+	;
+
+MarkViewEntry
+	: ViewEntry		=> (mark PT.VEntry_Mark (FULL_SPAN, ViewEntry))
+	;
+
+ViewEntry
+	: ViewEntities "<=" ViewProps
+		=> (PT.VEntry(ViewEntities, ViewProps))
+	| "<=" Id "{" MarkViewEntityCode* "}"
+		=> (PT.VEntry_Multiple(Id, MarkViewEntityCode))
+	;
+
+MarkViewEntityCode
+	: ViewEntity CODE
+		=> (ViewEntity, CODE)
+	;
+
+ViewEntities
+	: MarkViewEntity
+		=> ([MarkViewEntity])
+	| "{" MarkViewEntity* "}"
+		=> (MarkViewEntity)
+	;
+
+MarkViewEntity
+	: ViewEntity
+		=> (mark PT.VEntity_Mark (FULL_SPAN, ViewEntity))
+	;
+
+ViewEntity
+	: "<file>"
+		=> (PT.VEntity_File)
+	| "module" Id
+		=> (PT.VEntity_Module Id)
+	| Id "." TyId
+		=> (PT.VEntity_Type(Id, TyId))
+	| Id "." TyId "." "*"
+		=> (PT.VEntity_AllCons(Id, TyId))
+	| Id "." TyId "." ConId
+		=> (PT.VEntity_Cons(Id, TyId, ConId))
+	;
+
+ViewProps
+	: ViewProp
+		=> ([ViewProp])
+	| "{" ViewProp* "}"
+		=> (ViewProp)
+	;
+
+ViewProp
+	: Id CODE
+		=> (mark PT.VProp_Mark (FULL_SPAN, (PT.VProp(Id, CODE))))
+	;

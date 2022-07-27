@@ -1,0 +1,4 @@
+-- d.asdl
+--
+
+module D { t = (string, string) }

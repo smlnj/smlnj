@@ -1,0 +1,4 @@
+This directory contains a program for generating the templates
+as SML modules.  This is required to build the system on MLton.
+The SML/NJ build process reads the template files directly.
+

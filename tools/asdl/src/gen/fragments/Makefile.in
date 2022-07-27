@@ -1,0 +1,28 @@
+# Makefile
+#
+# COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+# A Makefile for building the fragment generator using mlton.
+#
+
+SHELL =		@SHELL@
+
+#
+# MLton build tools
+#
+MLTON =		@MLTON@
+
+mkmk:	mkfrags
+	ln -s mkfrags mkmk
+
+mkfrags:	sources.mlb $(wildcard *.sml)
+	$(MLTON) -output mkfrags sources.mlb
+
+clean:
+	rm -f mkmk mkfrags
+
+distclean:	clean
+	rm -f mkmk.sh mkfrags.sh

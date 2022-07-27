@@ -1,0 +1,20 @@
+(* config.sml
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * @configure_input@
+ *)
+
+structure Config =
+  struct
+
+    val srcdir = "@srcdir@"
+
+    val top_srcdir = "@top_srcdir@"
+
+    val prefix = "@prefix@"
+
+    val version = "@PACKAGE_VERSION@"
+
+  end

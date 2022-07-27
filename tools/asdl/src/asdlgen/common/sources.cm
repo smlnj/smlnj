@@ -1,0 +1,20 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Config
+  structure Options
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../ast/sources.cm
+
+  config.sml
+  options.sml

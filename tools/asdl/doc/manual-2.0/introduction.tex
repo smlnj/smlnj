@@ -1,0 +1,42 @@
+%!TEX root = manual.tex
+%
+\chapter{Introduction}
+\label{chap:introduction}
+
+\thispagestyle{empty}
+
+The \emph{Abstract Syntax Description Lanuguage} (\asdl{}) is a language
+designed to describe the tree-like data structures in compilers.
+Its main goal is to provide a method for
+compiler components written in different languages to
+interoperate. \asdl{} makes it easier for applications written in a
+variety of programming languages to communicate complex recursive data
+structures. 
+
+\asdlgen{} is a tool that takes \asdl{} descriptions and produces
+implementations of those descriptions in a variety of languages.
+\asdl{} and \asdlgen{} together provide the following advantages
+\begin{itemize}
+  \item Concise descriptions of important data structures.
+  \item Automatic generation of data structure implementations for
+    \asdlgen{}-supported languages.
+  \item Automatic generation of functions to read and write the data
+    structures to disk in a machine and language independent way.
+\end{itemize}%
+
+\asdl{} descriptions describe the tree-like data structures such as
+abstract syntax trees (ASTs) and compiler intermediate representations
+(IRs). Tools such as \asdlgen{} automatically produce the equivalent
+data structure definitions for the supported languages;.
+\asdlgen{} also produces functions for each language that read and
+write the data structures to and from a platform and language
+independent sequence of bytes. The sequence of bytes is called a
+\emph{pickle}.
+
+\asdl{} pickles can be interactively viewed and edited with a graphical,
+or pretty printed into a simple textual format.
+The browser provides some advanced features
+such as display styles and tree based versions of standard Unix tools
+such as \texttt{diff} and \texttt{grep}.
+\asdl{} was originally developed as part of the
+\emph{National Compiler Infrastructure} project.

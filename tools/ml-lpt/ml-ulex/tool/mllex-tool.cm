@@ -1,0 +1,13 @@
+(*
+ * Plugin for the "mllex" CM tool class that causes "legacy" ml-lex
+ * input to be processed by "ml-ulex --ml-lex-mode".
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	structure ULexMLLexTool
+is
+	$smlnj/cm/tools.cm
+	mllex-tool.sml

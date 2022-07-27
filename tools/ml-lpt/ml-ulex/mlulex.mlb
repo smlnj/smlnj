@@ -1,0 +1,48 @@
+(* ml-ulex.mlb
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * MLB file for building ml-ulex under MLton.
+ *)
+
+local
+  $(SML_LIB)/basis/basis.mlb
+  $(SML_LIB)/basis/sml-nj.mlb
+  $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+  $(SML_LIB)/smlnj-lib/PP/pp-lib.mlb
+  $(SML_LIB)/mlyacc-lib/mlyacc-lib.mlb
+  ../lib/ml-lpt-lib.mlb
+  ../common/lpt-common.mlb
+
+  reg-exp-sig.sml
+  options.sml
+  reg-exp.sml
+  BackEnds/lex-output-spec.sml
+  FrontEnds/lex-spec.sml
+  lex-gen.sml
+  FrontEnds/ml-ulex/ml-ulex.grm.sml
+  FrontEnds/ml-ulex/ml-ulex.lex.sml
+  FrontEnds/ml-ulex/ml-ulex-input.sml
+  BackEnds/output-sig.sml
+  BackEnds/Dot/dot-output.sml
+  BackEnds/SML/ml.sml
+  BackEnds/SML/string-template-ml-ulex.sml
+  BackEnds/SML/string-template-ml-lex.sml
+  BackEnds/SML/mlton-templates.sml
+  BackEnds/SML/sml-output-support.sml
+  BackEnds/SML/sml-fun-output.sml
+  BackEnds/Match/match.sml
+  FrontEnds/ml-lex/ml-lex.yacc.sig
+  FrontEnds/ml-lex/ml-lex.lex.sml
+  FrontEnds/ml-lex/ml-lex.yacc.sml
+  FrontEnds/ml-lex/ml-lex-input.sml
+  BackEnds/Dump/dump-output.sml
+  BackEnds/SML/sml-tbl-output.sml
+  main.sml
+
+in
+
+  mlton-main.sml
+
+end

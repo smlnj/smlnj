@@ -1,0 +1,35 @@
+# Makefile for ASDL documentation
+#
+# This code is part of the SML/NJ system (http://smlnj.org)
+#
+# COPYRIGHT (c) 2016 The Fellowship of SML/NJ
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =		/bin/sh
+PREFIX =	@prefix@
+
+DIRS =		manual-3.0
+
+.PHONY:		pdf local-install install
+
+pdf:
+	for dir in $(DIRS) ; do \
+	    (cd $$dir; make pdf) \
+	done
+
+local-install:
+
+install:
+
+#################### Cleanup ####################
+
+CLEAN_SUBDIRS =		$(DIRS) manual-2.0
+
+DISTCLEAN_FILES +=      Makefile
+
+DEVCLEAN_FILES =
+
+include @ASDL_MKDIR@/clean-rules.gmk

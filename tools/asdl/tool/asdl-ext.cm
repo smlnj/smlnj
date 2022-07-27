@@ -1,0 +1,15 @@
+(* asdl-ext.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure ASDLExt
+
+is
+
+  $smlnj/cm/tools.cm
+
+  ext.sml

@@ -1,0 +1,19 @@
+%full
+
+better error handling on ml-lex.lex and ml-lex.yacc
+check for invalid start states on rules
+
+escape codes and DOT
+
+(*line  stuff
+
+docs
+
+lookahead?
+
+
+-----
+
+changes:
+  -- yylineno not slow
+  -- %count and %reject assumed

@@ -1,0 +1,28 @@
+module Stm (imports Pos
+            imports Exp) {
+
+  stm = Compound(stm head, stm next)
+      | Assign(identifier id, Exp.exp exp) 
+      | Print(Exp.exp*)
+    attributes (Pos.pos p, int? value)
+}
+
+module Exp (imports Pos
+            imports Ops) {
+
+  exp = Id(identifier id)
+      | Num(int v)
+      | Op(exp lexp, Ops.binop? op, exp rexp)
+    attributes (Pos.pos p,int? value)	
+
+}
+
+module Pos {
+  pos = (string? file, int line, int offset)
+}
+
+
+module Ops {
+  binop = Plus | Minus | Times | Div	
+}
+

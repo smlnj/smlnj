@@ -1,0 +1,115 @@
+%!TEX root = manual.tex
+%
+\chapter{Usage}
+\label{chap:usage}
+
+\section*{Synopsis}
+\begin{quote}
+  \texttt{asdlgen \textit{command} [ \textit{options} ] \textit{files} ...}
+\end{quote}%
+%
+Where \texttt{\textit{command}} is one of
+\begin{quote}
+  \begin{tabular}{ll}
+    \texttt{help}
+      & Print information about the \asdlgen{} tool to the standard output. \\
+    \texttt{version}
+      & Print the version of of asdlgen to the standard output. \\
+    \texttt{c++} or \texttt{cxx}
+      & Generate \Cplusplus{} \\
+    \texttt{sml}
+      & Generate Standard ML \\
+% NOT YET IMPLEMENTED!!!
+%    \texttt{typ}
+%      & Generate a machine readable type description of the ASDL modules \\
+    \texttt{check}
+      & Check correctness of inputs, but do not generate output \\
+  \end{tabular}%
+\end{quote}%
+
+\section*{Description}
+\asdlgen{} reads the set of \texttt{\textit{files}}, which contain ASDL module
+and view declarations.
+
+\section*{Common Options}
+
+Options common to all the commands include
+\begin{description}
+  \item[\normalfont\texttt{-n}] \mbox{}\\
+    Do not write any output files.
+    Instead write the list of files that would have been written to standard out.
+% NOT YET IMPLEMENTED!!!
+%  \item[\normalfont\texttt{--line-width=}\textit{width}] \mbox{}\\
+%    Set the maximum line width for pretty printing code.
+%    The default value is 90 characters.
+  \item[\normalfont\texttt{--output-directory=}\textit{dir} or \texttt{-d} \textit{dir}] \mbox{}\\
+    Specify the output directory to place the generated files.
+    By default the output will be placed in the same directory as the
+    input file from which it was produced.
+  \item[\normalfont\texttt{--gen=}\textit{names}] \mbox{}\\
+    Specifies the components to generate.  The value \textit{names} is a list of
+    comma-separated names from the following list:
+    \begin{itemize}
+      \item ``\texttt{types}'' -- generate the type definitions from the ASDL specification.
+      \item ``\texttt{memory}'' -- generate the memory pickler
+      \item ``\texttt{file}'' -- generate the file pickler
+      \item ``\texttt{sexp}'' -- generate the S-Expression pickler (\sml{} only).
+    \end{itemize}%
+    The default is ``\texttt{types,memory,file}.''
+    Alternatively, \textit{names} can be ``\texttt{none},'' which means that
+    no output is generated.  Specifying
+    ``\texttt{none}'' is different than using the ``\texttt{-n}'' option, because
+    it does not cause the list of files to be printed.
+    
+    \textbf{Note:} currently the ``\texttt{--gen}'' option only affects the \sml{}
+    command; it is ignored by the \Cplusplus{} command.
+\end{description}%
+
+\section*{Command-specific Options}
+
+All the commands that produce source code as output offer a different
+command option to select the default base environment.
+The base environment is the set of the initial definitions available to the code.
+It defines the set of primitive types and functions used by the generated code.
+For example using the option \texttt{--base-include=my-base.hxx}
+when generating \Cplusplus{} code will insert the directive
+\begin{quote}\begin{lstlisting}[language=c++]
+#include "my-base.hxx"
+\end{lstlisting}\end{quote}%
+in the appropriate place so the resulting code will use the definitions found in
+\texttt{my-base.hxx} rather than the default set of primitive types.
+Unless there is a need to globally redefine
+the primitive types changing the base environment should be avoided.
+The actual option names vary depending on the output language.
+
+See \chapref{chap:code-interface} for a more detailed description about the interfaces
+to the default set of primitive types and functions.
+
+\subsection*{Options for \Cplusplus}
+
+\begin{description}
+  \item[\normalfont\texttt{--base-include=}\textit{file}] \mbox{}\\
+    Specify the name of the \Cplusplus{} header file that defines the primitive \asdl{} types
+    and functions.
+    The default value is \texttt{asdl/asdl.hxx}.
+\end{description}%
+
+\subsection*{Options for Standard ML}
+
+\begin{description}
+% NOT YET IMPLEMENTED!!!
+%  \item[\normalfont\texttt{--base-structure=}\textit{structure-name}] \mbox{}\\
+%    Specify the name of the structure that defines the primitive ASDL types.
+%    The default value is \lstinline[language=SML]!ASDL!.
+  \item[\normalfont\texttt{--cm=}\textit{file}] \mbox{}\\
+    Generate a \cm{} file for the pickler; this will define a \cm{} library.
+    Note that if the \asdl{} specification includes primitive modules, these
+    will be included in the list of exported structures, but the supporting source
+    files will have to be added to the \cm{} file by hand.
+  \item[\normalfont\texttt{--mlb=}\textit{file}] \mbox{}\\
+    Generate an \mlb{} file for the pickler.
+    Note that if the \asdl{} specification includes primitive modules, these
+    will be included in the list of exported structures, but the supporting source
+    files will have to be added to the \mlb{} file by hand.
+\end{description}%
+

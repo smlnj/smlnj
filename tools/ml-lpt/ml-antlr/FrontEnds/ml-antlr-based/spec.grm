@@ -1,0 +1,231 @@
+(* spec.grm
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * ML-Antlr grammar for ML-Antlr.
+ *)
+
+%defs (
+  structure GS = GrammarSyntax
+  structure StreamPos = AntlrStreamPos
+
+  fun lift f (vspan, v) = (vspan, f v)
+  fun mapFst f (fst, snd) = (f fst, snd)
+
+  val trimQuotes =
+        Substring.string o
+	(Substring.triml 1) o
+	(Substring.trimr 1) o
+	Substring.full
+
+);
+
+%name Spec;
+
+%tokens
+  : KW_change		("%change")
+  | KW_defs		("%defs")
+  | KW_dropping		("%dropping")
+  | KW_entry		("%entry")
+  | KW_header		("%header")
+  | KW_import		("%import")
+  | KW_keywords		("%keywords")
+  | KW_name		("%name")
+  | KW_nonterms		("%nonterms")
+  | KW_prefer		("%prefer")
+  | KW_refcell		("%refcell")
+  | KW_start		("%start")
+  | KW_tokens		("%tokens")
+  | KW_tokentype	("%tokentype")
+  | KW_try		("%try")
+  | KW_value		("%value")
+  | KW_where		("%where")
+  | LP  		("(")
+  | RP  		(")")
+  | LSB 		("[")
+  | RSB 		("]")
+  | LCB 		("{")
+  | RCB 		("}")
+  | SLASH		("/")
+  | COLON		(":")
+  | SEMI		(";")
+  | COMMA		(",")
+  | AT			("@")
+  | DOLLAR		("$")
+  | BAR			("|")
+  | STAR		("*")
+  | PLUS		("+")
+  | QUERY		("?")
+  | EQ			("=")
+  | ARROW		("->")
+  | DARROW		("=>")
+  | REFSET		(":=")
+  | OF			("of")
+  | CODE of string
+  | ID of string
+  | STRING of string
+  | IDDOT of string	(* identifier with dot (e.g., "module.") *)
+  | TYVAR of string	(* ML-style type variable name *)
+  | INT of string	(* integer label within record *)
+  | BOGUS
+  ;
+
+%refcell liftSpan : AntlrStreamPos.span -> GrammarSyntax.span
+	= (fn _ => let val z = ("", 0, 0) in (z, z) end);
+
+%nonterm File of GS.grammar ;
+File(fileName, sm)
+	: ( => (liftSpan := (fn (p1, p2) => ((fileName, StreamPos.lineNo sm p1,
+							 StreamPos.colNo  sm p1),
+					      (fileName, StreamPos.lineNo sm p2,
+							 StreamPos.colNo  sm p2)))
+	  ) )
+	  (Decl ";")* => (map (mapFst (!liftSpan)) (List.concat SR2))
+	;
+
+%nonterm Decl of (StreamPos.span * GS.decl) list ;
+Decl
+	: "%name" ID
+		=> ([ (FULL_SPAN, GS.NAME ID) ])
+	| "%header" Code
+		=> ([ (FULL_SPAN, GS.HEADER Code) ])
+	| "%start" ID
+		=> ([ (FULL_SPAN, GS.START (Atom.atom ID)) ])
+	| "%entry" IDList
+		=> (map (lift (GS.ENTRY o Atom.atom)) IDList)
+	| "%keywords" SymList
+		=> (map (lift GS.KEYWORD) SymList)
+	| "%value" ID Code
+		=> ([ (FULL_SPAN, GS.VALUE (Atom.atom ID, Code)) ])
+	| "%prefer" SymList
+		=> (map (lift GS.PREFER) SymList)
+	| "%change" ChangeList
+		=> (map (lift GS.CHANGE) ChangeList)
+	| "%defs" Code
+		=> ([ (FULL_SPAN, GS.DEFS Code) ])
+	| "%tokentype" QualID
+		=> ([ (FULL_SPAN, GS.TOKENTYPE QualID)])
+	| "%tokens" ":"? ConstrList
+		=> (List.map (lift GS.TOKEN) ConstrList)
+	| "%import" STRING ("%dropping" SymList)?
+		=> ([ (FULL_SPAN, GS.IMPORT{
+		      filename = trimQuotes STRING,
+		      dropping = map (mapFst (!liftSpan)) (getOpt (SR, []))
+		    }) ])
+	| "%refcell" ID ":" Ty "=" Code
+		=> ([ (FULL_SPAN, GS.REFCELL (ID, Ty, Code)) ])
+	| "%nonterms" ":"? TyAnn ("|" TyAnn)*
+		=> (map (lift GS.NONTERM) (TyAnn::SR))
+	| ID Formals? ":" AltList
+		=> (map (fn (span, alt) =>
+		      (span, GS.RULE {
+			lhs = Atom.atom ID,
+			formals = getOpt(Formals, []),
+			rhs = alt
+		      })) AltList)
+	;
+
+Formals : "(" ID ("," ID)* ")" => (ID::SR) ;
+IDList	: ID' ("," ID')* => (ID'::SR) ;
+SymList	: Symbol' ("," Symbol')* => (Symbol'::SR) ;
+
+ChangeList
+	: Change ("|" Change)*
+		=> (Change::SR)
+	;
+
+Change
+	: Symbol* "->" Symbol*
+		=> (FULL_SPAN, (Symbol1, Symbol2))
+	;
+
+AltList	: Alt ("|" Alt)* => (Alt::SR) ;
+TyAnn   : ID ("of" Ty | => ("unit")) => (FULL_SPAN, (Atom.atom ID, SR)) ;
+
+Alt	: "%try"? NamedItem* ("%where" Code)? ("=>" Code)?
+		=> (FULL_SPAN, GS.RHS {
+		      items = NamedItem,
+		      try = isSome KW_try,
+		      predicate = SR1,
+		      action = SR2,
+		      loc = (!liftSpan) FULL_SPAN
+		    })
+	;
+
+NamedItem
+	: (ID "=")? Item => (SR, Item) ;
+
+Item
+	: PrimItem
+	    ( "*" => ((!liftSpan) PrimItem_SPAN, GS.CLOS PrimItem)
+	    | "+" => ((!liftSpan) PrimItem_SPAN, GS.POSCLOS PrimItem)
+	    | "?" => ((!liftSpan) PrimItem_SPAN, GS.OPT PrimItem)
+	    | => (PrimItem) )
+		=> (SR)
+	;
+
+PrimItem
+	: Symbol ("@" Code)?
+		=> ((!liftSpan) FULL_SPAN, GS.SYMBOL (Symbol, SR))
+	| "(" AltList ")"
+		=> ((!liftSpan) FULL_SPAN, GS.SUBRULE (map (fn (_, alt) => alt) AltList))
+	;
+
+ID'	: ID => (ID_SPAN, ID) ;
+
+Symbol'
+	: Symbol
+		=> (FULL_SPAN, Symbol)
+	;
+
+Symbol
+	: ID
+		=> (Atom.atom ID)
+	| STRING
+		=> (Atom.atom STRING)
+	;
+
+Constr	: ID ("of" Ty)? Abbrev? => (FULL_SPAN, (Atom.atom ID, SR, Abbrev)) ;
+ConstrList
+	: Constr ("|" Constr)* => (Constr::SR)
+	;
+
+Ty	: TyFun
+	;
+
+TyFun
+	: TyProd ("->" TyProd)* => (String.concatWith " -> " (TyProd::SR)) ;
+
+TyProd
+	: TyApp ("*" TyApp)* => (String.concatWith " * " (TyApp::SR)) ;
+
+TyApp
+	: %try "(" Ty ("," Ty)+ ")" QualID
+		=> ("(" ^ String.concatWith "," (Ty::SR) ^ ") " ^ QualID)
+	| %try TyAtom ( QualID => (TyAtom ^ " " ^ QualID) | => (TyAtom))
+		=> (SR)
+	;
+
+TyAtom
+	: TYVAR
+	| "(" Ty ")" => ("(" ^ Ty ^ ")")
+	| "{" RowList "}"	=> ("{ " ^ RowList ^" } ")
+	| "{" "}"		=> ("{}")
+	| QualID
+	;
+
+Row	: Label ":" Ty => (Label ^ " : " ^ Ty) ;
+RowList	: Row ("," Row)* => (String.concatWith "," (Row::SR)) ;
+
+Label	: ID | INT ;
+
+QualID
+	: ID
+	| IDDOT QualID => (IDDOT ^ QualID)
+	;
+
+Abbrev	: "(" STRING ")" => (Atom.atom STRING) ;
+
+%nonterm Code of GrammarSyntax.code ;
+Code	: CODE => ((!liftSpan) FULL_SPAN, CODE) ;

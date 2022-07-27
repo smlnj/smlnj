@@ -1,0 +1,48 @@
+# Makefile
+#
+# COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Makefile for building ml-antlr using MLton
+#
+
+SHELL =		/bin/sh
+
+MLTON =		mlton
+MLTON_FLAGS =
+
+TARGET =	mlantlr
+
+SML_BE =	BackEnds/SML
+LATEX_BE =	BackEnds/LaTeX
+
+TEMPLATES =	$(SML_BE)/string-template.sml \
+		$(LATEX_BE)/string-template.sml
+
+SML_FILES =
+
+MLB_FILES =	../common/lpt-common.mlb \
+		../lib/ml-lpt-lib.mlb \
+		$(TARGET).mlb
+
+$(TARGET) :	$(MLB_FILES) $(SML_FILES) $(TEMPLATES)
+	$(MLTON) -output $(TARGET) $(MLTON_FLAGS) $(TARGET).mlb
+
+# a generator for the template string files
+#
+GEN =		../gen/gen-template-struct
+
+$(GEN):
+	(cd ../gen; make gen-template-struct)
+
+$(SML_BE)/string-template.sml:	$(GEN) $(SML_BE)/template.sml
+	$(GEN) SMLTemplate $(SML_BE)/template.sml $(SML_BE)/string-template.sml
+
+$(LATEX_BE)/string-template.sml:	$(GEN) $(LATEX_BE)/template.tex
+	$(GEN) LaTeXTemplate $(LATEX_BE)/template.tex $(LATEX_BE)/string-template.sml
+
+.PHONEY:	clean
+clean:
+	rm -f $(TARGET)
+	rm -f $(TEMPLATES)
+	(cd ../gen; make clean)

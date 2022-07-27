@@ -1,0 +1,19 @@
+Library
+
+  structure Main
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+
+(* NOTE: we use a relative path here, but you should use
+ *
+ *     $/ml-lpt-lib.cm
+ *
+ * for your projects.
+ *)
+  ../../../lib/ml-lpt-lib.cm
+
+  c.grm.sml
+  cc.lex
+  cmain.sml

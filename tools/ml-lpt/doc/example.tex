@@ -1,0 +1,157 @@
+%!TEX root = manual.tex
+%
+\chapter{A complete example}
+\label{ch:example}
+
+This chapter gives a complete example of a simple calculator
+language implemented using both \texttt{ml-ulex} and \texttt{ml-antlr}.
+The language has the following syntax:
+\begin{displaymath}
+  \begin{array}{rcl}
+    E & ::=  & \mathtt{let}\;\mathrm{id}\;\mathtt{in}\;E \\
+      & \mid & E \;\mathtt{+}\; E \\
+      & \mid & E \;\mathtt{*}\; E \\
+      & \mid & \mathtt{-}\;E \\
+      & \mid & \mathrm{id} \\
+      & \mid & \mathrm{num}
+  \end{array}%
+\end{displaymath}%
+The lexical conventions allow arbitrary whitespace between tokens.
+Numbers ($\mathrm{num}$) numbers are unsigned decimal numbers
+and identifiers ($\mathrm{id}$) begin with a letter followed by letters and digits.
+The expression forms are listed in order of increasing precedence:
+let-expressions have the lowest precedence; then addition, multiplication, and negation.
+The calculator will compute and return the value of the expression.
+
+Figure~\ref{fig:calc-sources} gives the CM file for the project.
+%Note that we are assuming that the \texttt{ml-ulex} and \texttt{ml-antlr} tools have been run by hand.
+\begin{figure}[h]
+\begin{lstlisting}[language=CM]
+Library
+
+  structure CalcLexer
+  functor CalcParseFn
+  structure CalcTest
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/ml-lpt-lib.cm
+
+  calc.grm : ml-antlr
+  calc.lex : ml-ulex
+  calc-test.sml
+\end{lstlisting}%
+\caption{The CM file: {\tt sources.cm}}
+\label{fig:calc-sources}
+\end{figure}%
+
+\begin{figure}
+
+\begin{lstlisting}[language=MLULex]
+%name CalcLexer;
+
+%let digit = [0-9];
+%let int = {digit}+;
+%let alpha = [a-zA-Z];
+%let id = {alpha}({alpha} | {digit})*;
+
+%defs (
+  structure T = CalcTokens
+  type lex_result = T.token
+  fun eof() = T.EOF
+);
+
+let     => ( T.KW_let );
+in      => ( T.KW_in );
+{id}    => ( T.ID yytext );
+{int}   => ( T.NUM (valOf (Int.fromString yytext)) );
+"="     => ( T.EQ );
+"+"     => ( T.PLUS );
+"-"     => ( T.MINUS );
+"*"     => ( T.TIMES );
+"("     => ( T.LP );
+")"     => ( T.RP );
+" " | \n | \t
+        => ( skip() );
+.       => ( (* handle error *) );
+\end{lstlisting}
+\caption{The ml-ulex specification: \texttt{calc.lex}}
+\label{fig:calc-lex}
+\end{figure}%
+
+\begin{figure}[p]
+\begin{lstlisting}[language=SML]
+%name Calc;
+
+%tokens
+  : KW_let  ("let")  | KW_in   ("in")
+  | ID of string     | NUM of Int.int
+  | EQ      ("=")    | PLUS    ("+")
+  | TIMES   ("*")    | MINUS   ("-")
+  | LP      ("(")    | RP      (")")
+  ;
+  
+exp(env)
+  : "let" ID "=" exp@(env) 
+    "in" exp@(AtomMap.insert(env, Atom.atom ID, exp1))
+      => ( exp2 )
+  | addExp@(env)
+  ;
+  
+addExp(env)
+  : multExp@(env) ("+" multExp@(env))*
+      => ( List.foldr op+ 0 (multExp::SR) )
+  ;
+  
+multExp(env)
+  : prefixExp@(env) ("*" prefixExp@(env))*
+      => ( List.foldr op* 1 (prefixExp::SR) )
+  ;
+  
+prefixExp(env)
+  : atomicExp@(env)
+  | "-" prefixExp@(env)
+      => ( ~prefixExp )
+  ;
+  
+atomicExp(env)
+  : ID  
+      => ( valOf(AtomMap.find (env, Atom.atom ID)) )
+  | NUM
+  | "(" exp@(env) ")"
+  ;
+\end{lstlisting}
+\caption{The ml-antlr specification: \texttt{calc.grm}}
+\label{fig:calc-grm}
+\end{figure}%
+
+\begin{figure}
+\begin{lstlisting}[language=SML]
+structure CalcTest =
+  struct
+
+    structure CP = CalcParseFn(CalcLexer)
+
+    fun tok2s (ID s) = s
+      | tok2s (NUM n) = Int.toString n
+      | tok2s tok = CalcTokens.toString tok
+      
+  (* val calc : TextIO.instream -> Int.int *)
+    fun calc instrm = let
+      val sm = AntlrStreamPos.mkSourcemap()
+      val lex = CalcLexer.lex sm
+      val strm = CalcLexer.streamifyInstream instrm
+      val (r, strm', errs) = CP.parse lex AtomMap.empty strm
+      in
+        print (String.concatWith "\n" 
+            (List.map (AntlrRepair.repairToString tok2s sm) 
+                 errs));
+        r
+      end
+
+  end
+\end{lstlisting}
+\caption{The driver: {\tt calc-test.sml}}
+\label{fig:calc-test}
+\end{figure}%

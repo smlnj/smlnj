@@ -1,0 +1,17 @@
+module Slp {
+pos = (string? file,int line, int offset)
+
+stm = Compound(stm head,stm next)
+    | Assign(identifier id,exp exp) 
+    | Print(exp*)
+     attributes (pos p)
+
+real = (int mantissa, int exp)
+exp = Id(identifier id)
+    | Num(int v)
+    | Op(exp lexp,binop bop,exp rexp)
+     attributes (real? value)	
+
+binop = Plus | Minus | Times | Div
+
+}

@@ -1,0 +1,84 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  signature BACK_END
+
+  structure Action
+  structure CheckGrammar
+  structure ComputePredict
+  structure Err
+  structure GLA
+  structure GrammarSyntax
+  structure Item
+  structure LLKSpec
+  structure Nonterm
+  structure ParseFile
+  structure Predict
+  structure Preitem
+  structure Prod
+  structure Token
+
+  structure ExpandFile
+  structure ML
+  structure SMLOutput
+  structure LaTeXOutput
+  structure Main
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $/ml-lpt-lib.cm
+
+  ../common/lpt-common.cm
+
+  BackEnds/back-end-sig.sml
+
+  action.sml
+  check-grammar.sml
+  compute-predict.sml
+  err.sml
+  gla.sml
+  item.sml
+  llk-spec.sml
+  main.sml
+  nonterm.sml
+  options.sml
+  predict.sml
+  preitem.sml
+  prod.sml
+  token.sml
+
+  FrontEnds/grammar-syntax.sml
+  FrontEnds/ml-antlr-based/parse-file.sml
+
+(* During installation we rely on pre-generated files
+ * to avoid certain chicken-and-egg problems. *)
+#if defined(NO_ML_ULEX)
+  FrontEnds/ml-antlr-based/spec.lex.sml
+#else
+  FrontEnds/ml-antlr-based/spec.lex : ml-ulex
+#endif
+
+(* During installation we rely on pre-generated files
+ * to avoid certain chicken-and-egg problems. *)
+#if defined(NO_ML_ANTLR)
+  FrontEnds/ml-antlr-based/spec.grm.sml
+#else
+  FrontEnds/ml-antlr-based/spec.grm : ml-antlr
+#endif
+
+  BackEnds/SML/ml.sml
+  BackEnds/SML/abs.sml
+  BackEnds/SML/pp.sml
+  BackEnds/SML/sml-output.sml
+  BackEnds/SML/smlnj-template.sml
+
+  BackEnds/LaTeX/latex-output.sml
+  BackEnds/LaTeX/smlnj-template.sml

@@ -1,0 +1,58 @@
+\documentclass[11pt,letterpaper]{book}
+
+\usepackage[textwidth=6in,textheight=9in]{geometry}
+
+\include{defs}
+
+\title{
+  ASDL Reference Manual \\
+  Version 2.0}
+\author{
+  Daniel Wang\\
+  \texttt{??}\\[0.5em]
+  John Reppy\\
+  \texttt{jhr@cs.chicago.edu}}
+\date{Revised: October 2016}
+
+
+\begin{document}
+
+\frontmatter
+
+\maketitle
+
+\phantom{.}
+\vspace{\stretch{1}}
+
+\noindent Copyright \copyright{}2016.  Fellowship of SML/NJ.  All rights reserved.
+
+\vskip 12pt
+
+\pagebreak
+
+\tableofcontents
+
+\mainmatter
+
+%	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+%	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
+
+\newpage
+
+\input{introduction}
+\input{invocation}
+\input{tutorial}
+\input{syntax}
+\input{code-interface}
+\input{views}
+\input{pickles}
+\input{support-code}
+\input{history}
+
+\backmatter
+
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{plain}
+\bibliography{refs.bib}
+
+\end{document}

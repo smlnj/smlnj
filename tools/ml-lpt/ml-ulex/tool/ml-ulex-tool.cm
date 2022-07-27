@@ -1,0 +1,10 @@
+(*
+ * The plugin library for ML-ULex
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *)
+Library
+	structure ULexTool
+is
+	$smlnj/cm/tools.cm
+	tool.sml

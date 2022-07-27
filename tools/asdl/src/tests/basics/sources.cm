@@ -1,0 +1,38 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Test
+  structure TestIO
+  structure TestMix
+  structure TestSExp
+
+(* generated pickling modules *)
+  structure TestSpec
+  structure TestSpecMemoryPickle
+  structure TestSpecFilePickle
+  structure TestSpecSExpPickle
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../../lib/sml/asdl-lib.cm
+
+  test-spec-pickle.sig
+  test-spec-memory-pickle.sml
+  test-spec-file-pickle.sml
+  test-spec-sexp-pickle.sml
+  test-spec.sml
+
+  sml-test.sml
+  sml-test-io.sml
+  sml-test-mix.sml
+  sml-test-sexp.sml
+  util.sml
+

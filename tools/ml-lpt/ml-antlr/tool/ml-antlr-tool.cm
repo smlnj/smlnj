@@ -1,0 +1,10 @@
+(*
+ * The plugin library for ML-Antlr
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *)
+Library
+	structure AntlrTool
+is
+	$smlnj/cm/tools.cm
+	tool.sml

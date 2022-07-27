@@ -1,0 +1,26 @@
+# subdir-build-rules.gmk
+#
+# COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Common makerules for subdirectories.  It defines the phony targets
+# `build`, `local-install`, and `install`.  To use, define the make
+# variable `BUILD_DIRS`
+#
+
+.PHONY:		build local-install install
+
+local-install:	build
+	for dir in $(BUILD_DIRS); do \
+	  (cd $$dir && $(MAKE) local-install) || exit $$?; \
+	done
+
+install:	build
+	for dir in $(BUILD_DIRS); do \
+	  (cd $$dir && $(MAKE) install) || exit $$?; \
+	done
+
+build:
+	for dir in $(BUILD_DIRS); do \
+	  (cd $$dir && $(MAKE) build) || exit $$?; \
+	done

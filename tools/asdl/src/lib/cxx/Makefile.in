@@ -1,0 +1,73 @@
+# Makefile for C++ ASDL library
+#
+# COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =			@SHELL@
+@SET_MAKE@
+
+#
+# paths to local installation directories
+#
+ASDL_LIBDIR =		@ASDL_LIBDIR@
+ASDL_INCDIR =		@ASDL_INCDIR@/asdl
+
+#
+# paths to installation directories
+#
+PREFIX =		@prefix@
+INSTALL_LIBDIR =	$(PREFIX)/lib
+INSTALL_INCDIR =	$(PREFIX)/include/asdl
+
+INSTALL =		@INSTALL@
+
+CXX =			@CXX@
+CXXFLAGS =		@CXXFLAGS@ @CXXFLAG_fPIC@
+CPPFLAGS =		@CPPFLAGS@ -Iinclude
+
+LD_STATIC =		@LD_STATIC@
+LD_DYNAMIC =		@LD_DYNAMIC@
+
+TARGETS =		libasdl.@DSLEXT@
+
+SRCS =          	asdl.cxx asdl-integer.cxx
+OBJS =          	$(patsubst %.cxx,%.o,$(SRCS))
+
+INCLS =			$(wildcard asdl/*.hxx)
+
+.PHONY:		build local-install install
+
+build:		$(TARGETS)
+
+libasdl.@DSLEXT@:	$(OBJS)
+	$(LD_DYNAMIC) -r -o $@ $(OBJS)
+
+%.o : %.cxx $(INCLS)
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
+
+local-install:	$(TARGETS)
+	$(INSTALL) -d $(ASDL_LIBDIR)
+	$(INSTALL) -C -m 755 $(TARGETS) $(ASDL_LIBDIR)
+	$(INSTALL) -d $(ASDL_INCDIR)
+	$(INSTALL) -C -m 644 include/asdl/*hxx $(ASDL_INCDIR)
+	$(INSTALL) -C -m 644 include/asdl/config.h $(ASDL_INCDIR)
+
+install:	$(TARGETS)
+	$(INSTALL) -d $(INSTALL_LIBDIR)
+	$(INSTALL) -C -m 755 $(TARGETS) $(INSTALL_LIBDIR)
+	$(INSTALL) -d $(INSTALL_INCDIR)
+	$(INSTALL) -C -m 644 include/asdl/*hxx $(INSTALL_INCDIR)
+	$(INSTALL) -C -m 644 include/asdl/config.h $(INSTALL_INCDIR)
+
+#################### Cleanup ####################
+
+CLEAN_FILES =		$(OBJS) $(TARGETS)
+
+DISTCLEAN_FILES +=      Makefile
+
+DEVCLEAN_FILES =
+
+include @ASDL_MKDIR@/clean-rules.gmk

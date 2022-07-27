@@ -1,0 +1,21 @@
+%tokens
+  : ID of string
+  | INT of int
+  | LP ("(")	| RP (")")
+  | PLUS ("+")
+  | SEMI (";")	| EQ ("=")
+  ;
+
+stmt
+  : ID "=" exp ";"
+  ;
+
+exp
+  : atomicExp ("+" atomicExp)*
+  ;
+
+atomicExp
+  : ID
+  | INT
+  | "(" exp ")"
+  ;

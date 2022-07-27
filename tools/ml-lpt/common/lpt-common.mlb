@@ -1,0 +1,14 @@
+(* lpt-common.mlb
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * A MLton-style MLB file for the ML-LPT library.
+ *)
+
+local
+   $(SML_LIB)/basis/basis.mlb
+   $(SML_LIB)/smlnj-lib/RegExp/regexp-lib.mlb
+in
+   expand-file.sml
+end

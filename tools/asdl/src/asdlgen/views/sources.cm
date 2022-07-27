@@ -1,0 +1,37 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * CM file for common view code.  View-specific code is in the back-end
+ * directory tree.
+ *)
+
+Library
+
+  signature VIEW_FILE_BASE
+  signature VIEW_MODULE_BASE
+  signature VIEW_TYPE_BASE
+  signature VIEW_CONSTR_BASE
+  signature VIEW_BASE
+
+  structure CommonView
+  structure PropNames
+  structure View
+
+  functor ViewBaseFn
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../common/sources.cm
+  ../ast/sources.cm
+
+  common-view.sml
+  prop-names.sml
+  view.sml
+  view-base-fn.sml
+  view-base-sig.sml
+

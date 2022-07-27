@@ -1,0 +1,134 @@
+%!TEX root = manual.tex
+%
+\chapter{Pickles}
+\label{sec:pickles}
+
+One of the most important features of \asdlgen{} is that it automatically
+produces functions that can read and write the data structures it generates
+to and from a platform and language independent external
+representation. This process of converting data structures in memory into a
+sequence of bytes on the disk is referred to as pickling.
+Since it is possible to generate data structures and pickling code for
+any of the supported languages from a single \asdl{} specification,
+\asdlgen{} provides an easy
+and efficient way to share complex data structures among these languages.
+
+\section{User Visible Interface}
+As part of the output code every defined type has a \texttt{read} and \texttt{write}
+function that writes values of that type to or from a stream. There are also
+\texttt{read\char`\_tagged} and \texttt{write\char`\_tagged} functions that first output a unique
+tag before writing out the rest of the type. These functions are useful when
+you expect to write several different kinds of pickles to the same stream
+and want a minimal level of error checking. 
+
+The \asdl{} pickle format requires that both the reader and writer
+of the pickler agree on the type of the pickle. Other than constructor tags
+for sum types, there is no explicit type information in the pickle. In the
+case of an error the behavior is undefined. It is also important for the
+streams to be opened in binary mode to prevent line feed translations from
+corrupting the pickle. 
+
+\emph{Plans are being made to support a text based pickle format similar to
+XML}
+
+\section{Pretty Printing Pickles}
+\begin{quote}
+  \texttt{asdl-gen --pp\char`\_pkl [ --text $|$ (--html [ --lists $|$ --tables ]) ] \textit{file.typ}
+    \textit{file.pkl} \textit{type-id} ...}
+\end{quote}%
+
+\asdlgen{} has an option that will dump pickles into either a simple
+textual format or HTML.
+In order to display a pickle \asdlgen{} needs
+to have a description of the type environment and the name of the type
+in the pickle.
+A description of the type environment, which produced
+the pickle, is obtained by running \asdlgen{} with the \texttt{--typ} option
+on the set of files that describe the modules that produced the code
+which produced the pickle.
+The resulting \texttt{env.typ} should be the
+first file provided to \asdlgen{} after the \texttt{--pp\char`\_pkl}
+argument.
+The \texttt{--output\char`\_file}> option can be use to change the name
+of the resulting type environment.
+The file that contains the pickle
+comes next, and finally a list of fully qualified type identifiers
+that describe the pickles in the file.
+
+\emph{Produce a type environment}\\
+\begin{quote}\begin{lstlisting}[language=bash]
+% asdlGen --typ slp.asdl --output_file=slp.typ
+\end{lstlisting}\end{quote}%
+
+\emph{Produce a pickle file called \texttt{slp.pkl} that contains \texttt{Slp.exp} 
+and \texttt{Slp.stm}}\\
+\begin{quote}\begin{lstlisting}[language=bash]
+% asdlGen --pp_pkl slp.typ slp.pkl Slp.exp Slp.stm <newline>
+\end{lstlisting}\end{quote}%
+
+\section{Pickle Format Details}
+
+The format of the data is described in
+detail below for description writers that use the \texttt{reader} and
+\texttt{writer} properties to replace the default pickling code for whatever
+reason.
+
+Since \asdl{} data structures have a tree-like form, they can be represented
+linearly with a simple prefix encoding. It is easy to generate functions
+that convert to and from the linear form.  A pre-order walk of the data
+structure is all that's needed. The walk is implemented as recursively
+defined functions for each type in an \asdl{} definition. Each function visits
+a node of that type and recursively walks the rest of the tree. Functions
+that write a value take as their first argument the value to write. The
+second argument is the stream that is to be written to. Functions that read
+values take the stream they are to read the value from as their single
+argument and return the value read. 
+
+\begin{description}
+  \item[int] \mbox{}\\
+    Since \asdl{} integers are intended to be of infinite precision they are
+    represented with a variable-length, signed-magnitude encoding.  The
+    eight bit of each byte indicates if a given byte is the last byte of
+    the integer encoding. The seventh bit of the most significant byte is
+    used to determine the sign of the value. Numbers in the range of -63
+    to 63 can be encoded in one byte. Numbers out of this range require an
+    extra byte for every seven bits of precision needed.  Bytes are
+    written out in little-endian order. If most integer values tend to be
+    values near zero, this encoding of integers may use less space than a
+    fixed precision representation.
+
+  \item[string] \mbox{}\\
+    Strings are represented with a length-header that describe how many more
+    8-bit bytes follow for the string and then the data for the string in
+    bytes. The length-header is encoded with the same arbitrary precision
+    integer encoding described previously.
+
+  \item[identifier] \mbox{}\\
+    Identifiers are represented as if they were strings. 
+
+  \item[product types] \mbox{}\\ 
+    Product types are represented sequentially without any tag. The fields of
+    the product type are packed from left to right.
+
+  \item[sum types] \mbox{}\\
+    Sum types begin with a unique tag to identify the constructor
+    followed sequentially by the fields of the constructor.  Tag values are
+    assigned based on the order of constructor definition in the
+    description. The first constructor has a tag value of one. Fields are packed
+    left to right based of the order in the definition.  If there are any
+    attribute values associated with the type, they are packed left to right
+    after the tag but before other constructor fields. The tag is encoded with
+    the same arbitrary precision integer encoding described previously.
+
+  \item[sequence qualified types] \mbox{}\\
+    Sequence types are represented with an integer length-header followed by
+    that many values of that type. The length-header is encoded with the same
+    arbitrary precision integer encoding described previously.
+
+  \item[option qualified types] \mbox{}\\
+    Optional values are preceded by an integer header that is either one or
+    zero. A zero indicates that the value is empty (NONE, nil, or NULL) and no
+    more data follows. A one indicates that the next value is the value of the
+    optional value. The header is encoded with the same arbitrary precision
+    integer encoding described previously.
+\end{description}%

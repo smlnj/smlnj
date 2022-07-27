@@ -1,0 +1,93 @@
+ASDLGEN(1)
+===========
+:doctype:	manpage
+:man source:	ASDL
+:man version:	{version}
+
+NAME
+----
+asdlgen - compiler for the Abstract Syntax Description Language (ASDL).
+
+
+SYNOPSIS
+--------
+*asdlgen* *COMMAND* ['OPTIONS'] 'FILE' ...
+
+
+DESCRIPTION
+-----------
+The asdlgen(1) command reads the specifies ASDL input files and performs the
+specified command on them.
+
+
+COMMANDS
+--------
+
+The first argument to the asdlgen(1) tool must be one of the following *commands*:
+
+*help*::
+  print information about the asdlgen tool to the standard output.
+
+*version*::
+  print the version of of asdlgen to the standard output.
+
+*c++* or *cxx*::
+  generate a C++ implementation of the ASDL modules.
+
+*sml*::
+  generate a Standard ML implementation of the ASDL modules.
+
+*typ*::
+  generate a machine readable type description of the ASDL modules .
+
+*check*::
+  check the correctness of the inputs without generating code.
+
+
+COMMON OPTIONS
+--------------
+
+Options common to all the commands include
+
+*-n*::
+  Do not write any output files.
+  Instead output the list of files that would have been generated to the
+  standard output.
+
+*--line-width='WIDTH'*::
+  Set the maximum line width for pretty printing code.
+  The default value is 90 characters.
+
+*--output-directory='DIR'* or *-d 'DIR'*::
+  Specify the output directory to place the generated files.
+  By default the output will be placed in the same directory as the
+  input file from which it was produced.
+
+*--pickler='NAME' or *-p 'NAME'*::
+  Specifies which kind of pickler to generate.
+  The default is *binary*.
+
+
+C++ OPTIONS
+-----------
+
+*--base-include='FILE'*::
+  specify the header file that specifies the primitive ASDL types.
+  The default is `asdl/base.hxx`.
+
+
+SML OPTIONS
+-----------
+
+*--base-structure='NAME'*::
+  specify the name of the 'BASE' structure that defines the primitive ASDL types.
+  The default is `ASDLBase`.
+
+
+AUTHOR
+------
+
+The original version of ASDL was developed by Daniel Wang at Princeton University
+as part of the National Compiler Infrastructure project.  This version of ASDL
+and asdlgen(1) is a complete redesign as part of the SML/NJ System.  See the
+manual for details about the differences between versions.

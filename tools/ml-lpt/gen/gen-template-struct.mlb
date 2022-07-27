@@ -1,0 +1,15 @@
+(* gen-template-struct.mlb
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+local
+
+  $(SML_LIB)/basis/basis.mlb
+
+  gen-template-struct.sml
+
+in
+  mlton-main.sml
+end

@@ -1,0 +1,48 @@
+(* ml-antlr.mlb
+ *
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * MLB file for building ml-antlr under MLton.
+ *)
+
+local
+  $(SML_LIB)/basis/basis.mlb
+  $(SML_LIB)/basis/sml-nj.mlb
+  $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+  $(SML_LIB)/smlnj-lib/PP/pp-lib.mlb
+  ../lib/ml-lpt-lib.mlb
+  ../common/lpt-common.mlb
+
+  err.sml
+  FrontEnds/grammar-syntax.sml
+  action.sml
+  llk-spec.sml
+  token.sml
+  predict.sml
+  nonterm.sml
+  preitem.sml
+  item.sml
+  prod.sml
+  gla.sml
+  compute-predict.sml
+  BackEnds/back-end-sig.sml
+  BackEnds/SML/string-template.sml
+  options.sml
+  BackEnds/SML/abs.sml
+  BackEnds/SML/pp.sml
+  BackEnds/SML/ml.sml
+  BackEnds/SML/sml-output.sml
+  FrontEnds/ml-antlr-based/spec.grm.sml
+  FrontEnds/ml-antlr-based/spec.lex.sml
+  FrontEnds/ml-antlr-based/parse-file.sml
+  check-grammar.sml
+  BackEnds/LaTeX/string-template.sml
+  BackEnds/LaTeX/latex-output.sml
+  main.sml
+
+in
+
+  mlton-main.sml
+
+end

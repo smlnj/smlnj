@@ -1,0 +1,31 @@
+--*::
+--This is an ASDL description of the parse trees returned by the parser.
+--It currently contains construcuts that are ignored by asdlGen but are
+--include for future extension.
+--* 
+module Asdl {
+-- Toplevel defintions
+decl = Module(import* imports,type_decl* decls)
+     | PrimitiveModule(identifier* exports) 
+     | View(view_decl* decls)
+       attributes(identifier name)
+
+import = Imports(identifier module,identifier? alias)
+
+path  = (identifier? qualifier, identifier base) 
+
+-- ('?' | '*' | '!')
+-- N.B. shared type not fully supported yet
+tycon = Option | Sequence | Shared  
+
+field = (path typ,identifier? label_opt, tycon? tycon_opt) 
+
+constructor = (identifier name, field* fs)
+
+type_decl = SumType(field* attribs,constructor c, constructor* cs)
+          | ProductType (field f,field* fs)
+            attributes (identifier name)
+
+view_decl = (identifier* entity, string prop, string value)
+}
+

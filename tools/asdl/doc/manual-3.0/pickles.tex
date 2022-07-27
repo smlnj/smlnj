@@ -1,0 +1,213 @@
+%!TEX root = manual.tex
+%
+\chapter{Pickles}
+\label{chap:pickles}
+
+One of the most important features of \asdlgen{} is that it automatically
+produces functions that can read and write the data structures it generates
+to and from a platform and language independent external
+representation.
+This process of converting data structures in memory into a
+sequence of bytes on the disk is referred to as \emph{pickling}.\footnote{
+  It is also called \emph{serialization}.
+}
+Since it is possible to generate data structures and pickling code for
+any of the supported languages from a single \asdl{} specification,
+\asdlgen{} provides an easy
+and efficient way to share complex data structures among these languages.
+
+The \asdl{} pickle format requires that both the reader and writer
+of the pickler agree on the type of the pickle.
+Other than constructor tags for sum types, there is no explicit type
+information in the pickle.
+In the case of an error, the behavior is undefined.
+It is also important that when pickling/unpickling to/from files, that the
+files be opened in binary mode to prevent line feed translations from corrupting
+the pickle.
+
+\section{Binary Pickle Format}
+
+Since \asdl{} data structures have a tree-like form, they can be represented
+linearly with a simple prefix encoding.
+This encoding is used by both the memory and file picklers and
+is described in this section.
+
+\subsection{Primitive types}
+
+\begin{description}
+  \item[bool] \mbox{}\\
+    Boolean values are represented by \lstinline!1! (false) or \lstinline!2! (true)
+    and are encoded in one byte.  We reserve the value zero to represent the
+    empty value for the type \lstinline@bool?@.
+
+  \item[int] \mbox{}\\
+    The \lstinline!int! type provides 30-bits of signed precision encoded in one to
+    four bytes.
+    The top two bits of the first byte (bit~6--7) specify the number of additional
+    bytes in the encoding and bit~5 specifies the sign of the number.
+    Thus values in the range -32 to 31 can be encoded in one byte,
+    -8192 to 8191 in two bytes, \etc{}
+    A negative number $n$ is represented as the positive number $-(n+1)$.
+
+  \item[uint] \mbox{}\\
+    The \lstinline!uint! type provides 30-bits of unsigned precision encoded in one
+    to four bytes.
+    As with the \lstinline!int! type, the top two bits of the first byte specify the
+    number of additional bytes in the encoding.
+    Thus values in the range 0 to 63 can be encoded in one byte,
+    0 to 16383 unsigned in two bytes, \etc{}
+
+  \item[integer] \mbox{}\\
+    The \asdl{} \lstinline!integer! type is represented with a variable-length,
+    big-endian, signed-magnitude encoding.
+    The high bit of each byte indicates if the byte is the last byte of
+    the encoding.
+    The bit~6 of the most significant byte is used to determine the
+    sign of the value.
+    Thus, numbers in the range of -63 to 63 are encoded in one byte.
+    Numbers outside of this range require an extra byte for every seven bits
+    of precision required.
+
+  \item[string] \mbox{}\\
+    Strings are represented with a length-header that describe how many more
+    8-bit bytes follow for the string and then the data for the string in bytes.
+    The length-header is encoded as a \lstinline!uint! value, thus strings are limited
+    to 1,073,741,823 characters.
+
+  \item[identifier] \mbox{}\\
+    Identifiers are represented as if they were strings.
+
+  \item[tags] \mbox{}\\
+    Tags are an internal type that \asdl{} uses to represent enumerations and
+    tagged sums.
+    If the number of distinct tags required for a type is less than 256, then
+    the tag is represented as a single byte.
+    Otherwise, the tag value is encoded as a \lstinline!uint! value.
+\end{description}%
+
+\subsection{Product types}
+The fields of a product type are encoded sequentially (left to right)
+without any initial tag.
+
+\subsection{Enumeration types}
+Enumeration types are represented by a set of tag values, one per constructor
+on the type.
+Tag values are assigned in order of constructor definition starting from one.
+As with the \lstinline@bool@ type, the value zero is used to encode empty option values.
+
+If the enumeration type has only a single constructor, then it is implicit in
+the encoding (\ie{}, no space is used to represent it).
+
+\subsection{Sum types}
+Non-enumeration sum types begin with a unique tag to identify the constructor
+followed by the fields of the constructor.
+Tag values are assigned in order of constructor definition starting from one (the
+value zero is used to encode empty option values).
+As with product types, fields are packed left to right based on the order
+in the definition.
+If there are any attribute values associated with the type, they are packed left to right
+after the tag but before other constructor fields.
+  
+If the sum type has a single constructor with fields, then it is
+encoded without a tag (\ie{}, like a product type).
+
+\subsection{Sequence types}
+Sequence types are represented with an integer length-header followed by
+that many values of that type.
+The length-header is encoded as a \lstinline!uint! value, thus sequences are limited
+to at most 1,073,741,823 items.
+
+\subsection{Option types}
+The encoding of optional values depends on the base type.
+For sum types with more than one constructor (including \lstinline@bool@),
+the special tag value of zero is used to denote an empty value and
+non-zero values are interpreted as the constructor's tag.
+For any other base type, there is an initial byte that is either one or zero.
+A zero indicates that the value is empty and no more data follows.
+A one indicates that the next value is the value of the optional value.
+
+\subsection{Shared types}
+\label{sec:shared-pickle-rep}
+
+Shared types change the representation of a pickle from a tree to a DAG
+(Directed Acyclic Graph).  A shared value is the pickle is
+either a \emph{definition} occurrence (\ie{}, the first occurrence of that
+value), or a \emph{back reference} (\ie{}, subsequent occurrences of the value).
+A shared value is represented by an integer followed by the encoding of the
+value itself.  For a definitional occurrence, the integer will be zero, and
+for subsequent occurrences, the integer will count back to the shared definition
+(\eg{}, one maps to the most recent definition, two to the one before it, \etc{}).
+For unpickling, this representation only requires that the unpickler maintain
+a stack per shared type.  Definitions get pushed onto the stack and back references
+extract existing values from the stack.
+
+Note that shared types are currently the only feature of \asdl{} that are
+\emph{stateful}; \ie{}, that pickling/unpickling a value depends on previous
+values in the stream.
+
+\subsection{Alias types}
+Alias types use the encoding of their definition.
+
+\subsection{User-defined primitive types}
+User-defined primitive types are pickled/unpickled by user-provided functions (see
+\secref{sec:primitive-syntax}).
+
+\section{S-expression Format}
+\label{sec:s-expressions}
+It is also possible to generate a text-based representation of pickles in S-Expression
+syntax.
+Primitive values are represented as literals, enumerations are represented
+as quoted symbols, and structured values are represented with a parenthesized
+expression of the form
+\begin{code}\begin{lstlisting}[mathescape=true]
+( $\mathit{op}$ $v'_1$ $\cdots$ $v'_n$ )
+\end{lstlisting}\end{code}%
+where $\mathit{op}$ is an identifier that defines the structure of the value
+and the $v'_1,\,\ldots,\,v'_n$ are the encodings of the sub-values.
+
+\subsection{Primitive types}
+
+\begin{description}
+  \item[bool] \mbox{}\\
+    Boolean values are mapped to the literals \lstinline!#t! and \lstinline!#f!.
+    
+  \item[numbers] \mbox{}\\
+    Values of the ASDL numeric types (\lstinline!int!, \lstinline!uint!, and
+    \lstinline!integer!) are represented by decimal literals.
+
+  \item[string and identifier] \mbox{}\\
+    These values are represented by string literals.
+\end{description}%
+
+\subsection{Product types}
+A product value \lstinline[mathescape=true]@($f_1$, $\ldots$, $f_n$)@
+is encoded as the
+S-expression \lstinline[mathescape=true]@($n$-tuple $f'_1$ $\cdots$ $f'_n$)@,
+where the $f'_i$ are the encoded fields of the value.
+Unlabeled fields are directly represented by their value, whereas a
+field with label $l$ and value $v$ is encoded as
+\lstinline[mathescape=true]@($l$ $v'$)@, where $v'$ is the encoding of the field's
+value.
+
+\subsection{Sum types}
+Nullary constructors are mapped to quoted symbols, while non-nullary constructors are mapped
+to an S-expression with the constructor name as the operator and the 
+
+\subsection{Sequence types}
+A sequence of values $v_1,\,\ldots,\,v_n$ is encoded as
+\lstinline[mathescape=true]@(* $v'_1$ $\cdots$ $v'_n$)@,
+where the $v'_i$ are the encoded fields of the sequence.
+
+\subsection{Option types}
+An empty option value is represented as \lstinline@(?)@, while a non-empty
+option value with contents $v$ is represented as \lstinline[mathescape=true]@(? $v'$)@,
+where $v'$ is the encoding of the contents.
+
+\subsection{Alias types}
+Alias types use the encoding of their definition.
+
+\subsection{User-defined primitive types}
+User-defined primitive types are not yet supported in S-Expression form.
+
+%\section{XML Pickle Format}
+% TODO

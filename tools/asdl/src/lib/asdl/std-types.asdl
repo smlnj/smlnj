@@ -1,0 +1,72 @@
+-- std-types.asdl
+--
+-- Standard ASDL types
+--
+
+primitive module StdTypes {
+  nat    bool
+  int8   int16  int32  int64
+  uint8  uint16 uint32  uint64
+  ieee_real
+}
+
+view Doc {
+ { StdTypes.int8 StdTypes.int16 StdTypes.int32 StdTypes.int64 }
+<= doc_string : Signed integer type with a guaranteed minimum bit width
+
+ { StdTypes.uint8 StdTypes.uint16 StdTypes.uint32 StdTypes.uint64 }
+<= doc_string : Unsigned integer type with a guaranteed minimum bit width
+
+<= doc_string {
+ StdTypes.ieee_real : Raw bits of an IEEE real
+ StdTypes.nat : Language appropiate representation for natural numbers
+ }
+}
+
+view C {
+ StdTypes.nat         <= source_name : nat
+ StdTypes.bool        <= source_name : bool
+ StdTypes.ieee_real   <= source_name : ieee_real
+
+ StdTypes.int8        <= source_name : int8
+ StdTypes.int16       <= source_name : int16
+ StdTypes.int32       <= source_name : int32
+ StdTypes.int64       <= source_name : int64
+
+ StdTypes.uint8       <= source_name : uint8
+ StdTypes.uint16      <= source_name : uint16
+ StdTypes.uint64      <= source_name : uint64
+}
+
+view Cxx {
+ StdTypes.nat         <= source_name : uint32_t
+ StdTypes.bool        <= source_name : bool
+ StdTypes.ieee_real   <= source_name : double
+
+ StdTypes.int8        <= source_name : int8_t
+ StdTypes.int16       <= source_name : int16_t
+ StdTypes.int32       <= source_name : int32_t
+ StdTypes.int64       <= source_name : int64_t
+
+ StdTypes.uint8       <= source_name : uint8_t
+ StdTypes.uint16      <= source_name : uint16_t
+ StdTypes.uint64      <= source_name : uint64_t
+}
+
+-- The Java view is a bit magic because java lacks type abbreviations
+-- and a global name space
+-- The Java backend treats the source_names java_foo as magic
+view Java {
+ StdTypes.nat         <= source_name : StdTypes.java_int
+ StdTypes.bool        <= source_name : StdTypes.java_boolean
+ StdTypes.ieee_real   <= source_name : StdTypes.java_double
+ StdTypes.int8        <= source_name : StdTypes.java_byte
+ StdTypes.int16       <= source_name : StdTypes.java_short
+ StdTypes.int32       <= source_name : StdTypes.java_int
+ StdTypes.int64       <= source_name : StdTypes.java_long
+
+ StdTypes.uint8       <= source_name : StdTypes.java_short
+ StdTypes.uint16      <= source_name : StdTypes.java_int
+ StdTypes.uint64      <= source_name : StdTypes.java_math_BigInteger
+}
+

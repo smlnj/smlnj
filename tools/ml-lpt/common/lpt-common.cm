@@ -1,0 +1,19 @@
+(* lpt-common.cm
+ *
+ * COPYRIGHT (c) 2008 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Code that is common to the implementations of both ml-ulex and ml-antlr.
+ *)
+
+
+Library
+
+  structure ExpandFile
+
+is
+
+  $/basis.cm
+  $/regexp-lib.cm
+
+  expand-file.sml

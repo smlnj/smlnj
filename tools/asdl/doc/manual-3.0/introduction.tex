@@ -1,0 +1,82 @@
+%!TEX root = manual.tex
+%
+\chapter{Introduction}
+\label{chap:introduction}
+
+\thispagestyle{empty}
+
+The \emph{Abstract Syntax Description Lanuguage} (\asdl{}) is a language
+designed to describe the tree-like data structures used in compilers.
+Its original purpose was to provide a method for
+compiler components written in different languages to
+interoperate~\cite{usenix:zephyr-asdl}, but it has also been
+used to support communicating information between separate runs
+of a compiler.
+\asdl{} makes it fairly easy for applications written in a
+variety of programming languages to communicate complex recursive data
+structures. 
+
+\asdlgen{} is a tool that takes \asdl{} descriptions and produces
+implementations of those descriptions in a variety of languages.
+\asdl{} and \asdlgen{} together provide the following advantages
+\begin{itemize}
+  \item Concise descriptions of important data structures.
+  \item Automatic generation of data structure implementations for
+    \asdlgen{}-supported languages.
+  \item Automatic generation of functions to read and write the data
+    structures to disk in a machine and language independent way.
+\end{itemize}%
+
+\asdl{} descriptions describe the tree-like data structures such as
+abstract syntax trees (ASTs) and compiler intermediate representations
+(IRs).
+Tools such as \asdlgen{} automatically produce the equivalent
+data structure definitions for the supported languages.
+\asdlgen{} also produces functions for each language that read and
+write the data structures to and from a platform and language
+independent sequence of bytes.
+The sequence of bytes is called a \emph{pickle}.
+
+\asdl{} was originally developed in the 1990's by Daniel Wang as part of the
+\emph{National Compiler Infrastructure} project at Princeton University.
+That \asdl{} implementation has not kept up with the significant changes
+in many of its target languages (\eg{}, \Cplusplus{}, \haskell{}, \java{},
+\etc{}), so it was time for a rewrite.\footnote{
+  Version~2.0 of \asdl{} is still available from
+  \url{https://sourceforge.net/projects/asdl}
+  and the~2.0 version of the manual (converted to \LaTeX{}) is included
+  in the documentation of this system.
+}
+Version~3.0 of \asdl{} and \asdlgen{} is a complete reimplementation of the
+system, with the primary purpose of supporting the \smlnj{} compiler.
+As such, it currently only supports generating picklers in \sml{} and
+modern \Cplusplus{}, although other languages may be added as time
+permits.
+
+\section{Changes From Version 2.0}
+\label{sec:changes}
+
+The following is a list of the major changes from the 2.0 version of \asdl{}
+and \asdlgen{}:
+\begin{itemize}
+  \item
+    The primitive types were extended and changed.
+    The \lstinline!bool! type was added, the type name of arbitrary precision integers
+    was changed to \lstinline!integer!, and the types \lstinline!int! and \lstinline!uint!
+    were added to represent small integers.
+  \item
+    Various changes were made to the binary encoding of pickles.
+  \item
+    Currently only two target languages are supported: \sml{} and \Cplusplus{}.
+  \item
+    The generated \Cplusplus{} code targets the 2011 standard and uses the
+    \Cplusplus{} STL (\eg{}, \lstinline[language=C++]!std::vector<>! for \asdl{} sequences).
+  \item
+    Data can be pickled/unpickled to/from memory, as well as files.
+    This change affects the requirements for implementing primitive modules.
+  \item
+    Alias-type definitions were added to the ASDL syntax.
+  \item
+    Include directives were added to support splitting specifications into multiple
+    files (and the sharing of common specifications).
+\end{itemize}%

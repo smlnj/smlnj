@@ -1,0 +1,13 @@
+(*
+ * Plugin for registering "grm" suffix that points to ml-antlr.
+ *
+ * (C) 2007 The Fellowship of SML/NJ.
+ *
+ * This should currently not be installed as it conflicts with
+ * the equally-named plugin library for legacy ml-yacc.
+ *)
+Library
+	structure AntlrGrmExt
+is
+	$smlnj/cm/tools.cm
+	ext.sml

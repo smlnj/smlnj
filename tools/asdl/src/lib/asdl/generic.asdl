@@ -1,0 +1,95 @@
+-- generic.asdl
+--
+
+module TypePickle {
+-- Description of type environments in asdl.
+
+    qid = (identifier* qualifier, identifier base)
+
+    field = Id | Option | Sequence
+	  attributes(int type_map_key, identifier label)
+
+    prim = String | Identifier | Int
+
+    type_map = (int max_key, type_map_entry* entries)
+    type_map_entry = (int key, type_map_value v)
+
+    type_map_value = Defined(qid name,
+                             field* fields,
+                             int* cnstr_map_keys)
+		   | Prim (prim p)
+		     attributes(int pkl_tag)
+
+    cnstr_map = (int max_key, cnstr_map_entry* entries)
+    cnstr_map_entry = (int key, cnstr_map_value v)
+    cnstr_map_value =
+	(int pkl_tag,
+         int type_map_key, qid name, field* fields)
+
+    module_map =
+	    (int max_key, module_map_entry* entries)
+    module_map_entry =
+	    (int key, module_map_value v)
+    module_map_value = (qid name,string file)
+
+    type_env = (int  version,
+		int  magic,
+		module_map    mmap,
+		type_map      tmap,
+		cnstr_map     cmap)
+}
+
+module AsdlValue (imports TypePickle) {
+-- langauge of generic ADSL values
+
+    asdl_value = SumValue(TypePickle.qid con, asdl_value* attrbs,
+		          asdl_value* vs)
+	       | ProductValue(asdl_value v,asdl_value* vs)
+	       | SequenceValue(asdl_value* vs)
+	       | NoneValue
+	       | SomeValue(asdl_value v)
+	       | PrimValue(prim_value v)
+	    attributes(TypePickle.qid typename)
+
+    prim_value = IntValue(int)
+	       | StringValue(string)
+	       | IdentifierValue(identifier)
+
+}
+
+view Doc {
+
+<= doc_string {
+  module TypePickle
+%%
+    <p>The types in this module are used to described ASDL type pickles.
+    Produced by invoking <tt>asdlGen --typ</tt> on a set of ASDL modules.
+    Type pickles define a static closed set of modules and the types
+    that they defined. This set of types is refered to as the type environment.
+
+    <p>Type pickles and the type environments they describe are used by
+    tools that need <em>runtime</em> type information manipulate
+    arbitary pickles. Tools such as the ASDL browser need this
+    functionality.
+%%
+  TypePickle.type_env
+%%
+  A type environment consists of three different mapings, that all map
+  an integer to a value.
+%%
+
+  TypePickle.qid %%
+  Qualified identifiers. All constructor and type identifiers are
+  fully qualified. This representation provides support for qualified
+  identifiers of the form Q1.Q2.Q3.base. ASDL does not support nested
+  module. This type is more general than necessary.
+%%
+  TypePickle.field    : Fields of a type
+  TypePickle.Id       : Normal type
+  TypePickle.Option   : Option type
+  TypePickle.Sequence : Sequence type
+  }
+
+}
+
+

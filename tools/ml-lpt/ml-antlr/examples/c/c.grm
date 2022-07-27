@@ -1,0 +1,413 @@
+%defs ( );
+%unitactions;
+
+%tokens
+ : COLON	(":")
+ | SEMICOLON	(";")
+ | LPAREN	("(")
+ | RPAREN	(")")
+ | LCURLY	("{")
+ | RCURLY	("}")
+ | LBRACE	("[")
+ | RBRACE	("]")
+ | DOT		(".")
+ | COMMA	(",")
+ | QUESTION	("?")
+ | PERCENT	("%")
+ | AMP		("&")
+ | BAR		("|")
+ | TILDE	("~")
+ | DIVIDE	("/")
+ | PLUS		("+")
+ | MINUS	("-")
+ | HAT		("^")
+ | BANG		("!")
+ | TIMES	("*")
+ | INC		("++")
+ | DEC		("--")
+ | ARROW	("->")
+ | ID of string
+ | EQUALS	("=")
+ | PLUSEQUALS	("+=")
+ | MINUSEQUALS	("-=")
+ | XOREQUALS	("^=")
+ | MODEQUALS	("%=")
+ | TIMESEQUALS	("*=")
+ | DIVEQUALS	("/=")
+ | OREQUALS	("|=")
+ | ANDEQUALS	("&=")
+ | LSHIFTEQUALS	("<<=")
+ | RSHIFTEQUALS	(">>=")
+ | LTE		("<=")
+ | GTE		(">=")
+ | LT		("<")
+ | GT		(">")
+ | EQ		("==")
+ | NEQ		("!=")
+ | OR		("||")
+ | AND		("&&")
+ | LSHIFT	("<<")
+ | RSHIFT	(">>")
+ | DECNUM of LargeInt.int
+ | REALNUM of real
+ | STRING of string
+ | CCONST of LargeInt.int
+ | EXTERN	("extern")
+ | AUTO		("auto")
+ | STATIC	("static")
+ | REGISTER	("register")
+ | CONST	("const")
+ | VOLATILE	("volatile")
+ | IF		("if")
+ | ELSE		("else")
+ | FOR		("for")
+ | DO		("do")
+ | SWITCH	("switch")
+ | CASE		("case")
+ | DEFAULT	("default")
+ | WHILE	("while")
+ | RETURN	("return")
+ | BREAK	("break")
+ | CONTINUE	("continue")
+ | GOTO		("goto")
+
+ | CHAR		("char")
+ | DOUBLE	("double")
+ | ENUM		("enum")
+ | FLOAT	("float")
+ | INT		("int")
+ | LONG		("long")
+ | SHORT	("short")
+(* | FRACTIONAL | SATURATE                                (* D *) *)
+ | STRUCT	("struct")
+ | UNION	("union")
+ | UNSIGNED	("unsigned")
+ | SIGNED	("signed")
+ | VOID		("void")
+ | SIZEOF	("sizeof")
+ | TYPEDEF	("typedef")
+ | ELIPSIS	("...")
+ ;
+
+translation_unit
+ : external_declaration*
+ ;
+
+external_declaration
+ : %try function_definition
+ | %try declaration
+ ;
+
+function_definition
+ : declaration_specifiers? declarator declaration* compound_statement
+ ;
+
+declaration
+ : declaration_specifiers init_declarator_list? ";"
+ ;
+
+declaration_specifiers
+ : (storage_class_specifier | type_specifier | type_qualifier)+
+ ;
+
+storage_class_specifier
+ : "auto" 
+ | "register" 
+ | "static"
+ | "extern"
+ | "typedef"
+ ;
+
+type_specifier
+ : "void"
+ | "char"
+ | "short"
+ | "int"
+ | "long"
+ | "float"
+ | "double"
+ | "signed"
+ | "unsigned"
+ | struct_or_union_specifier
+ | enum_specifier
+(* | typedef_name *)
+ ;
+
+type_qualifier
+ : "const"
+ | "volatile"
+ ;
+
+struct_or_union_specifier
+ : struct_or_union ID? "{" struct_declaration+ "}"
+ | struct_or_union ID
+ ;
+
+struct_or_union
+ : "struct"
+ | "union"
+ ;
+
+init_declarator_list
+ : init_declarator ("," init_declarator)*
+ ;
+
+init_declarator
+ : declarator ("=" initializer)?
+ ;
+
+struct_declaration
+ : specifier_qualifier_list struct_declarator_list ";"
+ ;
+
+specifier_qualifier_list
+ : (type_specifier | type_qualifier)+
+ ;
+
+struct_declarator_list
+ : struct_declarator ("," struct_declarator)*
+ ;
+
+struct_declarator
+ : declarator (":" constant_expression)?
+ | ":" constant_expression
+ ;
+
+enum_specifier
+ : "enum" ID? "{" enumerator_list "}"
+ | "enum" ID
+ ;
+
+enumerator_list
+ : enumerator ("," enumerator)*
+ ;
+
+enumerator
+ : ID ("=" constant_expression)?
+ ;
+
+declarator
+ : pointer? direct_declarator
+ ;
+
+direct_declarator
+ : inner_direct_declarator
+     ( "[" constant_expression? "]"
+     | "(" parameter_type_list ")"
+     | "(" identifier_list? ")"
+     )*
+ ;
+
+inner_direct_declarator
+ : ID
+ | "(" declarator ")"
+ ;
+
+pointer
+ : ("*" type_qualifier_list?)+
+ ;
+
+type_qualifier_list
+ : type_qualifier+
+ ;
+
+parameter_type_list
+ : parameter_list ("," "...")?
+ ;
+
+parameter_list
+ : parameter_declaration ("," parameter_declaration)*
+ ;
+
+parameter_declaration
+ : declaration_specifiers (%try declarator | %try abstract_declarator)?
+ ;
+
+identifier_list
+ : ID ("," ID)*
+ ;
+
+initializer
+ : assignment_expression
+ | "{" initializer_list ","? "}"
+ ;
+
+initializer_list
+ : initializer ("," initializer)*
+ ;
+
+type_name
+ : specifier_qualifier_list abstract_declarator?
+ ;
+
+abstract_declarator
+ : pointer direct_abstract_declarator?
+ | direct_abstract_declarator
+ ;
+
+direct_abstract_declarator
+ : "(" abstract_declarator ")"
+   ( "[" constant_expression? "]" 
+   | "(" parameter_type_list? ")"
+   )*
+ | ( "[" constant_expression? "]" 
+   | "(" parameter_type_list? ")"
+   )+
+ ;
+
+(*
+typedef_name
+ : ID
+ ;
+*)
+
+statement
+ : labeled_statement
+ | expression_statement
+ | compound_statement
+ | selection_statement
+ | iteration_statement
+ | jump_statement
+ ;
+
+labeled_statement
+ : ID ":" statement
+ | "case" constant_expression ":" statement
+ | "default" ":" statement
+ ;
+
+expression_statement
+ : expression? ";"
+ ;
+
+compound_statement
+ : "{" (declaration | statement)* "}"
+ ;
+
+selection_statement
+ : %try "if" "(" expression ")" statement "else" statement
+ | %try "if" "(" expression ")" statement 
+ | "switch" "(" expression ")" statement
+ ;
+
+iteration_statement
+ : "while" "(" expression ")" statement
+ | "do" statement "while" "(" expression ")" ";"
+ | "for" "(" expression? ";" expression? ";" expression? ")" statement
+ ;
+
+jump_statement
+ : "goto" ID ";"
+ | "continue" ";"
+ | "break" ";"
+ | "return" expression? ";"
+ ;
+
+expression
+ : assignment_expression ("," assignment_expression)*
+ ;
+
+(*    take a look at this ...
+assignment_expression
+ : conditional_expression
+ | unary_expression assignment_operator assignment_expression
+ ;
+*)
+assignment_expression
+ : conditional_expression (assignment_operator conditional_expression)*
+ ;
+
+assignment_operator
+ : "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | "&=" | "^=" | "|="
+ ;
+
+conditional_expression
+ : logical_OR_expression ("?" expression ":" conditional_expression)?
+ ;
+
+constant_expression
+ : conditional_expression
+ ;
+
+logical_OR_expression
+ : logical_AND_expression ("||" logical_AND_expression)*
+ ;
+
+logical_AND_expression
+ : inclusive_OR_expression ("&&" inclusive_OR_expression)*
+ ;
+
+inclusive_OR_expression
+ : exclusive_OR_expression ("|" exclusive_OR_expression)*
+ ;
+
+exclusive_OR_expression
+ : AND_expression ("^" AND_expression)*
+ ;
+
+AND_expression
+ : equality_expression ("&" equality_expression)*
+ ;
+
+equality_expression
+ : relational_expression (("==" | "!=") relational_expression)*
+ ;
+
+relational_expression
+ : shift_expression
+     (("<" | ">" | "<=" | ">=") shift_expression)*
+ ;
+
+shift_expression
+ : additive_expression (("<<" | ">>") additive_expression)*
+ ;
+
+additive_expression
+ : multiplicative_expression (("+" | "-") multiplicative_expression)*
+ ;
+
+multiplicative_expression
+ : cast_expression (("*" | "/" | "%") cast_expression)*
+ ;
+
+cast_expression
+ : unary_expression
+ | "(" type_name ")" cast_expression
+ ;
+
+unary_expression
+ : postfix_expression
+ | "++" unary_expression
+ | "--" unary_expression
+ | ("&" | "*" | "+" | "-" | "~" | "!") cast_expression
+ | "sizeof" unary_expression
+ | "sizeof" "(" type_name ")"
+ ;
+
+postfix_expression
+ : primary_expression
+     ( "[" expression "]"
+     | "(" argument_expression_list? ")"
+     | "." ID
+     | "->" ID
+     | "++"
+     | "--"
+     )*
+ ;
+
+primary_expression
+ : ID
+ | constant
+ | "(" expression ")"
+ ;
+
+argument_expression_list
+ : assignment_expression ("," assignment_expression)*
+ ;
+
+constant
+ : DECNUM 
+ | REALNUM
+ | STRING
+ | CCONST
+ ;

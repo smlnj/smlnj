@@ -1,0 +1,20 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Test
+  structure TestIO
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  ../../lib/sml/asdl-lib.cm
+
+  sml-test.sml
+  sml-test-io.sml

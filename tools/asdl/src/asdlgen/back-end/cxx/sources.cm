@@ -1,0 +1,29 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure CxxView
+  structure GenCxx
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+
+  ../../ast/sources.cm
+  ../../common/sources.cm
+  ../../views/sources.cm
+  ../util/sources.cm
+
+  cxx.sml
+  cxx-view.sml
+  gen-cxx.sml
+  gen-pickle.sml
+  gen-types.sml
+  print-cxx.sml
+  util.sml

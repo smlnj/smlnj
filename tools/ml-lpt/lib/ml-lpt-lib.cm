@@ -1,0 +1,42 @@
+(* ml-lpt-lib.cm
+ *
+ * COPYRIGHT (c) 2006
+ * John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * All rights reserved.
+ *
+ * Sources file for ml-lpt lib
+ *)
+
+Library
+
+  signature ANTLR_LEXER
+  signature ANTLR_TOKENS
+
+  structure AntlrRepair
+  structure AntlrStreamPos
+  structure ULexBuffer
+  structure UTF8 (* from smlnj-lib.cm; used in generated scanners *)
+
+  functor AntlrEBNF
+  functor AntlrErrHandler
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  ebnf.sml
+  err-handler.sml
+  antlr-lexer-sig.sml
+  repair.sml
+
+(*
+  repairable-strm-sig.sml
+  repairable-strm.sml
+*)
+  wrapped-strm.sml
+
+  antlr-stream-pos.sml
+  antlr-tokens-sig.sml
+
+  ulex-buffer.sml

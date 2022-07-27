@@ -1,0 +1,378 @@
+%!TEX root = manual.tex
+%
+\chapter{ML-ULex}
+
+%\section{Overview}
+
+Lexers analyze the lexical structure of an input string, and are usually specified using regular expressions.  \textsc{ml-ulex} is a lexer generator for Standard ML.  The module it generates will contain a type \texttt{strm} and a function
+\begin{verbatim}
+    val lex : AntlrStreamPos.sourcemap -> strm
+          -> lex_result * AntlrStreamPos.span * strm
+\end{verbatim}%
+where \texttt{lex\char`\_result} is a type that must be defined by the user of \ulex{}.
+Note that the lexer always returns a token: we assume that end-of-file will be explicitly represented by a token.
+Compared to ML-Lex, \ulex{} offers the following improvements:
+\begin{itemize}
+ \item Unicode is supported under the UTF8 encoding.
+ \item Regular expressions can include intersection and negation operators.
+ \item The position span of a token is automatically computed and returned to the lexer's caller (as can be seen
+   by the specification of the \texttt{lex} function above).
+ \item The specification format is somewhat cleaner.
+ \item The code base is much cleaner, and supports multiple back-ends, including DFA graph visualization and interactive testing of rules.
+\end{itemize}%
+The tool is invoked from the command-line as follows:
+\begin{verbatim}
+    ml-ulex [options] file
+\end{verbatim}%
+where \texttt{file} is the name of the input \ulex{} specification, and where \texttt{options} may be any combination of:
+
+\vskip 12pt
+\begin{tabular}{lp{0.65\textwidth}}
+  \texttt{--dot} & generate DOT output (for graphviz; see \texttt{http://www.graphviz.org}).  The produced file will be named \texttt{file.dot}, where \texttt{file} is the input file. \\
+  \\
+  \texttt{--match} & enter interactive matching mode.  This will allow interactive testing of the machine; presently, only the \texttt{INITIAL} start state is available for testing
+  (see Section~\ref{sec:start-states} for details on start states).  \\
+  \\
+  \texttt{--ml-lex-mode} & operate in \texttt{ml-lex} compatibility mode.  See Section~\ref{sec:lex-compat} for details. \\
+  \\
+  \texttt{--table-based} & generate a table-based lexer.\\
+  \\
+  \texttt{--fn-based} & generate a lexer that represents states as functions and transitions as tail calls.\\
+  \\
+  \texttt{--minimize} & generate a minimal machine.  Note that this is slow, and is almost never necessary. \\
+  \\
+  \texttt{--strict-sml} & generate strict SML (\ie{}, do not use SML/NJ extensions).  This flag
+    is useful if you want to use the output with a different SML system.
+\end{tabular}
+
+\vskip 10pt \noindent
+The output file will be called \texttt{file.sml}.
+
+\section{Specification format}
+
+A \ulex{} specification is a list of semicolon-terminated \emph{declarations}.  Each declaration is either a \emph{directive} or a \emph{rule}.  Directives are used to alter global specification properties (such as the name of the module that will be generated) or to define named regular expressions.  Rules specify the actual reguluar expressions to be matched.  The grammar is given in Figure~\ref{fig:ulex-syntax}.
+
+\begin{figure}
+\Grammar{
+\GFirstB{spec}
+	{$($ declaration \T{;} $)^*$}
+
+\GFirstB{declaration}
+	{directive}
+\GNextB
+	{rule}
+
+%	{\kw{charset} $($ \T{ASCII7} $|$ \T{ASCII8} $|$ \T{UTF8} $)$}
+
+\GFirstB{directive}
+	{\kw{arg} code}
+\GNextB
+	{\kw{defs} code}
+\GNextB
+	{\kw{let} ID \T{=} re}
+\GNextB
+	{\kw{name} ID}
+\GNextB
+	{\kw{header} code}
+\GNextB
+	{\kw{states} ID$^+$}
+	
+\GFirstB{code}
+	{ \T{(} $\dots$ \T{)} }
+	
+\GFirstB{rule}
+	{ $($\T{<} ID $($ \T{,} ID $)^*$ \T{>}$)^?$ re \T{=>} code}
+\GNextB
+	{ $($\T{<} ID $($ \T{,} ID $)^*$ \T{>}$)^?$ \T{<<EOF>>} \T{=>} code}
+
+\GFirstB{re}
+	{CHAR}
+\GNextB
+	{\T{"} SCHAR$^*$ \T{"}}
+\GNextB
+	{\T{(} re \T{)}}
+\GNextCC
+	{\T{[} $($ \T{-} $|$ \T{\^{ }} $)^?$ $($ CCHAR \T{-} CCHAR $|$ CCHAR $)^+$ 
+	 \T{-}$^?$ \T{]} \quad\phantom{.}}
+				{a character class}
+\GNextC
+	{\T{\{} ID \T{\}}}	{\kw{let}-bound RE}
+\GNextC
+	{\T{.}}			{wildcard (any single character including \texttt{{$\backslash$}n})}
+\GNextC
+	{re \T{*}}		{Kleene-closure (0 or more)}
+\GNextC
+	{re \T{?}}		{optional (0 or 1)}
+\GNextC
+	{re \T{+}}		{positive-closure (1 or more)}
+\GNextC
+	{re \T{\{} NUM \T{\}}}	{exactly {\it NUM} repetitions}
+\GNextC
+	{re \T{\{} NUM$_1$, \ NUM$_2$ \T{\}}}	{between {\it NUM$_1$} and {\it NUM$_2$} repetitions}
+\GNextC
+	{re re}			{concatenation}
+\GNextC
+	{\T{$\sim$} re}	{negation} %(any string not matched by \textit{re})}
+\GNextC
+	{re \T{\&} re}	{intersection}
+\GNextC
+	{re \T{|} re}	{union}
+%\GNextB
+%	{re \T{/} re}
+%\GNextB
+%	{re \T{\$}}
+%\GNextB
+%	{\T{\_}}
+\GFirstB{CHAR}
+	{any printable character not one of \ 
+		$\begin{array}[t]{l}
+		\normalfont
+		 \texttt{\^{ } < > $\backslash$ ( ) \{ \} [ \& | * ?}\\
+		\normalfont
+		 \texttt{+ " . ; = $\sim$ }
+		 \end{array}$}
+\GNextB{an SML or Unicode escape code}
+\GFirstB{CCHAR}
+	{any printable character not one of \ \T{\^{ } - ] $\backslash$}}
+\GNextB{an SML or Unicode escape code}
+\GFirstB{SCHAR}
+	{any printable character not one of \ \T{" $\backslash$}}
+\GNextB{an SML or Unicode escape code}
+\GFirstB{NUM}
+	{one or more digits}
+}
+\caption{The \ulex{} grammar}\label{fig:ulex-syntax}
+\end{figure}
+
+There are a few lexical details of the specification format worth mentioning.  First, SML-style comments (\texttt{(* ... *)}) are treated as ignored whitespace anywhere they occur in the specification, \emph{except} in segments of code.  The \textit{ID} symbol used in the grammar stands for alpha-numeric-underscore identifiers, starting with an alpha character.  The \textit{code} symbol represents a segment of SML code, enclosed in parentheses.  Extra parentheses occuring within strings or comments in code need not be balanced.
+
+A complete example specification appears in Chapter~\ref{ch:example}.
+
+\section{Directives}
+
+\subsection{The \kw{arg} directive}
+
+Specifies an additional curried parameter, appearing after the sourcemap parameter, that will be passed into the \texttt{lex} function and made available to all lexer actions.
+
+\subsection{The \kw{defs} directive}
+
+The \kw{defs} directive is used to include a segment of code in the generated lexer module, as in the following example:
+\begin{lstlisting}
+%defs (
+  type lex_result = CalcParseToks.token
+  fun eof() = CalcParseTokens.EOF
+  fun helperFn x = (* ... *)
+)
+\end{lstlisting}
+The definitions must at least fulfill the following signature:
+\begin{lstlisting}
+type lex_result
+val eof : unit -> lex_result
+\end{lstlisting}
+unless EOF rules are specified, in which case only the \texttt{lex\char`\_result} type is needed~(see Section~\ref{sec:eof-rules}).
+All semantic actions must yield values of type \texttt{lex\char`\_result}.  The \texttt{eof} function is called by \ulex{} when the end of file is reached -- it acts as the semantic action for the empty input string.  All definitions given will be in scope for the rule actions (see Section~\ref{sec:ulex-rules}).
+
+\subsection{The \kw{let} directive}
+
+Use \kw{let} to define named abbreviations for regular expressions; once bound, an abbreviation can be used in further \kw{let}-bindings or in rules.  For example,
+\begin{verbatim}
+%let digit = [0-9];
+\end{verbatim}
+introduces an abbreviation for a regular expression matching a single digit.  To use abbreviations, enclose their name in curly braces.  For example, an additional \kw{let} definition can be given in terms of \texttt{digit},
+\begin{verbatim}
+%let int = {digit}+;
+\end{verbatim}
+which matches arbitrary-length integers.  Note that scoping of let-bindings follows standard SML rules, so that the definition of \texttt{int} must appear after the definition of \texttt{digit}.
+
+\subsection{The \kw{name} directive}
+
+The name to use for the generated lexer module is specified using \kw{name}.
+
+\subsection{The \kw{header} directive}
+The \kw{header} directive allows one to specify the lexer's header.
+This directive is useful when you want to use a functor for the lexer.
+For example,
+\begin{lstlisting}
+%header (functor ExampleLexFn (Extras : EXTRA_SIG));
+\end{lstlisting}%
+Note that it is an error to include both the \kw{header} and \kw{name} directive in the
+same lexer specification.
+
+\subsection{The \kw{states} directive}
+\label{sec:start-states}
+
+It is often helpful for a lexer to have multiple \emph{start states}, which influence
+the regular expressions that the lexer will match. 
+For instance, after seeing a double-quote, the lexer might switch into a \texttt{STRING}
+start state that contains only the rules necessary for matching strings, and which
+returns to the standard start state after the closing quote.
+
+Start states are introduced via \kw{states} and are named using standard identifiers. 
+There is always an implicit, default start state called \texttt{INITIAL}.
+Within a rule action, the function \texttt{YYBEGIN} can be applied to the name
+of a start state to switch the lexer into that state; see~\ref{sec:ulex-actions}
+for details on rule actions.
+
+Using start states allows the lexer to be defined as a collection of finite-state machines
+(one per start state), with arbitrary SML code used to control switching between machines.
+This mechanism thus allows non-regular features to be supported by the lexer, such as
+nested comments.
+
+\section{Rules}\label{sec:ulex-rules}
+
+In general, when \texttt{lex} is applied to an input stream, it will attempt to match a prefix of the input with a regular expression given in one of the rules.  When a rule is matched, its \emph{action} (associated code) is evaluated and the result is returned.  Hence, all actions must belong to the same type. %, but no restrictions are placed on what that type is.
+Rules are specified by an optional list of start states, a regular expression, and the action code.  The rule is said to ``belong'' to the start states it lists.  If no start states are specified, the rule belongs to \emph{all} defined start states.
+
+Rule matching is determined by three factors: start state, match length, and rule order.  A rule is only considered for matching if it belongs to the lexer's current start state.  If multiple rules match an input prefix, the rule matching the longest prefix is selected.  In the case of a tie, the rule appearing first in the specification is selected.
+
+For example, suppose the start state \texttt{FOO} is defined, and the following rules appear, with no other rules belonging to \texttt{FOO}:
+\begin{verbatim}
+    <FOO> a+    => ( Tokens.as );
+    <FOO> a+b+  => ( Tokens.asbs );
+    <FOO> a+bb* => ( Tokens.asbs );
+\end{verbatim}
+If the current start state is not \texttt{FOO}, none of the rules will be considered.  Otherwise, on input ``aabbbc'' all three rules are possible matches.  The first rule is discarded, since the others match a longer prefix.  The second rule is then selected, because it matches the same prefix as the third rule, but appears earlier in the specification.
+
+\subsection{Regular expression syntax}
+
+\newcommand{\REX}{\textit{re}}
+\begin{figure}
+\begin{minipage}[t]{.5\textwidth}
+\begin{eqnarray*}
+  \sem{\T{.}} &=& \Sigma \\
+  \sem{\REX_1 \ \REX_2} &=& \sem{\REX_1} \cdot \sem{\REX_2} \\
+  \sem{\T{$\sim$} \ \REX} &=& \left(\bigcup_{i=0}^\infty \Sigma^i\right)\setminus \sem{\REX} \\
+  \sem{\REX_1 \ \T{\&} \ \REX_2} &=& \sem{\REX_1} \cap \sem{\REX_2} \\
+  \sem{\REX_1 \ \T{|} \ \REX_2} &=& \sem{\REX_1} \cup \sem{\REX_2} \\
+  \sem{\REX \ \T{?}} &=& \sem{\REX} \cup \{ \epsilon \}
+\end{eqnarray*}
+\end{minipage}\begin{minipage}[t]{.5\textwidth}
+\begin{eqnarray*}
+  \sem{\REX \ \T{*}} &=& \bigcup_{i=0}^\infty \sem{\REX}^i \\
+  \sem{\REX \ \T{+}} &=& \bigcup_{i=1}^\infty \sem{\REX}^i \\
+  \sem{\REX \ \T{\{} n \T{\}}} &=& \sem{\REX}^n \\
+  \sem{\REX \ \T{\{} n \T{, } m \T{\}}} &=& \bigcup_{i=n}^m \sem{\REX}^i
+\end{eqnarray*}
+\end{minipage}
+\caption{Semantics for regular expressions}\label{ulex-re-semantics}
+\end{figure}
+
+The syntax of regular expressions is given in Figure~\ref{fig:ulex-syntax}; constructs are listed in precedence order, from most tightly-binding to least.  Escape codes are the same as in SML, but also include \texttt{$\backslash$uxxxx} and \texttt{$\backslash$Uxxxxxxxx}, where \texttt{xxxx} represents a hexidecimal number which in turn represents a Unicode symbol.  The specification format itself freely accepts Unicode characters, and they may be used within a quoted string, or by themselves.
+
+The semantics for \ulex{} regular expressions are shown in Figure~\ref{ulex-re-semantics}; they are standard.  Some examples:
+\[
+\begin{array}{rcl}
+\texttt{0 | 1 | 2 | 3}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3} \}	\\
+\texttt{[0123]}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{1}, \texttt{2}, \texttt{3} \}	\\
+\texttt{0123}	& \textit{denotes} &
+    \{ \texttt{0123} \}						\\
+\texttt{0*}	& \textit{denotes} &
+    \{ \epsilon, \texttt{0}, \texttt{00}, \dots \}		\\
+\texttt{00*}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{00}, \dots \}		\\
+\texttt{0+}	& \textit{denotes} &
+    \{ \texttt{0}, \texttt{00}, \dots \}		\\
+\texttt{[0-9]\{3\}}	& \textit{denotes} &
+    \{ \texttt{000}, \texttt{001}, \texttt{002}, \dots, \texttt{999} \}	\\
+\texttt{0* \& (..)*}	& \textit{denotes} &
+    \{ \epsilon, \texttt{00}, \texttt{0000}, \dots \}	\\
+\texttt{\^{ }(abc)}	& \textit{denotes} &
+    \Sigma^* \setminus \{ \texttt{abc} \}	\\
+\texttt{[\^{ }abc]}	& \textit{denotes} &
+    \Sigma \setminus \{ \texttt{a}, \texttt{b}, \texttt{c} \}
+\end{array}
+\]
+
+\subsection{EOF rules}\label{sec:eof-rules}
+
+It is sometimes useful for the behavior of a lexer when it reaches the end-of-file to change
+depending on the current start state.
+Normally, there is a single user-defined \texttt{eof} function that defines EOF behavior, but
+EOF rules can be used to be more selective, as in the following example:
+\begin{verbatim}
+  <INITIAL> <<EOF>> => ( Tok.EOF );
+  <COMMENT> <<EOF>> => ( print "Error: unclosed comment";
+                         Tok.EOF );
+\end{verbatim}
+Other than the special \T{<<EOF>>} symbol, EOF rules work exactly like normal rules.
+
+Note that if you define any EOF rules, then you must define EOF rules for all states;
+otherwise, your scanner may generate a \texttt{Match} exception on EOF.
+Furthermore, if you define EOF rules, you do not need a definition of the \texttt{eof}
+function.
+
+\subsection{Actions}\label{sec:ulex-actions}
+
+\newcommand{\itemtt}[2]{\item[{\normalfont\textbf{\texttt{val}} \texttt{#1} \texttt{:} \texttt{#2}}]\mbox{}\\}
+
+Actions are arbitrary SML code enclosed in parentheses.  The following names are in scope:
+\begin{description}
+  \itemtt{YYBEGIN}{yystart\char`\_state -> unit}
+    This function changes the start state to its argument.
+  \itemtt{yysetStrm}{ULexBuffer.stream -> unit}
+    This function changes the current input source to its argument.
+    The functions \texttt{yystreamify}, \texttt{yystreamifyInstream} and \texttt{yystreamifyReader}
+    can be used to construct the stream; they work identically to the corresponding functions
+    described in Section~\ref{sec:ulex-code}
+  \itemtt{yytext}{string}
+    The matched text as a string.
+  \itemtt{yysubstr}{substring}
+    The matched text as a substring (avoids copying).
+  \itemtt{yyunicode}{UTF8.wchar list}
+    The matched text as a list of Unicode wide characters (\ie{}, words).
+  \itemtt{continue}{unit -> lex\char`\_result}
+    This function recursively calls the lexer on the input following the matched prefix, and returns its result.
+    The span for the resulting token begins at the left border of the match that calls \texttt{continue}.
+  \itemtt{skip}{unit -> lex\char`\_result}
+    This function is identical to \texttt{continue}, except that it moves forward the left marker
+    for the span of the returned token.
+    For example, \texttt{skip} can be used to skip preceding whitespace.
+  \itemtt{yysm}{AntlrSourcePos.sourcemap}
+    the sourcemap for the lexer, to be used with the functions in the \texttt{AntlrSourcePos} module.
+  \itemtt{yypos}{ref int}
+    the input character position of the left border of the matched RE, starting from 0.
+  \itemtt{yylineno}{ref int}
+    The current line number, starting from 1.
+    Note that lines are counted using the Unix line-ending convention.
+  \itemtt{yycolno}{ref int}
+    The current column number, starting from 1.
+\end{description}%
+Futhermore, any name bound in the \kw{\%defs} section is in scope in the actions.
+
+\section{Using the generated code}\label{sec:ulex-code}
+
+The generated lexer module has a signature that includes the following specifications:
+\begin{lstlisting}
+type prestrm
+type strm = prestrm * start_state
+    
+val streamify         : (unit -> string) -> strm
+val streamifyReader   : (char, 'a) StringCvt.reader -> 'a -> strm
+val streamifyInstream : TextIO.instream -> strm
+    
+val lex : AntlrStreamPos.sourcemap -> strm
+      -> lex_result * AntlrStreamPos.span * strm
+\end{lstlisting}%
+where \texttt{lex\char`\_result} is the result type of the lexer actions, and \texttt{start\char`\_state} is an algebraic datatype with nullary constructors for each defined start state.
+Note that \texttt{lex\char`\_result} must be defined as a type using the \kw{defs} directive.
+In this interface, lexer start states are conceptually part of the input stream; thus, from an external viewpoint,
+start states can be ignored.
+It is, however, sometimes helpful to control the lexer start state externally, allowing contextual
+information to influence the lexer.
+This is why the \texttt{strm} type includes a concrete \texttt{start\char`\_state} component.
+
+Note that the \texttt{AntlrStreamPos} module is part of the \texttt{ml-lpt-lib} library described in Chapter~\ref{ch:ml-lpt-lib}. 
+An \texttt{AntlrStreamPos.sourcemap} value, combined with an \texttt{AntlrStreamPos.pos} value, compactly represents position information (line number, column number, and so on).
+An \texttt{AntlrStreamPos.span} is a pair of \texttt{pos} values that specify the character position of the
+leftmost (first) character of the scanned token and the position of the
+rightmost (last) character in the token (respectively).
+By default, the span will cover the entire sequence of characters consumed by a call to the lexer, but one may
+use the \texttt{skip} function (see Section~\ref{sec:ulex-actions}) to ignore leading whitespace,
+\textit{etc.}\ when computing the span.
+Code to compute the span is generated automatically by \texttt{ml-ulex}.
+
+\section{\texttt{ml-lex} compatibility}\label{sec:lex-compat}
+
+Running \ulex{} with the \texttt{--ml-lex-mode} option will cause it to process its input file using the ML-Lex format, and interpret the actions in a ML-Lex-compatible way.  The compatibility extends to the bugs in ML-Lex, so in particular \texttt{yylineno} starts at 2 in \texttt{--ml-lex-mode}.

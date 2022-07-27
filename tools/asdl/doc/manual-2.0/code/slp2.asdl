@@ -1,0 +1,14 @@
+module Slp {
+-- With user defined field names
+
+stm = Compound(stm head, stm next)
+    | Assign(identifier id, exp exp) 
+    | Print(exp* args)
+
+exp = Id(identifier id)
+    | Num(int v)
+    | Op(exp lexp, binop bop, exp rexp)
+
+binop = Plus | Minus | Times | Div
+
+}

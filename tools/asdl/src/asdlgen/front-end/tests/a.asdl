@@ -1,0 +1,11 @@
+-- a.asdl
+--
+
+include : b.asdl
+include : c.asdl
+
+module A (import B import C) {
+
+  t = C1(B.t) | C2(C.t)
+
+}

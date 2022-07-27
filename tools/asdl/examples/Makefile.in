@@ -1,0 +1,36 @@
+# Makefile for asdlgen examples
+#
+# This code is part of the SML/NJ system (http://smlnj.org)
+#
+# COPYRIGHT (c) 2018 The Fellowship of SML/NJ
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =		/bin/sh
+PREFIX =	@prefix@
+
+ASDLGEN =	@ASDL_BINDIR@/asdlgen
+
+.PHONY:		build local-install install
+
+build:
+
+# nothing to do for local-install target
+#
+local-install:	build
+
+# nothing to do for install target
+#
+install:	build
+
+#################### Cleanup ####################
+
+CLEAN_FILES =
+
+DISTCLEAN_FILES +=      Makefile
+
+DEVCLEAN_FILES =
+
+include @ASDL_MKDIR@/clean-rules.gmk

@@ -1,0 +1,635 @@
+digraph dump {
+  graph
+    [ rankdir = "LR" ]
+  1
+    [ label = "program" ]
+    [ shape = "box" ]
+  2
+    [ label = "id_list" ]
+    [ shape = "box" ]
+  3
+    [ label = "declaration" ]
+    [ shape = "box" ]
+  4
+    [ label = "program_SR1" ]
+    [ shape = "box" ]
+  5
+    [ label = "subprogram_declaration" ]
+    [ shape = "box" ]
+  6
+    [ label = "program_SR2" ]
+    [ shape = "box" ]
+  7
+    [ label = "compound_statement" ]
+    [ shape = "box" ]
+  8
+    [ label = "id_list_SR1" ]
+    [ shape = "box" ]
+  9
+    [ label = "id_list_type" ]
+    [ shape = "box" ]
+  10
+    [ label = "compound_type" ]
+    [ shape = "box" ]
+  11
+    [ label = "standard_type" ]
+    [ shape = "box" ]
+  12
+    [ label = "subprogram_head" ]
+    [ shape = "box" ]
+  13
+    [ label = "subprogram_declaration_SR1" ]
+    [ shape = "box" ]
+  14
+    [ label = "arguments" ]
+    [ shape = "box" ]
+  15
+    [ label = "parameter_list" ]
+    [ shape = "box" ]
+  16
+    [ label = "parameter_list_SR1" ]
+    [ shape = "box" ]
+  17
+    [ label = "statement" ]
+    [ shape = "box" ]
+  18
+    [ label = "compound_statement_SR1_SR1" ]
+    [ shape = "box" ]
+  19
+    [ label = "compound_statement_SR1" ]
+    [ shape = "box" ]
+  20
+    [ label = "variable" ]
+    [ shape = "box" ]
+  21
+    [ label = "exp" ]
+    [ shape = "box" ]
+  22
+    [ label = "procedure_statement" ]
+    [ shape = "box" ]
+  23
+    [ label = "procedure_statement_SR1" ]
+    [ shape = "box" ]
+  24
+    [ label = "simple_exp" ]
+    [ shape = "box" ]
+  25
+    [ label = "exp_SR1" ]
+    [ shape = "box" ]
+  26
+    [ label = "signed_term" ]
+    [ shape = "box" ]
+  27
+    [ label = "simple_exp_SR1" ]
+    [ shape = "box" ]
+  28
+    [ label = "term" ]
+    [ shape = "box" ]
+  29
+    [ label = "factor" ]
+    [ shape = "box" ]
+  30
+    [ label = "term_SR1" ]
+    [ shape = "box" ]
+  31
+    [ label = "factor_SR1" ]
+    [ shape = "box" ]
+  62
+    [ shape = "doublecircle" ]
+  61
+    [ shape = "doublecircle" ]
+  60
+    [ shape = "doublecircle" ]
+  59
+    [ shape = "doublecircle" ]
+  58
+    [ shape = "doublecircle" ]
+  57
+    [ shape = "doublecircle" ]
+  56
+    [ shape = "doublecircle" ]
+  55
+    [ shape = "doublecircle" ]
+  54
+    [ shape = "doublecircle" ]
+  53
+    [ shape = "doublecircle" ]
+  52
+    [ shape = "doublecircle" ]
+  51
+    [ shape = "doublecircle" ]
+  50
+    [ shape = "doublecircle" ]
+  49
+    [ shape = "doublecircle" ]
+  48
+    [ shape = "doublecircle" ]
+  47
+    [ shape = "doublecircle" ]
+  46
+    [ shape = "doublecircle" ]
+  45
+    [ shape = "doublecircle" ]
+  44
+    [ shape = "doublecircle" ]
+  43
+    [ shape = "doublecircle" ]
+  42
+    [ shape = "doublecircle" ]
+  41
+    [ shape = "doublecircle" ]
+  40
+    [ shape = "doublecircle" ]
+  39
+    [ shape = "doublecircle" ]
+  38
+    [ shape = "doublecircle" ]
+  37
+    [ shape = "doublecircle" ]
+  36
+    [ shape = "doublecircle" ]
+  35
+    [ shape = "doublecircle" ]
+  34
+    [ shape = "doublecircle" ]
+  33
+    [ shape = "doublecircle" ]
+  32
+    [ shape = "doublecircle" ]
+  1 -> 67
+    [ label = "" ]
+  67 -> 68
+    [ label = "KW_program" ]
+  68 -> 69
+    [ label = "ID" ]
+  69 -> 70
+    [ label = "LP" ]
+  70 -> 71
+    [ label = "id_list" ]
+  71 -> 72
+    [ label = "RP" ]
+  72 -> 73
+    [ label = "SEMI" ]
+  73 -> 75
+    [ label = "program_SR1" ]
+  75 -> 73
+    [ label = "" ]
+  73 -> 74
+    [ label = "" ]
+  74 -> 77
+    [ label = "program_SR2" ]
+  77 -> 74
+    [ label = "" ]
+  74 -> 76
+    [ label = "" ]
+  76 -> 78
+    [ label = "compound_statement" ]
+  78 -> 79
+    [ label = "DOT" ]
+  79 -> 80
+    [ label = "EOF" ]
+  80 -> 32
+    [ label = "" ]
+  2 -> 84
+    [ label = "" ]
+  84 -> 85
+    [ label = "ID" ]
+  85 -> 87
+    [ label = "id_list_SR1" ]
+  87 -> 85
+    [ label = "" ]
+  85 -> 86
+    [ label = "" ]
+  86 -> 33
+    [ label = "" ]
+  3 -> 88
+    [ label = "" ]
+  88 -> 89
+    [ label = "KW_var" ]
+  89 -> 90
+    [ label = "id_list_type" ]
+  90 -> 91
+    [ label = "SEMI" ]
+  91 -> 34
+    [ label = "" ]
+  4 -> 63
+    [ label = "" ]
+  63 -> 64
+    [ label = "declaration" ]
+  64 -> 35
+    [ label = "" ]
+  5 -> 114
+    [ label = "" ]
+  114 -> 115
+    [ label = "subprogram_head" ]
+  115 -> 117
+    [ label = "subprogram_declaration_SR1" ]
+  117 -> 115
+    [ label = "" ]
+  115 -> 116
+    [ label = "" ]
+  116 -> 118
+    [ label = "compound_statement" ]
+  118 -> 119
+    [ label = "SEMI" ]
+  119 -> 36
+    [ label = "" ]
+  6 -> 65
+    [ label = "" ]
+  65 -> 66
+    [ label = "subprogram_declaration" ]
+  66 -> 37
+    [ label = "" ]
+  7 -> 151
+    [ label = "" ]
+  151 -> 152
+    [ label = "KW_begin" ]
+  152 -> 153
+    [ label = "compound_statement_SR1" ]
+  153 -> 154
+    [ label = "KW_end" ]
+  154 -> 38
+    [ label = "" ]
+  152 -> 153
+    [ label = "" ]
+  8 -> 81
+    [ label = "" ]
+  81 -> 82
+    [ label = "COMMA" ]
+  82 -> 83
+    [ label = "ID" ]
+  83 -> 39
+    [ label = "" ]
+  9 -> 108
+    [ label = "" ]
+  108 -> 109
+    [ label = "id_list" ]
+  109 -> 110
+    [ label = "COLON" ]
+  110 -> 111
+    [ label = "compound_type" ]
+  111 -> 40
+    [ label = "" ]
+  10 -> 94
+    [ label = "" ]
+  94 -> 95
+    [ label = "KW_array" ]
+  95 -> 96
+    [ label = "LSB" ]
+  96 -> 97
+    [ label = "INT" ]
+  97 -> 98
+    [ label = "DOT" ]
+  98 -> 99
+    [ label = "DOT" ]
+  99 -> 100
+    [ label = "INT" ]
+  100 -> 101
+    [ label = "RSB" ]
+  101 -> 102
+    [ label = "KW_of" ]
+  102 -> 103
+    [ label = "standard_type" ]
+  103 -> 41
+    [ label = "" ]
+  10 -> 92
+    [ label = "" ]
+  92 -> 93
+    [ label = "standard_type" ]
+  93 -> 41
+    [ label = "" ]
+  11 -> 106
+    [ label = "" ]
+  106 -> 107
+    [ label = "KW_real" ]
+  107 -> 42
+    [ label = "" ]
+  11 -> 104
+    [ label = "" ]
+  104 -> 105
+    [ label = "KW_integer" ]
+  105 -> 42
+    [ label = "" ]
+  12 -> 127
+    [ label = "" ]
+  127 -> 128
+    [ label = "KW_procedure" ]
+  128 -> 129
+    [ label = "ID" ]
+  129 -> 130
+    [ label = "arguments" ]
+  130 -> 131
+    [ label = "SEMI" ]
+  131 -> 43
+    [ label = "" ]
+  12 -> 120
+    [ label = "" ]
+  120 -> 121
+    [ label = "KW_function" ]
+  121 -> 122
+    [ label = "ID" ]
+  122 -> 123
+    [ label = "arguments" ]
+  123 -> 124
+    [ label = "COLON" ]
+  124 -> 125
+    [ label = "standard_type" ]
+  125 -> 126
+    [ label = "SEMI" ]
+  126 -> 43
+    [ label = "" ]
+  13 -> 112
+    [ label = "" ]
+  112 -> 113
+    [ label = "declaration" ]
+  113 -> 44
+    [ label = "" ]
+  14 -> 136
+    [ label = "" ]
+  136 -> 45
+    [ label = "" ]
+  14 -> 132
+    [ label = "" ]
+  132 -> 133
+    [ label = "LP" ]
+  133 -> 134
+    [ label = "parameter_list" ]
+  134 -> 135
+    [ label = "RP" ]
+  135 -> 45
+    [ label = "" ]
+  15 -> 140
+    [ label = "" ]
+  140 -> 141
+    [ label = "id_list_type" ]
+  141 -> 143
+    [ label = "parameter_list_SR1" ]
+  143 -> 141
+    [ label = "" ]
+  141 -> 142
+    [ label = "" ]
+  142 -> 46
+    [ label = "" ]
+  16 -> 137
+    [ label = "" ]
+  137 -> 138
+    [ label = "SEMI" ]
+  138 -> 139
+    [ label = "id_list_type" ]
+  139 -> 47
+    [ label = "" ]
+  17 -> 170
+    [ label = "" ]
+  170 -> 171
+    [ label = "KW_while" ]
+  171 -> 172
+    [ label = "exp" ]
+  172 -> 173
+    [ label = "KW_do" ]
+  173 -> 174
+    [ label = "statement" ]
+  174 -> 48
+    [ label = "" ]
+  17 -> 163
+    [ label = "" ]
+  163 -> 164
+    [ label = "KW_if" ]
+  164 -> 165
+    [ label = "exp" ]
+  165 -> 166
+    [ label = "KW_then" ]
+  166 -> 167
+    [ label = "statement" ]
+  167 -> 168
+    [ label = "KW_else" ]
+  168 -> 169
+    [ label = "statement" ]
+  169 -> 48
+    [ label = "" ]
+  17 -> 161
+    [ label = "" ]
+  161 -> 162
+    [ label = "compound_statement" ]
+  162 -> 48
+    [ label = "" ]
+  17 -> 159
+    [ label = "" ]
+  159 -> 160
+    [ label = "procedure_statement" ]
+  160 -> 48
+    [ label = "" ]
+  17 -> 155
+    [ label = "" ]
+  155 -> 156
+    [ label = "variable" ]
+  156 -> 157
+    [ label = "ASSIGNOP" ]
+  157 -> 158
+    [ label = "exp" ]
+  158 -> 48
+    [ label = "" ]
+  18 -> 144
+    [ label = "" ]
+  144 -> 145
+    [ label = "SEMI" ]
+  145 -> 146
+    [ label = "statement" ]
+  146 -> 49
+    [ label = "" ]
+  19 -> 147
+    [ label = "" ]
+  147 -> 148
+    [ label = "statement" ]
+  148 -> 150
+    [ label = "compound_statement_SR1_SR1" ]
+  150 -> 148
+    [ label = "" ]
+  148 -> 149
+    [ label = "" ]
+  149 -> 50
+    [ label = "" ]
+  20 -> 177
+    [ label = "" ]
+  177 -> 178
+    [ label = "ID" ]
+  178 -> 179
+    [ label = "LSB" ]
+  179 -> 180
+    [ label = "exp" ]
+  180 -> 181
+    [ label = "RSB" ]
+  181 -> 51
+    [ label = "" ]
+  20 -> 175
+    [ label = "" ]
+  175 -> 176
+    [ label = "ID" ]
+  176 -> 51
+    [ label = "" ]
+  21 -> 197
+    [ label = "" ]
+  197 -> 198
+    [ label = "simple_exp" ]
+  198 -> 199
+    [ label = "exp_SR1" ]
+  199 -> 52
+    [ label = "" ]
+  198 -> 199
+    [ label = "" ]
+  22 -> 187
+    [ label = "" ]
+  187 -> 188
+    [ label = "ID" ]
+  188 -> 189
+    [ label = "LP" ]
+  189 -> 190
+    [ label = "exp" ]
+  190 -> 192
+    [ label = "procedure_statement_SR1" ]
+  192 -> 190
+    [ label = "" ]
+  190 -> 191
+    [ label = "" ]
+  191 -> 193
+    [ label = "RP" ]
+  193 -> 53
+    [ label = "" ]
+  22 -> 182
+    [ label = "" ]
+  182 -> 183
+    [ label = "ID" ]
+  183 -> 53
+    [ label = "" ]
+  23 -> 184
+    [ label = "" ]
+  184 -> 185
+    [ label = "COMMA" ]
+  185 -> 186
+    [ label = "exp" ]
+  186 -> 54
+    [ label = "" ]
+  24 -> 203
+    [ label = "" ]
+  203 -> 204
+    [ label = "signed_term" ]
+  204 -> 206
+    [ label = "simple_exp_SR1" ]
+  206 -> 204
+    [ label = "" ]
+  204 -> 205
+    [ label = "" ]
+  205 -> 55
+    [ label = "" ]
+  25 -> 194
+    [ label = "" ]
+  194 -> 195
+    [ label = "RELOP" ]
+  195 -> 196
+    [ label = "simple_exp" ]
+  196 -> 56
+    [ label = "" ]
+  26 -> 210
+    [ label = "" ]
+  210 -> 211
+    [ label = "term" ]
+  211 -> 57
+    [ label = "" ]
+  26 -> 207
+    [ label = "" ]
+  207 -> 208
+    [ label = "MINUS" ]
+  208 -> 209
+    [ label = "term" ]
+  209 -> 57
+    [ label = "" ]
+  27 -> 200
+    [ label = "" ]
+  200 -> 201
+    [ label = "ADDOP" ]
+  201 -> 202
+    [ label = "signed_term" ]
+  202 -> 58
+    [ label = "" ]
+  28 -> 215
+    [ label = "" ]
+  215 -> 216
+    [ label = "factor" ]
+  216 -> 218
+    [ label = "term_SR1" ]
+  218 -> 216
+    [ label = "" ]
+  216 -> 217
+    [ label = "" ]
+  217 -> 59
+    [ label = "" ]
+  29 -> 239
+    [ label = "" ]
+  239 -> 240
+    [ label = "KW_not" ]
+  240 -> 241
+    [ label = "factor" ]
+  241 -> 60
+    [ label = "" ]
+  29 -> 235
+    [ label = "" ]
+  235 -> 236
+    [ label = "LP" ]
+  236 -> 237
+    [ label = "exp" ]
+  237 -> 238
+    [ label = "RP" ]
+  238 -> 60
+    [ label = "" ]
+  29 -> 233
+    [ label = "" ]
+  233 -> 234
+    [ label = "REAL" ]
+  234 -> 60
+    [ label = "" ]
+  29 -> 231
+    [ label = "" ]
+  231 -> 232
+    [ label = "INT" ]
+  232 -> 60
+    [ label = "" ]
+  29 -> 224
+    [ label = "" ]
+  224 -> 225
+    [ label = "ID" ]
+  225 -> 226
+    [ label = "LP" ]
+  226 -> 227
+    [ label = "exp" ]
+  227 -> 229
+    [ label = "factor_SR1" ]
+  229 -> 227
+    [ label = "" ]
+  227 -> 228
+    [ label = "" ]
+  228 -> 230
+    [ label = "RP" ]
+  230 -> 60
+    [ label = "" ]
+  29 -> 219
+    [ label = "" ]
+  219 -> 220
+    [ label = "variable" ]
+  220 -> 60
+    [ label = "" ]
+  30 -> 212
+    [ label = "" ]
+  212 -> 213
+    [ label = "MULOP" ]
+  213 -> 214
+    [ label = "factor" ]
+  214 -> 61
+    [ label = "" ]
+  31 -> 221
+    [ label = "" ]
+  221 -> 222
+    [ label = "COMMA" ]
+  222 -> 223
+    [ label = "exp" ]
+  223 -> 62
+    [ label = "" ]
+}

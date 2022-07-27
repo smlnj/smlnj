@@ -1,0 +1,145 @@
+#!/bin/sh
+#
+# Wrapper for ml-antlr heap image
+#
+
+mlantlrdir=$0
+scripthome=${mlantlrdir%ml-antlr}
+#echo "script home:"
+#echo $scripthome
+
+#
+# determine heap suffix
+#
+case `uname -s` in
+  HP-UX)
+    ARCH=hppa
+    case `uname -r` in
+      *.09.*) OPSYS=hpux9 ;;
+      *.10.*) OPSYS=hpux ;;
+      *.11.*) OPSYS=hpux ;;
+      *) exit 1 ;;
+    esac
+    ;; 
+  IRIX*)
+    ARCH=mipseb
+    OPSYS=irix
+    ;;
+  SunOS)
+    case `uname -r` in
+      4.*)
+	OPSYS=sunos
+	case `/usr/bin/arch` in
+	  sun4) ARCH=sparc;;
+	  *) exit 1;;
+	esac
+      ;;
+      5.*)
+	OPSYS=solaris
+	case `uname -p` in
+	  sparc) ARCH=sparc;;
+	  *86) ARCH=x86;;
+	  *) exit 1;;
+	esac
+      ;;
+      *) exit 1;;
+    esac
+    ;;
+  AIX)
+    OPSYS=aix
+    ARCH=ppc
+    ;;
+  Darwin)
+    OPSYS=darwin
+    case `uname -p` in
+      powerpc) ARCH=ppc;;
+      i386) ARCH=x86;;
+    esac
+    ;;
+  OSF1)
+    case `uname -m` in
+      alpha)
+	case `uname -r` in
+	  V2.*) ARCH=alpha32x; OPSYS=osf1 ;;
+	  V3.*) ARCH=alpha32x; OPSYS=osf1 ;;
+	  V4.*) ARCH=alpha32; OPSYS=dunix ;;
+	  *) exit 1 ;;
+	esac
+        ;;
+      *) exit 1 ;;
+    esac 
+    ;;
+  Linux)
+    OPSYS=linux
+    case `uname -m` in
+      *86)
+	ARCH=x86
+      # we no longer support Linux before the 2.2 kernel.
+	case `uname -r` in
+	  2.2.*) ;;
+	  2.3.*) ;;
+	  2.4.*) ;;
+	  2.5.*) ;;
+	  2.6.*) ;;
+	  *) exit 1 ;;
+	esac
+	;;
+    # As long as we do not natively support the amd64 architecture,
+    # we should fallback to the x86 compatibility mode.  --Stef
+      x86_64) ARCH=x86;;
+      ppc)
+	ARCH=ppc
+	case `uname -r` in
+	  *osfmach*) OPSYS=mklinux ;;
+	  *) ;;
+	esac
+	;;
+      *) exit 1;;
+    esac
+    ;;
+  FreeBSD)
+    OPSYS=bsd
+    case `uname -m` in
+      *86) ARCH=x86;;
+      *) exit 1;;
+    esac
+    ;;
+  NetBSD)
+    OPSYS=bsd
+    case `uname -m` in
+      *86) ARCH=x86;;
+      *) exit 1;;
+    esac
+    ;;
+  Windows_NT)
+    OPSYS=win32
+    case `uname -m` in
+      *86) ARCH=x86;;
+      *) exit 1;;
+    esac
+    ;;
+  CYGWIN_NT*)
+    # If the environment variable SMLNJ_CYGWIN_RUNTIME is defined,
+    # use cygwin as the runtime environment.
+    if [ "$SMLNJ_CYGWIN_RUNTIME" != "" ]; then
+       OPSYS=cygwin
+    else
+       OPSYS=win32
+    fi
+    case `uname -m` in
+       *86) ARCH=x86;;
+       *) exit 1;;
+    esac
+    ;;
+  *) exit 1;;
+esac
+
+heap=${scripthome}ml-antlr.${ARCH}-${OPSYS}
+
+if test ! -r $heap ; then
+  echo "ml-antlr: no heap image!"
+  exit 1
+fi
+
+exec sml @SMLload=$heap $@
+

@@ -1,0 +1,22 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Driver
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+
+  ../common/sources.cm
+  ../parser/sources.cm
+  ../typechecker/sources.cm
+
+  driver.sml
+  pp-ast.sml

@@ -1,0 +1,279 @@
+%!TEX root = manual.tex
+%
+\chapter{Views}
+\label{chap:views}
+
+Views provide a general mechanism to customize the output of
+\asdlgen{}.
+Views allow description writers to annotate modules,
+constructors, and types with directives or properties that are interpreted
+by \asdlgen{}.
+Currently \asdlgen{} properties that allow for the 
+\begin{itemize}
+  \item
+    Inclusion of arbitrary user code in the resulting output.
+  \item
+    Automatic coercion of specific types into more efficient user
+    defined representations.
+  \item
+    Addition of extra user defined attributes and initialization code .
+  \item
+    Specialized user defined routines to read and write data structures to the
+    file system.
+  \item
+    Control over how the names of types, constructors, and modules names
+    are mapped into the output language to resolve style issues and name space
+    conflicts.
+  \item
+    Control over the tag values.
+  \item
+    Addition of documentation that describes the meaning of types
+    constructors and modules.
+\end{itemize}%
+
+\section{Interpretation of View Entry Values}
+
+See the chapter on \hyperref[chap:syntax]{Input Syntax} for details on
+view the syntax and some basic view terminology. The view syntax associates
+an arbitrary string whose interpretation depends on the property it is
+assigned too. Currently there is a small set of standard interpretations.
+
+\begin{description}
+  \item[integer]
+    An integral number in decimal notation.
+  \item[string]
+    A raw string.
+  \item[boolean]
+    A boolean value either ``\lstinline!true!'' or ``\lstinline!false!.''
+  \item[qualified identifier]
+    A possibly qualified identifier (\textit{e.g.}, ``\lstinline!M.t!'' or ``\lstinline!t!'').
+    Qualified identifiers are language independent
+    identifiers that are translated to the appropriate output language in a
+    uniform way.
+    For example \lstinline!M.t! would appear as \lstinline!M_t! in C, as \lstinline!M::t! in C++, but
+    remain as \lstinline!M.t! in SML, Java, and Haskell.
+\end{description}%
+
+\section{Adding User Code}
+It is useful to be able to add arbitrary user code to the modules
+produced by \asdlgen{}.
+Modules have six properties that can be set to allow
+the addition of user-code strings. 
+\begin{description}
+  \item[\texttt{interface\char`\_prologue}]\mbox{}\\
+    Include text verbatim after the introduction of the base
+    environment, but before any type defined in the module interface.
+
+  \item[\texttt{interface\char`\_epilogue}]\mbox{}\\
+    Include text verbatim after all types defined in the module
+    interface have been defined.
+	
+  \item[\texttt{implementation\char`\_prologue}]\mbox{}\\
+    Include text verbatim after the introduction of the base
+    environment, but before any other implementation code is defined.
+	
+  \item[\texttt{implementation\char`\_epilogue}]\mbox{}\\
+   Include text verbatim after all definitions defined in the module
+   implementation.  
+
+  \item[\texttt{suppress}]\mbox{}\\
+   Default value is false. Do not produce any code for this module, 
+   assume it's implementation is 
+   written by hand. It's often a good idea to first generate code and then
+   set the flag, so the generated code can be used as stubs for the 
+   user implementation.
+
+  \item[\texttt{is\char`\_library}]\mbox{}\\
+   Default value is false. If true assume all types can be used
+   as lists or options and generate any needed code, rather then 
+   generating list and option code on demand. Useful for generating stubs.
+
+\end{description}%
+
+The precise meaning of interface and implementation for the different
+languages is as follows
+\begin{description}
+  \item[C]
+    The interface is the \texttt{.h} file and the implementation is the \texttt{.c}
+    file.
+  \item[C++]
+    The interface is the \texttt{.hxx} file and the implementation is the \texttt{.cxx}
+    file.
+  \item[Java]
+     Java has no notion of interfaces so this property is ignored. The
+     \lstinline!implementation_prologue! is placed outside the class definition of a
+     Java class that contains package wide global constants. The
+     \lstinline!implementation_epilogue! is placed inside the class definition of a Java
+     class that contains package wide global constants. 
+  \item[ML]
+    The interface is the generated signature the implementation is the structure.
+  \item[Haskell]
+    The interface is the export list of the module. The implementation is the
+    module body.  
+\end{description}%
+
+\section{Other Properties}
+\begin{description}
+  \item[\texttt{doc\char`\_string}]\mbox{}\\
+        All entities have this property. Its value is interpreted as a
+        string. Currently only the \lstinline!--doc! command recognizes the
+        property. It includes the property value in the HTML documentation
+        produced for the module.
+ 
+  \item[\texttt{source\char`\_name}]\mbox{}\\
+        All entities have this property.  The value is interpreted as a
+        string. Choose a different name for the type constructor or module
+        in the output code. The name has no case restrictions. This is
+        particularly useful when producing Java code on Windows NT/95 since
+        the file system is case insensitive and types and constructors that
+        differ only in case will cause problems.
+
+  \item[\texttt{user\char`\_attribute}]\mbox{}\\
+    Property of types only.	The value is interpreted as a qualified 
+    identifier. Add a field called \lstinline!client_data! as an
+    attribute to the type. The value is the qualified identifier that
+    represents an arbitrary user type of the field. The \lstinline!client_data!
+    field is ignored by the pickling code and does not appear in
+    constructors. This property is currently only recognized when
+    outputting C.
+
+  \item[\texttt{user\char`\_init}]\mbox{}\\
+    Property of types only. The value is interpreted as a qualified
+    identifier. Call the function specified by the value before
+    returning a the data structure created by a constructor function.
+    This property is currently only recognized when outputting C.
+
+  \item[\texttt{base\char`\_class}]\mbox{}\\
+    Property of types only. The value is interpreted as a qualified
+    identifier. The name of the class from which all classes generated
+    for that type should inherit from. This property is recognized only
+    when outputting C++ and Java.
+    
+  \item[\texttt{reader}]\mbox{}\\
+   Property of types only. The value is interpreted as a qualified
+   identifier.  Replace the body of the read pickle function for this
+   type with a call to a function with the proper arguments. 
+
+  \item[\texttt{writer}]\mbox{}\\
+   Property of types only. The value is interpreted as a qualified
+   identifier.  Replace the body of the writer pickle function for this
+   type with a call to a function with the proper arguments. 
+
+  \item[\texttt{enum\char`\_value}]\mbox{}\\
+   Property of constructors only. The value is interpreted as an integer.
+   Use this integer value as the \lstinline!internal! tag value for the
+   constructor. The external pickle tag remains unchanged. 
+   This property is recognized only when outputting C, C++, and Java. 
+
+\end{description}%
+
+\section{Choosing a Different Representation}
+
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module IntMap {
+  int_map = (int size,entries map)
+  entries = (entry* entries)
+  entry   = (int key, int value)
+}
+\end{lstlisting}\end{quote}%
+The above is one possible abstract description of a mapping from integers to
+integers.  It would be more efficient to \emph{implement} such a mapping as
+a binary tree. Described as with the ASDL definition below.
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module IntMap {
+  int_map = (size int, map tree)
+     tree = Node(int key, int value, tree left, tree right)
+          | Empty
+}
+\end{lstlisting}\end{quote}%
+
+Although this is a much more efficient representation it exposes
+implementation details. If we decided to change the implementation of
+\lstinline!int_maps! to use a hash table the all other clients that use our type
+will have to be updated.
+
+The view properties \lstinline!natural_type!, \lstinline!natural_type_con!, \lstinline!wrapper!,
+and \lstinline!unwrapper! provide a general mechanism to choose a different
+more efficient representation through coercion functions. All of these
+properties apply to types only and are interpreted as qualified identifiers.
+
+\begin{description} 
+  \item[\texttt{natural\char`\_type}] \mbox{} \\
+    The type to use in place of the original type in all the resulting code. 
+    Supported by all output languages.
+
+  \item[\texttt{natural\char`\_type\char`\_con}] \mbox{} \\
+    A unary type constructor to apply to the old type to get a new type to
+    use in all the resulting code; \textit{e.g.}, ref in ML to make a type
+    mutable. Supported by ML and Haskell.  \emph{Support for C++ templates
+    will be added in the near future.}
+
+  \item[\texttt{wrapper}] \mbox{} \\
+    A function to convert the new type to the old type when writing the
+    pickle. Supported by all output languages.
+
+  \item[\texttt{unwrapper}] \mbox{} \\
+    A function to convert the old type to the new type when reading the pickle. 
+    Supported by all output languages. 
+\end{description}%
+
+When using \lstinline!natural_type! and \lstinline!natural_type_con! the automatically
+generated type definitions for the original type still remain, but all other
+references to the original type in constructors, picklers, and other type
+definitions that referred to it are replaced with the new type. The original
+definition must remain to support pickling of the type. Pickling is achieved
+by appropriately coercing the new type to the old type and vice versa with
+functions specified by \lstinline!wrapper! and \lstinline!unwrapper! properties.
+
+\subsection{Examples}
+%% Need more examples/
+
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module Slp {
+
+ real = (int mantissa, int exp)
+...
+  exp = Id(identifier id)
+      | Num(int v)
+      | Op(exp lexp,binop?,exp rexp)
+       attributes (real? value)	
+...
+
+}
+
+view C {
+
+-- represent reals as a double
+
+  Slp.exp <= {
+   natural_type : my_real
+   wrapper      : real2my_real
+   unwrapper    : my_real2real
+  }
+  
+  module Slp <= {
+  interface_epilogue : typedef double my_real_ty
+  
+  implementation_prologue
+%%
+  my_real_ty real2my_real(Slp_real_ty x) {
+    /* hairy code to actually do this */
+  }
+
+  Slp_real_ty my_real2real(my_real_ty x) {
+    /* hairy code to actually do this */
+  }
+%% 
+  } 
+}
+
+view SML {
+   -- unpickle exp trees as a mutable type
+    Slp.exp <= {
+       natural_type_con : ref
+       wrapper          : !
+       unwrapper        : ref
+    }
+
+}
+\end{lstlisting}\end{quote}%

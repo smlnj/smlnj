@@ -1,0 +1,249 @@
+-- cps.asdl
+--
+-- COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+-- All rights reserved.
+--
+-- ASDL description of the CPS IR.
+--
+
+-- primitive module for pickling lvars
+--
+primitive module LambdaVar {
+    type lvar
+}
+
+-- primitive module for pickling RealLit.t
+--
+primitive module RealLit {
+    type t
+}
+
+-- should agree with PrimCTypes
+--
+module CTypes {
+
+    c_type
+      = C_void
+      | C_float
+      | C_double
+      | C_long_double
+      | C_unsigned (c_int)
+      | C_signed (c_int)
+      | C_PTR
+      | C_ARRAY (c_type, int)
+      | C_STRUCT (c_type*)
+      | C_UNION (c_type*)
+
+    c_int
+      = I_char
+      | I_short
+      | I_int
+      | I_long
+      | I_long_long
+
+    calling_convention = string
+
+    c_proto = (calling_convention conv, c_type retTy, c_type* paramTys)
+
+}
+
+module CPS_Type {
+
+    record_kind
+      = RK_VECTOR
+      | RK_RECORD
+      | RK_SPILL
+      | RK_ESCAPE
+      | RK_EXN
+      | RK_CONT
+      | RK_FCONT
+      | RK_KNOWN
+      | RK_BLOCK
+      | RK_FBLOCK
+      | RK_I32BLOCK
+
+    pkind = VPT | RPT (int) | FPT (int)
+
+  -- kinds of integers: size in bits and tagged vs boxed
+    intty = (int sz, bool tag)
+
+    cty
+      = NUMt (intty)	-- integers of the given type
+      | PTRt (pkind)	-- pointer
+      | FUNt		-- function?
+      | FLTt (int) 	-- float of given size
+      | CNTt		-- continuation
+
+}
+
+-- for pickling `intty IntConst.t`
+--
+module CPS_IntConst (import CPS_Type) {
+  t = (integer ival, CPS_Type.intty ty)
+}
+
+-- for pickling `int RealConst.t`
+--
+module CPS_RealConst (import RealLit) {
+  t = (RealLit.t rval, int ty)
+}
+
+-- CPS primitive operations
+--
+module CPS_Prim (import CPS_Type) {
+
+    numkind = INT | UINT | FLT attributes (int)
+
+    arithop
+      = ADD | SUB | MUL | DIV | MOD | QUOT | REM
+      | LSHIFT | RSHIFT | RSHIFTL | ANDB | ORB | XORB
+      | NEG | ABS | NOTB
+      | FSQRT | FSIN | FCOS | FTAN
+
+    cmpop = GT | GTE | LT | LTE | EQL | NEQ
+
+    fcmpop
+      = F_EQ	-- =
+      | F_ULG	-- ?<>
+      | F_UN	-- ?
+      | F_LEG	-- <=>
+      | F_GT	-- >
+      | F_GE	-- >=
+      | F_UGT	-- ?>
+      | F_UGE	-- ?>=
+      | F_LT	-- <
+      | F_LE	-- <=
+      | F_ULT	-- ?<
+      | F_ULE	-- ?<=
+      | F_LG	-- <>
+      | F_UE	-- ?=
+      | F_SGN
+
+    branch
+      = CMP (cmpop oper, bool signed)
+      | FCMP (fcmpop oper, int size)
+      | BOXED | UNBOXED | PEQL | PNEQ
+      | STREQL	-- STREQL(n,a,b) is defined only if length(a) = length(b) = n > 1
+      | STRNEQ
+
+  -- These all update the store
+    setter
+      = NUMUPDATE (numkind kind)
+      | UNBOXEDUPDATE | UPDATE
+      | UNBOXEDASSIGN | ASSIGN
+      | SETHDLR | SETVAR | SETSPECIAL
+      | FREE | ACCLINK | SETPSEUDO | SETMARK
+      | RAWSTORE (numkind kind)
+      | RAWUPDATE (CPS_Type.cty)
+
+  -- These fetch from the store, never have functions as arguments.
+    looker
+      = DEREF | SUBSCRIPT | NUMSUBSCRIPT (numkind kind) | GETSPECIAL
+      | GETHDLR | GETVAR | GETPSEUDO
+      | RAWLOAD (numkind kind)
+
+  -- These might raise exceptions, never have functions as arguments.
+    arith
+      = ARITH (arithop oper, numkind kind)
+      | TEST (int from, int to)
+      | TESTU (int from, int to)
+      | TESTINF (int)				-- conversion from IntInf.int
+      | ROUND (bool floor, numkind fromkind, numkind tokind)
+
+  -- These don't raise exceptions and don't access the store.
+    pure
+      = PURE_ARITH (arithop oper, numkind kind)
+      | PURE_NUMSUBSCRIPT (numkind kind)
+      | LENGTH | OBJLENGTH | MAKEREF
+      | EXTEND (int from, int to)
+      | TRUNC (int from, int to)
+      | COPY (int from, int to)
+      | EXTENDINF (int)
+      | TRUNCINF (int)
+      | COPYINF (int)
+      | REAL (numkind fromkind, numkind tokind)
+      | SUBSCRIPTV
+      | GETTAG | MKSPECIAL | WRAP | UNWRAP | CAST | GETCON | GETEXN
+      | FWRAP | FUNWRAP | IWRAP | IUNWRAP | I32WRAP | I32UNWRAP
+      | GETSEQDATA | RECSUBSCRIPT | RAW64SUBSCRIPT | NEWARRAY0
+      | RAWRECORD (CPS_Type.record_kind?)	-- allocate uninitialized words from the heap
+      | CONDMOVE (branch)
+
+}
+
+-- CPS IR
+--
+module CPS_Rep (
+    import LambdaVar
+    import CPS_RealConst
+    import CTypes
+    import CPS_Prim
+    import CPS_Type
+  ) {
+
+    value
+      = VAR (LambdaVar.lvar)
+      | LABEL (LambdaVar.lvar)
+      | NUM (integer)
+      | REAL (CPS_RealConst.t)
+      | STRING (string)
+      | VOID
+
+    accesspath
+      = OFFp (int)
+      | SELp (int, accesspath)
+
+    fun_kind
+      = CONT            -- continuation functions
+      | KNOWN           -- general known functions
+      | KNOWN_REC       -- known recursive functions
+      | KNOWN_CHECK     -- known functions that need a heap limit check
+      | KNOWN_TAIL      -- tail-recursive kernal
+      | KNOWN_CONT      -- known continuation functions
+      | ESCAPE          -- before the closure phase, any user function;
+			-- after the closure phase, escaping user function
+      | NO_INLINE_INTO	-- before the closure phase,
+			-- a user function inside of which no in-line expansions
+			-- should be performed;
+			-- does not occur after the closure phase
+
+    cexp
+      = RECORD (CPS_Type.record_kind, field*, LambdaVar.lvar, cexp)
+      | SELECT (int, value, LambdaVar.lvar, CPS_Type.cty, cexp)
+      | OFFSET (int, value, LambdaVar.lvar, cexp)
+      | APP (value, value*)
+      | FIX (function*, cexp)
+      | SWITCH (value, LambdaVar.lvar, cexp*)
+      | BRANCH (CPS_Prim.branch, value*, LambdaVar.lvar, cexp, cexp)
+      | SETTER (CPS_Prim.setter, value*, cexp)
+      | LOOKER (CPS_Prim.looker, value*, LambdaVar.lvar, CPS_Type.cty, cexp)
+      | ARITH (CPS_Prim.arith, value*, LambdaVar.lvar, CPS_Type.cty, cexp)
+      | PURE (CPS_Prim.pure, value*, LambdaVar.lvar, CPS_Type.cty, cexp)
+    -- experimental "raw C call" (Blume, 1/2001)
+      | RCC (rcc_kind, string, CTypes.c_proto, value*, rcc_param*, cexp)
+
+    field = (value, accesspath)
+
+    rcc_param = (LambdaVar.lvar, CPS_Type.cty)
+
+    rcc_kind = FAST_RCC | REENTRANT_RCC
+
+    function = (fun_kind, LambdaVar.lvar, LambdaVar.lvar*, CPS_Type.cty*, cexp)
+
+}
+
+-- C++ specialization
+--
+view Cxx {
+    { CPS_Rep.value CPS_Rep.cexp } <= public_code %%
+    virtual codegen (code_buffer &buf) = 0;
+%%
+    { CPS_Rep.value.* CPS_Rep.cexp.* } <= public_code %%
+    void codegen (code_buffer &buf);
+%%
+    CPS_Rep.accesspath <= {
+        natural_type : std::vector<int>
+        writer      : wr_accesspath
+	reader      : rd_accesspath
+    }
+}

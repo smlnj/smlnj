@@ -1,0 +1,138 @@
+%!TEX root = manual.tex
+%
+\chapter{Using the Generated Code}
+\label{sec:code-interface}
+
+\section{Memory Management}
+Currently the code produced by \asdlgen{} uses the standard memory management
+facilities of the output language.
+However, \asdlgen{}, assumes a garbage
+collect environment and does not automatically provided deallocation
+functions in languages without garbage collection.
+For languages like C and
+C++ that do not have garbage collection there exist freely
+available packages such as the Boehm-Weiser Conservative Collector. 
+Future plans are to provide interfaces to allow for finer grain
+control over aspects of allocation and deallocation for languages
+without garbage collection.
+
+\section{Cyclic Data Structures Caveat}
+The code that pickles data assumes that the data structures are acyclic. If
+a cyclic data structure is pickled the pickler will not terminate. \asdlgen{}
+does not enforce this acyclic property in C, C++, and Java. It is the
+responsibility of the programmer to do so. The lack of enforcement gives the
+programmer greater flexibility when manipulating data structures. In future
+there will be an option to produce code that enforces acyclic data
+structures for those who would rather avoid the dangers associated with the
+extra flexibility.
+
+\section{Constructing Data Structures}
+By default all languages produce constructor functions for each type
+mentioned in the descriptions. For languages that support overloading (Java
+and C++) two constructors are produced for sum type constructors that
+contain attributes.
+One constructor contains attribute fields the other omits them.
+In languages that do not support overloading attribute fields
+are included in the arguments to the constructor functions. Some languages
+like C support different options for generating constructors (see
+\secref{sec:language-specific-options}).
+
+In ML an expression to create a \lstinline!sexpr! described in
+\secref{sec:rosetta-stone}, which represents the integer one, would look like
+\begin{quote}\begin{lstlisting}[language=SML]
+M.Int(1)       
+\end{lstlisting}\end{quote}%
+in C it would be
+\begin{quote}\begin{lstlisting}[language=c]  
+M_Int(1)
+\end{lstlisting}\end{quote}%
+and in Java
+\begin{quote}\begin{lstlisting}[language=java]
+new M.Int(1)
+\end{lstlisting}\end{quote}%
+
+Constructors that are that are treated specially as
+enumerations (see \secref{sec:enumerations}) 
+are globally defined constant integers or objects of the appropriate name. So
+these constructors can be "called" without any arguments. For instance
+\begin{quote}\begin{lstlisting}[language=c]
+Op_PLUS
+\end{lstlisting}\end{quote}%
+rather than
+\begin{quote}\begin{lstlisting}[language=c]
+Op_PLUS() /* Incorrect use */
+\end{lstlisting}\end{quote}%
+
+Because Java does not have a name space where one can place
+globally visible constants. There is a special class named \lstinline!g! which
+contains all constant objects/constructors for the package. The call in Java
+would be 
+\begin{quote}\begin{lstlisting}[language=java]
+import ast.*;
+Op.op x = Op.g.PLUS;
+\end{lstlisting}\end{quote}%
+
+\section{De-constructing Data Structures}
+Here are some common idioms for De-constructing sum types based on the 
+examples in <ref id="rosetta-stone" name="The Rosetta Stone for Sum 
+Types">, for languages that do not support pattern matching. Languages such
+as ML can simply use pattern matching.
+
+In C the common idiom should look something like this
+\begin{quote}\begin{lstlisting}[language=c]
+ M_sexpr_ty sexpr;
+  switch(sexpr->kind) {
+    case M_Int_kind: {
+       struct M_Int_s x = sexpr->v.M_Int;
+       /* access the fields through x */
+    } break;
+    case M_String_kind: {
+	struct M_String_s x = sexpr->v.M_String;
+       /* access fields through x */
+    } break;
+    ....
+    case M_Cons_kind: {
+	struct M_Cons_s x = sexpr->v.M_Cons;
+       /* access the fields through x */
+    } break;
+ } 
+\end{lstlisting}\end{quote}%
+
+This approach introduces an extra structure copy which isn't necessary, but
+has the advantage of enforcing a read only discipline on the
+value. Alternatively nothing prevents you from accessing the fields directly
+and mutating them as or making \lstinline!x! a pointer to a structure. A
+carefully crafted set of macros could make this more readable.
+
+In Java the idiom is much the same
+\begin{quote}\begin{lstlisting}[language=java]
+import ast.*;
+...
+M.sexpr sexpr;
+switch(M.sexpr.kind()) {
+  case M.sexpr.Int_kind: {
+     M.Int x = (M.Int) sexpr;
+     // access the fields through x
+  }  break;
+  case M.sexpr.String_kind: {
+     M.String x = (M.String) sexpr;
+     // access the fields through x
+  }  break;
+ ...
+  case M.sexpr.Cons_kind: {
+     M.Cons x = (M.Cons) sexpr;
+     // access the fields through x
+  }  break;
+} 
+\end{lstlisting}\end{quote}%
+A series of \lstinline[language=java]!instanceof!'s in a chain if-then-else
+statements would work also, but
+this switch statement is likely to be faster. Unlike the C version this
+idiom does not enforce a read only discipline since all object types are
+reference types in Java.
+
+For sum types which have been treated as enumerations (see \secref{sec:enumerations})
+the idioms are a bit different for C code.
+In particular, rather than switching on \lstinline[language=c]!var->kind! in one would
+switch on \lstinline[language=c]!var!. 
+

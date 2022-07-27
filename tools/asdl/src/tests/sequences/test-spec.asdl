@@ -1,0 +1,22 @@
+-- test-spec.asdl
+--
+-- This specification tests the ASDL "*" type operator
+--
+
+module TestSpec {
+
+-- an enumeration
+  color = RED | GREEN | BLUE
+
+-- an image
+  image = (int wid, int ht, color* pixels)
+
+-- a non-recursive sum type
+  value = BOOL(bool) | INT(integer) | STRING(string)
+
+-- a rose tree
+  tree = NODE(value v, tree* kids)
+
+-- a tuple of everything
+  everything = (color, image, value*, tree)
+}

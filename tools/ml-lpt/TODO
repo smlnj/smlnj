@@ -1,0 +1,127 @@
+================
+ ml-ulex
+================
+
+ - new spec format
+     x implement & and ^
+     - unicode char classes (and meeting the standard, generally)
+     - lookahead / and $
+
+ - better lex/parse error messages
+     - allow $ and /, but give error that not supported in --ml-lex-mode
+     - use new region infrastructure and carry line numbers further
+
+ - check that all used start states are defined
+ - check for stuck states
+ - default EOF rules for states that do not have an explicit rule (when
+   other states have an EOF rule)
+
+ x switch ulex backend to functional stream
+
+================
+ ml-antlr
+================
+
+ X fix error repair
+     x implement heuristic for primary repair
+     x implement secondary recovery
+     x work on error messages
+     x position details -- WSTREAM
+     X deal with keywords
+     - preferred replacements
+ x make prePath required in GLA.*
+ x think about: EBNF predicates should only include true case?
+ x grammar inheritance
+ x custom names for return values
+ x move actions into separate functions
+ x reverse order of %where and => actions
+ x region information
+
+ - add signature to generated parser
+     - add type for %arg
+ - test performance
+
+ - controlling lexer state / lexer multiplexing
+
+ - friendlier errors for prediction tree failure
+     - report multiple failures
+ - more/better comments!
+ X improve check-grammar
+     x allow for and report multiple errors
+     X do additional checking
+        X multiple tokens w/ same abbrev
+
+ - figure out syntax for A (X A)* and A ((X | Y | Z) A)*
+ - automatic left-factoring?
+ - improve DOT output
+ - predicate hoisting (or maybe not...)
+
+ - (*#line directive
+     - ran into problems with ordering in generated file not matching 
+       ordering in source
+
+
+
+
+
+================================================
+
+add built-in Unicode character classes
+look into OCaml-style rules (starting with | rather than :)
+decrease lexer size and compile time
+check that nonterminals with parameters are given parameters
+union/insct/containment for stream pos spans
+
+speculative:
+higher-order nonterminal definitions
+
+================================================================
+
+update HISTORY file
+
+support for %arg
+
+better handling of EOF/EOP
+nonunicode charsets
+
+allow lexer to pass error messages to the parser data structures
+
+adjustable k
+
+error repair: get rid of exception-based, instead use 5-token markers
+ml-antlr pretty-printing of flattened spec
+make for better type error messages dealing with actions (wrt hygienic parameters)
+"functorize" lexer over notion of stream positions
+
+to document:
+  X skip vs continue for lexers
+  - type annotations
+  - ref cells
+  - changes to grammar import
+  - changes to overall decl format
+  X RE syntax, semantics
+  X yylinepos = 1 for the first line of the file
+  X dump.dot and latex output.  add switches to ml-antlr and document them
+  - larger example
+
+X  allow type annotations!!!
+X  issue with "-" in character classes; escape codes in general
+X  check for same token specified multiple times with %keyword
+X  new interfaces for ulex (stream textio, imperative textio, string, etc)
+X  verbosify parser error messages ("Try deleting ';'")
+X  support for {1,3} (ranges) in ml-ulex
+X  make sure checking that token names and NT names are disjoint
+X  make ref cells work with := directly
+X  when refcells declared, used = anyway
+X  Matthew Fluet's port for ml-ulex
+X  weird naming issues (spec.grm) eg. UserCode.File_PROD_1_File_File_PROD_1_SUBRULE_1_PROD_1_ACT
+X  refcells: to avoid accidental capture, put type and initial value in
+     UserDeclarations, then load into refcell when instantiating parser
+X  bug: refcell parens in grammar spec do not appear in emitted code, so
+     tuples do not work correctly
+X use ml-antlr for parsing
+X use new region infrastructure and carry line numbers further
+     X overhaul CheckGrammar for better error messages
+X switches for unit actions & debugging actions
+X line breaks in table-based lexer table
+X error repair should treat reaching EOF as a successful repair

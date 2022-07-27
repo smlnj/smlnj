@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# Wrapper for dragon heap image
+#
+
+case `uname -s` in
+  Darwin) heap=ct.ppc-darwin ;;
+  *) heap=ct.x86-linux ;;
+esac
+
+if test ! -r $heap ; then
+  echo "ct: no heap image!"
+  exit 1
+fi
+
+exec sml @SMLload=$heap $@

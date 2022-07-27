@@ -1,0 +1,151 @@
+ml-antlr
+
+The tool is invoked using the command
+
+  ml-antlr grammar.g
+
+The basic specification format is described in the doc directory, 
+in design.pdf.
+
+================================================================
+ NOTE: differences from the design document
+================================================================
+ - %keywords, %start, %drop, %replace, %extend, %import are 
+   unsupported at present
+================================================================
+
+The following example grammar illustrates the format:
+
+  %defs ( (* SML code goes here *) )
+
+  %tokens
+    : LP 
+    | RP
+    | PLUS
+    | NUM of int
+    | ID of string
+    ;
+
+  exp
+    : atomicExp (PLUS atomicExp)* => ( foldl op+ atomicExp SR1 )
+    ;
+
+  atomicExp
+    : LP exp RP
+    | NUM
+    | ID		=> ( lookupVal(ID) )
+    ;
+
+Actions must always occur in the tail position of rules or subrules.
+The yield of a token or nonterminal is bound to the name of that
+token or nonterminal; if there are multiple occurences with the same
+name, the occurences are numbered starting from one as in ml-yacc.
+
+Subrules are generated any time items are grouped with parentheses,
+including for EBNF constructs.  In fact, EBNF constructs can only be
+used on a parenthesized subrule.  Subrules are always numbered, and
+are bound to the names SR1, SR2, ... within each production.
+
+Actions are optional.  The default action is to create a tuple that
+includes the yield of each data-containing token and each nonterminal
+referenced.  Thus in the example above, the production "LP exp RP" 
+needs no action, since the default action will simply return the yield
+of the nested exp.
+
+When ml-antlr analyzes a grammar, it attempts to create a prediction-
+decision tree for each nonterminal.  In the usual case, this decision
+is made using lookahead token sets.  The tool will start with k = 1
+lookahead and increment to a set value (e.g. k = 5) until it can 
+uniquely predict each production.  Subtrees of the decision tree
+remember the tokens chosen by their parents, and take this into account
+when computing lookahead.  For example, suppose we have two productions
+at the top level that generate the following sentences:
+
+  prod1 ==> AA
+  prod1 ==> AB
+  prod1 ==> BC
+  prod2 ==> AC
+  prod2 ==> C
+
+At k = 1, the productions can generate the following sets:
+
+  prod1 {A, B}
+  prod2 {A, C}
+
+and k = 2,
+
+  prod1 {A, B, C}
+  prod2 {C, $}
+
+Examining the lookahead sets alone, this grammar fragment looks ambiguous
+even for k = 2.  However, ml-antlr will generate the following decision
+tree:
+
+  if LA(0) = A then
+    if LA(1) = A or LA(1) = B then
+      predict prod1
+    else if LA(1) = C then
+      predict prod2
+  else if LA(0) = B then
+    predict prod1
+  else if LA(1) = C then
+    predict prod2
+
+When predictive parsing is not powerful enough to disambiguate a nonterminal,
+backtracking can be used.  Productions are marked as eligible for
+backtracking by  prepending a "%try":
+
+  exp
+    : %try LP VAR (COMMA VAR)* RP COLON VAR
+    | %try LP VAR (COMMA VAR)* RP		  
+    ;
+
+When analyzing a grammar, ml-antlr uses roughly the following algorithm:
+
+  computePredictions(k) = 
+    computeLookahead(k)   // taking into account parent decisions
+    for each ambiguous prediction token set
+      if each predicted production is marked for backtracking
+        use backtracking to make determination
+      else 
+        computePredictions(k+1)
+    
+Thus, backtracking will only be used when (1) lookahead prediction fails for 
+at least k = 1 and (2) ALL productions involved in an ambiguity are marked 
+as backtracking.  Lookahead can be used to narrow down the choices to a
+small number of ambiguous productions, which can then be marked as
+backtracking.
+
+Note that when backtracking is used, productions are attempted in the
+order in which they appear in the grammar.
+
+Semantic predicates may be used anywhere in a production to specify further
+constraints on the production succeeding.  By default, semantic predicates
+are only used to cause a parse error after a productions has been
+*unambiguously* selected.  To use a semantic predicate to disambiguate
+a grammar, simply mark the production as backtracking.  The exception
+caused by a predicate failure will be caught by the backtracker, which
+will attempt the next production.
+
+The following short grammar illustrates these constructs:
+
+  %tokens 
+    : LP
+    | RP
+    | VAR of string
+    | COMMA
+    | COLON
+    ;
+
+  exp
+    : %try LP VAR (COMMA VAR)* RP COLON VAR	=> ( "prod1" )
+    | %try LP VAR RP						=> ( "prod2" )
+    	%where ( VAR = "x" )
+    | %try LP VAR (COMMA VAR)* RP			=> ( "prod3" )
+    ;
+
+Finally, a more substantial example grammar is available in the
+tests/dragon directory.  This grammar is based on the simplified Pascal 
+grammar presented in the appendix to the dragon book.  It includes a
+lexer, a testing program, and an example Pascal program.  Use "make" to
+build the example and "dragon example.pas" to run it.

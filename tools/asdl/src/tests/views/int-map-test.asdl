@@ -1,0 +1,79 @@
+-- int-map-test.asdl
+--
+-- test of view example from manual
+--
+
+module IntMap {
+  int_map = (int size, entries map)
+  entries = (entry* entries)
+  entry   = (int key, int value)
+  map_pair = (int_map, int_map)
+}
+
+view sml {
+  module IntMap <= {
+    interface_prologue : type int_map = int IntRedBlackMap.map
+    implementation_prologue
+%%
+    structure IntMap = IntRedBlackMap
+    type int_map = int IntMap.map
+%%
+    implementation_epilogue
+%%
+    fun wrap_int_map ({map={entries}, ...} : int_map_pkl) =
+          List.foldl
+            (fn ({key, value}, imap) => IntMap.insert(imap, key, value))
+              IntMap.empty
+                entries
+    fun unwrap_int_map (imap : int_map) = {
+            size = IntMap.numItems imap,
+            map = {entries = IntMap.foldri
+              (fn (k, v, entries) => {key = k, value = v} :: entries)
+                []
+                  imap}
+          }
+%%
+  }
+  IntMap.int_map <= {
+    name : int_map_pkl
+    natural_type : int_map
+    wrapper : wrap_int_map
+    unwrapper : unwrap_int_map
+  }
+}
+
+view cxx {
+  module IntMap <= {
+    interface_prologue
+%%
+#include <unordered_map>
+typedef std::unordered_map<int,int> int_map_t;
+%%
+    implementation_epilogue
+%%
+int_map_t wrap_int_map (int_map_pkl const &pkl)
+{
+    int_map_t imap;
+    for (auto it = pkl.map.cbegin();  it != pkl.map.cend();  ++it) {
+        imap.insert(std::pair<int,int>(it->key, it->value));
+    }
+}
+
+int_map_pkl unwrap_int_map (int_map_t const &imap)
+{
+    entries vec;
+    vec.entries.reserve(imap.size());
+    for (auto it = imap.cbegin();  it != imap.cend();  ++it) {
+	vec.entries.push_back(entry(it->first, it->second));
+    }
+    return pkl(imap.size(), vec);
+}
+%%
+  }
+  IntMap.int_map <= {
+    name : int_map_pkl
+    natural_type : int_map_t
+    wrapper : wrap_int_map
+    unwrapper : unwrap_int_map
+  }
+}

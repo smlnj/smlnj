@@ -1,0 +1,43 @@
+-- int-map.asdl
+--
+module IntMap {
+  int_map = (int size, entries map)
+  entries = (entry* entries)
+  entry = (int key, int value)
+}
+view C {
+
+  IntMap.entries <= natural_type          : Bst.bst
+  IntMap.entries <= wrapper               : entries2bst
+  IntMap.entries <= unwrapper             : bst2entries
+  module  IntMap <= interface_prologue    
+%%
+#include "bst.h"
+%%
+
+  module  IntMap <= implementation_prologue
+%%
+  /* proto_types for wrapper functions */
+  static Bst_bst_ty entries2bst (IntMap_entries_ty x)
+  {
+    /* code to convert int_map to a bst */ 
+  }
+
+  static IntMap_entries_ty bst2entries (Bst_bst_ty x)
+  {
+    /* code to convert bst to an int map */
+  }
+%%
+}
+
+view C_with_HT {
+
+  IntMap.entries <= natural_type          : Ht.ht
+  IntMap.entries <= wrapper               : entries2ht
+  IntMap.entries <= unwrapper             : ht2entries
+  module IntMap  <= interface_prologue    : #include "ht.h"
+  module IntMap  <= implementation_prologue 
+%%
+ /* ... */
+%%
+}

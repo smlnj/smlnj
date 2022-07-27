@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# Wrapper for ml-ulex heap image
+#
+
+mlulexdir=$0
+scripthome=${mlulexdir%ml-ulex}
+
+case `uname -s` in
+  Darwin)
+    case `uname -p` in
+      i386) heap=${scripthome}ml-ulex.x86-darwin ;;
+      powerpc) heap=${scripthome}ml-ulex.ppc-darwin ;;
+    esac ;;
+  *) heap=${scripthome}ml-ulex.x86-linux ;;
+esac
+
+if test ! -r $heap ; then
+  echo "ml-ulex: no heap image!"
+  exit 1
+fi
+
+exec sml @SMLload=$heap $@
+

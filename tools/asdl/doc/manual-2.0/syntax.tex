@@ -1,0 +1,487 @@
+%!TEX root = manual.tex
+%
+\chapter{Input Syntax}
+\label{chap:syntax}
+
+This section describes the syntax of the input language to \asdlgen{}.
+The syntax is described using EBNF notation.
+Literal terminals are typeset in bold and enclosed in single quotes.
+Optional terms are enclosed in square brackets and terms that are
+repeated zero or more times are enclosed in braces.
+The description is broken up in smaller subsection.
+Each subsection describes a fragment of
+the syntax and its meaning.
+
+\section{Lexical Tokens}
+
+\begin{figure}[t]
+  \begin{center}
+    \begin{grammar}
+      <upper>     ::= `A' | ... | `Z'
+
+      <lower>     ::= `a' | ... | `z'
+
+      <alpha>     ::= `_' | <upper> | <lower>
+
+      <alpha-num> ::= <alpha> | `0' | ... | `9'
+
+      <typ-id>    ::= <lower> \{ <alpha-num> \}
+
+      <con-id>    ::= <upper> \{ <alpha-num> \}
+
+      <id>        ::= <typ-id> | <con-id>
+    \end{grammar}
+  \end{center}
+  \caption{Lexical rules for \asdl{} terminals}
+\end{figure}%
+
+Notice that identifiers for types, \synt{typ-i}, are in a different
+lexical class from identifiers for constructors
+\synt{con-id}. Constructor identifiers must start with one uppercase
+letter, while type identifiers must begin with one lowercase
+letter. All identifiers must begin with a letter.  Comments (not shown
+in the above syntax) begin with ``\lstinline[language=ASDL]!--!''
+and continue to the end of the line.
+
+\section{Module Syntax}
+
+\begin{figure}[ht]
+  \begin{center}
+    \begin{grammar}
+      <module>  ::=  `module' <id> [ <imports> ] `{' <definitions> `}'
+
+      <imports> ::=  `(' \{ `imports' <id> \} `)'
+    \end{grammar}
+  \end{center}
+  \caption{\asdl{} module syntax}
+\end{figure}%
+
+An ASDL module declaration consists of the keyword \lit{module}
+followed by an identifier, an optional set of imported modules, and a
+sequence of type definitions enclosed in braces. For example the
+following example declares modules \lstinline[language=ASDL]!A!,
+\lstinline[language=ASDL]!B!, and \lstinline[language=ASDL]!C!.
+\lstinline[language=ASDL]!B! imports types from \lstinline[language=ASDL]!A!.
+\lstinline[language=ASDL]!C! imports types from both \lstinline[language=ASDL]!A! and
+\lstinline[language=ASDL]!B!.
+Imports cannot be recursive; for example, it is an error for \lstinline[language=ASDL]!B! to
+import \lstinline[language=ASDL]!C!, since \lstinline[language=ASDL]!C!
+imports \lstinline[language=ASDL]!B!.
+\begin{quote}\begin{lstlisting}[language=ASDL]
+ module A { ... } 
+ module B (imports A) { ... }
+ module C (imports A 
+           imports B) { ... }
+\end{lstlisting}\end{quote}% 
+
+To refer to a type imported from another module the type must
+\emph{always} be qualified by the module name from which it is
+imported.
+The following declares two different types called ``\texttt{t}.''
+One in module \texttt{A} and one in module \texttt{B}.
+The type ``\texttt{t}'' in module \texttt{B} defines a type ``\texttt{t}'' that
+recursively mentions itself and also references the type ``\texttt{t}'' imported
+from module \texttt{A}.
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module A { t = ... } 
+module B (imports A) { t = T(A.t, t) | N  ... }
+\end{lstlisting}\end{quote}% 
+
+\section{Type Definitions}
+
+\begin{figure}[ht]
+  \begin{center}
+    \begin{grammar}
+      <definitions>  ::=  \{ <typ-id> `=' <type> \}
+
+      <type>         ::= <sum-type> | <product-type>
+
+      <product-type> ::= <fields>
+
+      <sum-type>     ::= <constructor> \{ `|' <constructor> \} [ `attributes' <fields> ]
+
+      <constructor>  ::= <con-id> [ <fields> ]
+
+      <fields>       ::= `(' \{ <field>  `,' \} <field> `)'
+
+      <field>        ::= [ id `.' ] <typ-id> [`?' | `*' ]  [ <id> ]
+    \end{grammar}
+  \end{center}
+  \caption{\asdl{} type definition syntax}
+\end{figure}%
+
+All type definitions occur within a module.  They begin with a type
+identifier, which is the name of the type. The name must be unique within the
+module. The order of definitions is unimportant. When translating type
+definitions from a module they are placed in what would be considered a
+module, package, or name-space of the same name. If a output language does
+not support such features and only has one global name space the module name
+is used to prefix all the globally exported identifiers.
+
+Type definitions are either product types, which are simple record definitions,
+or sum type, which represent a discriminated union of possible values. Unlike
+sum types, product types cannot form recursive type definitions, but they can
+contain recursively declared sum types.
+
+\subsection{Primitive Types}
+There are only three primitive types in ASDL. They
+are \lstinline[language=ASDL]!string!, \lstinline[language=ASDL]!int!, and \lstinline[language=ASDL]!identifier!. The \lstinline[language=ASDL]!string! type
+represents length encoded strings of bytes. The \lstinline[language=ASDL]!int! type represents
+arbitrary precision signed integers. The \lstinline[language=ASDL]!identifier! type represents
+atomic printable names, which support fast equality testing, analogous to
+LISP symbols.
+
+\subsection{Product Types}
+Product types are record or tuple declarations. They consist of a non-empty 
+sequence of fields separated by commas enclosed in parenthesis. For
+example 
+\begin{quote}\begin{lstlisting}[language=ASDL] 
+pair_of_ints = (int, int) 
+\end{lstlisting}\end{quote}% 
+declares a new type \lstinline[language=ASDL]!pair_of_ints! that consists of two integers.
+
+\subsection{Sum Types}
+
+Sum types are the most useful types in ASDL. They provide concise notation
+used to describe a type that is the tagged union of a finite set of other
+types.  Sum types consists of a series of constructors separated by a
+vertical bar. Each constructor consist of a constructor identifier followed
+by an optional sequence of fields similar to a product type. 
+
+Constructor names must be unique within the module in which they are
+declared. Constructors can be viewed as functions who take some number of
+arguments of arbitrary type and create a value belonging to the sum type in
+which they are declared. For example
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module M {
+  sexpr = Int(int)
+	| String(string)
+	| Symbol(identifier)
+	| Cons(sexpr, sexpr)
+	| Nil
+}
+\end{lstlisting}\end{quote}%
+declares that values of type \lstinline[language=ASDL]!sexpr! can either be constructed from an
+\lstinline[language=ASDL]!int! using the \lstinline[language=ASDL]!Int! constructor or a \lstinline[language=ASDL]!string! from a \lstinline[language=ASDL]!String!
+constructor, an \lstinline[language=ASDL]!identifier! using the \lstinline[language=ASDL]!Symbol! constructor, or from
+two other \lstinline[language=ASDL]!sexpr! using the \lstinline[language=ASDL]!Cons! constructor, or from no arguments
+using the \lstinline[language=ASDL]!Nil! constructor. Notice that the \lstinline[language=ASDL]!Cons! constructor
+recursively refers to the \lstinline[language=ASDL]!sexpr! type. ASDL allows sum types to be
+mutually recursive. Recursion however is limited to sum types defined within
+the same module.
+
+\subsubsection{The Rosetta Stone for Sum Types}
+\label{sec:rosetta-stone}
+
+In languages that have algebraic data types sum types are equivalent to the
+\lstinline[language=ASDL]!datatype! and \lstinline[language=ASDL]!data! declarations in ML and Haskell. In Algol like
+languages they are equivalent to tagged \lstinline[language=ASDL]!unions! in C or variant records
+in Pascal. In class based object oriented languages sum types are equivalent
+to an abstract base class that represents the type of a family of subclasses
+one for each constructor of the type. The previous example written in ML would
+be
+\begin{quote}\begin{lstlisting}[language=SML]
+structure M =
+  struct
+    datatype sexpr
+      = Int of (int)
+      | String of (string)
+      | Symbol of (identifier)
+      | Cons of (sexpr * sexpr)
+      | Nil
+  end
+\end{lstlisting}\end{quote}%
+in C would be
+\begin{quote}\begin{lstlisting}[language=c]
+typedef struct M_sexpr_s * M_sexpr_ty;
+struct M_sexpr_s { 
+ enum { M_Int_kind, M_String_kind, 
+        M_Symbol_kind, M_Cons_kind, M_Nil_kind }  kind;
+         union {
+	  struct M_Int_s    { int_ty  int1;             } M_Int;
+          struct M_String_s { string_ty string1;        } M_String;	 
+          struct M_Atom_s   { identifier_ty identifier1;} M_Atom;
+          struct M_Cons_s   { M_sexpr_ty; sexpr1 M_sexpr_ty sexpr2 }; M_Cons;
+         } v;
+}
+\end{lstlisting}\end{quote}%
+and in Java would be
+\begin{quote}\begin{lstlisting}[language=java]
+package ast.M;
+public abstract class sexpr {
+	 int kind;
+	 static final Int_kind        = 0;
+	 static final String_kind     = 1;
+	 static final Symbol_kind     = 2;
+	 static final Cons_kind       = 3;
+	 static final Nil_kind        = 4;
+	 abstract int kind();
+}
+public class Int extends sexpr { 
+    int v; 
+    Int(int v) { this.v = v;  } 
+    int kind () { return Int_kind; }
+}
+public class String extends sexpr { String(string v) { ... } ... }
+public class Symbol extends sexpr { Symbol(identifier v) { ... } ... }
+public class Cons   extends sexpr { Cons(sexpr x, sexpr y) { ... } }
+public class Nil    extends sexpr { Nil() { ... } }
+\end{lstlisting}\end{quote}%
+
+\subsubsection{Sum Types as Enumerations}
+\label{sec:enumerations}
+
+Sum types, which consist completely of constructors that take no arguments,
+are often treated specially and translated into static constants of a
+enumerated value in languages that support them.
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module Op {
+  op = PLUS | MINUS | TIMES | DIVIDE 
+}
+\end{lstlisting}\end{quote}%
+
+Is translated into the enumeration and constants in C as
+\begin{quote}\begin{lstlisting}[language=c]
+enum Op_op_ty {Op_PLUS_kind, Op_MINUS_kind, Op_TIME_kind, Op_DIVIDE_kind};
+extern Op_op_ty Op_PLUS   = Op_PLUS_kind;
+extern Op_op_ty Op_MINUS  = Op_MINUS_kind;
+extern Op_op_ty Op_TIMES  = Op_TIMES_kind;
+extern Op_op_ty Op_DIVIDE = Op_DIVIDE_kind;
+\end{lstlisting}\end{quote}%
+
+\subsection{Field Labels}
+Field declarations can be as simple as a single type identifier, or they can
+be followed with an optional label. Labels aid in the readability of
+descriptions and are used by \asdlgen{} to name the fields of records
+and classes for languages. For example the declarations
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module Tree {
+  tree = Node(int, tree, tree)
+       | EmptyTree
+}
+\end{lstlisting}\end{quote}%
+can also be written as
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module Tree {
+  tree = Node(int value, tree left, tree right)
+       | EmptyTree
+}
+\end{lstlisting}\end{quote}%
+
+When translating the first definition without labels 
+into C one would normally get
+\begin{quote}\begin{lstlisting}[language=c]
+...
+struct Tree_tree_s {
+    union {
+    struct { int_ty int1; Tree_tree_ty tree1; Tree_tree_ty tree2; } ...
+    } v
+}
+...
+\end{lstlisting}\end{quote}%
+with labels one would get
+\begin{quote}\begin{lstlisting}[language=c]
+...
+struct Tree_tree_s {
+    union {
+    struct { int_ty value; Tree_tree_ty left; Tree_tree_ty right; } ...
+    } v
+}
+...
+\end{lstlisting}\end{quote}%
+
+\subsection{Type Qualifiers}
+
+The type identifier of a field declaration can also be qualified with either
+a sequence (\lit{*}) or option (\lit{?}) qualifier. The sequence qualifier
+is an abbreviation that stands for a sequence or list of that given type,
+while the option qualifier stands for a type whose value maybe
+uninitialized. Sequence types are equivalent to the lists or arrays of a
+fixed type. Option types are equivalent to the \lstinline[language=ASDL]!option! and \lstinline[language=ASDL]!Maybe!
+types in ML and Haskell or the idiom of a pointer that may be \lstinline[language=ASDL]!NULL! in languages like C or Java.
+\asdlgen{} provides various different translation schemes for handling option
+and sequence types in languages that do not have parametric polymorphism. 
+See \chapref{chap:invocation} for details.
+
+\subsection{Attributes}
+All sum types may optionally be followed by a set of
+attributes. Attributes provide notation for fields common to all the
+constructors in the sum type. 
+\begin{quote}\begin{lstlisting}[language=ASDL]
+module M {
+  pos = (string file, int linenum, int charpos)
+  sexpr = Int(int)
+	| String(string)
+	| Symbol(identifier)
+	| Cons(sexpr, sexpr)
+	| Nil
+        attribute(pos p)
+}
+\end{lstlisting}\end{quote}%
+adds a field of type \lstinline[language=ASDL]!pos! with label \lstinline[language=ASDL]!p! to all the constructors in
+\lstinline[language=ASDL]!sexpr!. Attribute fields are treated specially when
+translated. For example in C code the attribute field is hoisted out of the
+\lstinline[language=ASDL]!union! and placed in the outer \lstinline[language=ASDL]!struct!. Object oriented languages
+find attribute fields declared in the abstract base class. 
+
+\section{Primitive Modules}
+\begin{figure}[ht]
+  \begin{center}
+    \begin{grammar}
+      <primitive-module> ::= `primitive' `module' <id> `{' \{ <id> \} `}'
+    \end{grammar}%
+  \end{center}%
+  \caption{\asdl{} primitive module syntax}
+\end{figure}%
+
+Primitive modules provide a way to introduce abstract types that are defined outside
+of \asdl{} and which have their own pickling and unpickling code.
+For example, we might want to include GUIDs (16-byte globally-unique IDs) in our
+pickles.
+We can do so by first defining a primitive module \lstinline!Prim!:
+\begin{quote}\begin{lstlisting}[language=ASDL]
+primitive module Prim { guid }
+\end{lstlisting}\end{quote}%
+The, depending on the target language, we will need to define
+supporting code to read and write guids from the byte stream.
+In SML, we would define the following two modules:
+\begin{quote}\begin{lstlisting}[language=SML]
+structure PrimPickleUtil : sig
+
+    type guid = GUID.guid
+    
+    val read_guid :  StdPkl.instream -> guid
+    val write_guid : guid -> StdPkl.outstream -> unit
+    
+  end = struct
+  
+    type guid = GUID.guid
+
+    fun read_guid strm = (case GUID.fromBytes(BinIO.inputN(strm, 16))
+	   of NONE => raise Fail "bogus GUID"
+	    | (SOME g) => g
+	  (* end case *))
+    fun write_guid g strm = BinIO.output(strm, GUID.toBytes g)
+    
+  end
+
+structure PrimPickle :> sig
+    type guid = PrimPickleUtil.guid
+  end = PrimPickleUtil;
+\end{lstlisting}\end{quote}%
+(assuming that the \lstinline!GUID! module implements the application's representation
+of GUIDs).
+
+\section{View Syntax}
+\begin{figure}[ht]
+  \begin{center}
+    \begin{grammar}
+      <lit-txt>     ::= <see discussion below>
+
+      <view>        ::= `view' <id> `{' \{ <view-entry> \} `}'
+
+      <view-entry>  ::= <view-entity>  <view-prop> <lit-txt>
+		 \alt{} `{' {<view-entity>} `}' <view-prop> <lit-txt>
+		 \alt{} <view-prop> `{' \{ <view-entity> <lit-txt> \} `}'
+		 \alt{} <view-entity> `<=' `{' \{ <id> <lit-txt> \} `}'
+
+      <view-entity> ::= <id> `.' <typ-id>
+		 \alt{} <id> `.' <con-id>
+		 \alt{} `module' <id>
+
+      <view-prop>   ::= `<='  <id>
+    \end{grammar}
+  \end{center}
+  \caption{\asdl{} type definition syntax}
+\end{figure}%
+
+Views are an extensible system of annotating modules, types, and
+constructors to aid in the conversion of ASDL declarations into a
+particular output language. This discussion will only cover the basic view
+syntax.
+\chapref{chap:views} discusses the meaning of the annotations in more detail.
+
+\subsection{Basic Syntax}
+Views are named and consist of series of entries.
+Each entry conceptually
+begins with a fully qualified type, constructor, or module name. Following
+that name is a key value pair.
+The meaning of the entry is to add a
+particular key value pair into an internal table associated with the type,
+constructor, or module.
+The type, constructor or module is referred to as
+the view entity the key is referred to as the view property.
+The value is an arbitrary string.
+In the grammar above the arbitrary string is represented
+by the \synt{lit-txt} non-terminal, where \synt{lit-txt} is either a ``\lstinline!:!''
+followed by some arbitrary text that continues to the end of the line or a
+``\lstinline!%%!'' terminated by a ``\lstinline!%%!'' at the beginning of a line by itself. 
+Text include using the ``\lstinline!:!'' notation will have trailing and leading 
+whitespace removed. For example
+%
+\begin{quote}\begin{lstlisting}[language=ASDL]
+view Doc {
+  module  M <= doc_string
+%%
+  Types for representing LISP s-expressions.
+%%
+  M.sexpr  <= doc_string : s-expressions 
+  M.Int    <= doc_string : s-expression constructor
+  M.Symbol <= doc_string : s-expression constructor
+  M.Cons   <= doc_string : s-expression constructor
+  M.Nil    <= doc_string : s-expression constructor
+}
+
+view Java {
+ M.sexpr <= source_name : Sexpr
+ M.sexpr <= base_class  : MyClass
+}
+\end{lstlisting}\end{quote}%
+%
+associates with the module \lstinline[language=ASDL]!M! the type
+\lstinline[language=ASDL]!M.sexpr! and the
+constructor \lstinline[language=ASDL]!M.Int!
+strings that will be added to the automatically generated documentation
+produced by the \texttt{--doc} command of \asdlgen{}.
+(\emph{In future we will probably dump them in comments in the output code too.})
+The view named \lstinline[language=ASDL]!Java! causes the type
+\lstinline[language=ASDL]!M.sexpr! to be renamed \lstinline[language=ASDL]!Sexpr! when
+generating Java output, and causes the abstract class normally generated to
+inherit from \lstinline[language=ASDL]!MyClass!. 
+
+There can be many views with the same name. The entries of two views
+with the same name are merged and consist of the union of the entries
+in both. It is an error, for two views of the same name to assign
+different values to the same property of an entity. \emph{Currently
+this error isn't checked for so you randomly get one or the other.}
+
+\subsection{Sugared Syntax}
+The above example shows only the simplest syntax to define view entries.
+There are also three sugared versions that remove some of the redundancy of the simple
+syntax. The first sugared version allows the assignment of the same
+property value pair to a set of entities. The next sugared version allows
+assigning to different entities different values for a fixed property.
+The final sugared version allows the assignment of different property
+value pairs to the same entity. Examples of the sugared notation are shown
+below in their respective order.
+\begin{quote}\begin{lstlisting}[language=ASDL]
+view Doc {
+ { M.Int  M.Symbol  
+   M.Cons M.Nil } <= doc_string : s-expression constructor
+
+ <= doc_string {
+  module  M 
+%%
+  Types for representing LISP s-expressions.
+%%
+  M.sexpr : s-expressions 
+  }
+}
+
+view Java {
+ M.sexpr <= {
+   source_name : Sexpr
+   base_class  : MyClass
+ }
+}
+\end{lstlisting}\end{quote}%

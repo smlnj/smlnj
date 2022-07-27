@@ -1,0 +1,201 @@
+(* ml-ulex.grm
+ *
+ * COPYRIGHT (c) 2006 
+ * John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * All rights reserved.
+ *)
+
+%defs (
+  structure LS = LexSpec
+  structure AMap = AtomMap
+  structure RE = RegExp
+  structure SIS = RE.SymSet
+
+  fun listToASet ls = AtomSet.addList (AtomSet.empty, ls)
+  fun charToSym c = Word.fromInt (Char.ord c)
+  val dashSet = SIS.singleton (charToSym #"-")
+
+  fun flip (x, y) = (y, x)
+);
+
+%name MLULex;
+
+%tokens
+  : BAR		("|")
+  | AMP		("&")
+  | DOT		(".")
+  | DOLLAR	("$")
+  | PLUS	("+")
+  | STAR	("*")
+  | QUERY	("?")
+  | SEMI	(";")
+  | LP		("(")	| RP	(")")
+  | LSB		("[")	| RSB	("]")
+  | LCB		("{")	| RCB	("}")
+  | LT		("<")	| GT	(">")
+  | SLASH	("/")
+  | COMMA	(",")
+  | CARAT	("^")
+  | NEG		("~")
+  | DASH	("-")
+  | DARROW	("=>")
+  | EQ		("=")
+  | KW_defs	("%defs")
+  | KW_arg	("%arg")
+  | KW_header	("%header")
+  | KW_name	("%name")
+  | KW_states	("%states")
+  | KW_let	("%let")
+  | KW_charset	("%charset")
+  | UTF8	("utf8")
+  | ASCII7	("ascii7")
+  | ASCII8	("ascii8")
+  | EOFMARK	("<<EOF>>")
+  | INT of int
+  | CHAR of char
+  | UCHAR of UTF8.wchar
+  | ID of string
+  | CODE of string
+  | BOGUS
+  ;
+
+%keywords
+  "%defs", "%name", "%states", "%let", "%charset", "%arg", "%header" ;
+
+%refcell errs : (AntlrStreamPos.span * string) list = ([]);
+
+file
+  : decls@(LS.mkSpec(), AMap.empty)
+  ;
+
+decls(spec, env)
+  : decl@(spec, env) ";" decls@(decl)
+      => (decls)
+  | 
+      => (spec)
+  ;
+
+decl(spec, env)
+  : directive@(LS.getConf spec, env)
+      => (let val (conf', env') = directive
+	  in 
+	    (LS.updConf (spec, conf'),
+	     env')
+	  end)
+  | "%defs" CODE
+      => (LS.updDecls (spec, CODE), env)
+  | SS = ("<" (ID ","? => (ID))+ ">")? 
+      main = 
+      ( addNewlCheck = 
+          ( => (fn c => c) 
+          | "^" => (fn c => "if not yylastwasn then REJECT() else (" ^ c ^")"))
+        re@(env) "=>" CODE
+          => ( LS.addRule (spec, 
+	         ((Option.map (listToASet o (map Atom.atom)) SS, re), addNewlCheck CODE)),
+	       env )
+      | "<<EOF>>" "=>" CODE
+	  => ( case SS
+		of NONE => (LS.addEOFRule (spec, ("_", CODE)), env)
+		 | SOME ss => (foldl (fn (s, spec) => LS.addEOFRuleFront (spec, (s, CODE)))
+			             spec ss,
+			       env) ) )
+      => ( main )
+  ;
+
+directive(conf, env)
+  : "%let" ID "=" re@(env)
+      => (conf, AMap.insert (env, Atom.atom ID, re))
+  | "%arg" CODE
+      => (LS.updArg (conf, CODE), env)
+  | "%states" (ID ","? => (ID))+
+      => (LS.updStartStates (conf, listToASet (map Atom.atom SR)), 
+	  env)
+  | "%charset"
+      ( "utf8" => (LS.updClamp (conf, LS.NO_CLAMP), env)
+      | "ascii7" =>  (LS.updClamp (conf, LS.CLAMP127), env)
+      | "ascii8" =>  (LS.updClamp (conf, LS.CLAMP255), env))
+  | "%name" ID
+      => (LS.updStructName (conf, ID), env)
+  | "%header" CODE
+      => (LS.updHeader (conf, CODE), env)
+  ;
+
+re(env)
+  : or_re@(env)
+  ;
+
+or_re(env)
+  : and_re@(env) ("|" and_re@(env))*
+      => (foldl (RE.mkOr o flip) and_re SR)
+  ;
+
+and_re(env)
+  : cat_re@(env) ("&" cat_re@(env))*
+      => (foldl (RE.mkAnd o flip) cat_re SR)
+  ;
+
+cat_re(env)
+  : not_re@(env) (not_re@(env))*
+      => (foldl (RE.mkConcat o flip) not_re SR)
+  ;
+
+not_re(env)
+  : "~" post_re@(env)
+      => (RE.mkNot post_re)
+  | post_re@(env)
+  ;
+
+post_re(env)
+  : prim_re@(env) 
+      ( "?" => (RE.mkOpt)
+      | "*" => (RE.mkClosure)
+      | "+" => (fn re => RE.mkAtLeast (re, 1))
+      | "{" INT "}" => (fn re => RE.mkRep (re, INT, INT))
+      | "{" INT "," INT "}" => (fn re => RE.mkRep (re, INT1, INT2))
+      | => (fn x => x)
+      )
+      => (SR prim_re)
+  ;
+
+prim_re(env)
+  : "{" ID "}"
+      => (case (AMap.find (env, Atom.atom ID))
+	   of SOME re => re
+	    | NONE => (errs := (ID_SPAN, String.concat [
+		"Error: {", ID, "} is undefined."])::(!errs);
+		RE.any))
+  | "(" re@(env) ")"
+  | char
+      => (RE.mkSym char)
+  | "."
+      => (RE.mkSymSet SIS.universe)
+  | "[" 
+        ( "^" => (SIS.complement) 
+        | %try "-" => (fn x => SIS.union (x, dashSet))
+        | %try => (fn x => x)
+        )
+
+        ( char "-" char => 
+	    (if char1 <= char2 then
+	       SIS.interval (char1, char2)
+	     else (errs := (FULL_SPAN, String.concat [
+	       "Error: malformed character class: ",
+	       Word.toString char1, " - ",
+	       Word.toString char2, "."])::(!errs);
+	       SIS.universe))
+        | char => (SIS.singleton char)
+        )*
+
+	("-" => (dashSet)
+        | => (SIS.empty))
+    "]"
+      => (RE.mkSymSet 
+	    (SR1 (foldl SIS.union SR3 SR2)))
+  ;
+
+char
+  : CHAR
+      => (charToSym CHAR)
+  | UCHAR
+  ;

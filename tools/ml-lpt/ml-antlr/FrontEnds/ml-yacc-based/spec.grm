@@ -1,0 +1,284 @@
+(* spec.grm
+ *
+ * COPYRIGHT (c) 2006 
+ * John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
+ * All rights reserved.
+ *)
+
+structure GS = GrammarSyntax
+
+type code = Int.int * String.string
+
+%%
+
+%name MLY
+
+%term EOF
+    | KW_tokens | KW_defs | KW_keywords | KW_import | KW_name | KW_start | KW_entry | KW_refcell
+    | KW_try | KW_where | KW_debugact | KW_unitact | KW_header
+    | KW_drop | KW_extend | KW_replace
+    | LP | RP		(* ( ) *)
+    | LSB | RSB		(* [ ] *)
+    | LCB | RCB		(* { } *)
+    | SLASH		(* / *)
+    | COLON
+    | SEMI
+    | COMMA
+    | AT
+    | DOLLAR
+    | BAR		(* | *)
+    | STAR		(* * *)
+    | PLUS		(* + *)
+    | QUERY		(* ? *)
+    | CODE of string
+    | EQ		(* = *)
+    | ARROW		(* -> *)
+    | DARROW		(* => *)
+    | REFSET		(* :== *)
+    | OF
+    | ID of string
+    | STRING of string
+    | IDDOT of string	(* identifier with dot (e.g., "module.") *)
+    | TYVAR of string	(* ML-style type variable name *)
+    | INT of string	(* integer label within record *)
+    | BOGUS
+
+%nonterm 
+      File of GS.grammar
+    | Decls of GS.grammar
+    | Rule of GS.rule
+    | Formals of Atom.atom list
+    | IDList of string list
+    | SymList of Atom.atom list
+    | AltList of GS.alt list
+    | Alt of GS.alt
+    | IsTry of bool
+    | AltPred of code option
+    | AltCode of code option
+    | ItemList of (string option * GS.item) list
+    | NamedItem of string option * GS.item
+    | Item of GS.item
+    | PrimItem of GS.item
+    | Args of GS.action option
+    | LHS of Atom.atom
+    | Symbol of Atom.atom
+    | ConstrList of GS.constr list
+    | OptTy of GS.ty option
+    | Ty of GS.ty
+    | OptAbbrev of Atom.atom option
+    | RecordList of string
+    | Label of string
+    | QualID of string
+    | Code of code
+
+%arg (errFn, startGrm) : ((string * int * int) -> unit) * GS.grammar
+
+%pos int
+%eop EOF
+%noshift EOF
+%start File
+%verbose
+
+%right ARROW
+%left  STAR
+
+%%
+
+File	: Decls
+		(Decls)
+
+Decls
+	: 
+		(startGrm)
+	| Decls KW_name ID SEMI
+		(GS.updName (Decls, ID))
+	| Decls KW_start ID SEMI
+		(GS.updStartSym (Decls, Atom.atom ID))
+	| Decls KW_entry IDList SEMI
+		(GS.updEntryPoints (Decls, map Atom.atom IDList))
+	| Decls KW_keywords SymList SEMI
+		(GS.updKeywords (Decls, SymList))
+(*	| Decls KW_header STRING SEMI
+		(GS.updHeader (Decls, STRING)) *)
+	| Decls KW_defs Code SEMI
+		(GS.updDefs (Decls, Code))
+	| Decls KW_tokens COLON ConstrList SEMI
+		(GS.updToks (Decls, ConstrList))
+	| Decls KW_import STRING SEMI
+		(GS.updImport (Decls, 
+		  (Substring.string o
+		   (Substring.triml 1) o
+		   (Substring.trimr 1) o 
+		   Substring.full) STRING))
+	| Decls KW_refcell ID COLON Ty REFSET Code SEMI
+		(GS.addRefcell (Decls, (ID, Ty, Code)))
+	| Decls Rule SEMI
+		(GS.addRule (Decls, Rule))
+	| Decls KW_extend Rule SEMI
+		(GS.addImportChange (Decls, GS.ICExtend Rule))
+	| Decls KW_replace Rule SEMI
+		(GS.addImportChange (Decls, GS.ICReplace Rule))
+	| Decls KW_drop IDList SEMI
+		(foldl 
+		   (fn (id, g) =>
+		       GS.addImportChange (g, GS.ICDrop (Atom.atom id))) 
+		   Decls 
+		   IDList)
+	| Decls KW_debugact SEMI
+		(GS.debugAct Decls)
+	| Decls KW_unitact SEMI
+		(GS.unitAct Decls)
+		
+Rule
+	: LHS Formals COLON AltList
+		(GS.RULE{lhs=LHS, formals = Formals, alts=AltList})
+
+Formals
+	: LP IDList RP
+		(map Atom.atom IDList)
+	| 
+		([])
+
+IDList
+	: ID
+		([ID])
+	| ID COMMA IDList
+		(ID::IDList)
+
+SymList
+	: Symbol
+		([Symbol])
+	| Symbol COMMA SymList
+		(Symbol::SymList)
+
+AltList
+	: Alt
+		([Alt])
+	| Alt BAR AltList
+		(Alt :: AltList)
+
+Alt
+	: IsTry ItemList AltPred AltCode
+		(GS.ALT {items = ItemList, action = AltCode, 
+			 try = IsTry, pred = AltPred})
+
+IsTry
+	: KW_try
+		(true)
+	|
+		(false)
+
+AltPred
+	: KW_where Code
+		(SOME Code)
+	| 
+		(NONE)
+
+AltCode
+	: DARROW Code
+		(SOME Code)
+	| 
+		(NONE)
+
+ItemList
+	: (* empty *)
+		([])
+	| NamedItem ItemList
+		(NamedItem :: ItemList)
+
+NamedItem 
+	: ID EQ Item
+		(SOME ID, Item)
+	| Item
+		(NONE, Item)
+
+Item
+	: PrimItem
+		(PrimItem)
+	| PrimItem STAR
+		(GS.CLOS PrimItem)
+	| PrimItem PLUS
+		(GS.POSCLOS PrimItem)
+	| PrimItem QUERY
+		(GS.OPT PrimItem)
+
+PrimItem
+	: Symbol Args
+		(GS.SYMBOL (Symbol, Args))
+	| LP AltList RP
+		(GS.SUBRULE AltList)
+
+Args
+	:
+		(NONE)
+	| AT Code
+		(SOME Code)
+
+LHS
+	: ID
+		(Atom.atom ID)
+
+Symbol
+	: ID
+		(Atom.atom ID)
+	| STRING
+		(Atom.atom STRING)
+
+ConstrList 
+	: ConstrList BAR ID OptTy OptAbbrev
+		((Atom.atom ID, OptTy, OptAbbrev)::ConstrList)
+	| ID OptTy OptAbbrev
+		([(Atom.atom ID, OptTy, OptAbbrev)])
+
+OptTy
+	:
+		(NONE)
+	| OF Ty
+		(SOME Ty)
+
+Ty 
+	: TYVAR
+		(TYVAR)
+	| LCB RecordList RCB
+		("{ " ^ RecordList ^" } ")
+	| LCB RCB
+		("{}")
+	| LP Ty RP
+		("(" ^ Ty ^ ")")
+	| Ty QualID
+		(Ty ^ " " ^ QualID)
+	| QualID
+		(QualID)
+	| Ty STAR Ty
+		(Ty1 ^ "*" ^ Ty2)
+	| Ty ARROW Ty
+		(Ty1 ^ " -> " ^ Ty2)
+
+OptAbbrev
+	:
+		(NONE)
+	| LP STRING RP
+		(SOME (Atom.atom STRING))
+
+RecordList
+	: RecordList COMMA Label COLON Ty
+		(RecordList ^ "," ^ Label ^ ":" ^ Ty)
+	| Label COLON Ty
+		(Label ^ ":" ^ Ty)
+
+Label 
+	: ID  
+		(ID)
+	| INT 
+		(INT)
+
+QualID
+	: ID	
+		(ID)
+	| IDDOT QualID
+		(IDDOT ^ QualID)
+
+Code
+	: CODE
+		(CODEleft, CODE)

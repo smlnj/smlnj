@@ -1,0 +1,25 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure CalcTest
+
+is
+  $/basis.cm
+  $/smlnj-lib.cm
+
+(* NOTE: we use a relative path here, but you should use
+ *
+ *     $/ml-lpt-lib.cm
+ *
+ * for your projects.
+ *)
+  ../../../lib/ml-lpt-lib.cm
+
+  calc.g : ml-antlr
+  calc.lex : ml-ulex
+  calc-test.sml

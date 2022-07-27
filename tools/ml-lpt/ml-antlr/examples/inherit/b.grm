@@ -1,0 +1,18 @@
+%import "a.grm" %dropping stmt, exp;
+
+%tokens
+  : REAL of real
+  | TIMES ("*")
+  ;
+
+exp
+  : multExp ("+" multExp)*
+  ;
+
+multExp
+  : atomicExp ("*" atomicExp)*
+  ;
+
+atomicExp
+  : REAL
+  ;

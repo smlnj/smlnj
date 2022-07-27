@@ -1,0 +1,104 @@
+%!TEX root = manual.tex
+%
+\chapter{The {\tt ml-lpt-lib} library}
+\label{ch:ml-lpt-lib}
+
+To use the output of \ulex{} or \mlantlr{} in an SML program requires including the
+\texttt{ml-opt-lib} library.
+This library includes the \texttt{AntlrStreamPos} structure, which manages tracking
+positions in the input stream, and the \texttt{AntlrRepair} structure, which defines
+a representation of \mlantlr{}'s error-repair actions that can be used to generate
+error messages.
+
+\section{Usage}
+For SML/NJ, you should include the following line in your CM file:
+\begin{lstlisting}[language=CM]
+$/ml-lpt-lib.cm
+\end{lstlisting}%
+The SML/NJ Compilation Manager also understands how to generate SML files from \ulex{} and
+\mlantlr{} files.
+For example, if you include
+\begin{lstlisting}
+foo.grm : ml-antlr
+foo.lex : ml-ulex
+\end{lstlisting}%
+in the list of sources in a CM file, then CM will run the \ulex{} (reps.\ \mlantlr{})
+to produce \texttt{foo.lex.sml} (resp.\ \texttt{foo.grm.sml}).
+
+If you are using MLton SML compiler, then you will need to include the following line
+in your MLB file:
+\begin{lstlisting}
+$(SML_LIB)/mllpt-lib/mllpt-lib.mlb
+\end{lstlisting}%
+
+\section{The {\tt AntlrStreamPos} structure}
+
+\begin{lstlisting}
+structure AntlrStreamPos : sig
+
+  type pos = int
+  type span = pos * pos
+  type sourceloc = { fileName : string option, lineNo : int, colNo : int }
+  type sourcemap
+
+  (* the result of moving forward an integer number of characters *)
+  val forward : pos * int -> pos
+
+  val mkSourcemap  : unit   -> sourcemap
+  val mkSourcemap' : string -> sourcemap
+
+  val same : sourcemap * sourcemap -> bool
+
+  (* log a new line occurence *)
+  val markNewLine : sourcemap -> pos -> unit
+  (* resychronize to a full source location *)
+  val resynch     : sourcemap -> pos * sourceloc -> unit
+
+  val sourceLoc : sourcemap -> pos -> sourceloc
+  val fileName  : sourcemap -> pos -> string option
+  val lineNo    : sourcemap -> pos -> int
+  val colNo     : sourcemap -> pos -> int
+  val toString  : sourcemap -> pos -> string
+  val spanToString : sourcemap -> span -> string
+
+end
+\end{lstlisting}%
+
+
+\section{The {\tt AntlrRepair} structure}
+
+\begin{lstlisting}
+structure AntlrRepair : sig
+
+  datatype 'tok repair_action
+    = Insert of 'tok list
+    | Delete of 'tok list
+    | Subst of {
+	old : 'tok list,
+	new : 'tok list
+      }
+    | FailureAt of 'tok
+
+  type 'a repair = AntlrStreamPos.pos * 'tok repair_action
+
+  val actionToString :  ('tok -> string)
+	-> 'tok repair_action
+	-> string
+
+  val repairToString : ('tok -> string)
+	-> AntlrStreamPos.sourcemap
+	-> 'tok repair -> string
+
+  datatype add_or_delete = ADD | DEL
+
+(* return a string representation of the repair action.  This version
+ * uses the add_or_delete information to allow different token names
+ * for deletion (more specific) and addition (more general).
+ *)
+  val actionToString' : (add_or_delete -> 'tok -> string)
+	-> 'tok repair_action -> string
+  val repairToString' : (add_or_delete -> 'tok -> string)
+	-> AntlrStreamPos.sourcemap -> 'tok repair -> string
+
+end
+\end{lstlisting}%

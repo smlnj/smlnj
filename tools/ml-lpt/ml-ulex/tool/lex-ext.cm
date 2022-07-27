@@ -1,0 +1,13 @@
+(*
+ * Plugin for "lex" suffix that points to ml-ulex.
+ *
+ * (C) 2007 The Fellowship of SML/NJ.
+ *
+ * This should currently not be installed as it conflicts with
+ * the equally-named plugin library for legacy ml-lex.
+ *)
+Library
+	structure ULexLexExt
+is
+	$smlnj/cm/tools.cm
+	ext.sml
