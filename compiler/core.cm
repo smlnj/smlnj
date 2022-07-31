@@ -1,0 +1,314 @@
+(* core.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This is the machine-independent "core" part of the compiler
+ * (but without the parser and elaborator data structures).
+ * Machine-dependent parts are in backend-<arch>.cm.
+ *
+ * The parser is in Parse/parser.cm.
+ * Elaborator data structures are in ElabData/elabdata.cm.
+ * Basic definitions are in Basics/basics.cm.
+ *
+ * The present file is a group which gets referred to by the actual library
+ * file in system/smlnj/viscomp/core.cm.
+ *)
+
+Group
+	signature BACKEND
+
+	(* To be able to separate machine-dependent parts of viscomp-lib.cm
+	 * from machine-independent parts, we must also export the
+	 * the following things.... *)
+
+	signature MACH_SPEC
+	functor DefaultMachSpecFn
+
+        functor BackendFn
+
+        functor CodeGeneratorFn
+
+	structure FLINTOpt
+
+	(* stuff that lived (or should have) in Frontend (aka GenericVC) *)
+	structure Control
+	structure ArithOps
+	structure Primop
+	structure PrimopBind
+	structure PrimopBindings
+	structure PrimEnv
+	structure Environment
+	structure EnvRef
+	structure ModuleId
+	structure GenModIdMap
+
+	structure PickMod
+	structure UnpickMod
+	structure Rehash
+	structure PickleSymPid
+	structure UnpickleSymPid
+
+	structure CompilerPPTable
+	structure PrintHooks
+	structure SMLNJVersion
+	structure CoreSym
+	structure FLINT
+
+        structure Types
+        structure EntityEnv
+        structure Modules
+        structure Stamps
+        structure Bindings
+        structure TypesUtil
+        structure Variable
+        structure ModuleUtil
+	structure PrimopId
+        structure BasicTypes
+        structure PPType
+        structure Access
+	structure Unify
+	structure SigMatch
+
+	structure PickleSymPid
+	structure UnpickleSymPid
+	structure PickMod
+	structure UnpickMod
+	structure Rehash
+
+	structure PrimEnv
+
+	(* corresponding signatures *)
+	signature CONTROL
+	signature ENVIRONMENT
+	signature PRIM_ENV
+	signature ENVREF
+	signature MODULE_ID
+
+	signature PICKMOD
+	signature UNPICKMOD
+
+	signature PRIM_ENV
+
+	signature FLINT
+
+	signature TYPES
+	signature ENTITY_ENV
+	signature MODULES
+	signature STAMPS
+	signature BINDINGS
+	signature TYPESUTIL
+	signature VARIABLE
+	signature MODULEUTIL
+	signature BASICTYPES
+	signature PPTYPE
+	signature ACCESS
+	signature UNIFY
+
+	(* export of structures required to use FLINT directly *)
+	structure TransUtil
+	structure Translate
+	structure Lty
+	structure LtyKindChk
+	structure LtyKernel
+	structure LtyDef
+	structure LtyExtern
+	structure PrimTyc
+	structure PPFlint
+	structure LContract
+	structure Specialize
+	structure LambdaVar
+	structure ChkFlint
+	structure DebIndex
+
+	structure PPLty
+
+	signature TARGET
+	structure Target
+
+(* new codegen structures *)
+	structure CFG
+	structure PPCfg
+(*
+	functor NewMLRiscGenFn
+*)
+
+is
+
+TopLevel/environ/environ.sig
+TopLevel/environ/environ.sml
+
+TopLevel/interact/envref.sml
+TopLevel/interact/evalloop.sig
+TopLevel/interact/evalloop.sml
+TopLevel/interact/interact.sig
+TopLevel/interact/interact.sml
+
+TopLevel/backend/backend.sig
+TopLevel/backend/backend-fn.sml
+
+TopLevel/main/control.sig
+TopLevel/main/control.sml
+TopLevel/main/cconfig.sig
+TopLevel/main/code-generator.sig
+TopLevel/main/compile.sig
+TopLevel/main/compile.sml
+
+TopLevel/print/ppdec.sml
+TopLevel/print/ppobj.sml
+TopLevel/print/pptable.sml
+TopLevel/print/compilerpptable.sml
+TopLevel/print/printhooks.sml
+
+(* Semantic analysis (elaborator) specialized for SML/NJ. *)
+
+(* pickling and unpickling *)
+ElabData/pickle/pickle-sym-pid.sml
+ElabData/pickle/unpickle-sym-pid.sml
+ElabData/pickle/pickmod.sml
+ElabData/pickle/unpickmod.sml
+ElabData/pickle/rehash.sml
+
+ElabData/prim/prim-env.sml
+
+(* The FLINT optimizer ("middle-end"). *)
+FLINT/flint/chkflint.sml
+FLINT/flint/flint.sig
+FLINT/flint/flint.sml
+FLINT/flint/flintutil.sml
+FLINT/flint/printflint.sig
+FLINT/flint/printflint.sml
+FLINT/flint/ppflint.sig
+FLINT/flint/ppflint.sml
+FLINT/flint/tvarcvt.sml
+FLINT/kernel/lty.sig
+FLINT/kernel/lty.sml
+FLINT/kernel/ltykernel.sig
+FLINT/kernel/ltykernel.sml
+FLINT/kernel/ltydef.sig
+FLINT/kernel/ltydef.sml
+FLINT/kernel/funrecmeta.sig
+FLINT/kernel/funrecmeta.sml
+FLINT/kernel/ltybasic.sig
+FLINT/kernel/ltybasic.sml
+FLINT/kernel/ltyextern.sig
+FLINT/kernel/ltyextern.sml
+FLINT/kernel/ltydict.sml
+FLINT/kernel/primtyc.sig
+FLINT/kernel/primtyc.sml
+FLINT/kernel/ltykindchk.sml
+FLINT/kernel/pplty.sml
+
+FLINT/main/flint-opt.sml
+FLINT/main/control.sig
+FLINT/main/control.sml
+FLINT/opt/fixfix.sml
+FLINT/opt/collect.sml
+FLINT/opt/fcontract.sml
+FLINT/opt/optutils.sml
+FLINT/opt/lcontract.sml
+FLINT/opt/recover.sml
+FLINT/opt/specialize.sml
+FLINT/opt/loopify.sml
+FLINT/opt/lift.sml
+FLINT/plambda/chkplexp.sml
+FLINT/plambda/flintnm.sml
+FLINT/plambda/pflatten.sig
+FLINT/plambda/pflatten.sml
+FLINT/plambda/plambda.sig
+FLINT/plambda/plambda.sml
+FLINT/plambda/pplexp.sml
+FLINT/plambda/reorder.sml
+FLINT/reps/coerce.sml
+FLINT/reps/equal.sml
+FLINT/reps/reify.sml
+FLINT/reps/rttype.sml
+FLINT/reps/typeoper.sml
+FLINT/reps/wrapping.sml
+FLINT/trans/module-plists.sml
+FLINT/trans/transtkind.sml
+FLINT/trans/pequal.sml
+FLINT/trans/transutil.sml
+FLINT/trans/translate.sml
+FLINT/trans/transprim.sml
+FLINT/trans/transtypes.sml
+FLINT/trans/literal-to-num.sml    (* uses CoreIntInf functionality *)
+
+(* The CPS stages *)
+CPS/clos/globalfix.sml
+CPS/clos/closure.sml
+CPS/clos/freeclose.sml
+CPS/clos/staticprof.sml
+CPS/clos/unrebind.sml
+CPS/convert/convert.sml
+CPS/convert/cpstrans.sml
+CPS/convert/switch.sml
+CPS/cps/cps.sig
+CPS/cps/cps.sml
+CPS/cps/ppcps.sml
+CPS/cps/cps-util.sml
+CPS/opt/contract.sml
+CPS/opt/contract-prim.sml
+CPS/opt/cpsopt.sml
+CPS/opt/divcnv.sml
+CPS/opt/eta.sml
+CPS/opt/etasplit.sml
+CPS/opt/expand.sml
+CPS/opt/flatten.sml
+CPS/opt/infcnv.sml
+CPS/opt/lower.sml
+CPS/opt/num64cnv.sml
+CPS/opt/streqlcnv.sml
+CPS/opt/testcnv.sml
+CPS/opt/uncurry.sml
+CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
+CPS/main/cps-comp.sml
+CPS/main/feedback.sml
+CPS/main/limit.sml
+CPS/main/literals.sml
+CPS/main/new-literals.sml
+CPS/main/normalize-cluster.sml
+CPS/main/spill-fn.sml
+
+NewCodeGen/cfg/cfg.sml
+NewCodeGen/cfg/ppcfg.sml
+NewCodeGen/cfg/cfg-util.sml
+NewCodeGen/cfg-pickle/cfg-pickle.sig
+NewCodeGen/cfg-pickle/cfg-pickler.sml
+NewCodeGen/cfg-pickle/cfg-file-pickle.sml
+NewCodeGen/cfg-pickle/cfg-memory-pickle.sml
+NewCodeGen/cfg-pickle/lambda-var-pickle.sml
+(*
+NewCodeGen/cps-to-cfg/cluster.sml
+*)
+NewCodeGen/cps-to-cfg/cps-info.sml
+NewCodeGen/cps-to-cfg/invoke-gc.sml
+NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml
+NewCodeGen/cps-to-cfg/tagged-arith.sml
+NewCodeGen/main/code-gen-fn.sml
+NewCodeGen/main/mach-spec.sig
+NewCodeGen/main/default-machspec-fn.sml
+NewCodeGen/main/object-desc.sig
+NewCodeGen/main/object-desc.sml
+
+(* Miscellaneous utilities. *)
+Library/const-arith/sources.cm
+
+(* Libraries that are part of the visible compiler framework. *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/parser.cm
+$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/elaborate.cm
+$smlnj/viscomp/debugprof.cm
+$smlnj/viscomp/execute.cm
+
+(* Other libaries. *)
+$smlnj/basis/basis.cm
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/asdl/asdl-lib.cm
+$/pickle-lib.cm
+
+$smlnj/init/init.cmi : cm          (* to gain access at CoreIntInf *)
+
+$smlnj/internal/smlnj-version.cm

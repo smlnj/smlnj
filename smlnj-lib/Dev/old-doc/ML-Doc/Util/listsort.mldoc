@@ -1,0 +1,58 @@
+<!-- listsort.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY LIST-SORT SDATA "listsort-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=11>
+<TITLE>The LIST_SORT signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/LIST_SORT/ signature</HEAD>
+
+<PP>
+The <SIGREF NOLINK/LIST_SORT/ signature specifies an interface for
+the applicative sorting of lists.
+
+<SIGNATURE SIGID="LIST_SORT">
+  <SIGBODY SIGID="LIST_SORT" FILE=LIST-SORT>
+    <SPEC>
+      <VAL>sort<TY>(('a * 'a) -> bool) -> 'a list -> 'a list
+        <COMMENT>
+          <PROTOTY>
+          sort <ARG/f/ <ARG/l/
+          </PROTOTY>
+          returns a list of the elements in <ARG/l/, sorted in non-decreasing
+          order as specified by the ``greater than'' predicate <ARG/f/.
+          Specifically, if <CD/f(x,y)/ evaluates to true, then <CD/x/ will
+          appear after <CD/y/ in the resulting list.
+    <SPEC>
+      <VAL>uniqueSort<TY>(('a * 'a) -> order) -> 'a list -> 'a list
+        <COMMENT>
+          <PROTOTY>
+          uniqueSort <ARG/f/ <ARG/l/
+          </PROTOTY>
+          returns a list of the elements in <ARG/l/, sorted in increasing
+          order as specified by the comparison function <ARG/f/, and having
+          only one copy of equal elements.
+    <SPEC>
+      <VAL>sorted<TY>(('a * 'a) -> bool) -> 'a list -> bool
+        <COMMENT>
+          <PROTOTY>
+          sorted <ARG/f/ <ARG/l/
+          </PROTOTY>
+          returns true if <ARG/l/ is sorted in non-decreasing
+          order as specified by the ``greater than'' predicate <ARG/f/.
+          Specifically, it returns true if for all adjacent items <CD/x,y/
+          in <ARG/l/, <CD/f(x,y)/ evaluates to false.
+  <SIGINSTANCE> <ID> ListMergeSort
+    <COMMENT>
+    <PP>
+      This structure implements <SIGREF/LIST_SORT/ using a smooth merge sort
+      algorithm, based on the implementation given in Paulson's book. 
+      Note that the sorting algorithm is not stable.
+</SIGNATURE>
+
+</INTERFACE>

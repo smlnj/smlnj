@@ -1,0 +1,15 @@
+This is the utility library of the SML/NJ Library.  The services provided
+can be grouped as follows:
+
+  - Data structures
+    - Hash tables
+    - Finite maps of ordered keys
+    - Finite sets of ordered elements
+    - Queues
+    - Arrays
+
+  - Searching and sorting
+
+  - String conversions
+
+  - Some miscellaneous utility modules. 

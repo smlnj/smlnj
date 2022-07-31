@@ -1,0 +1,174 @@
+Here is a brief description of the changes since the 0.3beta release of
+the SML/NJ library in 1994.  Modules are listed in alphabetical order.
+
+--------------------------------------------------------------------
+Summary
+-------
+    - eliminate weak types in signatures.
+
+    - name changes to track SML Basis conventions.
+	- change names, argument order of iteration combinators
+	- use MONO_XXX/XXX instead of XXX/POLY_XXX for signatures.
+
+    - consolidate signatures
+	- e.g., use ORD_MAP for the Int*Map structures.
+
+    - Name structure is renamed Atom.
+	- removed name_tbl type and operations and define free-standing
+	  structures AtomBinaryMap, AtomBinarySet and AtomTable.
+
+    - split Format structure into Format and Scan
+
+    - moved Unix specific modules to Unix library (use unix-lib.cm
+      in sources file to access).
+
+    - remove signatures and structures that are redundant with the
+      SML Basis Library.
+
+--------------------------------------------------------------------
+Detailed Changes
+----------------
+
+functor ArrayQSort (...) : ARRAY_SORT
+	==>	ArrayQSortFn (...) : MONO_ARRAY_SORT
+
+structure BigInt : BIGINT
+	==>	IntInf : INT_INF
+	The IntInf structure mostly matches that defined by SML'97.
+
+functor BinaryDict(...) : DICT
+	==>	BinaryMapFn(...) : ORD_MAP
+
+functor BinarySet(...)
+	==>	BinarySetFn(...)
+
+structure CType : CTYPE
+	Deleted.  Use operations from Char structure in basis.
+
+signature DICT
+	==>	ORD_MAP
+	Also, various function names changed to track the SML'97 naming
+	conventions:
+		val find : ...
+			Deleted.
+		val peek : ...
+			==> find : ...
+		val listItems : ...
+			==> listItemsi : ...
+		val app : ...
+			==> appi : ...
+		val revapp : ...
+			Deleted.
+		val map : ...
+			==> mapi : ...
+		val fold : ...
+			==> foldr
+		val revfold : ...
+			==> foldl
+		val transform : ...
+			==> map : ...
+	Also, the ORD_MAP interface provides the following new operations:
+	insert', listItems, collate, unionWith, unionWithi, intersectWith,
+	intersectWithi, app, foldl, foldr, filter, filteri, mapPartial,
+	and mapPartiali.
+
+structure Finalizer : FINALIZER
+	Deleted.  No replacement as of yet.
+
+structure Format : FORMAT
+	The scanning functions were moved to a new module (Scan : SCAN).
+	Also, the fmt_item datatype has changed.
+
+functor HashTable (...) : HASH_TABLE
+	==>	HashTableFn (...) : MONO_HASH_TABLE
+
+structure IntMap : INTMAP
+	==>	IntBinaryMap : ORD_MAP
+	also	IntListMap : ORD_MAP
+
+structure IntSet : INTSET
+	==>	IntBinarySet : ORD_MAP
+	also	IntListSet : ORD_MAP
+
+structure LibBase
+	Uses of the LibBase.BadArg exception have been replaced by
+	the Fail exception from the SML'97 basis.  The function
+	LibBase.failure replaces LibBase.badArg.
+	Uses of the type LibBase.relation have been replaced by the
+	order type from the SML'97 basis.
+	The type of the version value has changed, and the value
+	versionName is now called banner.
+
+structure ListUtil : LIST_UTIL
+	Deleted.  Use the operations from List and ListPair in the
+	SML'97 basis.
+
+structure Name : NAME
+	==>	Atom : ATOM
+	and	AtomTable : ATOM_TABLE
+
+structure MakeString : MAKESTRING
+	Deleted.  In SML'97, basic types provide their own conversion
+	functions.
+
+signature ORD_SET
+	Many function names changed to track the SML'97 naming conventions:
+		val find : ...
+			Deleted
+		val peek : ...
+			==> find : ...
+		val fold : ...
+			==> foldr : ...
+		val revfold : ...
+			==> foldl : ...
+	Also, the ORD_SET interface provides the following new operations:
+	add', compare, and filter.
+
+structure PolyHashTable : POLY_HASH_TABLE
+	==>	HashTable : HASH_TABLE
+
+structure PolyArrayQSort : POLY_ARRAY_SORT
+	==>	ArrayQSort : ARRAY_SORT
+
+structure Rand : RAND
+	==>	Random : RANDOM
+
+structure Random : RANDOM
+	==>	Rand : RAND
+
+functor SplayDict (...) : DICT
+	==>	SplayMapFn (...) : ORD_MAP
+
+functor SplaySet (...)
+	==>	SplaySetFn (...)
+
+structure StringUtil : STRING_UTIL
+	Deleted.  Use operations from String and Substring structures.
+
+structure StringCvt : STRING_CVT
+	Deleted.  In SML'97, basic types provide their own conversion
+	functions.
+
+structure UnixPath : UNIX_PATH
+	==> structure PathUtil : PATH_UTIL
+	Many of the operations defined in the UnixPath structure are
+	now part of the OS.FileSys and OS.Path structures in the SML'97
+	basis.  The remaining operations are findFile and findFiles.
+	In addition, two new functions are provided: existsFile and
+	allFiles.
+
+--------------------------------------------------------------------
+New modules
+-----------
+KeywordFn
+Hash2TableFn
+structure ParserComb : PARSER_COMB
+structure SimpleURef : UREF
+structure URef : UREF
+
+--------------------------------------------------------------------
+New Libraries
+-------------
+HTML library
+Reactive library
+Regular expression library

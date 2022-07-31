@@ -1,0 +1,81 @@
+<!-- lib-base.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY LibBase SDATA "lib-base-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.1" YEAR=1998 MONTH=5 DAY=6>
+<TITLE>The LibBase structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/LibBase/ structure</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+The <STRREF NOLINK/LibBase/ structure provides a set of 
+common types, exceptions, and utility functions for the library.
+Although defined and used within the library, the components
+of <STRREF NOLINK/LibBase/ are meant to be used by program built
+on top of the library. For example, most code has need of an
+<CD/Unimplemented/ exception to flag code yet to be written, or
+an <CD/Impossible/ exception, to mark cases that should not occur.
+
+<STRUCTURE STRID="LibBase">
+  <SIGBODY SIGID="LIB_BASE" FILE=LIB-BASE>
+    <SPEC>
+      <EXN>Unimplemented<TY>string
+      <COMMENT>
+      <PP>
+        Raised to report unimplemented features.
+    <SPEC>
+      <EXN>Impossible<TY>string
+      <COMMENT>
+      <PP>
+        Raised to report internal errors.
+    <SPEC>
+      <EXN>NotFound
+      <COMMENT>
+      <PP>
+        Raised to indicate various search failures.
+    <SPEC>
+      <VAL>failure<TY>{module : string, func : string, msg : string} -> 'a
+      <RAISES><EXNREF DOCUMENT=SML-BASIS-DOC STRID="General"/Fail/
+        <COMMENT>
+          <PROTOTY>
+          failure {<ARG/module/, <ARG/func/, <ARG/msg/}
+          </PROTOTY>
+    raises the exception <EXNREF DOCUMENT=SML-BASIS-DOC STRID="General"/Fail/
+    with a standard message format. By convention, <ARG/func/ and <ARG/module/ 
+    should be the names of the function and structure, respectively, in 
+    which the failure occurs. The <ARG/msg/ string should provide additional
+    information as to the cause or location of the problem. 
+    <SPEC>
+      <VAL>version<TY>{date : string, system : string, version_id : int list}
+        <COMMENT>
+          <PROTOTY>
+          version
+          </PROTOTY>
+      is a record providing information about the library version in a
+      conventional format. The <CD/system/ field specifies the subsystem
+      involved, in this case the SML/NJ library; the <CD/date/ field gives 
+      the date of the release; the <CD/version_id/ field provides a list
+      of integers indicating the major and various minor release numbers
+      associated with the current release. The closer to the head of the
+      list, the more significant is the release number; in particular, the
+      head of <CD/version_id/ is the major release number.
+    <SPEC>
+      <VAL>banner<TY>string
+        <COMMENT>
+          <PROTOTY>
+          banner
+          </PROTOTY>
+        encodes the information in <CD/version/ as a string, e.g., 
+        <CD/"SML/NJ Library, Version 1.0, June 1, 1996".
+</STRUCTURE>
+
+</INTERFACE>

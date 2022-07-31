@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>CMSC 15100-01 Lecture 1</title>
+    <date>September 30, 2013</date>
+<revhistory><revision><date>September 30, 2013</date></revision></revhistory>
+</articleinfo>
+<section id="_administrative_stuff">
+<title>Administrative stuff</title>
+<section id="_instructors">
+<title>Instructors</title>
+<itemizedlist>
+<listitem>
+<simpara>
+John Reppy<?asciidoc-br?>
+Ryerson 256<?asciidoc-br?>
+<literal>jhr@cs.uchicago.edu</literal>
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+Adam Shaw<?asciidoc-br?>
+Ryerson 157<?asciidoc-br?>
+<literal>adamshaw@cs.uchicago.edu</literal>
+</simpara>
+</listitem>
+</itemizedlist>
+</section>
+<section id="_communication">
+<title>Communication</title>
+<simpara>We will use the website and piazza to make class announcements, post assignments, and
+answer questions.</simpara>
+<section id="_course_web_site">
+<title>Course web site</title>
+<simpara>The Course website is at <ulink url="http://www.classes.cs.uchicago.edu/archive/2013/fall/15100-1/">http://www.classes.cs.uchicago.edu/archive/2013/fall/15100-1/</ulink></simpara>
+<simpara>Check out the syllabus on the website for more information.</simpara>
+</section>
+<section id="_piazza">
+<title>Piazza</title>
+<simpara>You should all have received an invitation to the course&#8217;s <ulink url="http://piazza.com">http://piazza.com</ulink> page
+(if not, let us know ASAP).
+If you have questions about homework, etc., please use piazza to post them.
+Note that you should not post substantial bodies of code; either as part of a question
+or as part of an answer.</simpara>
+</section>
+</section>
+<section id="_text_book">
+<title>Text book</title>
+<simpara>The text for this course is <emphasis>How to Design Programs</emphasis> by Felleisen <emphasis>et al.</emphasis>
+It is available online at <ulink url="http:\\htdp.org">http:\\htdp.org</ulink> or from the Seminary Coop Bookstore
+on Woodlawn Ave.
+Reading assignments will be posted on Piazza.</simpara>
+</section>
+<section id="_lectures">
+<title>Lectures</title>
+<simpara>I&#8217;ll try to start lectures on time; please try to be on time (and if not, enter from the back).
+The lectures cover the material in the book, but from a different perspective.
+You are responsible for the lecture material, so come to class.</simpara>
+<simpara>Also, please turn off all of your devices during class (phones, laptops, tablets, glasses, etc.)</simpara>
+</section>
+<section id="_lab_sections">
+<title>Lab sections</title>
+<simpara>Labs are held in the new Computer Science Instructional Laboratory (CSIL) located
+on the first floor of the Crerar Library.
+There are four labs, but we will just use CSIL 1 (JCL 110) and CSIL 2 (JCL 111), which
+are the Mac Labs.
+More information about CSIL can be found at <ulink url="http://csil.cs.uchicago.edu">http://csil.cs.uchicago.edu</ulink>.</simpara>
+<simpara>You can switch lab sections online by using the Registrar&#8217;s online "activity swap" system.</simpara>
+</section>
+<section id="_programming_environment">
+<title>Programming environment</title>
+<simpara>We use the DrRacket development environment (version 5.3.6).
+This system is installed on the Mac Lab machines (including the Linux boxes).
+You can also download it from <ulink url="http://racket-lang.org">http://racket-lang.org</ulink>
+for your personal machine.</simpara>
+</section>
+<section id="_course_work">
+<title>Course work</title>
+<simpara>This course requires a lot of work.
+For the most part, you will be asked to write many small programs.
+Toward the end of the course, you will have an opportunity to write a more significant
+program.</simpara>
+<section id="_programming_assignments">
+<title>Programming assignments</title>
+<simpara>Assignments will be posted on the class web site.
+There are three kinds of assignments:</simpara>
+<orderedlist numeration="arabic">
+<listitem>
+<simpara>
+Lab assignments&#8201;&#8212;&#8201;    There will be short lab assignments that are due Thursday nights.
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+Homework&#8201;&#8212;&#8201;    There will be weekly homework assignments that will be due Monday nights.
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+Project&#8201;&#8212;&#8201;    There will be a multipart project assigned over the last few weeks of the course.
+    The final part will be due during exam week.
+</simpara>
+</listitem>
+</orderedlist>
+<simpara>You will use subversion to submit your assignments (details on the web page).</simpara>
+<simpara>Late assignments will <emphasis role="strong">not</emphasis> be accepted.
+Since work is submitted electronically, deadlines are enforced to the minute.
+Each student has one 24-hour extension on any lab or homework
+assignment (except the first), no questions asked.  Note the 24-hour
+extension may not be used on the first homework or lab exercise.</simpara>
+</section>
+<section id="_exams">
+<title>Exams</title>
+<simpara>There will be two exams for all students (both sections) at the
+following dates and times:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>
+Wednesday, October 30, 7pm&#8212;9pm, and
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+Wednesday, December 4, 7pm&#8212;9pm.
+</simpara>
+</listitem>
+</itemizedlist>
+<simpara>There will be no lab sessions those weeks and no final exam.</simpara>
+</section>
+<section id="_grading">
+<title>Grading</title>
+<simpara>The different parts of the course work are weighted as follows:</simpara>
+<informaltable
+frame="all"
+rowsep="1" colsep="1"
+>
+<?dbhtml table-width="50%"?>
+<?dbfo table-width="50%"?>
+<?dblatex table-width="50%"?>
+<tgroup cols="2">
+<colspec colname="col_1" colwidth="106*"/>
+<colspec colname="col_2" colwidth="106*"/>
+<tbody>
+<row>
+<entry align="left" valign="top"><simpara>Homework and projects</simpara></entry>
+<entry align="left" valign="top"><simpara>30%</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>Lab assignments</simpara></entry>
+<entry align="left" valign="top"><simpara>20%</simpara></entry>
+</row>
+<row>
+<entry align="left" valign="top"><simpara>Exams</simpara></entry>
+<entry align="left" valign="top"><simpara>50%</simpara></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+</section>
+</section>
+</section>
+<section id="_course_introduction">
+<title>Course Introduction</title>
+<simpara>This course is called "Introduction to Computer Science", but, like most introductory CS courses,
+it is largely about programming.</simpara>
+<simpara>What is the relationship between this course and the field of CS?</simpara>
+<simpara>Writing a program in a particular language is a concrete instance of the more general
+idea of specifying a computational solution to a problem.</simpara>
+<simpara>Not all problems are computationally solvable and many that are solvable cannot be
+solved in a reasonable amount of time.</simpara>
+<simpara>Programming serves many important roles in computer science:</simpara>
+<orderedlist numeration="arabic">
+<listitem>
+<simpara>
+makes computational thinking concrete
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+realizes artifacts to test ideas (algorithms; novel systems; etc.)
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+motivates study of programming languages
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+discipline of software engineering
+</simpara>
+</listitem>
+</orderedlist>
+</section>
+<section id="_computers">
+<title>Computers</title>
+<simpara>Most (essentially all) general-purpose computers are instances of the <emphasis>von Neumann architecture</emphasis>,
+which consists of a memory that holds both data and instructions coupled with a computational
+processing unit (CPU).</simpara>
+<simpara><emphasis>picture goes here</emphasis></simpara>
+<simpara>Note that both data and code are represented as bits (0s and 1s) that are organized
+in an addressable array of bytes (8-bit quantities).</simpara>
+<simpara>How the bits are interpreted depends on the way that they are used.</simpara>
+<simpara>This is a very powerful, but low-level model.</simpara>
+<simpara>May discuss parallel architectures a bit at the end of the term.</simpara>
+<simpara>Programming languages provide varying levels of abstraction from the details of the hardware.</simpara>
+<simpara>Compilers translate programming languages into the bits needed to represent the executable program.</simpara>
+<simpara>This abstraction is important for productivity (think algebra vs. arithmetic), portability, and our sanity.</simpara>
+<simpara>There are many different languages that support many different models of programming (e.g., OO, FP, &#8230;).</simpara>
+<simpara>While these languages look and feel different, they share a lot of common DNA;
+<emphasis>e.g.</emphasis>, basic values (integers, booleans, &#8230;), conditionals, procedural abstraction,
+and mechanisms for representing more complicated data.</simpara>
+</section>
+<section id="_a_quick_introduction_to_the_command_line">
+<title>A quick Introduction to the Command Line</title>
+<simpara>File system; directories (<emphasis>aka</emphasis> folders).</simpara>
+<simpara>Some basic commands: <emphasis role="strong">ls</emphasis>, <emphasis role="strong">pwd</emphasis>, <emphasis role="strong">cd</emphasis>, <emphasis role="strong">mkdir</emphasis>, <emphasis role="strong">cp</emphasis>, <emphasis role="strong">mv</emphasis>, <emphasis role="strong">touch</emphasis>.</simpara>
+<simpara>Use <emphasis role="strong">man</emphasis> to get information about a command.</simpara>
+</section>
+</article>

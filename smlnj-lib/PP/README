@@ -1,0 +1,35 @@
+README: PP -- the pretty printer library
+*** under construction ***
+
+This is a library for pretty printing.  It provides a much richer
+pretty printing model than the Oppen-style pretty printer provided
+by the compiler.
+
+Its implementation is based on the FORMAT library by Pierre Weis
+(Copyright INRIA 1996), which was written in CAML, but there are
+a number of differences:
+
+  1) this pretty printer does not support tabulation boxes yet.
+  2) this pretty-printer is functorized over abstract output
+     devices and input tokens.
+  3) this pretty-printer supports styled text.
+  4) this pretty-printer supports both absolute and relative indentation
+     modes (the former is necessary for block-structured language
+     indentation).
+  5) this pretty-printer supports both imperative pretty-printer streams
+     and declarative pretty-printing layouts, which can be intermixed.
+
+The main signatures and implementation can be found in the src directory.
+The devices directory has some sample output devices (including one for
+generating layouts in HTML).  Someday, the examples directory will have
+some example pretty-printers; for now, you can look in the tests directory.
+
+For reference, the current OCaml implementation is available at
+
+	https://github.com/ocaml/ocaml/blob/trunk/stdlib/format.mli
+	https://github.com/ocaml/ocaml/blob/trunk/stdlib/format.ml
+
+A short tutorial on the OCaml FORMAT pretty pringing library can be
+found at
+
+        https://ocaml.org/learn/tutorials/format.html

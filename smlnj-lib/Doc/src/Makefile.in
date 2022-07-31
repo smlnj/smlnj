@@ -1,0 +1,91 @@
+# Makefile for SML/NJ Library documentation
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =         @SHELL@
+INSTALL =       @INSTALL@
+@SET_MAKE@
+
+# documentation generator tools
+#
+GEN_PAGES =		@TOOL_BIN_DIR@/gen-pages
+GEN_PAGES_FLAGS =	-v
+MAKE_INDEX =		@TOOL_BIN_DIR@/make-index
+
+ifeq ($(WEB),yes)
+GEN_PAGES_FLAGS +=	--base-url=https://smlnj.org/doc/smlnj-lib
+endif
+
+# place to put documentation for doc target
+#
+HTML_DST_ROOT =         @OUT_DIR@
+STYLES_DST =            $(HTML_DST_ROOT)/styles
+IMAGES_DST =		$(HTML_DST_ROOT)/images
+
+# root path to place generated HTML files for the SML/NJ web site
+#
+WEB_HTMLDST_ROOT =      @ROOT_DIR@/htdocs
+WEB_STYLES_DST =        $(WEB_HTML_DST_ROOT)/styles
+
+# we have one sub-directory per documented library
+#
+DOC_SUBDIRS =           Controls HashCons INet JSON Reactive RegExp SExp Unix Util UUID XML
+
+HTML_SUBDIRS =		$(addprefix $(HTML_DST_ROOT)/,$(DOC_SUBDIRS))
+
+ADOC_FILES =		index.adoc \
+			$(wildcard */*.adoc)
+
+# install-offline includes the images directory so that things render
+# properly offline
+.PHONY:		install-offline
+install-offline:	install
+	mkdir -p $(IMAGES_DST)
+	cp -p images/smlnj-logo.png $(IMAGES_DST)
+
+.PHONY:         	install
+install:		$(HTML_DST_ROOT) css html
+	cp -p index.html $(HTML_DST_ROOT)
+	cp -p styles/smlnj-lib-base.css $(STYLES_DST)
+	cp -p styles/smlnj-lib.css $(STYLES_DST)
+	cp -p styles/smlnj-lib-pygments.css $(STYLES_DST)
+	for dir in $(DOC_SUBDIRS) ; do \
+	    cp -p $$dir/*html $(HTML_DST_ROOT)/$$dir ; \
+	done
+
+.PHONY:		css
+css:
+	scripts/gen-css.sh styles/smlnj-lib-base_css.in > styles/smlnj-lib-base.css
+	scripts/gen-css.sh styles/smlnj-lib_css.in > styles/smlnj-lib.css
+	scripts/gen-css.sh styles/smlnj-lib-pygments_css.in > styles/smlnj-lib-pygments.css
+
+.PHONY:		html
+html:		index.html
+
+index.html:	index.json
+	$(GEN_PAGES) $(GEN_PAGES_FLAGS)
+
+index.json:	$(ADOC_FILES)
+	$(MAKE_INDEX) index.json
+
+$(HTML_DST_ROOT):
+	mkdir -p $(HTML_DST_ROOT)
+	mkdir -p $(STYLES_DST)
+	for dir in $(DOC_SUBDIRS) ; do \
+	    mkdir -p $(HTML_DST_ROOT)/$$dir ; \
+	done
+
+
+#################### Cleanup ####################
+
+CLEAN_FILES =	index.html */*html index.json \
+		styles/smlnj-lib-base.css \
+		styles/smlnj-lib.css \
+		styles/smlnj-lib-pygments.css \
+		tools/gen-pages/config.sml
+
+include @MK_DIR@/clean-rules.gmk

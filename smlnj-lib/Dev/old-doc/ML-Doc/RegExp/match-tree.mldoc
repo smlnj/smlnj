@@ -1,0 +1,80 @@
+<!-- ML-Doc/match-tree.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY MatchTree SDATA "../match-tree.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=3>
+<TITLE>The MatchTree structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/MatchTree/ structure</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+This structure implements the type used to report matching
+information and associated operations. <PP>
+
+
+<STRUCTURE STRID="MatchTree">
+  <SIGBODY SIGID="MATCH_TREE" FILE=MATCH-TREE>
+    <SPEC>
+      <DATATYPE><TYPARAM>'a<ID>match_tree
+        <CONS>Match<TY>('a * 'a match_tree list)
+      </DATATYPE>
+    <SPEC>
+      <VAL>root<TY>'a match_tree -> 'a
+        <COMMENT>
+          <PROTOTY>
+          root <ARG/mt/
+          </PROTOTY>
+          returns the root (outermost) match in the tree <ARG/mt/.
+    <SPEC>
+      <VAL>nth<TY>('a match_tree * int) -> 'a
+        <COMMENT>
+          <PROTOTY>
+          nth (<ARG/mt/, <ARG/n/)
+          </PROTOTY>
+          returns the <ARG/n/th match in the tree <ARG/mt/. Matches
+are labeled in preorder, starting at 0. The <ARG/n/th match in a tree
+correspond to the match of the <ARG/n/th subexpression of a regular
+expression, when counted from left to right (and letting the full
+expression be indexed at 0).
+    <SPEC>
+      <VAL>map<TY>('a -> 'b) -> 'a match_tree -> 'b match_tree
+        <COMMENT>
+          <PROTOTY>
+          map <ARG/f/ <ARG/mt/
+          </PROTOTY>
+          maps a function <ARG/f/ over the tree <ARG/mt/ in preorder.
+    <SPEC>
+      <VAL>app<TY>('a -> unit) -> 'a match_tree -> unit
+        <COMMENT>
+          <PROTOTY>
+          app <ARG/f/ <ARG/mt/
+          </PROTOTY>
+          applies a given function <ARG/f/ over every element of the
+tree <ARG/mt/ in preorder.
+    <SPEC>
+      <VAL>find<TY>('a -> bool) -> 'a match_tree -> 'a option
+        <COMMENT>
+          <PROTOTY>
+          find <ARG/f/ <ARG/mt/
+          </PROTOTY>
+          finds the first match in the tree <ARG/mt/ that satisfies
+the predicate <ARG/f/ (or <CD/NONE/).
+    <SPEC>
+      <VAL>num<TY>'a match_tree -> int
+        <COMMENT>
+          <PROTOTY>
+          num <ARG/mt/
+          </PROTOTY>
+          returns the number of matches included in the tree <ARG/mt/.
+</STRUCTURE>
+
+</INTERFACE>

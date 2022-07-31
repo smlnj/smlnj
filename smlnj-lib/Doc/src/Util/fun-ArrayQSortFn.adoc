@@ -1,0 +1,63 @@
+= The `ArrayQSortFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ArrayQSortFn` functor provides _in situ_ sorting of monomorphic arrays
+using the quicksort algorithm.
+
+== Synopsis
+
+[source,sml]
+------------
+signature MONO_ARRAY_SORT
+functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+A : MONO_ARRAY
+------------
+
+== Functor Argument Description
+
+`A : MONO_ARRAY`::
+  A structure that implements the
+  {sml-basis-url}/mono-array.html[`MONO_ARRAY`] signature from
+  the {sml-basis-url}/index.html[*SML Basis Library*].
+
+== Interface
+
+[source,sml]
+------------
+structure A : MONO_ARRAY
+
+val sort : (A.elem * A.elem -> order) -> A.array -> unit
+
+val sorted : (A.elem * A.elem -> order) -> A.array -> bool
+------------
+
+== Interface Description
+
+`[.kw]#structure# A : MONO_ARRAY`::
+  The argument structure.
+
+`[.kw]#val# sort : (A.elem * A.elem \-> order) \-> A.array \-> unit`::
+  `sort cmp arr` sorts the array `arr` into ascending order
+  according to the comparison function `cmp`.
+
+`[.kw]#val# sorted : (A.elem * A.elem \-> order) \-> A.array \-> bool`::
+  `sorted cmp arr` returns true if, and only if, the array `arr=` is
+  sorted in ascending order.
+
+
+== See Also
+
+xref:str-ArrayQSort.adoc[`ArrayQSort`],
+{sml-basis-url}/Basis/mono-array.html[`MONO_ARRAY`],
+xref:fun-MonoArrayFn.adoc[`MonoArrayFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

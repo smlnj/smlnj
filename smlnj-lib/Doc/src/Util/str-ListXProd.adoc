@@ -1,0 +1,76 @@
+= The `ListXProd` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ListXProd` structure provides list combinators for computing
+over the "Cartesian product" of two lists.  For lists `[a, b, c]`
+and `[x, y, z]`, the elements are processed in the order
+[source,sml]
+------------
+[ (a, x), (a, y), (a, z),
+  (b, x), (b, y), (b, z),
+  (c, x), (c, y), (c, z)
+]
+------------
+
+
+== Synopsis
+
+[source,sml]
+------------
+signature LIST_XPROD
+structure ListXProd : LIST_XPROD
+------------
+
+== Interface
+
+[source,sml]
+------------
+val app : (('a * 'b) -> unit) -> ('a list * 'b list) -> unit
+val map : (('a * 'b) -> 'c) -> ('a list * 'b list) -> 'c list
+val fold : (('a * 'b * 'c) -> 'c) -> 'c -> ('a list * 'b list) -> 'c
+
+val appX : (('a * 'b) -> unit) -> ('a list * 'b list) -> unit
+val mapX : (('a * 'b) -> 'c) -> ('a list * 'b list) -> 'c list
+val foldX : (('a * 'b * 'c) -> 'c) -> ('a list * 'b list) -> 'c -> 'c
+------------
+
+== Description
+
+[[val:app]]
+`[.kw]#val# app : (('a * 'b) \-> unit) \-> ('a list * 'b list) \-> unit`::
+  `appX f (l1, l2)` applies the function `f` to the Cartesian product of the
+  to lists `l1` and `l2`.
+
+[[val:map]]
+`[.kw]#val# map : (('a * 'b) \-> 'c) \-> ('a list * 'b list) \-> 'c list`::
+  `mapX f (l1, l2)` maps the function `f` over the Cartesian product of the
+  to lists `l1` and `l2` to produce a new list.
+
+[[val:fold]]
+`[.kw]#val# fold : (('a * 'b * 'c) \-> 'c) \-> 'c \->('a list * 'b list) \-> 'c`::
+ `foldX f init (l1, l2)` folds the function `f` over the Cartesian product of the
+  to lists `l1` and `l2`, using `init` as the initial value.
+
+=== Deprecated functions
+
+The following functions are part of the interface, but have been
+deprecated.
+
+`[.kw]#val# appX : (('a * 'b) \-> 'c) \-> ('a list * 'b list) \-> unit`::
+  Use xref:#val:app[`app`] instead.  Note that xref:#val:app[`app`] expects
+  that its first argument will have a `unit` return type.
+
+`[.kw]#val# mapX : (('a * 'b) \-> 'c) \-> ('a list * 'b list) \-> 'c list`::
+  Use xref:#val:map[`map`] instead.
+
+`[.kw]#val# foldX : (('a * 'b * 'c) \-> 'c) \-> 'c \->('a list * 'b list) \-> 'c`::
+  Use xref:#val:fold[`fold`] instead.  Note that the second and third
+  arguments of xref:#val:fold[`fold`] are swapped with respect to `foldX`.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

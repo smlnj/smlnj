@@ -1,0 +1,23 @@
+PLambda/FLINT types (FLINT/kernel) to do list
+
+1. lty.sml
+  TC_VAR --> TC_DVAR (* to acknowledge that it is a deBruijn index type variable *)
+
+2. signatures LTY, LTYKERNEL, LTYDEF, LTYBASIC, LTYEXTERN made disjoint.
+   [DONE, 2021.0, DBM, 2021.10]
+
+3. TC_TOKEN eliminated, replaced by ordinary constructor TC_WRAP
+   [DONE, 2021.0, DBM, 2021.10]
+
+4. TC_ABS eliminated
+   [DONE, 2021.0, DBM, 2021.10]
+
+5. Deep rewrite of the whole PLambda/FLINT type system
+   [possibly in conjunction with replacement of FLINT?]
+   - hash-consing may no longer be justified (computing resources
+     since 1990s). Use direct representation as datatypes.
+   - complex "Nadathur" closures probably overkill.  Use simpler,
+     more naive approach to type expression reduction (and closures).
+   - investigate question of why FLINT types are/may be much more
+     expensive to manage than front-end types. What is the source
+     of the extra work, if any?

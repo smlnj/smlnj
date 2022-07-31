@@ -1,0 +1,94 @@
+= The `URef` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `URef` structure provides mutable references with __Union-Find__
+semantics.  The interface is similar to that of references, but
+adds operations to union two references together.  When two `uref`
+values are joined by one of the union operations, they become
+equal (and, thus, their contents will be equal too).
+
+The original design and implementation of this module was by Fritz Henglein.
+
+== Synopsis
+
+[source,sml]
+------------
+signature UREF
+structure URef : UREF
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a uref
+
+val uRef: 'a -> 'a uref
+
+val equal: 'a uref * 'a uref -> bool
+
+val !! : 'a uref -> 'a
+
+val update : 'a uref * 'a -> unit
+
+val unify : ('a * 'a -> 'a) -> 'a uref * 'a uref -> bool
+
+val union : 'a uref * 'a uref -> bool
+
+val link : 'a uref * 'a uref -> bool
+------------
+
+== Description
+
+`[.kw]#type# 'a uref`::
+  The type constructor for union-find references.
+
+[[val:uRef]]
+`[.kw]#val# uRef: 'a \-> 'a uref`::
+ `uRef v` creates a new reference with contents `v`.
+
+`[.kw]#val# equal: 'a uref * 'a uref \-> bool`::
+  `equal (ur1, ur2)` returns `true` if, and only if,  `ur1` and `ur2` were
+  created by the same call to xref:#val:uRef[`uRef`] or if they have been
+  unioned by a xref:#val:link[`link`], xref:#val:union[`union`], or
+  xref:#val:unify[`unify`] operation.
+
+`[.kw]#val# !! : 'a uref \-> 'a`::
+  `!! ur` returns the contents of `ur`.
+
+`[.kw]#val# update : 'a uref * 'a \-> unit`::
+  `update (ur, v)` updates the contents of `ur` to be `v`.
+
+[[val:unify]]
+`[.kw]#val# unify : ('a * 'a \-> 'a) \-> 'a uref * 'a uref \-> bool`::
+  `unify f (ur1, ur2)` unions `ur1` and `ur2` (_i.e._, after this
+  call, the expression `equal(r1, ur2)` will return `true`) and
+  returns `true` if they were *not* equal prior to the call to `unify`.
+  The contents of the unioned reference is set to `f (v1, v2)`, where `v1`
+  (resp. `v2`) was the contents of `ur1` (resp. `ur2`) prior to the
+  call to `unify`.
+
+[[val:union]]
+`[.kw]#val# union : 'a uref * 'a uref \-> bool`::
+  `union (ur1, ur2)` unions `ur1` and `ur2` (_i.e._, after this
+  call, the expression `equal(r1, ur2)` will return `true`) and
+  returns `true` if they were *not* equal prior to the call to `union`.
+  The contents of the unioned reference is set to one of `v1` or `v2`,
+  where `v1` (resp. `v2`) was the contents of `ur1` (resp. `ur2`)
+  prior to the call to `union`.
+
+[[val:link]]
+`[.kw]#val# link : 'a uref * 'a uref \-> bool`::
+ `link (ur1, ur2)` unions `ur1` and `ur2` (_i.e._, after this
+  call, the expression `equal(r1, ur2)` will return `true`) and
+  returns `true` if they were *not* equal prior to the call to `link`.
+  The contents of the unioned reference is set to `v1`, where
+  `v1` was the contents of `ur1` prior to the call to `link`.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

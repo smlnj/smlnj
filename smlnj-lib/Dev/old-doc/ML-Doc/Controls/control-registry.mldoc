@@ -1,0 +1,96 @@
+<!-- control-registry.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=16>
+<TITLE>The CONTROL_REGISTRY signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/CONTROL_REGISTRY/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+<!-- Some general introductory text -->
+
+<STRUCTURE STRID="ControlRegistry">
+  <OPAQUE>  <SIGBODY SIGID="CONTROL_REGISTRY" FILE=CONTROL-REGISTRY>
+    <SPEC>
+      <TYPE><ID>registry
+    <SPEC>
+      <TYPE><ID>control_info<TY>{envName : string option}
+    <SPEC>
+      <VAL>new<TY>{help : string} -> registry
+        <COMMENT>
+          <PROTOTY>
+          new {<ARG>help</ARG>}
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of new HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>register<TY>registry -> {ctl : string Controls.control, envName : string option} -> unit
+        <COMMENT>
+          <PROTOTY>
+          register <ARG>re</ARG> {<ARG>ctl</ARG>, <ARG>envName</ARG>}
+          </PROTOTY>
+          <PP>
+          register a control
+        </COMMENT>
+    <SPEC>
+      <VAL>registerSet<TY>registry -> {ctls : (string,'a) ControlSet.control_set, mkEnvName : string -> string option} -> unit
+        <COMMENT>
+          <PROTOTY>
+          registerSet <ARG>re</ARG> {<ARG>ctls</ARG>, <ARG>mkEnvName</ARG>}
+          </PROTOTY>
+          <PP>
+          register a set of controls
+        </COMMENT>
+    <SPEC>
+      <VAL>nest<TY>registry -> {prefix : string option, pri : Controls.priority, obscurity : int, reg : registry} -> unit
+        <COMMENT>
+          <PROTOTY>
+          nest <ARG>re</ARG> {<ARG>prefix</ARG>, <ARG>pri</ARG>, <ARG>obscurity</ARG>, <ARG>reg</ARG>}
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of nest HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>control<TY>registry -> string list -> string Controls.control option
+        <COMMENT>
+          <PROTOTY>
+          control <ARG>re</ARG> <ARG>l</ARG>
+          </PROTOTY>
+          <PP>
+          find a control
+        </COMMENT>
+    <SPEC>
+      <VAL>init<TY>registry -> unit
+        <COMMENT>
+          <PROTOTY>
+          init <ARG>re</ARG>
+          </PROTOTY>
+          <PP>
+          initialize the controls in the registry from the environment
+        </COMMENT>
+    <SPEC>
+      <DATATYPE><ID>registry_tree
+        <CONS>RTree<TY>{path : string list, help : string, ctls : {ctl : string Controls.control, info : control_info} list, subregs : registry_tree list}
+      </DATATYPE>
+    <SPEC>
+      <VAL>controls<TY>(registry * int option) -> registry_tree
+        <COMMENT>
+          <PROTOTY>
+          controls (<ARG>re</ARG>, <ARG>opt</ARG>)
+          </PROTOTY>
+          <PP>
+          get the registry-tree representation of a registry; an optional obscurity
+	  argument may be supplied to filter out obscure options.
+        </COMMENT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

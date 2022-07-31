@@ -1,0 +1,44 @@
+Utility library
+---------------
+  Polymorphic version of dynamic arrays.
+  New hash table implementation/API.
+
+HTML Library
+------------
+
+  Rewrite parser as recursive descent (the ML-Yacc version doesn't handle
+  whitespace in the HEAD element very well).
+
+PP Library
+----------
+
+  Add support for tabular layout.
+
+RegExp library
+--------------
+
+  Add support for Interval REs to the DFA and Thompson engines
+
+  Add support for "$" to the Thompson engine
+
+  Add support for POSIX character classes to the AWK syntax.  These
+  are
+	[:alnum:]	Alphanumeric characters.
+	[:alpha:]	Alphabetic characters.
+	[:blank:]	Space and TAB characters.
+	[:cntrl:]	Control characters.
+	[:digit:]	Decimal digits.
+	[:graph:]	Characters that are both printable and visible.
+			(A space is printable but not visible, whereas an ‘a’ is both.)
+	[:lower:]	Lowercase alphabetic characters.
+	[:print:]	Printable characters (characters that are not control characters).
+	[:punct:]	Punctuation characters (characters that are not letters,
+			digits, control characters, or space characters).
+	[:space:]	Space characters (such as space, TAB, and formfeed, etc).
+	[:upper:]	Uppercase alphabetic characters.
+	[:xdigit:]	Hexadecimal digits.
+
+New libraries
+-------------
+
+  CGI scripting

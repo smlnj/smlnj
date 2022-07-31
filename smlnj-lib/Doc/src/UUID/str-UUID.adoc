@@ -1,0 +1,93 @@
+= The `UUID` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `UUID` structure provides an implementation of
+https://en.wikipedia.org/wiki/Universally_unique_identifier[
+UUIDs (__**U**niversally **U**nique **ID**entifiers__)].
+UUIDs, which are also known as GUIDs (__**G**lobally **U**nique **ID**entifiers__),
+are sequences of 16-bytes.
+
+== Synopsis
+
+[source,sml]
+------------
+structure UUID
+------------
+
+== Interface
+
+[source,sml]
+------------
+type t
+
+val null : t
+
+val compare : t * t -> order
+
+val same : t * t -> bool
+
+val hash : t -> word
+
+val toString : t -> string
+
+val fromString : string -> t option
+
+val toBytes : t -> Word8Vector.vector
+
+val fromBytes : Word8Vector.vector -> t
+------------
+
+== Description
+
+`[.kw]#type# t`::
+  the abstract type of UUIDs.
+
+`[.kw]#val# null : t`::
+  `null` is the all-zeros UUID
+
+`[.kw]#val# compare : t * t \-> order`::
+  `compare (uuid1, uuid2)` does a byte-wise comparison of the two
+  UUIDs and returns their order.
+
+`[.kw]#val# same : t * t \-> bool`::
+  `same (uuid1, uuid2)` does a byte-wise comparison of the two
+  UUIDs and returns `true` is they are equal and `false` otherwise.
+
+`[.kw]#val# hash : t \-> word`::
+  `hash uuid` returns a hash of the UUID.
+
+[[val:toString]]
+`[.kw]#val# toString : t \-> string`::
+  `toString uuid` formats `uuid` as a string of the form
+[source,sml]
+------------
+"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+------------
+  where each "`x`" is a lower-case hexadecimal digit.  The first two digits
+  in the string correspond to the first byte, and so on.
+
+`[.kw]#val# fromString : string \-> t option`::
+  `fromString s` converts the string `s`, which should be of the form returned
+  by xref:val:toString[`toString`] to `SOME uuid`, where `uuid` is the UUID
+  denoted by the string.  Leading whitespace is ignored.  If the string does
+  not have the correct format, then `NONE` is returned.
+
+`[.kw]#val# toBytes : t \-> Word8Vector.vector`::
+  `toBytes uuid` returns the 16-element `Word8Vector.vector` value
+  that represents `uuid`.
+
+`[.kw]#val# fromBytes : Word8Vector.vector \-> t`::
+  `fromBytes bytes` takes a 16-element vector of bytes and converts it to
+  a UUID.  The {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN[`Size`]
+  exception is raised if the length of the vector is not exactly 16.
+  Otherwise, there is no validity chechking of the UUID (_i.e._, the variant
+  and type are not checked).
+
+== See Also
+
+xref:str-GenUUID.adoc[`GenUUID`],
+xref:uuid-lib.adoc[__The UUID Library__]

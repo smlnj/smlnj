@@ -1,0 +1,79 @@
+This is an implementation of a low-level reactive engine (or toolkit),
+which is mostly translated from SugarCubes (a Java toolkit).  The main
+difference (aside from the implementation language) is that we support
+preemption of actions (as in Berry's Communicating Reactive Processes
+model).  This library is meant to be the target of higher-level reactive
+models.
+
+Note also that we use the term "signal" (al la Esterel) instead of "event".
+
+Information about SugarCubes can be found at
+
+	http://www-sop.inria.fr/meije/rc/SugarCubes/index.html
+
+A reactive script is written as an abstract syntax tree of type
+Machine.instruction, which is defined in the Instruction module.
+This type is parameterized over a context type, which is the
+type of the runtime environment.
+
+Reactive scripting language:
+
+  i1 || i2	interleave the activation of i1 and i2 until both terminate or one
+		suspends.
+
+  i1 & i2	activate in sequence
+
+  nothing	do nothing
+
+  stop		stop activation; is terminated for all future activations
+
+  suspend	suspends activation
+
+  action(act)	An atomic action; apply to the machine.
+
+  exec(exe)	Activation causes exe to be applied to the machine, which returns two
+		functions
+
+			stop : unit -> unit
+			done : unit -> bool
+
+  ifThenElse(pred, i1, i2)
+		Conditional.  Evaluates predicate applied to the machine and then
+		activates either e1 (if the predicate is true) or e2.
+
+  repeat(n, i)	Activate the script i n times.  It terminates when either the loop
+		has been repeated n times or i terminates.
+
+  loop		Loop forever.
+
+  close      : instruction -> instruction
+
+  signal(sig, i)
+		Binds the signal sig in the enclosed script i.
+
+  rebind(sig1, sig2, i)
+		Binds sig2 to the signal sig1 in the enclosed script i.
+
+  when(cfg, i1, i2)
+
+  trap(cfg, i)
+
+  trapWith(cfg, i1, i2)
+
+  emit(sig)	Generate the named signal this instance.
+
+  await(cfg)	Wait for the configuration to hold.
+
+Signal configurations have the following forms:
+
+  posConfig sig
+		Holds if sig is present this instance.
+
+  negConfig sig
+		Holds if sig is not present this instance.
+
+  orConfig(cfg1, cfg2)
+		Holds if either cfg1 or cfg2 holds.
+
+  andConfig(cfg1, cfg2)
+		Holds if neither cfg1 or cfg2 holds.

@@ -1,0 +1,13 @@
+(*
+ * A pointer to the plugin library for Noweb.
+ *   (For each to-be-recognized file name suffix <s>, a copy of this
+ *    file should be created and stored under the name <s>-ext.cm.)
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	structure NowebTool
+is
+	$/noweb-tool.cm

@@ -1,0 +1,227 @@
+%!TEX root = btcomp.tex
+%
+
+\section{Basic usage}
+
+\subsection{Requirements}
+
+To be able to use the bootstrap compiler, one must first install
+SML/NJ (i.e., the interactive system that contains the compiler) as
+well as both ML-Yacc and ML-Lex.
+
+It is further necessary to have all ML source code for the system
+available.  If the basic installation did not install this source
+code, then one must now fetch all source archives and unpack them.
+(There is an option for the SML/NJ installer that lets it install all
+source trees automatically.  However, by default this feature is turned
+off.)
+
+The following list shows all required source packages.  (Path names
+are shown relative to the SML/NJ installation directory.)
+
+\begin{description}
+\item[{\bf src/system}] This archive contains the sources for the SML
+Standard Basis library as well as lots of ``glue'' code.  The glue is
+used for assembling a complete system from all its other parts.
+Directory {\tt src/system} must be the current working directory at
+the time the bootstrap compiler is started.
+\item[{\bf src/MLRISC}] This is the implementation of the MLRISC
+backend (the low-level optimizer and code generator) used by SML/NJ.
+\item[{\bf src/cm}] This source tree contains most of CM's (and CMB's)
+implementation.
+\item[{\bf src/compiler}] This is the implementation of the frontend
+(parser, type checker, etc.) of the compiler as well as its high-level
+optimizer (FLINT).
+\item[{\bf src/ml-yacc}] This source tree contains the implementation
+of ML-Yacc and its library ({\tt \$/ml-yacc-lib.cm}).
+Technically, the sources of ML-Yacc itself are not needed (provided a
+working executable for ML-Yacc has been installed), but the library
+sources are.
+\item[{\bf src/smlnj-lib}] This source tree hosts several sub-trees,
+each of which implements one of the libraries in the SML/NJ library
+collection.  For bootstrap compilation, the following sub-trees are
+required:
+\begin{description}
+\item[{\bf src/smlnj-lib/Util}] This directory holds the sources for
+{\tt \$/smlnj-lib.cm}.
+\item[{\bf src/smlnj-lib/PP}] This directory holds the sourcse for
+{\tt \$/pp-lib.cm}, i.e., the pretty-printing library.
+\item[{\bf src/smlnj-lib/HTML}] This directory holds the sources for
+{\tt \$/html-lib.cm}, a library for handling HTML files.  The need for
+this library arises from the fact that {\tt \$/pp-lib.cm} statically
+depends on it.  (The compiler does not actually use any services from
+this library.)
+\end{description}
+\end{description}
+
+\subsection{Invoking the bootstrap compiler}
+
+To invoke the bootstrap compiler, first one has to change the current
+working directory to {\tt src/system}:
+
+\begin{verbatim}
+$ cd src/system
+\end{verbatim}
+%$emacs unconfuse
+
+The next step is to start the interactive system and load the
+bootstrap compiler.  This can be done in one of two ways:
+
+\begin{enumerate}
+\item Start the interactive system and then issue a {\tt CM.autoload}
+command that causes the bootstrap compiler to be loaded. The resulting
+session could look like this:
+\begin{verbatim}
+$ sml
+Standard ML of New Jersey ...
+- CM.autoload "$smlnj/cmb.cm";
+...
+val it = true : bool
+-
+\end{verbatim}
+\item Start the interactive system and specify {\tt \$smlnj/cmb.cm} on
+the command line:
+\begin{verbatim}
+$ sml '$smlnj/cmb.cm'
+Standard ML of New Jersey ...
+-  
+\end{verbatim}
+\end{enumerate}
+
+\noindent{\it Note for frequent compiler hackers:} The {\tt makeml}
+script (see below) builds the the interactive system in such a way
+that {\tt \$smlnj/cmb.cm} is already pre-registered for autoloading.
+Therefore, when using an interactive system built by {\tt makeml}
+(as opposed to the original config/install.sh) there is no need
+for loading the bootstrap compiler explicitly.
+
+At this point one can invoke the bootstrap compiler by simply issuing
+the command {\tt CMB.make()}:
+
+\begin{verbatim}
+- CMB.make ();
+\end{verbatim}
+
+If {\tt CMB.make()} does not run to successful completion, you do not
+have to start from the beginning.  Instead, fix the problem at hand
+and re-issue {\tt CMB.make()} without terminating the interactive
+session in between.  This tends to be a lot faster than starting over.
+
+This process can be repeated arbitrarily many times until {\tt
+CMB.make()} is successful.
+
+A successful run looks like this:
+
+\begin{verbatim}
+- CMB.make ();
+...
+New boot directory has been built.
+val it = true : bool
+- 
+\end{verbatim}
+
+The return value of {\tt true} indicates success.  This means that (as
+indicated by the message above the return value) a directory with
+stable libraries and some other special files that are needed for
+``booting'' a new interactive system has been created.
+
+The name of the boot directory depends on circumstances.  A part of it
+can be chosen freely, other parts depend on current architecture and
+operating system.  For example, on a Sparc system running some version
+of Unix, the default name of the directory is {\tt
+sml.boot.sparc-unix}.
+
+There is also a similarly-named {em binfile directory} which is used
+by {\tt CMB.make()} itself but which is not required for the purpose
+of subsequent ``boot'' steps.
+
+\subsection{Booting a new interactive system}
+
+Once {\tt CMB.make()} has completed its work successfully (indicated
+by its return value of {\tt true}), the next step is to build a new
+heap image.  To do so, issue the command {\tt makeml} at the shell
+prompt:
+
+\begin{verbatim}
+$ ./makeml
+...
+Standard ML of New Jersey ...
+./makeml: Heap image generated.
+\end{verbatim}
+%$emacs unconfuse
+
+The {\tt makeml} command generates a new heap image and also prepares
+stable libraries to be used by this image.  Neither the heap image nor
+the libraries will at this time be installed for permanent use
+though.  This means that invoking {\tt sml} still starts the old
+system.
+
+Again, the name of the generated heap image is variable and depends on
+programmer choice, current architecture, and current operating
+system.  For example, on an Intel x86 Linux machine, the default would
+be {\tt sml.x86-linux}.\footnote{The operating-system dependent
+portion of the name of a heap image is more discriminating than the
+operating-system dependent portion of boot- or binfile directories.
+On the same Intel x86 Linux machine, the name of the boot directory is
+{\tt sml.boot.x86-unix}.}
+
+\subsection{Testing the newly booted system}
+
+To test-drive a newly booted system without installing it, issue the
+{\tt testml} command at the shell prompt:
+
+\begin{verbatim}
+$ ./testml
+\end{verbatim}
+%$emacs unconfuse
+
+This starts an interactive system in a way very similar to {\tt sml},
+but it uses the heap image and libraries from a previous run of {\tt
+makeml}.
+
+\subsection{Installing a newly booted system}
+
+Once one is sure that a newly booted system is good enough to replace
+the old system, issuing the {\tt installml} command will replace old
+heap image and old libraries with those generated by the previous run
+of {\tt makeml}.
+
+\begin{verbatim}
+$ ./installml
+\end{verbatim}
+%$emacs unconfuse
+
+This command will replace the system's heap image in {\tt
+../../bin/.heap} and its libraries in {\tt ../../lib}.  However, it
+will leave alone any unrelated libraries in {\tt ../../lib}.
+
+Sometimes changes to the compiler will render any previously installed
+libraries unusable.  In this case one should erase them prior to
+issuing the {\tt installml} command:
+
+\begin{verbatim}
+$ rm ../../lib/*
+$ ./installml
+\end{verbatim}
+
+Libraries that were installed as part of the SML/NJ installation
+process but which are unrelated to bootstrap compilation (e.g., {\tt
+\$/inet-lib.cm}, CML, eXene) can be recovered (once they had been
+removed) by going back to the installation directory and issuing the
+{\tt config/install.sh} command again:
+
+\begin{verbatim}
+$ cd ../..
+$ config/install.sh
+\end{verbatim}
+
+Since some changes to the compiler also render old binfiles unusable,
+one will occasionally have to remove those first (prior to re-running
+{\tt config/install.sh}).  Binfiles for libraries unrelated to
+bootstrapping are handled by CM (and not CMB), so the usual CM rules
+for locating them apply.  (This means that in such a case the binfile
+for {\tt $d$/$f$.sml} will be in
+{\tt $d$/CM/{\it arch}-{\it os}/$f$.sml}
+where {\it arch} is a string describing the CPU
+architecture and {\it os} is a string describing the operating system
+kind.  Example: {\tt x86-unix}.)

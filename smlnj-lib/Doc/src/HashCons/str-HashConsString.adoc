@@ -1,0 +1,44 @@
+= The `HashConsString` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashConsString` structure  embeds the `string`
+type as a hash-consed object.
+It is implemented using the xref:fun-HashConsGroundFn.adoc[`HashConsGroundFn`]
+functor.
+
+== Synopsis
+
+[source,sml]
+------------
+structure HashConsString
+------------
+
+== Interface
+
+[source,sml]
+------------
+type hash_key = string
+type obj = hash_key HashCons.obj
+
+val mk : hash_key -> obj
+------------
+
+== Description
+
+`[.kw]#type# hash_key = string`::
+  The ground type being hashed.
+
+`[.kw]#type# obj = hash_key HashCons.obj`::
+  The type of hash-consed strings.
+
+`[.kw]#val# mk : hash_key \-> obj`::
+  `mk s` converts the string `s` to a hash-consed object.
+
+== See Also
+
+xref:str-HashCons.adoc[`HashCons`],
+xref:hash-cons-lib.adoc[__The HashCons Library__]

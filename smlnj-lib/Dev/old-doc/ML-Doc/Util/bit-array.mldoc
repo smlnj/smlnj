@@ -1,0 +1,206 @@
+<!-- bit-array.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY BitArray SDATA "bit-array-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The BitArray structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/BitArray/ structure</HEAD>
+<SEEALSO>
+    <STRREF/BitVector/
+    <SIGREF DOCUMENT=SML-BASIS-DOC/MONO_ARRAY/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/BitArray/ structure  
+provides compacted arrays of booleans,
+with one bit for each boolean value. A 0 (1) bit corresponds
+to the boolean value <CD/false/ (<CD/true/), respectively. These arrays can be
+used to implement sets of integers. Member testing takes constant time and, 
+since a <CD/bitarray/ is mutable, adding and deleting elements are also constant
+time operations. In addition, the structure provides a complementary set 
+of applicative operations.
+
+
+<STRUCTURE STRID="BitArray">
+  <SIGBODY SIGID="BIT_ARRAY" FILE=BIT-ARRAY>
+    <SPEC>
+      <INCLUDE><SIGREF DOCUMENT=SML-BASIS-DOC>MONO_ARRAY</SIGREF>
+        <WHERETYPE><ID>elem<TY>bool</WHERETYPE>
+    <SPEC>
+      <VAL>fromString<TY>string -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          fromString <ARG/s/
+          </PROTOTY>
+          creates an array from the string argument <ARG/s/, which should
+          contain a hexadecimal representation of the bits set in the array. 
+          Characters 0-9, a-f and A-F are allowed. For example, 
+          <CD/fromString "1af8" = 0001101011111000/. (By convention, 0 
+          corresponds to <CD/false/ and 1 corresponds to <CD/true/, 
+          bit 0 appears on the right, and indices increase to the left.) 
+          The length of the array will be <CD/4*(size <ARG/s/)/. 
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/ if a non-hexadecimal character 
+          appears in the string.
+    <SPEC>
+      <VAL>bits<TY>(int * int list) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/
+        <COMMENT>
+          <PROTOTY>
+          bits (<ARG/sz/, <ARG/l/)
+          </PROTOTY>
+          creates an array of length <ARG/sz/ with the indices of its set bits  
+          given by <ARG/l/. Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/ 
+          if a list item is less than 0, or greater than or equal to <ARG/sz/.
+    <SPEC>
+      <VAL>getBits<TY>array -> int list
+        <COMMENT>
+          <PROTOTY>
+          getBits <ARG/arr/
+          </PROTOTY>
+          returns a list of indices of the bits set in <ARG/arr/, 
+          in increasing order.
+    <SPEC>
+      <VAL>toString<TY>array -> string
+        <COMMENT>
+          <PROTOTY>
+          toString <ARG/arr/
+          </PROTOTY>
+          encodes a bit array as a string. The bit array is zero-padded to 
+          the next length that is a multiple of 4.
+    <SPEC>
+      <VAL>isZero<TY>array -> bool
+        <COMMENT>
+          <PROTOTY>
+          isZero <ARG/arr/
+          </PROTOTY>
+          returns true if and only if no bits are set.
+    <SPEC>
+      <VAL>extend0<TY>(array * int) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+      <VAL>extend1<TY>(array * int) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+        <COMMENT>
+          <PROTOTY>
+          extend0 (<ARG/arr/, <ARG/len/)
+          <PROTO>
+          extend1 (<ARG/arr/, <ARG/len/)
+          </PROTOTY>
+          create a new arrays by extending the argument bit array 
+          by 0's or 1's to given length. If <ARG/arr/ 
+          is already as long as <ARG/len/, return a copy of the bit array. 
+          Raise <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+	  if <ARG/len/ is negative.
+    <SPEC>
+      <VAL>eqBits<TY>(array * array) -> bool
+        <COMMENT>
+          <PROTOTY>
+          eqBits (<ARG/arr/, <ARG/arr2/)
+          </PROTOTY>
+          returns true if the set bits in the two arrays are the same. This
+          is equivalent to:
+          <CODE>
+            getBits <ARG/arr/ = getBits <ARG/arr2/
+          </CODE>
+    <SPEC>
+      <VAL>equal<TY>(array * array) -> bool
+        <COMMENT>
+          <PROTOTY>
+          equal (<ARG/arr/, <ARG/arr2/)
+          </PROTOTY>
+          returns true if the two arrays are equivalent, i.e., have the
+          same length and set bits.
+    <SPEC>
+      <VAL>andb<TY>(array * array * int) -> array
+      <VAL>orb<TY>(array * array * int) -> array
+      <VAL>xorb<TY>(array * array * int) -> array
+        <COMMENT>
+          <PROTOTY>
+          andb (<ARG/arr/, <ARG/arr2/, <ARG/len/)
+          <PROTO>
+          orb (<ARG/arr/, <ARG/arr2/, <ARG/len/)
+          <PROTO>
+          xorb (<ARG/arr/, <ARG/arr2/, <ARG/len/)
+          </PROTOTY>
+          creates a new array of length <ARG/len/ by logically combining the 
+          bits of <ARG/arr/ and <ARG/arr2/ using and, or and xor, respectively.
+          If necessary, the arrays are implicitly extended by 0 to be the 
+          same length  as the new array.
+    <SPEC>
+      <VAL>notb<TY>array -> array
+        <COMMENT>
+          <PROTOTY>
+          notb <ARG/arr/
+          </PROTOTY>
+          creates a new array with all bits of original array inverted.
+    <SPEC>
+      <VAL>lshift<TY>(array * int) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          lshift (<ARG/arr/, <ARG/n/)
+          </PROTOTY>
+          creates a new array by inserting <ARG/n/ 0's on the right 
+          of <ARG/arr/. The new array has 
+          length <MATH/<ARG/n/ + <MTEXT><VALREF>length</VALREF></MTEXT> <ARG/arr//.
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/ if <ARG/n/ is negative.
+    <SPEC>
+      <VAL>rshift<TY>(array * int) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          rshift (<ARG/arr/, <ARG/n/)
+          </PROTOTY>
+          creates a new array of 
+          length <MATH/max(0,<MTEXT><VALREF>length</VALREF></MTEXT> <ARG/arr/ - <ARG/n/)/ consisting 
+          of bits <MATH/n,n+1,...,<MTEXT><VALREF>length</VALREF></MTEXT> <ARG/arr/ - 1/ of <ARG/arr/. 
+          If <MATH/<ARG/n/ &GREATEREQ; <MTEXT><VALREF>length</VALREF></MTEXT> <ARG/arr//, the new array 
+          has length 0.
+    <SPEC>
+      <VAL>setBit<TY>(array * int) -> unit
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/
+      <VAL>clrBit<TY>(array * int) -> unit
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/
+        <COMMENT>
+          <PROTOTY>
+          setBit (<ARG/arr/, <ARG/i/)
+          <PROTO>
+          clrBit (<ARG/arr/, <ARG/i/)
+          </PROTOTY>
+          updates the value at index <ARG/i/ to new value, true and false,
+          respectively. These are equivalent to:
+          <CODE>
+          update(arr,i,true)
+          update(arr,i,false)
+          </CODE>
+          respectively. Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/ if 
+          <ARG/i/ is negative 
+          or <MATH/<ARG/i/ $GREATEREQ; <MTEXT><VALREF>length</VALREF></MTEXT> <ARG/arr//. 
+    <SPEC>
+      <VAL>union<TY>array -> array -> unit
+      <VAL>intersection<TY>array -> array -> unit
+        <COMMENT>
+          <PROTOTY>
+          union <ARG/arr/ <ARG/arr2/
+          <PROTO>
+          intersection <ARG/arr/ <ARG/arr2/
+          </PROTOTY>
+          Or (respectively, and) <ARG/arr2/ into <ARG/arr/. The array <ARG/arr2/
+          is implicitly truncated or extended by 0's to match the length 
+          of the <ARG/arr/.
+    <SPEC>
+      <VAL>complement<TY>array -> unit
+        <COMMENT>
+          <PROTOTY>
+          complement <ARG/arr/
+          </PROTOTY>
+          inverts all the bits in <ARG/arr/.
+</STRUCTURE>
+
+</INTERFACE>

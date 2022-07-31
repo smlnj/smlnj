@@ -1,0 +1,760 @@
+/* X86.prim.masm (MS assembler)
+ *
+ * COPYRIGHT (c) 1996 Bell Laboratories, Lucent Technologies
+ *
+ * derived from X86.prim.asm
+ * derived from I386.prim.s, by Mark Leone (mleone@cs.cmu.edu)
+ *
+ * new version derived from Lal George's completely rewritten
+ * X86.prim.asm, by Matthias Blume (blume@cs.uchicago.edu)
+ */
+
+#include "ml-base.h"
+#include "asm-base.h"
+#include "ml-values.h"
+#include "tags.h"
+#include "ml-request.h"
+#include "reg-mask.h"
+#include "ml-limits.h"
+
+/*
+ *
+ * The 386 registers are used as follows:
+ *
+ * EAX - temp1 (see the code generator, x86/x86.sml)
+ * EBX - misc0
+ * ECX - misc1
+ * EDX - misc2
+ * ESI - standard continuation (ml_cont, see ml_state.h)
+ * EBP - standard argument (ml_arg)
+ * EDI - free space pointer (ml_allocptr)
+ * ESP - stack pointer
+ * EIP - program counter (ml_pc)
+ */
+
+
+	/* Registers (see x86/x86.sml): */
+#define temp		REG(eax)
+#define misc0		REG(ebx)
+#define misc1		REG(ecx)
+#define misc2		REG(edx)
+#define stdcont		REG(esi)
+#define stdarg		REG(ebp)
+#define allocptr	REG(edi)
+#define stackptr	REG(esp)
+
+
+	/* other reg uses */
+#define creturn 	REG(eax)
+
+#define REGOFF(o,r)	IND_DW_OFF(r,o)
+
+	/* Stack frame (see x86/x86.sml): */
+#define tempmem		REGOFF(0,REG(esp))
+#define baseptr		REGOFF(4,REG(esp))
+#define exncont		REGOFF(8,REG(esp))
+#define limitptr	REGOFF(12,REG(esp))
+#define pc		REGOFF(16,REG(esp))
+#define unused_1	REGOFF(20,REG(esp))
+#define storeptr	REGOFF(24,REG(esp))
+#define varptr		REGOFF(28,REG(esp))
+#define start_gc	REGOFF(32,REG(esp))
+#define unused_2	REGOFF(36,REG(esp))
+#define eaxSpill	REGOFF(40,REG(esp)) /* eax=0 */
+#define	ecxSpill	REGOFF(44,REG(esp)) /* ecx=1 */
+#define	edxSpill	REGOFF(48,REG(esp)) /* edx=2 */
+#define	ebxSpill	REGOFF(52,REG(esp)) /* ebx=3 */
+#define	espSpill	REGOFF(56,REG(esp)) /* esp=4 */
+#define	ebpSpill	REGOFF(60,REG(esp)) /* ebp=5 */
+#define	esiSpill	REGOFF(64,REG(esp)) /* esi=6 */
+#define	ediSpill	REGOFF(68,REG(esp)) /* edi=7 */
+#define stdlink		REGOFF(72,REG(esp))
+#define	stdclos		REGOFF(76,REG(esp))
+
+#define ML_STATE_OFFSET 176
+#define mlstate_ptr	REGOFF(ML_STATE_OFFSET,REG(esp))
+#define freg8           184	     /* double word aligned */
+#define	freg9           192
+#define freg31          368          /* 152 + (31-8)*8 */
+#define	fpTempMem	376	     /* freg31 + 8 */
+#define SpillAreaStart	512	     /* starting offset */
+#define ML_FRAME_SIZE	(8192)
+
+#define	via
+
+.386
+.MODEL FLAT
+
+	DATA
+	ALIGN4
+WORD32(request_w,0)	/* place to put the request code */
+
+	GLOBAL(CSYM(ML_X86Frame))
+WORD32(CSYM(ML_X86Frame),0) /* ptr to the ml frame (gives C access to limitptr) */
+
+WORD32(SavedSP,0)      /* Value of stack pointer to restore */
+
+#include "mlstate-offsets.h"	/** this file is generated **/
+
+/*
+ * 386 function call conventions:
+ *  [true for gcc and dynix3 cc; untested for others]
+ *
+ * 	Caller save registers: eax, ecx, edx
+ * 	Callee save registers: ebx, esi, edi, and ebp.
+ * 	Floating point state is caller-save.
+ * 	Arguments passed on stack.  Rightmost argument pushed first.
+ * 	Word-sized result returned in %eax.
+ */
+
+#define cresult	REG(eax)
+
+CALLEE_SAVE_M MACRO
+	PUSHL	REG(ebx)
+	PUSHL	REG(esi)
+	PUSHL	REG(edi)
+	PUSHL	REG(ebp)
+ENDM
+#define CALLEE_SAVE CALLEE_SAVE_M
+
+CALLEE_RESTORE_M MACRO
+	POPL	REG(ebp)
+	POPL	REG(edi)
+	POPL	REG(esi)
+	POPL	REG(ebx)
+ENDM
+#define CALLEE_RESTORE CALLEE_RESTORE_M
+
+/* MOVE copies one memory location to another, using a specified temporary. */
+
+EXCHANGE_M MACRO src,tmp,dest
+	MOVL	(src, tmp)
+	MOVL	(tmp, dest)
+ENDM
+#define MOVE(a,b,c) EXCHANGE_M a, b, c
+
+CONTINUE_M MACRO
+	JMP     via stdcont
+ENDM
+#define CONTINUE CONTINUE_M
+
+CHECKLIMIT_M MACRO
+ ANON_LAB:
+	MOVE(stdlink, temp, pc)
+	CMPL(limitptr, allocptr)
+	jb	FLAB_ANON
+	CALL	CSYM(saveregs)
+	JMP	BLAB_ANON
+ ANON_LAB:
+ENDM
+#define CHECKLIMIT CHECKLIMIT_M
+
+ENTRY_M MACRO id
+	GLOBAL(CSYM(&id))
+	LABEL(CSYM(&id))
+ENDM
+#define ENTRY(id) ENTRY_M id
+
+ML_CODE_HDR_M MACRO name
+	GLOBAL(CSYM(&name))
+	ALIGN4
+	LABEL(CSYM(&name))
+ENDM
+#define ML_CODE_HDR(name) ML_CODE_HDR_M name
+
+
+/**********************************************************************/
+	TEXT
+	ALIGN4
+
+ML_CODE_HDR(sigh_return_a)
+	MOVL	(IMMED(ML_unit),stdlink)
+	MOVL	(IMMED(ML_unit),stdclos)
+	MOVL	(IMMED(ML_unit),pc)
+	MOVL	(IMMED(REQ_SIG_RETURN),request_w)
+	JMP	CSYM(set_request)
+
+/* sigh_resume:
+ * Resume execution at the point at which a handler trap occurred.  This is a
+ * standard two-argument function, thus the closure is in ml_cont.
+ */
+
+ENTRY(sigh_resume)
+	MOVL	(IMMED(REQ_SIG_RESUME),request_w)
+	JMP	CSYM(set_request)
+
+/* pollh_return_a:
+ * The return continuation for the ML poll handler.
+ */
+ML_CODE_HDR(pollh_return_a)
+	MOVL	(IMMED(REQ_POLL_RETURN),request_w)
+	MOVL	(IMMED(ML_unit),stdlink)
+	MOVL	(IMMED(ML_unit),stdclos)
+	MOVL	(IMMED(ML_unit),pc)
+	JMP	CSYM(set_request)
+
+/* pollh_resume:
+ * Resume execution at the point at which a poll event occurred.
+ */
+ENTRY(pollh_resume)
+	MOVL	(IMMED(REQ_POLL_RESUME),request_w)
+	JMP	CSYM(set_request)
+
+ML_CODE_HDR(handle_a)
+	MOVL	(IMMED(REQ_EXN),request_w)
+	MOVE	(stdlink,temp,pc)
+	JMP	CSYM(set_request)
+
+ML_CODE_HDR(return_a)
+	MOVL	(IMMED(REQ_RETURN),request_w)
+	MOVL	(IMMED(ML_unit),stdlink)
+	MOVL	(IMMED(ML_unit),stdclos)
+	MOVL	(IMMED(ML_unit),pc)
+	JMP	CSYM(set_request)
+
+/* Request a fault.  The floating point coprocessor must be reset
+ * (thus trashing the FP registers) since we don't know whether a
+ * value has been pushed into the temporary "register".	 This is OK
+ * because no floating point registers will be live at the start of
+ * the exception handler.
+ */
+ENTRY(request_fault)
+	CALL	CSYM(FPEEnable)
+	MOVL	(IMMED(REQ_FAULT),request_w)
+	MOVE	(stdlink,temp,pc)
+	JMP	CSYM(set_request)
+
+/* bind_cfun : (string * string) -> c_function
+ */
+ML_CODE_HDR(bind_cfun_a)
+	CHECKLIMIT
+	MOVL	(IMMED(REQ_BIND_CFUN),request_w)
+	JMP	CSYM(set_request)
+
+ML_CODE_HDR(build_literals_a)
+	CHECKLIMIT
+	MOVL	(IMMED(REQ_BUILD_LITERALS),request_w)
+	JMP	CSYM(set_request)
+
+ML_CODE_HDR(callc_a)
+	CHECKLIMIT
+	MOVL	(IMMED(REQ_CALLC),request_w)
+	JMP	CSYM(set_request)
+
+ENTRY(saveregs)
+	POPL	pc
+	MOVL	(IMMED(REQ_GC),request_w)
+	/* fall into set_request */
+
+ENTRY(set_request)
+	/* temp holds mlstate_ptr, valid request in request_w  */
+	/* Save registers */
+	MOVL	(mlstate_ptr, temp)
+	MOVL	(allocptr, REGOFF(AllocPtrOffMSP,temp))
+	MOVL	(stdarg, REGOFF(StdArgOffMSP,temp))
+	MOVL	(stdcont, REGOFF(StdContOffMSP,temp))
+
+#define	temp2 allocptr
+	/* note that we have left ML code */
+	MOVL	(REGOFF(VProcOffMSP,temp),temp2)
+	MOVL	(IMMED(0), REGOFF(InMLOffVSP,temp2))
+
+	MOVL	(misc0, REGOFF(Misc0OffMSP,temp))
+	MOVL	(misc1, REGOFF(Misc1OffMSP,temp))
+	MOVL	(misc2, REGOFF(Misc2OffMSP,temp))
+
+	/* Save vregs before stack frame is popped. (?? - Blume) */
+	MOVE	(limitptr,temp2, REGOFF(LimitPtrOffMSP,temp))
+	MOVE	(exncont, temp2, REGOFF(ExnPtrOffMSP,temp))
+	MOVE	(stdclos, temp2, REGOFF(StdClosOffMSP,temp))
+	MOVE	(stdlink, temp2, REGOFF(LinkRegOffMSP,temp))
+	MOVE	(pc, temp2, REGOFF(PCOffMSP,temp))
+	MOVE	(storeptr,temp2, REGOFF(StorePtrOffMSP,temp))
+	MOVE	(varptr,  temp2, REGOFF(VarPtrOffMSP,temp))
+#undef	temp2
+
+	/* return val of function is request code */
+	MOVL	(request_w,creturn)
+
+	/* Pop the stack frame and return to run_ml(). */
+	MOVL	(SavedSP, REG(esp))
+	CALLEE_RESTORE
+	RET
+
+	TEXT
+	ALIGN4
+
+ENTRY(asm_restoreregs)
+	MOVL	(REGOFF(4,REG(esp)), temp) /* get argument (MLState ptr) */
+	CALLEE_SAVE
+
+	MOVL	(REG(esp), SavedSP)	/* save stack pointer */
+
+	/* Align on 8 byte boundary. Assumes that the stack starts
+	 * out being at least word aligned. But who knows... */
+
+	ORL	(IMMED(4),REG(esp))
+	SUBL	(IMMED(4),REG(esp))
+
+#define temp2 REG(ebx)
+	/* Allocate and initialize the ML stack frame. */
+	SUBL	(IMMED(ML_FRAME_SIZE), REG(esp))
+	MOVE	(REGOFF(ExnPtrOffMSP,temp),   temp2, exncont)
+	MOVE	(REGOFF(LimitPtrOffMSP,temp), temp2, limitptr)
+	MOVE	(REGOFF(StorePtrOffMSP,temp), temp2, storeptr)
+	MOVE	(REGOFF(VarPtrOffMSP,temp),   temp2, varptr)
+	LEA	(CSYM(saveregs),temp2)
+	MOVL	(temp2,start_gc)
+	MOVL	(temp,mlstate_ptr)
+
+	/* vregs */
+	MOVE	(REGOFF(LinkRegOffMSP,temp),temp2,stdlink)
+	MOVE	(REGOFF(StdClosOffMSP,temp),temp2,stdclos)
+
+	/* PC */
+	MOVE	(REGOFF(PCOffMSP,temp),temp2,pc)
+#undef temp2
+
+	/* Load ML registers */
+	MOVL	(REGOFF(AllocPtrOffMSP,temp),allocptr)
+	MOVL	(REGOFF(StdContOffMSP,temp),stdcont)
+	MOVL	(REGOFF(StdArgOffMSP,temp),stdarg)
+	MOVL	(REGOFF(Misc0OffMSP,temp),misc0)
+	MOVL	(REGOFF(Misc1OffMSP,temp),misc1)
+	MOVL	(REGOFF(Misc2OffMSP,temp),misc2)
+
+	MOVL(REG(esp),CSYM(ML_X86Frame))    /* frame ptr for signal handler. */
+
+	PUSHL	misc2			/* free up a register */
+	PUSHL	temp			/* save msp temporarily */
+
+#define tmpreg misc2
+	/* note that we're entering ML */
+	MOVL	(REGOFF(VProcOffMSP,temp),temp)	/* temp is now vsp */
+#define vsp temp
+	MOVL	(IMMED(1),REGOFF(InMLOffVSP,vsp))
+
+	/* handle signals */
+	MOVL	  (REGOFF(SigsRecvOffVSP,vsp),tmpreg)
+	CMPL	  (REGOFF(SigsHandledOffVSP,vsp),tmpreg)
+#undef tmpreg
+
+	JNE	pending
+
+restore_and_jmp_ml:
+	POPL	temp			/* restore temp to msp */
+	POPL	misc2
+
+jmp_ml:
+	CMPL	(limitptr,allocptr)
+	JMP	(REGOFF(PCOffMSP,temp))	/* jump to ML code */
+
+pending:
+	CMPL	(IMMED(0),REGOFF(InSigHandlerOffVSP,vsp))
+	JNE	restore_and_jmp_ml
+
+	MOVL	(IMMED(1),REGOFF(HandlerPendingOffVSP,vsp))
+
+	/* must restore here because limitptr is on stack */
+	POPL	temp			/* restore temp to msp */
+	POPL	misc2
+
+	MOVL	(allocptr,limitptr)
+	JMP	jmp_ml
+#undef vsp
+
+
+/* ----------------------------------------------------------------------
+ * array : (int * 'a) -> 'a array
+ * Allocate and initialize a new array.	 This can cause GC.
+ */
+
+ML_CODE_HDR(array_a)
+	CHECKLIMIT
+	MOVL	(REGOFF(0,stdarg),temp)		/* temp := length in words */
+	SARL	(IMMED(1),temp)			/* temp := length untagged */
+	CMPL	(IMMED(SMALL_OBJ_SZW),temp)	/* small object? */
+	JGE	FLAB(ARRAY_A_LARGE)
+
+#define temp1 misc0
+#define temp2 misc1
+	PUSHL	misc0			/* free up misc0 */
+	PUSHL	misc1			/* free up misc1 */
+
+	MOVL	(temp,temp1)
+	SALL	(IMMED(TAG_SHIFTW),temp1)	/* build descriptor */
+	ORL	(IMMED(MAKE_TAG(DTAG_arr_data)),temp1)
+	MOVL	(temp1,REGOFF(0,allocptr))	/* store descriptor */
+	ADDL	(IMMED(4),allocptr)		/* allocptr++ */
+	MOVL	(allocptr,temp1)		/* temp1 := array data ptr */
+	MOVL	(REGOFF(4,stdarg),temp2)	/* temp2 := initial value */
+ANON_LAB:
+	MOVL	(temp2,REGOFF(0,allocptr))	/* init array */
+	ADDL	(IMMED(4),allocptr)
+	SUBL	(IMMED(1),temp)
+	JNE	BLAB_ANON
+
+	/* Allocate array header */
+	MOVL	(IMMED(DESC_polyarr),REGOFF(0,allocptr)) /* descriptor */
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(REGOFF(0,stdarg),temp)		/* temp := length */
+	MOVL	(allocptr, stdarg)		/* result := header addr */
+	MOVL	(temp1, REGOFF(0,allocptr))	/* store pointer to data */
+	MOVL	(temp, REGOFF(4,allocptr))	/* store length */
+	ADDL	(IMMED(8),allocptr)
+
+	POPL	misc1
+	POPL	misc0
+	CONTINUE
+#undef temp1
+#undef temp2
+
+LABEL(ARRAY_A_LARGE)
+	MOVL	(IMMED(REQ_ALLOC_ARRAY),request_w)
+	MOVE	(stdlink,temp,pc)
+	JMP	CSYM(set_request)
+
+
+/* create_r : int -> realarray */
+ML_CODE_HDR(create_r_a)
+	CHECKLIMIT
+#define temp1 misc0
+	PUSHL	misc0			/* free temp1 */
+	MOVL	(stdarg,temp)		/* temp := length */
+	SARL	(IMMED(1),temp)		/* temp := untagged length */
+	SHLL	(IMMED(1),temp)		/* temp := length in words */
+	CMPL	(IMMED(SMALL_OBJ_SZW),temp)
+	JGE	FLAB_ANON
+
+	ORL	(IMMED(4),allocptr)	/* align allocptr */
+
+	/* allocate the data object */
+	MOVL	(temp,temp1)
+	SHLL	(IMMED(TAG_SHIFTW),temp1)	/* temp1 := descriptor */
+	ORL	(IMMED(MAKE_TAG(DTAG_raw64)),temp1)
+	MOVL	(temp1,REGOFF(0,allocptr))	/* store descriptor */
+	ADDL	(IMMED(4),allocptr)		/* allocptr++ */
+	MOVL	(allocptr,temp1)		/* temp1 := data object */
+	SHLL	(IMMED(2),temp)			/* temp := length in bytes */
+	ADDL	(temp,allocptr)			/* allocptr += length */
+
+	/* allocate the header object */
+	MOVL	(IMMED(DESC_real64arr),REGOFF(0,allocptr))
+	ADDL	(IMMED(4),allocptr)		/* allocptr++ */
+	MOVL	(temp1,REGOFF(0,allocptr))	/* header data */
+	MOVL	(stdarg,REGOFF(4,allocptr))	/* header length */
+	MOVL	(allocptr,stdarg)		/* stdarg := header obj */
+	ADDL	(IMMED(8),allocptr)		/* allocptr += 2 */
+
+	POPL	misc0
+	CONTINUE
+
+ANON_LAB:
+	POPL	misc0
+	MOVL	(IMMED(REQ_ALLOC_REALDARRAY),request_w)
+	MOVE	(stdlink,temp,pc)
+	JMP	CSYM(set_request)
+#undef temp1
+
+
+/* create_b : int -> bytearray */
+ML_CODE_HDR(create_b_a)
+	CHECKLIMIT
+	MOVL	(stdarg,temp)		/* temp is tagged length */
+	SARL	(IMMED(1),temp)		/* temp is untagged length */
+	ADDL	(IMMED(3),temp)
+	SARL	(IMMED(2),temp)		/* temp is length in words */
+	CMPL	(IMMED(SMALL_OBJ_SZW),temp)
+	JMP	FLAB_ANON
+	JGE	FLAB_ANON		/* XXXXX */
+
+#define temp1 misc0
+	PUSHL	misc0
+
+	/* allocate the data object */
+	MOVL	(temp,temp1)
+	SHLL	(IMMED(TAG_SHIFTW),temp1)
+	ORL	(IMMED(MAKE_TAG(DTAG_raw)),temp1)
+	MOVL	(temp1,REGOFF(0,allocptr))	/* store descriptor */
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(allocptr,temp1)		/* temp1 is data object */
+	SHLL	(IMMED(2),temp)			/* temp is size in bytes */
+	ADDL	(temp,allocptr)			/* allocptr += length */
+
+	/* allocate the header object */
+	MOVL	(IMMED(DESC_word8arr),REGOFF(0,allocptr))
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(temp1,REGOFF(0,allocptr))
+	MOVL	(stdarg,REGOFF(4,allocptr))
+	MOVL	(allocptr,stdarg)		/* stdarg := header */
+	ADDL	(IMMED(8),allocptr)		/* allocptr += 2 */
+	POPL	misc0
+	CONTINUE
+#undef temp1
+
+ANON_LAB:
+	MOVL	(IMMED(REQ_ALLOC_BYTEARRAY),request_w)
+	MOVE	(stdlink,temp,pc)
+	JMP	CSYM(set_request)
+
+
+/* create_s : int -> string */
+ML_CODE_HDR(create_s_a)
+	CHECKLIMIT
+	MOVL	(stdarg,temp)
+	SARL	(IMMED(1),temp)		/* untag */
+	ADDL	(IMMED(4),temp)		/* 3 + extra byte */
+	SARL	(IMMED(2),temp)		/* length in words */
+	CMPL	(IMMED(SMALL_OBJ_SZW),temp)
+	JGE	FLAB_ANON
+
+	PUSHL	misc0
+#define temp1 misc0
+
+	MOVL	(temp,temp1)
+	SHLL	(IMMED(TAG_SHIFTW),temp1)
+	ORL	(IMMED(MAKE_TAG(DTAG_raw)),temp1)
+	MOVL	(temp1,REGOFF(0,allocptr))	/* store descriptor */
+	ADDL	(IMMED(4),allocptr)
+
+	MOVL	(allocptr,temp1)		/* temp1 is data obj */
+	SHLL	(IMMED(2),temp)			/* bytes len */
+	ADDL	(temp,allocptr)			/* allocptr += length */
+	MOVL	(IMMED(0),REGOFF((-4),allocptr)) /* zero out last word */
+
+	/* allocate header obj */
+	MOVL	(IMMED(DESC_string),temp)	/* hdr descr */
+	MOVL	(temp,REGOFF(0,allocptr))
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(temp1,REGOFF(0,allocptr))	/* hdr data */
+	MOVL	(stdarg,REGOFF(4,allocptr))	/* hdr length */
+	MOVL	(allocptr, stdarg)		/* stdarg is hdr obj */
+	ADDL	(IMMED(8),allocptr)		/* allocptr += 2 */
+
+	POPL	misc0
+#undef temp1
+	CONTINUE
+
+ANON_LAB:
+	MOVL	(IMMED(REQ_ALLOC_STRING),request_w)
+	MOVE	(stdlink, temp, pc)
+	JMP	CSYM(set_request)
+
+
+/* create_v_a : int * 'a list -> 'a vector
+ *	creates a vector with elements taken from a list.
+ *	n.b. The frontend ensures that list cannot be nil.
+ */
+ML_CODE_HDR(create_v_a)
+	CHECKLIMIT
+	PUSHL	misc0
+	PUSHL	misc1
+#define temp1 misc0
+#define temp2 misc1
+	MOVL	(REGOFF(0,stdarg),temp)		/* len tagged */
+	MOVL	(temp,temp1)
+	SARL	(IMMED(1),temp1)		/* untag */
+	CMPL	(IMMED(SMALL_OBJ_SZW),temp1)
+	JGE	FLAB(CREATE_V_A_LARGE)
+
+	SHLL	(IMMED(TAG_SHIFTW),temp1)
+	ORL	(IMMED(MAKE_TAG(DTAG_vec_data)),temp1)
+	MOVL	(temp1,REGOFF(0,allocptr))
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(REGOFF(4,stdarg),temp1)	/* temp1 is list */
+	MOVL	(allocptr,stdarg)		/* stdarg is vector */
+
+ANON_LAB:
+	MOVL	(REGOFF(0,temp1),temp2)		/* hd */
+	MOVL	(temp2,REGOFF(0,allocptr))	/* store into vector */
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(REGOFF(4,temp1),temp1)		/* tl */
+	CMPL	(IMMED(ML_nil),temp1)		/* isNull */
+	JNE	BLAB_ANON
+
+	/* allocate header object */
+	MOVL	(IMMED(DESC_polyvec),temp1)
+	MOVL	(temp1,REGOFF(0,allocptr))
+	ADDL	(IMMED(4),allocptr)
+	MOVL	(stdarg,REGOFF(0,allocptr))	/* data */
+	MOVL	(temp,REGOFF(4,allocptr))	/* len */
+	MOVL	(allocptr,stdarg)		/* result */
+	ADDL	(IMMED(8),allocptr)		/* allocptr += 2 */
+
+	POPL	misc1
+	POPL	misc0
+	CONTINUE
+
+LABEL(CREATE_V_A_LARGE)
+	POPL	misc1
+	POPL	misc0
+	MOVL	(IMMED(REQ_ALLOC_VECTOR),request_w)
+	MOVE	(stdlink, temp, pc)
+	JMP	CSYM(set_request)
+#undef temp1
+#undef temp2
+
+
+/* try_lock: spin_lock -> bool.
+ * low-level test-and-set style primitive for mutual-exclusion among
+ * processors.	For now, we only provide a uni-processor trivial version.
+ */
+ML_CODE_HDR(try_lock_a)
+#if (MAX_PROCS > 1)
+#  error multiple processors not supported
+#else /* (MAX_PROCS == 1) */
+	MOVL	((stdarg), temp)	/* Get old value of lock. */
+	MOVL	(IMMED(1), (stdarg))	/* Set the lock to ML_false. */
+	MOVL	(temp, stdarg)		/* Return old value of lock. */
+	CONTINUE
+#endif
+
+/* unlock : releases a spin lock
+ */
+ML_CODE_HDR(unlock_a)
+#if (MAX_PROCS > 1)
+#  error multiple processors not supported
+#else /* (MAX_PROCS == 1) */
+	MOVL	(IMMED(3), (stdarg))	/* Store ML_true into lock. */
+	MOVL	(IMMED(1), stdarg)	/* Return unit. */
+	CONTINUE
+#endif
+
+
+/********************* Floating point functions. *********************/
+
+#define FPOP	fstp FP_REG(st)	/* Pop the floating point register stack. */
+
+/* Temporary storage for the old and new floating point control
+   word.  We don't use the stack to for this, since doing so would
+   change the offsets of the pseudo-registers. */
+	DATA
+	ALIGN4
+GLOBAL(old_controlwd)
+WORD16(old_controlwd,0)
+GLOBAL(new_controlwd)
+WORD16(new_controlwd,0)
+
+	TEXT
+	ALIGN4
+
+/*
+ * Initialize the 80387 floating point coprocessor.  First, the floating
+ * point control word is initialized (undefined fields are left
+ * unchanged).	Rounding control is set to "nearest" (although floor_a
+ * needs "toward negative infinity").  Precision control is set to
+ * "double".  The precision, underflow, denormal
+ * overflow, zero divide, and invalid operation exceptions
+ * are masked.  Next, seven of the eight available entries on the
+ * floating point register stack are claimed (see x86/x86.sml).
+ *
+ * NB: this cannot trash any registers because it's called from request_fault.
+ */
+ENTRY(FPEEnable)
+	finit
+	/* Temp space.Keep stack aligned. */
+	SUBL	(IMMED(4), REG(esp))
+	/* Store FP control word. */
+	fstcw	IND_W_OFF(REG(esp),0)
+	/* Keep undefined fields, clear others. */
+	ANDW	(IMMED(HEXLIT(f0c0)), REGOFF(0,REG(esp)))
+	/* Set fields (see above). */
+	ORW	(IMMED(HEXLIT(023f)), REGOFF(0,REG(esp)))
+	fldcw	IND_W_OFF(REG(esp),0) /* Install new control word. */
+	ADDL	(IMMED(4), REG(esp))
+	RET
+
+ENTRY(fegetround)
+      SUBL    (IMMED(4),REG(esp))         /* allocate temporary space */
+      FSTCW   IND_W_OFF(REG(esp),0)          /* store fp control word */
+	/* rounding mode is at bit 10 and 11 */
+      SARL    (IMMED(10),REGOFF(0,REG(esp)))
+      ANDL    (IMMED(3),REGOFF(0,REG(esp)))  /* mask two bits */
+      MOVL    (REGOFF(0,REG(esp)),REG(eax))  /* return rounding mode */
+      ADDL    (IMMED(4),REG(esp))                /* deallocate space */
+      RET
+
+ENTRY(fesetround)
+      SUBL    (IMMED(4),REG(esp))	/* allocate temporary space */
+      FSTCW   IND_W_OFF(REG(esp),0)	/* store fp control word */
+	/* Clear rounding field. */
+      ANDW    (IMMED(HEXLIT(f3ff)),REGOFF(0,REG(esp)))
+      MOVL    (REGOFF(8,REG(esp)),REG(eax))	/* new rounding mode */
+      SALL    (IMMED(10),REG(eax))		/* move to right place */
+      ORL     (REG(eax),REGOFF(0,REG(esp)))	/* new control word */
+      FLDCW   IND_W_OFF(REG(esp),0)		/* load new control word */
+      ADDL    (IMMED(4),REG(esp))		/* deallocate space */
+      RET
+
+
+/* floor : real -> int
+   Return the nearest integer that is less or equal to the argument.
+   Caller's responsibility to make argument in range. */
+
+ML_CODE_HDR(floor_a)
+	/* Get FP control word. */
+	fstcw	old_controlwd
+	MOVW	(old_controlwd,REG(ax))
+	/* Clear rounding field. */
+	ANDW	(IMMED(HEXLIT(f3ff)), REG(ax))
+	/* Round towards neg. infinity. */
+	ORW	(IMMED(HEXLIT(0400)), REG(ax))
+	MOVW	(REG(ax), new_controlwd)
+	fldcw	new_controlwd		/* Install new control word. */
+
+	fld	REAL8 PTR 0 [stdarg]
+	SUBL	(IMMED(4),REG(esp))
+	FISTPL	REGOFF(0,REG(esp))
+	POPL	stdarg
+	SALL	(IMMED(1),stdarg)
+	INCL	stdarg
+
+	FLDCW	old_controlwd
+	CONTINUE
+
+
+/* logb : real -> int
+ * Extract the unbiased exponent pointed to by stdarg.
+ * Note: Using fxtract, and fistl does not work for inf's and nan's.
+ */
+ML_CODE_HDR(logb_a)
+	MOVL    (REGOFF(4,stdarg),temp)	/* msb for little endian arch */
+	SARL	(IMMED(20),temp)	/* throw out 20 bits */
+	ANDL	(IMMED(HEXLIT(7ff)),temp)	/* clear all but 11 low bits */
+	SUBL	(IMMED(1023),temp)		/* unbias */
+	SALL	(IMMED(1),temp)			/* room for tag bit */
+	ADDL	(IMMED(1),temp)			/* tag bit */
+	MOVL	(temp,stdarg)
+	CONTINUE
+
+
+/* scalb : (real * int) -> real
+ * Scale the first argument by 2 raised to the second argument.	 Raise
+ * Float("underflow") or Float("overflow") as appropriate.
+ * NB: We assume the first floating point "register" is
+ * caller-save, so we can use it here (see x86/x86.sml). */
+
+ML_CODE_HDR(scalb_a)
+	CHECKLIMIT
+	PUSHL	REGOFF(4,stdarg)		/* Get copy of scalar. */
+	SARL	(IMMED(1),REGOFF(0,REG(esp)))	/* Untag it. */
+	FILDL	REGOFF(0,REG(esp))			/* Load it ... */
+/*	fstp	FP_REG(st)(1) */		/* ... into 1st FP reg. */
+/*	ADDL	(IMMED(4), REG(esp)) */		/* Discard copy of scalar. */
+
+	MOVL	(REGOFF(0,stdarg), temp)	/* Get pointer to real. */
+	fld	REAL8 PTR 0 [temp]		/* Load it into temp. */
+
+	fscale				/* Multiply exponent by scalar. */
+	MOVL	(IMMED(DESC_reald), REGOFF(0,allocptr))
+	fstp	REAL8 PTR 4 [allocptr]	/* Store resulting float. */
+	ADDL	(IMMED(4),allocptr)	/* Allocate word for tag. */
+	MOVL	(allocptr, stdarg)	/* Return a pointer to the float. */
+	ADDL	(IMMED(8), allocptr)	/* Allocate room for float. */
+	fstp	REAL8 PTR 0 [esp]	/* ?? */
+	ADDL	(IMMED(4),REG(esp))	/* discard copy of scalar */
+	CONTINUE
+
+END
+
+/* end of X86.prim.masm (MS assembler) */

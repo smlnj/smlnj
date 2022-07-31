@@ -1,0 +1,17 @@
+(* html4-test.cm
+ *
+ * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Group is
+    $/basis.cm
+    $/smlnj-lib.cm
+    $/ml-lpt-lib.cm
+
+    html4-lib.cm
+    html4-test.sml
+
+(* ______________________________________________________________________
+   End of html4-test.cm
+   ______________________________________________________________________ *)

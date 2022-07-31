@@ -1,0 +1,24 @@
+(* $smlnj/asdl/asdl-lib.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This file is a proxy for $SMLNJ-ASDL-LIB/asdl-lib.cm and represents
+ * the version of the ASDL library that is internally
+ * used by the implementation of the system itself.
+ *
+ * User code can refer to it as $/asdl-lib.cm, but the $asdl-lib.cm
+ * anchor may be redefined to point to a different version
+ * without affecting the compiler itself.
+ *)
+
+Library
+
+  library($SMLNJ-ASDL-LIB/asdl-lib.cm)
+
+is
+
+  $SMLNJ-ASDL-LIB/asdl-lib.cm
+    (bind:(anchor:basis.cm value:$SMLNJ-BASIS)
+     bind:(anchor:smlnj-lib.cm value:$SMLNJ-LIB/Util)
+     bind:(anchor:pp-lib.cm value:$SMLNJ-LIB/PP))

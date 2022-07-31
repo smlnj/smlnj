@@ -1,0 +1,34 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources file for Pretty printer device library.
+ *)
+
+Group
+
+  structure ANSITermDev
+  structure ANSITermPP
+  structure CharBufferDev
+  structure CharBufferPP
+  structure SimpleTextIODev
+  structure StringToken
+  structure TextIOPP
+  structure TextPP
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  ../src/sources.cm
+
+  ansi-term-dev.sml
+  ansi-term-pp.sml
+  char-buffer-dev.sml
+  char-buffer-pp.sml
+  default-device-fn.sml
+  simple-textio-dev.sml
+  string-token.sml
+  textio-pp.sml
+  text-pp.sml

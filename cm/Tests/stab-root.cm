@@ -1,0 +1,6 @@
+Library
+	structure A
+	structure B
+is
+	stab-a.sml
+	stab-b.cm (bind:(anchor:foo value:.))

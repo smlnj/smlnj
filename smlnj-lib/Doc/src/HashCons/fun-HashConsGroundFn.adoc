@@ -1,0 +1,68 @@
+= The `HashConsGroundFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashConsGroundFn` functor provides a mechanism for defining
+a hash-consed representations for "leaf" (or "ground") types.
+These are types that might be atomic (_e.g._,
+the xref:str-HashConsAtom.adoc[`HashConsAtom structure`]) or
+datatypes, but they are treated as atomic values by the *HashCons Library*
+and are the leaves of the hash-consed data structures.
+
+== Synopsis
+
+[source,sml]
+------------
+functor HashConsGroundFn (T : HASH_KEY)
+------------
+
+== Arguments
+
+* `T : xref:../Util/sig-HASH_KEY.adoc[HASH_KEY]`::
+  The argument structure `T` defines the type, equality function, and
+  hashing function a the "leaf" type.
+
+== Interface
+
+[source,sml]
+------------
+type hash_key = T.hash_key
+type obj = hash_key HashCons.obj
+
+val mk : hash_key -> obj
+------------
+
+== Description
+
+`[.kw]#type# hash_key = T.hash_key`::
+  something
+
+`[.kw]#type# obj = hash_key HashCons.obj`::
+  something
+
+`[.kw]#val# mk : hash_key \-> obj`::
+  something
+
+== Example
+
+Suppose that we wish to have pairs of integers as a ground type
+for a hash-consed data structure.  We might implement this using
+the following functor application:
+
+[source,sml]
+------------
+structure HCPairs = HashConsGroundFn (
+    struct
+      type hash_key = int * int
+      fun sameKey (a : hash_key, b) = (a = b)
+      fun hashVal (a, b) = Word.xorb(Word.fromInt a, Word.fromInt b)
+    end)
+------------
+
+== See Also
+
+xref:str-HashCons.adoc[`HashCons`],
+xref:hash-cons-lib.adoc[__The HashCons Library__]

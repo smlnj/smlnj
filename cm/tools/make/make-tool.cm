@@ -1,0 +1,15 @@
+(*
+ * The plugin library for the "make" tool.
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	structure MakeTool
+is
+	$smlnj/basis/basis.cm
+	$smlnj/internal/cm-lib.cm
+	$smlnj/cm.cm
+	$smlnj/cm/tools.cm
+	tool.sml

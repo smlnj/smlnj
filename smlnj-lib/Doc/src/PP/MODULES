@@ -1,0 +1,15 @@
+signature PP_DESC
+signature PP_DEVICE
+signature PP_TOKEN
+signature PP_STREAM
+functor PPStreamFn
+functor PPDescFn
+functor PPDebugFn
+structure TextIOPP
+structure TextPP
+structure SimpleTextIODev
+structure CharBufferPP
+structure ANSITermDev
+structure ANSITermPP
+structure HTMLDev
+structure StringToken

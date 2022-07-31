@@ -1,0 +1,17 @@
+(* cm0.cm
+ *   -- link CM (+ some internal extension hooks, thus we really get "CM0")
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *)
+cm-init
+Library
+	structure CM0
+is
+	(* library providing the implementation of CM *)
+	$smlnj/internal/cm-lib.cm
+
+	(* library providing the visible compiler for current architecture *)
+	$smlnj/compiler/current.cm
+
+	(* make CM0 from these ingredients *)
+	link-cm.sml

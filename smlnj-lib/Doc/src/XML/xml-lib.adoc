@@ -1,0 +1,80 @@
+= The XML Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *XML Library* is a small library for parsing
+https://www.w3.org/TR/REC-xml[*XML*] files.  It does
+*not* support validation (_e.g._, against a *DTD* or *Schema*).  The
+basic idea is that the user supplies a "schema" module that describes
+the elements and attribute representation of an *XML* document.  From this,
+one builds an XML tree representation
+
+[source,sml]
+------------
+structure MyXMLTree = XMLTreeFn (MyXMLSchema)
+------------
+
+and an XML parser
+
+[source,sml]
+------------
+structure MyXMLParser = XMLParserFn (MyXMLTree)
+------------
+
+The library also provides a generic *XML* tree definition
+(_i.e._, one that allows any element name).
+
+For a more complete library for XML processing, use the
+https://smlnj.org/dist/other/fxp-2.1.tgz[*fxp library*].
+
+== Contents
+
+xref:sig-XML_SCHEMA.adoc[`[.kw]#signature# XML_SCHEMA`]::
+  describes the elements and attributes of an *XML* schema
+  that are required to parse files of that schema.
+
+xref:sig-XML_TREE.adoc[`[.kw]#signature# XML_TREE`]::
+  Defines a tree representation of *XML* files.
+
+xref:fun-XMLTreeFn.adoc[`[.kw]#functor# XMLTreeFn`]::
+  Generates a tree representation of *XML*
+  files from a schema structure argument.
+
+xref:fun-XMLParserFn.adoc[`[.kw]#functor# XMLParserFn`]::
+  generates a parser for the given *SML* tree representation.
+
+xref:str-GenericXMLTree.adoc[`[.kw]#structure# GenericXMLTree`]::
+  Provides a generic representation of *XML* trees.
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/xml-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/XML/xml-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::sig-XML_SCHEMA.adoc[]
+
+include::sig-XML_TREE.adoc[]
+
+include::fun-XMLTreeFn.adoc[]
+
+include::fun-XMLParserFn.adoc[]
+
+include::str-GenericXMLTree.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

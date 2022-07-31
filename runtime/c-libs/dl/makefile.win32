@@ -1,0 +1,57 @@
+#
+# the makefile for the dynload library
+# win32 specific
+
+SHELL =		
+
+INC_DIR =	..\..\include
+CLIB_DIR =	..\
+
+INCLUDES =	/I$(INC_DIR) /I$(CLIB_DIR) /I..\..\objs
+
+MAKEFILE = 	makefile.win32
+MAKE =		nmake /F$(MAKEFILE)
+AR =		lib
+ARFLAGS =	
+RANLIB =	lib
+
+LIBRARY =	dynload.lib
+
+VERSION =	v-dummy
+
+OBJS =		unix-dynload-lib.obj \
+                dlopen.obj \
+                dlclose.obj \
+                dlsym.obj \
+                dlerror.obj
+
+$(LIBRARY)	: $(VERSION) $(OBJS)
+	del /F /Q $(LIBRARY)
+	$(AR) $(ARFLAGS) /out:$(LIBRARY) $(OBJS)
+	$(RANLIB) /out:$(LIBRARY)
+
+$(VERSION) :
+	($(MAKE) MAKE="$(MAKE)" clean)
+	echo "$(VERSION)" > $(VERSION)
+
+DEPENDENTS = $(INC_DIR)\ml-unixdep.h $(INC_DIR)\ml-base.h \
+	     $(INC_DIR)\ml-values.h \
+	     $(CLIB_DIR)\ml-c.h cfun-proto-list.h cfun-list.h
+
+unix-dynload-lib.obj: unix-dynload-lib.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c unix-dynload-lib.c
+
+dlopen.obj: dlopen.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c dlopen.c
+
+dlclose.obj: dlclose.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c dlclose.c
+
+dlerror.obj: dlerror.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c dlerror.c
+
+dlsym.obj: dlsym.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c dlsym.c
+
+clean :
+	del /F /Q v-* *.obj *.pdb $(LIBRARY)

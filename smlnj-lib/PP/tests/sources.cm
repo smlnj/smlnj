@@ -1,0 +1,24 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+  functor PPStreamFn
+  functor PPDebugFn
+  structure SimpleTextIODev
+  structure HTMLDev
+
+  structure HTML
+  structure PrHTML
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/html-lib.cm
+  $/pp-lib.cm
+#else
+  ../../HTML/html-lib.cm
+  ../src/sources.cm
+  ../devices/sources.cm
+#endif

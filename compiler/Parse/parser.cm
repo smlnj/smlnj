@@ -1,0 +1,61 @@
+(* parser.cm
+ *
+ * The part of the SML/NJ frontend that is concerned with parsing.
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Group
+	signature PARSER_CONTROL
+	structure ParserControl
+
+	signature AST
+	signature ASTUTIL
+	signature SMLFILE
+	signature PPAST
+
+	structure Ast
+	structure PPAst
+	structure AstUtil
+	structure SmlFile
+
+is
+	ast/ast.sig
+	ast/ast.sml
+	ast/astutil.sig
+	ast/astutil.sml
+	ast/ppast.sig
+	ast/ppast.sml
+
+	lex/tokentable.sml
+	lex/user.sml
+
+#if defined (NO_PLUGINS)
+        lex/ml.lex.sml
+        lex/sml.lex.sml
+	parse/ml.grm.sig
+	parse/ml.grm.sml
+	parse/sml.grm.sig
+	parse/sml.grm.sml
+#else
+	lex/ml.lex : MLLex
+	lex/sml.lex : MLLex
+	parse/ml.grm : MLYacc
+	parse/sml.grm : MLYacc
+#endif
+
+	main/parsercontrol.sml
+	main/parse-result.sml
+	main/parser.sig
+	main/ml-parser.sml
+	main/sml-parser.sml
+	main/smlfile.sml
+
+	$smlnj/viscomp/basics.cm
+
+	$smlnj/ml-yacc/ml-yacc-lib.cm
+
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm
+	$smlnj/basis/basis.cm

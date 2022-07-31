@@ -1,0 +1,977 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Tables [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<meta name="description" content="Test your Web browser&rsquo;s support for tables. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="scrolling tables, table borders, row groups, column groups, accessibility, summary, scope, headers, axis">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="scripts" title="Scripts">
+	<link rel="next" href="dir" title="Text Direction">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+	<style type="text/css">/* per CSS2 columns can set border, background, width, visibility */span.testcolgroup { background-color: #acc }
+span.testcol { background-color: #aca }</style>
+
+
+	<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Tables</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="scripts" rel="prev" accesskey="P" title="Prior: Scripts">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="dir" rel="next" accesskey="N" title="Next: Text Direction"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Tables (<a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html" title="HTML 4.0 Specification">&sect;11</a>)</h1>
+
+	
+	
+
+	<div class="section" id="groups">
+		<h2>Row and column groups</h2>
+
+		<div class="bodytext">
+			<ul>
+				<li><p><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#edef-thead" title="HTML 4.0 Specification: 11 Tables"><code class="element">&lt;thead></code></a></dfn>, <dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#edef-tfoot" title="HTML 4.0 Specification: 11 Tables"><code class="element">&lt;tfoot></code></a></dfn>, and <dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#edef-tbody" title="HTML 4.0 Specification: 11 Tables"><code class="element">&lt;tbody></code></a></dfn> group table rows into a header, a footer, and one or more body sections.</p>
+					<p>At this writing, no Web browsers to my knowledge put this feature to either of the interesting uses suggested by the official specification: <q cite="http://www.w3.org/TR/html4/struct/tables.html#h-11.2.3">This division enables user agents to support scrolling of table bodies independently of the table head and foot. When long tables are printed, the table head and foot information may be repeated on each page that contains table data.</q></p>
+					<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=thead-UI">thead-UI</a>.</p>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#edef-colgroup" title="HTML 4.0 Specification: 11 Tables"><code class="element">&lt;colgroup></code></a></dfn> groups columns together into divisions. (Rows are grouped with <code class="element">&lt;tbody></code>.)
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#edef-col" title="HTML 4.0 Specification: 11 Tables"><code class="element">&lt;col></code></a></dfn> applies its parameters to a table column.
+			</ul>
+
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-rules" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">rules</code></a></dfn> declares where borders are drawn between cells.
+			</ul>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering eliminating the presentational <code class="attribute">rules</code> attribute in <abbr>XHTML</abbr> 2.0.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>The <code class="attribute">rules</code> attribute can take these five values.</p>
+
+		<h4 class="resultheader">Here is a sample table of filtering features in major Web browsers. It should have no border and no rules:</h4>
+			<div class="results" id="result1">
+			<table >
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has the default value of <code class="attribute">rules="none"</code>. It should have no rules:</h4>
+			<div class="results" id="result2">
+			<table rules="none">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">rules="rows"</code>. It should have rules between rows only:</h4>
+			<div class="results" id="result3">
+			<table rules="rows">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">rules="cols"</code>. It should have rules between columns only:</h4>
+			<div class="results" id="result4">
+			<table rules="cols">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">rules="all"</code>. It should have rules between both rows and columns:</h4>
+			<div class="results" id="result5">
+			<table rules="all">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">rules="groups"</code>. It should only have rules between the row groups (between the header and body) and between the column groups:</h4>
+			<div class="results" id="result6">
+			<table rules="groups">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Table-Rules">Table-Rules</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=47412">#47412</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	
+		<div class="bodytext">
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-frame" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">frame</code></a></dfn> declares on which sides borders are drawn around the table.
+			</ul>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> Like <code class="attribute">rules</code>, <code class="attribute">frame</code> too may be on the chopping block.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>The <code class="attribute">code</code> attribute can take these values.</p>
+
+		<h4 class="resultheader">This table has the default value of <code class="attribute">frame="void"</code>. There should be no border.</h4>
+			<div class="results" id="result7">
+			<table frame="void">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="box"</code>. There should be a border on all four sides of the table:</h4>
+			<div class="results" id="result8">
+			<table frame="box">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="hsides"</code>. There should be a border on the top and bottom sides of the table only:</h4>
+			<div class="results" id="result9">
+			<table frame="hsides">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="vsides"</code>. There should be a border on the left and right sides of the table only:</h4>
+			<div class="results" id="result10">
+			<table frame="vsides">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="above"</code>. There should be a border at the top of the table only:</h4>
+			<div class="results" id="result11">
+			<table frame="above">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="below"</code>. There should be a border at the bottom of the table only:</h4>
+			<div class="results" id="result12">
+			<table frame="below">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="lhs"</code>. There should be a border at the left of the table only:</h4>
+			<div class="results" id="result13">
+			<table frame="lhs">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<h4 class="resultheader">This table has <code class="attribute">frame="rhs"</code>. There should be a border at the right of the table only:</h4>
+			<div class="results" id="result14">
+			<table frame="rhs">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Table-Rules">Table-Rules</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=47412">#47412</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="align">
+		<h2>Alignment and style</h2>
+
+		<div class="bodytext">
+			<p>Columns and column groups can be used to apply alignment or style properties to every cell in a column.</p>
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-char" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">char</code></a></dfn> specifies a character to align a column around when character alignment is used.
+			</ul>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>	
+		
+			<div class="blockcode">
+		<em class="html">&lt;table <em class="html4">frame="void" rules="groups"</em>></em><br>
+			<div class="indent">
+			<em class="html">&lt;caption></em>Grocery Bill<em class="html">&lt;/caption></em><br>
+			<em class="html4">&lt;colgroup></em><br>
+				<div class="indent">
+				<em class="html4">&lt;col <strong class="tested">align="left"</strong>></em><br>
+				<em class="html4">&lt;col <strong class="tested">align="char" char="."</strong>></em><br>
+				<em class="html4">&lt;col <strong class="tested">align="right"</strong>></em><br>
+				</div>
+			<em class="html4">&lt;colgroup></em><br>
+				<div class="indent">
+				<em class="html4">&lt;col <strong class="tested">align="char" char="."</strong>></em><br>
+				</div>
+			<em class="html4">&lt;thead></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr></em><br>
+					<div class="indent">
+					<em class="html">&lt;th></em>Item<br>
+					<em class="html">&lt;th align="right"></em>Unit Cost<br>
+					<em class="html">&lt;th></em>Qty.<br>
+					<em class="html">&lt;th align="right"></em>Price
+					</div>
+				</div>
+			<em class="html4">&lt;tfoot></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr></em><br>
+					<div class="indent">
+					<em class="html">&lt;th colspan=3 align="right"></em>Total<br>
+					<em class="html">&lt;td></em>$11.97<br>
+					</div>
+				</div>
+			<em class="html4">&lt;tbody></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr>&lt;td></em>Cookies <em class="html">&lt;td></em>2.49 <em class="html">&lt;td></em>2 <em class="html">&lt;td></em>4.98<br>
+				<em class="html">&lt;tr>&lt;td></em>Soda <em class="html">&lt;td></em>.99 <em class="html">&lt;td></em>1 <em class="html">&lt;td></em>.99<br>
+				<em class="html">&lt;tr>&lt;td></em>Ice Cream <em class="html">&lt;td></em>6 <em class="html">&lt;td></em>1 <em class="html">&lt;td></em>6.<br>
+				</div>
+			</div>
+		<em class="html">&lt;/table></em><br>
+		</div>
+
+		<h4 class="sampheader">The decimal points should be lined up like this:</h4>
+			<pre class="blocksamp"><samp>          Grocery Bill
+
+Item         Unit   Qty. |  Price
+-------------------------+-------
+Cookies      2.49      1 |   4.98
+Soda          .99      1 |    .99
+Ice Cream    6         1 |   6.  
+-------------------------+-------
+                   Total | $11.97</samp></pre>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result15">
+		<table frame="void" rules="groups">
+			<caption>Grocery Bill</caption>
+			<colgroup>
+				<col align="left">
+				<col align="char" char=".">
+				<col align="right">
+			<colgroup>
+				<col align="char" char=".">
+			<thead>
+				<tr>
+					<th>Item
+					<th align="right">Unit Cost
+					<th>Qty.
+					<th align="right">Price
+			<tfoot>
+				<tr>
+					<th colspan=3 align="right">Total
+					<td>$11.97
+			<tbody>
+				<tr><td>Cookies <td>2.49 <td>2 <td>4.98
+				<tr><td>Soda <td>.99 <td>1 <td>.99
+				<tr><td>Ice Cream <td>6 <td>1 <td>6.
+		</table>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Column">Column</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Character-Alignment">Character-Alignment</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Table-Rules">Table-Rules</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=29577">#29577</a>.</p>
+		</div>
+
+		<div class="bodytext">
+			<p>You can also set styles on columns and column groups, but <a class="specsect" href="http://www.w3.org/TR/REC-CSS2/tables.html#q4">according to the <abbr>CSS2</abbr> standard</a>, only the <code class="style_description">border</code>, <code class="style_description">background</code>, <code class="style_description">width</code>, and <code class="style_description">visibility</code> descriptions apply to columns and column groups.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>Let&rsquo;s add a little style to the previous example.</p>
+		
+		
+			<div class="blockcode">
+		<em class="html">&lt;table <em class="html4">frame="void" rules="groups"</em>></em><br>
+			<div class="indent">
+			<em class="html">&lt;caption></em>Grocery Bill<em class="html">&lt;/caption></em><br>
+			<em class="html4">&lt;colgroup <strong class="tested">style="background-color: #acc"</strong>></em><br>
+				<div class="indent">
+				<em class="html4">&lt;col align="left"></em><br>
+				<em class="html4">&lt;col align="char" char="." <strong class="tested">style="border-left-style: dotted"</strong>></em><br>
+				<em class="html4">&lt;col align="right"></em><br>
+				</div>
+			<em class="html4">&lt;colgroup></em><br>
+				<div class="indent">
+				<em class="html4">&lt;col align="char" char="." <strong class="tested">style="background-color: #aca"</strong>></em><br>
+				</div>
+			<em class="html4">&lt;thead></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr></em><br>
+					<div class="indent">
+					<em class="html">&lt;th></em>Item<br>
+					<em class="html">&lt;th align="right"></em>Unit Cost<br>
+					<em class="html">&lt;th></em>Qty.<br>
+					<em class="html">&lt;th align="right"></em>Price
+					</div>
+				</div>
+			<em class="html4">&lt;tfoot></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr></em><br>
+					<div class="indent">
+					<em class="html">&lt;th colspan=3 align="right"></em>Total<br>
+					<em class="html">&lt;td></em>$11.97<br>
+					</div>
+				</div>
+			<em class="html4">&lt;tbody></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr>&lt;td></em>Cookies <em class="html">&lt;td></em>2.49 <em class="html">&lt;td></em>2 <em class="html">&lt;td></em>4.98<br>
+				<em class="html">&lt;tr>&lt;td></em>Soda <em class="html">&lt;td></em>.99 <em class="html">&lt;td></em>1 <em class="html">&lt;td></em>.99<br>
+				<em class="html">&lt;tr>&lt;td></em>Ice Cream <em class="html">&lt;td></em>6 <em class="html">&lt;td></em>1 <em class="html">&lt;td></em>6.<br>
+				</div>
+			</div>
+		<em class="html">&lt;/table></em><br>
+		</div>
+		
+		<h4 class="sampheader">It should be rendered similar to this:</h4>
+			<pre class="blocksamp"><samp>          Grocery Bill
+
+<span class="testcolgroup">Item       : Unit   Qty. </span>|<span class="testcol">  Price</span>
+-------------------------+-------
+<span class="testcolgroup">Cookies    : 2.49      1 </span>|<span class="testcol">   4.98</span>
+<span class="testcolgroup">Soda       :  .99      1 </span>|<span class="testcol">    .99</span>
+<span class="testcolgroup">Ice Cream  : 6         1 </span>|<span class="testcol">   6.  </span>
+-------------------------+-------
+<span class="testcolgroup">                   Total </span>|<span class="testcol"> $11.97</span></samp></pre>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result16">
+		<table frame="void" rules="groups">
+			<caption>Grocery Bill</caption>
+			<colgroup style="background-color: #acc">
+				<col align="left">
+				<col align="char" char="." style=" border-left-style: dotted">
+				<col align="right">
+			<colgroup>
+				<col align="char" char="." style="background-color: #aca">
+			<thead>
+				<tr>
+					<th>Item
+					<th align="right">Unit Cost
+					<th>Qty.
+					<th align="right">Price
+			<tfoot>
+				<tr>
+					<th colspan=3 align="right">Total
+					<td>$11.97
+			<tbody>
+				<tr><td>Cookies <td>2.49 <td>2 <td>4.98
+				<tr><td>Soda <td>.99 <td>1 <td>.99
+				<tr><td>Ice Cream <td>6 <td>1 <td>6.
+		</table>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Column">Column</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Character-Alignment">Character-Alignment</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Table-Rules">Table-Rules</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=29577">#29577</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="summary">
+		<h2>Accessibility for nonvisual Web browsers (<a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#h-11.4" title="HTML 4.0 Specification: 11 Tables">&sect;11.4</a>)</h2>
+	
+		<div class="bodytext">
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-summary" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">summary</code></a></dfn> provides a long description of table contents.
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-scope" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">scope</code></a></dfn> specifies whether a header cell provides information for a row, column, row group, or column group.
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-headers" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">headers</code></a></dfn> lists which table cells provide header information for that cell.
+			</ul>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering changing <code class="attribute">summary</code> from an attribute to a <a class="specsect" href="http://www.w3.org/TR/2004/WD-xhtml2-20040722/mod-edit.html#col_Edit" title="XHTML 2.0 Working Draft: Tables Module"><code class="element">&lt;summary></code> element</a> within <code class="element">&lt;table></code>, so that it can contain markup.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>	
+		<p>Instead of colors, let&rsquo;s add some attributes to the previous table to help speech synthesizers read it aloud.</p>
+
+		
+			<div class="blockcode">
+		<em class="html">&lt;table <em class="html4">frame="void" rules="groups"</em> <strong class="tested">summary="The total for cookies, soda, and ice cream is $11.97."</strong>></em><br>
+			<div class="indent">
+			<em class="html">&lt;caption></em>Grocery Bill<em class="html">&lt;/caption></em><br>
+			<em class="html4">&lt;colgroup></em><br>
+				<div class="indent">
+				<em class="html4">&lt;col align="left"></em><br>
+				<em class="html4">&lt;col align="char" char="."></em><br>
+				<em class="html4">&lt;col align="right"></em><br>
+				</div>
+			<em class="html4">&lt;colgroup></em><br>
+				<div class="indent">
+				<em class="html4">&lt;col align="char" char="."></em><br>
+				</div>
+			<em class="html4">&lt;thead></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr></em><br>
+					<div class="indent">
+					<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>Item<br>
+					<em class="html">&lt;th <strong class="tested">scope="col"</strong> align="right"></em>Unit Cost<br>
+					<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>Qty.<br>
+					<em class="html">&lt;th <strong class="tested">scope="col"</strong> align="right"></em>Price
+					</div>
+				</div>
+			<em class="html4">&lt;tfoot></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr></em><br>
+					<div class="indent">
+					<em class="html">&lt;th <strong class="tested">id="total_header"</strong> colspan=3 align="right"></em>Total<br>
+					<em class="html">&lt;td <strong class="tested">headers="total_header"</strong>></em>$11.97<br>
+					</div>
+				</div>
+			<em class="html4">&lt;tbody></em><br>
+				<div class="indent">
+				<em class="html">&lt;tr>&lt;td></em>Cookies <em class="html">&lt;td></em>2.49 <em class="html">&lt;td></em>2 <em class="html">&lt;td></em>4.98<br>
+				<em class="html">&lt;tr>&lt;td></em>Soda <em class="html">&lt;td></em>.99 <em class="html">&lt;td></em>1 <em class="html">&lt;td></em>.99<br>
+				<em class="html">&lt;tr>&lt;td></em>Ice Cream <em class="html">&lt;td></em>6 <em class="html">&lt;td></em>1 <em class="html">&lt;td></em>6.<br>
+				</div>
+			</div>
+		<em class="html">&lt;/table></em><br>
+		</div>
+
+		<h4 class="sampheader">A speech synthesizer could read this table aloud like:</h4>
+			<pre class="blocksamp"><samp>Caption: Grocery Bill
+Summary: The total for cookies, soda, and ice cream is $11.97.
+Item: Cookies    Unit Cost: 2.49  Qty.: 2  Price:   4.98
+Item: Soda       Unit Cost:  .99  Qty.: 1  Price:    .99
+Item: Ice Cream  Unit Cost: 6     Qty.: 1  Price:   6.
+                                           Total: $11.97</samp></pre>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result17">
+		<table frame="void" rules="groups" summary="The total for cookies, soda, and ice cream is $11.97.">
+			<caption>Grocery Bill</caption>
+			<colgroup>
+				<col align="left">
+				<col align="char" char=".">
+				<col align="right">
+			<colgroup>
+				<col align="char" char=".">
+			<thead>
+				<tr>
+					<th scope="col">Item
+					<th scope="col" align="right">Unit Cost
+					<th scope="col">Qty.
+					<th scope="col" align="right">Price
+			<tfoot>
+				<tr>
+					<th id="total_header" colspan=3 align="right">Total
+					<td headers="total_header">$11.97
+			<tbody>
+				<tr><td>Cookies <td>2.49 <td>2 <td>4.98
+				<tr><td>Soda <td>.99 <td>1 <td>.99
+				<tr><td>Ice Cream <td>6 <td>1 <td>6.
+		</table>
+		</div>
+
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+
+		<div class="bodytext">
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-abbr" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">abbr</code></a></dfn> provides an abbreviated form of a cell&rsquo;s content. Useful for long headers that speech synthesizers may repeat frequently.
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-axis" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">axis</code></a></dfn> declares categories for cells. In effect, it provides header information which does not exist as actual headers in the table.
+			</ul>
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-span" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">span</code></a></dfn> specifies the number of columns in a <code class="element">&lt;colgroup></code>.
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/tables.html#adef-width" title="HTML 4.0 Specification: 11 Tables"><code class="attribute">width</code></a></dfn> specifies the width of a column or each column in a <code class="element">&lt;colgroup></code>.
+			</ul>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+
+		<p>Each column in the following table should be the same width except for the first, which should be twice as wide as the others.</p>
+		
+			<div class="blockcode">
+				<em class="html">&lt;table <em class="html4">rules="groups"</em>></em><br>
+		<em class="html">&lt;caption></em>Filtering Features<em class="html">&lt;/caption></em><br>
+	<em class="html4">&lt;colgroup></em><br>
+	<em class="html4">&lt;col <strong class="tested">width="2*" align="right"</strong>></em><br>
+	<em class="html4">&lt;colgroup <strong class="tested">span=3 width="*" align="center"</strong>></em><br>
+	<em class="html4">&lt;colgroup <strong class="tested">span=3 width="*" align="center"</strong>></em><br>
+	<em class="html4">&lt;colgroup <strong class="tested">span=2 width="*" align="center"</strong>></em><br>
+	<em class="html4">&lt;thead></em><br>
+		<div class="indent">
+		<em class="html">&lt;tr></em><br>
+			<div class="indent">
+			<em class="html">&lt;th rowspan=2 <strong class="tested">scope="col" abbr="Browser"</strong>></em>Web Browser<br>
+			<em class="html">&lt;th colspan=3 <strong class="tested">scope="colgroup" axis="Feature"</strong>></em>Cookies<br>
+			<em class="html">&lt;th colspan=3 <strong class="tested">scope="colgroup" axis="Feature"</strong>></em>Images<br>
+			<em class="html">&lt;th colspan=2 <strong class="tested">scope="colgroup" axis="Feature"</strong>></em>Pop<em class="html4"><em class="entity">&amp;#8208;</em></em>Up Windows<br>
+			</div>
+		<em class="html">&lt;tr></em><br>
+			<div class="indent">
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>external server<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>by domain<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>throw away on exit<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>external server<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>by domain<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>by URL<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>all<br>
+			<em class="html">&lt;th <strong class="tested">scope="col"</strong>></em>by domain<br>
+			</div>
+		</div>
+	<em class="html4">&lt;tbody></em><br>
+		<div class="indent">
+		<em class="html">&lt;tr>&lt;th <strong class="tested">scope="row"</strong>></em>Internet Explorer <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>No <em class="html">&lt;td></em>No<em class="html">&lt;td></em>No<em class="html">&lt;td></em>No <em class="html">&lt;td></em>No<em class="html">&lt;td></em>No<br>
+		<em class="html">&lt;tr>&lt;th <strong class="tested">scope="row"</strong>></em>Mozilla <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>No <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes<br>
+		<em class="html">&lt;tr>&lt;th <strong class="tested">scope="row"</strong>></em>Opera <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes <em class="html">&lt;td></em>No<em class="html">&lt;td></em>No<em class="html">&lt;td></em>No <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>No<br>
+		<em class="html">&lt;tr>&lt;th <strong class="tested">scope="row"</strong>></em>iCab <em class="html">&lt;td></em>No<em class="html">&lt;td></em>No<em class="html">&lt;td></em>Yes <em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes<em class="html">&lt;td></em>Yes <em class="html">&lt;td></em>No<em class="html">&lt;td></em>No<br>
+		</div>
+	<em class="html">&lt;/table></em><br>
+		</div>
+		<h4 class="sampheader">A speech synthesizer could read this table aloud as:</h4>
+			<pre class="blocksamp"><samp>Caption: Filtering Features
+Browser: Internet Explorer
+	Cookies:
+		external server: Yes
+		by domain: Yes
+		throw away on exit: No
+	Images:
+		external server: No
+		by domain: No
+		throw away on exit: No
+	Pop&#8208;Up Windows:
+		all: No
+		by domain: No
+Browser: Mozilla
+	Cookies:
+		external server: Yes
+		by domain: Yes
+		throw away on exit: Yes
+	Images:
+		external server: Yes
+		by domain: Yes
+		throw away on exit: No
+	Pop&#8208;Ups:
+		all: Yes
+		by domain: Yes
+Browser: Opera
+	Cookies:
+		external server: Yes
+		by domain: Yes
+		throw away on exit: Yes
+	Images:
+		external server: No
+		by domain: No
+		throw away on exit: No
+	Pop&#8208;Ups:
+		all: Yes
+		by domain: No
+Browser: iCab
+	Cookies:
+		external server: No
+		by domain: No
+		throw away on exit: Yes
+	Images:
+		external server: Yes
+		by domain: Yes
+		throw away on exit: Yes
+	Pop&#8208;Ups:
+		all: No
+		by domain: No
+</samp></pre>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result18">
+			<table rules="groups">
+	<caption>Filtering Features</caption>
+	<colgroup>
+	<col width="2*" align="right">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=3 width="*" align="center">
+	<colgroup span=2 width="*" align="center">
+	<thead>
+		<tr>
+			<th rowspan=2 scope="col" abbr="Browser">Web Browser
+			<th colspan=3 scope="colgroup" axis="Feature">Cookies
+			<th colspan=3 scope="colgroup" axis="Feature">Images
+			<th colspan=2 scope="colgroup" axis="Feature">Pop&#8208;Up Windows
+		<tr>
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">throw away on exit
+			<th scope="col">external server
+			<th scope="col">by domain
+			<th scope="col">by URL
+			<th scope="col">all
+			<th scope="col">by domain
+	<tbody>
+		<tr><td scope="row">Internet Explorer <td>Yes<td>Yes<td>No <td>No<td>No<td>No <td>No<td>No
+		<tr><td scope="row">Mozilla <td>Yes<td>Yes<td>Yes <td>Yes<td>Yes<td>No <td>Yes<td>Yes
+		<tr><td scope="row">Opera <td>Yes<td>Yes<td>Yes <td>No<td>No<td>No <td>Yes<td>No
+		<tr><td scope="row">iCab <td>No<td>No<td>Yes <td>Yes<td>Yes<td>Yes <td>No<td>No
+	</table>
+		</div>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

@@ -1,0 +1,32 @@
+<!-- intro-part.mldoc --
+  -- --
+  -- COPYRIGHT (c) 1998 Bell Laboratories, Lucent Technologies. --
+  -- --
+  -- The introduction and overview of the SML/NJ Libraries -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John H. Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=1996>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=24>
+
+<TITLE>SML/NJ Library Introduction</TITLE>
+
+<SECTION>
+<HEAD>Introduction</HEAD>
+
+<SECTION>
+<HEAD>Overview</HEAD>
+<PP>
+The &SMLNJ-LIB; is actually a collection of libraries.
+</SECTION>
+
+<SECTION>
+<HEAD>A quick tour</HEAD>
+</SECTION>
+
+</SECTION>
+

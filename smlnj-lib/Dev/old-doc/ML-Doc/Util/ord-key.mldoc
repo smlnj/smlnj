@@ -1,0 +1,47 @@
+<!-- ord-key.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ORD-KEY SDATA "ord-key-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=5>
+<TITLE>The ORD_KEY signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ORD_KEY/ signature</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_MAP/
+  <SIGREF/ORD_SET/
+  <FCTREF/BinarySetFn/
+  <FCTREF/BinaryMapFn/
+  <FCTREF/SplaySetFn/
+  <FCTREF/SplayMapFn/
+  <FCTREF/ListSetFn/
+  <FCTREF/ListMapFn/
+</SEEALSO>
+
+<PP>
+The <SIGREF NOLINK/ORD_KEY/ signature provides an abstract
+description of ordered keys. It specifies a type plus a trivalent
+comparison function.
+
+<SIGNATURE SIGID="ORD_KEY">
+  <SIGBODY SIGID="ORD_KEY" FILE=ORD-KEY>
+    <SPEC>
+      <TYPE><ID>ord_key
+    <SPEC>
+      <VAL>compare<TY>(ord_key * ord_key) -> order
+        <COMMENT>
+          <PROTOTY>
+          compare (<ARG/key/, <ARG/key'/)
+          </PROTOTY>
+          returns <CONREF STRID="General" DOCUMENT=SML-BASIS-DOC/LESS/, 
+	  <CONREF STRID="General" DOCUMENT=SML-BASIS-DOC/EQUAL/,
+	  or <CONREF STRID="General" DOCUMENT=SML-BASIS-DOC/GREATER/ 
+          if and only if <ARG/key/ is less than, equal to, or greater 
+          than <ARG/key'/, respectively, in some defined linear ordering.
+</SIGNATURE>
+
+</INTERFACE>

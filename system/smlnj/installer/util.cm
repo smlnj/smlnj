@@ -1,0 +1,14 @@
+(* installer/util.cm
+ *
+ * Utility routines used both by the main installer
+ * and the library installer
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *
+ * author: Matthias Blume
+ *)
+library
+	structure InstallerUtil
+is
+	installer-util.sml
+	$smlnj/basis/basis.cm

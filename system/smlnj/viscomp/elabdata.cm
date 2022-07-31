@@ -1,0 +1,11 @@
+(* smlnj/viscomp/elabdata.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * A library defining data structures used by the SML/NJ elaborator.
+ *)
+Library
+	group($compiler/ElabData/elabdata.cm)
+is
+	(* reference to our only group... *)
+	$compiler/ElabData/elabdata.cm

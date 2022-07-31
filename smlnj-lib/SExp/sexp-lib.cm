@@ -1,0 +1,34 @@
+(* sexp-lib.cm
+ *
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Author: Damon Wang (with modifications by John Reppy)
+ *)
+
+Library
+
+  structure SExp
+  structure SExpParser
+  structure SExpPP
+  structure SExpPrinter
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $/ml-lpt-lib.cm
+
+#if defined(NO_PLUGINS)
+  sexp.lex.sml
+#else
+  sexp.lex : ml-ulex
+#endif
+
+  sexp.sml
+  sexp-parser.sml
+  sexp-pp.sml
+  sexp-printer.sml
+  sexp-string-util.sml
+  sexp-tokens.sml

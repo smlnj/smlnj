@@ -1,0 +1,29 @@
+(*
+ * Library exporting structure CM.
+ *   (this implements $smlnj/cm/cm.cm)
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	signature CM
+	structure CM
+is
+	(* The following two libraries are here to make sure that
+	 * pickling does not need to refer to host-compiler-0.cm.
+	 * This is an extremely *fragile* hack, but it significantly reduces
+	 * autoloading time for structure CM (as well as the system's
+	 * memory footprint).
+	 * The two libraries must be mentioned _first_ in order to take
+	 * advantage of CM's implicit priority scheme when it comes
+	 * to constructing the pickle environment for a library.
+	 * (The rule is that libraries that get mentioned early are
+	 * being favored.) *)
+	$smlnj/basis/basis.cm
+	$smlnj/internal/srcpath-lib.cm
+
+	(* Here is the actual implementation... *)
+	$smlnj/internal/cm-sig-lib.cm
+	$smlnj/internal/cm0.cm
+	fetch-cm.sml

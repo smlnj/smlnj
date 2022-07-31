@@ -1,0 +1,85 @@
+<!-- unix-path.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=15>
+<TITLE>The UNIX_PATH signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/UNIX_PATH/ signature</HEAD>
+<SEEALSO>
+  <STRREF>UnixEnv</STRREF>
+</SEEALSO>
+
+<PP>
+<!-- Some general introductory text -->
+
+<STRUCTURE STRID="UnixPath">
+  <OPAQUE>  <SIGBODY SIGID="UNIX_PATH" FILE=UNIX-PATH>
+    <SPEC>
+      <TYPE><ID>path_list<TY>string list
+    <SPEC>
+      <VAL>getPath<TY>unit -> path_list
+        <COMMENT>
+          <PROTOTY>
+          getPath <ARG>()</ARG>
+          </PROTOTY>
+          <PP>
+          get the user's PATH environment variable.
+        </COMMENT>
+    <SPEC>
+      <DATATYPEDEF><ID>access_mode</ID>
+	<TYREF STRID="OS.FileSys" DOCUMENT=SML-BASIS-DOC>OS.FileSys.access_mode</TYREF>
+      </DATATYPEDEF>
+    <SPEC>
+      <DATATYPE><ID>file_type
+        <CONS>F_REGULAR
+        <CONS>F_DIR
+        <CONS>F_SYMLINK
+        <CONS>F_SOCK
+        <CONS>F_CHR
+        <CONS>F_BLK
+      </DATATYPE>
+    <SPEC>
+      <EXN>NoSuchFile
+    <SPEC>
+      <VAL>findFile<TY>(path_list * access_mode list) -> string -> string
+        <COMMENT>
+          <PROTOTY>
+          findFile (<ARG>pl</ARG>, <ARG>l</ARG>) <ARG>s</ARG>
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of findFile HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>findFiles<TY>(path_list * access_mode list) -> string -> string list
+        <COMMENT>
+          <PROTOTY>
+          findFiles (<ARG>pl</ARG>, <ARG>l</ARG>) <ARG>s</ARG>
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of findFiles HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>findFileOfType<TY>(path_list * file_type * access_mode list) -> string -> string
+        <COMMENT>
+          <PROTOTY>
+          findFileOfType (<ARG>pl</ARG>, <ARG>ft</ARG>, <ARG>l</ARG>) <ARG>s</ARG>
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of findFileOfType HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>findFilesOfType<TY>(path_list * file_type * access_mode list) -> string -> string list
+        <COMMENT>
+          <PROTOTY>
+          findFilesOfType (<ARG>pl</ARG>, <ARG>ft</ARG>, <ARG>l</ARG>) <ARG>s</ARG>
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of findFilesOfType HERE.
+        </COMMENT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

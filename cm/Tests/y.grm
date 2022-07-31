@@ -1,0 +1,201 @@
+(* -*- sml -*-
+ *
+ * ML-Yacc grammar for CM description files
+ *
+ * (C) 1999 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+
+structure S = CMSemant
+
+%%
+
+%term EOF
+    | FILE_STANDARD of string
+    | FILE_NATIVE of string
+    | CM_ID of string
+    | ML_ID of string
+    | NUMBER of int
+    | ALIAS | GROUP | LIBRARY | IS
+    | LPAREN | RPAREN | COLON
+    | IF | ELIF | ELSE | ENDIF
+    | ERROR of string
+    | STRUCTURE | SIGNATURE | FUNCTOR | FUNSIG
+    | DEFINED
+    | PLUS | MINUS | TIMES | DIV | MOD | TILDE
+    | ANDALSO | ORELSE | NOT
+    | LT | LE | GT | GE | EQ | NE
+
+%nonterm description of S.group
+       | alias of S.group
+       | group of S.group
+       | privspec of S.privilegespec
+       | opt_exports of S.exports option
+       | exports of S.exports
+       | export of S.exports
+       | guarded_exports of S.exports * S.exports
+       | else_exports of S.exports
+       | members of S.members
+       | member of S.members
+       | guarded_members of S.members * S.members
+       | else_members of S.members
+       | aexp of S.aexp
+       | boolexp of S.exp
+       | exp of S.exp
+       | ml_symbol of S.ml_symbol
+       | pathname of S.pathname
+       | cmpath of S.pathname
+       | nativepath of S.pathname
+       | sym of S.cm_symbol
+       | word of S.cm_symbol
+
+%pos int
+%verbose
+%arg (grouppath, context, error, recParse, doMember, gp) :
+    S.pathname *
+    S.context *
+    (pos * pos -> string -> unit) *
+    (pos * pos -> S.pathname -> S.group) *
+    (S.pathname * pos * pos * S.cm_symbol option -> S.members) *
+    GeneralParams.info
+%start description
+%eop EOF
+%noshift EOF
+
+%name CM
+
+%keyword ALIAS GROUP LIBRARY IS IF ELIF ELSE ENDIF DEFINED
+  STRUCTURE SIGNATURE FUNCTOR FUNSIG
+
+%prefer LPAREN
+
+%left ORELSE
+%left ANDALSO
+%nonassoc LT LE GT GE
+%nonassoc EQ NE
+%left PLUS MINUS
+%left TIMES DIV MOD
+%left NOT TILDE
+
+%%
+
+description : alias				(alias)
+	    | group				(group)
+
+alias : ALIAS pathname				(recParse
+						 (pathnameleft, pathnameright)
+						 pathname)
+
+group : privspec GROUP opt_exports IS members   (S.group
+						 (grouppath,
+						  privspec, opt_exports,
+						  members,
+						  error (opt_exportsleft,
+							 opt_exportsright),
+						  gp))
+      | privspec LIBRARY exports IS members     (S.library
+						 (grouppath,
+						  privspec, exports, members,
+						  error (exportsleft,
+							 exportsright),
+						  gp))
+
+privspec : (* empty *)                          (S.initialPrivilegeSpec)
+         | privspec word                        (S.require (privspec, word,
+							    error (wordleft,
+								   wordright)))
+         | privspec LPAREN word RPAREN          (S.grant (privspec, word,
+							  error (wordleft,
+								 wordright)))
+
+exports : export				(export)
+	| export exports			(S.exports (export, exports))
+
+opt_exports : (* empty *)                       (NONE)
+            | exports                           (SOME exports)
+
+export : ml_symbol				(S.export ml_symbol)
+       | IF exp guarded_exports			(S.guarded_exports
+						  (exp, guarded_exports,
+						   error (expleft, expright)))
+       | ERROR                                  (S.error_export
+						 (fn () =>
+						  error (ERRORleft, ERRORright)
+						        ERROR))
+
+guarded_exports : exports else_exports	        ((exports, else_exports))
+
+else_exports : ENDIF				(S.emptyExports)
+	     | ELSE exports ENDIF		(exports)
+             | ELIF exp guarded_exports		(S.guarded_exports
+						 (exp, guarded_exports,
+						  error (expleft, expright)))
+
+members : (* empty *)				(S.emptyMembers)
+	| member members			(S.members (member, members))
+
+member : pathname				(doMember (pathname,
+							   pathnameleft,
+							   pathnameright,
+							   NONE))
+       | pathname COLON word			(doMember (pathname,
+							   pathnameleft,
+							   pathnameright,
+							   SOME word))
+       | IF exp guarded_members			(S.guarded_members
+						 (exp, guarded_members,
+						  error (expleft, expright)))
+       | ERROR                                  (S.error_member
+						 (fn () =>
+						  error (ERRORleft, ERRORright)
+						        ERROR))
+
+guarded_members : members else_members	        ((members, else_members))
+
+else_members : ENDIF				(S.emptyMembers)
+	     | ELSE members ENDIF		(members)
+	     | ELIF exp guarded_members		(S.guarded_members
+						 (exp, guarded_members,
+						  error (expleft, expright)))
+
+word : FILE_STANDARD                            (S.cm_symbol FILE_STANDARD)
+
+sym : CM_ID                                     (S.cm_symbol CM_ID)
+
+exp : boolexp					(boolexp)
+
+aexp : NUMBER				        (S.number NUMBER)
+     | sym					(S.variable sym)
+     | LPAREN aexp RPAREN		        (aexp)
+     | aexp PLUS aexp		                (S.plus (aexp1, aexp2))
+     | aexp MINUS aexp		                (S.minus (aexp1, aexp2))
+     | aexp TIMES aexp		                (S.times (aexp1, aexp2))
+     | aexp DIV aexp		                (S.divide (aexp1, aexp2))
+     | aexp MOD aexp		                (S.modulus (aexp1, aexp2))
+     | TILDE aexp		                (S.negate aexp)
+
+boolexp : DEFINED LPAREN ml_symbol RPAREN	(S.ml_defined ml_symbol)
+	| DEFINED LPAREN sym RPAREN		(S.cm_defined sym)
+	| LPAREN boolexp RPAREN			(boolexp)
+	| boolexp ANDALSO boolexp		(S.conj (boolexp1, boolexp2))
+	| boolexp ORELSE boolexp		(S.disj (boolexp1, boolexp2))
+	| boolexp EQ boolexp			(S.beq (boolexp1, boolexp2))
+	| boolexp NE boolexp			(S.bne (boolexp1, boolexp2))
+	| NOT boolexp				(S.not boolexp)
+	| aexp LT aexp			        (S.lt (aexp1, aexp2))
+	| aexp LE aexp			        (S.le (aexp1, aexp2))
+	| aexp GT aexp			        (S.gt (aexp1, aexp2))
+	| aexp GE aexp			        (S.ge (aexp1, aexp2))
+	| aexp EQ aexp			        (S.eq (aexp1, aexp2))
+	| aexp NE aexp			        (S.ne (aexp1, aexp2))
+
+ml_symbol : STRUCTURE ML_ID			(S.ml_structure ML_ID)
+	  | SIGNATURE ML_ID			(S.ml_signature ML_ID)
+	  | FUNCTOR ML_ID			(S.ml_functor ML_ID)
+	  | FUNSIG ML_ID			(S.ml_funsig ML_ID)
+
+pathname : FILE_STANDARD			(S.file_standard
+						 (FILE_STANDARD, context))
+	 | FILE_NATIVE				(S.file_native
+						 (FILE_NATIVE, context))

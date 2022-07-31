@@ -1,0 +1,2280 @@
+@FILES
+  ["real"; "The REAL signature";]
+  ["unix"; "The Unix structure";]
+  ["index"; "Standard ML Basis Library";
+    @SECTION "Introduction" []
+     @FILE "overview"
+     @FILE "top-level-chapter"
+     @FILE "manpages"
+     @FILE "credits"
+     @FILE "history"
+  ]
+  ["math"; "The MATH signature";]
+  ["posix-proc-env"; "The Posix.ProcEnv structure";]
+  ["os-file-sys"; "The OS.FileSys structure";]
+  ["imperative-io"; "The IMPERATIVE_IO signature";]
+  ["posix-file-sys"; "The Posix.FileSys structure";]
+  ["array"; "The Array structure";]
+  ["posix-sys-db"; "The Posix.SysDB structure";]
+  ["stream-io-fn"; "The StreamIO functor";]
+  ["string"; "The STRING signature";]
+  ["io"; "The IO structure";]
+  ["word"; "The WORD signature";]
+  ["list"; "The List structure";]
+  ["imperative-io-fn"; "The ImperativeIO functor";]
+  ["inet-sock"; "The INetSock structure";]
+  ["date"; "The Date structure";]
+  ["char"; "The CHAR signature";]
+  ["posix-signal"; "The Posix.Signal structure";]
+  ["mono-vector"; "The MONO_VECTOR signature";]
+  ["array-slice"; "The ARRAY_SLICE signature";]
+  ["unix-sock"; "The UnixSock structure";]
+  ["string-cvt"; "The StringCvt structure";]
+  ["substring"; "The SUBSTRING signature";]
+  ["vector"; "The Vector structure";]
+  ["net-host-db"; "The NetHostDB structure";]
+  ["posix-io"; "The Posix.IO structure";]
+  ["generic-sock"; "The GenericSock structure";]
+  ["windows"; "The Windows structure";]
+  ["ieee-float"; "The IEEEReal structure";]
+  ["prim-io-fn"; "The PrimIO functor";]
+  ["stream-io"; "The STREAM_IO signature";]
+  ["serv-db"; "The NetServDB structure";]
+  ["posix"; "The Posix structure";]
+  ["mono-array"; "The MONO_ARRAY signature";]
+  ["int-inf"; "The IntInf structure";]
+  ["text"; "The TEXT signature";]
+  ["mono-vector-slice"; "The MONO_VECTOR_SLICE signature";]
+  ["socket"; "The Socket structure";]
+  ["bool"; "The Bool structure";]
+  ["os-path"; "The OS.Path structure";]
+  ["posix-process"; "The Posix.Process structure";]
+  ["time"; "The Time structure";]
+  ["vector-slice"; "The VECTOR_SLICE signature";]
+  ["command-line"; "The CommandLine structure";]
+  ["overview"; "SML Basis Library Overview";
+    @SECTION "Overview" [
+      @SECTION "Top-level environment" []
+      @SECTION "Basic types" []
+      @SECTION "Standard datatypes" []
+      @SECTION "Vectors and arrays" []
+      @SECTION "Text" []
+      @SECTION "Input/output" []
+      @SECTION "System interfaces" []
+      @SECTION "Sockets" []
+      @SECTION "\|Unix\|-specific interfaces" []
+      @SECTION "\|Microsoft Windows\|-specific interfaces" []
+      @SECTION "Required components" [
+        @SECTION "Required signatures" []
+        @SECTION "Required structures" []
+      ]
+      @SECTION "Optional components" [
+        @SECTION "Optional signatures" []
+        @SECTION "Optional structures" []
+        @SECTION "Optional functors" []
+      ]
+    ]
+  ]
+  ["integer"; "The INTEGER signature";]
+  ["credits"; "Contributors";
+    @SECTION "Contributors" []
+  ]
+  ["mono-array-slice"; "The MONO_ARRAY_SLICE signature";]
+  ["history"; "Change history";
+    @SECTION "Change history" [
+      @SECTION "May 24, 2004" []
+      @SECTION "May 12, 2004" []
+      @SECTION "May 4, 2004" []
+      @SECTION "April 30, 2004" []
+      @SECTION "April 12, 2004" []
+      @SECTION "April 7, 2004" []
+      @SECTION "September 18, 2003" []
+      @SECTION "September 15, 2003" []
+      @SECTION "September 12, 2003" []
+      @SECTION "September 11, 2003" []
+      @SECTION "September 8, 2003" []
+      @SECTION "August 26, 2003" []
+      @SECTION "August 19, 2003" []
+      @SECTION "August 14, 2003" []
+      @SECTION "July 30, 2003" []
+      @SECTION "July 30, 2003" []
+      @SECTION "July 15, 2003" []
+      @SECTION "July 14, 2003" []
+      @SECTION "July 10, 2003" []
+      @SECTION "June 26, 2003" []
+      @SECTION "May 9, 2003" []
+      @SECTION "April 26, 2003" []
+      @SECTION "July 9, 2002" []
+      @SECTION "July 3, 2002" []
+      @SECTION "June 18, 2002" []
+      @SECTION "December 6, 2001" []
+      @SECTION "October 29, 2001" []
+      @SECTION "October 10, 2001" []
+      @SECTION "April 11, 2001" []
+      @SECTION "April 3, 2001" []
+      @SECTION "December 15, 2000" []
+      @SECTION "November 20, 2000" []
+      @SECTION "October 31, 2000" []
+      @SECTION "October 24, 2000" []
+      @SECTION "October 17, 2000" []
+      @SECTION "September 20, 2000" []
+      @SECTION "September 6, 2000" []
+      @SECTION "September 4, 2000" []
+      @SECTION "July 17, 2000" []
+      @SECTION "June 1, 2000" []
+      @SECTION "March 29, 2000" []
+      @SECTION "Summer and Fall 1999" []
+      @SECTION "April 28, 1999" []
+      @SECTION "February 26, 1999" []
+      @SECTION "October 5, 1998" []
+      @SECTION "August 28, 1998" []
+      @SECTION "August 26, 1998" []
+      @SECTION "August 12, 1998" []
+      @SECTION "July 21, 1998" []
+      @SECTION "May 7, 1998" []
+      @SECTION "November 29, 1997" []
+    ]
+  ]
+  ["os"; "The OS structure";]
+  ["pack-float"; "The PACK_REAL signature";]
+  ["text-stream-io"; "The TEXT_STREAM_IO signature";]
+  ["list-pair"; "The ListPair structure";]
+  ["mono-array2"; "The MONO_ARRAY2 signature";]
+  ["prot-db"; "The NetProtDB structure";]
+  ["bit-flags"; "The BIT_FLAGS signature";]
+  [@EMPTY "manpages"; "SML Basis Manual Pages";
+    @SECTION "Manual pages" "sec:man-pages" [
+       @FILE "array"
+       @FILE "array2"
+       @FILE "array-slice"
+       @FILE "bin-io"
+       @FILE "bit-flags"
+       @FILE "bool"
+       @FILE "byte"
+       @FILE "char"
+       @FILE "command-line"
+       @FILE "date"
+       @FILE "general"
+       @FILE "generic-sock"
+       @FILE "ieee-float"
+       @FILE "imperative-io"
+       @FILE "imperative-io-fn"
+       @FILE "inet-sock"
+       @FILE "integer"
+       @FILE "int-inf"
+       @FILE "io"
+       @FILE "list"
+       @FILE "list-pair"
+       @FILE "math"
+       @FILE "mono-array"
+       @FILE "mono-array2"
+       @FILE "mono-array-slice"
+       @FILE "mono-vector"
+       @FILE "mono-vector-slice"
+       @FILE "net-host-db"
+       @FILE "prot-db"
+       @FILE "serv-db"
+       @FILE "option"
+       @FILE "os"
+       @FILE "os-file-sys"
+       @FILE "os-io"
+       @FILE "os-path"
+       @FILE "os-process"
+       @FILE "pack-float"
+       @FILE "pack-word"
+       @FILE "posix"
+       @FILE "posix-error"
+       @FILE "posix-file-sys"
+       @FILE "posix-io"
+       @FILE "posix-proc-env"
+       @FILE "posix-process"
+       @FILE "posix-signal"
+       @FILE "posix-sys-db"
+       @FILE "posix-tty"
+       @FILE "prim-io"
+       @FILE "prim-io-fn"
+       @FILE "real"
+       @FILE "socket"
+       @FILE "stream-io"
+       @FILE "stream-io-fn"
+       @FILE "string"
+       @FILE "string-cvt"
+       @FILE "substring"
+       @FILE "text"
+       @FILE "text-io"
+       @FILE "text-stream-io"
+       @FILE "time"
+       @FILE "timer"
+       @FILE "unix"
+       @FILE "unix-sock"
+       @FILE "vector"
+       @FILE "vector-slice"
+       @FILE "windows"
+       @FILE "word"
+    ]
+  ]
+  ["prim-io"; "The PRIM_IO signature";]
+  ["general"; "The General structure";]
+  ["os-process"; "The OS.Process structure";]
+  ["array2"; "The Array2 structure";]
+  ["posix-tty"; "The Posix.TTY structure";]
+  ["timer"; "The Timer structure";]
+  ["byte"; "The Byte structure";]
+  ["os-io"; "The OS.IO structure";]
+  ["pack-word"; "The PACK_WORD signature";]
+  ["option"; "The Option structure";]
+  ["posix-error"; "The Posix.Error structure";]
+  ["text-io"; "The TEXT_IO signature";]
+  ["top-level-chapter"; "Top-level Environment";
+    @SECTION "Top-level environment" "sec:top-level-env" [
+      @SECTION "Modules in the top-level environment" []
+      @SECTION "Top-level type, exception, and value identifiers" []
+      @SECTION "Overloaded identifiers" []
+      @SECTION "Infix identifiers" []
+      @SECTION "The process environment" []
+    ]
+  ]
+  ["bin-io"; "The BinIO structure";]
+@ANCHORS
+  ["PrimIO:Layer"; "prim-io"]
+@LABELS
+  ["tbl:top-level-types"; @TABLE; "top-level-chapter"]
+  ["sec:top-level-env"; @SECTION; "top-level-chapter"]
+  ["tbl:top-level-fns"; @TABLE; "top-level-chapter"]
+  ["code:gcvt"; @CODE; "string-cvt"]
+  ["sec:man-pages"; @SECTION; "manpages"]
+@SIGNATURE STRING_CVT "string-cvt" [
+  @TYPES 
+    @DATATYPE radix [ BIN OCT DEC HEX]
+    @TYPE reader
+    @TYPE cs
+    @DATATYPE realfmt [ SCI FIX GEN EXACT]
+  @VALS 
+    takel
+    skipWS
+    padLeft
+    dropl
+    padRight
+    splitl
+    scanString
+]
+@SIGNATURE REAL "real" [
+  @STRUCTURE Math MATH
+  @TYPES 
+    @TYPE real
+  @VALS 
+    signBit
+    \|@LT\|
+    realCeil
+    nextAfter
+    isNormal
+    class
+    isNan
+    fromLargeInt
+    fromString
+    toManExp
+    ~
+    fromLarge
+    \|@GTE\|
+    floor
+    fromDecimal
+    checkFloat
+    rem
+    min
+    maxFinite
+    \|@LTE\|
+    minPos
+    max
+    fmt
+    negInf
+    round
+    unordered
+    isFinite
+    compareReal
+    \|@GT\|
+    split
+    ceil
+    fromManExp
+    !=
+    toLarge
+    minNormalPos
+    realTrunc
+    toDecimal
+    scan
+    abs
+    radix
+    copySign
+    posInf
+    fromInt
+    sign
+    realMod
+    *+
+    realFloor
+    compare
+    sameSign
+    *-
+    toLargeInt
+    ==
+    *
+    toString
+    +
+    ?=
+    precision
+    realRound
+    trunc
+    -
+    toInt
+    /
+]
+@SIGNATURE UNIX "unix" [
+  @TYPES 
+    @DATATYPE exit_status [ W_EXITED W_EXITSTATUS W_SIGNALED W_STOPPED]
+    @TYPE proc
+    @TYPE signal
+  @VALS 
+    binInstreamOf
+    execute
+    streamsOf
+    reap
+    kill
+    textOutstreamOf
+    binOutstreamOf
+    executeInEnv
+    fromStatus
+    exit
+    textInstreamOf
+]
+@SIGNATURE MONO_ARRAY_SLICE "mono-array-slice" [
+  @TYPES 
+    @TYPE slice
+    @TYPE vector_slice
+    @TYPE elem
+    @TYPE array
+    @TYPE vector
+  @VALS 
+    slice
+    foldri
+    exists
+    modifyi
+    foldl
+    find
+    length
+    update
+    foldr
+    modify
+    copyVec
+    all
+    appi
+    app
+    full
+    vector
+    collate
+    sub
+    subslice
+    foldli
+    findi
+    base
+    copy
+    isEmpty
+    getItem
+]
+@SIGNATURE TEXT_STREAM_IO "text-stream-io" [
+  @INCLUDE STREAM_IO
+  @VALS 
+    inputLine
+    outputSubstr
+]
+@SIGNATURE SOCKET "socket" [
+  @STRUCTURE AF [
+    @TYPES 
+      @TYPE addr_family
+    @VALS 
+      fromString
+      toString
+      list
+  ]
+  @STRUCTURE SOCK [
+    @TYPES 
+      @EQTYPE sock_type
+    @VALS 
+      fromString
+      stream
+      toString
+      dgram
+      list
+  ]
+  @STRUCTURE Ctl [
+    @VALS 
+      getSockName
+      setKEEPALIVE
+      getDONTROUTE
+      setRCVBUF
+      getDEBUG
+      getERROR
+      getNREAD
+      setREUSEADDR
+      setOOBINLINE
+      setDONTROUTE
+      getATMARK
+      getLINGER
+      getSNDBUF
+      getTYPE
+      setDEBUG
+      getBROADCAST
+      getKEEPALIVE
+      getRCVBUF
+      setLINGER
+      getPeerName
+      setSNDBUF
+      getREUSEADDR
+      setBROADCAST
+      getOOBINLINE
+  ]
+  @TYPES 
+    @TYPE in_flags
+    @TYPE passive
+    @TYPE stream
+    @TYPE sock
+    @DATATYPE shutdown_mode [ NO_RECVS NO_SENDS NO_RECVS_OR_SENDS]
+    @TYPE out_flags
+    @TYPE sock_addr
+    @TYPE dgram
+    @TYPE active
+    @TYPE sock_desc
+  @VALS 
+    acceptNB
+    sameAddr
+    sendArrTo
+    sameDesc
+    close
+    recvArrFromNB
+    connectNB
+    sendVecToNB
+    sockDesc
+    sendArrNB
+    accept
+    familyOfAddr
+    recvArrNB
+    recvVecFromNB'
+    recvArrFrom
+    connect
+    sendVecTo
+    shutdown
+    bind
+    sendArr
+    sendVecNB'
+    recvArrFromNB'
+    select
+    recvVecFromNB
+    sendVecToNB'
+    recvArr
+    recvVecNB'
+    sendArrNB'
+    sendVecNB
+    recvVecFrom'
+    sendArrToNB'
+    recvArrNB'
+    recvVecNB
+    sendVec'
+    listen
+    recvArrFrom'
+    sendVecTo'
+    sendArrToNB
+    recvVecFrom
+    recvVec'
+    sendArr'
+    ioDesc
+    sendVec
+    sendArrTo'
+    recvArr'
+    recvVec
+]
+@SIGNATURE MONO_VECTOR_SLICE "mono-vector-slice" [
+  @TYPES 
+    @TYPE slice
+    @TYPE elem
+    @TYPE vector
+  @VALS 
+    slice
+    foldri
+    exists
+    foldl
+    find
+    length
+    mapi
+    foldr
+    all
+    appi
+    map
+    app
+    full
+    vector
+    collate
+    concat
+    sub
+    subslice
+    foldli
+    findi
+    base
+    isEmpty
+    getItem
+]
+@SIGNATURE MATH "math" [
+  @TYPES 
+    @TYPE real
+  @VALS 
+    atan
+    acos
+    atan2
+    pow
+    sqrt
+    asin
+    tanh
+    cosh
+    sinh
+    tan
+    log10
+    e
+    cos
+    pi
+    sin
+    ln
+    exp
+]
+@SIGNATURE POSIX_IO "posix-io" [
+  @STRUCTURE FD [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      cloexec
+  ]
+  @STRUCTURE O [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      nonblock
+      append
+      sync
+  ]
+  @STRUCTURE FLock [
+    @TYPES 
+      @TYPE flock
+    @VALS 
+      pid
+      len
+      whence
+      ltype
+      start
+      flock
+  ]
+  @TYPES 
+    @DATATYPE open_mode [ O_RDONLY O_WRONLY O_RDWR]
+    @EQTYPE pid
+    @EQTYPE file_desc
+    @DATATYPE whence [ SEEK_SET SEEK_CUR SEEK_END]
+    @DATATYPE lock_type [ F_RDLCK F_WRLCK F_UNLCK]
+  @VALS 
+    getfl
+    dupfd
+    lseek
+    close
+    setfd
+    getlk
+    writeVec
+    readVec
+    pipe
+    setfl
+    writeArr
+    mkTextReader
+    readArr
+    fsync
+    setlk
+    mkBinReader
+    dup
+    getfd
+    setlkw
+    mkTextWriter
+    dup2
+    mkBinWriter
+]
+@SIGNATURE GENERIC_SOCK "generic-sock" [
+  @VALS 
+    socket'
+    socket
+    socketPair'
+    socketPair
+]
+@SIGNATURE GENERAL "general" [
+  @TYPES 
+    @EQTYPE unit
+    @DATATYPE order [ LESS EQUAL GREATER]
+    @TYPE exn
+  @EXCEPTIONS 
+    Chr
+    Subscript
+    Span
+    Div
+    Overflow
+    Domain
+    Size
+    Fail
+    Bind
+    Match
+  @VALS 
+    ignore
+    exnMessage
+    !
+    before
+    :=
+    exnName
+    o
+]
+@SIGNATURE OS_FILE_SYS "os-file-sys" [
+  @TYPES 
+    @DATATYPE access_mode [ A_READ A_WRITE A_EXEC]
+    @TYPE dirstream
+    @EQTYPE file_id
+  @VALS 
+    fullPath
+    openDir
+    tmpName
+    hash
+    mkDir
+    isLink
+    readLink
+    readDir
+    isDir
+    setTime
+    fileId
+    rmDir
+    remove
+    realPath
+    access
+    closeDir
+    compare
+    rewindDir
+    rename
+    chDir
+    fileSize
+    getDir
+    modTime
+]
+@SIGNATURE BIN_IO "bin-io" [
+  @INCLUDE IMPERATIVE_IO
+  @VALS 
+    openIn
+    openAppend
+    openOut
+]
+@SIGNATURE SUBSTRING "substring" [
+  @TYPES 
+    @TYPE substring
+    @EQTYPE string
+    @EQTYPE char
+  @VALS 
+    slice
+    foldl
+    getc
+    foldr
+    extract
+    splitAt
+    concatWith
+    tokens
+    string
+    concat
+    triml
+    splitl
+    sub
+    size
+    isEmpty
+    translate
+    trimr
+    splitr
+    takel
+    explode
+    taker
+    isPrefix
+    isSubstring
+    substring
+    app
+    isSuffix
+    dropl
+    span
+    full
+    collate
+    position
+    dropr
+    compare
+    fields
+    first
+    base
+]
+@SIGNATURE PACK_REAL "pack-float" [
+  @TYPES 
+    @TYPE real
+  @VALS 
+    update
+    subVec
+    fromBytes
+    isBigEndian
+    subArr
+    bytesPerElem
+    toBytes
+]
+@SIGNATURE LIST_PAIR "list-pair" [
+  @EXCEPTIONS 
+    UnequalLengths
+  @VALS 
+    exists
+    foldl
+    zip
+    mapEq
+    unzip
+    appEq
+    foldr
+    all
+    map
+    app
+    foldlEq
+    zipEq
+    foldrEq
+    allEq
+]
+@SIGNATURE MONO_ARRAY "mono-array" [
+  @TYPES 
+    @TYPE elem
+    @EQTYPE array
+    @TYPE vector
+  @VALS 
+    foldri
+    exists
+    modifyi
+    foldl
+    find
+    length
+    update
+    maxLen
+    foldr
+    modify
+    copyVec
+    all
+    appi
+    array
+    fromList
+    app
+    tabulate
+    vector
+    collate
+    sub
+    foldli
+    findi
+    copy
+]
+@SIGNATURE MONO_VECTOR "mono-vector" [
+  @TYPES 
+    @TYPE elem
+    @TYPE vector
+  @VALS 
+    foldri
+    exists
+    foldl
+    find
+    length
+    update
+    maxLen
+    mapi
+    foldr
+    all
+    appi
+    map
+    fromList
+    app
+    tabulate
+    collate
+    concat
+    sub
+    foldli
+    findi
+]
+@SIGNATURE LIST "list" [
+  @TYPES 
+    @DATATYPE list [ nil ::]
+  @EXCEPTIONS 
+    Empty
+  @VALS 
+    tl
+    exists
+    find
+    foldl
+    length
+    take
+    filter
+    foldr
+    all
+    partition
+    mapPartial
+    hd
+    map
+    @
+    app
+    tabulate
+    last
+    collate
+    revAppend
+    drop
+    concat
+    nth
+    null
+    rev
+    getItem
+]
+@SIGNATURE WORD "word" [
+  @TYPES 
+    @EQTYPE word
+  @VALS 
+    \|@LT\|\|@LT\|
+    \|@LT\|
+    toLargeIntX
+    toLargeWordX
+    toLargeX
+    fromLargeInt
+    fromString
+    fromLargeWord
+    ~
+    fromLarge
+    mod
+    \|@GTE\|
+    div
+    min
+    \|@LTE\|
+    max
+    \|@GT\|\|@GT\|
+    fmt
+    wordSize
+    toLargeWord
+    \|@GT\|
+    toLarge
+    ~\|@GT\|\|@GT\|
+    scan
+    toIntX
+    fromInt
+    orb
+    notb
+    andb
+    compare
+    toLargeInt
+    *
+    toString
+    +
+    xorb
+    -
+    toInt
+]
+@SIGNATURE DATE "date" [
+  @TYPES 
+    @DATATYPE month [ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec]
+    @DATATYPE weekday [ Mon Tue Wed Thu Fri Sat Sun]
+    @TYPE date
+  @EXCEPTIONS 
+    Date
+  @VALS 
+    localOffset
+    fromTimeUniv
+    scan
+    offset
+    fromString
+    day
+    year
+    minute
+    toTime
+    month
+    isDst
+    compare
+    fmt
+    weekDay
+    toString
+    second
+    date
+    hour
+    fromTimeLocal
+    yearDay
+]
+@SIGNATURE CHAR "char" [
+  @TYPES 
+    @EQTYPE string
+    @EQTYPE char
+  @VALS 
+    \|@LT\|
+    pred
+    fromString
+    \|@GTE\|
+    minChar
+    isAlpha
+    isAlphaNum
+    maxChar
+    \|@LTE\|
+    isAscii
+    isUpper
+    \|@GT\|
+    isDigit
+    fromCString
+    isGraph
+    contains
+    toUpper
+    notContains
+    scan
+    maxOrd
+    chr
+    toCString
+    succ
+    isCntrl
+    isHexDigit
+    ord
+    isLower
+    isPunct
+    compare
+    isSpace
+    isPrint
+    toString
+    toLower
+]
+@SIGNATURE NET_PROT_DB "prot-db" [
+  @TYPES 
+    @TYPE entry
+  @VALS 
+    name
+    getByName
+    aliases
+    protocol
+    getByNumber
+]
+@SIGNATURE OS "os" [
+  @STRUCTURE Path OS_PATH
+  @STRUCTURE FileSys OS_FILE_SYS
+  @STRUCTURE Process OS_PROCESS
+  @STRUCTURE IO OS_IO
+  @TYPES 
+    @EQTYPE syserror
+  @EXCEPTIONS 
+    SysErr
+  @VALS 
+    syserror
+    errorMsg
+    errorName
+]
+@SIGNATURE POSIX "posix" [
+  @STRUCTURE ProcEnv POSIX_PROC_ENV
+  @STRUCTURE Process POSIX_PROCESS
+  @STRUCTURE FileSys POSIX_FILE_SYS
+  @STRUCTURE TTY POSIX_TTY
+  @STRUCTURE SysDB POSIX_SYS_DB
+  @STRUCTURE IO POSIX_IO
+  @STRUCTURE Error POSIX_ERROR
+  @STRUCTURE Signal POSIX_SIGNAL
+]
+@SIGNATURE COMMAND_LINE "command-line" [
+  @VALS 
+    name
+    arguments
+]
+@SIGNATURE OS_IO "os-io" [
+  @STRUCTURE Kind [
+    @VALS 
+      file
+      socket
+      pipe
+      dir
+      device
+      tty
+      symlink
+  ]
+  @TYPES 
+    @EQTYPE poll_desc
+    @EQTYPE iodesc_kind
+    @TYPE poll_info
+    @EQTYPE iodesc
+  @EXCEPTIONS 
+    Poll
+  @VALS 
+    hash
+    isOut
+    infoToPollDesc
+    kind
+    pollIn
+    pollToIODesc
+    pollPri
+    isIn
+    pollDesc
+    compare
+    poll
+    isPri
+    pollOut
+]
+@SIGNATURE PACK_WORD "pack-word" [
+  @VALS 
+    update
+    subVec
+    isBigEndian
+    subArr
+    subVecX
+    bytesPerElem
+    subArrX
+]
+@SIGNATURE POSIX_ERROR "posix-error" [
+  @TYPES 
+    @EQTYPE syserror
+  @VALS 
+    inval
+    nosys
+    fault
+    inprogress
+    badf
+    acces
+    canceled
+    notdir
+    fromWord
+    again
+    dom
+    errorMsg
+    nospc
+    child
+    noent
+    xdev
+    io
+    loop
+    range
+    exist
+    intr
+    mfile
+    nxio
+    nfile
+    notempty
+    noexec
+    busy
+    toobig
+    deadlk
+    nolck
+    notsup
+    syserror
+    mlink
+    isdir
+    nodev
+    nomem
+    badmsg
+    notty
+    pipe
+    srch
+    spipe
+    msgsize
+    nametoolong
+    perm
+    fbig
+    rofs
+    errorName
+    toWord
+]
+@SIGNATURE POSIX_PROC_ENV "posix-proc-env" [
+  @TYPES 
+    @EQTYPE gid
+    @EQTYPE pid
+    @EQTYPE file_desc
+    @EQTYPE uid
+  @VALS 
+    setgid
+    setpgid
+    getuid
+    gidToWord
+    wordToGid
+    uname
+    getegid
+    getpgrp
+    getenv
+    setsid
+    setuid
+    time
+    getgroups
+    uidToWord
+    wordToUid
+    environ
+    times
+    ttyname
+    getgid
+    sysconf
+    geteuid
+    ctermid
+    getlogin
+    getpid
+    getppid
+    isatty
+]
+@SIGNATURE POSIX_FILE_SYS "posix-file-sys" [
+  @STRUCTURE S [
+    @INCLUDE BIT_FLAGS
+    @TYPES 
+      @EQTYPE mode
+    @VALS 
+      isgid
+      irwxg
+      irusr
+      irwxo
+      iwusr
+      ixusr
+      isuid
+      irwxu
+      irgrp
+      iroth
+      iwgrp
+      ixgrp
+      iwoth
+      ixoth
+  ]
+  @STRUCTURE ST [
+    @TYPES 
+      @TYPE stat
+    @VALS 
+      isFIFO
+      atime
+      ctime
+      gid
+      isBlk
+      mode
+      isChr
+      isReg
+      isLink
+      isDir
+      isSock
+      nlink
+      mtime
+      dev
+      uid
+      ino
+      size
+  ]
+  @STRUCTURE O [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      noctty
+      excl
+      nonblock
+      append
+      trunc
+      sync
+  ]
+  @TYPES 
+    @EQTYPE gid
+    @DATATYPE open_mode [ O_RDONLY O_WRONLY O_RDWR]
+    @DATATYPE access_mode [ A_READ A_WRITE A_EXEC]
+    @EQTYPE file_desc
+    @EQTYPE dev
+    @EQTYPE uid
+    @EQTYPE ino
+    @TYPE dirstream
+  @VALS 
+    opendir
+    stdout
+    fchown
+    fdToWord
+    createf
+    readdir
+    wordToDev
+    chown
+    unlink
+    stdin
+    utime
+    stderr
+    closedir
+    inoToWord
+    symlink
+    fdToIOD
+    iodToFD
+    ftruncate
+    getcwd
+    mkdir
+    openf
+    fpathconf
+    wordToFD
+    readlink
+    link
+    rmdir
+    devToWord
+    fchmod
+    umask
+    access
+    fstat
+    pathconf
+    wordToIno
+    lstat
+    rename
+    rewinddir
+    chdir
+    chmod
+    stat
+    mkfifo
+    creat
+]
+@SIGNATURE POSIX_SYS_DB "posix-sys-db" [
+  @STRUCTURE Passwd [
+    @TYPES 
+      @TYPE passwd
+    @VALS 
+      name
+      gid
+      shell
+      home
+      uid
+  ]
+  @STRUCTURE Group [
+    @TYPES 
+      @TYPE group
+    @VALS 
+      name
+      gid
+      members
+  ]
+  @TYPES 
+    @EQTYPE gid
+    @EQTYPE uid
+  @VALS 
+    getpwnam
+    getpwuid
+    getgrgid
+    getgrnam
+]
+@SIGNATURE OPTION "option" [
+  @TYPES 
+    @DATATYPE option [ NONE SOME]
+  @EXCEPTIONS 
+    Option
+  @VALS 
+    composePartial
+    filter
+    compose
+    valOf
+    mapPartial
+    map
+    isSome
+    join
+    app
+    getOpt
+]
+@SIGNATURE NET_HOST_DB "net-host-db" [
+  @TYPES 
+    @EQTYPE in_addr
+    @TYPE entry
+    @EQTYPE addr_family
+  @VALS 
+    name
+    scan
+    getByAddr
+    fromString
+    getByName
+    getHostName
+    aliases
+    toString
+    addr
+    addrType
+    addrs
+]
+@SIGNATURE IMPERATIVE_IO "imperative-io" [
+  @STRUCTURE StreamIO STREAM_IO
+  @TYPES 
+    @TYPE elem
+    @TYPE instream
+    @TYPE vector
+    @TYPE outstream
+  @VALS 
+    input
+    input1
+    canInput
+    getOutstream
+    setPosOut
+    endOfStream
+    inputAll
+    mkOutstream
+    closeOut
+    setOutstream
+    output
+    output1
+    getInstream
+    lookahead
+    flushOut
+    getPosOut
+    mkInstream
+    closeIn
+    inputN
+    setInstream
+]
+@SIGNATURE OS_PATH "os-path" [
+  @EXCEPTIONS 
+    Path
+    InvalidArc
+  @VALS 
+    file
+    isRoot
+    ext
+    fromUnixPath
+    getVolume
+    fromString
+    splitDirFile
+    joinBaseExt
+    dir
+    parentArc
+    mkCanonical
+    isCanonical
+    mkRelative
+    toUnixPath
+    mkAbsolute
+    validVolume
+    splitBaseExt
+    isRelative
+    concat
+    currentArc
+    toString
+    getParent
+    base
+    isAbsolute
+    joinDirFile
+]
+@SIGNATURE OS_PROCESS "os-process" [
+  @TYPES 
+    @TYPE status
+  @VALS 
+    isSuccess
+    system
+    success
+    getEnv
+    sleep
+    atExit
+    failure
+    terminate
+    exit
+]
+@SIGNATURE POSIX_PROCESS "posix-process" [
+  @STRUCTURE W [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      untraced
+  ]
+  @TYPES 
+    @EQTYPE pid
+    @DATATYPE exit_status [ W_EXITED W_EXITSTATUS W_SIGNALED W_STOPPED]
+    @DATATYPE killpid_arg [ K_PROC K_SAME_GROUP K_GROUP]
+    @DATATYPE waitpid_arg [ W_ANY_CHILD W_CHILD W_SAME_GROUP W_GROUP]
+    @EQTYPE signal
+  @VALS 
+    waitpid
+    exec
+    execp
+    waitpid_nh
+    sleep
+    wordToPid
+    pidToWord
+    kill
+    pause
+    fork
+    wait
+    fromStatus
+    exece
+    exit
+    alarm
+]
+@SIGNATURE TEXT "text" [
+  @STRUCTURE CharArray MONO_ARRAY
+  @STRUCTURE CharArraySlice MONO_ARRAY_SLICE
+  @STRUCTURE Substring SUBSTRING
+  @STRUCTURE CharVector MONO_VECTOR
+  @STRUCTURE CharVectorSlice MONO_VECTOR_SLICE
+  @STRUCTURE String STRING
+  @STRUCTURE Char CHAR
+]
+@SIGNATURE IEEE_REAL "ieee-float" [
+  @TYPES 
+    @TYPE decimal_approx
+    @DATATYPE rounding_mode [ TO_NEAREST TO_NEGINF TO_POSINF TO_ZERO]
+    @DATATYPE float_class [ NAN INF ZERO NORMAL SUBNORMAL]
+    @DATATYPE real_order [ LESS EQUAL GREATER UNORDERED]
+  @EXCEPTIONS 
+    Unordered
+  @VALS 
+    scan
+    setRoundingMode
+    fromString
+    toString
+    getRoundingMode
+]
+@SIGNATURE BOOL "bool" [
+  @TYPES 
+    @DATATYPE bool [ false true]
+  @VALS 
+    not
+    scan
+    fromString
+    toString
+]
+@SIGNATURE TIME "time" [
+  @TYPES 
+    @EQTYPE time
+  @EXCEPTIONS 
+    Time
+  @VALS 
+    \|@LT\|
+    toSeconds
+    now
+    scan
+    toReal
+    toMilliseconds
+    fromString
+    toMicroseconds
+    toNanoseconds
+    zeroTime
+    \|@GTE\|
+    fromSeconds
+    \|@LTE\|
+    compare
+    fmt
+    fromReal
+    fromMilliseconds
+    toString
+    +
+    \|@GT\|
+    fromMicroseconds
+    -
+    fromNanoseconds
+]
+@SIGNATURE INET_SOCK "inet-sock" [
+  @STRUCTURE TCP [
+    @VALS 
+      socket'
+      socket
+      getNODELAY
+      setNODELAY
+  ]
+  @STRUCTURE UDP [
+    @VALS 
+      socket'
+      socket
+  ]
+  @TYPES 
+    @TYPE stream_sock
+    @TYPE inet
+    @TYPE sock
+    @TYPE dgram_sock
+    @TYPE sock_addr
+  @VALS 
+    fromAddr
+    inetAF
+    any
+    toAddr
+]
+@SIGNATURE ARRAY2 "array2" [
+  @TYPES 
+    @TYPE region
+    @DATATYPE traversal [ RowMajor ColMajor]
+    @EQTYPE array
+  @VALS 
+    modifyi
+    update
+    fold
+    row
+    modify
+    nRows
+    appi
+    column
+    array
+    nCols
+    fromList
+    app
+    tabulate
+    dimensions
+    sub
+    copy
+    foldi
+]
+@SIGNATURE TIMER "timer" [
+  @TYPES 
+    @TYPE real_timer
+    @TYPE cpu_timer
+  @VALS 
+    checkRealTimer
+    startCPUTimer
+    checkGCTime
+    totalRealTimer
+    startRealTimer
+    checkCPUTimer
+    checkCPUTimes
+    totalCPUTimer
+]
+@SIGNATURE STRING "string" [
+  @TYPES 
+    @EQTYPE string
+    @EQTYPE char
+  @VALS 
+    \|@LT\|
+    explode
+    scan
+    str
+    isPrefix
+    extract
+    fromString
+    isSubstring
+    toCString
+    ^
+    map
+    \|@GTE\|
+    maxSize
+    substring
+    isSuffix
+    concatWith
+    tokens
+    collate
+    \|@LTE\|
+    fields
+    compare
+    concat
+    sub
+    implode
+    toString
+    size
+    \|@GT\|
+    translate
+    fromCString
+]
+@SIGNATURE IO "io" [
+  @TYPES 
+    @DATATYPE buffer_mode [ NO_BUF LINE_BUF BLOCK_BUF]
+  @EXCEPTIONS 
+    BlockingNotSupported
+    ClosedStream
+    RandomAccessNotSupported
+    Io
+    NonblockingNotSupported
+]
+@SIGNATURE BIT_FLAGS "bit-flags" [
+  @TYPES 
+    @EQTYPE flags
+  @VALS 
+    intersect
+    allSet
+    all
+    fromWord
+    anySet
+    clear
+    flags
+    toWord
+]
+@SIGNATURE WINDOWS "windows" [
+  @STRUCTURE Status [
+    @TYPES 
+      @TYPE status
+    @VALS 
+      floatInexactResult
+      invalidHandle
+      userAPC
+      datatypeMisalignment
+      guardPageViolation
+      floatUnderflow
+      integerDivideByZero
+      inPageError
+      breakpoint
+      arrayBoundsExceeded
+      floatDenormalOperand
+      integerOverflow
+      pending
+      floatDivideByZero
+      accessViolation
+      timeout
+      floatOverflow
+      floatStackCheck
+      stackOverflow
+      illegalInstruction
+      invalidDisposition
+      privilegedInstruction
+      controlCExit
+      floatInvalidOperation
+      noncontinuableException
+      singleStep
+  ]
+  @STRUCTURE Reg [
+    @TYPES 
+      @DATATYPE create_result [ CREATED_NEW_KEY OPENED_EXISTING_KEY]
+      @DATATYPE value [ SZ DWORD BINARY MULTI_SZ EXPAND_SZ]
+      @EQTYPE hkey
+    @VALS 
+      localMachine
+      deleteValue
+      classesRoot
+      users
+      setValueEx
+      openKeyEx
+      currentConfig
+      createKeyEx
+      enumKeyEx
+      deleteKey
+      queryValueEx
+      currentUser
+      dynData
+      performanceData
+      closeKey
+      enumValueEx
+  ]
+  @STRUCTURE Config [
+    @VALS 
+      getComputerName
+      platformWin32Windows
+      getVersionEx
+      platformWin32NT
+      platformWin32s
+      platformWin32CE
+      getWindowsDirectory
+      getUserName
+      getSystemDirectory
+  ]
+  @STRUCTURE Key [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      createLink
+      execute
+      createSubKey
+      setValue
+      enumerateSubKeys
+      queryValue
+      notify
+      allAccess
+      write
+      read
+  ]
+  @STRUCTURE DDE [
+    @TYPES 
+      @TYPE info
+    @VALS 
+      startDialog
+      stopDialog
+      executeString
+  ]
+  @TYPES 
+    @TYPE proc
+  @VALS 
+    binInstreamOf
+    findExecutable
+    execute
+    reap
+    simpleExecute
+    textOutstreamOf
+    openDocument
+    binOutstreamOf
+    fromStatus
+    exit
+    textInstreamOf
+    getVolumeInformation
+    launchApplication
+]
+@SIGNATURE ARRAY_SLICE "array-slice" [
+  @TYPES 
+    @TYPE slice
+  @VALS 
+    slice
+    foldri
+    exists
+    modifyi
+    foldl
+    find
+    length
+    update
+    foldr
+    modify
+    copyVec
+    all
+    appi
+    app
+    full
+    vector
+    collate
+    sub
+    subslice
+    foldli
+    findi
+    base
+    copy
+    isEmpty
+    getItem
+]
+@SIGNATURE PRIM_IO "prim-io" [
+  @TYPES 
+    @TYPE vector_slice
+    @EQTYPE pos
+    @TYPE elem
+    @TYPE array
+    @TYPE vector
+    @DATATYPE reader [ RD]
+    @DATATYPE writer [ WR]
+    @TYPE array_slice
+  @VALS 
+    nullWr
+    openVector
+    nullRd
+    augmentReader
+    compare
+    augmentWriter
+]
+@SIGNATURE VECTOR_SLICE "vector-slice" [
+  @TYPES 
+    @TYPE slice
+  @VALS 
+    slice
+    foldri
+    exists
+    foldl
+    find
+    length
+    mapi
+    foldr
+    all
+    appi
+    map
+    app
+    full
+    vector
+    collate
+    concat
+    sub
+    subslice
+    foldli
+    findi
+    base
+    isEmpty
+    getItem
+]
+@SIGNATURE POSIX_TTY "posix-tty" [
+  @STRUCTURE V [
+    @TYPES 
+      @TYPE cc
+    @VALS 
+      erase
+      quit
+      update
+      stop
+      cc
+      nccs
+      eof
+      susp
+      kill
+      time
+      eol
+      min
+      sub
+      intr
+      start
+  ]
+  @STRUCTURE CF [
+    @VALS 
+      getispeed
+      getospeed
+      setispeed
+      setospeed
+  ]
+  @STRUCTURE C [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      cstopb
+      hupcl
+      clocal
+      csize
+      cread
+      parenb
+      parodd
+      cs5
+      cs6
+      cs7
+      cs8
+  ]
+  @STRUCTURE TC [
+    @TYPES 
+      @EQTYPE flow_action
+      @EQTYPE set_action
+      @EQTYPE queue_sel
+    @VALS 
+      ioff
+      saflush
+      getpgrp
+      ooff
+      ioflush
+      iflush
+      getattr
+      oflush
+      sadrain
+      flush
+      setpgrp
+      ion
+      setattr
+      sanow
+      flow
+      oon
+      drain
+      sendbreak
+  ]
+  @STRUCTURE I [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      ignpar
+      igncr
+      inpck
+      icrnl
+      inlcr
+      brkint
+      ixoff
+      parmrk
+      istrip
+      ignbrk
+      ixon
+  ]
+  @STRUCTURE L [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      tostop
+      noflsh
+      isig
+      iexten
+      echoe
+      icanon
+      echonl
+      echok
+      echo
+  ]
+  @STRUCTURE O [
+    @INCLUDE BIT_FLAGS
+    @VALS 
+      opost
+  ]
+  @TYPES 
+    @EQTYPE speed
+    @EQTYPE pid
+    @EQTYPE file_desc
+    @TYPE termios
+  @VALS 
+    speedToWord
+    wordToSpeed
+    b9600
+    b38400
+    getiflag
+    getlflag
+    getoflag
+    fieldsOf
+    b0
+    termios
+    b110
+    b200
+    b300
+    b1200
+    getcc
+    b50
+    compareSpeed
+    b150
+    b600
+    b2400
+    b134
+    b1800
+    getcflag
+    b75
+    b4800
+    b19200
+]
+@SIGNATURE UNIX_SOCK "unix-sock" [
+  @STRUCTURE Strm [
+    @VALS 
+      socket
+      socketPair
+  ]
+  @STRUCTURE DGrm [
+    @VALS 
+      socket
+      socketPair
+  ]
+  @TYPES 
+    @TYPE unix
+    @TYPE stream_sock
+    @TYPE sock
+    @TYPE dgram_sock
+    @TYPE sock_addr
+  @VALS 
+    unixAF
+    fromAddr
+    toAddr
+]
+@SIGNATURE TEXT_IO "text-io" [
+  @INCLUDE IMPERATIVE_IO
+  @STRUCTURE StreamIO TEXT_STREAM_IO
+  @VALS 
+    stdOut
+    inputLine
+    openIn
+    openString
+    openAppend
+    scanStream
+    stdIn
+    outputSubstr
+    stdErr
+    openOut
+    print
+]
+@SIGNATURE ARRAY "array" [
+  @TYPES 
+    @EQTYPE array
+    @TYPE vector
+  @VALS 
+    foldri
+    exists
+    modifyi
+    foldl
+    find
+    length
+    update
+    maxLen
+    foldr
+    modify
+    copyVec
+    all
+    appi
+    array
+    fromList
+    app
+    tabulate
+    vector
+    collate
+    sub
+    foldli
+    findi
+    copy
+]
+@SIGNATURE POSIX_SIGNAL "posix-signal" [
+  @TYPES 
+    @EQTYPE signal
+  @VALS 
+    quit
+    stop
+    abrt
+    fpe
+    usr1
+    tstp
+    alrm
+    kill
+    usr2
+    ttou
+    pipe
+    fromWord
+    ill
+    cont
+    segv
+    term
+    bus
+    int
+    chld
+    hup
+    toWord
+    ttin
+]
+@SIGNATURE STREAM_IO "stream-io" [
+  @TYPES 
+    @TYPE pos
+    @TYPE elem
+    @TYPE instream
+    @TYPE vector
+    @TYPE reader
+    @TYPE outstream
+    @TYPE out_pos
+    @TYPE writer
+  @VALS 
+    input
+    input1
+    canInput
+    getReader
+    setPosOut
+    endOfStream
+    inputAll
+    filePosOut
+    mkOutstream
+    getWriter
+    closeOut
+    getBufferMode
+    output
+    output1
+    filePosIn
+    flushOut
+    getPosOut
+    mkInstream
+    setBufferMode
+    closeIn
+    inputN
+]
+@SIGNATURE VECTOR "vector" [
+  @TYPES 
+    @EQTYPE vector
+  @VALS 
+    foldri
+    exists
+    foldl
+    find
+    length
+    update
+    maxLen
+    mapi
+    foldr
+    all
+    appi
+    map
+    fromList
+    app
+    tabulate
+    collate
+    concat
+    sub
+    foldli
+    findi
+]
+@SIGNATURE BYTE "byte" [
+  @VALS 
+    unpackStringVec
+    bytesToString
+    stringToBytes
+    byteToChar
+    charToByte
+    packString
+    unpackString
+]
+@SIGNATURE INT_INF "int-inf" [
+  @INCLUDE INTEGER
+  @VALS 
+    \|@LT\|\|@LT\|
+    divMod
+    ~\|@GT\|\|@GT\|
+    pow
+    orb
+    notb
+    log2
+    andb
+    xorb
+    quotRem
+]
+@SIGNATURE MONO_ARRAY2 "mono-array2" [
+  @TYPES 
+    @TYPE elem
+    @TYPE region
+    @DATATYPE traversal
+    @EQTYPE array
+    @TYPE vector
+  @VALS 
+    modifyi
+    update
+    fold
+    row
+    modify
+    nRows
+    appi
+    column
+    array
+    nCols
+    fromList
+    app
+    tabulate
+    dimensions
+    sub
+    copy
+    foldi
+]
+@SIGNATURE NET_SERV_DB "serv-db" [
+  @TYPES 
+    @TYPE entry
+  @VALS 
+    name
+    port
+    getByName
+    getByPort
+    aliases
+    protocol
+]
+@SIGNATURE INTEGER "integer" [
+  @TYPES 
+    @EQTYPE int
+  @VALS 
+    \|@LT\|
+    scan
+    abs
+    quot
+    fromString
+    ~
+    fromLarge
+    fromInt
+    minInt
+    mod
+    \|@GTE\|
+    maxInt
+    sign
+    div
+    rem
+    min
+    \|@LTE\|
+    max
+    compare
+    sameSign
+    fmt
+    *
+    toString
+    +
+    \|@GT\|
+    precision
+    -
+    toLarge
+    toInt
+]
+@STRUCTURE Word8 "word" WORD
+@STRUCTURE Word{N}VectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE PackRealBig "pack-float" PACK_REAL
+@STRUCTURE LargeWordArray "mono-array" MONO_ARRAY
+@STRUCTURE Real{N}ArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE WordVector "mono-vector" MONO_VECTOR
+@STRUCTURE WordVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE CharVector "mono-vector" MONO_VECTOR
+@STRUCTURE VectorSlice "vector-slice" VECTOR_SLICE
+@STRUCTURE Position "integer" INTEGER
+@STRUCTURE BoolArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE NetHostDB "net-host-db" NET_HOST_DB
+@STRUCTURE NetServDB "serv-db" NET_SERV_DB
+@STRUCTURE LargeReal "real" REAL
+@STRUCTURE Int{N}ArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE OS "os" OS
+@STRUCTURE NetProtDB "prot-db" NET_PROT_DB
+@STRUCTURE LargeIntArray "mono-array" MONO_ARRAY
+@STRUCTURE WideTextIO "text-io" TEXT_IO
+@STRUCTURE PackReal{N}Little "pack-float" PACK_REAL
+@STRUCTURE ListPair "list-pair" LIST_PAIR
+@STRUCTURE Socket "socket" SOCKET
+@STRUCTURE Bool "bool" BOOL
+@STRUCTURE Time "time" TIME
+@STRUCTURE LargeRealArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE Word{N} "word" WORD
+@STRUCTURE PackWord{N}Big "pack-word" PACK_WORD
+@STRUCTURE TextPrimIO "prim-io" PRIM_IO
+@STRUCTURE CommandLine "command-line" COMMAND_LINE
+@STRUCTURE TextIO "text-io" TEXT_IO
+@STRUCTURE INetSock "inet-sock" INET_SOCK
+@STRUCTURE Int{N}Vector "mono-vector" MONO_VECTOR
+@STRUCTURE Word{N}Vector "mono-vector" MONO_VECTOR
+@STRUCTURE IntInf "int-inf" INT_INF
+@STRUCTURE IntArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE WordArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE General "general" GENERAL
+@STRUCTURE WideText "text" TEXT
+@STRUCTURE CharArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE CharVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE PackRealLittle "pack-float" PACK_REAL
+@STRUCTURE Timer "timer" TIMER
+@STRUCTURE RealArray "mono-array" MONO_ARRAY
+@STRUCTURE Byte "byte" BYTE
+@STRUCTURE WideCharArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE IO "io" IO
+@STRUCTURE Option "option" OPTION
+@STRUCTURE WideCharVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE Word{N}Array "mono-array" MONO_ARRAY
+@STRUCTURE Int{N}VectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE Unix "unix" UNIX
+@STRUCTURE LargeWordArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE Math "math" MATH
+@STRUCTURE IntArray "mono-array" MONO_ARRAY
+@STRUCTURE LargeWordVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE WordArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE CharArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE Real{N}VectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE LargeRealArray "mono-array" MONO_ARRAY
+@STRUCTURE IntVector "mono-vector" MONO_VECTOR
+@STRUCTURE Word8Array "mono-array" MONO_ARRAY
+@STRUCTURE UnixSock "unix-sock" UNIX_SOCK
+@STRUCTURE LargeInt "integer" INTEGER
+@STRUCTURE RealVector "mono-vector" MONO_VECTOR
+@STRUCTURE RealVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE WideCharVector "mono-vector" MONO_VECTOR
+@STRUCTURE IEEEReal "ieee-float" IEEE_REAL
+@STRUCTURE Word "word" WORD
+@STRUCTURE Int{N}Array "mono-array" MONO_ARRAY
+@STRUCTURE Int{N}Array2 "mono-array2" MONO_ARRAY2
+@STRUCTURE Word{N}Array2 "mono-array2" MONO_ARRAY2
+@STRUCTURE LargeIntVector "mono-vector" MONO_VECTOR
+@STRUCTURE LargeWordVector "mono-vector" MONO_VECTOR
+@STRUCTURE SysWord "word" WORD
+@STRUCTURE Substring "substring" SUBSTRING
+@STRUCTURE Vector "vector" VECTOR
+@STRUCTURE Word8Vector "mono-vector" MONO_VECTOR
+@STRUCTURE Word8VectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE Real{N} "real" REAL
+@STRUCTURE BoolArray "mono-array" MONO_ARRAY
+@STRUCTURE Int "integer" INTEGER
+@STRUCTURE FixedInt "integer" INTEGER
+@STRUCTURE PackReal{N}Big "pack-float" PACK_REAL
+@STRUCTURE Windows "windows" WINDOWS
+@STRUCTURE WideTextPrimIO "prim-io" PRIM_IO
+@STRUCTURE Word{N}ArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE Posix "posix" POSIX
+@STRUCTURE Text "text" TEXT
+@STRUCTURE WideChar "char" CHAR
+@STRUCTURE IntArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE CharArray "mono-array" MONO_ARRAY
+@STRUCTURE Real{N}Vector "mono-vector" MONO_VECTOR
+@STRUCTURE StringCvt "string-cvt" STRING_CVT
+@STRUCTURE RealArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE LargeWord "word" WORD
+@STRUCTURE WideCharArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE BinPrimIO "prim-io" PRIM_IO
+@STRUCTURE BoolVector "mono-vector" MONO_VECTOR
+@STRUCTURE BoolVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE PackWord{N}Little "pack-word" PACK_WORD
+@STRUCTURE BinIO "bin-io" BIN_IO
+@STRUCTURE LargeIntArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE LargeWordArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE Real{N}Array "mono-array" MONO_ARRAY
+@STRUCTURE LargeIntVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE LargeRealArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE IntVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE Array2 "array2" ARRAY2
+@STRUCTURE LargeRealVectorSlice "mono-vector-slice" MONO_VECTOR_SLICE
+@STRUCTURE RealArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE Word8Array2 "mono-array2" MONO_ARRAY2
+@STRUCTURE WideSubstring "substring" SUBSTRING
+@STRUCTURE GenericSock "generic-sock" GENERIC_SOCK
+@STRUCTURE WideString "string" STRING
+@STRUCTURE Real "real" REAL
+@STRUCTURE LargeIntArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE Real{N}Array2 "mono-array2" MONO_ARRAY2
+@STRUCTURE WordArray "mono-array" MONO_ARRAY
+@STRUCTURE Array "array" ARRAY
+@STRUCTURE ArraySlice "array-slice" ARRAY_SLICE
+@STRUCTURE Int{N} "integer" INTEGER
+@STRUCTURE LargeRealVector "mono-vector" MONO_VECTOR
+@STRUCTURE Word8ArraySlice "mono-array-slice" MONO_ARRAY_SLICE
+@STRUCTURE WideCharArray "mono-array" MONO_ARRAY
+@STRUCTURE String "string" STRING
+@STRUCTURE List "list" LIST
+@STRUCTURE BoolArray2 "mono-array2" MONO_ARRAY2
+@STRUCTURE Char "char" CHAR
+@STRUCTURE Date "date" DATE
+@FUNCTOR StreamIO "stream-io-fn" [
+  @STRUCTURE Array MONO_ARRAY
+  @STRUCTURE PrimIO PRIM_IO
+  @STRUCTURE Vector MONO_VECTOR
+  @VALS 
+    someElem
+]
+STREAM_IO
+@FUNCTOR ImperativeIO "imperative-io-fn" [
+  @STRUCTURE StreamIO STREAM_IO
+  @STRUCTURE Array MONO_ARRAY
+  @STRUCTURE Vector MONO_VECTOR
+]
+IMPERATIVE_IO
+@FUNCTOR PrimIO "prim-io-fn" [
+  @STRUCTURE Array MONO_ARRAY
+  @STRUCTURE ArraySlice MONO_ARRAY_SLICE
+  @STRUCTURE Vector MONO_VECTOR
+  @STRUCTURE VectorSlice MONO_VECTOR_SLICE
+  @TYPES 
+    @EQTYPE pos
+  @VALS 
+    someElem
+    compare
+]
+PRIM_IO

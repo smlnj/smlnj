@@ -1,0 +1,47 @@
+The *SExp Library* supports the reading and writing of structured data using
+the S-expression syntax.  It is a work in progress, and does not fully
+conform with any formal S-exp specification.
+
+- End-of-line comments begin with a semicolon character
+
+- An S-Expression is either an atomic token (boolean, number, symbol, or
+  string), a quoted expression, or a list of S-Expressions enclosed in brackets.
+
+- Quoted expressions are formed by the single-quote character (``'``) followed
+  by an expression.
+
+- Lists are delimited by matched pairs of `()` `[]` or `{}`, nested freely.
+
+- List items are separated with whitespace (space, tab, newlines, or carriage
+  returns).
+
+- Symbols (or _identifiers_) begin with an initial character followed by
+  zero or more _subsequent_ characters, where an initial character is
+  either a letter or one of the characters `-+.@!$%&*/:<=>?^_~` and
+  a subsequent character is either an initial character, a decimal digit,
+  or the character `#`.
+
+- Booleans are represented by the literals `#f` (false) and `#t` (true).
+
+- Numbers are either signed integers or floating-point numbers; the
+  sign (if present) is one of "'+'," "`-`," or "`~`".
+
+- Integers may be specified in decimal without any prefix, or in hexadecimal
+  with the prefix "0x".  In hex, the value is assumed to be unsigned, so -255
+  should be written "-0xff" rather than "0x-ff".
+
+- The format of a floating point number is described by the following
+  regular expression: <sign>? <digit>+ '.' <digit>+ ([eE] <sign>? <digit>+)
+  Notably, "`1.`" and "`.1`" are invalid and "`1`" is an
+  integer --- floats must have a dot with digits
+  on both sides.
+
+- Strings are enclosed in double quotes (``"``) and mostly follow the Scheme
+  syntax as described in https://www.scheme.com/tspl4/grammar.html#./grammar:strings
++
+  The difference between symbols and strings is that symbols are represented as
+  Atom.atom types, so equality comparisons are more efficient.
+
+The original version of the library was written by Damon Wang
+at the University of Chicago.  It has since been modified and
+maintained by John Reppy.

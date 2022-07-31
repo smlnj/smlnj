@@ -1,0 +1,47 @@
+(* html-lib.cm
+ *
+ * COPYRIGHT (c) 1996 AT&T Research.
+ *
+ * Sources file for HTML parsing/pretty-printing library; part of the SML/NJ
+ * Library suite.
+ *)
+
+Library
+  signature HTML_ERROR
+  signature HTML
+  structure HTML
+  structure MakeHTML
+  structure PrHTML
+  structure HTMLDefaults
+  functor HTMLParserFn
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/ml-yacc-lib.cm
+#else
+  ../Util/smlnj-lib.cm
+  ml-yacc-lib.cm
+#endif
+
+#if defined(NO_PLUGINS)
+  html-lex.sml
+  html-gram.sig
+  html-gram.sml
+#else
+  html-lex : MLLex
+  html-gram : MLYacc
+#endif
+
+  html-error-sig.sml
+  html-sig.sml
+  html.sml
+  html-attr-vals.sml
+  html-attrs-sig.sml
+  html-attrs-fn.sml
+  html-elements-fn.sml
+  html-parser-fn.sml
+  check-html-fn.sml
+  html-defaults.sml
+  make-html.sml
+  pr-html.sml

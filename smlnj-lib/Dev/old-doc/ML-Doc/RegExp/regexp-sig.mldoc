@@ -1,0 +1,88 @@
+<!-- ML-Doc/regexp-sig.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY REGEXP SDATA "../regexp-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=3>
+<TITLE>The REGEXP signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/REGEXP/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<SEEALSO>
+   <FCTREF/RegExpFn/
+   <STRREF/MatchTree/
+</SEEALSO>
+
+<PP>
+This is the signature of a regular expressions matching
+structure. Such a structure is created by applying the functor
+<CD/RegExpFn/ to a given concrete syntax for regular expressions and a
+given matching engine.<PP>
+
+
+<SIGNATURE SIGID="REGEXP">
+  <SIGBODY SIGID="REGEXP" FILE=REGEXP>
+    <SPEC>
+      <TYPE><ID>regexp
+        <COMMENT><PP>
+          the type of a compiled regular expression
+    <SPEC>
+      <VAL>compile<TY>(char,'a) StringCvt.reader -> (regexp,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          compile <ARG/getc/
+          </PROTOTY>
+            Given a character reader <ARG/getc/, this function returns 
+a reader that parses a regular expression in the concrete syntax from
+the stream and compiles it.
+    <SPEC>
+      <VAL>compileString<TY>string -> regexp
+        <COMMENT>
+          <PROTOTY>
+          compileString <ARG/s/
+          </PROTOTY>
+            compiles a string representing a regular expression in the
+concrete syntax. The function <CD/compileString/ is equivalent to
+<CD/StringCvt.scanString compile/.
+    <SPEC>
+      <VAL>find<TY>regexp -> (char,'a) StringCvt.reader -> ({pos : 'a, len : int} option MatchTree.match_tree,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          find <ARG/r/ <ARG/getc/
+          </PROTOTY>
+          Given a compiled regular expression <ARG/r/ and a character 
+reader <ARG/getc/, this function returns a reader that scans the stream for the first
+match of the regular expression. The reader returns <CD/NONE/ if
+no match is found.
+    <SPEC>
+      <VAL>prefix<TY>regexp -> (char,'a) StringCvt.reader -> ({pos : 'a, len : int} option MatchTree.match_tree,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          prefix <ARG/r/ <ARG/getc/
+          </PROTOTY>
+          Given a compiled regular expression <ARG/r/ and a character 
+reader <ARG/getc/, this functions returns a reader that attempts to
+match the stream at its current position with the regular
+expression. The reader returns <CD/NONE/ if there is not match at the
+current position of the stream.
+    <SPEC>
+      <VAL>match<TY>(string * ({pos : 'a, len : int} option MatchTree.match_tree -> 'b)) list -> (char,'a) StringCvt.reader -> ('b,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          match <ARG/l/ <ARG/getc/
+          </PROTOTY>
+          Given a list <ARG/l/ of tuples made up of a string
+representing a regular expression in the concrete syntax and a
+function from matching tree to values of type 
+<CD/'b/, and given a character reader <ARG/getc/, this function
+returns a reader that attempts to match one of the given regular
+expressions at the current position of the stream. If a match is
+found, the corresponding function is applied to the match tree and the
+result is returned. The reader returns <CD/NONE/ if no match is found.
+</SIGNATURE>
+
+</INTERFACE>

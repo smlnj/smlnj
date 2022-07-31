@@ -1,0 +1,30 @@
+<!-- dynamic-array.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY DynamicArrayFn SDATA "dynamic-array-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The DynamicArrayFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/DynamicArrayFn/ functor</HEAD>
+<SEEALSO>
+  <SIGREF DOCUMENT=SML-BASIS-DOC/MONO_ARRAY/
+  <SIGREF/MONO_DYNAMIC_ARRAY/
+</SEEALSO>
+
+<PP>
+The <FCTREF NOLINK/DynamicArrayFn/ functor takes a monomorphic array structure 
+as an argument. It produces a structure implementing dynamic arrays. 
+These act like arrays of unbounded length.
+
+<FUNCTOR FCTID="DynamicArrayFn">
+  <ID/A/<SIGREF DOCUMENT=SML-BASIS-DOC>MONO_ARRAY</SIGREF>
+  <ID/MONO_DYNAMIC_ARRAY/
+    <WHERETYPE><ID>elem<TY>A.elem</WHERETYPE>
+</FUNCTOR>
+
+</INTERFACE>

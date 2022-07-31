@@ -1,0 +1,86 @@
+= The `UnixPath` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `UnixPath` structure provides support for searching for files
+in the *Unix* file system using a list of possible locations.
+
+Note that this module is largely superseded by the
+xref:../Util/str-PathUtil.adoc[`PathUtil`] module
+in the xref:../Util/smlnj-lib.adoc[*Util Library*].
+
+== Synopsis
+
+[source,sml]
+------------
+signature UNIX_PATH
+structure UnixPath : UNIX_PATH
+------------
+
+== Interface
+
+[source,sml]
+------------
+type path_list = string list
+
+val getPath : unit -> path_list
+
+datatype access_mode = datatype OS.FileSys.access_mode
+datatype file_type = F_REGULAR | F_DIR | F_SYMLINK | F_SOCK | F_CHR | F_BLK
+
+val findFile : (path_list * access_mode list) -> string -> string option
+
+val findFiles : (path_list * access_mode list) -> string -> string list
+
+val findFileOfType : (path_list * file_type * access_mode list) -> string -> string option
+
+val findFilesOfType : (path_list * file_type * access_mode list) -> string -> string list
+------------
+
+== Description
+
+`[.kw]#type# path_list = string list`::
+  A list of file-system paths that is used to search for files.
+
+`[.kw]#val# getPath : unit \-> path_list`::
+  `getPath ()` return's the value of the user's `PATH` shell variable
+  as a `path_list`.
+
+`[.kw]#datatype# access_mode = [.kw]#datatype# {sml-basis-url}os-file-sys.html#SIG:OS_FILE_SYS.access_mode:TY[OS.FileSys.access_mode]`::
+  Rebind the file-system access-mode constructors.
+
+`[.kw]#datatype# file_type = F_REGULAR | F_DIR | F_SYMLINK | F_SOCK | F_CHR | F_BLK`::
+  The different types of file-system objects in *Unix*.
+
+`[.kw]#val# findFile : (path_list * access_mode list) \-> string \-> string option`::
+  `findFile (paths, mode) __name__` returns `SOME path`, where `path` is a string of
+   the form ``"__p__/__name__"`` and ``__p__`` is the first string in `paths`
+   such that `path` has the given access modes (the empty list of access modes
+   is used to test for existence).  If no such file exists, then `NONE` is returned.
+
+`[.kw]#val# findFiles : (path_list * access_mode list) \-> string \-> string list`::
+  `findFiles (paths, mode) __name__` returns a list of strings, such that each string
+  `s` in the result has the form ``"__p__/__name__"`` with ``__p__`` in `paths`
+  and the file named by `path` has the specified access modes.
+
+`[.kw]#val# findFileOfType : (path_list * file_type * access_mode list) \-> string \-> string option`::
+  `findFileOfType (paths, ftype, mode) __name__` returns the `SOME path`, where `path` is
+   a string of the form ``"__p__/__name__"`` and ``__p__`` is the first string
+   in `paths` such that `path` has the given access modes (the empty list of
+   access modes is used to test for existence) and is of the specified file type.
+   If no such file exists, then `NONE` is returned.
+
+`[.kw]#val# findFilesOfType : (path_list * file_type * access_mode list) \-> string \-> string list`::
+  `findFilesOfType (paths, mode) __name__` returns a list of strings,
+  such that each string `s` in the result has the form ``"__p__/__name__"``
+  with ``__p__`` in `paths` and the file named by `path` has the specified
+  access modes and is of the specified file type.
+
+== See Also
+
+xref:str-UnixEnv.adoc[`UnixEnv`],
+xref:../Util/str-PathUtil.adoc[`PathUtil`],
+xref:unix-lib.adoc[__The Unix Library__]

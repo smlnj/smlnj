@@ -1,0 +1,36 @@
+# mk.amd64-darwin
+#
+# COPYRIGHT (c) 2021 The SML/NJ Fellowship
+#
+# Makefile for macOS 10.14+ (High Sierra or later) on 64-bit Intel processors
+#
+
+SDK =		-mmacosx-version-min=10.14
+
+SHELL =		/bin/sh
+
+MAKE =		make
+AS =		/usr/bin/as -arch x86_64
+CC =		cc -m64 -std=c99
+CFLAGS =	-g -O2 -D_DARWIN_C_SOURCE
+CXX =           c++ --std=c++14
+CXX_FLAGS =     -g -O2
+CPP =           cc -x assembler-with-cpp -E -P -std=c99
+XOBJS =
+XLIBS =         ../c-libs/dl/libunix-dynload.a ../c-libs/codegen/libcodegen.a
+LD_LIBS =
+XDEFS =
+#XDEFS =		-DDEBUG_TRACE_CCALL -DVERBOSE -DCHECK_HEAP -DASSERT_ON -DDEBUG_WEAK_PTRS
+BASE_DEFS =
+DEFS =		$(XDEFS) $(BASE_DEFS) -DARCH_AMD64 -DSIZE_64 \
+		-DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC
+TARGET =	AMD64
+# for cross compilation
+TARGET_ARCHS =	all
+VERSION =	v-amd64-darwin
+RUNTIME =	run.amd64-darwin
+RUNTIMEX =	runx.amd64-darwin
+
+all:
+	($(MAKE) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" AS="$(AS)" TARGET=$(TARGET) TARGET_ARCHS=all DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
+#	($(MAKE) RUNTIME="$(RUNTIMEX)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-Xlinker -r" $(RUNTIMEX))

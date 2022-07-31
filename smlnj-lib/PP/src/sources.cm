@@ -1,0 +1,35 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources file for Pretty Printing Library.
+ *)
+
+Group
+
+  signature PP_DESC
+  signature PP_DEVICE
+  signature PP_TOKEN
+  signature PP_STREAM
+
+  functor PPStreamFn
+  functor PPDescFn
+  functor PPDebugFn
+
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
+  ../../Util/smlnj-lib.cm
+#endif
+
+  pp-device-sig.sml
+  pp-token-sig.sml
+  pp-desc-fn.sml
+  pp-stream-sig.sml
+  pp-stream-fn.sml
+  pp-debug-fn.sml
+  pp-desc-sig.sml
+

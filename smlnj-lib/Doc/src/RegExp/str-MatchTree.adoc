@@ -1,0 +1,87 @@
+= The `MatchTree` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `MatchTree` structure provides a tree-structured representation
+of the result of a successful regular expression match.  The tree structure
+corresponds to the nesting of xref:str-RegExpSyntax.adoc#con:Group[groups]
+in the regular expression.
+
+== Synopsis
+
+[source,sml]
+------------
+signature MATCH_TREE
+structure MatchTree : MATCH_TREE
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype 'a match_tree = Match of 'a * 'a match_tree list
+
+val root : 'a match_tree -> 'a
+val nth : ('a match_tree * int) -> 'a (* raises Subscript *)
+val map : ('a -> 'b) -> 'a match_tree -> 'b match_tree
+val app : ('a -> unit) -> 'a match_tree -> unit
+val foldl : ('a * 'b -> 'b) -> 'b -> 'a match_tree -> 'b
+val foldr : ('a * 'b -> 'b) -> 'b -> 'a match_tree -> 'b
+val find : ('a -> bool) -> 'a match_tree -> 'a option
+val num : 'a match_tree -> int
+------------
+
+== Description
+
+[[type:match_tree]]
+`[.kw]#datatype# 'a match_tree = Match of 'a * 'a match_tree list`::
+  The representation of the results of a nested grouping of regular expressions.
+  The type variable ``'a`` is typically instantiated to information about the
+  particular range of the source that the node covers.  For example,
+  it might be the pair of the start position and length of the match.
+
+`[.kw]#val# root : 'a match_tree \-> 'a`::
+  `root mt` returns the information about the root (outermost) match in the tree.
+
+`[.kw]#val# nth : ('a match_tree * int) \-> 'a (* raises Subscript *)`::
+  `nth (mt, i)` returns the information about the ``i``'th match in the tree,
+  where matches are labeled in _pre-order_ starting with `0` for the root.
+  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Subscript:EXN[`Subscript`] exception
+  if `i < 0` or there are fewer than `i-1` nodes in the tree.
+
+`[.kw]#val# map : ('a \-> 'b) \-> 'a match_tree \-> 'b match_tree`::
+  `map f mt` returns the result of mapping the function `f` over `mt`.
+  For example, this function can be used to convert a match-tree of
+  position information to a tree of strings.  The function is applied
+  to the tree in pre-order.
+
+`[.kw]#val# app : ('a \-> unit) \-> 'a match_tree \-> unit`::
+  `app f mt` applies the given function to the nodes in the tree
+  in pre-order.
+
+`[.kw]#val# foldl : ('a * 'b \-> 'b) \-> 'b \-> 'a match_tree \-> 'b`::
+  `foldl f init mt` folds the function `f` over `mt` in left-to-right pre-order
+  using `init` as the initial value.
+
+`[.kw]#val# foldr : ('a * 'b \-> 'b) \-> 'b \-> 'a match_tree \-> 'b`::
+  `foldr f init mt` folds the function `f` over `mt` in right-to-left post-order
+  using `init` as the initial value.
+
+`[.kw]#val# find : ('a \-> bool) \-> 'a match_tree \-> 'a option`::
+  `find pred mt` returns `SOME info` where `info` is the first
+  information that satisfies `pred` in a pre-order traversal of
+  the tree.  It returns `NONE` if there is no match information
+  that satisfies `pred`.
+
+`[.kw]#val# num : 'a match_tree \-> int`::
+  `num mt` returns the number of *sub-matches* in the tree; _i.e._, the number
+  of nodes not counting the root.
+
+== See Also
+
+xref:fun-RegExpFn.adoc[`RegExpFn`],
+xref:regexp-lib.adoc[__The RegExp Library__]

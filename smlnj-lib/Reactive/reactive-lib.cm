@@ -1,0 +1,24 @@
+(* reactive-lib.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources file for reactive engine library.
+ *)
+
+Library
+  signature REACTIVE
+  structure Reactive
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
+  ../Util/smlnj-lib.cm
+#endif
+
+  instruction.sml
+  machine.sml
+  reactive-sig.sml
+  reactive.sml
+

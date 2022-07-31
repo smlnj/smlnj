@@ -1,0 +1,212 @@
+%!TEX root = manual.tex
+%
+\chapter{CM description file syntax}
+
+\section{Lexical Analysis}
+
+The CM parser employs a context-sensitive scanner.  In many cases this
+avoids the need for ``escape characters'' or other lexical devices
+that would make writing description files cumbersome.  (The downside
+of this is that it increases the complexity of both documentation and
+implementation.)
+
+The scanner skips all nestable SML-style comments (enclosed with {\bf
+(*} and {\bf *)}).
+
+Lines starting with {\bf \#line} may list up to three fields separated
+by white space.  The first field is taken as a line number and the
+last field (if more than one field is present) as a file name.  The
+optional third (middle) field specifies a column number.  A line of
+this form resets the scanner's idea about the name of the file that it
+is currently processing and about the current position within that
+file.  If no file is specified, the default is the current file.  If
+no column is specified, the default is the first column of the
+(specified) line.  This feature is meant for program-generators or
+tools such as {\tt noweb} but is not intended for direct use by
+programmers.
+
+The following lexical classes are recognized:
+
+\begin{description}
+\item[Namespace specifiers:] {\bf structure}, {\bf signature},
+{\bf functor}, or {\bf funsig}.  These keywords are recognized
+everywhere.
+\item[CM keywords:] {\bf group}, {\bf Group}, {\bf GROUP}, {\bf
+library}, {\bf Library}, {\bf LIBRARY}, {\bf source}, {\bf Source},
+{\bf SOURCE}, {\bf is}, {\bf IS}, {\bf *}, {\bf -}.  These keywords
+are recognized everywhere except within ``preprocessor'' lines (lines
+starting with {\bf \#}) or following one of the namespace specifiers.
+\item[Preprocessor control keywords:] {\bf \#if}, {\bf \#elif}, {\bf
+\#else}, {\bf \#endif}, {\bf \#error}.  These keywords are recognized
+only at the beginning of the line and indicate the start of a
+``preprocessor'' line.  The initial {\bf \#} character may be
+separated from the rest of the token by white space (but not by comments).
+\item[Preprocessor operator keywords:] {\bf defined}, {\bf div}, {\bf
+mod}, {\bf andalso}, {\bf orelse}, {\bf not}.  These keywords are
+recognized only when they occur within ``preprocessor'' lines.  Even
+within such lines, they are not recognized as keywords when they
+directly follow a namespace specifier---in which case they are
+considered SML identifiers.
+\item[SML identifiers (\nt{mlid}):] Recognized SML identifiers
+include all legal identifiers as defined by the SML language
+definition. (CM also recognizes some tokens as SML identifiers that
+are really keywords according to the SML language definition. However,
+this can never cause problems in practice.)  SML identifiers are
+recognized only when they directly follow one of the namespace
+specifiers.
+\item[CM identifiers (\nt{cmid}):] CM identifiers have the same form
+as those ML identifiers that are made up solely of letters, decimal
+digits, apostrophes, and underscores.  CM identifiers are recognized when they
+occur within ``preprocessor'' lines, but not when they directly follow
+some namespace specifier.
+\item[Numbers (\nt{number}):] Numbers are non-empty sequences of
+decimal digits.  Numbers are recognized only within ``preprocessor''
+lines.
+\item[Preprocessor operators:] The following unary and binary operators are
+recognized when they occur within ``preprocessor'' lines: {\tt +},
+{\tt -}, {\tt *}, {\tt /}, {\tt \%}, {\tt <>}, {\tt !=}, {\tt <=},
+{\tt <}, {\tt >=}, {\tt >}, {\tt ==}, {\tt =}, $\tilde{~}$, {\tt
+\&\&}, {\tt ||}, {\tt !}.  Of these, the following (``C-style'')
+operators are considered obsolete and trigger a warning
+message\footnote{The use of {\tt -} as a unary minus also triggers
+this warning.} as long as {\tt CM.Control.warn\_obsolete} is set to
+{\tt true}: {\tt /}, {\tt \%}, {\tt !=}, {\tt ==}, {\tt \&\&}, {\tt
+||}, {\tt !}.
+\item[Standard path names (\nt{stdpn}):] Any non-empty sequence of
+upper- and lower-case letters, decimal digits, and characters drawn
+from {\tt '\_.;,!\%\&\$+/<=>?@$\tilde{~}$|\#*-\verb|^|} that occurs
+outside of ``preprocessor'' lines and is neither a namespace specifier
+nor a CM keyword will be recognized as a stardard path name.  Strings
+that lexically constitute standard path names are usually---but not
+always---interpreted as file names. Sometimes they are simply taken as
+literal strings.  When they act as file names, they will be
+interpreted according to CM's {\em standard syntax} (see
+\secref{sec:basicrules}).  (Member class names, names of
+privileges, and many tool optios are also specified as standard path
+names even though in these cases no actual file is being named.)
+\item[Native path names (\nt{ntvpn}):] A token that has the form of an
+SML string is considered a native path name.  The same rules as in SML
+regarding escape characters apply.  Like their ``standard''
+counterparts, native path names are not always used to actually name
+files, but when they are, they use the native file name syntax of the
+underlying operating system.
+\item[Punctuation:] A colon {\bf :} is recognized as a token
+everywhere except within ``preprocessor'' lines. Parentheses {\bf ()}
+are recognized everywhere.
+\end{description}
+
+\section{EBNF for preprocessor expressions}
+
+\noindent{\em Lexical conventions:}\/ Syntax definitions use {\em
+Extended Backus-Naur Form} (EBNF).  This means that vertical bars
+\vb separate two or more alternatives, curly braces \{\} indicate
+zero or more copies of what they enclose (``Kleene-closure''), and
+square brackets $[]$ specify zero or one instances of their enclosed
+contents.  Round parentheses () are used for grouping.  Non-terminal
+symbols appear in \nt{this}\/ typeface; terminal symbols are
+\tl{underlined}.
+
+\noindent The following set of rules defines the syntax for CM's
+preprocessor expressions (\nt{ppexp}):
+
+\begin{tabular}{rcl}
+\nt{aatom}  &\ar& \nt{number} \vb \nt{cmid} \vb \tl{(} \nt{asum} \tl{)} \vb (\ttl{$\tilde{~}$} \vb \ttl{-}) \nt{aatom} \\
+\nt{aprod}  &\ar& \{\nt{aatom} (\ttl{*} \vb \tl{div} \vb \tl{mod}) \vb \ttl{/} \vb \ttl{\%} \} \nt{aatom} \\
+\nt{asum}   &\ar& \{\nt{aprod} (\ttl{+} \vb \ttl{-})\} \nt{aprod} \\
+\\
+\nt{ns}     &\ar& \tl{structure} \vb \tl{signature} \vb \tl{functor} \vb \tl{funsig} \\
+\nt{mlsym}  &\ar& \nt{ns} \nt{mlid} \\
+\nt{query}  &\ar& \tl{defined} \tl{(} \nt{cmid} \tl{)} \vb \tl{defined} \tl{(} \nt{mlsym} \tl{)} \\
+\\
+\nt{acmp}   &\ar& \nt{asum} (\ttl{<} \vb \ttl{<=} \vb \ttl{>} \vb \ttl{>=} \vb \ttl{=} \vb \ttl{==} \vb \ttl{<>} \vb \ttl{!=}) \nt{asum} \\
+\\
+\nt{batom}  &\ar& \nt{query} \vb \nt{acmp} \vb (\tl{not} \vb \ttl{!}) \nt{batom} \vb \tl{(} \nt{bdisj} \tl{)} \\
+\nt{bcmp}   &\ar& \nt{batom} [(\ttl{=} \vb \ttl{==} \vb \ttl{<>} \vb \ttl{!=}) \nt{batom}] \\
+\nt{bconj}  &\ar& \{\nt{bcmp} (\tl{andalso} \vb \ttl{\&\&})\} \nt{bcmp} \\
+\nt{bdisj}  &\ar& \{\nt{bconj} (\tl{orelse} \vb \ttl{||})\} \nt{bconj} \\
+\\
+\nt{ppexp} &\ar& \nt{bdisj}
+\end{tabular}
+
+\section{EBNF for tool options}
+
+The following set of rules defines the syntax for tool options
+(\nt{toolopts}):
+
+\begin{tabular}{rcl}
+\nt{pathname} &\ar& \nt{stdpn} \vb \nt{ntvpn} \\
+\nt{toolopts} &\ar& \{ \nt{pathname} [\tl{:} (\tl{(} \nt{toolopts} \tl{)} \vb \nt{pathname})] \}
+\end{tabular}
+
+\section{EBNF for export lists}
+
+The following set of rules defines the syntax for export lists (\nt{elst}):
+
+\begin{tabular}{rcl}
+\nt{libkw}         &\ar& \tl{library} \vb \tl{Library} \vb \tl{LIBRARY} \\
+\nt{groupkw}       &\ar& \tl{group} \vb \tl{Group} \vb \tl{GROUP} \\
+\nt{sourcekw}      &\ar& \tl{source} \vb \tl{Source} \vb \tl{SOURCE} \\
+\nt{guardedexports} &\ar& \{ \nt{export} \} (\tl{\#endif} \vb
+   \tl{\#else} \{ \nt{export} \} \tl{\#endif} \vb \tl{\#elif} \nt{ppexp} \nt{guardedexports}) \\
+\nt{restline}      &\ar& rest of current line up to next newline character \\
+\nt{export}        &\ar& \nt{difference} \vb \tl{\#if} \nt{ppexp} \nt{guardedexports} \vb \tl{\#error} \nt{restline}  \\
+\nt{difference}    &\ar& \nt{intersection} \vb \nt{difference} \ttl{-} \nt{intersection} \\
+\nt{intersection}  &\ar& \nt{atomicset} \vb \nt{intersection} \ttl{*} \nt{atomicset} \\
+\nt{atomicset}     &\ar& \nt{mlsym} \vb \nt{union} \vb \nt{implicitset} \\
+\nt{union}         &\ar& \tl{(} [ \nt{elst} ] \tl{)} \\
+\nt{implicitset}   &\ar& \nt{sourceset} \vb \nt{subgroupset} \vb \nt{libraryset} \\
+\nt{sourceset}     &\ar& \nt{sourcekw} \tl{(} (\ttl{-} \vb \nt{pathname}) \tl{)} \\
+\nt{subgroupset}   &\ar& \nt{groupkw} \tl{(} (\ttl{-} \vb \nt{pathname}) \tl{)} \\
+\nt{libraryset}    &\ar& \nt{libkw} \tl{(} (\nt{pathname}) [\tl{(} \nt{toolopts} \tl{)}] \tl{)} \\
+\nt{elst}          &\ar& \nt{export} \{ \nt{export} \} \\
+\end{tabular}
+
+\section{EBNF for member lists}
+
+The following set of rules defines the syntax for member lists (\nt{members}):
+
+\begin{tabular}{rcl}
+\nt{class}          &\ar& \nt{stdpn} \\
+\nt{member}         &\ar& \nt{pathname} [\tl{:} \nt{class}] [\tl{(} \nt{toolopts} \tl{)}] \\
+\nt{guardedmembers} &\ar& \nt{members} (\tl{\#endif} \vb \tl{\#else} \nt{members} \tl{\#endif} \vb \tl{\#elif} \nt{ppexp} \nt{guardedmembers}) \\
+\nt{members}        &\ar& \{ (\nt{member} \vb \tl{\#if} \nt{ppexp}
+\nt{guardedmembers} \vb \tl{\#error} \nt{restline}) \}
+\end{tabular}
+
+\section{EBNF for library descriptions}
+
+The following set of rules defines the syntax for library descriptions
+(\nt{library}).  Notice that although the syntax used for \nt{version}
+is the same as that for \nt{stdpn}, actual version strings will
+undergo further analysis according to the rules given in
+\chapref{chap:versions}:
+
+\begin{tabular}{rcl}
+\nt{version}   &\ar& \nt{stdpn} \\
+\nt{privilege} &\ar& \nt{stdpn} \\
+\nt{lprivspec} &\ar& \{ \nt{privilege} \vb \tl{(} \{ \nt{privilege} \} \tl{)} \} \\
+\nt{library}  &\ar& [\nt{lprivspec}] \nt{libkw} [[\tl{(} \nt{version} \tl{)}] \nt{elst}] (\tl{is} \vb \tl{IS}) \nt{members}
+\end{tabular}
+
+\section{EBNF for library component descriptions (group descriptions)}
+
+The main differences between group- and library-syntax can be
+summarized as follows:
+
+\begin{itemize}\setlength{\itemsep}{0pt}
+\item Groups use keyword \tl{group} instead of \tl{library}.
+\item Groups may have an empty export list.
+\item Groups cannot wrap privileges, i.e., names of privileges (in
+front of the \tl{group} keyword) never appear within parentheses.
+\item Groups have no version.
+\item Groups have an optional owner.
+\end{itemize}
+
+\noindent The following set of rules defines the syntax for library
+component (group) descriptions (\nt{group}):
+
+\begin{tabular}{rcl}
+\nt{owner}     &\ar& \nt{pathname} \\
+\nt{gprivspec} &\ar& \{ \nt{privilege} \} \\
+\nt{group}     &\ar& [\nt{gprivspec}] \nt{groupkw} [\tl{(} \nt{owner} \tl{)}] [\nt{elst}] (\tl{is} \vb \tl{IS}) \nt{members}
+\end{tabular}

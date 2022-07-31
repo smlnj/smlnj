@@ -1,0 +1,55 @@
+(*
+ * Utility modules for new CM.
+ *  Hooks into compiler and into SML/NJ library.
+ *
+ * Copyright (c) 2004 by The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Group
+	structure StringSet
+	structure StringMap
+	structure SymbolOrdKey
+	structure SymbolSet
+	structure SymbolMap
+	structure PidSet
+	signature SAFEIO
+	structure SafeIO
+	structure Seek
+	signature SAY
+	structure Say
+	structure StdConfig
+	structure AutoDir
+	structure Memoize
+	structure Subst
+
+	structure LibBase	(* from SML/NJ library *)
+	functor MapFn
+	functor SetFn
+	structure IntMap
+	structure IntSet
+is
+	stringset.sml
+	stringmap.sml
+	symbolordkey.sml
+	symbolset.sml
+	symbolmap.sml
+	pidset.sml
+	safeio.sml
+	seek.sml
+	stdcfg.sml
+	say.sml
+	autodir.sml
+	memoize.sml
+	subst.sml
+
+	map-fn.sml
+	set-fn.sml
+	int-map.sml
+	int-set.sml
+
+	$smlnj/basis/basis.cm
+	$smlnj/viscomp/basics.cm
+	$smlnj/viscomp/core.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm

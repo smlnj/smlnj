@@ -1,0 +1,221 @@
+= The `JSONStreamParser` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `JSONStreamParser` structure provides an event-based
+(or _stream_) parsing model for *JSON* files.  It is suitable
+for scanning large files for particular items without having
+to first build an in-memory data structure.  It can also
+be useful to directly translate from *JSON* to a specific *SML*
+datatype without having to go through the intermediate
+xref:str-JSON.adoc#type:value[`JSON.value`] representation.
+
+== Synopsis
+
+[source,sml]
+------------
+structure JSONStreamParser
+------------
+
+== Interface
+
+[source,sml]
+------------
+type source
+
+type 'ctx callbacks = {
+    null : 'ctx -> 'ctx,
+    boolean : 'ctx * bool -> 'ctx,
+    integer : 'ctx * IntInf.int -> 'ctx,
+    float : 'ctx * real -> 'ctx,
+    string : 'ctx * string -> 'ctx,
+    startObject : 'ctx -> 'ctx,
+    objectKey : 'ctx * string -> 'ctx,
+    endObject : 'ctx -> 'ctx,
+    startArray : 'ctx -> 'ctx,
+    endArray : 'ctx -> 'ctx,
+    error : 'ctx * string -> unit
+  }
+
+val openStream : TextIO.instream -> source
+val openFile : string -> source
+val openString : string -> source
+
+val close : source -> unit
+
+val parse : 'ctx callbacks -> (source * 'ctx) -> 'ctx
+
+val parseFile : 'ctx callbacks -> (string * 'ctx) -> 'ctx
+------------
+
+== Description
+
+[[type:source]]
+`[.kw]#type# source`::
+  The abstract type of JSON input sources.  Note that this type is the
+  same as xref:str-JSONStreamParser.adoc#type:source[`JSONParser.source`].
+
+`[.kw]#type# 'ctx callbacks = { ... }`::
+  This type is a record of the parsing-event call-back functions, where
+  the type parameter ``'cxt`` is instantiated to the context (or state)
+  needed to preserve information between events.  The call-back functions
+  in this record type are invoked as follows:
++
+--
+    `null : 'ctx \-> 'ctx`::
+        called when the *JSON* *null* value is encountered.
+
+    `boolean : 'ctx * bool \-> 'ctx`::
+        called when the *JSON* *true*  or *false* values are encountered.
+
+    `integer : 'ctx * IntInf.int \-> 'ctx`::
+        called when a *JSON* integral-number value encountered.
+
+    `float : 'ctx * real \-> 'ctx`::
+        called when a *JSON* floating-point-number value encountered.
+
+    `string : 'ctx * string \-> 'ctx`::
+        called when a *JSON* string value encountered.
+
+    `startObject : 'ctx \-> 'ctx`::
+        called at the beginning of a *JSON* object definition (_i.e._,
+        when a "`{`" is encountered).
+
+    `objectKey : 'ctx * string \-> 'ctx`::
+        called when a *JSON* object key is encountered (including the
+        "`:").  The next call-back will specify the value
+        associated with the key.
+
+    `endObject : 'ctx \-> 'ctx`::
+        called at the end of a *JSON* object definition (_i.e._,
+        when a "`}`" is encountered).
+
+    `startArray : 'ctx \-> 'ctx`::
+        called at the beginning of a *JSON* array definition (_i.e._,
+        when a "`[`" is encountered).
+
+    `endArray : 'ctx \-> 'ctx`::
+        called at the end of a *JSON* array definition (_i.e._,
+        when a "`]`" is encountered).
+
+    `error : 'ctx * string \-> unit`::
+        called when a syntax error is encountered in the input.  The
+        second argument is an error message describing the error.
+	It is expected that this call-back does not return (_i.e._, it
+	either raises an exception or terminates the program).
+	If it does return, then the parser will raise the
+	{sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`]
+	exception.
+--
+
+[[val:openStream]]
+`[.kw]#val# openStream : TextIO.instream -> source`::
+  `openStream inS` returns a input source for the given input stream.
+
+[[val:openFile]]
+`[.kw]#val# openFile : string -> source`::
+  `openStream file` returns a input source for the given file.  This function
+  opens an input stream for reading from the file, so one should make sure to
+  call xref:val:close[`close`] on the source once all of the *JSON* values
+  have been read from the file.
+
+`[.kw]#val# openString : string -> source`::
+  `openStream s` returns a input source for the given string.
+
+[[val:close]]
+`[.kw]#val# close : source -> unit`::
+  `close src` closes the input source, which has the effect of marking the source
+  as _closed_.  Furthermore, if `src` was created by a call to
+  xref:#val:openFile[`openFile`], then the underlying input stream that
+  was created for the file is closed.  This function does *not* close the
+  input stream for sources created by xref:#val:openStream[`openStream`]
+
+[[val:parse]]
+`[.kw]#val# parse : 'ctx callbacks \-> (source * 'ctx) \-> 'ctx`::
+  `parse cbs (src, cxt)` will parse the *JSON* input from the input source
+  `src`, using the record of call-back functions `cbs` and the initial
+  context `cxt`.
+
+`[.kw]#val# parseFile : 'ctx callbacks \-> (string * 'ctx) \-> 'ctx`::
+  `parse cbs (f, cxt)` will parse the *JSON* input from the file
+  `f`, using the record of call-back functions `cbs` and the initial
+  context `cxt`.  Note that this function will only parse a single
+  *JSON* value from the file; to parse multiple values, one should used
+  the xref:val:parse[`parse`] function with a source created by
+  xref:val:openFile[`openFile`].
+
+== Exampless
+
+Consider the following *JSON* input:
+
+[source,json]
+-------------
+{ "a" : 23,
+  "b" : [ false, true ],
+  "c" : "hello world"
+}
+-------------
+
+Parsing this value has the same result as evaluating the following
+function:
+
+[source,sml]
+------------
+fun f cxt = let
+      val cxt = startObject cxt
+      val cxt = objectKey (cxt, "a")
+      val cxt = integer (cxt, 23)
+      val cxt = objectKey (cxt, "b")
+      val cxt = startArray cxt
+      val cxt = boolean (cxt, false)
+      val cxt = boolean (cxt, true)
+      val cxt = endArray cxt
+      val cxt = objectKey (cxt, "c")
+      val cxt = objectString (cxt, "hello world")
+      val cxt = endObject cxt
+      in
+        cxt
+      end
+------------
+
+The following function returns a list of all of the string-valued
+fields labeled as `"name"` in the input file.
+
+[source,sml]
+------------
+fun getNames file = let
+      fun objectKey ({names, ...}, "name") = {names = names, isName = true}
+        | objectKey (cxt, _) = cxt
+      fun string (cxt as {names, isName}, s) = if isName
+            then {names = s :: names, isName = false}
+            else cxt
+      fun default ({names, isName}, _) = {names = names, isName = false}
+      val cbs = {
+              null = Fn.id,
+              boolean = default,
+              integer = default,
+              float = default,
+              string = string,
+              startObject = Fn.id,
+              objectKey = objectKey,
+              endObject = Fn.id,
+              startArray = Fn.id,
+              endArray = Fn.id,
+              error = fn (_, msg) => raise Fail msg
+            }
+      val {names, ...} =
+            JSONStreamParser.parseFile cbs (file, {names = [], isName = false})
+      in
+        List.rev names
+      end
+------------
+
+
+== See Also
+
+xref:str-JSONParser.adoc[`JSONParser`],
+xref:str-JSONStreamPrinter.adoc[`JSONStreamPrinter`],
+xref:json-lib.adoc[__The JSON Library__]

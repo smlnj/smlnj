@@ -1,0 +1,177 @@
+FLINT/  (87 files, 75 .sml, 12 .sig)
+--------------
+
+MAP -- this file
+
+kernel/
+  FLINT types
+
+  primop.sig/sml
+    datatypes (primop,numkind,arithop,cmpop) for defining primops
+    defs: PRIM_OP, PrimOp: PRIM_OP
+
+  primtyc.sig/sml
+    representing FLINT primitive types (datatype ptyc, type primtyc)
+    defs: PRIM_TYC, PrimTyc :> PRIM_TYC
+
+  lty.sig/sml
+    representing FLINT types (types tyc, lty, tycEnv), including
+    concrete and hashconsed versions (e.g. tycI, tyc, ltyI,lty, ...)
+    defs: LTY, Lty: LTY
+
+  pplty.sml
+    prettyprinting lty, tyc defined in Lty.
+    defs: PPLty
+
+  ltykindchk.sml
+    kindchecking for FLINT types
+    defs: LTYKINDCHK, LtyKindChk: LTYKINDCHK
+
+  ltykernel.sig/sml
+    normalization and equivalence for tyc and lty
+    defs: LTYKERNEL, LtyKernel: LTYKERNEL
+
+  ltydef.sig/sml
+    LtyDef contains the set of abstract constructor, deconstructor, and
+    predicate functions for tkind, tyc, and lty, hiding the
+    details of tkind, tyc, and lty defined in Lty. LTYDEF
+    does not mention the concrete types tkindI, tycI, or ltyI.
+    defs: LTYDEF, LtyDef
+
+  ltybasic.sig/sml
+    superset of LtyDef, adds commonly used primitive tycs and ltys,
+    and general purpose utility functions to manipulate tkinds, tycs, ltys.
+    defs: LTYBASIC, LtyBasic: LTYBASIC
+
+  ltydict.sml
+    dictionaries over tyc and lty
+    defs: LTYDICT, LtyDict: LTYDICT
+    used: LtyExtern
+
+  ltyextern.sig/sml
+    superset of LtyBasic, adding more specialized utility functions
+    defs: LTYEXTERN, LtyExtern: LTYEXTERN
+
+
+plambda/
+  plambda expressions; first IR, to which Absyn is translated
+
+  plambdatype.sml
+    defines PLambdaType as an alias of LtyExtern
+    defs: PLambdaType
+
+  plambda.sig/sml
+    the F-omega-like typed intermediate language (type lexp)
+    defs: PLAMBDA, PLambda: PLAMBDA
+
+  pplexp.sml
+    prettyprinting lexp
+    defs: PPLEXP, PPLexp: PPLEXP
+
+  rpplexp.sml
+    "Real" prettyprinting for lexp
+    defs: PPLEXP, PPLexp: PPLEXP
+
+  pflatten.sig/sml
+    utility functions used in plambda to FLINT normalization;
+    FLINT type specialization, and FLINT representation analysis
+    defs: PFLATTEN, PFlatten : PFLATTEN
+
+  reorder.sml
+    Sethi-Ullman reordering of expression trees to minimize register usage
+    defs: REORDER, Reorder: REORDER
+
+  flintnm.sml
+    Converting the Standard PLambda.lexp into the FLINT IL
+    defs: FLINTNM, FlintNM: FLINTNM
+
+
+flint/
+
+  flint.sig/sml
+    FLINT A-normal form intermediate language (type lexp again)
+    defs: FLINT, FLINT: FLINT
+
+  flintutil.sml
+    defs: FLINTUTIL, FlintUtil : FLINTUTIL
+
+  ppflint.sig/sml
+    pseudo prettyprinting of FLINT lexp
+    defs: PPFLINT, PPFlint :> PPFLINT
+
+  chkflint.sml
+    FLINT type checker
+    defs: CHKFLINT, ChkFlint: CHKFLINT
+
+  tvarcvt.sml
+    converting between different representations of
+    type variables in a FLINT program.
+    defs: TVARCVT, TvarCvt :> TVARCVT
+
+
+trans/
+
+  primopmap.sml
+    mapping from primop names (strings) to primop representations
+    defs: PRIMOP_MAP, PrimOpMap
+    see: ElabData/basics/primoptypemap.sml
+
+  matchcomp.sml
+    main match compiler
+    defs: MATCH_COMP, MatchComp: MATCH_COMP
+
+  mccommon.sml
+    match compiler support data structures
+    defs: MCCommon
+
+  pequal.sml
+    inline equality, with equality for strings, IntInf, and polymorphic types
+    imported from the Core structure in translate.sml
+    defs: PEQUAL, PEqual: PEQUAL
+
+[DELETED: -- unused support for pattern templates
+  tempexpn.sml]
+
+  transtypes.sml
+    translate front-end types to flint types (lty, tyc)
+    defs: TRANSTYPES, TransTypes: TRANSTYPES
+
+  translate.sml
+    translate absyn to plambda lexp
+    defs: TRANSLATE, Translate: TRANSLATE
+
+  literal-to-num.sml
+    Conversions from integer/word literals (which are represented as
+    arbitrary precision ints) to fixed size. a hack that should be
+    replaced by a parameterized numeric types.
+    size numbers
+    defs: LITERAL_TO_NUM, LiteralToNum : LITERAL_TO_NUM
+
+flint/
+
+reps/
+
+opt/
+
+lsplit/
+
+cps/
+
+cpsopt/
+
+clos/
+
+main/
+
+  flintcomp.sml
+    defs:
+      functor FLINTComp
+	 (structure Gen: MACHINE_GEN
+	  val collect: (unit -> int) -> CodeObj.code_object) : CODE_GENERATOR
+    imports:
+       (*ABCopt,*) ChkFlint, Closure, Control, Convert, CPStrans, CPSopt, Spill,
+       CpsSplit, FLINT_Control, FContract, FixFix, FLINT, FSplit, GlobalFix,
+       LContract, Lift, Limit, Literals, Loopify, LtyExtern, PPCps, PPFlint,
+       Recover, Reify, Specialize, SMLofNJ, TextIO, Wrapping
+
+reals/

@@ -1,0 +1,24 @@
+<!-- unix-lib-part.mldoc --
+  -- --
+  -- COPYRIGHT (c) 2007 The Fellowship of SML/NJ. --
+  -- --
+  -- The root of the Unix library part of the manual.  -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John H. Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=2007>
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=15>
+
+<TITLE>Unix Library Manual</TITLE>
+
+<SECTION>
+<HEAD>The Unix Library</HEAD>
+
+<INCLFILE FILE="unix-env">
+<INCLFILE FILE="unix-path">
+</SECTION>
+

@@ -1,0 +1,243 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Naming objects in the file system}
+
+\section{Motivation}
+
+The main difficulty with file naming lies in the fact that files or
+even whole directories may move after CM has already partially (but
+not fully) processed them.  For example, this happens when the {\em
+autoloader} (see \secref{sec:autoload}) has been invoked and the
+session (including CM's internal state) is then frozen (i.e., saved to
+a file) via {\tt SMLofNJ.exportML}.
+
+CM's configurable {\em path anchor} mechanism enables it to resume
+such a session even when operating in a different environment, perhaps
+on a different machine with different file systems mounted, or a
+different location of the SML/NJ installation.  Evaluation of path
+anchors always takes place as late as possible, and CM will re-evaluate
+path anchors as this becomes necessary due to changes to their
+configuration.
+
+\section{Basic rules}
+\label{sec:basicrules}
+
+CM uses its own ``standard'' syntax for pathnames which for the most
+part happens to be the same as the one used by most Unix-like systems:
+\begin{itemize}
+\item Path name components are separated by ``{\bf /}''.
+\item Special components ``{\bf .}'' and ``{\bf ..}'' denote {\em
+current} and {\em previous} directory, respectively.
+\item Paths beginning
+with ``{\bf /}'' are considered {\em absolute}.
+\item Other paths are {\em relative} unless they start with ``{\bf \$}''.
+\end{itemize}
+\noindent There is an important third form of standard paths: {\em
+anchored} paths.  Anchored paths always start with ``{\bf \$}''.
+
+Since this standard syntax does not cover system-specific aspects such
+as volume names, it is also possible to revert to ``native'' syntax by
+enclosing a path name in double-quotes.  Of course, description files
+that use path names in native syntax are not portable across operating
+systems.
+
+\begin{description}
+\item[Absolute pathnames] are resolved in the usual manner
+specific to the operating system.  However, it is advisable to avoid
+absolute pathnames because they are certain to ``break'' if the
+corresponding file moves to a different location.
+\item[Relative pathnames that occur in some CM description file] whose
+name is {\it path}{\tt /}{\it file}{\tt .cm} will be resolved relative
+to {\it path}, i.e., relative to the directory that contains the
+description file.
+\item[Relative pathnames that have been entered interactively,]
+usually as an argument to one of CM's interface functions, will be
+resolved in the OS-specific manner, i.e., relative to the current
+working directory.  However, notice that some of CM's operations (see
+\secref{sec:autoload}---autoload) will be executed lazily and,
+thus, can occur interleaved with arbitary other operations---including
+changes of the working directory.  This is handled by CM in such a way
+that it appears as if all path derived from an interactive relative
+path $p$ had been completely resolved at the time $p$ was entered. As
+a result, two names specified using identical strings but at different
+times when different working directories were in effect will be kept
+apart and continue to refer to their respective original file system
+locations.
+\item[Anchored paths] consist of an anchor name (of non-zero length)
+and a non-empty list of additional arcs.  The name is enclosed by
+the path's leading {\bf \$} on the left and the path's first {\bf /}
+on the right.  The list of arcs follows the first {\bf /}.  As with
+all standard paths, the arcs themselves are also separated by {\bf /}.
+An error is signalled if the anchor name is not known to CM.
+If $a$ is a know anchor name currently bound to some directory name
+$d$, then the standard path {\tt \$}$a${\tt /}$p$ (where $p$ is a list
+of arcs) refers to $d${\tt /}$p$.  The frequently occuring case where
+$a$ coincides with the first arc of $p$ can be abbreviated as {\tt
+\$/}$p$.
+\end{description}
+
+\section{Anchor environments}
+\label{sec:anchor:env}
+
+Anchor names are resolved in the {\em anchor environment} that is in
+effect at the time the anchor is read.
+
+The basis for all anchor environments is the {\em root environment}.
+Conceptually, the root environments is a fixed mapping that binds
+every possible anchor to a mutable location.  The location can store a
+native directory name or can be marked ``undefined''.  Most locations
+initially start out undefined.  The contents of each location is
+configurable (see \secref{sec:anchor:config}).
+
+At the time a CM description file $a${\tt .cm} refers to another
+library's or library component's description file $b${\tt .cm}, it can
+augment the current anchor environment with new bindings.  The new
+bindings are in effect while $b${\tt .cm} (including any description
+files {\it it}\/ mentions!) is being processed.  If a new binding
+binds an anchor name that was already bound in the current
+environment\footnote{which is technically always the case given our
+explanation of the root environment}, then the old binding is being
+hidden.  The effect is scoping for anchor names.
+
+Using CM's {\em tool parameter} mechanism (see
+\secref{sec:toolparam}), a new binding is specified as a pair of
+anchor name and anchor value.  The value has the form of another path
+name (standard or native). Example:
+
+\begin{lstlisting}[language=CM]
+  a.cm (bind:(anchor:lib value:$mystuff/a-lib)
+        bind:(anchor:support value:$lib)
+        bind:(anchor:utils value:/home/bob/stuff/ML/utils))
+\end{lstlisting}%
+
+As shown in this example, it is perfectly legal for the specification
+of the value to involve the use of another anchor.  That anchor will
+be resolved in the original anchor environment. Thus, a path anchored
+at {\tt \$lib} in {\tt a.cm} will be resolved using the binding for
+{\tt \$mystuff} that is currently in effect.  The point here is that a
+re-configuration of the root environment that affects {\tt \$mystuff}
+now also affects how {\tt \$lib} is resolved as it occurs within {\tt
+a.cm}.
+
+CM processes the list of {\tt bind}-directives ``in parallel.'' This
+means that the anchor {\tt \$support} will refer to the original
+meaning of {\tt \$lib} and is {\em not} being bound to {\tt
+\$mystuff/a-lib/asupport}.
+
+The example also demonstrates that {\tt value}-paths can be single
+anchors. In other words, the restriction that there has to be at least
+one arc after the anchor does not apply here. This makes it possible
+to ``rename'' anchors, or, to put it more precisely, for one anchor
+name to be established as an ``alias'' for another anchor name.
+
+\section{Anchor configuration}
+\label{sec:anchor:config}
+
+Anchor configuration is concerned with the values that are stored in
+the root anchor environment.  At startup time, the root environment is
+initialized by reading two configuration files: an
+installation-specific one and a user-specific one.  After that, the
+contents of root locations can be maintained using CM's interface
+functions {\tt CM.Anchor.anchor} and {\tt CM.Anchor.reset} (see
+\secref{sec:api:anchors}).
+
+Although there is a hard-wired default for the installation-specific
+configuration file\footnote{which happens to be {\tt
+/usr/lib/smlnj-pathconfig}}, this default in rarely being used.
+Instead, in a typical installation of SML/NJ the default will be a
+file $r${\tt /lib/pathconfig} where $r$ is the {\it root} directory
+into which SML/NJ had been installed.  (The installation procedure
+establishes this new default by setting the environment variable {\tt
+CM\_PATHCONFIG} at the time it produces the heap image for
+the interactive system.)  The user can specify a new location at
+startup time using the same environment variable {\tt CM\_PATHCONFIG}.
+
+The default location of the user-specific configuration file is {\tt
+.smlnj-pathconfig} in the user's home directory (which must be given
+by the {\tt HOME} environment variable).  At startup time, this
+default can be overridden by a fixed location which must be given as
+the value of the environment variable {\tt CM\_LOCAL\_PATHCONFIG}.
+
+The syntax of all configuration files is identical.  Lines are
+processed from top to bottom. White space divides lines into tokens.
+\begin{itemize}
+\item A line with exactly two tokens associates an anchor (the first
+token) with a directory in native syntax (the second token).  Neither
+anchor nor directory name may contain white space and the anchor
+should not contain a {\bf /}.  If the directory name is a relative
+name, then it will be expanded by prepending the name of the directory
+that contains the configuration file.
+\item A line containing exactly one token that is the name of an
+anchor cancels any existing association of that anchor with a
+directory.
+\item A line with a single token that consists of a single minus sign
+{\bf -} cancels all existing anchors.  This typically makes sense only
+at the beginning of the user-specific configuration file and
+erases any settings that were made by the installation-specific
+configuration file.
+\item Lines with no token (i.e., empty lines) will be silently ignored.
+\item Any other line is considered malformed and will cause a warning
+but will otherwise be ignored.
+\end{itemize}
+
+\section{When to use anchor environments}
+
+The following sample scenario for using anchor environments will
+provide some background on the reasons that led to the inclusion of
+this feature into CM.  In short, anchor environments will typically be
+used to disambiguate between two or more different uses of the same
+anchor name.  This is something that the root environment alone (i.e.,
+a fixed mapping from anchors to directory names) cannot do because the
+root environment binds each anchor to at most one ``meaning.''
+
+Suppose you are developing a project {\tt P.cm} for which you obtain
+two utility libraries {\tt A.cm} and {\tt B.cm} from other
+programmers.  Unfortunately, since these programmers did not
+coordinate their work (perhaps because they did not even know of each
+other), both {\tt A.cm} and {\tt B.cm} each uses its own helper
+library that is expected to be found under the name {\tt \$H/H.cm}.
+
+Your task is to put references to {\tt A.cm} and {\tt B.cm} into {\tt
+P.cm} so that everything ``works.''  Now, mentioning {\tt A.cm} and
+{\tt B.cm} is easy enough, but if you do so without special
+precautions, you arrive at a situation where both helpers end up being
+the same---no matter how you configure the binding for anchor {\tt
+\$H}.
+
+If you have access to the description files for {\tt A.cm} and {\tt
+B.cm}, you could work around this problem by changing the reference to
+{\tt \$H} in one of them into something else.  Remember, however, that
+in general you may not be able to do this because it could be that
+either you do not have permissions to change the description files, or
+you might not even have any description file that you could change
+because the two libraries were given to you in ``stable'' form.
+
+The correct solution is to add {\tt bind:}-directives where you {\em
+use} {\tt A.cm} and {\tt B.cm} in your own description file {\tt P.cm}.
+For example, you could write there:
+
+\begin{lstlisting}[language=CM]
+  A.cm (bind:(anchor:H value:$AH))
+  B.cm (bind:(anchor:H value:$BH))
+\end{lstlisting}%
+
+With this, the two uses of anchor {\tt \$H} will occur in different
+{\em local} anchor environments.  In the example as shown, the first
+such local environment effectively renames {\tt \$H} into {\tt \$AH}
+while the second renames {\tt \$H} into {\tt \$BH}. Thus, you can put
+independent bindings for {\tt \$AH} and {\tt \$HB} into your root
+configuration, these independent bindings will propagate to the
+respective local environment, and the two uses of {\tt \$H} will be
+resolved differently---as was intended.
+
+Another situation where anchor name clashes would definitely happen is
+when two different versions (i.e., development stages) of the same set
+of libraries are being used at the same time.  In this case, one
+should let the libraries within each set refer to each other using
+anchored names and provide (different) bindings for these names using
+{\tt bind:}-directives from within their respective clients.
+
+A good way of encapsulating the construction of the required local
+anchor environment for a library is to create a {\em proxy} for it
+(see \chapref{chap:exportcalculus}).

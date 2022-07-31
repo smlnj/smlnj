@@ -1,0 +1,132 @@
+(* basics.cm
+ *
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Basic definitions and utilities used within the SML/NJ compiler.
+ *)
+
+Group
+
+	signature BASIC_CONTROL
+	structure BasicControl
+
+	signature PRINTCONTROL
+	structure Control_Print
+	signature PRETTYPRINT
+	signature PPUTIL
+	structure PrintUtil
+
+	signature SYMBOL
+	signature FASTSYMBOL
+	signature FIXITY
+	structure Symbol
+	structure FastSymbol
+	structure Fixity
+	structure SymbolHashTable
+	structure SpecialSymbols
+
+	signature PERSSTAMPS
+	structure PersStamps
+	structure PersMap
+
+	signature ERRORMSG
+	signature STATS
+
+	signature SOURCE
+	signature SOURCE_MAP
+	structure Source
+	structure SourceMap
+	structure ErrorMsg
+	structure CompileExn
+	structure PrettyPrint
+        structure PPUtil
+	
+	structure Stats
+	structure WordStringHashTable
+
+	signature PIDENV
+	functor PidEnvFn
+
+	structure IntConst
+
+	signature REAL_TO_BITS
+	structure Real64ToBits
+	structure RealLit
+	structure RealConst
+
+	signature TARGET
+	structure Target
+is
+	control/basiccontrol.sml
+
+	symbol/symbol.sig
+	symbol/symbol.sml
+	symbol/fastsymbol.sig
+	symbol/fastsymbol.sml
+	symbol/symbol-hashtable.sml
+	symbol/fixity.sml
+	symbol/specialsyms.sml
+
+	pid/persstamps.sig
+	pid/persstamps.sml
+	pid/persmap.sml
+	pid/pidenv.sig
+	pid/pidenv.sml
+
+	source/source.sig
+	source/source.sml
+	source/sourcemap.sig
+	source/sourcemap.sml
+	source/pathnames.sml
+
+	errormsg/errormsg.sig
+	errormsg/errormsg.sml
+
+	stats/stats.sml
+
+	print/printcontrol.sml
+	print/printutil.sig
+	print/printutil.sml
+	print/prettyprint.sml
+	print/pputil.sig
+	print/pputil.sml
+
+	util/wordstr-hashtable.sml
+
+	reals/real-lit.sml
+	reals/real-to-bits.sig
+	reals/real-to-bits-fn.sml
+	reals/real64-to-bits.sml
+
+        compiler/int-const.sml
+        compiler/real-const.sml
+	compiler/compileexn.sml
+	compiler/target.sig
+
+#if defined(TARGET_BIG_ENDIAN)
+        compiler/endianess-big.sml
+#elif defined(TARGET_LITTLE_ENDIAN)
+        compiler/endianess-little.sml
+        (* falling back on host-specific endianness spec *)
+#elif defined(BIG_ENDIAN)
+	compiler/endianess-big.sml
+#else
+	compiler/endianess-little.sml
+#endif
+
+#if defined(TARGET_SIZE_32)
+        compiler/target32.sml
+#elif defined(TARGET_SIZE_64)
+        compiler/target64.sml
+        (* falling back on host-specific size spec *)
+#elif defined(SIZE_32)
+	compiler/target32.sml
+#else
+	compiler/target64.sml
+#endif
+
+	$smlnj/basis/basis.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/pp-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm

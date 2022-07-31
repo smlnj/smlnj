@@ -1,0 +1,8 @@
+Group
+	structure KG0
+is
+	kg-0.sml
+	kg-1.sml
+	kg-2.sml
+	kg-3.sml
+	kg-4.sml

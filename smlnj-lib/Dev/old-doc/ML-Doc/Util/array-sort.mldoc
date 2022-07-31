@@ -1,0 +1,47 @@
+<!-- array-sort.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ARRAY-SORT SDATA "array-sort-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=5 DAY=12>
+<TITLE>The ARRAY_SORT signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ARRAY_SORT/ signature</HEAD>
+<SEEALSO>
+  <STRREF TOPID/ArrayQSort/
+  <SIGREF/MONO_ARRAY_SORT/
+  <FCTREF/ArrayQSortFn/
+</SEEALSO>
+
+<PP>
+The <SIGREF NOLINK/ARRAY_SORT/ signature provides an
+interface for the in-place sorting of polymorphic arrays.
+
+
+<SIGNATURE SIGID="ARRAY_SORT">
+  <SIGBODY SIGID="ARRAY_SORT" FILE=ARRAY-SORT>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>array
+    <SPEC>
+      <VAL>sort<TY>(('a * 'a) -> order) -> 'a array -> unit
+        <COMMENT>
+          <PROTOTY>
+          sort <ARG/cmp/ <ARG/arr/
+          </PROTOTY>
+          sorts the array <ARG/arr/ in non-decreasing order using
+          the comparison relationship defined by <ARG/cmp/.
+    <SPEC>
+      <VAL>sorted<TY>(('a * 'a) -> order) -> 'a array -> bool
+        <COMMENT>
+          <PROTOTY>
+          sorted <ARG/cmp/ <ARG/arr/
+          </PROTOTY>
+          returns true if the array <ARG/arr/ is sorted in non-decreasing
+          order under the comparison relationship <ARG/cmp/.
+</SIGNATURE>
+
+</INTERFACE>

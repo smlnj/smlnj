@@ -1,0 +1,118 @@
+= Using the RegExp Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Introduction
+
+The *RegExp Library* is designed for flexibility; it allows mixing and
+matching of different front-end syntax with back-end engines, as well
+as supporting arbitrary input sources.
+This flexibility, however, comes at the cost of making some of the
+simple applications a bit less obvious.  This tutorial shows how the
+*RegExp Library* can be used in a variety of common applications.
+
+== Assembling an Regular Expression Matcher
+
+Before we can do anything else, we must assemble a regular-expression
+matcher.  For the purposes of this tutorial, we use a combination
+of the `AwkSyntax` front-end and the `BackTrackEngine` back-end.
+
+[source,sml]
+------------
+structure RE = RegExpFn(
+    structure P = AwkSyntax
+    structure E = BackTrackEngine)
+------------
+
+== Match trees
+
+Regular expressions may contain xref:str-RegExpSyntax.adoc#con:Group[grouping]
+operators.  When a pattern matches a string, these groups induce a nested
+tree structure on the matched string.
+The xref:str-MatchTree.adoc[``MatchTree``] structure defines
+a polymorphic representation of this structure, along with a
+number of utility functions for extracting information from
+a match.
+
+[source,sml]
+------------
+structure MT = MatchTree
+------------
+
+
+== Example: scanning tokens
+
+The `match` function in the `REGEXP` signature allows one to distinguish
+between a set of possible regular expression matches.  One application of
+this mechanism is a simple scanner.  Let us define a datatype for tokens,
+which can be white space, numbers, or identifiers.
+
+[source,sml]
+------------
+datatype tok
+  = WS | NUM of IntInf.int | ID of string
+------------
+
+We can then define the scanner as follows:
+
+[source,sml]
+------------
+fun scanner getc gets = let
+      fun getMatch cons (MT.Match({pos, len}, _)) = cons (gets (pos, len))
+      in
+        RE.match [
+            ("[ \t\n]+", getMatch (fn _ => WS)),
+            ("[0-9]+", getMatch (fn s => NUM(valOf(IntInf.fromString s)))),
+            ("[a-zA-Z][a-zA-Z0-9]*", getMatch ID)
+          ] getc
+      end
+------------
+
+Here the `getc` parameter is the standard character reader; we have also included
+the `gets` parameter, which is a function of type
+
+[source,sml]
+------------
+'strm * int -> string
+------------
+
+for getting a string from a stream.  For many input sources, the `gets` function
+has an efficient and direct implementation, but it can also be implemented in
+terms of the `getc` function as follows:
+
+[source,sml]
+------------
+fun gets getc (strm, n) = let
+      fun getChrs (0, _, chrs) = String.implodeRev chrs
+        | getChrs (n, strm, chrs) = (case getc strm
+             of NONE => raise Fail "empty stream"
+              | SOME(c, strm) => getChrs (n-1, strm, c::chrs)
+            (* end case *))
+      in
+        getChrs (n, strm, [])
+      end;
+------------
+
+Because this function is only called *after* the `scanner` function has matched
+a sequence of `n` characters from `strm`, the `"empty stream"` case will not
+occur for well behaving input streams.
+
+Here is an example of using the scanner to tokenize strings, where we use the
+*Basis Library* substring type to implement the stream type:
+
+[source,sml]
+------------
+fun tokens s = let
+      fun gets (ss, n) = Substring.string(Substring.slice (ss, 0, SOME n))
+      val scan = scanner Substring.getc gets
+      fun lp (ss, toks) = (case scan ss
+             of SOME(tok, ss') => lp (ss', tok::toks)
+              | NONE => List.rev toks
+            (* end case *))
+      in
+        lp (Substring.full s, [])
+      end;
+------------

@@ -1,0 +1,130 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Example: Dynamic linking}
+\label{chap:dynlink}
+
+Autoloading is convenient and avoids wasted memory for modules that
+should be available at the interactive prompt but have not actually
+been used so far.  However, sometimes one wants to be even more
+aggressive and save the space needed for a function until---at
+runtime---that function is actually being dynamically invoked.
+
+CM does not provide immediate support for this kind of {\em dynamic
+linking}, but it is quite simple to achieve the effect by carefully
+arranging some helper libraries and associated stub code.
+
+Consider the following module:
+\begin{lstlisting}
+  structure F = struct
+      fun f (x: int): int =
+          G.g x + H.h (2 * x + 1)
+  end
+\end{lstlisting}%
+
+Let us further assume that the implementations of structures {\tt G}
+and {\tt H} are rather large so that it would be worthwhile to avoid
+loading the code for {\tt G} and {\tt H} until {\tt F.f} is called
+with some actual argument.  Of course, if {\tt F} were bigger, then we
+also want to avoid loading {\tt F} itself.
+
+To achieve this goal, we first define a {\em hook} module which will
+be the place where the actual implementation of our function will be
+registered once it has been loaded.  This hook module is then wrapped
+into a hook library.  Thus, we have {\tt f-hook.cm}:
+\begin{lstlisting}[language=CM]
+  Library
+      structure F_Hook
+  is
+      f-hook.sml
+\end{lstlisting}%
+
+and {\tt f-hook.sml}:
+
+\begin{lstlisting}
+  structure F_Hook = struct
+      local
+          fun placeholder (i: int) : int =
+              raise Fail "F_Hook.f: unitinialized"
+          val r = ref placeholder
+      in
+          fun init f = r := f
+          fun f x = !r x
+      end
+  end
+\end{lstlisting}%
+
+The hook module provides a reference cell into which a function of
+type equal to {\tt F.f} can be installed.  Here we have chosen to hide
+the actual reference cell behind a {\bf local} construct.  Accessor
+functions are provided to install something into the hook
+({\tt init}) and to invoke the so-installed value ({\tt f}).
+
+With this preparation we can write the implementation module {\tt f-impl.sml}
+in such a way that not only does it provide the actual
+code but also installs itself into the hook:
+\begin{lstlisting}
+  structure F_Impl = struct
+      local
+          fun f (x: int): int =
+              G.g x + H.h (2 * x + 1)
+      in
+          val _ = F_Hook.init f
+      end
+  end
+\end{lstlisting}%
+\noindent The implementation module is wrapped into its implementation
+library {\tt f-impl.cm}:
+\begin{lstlisting}[language=CM]
+  Library
+      structure F_Impl
+  is
+      f-impl.sml
+      f-hook.cm
+      g.cm       (* imports G *)
+      h.cm       (* imports H *)
+\end{lstlisting}%
+\noindent Note that {\tt f-impl.cm} must mention {\tt f-hook.cm} for
+{\tt f-impl.sml} to be able to access structure {\tt F\_Hook}.
+
+Finally, we replace the original contents of {\tt f.sml} with a stub
+module that defines structure {\tt F}:
+\begin{lstlisting}
+  structure F = struct
+      local
+          val initialized = ref false
+      in
+          fun f x =
+              (if !initialized then ()
+               else if CM.make "f-impl.cm" then initialized := true
+               else raise Fail "dynamic linkage for F.f failed";
+               F_Hook.f x)
+      end
+  end
+\end{lstlisting}%
+\noindent The trick here is to explicitly invoke {\tt CM.make} the
+first time {\tt F.f} is called.  This will then cause {\tt f-impl.cm}
+(and therefore {\tt g.cm} and also {\tt h.cm}) to be loaded and the
+``real'' implementation of {\tt F.f} to be registered with the hook
+module from where it will then be available to this and future calls
+of {\tt F.f}.
+
+For the new {\tt f.sml} to be compiled successfully it must be placed
+into a library {\tt f.cm} that mentions {\tt f-hook.cm} and {\tt
+\$smlnj/cm.cm}.  As we have seen, {\tt f-hook.cm} exports {\tt
+F\_Hook.f} and {\tt \$smlnj/cm.cm} is needed because it exports
+{\tt CM.make}:
+
+\begin{lstlisting}[language=CM]
+  Library
+      structure F
+  is
+      f.sml
+      f-hook.cm
+      $smlnj/cm.cm (* or $smlnj/cm/full.cm *)
+\end{lstlisting}%
+
+\noindent{\bf Beware!}  This solution makes use of {\tt \$smlnj/cm.cm}
+which in turn requires the SML/NJ compiler to be present.  Therefore,
+is worthwhile only for really large program modules where the benefits
+of their absence are not outweighed be the need for the compiler.

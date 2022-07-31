@@ -1,0 +1,19 @@
+(* $smlnj/basis/basis.cm
+ *
+ *   This is a proxy for $SMLNJ-BASIS/basis.cm and represents
+ *   the version of the SML/NJ Basis library that is internally
+ *   used by the implementation of the system itself.
+ *
+ *   User code can refer to it as $/basis.cm, but the $basis.cm
+ *   anchor may be redefined to point to a different version
+ *   without affecting the compiler itself.
+ *
+ *   Copyright (c) 2005 by The Fellowship of SML/NJ
+ *
+ * author: Matthias Blume (blume@tti-c.org)
+ *)
+
+Library
+	library ($SMLNJ-BASIS/basis.cm)
+is
+	$SMLNJ-BASIS/basis.cm

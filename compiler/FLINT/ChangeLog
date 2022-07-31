@@ -1,0 +1,318 @@
+2002-03-07  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/split.sml (FSplit.split.stfn): Check "split all" before checking
+	"split nothing" in case the TFN has nothing but RET[v].
+
+2001-09-27  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (fcexp.fcFix.fcEta): Fix typo.
+
+2001-09-12  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/loopify.sml (loopify.lexp.cfun): Don't forget to empty TFS when
+	TCP is not true.
+
+2000-08-21  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* main/flintcomp.sml (FLINTComp.flintcomp): Convert named type vars
+	in `fi' back into deBruijn indices since this is still the
+	representation used outside of flintcomp (i.e. in LSplitInline).
+
+2000-06-16  Yichen Xie <yichen.xie@yale.edu>
+
+	* opt/abcopt.sml: Bug fix in hoist function. FLINT type check
+	error should be gone now.
+
+2000-04-22  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/flintopt.txt: New file.
+
+	* opt/abcopt.sml: New file.
+
+	* main/flintcomp.sml: Change `Compiler' to `FLINT' or `CPS' in the
+	name of phases printed by Compiler.Stats.
+	(abcopt): New phase.
+
+	* main/control.sml (phases): Move loopify+fixfix to before wrap.
+
+	* cpsopt/cpsopt.sml (zeroexpand): New function.
+
+2000-04-19  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* reps/typeoper.sml (tkAbsGen): Remove.
+
+	* opt/fixfix.sml (curry): Make sure that uncurrying will not make a
+	function recursive, but allow uncurrying a mix of functor and function
+	in some restricted cases.
+	(uncurry): Properly handle the new functor/function case.
+	(SWITCH): Don't change the ordering while folding over the arms.
+	Plus some cosmetic code movements to avoid long lines.
+
+	* main/control.sml (phases): Move loopify (and its fixfix) to before
+	`reify' (while still keeping a fixfix after reify).
+
+2000-04-07  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/switchoff.sml: Remove.
+
+	* main/flintcomp.sml: Remove switchoff-code and fix the Stats.doPhase
+	call for fcontract so as to get correct measurements.
+
+	* reps/equal.sml: Rewritten to generate more CPS-like code.
+
+	* opt/fcontract.sml (fcLet): re-introduced the branch/switch code,
+	but without the deadly multiple traversals.
+
+2000-02-18  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/switchoff.sml (inside/LET): use IH_MAYBE instead of IH_ALWAYS.
+
+2000-01-31  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (fcLet/cassoc): Don't do a second pass over the
+	output of the rewrite.  It leads to quadratic behavior for
+	`x1 andalso x2 ...'.
+
+1999-07-10  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/split.sml: don't burp when you can't split.
+
+1999-03-08  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/split.sml (sexp): Don't split HANDLE (it's incorrect).
+	(funeffect): Embryo to detect side-effect free APPs (non-functional).
+	(splitThreshold): To put a cap on inlining.
+	(stfn): Don't bother splitting inlinable TFNs. 
+
+	* main/control.sml (splitThreshold): New var.
+
+	* opt/specialize (kBnd): Be more conservative with nvars (it's too
+	conservative, now).
+
+	* opt/fixfix.sml (curry): Fixed bug when uncurrying cooked functions.
+
+	* opt/fcontract.sml (fcFun): Fix bug when undertaking mut-rec funs.
+
+	* main/flintcomp.sml: Add `recover' to help debugging.
+	Updated the fold to allow extraction of Fi and return it at the end.
+
+	* lsplit/ls-inline.sml (oneBranch): Fix the wrapper function.
+
+	* flint/flintutil.sml (freevars): Forgot to count the arg of SWITCH.
+
+	* flint/flint.sig: Add a tfkind to TFN (only inlining for now).
+
+	* main/control.sml: New file. Moved from TopLevel/viscomp/control.sml
+
+1999-03-04  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* kernel/ltyextern.sml (tnarrow), reps/{reify,rttype,typeoper}.sml:
+	  flatten arguments when reifying them since the pretty-printer doesn't
+	  know how to deal with flattened reified TFNs.
+
+1999-03-02  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* kernel/ltyextern.sml (tnarrow), reps/{reify,rttype,typeoper}.sml:
+	  don't unflatten arguments when reifying them.
+
+1999-02-28  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (fcEta): Do the known->unknown eta-reduce if the
+	`known' function is not locally defined (in which case the
+	known/unknown distinction is pointless anyway).
+	(wrap): Don't forget to junk dead inlinable functions.
+
+1999-02-26  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/split.sml: Seriously reworked.  Now splits TFNs as well.
+
+1999-02-25  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* kernel/primop.sml (effect): removed DEREF and MAKEREF from the pure
+	  primops.
+
+1999-02-24  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* flint/flintutil.sml (copy): sort the type-map since {lt,tc}_subst
+	  actually expects it to be sorted.
+
+1999-02-23  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/recover.sml (lt_nvpoly): moved to ltyextern.sml
+
+	* kernel/ltyextern.{sml,sig} (lt_nvpoly): new function (digged from
+	  recover.sml to build a LT_POLY in the case of named tvars.
+
+1999-02-20  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/recover.sml: Remove unused depth arguments left behind from
+	before we switched to named tvars.
+	(addLty): Add for the benefit of opt/split.sml
+
+1999-02-17  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/split.sml: new file.  Does the lambda-splitting for cross-module
+	  inlining.  Currently in a simplified form.
+
+	* opt/fcontract.sml (fcEta): bug with (mutually) recursive eta redexes.
+
+1998-12-18  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml: turned fcFun into a foldable function.
+
+1998-12-17  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/loopify.sml: fix (TR-ing would fail if not LR-ing also)
+
+1998-12-16  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/loopify.sml: make dropinvariant optional.
+
+1998-12-15  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/loopify.sml: drop invariant arguments in loops.
+
+	* opt/optutils.sml (filter): curried.
+
+1998-12-12  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (fcFun): value-specialization (turned off: useless)
+	(fcApp): use IH_MAYBE.
+
+	* opt/fixfix.sml: Improve the inlining heuristic by using the IH_MAYBE.
+
+1998-11-29  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (fcFun): Only update the binding (after contracting
+	the function) if there are more funs to contract (the unusual case).
+
+1998-11-28  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/[lf]contract.sml,collect.sml: use PO.purePrimop
+
+	* opt/fcontract.sml: Generalize the BRANCH thing.
+	It should now be faster to detect and avoid potential code blowups
+	while applying to more cases.  But it requires one more pass to
+	generate the same code quality :-(
+	(fcexp): Straightforward split into functions
+	(fcLet): Do the BRANCH thing after contraction (and force an additional
+	contraction, so the total is 3 passes for a fairly good handling of
+	wrap's equality-primop compilation)
+	(fcLet): Drop TAPP if the output is unused.
+
+1998-11-25  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/loopify.sml: Improve tail-calls recognition.
+	Also be more careful about wrapping loops into functions
+	(so contraction is not needed to cleanup).
+
+	* opt/fixfix.sml: pretend loops are smaller to increase their inlining.
+
+	* kernel/ltyextern.sml: commented out Stats calls.
+
+	* flint/flint.sig: changed LK_WHILE to LK_TAIL.
+
+1998-11-21  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* reps/rttype.sml: changes from Bratin.
+	(rtLexp): define the NVAR case (return the tvar as an lvar).
+
+	* opt/[fl]contract.sml: removed the restriction on inlining at the same
+	  deBruijn depth.
+
+	* opt/lift.sml: new file for typelifting.
+
+	* flint/flintutil.sml (copy): added tvar renaming.
+
+	* flint/tvarcvt.sml: new file for named tvar <-> deBruijn conversions.
+
+1998-11-19  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/loopify.sml: new file
+
+	* cps/convert.sml: added code to take advantage of LK_WHILE loops.
+
+	* opt/optutils.sml (id): removed.  That was stupid.
+
+	* opt/collect.sml: Drop support for actuals
+	(was only used for cstargs).
+
+	* opt/lcontract.sml (lpfd): reset the inline bit to a safe value.
+
+	* opt/fcontract.sml (cstargs): eliminated.  Might reappear in a
+	  specialization phase some day.
+	(inline): turned off unrolling because it's buggy.
+	(APP): use the new ifs, damit!
+
+1998-11-11  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (sval): ref svals rather than going through F.value
+
+	* opt/collect.sml: Switch back to a read-only collect phase.
+	Try to export the info to allow fcontract to circumvent some
+	of the get calls.
+	(info): Get rid of Transfer by using the intmap for redirection.
+	(unuselexp): Junk the fundec part.
+	(unuse): Return a boolean instead of calling an undertaker.
+
+1998-11-09  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml: take advantage of single-arm SWITCH (aka decon)
+	(SWITCH(CON)): just compare the conreps because types may differ (?)
+	(inlineWitness): ugly hack used to figure out if inlining happened,
+	  in order to decide whether to keep the inline bit or not (in cfun).
+
+1998-11-06  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml: added unrolling support
+
+	* reps/coerce.sml: replaced FK_FCT by fkfct, itself defined "sanely"
+
+	* opt/fixfix.sml: adapted to the new fkind and introduced unrolling
+
+1998-11-05  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* flint/flint.sig: Change fkind to have most annotations valid on
+	functors as well.  It also adds a loopkind annotation as well as
+	extends the inline boolean into a three-way alternative.
+
+1998-10-30  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (dropcstargs): Replace cst args by the constant.
+	(cexp): Switch to a continuation passing style to implement the
+	let-associativity rule in a better way.
+
+	* opt/fixfix.sml (curry): correctly handle "impossible" cases.
+
+	* opt/collect.sml: completely revisited:  no distinction between
+	  internal/external uses, dead-code elimination done right away.  This
+	  makes fcontract a little simpler.
+
+1998-10-28  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/fcontract.sml (inline): Do simple inlining only for non-isrec
+	functions (to ensure we never silently turn external uses into internal
+	uses) and correspondingly change the agressive inlining to inline
+	non-inlinable functions as long as its their last use.
+	(dropargs): New functions to drop unused arguments.
+
+1998-10-27  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* opt/optutils.sml: Try to reuse code between fixfix and fcontract.
+
+	* opt/collect.sml (called): Add for eta-expand.
+
+	* opt/fcontract.sml (inline): Allow single inlining of FK_FCT.
+
+	* lsplit/ls-inline.sml: Don't call lcontract anymore.
+
+1998-10-26  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* cps/cpstrans.sml (spillOut): Fix from Zhong.
+
+	* cpsopt/cpsopt.sml: Use Control.CG.cpsopt and fold over it.
+
+	* main/flintcomp.sml: Use Control.FLINT.phases and fold over it.
+
+	* opt/fixfix.sml (curry): Use Control.FLINT.maxargs to bound the
+	uncurrying.

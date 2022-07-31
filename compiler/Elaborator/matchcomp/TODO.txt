@@ -1,0 +1,66 @@
+TODO.txt
+TODO list for new match compiler
+
+[*] add support for word constants (like "0w8") as constant patterns.
+    numCon in andor.sml (int or word forms produced depending on the
+    ty component of Types.ty IntConst.t.
+
+[*] add handling of OR patterns in line in andor.sml
+    Done: 2 lines in andor.sml
+
+[*] translate andor tree + decision tree into pseudo code
+  1. pure patterns, no vars (except internal vars to refer to test ponts)
+  2. vars
+  3. as vars
+
+  Have to bind external (explicit) variables (asvars and vars) in
+  internal (implicit) variables that are built into the AND-OR trees
+  (and hence into mcexp). These bindings are "per rule", so should be
+  done at the end just before dispatching to a particular rule RHS.
+
+[*] "Multi-dispatch" (multiple dispatches to the same RHS)
+  If a rule has multiple occurrences in the leaves of the decision
+  tree, it needs to be "funtionalized" and called with different
+  variable parameters at each RHS dispatch point.
+  
+  This can happen (only) because of OR patterns.
+  This should be straightforward.
+
+[*] types
+  Types of the patterns and RHSs are known because of type checking.
+  Have to deal with polymorphism and _explicitly_ bound type variables.
+
+[*] replace (or translate) pseudo code by (extended) absyn 
+  mcexp (in mctypes.sml) is a layer of syntax over Absyn.
+
+
+[*] polymorphism: explicit abstraction over "typevar"s in mcexp.
+  Leaving this to FLINT, based on its book-keeping using LBOUND metatyvars.
+
+[*] Translation from mcexp [+absyn] to Plambda.
+  -- special case of matching intinf constants, see getintinfswitch
+     in trans/translate.sml
+  See FLINT/trans/translate-new.sml
+     
+[*] Type checker modification to introduce new "typevar"s when
+  generalizing types, and saving those new typevars in the Absyn
+  in an appropriate place. [Temporary fix -- later will revise
+  the type checker to produce a new "fully explicit" typed absyn.]
+
+  -- Not doing this at this point. Leave this issue to the typechecker
+     rewrite, where the FLINT LBOUND metatyvars will be dealt with.
+
+[*] matchComp (the main match compiler function) is called within
+  typecheck.sml, immediately after type checking the relevant
+  constructs (case and fn matches, exn handlers, refutable let bindings).
+
+
+
+================================================================================ 
+BUGS:
+================================================================================
+
+* TypesUtil.refutablePats used to check whether an ORpat is refutable
+  is not correct.
+  See comment in the code.
+

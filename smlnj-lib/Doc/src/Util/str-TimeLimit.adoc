@@ -1,0 +1,41 @@
+= The `TimeLimit` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `TimeLimit` structure provides a mechanism for limiting the execution
+time of a computation.  The mechanism is implemented using the runtime
+system's interval timer and the *SML/NJ* signal mechanism.
+
+== Synopsis
+
+[source,sml]
+------------
+structure TimeLimit
+------------
+
+== Interface
+
+[source,sml]
+------------
+exception TimeOut
+
+val timeLimit : Time.time -> ('a -> 'b) -> 'a -> 'b
+------------
+
+== Description
+
+[[exn:TimeOut]]
+`[.kw]#exception# TimeOut`::
+  The exception that is raised if the time limit expires.
+
+`[.kw]#val# timeLimit : Time.time \-> ('a \-> 'b) \-> 'a \-> 'b`::
+  `timeLimit t f x` computes the expression `f x`.  If the computation
+  takes longer than the time limit `t`, then the
+  xref:#exn:TimeOut[`TimeOut`] exception is raised.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

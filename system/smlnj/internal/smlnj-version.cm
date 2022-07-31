@@ -1,0 +1,27 @@
+(* smlnj-version.cm
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+	structure SMLNJVersion
+is
+
+# if defined (NO_PLUGINS)
+
+	(* don't try to load the version tool, use what's there *)
+	version.sml
+
+# else
+
+	(* load version tool; define class "version" *)
+	versiontool.cm : tool
+
+	version.template : version (target: version.sml
+                                    versionfile: ../../../../config/version
+                                    releasedate: ../../../../config/releasedate)
+
+# endif
+
+        $smlnj/basis/basis.cm

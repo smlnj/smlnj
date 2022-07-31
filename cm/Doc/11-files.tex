@@ -1,0 +1,98 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Files}
+\label{chap:files}
+
+CM uses three kinds of files to store derived information during and
+between sessions:
+
+\begin{enumerate}
+\item {\it Skeleton files} are used to store a highly abbreviated
+version of each ML source file's abstract syntax tree---just barely
+sufficient to drive CM's dependency analysis.  Skeleton files are much
+smaller and (for a program) easier to read than actual ML source code.
+Therefore, the existence of valid skeleton files makes CM a lot faster
+because usually most parsing operations can be avoided that way.
+\item {\it Binfiles} are the SML/NJ equivalent of object files.  They
+contain executable code and a symbol table for the associated ML
+source file.
+\item {\it Library files} (sometimes called: {\em stablefiles}) contain
+dependency graph, executable code, and symbol tables for an entire CM
+library including all of its components (groups).  Other libraries
+used by a stable library are not included in full.  Instead,
+references to those libraries are recorded using their (preferably
+anchored) pathnames.
+\end{enumerate}
+
+Normally, all these files are stored in a subdirectory of directory
+{\tt CM}. {\tt CM} itself is a subdirectory of the directory where the
+original ML source file or---in the case of library files---the
+original CM description file is located.
+
+Skeleton files are machine- and operating system-independent.
+Therefore, they are always placed into the same directory {\tt
+CM/SKEL}. Parsing (for the purpose of dependency analysis) will be
+done only once even if the same file system is accessible from
+machines of different type.
+
+Binfiles and library files contain executable code and other
+information that is potentially system- and architecture-dependent.
+Therefore, they are stored under {\tt CM/}{\it arch}{\tt -}{\it os}
+where {\it arch} is a string indicating the type of the current
+CPU architecture and {\it os} a string denoting the current operating
+system type.
+
+As explained in \secref{sec:stable}, library files are a bit of
+an exception in the sense that they do not require any source files or
+any other derived files of the same library to exist.  As a
+consequence, the location of such a library file should be described
+as being relative to ``the location of the original CM description
+file if that description file still existed''.  (Of course, nothing
+precludes the CM description file from actually existing, but in the
+presence of a corresponding library file CM will not take any notice
+of that.)
+
+{\em Note:} As discussed in \secref{sec:toolparam:cm}, CM sometimes
+looks for library files in {\tt CM/}{\it version}{\tt /}{\it arch}{\tt
+-}{\it os}.  However, library files are never {\em created} there by
+CM.  If several versions of the same library are to be provided, an
+administrator must arrange the directory hierarchy accordingly ``by
+hand''.
+
+\section{Time stamps}
+
+For skeleton files and binfiles, CM uses file system time stamps
+(i.e., modification time) to determine whether a file has become
+outdated.  The rule is that in order to be considered ``up-to-date''
+the time stamp on skeleton file and binfile has to be exactly the
+same\footnote{CM explicitly sets the time stamp to be the same.} as
+the one on the ML source file.  This guarantees that all changes to a
+source will be noticed---even those that revert to an older version of
+a source file.\footnote{except for the pathological case where two
+different versions of the same source file have exactly the same time
+stamp}
+
+CM also uses time stamps to decide whether tools such as ML-Yacc or
+ML-Lex need to be run (see \chapref{chap:classes}).  However, the
+difference is that a file is considered outdated if it is older than
+its source.  Some care on the programmers side is necessary since this
+scheme does not allow CM to detect the situation where a source file
+gets replaced by an older version of itself.
+
+\section{Index files}
+\label{sec:indexfiles}
+
+CM can optionally generate a human-readable index file for each
+description file.  An index files alphabetically lists all symbols
+defined or imported within the given library or library component.
+Index-file generation is normally disabled.  To enable it, {\tt
+CM.Control.generate\_index} must be set to true (see
+\secref{sec:api}).
+
+With index-file generation enabled, index files will be written for
+all description files involved every time CM performs a dependency
+analysis.  (In other words, it is a side-effect to other CM operations
+such as {\tt CM.make} etc.)  If the name of the description files is
+{\tt $p$/$d$.cm}, then the corresponding index file will be in {\tt
+$p$/CM/INDEX/$d$.cm}.

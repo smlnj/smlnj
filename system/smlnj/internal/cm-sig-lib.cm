@@ -1,0 +1,15 @@
+(*
+ * Internal library exporting signatures for CM and CMB.
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	signature CM
+	signature CMB
+is
+	$smlnj/basis/basis.cm
+	$/pgraph.cm
+	cm.sig
+	cmb.sig

@@ -1,0 +1,14 @@
+(*
+ * Library implementing the bootstrap compiler for AMD64/Unix.
+ *
+ * (C) 2006 The Fellowship of SML/NJ
+ *)
+Library
+	structure AMD64UnixCMB
+is
+	$smlnj/basis/basis.cm
+	$smlnj/internal/cm-sig-lib.cm
+	$smlnj/internal/cm-lib.cm
+	$smlnj/compiler/amd64.cm
+	$smlnj/internal/cm0.cm
+	amd64-unix.sml

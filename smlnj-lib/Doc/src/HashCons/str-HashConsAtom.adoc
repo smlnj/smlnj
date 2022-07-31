@@ -1,0 +1,44 @@
+= The `HashConsAtom` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashConsAtom` structure embeds the xref:../Util/str-Atom.adoc#type:atom[`Atom.atom`]
+type as a hash-consed object.
+It is implemented using the xref:fun-HashConsGroundFn.adoc[`HashConsGroundFn`]
+functor.
+
+== Synopsis
+
+[source,sml]
+------------
+structure HashConsAtom
+------------
+
+== Interface
+
+[source,sml]
+------------
+type hash_key = Atom.atom
+type obj = hash_key HashCons.obj
+
+val mk : hash_key -> obj
+------------
+
+== Description
+
+`[.kw]#type# hash_key = Atom.atom`::
+  The ground type being hashed.
+
+`[.kw]#type# obj = hash_key HashCons.obj`::
+  The type of hash-consed atoms.
+
+`[.kw]#val# mk : hash_key \-> obj`::
+  `mk a` converts the atom `a` to a hash-consed object.
+
+== See Also
+
+xref:str-HashCons.adoc[`HashCons`],
+xref:hash-cons-lib.adoc[__The HashCons Library__]

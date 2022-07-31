@@ -1,0 +1,34 @@
+<!-- list-set-fn.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ListSetFn SDATA "list-set-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=10>
+<TITLE>The ListSetFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ListSetFn/ functor</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_KEY/
+  <SIGREF/ORD_SET/
+  <FCTREF/BinarySetFn/
+  <FCTREF/SplaySetFn/
+  <SIGREF/ORD_MAP/
+</SEEALSO>
+
+<PP>
+The <FCTREF NOLINK/ListSetFn/ functor implements applicative sets on
+an ordered type. It uses a sorted list representation.
+
+<FUNCTOR FCTID="ListSetFn"><ID/K/<ID>ORD_KEY</ID>
+  <ID>ORD_SET
+</FUNCTOR>
+
+<PP>
+Note that adding an element to a set that already contains such an element
+(in the sense that both elements are considered equal by the comparison
+function) causes the current element to be replaced by the new one.
+</INTERFACE>

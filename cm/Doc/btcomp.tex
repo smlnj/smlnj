@@ -1,0 +1,47 @@
+% -*- latex -*-
+\documentclass[titlepage,letterpaper]{article}
+
+\usepackage[text={6.7in,9.1in},centering]{geometry}
+
+\input{defs}
+
+\columnsep0.25in
+
+\newcommand{\smlmj}{110}
+\newcommand{\smlmn}{35}
+
+\author{Matthias Blume \\
+Lucent Technologies, Bell Labs}
+
+\title{{\bf CMB}\\
+The SML/NJ Bootstrap Compiler \\
+{\it\small (for SML/NJ version \smlmj.\smlmn~and later)} \\
+User Manual}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 3pt minus 2pt}
+
+\begin{document}
+
+\bibliographystyle{alpha}
+
+\maketitle
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+\input{bt-01-intro}
+\input{bt-02-basicusage}
+\input{bt-03-diffs}
+\input{bt-04-api}
+\input{bt-05-naming}
+\input{bt-06-scripts}
+
+\pagebreak
+
+\bibliography{cm}
+
+\end{document}

@@ -1,0 +1,1224 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
+  <head>
+  <title>Characters [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+  <meta name="description" content="Test your Web browser&rsquo;s support for HTML 4.0 character entity references. Part of Robin&rsquo;s HTML 4.0 Conformance Test." />
+	<meta name="DC.Creator" content="Lionheart, Robin" />
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com" />
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test" />
+	<link rel="prev" href="abbr" title="Abbreviations" />
+	<link rel="next" href="spchars" title="Characters: Special" />
+	<link rel="glossary" href="glossary" title="Glossary" />
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart" />
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection" />
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test" />
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png" />
+<style type="text/css">
+  /* If you can read this, your Web browser doesn't understand the STYLE tag. */
+  table.key         { border-spacing: 0;
+	                    border-style: solid;
+                      float: right; }
+@media aural, tactile {					  
+  table.key         { display: none }
+}
+  tbody				{ border-style: solid none }
+  tr                { color: #000;
+                      vertical-align: middle }
+  tr.nonentity      { color: #000; background-color: #AAA; }
+  tr.XML            { color: #000; background-color: #FAF; }
+  tr.SGML           { color: #000; background-color: #8F8; }
+  tr.HTMLlat1       { color: #000; background-color: #AFA; }
+  tr.HTMLsymbol     { color: #000; background-color: #FFA; }
+  tr.HTMLspecial    { color: #000; background-color: #FF8; }
+  span.space    	{ background-color: #8AA; }
+  col.image, 
+  td.name    		{ background-color: white; }
+  td.unprintable    { background-color: gray; }
+  td.index			{ font-weight: bold; text-align: right;
+  					  padding-right: 1ex; background-color: white; }
+  td.image          { text-align: center;
+                      /* background-color: white; */ }
+  col.unicode,
+  td.unicode        { text-align: center;
+                      font-size: 32px;
+                      /* height: 64px; width: 64px; */
+                      font-family: Arial Unicode MS, "Lucida Sans Unicode", "Everson Mono Unicode", sans-serif; }
+  div.bodytext			{ font-family: sans-serif; }
+  table.chartable		{ font-family: sans-serif;
+  						  margin-left: auto; margin-right: auto; }
+</style>
+  </head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<body>
+	<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Characters</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">⇤<strong>1</strong>st</a></li>
+			<li><a href="abbr" rel="prev" accesskey="P" title="Prior: Abbreviations">←<strong>P</strong>rior</a></li>
+			<li><a href="spchars" rel="next" accesskey="N" title="Next: Characters: Special"><strong>N</strong>ext→</a></li>
+		</ul>
+	</div>
+
+	<h1>Characters (<a class="specsect" href="http://www.w3.org/TR/html4/sgml/entities.html" title="HTML 4.0 Specification">&sect;24</a>)</h1>
+
+
+
+<table class="key">
+		<caption>Color Key</caption>
+		<col align="center" />
+		<col align="center" />
+	<tbody>
+		<tr class="SGML">
+			<td><abbr>HTML</abbr> 1.0 entity</td>
+		</tr>
+		<tr class="HTMLlat1">
+			<td><abbr>HTML</abbr> 2.0 entities</td>
+		</tr>
+		<tr class="HTMLsymbol">
+			<td><abbr>HTML</abbr> 4.0 entities<br />
+			in Adobe Symbol font</td>
+		</tr>
+		<tr class="HTMLspecial">
+			<td><abbr>HTML</abbr> 4.0 entities</td>
+		</tr>
+		<tr class="XML">
+			<td><abbr>XHTML</abbr> 1.0 entities</td>
+		</tr>
+	</tbody>
+	</table>
+
+	<div class="bodytext">
+		<p>These are the character entities from all of the <abbr title="Hypertext Markup Language">HTML</abbr> specifications.</p>
+
+		<p><abbr>HTML</abbr> 4.0 defines many new character entities, primarily glyphs from the widely available Abobe font <cite>Symbol</cite> and punctuation from the Win1252 (Windows: Western) character set.</p>
+
+		<p><abbr>HTML</abbr> 4.0 also introduces hexadecimal numeric entity references, and specifies that numeric entities be treated as <a href="http://www.unicode.org/">Unicode</a> glyphs, which includes just about every typographical character known to typesetters.</p>
+
+		<p class="note">To test your Web browser&rsquo;s support for the full range of Unicode characters, I recommend the test suite in <a href="http://www.alanwood.net/unicode/">Alan Wood&rsquo;s Unicode Resources</a>.</p>
+
+		<p>You may also view this table with <a href="entities-mathml">MathML entities</a>.</p>
+</div>
+
+	<table rules="groups" class="chartable">
+		<caption>Character Entities</caption>
+		<colgroup>
+			<col />
+		</colgroup>
+		<colgroup>
+			<col />
+			<col class="unicode" />
+		</colgroup>
+		<colgroup>
+			<col />
+			<col class="unicode" />
+		</colgroup>
+		<colgroup>
+			<col />
+			<col class="unicode" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th colspan="1" scope="colgroup">Name<br /></th>
+				<th colspan="2" scope="colgroup">Decimal<br /></th>
+				<th colspan="2" scope="colgroup">Hex<br /></th>
+				<th colspan="2" scope="colgroup">Named<br /></th>
+			</tr>
+		</thead>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U0000.pdf" title="Unicode Code Charts: Basic Latin (PDF)">Basic Latin</a> (ASCII)</th></tr>
+<tr class="SGML ISO8879 " title="Num: 34, Category: Po"><td class="name">quotation mark<br /></td><td>#34</td><td class="unicode">&#34;<br /></td>
+<td>#x22</td><td class="unicode">&#x22;<br /></td>
+<td>quot</td><td id="quot" class="unicode">&quot;<br /></td>
+</tr>
+<tr class="SGML ISO8879 " title="Num: 38, Category: Po"><td class="name">ampersand<br /></td><td>#38</td><td class="unicode">&#38;<br /></td>
+<td>#x26</td><td class="unicode">&#x26;<br /></td>
+<td>amp</td><td id="amp" class="unicode">&amp;<br /></td>
+</tr>
+<tr class="XML ISO8879 " title="Num: 39, Category: Po"><td class="name">apostrophe<br /></td><td>#39</td><td class="unicode">&#39;<br /></td>
+<td>#x27</td><td class="unicode">&#x27;<br /></td>
+<td>apos</td><td id="apos" class="unicode">&apos;<br /></td>
+</tr>
+<tr class="SGML ISO8879 " title="Num: 60, Category: Sm"><td class="name">less-than sign<br /></td><td>#60</td><td class="unicode">&#60;<br /></td>
+<td>#x3c</td><td class="unicode">&#x3c;<br /></td>
+<td>lt</td><td id="lt" class="unicode">&lt;<br /></td>
+</tr>
+<tr class="SGML ISO8879 " title="Num: 62, Category: Sm"><td class="name">greater-than sign<br /></td><td>#62</td><td class="unicode">&#62;<br /></td>
+<td>#x3e</td><td class="unicode">&#x3e;<br /></td>
+<td>gt</td><td id="gt" class="unicode">&gt;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U0080.pdf" title="Unicode Code Charts: Latin-1 Supplement (PDF)">Latin-1 Supplement</a> (<a href="http://wwwwbs.cs.tu-berlin.de/user/czyborra/charsets/">ISO 8859-1</a>)</th></tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 160, Category: Zs, Decomposition: &lt;noBreak&gt; 0020"><td class="name">no-break space<br /></td><td>#160</td><td class="unicode"><span class="space">&#160;</span><br /></td>
+<td>#xa0</td><td class="unicode"><span class="space">&#xa0;</span><br /></td>
+<td>nbsp</td><td id="nbsp" class="unicode"><span class="space">&nbsp;</span><br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 161, Category: Po"><td class="name">inverted exclamation mark<br /></td><td>#161</td><td class="unicode">&#161;<br /></td>
+<td>#xa1</td><td class="unicode">&#xa1;<br /></td>
+<td>iexcl</td><td id="iexcl" class="unicode">&iexcl;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 162, Category: Sc"><td class="name">cent sign<br /></td><td>#162</td><td class="unicode">&#162;<br /></td>
+<td>#xa2</td><td class="unicode">&#xa2;<br /></td>
+<td>cent</td><td id="cent" class="unicode">&cent;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 163, Category: Sc"><td class="name">pound sign<br /></td><td>#163</td><td class="unicode">&#163;<br /></td>
+<td>#xa3</td><td class="unicode">&#xa3;<br /></td>
+<td>pound</td><td id="pound" class="unicode">&pound;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 164, Category: Sc"><td class="name">currency sign<br /></td><td>#164</td><td class="unicode">&#164;<br /></td>
+<td>#xa4</td><td class="unicode">&#xa4;<br /></td>
+<td>curren</td><td id="curren" class="unicode">&curren;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 165, Category: Sc"><td class="name">yen sign<br /></td><td>#165</td><td class="unicode">&#165;<br /></td>
+<td>#xa5</td><td class="unicode">&#xa5;<br /></td>
+<td>yen</td><td id="yen" class="unicode">&yen;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 166, Category: So"><td class="name">broken bar<br /></td><td>#166</td><td class="unicode">&#166;<br /></td>
+<td>#xa6</td><td class="unicode">&#xa6;<br /></td>
+<td>brvbar</td><td id="brvbar" class="unicode">&brvbar;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 167, Category: So"><td class="name">section sign<br /></td><td>#167</td><td class="unicode">&#167;<br /></td>
+<td>#xa7</td><td class="unicode">&#xa7;<br /></td>
+<td>sect</td><td id="sect" class="unicode">&sect;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 168, Category: Sk, Decomposition: &lt;compat&gt; 0020 0308"><td class="name">diaeresis<br /></td><td>#168</td><td class="unicode">&#168;<br /></td>
+<td>#xa8</td><td class="unicode">&#xa8;<br /></td>
+<td>uml</td><td id="uml" class="unicode">&uml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 169, Category: So"><td class="name">copyright sign<br /></td><td>#169</td><td class="unicode">&#169;<br /></td>
+<td>#xa9</td><td class="unicode">&#xa9;<br /></td>
+<td>copy</td><td id="copy" class="unicode">&copy;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 170, Category: Ll, Decomposition: &lt;super&gt; 0061"><td class="name">feminine ordinal indicator<br /></td><td>#170</td><td class="unicode">&#170;<br /></td>
+<td>#xaa</td><td class="unicode">&#xaa;<br /></td>
+<td>ordf</td><td id="ordf" class="unicode">&ordf;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 171, Category: Pi"><td class="name">left-pointing double angle quotation mark<br /></td><td>#171</td><td class="unicode">&#171;<br /></td>
+<td>#xab</td><td class="unicode">&#xab;<br /></td>
+<td>laquo</td><td id="laquo" class="unicode">&laquo;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 172, Category: Sm"><td class="name">not sign<br /></td><td>#172</td><td class="unicode">&#172;<br /></td>
+<td>#xac</td><td class="unicode">&#xac;<br /></td>
+<td>not</td><td id="not" class="unicode">&not;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 173, Category: Cf"><td class="name">soft hyphen<br /></td><td>#173</td><td class="unprintable"></td>
+<td>#xad</td><td class="unprintable"></td>
+<td>shy</td><td class="unprintable"></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 174, Category: So"><td class="name">registered sign<br /></td><td>#174</td><td class="unicode">&#174;<br /></td>
+<td>#xae</td><td class="unicode">&#xae;<br /></td>
+<td>reg</td><td id="reg" class="unicode">&reg;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 175, Category: Sk, Decomposition: &lt;compat&gt; 0020 0304"><td class="name">macron<br /></td><td>#175</td><td class="unicode">&#175;<br /></td>
+<td>#xaf</td><td class="unicode">&#xaf;<br /></td>
+<td>macr</td><td id="macr" class="unicode">&macr;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 176, Category: So"><td class="name">degree sign<br /></td><td>#176</td><td class="unicode">&#176;<br /></td>
+<td>#xb0</td><td class="unicode">&#xb0;<br /></td>
+<td>deg</td><td id="deg" class="unicode">&deg;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 177, Category: Sm"><td class="name">plus-minus sign<br /></td><td>#177</td><td class="unicode">&#177;<br /></td>
+<td>#xb1</td><td class="unicode">&#xb1;<br /></td>
+<td>plusmn</td><td id="plusmn" class="unicode">&plusmn;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 178, Category: No, Decomposition: &lt;super&gt; 0032"><td class="name">superscript two<br /></td><td>#178</td><td class="unicode">&#178;<br /></td>
+<td>#xb2</td><td class="unicode">&#xb2;<br /></td>
+<td>sup2</td><td id="sup2" class="unicode">&sup2;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 179, Category: No, Decomposition: &lt;super&gt; 0033"><td class="name">superscript three<br /></td><td>#179</td><td class="unicode">&#179;<br /></td>
+<td>#xb3</td><td class="unicode">&#xb3;<br /></td>
+<td>sup3</td><td id="sup3" class="unicode">&sup3;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 180, Category: Sk, Decomposition: &lt;compat&gt; 0020 0301"><td class="name">acute accent<br /></td><td>#180</td><td class="unicode">&#180;<br /></td>
+<td>#xb4</td><td class="unicode">&#xb4;<br /></td>
+<td>acute</td><td id="acute" class="unicode">&acute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 181, Category: Ll, Decomposition: &lt;compat&gt; 03BC"><td class="name">micro sign<br /></td><td>#181</td><td class="unicode">&#181;<br /></td>
+<td>#xb5</td><td class="unicode">&#xb5;<br /></td>
+<td>micro</td><td id="micro" class="unicode">&micro;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 182, Category: So"><td class="name">pilcrow sign<br /></td><td>#182</td><td class="unicode">&#182;<br /></td>
+<td>#xb6</td><td class="unicode">&#xb6;<br /></td>
+<td>para</td><td id="para" class="unicode">&para;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 183, Category: Po"><td class="name">middle dot<br /></td><td>#183</td><td class="unicode">&#183;<br /></td>
+<td>#xb7</td><td class="unicode">&#xb7;<br /></td>
+<td>middot</td><td id="middot" class="unicode">&middot;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 184, Category: Sk, Decomposition: &lt;compat&gt; 0020 0327"><td class="name">cedilla<br /></td><td>#184</td><td class="unicode">&#184;<br /></td>
+<td>#xb8</td><td class="unicode">&#xb8;<br /></td>
+<td>cedil</td><td id="cedil" class="unicode">&cedil;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 185, Category: No, Decomposition: &lt;super&gt; 0031"><td class="name">superscript one<br /></td><td>#185</td><td class="unicode">&#185;<br /></td>
+<td>#xb9</td><td class="unicode">&#xb9;<br /></td>
+<td>sup1</td><td id="sup1" class="unicode">&sup1;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 186, Category: Ll, Decomposition: &lt;super&gt; 006F"><td class="name">masculine ordinal indicator<br /></td><td>#186</td><td class="unicode">&#186;<br /></td>
+<td>#xba</td><td class="unicode">&#xba;<br /></td>
+<td>ordm</td><td id="ordm" class="unicode">&ordm;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 187, Category: Pf"><td class="name">right-pointing double angle quotation mark<br /></td><td>#187</td><td class="unicode">&#187;<br /></td>
+<td>#xbb</td><td class="unicode">&#xbb;<br /></td>
+<td>raquo</td><td id="raquo" class="unicode">&raquo;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 188, Category: No, Decomposition: &lt;fraction&gt; 0031 2044 0034"><td class="name">vulgar fraction one quarter<br /></td><td>#188</td><td class="unicode">&#188;<br /></td>
+<td>#xbc</td><td class="unicode">&#xbc;<br /></td>
+<td>frac14</td><td id="frac14" class="unicode">&frac14;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 189, Category: No, Decomposition: &lt;fraction&gt; 0031 2044 0032"><td class="name">vulgar fraction one half<br /></td><td>#189</td><td class="unicode">&#189;<br /></td>
+<td>#xbd</td><td class="unicode">&#xbd;<br /></td>
+<td>frac12</td><td id="frac12" class="unicode">&frac12;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 190, Category: No, Decomposition: &lt;fraction&gt; 0033 2044 0034"><td class="name">vulgar fraction three quarters<br /></td><td>#190</td><td class="unicode">&#190;<br /></td>
+<td>#xbe</td><td class="unicode">&#xbe;<br /></td>
+<td>frac34</td><td id="frac34" class="unicode">&frac34;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 191, Category: Po"><td class="name">inverted question mark<br /></td><td>#191</td><td class="unicode">&#191;<br /></td>
+<td>#xbf</td><td class="unicode">&#xbf;<br /></td>
+<td>iquest</td><td id="iquest" class="unicode">&iquest;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 192, Category: Lu, Decomposition: 0041 0300"><td class="name">Latin capital letter A with grave<br /></td><td>#192</td><td class="unicode">&#192;<br /></td>
+<td>#xc0</td><td class="unicode">&#xc0;<br /></td>
+<td>Agrave</td><td id="Agrave" class="unicode">&Agrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 193, Category: Lu, Decomposition: 0041 0301"><td class="name">Latin capital letter A with acute<br /></td><td>#193</td><td class="unicode">&#193;<br /></td>
+<td>#xc1</td><td class="unicode">&#xc1;<br /></td>
+<td>Aacute</td><td id="Aacute" class="unicode">&Aacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 194, Category: Lu, Decomposition: 0041 0302"><td class="name">Latin capital letter A with circumflex<br /></td><td>#194</td><td class="unicode">&#194;<br /></td>
+<td>#xc2</td><td class="unicode">&#xc2;<br /></td>
+<td>Acirc</td><td id="Acirc" class="unicode">&Acirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 195, Category: Lu, Decomposition: 0041 0303"><td class="name">Latin capital letter A with tilde<br /></td><td>#195</td><td class="unicode">&#195;<br /></td>
+<td>#xc3</td><td class="unicode">&#xc3;<br /></td>
+<td>Atilde</td><td id="Atilde" class="unicode">&Atilde;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 196, Category: Lu, Decomposition: 0041 0308"><td class="name">Latin capital letter A with diaeresis<br /></td><td>#196</td><td class="unicode">&#196;<br /></td>
+<td>#xc4</td><td class="unicode">&#xc4;<br /></td>
+<td>Auml</td><td id="Auml" class="unicode">&Auml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 197, Category: Lu, Decomposition: 0041 030A"><td class="name">Latin capital letter A with ring above<br /></td><td>#197</td><td class="unicode">&#197;<br /></td>
+<td>#xc5</td><td class="unicode">&#xc5;<br /></td>
+<td>Aring</td><td id="Aring" class="unicode">&Aring;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 198, Category: Lu"><td class="name">Latin capital letter AE<br /></td><td>#198</td><td class="unicode">&#198;<br /></td>
+<td>#xc6</td><td class="unicode">&#xc6;<br /></td>
+<td>AElig</td><td id="AElig" class="unicode">&AElig;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 199, Category: Lu, Decomposition: 0043 0327"><td class="name">Latin capital letter C with cedilla<br /></td><td>#199</td><td class="unicode">&#199;<br /></td>
+<td>#xc7</td><td class="unicode">&#xc7;<br /></td>
+<td>Ccedil</td><td id="Ccedil" class="unicode">&Ccedil;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 200, Category: Lu, Decomposition: 0045 0300"><td class="name">Latin capital letter E with grave<br /></td><td>#200</td><td class="unicode">&#200;<br /></td>
+<td>#xc8</td><td class="unicode">&#xc8;<br /></td>
+<td>Egrave</td><td id="Egrave" class="unicode">&Egrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 201, Category: Lu, Decomposition: 0045 0301"><td class="name">Latin capital letter E with acute<br /></td><td>#201</td><td class="unicode">&#201;<br /></td>
+<td>#xc9</td><td class="unicode">&#xc9;<br /></td>
+<td>Eacute</td><td id="Eacute" class="unicode">&Eacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 202, Category: Lu, Decomposition: 0045 0302"><td class="name">Latin capital letter E with circumflex<br /></td><td>#202</td><td class="unicode">&#202;<br /></td>
+<td>#xca</td><td class="unicode">&#xca;<br /></td>
+<td>Ecirc</td><td id="Ecirc" class="unicode">&Ecirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 203, Category: Lu, Decomposition: 0045 0308"><td class="name">Latin capital letter E with diaeresis<br /></td><td>#203</td><td class="unicode">&#203;<br /></td>
+<td>#xcb</td><td class="unicode">&#xcb;<br /></td>
+<td>Euml</td><td id="Euml" class="unicode">&Euml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 204, Category: Lu, Decomposition: 0049 0300"><td class="name">Latin capital letter I with grave<br /></td><td>#204</td><td class="unicode">&#204;<br /></td>
+<td>#xcc</td><td class="unicode">&#xcc;<br /></td>
+<td>Igrave</td><td id="Igrave" class="unicode">&Igrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 205, Category: Lu, Decomposition: 0049 0301"><td class="name">Latin capital letter I with acute<br /></td><td>#205</td><td class="unicode">&#205;<br /></td>
+<td>#xcd</td><td class="unicode">&#xcd;<br /></td>
+<td>Iacute</td><td id="Iacute" class="unicode">&Iacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 206, Category: Lu, Decomposition: 0049 0302"><td class="name">Latin capital letter I with circumflex<br /></td><td>#206</td><td class="unicode">&#206;<br /></td>
+<td>#xce</td><td class="unicode">&#xce;<br /></td>
+<td>Icirc</td><td id="Icirc" class="unicode">&Icirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 207, Category: Lu, Decomposition: 0049 0308"><td class="name">Latin capital letter I with diaeresis<br /></td><td>#207</td><td class="unicode">&#207;<br /></td>
+<td>#xcf</td><td class="unicode">&#xcf;<br /></td>
+<td>Iuml</td><td id="Iuml" class="unicode">&Iuml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 208, Category: Lu"><td class="name">Latin capital letter ETH<br /></td><td>#208</td><td class="unicode">&#208;<br /></td>
+<td>#xd0</td><td class="unicode">&#xd0;<br /></td>
+<td>ETH</td><td id="ETH" class="unicode">&ETH;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 209, Category: Lu, Decomposition: 004E 0303"><td class="name">Latin capital letter N with tilde<br /></td><td>#209</td><td class="unicode">&#209;<br /></td>
+<td>#xd1</td><td class="unicode">&#xd1;<br /></td>
+<td>Ntilde</td><td id="Ntilde" class="unicode">&Ntilde;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 210, Category: Lu, Decomposition: 004F 0300"><td class="name">Latin capital letter O with grave<br /></td><td>#210</td><td class="unicode">&#210;<br /></td>
+<td>#xd2</td><td class="unicode">&#xd2;<br /></td>
+<td>Ograve</td><td id="Ograve" class="unicode">&Ograve;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 211, Category: Lu, Decomposition: 004F 0301"><td class="name">Latin capital letter O with acute<br /></td><td>#211</td><td class="unicode">&#211;<br /></td>
+<td>#xd3</td><td class="unicode">&#xd3;<br /></td>
+<td>Oacute</td><td id="Oacute" class="unicode">&Oacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 212, Category: Lu, Decomposition: 004F 0302"><td class="name">Latin capital letter O with circumflex<br /></td><td>#212</td><td class="unicode">&#212;<br /></td>
+<td>#xd4</td><td class="unicode">&#xd4;<br /></td>
+<td>Ocirc</td><td id="Ocirc" class="unicode">&Ocirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 213, Category: Lu, Decomposition: 004F 0303"><td class="name">Latin capital letter O with tilde<br /></td><td>#213</td><td class="unicode">&#213;<br /></td>
+<td>#xd5</td><td class="unicode">&#xd5;<br /></td>
+<td>Otilde</td><td id="Otilde" class="unicode">&Otilde;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 214, Category: Lu, Decomposition: 004F 0308"><td class="name">Latin capital letter O with diaeresis<br /></td><td>#214</td><td class="unicode">&#214;<br /></td>
+<td>#xd6</td><td class="unicode">&#xd6;<br /></td>
+<td>Ouml</td><td id="Ouml" class="unicode">&Ouml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 215, Category: Sm"><td class="name">multiplication sign<br /></td><td>#215</td><td class="unicode">&#215;<br /></td>
+<td>#xd7</td><td class="unicode">&#xd7;<br /></td>
+<td>times</td><td id="times" class="unicode">&times;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 216, Category: Lu"><td class="name">Latin capital letter O with stroke<br /></td><td>#216</td><td class="unicode">&#216;<br /></td>
+<td>#xd8</td><td class="unicode">&#xd8;<br /></td>
+<td>Oslash</td><td id="Oslash" class="unicode">&Oslash;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 217, Category: Lu, Decomposition: 0055 0300"><td class="name">Latin capital letter U with grave<br /></td><td>#217</td><td class="unicode">&#217;<br /></td>
+<td>#xd9</td><td class="unicode">&#xd9;<br /></td>
+<td>Ugrave</td><td id="Ugrave" class="unicode">&Ugrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 218, Category: Lu, Decomposition: 0055 0301"><td class="name">Latin capital letter U with acute<br /></td><td>#218</td><td class="unicode">&#218;<br /></td>
+<td>#xda</td><td class="unicode">&#xda;<br /></td>
+<td>Uacute</td><td id="Uacute" class="unicode">&Uacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 219, Category: Lu, Decomposition: 0055 0302"><td class="name">Latin capital letter U with circumflex<br /></td><td>#219</td><td class="unicode">&#219;<br /></td>
+<td>#xdb</td><td class="unicode">&#xdb;<br /></td>
+<td>Ucirc</td><td id="Ucirc" class="unicode">&Ucirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 220, Category: Lu, Decomposition: 0055 0308"><td class="name">Latin capital letter U with diaeresis<br /></td><td>#220</td><td class="unicode">&#220;<br /></td>
+<td>#xdc</td><td class="unicode">&#xdc;<br /></td>
+<td>Uuml</td><td id="Uuml" class="unicode">&Uuml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 221, Category: Lu, Decomposition: 0059 0301"><td class="name">Latin capital letter Y with acute<br /></td><td>#221</td><td class="unicode">&#221;<br /></td>
+<td>#xdd</td><td class="unicode">&#xdd;<br /></td>
+<td>Yacute</td><td id="Yacute" class="unicode">&Yacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 222, Category: Lu"><td class="name">Latin capital letter Thorn<br /></td><td>#222</td><td class="unicode">&#222;<br /></td>
+<td>#xde</td><td class="unicode">&#xde;<br /></td>
+<td>THORN</td><td id="THORN" class="unicode">&THORN;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 223, Category: Ll"><td class="name">Latin small letter sharp s<br /></td><td>#223</td><td class="unicode">&#223;<br /></td>
+<td>#xdf</td><td class="unicode">&#xdf;<br /></td>
+<td>szlig</td><td id="szlig" class="unicode">&szlig;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 224, Category: Ll, Decomposition: 0061 0300"><td class="name">Latin small letter a with grave<br /></td><td>#224</td><td class="unicode">&#224;<br /></td>
+<td>#xe0</td><td class="unicode">&#xe0;<br /></td>
+<td>agrave</td><td id="agrave" class="unicode">&agrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 225, Category: Ll, Decomposition: 0061 0301"><td class="name">Latin small letter a with acute<br /></td><td>#225</td><td class="unicode">&#225;<br /></td>
+<td>#xe1</td><td class="unicode">&#xe1;<br /></td>
+<td>aacute</td><td id="aacute" class="unicode">&aacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 226, Category: Ll, Decomposition: 0061 0302"><td class="name">Latin small letter a with circumflex<br /></td><td>#226</td><td class="unicode">&#226;<br /></td>
+<td>#xe2</td><td class="unicode">&#xe2;<br /></td>
+<td>acirc</td><td id="acirc" class="unicode">&acirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 227, Category: Ll, Decomposition: 0061 0303"><td class="name">Latin small letter a with tilde<br /></td><td>#227</td><td class="unicode">&#227;<br /></td>
+<td>#xe3</td><td class="unicode">&#xe3;<br /></td>
+<td>atilde</td><td id="atilde" class="unicode">&atilde;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 228, Category: Ll, Decomposition: 0061 0308"><td class="name">Latin small letter a with diaeresis<br /></td><td>#228</td><td class="unicode">&#228;<br /></td>
+<td>#xe4</td><td class="unicode">&#xe4;<br /></td>
+<td>auml</td><td id="auml" class="unicode">&auml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 229, Category: Ll, Decomposition: 0061 030A"><td class="name">Latin small letter a with ring above<br /></td><td>#229</td><td class="unicode">&#229;<br /></td>
+<td>#xe5</td><td class="unicode">&#xe5;<br /></td>
+<td>aring</td><td id="aring" class="unicode">&aring;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 230, Category: Ll"><td class="name">Latin small letter ae<br /></td><td>#230</td><td class="unicode">&#230;<br /></td>
+<td>#xe6</td><td class="unicode">&#xe6;<br /></td>
+<td>aelig</td><td id="aelig" class="unicode">&aelig;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 231, Category: Ll, Decomposition: 0063 0327"><td class="name">Latin small letter c with cedilla<br /></td><td>#231</td><td class="unicode">&#231;<br /></td>
+<td>#xe7</td><td class="unicode">&#xe7;<br /></td>
+<td>ccedil</td><td id="ccedil" class="unicode">&ccedil;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 232, Category: Ll, Decomposition: 0065 0300"><td class="name">Latin small letter e with grave<br /></td><td>#232</td><td class="unicode">&#232;<br /></td>
+<td>#xe8</td><td class="unicode">&#xe8;<br /></td>
+<td>egrave</td><td id="egrave" class="unicode">&egrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 233, Category: Ll, Decomposition: 0065 0301"><td class="name">Latin small letter e with acute<br /></td><td>#233</td><td class="unicode">&#233;<br /></td>
+<td>#xe9</td><td class="unicode">&#xe9;<br /></td>
+<td>eacute</td><td id="eacute" class="unicode">&eacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 234, Category: Ll, Decomposition: 0065 0302"><td class="name">Latin small letter e with circumflex<br /></td><td>#234</td><td class="unicode">&#234;<br /></td>
+<td>#xea</td><td class="unicode">&#xea;<br /></td>
+<td>ecirc</td><td id="ecirc" class="unicode">&ecirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 235, Category: Ll, Decomposition: 0065 0308"><td class="name">Latin small letter e with diaeresis<br /></td><td>#235</td><td class="unicode">&#235;<br /></td>
+<td>#xeb</td><td class="unicode">&#xeb;<br /></td>
+<td>euml</td><td id="euml" class="unicode">&euml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 236, Category: Ll, Decomposition: 0069 0300"><td class="name">Latin small letter i with grave<br /></td><td>#236</td><td class="unicode">&#236;<br /></td>
+<td>#xec</td><td class="unicode">&#xec;<br /></td>
+<td>igrave</td><td id="igrave" class="unicode">&igrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 237, Category: Ll, Decomposition: 0069 0301"><td class="name">Latin small letter i with acute<br /></td><td>#237</td><td class="unicode">&#237;<br /></td>
+<td>#xed</td><td class="unicode">&#xed;<br /></td>
+<td>iacute</td><td id="iacute" class="unicode">&iacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 238, Category: Ll, Decomposition: 0069 0302"><td class="name">Latin small letter i with circumflex<br /></td><td>#238</td><td class="unicode">&#238;<br /></td>
+<td>#xee</td><td class="unicode">&#xee;<br /></td>
+<td>icirc</td><td id="icirc" class="unicode">&icirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 239, Category: Ll, Decomposition: 0069 0308"><td class="name">Latin small letter i with diaeresis<br /></td><td>#239</td><td class="unicode">&#239;<br /></td>
+<td>#xef</td><td class="unicode">&#xef;<br /></td>
+<td>iuml</td><td id="iuml" class="unicode">&iuml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 240, Category: Ll"><td class="name">Latin small letter eth<br /></td><td>#240</td><td class="unicode">&#240;<br /></td>
+<td>#xf0</td><td class="unicode">&#xf0;<br /></td>
+<td>eth</td><td id="eth" class="unicode">&eth;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 241, Category: Ll, Decomposition: 006E 0303"><td class="name">Latin small letter n with tilde<br /></td><td>#241</td><td class="unicode">&#241;<br /></td>
+<td>#xf1</td><td class="unicode">&#xf1;<br /></td>
+<td>ntilde</td><td id="ntilde" class="unicode">&ntilde;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 242, Category: Ll, Decomposition: 006F 0300"><td class="name">Latin small letter o with grave<br /></td><td>#242</td><td class="unicode">&#242;<br /></td>
+<td>#xf2</td><td class="unicode">&#xf2;<br /></td>
+<td>ograve</td><td id="ograve" class="unicode">&ograve;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 243, Category: Ll, Decomposition: 006F 0301"><td class="name">Latin small letter o with acute<br /></td><td>#243</td><td class="unicode">&#243;<br /></td>
+<td>#xf3</td><td class="unicode">&#xf3;<br /></td>
+<td>oacute</td><td id="oacute" class="unicode">&oacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 244, Category: Ll, Decomposition: 006F 0302"><td class="name">Latin small letter o with circumflex<br /></td><td>#244</td><td class="unicode">&#244;<br /></td>
+<td>#xf4</td><td class="unicode">&#xf4;<br /></td>
+<td>ocirc</td><td id="ocirc" class="unicode">&ocirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 245, Category: Ll, Decomposition: 006F 0303"><td class="name">Latin small letter o with tilde<br /></td><td>#245</td><td class="unicode">&#245;<br /></td>
+<td>#xf5</td><td class="unicode">&#xf5;<br /></td>
+<td>otilde</td><td id="otilde" class="unicode">&otilde;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 246, Category: Ll, Decomposition: 006F 0308"><td class="name">Latin small letter o with diaeresis<br /></td><td>#246</td><td class="unicode">&#246;<br /></td>
+<td>#xf6</td><td class="unicode">&#xf6;<br /></td>
+<td>ouml</td><td id="ouml" class="unicode">&ouml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 247, Category: Sm"><td class="name">division sign<br /></td><td>#247</td><td class="unicode">&#247;<br /></td>
+<td>#xf7</td><td class="unicode">&#xf7;<br /></td>
+<td>divide</td><td id="divide" class="unicode">&divide;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 248, Category: Ll"><td class="name">Latin small letter o with stroke<br /></td><td>#248</td><td class="unicode">&#248;<br /></td>
+<td>#xf8</td><td class="unicode">&#xf8;<br /></td>
+<td>oslash</td><td id="oslash" class="unicode">&oslash;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 249, Category: Ll, Decomposition: 0075 0300"><td class="name">Latin small letter u with grave<br /></td><td>#249</td><td class="unicode">&#249;<br /></td>
+<td>#xf9</td><td class="unicode">&#xf9;<br /></td>
+<td>ugrave</td><td id="ugrave" class="unicode">&ugrave;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 250, Category: Ll, Decomposition: 0075 0301"><td class="name">Latin small letter u with acute<br /></td><td>#250</td><td class="unicode">&#250;<br /></td>
+<td>#xfa</td><td class="unicode">&#xfa;<br /></td>
+<td>uacute</td><td id="uacute" class="unicode">&uacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 251, Category: Ll, Decomposition: 0075 0302"><td class="name">Latin small letter u with circumflex<br /></td><td>#251</td><td class="unicode">&#251;<br /></td>
+<td>#xfb</td><td class="unicode">&#xfb;<br /></td>
+<td>ucirc</td><td id="ucirc" class="unicode">&ucirc;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 252, Category: Ll, Decomposition: 0075 0308"><td class="name">Latin small letter u with diaeresis<br /></td><td>#252</td><td class="unicode">&#252;<br /></td>
+<td>#xfc</td><td class="unicode">&#xfc;<br /></td>
+<td>uuml</td><td id="uuml" class="unicode">&uuml;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 253, Category: Ll, Decomposition: 0079 0301"><td class="name">Latin small letter y with acute<br /></td><td>#253</td><td class="unicode">&#253;<br /></td>
+<td>#xfd</td><td class="unicode">&#xfd;<br /></td>
+<td>yacute</td><td id="yacute" class="unicode">&yacute;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 254, Category: Ll"><td class="name">Latin small letter thorn<br /></td><td>#254</td><td class="unicode">&#254;<br /></td>
+<td>#xfe</td><td class="unicode">&#xfe;<br /></td>
+<td>thorn</td><td id="thorn" class="unicode">&thorn;<br /></td>
+</tr>
+<tr class="HTMLlat1 ISO8879 " title="Num: 255, Category: Ll, Decomposition: 0079 0308"><td class="name">Latin small letter y with diaeresis<br /></td><td>#255</td><td class="unicode">&#255;<br /></td>
+<td>#xff</td><td class="unicode">&#xff;<br /></td>
+<td>yuml</td><td id="yuml" class="unicode">&yuml;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U0100.pdf" title="Unicode Code Charts: Latin Extended-A (PDF)">Latin Extended-A</a></th></tr>
+<tr class="HTMLspecial " title="Num: 338, Category: Lu"><td class="name">Latin capital ligature OE<br /></td><td>#338</td><td class="unicode">&#338;<br /></td>
+<td>#x152</td><td class="unicode">&#x152;<br /></td>
+<td>OElig</td><td id="OElig" class="unicode">&OElig;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 339, Category: Ll"><td class="name">Latin small ligature oe<br /></td><td>#339</td><td class="unicode">&#339;<br /></td>
+<td>#x153</td><td class="unicode">&#x153;<br /></td>
+<td>oelig</td><td id="oelig" class="unicode">&oelig;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 352, Category: Lu, Decomposition: 0053 030C"><td class="name">Latin capital letter S with caron<br /></td><td>#352</td><td class="unicode">&#352;<br /></td>
+<td>#x160</td><td class="unicode">&#x160;<br /></td>
+<td>Scaron</td><td id="Scaron" class="unicode">&Scaron;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 353, Category: Ll, Decomposition: 0073 030C"><td class="name">Latin small letter s with caron<br /></td><td>#353</td><td class="unicode">&#353;<br /></td>
+<td>#x161</td><td class="unicode">&#x161;<br /></td>
+<td>scaron</td><td id="scaron" class="unicode">&scaron;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 376, Category: Lu, Decomposition: 0059 0308"><td class="name">Latin capital letter Y with diaeresis<br /></td><td>#376</td><td class="unicode">&#376;<br /></td>
+<td>#x178</td><td class="unicode">&#x178;<br /></td>
+<td>Yuml</td><td id="Yuml" class="unicode">&Yuml;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U0180.pdf" title="Unicode Code Charts: Latin Extended-B (PDF)">Latin Extended-B</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 402, Category: Ll"><td class="name">Latin small letter f with hook<br /></td><td>#402</td><td class="unicode">&#402;<br /></td>
+<td>#x192</td><td class="unicode">&#x192;<br /></td>
+<td>fnof</td><td id="fnof" class="unicode">&fnof;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U02B0.pdf" title="Unicode Code Charts: Spacing Modifier Letters (PDF)">Spacing Modifier Letters</a></th></tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 710, Category: Lm"><td class="name">modifier letter circumflex accent<br /></td><td>#710</td><td class="unicode">&#710;<br /></td>
+<td>#x2c6</td><td class="unicode">&#x2c6;<br /></td>
+<td>circ</td><td id="circ" class="unicode">&circ;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 732, Category: Sk, Decomposition: &lt;compat&gt; 0020 0303"><td class="name">small tilde<br /></td><td>#732</td><td class="unicode">&#732;<br /></td>
+<td>#x2dc</td><td class="unicode">&#x2dc;<br /></td>
+<td>tilde</td><td id="tilde" class="unicode">&tilde;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U0370.pdf" title="Unicode Code Charts: Greek and Coptic (PDF)">Greek and Coptic</a></th></tr>
+<tr class="HTMLsymbol " title="Num: 913, Category: Lu"><td class="name">Greek capital letter Alpha<br /></td><td>#913</td><td class="unicode">&#913;<br /></td>
+<td>#x391</td><td class="unicode">&#x391;<br /></td>
+<td>Alpha</td><td id="Alpha" class="unicode">&Alpha;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 914, Category: Lu"><td class="name">Greek capital letter Beta<br /></td><td>#914</td><td class="unicode">&#914;<br /></td>
+<td>#x392</td><td class="unicode">&#x392;<br /></td>
+<td>Beta</td><td id="Beta" class="unicode">&Beta;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 915, Category: Lu"><td class="name">Greek capital letter Gamma<br /></td><td>#915</td><td class="unicode">&#915;<br /></td>
+<td>#x393</td><td class="unicode">&#x393;<br /></td>
+<td>Gamma</td><td id="Gamma" class="unicode">&Gamma;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 916, Category: Lu"><td class="name">Greek capital letter Delta<br /></td><td>#916</td><td class="unicode">&#916;<br /></td>
+<td>#x394</td><td class="unicode">&#x394;<br /></td>
+<td>Delta</td><td id="Delta" class="unicode">&Delta;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 917, Category: Lu"><td class="name">Greek capital letter Epsilon<br /></td><td>#917</td><td class="unicode">&#917;<br /></td>
+<td>#x395</td><td class="unicode">&#x395;<br /></td>
+<td>Epsilon</td><td id="Epsilon" class="unicode">&Epsilon;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 918, Category: Lu"><td class="name">Greek capital letter Zeta<br /></td><td>#918</td><td class="unicode">&#918;<br /></td>
+<td>#x396</td><td class="unicode">&#x396;<br /></td>
+<td>Zeta</td><td id="Zeta" class="unicode">&Zeta;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 919, Category: Lu"><td class="name">Greek capital letter Eta<br /></td><td>#919</td><td class="unicode">&#919;<br /></td>
+<td>#x397</td><td class="unicode">&#x397;<br /></td>
+<td>Eta</td><td id="Eta" class="unicode">&Eta;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 920, Category: Lu"><td class="name">Greek capital letter Theta<br /></td><td>#920</td><td class="unicode">&#920;<br /></td>
+<td>#x398</td><td class="unicode">&#x398;<br /></td>
+<td>Theta</td><td id="Theta" class="unicode">&Theta;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 921, Category: Lu"><td class="name">Greek capital letter Iota<br /></td><td>#921</td><td class="unicode">&#921;<br /></td>
+<td>#x399</td><td class="unicode">&#x399;<br /></td>
+<td>Iota</td><td id="Iota" class="unicode">&Iota;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 922, Category: Lu"><td class="name">Greek capital letter Kappa<br /></td><td>#922</td><td class="unicode">&#922;<br /></td>
+<td>#x39a</td><td class="unicode">&#x39a;<br /></td>
+<td>Kappa</td><td id="Kappa" class="unicode">&Kappa;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 923, Category: Lu"><td class="name">Greek capital letter Lamda<br /></td><td>#923</td><td class="unicode">&#923;<br /></td>
+<td>#x39b</td><td class="unicode">&#x39b;<br /></td>
+<td>Lambda</td><td id="Lambda" class="unicode">&Lambda;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 924, Category: Lu"><td class="name">Greek capital letter Mu<br /></td><td>#924</td><td class="unicode">&#924;<br /></td>
+<td>#x39c</td><td class="unicode">&#x39c;<br /></td>
+<td>Mu</td><td id="Mu" class="unicode">&Mu;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 925, Category: Lu"><td class="name">Greek capital letter Nu<br /></td><td>#925</td><td class="unicode">&#925;<br /></td>
+<td>#x39d</td><td class="unicode">&#x39d;<br /></td>
+<td>Nu</td><td id="Nu" class="unicode">&Nu;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 926, Category: Lu"><td class="name">Greek capital letter Xi<br /></td><td>#926</td><td class="unicode">&#926;<br /></td>
+<td>#x39e</td><td class="unicode">&#x39e;<br /></td>
+<td>Xi</td><td id="Xi" class="unicode">&Xi;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 927, Category: Lu"><td class="name">Greek capital letter Omicron<br /></td><td>#927</td><td class="unicode">&#927;<br /></td>
+<td>#x39f</td><td class="unicode">&#x39f;<br /></td>
+<td>Omicron</td><td id="Omicron" class="unicode">&Omicron;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 928, Category: Lu"><td class="name">Greek capital letter Pi<br /></td><td>#928</td><td class="unicode">&#928;<br /></td>
+<td>#x3a0</td><td class="unicode">&#x3a0;<br /></td>
+<td>Pi</td><td id="Pi" class="unicode">&Pi;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 929, Category: Lu"><td class="name">Greek capital letter Rho<br /></td><td>#929</td><td class="unicode">&#929;<br /></td>
+<td>#x3a1</td><td class="unicode">&#x3a1;<br /></td>
+<td>Rho</td><td id="Rho" class="unicode">&Rho;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 931, Category: Lu"><td class="name">Greek capital letter Sigma<br /></td><td>#931</td><td class="unicode">&#931;<br /></td>
+<td>#x3a3</td><td class="unicode">&#x3a3;<br /></td>
+<td>Sigma</td><td id="Sigma" class="unicode">&Sigma;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 932, Category: Lu"><td class="name">Greek capital letter Tau<br /></td><td>#932</td><td class="unicode">&#932;<br /></td>
+<td>#x3a4</td><td class="unicode">&#x3a4;<br /></td>
+<td>Tau</td><td id="Tau" class="unicode">&Tau;<br /></td>
+</tr>
+<tr class="HTMLsymbol MMLExtra " title="Num: 933, Category: Lu"><td class="name">Greek capital letter Upsilon<br /></td><td>#933</td><td class="unicode">&#933;<br /></td>
+<td>#x3a5</td><td class="unicode">&#x3a5;<br /></td>
+<td>Upsilon</td><td id="Upsilon" class="unicode">&Upsilon;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 934, Category: Lu"><td class="name">Greek capital letter Phi<br /></td><td>#934</td><td class="unicode">&#934;<br /></td>
+<td>#x3a6</td><td class="unicode">&#x3a6;<br /></td>
+<td>Phi</td><td id="Phi" class="unicode">&Phi;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 935, Category: Lu"><td class="name">Greek capital letter Chi<br /></td><td>#935</td><td class="unicode">&#935;<br /></td>
+<td>#x3a7</td><td class="unicode">&#x3a7;<br /></td>
+<td>Chi</td><td id="Chi" class="unicode">&Chi;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 936, Category: Lu"><td class="name">Greek capital letter Psi<br /></td><td>#936</td><td class="unicode">&#936;<br /></td>
+<td>#x3a8</td><td class="unicode">&#x3a8;<br /></td>
+<td>Psi</td><td id="Psi" class="unicode">&Psi;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 937, Category: Lu"><td class="name">Greek capital letter Omega<br /></td><td>#937</td><td class="unicode">&#937;<br /></td>
+<td>#x3a9</td><td class="unicode">&#x3a9;<br /></td>
+<td>Omega</td><td id="Omega" class="unicode">&Omega;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 945, Category: Ll"><td class="name">Greek small letter alpha<br /></td><td>#945</td><td class="unicode">&#945;<br /></td>
+<td>#x3b1</td><td class="unicode">&#x3b1;<br /></td>
+<td>alpha</td><td id="alpha" class="unicode">&alpha;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 946, Category: Ll"><td class="name">Greek small letter beta<br /></td><td>#946</td><td class="unicode">&#946;<br /></td>
+<td>#x3b2</td><td class="unicode">&#x3b2;<br /></td>
+<td>beta</td><td id="beta" class="unicode">&beta;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 947, Category: Ll"><td class="name">Greek small letter gamma<br /></td><td>#947</td><td class="unicode">&#947;<br /></td>
+<td>#x3b3</td><td class="unicode">&#x3b3;<br /></td>
+<td>gamma</td><td id="gamma" class="unicode">&gamma;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 948, Category: Ll"><td class="name">Greek small letter delta<br /></td><td>#948</td><td class="unicode">&#948;<br /></td>
+<td>#x3b4</td><td class="unicode">&#x3b4;<br /></td>
+<td>delta</td><td id="delta" class="unicode">&delta;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 949, Category: Ll"><td class="name">Greek small letter epsilon<br /></td><td>#949</td><td class="unicode">&#949;<br /></td>
+<td>#x3b5</td><td class="unicode">&#x3b5;<br /></td>
+<td>epsilon</td><td id="epsilon" class="unicode">&epsilon;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 950, Category: Ll"><td class="name">Greek small letter zeta<br /></td><td>#950</td><td class="unicode">&#950;<br /></td>
+<td>#x3b6</td><td class="unicode">&#x3b6;<br /></td>
+<td>zeta</td><td id="zeta" class="unicode">&zeta;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 951, Category: Ll"><td class="name">Greek small letter eta<br /></td><td>#951</td><td class="unicode">&#951;<br /></td>
+<td>#x3b7</td><td class="unicode">&#x3b7;<br /></td>
+<td>eta</td><td id="eta" class="unicode">&eta;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 952, Category: Ll"><td class="name">Greek small letter theta<br /></td><td>#952</td><td class="unicode">&#952;<br /></td>
+<td>#x3b8</td><td class="unicode">&#x3b8;<br /></td>
+<td>theta</td><td id="theta" class="unicode">&theta;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 953, Category: Ll"><td class="name">Greek small letter iota<br /></td><td>#953</td><td class="unicode">&#953;<br /></td>
+<td>#x3b9</td><td class="unicode">&#x3b9;<br /></td>
+<td>iota</td><td id="iota" class="unicode">&iota;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 954, Category: Ll"><td class="name">Greek small letter kappa<br /></td><td>#954</td><td class="unicode">&#954;<br /></td>
+<td>#x3ba</td><td class="unicode">&#x3ba;<br /></td>
+<td>kappa</td><td id="kappa" class="unicode">&kappa;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 955, Category: Ll"><td class="name">Greek small letter lamda<br /></td><td>#955</td><td class="unicode">&#955;<br /></td>
+<td>#x3bb</td><td class="unicode">&#x3bb;<br /></td>
+<td>lambda</td><td id="lambda" class="unicode">&lambda;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 956, Category: Ll"><td class="name">Greek small letter mu<br /></td><td>#956</td><td class="unicode">&#956;<br /></td>
+<td>#x3bc</td><td class="unicode">&#x3bc;<br /></td>
+<td>mu</td><td id="mu" class="unicode">&mu;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 957, Category: Ll"><td class="name">Greek small letter nu<br /></td><td>#957</td><td class="unicode">&#957;<br /></td>
+<td>#x3bd</td><td class="unicode">&#x3bd;<br /></td>
+<td>nu</td><td id="nu" class="unicode">&nu;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 958, Category: Ll"><td class="name">Greek small letter xi<br /></td><td>#958</td><td class="unicode">&#958;<br /></td>
+<td>#x3be</td><td class="unicode">&#x3be;<br /></td>
+<td>xi</td><td id="xi" class="unicode">&xi;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 959, Category: Ll"><td class="name">Greek small letter omicron<br /></td><td>#959</td><td class="unicode">&#959;<br /></td>
+<td>#x3bf</td><td class="unicode">&#x3bf;<br /></td>
+<td>omicron</td><td id="omicron" class="unicode">&omicron;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 960, Category: Ll"><td class="name">Greek small letter pi<br /></td><td>#960</td><td class="unicode">&#960;<br /></td>
+<td>#x3c0</td><td class="unicode">&#x3c0;<br /></td>
+<td>pi</td><td id="pi" class="unicode">&pi;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 961, Category: Ll"><td class="name">Greek small letter rho<br /></td><td>#961</td><td class="unicode">&#961;<br /></td>
+<td>#x3c1</td><td class="unicode">&#x3c1;<br /></td>
+<td>rho</td><td id="rho" class="unicode">&rho;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 962, Category: Ll"><td class="name">Greek small letter final sigma<br /></td><td>#962</td><td class="unicode">&#962;<br /></td>
+<td>#x3c2</td><td class="unicode">&#x3c2;<br /></td>
+<td>sigmaf</td><td id="sigmaf" class="unicode">&sigmaf;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 963, Category: Ll"><td class="name">Greek small letter sigma<br /></td><td>#963</td><td class="unicode">&#963;<br /></td>
+<td>#x3c3</td><td class="unicode">&#x3c3;<br /></td>
+<td>sigma</td><td id="sigma" class="unicode">&sigma;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 964, Category: Ll"><td class="name">Greek small letter tau<br /></td><td>#964</td><td class="unicode">&#964;<br /></td>
+<td>#x3c4</td><td class="unicode">&#x3c4;<br /></td>
+<td>tau</td><td id="tau" class="unicode">&tau;<br /></td>
+</tr>
+<tr class="HTMLsymbol MMLExtra " title="Num: 965, Category: Ll"><td class="name">Greek small letter upsilon<br /></td><td>#965</td><td class="unicode">&#965;<br /></td>
+<td>#x3c5</td><td class="unicode">&#x3c5;<br /></td>
+<td>upsilon</td><td id="upsilon" class="unicode">&upsilon;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 966, Category: Ll"><td class="name">Greek small letter phi<br /></td><td>#966</td><td class="unicode">&#966;<br /></td>
+<td>#x3c6</td><td class="unicode">&#x3c6;<br /></td>
+<td>phi</td><td id="phi" class="unicode">&phi;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 967, Category: Ll"><td class="name">Greek small letter chi<br /></td><td>#967</td><td class="unicode">&#967;<br /></td>
+<td>#x3c7</td><td class="unicode">&#x3c7;<br /></td>
+<td>chi</td><td id="chi" class="unicode">&chi;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 968, Category: Ll"><td class="name">Greek small letter psi<br /></td><td>#968</td><td class="unicode">&#968;<br /></td>
+<td>#x3c8</td><td class="unicode">&#x3c8;<br /></td>
+<td>psi</td><td id="psi" class="unicode">&psi;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 969, Category: Ll"><td class="name">Greek small letter omega<br /></td><td>#969</td><td class="unicode">&#969;<br /></td>
+<td>#x3c9</td><td class="unicode">&#x3c9;<br /></td>
+<td>omega</td><td id="omega" class="unicode">&omega;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 977, Category: Ll, Decomposition: &lt;compat&gt; 03B8"><td class="name">Greek theta symbol<br /></td><td>#977</td><td class="unicode">&#977;<br /></td>
+<td>#x3d1</td><td class="unicode">&#x3d1;<br /></td>
+<td>thetasym</td><td id="thetasym" class="unicode">&thetasym;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 978, Category: Lu, Decomposition: &lt;compat&gt; 03A5"><td class="name">Greek upsilon with hook symbol<br /></td><td>#978</td><td class="unicode">&#978;<br /></td>
+<td>#x3d2</td><td class="unicode">&#x3d2;<br /></td>
+<td>upsih</td><td id="upsih" class="unicode">&upsih;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 982, Category: Ll, Decomposition: &lt;compat&gt; 03C0"><td class="name">Greek pi symbol<br /></td><td>#982</td><td class="unicode">&#982;<br /></td>
+<td>#x3d6</td><td class="unicode">&#x3d6;<br /></td>
+<td>piv</td><td id="piv" class="unicode">&piv;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U2000.pdf" title="Unicode Code Charts: General Punctuation (PDF)">General Punctuation</a></th></tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8194, Category: Zs, Decomposition: &lt;compat&gt; 0020"><td class="name">en space<br /></td><td>#8194</td><td class="unicode"><span class="space">&#8194;</span><br /></td>
+<td>#x2002</td><td class="unicode"><span class="space">&#x2002;</span><br /></td>
+<td>ensp</td><td id="ensp" class="unicode"><span class="space">&ensp;</span><br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8195, Category: Zs, Decomposition: &lt;compat&gt; 0020"><td class="name">em space<br /></td><td>#8195</td><td class="unicode"><span class="space">&#8195;</span><br /></td>
+<td>#x2003</td><td class="unicode"><span class="space">&#x2003;</span><br /></td>
+<td>emsp</td><td id="emsp" class="unicode"><span class="space">&emsp;</span><br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8201, Category: Zs, Decomposition: &lt;compat&gt; 0020"><td class="name">thin space<br /></td><td>#8201</td><td class="unicode"><span class="space">&#8201;</span><br /></td>
+<td>#x2009</td><td class="unicode"><span class="space">&#x2009;</span><br /></td>
+<td>thinsp</td><td id="thinsp" class="unicode"><span class="space">&thinsp;</span><br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8204, Category: Cf"><td class="name">zero width non-joiner<br /></td><td>#8204</td><td class="unprintable"></td>
+<td>#x200c</td><td class="unprintable"></td>
+<td>zwnj</td><td class="unprintable"></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8205, Category: Cf"><td class="name">zero width joiner<br /></td><td>#8205</td><td class="unprintable"></td>
+<td>#x200d</td><td class="unprintable"></td>
+<td>zwj</td><td class="unprintable"></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8206, Category: Cf"><td class="name">left-to-right mark<br /></td><td>#8206</td><td class="unprintable"></td>
+<td>#x200e</td><td class="unprintable"></td>
+<td>lrm</td><td class="unprintable"></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8207, Category: Cf"><td class="name">right-to-left mark<br /></td><td>#8207</td><td class="unprintable"></td>
+<td>#x200f</td><td class="unprintable"></td>
+<td>rlm</td><td class="unprintable"></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8211, Category: Pd"><td class="name">en dash<br /></td><td>#8211</td><td class="unicode">&#8211;<br /></td>
+<td>#x2013</td><td class="unicode">&#x2013;<br /></td>
+<td>ndash</td><td id="ndash" class="unicode">&ndash;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8212, Category: Pd"><td class="name">em dash<br /></td><td>#8212</td><td class="unicode">&#8212;<br /></td>
+<td>#x2014</td><td class="unicode">&#x2014;<br /></td>
+<td>mdash</td><td id="mdash" class="unicode">&mdash;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8216, Category: Pi"><td class="name">left single quotation mark<br /></td><td>#8216</td><td class="unicode">&#8216;<br /></td>
+<td>#x2018</td><td class="unicode">&#x2018;<br /></td>
+<td>lsquo</td><td id="lsquo" class="unicode">&lsquo;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8217, Category: Pf"><td class="name">right single quotation mark<br /></td><td>#8217</td><td class="unicode">&#8217;<br /></td>
+<td>#x2019</td><td class="unicode">&#x2019;<br /></td>
+<td>rsquo</td><td id="rsquo" class="unicode">&rsquo;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8218, Category: Ps"><td class="name">single low-9 quotation mark<br /></td><td>#8218</td><td class="unicode">&#8218;<br /></td>
+<td>#x201a</td><td class="unicode">&#x201a;<br /></td>
+<td>sbquo</td><td id="sbquo" class="unicode">&sbquo;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8220, Category: Pi"><td class="name">left double quotation mark<br /></td><td>#8220</td><td class="unicode">&#8220;<br /></td>
+<td>#x201c</td><td class="unicode">&#x201c;<br /></td>
+<td>ldquo</td><td id="ldquo" class="unicode">&ldquo;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8221, Category: Pf"><td class="name">right double quotation mark<br /></td><td>#8221</td><td class="unicode">&#8221;<br /></td>
+<td>#x201d</td><td class="unicode">&#x201d;<br /></td>
+<td>rdquo</td><td id="rdquo" class="unicode">&rdquo;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8222, Category: Ps"><td class="name">double low-9 quotation mark<br /></td><td>#8222</td><td class="unicode">&#8222;<br /></td>
+<td>#x201e</td><td class="unicode">&#x201e;<br /></td>
+<td>bdquo</td><td id="bdquo" class="unicode">&bdquo;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8224, Category: Po"><td class="name">dagger<br /></td><td>#8224</td><td class="unicode">&#8224;<br /></td>
+<td>#x2020</td><td class="unicode">&#x2020;<br /></td>
+<td>dagger</td><td id="dagger" class="unicode">&dagger;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8225, Category: Po"><td class="name">double dagger<br /></td><td>#8225</td><td class="unicode">&#8225;<br /></td>
+<td>#x2021</td><td class="unicode">&#x2021;<br /></td>
+<td>Dagger</td><td id="Dagger" class="unicode">&Dagger;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8226, Category: Po"><td class="name">bullet<br /></td><td>#8226</td><td class="unicode">&#8226;<br /></td>
+<td>#x2022</td><td class="unicode">&#x2022;<br /></td>
+<td>bull</td><td id="bull" class="unicode">&bull;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8230, Category: Po, Decomposition: &lt;compat&gt; 002E 002E 002E"><td class="name">horizontal ellipsis<br /></td><td>#8230</td><td class="unicode">&#8230;<br /></td>
+<td>#x2026</td><td class="unicode">&#x2026;<br /></td>
+<td>hellip</td><td id="hellip" class="unicode">&hellip;<br /></td>
+</tr>
+<tr class="HTMLspecial ISO8879 " title="Num: 8240, Category: Po"><td class="name">per mille sign<br /></td><td>#8240</td><td class="unicode">&#8240;<br /></td>
+<td>#x2030</td><td class="unicode">&#x2030;<br /></td>
+<td>permil</td><td id="permil" class="unicode">&permil;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8242, Category: Po"><td class="name">prime<br /></td><td>#8242</td><td class="unicode">&#8242;<br /></td>
+<td>#x2032</td><td class="unicode">&#x2032;<br /></td>
+<td>prime</td><td id="prime" class="unicode">&prime;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8243, Category: Po, Decomposition: &lt;compat&gt; 2032 2032"><td class="name">double prime<br /></td><td>#8243</td><td class="unicode">&#8243;<br /></td>
+<td>#x2033</td><td class="unicode">&#x2033;<br /></td>
+<td>Prime</td><td id="Prime" class="unicode">&Prime;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8249, Category: Pi"><td class="name">single left-pointing angle quotation mark<br /></td><td>#8249</td><td class="unicode">&#8249;<br /></td>
+<td>#x2039</td><td class="unicode">&#x2039;<br /></td>
+<td>lsaquo</td><td id="lsaquo" class="unicode">&lsaquo;<br /></td>
+</tr>
+<tr class="HTMLspecial " title="Num: 8250, Category: Pf"><td class="name">single right-pointing angle quotation mark<br /></td><td>#8250</td><td class="unicode">&#8250;<br /></td>
+<td>#x203a</td><td class="unicode">&#x203a;<br /></td>
+<td>rsaquo</td><td id="rsaquo" class="unicode">&rsaquo;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 8254, Category: Po, Decomposition: &lt;compat&gt; 0020 0305"><td class="name">overline<br /></td><td>#8254</td><td class="unicode">&#8254;<br /></td>
+<td>#x203e</td><td class="unicode">&#x203e;<br /></td>
+<td>oline</td><td id="oline" class="unicode">&oline;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 8260, Category: Sm"><td class="name">fraction slash<br /></td><td>#8260</td><td class="unicode">&#8260;<br /></td>
+<td>#x2044</td><td class="unicode">&#x2044;<br /></td>
+<td>frasl</td><td id="frasl" class="unicode">&frasl;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U20A0.pdf" title="Unicode Code Charts: Currency Symbols (PDF)">Currency Symbols</a></th></tr>
+<tr class="HTMLspecial " title="Num: 8364, Category: Sc"><td class="name">euro sign<br /></td><td>#8364</td><td class="unicode">&#8364;<br /></td>
+<td>#x20ac</td><td class="unicode">&#x20ac;<br /></td>
+<td>euro</td><td id="euro" class="unicode">&euro;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U2100.pdf" title="Unicode Code Charts: Letterlike Symbols (PDF)">Letterlike Symbols</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8465, Category: Lu, Decomposition: &lt;font&gt; 0049"><td class="name">black-letter capital I<br /></td><td>#8465</td><td class="unicode">&#8465;<br /></td>
+<td>#x2111</td><td class="unicode">&#x2111;<br /></td>
+<td>image</td><td id="image" class="unicode">&image;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8472, Category: So"><td class="name">script capital P<br /></td><td>#8472</td><td class="unicode">&#8472;<br /></td>
+<td>#x2118</td><td class="unicode">&#x2118;<br /></td>
+<td>weierp</td><td id="weierp" class="unicode">&weierp;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8476, Category: Lu, Decomposition: &lt;font&gt; 0052"><td class="name">black-letter capital R<br /></td><td>#8476</td><td class="unicode">&#8476;<br /></td>
+<td>#x211c</td><td class="unicode">&#x211c;<br /></td>
+<td>real</td><td id="real" class="unicode">&real;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8482, Category: So, Decomposition: &lt;super&gt; 0054 004D"><td class="name">trade mark sign<br /></td><td>#8482</td><td class="unicode">&#8482;<br /></td>
+<td>#x2122</td><td class="unicode">&#x2122;<br /></td>
+<td>trade</td><td id="trade" class="unicode">&trade;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 8501, Category: Lo, Decomposition: &lt;compat&gt; 05D0"><td class="name">alef symbol<br /></td><td>#8501</td><td class="unicode">&#8501;<br /></td>
+<td>#x2135</td><td class="unicode">&#x2135;<br /></td>
+<td>alefsym</td><td id="alefsym" class="unicode">&alefsym;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U2190.pdf" title="Unicode Code Charts: Arrows (PDF)">Arrows</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8592, Category: Sm"><td class="name">leftwards arrow<br /></td><td>#8592</td><td class="unicode">&#8592;<br /></td>
+<td>#x2190</td><td class="unicode">&#x2190;<br /></td>
+<td>larr</td><td id="larr" class="unicode">&larr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8593, Category: Sm"><td class="name">upwards arrow<br /></td><td>#8593</td><td class="unicode">&#8593;<br /></td>
+<td>#x2191</td><td class="unicode">&#x2191;<br /></td>
+<td>uarr</td><td id="uarr" class="unicode">&uarr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8594, Category: Sm"><td class="name">rightwards arrow<br /></td><td>#8594</td><td class="unicode">&#8594;<br /></td>
+<td>#x2192</td><td class="unicode">&#x2192;<br /></td>
+<td>rarr</td><td id="rarr" class="unicode">&rarr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8595, Category: Sm"><td class="name">downwards arrow<br /></td><td>#8595</td><td class="unicode">&#8595;<br /></td>
+<td>#x2193</td><td class="unicode">&#x2193;<br /></td>
+<td>darr</td><td id="darr" class="unicode">&darr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8596, Category: Sm"><td class="name">left right arrow<br /></td><td>#8596</td><td class="unicode">&#8596;<br /></td>
+<td>#x2194</td><td class="unicode">&#x2194;<br /></td>
+<td>harr</td><td id="harr" class="unicode">&harr;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 8629, Category: So"><td class="name">downwards arrow with corner leftwards<br /></td><td>#8629</td><td class="unicode">&#8629;<br /></td>
+<td>#x21b5</td><td class="unicode">&#x21b5;<br /></td>
+<td>crarr</td><td id="crarr" class="unicode">&crarr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8656, Category: So"><td class="name">leftwards double arrow<br /></td><td>#8656</td><td class="unicode">&#8656;<br /></td>
+<td>#x21d0</td><td class="unicode">&#x21d0;<br /></td>
+<td>lArr</td><td id="lArr" class="unicode">&lArr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8657, Category: So"><td class="name">upwards double arrow<br /></td><td>#8657</td><td class="unicode">&#8657;<br /></td>
+<td>#x21d1</td><td class="unicode">&#x21d1;<br /></td>
+<td>uArr</td><td id="uArr" class="unicode">&uArr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8658, Category: Sm"><td class="name">rightwards double arrow<br /></td><td>#8658</td><td class="unicode">&#8658;<br /></td>
+<td>#x21d2</td><td class="unicode">&#x21d2;<br /></td>
+<td>rArr</td><td id="rArr" class="unicode">&rArr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8659, Category: So"><td class="name">downwards double arrow<br /></td><td>#8659</td><td class="unicode">&#8659;<br /></td>
+<td>#x21d3</td><td class="unicode">&#x21d3;<br /></td>
+<td>dArr</td><td id="dArr" class="unicode">&dArr;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8660, Category: Sm"><td class="name">left right double arrow<br /></td><td>#8660</td><td class="unicode">&#8660;<br /></td>
+<td>#x21d4</td><td class="unicode">&#x21d4;<br /></td>
+<td>hArr</td><td id="hArr" class="unicode">&hArr;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U2200.pdf" title="Unicode Code Charts: Mathematical Operators (PDF)">Mathematical Operators</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8704, Category: Sm"><td class="name">for all<br /></td><td>#8704</td><td class="unicode">&#8704;<br /></td>
+<td>#x2200</td><td class="unicode">&#x2200;<br /></td>
+<td>forall</td><td id="forall" class="unicode">&forall;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8706, Category: Sm"><td class="name">partial differential<br /></td><td>#8706</td><td class="unicode">&#8706;<br /></td>
+<td>#x2202</td><td class="unicode">&#x2202;<br /></td>
+<td>part</td><td id="part" class="unicode">&part;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8707, Category: Sm"><td class="name">there exists<br /></td><td>#8707</td><td class="unicode">&#8707;<br /></td>
+<td>#x2203</td><td class="unicode">&#x2203;<br /></td>
+<td>exist</td><td id="exist" class="unicode">&exist;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO9573 " title="Num: 8709, Category: Sm"><td class="name">empty set<br /></td><td>#8709</td><td class="unicode">&#8709;<br /></td>
+<td>#x2205</td><td class="unicode">&#x2205;<br /></td>
+<td>empty</td><td id="empty" class="unicode">&empty;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8711, Category: Sm"><td class="name">nabla<br /></td><td>#8711</td><td class="unicode">&#8711;<br /></td>
+<td>#x2207</td><td class="unicode">&#x2207;<br /></td>
+<td>nabla</td><td id="nabla" class="unicode">&nabla;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8712, Category: Sm"><td class="name">element of<br /></td><td>#8712</td><td class="unicode">&#8712;<br /></td>
+<td>#x2208</td><td class="unicode">&#x2208;<br /></td>
+<td>isin</td><td id="isin" class="unicode">&isin;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8713, Category: Sm, Decomposition: 2208 0338"><td class="name">not an element of<br /></td><td>#8713</td><td class="unicode">&#8713;<br /></td>
+<td>#x2209</td><td class="unicode">&#x2209;<br /></td>
+<td>notin</td><td id="notin" class="unicode">&notin;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8715, Category: Sm"><td class="name">contains as member<br /></td><td>#8715</td><td class="unicode">&#8715;<br /></td>
+<td>#x220b</td><td class="unicode">&#x220b;<br /></td>
+<td>ni</td><td id="ni" class="unicode">&ni;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8719, Category: Sm"><td class="name">n-ary product<br /></td><td>#8719</td><td class="unicode">&#8719;<br /></td>
+<td>#x220f</td><td class="unicode">&#x220f;<br /></td>
+<td>prod</td><td id="prod" class="unicode">&prod;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8721, Category: Sm"><td class="name">n-ary summation<br /></td><td>#8721</td><td class="unicode">&#8721;<br /></td>
+<td>#x2211</td><td class="unicode">&#x2211;<br /></td>
+<td>sum</td><td id="sum" class="unicode">&sum;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8722, Category: Sm"><td class="name">minus sign<br /></td><td>#8722</td><td class="unicode">&#8722;<br /></td>
+<td>#x2212</td><td class="unicode">&#x2212;<br /></td>
+<td>minus</td><td id="minus" class="unicode">&minus;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8727, Category: Sm"><td class="name">asterisk operator<br /></td><td>#8727</td><td class="unicode">&#8727;<br /></td>
+<td>#x2217</td><td class="unicode">&#x2217;<br /></td>
+<td>lowast</td><td id="lowast" class="unicode">&lowast;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8730, Category: Sm"><td class="name">square root<br /></td><td>#8730</td><td class="unicode">&#8730;<br /></td>
+<td>#x221a</td><td class="unicode">&#x221a;<br /></td>
+<td>radic</td><td id="radic" class="unicode">&radic;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8733, Category: Sm"><td class="name">proportional to<br /></td><td>#8733</td><td class="unicode">&#8733;<br /></td>
+<td>#x221d</td><td class="unicode">&#x221d;<br /></td>
+<td>prop</td><td id="prop" class="unicode">&prop;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8734, Category: Sm"><td class="name">infinity<br /></td><td>#8734</td><td class="unicode">&#8734;<br /></td>
+<td>#x221e</td><td class="unicode">&#x221e;<br /></td>
+<td>infin</td><td id="infin" class="unicode">&infin;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8736, Category: Sm"><td class="name">angle<br /></td><td>#8736</td><td class="unicode">&#8736;<br /></td>
+<td>#x2220</td><td class="unicode">&#x2220;<br /></td>
+<td>ang</td><td id="ang" class="unicode">&ang;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8743, Category: Sm"><td class="name">logical and<br /></td><td>#8743</td><td class="unicode">&#8743;<br /></td>
+<td>#x2227</td><td class="unicode">&#x2227;<br /></td>
+<td>and</td><td id="and" class="unicode">&and;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8744, Category: Sm"><td class="name">logical or<br /></td><td>#8744</td><td class="unicode">&#8744;<br /></td>
+<td>#x2228</td><td class="unicode">&#x2228;<br /></td>
+<td>or</td><td id="or" class="unicode">&or;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8745, Category: Sm"><td class="name">intersection<br /></td><td>#8745</td><td class="unicode">&#8745;<br /></td>
+<td>#x2229</td><td class="unicode">&#x2229;<br /></td>
+<td>cap</td><td id="cap" class="unicode">&cap;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8746, Category: Sm"><td class="name">union<br /></td><td>#8746</td><td class="unicode">&#8746;<br /></td>
+<td>#x222a</td><td class="unicode">&#x222a;<br /></td>
+<td>cup</td><td id="cup" class="unicode">&cup;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8747, Category: Sm"><td class="name">integral<br /></td><td>#8747</td><td class="unicode">&#8747;<br /></td>
+<td>#x222b</td><td class="unicode">&#x222b;<br /></td>
+<td>int</td><td id="int" class="unicode">&int;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8756, Category: Sm"><td class="name">therefore<br /></td><td>#8756</td><td class="unicode">&#8756;<br /></td>
+<td>#x2234</td><td class="unicode">&#x2234;<br /></td>
+<td>there4</td><td id="there4" class="unicode">&there4;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8764, Category: Sm"><td class="name">tilde operator<br /></td><td>#8764</td><td class="unicode">&#8764;<br /></td>
+<td>#x223c</td><td class="unicode">&#x223c;<br /></td>
+<td>sim</td><td id="sim" class="unicode">&sim;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8773, Category: Sm"><td class="name">approximately equal to<br /></td><td>#8773</td><td class="unicode">&#8773;<br /></td>
+<td>#x2245</td><td class="unicode">&#x2245;<br /></td>
+<td>cong</td><td id="cong" class="unicode">&cong;<br /></td>
+</tr>
+<tr class="HTMLsymbol " title="Num: 8776, Category: Sm"><td class="name">almost equal to<br /></td><td>#8776</td><td class="unicode">&#8776;<br /></td>
+<td>#x2248</td><td class="unicode">&#x2248;<br /></td>
+<td>asymp</td><td id="asymp" class="unicode">&asymp;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8800, Category: Sm, Decomposition: 003D 0338"><td class="name">not equal to<br /></td><td>#8800</td><td class="unicode">&#8800;<br /></td>
+<td>#x2260</td><td class="unicode">&#x2260;<br /></td>
+<td>ne</td><td id="ne" class="unicode">&ne;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8801, Category: Sm"><td class="name">identical to<br /></td><td>#8801</td><td class="unicode">&#8801;<br /></td>
+<td>#x2261</td><td class="unicode">&#x2261;<br /></td>
+<td>equiv</td><td id="equiv" class="unicode">&equiv;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8804, Category: Sm"><td class="name">less-than or equal to<br /></td><td>#8804</td><td class="unicode">&#8804;<br /></td>
+<td>#x2264</td><td class="unicode">&#x2264;<br /></td>
+<td>le</td><td id="le" class="unicode">&le;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8805, Category: Sm"><td class="name">greater-than or equal to<br /></td><td>#8805</td><td class="unicode">&#8805;<br /></td>
+<td>#x2265</td><td class="unicode">&#x2265;<br /></td>
+<td>ge</td><td id="ge" class="unicode">&ge;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8834, Category: Sm"><td class="name">subset of<br /></td><td>#8834</td><td class="unicode">&#8834;<br /></td>
+<td>#x2282</td><td class="unicode">&#x2282;<br /></td>
+<td>sub</td><td id="sub" class="unicode">&sub;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8835, Category: Sm"><td class="name">superset of<br /></td><td>#8835</td><td class="unicode">&#8835;<br /></td>
+<td>#x2283</td><td class="unicode">&#x2283;<br /></td>
+<td>sup</td><td id="sup" class="unicode">&sup;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8836, Category: Sm, Decomposition: 2282 0338"><td class="name">not a subset of<br /></td><td>#8836</td><td class="unicode">&#8836;<br /></td>
+<td>#x2284</td><td class="unicode">&#x2284;<br /></td>
+<td>nsub</td><td id="nsub" class="unicode">&nsub;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8838, Category: Sm"><td class="name">subset of or equal to<br /></td><td>#8838</td><td class="unicode">&#8838;<br /></td>
+<td>#x2286</td><td class="unicode">&#x2286;<br /></td>
+<td>sube</td><td id="sube" class="unicode">&sube;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8839, Category: Sm"><td class="name">superset of or equal to<br /></td><td>#8839</td><td class="unicode">&#8839;<br /></td>
+<td>#x2287</td><td class="unicode">&#x2287;<br /></td>
+<td>supe</td><td id="supe" class="unicode">&supe;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8853, Category: Sm"><td class="name">circled plus<br /></td><td>#8853</td><td class="unicode">&#8853;<br /></td>
+<td>#x2295</td><td class="unicode">&#x2295;<br /></td>
+<td>oplus</td><td id="oplus" class="unicode">&oplus;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO9573 " title="Num: 8855, Category: Sm"><td class="name">circled times<br /></td><td>#8855</td><td class="unicode">&#8855;<br /></td>
+<td>#x2297</td><td class="unicode">&#x2297;<br /></td>
+<td>otimes</td><td id="otimes" class="unicode">&otimes;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8869, Category: Sm"><td class="name">up tack<br /></td><td>#8869</td><td class="unicode">&#8869;<br /></td>
+<td>#x22a5</td><td class="unicode">&#x22a5;<br /></td>
+<td>perp</td><td id="perp" class="unicode">&perp;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8901, Category: Sm"><td class="name">dot operator<br /></td><td>#8901</td><td class="unicode">&#8901;<br /></td>
+<td>#x22c5</td><td class="unicode">&#x22c5;<br /></td>
+<td>sdot</td><td id="sdot" class="unicode">&sdot;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U2300.pdf" title="Unicode Code Charts: Miscellaneous Technical (PDF)">Miscellaneous Technical</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8968, Category: Sm"><td class="name">left ceiling<br /></td><td>#8968</td><td class="unicode">&#8968;<br /></td>
+<td>#x2308</td><td class="unicode">&#x2308;<br /></td>
+<td>lceil</td><td id="lceil" class="unicode">&lceil;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8969, Category: Sm"><td class="name">right ceiling<br /></td><td>#8969</td><td class="unicode">&#8969;<br /></td>
+<td>#x2309</td><td class="unicode">&#x2309;<br /></td>
+<td>rceil</td><td id="rceil" class="unicode">&rceil;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8970, Category: Sm"><td class="name">left floor<br /></td><td>#8970</td><td class="unicode">&#8970;<br /></td>
+<td>#x230a</td><td class="unicode">&#x230a;<br /></td>
+<td>lfloor</td><td id="lfloor" class="unicode">&lfloor;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 8971, Category: Sm"><td class="name">right floor<br /></td><td>#8971</td><td class="unicode">&#8971;<br /></td>
+<td>#x230b</td><td class="unicode">&#x230b;<br /></td>
+<td>rfloor</td><td id="rfloor" class="unicode">&rfloor;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9001, Category: Ps, Decomposition: 3008"><td class="name">left-pointing angle bracket<br /></td><td>#9001</td><td class="unicode">&#9001;<br /></td>
+<td>#x2329</td><td class="unicode">&#x2329;<br /></td>
+<td>lang</td><td id="lang" class="unicode">&lang;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9002, Category: Pe, Decomposition: 3009"><td class="name">right-pointing angle bracket<br /></td><td>#9002</td><td class="unicode">&#9002;<br /></td>
+<td>#x232a</td><td class="unicode">&#x232a;<br /></td>
+<td>rang</td><td id="rang" class="unicode">&rang;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U25A0.pdf" title="Unicode Code Charts: Geometric Shapes (PDF)">Geometric Shapes</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9674, Category: So"><td class="name">lozenge<br /></td><td>#9674</td><td class="unicode">&#9674;<br /></td>
+<td>#x25ca</td><td class="unicode">&#x25ca;<br /></td>
+<td>loz</td><td id="loz" class="unicode">&loz;<br /></td>
+</tr>
+</tbody>
+<tbody><tr><th colspan="7" scope="rowgroup"><a href="http://www.unicode.org/charts/PDF/U2600.pdf" title="Unicode Code Charts: Miscellaneous Symbols (PDF)">Miscellaneous Symbols</a></th></tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9824, Category: So"><td class="name">black spade suit<br /></td><td>#9824</td><td class="unicode">&#9824;<br /></td>
+<td>#x2660</td><td class="unicode">&#x2660;<br /></td>
+<td>spades</td><td id="spades" class="unicode">&spades;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9827, Category: So"><td class="name">black club suit<br /></td><td>#9827</td><td class="unicode">&#9827;<br /></td>
+<td>#x2663</td><td class="unicode">&#x2663;<br /></td>
+<td>clubs</td><td id="clubs" class="unicode">&clubs;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9829, Category: So"><td class="name">black heart suit<br /></td><td>#9829</td><td class="unicode">&#9829;<br /></td>
+<td>#x2665</td><td class="unicode">&#x2665;<br /></td>
+<td>hearts</td><td id="hearts" class="unicode">&hearts;<br /></td>
+</tr>
+<tr class="HTMLsymbol ISO8879 " title="Num: 9830, Category: So"><td class="name">black diamond suit<br /></td><td>#9830</td><td class="unicode">&#9830;<br /></td>
+<td>#x2666</td><td class="unicode">&#x2666;<br /></td>
+<td>diams</td><td id="diams" class="unicode">&diams;<br /></td>
+</tr>
+</tbody>
+	</table>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="xhtml11_button" data="/images/buttons/xhtml11.png">Valid XHTML 1.1</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">©</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+
+</body>
+</html>

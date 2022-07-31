@@ -1,0 +1,65 @@
+= The `IOUtil` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `IOUtil` structure provides support for redirecting the standard input
+and output streams.
+
+== Synopsis
+
+[source,sml]
+------------
+signature IO_UTIL
+structure IOUtil : IO_UTIL
+------------
+
+== Interface
+
+[source,sml]
+------------
+val withInputFile : string * ('a -> 'b) -> 'a -> 'b
+val withInstream : TextIO.instream * ('a -> 'b) -> 'a -> 'b
+
+val withOutputFile : string * ('a -> 'b) -> 'a -> 'b
+val withOutstream : TextIO.outstream * ('a -> 'b) -> 'a -> 'b
+------------
+
+== Description
+
+`[.kw]#val# withInputFile : string * ('a \-> 'b) \-> 'a \-> 'b`::
+  `withInputFile (file, f) x` evaluates the expression `f x` with
+  standard input bound to `file`.  The file is closed and the
+  `TextIO.stdIn` input stream is restored to its original binding
+  once evaluation terminates.
+
+`[.kw]#val# withInstream : TextIO.instream * ('a \-> 'b) \-> 'a \-> 'b`::
+  `withInstream (inS, f) x` evaluates the expression `f x` with
+  standard output redirected to `inS`.  The `TextIO.stdIn` input stream
+  is restored to its original binding once evaluation terminates.
+
+`[.kw]#val# withOutputFile : string * ('a \-> 'b) \-> 'a \-> 'b`::
+  `withOutputFile (file, f) x` evaluates the expression `f x` with
+  standard output redirected to `file`.  The file is closed and the
+  `TextIO.stdOut` output stream is restored to its original destination
+  once evaluation terminates.
+
+`[.kw]#val# withOutstream : TextIO.outstream * ('a \-> 'b) \-> 'a \-> 'b`::
+  `withOutstream (outS, f) x` evaluates the expression `f x` with
+  standard output redirected to `outS`.  The `TextIO.stdOut` output stream
+  is restored to its original destination once evaluation terminates.
+
+== Example
+
+The following expression will put its output in the file "hello.txt":
+
+[source,sml]
+------------
+withOutputFile ("hello.txt", fn () => print "hello world\n") ()
+------------
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

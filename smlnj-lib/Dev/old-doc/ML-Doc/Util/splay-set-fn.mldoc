@@ -1,0 +1,35 @@
+<!-- splay-set-fn.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY SplaySetFn SDATA "splay-set-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=10>
+<TITLE>The SplaySetFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/SplaySetFn/ functor</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_KEY/
+  <SIGREF/ORD_SET/
+  <FCTREF/BinarySetFn/
+  <FCTREF/ListSetFn/
+  <STRREF TOPID/SplayTree/
+  <SIGREF/ORD_MAP/
+</SEEALSO>
+
+<PP>
+The <FCTREF NOLINK/SplaySetFn/ functor implements applicative sets on
+an ordered type. It is based on Sleator-Tarjan splay trees.
+
+<FUNCTOR FCTID="SplaySetFn"><ID/K/<ID>ORD_KEY</ID>
+  <ID>ORD_SET
+</FUNCTOR>
+
+<PP>
+Note that adding an element to a set that already contains such an element
+(in the sense that both elements are considered equal by the comparison
+function) causes the current element to be replaced by the new one.
+</INTERFACE>

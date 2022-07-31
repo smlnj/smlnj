@@ -1,0 +1,8 @@
+TODO list for the HTML4 library:
+
+  - fix bugs in conformance tests (these are parsing issues)
+  - streamline parser; we should be able to fold the processing of attributes (html4-attr.{lg})
+    into the scaner/parser for elements.
+  - the printer should be "PRE" aware.
+  - add the rest of the standard HTML4 entites to html4-entities.sml
+

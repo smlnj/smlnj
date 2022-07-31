@@ -1,0 +1,24 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure ConstArith
+
+is
+
+  $smlnj/basis/basis.cm
+  $smlnj/smlnj-lib/smlnj-lib.cm
+
+  bitwise-const-arith-sig.sml
+  bitwise-const-arith.sml
+  const-arith-glue-fn.sml
+  const-arith-sig.sml
+  const-arith.sml
+  signed-const-arith-sig.sml
+  signed-trapping-arith.sml
+  unsigned-const-arith-sig.sml
+  unsigned-wrapping-arith.sml

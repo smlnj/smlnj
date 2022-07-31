@@ -1,0 +1,66 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Export lists}
+\label{chap:exportcalculus}
+
+In the simplest case, the export list is given as a sequence of SML
+symbol names such as shown in earlier examples.  But for more
+complicated scenarios, CM provides a little ``set calculus'' for
+writing export lists.  Formally, the export section specifies the
+union of a sequence of {\em symbol sets}.  Each individual set in this
+sequence can be one of the following:
+
+\begin{itemize}\setlength{\itemsep}{0pt}
+\item a singleton set given by the name of its sole member
+\item the set difference of two other sets $s_1$ and $s_2$, written as $s_1
+\mbox{\tt -} s_2$
+\item the intersection of two sets $s_1$ and $s_2$, written as $s_1
+\mbox{\tt *} s_2$
+\item the union of sets $s_1, \ldots, s_n$ for $n \ge 0$, written as
+$\mbox{\tt (} s_1 \ldots s_n \mbox{)}$
+\item the top-level defined symbols of one of the SML source files $f$
+that the given library or group consists of, written as
+$\mbox{\tt source(}f\mbox{)}$
+\item the top-level defined symbols of all constituent SML source
+files that are not marked {\em local} (see \secref{sec:toolparam:sml}),
+written as {\tt source(-)}
+\item the exported symbols of one of the subgroups $g$, written as
+$\mbox{\tt group(}g\mbox{)}$
+\item the exported symbols of {\em all} subgroups, written as
+{\tt group(-)}
+\item the exported symbols of another library $l$ \\
+In most situations, the notation for this is $\mbox{\tt library(}l\mbox{)}$.
+However, notice that unlike in the case of subgroups and SML source
+files, $l$ may or may not be listed as one of the members in the
+current description.  For the case that $l$ is not a member, its
+elaboration---determining its set of exported symbols---may require
+{\em tool parameters} to be specified (see
+\secref{sec:toolparam}).  When tool parameters are necessary,
+they are given within an extra pair of parentheses following the name
+$l$.  Example:
+\begin{lstlisting}[language=CM]
+  library(foo/bar.cm (bind:(anchor:x value:y)))
+\end{lstlisting}%
+\noindent If $l$ is a member of the current description, then CM will
+re-use the earlier elaboration result.  Tool parameters within the
+export set specification are neither necessary nor permitted in this case.
+\end{itemize}
+
+
+\noindent Notes:
+\begin{itemize}\setlength{\itemsep}{0pt}
+\item Intersection has higher precedence than set difference.
+\item Conditional compilation constructs (see
+\chapref{chap:preproc}) may be used within set union
+costructs---both the parenthesized variety and at top level.
+\end{itemize}
+
+Using the export list calculus, it is easy to set up ``proxy''
+libraries.  A proxy library $A$ is a library with a single member
+which is another library $B$ so that the export lists of $A$ and $B$
+coincide.  Proxy libraries are mainly used for the purpose of managing
+anchor names and anchor environments (see
+\secref{sec:anchor:env}).  Using the $\mbox{\tt
+library(}l\mbox{)}$ construct one can avoid the cumbersome repetition
+of lengthy explicit export lists and, thus, improve maintainability.

@@ -1,0 +1,52 @@
+= The `HASH_KEY` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HASH_KEY` signature describes a monomorphic type with an equality
+test and hashing function.  It is used as the argument signature for
+the xref:fun-HashSetFn.adoc[`HashSetFn`] and xref:fun-HashTableFn.adoc[`HashTableFn`]
+functors, and as a sub-structure signature in the
+xref:fun-HashSetFn.adoc[`MONO_HASH_SET`] and
+xref:fun-HashTableFn.adoc[`MONO_HASH_TABLE`] signatures.
+
+== Synopsis
+
+[source,sml]
+------------
+signature HASH_KEY
+------------
+
+== Interface
+
+[source,sml]
+------------
+type hash_key
+
+val hashVal : hash_key -> word
+
+val sameKey : (hash_key * hash_key) -> bool
+------------
+
+== Description
+
+[[type:hash_key]]
+`[.kw]#type# hash_key`::
+  The type of key values.
+
+`[.kw]#val# hashVal : hash_key \-> word`::
+  `hashVal key` returns a hash value for the key.
+
+`[.kw]#val# sameKey : (hash_key * hash_key) \-> bool`::
+  `sameKey (key1, key2)` returns true of two hash keys are equal.
+  Implementations of this signature should ensure that if
+  `sameKey (key1, key2)`, then `hashVal key1 = hashVal key2`.
+
+== See Also
+
+xref:fun-HashSetFn.adoc[`HashSetFn`],
+xref:fun-HashTableFn.adoc[`HashTableFn`],
+xref:sig-MONO_HASH_TABLE.adoc[`MONO_HASH_TABLE`],
+xref:smlnj-lib.adoc[__The Util Library__]

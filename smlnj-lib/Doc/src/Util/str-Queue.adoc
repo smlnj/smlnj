@@ -1,0 +1,129 @@
+= The `Queue` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Queue` structure provides an imperative queue data structure,
+which are implemented as a pair of stacks (lists) representing the
+front and rear of the queue.  **Single-threaded** enqueuing and
+dequeuing operations will have amortized constant time.
+
+== Synopsis
+
+[source,sml]
+------------
+signature QUEUE
+structure Queue :> QUEUE
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a queue
+
+exception Dequeue
+
+val mkQueue : unit -> 'a queue
+val clear : 'a queue -> unit
+val isEmpty : 'a queue -> bool
+val enqueue : 'a queue * 'a -> unit
+val dequeue : 'a queue -> 'a
+val next : 'a queue -> 'a option
+val delete : ('a queue * ('a -> bool)) -> unit
+val head : 'a queue -> 'a
+val peek : 'a queue -> 'a option
+val length : 'a queue -> int
+val contents : 'a queue -> 'a list
+val app : ('a -> unit) -> 'a queue -> unit
+val map : ('a -> 'b) -> 'a queue -> 'b queue
+val foldl : ('a * 'b -> 'b) -> 'b -> 'a queue -> 'b
+val foldr : ('a * 'b -> 'b) -> 'b -> 'a queue -> 'b
+------------
+
+== Description
+
+`[.kw]#type# 'a queue`::
+  The type constructor for queues.
+
+[[exn:Dequeue]]
+`[.kw]#exception# Dequeue`::
+  This exceptions is raised when the `dequeue` function is
+  applied to an empty queue.
+
+`[.kw]#val# mkQueue : unit \-> 'a queue`::
+  `mkQueue ()` returns a new empty queue.
+
+`[.kw]#val# clear : 'a queue \-> unit`::
+  `clear q` removes any elements from `q` leaving it empty.
+
+`[.kw]#val# isEmpty : 'a queue \-> bool`::
+  `ifEmpty q` returns true if the queue is empty.
+
+`[.kw]#val# enqueue : 'a queue * 'a \-> unit`::
+  `enqueue (q, x)` adds `x` to the end of `q`.
+
+`[.kw]#val# dequeue : 'a queue \-> 'a`::
+  `dequeue q` removes and returns the first element in `q`.
+  This function raises the xref:#exn:Dequeue[`Dequeue`] exception
+  if it is called on an empty queue.
+
+`[.kw]#val# next : 'a queue \-> 'a option`::
+  `next q` returns `SOME x` and removes `x` from `q`, where `x` was the first
+  element in `q`, or `NONE` if `q` is empty.
+
+`[.kw]#val# delete : ('a queue * ('a \-> bool)) \-> unit`::
+  `delete (q, pred)` removes those items from `q` for which the
+  function `pred` returns `true`.
+
+`[.kw]#val# head : 'a queue \-> 'a`::
+  `head q` returns the first element of `q` or raises the exception
+  xref:#exn:Dequeue[`Dequeue`] if `q` is empty.  The queue is unchanged.
+
+`[.kw]#val# peek : 'a queue \-> 'a option`::
+  `peek q` returns `SOME x`, where `x` is the first element of `q`,
+  or `NONE` if `q` is empty.  The queue is unchanged.
+
+`[.kw]#val# length : 'a queue \-> int`::
+  `length q` returns the number of elements in the queue.
+
+`[.kw]#val# contents : 'a queue \-> 'a list`::
+  `contents q` returns the contents of `q` as a list.
+
+`[.kw]#val# app : ('a \-> unit) \-> 'a queue \-> unit`::
+  `app f q` applies the function `f` to the elements of `q`.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.app f (contents q)
+------------
+
+`[.kw]#val# map : ('a \-> 'b) \-> 'a queue \-> 'b queue`::
+  `map f q` returns a new queue that results from mapping
+  the function `f` across the elements of the queue.
+
+`[.kw]#val# foldl : ('a * 'b \-> 'b) \-> 'b \-> 'a queue \-> 'b`::
+  `foldl f init q` folds the function `f` over the elements of `q` from
+  front to back.  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldl f init (contents q)
+------------
+
+`[.kw]#val# foldr : ('a * 'b \-> 'b) \-> 'b \-> 'a queue \-> 'b`::
+  `foldr f init q` folds the function `f` over the elements of `q` from
+  back to front.  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldr f init (contents q)
+------------
+
+== See Also
+
+xref:str-Fifo.adoc[`Fifo`],
+xref:smlnj-lib.adoc[__The Util Library__]

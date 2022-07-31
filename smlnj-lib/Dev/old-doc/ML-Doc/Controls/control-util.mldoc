@@ -1,0 +1,71 @@
+<!-- control-util.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=16>
+<TITLE>The CONTROL_UTIL signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/CONTROL_UTIL/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+<!-- Some general introductory text -->
+
+<STRUCTURE STRID="ControlUtil">
+  <OPAQUE>  <SIGBODY SIGID="CONTROL_UTIL" FILE=CONTROL-UTIL>
+    <SPEC>
+      <SUBSTRUCT>Cvt
+        <SIGBODY>
+        <SPEC>
+          <VAL>int<TY>int Controls.value_cvt
+          <VAL>bool<TY>bool Controls.value_cvt
+          <VAL>real<TY>real Controls.value_cvt
+            <COMMENT>
+              <PP>
+              Control converters for primitive types, using respective
+	      <CD>fromString</CD>/<CD>toString</CD> functions.
+            </COMMENT>
+        <SPEC>
+          <VAL>stringList<TY>string list Controls.value_cvt
+            <COMMENT>
+              <PROTOTY>
+              stringList
+              </PROTOTY>
+              <PP>
+              Control converter for comma-separated tokens
+            </COMMENT>
+        <SPEC>
+          <VAL>string<TY>string Controls.value_cvt
+            <COMMENT>
+              <PROTOTY>
+              string
+              </PROTOTY>
+              <PP>
+            </COMMENT>
+        </SIGBODY>
+      </SUBSTRUCT>
+    <SPEC>
+      <SUBSTRUCT>EnvName
+        <SIGBODY>
+        <SPEC>
+          <VAL>toUpper<TY>string -> string -> string
+            <COMMENT>
+              <PROTOTY>
+              toUpper <ARG>prefix</ARG> <ARG>s</ARG>
+              </PROTOTY>
+              <PP>
+              converts the string <ARG>s</ARG> an format suitable for an environment-variable name.
+	      Lower-case letters are converted to upper case; the <CD>#"-"</CD> character is
+	      converted to <CD>#"_"</CD>; and the prefix <ARG>prefix</ARG> is added.
+            </COMMENT>
+        </SIGBODY>
+      </SUBSTRUCT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

@@ -1,0 +1,12 @@
+(* srcpath-lib.cm
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+
+Library
+	group($cm/paths/srcpath-lib.cm)
+is
+	$cm/paths/srcpath-lib.cm

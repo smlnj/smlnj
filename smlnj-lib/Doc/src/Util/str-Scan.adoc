@@ -1,0 +1,135 @@
+= The `Scan` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Scan` structure provides **C**-style conversions from string
+representations.
+
+== Synopsis
+
+[source,sml]
+------------
+signature SCAN
+structure Scan : SCAN
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype fmt_item
+  = ATOM of Atom.atom
+  | LINT of LargeInt.int
+  | INT of Int.int
+  | LWORD of LargeWord.word
+  | WORD of Word.word
+  | WORD8 of Word8.word
+  | BOOL of bool
+  | CHR of char
+  | STR of string
+  | REAL of Real.real
+  | LREAL of LargeReal.real
+  | LEFT of (int * fmt_item)
+  | RIGHT of (int * fmt_item)
+
+exception BadFormat
+
+val sscanf : string -> string -> fmt_item list option
+val scanf  : string -> (char, 'a) StringCvt.reader
+      -> (fmt_item list, 'a) StringCvt.reader
+------------
+
+== Description
+
+
+[[type:fmt_item]]
+`[.kw]#datatype# fmt_item`::
+This datatype, which is the same type as
+xref:str-Format.adoc#type:fmt_item[`Format.fmt_item`], is used as a union
+type to represent the results of scanning input.
+
++
+--
+  `LINT n`:: wraps a large integer value `n` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `INT n`:: wraps a default integer value `n` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `BOOL b`:: wraps a Boolean value `b` to convert
+     (the conversion specifier must be "`b`").
+
+  `CHR c`:: wraps a character value
+     (the conversion specifier must be "`c`").
+
+  `STR s`:: wraps a string value `s` to convert
+     (the conversion specifier must be "`s`").  The conversion is the
+     identity; _e.g._, `STR "\n"` will produce a newline in the result
+     string.
+
+  `REAL r`:: wraps a default real value `r` to convert
+     (the conversion specifier must be one of "`e`", "`E`", "`f`",
+     "`F`", "`g`", or "`G`").
+
+  `ATOM atm`:: this constructor will never be returned by `scanf` or `sscanf`.
+
+  `LWORD w`:: this constructor will never be returned by `scanf` or `sscanf`.
+
+  `WORD w`:: this constructor will never be returned by `scanf` or `sscanf`.
+
+  `WORD8 w`:: this constructor will never be returned by `scanf` or `sscanf`.
+
+  `LREAL r`:: this constructor will never be returned by `scanf` or `sscanf`.
+
+  `LEFT _`:: this constructor will never be returned by `scanf` or `sscanf`.
+
+  `RIGHT _`:: this constructor will never be returned by `scanf` or `sscanf`.
+--
+
+[[exn:BadFormat]]
+`[.kw]#exception# BadFormat`::
+  This exception is raised when either `sscanf` or `scanf` is applied
+  to an ill-formed format string.
+
+[[val:sscanf]]
+`[.kw]#val# sscanf : string -> string -> fmt_item list option`::
+  `sscanf fmt s` scans the string `s` using the format specifier `fmt`.  If
+  successful, `SOME items` is returned, where each item in the `items` list
+  corresponds to a specified item in `fmt`.  If the input cannot be scanned
+  according to `fmt`, then `NONE` is returned.
+  If the format string is ill formed, then the `BadFormat` exception
+  will be raised when `sscanf fmt` is evaluated.
+
+[[val:scanf]]
+`[.kw]#val# scanf : string -> (char, 'a) StringCvt.reader -> (fmt_item list, 'a) StringCvt.reader`::
+  `sscanf fmt getc` returns a reader that scan a character stream using
+  the format specifier `fmt`.   If the format string is ill formed, then the
+ `BadFormat` exception will be raised when `scanf fmt` is evaluated.
+
+== Format Strings
+
+The `sscanf and `scanf` functions take a format string as their first
+argument.  The format string is composed of zero or more
+directives, which are either ordinary characters (excluding `%`)
+or conversion specifiers.  The result of applying one of the scan functions
+to an input will be a list of xref:#type:fmt_item[`fmt_item`] corresponding
+to the conversion specifiers in the format string.  All conversions are
+introduced by the `%` character.  The format string may also contain
+other characters.  White space (such as blanks, tabs, or newlines) in the format
+string match any amount of white space, including none, in the input.  Everything
+else matches only itself.  Scanning stops when an input character does not match
+such a format character.  Scanning also stops when an input conversion cannot be
+made (see below).
+
+//Conversion specifiers begin with the percent (`%`) character followed by
+//the following in sequence:
+
+**To be written**
+
+== See Also
+
+xref:str-Format.adoc[`Format`],
+xref:smlnj-lib.adoc[__The Util Library__]

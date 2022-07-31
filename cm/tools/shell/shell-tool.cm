@@ -1,0 +1,13 @@
+(*
+ * The plugin library for the "shell" tool.
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	structure ShellTool
+is
+	$smlnj/basis/basis.cm
+	$smlnj/cm/tools.cm
+	tool.sml

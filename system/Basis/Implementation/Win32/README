@@ -1,0 +1,3 @@
+This directory contains the Win32 (WindowsNT and Windows'95) implementation of
+the SMLSL generic OS interfaces, and the Win32 instantiation of the IO stacks.
+

@@ -1,0 +1,7 @@
+(*
+ * This used to be an alias, but there are no aliases anymore...
+ *)
+Group
+	structure InteractiveSystem
+is
+	$smlnj/internal/intsys.cm

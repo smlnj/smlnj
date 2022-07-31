@@ -1,0 +1,70 @@
+<!-- list-xprod.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ListXProd SDATA "list-xprod-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=11>
+<TITLE>The ListXProd structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ListXProd/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID DOCUMENT=SML-BASIS-DOC/List/
+  <STRREF TOPID DOCUMENT=SML-BASIS-DOC/ListPair/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/ListXProd/ structure provides functions for
+computing with the cross product of two lists. For purposes of
+documentation, we define the cross product of two lists as the
+the list produced by the following function:
+<CODE>
+fun xProd (l1, l2) = let
+      fun mkPair a b = (a,b)
+      in
+        List.foldr (fn (a,l) => (map (mkPair a) l2)@l) [] l1
+      end
+</CODE>
+
+<STRUCTURE STRID="ListXProd">
+  <SIGBODY SIGID="LIST_XPROD" FILE=LIST-XPROD>
+    <SPEC>
+      <VAL>appX<TY>(('a * 'b) -> 'c) -> ('a list * 'b list) -> unit
+        <COMMENT>
+          <PROTOTY>
+          appX <ARG/f/ (<ARG/l1/, <ARG/l2/)
+          </PROTOTY>
+          applies <ARG/f/ to the cross product of the two lists.
+          This is equivalent to:
+          <CODE>
+          List.app f (xProd(l1,l2))
+          </CODE>
+    <SPEC>
+      <VAL>mapX<TY>(('a * 'b) -> 'c) -> ('a list * 'b list) -> 'c list
+        <COMMENT>
+          <PROTOTY>
+          mapX <ARG/f/ (<ARG/l/, <ARG/l2/)
+          </PROTOTY>
+          creates a new list by mapping <ARG/f/ across the cross product 
+          of the two lists.
+          This is equivalent to:
+          <CODE>
+          List.map f (xProd(l1,l2))
+          </CODE>
+    <SPEC>
+      <VAL>foldX<TY>(('a * 'b * 'c) -> 'c) -> ('a list * 'b list) -> 'c -> 'c
+        <COMMENT>
+          <PROTOTY>
+          foldX <ARG/f/ (<ARG/l/, <ARG/l2/) <ARG/a/
+          </PROTOTY>
+          fold <ARG/f/ across the cross product of the two lists.
+          This is equivalent to:
+          <CODE>
+          List.foldl (fn((a,b),c) => f(a,b,c)) a (xProd(l1,l2))
+          </CODE>
+</STRUCTURE>
+
+</INTERFACE>

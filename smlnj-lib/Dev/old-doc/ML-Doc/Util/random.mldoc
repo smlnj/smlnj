@@ -1,0 +1,114 @@
+<!-- random.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.1" YEAR=1998 MONTH=5 DAY=6>
+<TITLE>The Random structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/Random/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/Rand/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/Random/ structure implements a random number 
+generator using a subtract-with-borrow
+(SWB) generator as described in Marsaglia and Zaman, 
+"A New Class of Random Number Generators," 
+<IT/Ann. Applied Prob./ 1(3), 1991, pp. 462-480.
+
+<PP>
+The SWB generator is a 31-bit generator with lags 48 and 8. It has period
+<MATH>(2<SUP/1487/ - 2<SUP/247/)/105</MATH> or about <MATH/10<SUP/445//. 
+Although generally excellent,
+they act locally like a lagged Fibonacci generator
+and thus have troubles with the birthday test. To repair this, the
+implementation provided here incorporates a suggestion of Marsaglia and Zaman,
+and combines the SWB generator with a
+linear congruential generator, specifically 
+<MATH/(48271*a)mod(2<SUP/31/-1)/.
+
+<STRUCTURE STRID="Random">
+  <OPAQUE>  <SIGBODY SIGID="RANDOM" FILE=RANDOM>
+    <SPEC>
+      <TYPE><ID>rand
+        <COMMENT>
+      <PP>
+      encapsulates state for the random number generator.
+    <SPEC>
+      <VAL>rand<TY>(int * int) -> rand
+        <COMMENT>
+          <PROTOTY>
+          rand (<ARG/i/, <ARG/j/)
+          </PROTOTY>
+          creates the initial seed for the random number generator based
+          on the integers <ARG/i/ and <ARG/j/.
+    <SPEC>
+      <VAL>toString<TY>rand -> string
+      <VAL>fromString<TY>string -> rand
+        <COMMENT>
+        <PP>
+          These functions convert between generator state and a string
+          representation of that state. The string representation is not
+          necessarily printable. <CD/fromString/ is only guaranteed to
+          work on the output of <CD/toString/, in which case
+          <CD/fromString o toString/ is the identity function. A string
+          in an incorrect format will cause <CD/fromString/ to raise
+          the exception.
+        <PP>
+          These functions allow the state of a generator to be saved, in order
+          that the generator can be replicated at a later time.
+    <SPEC>
+      <VAL>randInt<TY>rand -> int
+        <COMMENT>
+          <PROTOTY>
+          randInt <ARG/s/
+          </PROTOTY>
+          generates random integers uniformly in the range
+          <MATH>
+	    [<MTEXT><VALREF STRID="Int" DOCUMENT=SML-BASIS-DOC>Int.minInt</VALREF></MTEXT>,
+	     <MTEXT><VALREF STRID="Int" DOCUMENT=SML-BASIS-DOC>Int.maxInt</VALREF></MTEXT>]
+	  </MATH> based on the
+          information in <ARG/s/. As a side-effect, the function updates
+          the internal state of <ARG/s/.
+    <SPEC>
+      <VAL>randNat<TY>rand -> int
+        <COMMENT>
+          <PROTOTY>
+          randNat <ARG/s/
+          </PROTOTY>
+          generates random integers uniformly in the range
+          <MATH>
+	    [0,
+	     <MTEXT><VALREF STRID="Int" DOCUMENT=SML-BASIS-DOC>Int.maxInt</VALREF></MTEXT>]
+	  </MATH> based on the
+          information in <ARG/s/. As a side-effect, the function updates
+          the internal state of <ARG/s/.
+    <SPEC>
+      <VAL>randReal<TY>rand -> real
+        <COMMENT>
+          <PROTOTY>
+          randReal <ARG/s/
+          </PROTOTY>
+          generates random integers uniformly in the range
+          <MATH/(0.0,1.0)/ based on the
+          information in <ARG/s/. As a side-effect, the function updates
+          the internal state of <ARG/s/.
+    <SPEC>
+      <VAL>randRange<TY>(int * int) -> rand -> int
+      <RAISES><EXNREF DOCUMENT=SML-BASIS-DOC STRID="General"/Fail/
+        <COMMENT>
+          <PROTOTY>
+          randRange (<ARG/i/, <ARG/j/) <ARG/s/
+          </PROTOTY>
+          generates random integers uniformly in the range
+          <MATH/[<ARG/i/, <ARG/j/]/ based on the
+          information in <ARG/s/. As a side-effect, the function updates
+          the internal state of <ARG/s/.
+       This raises the exception <EXNREF DOCUMENT=SML-BASIS-DOC STRID="General"/Fail/
+       if <MATH/<ARG/j/ &LT; <ARG/i//.
+</STRUCTURE>
+
+</INTERFACE>

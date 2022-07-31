@@ -1,0 +1,51 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Introduction}
+
+This manual describes a new implementation of CM, the ``Compilation
+and Library Manager'' for Standard ML of New Jersey (SML/NJ).  Like
+its previous incarnation, CM is in charge of managing separate
+compilation and facilitates access to stable libraries.
+
+Most programming projects that use CM are composed of separate {\em
+libraries}.  Libraries are collections of ML compilation units.  These
+collections themselves can be internally sub-structured using CM's
+notion of {\em library components}.
+
+CM offers the following features to the programmer:
+
+\begin{itemize}
+\item separate compilation and type-safe linking~\cite{appel94:sepcomp}
+\item hierarchical modularity~\cite{blume:appel:cm99}
+\item automatic dependency analysis~\cite{blume:depend99}
+\item optimization of the compilation process via {\em
+cutoff}-recompilation techniques~\cite{tichy94}
+\item management of program libraries, distinguishing between libraries
+that are {\em under development} and libraries that are {\em stable}
+\item operating-system independent file naming (with optional escape
+to native file names)
+\item adaptability to changing environments using the {\em path anchor}
+facility
+\item an extensible set of auxiliary {\em tools} that lets CM
+seemlessly interoperate with other program generators, source-control
+systems, literate-programming facilities, or shell-scripts
+\item checked version numbers on libraries
+\item (still rudimentary) support for access control
+\item access to libraries from the interactive toplevel loop
+\item sharing of code that is common to several programs or code that
+is common to both user programs and SML/NJ itself
+\item management of (the sharing of) link-time state
+\item conditional compilation (at compilation unit granularity)
+\item support for parallel and distributed compilation
+\item facilities for generating stand-alone ML programs
+\item a mechanism for deriving dependency information for use
+by other compilation managers (e.g., Unix' {\bf make})
+\item an API to access all these facilities at SML/NJ's interactive
+prompt or from user programs
+\end{itemize}
+
+CM puts emphasis on {\em working with libraries}.  This contrasts with
+previous compilation managers for SML/NJ where the focus was on
+compilation management while libraries were added as an afterthought.
+

@@ -1,0 +1,32 @@
+This library provides support for parsing and pretty-printing HTML.
+The file html-sig.sml and html.sml define a parse-tree representation
+of HTML 3.2 (as defined in the January 14th 1997 specification).
+
+The HTML structure implements a collection of datatypes
+that describe the syntax of HTML trees according to the 3.2 spec.
+The library provides support for parsing and printing these
+datatypes.  The functor HTMLParserFn implements the parser and
+the PrHTML structure provides printing of HTML trees.  Also, there
+is a structure called MakeHTML, which provides helper functions for
+constructing HTML trees (mostly defaults of attribute values).
+
+Note that this is a fairly strict interpretation of the standard;
+non-standard tags and attributes will cause errors.  To allow some
+flexibility, the parser is functorized over a collection of error
+reporting functions (see html-error-sig.sml).
+
+The file test-parser.sml gives an example of how the parser part of the
+library can be used.
+
+TODO LIST:
+
+The parser has trouble with white-space in the <HEAD>.
+
+The pretty-printer needs to be rewritten to deal with line breaks better.
+
+Some library support for entities (e.g., "&lt;" should be provided).
+
+	John Reppy
+	Bell Labs, Lucent Technologies
+	jhr@research.bell-labs.com
+

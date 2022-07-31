@@ -1,0 +1,27 @@
+(* unix-lib.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources file for Unix utility library; part of the SML/NJ library suite.
+ *)
+
+Library
+  signature UNIX_ENV
+  signature UNIX_PATH
+
+  structure UnixEnv
+  structure UnixPath
+
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
+  ../Util/smlnj-lib.cm
+#endif
+
+  unix-env-sig.sml
+  unix-env.sml
+  unix-path-sig.sml
+  unix-path.sml

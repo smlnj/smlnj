@@ -1,0 +1,50 @@
+<!-- mono-array-sort.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY MONO-ARRAY-SORT SDATA "mono-array-sort-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The MONO_ARRAY_SORT signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/MONO_ARRAY_SORT/ signature</HEAD>
+<SEEALSO>
+  <SIGREF DOCUMENT=SML-BASIS-DOC/MONO_ARRAY/
+  <SIGREF/ARRAY_SORT/
+  <STRREF/ArrayQSort/
+</SEEALSO>
+
+<PP>
+The <SIGREF NOLINK/MONO_ARRAY_SORT/ signature provides an
+interface for the in-place sorting of monomorphic arrays.
+
+<SIGNATURE SIGID="MONO_ARRAY_SORT">
+  <SIGBODY SIGID="MONO_ARRAY_SORT" FILE=MONO-ARRAY-SORT>
+    <SPEC>
+      <SUBSTRUCT>A<SIGREF DOCUMENT=SML-BASIS-DOC>MONO_ARRAY</SIGREF></SUBSTRUCT>
+        <COMMENT>
+        <PP>
+          provides a structure in which the array and element type
+          are defined.
+    <SPEC>
+      <VAL>sort<TY>((A.elem * A.elem) -> order) -> A.array -> unit
+        <COMMENT>
+          <PROTOTY>
+          sort <ARG/cmp/ <ARG/arr/
+          </PROTOTY>
+          sorts the array <ARG/arr/ in non-decreasing order using
+          the comparison relationship defined by <ARG/cmp/.
+    <SPEC>
+      <VAL>sorted<TY>((A.elem * A.elem) -> order) -> A.array -> bool
+        <COMMENT>
+          <PROTOTY>
+          sorted <ARG/cmp/ <ARG/arr/
+          </PROTOTY>
+          returns true if the array <ARG/arr/ is sorted in non-decreasing
+          order under the comparison relationship <ARG/cmp/.
+</SIGNATURE>
+
+</INTERFACE>

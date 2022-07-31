@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Edits [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for revision tracking elements. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="id" title="Common Attributes">
+	<link rel="next" href="forms" title="Forms">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Edits</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="id" rel="prev" accesskey="P" title="Prior: Common Attributes">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="forms" rel="next" accesskey="N" title="Next: Forms"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+	<h1>Edits (<a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#h-9.4" title="HTML 4.0 Specification">&sect;9.4</a>)</h1>
+
+	<div class="section" id="insdel">
+		<h2>Changes</h2>
+
+		<div class="bodytext">
+			<p>The <dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-ins" title="HTML 4.0 Specification: 9 Text"><code class="element">&lt;ins></code></a></dfn> and <dfn><a href="http://www.w3.org/TR/html4/struct/text.html#edef-del" title="HTML 4.0 Specification: 9 Text"><code class="element">&lt;del></code></a></dfn> elements mark <em>insertions</em> and <em>deletions</em>, to track changes between versions of a document.</p>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering replacing <code class="element">&lt;ins></code> and <code class="element">&lt;del></code> in <abbr>XHTML</abbr> 2.0 with a common <a class="specsect" href="http://www.w3.org/TR/2004/WD-xhtml2-20040722/mod-edit.html#col_Edit" title="XHTML 2.0 Working Draft: Edit Collection"><code class="attribute">edit</code></a> attribute, which can also mark changed and moved content. The <code class="attribute">edit</code> attribute is better designed to fulfill the needs of revision tracking than <code class="element">&lt;ins></code> and <code class="element">&lt;del></code>, which seem like ill&#8208;considered semantic replacements for the deprecated <code class="element">&lt;u></code> and <code class="element">&lt;s></code> elements.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			
+			<div class="blockcode">
+			Neil Armstrong, taking the first human step on the moon, said, <em class="html4">&lt;q></em>That<em class="html4"><em class="entity">&amp;rsquo;</em></em>s one small step for <em class="html4"><strong class="tested">&lt;del></strong></em>Man<em class="html4"><strong class="tested">&lt;/del></strong><strong class="tested">&lt;ins></strong></em>a man<em class="html4"><strong class="tested">&lt;/ins></strong></em>, one giant leap for mankind.<em class="html4">&lt;/q></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+			Neil Armstrong, taking the first human step on the moon, said, <q>That&rsquo;s one small step for <del>Man</del><ins>a man</ins>, one giant leap for mankind.</q>
+			</div>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			
+			<div class="blockcode">
+			<em class="html">&lt;blockquote title="The Galaxy Song"&gt;</em><br>
+			<div class="indent">
+				<em class="html">&lt;p&gt;</em>Just remember that you<em class="html4"><em class="entity">&amp;rsquo;</em></em>re standing on a planet that<em class="html4"><em class="entity">&amp;rsquo;</em></em>s evolving,<br>
+				<em class="html">&lt;br&gt;</em>revolving at <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>900<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins&gt;</strong></em>1,000<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em> miles an hour,<br>
+				<em class="html">&lt;br&gt;</em>It<em class="html4"><em class="entity">&amp;rsquo;</em></em>s orbiting at <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>19<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins&gt;</strong></em>18<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em> miles a second, so it<em class="html4"><em class="entity">&amp;rsquo;</em></em>s reckoned,<br>
+				<em class="html">&lt;br&gt;</em>a sun that is the source of all our power.<br>
+				<em class="html">&lt;br&gt;</em>The sun and you and me, and all the stars that we can see,<br>
+				<em class="html">&lt;br&gt;</em>are moving <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>at a<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins&gt;</strong></em>13<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em> million miles a day,<br>
+				<em class="html">&lt;br&gt;</em>In an outer spiral arm, at <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>40,000<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins title="540,000"&gt;</strong></em>half a million<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em> miles an hour,<br>
+				<em class="html">&lt;br&gt;</em>of the galaxy we call the Milky Way.<em class="html">&lt;/p&gt;</em><br><br>
+				
+				<em class="html">&lt;p&gt;</em>Our galaxy itself contains <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>100<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins&gt;</strong></em>400<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em> billion stars,<br>
+				<em class="html">&lt;br&gt;</em>it<em class="html4"><em class="entity">&amp;rsquo;</em></em>s 100,000 light-years side-to-side,<br>
+				<em class="html">&lt;br&gt;</em>It bulges in the middle, <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>16<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins&gt;</strong></em>15<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em>,000 light-years thick,<br>
+				<em class="html">&lt;br&gt;</em>but out by us it<em class="html4"><em class="entity">&amp;rsquo;</em></em> just 3,000 light-years wide.<br>
+				<em class="html">&lt;br&gt;</em>We<em class="html4"><em class="entity">&amp;rsquo;</em></em>re <span title="27,700">30,000</span> light-years from galactic central point,<br>
+				<em class="html">&lt;br&gt;</em>we go round every <em class="html4"><strong class="tested">&lt;del&gt;</strong></em>200<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins&gt;</strong></em>one quarter<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em> million years,<br>
+				<em class="html">&lt;br&gt;</em>And our galaxy is only one of millions of billions<br>
+				<em class="html">&lt;br&gt;</em>in this amazing and expanding universe.<em class="html">&lt;/p&gt;</em><br><br>
+				
+				<em class="html">&lt;p&gt;</em>The universe itself keeps on expanding and expanding,<br>
+				<em class="html">&lt;br&gt;</em>in all of the directions it can whiz,<br>
+				<em class="html">&lt;br&gt;</em>As fast as it can go, the speed of light you know,<br>
+				<em class="html">&lt;br&gt;</em><em class="html4"><strong class="tested">&lt;del&gt;</strong></em>12 million miles a minute<em class="html4"><strong class="tested">&lt;/del&gt;&lt;ins title="186,000"&gt;</strong></em>one eight six thousand miles a second<em class="html4"><strong class="tested">&lt;/ins&gt;</strong></em>, and that<em class="html4"><em class="entity">&amp;rsquo;</em></em>s the fastest speed there is.<br>
+				<em class="html">&lt;br&gt;</em>So remember, when you<em class="html4"><em class="entity">&amp;rsquo;</em></em>re feeling very small and insecure,<br>
+				<em class="html">&lt;br&gt;</em>how amazingly unlikely is your birth,<br>
+				<em class="html">&lt;br&gt;</em>And pray that there<em class="html4"><em class="entity">&amp;rsquo;</em></em>s intelligent life somewhere up in space,<br>
+				<em class="html">&lt;br&gt;</em><em class="html4"><em class="entity">&amp;rsquo;</em></em>cause there<em class="html4"><em class="entity">&amp;rsquo;</em></em>s bugger all down here on Earth.<em class="html">&lt;/p&gt;</em><br>
+			</div>
+			<em class="html">&lt;/blockquote&gt;</em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+			<blockquote title="The Galaxy Song">
+				<p>Just remember that you&rsquo;re standing on a planet that&rsquo;s evolving,
+				<br>revolving at <del>900</del><ins>1,000</ins> miles an hour,
+				<br>It&rsquo;s orbiting at <del>19</del><ins>18</ins> miles a second, so it&rsquo;s reckoned,
+				<br>a sun that is the source of all our power.
+				<br>The sun and you and me, and all the stars that we can see,
+				<br>are moving <del>at a</del><ins>13</ins> million miles a day,
+				<br>In an outer spiral arm, at <del>40,000</del><ins title="540,000">half a million</ins> miles an hour,
+				<br>of the galaxy we call the Milky Way.</p>
+				
+				<p>Our galaxy itself contains <del>100</del><ins>400</ins> billion stars,
+				<br>it&rsquo;s 100,000 light-years side-to-side,
+				<br>It bulges in the middle, <del>16</del><ins>15</ins>,000 light-years thick,
+				<br>but out by us it&rsquo;s just 3,000 light-years wide.
+				<br>We&rsquo;re <span title="27,700">30,000</span> light-years from galactic central point,
+				<br>we go round every <del>200</del><ins>one quarter</ins> million years,
+				<br>And our galaxy is only one of millions of billions
+				<br>in this amazing and expanding universe.</p>
+				
+				<p>The universe itself keeps on expanding and expanding,
+				<br>in all of the directions it can whiz,
+				<br>As fast as it can go, the speed of light you know,
+				<br><del>12 million miles a minute</del><ins>one eight six thousand miles a second</ins>, and that&rsquo;s the fastest speed there is.
+				<br>So remember, when you&rsquo;re feeling very small and insecure,
+				<br>how amazingly unlikely is your birth,
+				<br>And pray that there&rsquo;s intelligent life somewhere up in space,
+				<br>&rsquo;cause there&rsquo;s bugger all down here on Earth.</p>
+			</blockquote>
+			</div>
+		</div>
+	</div>
+
+	<div class="section" id="datetime">
+		<h2>Date and time</h2>
+
+		<div class="bodytext">
+			<p>The <dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#adef-datetime" title="HTML 4.0 Specification: 9 Text"><code class="attribute">datetime</code></a></dfn> attribute specifies the date of the revision.</p>
+		</div>
+		<div class="illo">
+			<h3>Example:</h3>
+			
+			<div class="blockcode">
+
+			As of <em class="html4">&lt;del <strong class="tested">datetime="2010-04-15T08:00:00"</strong>></em>18 December 1998<em class="html4">&lt;/del>&lt;ins <strong class="tested">datetime="2010-04-15T08:00:00"</strong>></em>15 April 2010<em class="html4">&lt;/ins></em>, no Web browser fully supports the <em class="html4">&lt;del <strong class="tested">datetime="2010-04-15T08:00:00"</strong>></em>one<em class="html4">&lt;/del>&lt;ins <strong class="tested">datetime="2010-04-15T08:00:00"</strong>></em>twelve<em class="html4">&lt;/ins></em> year old standard.
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+			As of <del datetime="2010-04-15T08:00:00-05:00">18 December 1998</del><ins datetime="2010-04-15T08:00:00-05:00">15 April 2010</ins>, no Web browser fully supports the <del datetime="2010-04-15T08:00:00-05:00">one</del><ins datetime="2010-04-15T08:00:00-05:00">twelve</ins> year old standard.
+			</div>
+
+			<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Metadata">Metadata</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="cite">
+		<h2>Explanatory links</h2>
+
+		<div class="bodytext">
+			<p><code class="element">&lt;ins></code> and <code class="element">&lt;del></code> can also mark revisions to blocks of mark up.</p>
+			<p>The <dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#adef-cite" title="HTML 4.0 Specification: 9 Text"><code class="attribute">cite</code></a></dfn> attribute provides a link to more information about a revision.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			<h4 class="codeheader">This revision links to &ldquo;Why &lsquo;click here&rsquo; is bad linking practice&rdquo; as a reason for the change:</h4>
+			<div class="blockcode">
+			<em class="html"><em class="html4">&lt;del <strong class="tested">cite="<a href="http://www.cs.tut.fi/~jkorpela/www/click.html">http://www.cs.tut.fi/~jkorpela/www/click.html</a>"</strong>></em>&lt;p>&lt;a href="http://www.lungusa.org/diseases/lungpneumoni.html"></em>Click here<em class="html">&lt;/a></em> for more information about pneumonia.<em class="html">&lt;/p><em class="html4">&lt;/del></em></em><br>
+			<em class="html"><em class="html4">&lt;ins <strong class="tested">cite="http://www.cs.tut.fi/~jkorpela/www/click.html"</strong>></em>&lt;p></em>The American Lung Association has <em class="html">&lt;a href="http://www.lungusa.org/diseases/lungpneumoni.html"></em>more information about pneumonia<em class="html">&lt;/a></em>.<em class="html">&lt;/p><em class="html4">&lt;/ins></em></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result4">
+			<del cite="http://www.cs.tut.fi/~jkorpela/www/click.html"><p><a href="http://www.lungusa.org/diseases/lungpneumoni.html">Click here</a> for more information about pneumonia.</p></del>
+			<ins cite="http://www.cs.tut.fi/~jkorpela/www/click.html"><p>The American Lung Association has <a href="http://www.lungusa.org/diseases/lungpneumoni.html">more information about pneumonia</a>.</p></ins>
+			</div>
+
+			<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Del-Only-Inline">Del-Only-Inline</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Metadata">Metadata</a>.</p>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+
+

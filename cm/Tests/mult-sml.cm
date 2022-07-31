@@ -1,0 +1,5 @@
+Library
+	structure A
+is
+	mult-a.sml
+	mult-a.sml

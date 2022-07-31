@@ -1,0 +1,4 @@
+Group is
+	subdir/smlcopy-tool.cm : tool
+	subdir/sd.cm
+	subdir/x.cp : smlcopy

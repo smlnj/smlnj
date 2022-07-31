@@ -1,0 +1,75 @@
+<!-- iterate.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY Iterate SDATA "iterate-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=10>
+<TITLE>The Iterate structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/Iterate/ structure</HEAD>
+<PP>
+The <STRREF NOLINK/Iterate/ structure provides wrappers for simple
+forms of iteration.
+
+<STRUCTURE STRID="Iterate">
+  <SIGBODY SIGID="ITERATE" FILE=ITERATE>
+    <SPEC>
+      <VAL>iterate<TY>('a -> 'a) -> int -> 'a -> 'a
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          iterate <ARG/f/ <ARG/cnt/ <ARG/a/
+          </PROTOTY>
+          invokes the function <ARG/f/ <ARG/cnt/ times, starting with
+          the value <ARG/a/, and using the result of one iteration as
+          the argument in the next. Recursively, we have
+          <CODE>
+          iterate f cnt v = iterate f (cnt-1) (f v)
+          iterate f 0 v = v
+          </CODE>
+          Raises the <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/ exception if
+          <ARG/cnt/ is negative.
+    <SPEC>
+      <VAL>repeat<TY>((int * 'a) -> 'a) -> int -> 'a -> 'a
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          repeat <ARG/f/ <ARG/cnt/ <ARG/a/
+          </PROTOTY>
+          is similar to <CD/iterate/ except that the function <ARG/f/
+          is also passed the iteration index. In particular, it is
+          equivalent to:
+          <CODE>
+          #2(iterate (fn (i,v) => (i+1,f(i,v))) cnt (0,init))
+          </CODE>
+    <SPEC>
+      <VAL>for<TY>((int * 'a) -> 'a) -> (int * int * int) -> 'a -> 'a
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          for <ARG/f/ (<ARG/start/, <ARG/stop/, <ARG/inc/) <ARG/a/
+          </PROTOTY>
+          provides more control over the range and step-size involved
+          in the interation. Recursively, we have
+          <CODE>
+          for f (start,stop,inc) a = for f (start+inc,stop,inc) (f(start,a))
+          </CODE>
+          halting when <MATH/<ARG/start/ &GREATER; <ARG/stop// for
+          negative <ARG/inc/ and halting when 
+          <MATH/<ARG/stop/ &GREATER; <ARG/start// for positive <ARG/inc/.
+          If <ARG/inc/ is zero, <ARG/start/ and <ARG/~TOP/ must be equal,
+          and we have
+          <CODE>
+          for f (start,stop,0) a = f(start,a)
+          </CODE>
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/ if either <ARG/inc/ is
+          non-positive and <MATH/<ARG/stop/ &GREATER; <ARG/start//, 
+          or if <ARG/inc/ is non-negative and
+          <MATH/<ARG/start/ &GREATER; <ARG/stop//.
+</STRUCTURE>
+
+</INTERFACE>

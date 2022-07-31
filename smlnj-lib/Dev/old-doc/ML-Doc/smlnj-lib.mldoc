@@ -1,0 +1,23 @@
+<!-- smlnj-lib.mldoc --
+  -- --
+  -- COPYRIGHT (c) 1998 Bell Labs, Lucent Technologies. --
+  -- --
+  -- This is the root document for the SML/NJ Library Manual -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John H. Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=1996>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=15>
+
+<TITLE>SML/NJ Library Manual</TITLE>
+
+<INCLFILE FILE="intro-part">
+<INCLFILE FILE="Controls/controls-lib-part">
+<INCLFILE FILE="Unix/unix-lib-part">
+<INCLFILE FILE="Util/util-lib-part">
+<INCLFILE FILE="RegExp/regexp-lib-part">
+

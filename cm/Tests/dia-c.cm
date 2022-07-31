@@ -1,0 +1,4 @@
+Library
+  structure X
+is
+  dia-x.sml

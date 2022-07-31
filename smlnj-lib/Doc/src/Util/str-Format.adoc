@@ -1,0 +1,222 @@
+= The `Format` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Format` structure provides `printf`-style string formatting.
+The syntax of format strings is a subset of that
+supported by the *C* `printf` function.
+
+== Synopsis
+
+[source,sml]
+------------
+structure Format
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype fmt_item
+  = ATOM of Atom.atom
+  | LINT of LargeInt.int
+  | INT of Int.int
+  | LWORD of LargeWord.word
+  | WORD of Word.word
+  | WORD8 of Word8.word
+  | BOOL of bool
+  | CHR of char
+  | STR of string
+  | REAL of Real.real
+  | LREAL of LargeReal.real
+  | LEFT of (int * fmt_item)
+  | RIGHT of (int * fmt_item)
+
+exception BadFormat
+exception BadFmtList
+
+val format  : string -> fmt_item list -> string
+val formatf : string -> (string -> unit) -> fmt_item list -> unit
+------------
+
+== Description
+
+[[type:fmt_item]]
+`[.kw]#datatype# fmt_item = ...`::
+  The `fmt_item` datatype is a union of the types that the `format` function
+  supports.  The constructors are interpreted as follows:
++
+--
+  `ATOM atm`:: specifies an atom `atm` to convert (the conversion
+  specifier must be "`s`").
+
+  `LINT n`:: specifies a large integer value `n` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `INT n`:: specifies a default integer value `n` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `LWORD w`:: specifies a large word value `w` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `WORD w`:: specifies a default word value `w` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `WORD8 w`:: specifies an 8-bit word value `w` to convert
+     (the conversion specifier must be one of "`d`", "`o`", "`x`", or "`X`").
+
+  `BOOL b`:: specifies a Boolean value `b` to convert
+     (the conversion specifier must be "`b`").
+
+  `CHR c`:: specifies a character value
+     (the conversion specifier must be "`c`").
+
+  `STR s`:: specifies a string value `s` to convert
+     (the conversion specifier must be "`s`").  The conversion is the
+     identity; _e.g._, `STR "\n"` will produce a newline in the result
+     string.
+
+  `REAL r`:: specifies a default real value `r` to convert
+     (the conversion specifier must be one of "`e`", "`E`", "`f`",
+     "`F`", "`g`", or "`G`").
+
+  `LREAL r`:: specifies a large real value `r` to convert
+     (the conversion specifier must be one of "`e`", "`E`", "`f`",
+     "`F`", "`g`", or "`G`").
+
+  `LEFT(wid, item)`:: specifies a left-padded (right-justified)
+    conversion, where the result of formatting `item`
+    is padded on the left with spaces to the width specified
+    by `wid`.  Note that the padding occurs _after_ `item`
+    formatted, so it can be combined with width specifiers and
+    zero padding.
+
+  `RIGHT(wid, item)`:: specifies a right-padded (left-justified)
+    conversion, where the result of formatting `item`
+    is padded on the right with spaces to the width specified
+    by `wid`.  Note that the padding occurs _after_ `item`
+    formatted, so it can be combined with width specifiers and
+    zero padding.
+--
+
+`[.kw]#exception# BadFormat`::
+  This exception is raised when either `format` or `formatf` is applied
+  to an ill-formed format string.
+
+`[.kw]#exception# BadFmtList`::
+  This exception is raised when there is a mismatch in either
+  number or type between the format string and the list of items.
+
+`[.kw]#val# format : string \-> fmt_item list \-> string`::
+  `format fmt` returns a function for formating a list of format items as
+  a string by converting the list of items according to the format
+  string `fmt`.  If the format string is ill formed, the `BadFormat`
+  exception will be raised.  Likewise, if there is a mismatch between
+  the conversion specifiers in the format string and the list of items,
+  then the `BadFmtList` exception is raised.
+
+`[.kw]#val# formatf : string \-> (string \-> unit) \-> fmt_item list \-> unit`::
+  `format fmt consumer items` is equivalent to the expression
++
+[source,sml]
+------------
+consumer (format fmt items)
+------------
+
+== Format Strings
+
+The `format and `formatf` functions take a format string and a list of
+format items as arguments.  The format string is composed of zero or more
+directives, which are either ordinary characters (excluding `%`), which are
+copied to the result, or conversion specifiers, which are used to convert
+the corresponding format items to strings that are then added to the result.
+
+Conversion specifiers begin with the percent (`%`) character followed by
+the following in sequence:
+
+* Zero or more of the following single-character flags.  Note that these
+  only apply to the numeric conversion specifiers.
+
+** A "++ ++" (space), which means that a space character is used as the
+   sign for positive numbers.  This flag is incompatible with the
+   "`+`" flag.
+
+** A "`+`", which means that a `+` character is used as the sign for positive
+   numbers.  This flag is incompatible with the "` `" flag.
+
+** A "`~`", which means that the tilde character is used as the sign for negative
+   numbers (_i.e._, *SML* syntax).
+
+** A "`0`", which means that the zero character should be used to pad the number
+  (on the left) to the requested width.
+
+** A "`-`", which means that the minus character is used as the sign for negative
+   numbers, which is the default behavior.  Note that this interpretation
+   of the "`-`" flag differs from the *C* `printf` function, where it is
+   used to specify left justification; use the `LEFT` constructor for that
+   purpose.
+
+** A "`#`", which means that a _base_ specifier should be prepended to
+   the representation of the number.
+
+* an optional decimal number specifying a minimum field width.  If the
+  converted value has fewer characters than the field width, it will be padded
+  on the left with spaces (or zeros, when zero-padding has been specified).
+
+* An optional precision, in the form of a period "`.`" followed by an optional
+  decimal number.  If the number is omitted, the precision is taken as zero.
+  The precision specifies the the number of digits to appear after the
+  decimal-point for "`a`", "`A`", "`e`", "`E`", "`f`", and "`F`" conversions,
+  the maximum number of significant digits for "`g`" and "`G`" conversions, and
+  the maximum number of characters for the "`s`" conversion.
+
+* The conversion-specifier character, which must match the corresponding
+  format item.  The conversion character is one of the following:
+
+** A "`d`", which specifies the conversion of an integer (`INT` or `LINT`)
+  or word (`WORD`, `LWORD`, or `WORD8`) item to its decimal representation.
+
+** An "`o`", which specifies the conversion of an integer (`INT` or `LINT`)
+  or word (`WORD`, `LWORD`, or `WORD8`) item to its octal representation.  If the
+  "`#`" flag was specifies, then a leading `"0"` is prepended to the result.
+
+** An "`x`" or "`X`", which specifies the conversion of an integer
+  (`INT` or `LINT`) or word (`WORD`, `LWORD`, or `WORD8`) item to its hexadecimal
+  representation.  The digits are lower-case for "`x`" and upper-case
+  for "`X`".  If the "`#`" flag was specifies, then a leading "`0x`" (or "`0X`")
+  is prepended to the result.
+
+** An "`e`" or "`E`", which specifies the conversion of a real (`REAL` or
+  `LREAL`) item to the format ``__s__ __d__ *.* __ddd__ *e* __s__ __dd__``,
+  where there is one digit before the decimal-point character and the
+  number of digits after the decimal-point is equal to the precision.
+  (The "``*e*``" is replaced by "``*E*``" for the "`E`" conversion specifier.)
+  If the precision is missing, it defaults to six and if the precision is
+  zero, no decimal-point character appears.  The signs (``__s__``)
+  of the number and exponent are displayed as specified by the flags.
+
+** A "`f`" or "`F`", which specifies the conversion of a real (`REAL` or
+  `LREAL`) item to the format ``__s__ __ddd__ *.* __ddd__``, where the
+  number of digits after the decimal-point is equal to the precision
+  specification (or six if not specified).
+
+** A "`g`" or "`G`", which specifies the conversion of a real (`REAL` or
+  `LREAL`) item to either the format specified by "`e`" or "`f`"
+  (or "`E`" or "`F`" in the case of "`G`").
+
+** A "`b`", which specifies the conversion of a boolean (`BOOL`) item,
+   which will be displayed as either "`true`" or "`false`."
+
+** A "`c`", which specifies the identity conversion of a character (`CHAR`) item.
+
+** A "`s`", which specifies the identity conversion of a string (`STR`) or
+  atom (`ATOM`) item.
+
+== See Also
+
+xref:str-FormatComb.adoc[`FormatComb`],
+xref:str-Scan.adoc[`Scan`],
+xref:smlnj-lib.adoc[__The Util Library__]

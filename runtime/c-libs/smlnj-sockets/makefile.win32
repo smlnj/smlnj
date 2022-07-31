@@ -1,0 +1,256 @@
+#
+# the makefile for the Sockets library
+# win32 specific
+
+SHELL =		
+
+INC_DIR =	..\..\include
+CLIB_DIR =	..\
+
+INCLUDES =	/I$(INC_DIR) /I$(CLIB_DIR) /I..\..\objs
+
+MAKEFILE = 	makefile.win32
+MAKE =		nmake /F$(MAKEFILE)
+AR =		lib
+ARFLAGS =	
+RANLIB =	lib
+
+LIBRARY =	libsmlnj-sock.lib
+
+VERSION =	v-dummy
+
+NETDB_OBJS =	gethostname.obj \
+		getnetbyname.obj \
+		getnetbyaddr.obj \
+		gethostbyname.obj \
+		gethostbyaddr.obj \
+		getprotbyname.obj \
+		getprotbynum.obj \
+		getservbyname.obj \
+		getservbyport.obj
+
+CTL_OBJS =	ctlBROADCAST.obj \
+		ctlDEBUG.obj \
+		ctlDONTROUTE.obj \
+		ctlKEEPALIVE.obj \
+		ctlLINGER.obj \
+		ctlNODELAY.obj \
+		ctlOOBINLINE.obj \
+		ctlRCVBUF.obj \
+		ctlREUSEADDR.obj \
+		ctlSNDBUF.obj \
+		getERROR.obj \
+		getTYPE.obj \
+		setNBIO.obj \
+		getNREAD.obj \
+		getATMARK.obj \
+		getpeername.obj \
+		getsockname.obj
+
+SOCK_OBJS =	accept.obj \
+		bind.obj \
+		close.obj \
+		connect.obj \
+		listen.obj \
+		socket.obj \
+		shutdown.obj
+
+IO_OBJS =	recv.obj \
+		recvbuf.obj \
+		recvfrom.obj \
+		recvbuffrom.obj \
+		sendbuf.obj \
+		sendbufto.obj
+
+MISC_OBJS =	list-addr-families.obj \
+		list-sock-types.obj \
+		getaddrfamily.obj \
+		inetany.obj \
+		from-inetaddr.obj \
+		to-inetaddr.obj
+
+UTIL_OBJS =     util-mkhostent.obj \
+                util-mknetent.obj \
+                util-mkservent.obj \
+                util-sockopt.obj \
+                tbl-sock-type.obj \
+                tbl-addr-family.obj
+
+OBJS =		smlnj-sock-lib.obj \
+		$(NETDB_OBJS) $(CTL_OBJS) $(SOCK_OBJS) $(MISC_OBJS) \
+		$(IO_OBJS) $(UTIL_OBJS)
+
+
+$(LIBRARY)	: $(VERSION) $(OBJS)
+	del /F /Q $(LIBRARY)
+	$(AR) $(ARFLAGS) /out:$(LIBRARY) $(OBJS)
+	$(RANLIB) /out:$(LIBRARY)
+
+$(VERSION) :
+	($(MAKE) MAKE="$(MAKE)" clean)
+	echo "$(VERSION)" > $(VERSION)
+
+DEPENDENTS = $(INC_DIR)\ml-unixdep.h $(INC_DIR)\ml-base.h \
+	     $(INC_DIR)\ml-values.h \
+	     $(CLIB_DIR)\ml-c.h cfun-proto-list.h cfun-list.h
+
+
+smlnj-sock-lib.obj: smlnj-sock-lib.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c smlnj-sock-lib.c
+
+list-addr-families.obj: list-addr-families.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c list-addr-families.c
+
+list-sock-types.obj: list-sock-types.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c list-sock-types.c
+
+socket.obj: socket.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c socket.c
+
+recvbuffrom.obj: recvbuffrom.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c recvbuffrom.c
+
+recvfrom.obj: recvfrom.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c recvfrom.c
+
+recvbuf.obj: recvbuf.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c recvbuf.c
+
+recv.obj: recv.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c recv.c
+
+sendbufto.obj: sendbufto.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c sendbufto.c
+
+sendbuf.obj: sendbuf.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c sendbuf.c
+
+shutdown.obj: shutdown.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c shutdown.c
+
+listen.obj: listen.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c listen.c
+
+connect.obj: connect.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c connect.c
+
+bind.obj: bind.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c bind.c
+
+accept.obj: accept.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c accept.c
+
+close.obj: close.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c close.c
+
+getaddrfamily.obj: getaddrfamily.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getaddrfamily.c
+
+inetany.obj: inetany.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c inetany.c
+
+from-inetaddr.obj: from-inetaddr.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c from-inetaddr.c
+
+to-inetaddr.obj: to-inetaddr.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c to-inetaddr.c
+
+getsockname.obj: getsockname.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getsockname.c
+
+getpeername.obj: getpeername.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getpeername.c
+
+getservbyport.obj: getservbyport.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getservbyport.c
+
+getservbyname.obj: getservbyname.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getservbyname.c
+
+getprotbynum.obj: getprotbynum.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getprotbynum.c
+
+getprotbyname.obj: getprotbyname.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getprotbyname.c
+
+gethostbyname.obj: gethostbyname.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c gethostbyname.c
+
+gethostbyaddr.obj: gethostbyaddr.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c gethostbyaddr.c
+
+getnetbyname.obj: getnetbyname.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getnetbyname.c
+
+getnetbyaddr.obj: getnetbyaddr.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getnetbyaddr.c
+
+gethostname.obj: gethostname.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c gethostname.c
+
+util-mkhostent.obj: util-mkhostent.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c util-mkhostent.c
+
+util-mknetent.obj: util-mknetent.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c util-mknetent.c
+
+util-mkservent.obj: util-mkservent.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c util-mkservent.c
+
+util-sockopt.obj: util-sockopt.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c util-sockopt.c
+
+getATMARK.obj: getATMARK.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getATMARK.c
+
+getNREAD.obj: getNREAD.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getNREAD.c
+
+setNBIO.obj: setNBIO.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c setNBIO.c
+
+getERROR.obj: getERROR.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getERROR.c
+
+getTYPE.obj: getTYPE.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c getTYPE.c
+
+ctlNODELAY.obj: ctlNODELAY.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlNODELAY.c
+
+ctlRCVBUF.obj: ctlRCVBUF.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlRCVBUF.c
+
+ctlSNDBUF.obj: ctlSNDBUF.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlSNDBUF.c
+
+ctlOOBINLINE.obj: ctlOOBINLINE.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlOOBINLINE.c
+
+ctlBROADCAST.obj: ctlBROADCAST.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlBROADCAST.c
+
+ctlLINGER.obj: ctlLINGER.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlLINGER.c
+
+ctlDONTROUTE.obj: ctlDONTROUTE.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlDONTROUTE.c
+
+ctlKEEPALIVE.obj: ctlKEEPALIVE.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlKEEPALIVE.c
+
+ctlREUSEADDR.obj: ctlREUSEADDR.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlREUSEADDR.c
+
+ctlDEBUG.obj: ctlDEBUG.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c ctlDEBUG.c
+
+tbl-sock-type.obj: tbl-sock-type.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c tbl-sock-type.c
+
+tbl-addr-family.obj: tbl-addr-family.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c tbl-addr-family.c
+
+
+clean :
+	del /F /Q v-* *.obj *.pdb $(LIBRARY)

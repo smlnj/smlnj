@@ -1,0 +1,23 @@
+(* $smlnj/ml-yacc/ml-yacc-lib.cm
+ *
+ *   This is a proxy for $SMLNJ-ML-YACC-LIB/ml-yacc-lib.cm and represents
+ *   the version of the ML-Yacc library that is internally
+ *   used by the implementation of the system itself.
+ *
+ *   User code can refer to it as $/ml-yacc-lib.cm, but the $ml-yacc-lib.cm
+ *   anchor may be redefined to point to a different version
+ *   without affecting the compiler itself.
+ *
+ *   Copyright (c) 2005 by The Fellowship of SML/NJ
+ *
+ * author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	library($SMLNJ-ML-YACC-LIB/ml-yacc-lib.cm)
+is
+	$SMLNJ-ML-YACC-LIB/ml-yacc-lib.cm
+		(bind:(anchor:basis.cm value:$SMLNJ-BASIS)
+		 bind:(anchor:smlnj-lib.cm value:$SMLNJ-LIB/Util)
+		 bind:(anchor:pp-lib.cm value:$SMLNJ-LIB/PP)
+		 bind:(anchor:controls-lib.cm value:$SMLNJ-LIB/Controls)
+		 bind:(anchor:ml-yacc-lib.cm value:$SMLNJ-ML-YACC-LIB))

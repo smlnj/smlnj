@@ -1,0 +1,1 @@
+structure D = struct end

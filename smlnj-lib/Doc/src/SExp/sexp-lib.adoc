@@ -1,0 +1,105 @@
+= The SExp Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *SExp Library* supports the reading and writing of structured data using
+the S-expression syntax.  It is a work in progress, and does not fully conform with
+any formal S-exp specification.
+
+- End-of-line comments begin with a semicolon (`;`)
+
+- An S-Expression is either an atomic token (boolean, number, symbol, or
+  string), a quoted expression, or a list of S-Expressions enclosed in brackets.
+
+- Quoted expressions are formed by the single-quote character (``'``) followed
+  by an expression.
+
+- Lists are delimited by matched pairs of `()` `[]` or `{}`, nested freely.
+
+- List items are separated with whitespace (space, tab, newlines, or carriage
+  returns).
+
+- Symbols (or _identifiers_) begin with an initial character followed by
+  zero or more _subsequent_ characters, where an initial character is
+  either a letter or one of the characters `-+.@!$%&*/:<=>?^_~` and
+  a subsequent character is either an initial character, a decimal digit,
+  or the character `#`.
+
+- Booleans are represented by the literals `#f` (false) and `#t` (true).
+
+- Numbers are either signed integers or floating-point numbers; the
+  sign (if present) is one of "'+'," "`-`," or "`~`".
+
+- Integers may be specified in decimal without any prefix, or in hexadecimal
+  with the prefix "0x".  In hex, the value is assumed to be unsigned, so -255
+  should be written "-0xff" rather than "0x-ff".
+
+- The format of a floating point number is described by the following
+  regular expression:
++
+[latexmath]
+++++
+  \mathit{sign}^{?}\,\mathit{digit}^{+}\,\mathtt{.}\;\mathit{digit}^{+}\,
+  ([\mathtt{eE}]\,\mathit{sign}^{?}\,\mathit{digit}^{+})^{?}
+++++
++
+Notably, "`1.`" and "`.1`" are invalid and "`1`" is parsed as an
+integer -- floats must have a dot with digits
+on both sides.
+
+- Strings are sequences of ASCII characters enclosed in double quotes (``"``).
+  We follow the syntax of *Scheme* strings as described in
+  https://www.scheme.com/tspl4/grammar.html#./grammar:strings[]
++
+The difference between symbols and strings is that symbols are represented as
+Atom.atom types, so equality comparisons are more efficient.
+
+The original version of the library was written by Damon Wang
+at the University of Chicago.  It has since been modified and
+maintained by John Reppy.
+
+== Contents
+
+xref:str-SExp.adoc[`[.kw]#structure# SExp`]::
+  Defines the tree representation of S-expression data.
+
+xref:str-SExpParser.adoc[`[.kw]#structure# SExpParser`]::
+  Implements an S-Expression parser.
+
+xref:str-SExpPP.adoc[`[.kw]#structure# SExpPP`]::
+  Implements an S-Expression pretty-printer.
+
+xref:str-SExpPrinter.adoc[`[.kw]#structure# SExpPrinter`]::
+  Implements an S-Expression printer that produces _condensed_
+  output without indentation or line breaks.
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/sexp-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/SExp/sexp-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-SExp.adoc[]
+
+include::str-SExpParser.adoc[]
+
+include::str-SExpPP.adoc[]
+
+include::str-SExpPrinter.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

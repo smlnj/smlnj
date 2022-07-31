@@ -1,0 +1,109 @@
+%!TEX root = btcomp.tex
+%
+
+\section{File naming---the role of path anchors}
+
+Under normal operation of CM, the mapping from path names to the files
+they denote is supposed to be a fixed one.  The path anchor mechanism
+is merely a means of configuring this mapping according to the
+actual filesystem layout.
+
+The bootstrap compiler and the associated boot procedure, however, use
+path anchors extensively for other purposes.  In particular, the
+above-mentioned mapping will vary over time.
+
+The ``casual'' compiler hacker does not actually need to remember all
+the details because these details are mostly taken care of
+automatically by {\tt CMB} and its various scripts ({\tt makeml}, {\tt
+testml}, {\tt installml}).  But it is useful to have a rough idea of
+what r\^{o}les are being played by various files and directories that
+are being used or created.
+
+\subsection{Anchoring requirement}
+
+During bootstrap compilation it is necessary that all pathnames be
+either anchored or relative to another anchored pathname.  This rule
+guarantees that every path name can be mapped to different locations
+in the filesystem at different times.  (Technically, this restriction
+is necessary only for library description files.)
+
+\subsection{Different anchor mappings at different times}
+
+We can distinguish between four different anchor configurations which
+will be in effect at different times:
+
+\begin{description}
+\item[{\bf compilation}:]
+At the time {\tt CMB.make} runs, the anchor configuration is taken
+from file {\tt pathconfig}.\footnote{All relative pathnames shown here
+are relative to {\tt src/system}.}  This configuration maps anchors to
+their respective directories in the actual source tree.  At the same
+time the policy which determines the names of binfiles
+and stablefiles is modified in such a way that all binfiles will be
+created in directory {\tt $u$.bin.{\it arch}-{\it os}} and all
+stablefiles will be created in {\tt $u$.boot.{\it arch}-{\it os}}.
+In particular, if {\tt \$$a$} is the root anchor name controlling
+the path leading to an ML source file
+{\tt \$$a$/$\cdots$/{\it file}.sml},
+then the corresponding binfile will be created as
+{\tt $u$.bin.{\it arch}-{\it os}/$a$/$\cdots$/CM/{\it arch}-{\it os}/{\it file}.sml}.
+Similarly, the stablefile for the library description
+{\tt \$$a$/$\cdots$/{\it file}.cm} controlled by root anchor {\tt \$$a$}
+gets written to
+{\tt $u$.boot.{\it arch}-{\it os}/$a$/$\cdots$/CM/{\it arch}-{\it os}/{\it file}.cm}.
+(Notice how the anchor name {\tt \$$a$} is being incorporated into the
+resulting pathnames.)
+\item[{\bf boot}:]
+At bootstrap time (e.g., when the {\tt makeml} script is invoked), CM
+scans the contents of {\tt $u$.boot.{\it arch}-{\it os}}, and for
+each directory name $a$ it finds there it maps the anchor {\tt \$$a$} to that
+directory.  The result is that the location for library description
+{\tt \$$a$/$\cdots$/{\it file}.cm}
+is considered to be
+{\tt $u$.bin.{\it arch}-{\it os}/$a$/$\cdots$/{\it file}.cm}, which
+means that---under the {\em usual} rules of CM---
+the corresponding stablefile is going to be
+{\tt $u$.bin.{\it arch}-{\it os}/$a$/$\cdots$/CM/{\it arch}-{\it
+os}/{\it file}.cm}.  This is precisely where {\tt CMB.make} created
+it.  (Of course, the libary description file itself does not exist,
+but this is not a problem because the stablefile does.)
+
+The resulting mapping for anchors is the one that is being saved to the
+newly generated heap image.
+\item[{\bf test}:] After generating a new heap image {\tt $v$.{\it
+arch}-{\it osname}}\footnote{As mentioned earlier, we distinguish
+between {\it os} which describes the {\em kind} of operating system
+and {\it osname} which is the name of a particular operating system.
+For example, on a Linux machine {\it osname} is {\tt linux} while {\it
+os} is still {\tt unix}.}, the {\tt makeml} script will copy the
+hierarchy of directories under {\tt $u$.boot.{\it arch}-{\it os}} to a
+new directory {\tt $v$.lib} and generate a path configuration file
+{\tt $v$.lib/pathconfig} for it.  Files in this hierarchy will be
+re-created as hard links.  The prefix $v$ can be chosen at the time
+{\tt makeml} is invoked (see section~\ref{script:makeml})---just like
+$u$ can be chosen at the time {\tt CMB.make} is invoked.  The default
+for $v$ is {\tt sml}.  Copying the directory prevents any future {\tt
+CMB.make} from clobbering the libraries that belong to the newly
+generated heap image.
+
+Running the {\tt testml} script will start the runtime system,
+instruct it to load heap image {\tt $v$.{\it arch}-{\it osname}},
+and arrange for the path configuration file {\tt $v$.lib/pathconfig}
+to take effect.  This will cause any anchor $a$ to be resolved within
+the {\tt $v$.lib} hierarchy.  Thus, the new system can be tested in a
+way that is completely independent from any existing installation.
+(Again, $v$ can be specified as a parameter to {\tt testml}.)
+\item[{\bf install}:]
+When testing has been satisfactory, the new system can be installed
+permamently, replacing the old heap image and its old libraries with
+their newly created counterparts.  To do so, one should run the {\tt
+installml} script.  It will move the heap image
+{\tt $v$.{\it arch}-{\it osname}} to
+{\tt ../../bin/.heap/sml.{\it arch}-{\it osname}}
+and all stablefiles from {\tt $v$.lib} to their usual place
+under {\tt ../../lib}.  It then proceeds to edit
+{\tt ../../lib/pathconfig} (the main path configuration file of the
+installation) to reflect the new situation.
+(Library files in {\tt ../../lib} that have nothing to do with the
+bootstrap process will remain untouched.)
+\end{description}

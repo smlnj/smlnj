@@ -1,0 +1,38 @@
+(* debugprof.cm
+ *
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Debugging and profiling instrumentation phases.
+ *)
+
+Group
+	signature PROFILE
+
+	structure Profile
+	structure TProf
+	structure SProf
+	structure TDPInstrument
+
+	functor ProfileFn
+	functor ProfEnvFn
+is
+	profile/prof-env.sml
+	profile/profile-fn.sml
+	profile/profile.sig
+	profile/profile.sml
+	profile/sprof.sml
+	profile/tell-env.sml
+	profile/tprof.sml
+	profile/tdp-instrument.sml
+
+	types/reconstruct.sml
+
+	$smlnj/viscomp/basics.cm
+	$smlnj/viscomp/elabdata.cm
+
+	$smlnj/init/init.cmi : cm
+
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm
+	$smlnj/basis/basis.cm

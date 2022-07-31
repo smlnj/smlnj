@@ -1,0 +1,624 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Forms [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for HTML 4.0 forms. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="edit" title="Edits">
+	<link rel="next" href="frames" title="Frames">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Forms</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="edit" rel="prev" accesskey="P" title="Prior: Edits">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="frames" rel="next" accesskey="N" title="Next: Frames"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Forms (<a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html" title="HTML 4.0 Specification">&sect;17</a>)</h1>
+
+	<div class="section" id="fieldset">
+		<h2>Fieldsets and tab indexes</h2>
+
+		<div class="bodytext">
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-fieldset" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;fieldset></code></a></dfn> groups related form controls into sections.
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-legend" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;legend></code></a></dfn> assigns a caption to a <code class="element">&lt;fieldset></code>.
+			</ul>
+
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#adef-tabindex" title="HTML 4.0 Specification: 17 Forms"><code class="attribute">tabindex</code></a></dfn> lets you set the order in which hyperlinks and form controls gain focus.
+			</ul>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is discussing replacing <code class="attribute">tabindex</code> in <abbr>XHTML</abbr> 2.0 with common <a class="specsect" href="http://www.w3.org/TR/xhtml2/mod-hyperAttributes.html#col_Hypertext"  title="XHTML 2.0 Working Draft: Hypertext Attributes Module"><code class="attribute">nextfocus</code> and <code class="attribute">prevfocus</code> attributes</a>, which contain an <code class="attribute">id</code> reference of the next element to be activated.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>The controls are numbered according to their tab order. Tabbing forward from "1:" should take you to "2:", and so forth.</p>
+
+		
+			<div class="blockcode">
+			<em class="html">&lt;form action="#test"></em><br>
+				<div class="indent">
+				<em class="html4"><strong class="tested">&lt;fieldset></strong></em><br>
+					<div class="indent">
+					<em class="html4"><strong class="tested">&lt;legend></strong></em>Tab Index<em class="html4"><strong class="tested">&lt;/legend></strong></em><br>
+					<em class="html">&lt;p></em>The focus should move through the following controls in numerical order.<em class="html">&lt;/p></em><br>
+					<em class="html">&lt;table></em><br>
+						<div class="indent">
+						<em class="html">&lt;tr></em><br>
+							<div class="indent">
+							<em class="html">&lt;td></em>1: <em class="html">&lt;td>&lt;input <em class="html4"><strong class="tested">tabindex=1</strong></em> value="One" size=6></em><br>
+							<em class="html">&lt;td></em>3: <em class="html">&lt;td>&lt;input <em class="html4"><strong class="tested">tabindex=3</strong></em> value="Three" size=6></em><br>
+							<em class="html">&lt;td></em>7: <em class="html">&lt;td>&lt;input <em class="html4"><strong class="tested">tabindex=7</strong></em> value="Seven" size=6></em><br>
+							</div>
+						<em class="html">&lt;tr></em><br>
+							<div class="indent">
+							<em class="html">&lt;td></em>2: <em class="html">&lt;td>&lt;input <em class="html4"><strong class="tested">tabindex=2</strong></em> value="Two" size=6></em><br>
+							<em class="html">&lt;td></em>4: <em class="html">&lt;td>&lt;input <em class="html4"><strong class="tested">tabindex=4</strong></em> value="Four" size=6></em><br>
+							<em class="html">&lt;td></em>6: <em class="html">&lt;td>&lt;input <em class="html4"><strong class="tested">tabindex=6</strong></em> value="Six" size=6></em><br>
+							</div>
+						</div>
+					<em class="html">&lt;/table></em><br>
+					<em class="html">&lt;table></em><br>
+						<div class="indent">
+						<em class="html">&lt;tr></em><br>
+							<div class="indent">
+							<em class="html">&lt;td></em>5:<br>
+							<em class="html">&lt;td></em><br>
+								<div class="indent">
+								<em class="html">&lt;select <em class="html4"><strong class="tested">tabindex=5</strong></em>></em><br>
+									<div class="indent">
+									<em class="html">&lt;option selected></em>Five<br>
+									</div>
+								<em class="html">&lt;/select></em><br>
+								</div>
+							</div>
+						<em class="html">&lt;tr></em><br>
+							<div class="indent">
+							<em class="html">&lt;td></em>9:<br>
+							<em class="html">&lt;td>&lt;textarea rows=2 cols=3 <em class="html4"><strong class="tested">tabindex=9</strong></em>></em>Nine<em class="html">&lt;/textarea></em><br>
+							</div>
+						</div>
+					<em class="html">&lt;/table></em><br>
+					8: <em class="html4">&lt;button type="button" tabindex=8></em>Eight<em class="html4">&lt;/button></em><br>
+					</div>
+				<em class="html4"><strong class="tested">&lt;/fieldset></strong></em><br>
+				</div>
+			<em class="html">&lt;/form></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+		<form action="#test">
+			<fieldset>
+				<legend>Tab Index</legend>
+				<p>The focus should move through the following controls in numerical order.</p>
+				<table>
+					<tr>
+						<td>1: <td><input tabindex=1 value="One" size=6>
+						<td>3: <td><input tabindex=3 value="Three" size=6>
+						<td>7: <td><input tabindex=7 value="Seven" size=6>
+					<tr>
+						<td>2: <td><input tabindex=2 value="Two" size=6>
+						<td>4: <td><input tabindex=4 value="Four" size=6>
+						<td>6: <td><input tabindex=6 value="Six" size=6>
+				</table>
+				<table>
+					<tr>
+						<td>5: 
+						<td>
+							<select tabindex=5>
+								<option selected>Five
+							</select>
+					<tr>
+						<td>9:
+						<td><textarea rows=2 cols=6 tabindex=9>Nine</textarea>
+				</table>
+				8: <button type="button" tabindex=8>Eight</button>
+			</fieldset>
+		</form>
+		</div>
+		</div>
+	</div>
+
+	<div class="section" id="label">
+		<h2>Labels and access keys</h2>
+
+		<div class="bodytext">
+			<p><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-label" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;label></code></a></dfn> associates its contents with a form control. In a Web browser, selecting a label could give its corresponding control focus.</p>
+			<p>The <dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#adef-accesskey" title="HTML 4.0 Specification: 17 Forms"><code class="attribute">accesskey</code></a></dfn> attribute assigns a key to give focus to an element.</p>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is discussing replacing <code class="attribute">accesskey</code> in <abbr>XHTML</abbr> 2.0 with a common <a class="specsect" href="http://www.w3.org/TR/xhtml2/mod-hyperAttributes.html#col_Hypertext"  title="XHTML 2.0 Working Draft: Hypertext Attributes Module"><code class="attribute">access</code> attribute</a> to assign an <q>access name</q> that will activate an element. <code class="attribute">accesskey</code> is too associated with particular user interfaces. Instead of keystrokes, <code class="attribute">access</code> associate words with elements which users may select them by other means, such as selecting them from a menu or speaking an access name into a microphone.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>Selecting (ex. clicking on) the following labels should activate the corresponding field. The highlighted letters are designated as shortcut keys for the field, which may be supported in different ways by different Web browsers.</p>
+		<p>For example, in <em class="browser">Internet Explorer 4.0&mdash;</em> and <em class="browser">Netscape 6.0&mdash;</em> for Windows, <kbd>Alt&#8208;U</kbd> will select the &ldquo;User name:&rdquo; field.</p>
+
+		
+			<div class="blockcode">
+			<em class="html">&lt;form action="#test"></em><br>
+				<div class="indent">
+				<em class="html4">&lt;fieldset></em><br>
+					<div class="indent">
+					<em class="html"><em class="html4">&lt;legend <strong class="tested">accesskey="L"</strong>></em>&lt;strong></em>L<em class="html">&lt;/strong></em>abels and Access Keys<em class="html4">&lt;/legend></em><br>
+					<em class="html">&lt;p></em>Selecting the following labels should activate the corresponding form control. You may also be able to use the highlighted letters to select a form control.<em class="html">&lt;/p></em><br>
+					<br>
+					<em class="html"><strong class="tested">&lt;label  accesskey="U"></strong>&lt;strong></em>U<em class="html">&lt;/strong></em>ser name: <em class="html">&lt;input type="text" name="uname" size=40><strong class="tested">&lt;/label></strong>&lt;br></em><br>
+					<em class="html"><strong class="tested">&lt;label for="email"></strong>&lt;strong></em>E<em class="html">&lt;/strong></em><em class="html4"><em class="entity">&amp;#8208;</em></em>mail: <em class="html">&lt;input <em class="html4"><strong class="tested">id="email" accesskey="E"</strong></em> type="text" name="email" size=40><strong class="tested">&lt;/label></strong>&lt;br></em><br>
+					<br>
+					<em class="html">&lt;p></em>Sex:<br>
+					<em class="html"><em class="html4"><strong class="tested">&lt;label accesskey="M"></strong></em>&lt;input type="radio" name="sex" value="male">&lt;strong></em>M<em class="html">&lt;/strong></em>ale<em class="html"><strong class="tested">&lt;/label></strong>&lt;br></em><br>
+					<br>
+					<em class="html">&lt;input <em class="html4"><strong class="tested">id="female" accesskey="F"</strong></em> type="radio" name="sex" value="female"><strong class="tested">&lt;label for="female"></strong>&lt;strong></em>F<em class="html">&lt;/strong></em>emale<em class="html4"><strong class="tested">&lt;/label></strong></em><em class="html">&lt;/p></em><br>
+					<br>
+					<em class="html">&lt;p></em><em class="html4"><strong class="tested">&lt;label accesskey="G"></strong></em><em class="html">&lt;strong></em>G<em class="html">&lt;/strong></em>ender:<br>
+					<em class="html">&lt;select size=2></em><br>
+						<div class="indent">
+						<em class="html">&lt;option></em>Male<br>
+						<em class="html">&lt;option></em>Female<br>
+						</div>
+					<em class="html">&lt;/select><strong class="tested">&lt;/label></strong>&lt;/p></em><br>
+					<br>
+					<em class="html">&lt;p><strong class="tested">&lt;label for="honorific" accesskey="H"></strong>&lt;strong></em>H<em class="html">&lt;/strong></em>onorific:<em class="html4"><strong class="tested">&lt;/label></strong></em><br>
+					<em class="html">&lt;select <em class="html4"><strong class="tested">id="honorific"</strong></em> size=3></em><br>
+						<div class="indent">
+						<em class="html">&lt;option></em>Mr.<br>
+						<em class="html">&lt;option></em>Ms.<br>
+						<em class="html">&lt;option></em>Miss<br>
+						<em class="html">&lt;option></em>Mrs.<br>
+						<em class="html">&lt;option></em>Dr.<br>
+						</div>
+					<em class="html">&lt;/select>&lt;/p></em><br>
+					<br>
+					<em class="html">&lt;p></em>Where did you hear about us? (check all that apply)<em class="html">&lt;br></em><br>
+					<em class="html"><strong class="tested">&lt;label accesskey="S"></strong>&lt;input type="checkbox" name="where" value="search">&lt;strong></em>S<em class="html">&lt;/strong></em>earch engine<em class="html4"><strong class="tested">&lt;/label></strong></em><br>
+					<br>
+					<em class="html"><strong class="tested">&lt;label></strong>&lt;input type="checkbox" <strong class="tested">accesskey="O"</strong> name="where" value="other">&lt;strong></em>O<em class="html">&lt;/strong></em>ther<em class="html4"><strong class="tested">&lt;/label></strong></em><em class="html">&lt;/p></em><br>
+					<br>
+					<em class="html">&lt;p></em><em class="html4"><strong class="tested">&lt;label accesskey="W"></strong></em>If other, <em class="html">&lt;strong></em>w<em class="html">&lt;/strong></em>here?<em class="html">&lt;br></em><br>
+					<em class="html">&lt;textarea rows=2 cols=40>&lt;/textarea><strong class="tested">&lt;/label></strong>&lt;/p></em><br>
+					<br>
+					<em class="html">&lt;p></em><em class="html4"><strong class="tested">&lt;label></strong></em><em class="html">&lt;strong></em>C<em class="html">&lt;/strong></em>omments:<em class="html">&lt;br></em><br>
+					<em class="html">&lt;textarea rows=2 cols=40 <strong class="tested">accesskey="C"</strong>>&lt;/textarea><strong class="tested">&lt;/label></strong>&lt;/p></em><br>
+					</div>
+				<em class="html4">&lt;/fieldset></em><br>
+				</div>
+			<em class="html">&lt;/form></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+		<form action="#test">
+			<fieldset>
+				<legend accesskey="L"><strong>L</strong>abels and Access Keys</legend>
+				<p>Selecting the following labels should activate the corresponding form control. You may also be able to use the highlighted letters to select a form control.</p>
+
+				<label accesskey="U"><strong>U</strong>ser name: <input type="text" name="uname" size=40></label><br>
+				<label><strong>E</strong>&#8208;mail: <input id="email" accesskey="E" type="text" name="email" size=40></label><br>
+
+				<p>Sex:
+				<label accesskey="M"><input type="radio" name="sex" value="male"><strong>M</strong>ale</label>
+
+				<input id="female" type="radio" name="sex" value="female" accesskey="F"><label for="female"><strong>F</strong>emale</label></p>
+
+				<p><label accesskey="G"><strong>G</strong>ender:
+				<select size=2>
+					<option>Male
+					<option>Female
+				</select></label></p>
+
+				<p><label for="honorific" accesskey="H"><strong>H</strong>onorific:</label>
+				<select id="honorific" size=5>
+					<option>Mr.
+					<option>Ms.
+					<option>Miss
+					<option>Mrs.
+					<option>Dr.
+				</select></p>
+
+				<p>Where did you hear about us? (check all that apply)<br>
+				<label accesskey="S"><input type="checkbox" name="where" value="search"><strong>S</strong>earch engine</label>
+
+				<label><input type="checkbox" accesskey="O" name="where" value="other"><strong>O</strong>ther</label></p>
+
+				<p><label accesskey="W">If other, <strong>w</strong>here?<br>
+				<textarea rows=2 cols=40></textarea></label></p>
+
+				<p><label><strong>C</strong>omments:<br>
+				<textarea rows=2 cols=40 accesskey="C"></textarea></label></p>
+			</fieldset>
+		</form>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Accesskey-XUL">Accesskey-XUL</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Legend-Accesskey">Legend-Accesskey</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Fieldset-Eats-Spaces">Fieldset-Eats-Spaces</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Checkbox-Accesskey">Checkbox-Accesskey</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="button">
+		<h2>Buttons</h2>
+
+		<div class="bodytext">
+			<p><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-button" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;button></code></a></dfn> allows push button controls to contain any sort of markup, not just simple text.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>This form has buttons of each type. The change message buttons change the message field when selected, if your Web browser supports ECMAScript. If you type over the text in the message field, Reset should restore the message to its default. Submitting the form should reload this page.</p>
+
+		
+			<div class="blockcode">
+			<em class="html">&lt;form action="#test"></em><br>
+				<div class="indent">
+				<em class="html4">&lt;fieldset></em><br>
+					<div class="indent">
+					<em class="html4">&lt;legend></em>Buttons<em class="html4">&lt;/legend></em><br>
+					<em class="html">&lt;p></em>Message: <em class="html">&lt;input <em class="html4">id="message"</em> type="text" name="message" size="40" value="Change this then try Reset.">&lt;/p></em><br>
+						 <em class="html">&lt;p></em>Change message:<br>
+					 <em class="html4"><strong class="tested">&lt;button type="button" <em class="html4">onclick="document .getElementById('message') .setAttribute('value', 'Take it easy!')"</em>></strong></em>Get Some R<em class="html"><em class="entity">&amp;amp;</em></em>R<em class="html4"><strong class="tested">&lt;/button></strong></em><br>
+					 <em class="html4"><strong class="tested">&lt;button type="button" <em class="html4">onclick="document .getElementById('message') .setAttribute('value', 'Have a nice day!')"</em>></strong></em>Smile <em class="html">&lt;img src="/images/smiley/smile.png" alt=":-)"><strong class="tested">&lt;/button></strong></em><br>
+					<em class="html4"><strong class="tested">&lt;button type="button" <em class="html4">onclick="document .getElementById('message') .setAttribute('value', 'Lather, rinse, repeat')"</em>></strong></em><br>
+							<div class="indent">
+					<em class="html">&lt;ul></em><br>
+								<div class="indent">
+						<em class="html">&lt;li></em>Lather<br>
+						<em class="html">&lt;li></em>Rinse<br>
+						<em class="html">&lt;li></em>Repeat<br>
+								</div>
+					<em class="html">&lt;/ul></em><br>
+							</div>
+						<em class="html"><strong class="tested">&lt;/button></strong>&lt;/p></em><br>
+					 <em class="html">&lt;p><strong class="tested">&lt;button type="submit"></strong></em>Submit<em class="html4"><strong class="tested">&lt;/button></strong></em><br>
+					<em class="html4"><strong class="tested">&lt;button type="reset"></strong></em>Reset<em class="html4"><strong class="tested">&lt;/button></strong></em><em class="html">&lt;/p></em><br>
+					</div>
+				<em class="html4">&lt;/fieldset></em><br>
+				</div>
+			<em class="html">&lt;/form></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+		<form action="#test">
+			<fieldset>
+			<legend>Buttons</legend>
+				<p>Message: <input id="message" type="text" name="message" size="40" value="Change this then try Reset."></p>
+			<p>Change message:
+			<button type="button" onclick="document .getElementById('message') .setAttribute('value', 'Take it easy!')">Get Some R&amp;R</button>
+			<button type="button" onclick="document .getElementById('message') .setAttribute('value', 'Have a nice day!')">Smile <img src="/images/smiley/smile.png" alt=":-)"></button>
+			<button type="button" onclick="document .getElementById('message') .setAttribute('value', 'Lather, rinse, repeat')">
+				<ul>
+				<li>Lather
+				<li>Rinse
+				<li>Repeat
+				</ul>
+			</button></p>
+			<p><button type="submit">Submit</button>
+			<button type="reset">Reset</button></p>
+		</fieldset>
+		</form>
+		</div>
+		</div>
+	</div>
+
+	<div class="section" id="optgroup">
+		<h2>Option groups</h2>
+
+		<div class="bodytext">
+			<p><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-optgroup" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;optgroup></code></a></dfn> groups into sections the <a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-option" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;option></code></a> elements in a <a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#edef-select" title="HTML 4.0 Specification: 17 Forms"><code class="element">&lt;select></code></a> control. A Web browser could add dividers or headings to the drop&#8208;down list, or collapse them into cascading drop&#8208;down menus.</p>
+			<p>The <dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#adef-label" title="HTML 4.0 Specification: 17 Forms"><code class="attribute">label</code></a></dfn> attribute on the <code class="element">&lt;optgroup></code> and <code class="element">&lt;option></code> elements provides a name to use within grouped selection menus.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			<em class="html">&lt;form action="#test"></em><br>
+				<div class="indent">
+				<em class="html4">&lt;fieldset></em><br>
+					<div class="indent">
+					<em class="html4">&lt;legend></em>Option Groups<em class="html4">&lt;/legend></em><br>
+					<em class="html">&lt;p></em>Browser of Choice:<br>
+					<em class="html">&lt;select name="agent"></em><br>
+							<div class="indent">
+					<em class="html4"><strong class="tested">&lt;optgroup label="Microsoft Internet Explorer"></strong></em><br>
+								<div class="indent">
+						<em class="html">&lt;option <em class="html4"><strong class="tested">label="5.x<em class="entity">&ndash;</em>6.x"</strong></em> value="ie5"></em>Microsoft Internet Explorer 5.x<em class="html4"><em class="entity">&amp;ndash;</em></em>6.x<br>
+						<em class="html">&lt;option <em class="html4"><strong class="tested">label="4.x"</strong></em> value="ie4"></em>Microsoft Internet Explorer 4.x<br>
+						<em class="html">&lt;option <em class="html4"><strong class="tested">label="3.0 or lower"</strong></em> value="ie3"></em>Microsoft Internet Explorer 3.0 or lower<br>
+								</div>
+					<em class="html4"><strong class="tested">&lt;/optgroup></strong></em><br>
+					<em class="html4"><strong class="tested">&lt;optgroup label="Mozilla"></strong></em><br>
+								<div class="indent">
+						<em class="html">&lt;option <strong class="tested">label="Firefox"</strong> value="fox"></em>Mozilla Firefox<br>
+						<em class="html">&lt;option value="moz" selected></em>Mozilla<br>
+								</div>
+					<em class="html4"><strong class="tested">&lt;/optgroup></strong></em><br>
+					<em class="html4"><strong class="tested">&lt;optgroup label="Netscape"></strong></em><br>
+								<div class="indent">
+						<em class="html">&lt;option <em class="html4"><strong class="tested">label="6.x"</strong></em> value="n6"></em>Netscape 6.x<br>
+						<em class="html">&lt;option <em class="html4"><strong class="tested">label="4.x"</strong></em> value="n4"></em>Netscape 4.x<br>
+						<em class="html">&lt;option <em class="html4"><strong class="tested">label="3.x or lower"</strong></em> value="n3"></em>Netscape 3.x or lower<br>
+								</div>
+					<em class="html4"><strong class="tested">&lt;/optgroup></strong></em><br>
+					<em class="html">&lt;option value="op"></em>Opera<br>
+					<em class="html">&lt;option value="safari"></em>Safari<br>
+					<em class="html">&lt;option value="omniweb"></em>OmniWeb<br>
+					<em class="html">&lt;option value="icab"></em>iCab<br>
+					<em class="html">&lt;option value="lynx"></em>Lynx<br>
+					<em class="html">&lt;option value="other"></em>Other<br>
+							</div>
+					<em class="html">&lt;/select>&lt;/p></em><br>
+					</div>
+				<em class="html4">&lt;/fieldset></em><br>
+				</div>
+			<em class="html">&lt;/form></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result4">
+		<form action="#test">
+			<fieldset>
+			<legend>Option Groups</legend>
+			<p>Browser of Choice:
+			<select name="agent">
+				<optgroup label="Microsoft Internet Explorer">
+				 <option label="5.x&ndash;6.x" value="ie5">Microsoft Internet Explorer 5.x&ndash;6.x
+				 <option label="4.x" value="ie4">Microsoft Internet Explorer 4.x
+				 <option label="3.x or lower" value="ie3">Microsoft Internet Explorer 3.x or lower
+				</optgroup>
+				<optgroup label="Mozilla">
+				<option label="Firefox" value="fox">Mozilla Firefox
+				<option value="moz" selected>Mozilla
+				</optgroup>
+				<optgroup label="Netscape">
+				<option label="6.x" value="n6">Netscape 6.x
+				<option label="4.x" value="n4">Netscape 4.x
+				<option label="3.x or lower" value="n3">Netscape 3.x or lower
+				</optgroup>
+				<option value="op">Opera
+				<option value="safari">Safari
+				<option value="omniweb">OmniWeb
+				<option value="icab">iCab
+				<option value="lynx">Lynx
+				<option value="other">Other
+			</select></p>
+		</fieldset>
+		</form>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Option-Label">Option-Label</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>The previous example again, but with <code>size="10"</code> set on the <code class="element">&lt;select></code> element.</p>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result5">
+		<form action="#test">
+			<fieldset>
+			<legend>Option Groups</legend>
+			<p>Browser of Choice:
+			<select name="agent" size="10">
+				<optgroup label="Microsoft Internet Explorer">
+				 <option label="5.x&ndash;6.x" value="ie5">Microsoft Internet Explorer 5.x&ndash;6.x
+				 <option label="4.x" value="ie4">Microsoft Internet Explorer 4.x
+				 <option label="3.x or lower" value="ie3">Microsoft Internet Explorer 3.x or lower
+				</optgroup>
+				<optgroup label="Mozilla">
+				<option label="Firefox" value="fox">Mozilla Firefox
+				<option value="moz" selected>Mozilla
+				</optgroup>
+				<optgroup label="Netscape">
+				<option label="6.x" value="n6">Netscape 6.x
+				<option label="4.x" value="n4">Netscape 4.x
+				<option label="3.x or lower" value="n3">Netscape 3.x or lower
+				</optgroup>
+				<option value="op">Opera
+				<option value="safari">Safari
+				<option value="omniweb">OmniWeb
+				<option value="icab">iCab
+				<option value="lynx">Lynx
+				<option value="other">Other
+			</select></p>
+		</fieldset>
+		</form>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Option-Label">Option-Label</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="readonly">
+		<h2>Disabled and Read&#8208;only</h2>
+
+		<div class="bodytext">
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#adef-disabled" title="HTML 4.0 Specification: 17 Forms"><code class="attribute">disabled</code></a></dfn> prevents a form control from receiving focus or accepting input. Disabled controls do not send data when the form is submitted.
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/forms.html#adef-readonly" title="HTML 4.0 Specification: 17 Forms"><code class="attribute">readonly</code></a></dfn> prohibits changes to a form control. Read&#8208;only controls still send data when the form is submitted.
+			</ul>
+		</div>
+
+		<div class="note">
+			<p>Though <abbr>HTML</abbr> 4.0&rsquo;s definition of <code class="attribute">readonly</code> implies that checkboxes and radio buttons may be set read&#8208;only (and no errata has changed the definition), <code class="attribute">readonly</code> is meant only for <code class="value">text</code> or <code class="value">password</code>.</p>
+			<p>In a <a href="http://whatwg.org/specs/web-forms/current-work/#readonly">working draft of the Web Forms 2.0 standard</a>, <abbr>WHAT</abbr> Working Group clarifies, <q cite="http://whatwg.org/specs/web-forms/current-work/#readonly">Specifically, it does not apply to radio buttons, check boxes, file upload fields, select elements, or any of the button types; the interface concept of <q>readonly</q> values does not apply to button&#8208;like interfaces.</q> Also, the <a href="glossary#dom" rel="glossary">Document Object Model</a> level 2 standard describes the associated <code>readOnly</code> method as <q cite="http://www.w3.org/TR/2003/REC-DOM-Level-2-HTML-20030109/html.html#ID-88461592">Relevant only when <code class="attribute">type</code> has the value &ldquo;<code class="value">text</code>&rdquo; or &ldquo;<code class="value">password</code>&rdquo;.</q></p>
+			<p>(<em class="browser">Opera 5.x</em> supported read&#8208;only checkboxes and radio buttons, but removed support for them in version <em class="version">6.0</em>.)</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			<em class="html">&lt;form action="#test"></em><br>
+				<div class="indent">
+				<em class="html4">&lt;fieldset></em><br>
+					<div class="indent">
+					<em class="html4">&lt;legend></em>Disabled and Read<em class="html"><em class="entity">&amp;#8208;</em></em>Only<em class="html4">&lt;/legend></em><br><br>
+					<em class="html4">&lt;fieldset></em><br>
+						<div class="indent">
+						<em class="html4">&lt;legend></em>Normal<em class="html4">&lt;/legend></em><br>
+						<em class="html">&lt;p></em>These controls should be fully functional.<em class="html">&lt;/p></em><br>
+						<em class="html">&lt;input type="text" value="Changeable" size=14></em><br>
+						<em class="html">&lt;input type="checkbox" checked></em><br>
+						<em class="html">&lt;input type="radio" name="yn1"></em>Yes <em class="html">&lt;input type="radio" name="yn1" checked></em>No<br>
+						<em class="html">&lt;br></em><br>
+						<em class="html">&lt;textarea rows=3 cols=20></em>Can edit this.<em class="html">&lt;/textarea></em><br>
+						<em class="html">&lt;select size=3></em><br>
+							<div class="indent">
+							<em class="html">&lt;option></em>One<br>
+							<em class="html">&lt;option selected></em>Two<br>
+							<em class="html">&lt;option></em>Three<br>
+							</div>
+						<em class="html">&lt;/select></em><br>
+						</div>
+					<em class="html4">&lt;/fieldset></em><br><br>
+					<em class="html4">&lt;fieldset></em><br>
+						<div class="indent">
+						<em class="html4">&lt;legend></em>Disabled<em class="html4">&lt;/legend></em><br>
+						<em class="html">&lt;p></em>You should not be able to select these controls.<em class="html">&lt;/p></em><br>
+						<em class="html">&lt;input type="text" value="Unselectable" size=14 <em class="html4"><strong class="tested">disabled</strong></em>></em><br>
+						<em class="html">&lt;input type="checkbox" checked <em class="html4"><strong class="tested">disabled</strong></em>></em><br>
+						<em class="html">&lt;input type="radio" name="yn3" <em class="html4"><strong class="tested">disabled</strong></em>></em>Yes <em class="html">&lt;input type="radio" name="yn3" checked <em class="html4"><strong class="tested">disabled</strong></em>></em>No<br>
+						<em class="html">&lt;br></em><br>
+						<em class="html">&lt;textarea rows=3 cols=20 <em class="html4"><strong class="tested">disabled</strong></em>></em>Can't touch this.<em class="html">&lt;/textarea></em><br>
+						<em class="html">&lt;select size=3 <em class="html4"><strong class="tested">disabled</strong></em>></em><br>
+							<div class="indent">
+							<em class="html">&lt;option></em>One<br>
+							<em class="html">&lt;option selected></em>Two<br>
+							<em class="html">&lt;option></em>Three<br>
+							</div>
+						<em class="html">&lt;/select></em><br>
+						<em class="html">&lt;input type="reset" <em class="html4"><strong class="tested">disabled</strong></em>></em><br>
+						<em class="html4">&lt;button type="reset" <em class="html4"><strong class="tested">disabled</strong></em>></em>Undo changes<em class="html4">&lt;/button></em><br>
+						<em class="html">&lt;br></em><br>
+						<em class="html">&lt;p></em>You should be able to select only option A or B.<em class="html">&lt;/p></em><br>
+						<em class="html">&lt;select size=7></em><br>
+							<div class="indent">
+							<em class="html4">&lt;optgroup label="Pass"></em><br>
+								<div class="indent">
+								<em class="html">&lt;option></em>A<br>
+								<em class="html">&lt;option></em>B<br>
+								<em class="html">&lt;option <em class="html4"><strong class="tested">disabled</strong></em>></em>C (unavailable)<br>
+								</div>
+							<em class="html4">&lt;/optgroup></em><br>
+							<em class="html4">&lt;optgroup label="Fail (unavailable)" <em class="html4"><strong class="tested">disabled</strong></em>></em><br>
+								<div class="indent">
+								<em class="html">&lt;option></em>D<br>
+								<em class="html">&lt;option></em>F<br>
+								</div>
+							<em class="html4">&lt;/optgroup></em><br>
+							</div>
+						<em class="html">&lt;/select></em><br>
+						</div>
+					<em class="html4">&lt;/fieldset></em><br><br>
+					<em class="html4">&lt;fieldset></em><br>
+						<div class="indent">
+						<em class="html4">&lt;legend></em>Read<em class="html"><em class="entity">&amp;#8208;</em></em>Only<em class="html4">&lt;/legend></em><br>
+						<em class="html">&lt;p></em>You should be able to select but not change these controls.<em class="html">&lt;/p></em><br>
+						<em class="html">&lt;input type="text" value="Unchangeable" size=14 <em class="html4"><strong class="tested">readonly</strong></em>></em><br>
+						<em class="html">&lt;br></em><br>
+						<em class="html">&lt;textarea rows=3 cols=20 <em class="html4"><strong class="tested">readonly</strong></em>></em>Can't edit this.<em class="html">&lt;/textarea></em><br>
+						</div>
+					<em class="html4">&lt;/fieldset></em><br>
+					</div>
+				<em class="html4">&lt;/fieldset></em><br>
+				</div>
+			<em class="html">&lt;/form></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result6">
+		<form action="#test">
+			<fieldset>
+				<legend>Disabled and Read&#8208;Only</legend>
+
+				<fieldset>
+					<legend>Normal</legend>
+					<p>These controls should be fully functional.</p>
+					<input type="text" value="Changeable" size=14>
+					<input type="checkbox" checked>
+					<input type="radio" name="yn1">Yes <input type="radio" name="yn1" checked>No
+					<br>
+					<textarea rows=3 cols=20>Can edit this.</textarea>
+					<select size=3>
+						<option>One
+						<option selected>Two
+						<option>Three
+					</select>
+				</fieldset>
+
+				<fieldset>
+					<legend>Disabled</legend>
+					<p>You should not be able to select these controls.</p>
+					<input type="text" value="Unselectable" size=14 disabled>
+					<input type="checkbox" checked disabled>
+					<input type="radio" name="yn3" disabled>Yes <input type="radio" name="yn3" checked disabled>No
+					<br>
+					<textarea rows=3 cols=20 disabled>Can't touch this.</textarea>
+					<select size=3 disabled>
+						<option>One
+						<option selected>Two
+						<option>Three
+					</select>
+					<input type="reset" disabled>
+					<button type="reset" disabled>Undo changes</button>
+	
+					<p>You should be able to select only option A or B.</p>
+					<select size=7>
+						<optgroup label="Pass">
+							<option>A
+							<option>B
+							<option disabled>C (unavailable)
+						</optgroup>
+						<optgroup label="Fail (unavailable)" disabled> 
+							<option>D
+							<option>F
+						</optgroup>
+					</select>
+				</fieldset>
+
+				<fieldset>
+					<legend>Read&#8208;Only</legend>
+					<p>You should be able to select but not change these controls.</p>
+					<input type="text" value="Unchangeable" size=14 readonly>
+					<br>
+					<textarea rows=3 cols=20 readonly>Can't edit this.</textarea>
+				</fieldset>
+			</fieldset>
+		</form>
+		</div>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

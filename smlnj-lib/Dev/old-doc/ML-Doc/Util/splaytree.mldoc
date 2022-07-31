@@ -1,0 +1,65 @@
+<!-- splaytree.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY SplayTree SDATA "splaytree-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=5>
+<TITLE>The SplayTree structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/SplayTree/ structure</HEAD>
+<SEEALSO>
+  <FCTREF/SplaySetFn/
+  <FCTREF/SplayMapFn/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/SplayTree/ structure provides the datatype and 
+two basic functions necessary for applicative Sleator-Tarjan splay trees.
+
+<STRUCTURE STRID="SplayTree">
+  <SIGBODY SIGID="SPLAY_TREE" FILE=SPLAY-TREE>
+    <SPEC>
+      <DATATYPE><TYPARAM>'a<ID>splay
+        <CONS>SplayObj<TY>{value : 'a, right : 'a splay, left : 'a splay}
+        <CONS>SplayNil
+      </DATATYPE>
+    <SPEC>
+      <VAL>splay<TY>(('a -> order) * 'a splay) -> (order * 'a splay)
+        <COMMENT>
+          <PROTOTY>
+          splay (<ARG/cmp/, <ARG/tree/)
+          </PROTOTY>
+          returns <CD/(<ARG/r/,<ARG/tree'/)/,  where <ARG/tree'/ is 
+          <ARG/tree/ adjusted using the comparison function <ARG/cmp/. 
+          In addtion, if <CD/tree' = SplayObj{value,...}/, then <ARG/r/ equal
+          <CD/cmp value/. <CD/tree' = SplayNil/ if and only if 
+          <CD/tree = SplayNil/, in which case <ARG/r/ is unspecified.
+
+          <PP>
+          Usually, <ARG/cmp/ will compare its argument against some fixed value.
+          For example, if <CD/cmpfn : 'a * 'a -> order/ defines an order 
+          relation on the type <CD/'a/ and we wish to search for a value 
+          <CD/u/, we can pass the function <CD/fn v => cmpfn(v,u)/ to 
+          the <CD/splay/ function.        
+
+    <SPEC>
+      <VAL>join<TY>('a splay * 'a splay) -> 'a splay
+        <COMMENT>
+          <PROTOTY>
+          join (<ARG/sp/, <ARG/sp2/)
+          </PROTOTY>
+          returns a new splay tree joining <ARG/sp/ and <ARG/sp2/.
+</STRUCTURE>
+
+<PP>
+Not only is the data structure concrete, but the <CD/splay/ function
+takes a comparison function as an argument, allowing the semantics
+of the splay tree to be changed on the fly. It is assumed that this
+structure will only be used within another structure that will guarantee
+the consistency of the trees.
+
+</INTERFACE>

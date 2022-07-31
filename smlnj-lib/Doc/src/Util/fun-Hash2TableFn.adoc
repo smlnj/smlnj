@@ -1,0 +1,222 @@
+= The `Hash2TableFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Hash2TableFn` functor provides hash tables that are keyed by two
+different key types.  Items are inserted with two keys, either of
+which may be used to lookup the item.  Essentially, it is a pair of
+hash tables that are kept synchronized.
+
+The tables are implemented as an array of _buckets_, which are
+lists of key-value pairs.  The number of buckets grows with the number
+of table entries.
+
+== Synopsis
+
+[source,sml]
+------------
+functor Hash2TableFn (
+    structure Key1 : HASH_KEY
+    structure Key2 : HASH_KEY
+  ) : MONO_HASH2_TABLE
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+structure Key1 : HASH_KEY
+structure Key2 : HASH_KEY
+------------
+
+== Functor Argument Description
+
+`[.kw]#structure# Key1 : xref:sig-HASH_KEY.adoc[HASH_KEY]`::
+  The argument structure that specifies the first key type
+  with its hashing and equality functions.
+
+`[.kw]#structure# Key2 : xref:sig-HASH_KEY.adoc[HASH_KEY]`::
+  The substructure that specifies the second key type
+  with its hashing and equality functions.
+
+== Interface
+
+[source,sml]
+------------
+structure Key1 : HASH_KEY
+structure Key2 : HASH_KEY
+
+type 'a hash_table
+
+val mkTable : (int * exn) -> 'a hash_table
+
+val clear : 'a hash_table -> unit
+
+val insert : 'a hash_table -> (Key1.hash_key * Key2.hash_key * 'a) -> unit
+
+val inDomain1 : 'a hash_table -> Key1.hash_key -> bool
+val inDomain2 : 'a hash_table -> Key2.hash_key -> bool
+
+val lookup1 : 'a hash_table -> Key1.hash_key -> 'a
+val lookup2 : 'a hash_table -> Key2.hash_key -> 'a
+
+val find1 : 'a hash_table -> Key1.hash_key -> 'a option
+val find2 : 'a hash_table -> Key2.hash_key -> 'a option
+
+val remove1 : 'a hash_table -> Key1.hash_key -> 'a
+val remove2 : 'a hash_table -> Key2.hash_key -> 'a
+
+val numItems : 'a hash_table ->  int
+
+val listItems  : 'a hash_table -> 'a list
+val listItemsi : 'a hash_table -> (Key1.hash_key * Key2.hash_key * 'a) list
+
+val app  : ('a -> unit) -> 'a hash_table -> unit
+val appi : ((Key1.hash_key * Key2.hash_key * 'a) -> unit) -> 'a hash_table
+	    -> unit
+
+val map  : ('a -> 'b) -> 'a hash_table -> 'b hash_table
+val mapi : ((Key1.hash_key * Key2.hash_key * 'a) -> 'b) -> 'a hash_table
+	    -> 'b hash_table
+
+val fold  : (('a * 'b) -> 'b) -> 'b -> 'a hash_table -> 'b
+val foldi : ((Key1.hash_key * Key2.hash_key * 'a * 'b) -> 'b) -> 'b
+
+val filter  : ('a -> bool) -> 'a hash_table -> unit
+val filteri : ((Key1.hash_key * Key2.hash_key * 'a) -> bool) -> 'a hash_table
+	    -> unit
+
+val copy : 'a hash_table -> 'a hash_table
+
+val bucketSizes : 'a hash_table -> (int list * int list)
+------------
+
+== Interface Description
+
+`[.kw]#structure# Key1 : xref:sig-HASH_KEY.adoc[HASH_KEY]`::
+  The substructure that specifies the first key type.
+
+`[.kw]#structure# Key2 : xref:sig-HASH_KEY.adoc[HASH_KEY]`::
+  The substructure that specifies the second key type.
+
+`[.kw]#type# 'a hash_table`::
+  The type of imperative hash tables indexed by the key types.
+
+`[.kw]#val# mkTable : (int * exn) \-> 'a hash_table`::
+  `mkTable (n, ex)` creates a new hash table; the table will be initially
+  sized to hold at least `n` items.  The exception `ex` is raised by the
+  lookup and remove functions (described below)
+  when the search key is not in the domain.
+
+`[.kw]#val# clear : 'a hash_table \-> unit`::
+  `clear tbl` removes all of the entries in the table.
+
+`[.kw]#val# insert : 'a hash_table \-> (Key1.hash_key * Key2.hash_key * 'a) \-> unit`::
+  `insert tbl (key1, key2, item)` inserts a mappings from `key1` and `key2`
+  to `item` into `tbl`.  Any existing mapping of the keys is discarded.
+
+`[.kw]#val# inDomain1 : 'a hash_table \-> Key1.hash_key \-> bool`::
+  `inDomain1 tbl key` returns `true` if, and only if, `key` is in the
+  first domain of the table
+
+`[.kw]#val# inDomain2 : 'a hash_table \-> Key2.hash_key \-> bool`::
+  `inDomain2 tbl key` returns `true` if, and only if, `key` is in the
+  second domain of the table
+
+[[val:lookup1]]
+`[.kw]#val# lookup1 : 'a hash_table \-> Key1.hash_key \-> 'a`::
+  `lookup1 tbl key` returns the item that `key` maps to if `key` is in
+  the first mapping of `tbl`.  Otherwise, the table's exception is raised.
+
+[[val:lookup2]]
+`[.kw]#val# lookup2 : 'a hash_table \-> Key2.hash_key \-> 'a`::
+  `lookup2 tbl key` returns the item that `key` maps to if `key` is in
+  the second mapping of `tbl`.  Otherwise, the table's exception is raised.
+
+`[.kw]#val# find1 : 'a hash_table \-> Key1.hash_key \-> 'a option`::
+  `find1 tbl key` returns the `SOME v` if `key` is in the first domain
+  of `tbl` and is mapped to `v`.  Otherwise, it returns `NONE`.
+
+`[.kw]#val# find2 : 'a hash_table \-> Key2.hash_key \-> 'a option`::
+  `find2 tbl key` returns the `SOME v` if `key` is in the second domain
+  of `tbl` and is mapped to `v`.  Otherwise, it returns `NONE`.
+
+[[val:remove1]]
+`[.kw]#val# remove1 : 'a hash_table \-> Key1.hash_key \-> 'a`::
+  `remove1 tbl key1` returns the item that `key1` maps to if `key1` is in
+  the first mapping of `tbl`.  Furthermore, if the item was inserted with
+  keys `key1` and `key2`, then `key1` is removed from the first mapping
+  and `key2` is removed from the second mapping.  If `key1` is not in the
+  first domain of the table, then the table's exception is raised.
+
+[[val:remove2]]
+`[.kw]#val# remove2 : 'a hash_table \-> Key2.hash_key \-> 'a`::
+  `remove2 tbl key2` returns the item that `key2` maps to if `key2` is in
+  the second mapping of `tbl`.  Furthermore, if the item was inserted with
+  keys `key1` and `key2`, then `key1` is removed from the first mapping
+  and `key2` is removed from the second mapping.  If `key2` is not in the
+  second domain of the table, then the table's exception is raised.
+
+`[.kw]#val# numItems : 'a hash_table \->  int`::
+  `numItems tbl` returns the number of entries in the table.
+
+`[.kw]#val# listItems  : 'a hash_table \-> 'a list`::
+  `listItems tbl` returns a list of the items in the range of `tbl`.
+
+`[.kw]#val# listItemsi : 'a hash_table \-> (Key1.hash_key * Key2.hash_key * 'a) list`::
+  `listItemsi tbl` returns a list of the `(key1, key2, item)` triples that
+  are in `tbl`.
+
+`[.kw]#val# app  : ('a \-> unit) \-> 'a hash_table \-> unit`::
+  `app f tbl` applies the function `f` to each item in `tbl`.
+
+`[.kw]#val# appi : ((Key1.hash_key * Key2.hash_key * 'a) \-> unit) \-> 'a hash_table`::
+  `appi f tbl` applies the function `f` to each `(key1, key2, item)` triple in `tbl`.
+
+`[.kw]#val# map  : ('a \-> 'b) \-> 'a hash_table \-> 'b hash_table`::
+  `map f tbl` creates a new table with an entry `(key1, key2, f item)`
+  in the new table for every `(key1, key2, item)` triple in `tbl`.
+  The exception for the new table is copied from `tbl`.
+
+`[.kw]#val# mapi : ((Key1.hash_key * Key2.hash_key * 'a) \-> 'b) \-> 'a hash_table \-> 'b hash_table`::
+  `mapi f tbl` creates a new table with an entry `(key1, key2, f(key1, key2, item))`
+  in the new table for every `(key1, key2, item)` triple in `tbl`.
+  The exception for the new table is copied from `tbl`.
+
+`[.kw]#val# fold  : (('a * 'b) \-> 'b) \-> 'b \-> 'a hash_table \-> 'b`::
+  `fold f init tbl` folds the function `f` over the items in the range of `tbl`
+  using `init` as an initial value.
+
+`[.kw]#val# foldi : ((Key1.hash_key * Key2.hash_key * 'a * 'b) \-> 'b) \-> 'b \-> 'a hash_table \-> 'b`::
+  `foldi f init tbl` folds the function `f` over the `(key1, key2, item)`
+  triples in `tbl` using `init` as an initial value.
+
+`[.kw]#val# filter  : ('a \-> bool) \-> 'a hash_table \-> unit`::
+  `filter pred tbl` removes any entry `(key1, key2, item)` from `tbl` for which
+  `pred item` returns `false`.
+
+`[.kw]#val# filteri : ((Key1.hash_key * Key2.hash_key * 'a) \-> bool) \-> 'a hash_table \-> unit`::
+  `filteri pred tbl` removes any entry `(key1, key2, item)` from `tbl` for which
+  `pred(key1, key2, item)` returns `false`.
+
+`[.kw]#val# copy : 'a hash_table \-> 'a hash_table`::
+  `copy tbl` creates a copy of `tbl`.  This expression is equivalent to
++
+[source,sml]
+------------
+map (fn x => x) tbl
+------------
+
+`[.kw]#val# bucketSizes : 'a hash_table \-> (int list * int list)`::
+  `bucketSizes tbl` returns a list of the current number of items per
+  bucket for each of the tables.  This function allows users to gauge
+  the quality of their hashing functions.
+
+== See Also
+
+xref:sig-HASH_KEY.adoc[`HASH_KEY`],
+xref:fun-HashTableFn.adoc[`HashTableFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

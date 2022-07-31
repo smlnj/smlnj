@@ -1,0 +1,191 @@
+= The `UTF8` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `UTF8` structure provides support for working
+with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
+encoded strings.  *UTF-8* is a way to represent *Unicode*
+code points in an 8-bit character type while being backward
+compatible with the *ASCII* encoding for 7-bit characters.
+The encoding scheme uses one to four bytes as follows:
+
+[cols="^4a,4*^1a",options="header",align="center",grid="rows",width="80%"]
+|===
+| Wide Character Bits           | Byte 0     | Byte 1     | Byte 2     | Byte 3
+| `00000` `00000000` `0xxxxxxx` | `0xxxxxxx` |            |            |
+| `00000` `00000yyy` `yyxxxxxx` | `110yyyyy` | `10xxxxxx` |            |
+| `00000` `zzzzyyyy` `yyxxxxxx` | `1110zzzz` | `10yyyyyy` | `10xxxxxx` |
+| `wwwzz` `zzzzyyyy` `yyxxxxxx` | `11110www` | `10zzzzzz` | `10yyyyyy` | `10xxxxxx`
+|===
+
+== Synopsis
+
+[source,sml]
+------------
+signature UTF8
+structure UTF8 :> UTF8
+------------
+
+== Interface
+
+[source,sml]
+------------
+type wchar = word
+
+val maxCodePoint : wchar
+
+exception Incomplete
+
+val getu : (char, 'strm) StringCvt.reader -> (wchar, 'strm) StringCvt.reader
+
+val encode : wchar -> string
+
+val isAscii : wchar -> bool
+val toAscii : wchar -> char
+val fromAscii : char -> wchar
+
+val toString : wchar -> string
+
+val size : string -> int
+
+val explode : string -> wchar list
+val implode : wchar list -> string
+
+val map : (wchar -> wchar) -> string -> string
+val app : (wchar -> unit) -> string -> unit
+val fold : ((wchar * 'a) -> 'a) -> 'a -> string -> 'a
+val all : (wchar -> bool) -> string -> bool
+val exists : (wchar -> bool) -> string -> bool
+------------
+
+== Description
+
+`[.kw]#type# wchar = word`::
+  The type of a *Unicode* code point. +
+  Note that we use the `word` type for this because *SML/NJ* does not currently
+  have a wide-character type.  If such a type is introduced, then this type
+  definition will likely change.
+
+`[.kw]#val# maxCodePoint : wchar`::
+  The maximum code point in the *Unicode* character set (`0wx10FFFF`).
+
+[[exn:Incomplete]]
+`[.kw]#exception# Incomplete`::
+  This exception is raised when certain operations are applied to incomplete
+  strings (_i.e._, strings that end with a partial *UTF-8* character encoding).
+
+`[.kw]#val# getu : (char, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader] \-> (wchar, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader]`::
+  `getu getc` returns a wide-character reader for the character reader `getc`.
+  The resulting reader will raise the xref:#exn:Incomplete[`Incomplete`] exception
+  if it encounters an incomplete *UTF-8* character.
+
+`[.kw]#val# encode : wchar \-> string`::
+  `encode wc` returns the *UTF-8* encoding of the wide character `wc`.
+  This expression raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN[`Domain`] exception
+  if `wc` is greater than the maximum *Unicode* code point.
+
+`[.kw]#val# isAscii : wchar \-> bool`::
+  `isAscii wc` returns `true` if, and only if, `wc` is an ASCII character.
+
+`[.kw]#val# toAscii : wchar \-> char		(* truncates to 7-bits *)`::
+  `toAscii wc` converts `wc` to an 8-bit character by truncating `wc`
+  to its low seven bits.
+
+`[.kw]#val# fromAscii : char \-> wchar	(* truncates to 7-bits *)`::
+  `toAscii c` converts the 8-bit character `c` to a wide character in
+  the ASCII range (the high bit of `c` is ignored).
+
+`[.kw]#val# toString : wchar \-> string`::
+  `toString wc` returns a printable string representation of a wide character
+  as a *Unicode* escape sequence.
+
+`[.kw]#val# size : string \-> int`::
+  `size s` returns the number of *UTF-8* encoded *Unicode* characters
+  in the string `s`.  This expression raises the
+  xref:#exn:Incomplete[`Incomplete`] exception if an incomplete
+  character is encountered.
+
+`[.kw]#val# explode : string \-> wchar list`::
+  `explode s` returns the list of *UTF-8* encoded Unicode characters that
+  comprise the string `s`.
+
+`[.kw]#val# implode : wchar list \-> string`::
+  `implode wcs` returns the *UTF-8* encoded string that represents
+  the list `wcs` of Unicode code points.
+  This expression raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN[`Domain`] exception
+  if any character in the list is greater than the maximum *Unicode* code point.
+
+`[.kw]#val# map : (wchar \-> wchar) \-> string \-> string`::
+  `map f s` maps the function `f` over the *UTF-8* encoded characters
+  in the string `s` to produce a new *UTF-8* string. This expression raises
+  the xref:#exn:Incomplete[`Incomplete`] exception if an incomplete
+  character is encountered and the
+  {sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN[`Domain`] exception
+  if `f` returns a value that is greater than the maximum *Unicode* code point.
+  It is equivalent to the expression
++
+[source,sml]
+------------
+implode (List.map f (explode s))
+------------
+
+`[.kw]#val# app : (wchar \-> unit) \-> string \-> unit`::
+  `app f s` applies the function `f` to the  *UTF-8* encoded characters
+  in the string `s`.  This expression raises the
+  xref:#exn:Incomplete[`Incomplete`] exception if an incomplete
+  character is encountered.  It is equivalent to the expression
++
+[source,sml]
+------------
+List.app f (explode s)
+------------
+
+`[.kw]#val# fold : ((wchar * 'a) \-> 'a) \-> 'a \-> string \-> 'a`::
+  `fold f init s` folds a function from left-to-right over the
+  *UTF-8* encoded characters in the string.  This expression raises
+  the xref:#exn:Incomplete[`Incomplete`] exception if an incomplete
+  character is encountered.  It is equivalent to the expression
++
+[source,sml]
+------------
+List.foldl f init (explode s)
+------------
+
+`[.kw]#val# all : (wchar \-> bool) \-> string \-> bool`::
+  `all pred s` returns `true` if, and only if, the function `pred`
+  returns true for all of the *UTF-8* encoded characters in the
+  string.  It short-circuits evaluation as soon as a character
+  is encountered for which `pred` returns `false`.  This expression
+  raises the xref:#exn:Incomplete[`Incomplete`] exception if an incomplete
+  character is encountered.  It is equivalent to the expression
++
+[source,sml]
+------------
+List.all pred (explode s)
+------------
++
+when `s` only contains complete characters.
+
+`[.kw]#val# exists : (wchar \-> bool) \-> string \-> bool`::
+  `exists pred s` returns `true` if, and only if, the function `pred`
+  returns `true` for at least one *UTF-8* encoded character in
+  the string `s`.  It short-circuits evaluation as soon as a character
+  is encountered for which `pred` returns `true`.  This expression raises
+  the xref:#exn:Incomplete[`Incomplete`] exception if an incomplete
+  character is encountered.  It is equivalent to the expression
++
+[source,sml]
+------------
+List.exists pred (explode s)
+------------
++
+when `s` only contains complete characters.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

@@ -1,0 +1,32 @@
+#
+# Modules to be pre-loaded into a "standard" system during bootstrap.
+#   Each line should have the form "command file" where "command" is
+#   either "autoload" or "make".
+#
+#   Copyright (c) 1999 by Lucent Bell Laboratories
+#
+# author: Matthias Blume (blume@cs.princeton.edu)
+#
+
+# The SML Basis library:
+autoload $smlnj/basis/basis.cm
+
+# The Compilation Manager (structure CM)
+autoload $smlnj/cm.cm
+
+# The Bootstrap Compilation Manager (structure CMB)
+autoload $smlnj/cmb.cm
+
+# The Visisble Compiler (collection of structures)
+autoload $smlnj/compiler.cm
+
+# The Visible Compiler (old style: structure Compiler)
+#autoload $smlnj/compiler/compiler.cm
+
+# If you don't autoload the old-style visible compiler above, then
+# you should make a minimal version of it available so that
+# Compiler.version as well as Compiler.achitecture are available:
+autoload $smlnj/compiler/minimal.cm
+
+# The SML/NJ Library
+autoload $smlnj/smlnj-lib/smlnj-lib.cm

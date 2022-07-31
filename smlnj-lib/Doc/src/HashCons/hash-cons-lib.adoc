@@ -1,0 +1,123 @@
+= The HashCons Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *HashCons Library* supports the implementation of
+hash-consed representations of data structures. Such representations
+are useful to reduce space usage by sharing common substructures
+and to provide constant-time equality testing for large structures.
+
+To use this library, you need to use a two-level definition of your
+data structures.  For example, we might define a hash-cons representation
+of lambda terms as follows:
+
+[source,sml]
+------------
+structure HC = HashCons
+
+type var = HashConsString.obj
+
+datatype term_node
+  = VAR of var
+  | LAM of (var * term)
+  | APP of (term * term)
+withtype term = term_node HC.obj
+------------
+
+And you need to define an equality function on your terms (this function
+can use the hash-cons identity on subterms).  For example, here is the
+equality function for our lambda terms:
+
+[source,sml]
+------------
+fun eq (APP(t11, t12), APP(t21, t22)) = HC.same(t11, t21) andalso HC.same(t12, t22)
+  | eq (LAM(x, t1), LAM(y, t2)) = HC.same(x, y) andalso HC.same(t1, t2)
+  | eq (VAR x, VAR y) = HC.same(x, y)
+  | eq _ = false
+------------
+
+With the equality function defined, we can then create a hash-cons table:
+
+[source,sml]
+------------
+val tbl = HC.new {eq = eq}
+------------
+
+And define constructor functions:
+
+[source,sml]
+------------
+val mkAPP = HC.cons2 tbl (0wx1, APP)
+val mkLAM = HC.cons2 tbl (0wx3, LAM)
+val mkVAR = HC.cons1 tbl (0wx7, VAR)
+val var = HW.mk
+------------
+
+Note that we pick successive prime numbers for the constructor hash codes.
+Using these constructors, we can construct the representation of the
+identity function "latexmath:[\lambda{} x . x]" as follows:
+
+[source,sml]
+------------
+mkLAM(var "x", mkVAR(var "x"))
+------------
+
+In addition to term construction, this library also supports finite sets
+and maps using the unique hash-cons codes as keys.
+
+== Contents
+
+xref:str-HashCons.adoc[`[.kw]#structure# HashCons`]::
+  The main module in the library, which defines the basic types
+  and various utility functions.
+
+xref:str-HashConsAtom.adoc[`[.kw]#structure# HashConsAtom`]::
+  Code to package the xref:../Util/str-Atom.adoc#type:atom[`Atom.atom`] type
+  as a hash-consed object.
+
+xref:str-HashConsMap.adoc[`[.kw]#structure# HashConsMap`]::
+  Implements finite maps keyed by hash-consed objects.
+
+xref:str-HashConsString.adoc[`[.kw]#structure# HashConsString`]::
+  Code to package the `string` type as a hash-consed object.
+
+xref:str-HashConsSet.adoc[`[.kw]#structure# HashConsSet`]::
+  Implements finite sets of hash-consed objects.
+
+xref:fun-HashConsGroundFn.adoc[`[.kw]#functor# HashConsGroundFn`]::
+  A functor for implementing new leaf types as hash-consed objects.
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/hash-cons-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/HashCons/hash-cons-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-HashCons.adoc[]
+
+include::str-HashConsAtom.adoc[]
+
+include::str-HashConsMap.adoc[]
+
+include::str-HashConsString.adoc[]
+
+include::str-HashConsSet.adoc[]
+
+include::fun-HashConsGroundFn.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

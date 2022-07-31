@@ -1,0 +1,120 @@
+<!-- mono-dynamic-array.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY MONO-DYNAMIC-ARRAY SDATA "mono-dynamic-array-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The MONO_DYNAMIC_ARRAY signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/MONO_DYNAMIC_ARRAY/ signature</HEAD>
+<SEEALSO>
+  <FCTREF/DynamicArrayFn/
+  <SIGREF DOCUMENT=SML-BASIS-DOC/MONO_ARRAY/
+</SEEALSO>
+
+<PP>
+The <SIGREF NOLINK/MONO_DYNAMIC_ARRAY/ signature specifies
+an interface to dynamic monomorphic arrays. These act like arrays
+of unbounded length. 
+
+<SIGNATURE SIGID="MONO_DYNAMIC_ARRAY">
+  <SIGBODY SIGID="MONO_DYNAMIC_ARRAY" FILE=MONO-DYNAMIC-ARRAY>
+    <SPEC>
+      <TYPE><ID>elem
+    <SPEC>
+      <TYPE><ID>array
+    <SPEC>
+      <VAL>array<TY>(int * elem) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+        <COMMENT>
+          <PROTOTY>
+          array (<ARG/sz/, <ARG/el/)
+          </PROTOTY>
+          creates a dynamic array all of whose elements are 
+          initialized to the default value of <ARG/el/. The <ARG/sz/ 
+          parameter is used as a hint of the potential range of indices of
+          non-default items. Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/ if
+          <MATH/<ARG/sz/ &LT; 0/.
+    <SPEC>
+      <VAL>subArray<TY>(array * int * int) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+        <COMMENT>
+          <PROTOTY>
+          subArray (<ARG/arr/, <ARG/lo/, <ARG/hi/)
+          </PROTOTY>
+          creates a new array with the same default as <ARG/arr/, and whose 
+          values in the range <MATH/[0,hi-lo]/ are equal to the values in 
+          <ARG/arr/ in the range <MATH/[lo, hi]/.
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/ if
+          <MATH/<ARG/hi/ &LT; <ARG/lo//.
+    <SPEC>
+      <VAL>fromList<TY>(elem list * elem) -> array
+        <COMMENT>
+          <PROTOTY>
+          fromList (<ARG/l/, <ARG/el/)
+          </PROTOTY>
+          creates an array using the list of values <ARG/l/ plus the 
+          default value <ARG/el/.
+    <SPEC>
+      <VAL>tabulate<TY>(int * (int -> elem) * elem) -> array
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+        <COMMENT>
+          <PROTOTY>
+          tabulate (<ARG/sz/, <ARG/f/, <ARG/el/)
+          </PROTOTY>
+          acts like <VALREF STRID="Array" DOCUMENT=SML-BASIS-DOC/Array.tabulate/,
+	  plus stores the default value <ARG/el/.
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/ if
+          <MATH/<ARG/sz/ &LT; 0/.
+    <SPEC>
+      <VAL>default<TY>array -> elem
+        <COMMENT>
+          <PROTOTY>
+          default <ARG/arr/
+          </PROTOTY>
+          returns the array's default value.
+    <SPEC>
+      <VAL>sub<TY>(array * int) -> elem
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/
+        <COMMENT>
+          <PROTOTY>
+          sub (<ARG/arr/, <ARG/i/)
+          </PROTOTY>
+          returns value of the array at index <ARG/i/. If that value has not 
+          been set by <CD/update/, it returns the default value.
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/ if
+          <MATH/<ARG/i/ &LT; 0/. Note that no exception is raised for an
+          index too large.
+    <SPEC>
+      <VAL>update<TY>(array * int * elem) -> unit
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/
+        <COMMENT>
+          <PROTOTY>
+          update (<ARG/arr/, <ARG/i/, <ARG/el/)
+          </PROTOTY>
+          sets the value at index <ARG/i/ of the array <ARG/arr/ to <ARG/el/. 
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/ if
+          <MATH/<ARG/i/ &LT; 0/. Note that no exception is raised for an
+          index too large.
+    <SPEC>
+      <VAL>bound<TY>array -> int
+        <COMMENT>
+          <PROTOTY>
+          bound <ARG/arr/
+          </PROTOTY>
+          returns an upper bound on the index of values that have been changed.
+    <SPEC>
+      <VAL>truncate<TY>(array * int) -> unit
+        <COMMENT>
+          <PROTOTY>
+          truncate (<ARG/arr/, <ARG/sz/)
+          </PROTOTY>
+          makes every entry in <ARG/arr/ with index greater than <ARG/sz/ 
+          the default value.
+</SIGNATURE>
+
+</INTERFACE>

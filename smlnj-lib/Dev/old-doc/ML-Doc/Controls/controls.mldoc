@@ -1,0 +1,123 @@
+<!-- controls.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=16>
+<TITLE>The CONTROLS signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/CONTROLS/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+<!-- Some general introductory text -->
+
+<STRUCTURE STRID="Controls">
+  <OPAQUE>  <SIGBODY SIGID="CONTROLS" FILE=CONTROLS>
+    <SPEC>
+      <TYPE><ID>priority<TY>int list
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>control
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>value_cvt<TY>{tyName : string, fromString : string -> 'a option, toString : 'a -> string}
+    <SPEC>
+      <VAL>control<TY>{name : string, pri : priority, obscurity : int, help : string, ctl : 'a ref} -> 'a control
+        <COMMENT>
+          <PROTOTY>
+          control {<ARG>name</ARG>, <ARG>pri</ARG>, <ARG>obscurity</ARG>, <ARG>help</ARG>, <ARG>ctl</ARG>}
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of control HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>genControl<TY>{name : string, pri : priority, obscurity : int, help : string, default : 'a} -> 'a control
+        <COMMENT>
+          <PROTOTY>
+          genControl {<ARG>name</ARG>, <ARG>pri</ARG>, <ARG>obscurity</ARG>, <ARG>help</ARG>, <ARG>default</ARG>}
+          </PROTOTY>
+          <PP>
+          <!-- generate a control -->
+        </COMMENT>
+    <SPEC>
+      <EXN>ValueSyntax<TY>{tyName : string, ctlName : string, value : string}
+    <SPEC>
+      <VAL>stringControl<TY>'a value_cvt -> 'a control -> string control
+        <COMMENT>
+          <PROTOTY>
+          stringControl <ARG>vc</ARG> <ARG>ctl</ARG>
+          </PROTOTY>
+          <PP>
+          create a string control from a typed control.
+        </COMMENT>
+    <SPEC>
+      <VAL>name<TY>'a control -> string
+        <COMMENT>
+          <PROTOTY>
+          name <ARG>ctl</ARG>
+          </PROTOTY>
+          <PP>
+          <!-- control operations -->
+        </COMMENT>
+    <SPEC>
+      <VAL>get<TY>'a control -> 'a
+        <COMMENT>
+          <PROTOTY>
+          get <ARG>ctl</ARG>
+          </PROTOTY>
+          <PP>
+          <!-- control operations -->
+        </COMMENT>
+    <SPEC>
+      <VAL>set<TY>('a control * 'a) -> unit
+        <COMMENT>
+          <PROTOTY>
+          set (<ARG>ctl</ARG>, <ARG>a</ARG>)
+          </PROTOTY>
+          <PP>
+          <!-- control operations -->
+        </COMMENT>
+    <SPEC>
+      <VAL>set'<TY>('a control * 'a) -> unit -> unit
+        <COMMENT>
+          <PROTOTY>
+          set' (<ARG>ctl</ARG>, <ARG>a</ARG>) <ARG>()</ARG>
+          </PROTOTY>
+          <PP>
+          explain the use and semantics of set' HERE.
+        </COMMENT>
+    <SPEC>
+      <VAL>info<TY>'a control -> {priority : priority, obscurity : int, help : string}
+        <COMMENT>
+          <PROTOTY>
+          info <ARG>ctl</ARG>
+          </PROTOTY>
+          <PP>
+          <!-- delayed, error checking in 1st stage -->
+        </COMMENT>
+    <SPEC>
+      <VAL>save'restore<TY>'a control -> unit -> unit
+        <COMMENT>
+          <PROTOTY>
+          save'restore <ARG>ctl</ARG>
+          </PROTOTY>
+          <PP>
+          captures the current value of the control <ARG>ctl</ARG> and returns a function
+	  that restores the value.
+        </COMMENT>
+    <SPEC>
+      <VAL>compare<TY>('a control * 'a control) -> order
+        <COMMENT>
+          <PROTOTY>
+          compare (<ARG>ctl</ARG>, <ARG>ctl'</ARG>)
+          </PROTOTY>
+          <PP>
+          compares the priority of the two controls.
+        </COMMENT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

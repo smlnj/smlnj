@@ -1,0 +1,52 @@
+= The `LibBase` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `LibBase` structure provides some common definitions that are
+shared across the *SML/NJ Lbrary*.
+
+== Synopsis
+
+[source,sml]
+------------
+signature LIB_BASE
+structure LibBase : LIB_BASE
+------------
+
+== Interface
+
+[source,sml]
+------------
+exception Unimplemented of string
+exception Impossible of string
+
+exception NotFound
+
+val failure : {module : string, func : string, msg : string} -> 'a
+------------
+
+== Description
+
+`[.kw]#exception# Unimplemented of string`::
+  This exception is raised to report unimplemented features.
+
+`[.kw]#exception# Impossible of string`::
+  This exception is raised to report internal errors.
+
+[[exn:NotFound]]
+`[.kw]#exception# NotFound`::
+  This exception is raised by searching operations when something being
+  searched for is missing.
+
+`[.kw]#val# failure : {module : string, func : string, msg : string} \-> 'a`::
+  `failure {module, func, msg}` raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`] exception
+  with a message in a standard format.  It is used internally to report
+  errors.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

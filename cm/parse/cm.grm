@@ -1,0 +1,331 @@
+(* -*- sml-yacc -*-
+ *
+ * cm.grm
+ *
+ * ML-Yacc grammar for CM description files
+ *
+ * (C) 1999,2001 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@research.bell-labs.com)
+ *)
+
+structure S = CMSemant
+
+%%
+
+%term EOF
+    | FILE_STANDARD of string
+    | FILE_NATIVE of string
+    | CM_ID of string
+    | ML_ID of string
+    | NUMBER of int
+    | GROUP | LIBRARY | IS
+    | LPAREN | RPAREN | COLON
+    | IF | ELIF | ELSE | ENDIF
+    | ERROR of string
+    | STRUCTURE | SIGNATURE | FUNCTOR | FUNSIG
+    | DEFINED
+    | ADDSYM of CMSemant.addsym
+    | MULSYM of CMSemant.mulsym
+    | EQSYM of CMSemant.eqsym
+    | INEQSYM of CMSemant.ineqsym
+    | TILDE
+    | ANDALSO | ORELSE | NOT
+    | TRUE | FALSE
+    | STAR | DASH | SOURCE
+
+%nonterm description of S.group
+       | group of S.group
+       | gprivspec of S.privilegespec
+       | lprivspec of S.privilegespec
+       | version of S.cm_version
+       | wrapspec of S.privilegespec -> S.privilegespec
+       | mand_exports of S.exports
+       | opt_exports of S.exports
+       | exports of S.exports
+       | export of S.exports
+       | guarded_exports of S.exports * S.exports
+       | else_exports of S.exports
+       | members of S.members
+       | member of S.members
+       | guarded_members of S.members * S.members
+       | else_members of S.members
+       | aexp of S.aexp
+       | boolexp of S.exp
+       | exp of S.exp
+       | ml_symbol of S.ml_symbol
+       | ml_symbolset of S.exports
+       | pathname of { name: string, mkpath: unit -> SrcPath.prefile }
+       | sym of S.cm_symbol
+       | word of S.cm_symbol
+       | class of S.cm_class
+       | optclass of S.cm_class option
+       | toolopts of S.toolopt list
+       | ptoolopts of S.toolopt list
+       | opttoolopts of S.toolopt list option
+       | srcfile of unit -> SrcPath.file
+       | srcfiles of unit -> SrcPath.file option
+       | filecat of (unit -> SrcPath.file option) * S.complainer -> S.exports
+
+%pos int
+%verbose
+%arg ({ grouppath, context, obsolete, error, doMember, curlib, gp, ig }) :
+    { grouppath: SrcPath.file,
+      context: S.context,
+      obsolete: pos * pos -> unit,
+      error: pos * pos -> string -> unit,
+      doMember : { name: string, mkpath: unit -> SrcPath.prefile } *
+		 pos * pos * S.cm_class option * S.toolopt list option
+		 -> S.members,
+      curlib: SrcPath.file option,
+      gp: GeneralParams.info,
+      ig: S.group }
+%start description
+%eop EOF
+%noshift EOF
+
+%name CM
+
+%keyword GROUP LIBRARY IS IF ELIF ELSE ENDIF DEFINED
+  STRUCTURE SIGNATURE FUNCTOR FUNSIG
+
+%prefer LPAREN
+
+%left ORELSE
+%left ANDALSO
+%nonassoc INEQSYM
+%nonassoc EQSYM
+%left ADDSYM
+%left MULSYM
+%left NOT TILDE
+
+%left DASH
+%left STAR
+
+%%
+
+description : group				(group)
+
+group : gprivspec LPAREN srcfile RPAREN opt_exports IS members
+                                                (obsolete (LPARENleft,
+							   RPARENright);
+						 S.group
+						 { path = grouppath,
+						   privileges = gprivspec,
+						   exports = opt_exports,
+						   members = members,
+						   gp = gp,
+						   curlib = curlib,
+						   initgroup = ig })
+      | gprivspec opt_exports IS members
+                                                (S.group
+						 { path = grouppath,
+						   privileges = gprivspec,
+						   exports = opt_exports,
+						   members = members,
+						   gp = gp,
+						   curlib = curlib,
+						   initgroup = ig })
+      | lprivspec LPAREN version RPAREN mand_exports IS members
+                                               (S.library
+						 { path = grouppath,
+						   privileges = lprivspec,
+						   exports = mand_exports,
+						   version = SOME version,
+						   members = members,
+						   gp = gp,
+						   initgroup = ig })
+      | lprivspec mand_exports IS members
+                                               (S.library
+						 { path = grouppath,
+						   privileges = lprivspec,
+						   exports = mand_exports,
+						   version = NONE,
+						   members = members,
+						   gp = gp,
+						   initgroup = ig })
+
+version : FILE_STANDARD                        (S.cm_version
+						(FILE_STANDARD,
+						 error (FILE_STANDARDleft,
+							FILE_STANDARDright)))
+
+wrapspec : (* empty *)                         (fn p => p)
+          | wrapspec word                      (fn p =>
+						 S.wrap (wrapspec p, word,
+							  error (wordleft,
+								 wordright)))
+
+gprivspec : GROUP                               (S.initialPrivilegeSpec)
+          | word gprivspec                      (S.require (gprivspec, word,
+							    error (wordleft,
+								   wordright)))
+
+lprivspec : LIBRARY                             (S.initialPrivilegeSpec)
+          | word lprivspec                      (S.require (lprivspec, word,
+							    error (wordleft,
+								   wordright)))
+          | LPAREN wrapspec RPAREN lprivspec    (wrapspec lprivspec)
+
+mand_exports : export				(export)
+	     | mand_exports export	        (S.union (mand_exports,export))
+
+opt_exports : (* empty *)                       (S.default_group_exports)
+            | mand_exports                      (mand_exports)
+
+exports : (* empty *)                           (S.emptyExports)
+        | exports export                        (S.union (exports, export))
+
+export : ml_symbolset				(ml_symbolset)
+       | IF exp guarded_exports			(S.guarded_exports
+						  (exp, guarded_exports,
+						   error (expleft, expright)))
+       | ERROR                                  (S.error_export
+						 (fn () =>
+						  error (ERRORleft, ERRORright)
+						        ERROR))
+
+filecat : GROUP                                 (S.exportgroup)
+        | SOURCE                                (S.exportsource)
+
+
+ml_symbolset : ml_symbol                        (S.export
+						     (ml_symbol,
+						      error (ml_symbolleft,
+							     ml_symbolright)))
+             | LPAREN exports RPAREN            (exports)
+             | ml_symbolset STAR ml_symbolset   (S.intersection
+						     (ml_symbolset1,
+						      ml_symbolset2))
+             | ml_symbolset DASH ml_symbolset   (S.difference
+						     (ml_symbolset1,
+						      ml_symbolset2))
+	     | filecat LPAREN srcfiles RPAREN   (filecat
+						     (srcfiles,
+						      error (srcfilesleft,
+							     srcfilesright)))
+             | LIBRARY LPAREN pathname opttoolopts RPAREN
+                                                (S.exportlibrary
+						     (fn () => SrcPath.file
+							 (#mkpath pathname ()),
+						      error (pathnameleft,
+							     pathnameright),
+						      { hasoptions =
+							   isSome opttoolopts,
+							elab = fn () =>
+							   doMember
+							       (pathname,
+								pathnameleft,
+								pathnameright,
+								NONE,
+								opttoolopts),
+							curlib = curlib }))
+
+guarded_exports : exports else_exports	        ((exports, else_exports))
+
+else_exports : ENDIF				(S.emptyExports)
+	     | ELSE exports ENDIF		(exports)
+             | ELIF exp guarded_exports		(S.guarded_exports
+						 (exp, guarded_exports,
+						  error (expleft, expright)))
+
+members : (* empty *)				(S.emptyMembers)
+	| member members			(S.members (member, members))
+
+toolopts : (* empty *)                          ([])
+         | pathname toolopts                    (S.string pathname :: toolopts)
+	 | pathname COLON ptoolopts toolopts    (S.subopts
+						     { name = #name pathname,
+						       opts = ptoolopts }
+						 :: toolopts)
+	 | pathname COLON pathname toolopts     (S.subopts
+						     { name = #name pathname1,
+						       opts = [S.string
+								   pathname2] }
+						 :: toolopts)
+
+ptoolopts : LPAREN toolopts RPAREN              (toolopts)
+
+opttoolopts : (* empty *)                       (NONE)
+            | ptoolopts                         (SOME ptoolopts)
+
+optclass : (* empty *)                          (NONE)
+         | COLON class                          (SOME class)
+
+member : pathname optclass opttoolopts		(doMember (pathname,
+							   pathnameleft,
+							   pathnameright,
+							   optclass,
+							   opttoolopts))
+       | IF exp guarded_members			(S.guarded_members
+						 (exp, guarded_members,
+						  error (expleft, expright)))
+       | ERROR                                  (S.error_member
+						 (fn () =>
+						  error (ERRORleft, ERRORright)
+						        ERROR))
+
+class : word                                    (S.class word)
+
+guarded_members : members else_members	        ((members, else_members))
+
+else_members : ENDIF				(S.emptyMembers)
+	     | ELSE members ENDIF		(members)
+	     | ELIF exp guarded_members		(S.guarded_members
+						 (exp, guarded_members,
+						  error (expleft, expright)))
+
+word : FILE_STANDARD                            (S.cm_symbol FILE_STANDARD)
+
+sym : CM_ID                                     (S.cm_symbol CM_ID)
+
+exp : boolexp					(boolexp)
+
+aexp : NUMBER				        (S.number NUMBER)
+     | sym					(S.variable gp sym)
+     | LPAREN aexp RPAREN		        (aexp)
+     | aexp ADDSYM aexp                         (S.add (aexp1, ADDSYM, aexp2))
+     | aexp MULSYM aexp                         (S.mul (aexp1, MULSYM, aexp2))
+     | TILDE aexp		                (S.negate aexp)
+     | ADDSYM aexp %prec TILDE                  (obsolete (ADDSYMleft,
+							   ADDSYMright);
+						 S.sign (ADDSYM, aexp))
+
+boolexp : DEFINED LPAREN ml_symbol RPAREN	(S.ml_defined ml_symbol)
+	| DEFINED LPAREN sym RPAREN		(S.cm_defined gp sym)
+	| LPAREN boolexp RPAREN			(boolexp)
+	| boolexp ANDALSO boolexp		(S.conj (boolexp1, boolexp2))
+	| boolexp ORELSE boolexp		(S.disj (boolexp1, boolexp2))
+	| boolexp EQSYM boolexp                 (S.beq (boolexp1, EQSYM,
+							boolexp2))
+	| NOT boolexp				(S.not boolexp)
+	| aexp INEQSYM aexp                     (S.ineq (aexp1, INEQSYM,
+							 aexp2))
+	| aexp EQSYM aexp                       (S.eq (aexp1, EQSYM, aexp2))
+	| TRUE					(S.boolean true)
+	| FALSE					(S.boolean false)
+
+ml_symbol : STRUCTURE ML_ID			(S.ml_structure ML_ID)
+	  | SIGNATURE ML_ID			(S.ml_signature ML_ID)
+	  | FUNCTOR ML_ID			(S.ml_functor ML_ID)
+	  | FUNSIG ML_ID			(S.ml_funsig ML_ID)
+
+pathname : FILE_STANDARD			({ name = FILE_STANDARD,
+						   mkpath = fn () =>
+						     S.file_standard gp
+						      (FILE_STANDARD,
+						       context, error
+						       (FILE_STANDARDleft,
+							FILE_STANDARDright)) })
+	 | FILE_NATIVE				({ name = FILE_NATIVE,
+						   mkpath = fn () =>
+						     S.file_native
+						       (FILE_NATIVE,
+							context, error
+							(FILE_NATIVEleft,
+							 FILE_NATIVEright)) })
+
+srcfile : pathname                              (fn () => SrcPath.file
+							 (#mkpath pathname ()))
+srcfiles : srcfile                              (SOME o srcfile)
+         | DASH                                 (fn () => NONE)

@@ -1,0 +1,6 @@
+Library
+  structure Y
+is
+  dia-a.cm
+  dia-b.cm
+  dia.sml

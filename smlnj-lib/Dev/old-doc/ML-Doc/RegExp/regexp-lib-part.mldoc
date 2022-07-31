@@ -1,0 +1,22 @@
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="Riccardo Pucella"
+  EMAIL="riccardo@research.bell-labs.com"
+  YEAR=1998>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=1>
+
+<TITLE>Regular Expression Library</TITLE>
+
+<SECTION>
+<HEAD>The Regular expression Library</HEAD>
+<INCLFILE FILE="regexp-intro">
+<INCLFILE FILE="regexp-sig">
+<INCLFILE FILE="parser-sig">
+<INCLFILE FILE="engine-sig">
+<INCLFILE FILE="regexp-fn">
+<INCLFILE FILE="match-tree">
+<INCLFILE FILE="syntax">
+</SECTION>
+

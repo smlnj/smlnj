@@ -1,0 +1,42 @@
+= The `JSONPrinter` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `JSONPrinter` structure implements a printer for the
+xref:str-JSON.adoc#type:value[`JSON.value`] type.
+
+== Synopsis
+
+[source,sml]
+------------
+structure JSONPrinter
+------------
+
+== Interface
+
+[source,sml]
+------------
+val print : TextIO.outstream * JSON.value -> unit
+val print' : {strm : TextIO.outstream, pretty : bool} -> JSON.value -> unit
+------------
+
+== Description
+
+`[.kw]#val# print : TextIO.outstream * JSON.value \-> unit`::
+  `print (outS, jv)` prints the *JSON* value `jv` to the outstream `outS`
+  in _condensed_ format (_i.e._, without newlines or indentation).
+
+`[.kw]#val# print' : {strm : TextIO.outstream, pretty : bool} \-> JSON.value \-> unit`::
+  `print' {outS, pretty} jv` prints the *JSON* value `jv` to the
+  outstream `outS`, where the value of the `pretty` field controls whether
+  the output is condensed (when `pretty` is `false`) or printed with
+  new lines and indentation to improve readability (when `pretty` is `true`).
+
+== See Also
+
+xref:str-JSON.adoc[`JSON`],
+xref:sig-JSON_STREAM_OUTPUT.adoc[`JSON_STREAM_OUTPUT`],
+xref:json-lib.adoc[__The JSON Library__]

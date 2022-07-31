@@ -1,0 +1,23 @@
+(* $smlnj/smlnj-lib/controls-lib.cm
+ *
+ *   This is a proxy for $SMLNJ-LIB/Controls/controls-lib.cm and represents
+ *   the version of the SML/NJ Controls library that is internally
+ *   used by the implementation of the system itself.
+ *
+ *   User code can refer to it as $/controls-lib.cm, but the $controls-lib.cm
+ *   anchor may be redefined to point to a different version
+ *   without affecting the compiler itself.
+ *
+ *   Copyright (c) 2005 by The Fellowship of SML/NJ
+ *
+ * author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	library ($SMLNJ-LIB/Controls/controls-lib.cm)
+is
+	$SMLNJ-LIB/Controls/controls-lib.cm
+		(bind:(anchor:basis.cm value:$SMLNJ-BASIS)
+		 bind:(anchor:smlnj-lib.cm value:$SMLNJ-LIB/Util)
+		 bind:(anchor:pp-lib.cm value:$SMLNJ-LIB/PP)
+		 bind:(anchor:controls-lib.cm value:$SMLNJ-LIB/Controls)
+		 bind:(anchor:ml-yacc-lib.cm value:$SMLNJ-ML-YACC-LIB))

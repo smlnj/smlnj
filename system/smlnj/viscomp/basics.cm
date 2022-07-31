@@ -1,0 +1,11 @@
+(* smlnj/viscomp/basics.cm
+ *
+ * Basic definitions and utilities used within the SML/NJ compiler.
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *)
+Library
+	group($compiler/Basics/basics.cm)
+is
+	(* reference to our only group... *)
+	$compiler/Basics/basics.cm

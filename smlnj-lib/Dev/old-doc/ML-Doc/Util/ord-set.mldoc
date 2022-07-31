@@ -1,0 +1,248 @@
+<!-- ord-set.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ORD-SET SDATA "ord-set-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The ORD_SET signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ORD_SET/ signature</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_MAP/
+  <SIGREF/ORD_KEY/
+  <FCTREF/BinarySetFn/
+  <FCTREF/SplaySetFn/
+  <FCTREF/ListSetFn/
+</SEEALSO>
+
+<PP>
+The <SIGREF NOLINK/ORD_SET/ signature provides an abstract
+description of applicative-style sets on a linearly ordered type.
+
+<SIGNATURE SIGID="ORD_SET">
+  <SIGBODY SIGID="ORD_SET" FILE=ORD-SET>
+    <SPEC>
+      <SUBSTRUCT>Key<ID>ORD_KEY</SUBSTRUCT>
+    <SPEC>
+      <TYPE><ID>item<TY>Key.ord_key
+    <SPEC>
+      <TYPE><ID>set
+    <SPEC>
+      <VAL>empty<TY>set
+        <COMMENT>
+        <PP> The empty set.
+    <SPEC>
+      <VAL>singleton<TY>item -> set
+        <COMMENT>
+          <PROTOTY>
+          singleton <ARG/v/
+          </PROTOTY>
+          creates a singleton set containing <ARG/v/.
+    <SPEC>
+      <VAL>add<TY>(set * item) -> set
+        <COMMENT>
+          <PROTOTY>
+          add (<ARG/se/, <ARG/v/)
+          </PROTOTY>
+          returns a set that is the union of <ARG/se/ and <MATH/{v}/.
+    <SPEC>
+      <VAL>add'<TY>(item * set) -> set
+        <COMMENT>
+          <PROTOTY>
+          add' (<ARG/v/, <ARG/se/)
+          </PROTOTY>
+          returns a set that is the union of <ARG/se/ and <MATH/{v}/.
+          This differs from <CD/add/ only in the order of its arguments,
+          for use with fold functions.
+    <SPEC>
+      <VAL>addList<TY>(set * item list) -> set
+        <COMMENT>
+          <PROTOTY>
+          addList (<ARG/se/, <ARG/l/)
+          </PROTOTY>
+          returns the set consisting of the union of <ARG/se/ with the
+          items in <ARG/l/. This is equivalent to:
+          <CODE>
+          List.foldl add' se l
+          </CODE>
+    <SPEC>
+      <VAL>delete<TY>(set * item) -> set
+      <RAISES><EXNREF STRID="LibBase"/NotFound/
+        <COMMENT>
+          <PROTOTY>
+          delete (<ARG/se/, <ARG/v/)
+          </PROTOTY>
+          removes the item <ARG/v/ from <ARG/se/ and returns the resulting set.
+          Raises the exception <EXNREF STRID="LibBase"/NotFound/
+          if the element is not found.
+    <SPEC>
+      <VAL>member<TY>(set * item) -> bool
+        <COMMENT>
+          <PROTOTY>
+          member (<ARG/se/, <ARG/v/)
+          </PROTOTY>
+          returns true if and only if <ARG/v/ is an element in the set.
+    <SPEC>
+      <VAL>isEmpty<TY>set -> bool
+        <COMMENT>
+          <PROTOTY>
+          isEmpty <ARG/se/
+          </PROTOTY>
+          returns true if and only if the set is empty.
+    <SPEC>
+      <VAL>equal<TY>(set * set) -> bool
+        <COMMENT>
+          <PROTOTY>
+          equal (<ARG/se/, <ARG/se2/)
+          </PROTOTY>
+          returns true if and only if the two sets are equal.
+    <SPEC>
+      <VAL>compare<TY>(set * set) -> order
+        <COMMENT>
+          <PROTOTY>
+          compare (<ARG/se/, <ARG/se2/)
+          </PROTOTY>
+          does a lexical comparison of two sets.
+    <SPEC>
+      <VAL>isSubset<TY>(set * set) -> bool
+        <COMMENT>
+          <PROTOTY>
+          isSubset (<ARG/se/, <ARG/se2/)
+          </PROTOTY>
+          returns true if and only if the first set is a subset of the second.
+    <SPEC>
+      <VAL>numItems<TY>set -> int
+        <COMMENT>
+          <PROTOTY>
+          numItems <ARG/se/
+          </PROTOTY>
+          returns the number of items in the set.
+    <SPEC>
+      <VAL>listItems<TY>set -> item list
+        <COMMENT>
+          <PROTOTY>
+          listItems <ARG/se/
+          </PROTOTY>
+          returns the items in <ARG/se/, listed in increasing order.
+    <SPEC>
+      <VAL>union<TY>(set * set) -> set
+        <COMMENT>
+          <PROTOTY>
+          union (<ARG/se/, <ARG/se2/)
+          </PROTOTY>
+          returns the union of the two sets.
+    <SPEC>
+      <VAL>intersection<TY>(set * set) -> set
+        <COMMENT>
+          <PROTOTY>
+          intersection (<ARG/se/, <ARG/se2/)
+          </PROTOTY>
+          returns the intersection of the two sets.
+    <SPEC>
+      <VAL>difference<TY>(set * set) -> set
+        <COMMENT>
+          <PROTOTY>
+          difference (<ARG/se/, <ARG/se2/)
+          </PROTOTY>
+          returns the difference of the two sets, i.e., those elements
+          in <ARG/se/ not in <ARG/se2/.
+    <SPEC>
+      <VAL>map<TY>(item -> item) -> set -> set
+        <COMMENT>
+          <PROTOTY>
+          map <ARG/f/ <ARG/se/
+          </PROTOTY>
+          creates a new set by applying <ARG/f/ to all the elements in <ARG/se/.
+          This is equivalent to:
+          <CODE>
+          List.foldl add' empty (List.map f (listItems se))
+          </CODE>
+    <SPEC>
+      <VAL>app<TY>(item -> unit) -> set -> unit
+        <COMMENT>
+          <PROTOTY>
+          app <ARG/f/ <ARG/se/
+          </PROTOTY>
+          applies <ARG/f/ to the entries of <ARG/se/ in increasing order.
+          This is equivalent to:
+          <CODE>
+          List.app f (listItems se)
+          </CODE>
+    <SPEC>
+      <VAL>foldl<TY>((item * 'b) -> 'b) -> 'b -> set -> 'b
+        <COMMENT>
+          <PROTOTY>
+          foldl <ARG/f/ <ARG/a/ <ARG/se/
+          </PROTOTY>
+          applies the folding function <ARG/f/ to the entries of <ARG/se/
+          in increasing order. This is equivalent to:
+          <CODE>
+          List.foldl f a (listItems se)
+          </CODE>
+    <SPEC>
+      <VAL>foldr<TY>((item * 'b) -> 'b) -> 'b -> set -> 'b
+        <COMMENT>
+          <PROTOTY>
+          foldr <ARG/f/ <ARG/a/ <ARG/se/
+          </PROTOTY>
+          applies the folding function <ARG/f/ to the entries of <ARG/se/
+          in decreasing order. This is equivalent to:
+          <CODE>
+          List.foldr f a (listItems se)
+          </CODE>
+    <SPEC>
+      <VAL>filter<TY>(item -> bool) -> set -> set
+        <COMMENT>
+          <PROTOTY>
+          filter <ARG/f/ <ARG/se/
+          </PROTOTY>
+          creates a new set containing only those elements of <ARG/se/
+          that satisfy the predicate <ARG/f/. This is equivalent to:
+          <CODE>
+          List.foldl add' empty (List.filter f (listItems se))
+          </CODE>
+    <SPEC>
+      <VAL>exists<TY>(item -> bool) -> set -> bool
+        <COMMENT>
+          <PROTOTY>
+          exists <ARG/f/ <ARG/se/
+          </PROTOTY>
+          returns true if and only if some element in <ARG/se/ satisfies
+          the predicate <ARG/f/.
+    <SPEC>
+      <VAL>find<TY>(item -> bool) -> set -> item option
+        <COMMENT>
+          <PROTOTY>
+          find <ARG/f/ <ARG/se/
+          </PROTOTY>
+          returns an item in <ARG/se/ satisfying the predicate <ARG/f/,
+          if one exists. Otherwise, it returns
+	  <CONREF STRID="Option" DOCUMENT=SML-BASIS-DOC/NONE/.
+  </SIGBODY>
+
+<SIGINSTANCE OPAQUE><ID>IntBinarySet
+   <WHERETYPE><ID>item<TY>Int.int
+   <COMMENT>
+   <PP>
+This structure is based on Stephen Adams' integer set code, which uses
+binary trees of bounded balance. It can be viewed as an application of
+the functor <FCTREF/BinarySetFn/ using <CD/ord_key = Int.int/ and
+<CD/compare = Int.compare/.
+>/SIGINSTANCE>
+<SIGINSTANCE OPAQUE><ID>IntListSet
+   <WHERETYPE><ID>item<TY>Int.int
+   <COMMENT>
+   <PP>
+This structure implements integer sets using sorted lists.
+It can be viewed as an application of
+the functor <FCTREF/ListSetFn/ using <CD/ord_key = Int.int/ and
+<CD/compare = Int.compare/.
+>/SIGINSTANCE>
+
+</SIGNATURE>
+
+</INTERFACE>

@@ -1,0 +1,20 @@
+short term:
+
+medium term:
+- move the concept of source paths (SrcPath module)
+  much further down towards the basis of the system;
+  the compiler should uniformely talk about source paths (even for "use")
+- fix "too large environment after opaque match" problem
+  (perhaps cannot be fixed easily (?))
+
+long term:
+- Generic notification architecture (ErrorMsg module, Say module, ...);
+  this also relies on having the notion of source path available early
+- restructure binfiles and library files; implement a dynamic linker for
+  libraries that is much more light-weight than CM itself
+- implement dynamic loading of stable libraries via shared memory segments
+  (mmap); this requires help from the runtime system
+- handling of non-generalizability should move to later moment in time
+- environment canonicalization
+- Try to generalize CM by abstracting from programming language (and compiler),
+  so it can work with Twelf, TILT, or things like HOL

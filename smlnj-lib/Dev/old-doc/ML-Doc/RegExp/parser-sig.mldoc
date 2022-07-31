@@ -1,0 +1,75 @@
+<!-- ML-Doc/parser-sig.mldor -->
+<!-- Entities.sgml entry 
+<!ENTITY REGEXP-PARSER SDATA "../parser-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=3>
+<TITLE>The REGEXP_PARSER signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/REGEXP_PARSER/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<SEEALSO>
+   <STRREF/RegExpSyntax/
+</SEEALSO>
+
+<PP>
+This is the signature of a concrete syntax for regular expressions. It
+provides functionality to converts strings of characters into the
+abstract syntax of regular expressions given in the <CD/RegExpSyntax/
+structure. This is done by converting a character reader into an
+abstract syntax reader.<PP>
+
+The <CD/AwkSyntax/ structure is a structure matching this
+signature. It implements the AWK syntax for specifying regular
+expressions. The syntax is defined on pp. 28-30 of "The AWK
+Programming Language," by Aho, Kernighan and Weinberger.<PP>
+
+<CODE>
+   Meta characters:
+      "\" "^" "$" "." "[" "]" "|" "(" ")" "*" "+" "?"
+
+   Atomic REs:
+      c        matches the character c (for non-metacharacters c)
+      "^"      matches the empty string at the beginning of a line
+      "$"      matches the empty string at the end of a line
+      "."      matches any single character (except \000 and \n)
+
+   Escape sequences:
+      "\b"     matches backspace
+      "\f"     matches formfeed
+      "\n"     matches newline (linefeed)
+      "\r"     matches carriage return
+      "\t"     matches tab
+      "\"ddd   matches the character with octal code ddd.
+      "\"c     matches the character c (e.g., \\ for \, \" for ")
+      "\x"dd   matches the character with hex code dd.
+
+    Compound regular expressions:
+      A"|"B    matches A or B
+      AB       matches A followed by B
+      A"?"     matches zero or one As
+      A"*"     matches zero or more As
+      A"+"     matches one or more As
+      "("A")"  matches A
+</CODE><PP>
+
+
+<SIGNATURE SIGID="REGEXP_PARSER">
+  <SIGBODY SIGID="REGEXP_PARSER" FILE=REGEXP-PARSER>
+    <SPEC>
+      <VAL>scan<TY>(char,'a) StringCvt.reader -> (RegExpSyntax.syntax,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          scan <ARG/getc/
+          </PROTOTY>
+          Given a character reader <ARG/getc/, this function returns a 
+reader that parses elements of the stream into the abstract syntax for 
+regular expressions.
+  <SIGINSTANCE><ID>AwkSyntax
+</SIGNATURE>
+
+</INTERFACE>

@@ -1,0 +1,18 @@
+%h{		-- open hbox
+%v{		-- open vbox
+%hov{		-- open hov box
+%hv{		-- open hv box
+%b{		-- open box
+%}		-- close box
+
+%t		-- token
+%d		-- integer
+%s		-- string
+%c		-- character
+%b		-- boolean
+
+<n spaces>	-- space n
+\n		-- newline
+%,		-- cut
+%;		-- break
+%_		-- non-breakable space

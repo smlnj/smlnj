@@ -1,0 +1,14 @@
+(* minimal.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * This defines a minimal version of structure Compiler for
+ * backward compatibility with code that wants to test
+ * Compiler.version or Compiler.architecture.
+ *)
+library
+	structure Compiler
+	structure MinimalCompiler
+is
+	$smlnj/compiler/current.cm
+	minimal-compiler.sml

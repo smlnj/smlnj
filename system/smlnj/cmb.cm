@@ -1,0 +1,12 @@
+(*
+ * Library exporting structure CMB.
+ *   (this implements $smlnj/cmb.cm -- a proxy for $smlnj/cmb/current.cm)
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	library($smlnj/cmb/current.cm)
+is
+	$smlnj/cmb/current.cm

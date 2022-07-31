@@ -1,0 +1,71 @@
+<!-- list-format.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ListFormat SDATA "list-format-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=11>
+<TITLE>The ListFormat structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ListFormat/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/Format/
+  <STRREF TOPID DOCUMENT=SML-BASIS-DOC/List/
+  <STRREF TOPID DOCUMENT=SML-BASIS-DOC/StringCvt/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/ListFormat/ structure provides simple utilities
+for converting between lists and their string representations.
+
+<STRUCTURE STRID="ListFormat">
+  <SIGBODY SIGID="LIST_FORMAT" FILE=LIST-FORMAT>
+    <SPEC>
+      <VAL>fmt<TY>{init : string, sep : string, final : string, fmt : 'a -> string} -> 'a list -> string
+        <COMMENT>
+          <PROTOTY>
+          fmt {<ARG/init/, <ARG/sep/, <ARG/final/, <ARG/fmt/}
+          </PROTOTY>
+          takes an initial string (<ARG/init/), a separator (<ARG/sep/), 
+          a terminating string (<ARG/final/), and an item formating 
+          function (<ARG/fmt/), and returns a list formatting function.  
+          The list <CD/[a, b, ..., c]/ gets formated as 
+          <CODE>
+          init ^ (fmt a) ^ sep ^ (fmt b) ^ sep ^ ... ^ sep ^ (fmt c) ^ final
+          </CODE>
+    <SPEC>
+      <VAL>listToString<TY>('a -> string) -> 'a list -> string
+        <COMMENT>
+          <PROTOTY>
+          listToString <ARG/f/ <ARG/l/
+          </PROTOTY>
+          formats a list in SML style. Equivalent to:
+          <CODE> 
+          fmt {init="[", sep=",", final="]", fmt=f} l
+          </CODE> 
+    <SPEC>
+      <VAL>scan<TY>{init : string, sep : string, final : string, scan : (char,'b) StringCvt.reader -> ('a,'b) StringCvt.reader} -> (char,'b) StringCvt.reader -> ('a list,'b) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          scan {<ARG/init/, <ARG/sep/, <ARG/final/, <ARG/scan/} <ARG/re/
+          </PROTOTY>
+          scans a list of the specified format from a stream of characters. If
+          successful, it returns the list and the remainder of the stream;
+          otherwise, it returns <CONREF STRID="Option" DOCUMENT=SML-BASIS-DOC/NONE/.
+
+          <PP>
+          The format of the list is specified by an expected initial string
+          <ARG/init/, a list item separator <ARG/sep/, an expected
+          terminating string <ARG/final/, and a function <ARG/scan/ for scanning
+          a list item. Whitespace is ignored.
+
+          <PP>
+          When scanning a string, <CD/scan/ checks for the separator before 
+          the terminator, thus if the separator is a prefix of the terminator, 
+          the function will not work.
+</STRUCTURE>
+
+</INTERFACE>

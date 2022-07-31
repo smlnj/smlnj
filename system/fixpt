@@ -1,0 +1,130 @@
+#!/bin/sh
+#
+# COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# fixpt [-32 | -64]
+#  - to be run in src/system to iterate compilation to a fixed point
+#  - assumes no sml.boot... directory in src/system (but uses it if it
+#    is there and the base is set to "sml" -- which is the default)
+#  - assumes that ../../../bin/sml and ../../../bin/.arch-n-opsys have
+#     been installed
+
+this=$0
+here=`pwd`
+cd ../..
+twoup=`pwd`
+cd $here
+
+SML=$twoup/bin/sml
+ARCH=amd64
+SIZE_OPT="-64"
+ARGS=""
+
+#
+# Parse command line
+#
+while [ "$#" != 0 ] ; do
+    arg=$1; shift
+    case $arg in
+    -32) SIZE_OPT="-32" ;;
+    -64) SIZE_OPT="-64" ;;
+    -iter)
+	if [ "$#" = 0 ] ; then
+	    echo "$this: missing argument for \"-iter\" option"
+	    exit 2
+	fi
+	ITER=$1; shift
+	;;
+    -base)
+	if [ "$#" = 0 ] ; then
+	    echo "$this: missing argument for \"-base\" option"
+	    exit 2
+	fi
+	BASE=$1; shift
+	;;
+    -light)
+	REBUILD="-lightrebuild"
+	SETLIGHT='val _ = #set (CMB.symval "LIGHT") (SOME 1);'
+	;;
+    -save)
+	SAVE=true;
+	;;
+    -C*) ARGS="$ARGS $arg" ;;
+    -D*) ARGS="$ARGS $arg" ;;
+    *)
+	echo "$this: unknown argument \"$arg\""
+	exit 2
+	;;
+    esac
+done
+
+#
+# use the arch-n-opsys script to determine the ARCH/OS if possible
+#
+if [ -f $twoup/bin/.arch-n-opsys ]; then
+    ARCH_N_OPSYS=`$twoup/bin/.arch-n-opsys $SIZE_OPT`
+    if [ "$?" = "0" ]; then
+	eval $ARCH_N_OPSYS
+	echo Architecture: $ARCH
+    fi
+fi
+
+BIN=.bin.$ARCH-unix
+BOOT=.boot.$ARCH-unix
+ITER=3
+BASE=sml
+REBUILD="-rebuild"
+SETLIGHT=""
+SAVE=false		# should we save intermediate boot and bin directories?
+
+#
+# Function to do one round of compilation to get the initial set of binfiles.
+# (The funky ML comment is there to un-confuse emacs fontlock mode. :)
+#
+initcompile() {
+$SML $SIZE_OPT $ARGS '$smlnj/cmb.cm' <<EOF
+local open OS.Process CMB in
+   $SETLIGHT
+   val _ = exit (if make' (SOME "$BASE") then success else failure) (* ' *)
+end
+EOF
+}
+
+iter=0
+iterbase=$BASE
+
+if initcompile ; then
+    while [ $iter -lt $ITER ] ; do
+	prev=$iter
+	prevbase=$iterbase
+	iter=`expr $iter + 1`
+	iterbase=$BASE$iter
+	if ./makeml $SIZE_OPT $ARGS -boot $prevbase$BOOT $REBUILD $iterbase ; then
+	    if diff -r $prevbase$BIN $iterbase$BIN >/dev/null 2>&1 ; then
+		echo "$this: fixpoint reached in round $iter"
+		if $SAVE ; then
+		  echo "$this: results in $iterbase$BOOT $iterbase$BIN"
+		else
+		# get rid of the intermediary results and move the boot/bin files
+		# where they belong
+		  rm -rf $BASE$BOOT $BASE$BIN
+		  mv $iterbase$BOOT $BASE$BOOT
+		  mv $iterbase$BIN $BASE$BIN
+		  rm -rf $BASE[1-9]$BOOT $BASE[1-9]$BIN
+		  echo "$this: results in $BASE$BOOT $BASE$BIN"
+		fi
+		exit 0
+	    fi
+	else
+	    echo "$this: compilation failed in round $iter"
+	    exit 3
+	fi
+    done
+else
+    echo "$this: initial compilation failed"
+    exit 3
+fi
+
+echo "$this: no fixpoint reached after $iter rounds"
+exit 1

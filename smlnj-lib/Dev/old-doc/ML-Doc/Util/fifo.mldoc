@@ -1,0 +1,153 @@
+<!-- fifo.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY Fifo SDATA "fifo-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=5 DAY=14>
+<TITLE>The Fifo structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/Fifo/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/Queue/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/Fifo/ structure provides an applicative implementation
+of queues, in one of the greater abuses of notation.
+
+<PP>
+As the implementation uses a pair of lists, the amortized cost for
+calling <CD/enqueue/, <CD/dequeue/ or <CD/head/ is constant time.
+
+<STRUCTURE STRID="Fifo">
+  <SIGBODY SIGID="FIFO" FILE=FIFO>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>fifo
+    <SPEC>
+      <EXN>Dequeue
+    <SPEC>
+      <VAL>empty<TY>'a fifo
+        <COMMENT>
+          <PROTOTY>
+          empty
+          </PROTOTY>
+          is an empty queue.
+    <SPEC>
+      <VAL>isEmpty<TY>'a fifo -> bool
+        <COMMENT>
+          <PROTOTY>
+          isEmpty <ARG/fi/
+          </PROTOTY>
+          returns true if <ARG/fi/ is empty.
+    <SPEC>
+      <VAL>enqueue<TY>('a fifo * 'a) -> 'a fifo
+        <COMMENT>
+          <PROTOTY>
+          enqueue (<ARG/fi/, <ARG/a/)
+          </PROTOTY>
+          creates a new queue by appending <ARG/a/ to the tail of <ARG/fi/.
+    <SPEC>
+      <VAL>dequeue<TY>'a fifo -> ('a fifo * 'a)
+      <RAISES><EXNREF STRID="Fifo"/Dequeue/
+        <COMMENT>
+          <PROTOTY>
+          dequeue <ARG/fi/
+          </PROTOTY>
+          returns the head of <ARG/fi/ plus the remainder of <ARG/fi/ after
+          the head is removed. Raises the exception <EXNREF STRID="Fifo"/Dequeue/
+          if <ARG/fi/ is empty.
+    <SPEC>
+      <VAL>delete<TY>('a fifo * ('a -> bool)) -> 'a fifo
+        <COMMENT>
+          <PROTOTY>
+          delete (<ARG/fi/, <ARG/f/)
+          </PROTOTY>
+          creates a new queue by deleting from <ARG/fi/ all elements
+          satisfying the predicate <ARG/f/. The order of the remaining
+          elements is preserved.
+    <SPEC>
+      <VAL>head<TY>'a fifo -> 'a
+      <RAISES><EXNREF STRID="Fifo"/Dequeue/
+        <COMMENT>
+          <PROTOTY>
+          head <ARG/fi/
+          </PROTOTY>
+          returns the head of <ARG/fi/, without changing <ARG/fi/.
+          Raises the exception <EXNREF STRID="Fifo"/Dequeue/
+          if <ARG/fi/ is empty.
+          
+    <SPEC>
+      <VAL>peek<TY>'a fifo -> 'a option
+        <COMMENT>
+          <PROTOTY>
+          peek <ARG/fi/
+          </PROTOTY>
+          returns the head of <ARG/fi/ if it exists; otherwise, returns
+          <CONREF STRID="Option" DOCUMENT=SML-BASIS-DOC/NONE/.
+    <SPEC>
+      <VAL>length<TY>'a fifo -> int
+        <COMMENT>
+          <PROTOTY>
+          length <ARG/fi/
+          </PROTOTY>
+          returns the number of elements in <ARG/fi/. At present, this
+          is a linear time operation.
+    <SPEC>
+      <VAL>contents<TY>'a fifo -> 'a list
+        <COMMENT>
+          <PROTOTY>
+          contents <ARG/fi/
+          </PROTOTY>
+          returns the elements in <ARG/fi/ in queue order. This
+          is a linear time operation.
+    <SPEC>
+      <VAL>app<TY>('a -> unit) -> 'a fifo -> unit
+        <COMMENT>
+          <PROTOTY>
+          app <ARG/f/ <ARG/fi/
+          </PROTOTY>
+          applies the function <ARG/f/ to the elements in <ARG/fi/ in
+          queue order. This is equivalent to:
+          <CODE>
+            List.app f (contents fi)
+          </CODE>
+    <SPEC>
+      <VAL>map<TY>('a -> 'b) -> 'a fifo -> 'b fifo
+        <COMMENT>
+          <PROTOTY>
+          map <ARG/f/ <ARG/fi/
+          </PROTOTY>
+          creates a new queue by mapping the elements in <ARG/fi/ by
+          <ARG/f/. This is equivalent to:
+          <CODE>
+            List.foldl (fn (v,q) => enqueue(q,v)) empty (List.map f (contents fi))
+          </CODE>
+    <SPEC>
+      <VAL>foldl<TY>(('a * 'b) -> 'b) -> 'b -> 'a fifo -> 'b
+        <COMMENT>
+          <PROTOTY>
+          foldl <ARG/f/ <ARG/a/ <ARG/fi/
+          </PROTOTY>
+          folds the elements of the queue from the head to the tail.
+           This is equivalent to:
+          <CODE>
+            List.foldl f a (contents fi))
+          </CODE>
+    <SPEC>
+      <VAL>foldr<TY>(('a * 'b) -> 'b) -> 'b -> 'a fifo -> 'b
+        <COMMENT>
+          <PROTOTY>
+          foldr <ARG/f/ <ARG/a/ <ARG/fi/
+          </PROTOTY>
+          folds the elements of the queue from the tail to the head.
+           This is equivalent to:
+          <CODE>
+            List.foldr f a (contents fi))
+          </CODE>
+</STRUCTURE>
+
+</INTERFACE>

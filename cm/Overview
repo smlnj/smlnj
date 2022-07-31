@@ -1,0 +1,210 @@
+OVERVIEW
+--------
+
+The operation of CM can be understood best by looking at its most
+central datastructure: the dependency graph.  You can find the
+definitions of its associated types in depend/graph.sml.  There is
+also a coarse-grain "group graph" data structure.  Its definition is
+in depend/ggraph.sml.
+
+One can roughly divide CM into front-end and back-end.  It is the
+front-end's responsibility to establish the dependency graph for a
+given project.  The back-end implements various ways of traversing the
+graph, thereby performing the operations that the user expects:
+consistency checking, recompilation, linking, stabilization,
+generation of listings or other statistics, etc.
+
+The central component of the front-end is the parser.  It builds the
+dependency graph incrementally with help from the dependency analyzer.
+
+* Analysis CAN be performed incrementally because the sub-graphs that
+correspond to sub-groups or sub-libraries are independent of how they
+are being used.
+
+* We DO perform analysis incrementally because the parser occasionally
+wants to know what the exported symbols of sub-groups and
+sub-libraries are.  (This is required for the parser's conditional
+compilation facility.)  While it would probably be possible to achieve
+this using a more cursory analysis, the extra effort of implementing
+it would definitely not be outweighed by any gains.
+
+The dependency analyzer must inspect the ML source code of the
+project.  Within CM, handling of ML source code is centralized -- all
+information pertaining to one ML source file is bundled as an abstract
+data type (SmlInfo.info).  You find the definition (and the
+implementation) of that type in smlfile/smlinfo.sml.  In particular,
+one important optimization that saves many repeated invocations of
+the compiler's parser is to strip the ML abstract syntax tree from all
+unnecessary (as far as CM is concerned) information and store the
+"compressed" version in some sort of cache.  I call such compressed ML
+syntax information a "skeleton".  You find the definition of the
+skeleton type in smlfile/skeleton.sml. Associated code is in the same
+directory.
+
+The dependency analyzer operates on skeletons.  Its implementation can
+be found in depend/build.sml.
+
+
+PRIVILEGES (access control)
+---------------------------
+
+The basic mechanisms for access control are implemented: CM can
+correctly detect which "privileges" would be required to access groups
+and libraries.  However, nothing has been done to actually enforce
+anything.  In other words, everybody is assumed to have every possible
+privilege.  CM merely reports which privileges "would have been
+required".  For the time being this is not really critical.
+Enforcement must be tied into some form of OS-specific enforcement
+mechanism (such as Unix file permissions or something similar), and I
+haven't really thought out a way of doing this nicely and cleanly.
+
+The basic idea behind CM's "privileges" is quite easy to understand.
+In their description files groups and libraries can specify a list of
+privileges that the user of such a group/library must possess in order
+to be able to use it.  Privileges at this level are just names
+(strings).  If one group/library imports from another group/library,
+then privileges are being inherited.  In effect, to be able to use a
+program, one must have all privileges for all its libraries/groups,
+sub-libraries/groups, sub-sub-libraries/groups, etc.
+
+Of course, this is not yet satisfactory because there should also be
+the possibility of setting up a "safety wall": a library LSafe.cm
+could "wrap" all the unsafe operations in LUnsafe.cm with enough error
+checking that they become safe.  Therefore, a user of LSafe.cm should
+not also be required to possess the privileges that would be required
+if one were to use LUnsafe.cm directly.
+
+To this end, in CM's model of privileges it is possible for a
+group/library to "wrap" privileges.  If a privilege P is wrapped, then
+the user of the library does not need to have privilege P even though
+the library is using another library that requires privilege P.  In
+essence, the library acts as a "proxy" who provides the necessary
+privilege P to the sub-library.
+
+Of course, not everybody can be allowed to establish a library with
+such a "wrapped" privilege P.  The programmer who does that should at
+least herself have privilege P (but perhaps better, she should have
+"permission to wrap P" -- a stronger requirement).
+
+In CM, wrapping a privilege is done by specifying the name of that
+privilege within parenthesis.  The wrapping becomes active once the
+library gets "stabilized" (see below).  The (not yet implemented)
+enforcement mechanism must ensure that anyone who stabilizes a library
+that wraps P has permission to wrap P.
+
+
+STABILIZATION
+-------------
+
+Aside from the issues concerning privileges, stabilization is a way of
+putting an entire pre-compiled library -- together with its
+pre-computed dependency graph -- into one single container.  Once this
+is done, CM will never need to have access to the original ML source
+code.  Before actually consulting the description file for a library,
+the parser will always check and see if there is a stable container.
+If so, it will suck the dependency graph out of the container and be
+done.
+
+Because of ML's "open" feature, it sometimes is necessary for the
+dependency analyzer of a group to consult the contents (i.e., the
+definitions) of signatures, structures, or functors that are imported
+from sub-libraries.  Since the pre-computed dependency graph does not
+contain such information, it will then become necessary to recover it
+in a different way.
+
+Remember, the ML source code shouldn't have to be available at this
+point.  However, the same information is contained in the static
+environment that is stored in every "binfile".  (The binfile is the
+result of compiling one ML source file. It contains executable code
+and a pickled representation of the static environment that is
+exported from the compilation unit.)  Aside from the dependency graph,
+the container for a stabilized library also stores all the associated
+binfiles.
+
+Loading (stable) binfiles for the purpose of dependency analysis is
+sometimes necessary, but since it is expensive we do it as seldom as
+we can (i.e., lazily).  The implementation of this mechanism (which is
+really just a hook into the actual implementation provided by
+GenericVC) is in depend/se2dae.sml. (See the comments there.)  It is
+used in stable/stabilize.sml.  (Look for "cvtMemo"!)
+
+Information pertaining to members of stabilized libraries is managed
+by the abstract datatype BinInfo.info (see stable/bininfo.sml).  In
+some sense, BinInfo.info is to stabilized ML code what SmlInfo.info is
+to not-yet-stabilized ML code.
+
+By the way, only libraries can be stabilized.  A stabilized library
+will encompass its own sources as well as the sources of sub-groups
+(and their sub-groups, and so on).  Sub-libraries of the library, on
+the other hand, will be referred to symbolically (they do not get
+"sucked" in like groups do).  In effect, sub-grouping of a library
+becomes convenient for resolving name-spacing issues without
+compromising the "one single container" paradigm of stable libraries.
+
+
+DEPENDENCY GRAPH
+----------------
+
+The division into non-stabilized and stabilized libraries is clearly
+visible in the definition of the types that make up dependency graphs.
+There are "BNODE"s that mention BinInfo.info and there are "SNODE"s
+that mention SmlInfo.info.  (There are also "PNODE"s that facilitate
+access to "primitive" internal environments that have to do with
+bootstrapping.)
+
+You will notice that one can never go from a BNODE to an SNODE.  This
+mirrors our intention that a sub-library of a stabilized library must
+also be stabilized.  From SNODEs, on the other hand, you can either go
+to other SNODEs or to BNODEs.  All the "localimports" of an SNODE
+(i.e., the imports that come from the same group/library) are also
+SNODEs.  To go to a BNODE one must look into the list of
+"globalimport"s.  Global imports refer to "far" nodes -- nodes that
+are within other groups/libraries.  The edge that goes to such a node
+can have an export filter attached.  Therefore, a farbnode is a bnode
+with an optional filter, a farsbnode is either a BNODE or an SNODE
+with an optional filter attached.
+
+Imports and exports of a group/library are represented by "impexp"s.
+Impexps are essentially just farsbnodes, but they also contain the
+dependency analyzers "analysis environment" which contains information
+about the actual definition (contents) of exported
+structures/functors.  As said earlier, this is necessary to handle the
+"open" construct of ML.
+
+The exports of a group/library are then simply represented by a
+mapping from exported symbols to corresponding impexps. (See
+depend/ggraph.sml.)
+
+
+RECOMPILATION AND EXECUTION
+---------------------------
+
+There is a generic traversal routine that is used to implement both
+recompilation traversals and execution (link-) traversals
+(compile/generic.sml).  The decision of which kind of traversal is
+implemented comes from the functor argument: the "compilation type".
+A signature describing compilation types abstractly is in
+compile/compile-type.sml.  In essence, it provides compilation
+environments and associated operations abstractly.
+
+Concrete instantiations of this signature are in compile/recomp.sml
+and in compile/exec.sml.  As you will see, these are also implemented
+as functors parameterized by an abstraction of "persistent state".
+Persistent state is used to remember the results of traversals from
+invocation to invocation of CM.  This avoids needless recompilation in
+the case of recomp.sml and facilitates sharing of dynamic values in
+the case of exec.sml.  (However, the two cases are otherwise quite
+dissimilar.)
+
+Persistent state comes in two varieties: "recomp" and "full".  Full
+state is actually an extension of recomp state and can also be used
+where recomp state is expected.  The "normal" CM uses full state
+because it implements both recompilation and execution.  The same
+state is passed to both ExecFn and RecompFn, so it will be properly
+shared by recompilation and execution traversals.  In the case of the
+bootstrap compiler, however, we never actually execute the code that
+comes out of the compiler.  (The code will be executed by the runtime
+system when bootstrapping.)  Therefore, for the bootstrap compiler we
+don't use full state but simply recomp state.  (If we cross-compile
+for a different architecture we could not possibly execute the code
+anyway.)

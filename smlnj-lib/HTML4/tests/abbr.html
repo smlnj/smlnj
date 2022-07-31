@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Abbreviations [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for abbreviations. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="next" href="entities" title="Characters">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+	<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Abbreviations</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="./" rel="prev" accesskey="P" title="Prior: Robin&rsquo;s HTML 4.0 Test">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="entities" rel="next" accesskey="N" title="Next: Characters"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Abbreviations (<a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-abbr" title="HTML 4.0 Specification">&sect;9.2.1</a>)</h1>
+
+	<div class="section">
+		<h2>Difference between <code class="element">&lt;abbr></code> and <code class="element">&lt;acronym></code></h2>
+
+		<div class="bodytext">
+			<ul>
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-abbr" title="HTML 4.0 Specification: 9 Text"><code class="element">&lt;abbr></code></a></dfn> marks <em>abbreviations</em> in general (especially the sort that end in a period).
+				<li><dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-acronym" title="HTML 4.0 Specification: 9 Text"><code class="element">&lt;acronym></code></a></dfn> marks <em>acronyms</em> (abbreviations spoken like words) in particular.
+			</ul>
+
+			<p>Why two elements? Speech synthesizers benefit from the distinction. They may read aloud acronyms (like &ldquo;<acronym title="Random Access Memory">RAM</acronym>&rdquo;, &ldquo;<a href="http://www.nasa.gov/"><acronym title="National Aeronautics and Space Administration">NASA</acronym></a>&rdquo;, or &ldquo;<a href="http://www.un.org/Depts/unmovic/"><acronym title="United Nations Monitoring, Verification and Inspection Commission">UNMOVIC</acronym></a>&rdquo;) marked up with <code class="element">&lt;acronym></code>, and spell out abbreviations (<abbr title="example">ex.</abbr> &ldquo;<abbr title="World Wide Web">WWW</abbr>&rdquo;, &ldquo;<abbr title="centimeter">cm</abbr>&rdquo;, &ldquo;<abbr title="Saturday">Sat.</abbr>&rdquo;, and &ldquo;<abbr title="id est (that is)" lang="la">i.e.</abbr>&rdquo;) marked up with <code class="element">&lt;abbr></code>.</p>
+
+			<p class="note"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering removing <code class="element">&lt;acronym></code> in <abbr>XHTML</abbr> 2.0, leaving only <a class="specsect" href="http://www.w3.org/TR/2004/WD-xhtml2-20040722/mod-text.html#sec_9.1."  title="XHTML 2.0 Working Draft: The abbr element"><code class="element">&lt;abbr></code></a>.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			An <em class="html4"><strong class="tested">&lt;acronym></strong></em>URL<em class="html4"><strong class="tested">&lt;/acronym></strong></em> is like a street address for a document on the <em class="html4"><strong class="tested">&lt;abbr></strong></em>WWW<em class="html"><strong class="tested">&lt;/abbr></strong></em>.
+		</div>
+		<h4 class="resultheader">Speech synthesizers should speak <acronym>URL</acronym> as a word and spell out <abbr>WWW</abbr>:</h4>
+			<div class="results" id="result1">
+			An <acronym>URL</acronym> is like a street address for a document on the <abbr>WWW</abbr>.
+		</div>
+
+
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="title">
+		<h2>Marking up meanings</h2>
+
+		<div class="bodytext">
+			<p>The <code class="attribute">title</code> attribute can provide the meaning of an abbreviation. Many Web browsers pop up <code class="attribute">title</code> text as a &ldquo;tool tip&rdquo; when the mouse hovers over an abbreviation. Speech synthesizers might speak the value of the <code class="attribute">title</code> attribute for an abbrevation.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			An <em class="html4"><strong class="tested">&lt;acronym title="Uniform Resource Locator"></strong></em>URL<em class="html4"><strong class="tested">&lt;/acronym></strong></em> is like a street address for a document on the <em class="html4"><strong class="tested">&lt;abbr title="World Wide Web"></strong></em>WWW<em class="html"><strong class="tested">&lt;/abbr></strong></em>.
+		</div>
+		<h4 class="resultheader">You should be able to access the contents of the <code class="attribute">title</code> attribute in some manner:</h4>
+			<div class="results" id="result2">
+			An <acronym title="Uniform Resource Locator">URL</acronym> is like a street address for a document on the <abbr title="World Wide Web">WWW</abbr>.
+		</div>
+
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

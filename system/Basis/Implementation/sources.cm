@@ -1,0 +1,636 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The implementation of the Basis.  Also see the file
+ *
+ *	base/system/Basis/basis.cm
+ *
+ * which controls the external visibility of the basis library.
+ *)
+
+Group
+	signature ARRAY
+	signature ARRAY_SLICE
+	signature ARRAY2
+	signature BIN_IO
+	signature BIT_FLAGS
+	signature BOOL
+	signature BYTE
+	signature CHAR
+	signature COMMAND_LINE
+	signature DATE
+	signature GENERAL
+	signature IEEE_REAL
+	signature IMPERATIVE_IO
+	signature INT_INF
+	signature INTEGER
+	signature IO
+	signature LIST
+	signature LIST_PAIR
+	signature MATH
+	signature MONO_ARRAY
+	signature MONO_ARRAY_SLICE
+	signature MONO_ARRAY2
+	signature MONO_VECTOR
+	signature MONO_VECTOR_SLICE
+	signature OPTION
+	signature OS
+	signature OS_FILE_SYS
+	signature OS_IO
+	signature OS_PATH
+	signature OS_PROCESS
+	signature PACK_REAL
+	signature PACK_WORD
+	signature PRIM_IO
+	signature REAL
+	signature SIGNALS
+	signature STREAM_IO
+	signature STRING
+	signature STRING_CVT
+	signature SUBSTRING
+	signature TEXT
+	signature TEXT_IO
+	signature TEXT_STREAM_IO
+	signature TIME
+	signature TIMER
+	signature VECTOR
+	signature VECTOR_SLICE
+	signature WORD
+
+	signature EITHER	(* proposal 2015-002 *)
+	signature FN		(* proposal 2015-005 *)
+	signature REF		(* proposal 2015-007 *)
+	signature MONO_BUFFER	(* proposal 2018-001 *)
+	signature UNIVERSAL	(* proposal 2020-001 *)
+
+      (* old versions of basis signatures from the 2004 published spec *)
+	signature ARRAY_2004
+	signature ARRAY_SLICE_2004
+	signature LIST_2004
+	signature LIST_PAIR_2004
+        signature MATH_2004
+	signature MONO_ARRAY_2004
+	signature MONO_ARRAY_SLICE_2004
+	signature MONO_VECTOR_2004
+	signature MONO_VECTOR_SLICE_2004
+	signature OPTION_2004
+        signature REAL_2004
+	signature STRING_2004
+	signature TEXT_2004
+	signature VECTOR_2004
+	signature VECTOR_SLICE_2004
+	signature WORD_2004
+
+      (* basis signatures with extensions from proposal 2015-003 added *)
+	signature ARRAY_2015
+	signature LIST_2015
+	signature LIST_PAIR_2015
+	signature MONO_ARRAY_2015
+	signature MONO_VECTOR_2015
+	signature OPTION_2015
+	signature STRING_2015
+	(* signature TEXT_2015 *) (* superseded by TEXT_2018 *)
+	signature VECTOR_2015
+
+      (* basis signatures with extensions from proposal 2016-001 added *)
+	signature WORD_2016
+
+      (* basis signatures with extensions from proposal 2018-002 added *)
+	signature ARRAY_SLICE_2018
+	signature MONO_ARRAY_SLICE_2018
+	signature MONO_VECTOR_SLICE_2018
+	signature TEXT_2018
+	signature VECTOR_SLICE_2018
+
+      (* basis signatures with extensions from proposal 2022-001 added *)
+        signature MATH_2022
+        signature REAL_2022
+
+      (* backward compatibility with the SML'90 version of the basis *)
+	signature SML90
+
+      (* SML/NJ specific *)
+	signature SIGNALS
+
+	signature CLEAN_UP
+	signature CONT
+	signature INTERVAL_TIMER
+	signature INTERNALS
+	signature GC
+	signature SYS_INFO
+	signature WEAK
+	signature SUSP
+	signature SML_OF_NJ
+
+	signature UNSAFE_OBJECT
+	signature UNSAFE_ARRAY
+	signature UNSAFE_VECTOR
+	signature UNSAFE_MONO_ARRAY
+	signature UNSAFE_MONO_VECTOR
+	signature UNSAFE
+
+      (* Basis structures *)
+	structure Array
+	structure Array2
+	structure ArraySlice
+	structure BinIO
+	structure BinPrimIO
+	structure Bool
+	structure Byte
+	structure CharArraySlice
+	structure CharVectorSlice
+	structure CommandLine
+	structure Date
+	structure FixedIntImp
+	structure General
+	structure IEEEReal
+	structure IntImp
+	structure Int32Imp
+	structure Int64Imp
+	structure IntInfImp
+	structure IO
+	structure LargeIntImp
+	structure LargeRealImp
+	structure LargeWordImp
+	structure List
+	structure ListPair
+	structure Math
+	structure Option
+	structure OSImp
+	structure PackReal64Big
+	structure PackReal64Little
+	structure PackWord16Big
+	structure PackWord16Little
+	structure PackWord32Big
+	structure PackWord32Little
+	structure PackWord64Big
+	structure PackWord64Little
+	structure PositionImp
+	structure Real64Array
+	structure Real64ArraySlice
+	structure Real64Imp
+	structure Real64Vector
+	structure Real64VectorSlice
+	structure RealImp
+	structure StringCvt
+	structure SysWordImp
+	structure Text
+	structure TextIO
+	structure TextPrimIO
+	structure TimeImp
+	structure Timer
+	structure Vector
+	structure VectorSlice
+	structure WordImp
+	structure Word8Imp
+	structure Word32Imp
+	structure Word64Imp
+	structure Word8Array
+	structure Word8ArraySlice
+	structure Word8Vector
+	structure Word8VectorSlice
+
+	structure Either	(* proposal 2015-002 *)
+	structure Fn		(* proposal 2015-005 *)
+	structure Ref		(* proposal 2015-007 *)
+	structure CharBuffer	(* proposal 2018-001 *)
+	structure Word8Buffer	(* proposal 2018-001 *)
+	structure Universal	(* proposal 2020-001 *)
+
+	functor PrimIO
+
+	structure SML90
+	structure ExnName
+
+	(* SML/NJ specific *)
+	structure Signals
+	structure Unsafe
+	structure SMLofNJ
+	structure Export
+	structure Cont
+	structure IntervalTimer
+	structure Internals
+	structure SysInfo
+	structure Weak
+	structure Susp
+	structure Lazy
+
+#if defined(OPSYS_UNIX) orelse defined(OPSYS_WIN32)
+	(* Sockets (common part) *)
+	signature NET_HOST_DB
+	signature NET_PROT_DB
+	signature NET_SERV_DB
+
+	signature SYNCHRONOUS_SOCKET
+	signature SOCKET
+	signature INET_SOCK
+	signature GENERIC_SOCK
+
+	structure GenericSock
+	structure NetHostDB
+	structure NetProtDB
+	structure NetServDB
+	structure SocketImp
+	structure INetSock
+#endif
+
+#if defined(OPSYS_UNIX)
+	(* Posix *)
+	signature POSIX_ERROR
+	signature POSIX_SIGNAL
+	signature POSIX_PROCESS
+	signature POSIX_PROC_ENV
+	signature POSIX_FILE_SYS
+	signature POSIX_IO
+	signature POSIX_SYS_DB
+	signature POSIX_TTY
+	signature POSIX
+	structure Posix
+
+	(* Unix *)
+	signature UNIX_SIGNALS
+	structure UnixSignals
+	signature UNIX
+	structure Unix
+
+	(* Sockets (Unix part) *)
+	signature NET_DB
+	signature UNIX_SOCK
+
+	structure NetDB
+	structure UnixSock
+
+      (* old versions of basis signatures from the 2004 published spec *)
+	signature POSIX_2004
+	signature POSIX_TTY_2004
+
+      (* basis signature with extensions from proposal 2021-001 added *)
+	signature POSIX_2021
+	signature POSIX_TTY_2021
+
+#elif defined (OPSYS_WIN32)
+
+	signature WIN32_GENERAL
+	signature WIN32_PROCESS
+	signature WIN32_FILESYS
+	signature WIN32_IO
+	signature WIN32
+
+	structure Win32
+
+	signature WINDOWS_KEY
+	signature WINDOWS_REG
+	signature WINDOWS_CONFIG
+	signature WINDOWS_DDE
+	signature WINDOWS
+
+	structure Windows
+#endif
+
+is
+	$smlnj/init/init.cmi : cm
+
+	../TypesOnly/sources.cm
+
+	NJ/cleanup.sig
+	NJ/cleanup.sml
+	NJ/smlnj.sml
+	NJ/signals.sig
+	NJ/internal-signals.sml
+	NJ/signals.sml
+	NJ/weak.sig
+	NJ/weak.sml
+	NJ/susp.sig
+	NJ/susp.sml
+	NJ/export.sig
+	NJ/wrap-export.sml
+	NJ/export.sml
+	NJ/interval-timer.sig
+	NJ/interval-timer.sml
+	NJ/sysinfo.sig
+	NJ/sysinfo.sml
+	NJ/prof-control.sig
+	NJ/prof-control.sml
+	NJ/gc.sig
+	NJ/gc.sml
+	NJ/print-hook.sml
+	NJ/internals.sig
+	NJ/internals.sml
+	NJ/cont.sig
+	NJ/cont.sml
+	NJ/smlnj.sig
+	NJ/lazy.sml
+
+	Unsafe/cinterface.sig
+	Unsafe/cinterface.sml
+	Unsafe/object.sig
+	Unsafe/unsafe-array.sig
+	Unsafe/unsafe-vector.sig
+	Unsafe/unsafe-mono-array.sig
+	Unsafe/unsafe-mono-vector.sig
+	Unsafe/unsafe-pack-word-b16.sml
+	Unsafe/unsafe-pack-word-b32.sml
+	Unsafe/unsafe-pack-word-l16.sml
+	Unsafe/unsafe-pack-word-l32.sml
+	Unsafe/pointer.sig
+	Unsafe/pointer.sml
+	Unsafe/unsafe.sig
+	Unsafe/unsafe.sml
+#if defined(SIZE_32)
+	Unsafe/target32-object.sml
+#else
+	Unsafe/target64-object.sml
+#endif
+	OS/os.sig
+	OS/os-filesys.sig
+	OS/os-path.sig
+	OS/os-process.sig
+	OS/os-io.sig
+	OS/at-exit.sml
+	OS/os-path-fn.sml
+
+	pre-basis.sml
+	pre-string.sml
+	substring.sig
+	text.sig
+
+	general.sig
+	array.sig
+	array-slice.sig
+	array2.sig
+	vector.sig
+	vector-slice.sig
+	integer.sig
+	bool.sig
+	char.sig
+	string.sig
+	string-cvt.sig
+	list.sig
+	list-pair.sig
+	word.sig
+	byte.sig
+	command-line.sig
+	date.sig
+	ieee-real.sig
+	real.sig
+	time.sig
+	timer.sig
+	option.sig
+	math.sig
+	sml90.sig
+
+	substring.sml
+	text.sml
+	general.sml
+	vector.sml
+	vector-slice.sml
+	string-cvt.sml
+	string.sml
+	char.sml
+	list.sml
+	real64-values.sml
+	scan-util.sml
+	num-scan32.sml
+	num-format32.sml
+	num-scan64.sml
+	num-format64.sml
+	real-format.sml
+	real-scan.sml
+	bool.sml
+	date.sml
+
+	mono-vector.sig
+	mono-vector-slice.sig
+	mono-array.sig
+	mono-array-slice.sig
+	mono-array2.sig
+	mono-buffer.sig
+
+	real64-vector.sml
+	real64-vector-slice.sml
+	real64-array.sml
+	real64-array-slice.sml
+
+	char-array.sml
+	char-array-slice.sml
+	char-vector.sml
+	char-vector-slice.sml
+	char-buffer.sml
+	array.sml
+	array-slice.sml
+	array2.sml
+	ieee-real.sml
+	int32.sml
+	int-inf-sig.sml
+	int-inf.sml
+	w32-popcount.sml
+	word32.sml
+	real64.sml
+	math64-common.sml
+#if defined(ARCH_PPC)
+	math64-none.sml
+#else
+	math64-sqrt.sml
+#endif
+	word8.sml
+	word8-vector.sml
+	word8-vector-slice.sml
+	word8-array.sml
+	word8-array-slice.sml
+	word8-buffer.sml
+	time.sml
+	internal-timer.sml
+	timer.sml
+	list-pair.sml
+	byte.sml
+	command-line.sml
+	option.sml
+	exn-name.sml
+	sml90.sml
+
+	pack-real.sig
+	pack-real64-native.sml
+	pack-real64-swap.sml
+
+	pack-word.sig
+	pack-word-b16.sml
+	pack-word-l16.sml
+	pack-word-b32.sml
+	pack-word-l32.sml
+
+#if defined(SIZE_32)
+	Target32Bit/bind-structs.sml
+	Target32Bit/int.sml
+	Target32Bit/int64.sml
+	Target32Bit/intinf-to-real64.sml
+	Target32Bit/pack-word-b64.sml
+	Target32Bit/pack-word-l64.sml
+	Target32Bit/pointer.sml
+        Target32Bit/real64-to-intinf.sml
+	Target32Bit/word.sml
+	Target32Bit/word64.sml
+#else
+	Target64Bit/bind-structs.sml
+	Target64Bit/int.sml
+	Target64Bit/int64.sml
+	Target64Bit/intinf-to-real64.sml
+	Target64Bit/pack-word-b64.sml
+	Target64Bit/pack-word-l64.sml
+	Target64Bit/pointer.sml
+        Target64Bit/real64-to-intinf.sml
+	Target64Bit/word.sml
+	Target64Bit/word64.sml
+	Target64Bit/w64-popcount.sml
+#endif
+
+	bind-structs.sml
+#if defined(BIG_ENDIAN)
+	bind-pack-big.sml
+#else
+	bind-pack-little.sml
+#endif
+
+      (* basis proposal 2015-002 *)
+	either.sig
+	either.sml
+      (* basis proposal 2015-005 *)
+	fn.sig
+	fn.sml
+      (* basis proposal 2015-007 *)
+	ref.sig
+	ref.sml
+      (* basis proposl 2020-001 *)
+	universal.sig
+	universal.sml
+
+	bit-flags.sig
+	bit-flags-fn.sml
+
+#if defined(OPSYS_UNIX)
+	Unix/pre-os.sml
+	Posix/posix-prelude.sml
+	Posix/posix-error.sig
+	Posix/posix-error.sml
+	Posix/posix-signal.sig
+	Posix/posix-signal.sml
+	Posix/posix-process.sig
+	Posix/posix-process.sml
+	Posix/posix-filesys.sig
+	Posix/posix-io.sig
+	Posix/posix-filesys.sml
+	Posix/posix-io.sml
+	Posix/posix-procenv.sig
+	Posix/posix-procenv.sml
+	Posix/posix-sysdb.sig
+	Posix/posix-sysdb.sml
+	Posix/posix-tty.sig
+	Posix/posix-tty.sml
+	Posix/posix.sig
+	Posix/posix.sml
+	Unix/unix-signals.sig
+	Unix/unix-signals.sml
+
+	Unix/os-path.sml
+	Unix/os-filesys.sml
+	Unix/os-process.sml
+	Unix/os-io.sml
+	Unix/os.sml
+
+	Unix/posix-bin-prim-io.sml
+	Unix/posix-text-prim-io.sml
+	Unix/posix-bin-io.sml
+	Unix/posix-text-io.sml
+	Unix/unix.sig
+	Unix/unix.sml
+#elif defined(OPSYS_WIN32)
+
+#if defined(SIZE_32)
+	Win32/win32-handle.sml
+#else (* 64-bits *)
+	Win32/win64-handle.sml
+#endif
+
+	Win32/pre-os.sml
+	Win32/win32-general.sig
+	Win32/win32-general.sml
+	Win32/win32-filesys.sig
+	Win32/win32-filesys.sml
+	Win32/win32-io.sig
+	Win32/win32-io.sml
+	Win32/win32-process.sig
+	Win32/win32-process.sml
+	Win32/win32.sig
+	Win32/win32.sml
+
+	Win32/os-path.sml
+	Win32/os-filesys.sml
+	Win32/os-process.sml
+	Win32/os-io.sml
+	Win32/os.sml
+
+	Win32/win32-bin-prim-io.sml
+	Win32/win32-text-prim-io.sml
+	Win32/win32-bin-io.sml
+	Win32/win32-text-io.sml
+
+	Win32/windows-key.sig
+	Win32/windows-key.sml
+	Win32/windows-reg.sig
+	Win32/windows-reg.sml
+	Win32/windows-config.sig
+	Win32/windows-config.sml
+	Win32/windows-dde.sig
+	Win32/windows-dde.sml
+	Win32/windows-status.sig
+	Win32/windows-status.sml
+
+	Win32/windows.sig
+	Win32/windows.sml
+#else
+# error OS not supported for this system
+#endif
+
+	IO/prim-io.sig
+	IO/prim-io-fn.sml
+	IO/bin-prim-io.sml
+	IO/text-prim-io.sml
+	IO/io.sig
+	IO/io.sml
+	IO/clean-io.sml
+	IO/stream-io.sig
+	IO/text-stream-io.sig
+	IO/imperative-io.sig
+	IO/bin-io.sig
+	IO/text-io.sig
+	IO/os-prim-io.sig
+	IO/bin-io-fn.sml
+	IO/text-io-fn.sml
+
+#if defined(OPSYS_UNIX) orelse defined(OPSYS_WIN32)
+	Sockets/pre-sock.sml
+	Sockets/prot-db.sig
+	Sockets/prot-db.sml
+	Sockets/host-db.sig
+	Sockets/host-db.sml
+	Sockets/serv-db.sig
+	Sockets/serv-db.sml
+	Sockets/socket.sig
+	Sockets/socket.sml
+	Sockets/generic-sock.sig
+	Sockets/inet-sock.sig
+	Sockets/inet-sock.sml
+#endif
+
+#if defined(OPSYS_UNIX)
+	Sockets/net-db.sig
+	Sockets/net-db.sml
+	Sockets/unix-sock.sig
+	Sockets/unix-generic-sock.sml
+	Sockets/unix-sock.sml
+	Sockets/unix-details.sml
+#elif defined(OPSYS_WIN32)
+	Sockets/win32-generic-sock.sml
+	Sockets/win32-details.sml
+#endif

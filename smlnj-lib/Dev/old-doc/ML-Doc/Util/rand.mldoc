@@ -1,0 +1,107 @@
+<!-- rand.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.1" YEAR=1998 MONTH=5 DAY=6>
+<TITLE>The Rand structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/Rand/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/Random/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/Rand/ structure implements a simple linear congruential
+random number generator with a uniform distribution.
+It is based on the one described in Paulson's book (pp. 170-171),
+which is derived from the article
+``Random number generators: good ones are hard to find,''
+by Stephen K. Park and Keith W. Miller, <IT/CACM/ 31 (1988), pp. 1192-1201.
+It also incorporates the changes suggested by Park and Miller 
+in <IT/CACM/ 36 (1993), pp. 105-110.
+The generator has period <MATH/2<SUP/31/-1/.
+The values returned by <VALREF STRID="Rand">random</VALREF>
+and <VALREF STRID="Rand">mkRandom</VALREF> are 31-bit words
+in the range
+<MATH>
+  [<MTEXT><VALREF STRID="Rand">randMin</VALREF></MTEXT>,
+   <MTEXT><VALREF STRID="Rand">randMax</VALREF></MTEXT>]
+</MATH>. 
+In the current implementation,
+<VALREF STRID="Rand">randMin</VALREF> is <MATH/1.0/
+and <VALREF STRID="Rand">randMax</VALREF> is <MATH/2<SUP/31/-2/.
+
+<STRUCTURE STRID="Rand">
+  <SIGBODY SIGID="RAND" FILE=RAND>
+    <SPEC>
+      <TYPE><ID>rand<TY>Word31.word
+    <SPEC>
+      <VAL>randMin<TY>rand
+      <VAL>randMax<TY>rand
+        <COMMENT>
+	  <PP>
+          These are the minimum and maximum values returned by 
+	  <VALREF/random/ and <VALREF/mkRandom/.
+    <SPEC>
+      <VAL>random<TY>rand -> rand
+        <COMMENT>
+          <PROTOTY>
+          random <ARG/r/
+          </PROTOTY>
+	  returns a random number in the range
+	  <MATH>
+	    [<MTEXT><VALREF>randMin</VALREF></MTEXT>,
+	     <MTEXT><VALREF>randMax</VALREF></MTEXT>]
+	  </MATH>
+	  using the seed <ARG/r/. Iteratively using the value returned by 
+	  <VALREF/random/ as the next seed to <VALREF/random/ will
+	  produce a sequence of pseudo-random numbers.
+    <SPEC>
+      <VAL>mkRandom<TY>rand -> unit -> rand
+        <COMMENT>
+          <PROTOTY>
+          mkRandom <ARG/r/
+          </PROTOTY>
+	  returns a stateful function generating a sequence of
+	  random numbers in the range
+	  <MATH>
+	    [<MTEXT><VALREF>randMin</VALREF></MTEXT>,
+	     <MTEXT><VALREF>randMax</VALREF></MTEXT>]
+	  </MATH>,
+	  starting from the seed <ARG/r/.
+    <SPEC>
+      <VAL>norm<TY>rand -> real
+        <COMMENT>
+        <PP>
+          Uniformly maps the range
+	  <MATH>
+	    [<MTEXT><VALREF>randMin</VALREF></MTEXT>,
+	     <MTEXT><VALREF>randMax</VALREF></MTEXT>]
+	  </MATH>,
+	  to the range <MATH/(0.0,1.0)/. 
+          This can be used in combination with
+          <CD/random/ or <CD/mkRandom/ to generate normalized real-valued
+          random numbers.
+    <SPEC>
+      <VAL>range<TY>(int * int) -> rand -> int
+      <RAISES><EXNREF DOCUMENT=SML-BASIS-DOC STRID="General"/Fail/
+        <COMMENT>
+          <PROTOTY>
+          range (<ARG/i/, <ARG/j/)
+          </PROTOTY>
+       returns a function mapping the range
+	  <MATH>
+	    [<MTEXT><VALREF>randMin</VALREF></MTEXT>,
+	     <MTEXT><VALREF>randMax</VALREF></MTEXT>]
+	  </MATH>
+       uniformly to the range <MATH/[<ARG/i/,<ARG/j/]/.
+       This can be used in combination with
+       <CD/random/ or <CD/mkRandom/ to generate random numbers in a given
+       integer range.
+       This raises the exception <EXNREF DOCUMENT=SML-BASIS-DOC STRID="General"/Fail/
+       if <MATH/<ARG/j/ &LT; <ARG/i//.
+</STRUCTURE>
+
+</INTERFACE>

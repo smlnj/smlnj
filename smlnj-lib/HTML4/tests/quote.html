@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Quotations [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for quotation elements. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="quotations, quotes">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="objvideo" title="Objects: Video">
+	<link rel="next" href="scripts" title="Scripts">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+	<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Quotations</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="objvideo" rel="prev" accesskey="P" title="Prior: Objects: Video">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="scripts" rel="next" accesskey="N" title="Next: Scripts"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Quotations (<a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#h-9.2.2" title="HTML 4.0 Specification">&sect;9.2.2</a>)</h1>
+
+	<div class="section" id="q">
+		<h2>Quote marks</h2>
+
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-q" title="HTML 4.0 Specification: 9 Text"><dfn><code class="element">&lt;q></code></dfn></a> element provides a language&#8208;independent way of specifying <em>quotations</em>.</p>
+
+			<p>A visual Web browser must produce quotation marks at the beginning and end of the <code class="element">&lt;q></code> element. Depending on its capabilities, it could use curly left and right quotes instead of straight <abbr title="American Standard Code for Information Interchange">ASCII</abbr> quote marks. It could also use different quote marks appropriate to the text&rsquo;s language (for example, <em lang="fr">guillemets</em> in French documents).</p>
+
+			<p>Authors can recommend which quote marks <code class="element">&lt;q></code> should use through style sheets. In <a href="http://www.w3.org/TR/REC-CSS2/" title="W3C: Cascading Style Sheets, Level 2" class="w3clink"><abbr title="Cascading Style Sheets">CSS</abbr> level 2</a>, the <dfn><a class="specsect" href="http://www.w3.org/TR/REC-CSS2/generate.html#quotes-specify"><code class="style_description">quotes</code></a></dfn> style description specifies which characters to use.</p>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering replacing <code class="element">&lt;q></code> with a <a class="specsect" href="http://www.w3.org/TR/2004/WD-xhtml2-20040722/mod-text.html#sec_9.8." title="XHTML 2.0 Working Draft: The quote element"><code class="element">&lt;quote></code></a> element in <abbr>XHTML</abbr> 2.0. The difference between them is that <code class="element">&lt;quote></code> would not generate quotation marks like <code class="element">&lt;q></code> does. Web browsers that do not support <code class="element">&lt;quote></code> would still render the quotation marks in the content.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<h4 class="codeheader">This document has style rules specifying language&#8208;dependent renderings for quotation marks, to various depths:</h4>
+			<div class="blockcode">
+	:lang(en-gb) { quotes: "\2018" "\2019" "\201C" "\201D" }<br>
+	:lang(en-us),<br>
+	:lang(es) { quotes: "\201C" "\201D" "\2018" "\2019" }<br>
+	:lang(fr) { quotes: "«\2009" "\2009»" "\201C" "\201D" "\2018" "\2019" }<br>
+	:lang(de) { quotes: "\201E" "\201C" "\201A" "\2018" }<br>
+	:lang(it) { quotes: "«" "»" "\2039" "\203A" }<br>
+	:lang(no) { quotes: "«" "»" "\2018" "\2019" }<br>
+		</div>
+
+		<p>These paragraphs declare the language of their contents. Each should invoke the style rule for that language and set the quotation marks appropriately:</p>
+		
+			<div class="blockcode">
+			<em class="html">&lt;p><strong class="tested">&lt;q></strong></em>What is this thing called <em class="html4"><strong class="tested">&lt;q></strong></em>love<em class="html4"><strong class="tested">&lt;/q></strong></em>?<em class="html"><strong class="tested">&lt;/q></strong>&lt;/p></em><br>
+			<em class="html">&lt;p <em class="html4">lang="es"</em>><strong class="tested">&lt;q></strong></em>¿Cuál es esta cosa llamada <em class="html4"><strong class="tested">&lt;q></strong></em>amor<em class="html4"><strong class="tested">&lt;/q></strong></em>?<em class="html"><strong class="tested">&lt;/q></strong>&lt;/p></em><br>
+			<em class="html">&lt;p <em class="html4">lang="fr"</em>><strong class="tested">&lt;q></strong></em>Qu<em class="html4"><em class="entity">&amp;rsquo;</em></em>est<em class="html4"><em class="entity">&amp;#8208;</em></em>ce que c<em class="html4"><em class="entity">&amp;rsquo;</em></em>est que <em class="html4"><strong class="tested">&lt;q></strong></em>l<em class="html4"><em class="entity">&amp;rsquo;</em></em>amour<em class="html4"><strong class="tested">&lt;/q></strong></em>?<em class="html"><strong class="tested">&lt;/q></strong>&lt;/p></em><br>
+			<em class="html">&lt;p <em class="html4">lang="de"</em>><strong class="tested">&lt;q></strong></em>Was ist dies Ding, das man <em class="html4"><strong class="tested">&lt;q></strong></em>Liebe<em class="html4"><strong class="tested">&lt;/q></strong></em> nennt?<em class="html"><strong class="tested">&lt;/q></strong>&lt;/p></em><br>
+			<em class="html">&lt;p <em class="html4">lang="it"</em>><strong class="tested">&lt;q></strong></em>Che cosa è questa cosa chiamata <em class="html4"><strong class="tested">&lt;q></strong></em>amore<em class="html4"><strong class="tested">&lt;/q></strong></em>?<em class="html"><strong class="tested">&lt;/q></strong>&lt;/p></em> 
+		</div>
+	<h4 class="sampheader">It should be rendered similar to this:</h4>
+			<pre class="blocksamp"><samp>&ldquo;What is this thing called &lsquo;love&rsquo;?&rdquo;
+
+&ldquo;¿Cuál es esta cosa llamada &lsquo;amor&rsquo;?&rdquo;
+
+&laquo;&thinsp;Qu&rsquo;est&#8208;ce que c&rsquo;est que &ldquo;l&rsquo;amour&rdquo;?&thinsp;&raquo;
+
+&bdquo;Was ist dies Ding, das man &sbquo;Liebe&lsquo; nennt?&ldquo;
+
+&laquo;Che cosa è questa cosa chiamata &lsaquo;amore&rsaquo;?&raquo;
+</samp></pre>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+			<p><q>What is this thing called <q>love</q>?</q></p>
+			<p lang="es"><q>¿Cuál es esta cosa llamada <q>amor</q>?</q></p>
+			<p lang="fr"><q>Qu&rsquo;est&#8208;ce que c&rsquo;est que <q>l&rsquo;amour</q>?</q></p>
+			<p lang="de"><q>Was ist dies Ding, das man <q>Liebe</q> nennt?</q></p>
+			<p lang="it"><q>Che cosa è questa cosa chiamata <q>amore</q>?</q></p> 
+		</div>
+
+		<p class="note">Feel free to send me translations and the quote conventions for other languages, to add to the above example.</p>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Nested-Quotes">Nested-Quotes</a>, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Default-Quotes">Default-Quotes</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=29576">#29576</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="cite">
+		<h2>Source citations</h2>
+
+		<div class="bodytext">
+			<p>The <dfn><a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#adef-cite" title="HTML 4.0 Specification: cite"><code class="attribute">cite</code></a></dfn> attribute of the <a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-q" title="HTML 4.0 Specification: Q"><code class="element">&lt;q></code></a> and <a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#edef-blockquote" title="HTML 4.0 Specification: BLOCKQUOTE"><code class="element">&lt;blockquote></code></a> elements is <q cite="http://www.w3.org/TR/html4/struct/text.html#h-9.2.2">intended to give information about the source from which the quotation was borrowed</q>, according to the standard. It could be used to link to a quotation&rsquo;s source or to other information about it.</p>
+			<p>Some Web browsers allow you to access the source of the quotation by clicking on the quotation or selecting an option from a context menu.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<h4 class="codeheader">This block quotation cites the URL of its source:</h4>
+			<div class="blockcode">
+			<em class="html">&lt;blockquote <strong class="tested">cite="<a href="http://www.geocities.com/~rosemarylake/stories/ft-frogmanor.html">//www.geocities.com/~rosemarylake/stories/ft-frogmanor.html</a>"</strong> title="<em class="html4"><em class="entity">&amp;ldquo;</em></em>The Well at the World<em class="html4"><em class="entity">&amp;rsquo;</em></em>s End<em class="html4"><em class="entity">&amp;rdquo;</em></em> by Rosemary Lake"></em><br>
+				<div class="indent">
+				<em class="html">&lt;p></em>One day when Marianne had finished scrubbing the kitchen floor and was putting cakes and fruit on a plate to take to old Nurse, her Uncle threw a sieve at her and commanded: <em class="html4">&lt;q></em>Here, go and fill this with water from the Well at the World<em class="html4"><em class="entity">&amp;rsquo;</em></em>s End.<em class="html4">&lt;/q></em> For he was sure there was no such place, and if there were, no one could fill a sieve with water anyway.<em class="html">&lt;/p></em><br>
+				</div>
+			<em class="html">&lt;/blockquote></em>
+		</div>
+		<h4 class="resultheader">You should be able to navigate to the source of this quotation:</h4>
+			<div class="results" id="result2">
+			<blockquote cite="http://www.geocities.com/~rosemarylake/stories/ft-frogmanor.html" title="&quot;The Well at the World&rsquo;s End&quot; by Rosemary Lake">
+				<p>One day when Marianne had finished scrubbing the kitchen floor and was putting cakes and fruit on a plate to take to old Nurse, her Uncle threw a sieve at her and commanded: <q>Here, go and fill this with water from the Well at the World&rsquo;s End.</q> For he was sure there was no such place, and if there were, no one could fill a sieve with water anyway.</p>
+			</blockquote>
+		</div>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<h4 class="codeheader">This block quotation is about quotation marks:</h4>
+			<div class="blockcode">
+			<em class="html">&lt;blockquote <strong class="tested">cite="<a href="http://www.suck.com/daily/2000/03/20/">//www.suck.com/daily/2000/03/20/</a>"</strong> <em class="html4">title="suck: The Jawbone of a Scare Quote (20 Mar 2000)"</em>></em><br>
+				<div class="indent">
+				<em class="html">&lt;p></em>The scare quotes let you know the jury<em class="html4"><em class="entity">&amp;rsquo;</em></em>s still out<em class="entity html4">&amp;mdash;</em>the euphemism may become reality if it<em class="html4"><em class="entity">&amp;rsquo;</em></em>s tenacious enough to get the nod from the dictionary someday or to shed the scare quotes in the paper. A reader caught <em class="html">&lt;cite></em>The New York Times<em class="html">&lt;/cite></em> at this practice in its 5 May 1993 edition and used Orwell<em class="html4"><em class="entity">&amp;rsquo;</em></em>s <em class="html4"><em class="entity">&amp;ldquo;</em></em>Politics and the English Language<em class="html4"><em class="entity">&amp;rdquo;</em></em> as the bag of oranges for the beatdown. The Gray Lady had suddenly dropped the scare quotes around the obvious doublespeak <em class="html4"><em class="entity">&amp;ldquo;</em></em>ethnic cleansing,<em class="html4"><em class="entity">&amp;rdquo;</em></em> thereby legitimizing a term for genocide favored by killers looking to cast their murderous policies in a less sinister light. The upshot is that today we all know what ethnic cleansing is, and <em class="html4"><em class="entity">&amp;ldquo;</em></em>genocide<em class="html4"><em class="entity">&amp;rdquo;</em></em> somehow seems a PC fallback<em class="html4"><em class="entity">&amp;#8208;</em></em>word for whiners. The terms have changed places and the legit description now reads as suspect.<em class="html">&lt;/p></em><br>
+
+				
+				</div>
+			<em class="html">&lt;/blockquote></em>
+		</div>
+		<h4 class="resultheader">You should be able to navigate to the source of this quotation:</h4>
+			<div class="results" id="result3">
+			<blockquote cite="http://www.suck.com/daily/2000/03/20/" title="suck: The Jawbone of a Scare Quote (20 Mar 2000)">
+				
+			<p>The scare quotes let you know the jury&rsquo;s still out&mdash;the euphemism may become reality if it&rsquo;s tenacious enough to get the nod from the dictionary someday or to shed the scare quotes in the paper. A reader caught <cite>The New York Times</cite> at this practice in its 5 May 1993 edition and used Orwell&rsquo;s &ldquo;Politics and the English Language&rdquo; as the bag of oranges for the beatdown. The Gray Lady had suddenly dropped the scare quotes around the obvious doublespeak <q>ethnic cleansing,</q> thereby legitimizing a term for genocide favored by killers looking to cast their murderous policies in a less sinister light. The upshot is that today we all know what ethnic cleansing is, and <q>genocide</q> somehow seems a PC fallback&#8208;word for whiners. The terms have changed places and the legit description now reads as suspect.</p>
+			</blockquote>
+		</div>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<h4 class="codeheader">A quotation within a quotation, both with source citations.</h4>
+			<div class="blockcode">
+			<em class="html">&lt;blockquote <strong class="tested">cite="<a href="http://www.wired.com/wired/archive/4.01/white.paper_pr.html">//www.wired.com/wired/archive/4.01/white.paper_pr.html</a>"</strong> title="Wired: The Copyright Grab (Jan 1996)"></em><br>
+				<div class="indent">
+				<em class="html">&lt;p></em>Universal and Disney once sued Sony to stop distribution of its videotape machines, arguing that private noncommercial copying of their motion pictures by purchasers of Betamax machines was no more excusable than the theft of a necklace because the thief intended to wear it only at home for noncommercial purposes. The Supreme Court pointed out that the person who steals a necklace deprives its owner of possession and use of the item, whereas the copying of programs off the air <em class="html4">&lt;q <strong class="tested">cite="<a href="http://cyber.law.harvard.edu/metaschool/Fisher/integrity/Links/Cases/sony.html">//cyber.law.harvard.edu/metaschool/Fisher/integrity/Links/Cases/sony.html</a>"</strong> title="Sony v. Universal Studios"></em>does not even remotely entail comparable consequences for the copyright owner.<em class="html4">&lt;/q></em> The Court held that it was fair use for consumers to copy programs off the air for time<em class="html4"><em class="entity">&amp;#8208;</em></em>shifting purposes.<em class="html">&lt;/p></em><br>
+				</div>
+			<em class="html">&lt;/blockquote></em>
+		</div>
+		<h4 class="resultheader">You should be able to navigate to the source of both quotations:</h4>
+			<div class="results" id="result4">
+			<blockquote cite="http://www.wired.com/wired/archive/4.01/white.paper_pr.html" title="Wired: The Copyright Grab (Jan 1996)">
+				<p>Universal and Disney once sued Sony to stop distribution of its videotape machines, arguing that private noncommercial copying of their motion pictures by purchasers of Betamax machines was no more excusable than the theft of a necklace because the thief intended to wear it only at home for noncommercial purposes. The Supreme Court pointed out that the person who steals a necklace deprives its owner of possession and use of the item, whereas the copying of programs off the air <q cite="http://cyber.law.harvard.edu/metaschool/Fisher/integrity/Links/Cases/sony.html" title="Sony v. Universal Studios">does not even remotely entail comparable consequences for the copyright owner.</q> The Court held that it was fair use for consumers to copy programs off the air for time&#8208;shifting purposes.</p>
+			</blockquote>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Metadata">Metadata</a>.</p>
+		<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

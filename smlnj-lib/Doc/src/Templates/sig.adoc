@@ -1,0 +1,33 @@
+= The `@NAME@` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `@NAME@` signature ...
+
+== Synopsis
+
+[source,sml]
+------------
+signature @NAME@
+------------
+
+== Interface
+
+[source,sml]
+------------
+------------
+
+== Description
+
+`[.kw]#type# foo`::
+  something
+
+`[.kw]#val# bar : foo -> foo`::
+  something
+
+== See Also
+
+xref:@LIBRARY@.adoc[__The @DIR@ Library__]

@@ -1,0 +1,19 @@
+(* Copyright YALE FLINT PROJECT 1997 *)
+(* smlnj/viscomp/core.cm *)
+
+(*
+ * This used to be called all-files.cm, then sources.cm, and even later
+ * viscomp-lib.cm (at which point it became "just a library").
+ * It is now reduced to the machine-independent core part of the
+ * library.  Machine-dependent parts are in viscomp/<arch>.cm.
+ *   M.Blume (11/1999)
+ *
+ * Moved to smlnj/viscomp for better path-anchor organization.
+ *   M.Blume (03/2000)
+ *)
+(primitive)
+Library
+	group($compiler/core.cm)
+is
+	(* reference to our only group... *)
+	$compiler/core.cm

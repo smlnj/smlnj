@@ -1,0 +1,127 @@
+= The `Fifo` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Fifo` structure provides a functional queue data structure,
+which are implemented as a pair of stacks (lists) representing the
+front and rear of the queue.  **Single-threaded** enqueuing and
+dequeuing operations will have amortized constant time.
+
+== Synopsis
+
+[source,sml]
+------------
+signature FIFO
+structure Fifo :> FIFO
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a fifo
+
+exception Dequeue
+
+val empty : 'a fifo
+val isEmpty : 'a fifo -> bool
+val enqueue : 'a fifo * 'a -> 'a fifo
+val dequeue : 'a fifo -> 'a fifo * 'a
+val next : 'a fifo -> ('a * 'a fifo) option
+val delete : ('a fifo * ('a -> bool)) -> 'a fifo
+val head : 'a fifo -> 'a
+val peek : 'a fifo -> 'a option
+val length : 'a fifo -> int
+val contents : 'a fifo -> 'a list
+val app : ('a -> unit) -> 'a fifo -> unit
+val map : ('a -> 'b) -> 'a fifo -> 'b fifo
+val foldl : ('a * 'b -> 'b) -> 'b -> 'a fifo -> 'b
+val foldr : ('a * 'b -> 'b) -> 'b -> 'a fifo -> 'b
+------------
+
+== Description
+
+`[.kw]#type# 'a fifo`::
+  The type constructor for functional queues.
+
+[[exn:Dequeue]]
+`[.kw]#exception# Dequeue`::
+  This exceptions is raised when the `dequeue` function is
+  applied to an empty queue.
+
+`[.kw]#val# empty : 'a fifo`::
+  The empty queue.
+
+`[.kw]#val# isEmpty : 'a fifo \-> bool`::
+  `ifEmpty q` returns true if the queue is empty.
+
+`[.kw]#val# enqueue : 'a fifo * 'a \-> 'a fifo`::
+  `enqueue (q, x)` returns a queue with `x` added to the end.
+
+`[.kw]#val# dequeue : 'a fifo \-> 'a fifo * 'a`::
+  `dequeue q` returns a pair `(q', x)`, where `x` was the first
+  element in `q` and ``q'`` is the queue with `x` removed.
+  This function raises the xref:#exn:Dequeue[`Dequeue`] exception
+  if it is called on an empty queue.
+
+`[.kw]#val# next : 'a fifo \-> ('a * 'a fifo) option`::
+  `next q` returns `SOME(q', x)`, where `x` was the first
+  element in `q` and ``q'`` is the queue with `x` removed, or
+  `NONE` if `q` is empty.
+
+`[.kw]#val# delete : ('a fifo * ('a \-> bool)) \-> 'a fifo`::
+  `delete (q, pred)` removes those items from `q` for which the
+  function `pred` returns `true` and returns the resulting queue.
+
+`[.kw]#val# head : 'a fifo \-> 'a`::
+  `head q` returns the first element of `q` or raises the exception
+  xref:#exn:Dequeue[`Dequeue`] if `q` is empty.
+
+`[.kw]#val# peek : 'a fifo \-> 'a option`::
+  `peek q` returns `SOME x`, where `x` is the first element of `q`,
+  or `NONE` if `q` is empty.
+
+`[.kw]#val# length : 'a fifo \-> int`::
+  `length q` returns the number of elements in the queue.
+
+`[.kw]#val# contents : 'a fifo \-> 'a list`::
+  `contents q` returns the contents of `q` as a list.
+
+`[.kw]#val# app : ('a \-> unit) \-> 'a fifo \-> unit`::
+  `app f q` applies the function `f` to the elements of `q`.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.app f (contents q)
+------------
+
+`[.kw]#val# map : ('a \-> 'b) \-> 'a fifo \-> 'b fifo`::
+  `map f q` returns the queue that results from mapping
+  the function `f` across the elements of the queue.
+
+`[.kw]#val# foldl : ('a * 'b \-> 'b) \-> 'b \-> 'a fifo \-> 'b`::
+  `foldl f init q` folds the function `f` over the elements of `q` from
+  front to back.  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldl f init (contents q)
+------------
+
+`[.kw]#val# foldr : ('a * 'b \-> 'b) \-> 'b \-> 'a fifo \-> 'b`::
+  `foldr f init q` folds the function `f` over the elements of `q` from
+  back to front.  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldr f init (contents q)
+------------
+
+== See Also
+
+xref:str-Queue.adoc[`Queue`],
+xref:smlnj-lib.adoc[__The Util Library__]

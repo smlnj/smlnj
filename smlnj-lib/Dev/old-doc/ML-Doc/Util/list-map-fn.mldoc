@@ -1,0 +1,34 @@
+<!-- list-map-fn.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ListMapFn SDATA "list-map-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=10>
+<TITLE>The ListMapFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ListMapFn/ functor</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_KEY/
+  <SIGREF/ORD_MAP/
+  <FCTREF/BinaryMapFn/
+  <FCTREF/SplayMapFn/
+  <SIGREF/ORD_SET/
+</SEEALSO>
+
+<PP>
+The <FCTREF NOLINK/ListMapFn/ functor implements applicative maps on
+an ordered type. It uses a sorted list representation.
+
+<FUNCTOR FCTID="ListMapFn"><ID>K<ID>ORD_KEY</ID>
+  <ID>ORD_MAP
+</FUNCTOR>
+
+<PP>
+Note that inserting a pair into a map that already contains a pair using
+the same key (in the sense that both keys are considered equal by the comparison
+function) causes the current pair to be replaced by the new one.
+</INTERFACE>

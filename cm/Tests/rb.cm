@@ -1,0 +1,4 @@
+Library
+	structure S
+is
+	rb2.cm (bind:(anchor:basis.cm value:$mybasis.cm))

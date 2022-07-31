@@ -1,0 +1,13 @@
+(* minimal-only.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * This library exists only for administrative reasons because we
+ * want to mention "minimal.cm" in "intsys.cm" (so it gets made during
+ * bootstrap compilation), but we can't do so because of the name conflict
+ * that it would create with $smlnj/compiler.cm.  Therefore, minimal-only.cm
+ * does not re-export structure Compiler. *)
+library
+	structure MinimalCompiler
+is
+	$smlnj/compiler/minimal.cm

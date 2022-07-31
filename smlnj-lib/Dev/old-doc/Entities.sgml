@@ -1,0 +1,55 @@
+<!-- this file contains entities for the file names to generate signature -->
+<!-- code to. -->
+
+<!ENTITY SMLNJ-LIB SDATA "SML/NJ Library">
+<!ENTITY SML SDATA "SML">
+
+<!-- external documents -->
+<!ENTITY SML-BASIS-DOC  SDATA "SML-Basis-Doc">
+<!ENTITY SMLNJ-DOC  SDATA "SML-of-NJ-Doc">
+
+<!-- Controls library filename entities -->
+<!ENTITY CONTROLS SDATA "controls-sig.sml">
+<!ENTITY CONTROL-REGISTRY SDATA "registry-sig.sml">
+<!ENTITY CONTROL-SET SDATA "controls-set-sig.sml">
+<!ENTITY CONTROL-UTIL SDATA "controls-util-sig.sml">
+
+<!-- HashCons library filename entities -->
+<!ENTITY HASH-CONS SDATA "hash-cons-sig.sml">
+
+<!-- Unix library filename entities -->
+<!ENTITY UNIX-ENV SDATA "unix-env-sig.sml">
+<!ENTITY UNIX-PATH SDATA "unix-path-sig.sml">
+
+<!-- Util library filename entities -->
+<!ENTITY ARRAY-SORT SDATA "array-sort-sig.sml">
+<!ENTITY ATOM SDATA "atom-sig.sml">
+<!ENTITY CHAR-MAP SDATA "char-map-sig.sml">
+<!ENTITY FIFO SDATA "fifo-sig.sml">
+<!ENTITY ITERATE SDATA "iterate-sig.sml">
+<!ENTITY LIB-BASE SDATA "lib-base-sig.sml">
+<!ENTITY LIST-FORMAT SDATA "list-format-sig.sml">
+<!ENTITY LIST-XPROD SDATA "list-xprod-sig.sml">
+<!ENTITY ORD-SET SDATA "ord-set-sig.sml">
+<!ENTITY ORD-KEY SDATA "ord-key-sig.sml">
+<!ENTITY RAND SDATA "rand-sig.sml">
+<!ENTITY RANDOM SDATA "random-sig.sml">
+<!ENTITY SPLAY-TREE SDATA "splaytree-sig.sml">
+<!ENTITY QUEUE SDATA "queue-sig.sml">
+<!ENTITY MONO-ARRAY-SORT SDATA "mono-array-sort-sig.sml">
+<!ENTITY SplaySetFn SDATA "splay-set-fn.sml">
+<!ENTITY BinarySetFn SDATA "binary-set-fn.sml">
+<!ENTITY BIT-ARRAY SDATA "bit-array-sig.sml">
+<!ENTITY BIT-VECTOR SDATA "bit-vector-sig.sml">
+<!ENTITY BSearchFn SDATA "bsearch-fn.sml">
+<!ENTITY MONO-DYNAMIC-ARRAY SDATA "mono-dynamic-array-sig.sml">
+<!ENTITY ORD-MAP SDATA "ord-map-sig.sml">
+<!ENTITY LIST-SORT SDATA "listsort-sig.sml">
+<!ENTITY UREF SDATA "uref-sig.sml">
+
+<!-- RegExp library filename entities -->
+<!ENTITY REGEXP SDATA "regexp-sig.sml">
+<!ENTITY REGEXP-PARSER SDATA "parser-sig.sml">
+<!ENTITY REGEXP-SYNTAX SDATA "syntax-sig.sml">
+<!ENTITY REGEXP-ENGINE SDATA "engine-sig.sml">
+<!ENTITY MATCH-TREE SDATA "match-tree.sml">

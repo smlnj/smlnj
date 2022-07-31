@@ -1,0 +1,76 @@
+<!-- hash-cons.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John Reppy" YEAR=2005>
+<VERSION VERID="1.0" YEAR=2005 MONTH=5 DAY=10>
+<TITLE>The HashCons structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD>HASH_CONS</CD> signature</HEAD>
+  <SEEALSO>
+    <STRREF>HashConsAtom</STRREF>
+    <STRREF>HashConsMap</STRREF>
+    <STRREF>HashConsString</STRREF>
+    <STRREF>HashConsSet</STRREF>
+    <FCTREF>HashConsGroundFn</FCTREF>
+  </SEEALSO>
+
+<PP>
+Atoms are uniquely represented strings that support fast equality/inequality
+tests, as well as hashing and ordered comparisons.
+
+<STRUCTURE STRID="HashCons">
+  <SIGBODY SIGID="HASH_CONS" FILE=HASH-CONS>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>tbl
+    <SPEC>
+      <VAL>new<TY>{eq : 'a * 'a -> bool} -> 'a tbl
+    <SPEC>
+      <VAL>clear<TY>'a tbl -> unit
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>obj<TY>{nd : 'a, tag : word, hash : word}
+    <SPEC>
+      <VAL>node<TY>'a obj -> 'a
+    <SPEC>
+      <VAL>tag<TY>'a obj -> word
+    <SPEC>
+      <VAL>same<TY>('a obj * 'a obj) -> bool
+    <SPEC>
+      <VAL>compare<TY>('a obj * 'a obj) -> order
+    <SPEC>
+      <VAL>cons0<TY>'a tbl -> (word * 'a) -> 'a obj
+      <VAL>cons1<TY>'a tbl -> (word * ('b obj -> 'a))
+	  -> 'b obj -> 'a obj
+      <VAL>cons2<TY>'a tbl -> (word * ('b obj * 'c obj -> 'a))
+	  -> 'b obj * 'c obj -> 'a obj
+      <VAL>cons3<TY>'a tbl -> (word * ('b obj * 'c obj * 'd obj -> 'a))
+	  -> 'b obj * 'c obj * 'd obj -> 'a obj
+      <VAL>cons4<TY>'a tbl -> (word * ('b obj * 'c obj * 'd obj * 'e obj -> 'a))
+	  -> 'b obj * 'c obj * 'd obj * 'e obj -> 'a obj
+      <VAL>cons5<TY>'a tbl -> (word * ('b obj * 'c obj * 'd obj * 'e obj * 'f obj -> 'a))
+	  -> 'b obj * 'c obj * 'd obj * 'e obj * 'f obj -> 'a obj
+    <SPEC>
+      <VAL>consList<TY>'a tbl -> (word * ('b obj list -> 'a)) -> 'b obj list -> 'a obj
+    <SPEC>
+      <VAL>consR1<TY>'a tbl -> (word * ('b obj -> 'a) * ('r -> 'b obj))
+	  -> 'r -> 'a obj
+      <VAL>consR2<TY>'a tbl
+	  -> (word * ('b obj * 'c obj -> 'a) * ('r -> 'b obj * 'c obj))
+	    -> 'r -> 'a obj
+      <VAL>consR3<TY>'a tbl
+	  -> (word * ('b obj * 'c obj * 'd obj -> 'a)
+	    * ('r -> 'b obj * 'c obj * 'd obj))
+	    -> 'r -> 'a obj
+      <VAL>consR4<TY>'a tbl
+	  -> (word * ('b obj * 'c obj * 'd obj * 'e obj -> 'a)
+	    * ('r -> 'b obj * 'c obj * 'd obj * 'e obj))
+	    -> 'r -> 'a obj
+      <VAL>consR5<TY>'a tbl
+	  -> (word * ('b obj * 'c obj * 'd obj * 'e obj * 'f obj -> 'a)
+	    * ('r -> 'b obj * 'c obj * 'd obj * 'e obj * 'f obj))
+	    -> 'r -> 'a obj
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

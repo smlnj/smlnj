@@ -1,0 +1,164 @@
+<!-- bit-vector.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY BitVector SDATA "bit-vector-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The BitVector structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/BitVector/ structure</HEAD>
+<SEEALSO>
+    <STRREF/BitArray/
+    <SIGREF DOCUMENT=SML-BASIS-DOC/MONO_VECTOR/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/BitVector/ structure  
+provides compacted vectors of booleans,
+with one bit for each boolean value. A 0 (1) bit corresponds
+to the boolean value <CD/false/ (<CD/true/), respectively. These vectors can be
+used to implement sets of integers. Member testing takes constant time.
+
+<STRUCTURE STRID="BitVector">
+  <SIGBODY SIGID="BIT_VECTOR" FILE=BIT-VECTOR>
+    <SPEC>
+      <INCLUDE><SIGREF DOCUMENT=SML-BASIS-DOC>MONO_VECTOR</SIGREF>
+        <WHERETYPE><ID>elem<TY>bool</WHERETYPE>
+    <SPEC>
+      <VAL>fromString<TY>string -> vector
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          fromString <ARG/s/
+          </PROTOTY>
+          creates a vector from the string argument <ARG/s/, which should
+          contain a hexadecimal representation of the bits set in the vector.
+          Characters 0-9, a-f and A-F are allowed. For example, 
+          <CD/fromString "1af8" = 0001101011111000/. (By convention, 0 
+          corresponds to <CD/false/ and 1 corresponds to <CD/true/, 
+          bit 0 appears on the right, and indices increase to the left.) 
+          The length of the vector will be <CD/4*(size <ARG/s/)/. 
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/ if a non-hexadecimal character 
+          appears in the string.
+    <SPEC>
+      <VAL>bits<TY>(int * int list) -> vector
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/
+        <COMMENT>
+          <PROTOTY>
+          bits (<ARG/sz/, <ARG/l/)
+          </PROTOTY>
+          creates a vector of length <ARG/sz/ with the indices of its set bits  
+          given by <ARG/l/.
+	  Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Subscript/ 
+          if a list item is less than 0, or greater than or equal to <ARG/sz/.
+    <SPEC>
+      <VAL>getBits<TY>vector -> int list
+        <COMMENT>
+          <PROTOTY>
+          getBits <ARG/vec/
+          </PROTOTY>
+          returns a list of indices of the bits set in <ARG/vec/, 
+          in increasing order.
+    <SPEC>
+      <VAL>toString<TY>vector -> string
+        <COMMENT>
+          <PROTOTY>
+          toString <ARG/vec/
+          </PROTOTY>
+          encodes a bit vector as a string. The bit vector is zero-padded to 
+          the next length that is a multiple of 4.
+    <SPEC>
+      <VAL>isZero<TY>vector -> bool
+        <COMMENT>
+          <PROTOTY>
+          isZero <ARG/vec/
+          </PROTOTY>
+          returns true if and only if no bits are set.
+    <SPEC>
+      <VAL>extend0<TY>(vector * int) -> vector
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+      <VAL>extend1<TY>(vector * int) -> vector
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+        <COMMENT>
+          <PROTOTY>
+          extend0 (<ARG/vec/, <ARG/len/)
+          <PROTO>
+          extend1 (<ARG/vec/, <ARG/len/)
+          </PROTOTY>
+          create a new vectors by extending the argument bit vector 
+          by 0's or 1's to given length. If <ARG/vec/ 
+          is already as long as <ARG/len/, return a copy of the bit vector. 
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Size/
+	  if <ARG/len/ is negative.
+    <SPEC>
+      <VAL>eqBits<TY>(vector * vector) -> bool
+        <COMMENT>
+          <PROTOTY>
+          eqBits (<ARG/vec/, <ARG/vec2/)
+          </PROTOTY>
+          returns true if the set bits in the two vectors are the same. This
+          is equivalent to:
+          <CODE>
+            getBits <ARG/vec/ = getBits <ARG/vec2/
+          </CODE>
+    <SPEC>
+      <VAL>equal<TY>(vector * vector) -> bool
+        <COMMENT>
+          <PROTOTY>
+          equal (<ARG/vec/, <ARG/vec2/)
+          </PROTOTY>
+          returns true if the two vectors are equivalent, i.e., have the
+          same length and set bits.
+    <SPEC>
+      <VAL>andb<TY>(vector * vector * int) -> vector
+      <VAL>orb<TY>(vector * vector * int) -> vector
+      <VAL>xorb<TY>(vector * vector * int) -> vector
+        <COMMENT>
+          <PROTOTY>
+          andb (<ARG/vec/, <ARG/vec2/, <ARG/len/)
+          <PROTO>
+          orb (<ARG/vec/, <ARG/vec2/, <ARG/len/)
+          <PROTO>
+          xorb (<ARG/vec/, <ARG/vec2/, <ARG/len/)
+          </PROTOTY>
+          creates a new vector of length <ARG/len/ by logically combining the 
+          bits of <ARG/vec/ and <ARG/vec2/ using and, or and xor, respectively.
+          If necessary, the vectors are implicitly extended by 0 to be the 
+          same length  as the new array.
+    <SPEC>
+      <VAL>notb<TY>vector -> vector
+        <COMMENT>
+          <PROTOTY>
+          notb <ARG/vec/
+          </PROTOTY>
+          creates a new vector with all bits of original vector inverted.
+    <SPEC>
+      <VAL>lshift<TY>(vector * int) -> vector
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          lshift (<ARG/vec/, <ARG/i/)
+          </PROTOTY>
+          creates a new vector by inserting <ARG/n/ 0's on the right 
+          of <ARG/vec/. The new vector has 
+          length <MATH/<ARG/n/ + <MTEXT><VALREF>length</VALREF></MTEXT> <ARG/vec//.
+          Raises <EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/ if <ARG/n/ is negative.
+    <SPEC>
+      <VAL>rshift<TY>(vector * int) -> vector
+      <RAISES><EXNREF STRID="General" DOCUMENT=SML-BASIS-DOC/Fail/
+        <COMMENT>
+          <PROTOTY>
+          rshift (<ARG/vec/, <ARG/i/)
+          </PROTOTY>
+          creates a new vector of 
+          length <MATH/max(0,<MTEXT><VALREF>length</VALREF></MTEXT> <ARG/vec/ - <ARG/n/)/ consisting 
+          of bits <MATH/n,n+1,...,<MTEXT><VALREF>length</VALREF></MTEXT> <ARG/vec/ - 1/ of <ARG/vec/. 
+          If <MATH/<ARG/n/ &GREATEREQ; <MTEXT><VALREF>length</VALREF></MTEXT> <ARG/vec//, the new vector 
+          has length 0.
+</STRUCTURE>
+
+</INTERFACE>

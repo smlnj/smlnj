@@ -1,0 +1,5 @@
+Library
+  structure A
+  structure B
+is
+  ab.sml

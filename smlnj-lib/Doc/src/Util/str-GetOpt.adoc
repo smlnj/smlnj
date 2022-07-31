@@ -1,0 +1,274 @@
+= The `GetOpt` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `GetOpt` structure provides command-line argument processing similar
+to the GNU *getopt* library.   It supports both short options (a single
+character preceded by a single minus character) and long options (multi-character
+names preceded by two minus characters).  Options may require an argument;
+for short options, the argument is the next command-line argument, while for
+long options, the argument follows an equal character (_e.g._,
+"++--foo=bar++"). If the command-line arguments contains the string
+"++--++", then all subsequent arguments are passed through
+as non-options.
+
+This implementation was ported from Sven Panne's Haskell implementation
+by Riccardo Pucella and has then been updated in various ways.
+
+== Synopsis
+
+[source,sml]
+------------
+structure GetOpt
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype 'a arg_order
+  = RequireOrder
+  | Permute
+  | ReturnInOrder of string -> 'a
+
+datatype 'a arg_descr
+  = NoArg of unit -> 'a
+  | ReqArg of (string -> 'a) * string
+  | OptArg of (string option -> 'a) * string
+
+type 'a opt_descr = {
+    short : string,
+    long : string list,
+    desc : 'a arg_descr,
+    help : string
+  }
+
+val usageInfo : {
+        header : string,
+        options : 'a opt_descr list
+      } -> string
+
+val getOpt : {
+        argOrder : 'a arg_order,
+        options : 'a opt_descr list,
+        errFn : string -> unit
+      } -> string list -> ('a list * string list)
+------------
+
+== Description
+
+`[.kw]#datatype# 'a arg_order = ...`::
+  This datatype is used to specify the ordering policy for command-line
+  arguments.  The constructors are interpreted as follows:
++
+--
+`RequireOrder`::
+  No options are processed after the first non-option argument is encountered.
+
+`Permute`::
+  Options and non-options may be freely mixed.
+
+`ReturnInOrder [.kw]#of# string \-> 'a`::
+  Non-options are converted to options using the supplied function.
+--
+
+`[.kw]#datatype# 'a arg_descr` = ...::
+  This datatype is used to describe the optional argument of an option.
+  Each of the constructors has a function as an argument that is used
+  to generate the representation of the processed option.
+  The constructors are interpreted as follows:
++
+--
+[[con:NoArg]]
+`NoArg of unit \-> 'a`::
+  The option does not have an argument, the supplied function is applied to
+  unit when processing the option.
+
+[[con:ReqArg]]
+`ReqArg of (string \-> 'a) * string`::
+  The option requires an argument, which is handled by the given function.
+  The string is the name of the argument used when printing a usage message.
+
+[[con:OptArg]]
+`OptArg of (string option \-> 'a) * string`::
+  The argument is optional and
+  The string is the name of the argument used when printing a usage message.
+--
+
+[[type:opt_descr]]
+`[.kw]#type# 'a opt_descr = { ... }`::
+  This record type describes the properties of a command-line option.
+  Its fields have the following meaning:
++
+--
+`short : string`::
+  A string containing the allowed short flags for the option.
+
+`long : string list`::
+  A list of the allowed long flags for the option.
+
+`desc : 'a arg_descr`::
+  The description of how to process the option's argument.
+
+`help : string`::
+  A descriptive message that is used to construct the usage message
+ (see the `usageInfo` function).
+--
+
+`[.kw]#val# usageInfo : {header, options} \-> string`::
+  `usageInfo {header, options}` returns a usage string suitable for a help
+  message.  The `header` argument is prepended to the message (with a newline
+  between it and the rest of the message).  Each option is described on its
+  own line.
+
+`[.kw]#val# getOpt : {...} \-> string list \-> ('a list * string list)`::
+  `getOpt {argOrder, options, errFn}` returns a function for processing
+  command-line options, which will return a list of results from processing
+  the options and a list of the residual command-line arguments.  The
+  arguments to the call are
++
+--
+`argOrder : 'a arg_order`::
+  Specifies the ordering policy for processing command-line arguments.
+`options : 'a opt_descr list`::
+  The descriptors for the command-line options.
+`errFn : string \-> unit`::
+  An error callback function that is used to report errors during
+  argument processing.
+--
+
+== Examples
+
+There are two common approaches to using the `GetOpt` structure.  The first
+is to define a type that classifies the command-line options.  For example,
+
+[source,sml]
+------------
+datatype opt = AFlg | B of string | C of int | Other of string | Bad
+
+val opts = [
+        { short = "aA", long = [],
+          desc = NoArg(fn () => AFlg),
+          help = "Set A flag"
+        },
+        { short = "b", long = ["set-b"],
+          desc = ReqArg(B, "<name>"), help = "Set B name"
+        },
+        { short = "", long = ["cval"],
+          desc = OptArg (
+            fn (SOME s) => (case Int.fromString s
+                   of SOME n => C n
+                    | NONE => Bad)
+             | NONE => C 0,
+            "<n>"),
+          help = "Set C value (default 0)"
+        }
+      ]
+
+fun usage () = print (usageInfo{header = "usage:", options = opts})
+
+val doOpts = getOpt {
+        argOrder = ReturnInOrder (fn s => Other s),
+        options = opts,
+        errFn = fn msg => raise Fail msg
+      }
+------------
+
+The usage function will print the following text:
+
+[source]
+--------
+usage:
+  -a, -A                     Set A flag
+  -b <name>  --set-b=<name>  Set B name
+             --cval[=<n>]    Set C value (default 0)
+--------
+
+Applying the `doOpts` function with the following arguments
+
+[source,sml]
+------------
+doOpts ["-A", "foo", "--", "-c", "baz"];
+------------
+
+results in
+
+[source,sml]
+------------
+([AFlg, Other "foo", Other "--", Other "-c", Other "baz"], [])
+------------
+
+Note that the second component of the result will always be the empty list
+because the non-options were wrapped with `Other`.  The "`-c`" argument was
+treated as a non-option because it came after the "++--++."
+
+The other approach to using the `GetOpt` structure is to define references
+for the various options and then update them in the argument-descriptor
+functions.  For example:
+[source,sml]
+------------
+val aFlg : bool ref = ref false
+val bOpt : string option ref = ref NONE
+val cVal : int option ref = ref NONE
+val errorFlg : bool ref = ref false
+
+val opts = [
+        { short = "aA", long = [],
+          desc = NoArg(fn () => aFlg := true),
+          help = "Set A flag"
+        },
+        { short = "b", long = ["set-b"],
+          desc = ReqArg(fn s => bOpt := SOME s, "<name>"),
+          help = "Set B name"
+        },
+        { short = "", long = ["cval"],
+          desc = OptArg (
+            fn (SOME s) => (case Int.fromString s
+                   of NONE => errorFlg := true
+                    | someN => cVal := someN)
+             | NONE => cVal := SOME 0,
+            "<n>"),
+          help = "Set C value (default 0)"
+        }
+      ]
+
+val doOpts = getOpt {
+        argOrder = Permute,
+        options = opts,
+        errFn = fn msg => raise Fail msg
+      }
+------------
+
+With this version, applying the `doOpts` function with the following arguments
+
+[source,sml]
+------------
+doOpts ["-A", "foo", "--", "-c", "baz"];
+------------
+
+results in
+
+[source,sml]
+------------
+([()], ["foo", "--", "-c", "baz"])
+------------
+
+with the `aFlg` set to `true` and the other flags unchanged.  One reason
+for using this imperative approach is that it is supported by the
+xref:../Controls/controls-lib.adoc[*Controls Library*].
+
+
+== Bugs
+
+The function arguments to `ReqArg` and `OptArg` should really have
+an option return type so that the case where the argument is badly formed
+can be identified in the `GetOpt` implementation.
+
+== See Also
+
+xref:../Controls/str-ControlUtil.adoc[`Controls`],
+xref:../Controls/controls-lib.adoc[__The Controls Library__],
+xref:smlnj-lib.adoc[__The Util Library__]

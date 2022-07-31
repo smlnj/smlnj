@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# cross compile to all supported targets
+#
+
+if [ x"$1" != x ] ; then
+  SIZE_OPT=$1
+fi
+
+TARGETS="amd64-unix arm64-unix"
+
+for target in $TARGETS ; do
+  ./cmb-cross $SIZE_OPT -z $target || exit 1
+done

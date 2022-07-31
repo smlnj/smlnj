@@ -1,0 +1,17 @@
+(* library-install.cm
+ *
+ *   Simple library installation scripts written in ML.
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	structure LibraryInstall
+is
+	$smlnj/installer/util.cm
+	$smlnj/basis/basis.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/cm.cm
+
+	installer/library-install.sml

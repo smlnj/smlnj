@@ -1,0 +1,75 @@
+= The `ListFormat` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ListFormat` structure provides some utility functions for converting
+lists into strings (and back).
+
+== Synopsis
+
+[source,sml]
+------------
+signature LIST_FORMAT
+structure ListFormat : LIST_FORMAT
+------------
+
+== Interface
+
+[source,sml]
+------------
+val fmt : {
+	init : string,
+	sep : string,
+	final : string,
+	fmt : 'a -> string
+      } -> 'a list -> string
+
+val listToString : ('a -> string) -> 'a list -> string
+
+val scan : {
+	init : string,
+	sep : string,
+	final : string,
+	scan : (char, 'b) StringCvt.reader -> ('a, 'b) StringCvt.reader
+      } -> (char, 'b) StringCvt.reader -> ('a list, 'b) StringCvt.reader
+------------
+
+== Description
+
+`[.kw]#val# fmt : { ... } \-> 'a list \-> string`::
+  `fmt {init, sep, final, fmt} lst` converts the list `lst` to a string,
+  where `init` is an initial string, `sep` is the separator, `final` is
+  the final string, and `fmt` is a function for converting the list
+  elements to strings. For the list value `[a, b, ..., c]`, the resulting
+  string will be formatted as
++
+[source,sml]
+------------
+init ^ (fmt a) ^ sep ^ (fmt b) ^ sep ^ ... ^ sep ^ (fmt c) ^ final
+------------
+
+`[.kw]#val# listToString : ('a \-> string) \-> 'a list \-> string`::
+  `listToString fmt lst` returns a string representing `lst` using **SML**'s
+  list notation.  In other words, the above expression is equivalent to
++
+[source,sml]
+------------
+fmt {init="[", sep=",", final="]", fmt=fmt} lst
+------------
+
+`[.kw]#val# scan : { ... } \-> (char, 'b) StringCvt.reader \-> ('a list, 'b) StringCvt.reader`::
+  `scan {init, sep, final, scan} getc` returns a
+  {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[`reader`]
+  for scanning lists of items from a character stream.  The resulting
+  reader expects the list to begin with the `init` string, use `sep` as
+  a separator, and end with the `final` string.  The reader uses the `scan`
+  argument function to scan individual list elements. +
+  The reader will skip extra whitespace, so to scan a list of items separated
+  by spaces, use the empty string (`""`) as the separator.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

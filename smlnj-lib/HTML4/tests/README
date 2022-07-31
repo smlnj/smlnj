@@ -1,0 +1,33 @@
+______________________________________________________________________
+README for the HTML 4 parser test suite.
+______________________________________________________________________
+
+The following were copied under the Creative Commons Attribution-Share
+Alike license (see http://creativecommons.org/licenses/by-sa/2.5/),
+and come from a set of browser tests written by Robin Lionheart.
+These are available at: http://www.robinlionheart.com/stds/html4/
+
+* abbr.html - http://www.robinlionheart.com/stds/html4/abbr
+* entities.html - http://www.robinlionheart.com/stds/html4/entities
+  (Note that this page is actually XHTML 1.1, but we'll see what the
+  HTML 4.01 strict parser makes of it.)
+* spchars.html - http://www.robinlionheart.com/stds/html4/spchars
+* id.html - http://www.robinlionheart.com/stds/html4/id
+* edit.html - http://www.robinlionheart.com/stds/html4/edit
+* forms.html - http://www.robinlionheart.com/stds/html4/forms
+* frames.html - http://www.robinlionheart.com/stds/html4/frames
+** framebody.html - http://www.robinlionheart.com/stds/html4/framebody
+* objects.html - http://www.robinlionheart.com/stds/html4/objects
+* objaudio.html - http://www.robinlionheart.com/stds/html4/objaudio
+* objvideo.html - http://www.robinlionheart.com/stds/html4/objvideo
+* quote.html - http://www.robinlionheart.com/stds/html4/quote
+* scripts.html - http://www.robinlionheart.com/stds/html4/scripts
+* tables.html - http://www.robinlionheart.com/stds/html4/tables
+* dir.html - http://www.robinlionheart.com/stds/html4/dir
+
+At the time of copying, I validated all of these sources using the W3C
+validator (http://validator.w3.org/).
+
+______________________________________________________________________
+End of README
+______________________________________________________________________

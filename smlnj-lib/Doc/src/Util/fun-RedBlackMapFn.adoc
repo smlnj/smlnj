@@ -1,0 +1,25 @@
+= The `RedBlackMapFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `RedBlackMapFn` functor provides a red-black-tree implementation of the
+xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
+
+This functor is the preferred implementation of finite maps over ordered
+keys as it is faster than the other implementations.
+
+== Synopsis
+
+[source,sml]
+------------
+functor RedBlackMapFn (K : ORD_KEY) :> ORD_MAP where type Key.ord_key = K.ord_key
+------------
+
+== See Also
+
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:sig-ORD_MAP.adoc[`ORD_MAP`],
+xref:smlnj-lib.adoc[__The Util Library__]

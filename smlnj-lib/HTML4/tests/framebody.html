@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-US">
+	<title>Frames (subframe) [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for HTML 4.0 frames. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="forms" title="Forms">
+	<link rel="next" href="objects" title="Objects">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+	<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first" target="_top">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Frames</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test" target="_top">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="forms" rel="prev" accesskey="P" title="Prior: Forms" target="_top">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="objects" rel="next" accesskey="N" title="Next: Objects" target="_top"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Frames (<a class="specsect" href="http://www.w3.org/TR/html4/present/frames.html" title="HTML 4.0 Specification" target="_top">&sect;16</a>)</h1>
+
+	<div class="bodytext">
+		<p>This whole page is one large frame. If you disable frames in your Web browser, you should see the contents of the <a class="specsect" href="http://www.w3.org/TR/html4/present/frames.html#edef-frameset" title="HTML 4.0 Specification: Frames" target="_top"><code class="element">&lt;frameset></code></a> element&rsquo;s <a class="specsect" href="http://www.w3.org/TR/html4/present/frames.html#edef-noframes" title="HTML 4.0 Specification: Frames" target="_top"><code class="element">&lt;noframes></code></a> element.</p>
+		<p><a href="http://www.i-bench.com/" target="_top">i&#8208;Bench</a>&rsquo;s frame tests can do a more thorough check of your Web browser&rsquo;s support for frames, including floating frames.</p>
+
+		<p class="note"><strong class="subhead"><abbr>XHTML</abbr> 1.1:</strong> The <abbr title="World Wide Web Consortium">W3C</abbr> phased out frames in <abbr>XHTML</abbr> 1.1. Frames are destined to be replaced by more powerful markup like XLink.</p>
+		<p class="note">Jakob Neilsen has written about why frames are <a href="http://www.useit.com/alertbox/9612.html" title="Jakob Neilsen&rsquo;s Alertbox: Why Frames Suck (Most of the Time)">fundamentally flawed</a> and their use should be avoided.</p>
+	</div>
+
+	<div class="section" id="iframe">
+		<h2>Inline frames (<a class="specsect" href="http://www.w3.org/TR/html4/present/frames.html#h-16.5" title="HTML 4.0 Specification" target="_top">&sect;16.5</a>)</h2>
+
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/present/frames.html#edef-iframe" title="HTML 4.0 Specification: Frames" target="_top"><code class="element">&lt;iframe></code></a> element generates <em>inline frames</em>, like a simplified <code class="element">&lt;object></code> element.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			<em class="html4"><strong class="tested">&lt;iframe src="test.txt" longdesc="longdesc.txt"></strong></em><br>
+				<div class="indent">
+				<em class="html">&lt;p></em>An internal frame will replace this text if your Web browser supports it.<em class="html">&lt;/p></em><br>
+				</div>
+			<em class="html4"><strong class="tested">&lt;/iframe></strong></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+		<iframe src="test.txt" longdesc="longdesc.txt">
+			<p>An internal frame will replace this text if your Web browser supports it.</p>
+		</iframe>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Frame-Longdesc">Frame-Longdesc</a>.</p>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox" target="_top"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera" target="_top"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed" target="_top"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service" target="_top"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01 Transitional</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service" target="_top"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local" target="_top">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn" target="_top">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

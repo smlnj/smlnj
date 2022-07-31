@@ -1,0 +1,36 @@
+This is the SML/NJ Library.  It is free software distributed under the SML/NJ
+system's license (see the LICENSE file for details).
+
+The library is organized as a collection of CM libraries. Here is a roadmap of
+the library structure:
+
+  Directory	Sources File		Description
+  -------------------------------------------------
+  Util		smlnj-lib.cm		This is the general utility library.
+
+  Controls	controls-lib.cm		This is a library of support code
+					for managing application controls.
+
+  HashCons	hash-cons-lib.cm	This is a library supporting hash-consing
+					of data structures and efficient sets and
+					maps using hash-consed keys.
+
+  HTML		html-lib.cm		This library provides parsing and pretty
+					printing of HTML (Version 3.2).
+
+  INet		inet-lib.cm		Networking utilities (for both Unix
+					and Windows).
+
+  PP		pp-lib.cm		Pretty-printing library.
+
+  Reactive	reactive-lib.cm		A low-level reactive scripting library.
+
+  RegExp	regexp-lib.cm		Regular-expression library.
+
+  Unix		unix-lib.cm		Unix specific utilities.
+
+The first column is the source directory, the second gives the library sources
+file alias (to be used in your application's sources.cm file), and the third
+column gives a brief description.  Look at the Doc dicrectory and at the README
+files in the individual subdirectories for more documentation.
+

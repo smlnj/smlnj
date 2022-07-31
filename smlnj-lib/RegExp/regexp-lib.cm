@@ -1,0 +1,55 @@
+(* regexp-lib.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+signature REGEXP_SYNTAX
+signature REGEXP_PARSER
+signature MATCH_TREE
+signature REGEXP_ENGINE
+signature REGEXP
+
+structure RegExpSyntax
+structure MatchTree
+structure AwkSyntax
+structure BackTrackEngine
+structure DfaEngine
+structure ThompsonEngine
+
+functor RegExpFn
+
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
+  ../Util/smlnj-lib.cm
+#endif
+
+(* utility functions *)
+  Glue/match-tree.sml
+  BackEnd/fsm.sml
+
+(* internal glue language *)
+  FrontEnd/syntax-sig.sml
+  FrontEnd/syntax.sml
+
+(* front/back-ends signatures *)
+  FrontEnd/parser-sig.sml
+  BackEnd/engine-sig.sml
+
+(* Frontends *)
+  FrontEnd/awk-syntax.sml
+
+(* Engines *)
+  BackEnd/bt-engine.sml
+  BackEnd/dfa-engine.sml
+  BackEnd/thompson-engine.sml
+
+(* Glue functor *)
+  Glue/regexp-sig.sml
+  Glue/regexp-fn.sml
+

@@ -1,0 +1,20 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure ExtractIndex
+  structure FileTree
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/json-lib.cm
+  $/regexp-lib.cm
+
+  extract-index.sml
+  file-tree.sml

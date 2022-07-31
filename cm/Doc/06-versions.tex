@@ -1,0 +1,47 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Version numbers}
+\label{chap:versions}
+
+A CM library can carry a version number.  Version numbers are
+specified in parentheses after the keyword {\tt Library} as non-empty
+dot-separated sequences of non-negative integers.  Example:
+
+\begin{lstlisting}[language=CM]
+  Library (1.4.1.4.2.1.3.5)
+      structure Sqrt2
+  is
+      sqrt2.sml
+\end{lstlisting}%
+
+\section{How versions are compared}
+
+Version numbers are compared lexicographically, dot-separated
+component by dot-separated component, from left to right.  The
+components themselves are compared numerically.
+
+\section{Version checking}
+
+An importing library or library component can specify which version of
+the imported library it would like to see.  See the discussion is
+\secref{sec:toolparam:cm} for how this is done.  Where a version
+number is requested, an error is signalled if one of the following is
+true:
+
+\begin{itemize}
+\item the imported library does not carry a version number
+\item the imported library's version number is smaller than the
+one requested
+\item the imported library's version number has a first component
+(known as the ``major'' version number) that is greater than the one
+requested
+\end{itemize}
+
+A warning (but no error) is issued if the imported library has the
+same major version but the version as a whole is greater than the one
+requested.
+
+Note: {\it Version numbers should be incremented on every change to a
+library.  The major version number should be increased on every change
+that is not backward-compatible.}

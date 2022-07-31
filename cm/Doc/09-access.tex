@@ -1,0 +1,49 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Access control}
+\label{chap:access}
+
+The basic idea behind CM's access control is the following: In their
+description files, groups and libraries can specify a list of
+{\em privileges} that the client must have in order to be able to use them.
+Privileges at this level are just names (strings) and must be written
+in front of the initial keyword {\tt Library} or {\tt Group}.  If one
+group or library imports from another group or library, then
+privileges (or rather: privilege requirements) are being inherited.
+In effect, to be able to use a program, one must have all privileges
+for all its libraries, sub-libraries and library components,
+components of sub-libraries, and so on.
+
+Of course, this alone would not yet be satisfactory.  The main service
+of the access control system is that it can let a client use an
+``unsafe'' library ``safely''.  For example, a library {\tt LSafe.cm}
+could ``wrap'' all the unsafe operations in {\tt LUnsafe.cm} with
+enough error checking that they become safe.  Therefore, a user of
+{\tt LSafe.cm} should not also be required to possess the privileges
+that would be required if one were to use {\tt LUnsafe.cm} directly.
+
+In CM's access control model it is possible for a library to ``wrap''
+privileges.  If a privilege $P$ has been wrapped, then the user of the
+library does not need to have privilege $P$ even though the library is
+using another library that requires privilege $P$.  In essence, the
+library acts as a go-between who provides the necessary credentials
+for privilege $P$ to the sub-library.
+
+Of course, not everybody can be allowed to establish a library with
+such a ``wrapped'' privilege $P$.  The programmer who does that should at
+least herself have privilege P (but perhaps better, she should have
+{\em permission to wrap $P$}---a stronger requirement).
+
+In CM, wrapping a privilege is done by specifying the name of that
+privilege within parenthesis.  The wrapping becomes effective once the
+library gets stabilized via {\tt CM.stabilize}.  The (not yet
+implemented) enforcement mechanism must ensure that anyone who
+stabilizes a library that wraps $P$ has permission to wrap $P$.
+
+Note that privileges cannot be wrapped at the level of CM groups.
+
+Access control is a new feature. At the moment, only the basic
+mechanisms are implemented, but there is no enforcement.  In other
+words, everybody is assumed to have every possible privilege.  CM
+merely reports which privileges ``would have been required''.

@@ -1,0 +1,50 @@
+(* sexp-lib.mlb
+ *
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Author: Damon Wang (with modifications by John Reppy)
+ *
+ * An MLB file for the JSON library, so that it can be used by MLton programs.
+ *)
+
+local
+
+  $(SML_LIB)/basis/basis.mlb
+  $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+  $(SML_LIB)/smlnj-lib/PP/pp-lib.mlb
+  $(SML_LIB)/mllpt-lib/mllpt-lib.mlb
+
+  ann
+    "nonexhaustiveMatch warn" "redundantMatch warn"
+    "sequenceNonUnit ignore"
+    "warnUnused false" "forceUsed"
+  in
+
+    sexp-tokens.sml
+    sexp.lex.sml
+    sexp.sml
+(*    sexp-stream-parser.sml *)
+    sexp-parser.sml
+    sexp-string-util.sml
+(*    sexp-stream-printer.sml *)
+    sexp-pp.sml
+    sexp-printer.sml
+
+  end
+
+in
+
+(* DOM-style API (tree based) *)
+  structure SExp
+  structure SExpParser
+  structure SExpPP
+  structure SExpPrinter
+
+(* SAX-style API (event based) *)
+(* TODO
+  structure SExpStreamParser
+  structure SExpStreamPrinter
+*)
+
+end

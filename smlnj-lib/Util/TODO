@@ -1,0 +1,5 @@
+Improve implementation of unionWith/intersectWith in BinaryMapFn, IntBinaryMap,
+and SplayMapFn.
+
+New iterator module
+

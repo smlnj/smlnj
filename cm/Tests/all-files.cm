@@ -1,0 +1,49 @@
+(* Copyright YALE FLINT PROJECT 1997 *)
+(* all-files.cm *)
+
+(*
+ * Heavily revised by M.Blume (5/1998).
+ *)
+
+Group
+(*
+	(* bootstrap stuff *)
+	structure InteractiveSystem
+	structure Compiler
+	structure CM
+	structure CMB
+*)
+is
+	(* library of visible compilers for various architectures *)
+	viscomp-lib.cm
+
+	(* library providing the implementation of CM *)
+	(* ../cm/cm-lib.cm *)
+	../new-cm/cm-lib.cm
+
+	(* based on current architecture, select Compiler, CM, and CMB *)
+
+# if defined(ARCH_SPARC)
+	TopLevel/bootstrap/sparc-select.sml
+# elif defined(ARCH_X86)
+	TopLevel/bootstrap/x86-select.sml
+# else
+#   error "Strange architecture!"
+# endif
+
+	(* make Compiler once we have selected MachDepVC *)
+	TopLevel/bootstrap/full-compiler.sml
+
+	(* make CM and CMB once we have selected the Compiler *)
+	TopLevel/bootstrap/link-cm.sml
+
+	(* build boot environments *)
+	TopLevel/bootstrap/boot-env.sml
+
+	(* glue code (build the interactive system) *)
+	TopLevel/bootstrap/int-sys.sml
+
+	(* if desired, build all the cross-compilers as well *)
+# if defined(MAKE_CROSSCOMPILERS)
+	Retarget/all.cm
+# endif

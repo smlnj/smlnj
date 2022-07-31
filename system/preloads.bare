@@ -1,0 +1,17 @@
+#
+# Modules to be pre-loaded into a "bare" system during bootstrap.
+#   (Avoid "autoload" specifications as they will not work in a bare system.)
+#
+#   Copyright (c) 1999 by Lucent Bell Laboratories
+#
+# author: Matthias Blume (blume@cs.princeton.edu)
+#
+
+# The SML Basis library:
+make $smlnj/basis/basis.cm
+
+# The Visisble Compiler (collection of structures)
+make $smlnj/compiler.cm
+
+# The Visible Compiler (old style: structure Compiler)
+#make $smlnj/compiler/compiler.cm

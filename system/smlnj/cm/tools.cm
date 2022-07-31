@@ -1,0 +1,22 @@
+(*
+ * Tools library for CM.
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+(cm-init)
+Library
+	structure Sharing
+	signature VERSION
+	structure Version
+	signature TOOLS
+	structure Tools
+	structure Subst
+is
+	$smlnj/basis/basis.cm
+	$smlnj/internal/srcpath-lib.cm
+	$smlnj/internal/cm-lib.cm
+	$smlnj/internal/cm0.cm
+	tools.sml
+

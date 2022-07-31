@@ -1,0 +1,184 @@
+= The `HashCons` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashCons` structure is the main module for the *HashCons Library*.
+
+== Synopsis
+
+[source,sml]
+------------
+signature HASH_CONS
+structure HashCons : HASH_CONS
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a tbl
+
+val new : {eq : 'a * 'a -> bool} -> 'a tbl
+
+val clear : 'a tbl -> unit
+
+type 'a obj = { nd : 'a, tag : word, hash : word }
+
+val node : 'a obj -> 'a
+val tag  : 'a obj -> word
+
+val same : ('a obj * 'a obj) -> bool
+val compare : ('a obj * 'a obj) -> order
+
+val cons0 : 'a tbl -> (word * 'a) -> 'a obj
+val cons1 : 'a tbl -> (word * ('b obj -> 'a))
+      -> 'b obj -> 'a obj
+val cons2 : 'a tbl -> (word * ('b obj * 'c obj -> 'a))
+      -> 'b obj * 'c obj -> 'a obj
+val cons3 : 'a tbl -> (word * ('b obj * 'c obj * 'd obj -> 'a))
+      -> 'b obj * 'c obj * 'd obj -> 'a obj
+val cons4 : 'a tbl -> (word * ('b obj * 'c obj * 'd obj * 'e obj -> 'a))
+      -> 'b obj * 'c obj * 'd obj * 'e obj -> 'a obj
+val cons5 : 'a tbl -> (word * ('b obj * 'c obj * 'd obj * 'e obj * 'f obj -> 'a))
+      -> 'b obj * 'c obj * 'd obj * 'e obj * 'f obj -> 'a obj
+
+val consList : 'a tbl -> (word * ('b obj list -> 'a)) -> 'b obj list -> 'a obj
+
+val consR1 : 'a tbl -> (word * ('b obj -> 'a) * ('r -> 'b obj))
+      -> 'r -> 'a obj
+val consR2 : 'a tbl
+      -> (word * ('b obj * 'c obj -> 'a) * ('r -> 'b obj * 'c obj))
+        -> 'r -> 'a obj
+val consR3 : 'a tbl
+      -> (word * ('b obj * 'c obj * 'd obj -> 'a)
+        * ('r -> 'b obj * 'c obj * 'd obj))
+        -> 'r -> 'a obj
+val consR4 : 'a tbl
+      -> (word * ('b obj * 'c obj * 'd obj * 'e obj -> 'a)
+        * ('r -> 'b obj * 'c obj * 'd obj * 'e obj))
+        -> 'r -> 'a obj
+val consR5 : 'a tbl
+      -> (word * ('b obj * 'c obj * 'd obj * 'e obj * 'f obj -> 'a)
+        * ('r -> 'b obj * 'c obj * 'd obj * 'e obj * 'f obj))
+        -> 'r -> 'a obj
+------------
+
+== Description
+
+`[.kw]#type# 'a tbl`::
+  The type of a table for hash-consing objects of type ``'a``.  Typically, only
+  one table per distinct type should be defined.
+
+`[.kw]#val# new : {eq : 'a * 'a \-> bool} \-> 'a tbl`::
+  `new {eq}` creates a new hash-cons table using the equality function `eq`.
+
+`[.kw]#val# clear : 'a tbl \-> unit`::
+  `clear tbl` clears the table of all elements.
+
+`[.kw]#type# 'a obj = { ... }`::
+  The representation of a hash-consed object.  The fields are
++
+--
+`nd`::
+  the underlying representation of the object.
+`tag`::
+  a tag that is unique for the object (for the object's table)
+`hash`::
+  a hash of the object (used to index into the table)
+--
+
+`[.kw]#val# node : 'a obj \-> 'a`::
+  `node obj` projects out the node from `obj`.
+
+`[.kw]#val# tag  : 'a obj \-> word`::
+  `tag obj` projects out the unique tag from `obj`.
+
+`[.kw]#val# same : ('a obj * 'a obj) \-> bool`::
+  `same (obj1, obj2)` returns true if the objects are the same; this test
+  is constant time (it compares the object tags).
+
+`[.kw]#val# compare : ('a obj * 'a obj) \-> order`::
+  `compare (obj1, obj2)` returns the order of the two objects; this test
+  is constant time (it compares the object tags).
+
+`[.kw]#val# cons0 : 'a tbl \-> (word * 'a) \-> 'a obj`::
+  `cons0 tbl (h, x)` creates a unique (_w.r.t._ `tbl`) representation
+  for the value `x`, where `h` is the hash of `x`.
+
+`[.kw]#val# cons1 : 'a tbl \-> (word * ('b obj \-> 'a)) \-> 'b obj \-> 'a obj`::
+  `cons1 tbl (h, mk) obj1` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk obj1`, where `h` is a hash code for the term constructor `mk`.
+
+`[.kw]#val# cons2 : 'a tbl \-> (word * ('b obj * 'c obj \-> 'a)) \-> ...`::
+  `cons2 tbl (h, mk) (obj1, obj2)` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (obj1, obj2)`, where `h` is a hash code for the term constructor `mk`.
+
+`[.kw]#val# cons3 : 'a tbl \-> (word * ('b obj * 'c obj * 'd obj \-> 'a)) \-> ...`::
+  `cons3 tbl (h, mk) (obj1, obj2, obj3)` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (obj1, obj2, obj3)`, where `h` is a hash code for the term constructor `mk`.
+
+`[.kw]#val# cons4 : 'a tbl \-> (word * ('b obj * 'c obj * 'd obj * 'e obj \-> 'a)) \-> ...`::
+  `cons4 tbl (h, mk) (obj1, obj2, obj3, obj4)` creates a unique (_w.r.t._ `tbl`)
+  representation for `mk (obj1, obj2, obj3, obj4)`, where `h` is a hash code
+  for the term constructor `mk`.
+
+`[.kw]#val# cons5 : 'a tbl \-> (word * ('b obj * 'c obj * 'd obj * 'e obj * 'f obj \-> 'a)) \-> ...`::
+  `cons5 tbl (h, mk) (obj1, obj2, obj3, obj4, obj5)` creates a unique (_w.r.t._ `tbl`)
+  representation for `mk (obj1, obj2, obj3, obj4, obj5)`, where `h` is a hash code
+  for the term constructor `mk`.
+
+`[.kw]#val# consList : 'a tbl \-> (word * ('b obj list \-> 'a)) \-> 'b obj list \-> 'a obj`::
+  `consList tbl (h, mk) objs` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk objs`, where `h` is a hash code for the term constructor `mk`.
+
+`[.kw]#val# consR1 : 'a tbl \-> (word * ('b obj \-> 'a) * ('r \-> 'b obj)) \-> 'r \-> 'a obj`::
+  `consR1 (h, mk, proj) r` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (proj r)`, where `h` is a hash code for the term constructor `mk`
+  and `proj` projects the sub-component of `r` as an object.
+
+`[.kw]#val# consR2 : 'a tbl \-> (word * ('b obj * 'c obj \-> 'a) * ('r \-> 'b obj * 'c obj)) \-> 'r \-> 'a obj`::
+  `consR2 (h, mk, proj) r` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (proj r)`, where `h` is a hash code for the term constructor `mk`
+  and `proj` projects the sub-components of `r` as a tuple of objects.
+
+`[.kw]#val# consR3 : 'a tbl \-> (word * ('b obj * 'c obj * 'd obj \-> 'a) \-> ...`::
+  `consR3 (h, mk, proj) r` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (proj r)`, where `h` is a hash code for the term constructor `mk`
+  and `proj` projects the sub-components of `r` as a tuple of objects.
+
+`[.kw]#val# consR4 : 'a tbl \-> (word * ('b obj * 'c obj * 'd obj * 'e obj \-> 'a) \-> ...`::
+  `consR4 (h, mk, proj) r` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (proj r)`, where `h` is a hash code for the term constructor `mk`
+  and `proj` projects the sub-components of `r` as a tuple of objects.
+
+`[.kw]#val# consR5 : 'a tbl \-> (word * ('b obj * 'c obj * 'd obj * 'e obj * 'f obj \-> 'a) \-> ...`::
+  `consR5 (h, mk, proj) r` creates a unique (_w.r.t._ `tbl`) representation
+  for `mk (proj r)`, where `h` is a hash code for the term constructor `mk`
+  and `proj` projects the sub-components of `r` as a tuple of objects.
+
+== Discussion
+
+The functions `cons1`, `cons2`, _etc_., provide an easy way to convert a data
+constructor of the given arity to a hash-cons constructor.  For example, if
+we have
+[source,sml]
+------------
+datatype t = ... | Foo of (x obj * y obj * z obj) | ...
+------------
+as a constructor in our two-level hash-consed datatype, then we can
+define a hash-cons constructor for `Foo` has
+[source,sml]
+------------
+val mkFoo : x obj * y obj * z obj -> t obj = cons3 (0w17, Foo)
+------------
+where `0w17` is the hash code we selected for the `Foo` constructor.
+
+Likewise, the `cons1R`, `cons2R`, _etc_., functions can be used when
+record types are involved.
+
+== See Also
+
+xref:hash-cons-lib.adoc[__The HashCons Library__]

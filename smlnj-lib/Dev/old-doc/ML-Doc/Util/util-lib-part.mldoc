@@ -1,0 +1,52 @@
+<!-- util-lib-part.mldoc --
+  -- --
+  -- COPYRIGHT (c) 2001 Bell Laboratories, Lucent Technologies. --
+  -- --
+  -- The root of the Utility library part of the manual.  -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John H. Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=1996>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=15>
+
+<TITLE>Utility Library Manual</TITLE>
+
+<SECTION>
+<HEAD>The Utility Library</HEAD>
+
+<INCLFILE FILE="array-qsort-fn">
+<INCLFILE FILE="array-qsort">
+<INCLFILE FILE="array-sort">
+<INCLFILE FILE="binary-map-fn">
+<INCLFILE FILE="binary-set-fn">
+<INCLFILE FILE="bit-array">
+<INCLFILE FILE="bit-vector">
+<INCLFILE FILE="bsearch">
+<INCLFILE FILE="char-map">
+<INCLFILE FILE="dynamic-array">
+<INCLFILE FILE="fifo">
+<INCLFILE FILE="iterate">
+<INCLFILE FILE="lib-base">
+<INCLFILE FILE="list-format">
+<INCLFILE FILE="list-map-fn">
+<INCLFILE FILE="list-set-fn">
+<INCLFILE FILE="list-xprod">
+<INCLFILE FILE="listsort">
+<INCLFILE FILE="mono-array-sort">
+<INCLFILE FILE="mono-dynamic-array">
+<INCLFILE FILE="ord-key">
+<INCLFILE FILE="ord-map">
+<INCLFILE FILE="ord-set">
+<INCLFILE FILE="queue">
+<INCLFILE FILE="rand">
+<INCLFILE FILE="random">
+<INCLFILE FILE="splay-map-fn">
+<INCLFILE FILE="splay-set-fn">
+<INCLFILE FILE="splaytree">
+<INCLFILE FILE="uref">
+</SECTION>
+

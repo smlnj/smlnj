@@ -1,0 +1,174 @@
+= Using the Pretty-Printing Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Introduction
+
+The pretty printing library is quite flexible, but requires some care in its use to
+get the desired results.
+This tutorial illustrates how the various mechanisms work and provides some examples
+of how to implement common layouts.
+
+=== Background
+
+The pretty printer library was initially a port of the Ocaml `Format` module, which, in
+turn is an https://doi.org/10.1145/357114.357115[_Oppen-style_] implementation of the
+https://www-sop.inria.rr/croap/centaur/tutorial/tutorial.ps[_PPML] pretty-printing
+model.
+
+Pretty printing is achived by issuing a sequence of printing commands, which the
+library then uses to determine the layout.
+
+
+=== Basics
+
+There are three key concepts that determine how text will be layed out:
+
+--
+* **boxes** are nested containers that determine the layout mode for their contents.
+
+* **breaks** are hints to the layout engine about where to break lines of text.
+
+* **indentation** controls the initial position of a line of text with respect to
+  the previous line.
+--
+
+
+== Text
+
+// strings, tokens, nbSpace, breaks
+
+== Boxes
+
+Boxes provide a hiearchical structure that allows one to control the layout of
+text.  There are four main types of boxes:
+
+--
+* **Horizontal boxes (h) **, which pack text horizontally on a single line.
+
+* **Vertical boxes (v)**, which pack text vertically.
+
+* **Horizontal or vertical boxes (hov)**, which behave like h-boxes unless there
+  is insufficient space, in which case they behave like v-boxes.
+
+* **Horizontal then vertical boxes (hv)**, which pack text horizontally until there is
+  no more room, at which point a new line is started.  These could also be called
+  _paragraph boxes_, since the layout the text in paragraph-like blocks.
+--
+
+In addition, there is the structural box, which is similar to hv-boxes, but with some
+subtle differences that are described below.
+
+To add a box to the pretty printing stream, we first call the appropriate open
+function (_e.g._, `openHBox`), then emit the contents of the box, and then call the `closeBox`
+function.
+For every open-box function call, there must be a matching call to `closeBox`.
+
+== Example -- Layout of C Code
+
+In this section, we illustrate a couple of different approaches
+to formatting a simple C-like syntax.
+We use the following datatypes to represent simple C statments and
+functions, where we are using strings to represent expressions, _etc_.
+
+[source,sml]
+------------
+datatype stm
+  = ASGN of string * string
+  | IF of string * stm * stm
+  | WHILE of string * stm list
+  | BLK of stm list
+
+datatype func
+  = FUNC of string * stm list
+------------
+
+=== Using a K&R Style Layout
+
+[source,sml]
+------------
+fun knr ppS (FUNC(proto, body)) = let
+      val indent = PP.Abs 4
+      fun sp () = PP.space ppS 1
+      fun string s = PP.string ppS s
+      fun ppStm (ASGN(lhs, rhs)) = (
+            PP.openHBox ppS;
+              string lhs; sp(); string "="; sp(); string rhs;
+            PP.closeBox ppS)
+        | ppStm (IF(cond, thenStm, elseStm)) = (
+            PP.openVBox ppS (PP.Abs 0);
+              PP.openHBox ppS;
+                string "if"; sp(); string cond;
+              PP.closeBox ppS;
+              ppBlk thenStm;
+              PP.cut ppS;
+              PP.openHBox ppS;
+                string "else"; sp();
+              PP.closeBox ppS;
+              ppBlk elseStm;
+            PP.closeBox ppS)
+        | ppStm (stm as BLK _) = ppBlk stm
+        | ppStm (WHILE(cond, body)) = (
+            PP.openVBox ppS (PP.Abs 0);
+              PP.openHBox ppS;
+                string "while"; sp(); string cond; sp();
+              PP.closeBox ppS;
+              ppBlk body;
+            PP.closeBox ppS)
+      and ppBlk (BLK stms) = (
+            PP.openVBox ppS (PP.Abs 0);
+              string "{";
+              PP.openVBox ppS indent;
+                List.app (fn stm => (PP.cut ppS; ppStm stm)) stms;
+              PP.closeBox ppS;
+              PP.cut ppS;
+              string "}";
+           PP.closeBox ppS)
+        | ppBlk stm = (
+            PP.break ppS {nsp=0, offset=inAmt};
+            ppStm stm)
+      in
+        PP.openVBox ppS (PP.Abs 0);
+          PP.openVBox ppS indent;
+            PP.openHBox ppS;
+              string proto;
+              sp ();
+              string "{";
+            PP.closeBox ppS;
+            List.app (fn stm => (PP.cut ppS; ppStm stm)) body;
+          PP.closeBox ppS;
+          PP.cut ppS;
+          string "}";
+          PP.cut ppS;
+        PP.closeBox ppS
+      end
+------------
+
+=== Some Variations
+
+[source,c]
+----------
+if ( ... ) {
+    ...
+} else {
+    ...
+}
+----------
+
+[source,sml]
+------------
+| ppStm (IF(cond, thenBlk as BLK _, elseBlk as BLK _)) = (
+    PP.openVBox ppS (PP.Abs 0);
+      PP.openHBox ppS;
+        string "if"; sp(); string cond;
+      PP.closeBox ppS;
+      ppBlk thenStm;
+      PP.openHBox ppS;
+        string "else"; sp();
+      PP.closeBox ppS;
+      ppBlk elseStm;
+    PP.closeBox ppS)
+------------

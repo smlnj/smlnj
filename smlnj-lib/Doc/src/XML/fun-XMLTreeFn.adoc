@@ -1,0 +1,22 @@
+= The `XMLTreeFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `XMLTreeFn` functor generates a tree representation of *XML*
+files from a schema structure argument.
+
+== Synopsis
+
+[source,sml]
+------------
+functor XMLTreeFn (Schema : XML_SCHEMA) : XML_TREE
+------------
+
+== See Also
+
+xref:sig-XML_SCHEMA.adoc[`XML_SCHEMA`],
+xref:sig-XML_TREE.adoc[`XML_TREE`],
+xref:xml-lib.adoc[__The XML Library__]

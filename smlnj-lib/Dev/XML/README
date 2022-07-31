@@ -1,0 +1,23 @@
+This directory contains a small library for parsing XML files.  It does
+not support validation (e.g., against a DTD or Schema).  The basic idea
+is that the user supplies a "schema" module that describes the elements
+and attribute representation of an XML document.  From this, one builds
+an XML tree representation
+
+	structure MyXMLTree = XMLTreeFn (MyXMLSchema);
+
+and an XML parser
+
+	structure MyXMLParser = XMLParserFn (MyXMLTree);
+
+A generic XML schema (that allows any element name) is provided.
+
+For a more complete library for XML processing, use the fxp library.
+
+TODO:
+  handle internal subsets in "<!DOCTYPE ...>" definitions
+  handle processing markup ("<? ... ?>")
+  support a SAX-type parsing interface
+  support a DOM API a la TinyXML (http://www.grinninglizard.com/tinyxml)
+  or TinyXML-2 (http://www.grinninglizard.com/tinyxml2/)
+

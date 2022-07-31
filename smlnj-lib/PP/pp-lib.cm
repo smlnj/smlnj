@@ -1,0 +1,31 @@
+(* pp-lib.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The main sources file for the PP library.
+ *)
+
+Library
+
+  signature PP_DESC
+  signature PP_DEVICE
+  signature PP_TOKEN
+  signature PP_STREAM
+
+  functor PPStreamFn
+  functor PPDescFn
+  functor PPDebugFn
+
+(* devices *)
+  structure TextIOPP
+  structure TextPP
+  structure SimpleTextIODev
+  structure CharBufferPP
+  structure ANSITermDev
+  structure ANSITermPP
+  structure StringToken
+
+is
+  src/sources.cm
+  devices/sources.cm

@@ -1,0 +1,174 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Parallel and distributed compilation}
+\label{chap:parmake}
+
+To speed up recompilation of large projects with many ML source files,
+CM can exploit parallelism that is inherent in the dependency graph.
+Currently, the only kind of operating system for which this is
+implemented is Unix ({\tt OPSYS\_UNIX}), where separate processes are
+used.  From there, one can distribute the work across a network of
+machines by taking advantage of the network file system and the
+``rsh'' facility.
+
+To perform parallel compilations, one must attach {\em compile
+servers} to the currently running CM session.  This is done using
+function {\tt CM.Server.start}, which has the following type:
+
+\begin{lstlisting}
+  structure Server : sig
+      type server
+      val start : { name: string,
+                    cmd: string * string list,
+                    pathtrans: (string -> string) option,
+                    pref: int } -> server option
+  end
+\end{lstlisting}%
+
+Here, {\tt name} is an arbitrary string that is used by CM when
+issuing diagnostic messages concerning the server\footnote{Therefore,
+it is useful to choose {\tt name} uniquely.} and {\tt cmd} is a value
+suitable as argument to {\tt Unix.execute}.
+
+The program to be specified by {\tt cmd} should be another instance of
+CM---running in ``slave mode''.  To start CM in slave mode, start {\tt
+sml} with a single command-line argument of {\tt @CMslave}.  For
+example, if you have installed in /path/to/smlnj/bin/sml, then a
+server process on the local machine could be started by
+
+\begin{lstlisting}
+  CM.Server.start { name = "A", pathtrans = NONE, pref = 0,
+                    cmd = ("/path/to/smlnj/bin/sml",
+                           ["@CMslave"]) };
+\end{lstlisting}%
+
+To run a process on a remote machine, e.g., ``thatmachine'', as
+compute server, one can use ``rsh''.\footnote{On certain systems it
+may be necessary to wrap {\tt rsh} into a script that protects rsh
+from interrupt signals.}  Unfortunately, at the moment it
+is necessary to specify the full path to ``rsh'' because {\tt
+Unix.execute} (and therefore {\tt CM.Server.start}) does not perform
+a {\tt PATH} search. The remote machine
+must share the file system with the local machine, for example via NFS.
+
+\begin{lstlisting}
+  CM.Server.start { name = "thatmachine",
+                    pathtrans = NONE, pref = 0,
+                    cmd = ("/usr/ucb/rsh",
+                           ["thatmachine",
+                            "/path/to/smlnj/bin/sml",
+                            "@CMslave"]) };
+\end{lstlisting}%
+
+You can start as many servers as you want, but they all must have
+different names.  If you attach any servers at all, then you should
+attach at least two (unless you want to attach one that runs on a
+machine vastly more powerful than your local one).  Local servers make
+sense on multi-CPU machines: start as many servers as there are CPUs.
+Parallel make is most effective on multiprocessor machines because
+network latencies can have a severely limiting effect on what can be
+gained in the distributed case.
+(Be careful, though.  Since there is no memory-sharing to speak of
+between separate instances of {\tt sml}, you should be sure to check
+that your machine has enough main memory.)
+
+If servers on machines of different power are attached, one can give
+some preference to faster ones by setting the {\tt pref} value higher.
+(But since the {\tt pref} value is consulted only in the rare case
+that more than one server is idle, this will rarely lead to vastly
+better throughput.) All attached servers must use the same
+architecture-OS combination as the controlling machine.
+
+In parallel mode, the master process itself normally does not compile
+anything.  Therefore, if you want to utilize the master's CPU for
+compilation, you should start a compile server on the same machine
+that the master runs on (even if it is a uniprocessor machine).
+
+The {\tt pathtrans} argument is used when connecting to a machine with
+a different file-system layout.  For local servers, it can safely be
+left at {\tt NONE}.  The ``path transformation'' function is used to
+translate local path names to their remote counterparts.  This can be
+a bit tricky to get right, especially if the machines use automounters
+or similar devices.  The {\tt pathtrans} functions consumes and
+produces names in CM's internal ``protocol encoding'' (see
+\secref{sec:pathencode}).
+
+Once servers have been attached, one can invoke functions like
+{\tt CM.recomp}, {\tt CM.make}, and {\tt CM.stabilize}.  They should
+work the way the always do, but during compilation they will take
+advantage of parallelism.
+
+When CM is interrupted using Control-C (or such), one will sometimes
+experience a certain delay if servers are currently attached and busy.
+This is because the interrupt-handling code will wait for the servers
+to finish what they are currently doing and bring them back to an
+``idle'' state first.
+
+\section{Pathname protocol encoding}
+\label{sec:pathencode}
+
+A path encoded by CM's master-slave protocol encoding does not only
+specify which file a path refers to but also, in some sense, specifies
+why CM constructed this path in the first place.  For example, the
+encoding {\tt a/b/c.cm:d/e.sml} represents the file {\tt a/b/d/e.sml}
+but also tells us that it was constructed by putting {\tt d/e.sml}
+into the context of description file {\tt a/b/c.cm}.  Thus, an encoded
+path name consists of one or more colon-separated ({\bf :}) sections,
+and each section consists of slash-separated ({\bf /}) arcs.  To find
+out what actual file a path refers to, it is necessary to erase all
+arcs that precede colons.
+
+The first section is special because it also specifies whether the
+whole path was relative or absolute, or whether it was an anchored
+path.
+
+\begin{description}
+\item[Anchored paths] start with a dollar-symbol {\bf \$}.  The name
+of the anchor is the string between this leading dollar-symbol and the
+first occurence of a slash {\bf /} within the first section.  The
+remaining arcs of the first section are interpreted relative to the
+current value of the anchor.
+\item[Absolute paths] start either with a percent-sign {\bf \%} or a
+slash {\bf /}.  The canonical form is the one with the percent-sign:
+it specifies the volume name between the {\bf \%} and the first slash.
+In the common case where the volume name is empty (i.e, {\em always} on
+Unix systems), the path starts with {\bf /}.
+\item[Relative paths] are all other paths.
+\end{description}
+
+Encoded path names never contain white space.  Moreover, the encoding
+for path arcs, volume names, or anchor names does not contain special
+characters such as {\bf /}, {\bf \$}, {\bf \%}, {\bf :}, {\bf
+\verb|\|}, {\bf (}, and {\bf )}.  Instead, should white space or
+special characters occur in the non-encoded name, then they will be
+encoded using the escape-sequence \verb|\ddd| where {\tt ddd} is the
+decimal value of the respective character's ordinal number (i.e, the
+result of applying {\tt Char.ord}).
+
+The so-called {\em current} arc is encoded as {\bf .}, the {\em
+parent} arc uses {\bf ..} as its representation.  It might be that
+under some operating systems the names {\tt .} or {\tt ..} do not
+actually refer to the current or the parent arc.  In such a case, CM
+will encode the dots in these names using the \verb|\ddd| method, too.
+
+When issuing progress messages, CM shows path names in a form that is
+almost the same as the protocol encoding.  The only difference is that
+arcs that precede colon-sign {\bf :} are enclosed within parentheses
+to emphasize that they are ``not really there''.  The same form is
+also used by {\tt CM.Library.descr}.
+
+\section{Parallel bootstrap compilation}
+
+The bootstrap compiler\footnote{otherwise not mentioned in this
+document} with its main function {\tt CMB.make} and the corresponding
+cross-compilation variants of the bootstrap compiler will also use any
+attached compile servers.  If one intends to exclusively use the
+bootstrap compiler, one can even attach servers that run on machines
+with different architecture or operating system.
+
+Since the master-slave protocol is fairly simple, it cannot handle
+complicated scenarios such as the one necessary for compiling the
+``init group'' (i.e., the small set of files necessary for setting up
+the ``pervasive'' environment) during {\tt CMB.make}.  Therefore, this
+will always be done locally by the master process.

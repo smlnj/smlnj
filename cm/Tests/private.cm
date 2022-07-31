@@ -1,0 +1,3 @@
+Group is
+	priv-a.sml (private)
+	priv-b.sml (shared)

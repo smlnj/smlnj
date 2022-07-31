@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Objects: Video [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for video objects. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="videos, movies">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="objaudio" title="Objects: Audio">
+	<link rel="next" href="quote" title="Quotations">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Objects: Video</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="objaudio" rel="prev" accesskey="P" title="Prior: Objects: Audio">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="quote" rel="next" accesskey="N" title="Next: Quotations"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+	<h1>Objects: Video (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.3" title="HTML 4.0 Specification">&sect;13.3</a>)</h1>
+
+	<div class="section">
+		<div class="bodytext">
+			<p><code class="element">&lt;object></code> may be used to embed <em>video clips</em> as well as still images.</p>
+			<p>The <code class="element">&lt;param></code> element defines a parameter to pass information to an object when it runs.</p>
+			<p>Your Web browser may require you to download and install plugins to play the following.</p>
+		</div>
+	</div>
+
+	<div class="section" id="quicktime">
+		<h2>QuickTime</h2>
+
+		<div class="bodytext">
+			<p><a href="http://www.apple.com/quicktime/">QuickTime</a> is a proprietary streaming video format frequently used on the Web. The official <a href="glossary#content_type" class="local" title="Glossary" rel="glossary">content type</a> for QuickTime is <code class="content_type">video/quicktime</code>.</p>
+			<p>Apple provides <a href="http://www.apple.com/quicktime/download/">free plugins</a> to play QuickTime for MacOS and Windows operating systems.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>If your Web browser supports QuickTime, the following may play an &ldquo;uncommercial&rdquo;. Otherwise, it should render an image of three still frames from the video clip and a transcript of its message.</p>
+			<p class="note">Setting an <code>autoplay</code> parameter to <code>false</code> tells the QuickTime plugin not to play the movie automatically as soon as it loads.</p>
+			<p class="note">Though this movie is 320&times;240, the dimensions 320&times;256 are used because the plugin controls take up an additional 16 pixels.</p>
+
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="/video/gdp.mov" type="video/quicktime" class="local">/video/gdp.mov</a>" <strong class="tested">type="video/quicktime"</strong> width="320" height="256" standby="Loading<em class="entity">&amp;hellip;</em>"></em><br>
+					<div class="indent">
+					<em class="html4"><strong class="tested">&lt;param name="autoplay" value="false"></strong></em><br>
+					<em class="html4">&lt;object data="<a href="/video/un-gdp.jpg" type="image/jpeg" class="local">/video/un-gdp.jpg</a>" type="image/jpeg" width="420" height="130">&lt;/object></em><br><br>
+
+					<em class="html4">&lt;blockquote></em><br>
+						<div class="indent">
+						<em class="html">&lt;p><em class="html4">&lt;q></em></em>For years, economists have defined the economic health of a country by its Gross Domestic Product. Trouble is, every time a forest falls, the <em class="html4">&lt;abbr></em>GDP<em class="html4">&lt;/abbr></em> goes up. With every oil spill, the <em class="html4">&lt;abbr></em>GDP<em class="html4">&lt;/abbr></em> goes up. Every time a cancer patient is diagnosed, the <em class="html4">&lt;abbr></em>GDP<em class="html4">&lt;/abbr></em> goes up. Is this how we measure economic <em class="html">&lt;em></em>progress<em class="html">&lt;/em></em>? Economists <em class="html4"><em class="entity">&amp;hellip;</em></em> must learn to subtract.<em class="html"><em class="html4">&lt;/q></em>&lt;/p></em><br>
+						</div>
+					<em class="html4">&lt;/blockquote></em><br>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+				<object data="/video/gdp.mov" type="video/quicktime" width="320" height="256" standby="Loading&hellip;">
+					<param name="autoplay" value="false">
+					<object data="/video/un-gdp.jpg" type="image/jpeg" width="420" height="130"></object>
+
+					<blockquote>
+						<p><q>For years, economists have defined the economic health of a country by its Gross Domestic Product. Trouble is, every time a forest falls, the <abbr>GDP</abbr> goes up. With every oil spill, the <abbr>GDP</abbr> goes up. Every time a cancer patient is diagnosed, the <abbr>GDP</abbr> goes up. Is this how we measure economic <em>progress</em>? Economists &hellip; must learn to subtract.</q></p>
+					</blockquote>
+				</object>
+			</div>
+			<p class="note">This message was brought to you by <a href="http://www.adbusters.org/">Adbusters</a>.</p>
+		</div>
+	</div>
+
+	<div class="section">
+		<h2>Windows Media Player</h2>
+
+		<div class="bodytext">
+			<p>Microsoft also has a proprietary streaming video format for its Windows Media Player. <a href="http://www.microsoft.com/windows/windowsmedia/howto/articles/webserver.aspx">Microsoft recommends</a> using the content type <code class="content_type">video/x-ms-wmv</code> for Windows Media Player files that contain audio and video.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>Here is an embedded Windows Media Player video clip. You may have to download and install a plugin before you can play the movie.</p>
+			<p>If your Web browser supports Windows Media, the following may play a clip from <cite>Face the Nation</cite>. Otherwise, it should render a still image and a transcript of the clip.</p>
+			<p class="note">Setting an <code>autostart</code> parameter to <code>0</code> tells the Windows Media Player plugin not to play the movie automatically as soon as it loads. Different plugins use different parameter names.</p>
+			<p class="note">Though this movie is 320&times;240, the dimensions 320&times;285 are used because the plugin controls take up an additional 45 pixels.</p>
+
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="/video/rumsfelddeny4.wmv">/video/rumsfelddeny4.wmv</a>" <strong class="tested">type="video/x-ms-wmv"</strong> width="320" height="285" standby="Loading<em class="entity">&amp;hellip;</em>"></em><br>
+					<div class="indent">
+					<em class="html4"><strong class="tested">&lt;param name="autostart" value="0"></strong></em><br>
+					<em class="html4">&lt;object data="<a href="/video/rumsfeld-caught-lying.jpg">/video/rumsfeld-caught-lying.jpg</a>" type="image/jpeg" width="250" height="187">&lt;/object></em><br><br>
+					<em class="html">&lt;blockquote <em class="html4">cite="http://www.cbsnews.com/htdocs/pdf/face_031404.pdf"</em> title="Face the Nation (14 March 2004)"></em><br>
+						<div class="indent">
+						<em class="html"><em class="html">&lt;p>&lt;em></em></em>Schieffer:<em class="html">&lt;/em></em> Well, let me just ask you this. If they did not have these weapons of mass destruction, though, granted all of that is true, why then did they pose an immediate threat to us, to this country?<em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Rumsfeld:<em class="html">&lt;/em></em> Well, you<em class="html4"><em class="entity">&amp;rsquo;</em></em>re the<em class="html4"><em class="entity">&amp;mdash;</em></em>you and a few other critics are the only people I've heard use the phrase <em class="html4">&lt;q></em>immediate threat<em class="html4">&lt;/q></em>. I didn<em class="html4"><em class="entity">&amp;rsquo;</em></em>t. The president didn<em class="html4"><em class="entity">&amp;rsquo;</em></em>t. And it<em class="html4"><em class="entity">&amp;rsquo;</em></em>s become kind of folklore that that<em class="html4"><em class="entity">&amp;rsquo;</em></em>s<em class="html4"><em class="entity">&amp;mdash;</em></em>that<em class="html4"><em class="entity">&amp;rsquo;</em></em>s what<em class="html4"><em class="entity">&amp;rsquo;</em></em>s happened. The president went<em class="html4"><em class="entity">&amp;mdash;</em></em><em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Schieffer:<em class="html">&lt;/em></em> You<em class="html4"><em class="entity">&amp;rsquo;</em></em>re saying that nobody in the administration said that.<em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Rumsfeld:<em class="html">&lt;/em></em> I<em class="html4"><em class="entity">&amp;mdash;</em></em>I can<em class="html4"><em class="entity">&amp;rsquo;</em></em>t speak for nobody<em class="html4"><em class="entity">&amp;mdash;</em></em>everybody in the administration and say nobody said that.<em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Schieffer:<em class="html">&lt;/em></em> Vice president didn<em class="html4"><em class="entity">&amp;rsquo;</em></em>t say that? The<em class="html4"><em class="entity">&amp;mdash;</em></em><em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Rumsfeld:<em class="html">&lt;/em></em> Not<em class="html4"><em class="entity">&amp;mdash;</em></em>if<em class="html4"><em class="entity">&amp;mdash;</em></em>if you have any citations, I<em class="html4"><em class="entity">&amp;rsquo;</em></em>d like to see <em class="html4"><em class="entity">&amp;rsquo;</em></em>em.<em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Friedman:<em class="html">&lt;/em></em> We have one here. It says <em class="html4">&lt;q></em>some have argued that the nu<em class="html4">&lt;/q></em><em class="html4"><em class="entity">&amp;mdash;</em></em>this is you speaking<em class="html4"><em class="entity">&amp;mdash;</em></em><em class="html4">&lt;q></em>that the nuclear threat from Iraq is not imminent, that Saddam is at least five to seven years away from having nuclear weapons. I would not be so certain.<em class="html4">&lt;/q></em><em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Rumsfeld:<em class="html">&lt;/em></em> And<em class="html4"><em class="entity">&amp;mdash;</em></em>and<em class="html4"><em class="entity">&amp;mdash;</em></em><em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Friedman:<em class="html">&lt;/em></em> It was close to imminent.<em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Rumsfeld:<em class="html">&lt;/em></em> Well, I<em class="html4"><em class="entity">&amp;rsquo;</em></em>ve<em class="html4"><em class="entity">&amp;mdash;</em></em>I<em class="html4"><em class="entity">&amp;rsquo;</em></em>ve tried to be precise, and I<em class="html4"><em class="entity">&amp;rsquo;</em></em>ve tried to be accurate. I<em class="html4"><em class="entity">&amp;rsquo;</em></em>m s<em class="html4"><em class="entity">&amp;mdash;</em></em>suppose I<em class="html4"><em class="entity">&amp;rsquo;</em></em>ve<em class="html4"><em class="entity">&amp;mdash;</em></em><em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Friedman:<em class="html">&lt;/em></em> <em class="html4">&lt;q></em>No terrorist state poses a greater or more <em class="html">&lt;em></em>immediate threat<em class="html">&lt;/em></em> to the security of our people and the stability of the world and the regime of Saddam Hussein in Iraq.<em class="html4">&lt;/q></em><em class="html">&lt;/p></em><br><br>
+
+						<em class="html">&lt;p>&lt;em></em>Rumsfeld:<em class="html">&lt;/em></em> Mm<em class="html4"><em class="entity">&amp;#8208;</em></em>hmm. It<em class="html4"><em class="entity">&amp;mdash;</em></em>my view of<em class="html4"><em class="entity">&amp;mdash;</em></em>of the situation was that he<em class="html4"><em class="entity">&amp;mdash;</em></em>he had<em class="html4"><em class="entity">&amp;mdash;</em></em>we<em class="html4"><em class="entity">&amp;mdash;</em></em>we believe, the best intelligence that we had and other countries had and that<em class="html4"><em class="entity">&amp;mdash;</em></em>that we believed and we still do not know<em class="html4"><em class="entity">&amp;mdash;</em></em>we will know.<em class="html">&lt;/p></em><br>
+						</div>
+					<em class="html">&lt;/blockquote></em><br>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+				<object data="/video/rumsfelddeny4.wmv" type="video/x-ms-wmv" width="320" height="285" standby="Loading&hellip;">
+					<param name="autostart" value="0">
+					<object data="/video/rumsfeld-caught-lying.jpg" type="image/jpeg" width="250" height="187"></object>
+					<blockquote cite="http://www.cbsnews.com/htdocs/pdf/face_031404.pdf" title="Face the Nation (14 March 2004)">
+						<p><em>Schieffer:</em> Well, let me just ask you this. If they did not have these weapons of mass destruction, though, granted all of that is true, why then did they pose an immediate threat to us, to this country?</p>
+
+						<p><em>Rumsfeld:</em> Well, you&rsquo;re the&mdash;you and a few other critics are the only people I've heard use the phrase <q>immediate threat</q>. I didn&rsquo;t. The president didn&rsquo;t. And it&rsquo;s become kind of folklore that that&rsquo;s&mdash;that&rsquo;s what&rsquo;s happened. The president went&mdash;</p>
+
+						<p><em>Schieffer:</em> You&rsquo;re saying that nobody in the administration said that.</p>
+
+						<p><em>Rumsfeld:</em> I&mdash;I can&rsquo;t speak for nobody&mdash;everybody in the administration and say nobody said that.</p>
+
+						<p><em>Schieffer:</em> Vice president didn&rsquo;t say that? The&mdash;</p>
+
+						<p><em>Rumsfeld:</em> Not&mdash;if&mdash;if you have any citations, I&rsquo;d like to see &rsquo;em.</p>
+
+						<p><em>Friedman:</em> We have one here. It says <q>some have argued that the nu</q>&mdash;this is you speaking&mdash;<q>that the nuclear threat from Iraq is not imminent, that Saddam is at least five to seven years away from having nuclear weapons. I would not be so certain.</q></p>
+
+						<p><em>Rumsfeld:</em> And&mdash;and&mdash;</p>
+
+						<p><em>Friedman:</em> It was close to imminent.</p>
+
+						<p><em>Rumsfeld:</em> Well, I&rsquo;ve&mdash;I&rsquo;ve tried to be precise, and I&rsquo;ve tried to be accurate. I&rsquo;m s&mdash;suppose I&rsquo;ve&mdash;</p>
+
+						<p><em>Friedman:</em> <q>No terrorist state poses a greater or more <em>immediate threat</em> to the security of our people and the stability of the world and the regime of Saddam Hussein in Iraq.</q></p>
+
+						<p><em>Rumsfeld:</em> Mm&#8208;hmm. It&mdash;my view of&mdash;of the situation was that he&mdash;he had&mdash;we&mdash;we believe, the best intelligence that we had and other countries had and that&mdash;that we believed and we still do not know&mdash;we will know.</p>
+					</blockquote>
+				</object>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="section" id="matroska">
+		<h2>Matroska</h2>
+
+		<div class="bodytext">
+			<p><a href="http://www.matroska.org/">Matroska</a> is an open, cross&#8208;platform, patent&#8208;free multimedia file format. It supports advanced media features like chapters, menus, and multiple video, audio, and subtitle tracks.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>This embedded Matroska video clip has 16 subtitle tracks.</p>
+			<p>If your Web browser can&rsquo;t play this clip from <cite>Tokyo Mew Mew <span lang="ja">(&#26481;&#20140;&#12511;&#12517;&#12454;&#12511;&#12517;&#12454;)</span></cite>, it should render a still image and present a link to download it.</p>
+
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="/video/mewmew-vorbis-ssa.mkv">/video/mewmew-vorbis-ssa.mkv</a>" <strong class="tested">type="application/x-matroska"</strong> width="320" height="240" standby="Loading<em class="entity">&amp;hellip;</em>"></em><br>
+					<div class="indent">
+					<em class="html4">&lt;object data="<a href="/video/mkvtmm-a.jpg">/video/mkvtmm-a.jpg</a>" type="image/jpeg" width="320" height="240">&lt;/object></em><br><br>
+					<em class="html">&lt;p></em>Download a <em class="html">&lt;a href="/video/mewmew-vorbis-ssa.mkv" <em class="html4">type="application/x-matroska"</em>></em>Matroska demo<em class="html">&lt;/a></em> (7.8 <em class="html4">&lt;abbr title="mebibytes"></em>MiB<em class="html4">&lt;/abbr></em>).<em class="html">&lt;/p></em>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+				<object data="/video/mewmew-vorbis-ssa.mkv" type="application/x-matroska" width="320" height="240" standby="Loading&hellip;">
+					<object data="/video/mkvtmm-a.jpg" type="image/jpeg" width="320" height="240"></object>
+					<p>Download a <a href="/video/mewmew-vorbis-ssa.mkv" type="application/x-matroska">Matroska demo</a> (7.8 <abbr title="mebibyte">MiB</abbr>).</p>
+				</object>
+			</div>
+
+		</div>
+	</div>
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+
+

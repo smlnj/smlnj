@@ -1,0 +1,20 @@
+The **Util Library** has code that is over 30 years old and many of the interfaces
+could do with a redesign.  Since such a change would break lots of existing code,
+we will instead create a new library called the **SML/NJ Util Library** with
+CM file `smlnj-util-lib.cm`.  This file contains notes about things that should be
+fixed/changed in that redesign.
+
+The HASH_KEY and ORD_KEY signatures should be changed to match newer conventions.
+
+The MONO_ARRAY_SORT should have a fixed comparison function and should also
+contain the Binary Search function from the `BSearchFn` functor.
+
+Eliminate currying from the hash-table modules
+
+Eliminate the SplayTree and BinaryTree implementations of maps and sets; the
+RedBlackTree implementation is more performant across the board.  We'll keep
+the sorted-list based versions too for a lightweight implementation.
+
+The logical bit-sequence operations in BitArray need rethinking.  Specifically
+w.r.t. padding lengths.
+

@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Text Direction [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for bidirectional text. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="text directionality, bidirectional, bi-directional">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="tables" title="Tables">
+	<link rel="next" href="results" title="Results">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Text Direction</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="tables" rel="prev" accesskey="P" title="Prior: Tables">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="results" rel="next" accesskey="N" title="Next: Results"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Text Direction (<a class="specsect" href="http://www.w3.org/TR/html4/struct/dirlang.html#h-8.2" title="HTML 4.0 Specification">&sect;8.2</a>)</h1>
+
+	<div class="section">
+		<div class="bodytext">
+			<p>Text directionality is governed by the complex and subtle <a href="http://www.unicode.org/unicode/reports/tr9/">Unicode directionality algorithm</a>, which I myself have trouble understanding. The default text direction is generally left&#8208;to&#8208;right, unless one is using certain character sets for languages like Hebrew or Arabic. Displaying text left&#8208;to&#8208;right in languages written right&#8208;to&#8208;left could even express unintended meanings.</p>
+			<p>Sometimes a Web browser must be informed what the default text direction is. Though most alphabets have implicit directionality, <dfn>directionally neutral</dfn> characters&mdash;including most numbers and punctuation&mdash;often do not.</p>
+		</div>
+	</div>
+
+	<div class="section" id="dir">
+		<h2>Text direction</h2>
+
+		<div class="bodytext">
+			<p>The common <dfn><a class="specsect"	href="http://www.w3.org/TR/html4/struct/dirlang.html#adef-dir" title="HTML 4.0 Specification: 8 Language and Text Direction"><code class="attribute">dir</code></a></dfn> attribute sets the default <em>text direction</em> for directionally neutral text.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>If your Web browser supports bidirectional text, both of these expressions should read the same from left to right.</p>
+		
+			<div class="blockcode">
+			<em class="html">&lt;p><em class="html4">&lt;span <strong class="tested">dir="ltr"</strong>></em></em><em class="html"><em class="entity">&amp;frac12;</em></em> <em class="html"><em class="entity">&amp;times;</em></em> <em class="html"><em class="entity">&amp;frac12;</em></em> = <em class="html"><em class="entity">&amp;frac14;</em></em><em class="html"><em class="html4">&lt;/span></em>&lt;/p></em><br>
+			<em class="html">&lt;p><em class="html4">&lt;span <strong class="tested">dir="rtl"</strong>></em></em><em class="html"><em class="entity">&amp;frac14;</em></em> = <em class="html"><em class="entity">&amp;frac12;</em></em> <em class="html"><em class="entity">&amp;times;</em></em> <em class="html"><em class="entity">&amp;frac12;</em></em><em class="html"><em class="html4">&lt;/span></em>&lt;/p></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+			<p>&frac12; &times; &frac12; = &frac14;</p>
+			<p><span dir="rtl">&frac14; = &frac12; &times; &frac12;</span></p>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Text-Dir">Text-Dir</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="table">
+		<h2>Table directionality</h2>
+
+		<div class="bodytext">
+			<p>When set on a <code class="element">&lt;table></code> element, the <code class="attribute">dir</code> attribute not only sets the direction of directionally neutral text within the table, but also determines whether the columns are rendered in a left&#8208;to&#8208;right or right&#8208;to&#8208;left order.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>If your Web browser supports bidirectional text, this table should be rendered with &ldquo;3&rdquo; in the left column, &ldquo;2&rdquo; in the middle column, and &ldquo;1&rdquo; in the right column.</p>
+		
+			<div class="blockcode">
+			<em class="html">&lt;table <em class="html4">frame="box" rules="all"</em> <strong class="tested">dir="rtl"</strong>></em><br>
+		<div class="indent">
+		<em class="html">&lt;tr>&lt;td></em>1 <em class="html">&lt;td></em>2 <em class="html">&lt;td></em>3<br>
+		</div>
+		<em class="html">&lt;/table></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+			<table frame="box" rules="all" dir="rtl">
+			<tr><td>1 <td>2 <td>3
+		</table>
+		</div>
+		</div>
+	</div>
+
+	<div class="section" id="bdo">
+		<h2>Bidirectional override</h2>
+
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/struct/dirlang.html#edef-bdo" title="HTML 4.0 Specification: 8 Language and Text Direction"><code class="element">&lt;bdo></code></a> (bidirectional override) element overrides the current text direction.</p>
+
+			<p class="sugg"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering removing <code class="element">&lt;bdo></code> in <abbr>XHTML</abbr> 2.0 and adding	<code>lro</code> (left&#8208;to&#8208;right override) and <code>rlo</code> (right&#8208;to&#8208;left override) to the values the common <a class="specsect" href="http://www.w3.org/TR/2004/WD-xhtml2-20040722/mod-bidi.html#col_Bi-directional" title="XHTML 2.0 Working Draft: Bi-directional Text Collection"><code class="element">dir</code></a> attribute can take.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			<em class="html">&lt;p <strong class="tested">dir="ltr"</strong>></em>This sentence should be rendered left<em class="html4"><em class="entity">&amp;#8208;</em></em>to<em class="html4"><em class="entity">&amp;#8208;</em></em>right, <em class="html4"><strong class="tested">&lt;bdo dir="rtl"></strong></em>except for this phrase<em class="html4"><strong class="tested">&lt;/bdo></strong></em>.<em class="html">&lt;/p></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+			<p dir="ltr">This sentence should be rendered left&#8208;to&#8208;right, <bdo dir="rtl">except for this phrase</bdo>.</p>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Text-Dir">Text-Dir</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="rlm">
+		<h2>Direction mark characters</h2>
+
+		<div class="bodytext">
+			<p>The <dfn>left&#8208;to&#8208;right mark</dfn> (<code class="entity">&amp;lrm;</code>) and <dfn>right&#8208;to&#8208;left mark</dfn> (<code class="entity">&amp;rlm;</code>) characters force the directionality of directionally neutral characters. They have no width, so the marks should not be visible.</p>
+			<p>However, the <code class="attribute">dir</code> attribute 
+<q cite="http://www.unicode.org/unicode/reports/tr20/#Bidi" title="Unicode in XML and other Markup Languages">offers a better guarantee of document structural integrity and alleviates some problems when editing bidirectional <abbr>HTML</abbr> text with a simple text editor</q>.</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>If your web browser supports bidirectional text, both of these expressions should read the same from left to right.</p>
+		
+			<div class="blockcode">
+			<em class="html">&lt;p><em class="entity"><strong class="tested">&amp;lrm;</strong>&amp;frac12;</em></em> <em class="html"><em class="entity">&amp;times;</em></em> <em class="html"><em class="entity">&amp;frac12;</em></em> = <em class="html"><em class="entity">&amp;frac14;<strong class="tested">&amp;lrm;</strong></em>&lt;/p></em><br>
+			<em class="html">&lt;p><em class="entity"><strong class="tested">&amp;rlm;</strong>&amp;frac14;</em></em> = <em class="html"><em class="entity">&amp;frac12;</em></em> <em class="html"><em class="entity">&amp;times;</em></em> <em class="html"><em class="entity">&amp;frac12;<strong class="tested">&amp;rlm;</strong></em>&lt;/p></em><br>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result4">
+			<p>&lrm;&frac12; &times; &frac12; = &frac14;&lrm;</p>
+			<p>&rlm;&frac14; = &frac12; &times; &frac12;&rlm;</p>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Text-Dir">Text-Dir</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="rlo">
+		<h2>Bidirectional override characters</h2>
+
+		<div class="bodytext">
+			<p>According to <a class="specsect" href="http://www.w3.org/TR/html4/struct/dirlang.html#h-8.2.4">section 8.2.4</a> of the <abbr>HTML</abbr> 4.0 standard, the Unicode <dfn>left&#8208;to&#8208;right override</dfn> (<code class="entity">&amp;#8237;</code>) and <dfn>right&#8208;to&#8208;left override</dfn> (<code class="entity">&amp;#8238;</code>) characters may be used to override the current text direction. The <dfn>pop directional formatting</dfn> (<code class="entity">&amp;#8236;</code>) character then restores the previous directional state.</p>
+			<p>However, the <abbr>W3C</abbr> and Unicode Consortium <a href="http://www.unicode.org/unicode/reports/tr20/#Bidi">strongly discourage</a> using them in <abbr>HTML</abbr> 4.0, because <code class="attribute">&lt;bdo></code> is available and <q cite="http://www.unicode.org/unicode/reports/tr20/#Bidi" title="Unicode in XML and other Markup Languages">better suited to handle the stateful nature of their effect</q>.</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			<em class="html">&lt;p></em>This sentence should be rendered left<em class="html4"><em class="entity">&amp;#8208;</em></em>to<em class="html4"><em class="entity">&amp;#8208;</em></em>right, <em class="entity"><strong class="tested">&amp;#8238;</strong></em>except for this phrase<em class="entity"><strong class="tested">&amp;#8236;</strong></em>.<em class="html">&lt;/p></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result5">
+			<p>This sentence should be rendered left&#8208;to&#8208;right, &#8238;except for this phrase&#8236;.</p>
+		</div>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

@@ -1,0 +1,34 @@
+= The `SExpPP` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `SExpPP` structure implements a pretty printer for S-Expressions.
+
+== Synopsis
+
+[source,sml]
+------------
+structure SExpPP
+------------
+
+== Interface
+
+[source,sml]
+------------
+val output : TextIOPP.stream * SExp.value -> unit
+------------
+
+== Description
+
+`[.kw]#val# output : TextIOPP.stream * SExp.value \-> unit`::
+  `output (ppS, v)` pretty prints the value using the specified
+  pretty-printing stream.
+
+== See Also
+
+xref:str-SExp.adoc[`SExp`],
+xref:str-SExpParser.adoc[`SExpParser`],
+xref:sexp-lib.adoc[__The SExp Library__]

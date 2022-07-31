@@ -1,0 +1,6 @@
+Library
+	structure B
+	structure C
+is
+	$foo/stab-b.sml
+	$foo/stab-b-c.sml

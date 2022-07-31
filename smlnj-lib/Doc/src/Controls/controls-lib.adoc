@@ -1,0 +1,58 @@
+= The Controls Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *Controls Library* provides support for managing application
+controls via command-line options, environment variables, and
+code.
+
+The original design and implementation of the *Controls Library*
+was by Matthias Blume.
+
+== Contents
+
+xref:str-Controls.adoc[`[.kw]#structure# Controls`]::
+  The main structure of the *Controls Library*, which defines the
+  representation and basic operations for controls.
+
+xref:str-ControlSet.adoc[`[.kw]#structure# ControlSet`]::
+  Provides facilities for managing sets of controls, with
+  associated information, by name.
+
+xref:str-ControlRegistry.adoc[`[.kw]#structure# ControlRegistry`]::
+  Provides infrastructure for defining a hierarchical registry of controls.
+
+xref:str-ControlUtil.adoc[`[.kw]#structure# ControlUtil`]::
+  Provides utility functions for defining controls.
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/controls-lib.cm` in your
+*CM* file.
+
+For use in http://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/Controls/controls-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-Controls.adoc[]
+
+include::str-ControlSet.adoc[]
+
+include::str-ControlRegistry.adoc[]
+
+include::str-ControlUtil.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]
+

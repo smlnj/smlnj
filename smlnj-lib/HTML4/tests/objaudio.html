@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Objects: Audio [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for audio objects. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="audio, sound">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="objects" title="Objects">
+	<link rel="next" href="objvideo" title="Objects: Video">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Objects: Audio</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="objects" rel="prev" accesskey="P" title="Prior: Objects">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="objvideo" rel="next" accesskey="N" title="Next: Objects: Video"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+	<h1>Objects: Audio (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.3" title="HTML 4.0 Specification">&sect;13.3</a>)</h1>
+
+	<div class="section">
+		<div class="bodytext">
+			<p><a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#edef-object" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="element">&lt;object></code></a> could also be used for <em>audio clips</em>. Having a visual rendering is not a requirement, since not all Web browsers are visual. As images are to graphical Web browsers, audio clips are to speechreaders.</p>
+			<p>Your Web browser may require you to download and install plugins to play the following.</p>
+		</div>
+	</div>
+
+	<div class="section" id="midi">
+		<h2><acronym>MIDI</acronym></h2>
+
+		<div class="bodytext">
+			<p>Many plugins support <acronym>MIDI</acronym> using the generally accepted <a href="glossary#content_type" class="local" title="Glossary" rel="glossary">content type</a> <code class="content_type">audio/x-midi</code>.</p>
+
+			<p class="note">Some websites incorrectly use the invalid content type <strong><code class="content_type">audio/midi</code></strong>, which has not yet been registered. However, a <a href="http://www.ietf.org/internet-drafts/draft-lindgren-mime-dls-smf-00.txt">draft registration</a> is under development.</p>
+		</div>
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>If your Web browser cannot play this classical music, it should present a link to download it.</p>
+<em class="html"></em>
+		
+			<div class="blockcode">
+			<em class="html4">&lt;object data="<a href="/audio/pachelbel.mid" type="audio/x-midi" class="local">/audio/pachelbel.mid</a>" <strong class="tested">type="audio/x-midi"</strong>></em><br>
+				<div class="indent">
+				<em class="html">&lt;p></em>Listen to <em class="html">&lt;a href="/audio/pachelbel.mid" type="audio/x-midi"></em>Pachelbel<em class="html4"><em class="entity">&amp;rsquo;</em></em>s Canon in D<em class="html">&lt;/a></em> (MIDI<em class="html4">&lt;/acronym></em>, 10 <em class="html4">&lt;abbr title="kibibytes"></em>KiB<em class="html4">&lt;/abbr></em>).<em class="html">&lt;/p></em><br>
+				</div>
+			<em class="html4">&lt;/object></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+			<object data="/audio/pachelbel.mid" type="audio/x-midi">
+				<p>Listen to <a href="/audio/pachelbel.mid" type="audio/x-midi">Pachelbel&rsquo;s Canon in D</a> (<acronym>MIDI</acronym>, 10 <abbr title="kibibytes">KiB</abbr>).</p>
+			</object>
+		</div>
+		</div>
+	</div>
+
+	<div class="section" id="ogg">
+		<h2>Ogg Vorbis</h2>
+
+		<div class="bodytext">
+			<p><a href="http://www.xiph.org/ogg/vorbis/">Ogg Vorbis</a> is an open, cross&#8208;platform, patent&#8208;free audio format.</p>
+
+			<p class="note">Ogg Vorbis uses the Ogg container file format, which may contain other multimedia, like Ogg Theora video.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>If your Web browser cannot play this sample of a song by Piero Umiliani, it should present a link to download it.</p>
+<em class="html"></em>
+		
+			<div class="blockcode">
+			<em class="html4">&lt;object data="<a href="/audio/mahnamahna.ogg" type="application/ogg" class="local">/audio/mahnamahna.ogg</a>" <strong class="tested">type="application/ogg"</strong>></em><br>
+				<div class="indent">
+				<em class="html">&lt;p></em>Listen to <em class="html">&lt;a href="/audio/mahnamahna.ogg" type="application/ogg"></em>Mah Na<em class="html4"><em class="entity">&amp;rsquo;</em></em> Mah Na<em class="html4"><em class="entity">&amp;rsquo;</em></em><em class="html">&lt;/a></em> (Ogg Vorbis, 864 <em class="html4">&lt;abbr title="kibibytes"></em>KiB<em class="html4">&lt;/abbr></em>).<em class="html">&lt;/p></em><br>
+				</div>
+			<em class="html4">&lt;/object></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+			<object data="/audio/mahnamahna.ogg" type="application/ogg">
+				<p>Listen to a sample of <a href="/audio/mahnamahna.ogg" type="application/ogg">Mah Na&rsquo; Mah Na&rsquo;</a> (Ogg Vorbis, 864 <abbr title="kibibytes">KiB</abbr>).</p>
+			</object>
+		</div>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+
+

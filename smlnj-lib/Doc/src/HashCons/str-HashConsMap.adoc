@@ -1,0 +1,341 @@
+= The `HashConsMap` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashConsMap` structure implements functional, finite maps keyed
+by hash-consed objects.  A balanced tree structure is used in the
+representation.
+
+== Synopsis
+
+[source,sml]
+------------
+signature HASH_CONS_MAP
+structure HashConsMap : HASH_CONS_MAP
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a obj = 'a HashCons.obj
+
+type ('a, 'b) map
+
+val isEmpty : ('a, 'b) map -> bool
+
+val singleton : ('a obj * 'b) -> ('a, 'b) map
+
+val insert  : ('a, 'b) map * 'a obj * 'b -> ('a, 'b) map
+val insert' : (('a obj * 'b) * ('a, 'b) map) -> ('a, 'b) map
+
+val insertWith  : (('b * 'b) -> 'b)
+      -> ('a, 'b) map * 'a obj * 'b -> ('a, 'b) map
+val insertWithi :  (('a obj * 'b * 'b) -> 'b)
+      -> ('a, 'b) map * 'a obj * 'b -> ('a, 'b) map
+
+val find : ('a, 'b) map * 'a obj -> 'b option
+
+val lookup : ('a, 'b) map * 'a obj -> 'b
+
+val inDomain : (('a, 'b) map * 'a obj) -> bool
+
+val remove : ('a, 'b) map * 'a obj -> ('a, 'b) map * 'b
+
+val empty : ('a, 'b) map
+
+val numItems : ('a, 'b) map ->  int
+
+val listItems  : ('a, 'b) map -> 'b list
+val listItemsi : ('a, 'b) map -> ('a obj * 'b) list
+
+val listKeys : ('a, 'b) map -> 'a obj list
+
+val collate : ('b * 'b -> order) -> (('a, 'b) map * ('a, 'b) map) -> order
+
+val unionWith  : ('b * 'b -> 'b) -> (('a, 'b) map * ('a, 'b) map)
+      -> ('a, 'b) map
+val unionWithi : ('a obj * 'b * 'b -> 'b) -> (('a, 'b) map * ('a, 'b) map)
+      -> ('a, 'b) map
+
+val intersectWith  : ('b * 'c -> 'd) -> (('a, 'b) map * ('a, 'c) map)
+      -> ('a, 'd) map
+val intersectWithi : ('a obj * 'b * 'c -> 'd) -> (('a, 'b) map * ('a, 'c) map)
+      -> ('a, 'd) map
+
+val mergeWith : ('b option * 'c option -> 'd option)
+      -> (('a, 'b) map * ('a, 'c) map) -> ('a, 'd) map
+val mergeWithi : ('a obj * 'b option * 'c option -> 'd option)
+      -> (('a, 'b) map * ('a, 'c) map) -> ('a, 'd) map
+
+val app  : ('b -> unit) -> ('a, 'b) map -> unit
+val appi : (('a obj * 'b) -> unit) -> ('a, 'b) map -> unit
+
+val map  : ('b -> 'c) -> ('a, 'b) map -> ('a, 'c) map
+val mapi : ('a obj * 'b -> 'c) -> ('a, 'b) map -> ('a, 'c) map
+
+val fold  : ('b * 'c -> 'c) -> 'c -> ('a, 'b) map -> 'c
+val foldi : ('a obj * 'b * 'c -> 'c) -> 'c -> ('a, 'b) map -> 'c
+
+val filter  : ('b -> bool) -> ('a, 'b) map -> ('a, 'b) map
+val filteri : ('a obj * 'b -> bool) -> ('a, 'b) map -> ('a, 'b) map
+
+val mapPartial  : ('b -> 'c option) -> ('a, 'b) map -> ('a, 'c) map
+val mapPartiali : ('a obj * 'b -> 'c option) -> ('a, 'b) map -> ('a, 'c) map
+
+val exists : ('b -> bool) -> ('a, 'b) map -> bool
+val existsi : ('a obj * 'b -> bool) -> ('a, 'b) map -> bool
+
+val all : ('b -> bool) -> ('a, 'b) map -> bool
+val alli : ('a obj * 'b -> bool) -> ('a, 'b) map -> bool
+------------
+
+== Description
+
+In the description of operations below, we write latexmath:[\mathbf{dom}(m)]
+for the _domain_ of the map latexmath:[m] (_i.e_, the set of keys for which
+latexmath:[m] is defined), and latexmath:[\mathbf{rng}(m)] for its _range_
+(_i.e._, the set latexmath:[\{ m(k)\;|\;k \in \mathbf{dom}(m) \}]).  It is also
+useful to view a map as the set of key-value pairs
+latexmath:[\{ (k, m(k))\;|\;k \in \mathbf{dom}(m) \}], which we call the _items_
+of latexmath:[m].
+
+`[.kw]#type# 'a obj = 'a HashCons.obj`::
+  Hash-consed objects are the search keys for the finite maps.
+
+`[.kw]#type# ('a, 'b) map`::
+  A finite map from ``'a obj`` values to ``'b`` values.
+
+`[.kw]#val# empty : ('a, 'b) map`::
+  The empty map.
+
+`[.kw]#val# singleton : ('a obj * 'b) \-> ('a, 'b) map`::
+  `singleton (obj, v)` creates the singleton map that maps `obj` to `v`.
+
+`[.kw]#val# insert : ('a, 'b) map * 'a obj * 'b \-> ('a, 'b) map`::
+  `insert (m, obj, v)` adds the mapping from `obj` to `v` to `m`.
+  This mapping overrides any previous mapping from `obj`.
+
+`[.kw]#val# insert' : (('a obj * 'b) * ('a, 'b) map) \-> ('a, 'b) map`::
+  `insert' ((obj, v), map)` adds the mapping from `obj` to `v` to `m`.
+  This mapping overrides any previous mapping from `obj`.
+
+`[.kw]#val# insertWith  : (('b * 'b) \-> 'b) \-> ('a, 'b) map * 'a obj * 'b \-> ('a, 'b) map`::
+  `insertWith comb (m, obj, v)` adds the mapping from `obj` to `value` to `m`,
+  where `value = comb(v', v)`, if `m` already contained a mapping from `obj`
+  to `v'`; otherwise, `value = v`.
+
+`[.kw]#val# insertWithi :  (('a obj * 'b * 'b) \-> 'b) \-> ('a, 'b) map * 'a obj * 'b \-> ('a, 'b) map`::
+  `insertWithi comb (m, obj, v)` adds the mapping from `obj` to `value` to `m`,
+  where `value = comb(obj, v', v)`, if `m` already contained a mapping from `obj`
+  to `v'`; otherwise, `value = v`.
+
+`[.kw]#val# find : ('a, 'b) map * 'a obj \-> 'b option`::
+  `find (m, obj)` returns `SOME v`, if `m` maps `obj` to `v` and `NONE` otherwise.
+
+`[.kw]#val# lookup : ('a, 'b) map * 'a obj \-> 'b`::
+  `lookup (m, obj)` returns `v`, if `m` maps `obj` to `v`; otherwise it
+  raises the exception xref:../Util/str-LibBase.adoc#exn:NotFound[`NotFound`].
+
+`[.kw]#val# inDomain : (('a, 'b) map * 'a obj) \-> bool`::
+  `inDomain (m, obj)` returns `true` if `obj` is in the domain of `m`.
+
+`[.kw]#val# remove : ('a, 'b) map * 'a obj \-> ('a, 'b) map * 'b`::
+  `remove (m, obj)` returns the pair `(m', v)`, if `m` maps `obj` to `v`
+  and where `m'` is `m` with `obj` removed from its domain.  If `obj`
+  is not in the domain of `m`, then it raises the exception
+  xref:../Util/str-LibBase.adoc#exn:NotFound[`NotFound`].
+
+`[.kw]#val# isEmpty : ('a, 'b) map \-> bool`::
+  `isEmpty m` returns true if, and only if, `m` is empty.
+
+`[.kw]#val# numItems : ('a, 'b) map \->  int`::
+  `numItems m` returns the size of ``m``'s domain.
+
+`[.kw]#val# listItems  : ('a, 'b) map \-> 'b list`::
+  `listItems m` returns a list of the values in the _range_ of `m`.
+  Note that this list will contain duplicates when multiple keys in
+  ``m``'s domain map to the same value.
+
+`[.kw]#val# listKeys : ('a, 'b) map \-> 'a obj list`::
+  `listKeys m` returns a list of the objects in the domain of `m`.
+
+`[.kw]#val# listItemsi : ('a, 'b) map \-> ('a obj * 'b) list`::
+  `listItemsi m` returns a list of `(obj, v)` pairs, where `m` maps
+  `obj` to `v`.
+
+`[.kw]#val# collate : ('b * 'b \-> order) \-> (('a, 'b) map * ('a, 'b) map) \-> order`::
+  `collate cmpV (m1, m2)` returns the order of the two maps, where `cmpV` is
+  used to compare the values in the domain.
+
+`[.kw]#val# unionWith  : ('b * 'b \-> 'b) \-> (('a, 'b) map * ('a, 'b) map) \-> ('a, 'b) map`::
+  `unionWith comb (m1, m2)` returns the union of the two maps, using the function `comb`
+  to combine values when there is a collision of keys.  More formally, this expression
+  returns the map
++
+[latexmath]
++++++++++++
+  \begin{array}{l}
+  \{ (k, \mathtt{m1}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \setminus \mathbf{dom}(\mathtt{m2}) \}
+  \cup \\
+  \{ (k, \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m2}) \setminus \mathbf{dom}(\mathtt{m1}) \}
+  \cup \\
+  \{ (k, \mathtt{comb}(\mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
+  \end{array}
++++++++++++
++
+For example, we could implement a _multiset_ of objects by mapping objects to their
+multiplicity.  Then, the union of two multisets could be defined by
++
+[source,sml]
+------------
+fun union (ms1, ms2) = unionWith Int.+ (ms1, ms2)
+------------
+
+`[.kw]#val# unionWithi : ('a obj * 'b * 'b \-> 'b) \-> (('a, 'b) map * ('a, 'b) map) \-> ('a, 'b) map`::
+  `unionWithi comb (m1, m2)` returns the union of the two maps, using the function `comb`
+  to combine values when there is a collision of keys.  More formally, this expression
+  returns the map
++
+[latexmath]
++++++++++++
+  \begin{array}{l}
+  \{ (k, \mathtt{m1}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \setminus \mathbf{dom}(\mathtt{m2}) \}
+  \cup \\
+  \{ (k, \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m2}) \setminus \mathbf{dom}(\mathtt{m1}) \}
+  \cup \\
+  \{ (k, \mathtt{comb}(k, \mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
+  \end{array}
++++++++++++
+
+
+`[.kw]#val# intersectWith  : ('b * 'c \-> 'd) \-> (('a, 'b) map * ('a, 'c) map) \-> ('a, 'd) map`::
+  `intersectWith comb (m1, m2)` returns the intersection of the two maps,
+  where the values in the range are a computed by applying the function
+  `comb` to the values from the two maps.  More formally, this expression
+  returns the map
++
+[latexmath]
++++++++++++
+  \{ (k, \mathtt{comb}(\mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
++++++++++++
+
+`[.kw]#val# intersectWithi : ('a obj * 'b * 'c \-> 'd) \-> (('a, 'b) map * ('a, 'c) map) \-> ('a, 'd) map`::
+  `intersectWithi comb (m1, m2)` returns the intersection of the two maps,
+  where the values in the range are a computed by applying the function
+  `comb` to the kay and the values from the two maps.  More formally, this
+  expression returns the map
++
+[latexmath]
++++++++++++
+  \{ (k, \mathtt{comb}(k, \mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
++++++++++++
+
+`[.kw]#val# mergeWith : ('b option * 'c option \-> 'd option) \-> (('a, 'b) map * ('a, 'c) map) \-> ('a, 'd) map`::
+  `mergeWith comb (m1, m2)` merges the two maps using the function `comb`
+  as a decision procedure for adding elements to the new map.  For each object
+  latexmath:[\mathtt{obj} \in \mathbf{dom}(\mathtt{m1}) \cup \mathbf{dom}(\mathtt{m2})],
+  we evaluate `comb(optV1, optV2)`, where `optV1` is `SOME v` if
+  latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m1}] and is `NONE` if
+  latexmath:[\mathtt{obj} \not\in \mathbf{dom}(\mathtt{m1}); likewise for `optV2`.
+  If `comb(optV1, optV2)` returns ``SOME v'``, then we add ``(obj, v')``
+  to the result.
++
+The `mergeWith` function is a generalization of the `unionWith` and
+`intersectionWith` functions.
+
+`[.kw]#val# mergeWithi : ('a obj * 'b option * 'c option \-> 'd option) \-> (('a, 'b) map * ('a, 'c) map) \-> ('a, 'd) map`::
+  `mergeWithi comb (m1, m2)` merges the two maps using the function `comb`
+  as a decision procedure for adding elements to the new map.  The difference
+  between this function and `mergeWith` is that the `comb` function takes the
+  `key` value in addition to the optional values from the range.
+
+`[.kw]#val# app  : ('b \-> unit) \-> ('a, 'b) map \-> unit`::
+  `app f m` applies the function `f` to the values in the range of `m`.
+
+`[.kw]#val# appi : (('a obj * 'b) \-> unit) \-> ('a, 'b) map \-> unit`::
+  `appi f map` applies the function `f` to the key-value pairs that
+  define `m`.
+
+`[.kw]#val# map  : ('b \-> 'c) \-> ('a, 'b) map \-> ('a, 'c) map`::
+  `map f m` creates a new finite map ``m'`` by applying the function `f` to the
+  values in the range of `m`.  Thus, if
+  latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m}], then
+  `(obj, f v)` will be in ``m'``.
+
+`[.kw]#val# mapi : ('a obj * 'b \-> 'c) \-> ('a, 'b) map \-> ('a, 'c) map`::
+  `mapi f m` creates a new finite map ``m'`` by applying the function `f` to the
+  key-value pairs of `m`.  Thus, if
+  latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m}], then
+  `(obj, f(obj, v))` will be in ``m'``.
+
+`[.kw]#val# fold : ('b * 'c \-> 'c) \-> 'c \-> ('a, 'b) map \-> 'c`::
+  `fold f init m` folds the function `f` over the range of
+  `m` using `init` as the initial value.
+
+`[.kw]#val# foldi : ('a obj * 'b * 'c \-> 'c) \-> 'c \-> ('a, 'b) map \-> 'c`::
+  `foldi f init m` folds the function `f` over the key-value pairs in
+  `m` using `init` as the initial value.
+
+`[.kw]#val# filter : ('b \-> bool) \-> ('a, 'b) map \-> ('a, 'b) map`::
+  `filter pred m` filters out those items `(obj, v)` from `m`, such that
+  `pred v` returns `false`.  More formally, this expression returns the map
+  latexmath:[\{ (\mathtt{obj}, \mathtt{v})\;|\;\mathtt{obj} \in \mathbf{dom}(\mathtt{m})
+  \wedge \mathtt{pred}(\mathtt{v}) \}].
+
+`[.kw]#val# filteri : ('a obj * 'b \-> bool) \-> ('a, 'b) map \-> ('a, 'b) map`::
+  `filteri pred m` filters out those items `(obj, v)` from `m`, such that
+  `pred(obj, v)` returns `false`.  More formally, this expression returns the map
+  latexmath:[\{ (\mathtt{obj}, \mathtt{v})\;|\;\mathtt{obj} \in \mathbf{dom}(\mathtt{m})
+  \wedge \mathtt{pred}(\mathtt{obj}, \mathtt{v}) \}].
+
+`[.kw]#val# mapPartial : ('b \-> 'c option) \-> ('a, 'b) map \-> ('a, 'c) map`::
+  `mapPartial f m` maps the partial function `f` over the items of `m`.
+  More formally, this expression returns the map
+[latexmath]
++++++++++++
+  \{ (k, v') \;|\; (k, v) \in \mathtt{m} \wedge \mathtt{f}(v) = \mathtt{SOME}(v') \}
++++++++++++
+
+`[.kw]#val# mapPartiali : ('a obj * 'b \-> 'c option) \-> ('a, 'b) map \-> ('a, 'c) map`::
+  `mapPartiali f m` maps the partial function `f` over the items of `m`.
+  More formally, this expression returns the map
+[latexmath]
++++++++++++
+  \{ (k, v') \;|\; (k, v) \in \mathtt{m} \wedge \mathtt{f}(k, v) = \mathtt{SOME}(v') \}
++++++++++++
+
+`[.kw]#val# exists : ('b \-> bool) \-> ('a, 'b) map \-> bool`::
+  `exists pred m` returns `true` if, and only if, there exists an item
+  latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m}],
+  such that `pred v` returns `true`.
+
+`[.kw]#val# existsi : ('a obj * 'b \-> bool) \-> ('a, 'b) map \-> bool`::
+  `exists pred m` returns `true` if, and only if, there exists an item
+  latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m}], such that
+  `pred(obj, v)` returns `true`.
+
+`[.kw]#val# all : ('b \-> bool) \-> ('a, 'b) map \-> bool`::
+  `all pred m` returns `true` if, and only if, `pred v` returns `true`
+  for all items latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m}].
+
+`[.kw]#val# alli : ('a obj * 'b \-> bool) \-> ('a, 'b) map \-> bool`::
+  `all pred m` returns `true` if, and only if, `pred(obj, v)` returns `true`
+  for all items latexmath:[(\mathtt{obj}, \mathtt{v}) \in \mathtt{m}].
+
+== See Also
+
+xref:str-HashCons.adoc[`HashCons`],
+xref:str-HashConsSet.adoc[`HashConsSet`],
+xref:hash-cons-lib.adoc[__The HashCons Library__]

@@ -1,0 +1,5 @@
+Library
+  structure NewSym
+is
+  newsym.sml (private)
+  gensym.sml (shared)

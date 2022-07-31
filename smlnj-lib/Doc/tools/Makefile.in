@@ -1,0 +1,29 @@
+# Makefile.in
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Makefile for SML/NJ Library documentation tools
+#
+# @configure_input@
+#
+
+SHELL =         @SHELL@
+INSTALL =       @INSTALL@
+@SET_MAKE@
+
+SUBDIRS =	make-index gen-pages
+
+.PHONY:		install
+install:
+	for d in $(SUBDIRS) ; do \
+	  (cd $$d && $(MAKE) install) || exit $$?; \
+	done
+
+include @MK_DIR@/clean-rules.gmk
+
+CLEAN_FILES =
+
+CLEAN_SUBDIRS = $(DOC_SUBDIRS)
+
+CLEANDIST_FILES = $(TOOL_BIN_DIR)/* $(TOOL_BIN_DIR)/.heap

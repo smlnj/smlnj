@@ -1,0 +1,11 @@
+(* smlnj/viscomp/debugprof.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * Debugging and profiling instrumentation phases.
+ *)
+Library
+	group($compiler/DebugProf/debugprof.cm)
+is
+	(* reference to our only group... *)
+	$compiler/DebugProf/debugprof.cm

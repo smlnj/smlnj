@@ -1,0 +1,22 @@
+(*
+ * Pathname handling for CM.
+ *
+ * Copyright (c) 2004 by The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Group
+	signature SRCPATH
+	structure SrcPath
+	structure SrcPathMap
+	structure SrcPathSet
+	structure TStamp
+is
+	fileid.sml
+	srcpath.sml
+	srcpathmap.sml
+	srcpathset.sml
+	tstamp.sml
+
+	$smlnj/basis/basis.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm

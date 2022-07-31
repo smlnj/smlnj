@@ -1,0 +1,61 @@
+= The `BSearchFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `BSearchFn` functor provides binary search on sorted monomorphic
+arrays.
+
+== Synopsis
+
+[source,sml]
+------------
+functor BSearchFn (A : MONO_ARRAY)
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+A : MONO_ARRAY
+------------
+
+== Functor Argument Description
+
+`A : MONO_ARRAY`::
+  A structure that implements the
+  {sml-basis-url}/mono-array.html[`MONO_ARRAY`] signature from
+  the {sml-basis-url}/index.html[*SML Basis Library*].
+
+== Interface
+
+[source,sml]
+------------
+structure A : MONO_ARRAY
+
+val bsearch : (('a * A.elem) -> order) -> ('a * A.array) -> (int * A.elem) option
+------------
+
+== Description
+
+`[.kw]#structure# A : {sml-basis-url}/Basis/mono-array.html[MONO_ARRAY]`::
+  The array structure that defines the element and array types.
+
+`[.kw]#val# bsearch : (('a * A.elem) \-> order) \-> ('a * A.array) \-> (int * A.elem) option`::
+  `bsearch cmp (key, arr)` returns `SOME(ix, elem)` where `A.sub(arr, ix)` is
+  `elem` and `cmp(key, elem)` returns `EQUAL`; if no such element is present, then
+  `NONE` is returned.  This function uses a binary search over the array,
+   which requires that the elements be arranged in increasing order by the `cmp`
+  function.  Usually, the type of the search key will be `A.elem`, but the
+  interface allows some computation on the elements, as long as the ordering
+  is respected.
+
+== See Also
+
+{sml-basis-url}/Basis/mono-array.html[`MONO_ARRAY`],
+xref:fun-MonoArrayFn.adoc[`MonoArrayFn`],
+xref:fun-ArrayQSortFn.adoc[`ArrayQSortFn`],
+xref:smlnj-lib.adoc[__The Util Library__]
+

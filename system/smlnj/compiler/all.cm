@@ -1,0 +1,83 @@
+(* all.cm
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Library exporting "visible" compilers for all architectures.
+ *
+ * author: Matthias Blume (blume@research.bell-labs.com)
+ *)
+
+Library
+	(* signatures *)
+	signature STATS
+	signature CONTROL
+	signature SOURCE
+	signature SOURCE_MAP
+	signature ERRORMSG
+	signature SYMBOL
+	signature PERSSTAMPS
+	signature STATICENV
+	signature DYNAMICENV
+	signature ENVIRONMENT
+	signature ENVREF
+	signature MODULE_ID
+	signature PICKMOD
+	signature UNPICKMOD
+	signature PRETTYPRINT
+	signature AST
+	signature ABSYN
+	signature SMLFILE
+	signature BINFILE
+	signature FLINT
+
+	(* frontend stuff *)
+	structure Stats
+	structure Control
+	structure Source
+	structure SourceMap
+	structure ErrorMsg
+	structure Symbol
+	structure SymPath
+	structure PersStamps
+	structure StaticEnv
+	structure DynamicEnv
+	structure Environment
+	structure EnvRef
+	structure ModuleId
+	structure GenModIdMap
+	structure PickMod
+	structure UnpickMod
+	structure Rehash
+	structure PickleSymPid
+	structure UnpickleSymPid
+	structure PrettyPrint
+	structure CompilerPPTable
+	structure Ast
+	structure Absyn
+	structure SmlFile
+	structure Binfile
+	structure PrintHooks
+	structure SMLNJVersion
+	structure CompInfo
+	structure CompileExn
+	structure CoreSym
+	structure FLINT
+
+	(* backends *)
+	structure AMD64StdCallBackend
+	structure AMD64CCallBackend
+        structure Arm64Backend
+
+	(* bootstrap (cross-)compilers *)
+	structure AMD64UnixCMB
+(* TODO:
+        structure AMD64WindowsCMB
+*)
+        structure Arm64UnixCMB
+is
+	$smlnj/compiler/amd64.cm
+	$smlnj/compiler/arm64.cm
+
+	$smlnj/cmb/amd64-unix.cm
+	$smlnj/cmb/arm64-unix.cm

@@ -1,0 +1,39 @@
+<!-- binary-set-fn.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY BinarySetFn SDATA "binary-set-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=10>
+<TITLE>The BinarySetFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/BinarySetFn/ functor</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_KEY/
+  <SIGREF/ORD_SET/
+  <FCTREF/ListSetFn/
+  <FCTREF/SplaySetFn/
+  <SIGREF/ORD_MAP/
+</SEEALSO>
+
+<PP>
+The <FCTREF NOLINK/BinarySetFn/ functor implements applicative sets on
+an ordered type. The resulting structure will satisfy
+the interface described in <SIGREF/ORD_SET/.
+
+<PP>
+The implementation is based on Stephen Adams' integer set code, which uses
+binary trees of bounded balance.
+
+<FUNCTOR FCTID="BinarySetFn"><ID>K</ID><ID>ORD_KEY</ID>
+  <ID>ORD_SET
+</FUNCTOR>
+
+<PP>
+Note that adding an element to a set that already contains such an element
+(in the sense that both elements are considered equal by the comparison
+function) causes the current element to be replaced by the new one.
+</INTERFACE>

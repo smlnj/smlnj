@@ -1,0 +1,12 @@
+(* smlnj/viscomp/execute.cm
+ *
+ * The SML/NJ linker.
+ *   (Linking means execution of top-level code.)
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *)
+Library
+	group($compiler/Execution/execute.cm)
+is
+	(* reference to our only group... *)
+	$compiler/Execution/execute.cm

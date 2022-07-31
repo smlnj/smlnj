@@ -1,0 +1,82 @@
+<!-- Unix/unix-env.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=15>
+<TITLE>The UNIX_ENV signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/UNIX_ENV/ signature</HEAD>
+<SEEALSO>
+  <STRREF>UnixPath</STRREF>
+</SEEALSO>
+
+<PP>
+A UNIX environment is a list of strings of the form ``name=value'', where
+the ``='' character does not appear in name.
+NOTE: binding the user's environment as an ML value and then exporting the
+ML heap image can result in incorrect behavior, since the environment bound in the
+heap image may differ from the user's environment when the exported image
+is run.
+
+<STRUCTURE STRID="UnixEnv">
+  <OPAQUE>  <SIGBODY SIGID="UNIX_ENV" FILE=UNIX-ENV>
+    <SPEC>
+      <VAL>getFromEnv<TY>(string * string list) -> string option
+        <COMMENT>
+          <PROTOTY>
+          getFromEnv (<ARG>s</ARG>, <ARG>l</ARG>)
+          </PROTOTY>
+          <PP>
+          return the value, if any, bound to the name.
+        </COMMENT>
+    <SPEC>
+      <VAL>getValue<TY>{name : string, default : string, env : string list} -> string
+        <COMMENT>
+          <PROTOTY>
+          getValue {<ARG>name</ARG>, <ARG>default</ARG>, <ARG>env</ARG>}
+          </PROTOTY>
+          <PP>
+          return the value bound to the name, or a default value.
+        </COMMENT>
+    <SPEC>
+      <VAL>removeFromEnv<TY>(string * string list) -> string list
+        <COMMENT>
+          <PROTOTY>
+          removeFromEnv (<ARG>s</ARG>, <ARG>l</ARG>)
+          </PROTOTY>
+          <PP>
+          remove a binding from an environment.
+        </COMMENT>
+    <SPEC>
+      <VAL>addToEnv<TY>(string * string list) -> string list
+        <COMMENT>
+          <PROTOTY>
+          addToEnv (<ARG>s</ARG>, <ARG>l</ARG>)
+          </PROTOTY>
+          <PP>
+          add a binding to an environment, replacing an existing binding if necessary.
+        </COMMENT>
+    <SPEC>
+      <VAL>environ<TY>unit -> string list
+        <COMMENT>
+          <PROTOTY>
+          environ <ARG>()</ARG>
+          </PROTOTY>
+          <PP>
+          return the user's environment.
+        </COMMENT>
+    <SPEC>
+      <VAL>getEnv<TY>string -> string option
+        <COMMENT>
+          <PROTOTY>
+          getEnv <ARG>s</ARG>
+          </PROTOTY>
+          <PP>
+          return the binding of an environment variable in the user's environment.
+        </COMMENT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

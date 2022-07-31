@@ -1,0 +1,38 @@
+______________________________________________________________________
+README
+______________________________________________________________________
+
+This is the README for a new HTML 4.01 library for SML/NJ.
+
+____________________________________________________________
+Build targets
+____________________________________________________________
+
+The primary target is in html4-lib.cm.  This will build everything
+needed to provide the HTML4 structure.
+
+There are several test targets coded in CM files.
+
+The first one tests the lexer, accepting a list of files as an
+argument, and outputing a token per line.  For example:
+
+$ ml-build html4-lex-test.cm
+$ sml @SMLload=html4-lex-test.platform tests/test001.html
+
+The next one tests the parser, accepting a list of files as input, and
+outputing the parse tree (TODO).  For example:
+
+$ ml-build html4-test.cm
+$ sml @SMLload=html4-test.platform tests/test001.html
+
+____________________________________________________________
+Helper script
+____________________________________________________________
+
+We've included a helper script, which we used to create the lexical
+token constructors.  This script, helper.py, processes a table of
+elements, published in the HTML 4.01 specification.
+
+______________________________________________________________________
+End of README
+______________________________________________________________________

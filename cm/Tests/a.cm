@@ -1,0 +1,17 @@
+Group is
+# if defined(X_Y)
+#    error X_Y defined !
+# endif
+	a.sml
+# if not defined (structure A)
+#    error No definition for structure A!
+# endif
+	b.sml : sml
+	c.sml
+# if (3 > 2)
+	3.sml
+# elif not (4 > 5)
+        4.sml
+# else
+        5.sml
+# endif

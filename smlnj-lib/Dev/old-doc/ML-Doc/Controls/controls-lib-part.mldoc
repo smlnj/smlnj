@@ -1,0 +1,26 @@
+<!-- controls-lib-part.mldoc --
+  -- --
+  -- COPYRIGHT (c) 2007 The Fellowship of SML/NJ. --
+  -- --
+  -- The root of the Unix library part of the manual.  -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John H. Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=2007>
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=15>
+
+<TITLE>Controls Library Manual</TITLE>
+
+<SECTION>
+<HEAD>The Controls Library</HEAD>
+
+<INCLFILE FILE="controls">
+<INCLFILE FILE="control-registry">
+<INCLFILE FILE="control-set">
+<INCLFILE FILE="control-util">
+</SECTION>
+

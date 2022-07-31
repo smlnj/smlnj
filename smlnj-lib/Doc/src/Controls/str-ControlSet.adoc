@@ -1,0 +1,99 @@
+= The `ControlSet` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ControlSet` structure provides facilities for managing sets
+of controls, with associated information, by name.
+
+== Synopsis
+
+[source,sml]
+------------
+signature CONTROL_SET
+structure ControlSet : CONTROL_SET
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a control = 'a Controls.control
+type ('a, 'b) control_set
+
+val new : unit -> ('a, 'b) control_set
+
+val member : (('a, 'b) control_set * Atom.atom) -> bool
+val find   : (('a, 'b) control_set * Atom.atom)
+      -> {ctl : 'a control, info : 'b} option
+val insert : (('a, 'b) control_set * 'a control * 'b) -> unit
+val remove : (('a, 'b) control_set * Atom.atom) -> unit
+val infoOf : ('a, 'b) control_set -> 'a control -> 'b option
+
+val listControls : ('a, 'b) control_set -> {ctl : 'a control, info : 'b} list
+val listControls' : (('a, 'b) control_set * int) -> {ctl : 'a control, info : 'b} list
+
+val app : ({ctl : 'a control, info : 'b} -> unit) -> ('a, 'b) control_set -> unit
+
+val stringControls : 'a Controls.value_cvt -> ('a, 'b) control_set
+      -> (string, 'b) control_set
+------------
+
+== Description
+
+[[type:control_set]]
+`[.kw]#type# ('a, 'b) control_set`::
+  The abstract type of _control set_, where the first type parameter
+  is the value-type of the controls in the set and the second is the
+  type of the information associated with each control.
+
+`[.kw]#val# new : unit \-> ('a, 'b) control_set`::
+  `new ()` creates a new, empty, set of controls.
+
+`[.kw]#val# member : (('a, 'b) control_set * Atom.atom) \-> bool`::
+  `member (ctlSet, name)` returns true if there is a control with
+  the given name in the set.
+
+`[.kw]#val# find : (('a, 'b) control_set * Atom.atom) \-> {ctl : 'a control, info : 'b} option`::
+  `find (ctsSet, name)` returns `SOME{ctl, info}` when the control `ctl`, which
+  has the name `name` is in the set and `info` is its associated information.
+  Otherwise, `NONE` is returned.
+
+`[.kw]#val# insert : (('a, 'b) control_set * 'a control * 'b) \-> unit`::
+  `insert (ctsSet, ctl, info)` inserts the control `ctl` with associated
+  information `into` into the control set.
+
+`[.kw]#val# remove : (('a, 'b) control_set * Atom.atom) \-> unit`::
+  `remove (ctlSet, name)` removes the named control from the set (if
+  it is present).
+
+`[.kw]#val# infoOf : ('a, 'b) control_set \-> 'a control \-> 'b option`::
+  `infoOf ctlSet ctl` returns `SOME info`, when `ctl` is in the set
+  with associated information `info`.  If `ctl` is not in the set,
+  then `NONE` is returned.
+
+`[.kw]#val# listControls : ('a, 'b) control_set \-> {ctl : 'a control, info : 'b} list`::
+  `listControls ctlSet` returns a list of the controls in the set ordered by
+  priority.
+
+`[.kw]#val# listControls' : (('a, 'b) control_set * int) \-> {ctl : 'a control, info : 'b} list`::
+  `listControls (ctlSet, level)` returns a list of the controls in the set ordered by
+  priority, but omits any controls with an obscurity level greater or equal to
+  `level`.
+
+`[.kw]#val# app : ({ctl : 'a control, info : 'b} \-> unit) \-> ('a, 'b) control_set \-> unit`::
+  `app f ctlSet` applies the function `f` to the controls (and their associated
+  information).  The order in which `f` is applied is unspecified.
+
+`[.kw]#val# stringControls : 'a Controls.value_cvt \-> ('a, 'b) control_set \-> (string, 'b) control_set`::
+  `stringControls cvt ctlSet` returns a set of string controls, where the controls
+  in the new set are created by applying the value-converter `cvt` to the controls
+  in `ctlSet`.  The associated information is preserved.
+
+== See Also
+
+xref:str-Controls.adoc[`Controls`],
+xref:str-ControlRegistry.adoc[`ControlRegistry`],
+xref:controls-lib.adoc[__The Controls Library__]

@@ -1,0 +1,94 @@
+<!-- atom.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=2000>
+<VERSION VERID="1.0" YEAR=2000 MONTH=11 DAY=21>
+<TITLE>The Atom structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ATOM/ signature</HEAD>
+  <SEEALSO>
+    <STRREF TOPID>AtomMap</STRREF>
+    <STRREF TOPID>AtomSet</STRREF>
+    <STRREF TOPID>AtomTable</STRREF>
+    <STRREF TOPID>AtomBinaryMap</STRREF>
+    <STRREF TOPID>AtomBinarySet</STRREF>
+    <STRREF TOPID>AtomRedBlackMap</STRREF>
+    <STRREF TOPID>AtomRedBlackSet</STRREF>
+  </SEEALSO>
+
+<PP>
+Atoms are uniquely represented strings that support fast equality/inequality
+tests, as well as hashing and ordered comparisons.
+
+<STRUCTURE STRID="Atom">
+  <SIGBODY SIGID="ATOM" FILE=ATOM>
+    <SPEC>
+      <TYPE><ID>atom
+      <COMMENT>
+	<PP>
+	Atoms are uniquely represented strings that support fast
+	equality/inequality tests.
+    <SPEC>
+      <VAL>atom<TY>string -> atom
+        <COMMENT>
+          <PROTOTY>
+          atom <ARG/s/
+          </PROTOTY>
+          <PP>
+          maps the string <ARG>s</ARG> to the corresponding unique atom.
+        </COMMENT>
+    <SPEC>
+      <VAL>atom'<TY>substring -> atom
+        <COMMENT>
+          <PROTOTY>
+          atom' <ARG/ss/
+          </PROTOTY>
+          <PP>
+          maps the substring <ARG>ss</ARG> to the corresponding unique atom.
+        </COMMENT>
+    <SPEC>
+      <VAL>toString<TY>atom -> string
+        <COMMENT>
+          <PROTOTY>
+          toString <ARG/a/
+          </PROTOTY>
+          <PP>
+          returns the string representation of the atom <ARG>a</ARG>.
+        </COMMENT>
+    <SPEC>
+      <VAL>sameAtom<TY>(atom * atom) -> bool
+        <COMMENT>
+          <PROTOTY>
+          sameAtom (<ARG/a1/, <ARG/a2/)
+          </PROTOTY>
+          <PP>
+          returns true if the atoms <ARG>a1</ARG> and <ARG>a2</ARG> are the same.
+	  This test is constant-time.
+        </COMMENT>
+    <SPEC>
+      <VAL>compare<TY>(atom * atom) -> order
+        <COMMENT>
+          <PROTOTY>
+          compare (<ARG/a1/, <ARG/a2/)
+          </PROTOTY>
+          <PP>
+          compares the atoms the atoms <ARG>a1</ARG> and <ARG>a2</ARG>
+	  for their relative order.
+	  <EM>Note that this is not the lexical order of their underlying
+	  strings.</EM>
+        </COMMENT>
+    <SPEC>
+      <VAL>hash<TY>atom -> word
+        <COMMENT>
+          <PROTOTY>
+          hash <ARG/a/
+          </PROTOTY>
+          <PP>
+          returns a hash key for the atom <ARG>a</ARG>.
+        </COMMENT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

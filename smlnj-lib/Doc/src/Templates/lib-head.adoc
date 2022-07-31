@@ -1,0 +1,13 @@
+= The @DIR@ Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *@DIR@ Library* ...
+
+== Contents
+

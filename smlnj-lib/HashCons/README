@@ -1,0 +1,45 @@
+This directory contains a library supporting the implementation of
+hash-consing of data structures.  
+
+To use this library, you need to use a two-level definition of your
+data structures.  For example, we might define a hash-cons representation
+of lambda terms as follows:
+
+    structure HC = HashCons
+    type var = HashConsString.obj
+    datatype term_node
+      = VAR of var
+      | LAM of (var * term)
+      | APP of (term * term)
+    withtype term = term_node HC.obj
+
+And you need to define an equality function on your terms (this function
+can use the hash-cons identity on subterms).  For example, here is the
+code for our lambda terms:
+
+    fun eq (APP(t11, t12), APP(t21, t22)) =
+          HC.same(t11, t21) andalso HC.same(t12, t22)
+      | eq (LAM(x, t1), LAM(y, t2)) = HC.same(x, y) andalso HC.same(t1, t2)
+      | eq (VAR x, VAR y) = HC.same(x, y)
+      | eq _ = false
+
+With the equality function, we can create a hash-cons table:
+
+    val tbl = HC.new {eq = eq}
+
+And then we can then define constructor functions:
+
+    val mkAPP = HC.cons2 tbl (0wx1, APP)
+    val mkLAM = HC.cons2 tbl (0wx3, LAM)
+    val mkVAR = HC.cons1 tbl (0wx7, VAR)
+    val var = HW.mk
+
+Note that we pick successive prime numbers for the constructor hash codes.
+Using these constructors, we can construct the representation of the
+identity function (\x.x) as follows:
+
+    mkLAM(var "x", mkVAR(var "x"))
+
+In addition to term construction, this library also supports finite sets
+and maps using the unique hash-cons codes as keys.
+

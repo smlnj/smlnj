@@ -1,0 +1,68 @@
+= The `CharMap` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `CharMap` structure provides fast, read-only, maps from 8-bit characters
+to values.
+
+== Synopsis
+
+[source,sml]
+------------
+signature CHAR_MAP
+structure CharMap :> CHAR_MAP
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a char_map
+
+val mkCharMap : {default : 'a, bindings : (string * 'a) list} -> 'a char_map
+
+val mapChr : 'a char_map -> char -> 'a
+val mapStrChr : 'a char_map -> (string * int) -> 'a
+------------
+
+== Description
+
+`[.kw]#type# 'a char_map`::
+  The type of a mapping from 8-bit characters to ``'a``.
+
+`[.kw]#val# mkCharMap : {default : 'a, bindings : (string * 'a) list} \-> 'a char_map`::
+  `mkCharMap {default, bindings}` creates a new character map.  For each
+  item `(s, v)` in the `bindings` list, the characters in `s` are mapped to
+  the value `v`.  If a character is bound multiple times, then the rightmost
+  binding is used.  Characters not covered by a binding are mapped to the
+  default value.  For example, the following code creates a mapping that classifies
+  characters into lower and upper case letter, digits, and other characters:
++
+[source,sml]
+------------
+datatype char_kind = LOWER | UPPER | DIGIT | OTHER
+
+val cmap = mkCharMap {
+        default = OTHER,
+        bindings = [
+            ("abcdefghijklmnopqrstuvwxyz", LOWER),
+            ("ABCDEFGHIJKLMNOPQRSTUVWXYZ", UPPER),
+            ("0123456789", DIGIT)
+          ]
+      }
+------------
+
+`[.kw]#val# mapChr : 'a char_map \-> char \-> 'a`::
+  `mapChr cmap c` applies the map to the character.
+
+`[.kw]#val# mapStrChr : 'a char_map \-> (string * int) \-> 'a`::
+  `mapStrChr cmap (s, i)` applies the map to the `i`th character in `s`.
+  The {sml-basis-url}/general.html#SIG:GENERAL.Subscript:EXN:SPEC[`Subscript`]
+  exception is raised if `i` is out of bounds.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

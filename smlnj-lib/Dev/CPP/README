@@ -1,0 +1,3 @@
+This directory contains a library for processing input streams
+that use the C preprocessor include file and macro conventions.
+

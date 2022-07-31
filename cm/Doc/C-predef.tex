@@ -1,0 +1,26 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Listing of all pre-defined CM identifiers}
+
+\begin{center}
+\begin{tabular}{l||c|c|c|c|c|c|c}
+   & Alpha32 & HP-PA & PowerPC & PowerPC & Sparc & IA32 & IA32 \\
+   & Unix & Unix & MACOS & Unix & Unix & Unix & Win32 \\
+\hline \hline
+{\tt ARCH\_ALPHA}    & 1 & & & & & & \\
+{\tt ARCH\_HPPA}     & & 1 & & & & & \\
+{\tt ARCH\_PPC}      & & & 1 & 1 & & & \\
+{\tt ARCH\_SPARC}    & & & & & 1 & & \\
+{\tt ARCH\_X86}      & & & & & & 1 & 1 \\
+{\tt OPSYS\_UNIX}    & 1 & 1 & & 1 & 1 & 1 & \\
+{\tt OPSYS\_MACOS}   & & & 1 & & & & \\
+{\tt OPSYS\_WIN32}   & & & & & & & 1 \\
+{\tt BIG\_ENDIAN}    & & & & & 1 & & \\
+{\tt LITTLE\_ENDIAN} & 1 & 1 & 1 & 1 & & 1 & 1 \\
+{\tt SIZE\_32}       & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+{\tt NEW\_CM}        & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+{\tt SMLNJ\_VERSION} & \smlmj & \smlmj & \smlmj & \smlmj & \smlmj & \smlmj & \smlmj \\
+{\tt SMLNJ\_MINOR\_VERSION} & \smlmn & \smlmn & \smlmn & \smlmn & \smlmn & \smlmn & \smlmn
+\end{tabular}
+\end{center}

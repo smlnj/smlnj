@@ -1,0 +1,27 @@
+(* current.cm
+ *
+ * Library exporting structure CMB, the bootstrap compiler for the
+ * current architecture.
+ *
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Author: Matthias Blume
+ *)
+Library
+	signature CMB
+	structure CMB
+is
+	$smlnj/internal/cm-sig-lib.cm
+
+	(* based on current architecture and OS, select CMB *)
+
+# if defined(ARCH_AMD64)
+	$smlnj/cmb/amd64-unix.cm
+	select-amd64-unix.sml
+# elif defined(ARCH_ARM64)
+	$smlnj/cmb/arm64-unix.cm
+	select-arm64-unix.sml
+# else
+#   error Strange architecture and/or OS!
+# endif

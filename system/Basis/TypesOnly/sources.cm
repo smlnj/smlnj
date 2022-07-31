@@ -1,0 +1,24 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The types-only core of the Basis implementation.
+ *)
+
+Group is
+
+	$smlnj/init/init.cmi : cm
+
+	basis-structs.sml
+	basis-time.sml
+
+#if defined(SIZE_32)
+
+	bind-target-32-bit.sml
+
+#else (* 64-bits *)
+
+	bind-target-64-bit.sml
+
+#endif

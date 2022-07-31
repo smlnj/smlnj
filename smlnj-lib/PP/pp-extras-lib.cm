@@ -1,0 +1,38 @@
+(* pp-extras-lib.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * CM file for compiling the PP Library with the extra devices.
+ *)
+
+Library
+
+  signature PP_DESC
+  signature PP_DEVICE
+  signature PP_TOKEN
+  signature PP_STREAM
+
+  functor PPStreamFn
+  functor PPDescFn
+  functor PPDebugFn
+
+(* devices *)
+  structure TextIOPP
+  structure TextPP
+  structure SimpleTextIODev
+  structure CharBufferPP
+  structure ANSITermDev
+  structure ANSITermPP
+  structure StringToken
+
+(* extras *)
+  structure HTML3Dev
+
+is
+
+  $/basis.cm
+  $/html-lib.cm
+  $/pp-lib.cm
+
+  devices/html3-dev.sml

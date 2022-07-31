@@ -1,0 +1,86 @@
+= The `Rand` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Rand` structure provides a simple random number generator as described
+in Larry Paulson in __ML for the Working Programmer__ (pp. 170-171).
+The original algorithm was recommended by Park and Miller in
+https://doi.org/10.1145/63039.63042[__Random number generators: good ones
+are hard to find__], CACM 1988 (pp 1192-1201) with modifications described
+in CACM 1993 (pp. 105-110).
+
+Note: it is recommended that one use the xref:str-Random.adoc[`Random`]
+structure when the quality of the generated numbers is at all important.
+The main advantages of this implementation is that it is functional
+(the generators provided by the `Random` structure are imperative) and
+it is fast.
+
+== Synopsis
+
+[source,sml]
+------------
+structure Rand
+------------
+
+== Interface
+
+[source,sml]
+------------
+type rand = Word.word
+
+val randMin : rand
+val randMax : rand
+
+val random : rand -> rand
+
+val mkRandom : rand -> unit -> rand
+
+val norm : rand -> real
+
+val range : (int * int) -> rand -> int
+------------
+
+== Description
+
+`[.kw]#type# rand = Word.word`::
+  The "state" of the generator, which is just a single word.
+
+`[.kw]#val# randMin : rand`::
+  The minimum allowed value for the state.
+
+`[.kw]#val# randMax : rand`::
+  The maximum allowed value for the state.
+
+`[.kw]#val# random : rand \-> rand`::
+  `random seed` returns a pseudo-random value in the range
+  `[randMin .. randMax]`.  Iteratively using the value returned by
+  `random` as the next seed will produce a sequence of pseudo-random
+  numbers.
+
+`[.kw]#val# mkRandom : rand \-> unit \-> rand`::
+  something
+      (* Given seed, return function generating a sequence of
+       * random numbers randMin <= v <= randMax
+       *)
+
+`[.kw]#val# norm : rand \-> real`::
+  `norm rand` maps the random number in the range `[randMin .. randMax]`
+  to the real interval `(0..1)`.
+
+`[.kw]#val# range : (int * int) \-> rand \-> int`::
+  `range (lo, hi) rand` maps the random number in the range `[randMin .. randMax]`
+  to the interval `[lo..hi]`.  This function will raise the
+  {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`] exception
+  if `hi < lo`.
+
+== Bugs
+
+This implementation needs to be updated for 64-bit systems.
+
+== See Also
+
+xref:str-Random.adoc[`Random`],
+xref:smlnj-lib.adoc[__The Util Library__]

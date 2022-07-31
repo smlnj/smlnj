@@ -1,0 +1,403 @@
+-- cps.asdl
+--
+-- COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+-- All rights reserved.
+--
+-- ASDL description of the CFG IR.
+--
+
+-- primitive module for pickling lvars
+--
+primitive module LambdaVar {
+    lvar
+}
+
+-- should agree with CTypes
+--
+module CTypes {
+
+    c_type
+      = C_void
+      | C_float
+      | C_double
+      | C_long_double
+      | C_unsigned (c_int)
+      | C_signed (c_int)
+      | C_PTR
+      | C_ARRAY (c_type, int)
+      | C_STRUCT (c_type*)
+      | C_UNION (c_type*)
+
+    c_int
+      = I_char
+      | I_short
+      | I_int
+      | I_long
+      | I_long_long
+
+    calling_convention = string
+
+    c_proto = (calling_convention conv, c_type retTy, c_type* paramTys)
+
+}
+
+-- CFG primitive operations
+--
+module CFG_Prim {
+
+    numkind = INT | FLT
+
+  -- rounding modes for float conversions *)
+    rounding_mode = TO_NEAREST | TO_NEGINF | TO_POSINF | TO_ZERO
+
+  -- type signature for a field in a `RAW_RECORD`; the `sz` is in bits
+    raw_ty = (numkind kind, int sz)
+
+  -- These operations bump the allocation pointer
+    alloc
+    -- allocates a one-word special object, there the descriptor value may
+    -- be computed by an expression (i.e., the first argument to the `ALLOC`
+    -- statement will be the descriptor value
+      = SPECIAL
+    -- allocates an initialized record object with the given descriptor.
+    -- The `mut` field is true for mutable objects
+      | RECORD(integer desc, bool mut)
+    -- allocates an initialized record of raw data with the given descriptor.
+    -- The `fields`     -- The `fields` specify the kind and sizes of the components.
+      | RAW_RECORD(integer desc, int align, raw_ty* fields)
+    -- Allocates an uninitialized record.  The descriptor is optional (it will
+    -- be NONE for spill records).  The `align` field specifies the alignment
+    -- in bytes and the `len` field is the size in bytes.
+      | RAW_ALLOC(integer? desc, int align, int len)
+
+  -- signed arithmetic operations that may overflow; for the division operators,
+  -- we assume that the second argument is never zero (i.e., an explicit
+  -- test for zero is done before the operation).
+    arithop
+      = IADD | ISUB | IMUL
+-- Quesion: perhaps the division operators should be moved out of `arith`, since
+-- the div-by-zero and overflow tests will have to be explicit?
+      | IDIV | IREM
+
+  -- These operations might raise exceptions and do not access mutable memory.
+    arith
+      = ARITH (arithop oper, int sz)
+      | REAL_TO_INT (rounding_mode mode, int from, int to)
+
+  -- arithmetic operations that do not overflow; for the division operators,
+  -- we assume that the second argument is never zero (i.e., an explicit
+  -- test for zero is done before the operation).
+    pureop
+      = ADD | SUB
+    -- NOTE: we distinguish between signed and unsigned MUL because MLRisc makes
+    -- that distinction; even though 2's-complement multiplication is sign agnostic
+      | SMUL | SDIV | SREM
+      | UMUL | UDIV | UREM
+      | LSHIFT | RSHIFT | RSHIFTL
+      | ORB | XORB | ANDB
+      | FADD | FSUB | FMUL | FDIV
+      | FNEG | FABS | FSQRT
+
+  -- These operations do not raise exceptions and do not access mutable memory.
+    pure
+      = PURE_ARITH (pureop oper, int sz)
+      | EXTEND (bool signed, int from, int to)	-- extend a smaller value to a larger
+						-- one (from < to) by zeros (signed is
+						-- false) or the sign (signed is true)
+      | TRUNC (int from, int to)		-- truncate a larger value to a smaller
+						-- one (from > to).
+      | INT_TO_REAL (int from, int to)		-- int to float conversion
+      | PURE_SUBSCRIPT				-- indexed load of ML value
+      | PURE_RAW_SUBSCRIPT (numkind kind, int sz)
+						-- indexed load of raw value from
+						-- packed numeric vector
+      | RAW_SELECT (numkind kind, int sz, int offset)
+						-- select from RAW_RECORD
+
+  -- These operations fetch from mutable memory.
+    looker
+      = DEREF
+      | SUBSCRIPT
+      | RAW_SUBSCRIPT (numkind kind, int sz)
+      | RAW_LOAD (numkind kind, int sz)		-- load raw value from base+offset
+      | GET_HDLR | GET_VAR
+
+  -- These operations all update mutable memory.
+    setter
+      = UNBOXED_UPDATE | UPDATE			-- array update
+      | UNBOXED_ASSIGN | ASSIGN			-- reference assignment
+      | RAW_UPDATE (numkind kind, int sz)	-- raw array update
+      | RAW_STORE (numkind kind, int sz)	-- raw store to base+offset
+      | SET_HDLR | SET_VAR
+
+  -- comparison operators
+  -- NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
+    cmpop = GT | GTE | LT | LTE | EQL | NEQ
+
+  -- fcmpop conforms to the IEEE std 754 predicates.
+    fcmpop
+      = F_EQ	-- =
+      | F_ULG	-- ?<>
+      | F_UN	-- ?
+      | F_LEG	-- <=>
+      | F_GT	-- >
+      | F_GE	-- >=
+      | F_UGT	-- ?>
+      | F_UGE	-- ?>=
+      | F_LT	-- <
+      | F_LE	-- <=
+      | F_ULT	-- ?<
+      | F_ULE	-- ?<=
+      | F_LG	-- <>
+      | F_UE	-- ?=
+
+  -- These operations are two-way branches dependent on pure inputs
+    branch
+      = CMP (cmpop oper, bool signed, int sz)
+      | FCMP (fcmpop oper, int sz)
+      | FSGN (int)
+      | PEQL | PNEQ
+      | LIMIT (uint)
+
+}
+
+-- CFG IR
+--
+-- This IR is a simplified version of the first-order CPS IR, where we have
+-- turned expressions into trees.
+--
+module CFG (
+    import LambdaVar
+    import CTypes
+    import CFG_Prim
+  ) {
+
+  -- CFG types.
+  --
+    ty
+      = LABt		-- function and continuation code addresses
+      | PTRt		-- pointer or tagged value
+      | TAGt		-- native-size tagged integer value
+      | NUMt (int sz)	-- integers of given size
+      | FLTt (int sz) 	-- float of given size
+
+  -- expressions; note that reals and strings are represented by access into the
+  -- literal table, so we do not include them here.
+  --
+    exp
+      = VAR (LambdaVar.lvar name)
+      | LABEL (LambdaVar.lvar name)
+      | NUM (integer iv, int sz)
+      | LOOKER (CFG_Prim.looker oper, exp* args)
+      | PURE (CFG_Prim.pure oper, exp* args)
+      | SELECT (int idx, exp arg)
+      | OFFSET (int idx, exp arg)
+
+    param = (LambdaVar.lvar name, ty ty)
+
+  -- branch probabilities are measured in percent (1..99).  We use 0 to
+  -- represent the absence of probability information.
+  --
+    probability = int
+
+    stm
+      = LET (exp, param, stm)
+      -- `ALLOC(p, args, x, k)` applies the allocation primitive `p` to the
+      -- `args`, binds the resulting object to `x` and then executes `k`.
+      | ALLOC (CFG_Prim.alloc, exp*, LambdaVar.lvar, stm)
+      -- `APPLY(f, args, tys)` is an external function application; `f` is the
+      -- function to be called, `args` are the arguments, and `tys` are the
+      -- argument types
+      | APPLY (exp, exp*, ty*)
+      -- `THROW(k, args, tys)` is an external continuation application; `k` is
+      -- the continuation to be called, `args` are the arguments, and `tys` are
+      -- the argument types
+      | THROW (exp, exp*, ty*)
+      -- `GOTO(lab, args)` is an internal function call to the fragment specified
+      -- by `lab`; `args` are the arguments
+      | GOTO (LambdaVar.lvar, exp*)
+      -- `SWITCH(v, exps)` is a multiway branch on `v`
+      | SWITCH (exp, stm*)
+      -- `BRANCH(br, args, p, trueExp, falseExp)` is a two-way conditional branch,
+      -- where `p` is the probability that the branch is taken
+      | BRANCH (CFG_Prim.branch, exp*, probability, stm, stm)
+      -- `ARITH(p, args, x, k)` applies the trapping arithmetic operator `p` to the
+      -- arguments and binds the result (assuming no Overflow) to the parameter `x`
+      -- and then executes `k`
+      | ARITH (CFG_Prim.arith, exp*, param, stm)
+      -- `SETTER(p, args, k)` applies the setter operation `p` to the `args` and
+      -- then executes `k`
+      | SETTER (CFG_Prim.setter, exp*, stm)
+      -- `CALLGC(roots, newRoots, k)` invokes the GC with the given roots.  Upon
+      -- return, the new roots are bound to the lvars `newRoots` and then `k` is
+      -- executed.  The number of roots and newRoots are the same and are fixed
+      -- by the GC protocol (std-link, std-clos, std-cont, callee saves, and std-arg).
+      | CALLGC (exp*, LambdaVar.lvar*, stm)
+      -- "raw C call"
+      | RCC (
+	  bool reentrant,		-- true for reentrant calls
+	  string linkage,		-- ??
+	  CTypes.c_proto proto,		-- function prototype
+	  exp* args,			-- arguments
+	  param* results,		-- result variables (with types)
+	  param* live,			-- live variables across call (with types)
+	  stm k)			-- the continuation
+
+    frag_kind = STD_FUN | STD_CONT | KNOWN_FUN | INTERNAL
+
+  -- a cluster fragment is an extended basic block.  The fields are:
+  --    kind            the kind of fragment, which determines its calling convention
+  --    lab		the fragment's label
+  --	params		the lvar parameters and parameter types
+  --	body		the root of the extended basic block
+  --
+    frag = Frag (frag_kind kind, LambdaVar.lvar lab, param* params, stm body)
+
+  -- meta data about a cluster
+  --
+    attrs = (
+	int alignHP,		-- alignment requirement for allocation pointer
+	bool needsBasePtr,	-- true if cluster does PC-relative addressing
+	bool hasTrapArith,	-- true if cluster has trapping arithmetic
+	bool hasRCC		-- true if cluster contains raw C Calls
+      )
+
+  -- a cluster is a maximal flow graph where every known call is to a fragment in the
+  -- the cluster.
+  --
+    cluster = Cluster (attrs attrs, frag* frags)
+
+    comp_unit = (string srcFile, cluster entry, cluster* fns)
+
+}
+
+-- C++ specialization
+--
+view Cxx {
+    <file> <= interface_prologue %%
+#include "code-buffer.hxx"
+#include "lambda-var.hxx"
+
+%%
+    <file> <= suppress : pickler
+
+-- alloc
+    { CFG_Prim.alloc }  <= public_code %%
+        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+%%
+    { CFG_Prim.alloc.* } <= public_code %%
+        Value *codegen (code_buffer *buf, Args_t const &args);
+%%
+
+-- arith
+    { CFG_Prim.arith }  <= public_code %%
+        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+%%
+    { CFG_Prim.arith.* } <= public_code %%
+        Value *codegen (code_buffer *buf, Args_t const &args);
+%%
+
+-- pure
+    { CFG_Prim.pure }  <= public_code %%
+        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+%%
+    { CFG_Prim.pure.* } <= public_code %%
+        Value *codegen (code_buffer *buf, Args_t const &args);
+%%
+
+-- looker
+    { CFG_Prim.looker }  <= public_code %%
+        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+%%
+    { CFG_Prim.looker.* } <= public_code %%
+        Value *codegen (code_buffer *buf, Args_t const &args);
+%%
+
+-- setter
+    { CFG_Prim.setter }  <= public_code %%
+        virtual void codegen (code_buffer *buf, Args_t const &args) = 0;
+%%
+    { CFG_Prim.setter.* } <= public_code %%
+        void codegen (code_buffer *buf, Args_t const &args);
+%%
+
+-- branch
+    { CFG_Prim.branch }  <= public_code %%
+        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+%%
+    { CFG_Prim.branch.* } <= public_code %%
+        Value *codegen (code_buffer *buf, Args_t const &args);
+%%
+
+-- ty
+    { CFG.ty } <= public_code %%
+	virtual Type *codegen (code_buffer *buf) = 0;
+	bool isNUMt () { return this->_tag == _con_NUMt; }
+	bool isFLTt () { return this->_tag == _con_FLTt; }
+%%
+    { CFG.ty.* } <= public_code %%
+	Type *codegen (code_buffer *buf);
+%%
+
+-- param
+    { CFG.param } <= public_code %%
+	void bind (code_buffer *buf, Value *v) { buf->insertVal (this->_v_name, v); }
+%%
+
+-- exp
+    { CFG.exp } <= public_code %%
+        virtual Value *codegen (code_buffer *buf) = 0;
+	bool isLABEL () { return (this->_tag == _con_LABEL); }
+%%
+    { CFG.exp.* } <= public_code %%
+        Value *codegen (code_buffer *buf);
+%%
+
+-- stm
+    { CFG.stm } <= public_code %%
+        virtual void init (code_buffer *buf, bool blkEntry) = 0;
+        virtual void codegen (code_buffer *buf) = 0;
+        llvm::BasicBlock *bb () { return this->_bb; }
+%%
+    { CFG.stm } <= protected_code %%
+        llvm::BasicBlock *_bb;  // for the first stm in a block
+	void _initBB (code_buffer *buf, bool blkEntry);
+%%
+
+    { CFG.stm.* } <= public_code %%
+        void init (code_buffer *buf, bool blkEntry);
+        void codegen (code_buffer *buf);
+%%
+
+-- frag
+    { CFG.frag } <= public_code %%
+        void init (code_buffer *buf);
+        void codegen (code_buffer *buf, cluster *cluster);
+	llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
+	Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
+	void addIncoming (int i, Value *v, llvm::BasicBlock *bblk)
+	{
+	    this->_phiNodes[i]->addIncoming(v, bblk);
+	}
+%%
+    { CFG.frag } <= private_code %%
+        std::vector<llvm::PHINode *> _phiNodes;
+%%
+
+-- cluster
+    { CFG.cluster } <= public_code %%
+        void init (code_buffer *buf, bool isFirst);
+        void codegen (code_buffer *buf, bool isFirst);
+	llvm::Function *fn () const { return this->_fn; }
+	frag *entry () const { return this->_v_frags[0]; }
+%%
+    { CFG.cluster } <= private_code %%
+        llvm::Function *_fn;
+%%
+
+-- comp_unit
+    { CFG.comp_unit } <= public_code %%
+        void codegen (code_buffer *buf);
+%%
+
+}

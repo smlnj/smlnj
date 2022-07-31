@@ -1,0 +1,67 @@
+<!-- ML-Doc/syntax-sig.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY REGEXP-SYNTAX SDATA "../syntax-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=3>
+<TITLE>The RegExpSyntax structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/RegExpSyntax/ structure</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+This structure implements the abstract syntax for regular expressions
+to which the concrete syntax translates and that is recognized by
+matching engines. <PP>
+
+
+<STRUCTURE STRID="RegExpSyntax">
+  <SIGBODY SIGID="REGEXP_SYNTAX" FILE=REGEXP-SYNTAX>
+    <SPEC>
+      <EXN>CannotParse
+    <SPEC>
+      <EXN>CannotCompile
+    <SPEC>
+      <SUBSTRUCT>CharSet<ID>ORD_SET
+        <WHERETYPE><ID>Key.ord_key</ID><TY>char</WHERETYPE>
+      </SUBSTRUCT>
+    <SPEC>
+      <DATATYPE><ID>syntax
+        <CONS>Group<TY>syntax
+        <CONS>Alt<TY>syntax list
+        <CONS>Concat<TY>syntax list
+        <CONS>Interval<TY>(syntax * int * int option)
+        <CONS>Option<TY>syntax
+        <CONS>Star<TY>syntax
+        <CONS>Plus<TY>syntax
+        <CONS>MatchSet<TY>CharSet.set
+        <CONS>NonmatchSet<TY>CharSet.set
+        <CONS>Char<TY>char
+        <CONS>Begin
+        <CONS>End
+      </DATATYPE>
+    <SPEC>
+      <VAL>addRange<TY>(CharSet.set * char * char) -> CharSet.set
+        <COMMENT>
+          <PROTOTY>
+          addRange (<ARG/s/, <ARG/c1/, <ARG/c2/)
+          </PROTOTY>
+          adds the range of characters from <ARG/c1/ to <ARG/c2/ to
+the character set <ARG/s/.
+    <SPEC>
+      <VAL>allChars<TY>CharSet.set
+        <COMMENT>
+          <PROTOTY>
+          allChars
+          </PROTOTY>
+           is a character set containing all the characters.
+</STRUCTURE>
+
+</INTERFACE>

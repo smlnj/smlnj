@@ -1,0 +1,27 @@
+!standard
+
+root.cm			../system
+
+smlnj			../system/smlnj
+SMLNJ-MLRISC		../../MLRISC/cm
+pickle-lib.cm		../compiler/Library/pickle
+
+pgraph.cm		../../pgraph
+cm			../cm
+compiler		../compiler
+
+SMLNJ-BASIS		../system/Basis
+SMLNJ-LIB		../../smlnj-lib
+SMLNJ-ML-YACC-LIB	../../ml-yacc/lib
+SMLNJ-ASDL-LIB		../../asdl/src/lib/sml
+smlnj-tdp		../../trace-debug-profile
+
+mlyacc-tool.cm		../../ml-yacc/tool
+grm-ext.cm		../../ml-yacc/tool
+mllex-tool.cm		../../ml-lex/tool
+lex-ext.cm		../../ml-lex/tool
+make-tool.cm		../cm/tools/make
+shell-tool.cm		../cm/tools/shell
+noweb-tool.cm		../cm/tools/noweb
+nw-ext.cm		../cm/tools/noweb
+dir-tool.cm		../cm/tools/dir

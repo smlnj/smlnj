@@ -1,0 +1,176 @@
+(* elabdata.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * A library defining data structures used by the SML/NJ elaborator.
+ *)
+Group
+	signature ELABDATA_CONTROL
+	signature ACCESS
+	signature DEB_INDEX
+	signature TYPES
+        signature OCCURRENCE
+	signature TYPESUTIL
+	signature TUPLES
+	signature ABSYN
+	signature SYMPATH
+	signature INVPATH
+	signature CONVERTPATHS
+	signature LAMBDA_VAR
+	signature STAMPS
+	signature ENT_PATH
+	signature VARIABLE
+	signature MODULES
+	signature MODULEUTIL
+	signature MODULE_ID
+	signature BINDINGS
+	signature STATICENV
+	signature BASICTYPES
+	signature ENTITY_ENV
+	signature PRIMOP_ID
+	signature PRIMOP
+	signature PPUTIL
+	signature PPTYPE
+	signature PPABSYN
+	signature PPMOD
+	signature PPMOD_DB
+	signature PPVAL
+	signature EQTYPES
+	signature EXPAND_TYCON
+	signature CONREP
+
+	structure ElabDataControl
+	structure Access
+	structure DebIndex
+	structure Types
+	structure PPType
+        structure Occurrence
+	structure TypesUtil
+	structure Tuples
+	structure Absyn
+	structure PPAbsyn
+	structure AbsynUtil
+	structure SymPath
+	structure InvPath
+	structure ConvertPaths
+	structure LambdaVar
+	structure Stamps
+	structure StampMap
+	structure EntPath
+	structure Variable
+	structure Modules
+	structure ModuleUtil
+	structure PPModules
+	structure PPModules_DB
+	structure ModuleId
+	structure EntityEnv
+	structure EntPathContext
+	structure Bindings
+	structure EqTypes
+	structure ExpandTycon
+	structure StaticEnv
+	structure Lookup
+	structure CompInfo
+	structure CoreSym
+	structure BasicTypes
+	structure GenModIdMap
+	structure CoreAccess
+	structure BrowseStatEnv
+	structure PrimopId
+	structure PPPrim
+	structure ArithOps
+	structure Primop
+	structure PrimopUtil
+	structure PrimopBind
+	structure PrimopBindings
+	structure CProto
+	structure CTypes
+	structure TKind
+	structure SigPropList
+	structure PPUtil
+	structure PPVal
+	structure ConRep
+
+is
+	main/edcontrol.sig
+	main/edcontrol.sml
+	main/compinfo.sml
+
+	basics/debindex.sig
+	basics/debindex.sml
+	basics/lambdavar.sig
+	basics/lambdavar.sml
+	basics/env.sig
+	basics/env.sml
+	basics/stamps.sig
+	basics/stamps.sml
+	basics/stampmap.sml
+	basics/coresym.sml
+	basics/access.sig
+	basics/access.sml
+	basics/sympaths.sig
+	basics/sympaths.sml
+	basics/tkind.sml
+	basics/sig-plist.sml
+
+	syntax/absyn.sig
+	syntax/absyn.sml
+	syntax/ppabsyn.sml
+	syntax/variable.sig
+	syntax/variable.sml
+	syntax/absynutil.sml
+	syntax/ppval.sml
+
+	types/types.sig
+	types/types.sml
+	types/pptype.sml
+	types/tuples.sml
+	types/basictypes.sig
+	types/basictypes.sml
+	types/occ.sig
+	types/occ.sml
+	types/typesutil.sig
+	types/typesutil.sml
+	types/conrep.sml
+
+	modules/modules.sig
+	modules/modules.sml
+	modules/ppmod.sml
+	modules/ppmod-db.sml
+	modules/entpath.sml
+	modules/epcontext.sml
+	modules/moduleutil.sig
+	modules/moduleutil.sml
+	modules/moduleid.sml
+	modules/entityenv.sig
+	modules/entityenv.sml
+	modules/eqtypes.sml
+	modules/expandtycon.sml
+
+	statenv/bindings.sig
+	statenv/bindings.sml
+	statenv/statenv.sig
+	statenv/statenv.sml
+	statenv/lookup.sig
+	statenv/lookup.sml
+	statenv/genmap.sml
+	statenv/coreacc.sml
+	statenv/browse.sml
+
+	prim/arithops.sml
+	prim/primop.sig
+	prim/primop.sml
+	prim/primop-bind.sml
+	prim/primop-id.sig
+	prim/primop-id.sml
+	prim/primop-util.sml
+	prim/ppprim.sml
+	prim/cproto.sml
+	prim/c-types.sml
+	prim/primop-bindings.sml
+
+	$smlnj/viscomp/basics.cm
+	$smlnj/viscomp/parser.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm
+	$smlnj/basis/basis.cm

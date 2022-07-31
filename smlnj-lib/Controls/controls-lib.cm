@@ -1,0 +1,40 @@
+(* controls-lib.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * An implementation of "controls" -- representing environment-configurable
+ * global state (flags, options, ...) of a program.
+ *
+ * author: Matthias Blume
+ *)
+
+Library
+
+  signature CONTROLS
+  structure Controls
+  signature CONTROL_SET
+  structure ControlSet
+  signature CONTROL_REGISTRY
+  structure ControlRegistry
+  signature CONTROL_UTIL
+  structure ControlUtil
+
+is
+
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
+  ../Util/smlnj-lib.cm
+#endif
+
+  control-reps.sml
+  controls-sig.sml
+  controls.sml
+  control-registry-sig.sml
+  control-registry.sml
+  control-set-sig.sml
+  control-set.sml
+  control-util-sig.sml
+  control-util.sml

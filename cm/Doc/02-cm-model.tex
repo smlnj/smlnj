@@ -1,0 +1,344 @@
+%!TEX root = manual.tex
+%
+
+\chapter{The CM model}
+
+\section{Basic philosophy}
+
+The venerable \CMD{make} of Unix~\cite{feldman79} is {\em
+target-oriented}\/: one starts with a main goal (target) and applies
+production rules (with associated actions such as invoking a compiler)
+until no more rules are applicable. The leaves of the resulting
+derivation tree\footnote{``Tree'' is figurative speech here since the
+derivation really yields a DAG.} can be seen as defining the set of
+source files that are used to make the main target.
+
+CM, on the other hand, is largely {\em source-oriented}\/: Whereas
+with {\bf make} one specifies the tree and lets the program derive the
+leaves, with CM one specifies the leaves and lets the program derive
+the tree.  Thus, the programmer writes down a list of sources, and CM
+will calculate and then execute a series of steps to make the
+corresponding program.  In {\bf make} terminology, this resulting
+program acts as the ``main goal'', but under CM it does not need to be
+explicitly named.  In fact, since there typically is no corresponding
+single file system object for it, a ``natural'' name does not even
+exist.
+
+For simple projects it is literally true that all the programmer has
+to do is tell CM about the set of sources: a description file lists
+little more than the names of participating ML source files. However,
+larger projects typically benefit from a hierarchical structuring.
+This can be achieved by grouping ML source files into separate
+libraries and library components.  Dependencies between such libraries
+have to be specified explicitly and must form an acyclic directed
+graph (DAG).
+
+CM's own semantics, particularly its dependency analysis, interact
+with the ML language in such a way that for any well-formed project
+there will be exactly one possible interpretation as far as static
+semantics are concerned.  Only well-formed projects are accepted by
+CM; projects that are not well-formed will cause error messages.
+(Well-formedness is {\em defined} to enforce a unique definition-use
+relation for ML definitions~\cite{blume:depend99}.)
+
+\section{Description files}
+
+Technically, a CM library is a (possibly empty) collection of ML
+source files and may also contain references to other libraries.  Each
+library comes with an export interface which specifies the set of all
+toplevel-defined symbols of the library that shall be exported to its
+clients (see \chapref{chap:exportcalculus}).  A library is
+described by the contents of its {\em description file}.\footnote{The
+description file may also contain references to input files for {\em
+tools} like {\tt ml-lex} or {\tt ml-yacc} that produce ML source
+files.  See \chapref{chap:classes}.}
+
+\noindent Example:
+
+\begin{lstlisting}[language=CM]
+  Library
+      signature BAR
+      structure Foo
+  is
+      bar.sig
+      foo.sml
+      helper.sml
+
+      $/basis.cm
+      $/smlnj-lib.cm
+\end{lstlisting}%
+
+This library exports two definitions, one for a structure named {\tt
+Foo} and one for a signature named {\tt BAR}.  The specification for
+such exports appear between the keywords {\tt Library} and {\tt is}.
+The {\em members} of the library are specified after the keyword {\tt
+is}.  Here we have three ML source files ({\tt bar.sig}, {\tt
+foo.sml}, and {\tt helper.sml}) as well as references to two external
+libraries ({\tt \$/basis.cm} and {\tt \$/smlnj-lib.cm}).  The entry
+{\tt \$/basis.cm} typically denotes the description file for the {\it
+Standard ML Basis Library}~\cite{reppy99:basis}; most programs will
+want to list it in their own description file(s).  The other library
+in this example ({\tt \$/smlnj-lib.cm}) is a library of data
+structures and algorithms that comes bundled with SML/NJ.
+
+\section{Invoking CM}
+
+Once a library has been set up as shown in the example above, one can
+load it into a running interactive session by invoking function {\tt
+CM.make}.  If the name of the library's description file is, say, {\tt
+fb.cm}, then one would type
+
+\begin{lstlisting}
+  CM.make "fb.cm";
+\end{lstlisting}%
+
+at SML/NJ's interactive prompt.  This will cause CM to
+
+\begin{enumerate}
+\item parse the description file {\tt fb.cm},
+\item locate all its sources and all its sub-libraries,
+\item calculate the dependency graph,
+\item issue warnings and errors (and skip the remaining steps) if
+necessary,
+\item compile those sources for which that is required,
+\item execute module initialization code,
+\item and augment the toplevel environment with bindings for exported
+symbols, i.e., in our example for {\tt signature BAR} and {\tt
+structure Foo}.
+\end{enumerate}
+
+CM does not compile sources that are not ``reachable'' from the
+library's exports.  For every other source, it will avoid
+recompilation if all of the following is true:
+
+\begin{itemize}
+\item The {\em binfile} for the source exists.
+\item The binfile has the same time stamp as the source.
+\item The current compilation environment for the source is precisely
+the same as the compilation environment that was in effect when the
+binfile was produced.
+\end{itemize}
+
+\section{Members of a library}
+
+Members of a library do not have to be listed in any particular order
+since CM will automatically calculate the dependency graph.  Some
+minor restrictions on the source language are necessary to make this
+work:
+\begin{enumerate}
+\item All top-level definitions must be {\em module} definitions
+(structures, signatures, functors, or functor signatures).  In other
+words, there can be no top-level type-, value-, or infix-definitions.
+\item For a given symbol, there can be at most one ML source file per
+library (or---more correctly---one file per library component; see
+\secref{sec:groups}) that defines the symbol at top level.
+\item If more than one of the listed libraries or components is
+exporting the same symbol, then the definition (i.e., the ML source
+file that actually defines the symbol) must be identical in all cases.
+\label{rule:diamond}
+\item The use of ML's {\bf open} construct is not permitted at the top
+level of ML files compiled by CM.  (The use is still ok at the
+interactive top level.)
+\end{enumerate}
+
+Note that these rules do not require the exports of imported libraries
+to be distinct from the exports of ML source files in the current
+library.  If an ML source file $f$ re-defines a name $n$ that is also
+imported from library $l$, then the disambiguating rule is that the
+definition from $f$ takes precedence over that from $l$ in all sources
+except $f$ itself.  Free occurences of $n$ in $f$ refer to $l$'s
+definition.  This rule makes it possible to easily write code for
+exporting an ``augmented'' version of some module.  Example:
+
+\begin{lstlisting}
+  structure A = struct (* defines augmented A *)
+      open A           (* refers to imported A *)
+      fun f x = B.f x + C.g (x + 1)
+  end
+\end{lstlisting}%
+
+Rule~\ref{rule:diamond} may come as a bit of a surprise considering
+that each ML source file can be a member of at most one library (see
+\secref{sec:multioccur}).  However, it is indeed possible for two
+libraries to (re-)export the ``same'' definition provided they both
+import that definition from a third library.  For example, let us
+assume that {\tt a.cm} exports a structure {\tt X} which was defined
+in {\tt x.sml}---one of {\tt a.cm}'s members.  Now, if both {\tt b.cm}
+and {\tt c.cm} re-export that same structure {\tt X} after importing
+it from {\tt a.cm}, it is legal for a fourth library {\tt d.cm} to
+import from both {\tt b.cm} and {\tt c.cm}.
+
+The full syntax for library description files also includes provisions
+for a simple ``conditional compilation'' facility (see
+\chapref{chap:preproc}), for access control (see
+\chapref{chap:access}), and it accepts ML-style nestable comments
+delimited by \verb|(*| and \verb|*)|.
+
+\section{Name visibility}
+
+In general, all definitions exported from members (i.e., ML source
+files, sublibraries, and components) of a library are visible in all
+other ML source files of that library.  The source code in those
+source files can refer to them directly without further qualification.
+Here, ``exported'' means either a top-level definition within an ML
+source file or a definition listed in a sublibrary's export list.
+
+If a library is structured into library components using {\em groups}
+(see \secref{sec:groups}), then---as far as name visibility is
+concerned---each component (group) is treated like a separate library.
+
+Cyclic dependencies among libraries, library components, or ML source
+files within a library are detected and flagged as errors.
+
+\section{Library components (groups)}
+\label{sec:groups}
+
+CM's group model eliminates a whole class of potential naming problems
+by providing control over name spaces for program linkage.  The group
+model in full generality sometimes requires bindings to be renamed at
+the time of import. As has been described
+separately~\cite{blume:appel:cm99}, in the case of ML this can also be
+achieved using ``administative'' libaries, which is why CM can get
+away with not providing more direct support for renaming.
+
+However, under CM, the term ``library'' does not only mean namespace
+management (as it would from the point of view of the pure group
+model) but also refers to actual file system objects (e.g., CM
+description files and stable library files).  It would be inconvenient
+if name resolution problems would result in a proliferation of
+additional library files.  Therefore, CM also provides the notion of
+library components (``groups'').  Name resolution for groups works
+like name resolution for entire libraries, but grouping is entirely
+internal to each library.
+
+When a library is {\em stabilized} (via {\tt CM.stabilize} -- see
+\secref{sec:stable}), the entire library is compiled to a single
+file (hence groups do not result in separate stable files).
+
+During development, each group has its own description file which will
+be referred to by the surrounding library or by other groups of that
+library. The syntax of group description files is the same as that of
+library description files with the following exceptions:
+
+\begin{itemize}
+\item The initial keyword {\tt Library} is replaced with {\tt Group}.
+It is followed by the name of the surrounding library's description
+file in parentheses.
+\item The export list can be left empty, in which case CM will provide
+a default export list: all exports from ML source files plus all
+exports from subcomponents of the component. from other libraries will
+not be re-exported in this case.\footnote{This default can be spelled
+out as {\tt source(-) group(-)}.  See
+\chapref{chap:exportcalculus}.}  (Notice that an export list that
+is not {\em syntactically} empty but which effectively contains zero
+symbols because of conditional compilation---see
+\chapref{chap:preproc}---does not count as being ``left empty'' in
+the above sense.  Instead, the result would be an almost certainly
+useless component with truly no exports.)
+\item There are some small restrictions on access control
+specifications (see \chapref{chap:access}).
+\end{itemize}
+
+As an example, let us assume that
+{\tt foo-utils.cm} contains the following text:
+
+%note: emacs gets temporarily confused by the single dollar
+\begin{lstlisting}[language=CM]
+  Group (foo-lib.cm)
+  is
+      set-util.sml
+      map-util.sml
+      $/basis.cm
+\end{lstlisting}%
+%$emacs unconfuse
+
+This description defines group {\tt foo-utils.cm} to have the
+following properties:
+
+\begin{itemize}
+\item it is a component of library {\tt foo-lib.cm} (meaning that only
+foo-lib.cm itself or other groups thereof may list {\tt foo-utils.cm} as one
+of their members)
+\item {\tt set-utils.sml} and {\tt map-util.sml} are ML source files
+belonging to this component
+\item exports from the Standard Basis Library are available when
+compiling these ML source files
+\item since the export list has been left blank, the only (implicitly
+specified) exports of this component are the top-level definitions in
+its ML source files
+\end{itemize}
+
+With this, the library description file {\tt foo-lib.cm} could list
+{\tt foo-utils.cm} as one of its members:
+
+\begin{lstlisting}[language=CM]
+  Library
+      signature FOO
+      structure Foo
+  is
+      foo.sig
+      foo.sml
+      foo-utils.cm
+      $/basis.cm
+\end{lstlisting}%
+%$emacs unconfuse
+
+No harm is done if {\tt foo-lib.cm} does not actually mention {\tt
+foo-utils.cm}.  In this case it could be that\linebreak {\tt
+foo-utils.cm} is mentioned indirectly via a chain of other components
+of {\tt foo-lib.cm}.  The other possibility is that it is not
+mentioned at all (in which case CM would never know about it, so it
+cannot complain).
+
+\section{Multiple occurences of the same member}
+\label{sec:multioccur}
+
+The following rules apply to multiple occurences of the same ML source
+file, the same library, or the same group within a program:
+
+\begin{itemize}
+\item Within the same description file, each member can be specified
+at most once.
+\item Libraries can be referred to freely from as many other groups or
+libraries as the programmer desires.
+\item A group cannot be used from outside the uniquely defined library
+(as specified in its description file) of which it is a component.
+However, within that library it can be referred to from arbitrarily
+many other groups.
+\item The same ML source file cannot appear more than once.  If an ML
+source file is to be referred to by multiple clients, it must first be
+``wrapped'' into a library (or---if all references are from within the
+same library---a group).
+\end{itemize}
+
+\section{Stable libraries}
+\label{sec:stable}
+
+CM distinguishes between libraries that are {\em under development}
+and libraries that are {\em stable}.  A stable library is created by a
+call of {\tt CM.stabilize} (see \secref{sec:api:compiling}).
+
+Access to stable libraries is subject to less internal
+consistency-checking and touches far fewer file-system
+objects. Therefore, it is typically more efficient.  Stable libraries
+play an additional semantic role in the context of access control (see
+\chapref{chap:access}).
+
+From the client program's point of view, using a stable library is
+completely transparent.  When referring to a library---regardless of
+whether it is under development or stable---one {\em always} uses the
+name of the library's description file.  CM will check whether there
+is a stable version of the library and provided that is the case use
+it.  This means that in the presence of a stable version, the
+library's actual description file does not have to physically exists
+(even though its name is used by CM to find the corresponding stable
+file).
+
+\section{Top-level groups}
+
+Mainly to facilitate some superficial backward-compatibility, CM also
+allows groups to appear at top level, i.e., outside of any library.
+Such groups must omit the parenthetical library specification and then
+cannot also be used within libraries. One could think of the top level
+itself as a ``virtual unnamed library'' whose components are these
+top-level groups.

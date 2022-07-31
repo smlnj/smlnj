@@ -1,0 +1,10 @@
+(* compiler.cm
+ *   - the traditional "structure Compiler"
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *)
+Library
+	structure Compiler
+is
+	$smlnj/compiler/current.cm
+	compiler.sml

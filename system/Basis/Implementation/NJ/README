@@ -1,0 +1,3 @@
+This directory contains SML/NJ specific stuff that needs to be
+compiled prior to compiling the compiler.
+

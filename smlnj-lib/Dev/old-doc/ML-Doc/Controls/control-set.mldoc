@@ -1,0 +1,110 @@
+<!-- control-set.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="The Fellowship of SML/NJ" YEAR=2007>
+<VERSION VERID="1.0" YEAR=2007 MONTH=5 DAY=16>
+<TITLE>The CONTROL_SET signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/CONTROL_SET/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+<!-- Some general introductory text -->
+
+<STRUCTURE STRID="ControlSet">
+  <OPAQUE>  <SIGBODY SIGID="CONTROL_SET" FILE=CONTROL-SET>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>control<TY>'a Controls.control
+    <SPEC>
+      <TYPE><TYPARAM>('a,'b)<ID>control_set
+    <SPEC>
+      <VAL>new<TY>unit -> ('a,'b) control_set
+        <COMMENT>
+          <PROTOTY>
+          new <ARG>()</ARG>
+          </PROTOTY>
+          <PP>
+	  creates a new control set.-
+        </COMMENT>
+    <SPEC>
+      <VAL>member<TY>(('a,'b) control_set * Atom.atom) -> bool
+        <COMMENT>
+          <PROTOTY>
+          member (<ARG>cs</ARG>, <ARG>at</ARG>)
+          </PROTOTY>
+          <PP>
+	  returns <CD>true</CD> if the control set <ARG>cd</ARG> contains a control
+	  with the name <ARG>at</ARG>.
+        </COMMENT>
+    <SPEC>
+      <VAL>find<TY>(('a,'b) control_set * Atom.atom) -> {ctl : 'a control, info : 'b} option
+        <COMMENT>
+          <PROTOTY>
+          find (<ARG>cs</ARG>, <ARG>at</ARG>)
+          </PROTOTY>
+          <PP>
+        </COMMENT>
+    <SPEC>
+      <VAL>insert<TY>(('a,'b) control_set * 'a control * 'b) -> unit
+        <COMMENT>
+          <PROTOTY>
+          insert (<ARG>cs</ARG>, <ARG>co</ARG>, <ARG>a</ARG>)
+          </PROTOTY>
+          <PP>
+        </COMMENT>
+    <SPEC>
+      <VAL>remove<TY>(('a,'b) control_set * Atom.atom) -> unit
+        <COMMENT>
+          <PROTOTY>
+          remove (<ARG>cs</ARG>, <ARG>at</ARG>)
+          </PROTOTY>
+          <PP>
+        </COMMENT>
+    <SPEC>
+      <VAL>infoOf<TY>('a,'b) control_set -> 'a control -> 'b option
+        <COMMENT>
+          <PROTOTY>
+          infoOf <ARG>cs</ARG> <ARG>co</ARG>
+          </PROTOTY>
+          <PP>
+        </COMMENT>
+    <SPEC>
+      <VAL>listControls<TY>('a,'b) control_set -> {ctl : 'a control, info : 'b} list
+        <COMMENT>
+          <PROTOTY>
+          listControls <ARG>cs</ARG>
+	  <PROTO>
+          listControls' (<ARG>cs</ARG>, <ARG>i</ARG>)
+          </PROTOTY>
+          <PP>
+          list the members; the list is ordered by priority.
+	  The listControls' function allows one to specify an obscurity level;
+	  controls with equal or higher obscurioty are omitted from the list.
+        </COMMENT>
+    <SPEC>
+      <VAL>app<TY>({ctl : 'a control, info : 'b} -> unit) -> ('a,'b) control_set -> unit
+        <COMMENT>
+          <PROTOTY>
+          app <ARG>f</ARG> <ARG>cs</ARG>
+          </PROTOTY>
+          <PP>
+          apply a function to the controls in a set.
+        </COMMENT>
+    <SPEC>
+      <VAL>stringControls<TY>'a Controls.value_cvt -> ('a,'b) control_set -> (string,'b) control_set
+        <COMMENT>
+          <PROTOTY>
+          stringControls <ARG>vc</ARG> <ARG>cs</ARG>
+          </PROTOTY>
+          <PP>
+          convert the controls in a set to string controls and create a new set for them.
+        </COMMENT>
+  </SIGBODY>
+</STRUCTURE>
+
+</INTERFACE>

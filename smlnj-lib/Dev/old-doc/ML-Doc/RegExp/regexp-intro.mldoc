@@ -1,0 +1,64 @@
+<!-- regexp-intro.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="Riccardo Pucella"
+  EMAIL="riccardo@research.bell-labs.com"
+  YEAR=1998>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=1>
+
+<TITLE>Introduction</TITLE>
+
+<SECTION>
+<HEAD>Introduction</HEAD>
+<PP>
+This is a regular expressions library. It is based on a decoupling
+of the surface syntax used to specify regular expressions (the
+frontend) and the engine that implements the matcher (the matcher). An
+abstract syntax is used to communicate between the front end and the
+back end of the system.
+<PP>
+Given a structure <CD/S1/ describing a surface syntax and a structure
+<CD/S2/ describing a matching engine, a regular expression package can
+be defined by applying the functor <FCTREF/RegExpFn/ like so:
+<CODE>
+RegExpFn (structure P=S1  structure E=S2)
+</CODE>
+<PP>
+To match a regular expression, one first needs to compile a
+representation in the surface syntax. The type of a compiled regular
+expression is given in the <SIGREF/REGEXP/ signature as: 
+<CODE>
+type regexp
+</CODE>
+<PP>
+Once a regular expression has been compiled, three functions are
+provided to perform the matching, <CD/find/, <CD/prefix/ and
+<CD/match/. These functions operate on readers as defined in the
+<CD/StringCvt/ structure of the Basis Library. A reader
+of type <CD/('a,'b) reader/ is a function <CD/'b -> ('a,'b) option/
+taking a stream of type <CD/'b/ and returning an element of type
+<CD/'a/ and the remainder of the stream, or <CD/NONE/ if the end of
+the stream is reached.
+<PP> 
+The function <CD/find/ returns a reader that searches a stream and
+attempts to match the given regular expression. The function
+<CD/prefix/ returns a reader that attempts to match the regular
+expression at the current position in the stream. The function
+<CD/match/ takes a list of regular expressions and functions and
+returns a reader that attempts to match one of the regular expressions
+at the current position in the stream. The function corresponding to
+the matched regular expression is invoked on the matching
+information. 
+<PP>
+Once a match is found, it is returned as a <CD/match_tree/ datatype
+This is a hierarchical structure describing the matches of the various
+subexpressions appearing in the matched regular expression. A match
+for an expression is a record containing the position of the match and
+its length. The root of the structure always describes the outermost
+match (the whole string matched by the regular expression). 
+<PP>
+
+</SECTION>

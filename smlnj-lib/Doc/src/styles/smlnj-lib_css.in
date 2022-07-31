@@ -1,0 +1,184 @@
+/* CSS for SML/NJ Library documentation
+ * This file overrides the default asciidoctor definitions
+ * in smlnj-lib-base.css.
+ */
+
+/* page layout */
+
+#layout-top-mask {  /* masks out scrolling material */
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  height: 2em;
+  width: 100%;
+  background-color: @BACKGROUND@;
+  z-index: 5;
+}
+
+#layout-main {
+  margin: 0.5em 0.5em 0.5em 0.5em;
+}
+
+#layout-banner-spacer {
+  position: relative;
+  width: 100%;
+  height: 10em;
+  clear: both;
+}
+
+#layout-banner {
+  margin: 0;
+  padding: 1.25em;
+  background-color: @BANNER_BACKGROUND@;
+  font-family: Arial, Helvetica, Geneva, sans-serif;
+  text-align: left;
+  -webkit-border-top-left-radius: 1em;
+  -webkit-border-top-right-radius: 1em;
+  -webkit-border-bottom-right-radius: 1em;
+  -moz-border-radius-topright: 1em;
+  -moz-border-radius-bottomright: 1em;
+  border-top-right-radius: 1em;
+  border-bottom-right-radius: 1em;
+  position: fixed;
+  top: 0.5em;  /* should match layout-main margin */
+  left: 0.5em;
+  right: 0.5em;
+  z-index: 10;
+}
+
+#layout-title {
+  height: 7.5em;
+  color: @TITLE_COLOR@;
+}
+
+#layout-title-main {
+  font-size: 4.0em;
+  margin: 0 0 5px;
+  color: inherit;
+}
+
+#layout-title-main a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#layout-title-description {
+  font-size: 2.4em;
+  margin: 0;
+  color: inherit;
+}
+
+#layout-title-description code {
+  color: inherit;
+  background-color: inherit;
+}
+
+#layout-logo {
+  height: 7.5em;
+  float: left;
+  width: 14em;
+}
+
+#layout-logo img {
+  height: 7.5em;
+  max-width: none; /* override smlnj-lib-base.css */
+}
+
+#layout-toc {
+  position: fixed;
+  left: 0.5em;
+  width: 15em;
+  top: 10em;
+  bottom: 0;
+  z-index: 2;
+  background-color: @BANNER_BACKGROUND@;
+  color: @TITLE_COLOR@;
+  overflow: auto;
+}
+
+#layout-content-box {
+  margin-left: 15em;
+  z-index: 0;
+}
+
+#layout-footer-box {
+  margin-left: 15em;
+  margin-top: 4.0em;
+  padding-left: 1.0em;
+  padding-right: 0.4em;
+  padding-top: 0.5em;
+}
+
+#layout-footer {
+  border-top: 2px solid @HR_COLOR@;
+}
+
+#layout-footer-text {
+  float: left;
+  font-size: 0.8em;
+  padding-top: 0.2em;
+  padding-bottom: 0.5em;
+  border-bottom: 2px solid @HR_COLOR@;
+  margin-bottom: 1em;
+}
+
+/* Navigation (aka TOC) */
+#toc {
+  margin-top: 2em;
+  margin-left: 0;
+  margin-bottom: 2em;
+}
+#toc>:first-child{margin-top:0}
+#toc>:last-child{margin-bottom:0}
+
+#toc a{
+  color: inherit;
+  background-color: inherit;
+  text-decoration: none;
+}
+
+#toc a:hover{
+  background-color: @TOC_HIGHLIGHT@;
+}
+
+#toc code{
+  color: inherit;
+  background-color: inherit;
+}
+
+ul.toc-lib-list{
+  font-size: 1.1em;
+  list-style-type:none;
+  padding: 0;
+  margin-left: 0;
+}
+
+li.toc-lib{
+  margin-left: 0;
+  margin-bottom: 0.2em;
+  padding: 2px;
+}
+
+ul.toc-page-list{
+  font-size: 0.9em;
+  list-style-type: none;
+  padding: 0;
+  margin-left: 1em;
+}
+
+li.toc-page{
+  margin-left: 0;
+  margin-bottom: 0.2em;
+  padding: 2px;
+}
+
+#toc-current {
+  color: blue;
+}
+
+/* additional code styling support */
+dt > code { color: #19177C } /* tok-nv in pygments */
+code > span.kw { color: @KW_COLOR@; font-weight: bold } /* tok-k in pygments */
+code > span.tv { color: #AA22FF } /* tok-nd in pygments */
+code > span.ty { color: #B00040 } /* tok-kt in pygments */
+code > span.con { color: @BIND_COLOR@; font-weight: bold } /* tok-nc in pygments */

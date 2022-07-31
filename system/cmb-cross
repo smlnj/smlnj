@@ -1,0 +1,176 @@
+#!/bin/sh
+#
+# COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# usage: cmb-cross [ -32 | -64 ] [ -z ] <TARGET>
+#	<TARGET>	-- one of amd64-unix or arm64-unix
+#
+# cross compile to the specified TARGET
+#
+
+usage() {
+  echo "usage: cmb-cross [ options ] <target>"
+  echo "  Options:"
+  echo "    -z            -- archive result as gzipped tar file"
+  echo "    -C<ctl>=<v>   -- control argument passed to compile command"
+  echo "    <target>      -- one of amd64-unix or arm64-unix"
+  exit 1
+}
+
+this=$0
+here=`pwd`
+cd ../..
+twoup=`pwd`
+cd $here
+
+CTL_FLAGS=
+MAKE_TARBALL=no
+TARGET=
+
+#
+# Parse command line
+#
+while [ "$#" != 0 ] ; do
+    arg=$1; shift
+    case $arg in
+    -32)
+	echo "$this: 32-bits not supported anymore"
+	usage
+	;;
+    -64) ;;
+    -z) MAKE_TARBALL=yes ;;
+    -C*) CTL_FLAGS="$CTL_FLAGS $arg" ;;
+    amd64-unix|arm64-unix)
+	TARGET=$arg
+	;;
+    *)
+	echo "$this: unknown argument \"$arg\""
+	usage
+	;;
+    esac
+done
+
+if [ x"$TARGET" = x ] ; then
+  usage
+fi
+
+to_lower() {
+  echo $@ | tr "[:upper:]" "[:lower:]"
+}
+
+to_upper() {
+  echo $@ | tr "[:lower:]" "[:upper:]"
+}
+
+# check linking command
+LINK=$twoup/bin/.link-sml
+if [ ! -x $LINK ] ; then
+    echo $this: link script $LINK is not operational.
+    exit 1
+fi
+
+# get host ARCH and OPSYS variables
+if [ -f $twoup/bin/.arch-n-opsys ]; then
+    ARCH_N_OPSYS=`$twoup/bin/.arch-n-opsys`
+    if [ "$?" = "0" ]; then
+	eval $ARCH_N_OPSYS
+    fi
+else
+    echo "$this: .arch-n-opsys is missing"
+    exit 1
+fi
+
+HOST_ARCH=$(to_upper $ARCH)
+HOST_OPSYS=$(to_upper $OPSYS)
+
+# determine the TARGET ARCH, OPSYS, SIZE, and ENDIANESS variables
+#
+case $TARGET in
+  amd64-unix)
+    architecture=amd64
+    TARGET_ARCH=AMD64;
+    TARGET_OPSYS=UNIX
+    TARGET_SIZE=64
+    TARGET_ENDIANESS=LITTLE
+    ;;
+  arm64-unix)
+    architecture=arm64
+    TARGET_ARCH=ARM64;
+    TARGET_OPSYS=UNIX
+    TARGET_SIZE=64
+    TARGET_ENDIANESS=LITTLE
+    ;;
+  *) echo "cmb-cross: unrecognized TARGET '$TARGET'"
+     exit 1
+  ;;
+esac
+
+# lower-case architecture name
+architecture=$(to_lower $TARGET_ARCH)
+
+unset VERSIONTOOL_BUMP_RELEASE
+
+echo "$this: build $TARGET-cross bin/boot files"
+../../bin/sml -DNO_PLUGINS \$smlnj/cmb.cm << XXXX
+#set (CMB.symval "CMB_CROSS") (SOME 1);
+#set (CMB.symval "ARCH_${HOST_ARCH}") NONE;
+#set (CMB.symval "OPSYS_${HOST_OPSYS}") NONE;
+#set (CMB.symval "ARCH_${TARGET_ARCH}") (SOME 1);
+#set (CMB.symval "OPSYS_${TARGET_OPSYS}") (SOME 1);
+#set (CMB.symval "TARGET_SIZE_${TARGET_SIZE}") (SOME 1);
+#set (CMB.symval "TARGET_${TARGET_ENDIANESS}_ENDIAN") (SOME 1);
+CMB.make' (SOME "$TARGET-cross");
+XXXX
+
+# the following is equivalent to running
+#
+#	./makeml -boot $TARGET-cross.boot.x86-unix -rebuild $architecture
+#
+echo "$this: cross compile to $TARGET"
+
+if [ $HOST_OPSYS = win32 ] ; then
+    SUFFIX=$(to_lower "${HOST_ARCH}-win64")
+else
+    SUFFIX=$(to_lower "${HOST_ARCH}-unix")
+fi
+CROSS_BIN_DIR="${TARGET}-cross.bin.${SUFFIX}"
+CROSS_BOOT_DIR="${TARGET}-cross.boot.${SUFFIX}"
+
+MODE="@SMLrebuild=${architecture}"
+
+CM_PATHCONFIG=${CM_PATHCONFIG:-$twoup/lib/pathconfig}
+export CM_PATHCONFIG
+
+cd $CROSS_BOOT_DIR
+
+echo $this: $LINK @SMLboot=BOOTLIST @SMLheap=sml $MODE $CTL_FLAGS
+if $LINK @SMLboot=BOOTLIST @SMLheap=sml $MODE $CTL_FLAGS ; then
+    # back to the system directory
+    #
+    cd $here
+    # the new boot/bin files will be in "${architecture}.boot.${TARGET}"
+    # and "${architecture}.bin.${TARGET}"; we rename them with the
+    # standard naming convention by replacing "${architecture}" with "sml"
+    #
+    for xxx in bin boot ; do
+	if [ -d "${architecture}.${xxx}.${TARGET}" ] ; then
+            rm -rf "sml.${xxx}.${TARGET}"
+	    mv "${architecture}.${xxx}.${TARGET}" "sml.${xxx}.${TARGET}"
+	else
+	    echo "$this: ${architecture}.${xxx}.${TARGET} is missing!"
+	    exit 1
+	fi
+    done
+    echo $this: New binfiles are ready.
+    # cleanup
+    #
+    rm -rf ${CROSS_BIN_DIR} ${CROSS_BOOT_DIR}
+else
+    echo $this: Something broke.
+    exit 1
+fi
+
+if [ $MAKE_TARBALL = "yes" ] ; then
+  tar -cf - sml.boot.${TARGET} | gzip > boot.$TARGET.tgz
+fi

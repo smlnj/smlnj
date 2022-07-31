@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Special Characters [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for soft hyphens, fixed-width and zero-width spaces, joining controls, and ligatures. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="soft hyphens, en spaces, em spaces, thin spaces, zero-width spaces, ligatures">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="entities" title="Characters">
+	<link rel="next" href="id" title="Common Attributes">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Characters: Special</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="entities" rel="prev" accesskey="P" title="Prior: Characters">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="id" rel="next" accesskey="N" title="Next: Common Attributes"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Special Characters</h1>
+
+	<div class="section" id="shy">
+		<h2>Soft hyphens (<a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#h-9.3.3" title="HTML 4.0 Specification">&sect;9.3.3</a>)</h2>
+
+		<div class="bodytext">
+			<p>A <dfn>soft hyphen</dfn> (<code class="entity">&amp;shy;</code>) indicates where an <em>optional word break</em> may occur. When a soft hyphen breaks a word between one line and the next, a hyphen character is displayed at the end of the first line. When a soft hyphen does not break a word between lines, the hyphen must not be displayed.</p>
+
+			<p>Soft hyphens are vital for text that must be displayed on a tiny screen or in a narrow frame. Web browsers have no excuse for rendering them incorrectly, when they can be minimally compliant by ignoring them completely.</p>
+
+			<p class="note">Although technically, the <code class="entity">&amp;shy;</code> character entity was defined in <abbr>HTML</abbr> 3.2, I&rsquo;ll treat soft hyphens as a new feature of <abbr>HTML</abbr> 4.0. Until <abbr>HTML</abbr> 4.0 explicitly spelled out how they should work, soft hyphens had ambiguous semantics and a <a href="http://www.cs.tut.fi/~jkorpela/shy.html" title="&ldquo;Soft Hyphen (SHY) - a hard problem?&rdquo; by Jukka Korpela">history of contradictory interpretations</a>.</p>
+			<p class="note">In addition to the soft hyphen, there is also a hard hyphen (<code class="entity">&amp;#8208;</code> or <code class="entity">&amp;#x2010;</code>) which always renders, and a nonbreaking hyphen character (<code class="entity">&amp;#8209;</code> or <code class="entity">&amp;#x2011;</code>), for hyphens that do not break words across lines.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>For the following test, you may have to resize your screen or window so that a hyphenated word could be broken at the end of a line. (Widths of 80 columns and 640 pixels worked in local testing.)</p>
+
+		
+			<div class="blockcode">
+			The 1992 <em class="html">&lt;cite></em>Guinness Book of World Records<em class="html">&lt;/cite></em> calls the 29<em class="html4"><em class="entity">&amp;#8208;</em></em>letter<br><br>
+			<em class="html">&lt;em></em>floc<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ci<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>nau<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ci<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em><br>
+			ni<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>hil<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>i<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>pil<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>i<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em><br>
+			fi<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ca<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>tion<em class="html">&lt;/em></em><br><br>
+			<em class="html4">&lt;q></em>the longest real word in <em class="html">&lt;cite></em>Oxford English Dictionary<em class="html">&lt;/cite><em class="html4">&lt;/q></em></em>, dismissing the 45<em class="html4"><em class="entity">&amp;#8208;</em></em>letter<br><br>
+			<em class="html">&lt;em></em>pneu<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>mo<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>no<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ul<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>tra<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em><br>
+			mi<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>cro<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>scop<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ic<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em><br>
+			sili<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>co<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>vol<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ca<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>no<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em><br>
+			co<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>ni<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>o<em class="html"><em class="entity"><strong class="tested">&amp;shy;</strong></em></em>sis<em class="html">&lt;/em></em><br><br>
+			as <em class="html4">&lt;q></em>the longest made<em class="html4"><em class="entity">&amp;#8209;</em></em>up word in the <em class="html">&lt;cite></em>Oxford English Dictionary<em class="html">&lt;/cite><em class="html4">&lt;/q></em></em>.
+		</div>
+		<p class="note">Line breaks have been added to the above source for readability. The sample below consists of a single line.</p>
+
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+			The 1992 <cite>Guinness Book of World Records</cite> calls the 29&#8208;letter <em>floc&shy;ci&shy;nau&shy;ci&shy;ni&shy;hil&shy;i&shy;pil&shy;i&shy;fi&shy;ca&shy;tion</em> <q>the longest real word in the <cite>Oxford English Dictionary</cite></q>, dismissing the 45&#8208;letter <em>pneu&shy;mo&shy;no&shy;ultra&shy;mi&shy;cro&shy;scop&shy;ic&shy;sili&shy;co&shy;vol&shy;ca&shy;no&shy;co&shy;ni&shy;o&shy;sis</em> as <q>the longest made&#8209;up word in the <cite>Oxford English Dictionary</cite></q>.
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=shy">shy</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=33798">#33798</a>, <a href="http://bugs.kde.org/show_bug.cgi?id=33855">#33855</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="enemthin">
+		<h2>En spaces, em spaces, and thin spaces (<a class="specsect" href="http://www.w3.org/TR/html4/sgml/entities.html" title="HTML 4.0 Specification">&sect;24</a>)</h2>
+
+		<div class="bodytext">
+			<p><abbr>HTML</abbr> 4.0 has named entities for three fixed&#8208;width spaces: the en space, the em space, and the thin space. Unlike ordinary spaces, which may vary in width when text is justified, the en, em, and thin spaces should not change in width.</p>
+			<p>The fixed&#8208;width spaces are not <a href="glossary#whitespace" class="local" title="Glossary" rel="glossary">white space characters</a>, so two of them in sequence should not collapse into a single space. They should not be replaced by line breaks at the end of the line, though line breaks may occur immediately after them.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+		<em class="html">&lt;dl></em><br>
+			<div class="indent">
+			<em class="html">&lt;dt></em>space<br>
+			<em class="html">&lt;dd></em>The width of a space varies with the display font.<br>
+			<em class="html">&lt;dt><em class="entity">&amp;amp;</em></em>thinsp;<br>
+			<em class="html">&lt;dd></em>MathML<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>defines<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>thin<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>spaces<br>
+			<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>as<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>spaces<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>of<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>width<br>
+			<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>3<em class="html4"><em class="entity ">&amp;frasl;</em></em>18<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>as<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>wide<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>as<br>
+			<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>an<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>em<em class="html4"><em class="entity"><strong class="tested">&amp;thinsp;</strong></em></em>space.<br>
+			<em class="html">&lt;dt><em class="entity">&amp;amp;</em></em>ensp;<br>
+			<em class="html">&lt;dd></em>En<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em>spaces<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em>are<em class="html"><em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong>&amp;frac12;<strong class="tested">&amp;ensp;</strong></em></em></em><br>
+			as<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em>wide<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em>as<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em><br>
+			an<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em>em<em class="html4"><em class="entity"><strong class="tested">&amp;ensp;</strong></em></em>space.<br>
+			<em class="html">&lt;dt><em class="entity">&amp;amp;</em></em>emsp;<br>
+			<em class="html">&lt;dd></em>The<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>width<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>of<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>an<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>em<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em><br>
+			space<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>is<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>traditionally<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em><br>
+			equal<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>to<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>the<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>point<em class="html4"><em class="entity"><strong class="tested">&amp;emsp;</strong></em></em>size.<br>
+			</div>
+		<em class="html">&lt;/dl></em>
+		</div>
+		<p class="note">Line breaks have been added above for readability.</p>
+
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+		<dl>
+			<dt>space
+			<dd>The width of a space varies with the display font.
+			<dt>&amp;thinsp;
+			<dd>MathML&thinsp;defines&thinsp;thin&thinsp;spaces&thinsp;as&thinsp;spaces&thinsp;3&frasl;18&thinsp;as&thinsp;wide&thinsp;as&thinsp;an&thinsp;em&thinsp;space.
+			<dt>&amp;ensp;
+			<dd>En&ensp;spaces&ensp;are&ensp;&frac12;&ensp;as&ensp;wide&ensp;as&ensp;an&ensp;em&ensp;space.
+			<dt>&amp;emsp;
+			<dd>The&emsp;width&emsp;of&emsp;an&emsp;em&emsp;space&emsp;is&emsp;traditionally&emsp;equal&emsp;to&emsp;the&emsp;point&emsp;size.
+		</dl>
+		</div>
+		</div>
+	</div>
+
+	<div class="section" id="zws">
+		<h2>Zero&#8208;width spaces (<a class="specsect" href="http://www.w3.org/TR/html4/struct/text.html#h-9.1" title="HTML 4.0 Specification">&sect;9.1</a>)</h2>
+
+		<div class="bodytext">
+			<p>Long lines usually wrap at spaces between words, but in languages without spaces between words (like Thai), sentences may appear as if they were one continuous word.</p>
+			<p><a href="glossary#zero_width_space" class="local" title="Glossary" rel="glossary">Zero&#8208;width spaces</a> put &ldquo;invisible spaces&rdquo; between words where they can wrap to the next line.<sup><a href="#invisiblezws" class="footnote">[1]</a></sup>. Zero&#8208;width spaces divide long sequences of characters into smaller units that may wrap from one line to the next.</p>
+			<p class="sugg"><abbr>HTML</abbr> 4.0 lacks a character entity name like <code class="entity">&amp;zws;</code>, so we must use a numeric reference like <code class="entity">&amp;#8203;</code> or <code class="entity">&amp;#x200B;</code>. (<strong><abbr>MathML</abbr></strong> uses the entity name <code class="entity">&amp;ZeroWidthSpace;</code> for this character.)</p>
+			<p class="note">Zero&#8208;width spaces function similarly to the proprietary <code class="element">&lt;wbr></code> <em>word break</em> element in early versions of <em class="browser">Netscape</em>.</p>
+			<p class="footnote" id="invisiblezws"><sup>[1]</sup> Invisible in theory, anyway. Some Web browsers display zero&#8208;width spaces as a visible <a href="glossary#unknown_character_glyph" class="local" title="Glossary" rel="glossary">unknown&#8208;character glyph</a>, which is technically not incorrect. Perhaps a future version of the standard will mandate how zero&#8208;width spaces should be rendered, as <abbr>HTML</abbr> 4.0 does with soft hyphens.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>The following sentence contains a very long number, in which I&rsquo;ve helpfully included zero&#8208;width spaces every 5 digits. In a visual Web browser that doesn&rsquo;t treat zero&#8208;width spaces as white space, this page will probably scroll horizontally.</p>
+
+		
+			<div class="blockcode">
+			<em class="html4"><em class="entity">&amp;pi;</em></em>=3.14159<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>26535<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>89793<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em><br>
+			23846<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>26433<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>83279<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>50288<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em><br>
+			41971<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>69399<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>37510<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>58209<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em><br>
+			74944<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>59230<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>78164<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>06286<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em><br>
+			20899<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>86280<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>34825<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em>34211<em class="html4"><em class="entity"><strong class="tested">&amp;#8203;</strong></em></em><br>
+			70679<em class="html4"><em class="entity">&amp;hellip;</em></em>
+		</div>
+		<p class="note">Line breaks have been added to the above source for readability. The sample below consists of a single line.</p>
+
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+			&pi;=3.14159&#8203;26535&#8203;89793&#8203;23846&#8203;26433&#8203;83279&#8203;50288&#8203;41971&#8203;69399&#8203;37510&#8203;58209&#8203;74944&#8203;59230&#8203;78164&#8203;06286&#8203;20899&#8203;86280&#8203;34825&#8203;34211&#8203;70679&hellip;
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=zws">zws</a>.</p>
+		<p class="note kde">Related <em class="browser">Konqueror</em> bug reports: <a href="http://bugs.kde.org/show_bug.cgi?id=29575">#29575</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="zwj">
+		<h2>Joining Controls (<a class="specsect" href="http://www.w3.org/TR/html4/struct/dirlang.html#h-8.2.5" title="HTML 4.0 Specification">&sect;8.2.5</a>)</h2>
+
+		<div class="bodytext">
+			<p>In Arabic scripts, individual characters join with following ones. However, sometimes Web browsers must be informed to join characters that normally do not, or not to join characters that normally do.</p>
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/struct/dirlang.html#h-8.2.5" title="HTML 4.0 Specification: 8 Language and Text Direction"><code class="entity">&amp;zwnj;</code></a> entity prevents joining where joining would occur, but should not. The <a class="specsect" href="http://www.w3.org/TR/html4/struct/dirlang.html#h-8.2.5" title="HTML 4.0 Specification: 8 Language and Text Direction"><code class="entity">&amp;zwj;</code></a> entity forces joining when it would not occur, but should.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>Here is an example of <code class="entity">&amp;zwj;</code> and <code class="entity">&amp;zwnj;</code> being used with Devanagari characters.</p>
+		
+			<div class="blockcode">
+			<em class="html">&lt;p><em class="entity">&amp;#2325;&amp;#2381;</em></em> + <em class="html"><em class="entity">&amp;#2340;</em></em> = <em class="html"><em class="entity">&amp;#2325;&amp;#2381;&amp;#2340;</em></em> (a glyph of kta)<em class="html">&lt;/p></em><br>
+			<em class="html">&lt;p><em class="entity">&amp;#2325;&amp;#2381;</em></em> + <em class="html"><em class="entity">&amp;amp;</em></em>zwj; + <em class="html"><em class="entity">&amp;#2340;</em></em> = <em class="html"><em class="entity">&amp;#2325;&amp;#2381;<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>&amp;#2340;</em></em> (half<em class="html4"><em class="entity">&amp;#8208;</em></em>ka and ta)<em class="html">&lt;/p></em><br>
+			<em class="html">&lt;p><em class="entity">&amp;#2325;&amp;#2381;</em></em> + <em class="html"><em class="entity">&amp;amp;</em></em>zwnj; + <em class="html"><em class="entity">&amp;#2340;</em></em> = <em class="html"><em class="entity">&amp;#2325;&amp;#2381;<em class="html4"><em class="entity"><strong class="tested">&amp;zwnj;</strong></em></em>&amp;#2340;</em></em> (ka<em class="html4"><em class="entity">&amp;#8208;</em></em>halant and ta)<em class="html">&lt;/p></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result4">
+			<p>&#2325;&#2381; + &#2340; = &#2325;&#2381;&#2340; (a glyph of kta)</p>
+			<p>&#2325;&#2381; + &amp;zwj; + &#2340; = &#2325;&#2381;&zwj;&#2340; (half&#8208;ka and ta)</p>
+			<p>&#2325;&#2381; + &amp;zwnj; + &#2340; = &#2325;&#2381;&zwnj;&#2340; (ka&#8208;halant and ta)</p>
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=202352">#202352</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="ligature">
+		<h2>Ligatures</h2>
+
+		<div class="bodytext">
+			<p>In English&#8208;language text, <code class="entity">&amp;zwj;</code> may be used to form <a href="glossary#ligature" class="local" title="Glossary" rel="glossary"><em>ligatures</em></a>.</p>
+			<p>The MacOS character sets contains ligatures for &ldquo;fi&rdquo; and &ldquo;fl&rdquo;. Many fonts developed for both MacOS and Microsoft Windows contain the five main f&#8208;ligatures.</p>
+
+			<table summary="Common ligatures are ff (&#64256;), fi (&#64257;), fl (&#64258;), ffi (&#64259;), ffl (&#64260;), and st (&#64262;).">
+				<col><col><col class="unicode">
+				<thead>
+					<tr><th scope="col">Ligature</th><th scope="col">Entity</th><th scope="col">Character</th></tr>
+				<tbody>
+					<tr><td>ff</td><td><code class="entity">&amp;#64256;</code></td><td>&#64256;</td></tr>
+					<tr><td>fi</td><td><code class="entity">&amp;#64257;</code></td><td>&#64257;</td></tr>
+					<tr><td>fl</td><td><code class="entity">&amp;#64258;</code></td><td>&#64258;</td></tr>
+					<tr><td>ffi</td><td><code class="entity">&amp;#64259;</code></td><td>&#64259;</td></tr>
+					<tr><td>ffl</td><td><code class="entity">&amp;#64260;</code></td><td>&#64260;</td></tr>
+					<tr><td>st</td><td><code class="entity">&amp;#64262;</code></td><td>&#64262;</td></tr>
+			</table>
+
+			<p>However, using these character numbers with a typeface that does not support them could result in <a href="glossary#unknown_character_glyph" class="local" title="Glossary" rel="glossary">unknown&#8208;character glyphs</a>. Instead, you could request these ligatures with zero&#8208;width joiners, allowing Web browsers that cannot generate them to gracefully degrade to unjoined characters.</p>
+			<p>Zero&#8208;width joiners may also request ligatures without official characters in Unicode. Germanic typefaces sometimes have traditional ligatures for &ldquo;ch&rdquo;, &ldquo;ck&rdquo;, and &ldquo;tz&rdquo;. Adobe makes some fancy OpenType fonts with ligatures for &ldquo;fj&rdquo;, &ldquo;ffj&rdquo;, &ldquo;Th&rdquo;, &ldquo;ct&rdquo;, and &ldquo;sp&rdquo;.</p>
+
+			<p class="note">Using <code class="entity">&amp;zwj;</code> to form ligatures in Latin text is controversial. Some think <code class="entity">&amp;zwj;</code> should be used for ligatures only in contexts that absolutely require them, and consider it an abuse to request ligatures when unjoined letters convey the same meaning.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>The following text requests the five main f&#8208;ligatures. Your Web browser should either join the letters, or gracefully degrade by rendering them as separate letters. The zero&#8208;width joiner itself should always be invisible.</p>
+
+		
+			<div class="blockcode">
+			The f<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>lower in the f<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>ile made the of<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>f<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>ice staf<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>f snif<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>f<em class="html4"><em class="entity"><strong class="tested">&amp;zwj;</strong></em></em>le.
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result5">
+			The f&zwj;lower in the f&zwj;ile made the of&zwj;fice staf&zwj;f snif&zwj;f&zwj;le.
+		</div>
+
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Ligatures">Ligatures</a>.</p>
+		</div>
+	</div>
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+

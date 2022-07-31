@@ -1,0 +1,247 @@
+(* basis.cm
+ *
+ * This is the default SML/NJ Basis, which includes the latest updates (and proposed changes)
+ * to the Standard ML Basis Library (see https://github.com/SMLFamily/BasisLibrary).
+ *
+ * Copyright (c) 2020 by The Fellowship of SML/NJ
+ *)
+
+Library
+      (* Basis *)
+	signature ARRAY
+	signature ARRAY_SLICE
+	signature ARRAY2
+	signature BIN_IO
+	signature BIT_FLAGS
+	signature BOOL
+	signature BYTE
+	signature CHAR
+	signature COMMAND_LINE
+	signature DATE
+	signature GENERAL
+	signature IEEE_REAL
+	signature IMPERATIVE_IO
+	signature INT_INF
+	signature INTEGER
+	signature IO
+	signature LIST
+	signature LIST_PAIR
+	signature MATH
+	signature MONO_ARRAY
+	signature MONO_ARRAY_SLICE
+	signature MONO_ARRAY2
+	signature MONO_VECTOR
+	signature MONO_VECTOR_SLICE
+	signature OPTION
+	signature OS
+	signature OS_FILE_SYS
+	signature OS_IO
+	signature OS_PATH
+	signature OS_PROCESS
+	signature PACK_REAL
+	signature PACK_WORD
+	signature PRIM_IO
+	signature REAL
+	signature STREAM_IO
+	signature STRING
+	signature STRING_CVT
+	signature SUBSTRING
+	signature TEXT
+	signature TEXT_IO
+	signature TEXT_STREAM_IO
+	signature TIME
+	signature TIMER
+	signature VECTOR
+	signature VECTOR_SLICE
+	signature WORD
+
+	signature EITHER	(* proposal 2015-002 *)
+	signature FN		(* proposal 2015-005 *)
+	signature REF		(* proposal 2015-007 *)
+	signature MONO_BUFFER	(* proposal 2018-001 *)
+	signature UNIVERSAL	(* proposal 2020-001 *)
+
+	signature SML90
+
+      (* SML/NJ specific *)
+	signature SIGNALS
+
+	signature CLEAN_UP
+	signature CONT
+	signature INTERVAL_TIMER
+	signature INTERNALS
+	signature GC
+	signature SYS_INFO
+	signature WEAK
+	signature SUSP
+	signature SML_OF_NJ
+
+	signature UNSAFE_OBJECT
+	signature UNSAFE_ARRAY
+	signature UNSAFE_VECTOR
+	signature UNSAFE_MONO_ARRAY
+	signature UNSAFE_MONO_VECTOR
+	signature UNSAFE
+
+      (* Basis *)
+	structure Array
+	structure Array2
+	structure ArraySlice
+	structure BinIO
+	structure BinPrimIO
+	structure Bool
+	structure Byte
+	structure Char
+	structure CharArray
+	structure CharArraySlice
+	structure CharVector
+	structure CharVectorSlice
+	structure CommandLine
+	structure Date
+	structure FixedInt
+	structure General
+	structure IEEEReal
+	structure Int
+	structure Int32
+	structure Int64
+	structure IntInf
+	structure IO
+	structure LargeInt
+	structure LargeReal
+	structure LargeWord
+	structure List
+	structure ListPair
+	structure Math
+	structure Option
+	structure OS
+	structure PackReal64Big
+	structure PackReal64Little
+	structure PackWord16Big
+	structure PackWord16Little
+	structure PackWord32Big
+	structure PackWord32Little
+	structure PackWord64Big
+	structure PackWord64Little
+	structure Position
+	structure Real
+	structure Real64
+	structure Real64Array
+	structure Real64ArraySlice
+	structure Real64Vector
+	structure Real64VectorSlice
+	structure RealArray
+	structure RealArraySlice
+	structure RealVector
+	structure RealVectorSlice
+	structure String
+	structure StringCvt
+	structure Substring
+	structure SysWord
+	structure Text
+	structure TextIO
+	structure TextPrimIO
+	structure Time
+	structure Timer
+	structure Vector
+	structure VectorSlice
+	structure Word
+	structure Word32
+	structure Word64
+	structure Word8
+	structure Word8Array
+	structure Word8ArraySlice
+	structure Word8Vector
+	structure Word8VectorSlice
+
+(* target-size dependent modules *)
+#if defined(SIZE_32)
+	structure Int31
+	structure Word31
+#else (* 64-bits *)
+	structure Int63
+	structure Word63
+#endif
+
+	structure Either	(* proposal 2015-002 *)
+	structure Fn		(* proposal 2015-005 *)
+	structure Ref		(* proposal 2015-007 *)
+	structure CharBuffer	(* proposal 2018-001 *)
+	structure Word8Buffer	(* proposal 2018-001 *)
+	structure Universal	(* proposal 2020-001 *)
+
+	structure SML90
+
+	functor PrimIO
+
+	(* SML/NJ specific *)
+	structure Signals
+	structure Unsafe
+	structure SMLofNJ
+	structure Lazy
+
+#if defined(OPSYS_UNIX) orelse defined(OPSYS_WIN32)
+	(* Sockets (common part) *)
+	signature NET_HOST_DB
+	signature NET_PROT_DB
+	signature NET_SERV_DB
+
+	signature SYNCHRONOUS_SOCKET
+	signature SOCKET
+	signature INET_SOCK
+	signature GENERIC_SOCK
+
+	structure GenericSock
+	structure NetHostDB
+	structure NetProtDB
+	structure NetServDB
+	structure Socket
+	structure INetSock
+#endif
+
+#if defined(OPSYS_UNIX)
+	(* Posix *)
+	signature POSIX_ERROR
+	signature POSIX_SIGNAL
+	signature POSIX_PROCESS
+	signature POSIX_PROC_ENV
+	signature POSIX_FILE_SYS
+	signature POSIX_IO
+	signature POSIX_SYS_DB
+	signature POSIX_TTY
+	signature POSIX
+	structure Posix
+
+	(* Unix *)
+	signature UNIX_SIGNALS
+	structure UnixSignals
+	signature UNIX
+	structure Unix
+
+	(* Sockets *)
+	signature NET_DB
+	signature UNIX_SOCK
+
+	structure NetDB
+	structure UnixSock
+
+#elif defined (OPSYS_WIN32)
+
+	signature WIN32_GENERAL
+	signature WIN32_PROCESS
+	signature WIN32_FILESYS
+	signature WIN32_IO
+	signature WIN32
+
+	structure Win32
+
+	signature WINDOWS_KEY
+	signature WINDOWS_REG
+	signature WINDOWS_CONFIG
+	signature WINDOWS_DDE
+	signature WINDOWS
+
+	structure Windows
+#endif
+
+is
+	basis-common.cm

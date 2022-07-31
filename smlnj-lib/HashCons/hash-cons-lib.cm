@@ -1,0 +1,39 @@
+(* hash-cons-lib.cm
+ *
+ * COPYRIGHT (c) 2001 Bell Labs, Lucent Technologies
+ *
+ * This library supports the implementation of hash-consed of data structures. 
+ *)
+
+Library
+
+  signature HASH_CONS
+  signature HASH_CONS_MAP
+  signature HASH_CONS_SET
+
+  structure HashCons
+  structure HashConsAtom
+  structure HashConsMap
+  structure HashConsString
+  structure HashConsSet
+
+  functor HashConsGroundFn
+
+is
+
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
+  ../Util/smlnj-lib.cm
+#endif
+
+  hash-cons-atom.sml
+  hash-cons-ground-fn.sml
+  hash-cons-map-sig.sml
+  hash-cons-map.sml
+  hash-cons-sig.sml
+  hash-cons.sml
+  hash-cons-set-sig.sml
+  hash-cons-set.sml
+  hash-cons-string.sml

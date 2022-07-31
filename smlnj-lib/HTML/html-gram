@@ -1,0 +1,693 @@
+(* html-gram
+ *
+ * COPYRIGHT (c) 1996 AT&T Research.
+ *
+ * This grammar parses HTML 3.2.  Note that it does not enforce exclusions
+ * (for the content of FORM, PRE, etc).  Exclusions should be enforced as
+ * a second pass over the parse tree.
+ *)
+
+fun textList [text] = text
+  | textList l = HTML.TextList l
+
+fun blockList [blk] = blk
+  | blockList l = HTML.BlockList l
+
+fun textBlock l = HTML.TextBlock(textList l)
+    
+(* The elements of a definition list (<DL>) are tags (<DT>) and items (<DD>).
+ * To avoid shift/reduce problems, we parse them and then group them.
+ *)
+datatype deflist_item
+  = DL_tag of HTML.text
+  | DL_item of HTML.block
+
+fun groupDefListContents [] = []
+  | groupDefListContents (h :: t) = let
+      fun gdlc (DL_tag tag, []) = ({dt=[tag], dd=HTML.BlockList[]}, [])
+	| gdlc (DL_tag tag, h :: t) = let
+	    val ({dt, dd}, r) = gdlc (h, t)
+	    in
+	      ({dt = tag :: dt, dd = dd}, r)
+	    end
+	| gdlc (DL_item blk, r) = ({dt=[],dd=blk}, groupDefListContents r)
+      in
+	op :: (gdlc (h, t))
+      end
+
+(* A list of Text, paragraphs and blocks requires grouping the Text items and
+ * making an implicit paragraph.  We cannot directly use TextList because of
+ * conflicts.
+ *)
+datatype blklist_item
+  = BL_text of HTML.text list
+  | BL_block of HTML.block list
+
+fun consText (txt, BL_text tl :: r) = BL_text(txt::tl) :: r
+  | consText (txt, l) = BL_text[txt] :: l
+
+fun consBlock (blk, BL_block bl :: r) = BL_block(blk::bl) :: r
+  | consBlock (blk, l) = BL_block[blk] :: l
+
+fun mkBlock blks = let
+      fun f (BL_text tl) = textBlock tl
+	| f (BL_block bl) = blockList bl
+      in
+	blockList(List.map f blks)
+      end
+
+fun mkBody blks = HTML.BODY{
+	background = NONE,
+	bgcolor = NONE,
+	text = NONE,
+	link = NONE,
+	vlink = NONE,
+	alink = NONE,
+	content = mkBlock blks
+      }
+
+%%
+
+(* %pure *)
+%verbose
+
+%nonterm Document of HTML.html
+       | StartHTML of HTML.cdata option
+       | EndHTML
+       | Head of HTML.head_content list
+       | StartHEAD
+       | EndHEAD
+       | HeadContents of HTML.head_content list
+       | HeadElements of HTML.head_content list
+       | HeadElement of HTML.head_content
+       | Body of HTML.body
+       | StartBODY
+       | EndBODY
+       | BodyContent of HTML.block
+       | BodyContent0 of HTML.body
+       | BodyContent1 of blklist_item list
+       | BodyContent2 of blklist_item list
+       | BodyElement of HTML.block
+       | AddressContent1 of blklist_item list
+       | AddressContent2 of blklist_item list
+       | BlockWOIndex of HTML.block
+       | Block of HTML.block
+       | Paragraph of HTML.block
+       | List of HTML.block
+       | ListItemList of HTML.list_item list
+       | ListItem of HTML.list_item
+       | DLItemList of deflist_item list
+       | DLItem of deflist_item
+       | Flow1 of blklist_item list
+       | Flow2 of blklist_item list
+       | EndLI
+       | EndDT
+       | EndDD
+       | Preformatted of HTML.block
+       | optCaption of HTML.caption option
+       | TableRowList of HTML.tr list
+       | TableRow of HTML.tr
+       | TableCellList of HTML.table_cell list
+       | TableCell of HTML.table_cell
+       | TextList of HTML.text
+       | TextList' of HTML.text list
+       | TextWOScript of HTML.text
+       | Text of HTML.text
+       | Font of HTML.text
+       | Phrase of HTML.text
+       | Special of HTML.text
+       | AreaList of HTML.area list
+       | Form of HTML.text
+       | OptionList of HTML.select_option list
+       | EndOPTION
+       | PCData of HTML.pcdata
+       | PCDataList of HTML.pcdata list
+       | PCDataElem of HTML.pcdata
+
+%term EOF
+  (* tags in alphabetical order *)
+    | START_A of HTMLAttrVals.attrs | END_A
+    | START_ADDRESS | END_ADDRESS
+    | START_APPLET of HTMLAttrVals.attrs | END_APPLET
+    | TAG_AREA of HTMLAttrVals.attrs
+    | START_B | END_B
+    | TAG_BASE of HTMLAttrVals.attrs
+    | START_BIG | END_BIG
+    | START_BLOCKQUOTE | END_BLOCKQUOTE
+    | START_BODY of HTMLAttrVals.attrs | END_BODY
+    | TAG_BR of HTMLAttrVals.attrs
+    | START_CAPTION of HTMLAttrVals.attrs | END_CAPTION
+    | START_CENTER | END_CENTER
+    | START_CITE | END_CITE
+    | START_CODE | END_CODE
+    | START_DD | END_DD
+    | START_DFN | END_DFN
+    | START_DIR of HTMLAttrVals.attrs | END_DIR
+    | START_DIV of HTMLAttrVals.attrs | END_DIV
+    | START_DL of HTMLAttrVals.attrs | END_DL
+    | START_DT | END_DT
+    | START_EM | END_EM
+    | START_FONT of HTMLAttrVals.attrs | END_FONT
+    | START_BASEFONT of HTMLAttrVals.attrs | END_BASEFONT
+    | START_FORM of HTMLAttrVals.attrs | END_FORM
+    | START_H1 of HTMLAttrVals.attrs | END_H1
+    | START_H2 of HTMLAttrVals.attrs | END_H2
+    | START_H3 of HTMLAttrVals.attrs | END_H3
+    | START_H4 of HTMLAttrVals.attrs | END_H4
+    | START_H5 of HTMLAttrVals.attrs | END_H5
+    | START_H6 of HTMLAttrVals.attrs | END_H6
+    | START_HEAD | END_HEAD
+    | TAG_HR of HTMLAttrVals.attrs
+    | START_HTML | END_HTML
+    | START_I | END_I
+    | TAG_IMG of HTMLAttrVals.attrs
+    | TAG_INPUT of HTMLAttrVals.attrs
+    | TAG_ISINDEX of HTMLAttrVals.attrs
+    | START_KBD | END_KBD
+    | START_LI of HTMLAttrVals.attrs | END_LI
+    | TAG_LINK of HTMLAttrVals.attrs
+    | START_MAP of HTMLAttrVals.attrs | END_MAP
+    | START_MENU of HTMLAttrVals.attrs | END_MENU
+    | TAG_META of HTMLAttrVals.attrs
+    | START_OL of HTMLAttrVals.attrs | END_OL
+    | START_OPTION of HTMLAttrVals.attrs | END_OPTION
+    | START_P of HTMLAttrVals.attrs | END_P
+    | TAG_PARAM of HTMLAttrVals.attrs
+    | START_PRE of HTMLAttrVals.attrs | END_PRE
+    | START_SAMP | END_SAMP
+    | START_SCRIPT | END_SCRIPT
+    | START_SELECT of HTMLAttrVals.attrs | END_SELECT
+    | START_SMALL | END_SMALL
+    | START_STRIKE | END_STRIKE
+    | START_STRONG | END_STRONG
+    | START_STYLE | END_STYLE
+    | START_SUB | END_SUB
+    | START_SUP | END_SUP
+    | START_TABLE of HTMLAttrVals.attrs | END_TABLE
+    | START_TD of HTMLAttrVals.attrs | END_TD
+    | START_TEXTAREA of HTMLAttrVals.attrs | END_TEXTAREA
+    | START_TH of HTMLAttrVals.attrs | END_TH
+    | START_TITLE | END_TITLE
+    | START_TR of HTMLAttrVals.attrs | END_TR
+    | START_TT | END_TT
+    | START_U | END_U
+    | START_UL of HTMLAttrVals.attrs | END_UL
+    | START_VAR | END_VAR
+  (* raw text data *)
+    | PCDATA of string
+    | CHAR_REF of string	(* &#dd; *)
+    | ENTITY_REF of string	(* &#name; *)
+
+%pure
+%pos int
+%name HTML
+%start Document
+
+%header (
+  functor HTMLLrValsFn (
+    structure Token : TOKEN
+    structure HTMLAttrs : HTML_ATTRS))
+
+%arg (ctx) : int -> HTMLAttrs.context
+
+%eop EOF
+%noshift EOF  (* avoids infinite loop in error recovery *)
+
+(** Some error-correction support **)
+%value START_A ([])
+%value START_APPLET ([
+    ("CODE", HTMLAttrs.NAME ""),
+    ("WIDTH", HTMLAttrs.NAME ""),
+    ("HEIGHT", HTMLAttrs.NAME "")
+  ])
+%value TAG_AREA ([("ALT", HTMLAttrs.NAME "")])
+%value TAG_BASE ([("URL", HTMLAttrs.NAME "")])
+%value START_BODY ([])
+%value TAG_BR ([])
+%value START_CAPTION ([])
+%value START_DIR ([])
+%value START_DIV ([])
+%value START_DL ([])
+%value START_FONT ([])
+%value START_BASEFONT ([])
+%value START_FORM ([])
+%value START_H1 ([])
+%value START_H2 ([])
+%value START_H3 ([])
+%value START_H4 ([])
+%value START_H5 ([])
+%value START_H6 ([])
+%value TAG_HR ([])
+%value TAG_IMG ([("SRC", HTMLAttrs.NAME "")])
+%value TAG_INPUT ([])
+%value TAG_ISINDEX ([])
+%value TAG_LINK ([])
+%value START_MAP ([])
+%value START_MENU ([])
+%value TAG_META ([("CONTENT", HTMLAttrs.NAME "")])
+%value START_OL ([])
+%value START_OPTION ([])
+%value START_P ([])
+%value TAG_PARAM ([("NAME", HTMLAttrs.NAME "")])
+%value START_PRE ([])
+%value START_SELECT ([("NAME", HTMLAttrs.NAME "")])
+%value START_TABLE ([])
+%value START_TD ([])
+%value START_TEXTAREA ([
+    ("NAME", HTMLAttrs.NAME ""),
+    ("ROWS", HTMLAttrs.NAME "0"),
+    ("COLS", HTMLAttrs.NAME "0")
+  ])
+%value START_TH ([])
+%value START_TR ([])
+%value START_UL ([])
+
+%%
+
+Document
+	: StartHTML Head Body EndHTML
+		(HTML.HTML{version=StartHTML, head=Head, body=Body})
+
+StartHTML
+	: (* empty *)		(NONE)
+	| START_HTML		(NONE)
+
+EndHTML
+	: (* empty *)		()
+	| END_HTML		()
+
+
+(*** Head markup ***)
+
+Head
+	: StartHEAD HeadContents EndHEAD
+		(HeadContents)
+
+StartHEAD
+	: (* empty *)		()
+	| START_HEAD 		()
+EndHEAD
+	: (* empty *)		()
+	| END_HEAD 		()
+
+HeadContents
+	: HeadElements START_TITLE PCData END_TITLE HeadElements
+		(HeadElements1 @ (HTML.Head_TITLE PCData :: HeadElements2))
+
+HeadElements
+	: (* empty *)
+		([])
+	| HeadElement HeadElements
+		(HeadElement :: HeadElements)
+
+HeadElement
+	: TAG_META
+		(HTMLAttrs.mkMETA(ctx TAG_METAleft, TAG_META))
+	| TAG_LINK
+		(HTMLAttrs.mkLINK(ctx TAG_LINKleft, TAG_LINK))
+	| TAG_ISINDEX
+		(let val stuff =
+		    HTMLAttrs.mkISINDEX (ctx TAG_ISINDEXleft, TAG_ISINDEX)
+		  in HTML.Head_ISINDEX stuff end
+		)
+	| TAG_BASE
+		(HTMLAttrs.mkBASE(ctx TAG_BASEleft, TAG_BASE))
+	| START_STYLE PCData END_STYLE
+		(HTML.Head_STYLE(PCData))
+	| START_SCRIPT PCData END_SCRIPT
+		(HTML.Head_SCRIPT(PCData))
+
+
+(*** Body content ***)
+
+Body
+	: BodyContent0 EndBODY
+		(BodyContent0)
+
+EndBODY
+	: (* empty *)		()
+	| END_BODY		()
+
+BodyContent
+	: BodyContent1
+		(mkBlock BodyContent1)
+
+BodyContent0
+	: START_BODY BodyContent
+		(HTMLAttrs.mkBODY(ctx START_BODYleft, START_BODY, BodyContent))
+	| TextWOScript BodyContent1
+		(mkBody(consText(TextWOScript, BodyContent1)))
+	| BodyElement BodyContent1
+		(mkBody(consBlock(BodyElement, BodyContent1)))
+	| BlockWOIndex BodyContent1
+		(mkBody(consBlock(BlockWOIndex, BodyContent1)))
+	| Paragraph END_P BodyContent1
+		(mkBody(consBlock(Paragraph, BodyContent1)))
+	| Paragraph BodyContent2
+		(mkBody(consBlock(Paragraph, BodyContent2)))
+
+BodyContent1
+	: (* empty *)
+		([])
+	| Text BodyContent1
+		(consText(Text, BodyContent1))
+	| BodyElement BodyContent1
+		(consBlock(BodyElement, BodyContent1))
+	| Block BodyContent1
+		(consBlock(Block, BodyContent1))
+	| Paragraph END_P BodyContent1
+		(consBlock(Paragraph, BodyContent1))
+	| Paragraph BodyContent2
+		(consBlock(Paragraph, BodyContent2))
+
+BodyContent2
+	: (* empty *)
+		([])
+	| BodyElement BodyContent1
+		(consBlock(BodyElement, BodyContent1))
+	| Block BodyContent1
+		(consBlock(Block, BodyContent1))
+	| Paragraph END_P BodyContent1
+		(consBlock(Paragraph, BodyContent1))
+	| Paragraph BodyContent2
+		(consBlock(Paragraph, BodyContent2))
+
+BodyElement
+	: START_H1 TextList END_H1
+		(HTMLAttrs.mkHn(1, ctx START_H1left, START_H1, TextList))
+	| START_H2 TextList END_H2
+		(HTMLAttrs.mkHn(2, ctx START_H2left, START_H2, TextList))
+	| START_H3 TextList END_H3
+		(HTMLAttrs.mkHn(3, ctx START_H3left, START_H3, TextList))
+	| START_H4 TextList END_H4
+		(HTMLAttrs.mkHn(4, ctx START_H4left, START_H4, TextList))
+	| START_H5 TextList END_H5
+		(HTMLAttrs.mkHn(5, ctx START_H5left, START_H5, TextList))
+	| START_H6 TextList END_H6
+		(HTMLAttrs.mkHn(6, ctx START_H6left, START_H6, TextList))
+	| START_ADDRESS AddressContent1 END_ADDRESS
+		(HTML.ADDRESS(mkBlock AddressContent1))
+
+AddressContent1
+	: (* empty *)
+		([])
+	| Text AddressContent1
+		(consText(Text, AddressContent1))
+	| Paragraph END_P AddressContent1
+		(consBlock(Paragraph, AddressContent1))
+	| Paragraph AddressContent2
+		(consBlock(Paragraph, AddressContent2))
+
+AddressContent2
+	: (* empty *)
+		([])
+	| Paragraph END_P AddressContent1
+		(consBlock(Paragraph, AddressContent1))
+	| Paragraph AddressContent2
+		(consBlock(Paragraph, AddressContent2))
+
+(*** Block ***)
+
+BlockWOIndex
+	: List
+		(List)
+	| Preformatted
+		(Preformatted)
+	| START_DIV BodyContent END_DIV
+		(HTMLAttrs.mkDIV(ctx START_DIVleft, START_DIV, BodyContent))
+	| START_CENTER BodyContent END_CENTER
+		(HTML.CENTER BodyContent)
+	| START_BLOCKQUOTE BodyContent END_BLOCKQUOTE
+		(HTML.BLOCKQUOTE BodyContent)
+	| START_FORM BodyContent END_FORM
+		(HTMLAttrs.mkFORM(ctx START_FORMleft, START_FORM, BodyContent))
+	| TAG_HR
+		(HTMLAttrs.mkHR(ctx TAG_HRleft, TAG_HR))
+	| START_TABLE optCaption TableRowList END_TABLE
+		(HTMLAttrs.mkTABLE(
+		    ctx START_TABLEleft, START_TABLE,
+		    {caption = optCaption, body = TableRowList})
+		)
+
+Block
+	: BlockWOIndex
+		(BlockWOIndex)
+	| TAG_ISINDEX
+		(let val stuff =
+		    HTMLAttrs.mkISINDEX (ctx TAG_ISINDEXleft, TAG_ISINDEX)
+		  in HTML.ISINDEX stuff end
+		)
+
+Paragraph
+	: START_P TextList
+		(HTMLAttrs.mkP(ctx START_Pleft, START_P, TextList))
+
+List
+	: START_UL ListItemList END_UL
+		(HTMLAttrs.mkUL(ctx START_ULleft, START_UL, ListItemList))
+	| START_OL ListItemList END_OL
+		(HTMLAttrs.mkOL(ctx START_OLleft, START_OL, ListItemList))
+	| START_DIR ListItemList END_DIR
+		(HTMLAttrs.mkDIR(ctx START_DIRleft, START_DIR, ListItemList))
+	| START_MENU ListItemList END_MENU
+		(HTMLAttrs.mkMENU(ctx START_MENUleft, START_MENU, ListItemList))
+	| START_DL DLItemList END_DL
+		(HTMLAttrs.mkDL(
+		  ctx START_DLleft, START_DL,
+		  groupDefListContents DLItemList)
+		)
+
+ListItemList
+	: (* empty *)
+		([])
+	| ListItem ListItemList
+		(ListItem :: ListItemList)
+
+ListItem
+	: START_LI Flow1 EndLI
+		(HTMLAttrs.mkLI(ctx START_LIleft, START_LI, mkBlock Flow1))
+
+DLItemList
+	: (* empty *)
+		([])
+	| DLItem DLItemList
+		(DLItem :: DLItemList)
+
+DLItem
+	: START_DT TextList EndDT
+		(DL_tag TextList)
+	| START_DD Flow1 EndDD
+		(DL_item(mkBlock Flow1))
+
+Flow1
+	: (* empty *)
+		([])
+	| Text Flow1
+		(consText(Text, Flow1))
+	| Block Flow1
+		(consBlock(Block, Flow1))
+	| Paragraph END_P Flow1
+		(consBlock(Paragraph, Flow1))
+	| Paragraph Flow2
+		(consBlock(Paragraph, Flow2))
+
+Flow2
+	: (* empty *)
+		([])
+	| Block Flow1
+		(consBlock(Block, Flow1))
+	| Paragraph END_P Flow1
+		(consBlock(Paragraph, Flow1))
+	| Paragraph Flow2
+		(consBlock(Paragraph, Flow2))
+
+EndLI
+	: (* empty *)	()
+	| END_LI	()
+EndDT
+	: (* empty *)	()
+	| END_DT	()
+EndDD
+	: (* empty *)	()
+	| END_DD	()
+
+Preformatted
+	: START_PRE TextList END_PRE
+		(HTMLAttrs.mkPRE(ctx START_PREleft, START_PRE, TextList))
+
+(*** Tables ***)
+
+optCaption
+	: (* empty *)
+		(NONE)
+	| START_CAPTION TextList END_CAPTION
+		(SOME(HTMLAttrs.mkCAPTION(
+		  ctx START_CAPTIONleft, START_CAPTION, TextList)))
+
+TableRowList
+	: TableRow
+		([TableRow])
+	| TableRow TableRowList
+		(TableRow :: TableRowList)
+
+TableRow
+	: START_TR TableCellList
+		(HTMLAttrs.mkTR(ctx START_TRleft, START_TR, TableCellList))
+	| START_TR TableCellList END_TR
+		(HTMLAttrs.mkTR(ctx START_TRleft, START_TR, TableCellList))
+
+TableCellList
+	: TableCell
+		([TableCell])
+	| TableCell TableCellList
+		(TableCell :: TableCellList)
+
+TableCell
+	: START_TH BodyContent END_TH
+		(HTMLAttrs.mkTH(ctx START_THleft, START_TH, BodyContent))
+	| START_TH BodyContent
+		(HTMLAttrs.mkTH(ctx START_THleft, START_TH, BodyContent))
+	| START_TD BodyContent END_TD
+		(HTMLAttrs.mkTD(ctx START_TDleft, START_TD, BodyContent))
+	| START_TD BodyContent
+		(HTMLAttrs.mkTD(ctx START_TDleft, START_TD, BodyContent))
+
+(*** Text ***)
+
+TextList
+	: TextList'
+		(textList TextList')
+
+TextList'
+	: (* empty *)
+		([])
+	| Text TextList'
+		(Text :: TextList')
+
+TextWOScript
+	: PCDataElem
+		(HTML.PCDATA PCDataElem)
+	| Font
+		(Font)
+	| Phrase
+		(Phrase)
+	| Special
+		(Special)
+	| Form
+		(Form)
+
+Text
+	: TextWOScript
+		(TextWOScript)
+	| START_SCRIPT PCData END_SCRIPT
+		(HTML.SCRIPT PCData)
+		
+Font
+	: START_TT TextList END_TT
+		(HTML.TT(TextList))
+	| START_I TextList END_I
+		(HTML.I(TextList))
+	| START_B TextList END_B
+		(HTML.B(TextList))
+	| START_U TextList END_U
+		(HTML.U(TextList))
+	| START_STRIKE TextList END_STRIKE
+		(HTML.STRIKE(TextList))
+	| START_BIG TextList END_BIG
+		(HTML.BIG(TextList))
+	| START_SMALL TextList END_SMALL
+		(HTML.SMALL(TextList))
+	| START_SUB TextList END_SUB
+		(HTML.SUB(TextList))
+	| START_SUP TextList END_SUP
+		(HTML.SUP(TextList))
+Phrase
+	: START_EM TextList END_EM
+		(HTML.EM(TextList))
+	| START_STRONG TextList END_STRONG
+		(HTML.STRONG(TextList))
+	| START_CODE TextList END_CODE
+		(HTML.CODE(TextList))
+	| START_DFN TextList END_DFN
+		(HTML.DFN(TextList))
+	| START_SAMP TextList END_SAMP
+		(HTML.SAMP(TextList))
+	| START_KBD TextList END_KBD
+		(HTML.KBD(TextList))
+	| START_VAR TextList END_VAR
+		(HTML.VAR(TextList))
+	| START_CITE TextList END_CITE
+		(HTML.CITE(TextList))
+
+Special
+	: START_A TextList END_A
+		(HTMLAttrs.mkA(ctx START_Aleft, START_A, TextList))
+	| TAG_IMG
+		(HTMLAttrs.mkIMG(ctx TAG_IMGleft, TAG_IMG))
+	| START_APPLET TextList END_APPLET
+		(HTMLAttrs.mkAPPLET(ctx START_APPLETleft, START_APPLET, TextList))
+	| START_FONT TextList END_FONT
+		(HTMLAttrs.mkFONT(ctx START_FONTleft, START_FONT, TextList))
+	| START_BASEFONT TextList END_BASEFONT
+		(HTMLAttrs.mkBASEFONT(
+		  ctx START_BASEFONTleft, START_BASEFONT, TextList)
+		)
+	| TAG_BR
+		(HTMLAttrs.mkBR(ctx TAG_BRleft, TAG_BR))
+	| START_MAP AreaList END_MAP
+		(HTMLAttrs.mkMAP(ctx START_MAPleft, START_MAP, AreaList))
+	| TAG_PARAM
+		(HTMLAttrs.mkPARAM(ctx TAG_PARAMleft, TAG_PARAM))
+
+AreaList
+	: (* empty *)
+		([])
+	| TAG_AREA AreaList
+		(HTMLAttrs.mkAREA(ctx TAG_AREAleft, TAG_AREA) :: AreaList)
+
+Form
+	: TAG_INPUT
+		(HTMLAttrs.mkINPUT(ctx TAG_INPUTleft, TAG_INPUT))
+	| START_SELECT OptionList END_SELECT
+		(HTMLAttrs.mkSELECT(ctx START_SELECTleft, START_SELECT, OptionList))
+	| START_TEXTAREA PCData END_TEXTAREA
+		(HTMLAttrs.mkTEXTAREA(
+		  ctx START_TEXTAREAleft, START_TEXTAREA,
+		  PCData)
+		)
+
+OptionList
+	: (* empty *)
+		([])
+	| START_OPTION PCData EndOPTION OptionList
+		(HTMLAttrs.mkOPTION(ctx START_OPTIONleft, START_OPTION, PCData)
+		  :: OptionList
+		)
+
+EndOPTION
+	: (* empty *)
+		()
+	| END_OPTION
+		()
+
+
+(*** PCDATA list ***)
+
+PCData
+	: PCDataList
+		(concat PCDataList)
+
+PCDataList
+	: (* empty *)
+		([])
+	| PCDataElem PCDataList
+		(PCDataElem :: PCDataList)
+
+PCDataElem
+	: PCDATA
+		(PCDATA)
+	| CHAR_REF
+		(CHAR_REF)
+	| ENTITY_REF
+		(ENTITY_REF)
+

@@ -1,0 +1,198 @@
+= The `MONO_HASH_TABLE` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `MONO_HASH_TABLE` signature defines an interface to imperative hash
+tables with monomorphic keys.  The **SML/NJ Library** provides two
+specialized implementations of this signature, as well as a functor for
+constructing additional implementations.
+
+The tables are implemented as an array of _buckets_, which are
+lists of key-value pairs.  The number of buckets grows with the number
+of table entries.
+
+== Synopsis
+
+[source,sml]
+------------
+signature MONO_HASH_TABLE
+
+structure AtomTable :> MONO_HASH_TABLE where type Key.hash_key = Atom.atom
+structure IntHashTable :> MONO_HASH_TABLE where type Key.hash_key = int
+structure WordHashTable :> MONO_HASH_TABLE where type Key.hash_key = word
+------------
+
+== Interface
+
+[source,sml]
+------------
+structure Key : HASH_KEY
+
+type 'a hash_table
+
+val mkTable : (int * exn) -> 'a hash_table
+
+val clear : 'a hash_table -> unit
+
+val insert : 'a hash_table -> (Key.hash_key * 'a) -> unit
+
+val inDomain : 'a hash_table -> Key.hash_key -> bool
+
+val lookup : 'a hash_table -> Key.hash_key -> 'a
+val find : 'a hash_table -> Key.hash_key -> 'a option
+
+val remove : 'a hash_table -> Key.hash_key -> 'a
+
+val numItems : 'a hash_table ->  int
+
+val listItems  : 'a hash_table -> 'a list
+val listItemsi : 'a hash_table -> (Key.hash_key * 'a) list
+
+val app  : ('a -> unit) -> 'a hash_table -> unit
+val appi : ((Key.hash_key * 'a) -> unit) -> 'a hash_table -> unit
+
+val map  : ('a -> 'b) -> 'a hash_table -> 'b hash_table
+val mapi : ((Key.hash_key * 'a) -> 'b) -> 'a hash_table -> 'b hash_table
+
+val fold  : (('a * 'b) -> 'b) -> 'b -> 'a hash_table -> 'b
+val foldi : ((Key.hash_key * 'a * 'b) -> 'b) -> 'b -> 'a hash_table -> 'b
+
+val modify  : ('a -> 'a) -> 'a hash_table -> unit
+val modifyi : ((Key.hash_key * 'a) -> 'a) -> 'a hash_table -> unit
+
+val filter  : ('a -> bool) -> 'a hash_table -> unit
+val filteri : ((Key.hash_key * 'a) -> bool) -> 'a hash_table -> unit
+
+val copy : 'a hash_table -> 'a hash_table
+
+val bucketSizes : 'a hash_table -> int list
+------------
+
+== Description
+
+`[.kw]#structure# Key : HASH_KEY`::
+  This substructure defines the type of keys used to index the tables and
+  hash and equality functions on the key type.
+
+`[.kw]#type# 'a hash_table`::
+  The type of imperative hash tables indexed by `Key.hash_key` values
+
+`[.kw]#val# mkTable : (int * exn) \-> 'a hash_table`::
+  `mkTable (n, ex)` creates a new hash table; the table will be initially
+  sized to hold at least `n` items.  The exception `ex` is raised by the
+  xref:#val:lookup[`lookup`] and xref:#val:remove[`remove`] functions
+  when the search key is not in the domain.
+
+`[.kw]#val# clear : 'a hash_table \-> unit`::
+  `clear tbl` removes all of the entries in the table.
+
+`[.kw]#val# insert : 'a hash_table \-> (Key.hash_key * 'a) \-> unit`::
+  `insert tbl (key, item)` inserts a mapping from `key` to `item` into `tbl`.
+  Any existing mapping of `key` is discarded.
+
+`[.kw]#val# inDomain : 'a hash_table \-> Key.hash_key \-> bool`::
+  `inDomain tbl key` returns `true` if, and only if, `key` is in the
+  domain of the table
+
+[[val:lookup]]
+`[.kw]#val# lookup : 'a hash_table \-> Key.hash_key \-> 'a`::
+  `lookup tbl key` returns the item that `key` maps to if `key` is in
+  the domain of `tbl`.  Otherwise, the table's exception is raised.
+
+`[.kw]#val# find : 'a hash_table \-> Key.hash_key \-> 'a option`::
+  `find tbl key` returns the `SOME v` if `key` is mapped to `v` in `tbl`.
+  Otherwise, it returns `NONE`.
+
+[[val:remove]]
+`[.kw]#val# remove : 'a hash_table \-> Key.hash_key \-> 'a`::
+  `remove tbl key` returns the item that `key` maps to if `key` is in
+  the domain of `tbl` and removes it from the table.  Otherwise, the
+  table's exception is raised.
+
+`[.kw]#val# numItems : 'a hash_table \->  int`::
+  `numItems tbl` returns the number of entries in the table.
+
+`[.kw]#val# listItems  : 'a hash_table \-> 'a list`::
+  `listItems tbl` returns a list of the items in the range of `tbl`.
+
+`[.kw]#val# listItemsi : 'a hash_table \-> (Key.hash_key * 'a) list`::
+  `listItemsi tbl` returns a list of the key-value entries in `tbl`.
+
+`[.kw]#val# app  : ('a \-> unit) \-> 'a hash_table \-> unit`::
+  `app f tbl` applies the function `f` to each item in the range of `tbl`.
+
+`[.kw]#val# appi : ((Key.hash_key * 'a) \-> unit) \-> 'a hash_table \-> unit`::
+  `appi f tbl` applies the function `f` to each item in the
+  key-value entries in `tbl`.
+
+`[.kw]#val# map  : ('a \-> 'b) \-> 'a hash_table \-> 'b hash_table`::
+  `map f tbl` creates a new table with an entry `(key, f(lookup tbl key))`
+  in the new table for every `key` in `tbl`.  The exception for the new
+  table is copied from `tbl`.
+
+`[.kw]#val# mapi : ((Key.hash_key * 'a) \-> 'b) \-> 'a hash_table \-> 'b hash_table`::
+  `mapi f tbl` creates a new table with an entry `(key, f(key, lookup tbl key))`
+  in the new table for every `key` in `tbl`.  The exception for the new
+  table is copied from `tbl`.
+
+`[.kw]#val# fold  : (('a * 'b) \-> 'b) \-> 'b \-> 'a hash_table \-> 'b`::
+  `fold f init tbl` folds the function `f` over the items in the range of `tbl`
+  using `init` as an initial value.
+
+`[.kw]#val# foldi : ((Key.hash_key * 'a * 'b) \-> 'b) \-> 'b \-> 'a hash_table \-> 'b`::
+  `foldi f init tbl` folds the function `f` over the key-value entries in `tbl`
+  using `init` as an initial value.
+
+`[.kw]#val# modify  : ('a \-> 'a) \-> 'a hash_table \-> unit`::
+  `modify f tbl` applies the function `f` for effect to the items in the
+  range of `tbl`, replacing the old items with the result of applying `f`.
+
+`[.kw]#val# modifyi : ((Key.hash_key * 'a) \-> 'a) \-> 'a hash_table \-> unit`::
+  `modifyi f tbl` applies the function `f` for effect to the key-value
+  entries in `tbl`, replacing the old items with the result of applying `f`.
+
+`[.kw]#val# filter  : ('a \-> bool) \-> 'a hash_table \-> unit`::
+  `filter pred tbl` removes any entry `(key, item)` from `tbl` for which
+  `pred item` returns `false`.
+
+`[.kw]#val# filteri : ((Key.hash_key * 'a) \-> bool) \-> 'a hash_table \-> unit`::
+  `filteri pred tbl` removes any entry `(key, item)` from `tbl` for which
+  `pred(key, item)` returns `false`.
+
+`[.kw]#val# copy : 'a hash_table \-> 'a hash_table`::
+  `copy tbl` creates a copy of `tbl`.  This expression is equivalent to
++
+[source,sml]
+------------
+map (fn x => x) tbl
+------------
+
+`[.kw]#val# bucketSizes : 'a hash_table \-> int list`::
+  `bucketSizes tbl` returns a list of the current number of items per
+  bucket.  This function allows users to gauge the quality of their
+  hashing function.
+
+== Instances
+
+[[str:AtomTable]]
+`[.kw]#structure# AtomTable`::
+  This structure implements hash tables keyed by the
+  xref:str-Atom.adoc#type:atom[`Atom.atom`] type.
+
+[[str:IntHashTable]]
+`[.kw]#structure# IntHashTable`::
+  This structure implements hash tables keyed by the default `int` type.
+
+[[str:WordHashTable]]
+`[.kw]#structure# WordHashTable`::
+  This structure implements hash tables keyed by the default `word` type.
+
+== See Also
+
+xref:sig-HASH_KEY.adoc[`HASH_KEY`],
+xref:str-HashTable.adoc[`HashTable`],
+xref:fun-HashTableFn.adoc[`HashTableFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

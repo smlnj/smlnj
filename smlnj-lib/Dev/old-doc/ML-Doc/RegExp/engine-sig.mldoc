@@ -1,0 +1,86 @@
+<!-- ML-Doc/engine-sig.sml -->
+<!-- Entities.sgml entry 
+<!ENTITY REGEXP-ENGINE SDATA "../engine-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=3>
+<TITLE>The REGEXP_ENGINE signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/REGEXP_ENGINE/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<SEEALSO>
+   <STRREF/MatchTree/
+   <STRREF/RegExpSyntax/
+</SEEALSO>
+
+<PP>
+This is the signature of a concrete matching engine. It defines an
+abstract type <CD/regexp/ into which regular expressions are compiled,
+as well as functions to match the compiled regular expression with
+various semantics. <PP>
+
+Two engines are provided. The structure <CD/BackTrackEngine/ is a
+backtracking engine that is slow, but requires little memory, incurs
+low startup overhead and reports full matching information (matching
+information for all subexpressions of the regular expression). The
+structure <CD/DfaEngine/ is a finite-automaton implementation, and thus
+provides fast matching, but is memory-itensive, has a startup overhead
+(the creation of the automaton), and only reports the root match.<PP>
+
+
+<SIGNATURE SIGID="REGEXP_ENGINE">
+  <SIGBODY SIGID="REGEXP_ENGINE" FILE=REGEXP-ENGINE>
+    <SPEC>
+      <TYPE><ID>regexp
+        <COMMENT><PP>
+          the type of a compiled regular expression.
+    <SPEC>
+      <VAL>compile<TY>RegExpSyntax.syntax -> regexp
+        <COMMENT>
+          <PROTOTY>
+          compile <ARG/s/
+          </PROTOTY>
+          compiles a regular expression from the abstract syntax.
+    <SPEC>
+      <VAL>find<TY>regexp -> (char,'a) StringCvt.reader -> ({pos : 'a, len : int} option MatchTree.match_tree,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          find <ARG/r/ <ARG/getc/
+          </PROTOTY>
+          Given a compiled regular expression <ARG/r/ and a character 
+reader <ARG/getc/, this function returns a reader that scans the stream for the first
+match of the regular expression. The reader returns <CD/NONE/ if
+no match is found.
+    <SPEC>
+      <VAL>prefix<TY>regexp -> (char,'a) StringCvt.reader -> ({pos : 'a, len : int} option MatchTree.match_tree,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          prefix <ARG/r/ <ARG/getc/
+          </PROTOTY>
+          Given a compiled regular expression <ARG/r/ and a character 
+reader <ARG/getc/, this functions returns a reader that attempts to
+match the stream at its current position with the regular
+expression. The reader returns <CD/NONE/ if there is not match at the
+current position of the stream.
+    <SPEC>
+      <VAL>match<TY>(string * ({pos : 'a, len : int} option MatchTree.match_tree -> 'b)) list -> (char,'a) StringCvt.reader -> ('b,'a) StringCvt.reader
+        <COMMENT>
+          <PROTOTY>
+          match <ARG/l/ <ARG/getc/
+          </PROTOTY>
+          Given a list <ARG/l/ of tuples made up of a regular
+expression and a function from matching tree to values of type
+<CD/'b/, and given a character reader <ARG/getc/, this function
+returns a reader that attempts to match one of the given regular
+expressions at the current position of the stream. If a match is
+found, the corresponding function is applied to the match tree and the
+result is returned. The reader returns <CD/NONE/ if no match is found.
+   <SIGINSTANCE><ID>BackTrackEngine
+   <SIGINSTANCE><ID>DfaEngine
+</SIGNATURE>
+
+</INTERFACE>

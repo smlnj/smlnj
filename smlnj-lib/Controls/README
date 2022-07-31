@@ -1,0 +1,5 @@
+This library is designed to support management of control flags in
+an application.
+
+Credits:
+  The original design and implementation were by Matthias Blume.

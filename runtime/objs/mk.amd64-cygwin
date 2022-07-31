@@ -1,0 +1,24 @@
+# mk.x86-cygwin
+#
+
+SHELL =		/bin/sh
+
+MAKE =		make
+CC =		gcc -std=gnu99
+CFLAGS =	-O2
+CXX =           g++ --std=c++14
+CXX_FLAGS =     -g -O2
+CPP =		gcc -x assembler-with-cpp -E -P
+XOBJS =
+XLIBS =		../c-libs/dl/libunix-dynload.a
+LD_LIBS =	-lm
+XDEFS =
+BASE_DEFS =
+DEFS		= $(XDEFS) $(BASE_DEFS) -DARCH_AMD64 -DSIZE_64 \
+		  -DOPSYS_UNIX -DOPSYS_CYGWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC
+TARGET =	AMD64
+VERSION =	v-amd64-cygwin
+RUNTIME =	run.amd64-cygwin
+
+all:
+	($(MAKE) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))

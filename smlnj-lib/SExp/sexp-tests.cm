@@ -1,0 +1,27 @@
+(* sexp-tests.cm
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Author: Damon Wang (with modifications by John Reppy)
+ *)
+
+Library
+
+  structure SExp
+  structure SExpParser
+  structure SExpPrinter
+  structure SExpTests
+  structure TestPP
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/pp-lib.cm
+  $/ml-lpt-lib.cm
+
+  sexp-lib.cm
+
+  sexp-tests.sml
+  test-pp.sml

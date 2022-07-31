@@ -1,0 +1,47 @@
+<!-- bsearch.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY BSearchFn SDATA "bsearch-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=9>
+<TITLE>The BSearchFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/BSearchFn/ functor</HEAD>
+<SEEALSO>
+  <FCTREF/ArrayQSortFn/
+  <STRREF TOPID/ArrayQSort/
+</SEEALSO>
+
+<PP>
+The <FCTREF NOLINK/BSearchFn/ functor implements binary searching
+on sorted monomorphic arrays.
+
+
+<FUNCTOR FCTID="BSearchFn"><ID>A<SIGREF DOCUMENT=SML-BASIS-DOC>MONO_ARRAY</SIGREF>
+  <SIGBODY FILE=BSearchFn>
+    <SPEC>
+      <SUBSTRUCT>A<SIGREF DOCUMENT=SML-BASIS-DOC>MONO_ARRAY</SIGREF></SUBSTRUCT>
+    <SPEC>
+      <VAL>bsearch<TY>(('a * A.elem) -> order) -> ('a * A.array) -> (int * A.elem) option
+        <COMMENT>
+          <PROTOTY>
+          bsearch <ARG/cmp/ (<ARG/a/, <ARG/arr/)
+          </PROTOTY>
+          performs a binary search, looking for <ARG/a/ in the 
+          monomorphic array <ARG/arr/. It is
+          assumed that the array elements have some key, and have been 
+          sorted non-decreasingly in terms of that key. The comparison function 
+          <ARG/cmp/ is used to compare the elements of the array with the
+          value <ARG/a/.
+
+          <PP>
+          If the search is successful, the element and its index are returned;
+          otherwise; <CONREF STRID="Option" DOCUMENT=SML-BASIS-DOC/NONE/ is returned.
+  </SIGBODY>
+</FUNCTOR>
+
+</INTERFACE>

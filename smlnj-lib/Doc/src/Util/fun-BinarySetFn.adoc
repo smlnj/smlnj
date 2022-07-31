@@ -1,0 +1,31 @@
+= The `BinarySetFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `BinarySetFn` functor provides a balanced-binary-tree implementation of the
+xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+The original implementation was written by Stephen Adams and was based
+on the paper https://doi.org/10.1137/0202005[Binary Search Trees of Bounded Balance]
+by Nievergelt and Reingold (SIAM Journal of Computing; March 1973).
+
+It is recommended, however, that one use the xref:fun-RedBlackSetFn.adoc[`RedBlackSetFn`]
+functor instead of `BinarySetFn`, since experimentation has shown it to be
+faster across the board.
+
+== Synopsis
+
+[source,sml]
+------------
+functor BinarySetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key
+------------
+
+== See Also
+
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:sig-ORD_SET.adoc[`ORD_SET`],
+xref:fun-RedBlackSetFn.adoc[`RedBlackSetFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

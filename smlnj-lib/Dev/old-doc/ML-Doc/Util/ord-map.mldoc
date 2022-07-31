@@ -1,0 +1,329 @@
+<!-- ord-map.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ORD-MAP SDATA "ord-map-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=10>
+<TITLE>The ORD_MAP signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ORD_MAP/ signature</HEAD>
+<SEEALSO>
+  <SIGREF/ORD_SET/
+  <SIGREF/ORD_KEY/
+  <FCTREF/BinaryMapFn/
+  <FCTREF/SplayMapFn/
+  <FCTREF/ListMapFn/
+</SEEALSO>
+
+<PP>
+The <SIGREF NOLINK/ORD_MAP/ signature provides an abstract
+description of applicative-style maps on a linearly ordered key type.
+
+<SIGNATURE SIGID="ORD_MAP">
+  <SIGBODY SIGID="ORD_MAP" FILE=ORD-MAP>
+    <SPEC>
+      <SUBSTRUCT>Key<ID>ORD_KEY</SUBSTRUCT>
+    </SPEC>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>map
+    </SPEC>
+    <SPEC>
+      <VAL>empty<TY>'a map
+        <COMMENT>
+          <PP>
+          The empty map.
+        </COMMENT>
+    </SPEC>
+    <SPEC>
+      <VAL>singleton<TY>(Key.ord_key * 'a) -> 'a map
+	<COMMENT>
+          <PROTOTY>
+          singleton (<ARG/k/, <ARG/a/)
+          </PROTOTY>
+	  returns the singleton map that maps the key <ARG/k/ to the
+	  value <ARG/a/.
+        </COMMENT>
+    </SPEC>
+    <SPEC>
+      <VAL>insert<TY>('a map * Key.ord_key * 'a) -> 'a map
+      <VAL>insert'<TY>((Key.ord_key * 'a) * 'a map) -> 'a map
+        <COMMENT>
+          <PROTOTY>
+          insert (<ARG/ma/, <ARG/k/, <ARG/a/)
+          <PROTO>
+          insert' ((<ARG/k/, <ARG/a/), <ARG/ma/)
+          </PROTOTY>
+          creates a new map by inserting the key-value pair into <ARG/ma/.
+        </COMMENT>
+    </SPEC>
+    <SPEC>
+      <VAL>inDomain<TY>('a map * Key.ord_key) -> bool
+        <COMMENT>
+          <PROTOTY>
+          inDomain (<ARG/ma/, <ARG/k/)
+          </PROTOTY>
+	  returns <CD/true/ if the key <ARG/k/ is in the domain of <ARG/ma/,
+	  otherwise it returns <CD/false/.
+    </SPEC>
+    <SPEC>
+      <VAL>find<TY>('a map * Key.ord_key) -> 'a option
+        <COMMENT>
+          <PROTOTY>
+          find (<ARG/ma/, <ARG/k/)
+          </PROTOTY>
+          looks for an item in <ARG/ma/ keyed by <ARG/k/. It returns the
+          item if it finds it; otherwise, returns
+	  <CONREF STRID="Option" DOCUMENT=SML-BASIS-DOC/NONE/.
+    </SPEC>
+    <SPEC>
+      <VAL>remove<TY>('a map * Key.ord_key) -> ('a map * 'a)
+      <RAISES><EXNREF STRID="LibBase"/NotFound/
+        <COMMENT>
+          <PROTOTY>
+          remove (<ARG/ma/, <ARG/k/)
+          </PROTOTY>
+          removes an item from <ARG/ma/ corresponding to the key <ARG/k/.
+          If found, the resulting map and item are returned. Raises
+          <EXNREF STRID="LibBase"/NotFound/ if no such item exists.
+    </SPEC>
+    <SPEC>
+      <VAL>first<TY>'a map -> 'a option
+      <VAL>firsti<TY>'a map -> (Key.ord_key * 'a option)
+        <COMMENT>
+	  <PROTOTY>
+	    first <ARG/ma/
+	  </PROTOTY>
+	  returns the first element of the map <ARG/ma/ (as defined by
+	  the ordering on the keys).
+	  <PROTOTY>
+	    firsti <ARG/ma/
+	  </PROTOTY>
+	  returns the first element of the map <ARG/ma/ and its key.
+
+	  Both of these functions return
+	  <CONREF STRID="Option" DOCUMENT=SML-BASIS-DOC/NONE/ when called
+	  on the empty map.
+    </SPEC>
+    <SPEC>
+      <VAL>numItems<TY>'a map -> int
+        <COMMENT>
+          <PROTOTY>
+          numItems <ARG/ma/
+          </PROTOTY>
+          returns the number of items in the map.
+    </SPEC>
+    <SPEC>
+      <VAL>listItems<TY>'a map -> 'a list
+      <VAL>listItemsi<TY>'a map -> (Key.ord_key * 'a) list
+        <COMMENT>
+          <PROTOTY>
+          listItems <ARG/ma/
+          <PROTO>
+          listItemsi <ARG/ma/
+          </PROTOTY>
+          return a list of the items in the map, ordered by increasing
+          key. The second form also returns the key.
+    </SPEC>
+    <SPEC>
+      <VAL>collate<TY>(('a * 'a) -> order) -> ('a map * 'a map) -> order
+        <COMMENT>
+          <PROTOTY>
+          collate <ARG/f/
+          </PROTOTY>
+          returns an ordering on maps, given an ordering on the maps'
+          range.
+    </SPEC>
+    <SPEC>
+      <VAL>unionWith<TY>(('a * 'a) -> 'a) -> ('a map * 'a map) -> 'a map
+      <VAL>unionWithi<TY>((Key.ord_key * 'a * 'a) -> 'a) -> ('a map * 'a map) -> 'a map
+        <COMMENT>
+          <PROTOTY>
+          unionWith <ARG/f/ (<ARG/ma/, <ARG/ma2/)
+          <PROTO>
+          unionWithi <ARG/f/ (<ARG/ma/, <ARG/ma2/)
+          </PROTOTY>
+          returns a map that is the union of the maps <ARG/ma/ and <ARG/ma2/.
+          The first argument is used to define the map on elements that
+          are in the domain of both maps. In the second form, the function
+          takes the shared key as well as the two range values.
+    </SPEC>
+    <SPEC>
+      <VAL>intersectWith<TY>(('a * 'b) -> 'c) -> ('a map * 'b map) -> 'c map
+      <VAL>intersectWithi<TY>((Key.ord_key * 'a * 'b) -> 'c) -> ('a map * 'b map) -> 'c map
+        <COMMENT>
+          <PROTOTY>
+          intersectWith <ARG/f/ (<ARG/ma/, <ARG/ma2/)
+          <PROTO>
+          intersectWithi <ARG/f/ (<ARG/ma/, <ARG/ma2/)
+          </PROTOTY>
+          returns a map defined on the intersection of the domains of
+          the maps <ARG/ma/ and <ARG/ma2/. The function <ARG/f/ is
+          used to define the range. Specifically, if <CD/(k,u)/ is in
+          <ARG/ma/ and <CD/(k,v)/ is in <ARG/ma2/, the new map contains
+          <CD/(k,f(u,v))/ (or <CD/(k,f(k,u,v))/, in the second case).
+    </SPEC>
+    <SPEC>
+      <VAL>app<TY>('a -> unit) -> 'a map -> unit
+      <VAL>appi<TY>((Key.ord_key * 'a) -> unit) -> 'a map -> unit
+        <COMMENT>
+          <PROTOTY>
+          app <ARG/f/ <ARG/ma/
+          <PROTO>
+          appi <ARG/f/ <ARG/ma/
+          </PROTOTY>
+          applies the function <ARG/f/ to the items in the map in
+          increasing order of the key. 
+          These are respectively equivalent to:
+          <CODE>
+          List.app <ARG/f/ (listItems <ARG/ma/)
+          List.app <ARG/f/ (listItemsi <ARG/ma/)
+          </CODE>
+    </SPEC>
+    <SPEC>
+      <VAL>map<TY>('a -> 'b) -> 'a map -> 'b map
+      <VAL>mapi<TY>((Key.ord_key * 'a) -> 'b) -> 'a map -> 'b map
+        <COMMENT>
+          <PROTOTY>
+          map <ARG/f/ <ARG/ma/
+          <PROTO>
+          mapi <ARG/f/ <ARG/ma/
+          </PROTOTY>
+          creates a new map by applying the function <ARG/f/ to the
+          elements of the old map <ARG/ma/.
+          These are respectively equivalent to:
+          <CODE>
+          List.foldl (fn((k,v),m) => insert(m,k,f v)) empty (listItemsi ma)
+          List.foldl (fn((k,v),m) => insert(m,k,f(k,v))) empty (listItemsi ma)
+          </CODE>
+    </SPEC>
+    <SPEC>
+      <VAL>foldl<TY>(('a * 'b) -> 'b) -> 'b -> 'a map -> 'b
+      <VAL>foldli<TY>((Key.ord_key * 'a * 'b) -> 'b) -> 'b -> 'a map -> 'b
+        <COMMENT>
+          <PROTOTY>
+          foldl <ARG/f/ <ARG/a/ <ARG/ma/
+          <PROTO>
+          foldli <ARG/f/ <ARG/a/ <ARG/ma/
+          </PROTOTY>
+          applies the folding function <ARG/f/ to the entries of <ARG/ma/
+          in increasing order. These are respectively equivalent to:
+          <CODE>
+          List.foldl f a (listItems ma)
+          List.foldl (fn((k,v),b) => f(k,v,b)) a (listItemsi ma)
+          </CODE>
+    </SPEC>
+    <SPEC>
+      <VAL>foldr<TY>(('a * 'b) -> 'b) -> 'b -> 'a map -> 'b
+      <VAL>foldri<TY>((Key.ord_key * 'a * 'b) -> 'b) -> 'b -> 'a map -> 'b
+        <COMMENT>
+          <PROTOTY>
+          foldr <ARG/f/ <ARG/a/ <ARG/ma/
+          <PROTO>
+          foldri <ARG/f/ <ARG/a/ <ARG/ma/
+          </PROTOTY>
+          applies the folding function <ARG/f/ to the entries of <ARG/ma/
+          in decreasing order. These are respectively equivalent to:
+          <CODE>
+          List.foldr f a (listItems ma)
+          List.foldr (fn((k,v),b) => f(k,v,b)) a (listItemsi ma)
+          </CODE>
+    </SPEC>
+    <SPEC>
+      <VAL>filter<TY>('a -> bool) -> 'a map -> 'a map
+      <VAL>filteri<TY>((Key.ord_key * 'a) -> bool) -> 'a map -> 'a map
+        <COMMENT>
+          <PROTOTY>
+          filter <ARG/f/ <ARG/ma/
+          <PROTO>
+          filteri <ARG/f/ <ARG/ma/
+          </PROTOTY>
+          creates a new map containing only those elements of <ARG/ma/
+          that satisfy the predicate <ARG/f/. 
+          These are equivalent to:
+          <CODE>
+          List.foldl insert' empty (List.filter (fn(k,v) => f v) (listItemsi ma))
+          List.foldl insert' empty (List.filter f (listItemsi ma))
+          </CODE>
+    </SPEC>
+    <SPEC>
+      <VAL>mapPartial<TY>('a -> 'b option) -> 'a map -> 'b map
+      <VAL>mapPartiali<TY>((Key.ord_key * 'a) -> 'b option) -> 'a map -> 'b map
+        <COMMENT>
+          <PROTOTY>
+          mapPartial <ARG/f/ <ARG/ma/
+          <PROTO>
+          mapPartiali <ARG/f/ <ARG/ma/
+          </PROTOTY>
+          creates a new map by applying the partial function <ARG/f/ to the
+          map <ARG/ma/ in increasing key order.
+          The function <CD/mapPartiali/ can be implemented as:
+          <CODE>
+          fun mapPartiali f ma = let
+                fun f' (key,value) = case f (key,value)
+                   of NONE => NONE
+                    | SOME v => SOME(key,v)
+                val items = List.mapPartial f' (listItemsi ma)
+                in
+                  List.foldl insert' empty items
+                end
+          </CODE>
+          The function <CD/mapPartial/ is equivalent to:
+          <CODE>
+          fun mapPartial f ma = mapPartiali (fn (_, item) => f item) ma
+          </CODE>
+    </SPEC>
+    <SPECBREAK NEWLINE>
+    <SPEC>
+      <VAL>exists<TY>('a -> bool) -> 'a map -> bool</TY>
+      <VAL>existsi<TY>((Key.ord_key * 'a) -> bool) -> 'a map -> bool</TY>
+        <COMMENT>
+          <PROTOTY>
+          exists <ARG>pred</ARG> <ARG/m/
+          </PROTOTY>
+          applies <ARG>pred</ARG> to each element <ARG/x/ of the map
+	  <ARG/m/, in key order, until <CD/<ARG>pred</ARG> <ARG/x// evaluates to
+	  <CD>true</>; it returns <CD>true</> if  
+	  such an <ARG/x/ exists and <CD>false</> otherwise.
+	  It is equivalent to 
+	  <CD><VALREF STRID="List"/exists/ <ARG>pred</ARG> (<VALREF>items</VALREF> <ARG/m/)</CD>.
+	</COMMENT>
+    </SPEC>
+    <SPEC>
+      <VAL>all<TY>('a -> bool) -> 'a map -> bool</TY>
+      <VAL>alli<TY>((Key.ord_key * 'a) -> bool) -> 'a map -> bool</TY>
+        <COMMENT>
+          <PROTOTY>
+          all <ARG>pred</ARG> <ARG/m/
+          </PROTOTY>
+	  applies <ARG>pred</ARG> to each element <ARG/x/ of the map <ARG/m/, in key order,
+	  until <CD/<ARG>pred</ARG> <ARG/x// evaluates to <CD>false</>; it returns <CD>false</> 
+	  if such an <ARG/x/ exists and <CD>true</> otherwise.
+	  It is equivalent to 
+	  <CD><VALREF STRID="List"/all/ <ARG>pred</ARG> (<VALREF>items</VALREF> <ARG/m/)</CD>.
+	</COMMENT>
+    </SPEC>
+  <SIGINSTANCE OPAQUE> <ID> IntBinaryMap
+   <WHERETYPE><ID>Key.ord_key<TY>Int.int
+   <COMMENT>
+   <PP>
+This structure is based on Stephen Adams' integer set code, which uses
+binary trees of bounded balance. It can be viewed as an application of
+the functor <FCTREF/BinaryMapFn/ using <CD/ord_key = Int.int/ and
+<CD/compare = Int.compare/.
+>/SIGINSTANCE>
+  <SIGINSTANCE OPAQUE> <ID> IntListMap
+   <WHERETYPE><ID>Key.ord_key<TY>Int.int
+   <COMMENT>
+   <PP>
+This structure implements integer maps using sorted lists.
+It can be viewed as an application of
+the functor <FCTREF/ListMapFn/ using <CD/ord_key = Int.int/ and
+<CD/compare = Int.compare/.
+>/SIGINSTANCE>
+</SIGNATURE>
+
+</INTERFACE>

@@ -1,0 +1,5 @@
+Library
+  structure X
+is
+  fct+sig.sml
+  use-fct.sml

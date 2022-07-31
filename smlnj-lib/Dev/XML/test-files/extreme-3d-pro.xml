@@ -1,0 +1,323 @@
+<?xml version="1.0" ?>
+
+<!--
+************************************************************************
+* Bindings for Logitech Extreme Digital 3D Pro joystick.
+*
+
+* Axis 0: ailerons
+* Axis 1: elevator
+* Axis 2 (twist): rudder
+* Axis 3 (slider): throttle
+* Axes 4 and 5 (hat): view direction
+*
+* Buttons according to the numbers printed on the joystick:
+* Button 1: all brakes
+** Button 2: HUD Master Switch
+* Button 4: flap down
+* Button 6: flap up
+* Button 5: elevator trim up
+* Button 3: elevator trim down
+** Button 7: Gear down
+** Button 8: Gear up
+** Button 9: VStol nozzle rotate backword
+** Button 10: VStol nozzle rotate forward
+//* Button 11: left brake only
+//* Button 12: right brake only
+** Button 11: spoiler down
+** Button 12: spoiler up
+************************************************************************
+$Id: extreme-3d-pro.xml,v 1.7 2005/10/04 08:06:32 ehofman Exp $
+-->
+
+<PropertyList>
+
+ <name>Logitech Extreme 3D</name>
+ <name>Logitech Logitech Extreme 3D</name>
+ <name>Logitech Extreme Digital 3D Pro</name>
+ <name>Logitech Logitech Extreme 3D Pro</name>
+ <name>Logitech Extreme 3D Pro</name>
+ <name>Logitech Extreme 3D Pro USB</name>
+ <name>Logitech  Extreme 3D  Pro USB</name>
+
+ <axis n="0">
+  <desc>Aileron</desc>
+  <dead-band type="double">0.001</dead-band>
+  <binding>
+   <command>property-scale</command>
+   <property>/controls/flight/aileron</property>
+   <squared type="bool">true</squared>
+  </binding>
+ </axis>
+
+ <axis n="1">
+  <desc>Elevator</desc>
+  <binding>
+   <command>property-scale</command>
+   <property>/controls/flight/elevator</property>
+   <factor type="double">-1.0</factor>
+   <squared type="bool">true</squared>
+  </binding>
+ </axis>
+
+ <axis>
+  <desc>Rudder</desc>
+  <number>
+   <mac>2</mac>
+   <unix>2</unix>
+   <windows>3</windows>
+  </number>
+  <dead-band type="double">0.4</dead-band>
+  <binding>
+   <command>property-scale</command>
+   <property>/controls/flight/rudder</property>
+   <factor type="double">1.0</factor>
+  </binding>
+ </axis>
+
+ <axis>
+  <desc>Throttle</desc>
+  <number>
+   <mac>3</mac>
+   <unix>3</unix>
+   <windows>2</windows>
+  </number>
+  <binding>
+   <command>nasal</command>
+   <script>controls.throttleAxis()</script>
+  </binding>
+ </axis>
+
+ <axis>
+  <desc>View Direction</desc>
+  <number>
+   <mac>4</mac>
+   <unix>4</unix>
+   <windows>6</windows>
+  </number>
+  <low>
+   <repeatable>true</repeatable>
+   <binding>
+    <command>property-adjust</command>
+    <property>/sim/current-view/goal-heading-offset-deg</property>
+    <step type="double">2.0</step>
+   </binding>
+  </low>
+  <high>
+   <repeatable>true</repeatable>
+   <binding>
+    <command>property-adjust</command>
+    <property>/sim/current-view/goal-heading-offset-deg</property>
+    <step type="double">-2.0</step>
+   </binding>
+  </high>
+ </axis>
+
+ <axis>
+  <desc>View Elevation</desc>
+  <number>
+   <mac>5</mac>
+   <unix>5</unix>
+   <windows>7</windows>
+  </number>
+  <low>
+   <repeatable>true</repeatable>
+   <binding>
+    <command>property-adjust</command>
+    <property>/sim/current-view/goal-pitch-offset-deg</property>
+    <step type="double">2.0</step>
+   </binding>
+  </low>
+  <high>
+   <repeatable>true</repeatable>
+   <binding>
+    <command>property-adjust</command>
+    <property>/sim/current-view/goal-pitch-offset-deg</property>
+    <step type="double">-2.0</step>
+   </binding>
+  </high>
+ </axis>
+
+ <!-- button #1 -->
+ <button n="0">
+  <desc>Brakes</desc>
+  <binding>
+   <command>property-assign</command>
+   <property>/controls/gear/brake-left</property>
+   <value type="double">1.0</value>
+  </binding>
+  <binding>
+   <command>property-assign</command>
+   <property>/controls/gear/brake-right</property>
+   <value type="double">1.0</value>
+  </binding>
+  <mod-up>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/gear/brake-left</property>
+    <value type="double">0.0</value>
+   </binding>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/gear/brake-right</property>
+    <value type="double">0.0</value>
+   </binding>
+  </mod-up>
+ </button>
+
+ <button n="1">
+  <desc>HUD Master Switch</desc>
+  <binding>
+   <command>hud-masterswitch</command>
+  </binding>
+ </button>
+
+ <button n="4">
+  <desc>Elevator trim up</desc>
+  <repeatable type="bool">true</repeatable>
+  <binding>
+   <command>property-adjust</command>
+   <property>/controls/flight/elevator-trim</property>
+   <step type="double">0.001</step>
+  </binding>
+ </button>
+
+ <button n="2">
+  <desc>Elevator trim down</desc>
+  <repeatable type="bool">true</repeatable>
+  <binding>
+   <command>property-adjust</command>
+   <property>/controls/flight/elevator-trim</property>
+   <step type="double">-0.001</step>
+  </binding>
+ </button>
+
+ <button n="3">
+  <desc>Flaps down</desc>
+  <binding>
+   <command>nasal</command>
+   <script>controls.flapsDown(1)</script>
+  </binding>
+  <mod-up>
+   <binding>
+    <command>nasal</command>
+    <script>controls.flapsDown(0)</script>
+   </binding>
+  </mod-up>
+ </button>
+
+<!--button #6-->
+ <button n="5">
+  <desc>Flaps up</desc>
+  <repeatable>false</repeatable>
+  <binding>
+   <command>nasal</command>
+   <script>controls.flapsDown(-1)</script>
+  </binding>
+  <mod-up>
+   <binding>
+    <command>nasal</command>
+    <script>controls.flapsDown(0)</script>
+   </binding>
+  </mod-up>
+ </button>
+
+ <button n="6">
+  <desc>Gear down.</desc>
+  <binding>
+   <command>nasal</command>
+   <script>controls.gearDown(1)</script>
+  </binding>
+  <mod-up>
+   <binding>
+    <command>nasal</command>
+    <script>controls.gearDown(0)</script>
+   </binding>
+  </mod-up>
+ </button>
+
+ <button n="7">
+   <desc>Gear Up.</desc>
+   <binding>
+     <command>nasal</command>
+     <script>controls.gearDown(-1)</script>
+   </binding>
+   <mod-up>
+     <binding>
+       <command>nasal</command>
+       <script>controls.gearDown(0)</script>
+     </binding>
+   </mod-up>
+ </button>
+
+ <button n="9">
+  <desc>Mixture leaner.</desc>
+  <repeatable type="bool">true</repeatable>
+  <binding>
+   <command>nasal</command>
+   <script>controls.adjMixture(-1)</script>
+  </binding>
+ </button> 
+
+ <button n="8">
+  <desc>Mixture richer.</desc>
+  <repeatable type="bool">true</repeatable>
+  <binding>
+   <command>nasal</command>
+   <script>controls.adjMixture(1)</script>
+  </binding>
+ </button> 
+
+ <button n="10">
+  <desc>Decrease spoilers.</desc>
+  <binding>
+   <command>nasal</command>
+   <script>controls.stepSpoilers(-1)</script>
+  </binding>
+ </button>
+
+ <button n="11">
+  <desc>Increase spoilers.</desc>
+  <binding>
+   <command>nasal</command>
+   <script>controls.stepSpoilers(1)</script>
+  </binding>
+ </button>
+
+<!--
+ <button n="11">
+  <desc>Right brake</desc>
+  <binding>
+   <command>property-assign</command>
+   <property>/controls/gear/brake-right</property>
+   <value type="double">1.0</value>
+  </binding>
+  <mod-up>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/gear/brake-right</property>
+    <value type="double">0.0</value>
+   </binding>
+  </mod-up>
+ </button>
+
+ <button n="10">
+  <desc>Left brake</desc>
+  <binding>
+   <command>property-assign</command>
+   <property>/controls/gear/brake-left</property>
+   <value type="double">1.0</value>
+  </binding>
+  <mod-up>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/gear/brake-left</property>
+    <value type="double">0.0</value>
+   </binding>
+  </mod-up>
+ </button>
+-->
+
+</PropertyList>
+
+

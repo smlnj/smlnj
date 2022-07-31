@@ -1,0 +1,42 @@
+= The `ORD_KEY` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ORD_KEY` signature defines an interface to an abstract type
+of keys with a comparison function.  This signature is used as
+the argument to various implementations of finite maps and sets.
+
+== Synopsis
+
+[source,sml]
+------------
+signature ORD_KEY
+------------
+
+== Interface
+
+[source,sml]
+------------
+type ord_key
+
+val compare : ord_key * ord_key -> order
+------------
+
+== Description
+
+`[.kw]#type# ord_key`::
+  The abstract key type.
+
+`[.kw]#val# compare : ord_key * ord_key \-> order`::
+  `compare (k1, k2)` returns the relation between the two keys.  This
+  function should define a *total* order on the `ord_key` type.
+
+== See Also
+
+xref:sig-ORD_MAP.adoc[`ORD_MAP`],
+xref:sig-ORD_SET.adoc[`ORD_SET`],
+xref:fun-GraphSCCFn.adoc[`GraphSCCFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

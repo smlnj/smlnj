@@ -1,0 +1,20 @@
+(* uuid-lib.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources file for UUID library.
+ *)
+
+Library
+
+  structure UUID
+  structure GenUUID
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  gen-uuid.sml
+  uuid.sml

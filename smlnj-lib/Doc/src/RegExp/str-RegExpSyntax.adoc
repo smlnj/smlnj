@@ -1,0 +1,196 @@
+= The `RegExpSyntax` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `RegExpSyntax` structure provides an abstract-syntax-tree
+representation of regular expressions.  Its main purpose is to
+provide communication between different front-ends (implementing
+different RE specification languages), and different back-ends
+(implementing different compilation/searching algorithms).
+It is also possible, however, to use it as a way to directly
+specify a regular expression for a back-end engine.
+
+== Synopsis
+
+[source,sml]
+------------
+signature REGEXP_SYNTAX
+structure RegExpSyntax : REGEXP_SYNTAX
+------------
+
+== Interface
+
+[source,sml]
+------------
+exception CannotCompile
+
+structure CharSet : ORD_SET where type Key.ord_key = char
+
+datatype syntax
+  = Group of syntax
+  | Alt of syntax list
+  | Concat of syntax list
+  | Interval of (syntax * int * int option)
+  | MatchSet of CharSet.set
+  | NonmatchSet of CharSet.set
+  | Char of char
+  | Begin
+  | End
+
+val optional : syntax -> syntax
+val closure : syntax -> syntax
+val posClosure : syntax -> syntax
+
+val fromRange : char * char -> CharSet.set
+val addRange : CharSet.set * char * char -> CharSet.set
+
+val allChars : CharSet.set
+
+val alnum : CharSet.set
+val alpha : CharSet.set
+val ascii : CharSet.set
+val blank : CharSet.set
+val cntl : CharSet.set
+val digit : CharSet.set
+val graph : CharSet.set
+val lower : CharSet.set
+val print : CharSet.set
+val punct : CharSet.set
+val space : CharSet.set
+val upper : CharSet.set
+val word : CharSet.set
+val xdigit : CharSet.se
+------------
+
+== Description
+
+[[exn:CannotCompile]]
+`[.kw]#exception# CannotCompile`::
+  This exception is meant to be raised by back-ends when they encounter
+  a feature that they cannot handle.
+
+`[.kw]#structure# CharSet : ORD_SET where type Key.ord_key = char`::
+  This substructure implements sets of 8-bit characters.  Currently it
+  is implemented using sorted lists (_i.e._, using the
+  xref:../Util/fun-ListSetFn.adoc[`ListSetFn`] functor), but that may
+  be changed in the future.
+
+`[.kw]#datatype# syntax`::
+ This datatype defines the abstract syntax of regular expressions that
+  is supported by the library.  The constructors are defined as follows:
++
+--
+[[con:Group]]
+* `Group re`::
+  defines a match group (_i.e._, that produce a corresponding
+  match-tree node for the input matched by `re`.
+
+* `Alt[re1, re2, ..., ren]`::
+  matches any of `re1`, `re2`, ..., `ren`.  If the list is empty, then it
+  matches nothing.
+
+* `Concat[re1, re2, ..., ren]`::
+  matches the concatenation of `re1`, `re2`, ..., `ren`.  If the list
+  is empty, then it matches the empty string.
+
+* `Interval(re, n, NONE)`::
+  matches `re` repeated at least `n` times.
+
+* `Interval(re, n, SOME m)`::
+  matches `re` repeated from `n` to `m` times.
+
+* `MatchSet cs`::
+  matches a single character that is in the set `cs`.
+
+* `NonmatchSet cs`::
+  matches a single character that is *not* in the set `cs`.
+
+* `Char c`::
+  matches the single character `c`.
+
+* `Begin`::
+  matches beginning of the input stream.
+
+* `End`::
+  matches end of the input stream.
+--
+
+`[.kw]#val# optional : syntax -> syntax`::
+  `optional re` is equivalent to `Interval(re, 0, SOME 1)`.
+
+`[.kw]#val# closure : syntax -> syntax`::
+  `closure re` is equivalent to `Interval(re, 0, NONE)`.
+
+`[.kw]#val# posClosure : syntax -> syntax`::
+  `posClosure re` is equivalent to `Interval(re, 1, NONE)`.
+
+`[.kw]#val# fromRange : char * char \-> CharSet.set`::
+  `fromRange (c1, c2)` returns the set containing the characters
+  in the range from `c1` to `c2` (inclusive).  This expression
+  raises the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN[`Size`]
+  exception if `c2 < c1`.
+
+`[.kw]#val# addRange : CharSet.set * char * char \-> CharSet.set`::
+  `addRange (cs, c1, c2)` adds the set of characters in the range
+  from `c1` to `c2` (inclusive) to `cs`.  This expression raises
+  the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN[`Size`]
+  exception if `c2 < c1`.
+
+`[.kw]#val# allChars : CharSet.set`::
+  is the set of all 8-bit characters.
+
+=== POSIX Character Classes
+
+The `RegExpSyntax` structure pre-defines the following character sets,
+which are part of the POSIX regular-expression standard (plus a couple
+of extras):
+
+`[.kw]#val# alnum : CharSet.set`::
+  is the set of letters and digits.
+
+`[.kw]#val# alpha : CharSet.set`::
+  is the set of letters.
+
+`[.kw]#val# ascii : CharSet.set`::
+  is the set of characters `c` such that `0 \<= ord c \<= 127`.
+
+`[.kw]#val# blank : CharSet.set`::
+  is the set of ``#"\t"`` and space.
+
+`[.kw]#val# cntl : CharSet.set`::
+  is the set of non-printable characters.
+
+`[.kw]#val# digit : CharSet.set`::
+  is the set of decimal digits.
+
+`[.kw]#val# graph : CharSet.set`::
+  is the set of visible characters (does not include space).
+
+`[.kw]#val# lower : CharSet.set`::
+  is the set of lower-case letters.
+
+`[.kw]#val# print : CharSet.set`::
+  is the set of printable characters (includes space).
+
+`[.kw]#val# punct : CharSet.set`::
+  is the set of visible characters other than letters and digits.
+
+`[.kw]#val# space : CharSet.set`::
+  is the set of ``\#"\t"``, ``#"\r"``, ``\#"\n"``, ``#"\v"``, ``#"\f"``, and space.
+
+`[.kw]#val# upper : CharSet.set`::
+  is the set of upper-case letters.
+
+`[.kw]#val# word : CharSet.set`::
+  is the set of letters, digit, and ``#"_"``.
+
+`[.kw]#val# xdigit : CharSet.set`::
+  is the set of hexadecimal digits.
+
+== See Also
+
+xref:sig-REGEXP_ENGINE.adoc[`REGEXP_ENGINE`],
+xref:regexp-lib.adoc[__The RegExp Library__]

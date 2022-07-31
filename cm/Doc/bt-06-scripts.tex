@@ -1,0 +1,138 @@
+%!TEX root = btcomp.tex
+%
+
+\section{Scripts}
+
+This section gives a detailed description for each script, its
+function, and its options.  All scripts described here are located in
+the {\tt src/system} directory.\footnote{If the current directory {\tt
+.} is not on the shell's search path, then each script must be invoked
+using an explicit {\tt ./}-prefix.  Example: {\tt ./makeml}.}
+
+\subsection{The {\tt makeml} script}
+\label{script:makeml}
+
+This script is used after a successful run of {\tt CMB.make} (or {\tt
+CMB.make'}).  It {\em links} the compiler and its interactive system,
+forming a corresponding heap image.  In addition to that, it prepares
+a new directory containing stable CM libraries to be used with the new
+image.
+
+One way of thinking about this is to view {\tt makeml} as a function
+mapping a bootfile directory $b$ to a
+pair consisting of a heap image {\tt $v$.{\it arch}-{\it osname}} and
+a library directory {\tt $v$.lib}.  The strings $b$ and $v$ are
+optional parameters; the defaults are {\tt sml.boot.{\it arch}-{\it os}}
+for $b$ and {\tt sml} for $v$.
+
+The script accepts a number of options as follows:
+
+\begin{description}
+\item[-o $v$] specifies a $v$ other than the default {\tt sml}.
+\item[-boot $b$] specifies a $b$ other than the default {\tt
+sml.boot.{\it arch}-{\it os}}.
+\item[-quiet] instructs {\tt makeml} to greatly reduce its
+diagnostic output.  In particular, the names of files being linked are
+not shown.  The default for this can be controlled via a
+boolean-valued environment variable {\tt MAKEML\_VERBOSITY}.  If the
+variable is not set, then the default is {\tt true} (meaning ``verbose'').
+\item[-verbose] is the opposite of {\tt -quiet}.
+\item[-rebuild $u$] puts {\tt makeml} into a different mode: After
+loading the executable section of all binfiles and linking them, it
+will not read any static environments, will not initialize the usual
+interactive system and will not produce a heap image.  Instead, it
+internally invokes the equivalent of {\tt CMB.make' (SOME
+\verb+"+$u$\verb+"+)}, thus recompiling everything again.  When
+recompilation is complete, {\tt makeml} stops; the newly-built system
+must be linked using a separate explicit invocation of {\tt makeml}.
+Notice that {\tt $u$.boot.{\it arch}-{\it os}} must be different from
+$b$.
+\item[-rebuildlight $u$] is the same as {\tt -rebuild $u$} except that
+the symbol {\tt LIGHT} will be defined (using {\tt CMB.symval}) for
+the duration of the compilation.  The effect of this is that no
+cross-compilers will be built (which can save considerable time).
+Alternative names for {\bf -rebuildlight} are {\bf -light} and {\bf
+-lightrebuild}.
+\item[-bare] causes {\tt makeml} to build a reduced version of
+the system without the compilation manager CM included.  This is
+useful for people who are interested in an interactive system only.
+\item[-run $r$] selects the executable for the SML/NJ runtime system.
+The default is {../../bin/.run/run.{\it arch}-{\it osname}}.
+\item[-alloc $a$] specifies the size of the SML/NJ garbage-collector's
+allocation area.  The default depends on the current machine
+architecture.
+\end{description}
+
+The most common usage is to simply say {\tt ./makeml} without any
+arguments, taking advantage of the defaults as described above.
+
+\subsection{The {\tt testml} script}
+
+The {\tt testml} script launches a newly-built and newly-linked
+interactive system.  It requires a previous run of the {\tt makeml}
+script because it uses the heap image {\tt $v$.{\it arch}-{\it osname}}
+and libraries in {\tt $v$.lib}.
+
+If no arguments are given, $v$ defaults to {\tt sml}.  If at least one
+argument is given, then $v$ is assumed to be the first one. All other
+arguments are passed to the initialization routine of the interactive
+system just like normal arguments to the {\tt sml} command would.
+
+This means that one {\em must} specify a $v$ unless there are no
+command-line arguments at all.
+
+\subsection{The {\tt installml} script}
+
+The {\tt installml} script moves a heap image {\tt $v$.{\it arch}-{\it osname}}
+to {\tt ../../bin/.heap/sml.{\it arch}-{\it osname}}.  Moreover, it
+moves the libraries under {\tt $v$.lib} to {\tt ../../lib} and updates
+{\tt ../../lib/pathconfig} accordingly.
+
+The script takes one optional argument which specifies $v$.  If no
+argument is given, $v$ defaults to {\tt sml}.
+
+\subsection{The {\tt fixpt} script}
+
+One good test of whether a new version of the compiler is working
+properly is to see if it compiles to a {\em fixed point}.  For this,
+the compiler is compiled $n$ times with the result of the $(k-1)$st
+compilation being responsible for compiling the $k$th version.
+A fixed point is reached if two consecutive compilations produce
+identical results.
+
+The {\tt fixpt} script automates the task of compiling to a fixed
+point.  It internally uses the {\tt sml} command for the first
+compilation and the {\tt makeml} script with its {\tt -rebuild}
+parameter for all subsequent runs.  This produces a series of bin-directories
+{\tt $u$.bin.{\it arch}-{\it os}},
+{\tt $u$1.bin.{\it arch}-{\it os}},
+{\tt $u$2.bin.{\it arch}-{\it os}},$\ldots$
+and boot-directories
+{\tt $u$.boot.{\it arch}-{\it os}},
+{\tt $u$1.boot.{\it arch}-{\it os}},
+{\tt $u$2.boot.{\it arch}-{\it os}},$\ldots$
+where $u$ is a common ``stem'' that is used for naming the whole series.
+
+The {\tt fixpt} script accepts the following options:
+
+\begin{description}
+\item[-iter $n$] limits the number of iterations to $n$.  The default
+for $n$ is 3.  If no fixed point is found after $n$ iterations, then
+{\tt fixpt} terminates with an error message.
+\item[-base $u$] selects the ``stem'' $u$ (see above).  The default is
+{\tt sml}.
+\item[-light] causes {\tt LIGHT} to be defined during compilation.
+(See the discussion of {\tt makeml}'s {\tt -rebuildlight} option.)
+\end{description}
+
+Failure to reach a fixed point after 2 iterations usually indicates
+some serious problem within the compiler.
+
+\subsection{The {\tt allcross} script}
+
+Finally, the {\tt allcross} script is handy for building bin- and
+boot-files for all architectures.  The script currently takes no
+arguments and compiles (and cross-compiles) for 6 supported
+combinations of {\it arch} and {\it os}: {\tt alpha32-unix}, {\tt
+hppa-unix}, {\tt ppc-unix}, {\tt sparc-unix}, {\tt x86-unix}, and {\tt
+x86-win32}.

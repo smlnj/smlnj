@@ -1,0 +1,209 @@
+#
+# init.cmi
+#
+# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+#
+# This is the specification for how to build the "init library".
+# The main purpose of the init library is to tie in the runtime system
+# and to build the pervasive environment.  The pervasive enviroment
+# must contain a binding of the "special" structure named "_Core".
+# Because of its special nature, the init library cannot be described as
+# an ordinary CM library.  Instead, it is built from the DAG description
+# in this file.  The bootstrap compiler turns the init library into an
+# ordinary stable library.  The boot process fetches the pervasive
+# environment from that stable library.
+#
+# In addition to the pervasive environments, the init library can (and does)
+# also export additional definitions.  These can be accessed by client code
+# (such as the implementation of the Basis library) by simply listing
+# "init.cmi : cm" in their respective library description files.  (Since CM
+# does not automatically recognize the member class of ".cmi" files, the
+# class "cm" must be given explicitly.)  Clients who want to access "init.cmi"
+# must be in possession of the privilege named "primitive".
+#
+# The specification is basically a DAG: "bind" statements define
+# named environments which are the results of compiling the files on the
+# right-hand side of "=" wrt. a combination of the environments given
+# in parentheses.
+#
+# Format of this file:
+#  - The file is processed on a line-by-line basis.
+#  - Empty lines and lines beginning with "#" are ignored.
+#  - Non-comment lines continue on the next line if their last character
+#    before the newline is a backslash \.
+#  - Actual whitespace, "=", ",", "(", and ")" are all counted as whitespace.
+#     (this means that the syntactic sugar you see below is really just
+#      sugar for the human eye; the program that processes this file can
+#      do without it)
+#  - A line that says "nosplit" disables cross-module inlining (aka
+#    "lambda-splitting") until the next line that says "split".
+#  - A "split" can take an additional argument of the same form that
+#    is used for the "lambdasplit" option to SML files in CM.
+#    If no argument is given, it is assumed to be "default".
+#  - The (single) "rts-placeholder" line acts mostly like a "bind" line.
+#    Its purpose is to specify the module that plays the role of a
+#    placeholder for the runtime system.
+#  - A "bind-core" line acts like a "bind" line, but it has an additional
+#    first argument which must be the name of a structure bound at top-level
+#    by the named .sml file.  CM replaces these bindings by corresponding
+#    bindings of the internal structure symbol "_Core".
+#  - "bind" lines (as well as "bind-core" lines and the "rts-placeholder"
+#    line) must be in topological order (i.e., they cannot access environment
+#    names that are being defined later).
+#  - The last line that gets processed is the "return" line.
+#    It must specify at least one environment name, namely the one that is
+#    used as the system-wide "pervasive" environment.
+#    For any additional name n the exports of the module that was bound
+#    (by "bind") to n are added to the exports of the init library.
+#    These exports can be accessed by clients that explicitly list init.cmi
+#    in their own description files.
+#    Note: Since some clients need direct access to the core environment,
+#    the name "core" is also listed.  This "core" (as opposed to "xcore"
+#    has a binding for structure "Core" which can be accessed directly
+#    from SML source code.)
+#  - There is one pre-defined name ("primitive") that refers to the
+#    Environment.primEnv.  It must not be "exported" by the "return" line.
+#  - A line of the form "ifdef SYMBOL rest ..." is equivalent to "rest ..."
+#    if the CM symbol "SYMBOL" is defined (i.e., if "#if defined(SYMBOL)"
+#    would be true in ordinary description files).  If SYMBOL is not
+#    defined, then the "ifdef" line will be ignored.
+#  - Similarly, a line of the form "ifndef SYMBOL rest ..." is equivalent
+#    to "rest ..." if SYMBOL is not defined; otherwise the line will
+#    be ignored.
+#
+# Note that a binding for structure _Core is necessary ALMOST EVERYWHERE.
+# Therefore, it is necessary that the pervasive environment has such a
+# binding.  For files of this initial library (which do not yet have the
+# benefit of being able to access the pervasive environment), a trivial
+# member "xcore" is used to supply _Core.
+#
+# Conditional compilation:
+#
+#  Guarded lines of the "ifdef" and "ifndef" variety (see above) are used to
+#  achive a limited form of conditional compilation within the init library.
+#  Since "ifdef" and "ifndef" guards can be applied even to lines that
+#  are already guarded, one can easily get the effect of a logical "and".
+#  A logical "or" can be obtained by duplicating lines that have different
+#  guards. (Be careful with this, though.  The guards of such duplicated
+#  lines must be mutually exclusive! Otherwise the same ML source might get
+#  included more than once.)
+#  Thus, any logical combinaton of conditions can be expressed (albeit perhaps
+#  clumsily).  For simple case (such as, for example, having different source
+#  files for different architectures), this facility should be easy to use.
+#
+#  Example:
+#   ...
+#   ifdef  ARCH_SPARC                  bind foo = foo-sparc.sml (bar, baz)
+#   ifdef  ARCH_X86                    bind foo = foo-x86.sml (bar, baz)
+#   ifndef ARCH_SPARC ifndef ARCH_X86  bind foo = foo-default.sml (bar, baz)
+#   ...
+#
+# See base/cm/bootstrap/build-initdg.sml for the code that processes this file.
+#
+
+#### END OF EXPLANATION, SPEC STARTS HERE...
+
+# The "signature" of the runtime system.  (No _Core yet.)
+bind asig = assembly.sig (primitive)
+
+# The placeholder for the runtime system. (No _Core yet.)
+rts-placeholder rts = dummy.sml (asig, primitive)
+
+# definition of type order
+bind order = order.sml (primitive)
+
+# Minimal support for arbitrary-precision integers.
+ifdef SIZE_32 \
+	bind coreintinf = target32-core-intinf.sml (rts, order, primitive)
+ifdef SIZE_64 \
+	bind coreintinf = target64-core-intinf.sml (rts, order, primitive)
+
+# Minimal support for (simulated) 64-bit words on 32-bit target
+ifdef SIZE_32 \
+	bind coreword64 = core-word64.sml (rts, primitive, coreintinf)
+
+# Minimal support for (simulated) 64-bit ints on 32-bit target
+ifdef SIZE_32 \
+	bind coreint64 = core-int64.sml (rts, primitive, coreintinf)
+
+# This defines the core environment to be used everywhere else...
+# (This binds the structure symbol "Core", which is not yet the one that
+# is used implicitly by the compiler.  Of course, "core.sml" itself cannot
+# yet have access to _Core.)
+ifdef SIZE_32 \
+	bind core = target32-core.sml (rts, asig, coreintinf, coreword64, coreint64, primitive)
+ifdef SIZE_64 \
+	bind core = target64-core.sml (rts, asig, coreintinf, primitive)
+
+# Now we make the binding for structure _Core for use by the remaining
+# members of the init library. (Everybody else in the world gets access to
+# _Core via the pervasive env.)
+# The "bind-core" line says that its first argument ("xCore") should be
+# re-written as "_Core" before compilation. This rewriting is done
+# internally after the parser has already completed. Normally, there is
+# no way of referring explicitly to a structure named _Core.
+bind-core (xCore) xcore = xcore.sml (core)
+
+# The rest of the DAG...
+# (Everybody implicitly depends on xcore to have access to _Core.)
+ifdef SIZE_32 \
+	bind inline = target32-inline.sml (core, primitive, xcore)
+ifdef SIZE_64 \
+	bind inline = target64-inline.sml (core, primitive, xcore)
+# The PPC does not have hardware support for sqrt
+ifdef ARCH_PPC \
+	bind math-inlT = math-built-in-none.sml (core, primitive, xcore)
+ifndef ARCH_PPC \
+	bind math-inlT = math-built-in.sml (core, primitive, xcore)
+
+# raw memory support for FFI (but not when cross compiling)
+ifndef CMB_CROSS ifdef ARCH_X86 \
+	bind rawmem = rawmem.sml (core, primitive, xcore)
+ifdef CMB_CROSS ifdef ARCH_X86 \
+	bind rawmem = rawmem-dummy.sml (core, primitive, xcore)
+ifndef CMB_CROSS ifdef ARCH_SPARC \
+	bind rawmem = rawmem.sml (core, primitive, xcore)
+ifdef CMB_CROSS ifdef ARCH_SPARC \
+	bind rawmem = rawmem-dummy.sml (core, primitive, xcore)
+ifndef CMB_CROSS ifdef ARCH_PPC \
+	bind rawmem = rawmem.sml (core, primitive, xcore)
+ifdef CMB_CROSS ifdef ARCH_PPC \
+	bind rawmem = rawmem-dummy.sml (core, primitive, xcore)
+ifndef ARCH_X86 ifndef ARCH_SPARC ifndef ARCH_PPC \
+	bind rawmem = rawmem-dummy.sml (core, primitive, xcore)
+
+bind pp = pre-perv.sml (inline, order, xcore)
+bind ps = pre-string.sml (core, inline, pp, xcore)
+bind ss-sig = substring.sig (pp, inline, xcore)
+bind ss = substring.sml (ss-sig, pp, ps, core, inline, xcore)
+bind print-hook = print-hook.sml (inline, xcore)
+bind use-hook = use-hook.sml (inline, xcore)
+bind exn-info-hook = exn-info-hook.sml (inline, xcore, ps)
+bind init-utils = init-utils.sml (ps ss-sig ss, xcore)
+
+# Building the "pervasive" environment.  This file should be
+# kept as small as possible and only bind non-modular things
+# (i.e., top-level types and values).
+# Make sure everybody else in the world gets access to structure _Core...
+ifdef SIZE_32 \
+	bind-core (xCore) pervasive = pervasive.sml (core, ps, ss, pp, print-hook, \
+						     use-hook, exn-info-hook, \
+						     coreintinf, \
+						     coreword64, coreint64, \
+						     math-inlT, inline, xcore)
+ifdef SIZE_64 \
+	bind-core (xCore) pervasive = pervasive.sml (core, ps, ss, pp, print-hook, \
+						     use-hook, exn-info-hook, \
+						     coreintinf, \
+						     math-inlT, inline, xcore)
+
+# Report the results to the world...
+ifdef SIZE_32 \
+	return (pervasive) inline math-inlT print-hook use-hook exn-info-hook core \
+			   init-utils rawmem coreintinf coreword64 coreint64
+ifdef SIZE_64 \
+	return (pervasive) inline math-inlT print-hook use-hook exn-info-hook core \
+			   init-utils rawmem coreintinf

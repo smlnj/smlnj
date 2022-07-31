@@ -1,0 +1,175 @@
+<!-- uref.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=2001>
+<VERSION VERID="1.0" YEAR=2001 MONTH=3 DAY=23>
+<TITLE>The UREF signature</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/UREF/ signature</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<!-- <SEEALSO>    -->
+<!--   non-empty list of XREFS here   -->
+<!-- </SEEALSO>    -->
+
+<PP>
+A reference-cell style interface to union-find data structures.
+There are two implementations of this interface: <STRREF>SimpleURef</STRREF>
+implements a union-find data structure with path compression, while
+<STRREF>URef</STRREF> adds ranks to the representation to better balance
+the data structures.
+
+<SIGNATURE SIGID="UREF">
+  <SIGBODY SIGID="UREF" FILE=UREF>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>uref
+    <SPEC>
+      <VAL>uRef<TY>'a -> 'a uref
+        <COMMENT>
+          <PROTOTY>
+          uRef <ARG>x</ARG>
+          </PROTOTY>
+          <PP>
+          creates a new element with contents <ARG>x</ARG>.
+        </COMMENT>
+    <SPEC>
+      <VAL>equal<TY>('a uref * 'a uref) -> bool
+        <COMMENT>
+          <PROTOTY>
+          equal (<ARG>ur1</ARG>, <ARG>ur2</ARG>)
+          </PROTOTY>
+          <PP>
+          returns true if and only if <ARG>ur1</ARG> and <ARG>ur2</ARG>
+	  are either made by the same call to <VALREF>uRef</VALREF>,
+	  or if they have been unioned (see below).
+        </COMMENT>
+    <SPEC>
+      <VAL>!!<TY>'a uref -> 'a
+        <COMMENT>
+          <PROTOTY>
+          !! <ARG>ur</ARG>
+          </PROTOTY>
+          <PP>
+          returns the contents of <ARG>ur</ARG>.
+	  Note that <CD>!!(<VALREF>uRef</VALREF> <ARG>x</ARG>) = <ARG>x</ARG></CD>
+	  when <ARG>x</ARG> has equality type, and that
+	  <CD><VALREF>equal</VALREF>(<VALREF>uRef</VALREF> (<VALREF>!!</VALREF><ARG>x</ARG>), <ARG>x</ARG>) = false</CD>
+        </COMMENT>
+    <SPEC>
+      <VAL>update<TY>('a uref * 'a) -> unit
+        <COMMENT>
+          <PROTOTY>
+          update (<ARG>ur</ARG>, <ARG>x</ARG>)
+          </PROTOTY>
+          <PP>
+          updates the contents of <ARG>ur</ARG> to be <ARG>x</ARG>.
+        </COMMENT>
+    <SPEC>
+      <VAL>unify<TY>(('a * 'a) -> 'a) -> ('a uref * 'a uref) -> bool
+        <COMMENT>
+          <PROTOTY>
+          unify <ARG>f</ARG> (<ARG>ur1</ARG>, <ARG>ur2</ARG>)
+          </PROTOTY>
+          <PP>
+          makes <ARG>ur1</ARG> and <ARG>ur2</ARG> equal and returns <CD>true</CD>
+	  if they were not equal prior to the call.
+	  The contents of the unified cell is
+	  <CD><ARG>f</ARG>(<ARG>v1</ARG>, <ARG>v2</ARG>)</CD>, where
+	  <ARG>v1</ARG> and <ARG>v2</ARG> are the contents of
+	  <ARG>ur1</ARG> and <ARG>ur2</ARG>, respectively, prior to the
+	  <VALREF NOLINK>unify</VALREF> operation.
+        </COMMENT>
+    <SPEC>
+      <VAL>union<TY>('a uref * 'a uref) -> bool
+        <COMMENT>
+          <PROTOTY>
+          union (<ARG>ur1</ARG>, <ARG>ur2</ARG>)
+          </PROTOTY>
+          <PP>
+          makes <ARG>ur1</ARG> and <ARG>ur2</ARG> equal and returns <CD>true</CD>
+	  if they were not equal prior to the call.
+	  The contents of the unioned element is the contents of one
+	  of <ARG>ur1</ARG> and <ARG>ur2</ARG> before the union operation.
+	  After <CD><VALREF NOLINK>union</VALREF>(<ARG>ur1</ARG>, <ARG>ur2</ARG>)</CD>
+	  elements <ARG>ur1</ARG> and <ARG>ur2</ARG> will be congruent in the
+	  sense that they are interchangeable in any context.
+        </COMMENT>
+    <SPEC>
+      <VAL>link<TY>('a uref * 'a uref) -> bool
+        <COMMENT>
+          <PROTOTY>
+          link (<ARG>ur1</ARG>, <ARG>ur2</ARG>)
+          </PROTOTY>
+          <PP>
+          makes <ARG>ur1</ARG> and <ARG>ur2</ARG> equal and returns <CD>true</CD>
+	  if they were not equal prior to the call.
+	  The contents of the linked element is the contents of
+	  <ARG>ur2</ARG> before the link operation.
+        </COMMENT>
+  </SIGBODY>
+  <SIGINSTANCE> <ID> URef
+  <SIGINSTANCE> <ID> SimpleURef
+</SIGNATURE>
+<PP>
+A <SIGREF>UREF</SIGREF> structure consists of a type constructor
+<TYREF SIGID="UREF">uref</TYREF> with operations for
+making an element uref (<VALREF SIGID="UREF">uRef</VALREF>),
+getting the contents of an element (<VALREF SIGID="UREF">!!</VALREF>),
+checking for equality of two elements (<VALREF SIGID="UREF">equal</VALREF>), and
+for joining two elements (<VALREF SIGID="UREF">union</VALREF>).
+The <TYREF SIGID="UREF">uref</TYREF> type is is analogous to the &SML; reference
+type as expressed in the following table:
+<TABLE>
+  <COL ALIGN=LEFT> <COL ALIGN=LEFT> <COL ALIGN=LEFT>
+  <TR>
+    <TH></TH>
+    <TH><CD>ref</CD></TH>
+    <TH><VALREF SIGID="UREF">uref</VALREF></TH>
+  </TR>
+  <TR>
+    <TD>introduction</TD>
+    <TD><CD>ref</CD></TD>
+    <TD><VALREF SIGID="UREF">uRef</VALREF></TD>
+  </TR>
+  <TR>
+    <TD>elimination</TD>
+    <TD><CD>!</CD></TD>
+    <TD><VALREF SIGID="UREF">!!</VALREF></TD>
+  </TR>
+  <TR>
+    <TD>equality</TD>
+    <TD><CD>=</CD></TD>
+    <TD><VALREF SIGID="UREF">equal</VALREF></TD>
+  </TR>
+  <TR>
+    <TD>updating</TD>
+    <TD><CD>:=</CD></TD>
+    <TD><VALREF SIGID="UREF">::=</VALREF></TD>
+  </TR>
+  <TR>
+    <TD>unioning</TD>
+    <TD>n.a.</TD>
+    <TD><VALREF SIGID="UREF">link</VALREF>,
+      <VALREF SIGID="UREF">union</VALREF>, and
+      <VALREF SIGID="UREF">unify</VALREF></TD>
+  </TR>
+</TABLE>
+The main difference is in the union
+operations.
+Without these, refs and urefs can be used interchangebly.
+An assignment to a reference changes only the
+contents of the reference, but not the reference itself.  In
+particular, any two pointers that were different (in the sense of the
+equality predicate = returning false) before an assignment will still
+be so.  Their contents may or may not be equal after the assignment,
+though.  In contrast, applying the union operations (link, union,
+unify) to two uref elements makes the two elements themselves
+equal (in the sense of the predicate equal returning true).  As a
+consequence their contents will also be identical: in the case of link
+and union it will be the contents of one of the two unioned elements,
+in the case of unify the contents is determined by a binary
+function parameter.  The link, union, and unify functions return <CD>true</CD>
+when the elements were previously NOT equal.
+
+</INTERFACE>

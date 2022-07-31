@@ -1,0 +1,11 @@
+(* smlnj/viscomp/parser.cm
+ *
+ * The SML/NJ parser.
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *)
+Library
+	group($compiler/Parse/parser.cm)
+is
+	(* reference to our only group... *)
+	$compiler/Parse/parser.cm

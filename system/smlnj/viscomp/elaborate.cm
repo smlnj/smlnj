@@ -1,0 +1,11 @@
+(* smlnj/viscomp/elaborate.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * The SML/NJ elaborator.
+ *)
+Library
+	group($compiler/Elaborator/elaborate.cm)
+is
+	(* reference to our only group... *)
+	$compiler/Elaborator/elaborate.cm

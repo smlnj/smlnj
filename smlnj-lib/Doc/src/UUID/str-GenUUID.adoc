@@ -1,0 +1,34 @@
+= The `GenUUID` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `GenUUID` structure implements a generator for random
+(Variant 1, Type 4) UUIDs.  The random number generator
+is seeded by the current time.
+
+== Synopsis
+
+[source,sml]
+------------
+structure GenUUID
+------------
+
+== Interface
+
+[source,sml]
+------------
+val new : unit -> UUID.t
+------------
+
+== Description
+
+`[.kw]#val# new : unit \-> UUID.t`::
+  `new ()` generates a new Variant 1, Type 4 UUID.
+
+== See Also
+
+xref:str-UUID.adoc[`UUID`],
+xref:uuid-lib.adoc[__The UUID Library__]

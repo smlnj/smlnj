@@ -1,0 +1,9 @@
+signature REGEXP_PARSER
+signature REGEXP_ENGINE
+structure RegExpSyntax
+structure MatchTree
+structure AwkSyntax
+structure BackTrackEngine
+structure DfaEngine
+structure ThompsonEngine
+functor RegExpFn

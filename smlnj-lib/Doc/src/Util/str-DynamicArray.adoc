@@ -1,0 +1,216 @@
+= The `DynamicArray` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `DynamicArray` structure provides dynamically sized polymorphic
+arrays.  Each array has an associated _default_ value, which is
+covers those elements that have not been explicitly initialized
+(conceptually, one can view an array as having an infinite size).
+Thus, reads from indices above the bound will return the default value.
+The __bound__ of an array is the highest index of an initialized
+element (or `~1` if there are no initialized elements).  The
+__defined range__ of the array are the elements in the positions
+indexed from zero to the bound.
+
+== Synopsis
+
+[source,sml]
+------------
+structure DynamicArray
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a array
+
+val array : (int * 'a) -> 'a array
+
+val subArray : ('a array * int * int) -> 'a array
+
+val fromList : 'a list * 'a -> 'a array
+val fromVector : 'a vector * 'a -> 'a array
+
+val toList : 'a array -> 'a list
+val toVector : 'a array -> 'a vector
+
+val tabulate: (int * (int -> 'a) * 'a) -> 'a array
+
+val default : 'a array -> 'a
+
+val sub : ('a array * int) -> 'a
+
+val update : ('a array * int * 'a) -> unit
+
+val bound : 'a array -> int
+
+val truncate : ('a array * int) -> unit
+
+val appi : (int * 'a -> unit) -> 'a array -> unit
+val app : ('a -> unit) -> 'a array -> unit
+val modifyi : (int * 'a -> 'a) -> 'a array -> unit
+val modify : ('a -> 'a) -> 'a array -> unit
+val foldli : (int * 'a * 'b -> 'b) -> 'b -> 'a array -> 'b
+val foldri : (int * 'a * 'b -> 'b) -> 'b -> 'a array -> 'b
+val foldl : ('a * 'b -> 'b) -> 'b -> 'a array -> 'b
+val foldr : ('a * 'b -> 'b) -> 'b -> 'a array -> 'b
+val findi : (int * 'a -> bool) -> 'a array -> (int * 'a) option
+val find : ('a -> bool) -> 'a array -> 'a option
+val exists : ('a -> bool) -> 'a array -> bool
+val all : ('a -> bool) -> 'a array -> bool
+val collate : ('a * 'a -> order) -> 'a array * 'a array -> order
+
+val vector : 'a array -> 'a vector
+------------
+
+== Description
+
+`[.kw]#type# 'a array`::
+  The polymorphic type of dynamic arrays.  Each array has a _default value_
+  and a _bound_, where the _bound_ is the largest index for which an explicit
+  value has been set.  Reads from indices above the bound will return the
+  default value.
+
+`[.kw]#val# array : (int * 'a) \-> 'a array`::
+  `array (sz, dflt)` returns a new array with bound `~1` and default
+  value `dflt`.  The `sz` argument, which must be non-negative, is used
+  as a hint of the potential range of indices.  This function raises
+  the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
+  exception if `sz < 0`.
+
+`[.kw]#val# subArray : ('a array * int * int) \-> 'a array`::
+  `subArray (arr, lo, hi)` returns a new array with the same default
+  as `arr`, and whose values in the range `[0, hi-lo]` are equal to
+  the values in `arr` in the range `[lo, hi]`.  This function raises
+  the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
+  exception if `lo > hi`.
+
+`[.kw]#val# fromList : 'a list * 'a \-> 'a array`::
+  `fromList (lst, dflt)` returns a new array created from the elements
+  of `lst` and with default value `dflt`.  The bound of the array will be
+  `length lst - 1`.
+
+`[.kw]#val# fromVector : 'a Vector.vector * 'a \-> 'a array`::
+  `fromVector (vec, dflt)` returns a new array created from the elements
+  of `vec` and with default value `dflt`.  The bound of the array will be
+  `length vec - 1`.
+
+`[.kw]#val# toList : 'a array \-> 'a list`::
+  `toList arr` returns a list of the array's contents.  The resulting
+  list will have the array's bound plus one elements.
+
+[[val:toVector]]
+`[.kw]#val# toVector : 'a array \-> 'a vector`::
+  `toVector arr` returns a list of the array's contents.  The resulting
+  vector will have the array's bound plus one elements.
+
+`[.kw]#val# tabulate: (int * (int \-> 'a) * 'a) \-> 'a array`::
+  `tabulate (sz, init, dflt)` returns a new array with the first
+  `sz` elements initialized using the function `init` and the
+  default value `dflt`.  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
+  exception if `sz < 0`.
+
+`[.kw]#val# default : 'a array \-> 'a`::
+  `default arr` returns the default value for the array.
+
+`[.kw]#val# sub : ('a array * int) \-> 'a`::
+  `sub (arr, ix)` returns the value of the array at index `ix`.
+  If that value has not been explicitly set, then it returns the array's
+  default value.  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Subscript:EXN:SPEC[`Subscript`]
+  exception if `ix < 0`.
+
+`[.kw]#val# update : ('a array * int * 'a) \-> unit`::
+  `update (arr, ix, v)` sets the value at index `ix` of the array to `v`.
+  If `ix` is greater than the current bound of the array, then the bound
+  is set to `ix`.  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Subscript:EXN:SPEC[`Subscript`]
+  exception if `ix < 0`.
+
+`[.kw]#val# bound : 'a array \-> int`::
+  `bound arr` returns the current bound of the array, which is the highest
+  index that has been explicitly set (__e.g.__, by `update`).
+
+`[.kw]#val# truncate : ('a array * int) \-> unit`::
+  `truncate (arr, sz)` sets every entry with index greater or equal to
+  `sz` to the array's default value.
+
+`[.kw]#val# appi : (int * 'a \-> unit) \-> 'a array \-> unit`::
+  `appi f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.appi:VAL[`Array.appi`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# app : ('a \-> unit) \-> 'a array \-> unit`::
+  `app f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.app:VAL[`Array.app`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# modifyi : (int * 'a \-> 'a) \-> 'a array \-> unit`::
+  `modifyi f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.modifyi:VAL[`Array.modifyi`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# modify : ('a \-> 'a) \-> 'a array \-> unit`::
+  `modify f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.modify:VAL[`Array.modify`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# foldli : (int * 'a * 'b \-> 'b) \-> 'b \-> 'a array \-> 'b`::
+  `foldli f init arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.foldli:VAL[`Array.foldli`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# foldri : (int * 'a * 'b \-> 'b) \-> 'b \-> 'a array \-> 'b`::
+  `foldri f init arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.foldri:VAL[`Array.foldri`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# foldl : ('a * 'b \-> 'b) \-> 'b \-> 'a array \-> 'b`::
+  `foldl f init arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.foldl:VAL[`Array.foldl`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# foldr : ('a * 'b \-> 'b) \-> 'b \-> 'a array \-> 'b`::
+  `foldr f init arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.foldr:VAL[`Array.foldr`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# findi : (int * 'a \-> bool) \-> 'a array \-> (int * 'a) option`::
+  `findi f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.findi:VAL[`Array.findi`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# find : ('a \-> bool) \-> 'a array \-> 'a option`::
+  `find f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.find:VAL[`Array.find`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# exists : ('a \-> bool) \-> 'a array \-> bool`::
+  `exists f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.exists:VAL[`Array.exists`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# all : ('a \-> bool) \-> 'a array \-> bool`::
+  `all f arr` behaves like the
+  {sml-basis-url}/mono-array.html#SIG:ARRAY.all:VAL[`Array.all`]
+  function on the defined range of `arr`.
+
+`[.kw]#val# collate : ('a * 'a \-> order) \-> 'a array * 'a array \-> order`::
+  `collate cmp (arr1, arr2)` return the lexicographic order of the defined
+  ranges of the two arrays using the given comparison `cmp` on elements.
+
+=== Deprecated functions
+
+`[.kw]#val# vector : 'a array \-> 'a vector`::
+  Use xref:#val:toVector[`toVector`] instead.
+
+== See Also
+
+xref:fun-DynamicArrayFn.adoc[`DynamicArrayFn`],
+{sml-basis-url}/array.html[`Array`],
+xref:smlnj-lib.adoc[__The Util Library__]

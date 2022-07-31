@@ -1,0 +1,23 @@
+(* backend-arm64.cm
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This is the Arm64-specific (aka AArch64) part (backend) of the compiler.
+ *
+ * The present file is a group which gets referred to by the actual library
+ * file in system/smlnj/viscomp/arm64.cm.
+ *)
+
+Group
+  structure Arm64Backend
+is
+
+  TopLevel/backend/arm64-backend.sml
+
+  NewCodeGen/targets/arm64-spec.sml
+
+  $smlnj/basis/basis.cm
+  $smlnj/smlnj-lib/smlnj-lib.cm
+  $smlnj/viscomp/basics.cm
+  $smlnj/viscomp/core.cm

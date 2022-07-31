@@ -1,0 +1,33 @@
+1) Install from SVN sources on an x86 Unix machine.
+mkdir sml
+cd sml
+export SMLNJ_HOME=`pwd`
+svn co https://smlnj-gforge.cs.uchicago.edu/svn/smlnj/admin
+admin/checkout-all.sh
+
+2) Build the compiler.
+config/install.sh
+
+3) Boostrap the compiler on the host machine.
+cd base/system
+sml
+- CM.autoload "$smlnj/cmb.cm";
+- CMB.make();
+./makeml -rebuild x86
+./makeml
+./installml
+cd ../..
+config/install.sh
+
+4) Rebuild with your changes for the target machine.
+cd base/system
+sml
+- CM.autoload "$smlnj/cmb/x86-win32.cm";
+- X86Win32CMB.make();
+
+5) Copy files over to the root of the Windows SML/NJ enlistment. They are in
+a newly created sml.boot.x86-win32 subdirectory in the current directory.
+
+6) From the root of your Windows SML/NJ enlistment, run config\install.bat.
+You will want to delete the bin/ and lib/ directories if they already exist from
+a prior installation.

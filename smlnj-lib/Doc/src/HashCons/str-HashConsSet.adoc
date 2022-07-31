@@ -1,0 +1,253 @@
+= The `HashConsSet` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashConsSet` structure implements finite sets of hash-consed objects.
+
+== Synopsis
+
+[source,sml]
+------------
+signature HASH_CONS_SET
+structure HashConsSet : HASH_CONS_SET
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a obj = 'a HashCons.obj
+
+type 'a set
+
+val empty : 'a set
+
+val singleton : 'a obj -> 'a set
+
+val fromList : 'a obj list -> 'a set
+
+val add  : 'a set * 'a obj -> 'a set
+val add' : ('a obj * 'a set) -> 'a set
+
+val addList : 'a set * 'a obj list -> 'a set
+
+val subtract  : 'a set * 'a obj -> 'a set
+val subtract' : ('a obj * 'a set) -> 'a set
+
+val subtractList : 'a set * 'a obj list -> 'a set
+
+val delete : 'a set * 'a obj -> 'a set
+
+val member : 'a set * 'a obj -> bool
+
+val isEmpty : 'a set -> bool
+
+val equal : ('a set * 'a set) -> bool
+
+val compare : ('a set * 'a set) -> order
+
+val isSubset : ('a set * 'a set) -> bool
+
+val disjoint : 'a set * 'a set -> bool
+
+val numItems : 'a set ->  int
+
+val toList : 'a set -> 'a obj list
+val listItems : 'a set -> 'a obj list
+
+val union : 'a set * 'a set -> 'a set
+val intersection : 'a set * 'a set -> 'a set
+val difference : 'a set * 'a set -> 'a set
+
+val map : ('a obj -> 'b obj) -> 'a set -> 'b set
+
+val mapPartial : ('a obj -> 'b obj option) -> 'a set -> 'b set
+
+val app : ('a obj -> unit) -> 'a set -> unit
+
+val foldl : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
+val foldr : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
+
+val partition : ('a obj -> bool) -> 'a set -> ('a set * 'a set)
+
+val filter : ('a obj -> bool) -> 'a set -> 'a set
+
+val all : ('a obj -> bool) -> 'a set -> bool
+val exists : ('a obj -> bool) -> 'a set -> bool
+
+val find : ('a obj -> bool) -> 'a set -> 'a obj option
+------------
+
+== Description
+
+`[.kw]#type# 'a obj = 'a HashCons.obj`::
+  The elements in the set are hash-cons objects.
+
+`[.kw]#type# 'a set`::
+  A finite set of ``'a obj`` values.
+
+`[.kw]#val# empty : 'a set`::
+  The empty set.
+
+`[.kw]#val# singleton : 'a obj \-> 'a set`::
+  `singleton obj` creates a singleton set containing `obj`.
+
+`[.kw]#val# fromList : 'a obj list \-> 'a set`::
+  `fromList objs` creates a set from the list of objects.
+
+`[.kw]#val# add  : 'a set * 'a obj \-> 'a set`::
+  `add (set, obj)` adds the object to the set.
+
+`[.kw]#val# add' : ('a obj * 'a set) \-> 'a set`::
+  `add' (obj, set)` adds the object to the set.
+
+`[.kw]#val# addList : 'a set * 'a obj list \-> 'a set`::
+  `addList (set, objs)` adds the list of objects to the set.
+
+`[.kw]#val# subtract  : 'a set * 'a obj \-> 'a set`::
+  `subtract (set, obj)` removes the object `obj` from `set`.
+  Acts as the identity if `obj` is not in the set.
+
+`[.kw]#val# subtract' : ('a obj * 'a set) \-> 'a set`::
+  `subtract (obj, set)` removes the object `obj` from `set`.
+  Acts as the identity if `obj` is not in the set.
+
+`[.kw]#val# delete : 'a set * 'a obj \-> 'a set`::
+  `delete (set, obj)` removes the object `obj` from `set`.
+  Unlike `subtract`, this function raises the
+  xref:../Util/str-LibBase.adoc#exn:NotFound[`NotFound`]
+  exception if `obj` is not in the set.
+
+`[.kw]#val# member : 'a set * 'a obj \-> bool`::
+  `member (obj, set)` returns `true` if, and only if, `obj`
+  is an element of `set`.
+
+`[.kw]#val# isEmpty : 'a set \-> bool`::
+  `isEmpty set` returns true if, and only if, `set` is empty.
+
+`[.kw]#val# equal : ('a set * 'a set) \-> bool`::
+  `equal (set1, set2)` returns true if, and only if, the two
+  sets are equal (_i.e._, they contain the same elements).
+
+`[.kw]#val# compare : ('a set * 'a set) \-> order`::
+  `compare (set1, set2)` returns the lexical order of
+  the two sets.
+
+`[.kw]#val# isSubset : ('a set * 'a set) \-> bool`::
+  `isSubset (set1, set2)` returns true if, and only if, `set1`
+  is a subset of `set2` (_i.e._, any element of `set1` is an
+  element of `set2`).
+
+`[.kw]#val# disjoint : 'a set * 'a set \-> bool`::
+  `equal (set1, set2)` returns true if, and only if, the two
+  sets are disjoint (_i.e._, their intersection is empty).
+
+`[.kw]#val# numItems : 'a set \->  int`::
+  `numItems set` returns the number of items in the `set`.
+
+[[val:toList]]
+`[.kw]#val# toList : 'a set \-> 'a obj list`::
+  `toList set` returns a list of the objects in `set`.
+
+`[.kw]#val# union : 'a set * 'a set \-> 'a set`::
+  `union (set1, set2)` returns the union of the two sets.
+
+`[.kw]#val# intersection : 'a set * 'a set \-> 'a set`::
+  `intersection (set1, set2)` returns the intersection of the two sets.
+
+`[.kw]#val# difference : 'a set * 'a set \-> 'a set`::
+  `difference (set1, set2)` returns the difference of the two sets;
+  _i.e._, the set of objects that are in `set1`, but not in
+  `set2`.
+
+`[.kw]#val# map : ('a obj \-> 'b obj) \-> 'a set \-> 'b set`::
+  `map f set` constructs a new set from the result of applying the
+  function `f` to the elements of `set`.  This expression is
+  equivalent to
++
+[source,sml]
+------------
+fromList (List.map f (toList set))
+------------
+
+`[.kw]#val# mapPartial : ('a obj \-> 'b obj option) \-> 'a set \-> 'b set`::
+  `mapPartial f set` constructs a new set from the result of applying the
+  function `f` to the elements of `set`.  This expression is
+  equivalent to
++
+[source,sml]
+------------
+fromList (List.mapPartial f (toList set))
+------------
+
+`[.kw]#val# app : ('a obj \-> unit) \-> 'a set \-> unit`::
+  `app f set` applies the function `f` to the objects in `set`.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.app f (toList set)
+------------
+
+[[val:fold]]
+`[.kw]#val# fold : ('a obj * 'b \-> 'b) \-> 'b \-> 'a set \-> 'b`::
+  `fold f init set` folds the function `f` over the objects in
+  `set` using `init` as the initial value.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldl f init (toList set)
+------------
+  Although the order in which the elements are processed is unspecified.
+
+`[.kw]#val# partition : ('a obj \-> bool) \-> 'a set \-> ('a set * 'a set)`::
+  `partition pred set` returns a pair of disjoint sets `(tSet, fSet)`, where
+  the predicate `pred` returns true for every element of `tSet`,
+ `false` for every element of `fSet`, and `set` is the union of `tSet`
+  and `fSet`.
+
+`[.kw]#val# filter : ('a obj \-> bool) \-> 'a set \-> 'a set`::
+  `filter pred set` filters out any elements of set for which the
+  predicate `pred` returns false.
+  This expression is equivalent to
++
+[source,sml]
+------------
+#1 (partition pred set)
+------------
+
+`[.kw]#val# all : ('a obj \-> bool) \-> 'a set \-> bool`::
+  `all pred set` returns `true` if, and only if, `pred obj` returns
+  true for all elements `obj` in `set`.
+
+`[.kw]#val# exists : ('a obj \-> bool) \-> 'a set \-> bool`::
+  `exists pred set` returns `true` if, and only if, there exists an
+  element `obj` in `set` such that `pred obj` returns `true`.
+
+`[.kw]#val# find : ('a obj \-> bool) \-> 'a set \-> 'a obj option`::
+  `find pred set` returns `SOME obj` if there exists an object `obj`
+  in the set for which `pred obj` returns `true`; otherwise `NONE` is returned.
+
+=== Deprecated functions
+
+The following functions are part of the interface, but have been
+deprecated.
+
+`[.kw]#val# listItems : 'a set \-> 'a obj list`::
+  Use xref:#val:toList[`toList`] instead.
+
+`[.kw]#val# foldl : ('a obj * 'b \-> 'b) \-> 'b \-> 'a set \-> 'b`::
+  Use xref:#val:fold[`fold`] instead.
+
+`[.kw]#val# foldr : ('a obj * 'b \-> 'b) \-> 'b \-> 'a set \-> 'b`::
+  Use xref:#val:fold[`fold`] instead.
+
+== See Also
+
+xref:str-HashCons.adoc[`HashCons`],
+xref:str-HashConsMap.adoc[`HashConsMap`],
+xref:hash-cons-lib.adoc[__The HashCons Library__]

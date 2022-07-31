@@ -1,0 +1,4 @@
+Library
+	structure B
+is
+	mult-b.sml

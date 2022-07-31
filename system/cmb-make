@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# script to compile using the batch compiler
+# usage:
+#	cmb-make [ <sml-cmd> ] <flags> ...
+#
+# Do a batch compiler of the compiler; the optional <sml-cmd> argument specifes
+# the path to the SML compiler to use for the build.
+#
+
+
+usage() {
+  echo "usage: cmb-make [ options ] [ <sml-cmd> ]"
+  echo "  Options:"
+  echo "    -C<ctl>=<v>   -- control argument passed to compile command"
+  echo "    -D<ctl>=<v>   -- CM define argument passed to compile command"
+  exit 1
+}
+
+SML=sml
+ARGS=""
+# Process command-line arguments
+#
+while [ "$#" != "0" ] ; do
+    arg=$1; shift
+    case $arg in
+    -32)
+	echo "$this: 32-bits not supported anymore"
+	usage
+	;;
+    -64) ;;
+    -C*) ARGS="$ARGS $arg" ;;
+    -D*) ARGS="$ARGS $arg" ;;
+    *)  SML=$arg
+	break
+	;;
+    esac
+done
+
+exec $SML $ARGS $@ -DNO_PLUGINS '$smlnj/cmb.cm' <<XXXX
+CMB.make();
+XXXX

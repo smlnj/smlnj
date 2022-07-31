@@ -1,0 +1,63 @@
+<!-- char-map.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY CharMap SDATA "char-map-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=11>
+<TITLE>The CharMap structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/CharMap/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID DOCUMENT=SML-BASIS-DOC/Char/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/CharMap/ structure provides fast, read-only
+maps from characters to values.
+
+<STRUCTURE STRID="CharMap">
+  <OPAQUE>  <SIGBODY SIGID="CHAR_MAP" FILE=CHAR-MAP>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>char_map
+    <SPEC>
+      <VAL>mkCharMap<TY>{default : 'a, bindings : (string * 'a) list} -> 'a char_map
+        <COMMENT>
+          <PROTOTY>
+          mkCharMap {<ARG/default/, <ARG/bindings/}
+          </PROTOTY>
+          makes a character map that maps the bound characters to their 
+          bindings and maps everything else to the default value.
+          Specifically, if <CD/c/ is a character and <CD/(str,v)/ is an
+          item in <ARG/bindings/ with <CD/c/ in <CD/str/, then <CD/c/
+          will be mapped to <CD/v/. Otherwise, <CD/c/ is mapped to
+          <ARG/default/.
+
+          <PP>
+          Note that the <ARG/bindings/ list is processed from left to
+          right, so if a character appears in multiple strings, the
+          binding specified by the rightmost one will be the one used
+          in the map.
+    <SPEC>
+      <VAL>mapChr<TY>'a char_map -> char -> 'a
+        <COMMENT>
+          <PROTOTY>
+          mapChr <ARG/cm/ <ARG/c/
+          </PROTOTY>
+          maps the given character.
+    <SPEC>
+      <VAL>mapStrChr<TY>'a char_map -> (string * int) -> 'a
+        <COMMENT>
+          <PROTOTY>
+          mapStrChr <ARG/cm/ (<ARG/s/, <ARG/i/)
+          </PROTOTY>
+          is equivalent to
+          <CODE>
+          mapChr cm (String.sub(s, i)))
+          </CODE>
+</STRUCTURE>
+
+</INTERFACE>

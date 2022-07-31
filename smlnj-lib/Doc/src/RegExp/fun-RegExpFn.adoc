@@ -1,0 +1,133 @@
+= The `RegExpFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `RegExpFn` functor glues together a front-end regular-expression
+parser with a back-end regular-expression engine.
+
+== Synopsis
+
+[source,sml]
+------------
+signature REGEXP
+functor RegExpFn (
+    structure P : REGEXP_PARSER
+    structure E : REGEXP_ENGINE
+  ) :> REGEXP where type regexp = E.regexp
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+structure P : REGEXP_PARSER
+structure E : REGEXP_ENGINE
+------------
+
+== Functor Argument Description
+
+`[.kw]#structure# P : xref:sig-REGEXP_PARSER.adoc[REGEXP_PARSER]`::
+  The front-end parser for the regular-expression syntax.
+
+`[.kw]#structure# E : xref:sig-REGEXP_ENGINE.adoc[REGEXP_ENGINE]`::
+  The back-end engine.
+
+== Interface
+
+[source,sml]
+------------
+type regexp
+
+type 'a match = {pos : 'a, len : int} MatchTree.match_tree
+
+exception CannotParse
+
+val compile : (char,'a) StringCvt.reader -> (regexp, 'a) StringCvt.reader
+val compileString : string -> regexp
+
+val find : regexp -> (char,'a) StringCvt.reader -> ('a match, 'a) StringCvt.reader
+
+val prefix : regexp -> (char,'a) StringCvt.reader -> ('a match, 'a) StringCvt.reader
+
+val match : (string * ('a match -> 'b)) list
+      -> (char,'a) StringCvt.reader -> ('b, 'a) StringCvt.reader
+------------
+
+== Interface Description
+
+`[.kw]#type# regexp`::
+  The type of a compiled regular expression.
+
+  (* a match specifies the position (as a stream) and the length of the match *)
+`[.kw]#type# 'a match = {pos : 'a, len : int} MatchTree.match_tree`::
+  A xref:str-MatchTree.adoc#type:match_tree[match tree] specifying the starting
+  position and size of matches.  For a general
+  {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[character reader] `getc`,
+  we can extract the string for a match using the following function:
++
+[source,sml]
+------------
+fun getMatchString {pos, len} = let
+      fun get (_, 0, chrs) = String.implodeRev chrs
+        | get (strm, n, chrs) = let
+            val SOME(c, rest) = getc strm
+            in
+              get (rest, n-1, c::chrs)
+            end
+      in
+        get (pos, len, [])
+      end
+------------
++
+More direct means are possible for specific input sources (_e.g._, strings,
+substrings, or text input).
+
+[[exn:CannotParse]]
+`[.kw]#exception# CannotParse`::
+  This exception is raised by the functions xref:#val:compileString[`compileString`]
+  xref:#val:match[`match`] when the front-end encounters a syntax error.
+
+`[.kw]#val# compile : (char,'a) StringCvt.reader \-> (regexp, 'a) StringCvt.reader`::
+  `compile getc strm` parses and compiles a regular expression from the input
+  stream `strm` using the
+  {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[character reader] `getc`.
+  If successful, it returns `SOME(re, strm')`, where `re` is the compiled
+  regular expression and ``strm'`` is the residual input stream.  It returns
+  `NONE` if there is a syntax error in the input.  If the source regular
+  expression contains features that are not supported by the back-end engine,
+  then the xref:str-RegExpSyntax.adoc#exn:CannotCompile[`CannotCompile`]
+  exception is raised.
+
+[[val:compileString]]
+`[.kw]#val# compileString : string \-> regexp`::
+  `compileString s` returns the compiled regular expression defined
+  by the string `s`.  The xref:#exn:CannotParse[`CannotParse`] exception
+  is raised if there was a syntax error when parsing `s` and the
+  xref:str-RegExpSyntax.adoc#exn:CannotCompile[`CannotCompile`] exception
+  is raised if  the source regular expression contains features that are
+  not supported by the back-end engine.
+
+`[.kw]#val# find : regexp \-> (char,'a) StringCvt.reader \-> ('a match, 'a) StringCvt.reader`::
+  `find re getc strm` returns `SOME mt` where `mt` describes the *first*
+  match of `re` in the input stream; otherwise it returns `NONE` if there
+  is no match.
+
+`[.kw]#val# prefix : regexp \-> (char,'a) StringCvt.reader \-> ('a match, 'a) StringCvt.reader`::
+  `prefix re getc strm` returns `SOME mt` where `mt` describes the
+  matching of `re` at the *beginning* of the input stream; otherwise it
+  returns `NONE` if `re` does not match a prefix of the input.
+
+[[val:match]]
+`[.kw]#val# match : (string * ('a match \-> 'b)) list \-> (char,'a) StringCvt.reader \-> ('b, 'a) StringCvt.reader`::
+  `match rules getc strm` attempts to match one of the `rules` starting at the
+  current stream position.  Each rule is a pair of a regular expression and
+  an action.  The rules are tested in order; if a rule `(re, act)` matches with
+  the result `mt`, then the result of `match` will be `SOME(act mt)`.
+  If no rule matches, then `NONE` is the result.
+
+== See Also
+
+xref:regexp-lib.adoc[__The RegExp Library__]

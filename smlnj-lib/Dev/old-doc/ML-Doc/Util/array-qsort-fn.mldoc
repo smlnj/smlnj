@@ -1,0 +1,40 @@
+<!-- array-qsort-fn.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY ArrayQSortFn SDATA "mono-array-sort-sig.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=5 DAY=12>
+<TITLE>The ArrayQSortFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/ArrayQSortFn/ functor</HEAD>
+<SEEALSO>
+  <SIGREF DOCUMENT=SML-BASIS-DOC/MONO_ARRAY/
+  <SIGREF/MONO_ARRAY_SORT/
+  <SIGREF/ARRAY_SORT/
+</SEEALSO>
+
+<PP>
+The functor <FCTREF NOLINK/ArrayQSortFn/ implements functions for the
+in-place sorting of monomorphic arrays. The algorithm used is based
+on the a tuned version of quicksort due to J. Bentley and D. McIlroy
+described in ``Engineering a Sort Function,'' <EM/Software-Practice
+and Experience/, 23(11), 1993, pp. 1249-1265.
+
+<PP>
+The functor argument should be thinned to the minimum needed by the
+algorithm, which requires only an array type, plus the functions
+<CD/sub/, <CD/length/ and <CD/update/.
+
+<PP>
+Not that the sorting algorithm is not stable.
+
+<FUNCTOR FCTID="ArrayQSortFn">
+  <ID/A/<SIGREF DOCUMENT=SML-BASIS-DOC>MONO_ARRAY</SIGREF>
+  <ID/MONO_ARRAY_SORT/
+</FUNCTOR>
+
+</INTERFACE>

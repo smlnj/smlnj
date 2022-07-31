@@ -1,0 +1,763 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+	<title>Scripts [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for scripting elements. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="keywords" content="scripts, JavaScript, ECMAScript, VBScript, tcl, perlscript, COBOLScript, MIME types, application/x-javascript, application/javascript, application/ecmascript, text/javascript, text/ecmascript, noscript, defer">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="quote" title="Quotations">
+	<link rel="next" href="tables" title="Tables">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Scripts</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="quote" rel="prev" accesskey="P" title="Prior: Quotations">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="tables" rel="next" accesskey="N" title="Next: Tables"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+
+	<h1>Scripts (<a class="specsect" href="http://www.w3.org/TR/html4/interact/scripts.html" title="HTML 4.0 Specification">&sect;18</a>)</h1>
+
+	<div class="section" id="noscript">
+		<h2>Noscript nitpicking (<a class="specsect" href="http://www.w3.org/TR/html4/interact/scripts.html#h-18.3.1" title="HTML 4.0 Specification">&sect;18.3.1</a>)</h2>
+
+		<div class="bodytext">
+			<p>An <abbr>HTML</abbr> 4.0 compliant Web browser that cannot render scripts <em>must</em> render contents of a <dfn><a class="specsect" href="http://www.w3.org/TR/html4/interact/scripts.html#edef-noscript" title="HTML 4.0 Specification: 18 Scripts"><code class="element">&lt;noscript></code></a></dfn> element. Compliant Web browsers that can render scripts <em>should</em> render contents of a <code class="element">&lt;noscript></code> element when scripting is disabled.</p>
+			<p>The standard also says Web browsers should render <code class="element">&lt;noscript></code> after a script it could not render earlier in a document. <span class="note">This feature is of questionable desirability, and is rarely observed in practice.</span></p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			
+			<div class="blockcode">
+				<em class="html">&lt;script <strong class="tested">type="application/x-fakescript"</strong>></em>&lt;!--<br>
+				<div class="indent">
+					// There is no such thing as FakeScript.<br>
+					alert("I should not be running a FakeScript script!");<br>
+					document.writeln('&lt;p>&lt;em>This Web browser executed a FakeScript script.&lt;\/em>&lt;\/p>');<br>
+					// --><br>
+				</div>
+				<em class="html">&lt;/script></em><br>
+				<em class="html4"><strong class="tested">&lt;noscript></strong></em><br>
+				<div class="indent">
+					<em class="html">&lt;p></em>Technically, your Web browser should render this line whether or not scripting is enabled.<em class="html">&lt;/p></em><br>
+				</div>
+				<em class="html4"><strong class="tested">&lt;/noscript></strong></em>
+			</div>
+
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+				<script type="application/x-fakescript"><!--
+					// There is no such thing as FakeScript.
+					alert("I should not be running a FakeScript script!");
+					document.writeln("<p><em>This Web browser executed a FakeScript script.<\/em><\/p>");
+					// --> 
+				</script>
+				<noscript>
+					<p>Technically, your Web browser should render this line whether or not scripting is enabled.</p>
+				</noscript>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
+
+
+	<div class="section" id="type">
+		<h2>Content types</h2>
+
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/interact/scripts.html#adef-type-SCRIPT" title="HTML 4.0 Specification: 18 Scripts"><code class="attribute">type</code></a> attribute specifies the <a href="glossary#content_type" class="local" title="Glossary" rel="glossary">content type</a> of a script (that is, what language the script is in).</p>
+
+			<p class="note">On 27 June 2005, the <abbr>IETF</abbr> has at last <a href="http://www1.ietf.org/mail-archive/web/ietf-announce/current/msg01349.html">registered content types for JavaScript</a>, <strong><code class="content_type">application/javascript</code></strong>, <strong><code class="content_type">application/ecmascript</code></strong>, <strong><code class="content_type">text/javascript</code></strong> (marked obsolete), and <strong><code class="content_type">text/ecmascript</code></strong> (marked obsolete). Examples in the <abbr>HTML</abbr> 4.0 specification incorrectly used then&#8208;unregistered content type <code class="content_type">text/javascript</code> for JavaScript instead of well&#8208;established though unofficial content type <strong><code class="content_type">application/x-javascript</code></strong>. Using a subtype of <code class="content_type">text</code> for code to be executed instead of text for humans to read was a mistake and can cause problems. Examples also incorrectly use <code class="content_type">text/vbscript</code> (instead of <code class="content_type">application/x-vbscript</code>) and <code class="content_type">text/tcl</code> (instead of <code class="content_type">application/x-tcl</code>).</p>
+			<p class="note">The <code class="attribute">type</code> attribute replaces the ill&#8208;defined <code class="attribute">language</code> attribute used by older browsers. <abbr>HTML</abbr> 4.0 simultaneously introduces <code class="attribute">language</code> for compatibility, and deprecates it in favor of <code class="attribute">type</code>.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+		
+			<div class="blockcode">
+			<em class="html">&lt;div <em class="html4">id="validtypes"</em>></em><br>
+			<div class="indent">
+				<em class="html">&lt;p></em>This Web browser executes scripts with these valid content types:<em class="html">&lt;/p></em><br>
+				<br>
+				<em class="html">&lt;script <strong class="tested">type="application/javascript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Correct but rarely supported type for JavaScript<br>
+
+				if (document.createTextNode) {<br>
+				<div class="indent">
+					// the standards-compliant DOM way<br>
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("application/javascript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("validtypes");<br>
+					div.appendChild(newPara);<br>
+				</div>
+				} else {<br>
+				<div class="indent">
+					// the old DHTML way<br>
+					document.writeln("&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>application/javascript&lt;\/code> &lt;i>(without the &lt;abbr>DOM&lt;\/abbr>)&lt;\/i>&lt;\/p>");<br>
+				</div>
+				}<br>
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/ecmascript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Correct but rarely supported type for ECMAscript<br>
+				// Proposed by ECMAScript standard<br>
+
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("application/ecmascript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("validtypes");<br>
+					div.appendChild(newPara);<br>
+
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/x-vbscript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				' Correct unregistered type for VBScript<br>
+				option explicit<br>
+				dim newPara, textNode, codeNode, div<br><br>
+				set newPara = document.createElement("p")<br>
+				set textNode = document.createTextNode(ChrW(&amp;H2022) + " ")<br>
+				newPara.appendChild(textNode)<br><br>
+				set codeNode = document.createElement("code")<br>
+				newPara.appendChild(codeNode)<br><br>
+				set textNode = document.createTextNode("application/x-vbscript")<br>
+				codeNode.appendChild(textNode)<br><br>
+				set div = document.getElementById("validtypes")<br>
+				div.appendChild(newPara)<br>
+				' --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/x-tcl"</strong>></em>&lt;!--<br>
+				<div class="indent">
+					# Correct unregistered media type for Tcl.<br>
+					# I know of no Web browsers that run Tcl.<br>
+					document writeln "&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;i>&lt;code>text/tcl&lt;\/code>&lt;\/i>&lt;\/p>"<br>
+					# --><br>
+				</div>
+				<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/x-perlscript"</strong>></em>&lt;!--<br>
+				<div class="indent">
+					# Correct unregistered media type for PerlScript<br>
+					# I know of no Web browsers that run PerlScript,<br>
+					# but some Web servers can generate page content with it.<br>
+					$window->document->writeln("&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>application/x-perlscript&lt;\/code>&lt;\/p>");<br>
+					# --><br>
+				</div>
+				<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/x-cobolscript"</strong>></em>&lt;!--<br>
+				<div class="indent">
+					* You youngsters are so spoiled.<br>
+					* Back in the day, we wrote Web pages on punched cards...<br>
+					&nbsp;IDENTIFICATION DIVISION.<br>
+					&nbsp;PROGRAM-ID. Test_COBOLScript.<br>
+					&nbsp;DATA DIVISION.<br>
+					&nbsp;WORKING-STORAGE DIVISION.<br>
+					&nbsp;PROCEDURE DIVISION.<br>
+					<div class="indent">
+						&nbsp;INVOKE HOST "document.write" USING BY VALUE "&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>application/x-cobolscript&lt;".<br>
+						&nbsp;INVOKE HOST "document.write" USING BY VALUE "/code>&lt;".<br>
+						&nbsp;INVOKE HOST "document.write" USING BY VALUE "/p>"<br>
+					</div>
+					&nbsp;END PROGRAM.<br>
+					* --><br>
+				</div>
+				<em class="html">&lt;/script></em><br>
+			</div>
+			<em class="html">&lt;/div></em>
+			<br>
+			<em class="html">&lt;div <em class="html4">id="obsoletetypes"</em>></em><br>
+			<div class="indent">
+				<em class="html">&lt;p></em>This Web browser executes scripts with these valid, obsolete content types:<em class="html">&lt;/p></em><br>
+				<br>
+				<em class="html">&lt;script <strong class="tested">type="text/javascript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Historically misused for JavaScript<br>
+				// Registered as obsolete in 2005<br>
+				if (document.createTextNode) {<br>
+				<div class="indent">
+					// the standards-compliant DOM way<br>
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("text/javascript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("obsoletetypes");<br>
+					div.appendChild(newPara);<br>
+				</div>
+				} else {<br>
+				<div class="indent">
+					// the old DHTML way<br>
+					document.writeln("&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>text/javascript&lt;\/code> &lt;i>(without the &lt;abbr>DOM&lt;\/abbr>)&lt;\/i>&lt;\/p>");<br>
+				</div>
+				}<br>
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="text/ecmascript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Poorly-chosen default for scripts in SVG<br>
+				// Registered as obsolete in 2005<br>
+
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("text/ecmascript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("obsoletetypes");<br>
+					div.appendChild(newPara);<br>
+
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/x-javascript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Widely-accepted unregistered type for JavaScript<br>
+				// Used since the days of Netscape 3.x<br>
+				if (document.createTextNode) {<br>
+				<div class="indent">
+					// the standards-compliant DOM way<br>
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("application/x-javascript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("obsoletetypes");<br>
+					div.appendChild(newPara);<br>
+				</div>
+				} else {<br>
+				<div class="indent">
+					// the old DHTML way<br>
+					document.writeln("&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>application/x-javascript&lt;\/code> &lt;i>(without the &lt;abbr>DOM&lt;\/abbr>)&lt;\/i>&lt;\/p>");<br>
+				</div>
+				}<br>
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="application/x-ecmascript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Recommended by ECMAScript standard<br>
+				// To be replaced by application/ecmascript<br>
+
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("application/x-ecmascript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("obsoletetypes");<br>
+					div.appendChild(newPara);<br>
+
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+			</div>
+			<em class="html">&lt;/div></em>
+			<br>
+			<em class="html">&lt;div <em class="html4">id="invalidtypes"</em>></em><br>
+			<div class="indent">
+				<em class="html">&lt;p></em>This Web browser executes scripts with these unregistered content types:<em class="html">&lt;/p></em><br>
+				<br>
+				<em class="html">&lt;script <strong class="tested">type="text/fakescript"</strong>></em>&lt;!--<br>
+				<div class="indent">
+					alert("I should not be running a text/fakescript script!");<br>
+					document.writeln('&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;em>text/fakescript&lt;\/em>&lt;\/p>');<br>
+					// --><br>
+				</div>
+				<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="text/jscript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// Microsoft's proprietary version<br>
+
+				if (document.createTextNode) {<br>
+				<div class="indent">
+					// the standards-compliant DOM way<br>
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("text/jscript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("invalidtypes");<br>
+					div.appendChild(newPara);<br>
+				</div>
+				} else {<br>
+				<div class="indent">
+					// the old DHTML way<br>
+					document.writeln("&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>text/jscript&lt;\/code> &lt;i>(without the &lt;abbr>DOM&lt;\/abbr>)&lt;\/i>&lt;\/p>");<br>
+				</div>
+				}<br>
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="text/livescript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+				// iCab's alias<br>
+
+				if (document.createTextNode) {<br>
+				<div class="indent">
+					// the standards-compliant DOM way<br>
+					var newPara = document.createElement("p");<br><br>
+					var textNode = document.createTextNode("\u2022 ");<br>
+					newPara.appendChild(textNode);<br><br>
+					var codeNode = document.createElement("code");<br>
+					newPara.appendChild(codeNode);<br><br>
+					textNode = document.createTextNode("text/livescript");<br>
+					codeNode.appendChild(textNode);<br><br>
+					var div = document.getElementById("invalidtypes");<br>
+					div.appendChild(newPara);<br>
+				</div>
+				} else {<br>
+				<div class="indent">
+					// the old DHTML way<br>
+					document.writeln("&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;code>text/livescript&lt;\/code> &lt;i>(without the &lt;abbr>DOM&lt;\/abbr>)&lt;\/i>&lt;\/p>");<br>
+				</div>
+				}<br>
+				// --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="text/vbscript"</strong>></em>&lt;!--<br>
+			<div class="indent">
+
+				option explicit<br>
+				dim newPara, textNode, codeNode, div<br><br>
+				set newPara = document.createElement("p")<br>
+				set textNode = document.createTextNode(ChrW(&amp;H2022) + " ")<br>
+				newPara.appendChild(textNode)<br><br>
+				set codeNode = document.createElement("code")<br>
+				newPara.appendChild(codeNode)<br><br>
+				set textNode = document.createTextNode("text/vbscript")<br>
+				codeNode.appendChild(textNode)<br><br>
+				set div = document.getElementById("invalidtypes")<br>
+				div.appendChild(newPara)<br>
+				' --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="text/vbs"</strong>></em>&lt;!--<br>
+			<div class="indent">
+
+				option explicit<br>
+				dim newPara, textNode, codeNode, div<br><br>
+				set newPara = document.createElement("p")<br>
+				set textNode = document.createTextNode(ChrW(&amp;H2022) + " ")<br>
+				newPara.appendChild(textNode)<br><br>
+				set codeNode = document.createElement("code")<br>
+				newPara.appendChild(codeNode)<br><br>
+				set textNode = document.createTextNode("text/vbs")<br>
+				codeNode.appendChild(textNode)<br><br>
+				set div = document.getElementById("invalidtypes")<br>
+				div.appendChild(newPara)<br>
+				' --><br>
+			</div>
+			<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <strong class="tested">type="text/tcl"</strong>></em>&lt;!--<br>
+				<div class="indent">
+					# I know of no Web browsers that run Tcl.<br>
+					# The standard mentions text/tcl as an example value<br>
+					# for the Content-Script-Type header.<br>
+					document writeln "&lt;p><em class="html4"><em class="entity">&amp;bull;</em></em> &lt;i>&lt;code>text/tcl&lt;\/code>&lt;\/i>&lt;\/p>"<br>
+					# --><br>
+				</div>
+				<em class="html">&lt;/script></em><br>
+			</div>
+			<em class="html">&lt;/div></em>
+		</div>
+
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+			<div id="validtypes">
+				<p>This Web browser executes scripts with these valid content types:</p>
+
+				<script type="application/javascript"><!--
+				// Correct but rarely supported type for JavaScript
+
+				if (document.createTextNode) {
+					// the standards-compliant DOM way
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("application/javascript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("validtypes");
+					div.appendChild(newPara);
+				} else {
+					// the old DHTML way
+					document.writeln("<p>&bull; <code>application/javascript<\/code> <i>(without the <abbr>DOM<\/abbr>)<\/i><\/p>");
+				}
+				// -->
+			</script>
+				<script type="application/ecmascript"><!--
+				// Correct but rarely supported type for ECMA script
+				// Proposed by ECMAScript standard
+
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("application/ecmascript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("validtypes");
+					div.appendChild(newPara);
+
+				// -->
+			</script>
+				<script type="application/x-tcl"><!--
+				# The correct type for Tcl.<br>
+				# I know of no Web browsers that run Tcl.<br>
+					document write "<p>&bull; <code>text/tcl<\/code><\/p>"
+					# -->
+				</script>
+				<script type="application/x-vbscript"><!--
+					' The correct type for VBScript
+					document.writeln "<p>&bull; <code>text/vbscript<", "/code><", "/p>"
+					' -->
+				</script>
+				<script type="application/x-perlscript"><!--
+					# The correct type for PerlScript
+					# I know of no Web browsers that run PerlScript,
+					# but some Web servers can generate page content with it.
+					$window->document->writeln("<p>&bull; <code>application/x-perlscript<\/code><\/p>");
+					# -->
+				</script>
+				<script type="application/x-cobolscript"><!--
+					* You youngsters are so spoiled.
+					* Back in the day, we wrote Web pages on punched cards...
+					 IDENTIFICATION DIVISION.
+					 PROGRAM-ID. Test_COBOLScript.
+					 DATA DIVISION.
+					 WORKING-STORAGE DIVISION.
+					 PROCEDURE DIVISION.
+							 INVOKE HOST "document.write" USING BY VALUE "<p>&bull; <code>application/x-cobolscript<".
+							 INVOKE HOST "document.write" USING BY VALUE "/code><".
+							 INVOKE HOST "document.write" USING BY VALUE "/p>"
+					 END PROGRAM.
+					* -->
+				</script>
+			</div>
+			<div id="obsoletetypes">
+				<p>This Web browser executes scripts with these valid, obsolete content types:</p>
+
+				<script type="text/javascript"><!--
+				// Historically misused for JavaScript
+				// Registered as obsolete in 2005
+				if (document.createTextNode) {
+					// the standards-compliant DOM way
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("text/javascript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("obsoletetypes");
+					div.appendChild(newPara);
+				} else {
+					// the old DHTML way
+					document.writeln("<p>&bull; <code>text/javascript<\/code> <i>(without the <abbr>DOM<\/abbr>)<\/i><\/p>");
+				}
+				// -->
+			</script>
+				<script type="text/ecmascript"><!--
+				// Poorly-chosen default for scripts in SVG
+				// Registered as obsolete in 2005
+
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("text/ecmascript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("obsoletetypes");
+					div.appendChild(newPara);
+
+				// -->
+			</script>
+				<script type="application/x-javascript"><!--
+				// Widely-accepted unregistered type for JavaScript
+				// Used since the days of Netscape 3.x
+				if (document.createTextNode) {
+					// the standards-compliant DOM way
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("application/x-javascript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("obsoletetypes");
+					div.appendChild(newPara);
+				} else {
+					// the old DHTML way
+					document.writeln("<p>&bull; <code>application/x-javascript<\/code> <i>(without the <abbr>DOM<\/abbr>)<\/i><\/p>");
+				}
+				// -->
+			</script>
+				<script type="application/x-ecmascript"><!--
+				// Recommended by ECMAScript standard
+				// To be replaced by application/ecmascript
+
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("application/x-ecmascript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("obsoletetypes");
+					div.appendChild(newPara);
+
+				// -->
+			</script>
+			</div>
+			<div id="invalidtypes">
+				<p>This Web browser executes scripts with these unregistered content types:</p>
+
+				<script type="text/fakescript"><!--
+					alert("I should not be running a text/fakescript script!");
+					document.writeln("<p>&bull; <em>text/fakescript<\/em><\/p>");
+					// --> 
+				</script>
+				<script type="text/jscript"><!--
+				// MicroSoft's proprietary version
+
+				if (document.createTextNode) {
+					// the standards-compliant DOM way
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("text/jscript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("invalidtypes");
+					div.appendChild(newPara);
+				} else {
+					// the old DHTML way
+					document.writeln("<p>&bull; <code>text/jscript<\/code> <i>(without the <abbr>DOM<\/abbr>)<\/i><\/p>");
+				}
+				// -->
+			</script>
+				<script type="text/livescript"><!--
+				// iCab's alias
+
+				if (document.createTextNode) {
+					// the standards-compliant DOM way
+					var newPara = document.createElement("p");
+
+					var textNode = document.createTextNode("\u2022 ");
+					newPara.appendChild(textNode);
+
+					var codeNode = document.createElement("code");
+					newPara.appendChild(codeNode);
+
+					textNode = document.createTextNode("text/livescript");
+					codeNode.appendChild(textNode);
+
+					var div = document.getElementById("invalidtypes");
+					div.appendChild(newPara);
+				} else {
+					// the old DHTML way
+					document.writeln("<p>&bull; <code>text/livescript<\/code> <i>(without the <abbr>DOM<\/abbr>)<\/i><\/p>");
+				}
+				// -->
+			</script>
+				<script type="text/vbscript"><!--
+
+				option explicit
+				dim newPara, textNode, codeNode, div
+
+				set newPara = document.createElement("p")
+				set textNode = document.createTextNode(ChrW(&H2022) + " ")
+				newPara.appendChild(textNode)
+
+				set codeNode = document.createElement("code")
+				newPara.appendChild(codeNode)
+
+				set textNode = document.createTextNode("text/vbscript")
+				codeNode.appendChild(textNode)
+
+				set div = document.getElementById("invalidtypes")
+				div.appendChild(newPara)
+				' -->
+			</script>
+				<script type="text/vbs"><!--
+
+				option explicit
+				dim newPara, textNode, codeNode, div
+
+				set newPara = document.createElement("p")
+				set textNode = document.createTextNode(ChrW(&H2022) + " ")
+				newPara.appendChild(textNode)
+
+				set codeNode = document.createElement("code")
+				newPara.appendChild(codeNode)
+
+				set textNode = document.createTextNode("text/vbs")
+				codeNode.appendChild(textNode)
+
+				set div = document.getElementById("invalidtypes")
+				div.appendChild(newPara)
+				' -->
+			</script>
+	
+				<script type="text/tcl"><!--
+				# I know of no Web browsers that run Tcl.<br>
+				# The standard mentions text/tcl as an example value<br>
+				# for the Content-Script-Type header.<br>
+					document write "<p>&bull; <code>text/tcl<\/code><\/p>"
+					# -->
+				</script>
+			</div>
+			</div>
+		<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=text-ecmascript">text-ecmascript</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="defer">
+		<h2>Deferring execution</h2>
+
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/interact/scripts.html#adef-defer" title="HTML 4.0 Specification: 18 Scripts"><code class="attribute">defer</code></a> attribute marks scripts that may be executed after the rest of a page has finished rendering. It is used for scripts that do not generate document content (using methods like <code>document.writeln()</code> functions in the scripts above).</p>
+
+			<p class="note">Deferring <code>document.writeln()</code> functions until a page is fully loaded would cause generated content to be appended to the end of the page. However, one could defer a script that used <a href="glossary#dom" rel="glossary"><abbr title="Document Object Model">DOM</abbr></a> methods to insert content within a particular element in a document.</p>
+		</div>
+
+		<div class="illo">
+			<h3>Example:</h3>
+			
+			<div class="blockcode">
+				<em class="html">&lt;script <em class="html4">type="text/javascript"</em>></em>&lt;!--<br>
+					<div class="indent">
+					var defer_support = "used";<br>
+					// --><br>
+					</div>
+				<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <em class="html4">type="text/javascript"</em> <strong class="tested">defer</strong>></em>&lt;!--<br>
+					<div class="indent">
+					// may be executed after the following script<br>
+					var defer_support = "ignored";<br>
+					// --><br>
+					</div>
+				<em class="html">&lt;/script></em><br>
+				<em class="html">&lt;script <em class="html4">type="text/javascript"</em>></em>&lt;!--<br>
+					<div class="indent">
+					document.writeln("&lt;p>The &lt;code>defer&lt;\/code> attribute was ", defer_support, ".&lt;\/p>");<br>
+					// --><br>
+					</div>
+				<em class="html">&lt;/script></em><br>
+			</div>
+
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+				<script type="text/javascript"><!--
+					 var defer_support = "used";
+					 // --> 
+				</script>
+				<script type="text/javascript" defer><!--
+					 // may be executed after the following script
+					 defer_support = "ignored";
+					 // --> 
+				</script>
+				<script type="text/javascript"><!--
+					 document.writeln("<p>The <code>defer<\/code> attribute was ", defer_support, ".<\/p>");
+					 // --> 
+				</script>
+			</div>
+
+			<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Defer">Defer</a>.</p>
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+
+
+

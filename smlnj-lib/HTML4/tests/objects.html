@@ -1,0 +1,406 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-US">
+	<title>Objects [Robin&rsquo;s HTML 4.0 Conformance Test]</title>
+	<meta name="description" content="Test your Web browser&rsquo;s support for HTML 4.0 objects. Part of Robin&rsquo;s HTML 4.0 Conformance Test.">
+	<meta name="DC.Creator" content="Lionheart, Robin">
+	<link rel="home" href="http://www.robinlionheart.com/" title="RobinLionheart.com">
+	<link rel="first" href="./" title="Robin&rsquo;s HTML 4.0 Test">
+	<link rel="prev" href="frames" title="Frames">
+	<link rel="next" href="objaudio" title="Objects: Audio">
+	<link rel="glossary" href="glossary" title="Glossary">
+	<link rel="author" href="http://www.robinlionheart.com/robin/" title="Robin Lionheart">
+
+	<link rel="stylesheet" href="/style/linkcolors.css" type="text/css" media="screen, tv, projection">
+	<link rel="stylesheet" href="html4.css" type="text/css" media="screen, tv, projection" title="Conformance Test">
+	<link rel="icon" href="/images/icons/htmltest.png" type="image/png">
+
+
+<div id="navbar">
+		<ul class="nl" id="breadcrumbs"><li><a href="./" rel="first">Robin&rsquo;s HTML 4.0 Test</a><ul><li>Objects</li></ul></li></ul>
+		<ul class="nl">
+			<li><a href="./" rel="first" accesskey="1" title="First: Robin&rsquo;s HTML 4.0 Test">&#8676;<strong>1</strong>st</a></li>
+			<li><a href="frames" rel="prev" accesskey="P" title="Prior: Frames">&#8592;<strong>P</strong>rior</a></li>
+			<li><a href="objaudio" rel="next" accesskey="N" title="Next: Objects: Audio"><strong>N</strong>ext&#8594;</a></li>
+		</ul>
+	</div>
+	<h1>Objects (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.3" title="HTML 4.0 Specification">&sect;13.3</a>)</h1>
+
+	<div class="section">
+		<div class="bodytext">
+			<p><a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#edef-object" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="element">&lt;object></code></a> embeds objects of any type: images, movies, sounds, applets, or anything else you can send.</p>
+			<p>The all&#8208;purpose <code class="element">&lt;object></code> was potentially the most important addition in <abbr>HTML</abbr> 4.0. However, this ambitous but <a href="http://www.cs.tut.fi/~jkorpela/HTML4.0/comments.html#obj" title="Jukka Korpela&rsquo;s critical review of the HTML 4.0 draft">flawed</a> element is terribly overloaded. For example, it has 17 element&#8208;specific attributes with varied meanings and uses. Some of it is baggage inherited from Internet Explorer&rsquo;s earlier, proprietary version of <code class="element">&lt;object></code>.</p>
+	
+			<p class="note"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> The <abbr>W3C</abbr> is considering removing <code class="element">&lt;img></code> and <code class="element">&lt;applet></code>	in <abbr>XHTML</abbr> 2.0 in favor of a somewhat scaled back <a class="specsect" href="http://www.w3.org/TR/2004/WD-xhtml2-20040722/mod-object.html#sec_21.1." title="XHTML 2.0 Working Draft: The object element"><code class="element">&lt;object></code></a>, which addresses a couple of Jukka Korpela&rsquo;s <a href="http://www.cs.tut.fi/~jkorpela/HTML4.0/comments.html#obj" title="Jukka Korpela&rsquo;s critical review of the HTML 4.0 draft">criticisms</a> of it.</p>
+	
+			<p class="note">For more thorough testing of <code class="element">&lt;object></code>, I recommend Antti N&auml;yh&auml;&rsquo;s <a href="http://www.student.oulu.fi/~sairwas/object-test/">OBJECT test suite</a>. That suite inspired some of the tests below.</p>
+		</div>
+	</div>
+
+	<div class="section" id="type">
+		<h2>Content types</h2>
+	
+		<div class="bodytext">
+			<p>The optional <a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#adef-type-OBJECT" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="attribute">type</code></a> attribute provides the <a href="glossary#content_type" class="local" title="Glossary" rel="glossary">content type</a> of the object. A Web browser can use this information to avoid downloading content types that it does not support.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+		<p>Your Web browser should not try to render the <code>image/x-unsupported</code> image. It should render the alternate markup and not a broken image placeholder.</p>
+	
+		
+			<div class="blockcode">
+			<em class="html4"><strong class="tested">&lt;object data="data:image/x-unsupported,TEST" type="image/x-unsupported" width=100 height=100></strong></em><br>
+				<div class="indent">
+					<em class="html">&lt;p></em>As expected, I could not render the <em class="html">&lt;code></em>image/x-unsupported<em class="html">&lt;/code></em> image.<em class="html">&lt;/p></em><br>
+				</div>
+			<em class="html4"><strong class="tested">&lt;/object></strong></em>
+		</div>
+		<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result1">
+			<object data="data:image/x-unsupported,TEST" type="image/x-unsupported" width=100 height=100>
+				<p>As expected, I could not render the <code>image/x-unsupported</code> image.</p>
+			</object>
+		</div>
+		</div>
+	</div>
+
+	<div class="section" id="content">
+		<h2>Alternate markup (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.3.1" title="HTML 4.0 Specification">&sect;13.3.1</a>)</h2>
+	
+		<div class="bodytext">
+			<p>If an object is not rendered (ex. to ignore an unsupported content type, or to reject <a href="http://www.halcyon.com/mclain/ActiveX/">potentially dangerous ActiveX controls</a>), the contents of the <code class="element">&lt;object></code> element are rendered instead.</p>
+			<p>An image marked up <code class="element">&lt;img></code> can have alternate text, but an image marked up with <code class="element">&lt;object></code> can have <dfn>alternate markup</dfn>.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>The <code class="element">&lt;object></code> element allows more versatile replacements for images.</p>
+	
+			
+			<div class="blockcode">
+				<em class="html">&lt;p></em>Suppose we want to use an image as a fancy horizontal divider:<em class="html">&lt;/p></em><br>
+				<br>
+					<em class="html">&lt;div align="center">&lt;img src="<a href="/images/test/hr-grapevine.png" type="image/png" class="local">/images/test/hr-grapevine.png</a>" height=24 width=507 alt="~~~~~~~~~~~~~~~~~~ * ~~~~~~~~~~~~~~~~~~~">&lt;div></em><br>
+				<br>
+				<em class="html">&lt;p></em>With <em class="html">&lt;code><em class="entity">&amp;lt;</em></em>img<em class="html"><em class="entity">&amp;gt;</em>&lt;/code></em>, the most appropriate alternate text for a horizontal divider is generally a series of dashes:<em class="html">&lt;/p></em><br>
+				<br>
+				<em class="html">&lt;div align="center">&lt;img src="data:image/x-unsupported,TEST" alt="----------------------------------------">&lt;/div></em><br>
+				<br>
+				<em class="html">&lt;p></em>But with <em class="html">&lt;code><em class="entity">&amp;lt;</em></em>object<em class="html"><em class="entity">&amp;gt;</em>&lt;/code></em>, a horizontal rule can be alternate markup:<em class="html">&lt/p></em><br>
+				<br>
+					<em class="html">&lt;div align="center"><strong class="tested">&lt;object data="data:image/x-unsupported,TEST" type="image/x-unsupported"></strong></em><br>
+					<div class="indent">
+					<em class="html">&lt;hr width=507></em><br>
+					</div>
+				<em class="html"><strong class="tested">&lt;/object></strong>&lt;/div></em><br>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result2">
+				<p>Suppose we want to use an image of a fancy horizontal divider:</p>
+	
+				<div align="center"><img src="/images/test/hr-grapevine.png" height=24 width=507 alt="~~~~~~~~~~~~~~~~~~ * ~~~~~~~~~~~~~~~~~~~"></div>
+			
+				<p>With <code>&lt;img></code>, the most appropriate alternate text for a horizontal divider is generally a series of dashes:</p>
+	
+				<div align="center"><img src="data:image/x-unsupported,TEST" alt="----------------------------------------"></div>
+	
+				<p>But with <code>&lt;object></code>, a horizontal rule can be alternate markup:</p>
+	
+				<div align="center"><object data="data:image/x-unsupported,TEST" type="image/x-unsupported">
+					<hr width=507>
+				</object></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="section" id="nest">
+		<h2>Nested objects</h2>
+	
+		<div class="bodytext">
+			<p>You can even use another object as alternate markup. By nesting <code class="element">&lt;object></code> elements inside each other, you can provide several alternate content types. If a Web browser doesn&rsquo;t support the primary content type, it can gracefully switch to an alternate one.</p>
+			<p>The object need not be of a similar type. For example, an embedded <a href="objvideo" class="local">video clip</a> could have a static image as an alternate.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>Here is a picture of my cat in <acronym title="Tagged Image File Format">TIFF</acronym>, <abbr title="Portable Network Graphics">PNG</abbr> and <abbr title="Joint Photographic Experts Group">JPEG</abbr> formats.</p>
+			<p>If your Web browser supports any of these image formats (every graphical browser I&rsquo;ve used supports <abbr>JPEG</abbr>), it should render one and only one of the images below. The image should be rendered inline, not as a frame with scrollbars.</p>
+			<p>If your Web browser can not render any of them, or if it has images disabled, it should render the alternate markup and not a broken image placeholder.</p>
+			<p>Few Web browsers support <acronym>TIFF</acronym> images. If yours does not, watch any status messages as your Web browser loads the page; it should not even try to download the <acronym>TIFF</acronym> version of the image.</p>
+	
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="data:image/x-unsupported,TEST" type="image/x-unsupported" width=100 height=100></em><br>
+				<div class="indent">
+					<em class="html4"><strong class="tested">&lt;object data="<a href="/images/test/test.tiff" type="image/tiff" class="local">/images/test/test.tiff</a>" type="image/tiff" width=100 height=100></strong></em><br>
+					<div class="indent">
+						<em class="html4"><strong class="tested">&lt;object data="<a href="/images/test/test.png" type="image/png" class="local">/images/test/test.png</a>" type="image/png" width=100 height=100></strong></em><br>
+						<div class="indent">
+							<em class="html4"><strong class="tested">&lt;object data="<a href="/images/test/test.jpeg" type="image/jpeg" class="local">/images/test/test.jpeg</a>" type="image/jpeg" width=100 height=100></strong></em><br>
+							<div class="indent">
+								<em class="html">&lt;p></em>My cat <em class="html">&lt;a href="/robin/petpix"></em>Velcro<em class="html">&lt;/a></em> enjoys a good roll in the dirt.<em class="html">&lt;/p></em><br>
+							</div>
+							<em class="html4"><strong class="tested">&lt;/object></strong></em><br>
+						</div>
+						<em class="html4"><strong class="tested">&lt;/object></strong></em><br>
+					</div>
+					<em class="html4"><strong class="tested">&lt;/object></strong></em><br>
+				</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result3">
+				<object data="data:image/x-unsupported,TEST" type="image/x-unsupported" width=100 height=100>
+					<object data="/images/test/test.tiff" type="image/tiff" width=100 height=100>
+						<object data="/images/test/test.png" type="image/png" width=100 height=100>
+							<object data="/images/test/test.jpeg" type="image/jpeg" width=100 height=100>
+								<p>My cat <a href="/robin/petpix">Velcro</a> enjoys a good roll in the dirt.</p>
+							</object>
+						</object>
+					</object>
+				</object>
+			</div>
+
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="scale">
+		<h2>Scaling (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.7.1" title="HTML 4.0 Specification">&sect;13.7.1</a>)</h2>
+	
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#adef-width-IMG" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="attribute">width</code></a> and <a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#adef-height-IMG" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="attribute">height</code></a> attributes tell a Web browser how much space to reserve for an object.</p>
+			<p>Images should be <em>scaled</em> (squashed or stretched) to the specified width and/or height, overriding their natural dimensions.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>If your Web browser renders this image, it should be taller and narrower than normal.</p>
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="/images/test/test.png" type="image/png" class="local">/images/test/test.png</a>" type="image/png" <em class="html4"><strong class="tested">width=75 height=150</strong></em>></em><br>
+					<div class="indent">
+					<em class="html">&lt;p></em>My cat <em class="html">&lt;a href="/robin/petpix" title="Pet Pix"></em>Velcro<em class="html">&lt;/a></em> enjoys a good roll in the dirt.<em class="html">&lt;/p></em><br>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result4">
+				<object data="/images/test/test.png" type="image/png" width=75 height=150>
+					<p>My cat <a href="/robin/petpix" title="Pet Pix">Velcro</a> enjoys a good roll in the dirt.</p>
+				</object>
+			</div>
+
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>Let&rsquo;s complicate it by trying some nested images of different scales.</p>
+			<p>If your Web browser renders the <abbr>PNG</abbr> image, it should be stretched taller and narrower than normal. If it renders the <abbr>JPEG</abbr> image, it should be squashed shorter and wider than normal.</p>
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="data:image/x-unsupported,TEST" type="image/x-unsupported" <em class="html4"><strong class="tested">width=30 height=30</strong></em>></em><br>
+				<div class="indent">
+					<em class="html4">&lt;object data="<a href="/images/test/test.png" type="image/png" class="local">/images/test/test.png</a>" type="image/png" <em class="html4"><strong class="tested">width=75 height=150</strong></em>></em><br>
+					<div class="indent">
+						<em class="html4">&lt;object data="<a href="/images/test/test.jpeg" type="image/jpeg" class="local">/images/test/test.jpeg</a>" type="image/jpeg" <em class="html4"><strong class="tested">width=150 height=75</strong></em>></em><br>
+						<div class="indent">
+							<em class="html">&lt;p></em>My cat <em class="html">&lt;a href="/robin/petpix" title="Pet Pix"></em>Velcro<em class="html">&lt;/a></em> enjoys a good roll in the dirt.<em class="html">&lt;/p></em><br>
+						</div>
+						<em class="html4">&lt;/object></em>
+					</div>
+					<em class="html4">&lt;/object></em>
+				</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result5">
+				<object data="data:image/x-unsupported,TEST" type="image/x-unsupported" width=30 height=30>
+						<object data="/images/test/test.png" type="image/png" width=75 height=150>
+							<object data="/images/test/test.jpeg" type="image/jpeg" width=150 height=75>
+								<p>My cat <a href="/robin/petpix">Velcro</a> enjoys a good roll in the dirt.</p>
+							</object>
+						</object>
+				</object>
+			</div>
+
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="map">
+		<h2>Image maps (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.6" title="HTML 4.0 Specification">&sect;13.6</a>)</h2>
+	
+		<div class="bodytext">
+			<p><em>Image maps</em> link regions of an image to other webpages. Using <code class="element">&lt;object></code>, you can define those regions in the links within the alternate markup. Not only does this simplify the source code, it also ensures that every link in the image map can be accessed by Web browsers that do not load the image.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>In a graphical Web browser, selecting the image of the cat (and not the text identifying the image format) should bring you to a page of cat pictures.</p>
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="/images/test/test.jpeg" type="image/jpeg" class="local">/images/test/test.jpeg</a>" type="image/jpeg" width=100 height=100 <em class="html4"><strong class="tested">usemap="#catmap"</strong></em>></em><br>
+					<div class="indent">
+					<em class="html4"><strong class="tested">&lt;map name="catmap"></strong></em><br>
+						<div class="indent">
+						<em class="html">&lt;p></em>My cat <em class="html">&lt;a href="/robin/petpix" title="Pet Pix" <em class="html4"><strong class="tested">shape="rect" coords="45,15,200,230"</strong></em>></em>Velcro<em class="html">&lt;/a></em> enjoys a good roll in the dirt.<em class="html">&lt;/p></em><br>
+						</div>
+					<em class="html4"><strong class="tested">&lt;/map></strong></em><br>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result6">
+				<object data="/images/test/test.jpeg" type="image/jpeg" width=100 height=100 usemap="#catmap">
+		 			<map name="catmap">
+						<p>My cat <a href="/robin/petpix" title="Pet Pix" shape="rect" coords="0,0,100,66">Velcro</a> enjoys a good roll in the dirt.</p>
+					</map>
+				</object>
+			</div>
+
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>Image maps can have multiple, overlapping regions of different shapes.</p>
+			<p>The overlapped regions should be mapped to the shape in the foreground.</p>
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="/images/test/maptest.svg" type="image/svg+xml" class="local">/images/test/maptest.svg</a>" type="image/svg+xml" width=200 height=200 <em class="html4"><strong class="tested">usemap="#shapes"</strong></em>></em><br>
+					<div class="indent">
+					<em class="html4">&lt;object data="<a href="/images/test/maptest.png" type="image/png" class="local">/images/test/maptest.png</a>" type="image/png" width=200 height=200 <em class="html4"><strong class="tested">usemap="#shapes"</strong></em>></em><br>
+						<div class="indent">
+						<em class="html4">&lt;object data="<a href="/images/test/maptest.jpeg" type="image/jpeg" class="local">/images/test/maptest.jpeg</a>" type="image/jpeg" width=200 height=200 <em class="html4"><strong class="tested">usemap="#shapes"</strong></em>></em><br>
+							<div class="indent">
+							<em class="html4"><strong class="tested">&lt;map name="shapes"></strong></em><br>
+								<div class="indent">
+								<em class="html">&lt;ul></em><br>
+									<div class="indent">
+									<em class="html">&lt;li>&lt;a href="#triangle" title="green triangle" <em class="html4"><strong class="tested">shape="poly" coords="100,10, 58,94, 142,94, 100,10"</strong></em>></em>green triangle<em class="html">&lt;/a></em><br>
+									<em class="html">&lt;li>&lt;a href="#cross" title="blue cross" <em class="html4"><strong class="tested">shape="poly" coords="80,108, 60,128, 80,148, 60,168, 80,188, 100,168, 120,188, 140,168, 120,148, 140,128, 120,108, 100,128, 80,108"</strong></em>></em>blue cross<em class="html">&lt;/a></em><br>
+									<em class="html">&lt;li>&lt;a href="#square" title="magenta square" <em class="html4"><strong class="tested">shape="rect" coords="10,58, 94,142"</strong></em>></em>magenta square<em class="html">&lt;/a></em><br>
+									<em class="html">&lt;li>&lt;a href="#circle" title="red circle" <em class="html4"><strong class="tested">shape="circle" coords="148,100, 42"</strong></em>></em>red circle<em class="html">&lt;/a></em><br>
+									</div>
+								<em class="html">&lt;/ul></em><br>
+								</div>
+							<em class="html4"><strong class="tested">&lt;/map></strong></em><br>
+							</div>
+						<em class="html4">&lt;/object></em>
+						</div>
+					<em class="html4">&lt;/object></em>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result7">
+				<object data="/images/test/maptest.svg" type="image/svg+xml" width=200 height=200 usemap="#maptest">
+					<object data="/images/test/maptest.png" type="image/png" width=200 height=200 usemap="#maptest">
+						<object data="/images/test/maptest.jpeg" type="image/jpeg" width=200 height=200 usemap="#maptest">
+							<map name="maptest">
+								<ul>
+									<li><a href="#triangle" title="green triangle" shape="poly" coords="100,10, 58,94, 142,94, 100,10">green triangle</a>
+									<li><a href="#cross" title="blue cross" shape="poly" coords="80,108, 60,128, 80,148, 60,168, 80,188, 100,168, 120,188, 140,168, 120,148, 140,128, 120,108, 100,128, 80,108">blue cross</a>
+									<li><a href="#square" title="magenta square" shape="rect" coords="10,58, 94,142">magenta square</a>
+									<li><a href="#circle" title="red circle" shape="circle" coords="148,100, 42">red circle</a>
+								</ul>
+							</map>
+						</object>
+					</object>
+				</object>
+			</div>
+		
+			<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Bearded-Imagemap">Bearded-Imagemap</a>.</p>
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="codebase">
+		<h2>Codebase</h2>
+	
+		<div class="bodytext">
+			<p>The <a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#adef-codebase-OBJECT" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="attribute">codebase</code></a> attribute sets the base location from which to resolve a relative <acronym>URL</acronym> in the <a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#adef-data-OBJECT" title="HTML 4.0 Specification: Objects, Images, and Applets"><code class="attribute">data</code></a> and other attributes. The <code class="attribute">codebase</code> attribute is used mainly for applets that require loading several files.</p>
+
+			<p class="note"><strong class="subhead"><abbr>XHTML</abbr> 2.0:</strong> In <abbr>XHTML</abbr> 2.0, the <abbr>W3C</abbr> is considering replacing the <code class="attribute">codebase</code> attribute with a more general <code class="attribute">xml:base</code> attribute.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>If your Web browser can display <abbr>JPEG</abbr> images and implements <code class="attribute">codebase</code> correctly, the image below should be rendered.</p>
+		
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="test.jpeg" <em class="html4"><strong class="tested">codebase="/images/test/"</strong></em> type="image/jpeg" width=100 height=100></em><br>
+					<div class="indent">
+					<em class="html">&lt;p></em>My cat <em class="html">&lt;a href="/robin/petpix" title="Pet Pix"></em>Velcro<em class="html">&lt;/a></em> enjoys a good roll in the dirt.<em class="html">&lt;/p></em><br>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result8">
+				<object data="test.jpeg" codebase="/images/test/" type="image/jpeg" width=100 height=100>
+					<p>My cat <a href="/robin/petpix" title="Pet Pix">Velcro</a> enjoys a good roll in the dirt.</p>
+				</object>
+			</div>
+		
+			<p class="note bugzilla">Related <em class="browser">Mozilla</em> bug reports: <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=Object-Codebase">Object-Codebase</a>.</p>
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div class="section" id="iframe">
+		<h2>Embedded pages (<a class="specsect" href="http://www.w3.org/TR/html4/struct/objects.html#h-13.5" title="HTML 4.0 Specification">&sect;13.5</a>)</h2>
+	
+		<div class="bodytext">
+			<p>Though this page concentrates on images, <code class="element">&lt;object></code> may be used with <a href="objaudio" class="local" rel="section">audio clips</a>, <a href="objvideo" class="local" rel="section">video clips</a>, applets, and other kinds of objects.</p>
+		</div>
+	
+		<div class="illo">
+			<h3>Example:</h3>
+			<p>You can even use it with text files and <abbr>HTML</abbr>, to <em>embed one page in another</em> like a floating frame.</p>
+		
+			
+			<div class="blockcode">
+				<em class="html4">&lt;object data="<a href="test.txt" type="text/plain" class="local">test.txt</a>" <em class="html4"><strong class="tested">type="text/plain" standby="Loading..."></strong></em></em><br>
+					<div class="indent">
+					<em class="html">&lt;p></em>If your Web browser had supported it, <em class="html">&lt;a href="test.txt"></em>a simple text file<em class="html">&lt;/a></em> would be embedded here.<em class="html">&lt;/p></em><br>
+					</div>
+				<em class="html4">&lt;/object></em>
+			</div>
+			<h4 class="resultheader">Your Web browser renders it like this:</h4>
+			<div class="results" id="result9">
+				<object data="test.txt" type="text/plain" standby="Loading...">
+					<p>If your Web browser had supported it, <a href="test.txt">a simple text file</a>	would be embedded here.</p>
+				</object>
+			</div>
+
+			<p class="note msie">Related <em class="browser">Internet Explorer</em> bug reports: <a href="http://channel9.msdn.com/wiki/default.aspx/Channel9.InternetExplorerStandardsSupport">Channel9 Wiki: Internet Explorer Standards Support</a>.</p>
+		</div>
+	</div>
+
+	<div id="browserver">
+		<h2>Your Browser</h2>
+
+		<p>Your Web browser identified itself as <strong><code id="useragent">Wget/1.11.4</code></strong> when it requested this page.</p>
+
+		<script type="text/javascript" src="browserid.js"></script>
+		<noscript><p>Your Web browser did not run a script to reveal how it identifies itself to scripts.</p></noscript>
+	</div>
+
+	<div id="footer">
+		<div id="buttons">
+			<a href="http://www.mozilla.com/firefox/" title="Mozilla Firefox"><object type="image/png" width="80" height="15" id="firefox_button" data="/images/buttons/firefox.png">Get Firefox</object></a>
+			<a href="http://my.opera.com/rlionheart/affiliate/" title="Opera"><object type="image/png" width="80" height="15" id="opera_button" data="/images/buttons/opera.png">Get Opera</object></a>
+			<a rel="license" href="http://creativecommons.org/licenses/by-sa/2.5/" title="Creative Commons Deed"><object type="image/png" width="80" height="15" id="cc_button" data="/images/buttons/cc.png">Some rights reserved.</object></a>
+			<a href="http://www.htmlhelp.com/cgi-bin/validate.cgi?url=referer" title="WDG HTML Validation Service"><object type="image/png" width="80" height="15" id="html401_button" data="/images/buttons/html401.png">Valid HTML 4.01 Transitional</object></a>
+			<a href="http://jigsaw.w3.org/css-validator/check/referer" title="W3C CSS Validation Service"><object type="image/png" width="80" height="15" id="css_button" data="/images/buttons/css.png">Valid CSS</object></a>
+		</div>
+		<p><a rel="copyright" href="/copyright" class="local">&copy;</a> 1998 <span class="vcard"><a rel="home" href="/" class="local fn">Robin Lionheart</a> (<a rev="made" href="mailto&#58;lionheart&#64;robinlionheart&#46;com" class="email local">lionheart&#64;robin&shy;lionheart&#46;com</a>) [<a href="/robin/pubkey" class="local">public key</a>]</span></p>
+		<div id="dehanced">
+			<p>Best read with a browser that supports <abbr title="Extensible Hypertext Markup Language">XHTML</abbr>, <abbr title="Cascading Style Sheets level 2">CSS 2</abbr>, and <abbr title="Portable Network Graphics">PNG</abbr> images. I recommend <a href="http://www.mozilla.org/products/firefox/">Firefox</a>.</p>
+			<p>Degraded to fit your browser (JavaScript MIME type).</p>
+		</div>	</div>
+
+

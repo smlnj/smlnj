@@ -1,0 +1,42 @@
+<!-- ML-Doc/regexp-fn.mldoc -->
+<!-- Entities.sgml entry 
+<!ENTITY RegExpFn SDATA "../regexp-fn.sml">
+ -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<VERSION VERID="1.0" YEAR=1998 MONTH=6 DAY=4>
+<TITLE>The RegExpFn functor</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/RegExpFn/ functor</HEAD>
+<!-- optional SEEALSO; uncomment to use     -->
+<SEEALSO>
+   <SIGREF/REGEXP/
+   <SIGREF/REGEXP_PARSER/
+   <SIGREF/REGEXP_ENGINE/
+</SEEALSO>
+
+<PP>
+This functor creates a concrete regular expressions matcher by glueing
+together a concrete syntax and a matching engine.<PP>
+
+
+<FUNCTOR FCTID="RegExpFn">
+  <SIGBODY>
+    <SPEC>
+      <SUBSTRUCT>P<ID>REGEXP_PARSER</SUBSTRUCT>
+      <COMMENT>
+      <PP> This is the structure implementing the frontend (syntax) of 
+regular expressions.
+    <SPEC>
+      <SUBSTRUCT>E<ID>REGEXP_ENGINE</SUBSTRUCT>
+      <COMMENT>
+      <PP> This is the structure implementing the backend (engine) of
+regular expressions.
+  </SIGBODY>
+  <ID>REGEXP
+</FUNCTOR>
+
+</INTERFACE>

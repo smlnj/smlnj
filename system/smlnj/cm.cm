@@ -1,0 +1,12 @@
+(*
+ * Library exporting structure CM.
+ *   (this implements $smlnj/cm.cm -- a proxy for $smlnj/cm/cm.cm)
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	library($smlnj/cm/cm.cm)
+is
+	$smlnj/cm/cm.cm

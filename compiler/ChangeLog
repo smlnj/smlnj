@@ -1,0 +1,63 @@
+2000-08-21  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/main/compile.sml (CompileF.codegen): Remove dead code.
+	Enforce the `nosplit' directive by dropping inlineExp if requested.
+
+2000-04-22  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sml (cpsopt): Add `zeroexpand' to reduce
+	RA-blowup when compiling ml.grm.sml.
+
+	* viscomp-core.cm: Add FLINT.opt/abcopt.sml.
+
+2000-04-20  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sml (cpsopt): Use last_contract rather than
+	first_contract because dropargs is needed to avoid blowing up
+	the register allocator.
+
+2000-04-19  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sml (cpsopt): Remove all but first_contract.
+
+	* TopLevel/interact/evalloop.sml (loop): Don't hide compiler errors.
+
+1999-03-08  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sig (FLINT.printFctTypes): New var.
+	(splitThreshold): New var to control splitting aggressiveness.
+
+	* TopLevel/viscomp/control.sml: Move substructs outside so that clients
+	can refer to them directly (rather than through Control.Foo) to
+	reduce spurious dependencies.
+
+	* TopLevel/main/{codes,compile}: Call `split' from flintcomp,
+	not compile.
+
+1999-03-02  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* Semant/pickle/(un)pickmod.sml (fkind): Pickle the inline bit.
+
+	* Semant/pickle/pickmod.sml (mkPickleLty): Apply alpha-rename to NVAR.
+
+	* Semant/pickle/unpickmod.sml (lvar): Improperly defined.
+	(tyc): TC_NVAR wasn't read correctly.
+	(tfundec): Pickle puts a leading "1", so look for a "1", not a "0".
+
+1998-11-12  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* MiscUtil/util/stats.sml: added counters.
+
+1998-11-09  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sml (checkDatatypes): Turn off because
+	of infinite looping problems.
+
+1998-11-05  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sig (FLINT.unrollThreshold): New var.
+
+1998-10-27  Stefan Monnier  <monnier@cs.yale.edu>
+
+	* TopLevel/viscomp/control.sml (listLiterals): Turn it back off since
+	it increases the resulting heap size by more than 10%.
