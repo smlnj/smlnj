@@ -1,0 +1,25 @@
+Library
+	signature GRAPH_DISPLAY
+	signature GRAPH_VIEWER
+	structure daVinci
+	structure Dot
+	structure GraphLayout
+	structure VCG
+        functor GraphViewerFn
+        functor AllDisplaysFn
+is
+	../library/sources.cm
+	../graphs/sources.cm
+	allDisplays.sml
+	daVinci.sml
+	dot.sml
+	graphDisplay.sig
+	graphLayout.sml
+	graphViewer.sig
+	graphViewer.sml
+	vcg.sml
+
+#if defined(NEW_CM)
+	$basis.cm
+#endif
+

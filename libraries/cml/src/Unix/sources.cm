@@ -1,0 +1,40 @@
+Group
+  signature OS_IO
+  signature OS_PROCESS
+  signature UNIX
+
+  structure Syscall
+  structure OS
+  structure BinPrimIO
+  structure BinIO
+  structure TextPrimIO
+  structure TextIO
+  structure Unix
+  structure RunCML
+is
+#if defined (NEW_CM)
+  ../cml-sub-basis.cm
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+
+  ../IO/sources.cm
+  ../glue/sources.cm
+  os.cm
+
+  syscall.sml
+  os.sml
+  posix-bin-prim-io.sml
+  posix-bin-io.sml
+  posix-text-prim-io.sml
+  posix-text-io.sml
+  unix-sig.sml
+#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11033)
+  new-unix.sml
+#else
+  unix.sml
+#endif
+  unix-glue.sml
+  run-cml.sml
+

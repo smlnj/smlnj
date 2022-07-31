@@ -1,0 +1,29 @@
+(* os.cm
+ *
+ * This defines a subgroup of the CML Unix group.  We need the subgroup
+ * to avoid cycles.
+ *)
+
+Group
+  signature OS_IO
+  signature OS_PROCESS
+  signature OS
+
+  structure OS_IO
+  structure OS_Process
+  structure ProcManager
+is
+#if defined (NEW_CM)
+  ../cml-sub-basis.cm
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+  ../OS/sources.cm
+  ../util/sources.cm
+
+  (* io-manager.sml *)
+  os-io.sml
+  proc-manager.sml
+  os-process.sml
+

@@ -1,0 +1,471 @@
+(*
+ * MIPS IV architecture.
+ * 
+ * Note: information herein is derived from the documents
+ *       ``MIPSpro Assembly Language Programmer's Guide''
+ *       Document Number 007-2318-002 and
+ *       
+ *       MIPS R4000 Microprocessor User's Manual, Second Edition
+ *
+ *       MIPS IV Instruction Set Revision 3.2 Sept, 1995, Charles Price
+ *
+ * Basically, the differences between MIPS I, II, III, IV are:
+ *
+ *  MIPS I:   old 32-bit architecture.  I think this 
+              one has delay loads with no interlock(?)
+ *  MIPS II:  some 64-bit operations (32-bit address space?)
+ *  MIPS III: 64-bit CPU with unsigned word loads
+ *  MIPS IV:  register + register addressing mode for FPU 
+ *  
+ * We will support MIPS III and MIPS IV in MLRISC, and also provide
+ * support for 32-bit mode.  But MIPS I and MIPS II will not be supported.
+ *
+ * -- Allen (leunga@cs.nyu.edu)
+ *)
+architecture MIPS =
+struct
+
+   superscalar    
+
+   little endian (* is this right??? *)
+
+   lowercase assembly
+
+   storage
+      GP = $r[32] of 64 bits where $r[0] = 0
+           asm: (fn (1,_)  => "$at" (* assembler temporary *)
+                  | (28,_) => "$gp" (* global pointer *)
+                  | (29,_) => "$sp" (* stack pointer *)
+                  | (30,_) => "$fp" (* frame pointer *)
+                  | (r,_)  => "$"^Int.toString r)
+    | FP = $f[32] of 64 bits asm: (fn (f,_) => "$f"^Int.toString f)
+    | CC = $cc[] of 64 bits aliasing GP asm: (fn (r,_) => "$"^Int.toString r)
+  
+             (* condition code register *)
+    | COND = $cond[8] of 64 bits asm: (fn (r,_) => Int.toString r)
+    | HI   = $hi[1] of 64 bits asm: "$hi"
+    | LO   = $lo[1] of 64 bits asm: "$lo"
+    | MEM  = $m[] of 8 aggregable bits asm: (fn (r,_) => "m"^Int.toString r)
+    | CTRL = $ctrl[] asm: (fn (r,_) => "ctrl"^Int.toString r)
+
+   locations 
+       stackptrR  = $r[29]
+   and linkR      = $r[31]  (* link address from JAL *)
+   and frameptrR  = $r[30]
+   and globalptrR = $r[28]
+   and asmTmpR    = $r[1] 
+   and fasmTmp    = $f[30]
+   and r0         = $r[0]
+
+   (* Note on MIPS terminologies 
+    * 
+    *   B byte     - 8 bits
+    *   H halfword - 16 bits
+    *   W word     - 32 bits
+    *   D double   - 64 bits
+    *)
+   structure RTL =
+   struct
+      include "Tools/basis.mdl"
+      open Basis
+
+      fun disp(b,d) = $r[b] + d
+      fun byte x = (x : #8 bits)
+      fun half x = (x : #16 bits)
+      fun word x = (x : #32 bits)
+      fun dword x = (x : #64 bits)
+
+      rtl LB{rt,b,d,mem} = $r[rt] := sx(byte $m[disp(b,d):mem])
+      rtl LBU{rt,b,d,mem} = $r[rt] := zx(byte $m[disp(b,d):mem])
+      rtl LH{rt,b,d,mem} = $r[rt] := sx(half $m[disp(b,d):mem])
+      rtl LHU{rt,b,d,mem} = $r[rt] := zx(half $m[disp(b,d):mem])
+      rtl LW{rt,b,d,mem} = $r[rt] := sx(word $m[disp(b,d):mem])
+      rtl LD{rt,b,d,mem} = $r[rt] := dword $m[disp(b,d):mem]
+
+   end
+
+   structure Instruction =
+   struct
+
+       (* L[BWH] are sign extended by default *) 
+       datatype load! = LD | LW | LH | LHU | LB | LBU 
+                      | LWL | LWR | LWU | LDL | LDR 
+                      | ULH | ULHU | ULW | ULD (* unaligned *)
+
+       datatype store! = SD | SW | SH | SB
+                       | SWL | SWR | SDL | SDR 
+                       | USH | USW | USD
+
+       datatype fload!  = LDC1 | LWC1
+       datatype fstore! = SDC1 | SWC1
+
+       datatype fcond = 
+         FF "f"       | FUN "un"    | FEQ "eq"   | FUEQ "fueq" 
+       | FOLT "folt"  | FULT "ult"  | FOLE "ole" | FULE "ule" 
+       | FNGLE "ngle" | FSP "sf"    | FNGL "ngl" | FSEQ "seq" 
+       | FLT "flt"    | FNGE "fnge" | FLE "le"   | FNGT "ngt"    
+
+       datatype cond! =  
+          EQ | NE | LEZ | GTZ | LTZ | GEZ
+
+       datatype fbranch! = BC1T (* true *) | BC1F (* false *)
+
+       datatype likely = LIKELY "L" | UNLIKELY ""
+
+       (*
+        * Note, ADD may raise overflow exception
+        *       ADDU is the non-trapping version.
+        *       Same with other operators such as DADD, SUB, DSUB etc.
+        *
+        * Instructions that may take 16-bit immediate operands:
+        *   ADDI, ADDIU, SLTI, SLTIU, ANDI, 
+        *   ORI, XORI, LUI, DADDI, DADDIU
+        *
+        *  The immediate operands are unsigned in ORI, ANDI, XORI
+        *)
+       datatype arith! = ADD | ADDU | AND | XOR | MUL 
+                       | MULO | MULOU | NOR | OR 
+                       | SEQ | SGT | SGE | SGEU | SGTU | SLT | SLE 
+                       | SLEU | SLTU | SNE | SUB | SUBU | REM | REMU 
+                       | SRA | SLL | SRL | ROR | ROL 
+                       | MOVN | MOVZ (* conditional moves *)
+
+                        (* 64-bit operations from MIPS III *)
+                       | DADD | DADDU | DMUL | DMULO | DMULOU
+                       | DSUB | DSUBU | DREM | DREMU 
+                       | DROL | DROR 
+                       | DSLL | DSLL32 | DSLLV
+                       | DSRA | DSRA32 | DSRAV
+                       | DSRL | DSRL32 | DSRLV
+
+       datatype unary! = ABS | NEG | NEGU | NOT 
+                       | DABS | DNEG | DNEGU
+
+       datatype multiply! = MULT | MULTU | DMULT | DMULTU
+
+       datatype divide! = DIV | DIVU | DDIV | DDIVU
+
+       datatype trap! = TEQ | TNE | TLT | TLTU | TGE | TGEU
+
+       datatype farith! = ADD_D "add.d" | ADD_S "add.s"
+                        | SUB_D "sub.d" | SUB_S "sub.s"
+                        | MUL_D "mul.d" | MUL_S "mul.s"
+                        | DIV_D "div.d" | DIV_S "div.s"
+
+       datatype funary! = MOV_D "mov.d" | MOV_S "mov.s"
+                        | ABS_D "abs.d" | ABS_S "abs.s"
+                        | NEG_D "neg.d" | NEG_S "neg.s"
+                        | SQRT_D "sqrt.d" | SQRT_S "sqrt.s"
+
+                        | CVT_SD "cvt.s.d" (* S <- D *)
+                        | CVT_SW "cvt.s.w" 
+                        | CVT_DS "cvt.d.s" 
+                        | CVT_DW "cvt.d.w" 
+                        | CVT_WS "cvt.w.s" 
+                        | CVT_WD "cvt.w.d" 
+                        | CVT_SL "cvt.s.l" 
+                        | CVT_DL "cvt.d.l" 
+                        | CVT_LS "cvt.l.s" 
+                        | CVT_LD "cvt.l.d" 
+
+       datatype cvti2f! = MTC1 | DMTC1
+       datatype cvtf2i! = MFC1 | DMFC1
+
+          (* multiply and add/subtract *)
+       datatype farith3! = MADD_D "madd.d"   | MADD_S "madd.s"
+                         | NMADD_D "nmadd.d" | NMADD_S "nmadd.s"
+                         | MSUB_D "msub.d"   | MSUB_S "msub.s"
+                         | NMSUB_D "nmsub.d" | NMSUB_S "nmsub.s"
+
+          (* truncate and rounding *)
+       datatype fround! = TRUNC_WS  "trunc.w.s"
+                        | TRUNC_WD  "trunc.w.d"
+                        | ROUND_WS  "round.w.d"
+                        | ROUND_WD  "round.w.d"
+                        | CEIL_WD   "ceil.w.d"
+                        | CEIL_WS   "ceil.w.s"
+                        | CEILU_WD  "ceilu.w.d"
+                        | CEILU_WS  "ceilu.w.s"
+                        | FLOOR_WD  "floor.w.d"
+                        | FLOOR_WS  "floor.w.s"
+                        | FLOORU_WD "flooru.w.d"
+                        | FLOORU_WS "flooru.w.s"
+                        | ROUNDU_WD "roundu.w.d"
+                        | ROUNDU_WS "roundu.w.s"
+                        | TRUNCU_WD "truncu.w.d"
+                        | TRUNCU_WS "truncu.w.s"
+                        | TRUNC_LS  "trunc.l.s"
+                        | TRUNC_LD  "trunc.l.d"
+                        | ROUND_LS  "round.l.s"
+                        | ROUND_LD  "round.l.d"
+                        | CEIL_LS   "ceil.l.s"
+                        | CEIL_LD   "ceil.l.d"
+                        | FLOOR_LS  "floor.l.s"
+                        | FLOOR_LD  "floor.l.d"
+
+       datatype fmt = SINGLE "S" | DOUBLE "D"
+
+       datatype operand! = Imm of int ``<int>'' rtl: immed int (* 16 bits *)
+                         | Reg of $GP ``<GP>''  rtl: $r[GP] 
+                         | Lab of T.labexp ``<labexp>''
+                         | HiLab of T.labexp ``$hi(<labexp>)''
+                         | LoLab of T.labexp ``$lo(<labexp>)''
+
+       datatype ea = Direct of $GP
+                   | FDirect of $FP
+                   | Displace of {base: $GP, disp:int}
+
+       type addressing_mode = C.cell * operand
+
+   end (* Instruction *)
+
+   (*
+    * MIPS instructions are all 32-bits.
+    * Address offsets in base+disp is 16 bits.
+    *)
+   instruction formats 32 bits
+      Load{l:6, rt: $GP 5, b: $GP 5, offset:signed 16}
+
+    | Special{_:6=0, rs: $GP 5, rt: $GP 5, _:10=0, opc:6} 
+    
+
+   (*
+    * Assembly output helper functions
+    *)
+   structure Assembly =
+   struct
+      (* Add the i suffix for immediate operands of arithmetic instructions  
+       * For example: 
+       *    ADD   rt, rs1, rs2
+       *    ADDI  rt, rs, 10
+       *    ADDU  rt, rs1, rs2
+       *    ADDIU rt, rs, 10
+       *)
+      fun immedSuffix(s, I.Reg _) = s
+        | immedSuffix(s, _)       = 
+          let val n = String.size s
+          in  case String.sub(s, n-1) of
+                #"u" => String.substring(s, 0, n-1)^"iu"
+              | _    => s^"i" 
+          end
+
+      (* LDC1 -> LDXC1 when using the indexed addressing mode *)
+      fun indexed(s, I.Reg _) = 
+          let val prefix = String.substring(s, 0, 2)
+              val suffix = String.substring(s, 2, 4)
+          in  prefix^"x"^suffix end
+        | indexed(s, _) = s
+
+     (* Emit nop at delay slot *)
+      fun emit_nop false = () | emit_nop true = emit "\n\tnop"
+   end (* Asm *) 
+
+   (*
+    * Reservation tables and pipeline definitions for scheduling
+    *)
+
+   (* Function units *)
+   resource mem and alu and falu and fmul and fdiv and branch
+
+   (* Different implementations of cpus *)
+   cpu default 4 [1 mem, 2 alu, 2 falu, 2 fmul, 1 fdiv, 1 branch]  
+
+   (* Definitions of various reservation tables *) 
+   pipeline NOP _    = [] 
+    and     ARITH _  = [alu]
+    and     LOAD _   = [mem]
+    and     STORE _  = [mem,mem,mem] 
+    and     FARITH _ = [falu]
+    and     FMUL _   = [fmul,fmul]
+    and     FDIV _   = [fdiv,fdiv*50]
+    and     BRANCH _ = [branch]
+  
+   instruction 
+      NOP
+	``nop''
+
+   (*
+    * Load upper immediate
+    *)
+    | LUI of {rt: $GP, imm:operand}
+	``lui\t<rt>, <imm>''
+
+   (*
+    * Load address
+    *)
+    | LA of {rt: $GP, b: $GP, d:operand}
+	``la\t<rt>, <b>, <d>''
+
+    | DLA of {rt: $GP, b: $GP, d:operand}
+	``dla\t<rt>, <b>, <d>''
+
+   (*
+    * load and store instructions:
+    *)
+    | LOAD  of {l:load, rt: $GP, b: $GP, d:operand, mem:Region.region}
+	asm: ``<l>\t<rt>, <d>(<b>)<mem>''
+	rtl: ``<l>''
+
+    | STORE of {s:store, rs: $GP, b: $GP, d:operand, mem:Region.region}
+	``<s>\t<rs>, <d>(<b>)<mem>''
+
+    | FLOAD of {l:fload, ft: $FP, b: $GP, d:operand, mem:Region.region}
+	``<indexed(asm_fload l,d)>\t<ft>, <d>(<b>)<mem>''
+
+    | FSTORE of {s:fstore, fs: $GP, b: $GP, d:operand, mem:Region.region}
+	``<indexed(asm_fstore s,d)>\t<fs>, <d>(<b>)<mem>''
+
+   (*
+    * compare instructions:
+    *)
+    | FCMP of {fcond:fcond, fmt:fmt, cc: $COND, fs1: $FP, fs2: $FP}
+	``c.<fcond>.<fmt>\t<cc>, <fs1>, <fs2>''
+
+   (* 
+    * Integer trapping 
+    *)
+    | TRAP of {t:trap, rs: $GP, i:operand}
+	``<t>\t<rs>, <i>''
+
+   (*
+    * Branch instructions.
+    * All branch instruction have delayslots.
+    * We represent them as complex instructions with optional nops attached
+    *)
+
+      (* jump; branch delay *)
+    | J  of {lab:Label.label, nop:bool}
+	asm: ``j\t<lab><nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+      (* jump register; branch delay *)
+    | JR          of {rs: $GP, labels:Label.label list, nop:bool}
+	asm: ``jr\t<rs><nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+      (* jump and link, set $r31 <- PC + 8; branch delay *)
+    | JAL of {lab:Label.label, defs:C.cellset, uses: C.cellset,
+	      cutsTo: Label.label list, mem:Region.region, nop:bool}
+	asm: ``jal\t<lab><mem><
+               emit_defs(defs)><emit_uses(uses)><emit_cutsTo cutsTo><nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+      (* jump and link register, set $rt <- PC + 8; branch delay *)
+    | JALR of {rt: $GP, rs: $GP, 
+	       defs:C.cellset, uses: C.cellset,
+	       cutsTo: Label.label list, mem:Region.region, nop:bool}
+	asm: ``jalr\t<rt>, <rs><mem><
+               emit_defs(defs)><emit_uses(uses)><emit_cutsTo cutsTo><nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+      (* pseudo op for return; branch delay *)
+    | RET of {nop:bool}
+	asm: ``jr\t$31<nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+      (* Branch; comparing rs and rt *)	
+    | BRANCH of {likely:likely, cond:cond, rs: $GP, rt: $GP, 
+                 lab:Label.label, nop:bool}
+	asm: ``b<cond><likely>\t<rs>, <rt>, <lab><nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+      (* Note: on MIPS II, III there must be at least one instruction
+       * between the set condition code instruction and the branch *)
+    | FBRANCH  of {likely:likely, fbranch:fbranch, cc: $COND, lab:Label.label,
+                   nop:bool}
+	asm: ``<fbranch><likely>\t<cc>, <lab><nop>''
+        padding: nop
+	delayslot: true
+	delayslot candidate: false
+
+   (*
+    * Arithmetic instructions:
+    * arguments are (rt,rs,rt/immed) with the exception of sub (sigh).
+    *)
+    | ARITH of {oper:arith, rt: $GP, rs: $GP, i:operand}
+	``<immedSuffix(asm_arith oper, i)>\t<rt>, <rs>, <i>''
+
+    | UNARY of {oper:unary, rt: $GP, rs: $GP}
+	``<oper>\t<rt>, <rs>''
+
+    (*
+     * integer mult and div related:
+     *)
+    | MULTIPLY of {oper:multiply, rt: $GP, rs: $GP}
+	``<oper>\t<rt>, <rs>''
+
+    | DIVIDE   of {oper:divide, rt: $GP, rs: $GP}
+	``<oper>\t<rt>, <rs>''
+
+    | MFLO      of $GP
+	``mflo\t<GP>''
+
+    | MTLO      of $GP
+	``mtlo\t<GP>''
+
+    | MFHI      of $GP
+	``mfhi\t<GP>''
+
+    | MTHI      of $GP
+	``mthi\t<GP>''
+
+    | BREAK     of int
+	``break\t<int>''
+
+   (*
+    * Floating point arithmetic:
+    *)
+    | FARITH of {oper:farith, ft: $FP, fs1: $FP, fs2: $FP}
+	``<oper>\t<ft>, <fs1>, <fs2>''
+
+    | FUNARY of {oper:funary, ft: $FP, fs: $FP}
+	``<oper>\t<ft>, <fs>''
+
+    | FARITH3 of {oper:farith3, ft: $FP, fs1: $FP, fs2: $FP, fs3: $FP}
+	``<oper>\t<ft>, <fs1>, <fs2>, <fs3>''
+
+    | FROUND of {oper:fround, ft: $FP, fs1: $FP, rs2: $GP}
+	``<oper>\t<ft>, <fs1>, <fs1>, <rs2>''
+
+    | CVTI2F of {cvt:cvti2f, rs: $GP, ft: $FP}
+        ``<cvt>\t<ft>, <rs>''
+
+    | CVTF2I of {cvt:cvtf2i, fs: $FP, rt: $GP}
+        ``<cvt>\t<rt>, <fs>''
+
+    |  COPY of { dst: $GP list, src: $GP list, 
+	        impl:instruction list option ref, tmp:ea option}
+        asm: emitInstrs (Shuffle.shuffle{tmp,src,dst})
+
+    |  FCOPY of { dst: $FP list, src: $FP list, 
+                 impl:instruction list option ref, tmp:ea option}
+        asm: emitInstrs (Shuffle.shufflefp{tmp,src,dst})
+
+    |  ANNOTATION of {i:instruction, a:Annotations.annotation}
+        asm: (comment(Annotations.toString a); nl(); emitInstr i)
+        mc:  (emitInstr i)
+
+    |  PHI of {}
+	asm: ``phi''
+	mc:  ()
+
+   |  SOURCE of {}
+	asm: ``source''
+	mc:  ()
+
+   |  SINK of {}
+	asm: ``sink''
+	mc:  ()
+end

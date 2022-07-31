@@ -1,0 +1,45 @@
+What's in Here
+--------------
+
+This is a simple demo backend for MLRISC.  It only includes instruction
+selection and register allocation.  It takes MLTREE statements as input
+and emit assembly code in AMD64, Alpha, or Sparc format.  A lot of things
+are ignored here: for example, how the stack frame is laid out.  So don't
+expect the assembly output to run without some changes.
+
+You can probably use this as a starting point for developing your backend, 
+as a lot of stuff here is just boilerplate functor instantiation.
+
+Note: you do not need to have an AMD64 or Alpha or Sparc machine to use the system.
+
+How to Build the System for Alpha or Sparc
+-----------------------
+
+I assume you already have either SML/NJ version 110.0.6, 110.25 or 110.29+
+Unfortunately, the building process are slightly different across
+the versions because of changes to CM.  So three different build files
+are provided.
+
+1.  Run sml in this directory
+2.  Type:
+
+      use "build-<version>.sml"
+
+    Once you have done this all the code generator definitions are loaded 
+    into memory.
+
+3.  You can try: 
+
+      use "eg-sparc.sml"
+      use "eg-alpha.sml"
+
+    to load the test inputs.
+    Running eg1() and eg2() should produce the assembly. 
+
+
+How to Build the System for AMD64
+-----------------------
+1. Run sml in this directory
+2. Type "CM.make "sources-amd64.cm"
+3. Try generating code by typing
+     AMD64Demo.eg();

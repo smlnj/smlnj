@@ -1,0 +1,73 @@
+%
+% This is derived from alltt.sty
+%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{mltex}[2000/2/12 defines mltex environment]
+
+\usepackage{latexsym}
+%\usepackage{psfig}
+\usepackage{fancyheadings}
+\usepackage{sml}
+\usepackage{color}
+\usepackage{verbatim}
+
+
+% Sectioning
+
+\newcommand{\Chapter}[1]{\chapter{#1}}
+\newcommand{\Section}[1]{\section{#1}}
+\newcommand{\Subsection}[1]{\subsection{#1}}
+\newcommand{\Subsubsection}[1]{\subsubsection{#1}}
+\newcommand{\Paragraph}[1]{\paragraph{#1}}
+\newcommand{\majorsection}[1]{}
+
+% Frames
+   \newsavebox{\savepar}
+   \newenvironment{boxit}{\begin{lrbox}{\savepar}
+   \begin{minipage}[b]{\columnwidth}}
+   {\end{minipage}\end{lrbox}\begin{center}\framebox[\columnwidth]{\usebox{\savepar}}\end{center}}
+   \newenvironment{Boxit}{\begin{tabular}{|c|}\hline}{\\\hline\end{tabular}}
+
+
+% Table
+\newenvironment{Table}[2]{\begin{tabular}{#1}}{\end{tabular}}
+
+% Images and Figures
+\newcommand{\image}[3]{}
+%\newcommand{\cpsfig}[1]{\centerline{\psfig{#1}}}
+
+% Formatting
+\newenvironment{Bold}{\begingroup\bf}{\endgroup}
+\newenvironment{Italics}{\begingroup\it}{\endgroup}
+\newenvironment{Emph}{\begingroup\em}{\endgroup}
+
+\newcommand{\italics}[1]{{\it #1}}
+\newcommand{\bold}[1]{{\bf #1}}
+%\newcommand{\emph}[1]{{\em #1}}
+
+% New definitions
+\newcommand{\newdef}[1]{{\em #1}}
+\newcommand{\newtype}[1]{{\tt #1}}
+
+% Enviroments
+\newenvironment{SML}{\begin{smldisplay}}{\end{smldisplay}}
+\newenvironment{methods}{\begin{center}\begin{tabular}{@{\tt}ll}}%
+   {\end{tabular}\end{center}}
+\newenvironment{address}{}{}
+
+% HTML
+\newcommand{\href}[2]{#2\footnote{url: \tt #1}}
+\newcommand{\externhref}[2]{#2\footnote{url: \tt #1}}
+\newcommand{\mlrischref}[2]{\sml{#2}\footnote{{\bf file:} {\tt #1}}}
+
+\newcommand{\br}[1]{}
+\newcommand{\hr}{\rule{1em}{\textwidth}}
+
+% Color
+\renewenvironment{color}[1]{}{}
+
+% Misc
+\newcommand{\MLRISC}{MLRISC}
+\newcommand{\MLTeX}{\mbox{$\mbox{MLT}_{\mbox{E}}\mbox{X}$}}
+
+\endinput

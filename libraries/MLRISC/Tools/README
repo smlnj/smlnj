@@ -1,0 +1,38 @@
+What's In Here
+==============
+
+  This directory contains some tools that I've written for generating
+  MLRISC modules from machine descriptions.   They may also be useful 
+  for others.
+
+
+Organization
+============
+
+  PP/         --- a combinator based pretty printer
+
+
+  SourceMap/  --- a simple source location mapping utility
+
+  PrecParser/ --- a very naive precedence parser
+
+  FakeSMLAst/ --- the abstract syntax tree and associated transformation 
+                  routines for MDL, which includes a (hopefully complete) 
+                  ast for SML.  MDL is MLRISC's machine description language.
+
+  Parser/     --- parser and lexer for the same
+
+  MatchCompiler/ --- a pattern matching compiler library
+
+  RewriteGen/ --- a separate tool for generating rewriters
+
+  nowhere/  --- the source to 'nowhere', a translator that converts
+                 SML with where-clauses into SML code.
+
+  ASDL/      --- some utilities for emitting ASDL definitions.
+  
+  MDL/       --- the source for the MDL -> SML code translator.
+
+  basis.md   --- the standard basis for writing machine descriptions
+
+  mdl.vim    --- vim syntax highlighting file for mdl descriptions.

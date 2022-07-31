@@ -1,0 +1,17 @@
+(* This file is created by makeallcm *)
+Library
+	functor AlphaSSAProps
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	ALPHA.cm
+	ALPHA-RTL.cm
+
+	../alpha/SSA/alphaSSAProps.sml

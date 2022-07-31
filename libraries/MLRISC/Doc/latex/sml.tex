@@ -1,0 +1,277 @@
+\documentclass{article}
+  \usepackage{sml}
+  \title{Package {\tt sml}}
+  \author{Allen Leung}
+\begin{document}
+  \maketitle
+\section{Introduction}
+  The \verb|sml| package defines a \verb|verbatim|-like environment
+called \verb|smldisplay|
+for typesetting Standard ML programs.   
+Like the \verb|alltt| environment, 
+backslashes `\verb|\|' and the braces \verb|{|
+and \verb|}| have their usual meaning in \verb|smldisplay|, 
+so it is possible to use other
+macros and commands within the \verb|smldisplay| environment.
+Meta-characters such as \verb|#|, \verb|%|, 
+\verb|$|, \verb|_| and \verb|^| are disabled and appears verbatim.  
+
+To enter math mode, the user can use \verb|\(| \ldots \verb|)| or
+\verb|\[| \ldots \verb|\]|.  But unlike the \verb|alltt| environment,
+the superscripts \verb|^| and subscripts \verb|_| characters
+are available inside math mode. 
+
+The character \verb|'| is interpreted as the beginning of a ML 
+type variable.  Type variables are typeset 
+in italics within the \verb|smldisplay| environment.  For example, 
+\begin{verbatim}
+\begin{smldisplay} 
+   datatype 'a tree = EMPTY
+                    | NODE of 'a * 'a tree list
+\end{smldisplay}
+\end{verbatim}
+is typeset as follows:
+\begin{smldisplay} 
+   datatype 'a tree = EMPTY 
+                    | NODE of 'a * 'a tree list
+\end{smldisplay}
+
+The environment \verb|smlboxeddisplay| is similar to \verb|smldisplay|
+except that a box is also drawn around the displayed program.
+For example, if we write:
+\begin{verbatim}
+\begin{smlboxeddisplay} 
+   datatype 'a tree = EMPTY 
+                    | NODE of 'a * 'a tree list
+\end{smlboxeddisplay}
+\end{verbatim}
+we get:
+\begin{smlboxeddisplay} 
+   datatype 'a tree = EMPTY 
+                    | NODE of 'a * 'a tree list
+\end{smlboxeddisplay}
+
+\subsection{Highlighting keywords}
+A similar environment, called \verb|smldisp|, can be used to highlight
+all SML keywords.   However, math mode and other macros are {\em unavailable}
+in this environment.  For example, in \verb|smldisp| we can write:
+\begin{verbatim}
+\begin{smldisp} 
+   (* A n-ary tree *)
+   datatype 'a tree = EMPTY 
+                    | NODE of 'a * 'a tree list
+   (* Flatten a tree as a list in preorder *)
+   fun flatten(EMPTY) = []
+     | flatten(NODE(x,children)) = [x] @ List.concat(map flatten children)
+\end{smldisp}
+\end{verbatim}
+and get the following result:
+\begin{smldisp} 
+   (* A n-ary tree *)
+   datatype 'a tree = EMPTY 
+                    | NODE of 'a * 'a tree list
+   (* Flatten a tree as a list in preorder *)
+   fun flatten(EMPTY) = []
+     | flatten(NODE(x,children)) = [x] @ List.concat(map flatten children)
+\end{smldisp}
+
+Note that the keywords ``datatype'' and ``of'' have been typeset as
+\Sml{datatype} and \Sml{of}.  Furthermore, comments are typeset
+in small italics font.   
+
+The following macros control how keywords and comments are typeset
+in this environment:
+\begin{verbatim}
+ \newcommand{\makeSmlKeyword}[1]{{\bf #1}}
+ \newcommand{\smlCommentSize}{\small}
+ \newcommand{\smlCommentFont}{\it}
+ \newcommand{\BeginSmlComment}{\begingroup\smlCommentSize\smlCommentFont}
+ \newcommand{\EndSmlComment}{\endgroup}
+\end{verbatim}
+These can be redefined by the user if necessary.
+
+\subsection{Type Variable Translations}
+It is possible to define type variable translations for
+\verb|smldisplay| and \verb|smldisp| environments.  For example, 
+if we write:
+\begin{verbatim}
+   \smlTypeVar{a}{\(\alpha\)}
+   \smlTypeVar{foo}{\(\underline\beta\)}
+   \begin{smldisplay} 
+      datatype 'a tree = EMPTY | NODE of 'a * 'a tree list
+      type 'foo foo = ('foo * 'foo) tree
+      type 'c seq = 'c list
+   \end{smldisplay}
+\end{verbatim}
+we get:
+   \smlTypeVar{a}{\(\alpha\)}
+   \smlTypeVar{foo}{\(\underline\beta\)}
+   \begin{smldisplay} 
+      datatype 'a tree = EMPTY | NODE of 'a * 'a tree list
+      type 'foo foo = ('foo * 'foo) tree
+      type 'c seq = 'c list
+   \end{smldisplay}
+
+Note that all occurrances of \verb|'a| has been translated into
+$\alpha$, while all occurrances of \verb|'foo| has been translated
+into $\underline\beta$.
+
+A type variable translation declared by \verb|smlTypeVar| is active
+in its scope until it is removed by 
+the macro \verb|\smlRemoveTypeVar|.
+For example, we can write:
+\begin{verbatim}
+  \smlRemoveTypeVar{foo}
+\end{verbatim}
+to remove the translation on type variable \verb|'foo|.
+
+
+\subsection{{\tt $\backslash${verb}}-like macros}
+A \verb|\verb|-like macro called \verb|\sml| is available for typesetting
+short SML program fragments within running text.  
+For example, we can write the following:
+\begin{verbatim}
+\begin{quotation}
+   The datatype \sml{'a tree} implements a polymorphic n-ary tree.
+The function \sml{val rev : 'a tree -> 'a list} flattens a tree into a list.
+\end{quotation}
+\end{verbatim}
+and obtain:
+\begin{quotation}
+   The datatype \sml{'a tree} implements a polymorphic n-ary tree.
+The function \sml{val rev : 'a tree -> 'a list} flattens a tree into a list.
+\end{quotation}
+The macro \verb|\sml| behaves very much like the \verb|smldisplay|
+environment, except that newlines are not interpreted verbatim.
+
+Similarly, there is a \verb|\verb|-like macro called \verb|\Sml| that
+behaves like the \verb|smldisp| environment.  For example, writing
+\begin{verbatim}
+\begin{quotation}
+   The datatype \Sml{'a tree} implements a polymorphic n-ary tree.
+The function \Sml{val rev : 'a tree -> 'a list} flattens a tree into a list.
+\end{quotation}
+\end{verbatim}
+we obtain:
+\begin{quotation}
+   The datatype \Sml{'a tree} implements a polymorphic n-ary tree.
+The function \Sml{val rev : 'a tree -> 'a list} flattens a tree into a list.
+\end{quotation}
+
+\subsection{Changing the Fonts}
+The macros \verb|\smlFont| and \verb|\smlTypeVarFont| 
+define the fonts used for typesetting ML text and type variables.  
+They are predefined as follows:
+\begin{verbatim}
+   \newcommand{\smlFont}{\verbatim@font}
+   \newcommand{\smlTypeVarFont}{\it}
+\end{verbatim}
+Furthermore, the default method of typesetting a type variable
+is defined as: 
+\begin{verbatim}
+   \newcommand{\makeSmlTypeVar}[1]{'{\smlTypeVarFont #1}}
+\end{verbatim}
+These can be overridden by the user if desired.
+
+\subsection{Enabling {\tt \$}}
+By default, the math shift character \verb|$| 
+is disabled within the environment \verb|smldisplay|
+and the macro \verb|sml|.  It is possible to
+enable this character by declaring:
+\begin{verbatim}
+   \smlDollarOn
+\end{verbatim}
+\noindent in the prologue of a document.
+For example, we can write:
+\begin{verbatim}
+\smlDollarOn
+\begin{smldisplay}
+   datatype 'a tree = EMPTY | NODE of 'a * 'a tree list
+   \textrm{A balanced tree with $n$ nodes has height $O(\log n)$}
+\end{smldisplay}
+\end{verbatim}
+and obtain:
+\smlDollarOn
+\begin{smldisplay}
+   datatype 'a tree = EMPTY | NODE of 'a * 'a tree list
+   \textrm{A balanced tree with $n$ nodes has height $O(\log n)$}
+\end{smldisplay}
+
+To turn off the math shift character \verb|$|, we can
+write 
+\begin{verbatim}
+   \smlDollarOff
+\end{verbatim}
+
+\subsection{Numbered Program Listings}
+
+Numbered program listings can be displayed using the
+\verb|smllisting| environment, which behaves exactly like
+\verb|smldisplay| except that every line is prefixed by a
+line number.  For example, when we write:
+\begin{verbatim}
+\smlTypeVar{n}{\(\alpha\)}
+\smlTypeVar{e}{\(\beta\)}
+\smlTypeVar{g}{\(\gamma\)}
+\begin{smllisting}{1}{1}
+signature SINGLE_SOURCE_SHORTEST_PATHS =
+sig
+
+   val single_source_shortest_paths :
+                 \{ weight : 'e Graph.edge -> 'w,
+                   <      : 'w * 'w -> bool,
+                   +      : 'w * 'w -> 'w,
+                   zero   : 'w,
+                   inf    : 'w
+                 \} ->
+                 ('n,'e,'g) Graph.graph ->
+                 Graph.node_id ->
+                 \{ dist : 'w Array.array,
+                   pred :  Graph.node_id Array.array
+                 \}
+end
+\end{smllisting}
+\end{verbatim}
+\noindent we get:
+\smlTypeVar{n}{\(\alpha\)}
+\smlTypeVar{e}{\(\beta\)}
+\smlTypeVar{g}{\(\gamma\)}
+\begin{smllisting}{1}{1}
+signature SINGLE_SOURCE_SHORTEST_PATHS =
+sig
+
+   val single_source_shortest_paths :
+                 \{ weight : 'e Graph.edge -> 'w,
+                   <      : 'w * 'w -> bool,
+                   +      : 'w * 'w -> 'w,
+                   zero   : 'w,
+                   inf    : 'w
+                 \} ->
+                 ('n,'e,'g) Graph.graph ->
+                 Graph.node_id ->
+                 \{ dist : 'w Array.array,
+                   pred :  Graph.node_id Array.array
+                 \}
+end
+\end{smllisting}
+
+The environment \verb|smllisting| requires two numeric parameters.
+The first parameter determines the initial line number of the
+listing, while the second parameter determines how often the line
+number should be printed.  For example, if the second parameter
+is 2, then the line number appears every two lines. 
+
+The environment \verb|smlboxedlisting| is similar to 
+\verb|smllisting| except that a box is also drawn around the program
+listing.
+
+The following macros control how the numbers are displayed
+\begin{verbatim}
+\newcommand{\smlNumberFont}{\smlFont}
+\newcommand{\smlNumberStyle}[1]{\arabic{#1}}
+\end{verbatim}
+The first macro \verb|\smlNumberFont| controls the font used
+for line numbering, which by default is \verb|\tt|.  
+The second macro \verb|\smlNumberStyle| displays the line count as
+arabic numerals.  
+\end{document}

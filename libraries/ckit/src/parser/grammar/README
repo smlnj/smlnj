@@ -1,0 +1,14 @@
+The principal file here is cd.grm.
+c.grm and d.grm are derived from it via cpp and should not be edited.
+
+For C:
+ 1. comment out #define DPARSE
+ 2. /lib/cpp -P cd.grm > c.grm
+
+For D:
+ 1. uncomment #define DPARSE
+ 2. /lib/cpp -P cd.grm > d.grm
+
+Note: "-P" so that don't get control info (e.g. # 218 "cd.grm").
+
+

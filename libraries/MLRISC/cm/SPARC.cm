@@ -1,0 +1,62 @@
+(* This file is created by makeallcm *)
+Library
+	signature SPARCCELLS
+	signature SPARCCOMP_INSTR_EXT
+	signature SPARCINSTR
+	signature SPARCSHUFFLE
+	signature SPARC_PSEUDO_INSTR
+	structure SparcCells
+	structure SparcInstrExt
+	functor Sparc
+	functor SparcAsmEmitter
+	functor SparcCompInstrExt
+	functor SparcDelaySlots
+	functor SparcFreqProps
+	functor SparcGasPseudoOps
+	functor SparcInstr
+	functor SparcJumps
+	functor SparcMCEmitter
+	functor SparcProps
+	functor SparcRewrite
+	functor SparcShuffle
+	functor SparcSpillInstr
+	functor Sparc_CCalls
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/MLRISC.cm
+	$/Control.cm
+	$/Lib.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+#endif
+#else
+	smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+#endif
+	../sparc/instructions/sparcCells.sml
+	../sparc/instructions/sparcInstr.sml
+	../sparc/instructions/sparcinstr-ext.sml
+	../sparc/instructions/sparccomp-instr-ext.sml
+	../sparc/instructions/sparcShuffle.sig
+	../sparc/instructions/sparcShuffle.sml
+	../sparc/instructions/sparcProps.sml
+	../sparc/instructions/sparcFreqProps.sml
+	../sparc/emit/sparcAsm.sml
+	../sparc/emit/sparcMC.sml
+	../sparc/backpatch/sparcJumps.sml
+	../sparc/flowgraph/sparcGasPseudoOps.sml
+	../sparc/mltree/sparcPseudoInstr.sig
+	../sparc/mltree/sparc.sml 
+	../sparc/ra/sparcRewrite.sml
+	../sparc/ra/sparcSpillInstr.sml
+	../sparc/backpatch/sparcDelaySlotProps.sml
+	../sparc/c-calls/sparc-c-calls.sml

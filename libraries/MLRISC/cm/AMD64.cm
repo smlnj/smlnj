@@ -1,0 +1,63 @@
+(* Note: this file was _not_ created by makeallcm! *)
+Library
+	signature AMD64SHUFFLE
+	signature AMD64CELLS
+	signature AMD64INSTR
+	signature AMD64INSN_PROPERTIES
+
+	structure AMD64Cells
+	structure AMD64InstrExt
+
+	functor AMD64AsmEmitter
+	functor AMD64MCEmitter
+	functor AMD64Instr
+	functor AMD64Shuffle
+	functor AMD64SVID_CCalls
+	functor AMD64CompInstrExt
+	functor AMD64GasPseudoOps
+	functor AMD64DarwinPseudoOps
+	functor AMD64OmitFramePointer
+	functor AMD64Props
+	functor AMD64Gen
+	functor AMD64Opcodes
+	functor AMD64RegAlloc
+	functor AMD64Rewrite
+	functor AMD64SpillInstr
+	functor AMD64Jumps
+is
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/MLRISC.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/MLTREE.cm
+
+	../amd64/c-calls/amd64-svid.sml
+	../amd64/omit-frameptr/amd64omit-frameptr.sml
+
+	../amd64/flowgraph/amd64GasPseudoOps.sml
+	../amd64/flowgraph/amd64-darwin-pseudo-ops.sml
+
+	../amd64/emit/amd64Asm.sml
+	../amd64/amd64MC.sml
+
+	(* machine properties *)
+	../amd64/instructions/amd64Cells.sml
+	../amd64/instructions/amd64Instr.sml
+	../amd64/instructions/amd64Shuffle.sml
+	../amd64/instructions/amd64Props.sml
+	../amd64/instructions/amd64InstrExt.sml
+	../amd64/instructions/amd64CompInstrExt.sml
+
+	(* instruction selection *)
+	../amd64/mltree/amd64-gen.sml
+	../amd64/mltree/amd64-opcodes.sml
+
+	(* register allocation *)
+	../amd64/ra/amd64RegAlloc.sml
+	../amd64/ra/amd64Rewrite.sml
+	../amd64/ra/amd64SpillInstr.sml
+
+	(* backpatching *)
+	../amd64/backpatch/amd64Jumps.sml

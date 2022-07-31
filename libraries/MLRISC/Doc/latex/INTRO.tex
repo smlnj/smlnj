@@ -1,0 +1,48 @@
+\section{MLRISC}
+  \begin{center} 
+    \begin{Bold}
+     A framework for retargetable and optimizing compiler back ends 
+    \end{Bold}
+  \end{center}
+\begin{center}
+  \begin{tabular}{cc} 
+    \begin{address}
+      \href{mailto:george@research.bell-labs.com}{Lal George} 
+    \end{address} &
+    \begin{address}
+      \href{mailto:leunga@cs.nyu.edu}{ Allen Leung}
+    \end{address} \\
+       Bell Labs & New York University \\
+  \end{tabular}   
+\end{center}
+
+\begin{center}
+\image{MLRISC logo}{pictures/png/uncol.png}{align="middle"}
+
+\begin{Italics}
+   \href{contributors.html}{Contributors}
+\end{Italics}
+\end{center}
+
+Writing native code generators for modern processors is a significant
+investment.  Unfortunately it is difficult
+to reuse this investment for other architectures, and even more
+difficult to reuse for other source language compilers.   MLRISC is
+a customizable optimizing back-end written in
+\externhref{http://cm.bell-labs.com/cm/cs/what/smlnj/sml.html}{Standard ML}
+and has been successfully retargeted to multiple architectures.
+MLRISC deals elegantly with the special requirements imposed by the
+execution model of different high-level, typed languages, by allowing
+many components of the system to be customized to fit the source language
+semantics and runtime system requirements.
+
+The \begin{color}{#aa0000}Overview\end{color} pages on the left provide 
+an introduction the MLRISC system, mostly from the client's perspective,  
+while the \begin{color}{#aa0000}System\end{color}
+pages give a more detailed look at the 
+innards, and are of interest to MLRISC hackers.   As usual, development of
+the system has outpaced the documentation process substantally; thus
+the latter part of the document is incomplete but it may still be useful. 
+
+These pages are also available in 
+\href{../latex/mlrisc.ps}{tech report} form.

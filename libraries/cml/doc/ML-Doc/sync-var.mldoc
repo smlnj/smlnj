@@ -1,0 +1,227 @@
+<!-- ../doc/mldoc/sync-var.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Bell Laboratories" YEAR=1995>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The SyncVar structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/SyncVar/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/CML/
+</SEEALSO>
+
+<PP>
+The <STRREF TOPID NOLINK/SyncVar/ structure provides <BF/Id/-style
+synchronous variables (or memory cells).
+These variables have two states: <IT/empty/ and <IT/full/.
+An attempt to read a value from an empty variable blocks the calling
+thread until there is a value available.
+An attempt to put a value into a variable that is full results in the
+<EXNREF STRID="SyncVar"/Put/ exception being raised.
+There are two kinds of synchronous variables: I-variables are write-once,
+while M-variables are mutable.
+
+<STRUCTURE STRID="SyncVar">
+  <SIGBODY SIGID="SYNC_VAR" FILE=SYNC-VAR-SIG>
+    <SPEC>
+      <EXN>Put
+      <COMMENT>
+	<PP>
+	This exception is raised when an attempt is made to put a
+	value into a value that is already full (see <VALREF/iPut/ and
+	<VALREF/mPut/).
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>ivar
+      <COMMENT>
+	<PP>
+	This is the type constructor for I-structured variables.
+	I-structured variables are write-once variables that provide
+	synchronization on read operations.
+	They are especially useful for one-shot communications, such
+	as reply messages in client/server protocols, and can also be used
+	to implement shared <EM>incremental</EM> data structures.
+    <SPEC>
+      <VAL>iVar<TY>unit -> 'a ivar
+        <COMMENT>
+          <PROTOTY>
+          iVar ()
+          </PROTOTY>
+          creates a new empty I-variable.
+    <SPEC>
+      <VAL>iPut<TY>('a ivar * 'a) -> unit
+	<RAISES><EXNREF/Put/
+        <COMMENT>
+          <PROTOTY>
+          iPut (<ARG/iv/, <ARG/x/)
+          </PROTOTY>
+	  fills the I-variable <ARG/iv/ with the value <ARG/x/.
+	  Any threads that are blocked on <ARG/iv/ will be resumed.
+	  If <ARG/iv/ already has a value in it, then the <EXNREF/Put/
+	  exception is raised.
+    <SPEC>
+      <VAL>iGet<TY>'a ivar -> 'a
+        <COMMENT>
+          <PROTOTY>
+          iGet <ARG/iv/
+          </PROTOTY>
+          returns the contents of the I-variable <ARG/iv/.
+	  If the variable is empty, then the calling thread blocks until
+	  the variable becomes full.
+    <SPEC>
+      <VAL>iGetEvt<TY>'a ivar -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          iGetEvt <ARG/iv/
+          </PROTOTY>
+          returns an event-value that represents the <VALREF/iGet/
+	  operation on <ARG/iv/.
+    <SPEC>
+      <VAL>iGetPoll<TY>'a ivar -> 'a option
+        <COMMENT>
+	<PP>
+	  This is a non-blocking version of <VALREF/iGet/.
+	  If the corresponding blocking form would block, then it returns
+	  <CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/NONE/; otherwise
+	  it returns <CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/SOME/
+	  of the variable's contents.
+    <SPEC>
+      <VAL>sameIVar<TY>('a ivar * 'a ivar) -> bool
+        <COMMENT>
+          <PROTOTY>
+          sameIVar (<ARG/iv1/, <ARG/iv2/)
+          </PROTOTY>
+          returns <CD/true/, if <ARG/iv1/ and <ARG/iv2/ are the
+	  same I-variable.
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>mvar
+      <COMMENT>
+	<PP>
+	This is the type constructor for M-structured variables.
+	Unlike <TYREF/ivar/ values, M-structured variables may be
+	updated multiple times.
+	Like I-variables, however, they may only be written if they
+	are empty.
+    <SPEC>
+      <VAL>mVar<TY>unit -> 'a mvar
+        <COMMENT>
+          <PROTOTY>
+          mVar ()
+          </PROTOTY>
+          creates a new empty M-variable.
+    <SPEC>
+      <VAL>mVarInit<TY>'a -> 'a mvar
+        <COMMENT>
+          <PROTOTY>
+          mVarInit <ARG/x/
+          </PROTOTY>
+          creates a new M-variable initialized to <ARG/x/.
+    <SPEC>
+      <VAL>mPut<TY>('a mvar * 'a) -> unit
+	<RAISES><EXNREF/Put/
+        <COMMENT>
+          <PROTOTY>
+          mPut (<ARG/mv/, <ARG/x/)
+          </PROTOTY>
+	  fills the M-variable <ARG/mv/ with the value <ARG/x/.
+	  Any threads that are blocked on <ARG/mv/ will be resumed.
+	  If <ARG/mv/ already has a value in it, then the <EXNREF/Put/
+	  exception is raised.
+    <SPEC>
+      <VAL>mTake<TY>'a mvar -> 'a
+      <COMMENT>
+        <PROTOTY>
+          mTake <ARG/mv/
+        </PROTOTY>
+	removes and returns the contents of the M-variable <ARG/mv/
+	making it empty.
+	If the variable is already empty, then the calling thread
+	is blocked until a value is available.
+    <SPEC>
+      <VAL>mTakeEvt<TY>'a mvar -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          mTakeEvt <ARG/mv/
+          </PROTOTY>
+          returns an event-value that represents the <VALREF/mTake/
+	  operation on <ARG/mv/.
+    <SPEC>
+      <VAL>mGet<TY>'a mvar -> 'a
+        <COMMENT>
+          <PROTOTY>
+          mGet <ARG/mv/
+          </PROTOTY>
+          returns the contents of the M-variable <ARG/mv/ without emptying
+	  the variable; if the variable is empty, then the thread blocks until
+	  a value is available.
+	  It is equivalent to the code:
+	  <CODE>
+let val x = <VALREF/mTake/ <ARG/mv/ in <VALREF/mPut/(<ARG/mv/, x); x end
+	  </CODE>
+    <SPEC>
+      <VAL>mGetEvt<TY>'a mvar -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          mGetEvt <ARG/mv/
+          </PROTOTY>
+          returns an event-value that represents the <VALREF/mGet/
+	  operation on <ARG/mv/.
+    <SPEC>
+      <VAL>mTakePoll<TY>'a mvar -> 'a option
+      <VAL>mGetPoll<TY>'a mvar -> 'a option
+        <COMMENT>
+	<PP>
+	  These are non-blocking versions of <VALREF/mTake/ and
+	  <VALREF/mGet/ (respectively).
+	  If the corresponding blocking form would block, then they return
+	  <CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/NONE/; otherwise
+	  they return <CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/SOME/
+	  of the variable's contents.
+    <SPEC>
+      <VAL>mSwap<TY>('a mvar * 'a) -> 'a
+        <COMMENT>
+          <PROTOTY>
+          mSwap (<ARG/mv/, <ARG/newV/)
+          </PROTOTY>
+	  puts the value <ARG/newV/ into the M-variable <ARG/mv/ and returns
+	  the previous contents.
+	  If the variable is empty, then the thread blocks until
+	  a value is available.
+	  It is equivalent to the code:
+	  <CODE>
+let val x = <VALREF/mTake/ <ARG/mv/ in <VALREF/mPut/(<ARG/mv/, <ARG/newV/); x end
+	  </CODE>
+	  except that <CD/mSwap/ is executed atomically.
+    <SPEC>
+      <VAL>mSwapEvt<TY>('a mvar * 'a) -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          mSwapEvt (<ARG/mv/, <ARG/newV/)
+          </PROTOTY>
+          returns an event-value that represents the <VALREF/mSwap/
+	  operation on <ARG/mv/ and <ARG/newV/.
+    <SPEC>
+      <VAL>sameMVar<TY>('a mvar * 'a mvar) -> bool
+        <COMMENT>
+          <PROTOTY>
+          sameMVar (<ARG/mv1/, <ARG/mv2/)
+          </PROTOTY>
+          returns <CD/true/, if <ARG/mv1/ and <ARG/mv2/ are the same
+	  M-variable.
+  </SIGBODY>
+</STRUCTURE>
+<PP>
+I-variables provide a useful mechanism for implementing the
+reply communication in request/reply protocols (in cases where
+the server does not care if the reply is accepted).
+They may also be used to implement incremental data structures
+and streams; for example, the <STRREF>Multicast</STRREF> structure
+uses I-variables to implement its multicast channels.
+<PP>
+A disciplined use of M-variables can provide an atomic
+read-modify-write operation.
+</INTERFACE>

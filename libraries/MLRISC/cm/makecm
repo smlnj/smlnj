@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+## usage: makecm <cmfiles ...>
+## 
+## This script looks at a CM file like MLRISC.cm and updates the export list.
+## It changes the file in place.
+##
+
+if ($#ARGV == -1)
+{  open(HELP,"$0");
+   while (<HELP>)
+   {  print $1, "\n" if /^## (.*)/;
+   }
+   exit (1);
+} 
+
+foreach $file (@ARGV)
+{  makecm($file);
+}
+
+sub makecm
+{  my($cmfile) = @_;
+   $error = 0;
+   open(MLRISC,$cmfile) || (print STDERR ("$!: $cmfile\n"), $error = 1);
+   @HEADER=();
+   @FOOTER=();
+   @SIGS=();
+   @FCTS=();
+   @STRS=();
+   while (<MLRISC>)
+   {  next if /^\s*(functor|signature|structure) .*$/;
+      if (/^\s*is\s*$/)
+      {  goto NEXT;
+      }
+      push @HEADER, $_;
+   }
+   
+   NEXT:
+   
+   while (<MLRISC>)
+   {  push @FOOTER, $_;
+      next if $_ =~ /\(\*.*\*\)/;
+      ($comment=1, next) if $_ =~ /^\s*\(\*.*/;
+      ($comment=0, next) if $_ =~ /^.*\*\)/;
+      next if $comment;
+      if ($_ =~ /^.*\.(sml|sig)/)
+      {  open (F,$_) || (print STDERR ("$!: $cmfile: $_"), $error = 1);
+         while (<F>)
+         {  if (/^(signature)\s+([a-zA-Z0-9_]+)/)
+            {  push @SIGS, "\t$1 $2\n";
+            }
+            if (/^(functor)\s+([a-zA-Z0-9_]+)/)
+            {  push @FCTS, "\t$1 $2\n";
+            }
+            if (/^(structure)\s+([a-zA-Z0-9_]+)/)
+            {  push @STRS, "\t$1 $2\n";
+            }
+         }
+         close F
+      }
+   }
+   close(MLRISC);
+   if ($error) { exit 1; }
+   #system("/bin/mv -f $cmfile $cmfile.bak");
+   open(MLRISC,">$cmfile") || die("$!: $cmfile");
+   for (@HEADER)
+   {  print MLRISC $_;
+   }
+   for (sort @SIGS) { print MLRISC $_; }
+   for (sort @STRS) { print MLRISC $_; }
+   for (sort @FCTS) { print MLRISC $_; }
+   print MLRISC "is\n";
+   for (@FOOTER)
+   {  print MLRISC $_;
+   }
+   print "[New $cmfile created]\n";
+}

@@ -1,0 +1,37 @@
+(* This file is created by makeallcm *)
+Library
+	functor HppaSSAProps
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/MLRISC.cm
+	$/RTL.cm
+	$/SSA.cm
+	$/Region.cm
+	$/HPPA.cm
+	$/HPPA-RTL.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	HPPA.cm
+	HPPA-RTL.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	HPPA.cm
+	HPPA-RTL.cm
+#endif
+	../hppa/SSA/hppaSSAProps.sml

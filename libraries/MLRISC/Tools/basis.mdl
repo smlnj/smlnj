@@ -1,0 +1,75 @@
+(*
+ * The standard basis used in our lambda RTL language.
+ *)
+structure Basis =
+struct
+   (* Primitive types *)
+   type #n bits    (* a value that is n bits wide *)
+   type #n cell    (* a cell containing an n-bit value *)
+   type bool       (* a boolean *)
+   type effect     (* an action *)
+   type (#n, 'a) list (* an n-element list of type 'a *)
+   type string
+
+   type int
+   type word
+
+   type operand
+   type label    
+
+   (* We are allowed to use map in the basis.  
+    * This is the only higher order function we have. 
+    *)
+   val map       : ('a -> 'b) -> (#n, 'a) list -> (#n, 'b) list
+
+   val :=        : #n bits * #n bits -> effect
+   val ???       : #n bits
+   val label     : label -> #n bits
+   val operand   : operand -> #n bits
+
+   (* Signed/unsigned promotion *)
+   val sx  : #n bits -> #m bits
+   val zx  : #n bits -> #m bits
+
+   (* Integer operators *)
+   val ~ notb negt : #n bits -> #n bits
+   val + - muls mulu divs divu quots rems remu  
+         : #n bits * #n bits -> #n bits
+   val andb orb xorb eqvb << >> ~>> : #n bits * #n bits -> #n bits  
+   val addt subt mult divt quott remt : #n bits * #n bits -> #n bits  
+
+   (* Boolean operators *)
+   val cond    : bool * #n bits * #n bits -> #n bits
+   val not     : bool -> bool
+   val andalso : bool * bool -> bool
+   val orelse  : bool * bool -> bool
+
+   (* Integer comparisons *)
+   val == <> > < <= >= ltu leu gtu geu : #n bits * #n bits -> bool
+
+   (* Floating point operators *)
+   val fadd fsub fmul fdiv : #n bits * #n bits -> #n bits
+   val fabs fneg : #n bits -> #n bits
+
+   (* Floating point comparisons *)
+   val |?| |!<=>| |==| |?=| |!<>| |!?>=| |<| |?<| 
+       |!>=| |!?>| |<=| |?<=| |!>| |!?<=| |>| |?>|
+       |!<=| |!?<| |>=| |?>=| |!<| |!?=| |<>| |!=|
+       |!?| |<=>| |?<>| : #n bits * #n bits -> bool
+
+   (* Effect combinators *)
+   val ||    : effect * effect -> effect  (* parallel effects *)
+   val Nop   : effect                     (* empty effect *)
+   val Jmp   : #n bits -> effect          (* jump to address *)
+   val Call  : #n bits -> effect          (* call address *)
+   val Ret   : effect                     (* return *)
+   val If    : bool * effect * effect -> effect (* if/then/else *)
+
+   fun Kill x = x := ???
+   fun Use x  = ??? := x
+
+   (* Hidden definitions *)
+   val intConst  : int -> #n bits
+   val wordConst : word -> #n bits
+   val newOp     : string -> 'a
+end 

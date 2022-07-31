@@ -1,0 +1,77 @@
+(* cml-internal.cm
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This is the actual implementation of CML.  It defines the public
+ * interface of CML as well as some other things which belong intro
+ * basis.cm.
+ * This library has the status of an "internal" library.  Public
+ * "views" for it are defined in cml.cm and basis.cm.
+ *)
+
+Library
+  signature CML
+  structure CML
+
+  signature SYNC_VAR
+  structure SyncVar
+  signature MAILBOX
+  structure Mailbox
+  signature BARRIER
+  structure Barrier
+
+  structure RunCML
+
+  structure Debug
+
+  signature OS_PROCESS
+  signature OS_IO
+  signature OS
+  structure OS
+
+  signature PRIM_IO
+  signature CML_STREAM_IO
+  signature CML_TEXT_STREAM_IO
+  signature CML_IMPERATIVE_IO
+  signature CML_BIN_IO
+  signature CML_TEXT_IO
+
+  structure BinPrimIO
+  structure BinIO
+  structure TextPrimIO
+  structure TextIO
+
+  signature GENERIC_SOCK
+  signature INET_SOCK
+
+  structure Socket
+  structure GenericSock
+  structure INetSock
+#if defined(OPSYS_UNIX)
+  signature UNIX_SOCK
+  structure UnixSock
+#endif
+
+#if defined(OPSYS_UNIX)
+  signature UNIX
+  structure Unix
+#endif
+
+is
+#if defined (NEW_CM)
+  $cml/core-cml.cm
+#else
+  core-cml.cm
+#endif
+  glue/sources.cm
+  OS/sources.cm
+  IO/sources.cm
+
+  Sockets/sources.cm
+
+#if defined(OPSYS_UNIX)
+  Unix/sources.cm
+#elif defined(OPSYS_WIN32)
+  Win32/sources.cm
+#endif

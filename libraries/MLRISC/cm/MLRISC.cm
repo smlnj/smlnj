@@ -1,0 +1,276 @@
+(* This file is created by makeallcm *)
+Library
+(*	signature CFG_VIEW *)
+(*	functor CFGView *)
+	signature ARCH_SPILL_INSTR
+	signature AS_PSEUDO_OPS
+	signature ASM_FORMAT_UTIL
+	signature ASM_STREAM
+	signature ASSEMBLY_EMITTER
+	signature BBSCHED
+	signature BLOCK_PLACEMENT
+	signature CELLS
+	signature CELLS_BASIS
+	signature CFG_OPTIMIZATION
+	signature CLIENT_PSEUDO_OPS
+	signature CODE_STRING
+	signature COMPUTE_EXECUTION_FREQUENCIES
+	signature CONSTANT
+	signature CONTROL_FLOWGRAPH_GEN
+	signature CONTROL_FLOW_GRAPH
+	signature C_CALLS
+	signature DELAY_SLOT_PROPERTIES
+	signature DOMINATOR_TREE
+	signature FREQUENCY_PROPERTIES
+	signature GC_CELLS
+	signature GC_TYPE
+	signature GETREG
+	signature INSN_PROPERTIES
+	signature INSTRUCTIONS
+	signature INSTRUCTION_EMITTER
+	signature INSTRUCTION_STREAM
+	signature LABEL
+	signature LIVENESS
+	signature LOOP_STRUCTURE
+	signature MACHINE_INT
+	signature MC_EMIT
+	signature MLRISC_ANNOTATIONS
+	signature MLRISC_OPTIMIZATION
+	signature MLRISC_REGION
+	signature MLTREE
+	signature MLTREECOMP
+	signature MLTREEGEN
+	signature MLTREE_BASIS
+	signature MLTREE_EVAL
+	signature MLTREE_EXTENSION
+	signature MLTREE_EXTENSION_COMP
+	signature MLTREE_HASH
+	signature MLTREE_MULT_DIV
+	signature MLTREE_SIZE
+	signature MLTREE_STREAM
+	signature OMIT_FRAME_POINTER
+	signature POINTS_TO
+	signature PRINT_FLOWGRAPH
+	signature PSEUDO_OPS
+	signature PSEUDO_OPS_BASIS
+	signature PSEUDO_OPS_ENDIAN
+	signature RA
+	signature RA_BITMATRIX
+	signature RA_CORE
+	signature RA_FLOWGRAPH
+	signature RA_FLOWGRAPH_PARTITIONER
+	signature RA_GRAPH
+	signature RA_PRIORITY_QUEUE
+	signature RA_SPILL
+	signature RA_SPILL_HEURISTICS
+	signature REGION
+	signature REWRITE_INSTRUCTIONS
+	signature SDI_JUMPS
+	signature SHUFFLE
+	structure AsmFlags
+	structure AsmFormatUtil
+	structure AsmStream
+	structure CTypes
+	structure CellsBasis
+	structure ChaitinSpillHeur
+	structure ChowHennessySpillHeur
+	structure Label
+	structure MLRiscAnnotations
+	structure MLRiscRegion
+	structure MLTreeBasis
+	structure MachineInt
+	structure PointsTo
+	structure PseudoOpsBasisTyp
+	structure RACore
+	structure RAGraph
+	structure RaBitmatrix
+	functor BBSched2
+	functor BackPatch
+	functor BlockPlacement
+	functor BuildFlowgraph
+	functor CFGCountCopies
+	functor CFGEmit
+	functor CFGExpandCopies
+	functor Cells
+	functor CheckPlacementFn
+	functor ClusterRA
+	functor CompleteProbsFn
+	functor ComputeFreqsFn
+	functor ControlFlowGraph
+	functor DarwinPseudoOps
+	functor DefaultBlockPlacement
+	functor DominatorTree
+	functor EstimateLoopProbsFn
+	functor FreqProps
+	functor GCCells
+	functor GasPseudoOps
+	functor GetReg
+	functor GetReg2
+	functor InstructionStream
+	functor JumpChainElimFn
+	functor Liveness
+	functor LoopStructure
+	functor MLTreeEval
+	functor MLTreeF
+	functor MLTreeGen
+	functor MLTreeHash
+	functor MLTreeMult
+	functor MLTreeSize
+	functor MLTreeCheckTy
+	functor MLTreeStream
+	functor MemoryRA
+	functor NoDelaySlots
+	functor PrintFlowgraph
+	functor PseudoOps
+	functor PseudoOpsBig
+	functor PseudoOpsLittle
+	functor RADeadCodeElim
+	functor RASpill
+	functor RASpillTypes
+	functor RISC_RA
+	functor RaPriQueue
+	functor RegionBasedRA
+	functor RegisterAllocator
+	functor Shuffle
+	functor SpanDependencyResolution
+	functor WeightedBlockPlacementFn
+	functor UnimplementedCCallsFn
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+	Graphs.cm
+	Lib.cm
+
+	../instructions/cells.sig
+	../instructions/cells.sml
+	../instructions/cells-basis.sig
+	../instructions/cells-basis.sml
+	../instructions/rewrite.sig
+	../instructions/insnProps.sig
+	../instructions/stream.sig
+	../instructions/stream.sml
+	../instructions/instructions.sig
+	../instructions/shuffle.sig
+	../instructions/shuffle.sml
+	../instructions/constant.sig
+	../instructions/label.sml
+	../instructions/label-sig.sml
+	../instructions/region.sig
+	../instructions/freqProps.sig
+	../instructions/freqProps.sml
+	../instructions/mlriscAnnotations.sig
+	../instructions/mlriscAnnotations.sml
+	../instructions/mlriscOptimization.sig
+	../aliasing/mlriscRegion.sig
+	../aliasing/mlriscRegion.sml
+	../aliasing/pointsTo.sig
+	../aliasing/pointsTo.sml
+	../mltree/mltree.sig
+	../mltree/mltree.sml
+	../mltree/mltree-eval.sig
+	../mltree/mltree-eval.sml
+	../mltree/mltree-extension.sig
+	../mltree/mltree-basis.sig
+	../mltree/mltree-basis.sml
+	../mltree/mltreecomp.sig
+	../mltree/mltree-gen.sig
+	../mltree/mltree-gen.sml
+	../mltree/mltree-hash.sig
+	../mltree/mltree-hash.sml
+	../mltree/mltree-size.sig
+	../mltree/mltree-size.sml
+	../mltree/mltree-check-ty.sml
+	../mltree/mltree-stream.sig
+	../mltree/mltree-stream.sml
+	../mltree/mltree-mult.sig
+	../mltree/mltree-mult.sml
+	../mltree/machine-int.sig
+	../mltree/machine-int.sml
+	../flowgraph/as-pseudo-ops.sig
+	../flowgraph/buildFlowgraph.sml
+	../flowgraph/cfg-optimization.sig
+	../flowgraph/client-pseudo-ops.sig
+	../flowgraph/cfg.sig
+	../flowgraph/cfg.sml
+(*	../flowgraph/cfgView.sig
+	../flowgraph/cfgView.sml
+*)
+	../flowgraph/cfgCountCopies.sml
+	../flowgraph/cfgExpandCopies.sml
+	../flowgraph/darwin-pseudo-ops.sml
+	../flowgraph/gasPseudoOps.sml
+	../flowgraph/printFlowgraph.sml
+	../flowgraph/pseudo-ops.sig
+	../flowgraph/pseudo-ops.sml
+	../flowgraph/pseudo-ops-basis.sig
+	../flowgraph/pseudo-ops-basis-typ.sml
+	../flowgraph/pseudo-ops-big.sml
+	../flowgraph/pseudo-ops-endian.sig
+	../flowgraph/pseudo-ops-little.sml
+	../frequencies/complete-probs-fn.sml
+	../frequencies/compute-execution-freqs.sig
+	../frequencies/compute-freqs-fn.sml
+	../frequencies/estimate-loop-probs-fn.sml
+	../ir-archive/dominator.sig
+	../ir-archive/dominator.sml
+	../ir-archive/loop-structure.sig
+	../ir-archive/loop-structure.sml
+	../ra/arch-spill-instr.sig
+	../ra/getreg.sig
+	../ra/getreg.sml
+	../ra/getreg2.sml
+	../ra/liveness.sml
+        ../ra/chaitin-spillheur.sml
+        ../ra/chow-hennessy-spillheur.sml
+ 	../ra/raBitmatrix.sml
+	../ra/ra-bitmatrix.sig
+	../ra/ra-priqueue.sig
+	../ra/raPriQueue.sml
+        ../ra/ra-graph.sig
+        ../ra/ra-graph.sml
+        ../ra/ra-core.sig
+        ../ra/ra-core.sml
+        ../ra/ra-spill-types.sml
+        ../ra/ra-spill.sig
+        ../ra/ra-spill.sml
+        ../ra/ra-spillheur.sig
+        ../ra/ra-flowgraph.sig
+        ../ra/ra-flowgraph-part.sig
+        ../ra/ra.sig
+        ../ra/ra.sml
+	../ra/ra-deadCodeE.sml
+	../ra/mem-ra.sml
+	../ra/region-based-ra.sml
+	../ra/risc-ra.sml
+        ../ra/cluster-ra.sml
+	../emit/asm-flags.sml
+	../emit/instruction-emitter.sig
+	../emit/asmEmit.sig
+	../emit/asmStream.sml
+	../emit/asmUtil.sml
+	../emit/cfgEmit.sml
+	../emit/code-string.sig
+	../emit/mc-emit.sig
+	../gc-safety/gc-cells.sig
+	../gc-safety/gc-cells.sml
+	../gc-safety/gc-type.sig
+	../backpatch/backpatch.sml
+	../backpatch/bbsched.sig
+	../backpatch/spanDep.sml
+	../backpatch/delaySlotProps.sig
+	../backpatch/noDelaySlots.sml
+	../backpatch/sdi-jumps.sig
+	../backpatch/vlBackPatch.sml
+	../block-placement/block-placement.sig
+	../block-placement/block-placement.sml
+	../block-placement/check-placement-fn.sml
+	../block-placement/default-block-placement.sml
+	../block-placement/weighted-block-placement-fn.sml
+	../block-placement/jump-chain-elim-fn.sml
+        ../c-calls/c-types.sml
+        ../c-calls/c-calls.sig
+	../c-calls/unimplemented-c-calls.sml
+ 	../omit-frameptr/omit-frame-pointer.sig

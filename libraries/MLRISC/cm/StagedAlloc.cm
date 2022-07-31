@@ -1,0 +1,26 @@
+(* This file is created by makeallcm *)
+Library
+	signature STAGED_ALLOCATION
+	structure CLocKind
+	functor SparcCConventionFn
+	functor StagedAllocationFn
+	functor X86CConventionFn
+	functor X86_64CConventionFn
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+#endif
+#else
+	smlnj-lib.cm
+#endif
+	../staged-alloc/allocator/staged-allocation-sig.sml
+	../staged-alloc/allocator/staged-allocation-fn.sml
+	../staged-alloc/conventions/c-loc-kind.sml
+	../staged-alloc/conventions/x86-64-c-fn.sml
+	../staged-alloc/conventions/x86-c-fn.sml
+	../staged-alloc/conventions/sparc-c-fn.sml

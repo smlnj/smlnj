@@ -1,0 +1,260 @@
+\section{MLTree Utilities} 
+
+The \MLRISC{} system contains numerous utilities for working with
+MLTree datatypes.  Some of the following utilizes are also useful for clients
+use:
+\begin{description}
+  \item[MLTreeUtils] implements basic hashing, equality and pretty
+printing functions,
+  \item[MLTreeFold] implements a fold function over the MLTree datatypes,  
+  \item[MLTreeRewrite] implements a generic rewriting engine,
+  \item[MLTreeSimplify] implements a simplifier that performs algebraic
+simplification and constant folding.
+\end{description}
+\subsubsection{Hashing, Equality, Pretty Printing}
+
+The functor \mlrischref{mltree/mltree-utils.sml}{MLTreeUtils} provides
+the basic utilities for hashing an MLTree term, comparing two
+MLTree terms for equality and pretty printing.  The hashing and comparision
+functions are useful for building hash tables using MLTree datatype as keys.
+The signature of the functor is:
+\begin{SML}
+signature \mlrischref{mltree/mltree-utils.sig}{MLTREE_UTILS} =
+sig
+   structure T : MLTREE 
+
+   (*
+    * Hashing
+    *)
+   val hashStm   : T.stm -> word
+   val hashRexp  : T.rexp -> word
+   val hashFexp  : T.fexp -> word
+   val hashCCexp : T.ccexp -> word
+
+   (*
+    * Equality
+    *)
+   val eqStm     : T.stm * T.stm -> bool
+   val eqRexp    : T.rexp * T.rexp -> bool
+   val eqFexp    : T.fexp * T.fexp -> bool
+   val eqCCexp   : T.ccexp * T.ccexp -> bool
+   val eqMlriscs : T.mlrisc list * T.mlrisc list -> bool
+
+   (*
+    * Pretty printing 
+    *)
+   val show : (string list * string list) -> T.printer
+
+   val stmToString   : T.stm -> string
+   val rexpToString  : T.rexp -> string
+   val fexpToString  : T.fexp -> string
+   val ccexpToString : T.ccexp -> string
+
+end
+functor \mlrischref{mltree/mltree-utils.sml}{MLTreeUtils} 
+  (structure T : MLTREE
+   (* Hashing extensions *)
+   val hashSext  : T.hasher -> T.sext -> word
+   val hashRext  : T.hasher -> T.rext -> word
+   val hashFext  : T.hasher -> T.fext -> word
+   val hashCCext : T.hasher -> T.ccext -> word
+
+   (* Equality extensions *)
+   val eqSext  : T.equality -> T.sext * T.sext -> bool
+   val eqRext  : T.equality -> T.rext * T.rext -> bool
+   val eqFext  : T.equality -> T.fext * T.fext -> bool
+   val eqCCext : T.equality -> T.ccext * T.ccext -> bool
+
+   (* Pretty printing extensions *)
+   val showSext  : T.printer -> T.sext -> string
+   val showRext  : T.printer -> T.ty * T.rext -> string
+   val showFext  : T.printer -> T.fty * T.fext -> string
+   val showCCext : T.printer -> T.ty * T.ccext -> string
+  ) : MLTREE_UTILS =
+\end{SML} 
+
+The types \sml{hasher}, \sml{equality},
+and \sml{printer} represent functions for hashing,
+equality and pretty printing.   These are defined as:
+\begin{SML} 
+   type hasher =
+      \{stm    : T.stm -> word,
+       rexp   : T.rexp -> word,
+       fexp   : T.fexp -> word,
+       ccexp  : T.ccexp -> word
+      \}    
+
+   type equality =
+      \{ stm    : T.stm * T.stm -> bool,
+        rexp   : T.rexp * T.rexp -> bool,
+        fexp   : T.fexp * T.fexp -> bool,
+        ccexp  : T.ccexp * T.ccexp -> bool
+      \} 
+   type printer =
+      \{ stm    : T.stm -> string,
+        rexp   : T.rexp -> string,
+        fexp   : T.fexp -> string,
+        ccexp  : T.ccexp -> string,
+        dstReg : T.ty * T.var -> string,
+        srcReg : T.ty * T.var -> string
+      \}
+\end{SML}
+
+For example, to instantiate a \sml{Utils} module for our \sml{DSPMLTree},
+we can write:
+\begin{SML}
+   structure U = MLTreeUtils
+     (structure T = DSPMLTree
+      fun hashSext \{stm, rexp, fexp, ccexp\} (FOR(i, a, b, s)) =
+           Word.fromIntX i + rexp a + rexp b + stm s
+      and hashRext \{stm, rexp, fexp, ccexp\} e =
+          (case e of
+             SUM(i,a,b,c) => Word.fromIntX i + rexp a + rexp b + rexp c
+           | SADD(a,b) => rexp a + rexp b
+           | SSUB(a,b) => 0w12 + rexp a + rexp b
+           | SMUL(a,b) => 0w123 + rexp a + rexp b
+           | SDIV(a,b) => 0w1245 + rexp a + rexp b
+          )
+      fun hashFext _ _ = 0w0
+      fun hashCCext _ _ = 0w0
+      fun eqSext \{stm, rexp, fexp, ccexp\} 
+        (FOR(i, a, b, s), FOR(i', a', b', s')) =
+           i=i' andalso rexp(a,a') andalso rexp(b,b') andalso stm(s,s')
+      fun eqRext \{stm, rexp, fexp, ccexp\} (e,e') =
+       (case (e,e') of
+          (SUM(i,a,b,c),SUM(i',a',b',c')) => 
+            i=i' andalso rexp(a,a') andalso rexp(b,b') andalso stm(c,c')
+        | (SADD(a,b),SADD(a',b')) => rexp(a,a') andalso rexp(b,b')
+        | (SSUB(a,b),SSUB(a',b')) => rexp(a,a') andalso rexp(b,b')
+        | (SMUL(a,b),SMUL(a',b')) => rexp(a,a') andalso rexp(b,b')
+        | (SDIV(a,b),SDIV(a',b')) => rexp(a,a') andalso rexp(b,b')
+        | _ => false
+       )
+      fun eqFext _ _ = true
+      fun eqCCext _ _ = true
+
+      fun showSext \{stm, rexp, fexp, ccexp, dstReg, srcReg\}  
+            (FOR(i, a, b, s)) =
+          "for("^dstReg i^":="^rexp a^".."^rexp b^")"^stm s
+      fun ty t = "."^Int.toString t
+      fun showRext \{stm, rexp, fexp, ccexp, dstReg, srcReg\} e = 
+           (case (t,e) of
+             SUM(i,a,b,c) => 
+              "sum"^ty t^"("^dstReg i^":="^rexp a^".."^rexp b^")"^rexp c
+           | SADD(a,b) => "sadd"^ty t^"("rexp a^","^rexp b^")"
+           | SSUB(a,b) => "ssub"^ty t^"("rexp a^","^rexp b^")"
+           | SMUL(a,b) => "smul"^ty t^"("rexp a^","^rexp b^")"
+           | SDIV(a,b) => "sdiv"^ty t^"("rexp a^","^rexp b^")"
+           )
+      fun showFext _ _ = ""
+      fun showCCext _ _ = ""
+     )
+\end{SML}
+
+\subsubsection{MLTree Fold}
+The functor \mlrischref{mltree/mltree-fold.sml}{MLTreeFold}
+provides the basic functionality for implementing various forms of
+aggregation function over the MLTree datatypes.  Its signature is
+\begin{SML}
+signature \mlrischref{mltree/mltree-fold.sig}{MLTREE_FOLD} =
+sig
+   structure T : MLTREE
+
+   val fold : 'b folder -> 'b folder
+end
+functor \mlrischref{mltree/mltree-fold.sml}{MLTreeFold}
+  (structure T : MLTREE
+   (* Extension mechnism *)
+   val sext  : 'b T.folder -> T.sext * 'b -> 'b
+   val rext  : 'b T.folder -> T.ty * T.rext * 'b -> 'b
+   val fext  : 'b T.folder -> T.fty * T.fext * 'b -> 'b
+   val ccext : 'b T.folder -> T.ty * T.ccext * 'b -> 'b
+  ) : MLTREE_FOLD =
+\end{SML}
+The type \newtype{folder} is defined as:
+\begin{SML}
+   type 'b folder =
+       \{ stm   : T.stm * 'b -> 'b,
+         rexp  : T.rexp * 'b -> 'b,
+         fexp  : T.fexp * 'b -> 'b, 
+         ccexp : T.ccexp * 'b -> 'b
+       \}
+\end{SML}
+
+
+\subsubsection{MLTree Rewriting}
+
+The functor \mlrischref{mltree/mltree-rewrite.sml}{MLTreeRewrite}
+implements a generic term rewriting engine which is useful for performing
+various transformations on MLTree terms. Its signature is
+\begin{SML}
+signature \mlrischref{mltree/mltree-rewrite.sig}{MLTREE_REWRITE} =
+sig
+   structure T : MLTREE
+
+  val rewrite : 
+       (* User supplied transformations *)
+       \{ rexp  : (T.rexp -> T.rexp) -> (T.rexp -> T.rexp), 
+         fexp  : (T.fexp -> T.fexp) -> (T.fexp -> T.fexp),
+         ccexp : (T.ccexp -> T.ccexp) -> (T.ccexp -> T.ccexp),
+         stm   : (T.stm -> T.stm) -> (T.stm -> T.stm)
+       \} -> T.rewriters
+end
+functor \mlrischref{mltre/mltree-rewrite.sml}{MLTreeRewrite}
+  (structure T : MLTREE
+   (* Extension *)
+   val sext : T.rewriter -> T.sext -> T.sext
+   val rext : T.rewriter -> T.rext -> T.rext
+   val fext : T.rewriter -> T.fext -> T.fext
+   val ccext : T.rewriter -> T.ccext -> T.ccext
+  ) : MLTREE_REWRITE =
+\end{SML}
+
+The type \newtype{rewriter} is defined in signature
+\mlrischref{mltree/mltree.sig}{MLTREE} as:
+\begin{SML}
+   type rewriter = 
+       \{ stm   : T.stm -> T.stm,
+         rexp  : T.rexp -> T.rexp,
+         fexp  : T.fexp -> T.fexp,
+         ccexp : T.ccexp -> T.ccexp
+       \} 
+\end{SML}
+ 
+\subsubsection{MLTree Simplifier}
+
+The functor \mlrischref{mltree/mltree-simplify.sml}{MLTreeSimplify}
+implements algebraic simplification and constant folding for MLTree.
+Its signature is:
+\begin{SML}
+signature \mlrischref{mltree/mltree-simplify.sig}{MLTREE_SIMPLIFIER} =
+sig
+
+   structure T : MLTREE
+
+   val simplify  :
+       { addressWidth : int } -> T.simplifier
+   
+end
+functor \mlrischref{mltree/mltree-simplify.sml}{MLTreeSimplifier}
+  (structure T : MLTREE
+   (* Extension *)
+   val sext : T.rewriter -> T.sext -> T.sext
+   val rext : T.rewriter -> T.rext -> T.rext
+   val fext : T.rewriter -> T.fext -> T.fext
+   val ccext : T.rewriter -> T.ccext -> T.ccext
+  ) : MLTREE_SIMPLIFIER =
+\end{SML}
+
+Where type \newdef{simplifier} is defined in signature 
+\mlrischref{mltree/mltree.sig}{MLTREE} as:
+\begin{SML}
+   type simplifier =
+       \{ stm   : T.stm -> T.stm,
+         rexp  : T.rexp -> T.rexp,
+         fexp  : T.fexp -> T.fexp,
+         ccexp : T.ccexp -> T.ccexp
+       \}
+\end{SML}
+
+

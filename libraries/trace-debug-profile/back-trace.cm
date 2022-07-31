@@ -1,0 +1,15 @@
+(* back-trace.cm
+ *
+ *   Library that (when loaded via CM.make) causes the test back-trace
+ *   plugin to be installed into its core hook.
+ *
+ * Copyright (c) 2004 by The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	structure BackTrace
+	structure InstallBackTrace
+is
+	$smlnj-tdp/plugins.cm
+	install-back-trace.sml

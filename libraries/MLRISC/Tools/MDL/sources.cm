@@ -1,0 +1,218 @@
+(* Important NOTE: we absolutely do not want to use the version of MLRISC
+ * that is in the compiler.  Otherwise, when we change MLRISC, we will not
+ * be able to compile/run this tool until we've bootstrapped a new compiler. 
+ *
+ * -- Allen
+ *)
+
+Group 
+	signature CELLS
+	signature CELLS_BASIS 
+	signature CONSTANT
+	signature ENV
+	signature INSTRUCTION_STREAM
+	signature LABEL
+	signature MACHINE_INT
+	signature MDL_COMPILE
+	signature MDL_ENV
+	signature MDL_GEN
+	signature MDL_GEN_MODULE
+	signature MDL_GEN_MODULE2
+	signature MDL_RTL_COMP
+	signature MDL_RTL_TOOLS
+	signature MDL_TYPE_UTILS
+	signature MDL_TYPING
+	signature MLRISC_DEFS
+	signature MLRISC_TYPES
+	signature MLTREE
+	signature MLTREE_BASIS
+	signature MLTREE_EXTENSION
+	signature MLTREE_FOLD
+	signature MLTREE_REWRITE
+	signature MLTREE_RTL
+	signature MLTREE_UTILS
+	signature PSEUDO_OPS
+	signature REGION
+	signature RTL_BUILD
+	structure CellsBasis
+	structure Env
+	structure Label
+	structure MDLAstUtil
+	structure MDLCompile
+	structure MDLConstant
+	structure MDLEnv
+	structure MDLExtension
+	structure MDLGen
+	structure MDLMLTree
+	structure MDLMLTreeFold
+	structure MDLMLTreeRTL
+	structure MDLMLTreeRewrite
+	structure MDLMLTreeUtil
+	structure MDLPP
+	structure MDLParser
+	structure MDLPseudoOps
+	structure MDLRTLBuilder
+	structure MDLRTLComp
+	structure MDLRTLTools
+	structure MDLRegion
+	structure MDLRewriter
+	structure MDLStream
+	structure MDLTrans
+	structure MDLTypeUtils
+	structure MDLTyping
+	structure MLRiscDefs
+	structure MLRiscTypes
+	structure MLTreeBasis
+	structure MachineInt
+(*	functor Cells *)
+	functor InstructionStream
+	functor MDLCompile
+	functor MDLDummyGen
+	functor MDLEnv
+	functor MDLGen
+	functor MDLRTLComp
+	functor MDLRTLTools
+	functor MDLTypeUtils
+	functor MDLTyping
+	functor MLRiscDefs
+	functor MLRiscTypes
+	functor MLTreeF
+	functor MLTreeFold
+	functor MLTreeRTL
+	functor MLTreeRewrite
+	functor MLTreeUtils
+	functor RTLBuild
+is
+
+#if defined(NEW_CM) 
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030 
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/ml-yacc-lib.cm
+	$smlnj/compiler.cm
+
+#else
+	basis.cm
+	smlnj-lib.cm
+	ml-yacc-lib.cm
+	host-compiler.cm
+
+#endif
+#else
+	smlnj-lib.cm
+	ml-yacc-lib.cm
+
+#endif
+
+
+
+        (* MLRISC libraries [NEVER share the version in the compiler] *)
+        ../../cm/Graphs.cm
+        ../../cm/Control.cm
+        ../../cm/Lib.cm
+        ../../cm/MLRISC.cm
+        ../../cm/MLTREE.cm
+        ../../cm/RTL.cm
+
+	(* Pretty printer *)
+	../PP/sources.cm
+
+	(* line number mapping utility *)
+	../SourceMap/sources.cm
+
+	(* Abstract syntax tree *)
+	../FakeSMLAst/sources.cm
+
+	(* Parser *)
+	../PrecParser/sources.cm
+	../Parser/sources.cm
+
+        (* Required MLRISC sources *)
+(*
+        ../../library/annotations.sig
+        ../../library/annotations.sml
+	../../instructions/cells-basis.sig
+	../../instructions/cells-basis.sml
+	../../instructions/cells.sig
+	../../instructions/cells.sml
+	../../instructions/stream.sig
+	../../instructions/stream.sml
+	../../instructions/region.sig
+	../../instructions/constant.sig
+	../../instructions/label-sig.sml
+	../../instructions/label.sml
+	../../instructions/pseudoOps.sig
+	../../mltree/mltree-basis.sig
+	../../mltree/mltree-basis.sml
+	../../mltree/mltree-extension.sig
+	../../mltree/mltree.sig
+	../../mltree/mltree.sml
+	../../mltree/machine-int.sig
+	../../mltree/machine-int.sml
+
+
+	../../mltree/mltree-utils.sig
+	../../mltree/mltree-utils.sml
+	../../mltree/mltree-rewrite.sig
+	../../mltree/mltree-rewrite.sml
+	../../mltree/mltree-fold.sig
+	../../mltree/mltree-fold.sml
+
+	../../mltree/mltree-rtl.sig
+	../../mltree/mltree-rtl.sml
+	../../mltree/rtl-build.sig
+	../../mltree/rtl-build.sml
+*)
+
+	(* A simple environment abstract type *)
+	env.sml
+
+	(* Environment *)
+	mdl-env.sig
+	mdl-env.sml
+
+	(* Type checking *)
+	mdl-type-utils.sig
+	mdl-type-utils.sml
+	mdl-typing.sig
+	mdl-typing.sml
+
+	(* Process rtl description *)
+	mdl-rtl.sml 
+	mdl-rtl-tools.sig 
+	mdl-rtl-tools.sml 
+	mdl-rtl-comp.sig
+	mdl-rtl-comp.sml 
+
+	(* Semantics *)
+	(* lambda-rtl.sig *)
+	(* lambda-rtl.sml *)
+	(* basis.sml *)
+
+	(* The compiler *)
+	mdl-compile.sig
+	mdl-compile.sml
+
+	mlrisc-defs.sig
+	mlrisc-defs.sml
+	mlrisc-types.sig
+	mlrisc-types.sml
+
+	(* Glue *)
+	mdl-gen.sig
+	mdl-gen.sml
+	mdl-dummygen.sml
+	mdl-glue0.sml
+	mdl-glue.sml
+
+	(* Various modules for generating different structures/functors *)
+	mdl-gen-cells.sml (* generate Cells *)
+	mdl-gen-instr.sml (* generate the instruction set *)
+	mdl-gen-asm.sml   (* generate the assembler *)
+	mdl-gen-mc.sml    (* generate the machine code emitter *)
+	mdl-gen-insnprops.sml (* generate the instruction properties *)
+	mdl-gen-rewrite.sml (* generate the rewrite module *)
+	mdl-gen-rtlprops.sml (* generate the rtl properties *)
+	mdl-gen-ssaprops.sml (* generate the ssa properties *)
+	(* mdl-gen-delay.sml *) (* generate the delay slots properties *)
+	(* mdl-gen-schedprops.sml *) (* generate the scheduling properties *)

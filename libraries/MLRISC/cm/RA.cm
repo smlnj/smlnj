@@ -1,0 +1,16 @@
+(* This file is created by makeallcm *)
+Library
+	functor ImprovedChaitinSpillHeur
+	functor ImprovedChowHennessySpillHeur
+	functor RASpillWithRenaming
+is
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+
+	../ra/chaitin-spillheur2.sml
+	../ra/chow-hennessy-spillheur2.sml
+	../ra/ra-spill-with-renaming.sml

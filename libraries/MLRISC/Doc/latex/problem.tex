@@ -1,0 +1,42 @@
+\section{Problem Statement}
+
+    Writing a native code generator for any language is a significant
+    investment, especially for todays modern processors with require extensive
+    compiler support to achieve high performance.  The algorithms that must
+    be used to generate high quality code are complex, sometimes quite
+    delicate, and require substantial infrastructure.
+
+    \image{Retargeting compiler}{pictures/png/uncol2.png}{align=right}
+    A specific architecture has a
+    relatively short life time in relation to the time taken to build
+    the code generator, and one quickly needs the ability to retarget
+    to new versions of the architecture, or to different target
+    architectures. This is by no means an open problem. There are many
+    compilers today that target multiple architectures, however the
+    quality of code varies. For example, 
+    \begin{color}{red}\begin{Italics}lcc\end{Italics}\end{color} 
+    by Chris Fraser and David Hansen does
+    no back end optimizations; 
+    \begin{color}{red}\begin{Italics}gcc\end{Italics}\end{color} 
+    from the Free Software Foundation does extensive peephole and simple
+    data flow optimizations, and falls short on advanced superscalar
+    optimizations; and finally the 
+    \begin{color}{red}\begin{Italics}IMPACT\end{Italics}\end{color} 
+    compiler done by the Impact group at the
+    University of Illinois specializes in more advanced superscalar
+    and predicated architectures. 
+
+    \br{clear=right}
+    
+    \image{UNCOL?}{pictures/png/uncol.png}{align=left} Assuming
+    the retargeting issue is solved, one would like to use all the
+    developed infrastructure for multiple source languages. This
+    problem is far from solved; even though \italics{gcc} has been used
+    for multiple languages like Ada, Pascal, and Modula III, each of
+    these have similiar execution models or were forced to adopt C
+    conventions.  \italics{gcc} cannot be used directly for languages
+    such as Lisp, Smalltalk, Haskell, or ML that have radically
+    different execution models and special requirements to support
+    advanced language features.
+ 
+   

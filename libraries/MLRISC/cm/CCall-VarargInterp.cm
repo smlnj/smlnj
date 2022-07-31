@@ -1,0 +1,32 @@
+Library
+
+	functor X86GenFn
+	functor X86_64GenFn
+	functor SparcGenFn
+
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/MLRISC.cm
+	$/MLTREE.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/RA.cm
+	$/IA32.cm
+	$/AMD64.cm
+	$/SPARC.cm
+	$/StagedAlloc.cm
+	$/CCall.cm
+	$/CCall-Vararg.cm
+	$smlnj-tdp/plugins.cm
+	$c/c.cm
+	$smlnj/init/init.cmi : cm
+	$c/internals/c-int.cm
+	
+	../c-call/varargs/interp/mlrisc-gen-sig.sml
+	../c-call/varargs/interp/gen-fn.sml
+	../c-call/varargs/interp/x86-gen-fn.sml
+	../c-call/varargs/interp/x86-64-gen-fn.sml
+	../c-call/varargs/interp/sparc-gen-fn.sml

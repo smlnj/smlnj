@@ -1,0 +1,33 @@
+\section{Annotations}
+
+\subsection{Overview}
+A compiler front-end has to be propagate information to
+the back-end.  An optimization phase may have to leave behind information
+at various places of the IR so that other phases can reuse such information.
+MLRISC uses the \newdef{annotations}
+mechanism for these functions.  
+Individual instructions, basic blocks, and flow graph edges, 
+can be attached one or more annotations.  
+
+The basic MLRISC system understands many annotations.  Some examples are:
+\begin{description}
+   \item[COMMENT] 
+         these can be used to attach comments.  If attached to
+         an instruction, the assemblers will output 
+         them as part of their assembly output.
+   \item[BRANCH\_PROB]
+          these can be attached to a branch instruction to indicate
+          the probability in which is it taken.
+   \item[EXECUTION\_FREQ]
+          these can be attached to a basic block to indicate 
+          its expected execution frequency 
+\end{description}
+
+\subsection{Details}
+The primitive annotations datatype is defined
+to have this \mlrischref{library/annotations.sig}{signature}.
+In addition, MLRISC predefined a few primitive annotations that are
+recognized by the core system.  This signature is
+\mlrischref{instructions/mlriscAnnotations.sig}{MLRISC\_ANNOTATIONS}.
+More detailed documentation can be found in this 
+\href{http://cm.bell-labs.com/cm/cs/what/smlnj/compiler-notes/annotations.ps}{paper}.

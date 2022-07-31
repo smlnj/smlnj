@@ -1,0 +1,15 @@
+\section{Back End Optimizations}
+
+  Once MLRisc trees have been generated, they are passed into a module
+  that generates a flowgraph of target machine instructions. Again,
+  this module and all subsequent optimization phases have been
+  specialized to the front end.  
+  \image{Back end optimizations}{pictures/png/optimization.png}{align=right} 
+   Nearly all
+  instruction selection modules provided by MLRISC use a simple tree
+  pattern matching algorithm rather than the more heavy weight BURG
+  tools --- including the x86 \begin{color}{#580000} It is important to
+  emphasis that all optimizations are performed on the flowgraph of
+  target machine instructions and \emph{not} MLRisc
+  immediate IR. \end{color} There is complete flexibility in the order,
+  and nature of the optimizations performed. 

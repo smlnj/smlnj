@@ -1,0 +1,46 @@
+(* This file is created by makeallcm *)
+Library
+	signature GRAPH_DISPLAY
+	signature GRAPH_VIEWER
+	structure AllDisplays
+	structure Dot
+	structure GraphLayout
+	structure VCG
+	structure daVinci
+	functor FormatInstruction
+	functor GraphViewer
+	functor CFGViewer
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/MLRISC.cm
+#else
+	basis.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	MLRISC.cm
+	IR.cm
+#endif
+#else
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	MLRISC.cm
+	IR.cm
+#endif
+	../visualization/allDisplays.sml
+	../visualization/daVinci.sml
+	../visualization/dot.sml
+	../visualization/graphDisplay.sig
+	../visualization/graphLayout.sml
+	../visualization/graphViewer.sig
+	../visualization/graphViewer.sml
+	../visualization/vcg.sml
+	../visualization/cfgViewer.sml
+	../visualization/mlrisc-format-insn.sml
+

@@ -1,0 +1,22 @@
+(* sources.cm
+ *
+ * These are the generic OS interfaces that are modified for CML.
+ *)
+
+Group
+  signature OS_IO
+  signature OS_PROCESS
+  signature OS
+is
+#if defined (NEW_CM)
+  $/basis.cm
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+
+  os-io-sig.sml
+  os-process-sig.sml
+  os-sig.sml
+  os-signatures.sml
+

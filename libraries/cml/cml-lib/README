@@ -1,0 +1,3 @@
+This directory contains a small library of useful CML utilities.
+Some of these are versions of the SML/NJ library modules implemented
+using global servers to protect global state.

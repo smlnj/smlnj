@@ -1,0 +1,60 @@
+\section{Contributions}
+    The optimizations provided by MLRISC are at a similar level to
+    those performed by the Impact compiler; several target back ends
+    exist (Dec Alpha, HPPA, Sparc, x86, and PPC); but more importantly, the
+    framework has been demonstrated in \href{systems.html}{real use} 
+    for languages with radically different execution models.  These include:
+   
+   \begin{center}
+   \begin{tabular}{|c|c|} \hline 
+       Compiler & Association \\ \hline
+       \begin{color}{#005500}SML/NJ\end{color} & Bell Labs and Princeton\\\hline
+       \begin{color}{#005500}TIL\end{color} & CMU \\ \hline
+       \begin{color}{#005500}Tiger\end{color} &  Princeton \\ \hline
+       \begin{color}{#005500}C--\end{color} & OGI \\ \hline
+       \begin{color}{#005500}SML/Regions\end{color} & DIKU \\ \hline
+       \begin{color}{#005500}Moby\end{color} &  Bell Labs \\ \hline
+   \end{tabular}
+   \end{center}
+    
+    The strength of MLRISC lies in the ability to easily create high
+    quality code generator for each of these systems. For example:
+    
+   \begin{description} 
+      \item[Tiger:] Has an execution
+      model very similar to C with stack allocated activation frames,
+      and also maintains static and dynamic chains to support lexical
+      scoping.
+
+      \item[TIL:] Is similar to C in its
+      use of activation frames, however it uses a 
+      \emph{typed intermediate language} that 
+       supports \emph{almost tag-free}
+      garbage collection.  This has severe implications on the
+      interaction of spilling and garbage collection. The set of live
+      variables and their locations, be it registers or frame slots,
+      is recorded in a trace table for a specific program point. When
+      spilling occurs, it is necessary to adjust some of these trace
+      tables to reflect the new locations of live variables.
+
+      \item[SML/NJ:] Has no runtime
+      stack, but stores all execution context in a garbage collected
+      heap. This arrangement imposes special requirements for spilling
+      registers. SML/NJ also does \emph{dynamic linking} --- that is
+      to say, no use is made of a conventional linker, but machine
+      code is generated directly and linked into the interactive
+      environment, dynamically.
+ 
+      \item[C--:] Is a C-like portable assembly
+      language used as an intermediate language for high level typed language,
+      and provides direct compilation support for exceptions and 
+      precise garbage collection.  In addition, it allows 
+      interoperability with C function calls.  
+\end{description}
+
+  It is not uncommon for any of these systems to store special global
+  values in dedicated registers, and use their own parameter passing
+  and callee-save conventions. In any language that supports garbage
+  collection, there are also the issues of generating gc type maps,
+  and gc-safety in aggressive optimizations.  MLRISC deals with all these
+  important issues by allowing customization of many aspects of the system.

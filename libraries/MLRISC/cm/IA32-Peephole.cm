@@ -1,0 +1,28 @@
+(* This file is created by makeallcm *)
+Library
+	functor X86Peephole
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/MLRISC.cm
+	$/Peephole.cm
+	$/IA32.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	Peephole.cm
+	IA32.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	Peephole.cm
+	IA32.cm
+#endif
+	../x86/instructions/x86Peephole.sml

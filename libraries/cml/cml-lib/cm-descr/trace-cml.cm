@@ -1,0 +1,13 @@
+(* trace-cml.cm
+ *
+ * COPYRIGHT (c) 1996 AT&T Research.
+ *
+ * The TraceCML library module needs access to CML internals, so we package
+ * it up into a sub-group.
+ *)
+
+Library
+  signature TRACE_CML
+  structure TraceCML
+is
+  ../trace-cml.cm

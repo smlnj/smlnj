@@ -1,0 +1,49 @@
+<!-- os-process.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=1996>
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1996>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The OS.Process structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/OS.Process/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/OS/
+  <STRREF DOCUMENT=SML-BASIS-DOC STRID="OS"/OS.Process/
+</SEEALSO>
+
+<PP>
+The <STRREF STRID="OS" NOLINK/OS.Process/ structure
+provides functions for manipulating processes in an 
+operating system independent manner.
+
+<STRUCTURE STRID="OS.Process" STATUS=REQUIRED>
+  <SIGBODY SIGID="CML_OS_PROCESS" FILE=OS-PROCESS-SIG>
+    <SPEC>
+      <INCLUDE><SIGREF DOCUMENT=SML-BASIS-DOC/OS_PROCESS/
+    <SPEC>
+      <VAL>systemEvt<TY>string -> status event
+        <RAISES><EXNREF DOCUMENT=SML-BASIS-DOC STRID="OS"/SysErr/
+        <COMMENT>
+          <PROTOTY>
+          systemEvt <ARG/cmd/
+          </PROTOTY>
+          asks the operating system to execute the command <ARG/cmd/ as
+	  a sub-process, and returns an event for synchronizing on the
+	  termination of the sub-process.
+          Raises <EXNREF DOCUMENT=SML-BASIS-DOC STRID="OS"/SysErr/ if the command cannot be executed.
+          <PP>
+          Note that, although this function is independent of the operating
+          system, the interpretation of the string <ARG/cmd/ depends
+          very much on the underlying operating system and shell.
+</STRUCTURE>
+</INTERFACE>
+

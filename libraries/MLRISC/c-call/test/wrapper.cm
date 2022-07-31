@@ -1,0 +1,38 @@
+(* wrapper.cm
+ *
+ *)
+
+Group
+  (* proxy; do not export anything!! *)
+is
+
+  group.cm
+    (bind:(anchor:MLRISC.cm value:../../cm)
+     bind:(anchor:MLTREE.cm value:../../cm)
+     bind:(anchor:RA.cm value:../../cm)
+     bind:(anchor:Peephole.cm value:../../cm)
+     bind:(anchor:Control.cm value:../../cm)
+     bind:(anchor:Lib.cm value:../../cm)
+     bind:(anchor:Visual.cm value:../../cm)
+     bind:(anchor:GC.cm value:../../cm)
+     bind:(anchor:Graphs.cm value:../../cm)
+     bind:(anchor:IR.cm value:../../cm)
+     bind:(anchor:RTL.cm value:../../cm)
+     bind:(anchor:Region.cm value:../../cm)
+     bind:(anchor:SSA.cm value:../../cm)
+     bind:(anchor:Sched.cm value:../../cm)
+     bind:(anchor:ir.cm value:../../cm)
+     bind:(anchor:AMD64.cm value:../../cm)
+     bind:(anchor:AMD64-Peephole.cm value:../../cm)
+     bind:(anchor:IA32.cm value:../../cm)
+     bind:(anchor:SPARC.cm value:../../cm)
+     bind:(anchor:StagedAlloc.cm value:../../cm)
+     bind:(anchor:CCall.cm value:../../cm)
+     bind:(anchor:CCall-sparc.cm value:../../cm)
+     bind:(anchor:CCall-x86.cm value:../../cm)
+     bind:(anchor:CCall-x86-64.cm value:../../cm)
+     bind:(anchor:CCall-Vararg.cm value:../../cm)
+     bind:(anchor:CCall-VarargCall.cm value:../../cm)
+     bind:(anchor:CCall-VarargInterp.cm value:../../cm)
+     )
+

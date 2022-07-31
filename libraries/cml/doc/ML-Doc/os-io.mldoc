@@ -1,0 +1,46 @@
+<!-- os-io.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=1996>
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1996>
+<VERSION VERID="1.5" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The OS.IO structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/OS.IO/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/OS/
+  <STRREF DOCUMENT=SML-BASIS-DOC STRID="OS"/OS.IO/
+</SEEALSO>
+
+<PP> 
+The <STRREF NOLINK/OS.IO/ structure provides a general interface
+for polling I/O devices, which has been modelled after the Unix SVR4
+poll interface. 
+A <TYREF DOCUMENT=SML-BASIS-DOC STRID="OS.IO"/poll_desc/, created from an I/O descriptor, can be
+used to test for various polling conditions.
+
+<STRUCTURE STRID="OS.IO" STATUS=REQUIRED>
+  <SIGBODY SIGID="CML_OS_IO" FILE=OS-IO-SIG>
+    <SPEC>
+      <INCLUDE><SIGREF DOCUMENT=SML-BASIS-DOC/OS_IO/
+    <SPEC>
+      <VAL>pollEvt<TY>poll_desc list -> poll_info list event
+	<RAISES><EXNREF DOCUMENT=SML-BASIS-DOC STRID="OS"/OS.SysErr/
+      <COMMENT>
+        <PROTOTY>
+          pollEvt <ARG/l/
+        </PROTOTY>
+	polls a list of poll descriptors <ARG/l/.
+	This will raise <EXNREF DOCUMENT=SML-BASIS-DOC STRID="OS"/OS.SysErr/ if, for example,
+	one of the file descriptors refers to a closed file.
+</STRUCTURE>
+</INTERFACE>
+

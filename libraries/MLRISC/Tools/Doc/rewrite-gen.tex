@@ -1,0 +1,296 @@
+\documentclass{article}
+\usepackage{alltt}
+   \newcommand{\RewriteGen}{{\sf RewriteGen}}
+   \newcommand{\KW}[2]{\newcommand{#1}[1]{{\bf #2}\ }}
+   \newcommand{\END}{{\bf end}} 
+   \newcommand{\OF}{{\bf of}} 
+   \KW{\FUN}{fun} \KW{\VAL}{val} 
+   \KW{\CASE}{case} \KW{\LET}{let}
+   \KW{\INCLUDE}{include} \KW{\SIGNATURE}{signature} \KW{\DATATYPE}{datatype}
+   \newcommand{\SIG}{{\bf sig}}
+   \KW{\IN}{in}
+   \KW{\AND}{and}
+
+   \title{\RewriteGen{} 1.0 Manual}
+   \author{Allen Leung\thanks{New York University. Email:{\tt leunga@cs.nyu.edu}}}
+\begin{document}
+   \maketitle
+\section{Introduction}
+Often, given a set of recursively
+datatype definitions, {\em natural} generalizations for 
+functions such as \verb|map|,
+\verb|fold|, and \verb|app| exist, defined by the inductive structure
+of the datatypes.  However, in Standard ML, these functions
+must be painstakingly written for each datatype.  Furthermore, whenever
+the definition of the datatype changes, these must be modified to match
+the new definitions.  This is often an error prone process.
+
+\RewriteGen\ is a source-to-source translator that automates some of the
+mundane bookkeeping of writing transformations on user defined datatypes.  
+It can automatically generate rewriters, app and fold functions.
+
+Originally, the core transformation routines of \RewriteGen\ 
+are developed for the MDGen machine description generator.
+But they turn out to be useful for writing MDGen itself.  
+The result is this tool.
+
+\section{An Example}
+Suppose that in file \verb|"wff.sig"| 
+we are given a datatype definition for well-formed formulas in logic:
+\begin{alltt}
+\SIGNATURE WFF =
+\SIG
+   \DATATYPE wff = FALSE | TRUE | VAR \OF string
+                | AND \OF wff * wff
+                | OR \OF wff * wff
+                | NOT \OF wff 
+
+   \VAL simplify : wff -> wff
+\END
+\end{alltt}
+\noindent and we want to implement the function \verb|simplify|,
+which simplifes complex wffs.
+
+We can do this by writing the template:
+\begin{alltt}
+   \FUN simplify e = 
+       Generic.rewrite(
+       \LET \INCLUDE "wff.sig"
+           \FUN wff (NOT FALSE) = TRUE
+             | wff (NOT TRUE) = FALSE
+             | wff (NOT(NOT x)) = x
+             | wff (AND(TRUE,x)) = x
+             | wff (AND(x,TRUE)) = x
+             | wff (AND(FALSE,x)) = FALSE
+             | wff (AND(x,FALSE)) = FALSE
+             | wff (OR(TRUE,x)) = TRUE
+             | wff (OR(x,TRUE)) = TRUE
+             | wff (OR(FALSE,x)) = x
+             | wff (OR(x,FALSE)) = x
+       \IN  rewrite'wff e
+       \END)
+\end{alltt}
+The \verb|Generic.rewrite| 
+template will read the datatype specification from the
+file \verb|"wff.sig"|,
+then create a rewriting function for the type \verb|wff| using the
+normalization rules specified by the user as the function \verb|wff|.  
+The generated rewriter 
+will try to apply the normalization rules\footnote{Once} for each
+subpart of a wff.  The rewriting function
+is called \verb|rewrite'wff|.
+
+In this example, the template is transformed into the following SML code:
+\begin{alltt}
+  \FUN simplify e = 
+  \LET \FUN rewrite'wff redex = 
+      \LET \VAL redo = rewrite'wff
+      \IN  \CASE redex \OF
+             FALSE => redex
+           | TRUE => redex
+           | VAR string => redex
+           | AND(wff1, wff2) => 
+             (\CASE (rewrite'wff wff1, rewrite'wff wff2) \OF
+               (TRUE, x) => x
+             | (x, TRUE) => x
+             | (FALSE, x) => FALSE
+             | (x, FALSE) => FALSE
+             | arg => AND arg
+             )
+           | OR(wff1, wff2) => 
+             (\CASE (rewrite'wff wff1, rewrite'wff wff2) \OF
+               (TRUE, x) => TRUE
+             | (x, TRUE) => TRUE
+             | (FALSE, x) => x
+             | (x, FALSE) => x
+             | arg => OR arg
+             )
+           | NOT wff => 
+             (\CASE rewrite'wff wff \OF
+               FALSE => TRUE
+             | TRUE => FALSE
+             | NOT x => x
+             | arg => NOT arg
+             )
+           )
+        \END
+   \IN rewrite'wff e
+   \END
+\end{alltt}
+\subsection{App and fold functions}
+
+ App and fold functions can also be easily generated.
+For example, suppose we want to write a function that counts all occurrances
+of \verb|NOT| in a wff.  This can be specified with the
+\verb|Generic.app| template:
+\begin{alltt}
+   \FUN countNots e = 
+   \LET \VAL count = ref 0
+   \IN  Generic.app(
+       \LET \INCLUDE "wff.sig"
+           \FUN wff (NOT _) = count := !count + 1
+             | wff _ = ()
+       \IN  app'wff e;
+           !count
+       \END)
+   \END 
+\end{alltt}
+
+Alternatively, we can implement the same function 
+functionally using the \verb|Generic.fold| template:
+\begin{alltt}
+   \FUN countNots2 e = 
+       Generic.fold(
+       \LET include "wff.sig"
+           \FUN wff (NOT _, n) = n+1
+             | wff (_, n) = n
+       \IN  fold'wff(e, 0)
+       \END)
+\end{alltt}
+
+Similarly, a function that enumerates all the identifiers in a wff
+can be written as:
+\begin{alltt}
+   \FUN allVars e = 
+       Generic.fold(
+       \LET include "wff.sig"
+           \FUN wff (VAR v, vs) = v::vs
+             | wff (_, vs) = vs
+       \IN  fold'wff(e, [])
+       \END)
+\end{alltt}
+This function has type \verb|addVars : wff -> string list|.
+
+\section{Multiple Sorts}
+
+   Real life applications usually make use of multiple
+mutually recursive datatypes.  In general, mutually recursive
+transformations functions such as rewrite, fold, and app, can be also defined  
+by specifying a set of rules for each of the datatypes that are involved
+in the recursion.  
+
+   For example, suppose the abstract syntax tree  
+for a simple function programming language includes 
+the datatypes \verb|expr| (expression), 
+\verb|decl| (declaratons).
+
+\begin{alltt}
+  \DATATYPE expr = 
+    LET \OF decl * expr
+  | APPLY \OF expr * expr
+  | ID \OF string
+  | LAMBDA \OF string * expr
+  | {\em others}
+  \AND decl = 
+    VAL \OF string * expr
+  | VALREC \OF string * expr
+  | LOCAL \OF decl * decl
+  | {\em others}
+\end{alltt}
+
+We can define a rewriter that renames every identifier 
+from lowercase to uppercase as follows:
+\begin{alltt}
+   \FUN renameToUpperCase program =  
+   Generic.rewrite(
+   \LET {\em include datatype definitions}
+        \FUN expr (ID x) = ID(String.map Char.toUpper x)
+        \AND decl d      = d
+   \IN  rewrite'decl program
+   \END
+   )
+\end{alltt}
+
+Note that:
+\begin{enumerate}
+  \item the function \verb|decl| is necessary to tell that 
+\RewriteGen\ that the type \verb|decl| involved in the recursion
+in this set of rewriting rules.
+  \item the functions \verb|decl| and \verb|expr| must be defined 
+        mutual recursively with the \AND{} connector.
+\end{enumerate}
+
+\section{Lists and other Type Constructors}
+
+Suppose we have the following definition of datatype
+\verb|exp| (expression), where we make use of lists.
+\begin{alltt}
+  \DATATYPE exp = OPER \OF string * exp list
+                | VAR \OF string
+                | {\em others}
+\end{alltt}
+Let's say this definition is contained in the file \verb|"exp-def.sig"|.
+
+We can define a rewriter that translates all unary expression $+e$ 
+into $e$ as follows:
+\begin{alltt}
+   \FUN transform e =
+   Generic.rewrite
+   ( \LET \INCLUDE "exp-def.sig"
+          \DATATYPE 'a list = nil | :: \OF 'a * 'a list 
+          \FUN list x = x
+          \FUN exp (OPER("+",[x])) = x
+     \IN  rewrite'exp e
+     \END
+   )
+\end{alltt}
+ Note that we have to make the definition of
+type \verb|list| visible\footnote{We can also import it from some file
+via \INCLUDE.}, and define the function \verb|list| to tell \RewriteGen{}
+that type \verb|list| is involved in the rewriting. 
+
+ In general, user defined polymorphic datatypes are also supported.
+We generate code by arity raising\footnote{More on this later.}.
+ Of course, we cannot define transformations that make use of 
+polymorphic recursion, since SML cannot type such programs.
+
+\section{Running \RewriteGen}
+
+  \RewriteGen\ is a source-to-source translator.  First, you should
+build the system by running the script \verb|"build.sml"| in this
+directory.  This will create an SML image called \verb|rwgen.<arch>|.
+To run the program, type:
+\begin{alltt}
+    sml @SMLload=rwgen {\em input-filename} > {\em output-filename}
+\end{alltt}
+\noindent on the Unix commmand.
+
+The input file can contain arbitrary SML code.  \RewriteGen\ looks
+for templates like \verb|Generic.rewrite|, \verb|Generic.app|,
+and \verb|Generic.fold|, transform those templates, and
+leave the rest of the code unchanged.
+
+\section{Bugs and Missing Features}
+    There are too many to list, but some important ones are:
+  \begin{enumerate}
+  \item
+   \RewriteGen\ is understands only the syntax of SML but not its semantics,
+so it can get horribly confused with scoping rules and/or variable captures.
+
+   \item \RewriteGen\ can get confused with \verb|infix|, \verb|infixr|
+        declarations.  Try to avoid them when possible.
+  \item
+    The generated code for a rewriter is not ideal.  Better algorithms
+    should be used in the future.
+
+  \item
+   Currently conditional patterns (i.e. patterns with guards) 
+are not supported but this should be available in the next version, 
+once I hook up the match compiler into the tool.
+
+  \item
+   Subterms built with type constructors, such as lists, are currently not
+handled entirely properly.  
+
+  \item
+   Binary polytypic functions like \verb|equal|, or \verb|zip|, are currently
+missing.  Also we should also be able to generate, pretty printers, 
+parsers,  pickers and unpickers.  But these are currently missing. 
+
+  \item
+   Ideally, there should be a generic mechanism for defining new 
+generic templates.  This is probably the best way of extending the
+tool.   I'll consider how to add this later.
+\end{enumerate}
+
+\end{document}

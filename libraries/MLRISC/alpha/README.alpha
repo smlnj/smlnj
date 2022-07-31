@@ -1,0 +1,27 @@
+Changes to the instruction set
+==============================
+
+1. Numerous 64 bit extensions and floating point/integer conversion ops.
+2. Conditional move instructions.
+
+New optimizations in the Alpha backend
+======================================
+1.  Propagation of annotations
+2.  SnADD SnSUB (shift and add, shift and substract)
+    instructions are generated whenever possible. 
+3.  Multiplication and division by a constant now generates special code.
+4.  NOTB folding is implemented.   This optimization combines NOTB with
+    other bit ops, such as ANDB, ORB, NOTB.
+5.  COND expressions now generate compares or conditonal moves.
+
+Special flags in the Alpha backend
+======================================
+1.  mode32bit -- when this flag is set, 
+    LOAD(32,...) will always be sign extended.
+    (NOTE: this flag has been eliminated.)
+2.  useSU -- when this flag is set the floating point arithmetic
+     will use the /SU rounding mode.  Otherwise, /SUD is used.
+3.  multCost -- the estimated cost of integer multiplication. The 
+    multiplication/division by a constant module uses this parameter.
+4.  useMultByConst -- when this flag is set, multiplication by a constant
+    that fits into one single instruction are always generated.

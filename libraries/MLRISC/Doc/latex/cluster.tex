@@ -1,0 +1,53 @@
+\section{Cluster}
+
+A \newdef{cluster}
+represents a compilation unit in linearized form,
+and contains information about the control flow, global annotations, 
+block and edge execution frequencies, and live-in/live-out information.
+
+Its signature is:
+\begin{SML}
+signature FLOWGRAPH = sig
+  structure C : \href{cells.html}{CELLS}
+  structure I : \href{instructions.html}{INSTRUCTIONS}
+  structure P : \href{pseudo-ops.html}{PSEUDO_OPS}
+  structure W : \href{freq.html}{FREQ}
+     sharing I.C = C
+
+  datatype block =
+      PSEUDO of P.pseudo_op
+    | LABEL of Label.label
+    | BBLOCK of
+        \{ blknum      : int,
+          freq        : W.freq ref,
+          annotations : Annotations.annotations ref,
+	  liveIn      : C.cellset ref,
+	  liveOut     : C.cellset ref,
+	  succ 	      : edge list ref,
+	  pred 	      : edge list ref,
+	  insns	      : I.instruction list ref
+        \}
+    | ENTRY of 
+        \{blknum : int, freq : W.freq ref, succ : edge list ref\}
+    | EXIT of 
+        \{blknum : int, freq : W.freq ref, pred : edge list ref\}
+  withtype edge = block * W.freq ref
+
+  datatype cluster = 
+      CLUSTER of \{
+        blocks: block list, 
+        entry : block,
+        exit  : block,	  
+        regmap: C.regmap,
+        blkCounter : int ref,
+        annotations : Annotations.annotations ref
+      \}
+end
+\end{SML}
+
+Clusters are used in
+\href{span-dep.html}{span dependency resolution}, 
+\href{delayslots.html}{delay slot filling},
+\href{asm.html}{assembly}, 
+and \href{mc.html}{machine code} 
+output, since these phases require the code laid out in linearized form.

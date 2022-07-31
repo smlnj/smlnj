@@ -1,0 +1,17 @@
+<!-- refman.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1996>
+<COPYRIGHT OWNER="John H. Reppy" YEAR=1991>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The Concurrent Reference Manual</TITLE>
+
+<INCLFILE FILE="basics">
+<INCLFILE FILE="core-cml">
+<INCLFILE FILE="cml-lib">
+<!-- <INCLFILE FILE="lib/cml-lib"> -->
+

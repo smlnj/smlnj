@@ -1,0 +1,104 @@
+\section{Garbage Collection Safety}
+\subsection{Motivation}
+   High level languages such as SML make use of garbage collectors
+to reclaim unused storage at runtime.   For generality, I assume that
+a precise, compacting garbage collector is used.  In general, 
+low-level optimizations that reorder instructions 
+pass \newdef{gc safepoints}, when applied naively, 
+are not safe.  In general, two general classes of safety issues can be identified:
+\begin{description}
+ \item[derived values] 
+A derived value $x$ is a value that are
+dependent on the addresses of one of more heap allocated objects
+$a1,a2,a3,\ldots$ and/or the recent branch history.
+When these allocated objects $a1,a2,a3,\ldots$
+are moved by the garbage collector, $x$
+has to be adjusted accordingly.  
+
+For example, inductive variable elimination may transformed an array
+indexing into a running pointer to the middle of an array object.
+Such running pointer is a derived value and is dependent on the 
+starting address of the array. 
+
+The main difficulty in handling a derived value $x$ 
+during garbage collection is that sometimes it is impossible or 
+counter-productive to recompute from $a1,a2,a3,\ldots$.
+For example, when the recent branch history is unknown, or when the
+precise relationship between $x$ and $a1,a2,a3,\ldots$ cannot
+be inferred from context.  
+We call these \newdef{unrecoverable} derived values.  
+  \item[incomplete allocation]
+   If heap allocation is performed inlined, then code motion may 
+render some allocation incomplete at a gc safepoint.  In general, incomplete
+allocation has to be completed, or rolled backed and then reexecuted
+after garbage collection, when the source language semantics allow it.
+\end{description}
+
+Typically, two gc safepoints cannot be separated by an unbounded
+number of allocations, which implies that in general, optimizations that move
+instructions between basic blocks are unsafe when naively applied,
+which greatly limits the class of optimizations in such an environment
+to trivial basic block level optimizations. 
+framework is a necessity.
+
+
+\subsection{Safety Framework}
+  MLRISC contains a gc-safety framework 
+for performing aggressive machine level optimizations, including SSA-based
+scalar optimizations, global instruction scheduling, and global
+register allocation.  Unlike previous work in this area, phases that
+perform optimizations and phases that maintain and update 
+garbage collection information are completely separate, and the optimizer
+is constructed in a fully modular manner.  In particular,
+gc-types and safety constraints 
+are \emph{parameterizable} 
+by the source language semantics, the object representation, 
+and the target architectures.  
+
+This framework has the following overall structure:
+\begin{description}
+\item[Garbage collection invariants annotation]
+The front-end client is responsible for annotating each 
+value in the program with a \newdef{gc type}, which is 
+used to specify the abstract object representation, 
+and the constraints on code motion that may be applied to such a value.
+The front-end uses an architecture independent \href{mltree.html}{RTL} 
+language for representing the program, thus this annotation 
+phase is portable between target architectures. 
+\item[GC constraints propagation]
+    After instruction selection, gc constraint are propagated throughout
+the machine level program representation.  Again, for portability, gc typing
+rules are specified in terms of the \href{mltree.html}{ RTL } of
+the machine instructions.  In this phase, unsafe code motions which
+exposes unrecoverable derived values to gc safepoints are automatically 
+identified.   (Pseudo) control dependence and anti-control dependence 
+constraints are then added the  program representation to prohibit all
+gc-unsafe code motions.
+\item[Machine level optimizations]
+    After constraints propagation, traditional 
+machine level optimizations such as
+SSA optimizations and/or global scheduling are applied, without regard
+to gc information.  This is safe because 
+all gc safety constraints have been translated into the appropriate 
+code motion constraints. 
+\item[GC type propagation and gc code generation]
+    GC type inference is performed when all optimizations
+have been performed.  GC safepoints are then
+identified and the root sets are determined.  In addition, compensation
+code are inserted at gc points for repairing recoverable derived values.
+\end{description}
+\subsection{Concurrency Safety}
+ In the presence of \newdef{concurrency}, i.e. multiple threads
+of control that communicate via a shared heap, the above framework
+will have to slightly extended.  As in before, we assume that
+context switching can only occur at well-defined 
+\emph{safepoints}.
+The crucial aspect is that values that are live at safepoints must be
+classified as \newdef{local} or \newdef{global}.
+Local values are only observable from
+the local thread, while global values are potentially observable and mutable
+from other threads.  The invariants to maintain are as follows:
+\begin{itemize}
+ \item Only local and recoverable derived values may be live at a safepoint,  
+ \item Only local and recoverable allocation may be incomplete at a safepoint
+\end{itemize}

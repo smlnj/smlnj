@@ -1,0 +1,42 @@
+(* This file is created by makeallcm *)
+Library
+	structure X86CSizes
+	functor X86SVIDFn
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/MLRISC.cm
+	$/Graphs.cm
+	$/MLTREE.cm
+	$/StagedAlloc.cm
+	$/CCall.cm
+	$/IA32.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	IA32.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	IA32.cm
+#endif
+	../c-call/archs/x86-svid-fn.sml
+	../c-call/archs/x86-c-sizes.sml

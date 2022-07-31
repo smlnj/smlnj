@@ -1,0 +1,6 @@
+Group is
+   ../src/ast/sources.cm
+(*   ../src/ast-utils/simplifier/sources.cm *)
+
+   test-fn.sml
+

@@ -1,0 +1,25 @@
+\section{Labels}
+
+\newdef{Labels} are used as symbolic names for address.
+The structure \mlrischref{instructions/labels.sml}{Label}
+defines the label datatype.  The following operations are defined
+on labels:
+\begin{itemize}
+\item \sml{newLabel : string -> label} --  Generate a new label with
+    a given name.  If the name is \sml{""}, a new name is generated.
+\item \sml{nameOf : label -> string} -- Returns the name of
+   a label
+\item \sml{id : label -> int} -- Return the unique id of a label
+\item \sml{reset : unit -> unit} -- Return the label id counter to 0.  
+\end{itemize}
+
+For machine code generation, the following two additional methods are
+defined.
+\begin{itemize}
+\item  \sml{addrOf : label -> int} -- Return the address associated with
+a label
+\item  \sml{setAddr : label * int -> unit} --  Set the address associated
+with a label
+\end{itemize}
+
+See also \href{labelexp.html}{Label Expressions}.

@@ -1,0 +1,195 @@
+<!-- trace-cml.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1997>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The TraceCML structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/TraceCML/ structure</HEAD>
+
+<PP>
+The <STRREF NOLINK/TraceCML/ structure provides rudimentary debugging support
+in the form of mechanisms to control debugging output, and to monitor thread
+termination.
+This version of this module is adapted from Cliff Krumvieda's utility for
+tracing &CML; programs.
+It provides three facilities: trace modules, for controlling
+debugging output; thread watching, for detecting thread termination; and
+a mechanism for reporting uncaught exceptions on a per thread basis.
+<PP>
+Trace modules provide a hierarchical name space, which is used to control
+the granularity of debugging output.
+The trace module operations have been implemented in such a way that they
+can be invoked independent of whether &CML; is currently running.
+This allows the trace hierarchy to be setup statically.
+<PP>
+The <STRREF NOLINK/TraceCML/ also provides hooks to detect unexpected
+termination of threads.
+Support is provided to watch for a thread's termination (useful for
+monitoring servers that are never supposed to terminate).
+Hooks are also provided to specify the action taken when a thread terminates
+because of an uncaught exception.
+<STRUCTURE STRID="TraceCML">
+  <SIGBODY SIGID="TRACE_CML" FILE=TRACE-CML-SIG>
+    <SPEC>
+      <TYPE><ID>trace_module
+      <COMMENT>
+	<PP>
+	A <TYREF NOLINK/trace_module/ is an element in a hierarchical
+	name space, which is used to control debugging output.
+    <SPEC>
+      <DATATYPE><ID>trace_to
+        <CONS>TraceToOut
+        <CONS>TraceToErr
+        <CONS>TraceToNull
+        <CONS>TraceToFile<TY>string
+        <CONS>TraceToStream<TY>TextIO.outstream
+      </DATATYPE>
+      <COMMENT>
+	<PP>
+	The various destinations of trace output.
+    <SPEC>
+      <VAL>setTraceFile<TY>trace_to -> unit
+        <COMMENT>
+          <PROTOTY>
+          setTraceFile <ARG/tt/
+          </PROTOTY>
+          Direct the destination of trace output.
+	  Note: <CONREF/TraceToStream/ can only be specified as a
+	  destination if &CML; is running.
+    <SPEC>
+      <VAL>traceRoot<TY>trace_module
+        <COMMENT>
+          <PROTOTY>
+          traceRoot
+          </PROTOTY>
+          is the root module of the trace hierarchy
+    <SPEC>
+      <EXN>NoSuchModule
+    <SPEC>
+      <VAL>traceModule<TY>(trace_module * string) -> trace_module
+        <COMMENT>
+          <PROTOTY>
+          traceModule (<ARG/tm/, <ARG/s/)
+          </PROTOTY>
+          creates a new trace module that is a child of <ARG/tm/ and
+	  has the label <ARG/s/.
+	  If such a module exists, it just returns the existing module.
+    <SPEC>
+      <VAL>nameOf<TY>trace_module -> string
+        <COMMENT>
+          <PROTOTY>
+          nameOf <ARG/tm/
+          </PROTOTY>
+          returns the full name of the module <ARG/tm/.
+    <SPEC>
+      <VAL>moduleOf<TY>string -> trace_module
+        <COMMENT>
+          <PROTOTY>
+          moduleOf <ARG/name/
+          </PROTOTY>
+          returns the trace module named by <ARG/name/.
+	  Trace module names are written in the style of Unix pathnames
+	  (e.g., using <CD>"/"</CD> as a separator).
+    <SPEC>
+      <VAL>traceOn<TY>trace_module -> unit
+        <COMMENT>
+          <PROTOTY>
+          traceOn <ARG/tm/
+          </PROTOTY>
+	  turns tracing on for moduel <ARG/tm/ and its descendents.
+    <SPEC>
+      <VAL>traceOff<TY>trace_module -> unit
+        <COMMENT>
+          <PROTOTY>
+          traceOff <ARG/tm/
+          </PROTOTY>
+	  turns tracing off for moduel <ARG/tm/ and its descendents.
+    <SPEC>
+      <VAL>traceOnly<TY>trace_module -> unit
+        <COMMENT>
+          <PROTOTY>
+          traceOnly <ARG/tm/
+          </PROTOTY>
+          turn tracing on for module <ARG/tm/, but not for its descendents.
+    <SPEC>
+      <VAL>amTracing<TY>trace_module -> bool
+        <COMMENT>
+          <PROTOTY>
+          amTracing <ARG/tm/
+          </PROTOTY>
+          returns <CD/true/ if tracing is enabled for module <ARG/tm/.
+    <SPEC>
+      <VAL>status<TY>trace_module -> (trace_module * bool) list
+        <COMMENT>
+          <PROTOTY>
+          status <ARG/tm/
+          </PROTOTY>
+          returns a pre-order list of the modules rooted at <ARG/tm/, along
+	  with their status (enabled or disabled).
+    <SPEC>
+      <VAL>trace<TY>(trace_module * (unit -> string list)) -> unit
+        <COMMENT>
+          <PROTOTY>
+          trace (<ARG/tm/, <ARG/f/)
+          </PROTOTY>
+          explain the use and semantics of trace HERE.
+    <SPEC>
+      <VAL>watcher<TY>trace_module
+        <COMMENT>
+          <PROTOTY>
+          watcher
+          </PROTOTY>
+          is a trace module that is used to control the printing of thread
+	  termination messages.
+	  Its name is <CD>"/ThreadWatcher/"</CD>, and by default it is enabled.
+    <SPEC>
+      <VAL>watch<TY>(string * CML.thread_id) -> unit
+        <COMMENT>
+          <PROTOTY>
+          watch (<ARG/name/, <ARG/tid/)
+          </PROTOTY>
+          watch the thread named by <ARG/tid/ for unexpected termination.
+	  If the thread terminates, then a trace message is generated
+	  (see <VALREF/watcher/).
+	  The string <ARG/name/ is used to identify the thread in the
+	  termination message.
+    <SPEC>
+      <VAL>unwatch<TY>CML.thread_id -> unit
+        <COMMENT>
+          <PROTOTY>
+          unwatch <ARG/tid/
+          </PROTOTY>
+          stop watching the thread named by <ARG/tid/.
+    <SPEC>
+      <VAL>setUncaughtFn<TY>((CML.thread_id * exn) -> unit) -> unit
+        <COMMENT>
+          <PROTOTY>
+          setUncaughtFn <ARG/f/
+          </PROTOTY>
+          sets the default uncaught exception action to <ARG/f/.
+    <SPEC>
+      <VAL>setHandleFn<TY>((CML.thread_id * exn) -> bool) -> unit
+        <COMMENT>
+          <PROTOTY>
+          setHandleFn <ARG/f/
+          </PROTOTY>
+          adds the function <ARG/f/ as an additional uncaught exception action.
+	  If the action returns <CD/true/, then no further action is taken.
+	  This can be used to handle application specific exceptions.
+    <SPEC>
+      <VAL>resetUncaughtFn<TY>unit -> unit
+        <COMMENT>
+          <PROTOTY>
+          resetUncaughtFn <ARG/()/
+          </PROTOTY>
+          resets the default uncaught exception action to the system default,
+	  and removes any layered actions.
+</STRUCTURE>
+</INTERFACE>
+

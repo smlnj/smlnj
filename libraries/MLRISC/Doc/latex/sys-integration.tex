@@ -1,0 +1,43 @@
+\section{System Integration}
+  In a heavily parameterized system like this, one very quickly ends up
+  with a large number of modules and dependencies making it very
+  easy to mix things up in the wrong way.  
+  \image{module dependencies}{pictures/png/sharing1.png}{align=center} 
+  \br{clear=left} 
+   For example, MLRisc is parameterised over pseudo-ops,
+  constants, and regions. An instruction set must be parameterized
+  over constants so that instructions that carry immediate operands
+  can also carry these abstract constants. Instructions must also be
+  parameterized over regions so that memory operations can be
+  appropriately annotated. Finally, the flowgraph module must be
+  parameterized over instructions it carries in basic blocks and
+  pseudo-ops that describe data layout and alignment constraints.
+
+  \image{sharing constraints}{pictures/png/sharing2.png}{align=right}
+  \br{clear=left}
+  In integrating a system that involves these modules, it must be the
+  case that they were created with the same base modules. That is to
+  say the pseudo-ops in flowgraphs must be the same abstraction that
+  was used to define the MLRisc intermediate
+  representation. Alternatively, we want 
+  \begin{color}{#ff0000}sharing constraints\end{color} 
+  that assert that identity of modules used to
+  specialize other modules. In Standard ML, this is a complete
+  non-issue. A single line that says exactly that is all that is
+  needed to maintain consistency, and the module system does the rest
+  to ensure that the final system is built correctly.
+
+  \image{Back end optimizations}{pictures/png/sharing3.png}{align=left}
+  \br{clear=right}
+  In certain cases one wants to write a specific module for a
+  particular architecture. For instance it may be desirable to collapse
+  trap barriers on the DEC Alpha where it is legal to do so. The
+  INSTRUCTIONS interface is abstract with no built-in knowledge of 
+  trap barriers as not all architectures have them.
+  Further the DEC Alpha has fairly unique trap barrier semantics,
+  that one may want to write an optimization module specific and
+  dedicated to the Alpha instruction set and architecture, and forget
+  about writing anything generic. In this case, the Standard ML module
+  system allows one to say that a specific abstraction actually is or
+  matches a more detailed interface. That is to say the INSTRUCTION
+  interface is really the DEC Alpha instruction set.

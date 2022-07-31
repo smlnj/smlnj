@@ -1,0 +1,11 @@
+(* (C) 2011 The Fellowship of SML/NJ
+ *     Author: matthias.blume@gmail.com (Matthias Blume)
+ *
+ * This wrapper library establishes $cml/smlnj-lib.cm
+ * an alias for $cml-lib/smlnj-lib.cm, but without
+ * the CML-specific additions.
+ *)
+Library
+	library($/smlnj-lib.cm) - structure TimeLimit
+is
+	$cml-lib/smlnj-lib.cm

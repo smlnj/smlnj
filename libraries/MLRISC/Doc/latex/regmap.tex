@@ -1,0 +1,16 @@
+\section{Regmap}
+A \newdef{regmap}
+is a mapping from virtual register to virtual or physical
+register, and is used by MLRISC register allocators to
+represent the current binding of virtual registers.  Regmaps are implemented
+as \mlrischref{library/intmap.sml}{Intmap} 
+in MLRISC, and are defined in the
+\href{cells.html}{CELLS} interface.
+
+Regmaps are used in phases such as 
+\href{asm.html}{assembly generation} and 
+\href{mc.html}{machine code}.   MLRISC program representations such
+\href{cluster.html}{clusters} and \href{mlrisc-ir.html}{IR}
+each contains a global regmap per compilation unit.  Representations
+such as \href{hyperblock.html}{hyperblock} may contain its own
+regmap, which overrides the global regmap. 

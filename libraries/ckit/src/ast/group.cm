@@ -1,0 +1,112 @@
+Group
+is
+
+#if defined(NEW_CM)
+#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11029)
+
+        (* standard basis *)
+        $/basis.cm
+
+	(* standard library *)
+	$/smlnj-lib.cm
+#else
+	(* standard basis *)
+	basis.cm
+
+	(* standard library *)
+	smlnj-lib.cm
+#endif
+#else
+	smlnj-lib.cm
+#endif
+
+	(* parser *)
+        ../parser/group.cm
+
+        (* configuration *)
+        ../variants/group.cm
+
+	(* C symbols *)
+	symbol-sig.sml
+	symbol.sml
+
+	(* unique identifiers *)
+	uid-sig.sml
+	uid-fn.sml
+
+	(* abstract syntax *)
+	aid.sml  (* was adornment.sml *)
+	pid.sml
+	tid.sml
+	ast-sig.sml
+	ast.sml
+        ctype-eq.sml
+
+	(* language extension support *)
+	cnv-ext-sig.sml
+
+	(* tables for unique identifiers *)
+	uidtabimp-sig.sml
+	uidtabimp-fn.sml
+        aidtab.sml
+	pidtab.sml
+	tidtab.sml
+	tables.sml (* type abbreviations for pidtab, tidtab, aidtab *)
+
+	(* pretty-printers *)
+	pp/pp-lib.sml
+	pp/pp-ast-sig.sml
+	pp/pp-ast.sml
+	pp/pp-ast-adornment-sig.sml
+	pp/pp-ast-ext-sig.sml
+	pp/pp-ast-fn.sml
+
+(* Not currently needed: current uses of ast-equality (in simplify-ast)
+   just use polymorphic equality.  But this code may be useful in the future
+   if the modifications to the ast types violate rules for eqtypes.
+	(* equality modulo alpha renaming *)
+	eq-binary-maps.sml
+        eq-ast-ext-sig.sml
+        eq-ctype.sml
+        eq-ast.sml
+*)
+	(* translation from parse tree *)
+	sizes-sig.sml
+	sizes.sml
+	sizeof-sig.sml
+	sizeof.sml
+
+	type-util-sig.sml
+	type-util.sml
+
+        bindings.sml
+
+	state-sig.sml
+	state.sml
+
+        simplify-assign-ops.sml
+	build-ast-sig.sml
+	build-ast.sml
+
+        anonymous-structs.sml
+
+	initializer-normalizer-sig.sml
+	initializer-normalizer.sml
+
+	(* top level *)
+	parse-to-ast-sig.sml 
+        parse-to-ast.sml
+
+        (* extensions *)
+#if (defined(d))
+        extensions/d/ast-ext-sig.sml
+        extensions/d/ast-ext.sml
+        extensions/d/cnv-ext.sml
+        extensions/d/eq-ast-ext.sml
+        extensions/d/pp-ast-ext-fn.sml
+#else
+        extensions/c/ast-ext-sig.sml
+        extensions/c/ast-ext.sml
+        extensions/c/cnv-ext.sml
+        extensions/c/pp-ast-ext-fn.sml
+#endif

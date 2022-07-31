@@ -1,0 +1,88 @@
+\section{Instructions}
+
+  Instructions in MLRISC are implemented as abstract datatypes and
+must satisfy the signature 
+\mlrischref{instructions/instructions.sig}{INSTRUCTIONS}, defined as follows:
+
+\begin{SML}
+signature INSTRUCTIONS =
+sig
+   structure C        : \href{cells.html}{CELLS}
+   structure Constant : \href{constants.html}{CONSTANT}
+   structure LabelExp : \href{labelexp.html}{LABELEXP}
+      sharing LabelExp.Constant = Constant
+
+   type operand   
+   type ea         
+   type addressing_mode
+   type instruction 
+end
+\end{SML}
+
+Type \sml{operand} is used to represent ioperands,
+\sml{ea} is used to represent effective addresses, type 
+\sml{addressing_mode} is used to represent the internal addressing mode
+used by the architecture.  Note that these are all abstract according to 
+the signature, so the client has complete freedom in choosing the most
+convenient representation for these things.
+
+\subsection{Predication}
+   For architectures that have full \newdef{predication}
+built-in, such as the C6xx or IA-64, the instruction set should be
+extended to satisfy the signature: 
+\begin{SML}
+signature \mlrischref{instructions/pred-instructions.sig}{PREDICATED_INSTRUCTIONS} =
+sig
+   include INSTRUCTIONS
+   
+   type predicate  
+end
+\end{SML}
+This basically says that the type that is used to represent a predicate
+can be implemented however the client wants.  This flexibility
+is quite important since the predication model may differ substantially
+from architecture to architecture.
+
+For example, in the TI C6, there are no seperate predicate register files
+and integer registers double as predicate registers, and the predicate
+true is any non-zero value.  Each instruction can be predicated under a
+predicate register or its negation.  In contrasts, architectures such as
+IA-64 and HP's Playdoh incorporate separate predicate registers into their 
+architectures.  In Playdoh, \newdef{predicate defining} instructions 
+actually set a pair of complementary predicate registers, 
+and instructions can only
+be predicated under the value of a predicate register, not its negation.
+
+\subsection{VLIW}
+   VLIW architectures differ from superscalars in that
+resource assignments are statically determined at compile time.
+We distinguish between two different types of resources, namely
+\newdef{functional units} and \newdef{data paths}.  
+The latter type is particularly
+important for clustered architectures.
+The following signature
+is used to describe VLIW instructions:
+\begin{SML}
+signature \mlrischref{instructions/vliw-instructions.sig}{VLIW\_INSTRUCTIONS} =
+sig
+
+   include INSTRUCTIONS
+   structure FU : \mlrischref{instructions/funits.sig}{FUNITS}
+   structure DP : \mlrischref{instructions/datapaths.sig}{DATAPATHS}
+end
+\end{SML}
+The signature \sml{FUNITS} is used to describe functional unit
+resources, while the signature \sml{DATAPATHS} is used to describe
+data paths.
+
+\subsection{Predicated VLIW}
+
+Finally, instructions sets for predicated VLIW/EPIC machines should match
+the signature 
+\begin{SML}
+signature \mlrischref{instructions/pred-vliw-instructions.sig}{PREDICATED_VLIW_INSTRUCTIONS} =
+sig
+   include VLIW_INSTRUCTIONS
+   type predicate
+end
+\end{SML}

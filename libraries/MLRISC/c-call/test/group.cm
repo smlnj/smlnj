@@ -1,0 +1,46 @@
+Group
+
+  structure X86_64Test
+  structure X86Test
+  structure SparcTest
+  structure TestVarargs
+  functor X86GenFn
+
+is
+
+  $/basis.cm
+
+  $/smlnj-lib.cm
+  $/controls-lib.cm
+  $/pp-lib.cm
+  $c/internals/c-int.cm
+  $c/c.cm
+  $smlnj/init/init.cmi : cm
+
+  ../../cm/Control.cm
+  ../../cm/Lib.cm
+  ../../cm/MLRISC.cm
+  ../../cm/Graphs.cm
+  ../../cm/MLTREE.cm
+  ../../cm/RA.cm
+  ../../cm/Visual.cm
+  ../../cm/Peephole.cm
+  ../../cm/IA32.cm
+  ../../cm/AMD64.cm
+  ../../cm/AMD64-Peephole.cm
+  ../../cm/SPARC.cm
+  ../../cm/StagedAlloc.cm
+  ../../cm/CCall.cm
+  ../../cm/CCall-x86.cm
+  ../../cm/CCall-x86-64.cm
+  ../../cm/CCall-sparc.cm
+  ../../cm/CCall-Vararg.cm
+  ../../cm/CCall-VarargCall.cm
+  ../../cm/CCall-VarargInterp.cm
+
+  c-x86-64-test.sml
+  c-x86-test.sml
+  c-sparc-test.sml
+  c-test-gen.sml
+  spill-table.sml
+  test-varargs.sml

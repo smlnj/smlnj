@@ -1,0 +1,33 @@
+\section{How to Obtain MLRISC}
+
+There are a few ways to obtain the MLRISC system.
+\begin{enumerate}
+\item
+An old version of MLRISC is available from
+\externhref{http://cm.bell-labs.com/cm/cs/what/smlnj/doc/MLRISC/quick-tour/index.html}{this link}.   
+This version is stable but very out-dated, and does
+not contain the most up-to-date features. 
+\item
+New experimental versions are available from the 
+\externhref{http://cm.bell-labs.com/cm/cs/what/smlnj/software.html}{SML/NJ software page} as part of the SML/NJ compiler releases.  
+These versions are relative stable, but
+do not include the entire MLRISC source tree.
+\item \href{mailto:leunga@cs.nyu.edu}{Allen} 
+keeps an up-to-date version of MLRISC at NYU for private use.
+This version includes everything but is under constant changes, so beware!
+To access the CVS repository, set your \sml{CVSROOT} environment variable 
+to
+\begin{verbatim}
+   :pserver:mlrisc@react-ilp.cs.nyu.edu:/home/leunga/mlrisc
+\end{verbatim}
+and checkout the repository using
+\begin{verbatim}
+   cvs co MLRISC++
+\end{verbatim}
+The password to use is \sml{mlrisc}.
+\item
+Generally speaking, you can get the latest version of MLRISC by asking
+\href{mailto:george@research.bell-labs.com}{Lal}.
+\end{enumerate}
+MLRISC is \newdef{free, open source} software, and is released under the
+\href{http://cm.bell-labs.com/cm/cs/what/smlnj/license.html}{SML/NJ license}.

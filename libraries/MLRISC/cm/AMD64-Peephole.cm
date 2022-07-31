@@ -1,0 +1,28 @@
+(* This file is created by makeallcm *)
+Library
+	functor AMD64Peephole
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/MLRISC.cm
+	$/Peephole.cm
+	$/AMD64.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	Peephole.cm
+	AMD64.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	Peephole.cm
+	AMD64.cm
+#endif
+	../amd64/instructions/amd64Peephole.sml

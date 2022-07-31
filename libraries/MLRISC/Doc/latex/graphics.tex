@@ -1,0 +1,128 @@
+\section{The Graph Visualization Library}
+\subsection{Overview}
+Visualization is an important aid for debugging graph algorithms.
+MLRISC provides a simple facility for displaying graphs that
+adheres to the graph interface.  Two graph viewer 
+back-ends are currently supported.  (An interface to the \emph{dot}
+tool is still available but is unsupported.)
+\begin{itemize}
+ \item \externhref{http://www.cs.uni-sb.de/RW/users/sander/html/gsvcg1.html}{vcg} -- 
+     this tool supports the browsing
+ of hierarchical graphs, zoom in/zoom out functions.  It can
+ handle up to around 5000 nodes in a graph.
+ \item \externhref{http://www.Informatik.Uni-Bremen.DE/~davinci/}{daVinci} -- 
+   this tool supports a separate
+ ``survey'' view from the main view and text searching.  This tool is
+slower than vcg but it has a nicer interface, and
+ can handle up to around 500 nodes in a graph.
+\end{itemize}
+All graph viewing back-ends work in the same manner.  
+They take a graph whose nodes and edges are annotated with \newdef{layout}
+instructions and translate these layout instructions
+into the target description language.  For vcg, the target description
+language is GDL.  For daVinci, it is a language based on s-expressions.
+
+\subsection{Graph Layout}
+Some basic layout formats are defined structure \sml{GraphLayout} are:
+\begin{SML}
+ structure \mlrischref{visualization/graphLayout.sml}{GraphLayout} = struct
+   datatype format =
+     LABEL of string
+   | COLOR of string
+   | NODE_COLOR of string
+   | EDGE_COLOR of string
+   | TEXT_COLOR of string
+   | ARROW_COLOR of string
+   | BACKARROW_COLOR of string
+   | BORDER_COLOR of string
+   | BORDERLESS 
+   | SHAPE of string 
+   | ALGORITHM of string
+   | EDGEPATTERN of string
+
+   type ('n,'e,'g) style = 
+      \{ edge  : 'e edge -> format list,
+        node  : 'n node -> format list,
+        graph : 'g -> format list
+      \}
+   type layout = (format list, format list, format list) graph
+ end
+\end{SML}
+
+The interpretation of the layout formats are as follows:
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+   \sml{LABEL} $l$ &  Label a node or an edge with the string $l$ \\
+   \sml{COLOR} $c$ &  Use color $c$ for a node or an edge \\
+   \sml{NODE_COLOR} $c$ & Use color $c$ for a node  \\
+   \sml{EDGE_COLOR} $c$ & Use color $c$ for an edge \\
+   \sml{TEXT_COLOR} $c$ & Use color $c$ for the text within a node \\
+   \sml{ARROW_COLOR} $c$ & Use color $c$ for the arrow of an edge \\
+   \sml{BACKARROW_COLOR} $c$ & Use color $c$ for the arrow of an edge \\
+   \sml{BORDER_COLOR} $c$ & Use color $c$ for the border in a node \\
+   \sml{BORDERLESS} & Disable border for a node \\
+   \sml{SHAPE} $s$ &  Use shape $s$ for a node \\
+   \sml{ALGORITHM} $a$ & Use algorithm $a$ to layout the graph \\
+   \sml{EDGEPATTERN} $p$ & Use pattern $p$ to layout an edge \\
+\hline
+\end{tabular}
+\end{center}
+
+Exactly how these formats are interpreted is determined by
+the visualization tool that is used.    If a feature is unsupported
+then the corresponding format will be ignored.
+Please see the appropriate reference manuals of vcg and daVinci for details.
+
+\subsection{Layout style}
+How a graph is layout is determined by its \newdef{layout style}:
+\begin{SML}
+   type ('n,'e,'g) style = 
+      \{ edge  : 'e edge -> format list,
+        node  : 'n node -> format list,
+        graph : 'g -> format list
+      \}
+\end{SML}
+which is simply three functions that convert nodes, edges and graph
+info into layout formats.
+The function \sml{makeLayout} can be used to convert a 
+layout style into a layout, which can then be passed to a graph
+viewer to be displayed.
+\begin{SML}
+   GraphLayout.makeLayout : ('n,'e,'g) style -> ('n,'e,'g) graph -> layout
+\end{SML}
+
+\subsection{Graph Displays}
+
+A \newdef{graph display} is an abstraction for the
+interface that converts a layout graph into an external graph 
+description language.  This abstraction is defined in the
+signature below.
+\begin{SML}
+ signature \mlrischref{visualization/graphDisplay.sig}{GRAPH_DISPLAY} = sig
+   val suffix    : unit -> string
+   val program   : unit -> string
+   val visualize : (string -> unit) -> GraphLayout.layout -> unit
+ end
+\end{SML}
+\begin{itemize}
+\item \sml{suffix} is the common file suffix used for the graph description
+language 
+\item \sml{program} is the common name of the graph visualization tool
+\item \sml{visualize} is a function that takes a 
+string output function and a layout graph $G$ as arguments
+and generates a graph description based on $G$
+\end{itemize}
+
+\subsection{Graph Viewers}
+
+The graph viewer functor 
+\mlrischref{visualization/graphViewer.sml}{GraphViewer}
+takes a graph display back-end and creates a graph viewer
+that can be used to display any layout graph.
+
+\begin{SML}
+ signature \mlrischref{visualization/graphViewer.sig}{GRAPH_VIEWER} = sig
+    val view : GraphLayout.layout -> unit
+ end
+ functor GraphViewer(D : GRAPH_DISPLAY) : GRAPH_VIEWER
+\end{SML}

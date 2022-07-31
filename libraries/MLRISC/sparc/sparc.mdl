@@ -1,0 +1,863 @@
+(*
+ * This has been upgraded to V9.
+ *)
+
+architecture Sparc =
+struct
+
+   superscalar    
+
+   big endian
+
+   lowercase assembly
+
+   storage
+     GP = $r[32] of 64 bits where $r[0] = 0
+             asm: (fn (r,_) => 
+                      if r < 8 then "%g"^Int.toString r
+                      else if r = 14 then "%sp"
+                      else if r < 16 then "%o"^Int.toString(r-8)
+                      else if r < 24 then "%l"^Int.toString(r-16)
+                      else if r = 30 then "%fp"
+                      else if r < 32 then "%i"^Int.toString(r-24) 
+                      else "%r"^Int.toString r
+                  ) 
+    | FP = $f[32] of 32 bits asm: (fn (f,_) => "%f"^Int.toString f)
+    | Y  = $y[1] of 64 bits asm: "%y"
+    | PSR = $psr[1] of 64 bits 
+         asm: (fn (0,_) => "%psr"
+                | (n,_) => "%psr"^Int.toString n)
+    | FSR = $fsr[1] of 64 bits
+         asm: (fn (0,_) => "%fsr"
+                | (n,_) => "%fsr"^Int.toString n)
+    | CC   = $cc[] of 64 bits aliasing GP asm: "%cc"
+    | MEM  = $m[] of 8 aggregable bits asm: (fn (r,_) => "m"^Int.toString r)
+    | CTRL = $ctrl[] asm: (fn (r,_) => "ctrl"^Int.toString r)
+
+   locations
+       stackptrR = $r[14]    (* %o6 = %sp *)
+   and frameptrR = $r[30]    (* %i6 = %fp *)
+   and asmTmpR   = $r[10]    (* %o2 *)
+   and linkReg   = $r[15]
+   and fasmTmp   = $f[30]
+   and y         = $y[0]
+   and psr       = $psr[0]
+   and fsr       = $fsr[0]
+   and r0        = $r[0]
+
+   structure RTL =
+   struct
+      include "Tools/basis.mdl"
+      open Basis
+      infix 1 ||
+      infix 3 << >> ~>>
+
+      fun %% l = (l : #64 bits)
+
+      (* Updates condition code *)
+      fun cc{} = Kill $psr[0] 
+
+      fun byte x   = (x : #8 bits)
+      fun hword x  = (x : #16 bits)
+      fun word x   = (x : #32 bits)
+      fun dword x  = (x : #64 bits)
+      fun single x = (x : #32 bits)
+      fun double x = (x : #64 bits)
+      fun quad x   = (x : #128 bits)
+
+      fun disp(r,i) = $r[r] + i
+
+      (* read from/write to the y register *)
+      rtl RDY{d} = $r[d] := $y[0]
+      rtl WRY{r,i} = $y[0] := disp(r,i)
+
+      rtl SETHI{i,d} = $r[d] := i << 10
+
+      (* Integer load/store *)
+      rtl LDSB{r,i,d,mem} = $r[d] := sx(byte $m[disp(r,i):mem])
+      rtl LDSH{r,i,d,mem} = $r[d] := sx(hword $m[disp(r,i):mem])
+      rtl LDUB{r,i,d,mem} = $r[d] := zx(byte $m[disp(r,i):mem])
+      rtl LDUH{r,i,d,mem} = $r[d] := zx(hword $m[disp(r,i):mem])
+      rtl LD{r,i,d,mem}   = $r[d] := zx(word $m[disp(r,i):mem])
+      rtl LDX{r,i,d,mem}  = $r[d] := zx(quad $m[disp(r,i):mem])
+      rtl STB{r,i,d,mem}  = $m[disp(r,i):mem] := $r[d] at [0..7]
+      rtl STH{r,i,d,mem}  = $m[disp(r,i):mem] := $r[d] at [0..15]
+      rtl ST{r,i,d,mem}   = $m[disp(r,i):mem] := $r[d] at [0..31]
+      rtl STX{r,i,d,mem}  = $m[disp(r,i):mem] := $r[d] at [0..63]
+
+      (* Integer opcodes *)
+
+      (* These are built-in sparc bitops *)
+      fun andn(x,y) = andb(x,notb y)
+      fun orn(x,y) = orb(x,notb y)
+      fun xnor(x,y) = notb(xorb(x,y))
+
+      (* Tagged additions operators.  We just fake these by 
+       * generating new operators.
+       *)
+      rtl tadd taddtv tsub tsubtv : #n bits * #n bits -> #n bits 
+
+      fun multiply opc {r,i,d} = 
+          $r[d] := opc($r[r],i) ||
+          Kill $y[0] 
+      fun multiplycc opc {r,i,d} = multiply opc {r,i,d} || cc{}
+      fun divide opc {r,i,d} = 
+          $r[d] := opc($r[r],i) (* XXX *)
+      fun dividecc opc {r,i,d} =  divide opc {r,i,d} || cc{}
+
+      fun logical opc {r,i,d} = $r[d] := opc($r[r],i)
+      fun logicalcc opc {r,i,d} = $r[d] := opc($r[r],i) || cc{}
+      fun arith opc {r,i,d} = $r[d] := opc($r[r],i)
+      fun arithcc opc {r,i,d} = $r[d] := opc($r[r],i) || cc{}
+
+      rtl li{i,d} = $r[d] := i (* load immediate *)
+
+      rtl [AND,ANDN,OR,ORN,XOR,XNOR] = 
+          map logical [andb, andn, orb, orn, xorb, xnor]
+
+      rtl [ANDCC, ANDNCC, ORCC, ORNCC, XORCC, XNORCC] = 
+          map logicalcc [andb, andn, orb, orn, xorb, xnor] 
+
+      rtl [ADD, TADD, TADDTV, SUB, TSUB, TSUBTV] = 
+          map arith [(+), tadd, taddtv, (-), tsub, tsubtv]
+
+      rtl [ADDCC, TADDCC, TADDTVCC, SUBCC, TSUBCC, TSUBTVCC] = 
+          map arithcc [(+), tadd, taddtv, (-), tsub, tsubtv]
+ 
+      rtl [UMUL,SMUL]     = map multiply [mulu,muls]
+      rtl [UMULCC,SMULCC] = map multiplycc [mulu,muls]
+      rtl [UDIV,SDIV]     = map divide [divu,divs]
+      rtl [UDIVCC,SDIVCC] = map dividecc [divu,divs]
+
+      rtl [MULX, SDIVX, UDIVX] = map arith [muls, divs, divu]
+      rtl [SLL, SRL, SRA]      = map logical [(<<), (>>), (~>>)] (* XXX *)
+      rtl [SLLX, SRLX, SRAX]   = map logical [(<<), (>>), (~>>)] (* XXX *)
+
+      local fun xor(a, b) = a == b
+            (* Extract bits from the $psr *)
+            val N = ($psr[0] at [23]) == 1
+            val Z = ($psr[0] at [22]) == 1
+            val V = ($psr[0] at [21]) == 1
+            val C = ($psr[0] at [20]) == 1
+      in  val [A,      E,     LE, L,   LEU,  CS,   NEG,  VS, (* XXX *)
+               N,      NE,    G,  GE,   GU,  CC,   POS,  VC] =   
+              [true,  Z,     Z,  Z,   Z,    C,    N,    V,  
+               false, not Z, Z,  Z,   Z,    not C,not N,not V
+              ]
+      end
+
+      val integer_tests =  
+          [N,  E,   LE,  L,   LEU,  CS,  NEG, VS,
+           A,  NE,  G,   GE,  GU,   CC,  POS, VC]
+
+      (* Integer branches *)
+      fun branch status {label} = if status then Jmp(%%label) else () 
+      rtl [BN, BE,  BLE, BL,  BLEU, BCS, BNEG, BVS, 
+           BA, BNE, BG,  BGE, BGU,  BCC, BPOS, BVC] = 
+          map branch integer_tests
+
+      rtl JMP{r,i}    = Jmp(disp(r,i))
+
+      (* Conditional moves *)
+      fun MOVicc icc {i, d} = if icc then $r[d] := i else ()
+      fun FMOVicc icc {r, d} = if icc then $f[d] := $f[r] else ()
+
+      val MOV ^^
+          [E,     LE,    L,     LEU,    CS,    NEG,    VS,
+           NE,    G,     GE,    GU,     CC,    POS,    VC] =
+          map MOVicc
+          [E,     LE,    L,     LEU,    CS,    NEG,    VS,
+           NE,    G,     GE,    GU,     CC,    POS,    VC]
+      val FMOV ^^
+          [E,     LE,    L,     LEU,    CS,    NEG,    VS,
+           NE,    G,     GE,    GU,     CC,    POS,    VC] =
+          map FMOVicc
+          [E,     LE,    L,     LEU,    CS,    NEG,    VS,
+           NE,    G,     GE,    GU,     CC,    POS,    VC]
+
+      fun MOVR rcc {r, i, d} = if rcc($r[r], 0) then $r[d] := i else ()
+      rtl MOVR ^^ [Z, LEZ, LZ, NZ, GZ, GEZ] = 
+          map MOVR [(==), (<=), (<), (<>), (>), (>=)]
+
+      (* Floating point load/store *)
+      rtl LDF{r,i,d,mem}  = $f[d] := $m[disp(r,i):mem]
+      rtl LDDF{r,i,d,mem} = $f[d] := $m[disp(r,i):mem]
+      rtl LDQF{r,i,d,mem} = $f[d] := $m[disp(r,i):mem]
+      rtl STF{r,i,d,mem}  = $m[disp(r,i):mem] := $f[d]
+      rtl STDF{r,i,d,mem} = $m[disp(r,i):mem] := $f[d]
+
+      rtl LDFSR{r,i,mem}  = $fsr[0] := $m[disp(r,i):mem] (* XXX *)
+      rtl LDXFSR{r,i,mem} = $fsr[0] := $m[disp(r,i):mem] (* XXX *)
+      rtl STFSR{r,i,mem}  = $m[disp(r,i):mem] := $fsr[0] (* XXX *)
+
+      (* conversions *)
+      rtl fitos fitod fitoq fstoi fdtoi fqtoi fsqrt
+          fstod fstoq fdtos fdtoq fqtos fqtod : #n bits -> #n bits
+
+      fun fmovs x = x
+      fun fmovd x = x
+      fun fmovq x = x
+
+      fun funary opc {r,d} = $f[d] := opc $f[r]
+ 
+      (* Floating point unary operations *)
+      rtl [FiTOs, FiTOd, FiTOq, FsTOi,  FdTOi,  FqTOi,
+           FsTOd, FsTOq, FdTOs, FdTOq,  FqTOs,  FqTOd,
+           FMOVs, FNEGs, FABSs, FMOVd,  FNEGd,  FABSd,
+           FMOVq, FNEGq, FABSq, FSQRTs, FSQRTd, FSQRTq] = (* XXX *)
+          map funary  
+          [fitos, fitod, fitoq, fstoi, fdtoi, fqtoi,
+           fstod, fstoq, fdtos, fdtoq, fqtos, fqtod,
+           fmovs, fneg,  fabs,  fmovd, fneg,  fabs,
+           fmovq, fneg,  fabs,  fsqrt, fsqrt, fsqrt]
+
+      (* Floating point binary operations *)
+      fun fbinary opc {r1,r2,d} = $f[d] := opc($f[r1],$f[r2])
+      rtl fsmuld fdmulq : #n bits * #n bits -> #n bits (* XXX *)
+      rtl [FADDs, FADDd, FADDq, FSUBs, FSUBd, FSUBq,  (* XXX *)
+           FMULs, FMULd, FMULq, FsMULd, FdMULq,
+           FDIVs, FDIVd, FDIVq] =
+          map fbinary
+          [fadd, fadd, fadd, fsub, fsub, fsub,
+           fmul, fmul, fmul, fsmuld, fdmulq,
+           fdiv, fdiv, fdiv] 
+
+      (* Floating point comparisons *)
+      rtl Nan : #32 bits -> #32 bits
+      fun nan(r) = (* if Nan($f[r]) == 0 then () else () *) ()
+      rtl cmps cmpd cmpq : #n bits * #n bits -> #n bits 
+      rtl FCMPs{r1,r2}  = $fsr[0] := cmps($f[r1],$f[r2])
+      rtl FCMPd{r1,r2}  = $fsr[0] := cmpd($f[r1],$f[r2])
+      rtl FCMPq{r1,r2}  = $fsr[0] := cmpq($f[r1],$f[r2])
+      rtl FCMPEs{r1,r2} = $fsr[0] := cmps($f[r1],$f[r2]) || nan(r1) || nan(r2)
+      rtl FCMPEd{r1,r2} = $fsr[0] := cmpd($f[r1],$f[r2]) || nan(r1) || nan(r2)
+      rtl FCMPEq{r1,r2} = $fsr[0] := cmpq($f[r1],$f[r2]) || nan(r1) || nan(r2)
+
+      local val X = $fsr[0] == 0
+      in  val floating_point_tests as
+              [FN,  FNE, FLG, FUL, FL,   FUG, FG,   FU,
+               FA,  FE,  FUE, FGE, FUGE, FLE, FULE, FO] = 
+              [X,   X,   X,   X,   X,    X,   X,    X,
+               X,   X,   X,   X,   X,    X,   X,    X
+              ]
+      end
+      fun fbranch fcc {label} = if fcc then Jmp(%%label) else ()
+      rtl [FBN, FBNE, FBLG, FBUL, FBL,   FBUG, FBG,   FBU,
+           FBA, FBE,  FBUE, FBGE, FBUGE, FBLE, FBULE, FBO] = 
+          map fbranch floating_point_tests
+
+      (* Floating point conditional moves *)
+      fun MOVfcc fcc {i, d} = if fcc then $r[d] := i else ()
+      fun FMOVfcc fcc { r, d} = if fcc then $f[d] := $f[r] else ()
+
+      rtl MOV ^^ [N, NE, LG, UL, L,   UG, G,   U,
+                  A, E,  UE, GE, UGE, LE, ULE, O] = 
+          map MOVfcc floating_point_tests
+
+      rtl FMOV ^^ [N, NE, LG, UL, L,   UG, G,   U,
+                   A, E,  UE, GE, UGE, LE, ULE, O] = 
+          map FMOVfcc floating_point_tests
+
+      (* Traps *)
+      fun Trap x = Jmp x (* XXX *)
+      fun Ticc cc {r,i} = if cc then Trap(disp(r,i)) else ()
+      fun Txcc cc {r,i} = if cc then Trap(disp(r,i)) else ()
+
+      rtl TICC ^^ [BN,BE, BLE,BL, BLEU,BCS,BNEG,BVS, 
+                   BA,BNE,BG, BGE,BGU, BCC,BPOS,BVC] = 
+          map Ticc integer_tests
+      rtl TXCC ^^ [BN,BE, BLE,BL, BLEU,BCS,BNEG,BVS, 
+                   BA,BNE,BG, BGE,BGU, BCC,BPOS,BVC] = 
+          map Txcc integer_tests
+
+      (* Jmps, calls and returns *)
+      rtl JMP{r,i} = Jmp(disp(r,i))
+      rtl JMPL{r,i,d,defs,uses} = 
+            Call(disp(r,i))     || 
+            $r[d] := ???        || 
+            Kill $cellset[defs] ||
+            Use $cellset[uses] 
+      rtl CALL{label,defs,uses} = 
+            Call(%%label)       || 
+            Kill $cellset[defs] ||
+            Use $cellset[uses] 
+      rtl RET{} = Ret
+
+   end (* RTL *)
+
+   structure Instruction = 
+   struct
+      datatype load : op3!  = LDSB  0b001001 
+                            | LDSH  0b001010 
+                            | LDUB  0b000001
+                            | LDUH  0b000010
+                            | LD    0b000000
+                            | LDX   0b001011 (* v9 *)
+                            | LDD   0b000011
+      datatype store : op3! = STB   0b000101
+                            | STH   0b000110
+                            | ST    0b000100 
+                            | STX   0b001110 (* v9 *)
+                            | STD   0b000111
+      datatype fload : op3! = LDF    0b100000
+                            | LDDF   0b100011 
+                            | LDQF   0b100010 (* v9 *)
+                            | LDFSR  0b100001 (* rd = 0 *)
+                            | LDXFSR 0b100001 (* v9 *) (* rd = 1 *)
+      datatype fstore : op3! = STF   0b100100
+                             | STDF  0b100111
+                             | STFSR 0b100101 
+      datatype arith : op3! = AND      0b000001
+                            | ANDCC    0b010001
+                            | ANDN     0b000101
+                            | ANDNCC   0b010101
+                            | OR       0b000010
+                            | ORCC     0b010010
+                            | ORN      0b000110
+                            | ORNCC    0b010110
+                            | XOR      0b000011
+                            | XORCC    0b010011
+                            | XNOR     0b000111
+                            | XNORCC   0b010111
+                            | ADD      0b000000
+                            | ADDCC    0b010000
+                            | TADD     0b100000
+                            | TADDCC   0b110000
+                            | TADDTV   0b100010
+                            | TADDTVCC 0b110010
+                            | SUB      0b000100
+                            | SUBCC    0b010100
+                            | TSUB     0b100001
+                            | TSUBCC   0b110001
+                            | TSUBTV   0b100011
+                            | TSUBTVCC 0b110011
+                            | UMUL     0b001010
+                            | UMULCC   0b011010
+                            | SMUL     0b001011
+                            | SMULCC   0b011011
+                            | UDIV     0b001110
+                            | UDIVCC   0b011110
+                            | SDIV     0b001111
+                            | SDIVCC   0b011111
+                            (* v9 extensions *)
+                            | MULX     0b001001
+                            | SDIVX    0b101101
+                            | UDIVX    0b001101
+                                     (* op3, x *)
+      datatype shift : op3! = SLL     (0wb100101,0w0)
+                            | SRL     (0wb100110,0w0)
+                            | SRA     (0wb100111,0w0)
+                            (* v9 extensions *)
+                            | SLLX    (0wb100101,0w1)
+                            | SRLX    (0wb100110,0w1)
+                            | SRAX    (0wb100111,0w1)
+      datatype farith1 : opf! = FiTOs 0b011000100 
+                              | FiTOd 0b011001000 
+                              | FiTOq 0b011001100
+                              | FsTOi 0b011010001
+                              | FdTOi 0b011010010
+                              | FqTOi 0b011010011
+                              | FsTOd 0b011001001
+                              | FsTOq 0b011010101
+                              | FdTOs 0b011000110
+                              | FdTOq 0b011001110
+                              | FqTOs 0b011000111
+                              | FqTOd 0b011001011
+                              | FMOVs 0b000000001
+                              | FNEGs 0b000000101
+                              | FABSs 0b000001001
+                              | FMOVd | FNEGd | FABSd (* composite instr *)
+                              | FMOVq | FNEGq | FABSq (* composite instr *)
+                              | FSQRTs 0b000101001
+                              | FSQRTd 0b000101010
+                              | FSQRTq 0b000101011
+      datatype farith2 :opf! = FADDs  0b001000001
+                             | FADDd  0b001000010
+                             | FADDq  0b001000011
+                             | FSUBs  0b001000101
+                             | FSUBd  0b001000110
+                             | FSUBq  0b001000111
+                             | FMULs  0b001001001
+                             | FMULd  0b001001010
+                             | FMULq  0b001001011
+                             | FsMULd 0b001101001 
+                             | FdMULq 0b001101110
+                             | FDIVs  0b001001101
+                             | FDIVd  0b001001110
+                             | FDIVq  0b001001111
+      datatype fcmp : opf!   = FCMPs  0b001010001
+                             | FCMPd  0b001010010
+                             | FCMPq  0b001010011
+                             | FCMPEs 0b001010101
+                             | FCMPEd 0b001010110
+                             | FCMPEq 0b001010111
+   
+      datatype branch [0..15] : cond! = 
+           BN   "n" 
+         | BE   "e" 
+         | BLE  "le"
+         | BL   "l" 
+         | BLEU "leu"
+         | BCS  "cs"  
+         | BNEG "neg" 
+         | BVS  "vs"  
+         | BA   ""   
+         | BNE  "ne"  
+         | BG   "g"   
+         | BGE  "ge"  
+         | BGU  "gu"  
+         | BCC  "cc"  
+         | BPOS "pos" 
+         | BVC  "vs"
+   
+      datatype rcond! = (* V9 integer conditions *)
+           RZ    0b001
+         | RLEZ  0b010
+         | RLZ   0b011
+         | RNZ   0b101
+         | RGZ   0b110
+         | RGEZ  0b111
+   
+      datatype cc = (* V9 condition register *) 
+          ICC 0b00
+        | XCC 0b10
+   
+      datatype prediction! = (* V9 branch prediction bit *)
+           PT | PN
+   
+      datatype fbranch [0..15] : cond! = 
+           FBN  
+         | FBNE 
+         | FBLG 
+         | FBUL
+         | FBL   
+         | FBUG 
+         | FBG  
+         | FBU
+         | FBA "fb"
+         | FBE  
+         | FBUE 
+         | FBGE 
+         | FBUGE 
+         | FBLE 
+         | FBULE
+         | FBO
+   
+      datatype ea = Direct of $GP
+                  | FDirect of $GP
+                  | Displace of {base: $GP, disp: T.labexp, mem: Region.region}
+
+           (* used to encode the opf_low field V9 *)
+      datatype fsize! = S 0b00100
+                      | D 0b00110
+                      | Q 0b00111 
+   
+      datatype operand =
+         REG of $GP       ``<GP>''           rtl: $r[GP] 
+       | IMMED of int     ``<int>''          rtl: immed int 
+       | LAB of T.labexp  ``<labexp>''       rtl: labexp
+       | LO of T.labexp   ``%lo(<labexp>)''  rtl: lo(labexp)
+       | HI of T.labexp   ``%hi(<labexp>)''  rtl: hi(labexp)
+
+      type addressing_mode = CellsBasis.cell * operand
+   
+   end (* Instruction *)
+
+   functor Assembly(val V9 : bool) = 
+   struct
+      (* Some helper functions for assembly generation *)
+      fun emit_leaf false = () | emit_leaf true  = emit "l"
+      fun emit_nop false = () | emit_nop true = emit "\n\tnop"
+      fun emit_a false = () | emit_a true  = emit ",a"
+      fun emit_cc false = () | emit_cc true = emit "cc"
+   end
+
+   instruction formats 32 bits
+      (* Extract the value of an operand *)
+      opn{i} =  
+      let fun hi22 w = (itow w) ~>> 0w10
+          fun lo10 w = (itow w) at [0..9] 
+      in  case i of
+           I.REG rs2 => error "opn"
+         | I.IMMED i => itow i
+         | I.LAB l   => itow(MLTreeEval.valueOf l)
+         | I.LO l    => lo10(MLTreeEval.valueOf l)
+         | I.HI l    => hi22(MLTreeEval.valueOf l)
+      end
+
+      (* basic formats, integer source registers, target type not determined.*)
+   |  rr {op1:2, rd:5, op3:6, rs1:GP 5, i:1=0, asi:8=0, rs2:GP 5}
+   |  ri {op1:2, rd:5, op3:6, rs1:GP 5, i:1=1, simm13:signed 13}
+   |  rix{op1,op3,r,i,d} = 
+        (case i of
+            I.REG rs2 => rr{op1,op3,rs1=r,rs2=rs2,rd=d}
+         |  _ =>         ri{op1,op3,rs1=r,rd=d,simm13=opn{i}}
+        )
+
+      (* GP + imm/GP -> GP *)
+   |  rir{op1,op3,r,i,d:GP} = rix{op1,op3,r,i,d}
+      (* GP + imm/GP -> FP *)
+   |  rif{op1,op3,r,i,d:FP} = rix{op1,op3,r,i,d}
+
+       (* formats found in the Sparc architecture manual *)
+   |  load{l:load,r,i,d} = rir{op1=0w3,op3=l,r,i,d}    (* p90 *)
+   |  store{s:store,r,i,d} = rir{op1=0w3,op3=s,r,i,d}  (* p95 *)
+   |  fload{l:fload,r,i,d} = rif{op1=0w3,op3=l,r,i,d}  (* p92 *)
+   |  fstore{s:fstore,r,i,d} = rif{op1=0w3,op3=s,r,i,d} (* p97 *)
+   |  sethi {op1:2=0, rd:GP 5, op2:3=0b100, imm22:int signed 22}  (* p104 *)
+   |  NOP   {op1:2=0, rd:5=0, op2:3=0b100, imm22:22=0} (* p105 *)
+   |  unimp {op1:2=0, rd:5=0, op2:3=0, const22:int unsigned 22} (* p137 *)
+   |  delay {nop} = if nop then NOP{} else () (* delay slot *)
+   |  arith {a:arith,r,i,d} =                       (* p106 *)
+        rir{op1=0w2,op3=a,r,i,d} 
+
+   |  shiftr {op1:2=2, rd:5, op3:6, rs1:5, i:1=0, x:1, asi:7=0, rs2:GP 5}
+   |  shifti {op1:2=2, rd:5, op3:6, rs1:5, i:1=1, x:1, asi:6=0, cnt:signed 6}
+   |  shift {s:shift,r:GP,i,d:GP} = 
+        let val (op3,x) = s
+        in  case i of
+              I.REG rs2 => shiftr{op3,rs1=r,rs2=rs2,rd=d,x=x}  (* p218 v9 *)
+            | _         => shifti{op3,rs1=r,cnt=opn{i},rd=d,x=x}
+        end
+   |  save {r,i,d} = rir{op1=0w2,op3=0wb111100,r,i,d} (* p117 *)
+   |  restore {r,i,d} = rir{op1=0w2,op3=0wb111101,r,i,d} (* p117 *)
+   |  bicc{op1:2=0,a:bool 1, b:branch 4, op2:3=0b010, disp22:signed 22}
+   |  fbfcc{op1:2=0,a:bool 1, b:fbranch 4, op2:3=0b110, disp22:signed 22}
+   |  call {op1:2=1, disp30:signed 30}                (* p125 *)
+   |  jmpl {r,i,d} = rir{op1=0w2,op3=0wb111000,r,i,d} (* p126 *)
+   |  jmp  {r,i}   = rix{op1=0w2,op3=0wb111000,r,i,d=0w0}
+
+   |  ticcr {op1:2, rd:5, op3:6, rs1:GP 5, i:1=0, cc:cc 2, _:6=0, rs2:GP 5}
+   |  ticci {op1:2, rd:5, op3:6, rs1:GP 5, i:1=1, cc:cc 2, _:4=0, 
+             sw_trap:signed 7}
+   |  ticcx{op1,op3,cc,r,i,d} = 
+        (case i of
+            I.REG rs2 => ticcr{op1,op3,cc,rs1=r,rs2=rs2,rd=d}
+         |  _ =>         ticci{op1,op3,cc,rs1=r,rd=d,sw_trap=opn{i}}
+        )
+   |  ticc {t:branch,cc,r,i} = 
+         ticcx{op1=0w2,d=t,op3=0wb111010,cc,r,i} (* p237 (V9) *)
+
+   |  rdy {op2:2=2,d:GP 5,op3:6=0b101000,rs1:5=0,x:0..13=0} (* p131 *)
+   |  wdy {r,i} = rix{op1=0w2,op3=0wb110000,r,i,d=0w0} (* p133 *)
+
+        (* one input floating point format *)
+   |  fop_1 {op1:2=2, d:5, op3:6=0b110100, rs1:5=0, a:9, r:5}
+   |  fop1 {a:farith1,r:FP,d:FP} = fop_1{a,r,d}
+
+        (* generate composite instruction *)
+   |  fdouble{a:farith1,r:FP,d:FP} = 
+          (fop_1{a,r,d}; 
+           fop_1{a=0w1,r=r+0w1,d=d+0w1}
+          )
+   |  fquad{a:farith1,r:FP,d:FP} = 
+          (fop_1{a,r,d}; 
+           fop_1{a=0w1,r=r+0w1,d=d+0w1};
+           fop_1{a=0w1,r=r+0w2,d=d+0w2}; 
+           fop_1{a=0w1,r=r+0w3,d=d+0w3}
+          )
+
+        (* two inputs floating point format *)
+   |  fop2 {op1:2=2, d:FP 5, op3:6=0b110100, r1:FP 5, a:farith2 9, r2:FP 5}
+   |  fcmp {op1:2=2, rd:25..29=0, op3:6=0b110101, rs1:FP 5, opf:fcmp 9,rs2:FP 5}
+
+      (* conditional moves formats (V9) *)
+   |  cmovr{op1:2=2,op3:6,rd:5,cc2:1,cond:4,i:1=0,cc1:1,cc0:1,_:6=0,rs2:5}
+   |  cmovi{op1:2=2,op3:6,rd:5,cc2:1,cond:4,i:1=1,cc1:1,cc0:1,simm11:signed 11}
+   |  cmov{op3,cond,cc2,cc1,cc0,i,rd} =
+        (case i of
+            I.REG rs2 => cmovr{op3,cond,rs2=emit_GP rs2,rd,cc0,cc1,cc2}
+         |  _ => cmovi{op3,cond,rd,cc0,cc1,cc2,simm11=opn{i}}
+        )
+
+   |  movicc {b:branch,i,d:GP} =
+        cmov{op3=0wb101100,cond=b,i,rd=d,cc2=0w1,cc1=0w0,cc0=0w0}
+   |  movfcc {b:fbranch,i,d:GP} = (* use fcc0 *)
+        cmov{op3=0wb101100,cond=b,i,rd=d,cc2=0w0,cc1=0w0,cc0=0w0}
+   |  fmovicc{sz:fsize,b:branch,r:FP,d:FP} =
+        cmovr{op3=0wb101100,cond=b,rs2=r,rd=d,cc2=0w1,cc1=0w0,cc0=0w0}
+   |  fmovfcc{sz:fsize,b:fbranch,r:FP,d:FP} = (* use fcc0 *)
+        cmovr{op3=0wb101100,cond=b,rs2=r,rd=d,cc2=0w0,cc1=0w0,cc0=0w0}
+
+        (* move integer register on register condition format *)
+   |  movrr {op1:2=2, rd:GP 5, op3:6=0b101111, rs1:GP 5, i:1=0, rcond:3, 
+             asi:5=0, rs2:GP 5}
+   |  movri {op1:2=2, rd:GP 5, op3:6=0b101111, rs1:GP 5, i:1=1, rcond:3, 
+             simm10:signed 10}
+   |  movr{rcond:rcond,r,i,d} =
+        (case i of
+           I.REG rs2 => movrr{rcond,rs1=r,rs2=rs2,rd=d}
+         | _ =>         movri{rcond,rs1=r,rd=d,simm10=opn{i}}
+        ) 
+
+   structure MC = 
+   struct
+      (* this computes the displacement address *)
+      fun disp label = itow((Label.addrOf label - !loc)) ~>> 0w2
+      val r15 = C.Reg CellsBasis.GP 15
+      and r31 = C.Reg CellsBasis.GP 31
+   end
+
+
+   (*
+    * Reservation tables and pipeline definitions for scheduling
+    *)
+
+   (* Function units *)
+   resource issue and mem and alu and falu and fmul and fdiv and branch
+
+   (* Different implementations of cpus *)
+   cpu default 2 [2 issue, 2 mem, 1 alu]  (* 2 issue machine *)
+
+   (* Definitions of various reservation tables *) 
+   pipeline NOP _    = [issue] 
+    and     ARITH _  = [issue^^alu]
+    and     LOAD _   = [issue^^mem]
+    and     STORE _  = [issue^^mem,mem,mem] 
+    and     FARITH _ = [issue^^falu]
+    and     FMUL _   = [issue^^fmul,fmul]
+    and     FDIV _   = [issue^^fdiv,fdiv*50]
+    and     BRANCH _ = [issue^^branch]
+
+   (*
+    * Notation:
+    *   r -- source register
+    *   i -- source operand (immed or register)
+    *   d -- destination register (or data register in store instructions)
+    *)
+   instruction 
+      LOAD of { l:load, d: $GP, r: $GP, i:operand, mem:Region.region }
+        asm: ``<l>\t[<r>+<i>], <d><mem>'' 
+        mc:  load{l,r,i,d}
+	rtl: ``<l>''
+	latency: 1
+
+   |  STORE of { s:store, d: $GP, r: $GP, i:operand, mem:Region.region }
+        asm: ``<s>\t<d>, [<r>+<i>]<mem>'' 
+        mc: store{s,r,i,d}
+	rtl: ``<s>''
+
+   |  FLOAD of { l:fload, r: $GP, i:operand, d: $FP, mem:Region.region }
+        asm: ``<l>\t[<r>+<i>], <d><mem>'' 
+        mc:  fload{l,r,i,d}
+	rtl: ``<l>''
+	latency: 1
+
+   |  FSTORE of { s:fstore, d: $FP, r: $GP, i:operand, mem:Region.region }
+        asm: ``<s>\t[<r>+<i>], <d><mem>'' 
+        mc:  fstore{s,r,i,d}
+	rtl: ``<s>''
+
+   |  UNIMP of { const22: int }
+	asm: ``unimp <const22>''
+	mc:  unimp{const22}
+
+   |  SETHI of { i:int, d: $GP } 
+        asm: let val i = Word32.toString(Word32.<<(Word32.fromInt i,0w10))
+             in  ``sethi\t%hi(0x<emit i>), <d>'' 
+             end
+        mc:  sethi{imm22=i,rd=d}
+	rtl: ``SETHI''
+
+   |  ARITH of { a:arith, r: $GP, i:operand, d: $GP }
+        asm: (case (a,CellsBasis.registerId r,CellsBasis.registerId d, i) of 
+                (* generate abbreviations! *)
+               (I.OR,0,_,I.REG _) => ``mov\t<i>, <d>''
+             | (I.OR,0,_,_)       => ``set\t<i>, <d>''
+             | (I.SUBCC,_,0,_)    => ``cmp\t<r>, <i>''
+             |  _                 => ``<a>\t<r>, <i>, <d>'' 
+             )
+        mc:  arith{a,r,i,d}
+	rtl: (case (a,CellsBasis.registerId r) of 
+               (I.OR, 0) => ``<li>''
+             | _         => ``<a>''
+             )
+
+   |  SHIFT of { s:shift, r: $GP, i:operand, d: $GP }
+        asm: ``<s>\t<r>, <i>, <d>'' 
+        mc:  shift{s,r,i,d}
+	rtl: ``<s>''
+
+      (* Conditional moves! *)
+   |  MOVicc of {b:branch,  i:operand, d: $GP } (* V9 *)
+        asm: ``mov<b>\t<i>, <d>'' 
+        mc:  movicc{b,i,d}
+
+   |  MOVfcc of {b:fbranch, i:operand, d: $GP } (* V9 *) 
+        asm: ``mov<b>\t<i>, <d>''  
+        mc:  movfcc{b,i,d}
+
+   |  MOVR of {rcond:rcond, r: $GP, i: operand, d: $GP} (* V9 *)
+        asm: ``movr<rcond>\t<r>, <i>, <d>''
+        mc:  movr{rcond,r,i,d}
+
+   |  FMOVicc of {sz:fsize, b:branch, r: $FP, d: $FP } (* V9 *)
+        asm: ``fmov<sz><b>\t<r>, <d>''
+        mc:  fmovicc{sz,b,r,d}
+
+   |  FMOVfcc of {sz:fsize, b:fbranch, r: $FP, d: $FP } (* V9 *)
+        asm: ``fmov<sz><b>\t<r>, <d>''
+        mc:  fmovfcc{sz,b,r,d}
+
+   |  Bicc of  { b:branch, a:bool, label:Label.label, nop:bool}
+        asm: ``b<b><a>\t<label><nop>'' 
+        mc:  (bicc{b,a,disp22=disp label}; delay{nop})
+	rtl: ``<b>''
+        padding: nop = true
+        nullified: a = true and (case b of I.BA => false | _ => true)
+        delayslot candidate: false
+
+   |  FBfcc of { b:fbranch, a:bool, label:Label.label, nop:bool }
+        asm: ``<b><a>\t<label><nop>'' 
+        mc:  (fbfcc{b,a,disp22=disp label}; delay{nop})
+	rtl: ``<b>''
+        padding: nop = true
+        nullified: a = true
+        delayslot candidate: false
+
+       (* V9 branch on condition in integer register *)
+   |  BR of {rcond:rcond, p:prediction, r: $GP, a:bool, 
+             label:Label.label, nop:bool} 
+        asm: ``b<rcond><a><p>\t<r>, <label><nop>''
+
+        (* V9 branch on integer condition code with prediction *)
+   |  BP of {b:branch, p:prediction, cc:cc, a:bool, label:Label.label,nop:bool}
+        asm: ``bp<b><a><p>\t%<emit(if cc = I.ICC then "i" else "x")>cc, <label><nop>''
+   |  JMP  of { r: $GP, i:operand, labs : Label.label list, nop:bool}
+        asm: ``jmp\t<r>+<i><nop>'' 
+        mc:  (jmp{r,i}; delay{nop})
+	rtl: ``JMP''
+        padding: nop = true
+        nullified: false
+        delayslot candidate: false
+
+   |  JMPL of { r: $GP, i:operand, d: $GP, 
+                defs: $cellset, uses: $cellset, 
+                cutsTo : Label.label list, nop:bool, mem:Region.region
+              }
+        asm: ``jmpl\t<r>+<i>, <d><mem><emit_defs defs><emit_uses uses><emit_cutsTo cutsTo><nop>'' 
+        mc:  (jmpl{r,i,d}; delay{nop})
+	rtl: ``JMPL''
+        padding: nop = true
+        nullified: false
+        delayslot candidate: false
+
+   |  CALL of  { defs: $cellset, uses: $cellset, 
+                 label:Label.label, cutsTo:Label.label list,
+                 nop:bool, mem:Region.region
+               }  
+        asm: ``call\t<label><mem><emit_defs(defs)><emit_uses(uses)><emit_cutsTo cutsTo><nop>'' 
+        mc:  (call{disp30=disp label}; delay{nop})
+	rtl: ``CALL''
+        padding: nop 
+        nullified: false
+        delayslot candidate: false
+
+        (* Note, for V8 the cc bit must be ICC *)
+   |  Ticc of { t:branch, cc:cc, r: $GP, i:operand} 
+        asm: ``t<t>\t<if cc = I.ICC then () else emit "%xcc, "><r>+<i>'' 
+        mc:  ticc{t,r,cc,i}
+	rtl: ``T<cc><t>''
+        delayslot candidate: false
+
+   |  FPop1 of { a:farith1, r: $FP, d: $FP }
+        asm: let fun f(a,r,d) = 
+                 (emit(a); emit "\t"; 
+                  emit(C.showFP r); 
+                  emit ", "; 
+                  emit(C.showFP d))
+                 fun g(a,r,d) =
+                 let val r = CellsBasis.registerNum r and d = CellsBasis.registerNum d
+                 in  f(a,r,d); emit "\n\t"; 
+                     f("fmovs",r+1,d+1) 
+                 end
+                 fun h(a,r,d) =
+                 let val r = CellsBasis.registerNum r and d = CellsBasis.registerNum d
+                 in  f(a,r,d); emit "\n\t"; 
+                     f("fmovs",r+1,d+1); emit "\n\t";
+                     f("fmovs",r+2,d+2); emit "\n\t";
+                     f("fmovs",r+3,d+3)
+                 end    
+             in if V9 then ``<a>\t<r>, <d>''
+                else
+                case a of
+                  I.FMOVd => g("fmovs",r,d)
+                | I.FNEGd => g("fnegs",r,d)
+                | I.FABSd => g("fabss",r,d)
+                | I.FMOVq => h("fmovs",r,d)
+                | I.FNEGq => h("fnegs",r,d)
+                | I.FABSq => h("fabss",r,d)
+                | _       => ``<a>\t<r>, <d>''
+             end
+        mc: (case a of
+              (* composite instructions *)
+              I.FMOVd => fdouble{a=I.FMOVs,r,d}
+            | I.FNEGd => fdouble{a=I.FNEGs,r,d}
+            | I.FABSd => fdouble{a=I.FABSs,r,d}
+            | I.FMOVq => fquad{a=I.FMOVs,r,d}
+            | I.FNEGq => fquad{a=I.FNEGs,r,d}
+            | I.FABSq => fquad{a=I.FABSs,r,d}
+                  | _       => fop1{a,r,d}
+               )
+	rtl: ``<a>''
+
+   |  FPop2 of { a:farith2, r1: $FP, r2: $FP, d: $FP }
+        asm: ``<a>\t<r1>, <r2>, <d>'' 
+        mc:  fop2{a,r1,r2,d}
+	rtl: ``<a>''
+
+   |  FCMP of  { cmp:fcmp, r1: $FP, r2: $FP, nop:bool }
+        asm: ``<cmp>\t<r1>, <r2><nop>'' 
+        mc:  (fcmp{opf=cmp,rs1=r1,rs2=r2}; delay{nop})
+	rtl: ``<cmp>''
+        padding: nop = true
+        nullified: false
+        delayslot candidate: false
+        latency: 1
+
+   |  SAVE of {r: $GP, i:operand, d: $GP}
+        asm: ``save\t<r>, <i>, <d>'' 
+        mc:  save{r,i,d}
+
+   |  RESTORE of {r: $GP, i:operand, d: $GP}
+        asm: ``restore\t<r>, <i>, <d>''  
+        mc:  restore{r,i,d}
+
+   |  RDY of {d: $GP}                
+        asm: ``rd\t%y, <d>''
+        mc:  rdy{d}
+	rtl: ``RDY''
+
+   |  WRY of {r: $GP,i:operand}        
+        asm: ``wr\t<r>, <i>, %y''
+        mc:  wdy{r,i}
+	rtl: ``WRY''
+
+   |  RET of {leaf:bool,nop:bool} 
+        asm: ``ret<leaf><nop>'' 
+        mc:  (jmp{r=if leaf then r31 else r15,i=I.IMMED 8}; delay{nop})
+	rtl: ``RET''
+        padding: nop = true
+        nullified: false
+
+   | SOURCE of {}
+        asm: ``source''
+        mc:  ()
+
+   | SINK of {}
+        asm: ``sink''
+        mc:  ()
+
+   | PHI of {}
+        asm: ``phi''
+        mc:  ()
+
+   structure SSA = 
+   struct
+      fun operand(ty,I.REG r)   = T.REG(ty, r)
+        | operand(ty,I.IMMED i) = T.LI(IntInf.fromInt i)
+        (*| operand(ty,I.LAB le)  = T.LABEL le*)
+        | operand(ty,_) = error "operand"
+   end
+
+end

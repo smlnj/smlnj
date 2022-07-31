@@ -1,0 +1,238 @@
+(*
+ * Performs simple local optimizations.
+ * This version uses IntInf
+ *)
+local
+
+   structure T =
+   struct 
+      include "mltree-basis.sig"
+      include "mltree.sig"
+   end
+
+in
+
+functor MLTreeSimplifier
+  (structure T    : MLTREE
+   structure Size : MLTREE_SIZE
+      where T = T
+   (* Extension *)
+   val sext : T.rewriter -> T.sext -> T.sext
+   val rext : T.rewriter -> T.rext -> T.rext
+   val fext : T.rewriter -> T.fext -> T.fext
+   val ccext : T.rewriter -> T.ccext -> T.ccext
+  ) : MLTREE_SIMPLIFIER =
+struct
+
+   structure T  = T
+   structure I  = T.I
+   structure R  = MLTreeRewrite
+     (structure T = T
+      val sext = sext and rext = rext and fext = fext and ccext = ccext
+     )
+
+   type simplifier = T.rewriter
+
+   val _ = "literals"
+   val zero  = 0i
+   val zeroT = T.LI zero
+
+   fun simplify {addressWidth, signedAddress} = 
+   let 
+
+   fun dm T.DIV_TO_ZERO = I.DIV_TO_ZERO
+     | dm T.DIV_TO_NEGINF = I.DIV_TO_NEGINF
+
+   fun sim ==> exp =
+   let  
+   in (* perform algebraic simplification and constant folding *)
+      case exp of
+        T.ADD(ty,T.ADD(ty', a, T.LI x), T.LI y) where ty = ty' =>
+            T.ADD(ty,a,T.LI(I.ADD(ty,x,y))) 
+      | T.ADD(ty,T.LI 0i,x) => x
+      | T.ADD(ty,x,T.LI 0i) => x
+      | T.ADD(ty,T.LI x,T.LI y) => T.LI(I.ADD(ty,x,y))
+      | T.ADD(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.ADD(ty,x,y))
+
+      | T.SUB(ty,T.LI 0i,T.SUB(ty',T.LI 0i, a)) where ty = ty' => a
+      | T.SUB(ty,T.SUB(ty', a, T.LI x), T.LI y) where ty = ty' => 
+           T.SUB(ty,a,T.LI(I.ADD(ty,x,y))) 
+      | T.SUB(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.SUB(ty,x,y))
+
+      | T.SUB(ty,a,T.LI 0i) => a
+      | T.SUB(ty,T.LI x,T.LI y) => T.LI(I.SUB(ty,x,y))
+
+      | T.MULS(ty,T.LI 0i,_) => zeroT
+      | T.MULS(ty,_,T.LI 0i) => zeroT
+      | T.MULS(ty,T.LI 1i,x) => x
+      | T.MULS(ty,x,T.LI 1i) => x
+      | T.MULS(ty,T.LI x,T.LI y) => T.LI(I.MULS(ty,x,y))
+      | T.MULS(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.MULS(ty,x,y))
+
+      | T.DIVS(m,ty,a,T.LI 1i) => a
+      | T.DIVS(m,ty,T.LI x,T.LI y) where y <> zero => T.LI(I.DIVS(dm m,ty,x,y))
+      | T.DIVS(m,ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.DIVS(m,ty,x,y))
+
+      | T.REMS(m,ty,a,T.LI 1i) => zeroT
+      | T.REMS(m,ty,T.LI x,T.LI y) where y <> zero => T.LI(I.REMS(dm m,ty,x,y))
+      | T.REMS(m,ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.REMS(m,ty,x,y))
+
+      | T.MULU(ty,T.LI 0i,_) => zeroT
+      | T.MULU(ty,_,T.LI 0i) => zeroT
+      | T.MULU(ty,T.LI 1i,x) => x
+      | T.MULU(ty,x,T.LI 1i) => x
+      | T.MULU(ty,T.LI x,T.LI y) => T.LI(I.MULU(ty,x,y))
+      | T.MULU(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.MULU(ty,x,y))
+
+      | T.DIVU(ty,a,T.LI 1i) => a
+      | T.DIVU(ty,T.LI x,T.LI y) where y <> zero => T.LI(I.DIVU(ty,x,y))
+      | T.DIVU(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.DIVU(ty,x,y))
+
+      | T.REMU(ty,a,T.LI 1i) => zeroT
+      | T.REMU(ty,T.LI x,T.LI y) where y <> zero => T.LI(I.REMU(ty,x,y)) 
+      | T.REMU(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.REMU(ty,x,y))
+
+      | T.NEGT(ty,T.LI x) => (T.LI(I.NEGT(ty,x)) handle Overflow => exp)
+      | T.NEGT(ty,T.LABEXP x) => T.LABEXP(T.NEGT(ty,x))
+
+      | T.ADDT(ty,T.LI 0i,x) => x
+      | T.ADDT(ty,x,T.LI 0i) => x
+      | T.ADDT(ty,T.LI x,T.LI y) => 
+          (T.LI(I.ADDT(ty,x,y)) handle Overflow => exp)
+      | T.ADDT(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.ADDT(ty,x,y))
+
+      | T.SUBT(ty,a,T.LI 0i) => a
+      | T.SUBT(ty,T.LI x,T.LI y) => 
+          (T.LI(I.SUBT(ty,x,y)) handle Overflow => exp)
+      | T.SUBT(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.SUBT(ty,x,y))
+
+      | T.MULT(ty,T.LI 0i,_) => zeroT
+      | T.MULT(ty,_,T.LI 0i) => zeroT
+      | T.MULT(ty,T.LI 1i,x) => x
+      | T.MULT(ty,x,T.LI 1i) => x
+      | T.MULT(ty,T.LI x,T.LI y) => 
+         (T.LI(I.MULT(ty,x,y)) handle Overflow => exp)
+      | T.MULT(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.MULT(ty,x,y))
+
+      | T.DIVT(m,ty,a,T.LI 1i) => a
+      | T.DIVT(m,ty,T.LI x,T.LI y) where y <> zero => T.LI(I.DIVT(dm m,ty,x,y))
+      | T.DIVT(m,ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.DIVT(m,ty,x,y))
+
+      | T.ANDB(_,_,b as T.LI 0i) => b
+      | T.ANDB(_,a as T.LI 0i,_) => a
+      | T.ANDB(ty,T.NOTB(ty',a),T.NOTB(ty'',b)) 
+         where ty = ty' andalso ty' = ty'' => T.NOTB(ty,T.ORB(ty,a,b)) 
+      | T.ANDB(ty,T.LI x,T.LI y) => T.LI(I.ANDB(ty,x,y))
+      | T.ANDB(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.ANDB(ty,x,y))
+
+      | T.ORB(_,a,T.LI 0i) => a
+      | T.ORB(_,T.LI 0i,b) => b
+      | T.ORB(ty,T.NOTB(ty',a),T.NOTB(ty'',b)) 
+         where ty = ty' andalso ty' = ty'' => T.NOTB(ty,T.ANDB(ty,a,b)) 
+      | T.ORB(ty,T.LI x,T.LI y) => T.LI(I.ORB(ty,x,y))
+      | T.ORB(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.ORB(ty,x,y))
+
+      | T.XORB(ty,a,T.LI 0i) => a
+      | T.XORB(ty,T.LI 0i,b) => b
+      | T.XORB(ty,T.NOTB(ty',a),T.NOTB(ty'',b)) 
+         where ty = ty' andalso ty' = ty'' => T.NOTB(ty,T.XORB(ty,a,b)) 
+      | T.XORB(ty,T.LI x,T.LI y) => T.LI(I.XORB(ty,x,y))
+      | T.XORB(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.XORB(ty,x,y))
+
+      | T.EQVB(ty,a,T.LI 0i) => zeroT
+      | T.EQVB(ty,T.LI 0i,b) => zeroT
+      | T.EQVB(ty,T.LI x,T.LI y) => T.LI(I.EQVB(ty,x,y))
+      | T.EQVB(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.EQVB(ty,x,y))
+
+      | T.NOTB(ty,T.NOTB(ty',a)) where ty = ty' => a
+      | T.NOTB(ty,T.LI n) => T.LI(I.NOTB(ty, n))
+      | T.NOTB(ty,T.LABEXP x) => T.LABEXP(T.NOTB(ty,x))
+
+      | T.SRA(ty,a,T.LI 0i) => a
+      | T.SRA(ty,T.LI 0i,_) => zeroT
+      | T.SRA(ty,T.LI x,T.LI y) => T.LI(I.SRA(ty,x,y))
+      | T.SRA(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.SRA(ty,x,y))
+
+      | T.SRL(ty,a,T.LI 0i) => a
+      | T.SRL(ty,T.LI 0i,_) => zeroT
+      | T.SRL(ty,_,T.LI n) where IntInf.<=(IntInf.fromInt ty,n) => zeroT
+      | T.SRL(ty,T.LI x,T.LI y) => T.LI(I.SRL(ty,x,y))
+      | T.SRL(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.SRL(ty,x,y))
+
+      | T.SLL(ty,a,T.LI 0i) => a
+      | T.SLL(ty,T.LI 0i,_) => zeroT
+      | T.SLL(ty,_,T.LI n) where IntInf.<=(IntInf.fromInt ty,n) => zeroT
+      | T.SLL(ty,T.LI x,T.LI y) => T.LI(I.SLL(ty,x,y))
+      | T.SLL(ty,T.LABEXP x,T.LABEXP y) => T.LABEXP(T.SLL(ty,x,y))
+
+      (* reig *)
+           
+      (* MLtree does not have an UNSIGNED LOAD operation. In targets
+         where both uload and sload are provided, T.LOAD translates to
+         uload. To get the sload, the client must emit:
+             T.SX(ty,ty',T.LOAD(ty',ea,mem))
+         We don't want to simplify this here, so that the instruction 
+	 selector  sees it.
+      *)
+
+      | T.SX(ty,ty',T.LOAD _) => exp
+
+      | T.SX(ty,ty',e) where ty = ty' => e 
+      | T.SX(ty,ty',T.LI n) => T.LI(I.SX(ty,ty',n))
+      | T.SX(ty,ty',T.LABEXP x) => T.LABEXP(T.SX(ty,ty',x))
+
+      | T.ZX(ty,ty',e) where ty = ty' => e
+      | T.ZX(ty,ty',T.LI n) => T.LI(I.ZX(ty,ty',n))
+      | T.ZX(ty,ty',T.LABEXP x) => T.LABEXP(T.ZX(ty,ty',x))
+
+      | T.COND(ty,T.TRUE,a,b) => a
+      | T.COND(ty,T.FALSE,a,b) => b
+
+      | exp => exp
+   end
+
+   and simStm ==> (T.IF(T.TRUE,yes,no)) = yes
+     | simStm ==> (T.IF(T.FALSE,yes,no)) = no
+     | simStm ==> (T.SEQ[x]) = x
+     | simStm ==> s = s
+   
+   and simF ==> (T.FNEG(ty,T.FNEG(ty',e))) where (ty = ty') = e 
+     | simF ==> (T.CVTF2F(ty,ty',e)) where (ty = ty') = e
+     | simF ==> (T.FCOND(ty,T.TRUE,yes,no)) = yes
+     | simF ==> (T.FCOND(ty,T.FALSE,yes,no)) = no
+     | simF ==> exp = exp
+
+   and cc false = T.FALSE | cc true = T.TRUE
+   and simCC ==> (T.CMP(ty,T.EQ,T.LI x,T.LI y)) = cc(I.EQ(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.NE,T.LI x,T.LI y)) = cc(I.NE(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.GT,T.LI x,T.LI y)) = cc(I.GT(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.GE,T.LI x,T.LI y)) = cc(I.GE(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.LT,T.LI x,T.LI y)) = cc(I.LT(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.LE,T.LI x,T.LI y)) = cc(I.LE(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.GTU,T.LI x,T.LI y)) = cc(I.GTU(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.LTU,T.LI x,T.LI y)) = cc(I.LTU(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.GEU,T.LI x,T.LI y)) = cc(I.GEU(ty,x,y))
+     | simCC ==> (T.CMP(ty,T.LEU,T.LI x,T.LI y)) = cc(I.LEU(ty,x,y))
+     | simCC ==> (T.AND(T.TRUE,x)) = x
+     | simCC ==> (T.AND(x,T.TRUE)) = x
+     | simCC ==> (T.AND(T.FALSE,x)) = T.FALSE
+     | simCC ==> (T.AND(x,T.FALSE)) = T.FALSE
+     | simCC ==> (T.OR(T.FALSE,x)) = x
+     | simCC ==> (T.OR(x,T.FALSE)) = x
+     | simCC ==> (T.OR(T.TRUE,x)) = T.TRUE
+     | simCC ==> (T.OR(x,T.TRUE)) = T.TRUE
+     | simCC ==> (T.XOR(T.TRUE,T.TRUE)) = T.FALSE
+     | simCC ==> (T.XOR(T.FALSE,x)) = x
+     | simCC ==> (T.XOR(x,T.FALSE)) = x
+     | simCC ==> (T.XOR(T.TRUE,x)) = T.NOT x
+     | simCC ==> (T.XOR(x,T.TRUE)) = T.NOT x
+     | simCC ==> (T.EQV(T.FALSE,T.FALSE)) = T.TRUE
+     | simCC ==> (T.EQV(T.TRUE,x)) = x
+     | simCC ==> (T.EQV(x,T.TRUE)) = x
+     | simCC ==> (T.EQV(T.FALSE,x)) = T.NOT x
+     | simCC ==> (T.EQV(x,T.FALSE)) = T.NOT x
+     | simCC ==> exp = exp
+
+   in R.rewrite {rexp=sim,fexp=simF,ccexp=simCC,stm=simStm} end
+end
+end (* local *)

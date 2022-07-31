@@ -1,0 +1,30 @@
+\section{Future Work}
+\subsection{Short Term}
+
+\begin{description}    
+\item[Detailed user manual:]
+    A detailed user manual describing the interfaces, algorithms, 
+    and examples on how to put together code generators.
+\item[Support for GC:]
+      There is a strong interaction
+     with support for GC and global code motion. MLRISC aims at
+     providing a generic framework for code generators, and finding
+     the right level of information to support GC and global code
+     motion is an issue. I think we have several solutions to address
+     this that need more evaluation.
+\item[Other architectures:] There is the need to port
+     to other architectures like the MIPS, and the IA-64. 
+\end{description}
+\hr
+\subsection{Long Term}
+\begin{description}
+ \item[Predicated VLIW compilation:] Currently, the framework
+for predicated VLIW architectures compilation
+is incomplete, and contain only one back end (C6)
+\item[Other compilers:] I would really like to see some
+major compiler effort bootstrapped with an MLRISC backend.
+\item[Verification] It is extremely difficult to
+debug errors in modules that perform aggressive code
+reorganizations. Ideas from formal methods such as typed assembly
+language (TAL) or Proof Carrying Code (PCC) are worth investigating.
+\end{description}

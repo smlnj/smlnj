@@ -1,0 +1,53 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Group
+  signature CML_BIN_IO
+  signature CML_IMPERATIVE_IO
+  signature CML_STREAM_IO
+  signature CML_TEXT_IO
+  signature CML_TEXT_STREAM_IO
+  signature OS_PRIM_IO
+  signature PRIM_IO
+  structure BinPrimIO
+  structure CleanIO
+  structure TextPrimIO
+  functor BinIOFn
+  functor ChanIOFn
+  functor PrimIO
+  functor TextIOFn
+is
+#if defined (NEW_CM)
+  $/basis.cm
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+
+  prim-io-sig.sml
+  cml-stream-io-sig.sml
+  cml-text-stream-io-sig.sml
+#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11033)
+  new-cml-imperative-io-sig.sml
+  new-bin-io-fn.sml
+  new-cml-text-io-sig.sml
+  new-text-io-fn.sml
+#else
+  cml-imperative-io-sig.sml
+  bin-io-fn.sml
+  cml-text-io-sig.sml
+  text-io-fn.sml
+#endif
+
+  cml-bin-io-sig.sml
+
+  clean-io.sml
+  prim-io-fn.sml
+  os-prim-io-sig.sml
+  bin-prim-io.sml
+  text-prim-io.sml
+  chan-io-fn.sml
+

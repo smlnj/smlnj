@@ -1,0 +1,20 @@
+Short-term
+----------
+
+Finish CML reference manual
+
+Alert mechanism for interrupting threads.
+
+Create a CML version of SML basis Posix library
+
+
+Long-term
+---------
+
+Interactive top-level loop for CML.
+
+Multi-threading run-time system.
+
+Multi-processor implementation.
+
+

@@ -1,0 +1,68 @@
+(* This file is created by makeallcm *)
+Library
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/Visual.cm
+	$/ir-archive.cm
+	$/MLRISC.cm
+	$/IR.cm
+	$/GC.cm
+	$/MLTREE.cm
+	$/RTL.cm
+	$/Region.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	IR.cm
+	GC.cm
+	MLTREE.cm
+	RTL.cm
+	Region.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	IR.cm
+	GC.cm
+	MLTREE.cm
+	RTL.cm
+	Region.cm
+#endif
+	../SSA/SSA-flowgraph.sig
+	../SSA/mlrisc-ssa.sig
+	../SSA/mlrisc-ssa.sml
+	../SSA/SSA-optimization.sig
+	../SSA/SSA-props.sig
+	../SSA/mlrisc-ssa-construction.sig
+	../SSA/mlrisc-ssa-construction.sml
+	../SSA/mlrisc-ssa-deconstruction.sig
+	../SSA/mlrisc-ssa-deconstruction.sml
+	../SSA/SSA-const-folding.sig
+	../SSA/SSA-const-folding.sml
+	../SSA/SSA-gvn-basis.sig
+	../SSA/SSA-gvn-basis.sml
+	../SSA/SSA-instrgen.sig
+	../SSA/SSA-instrgen.sml
+	../SSA/SSA-dead-code-elim.sml
+	../SSA/SSA-cond-const-folding.sml
+	../SSA/SSA-global-code-motion.sml
+	../SSA/SSA-global-value-numbering.sml
+	../SSA/SSA-operator-strength-reduction.sml
+	../SSA/SSA-gc-invariants.sml

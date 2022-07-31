@@ -1,0 +1,39 @@
+(* This file is created by makeallcm *)
+Library
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/MLRISC.cm
+	$/IA32.cm
+	$/Sched.cm
+	$/Region.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	IA32.cm
+	Sched.cm
+	Region.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	IA32.cm
+	Sched.cm
+	Region.cm
+#endif
+	../x86/scheduling/x86Arch.sig
+	../x86/scheduling/x86ReservationTable.sig
+	../x86/scheduling/x86PairingRT.sml
+	../x86/scheduling/x86PipelineRT.sml
+	../x86/scheduling/x86PentiumII.sml
+	../x86/scheduling/x86PentiumPro.sml
+	../x86/scheduling/x86SchedProps.sml

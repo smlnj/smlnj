@@ -1,0 +1,49 @@
+(* This file is created by makeallcm *)
+Library
+	signature ANNOTATIONS
+	signature BITSET
+	signature CACHE_REF
+	signature CATNETABLE_LIST
+	signature FREQ
+	signature LINE_BREAK
+	signature PRIORITY_QUEUE
+	signature PROBABILITY
+	signature STRING_OUTSTREAM
+	structure Annotations
+	structure BitSet
+	structure CacheRef
+	structure CatnetableList
+	structure DynArray
+	structure Freq
+	structure HashArray
+	structure LineBreak
+	structure PriorityHeap
+	structure PriorityQueue
+	structure Probability
+	structure SortedList
+	structure StringOutStream
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+
+	../library/annotations.sig
+	../library/annotations.sml
+	../library/bitset.sig
+	../library/bitset.sml
+	../library/cache.sml
+	../library/catlist.sml
+	../library/dynamic-array.sml
+	../library/hash-array.sml
+	../library/freq.sig
+	../library/freq.sml
+	../library/heap.sml
+	../library/line-break.sml
+	../library/priQueue.sig
+	../library/priQueue.sml
+	../library/probability.sml
+	../library/sortedlist.sml
+	../library/stringOutStream.sig
+	../library/stringOutStream.sml

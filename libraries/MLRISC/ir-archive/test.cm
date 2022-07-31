@@ -1,0 +1,28 @@
+Group is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030 
+  $/basis.cm
+#else
+  basis.cm
+#endif
+#endif
+
+  $/smlnj-lib.cm
+#if defined(UNSHARED_MLRISC)
+  ../cm/Control.cm
+  ../cm/Graphs.cm
+  ../cm/Visual.cm
+  ../cm/MLRISC.cm
+#else
+  $/Control.cm
+  $/Graphs.cm
+  $/Visual.cm
+  $/MLRISC.cm
+#endif
+
+  (* ../cm/ir-archive.cm *)
+  (* test1.sml
+  test2.sml
+  test3.sml *)
+
+  test4.sml

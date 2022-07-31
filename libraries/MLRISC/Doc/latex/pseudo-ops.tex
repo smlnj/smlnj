@@ -1,0 +1,39 @@
+\section{Client Defined Pseudo Ops}
+\subsection{Introduction}
+\newdef{Pseudo ops}
+are client defined instruction stream markers.  They
+can be used to represent assembly directives.
+Pseudo ops should satisfy the following signature:
+\begin{SML}
+signature \mlrischref{instructions/pseudoOps.sig}{PSEUDO_OPS} = sig
+  type pseudo_op
+  val toString : pseudo_op -> string
+  val emitValue : {pOp:pseudo_op, loc:int, emit:Word8.word -> unit} -> unit
+  val sizeOf : pseudo_op * int -> int
+  val adjustLabels : pseudo_op * int -> bool
+end
+\end{SML}
+
+The method that is required is:
+\begin{itemize}
+ \item \sml{toString} -- pretty printing the pseudo in assembly format.
+\end{itemize}
+
+When machine code generation is used, we also have to implement
+the following methods:
+\begin{itemize}
+ \item \sml{emitValue} --
+    emit value of pseudo op give current location counter and output
+    stream. The value emitted should respect the endianness of the
+    target machine.
+ \item \sml{sizeOf} --
+    Size of the pseudo op in bytes given the current location counter
+    The location counter is provided in case some pseudo ops are 
+    dependent on alignment considerations.
+ \item \sml{adjustLabels} --
+    adjust the value of labels in the pseudo op given the current
+    location counter.
+\end{itemize}
+These methods are involved during the 
+\href{span-dep.html}{span dependence resolution} phase to determine
+the size and layout of the pseudo ops.

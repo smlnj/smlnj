@@ -1,0 +1,12 @@
+use "test1.sml";
+use "test2.sml";
+use "test3.sml";
+use "test4.sml";
+use "test5.sml";
+TestMaxFlow.test();
+TestMatching.test();
+TestMinCut.test();
+TestDijkstra.test();
+TestBellmanFord.test();
+TestWarshall.test();
+TestJohnson.test();

@@ -1,0 +1,27 @@
+What's in Here
+--------------
+
+   This directory contains a simple tool for generating generic map, fold,
+   or app functions on datatypes.
+
+How to build the tool
+---------------------
+
+   To build to tool, start SML version 110.30 or later.  Then type:
+    
+    use "build.sml"
+ 
+   This will create an image named rwgen.<architecture> in this directory.
+     
+How to run the tool
+-------------------
+
+   To run the tool, type
+
+     sml @SMLload=rwgen filename >outfilename
+
+More Info?
+----------
+
+   For more info, see the note rewrite-gen.tex in the directory ../Doc
+and the sample file wff.gsml, wff.sig, and wff.sml (translator output).

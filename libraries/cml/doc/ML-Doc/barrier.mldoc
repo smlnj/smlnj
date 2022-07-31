@@ -1,0 +1,142 @@
+<!-- ../doc/mldoc/barrier.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2011>
+<VERSION VERID="1.0" YEAR=2011 MONTH=2 DAY=18>
+
+<TITLE>The Barrier structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/Barrier/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/CML/
+</SEEALSO>
+
+<PP>
+The <STRREF TOPID NOLINK/Barrier/ structure provides support for barrier synchronization
+with global state.
+Note that unlike most other synchronization mechnisms in CML, barriers do not have
+event-value operations.
+</PP>
+<STRUCTURE STRID="Barrier">
+  <SIGBODY SIGID="BARRIER" FILE=BARRIER-SIG>
+    <SPEC>
+      <TYPE><TYPARAM>'a</TYPARAM><ID>barrier</ID></TYPE>
+      <COMMENT>
+	<PP>
+	  This is the type constructor for a barrier.
+	</PP>
+      </COMMENT>
+    </SPEC>
+    <SPEC>
+      <TYPE><TYPARAM>'a</TYPARAM><ID>enrollment</ID></TYPE>
+      <COMMENT>
+	<PP>
+	  This type constructor represents an <EM>enrollment</EM> on a barrier.
+	  Enrollments are used to synchronize on barriers.
+	</PP>
+      </COMMENT>
+    </SPEC>
+    <SPEC>
+      <VAL>barrier<TY>('a -> 'a) -> 'a -> 'a barrier</TY></VAL>
+      <COMMENT>
+	<PROTOTY>
+	barrier update init
+	</PROTOTY>
+	creates a new barrier with the update function <ARG>update</ARG>
+	and the initial state <ARG>init</ARG>.
+	The state is updated each time the barrier is synchronized on by the enrolled
+	threads.
+      </COMMENT>
+    </SPEC>
+
+    <SPEC>
+      <VAL>enroll<TY>'a barrier -> 'a enrollment</TY></VAL>
+      <COMMENT>
+	<PROTOTY>
+	enroll bar
+	</PROTOTY>
+	enrolls on the barrier, returning a new <TYREF>enrollment</TYREF>.
+	The (unenforced) convention is that each enrolled thread belongs to a thread
+	and that a thread owns at most one enrollment on a given barrier.
+      </COMMENT>
+    </SPEC>
+
+    <SPEC>
+      <VAL>wait<TY>'a enrollment -> 'a</TY></VAL>
+	<RAISES><EXNREF>Fail</EXNREF>
+      <COMMENT>
+	<PROTOTY>
+	wait ebar
+	</PROTOTY>
+	waits on the barrier until all of the enrolled threads are waiting, at which point
+	the state is updated and the resulting state value is returned to the waiting
+	threads.
+	If another thread is already waiting on this enrollment or if the enrollment
+	has been resigned, then the exception <EXNREF>Fail</EXNREF> is raised.
+	<PP>
+	Note that if the update function for the barrier raises an exception, then this
+	exception is raised for each waiting thread by <VALREF>wait</VALREF>.
+	</PP>
+      </COMMENT>
+    </SPEC>
+
+    <SPEC>
+      <VAL>resign<TY>'a enrollment -> unit</TY></VAL>
+	<RAISES><EXNREF>Fail</EXNREF>
+      <COMMENT>
+	<PROTOTY>
+	resign ebar
+	</PROTOTY>
+	resigns from the enrollment <ARG>ebar</ARG>.
+	Resigning from an already resigned enrollment is ignored, but
+	if another thread is waiting on this enrollment, then the
+	exception <EXNREF>Fail</EXNREF> is raised.
+      </COMMENT>
+    </SPEC>
+
+    <SPEC>
+      <VAL>value<TY>'a enrollment -> 'a</TY></VAL>
+	<RAISES><EXNREF>Fail</EXNREF>
+      <COMMENT>
+	<PROTOTY>
+	value ebar
+	</PROTOTY>
+	gets the current value of the barrier's state.
+	<PP>
+	Note that if the convention of one-thread per enrollment is followed, then this
+	operation is free of races, since the state is stable between barrier
+	synchronizations.
+	</PP>
+      </COMMENT>
+    </SPEC>
+  </SIGBODY>
+</STRUCTURE>
+<PP>
+Barriers can be used to implement clock and phased synchronization.
+For example, consider the following code:
+<CODE>
+let
+val clock = <VALREF>Barrier.barrier</VALREF> (fn x => x+1) 0
+fun spawnChild () = let
+      val bar = <VALREF>Barrier.enroll</VALREF> clock
+      fun loop () = if (<VALREF>Barrier.wait</VALREF> bar = 5) then () else loop()
+      in
+	<VALREF>CML.spawn</VALREF> loop
+      end
+in
+  <VALREF>Barrier.enroll</VALREF> clock;
+  spawnChild ();
+  spawnChild ();
+  <VALREF>Barrier.resign</VALREF> clock
+end
+</CODE>
+In this example, two threads are spawned, which then synchronize on the barrier
+five times.
+To avoid a race condition between enrollment and the first synchronization, the parent
+thread enrolls on the barrier prior to spawning its children and then resigns after
+the children have been enrolled by the <CD>spawnChild</CD> function.
+</PP>
+
+</INTERFACE>

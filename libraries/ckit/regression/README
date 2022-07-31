@@ -1,0 +1,34 @@
+Regression README
+
+Map of regression directory
+---------------------------
+Test directories
+  valid-programs/
+  invalid-programs/
+  output/
+  valid-programs.obs/
+
+SML code for running tests
+  sources.cm
+  test-fn.sml   defines TestFn
+  tests/ instantiations of TestFn
+    simplify/   for simplify
+      [not active]
+    typecheck/  for typecheck
+      sources.cm
+      typecheck-test.sml  defines structure TypecheckTest
+
+
+Typical usage
+-------------
+
+% cd regression/tests/typecheck
+% mkdir results  # if necessary
+% sml
+- CM.make();  (* defines TypecheckTest *)
+- TypecheckTest.testAll();
+
+Note: this will fail if you don't have a results directory
+in the typecheck directory.
+
+Note: the regression/tests/simplify is not working at the moment.

@@ -1,0 +1,94 @@
+ \section{Register Allocation}
+  All the optimization modules are written in a generic fashion but
+  parameterized over architecture and client information. The Standard
+  ML module system is a central mechanism to the design and
+  organization of MLRISC. Parameterized modules in Standard ML are
+provided by \newdef{functors}, that takes the
+specification of input modules and produces a module that matches some
+output specification. In particular, SML/NJ modules are 
+\emph{higher order}, which means that a functor can yield functors as a
+result. I will use register allocation as an example.
+
+\image{Back end optimizations}{pictures/png/hof-1.png}{align=left}
+
+  The register allocator is written has a higher order functor which
+  when applied to suitable arguments produces an integer or floating
+  point register allocator. The figure is simplifed because the output
+  functor is not restricted to integer and floating point allocators
+  but could also be other types of allocators, for example, condition
+  code.  The integer and floating point register allocators are
+  functors that only take \emph{client specific} parameters as
+  input, whereas the higher-order takes architectural parameters as
+  input. The client specific parameters include:
+\begin{SML}
+  nFreeRegs : int
+  dedicated : int list
+  spill : ..
+  reload : ..
+\end{SML}
+
+where:
+ \begin{description} 
+    \item[\sml{nFreeRegs}] is the number of free registers or
+    essentially the number of colors available for coloring the
+    interference graph.
+
+    \item[\sml{dedicated}] is the list of dedicated registers. It
+    is useful to exclude these from the graph-color process to reduce
+    the size of the data structures created.
+
+    \item[\sml{spill/reload}] are functions that describe how to
+    spill and reload registers that need to be spilled or reloaded in
+    an instruction. These two functions are perhaps the most
+    complicated pieces of information that need to be supplied by a
+    client of MLRISC.
+\end{description} 
+
+  The architecture specific parameters supplied to the higher-order
+  functor include:
+\begin{SML}
+  firstPseudoReg : int
+  maxPseudoR : unit -> int
+  defUse : instruction -> (int list * int list)
+\end{SML}
+
+  where: 
+\begin{description}  
+    \item[\sml{firstPseudoR}] is an integer representing the first
+    pseudo register. Any register below this value is a physical
+    register.
+ 
+    \item[\sml{maxPseudoR}] is a function that returns an
+    integer indicating the number of the highest pseudo-register that
+    has been used in the program. This number is useful in estimating
+    the intial size of various tables.
+
+    \item[\sml{defUse}] is a function that returns the
+    registers defined and used by an instruction.
+\end{description}
+
+  These parameters are largely self explanatory, however, there are
+  addition architectural parameters that relate to the internal
+  representation of instructions that would be ugly to explain. For
+  example there is the need for a module that does liveness analysis
+  over the register class that is being allocated. This type of
+  complexity can be shielded from a user.  For the DEC Alpha the
+  situation is as shown in the figure:
+
+  \image{Back end optimizations}{pictures/png/hof-2.png}{align=center}
+
+  The client only sees the functors on the right, to which only client
+  specific information need be provided. There is the illusion of a
+  dedicated DEC Alpha integer and floating point register
+  allocator. There are several advantages to this:
+  \begin{itemize}
+    \item The architectural parameters that are implementation specific
+do not need to be explained to a user, and are supplied by someone
+that intimately understands the port to the target architecture. 
+
+     \item The number of parameters that a client supplies is
+reduced.
+
+     \item The parameters that the client supplies is restricted to
+things that concern the front end. 
+  \end{itemize}

@@ -1,0 +1,25 @@
+(* sources.cm
+ *
+ * The sources file for the glue that holds CML together.
+ *)
+
+Group
+  signature OS_GLUE
+  functor RunCMLFn
+is
+#if defined(NEW_CM)
+  ../cml-sub-basis.cm
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+  ../IO/sources.cm
+
+  init-cleanup.sml
+  export-fn-fn.sml
+  os-glue-sig.sml
+#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11033)
+  new-run-cml-fn.sml
+#else
+  run-cml-fn.sml
+#endif

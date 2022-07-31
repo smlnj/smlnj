@@ -1,0 +1,58 @@
+(* This file is created by makeallcm *)
+Library
+	signature HPPACELLS
+	signature HPPAINSTR
+	signature HPPASHUFFLE
+	signature HPPA_MILLICODE
+	signature LABEL_COMP
+	structure HppaCells
+	functor Hppa
+	functor HppaAsmEmitter
+	functor HppaDelaySlots
+	functor HppaFreqProps
+	functor HppaGasPseudoOps
+	functor HppaInstr
+	functor HppaJumps
+	functor HppaMCEmitter
+	functor HppaProps
+	functor HppaRewrite
+	functor HppaShuffle
+	functor HppaSpillInstr
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/MLRISC.cm
+	$/Control.cm
+	$/Lib.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+#endif
+#else
+	smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+#endif
+	../hppa/instructions/hppaCells.sml
+	../hppa/instructions/hppaInstr.sml
+	../hppa/instructions/hppaShuffle.sig
+	../hppa/instructions/hppaShuffle.sml
+	../hppa/instructions/hppaProps.sml
+	../hppa/instructions/hppaFreqProps.sml
+	../hppa/emit/hppaAsm.sml
+	../hppa/emit/hppaMC.sml
+	../hppa/backpatch/hppaDelaySlotProps.sml
+	../hppa/backpatch/hppaJumps.sml
+	../hppa/flowgraph/hppaGasPseudoOps.sml
+	../hppa/mltree/hppaMillicode.sig
+	../hppa/mltree/hppaLabelComp.sig
+	../hppa/mltree/hppa.sml
+	../hppa/ra/hppaRewrite.sml
+	../hppa/ra/hppaSpillInstr.sml
+

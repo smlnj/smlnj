@@ -1,0 +1,22 @@
+C calls for MLRISC
+Mike Rainey (mrainey@cs.uchicago.edu)
+
+This library implements C calls for several architectures and operating systems. For calling
+conventions, we depend on the Staged Allocation library. 
+
+We support both fixed- and variable-arity C calling sequences. For the fixed-arity case, we
+generate MLRISC instructions for the calling sequence. For the variable-arity case, we must 
+use more elaborate techniques. The basic idea is to use an interpreter at runtime to carry 
+out the calling sequence. Our ML Workshop paper contains the specifics.
+
+ * Calling variadic functions from a strongly typed language - http://cs.uchicago.edu/~mrainey/ml-varargs.pdf
+
+Layout:
+
+ * archs - support for different architectures and operating systems
+ * gen - architecture-independent code
+ * test - testing infrastructure
+ * varargs - variable arity C calls
+   * gen - generates located-arguments and calls the runtime interpreter
+   * interp - runtime interpreter
+ 

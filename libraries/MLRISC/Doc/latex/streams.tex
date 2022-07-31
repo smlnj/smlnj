@@ -1,0 +1,72 @@
+\section{Instruction Streams}
+
+\subsubsection{Overview}
+An \newdef{instruction stream}
+is an abstraction used by MLRISC to describe linearized instructions.
+This abstraction turns out to fit the function of
+many MLRISC modules.  For example,
+a phase such as \href{instrsel.html}{Instruction Selection} 
+can be viewed as taking an stream of 
+\href{mltree.html}{MLTREE} statements and return a
+stream of \href{instructions.html}{instructions}.  Similarly,
+phases such as \href{asm.html}{assembly output} and
+\href{mc.html}{machine code generation} can be seen 
+as taking a stream of instructions and 
+returning a stream of characters and a stream of bytes.
+
+\subsubsection{The Details}
+An instruction stream satisfy the following abstract signature:
+\begin{SML}
+signature \mlrischref{instructions/stream.sig}{INSTRUCTION_STREAM} =
+sig
+   structure P : \href{pseudo-ops.html}{PSEUDO_OPS}
+
+   datatype ('a,'b,'c,'d,'e,'f) stream =
+      STREAM of
+      \{ beginCluster: int -> 'b,  
+        endCluster  : 'c -> unit, 
+        emit        : 'a,        
+        pseudoOp    : P.pseudo_op -> unit,
+        defineLabel : Label.label -> unit,
+        entryLabel  : Label.label -> unit,
+        comment     : string -> unit,    
+        annotation  : Annotations.annotation -> unit,
+        exitBlock   : 'd -> unit,
+        alias       : 'e -> unit, 
+        phi         : 'f -> unit  
+      \}
+end
+\end{SML}
+This type is specialized in other modules as such the
+\href{asm.html}{assembler}, the \href{mc.html}{machine code emitter},
+and the \href{instrsel.html}{instruction selection modules}.
+\subsubsection{The protocol}
+All instruction streams, irrespective of their actual types, 
+follow the following protocol:
+\begin{itemize}
+  \item The method \sml{beginCluster} should be called at the beginning of
+        the stream to mark the start of a new compilation unit.  
+         The integer passed to this method is the number
+        of bytes in the stream.  This integer is only used for 
+        machine code emitter, which uses it to allocate space for the
+        code string.  
+  \item The method \sml{endCluster} should be called when the entire
+       compilation unit has been sent.
+  \item In between these calls, the following methods can be called in any
+       order:
+  \begin{itemize}
+   \item \sml{emit} -- this method emits an instruction.  It takes
+         a \href{regmap.html}{regmap} as argument.
+   \item \sml{pseudoOp} -- this method emits a pseudo op.
+   \item \sml{defineLabel} -- this method defines a \emph{local} label, i.e.
+a label that is only referenced within the same compilation unit.
+   \item \sml{entryLabel} -- this method defines an \emph{enternal} label that
+          marks an procedure entry, and may be referenced from other 
+compilation units.
+   \item \sml{comment} -- this emits a comment string
+   \item \sml{annotation} -- this function attaches an annotation to 
+     the current basic block.
+   \item \sml{exitBlock} -- 
+          this marks the current block as an procedure exit.
+  \end{itemize}
+\end{itemize}  

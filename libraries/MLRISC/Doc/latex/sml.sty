@@ -1,0 +1,390 @@
+%
+% This is derived from alltt.sty
+%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{sml}[1998/12/17 defines sml environment]
+
+%
+%  Font for typesetting sml code, default is \tt
+%
+\newcommand{\smlFont}{\verbatim@font}
+\newcommand{\smlCommentSize}{\small}
+\newcommand{\smlCommentFont}{\it}
+\newcommand{\smlNumberFont}{\smlFont}
+\newcommand{\smlNumberStyle}[1]{\arabic{#1}}
+\newcommand{\sml@font}{\smlFont}
+
+
+%
+% Turn on and off dollar sign
+%
+\newif\ifsml@dollar
+\newcommand{\smlDollarOn}{\sml@dollartrue}
+\newcommand{\smlDollarOff}{\sml@dollarfalse}
+\smlDollarOff
+
+%
+%  Font for typesetting sml type variables, default is \it
+%
+\newcommand{\smlTypeVarFont}{\it}
+
+%
+%  Commands for typesetting type variables and keywords.
+%  Can be overridden by user.
+%
+\newcommand{\makeSmlTypeVar}[1]{'{\smlTypeVarFont#1}}
+\newcommand{\makeSmlKeyword}[1]{{\bf#1}}
+\newcommand{\BeginSmlComment}{\begingroup\smlCommentSize\smlCommentFont}
+\newcommand{\EndSmlComment}{\endgroup}
+
+%
+%  Command to declare a new type variable translation
+%  and keywords
+%
+\newcommand{\smlTypeVar}[2]{
+  \expandafter\newcommand\csname smltv@#1\endcsname{#2}
+}
+\newcommand{\smlRemoveTypeVar}[1]{
+  \expandafter\newcommand\csname smltv@#1\endcsname\relax
+}
+\newcommand{\smlNewKeyword}[1]{
+   \expandafter\def\csname smlkw@#1\endcsname{\makeSmlKeyword{#1}}
+}
+\newcommand{\smlDefineNewKeyword}[2]{
+   \expandafter\def\csname smlkw@#1\endcsname{#2}
+}
+\newcommand{\smlRemoveKeyword}[1]{
+  \expandafter\newcommand\csname smlkw@#1\endcsname\relax
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\sml@expandtv}[1]{%
+\if\csname smltv@#1\endcsname\relax\makeSmlTypeVar{#1}\else%
+\csname smltv@#1\endcsname\fi}
+
+\newcommand{\sml@expandkw}[1]{%
+\if\csname smlkw@#1\endcsname\relax{#1}\else\csname smlkw@#1\endcsname\fi}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This is a lexer that translates type variables and keywords
+% #1 is the eof character
+% #2 is the current state (actually a macro)
+%    which can be:
+%       0 -- program text
+%       1 -- type variable
+%       2 -- program text found (  
+%       3 -- in comment 
+%       4 -- in comment type variable
+%       5 -- in comment found *
+% #3 is the current string 
+% #4 is the next token 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\sml@startlexer}[1]{\sml@lexer{#1}{0}{}}
+\newcommand{\sml@lexer}[4]{%
+   \ifx#4a\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4b\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4c\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4d\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4e\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4f\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4g\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4h\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4i\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4j\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4k\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4l\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4m\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4n\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4o\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4p\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4q\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4r\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4s\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4t\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4u\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4v\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4w\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4x\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4y\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4z\let\sml@nexttok=\sml@getletter%
+   \else\ifx#4_\let\sml@nexttok=\sml@getletter%
+   \else%
+     \let\sml@nexttok=\sml@transition% is not a letter
+   \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi%
+   \sml@nexttok{#1}{#2}{#3}{#4}%
+}
+
+\newcommand{\sml@getletter}[4]{\sml@lexer{#1}{#2}{#3#4}}  % get more character
+
+%
+% Do something according to the lookahead character
+%
+\newcommand{\sml@transition}[4]{% 
+   %\message{|#3|}%
+   \if\noexpand#4'%
+       \let\sml@nextaction=\sml@tokenizetv%
+   \else\if\noexpand#4#1%
+       \let\sml@nextaction=\sml@endlexer%
+   \else\ifx#4(%
+       \let\sml@nextaction=\sml@lparen%
+   \else\ifx#4)%
+       \let\sml@nextaction=\sml@rparen%
+   \else\ifx#4*%
+       \let\sml@nextaction=\sml@star%
+   \else%
+       \let\sml@nextaction=\sml@tokenizekw%
+   \fi\fi\fi\fi\fi%
+   \sml@nextaction{#1}{#2}{#3}{#4}%
+}
+
+%       0 -- program text
+%       1 -- type variable
+%       2 -- program text found (  
+%       3 -- in comment 
+%       4 -- in comment type variable
+%       5 -- in comment found *
+\newcommand{\sml@expand}[2]{%
+   \ifcase#1\let\sml@process=\sml@expandkw\or%
+            \let\sml@process=\sml@expandtv\or%
+            \let\sml@process=\sml@expandkw\or%
+            \let\sml@process=\sml@expandkw\or%
+            \let\sml@process=\sml@expandtv\or%
+            \let\sml@process=\sml@expandkw%
+   \else\ERROR%
+   \fi%
+   \sml@process{#2}%
+}
+\newcommand{\sml@tokenizekw}[4]{\sml@expand{#2}{#3}#4\sml@lexer{#1}{\sml@deltakw{#2}}{}}
+\newcommand{\sml@tokenizetv}[4]{\sml@expand{#2}{#3}\sml@lexer{#1}{\sml@deltatv{#2}}{}}
+\newcommand{\sml@endlexer}[4]{\sml@expand{#2}{#3}}
+\newcommand{\sml@lparen}[4]{\sml@expand{#2}{#3}%
+(\sml@lexer{#1}{\sml@deltal{#2}}{}}
+\newcommand{\sml@rparen}[4]{\sml@expand{#2}{#3}%
+\sml@closecomment{#2})\sml@lexer{#1}{\sml@deltar{#2}}{}}
+\newcommand{\sml@star}[4]{\sml@expand{#2}{#3}*%
+\sml@opencomment{#2}\sml@lexer{#1}{\sml@deltas{#2}}{}}
+
+%       0 -- program text
+%       1 -- type variable
+%       2 -- program text found (  
+%       3 -- in comment 
+%       4 -- in comment type variable
+%       5 -- in comment found *
+\newcommand{\sml@opencomment}[1]{\if2#1\BeginSmlComment\else\fi}
+\newcommand{\sml@closecomment}[1]{\if5#1\EndSmlComment\else\fi}
+\newcommand{\sml@deltakw}[1]{\ifcase#1 0\or0\or0\or3\or3\or3\else\ERROR\fi}
+\newcommand{\sml@deltatv}[1]{\ifcase#1 1\or1\or1\or4\or4\or4\else\ERROR\fi}
+\newcommand{\sml@deltal}[1]{\ifcase#1 2\or2\or2\or3\or3\or3\else\ERROR\fi}
+\newcommand{\sml@deltas}[1]{\ifcase#1 0\or0\or3\or5\or5\or5\else\ERROR\fi}
+\newcommand{\sml@deltar}[1]{\ifcase#1 0\or0\or0\or3\or3\or0\else\ERROR\fi}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% How to process type variables as active character:
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\sml@processtypevar}{\sml@lexty{}}
+\newcommand{\sml@lexty}[2]{\ifcat\noexpand#2a\let\sml@nextty=\sml@morety\else\let\sml@nextty=\sml@donety\fi\sml@nextty{#1}#2}
+\newcommand{\sml@morety}[2]{\sml@lexty{#1#2}}
+\newcommand{\sml@donety}[1]{\sml@expandtv{#1}}
+\newcommand{\sml@aftertypevar}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Macros for setting up verbatim mode 
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Set up catcodes for verbatim mode
+%
+\begingroup
+\lccode`\~=`\'
+\lowercase{\endgroup
+\newcommand{\sml@settick}{\catcode`\'=\active\let~=\sml@processtypevar}
+\newcommand{\sml@verbatimmode}{%
+\let\sml@origprime=~%
+\sml@font%
+\@noligs%
+\catcode`\^=12%
+\catcode`\_=12%  
+\ifsml@dollar\else\catcode`\$=12\fi% 
+\catcode`\#=12%
+\catcode`\&=12%
+\catcode`\~=12%
+\catcode`\%=12%
+\everymath\expandafter{\the\everymath\sml@mathmode}%
+\everydisplay\expandafter{\the\everydisplay\sml@mathmode}%
+\everypar\expandafter{\the\everypar\unpenalty}%
+\sml@settick%
+\frenchspacing\@vobeyspaces% Preserve all spaces  
+}
+
+%
+% Set up catcodes for math mode
+%
+\newcommand{\sml@mathmode}{
+   \catcode`\^=7       % Superscript 
+   \catcode`\_=8       % Subscript
+   \catcode`\'=12      % prime
+   \let~=\sml@origprime%
+}
+}
+
+%
+% Set up display format 
+%
+\newcommand{\sml@begindisplay}{%
+    \begingroup
+    %\trivlist \item
+    \if@minipage% Insert paragraph break
+    \else
+       \vskip\parskip
+    \fi
+    \leftskip\@totalleftmargin
+    \rightskip\z@skip
+    \parindent\z@
+    \parfillskip\@flushglue
+    \parskip\z@skip
+    \@@par
+    \@tempswafalse 
+    \def\par{%
+      \if@tempswa
+        \leavevmode\null\@@par\penalty\interlinepenalty
+    \else
+      \@tempswatrue
+      \ifhmode\@@par\penalty\interlinepenalty\fi
+    \fi}
+    \obeylines       % Lines breaks are meaningful
+}
+
+%
+% End display format 
+%
+%\newcommand{\sml@enddisplay}{\endtrivlist\endgroup}
+\newcommand{\sml@enddisplay}{\endgroup}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  The main macros
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newenvironment{smldisplay}{\sml@begindisplay\trivlist\item\sml@verbatimmode}{\endtrivlist\sml@enddisplay}
+
+\newcommand{\sml}{\begingroup\sml@verbatimmode\sml@verb}
+\newcommand{\sml@verb}[1]{#1\endgroup}
+
+\newsavebox{\sml@box}
+   \newenvironment{sml@boxit}{\begin{lrbox}{\sml@box}
+   \begin{minipage}[b]{\columnwidth}}
+    {\end{minipage}\end{lrbox}\begin{center}\framebox[\columnwidth]{\usebox{\sml@box}}\end{center}}
+
+\newenvironment{smlboxeddisplay}{\begin{sml@boxit}\begin{smldisplay}}{\end{smldisplay}\end{sml@boxit}}
+
+\newcounter{sml@linecount}
+\newcounter{sml@increment}
+\newcommand{\sml@setuplineno}[2]{%
+\setcounter{sml@linecount}{#1}%
+\setcounter{sml@increment}{1}%
+\newcommand{\sml@showlinecount}%
+{\llap{\smlNumberFont\smlNumberStyle{sml@linecount}\ }}%
+\newcommand{\sml@inclineno}{\addtocounter{sml@increment}{-1}%
+\ifnum\value{sml@increment}=0\sml@showlinecount\setcounter{sml@increment}{#2}\else \fi%
+\addtocounter{sml@linecount}{1}}%
+\everypar{\sml@inclineno}%
+}
+
+\newenvironment{smllisting}[2]%
+   {\sml@begindisplay\sml@verbatimmode\sml@setuplineno{#1}{#2}}%
+   {\sml@enddisplay}
+\newenvironment{smlboxedlisting}[2]%
+   {\begin{sml@boxit}\begin{smllisting}{#1}{#2}}{\end{smllisting}\end{sml@boxit}}
+\newenvironment{smldisplay*}[1]{%
+   \sml@begindisplay
+   \let\sml@settick=\relax
+   \sml@verbatimmode
+   \sml@startlexer{#1}
+  }{\sml@enddisplay}
+\newenvironment{smlboxeddisplay*}[1]%
+  {\begin{sml@boxit}\begin{smldisplay*}{#1}}{\end{smldisplay*}\end{sml@boxit}}
+
+
+\begingroup
+\catcode`\^^A=12%
+\catcode`\<=1%
+\catcode`\>=2%
+\catcode`\?=0%
+\catcode`\{=12%
+\catcode`\}=12%
+%\catcode`\\=12%
+\lowercase<\endgroup%
+\def\sml@glob#1\end<\sml@startlexer<^^A>#1^^A\sml@enddisplay\end>%
+\def\smldisp<%
+   \sml@begindisplay%
+   \let\sml@settick=\relax%
+   \sml@verbatimmode%
+   \catcode`\^^A=12%
+   \sml@glob%
+>
+\def\endsmldisp<>
+>
+
+\begingroup
+\catcode`\^^A=12
+\lowercase{\endgroup
+\newcommand{\Sml}{%
+   \begingroup%
+   \let\sml@settick=\relax%
+   \sml@verbatimmode%
+   \catcode`\^^A=12%
+   \long\def\sml@grab##1{\sml@startlexer{^^A}##1^^A\endgroup}%
+   \sml@grab%
+}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Set up the default keywords
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\smlSetupAllKeywords}
+{  \smlNewKeyword{functor}
+   \smlNewKeyword{structure}
+   \smlNewKeyword{signature}
+   \smlNewKeyword{struct}
+   \smlNewKeyword{sharing}
+   \smlNewKeyword{sig}
+   \smlNewKeyword{include}
+   \smlNewKeyword{fun}
+   \smlNewKeyword{val}
+   \smlNewKeyword{rec}
+   \smlNewKeyword{type}
+   \smlNewKeyword{datatype}
+   \smlNewKeyword{case}
+   \smlNewKeyword{of}
+   \smlNewKeyword{and}
+   \smlNewKeyword{where}
+   \smlNewKeyword{withtype}
+   \smlNewKeyword{end}
+   \smlNewKeyword{let}
+   \smlNewKeyword{in}
+   \smlNewKeyword{end}
+   \smlNewKeyword{handle}
+   \smlNewKeyword{raise}
+   \smlNewKeyword{exception}
+   \smlNewKeyword{local}
+   \smlNewKeyword{open}
+   \smlNewKeyword{if}
+   \smlNewKeyword{then}
+   \smlNewKeyword{else}
+   \smlNewKeyword{infix}
+   \smlNewKeyword{infixr}
+   \smlNewKeyword{nonfix}
+}
+
+\smlSetupAllKeywords
+
+\endinput

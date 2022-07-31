@@ -1,0 +1,87 @@
+(* This file is created by makeallcm *)
+Library
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/Visual.cm
+	$/ir-archive.cm
+	$/MLRISC.cm
+	$/IR.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	IR.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	IR.cm
+#endif
+	../instructions/funits.sig
+	../instructions/datapaths.sig
+	../instructions/pred-instructions.sig
+	../instructions/vliw-instructions.sig
+	../instructions/pred-vliw-instructions.sig
+	../instructions/predicationProps.sig
+	../instructions/vliwProps.sig
+	../hyperblock/decision-trees.sig
+	../hyperblock/decision-trees.sml
+	../hyperblock/hyperblock.sig
+	../hyperblock/hyperblock.sml
+	../hyperblock/hyperblock-ddg.sig
+	../hyperblock/hyperblock-ddg.sml
+	../hyperblock/if-conversion.sig
+	../hyperblock/if-conversion.sml
+	../hyperblock/predicated-ddg.sig
+	../hyperblock/predicated-ddg.sml
+	../hyperblock-scheduling/critical-path.sml
+	../hyperblock-scheduling/hyperblock-scheduling.sig
+	../hyperblock-scheduling/hyperblock-scheduling.sml
+	../hyperblock-scheduling/rank-algorithm.sig
+	../hyperblock-scheduling/vliwSchedulingProps.sig
+	../hyperblock-scheduling/vliwSchedulingAutomaton.sig
+	../modulo-scheduling/iterated-modulo-scheduling.sml
+	../modulo-scheduling/modulo-scheduling-algo.sig
+	../modulo-scheduling/modulo-scheduling.sig
+	../modulo-scheduling/modulo-scheduling.sml
+	../modulo-scheduling/mrt.sig
+	../modulo-scheduling/mrt.sml
+	../modulo-scheduling/pre-modulo-scheduling.sig
+	../modulo-scheduling/pre-modulo-scheduling.sml
+	../C6/instructions/C6Cells.sig
+	../C6/instructions/C6Cells.sml
+	../C6/instructions/C6Datapaths.sig
+	../C6/instructions/C6Datapaths.sml
+	../C6/instructions/C6Funits.sig
+	../C6/instructions/C6Funits.sml
+	../C6/instructions/C6Instr.sig
+	../C6/instructions/C6Instr.sml
+	../C6/instructions/C6InstrClass.sig
+	../C6/instructions/C6InstrClass.sml
+	../C6/instructions/C6Intrinsics.sig
+	../C6/instructions/C6Intrinsics.sml
+	../C6/instructions/C6PredicationProps.sml
+	../C6/instructions/C6Props.sml
+	../C6/instructions/C6PseudoOps.sig
+	../C6/instructions/C6PseudoOps.sml
+	../C6/instructions/C6Shuffle.sig
+	../C6/instructions/C6Shuffle.sml
+	../C6/instructions/C6VLIWProps.sml
+	../C6/emit/C6Asm.sml
+	../C6/scheduling/C6SchedulingProps.sml

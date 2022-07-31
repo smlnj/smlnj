@@ -1,0 +1,24 @@
+(* This file is created by makeallcm *)
+Library
+	signature PEEPHOLE
+	functor CFGPeephole
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/MLRISC.cm
+	$/Graphs.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	MLRISC.cm
+	Graphs.cm
+#endif
+#else
+	smlnj-lib.cm
+	MLRISC.cm
+	Graphs.cm
+#endif
+	../instructions/peephole.sig
+	../flowgraph/cfgPeephole.sml

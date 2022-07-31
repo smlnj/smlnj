@@ -1,0 +1,56 @@
+\section{The Sparc Back End}
+
+The Sparc back end can function in two different modes:
+\begin{description}
+  \item[Sparc V8]  This is V8 instruction set is used.  In this mode the processor
+behaves like a 32-bit processor.   In this mode we assume we
+have 16 floating point registers numbered \verb|%f0, %f2, %f4, ..., %f30|.
+These are all in IEEE double precision.
+  \item[Sparc V9]  This generates code assuming the V9 instruction set is used.
+In this mode the processor functions at 64-bit.  In this mode the 
+floating point processors can number from \verb|%f0, %f2, %f4, ..., %f62|.
+These are all in IEEE double precision.
+
+  New V9 instructions include the 64-bit extended version of multiplications,
+divisions, shifts, and load and store.
+\begin{verbatim}
+    MULX SMULX DIVX SLLX SRLX SRAX LDX STX
+\end{verbatim}
+
+  Also, V9 includes conditional moves and more general form of branches.
+\begin{description}
+  \item[MOVcc]  conditional moves on condition code 
+  \item[FMOVcc] conditional moves on condition code 
+  \item[MOVR]   conditional moves on integer condition 
+  \item[BR]     branch on integer register with prediction 
+  \item[BP]     branch on integer condition with prediction 
+\end{description}
+\end{description}
+
+\subsection{General Setup for V8}
+
+ The SPARC architecture has 32 general purpose registers 
+ (\verb|%g0| is always 0)
+ and 32 single precision floating point registers.
+
+ Some Ugliness: double precision floating point registers are
+ register pairs.  There are no double precision moves, negation and absolute
+ values.  These require two single precision operations.  I've created
+ composite instructions \verb|FMOVd|, 
+  \verb|FNEGd| and 
+  \verb|FABSd| to stand for these.
+ 
+ All integer arithmetic instructions can optionally set the condition
+ code register.  We use this to simplify certain comparisons with zero
+ in the instruction selection process.
+
+ Integer multiplication, division and conversion from integer to floating
+ go thru the pseudo instruction interface, since older sparcs do not
+ implement these instructions in hardware.
+
+ In addition, the trap instruction for detecting overflow is a parameter.
+ This allows different trap vectors to be used.
+
+\subsection{General Setup for V9}
+
+\subsection{Specializing the Sparc Back End}

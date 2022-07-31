@@ -1,0 +1,64 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources file for the CML version of smlnj-lib.cm.
+ *)
+
+Group
+
+(** CML specific modules **)
+  signature MULTICAST
+  signature SIMPLE_RPC
+  signature TRACE_CML
+
+  structure Multicast
+  structure SimpleRPC
+  structure TraceCML
+
+(** Modules inherited from the SML/NJ Util Library **)
+  library($/smlnj-lib.cm) - structure TimeLimit
+
+(** Modules from the SML/NJ Unix Library *)
+#if defined(OPSYS_UNIX)
+  library($/unix-lib.cm)
+#endif
+
+(** Modules from the SML/NJ INet Library *)
+  signature SOCK_UTIL		(* copied to avoid typing problems *)
+  structure SockUtil		(* copied to avoid typing problems *)
+#if defined(OPSYS_UNIX)
+  signature UNIX_SOCK_UTIL
+  structure UnixSockUtil
+#endif
+is
+
+  $cml/basis.cm
+  $/smlnj-lib.cm
+# if defined(OPSYS_UNIX)
+    $/unix-lib.cm
+# endif
+  $cml/cml.cm
+  $cml-lib/trace-cml.cm		(* for trace-cml-sig.sml and trace-cml.sml *)
+
+  SMLNJ-Util/cml-atom-new.sml
+  SMLNJ-Util/atom-binary-map.sml
+  SMLNJ-Util/atom-binary-set.sml
+  SMLNJ-Util/atom-map.sml
+  SMLNJ-Util/atom-redblack-map.sml
+  SMLNJ-Util/atom-redblack-set.sml
+  SMLNJ-Util/atom-set.sml
+  SMLNJ-Util/atom-table.sml
+  SMLNJ-Util/io-util.sml
+  SMLNJ-Util/io-util-sig.sml
+  SMLNJ-INet/sock-util-sig.sml
+  SMLNJ-INet/sock-util.sml
+#if defined(OPSYS_UNIX)
+  SMLNJ-INet/unix-sock-util.sml
+#endif
+
+  multicast-sig.sml
+  multicast.sml
+  simple-rpc-sig.sml
+  simple-rpc.sml

@@ -1,0 +1,444 @@
+\section{The MLRISC Machine Description Language}
+
+\subsection{ Overview }
+
+\newdef{MDGen} is a machine description language 
+is designed to automate
+various mundane and error prone tasks in developing a back-end for 
+MLRISC.  Currently, to target a new
+architecture the programmer must provide the following set of modules
+written in Standard ML:
+
+\begin{itemize}
+  \item \codehref{instructions/cells.sig}{CELLS} -- 
+   the properties of the register set and (some part of) memory hierarchy. 
+  \item \codehref{instructions/instructions.sig}{INSTRUCTIONS} -- 
+   the concrete instruction set representation.
+  \item \codehref{instructions/insnProps.sig}{INSNS_PROPERTIES}  --
+   properties of the instructions.
+  \item \codehref{instructions/shuffle.sig}{SHUFFLE} --
+   methods to emit linearized code from parallel copies.
+  \item \codehref{emit/instruction-emitter.sig}{ASSEMBLER} --
+   the assembler
+  \item \codehref{emit/instruction-emitter.sig}{MC} --
+   the machine code emitter
+  \item \codehref{../backpatch/sdi-jumps.sig}{ SDI_JUMPS } --
+   methods for resolving span-dependent instructions. 
+  \item <a href="../backpatch/delaySlotProps.sig" target=code> DELAY_SLOTS_PROPERTIES 
+        </a> -- machine properties for delay slot filling, if a machine 
+    architecture contains branch delay slots or load delay slots.
+  \item \codehref{../SSA/ssaProps.sig}{ SSA_PROPERTIES } --
+    semantics properties for performing optimizations in Static Single
+  Assignment form.
+\end{itemize}
+
+In general, writing a backend is tedious even with  
+SML's abstraction capabilities. 
+Furthermore, the machine description is procedural in natural 
+and must be checked by hand.  
+
+\subsection{ What is in MDGen? }
+The MDGen tool simplifies the process of developing a new MLRISC backend.  
+MDGen provides the following:
+\begin{itemize}
+   \item A representation description language for specifying the
+     machine encoding of the instruction set,
+     using an extension of ML's algebraic datatype facility.
+   \item A semantics description language for specifying the abstract semantics
+      of the instructions.
+\end{itemize}
+
+Both sub-languages are based on ML's syntax and semantics, so
+they should be readily familiar to all MLRISC users.
+
+A backend developer can specify a new machine architecture using the MDGen 
+language, and in turn, the MDGen tool generates ML modules that are
+required by the MLRISC system.
+
+The basic concepts of MDGen are inspired largely from 
+Norman Ramsey's <a href="www.cs.virginia.edu/~nr/toolkit">
+New Jersey Machine Code Tool Kit </a> and 
+Ramsey and Davidson's
+<a href="http://www.cs.virginia.edu/zephyr/csdl/lrtlindex.html">
+Lambda RTL </a>
+
+\subsection{A Sample Description}
+
+Here we present a sample MDGen description, using the Alpha as an example.
+We highlight all keywords in the MDGen language 
+in.  A typical machine description
+is structured as follows:
+
+\begin{SML}
+architecture Alpha =
+   struct
+
+   name "Alpha"
+
+   superscalar
+
+   little endian
+
+   <font color=#FF0000>lowercase assembly</font>
+
+   \href{#cells}{Storage cells and locations}
+   \href{#encoding}{Instruction encoding formats specification}
+   \href{#instruction}{Instruction definition}
+<font color=#FF0000>end</font>
+\end{SML}
+
+Here, we declare that the Alpha is a superscalar machine using
+little endian encoding.  Furthermore, assembly output should be displayed
+in lowercase-- this is for personal esthetic reasons only; most assemblers
+are case insensitive.
+
+
+
+\subsubsection{ <a name="cells">Specifying Storage Cells and Locations </a>}
+
+A <font color="#ff0000">cell</font> is an abstract resource location 
+for holding data values.  On typical machines, the types of
+cells include general purpose registers, floating point registers,
+and condition code registers.
+
+The \sml{storage} declaration defines different 
+<font color="#ff0000">cellkinds</font>.  MLRISC requires the
+cellkinds \sml{GP}, \sml{FP}, \sml{CC} to be defined.
+These are the cellkinds for general purpose registers, floating point
+registers and condition code registers.
+
+In the following sequence of declarations, a few things are defined:
+\begin{itemize}
+  \item The cellkinds \sml{GP, FP, CC} are defined.
+        Furthermore, the cellkinds \sml{MEM, CTRL}, which stand
+        for memory and control (dependence), are also implicitly defined.
+  \item The \sml{assembly as} clauses specify how a specific cell type is
+       to be displayed.    Here, we specify that register 30, the
+       stack pointer, should be displayed specially as \sml{$sp}.
+  \item The \sml{in cellset} clause, when attached, tells MDGen that
+       the associated cellkind should be part of the 
+       \href{cellset.html}{ cellset }.  The clause \sml{in cellset GP}
+       tells MDGen that the a cell of type \sml{CC} should be treated
+       the same as a \sml{GP}
+  \item The \sml{locations} declarations define a few abbreviations:
+        \sml{stackptrR} is the stack pointer, \sml{asmTmpR} is
+       the assembly temporary, \sml{fasmTmp} is the floating point
+       assembly temporary etc.
+\end{itemize}
+
+<tt>
+\begin{SML}
+   <font color=#FF0000>storage</font>
+     GP = 32 <font color=#FF0000>cells <font color=#FF0000>of</font> 64 bits in cellset called</font> "register" 
+       	<font color=#FF0000>assembly as</font> (fn 30 => "$sp"
+                      | r => "$"^Int.toString r)
+   | FP = 32 <font color=#FF0000>cells <font color=#FF0000>of</font> 64 bits in cellset called</font> "floating point register" 
+       	<font color=#FF0000>assembly as</font> (fn f => "f"^Int.toString f)
+   | CC = <font color=#FF0000>cells <font color=#FF0000>of</font> 64 bits in cellset GP called</font> "condition code register"
+                <font color=#FF0000>assembly as</font> "cc"
+   <font color=#FF0000>locations</font>
+       stackptrR = <font color=#008800>$</font>GP[30]
+   <font color=#FF0000>and</font> asmTmpR   = <font color=#008800>$</font>GP[28]
+   <font color=#FF0000>and</font> fasmTmp   = <font color=#008800>$</font>FP[30]
+   <font color=#FF0000>and</font> GPReg r   = <font color=#008800>$</font>GP[r]
+   <font color=#FF0000>and</font> FPReg f   = <font color=#008800>$</font>GP[f]
+\end{SML}
+
+<h3> <a name="instruction">
+     Specifying the Representation of Instructions</a></h3> 
+\begin{SML}
+   <font color=#FF0000>structure</font> Instruction = 
+   <font color=#FF0000>struct</font>
+   <font color=#FF0000>datatype</font> ea = 
+       Direct <font color=#FF0000>of</font> <font color=#008800>$</font>GP 
+     | FDirect <font color=#FF0000>of</font> <font color=#008800>$</font>FP        
+     | Displace <font color=#FF0000>of</font> {base: <font color=#008800>$</font>GP, disp:int}
+ 
+   <font color=#FF0000>datatype</font> operand = 
+       REGop <font color=#FF0000>of</font> <font color=#008800>$</font>GP       		``<GP>'' (GP)
+     | IMMop <font color=#FF0000>of</font> int       		``<int>''
+     | HILABop <font color=#FF0000>of</font> LabelExp.labexp       ``hi(<emit_labexp labexp>)''
+     | LOLABop <font color=#FF0000>of</font> LabelExp.labexp       ``lo(<emit_labexp labexp>)''
+     | LABop <font color=#FF0000>of</font> LabelExp.labexp       	``<emit_labexp labexp>''
+     | CONSTop <font color=#FF0000>of</font> Constant.const       ``<emit_const const>''
+
+   (* 
+    * When I say ! after the datatype</font> name XXX, it means generate a
+    * function emit_XXX that converts the constructors into the corresponding
+    * assembly text.  By default, it uses the same name as the constructor,
+    * but may be modified by the lowercase/uppercase assembly directive.
+    * 
+    *)
+   <font color=#FF0000>datatype</font> branch! = 
+      BR  0x30  
+                | BSR 0x34  
+                           | BLBC 0x3
+    | BEQ  0x39 | BLT 0x3a | BLE  0x3b
+    | BLBS 0x3c | BNE 0x3d | BGE  0x3e 
+    | BGT  0x3f
+
+   <font color=#FF0000>datatype</font> fbranch! =
+                  FBEQ 0x31 | FBLT 0x32
+    | FBLE 0x33             | FBNE 0x35
+    | FBGE 0x36 | FBGT 0x37 
+ 
+   <font color=#FF0000>datatype</font> load! = LDL 0x28 | LDL_L 0x2A | LDQ 0x29 | LDQ_L 0x2B | LDQ_U 0x0B
+   <font color=#FF0000>datatype</font> store! = STL 0x2C | STQ 0x2D | STQ_U 0x0F
+   <font color=#FF0000>datatype</font> fload[0x20..0x23]! = LDF | LDG | LDS | LDT 
+   <font color=#FF0000>datatype</font> fstore[0x24..0x27]! = STF | STG | STS | STT 
+
+   (* non-trapping opcodes *) 
+   <font color=#FF0000>datatype</font> operate! = (* table C-5 *)
+       ADDL  (0wx10,0wx00)                       | ADDQ (0wx10,0wx20) 
+                           | CMPBGE(0wx10,0wx0f) | CMPEQ (0wx10,0wx2d) 
+     | CMPLE (0wx10,0wx6d) | CMPLT (0wx10,0wx4d) | CMPULE (0wx10,0wx3d) 
+     | CMPULT(0wx10,0wx1d) | SUBL  (0wx10,0wx09) 
+     | SUBQ  (0wx10,0wx29) 
+     | S4ADDL(0wx10,0wx02) | S4ADDQ (0wx10,0wx22) | S4SUBL (0wx10,0wx0b)
+     | S4SUBQ(0wx10,0wx2b) | S8ADDL (0wx10,0wx12) | S8ADDQ (0wx10,0wx32)
+     | S8SUBL(0wx10,0wx1b) | S8SUBQ (0wx10,0wx3b) 
+
+     | AND   (0wx11,0wx00) | BIC    (0wx11,0wx08) | BIS    (0wx11,0wx20)
+     | CMOVEQ(0wx11,0wx24) | CMOVLBC(0wx11,0wx16) | CMOVLBS(0wx11,0wx14)
+     | CMOVGE(0wx11,0wx46) | CMOVGT (0wx11,0wx66) | CMOVLE (0wx11,0wx64)
+     | CMOVLT(0wx11,0wx44) | CMOVNE (0wx11,0wx26) | EQV (0wx11,0wx48)
+     | ORNOT (0wx11,0wx28) | XOR    (0wx11,0wx40)
+
+     | EXTBL (0wx12,0wx06) | EXTLH  (0wx12,0wx6a) | EXTLL(0wx12,0wx26)
+     | EXTQH (0wx12,0wx7a) | EXTQL  (0wx12,0wx36) | EXTWH(0wx12,0wx5a)
+     | EXTWL (0wx12,0wx16) | INSBL  (0wx12,0wx0b) | INSLH(0wx12,0wx67)
+     | INSLL (0wx12,0wx2b) | INSQH  (0wx12,0wx77) | INSQL(0wx12,0wx3b)
+     | INSWH (0wx12,0wx57) | INSWL  (0wx12,0wx1b) | MSKBL(0wx12,0wx02)
+     | MSKLH (0wx12,0wx62) | MSKLL  (0wx12,0wx22) | MSKQH(0wx12,0wx72)
+     | MSKQL (0wx12,0wx32) | MSKWH  (0wx12,0wx52) | MSKWL(0wx12,0wx12)
+     | SLL   (0wx12,0wx39) | SRA    (0wx12,0wx3c) | SRL  (0wx12,0wx34)
+     | ZAP   (0wx12,0wx30) | ZAPNOT (0wx12,0wx31)
+     | MULL  (0wx13,0wx00)                        | MULQ (0wx13,0wx20)
+                           | UMULH  (0wx13,0wx30) 
+     | SGNXL "addl" (0wx10,0wx00) (* same as ADDL *)
+
+   (* conditional moves *) 
+ 
+   <font color=#FF0000>datatype</font> pseudo_op! = DIVL | DIVLU
+ 
+   <font color=#FF0000>datatype</font> operateV! = (* table C-5 opc/func *)
+        ADDLV (0wx10,0wx40) | ADDQV (0wx10,0wx60)
+      | SUBLV (0wx10,0wx49) | SUBQV (0wx10,0wx69) 
+      | MULLV (0wx13,0wx00) | MULQV (0wx13,0wx60)
+ 
+   <font color=#FF0000>datatype</font> foperate! =   (* table C-6 *)
+      CPYS    (0wx17,0wx20)  | CPYSE (0wx17,0wx022)    | CPYSN   (0wx17,0wx021)
+    | CVTLQ   (0wx17,0wx010) | CVTQL (0wx17,0wx030)    | CVTQLSV (0wx17,0wx530)
+    | CVTQLV  (0wx17,0wx130)
+    | FCMOVEQ (0wx17,0wx02a) | FCMOVEGE (0wx17,0wx02d) | FCMOVEGT (0wx17,0wx02f)
+    | FCMOVLE (0wx17,0wx02e) | FCMOVELT (0wx17,0wx02c) | FCMOVENE (0wx17,0wx02b)
+    | MF_FPCR (0wx17,0wx025) | MT_FPCR  (0wx17,0wx024)
+
+                         (* table C-7 *)
+    | CMPTEQ  (0wx16,0wx0a5) | CMPTLT (0wx16,0wx0a6)   | CMPTLE  (0wx16,0wx0a7)
+    | CMPTUN  (0wx16,0wx0a4)
+
+   <font color=#FF0000>datatype</font> foperateV! = 
+          ADDSSUD  0wx5c0
+        | ADDTSUD  0wx5e0
+        | CVTQSC   0wx3c
+        | CVTQTC   0wx3e
+        | CVTTSC   0wx2c
+        | CVTTQC   0wx2f
+        | DIVSSUD  0wx5ec
+        | DIVTSUD  0wx5c3
+        | MULSSUD  0wx5c2
+        | MULTSUD  0wx5e2
+        | SUBSSUD  0wx5c1
+        | SUBTSUD  0wx5e1
+ 
+   <font color=#FF0000>datatype</font> osf_user_palcode! = 
+      BPT 0x80 | BUGCHK 0x81 | CALLSYS 0x83 
+    | GENTRAP 0xaa | IMB 0x86 | RDUNIQUE 0x9e | WRUNIQUE 0x9f
+
+   end (* Instruction *)
+\end{SML}
+
+<h3> <a name="encoding">
+     Specifying the Instruction Encoding Formats </a></h3>
+
+    The Alpha has very simple instruction encoding formats.
+
+<tt>
+\begin{SML}
+   <font color=#FF0000>instruction formats 32 bits</font>
+     Memory{opc:6, ra:5, rb:GP 5, disp: signed 16} (* p3-9 *)
+      (* derived from Memory *) 
+   | LoadStore{opc,ra,rb,disp} =
+       <font color=#FF00000>let val</font> disp = 
+           <font color=#FF00000>case</font> disp <font color=#FF0000>of</font>
+             I.REGop rb => emit_GP rb
+           | I.IMMop i  => itow i
+           | I.HILABop le => itow(LabelExp.valueOf le)
+           | I.LOLABop le => itow(LabelExp.valueOf le)
+           | I.LABop le => itow(LabelExp.valueOf le)
+           | I.CONSTop c => itow(Constant.valueOf c)
+       in  Memory{opc,ra,rb,disp}
+       end
+   | ILoadStore{opc,r:GP,b,d} = LoadStore{opc,ra=r,rb=b,disp=d}
+   | FLoadStore{opc,r:FP,b,d} = LoadStore{opc,ra=r,rb=b,disp=d}
+
+   | Jump{opc:6,ra:GP 5,rb:GP 5,h:2,disp:int signed 14}   (* table C-3 *)
+   | Memory_fun{opc:6, ra:GP 5, rb:GP 5, func:16}     (* p3-9 *)
+   | Branch{opc:branch 6, ra:GP 5, disp:signed 21}           (* p3-10 *)
+   | Fbranch{opc:fbranch 6, ra:FP 5, disp:signed 21}          (* p3-10 *)
+        (* p3-11 *)
+   | Operate0{opc:6,ra:GP 5,rb:GP 5,sbz:13..15,_:1=0,func:5..11,rc:GP 5} 
+        (* p3-11 *)
+   | Operate1{opc:6,ra:GP 5,lit:signed 13..20,_:1=1,func:5..11,rc:GP 5} 
+   | Operate{opc,ra,rb,func,rc} =
+        (<font color=#FF00000>case</font> rb <font color=#FF0000>of</font>
+          I.REGop rb => Operate0{opc,ra,rb,func,rc,sbz=0w0}
+        | I.IMMop i  => Operate1{opc,ra,lit=itow i,func,rc}
+        | I.HILABop le => Operate1{opc,ra,lit=itow(LabelExp.valueOf le),func,rc}
+        | I.LOLABop le => Operate1{opc,ra,lit=itow(LabelExp.valueOf le),func,rc}
+        | I.LABop le => Operate1{opc,ra,lit=itow(LabelExp.valueOf le),func,rc}
+        | I.CONSTop c => Operate1{opc,ra,lit=itow(Constant.valueOf c),func,rc}
+        )
+   | Foperate{opc:6,fa:FP 5,fb:FP 5,func:5..15,fc:FP 5}
+   | Pal{opc:6=0,func:26}
+\end{SML}
+</tt>
+
+\subsubsection{ Specifying the instruction set }
+<tt>
+\begin{SML}
+   <font color=#FF0000>structure</font> MC =
+   <font color=#FF0000>struct</font>
+      (* compute displacement address *)
+      <font color=#FF0000>fun</font> disp lab = itow(Label.addrOf lab - !loc - 4) ~>> 0w2
+   <font color=#FF0000>end</font>
+
+   (*
+    * The main instruction set definition consists <font color=#FF0000>of</font> the following:
+    *  1) constructor-like declaration defines the view <font color=#FF0000>of</font> the instruction,
+    *  2) assembly directive in funny quotes `` '',
+    *  3) machine encoding expression,
+    *  4) semantics expression in [[ ]],
+    *  5) delay slot directives etc (not necessary in this architecture!)
+    *) 
+   <font color=#FF0000>instruction</font>
+     DEFFREG <font color=#FF0000>of</font> <font color=#008800>$</font>FP       (* define a floating point register *)
+       ``deffreg <FP>''
+        (* Pseudo instruction for the register allocator *)
+ 
+   (* Load/Store *)
+   | LDA <font color=#FF0000>of</font> {r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:operand}       (* use of REGop is illegal *)
+     ``lda\t<r>, <d>()''
+     ILoadStore{opc=0w08,r,b,d}
+
+   | LDAH <font color=#FF0000>of</font> {r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:operand} (* use of REGop is illegal *)
+     ``ldah\t<r>, <d>()''
+     ILoadStore{opc=0w09,r,b,d}
+
+   | LOAD <font color=#FF0000>of</font> {ldOp:load, r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:operand, mem:Region.region}
+     ``<ldOp>\t<r>, <d>()''
+     ILoadStore{opc=emit_load ldOp,r,b,d}
+
+   | STORE <font color=#FF0000>of</font> {stOp:store, r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:operand, mem:Region.region}
+     ``<stOp>\t<r>, <d>()''
+     ILoadStore{opc=emit_store stOp,r,b,d}
+
+   | FLOAD <font color=#FF0000>of</font> {ldOp:fload, r: <font color=#008800>$</font>FP, b: <font color=#008800>$</font>GP, d:operand, mem:Region.region}
+     ``<ldOp>\t<r>, <d>()''
+     FLoadStore{opc=emit_fload ldOp,r,b,d}
+
+   | FSTORE <font color=#FF0000>of</font> {stOp:fstore, r: <font color=#008800>$</font>FP, b: <font color=#008800>$</font>GP, d:operand, mem:Region.region}
+     ``<stOp>\t<r>, <d>()''
+     FLoadStore{opc=emit_fstore stOp,r,b,d}
+ 
+   (* Control Instructions *)
+   | JMPL <font color=#FF0000>of</font> {r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:int} * Label.label list
+     ``jmpl\t<r>, <d>()''
+     Jump{opc=0wx1a,h=0w0,ra=r,rb=b,disp=d}   (* table C-3 *)
+
+   | JSR <font color=#FF0000>of</font> {r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:int} * C.cellset * C.cellset
+     ``jsr\t<r>, <d>()''
+     Jump{opc=0wx1a,h=0w1,ra=r,rb=b,disp=d}
+
+   | RET <font color=#FF0000>of</font> {r: <font color=#008800>$</font>GP, b: <font color=#008800>$</font>GP, d:int} 
+     ``ret\t<r>, <d>()''
+     Jump{opc=0wx1a,h=0w2,ra=r,rb=b,disp=d}
+
+   | BRANCH <font color=#FF0000>of</font> branch * <font color=#008800>$</font>GP * Label.label   
+     ``<branch> <GP>, <label>''
+     Branch{opc=branch,ra=GP,disp=disp label}
+
+   | FBRANCH <font color=#FF0000>of</font> fbranch * <font color=#008800>$</font>FP * Label.label  
+     ``<fbranch> <FP>, <label>''
+     Fbranch{opc=fbranch,ra=FP,disp=disp label}
+ 
+   (* Integer Operate *)
+   | OPERATE <font color=#FF0000>of</font> {oper:operate, ra: <font color=#008800>$</font>GP, rb:operand, rc: <font color=#008800>$</font>GP}
+       ``<oper>\t<ra>, <rb>, <rc>''
+        (let val (opc,func) = emit_operate oper
+         in  Operate{opc,func,ra,rb,rc} 
+         end)
+
+   | OPERATEV <font color=#FF0000>of</font> {oper:operateV, ra: <font color=#008800>$</font>GP, rb:operand, rc: <font color=#008800>$</font>GP}
+       ``<oper>\t<ra>, <rb>, <rc>''
+        (let val (opc,func) = emit_operateV oper
+         in  Operate{opc,func,ra,rb,rc} 
+         end)
+
+   | PSEUDOARITH <font color=#FF0000>of</font> {oper: pseudo_op, ra: <font color=#008800>$</font>GP, rb:operand, rc: <font color=#008800>$</font>GP, 
+       	     tmps: C.cellset}
+       ``<oper>\t<ra>, <rb>, <rc>''
+ 
+   (* Copy instructions *)
+   | COPY <font color=#FF0000>of</font> {dst: <font color=#008800>$</font>GP list, src: <font color=#008800>$</font>GP list, 
+              impl:instruction list option ref, tmp: ea option}
+       ``<app emitInstr (Shuffle.shuffle{regmap,tmp,dst,src})>''
+   | FCOPY <font color=#FF0000>of</font> {dst: <font color=#008800>$</font>FP list, src: <font color=#008800>$</font>FP list, 
+               impl:instruction list option ref, tmp: ea option}
+       ``<app emitInstr (Shuffle.shufflefp{regmap,tmp,dst,src})>''
+ 
+   (* Floating Point Operate *)
+   | FOPERATE <font color=#FF0000>of</font> {oper:foperate, fa: <font color=#008800>$</font>FP, fb: <font color=#008800>$</font>FP, fc: <font color=#008800>$</font>FP}
+       ``<oper>\t<fa>, <fb>, <fc>''
+       (let val (opc,func) = emit_foperate oper
+        in  Foperate{opc,func,fa,fb,fc}
+        end)
+
+   (* Trapping versions <font color=#FF0000>of</font> the above *)
+   | FOPERATEV <font color=#FF0000>of</font> {oper:foperateV, fa: <font color=#008800>$</font>FP, fb: <font color=#008800>$</font>FP, fc: <font color=#008800>$</font>FP}
+       ``<oper>\t<fa>, <fb>, <fc>''
+        Foperate{opc=0wx16,func=emit_foperateV oper,fa,fb,fc}
+ 
+   (* Misc *)
+   | TRAPB       			(* Trap barrier *)
+       ``trapb''
+        Memory_fun{opc=0wx18,ra=31,rb=31,func=0wx0}
+ 
+   | CALL_PAL <font color=#FF0000>of</font> {code:osf_user_palcode, def: <font color=#008800>$</font>GP list, use: <font color=#008800>$</font>GP list}
+       ``call_pal <code>''
+        Pal{func=emit_osf_user_palcode code}
+ end
+\end{SML}
+</tt>
+
+
+\subsection{ 4 Machine Descriptions }
+Here are some machine descriptions in varing degree of completion.
+
+\begin{itemize}
+ \item \codehref{../sparc/sparc.mdl}{ Sparc } 
+ \item \codehref{../hppa/hppa.mdl}{ Hppa } 
+ \item \codehref{../alpha/alpha.mdl}{ Alpha }
+ \item \codehref{../ppc/ppc.mdl}{ PowerPC } 
+ \item \codehref{../x86/x86.mdl}{ X86 } 
+\end{itemize}
+
+\subsection{ Syntax Highlighting Macros }
+
+\begin{itemize}
+  \item \href{md.vim}{ For vim 5.3 }
+\end{itemize}
+
+</body>
+</html>

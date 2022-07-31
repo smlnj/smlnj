@@ -1,0 +1,57 @@
+What is in this directory
+------------------------
+This directory contains the source to 'nowhere'.
+This is a simple source to source translation tool that expands out 
+case expressions with conditional patterns.
+Conditional patterns use the "where" keyword.  For example:
+
+    case l of
+      [x,y,z] where x=1 => 1
+    | _ => 2
+
+means the same as:
+
+    case l of
+      [1,y,z] => 1
+    | _ => 2
+   
+   Currently, the input file must be of the following form:
+
+   local
+        <definitions>
+   in
+       <body>
+   end
+
+<definitions> should include all datatypes definitions that are used inside the 
+<body>.  It is only for the tool's benefit and does not appear in the output.
+Only <body> appears at the output.  You can use the special declaration 
+
+     include "filename"
+
+to import extra definitions.
+
+The tool translates all case expressions with guards into the appropriate code.  
+How to compile the tool
+-----------------------
+
+   In sml (version 110.30+), type
+
+     use "build.sml"
+
+   This will create an image named:
+
+     nowhere.<arch>
+
+How to run it
+-------------
+
+    To run it, type:
+
+       sml @SMLload=nowhere infile
+
+    on the Unix command line
+
+    The output will be written to a file with suffix 'sml'.
+    The input file should have a different suffix.
+

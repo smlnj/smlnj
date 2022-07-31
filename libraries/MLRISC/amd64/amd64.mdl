@@ -1,0 +1,872 @@
+(* amd64.mdl
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * MLRISC machine description for AMD64 (aka x86-64) architecture.
+ *)
+
+architecture AMD64 =
+  struct
+
+   superscalar          (* superscalar machine *)
+
+   little endian        (* little endian architecture *)
+
+   lowercase assembly   (* print assembly in lower case *)
+
+   storage
+      GP   = $r[16] of 64 bits
+                asm: (fn (0,8)  => "%al" | (4, 8) => "%ah"
+                       | (1,8)  => "%cl" | (5, 8) => "%ch"
+                       | (2,8)  => "%dl" | (6, 8) => "%dh"
+                       | (3,8)  => "%bl" | (7, 8) => "%bh"
+		       | (r,8) => "%r"^Int.toString r^"b"
+
+		       | (0,16) => "%ax"  | (4,16) => "%sp"
+		       | (1,16) => "%cx"  | (5,16) => "%bp"
+		       | (2,16) => "%dx"  | (6,16) => "%si"
+		       | (3,16) => "%bx"  | (7,16) => "%di"
+		       | (r,16) => "%r"^Int.toString r^"w"
+
+		       | (0,32) => "%eax"  | (4,32) => "%esp"
+		       | (1,32) => "%ecx"  | (5,32) => "%ebp"
+		       | (2,32) => "%edx"  | (6,32) => "%esi"
+		       | (3,32) => "%ebx"  | (7,32) => "%edi"
+		       | (r,32) => "%r"^Int.toString r^"d"
+
+		       | (0,64) => "%rax"  | (4,64) => "%rsp"
+		       | (1,64) => "%rcx"  | (5,64) => "%rbp"
+		       | (2,64) => "%rdx"  | (6,64) => "%rsi"
+		       | (3,64) => "%rbx"  | (7,64) => "%rdi"
+                       | (r,64) => "%r"^Int.toString r
+
+                       | (r,_) => "%"^Int.toString r
+                      )
+   |  FP   = $f[16] of 64 bits
+	             asm: (fn (f, _) =>
+			      if f < 16
+				then "%xmm"^Int.toString f
+				else "%f"^Int.toString f )
+   |  CC     = $cc[] of 32 bits aliasing GP asm: "cc"
+   |  EFLAGS = $eflags[1] of 32 bits asm: "$eflags"
+   |  FFLAGS = $fflags[1] of 32 bits asm: "$fflags"
+   |  MEM    = $m[]    of 8 aggregable bits asm: "mem"
+   |  CTRL   = $ctrl[] asm: "ctrl"
+
+   locations
+       rax       = $r[0]
+   and rcx       = $r[1]
+   and rdx       = $r[2]
+   and rbx       = $r[3]
+   and rsp       = $r[4]
+   and rbp       = $r[5]
+   and rsi       = $r[6]
+   and rdi       = $r[7]
+   and r8        = $r[8]
+   and r9        = $r[9]
+   and r10       = $r[10]
+   and r11       = $r[11]
+   and r12       = $r[12]
+   and r13       = $r[13]
+   and r14       = $r[14]
+   and r15       = $r[15]
+
+   and xmm0      = $f[0]
+   and xmm1      = $f[1]
+   and xmm2      = $f[2]
+   and xmm3      = $f[3]
+   and xmm4      = $f[4]
+   and xmm5      = $f[5]
+   and xmm6      = $f[6]
+   and xmm7      = $f[7]
+   and xmm8      = $f[8]
+   and xmm9      = $f[9]
+   and xmm10     = $f[10]
+   and xmm11     = $f[11]
+   and xmm12     = $f[12]
+   and xmm13     = $f[13]
+   and xmm14     = $f[14]
+   and xmm15     = $f[15]
+
+   and stackptrR = $r[4]
+   and asmTmpR   = $r[0] (* not used *)
+   and fasmTmp   = $f[0] (* not used *)
+   and eflags    = $eflags[0]
+
+  (*------------------------------------------------------------------------
+   *
+   * Representation for various opcodes.
+   *
+   *------------------------------------------------------------------------*)
+   structure Instruction =
+   struct
+      (* An effective address can be any combination of
+       *  base + index*scale + disp
+       *   or
+       *   B + I*SCALE + DISP
+       *
+       * where any component is optional. The operand datatype captures
+       * all these combinations.
+       *
+       *  DISP 	           == Immed | ImmedLabel | Const
+       *  B		   == Displace{base=B, disp=0}
+       *  B+DISP	   == Displace{base=B, disp=DISP}
+       *  I*2^SCALE+DISP   == Indexed{base=NONE,index=I,scale=SCALE,disp=D}
+       *  B+I*2^SCALE+DISP == Indexed{base=SOME B,index=I,scale=SCALE,disp=DISP}
+       * Note1: The index register cannot be rbp.
+       *        The disp field must be one of Immed, ImmedLabel,  or Const.
+       *)
+
+      (* Note: Relative is only generated after sdi resolution *)
+      datatype operand =
+         Immed      of Int32.int   	   rtl: int
+       | Immed64    of Int64.int           rtl: int
+       | ImmedLabel of T.labexp            rtl: labexp
+       | Relative   of int		   (* no semantics given *)
+       | LabelEA    of T.labexp            rtl: labexp (* XXX *)
+       | Direct     of (int * $GP)   rtl: $r[GP]
+       | FDirect    of $FP                 rtl: $f[FP]
+       | Displace   of {base: $GP, disp:operand, mem:Region.region}
+              rtl: $m[$r[base] + disp : mem]
+       | Indexed    of {base: $GP option, index: $GP, scale:int,
+                        disp:operand, mem:Region.region}
+              rtl: $m[$r[base] + $r[index] << scale + disp : mem]
+
+      type addressing_mode = operand
+
+      type ea = operand
+
+      type byte = Word8.word
+
+      datatype cond! =
+          EQ "e" 0w4 | NE 0w5 | LT "l" 0w12 | LE 0w14 | GT "g" 0w15 | GE 0w13
+        | B  0w2 | BE (* below *) 0w6 | A 0w7 | AE (* above *) 0w3
+        | C  0w2 | NC (* if carry *) 0w3 | P 0wxa | NP (* if parity *) 0wxb
+        | O  0w0 | NO (* overflow *) 0w1
+
+          (* LOCK can only be used in front of
+           *                      (Intel ordering, not gasm ordering)
+           * ADC, ADD, AND, BT   mem, reg/imm
+           * BTS, BTR, BTC, OR   mem, reg/imm
+           * SBB, SUB, XOR       mem, reg/imm
+           * XCHG                reg, mem
+           * XCHG                mem, reg
+           * DEC, INC, NEG, NOT  mem
+           *)
+
+      datatype binaryOp! =
+         ADDQ | SUBQ | ANDQ | ORQ | XORQ | SHLQ | SARQ | SHRQ | IMULQ
+       | ADCQ | SBBQ
+       | ADDL | SUBL | ANDL | ORL | XORL | SHLL | SARL | SHRL | IMULL
+       | ADCL | SBBL
+       | ADDW | SUBW | ANDW | ORW | XORW | SHLW | SARW | SHRW | IMULW
+       | ADDB | SUBB | ANDB | ORB | XORB | SHLB | SARB | SHRB | IMULB
+       | BTSW | BTCW | BTRW | BTSL | BTCL | BTRL
+       | ROLW | RORW | ROLL | RORL
+       | XCHGB | XCHGW | XCHGL
+       | LOCK_ADCW "lock\n\tadcw"
+       | LOCK_ADCL "lock\n\tadcl"
+       | LOCK_ADDW "lock\n\taddw"
+       | LOCK_ADDL "lock\n\taddl"
+       | LOCK_ANDW "lock\n\tandw"
+       | LOCK_ANDL "lock\n\tandl"
+       | LOCK_BTSW "lock\n\tbtsw"
+       | LOCK_BTSL "lock\n\tbtsl"
+       | LOCK_BTRW "lock\n\tbtrw"
+       | LOCK_BTRL "lock\n\tbtrl"
+       | LOCK_BTCW "lock\n\tbtcw"
+       | LOCK_BTCL "lock\n\tbtcl"
+       | LOCK_ORW  "lock\n\torw"
+       | LOCK_ORL  "lock\n\torl"
+       | LOCK_SBBW "lock\n\tsbbw"
+       | LOCK_SBBL "lock\n\tsbbl"
+       | LOCK_SUBW "lock\n\tsubw"
+       | LOCK_SUBL "lock\n\tsubl"
+       | LOCK_XORW "lock\n\txorw"
+       | LOCK_XORL "lock\n\txorl"
+       | LOCK_XADDB "lock\n\txaddb"
+       | LOCK_XADDW "lock\n\txaddw"
+       | LOCK_XADDL "lock\n\txaddl"
+
+      (* One operand multiplication/division operations *)
+      datatype multDivOp! =
+               IMULL1 "imull" | MULL1 "mull" | IDIVL1 "idivl" | DIVL1 "divl"
+	     | IMULQ1 "imulq" | MULQ1 "mulq" | IDIVQ1 "idivq" | DIVQ1 "divq"
+
+      datatype unaryOp! = DECQ | INCQ | NEGQ | NOTQ
+                        | DECL | INCL | NEGL | NOTL
+                        | DECW | INCW | NEGW | NOTW
+                        | DECB | INCB | NEGB | NOTB
+                        | LOCK_DECQ "lock\n\tdecq"
+                        | LOCK_INCQ "lock\n\tincq"
+                        | LOCK_NEGQ "lock\n\tnegq"
+                        | LOCK_NOTQ "lock\n\tnotq"
+
+      datatype shiftOp! = SHLDL | SHRDL
+
+      datatype bitOp! = BTW
+                      | BTL
+                      | BTQ
+                      | LOCK_BTW "lock\n\tbtw"
+                      | LOCK_BTL "lock\n\tbtl"
+
+      datatype move! = MOVQ
+	             | MOVL    (* zx(long) -> qword *)
+                     | MOVB
+                     | MOVW
+		     | MOVABSQ
+		     | MOVSWQ  (* sx(word) -> qword *)
+                     | MOVZWQ  (* zx(word) -> qword *)
+                     | MOVSWL  (* sx(word) -> long *)
+                     | MOVZWL  (* zx(word) -> long *)
+                     | MOVSBQ  (* sx(byte) -> qword *)
+                     | MOVZBQ  (* zx(byte) -> qword *)
+                     | MOVSBL  (* sx(byte) -> long *)
+                     | MOVZBL  (* zx(byte) -> long *)
+		     | MOVSLQ  (* sx(long) -> qword *)
+		     | CVTSD2SI  (* double -> long *)
+		     | CVTSS2SI  (* float -> long *)
+		     | CVTSD2SIQ  (* double -> qword *)
+		     | CVTSS2SIQ  (* float -> qword *)
+
+       datatype fbin_op! =
+           ADDSS | ADDSD
+         | SUBSS | SUBSD
+         | MULSS | MULSD
+         | DIVSS | DIVSD
+	 | XORPS | XORPD
+	 | ANDPS | ANDPD
+	 | ORPS  | ORPD
+
+       datatype fcom_op! =
+           COMISS | COMISD               (* ordered *)
+         | UCOMISS | UCOMISD             (* unordered *)
+
+       datatype fmove_op! =
+	   MOVSS | MOVSD
+	   (* conversion *)
+	 | CVTSS2SD | CVTSD2SS
+	 | CVTSI2SS | CVTSI2SSQ | CVTSI2SD | CVTSI2SDQ
+
+      (* Intel floating point precision *)
+      datatype fsize = FP32 "s" | FP64 "l"
+
+      (* Intel integer precision *)
+      datatype isize = I8 "8" | I16 "16" | I32 "32" | I64 "64"
+
+  end (* Instruction *)
+
+  (*------------------------------------------------------------------------
+   *
+   * Here, I'm going to define the semantics of the instructions
+   *
+   *------------------------------------------------------------------------*)
+  structure RTL =
+  struct
+
+     (* Get the basis *)
+     include "Tools/basis.mdl"
+     open Basis
+     infix 1 ||  (* parallel effects *)
+     infix 2 :=  (* assignment *)
+
+     (* Some type abbreviations *)
+     fun byte x = (x : #8 bits)
+     fun word x = (x : #16 bits)
+     fun long x = (x : #32 bits)
+     fun qword x = (x: #64 bits)
+     fun float x = (x : #32 bits)
+     fun double x = (x : #64 bits)
+
+     (* Intel register abbreviations *)
+     val rax = $r[0] and rcx = $r[1] and rdx = $r[2] and rbx = $r[3]
+     and rsp = $r[4] and rbp = $r[5] and rsi = $r[6] and rdi = $r[7]
+
+     (* Condition codes bits in eflag.
+      * Let's give symbolic name for each bit as per the Intel doc.
+      *)
+     rtl setFlag : #n bits -> #n bits
+     fun flag b = andb($eflags[0] >> b, 1)
+     val CF = flag 0 and PF = flag 2
+     and ZF = flag 6 and SF = flag 7 and OF = flag 11
+
+     (* Now gets use the bits to express the conditions.  Again from Intel. *)
+     (* conditions *)                   (* aliases *)
+     val B   = CF == 1                  val C = B and NAE = B
+     val BE  = CF == 1 orelse ZF == 1   val NA = BE
+     val E   = ZF == 1                  val Z = E
+     val L   = SF <> OF                 val NGE = L
+     val LE  = SF <> OF orelse ZF == 1  val NG = LE
+     val NB  = CF == 0                  val AE = NB and NC = NB
+     val NBE = CF == 0 andalso ZF == 0  val A  = NBE
+     val NE  = ZF == 0                  val NZ = NE
+     val NL  = SF == OF                 val GE = NL
+     val NLE = ZF == 0 andalso SF == OF val G = NLE
+     val NO  = OF == 0
+     val NP  = PF == 0                  val PO = NP
+     val NS  = SF == 0
+     val O   = OF == 1
+     val P   = PF == 1                  val PE = P
+     val S   = SF == 1
+
+     rtl NOP{} = () (* duh! *)
+     rtl LEAL{addr, r32} = $r[r32] := addr (* this is completely wrong! XXX *)
+     rtl LEAQ{addr, r64} = $r[r32] := addr (* this is completely wrong! XXX *)
+
+         (* moves with type conversion *)
+     rtl MOVQ{src,dst} = dst := qword src
+     rtl MOVL{src,dst} = dst := long src
+     rtl MOVW{src,dst} = dst := word src
+     rtl MOVB{src,dst} = dst := byte src
+     rtl MOVSWL{src,dst} = dst := long(sx(word src))
+     rtl MOVZWL{src,dst} = dst := long(zx(word src))
+     rtl MOVSBL{src,dst} = dst := long(sx(byte src))
+     rtl MOVZBL{src,dst} = dst := long(zx(byte src))
+     rtl MOVSWQ{src,dst} = dst := qword(sx(word src))
+     rtl MOVZWQ{src,dst} = dst := qword(zx(word src))
+     rtl MOVSBQ{src,dst} = dst := qword(sx(byte src))
+     rtl MOVZBQ{src,dst} = dst := qword(zx(byte src))
+     rtl MOVZLQ{src,dst} = dst := qword(zx(long src))
+
+     (* semantics of integer arithmetic;
+      * all instructions sets the condition code
+      *)
+     fun binop typ oper {dst,src} = dst := typ(oper(dst,src))
+     fun arith typ oper {dst,src} = dst := typ(oper(dst,src))
+                                 || $eflags[0] := ??? (* XXX *)
+     fun unary typ oper {opnd} = opnd := typ(oper opnd)
+
+     fun inc x = x + 1
+     fun dec x = x - 1
+
+     (* I'm too lazy to specify the semantics of these for now *)
+     rtl adc sbb bts btc btr rol ror xchg xadd cmpxchg rdtsc rdtscp
+          : #n bits * #n bits -> #n bits
+
+     rtl [ADD,SUB,AND,OR,XOR]^^B = map (arith byte) [(+),(-),andb,orb,xorb]
+     rtl [ADD,SUB,AND,OR,XOR]^^W = map (arith word) [(+),(-),andb,orb,xorb]
+     rtl [ADD,SUB,AND,OR,XOR]^^L = map (arith long) [(+),(-),andb,orb,xorb]
+     rtl [ADD,SUB,AND,OR,XOR]^^Q = map (arith qword) [(+),(-),andb,orb,xorb]
+     rtl [SHR,SHL,SAR]^^B = map (binop byte) [(>>),(<<),(~>>)]
+     rtl [SHR,SHL,SAR]^^W = map (binop word) [(>>),(<<),(~>>)]
+     rtl [SHR,SHL,SAR]^^L = map (binop long) [(>>),(<<),(~>>)]
+     rtl [SHR,SHL,SAR]^^Q = map (binop qword) [(>>),(<<),(~>>)]
+     rtl [NEG,NOT,INC,DEC]^^B = map (unary byte) [(~),notb,inc,dec]
+     rtl [NEG,NOT,INC,DEC]^^W = map (unary word) [(~),notb,inc,dec]
+     rtl [NEG,NOT,INC,DEC]^^L = map (unary long) [(~),notb,inc,dec]
+     rtl [NEG,NOT,INC,DEC]^^Q = map (unary qword) [(~),notb,inc,dec]
+
+
+     rtl [ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^B =
+          map (arith byte) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl [ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^W =
+          map (arith word) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl [ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^L =
+          map (arith long) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl [ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^Q =
+          map (arith qword) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+
+     fun lockarith typ oper {src,dst}=
+             dst := typ(oper(dst,src))
+          || Kill $eflags[0] (* XXX *)
+     fun lockunary typ oper {opnd} =
+             opnd := typ(oper(opnd))
+          || Kill $eflags[0] (* XXX *)
+
+     rtl LOCK_^^[ADD,SUB,AND,OR,XOR,XADD]^^B =
+          map (lockarith byte) [(+),(-),andb,orb,xorb,xadd]
+     rtl LOCK_^^[ADD,SUB,AND,OR,XOR,XADD]^^W =
+          map (lockarith word) [(+),(-),andb,orb,xorb,xadd]
+     rtl LOCK_^^[ADD,SUB,AND,OR,XOR,XADD]^^L =
+          map (lockarith long) [(+),(-),andb,orb,xorb,xadd]
+     rtl LOCK_^^[ADD,SUB,AND,OR,XOR,XADD]^^Q =
+          map (lockarith qword) [(+),(-),andb,orb,xorb,xadd]
+     rtl LOCK_^^[ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^B =
+          map (lockarith byte) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl LOCK_^^[ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^W =
+          map (lockarith word) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl LOCK_^^[ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^L =
+          map (lockarith long) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl LOCK_^^[ADC,SBB,BTS,BTC,BTR,ROL,ROR,XCHG]^^Q =
+          map (lockarith qword) [adc,sbb,bts,btc,btr,rol,ror,xchg]
+     rtl LOCK_^^[DEC,INC,NEG,NOT]^^L =
+          map (lockunary long) [dec,inc,(~),notb]
+     rtl LOCK_^^[DEC,INC,NEG,NOT]^^Q =
+          map (lockunary qword) [dec,inc,(~),notb]
+     rtl LOCK_^^[CMPXCHG]^^B = map (lockarith byte) [cmpxchg]
+     rtl LOCK_^^[CMPXCHG]^^W = map (lockarith word) [cmpxchg]
+     rtl LOCK_^^[CMPXCHG]^^L = map (lockarith long) [cmpxchg]
+     rtl LOCK_^^[CMPXCHG]^^Q = map (lockarith qword) [cmpxchg]
+
+     (* Multiplication/division *)
+     rtl upperMultiply : #n bits * #n bits -> #n bits
+     rtl MULL1{src}  = eax        := muls(eax, src) ||
+                       edx        := upperMultiply(eax, src) ||
+                       $eflags[0] := ???
+     rtl IDIVL1{src} = eax := divs(eax, src) ||
+                       edx := rems(eax, src) ||
+                       $eflags[0] := ???
+     rtl DIVL1{src}  = edx := divu(eax, src) ||
+                       edx := remu(eax, src) ||
+                       $eflags[0] := ???
+
+     (* test[b,w,l] *)
+     rtl TESTB {lsrc,rsrc} = $eflags[0] := setFlag(andb(byte lsrc, rsrc))
+     rtl TESTW {lsrc,rsrc} = $eflags[0] := setFlag(andb(word lsrc, rsrc))
+     rtl TESTL {lsrc,rsrc} = $eflags[0] := setFlag(andb(long lsrc, rsrc))
+     rtl TESTQ {lsrc,rsrc} = $eflags[0] := setFlag(andb(qword lsrc, rsrc))
+
+     (* setcc *)
+     fun set cc {opnd} = opnd := byte(cond(cc, 0xff, 0x0))
+     rtl SET^^   [EQ,NE,LT,LE,GT,GE,B,BE,A,AE,C,NC,P,NP,O,NO] =
+         map set [E ,NE,L, LE,G ,GE,B,BE,A,AE,C,NC,P,NP,O,NO]
+
+     (* conditional move *)
+     fun cmov cc {src,dst} = if cc then $r[dst] := long src else ()
+     rtl CMOV^^   [EQ,NE,LT,LE,GT,GE,B,BE,A,AE,C,NC,P,NP,O,NO] =
+         map cmov [E ,NE,L, LE,G ,GE,B,BE,A,AE,C,NC,P,NP,O,NO]
+
+     (* push and pops *)
+     rtl PUSHQ {operand} = $m[rsp - 8] := qword(operand) || rsp := rsp - 8
+     rtl POP  {operand} = operand := long($m[esp]) || esp := esp + 4
+
+     (* semantics of branches and jumps *)
+     rtl JMP{operand} = Jmp(long operand)
+     fun jcc cc {opnd} = if cc then Jmp(long opnd) else ()
+     rtl J^^     [EQ,NE,LT,LE,GT,GE,B,BE,A,AE,C,NC,P,NP,O,NO] =
+         map jcc [E ,NE,L, LE,G ,GE,B,BE,A,AE,C,NC,P,NP,O,NO]
+     rtl CALL{opnd,defs,uses} =
+         Call(long opnd) ||
+         Kill $cellset[defs] ||
+         Use $cellset[uses]
+
+
+  end (* RTL *)
+
+  (*------------------------------------------------------------------------
+   * Machine Instruction encoding on the x86-64
+   * Because of variable width instructions.
+   * We decompose each byte field into a seperate format first, then combine
+   * then to form the real instructions
+   *------------------------------------------------------------------------*)
+  instruction formats 8 bits
+    modrm{mod:2, reg:3, rm:3}
+  | reg{opc:5, reg:3}
+  | sib{ss:2, index:3, base:3}
+  | immed8{imm:8}
+
+  instruction formats 32 bits
+    immed32{imm:32}
+
+  (*
+   * Variable format instructions
+   *)
+  instruction formats
+    immedOpnd{opnd} =
+      (case opnd of
+         I.Immed i32 => i32
+       | I.Immed i64 => i64
+       | I.ImmedLabel le => lexp le
+       | I.LabelEA le => lexp le
+       | _ => error "immedOpnd"
+      )
+  | extension{opc, opnd} = (* generate an extension *)
+      (case opnd of
+        I.Direct (_, r) => modrm{mod=3, reg=opc, rm=r}
+      | I.FDirect _ => raise Fail "todo"
+      | I.Displace{base, disp, ...} =>
+        let val immed = immedOpnd{opnd=disp}
+        in  () (* XXX *)
+        end
+      | I.Indexed{base=NONE, index, scale, disp, ...} => ()
+      | I.Indexed{base=SOME b, index, scale, disp, ...} => ()
+      | _ => error "immedExt"
+      )
+
+   instruction formats 16 bits
+     encodeST{prefix:8, opc:5, st: $FP 3}
+
+   instruction formats
+     encodeReg{prefix:8, reg: $GP 3, opnd} =
+      (emit prefix; immedExt{opc=reg, opnd=opnd})
+   | arith{opc1,opc2,src,dst} =
+      (case (src, dst) of
+        (I.ImmedLabel le, dst) => arith{opc1,opc2,src=I.Immed(lexp le),dst}
+      | (I.LabelEA le, dst) => arith{opc1,opc2,src=I.Immed(lexp le),dst}
+      | (I.Immed i,dst) => ()
+      | (I.Immed64 i,dst) => ()
+      | (src, I.Direct (_,r)) => encodeReg{prefix=opc1+op3,reg,opnd=src}
+      | (I.Direct (_,r),dst) => encodeReg{prefix=opc1+0w1,reg,opnd=dst}
+      | _ => error "arith"
+      )
+
+  structure Assembly =
+    struct
+      fun emitInt32 i = let
+          val s = Int32.toString i
+          val s = if i >= 0 then s else "-"^String.substring(s,1,size s-1)
+          in
+	     emit s
+	  end
+      fun emitInt64 i = let
+          val s = Int64.toString i
+          val s = if (i >= 0) then s else "-"^String.substring(s,1,size s-1)
+          in
+	      emit s
+          end
+
+      val {low=SToffset, ...} = C.cellRange CellsBasis.FP
+
+      fun emitScale 0 = emit "1"
+        | emitScale 1 = emit "2"
+        | emitScale 2 = emit "4"
+        | emitScale 3 = emit "8"
+        | emitScale _ = error "emitScale"
+
+      and eImmed(I.Immed i) = emitInt32 i
+	| eImmed(I.Immed64 i) = emitInt64 i
+        | eImmed(I.ImmedLabel lexp) = emit_labexp lexp
+        | eImmed _ = error "eImmed"
+
+      and emit_operand opn = (case opn
+	  of I.Immed i => (emit "$"; emitInt32 i)
+	   | I.Immed64 i => (emit "$"; emitInt64 i)
+           | I.ImmedLabel lexp => (emit "$"; emit_labexp lexp)
+           | I.LabelEA le => emit_labexp le
+           | I.Relative _ => error "emit_operand"
+           | I.Direct (ty, r) => emit(CellsBasis.toStringWithSize(r,ty))
+           | I.FDirect f => emit(CellsBasis.toString f)
+           | I.Displace{base,disp,mem,...} =>
+               (emit_disp disp; emit "("; emitCell base; emit ")";
+                emit_region mem)
+           | I.Indexed{base,index,scale,disp,mem,...} =>
+              (emit_disp disp; emit "(";
+               case base of
+                 NONE => ()
+               | SOME base => emitCell base;
+               comma();
+               emitCell index; comma();
+               emitScale scale; emit ")"; emit_region mem)
+	  (* end case *))
+
+       and emit_operand8(I.Direct (_, r)) =
+	   emit(CellsBasis.toStringWithSize(r,8))
+         | emit_operand8 opn = emit_operand opn
+
+      and emit_cell (r, sz) = emit (CellsBasis.toStringWithSize(r,sz))
+
+      and emit_disp(I.Immed 0) = ()
+        | emit_disp(I.Immed i) = emitInt32 i
+	| emit_disp(I.Immed64 0) = ()
+	| emit_disp(I.Immed64 i) = emitInt64 i
+        | emit_disp(I.ImmedLabel lexp) = emit_labexp lexp
+        | emit_disp _ = error "emit_disp"
+
+     (* The gas assembler does not like the "$" prefix for immediate
+      * labels in certain instructions.
+      *)
+      fun stupidGas(I.ImmedLabel lexp) = emit_labexp lexp
+        | stupidGas opnd = (emit "*"; emit_operand opnd)
+
+     (* Display the floating point binary opcode *)
+      fun isMemOpnd(I.FDirect f) = true
+        | isMemOpnd(I.LabelEA _) = true
+        | isMemOpnd(I.Displace _) = true
+        | isMemOpnd(I.Indexed _) = true
+        | isMemOpnd _ = false
+      fun chop fbinOp =
+          let val n = size fbinOp
+          in  case Char.toLower(String.sub(fbinOp,n-1)) of
+                (#"s" | #"l") => String.substring(fbinOp,0,n-1)
+              | _ => fbinOp
+          end
+
+      val emit_dst = emit_operand
+      val emit_src = emit_operand
+      val emit_opnd = emit_operand
+      val emit_opnd8 = emit_operand8
+      val emit_rsrc = emit_operand
+      val emit_lsrc = emit_operand
+      val emit_addr = emit_operand
+      val emit_src1 = emit_operand
+      val emit_ea = emit_operand
+      val emit_count = emit_operand
+      fun emit_byte b = (emit "$0x"; emit(Word8.toString b))
+  end (* Assembly *)
+
+
+  (*------------------------------------------------------------------------
+   *
+   * Reservation tables and pipeline definitions for scheduling.
+   * Faked for now as I don't have to time to look up the definitions
+   * from the Intel doc.
+   *
+   *------------------------------------------------------------------------*)
+
+   (* Function units *)
+   resource issue and mem and alu and falu and fmul and fdiv and branch
+
+   (* Different implementations of cpus *)
+   cpu default 2 [2 issue, 2 mem, 1 alu, 1 falu, 1 fmul] (* 2 issue machine *)
+
+   (* Definitions of various reservation tables *)
+   pipeline NOP _    = [issue]
+    and     ARITH _  = [issue^^alu]
+    and     LOAD _   = [issue^^mem]
+    and     STORE _  = [issue^^mem,mem,mem]
+    and     BRANCH _ = [issue^^branch]
+
+  (*------------------------------------------------------------------------
+   *
+   * Compiler representation of the instruction set.
+   *
+   *------------------------------------------------------------------------*)
+  instruction
+      NOP
+	asm: ``nop''
+	rtl: ``NOP''
+
+    | JMP of operand * Label.label list
+	asm: ``jmp\t<stupidGas operand>''
+	rtl: ``JMP''
+
+    | JCC of {cond:cond, opnd:operand}
+	asm: ``j<cond>\t<stupidGas opnd>''
+	rtl: ``J<cond>''
+
+    | CALL of {opnd: operand, defs: $cellset, uses: $cellset,
+               return: $cellset, cutsTo: Label.label list, mem: Region.region,
+ 	       pops:Int32.int}
+	asm: ``call\t<stupidGas opnd><mem><
+          	emit_defs(defs)><
+          	emit_uses(uses)><
+          	emit_cellset("return",return)><
+                emit_cutsTo cutsTo>''
+	rtl: ``CALL''
+
+    | ENTER of {src1:operand, src2:operand}
+	asm: ``enter\t<emit_operand src1>, <emit_operand src2>''
+
+    | LEAVE
+	asm: ``leave''
+
+    | RET of operand option
+	asm: ``ret<case option of NONE => ()
+                                | SOME e => (emit "\t"; emit_operand e)>''
+
+    | MOVE of {mvOp:move, src:operand, dst:operand}
+	asm: ``<mvOp>\t<src>, <dst>''
+	rtl: ``<mvOp>''
+
+    | LEAL of {r32: $GP, addr: operand}
+	asm: ``leal\t<addr>, <emit_cell (r32, 32)>''
+	rtl: ``LEAL''
+
+    | LEAQ of {r64: $GP, addr: operand}
+	asm: ``leaq\t<addr>, <emit_cell (r64, 64)>''
+	rtl: ``LEAQ''
+
+    | CMPQ of {lsrc: operand, rsrc: operand}
+	asm: ``cmpq\t<rsrc>, <lsrc>''
+
+    | CMPL of {lsrc: operand, rsrc: operand}
+	asm: ``cmpl\t<rsrc>, <lsrc>''
+
+    | CMPW of {lsrc: operand, rsrc: operand}
+	``cmpb\t<rsrc>, <lsrc>''
+
+    | CMPB of {lsrc: operand, rsrc: operand}
+	``cmpb\t<rsrc>, <lsrc>''
+
+    | TESTQ of {lsrc: operand, rsrc: operand}
+	asm: ``testq\t<rsrc>, <lsrc>''
+	rtl: ``TESTQ''
+
+    | TESTL of {lsrc: operand, rsrc: operand}
+	asm: ``testl\t<rsrc>, <lsrc>''
+	rtl: ``TESTL''
+
+    | TESTW of {lsrc: operand, rsrc: operand}
+	asm: ``testw\t<rsrc>, <lsrc>''
+	rtl: ``TESTW''
+
+    | TESTB of {lsrc: operand, rsrc: operand}
+	asm: ``testb\t<rsrc>, <lsrc>''
+	rtl: ``TESTB''
+
+    | BITOP of {bitOp:bitOp, lsrc: operand, rsrc: operand}
+	``<bitOp>\t<rsrc>, <lsrc>''
+
+    | BINARY of {binOp:binaryOp, src:operand, dst:operand}
+	asm: (case (src,binOp) of
+               (I.Direct _,  (* tricky business here for shifts *)
+               (I.SARQ | I.SHRQ | I.SHLQ |
+		I.SARL | I.SHRL | I.SHLL |
+                I.SARW | I.SHRW | I.SHLW |
+                I.SARB | I.SHRB | I.SHLB)) => ``<binOp>\t%cl, <dst>''
+             | _ => ``<binOp>\t<src>, <dst>''
+             )
+	(*rtl: ``<binOp>''*)
+    | SHIFT of {shiftOp:shiftOp, src:operand, dst:operand, count:operand}
+        asm: (case count of (* must be %ecx if it is a register *)
+                I.Direct (ty, ecx) => ``<shiftOp>\t<src>, <dst>''
+              | _            => ``<shiftOp>\t<src>, <count>, <dst>''
+             )
+
+    | MULTDIV of {multDivOp:multDivOp, src:operand}
+	asm: ``<multDivOp>\t<src>''
+
+    | MUL3 of {dst: $GP, src2: Int32.int, src1:operand}
+        (* Fermin: constant operand must go first *)
+        asm: ``imull\t$<emitInt32 src2>, <src1>, <emit_cell (dst, 32)>''
+
+    | MULQ3 of {dst: $GP, src2: Int32.int, src1:operand}
+        (* Fermin: constant operand must go first *)
+        asm: ``imulq\t$<emitInt32 src2>, <src1>, <emit_cell (dst, 64)>''
+
+    | UNARY of {unOp:unaryOp, opnd:operand}
+	asm: ``<unOp>\t<opnd>''
+	rtl: ``<unOp>''
+
+      (* set byte on condition code; note that
+       * this only sets the low order byte, so it also
+       * uses its operand.
+       *)
+    | SET of {cond:cond, opnd:operand}
+	asm: ``set<cond>\t<emit_opnd8 opnd>''
+	rtl: ``SET<cond>''
+
+    | CMOV of {cond:cond, src:operand, dst: $GP}
+	asm: ``cmov<cond>\t<src>, <dst>''
+	rtl: ``CMOV<cond>''
+
+    | PUSH of operand
+	asm: ``pushq\t<operand>''
+	rtl: ``PUSHQ''
+
+    | PUSHFQ    (* push $rflags onto stack *)
+	``pushfq''
+
+    | POPFQ	(* pop $rflags onto stack *)
+	``popfq''
+
+    | POP of operand
+	asm: ``popq\t<operand>''
+	rtl: ``POP''
+
+    (* also known as CLTD *)
+    | CDQ
+	``cdq''
+
+    (* also known as CQTO *)
+    | CDO
+	``cdo''
+
+    (* interrupt; use 0w4 to signal overflow *)
+    | INT of byte
+	``int\t<byte>''
+
+    (* floating-point operations (SSE scalar instructions) *)
+    | FMOVE of {fmvOp : fmove_op, dst : operand, src : operand}
+      ``<fmvOp>\t <src>, <dst>''
+
+    | FBINOP of {binOp : fbin_op, dst : $FP, src : operand}
+      ``<binOp>\t <src>, <dst>''
+
+    | FCOM of {comOp : fcom_op, dst : $FP, src : operand}
+      ``<comOp>\t <src>, <dst>''
+
+    | FSQRTS of {dst : operand, src : operand}
+      ``sqrtss\t <src>, <dst>''
+
+    | FSQRTD of {dst : operand, src : operand}
+      ``sqrtsd\t <src>, <dst>''
+
+   (* misc *)
+    | SAHF        (* %flags -> %ah *)
+	``sahf''
+
+  (*** concurrency operations ****)
+
+      (* performs a serializing operation on all load-to-memory operations issued prior to
+       * the lfence instruction.
+       *)
+    | LFENCE
+        asm: ``lfence''
+        rtl:  ``LFENCE''
+
+      (* performs a serializing operation on all load-from-memory and store-to-memory
+       * operations issued prior to the mfence instruction.
+       *)
+    | MFENCE
+        asm: ``mfence''
+        rtl: ``MFENCE''
+
+      (* performs a serializing operation on all store-to-memory operations issued prior to
+       * the sfence instruction.
+       *)
+    | SFENCE
+        asm: ``sfence''
+        rtl:  ``SFENCE''
+
+      (* improves performance of spin-wait loops *)
+    | PAUSE
+        asm: ``pause''
+        rtl: ``PAUSE''
+
+    | XCHG of {lock:bool, sz:isize, src: operand, dst:operand}
+	asm: (if lock then ``lock\n\t'' else ();
+              ``xchg'';
+              case sz of
+                I.I8 => ``b''
+              | I.I16 => ``w''
+              | I.I32 => ``l''
+	      | I.I64 => ``q'';
+              ``\t<src>, <dst>''
+             )
+
+    | CMPXCHG of {lock:bool, sz:isize, src: operand, dst:operand}
+	asm: (if lock then ``lock\n\t'' else ();
+              ``cmpxchg'';
+              case sz of
+                I.I8 => ``b''
+              | I.I16 => ``w''
+              | I.I32 => ``l''
+	      | I.I64 => ``q'';
+              ``\t<src>, <dst>''
+             )
+
+    | XADD of {lock:bool, sz:isize, src:operand, dst:operand}
+       asm: (if lock then ``lock\n\t'' else ();
+              ``xadd'';
+              case sz of
+                I.I8 => ``b''
+              | I.I16 => ``w''
+              | I.I32 => ``l''
+	      | I.I64 => ``q'';
+              ``\t<src>, <dst>''
+             )
+
+    | RDTSC
+        asm: ``rdtsc''
+    | RDTSCP
+        asm: ``rdtscp''
+
+    | LAHF	  (* %ah -> %flags *)
+	``lahf''
+
+    | SOURCE of {}
+        asm: ``source''
+        mc:  ()
+
+    | SINK of {}
+        asm: ``sink''
+        mc:  ()
+
+    | PHI of {}
+        asm: ``phi''
+        mc:  ()
+
+  end
+

@@ -1,0 +1,26 @@
+<!-- template for CML Manual table of contents page -->
+<HTML>
+<HEAD>
+<TITLE>&title;</TITLE>
+<BODY>
+<A NAME="top"></A>
+<HR>
+<H1 align=center>The Concurrent ML Reference Manual</H1>
+<HR>
+&body;
+<HR>
+<CENTER>
+<B>[ <A HREF="#top">Top</A>
+   | <A HREF="&parent.url;">Parent</A>
+   | Contents
+   | <A HREF="index-all.html">Index</A>
+   | <A HREF="&root.url;">Root</A>
+   ]</B>
+</CENTER>
+<P>
+<I>Generated &today.date;</I><BR>
+<I>Comments to <A HREF="http://www.cs.uchicago.edu/~jhr">John Reppy.</A></I><BR>
+Copyright &copy; 1991-2003 John Reppy<BR>
+<HR>
+</BODY>
+</HTML>

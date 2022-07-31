@@ -1,0 +1,16 @@
+(* This file is created by makeallcm *)
+Library
+	functor AlphaRTL
+	functor AlphaRTLProps
+is
+        $/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	Region.cm
+	ALPHA.cm
+
+	../alpha/mltree/alphaRTL.sml
+	../alpha/mltree/alphaRTLProps.sml

@@ -1,0 +1,102 @@
+(*
+ * This library contains the superscalar scheduling stuff.
+ *)
+
+Library 
+	signature BASIC_BLOCK_SCHEDULER
+	signature BASIC_BLOCK_SCHEDULER_DDG_BUILDER
+	signature BASIC_BLOCK_SCHEDULER_DDG_VIEWER
+	signature GLOBAL_SCHEDULER_DDG_VIEWER
+	signature GLOBAL_SCHEDULING_ALGORITHM
+	signature LEUNG_PALEM_PNUELI
+	signature LIST_SCHEDULER
+	signature PALEM_SIMONS
+	signature REGION_BUILDER
+	signature SCHEDULER_DDG
+	signature SCHEDULER_DDG_BUILDER
+	signature SCHEDULING_ALIASING
+	signature SCHEDULING_PROPERTIES
+	signature SCHEDULING_RANKS
+	structure LeungPalemPnueli
+	structure PalemSimons
+	functor BBScheduler
+	functor BasicBlockSchedulerDDGBuilder
+	functor BasicBlockSchedulerDDGViewer
+	functor ClusterBasicBlockScheduler
+	functor DAGScheduling
+	functor GlobalCriticalPath
+	functor GlobalScheduler
+	functor GlobalSchedulerDDGViewer
+	functor ListScheduler
+	functor LocalCriticalPath
+	functor RegionBuilder
+	functor SchedulerDDG
+	functor SchedulerDDGBuilder
+is
+
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11028 
+	$basis.cm
+	$smlnj-lib.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+#endif
+#else
+	smlnj-lib.cm
+#endif
+	
+	../MLRISC.cm
+	../control/Control.cm
+	../library/Lib.cm
+	../graphs/Graphs.cm
+	../visualization/Visual.cm
+	../ir/ir.cm
+	../IR/IR.cm
+	../mltree/RTL.cm
+
+	(* Rank algorithms *)
+	PalemSimons.sig
+	PalemSimons.sml
+	LeungPalemPnueli.sig
+	LeungPalemPnueli.sml
+
+	(* Data dependence dag representation *)
+	schedulerDDG.sig
+	schedulerDDG.sml
+
+	(* Signature of a rank function *)
+	schedulingRanks.sig
+
+	(* Architectural Properties *)
+	schedulingProps.sig
+
+	(* Basic block scheduling *)
+	localCP.sml
+	buildLocalDDG.sig
+	buildLocalDDG.sml
+	bbScheduler.sig
+	bbScheduler.sml
+	bbDDGViewer.sig
+	bbDDGViewer.sml
+	clusterBBScheduler.sml
+
+	(* Superscalar scheduling.  These are required if you want to
+	 * play with instruction scheduling for superscalars.
+	 * It requires the MLRISC IR stuff. !!!
+	 *)
+	listScheduler.sig
+	listScheduler.sml
+	buildDDG.sig
+	buildDDG.sml
+	schedulingAliasing.sig
+	regionBuilder.sig
+	regionBuilder.sml
+
+        (* Various global scheduling algorithms *)
+	globalCP.sml
+        globalDDGViewer.sig
+        globalDDGViewer.sml
+        globalSchedulingAlgo.sig
+        dagScheduling.sml
+	globalScheduler.sml

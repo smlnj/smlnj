@@ -1,0 +1,39 @@
+(* This file is created by makeallcm *)
+Library
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/MLRISC.cm
+	$/AMD64.cm
+	$/Sched.cm
+	$/Region.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	AMD64.cm
+	Sched.cm
+	Region.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	AMD64.cm
+	Sched.cm
+	Region.cm
+#endif
+	../amd64/scheduling/amd64Arch.sig
+	../amd64/scheduling/amd64ReservationTable.sig
+	../amd64/scheduling/amd64PairingRT.sml
+	../amd64/scheduling/amd64PipelineRT.sml
+	../amd64/scheduling/amd64PentiumII.sml
+	../amd64/scheduling/amd64PentiumPro.sml
+	../amd64/scheduling/amd64SchedProps.sml

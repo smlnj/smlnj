@@ -1,0 +1,11 @@
+Group
+
+  structure X86_64Test
+  structure X86Test
+  structure SparcTest
+  structure TestVarargs
+
+is
+
+  $/basis.cm
+  wrapper.cm

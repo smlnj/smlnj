@@ -1,0 +1,1 @@
+structure MLRiscDefs = MLRiscDefs(MDLAst)

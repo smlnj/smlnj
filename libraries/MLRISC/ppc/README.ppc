@@ -1,0 +1,13 @@
+Changes to the instruction set
+==============================
+
+1. Added Region.region to CALL instructions.
+2. Added a lot of 64-bit and single-precision floating point instructions
+
+New optimizations in the PowerPC backend
+======================================
+1.  Propagation of annotations.
+2.  Strength reduction of unsigned 32-bit multiplication and division.
+3.  NOTB folding is implemented.  For example, this combines
+    NOTB with AND into NAND.
+4.  3-operand floating point instructions are generated.

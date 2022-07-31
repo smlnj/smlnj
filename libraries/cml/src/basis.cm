@@ -1,0 +1,247 @@
+(* basis.cm
+ *
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This is the CML-enhanced version of the Standard ML Basis Library.
+ * It consists of a "view" of cml-internal.cm and many definitions
+ * reexported from the original $/basis.cm without change.
+ *)
+
+Library
+
+(* The "old" CM did not have $/basis.cm but used a very large pervasive
+ * environment in its place.  The pervasive environment is implicit and
+ * one cannot re-export from it.  Therefore, re-exports from $/basis.cm
+ * are conditional on NEW_CM.
+ *)
+	(* Basis *)
+	signature ARRAY
+	signature ARRAY_SLICE
+	signature ARRAY2
+	signature BIN_IO
+	signature BIT_FLAGS
+	signature BOOL
+	signature BYTE
+	signature CHAR
+	signature COMMAND_LINE
+	signature DATE
+	signature GENERAL
+	signature IEEE_REAL
+	signature IMPERATIVE_IO
+	signature INT_INF
+	signature INTEGER
+	signature IO
+	signature LIST
+	signature LIST_PAIR
+	signature MATH
+	signature MONO_ARRAY
+	signature MONO_ARRAY_SLICE
+	signature MONO_ARRAY2
+	signature MONO_VECTOR
+	signature MONO_VECTOR_SLICE
+	signature OPTION
+	signature OS
+	signature OS_FILE_SYS
+	signature OS_IO
+	signature OS_PATH
+	signature OS_PROCESS
+	signature PACK_REAL
+	signature PACK_WORD
+	signature PRIM_IO
+	signature REAL
+	signature STREAM_IO
+	signature STRING
+	signature STRING_CVT
+	signature SUBSTRING
+	signature TEXT
+	signature TEXT_IO
+	signature TEXT_STREAM_IO
+	signature TIME
+	signature TIMER
+	signature VECTOR
+	signature VECTOR_SLICE
+	signature WORD
+
+	signature EITHER	(* proposal 2015-002 *)
+	signature FN		(* proposal 2015-005 *)
+	signature REF		(* proposal 2015-007 *)
+
+	signature SML90
+
+	(* SML/NJ specific *)
+	signature SIGNALS
+
+	signature CLEAN_UP
+	signature CONT
+	signature INTERVAL_TIMER
+	signature INTERNALS
+	signature GC
+	signature SYS_INFO
+	signature WEAK
+	signature SML_OF_NJ
+
+	signature UNSAFE_OBJECT
+	signature UNSAFE_ARRAY
+	signature UNSAFE_VECTOR
+	signature UNSAFE_MONO_ARRAY
+	signature UNSAFE_MONO_VECTOR
+	signature UNSAFE
+
+	(* Basis *)
+	structure Array
+	structure Array2
+	structure ArraySlice
+	structure Bool
+	structure Byte
+	structure Char
+	structure CharArray
+	structure CharArraySlice
+	structure CharVector
+	structure CharVectorSlice
+	structure CommandLine
+	structure Date
+	structure General
+	structure IEEEReal
+	structure Int
+#if defined(SIZE_64)
+	structure Int63
+#else (* SIZE_32 *)
+	structure Int31
+#endif
+	structure Int32
+	structure Int64
+	structure IntInf
+	structure IO
+	structure LargeInt
+	structure LargeReal
+	structure LargeWord
+	structure List
+	structure ListPair
+	structure Math
+	structure Option
+	structure PackReal64Big
+	structure PackReal64Little
+	structure PackWord16Big
+	structure PackWord16Little
+	structure PackWord32Big
+	structure PackWord32Little
+	structure PackWord64Big
+	structure PackWord64Little
+	structure Position
+	structure Real
+	structure Real64
+	structure Real64Array
+	structure Real64ArraySlice
+	structure Real64Vector
+	structure Real64VectorSlice
+	structure RealArray
+	structure RealArraySlice
+	structure RealVector
+	structure RealVectorSlice
+	structure String
+	structure StringCvt
+	structure Substring
+	structure SysWord
+	structure Text
+	structure Time
+	structure Timer
+	structure Vector
+	structure VectorSlice
+	structure Word
+#if defined(SIZE_64)
+	structure Int63
+#else (* SIZE_32 *)
+	structure Word31
+#endif
+	structure Word32
+	structure Word64
+	structure Word8
+	structure Word8Array
+	structure Word8ArraySlice
+	structure Word8Vector
+	structure Word8VectorSlice
+
+	structure Either	(* proposal 2015-002 *)
+	structure Fn		(* proposal 2015-005 *)
+	structure Ref		(* proposal 2015-007 *)
+
+	structure SML90
+
+	(* SML/NJ specific *)
+	structure Signals
+	structure Unsafe
+	structure SMLofNJ
+	structure Lazy
+
+#if defined(OPSYS_UNIX) orelse defined(OPSYS_WIN32)
+	(* Sockets (common part) *)
+	signature NET_HOST_DB
+	signature NET_PROT_DB
+	signature NET_SERV_DB
+
+	signature SOCKET
+
+	structure GenericSock
+	structure NetHostDB
+	structure NetProtDB
+	structure NetServDB
+#endif
+
+#if defined(OPSYS_UNIX)
+	(* Posix *)
+	signature POSIX_ERROR
+	signature POSIX_SIGNAL
+	signature POSIX_PROCESS
+	signature POSIX_PROC_ENV
+	signature POSIX_FILE_SYS
+	signature POSIX_IO
+	signature POSIX_SYS_DB
+	signature POSIX_TTY
+	signature POSIX
+	structure Posix
+
+	(* Unix *)
+	signature UNIX_SIGNALS
+	structure UnixSignals
+
+	(* Sockets *)
+	signature NET_DB
+
+	structure NetDB
+
+#elif defined (OPSYS_WIN32)
+
+	signature WIN32_GENERAL
+	signature WIN32_PROCESS
+	signature WIN32_FILESYS
+	signature WIN32_IO
+	signature WIN32
+
+	structure Win32
+#endif
+
+	(* Here are the things that have a CML-specific implementation: *)
+	signature OS_PROCESS
+	signature OS_IO
+	signature OS
+	structure OS
+	signature PRIM_IO
+	structure BinIO
+	structure BinPrimIO
+	structure TextIO
+	structure TextPrimIO
+	signature INET_SOCK
+	signature GENERIC_SOCK
+	structure Socket
+	structure INetSock
+#if defined(OPSYS_UNIX)
+	signature UNIX_SOCK
+	structure UnixSock
+	signature UNIX
+	structure Unix
+#endif
+is
+
+  basis-sub-basis.cm
+  $cml/cml-internal.cm

@@ -1,0 +1,24 @@
+(* pgraph-util.cm
+ *   Utility routines for reading and writing pgraphs.
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * author: Matthias Blume (blume@research.bell-labs.com)
+ *)
+Library
+	structure FormatPortable
+	structure ScanPortable
+	structure GenSML
+
+	signature PG_OPS
+	structure PGOps
+	structure ReconstructPortable
+is
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/pgraph.cm
+	format.sml
+	scan.sml
+	gen-sml.sml
+	generic-ops.sml
+	reconstruct.sml

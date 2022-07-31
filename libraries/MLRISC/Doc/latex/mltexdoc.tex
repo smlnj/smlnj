@@ -1,0 +1,76 @@
+\documentclass{article} 
+\usepackage{mltex}
+\usepackage{wrapfig}
+\usepackage{float}
+%\usepackage{floatfig}
+\usepackage{fancyheadings}
+%\usepackage{draftcopy}
+%\usepackage{bookman}
+\usepackage{utopia}
+%\usepackage{times}
+%\usepackage{ncntrsbk}
+%\usepackage{palatino}
+
+   \setlength{\textwidth}{6.5in}
+   \setlength{\evensidemargin}{0in}
+   \setlength{\oddsidemargin}{0in}
+   \setlength{\textheight}{8in}
+   \setlength{\topmargin}{-0.5in}
+
+   \pagestyle{fancyplain}
+   %\addtolength{\headwidth}{\marginparsep}
+   %\addtolength{\headwidth}{\marginparwidth}
+
+   \newcommand{\edge}[1]{\rightarrow_{#1}}
+   \newcommand{\union}{\cup}
+   \newcommand{\Union}{\bigcup}
+   \newcommand{\overrides}{overrides}
+   \newcommand{\defas}{\stackrel{\rm as}{=}}
+
+   \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+   \renewcommand{\subsectionmark}[1]{\markright{\thesubsection\ #1}}
+   \newcommand{\Term}[1]{\mbox{\it #1}}
+   \lhead[\fancyplain{}{\bfseries\thepage}]%
+         {\fancyplain{}{\bfseries\rightmark}}
+   \rhead[\fancyplain{}{\bfseries\leftmark}]%
+         {\fancyplain{}{\bfseries\thepage}}
+   \cfoot{}
+
+   \newenvironment{Figure}{\begin{figure}[htbp]}{\end{figure}}
+
+\begin{document}
+   \title{\bf \LARGE \MLTeX} 
+   \author{\begin{tabular}{c}
+            Allen Leung \\ \\
+            New York University \\
+            719 Broadway, Rm. 714 \\ 
+            New York, NY 10003. \\
+            {\tt leunga@cs.nyu.edu}
+           \end{tabular}
+        \and 
+           \begin{tabular}{c}
+            Lal George \\ \\
+            Bell Laboratories \\
+            600--700 Mountain Ave. \\
+            Murray Hill, NJ 07974--0636. \\
+            {\tt george@research.bell-labs.com}
+            \end{tabular}
+     }
+
+   \date{\today}
+   \bibliographystyle{alpha}
+
+   \maketitle
+
+   \begin{abstract}
+ \newdef{\MLTeX} is a special \newdef{\LaTeX} package for writing
+\MLRISC{} documentation.  It is similar to the \newdef{latex2html}
+tool except that \MLTeX{} has special environments for documenting
+Standard ML code.   In addition, there is an accompanying tool
+called \newdef{mltex2html} for generating HTML pages.
+   \end{abstract}
+ 
+
+   \include{mltex}
+   \bibliography{mlrisc}
+\end{document}

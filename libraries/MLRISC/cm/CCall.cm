@@ -1,0 +1,36 @@
+(* This file is created by makeallcm *)
+Library
+	signature C_CALL_GEN
+	signature C_CALL
+	structure CType
+	functor CCallGenFn
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/MLRISC.cm
+	$/MLTREE.cm
+	$/StagedAlloc.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+#endif
+	../c-call/gen/c-call-gen-sig.sml
+	../c-call/gen/c-call-sig.sml
+	../c-call/gen/c-call-gen-fn.sml
+	../c-call/gen/c-type.sml

@@ -1,0 +1,11 @@
+Group is
+	../library/sources.cm
+	../graphs/sources.cm
+	../visualization/sources.cm
+	PalemSimons.sig
+	PalemSimons.sml
+	LeungPalemPnueli.sig
+	LeungPalemPnueli.sml
+	test1.sml
+	test2.sml
+	wuhui.sml

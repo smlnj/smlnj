@@ -1,0 +1,247 @@
+ckit: A FRONT END FOR C IN SML
+------------------------------
+
+1. GETTING STARTED
+------------------
+
+On unpacking the ckit sources, you should see a src directory, a doc directory
+and a README file (and possibly other directories, depending on the distribution).
+
+The src directory contains the following subdirectories:
+
+ parser:   lexer and parser, parse trees.
+ ast:      abstract syntax trees (Ast), type-checker, pretty-printer.
+ variants: flags for controlling the parser and type-checker. 
+ 
+To build the system, cd to src, run SML/NJ and type 
+
+- CM.make();
+
+To test the parser on "test.c", type 
+
+- ParseToAst.fileToAst "test.c";
+
+This parses and typechecks "test.c" and returns an abstract syntax tree for
+"test.c".  Alternatively, to parse, type-check and then pretty-print "test.c",
+type  
+
+- ParseToAst.fileToC "test.c";
+
+
+2. USING THE FRONTEND
+---------------------
+
+The following describes some commonly used ckit functions.
+
+2.1: ParseToAst.fileToAst: string -> ParseToAst.astBundle
+   
+This is the main function to parse a file and produce abstract syntax.
+When applied to a string (file name), it produces a bundle of information of
+type astBundle:
+   
+type astBundle =
+    {ast: Ast.ast,
+     tidtab: Bindings.tidBinding Tidtab.uidtab,
+     errorCount: int,
+     warningCount: int,
+     auxiliaryInfo: {astTypes: Tables.astIndexTab,
+	             implicits: Tables.astIndexTab,
+                     env: State.symtab}}
+
+where:
+ ast is the abstract syntax tree.
+ tidtab is the type identifier table that maps type identifiers into their meanings.
+ errorCount is the count of all errors encountered during parsing and type checking.
+ warningCount is the count of all warnings encountered during parsing and type checking.
+ astTypes is a table mapping ast indexes into the types of the corresponding ast expressions.
+ env is used to carry over global symbol information in some mult-file parsing applications.
+
+2.2 ParseToAst.fileToC
+
+
+2.3 Parser.parseFile
+ val parseFile : string -> ParseTree.externalDecl list * Error.errorStream
+
+2.4 errorStream
+ -- not used for much
+ -- contains count of warnings and errors
+
+Top level driving functions are in file parse-to-ast.sml.  Generally
+use ParseToAst.fileToAst.  It returns a record of type BuildAst.ProgramInfo.
+
+Example:
+
+   val {ast={ast: Ast.ast,
+	     tidtab: Bindings.tidBinding Tidtab.uidtab,
+	     errstrm: Error.errorStream},
+	aidtab: Tables.aidtab,
+	opaidtab: Tables.aidtab,
+	env: State.symtab} = ParseToAst.fileToAst ("file");
+
+Ast.ast is the abstract syntax type for translation units (a list of top-level
+C declarations).  For further information, read the code.
+
+To get a hold of parse trees (parser/parse-tree.sml), which is the raw data
+structure produced by the parser:
+
+  val (parseTree, errorStream) = Parser.parseFile "file";
+
+See parse/util/error.sml for the definition of the errorStream type.
+
+
+
+3. SYSTEM STRUCTURE
+-------------------
+
+The frontend consists of a number of phases.
+The first phase consists of a lexer/parser (written using ml-lex and ml-yacc
+respectively).  The output of this phase is a data-structure (parse tree)
+that is a simple "unprocessed" form that closely follows the structure of C's
+grammar.   The next phase inputs the parse tree data-structure, type checks it,
+and produces a "processed" abstract syntax tree representation (Ast).
+
+3.1 THE LEXER AND PARSER
+
+These are built using ml-lex and ml-yacc.  The lex and yacc files can be found
+in src/parser/grammar/[c.lex,c.grm].  The parser performs only a minimal amount
+of syntactic processing.  Many syntactic restrictions are enforced during the
+type-checking phase e.g restrictions on the number and combination of type
+specifiers used in a type.
+
+Similarly, most scoping issues are addressed during type-checking. 
+One exception is typedef.  This must be handled during parsing because typedefs
+introduce new types and these can dramatically alter the shape of parse trees.
+In principle, the scoping of typedefs could be delayed till later processing,
+but in practice this is not feasible: in particular, if typedefs are not
+processed during parsing, then we cannot distinguish between 
+declaration forms and expressions.  Consider, the following program.
+
+char x;
+f() {
+  typedef int x;
+  {
+    x * x;
+  }
+}
+
+Here, "x * x" declares x as a pointer to an integer.
+However, if the typedef is commented out, then
+"x * x" is interpreted as an expression.
+
+The treatment of typedefs involves a subtle interaction between the parser and
+lexer.  When the parser recognizes a typedef for an identifier, it communicates
+to the lexer that the identifier should now be treated as a "type".
+Parser lookahead introduces additional complication: we cannot lex a token until
+any preceding typedefs have been processed.  In particular, we must limit
+lookahead to one symbol.  In fact, this only works because C's grammar requires 
+typedefs to end in a semicolon --- this semicolon acts as a buffer so that a
+typedef will be completely processed before any use of the new type is lexed.
+Note that typedefs can be scoped (e.g. see the above program), and so the parser
+must tell the lexer to undo the effect of a typedef when the typedef's scope is
+exited.  Another complication is the error recovery mechanism of ml-yacc.
+
+The parser produces parse trees (see src/parser/parse-tree-sig.sml).
+This data structure is a simple "unprocessed" form that closely follows the
+structure of C's grammar.  These parse trees are built up by the actions of the
+ml-yacc grammar.
+
+Any language extensions is likely to involve extensions to the lexer, parser and
+to the parse tree datatype.  When extending the lexer and parser, care must be taken to
+preserve the interaction between the lexer, the parser, and the use of one-token
+lookahead.  Extensions to the parse tree datatype are supported via a collection
+of "Ext" constructors in the parse tree datatypes.  The file
+extensions/c/parse-tree-ext.sml contains the default "empty extension" for
+standard C.  
+
+Files: 
+  parser/parser-tree-sig.sml, parser-tree.sml: definition of parse tree types
+  parser/grammar/c.lex, c.grm: lex and yacc specifications
+  parser/util/sourcemap-sig.sml, sourcemap.sml: mapping source file locations
+  parser/util/error-sig.sml, error.sml: error reporting functions
+
+
+3.2 ABSTRACT SYNTAX TREES (AST'S) AND BUILD-AST
+
+BuildAst (src/ast/build-ast.sml) consumes parse trees and builds up abstract
+syntax trees (Ast's) while performing type checking.  Ast's (src/ast/ast.sml)
+are defined so that each of the major syntactic categories (statements,
+expressions, and declarations) have a unique integer index associated with them.
+These indices are used to associate information with specific parts of the
+code.  Care must be taken to preserve their uniqueness when performing code
+transformations.  
+
+Objects (global variables, local variables, functions, etc) and struct/union
+fields are assigned globally unique integers called program identifiers
+(pids). This simplifies treatment of scope in Ast.  Similarly, types introduced
+by structs, unions, enums and typedefs are assigned globally unique
+integers called type identifiers (tids).
+ 
+BuildAst performs the following tasks:
+
+  1. Scoping: scoping of variables, structs, unions, fields and enums 
+     is resolved.
+
+  2. Type Checking: Full ANSIC C type checking is performed, and appropriate
+     errors and warnings are generated.  Errors and warnings are suppressed
+     in the case where there are parse errors.  The behaviour of the type
+     checker can be customized using a collection of flags in 
+     the TypeCheckControl structure defined in src/variants/ansic/config.sml.
+     BuildAst incrementally constructs a mapping between expression indices and
+     types that records the type of each expression. 
+     
+  3. Type Sizes And Memory Layout: BuildAst computes the sizes of the objects
+     declared in the program.  It also optionally reduces sizeof expressions to
+     integer constants (the flag BuildAst.reduce_sizeof can be used to enable
+     this feature; the default setting does not reduce sizeof constructs).
+     BuildAst also computes the layout and alignment properties of
+     all objects, including the offsets for fields of structs.
+     Type size and memory layout is architecture and compiler specific.
+     The behaviour of this aspect of BuildAst is specified in 
+     Sizes structure defined in src/variants/ansic/config.sml.
+
+  4. Initializer Normalization: The meaning of an object initializer is partly
+     determined by the type of the object begin initialized.  BuildAst
+     normalizes initializers so that they are easier to implement.
+     Moreover, certain aspects of the type of an object are inferred from 
+     an initializer (e.g. int x[] = {1,2,3}). 
+
+Files:
+
+  ast/ast-sig.sml, ast.sml: definition of abstract syntax datatypes.
+  ast/build-ast.sml: translation from parse trees to abstract syntax, with type checking and other
+                     static semantics processing.
+  extensions/
+    c/  -- dummy extension structures for C
+variants/
+  ansic/
+    config.sml: various flags controlling error checking, type checking, etc.
+
+3.3 PRETTY PRINTER FOR AST
+    Ast comes equipped with a pretty-printer (ast/pp/pp-ast-sig.sml).
+    Not only is this useful for debugging purposes, but it also is an integral
+    component of source-to-source applications of the frontend.  
+    When pretty printing Ast, pids and tids can be optionally printed.
+    The following flags control this behavior:
+        
+     PPLib.suppressPidUnderscores: controls printing of pids
+     PPLib.suppressPidGlobalUnderscores: controls printing of pids for global objects
+     PPLib.suppressTidUnderscores: controls printing of tids.
+
+Files:
+  pp/pp-ast-fn.sml : the generic pretty printing code for ast.
+  pp/pp-ast-sig.sml: pretty printing signature.
+  pp/pp-ast.sml: default pretty printer
+  pp/pp-ast-adornment.sml: pretty printer for printing ast interspersed with adornment info.
+  pp/pp-lib.sml: pretty printing for identifiers; some pretty printing combinators.
+  
+
+3.4 AST-UTILS [Not distributed yet]
+
+Files:
+ ast-utils/copy/: copying ast types
+ ast-utils/equality/: equality for ast types
+ ast-utils/simplifier/: ast simplifier
+
+
+5. LOCATION INFO
+----------------

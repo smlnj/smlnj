@@ -1,0 +1,22 @@
+(* This file is created by makeallcm *)
+Library
+	functor SparcPeephole
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/MLRISC.cm
+	$/Peephole.cm
+	$/SPARC.cm
+#else
+	basis.cm
+	MLRISC.cm
+	Peephole.cm
+	SPARC.cm
+#endif
+#else
+	MLRISC.cm
+	Peephole.cm
+	SPARC.cm
+#endif
+	../sparc/instructions/sparcPeephole.sml

@@ -1,0 +1,93 @@
+<!-- multicast.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1997>
+<VERSION VERID="1.0" YEAR=1997 MONTH=1 DAY=29>
+<TITLE>The Multicast structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/Multicast/ structure</HEAD>
+
+<PP>
+Multicast channels provide a mechanism for broadcasting a stream of
+messages to a collection of threads.
+Threads receive multicast messages via an <EM/output port/; each port
+receives its own copy of every message sent since the port was
+created.
+Multicast channels are particularly useful for communicating with a dynamically
+varying group of threads, since the sender does not need to know
+how many threads are listening.
+
+<STRUCTURE STRID="Multicast">
+  <SIGBODY SIGID="MULTICAST" FILE=MULTICAST-SIG>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>event<TY>'a CML.event
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>mchan
+        <COMMENT>
+	<PP>
+          This is the type constructor for asynchronous multicast channels.
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>port
+        <COMMENT>
+	<PP>
+          This is the type constructor for output ports on an
+	  asynchronous multicast channels.
+    <SPEC>
+      <VAL>mChannel<TY>unit -> 'a mchan
+        <COMMENT>
+          <PROTOTY>
+          mChannel <ARG/()/
+          </PROTOTY>
+          creates a new multicast channel.
+    <SPEC>
+      <VAL>port<TY>'a mchan -> 'a port
+        <COMMENT>
+          <PROTOTY>
+          port <ARG/mc/
+          </PROTOTY>
+          creates a new output port on the channel <ARG/mc/.
+	  The port receives those messages sent after it is created.
+    <SPEC>
+      <VAL>copy<TY>'a port -> 'a port
+        <COMMENT>
+          <PROTOTY>
+          copy <ARG/p/
+          </PROTOTY>
+          creates a new output port on a channel that has the same state as the
+	  port <ARG/p/.
+	  I.e., the stream of messages seen on the two ports will
+	  be the same.
+	  This is useful when two threads need to see the same stream of
+	  messages.
+	  NOTE: if two (or more) independent threads are reading from <ARG/p/
+	  at the time that <VALREF NOLINK/copy/ operation is performed, then
+	  it may not be accurate.
+    <SPEC>
+      <VAL>recv<TY>'a port -> 'a
+        <COMMENT>
+          <PROTOTY>
+          recv <ARG/p/
+          </PROTOTY>
+          gets the next message from the port <ARG/p/.
+	  The calling thread is blocked until there is a message available.
+    <SPEC>
+      <VAL>recvEvt<TY>'a port -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          recvEvt <ARG/p/
+          </PROTOTY>
+	  creates an event value that represents the <VALREF/recv/ operation
+	  on the port <ARG/p/.
+    <SPEC>
+      <VAL>multicast<TY>('a mchan * 'a) -> unit
+        <COMMENT>
+          <PROTOTY>
+          multicast (<ARG/mc/, <ARG/v/)
+          </PROTOTY>
+          multicasts the value <ARG/v/ on the channel <ARG/mc/.
+	  This is a nonblocking operation.
+</STRUCTURE>
+</INTERFACE>
+

@@ -1,0 +1,1441 @@
+#!/usr/local/bin/perl
+#
+# This tool generates HTML pages in my own format given a stylized Latex file.
+#
+# The output is in HTML 4.01 Transitional form.
+#
+# Allen Leung (leunga@cs.nyu.edu)
+
+############################################################################
+#
+# Formatting parameters
+#
+############################################################################
+$BACKGROUND_COLOR="#ffffff";  #white
+$TEXT_COLOR="#000020";  
+$TITLE_COLOR="#aa0000";       #dark red
+$ABSTRACT_TITLE_COLOR="#486591";  #black
+$SECTION_COLOR="#486591";       #dark red
+$SUBSECTION_COLOR="#486591";       #dark red
+$SUBSUBSECTION_COLOR="#486591";       #dark red
+$PARAGRAPH_COLOR="#486591";       #dark red
+$NEWDEF_COLOR="#ff0000";   #red
+$NEWTYPE_COLOR="#ff0000";   #red
+
+$LINK_COLOR="navy";
+$VLINK_COLOR="gray";
+$ALINK_COLOR="maroon";
+
+$SML_TYVAR_COLOR="#00aaaa";   #green
+$SML_KEYWORD_COLOR="#6060a0";   #blue
+$SML_IDENT_COLOR="#9c4040";   
+
+$EMPH_COLOR="#ff0000";   #red
+$DESC_COLOR="#000070";   #blue
+$CAPTION_COLOR="#007777";   #green/blue
+$CODE_COLOR="#000000";  # black
+$TOC_BACKGROUND_COLOR="#e6e6e6";
+$SECTION_TOC_TEXT_COLOR="#486591";
+$MAJORSECTION_TEXT_COLOR="ffffff";
+$MAJORSECTION_BACKGROUND_COLOR="#486591";
+$SECTION_TOC_BACKGROUND_COLOR="#e6e6e6";
+$TOC_FACE="hevetica";
+$MAX_LOCAL_TOC_ENTRY_LENGTH=40;
+$MAX_GLOBAL_TOC_ENTRY_LENGTH=40;
+$GLOBAL_TOC_WIDTH=170;
+$SCREEN_WIDTH=700;
+$TEXT_WIDTH=400;
+$TOC_SIZE=-1;
+
+$X_PIXELS = 1024;
+$Y_PIXELS = 768;
+$IMAGE_SCALING=0.8;
+$PAPER_HEIGHT = "11in";
+$PAPER_WIDTH = "8.5in";
+
+@AUTHORS=("Lal George", "Allen Leung");
+@EMAILS=('george@research.bell-labs.com','leunga@cs.nyu.edu');
+$PWD=`pwd`;
+$DATE=`date`;
+$HOSTNAME=`hostname`;
+chop $HOSTNAME;
+chop $DATE;
+chop $PWD;
+$USER=$ENV{"USER"};
+$WWWHOST="www.cs.nyu.edu";
+$URLPREFIX="leunga/MLRISC/Doc/html/";
+
+$BEGINPRE="<font color=\"$CODE_COLOR\"><small><pre>";
+$ENDPRE="</pre></small></font>";
+$BEGINALLTT="<font color=\"$CODE_COLOR\"><pre>";
+$ENDALLTT="</pre></font>";
+
+############################################################################
+#
+# Global variables and tables
+#
+############################################################################
+$PARAM='[^\{\}]*';
+sub globalInit()
+{
+@GLOBALTOC=();   # table of contents for entire document
+@LOCALTOC=();    # table of contents for each section
+%LINKLABEL={};   # name to link for referenceing
+%LINKNAME={};
+$PATHNAME="";    # current pathname
+$FILENAME="";    # current file   
+$HTML_FILENAME="";
+$LINE_NO=0;      # current line   
+$GENERATE_TOC=0; # generate table of contents?
+$PAGE_TITLE="";
+$DOCUMENT_TITLE="";
+$DOCUMENT_ABSTRACT="";
+$DOCUMENT_AUTHOR="";
+%SECTION_TEXT = ();
+@TEXT=();
+@TEXT_STACK=();
+}
+
+sub IGNORE { return ""; }
+
+############################################################################
+# 
+# Error
+#
+############################################################################
+sub msg
+{  my($text) = @_;
+   print "$FILENAME:$LINE_NO: ", $text, "\n";
+}
+sub warning { msg("WARNING: " . $_[0]); }
+sub error   { msg($_[0]); die($_[0]); }
+############################################################################
+# 
+# Filename processing
+#
+############################################################################
+sub basename
+{  my($f) = @_;
+   $f =~ s|^.*/||;
+   return $f;
+}
+
+sub dirname
+{  my($f) = @_;
+   $f =~ s|^(.*/).*$|\1|;
+   return $f;
+}
+
+sub suffix
+{  my($f) = @_;
+   $f = basename($f);
+   $f =~ /^.*\.(.*)/;
+   return $1;
+}
+
+sub replaceSuffix
+{  my($f, $old, $new) = @_;
+   if ($f =~ /^(.*\.)$old/)
+   {  return $1 . $new;
+   } else
+   {  error("file $f does not have suffix $old");
+   }
+}
+
+############################################################################
+#
+# Indexing and Cross Referencing.
+#
+############################################################################
+sub localtocentry  # add local index entry
+{  my($name,$level) = @_;
+   my(@entry) = ($name, $level);
+   push @LOCALTOC, \@entry;
+   my($label) =  $LABELCOUNTER++;
+   $LINKLABEL{$name} = '#'. $label;
+   $LINKNAME{$name} = $name;
+   $CURRENT_SECTION_NAME=$name;
+   return "<a name=\"$label\"></a>";
+}
+
+sub globaltocentry  # add global index entry
+{  my($name, $level) = @_;
+   my(@entry) = ($name, $level);
+   push @GLOBALTOC, \@entry;
+   my($key) = "section:$name";
+   $LINKLABEL{$key} = $HTML_FILENAME;
+   $LINKNAME{$key} = $name;
+   $CURRENT_SECTION_NAME=$name;
+}
+
+sub tableofcontents
+{  $GENERATE_TOC = 1;
+   print "[Generating table of contents]\n";
+   return "";
+}
+
+sub label
+{  my($label) = @_;
+   $LINKLABEL{$label} = $HTML_FILENAME . '#' . $label;
+   $LINKNAME{$label} = $CURRENT_SECTION_NAME;
+   return "<a name=\"$label\"></a>";
+}
+
+sub ref
+{  my($label) = @_;
+   return "{$label}";
+}
+
+sub lookupRef
+{  my($label) = @_;
+   my($ref) = $LINKLABEL{$label};
+   my($name) = $LINKNAME{$label};
+   return " <a href=\"$ref\">$name</a>";
+}
+
+sub resolveReferences
+{  my($text) = @_;
+   $text =~ s/\{($PARAM)\}/&lookupRef($1)/oge;
+   return $text;
+}
+
+############################################################################
+#
+# Execute a subprogram
+#
+############################################################################
+sub runprog
+{  my($command) = @_;
+   print STDERR "running: ", $command, "\n";
+   system("$command");
+   if ($?) { die("$? $command"); }
+}
+
+############################################################################
+#
+# Environment/command processing
+#
+############################################################################
+sub enterMode
+{  my($m) = @_;
+   push @MODE_STACK, $m;
+   $MODE = $m;
+}
+
+sub leaveMode
+{  my($m) = @_;
+   if ($MODE ne $m)
+   { die("Trying to leave $m but actually in " . $MODE . " mode"); }
+   pop @MODE_STACK;
+   $MODE = $MODE_STACK[$#MODE_STACK];
+   $parbreak=1;
+}
+
+sub pushTextStack
+{  push @TEXT_STACK, \@TEXT;
+   @TEXT=();
+}
+
+sub popTextStack
+{  my(@text) = @TEXT;
+   my($old) = pop @TEXT_STACK;
+   @TEXT = @{$old};
+   return "@text"; 
+}
+
+%DEFINEDNAMES = {};
+%BEGINENV = {};  # how to process \begin{env}
+%ENDENV = {};    # how to process \end{env}
+%HTMLENV = {};   # html tag translation
+%COMMAND = {};   # how to process \command
+%ARITY = {};     # how many parameters does the environment has
+@ENV0 = ();
+@ENV1 = ();
+@ENV2 = ();
+@COMMAND0 = ();
+@COMMAND1 = ();
+@COMMAND2 = ();
+@COMMAND3 = ();
+
+sub newenvironment
+{  my($name,$arity,$begin,$end) = @_;
+   if (defined $DEFINEDNAMES{$name}) 
+   {  die("$name has already been defined"); 
+   }
+   $DEFINEDNAMES{$name} = "env"; 
+   $BEGINENV{$name} = $begin; 
+   $ENDENV{$name} = $end; 
+   $ARITY{$name} = $arity; 
+   push @ENV0, $name if $arity == 0;
+   push @ENV1, $name if $arity == 1;
+   push @ENV2, $name if $arity == 2;
+}
+
+sub newhtmlenvironment
+{  my($name,$tag) = @_;
+   if (defined $DEFINEDNAMES{$name}) 
+   {  die("$name has already been defined"); 
+   }
+   $DEFINEDNAMES{$name} = "htmltag"; 
+   $HTMLENV{$name} = $tag; 
+   push @ENV0, $name;
+}
+
+# This environment does not cause trailing paragraph breaks
+sub newhtmlparenvironment
+{  newhtmlenvironment(@_);
+   my($name) = @_;
+   $PARENV{$name} = 1;
+}
+
+sub newcommand
+{  my($name,$arity,$command) = @_;
+   if (defined $DEFINEDNAMES{$name}) 
+   {  die("$name has already been defined"); 
+   }
+   $DEFINEDNAMES{$name} = "command"; 
+   $COMMAND{$name} = $command; 
+   $ARITY{$name} = $arity; 
+   push @COMMAND0, $name if $arity == 0;
+   push @COMMAND1, $name if $arity == 1;
+   push @COMMAND2, $name if $arity == 2;
+   push @COMMAND3, $name if $arity == 3;
+}
+
+sub beginenv
+{  my($env,@args) = @_;
+   my($type) = $DEFINEDNAMES{$env};
+   if (! defined $type)
+   {  warning("environment $env is not defined");
+      return "\\begin{$env}";
+   }
+   if ($type eq "env")
+   {  my($func) = $BEGINENV{$env};
+      return $func->(@args); # call function 
+   }
+   return "<$HTMLENV{$env}>" if $type eq "htmltag";
+   die("don't know how to handle \\begin{$env} at line $LINE_NO"); 
+}
+
+sub endenv
+{  my($env) = @_;
+   my($type) = $DEFINEDNAMES{$env};
+   if (! defined $type)
+   {  warning("environment $env is not defined");
+      return "\\end{$env}";
+   }
+   return "</$HTMLENV{$env}>" if $type eq "htmltag";
+   if ($type eq "env")
+   {  my($func) = $ENDENV{$env};
+      my($text) = $func->(); # call function 
+      $parbreak = 1; 
+      return $text;
+   }
+   die("don't know how to handle \\end{$env} at line $LINE_NO"); 
+}
+
+sub command
+{  my($command,@args) = @_;
+   my($type) = $DEFINEDNAMES{$command};
+   if (! defined $type)
+   {  warning("command $command is not defined");
+      return "\\$env";
+   }
+   #print "[$command]";
+   if ($type eq "command") 
+   {  my($func) = $COMMAND{$command};
+      if (! $func)
+      { die("don't know how to handle \\$command at line $LINE_NO");  }
+      return $func->(@args);
+   }
+   die("don't know how to handle \\$command at line $LINE_NO"); 
+}
+############################################################################
+#
+# Color processing
+#
+############################################################################
+$COLORS{"red"}   = "#ff0000";
+$COLORS{"green"} = "#00ff00";
+$COLORS{"blue"}  = "#0000ff";
+$COLORS{"darkred"}   = "#aa0000";
+$COLORS{"darkgreen"} = "#00aa00";
+$COLORS{"darkblue"}  = "#0000aa";
+$COLORS{"black"} = "#000000";
+$COLORS{"grey"}  = "#777777";
+$COLORS{"white"} = "#ffffff";
+
+sub colorOf
+{  my($c) = @_;
+   return $COLORS{$c} if (defined $COLORS{$c});  
+   return "\"$c\"";
+}
+sub begincolor { my($c) = @_; return "<font color=" . colorOf($c) . ">"; }
+sub endcolor { return "</font>"; }
+
+############################################################################
+#
+# Generic LaTeX fonts and sizes handling.
+#
+############################################################################
+sub bf { return ""; }
+sub tt { return ""; }
+sub it { return ""; }
+sub em { return ""; }
+sub sf { return ""; }
+sub rm { return ""; }
+sub huge { return ""; }
+sub LARGE { return ""; }
+sub Large { return ""; }
+sub large { return ""; }
+sub normalsize { return ""; }
+sub small { return ""; }
+sub footnotesize { return ""; }
+sub scriptsize { return ""; }
+sub tiny { return ""; }
+
+############################################################################
+#
+# Headers and footers
+#
+############################################################################
+sub header
+{  $HEADER= <<"END";
+<!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- Generated by mltex2html -->
+<!-- do not edit this file -->
+END
+  return $HEADER;
+}
+
+sub footer
+{  my($filename) = @_;
+   my($URL)="http://$WWWHOST/$URLPREFIX$outfile";
+   my($contact) = "<table>\n";
+   for ($i=0; $i <= $#AUTHORS; $i++)
+   {  $author = $AUTHORS[$i];
+      $email = $EMAILS[$i];
+      $contact .= "<tr><td><font size=\"-1\">\n";
+      $contact .= "<a href=\"mailto:$email\">$author</a>\n";
+      $contact .= "</font></td></tr>\n";
+   }
+   $contact .= "</table>\n";
+
+$FOOTER= <<"END";
+<hr>
+  <table cellpadding=0 cellspacing=0 width="100%">
+  <tr>
+    <td align=left>
+    $contact
+    </td>
+    <td align=right>
+      <a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">
+      <img src="graphics/smlnj.jpg" width=80 height=50 
+       alt="SML/NJ" border=0>
+      </a>
+      <a href="http://validator.w3.org/check?url=$URL">
+         <img src="graphics/vh401.gif" width=88 height=31 
+          alt="Validate this page" border=0>
+       </a>
+    </td>
+  </tr>
+  <tr> <td align=left> 
+       <font size="-1">
+       <i> Generated by 
+          <a href="mltex.html"> 
+             <font color="#007777">mltex2html</font>
+          </a>
+       </i> 
+       </font>
+      </td>
+  </tr>
+  <tr> <td>
+    <font size="-2">
+    Last modified: $DATE by $USER\@$HOSTNAME
+    </font>
+    </td>
+  </tr>
+  </table>
+END
+  return $FOOTER;
+}
+
+############################################################################
+#
+# SML keyword highlighting
+#
+############################################################################
+@KEYWORDS=("structure", "datatype", "type", "of", "eqtype", "struct",
+           "end", "case", "if", "then", "else", "signature", 
+           "functor", "withtype", "sharing", "include", "where",
+           "val", "fun", "handle", "raise", "exception", "let", "in",
+           "local", "abstype", "rec", "and", "andalso", "orelse", "open",
+           "infix", "infixr", "nonfix"
+          );
+
+@DEFKEYWORDS=("functor", "structure", "signature", "exception", "withtype",
+              "datatype", "type", "eqtype", "fun", "val");
+
+$KEYWORDS = "@KEYWORDS";
+$KEYWORDS =~ s/ /|/g;
+$DEFKEYWORDS = "@DEFKEYWORDS";
+$DEFKEYWORDS =~ s/ /|/g;
+$SMLIDENT = "[a-zA-Z_][a-zA-Z0-9_']*";
+$SMLTYPEVAR = "('+$SMLIDENT)";
+
+sub highlightKeyword { return "<font color=\"$SML_KEYWORD_COLOR\"><b>$_[0]</b></font>"; }
+sub highlightTyvar { return "<font color=\"$SML_TYVAR_COLOR\">$_[0]</font>"; }
+sub highlightIdent 
+{  my($keyword, $typevar, $ident) = @_;
+   if ($typevar ne "") { $typevar .= " "; }
+   return "$keyword $typevar<font color=\"$SML_IDENT_COLOR\"><b>$ident</b></font>"; 
+}
+
+sub escape
+{  my($line) = @_;
+   $line =~ s|<|<|g;
+   $line =~ s|>|>|g;
+   $line =~ s|<|&lt;|g;
+   $line =~ s|>|&gt;|g;
+   return $line;
+}
+
+
+sub smldisplay
+{  my($line) = @_;
+   #$line =~ s/\b(($DEFKEYWORDS)\s+($SMLTYPEVAR|\(\s*$SMLTYPEVAR(\s*,\s*$SMLTYPEVAR)*\))?)\s*($SMLIDENT)(\s*=)/&highlightIdent($2,$3,$8) . $9/oge;
+   $line =~ s/\b($KEYWORDS)\b/&highlightKeyword($1)/oge;
+   $line =~ s/^(sig)\b/&highlightKeyword($1)/oge;
+   $line =~ s/([^\.\w])(sig)\b/$1 . &highlightKeyword($2)/oge;
+   $line =~ s/('\w+)/&highlightTyvar($1)/oge;
+   return $line;
+}
+
+sub sml
+{  return "<tt>" . smldisplay(@_) . "</tt>";
+}
+############################################################################
+#
+# Sectioning commands
+#
+############################################################################
+sub include
+{  my($filename) = @_;
+   $FILENAME= $PATHNAME . $filename . ".tex";
+   $HTML_FILENAME=replaceSuffix(basename($FILENAME),"tex","html");
+   print STDERR "[Processing $FILENAME]\n";
+   my($title,@text) = processSection($FILENAME);
+   my($localtoc) = "";
+   if ($#LOCALTOC >= 0)
+   { my(@toctitle) = ($title, 0);
+     my(@LOCALTOC) = (\@toctitle, @LOCALTOC);
+     $localtoc = 
+      makeTOC("local",
+              "border=0 align=right bgcolor=\"$SECTION_TOC_BACKGROUND_COLOR\"",
+              $MAX_LOCAL_TOC_ENTRY_LENGTH,"",@LOCALTOC);
+   }
+   my(@entry) =  ($title, $localtoc, @text);
+   $SECTION_TEXT{$FILENAME} = \@entry;
+   return "";
+} 
+
+
+sub section
+{  my($name) = @_;
+   #print "section $name\n";
+   $parbreak=1;
+   $PAGE_TITLE=$name;
+   globaltocentry($name,1);
+   return "";
+}
+
+sub majorsection
+{  my($name) = @_;
+   my(@entry) = ($name, 0);
+   push @GLOBALTOC, \@entry;
+   $parbreak=1;
+   return "";
+}
+
+sub title
+{  $DOCUMENT_TITLE = $_[0];
+   $parbreak=1;
+   return "";
+}
+
+sub subsection
+{  my($name) = @_;
+   #print "[subsection $name]\n";
+   $parbreak=1;
+   my($label) = localtocentry($name, 2);
+   return <<"END"
+$label
+<h2><font color="$SUBSECTION_COLOR">$name</font></h2>
+END
+}
+
+sub subsubsection
+{  my($name) = @_;
+   #print "subsubsection $name\n";
+   $parbreak=1;
+   my($label) = localtocentry($name, 3);
+   return <<"END";
+$label
+<h3><font color="$SUBSUBSECTION_COLOR">$name</font></h3>
+END
+}
+
+sub paragraph
+{  my($name) = @_;
+   #print "paragraph $name\n";
+   $parbreak=1;
+   my($label) = localtocentry($name, 4);
+   return <<"END";
+$label
+<h4><font color="$PARAGRAPH_COLOR">$name</font></h4>
+END
+}
+
+sub beginabstract
+{  print "[begin abstract]\n";
+   pushTextStack();
+   return "";
+}
+
+sub endabstract
+{  print "[end abstract]\n";
+   $DOCUMENT_ABSTRACT = popTextStack();
+   return "";
+}
+
+############################################################################
+#
+# Hypertext links
+#
+############################################################################
+sub href { return "<a href=\"$_[0]\">$_[1]</a>"; }
+sub mlrischref { return "<a href=\"../../$_[0]\" target=code>$_[1]</a>"; }
+sub externhref { return "<a href=\"$_[0]\">$_[1]</a>"; }
+
+############################################################################
+#
+# Images and figures
+#
+###########################################################################
+
+sub isGraphics
+{  my($filename) = @_;
+   return 1 if $filename =~ /\.png$/;
+   return 1 if $filename =~ /\.jpg$/;
+   return 1 if $filename =~ /\.gif$/;
+   return 1 if $filename =~ /\.tif$/;
+   return 1 if $filename =~ /\.tiff$/;
+   return 0;
+}
+
+sub image { return "<img alt=\"$_[0]\" src=$_[1] $_[2]>"; }
+
+#
+# Given a image file, try to find out if the original source exists
+# Paths are hardwired for now.
+sub figOf
+{  my($filename) = @_;
+   my($basename) = "";
+   $basename = $1 if $filename =~ m|^\.\./pictures/eps/(.*)\.eps|;
+   my($fig) = "../pictures/fig/$basename.fig";
+   return $fig if (-f $fig);
+   return "";
+}
+
+#
+# Try to convert the eps file to png
+#
+sub imageOf
+{  my($filename) = @_;
+   $basename = $1 if ($filename =~ m|^\.\./pictures/eps/(.*)\.eps$|);
+   my($png) = "../pictures/png/$basename.png";
+   return $png if -f $png; 
+   my($jpg) = "../pictures/jpeg/$basename.jpg";
+   return $jpg if -f $jpg; 
+
+   my($fig) = figOf($filename);
+   if ($fig)
+   {  runprog("fig2dev -L png $fig $png");
+      return $png;
+   } 
+   return "";
+}
+
+#
+# Try to translate LaTeX lengths into pixel sizes
+#
+sub lengthOf
+{  my($l) = @_;
+   return $1 * 0.4 if $l =~ /^(\d*(\.\d*)?)em$/; # making a guess
+   return $1 * 0.4 if $l =~ /^(\d*(\.\d*)?)cm$/;
+   return $1 * 1.0 if $l =~ /^(\d*(\.\d*)?)in$/;
+   if (! ($l =~ /^\s*$/)) { die("lengthOf($l)"); }
+   return 0;
+}
+sub heightOf { return lengthOf(@_) / lengthOf($PAPER_HEIGHT) * $Y_PIXELS * $IMAGE_SCALING; } 
+sub widthOf  { return lengthOf(@_) / lengthOf($PAPER_WIDTH) * $X_PIXELS * $IMAGE_SCALING; } 
+
+#
+# Try to translate sizes into pixel sizes
+#
+sub makeSize
+{  my($height, $width) = @_;
+   $height = heightOf($height);
+   $width = widthOf($width);
+   my($size) = "";
+   $size .= "height=$height" if $height;
+   $size .= " width=$width" if $width;
+   return $size;
+}
+
+
+sub psfig
+{  my($params) = @_;
+   my($filename) = ($params =~ /figure=([^ ,]*)/);
+   my($height) = ($params =~ /height=([^ ,]*)/);
+   my($width) = ($params =~ /width=([^ ,]*)/);
+   my($size) = makeSize($height, $width);
+
+   if (! defined $filename) { die("figure not found in $params"); }
+   if (! -f $filename) { warning("filename $filename not found"); }
+
+   my($img) = imageOf($filename);
+
+   if ($img)
+   {  return <<"END";
+ <a href="$img" target=image> 
+    <img src="$img" align=left alt="Click to enlarge" $size border=0>
+ </a>
+END
+   } else
+   {  return "<a href=\"$filename\"> $filename </a>";
+   }
+}
+
+sub cpsfig {  return "<center>" . psfig(@_) . "</center>"; }
+
+
+sub beginfig 
+{ my($border,$align) = @_;
+  $CAPTION = "";
+  $align = "align=left" if $align eq "l";
+  $align = "align=right" if $align eq "r";
+  $align = "align=center" if $align eq "c";
+  return "<table border=$border $align><tr><td align=center>"; 
+} 
+
+sub endfig 
+{  my($caption) = @_;
+   msg("new figure, caption=$caption");
+   if ($caption ne "") 
+   { $caption = <<"END";
+  <tr>
+    <td align=center>
+       <font color="$CAPTION_COLOR">
+          <i>$caption</i>
+       </font>
+     </td>
+  </tr>
+END
+   }
+   return "</td></tr>$caption</table>"; 
+} 
+
+sub beginFigure { return beginfig(0,""); } 
+sub endFigure { return endfig($CAPTION); } 
+
+sub caption
+{  my($text) = @_;
+   $CAPTION = $text;
+   return "";
+}
+
+sub beginwrapfigure
+{  my($align,$size) = @_;
+   return beginfig(0,$align); 
+}
+
+sub endwrapfigure { return endfig($CAPTION); }
+
+############################################################################
+#
+# Generic tabular processing
+#
+############################################################################
+sub begintab
+{  my($taboptions, $html) = @_;
+   enterMode("tabular");
+
+   # guess the border
+   my($border) = 0;
+   $border = 1 if ($taboptions =~ /^\|/);
+   $border = 2 if ($taboptions =~ /^\|\|/);
+
+   if ($html eq "") { $html = "align=center"; }
+
+   push @tabular_stack, $taboptions;
+   push @current_taboptions, $taboptions;
+
+   return "<table border=$border $html><tr>" . newtabitem();
+}
+
+sub endtab
+{  leaveMode("tabular");
+   pop @tabular_stack;
+   pop @current_tab;
+   return "</td></tr></table>";
+}
+
+sub newtabitem
+{  my($t) = $current_taboptions[$#current_taboptions];
+   my($align) = "left"; 
+
+   $t = $1 if $t =~ /^\|+(.*)/;
+   ($align = "center", $t = $1) if $t =~ /^c(.*)/;
+   ($align = "left", $t = $1) if $t =~ /^l(.*)/;
+   ($align = "right", $t = $1) if $t =~ /^r(.*)/;
+
+   $current_taboptions[$#current_taboptions] = $t;
+
+   return "<td align=$align>";
+}
+
+sub addtab
+{  return "</td>" . newtabitem();
+}
+
+sub tabnewline
+{  $current_taboptions[$#current_taboptions] =
+      $tabular_stack[$#tabular_stack];
+   return "</tr><tr>" . newtabitem();
+}
+
+sub newline
+{  return "<br>";
+}
+
+############################################################################
+#
+# Math mode processing
+#
+############################################################################
+$MATHPARAM='[^$]*';
+$MATHPARAM2='([^$\\]|\\[^)]+)*';
+sub math
+{  my($math) = @_;
+
+   $math =~ s|&||g;
+
+   $math =~ s|\\le\b|<=|g;
+   $math =~ s|\\ge\b|>=|g;
+
+   #quote all < and > first
+   $math =~ s/</</g;
+   $math =~ s/>/>/g;
+
+   # fonts changing
+   $math =~ s|{\\tt\s+($PARAM)}|<tt>\1</tt>|g; 
+
+   # subscript/superscripts
+   $math =~ s|_([^{])|<sub>\1</sub>|g;
+   $math =~ s|\^([^{])|<sup>\1</sup>|g;
+   $math =~ s|_{($PARAM)}|<sub>\1</sub>|g;
+   $math =~ s|^{($PARAM)}|<sup>\1</sup>|g;
+   $math =~ s|\\sb{($PARAM)}|<sub>\1</sub>|g;
+   $math =~ s|\\sp{($PARAM)}|<sup>\1</sup>|g;
+
+   # other stuff 
+   $math =~ s|\\edge\{($PARAM)\}|&rarr<sub>\1</sub>|g;
+   $math =~ s|\\defas\b|=|g;
+   $math =~ s|\\lim\b|lim|g;
+   $math =~ s|\\sin\b|sin|g;
+   $math =~ s|\\cos\b|cos|g;
+   $math =~ s|\\tan\b|tan|g;
+   $math =~ s|\\log\b|log|g;
+   $math =~ s|\\equiv\b|==|g;
+   $math =~ s|\\ldots\b|...|g;
+
+   $math =~ s|\\in\b|&isin;|g;
+   $math =~ s|\\alpha\b|&alpha;|g;
+   $math =~ s|\\beta\b|&beta;|g;
+   $math =~ s|\\gamma\b|&gamma;|g;
+   $math =~ s|\\lambda\b|&lambda;|g;
+   $math =~ s|\\phi\b|&phi;|g;
+   $math =~ s|\\sum\b|&sum;|g;
+   $math =~ s|\\cup\b|&cup;|g;
+   $math =~ s|\\cap\b|&cap;|g;
+   $math =~ s|\\rightarrow\b|&rarr;|g;
+   $math =~ s|\\leftarrow\b|&larr;|g;
+
+   $math =~ s/\{/{/g;
+   $math =~ s/\}/}/g;
+
+   #unquote all < and > 
+   $math =~ s|<|&lt;|g;
+   $math =~ s|>|&gt;|g;
+
+   $math =~ s|\\ne\b|<>|g;
+
+   $math =~ s|\\\\|<dt><dd>|g;
+
+   return "<math class=\"inline\"><i>$math</i></math>";
+}
+
+sub displaymath
+{  my($math) = @_;
+   return "<dl><dt><dd>" . math($math) . "</dl>";
+}  
+
+sub stupidBrowserMath
+{
+    s#&rarr(;|\b)#-&gt;#g;
+    s#&larr(;|\b)#&lt-#g;
+    s#&isin(;|\b)#in #g;
+}
+ 
+
+############################################################################
+#
+#  Frames and boxes
+#
+############################################################################
+sub beginboxit { return "<table border=1><tr><td>"; }
+sub endboxit   { return "</td></tr></table>"; }
+
+############################################################################
+#
+#  Setup the commands and environments
+#
+############################################################################
+newenvironment("color",1, \&begincolor, \&endcolor);
+
+newhtmlenvironment("small","small");
+newhtmlenvironment("Bold","b");
+newhtmlenvironment("Italics","i");
+newhtmlenvironment("Emph","em");
+newhtmlenvironment("address","address");
+
+newhtmlparenvironment("quotation","blockquote");
+newhtmlparenvironment("center","center");
+newhtmlparenvironment("enumerate","ol");
+newhtmlparenvironment("itemize","ul");
+newhtmlparenvironment("description","dl");
+
+newenvironment("boxit", 0, \&beginboxit, \&endboxit);
+newenvironment("Boxit", 0, \&beginboxit, \&endboxit);
+
+newcommand("title", 1, \&title);
+newcommand("section", 1, \&section);
+newcommand("subsection", 1, \&subsection);
+newcommand("subsubsection", 1, \&subsubsection);
+newcommand("paragraph", 1, \&paragraph);
+newcommand("include", 1, \&include);
+newcommand("majorsection", 1, \&majorsection);
+newenvironment("abstract",0,\&beginabstract,\&endabstract);
+
+newcommand("bf",0,\&bf);
+newcommand("tt",0,\&tt);
+newcommand("it",0,\&it);
+newcommand("em",0,\&em);
+newcommand("sf",0,\&sf);
+newcommand("rm",0,\&rm);
+newcommand("huge",0,\&huge);
+newcommand("LARGE",0,\&LARGE);
+newcommand("Large",0,\&Large);
+newcommand("large",0,\&large);
+newcommand("normalsize",0,\&normalsize);
+newcommand("footnotesize",0,\&footnotesize);
+newcommand("scriptsize",0,\&scriptsize);
+newcommand("tiny",0,\&tiny);
+
+newcommand("Term", 1, sub { return "<i>$_[0]</i>"; } );
+
+newcommand("italics", 1, sub { return "<i>$_[0]</i>"; });
+newcommand("bold", 1, sub { return "<b>$_[0]</b>"; });
+newcommand("emph", 1, sub { return "<em>$_[0]</em>"; });
+
+newcommand("href", 2, \&href);
+newcommand("mlrischref", 2, \&mlrischref);
+newcommand("externhref", 2, \&externhref);
+
+newcommand("image", 3, \&image);
+newcommand("psfig", 1, \&psfig);
+newcommand("cpsfig", 1, \&cpsfig);
+
+newcommand("linebreak", 0, \&IGNORE);
+newcommand("hr", 0, sub { return "<hr>"; });
+newcommand("hline", 0, \&IGNORE);
+newcommand("pagebreak", 0, \&IGNORE);
+
+newcommand("br", 1, sub { return "<br $_[0]>"; });
+
+newcommand("label",1, \&label);
+newcommand("ref",1, \&ref);
+
+newcommand("MLRISC", 0, sub { return "MLRISC"; });
+newcommand("LaTeX", 0, sub { return "L<sup>A</sup>T<sub>E</sub>X"; });
+newcommand("MLTeX", 0, sub { return "MLT<sub>E</sub>X"; });
+
+
+newcommand("caption", 1, \&caption);
+newenvironment("Figure", 0, \&beginFigure, \&endFigure);
+newenvironment("wrapfigure", 2, \&beginwrapfigure, \&endwrapfigure);
+
+sub newdef { return "<font color=\"$NEWDEF_COLOR\">$_[0]</font>"; }
+sub newtype { return "<font color=\"$NEWTYPE_COLOR\"><tt>$_[0]</tt></font>"; }
+
+newcommand("newdef",1,\&newdef);
+newcommand("newtype",1,\&newtype);
+
+newcommand("cite", 1, sub { return "<cite>[$_[0]]</cite>"; });
+newcommand("tableofcontents", 0, \&tableofcontents);
+
+############################################################################
+#
+# Import style file
+#
+############################################################################
+require "mltex.thm";
+
+############################################################################
+#
+#  Setup the patterns for command and environment parsing
+#
+############################################################################
+$COMMAND0 = "@COMMAND0";  $COMMAND0 =~ s/ /|/g; 
+$COMMAND1 = "@COMMAND1";  $COMMAND1 =~ s/ /|/g; 
+$COMMAND2 = "@COMMAND2";  $COMMAND2 =~ s/ /|/g;
+$COMMAND3 = "@COMMAND3";  $COMMAND3 =~ s/ /|/g;
+$COMMAND0 = 'XXXXXXXXXXXXXXXXX' if ($COMMAND0 eq "");
+$COMMAND1 = 'XXXXXXXXXXXXXXXXX' if ($COMMAND1 eq "");
+$COMMAND2 = 'XXXXXXXXXXXXXXXXX' if ($COMMAND2 eq "");
+$COMMAND3 = 'XXXXXXXXXXXXXXXXX' if ($COMMAND3 eq "");
+$ENV0 = "@ENV0";  $ENV0 =~ s/ /|/g;
+$ENV1 = "@ENV1";  $ENV1 =~ s/ /|/g;
+$ENV2 = "@ENV2";  $ENV2 =~ s/ /|/g;
+$ENV0 = 'XXXXXXXXXXXXXXXXX' if ($ENV0 eq "");
+$ENV1 = 'XXXXXXXXXXXXXXXXX' if ($ENV1 eq "");
+$ENV2 = 'XXXXXXXXXXXXXXXXX' if ($ENV2 eq "");
+
+#print "COMMAND0 = $COMMAND0\n";
+#print "COMMAND1 = $COMMAND1\n";
+#print "COMMAND2 = $COMMAND2\n";
+#print "COMMAND3 = $COMMAND3\n";
+#print "ENV0 = $ENV0\n";
+#print "ENV1 = $ENV1\n";
+#print "ENV2 = $ENV2\n";
+
+############################################################################
+#
+# Indexing and Table of Contents generation.
+#
+############################################################################
+sub truncentry
+{  my($entry,$max_len) = @_;
+   if ($max_len > 0 && length($entry) >= $max_len) 
+   { $entry = substr($entry, 0, $max_len-1) . "...";
+   }
+   return $entry;
+}
+
+############################################################################
+#
+# Make a table of contents 
+#
+############################################################################
+sub makeTOC
+{  my($type,      # local or global
+      $html,      # extra html parameters to the table
+      $max_len,   # maximal length of each entry
+      $highlight, # which entry to highlight
+      @TOC        # the entries
+     ) = @_;
+
+   return "" if $#TOC < 0;
+
+   my($toc) = "";
+   my($labelprefix) = "";
+   if ($type eq "global") { $labelprefix = "section:"; } 
+
+   $toc = <<"END";
+  <!-- table of contents -->
+  <table cellpadding=0 cellspacing=0 $html> 
+  <tr><td>
+END
+
+   for $entry (@TOC)
+   {  my($name)  = $entry->[0];
+      my($level) = $entry->[1];
+      my($label) = $LINKLABEL{$labelprefix . $name};
+      my($text)  = truncentry($name,$max_len);
+
+      # Major section heading
+      if ($level == 0)
+      {
+         $toc .= <<"END";
+    </td></tr><tr><td>
+    <table bgcolor="$MAJORSECTION_BACKGROUND_COLOR" width="100%" border=0 
+      cellpadding=0 cellspacing=0>
+    <tr><td align=center><font color="$MAJORSECTION_TEXT_COLOR">
+    $text
+    </font>
+    </td></tr></table><tr><td>
+END
+      } else
+      # Normal extries
+      {
+         my($indent) = "-" x ($level - 2);
+
+         if ($name eq $highlight) 
+         { $text = "<font color=\"$SECTION_TOC_TEXT_COLOR\"><b>$text</b></font>"; }
+
+         if ($type eq "local")
+         { $text = "<font size=\"$TOC_SIZE\" color=\"$SECTION_TOC_TEXT_COLOR\">$text</font>";
+         } else
+         { $text = "<font size=\"$TOC_SIZE\">$text</font>";
+         }
+
+         $toc .= <<"END";
+     $indent<a href="$label">$text</a><br>
+END
+      }
+   }
+
+   $toc .= <<"END";
+   </td></tr>
+  </table>
+  <!-- end of table of contents -->
+END
+  return $toc;
+}
+############################################################################
+#
+# Generate the output 
+#
+############################################################################
+
+sub writeSection
+{ my($filename,$TITLE,$localtoc,@TEXT) = @_;
+  my($outfile) = replaceSuffix(basename($filename), "tex", "html");
+  my($toc) = "";
+
+  print STDERR "[Generating $outfile]\n";
+
+  # Global table of contents
+  if ($GENERATE_TOC)
+  { $toc = 
+     makeTOC("global",
+       "border=0 width=$GLOBAL_TOC_WIDTH bgcolor=\"$TOC_BACKGROUND_COLOR\"", 
+        $MAX_GLOBAL_TOC_ENTRY_LENGTH, $TITLE, @GLOBALTOC);
+    $toc = <<"END";
+      <td valign=top align=left width="$GLOBAL_TOC_WIDTH">
+   $toc
+      </td>
+END
+  }
+
+  open(OUTFILE,">$outfile") || die("$!: $outfile");
+
+  $header   = header($TITLE);
+  $footer   = footer($outfile);
+  $maintext = resolveReferences("@TEXT");
+  $TOTAL_WIDTH = $TEXT_WIDTH + $GLOBAL_TOC_WIDTH;
+
+  print OUTFILE <<"END";
+$header
+<html>
+  <head>
+     <title> $TITLE </title>
+  </head>
+  <body bgcolor="$BACKGROUND_COLOR" text="$TEXT_COLOR" 
+   link="$LINK_COLOR" vlink="$VLINK_COLOR" alink="$ALINK_COLOR">
+  <table border=0> 
+  <tr>
+    $toc
+    <td width=2> </td>
+    <td valign=top align=left> 
+    <center><h1><font color="$SECTION_COLOR"><b>$TITLE</b></font></h1></center>
+    <hr> 
+    $localtoc
+    $maintext
+    $footer
+    </td>
+  </tr>
+  </table>
+  </body>
+</html>
+END
+  close OUTFILE;
+}
+
+############################################################################
+#
+# Write out the main page
+#
+############################################################################
+sub writeDocument
+{  my($filename) = @_;
+   my($outfile) = replaceSuffix(basename($filename), "tex", "html");
+
+   print STDERR "[Generating $outfile]\n";
+
+   my($toc) = makeTOC("global","border=0 width=$GLOBAL_TOC_WIDTH", 
+                      $MAX_GLOBAL_TOC_ENTRY_LENGTH, "", @GLOBALTOC);
+
+   open(OUTFILE,">$outfile") || die("$!: $outfile");
+   my($header) = header($DOCUMENT_TITLE);
+   my($footer) = footer($outfile);
+
+   print OUTFILE <<"END";
+$header
+<html>
+  <head>
+      <title> $DOCUMENT_TITLE </title>
+  </head>
+  <body bgcolor="$BACKGROUND_COLOR" text="$TEXT_COLOR">
+   <table border=0>
+   <tr>
+   <td valign=top align=left> $toc </td>
+   <td width=2> </td>
+   <td valign=top align=left textwidth="$TEXT_WIDTH">
+     <center><h1><font color="$TITLE_COLOR">$DOCUMENT_TITLE</font></h1></center> 
+      <hr>
+      <center>
+         $DOCUMENT_AUTHOR
+      </center>
+      <center>
+        <font color="$ABSTRACT_TITLE_COLOR"><b>Abstract</b></font>
+      </center> 
+      <blockquote>
+        $DOCUMENT_ABSTRACT
+      </blockquote>
+      $footer
+      </td></tr>
+      </table>
+   </td>
+   </tr>
+   </table>
+   </body>
+</html>   
+END
+   close OUTFILE;
+}
+
+############################################################################
+#
+# Initialization
+#
+############################################################################
+sub init()
+{
+  $MODE = "latex";
+  @MODE_STACK=($MODE); 
+  @tabular_stack=();
+
+  $LINE_NO=0;
+  @TEXT=();
+  @LOCALTOC=();
+  $LABELCOUNTER="link0000";
+}
+ 
+############################################################################
+#
+# Main loop for processing a section
+#
+############################################################################
+sub processSection
+{ my ($filename) = @_;
+
+  if (! ($filename =~/\.tex$/))
+  {  die("$filename must end in .tex");
+  }
+  open(INFILE,$filename) || die("$!: $filename"); 
+
+  init();
+
+  local($LINE_NO) = 0;
+
+  while (<INFILE>)
+  {
+     $LINE_NO++;
+
+     # Verbatim mode handling
+     if ($MODE eq "verbatim")
+     {  if (s|\\end{verbatim}|$ENDPRE|) { leaveMode("verbatim"); }
+        else 
+        { s/</&lt;/g;
+          s/>/&gt;/g;
+        }
+        push @TEXT, $_;
+        next;
+     }
+
+     if ($MODE eq "alltt")
+     {  if (s|\\end{alltt}|$ENDALLTT|) { leaveMode("alltt"); };
+        push @TEXT, $_;
+        next;
+     }
+
+     $_ = escape($_) if $MODE eq "sml";
+
+     # \verb 
+     # Must match the mimimum number of times 
+     s|\\verb(.)(.*?)\1|<tt>\2</tt>|g if ($MODE ne "verbatim");
+
+     # paragraph
+     if ($MODE eq "latex")
+     {  if (/^\s+$/) 
+        {  if (! $parbreak) { $_ = "<p>\n"; $parbreak=1; }
+        } else 
+        { $parbreak = 0; }
+     }
+ 
+     # special formatting environments 
+     if (s|\\begin{SML}|$BEGINPRE|) { enterMode("sml"); };
+     if (s|\\end{SML}|$ENDPRE|) { leaveMode("sml"); };
+     if (s|\\begin{code}|$BEGINPRE|) { enterMode("code"); };
+     if (s|\\end{code}|$ENDPRE|) { leaveMode("code"); };
+     if (s|\\begin{verbatim}|$BEGINPRE|) { enterMode("verbatim"); };
+     if (s|\\begin{alltt}|$BEGINALLTT|) { enterMode("alltt"); };
+
+     # method
+     if (s|\\begin{methods}|<dl><dt><tt>|) { enterMode("methods"); };
+     if (s|\\end{methods}|</tt></dl>|) { leaveMode("methods"); };
+     s|\&|</tt><dd>|g if $MODE eq "methods";
+     s|\\\\|<dt><tt>|g if $MODE eq "methods";
+
+     # Itemize 
+     s|\\item\[([^\]]*)\]|<dt><font color="$DESC_COLOR">\1</font><dd>|;
+     s|\\item|<li>|;
+  
+     # Tables
+     s|\\begin{tabular}{($PARAM)}|&begintab($1,"")|oge;
+     s|\\end{tabular}|&endtab()|oge;
+     
+     s|\\begin{Table}{($PARAM)}{($PARAM)}|&begintab($1,$2)|oge;
+     s|\\end{Table}|&endtab()|oge;
+
+     s|\&|&addtab()|oge if $MODE eq "tabular";
+     s|\\\\|&tabnewline()|oge if $MODE eq "tabular";
+     s|\\\\|&newline()|oge if $MODE eq "latex";
+  
+     # SML mode handling
+     s|\\sml{($PARAM)}|&sml($1)|oge;
+     s|\\code{($PARAM)}|<tt>\1</tt>|g;
+     if ($MODE eq "sml") { $_ = smldisplay($_); }
+  
+     # Math mode handling
+     if ($MODE ne "sml") { s|\$($MATHPARAM)\$|&math($1)|eg; }
+     s|\\\(($MATHPARAM2)\\\)|&math($1)|oeg;
+     if (/\\\[\s*\S|\S\s*\\\[/) 
+     { error("please put \\[ on a separate line by itself"); }
+     if (/^\s*\S+\s*\\\]\s*$/) 
+     { error("please put \\] on a separate line by itself"); }
+     if ($MODE eq "displaymath") { $_ = math($_); }
+     if ($MODE eq "eqnarray*") { $_ = math($_); }
+     if ($MODE eq "eqnarray") { $_ = math($_); }
+
+     if (s|\\\[\s*$|<dl><dt><dd>|) { enterMode("displaymath"); }
+     if (s|\\\]|</dl>|) { leaveMode("displaymath"); }
+     if (s|\\begin{eqnarray\*}|<dl><dt><dd>|) { enterMode("eqnarray*"); }
+     if (s|\\end{eqnarray\*}|</dl>|) { leaveMode("eqnarray*"); }
+     if (s|\\begin{eqnarray}|<dl><dt><dd>|) { enterMode("eqnarray"); }
+     if (s|\\end{eqnarray}|</dl>|) { leaveMode("eqnarray"); }
+
+     # How to handle environment
+     s|~?\\begin{($ENV0)}|&beginenv($1)|oge;
+     s|~?\\begin{($ENV1)}{($PARAM)}|&beginenv($1,$2)|oge;
+     s|~?\\begin{($ENV2)}{($PARAM)}{($PARAM)}|&beginenv($1,$2,$3)|oge;
+     s|~?\\end{($PARAM)}|&endenv($1)|oge;
+
+     # How to handle commands
+     s/~?\\($COMMAND0)(\{\}|\b)/&command($1)/oge;
+     s|~?\\($COMMAND1){($PARAM)}|&command($1,$2)|oge;
+     s|~?\\($COMMAND2){($PARAM)}{($PARAM)}|&command($1,$2,$3)|oge;
+     s|~?\\($COMMAND3){($PARAM)}{($PARAM)}{($PARAM)}|&command($1,$2,$3,$4)|oge;
+
+     # Math mode stuff
+     s|\\_|_|g;
+     s|\\{|{|g;
+     s|\\}|}|g;
+
+     # Indentation
+     s|\\noindent ||g;
+
+     #
+     # Not all browers can handle the math stuff yet. Do this in the mean time.
+     #
+     stupidBrowserMath();
+  
+     push @TEXT, $_;
+  }
+  close INFILE;
+  return ($PAGE_TITLE, @TEXT);
+
+}
+
+############################################################################
+#
+# Main loop for processing a document
+#
+############################################################################
+sub processDocument
+{  my($filename) = @_;
+   my($line, $output);
+
+   globalInit();
+
+   $MODE = "latex";
+   @MODE_STACK=($MODE); 
+
+   $PATHNAME = "";
+   if ($filename =~ /^(.*\/)[^\/]*$/) { $PATHNAME = $1; }
+
+   $LINE_NO=0;
+   $FILENAME=$filename;
+
+   open (DOCUMENT, $filename) || die("$! $filename");
+   while ($_ = <DOCUMENT>)
+   {  $LINE_NO++;
+      s|%.*$||;   #skip comments 
+     
+      s|\\\\|&newline()|oge if $MODE eq "latex";
+
+      # How to handle environment
+      s|~?\\begin{($ENV0)}|&beginenv($1)|oge;
+      s|~?\\begin{($ENV1)}{($PARAM)}|&beginenv($1,$2)|oge;
+      s|~?\\begin{($ENV2)}{($PARAM)}{($PARAM)}|&beginenv($1,$2,$3)|oge;
+      s|~?\\end{($PARAM)}|&endenv($1)|oge;
+
+      # How to handle commands
+      s/~?\\($COMMAND0)(\{\}|\b)/&command($1)/oge;
+      s|~?\\($COMMAND1){($PARAM)}|&command($1,$2)|oge;
+      s|~?\\($COMMAND2){($PARAM)}{($PARAM)}|&command($1,$2,$3)|oge;
+      s|~?\\($COMMAND3){($PARAM)}{($PARAM)}{($PARAM)}|&command($1,$2,$3,$4)|oge;
+
+      push @TEXT, $_;
+   }
+   close DOCUMENT;
+
+   # Write out the sections
+   foreach $file (keys %SECTION_TEXT)
+   {  my($output) = $SECTION_TEXT{$file};
+      my($title, $localtoc, @text) = @{$output};
+      writeSection($file, $title, $localtoc, @text);
+   }
+
+   # Write out the main page
+   writeDocument($filename);
+}
+
+#main 
+foreach $file (@ARGV)
+{  processDocument($file)
+}
+
+

@@ -1,0 +1,20 @@
+Library
+	signature PRECEDENCE_PARSER
+	structure PrecedenceParser
+is
+
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+        $/basis.cm
+        $/smlnj-lib.cm
+#else
+        basis.cm
+        smlnj-lib.cm
+#endif
+#else
+        smlnj-lib.cm
+#endif
+
+	../SourceMap/sources.cm
+
+	prec-parse.sml

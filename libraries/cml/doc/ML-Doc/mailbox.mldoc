@@ -1,0 +1,89 @@
+<!-- mldoc/mailbox.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1996>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The Mailbox structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <STRREF TOPID NOLINK/Mailbox/ structure</HEAD>
+<SEEALSO>
+  <STRREF TOPID/CML/
+</SEEALSO>
+
+<PP>
+The <STRREF TOPID NOLINK/Mailbox/ structure provides buffered asynchronous
+channels, which we call mailboxes.
+
+<STRUCTURE STRID="Mailbox">
+  <SIGBODY SIGID="MAILBOX" FILE=MAILBOX-SIG>
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>mbox
+      <COMMENT>
+	<PP>
+	This is the type constructor for a mailbox.
+	A mailbox is an unbounded, buffered communication channel.
+    <SPEC>
+      <VAL>mailbox<TY>unit -> 'a mbox
+      <COMMENT>
+        <PROTOTY>
+          mailbox ()
+        </PROTOTY>
+        creates a new mailbox.
+    <SPEC>
+      <VAL>sameMailbox<TY>('a mbox * 'a mbox) -> bool
+      <COMMENT>
+        <PROTOTY>
+          sameMailbox (<ARG/mb1/, <ARG/mb2/)
+        </PROTOTY>
+        returns <CD/true/, if <ARG/mb1/ and <ARG/mb2/ are the same mailbox.
+    <SPEC>
+      <VAL>send<TY>('a mbox * 'a) -> unit
+      <COMMENT>
+        <PROTOTY>
+          send (<ARG/mb/, <ARG/msg/)
+        </PROTOTY>
+        sends the message <ARG/msg/ to the mailbox <ARG/mb/.
+	Note that unlike <VALREF STRID="CML"/CML.send/, this is a non-blocking
+	operation.
+    <SPEC>
+      <VAL>recv<TY>'a mbox -> 'a
+      <COMMENT>
+        <PROTOTY>
+          recv <ARG/mb/
+        </PROTOTY>
+        receive the next message from the mailbox <ARG/mb/.
+	If, the mailbox is empty, then this blocks the calling
+	thread until there is a message available.
+    <SPEC>
+      <VAL>recvEvt<TY>'a mbox -> 'a event
+      <COMMENT>
+        <PROTOTY>
+          recvEvt <ARG/mb/
+        </PROTOTY>
+        returns the event value that represents the <VALREF/recv/ operation
+	on <ARG/mb/.
+    <SPEC>
+      <VAL>recvPoll<TY>'a mbox -> 'a option
+      <COMMENT>
+	<PP>
+        This is the non-blocking version of <VALREF/recv/.
+	If the corresponding blocking form would block (because the mailbox is
+	empty), then this returns
+	<CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/NONE/, otherwise it returns
+	<CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/SOME/ of the received
+	message.
+</STRUCTURE>
+<PP>
+Note that mailbox buffers are unbounded, which means that there is no flow
+control to prevent a producer from greatly outstriping a consumer, and thus
+exhausting memory.
+In situations where there is no natural limit to the rate of
+<VALREF STRID="Mailbox"/send/ operations, it is recommended that the
+synchronous channels from the <STRREF TOPID/CML/ structure
+be used instead.
+</INTERFACE>

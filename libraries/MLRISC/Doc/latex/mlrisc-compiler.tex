@@ -1,0 +1,54 @@
+\section{MLRISC Based Compiler}
+    A traditional compiler will typically consist of a 
+    \begin{color}{#dd0000}lex/yacc\end{color} based front end, an 
+    \begin{color}{#DD0000}optimization\end{color} 
+    phase that is repeatedly invoked
+    over some intermediate representation, and finally a 
+    \begin{color}{#DD0000}back end\end{color} 
+    code generation phase. The intermediate
+    representation is usually at a level of detail appropriate to the
+    optimization being performed, and may be far removed from the
+    native instructions of the target architecture. The back end
+    proceeds by translating the intermediate representation into
+    instructions and registers for an abstract machine that is much
+    closer to the target architecture. Retargetting is then achieved
+    by mapping the registers and instructions of the abstract machine
+    to registers and instructions of the target architecture.
+
+    \br{clear=left}
+
+    \image{MLRISC based compiler}{pictures/png/compiler-2.png}{align=right}
+
+  An MLRISC based compiler, on the other hand, translates the
+  intermediate representation into MLRISC instructions and it is the
+  MLRISC instructions that get mapped onto instructions of the target
+  architecture. Another possibility is to translate the front end
+  abstract machine instructions instead of the intermediate
+  representation.  Once MLRISC instructions have been generated,
+  nearly all aspects of high quality code generation come for free. A
+  long story would be cut short if MLRISC were just another abstract
+  machine.
+
+  \begin{color}{#580000} The key idea behind MLRISC is that there is no
+  single MLRISC instruction set or intermediate program
+  representation, \end{color} but the MLRISC intermediate representation
+  is specialized to the needs of the front end source language being
+  compiled. The specialization does not stop there, but the:
+   \begin{itemize}
+  \item  \begin{color}{#005500}target instruction set\end{color},
+  \item  \begin{color}{#005500}flowgraph\end{color}, and
+  \item  \begin{color}{#005500}entire optimization suite\end{color}
+  \end{itemize}
+
+  are specialized to the needs of the front end. The ability to
+  consistently specialize each of these to create a back end for a
+  specific language, summarizes the characteristics of MLRISC that
+  distinguishes it from other retargetable backends.
+
+  \begin{color}{#580000} It is important to emphasize that little
+  optimizations performed on the MLRISC intermediate
+  representation. \end{color} Most optimizations are done on a flowgraph of
+  target machine instructions, to enable optimizations that take advantage
+  of the characteristics of each architectural.
+  The MLRISC intermediate representation is just used as a stepping 
+  stone to get to the flowgraph.

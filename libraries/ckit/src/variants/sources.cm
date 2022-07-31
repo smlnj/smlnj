@@ -1,0 +1,24 @@
+Group is 
+ 
+#if defined(NEW_CM)
+#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11029)
+
+        (* standard basis *)
+        $/basis.cm
+#else
+        (* standard basis *)
+	basis.cm
+#endif
+#endif
+
+         parse-control-sig.sml
+         type-check-control-sig.sml
+         config-sig.sml
+
+#if (defined(d))
+        d/config.sml
+#elif (defined(fiveessc))
+        5essc/config.sml
+#else
+        ansic/config.sml
+#endif

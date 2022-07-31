@@ -1,0 +1,146 @@
+\section{Cells}
+
+MLRISC uses
+the \mlrischref{instructions/cells.sig}{CELLS} 
+interface to define all readable/writable resources
+in a machine architecture,  or \emph{cells} 
+The types defined herein are:
+\begin{itemize}
+ \item \sml{cellkind} -- different classes of cells are assigned
+   difference cellkinds.  The following cellkinds should be present
+   \begin{itemize}
+     \item \sml{GP} -- general purpose registers.
+     \item \sml{FP} -- floating point registers.
+     \item \sml{CC} -- condition code registers.
+   \end{itemize}
+   In addition, the cellkinds \sml{MEM} and \sml{CTRL}
+   should also be defined.  These are used for representing
+   memory based data dependence and control dependence.
+   \begin{itemize}
+     \item \sml{MEM} -- memory 
+     \item \sml{CTRL} -- control dependence
+   \end{itemize} 
+ \item \sml{regmap} -- \href{regmap.html}{register map}
+ \item \sml{cellset} -- a cellset represent a set of cells.  This
+   type can be used to denote live-in/live-out information.  Cellsets are
+   implemented as immutable abstract types.
+\end{itemize}
+
+These core definitions are defined in the following signature
+\begin{SML}
+signature \mlrischref{instructions/cells.sig}{CELLS\_BASIS} =
+sig
+   eqtype cellkind 
+   type cell = int
+   type regmap = cell Intmap.intmap
+   exception Cells
+
+   val cellkinds : cellkind list 
+   val cellkindToString : cellkind -> string
+   val firstPseudo : cell                    
+   val Reg   : cellkind -> int -> cell
+   val GPReg : int -> cell 
+   val FPReg : int -> cell
+   val cellRange : cellkind -> {low:int, high:int}
+   val newCell   : cellkind -> 'a -> cell 
+   val cellKind : cell -> cellkind         
+   val updateCellKind : cell * cellkind -> unit        
+   val numCell   : cellkind -> unit -> int              
+   val maxCell   : unit -> cell
+   val newReg    : 'a -> cell              
+   val newFreg   : 'a -> cell              
+   val newVar    : cell -> cell
+   val regmap    : unit -> regmap
+   val lookup    : regmap -> cell -> cell
+   val reset     : unit -> unit
+end
+\end{SML}
+
+\begin{itemize}
+  \item\sml{cellkinds} -- this is a list of all the cellkinds defined in the
+architecture
+  \item\sml{cellkindToString} -- this function maps a cellkind into its name
+  \item\sml{firstPseudo} -- MLRISC numbered physical resources
+   in the architecture from 0 to firstPseudo-1.  
+   This is the first usable virtual register number.
+  \item\sml{Reg} -- This function maps the $i$th physical
+   resource of a particular cellkind to its internal encoding used by MLRISC.
+   Note that all resources in MLRISC are named uniquely.
+  \item\sml{GPReg} -- abbreviation for \sml{Reg GP} 
+  \item\sml{FPReg} -- abbreviation for \sml{Reg FP} 
+  \item \sml{cellRange} -- this returns a range \sml{{low, high}}
+   when given a cellkind, with denotes the range of physical resources
+  \item \sml{newCell}  -- This function returns a new virtual register 
+   of a particular cellkind.
+  \item \sml{newReg} -- abbreviation as \sml{newCell GP}
+  \item \sml{newFreg} -- abbreviation as \sml{newCell FP}
+  \item \sml{cellKind}  -- When given a cell number, this returns its
+    cellkind.  Note that this feature is not enabled by default.
+  \item \sml{updateCellKind} -- updates the cellkind of a cell.
+  \item \sml{numCell} -- returns the number of virtual cells allocated for one cellkind.
+  \item \sml{maxCell} --  returns the next virtual cell id.
+  \item \sml{newVar}  -- given a cell id, return a new cell id of
+     the same cellkind.
+  \item \sml{regmap} -- This function returns a new empty regmap
+  \item \sml{lookup} -- This converts a regmap into a lookup function.
+  \item \sml{reset} -- This function resets all counters associated
+with all virtual cells.
+\end{itemize}
+
+\begin{SML}
+signature CELLS = sig
+   include CELLS_BASIS
+   val GP   : cellkind 
+   val FP   : cellkind
+   val CC   : cellkind 
+   val MEM  : cellkind 
+   val CTRL : cellkind 
+   val toString : cellkind -> cell -> string
+   val stackptrR : cell 
+   val asmTmpR : cell  
+   val fasmTmp : cell 
+   val zeroReg : cellkind -> cell option
+
+   type cellset
+
+   val empty      : cellset
+   val addCell    : cellkind -> cell * cellset -> cellset
+   val rmvCell    : cellkind -> cell * cellset -> cellset
+   val addReg     : cell * cellset -> cellset
+   val rmvReg     : cell * cellset -> cellset
+   val addFreg    : cell * cellset -> cellset
+   val rmvFreg    : cell * cellset -> cellset
+   val getCell    : cellkind -> cellset -> cell list
+   val updateCell : cellkind -> cellset * cell list -> cellset
+
+   val cellsetToString : cellset -> string
+   val cellsetToString' : (cell -> cell) -> cellset -> string
+
+   val cellsetToCells : cellset -> cell list
+end
+\end{SML}
+
+\begin{itemize} 
+  \item \sml{toString} -- convert a cell id of a certain cellkind into
+its assembly name.
+  \item \sml{stackptrR} -- the cell id of the stack pointer register. 
+  \item \sml{asmTmpR} -- the cell id of the assembly temporary 
+  \item \sml{fasmTmp} -- the cell id of the floating point temporary
+  \item \sml{zeroReg} -- given the cellkind, returns the cell id of the
+   source that always hold the value of zero, if there is any. 
+  \item \sml{empty} -- an empty cellset
+  \item \sml{addCell} -- inserts a cell into a cellset
+  \item \sml{rmvCell} -- remove a cell from a cellset
+  \item \sml{addReg} -- abbreviation for \sml{addCell GP}
+  \item \sml{rmvReg} -- abbreviation for \sml{rmvCell GP} 
+  \item \sml{addFreg} -- abbreviation for \sml{addCell FP}
+  \item \sml{rmvFreg} -- abbreviation for \sml{rmvCell FP} 
+  \item \sml{getCell} -- lookup all cells of a particular cellkind from
+the cellset
+  \item \sml{updateCell} -- replace all cells of a particular cellkind
+from the cellset. 
+   \item \sml{cellsetToString} -- pretty print a cellset 
+   \item \sml{cellsetToString'} -- pretty print a cellset, but first
+apply a regmap function.
+   \item \sml{cellsetToCells} -- convert a cellset into list form.
+\end{itemize}

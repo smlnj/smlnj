@@ -1,0 +1,11 @@
+Implement the event constructors for input operation (inputEvt, ...).
+
+Slow down timer interrupts when pausing for I/O, etc.  When waiting for
+just a single kind of thing (e.g., I/O), we can just wait, instead of
+sigpause.  Also, we should eventually use asynchronous mechanisms, such
+as SIGCHLD and SIGIO.
+
+Add a CML interface to signals.
+
+Add clean-up code for sockets.
+

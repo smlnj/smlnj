@@ -1,0 +1,1017 @@
+\section{The Graph Library}
+
+\subsection{Overview}
+
+Graphs are the most fundamental data structure in the \MLRISC{} system,
+and in fact in many optimizing compilers.
+\MLRISC{} now contains an extensive library for working with graphs.
+
+All graphs in \MLRISC{} 
+are modeled as edge- and node-labeled directed multi-graphs.
+Briefly, this means that nodes and edges can carry user supplied data, and  
+multiple directed edges can be attached between any two nodes.
+Self-loops are also allowed.
+
+A node is uniquely identified by its \sml{node_id}, which is
+simply an integer.  Node ids can be assigned externally 
+by the user, or else generated automatically by a graph.  All graphs
+keep track of all node ids that are currently used,
+and the method \sml{new_id : unit -> node_id} generates a new unused id.
+
+A node is modeled as a node id and node label pair, $(i,l)$.
+An edge is modeled as a triple $i \edge{l} j$, which contains
+the \newdef{source} and \newdef{target} node ids $i$ and $j$,
+and the edge label $l$.  These types are defined as follows:
+\begin{SML}
+   type 'n node = node_id * 'n 
+   type 'e edge = node_id * node_id * 'e
+\end{SML}
+
+\subsubsection{The graph signature}
+
+All graphs are accessed through an abstract interface
+of the polymorphic type \sml{('n,'e,'g) graph}.
+Here, \sml{'n} is the type of the node labels, \sml{'e} is the type
+of the edge labels, and \sml{'g} is the type of any extra information
+embedded in a graph.  We call the latter \sml{graph info}.
+
+Formally, a graph $G$ is a quadruple $(V,L,E,I)$
+where $V$ is a set of node ids, $L : V -> 'a$ is a node labeling
+function from vertices to node labels, $E$ is a multi-set
+of labeled-edges of type $V * V * 'e$, and $I: 'g$
+is the graph info.
+
+The interface of a graph is packaged into a 
+record of methods that manipulate the base representation:  
+\begin{SML}
+ signature \mlrischref{graphs/graph.sig}{GRAPH} = sig
+   type node_id = int
+   type 'n node = node_id * 'n 
+   type 'e edge = node_id * node_id * 'e
+
+   exception Graph of string
+   exception Subgraph        
+   exception NotFound        
+   exception Unimplemented        
+   exception Readonly        
+
+   datatype ('n,'e,'g) graph = GRAPH of ('n,'e,'g) graph_methods
+   withtype ('n,'e,'g) graph_methods = 
+       \{  name            : string,
+          graph_info      : 'g,
+          (* selectors *)
+          (* mutators *)
+          (* iterators *)
+       \}
+ end
+\end{SML}
+
+A few exceptions are predefined in this signature, which have
+the following informal interpretation.
+Exception \sml{Graph} is raised when a bug is encountered.
+The exception \sml{Subgraph} is raised if certain semantics constraints
+imposed on a graph are violated.
+The exception \sml{NotFound} is raised if lookup of a node id fails.
+The exception \sml{Unimplemented} is raised if a certain feature
+is accessed but is undefined on the graph.  The exception 
+\sml{Readonly} is raised if the graph is readonly and an update operation
+is attempted.
+
+\subsubsection{Selectors}
+
+Methods that access the structure of a graph are listed below:
+\begin{methods}
+   nodes : unit -> $'n$ node list &
+       Return a list of all nodes in a graph em \\
+    edges : unit -> $'e$ edge list &
+       Return a list of all edges in a graph \\
+    order : unit -> int &
+       Return the number of nodes in a graph.  The graph is empty
+       if its order is zero \\
+    size : unit -> int &
+       Return the number of edges in a graph \\
+    capacity : unit -> int & 
+       Return the maximum node id in the graph, plus 1. 
+       This can be used as a new id  \\
+    succ : node\_id -> node\_id list &
+       Given a node id $i$, return the node ids of all its successors,
+       i.e. $\{ j | i \edge{l} j \in E\}$. \\
+    pred : node\_id -> node\_id list &
+      Given a node id $j$, return the node ids of all its predecessors,
+       i.e. $\{ i | i \edge{l} j \in E\}$. \\
+    out\_edges : node\_id -> $'e$ edge list &
+       Given a node id $i$, return all the out-going edges from node $i$, 
+       i.e. all edges whose source is $i$. \\
+    in\_edges : node\_id -> $'e$ edge list &
+       Given a node id $j$, return all the in-coming edges from node $j$,
+       i.e. all edges whose target is $j$. \\
+    has\_edge : node\_id * node\_id -> bool &
+       Given two node ids $i$ and $j$, find out if an edge 
+       with source $i$ and target $j$ exists. \\
+    has\_node : node\_id -> bool &
+        Given a node id $i$, find out if a node of id $i$ exists. \\
+    node\_info : node\_id -> $'n$ &
+       Given a node id, return its node label.  If the node does not
+       exist, raise exception \sml{NotFound}. \\
+\end{methods}
+
+\subsubsection{Graph hierarchy}
+
+A graph $G$ may in fact be a subgraph of a \newdef{base graph} $G'$, or
+obtained from $G'$ via some transformation $T$.
+In such cases the following methods may be used to determine of the
+relationship between $G$ and $G'$.  
+An \newdef{entry edge} is an edge
+in $G'$ that terminates at a node in $G$, but is not an edge in $G$.
+Similarly, an \newdef{exit edge} is an edge in $G'$ that originates from
+a node in $G$, but is not an edge in $G$.  An \newdef{entry node}
+is a node in $G$ that has an incoming entry edge.  
+An \newdef{exit node} is a node in $G$ that has an out-going exit edge.  
+If $G$ is not
+a subgraph, all these methods will return nil.
+\begin{methods}
+    entries : unit -> node\_id list &
+        Return the node ids of all the entry nodes. \\
+    exits : unit -> node\_id list &
+        Return the node ids of all the exit nodes. \\
+    entry\_edges : node\_id -> $'e$ edge list &
+       Given a node id $i$, return all the entry edges whose sources are
+       $i$. \\
+    exit\_edges : node\_id -> $'e$ edge list &
+       Given a node id $i$, return all the exit edges whose targets are $i$.
+\end{methods}
+
+\subsubsection{Mutators}
+
+Methods to update a graph are listed below:  
+\begin{methods}
+   new\_id : unit -> node\_id &
+     Return a unique node id guaranteed to be
+     absent in the current graph. \\
+   add\_node : 'n node -> unit &
+     Insert node into the graph.  If a node of the same node id
+     already exists, replace the old node with the new. \\
+   add\_edge : 'e edge -> unit & 
+     Insert an edge into the graph. \\
+   remove\_node : node\_id -> unit &
+     Given a node id $n$, remove the node with the node id from the graph.
+     This also automatically removes all edges with source or target $n$. \\
+   set\_out\_edges : node\_id * 'e edge list -> unit &
+      Given a node id $n$, and a list of edges $e_1,\ldots,e_n$
+      with sources $n$, replace all out-edges of $n$ by $e_1,\ldots,e_n$. \\
+   set\_in\_edges : node\_id * 'e edge list -> unit &
+      Given a node id $n$, and a list of edges $e_1,\ldots,e_n$ 
+      with targets $n$, replace all in-edges of $n$ by $e_1,\ldots,e_n$. \\
+   set\_entries : node\_id list -> unit &
+      Set the entry nodes of a graph. \\
+   set\_exits : node\_id list -> unit &
+      Set the exit nodes of a graph. \\
+   garbage\_collect : unit -> unit &
+      Reclaim all node ids of nodes that have been removed by 
+     \sml{remove_node}.  Subsequent \sml{new_id} will reuse these
+      node ids.  \\
+\end{methods}
+
+\subsubsection{Iterators}
+
+Two primitive iterators are supported in the graph interface. 
+Method \sml{forall_nodes} iterates over all the nodes in a graph,
+while method \sml{forall_edges} iterates over all the edges.
+Other more complex iterators can be found in other modules. 
+\begin{methods}
+ forall\_nodes : ($'n$ node -> unit) -> unit &
+    Given a function $f$ on nodes, apply $f$ on all the nodes in the graph. \\
+ forall\_edges : ($'e$ edge -> unit) -> unit &
+    Given a function $f$ on edges, apply $f$ on all the edges in the graph.
+\end{methods}
+
+\subsubsection{Manipulating a graph}
+ 
+Since operations on the graph type are packaged into
+a record, an ``object oriented'' style of graph manipulation should be used.
+For example, if \sml{G} is a graph object, then we can obtain all the
+nodes and edges of \sml{G} as follows.
+\begin{SML}
+ val GRAPH g = G
+ val edges = #edges g ()
+ val nodes = #nodes g ()
+\end{SML}
+We can view \sml{#edges g} as sending the message to \sml{G}.
+While all this seems like mere syntactic deviation from the usual
+ signature/structure approach, there are two crucial differences which
+we will exploit:
+\emph{(i)} records are first class objects 
+while structures are not (consequently
+late binding of ``methods'' and cannot be easily simulated on the
+structure level); \emph{(ii)} recursion
+is possible on the type level, while recursive structures are not available.
+The extra flexibility of this choice becomes apparent with the
+introduction of views later. 
+
+\subsubsection{Creating a Graph}
+
+A graph implementation has the following signature
+\begin{SML}
+ signature \mlrischref{graphs/graphimpl.sig}{GRAPH_IMPLEMENTATION} = sig
+   val graph : string * 'g * int -> ('n,'e,'g) graph
+ end
+\end{SML}
+The function \sml{graph} takes a string (the name of the graph),
+graph info, and a default size as arguments and create an empty graph.
+
+The functor \sml{DirectedGraph}:
+\begin{SML}
+ functor DirectedGraph(A : ARRAY_SIG) : GRAPH_IMPLEMENTATION
+\end{SML}
+implements a graph using adjacency lists as internal representation.
+It takes an array type as a parameter.  For graphs with
+node ids that are dense enumerations, the \sml{DynamicArray} structure
+should be used as the parameter to this functor. 
+The structure \sml{DirectedGraph} is predefined as follows:
+\begin{SML}
+ structure \mlrischref{graphs/digraph.sml}{DirectedGraph} = DirectedGraph(DynamicArray)
+\end{SML}
+
+For node ids that are sparse enumerations, the structure \sml{HashArray}, 
+which implements integer-keyed hash tables
+with the signature of arrays, can be used
+as argument to \sml{DirectedGraph}.  
+For graphs with fixed sizes determined at creation time,
+the structure \sml{Array} can be used (see also 
+functor \mlrischref{library/undoable-array.sml}{\sml{UndoableArray}},
+which creates arrays with undoable updates, and transaction-like semantics.)
+
+\subsubsection{Basic Graph Algorithms}
+
+\subsubsection{Depth-/Breath-First Search}
+
+\begin{SML}
+   val dfs : ('n,'e,'g) graph  ->
+             (node_id -> unit) ->
+             ('e edge -> unit) ->
+             node_id list -> unit
+\end{SML}
+   The function \sml{dfs} takes as arguments a graph,
+a function \sml{f : node_id -> unit}, a function 
+\sml{g : 'e edge -> unit}, and a
+set of source vertices.  It performs depth first search on the
+graph.  The function \sml{f} is invoked 
+whenever a new node is being visited, while the function \sml{g}
+is invoked whenever a new edge is being traversed.
+This algorithm has running time $O(|V|+|E|)$.
+
+\begin{SML}
+   val dfsfold : ('n,'e,'g) graph  ->
+                 (node_id * 'a -> 'a) ->
+                 ('e edge * 'b -> 'a) ->
+                 node_id list -> 'a * 'b -> 'a * 'b
+   val dfsnum :  ('n,'e,'g) graph  ->
+                 (node_id * 'a -> 'a) ->
+                 { dfsnum : int array, compnum : int array }
+\end{SML}
+
+   The function \sml{bfs} is similar to \sml{dfs}
+except that breath first search is performed.
+\begin{SML} 
+   val bfs : ('n,'e,'g) graph  ->
+             (node_id -> unit) ->
+             ('e edge -> unit) ->
+             node_id list -> unit
+   val bfsdist : ('n,'e,'g) graph -> node_id list -> int array
+\end{SML} 
+
+\subsubsection{Preorder/Postorder numbering}
+\begin{SML}
+   val preorder_numbering  : ('n,'e,'g) graph -> int -> int array
+   val postorder_numbering : ('n,'e,'g) graph -> int -> int array
+\end{SML}  
+   Both these functions take a tree $T$ and a root $v$, and return
+the preorder numbering and the postorder numbering of the tree respectively. 
+
+\subsubsection{Topological Sort}
+\begin{SML}
+  val topsort : ('n,'e,'g) graph -> node_id list -> node_id list
+\end{SML}
+   The function 
+\sml{topsort} takes a graph $G$ and a set of source vertices $S$
+as arguments.  It returns a topological sort of all the nodes reachable from
+the set $S$.  
+This algorithm has running time $O(|S|+|V|+|E|)$.
+
+\subsubsection{Strongly Connected Components}
+\begin{SML}
+ val strong_components : ('n,'e,'g) graph -> 
+   (node_id list * 'a -> 'a) -> 'a -> 'a
+\end{SML}
+   The function \sml{strong_components} takes a graph $G$ and
+an aggregate function $f$ with type 
+\begin{SML}
+  node_id list * 'a -> 'a
+\end{SML}
+\noindent and an identity element \sml{x : 'a} as arguments.  
+Function $f$ is invoked with a strongly connected component 
+(represented as a list of node ids) as each is discovered.   
+That is, the function \sml{strong_components} computes 
+
+\[ 
+   f(SCC_n,f(SCC_{n-1},\ldots, f(SCC_1,x)))
+\] 
+
+where $SCC_1,\ldots,SCC_n$ are the strongly connected components
+in topological order.  This algorithm has running time $O(|V|+|E|)$.
+
+\subsubsection{Biconnected Components}
+\begin{SML}
+ val biconnected_components : ('n,'e,'g) graph -> 
+        ('e edge list * 'a -> 'a) -> 'a -> 'a
+\end{SML}
+   The function \sml{biconnected_components} takes a graph $G$ and
+an aggregate function $f$ with type 
+\begin{SML}
+  'e edge list * 'a -> 'a
+\end{SML}
+\noindent and an identity element \sml{x : 'a} as arguments.  
+Function $f$ is invoked with a biconnected component 
+(represented as a list of edges) as each is discovered.
+That is, the function \sml{biconnected_components} computes 
+
+\[
+   f(BCC_n,f(BCC_{n-1},\ldots, f(BCC_1,x))) 
+\]
+
+where $BCC_1,\ldots,BCC_n$ are the biconnected components.
+This algorithm has running time $O(|V|+|E|)$.
+
+\subsubsection{Cyclic Test}
+\begin{SML}
+ val is_cyclic : ('n,'e,'g) graph -> bool
+\end{SML}
+Function \sml{is_cyclic} tests if a graph is cyclic.
+This algorithm has running time $O(|V|+|E|)$.
+
+\subsubsection{Enumerate Simple Cycles}
+\begin{SML}
+ val cycles : ('n,'e,'g) graph -> ('e edge list * 'a -> 'a) -> 'a ->'a
+\end{SML}
+  A simple cycle is a circuit that visits each vertex only once.
+  The function \sml{cycles} enumerates all simple cycles in a graph $G$.
+  It takes as argument an aggregate function $f$ of type 
+  \begin{SML}
+       'e edge list * 'a -> 'a
+  \end{SML}
+  and an identity element $e$, and computes as result the expression
+  \[
+     f(c_n,f(c_{n-1},f(c_{n-2},\ldots, f(c_1,e)))) 
+  \]
+  where $c_1,\ldots,c_n$ are all the simple cycles in the graph.   
+  All cycles $c_1,\ldots,c_n$ are guaranteed to be distinct.  
+  A cycle is represented as a sequence of
+  adjacent edges, i.e. in the order of 
+  \[ 
+     v_1 -> v_2, v_2 -> v_3, v_3 -> v_4, \ldots, v_{n-1} -> v_n, v_n -> v_1 
+  \]
+  Our implementation works by first decomposing the graph into
+  its strongly connected components, then uses backtracking to enumerate
+  simple cycles in each component.
+\subsubsection{Minimal Cost Spanning Tree}
+\begin{SML}
+ signature \mlrischref{graphs/spanning-tree.sig}{MIN_COST_SPANNING_TREE} = sig
+   exception Unconnected
+
+   val spanning_tree : \{ weight    : 'e edge -> 'a,
+                         <         : 'a * 'a -> bool
+                       \} -> ('n, 'e, 'g) graph
+                         -> ('e edge * 'a -> 'a) -> 'a -> 'a
+ end
+ structure \mlrischref{graphs/kruskal.sml}{Kruskal} : MIN_COST_SPANNING_TREE
+\end{SML}
+
+Structure \sml{Kruskal} implements Kruskal's algorithm for
+computing a minimal cost spanning tree of a graph.
+The function \sml{spanning_tree} takes as arguments:
+\begin{itemize}
+\item a \sml{weight} function which when given an edge returns its weight
+\item an ordering function \sml{<}, which is used to compare the weights
+\item a graph $G$
+\item an accumulator function $f$, and
+\item an identity element $x$
+\end{itemize}
+The function \sml{spanning_tree} computes
+\[
+   f(e_{n},f(e_{n-1},\ldots, f(e_1,x))) 
+\]
+
+where $e_1,\ldots,e_n$ are the edges in a minimal cost spanning tree 
+of the graph.
+The exception \sml{Unconnected} is raised if the graph is unconnected.
+
+\subsubsection{Abelian Groups}
+  Graph algorithms that deal with numeric weights or distances
+are parameterized with respect to the signatures
+\sml{ABELIAN_GROUP} or \sml{ABELIAN_GROUP_WITH_INF}.
+These are defined as follows:
+\begin{SML}
+ signature \mlrischref{graphs/groups.sig}{ABELIAN_GROUP} = sig 
+   type elem 
+   val +    : elem * elem -> elem
+   val -    : elem * elem -> elem
+   val      : elem -> elem
+   val zero : elem
+   val <    : elem * elem -> bool
+   val ==   : elem * elem -> bool
+ end
+ signature \mlrischref{graphs/groups.sig}{ABELIAN_GROUP_WITH_INF} = sig
+   include ABELIAN_GROUP
+   val inf : elem
+ end
+\end{SML}
+Signature \sml{ABELIAN_GROUP} specifies an ordered commutative group,
+while signature \sml{ABELIAN_GROUP_WITH_INF} specifies an ordered commutative
+group with an infinity element \sml{inf}. 
+
+\subsubsection{Single Source Shortest Paths}
+\begin{SML}
+ signature \mlrischref{graphs/shortest-paths.sig}{SINGLE_SOURCE_SHORTEST_PATHS} = sig 
+   structure Num : ABELIAN_GROUP_WITH_INF
+   val single_source_shortest_paths :
+                 \{ graph : ('n,'e,'g) graph,
+                   weight : 'e edge -> Num.elem,
+                   s : node_id
+                 \} ->
+                 \{ dist : Num.elem array,
+                   pred :  node_id array
+                 \}
+ end
+ functor \mlrischref{graphs/dijkstra.sml}{Dijkstra}(Num : ABELIAN_GROUP_WITH_INF) 
+    : SINGLE_SOURCE_SHORTEST_PATHS
+\end{SML}
+The functor \sml{Dijkstra} implements Dijkstra's algorithm
+for single source shortest paths.  The function \linebreak
+\sml{single_source_shortest_paths} takes as arguments: 
+\begin{itemize}
+\item a graph $G$, 
+\item a \sml{weight} function on edges, and
+\item the source vertex $s$.
+\end{itemize}
+It returns two arrays \sml{dist} and \sml{pred}
+indexed by vertices.  These arrays have the following
+interpretation.  Given a vertex $v$,
+\begin{itemize}
+\item \sml{dist}[$v$] contains the distance of $v$ from the source $s$
+\item \sml{pred}[$v$] contains the predecessor of $v$ in the shortest
+path from $s$ to $v$, or -1 if $v=s$.
+\end{itemize}
+
+Dijkstra's algorithm fails to work on graphs that have
+negative edge weights.  
+To handle negative weights, Bellman-Ford's algorithm can be used. 
+The exception \sml{NegativeCycle} is raised if a cycle of
+negative total weight is detected.
+\begin{SML}
+ functor \mlrischref{graphs/bellman-ford.sml}{BellmanFord}(Num : ABELIAN_GROUP_WITH_INF) : sig
+    include SINGLE_SOURCE_SHORTEST_PATHS
+    exception NegativeCycle
+ end
+\end{SML}
+\subsubsection{All Pairs Shortest Paths}
+\begin{SML}
+ signature \mlrischref{graphs/shortest-paths.sig}{ALL_PAIRS_SHORTEST_PATHS} = sig 
+   structure Num : ABELIAN_GROUP_WITH_INF
+   val all_pairs_shortest_paths :
+                 \{ graph : ('n,'e,'g) graph,
+                   weight : 'e edge -> Num.elem
+                 \} ->
+                 \{ dist : Num.elem Array2.array,
+                   pred :  node_id Array2.array
+                 \}
+ end
+ functor \mlrischref{graphs/floyd-warshall.sml}{FloydWarshall}(Num : ABELIAN_GROUP_WITH_INF) 
+    : ALL_PAIRS_SHORTEST_PATHS
+\end{SML}
+The functor \sml{FloydWarshall} implements Floyd-Warshall's algorithm
+for all pairs shortest paths.  The function 
+\sml{all_pairs_shortest_paths} takes as arguments: 
+\begin{itemize}
+\item a graph $G$, and
+\item a \sml{weight} function on edges
+\end{itemize}
+It returns two 2-dimensional arrays \sml{dist} and \sml{pred}
+indexed by vertices $(u,v)$.  These arrays have the following
+interpretation.  Given a pair $(u,v)$,
+\begin{itemize}
+\item \sml{dist}[$u,v$] contains the distance from $u$ to $v$.
+\item \sml{pred}[$u,v$] contains the predecessor of $v$ in the shortest
+path from $u$ to $v$, or $-1$ if $u=v$.
+\end{itemize}
+This algorithm runs in time $O(|V|^3+|E|)$.
+
+An alternative implementation is available that uses Johnson's algorithm, 
+which works better for sparse graphs:
+\begin{SML}
+ functor \mlrischref{graphs/johnson.sml}{Johnson}(Num : ABELIAN_GROUP_WITH_INF) 
+    : sig include ALL_PAIRS_SHORTEST_PATHS
+          exception Negative Cycle
+      end
+\end{SML}
+
+\subsubsection{Transitive Closure}
+\begin{SML}
+ signature \mlrischref{graphs/trans-closure.sml}{TRANSITIVE_CLOSURE} = sig
+    val acyclic_transitive_closure : {  + : ('e * 'e -> 'e), simple : bool }
+        -> ('n,'e,'g) graph -> unit
+    val acyclic_transitive_closure2 : 
+       \{  + : 'e * 'e -> 'e,
+          max : 'e * 'e -> 'e
+       \}  -> ('n,'e,'g) graph -> unit
+    val transitive_closure : ('e * 'e -> 'e) -> ('n,'e,'g) graph -> unit
+ structure \mlrischref{graphs/trans-closure.sml}{TransitiveClosure} : TRANSITIVE_CLOSURE
+\end{SML}
+Structure \sml{TransitiveClosure} implements
+in-place transitive closures on graphs.   Three functions are implemented.
+Functions \sml{acyclic_transitive_closure} and 
+\sml{acyclic_transitive_closure2} can be used
+to compute the transitive closure of an acyclic graph, whereas the
+function \sml{transitive_closure} computes the transitive closure of
+a cyclic graph.  All take a binary function 
+\begin{SML}
+  + : 'e * 'e -> 'e
+\end{SML}
+defined on edge labels.  
+Transitive edges are inserted in the following manner:
+
+\begin{itemize}
+ \item \sml{acyclic_transitive_closure}:
+   given $u \edge{l} v$ and $v \edge{l'} w$, 
+if the flag \sml{simple} is false or if 
+the transitive edge $u \rightarrow w$ does not exists,
+then $u \edge{l + l'} w$ is added to the graph.
+ \item \sml{acyclic_transitive_closure2}:
+   given $u \edge{l} v$ and $v \edge{l'} w$, 
+the transitive $u \edge{l + l'} w$ is added to the graph.
+  Furthermore, all parallel edges 
+\[ 
+   u \edge{l_1} w, \ldots, u \edge{l_n} w 
+\]
+are coalesced into a single edge $u \edge{l} w$, where 
+$l = {\tt max}_{i = 1 \ldots n} l_i$ 
+\end{itemize}
+
+\subsubsection{Max Flow}
+
+   The function \sml{max_flow} computes the
+maximum flow between the source vertex \sml{s} and the sink vertex
+\sml{t} in the \sml{graph} when given a \sml{capacity} function. 
+\begin{SML}
+ signature \mlrischref{graphs/max-flow.sig}{MAX_FLOW} = sig
+   structure Num : ABELIAN_GROUP
+   val max_flow : \{ graph    : ('n,'e,'g) graph,
+                    s        : node_id, 
+                    t        : node_id, 
+                    capacity : 'e edge -> Num.elem, 
+                    flows    : 'e edge * Num.elem -> unit
+                  \} -> Num.elem
+ end
+ functor \mlrischref{graphs/max-flow.sml}{MaxFlow}(Num : ABELIAN_GROUP) : MAX_FLOW
+\end{SML}
+The function \sml{max_flow} returns its result in the follow manner:
+The function returns the total flow as its result value.
+Furthermore, the function \sml{flows} is called once for each edge $e$ in the
+graph with its associated flow $f_e$.  
+
+This algorithm uses Goldberg's preflow-push approach, and runs
+in $O(|V|^2|E|)$ time.
+\subsubsection{Min Cut}
+   The function \sml{min_cut} computes the
+minimum (undirected) cut in a \sml{graph} 
+when given a \sml{weight} function on
+its edges.  
+\begin{SML}
+ signature \mlrischref{graphs/min-cut.sig}{MIN_CUT} = sig
+   structure Num : ABELIAN_GROUP
+   val min_cut : \{ graph    : ('n,'e,'g) graph,
+                   weight : 'e edge -> Num.elem
+                 \} -> node_id list * Num.elem
+ end
+ functor \mlrischref{graphs/min-cut.sml}{MinCut}(Num : ABELIAN_GROUP) : MIN_CUT
+\end{SML}
+The function \sml{min_cut} returns a list of node ids denoting
+one side of the cut $C$ (the other side of the cut is $(V - C)$ and
+the weight cut.
+
+\subsubsection{Max Cardinality Matching}
+
+\begin{SML}
+   val matching : ('n,'e,'g) graph -> ('e edge * 'a -> 'a) -> 'a -> 'a * int
+\end{SML}
+
+The function \sml{BipartiteMatching.matching} computes the
+maximal cardinality matching of a bipartite graph.  As result, 
+the function iterates over all the matched edges and returns the
+number of matched edges.  The algorithm runs in time $O(|V||E|)$.
+
+\subsubsection{Node Partition}
+\begin{SML}
+ signature NODE_PARTITION = sig 
+   type 'n node_partition
+
+   val node_partition : ('n,'e,'g) graph -> 'n node_partition
+   val !!    : 'n node_partition -> node_id -> 'n node
+   val ==    : 'n node_partition -> node_id * node_id -> bool
+   val union : 'n node_partition -> ('n node * 'n node -> 'n node) ->
+                                        node_id * node_id -> bool
+   val union': 'n node_partition -> node_id * node_id -> bool
+
+ end
+\end{SML}
+
+\subsubsection{Node Priority Queue}
+\begin{SML}
+ signature NODE_PRIORITY_QUEUE = sig 
+   type node_priority_queue
+
+   exception EmptyPriorityQueue
+
+   val create         : (node_id * node_id -> bool) -> node_priority_queue
+   val fromGraph      : (node_id * node_id -> bool) -> 
+      ('n,'e,'g) graph -> node_priority_queue
+   val isEmpty        : node_priority_queue -> bool
+   val clear          : node_priority_queue -> unit
+   val min            : node_priority_queue -> node_id
+   val deleteMin      : node_priority_queue -> node_id
+   val decreaseWeight : node_priority_queue * node_id -> unit
+   val insert         : node_priority_queue * node_id -> unit
+   val toList         : node_priority_queue -> node_id list
+ end
+\end{SML}
+
+\subsection{Views}\label{sec:views}
+Simply put, a view is an alternative presentation
+of a data structure to a client.  A graph, such as the control flow
+graph, frequently has to be presented in different ways in a compiler.  
+For example, when global scheduling is applied on a region 
+(a subgraph of the CFG),
+we want to be able to concentrate on just the region and ignore all
+nodes and edges that are not part of the current focus.  
+All transformations that are applied on the current region view should be
+automatically reflected back to the entire CFG as a whole.
+Furthermore, we want to be able to freely intermix
+graphs and subgraphs of the same type in our program, without having
+to introducing sums in our type representations.
+
+The \sml{subgraph_view} view combinator accomplishes this.  \sml{Subgraph}
+takes a list of nodes and produces a graph object which is a view of the
+node induced subgraph of the original graph.
+All modification to the subgraph are automatically
+reflected back to the original graph.  From the client point of view,
+a graph and a subgraph are entirely indistinguishable, and furthermore,
+graphs and subgraphs can be freely mixed together (they are the same
+type from ML's point of view.)
+
+This transparency is obtained by selective method overriding, composition,
+and delegation.  For example, a generic graph object provides the
+following methods for setting and looking up the entries and exits
+from a graph.
+\begin{SML}
+   set_entries  : node_id list -> unit
+   set_exits    : node_id list -> unit
+   entries      : unit -> node_id list
+   exits        : unit -> node_id list
+\end{SML}
+
+For example, a CFG usually has a single entry and a single exit.
+These methods allow the client to destinate one node as the
+entry and another as
+the exit.  In the case of subgraph view, these methods are overridden so
+that the proper conventions are preserved:
+a node in a subgraph is an entry (exit) iff there is an in-edge (out-edge)
+from (to) outside the (sub-)graph.
+Similarly, the methods \sml{entry_edges} and \sml{exit_edges} can be used
+return the entry and exit edges associated with a node in a subgraph.
+\begin{SML}
+   entry_edges  : node_id -> 'e edge list
+   exit_edges   : node_id -> 'e edge list
+\end{SML}
+These methods are initially defined to return \sml{[]} in a graph and
+subsequently overridden in a subgraph.
+
+\subsubsection{ Update Transparency }
+
+Suppose a view $G'$ is created from some base graphs or views.
+\newdef{Update transparency} refers to the fact that 
+$G'$ behaves
+consistently according to its conventions and semantics when updates
+are performed. There are 4 different type of update transparencies:
+\begin{itemize}
+\item\newdef{update opaque}  A update opaque view disallows updates to both
+itself and its base graphs.
+\item\newdef{globally update transparent} A globally update transparent
+view allows updates to its base graphs but not to itself.  Changes
+will then be automatically reflected in the view.
+\item\newdef{locally update transparent}  A locally update transparent
+view allows updates to itself but not to its base graphs.
+Changes will be automatically reflected to the base graphs.
+\item\newdef{fully update transparent}  A fully update transparent
+view allows updates through its methods or through its base
+graphs'.  
+\end{itemize}
+
+\subsubsection{Structural Views}\label{sec:structural-views}
+
+\subsubsection{Reversal}
+\begin{SML}
+   val \mlrischref{graphs/revgraph.sml}{ReversedGraphView.rev_view} : ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+   This combinator takes a graph $G$ and produces a view $G^R$
+which reverses the direction
+of all its edges, including entry and exit edges.  Thus 
+the edge $i \edge{l} j$ in $G$ becomes the edge
+$j \edge{l} i$ in $G^R$.  This view is fully update transparent.
+
+\subsubsection{Readonly}
+\begin{SML}
+   val \mlrischref{graphs/readonly.sml}{ReadOnlyGraphView.readonly_view} : ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML} 
+  This function takes a graph $G$ and produces a view $G'$
+in which no mutator methods can be used.  Invoking a mutator
+method raises the exception \sml{Readonly}.
+This view is globally update transparent.
+
+\subsubsection{Snapshot}
+\begin{SML}
+   functor \mlrischref{graphs/snap-shot.sml}{GraphSnapShot}(GI : GRAPH_IMPLEMENTATION) : GRAPH_SNAPSHOT 
+   signature GRAPH_SNAPSHOT = sig
+      val snapshot : ('n,'e,'g) graph -> 
+        \{ picture : ('n,'e,'g) graph, button : unit -> unit \}
+   end
+\end{SML}
+
+The function \sml{snapshot} can be used to keep a cached copy
+of a view a.k.a the \sml{picture}.    This cached copy
+can be updated locally but the modification will not be reflected back
+to the base graph.  The function \sml{button} can be used to
+keep the view and the base graph up-to-date.
+
+\subsubsection{Map}
+\begin{SML}
+   val \mlrischref{graphs/isograph.sml}{IsomorphicGraphView.map} :
+     ('n node -> 'n') -> ('e edge -> 'e') -> ('g -> 'g') -> 
+     ('n,'e,'g) graph -> ('n','e','g') graph
+\end{SML}
+The function \sml{map} is a generalization of the \sml{map}
+function on lists.  It takes three functions 
+\begin{SML}
+f : 'n node -> 'n
+g : 'e edge -> 'e
+h : 'g -> g'
+\end{SML}
+and a graph $G=(V,L,E,I)$ as arguments.  
+It computes the view $G'=(V,L',E',I')$ where
+\begin{eqnarray*}
+  L'(v) & = & f(v,L(v)) \mbox{\ for all $v \in V$} \\
+  E'    & = & { i \edge{g(i,j,l)} j | i \edge{l} j \in E } \\
+  I'    & = & h(I) 
+\end{eqnarray*}
+
+\subsubsection{Singleton}
+\begin{SML}
+   val \mlrischref{graphs/singleton.sml}{SingletonGraphView.singleton_view} : ('n,'e,'g) graph -> node_id -> ('n,'e,'g) graph
+\end{SML}
+Function \sml{singleton_view} 
+takes a graph $G$ and a node id $v$ (which must exists in $G$)
+and return an edge-free graph with only one node ($v$).
+This view is opaque.
+
+\subsubsection{Node id renaming}
+\begin{SML}
+   val \mlrischref{graphs/renamegraph.sml}{RenamedGraphView.rename_view} : int -> ('n,'e,'g) graph -> ('n','e','g') graph
+\end{SML}
+The function \sml{rename_view} takes an integer $n$ and
+a graph $G$ and create a fully update transparent
+view where all node ids are incremented by $n$.  Formally,
+given graph $G=(V,E,L,I)$ it computes the view $G'=(V',E',L',I)$
+where
+\begin{eqnarray*}
+   V' & = & { v + n | v \in V } \\
+   E' & = & { i+n \edge{l} j+n | i \edge{l} j \in E } \\
+   L' & = & \lambda v. L(v-n) 
+\end{eqnarray*}
+
+\subsubsection{Union and Sum}
+\begin{SML}
+   val \mlrischref{graphs/uniongraph.sml}{UnionGraphView.union_view} : ('g * 'g') -> 'g'') ->
+      ('n,'e,'g) graph * ('n,'e,'g') graph -> ('n','e','g'') graph
+   GraphCombinations.unions : ('n,'e,'g) graph list -> ('n,'e,'g) graph
+   GraphCombinations.sum : ('n,'e,'g) graph * ('n,'e,'g) graph -> ('n,'e,'g) graph
+   GraphCombinations.sums : ('n,'e,'g) graph list -> ('n,'e,'g) graph
+\end{SML}
+
+Function \sml{union_view} takes as arguments
+a function $f$, and two graphs
+$G=(V,L,E,I)$ and $G'=(V',L',E',I')$, it computes the union $G+G'$ of
+these graphs.  Formally, $G \union G'=(V'',L'',E'',I'')$ where
+\begin{eqnarray*}
+   V'' & = & V \union V' \\
+   L'' & = & L \overrides L' \\
+   E'' & = & E \union E' \\
+   I'' & = & f(I,I')
+\end{eqnarray*}
+
+The function \sml{sum} constructs a \newdef{disjoint sum} of two
+graphs.
+\subsubsection{Simple Graph View}
+\begin{SML}
+  val \mlrischref{graphs/simple-graph.sml}{SimpleGraph.simple_graph} : (node_id * node_id * 'e list -> 'e) ->
+   ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+  Function \sml{simple_graph} takes a merge function $f$ 
+  and a multi-graph $G$ as arguments and return a view in which
+  all parallel multi-edges (edges with the same source and target) are combined
+  into a single edge: i.e. any collection of multi-edges between
+  the same source $s$ and target $t$ and with labels $l_1,\ldots,l_n$, 
+  are replaced by the edge $s \edge{l_{st}} t$ in the view, where
+  $l_{st} = f(s,t,[l_1,\ldots,l_n])$.  The function $f$ is assumed
+  to satisfy the equality $l = f(s,t,[l])$ for all $l$, $s$ and $t$.
+
+\subsubsection{No Entry or No Exit} 
+\begin{SML}
+  val \mlrischref{graphs/no-exit.sml}{NoEntryView.no_entry_view} : ('n,'e,'g) graph -> ('n,'e,'g) graph
+  NoEntryView.no_exit_view : ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+
+The function \sml{no_entry_view} creates a view in which
+all entry edges (and thus entry nodes) are removed.   The function
+\sml{no_exit_view} is the dual of this and creates a view in which
+all exit edges are removed.  This view is fully update transparent.
+It is possible to remove all entry and exit edges by composing these
+two functions.
+
+\subsubsection{Subgraphs} 
+\begin{SML}
+   val \mlrischref{graphs/subgraph.sml}{SubgraphView.subgraph_view} : node_id list -> ('e edge -> bool) -> 
+     ('n,'e,'g) graph -> (n','e','g') graph
+\end{SML}
+
+   The function \sml{subgraph_view} takes as arguments a set of node ids
+$S$, an edge predicate $p$ and a graph $G=(V,L,E,I)$.  It
+returns a view in which only the visible nodes are $S$ and
+the only visible edges $e$ are those that satisfy $p(e)$ and
+with sources and targets in $S$.  $S$ must be a subset of $V$.
+
+\begin{SML}
+   val \mlrischref{graphs/subgraph-p.sml}{Subgraph_P_View.subgraph_p_view} : node_id list -> 
+     (node_id -> bool) -> (node_id * node_id -> bool) ->
+     ('n,'e,'g) graph -> ('n','e','g') graph
+\end{SML}
+
+   The function \sml{subgraph_view} takes as arguments a set of node ids
+$S$, a node predicate $p$, an edge predicate $q$ and a graph $G=(V,L,E,I)$.  It
+returns a view in which only the visible nodes $v$ are those 
+in $S$ satisfying $p(v)$, and
+the only visible edges $e$ are those that satisfy $q(e)$ and
+with sources and targets in $S$.  $S$ must be a subset of $V$.
+
+\subsubsection{Trace}
+\begin{SML}
+   val \mlrischref{graphs/trace-graph.sml}{TraceView.trace_view} : node_id list -> ('n,'e,'g) graph -> ('n','e','g') graph
+\end{SML}
+
+\begin{wrapfigure}{r}{3in}
+  \begin{Boxit}
+%  \psfig{figure=../pictures/eps/trace.eps,width=2.8in}
+  \includegraphics[width=2.8in]{../pictures/pdf/trace}
+  \end{Boxit}
+  \label{fig:trace-view}
+  \caption{A trace view}
+\end{wrapfigure}
+A \newdef{trace} is an acyclic path in a graph.
+The function \sml{trace_view} takes a trace of node ids
+$v_1,\ldots,v_n$ and a graph $G$ and 
+returns a view in which only the nodes are visible.
+Only the edges that connected two adjacent nodes on the trace, i.e. 
+$v_i -> v_{i+1}$ for some $i = 1 \ldots n-1$ are considered be within
+the view.  Thus if there is an edge $v_i -> v_j$ in $G$ where
+$j \ne i+1$ this edge is not considered to be within the view --- it
+is considered to be an exit edge from $v_i$ and an entry edge
+from $v_j$ however.  Trace views can be used to construct a CFG region
+suitable for trace scheduling \cite{trace-scheduling,bulldog}.   
+
+Figure \ref{fig:trace-view} illustrates this concept graphically.
+Here, the trace view is formed from the
+nodes \sml{A, C, D, F} and \sml{G}.  The
+solid edges linking the trace is visible within the view.  All other
+dotted edges are considered to be either entry of exit edges into
+the trace.  The edge from node \sml{G} to \sml{A} is considered to
+be both since it exits from \sml{G} and enters into \sml{A}.
+
+\subsubsection{Acyclic Subgraph}
+\begin{SML}
+   val \mlrischref{graphs/acyclic-graph.sml}{AcyclicSubgraphView.acyclic_view} : 
+     node_id list -> 
+     ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+\begin{wrapfigure}{r}{3in}
+  \begin{Boxit}
+  \includegraphics[width=2.8in]{../pictures/pdf/subgraph}
+%  \psfig{figure=../pictures/eps/subgraph.eps,width=2.8in}
+  \end{Boxit}
+  \label{fig:acyclic-subgraph-view}
+  \caption{An acyclic subgraph}
+\end{wrapfigure}
+The function \sml{acyclic_view} takes an ordered
+list of node ids $v_1,\ldots,v_n$ and a graph $G$ as arguments
+and return a view $G'$ such that only the nodes $v_1,\ldots,v_n$
+are visible.  In addition, only the edges with directions consistent
+with the order list are considered to be within the view.
+Thus an edge $v_i -> v_j$ from $G$ is in $G'$ iff $1 \le i < j \le n$.
+Acyclic views can be used to construct a CFG region suitable
+for DAG scheduling.
+Figure \ref{fig:acyclic-subgraph-view} illustrates this concept graphically.
+
+\subsubsection{Start and Stop}
+\begin{SML}
+   val \mlrischref{graphs/start-stop.sml}{StartStopView.start_stop_view} :
+     \{ start : 'n node,
+        stop  : 'n node,
+        edges : 'e edge list
+     \} -> ('n,'e,'g) graph -> ('n','e','g') graph
+\end{SML}
+
+The function \sml{start_stop_view}
+
+\subsubsection{Single-Entry/Multiple-Exits}
+\begin{SML}
+   \mlrischref{graphs/SEME.sml}{SingleEntryMultipleExit.SEME}
+     exit : 'n node -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+
+The function \sml{SEME} converts a single-entry/multiple-exits 
+graph $G$ into a single entry/single exit graph.
+It takes an exit node $e$ and a graph $G$ and returns
+a view $G'$.  Suppose $i \edge{l} j$ is an exit edge in $G$.
+In view $G$ this edge is replaced by a new normal edge $i \edge{l} e$
+and a new exit edge $e \edge{l} j$.  Thus $e$ becomes the sole exit
+node in the new view.  
+
+\subsubsection{Behavioral Views}
+
+\subsubsection{Behavioral Primitives}
+
+Figure \ref{fig:behavioral-view-primitives} lists
+the set of behavioral primitives defined
+in structure \mlrischref{graphs/wrappers.sml}{\sml{GraphWrappers}}.  
+These functions allow the user
+to attach an action $a$ to a mutator method $m$ such that whenever $m$
+is invoked so does $a$.  Given a graph $G$, the combinator 
+\begin{SML}
+   do_before_\(xxx\) : f -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+\noindent returns a view $G'$ such that whenever method $xxx$ is invoked
+in $G'$, the function $f$ is called. 
+Similarly, the combinator 
+\begin{SML}
+   do_after_\(xxx\) : f -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+\noindent creates a new view $G''$ such that the function $f$
+is called after the method is invoked.
+\begin{Figure}
+\begin{boxit}
+\begin{SML}
+ do_before_new_id : (unit -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_new_id : (node_id -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_before_add_node : ('n node -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_add_node : ('n node -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_before_add_edge : ('e edge -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_add_edge : ('e edge -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_before_remove_node : (node_id -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_remove_node : (node_id -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph 
+ do_before_set_in_edges : (node_id * 'e edge list -> unit) -> 
+    ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_set_in_edges : (node_id * 'e edge list -> unit) -> 
+    ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_before_set_out_edges : (node_id * 'e edge list -> unit) -> 
+    ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_set_out_edges : (node_id * 'e edge list -> unit) -> 
+    ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_before_set_entries : (node_id list -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_set_entries : (node_id list -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_before_set_exits : (node_id list -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+ do_after_set_exits : (node_id list -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+\end{boxit}
+\label{fig:behavioral-view-primitives} 
+\caption{Behavioral view primitives}
+\end{Figure}
+
+Frequently it is not necessary to know precisely by which method a graph's
+structure has been modified, only that it is.  The following two methods
+take a notification function $f$ and returns a new view.  $f$ is
+invoked before a modification is attempted in a view created
+by \sml{do_before_changed}.  It is invoked after the modification in
+a view created by \sml{do_after_changed}.
+\begin{SML}
+   do_before_changed : (('n,'e,'g) graph -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+   do_after_changed : (('n,'e,'g) graph -> unit) -> ('n,'e,'g) graph -> ('n,'e,'g) graph
+\end{SML}
+
+Behavioral views created by the above functions are all fully update
+transparent.

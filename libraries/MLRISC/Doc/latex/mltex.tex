@@ -1,0 +1,120 @@
+\section{\MLTeX}
+ \newdef{\MLTeX} is a special \newdef{\LaTeX} package for writing
+\MLRISC{} documentation.  It is similar to the 
+\newdef{latex2html}~\cite{latex2html} tool
+except that \MLTeX{} has special environments for documenting
+Standard ML code.   In addition, there is an accompanying tool 
+called \newdef{mltex2html} for generating HTML pages. 
+This page, for example, is formatted by \MLTeX. 
+
+\subsection{Macros}
+
+Environments defined in \MLTeX{} are:
+\begin{description}
+   \item[SML]  This environment is used to display MLRISC code.
+For example,
+\begin{verbatim}
+   \begin{SML}
+      datatype 'a tree = 
+         EMPTY 
+      |  LEAF of 'a 
+      |  NODE of 'a * 'a tree * 'a tree
+   \end{SML}
+\end{verbatim}
+generates:
+   \begin{SML}
+      datatype 'a tree = 
+         EMPTY 
+      |  LEAF of 'a 
+      |  NODE of 'a * 'a tree * 'a tree
+   \end{SML}
+  
+   \item[methods] This environment can be used to document a list of
+methods to an interface.  For example,
+\begin{verbatim}
+  \begin{methods}
+     \sml{+ : int * int -> int} &  addition \\
+     \sml{- : int * int -> int} &  subtraction \\
+     \sml{* : int * int -> int} &  multiplication \\
+     \sml{/ : int * int -> int} &  division \\
+   \end{methods}
+\end{verbatim}
+generates:
+  \begin{methods}
+     \sml{+ : int * int -> int} &  addition \\
+     \sml{- : int * int -> int} &  subtraction \\
+     \sml{* : int * int -> int} &  multiplication \\
+     \sml{/ : int * int -> int} &  division \\
+   \end{methods}
+\end{description}
+
+Macros defined in \MLTeX{} are:
+\begin{description}
+   \item[sml]  This macro can be used inline for formating SML code fragment.
+For example the fragment
+\begin{verbatim}
+  \begin{quotation}
+  \begin{tabular}{l} 
+   \sml{val toString : int -> string}  \\
+   \sml{val map : ('a -> 'b) -> 'a list -> 'a list} 
+  \end{tabular}
+  \end{quotation}
+\end{verbatim}
+\noindent is formated as:
+  \begin{quotation}
+  \begin{tabular}{l} 
+   \sml{val toString : int -> string}  \\
+   \sml{val map : ('a -> 'b) -> 'a list -> 'a list} 
+  \end{tabular}
+  \end{quotation}
+   \item[href]  This macro generates a html hypertext link to a
+page within the same logical document.  For example, we can say
+\begin{verbatim}
+   \href{url}{text}
+\end{verbatim}
+   \item[mlrischref]  This macro generates a html hypertext link to MLRISC
+code.   The general syntax is:
+\begin{verbatim}
+   \mlrischref{path}{text}
+\end{verbatim} 
+    The \verb|path| parameter is a relative path in the MLRISC hierarchy.
+   \item[externhref]
+    This macro generates an external hypertext link to a document outside
+of the same logical document.  The general syntax is:
+\begin{verbatim}
+    \externhref{url}{text}
+\end{verbatim}
+   \item[newdef]  This macro defines a new term.  The general syntax is
+\begin{verbatim}
+    \newdef{text}
+\end{verbatim}
+\end{description}
+
+\subsection{Other Stuff}
+  In addition to the above, \MLTeX{} understands the following \LaTeX{}
+environments and macros, and will translate them into HTML equivalents.
+\begin{verbatim}
+  \begin{itemize} \end{itemize}
+  \begin{description} \end{description}
+  \begin{enumerate} \end{enumerate}
+  \verb
+  \begin{tabular} \end{tabular}
+  \begin{figure} \end{figure} \caption
+  \begin{wrapfigure} \end{wrapfigure}
+  \section \subsection \subsubsection \paragraph
+  \ref \label 
+  \noindent \linebreak 
+  \psfig  
+\end{verbatim}  
+
+\subsection{Bugs and Shortcomings}
+   There are too many to list.  But the things to watch for are:
+\begin{itemize}
+   \item A macro and all its arguments must appear in the same line.
+   \item The tool can get confused if too many macros appear on the same line.
+   \item Nesting of macros may not be handled correctly.
+   \item Math mode is not robust.
+\end{itemize}
+
+Please send bug fixes and comments to
+\href{mailto:leunga@cs.nyu.edu}{Allen Leung}.

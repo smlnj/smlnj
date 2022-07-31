@@ -1,0 +1,247 @@
+ckit Bug List
+=============
+[Last updated: 3/31/00]
+
+----------------------------------------------------------------------
+NUMBER: 11
+SUBMITTER: Kathleen Fisher <kfisher@research.att.com>
+DATE: 12/10/99
+TEST: 
+STATUS: request for more complete example
+DESCRIPTION:
+
+The code: 
+void write_myArray (char *f, char *space, int size)
+{
+  Sfio_t *fp;
+  int *temp_space = (int *) space;
+  int i;
+
+  fp = openfile (f,"w");
+  for (i = 0; i<2; i++)
+      sfprintf (fp,"%d",&(*temp_space)[i]);
+}
+
+passes through the ckit compiler, but cc reports:
+
+"directory008.c", line 866: error(1138): expression must have
+          pointer-to-object type
+              sfprintf (fp,"%d",&(*temp_space)[i]);
+
+COMMENT: Could not compile example (it is incomplete);
+Kathleen indicates she can't reproduce this behaviour.
+
+
+----------------------------------------------------------------------
+NUMBER: 15
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 4/17/00
+TEST: 
+STATUS: open
+DESCRIPTION: union bitfields
+
+According to Harbison and Steele (top of p.141), bitfields in unions are
+allowed in ISO C, but not "traditional" C.  Neither "gcc -ansi -pedantic",
+nor cc complains.
+
+  input:	union { int u16:12; } u;
+
+  output:	"test.c":1.2-3.4: error: union member has size spec
+
+		union t1 { int u16; };
+		union t1 u;
+
+
+----------------------------------------------------------------------
+NUMBER: 16
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 4/17/00
+TEST: 
+STATUS: open
+DESCRIPTION: struct bitfields
+
+This is not a big deal, since ckit implements a superset of ANSI C,
+but I thought I'd mention it anyway.  Ckit allows the following:
+
+struct S {
+  char a:4;   /* <-- Illegal field for ANSI C, but not "traditional" C */
+  float f:4;  /* <-- Illegal field */
+};
+
+
+----------------------------------------------------------------------
+NUMBER: 17
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 4/14/00
+TEST: 
+STATUS: open
+DESCRIPTION: large initializer value
+
+  Input:
+  ------
+  long i = 0xf8000000;
+  unsigned long i = 0xf8000000ul;
+
+  Output:
+  -------
+  "test.c":1.11-21: error: large int const
+  "test.c":2.19-31: error: large int const
+  "???": warning: additional errors suppressed.
+  "???": warning: additional warnings suppressed.
+
+  long i=0;
+  unsigned long i=0;
+
+  Note:
+  -----
+  gcc -Wall -ansi -pedantic: no complaint
+  cc: warning: initializer does not fit or is out of range: 0xf8000000
+
+COMMENT:
+The problem seems to be due to the fact that LargeInt (i.e. Int32 -
+signed integer type) is used for storing the value, and LargeInt
+raises exception Overflow (in c.lex) in the above cases.  IntInf does
+not overflow on such numbers, and so may be the right thing to use,
+however that requires changing the code to use IntInf for IntConst.
+
+Ironically, LargeInt parses hexadecimal strings fine but IntInf does
+not handle the 0x prefix for some reason:
+ 
+- let val v = valOf(StringCvt.scanString(LargeInt.scan StringCvt.HEX) "0xff")
+= in print ((LargeInt.toString v)^"\n") end;
+255
+val it = () : unit
+- let val v = valOf(StringCvt.scanString(IntInf.scan StringCvt.HEX) "0xff")
+= in print ((IntInf.toString v)^"\n") end;
+0
+val it = () : unit
+- let val v = valOf(StringCvt.scanString(IntInf.scan StringCvt.HEX) "ff")
+= in print ((IntInf.toString v)^"\n") end;
+255
+
+
+----------------------------------------------------------------------
+NUMBER: 18
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 4/14/00
+TEST: 
+STATUS: open
+DESCRIPTION:  old style varargs (INCONVENIENCE)
+
+This is something we have an easy workaround for (i.e. using cc -E
+instead of gcc -E to preprocess) but we mention it in case you think
+other people might care about this.  When varargs.h is included by
+gcc -E, old style parameter passing is transformed to this:
+
+  int foo(a)
+  a;...
+  { }
+
+  This is not accepted by ckit.
+  Remark: non-ANSI (gcc gives warning)
+  Solution: use cc -E.
+
+
+----------------------------------------------------------------------
+NUMBER: 19
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 4/20/00
+TEST: 
+STATUS: fixed, DBM, 6/8/00
+  Return fixed-up id at the same time as the fixed type (fun processDecr
+  in ast/build-ast.sml)
+DESCRIPTION:  incomplete types
+
+A change to build-ast.sml since ckit 1.0b3 is annotating types of ids
+with incomplete types at times.  Our problem is that we use the ast in
+a separate pass, so we don't see the local symbol tables (unless we
+redo the work of their construction).  We collect types of declared
+variables, which we then use in instrumentation.  Incomplete types
+give us compilation errors.
+
+The fixed up type is inserted into the symbol table under line 911,
+however, the type in the id of the declaration is still the incomplete
+type.  Subsequent uses of the id will by typed correctly but not the
+declaration.  The id created on line 916 should be used instead of the
+original id.
+
+Input:
+
+int ia[] = {1,2,3};
+
+int main() {
+int ib[] = {1,2,3,4,5};
+}
+
+Types I see in ids for ia and ib in the declarations above are both
+int[]. :-)
+
+
+----------------------------------------------------------------------
+NUMBER: 20
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 5/24/00
+TEST: 
+STATUS: open
+DESCRIPTION: long long
+
+1. Ckit doesn't really handle long long (it just recognizes the type, but
+   does not handle literals of "long long" size: seems to be due
+   to using LargeInt. See "unsigned long" bug above.
+
+2. Should keep around "L", "LL", "UL" suffix to int literals:
+	input:	1LL<<40
+	output:	1<<40	/* compiler complains */
+
+3. Tilde and negative:
+	input:	2e-5
+	output: 2E~05
+
+Negative numbers are represented with ~ in SML, so that Real.toString
+called in ppReal prints the ~ in the exponent.
+
+
+----------------------------------------------------------------------
+NUMBER: 21
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 5/25/00
+TEST: 
+STATUS: open
+DESCRIPTION: spurious error messages
+
+Input:
+        struct S {
+          float j;
+          int:24;
+          char * k;
+        } s = {1.2,"3"};
+
+Spurious Error Messages:
+        "stst.c":1.2-5.16: error: type of initializer is incompatible with type of lval
+        "stst.c":1.2-5.16: error: badly formed struct initializer: not enough initializers
+
+FIX:
+skip over unnamed members, as per C specs: diff of build-ast.sml (<new,>old) follows:
+623c623
+<             let fun f ((fieldType, _, _) :: l, expr :: exprs) =
+---
+>             let fun f ((fieldType, SOME mem, _) :: l, expr :: exprs) =
+625a626,627
+>                   | f ((fieldType, NONE, _) :: l, exprs) =
+>                        f (l, exprs)
+
+
+----------------------------------------------------------------------
+NUMBER: 22
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 5/25/00
+TEST: 
+STATUS: open
+DESCRIPTION:  const char */char * incompatibility (INCONVENIENCE)
+
+  input:        char c[100]; const char * d = &c[5];
+		c - d;
+  output:	error: Type Error: Unacceptable operands of "-" or "--".
+
+  general:	in general, the error occurs with incompatible pointer types.
+		the key is to not treat "const" as incompatible.

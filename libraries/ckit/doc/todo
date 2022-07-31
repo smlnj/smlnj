@@ -1,0 +1,53 @@
+1. document key signatures and other files
+
+  parser
++   parse-tree-sig.sml  (parse tree representation)
++   parser-sig.sml
+
+  parser/util
++   error-sig.sml
++   sourcemap-sig.sml
+
+  ast/pp  (pretty printing ast)
+    pp-ast-sig.sml
+
+  ast
+    ast-sig.sml        (abstract syntax representation)
++   parse-to-ast-sig.sml
+    (tables: tid, pid, aid, corresponding tables)
+
+  src
+    sources.cm
+
+
+2. config
+
+  variants  (configuration)
+    config-sig.sml
+    sizes-sig.sml
+    parse-control-sig.sml
+    type-check-control-sig.sml
+
+
+3. extensions
+
+  parse/extensions/x/   (x = c, ...)
+    parse-tree-ext-sig.sml
+
+  ast/extensions/x/
+    ast-ext-sig.sml
+
+  ast/
+    cnv-ext-sig.sml
+
+  lexing & parsing
+    c.lex
+    c.grm
+    token table
+    build-ast.sml
+    size ...
+
+
+--------------------------- Wed Oct 27 15:25:42 1999 --------------------------
+
+Document the regression test procedure....

@@ -1,0 +1,150 @@
+\documentclass{article} 
+\usepackage{graphicx}
+\usepackage{mltex}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{alltt}
+%\usepackage{floatfig}
+\usepackage{fancyheadings}
+%\usepackage{draftcopy}
+%\usepackage{bookman}
+\usepackage{utopia}
+%\usepackage{times}
+%\usepackage{ncntrsbk}
+%\usepackage{palatino}
+
+   \setlength{\textwidth}{6.5in}
+   \setlength{\evensidemargin}{0in}
+   \setlength{\oddsidemargin}{0in}
+   \setlength{\textheight}{8in}
+   \setlength{\topmargin}{-0.5in}
+
+   \pagestyle{fancyplain}
+   %\addtolength{\headwidth}{\marginparsep}
+   %\addtolength{\headwidth}{\marginparwidth}
+
+   \newcommand{\edge}[1]{\rightarrow_{#1}}
+   \newcommand{\union}{\cup}
+   \newcommand{\Union}{\bigcup}
+   \newcommand{\overrides}{overrides}
+   \newcommand{\defas}{\stackrel{\rm as}{=}}
+
+   \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+   \renewcommand{\subsectionmark}[1]{\markright{\thesubsection\ #1}}
+   \newcommand{\Term}[1]{\mbox{\it #1}}
+   \lhead[\fancyplain{}{\bfseries\thepage}]%
+         {\fancyplain{}{\bfseries\rightmark}}
+   \rhead[\fancyplain{}{\bfseries\leftmark}]%
+         {\fancyplain{}{\bfseries\thepage}}
+   \cfoot{}
+
+   \newenvironment{Figure}{\begin{figure}[htbp]}{\end{figure}}
+
+\begin{document}
+   \title{\bf \LARGE MLRISC \\ \large A framework for retargetable and optimizing compiler back ends}  
+   \author{\begin{tabular}{c}
+            Lal George \\ \\
+            Bell Laboratories \\
+            600--700 Mountain Ave. \\
+            Murray Hill, NJ 07974--0636. \\
+            {\tt george@research.bell-labs.com}
+            \end{tabular}
+          \and 
+          \begin{tabular}{c}
+            Allen Leung \\ \\
+            New York University \\
+            719 Broadway, Rm. 708 \\ 
+            New York, NY 10003. \\
+            {\tt leunga@cs.nyu.edu}
+           \end{tabular}
+        }
+
+   \date{\today}
+   \bibliographystyle{alpha}
+
+   \maketitle
+
+   \begin{abstract}
+Writing native code generators for modern processors is a significant
+investment.  Unfortunately it is difficult
+to reuse this investment for other architectures, and even more
+difficult to reuse for other source language compilers.   MLRISC is
+a customizable optimizing back-end written in
+\externhref{http://cm.bell-labs.com/cm/cs/what/smlnj/sml.html}{Standard ML}
+and has been successfully retargeted to multiple architectures.
+MLRISC deals elegantly with the special requirements imposed by the
+execution model of different high-level, typed languages, by allowing
+many components of the system to be customized to fit the source language
+semantics and runtime system requirements.
+   \end{abstract}
+   \tableofcontents
+   \newpage
+
+\majorsection{MLRISC}
+\include{INTRO}
+\include{contributors}
+\include{requirements}
+\include{availability}
+\majorsection{Overview}
+\include{problem}
+\include{contributions}
+\include{mlrisc-compiler}
+\include{mlrisc-ir-rep}
+\include{mlrisc-gen}
+\include{backend-opt}
+\include{mlrisc-ra}
+\include{mlrisc-md}
+\include{gc}
+\include{sys-integration}
+\include{optimizations}
+\include{mlrisc-graphics}
+\include{line-counts}
+\include{systems}
+\include{future-work}
+
+\majorsection{System}
+\include{mlrisc-arch}
+\include{mltree}
+\include{mltree-ext}
+\include{mltree-util}
+\include{instrsel}
+\include{asm}
+\include{mc}
+\include{delayslots}
+\include{span-dep}
+%\include{md}
+
+\include{graphs}
+\include{graphics}
+\include{compiler-graphs}
+\include{mlrisc-ir}
+\include{SSA}
+\include{ILP}
+\include{VLIW}
+\include{ra}
+
+\majorsection{Back Ends}
+\include{alpha}
+\include{hppa}
+\include{sparc}
+\include{x86}
+\include{ppc}
+\include{mips}
+\include{C6}
+
+\majorsection{Basic Types}
+\include{annotations}
+\include{cells}
+\include{cluster}
+\include{constants}
+\include{pseudo-ops}
+\include{instructions}
+\include{streams}
+\include{labelexp}
+\include{labels}
+\include{regions}
+\include{regmap}
+
+\bibliography{mlrisc}
+
+\end{document}

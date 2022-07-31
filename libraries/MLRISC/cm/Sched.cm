@@ -1,0 +1,96 @@
+(* This file is created by makeallcm *)
+Library
+	signature BASIC_BLOCK_SCHEDULER
+	signature BASIC_BLOCK_SCHEDULER_DDG_BUILDER
+	signature BASIC_BLOCK_SCHEDULER_DDG_VIEWER
+	signature GLOBAL_SCHEDULER_DDG_VIEWER
+	signature GLOBAL_SCHEDULING_ALGORITHM
+	signature LEUNG_PALEM_PNUELI
+	signature LIST_SCHEDULER
+	signature PALEM_SIMONS
+	signature REGION_BUILDER
+	signature SCHEDULER_DDG
+	signature SCHEDULER_DDG_BUILDER
+	signature SCHEDULING_ALIASING
+	signature SCHEDULING_PROPERTIES
+	signature SCHEDULING_RANKS
+	structure LeungPalemPnueli
+	structure PalemSimons
+	functor BBScheduler
+	functor BasicBlockSchedulerDDGBuilder
+	functor BasicBlockSchedulerDDGViewer
+	functor ClusterBasicBlockScheduler
+	functor DAGScheduling
+	functor GlobalCriticalPath
+	functor GlobalScheduler
+	functor GlobalSchedulerDDGViewer
+	functor ListScheduler
+	functor LocalCriticalPath
+	functor RegionBuilder
+	functor SchedulerDDG
+	functor SchedulerDDGBuilder
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/Visual.cm
+	$/ir-archive.cm
+	$/MLRISC.cm
+	$/RTL.cm
+	$/IR.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	RTL.cm
+	IR.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	RTL.cm
+	IR.cm
+#endif
+	../scheduling/PalemSimons.sig
+	../scheduling/PalemSimons.sml
+	../scheduling/LeungPalemPnueli.sig
+	../scheduling/LeungPalemPnueli.sml
+	../scheduling/schedulerDDG.sig
+	../scheduling/schedulerDDG.sml
+	../scheduling/schedulingRanks.sig
+	../scheduling/schedulingProps.sig
+	../scheduling/localCP.sml
+	../scheduling/buildLocalDDG.sig
+	../scheduling/buildLocalDDG.sml
+	../scheduling/bbScheduler.sig
+	../scheduling/bbScheduler.sml
+	../scheduling/bbDDGViewer.sig
+	../scheduling/bbDDGViewer.sml
+	../scheduling/clusterBBScheduler.sml
+	../scheduling/listScheduler.sig
+	../scheduling/listScheduler.sml
+	../scheduling/buildDDG.sig
+	../scheduling/buildDDG.sml
+	../scheduling/schedulingAliasing.sig
+	../scheduling/regionBuilder.sig
+	../scheduling/regionBuilder.sml
+	../scheduling/globalCP.sml
+	../scheduling/globalDDGViewer.sig
+	../scheduling/globalDDGViewer.sml
+	../scheduling/globalSchedulingAlgo.sig
+	../scheduling/dagScheduling.sml
+	../scheduling/globalScheduler.sml

@@ -1,0 +1,21 @@
+<!-- basics.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Labs Research" YEAR=1997>
+<COPYRIGHT OWNER="John H. Reppy" YEAR=1991>
+<VERSION VERID="1.0" YEAR=1997 MONTH=1 DAY=30>
+<TITLE>Basics</TITLE>
+
+<SECTION>
+<HEAD>Basics</HEAD>
+<!--
+Things to cover:
+  the basic idea of events
+  garbage collection of threads
+  preemptive scheduling
+-->
+
+<INCLFILE FILE="porting">
+</SECTION>

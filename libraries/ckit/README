@@ -1,0 +1,101 @@
+ckit, a front end for C in SML
+Version 1.0, 31 Mar 2000
+------------------------------
+
+0. Contact information
+----------------------
+
+   ckit mailing list: ckit@mailman.cs.uchicago.edu
+   Dave MacQueen: dbm@cs.uchicago.edu
+   Nevin Heintze: nch@google.com
+
+
+1. How to build it
+------------------
+
+Let CKIT be the directory containing the CKit code.
+Run SML in directory $CKIT/ast.
+Execute "CM.make();".  This gives you the parser/elaborator.
+
+
+2. How to use it
+----------------
+Top level driving functions are in file parse-to-ast.sml.  Generally
+use ParseToAst.fileToAst.  It returns a record of type BuildAst.ProgramInfo.
+
+Example:
+
+  val {ast: Ast.ast,
+       tidtab: Bindings.tidBinding Tidtab.uidtab,
+       errorCount: int,
+       warningCount: int,
+       auxiliaryInfo: {aidtab: Tables.aidtab,
+		       implicits: Tables.aidtab,
+                       env: State.symtab}}
+      = ParseToAst.fileToAst ("file");
+
+Ast.ast is the abstract syntax type for translation units (a list of top-level
+C declarations).  For further information, read the code.
+
+To get ahold of parse trees (parser/parse-tree.sml), which is the raw data
+structure produced by the parser:
+
+  val errorState : Error.errorState = Error.mkErrState TextIO.stdOut;
+  val parseTree : ParseTree.externalDecl list =
+      Parser.parseFile errorState "file";
+
+See parse/util/error.sml for the definition of the errorState type.
+
+
+3. Directory map
+----------------
+
+parser/
+  parser-tree-sig.sml, parser-tree.sml: definition of parse tree types
+  grammar/
+    lex and yacc specifications
+  util/
+    sourcemap-sig.sml, sourcemap.sml: mapping source file locations
+    error-sig.sml, error.sml: error reporting functions
+ast/
+  ast-sig.sml, ast.sml: definition of abstract syntax types
+  build-ast.sml:
+    translation from parse trees to abstract syntax, with type checking and other
+    static semantics processing
+  pp/* : pretty printing for ast
+  extensions/
+    c/  -- dummy extension structures for C
+variants/
+  ansic/
+    config.sml: various flags controlling error checking, type checking, etc.
+ast-utils/
+  copy/
+    copying ast types
+  equality/
+    equality for ast types
+  simplifier/
+    ast simplifier
+
+
+4. Notes:
+
+4.1 Pretty printing - suppressing underscores
+
+You can suppress underscores in pretty-printing using:
+
+  PPLib.suppressPidUnderscores := true;
+  PPLib.suppressTidUnderscores := true;
+
+4.2 ast-util
+
+Much of this code is suspect and needs revision.
+
+
+5. Todo:
+
+5.1. Implement checks on casts.
+     - explicit casts currently allow any change of type;
+       instead they should only allow permitted conversions.
+
+-----------------------------------------------------------------------------------
+

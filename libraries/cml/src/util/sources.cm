@@ -1,0 +1,15 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 1996 AT&T Research.
+ *)
+
+Group
+is
+#if defined (NEW_CM)
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+
+  result.sml
+

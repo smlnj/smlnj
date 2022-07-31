@@ -1,0 +1,32 @@
+(* layer1.cm
+ *
+ * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
+ *
+ *)
+
+Group
+  signature CML_SOCKET
+  structure PreSock
+  structure CML_Socket
+
+#if defined (NEW_CM)
+  (* re-exporting from the basis *)
+  structure GenericSock
+  structure NetHostDB
+  structure INetSock
+#if defined (OPSYS_UNIX)
+  structure UnixSock
+#endif
+#endif
+is
+
+#if defined (NEW_CM)
+  $/basis.cm
+  $cml/core-cml.cm
+#else
+  ../core-cml.cm
+#endif
+
+pre-sock.sml
+cml-socket-sig.sml
+cml-socket.sml

@@ -1,0 +1,40 @@
+(* This file is created by makeallcm *)
+Library
+	signature MLTREE_RTL
+	signature OPERAND_TABLE
+	signature RTL_BUILD
+	signature RTL_PROPERTIES
+	functor MLTreeRTL
+	functor OperandTable
+	functor RTLBuild
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/MLRISC.cm
+	$/MLTREE.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	MLTREE.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	MLTREE.cm
+#endif
+	../mltree/mltree-rtl.sig
+	../mltree/mltree-rtl.sml
+	../mltree/rtl-props.sig
+	../mltree/rtl-build.sig
+	../mltree/rtl-build.sml
+	../mltree/operand-table.sig
+	../mltree/operand-table.sml

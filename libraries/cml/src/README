@@ -1,0 +1,18 @@
+Here is a road map of the CML sources:
+
+  src/core-cml		this contains the implementation of the CML features
+			such as threads, channels, events, etc.
+
+  src/glue		this contains code to glue the various CML parts together.
+
+  src/OS		this contains a CML interface to the SML Basis OS API.
+
+  src/IO		this contains a CML interface to the SML Basis IO API.
+
+  src/Posix		this contains a CML interface to the Posix 1003.1a
+			binding defined in the SML Basis. [not yet implemented]
+
+  src/Sockets		this contains a CML interface to the SML Basis sockets API.
+
+  src/Unix		this contains a CML implementation of various Unix
+			specific modules --- both internal and external.

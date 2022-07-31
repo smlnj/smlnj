@@ -1,0 +1,40 @@
+\section{Line Counts}
+
+  \begin{Table}{|l|r|r|}{align=right} \hline
+                                               & SML/NJ & MLRISC \\ \hline
+      \begin{color}{#00aa00}Generic\end{color} & 3,023 & 6,814 \\
+      \begin{color}{#00aa00}Hppa\end{color}    &  725  & 2,285 \\
+      \begin{color}{#00aa00}Alpha\end{color}   &  614  & 2,316 \\ \hline
+     TOTAL & 4,362 & 11,415 \\ \hline
+  \end{Table} 
+  The table shows the number of lines involved in a basic MLRISC code
+  generator for SML/NJ that only does graph coloring register
+  allocation. The SML/NJ column shows the number of lines specific to
+  SML/N and the MLRISC column shows the number of lines specific to
+  MLRISC. The \begin{color}{#00aa00}Generic\end{color} shows the
+  number of lines that are target independent for both SML/NJ and
+  MLRISC. The \begin{color}{#00aa00}Hppa\end{color} and 
+  \begin{color}{#00aa00}Alpha\end{color} shows the number of lines that are
+  target dependent for both the HP Hppa and DEC Alpha targets.
+
+  The bulk of the \sml{3,023} generic to SML/NJ is involved in the
+  generation of MLRisc trees. Once this is done the incremental cost
+  of adding a target is between \sml{600} to \sml{700} lines.
+
+  The MLRISC column shows that the bulk of MLRISC is quite generic and
+a client is saved from writing \sml{11,415} lines of code.
+
+  \begin{Table}{|l|r|r|}{align=left} \hline
+                & SML/NJ & MLRISC \\ \hline
+   \begin{color}{#00aa00}Generic\end{color} & 121 + 3,023 & 15,686 + 6,814\\
+   \begin{color}{#00aa00}Hppa\end{color}    & 32 + 725    & 920 + 2,285 \\
+   \begin{color}{#00aa00}Alpha\end{color}   & 614         & 2,316 \\ \hline
+    TOTAL & 153 + 4,362 & 16,606 + 11,415 \\ \hline
+  \end{Table}
+  If one were to include the preliminary numbers for global acyclic
+  scheduling in the above table, we find that the incremental cost
+  required by the client is quite small -- approximately \sml{153}
+  lines of which \sml{121} are generic. However, the scheduling
+infra structure is quite large, a lot of it being quite generic. 
+
+\br{left=clear}

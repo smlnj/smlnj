@@ -1,0 +1,287 @@
+\documentclass{article}
+\usepackage{alltt}
+   \newcommand{\nowhere}{{\sf nowhere}}
+   \newcommand{\Nowhere}{{\sf Nowhere}}
+   \newcommand{\KWW}[2]{\newcommand{#1}[1]{{\bf #2}}}
+   \newcommand{\KW}[2]{\newcommand{#1}[1]{{\bf #2}\ }}
+   \newcommand{\END}{{\bf end}} 
+   \newcommand{\OF}{{\bf of}} 
+   \KW{\FUN}{fun} \KW{\VAL}{val}  
+   \KWW{\LOCAL}{local} \KW{\ANDALSO}{andalso}
+   \KW{\CASE}{case} \KW{\LET}{let} \KW{\WHERE}{where}
+   \KW{\INCLUDE}{include} 
+   \KW{\SIGNATURE}{signature} 
+   \KW{\STRUCTURE}{structure} 
+   \KWW{\STRUCT}{struct} 
+   \KW{\DATATYPE}{datatype} \KWW{\NOT}{not}
+   \newcommand{\SIG}{{\bf sig}}
+   \KW{\IN}{in}
+   \KW{\AND}{and}
+
+   \title{\Nowhere: a pattern matching tool for Standard ML\\ 
+          Version 1.1 Manual
+         }
+   \author{Allen Leung\thanks{New York University. Email:{\tt leunga@cs.nyu.edu}}}
+   \date{December 12th, 2000}
+\begin{document}
+   \maketitle
+\section{Introduction}
+If you are like me, you lament the fact that SML doesn't have conditional
+pattern matching.  Personally, I don't fully understand the rationale for its
+omission in the standard--- even though there are semantics ambiguity 
+issues if guard expressions have side effects, conditional pattern matching
+is just too useful in practice.   When writing non-trivial transformations, I
+find myself having to manually factor pattern matching code, 
+whose job should be the compiler's.
+I consider its lack in SML a big flaw in an otherwise great language.
+
+  As a remedy, \nowhere{} is a simple source to source tool that translates
+SML programs augmented with where-clauses and other complex patterns
+into normal SML code, i.e., code without where-clauses\footnote{Thus the name of the tool.}.  
+
+\subsection{Syntax}
+Where-clauses that we recognize are of two forms.
+In case statements:
+\begin{alltt}
+    \(pat\) \WHERE \(exp\) => \(exp\)
+\end{alltt}
+and in function clauses:
+\begin{alltt}
+    \(pat\sb{1}\) \ldots \(pat\sb{n}\) \WHERE (\(exp\)) = \(exp\)
+\end{alltt}
+Note that parentheses are not optional in the latter form, because
+of syntactic ambiguity with \verb|=|.
+
+For example, the expression
+\begin{alltt}
+   \CASE [1,2,3] \OF 
+      [x,y,z] \WHERE x>y \ANDALSO y>z => 1
+    | [x,y,z] \WHERE x<y \ANDALSO y<z => 2
+    | _ => 3
+\end{alltt}
+evaluates to 2.
+
+\Nowhere{} takes input files of the following form:
+\begin{alltt}
+{\bf local}
+    {\sl datatype definitions prologue}
+{\bf in}
+    {\sl code}
+{\bf end}
+\end{alltt}
+It looks for where-clauses within the {\sl code} section, and rewrite it into
+real SML code.  The {\sl prologue} section is for the benefit
+of \nowhere, since it is rather stupid at the moment and doesn't understand
+SML's scoping rule and environments.  
+All datatypes that are used within the {\sl code}
+section should be mentioned here, so that \nowhere{} can find its definitions.
+
+You can use the special file import declaration:
+\begin{alltt}
+  {\bf include} "filename"
+\end{alltt}
+to import the definitions from a file.  Note that \nowhere{} will look 
+inside signature definitions.  So if all datatypes are
+properly defined in signature files, all you have to do is import these
+files.
+
+\subsection{A Note on Semantics}
+   Expressions evaluated inside where-clauses should be side-effect free.
+This is a built-in assumption in the match compiler.  If it is violated
+the result may not be as expected. 
+
+\subsection{Other Extensions in Version 1.1}
+
+  Aside from the standard set of SML patterns and where-clauses, 
+the following extensions are also handled:
+\subsubsection{OR-patterns}   OR-patterns are written as
+\begin{alltt}
+   (\(pat\sb{1}\) | \ldots | \(pat\sb{n}\))
+\end{alltt}
+Note that the parenthesis are {\em not} optional.  A rule such as:
+\begin{alltt}
+   (\(pat\sb{1}\) | \ldots | \(pat\sb{n}\)) => e
+\end{alltt}
+means the same thing as
+\begin{alltt}
+   \(pat\sb{1}\) => e
+     \vdots
+   \(pat\sb{n}\) => e
+\end{alltt}
+The semantics of OR-patterns are identical to the treatment in SML/NJ.
+In particular, all disjuncts must have the same set of pattern variables
+and each variable must have the same type in all occurrances in the OR-pattern. 
+
+\subsubsection{NOT-patterns} NOT patterns negate the meaning of a pattern.
+The general syntax is
+\begin{alltt}
+   \NOT \(pat\)
+\end{alltt}
+For example, a pattern \verb|not p|, only matches forms other than \verb|p|.
+Note that the bindings of a NOT pattern are not visible, for obvious reasons.
+
+\subsubsection{WHERE-patterns} WHERE-patterns modifies a pattern by adding
+a condition.  For example, the pattern
+\begin{alltt}
+    ([x,y,z] \WHERE x<y \ANDALSO y<z)
+\end{alltt}
+matches only lists of length 3 listed in increasing order.   
+WHERE-pattern can be seen as a simple generalization
+of where-clauses.  The general syntax of a WHERE-pattern is:
+\begin{alltt}
+    (\(pat\) \WHERE \(exp\))
+\end{alltt}
+Note that the parentheses are required.  Furthermore, $exp$ can only 
+refer to pattern variables introduced in \(pat\).
+
+Because WHERE-patterns can be nested in subpatterns, 
+they are very useful when combined with other pattern connectives.
+For example, the pattern
+\begin{alltt}
+    \NOT ([x,y,z] \WHERE x<y \ANDALSO y<z)
+\end{alltt}
+matches all integer lists {\em except} lists of length 3 listed in increasing order.  
+
+\subsubsection{Nested patterns} Nested patterns allow conditional case statements to
+be embedded in a pattern.  They are written as\footnote{This syntax may be 
+changed in future versions.}:
+\begin{alltt}
+   (\(pat\sb{1}\) \WHERE \(exp\) \IN \(pat\sb{2}\))
+\end{alltt}
+  The semantics is to match $pat_1$, and if it matches, evaluates
+$exp$, and matches it with $pat_2$.  The entire pattern matches if
+both $pat_1$ and $pat_2$ match.  Note that $exp$ may refer to pattern
+variables introduced in $pat_1$, and the result of a successful match introduces
+bindings from both $pat_1$ and $pat_2$.
+
+For example, the pattern
+\begin{alltt}
+  ((l as h::t) \WHERE List.last l \IN [x])
+\end{alltt}   
+matches only non-nil lists of lists whose last element is a singleton.
+Upon a successful match, pattern variables \verb|h|, 
+\verb|t| and \verb|x| are bound to the appropriate values.
+
+\subsubsection{Real and IntInf literals}
+ Real and IntInf literal patterns are supported.
+IntInf literals are written with the suffix \verb|i|.
+For example, \verb|0i| is 0 (of type \verb|IntInf.int|.)
+Binary and hex prefixes can also be used.
+For example, the literals \verb|0xffi|, \verb|0b11111111i|
+and \verb|256i| mean the same thing.
+
+\section{An Example}
+Here's a larger example taken from the x86 peephole phase in MLRISC.
+We only show the push and pop folding rules.  The first rule
+folds the instructions 
+\begin{verbatim}
+   subl 4, %esp
+   movl src, 0(%esp)
+\end{verbatim}
+into \verb|push src|, assuming src is not \verb|%esp|. 
+The second rule folds
+\begin{verbatim}
+   movl 0(%esp), dst
+   addl 4, %esp
+\end{verbatim}
+into \verb|pop dst|, again assuming dst is not \verb|%esp|.
+
+\begin{alltt}
+\LOCAL\ 
+   (* import instruction definition *)
+   \STRUCTURE I = 
+   \STRUCT
+      include "x86Instr.sml" 
+   \END
+\IN\ 
+   {\sl ...}
+   \FUN loop(current, instrs) =
+       \CASE current \OF
+         {\sl ...}
+      | I.BINARY\{binOp=I.SUBL, src=I.Immed 4, dst=I.Direct dst_i\}:: 
+        I.MOVE\{mvOp=I.MOVL,src,dst=I.Displace\{base,disp=I.Immed 0,...\}\}
+        ::rest 
+           \WHERE C.sameColor(base, C.esp) andalso
+                  C.sameColor(dst_i, C.esp) andalso
+                  not(isStackPtr src) =>
+           loop(rest, I.PUSHL src::instrs)
+               
+      | I.MOVE\{mvOp=I.MOVL, 
+              src=I.Displace\{base, disp=I.Immed 0, ...\}, dst\}::
+        I.BINARY\{binOp=I.ADDL, src=I.Immed 4, dst=I.Direct dst_i\}:: 
+        rest 
+           \WHERE C.sameColor(base, C.esp) andalso
+                 C.sameColor(dst_i,C.esp) andalso
+                 not(isStackPtr dst) =>
+           loop(rest, I.POP dst::instrs)
+
+     | i::rest => loop(rest, i::instrs)
+     {\sl ...}
+\END
+\end{alltt}
+where function \verb|isStackPtr| is defined as:
+\begin{alltt}
+  \FUN isStackPtr(I.Direct r) = C.sameColor(r,C.esp)
+     | isStackPtr _ = false
+\end{alltt}
+
+The same set of rules may be written in many different ways.
+For example, an alternative way of writing the push folding rule, using
+WHERE-patterns and NOT-patterns, is:
+\begin{alltt}
+     I.BINARY\{binOp=I.SUBL, 
+               src=I.Immed 4, 
+               dst=(I.Direct dst \WHERE C.sameColor(dst,C.esp))
+             \}:: 
+     I.MOVE\{mvOp=I.MOVL,
+             src=\NOT (I.Direct src \WHERE C.sameColor(src,C.esp)),
+             dst=I.Displace\{base \WHERE C.sameColor(base,C.esp),
+                             disp=I.Immed 0,...\}
+           \}
+     ::rest 
+        =>
+         loop(rest, I.PUSHL src::instrs)
+\end{alltt}
+The labelled pattern 
+\begin{alltt}
+   base \WHERE C.sameColor(base,C.esp)
+\end{alltt}
+is an abbreviation for 
+\begin{alltt}
+   base=(base \WHERE C.sameColor(base,C.esp))
+\end{alltt}
+
+Note that since all constructors are accessed via the structure \verb|I|
+inside the body, 
+the datatype definitions are defined accordingly in the prologue.
+\begin{alltt}
+   \STRUCTURE I = 
+   \STRUCT
+      include "x86Instr.sml" 
+   \END
+\end{alltt}
+
+\section{Compiling and Running the Tool}
+
+To compile the tool, go to the directory Tools/WhereGen, and in sml, type
+\begin{alltt}
+   use "build.sml"
+\end{alltt}
+When this completes, the image \verb|nowhere.<arch>| will be generated.
+
+The input files to \nowhere{} should have any suffix other than \verb|.sml|.
+To run the tool, type:
+\begin{alltt}
+    sml @SMLload=nowhere inputfile
+\end{alltt}
+
+\section{Bugs and Missing Features}
+   Currently, these things are missing:
+\begin{enumerate}
+  \item SML/NJ extensions, such as array and vector patterns, are currently not supported. 
+  \item Type checking of patterns is missing.
+  \item The error messages may be less than clear.  Furthermore, 
+        line reporting may be out-of-sync.
+\end{enumerate}
+
+\end{document}

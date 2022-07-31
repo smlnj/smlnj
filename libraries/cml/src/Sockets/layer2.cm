@@ -1,0 +1,39 @@
+(* cml-socket.cm
+ *
+ * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
+ *
+ *)
+
+Group
+  signature CML_SOCKET
+  signature GENERIC_SOCK
+  signature INET_SOCK
+#if defined (OPSYS_UNIX)
+  signature UNIX_SOCK
+#endif
+  structure PreSock
+  structure Socket
+
+#if defined (NEW_CM)
+  (* re-exporting from the basis *)
+  structure GenericSock
+  structure NetHostDB
+  structure INetSock
+#if defined (OPSYS_UNIX)
+  structure UnixSock
+#endif
+#endif
+is
+
+layer1.cm
+
+rebind1.sml
+
+(* recompile the SML signatures, so that the types are right *)
+generic-sock-sig.sml
+inet-sock-sig.sml
+
+#if defined (OPSYS_UNIX)
+unix-sock-sig.sml
+#endif
+

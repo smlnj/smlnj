@@ -1,0 +1,116 @@
+###############################################################################
+#
+#  Theme file for MLTeX
+#
+###############################################################################
+
+#
+# Background color for document
+#
+$BACKGROUND_COLOR="#ffffff";  #white
+
+#
+# Default text color for document
+#
+$TEXT_COLOR="#000020";        #very dark blue
+
+#
+# Color of page title
+#
+$TITLE_COLOR="#aa0000";       #dark red
+
+#
+# Color of the abstract title
+#
+$ABSTRACT_TITLE_COLOR="#486591";  #black
+
+#
+# Color of each section title
+#
+$SECTION_COLOR="#486591";     
+
+#
+# Color of each subsection title
+#
+$SUBSECTION_COLOR="#486591"; 
+
+#
+# Color of each subsubsection title
+#
+$SUBSUBSECTION_COLOR="#486591"; 
+
+#
+# Color of each paragraph title
+#
+$PARAGRAPH_COLOR="#486591";    
+
+#
+# Colors for macros \newdef and \newtype
+#
+$NEWDEF_COLOR="#ff0000";   #red
+$NEWTYPE_COLOR="#ff0000";   #red
+
+#
+# Colors for html links
+#
+$LINK_COLOR="navy";
+$VLINK_COLOR="gray";
+$ALINK_COLOR="maroon";
+
+#
+# Colors for SML type variables, keywords and identifiers
+#
+$SML_TYVAR_COLOR="#00aaaa";  
+$SML_KEYWORD_COLOR="#6060a0"; 
+$SML_IDENT_COLOR="#9c4040";   
+
+#
+# Color for emphasis
+#
+$EMPH_COLOR="#ff0000";   #red
+
+#
+# Color for description items
+#
+$DESC_COLOR="#000070";   #blue
+
+#
+# Color for captions
+#
+$CAPTION_COLOR="#007777";   #green/blue
+
+#
+# Color of ML code
+#
+$CODE_COLOR="#000000";  # black
+
+#
+# Background color of table of contents
+#
+$TOC_BACKGROUND_COLOR="#e6e6e6";
+
+$SECTION_TOC_TEXT_COLOR="#486591";
+$MAJORSECTION_TEXT_COLOR="ffffff";
+$MAJORSECTION_BACKGROUND_COLOR="#486591";
+$SECTION_TOC_BACKGROUND_COLOR="#e6e6e6";
+$TOC_FACE="hevetica";
+$MAX_LOCAL_TOC_ENTRY_LENGTH=40;
+$MAX_GLOBAL_TOC_ENTRY_LENGTH=40;
+$GLOBAL_TOC_WIDTH=170;
+$SCREEN_WIDTH=700;
+$TEXT_WIDTH=600;
+$TOC_SIZE=-1;
+
+$X_PIXELS = 1024;
+$Y_PIXELS = 768;
+$IMAGE_SCALING=0.8;
+$PAPER_HEIGHT = "11in";
+$PAPER_WIDTH = "8.5in";
+
+@AUTHORS=("Lal George", "Allen Leung");
+@EMAILS=('george@research.bell-labs.com','leunga@cs.nyu.edu');
+
+$WWWHOST="www.cs.nyu.edu";
+$URLPREFIX="leunga/MLRISC/Doc/html/";
+
+1;

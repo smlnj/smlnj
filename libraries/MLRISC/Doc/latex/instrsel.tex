@@ -1,0 +1,244 @@
+\section{Instruction Selection} \label{sec:instrsel}
+Instruction selection modules are reponsible for translating 
+\href{mltree.html}{MLTree} statements into a flowgraph consisting
+of target machine instructions.  MLRISC decomposes this complex task 
+into \emph{three} components:
+\begin{description}
+   \item[Instruction selection modules] which are responsible for
+mapping a sequence of MLTree statements into a sequence target machine code,
+   \item[Flowgraph builders]  which are responsible for constructing
+the graph representation of the program from a sequence of target machine
+instructions, and
+   \item[Client Extender] which are responsible for compiling 
+MLTree extensions (see also Section~\ref{sec:mltree-extension}).
+\end{description}
+By detaching these components, extra flexiblity is obtained.  For example,
+the MLRISC system uses two different internal representations.  The
+first, \href{cluster.html}{cluster}, is a \emph{light-weight} representation
+which is suitable for simple compilers without extensive 
+optimizations; the second, \href{mlrisc-ir.html}{MLRISC IR}, is a 
+\emph{heavy duty} representation which allows very complex transformations
+to be performed.  Since the flowgraph builders are detached from the
+instruction selection modules, the same instruction selection modules
+can be used for both representations.  
+
+For consistency, the three components communicate to each other 
+via the same \href{stream.html}{stream} interface.
+
+\subsection{Interface Definition}
+All instruction selection modules satisfy the following signature:
+
+\begin{SML}
+signature \mlrischref{mltree/mltreecomp.sig}{MLTREECOMP} = 
+sig
+   structure T : \href{mltree.html}{MLTREE}
+   structure I : \href{instructions.html}{INSTRUCTIONS}
+   structure C : \href{cells.html}{CELLS}
+      sharing T.LabelExp = I.\href{labelexp.html}{LabelExp}
+      sharing I.C = C
+
+   type instrStream = (I.instruction,C.regmap,C.cellset) T.stream
+   type mltreeStream = (T.stm,C.regmap,T.mlrisc list) T.stream
+
+   val selectInstructions : instrStream -> mltreeStream
+end
+\end{SML}
+Intuitively, this signature states that
+the instruction selection module 
+returns a function that can transform a stream of MLTree statements 
+(\newtype{mltreeStream}) into a stream of instructions of the target 
+machine (\newtype{instrStream}).  
+
+\subsubsection{Compiling Client Extensions}
+
+Compilation of client extensions to MLTREE is controlled by the
+following signature: 
+\begin{SML}
+signature \mlrischref{mltree/mltreecomp.sig}{MLTREE_EXTENSION_COMP} =
+sig
+   structure T : \href{mltree.html}{MLTREE}
+   structure I : \href{instructions.html}{INSTRUCTIONS}
+   structure C : \href{cells.html}{CELLS}
+      sharing T.LabelExp = I.\href{labelexp.html}{LabelExp}
+      sharing I.C = C
+
+   type reducer = 
+     (I.instruction,C.regmap,C.cellset,I.operand,I.addressing_mode) T.reducer
+
+   val compileSext : reducer -> \{stm:T.sext, an:T.an list\} -> unit
+   val compileRext : reducer -> \{e:T.ty * T.rext, rd:C.cell, an:T.an list\} -> unit
+   val compileFext : reducer -> \{e:T.ty * T.fext, fd:C.cell, an:T.an list\} -> unit
+   val compileCCext : reducer -> \{e:T.ty * T.ccext, ccd:C.cell, an:T.an list\} -> unit
+end
+\end{SML}
+
+Methods \verb|compileSext|, \verb|compileRext|, etc.~are callbacks that
+are responsible for compiling MLTREE extensions.  The arguments
+to these callbacks have the following meaning:
+\begin{description}
+  \item[reducer] The first argument is always the \newtype{reducer}, 
+which contains internal methods for translating MLTree constructs
+into machine code.  These methods are supplied by the instruction
+selection modules.
+  \item[an] This is a list of annotations that should be attached to the
+generated code.
+  \item[ty, fty] These are the types of the extension construct.
+  \item[stm, e] This are the extension statement and expression.
+  \item[rd, fd, cd] These are the target registers of the 
+expression extension, i.e.~the callback should generate the appropriate
+code for the expression and writes the result to this target.
+\end{description}
+
+For example, when an instruction selection encounters a
+\verb|FOR(|$i,a,b,s$\verb|)| statement extension
+defined in Section~\ref{sec:mltree-extension}, the callback
+\begin{SML}   
+  compileStm reducer \{ stm=FOR(\(i,a,b,s\)), an=an \}
+\end{SML}
+\noindent is be involved. 
+
+The \newtype{reducer} type is defined
+in the signature \mlrischref{mltree/mltree.sig}{MLTREE} and has the
+following type:
+\begin{SML}
+  datatype reducer =
+    REDUCER of
+    \{ reduceRexp    : rexp -> reg,
+      reduceFexp    : fexp -> reg,
+      reduceCCexp   : ccexp -> reg,
+      reduceStm     : stm * an list -> unit,
+      operand       : rexp -> I.operand,
+      reduceOperand : I.operand -> reg,
+      addressOf     : rexp -> I.addressing_mode,
+      emit          : I.instruction * an list -> unit,
+      instrStream   : (I.instruction,C.regmap,C.cellset) stream,
+      mltreeStream  : (stm,C.regmap,mlrisc list) stream
+    \}
+\end{SML}
+
+The components of the reducer are
+\begin{description}
+  \item[reduceRexp, reduceFexp, reduceCCexp] These functions 
+take an expression of type integer, floating point and condition code, 
+translate them into machine code and return the 
+register that holds the result. 
+  \item[reduceStm] This function takes an MLTree statement and translates
+it into machine code.  it also takes a second argument, which is the
+list of annotations that should be attached to the statement.
+  \item[operand] This function translates an \sml{rexp} into an
+ \sml{operand} of the machine architecture.
+  \item[reduceOperand] This function takes an operand of the machine
+architecture and reduces it into an integer register.
+  \item[addressOf] This function takes an \sml{rexp}, treats
+it as an address expression and translates it into the appropriate
+\sml{addresssing_mode} of the target architecture.
+  \item[emit]  This function emits an instruction with attached annotations
+to the instruction stream
+  \item[instrStream, mltreeStream]  These are the instruction stream
+and mltree streams that are currently bound to the extender.
+\end{description}
+
+\subsubsection{Extension Example}
+Here is an example of how the extender mechanism can be used,
+using the \sml{DSP_MLTREE} extensions defined in
+Section~\ref{sec:mltree-extension}.   We need supply two
+new functions, \verb|compileDSPStm| for compiling the \verb|FOR|
+construct, and \verb|compileDSPRexp| for compiling the \verb|SUM|,
+and saturated arithmetic instructions.
+
+The first function, \sml{compileDSPStm}, is generic and simply
+translates the \verb|FOR| loop into the appropriate branches.
+Basically, we will translate \verb|FOR(|$i,start,stop,body$\verb|)| into
+the following loop in pseudo code:
+\begin{SML}
+        limit = \(stop\)
+        \(i\)  = \(start\)
+        goto test
+  loop: \(body\)
+        \(i\) = \(i\) + 1
+  test: if \(i\) <= limit goto loop
+\end{SML}
+This transformation can be implemented as follows:
+\begin{SML}
+ functor DSPMLTreeExtensionComp
+    (structure I : DSP_INSTRUCTION_SET
+     structure T : DSP_MLTREE
+       sharing I.LabelExp = T.LabelExp
+    ) =
+ struct
+   structure I = I
+   structure T = T
+   structure C = I.C
+
+   type reducer = 
+     (I.instruction,C.regmap,C.cellset,I.operand,I.addressing_mode) T.reducer
+   
+   fun mark(s, []) = s
+     | mark(s, a::an) = mark(ANNOTATION(s, a), an)
+   fun compileSext (REDUCER\{reduceStm, ...\}) 
+      \{stm=FOR(i, start, stop, body), an\} =
+   let val limit = C.newReg()
+       val loop  = Label.newLabel ""
+       val test  = Label.newLabel ""
+   in  reduceStm(
+         SEQ[MV(32, i, start),
+             MV(32, limit, stop),
+             JMP([], [LABEL(LabelExp.LABEL test)], []),
+             LABEL loop,
+             body,
+             MV(32, i, ADD(32, REG(32, i), LI 1),
+             LABEL test,
+             mark(BCC([], 
+                    CMP(32, LE, REG(32, i), REG(32, limit)), 
+                      loop),
+                  an),
+            ]
+      )
+   end
+
+   ...
+\end{SML}
+In this transformation, we have chosen to proprogate the annotation
+\verb|an| into the branch constructor.
+
+Assuming the target architecture that we are translated into contains
+saturated arithmetic instructions \verb|SADD|, \verb|SSUB|, \verb|SMUL|
+and \verb|SDIV|, the DSP extensions
+\verb|SUM| and saturated arithmetic expressions can be handled as follows.
+\begin{SML}
+   fun compileRext (REDUCER\{reduceStm, reduceRexp, emit, ...\}) 
+       \{ty, e, rd, an\} =
+   (case (ty,e) of
+      (_,T.SUM(i, a, b, exp)) =>
+        reduceStm(SEQ[MV(ty, rd, LI 0),
+                      FOR(i, a, b, 
+                         mark(MV(ty, rd, ADD(ty, REG(ty, rd), exp)), an))
+                     ]
+                 )
+   | (32,T.SADD(x,y)) => emit(I.SADD\{r1=reduceRexp x,r2=reduceRexp y,rd=rd\},an)
+   | (32,T.SSUB(x,y)) => emit(I.SSUB\{r1=reduceRexp x,r2=reduceRexp y,rd=rd\},an)
+   | (32,T.SMUL(x,y)) => emit(I.SMUL\{r1=reduceRexp x,r2=reduceRexp y,rd=rd\},an)
+   | (32,T.SDIV(x,y)) => emit(I.SDIV\{r1=reduceRexp x,r2=reduceRexp y,rd=rd\},an)
+   | ...
+   )
+
+   fun compileFext _ _ = ()
+   fun compileCCext _ _ = ()
+
+  end
+\end{SML}
+
+Note that in this example, we have simply chosen to reduce
+a \verb|SUM| expression into the high level \verb|FOR| construct.
+Clearly, other translation schemes are possible.
+
+\subsection{Instruction Selection Modules}
+Here are the actual code for the various back ends:
+\begin{enumerate}
+  \item \mlrischref{sparc/mltree/sparc.sml}{Sparc}
+  \item \mlrischref{hppa/mltree/hppa.sml}{PA-RISC}
+  \item \mlrischref{alpha/mltree/alpha.sml}{Alpha}
+  \item \mlrischref{ppc/mltree/ppc.sml}{Power PC}
+  \item \mlrischref{x86/mltree/x86.sml}{X86}
+  \item C6xx 
+\end{enumerate}

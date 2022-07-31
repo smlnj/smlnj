@@ -1,0 +1,32 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
+ *)
+
+Group
+  signature CML_SOCKET
+  signature GENERIC_SOCK
+  signature INET_SOCK
+  structure Socket
+  structure CML_GenericSock
+  structure CML_INetSock
+#if defined(OPSYS_UNIX)
+  signature UNIX_SOCK
+  structure CML_UnixSock
+#endif
+  structure GenericSock
+  structure INetSock
+#if defined(OPSYS_UNIX)
+  structure UnixSock
+#endif
+
+is
+
+layer3.cm
+
+rebind2.sml
+
+#if defined(OPSYS_UNIX)
+rebind2-unix-sock.sml
+#endif
+

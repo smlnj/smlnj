@@ -1,0 +1,55 @@
+structure Wff : WFF =
+struct    
+
+   datatype wff = FALSE | TRUE | VAR of string
+                | AND of wff * wff
+                | OR of wff * wff
+                | NOT of wff 
+
+   fun simplify e = 
+       Generic.rewrite(
+       let include "wff.sig"
+           fun wff (NOT FALSE) = TRUE
+             | wff (NOT TRUE) = FALSE
+             | wff (NOT(NOT x)) = x
+             | wff (AND(TRUE,x)) = x
+             | wff (AND(x,TRUE)) = x
+             | wff (AND(FALSE,x)) = FALSE
+             | wff (AND(x,FALSE)) = FALSE
+             | wff (OR(TRUE,x)) = TRUE
+             | wff (OR(x,TRUE)) = TRUE
+             | wff (OR(FALSE,x)) = x
+             | wff (OR(x,FALSE)) = x
+       in  rewrite'wff e
+       end
+       )
+
+   fun countNots e = 
+   let val count = ref 0
+   in  Generic.app(
+       let include "wff.sig"
+           fun wff (NOT _) = count := !count + 1
+             | wff _       = ()
+       in  app'wff e;
+           !count
+       end
+       )
+   end 
+
+   fun countNots2 e = 
+       Generic.fold(
+       let include "wff.sig"
+           fun wff (NOT _, n) = n+1 
+             | wff (_, n) = n
+       in  fold'wff(e, 0)
+       end
+       )
+
+   fun allVars e =
+       Generic.fold(
+       let include "wff.sig"
+           fun wff (VAR v, vs) = v::vs | wff (_, vs) = vs 
+       in  fold'wff(e, [])
+       end)        
+   
+end 

@@ -1,0 +1,27 @@
+(* cml-sub-basis.cm
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This group provides a restricted view on $/basis.cm to avoid conflicts
+ * between definitions imported from the original and CML's own Basis.
+ *
+ * This file must be used with the new CM.  The old CM cannot process it.
+ *)
+Group
+
+    library($/basis.cm)
+
+     - (signature OS
+	signature OS_IO
+	signature OS_PROCESS
+	signature PRIM_IO
+
+	structure BinIO
+	structure BinPrimIO
+	structure TextIO
+	structure TextPrimIO
+
+	functor PrimIO)
+is
+	$/basis.cm

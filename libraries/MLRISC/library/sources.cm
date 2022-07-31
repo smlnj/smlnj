@@ -1,0 +1,79 @@
+Library 
+	signature ANNOTATIONS
+	structure Annotations
+	signature BITSET
+	structure BitSet
+	signature CATNETABLE_LIST
+	structure CatnetableList
+	structure DynamicArray
+	signature FREQ
+	structure Freq
+	structure HashArray
+	signature PRIORITY_QUEUE
+	structure PriorityQueue
+	signature STRING_STREAM
+	structure StringStream
+	structure Word64
+is
+#if defined(NEW_CM)
+	$basis.cm
+	$smlnj-lib.cm
+#else
+	smlnj-lib.cm
+#endif
+
+	annotations.sig
+	annotations.sml
+	bitset.sig
+	bitset.sml
+(*
+	cache.sml
+ *)
+	catlist.sml
+	dynamic-array.sml
+(*
+	dynamic-bitset.sml
+	fixed-point.sig
+	fixed-point.sml
+ *)
+	freq.sig
+	freq.sml
+	hash-array.sml
+(*
+	hash-table.sig
+	hash-table.sml
+	hashMap.sig
+	hashMap.sml
+	hashBag.sig
+	hashBag.sml
+	hashMultimap.sig
+	hashMultimap.sml
+	hashSet.sig
+	hashSet.sml
+	int-set.sml
+ *)
+	priQueue.sig
+	priQueue.sml
+(*
+	probability.sml
+	randlist.sml
+	regset.sig
+	regset.sml
+	sorting2.sml
+ *)
+	stringStream.sml
+(*
+	susp.sml
+	transaction-glue.sml
+	transaction-log.sig
+	transaction-log.sml
+	transaction.sig
+	transaction.sml
+	tree-map.sml
+	undoable-array.sml
+	undoable-ref.sml
+	union-find.sml
+	uref.sml
+ *)
+	word64.sml
+

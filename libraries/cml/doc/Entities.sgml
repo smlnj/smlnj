@@ -1,0 +1,28 @@
+<!-- ENTITIES                                    --
+  --                                             --
+  -- COPYRIGHT (c) 1995 AT&T Bell Laboratories.  --
+  --                                             --
+  -- Filename entities for the CML ML-Doc files. --
+>
+
+<!-- Some entities for naming languages and systems -->
+<!ENTITY CLang		SDATA "C" >
+<!ENTITY SML		SDATA "SML" >
+<!ENTITY SMLBASIS	SDATA "SML Basis Library" >
+<!ENTITY SMLNJ		SDATA "SML/NJ">
+<!ENTITY CML		SDATA "CML">
+
+<!ENTITY SML-BASIS-DOC	SDATA "SML-Basis-Doc">
+<!ENTITY SMLNJ-DOC	SDATA "SML-of-NJ-Doc">
+<!ENTITY SMLNJ-LIB-DOC	SDATA "SML-NJ-Lib-Doc">
+
+<!-- filename entities -->
+<!ENTITY CML-SIG	SDATA "cml-sig.sml">
+<!ENTITY MAILBOX-SIG	SDATA "mailbox-sig.sml">
+<!ENTITY SYNC-VAR-SIG	SDATA "sync-var-sig.sml">
+<!ENTITY OS-SIG		SDATA "os-sig.sml">
+<!ENTITY OS-PROCESS-SIG	SDATA "os-process-sig.sml">
+<!ENTITY OS-IO-SIG	SDATA "os-io-sig.sml">
+<!ENTITY MULTICAST-SIG	SDATA "multicast-sig.sml">
+<!ENTITY TRACE-CML-SIG	SDATA "trace-cml-sig.sml">
+

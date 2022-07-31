@@ -1,0 +1,16 @@
+Staged Allocation for MLRISC
+Mike Rainey (mrainey@cs.uchicago.edu)
+
+Staged allocation is a technique for handling calling conventions for different
+architectures and languages. The basic idea is to use a domain-specific language
+for calling conventions and an allocator machine. The allocator machine takes
+a convention encoded in this language and a function signature and returns the
+machine locations for passing and returning values. From there, it is trivial
+to generate the calling sequence. For the full treatment, see the original
+paper by Olinsky et. al.
+
+ *  Staged allocation: a compositional technique for specifying and implementing procedure calling conventions - http://www.eecs.harvard.edu/~nr/pubs/staged-abstract.html
+
+Our library consists of two parts: 
+ * allocator - follows the operational semantics given in the paper
+ * conventions - several calling conventions

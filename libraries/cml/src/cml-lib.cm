@@ -1,0 +1,17 @@
+(* (C) 2011 The Fellowship of SML/NJ
+ *     Author: matthias.blume@gmail.com (Matthias Blume)
+ *
+ * This wrapper library establishes $cml/cml-lib.cm
+ * an alias for the CML-specific additions in
+ * $cml-lib/smlnj-lib.cm.
+ *)
+Library
+	signature MULTICAST
+	signature SIMPLE_RPC
+	signature TRACE_CML
+
+	structure Multicast
+	structure SimpleRPC
+	structure TraceCML
+is
+	$cml-lib/smlnj-lib.cm

@@ -1,0 +1,662 @@
+\section{Machine Description}
+\subsection{Overview}
+
+  \newdef{MDGen} is a simple tool for generating 
+various modules in the MLRISC customizable code generator
+directly from machine descriptions.   These descriptions 
+contain architectural information such as:
+\begin{enumerate}
+    \item How the the register file(s) are organized.   
+    \item How instructions are encoded in machine code: MLRISC uses
+this information to generate machine instructions directly into a byte stream.
+Directly machine code generation is used in the SML/NJ compiler.
+    \item How instructions are pretty printed in assembly: this is used
+for debugging and also for assembly output for other non-SML/NJ backends.
+    \item How instructions are internally represented in MLRISC. 
+   \item Other information needed for performing optimizations, which
+        include:
+   \begin{enumerate}
+     \item The register transfer list (RTL) that defines the 
+           operational semantics of the instruction.
+     \item Delay slot mechanisms.
+     \item Information for performing span dependency resolution.
+     \item Pipeline and reservation table characteristics.
+   \end{enumerate}
+\end{enumerate}
+
+Currently, item 5 is not ready for prime time.
+
+\subsubsection{Why MDGen?}
+MLRISC manipulates all instruction sets via a set of abstract
+interfaces, which allows the programmer to arbitrarily choose an
+instruction representation that is most convenient for a particular 
+architecture.  However, various functions that manipulate
+this representation must be provided by the instruction set's programmer.  
+As the number and complexities of each optimizations grow, and as
+the number of architectures increases, the functions
+for manipulating the instructions become more numerous and complex.
+In order to keep the effort of developing and maintaining
+an instruction set manageable,
+the MDGen tool is developed to (partially) automate this task.
+ 
+\subsubsection{Syntax}
+
+   MDGen's machine descriptions are written in a syntax that is very
+much like that of 
+\externhref{http://cm.bell-labs.com/cm/cs/what/smlnj/sml.html}{Standard ML}. 
+Most core SML constructs are recognized.  
+In addition, new declaration forms specific to MDGen are 
+used to specify architectural information.
+
+\paragraph{Reserved Words}
+   All SML keywords are reserved words in MDGen.
+   In addition, the following keywords are also reserved:
+
+\begin{verbatim}
+   always architecture assembly at backwards big bits branching called
+   candidate cell cells cellset debug delayslot dependent endian field
+   fields formats forwards instruction internal little locations lowercase
+   name never nodelayslot nullified opcode ordering padded pipeline predicated
+   register rtl signed span storage superscalar unsigned uppercase 
+   verbatim version vliw when
+\end{verbatim}
+
+   Two kinds are quotations marks are also reserved:   
+\begin{SML}
+   [[ ]]
+   `` ''
+\end{SML}
+
+   The first \sml{[[ ]]} is for describing semantics.  The
+second \sml{`` ''} is for describing assembly syntax.
+
+\paragraph{Syntactic Sugar}
+
+   MDGen recognizes the following syntactic sugar.
+\begin{description}
+\item[Record abbreviations]
+Record expressions such as \sml{{x=x,y=y,z=z}} 
+can be simplified to just \sml{{x,y,z}}.
+\item[Binary literals]
+Literals in binary can be written with the prefix \sml{0b} (for integer types)
+or \sml{0wb} (for word types).   For example, \sml{0wb101111} is the same 
+as \sml{0wx2f} and \sml{0w79}.
+\item[Bit slices]
+   A bit slice, which extracts a range of bits from a word, can be written
+using an \sml{at} expression.  For example, \sml{w at [16..18]} 
+means the same thing as \verb|Word32.andb(Word32.>>(w, 0w16),0w7)|, i.e.
+it extracts bit 16 to 18 from \sml{w}.  
+The least significant bit the zeroth bit. 
+
+In general, we can write:
+\begin{SML}
+  w at [range1, range2, ..., rangen]
+\end{SML}
+to extract a sequence of slices from $w$ and concatenate them together.
+For example, the expression
+\begin{SML}
+   0wxabcd at [0..3, 4..7, 8..11, 12..15]
+\end{SML}
+swap the 4 nybbles from the 16-bit word, and evaluates to \sml{0wxdcba}.
+
+\item[Signature]
+Signature declarations of the form
+\begin{SML}
+   val x y z : int -> int
+\end{SML}
+can be used as a shorthand for the more verbose:
+\begin{SML}
+   val x : int -> int
+   val y : int -> int
+   val z : int -> int
+\end{SML}
+\end{description}
+
+\subsubsection{Elaboration Semantics}
+
+   Unfortunately, there is no complete formal semantics of how
+an MDGen specification elaborates.  
+   But generally speaking, a machine description is a just a structure 
+(in the SML sense).   Different components of this structure describe 
+different aspects of the architecture.
+
+\paragraph{Syntactic Overloading}
+In general, the syntactic overloading are used heavily in MDGen.
+There are three types of definitions:
+\begin{itemize}
+ \item Definitions that defines properties of the instruction set.
+ \item Definitions of functions and terms that are in the RTL meta-language.
+The syntax of MDGen's RTL language is borrowed heavily from Lambda-RTL, 
+which in turns is borrowed heavily from SML.
+ \item Definitions of functions and types that are to be included in the
+output generated by the MDGen tool.  These are usually auxiliary
+helper functions and definitions.
+\end{itemize}
+In general, entities of type 2, when appearing in other context, are
+properly meta-quoted in the semantics quotations \sml{[[ ]]}.
+
+\subsubsection{Basic Structure of A Machine Description}
+
+   The machine description for an architecture are defined via
+an \sml{architecture} declaration, which has the following general
+form.
+
+\begin{SML}
+architecture name =
+struct
+   \Term{architecture type declaration}
+   \Term{endianess declaration}
+   \Term{storage class declarations}
+   \Term{locations declarations}
+   \Term{assembly case declarations}
+   \Term{delayslot declaration}
+   \Term{instruction machine encoding format declarations}
+   \Term{nested structure declarations}
+   \Term{instruction definition}
+end
+\end{SML}
+
+\subsection{Describing the Architecture} 
+
+\subsubsection{Architecture type}
+  Architecture type declaration specifies whether the architecture is
+a superscalar or a VLIW/EPIC machine.  Currently, this information is
+ignored.
+
+\begin{SML}
+   \Term{architecture type declaration} ::= superscalar | vliw
+\end{SML}
+
+\subsubsection{Storage class}
+
+Storage class declarations specify various information about the
+registers in the architecture.  For example, the Alpha has 32 general
+purpose registers and 32 floating point registers.  In addition, MLRISC
+requires that each architecture specifies a (pseudo) register 
+type\footnote{Called cellkind in MLRISC.} for 
+holding condition codes (\sml{CC}). 
+To specify these information in MDGen, we can say:
+
+\begin{SML}
+   storage
+     GP "r" = 32 cells of 64 bits in cellset called "register"
+                assembly as (fn (30,_) => "$sp"
+                              | (r,_)  => "$"^Int.toString r
+                            )
+   | FP "f" = 32 cells of 64 bits in cellset called "floating point register"
+                assembly as (fn (f,_) => "$f"^Int.toString f)
+   | CC "cc" = cells of 64 bits in cellset GP called "condition code register"
+                assembly as "cc"
+\end{SML}
+
+\begin{itemize}
+  \item There are 32 64-bit general purpose registers,
+32 64-bit floating point registers, while \sml{CC} is not a 
+real register type. 
+  \item Cellsets
+are used by MLRISC for annotating liveness information in the program.
+  The clause \sml{in cellset} states that register type \sml{GP} 
+and \sml{FP} are allotted their own components in the cellset,    
+while the register type \sml{CC} are put
+in the same cellset component as \sml{GP}.
+  \item The clause \sml{assembly as} specifies
+   how each register is to be pretty printed.  On the Alpha, general 
+   purpose register are pretty printed with prefix \sml{$}, while
+   floating point registers are pretty printed with the prefix \sml{$f}. 
+   A special case is made for register 30, which is the stack pointer, and 
+   is pretty printing as \sml{$sp}.  Pseudo condition code registers
+   are pretty printed with the prefix \sml{cc}.   
+\end{itemize}
+
+\subsubsection{Locations}
+
+  Special locations in the register files can be declared using the
+\sml{locations} declarations.  On the Alpha, GPR
+30 is the stack pointer, GPR 28 and floating point register 30
+are used as the assembly temporaries.  This special constants
+can be defined as follows:
+
+\begin{SML}
+   locations
+       stackptrR = $GP[30]
+   and asmTmpR   = $GP[28]
+   and fasmTmp   = $FP[30]
+\end{SML}
+
+\subsection{Specifying the Machine Encoding}
+\subsubsection{Endianess}
+
+The endianess declaration specifies whether the machine is little
+endian or big endian so that the correct machine instruction encoding 
+functions can be generated.  The general syntax of this is:
+
+\begin{SML}
+   \Term{endianess declaration} ::= little endian | big endian
+\end{SML}
+
+The Alpha is little endian, so we just say: 
+\begin{SML}
+    little endian
+\end{SML}
+
+\subsubsection{Defining New Instruction Formats}
+
+   How instructions are encoded are specified using 
+\sml{instruction format} declarations.  An instruction format declaration
+has the following syntax:
+\begin{SML}
+  \Term{instruction machine encoding format declarations} ::=
+     instruction formats n bits 
+       \Term{format}1
+     | \Term{format}2
+     | \Term{format}3
+     | ...
+     | \Term{format}n-1
+     | \Term{format}n
+\end{SML}
+
+Each encoding format can be a primitive format, or a derived format.
+
+\paragraph{Primitive formats}
+
+A primitive format is simply specified by giving it a name and specifying
+the position, names and types of its fields.   This is usually the same
+way it is described in a architectural reference manual.
+
+
+Here is how we specify some of the (32 bit) primitive instruction formats 
+used in the Alpha. 
+\begin{SML}
+   instruction formats 32 bits
+     Memory\{opc:6, ra:5, rb:GP 5, disp: signed 16\} 
+   | Jump\{opc:6=0wx1a,ra:GP 5,rb:GP 5,h:2,disp:int signed 14\}  
+   | Memory_fun\{opc:6, ra:GP 5, rb:GP 5, func:16\}     
+   | Branch\{opc:branch 6, ra:GP 5, disp:signed 21\}         
+   | Fbranch\{opc:fbranch 6, ra:FP 5, disp:signed 21\}        
+   | Operate0\{opc:6,ra:GP 5,rb:GP 5,sbz:13..15=0,_:1=0,func:5..11,rc:GP 5\}
+   | Operate1\{opc:6,ra:GP 5,lit:signed 13..20,_:1=1,func:5..11,rc:GP 5\} 
+\end{SML}
+
+For example, the format \sml{Memory}
+\begin{SML}
+     Memory\{opc:6, ra:5, rb:GP 5, disp: signed 16\} 
+\end{SML}
+has a 6-bit opcode field, a 5-bit \sml{ra} field, a 5-bit \sml{rb}
+field which always hold a general purpose register, and a 16-bit 
+sign-extended displacement field.  The field to the left is positioned 
+at the most significant bits, while the field to the right is positioned
+at the least.  The widths of these fields must add up to 32 bits.
+
+
+Similarly, the format \sml{Jump}
+\begin{SML}
+  Jump{opc:6=0wx1a,ra:GP 5,rb:GP 5,h:2,disp:int signed 14}  
+\end{SML}
+contains a 6-bit opcode field which always hold the constant \sml{0x1a},
+two 5-bit fields \sml{ra} and \sml{rb} which are of type \sml{GP},
+and a 14-bit sign-extended field of type integer.
+
+  Each field in a primitive format has one of 5 forms:
+\begin{SML}
+   \Term{name} : \Term{position} 
+   \Term{name} : \Term{position} = \Term{value} 
+   \Term{name} : \Term{type} \Term{position} 
+   \Term{name} : \Term{type} \Term{position} = \Term{value} 
+   _           : \Term{position} = \Term{value} 
+\end{SML}
+where \Term{position} is either a width, or a bits range 
+$n$\sml{..}$m$,
+with an optional \sml{signed} prefix.  The last form, with a wild card
+for the field name, can be used to specify an anonymous field that
+always has a fixed value.  
+
+
+  By default, a field has type \sml{Word32.word}.  If a type $T$ 
+is specified, then the function \sml{emit_}$T$ is implicitly called
+to convert the type into the appropriate encoding.   The function 
+\sml{emit_}$T$ are generated automatically by MDGen if it is a cellkind
+defined by the \sml{storage} class declaration, or if it is a primitive
+type such as integer or boolean.  
+There are also other ways to automatically generate this function
+(more on this later.)
+
+  For example, the format \sml{Operate1}
+\begin{SML}
+   Operate1\{opc:6,ra:GP 5,lit:signed 13..20,_:1=1,func:5..11,rc:GP 5\} 
+\end{SML}
+states that bits 26 to 31 are allocated to field \sml{opc}, 
+bits 21 to 25 are allocated to field \sml{ra}, which is of type 
+\sml{GP}, bits 13 to 20 are allocated to field \sml{lit}, bit 12
+is a single bit of value 1, etc.
+
+
+MDGen generates a function for each primitive format declaration of
+the same name that can be used for emitting the instruction.  
+In the case of the Alpha, the following functions are generated:
+\begin{SML}
+   val Memory : \{opc:Word32.word, ra:Word32.word, 
+                 rb:int, disp:Word32.word\} -> unit
+   val Jump   : \{ra:int, rb:int, disp:Word32.word\} -> unit
+   val Operate1 : \{opc:Word32.word, ra:int, lit:Word32.word,
+                   func:Word32.word, rc:int\} -> unit
+\end{SML}
+
+\paragraph{Derived formats}
+
+   Derived formats are simply instruction formats that are defined
+in terms of other formats.  On the alpha, we have a \sml{Operate}
+format that simplifies to either \sml{Operate0} or \sml{Operate1},
+depending on whether the second argument is a literal or a register.  
+\begin{SML}
+   Operate\{opc,ra,rb,func,rc\} =
+     (case rb of
+       I.REGop rb => Operate0\{opc,ra,rb,func,rc\}
+     | I.IMMop i  => Operate1\{opc,ra,lit=itow i,func,rc\}
+     | I.HILABop le => Operate1\{opc,ra,lit=High{le=le},func,rc\}
+     | I.LOLABop le => Operate1\{opc,ra,lit=Low{le=le},func,rc\}
+     | I.LABop le => Operate1\{opc,ra,lit=itow(LabelExp.valueOf le),func,rc\}
+     )
+\end{SML}
+
+\subsubsection{Generating Encoding Functions}
+
+   In MLRISC, we represent an instruction as a set of ML datatypes.
+Some of these datatypes represent specific fields or 
+opcodes of the instructions.
+MDGen lets us to associate a machine encoding to each datatype constructor
+directly in the specification, and automatically generates an 
+encoding function for these datatypes.
+
+There are two different ways of specifying an encoding.  The first way
+is just to write the machine encoding directly next the constructor.
+Here's an example directly from the Alpha description:
+\begin{SML}
+   structure Instruction =
+   struct
+      datatype branch! =  (* table C-2 *)
+         BR   0x30
+                   | BSR 0x34
+                              | BLBC 0x38
+       | BEQ  0x39 | BLT 0x3a | BLE  0x3b
+       | BLBS 0x3c | BNE 0x3d | BGE  0x3e
+       | BGT  0x3f
+
+      datatype fbranch! = (* table C-2 *)
+                     FBEQ 0x31 | FBLT 0x32
+       | FBLE 0x33             | FBNE 0x35
+       | FBGE 0x36 | FBGT 0x37
+
+      ...
+   end
+\end{SML}
+
+The datatypes \sml{branch} and \sml{fbranch} represent specific
+branch opcodes for integer branches \sml{BRANCH}, or floating point
+branches \sml{FBRANCH}.  On the Alpha, instruction \sml{BR} is encoded
+with an opcode of \sml{0x30}, instruction \sml{BSR} is encoded 
+as \sml{0x34} etc.  MDGen automatically generates two functions
+\begin{SML}
+    val emit_branch : branch -> Word32.word
+    val emit_fbranch : branch -> Word32.word
+\end{SML}
+that perform this encoding.    
+
+In the specification for the instruction set, we state that the
+\sml{BRANCH} instruction should be encoded using format \sml{Branch},
+while the \sml{FBRANCH} instruction should be encoded using
+format \sml{Fbranch}.
+\begin{SML}
+   structure MC =
+   struct
+      (* Auxiliary function for computing the displacement of a label *)
+      fun disp ... = ...
+      ...
+   end
+
+   ...
+
+   instruction
+     ...
+
+   | BRANCH of branch * $GP * Label.label
+     Branch\{opc=branch,ra=GP,disp=disp label\}
+
+   | FBRANCH of fbranch * $FP * Label.label
+     Fbranch\{opc=fbranch,ra=FP,disp=disp label\}
+
+   | ...
+\end{SML}
+
+Since the primitive instructions formats \sml{Branch} and \sml{FBranch}
+are defined with branch and fbranch as the type in the opcode field
+\begin{SML}
+   | Branch\{opc:branch 6, ra:GP 5, disp:signed 21\}          
+   | Fbranch\{opc:fbranch 6, ra:FP 5, disp:signed 21\}       
+\end{SML}
+the functions \sml{emit_branch} and \sml{emit_fbranch} are implicitly
+called.
+
+ 
+Another way to specify an encoding is to specify a range, as 
+in the following example:
+\begin{SML}
+   datatype fload[0x20..0x23]! = LDF | LDG | LDS | LDT
+
+   datatype fstore[0x24..0x27]! = STF | STG | STS | STT
+\end{SML}
+
+This states that \sml{LDF} should be assigned the encoding \sml{0x20},
+\sml{LDG} the encoding \sml{0x21} etc.  This form is useful for 
+specifying a consecutive range.
+
+\subsubsection{Encoding Variable Length Instructions}
+
+   Most architectures nowadays have fixed length encodings for instructions.  
+There are some notatable exceptions, however.  
+The Intel x86 architecture uses a legacy
+variable length encoding.   Modern RISC machines developed for 
+embedded systems may utilize space-reduction compression schemes in their
+instruction sets.  Finally, VLIW machines usually have some form
+of NOP compression scheme for compacting issue packets. 
+
+\subsection{Specifying the Assembly Formats}
+
+\subsubsection{Assembly Case Declaration}  
+
+  The assembly case declaration specifies whether the assembly should be
+emitted in lower case, upper case, or verbatim.  If either lower case
+or upper case is specified, all literal strings are converted to the 
+appropriate case.  The general syntax of this declaration is:
+
+\begin{SML}
+   \Term{assembly case declaration} ::=
+      lowercase assembly
+    | uppercase assembly
+    | verbatim  assembly
+\end{SML}
+
+\subsubsection{Assembly Annotations}
+
+   Assembly output are specified in the assembly meta quotations
+\sml{`` ''}, or string quotations \sml{" "}.   
+For example, here is a fragment from the Alpha description:
+
+\begin{SML}
+   instruction
+     ...
+   | LOAD of \{ldOp:load, r: $GP, b: $GP, d:operand, mem:Region.region\}
+     ``<ldOp>\t<r>, <d>()<mem>''
+
+   | STORE of \{stOp:store, r: $GP, b: $GP, d:operand, mem:Region.region\}
+     ``<stOp>\t<r>, <d>()<mem>''
+
+   | BRANCH of branch * $GP * Label.label
+     ``<branch>\t<GP>, <label>''
+
+   | FBRANCH of fbranch * $FP * Label.label
+     ``<fbranch>\t<FP>, <label>''
+
+   | CMOVE of \{oper:cmove, ra: $GP, rb:operand, rc: $GP\}
+     ``<oper>\t<ra>, <rb>, <rc>''
+
+   | FOPERATE of \{oper:foperate, fa: $FP, fb: $FP, fc: $FP\}
+     ``<oper>\t<fa>, <fb>, <fc>''
+
+   | ...
+\end{SML}
+
+   All characters within the quotations \sml{`` ''} have the same 
+interpretation as in the string quotation \sml{" "}, except when
+they are delimited by the \newdef{backquotes}
+\verb|< >|.
+Here's how the backquote is interpreted:
+\begin{itemize}
+\item If it is \verb|<|$x$\verb.>. and $x$ is a variable name of type $t$,
+  and if an assembly function of type $t$ is defined, then it will be invoked
+  to convert $x$ to the appropriate text.
+\item If it is \verb|<|$x$\verb.>. and $x$ is a variable name of type $t$,
+  and if an assembly function of type $t$ is NOT defined, 
+  then the function \sml{emit_}$x$ will be called to pretty print $x$.
+ \item If it is \verb|<|$e$\verb.>. where $e$ is a general expression, then
+  it will be used directly. 
+\end{itemize}
+
+\subsubsection{Generating Assembly Functions}
+   Similar to machine encodings, we can attach assembly annotations to
+datatype definitions and let MDGen generate the assembly functions for us.  
+Annotations take two forms, explicit or implicit.
+Explicit annotations are enclosed within assembly quotations \sml{`` ''}.
+
+ 
+For example, on the Alpha the datatype \sml{operand} is used to represent
+an integer operand.  This datatype is defined as follows:
+\begin{SML}
+   datatype operand =
+       REGop of $GP                     ``<GP>'' 
+     | IMMop of int                     ``<int>''
+     | HILABop of LabelExp.labexp       ``hi(<labexp>)''
+     | LOLABop of LabelExp.labexp       ``lo(<labexp>)''
+     | LABop of LabelExp.labexp         ``<labexp>''
+     | CONSTop of Constant.const        ``<const>''
+\end{SML}
+Basicaly this states that \sml{REGop r} should be pretty printed 
+as \sml{$r}, \sml{IMMop i} 
+as \sml{i}, \sml{HILABexp le} 
+as \sml{hi(le)},
+etc.
+ 
+Implicit assembly annotations are specified by simply attaching 
+an exclamation mark at the end of the datatype name.  This states
+that the assembly output is the same as the name of the datatype 
+constructor\footnote{But appropriately modified by the assembly case 
+declaration.}. For example,
+the datatype \sml{operate} is a listing of all integer opcodes 
+used in MLRISC.  
+\begin{SML}
+   datatype operate! = (* table C-5 *)
+       ADDL  (0wx10,0wx00)                       | ADDQ (0wx10,0wx20)
+                           | CMPBGE(0wx10,0wx0f) | CMPEQ (0wx10,0wx2d)
+     | CMPLE (0wx10,0wx6d) | CMPLT (0wx10,0wx4d) | CMPULE (0wx10,0wx3d)
+     | CMPULT(0wx10,0wx1d) | SUBL  (0wx10,0wx09)
+     | SUBQ  (0wx10,0wx29)
+     | S4ADDL(0wx10,0wx02) | S4ADDQ (0wx10,0wx22) | S4SUBL (0wx10,0wx0b)
+     | S4SUBQ(0wx10,0wx2b) | S8ADDL (0wx10,0wx12) | S8ADDQ (0wx10,0wx32)
+     | S8SUBL(0wx10,0wx1b) | S8SUBQ (0wx10,0wx3b)
+
+     | AND   (0wx11,0wx00) | BIC    (0wx11,0wx08) | BIS (0wx11,0wx20)
+                                                  | EQV (0wx11,0wx48)
+     | ORNOT (0wx11,0wx28) | XOR    (0wx11,0wx40)
+
+     | EXTBL (0wx12,0wx06) | EXTLH  (0wx12,0wx6a) | EXTLL(0wx12,0wx26)
+     | EXTQH (0wx12,0wx7a) | EXTQL  (0wx12,0wx36) | EXTWH(0wx12,0wx5a)
+     | EXTWL (0wx12,0wx16) | INSBL  (0wx12,0wx0b) | INSLH(0wx12,0wx67)
+     | INSLL (0wx12,0wx2b) | INSQH  (0wx12,0wx77) | INSQL(0wx12,0wx3b)
+     | INSWH (0wx12,0wx57) | INSWL  (0wx12,0wx1b) | MSKBL(0wx12,0wx02)
+     | MSKLH (0wx12,0wx62) | MSKLL  (0wx12,0wx22) | MSKQH(0wx12,0wx72)
+     | MSKQL (0wx12,0wx32) | MSKWH  (0wx12,0wx52) | MSKWL(0wx12,0wx12)
+     | SLL   (0wx12,0wx39) | SRA    (0wx12,0wx3c) | SRL  (0wx12,0wx34)
+     | ZAP   (0wx12,0wx30) | ZAPNOT (0wx12,0wx31)
+     | MULL  (0wx13,0wx00)                        | MULQ (0wx13,0wx20)
+                           | UMULH  (0wx13,0wx30)
+     | SGNXL "addl" (0wx10,0wx00) (* same as ADDL *)
+\end{SML}
+This definitions states that \sml{ADDL} should be pretty printed
+as \sml{addl}, \sml{ADDQ} as \sml{addq}, etc.  However, the opcode 
+\sml{SGNXL} is pretty printed as \sml{addl} since it has been explicitly
+overridden.
+
+\subsection{Defining the Instruction Set}
+
+How the instruction set is represented is declared using the
+\sml{instruction} declaration.  For example, here's how the Alpha instruction
+set is defined:
+\begin{SML}
+  instruction 
+     DEFFREG of $FP
+   | LDA of \{r: $GP, b: $GP, d:operand\}	
+   | LDAH of \{r: $GP, b: $GP, d:operand\} 
+   | LOAD of \{ldOp:load, r: $GP, b: $GP, d:operand, mem:Region.region\}
+   | STORE of \{stOp:store, r: $GP, b: $GP, d:operand, mem:Region.region\}
+   | FLOAD of \{ldOp:fload, r: $FP, b: $GP, d:operand, mem:Region.region\}
+   | FSTORE of \{stOp:fstore, r: $FP, b: $GP, d:operand, mem:Region.region\}
+   | JMPL of \{r: $GP, b: $GP, d:int\} * Label.label list
+   | JSR of \{r: $GP, b: $GP, d:int\} * C.cellset * C.cellset * Region.region
+   | RET of \{r: $GP, b: $GP, d:int\} 
+   | BRANCH of branch * $GP * Label.label   
+   | FBRANCH of fbranch * $FP * Label.label  
+   | ...
+\end{SML}
+
+The \sml{instruction} declaration defines a datatype and specifies
+that this datatype is used to represent the instruction set.  Generally
+speaking, the instruction set's designer has complete freedom in how the
+datatype is structured, but there are a few simple rules that she should
+follow:
+\begin{itemize}
+  \item If a field represents a register, it should be typed
+with the appropriate storage types \sml{$GP}, 
+\sml{$FP}, etc.~instead 
+of \sml{int}.   MDGen will treat its value in the correct manner; for
+example, during assembly emission a field declared type \sml{int} is
+printed as an integer, while a field declared type \sml{$GP} is displayed
+as a general purpose register.
+  \item MDGen recognizes the following special 
+types: \sml{label}, \sml{labexp}, \sml{region}, and \sml{cellset}.
+\end{itemize}
+
+\subsection{Specifying Instruction Semantics}
+   MLRISC performs all optimizations at 
+the granulariy of individual instructions,
+specialized to the architecture at hand.  Many
+optimizations are possible only if the ``semantics'' of the 
+instructions set to are properly specified.  MDGen contains a 
+\emph{register transfer language} (RTL) sub-language that let us to describe
+instruction semantics in a modular and succinct manner.  
+ 
+   The semantics of this RTL sub-language has been borrowed heavily from
+Norman Ramsey's and Jack Davidson's Lambda RTL.  There
+are a few main differences, however: 
+\begin{itemize}
+  \item The syntax of our RTL language 
+        is closer to that of ML than Lambda RTL.  
+  \item Our RTL language, like that of MDGen, is tied closely to MLRISC.
+\end{itemize}
+
+\subsection{How to Run the Tool}
+
+\subsection{Machine Description}
+Here are some machine descriptions in varing degree of completion.
+
+\begin{itemize}
+ \item \mlrischref{sparc/sparc.mdl}{Sparc} 
+ \item \mlrischref{hppa/hppa.mdl}{Hppa} 
+ \item \mlrischref{alpha/alpha.mdl}{Alpha}
+ \item \mlrischref{ppc/ppc.mdl}{PowerPC} 
+ \item \mlrischref{x86/x86.mdl}{X86} 
+\end{itemize}
+
+\subsection{ Syntax Highlighting Macros }
+
+\begin{itemize}
+  \item \href{md.vim}{For vim 5.3}
+\end{itemize}

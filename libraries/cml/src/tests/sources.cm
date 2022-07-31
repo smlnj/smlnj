@@ -1,0 +1,10 @@
+Group is
+#if defined(NEW_CM)
+  $cml/basis.cm
+  $cml/cml.cm
+#else
+  ../src/basis.cm
+  ../src/cml.cm
+#endif
+
+  test.sml

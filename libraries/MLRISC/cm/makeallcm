@@ -1,0 +1,69 @@
+#!/usr/bin/perl
+## usage: makeallcm 
+## 
+## This script looks at ALL.cm and create all the CM files.
+##
+
+$SPECIAL_CM{"smlnj-lib.cm"} = 1;
+$SPECIAL_CM{"ml-yacc-lib.cm"} = 1;
+
+makeallcm("ALL.cm");
+
+sub makeallcm
+{  my($cmfile) = @_;
+   $new = 1;
+   open(MLRISC,$cmfile) || die ("$!: $cmfile\n");
+
+   while (<MLRISC>)
+   {  push @FOOTER, $_;
+      next if $_ =~ /\(\*.*\*\)/;
+      next if $_ =~ /^\s*$/;
+      ($comment=1, next) if $_ =~ /^\s*\(\*.*/;
+      ($comment=0, next) if $_ =~ /^.*\*\)/;
+      next if $comment;
+      if (/^(.*):$/)
+      {  finish();
+         $outfile = $1;
+         open(OUT,">$outfile") || die("$!: $outfile\n");
+         print STDERR "[$outfile]";
+         print OUT <<"END";
+(* This file is created by makeallcm *)
+Library
+is
+END
+         next;  
+      }   
+      if (/^\s*(.*\.cm)\s*$/)
+      {  push @CMFILES, $1;
+         next; 
+      } 
+      if ($new) { dumpCMfiles(); }
+      print OUT $_;
+   }
+   finish();
+}
+sub finish
+{  close(OUT);
+   @CMFILES=();
+   $new = 1;
+   if ($outfile)
+   { system("perl makecm $outfile");
+   }
+}
+
+sub dumpCMfiles()
+{  print OUT <<"END";
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	\$/basis.cm
+END
+   foreach $f (@CMFILES) {  print OUT "\t\$/$f\n"; }
+   print OUT "#else\n";
+   print OUT "\tbasis.cm\n";
+   foreach $f (@CMFILES) {  print OUT "\t$f\n"; }
+   print OUT "#endif\n#else\n";
+   foreach $f (@CMFILES) {  print OUT "\t$f\n"; }
+   print OUT "#endif\n";
+   @CMFILES=();
+   $new = 0;
+}

@@ -1,0 +1,45 @@
+Library
+	signature MDL_AST
+	signature MDL_AST_CONSTANTS
+	signature MDL_AST_PRETTY_PRINTER
+	signature MDL_AST_REWRITER
+	signature MDL_AST_TRANSLATION
+	signature MDL_AST_UTIL
+	structure MDLAst
+	functor MDLAstConstants
+	functor MDLAstPrettyPrinter
+	functor MDLAstRewriter
+	functor MDLAstTranslation
+	functor MDLAstUtil
+is
+
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+        $/basis.cm
+        $/smlnj-lib.cm
+	$smlnj/MLRISC/Control.cm
+#else
+        basis.cm
+        smlnj-lib.cm
+	../../cm/Control.cm
+#endif
+#else
+        smlnj-lib.cm
+	../../cm/Control.cm
+#endif
+
+	../PP/sources.cm
+	../SourceMap/sources.cm
+
+	ast.sig
+	ast.sml
+	ast-util.sig
+	ast-util.sml
+	ast-pp.sig
+	ast-pp.sml
+	ast-rewrite.sig
+	ast-rewrite.sml
+	ast-trans.sig
+	ast-trans.sml
+	ast-consts.sig
+	ast-consts.sml

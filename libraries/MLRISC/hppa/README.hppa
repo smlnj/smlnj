@@ -1,0 +1,41 @@
+Additions to the instruction set
+=====================================
+1.  SHnADD[O] instructions, which performs a*(2^n)+b 
+2.  Branch on bit instruction (BB)
+3.  Single precision floating points + lots of other conversion ops
+4.  Loads and stores with scaled indexed and auto increment addressing modes
+
+New optimizations in the HPPA backend
+=====================================
+
+1.  An expressions such as a*n+b where n = 2, 4, and 8 now emits SHnADD[O]
+    instructions.
+
+2.  An expression such as 
+
+       BCC(T.CMP(T.NE,0,T.ANDB(mask,e))
+
+    where mask is a power of 2 now emits BB instructions.
+
+    SML/NJ: this improves boxity testing code by replacing 3 instructions with 1
+            instruction.
+
+3.  Strength reduction for multiplication with small constants. 
+
+    SML/NJ: benefits array indexing and multiway branches
+
+4   Addressing modes computation now takes into account of scaled 
+    indexed mode.  Unfortunately, due to tagging this optimizations
+    is not used in SML/NJ.
+
+5   Propagation of annotations
+
+6   Delay slot filling has been added
+
+7   NOTB folding has been implemented.  This combines NOTB with other
+    bit ops such as ANDB, ORB, XORB.
+
+8.  COND expressions now generate the composite instruction sequence:
+   
+        COMCLR,cc r1, r2, t
+        LDO i(b), t

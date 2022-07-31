@@ -1,0 +1,72 @@
+<!-- porting.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Bell Laboratories" YEAR=1995>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>Porting old programs</TITLE>
+
+<SECTION>
+<HEAD>Porting old CML programs</HEAD>
+
+<PP>
+There have been substantial changes from Version&nbsp;0.9.8 of &CML;.
+Most of these changes are cosmetic name changes meant to track
+changes in the &SML; interfaces, and to rationalize naming conventions.
+In this section, we detail the changes to the &CML; interfaces, and
+describe correspondence between the old and new interfaces.
+
+<SECTION>
+<HEAD>Backwards compatibility modules</HEAD>
+<PP>
+To ease the transition from version&nbsp;0.9.8 of &CML; to the new
+interfaces, we provide two backwards compatibility modules in the
+&CML; Library.
+</SECTION>
+
+<SECTION>
+<HEAD>Name changes</HEAD>
+<PP>
+<TABLE>
+  <COL ALIGN=LEFT> <COL ALIGN=LEFT>
+  <TR><TH ALIGN=CENTER>Old name <TH ALIGN=CENTER>New name
+  <TR><TD><IDREF/accept/	<TD><VALREF STRID="CML"/recv/
+  <TR><TD><IDREF/receive/	<TD><VALREF STRID="CML"/recvEvt/
+  <TR><TD><IDREF/transmit/	<TD><VALREF STRID="CML"/sendEvt/
+  <TR><TD><IDREF/timout/	<TD><VALREF STRID="CML"/timeOutEvt/
+  <TR><TD><IDREF/waitUntil/	<TD><VALREF STRID="CML"/atTimeEvt/
+  <TR><TD><IDREF/threadWait/	<TD><VALREF STRID="CML"/joinEvt/
+  <TR><TD><IDREF/sameThread/	<TD><VALREF STRID="CML"/sameTid/
+</TABLE>
+</SECTION>
+
+<SECTION>
+<HEAD>Input/output</HEAD>
+<PP>
+The most significant changes to the &CML; interfaces have to do with
+input/output operations.
+In version&nbsp;0.9.8, the structure <IDREF/CIO/ provided an implementation
+of the &SMLNJ; <IDREF/IO/ signature extended with event-valued operations.
+The old &SML; I/O interface has been replaced with a new interface, which is
+described in the <DOCREF DOCUMENT=SML-BASIS-DOC/&SML; Basis Library Manual/,
+and &CML; has followed suite.
+</SECTION>
+
+<SECTION>
+<HEAD>Condition variables</HEAD>
+</SECTION>
+
+<SECTION>
+<HEAD>Polling</HEAD>
+<PP>
+The only loss in function from version&nbsp;0.9.8 is the elimination
+of the <IDREF/poll/ operation, which provided a non-blocking form
+of <VALREF STRID="CML"/sync/.
+Instead of this operation, &CML; now provides non-blocking input operations
+on many of the basic communication types.
+</SECTION>
+</SECTION>
+

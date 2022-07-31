@@ -1,0 +1,27 @@
+(* layer3.sml
+ *
+ * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
+ *
+ *)
+
+Group
+  signature CML_SOCKET
+  signature GENERIC_SOCK
+  signature INET_SOCK
+  structure Socket
+  structure CML_GenericSock
+  structure CML_INetSock
+#if defined(OPSYS_UNIX)
+  signature UNIX_SOCK
+  structure CML_UnixSock
+#endif
+is
+
+layer2.cm
+
+cml-generic-sock.sml
+cml-inet-sock.sml
+
+#if defined(OPSYS_UNIX)
+cml-unix-sock.sml
+#endif

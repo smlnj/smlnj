@@ -1,0 +1,162 @@
+(* This file is created by makeallcm *)
+Library
+	signature ABELIAN_GROUP
+	signature ABELIAN_GROUP_WITH_INF
+	signature ACYCLIC_SUBGRAPH_VIEW
+	signature ALL_PAIRS_SHORTEST_PATHS
+	signature BIPARTITE_GRAPH
+	signature BIPARTITE_MATCHING
+	signature CLOSED_SEMI_RING
+	signature GRAPH
+	signature GRAPH_BICONNECTED_COMPONENTS
+	signature GRAPH_BREATH_FIRST_SEARCH
+	signature GRAPH_COMBINATIONS
+	signature GRAPH_DEPTH_FIRST_SEARCH
+	signature GRAPH_IMPLEMENTATION
+	signature GRAPH_IS_CYCLIC
+	signature GRAPH_MINOR_VIEW
+	signature GRAPH_SIMPLE_CYCLES
+	signature GRAPH_SNAPSHOT
+	signature GRAPH_STRONGLY_CONNECTED_COMPONENTS
+	signature GRAPH_TOPOLOGICAL_SORT
+	signature GRAPH_WRAPPERS
+	signature ISOMORPHIC_GRAPH_VIEW
+	signature MAX_FLOW
+	signature MIN_COST_SPANNING_TREE
+	signature MIN_CUT
+	signature NODE_PARTITION
+	signature NODE_PRIORITY_QUEUE
+	signature NO_ENTRY_VIEW
+	signature NO_EXIT_VIEW
+	signature PRINT_GRAPH
+	signature READONLY_GRAPH_VIEW
+	signature RENAMED_GRAPH_VIEW
+	signature REVERSED_GRAPH_VIEW
+	signature SINGLETON_GRAPH_VIEW
+	signature SINGLE_ENTRY_MULTIPLE_EXIT_VIEW
+	signature SINGLE_SOURCE_SHORTEST_PATHS
+	signature START_STOP_VIEW
+	signature SUBGRAPH_P_VIEW
+	signature SUBGRAPH_VIEW
+	signature TRACE_SUBGRAPH_VIEW
+	signature TRANSITIVE_CLOSURE
+	signature UNDIRECTED_GRAPH_VIEW
+	signature UNION_GRAPH_VIEW
+	signature UPDATE_GRAPH_INFO
+	structure AcyclicSubgraphView
+	structure BipartiteMatching
+	structure DirectedGraph
+	structure Graph
+	structure GraphBCC
+	structure GraphBFS
+	structure GraphCombinations
+	structure GraphCycles
+	structure GraphDFS
+	structure GraphIsCyclic
+	structure GraphMinorView
+	structure GraphSCC
+	structure GraphTopsort
+	structure GraphWrappers
+	structure IsomorphicGraphView
+	structure Kruskal
+	structure NoEntryView
+	structure NoExitView
+	structure NodePartition
+	structure PrintGraph
+	structure ReadOnlyGraphView
+	structure RenamedGraphView
+	structure ReversedGraphView
+	structure SingleEntryMultipleExit
+	structure SingletonGraphView
+	structure StartStopView
+	structure SubgraphView
+	structure Subgraph_P_View
+	structure TraceView
+	structure TransitiveClosure
+	structure UndirectedGraphView
+	structure UnionGraphView
+	structure UpdateGraphInfo
+	functor BellmanFord
+	functor Dijkstra
+	functor DirectedGraph
+	functor FloydWarshall
+	functor GraphSnapShot
+	functor Johnson
+	functor MaxFlow
+	functor MinCut
+	functor NodePriorityQueue
+	functor UndirectedGraph
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+	Lib.cm
+
+	../graphs/acyclic-graph.sml
+	../graphs/bellman-ford.sml
+	../graphs/bigraph.sig
+	../graphs/closed-semi-ring.sig
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION < 11042
+        ../graphs/orig-digraph.sml
+	../graphs/orig-node-priqueue.sml
+	../graphs/orig-udgraph.sml
+#else
+	../graphs/digraph.sml
+	../graphs/node-priqueue.sml
+	../graphs/udgraph.sml
+#endif
+	../graphs/dijkstra.sml
+	../graphs/floyd-warshall.sml
+	../graphs/johnson.sml
+	../graphs/graph-bfs.sig
+	../graphs/graph-bfs.sml
+	../graphs/graph-bcc.sig
+	../graphs/graph-bcc.sml
+	../graphs/graph-comb.sig
+	../graphs/graph-comb.sml
+	../graphs/graph-cycles.sig
+	../graphs/graph-cycles.sml
+	../graphs/graph-dfs.sig
+	../graphs/graph-dfs.sml
+	../graphs/graph-is-cyclic.sig
+	../graphs/graph-is-cyclic.sml
+	../graphs/graph-minor.sml
+	../graphs/graph-scc.sig
+	../graphs/graph-scc.sml
+	../graphs/graph-topsort.sig
+	../graphs/graph-topsort.sml
+	../graphs/graph.sig
+	../graphs/graph.sml
+	../graphs/graphimpl.sig
+	../graphs/group.sig
+	../graphs/isograph.sml
+	../graphs/kruskal.sml
+	../graphs/matching.sig
+	../graphs/matching.sml
+	../graphs/max-flow.sig
+	../graphs/max-flow.sml
+	../graphs/min-cut.sig
+	../graphs/min-cut.sml
+	../graphs/no-exit.sml
+	../graphs/node-partition.sml
+	../graphs/node-priqueue.sig
+	../graphs/printgraph.sml
+	../graphs/readonly.sml
+	../graphs/renamegraph.sml
+	../graphs/revgraph.sml
+	../graphs/seme.sml
+	../graphs/shortest-paths.sig
+	../graphs/singleton.sml
+	../graphs/snap-shot.sml
+	../graphs/spanning-tree.sig
+	../graphs/start-stop.sml
+	../graphs/subgraph-p.sml
+	../graphs/subgraph.sml
+	../graphs/trace-graph.sml
+	../graphs/trans-closure.sml
+	../graphs/ugraph.sml
+	../graphs/uniongraph.sml
+	../graphs/wrappers.sml
+	../graphs/update-graph-info.sml

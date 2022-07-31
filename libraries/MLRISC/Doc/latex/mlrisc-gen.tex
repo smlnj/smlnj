@@ -1,0 +1,60 @@
+\section{MLRisc Generation}
+  Every compiler will eventually compile down to an abstract machine
+  that it believes will execute source programs efficiently. The
+  abstract machine will typically consists of abstract machine
+  registers and instructions, one or more stacks, and parameter
+  passing conventions.  The hope is that all this will map down
+  efficiently onto the target machine. Indeed, the abstract machine
+  should be reasonably close to architectures that are envisioned as
+  possible targets. Several step need to be followed in the generation
+  of MLRisc.
+
+  \begin{enumerate}
+   \item The first step in generating target machine code is to define
+   the MLRisc intermediate representation after it has been
+   appropriately specialized. The interfaces that describe the
+   dimensions of specialization are quite simple. Depending on the
+   compiler, these may be target dependent; for example, in the SML/NJ
+   compiler, the encoding of registers used to indicate the roots of
+   garbage collection depend on how the runtime system decodes the
+   information.
+
+  \item The only real connection between the MLRisc intermediate
+  representation and the target machine is that the first
+  $0..K-1$ MLRisc registers map onto the first $K$
+  physical registers on the target machine. Thus some mapping of
+  dedicated abstract machine registers to physical target registers is
+  required. It is not always necessary to map abstract machine
+  registers to physical machine registers. For example, on
+  architectures like the x86 with few registers, some abstract machine
+  registers may be mapped to fixed memory locations. Thus an abstract
+  machine register like the \sml{maskReg} may have something like:
+\begin{SML}
+  LOAD(32, LABEL maskRegLab) 
+\end{SML}
+spliced instead.
+
+  \item The unit of compilation is called a 
+   \href{cluster.html}{cluster} which
+  is the smallest unit for inter-procedural optimizations. A cluster
+  will typically consist of several entry points that may call each
+  other, as well as call local functions in the module. For maximum
+  flexibility, the parameter passing convention for local functions
+  should be specialized by the \href{mlrisc-ra.html}{register allocator}.
+
+   Once the MLRisc trees for a cluster have been built, they must
+  be converted into target assembly or machine code. This is done by
+  building up a function (\newdef{codegen}) that
+  glues together optimizations modules that have been specialized. For
+  example, the target instruction set must be specialized to hold the
+  MLRisc constants; the flowgraph must be specialized to carry these
+  instructions as well as the MLRisc pseudo-ops; the optimization
+  modules must know about several front end constraints such as how to
+  spill registers.
+  \end{enumerate}
+
+   If the module that translates the abstract machine instructions
+  into MLRisc instructions has been appropriately parameterized, then
+  it can be reused for multiple target architectures. For high level
+  languages it is better to generate MLRisc instructions from the high
+  level intermediate form used by the front end of the compiler.

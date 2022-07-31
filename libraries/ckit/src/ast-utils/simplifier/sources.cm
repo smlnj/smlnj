@@ -1,0 +1,17 @@
+Group is
+
+        ../../ast/sources.cm
+
+	../copy/copy-ast-sig.sml
+	../copy/copy-ast.sml
+
+	simplify-ast-sig.sml
+	simplify-ast.sml
+
+#if (defined(d))
+        extensions/d/eq-ast-ext.sml
+#else
+        extensions/c/copy-ast-ext.sml
+        extensions/c/simplify-ast-ext.sml
+
+#endif

@@ -1,0 +1,41 @@
+Library 
+	signature MDL_PARSER_DRIVER
+	functor MDLParserDriver
+is
+
+#if defined(NEW_CM) 
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030 
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/ml-yacc-lib.cm
+	$smlnj/compiler.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	ml-yacc-lib.cm
+	host-compiler.cm
+#endif
+#else
+	smlnj-lib.cm
+	ml-yacc-lib.cm
+#endif
+	(* Pretty printer *)
+	$mlrisc-tools/pp.cm
+
+	(* line number mapping utility *)
+	$mlrisc-tools/source-map.cm
+
+	(* Precedence parsing *)
+	$mlrisc-tools/prec-parser.cm
+
+	(* Abstract syntax tree *)
+	$mlrisc-tools/sml-ast.cm
+
+	(* Parser *)
+	Parser/mdl.grm
+
+	(* Lexer *)
+	Parser/mdl.lex
+
+	Parser/parser.sml
+

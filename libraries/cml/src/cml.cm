@@ -1,0 +1,36 @@
+(* cml.cm
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This defines the public interface to CML.
+ * It does not include CML-specific Basis stuff and is nothing more
+ * than a "view" on cml-internal.cm.
+ *)
+
+Library
+  signature CML
+  structure CML
+
+  signature SYNC_VAR
+  structure SyncVar
+  signature MAILBOX
+  structure Mailbox
+  signature BARRIER
+  structure Barrier
+
+  structure RunCML
+
+  structure Debug
+
+  signature CML_STREAM_IO
+  signature CML_TEXT_STREAM_IO
+  signature CML_IMPERATIVE_IO
+  signature CML_BIN_IO
+  signature CML_TEXT_IO
+is
+#if defined (NEW_CM)
+  $cml/cml-internal.cm
+#else
+  cml-internal.cm
+#endif

@@ -1,0 +1,11 @@
+This is the CML implementation of the Sockets API.  The implementation
+mostly follows that of the SML/NJ version, but with a couple of exceptions:
+
+  1) the systems calls ?? are executed with the timers disabled, since they
+     may take much longer than a time quantum and there is no non-blocking
+     form.
+
+  2) the systems calls ?? are restarted if they are interrupted.
+
+  3) additional event-valued operations are added.
+

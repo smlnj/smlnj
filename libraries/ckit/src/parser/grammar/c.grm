@@ -1,0 +1,909 @@
+(* DO NOT CHANGE THIS FILE -- this file was generated from cd.grm *)
+
+(* Copyright (c) 1998 by Lucent Technologies *)
+
+(* new comments from Satish Chandra, 6/21/99 *)
+(* Overriding design approach: 
+ *
+ * Accept all legal programs, but possibly some illegal ones at this stage. 
+ * Do not attempt to make a really tight grammar. Our tools are supposed to
+ * work on "correct" C programs (i.e. those that cc -ansi would compile without
+ * warnings). Of course, a type checker on the parse tree can report some errors
+ * as syntax errors.
+ *
+ * Note on MARK:
+ *
+ * externalDecl, statement, and expression are the non-terms that are marked.
+ * Compound statements are not separately marked.
+ * declarations eventually become either a statement or a externalDecl
+ *   if they are outside any function. They are marked accordingly.
+ *
+ * Note on function definitions:
+ *
+ * The order of the paramaters will always come from the FuncDecr.
+ * The types of the parameter may come from the second declaration list  
+ * (in K&R style)
+ *
+ * Note on the structure of the grammar:
+ *
+ * It is difficult to write a LALR(1) grammar based on the grammar given at
+ * the back of the K&R book. The basic difficulty is that both TYPE_NAME and
+ * ID are tokens that are strings, but it depends on the context whether
+ * a given string is to be treated as an ID or a TYPE_NAME.
+ * We have borrowed the solution used in GCC's parser specification. In this
+ * scheme, the lexer always return the token TYPE_NAME if a name has been 
+ * defined as a type name (via a typedef) in an applicable scope. The grammar 
+ * productions are heavily rearranged (from K&R's grammar) to do the right 
+ * thing. In this rearrangement, the basic idea is that a TYPE_NAME is  
+ * allowed to appear in a declaration as a plain identifier only after a type 
+ * specifier has previously appeared in the declaration. Also, a TYPE_NAME may 
+ * appear only once in a declaration as a type specifier.
+ *)
+
+(* old comments below *)
+(* Shortcomings *)
+(* 1. No floating-point whatsoever *)
+
+(* Notes on MARK:
+ * externalDecl and statement are the non-terms that are marked.
+ * Compound statements are not separately marked.
+ * expressions are not marked at all.
+ * declarations eventually become either a statement or a externalDecl
+ *   if they are outside any function. they are marked accordingly.
+ *)
+ 
+(* Overriding theme: accept all legal programs, but also some illegal ones at this
+ * stage. Do not attempt to make a really tight grammar. Our tools are supposed to
+ * work on "correct" C programs (i.e. those that cc -ansi would compile without
+ * warnings). Of course, a type checker on the parse tree can report some errors
+ * as syntax errors.
+ *)
+
+(* About function definitions:
+ * The order of the paramaters will always come from the FuncDecr thing 
+ * The types of the parameter may come from the second declaration list  (in K&R style)
+ *)
+
+open ParseTree (* PortingHelp *)
+
+fun markExternalDecl srcMap (d,left,right) = 
+    MARKexternalDecl(SourceMap.location srcMap (left,right), d)
+
+fun markDeclaration srcMap (d,left,right) = 
+    MARKdeclaration(SourceMap.location srcMap (left,right), d)
+
+fun markDeclarator srcMap (d,left,right) = 
+    MARKdeclarator(SourceMap.location srcMap (left,right), d)
+
+fun markStatement srcMap (s,left,right) = 
+    MARKstatement(SourceMap.location srcMap (left, right), s)
+
+fun markExpression srcMap (s,left,right) = 
+    MARKexpression(SourceMap.location srcMap (left, right), s)
+
+val unknown = {storage=[],qualifiers=[],specifiers=[]}:decltype
+
+(* this code duplicated in BuildAst in function processDeclarator *)
+fun ctypeDecrToTypeName (typ as {qualifiers, specifiers},decr) =
+      let fun mkTyp spc = {qualifiers=[], specifiers=[spc]}
+	  fun addQual q = {qualifiers=q::qualifiers, specifiers=specifiers}
+       in case decr
+	    of VarDecr x => (typ,SOME x)
+	     | PointerDecr x =>
+		ctypeDecrToTypeName (mkTyp (Pointer typ),x)
+	     | ArrayDecr (x,sz) =>
+		ctypeDecrToTypeName (mkTyp (Array (sz,typ)),x)
+	     | FuncDecr (x,lst) =>
+		ctypeDecrToTypeName (mkTyp (Function{retType=typ,params=lst}),x)
+	     | QualDecr (q,decr) =>
+		ctypeDecrToTypeName (addQual q, decr)
+	     | EmptyDecr => (typ, NONE)
+	     | EllipsesDecr => (mkTyp Ellipses, SOME("**ellipses**"))
+	     | DecrExt _ => (typ, NONE)  (* should call decr extension? *)
+	     | MARKdeclarator(loc, decr) => ctypeDecrToTypeName(typ, decr)
+      end
+
+fun dclr2str dcl = 
+  (case ctypeDecrToTypeName ({qualifiers=[],specifiers=[]}, dcl)
+     of (_,SOME s) => s
+      | (_,NONE) => "")
+
+fun combineDecltypes ( {qualifiers=q1,storage=st1,specifiers=sp1}
+	           , {qualifiers=q2,storage=st2,specifiers=sp2}
+	           ) =
+  {qualifiers=q1@q2,storage=st1@st2,specifiers=sp1@sp2}  (* @ ok *)
+
+fun applyPointer (PointerDecr x,rest) = PointerDecr (applyPointer (x,rest))
+  | applyPointer (QualDecr (q,x),rest) = QualDecr (q, applyPointer (x,rest))
+  | applyPointer (EmptyDecr, rest) = rest
+  | applyPointer (_, rest) = rest  
+    (* NCH/DBM[6/14/99]: this case can never occur  *)
+
+fun addStorage(st, {qualifiers,storage,specifiers}) =
+        {qualifiers=qualifiers,storage=st::storage,specifiers=specifiers}
+
+fun addQualifiers(qs, {qualifiers,storage,specifiers}) =
+	{qualifiers=qs@qualifiers,storage=storage,specifiers=specifiers} (* @ ok *)
+
+fun addQualifier(q, {qualifiers,storage,specifiers}) =
+	{qualifiers=q::qualifiers,storage=storage,specifiers=specifiers}
+
+fun addSpecifier(sp, {qualifiers,storage,specifiers}) =
+	{qualifiers=qualifiers,storage=storage,specifiers=sp::specifiers}
+
+val addAll = combineDecltypes
+
+fun loopQd (q::rst, acc) = loopQd(rst, QualDecr(q, acc))
+  | loopQd (nil, acc) = acc
+
+fun mkCtype typ = typ
+
+(* DBM: major kludge, using TYPEDEF as storage class *)
+fun insertDeclNames ({storage,...}: decltype, idl) =
+    case storage
+      of [TYPEDEF] =>  List.app (fn x as (dcl,_) => TypeDefs.addTdef (dclr2str dcl)) idl
+       | _ => List.app (fn x as (dcl,_) => TypeDefs.addNoTdef (dclr2str dcl)) idl
+
+fun insertFuncName dcl =
+  let
+    val name = dclr2str dcl
+  in
+    TypeDefs.addNoTdef name
+  end
+
+fun insertFuncParams (FuncDecr (_,params)) : unit = 
+     let
+       fun getName (ct, dclr) = dclr2str dclr
+       val names = map getName params
+     in
+       List.app TypeDefs.addNoTdef names
+     end
+  | insertFuncParams (ArrayDecr(dcl,_)) = insertFuncParams dcl
+  | insertFuncParams (PointerDecr dcl) = insertFuncParams dcl
+  | insertFuncParams _ = ()  (* this is actually an error, but it will be caught in
+		              * BuildAst when processing a PT.FunctionDef *)
+
+abstype 'a seq = SEQ of 'a list
+with val emptySeq = SEQ nil
+     fun singletonSeq x = SEQ[x]
+     fun addToSeq(x, SEQ yl) = SEQ(x :: yl)  (* add to end of sequence! *)
+  (* fun addListToEnd(xl, yl) = SEQ((List.rev xl) @ yl) *)
+     fun addOptToEnd(NONE, yl) = yl
+       | addOptToEnd(SOME x, SEQ yl) = SEQ(x :: yl)
+     fun seqToList(SEQ yl) = List.rev yl
+end
+
+%%
+
+%header (functor LrValsFun(structure Token : TOKEN 
+			    ))
+
+%term 
+ 	  EOF 
+	| COLON | SEMICOLON | LPAREN | RPAREN | LCURLY | RCURLY 
+	| LBRACE | RBRACE | DOT 
+	| COMMA | QUESTION | PERCENT | AMP | BAR | TILDE | DIVIDE | PLUS
+	| MINUS | HAT | BANG | TIMES
+	| INC | DEC | ARROW
+	| ID of string  
+	| EQUALS | PLUSEQUALS | MINUSEQUALS | XOREQUALS | MODEQUALS 
+	| TIMESEQUALS | DIVEQUALS | OREQUALS  | ANDEQUALS | LSHIFTEQUALS 
+	| RSHIFTEQUALS
+	| LTE | GTE | LT | GT | EQ | NEQ | OR | AND | LSHIFT | RSHIFT
+	| DECNUM of LargeInt.int
+        | REALNUM of real 
+	| STRING of string 
+	| CCONST of LargeInt.int
+	| EXTERN | AUTO | STATIC | REGISTER | CONST | VOLATILE
+	| IF | THEN | ELSE
+	| FOR | DO |  SWITCH | CASE | DEFAULT
+	| WHILE | RETURN 
+	| BREAK | CONTINUE | GOTO
+	| CHAR | DOUBLE | ENUM | FLOAT | INT | LONG | SHORT
+        | FRACTIONAL | SATURATE                                (* D *)
+	| STRUCT | UNION | UNSIGNED | SIGNED
+	| VOID | SIZEOF | TYPEDEF | UNARY
+	| ELIPSIS
+	| TYPE_NAME of string
+
+%nonterm 
+	translationUnit of externalDecl list
+	| tu of externalDecl seq
+	| statement of statement
+	| ostatementlist of statement list
+
+	| statementlist of statement seq
+	| compoundStatement of statement
+	| expr of expression
+	| opExpr of expression
+	| exprWComma of expression
+	| unaryOperator of operator
+	| argumentExprList of expression seq
+	| trailingComma of bool
+	| enumeratorList of (string * expression) seq
+	| enumerator of (string * expression)
+	| abstractDeclarator of declarator
+	| directAbstractDeclarator of declarator
+	| initDeclarator of (declarator * expression)
+	| notypeInitDeclarator of (declarator * expression)
+	| initDeclaratorList of (declarator * expression) seq
+	| notypeInitDeclaratorList of (declarator * expression) seq
+	| pointer of declarator
+	| declarator of declarator
+        | aftertypeDeclarator of declarator
+        | notypeDeclarator of declarator
+        | parmDeclarator of declarator
+	| aftertypeDirectDeclarator of declarator
+	| notypeDirectDeclarator of declarator
+        | parmDirectDeclarator of declarator
+	| declarationSpecifiers of decltype 
+	| declarationModifiers of decltype
+        | reservedDeclarationSpecifier of decltype
+        | specifierQualifierReserved of ctype
+	| reservedSpecifierQualifiers of ctype
+	| initializer of expression
+	| initializerList of expression seq
+	| storageClassSpecifier of storage
+	| typeName of ctype
+	| typeSpecifier of specifier
+        | typeSpecifierReserved of specifier
+	| typeQualifier of qualifier
+        | typeQualifierList of qualifier list
+	| specifierQualifierList of ctype
+	| enumSpecifier of specifier
+	| structOrUnionSpecifier of specifier
+	| fDefDeclaration of (decltype * declarator)
+	| declarationList of declaration seq
+	| identlist of (string * int * int) seq
+	| functionDefinition of externalDecl
+	| declaration of declaration
+	| declaration1 of declaration
+	| externalDeclaration of externalDecl option
+	| parameterList of (decltype * declarator) seq
+	| parameterTypeList of (decltype * declarator) list
+	| parameterDeclaration of (decltype * declarator)
+	| structOrUnion of bool
+	| structDeclarator of (declarator * expression)
+	| notypeStructDeclarator of (declarator * expression)
+	| structDeclaratorList of (declarator * expression) seq
+	| notypeStructDeclaratorList of (declarator * expression) seq
+	| structDeclarationList of (ctype * (declarator * expression) list) seq
+	| structDeclaration of (ctype * (declarator * expression) list)
+	| pushScope of unit
+        | popScope of unit
+        | strings of string
+
+
+
+
+
+%pos int
+%verbose
+%pure
+%start translationUnit
+%eop EOF 
+%noshift EOF
+%keyword QUESTION IF THEN ELSE FOR DO SWITCH CASE DEFAULT WHILE RETURN BREAK CONTINUE GOTO
+%subst TYPE_NAME for ID
+%value TYPE_NAME(Error.hint "Likely cause: missing typedef declaration.\n"; "bogus")
+
+%arg (srcMap) : SourceMap.sourcemap
+
+%name C
+
+%left COMMA
+%right EQUALS PLUSEQUALS MINUSEQUALS TIMESEQUALS DIVEQUALS MODEQUALS XOREQUALS OREQUALS ANDEQUALS LSHIFTEQUALS RSHIFTEQUALS
+%right QUESTION
+%left OR
+%left AND
+%left BAR
+%left HAT
+%left AMP
+%left EQ NEQ
+%left LT GT LTE GTE
+%left LSHIFT RSHIFT
+%left PLUS MINUS
+%left TIMES DIVIDE PERCENT
+%right UNARY
+%right INC DEC SIZEOF
+%left LBRACE LPAREN ARROW DOT
+
+%%
+
+translationUnit:  
+	tu			(seqToList tu)
+
+tu:
+					(emptySeq)
+	| tu externalDeclaration	(addOptToEnd(externalDeclaration, tu))
+
+externalDeclaration:
+	  declaration			(SOME(markExternalDecl srcMap (ExternalDecl declaration,
+						                       declarationleft,
+								       declarationright)))
+	| SEMICOLON			(NONE)
+	| functionDefinition		(SOME(markExternalDecl srcMap (functionDefinition,
+						   	               functionDefinitionleft,
+							               functionDefinitionright)))
+
+statement:
+	FOR LPAREN opExpr SEMICOLON opExpr SEMICOLON opExpr RPAREN statement
+					(markStatement srcMap (For(opExpr1,opExpr2,opExpr3,statement),
+							FORleft, statementright))
+	| WHILE LPAREN exprWComma RPAREN statement
+					(markStatement srcMap (While(exprWComma,statement),
+							WHILEleft, statementright))
+	| SWITCH LPAREN exprWComma RPAREN statement
+					(markStatement srcMap (Switch(exprWComma,statement),
+							SWITCHleft, statementright))
+	| DO statement WHILE LPAREN exprWComma RPAREN SEMICOLON
+					(markStatement srcMap (Do(exprWComma,statement),
+							DOleft, SEMICOLONright))
+	| BREAK SEMICOLON		(markStatement srcMap (Break, 
+							BREAKleft, SEMICOLONright))
+	| CONTINUE SEMICOLON		(markStatement srcMap (Continue, 
+							CONTINUEleft, SEMICOLONright))
+	| RETURN opExpr SEMICOLON	(markStatement srcMap (Return(opExpr), 
+							RETURNleft, SEMICOLONright))
+	| GOTO ID SEMICOLON		(markStatement srcMap (Goto(ID), 
+							GOTOleft, SEMICOLONright))
+	| compoundStatement		(compoundStatement)
+	| ID COLON statement		(markStatement srcMap (Labeled(ID,statement),
+							IDleft,statementright))
+	| DEFAULT COLON statement	(markStatement srcMap (DefaultLabel(statement),
+							DEFAULTleft, statementright))
+	| CASE exprWComma COLON statement		
+					(markStatement srcMap (CaseLabel(exprWComma,statement),
+							CASEleft, statementright))
+	| IF LPAREN exprWComma RPAREN statement
+					(markStatement srcMap (IfThen(exprWComma,statement),
+							IFleft, statementright))
+	| IF LPAREN exprWComma RPAREN statement ELSE statement
+					(markStatement srcMap (IfThenElse(exprWComma,statement1,statement2),
+							IFleft,
+							statement2right))
+        | exprWComma SEMICOLON	(markStatement srcMap (Expr(exprWComma),
+							exprWCommaleft, SEMICOLONright))
+	| SEMICOLON		        (markStatement srcMap (Expr(EmptyExpr),
+							SEMICOLONleft, SEMICOLONright))
+
+
+
+
+
+
+declaration:
+          declaration1 SEMICOLON        (declaration1)
+
+
+declaration1:
+	  declarationSpecifiers
+		(insertDeclNames (declarationSpecifiers, []);
+		 markDeclaration srcMap
+		   (Declaration(declarationSpecifiers, []), 
+		    declarationSpecifiersleft, declarationSpecifiersright))
+
+	| declarationSpecifiers initDeclaratorList
+	        (let val decl = (declarationSpecifiers, seqToList initDeclaratorList)
+		  in insertDeclNames decl;
+		     markDeclaration srcMap
+		       (Declaration decl, declarationSpecifiersleft, initDeclaratorListright)
+	         end)
+
+        | declarationModifiers notypeInitDeclaratorList
+	        (let val decl = (declarationModifiers, seqToList notypeInitDeclaratorList)
+		  in insertDeclNames decl;
+		     markDeclaration srcMap
+		       (Declaration decl, declarationModifiersleft, notypeInitDeclaratorListright)
+	         end)
+
+ostatementlist:	 
+	statementlist 			(seqToList statementlist)
+	| 				([])
+
+statementlist:
+	statement			(singletonSeq statement)
+	| statementlist statement	(addToSeq(statement, statementlist))
+
+
+(* original code: changed for "let" statements in D *)
+compoundStatement: 
+	  LCURLY pushScope declarationList ostatementlist popScope RCURLY
+					(markStatement srcMap (Compound ((map Decl (seqToList declarationList)) @ ostatementlist), LCURLYleft, RCURLYright))
+	| LCURLY ostatementlist RCURLY
+ 					(markStatement srcMap (Compound (ostatementlist), LCURLYleft, RCURLYright))
+(* *)
+
+
+
+
+
+unaryOperator: 
+	AMP	(AddrOf)
+	| TIMES (Star)
+	| PLUS  (Uplus)
+	| MINUS (Negate)
+	| TILDE (BitNot)
+	| BANG  (Not)
+
+expr:
+	expr QUESTION exprWComma COLON expr %prec QUESTION (markExpression srcMap (QuestionColon(expr1,exprWComma1,expr2),expr1left,expr2right))
+        | expr PLUSEQUALS expr  	(markExpression srcMap (Binop(PlusAssign,expr1,expr2),expr1left,expr2right))
+        | expr MINUSEQUALS expr		(markExpression srcMap (Binop(MinusAssign,expr1,expr2),expr1left,expr2right))
+        | expr TIMESEQUALS expr		(markExpression srcMap (Binop(TimesAssign,expr1,expr2),expr1left,expr2right))
+        | expr DIVEQUALS expr		(markExpression srcMap (Binop(DivAssign,expr1,expr2),expr1left,expr2right))
+        | expr MODEQUALS expr		(markExpression srcMap (Binop(ModAssign,expr1,expr2),expr1left,expr2right))
+        | expr XOREQUALS expr		(markExpression srcMap (Binop(XorAssign,expr1,expr2),expr1left,expr2right))
+        | expr OREQUALS expr		(markExpression srcMap (Binop(OrAssign,expr1,expr2),expr1left,expr2right))
+        | expr ANDEQUALS expr		(markExpression srcMap (Binop(AndAssign,expr1,expr2),expr1left,expr2right))
+        | expr LSHIFTEQUALS expr	(markExpression srcMap (Binop(LshiftAssign,expr1,expr2),expr1left,expr2right))
+        | expr RSHIFTEQUALS expr	(markExpression srcMap (Binop(RshiftAssign,expr1,expr2),expr1left,expr2right))
+	| expr EQUALS expr 		(markExpression srcMap (Binop(Assign,expr1,expr2),expr1left,expr2right))
+        | expr OR expr  		(markExpression srcMap (Binop(Or,expr1,expr2),expr1left,expr2right))
+        | expr AND expr 		(markExpression srcMap (Binop(And,expr1,expr2),expr1left,expr2right))
+        | expr BAR expr 		(markExpression srcMap (Binop(BitOr,expr1,expr2),expr1left,expr2right))
+        | expr HAT expr 		(markExpression srcMap (Binop(BitXor,expr1,expr2),expr1left,expr2right))
+        | expr AMP expr 		(markExpression srcMap (Binop(BitAnd,expr1,expr2),expr1left,expr2right))
+        | expr EQ expr 			(markExpression srcMap (Binop(Eq,expr1,expr2),expr1left,expr2right))
+        | expr NEQ expr 		(markExpression srcMap (Binop(Neq,expr1,expr2),expr1left,expr2right))
+        | expr LT expr 			(markExpression srcMap (Binop(Lt,expr1,expr2),expr1left,expr2right))
+        | expr GT expr 			(markExpression srcMap (Binop(Gt,expr1,expr2),expr1left,expr2right))
+        | expr LTE expr			(markExpression srcMap (Binop(Lte,expr1,expr2),expr1left,expr2right))
+        | expr GTE expr			(markExpression srcMap (Binop(Gte,expr1,expr2),expr1left,expr2right))
+        | expr LSHIFT expr		(markExpression srcMap (Binop(Lshift,expr1,expr2),expr1left,expr2right))
+        | expr RSHIFT expr		(markExpression srcMap (Binop(Rshift,expr1,expr2),expr1left,expr2right))
+        | expr PLUS expr		(markExpression srcMap (Binop(Plus,expr1,expr2),expr1left,expr2right))
+        | expr MINUS expr		(markExpression srcMap (Binop(Minus,expr1,expr2),expr1left,expr2right))
+        | expr TIMES expr		(markExpression srcMap (Binop(Times,expr1,expr2),expr1left,expr2right))
+        | expr DIVIDE expr		(markExpression srcMap (Binop(Divide,expr1,expr2),expr1left,expr2right))
+        | expr PERCENT expr		(markExpression srcMap (Binop(Mod,expr1,expr2),expr1left,expr2right))
+	| expr INC %prec INC		(markExpression srcMap (Unop(PostInc,expr),exprleft,INCright))
+	| expr DEC %prec INC		(markExpression srcMap (Unop(PostDec,expr),exprleft,DECright))
+	| INC expr %prec INC		(markExpression srcMap (Unop(PreInc,expr),INCleft,exprright))
+	| DEC expr %prec INC	 	(markExpression srcMap (Unop(PreDec,expr),DECleft,exprright))
+	| unaryOperator expr  %prec UNARY (markExpression srcMap (Unop(unaryOperator,expr),unaryOperatorleft,exprright))
+	| SIZEOF expr  			(markExpression srcMap (Unop(Sizeof,expr),SIZEOFleft,exprright))
+	| LPAREN typeName RPAREN expr %prec INC 
+					(markExpression srcMap (Cast (typeName,expr),LPARENleft,exprright))
+	| SIZEOF LPAREN typeName RPAREN %prec SIZEOF 
+					(markExpression srcMap (Unop(SizeofType typeName,EmptyExpr),SIZEOFleft,RPARENright))
+	| expr LBRACE exprWComma RBRACE
+					(markExpression srcMap (Binop(Sub,expr,exprWComma),exprleft,RBRACEright))
+
+
+
+	| expr LPAREN RPAREN		(markExpression srcMap (Call(expr,[]),exprleft,RPARENright))
+	| expr LPAREN argumentExprList RPAREN
+					(markExpression srcMap (Call(expr, seqToList argumentExprList),exprleft,RPARENright))
+	| expr DOT ID			(markExpression srcMap (Binop(Dot,expr,Id(ID)),exprleft,IDright))
+	| expr ARROW ID			(markExpression srcMap (Binop(Arrow,expr,Id(ID)),exprleft,IDright))
+	| expr DOT TYPE_NAME		(markExpression srcMap (Binop(Dot,expr,Id(TYPE_NAME)),exprleft,TYPE_NAMEright))
+	| expr ARROW TYPE_NAME		(markExpression srcMap (Binop(Arrow,expr,Id(TYPE_NAME)),exprleft,TYPE_NAMEright))
+	| LPAREN exprWComma RPAREN	(markExpression srcMap (exprWComma,LPARENleft,RPARENright))
+	| DECNUM			(markExpression srcMap (IntConst DECNUM,DECNUMleft,DECNUMright))
+        | REALNUM                       (markExpression srcMap (RealConst REALNUM, REALNUMleft,REALNUMright))
+	| CCONST			(markExpression srcMap (IntConst CCONST, CCONSTleft,CCONSTright))
+	| ID				(markExpression srcMap (Id(ID), IDleft, IDright))
+        | strings                       (markExpression srcMap (String(strings),stringsleft,stringsright))
+
+
+strings:  STRING                        (STRING)
+	| STRING strings		(STRING ^ strings)
+
+
+
+exprWComma:
+	  expr 				(expr)
+	| exprWComma COMMA expr 	(markExpression srcMap (Binop(Comma,exprWComma,expr),exprWCommaleft,exprright))
+
+opExpr:					(EmptyExpr)
+	| exprWComma			(exprWComma)
+
+
+argumentExprList:
+	 expr				(singletonSeq expr)
+	| argumentExprList COMMA expr   (addToSeq(expr, argumentExprList))
+
+typeName:
+	  specifierQualifierList  	(specifierQualifierList)
+	| specifierQualifierList abstractDeclarator
+					(#1 (ctypeDecrToTypeName (specifierQualifierList, abstractDeclarator)))
+
+declarationSpecifiers:
+          typeSpecifier reservedDeclarationSpecifier
+                                        (addSpecifier (typeSpecifier,
+						        reservedDeclarationSpecifier))
+        | declarationModifiers typeSpecifier reservedDeclarationSpecifier
+                                        (addAll (declarationModifiers,
+                                                  addSpecifier (typeSpecifier,
+							         reservedDeclarationSpecifier)))
+
+reservedDeclarationSpecifier:
+                                        (unknown)
+        | reservedDeclarationSpecifier specifierQualifierReserved
+                                        (let val {qualifiers,specifiers} = specifierQualifierReserved
+					     val decltype = {qualifiers=qualifiers,specifiers=specifiers,storage=[]}
+	   				 in addAll (decltype, reservedDeclarationSpecifier) end )
+        | reservedDeclarationSpecifier storageClassSpecifier
+                                        (addStorage (storageClassSpecifier,
+                                                      reservedDeclarationSpecifier))
+
+specifierQualifierReserved:
+          typeSpecifierReserved       ({qualifiers=[],specifiers=[typeSpecifierReserved]})
+        | typeQualifier                ({qualifiers=[typeQualifier],specifiers=[]})
+        | structOrUnionSpecifier     ({qualifiers=[],specifiers=[structOrUnionSpecifier]})
+        | enumSpecifier                ({qualifiers=[],specifiers=[enumSpecifier]})
+
+declarationModifiers:
+          storageClassSpecifier
+                                        ({storage = [storageClassSpecifier],
+					  qualifiers = [],
+					  specifiers = []})
+        | declarationModifiers storageClassSpecifier
+                                        (addStorage(storageClassSpecifier,declarationModifiers))
+        | typeQualifier
+                                        ({specifiers = [],
+	 				  storage = [], 
+					  qualifiers = [typeQualifier]})
+        | declarationModifiers typeQualifier
+                                        (addQualifier(typeQualifier, declarationModifiers))
+
+specifierQualifierList:
+          typeSpecifier reservedSpecifierQualifiers
+                                        (let val {specifiers, qualifiers} = reservedSpecifierQualifiers
+	                                 in {specifiers=typeSpecifier::specifiers,qualifiers=qualifiers} end)
+						       
+        | typeQualifierList typeSpecifier reservedSpecifierQualifiers
+					(let val {specifiers, qualifiers} = reservedSpecifierQualifiers
+	                                 in {specifiers=typeSpecifier::specifiers
+					    ,qualifiers=typeQualifierList@qualifiers
+                                            }
+                                         end)
+
+reservedSpecifierQualifiers:
+                                        ({qualifiers=[],specifiers=[]})
+        | reservedSpecifierQualifiers specifierQualifierReserved
+                                        (let val {specifiers=s1, qualifiers=q1} = reservedSpecifierQualifiers
+					     val {specifiers=s2, qualifiers=q2} = specifierQualifierReserved
+	                                 in {specifiers=s1@s2, qualifiers=q1@q2} end)
+		
+typeQualifierList:
+          typeQualifier                ([typeQualifier])
+
+	| typeQualifier typeQualifierList 
+                                        (typeQualifier::typeQualifierList)
+
+typeSpecifier:
+          typeSpecifierReserved       (typeSpecifierReserved)
+        | structOrUnionSpecifier	(structOrUnionSpecifier)
+        | enumSpecifier		(enumSpecifier)
+        | TYPE_NAME			(TypedefName TYPE_NAME)
+
+typeSpecifierReserved:
+	  VOID				(Void)
+        | CHAR 				(Char)
+        | SHORT 			(Short)
+	| INT  				(Int)
+	| LONG				(Long)
+        | FLOAT				(Float)
+	| DOUBLE			(Double)
+	| SIGNED			(Signed)
+	| UNSIGNED			(Unsigned)
+
+
+structOrUnionSpecifier:
+          structOrUnion LCURLY structDeclarationList RCURLY
+	       (Struct{isStruct=structOrUnion, tagOpt=NONE, members=seqToList structDeclarationList})
+		
+        | structOrUnion ID LCURLY structDeclarationList RCURLY
+	     (Struct{isStruct=structOrUnion, tagOpt=SOME ID, members=seqToList structDeclarationList})
+
+        | structOrUnion TYPE_NAME LCURLY structDeclarationList RCURLY
+	     (Struct{isStruct=structOrUnion, tagOpt=SOME TYPE_NAME, members=seqToList structDeclarationList})
+
+        | structOrUnion ID	 	(StructTag {isStruct=structOrUnion, name=ID})
+
+        | structOrUnion TYPE_NAME 	(StructTag {isStruct=structOrUnion, name=TYPE_NAME})
+
+	  (* humor me: consider true for struct *)
+structOrUnion:
+	  STRUCT 			(true)
+	| UNION				(false)
+
+structDeclarationList:
+	  structDeclaration		(singletonSeq structDeclaration)
+        | structDeclarationList structDeclaration
+					(addToSeq(structDeclaration, structDeclarationList))
+
+structDeclaration:
+	specifierQualifierList structDeclaratorList SEMICOLON
+					((specifierQualifierList, seqToList structDeclaratorList))
+        | typeQualifierList notypeStructDeclaratorList SEMICOLON
+                                        (let
+					    val ct = {qualifiers=typeQualifierList, specifiers=[]}
+					 in
+					   (ct, seqToList notypeStructDeclaratorList)
+					 end)
+
+structDeclaratorList:
+          structDeclarator		(singletonSeq structDeclarator)
+        | structDeclaratorList COMMA structDeclarator
+					(addToSeq(structDeclarator, structDeclaratorList))
+
+notypeStructDeclaratorList:
+          notypeStructDeclarator	(singletonSeq notypeStructDeclarator)
+        | notypeStructDeclaratorList COMMA structDeclarator
+					(addToSeq(structDeclarator, notypeStructDeclaratorList))
+
+structDeclarator:
+	  declarator			(declarator, EmptyExpr)
+	| COLON expr			(EmptyDecr, expr)
+	| declarator COLON expr		(declarator, expr)
+
+notypeStructDeclarator:
+	  notypeDeclarator		(notypeDeclarator, EmptyExpr)
+	| COLON expr			(EmptyDecr, expr)
+	| notypeDeclarator COLON expr	(notypeDeclarator, expr)
+
+typeQualifier:
+	  CONST				(CONST)
+	| VOLATILE			(VOLATILE)
+
+enumSpecifier:
+          ENUM LCURLY enumeratorList trailingComma RCURLY
+		(Enum{tagOpt=NONE, enumerators=seqToList enumeratorList, trailingComma=trailingComma})
+
+        | ENUM ID LCURLY enumeratorList trailingComma RCURLY 
+		(Enum{tagOpt=SOME(ID), enumerators=seqToList enumeratorList, trailingComma=trailingComma})
+
+	| ENUM TYPE_NAME LCURLY enumeratorList trailingComma RCURLY 
+		(Enum{tagOpt=SOME(TYPE_NAME), enumerators=seqToList enumeratorList, trailingComma=trailingComma})
+        
+        | ENUM ID			(EnumTag(ID))
+
+        | ENUM TYPE_NAME		(EnumTag(TYPE_NAME))
+
+enumeratorList:
+	  enumeratorList COMMA enumerator 
+					(addToSeq(enumerator, enumeratorList))
+	| enumerator			((TypeDefs.addNoTdef(#1(enumerator)));
+					 singletonSeq enumerator)
+
+enumerator:
+	  ID				((ID,ParseTree.EmptyExpr))
+	| ID EQUALS expr		(ID,expr)
+
+storageClassSpecifier: 
+	  EXTERN 			(EXTERN)
+        | STATIC 			(STATIC)
+	| AUTO				(AUTO)
+        | REGISTER			(REGISTER)
+	| TYPEDEF                       (TYPEDEF)
+
+trailingComma:				(false)
+	| COMMA				(true)
+ 
+initDeclaratorList:
+	  initDeclarator		(singletonSeq initDeclarator)
+	| initDeclaratorList COMMA initDeclarator
+					(addToSeq(initDeclarator, initDeclaratorList))
+
+initDeclarator:
+	  declarator			((declarator,EmptyExpr))
+	| declarator EQUALS initializer (declarator,initializer)
+
+notypeInitDeclaratorList:
+          notypeInitDeclarator         (singletonSeq notypeInitDeclarator)
+        | notypeInitDeclaratorList COMMA initDeclarator
+                                       (addToSeq(initDeclarator, notypeInitDeclaratorList))
+
+notypeInitDeclarator:
+          notypeDeclarator             ((notypeDeclarator,EmptyExpr))
+        | notypeDeclarator EQUALS initializer
+                                        (notypeDeclarator,initializer)
+
+declarator:
+          aftertypeDeclarator          (aftertypeDeclarator)
+        | notypeDeclarator             (notypeDeclarator)
+
+aftertypeDeclarator:
+	  aftertypeDirectDeclarator		(aftertypeDirectDeclarator)
+	| pointer aftertypeDirectDeclarator	(applyPointer(pointer,aftertypeDirectDeclarator))
+
+notypeDeclarator:
+          notypeDirectDeclarator      (notypeDirectDeclarator)
+        | pointer notypeDirectDeclarator 
+                                        (applyPointer(pointer, notypeDirectDeclarator))
+
+parmDeclarator:
+          parmDirectDeclarator        (parmDirectDeclarator)
+        | pointer parmDirectDeclarator
+                                        (applyPointer(pointer, parmDirectDeclarator))
+
+pointer:
+	  TIMES				(PointerDecr(EmptyDecr))
+	| TIMES typeQualifierList
+                                        (PointerDecr(loopQd(typeQualifierList,EmptyDecr)))
+	| TIMES pointer			(PointerDecr(pointer))
+	| TIMES typeQualifierList pointer
+					(PointerDecr(loopQd(typeQualifierList,pointer)))
+
+aftertypeDirectDeclarator:
+ 	  TYPE_NAME			(markDeclarator srcMap (VarDecr TYPE_NAME,TYPE_NAMEleft,TYPE_NAMEright))
+	| LPAREN aftertypeDeclarator RPAREN		
+					(aftertypeDeclarator)
+	| aftertypeDirectDeclarator  LBRACE RBRACE %prec DOT
+					(ArrayDecr (aftertypeDirectDeclarator,EmptyExpr))
+	| aftertypeDirectDeclarator LBRACE expr RBRACE %prec DOT
+					(ArrayDecr (aftertypeDirectDeclarator,expr))
+	| aftertypeDirectDeclarator LPAREN RPAREN		%prec DOT
+					(FuncDecr (aftertypeDirectDeclarator,nil))
+	| aftertypeDirectDeclarator LPAREN parameterTypeList RPAREN		 %prec DOT
+					(FuncDecr (aftertypeDirectDeclarator,parameterTypeList))
+	| aftertypeDirectDeclarator LPAREN identlist RPAREN		%prec DOT
+					(FuncDecr (aftertypeDirectDeclarator,
+					    map (fn (x,y,z) => (unknown,markDeclarator srcMap (VarDecr x,y,z))) (seqToList identlist)))
+
+notypeDirectDeclarator:
+	  ID				(markDeclarator srcMap (VarDecr ID,IDleft,IDright))
+	| LPAREN notypeDeclarator RPAREN		
+					(notypeDeclarator)
+	| notypeDirectDeclarator LBRACE RBRACE %prec DOT
+					(ArrayDecr (notypeDirectDeclarator,EmptyExpr))
+	| notypeDirectDeclarator LBRACE expr RBRACE  %prec DOT
+					(ArrayDecr (notypeDirectDeclarator,expr))
+	| notypeDirectDeclarator LPAREN RPAREN	 %prec DOT	
+					(FuncDecr (notypeDirectDeclarator,nil))
+	| notypeDirectDeclarator LPAREN parameterTypeList RPAREN	 %prec DOT	
+					(FuncDecr (notypeDirectDeclarator,parameterTypeList))
+	| notypeDirectDeclarator LPAREN identlist RPAREN	 %prec DOT	
+					(FuncDecr (notypeDirectDeclarator,
+ 						   map (fn (x,y,z) => (unknown,markDeclarator srcMap (VarDecr x,y,z))) (seqToList identlist)))
+
+parmDirectDeclarator:
+ 	  TYPE_NAME			(markDeclarator srcMap (VarDecr TYPE_NAME,TYPE_NAMEleft,TYPE_NAMEright))
+	| parmDirectDeclarator LBRACE RBRACE  %prec DOT
+					(ArrayDecr (parmDirectDeclarator,EmptyExpr))
+	| parmDirectDeclarator LBRACE expr RBRACE  %prec DOT
+					(ArrayDecr (parmDirectDeclarator,expr))
+	| parmDirectDeclarator LPAREN RPAREN		 %prec DOT
+					(FuncDecr (parmDirectDeclarator,nil))
+	| parmDirectDeclarator LPAREN parameterTypeList RPAREN	 %prec DOT	
+					(FuncDecr (parmDirectDeclarator,parameterTypeList))
+	| parmDirectDeclarator LPAREN identlist RPAREN	 %prec DOT	
+					(FuncDecr (parmDirectDeclarator,
+						    map (fn (x,y,z) => (unknown,markDeclarator srcMap (VarDecr x,y,z))) (seqToList identlist)))
+
+initializer:
+	  expr				(expr)
+        | LCURLY initializerList trailingComma RCURLY
+					(markExpression srcMap (InitList(seqToList initializerList),LCURLYleft,RCURLYright))
+
+initializerList:
+          initializer			(singletonSeq initializer)
+        | initializerList COMMA initializer 
+					(addToSeq(initializer, initializerList))
+
+declarationList:
+          declaration		        (singletonSeq(markDeclaration srcMap (declaration,
+									      declarationleft,
+								              declarationright)))
+	| declarationList declaration	(addToSeq(markDeclaration srcMap (declaration,
+							            	  declarationleft,
+									  declarationright),
+						  declarationList))
+	  
+identlist:
+	  ID			(singletonSeq (ID,IDleft,IDright))
+	| identlist COMMA ID	(addToSeq((ID,IDleft,IDright),identlist))
+
+(* Put function name in the current scope and param names in a pushed scope. *)
+fDefDeclaration:
+          notypeDeclarator
+                                        (insertFuncName(notypeDeclarator);
+					 TypeDefs.pushScope();
+					 insertFuncParams(notypeDeclarator);
+					 (unknown, notypeDeclarator))
+        | declarationSpecifiers declarator
+	                                (insertFuncName(declarator);
+					 TypeDefs.pushScope();
+					 insertFuncParams(declarator);
+					 (declarationSpecifiers, declarator))
+
+        | declarationModifiers notypeDeclarator
+	                                (insertFuncName(notypeDeclarator);
+					 TypeDefs.pushScope();
+					 insertFuncParams(notypeDeclarator);
+					 (declarationModifiers, notypeDeclarator))
+
+functionDefinition:
+ 	  fDefDeclaration compoundStatement
+                                        (TypeDefs.popScope();
+					 FunctionDef
+					    {retType = #1 fDefDeclaration,
+					     funDecr = #2 fDefDeclaration,
+                                             krParams = [],
+                                             body = compoundStatement})
+					
+	| fDefDeclaration declarationList compoundStatement
+                                        (TypeDefs.popScope();
+					 FunctionDef 
+					    {retType = #1 fDefDeclaration,
+					     funDecr = #2 fDefDeclaration,
+                                             krParams = seqToList declarationList,
+                                             body = compoundStatement})
+					
+abstractDeclarator:
+	  pointer			(applyPointer (pointer, EmptyDecr))
+	| directAbstractDeclarator	(directAbstractDeclarator)
+	| pointer directAbstractDeclarator	
+					(applyPointer(pointer, directAbstractDeclarator))
+
+directAbstractDeclarator:
+	  LPAREN abstractDeclarator RPAREN	(abstractDeclarator) 
+        | LBRACE RBRACE 			(ArrayDecr(EmptyDecr, EmptyExpr))
+        | LBRACE expr RBRACE 			(ArrayDecr(EmptyDecr, expr))
+        | directAbstractDeclarator LBRACE RBRACE
+						(ArrayDecr (directAbstractDeclarator,EmptyExpr))
+        | directAbstractDeclarator LBRACE expr RBRACE 
+						(ArrayDecr (directAbstractDeclarator,expr))
+        | LPAREN RPAREN				(FuncDecr (EmptyDecr ,nil))
+        | LPAREN parameterTypeList RPAREN	(FuncDecr (EmptyDecr, parameterTypeList))
+        | directAbstractDeclarator LPAREN RPAREN
+						(FuncDecr (directAbstractDeclarator,nil))
+        | directAbstractDeclarator LPAREN parameterTypeList RPAREN 
+						(FuncDecr (directAbstractDeclarator, parameterTypeList))
+
+parameterTypeList:
+	  parameterList	                        (seqToList parameterList)
+        | parameterList COMMA ELIPSIS
+				(let val decltype = {specifiers=[Ellipses],qualifiers=[],storage=[]}
+	        		 in (seqToList parameterList) @ [(decltype, EllipsesDecr)] end)
+
+parameterList:
+	parameterDeclaration	
+                                (singletonSeq(#1 parameterDeclaration,
+                                              markDeclarator srcMap (#2 parameterDeclaration,
+							             parameterDeclarationleft,
+								     parameterDeclarationright)))
+        | parameterList COMMA parameterDeclaration 
+	                        (addToSeq((#1 parameterDeclaration,
+	                                           markDeclarator
+	                                            srcMap 
+                                                     (#2 parameterDeclaration,
+						      parameterDeclarationleft,
+						      parameterDeclarationright)),
+					  parameterList))
+
+(* Decided not a push and pop a scope at the parameterDeclarations, because we
+ * are not going to directly plug these names in the tdef table. If this is just
+ * a function declaration, the names here do not matter to the tdef table. If
+ * this will be part of func definition, we put all these names in tdef table at
+ * proper scope correctly, later on.
+ * Note: We miss syntax errors like int f(int foo, foo bar);, if foo was a typename
+ *)
+parameterDeclaration:
+          declarationSpecifiers  notypeDeclarator
+					((declarationSpecifiers, notypeDeclarator))
+        | declarationSpecifiers  parmDeclarator
+					((declarationSpecifiers, parmDeclarator))
+
+        | declarationSpecifiers 	(* this case can arise for function prototypes *)
+					((declarationSpecifiers, EmptyDecr))
+
+        | declarationSpecifiers  abstractDeclarator
+					((declarationSpecifiers, abstractDeclarator))
+
+        | declarationModifiers  notypeDeclarator
+                                       ((declarationModifiers, notypeDeclarator))
+
+        | declarationModifiers  abstractDeclarator
+                                       ((declarationModifiers, abstractDeclarator))
+
+pushScope:
+                                        (TypeDefs.pushScope())
+
+popScope:
+                                        (TypeDefs.popScope())
+
+

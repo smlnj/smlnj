@@ -1,0 +1,40 @@
+\section{Label Expressions}
+
+A \newdef{label expression} is a constant
+expression defined in terms of labels, or user 
+defined \href{constants.html}{constants}.  MLRISC uses the type
+\sml{labexp} to represent label expressions.  Label expressions
+are defined in the structure 
+\mlrischref{instructions/labelExp.sml}{LabelExp}.
+
+The datatype \sml{labexp} has the following definition:
+\begin{SML}
+  datatype labexp = 
+      LABEL of Label.label
+    | CONST of Constant.const
+    | INT of int
+    | PLUS of labexp * labexp
+    | MINUS of labexp * labexp
+    | MULT of labexp * labexp
+    | DIV of labexp * labexp
+    | LSHIFT of labexp * word
+    | RSHIFT of labexp * word
+    | AND of labexp * word
+    | OR of labexp * word
+\end{SML}
+
+In addition, the following functions are defined in \sml{labexp}:
+\begin{itemize}
+  \item \sml{valueOf : labexp -> int}  -- Returns the value associated with
+a label expression
+  \item \sml{toString : labexp -> string} -- Return the pretty printed representation of an expression
+  \item \sml{hash : labexp -> word} -- Returns the hash value of an expression
+  \item \sml{== : labexp * labexp -> bool} -- Tests whether two label expression are lexically identical
+\end{itemize}
+
+The type \sml{labexp} is depends on client defined 
+\href{constants.html}{constants} typed.  The functor \sml{LabelExp}
+is parameterized as follows.
+\begin{SML}
+   functor \mlrischref{instructions/labelExp.sml}{LabelExp}(Constant : \mlrischref{instructions/constant.sig}{CONSTANT})
+\end{SML}

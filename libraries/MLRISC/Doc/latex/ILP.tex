@@ -1,0 +1,23 @@
+\section{ILP Optimizations}
+\subsection{Introduction}
+    This section is under construction.  A new scheduler framework
+for superscalars that ties into the machine description language
+is currently being developed.
+\subsection{The ILP ToolBox}
+\subsubsection{List Scheduler}
+\subsubsection{Ranking Algorithms}
+   Some more complex ranking algorithms (than say critical path) have been
+implemented.  These are:
+\begin{itemize}
+ \item The algorithm of
+ \mlrischref{scheduling/PalemSimons.sig}{Palem and Simons} 
+  which appeared in TOPLAS '93.  This algorithm
+      computes the modified deadlines of a set instructions, with
+      precedence, latency, and deadlines constraints.
+      
+ \item The algorithm of 
+      \mlrischref{scheduling/LeungPalemPnueli.sig}{Leung, Palem, and Pnueli} 
+       which appeared in PACT '98.
+      This algorithm computes the modified deadlines of a set of instructions,
+      with precedence, latency, release-times and deadline constraints.
+\end{itemize}

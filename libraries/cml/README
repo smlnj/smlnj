@@ -1,0 +1,12 @@
+This is an "beta" release of a completely new implementation of CML.
+It has been in use since the Fall'96, and seems to be robust.
+The doc/HTML directory has partial HTML documentation for this version.
+
+In keeping with the migration of SML/NJ to the SML'97 standard, this version
+of CML has a number of changes in the API.  See the file doc/HTML/porting.html
+for more information.
+
+	- John Reppy
+	  Bell Labs, Lucent Technologies
+	  jhr@research.bell-labs.com
+

@@ -1,0 +1,1235 @@
+ALPHA.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	(* Alpha specific backend *)
+	../alpha/instructions/alphaCells.sml
+	../alpha/instructions/alphaInstr.sml
+	../alpha/instructions/alphaShuffle.sig
+	../alpha/instructions/alphaShuffle.sml
+	../alpha/instructions/alphaProps.sml
+	../alpha/instructions/alphaFreqProps.sml
+	../alpha/emit/alphaAsm.sml
+	../alpha/emit/alphaMC.sml
+	../alpha/backpatch/alphaJumps.sml
+	../alpha/flowgraph/alphaGasPseudoOps.sml
+	../alpha/mltree/alphaPseudoInstr.sig
+	../alpha/mltree/alpha.sml
+	../alpha/ra/alphaRewrite.sml
+
+ALPHA-GC.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	GC.cm
+	ALPHA.cm
+	
+ALPHA-Peephole.cm:
+
+	MLRISC.cm
+	Peephole.cm
+	ALPHA.cm
+
+	(* alpha *)
+	../alpha/instructions/alphaPeephole.sml
+ALPHA-RTL.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	Region.cm
+	ALPHA.cm
+	
+	(* Alpha specific backend *)
+	../alpha/mltree/alphaRTL.sml 
+	../alpha/mltree/alphaRTLProps.sml 
+
+ALPHA-Sched.cm:
+(*
+ * This library contains the superscalar scheduling stuff.
+ *)
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	ALPHA.cm
+	Sched.cm
+	Region.cm
+	
+	(* Alpha scheduler *) 
+	../alpha/scheduling/alphaSchedProps.sml
+
+ALPHA-SSA.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	ALPHA.cm
+	ALPHA-RTL.cm
+	
+	(* Alpha specific backend *)
+	../alpha/SSA/alphaSSAProps.sml
+
+CCall.cm:
+	MLRISC.cm
+	MLTREE.cm
+	StagedAlloc.cm
+
+	../c-call/gen/c-call-sig.sml
+	../c-call/gen/c-call-fn.sml
+	../c-call/gen/c-type.sml
+
+CCall-x86-64.cm:
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	AMD64.cm
+
+	../c-call/archs/x86-64-svid-fn.sml
+	../c-call/archs/x86-64-c-sizes.sml
+
+CCall-x86.cm:
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	IA32.cm
+
+	../c-call/archs/x86-svid-fn.sml
+	../c-call/archs/x86-c-sizes.sml
+
+CCall-sparc.cm:
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	SPARC.cm
+
+	../c-call/archs/sparc-c-sizes.sml
+	../c-call/archs/sparc-c-call-fn.sml
+
+Control.cm:
+
+        ../control/mlriscErrormsg.sml
+        ../control/mlrisc-control.sml
+        ../control/mlrisc-timing.sml
+
+GC.cm:
+(*
+ * This library implements GC safety. 
+ *)
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	MLRISC.cm
+	IR.cm
+	RTL.cm
+
+	(* GC safety stuff *)
+	../gc-safety/gc-gen.sig
+	../gc-safety/gc-gen.sml
+	../gc-safety/gc-liveness.sig
+	../gc-safety/gc-liveness.sml
+	../gc-safety/gc-typemap.sig
+	../gc-safety/gc-typemap.sml
+	../gc-safety/gc-dummy-type.sml
+	../gc-safety/gc-type-system.sig
+	../gc-safety/gc-type-system.sml
+	../gc-safety/gc-invariants.sml
+
+Graphs.cm:
+(*
+ * This is a generic graph library. 
+ *)
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+
+	../graphs/acyclic-graph.sml
+	../graphs/bellman-ford.sml
+	../graphs/bigraph.sig
+	../graphs/closed-semi-ring.sig
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION < 11042
+        ../graphs/orig-digraph.sml
+	../graphs/orig-node-priqueue.sml
+	../graphs/orig-udgraph.sml
+#else
+	../graphs/digraph.sml
+	../graphs/node-priqueue.sml
+	../graphs/udgraph.sml
+#endif
+	../graphs/dijkstra.sml
+	../graphs/floyd-warshall.sml
+	../graphs/johnson.sml
+	../graphs/graph-bfs.sig
+	../graphs/graph-bfs.sml
+	../graphs/graph-bcc.sig
+	../graphs/graph-bcc.sml
+	../graphs/graph-comb.sig
+	../graphs/graph-comb.sml
+	../graphs/graph-cycles.sig
+	../graphs/graph-cycles.sml
+	../graphs/graph-dfs.sig
+	../graphs/graph-dfs.sml
+	../graphs/graph-is-cyclic.sig
+	../graphs/graph-is-cyclic.sml
+	../graphs/graph-minor.sml
+	../graphs/graph-scc.sig
+	../graphs/graph-scc.sml
+	../graphs/graph-topsort.sig
+	../graphs/graph-topsort.sml
+	../graphs/graph.sig
+	../graphs/graph.sml
+	../graphs/graphimpl.sig
+	../graphs/group.sig
+	../graphs/isograph.sml
+	../graphs/kruskal.sml
+	../graphs/matching.sig
+	../graphs/matching.sml
+	../graphs/max-flow.sig
+	../graphs/max-flow.sml
+	../graphs/min-cut.sig
+	../graphs/min-cut.sml
+	../graphs/no-exit.sml
+	../graphs/node-partition.sml
+	../graphs/node-priqueue.sig
+	../graphs/printgraph.sml
+	../graphs/readonly.sml
+	../graphs/renamegraph.sml
+	../graphs/revgraph.sml
+	../graphs/seme.sml
+	../graphs/shortest-paths.sig
+	../graphs/singleton.sml
+	../graphs/snap-shot.sml
+	../graphs/spanning-tree.sig
+	../graphs/start-stop.sml
+	../graphs/subgraph-p.sml
+	../graphs/subgraph.sml
+	../graphs/trace-graph.sml
+	../graphs/trans-closure.sml
+	../graphs/ugraph.sml
+	../graphs/uniongraph.sml
+	../graphs/wrappers.sml
+	../graphs/update-graph-info.sml
+
+HPPA.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	(* HPPA specific backend *)
+	../hppa/instructions/hppaCells.sml
+	../hppa/instructions/hppaInstr.sml
+	../hppa/instructions/hppaShuffle.sig
+	../hppa/instructions/hppaShuffle.sml
+	../hppa/instructions/hppaProps.sml
+	../hppa/instructions/hppaFreqProps.sml
+	../hppa/emit/hppaAsm.sml
+	../hppa/emit/hppaMC.sml
+	../hppa/backpatch/hppaDelaySlotProps.sml
+	../hppa/backpatch/hppaJumps.sml
+	../hppa/flowgraph/hppaGasPseudoOps.sml
+	../hppa/mltree/hppaMillicode.sig
+	../hppa/mltree/hppaLabelComp.sig
+	../hppa/mltree/hppa.sml
+	../hppa/ra/hppaRewrite.sml
+	(* ../hppa/ra/hppaRegAlloc.sml *)
+	
+HPPA-GC.cm:
+
+
+	MLRISC.cm
+	GC.cm
+	HPPA.cm
+	
+	(* Hppa specific backend *)
+HPPA-RTL.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	Region.cm
+	HPPA.cm
+	
+	(* Hppa specific backend *)
+	../hppa/mltree/hppaRTL.sml 
+	../hppa/mltree/hppaRTLProps.sml 
+
+HPPA-Sched.cm:
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	HPPA.cm
+	Sched.cm
+	Region.cm
+	
+	(* Hppa scheduler *) 
+	../hppa/scheduling/hppaSchedProps.sml
+HPPA-SSA.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	HPPA.cm
+	HPPA-RTL.cm
+	
+	(* Hppa specific backend *)
+	../hppa/SSA/hppaSSAProps.sml
+IA32.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+        Graphs.cm
+	MLTREE.cm
+
+        (* c calls *)
+        ../x86/c-calls/ia32-svid.sml
+
+        ../x86/flowgraph/x86-darwin-pseudo-ops.sml
+        ../x86/flowgraph/x86GasPseudoOps.sml
+
+	(* omit frame pointer *)
+	../x86/omit-frameptr/x86omit-frameptr.sml
+
+	(* X86 specific backend *)
+	../x86/instructions/x86Cells.sml
+	../x86/instructions/x86comp-instr-ext.sml
+	../x86/instructions/x86Instr.sml
+	../x86/instructions/x86instr-ext.sml
+	../x86/instructions/x86Shuffle.sig
+	../x86/instructions/x86Shuffle.sml
+	../x86/instructions/x86Props.sml
+	../x86/instructions/x86MemRegs.sig
+	../x86/instructions/x86FreqProps.sml
+	../x86/emit/x86Asm.sml
+	../x86/x86MC.sml
+	../x86/ra/x86Rewrite.sig
+	../x86/ra/x86Rewrite.sml
+	(* ../x86/ra/x86RegAlloc.sml *)
+	../x86/ra/x86Spill.sml
+	(* This is no long needed *)
+	(* ../x86/ra/x86PseudoR.sml *)
+	../x86/backpatch/x86Jumps.sml 
+	../x86/mltree/x86.sml
+
+	(* Floating Point Code Generation/Optimization *)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION < 11042
+	../x86/mltree/orig-x86-fp.sml
+#else
+	../x86/mltree/x86-fp.sml
+#endif
+
+	(* register allocator *)
+	../x86/ra/x86RA.sml
+
+
+IA32-GC.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	GC.cm
+	IA32.cm
+	
+	(* X86 specific backend *)
+IA32-Peephole.cm:
+
+        smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	Peephole.cm
+	IA32.cm
+
+	(* x86 *)
+	../x86/instructions/x86Peephole.sml
+	(* ../x86/instructions/x86-leaf-opt.sml *)
+
+IA32-RTL.cm:
+
+        smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	Region.cm
+	IA32.cm
+	
+	(* x86 specific backend *)
+	../x86/mltree/x86RTL.sml 
+	../x86/mltree/x86RTLProps.sml 
+
+IA32-Sched.cm:
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	IA32.cm
+	Sched.cm
+	Region.cm
+	
+	(* X86 scheduler *) 
+	../x86/scheduling/x86Arch.sig
+	../x86/scheduling/x86ReservationTable.sig
+	../x86/scheduling/x86PairingRT.sml
+	../x86/scheduling/x86PipelineRT.sml
+	../x86/scheduling/x86PentiumII.sml
+	../x86/scheduling/x86PentiumPro.sml
+	(* ../x86/scheduling/x86SchedulingProps.sml *)
+
+	../x86/scheduling/x86SchedProps.sml
+
+IA32-SSA.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	IA32.cm
+	IA32-RTL.cm
+	
+	(* X86 specific backend *)
+	../x86/SSA/x86SSAProps.sml
+IR.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLTREE.cm
+
+	(* These provide a graph view for clusters.  Required if you 
+	 * want to perform any non-trivial analysis on the program.
+	 * Also required if you want to use the visualization stuff on clusters.
+	 *)
+	../cluster/clusterGraph.sig
+	../cluster/clusterGraph.sml
+	../cluster/clusterViewer.sig
+	../cluster/clusterViewer.sml
+
+	(* MLRISC IR for optimizations. These are necessary only if you want
+	 * to use various optional MLRISC optimizations.
+	 *)
+	../IR/dataflow.sig
+	../IR/dataflow.sml
+	../IR/mlrisc-branch-chaining.sml
+	../IR/mlrisc-cfg-util.sig
+	../IR/mlrisc-cfg-util.sml
+	../IR/mlrisc-cpr.sml
+	../IR/mlrisc-format-insn.sml
+	../IR/idefs2.sig
+	../IR/idefs2.sml
+	../IR/mlrisc-idefs.sig
+	../IR/mlrisc-idefs.sml
+	../IR/mlrisc-ir.sig
+	../IR/mlrisc-ir.sml
+	../IR/mlrisc-ir-optimization.sig
+	../IR/mlrisc-liveness.sml
+	../IR/mlrisc-preheaders.sml
+	../IR/mlrisc-reshape-branches.sml
+	../IR/static-branch-prediction.sml
+	
+	(* Glue modules.  These are required only if you want to 
+	 * play with optimizations.
+	 *)
+	../Glue/mlrisc-glue.sig
+	../Glue/mlrisc-glue.sml
+ir-archive.cm:
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+
+	../ir-archive/apt.sig
+	../ir-archive/apt.sml
+	../ir-archive/cdg.sig
+	../ir-archive/cdg.sml
+	../ir-archive/compute-freq.sig
+	../ir-archive/compute-freq.sml
+	../ir-archive/compute-freq2.sig
+	../ir-archive/compute-freq2.sml
+	../ir-archive/comp-djgraph.sml
+	../ir-archive/derived-graph.sig
+	../ir-archive/derived-graph.sml
+	../ir-archive/dj-dataflow.sig
+	../ir-archive/dj-dataflow.sml
+	../ir-archive/djgraph.sig
+	../ir-archive/djgraph.sml
+	../ir-archive/dominance-frontier.sig
+	../ir-archive/dominance-frontier.sml
+	../ir-archive/dominator.sig
+	../ir-archive/dominator.sml
+	../ir-archive/reducibility.sig
+	../ir-archive/reducibility.sml
+	../ir-archive/loop-structure.sig
+	../ir-archive/loop-structure.sml
+	../ir-archive/ssa.sig
+	../ir-archive/ssa.sml
+
+Lib.cm:
+(*
+ * This is the MLRISC library
+ *)
+        smlnj-lib.cm
+	Control.cm
+
+	../library/annotations.sig
+	../library/annotations.sml
+	../library/bitset.sig
+	../library/bitset.sml
+	../library/cache.sml
+	../library/catlist.sml
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION < 11042
+        ../library/orig-dynamic-array.sml
+	../library/orig-hash-array.sml
+#else
+	../library/dynamic-array.sml
+	../library/hash-array.sml
+#endif
+(*
+	../library/dynamic-bitset.sml
+	../library/fixed-point.sig
+	../library/fixed-point.sml
+ *)
+	../library/freq.sig
+	../library/freq.sml
+(*
+	../library/hash-table.sig
+	../library/hash-table.sml
+	../library/hashMap.sig
+	../library/hashMap.sml
+	../library/hashBag.sig
+	../library/hashBag.sml
+	../library/hashMultimap.sig
+	../library/hashMultimap.sml
+	../library/hashSet.sig
+	../library/hashSet.sml
+	../library/int-set.sml
+ *)
+ (*
+	../library/intmap.sig
+	../library/intmap.sml
+  *)
+	../library/heap.sml
+	../library/line-break.sml
+	../library/priQueue.sig
+	../library/priQueue.sml
+(*
+	../library/probability.sml
+	../library/randlist.sml
+	../library/regset.sig
+	../library/regset.sml
+ *)
+	../library/sortedlist.sml
+	../library/stringOutStream.sig
+	../library/stringOutStream.sml
+(*
+	../library/susp.sml
+	../library/transaction-glue.sml
+	../library/transaction-log.sig
+	../library/transaction-log.sml
+	../library/transaction.sig
+	../library/transaction.sml
+	../library/undoable-array.sml
+	../library/undoable-ref.sml
+ *)
+ (*
+	../library/word64.sml
+  *)
+
+MIPS.cm:
+(*
+ * MIPS specific modules for MLRISC code generation framework.
+ *)
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	(* MIPS specific backend *)
+	../mips/instructions/mipsCells.sml
+	../mips/instructions/mipsInstr.sml
+	../mips/instructions/mipsShuffle.sig
+	../mips/instructions/mipsShuffle.sml
+	../mips/instructions/mipsProps.sml
+	../mips/instructions/mipsFreqProps.sml
+	../mips/emit/mipsAsm.sml
+	../mips/emit/mipsMC.sml
+	../mips/backpatch/mipsDelaySlotProps.sml
+	../mips/backpatch/mipsJumps.sml
+	../mips/mltree/mipsPseudoInstr.sig
+	../mips/mltree/mips.sml
+	../mips/ra/mipsRewrite.sml
+MLRISC.cm:
+(* MLRISC.cm
+ *
+ * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
+ *
+ * This library contains only the core MLRISC stuff.  There are
+ * architecture-specific files for the various supported machines.
+ *)
+
+        smlnj-lib.cm
+	Control.cm
+ 	Graphs.cm
+	Visual.cm
+	Lib.cm
+
+	(* Core definitions. These are required *)
+	../instructions/cells.sig
+	../instructions/cells.sml
+	../instructions/cells-basis.sig
+	../instructions/cells-basis.sml
+	../instructions/rewrite.sig
+	../instructions/insnProps.sig
+	../instructions/stream.sig
+	../instructions/stream.sml
+	../instructions/instructions.sig
+	../instructions/shuffle.sig
+	../instructions/shuffle.sml
+	../instructions/constant.sig
+	../instructions/label.sml
+	../instructions/label-sig.sml
+	../instructions/region.sig
+	../instructions/freqProps.sig
+	../instructions/freqProps.sml
+	../instructions/mlriscAnnotations.sig
+	../instructions/mlriscAnnotations.sml
+	../instructions/mlriscOptimization.sig
+	
+	(* New ../aliasing/memory disambiguation support *)
+	../aliasing/mlriscRegion.sig
+	../aliasing/mlriscRegion.sml
+	../aliasing/pointsTo.sig
+	../aliasing/pointsTo.sml
+	
+	(* Core definitions for the MLTREE language. These are required. *)
+	../mltree/mltree.sig
+	../mltree/mltree.sml
+	../mltree/mltree-eval.sig
+	../mltree/mltree-eval.sml
+	../mltree/mltree-extension.sig
+	../mltree/mltree-basis.sig
+	../mltree/mltree-basis.sml
+	../mltree/mltreecomp.sig
+	../mltree/mltree-gen.sig
+	../mltree/mltree-gen.sml
+	../mltree/mltree-hash.sig
+	../mltree/mltree-hash.sml
+	../mltree/mltree-size.sig
+	../mltree/mltree-size.sml
+	../mltree/mltree-stream.sig
+	../mltree/mltree-stream.sml
+	../mltree/mltree-mult.sig
+	../mltree/mltree-mult.sml
+	../mltree/machine-int.sig
+	../mltree/machine-int.sml
+	
+	(* Basic cluster stuff. These are required. *)
+	../flowgraph/as-pseudo-ops.sig
+	../flowgraph/buildFlowgraph.sml
+	../flowgraph/cfg-optimization.sig
+	../flowgraph/client-pseudo-ops.sig
+	../flowgraph/cfg.sig
+	../flowgraph/cfg.sml
+	../flowgraph/cfgView.sig
+	../flowgraph/cfgView.sml
+	../flowgraph/cfgCountCopies.sml
+	../flowgraph/cfgExpandCopies.sml
+	../flowgraph/darwin-pseudo-ops.sml
+	../flowgraph/gasPseudoOps.sml
+	../flowgraph/printFlowgraph.sml
+	../flowgraph/pseudo-ops.sig
+	../flowgraph/pseudo-ops.sml
+	../flowgraph/pseudo-ops-basis.sig
+	../flowgraph/pseudo-ops-basis-typ.sml
+	../flowgraph/pseudo-ops-big.sml
+	../flowgraph/pseudo-ops-endian.sig
+	../flowgraph/pseudo-ops-little.sml
+
+	
+	(* Core register allocator utilities *)
+	../ra/getreg.sig
+	../ra/getreg.sml
+	../ra/getreg2.sml
+	../ra/liveness.sml
+	
+        (* Spill heuristics *)
+        ../ra/chaitin-spillheur.sml
+        ../ra/chow-hennessy-spillheur.sml
+
+	(* New RA *)
+        ../ra/ra-graph.sig
+        ../ra/ra-graph.sml
+        ../ra/ra-core.sig
+        ../ra/ra-core.sml
+        ../ra/ra-spill-types.sml
+        ../ra/ra-spill.sig
+        ../ra/ra-spill.sml
+        ../ra/ra-spillheur.sig
+        ../ra/ra-flowgraph.sig
+        ../ra/ra-flowgraph-part.sig
+        ../ra/ra.sig
+        ../ra/ra.sml
+	../ra/ra-deadCodeE.sml
+	../ra/ra-priqueue.sig
+	../ra/mem-ra.sml
+	../ra/region-based-ra.sml
+	../ra/risc-ra.sml
+
+        (* Cluster based RA's *)
+        ../ra/cluster-ra.sml
+
+	(* Assembly machine code stuff *)
+	../emit/instruction-emitter.sig
+	../emit/asmEmit.sig 
+	../emit/asmStream.sml
+	../emit/asmUtil.sml
+	../emit/cfgEmit.sml
+	../emit/code-string.sig
+	../emit/mc-emit.sig
+	
+	(* Basic GC types stuff *)
+	../gc-safety/gc-cells.sig
+	../gc-safety/gc-cells.sml
+	../gc-safety/gc-type.sig
+	
+	(* Span dependency stuff *)
+	../backpatch/backpatch.sml
+	../backpatch/bbsched.sig
+	../backpatch/spanDep.sml
+	../backpatch/delaySlotProps.sig
+	../backpatch/noDelaySlots.sml
+	../backpatch/sdi-jumps.sig
+	../backpatch/vlBackPatch.sml
+
+	(* block placement *)
+	../block-placement/block-placement.sig
+	../block-placement/default-block-placement.sml
+
+        (* c calls *)
+        ../c-calls/c-types.sml
+        ../c-calls/c-calls.sig
+
+ 	(* omit frame pointer optimization *)
+ 	../omit-frameptr/omit-frame-pointer.sig
+
+MLTREE.cm:
+(*
+ * This library contains some simple MLTree utilities 
+ *)
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	../mltree/mltree-utils.sig
+	../mltree/mltree-utils.sml
+	../mltree/mltree-fold.sig
+	../mltree/mltree-fold.sml
+	../mltree/mltree-rewrite.sig
+	../mltree/mltree-rewrite.sml
+	../mltree/mltree-simplify.sig
+	../mltree/mltree-simplify.sml
+	../mltree/instr-gen.sig
+	../mltree/instr-gen.sml
+
+Opt.cm:
+(*
+ * This library implemenents the MLRISC SSA optimizer.
+ *)
+
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	IR.cm
+	RTL.cm
+	SSA.cm
+	Sched.cm
+	GC.cm
+	
+	../Glue/mlrisc-optimizer.sml
+
+Peephole.cm:
+(* 
+ * This library contains only the peephole optimization stuff.  
+ *)
+        smlnj-lib.cm
+	MLRISC.cm
+	Graphs.cm
+
+	(* Peephole optimizations *)
+	../instructions/peephole.sig
+	../flowgraph/cfgPeephole.sml
+
+PPC.cm:
+(* 
+ * PowerPC specific modules for MLRISC code generation framework.
+ *)
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+        (* c calls *)
+        ../ppc/c-calls/ppc-macosx.sml
+
+	(* PowerPC specific backend *)
+	../ppc/instructions/ppcCells.sml
+	../ppc/instructions/ppcInstr.sml
+	../ppc/instructions/ppcShuffle.sig
+	../ppc/instructions/ppcShuffle.sml
+	../ppc/instructions/ppcProps.sml
+	../ppc/instructions/ppcFreqProps.sml
+	../ppc/emit/ppcAsm.sml
+	../ppc/emit/ppcMC.sml
+	../ppc/backpatch/ppcDelaySlots.sml
+	../ppc/backpatch/ppcJumps.sml
+	../ppc/flowgraph/ppcGasPseudoOps.sml
+	../ppc/mltree/ppcPseudoInstr.sig
+	../ppc/mltree/ppc.sml 
+	../ppc/ra/ppcRewrite.sml
+	(* ../ppc/ra/ppcRegAlloc.sml *)
+
+PPC-GC.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	GC.cm
+	PPC.cm
+	
+	(* PowerPC specific backend *)
+
+PPC-Sched.cm:
+(*
+ * This library contains the superscalar scheduling stuff.
+ *)
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	PPC.cm
+	Sched.cm
+	Region.cm
+	
+	(* PowerPC scheduler *) 
+	../ppc/scheduling/ppcSchedProps.sml
+
+RA.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	(*../ra/ra-spill-gcm.sig
+	../ra/ra-spill-gcm.sml
+	../ra/lcm.sig
+	../ra/lcm.sml
+	../ra/frame-info.sig
+	../ra/cluster-frame-info.sml*)
+	(* ../ra/interproc-mem-ra.sml *)
+
+	../ra/chaitin-spillheur2.sml
+	../ra/chow-hennessy-spillheur2.sml
+
+	../ra/ra-spill-with-renaming.sml
+
+Region.cm:
+(*
+ * This library contains the basic interface to the regions stuff 
+ *)
+
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	../instructions/regionInfo.sml
+	../instructions/regionProps.sig
+
+	../aliasing/pointsToInfo.sig
+	../aliasing/pointsToInfo.sml
+RTL.cm:
+(*
+ *  This library contains modules that implements the RTL and related stuff
+ *)
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	MLTREE.cm
+	
+	(* RTL *)
+	../mltree/mltree-rtl.sig
+	../mltree/mltree-rtl.sml
+	../mltree/rtl-props.sig
+	../mltree/rtl-build.sig
+	../mltree/rtl-build.sml
+
+	(* Operand tables *)
+	../mltree/operand-table.sig
+	../mltree/operand-table.sml
+
+Sched.cm:
+(*
+ * This library contains the superscalar scheduling stuff.
+ *)
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	RTL.cm
+	IR.cm
+
+	(* Rank algorithms *)
+	../scheduling/PalemSimons.sig
+	../scheduling/PalemSimons.sml
+	../scheduling/LeungPalemPnueli.sig
+	../scheduling/LeungPalemPnueli.sml
+
+	(* Data dependence dag representation *)
+	../scheduling/schedulerDDG.sig
+	../scheduling/schedulerDDG.sml
+
+	(* Signature of a rank function *)
+	../scheduling/schedulingRanks.sig
+
+	(* Architectural Properties *)
+	../scheduling/schedulingProps.sig
+
+	(* Basic block scheduling *)
+	../scheduling/localCP.sml
+	../scheduling/buildLocalDDG.sig
+	../scheduling/buildLocalDDG.sml
+	../scheduling/bbScheduler.sig
+	../scheduling/bbScheduler.sml
+	../scheduling/bbDDGViewer.sig
+	../scheduling/bbDDGViewer.sml
+	../scheduling/clusterBBScheduler.sml
+
+	(* Superscalar scheduling.  These are required if you want to
+	 * play with instruction scheduling for superscalars.
+	 * It requires the MLRISC IR stuff. !!!
+	 *)
+	../scheduling/listScheduler.sig
+	../scheduling/listScheduler.sml
+	../scheduling/buildDDG.sig
+	../scheduling/buildDDG.sml
+	../scheduling/schedulingAliasing.sig
+	../scheduling/regionBuilder.sig
+	../scheduling/regionBuilder.sml
+
+	(* Various global scheduling algorithms *)
+	../scheduling/globalCP.sml
+	../scheduling/globalDDGViewer.sig
+	../scheduling/globalDDGViewer.sml
+	../scheduling/globalSchedulingAlgo.sig
+	../scheduling/dagScheduling.sml
+	../scheduling/globalScheduler.sml
+SPARC.cm:
+(* 
+ * SPARC specific modules for MLRISC code generation framework.
+ *)
+        smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	(* Sparc specific backend *)
+	../sparc/instructions/sparcCells.sml
+	../sparc/instructions/sparcInstr.sml
+	../sparc/instructions/sparcinstr-ext.sml
+	../sparc/instructions/sparccomp-instr-ext.sml
+	../sparc/instructions/sparcShuffle.sig
+	../sparc/instructions/sparcShuffle.sml
+	../sparc/instructions/sparcProps.sml
+	../sparc/instructions/sparcFreqProps.sml
+	../sparc/emit/sparcAsm.sml
+	../sparc/emit/sparcMC.sml
+	../sparc/backpatch/sparcJumps.sml
+	../sparc/flowgraph/sparcGasPseudoOps.sml
+	../sparc/mltree/sparcPseudoInstr.sig
+	../sparc/mltree/sparc.sml 
+	../sparc/ra/sparcRewrite.sml
+	(* ../sparc/ra/sparcRegAlloc.sml *)
+	../sparc/backpatch/sparcDelaySlotProps.sml
+	../sparc/c-calls/sparc-c-calls.sml
+
+
+SPARC-GC.cm:
+
+        smlnj-lib.cm
+	MLRISC.cm
+	GC.cm
+	SPARC.cm
+	
+	(* Sparc specific backend *)
+SPARC-Peephole.cm:
+
+	MLRISC.cm
+	Peephole.cm
+	SPARC.cm
+
+	(* sparc *)
+	../sparc/instructions/sparcPeephole.sml
+
+SPARC-RTL.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	Region.cm
+	SPARC.cm
+	
+	(* sparc specific backend *)
+	../sparc/mltree/sparcRTL.sml 
+	../sparc/mltree/sparcRTLProps.sml 
+
+SPARC-Sched.cm:
+(*
+ * This library contains the superscalar scheduling stuff.
+ *)
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	SPARC.cm
+	Sched.cm
+	Region.cm
+	
+	(* Sparc scheduler *) 
+	../sparc/scheduling/sparcSchedProps.sml
+SPARC-SSA.cm:
+
+	smlnj-lib.cm
+	Control.cm
+	MLRISC.cm
+	RTL.cm
+	SSA.cm
+	Region.cm
+	SPARC.cm
+	SPARC-RTL.cm
+	
+	(* sparc specific backend *)
+	../sparc/SSA/sparcSSAProps.sml
+
+SSA.cm:
+(*
+ *  This library implements the SSA optimizations.
+ *)
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	IR.cm
+	GC.cm
+	MLTREE.cm
+	RTL.cm
+	Region.cm
+	
+	(* The SSA representation *)
+	../SSA/SSA-flowgraph.sig
+	../SSA/mlrisc-ssa.sig
+	../SSA/mlrisc-ssa.sml
+	../SSA/SSA-optimization.sig
+
+	(* Machine specific properties *)
+	../SSA/SSA-props.sig
+
+        (* CFG <-> SSA *)
+	../SSA/mlrisc-ssa-construction.sig
+	../SSA/mlrisc-ssa-construction.sml
+	../SSA/mlrisc-ssa-deconstruction.sig
+	../SSA/mlrisc-ssa-deconstruction.sml
+
+	../SSA/SSA-const-folding.sig
+	../SSA/SSA-const-folding.sml
+
+	../SSA/SSA-gvn-basis.sig
+	../SSA/SSA-gvn-basis.sml
+
+        (* Instruction selection *)
+	../SSA/SSA-instrgen.sig
+	../SSA/SSA-instrgen.sml
+
+	(* Optimization phases *)
+	../SSA/SSA-dead-code-elim.sml
+	../SSA/SSA-cond-const-folding.sml
+	../SSA/SSA-global-code-motion.sml
+	../SSA/SSA-global-value-numbering.sml
+	../SSA/SSA-operator-strength-reduction.sml
+
+	../SSA/SSA-gc-invariants.sml
+
+
+StagedAlloc.cm:
+	smlnj-lib.cm
+
+	../staged-alloc/allocator/staged-allocation-sig.sml
+	../staged-alloc/allocator/staged-allocation-fn.sml
+
+	../staged-alloc/conventions/c-loc-kind.sml
+	../staged-alloc/conventions/x86-64-c-fn.sml
+	../staged-alloc/conventions/x86-c-fn.sml
+	../staged-alloc/conventions/sparc-c-fn.sml
+
+Visual.cm:
+
+(*
+ * This library implements visualization of graphs
+ *)
+	Control.cm
+	Lib.cm
+	Graphs.cm
+
+	../visualization/allDisplays.sml
+	../visualization/daVinci.sml
+	../visualization/dot.sml
+	../visualization/graphDisplay.sig
+	../visualization/graphLayout.sml
+	../visualization/graphViewer.sig
+	../visualization/graphViewer.sml
+	../visualization/vcg.sml
+
+VLIW.cm:
+(*
+ * This library contains the VLIW based optimizations.
+ *)
+
+        smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLRISC.cm
+	IR.cm
+	
+	../emit/emitterNEW.sig (* dummy *)
+	
+	(* ../VLIW/EPIC foundational stuff.
+	 *)
+	../instructions/funits.sig
+	../instructions/datapaths.sig
+	../instructions/pred-instructions.sig
+	../instructions/vliw-instructions.sig
+	../instructions/pred-vliw-instructions.sig
+	../instructions/predicationProps.sig
+	../instructions/vliwProps.sig
+	
+	(* Hyperblock and predicate analysis. 
+	 * These are necessary if you want to play with optimizations
+	 * for predicated for VLIW architectures.
+	 *)
+	../hyperblock/decision-trees.sig
+	../hyperblock/decision-trees.sml
+	../hyperblock/hyperblock.sig
+	../hyperblock/hyperblock.sml
+	../hyperblock/hyperblock-ddg.sig
+	../hyperblock/hyperblock-ddg.sml
+	../hyperblock/if-conversion.sig
+	../hyperblock/if-conversion.sml
+	../hyperblock/predicated-ddg.sig
+	../hyperblock/predicated-ddg.sml
+	
+	(* Hyperblock Scheduling for VLIW 
+	 * It requires the hyperblock, MLRISC IR and VLIW modules. !!!
+	 *)
+	../hyperblock-scheduling/critical-path.sml
+	../hyperblock-scheduling/hyperblock-scheduling.sig
+	../hyperblock-scheduling/hyperblock-scheduling.sml
+	../hyperblock-scheduling/rank-algorithm.sig
+	../hyperblock-scheduling/vliwSchedulingProps.sig
+	../hyperblock-scheduling/vliwSchedulingAutomaton.sig
+	
+	(* Modulo Scheduling for VLIW
+	 * It requires the hyperblock, MLRISC IR and VLIW modules. !!!
+	 *)
+	../modulo-scheduling/iterated-modulo-scheduling.sml
+	../modulo-scheduling/modulo-scheduling-algo.sig
+	../modulo-scheduling/modulo-scheduling.sig
+	../modulo-scheduling/modulo-scheduling.sml
+	../modulo-scheduling/mrt.sig
+	../modulo-scheduling/mrt.sml
+	../modulo-scheduling/pre-modulo-scheduling.sig
+	../modulo-scheduling/pre-modulo-scheduling.sml
+	
+	(* C6 specific backend !!! *)
+	../C6/instructions/C6Cells.sig
+	../C6/instructions/C6Cells.sml
+	../C6/instructions/C6Datapaths.sig
+	../C6/instructions/C6Datapaths.sml
+	(*C6/instructions/C6DatapathsProps.sml*)
+	../C6/instructions/C6Funits.sig
+	../C6/instructions/C6Funits.sml
+	../C6/instructions/C6Instr.sig
+	../C6/instructions/C6Instr.sml
+	../C6/instructions/C6InstrClass.sig
+	../C6/instructions/C6InstrClass.sml
+	../C6/instructions/C6Intrinsics.sig
+	../C6/instructions/C6Intrinsics.sml
+	../C6/instructions/C6PredicationProps.sml
+	../C6/instructions/C6Props.sml
+	../C6/instructions/C6PseudoOps.sig
+	../C6/instructions/C6PseudoOps.sml
+	../C6/instructions/C6Shuffle.sig
+	../C6/instructions/C6Shuffle.sml
+	../C6/instructions/C6VLIWProps.sml
+	../C6/emit/C6Asm.sml
+	(*C6/scheduling/C6RTDEFS.sml
+	C6/scheduling/C6RTDEFS2.sml
+	C6/scheduling/C6RTTables.sml
+	C6/scheduling/C6RTTables2.sml*)
+	../C6/scheduling/C6SchedulingProps.sml
+	(* ../C6/SSA/C6SSAProps.sml *)

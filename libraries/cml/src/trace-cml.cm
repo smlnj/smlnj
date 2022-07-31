@@ -1,0 +1,10 @@
+(* (C) 2011 The Fellowship of SML/NJ
+ *     Author: matthias.blume@gmail.com (Matthias Blume)
+ *
+ * This wrapper library establishes $cml/trace-cml.cm as
+ * an alias for $cml-lib/trace-cml.cm
+ *)
+Library
+	library($cml-lib/trace-cml.cm)
+is
+	$cml-lib/trace-cml.cm

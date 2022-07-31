@@ -1,0 +1,11 @@
+(* (C) 2011 The Fellowship of SML/NJ
+ *     Author: matthias.blume@gmail.com (Matthias Blume)
+ *
+ * This wrapper library establishes $cml/inet-lib.cm
+ * an alias for the part of $cml-lib/smlnj-lib.cm
+ * that corresponds to $/inet-lib.cm
+ *)
+Library
+	library($/inet-lib.cm)
+is
+	$cml-lib/smlnj-lib.cm

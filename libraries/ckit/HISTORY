@@ -1,0 +1,1050 @@
+ckit history
+============
+
+Release Changes
+===============
+
+Version 0.x, 14/Sept/99 (nch)
+-----------------------------
+1. BuildAst flags combined into compiler-mode and source-to-source-mode
+   (control of scaling, insertion of explicit coersions, reduction of assign ops
+    reduction of sizeof).
+
+   BuildAst now contains the following flags and major modes (collections of
+   flags settings).
+
+  (* control of buildAst modes *)
+  val insert_explicit_coersions : bool ref
+    (* Insert explicit casts at points where there are implicit type conversions.
+       If true, then reduce_assign_ops should also be set. *)
+  val insert_scaling : bool ref
+    (* Insert scaling computations at pointer arithmetic. *)
+  val reduce_sizeof : bool ref
+    (* Replace sizeof expressions by integer constants. *)
+  val reduce_assign_ops : bool ref
+    (* Replace assignops by simple ops and assignments. *)
+  val multi_file_mode : bool ref
+    (* Analysis mode -- allow repeated definitions. *)
+
+  val multiFileMode: unit -> unit  (* was called analysis mode *)
+  val compilerMode: unit -> unit
+  val sourceToSourceMode: unit -> unit
+
+ 
+2. Warning for zero size arrays added.
+
+3. Error messages are now bounded.
+   Error now contains Error.errorsLimit and Error.warningsLimit
+   which can be used to limit the printing of errors and warnings.
+
+4. Array sizes and sizeof.
+   BuildAst now maintains the expressions used to define array sizes.
+   When printed out, these expressions are now printed.
+   This allows sizeof calculations to be maintained.
+
+   Note: In principle we should do the same thing for expressions in enums
+   and in bitfields.  However sizeof is fairly unlikely to be used in these
+   situations.  If reduce_sizeof is false and a sizeof is encountered in these
+   situations, a warning message will be printed.
+
+5. Fixed build-ast so that if we get parse errors, we don't print type-checking
+   errors.  The philosophy here is: first get file to parse, and only then worry
+   about semantic errors.
+
+6. Better error messages:  We had mentioned capturing error messages in a
+   data-structure so that a filter could be installed to print out more meaningful
+   error messages (e.g. instead of "ENUM inserted").  This turns out to be a rather
+   complex exercise.  The problematic error messages involving ENUM are generated
+   deep within ml-yacc, and dealing with these would require non-trivial rewriting
+   of ml-yacc (in fact I suspect that the only way to do this would be to have our
+   own version of ml-yacc).  
+   
+   So, instead I hacked the ml-yacc specification to do slightly better error
+   recovery -- we now substiture "TYPE_NAME" for "ID" if there is an error
+   involving "ID" tokens.
+   
+   To see how this might help, recall that the problematic case is when you miss a
+   typedef (or the related hancock-thingy).  For example, with a missing
+   definition of mytype, the declaration:
+   
+     mytype x;
+   
+   is tokenized as:
+   
+     ID ID;
+   
+   Now, what used to happen is that the parser would try to insert an ENUM token
+   (a random bad choice).  Instead, the parser now tries to interpret the ID as a
+   TYPE_NAME, and so in effect we get: 
+   
+     TYPE ID;
+   
+   and an error message:
+   
+     "foo.c": error: syntax error: replacing  ID with  TYPE_NAME
+   
+   I've experimented with some support for inserting heuristic help messages (an
+   extension to the Error struct).  I think it is rather ad hoc, but let me know
+   how useful it is.  The actual message that is printed now for the above scenario
+   is 
+   
+     "file.c": error: syntax error: replacing  ID with  TYPE_NAME
+     Likely cause: missing typedef declaration.
+   
+   This message can be customized (it appears as a function call in the grammar
+   file), and others could be added.
+   
+   I've also configured build-ast so that when there are parser errors, error
+   reporting during type checking is switched off, since such type checking errors
+   tend to be quite confusing.
+
+
+----------------------------------------------------------------------
+Version 1.0b1, 7/Dec/1999
+-------------
+Error interface changed.
+Top level interfaces for build-ast changed.
+
+
+----------------------------------------------------------------------
+Version 1.0b2, 13/Jan/2000
+--------------
+Bug fixes.
+Revise regression test suite.
+
+
+Version 1.0b3, 15/Mar/2000
+-------------
+Bug fixes: Bugs 1,3,5,6,7,9,10
+Made sizes (Sizes.sizes) a record and parameterized makeAst on sizes.
+Added various regression tests for bugs.
+
+
+Version 1.0, 15/Mar/2000
+-------------
+* Bug fixes: Bugs 2, 4, 8, 12, 13
+* Reworked size and alignment mechanism to support parameterization
+  (see src/ast/sizes[-sig].sml).  A utility program (src/c-util/sizes.c)
+  can be used to generate sizes info for a given compiler/platform
+  combination.
+
+Version 1.x (x > 0), Halloween 2001 (boo! :-), M.Blume
+-----------
+* Changed the "Function" constructor of type Ast.ctype to carry optional
+  argument identifiers.
+* Changed the return type of TypeUtil.getFunction accordingly.
+* Type equality ignores the argument names.
+* TypeUtil.composite tries to preserve argument names but gives up
+  if there is a mismatch.
+
+======================================================================
+Bug fix history
+======================================================================
+
+Test: valid-programs/a40.c
+Status: fixed 15/june/99
+Fix: Changed (ty, ty, signedNum CT.INT, expop) 
+     to (ty, ty, ty, expop)
+     in mulDivOp (build-ast.sml)
+     Also change similar code in integralOp.
+Email:
+   
+  From: chandra@research.bell-labs.com (Satish Chandra)
+  Date: Fri, 21 May 1999 14:00:28 -0500
+  
+  Nevin:
+  
+  Have you already caught this one?
+  
+  File build-ast-fn.sml:
+  
+  Function mulDivOp in case PT.Binop, about line 1216 in my version:
+  
+      then (case usualBinaryCnv env (ty1, ty2) of
+  	SOME ty => (ty, ty, signedNum CT.INT, expop)
+  				      ^^^^^^
+  If we were type checking a float multiplied by a float, we would
+  lose, right?
+  
+  The Wisconsin folks came up with this example, which does not
+  produce the correct adornments.
+  
+  float f = 5.6, f1;
+  
+  int main() {
+    f1 = f * f;
+  
+    return 0;
+  }
+  
+  -satish
+
+---------------------------------------------------------------------------
+
+Test: valid-programs/a37.c
+Status: fixed 15/june/99
+Fix: added case "| ([CT.Void], nil) => (nil, nil)" to isAssignableL (type-util.sml)
+Email:
+
+  From: chandra@research.bell-labs.com (Satish Chandra) 
+  Date: Tue, 25 May 1999 15:00:52 -0500
+  
+  A function with a 'void' argument as its only argument is basically
+  a function with no arguments. E.g.:
+  
+  void f(void);
+  
+  main()
+  {
+     f();
+  }
+  
+  We issue a Type Warning: function call has too few args
+  
+  I can go fix these things myself, but it will make it harder to 
+  synchronize our changes. Please give me a call so we can make a plan 
+  on how to go about it.
+  
+  -satish
+
+------------------------------------------------------------------------------
+
+Test: valid-programs/a38.c
+Status: fixed sometime in early june/99
+Fix: fixed during major overhaul of frontend
+
+  From: chandra@research.bell-labs.com (Satish Chandra)
+  Date: Thu, 03 Jun 1999 20:17:56 -0500
+  
+  When perform_type_checking is on, it complains about
+  
+  	for(;;)
+  
+  as "condition of for statement is not scalar".
+  
+  The problem stems from the use of isScalar, without checking for EmptyExp
+  first.
+  
+  -satish
+
+-------------------------------------------------------------------------------
+
+Test: valid-programs/a39.c
+Status: fixed sometime before 15/june/99 (probably before major frontend overhaul?)
+Fix: seems to have been fixed as side-effect of some other bug-fix or code change.
+Email:
+
+  Date: Thu, 20 May 1999 09:16:37 -0400 (EDT)
+  From: Kathleen Fisher <kfisher@research.att.com>
+  
+  
+  There seems to be a bug involving the ++ operator.
+  The following does not work:
+      p->count[i]++ /* generates an error. */
+      p->count[i] = p->count[i]+1; /* OK */
+  
+  Kathleen
+
+
+--------------------------- Sat Jul 31 18:36:00 1999 --------------------------
+
+Test: valid-programs/a60.c
+Status: fixed 31/july/99
+Fix: add case for TCInitializer so that if type is not core, then apply getCoreType
+ (Alternatively, we could impose the invarient that TCInitializer must be
+  applied only to core types, but this would be a pain becuase TCInitializer
+  has a number of recursive calls.)
+Email:
+  
+  build-ast.sml (TCInitializer) does not appear to look into typedefs.
+  Therefore,
+  
+  typedef struct {int x,y; } point;
+  
+  point x = {2,3};
+  
+  fails to typecheck although gcc accepts it.
+  
+
+--------------------------- Sat Jul 31 19:12:59 1999 --------------------------
+
+Test: valid-programs/a61.c
+Status: fixed 31/july/99
+Fix: Shadow struct definitions were simply ignored.  They generated nothing in
+   Ast, and in fact there was no way to represent these definitions.
+   The fix was to change the TypeDecal contructor from:
+
+     TypeDecl of tid
+
+   to
+
+     TypeDecl of {shadow: {strct:bool} option, tid:tid}
+
+   and then use TypeDecl{SOME{strct=true}, tid=....} to represent "struct x;" 
+   TypeDecl{SOME{strct=false}, tid=....} to represent "union x;" 
+
+Email:
+  Date: Thu, 29 Jul 1999 14:15:12 -0400
+  From: Fred Smith <fsmith@research.att.com  
+  I couldn't figure out exactly why but the compiler does not seem to emit
+  anything for empty structure declarations such as
+  
+  struct t;
+  
+  although the code looks like it should.  Instead it just omits them.  In
+  one of the libraries we are using, a declaration like this is used to
+  hide implementation details. When omitted we get a lot of spurious
+  warnings from the C compiler.
+  
+
+--------------------------- Sat Jul 31 20:14:32 1999 --------------------------
+
+Test: valid-programs/a62.c
+Status: fixed 31/july/99
+Fix: Spurious casts were inserted in some cases because the eq test that was used by cast
+did not deref typedefs (amongst other things).
+The simple fix is to replace:
+
+      if lookAid aid' = ty then expr  (* DBM: gen. equality on types *)
+
+by
+
+       if getCoreType(lookAid aid') = getCoreType ty then expr  (* DBM: gen. equality on types *)
+
+in the code for wrapCast.
+
+Email:
+  Date: Thu, 29 Jul 1999 17:00:54 -0400
+  From: Fred Smith <fsmith@research.att.com>
+
+  I ran some tests and a cast is being inserted whenever
+  a typedef occurs.  In fact the following code:
+
+  typedef struct { int x,y,z; } w;
+  
+  void main() {
+   w foo;
+   foo = foo;
+  }
+  
+  is compiled to
+  struct t12 { int x,y,z; };
+  
+  typedef struct t12 w_t13;
+  void main ()
+  {
+    w_t13 foo_p17;
+    foo_p17 = ((struct t12) foo_p17);
+  }
+  modulo formatting.
+  
+
+--------------------------- Sat Jul 31 20:24:30 1999 --------------------------
+
+Test: invalid-programs/r60.c
+Status: fixed 31/july/99
+Fix: Get rid of extra loc args in definitions of checkAssignableTys and checkAssign.
+
+  Date: Fri, 30 Jul 1999 10:15:36 -0400
+  From: Fred Smith <fsmith@research.att.com>
+  
+  The following C program compiles and type-checks under Ckit but
+  obviously should not.
+  
+  struct w { int x,y,z; };
+  
+  void main() {
+   struct w foo;
+   float x;
+   x = foo;
+  
+  }
+  
+  It took me a long time to track this one down since the code looks
+  absolutely correct.  The problem was that all calls to checkAssign in
+  build-ast.sml failed to pass in a location.  Since checkAssign was being
+  used solely for its side-effect, both occurences were in contexts like
+  (one case preceded a ; )
+      val _ = checkAssign ....
+  
+
+--------------------------- Wed Sep 22 17:20:03 1999 --------------------------
+
+Test: valid-programs/a63.c
+Status: fixed 22/Sept/99
+Fix: apply preArgConv to parameter types before adding them to local symbol table
+
+The following C program does not type check under ckit and it should:
+
+void f();
+
+main () {
+ int y[4];
+ f(y);
+} 
+
+void f(int x[4]) {
+ int *y;
+ x = y;
+ x[3] = 1;
+}
+
+C is a horrible language -- if you declare an array as an arg to a function,
+then "array of type" is adjusted to "pointer to type".
+
+
+--------------------------- Wed Sep 22 17:34:55 1999 --------------------------
+
+Test: invalid-programs/r62.c
+Status: fixed 22/Sept/99
+Fix: use lookLocalScope to check if parameter is locally defined before adding it.
+
+The following C program type checks under ckit and it should not:
+
+main () {
+ return(0);
+}
+
+f(int x, int x) {
+  x = x;
+}
+
+
+--------------------------- Mon Sep 27 19:17:33 1999 --------------------------
+
+Test: not available
+Status: fixed 27/Sept/99
+Problem: Redeclarations did not inherit the pid of the previous declaration.
+
+e.g. 
+
+extern int i;
+
+extern int i;
+
+would be allocated different pid's.
+Bug was introduced during build-ast overhaul.
+
+Fix: checkIdRebinding now returns an extra parameter (a uid option).
+
+
+--------------------------- Mon Sep 27 19:20:48 1999 --------------------------
+
+Test: not available
+Status: fixed (see a64.c, a65.c below)
+Problem: We don't check for non-constant expressions in non-simple initializers.
+
+int f(int j) {
+ int x[4] = {0,1,2,3};  /* this is ok */
+ int x[4] = {0,j,2*j,3*j};  /* this isn't */
+}
+
+but our frontend currently gives an unhesitant thumbs up for this code.
+
+
+--------------------------- Fri Oct 15 14:24:36 1999 --------------------------
+
+Test: not available
+Status: fixed 15/Oct/99
+Fix: in sizeof.sml, function computeFieldListStruct,
+     change foldr to foldl and reverse final list.
+Problem: 
+> From: chandra@research.bell-labs.com (Satish Chandra)
+> Date: Thu, 14 Oct 1999 22:30:05 -0500
+> 
+> This has been quite a while, and the code might have changed much, but ...
+> 
+> In function computeFieldListStruct, foldr computes offsets the wrong way.
+> I think we need foldl, and later on reverse the accumulated list called
+> "tab".
+
+--------------------------- Tue Sep 14 11:30:44 1999 --------------------------
+
+TEST: a64.c, a65.c
+STATUS: fixed 12/jan/99
+FIX: propagated isZeroExpr info for function args to checkFn (in type-utils),
+     so that zero test can be included when checking assignment of zero to
+     arg of pointer type.
+EMAIL:
+From: Kathleen Fisher <kfisher@research.att.com>
+Date: Mon, 10 Jan 2000 15:28:02 -0500 (EST)
+
+The ckit compiler doesn't treat 0 as a legal function pointer.  The
+program:
+
+***************************************************
+void f(int(* goo)(int)){}
+
+void main(){
+ f(0);
+}
+***************************************************
+
+gives the error message:
+
+"/fs/smaug/home4/kfisher/hancock/tests/suite/test.hc":4.2-6: error: Bad
+function call: arg 1 has type int but fn parameter has type int (*) (int)
+
+
+Kathleen
+
+--------------------------- Tue Jan 11 23:12:50 2000 --------------------------
+
+TEST: a66.c
+STATUS: fixed 12/jan/99
+FIX: Pretty-printer bug.
+     pp-ast-fn.sml: 
+	changed the code for the e0 case of QuestionColon to
+	   ; ppExpr {nested=true} aidinfo tidtab pps e0
+EMAIL:
+From: Alexey Loginov <alexey@cs.wisc.edu>
+Date: Sun, 28 Nov 1999 12:43:16 -0600 (CST)
+Hi Nevin and Dave,
+
+We found another bug that isn't fixed in the version of ckit you sent
+us.  I also didn't see it in the bug list.  Expressions containing the
+"?:" operator are not parenthesized correctly to account for its
+right-associativity.  (In the following program, lines 5 and 7 mean
+the same thing but line 6 is different.)
+
+void main() {
+
+  char a, b, c, d, e;
+
+  a?b:c?d:e;     /* Line 5. */
+  (a?b:c)?d:e;   /* Line 6. */
+  a?b:(c?d:e);   /* Line 7. */
+}
+
+
+Output C code:
+
+- ParseToAst.fileToC "/u/a/l/alexey/types/test/quest_col.c";
+
+void main ()
+{
+  char a;
+  char b;
+  char c;
+  char d;
+  char e;
+  a ? b : c ? d : e;
+  a ? b : c ? d : e;
+  a ? b : c ? d : e;
+}
+
+
+Thanks,
+-Alexey
+
+--------------------------- Tue Jan 11 23:12:52 2000 --------------------------
+
+
+TEST: r64.c
+STATUS: fixed 12/jan/00
+FIX: Add check of initializers to see if const (only non-const
+     case is an object of dynamic storage duration (i.e. non-global, non-static).
+     Notion of const is complex -- need to recurse through arithmetic, ?-: etc.
+     (Long term issue: constant expressions should really be reduced to constants.)
+EMAIL:
+Date: Tue, 7 Dec 1999 17:22:48 -0500 (EST)
+From: Kathleen Fisher <kfisher@research.att.com>
+
+The following code:
+
+  struct foo_t{
+    int x;
+    int y;
+  };
+ 
+  void f(int x0, int y0){
+    struct foo_t myfoo = {x0,y0};
+  }
+
+  void main(){
+    f(0,0);
+  }
+
+passes through the ckit compiler without complaint, but cc reports the
+following error:
+
+"bug.c", line 8: error(1028): expression must have a constant value
+    struct foo_t myfoo = {x0,y0};
+                          ^
+
+"bug.c", line 8: error(1028): expression must have a constant value
+    struct foo_t myfoo = {x0,y0};
+
+
+======================================================================
+Numbered Bugs
+======================================================================
+
+NUMBER: 1
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/10/00
+TEST: regression/valid-programs/a211.c,a212.c,a213.c,a214.c,a215.c
+STATUS: fixed 3/10/00 (nch)
+DESCRIPTION:
+  Enum constants which were not assigned values in original source
+  are assigned 0 in output.
+
+  - enum { e1,e2,e3 } e;
+
+	--> enum t1 { e1=0, e2=0, e3=0 };
+	    enum t1 e;
+
+
+----------------------------------------------------------------------
+NUMBER: 2
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/10/00
+TEST: 
+STATUS: fixed 3/31/00 
+DESCRIPTION:
+  functions returning function pointers.  Function signal is a good
+  real-life example.  It's mentioned in Harbison and Steele p. 270
+  or so (sorry I don't have the book with me).
+
+   int (*fp(double))(float);
+
+	--> int (*) (float) fp (double);
+
+	    which does not compile.
+
+
+----------------------------------------------------------------------
+NUMBER: 3
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/10/00
+TEST: regression/valid-programs/a216.c
+STATUS: fixed 3/10/00
+FIX: The problem was that the type for the second variable was array(const char),
+     and the code did not strip off the const inside the array constructor.
+     The fix was to add an extra case to look for qualifiers inside arrays in initializer-normalizer.
+DESCRIPTION:
+  inconsistent interpretation of initialization of constant
+  character arrays:
+
+   char c[] = "abcdefg";
+   const char cc[] = "abcdefg";
+
+	--> char c[8]={97,98,99,100,101,102,103,0};
+	    char const cc[1]={"abcdefg"};
+
+
+----------------------------------------------------------------------
+NUMBER: 4
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/10/00
+TEST: a232.c
+STATUS: fixed 24/Mar/00
+FIX:
+The pretty-printer in fact has enough information to know
+whether the original definition of a function was k&r or not:
+just look at the function params and at the function type.
+If the function type has no args, but the function has
+params, then we have k&r style.
+The case of FunctionDef in ppCoreExternalDecl now
+has code to recognize this case and print out K&R defns.
+
+DESCRIPTION:
+  old style C function parameter declarations have different
+  semantics from new style (with respec to promotions) and
+  should be preserved.
+
+   void foo(int);
+   void foo(c)
+   char c; { }
+
+	--> compiles, but
+
+   void foo(int);
+   void foo(char c) { }
+
+	--> which is output by ckit, does not
+
+
+----------------------------------------------------------------------
+NUMBER: 5
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/10/00
+TEST: regression/valid-programs/a222.c (for both problems)
+STATUS: fixed 3/10/00
+FIX for 1: change default value of flag local_externs_ok to true
+FIX for 2: changed checking code for initializations (build-ast.sml and initializer-normalizer.sml)
+DESCRIPTION:
+  Inconvinient Warnings:
+
+   - int foo() { extern int bar; }
+
+	  --> error: `extern' not allowed in local declarations
+
+   - struct S s = t; (in general, struct S = <exp> where <exp> is
+     not of the form {...})
+
+	  --> error: badly formed union/struct initializer: expecting {
+
+COMMENT:
+  These last two errors don't seem to affect the output, so we just
+  ignore them.  The others are causing problems on various utilities of
+  the GNU website.  (We're ignoring the issues with the use of GNU C.)
+
+  Local extern warning was fixed by making local_externs_ok contain true
+  in build-ast.sml.  There remains a question about whether the semantics
+  is correct in all cases.  (see regression/invalid-programs/r65.c, which
+  appears to be handled properly -- produces an error message.) [dbm, 3/10/00]
+
+
+----------------------------------------------------------------------
+NUMBER: 6
+SUBMITTER: John Reppy <jhr@research.bell-labs.com>
+DATE: 2/10/00
+TEST: none
+STATUS: fixed
+FIX: introduced a sizes record type in sizes-sig.sml, and parameterized
+  makeAst, SizeOf fns, and ParseToAst.fileAst' with respect to sizes.
+  The Sizes structure provides a default value Sizes.defaultSizes.  
+  sizes-sig.sml and sizes.sml moved from variants(/ansic) to ast.
+  [Plan is to provide a structure containing a set of sizes values for
+  various platform/compiler combinations.]
+  Removed bogus stale sizes-sig.sml file (the real signature contains longlong and longdouble).
+  Fixed sizeof so that it now:
+  a) provides the standard functionality for bitfields of char and short;
+  b) has flags to modify the standard behaviour
+  We can now simulate the behaviour of cc, lcc and gcc (wrt e.g. alignment 
+  issues for unnamed bitfields).
+
+DESCRIPTION:
+  The type metrics in the CKit are broken in several ways.  First, it seems
+  that the SIZES signature does not include longlong or longdouble.  Second,
+  the sizes are hard-coded in, instead of being ABI dependent.  I'd recommend
+  replacing the Sizes structure with a record type:
+
+      type metrics = {bits : int, align : int}
+
+      type interface = {
+	  charMetric : metrics,
+	  shortMetric : metrics,
+	  intMetric : metrics,
+	  longMetric : metrics,
+	  longlongMetric : metrics,
+	  floatMetric : metrics,
+	  doubleMetric : metrics,
+	  longdoubleMetric : metrics,
+	  pointerMetric : metrics,
+	  structAlign : int,
+	  bitFieldAlignment : int option
+	}
+
+  For the IA32/SVID, the values should be
+
+	  char		8	8
+	  short		16	16
+	  int		32	32
+	  long		32	32
+	  long long	64	32
+	  float		32	32
+	  double		64	32
+	  long double	96	32
+	  pointer		32	32
+	  struct align	-	8
+
+  One can probably write a small C program that generates this information.
+  [jhr has given one to nch -dbm]
+
+  [dbm, 3/8/00] The ast/sizes-sig.sml version of SIZES doesn't include
+  longlong or longdouble, but the variants/sizes-sig.sml version does.
+  That seems to be the version used in (e.g.) variants/*/config.sml.
+
+  The variants/sizes-sig.sml also defines a "layout" type corresponding
+  to John's "metrics".  The ast version of SIZES does not seem to be
+  mentioned anywhere except in ast/sizes-sig.sml, where it is defined,
+  so it looks like this is an old, vestigial version that has been superceded
+  by the variants version.
+
+  [dbm, 3/14/00] John still advocates using a record.  He anticipates wanting
+  to switch target architectures dynamically (either by passing the record
+  as a value, or by setting a global value) in the midst of processing.
+
+
+----------------------------------------------------------------------
+NUMBER: 7
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/18/00
+TEST: regression/valid-programs/a224.c
+STATUS: fixed 3/10/00 (see bug 9)
+DESCRIPTION:
+  '\0' is treated as '0' and not as a null character.  We didn't check
+  for any other special characters.
+
+  INPUT:
+
+  char c_null = '\0';
+  char c_zero = '0';
+
+  int main () { return 0; }
+
+  OUTPUT:
+
+  char c_null=48;
+  char c_zero=48;
+  int main ()
+  {
+    return 0;
+  }
+
+COMMENT:
+  This is a special case of bug 9.
+
+
+----------------------------------------------------------------------
+NUMBER: 8
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/18/00
+TEST: a227.c
+STATUS: fixed 24/Mar/00
+FIX: 
+The problem was in type-util.sml,
+where the function conditionalExp is used to type check conditional expressions.
+The relevant case statement in the body of the function is
+where both arguments (after usualUnaryCnv) have Pointer type.
+In this case, composite is called -- the problem is that the
+call to composite reverts to the original arguments ty1 and ty2 of the call
+to conditionalExp, rather than the results of applying usualUnaryCnv.
+
+(Note that the function composite can not and should not
+apply usualUnaryCnv to its arguments.)
+
+It turns out that this same error appears in three other places in the code 
+(in isEquable, isSubtractable and isComparable).
+
+With insert_explicit_coersions set to true, you now obtain:
+
+original program (a227.c):
+
+int main() {
+   int *ip;
+   int *jp;
+   int ia[3];
+   jp = (1 ? ia : ip);
+ }
+
+fileToC output:
+
+int main ()
+{
+  int *ip;
+  int *jp;
+  int ia[3];
+  jp = (1 ? (int *) ia : ip);
+}
+
+
+DESCRIPTION:
+  "?:" operator typing.
+
+   int *ip;
+   int *jp;
+   int ia[3];
+   jp = (1 ? ia : ip);
+
+      --> error: Type Error: Unacceptable operands of question-colon.
+
+	  C semantics (we think):
+		       --> jp = (1 ? (int *) ia : ip);
+				     ^^^^^^^
+		       (implicit cast of ia to pointer)
+
+
+	  Current implementation:
+		       --> jp = (1 ? ia : (int[3]) ip);
+					  ^^^^^^^^
+				(implicit cast of ip to array)
+
+COMMENT:
+  Of course, code is still output correctly (without the implicit cast)
+  but since we actually use the implicit casts to materialize some
+  casts, we rely on their correctness.
+
+
+----------------------------------------------------------------------
+NUMBER: 9
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/22/00
+TEST: regression/valid-programs/a223.c
+STATUS: fixed 3/10/00
+DESCRIPTION:
+  To follow up on this [bug 8] I wanted to mention that it looks like ckit
+  handles '\ooo' in three different ways depending on the number of
+  octal digits.  In C the number of digits can be 1-3 but ckit only
+  handles 3 digit numbers correctly.  Two digit numbers are processed as
+  decimal numbers.  Single digit numbers are processed as if '\' weren't
+  there (i.e. taken as ascii values).
+
+  INPUT:
+
+  char c_octal_0 = '\0';
+  char c_octal_51 = '\051';
+  char c_octal_60 = '\60';
+  char c_octal_7 = '\7';
+
+  int main () { return 0; }
+
+
+  OUTPUT:
+
+  char c_octal_0=48;   /* Should be  0 */
+  char c_octal_51=41;  /* Correct      */
+  char c_octal_60=60;  /* Should be 48 */
+  char c_octal_7=55;   /* Should be  7 */
+  int main ()
+  {
+    return 0;
+  }
+
+  Of course, '\0' is the most common of these.  Do you have a time frame 
+  for when you think the problems I mentioned before might be fixed?
+
+COMMENT:
+  [dbm] fixed by changing the rule in parser/grammar/c.lex to take 1 to 3 
+  octal digits instead of exactly 3 ({1,3} replaced {3} as the modifier).
+
+
+----------------------------------------------------------------------
+NUMBER: 10
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 2/23/00
+TEST: regression/valid-programs/a226.c
+STATUS: fixed 3/10/00
+FIX: Stupid cut-and-paste problem: preincrements/predecrements were getting
+     transformed into postincrements/postdecrements in build-ast.sml.
+DESCRIPTION:
+  preincrement and predecrement behavior
+
+  INPUT:
+
+  int main () {
+   int i = 10;
+
+   int i1 = ++i;
+   int i2 = --i;
+
+   return 0; }
+
+
+  OUTPUT:
+
+  int main ()
+  {
+    int i=10;
+    int i1=i++;
+    int i2=i--;
+    return 0;
+  }
+
+COMMENT:
+
+----------------------------------------------------------------------
+NUMBER: 12
+SUBMITTER: Kathleen Fisher <kfisher@research.att.com>
+DATE: 3/15/00
+TEST: a230.c
+STATUS: fixed 24/Mar/00
+FIX:
+The bug was because the implementation of the non-default
+behaviour of convert_function_args_to_pointers was not complete (there was
+a missing case in isAssignable in type-utils.sml).  To put it another way,
+too much of the code was assuming that convert_function_args_to_pointers
+was set to the standard value, and in particular, that certain coersions had
+been performed *before* isAssignable was called.  These coersions are not
+performed when convert_function_args_to_pointers is false.
+
+DESCRIPTION:
+We've run into a problem with ckit when we turn the flag
+convert_function_args_to_pointers to false in the config.sml file.
+The following program:
+
+********************************************************
+typedef int *windowTy[1];
+
+int f (windowTy w)
+{
+ return 1;
+}
+
+void main(){
+  windowTy w;
+  f (w);
+}
+********************************************************
+
+compiles just fine using cc, but it generates the following
+error if we compile it with ckit:
+
+"array-param.hc":11.3-8: error: Bad function call: arg 1 has type windowTy
+but fn parameter has type windowTy
+
+
+----------------------------------------------------------------------
+NUMBER: 13
+SUBMITTER: Olivier Tardieu
+DATE: 24/Mar/00
+TEST: a301.c
+STATUS: fixed 24/Mar/00
+FIX: 
+! should be type checked like || and && instead of like a simple
+unary operator.  Extra code (a function logicalOp1) has
+been added to do this.
+
+DESCRIPTION:
+
+main() {
+  void* p;
+
+  !p;
+}
+
+gives type error 
+     error: Type Error: operand of unary op ! must be a number.
+
+
+----------------------------------------------------------------------
+NUMBER: 14
+SUBMITTER: Alexey Loginov <alexey@cs.wisc.edu>
+DATE: 4/17/00
+TEST: a240.c
+STATUS: fixed 16/June/00
+FIX:
+There is a flag to control this behaviour in config.sml:
+ Config.TypeCheckControl.convert_function_args_to_pointers
+
+It should be set to true for standard behaviour (but was set to false
+for some reason -- maybe temporarily for debugging something else, and then
+not reverted back to true??).
+
+This is actually an ambiguous case: a strict reading of the standard would
+suggest that this should be flagged as a type error, but most
+compilers allow it, so it is "standard".
+
+DESCRIPTION: array formals
+
+This one is similar to the ?: bug we reported earlier (Bug number 8).
+
+void foo(int a[]);
+
+int main() {
+  int * ip;
+  foo(ip);
+}
+
+Output:
+
+"tt.c":5.3-10: error: Bad function call:
+               arg 1 has type int * but fn parameter has type int []
+
+Correct C output is still produced but the implicit type of ip inside
+the call to foo has int array type.  This is a problem for our
+instrumentation.
+
+

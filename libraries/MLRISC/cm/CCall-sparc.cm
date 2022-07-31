@@ -1,0 +1,42 @@
+(* This file is created by makeallcm *)
+Library
+	structure SparcCSizes
+	functor SparcCCallFn
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/MLRISC.cm
+	$/Graphs.cm
+	$/MLTREE.cm
+	$/StagedAlloc.cm
+	$/CCall.cm
+	$/SPARC.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	SPARC.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	Graphs.cm
+	MLTREE.cm
+	StagedAlloc.cm
+	CCall.cm
+	SPARC.cm
+#endif
+	../c-call/archs/sparc-c-sizes.sml
+	../c-call/archs/sparc-c-call-fn.sml

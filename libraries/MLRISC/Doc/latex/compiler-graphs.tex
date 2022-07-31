@@ -1,0 +1,434 @@
+\section{Basic Compiler Graphs}
+
+\subsection{Introduction}
+In this section we describe the set of core compiler specific graphs and
+algorithms implemented in MLRISC.
+Mostly of these algorithms are parameterized with respect
+to the actual intermediate representation, and as such they
+do not provide many facilities that are provided by higher abstraction
+layers, such as in \href{mlrisc-ir.html}{MLRISC IR}, 
+or in \href{SSA.html}{SSA}.
+
+\subsubsection{Dominator/Post-dominator Trees}
+\newdef{Dominance}
+is a fundamental concept in compiler optimizations.
+Node $A$ $dominates$ $B$ 
+iff all paths from the start node
+to $B$ intersects A.  A dual notion is the concept of 
+$post-dominance$:
+$A$ \newdef{post-dominates} $B$ iff all paths from $B$ to the stop node
+intersects $A$.  A (post-)dominator tree can be used
+to summarize the dominance/post-dominance relationship.
+
+\begin{SML}
+ functor \mlrischref{ir/dominator.sml}{DominatorTree}
+    (GraphImpl : GRAPH_IMPLEMENTATION) : DOMINATOR_TREE
+\end{SML}
+   The functor implements dominator analysis and 
+creates a dominator/post-dominator tree from a graph $G$.  A dominator tree is implemented as a graph
+with the following definition:
+\begin{SML}
+ signature \mlrischref{ir/dominator.sig}{DOMINATOR_TREE} = sig
+    exception Dominator
+    datatype 'n dom_node =
+       DOM of \{ node : 'n, level : int, preorder : int, postorder : int \}
+    type ('n,'e,'g) dom_info
+    type ('n,'e,'g) dominator_tree = ('n dom_node,unit,('n,'e,'g) dom_info) graph
+    type ('n,'e,'g) postdominator_tree = ('n dom_node,unit,('n,'e,'g) dom_info) graph
+\end{SML}
+
+We annotated each node in
+a dominator tree with three extra fields of information, which
+is useful for other algorithms:
+\begin{itemize}
+  \item\sml{level} is the nesting level of the tree.  The root
+  node has level 0, children of the root has level 1 and so on.
+  \item\sml{preorder} is the preorder numbering of a node
+  \item\sml{preorder} is the postorder numbering of a node.
+\end{itemize}
+
+To create a dominator tree and a postdominator tree
+from a graph, the following function should be called.
+\begin{SML}
+ val dominator_trees : ('n,'e,'g) graph ->
+         ('n,'e,'g) dominator_tree * ('n,'e,'g) postdominator_tree
+\end{SML}
+We use the algorithm of Tarjan and Lengauer, which
+runs in time $O(|V+E|\alpha(|V+E|))$ where $\alpha$ is the functional
+inverse of the Ackermann function.
+
+To perform many common queries on a dominator tree, we first
+call the function \sml{methods} to obtain a method object.
+\begin{SML} 
+  val methods : ('n,'e,'g) dominator_tree -> dominator_methods
+\end{SML}
+
+The methods are packed into the following type:
+\begin{SML}
+   type dominator_methods =
+         \{ dominates              : node_id * node_id -> bool,
+           immediately_dominates  : node_id * node_id -> bool,
+           strictly_dominates     : node_id * node_id -> bool,
+           postdominates          : node_id * node_id -> bool,
+           immediately_postdominates : node_id * node_id -> bool,
+           strictly_postdominates : node_id * node_id -> bool,
+           control_equivalent     : node_id * node_id -> bool,
+           idom         : node_id -> node_id, $(* ~1 if none *)$
+           idoms        : node_id -> node_id list,
+           doms         : node_id -> node_id list,
+           ipdom        : node_id -> node_id, $(* ~1 if none *)$
+           ipdoms       : node_id -> node_id list,
+           pdoms        : node_id -> node_id list,
+           dom_lca      : node_id * node_id -> node_id,
+           pdom_lca     : node_id * node_id -> node_id,
+           dom_level    : node_id -> int,
+           pdom_level   : node_id -> int,
+           control_equivalent_partitions : unit -> node_id list list
+         \}
+\end{SML}
+
+The query methods are as follows:
+\begin{methods}
+  dominates($a,b$)             & returns true iff $a$ dominates $b$ \\
+  immediately\_dominates($a,b$) & returns true iff $a$ immediately dominates $b$ \\
+  strictly\_dominates($a,b$)    & returns true iff $a$ strictly dominates $b$ \\
+  postdominates($a,b$)            & returns true iff $a$ post-dominates $b$ \\
+  immediately\_postdominates($a,b$) & returns true iff $a$ immediately post-dominates $b$ \\
+  strictly\_postdominates($a,b$) & returns true iff $a$ strictly post-dominates $b$ \\
+  control\_equivalent($a,b$) & 
+  returns true iff $a$ dominates $b$ and vice versa \\ 
+  idom($a$) & returns the immediate dominator of $a$, or $-1$ if none exists \\
+  idoms($a$) & returns all nodes that $a$ immediately dominates \\
+  doms($a$) & returns all nodes that $a$ dominates (including $a$ itself) \\
+  ipdom($a$) & returns the immediate post-dominator of $a$, or $-1$ if none exists \\
+  ipdoms($a$) & returns all nodes that $a$ immediately post-dominates \\
+  pdoms($a$) & returns all nodes that $a$ post-dominates (including $a$ itself) \\
+  dom\_lca($a,b$) & returns the least common ancestor of $a$ and $b$ in
+  the dominator tree \\
+  pdom\_lca($a,b$) & returns the least common ancestor of $a$ and $b$
+  in the post-dominator tree \\
+  dom\_level($a$) & returns the nesting level of $a$ in the dominator tree \\
+  pdom\_level($b$) & returns the nesting level of $a$ in the post-dominator 
+  tree \\
+  control\_equivalent\_partitions & partitions the graph into
+  a set of control equivalent nodes.
+\end{methods}
+
+The methods \sml{dom_lca}, \sml{pdom_lca} and 
+\sml{control_equivalent_partitions} executes in $O(n)$ time, where
+$n$ is the size of the dominator tree.  The other methods run in $O(1)$ time.
+
+\subsubsection{Control Dependence Graph}
+Given two nodes $A$ and $B$ in a control flow graph $G$, 
+we say that $B$ is \newdef{control dependent} on $A$ iff
+\begin{itemize}
+  \item $B$ post-dominates a successor of $A$
+  \item $B$ does not strictly post-dominates $A$
+\end{itemize}
+Intuitively, $B$ is control dependent on $A$ means that
+some path in the program that goes through $A$ can by-passed $B$,
+and furthermore, $A$ is the point in which this divergence can occur.
+Control dependence is used to various kinds of analysis and optimizations in
+a compiler, such as code motion and global scheduling~\cite{bernstein-rodeh}.
+
+To build a control dependence graph, the functor
+\sml{ControlDependenceGraph} can be used:
+\begin{SML}
+ signature \mlrischref{ir/cdg.sig}{CONTROL_DEPENDENCE_GRAPH} = sig
+    type ('n,'e,'g) cdg = ('n,'e,'g) graph
+
+    val control_dependence_graph :
+          ('e -> bool) ->
+          ('n,'e,'g) dominator_tree *
+          ('n,'e,'g) postdominator_tree ->
+          ('n,'e,'g) cdg
+ end
+ functor \mlrischref{ir/cdg.sml}{ControlDependenceGraph}
+    (structure Dom : DOMINATOR_TREE
+     structure GraphImpl : GRAPH_IMPLEMENTATION
+    ) : CONTROL_DEPENDENCE_GRAPH
+\end{SML}
+The control depedence graph is a subcomponent of the
+program dependence graph commonly used in
+modern compiler optimizations.
+
+\subsubsection{Dominance Frontiers}
+
+Many algorithms involving the notion of control dependence or dominance
+can be rephrased in terms of \newdef{dominance frontiers}.
+A node $A$ is in the dominance frontiers of $B$ iff
+$B$ dominates a predecessor of $A$ but $B$ does not strictly-dominate $A$.
+We denote this as $A \in DF(B)$. 
+The dual notion of \newdef{post-dominance frontiers} can be defined
+analogously using the post-dominator tree\footnote{Control dependence
+can be defined in terms of post-dominance frontiers.}.  
+
+\begin{SML}
+  functor \mlrischref{ir/dominance-frontier.sml}{DominanceFrontiers}(Dom : DOMINATOR_TREE) : DOMINANCE_FRONTIERS
+\end{SML}
+The functor \sml{DominanceFrontiers} can be used to
+compute all the dominance frontiers of all the nodes in a graph.
+It has the following signature. 
+
+\begin{SML}
+ signature \mlrischref{ir/dominance-frontier.sig}{DOMINANCE_FRONTIERS} = sig
+   structure Dom : DOMINATOR_TREE
+   type dominance_frontiers = node_id list array
+   val DFs : ('n,'e,'g) Dom.dominator_tree -> dominance_frontiers
+ end
+\end{SML}
+
+\subsubsection{Iterated Dominance Frontiers}
+
+\newdef{Iterated dominance frontiers} (denoted as $DF^+$) are defined
+as the least fixed point of iterating the operation $DF$. Formally,
+define the dominance frontiers on a set $S$ as follows:
+\[ 
+   DF(S) \defas \Union_{A \in S} DF(A) 
+\]
+Define iteration of $DF$, denoted as $DF^n$, as follows:
+\begin{eqnarray*}
+  DF^1(S)     & \defas & DF(S) \\
+  DF^{n+1}(S) & \defas & DF(S \union DF^n(S)) \\
+\end{eqnarray*}
+The iterated dominance frontiers $DF^+(S)$ on a set $S$ are defined as
+the limit:
+\[  
+   DF^+(S) \defas \lim_{n \to \infty} DF^n(S) 
+\]
+
+Iterated dominance frontiers of a set $S$ can be computed in
+time $O(|S|+|V|+|E|)$ using the 
+algorithm by Sreedhar and Gao~\cite{linear-time-IDF}\footnote{
+In practice it is often sub-linear in $|V|+|E|$.}.
+
+\begin{SML}
+  functor \mlrischref{ir/djgraph.sml}{DJGraph}(Dom : DOMINATOR_TREE) : DJ_GRAPH
+\end{SML}
+The functor \sml{DJGraph} implements this algorithm.
+It satisfies the signature below:
+\begin{SML}
+ signature \mlrischref{ir/djgraph.sig}{DJ_GRAPH} = sig
+    structure Dom : DOMINATOR_TREE
+    type ('n,'e,'g) dj_graph = ('n,'e,'g) Dom.dominator_tree
+    val dj_graph : ('n,'e,'g) dj_graph ->
+        \{  DF   : node_id -> node_id list,
+           IDF  : node_id -> node_id list,
+           IDFs : node_id list -> node_id list
+        \}
+ end
+\end{SML}
+The function \sml{dj_graph} takes a dominator tree and returns
+three query methods for computing dominance and iterated dominance frontiers.
+Method \sml{DF} computes $DF(v)$ for a single node $v$.
+Method \sml{IDF} computes the $DF^+(v)$, and method
+\sml{IDFs} computes $DF^+(S)$ when given a set of node ids.
+The dominator tree must not be updated while these operations
+are being performed. 
+
+Sreedhar's original algorithm is phrased in terms of the
+DJ-graph, which is a fusion of the dominator tree
+with its underlying flowgraph.  Our variant operates on the
+dominator tree and the flowgraph at the same time, without
+building an intermediate data structure.  
+
+Iterated dominance frontiers are used
+in many algorithms that deal with the notion of dominance.
+For example, our SSA construction algorithm uses iterated
+dominance frontiers to identify confluent points in the program
+where $phi$-functions are to be placed.
+
+\subsubsection{Loop Nesting Tree}
+
+A \newdef{natural loop} $L$ in a graph is a maximal 
+strongly connected component 
+such that all nodes in $L$ are dominated by a single node $h$, called
+the \newdef{loop header}.  Loops tend to form good optimization candidates
+and consequently \newdef{loop detection} is an essential task in a compiler.
+The functor 
+\begin{SML}
+ functor \mlrischref{ir/loop-structure.sml}{LoopStructure} 
+  (structure GraphImpl : GRAPH_IMPLEMENTATION
+   structure Dom       : DOMINATOR_TREE
+  ) : LOOP_STRUCTURE 
+\end{SML}
+recognizes all natural loops in a graph and built a 
+\newdef{loop nesting tree}
+that describes the loop nesting relationship between graphs.
+
+\begin{SML}
+ signature \mlrischref{ir/loop-structure.sig}{LOOP_STRUCTURE} = sig
+   structure Dom : DOMINATOR_TREE
+   datatype ('n,'e,'g) loop =
+      LOOP of \{ nesting    : int,
+                header     : node_id,
+                loop_nodes : node_id list,
+                backedges  : 'e edge list,
+                exits      : 'e edge list
+              \}
+
+   type ('n,'e,'g) loop_info
+   type ('n,'e,'g) loop_structure = (('n,'e,'g) loop,unit, ('n,'e,'g) loop_info) graph
+
+   val loop_structure : ('n,'e,'g) Dom.dominator_tree -> ('n,'e,'g) loop_structure
+   val nesting_level : ('n,'e,'g) loop_structure -> node_id array
+   val header        : ('n,'e,'g) loop_structure -> node_id array
+ end
+\end{SML}
+
+Our algorithm computes the loop nesting tree in time 
+$O((|V|+|E|)\alpha(|V|+|E|))$.
+Each node in this tree represents a loop in the flowgraph, except the
+root of the tree, which represents the entire graph.    
+Given a flowgraph $G$, the root
+of the loop nesting tree is defined to be the sole vertex in 
+\sml{#entry} $G$.  Other nodes in the tree
+are indexed by the loop header node ids.
+
+Loop detection classifies each loop and for 
+each loop $L$, the following information is obtained:
+\begin{itemize}
+ \item An integer \sml{nesting}.   The root of the tree has nesting
+ depth 0.  The top level loops have nesting depth 1, etc.
+ \item The node id of the loop \sml{header} $h$.
+ \item A set of \sml{loop_nodes}.  Loop nodes are
+  nodes that are in the strongly connected
+  component $L$, but excluding the header $h$ 
+  and all nodes that are part of any nested loops.
+   Thus all nodes are uniquely partitioned in header nodes and
+   loop nodes, and loop nodes are further partitioned into different
+   sets according to which headers they are immediately nested under.
+ \item A set of \sml{backedges}.  A back-edge is an
+    edge that targets the header $h$ and originates from a loop node
+    in $L$.
+ \item A set of loop \sml{exits}. An exit-edge is an edge
+   that originates from a loop node within $L$
+   targets a node outside of $L$.  Note that this set does not include
+   any exit-edges contained in loops nested in $L$ but 
+   target a node out of $L$.
+\end{itemize}
+
+\subsubsection{Static Single Assignment}
+
+An SSA construction algorithm based on~\cite{SSA,Briggs-SSA,linear-time-IDF}
+is implemented in the following functor:
+\begin{SML}
+  functor \mlrischref{ir/ssa.sml}{StaticSingleAssignmentForm}
+     (Dom : DOMINATOR_TREE) : STATIC_SINGLE_ASSIGNMENT_FORM
+\end{SML}
+
+SSA-based optimizations in MLRISC
+are actually implemented on top of a
+high-level SSA layer described in Section~\ref{sec:ssa}. 
+So it is not necessary to use this module directly.  Nevertheless,
+there can be situations in which this module can be specialized in other
+ways; for example, in the construction of sparse evaluation graphs.
+
+\begin{SML}
+ signature \mlrischref{ir/ssa.sig}{STATIC_SINGLE_ASSIGNMENT_FORM} = sig
+   structure Dom : DOMINATOR_TREE
+   type var     = int 
+   type phi  = var * var * var list $(* orig def/def/uses *)$
+   type renamer = \{defs : var list, uses: var list\} ->
+                  \{defs : var list, uses: var list\}
+   type copy    = \{dst : var list, src: var list\} -> unit
+
+   val compute_ssa : 
+       ('n,'e,'g) Dom.dominator_tree ->
+       \{ max_var      : var,  
+         defs         : 'n node -> var list,
+         is_live      : var * int -> bool,
+         rename_var   : var -> var,
+         rename_stmt  : \{rename:renamer,copy:copy\} -> 'n node -> unit,
+         insert_phi   : \{block    : 'n node,
+                         in_edges : 'e edge list,
+                         phis     : phi list 
+                        \} -> unit
+       \} -> unit
+ end
+\end{SML}
+
+This module defines the function \sml{compute_ssa}, which
+constructs an SSA graph.  It requires 
+the following information from the client:
+\begin{itemize}
+\item A dominator tree of the flowgraph.
+\item \sml{max_var} -- the maximum variable id (integer) that exists
+in the flowgraph.  All variables are assumed to be indexed by non-negative
+ integers.
+\item \sml{defs}($X$) -- a function that returns $defs(X)$, 
+i.e.~the set of variable names defined in block $X$.
+If a minimal SSA form is desired, this set should include all the definitions
+in $X$.  If a pruned SSA form is required, this set should
+include only the set of names that are live-out in $X$.
+\item \sml{is_live}($v,X$) -- a function that determines if
+variable $v$ is live-in into block $X$.  If not, a $\phi$-function will
+not be placed in $X$.  For example, to compute
+the minimal-SSA form, this function should always return true. 
+\item \sml{rename_var}($v$) -- a function that returns a new 
+unique name for variable $v$.   
+\item \sml{rename_stmt} -- a function of type
+       \sml{{rename:renamer,copy:copy} -> 'n node -> unit} where
+\begin{SML}
+   type renamer = \{defs : var list, uses: var list\} ->
+                  \{defs : var list, uses: var list\}
+   type copy    = \{dst : var list, src: var list\} -> unit
+\end{SML}
+Function \sml{rename_stmt} is called for each block
+in the flowgraph in the order of the dominator tree, and
+is responsible for renaming all the variables in $X$ by
+calling the functions \sml{renamer} or \sml{copy}.
+Function \sml{renamer} renames all definitions and uses of
+a statement, while function \sml{copy} renames
+of a set of parallel assignments
+\item \sml{insert_phi}($X$,$es$,$phis$) --
+   a function that inserts a set of 
+   $\phi$-definitions $phis$ in block $X$, where $es$
+   is the list of control flow edges that merge into block $X$.
+\end{itemize}      
+
+\subsubsection{IDEFS/IUSE sets}
+Reif and Tarjan define the following useful notions for
+computing approximate birth-points for expressions,  which in turn
+can be used to drive other optimizations.
+Given a node $X$, let $idom(X)$ denote the immediate dominator of $X$.
+Let $def(X)$ ($use(X)$) denote all the definitions (uses) in $X$. 
+Given a path $p \equiv v_1\ldots v_n$, define $def(p)$ ($use(p)$) as
+\begin{eqnarray*}
+   def(v_1\ldots v_n) & \equiv &\union_{i \in 1 \ldots n} def(v_i) \\
+   use(v_1\ldots v_n) & \equiv &\union_{i \in 1 \ldots n} use(v_i)
+\end{eqnarray*}
+
+Let $P(X)$ denotes all the paths from $idom(X)$ to $X$
+that does not cross $idom(X)$ internally.    Then define
+$idef(X)$ ($iuse(X)$) as:
+\begin{eqnarray*}
+  idef(X) & \equiv & \Union_{idom(X) v_1 \ldots v_n X \in P(X)} 
+     def(v_1\ldots v_n) \\
+  iuse(X) & \equiv & \Union_{idom(X) v_1 \ldots v_n X \in P(X)} 
+     use(v_1\ldots v_n) 
+\end{eqnarray*}
+The sets $ipostdef(X)$ and $ipostuse(X)$ are defined analogously
+using the postdominator tree.
+
+\begin{SML}
+ signature \mlrischref{ir/idefs2.sig}{IDEFS} = sig
+   type var = int
+   val compute_idefs : 
+       \{def_use : 'n Graph.node -> var list * var list,
+        cfg     : ('n,'e,'g) Graph.graph
+       \} ->
+       \{ idefuse      : unit -> (RegSet.regset * RegSet.regset) Array.array,
+         ipostdefuse  : unit -> (RegSet.regset * RegSet.regset) Array.array
+       \}
+ end
+ structure \mlrischref{ir/idefs2.sml}{IDefs} : IDEFS
+\end{SML}
+Structure \sml{IDefs} implements the function 
+\sml{comput_idefs} for computing
+the $idef$, $iuse$, $ipostdef$ and $ipostuse$ sets of a control flow
+graph.  It takes as arguments a flowgraph and a function \sml{def_use}, which
+takes a graph node and returns the def/use sets of the node.
+It returns two functions \sml{idefuse} and \sml{ipostdefuse} which
+compute the $idef/iuse$ and $ipostdef/ipostuse$ sets.  These sets
+are returned as arrays indexed by node ids.

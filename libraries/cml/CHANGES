@@ -1,0 +1,448 @@
+This is a record of changes made to CML and the CML Library.
+------------------------------------------------------------
+
+[2020-04-08]
+	Switch to using the "module subtraction" mechanism of CM so that
+	the CML version of the SML/NJ Library tracks the sequential
+	version automatically.  While this change breaks compatibility
+	with the "Old CM", the "New CM" was introduced almost 20 years
+	ago and there are many other sources of incompatibilty.
+
+[2015-10-04]
+	Tracking changes to the SML/NJ implementation of the Basis Library.
+
+[2013-05-05]
+	Added Word64 to CML Basis.  Note that, as with SML/NJ, this is not
+	the LargeWord structure (because of efficiency issues).  Also added
+	some missing SML Basis Library signatures to the CML version of
+	the Basis.
+
+[2012-09-24]
+	Track changes to SML/NJ Library
+
+[2011-05-10]
+        Changed the paths used to specify the CML versions of libraries
+        in a CM file.  The new scheme is
+          $cml/basis.cm         -- the CML version of $/basis.cm
+          $cml/cml.cm           -- core CML features
+          $cml/cml-lib.cm       -- CML library code
+          $cml/trace-cml.cm     -- TraceCML library for debugging
+          $cml/smlnj-lib.cm     -- CML version of the $/smlnj-lib.cm library
+          $cml/inet-lib.cm      -- CML version of the $/inet-lib.cm library
+          $cml/unix-lib.cm      -- CML version of the $/unix-lib.cm library
+
+[2011-02-18]
+	Added barriers.  These are inspired by the similar mechanism in CHP,
+        although we do not include any event-based operations on them as of yet.
+
+[2010-09-16]
+	Fixed the Win32 socket and polling implementation to work correctly
+	with CML. Signature of poll was wrong and didn't handle sockets at all.
+	(Thanks to Lars Bergstrom)
+
+[2008-07-16]
+	Fixed interface to OS.Process so that it agrees with the SML Basis Library
+	(added isSuccess and sleep; status is nolonger an eqtype).
+
+[2007-09-06]
+	Exported Int64 and IntInf from basis.cm.
+
+[2007-02-15]
+	Updates to the cml-lib to track removals from the SML/NJ library.
+
+[2007-01-28]
+	Updates to the cml-lib to track additions to the SML/NJ library.
+
+[2006-12-07]
+	Carried over the fix to the SOCKET signature.
+
+[2006-05-04]
+	Fixed bug with iGetPoll, mTakePoll, and mGetPoll.  In some cases, the
+	atomic region was not being closed properly.  The iGetPoll and mGetPoll
+	operations just read the value field now, since there is reads are
+	atomic.
+
+[2006-02-27]
+	Fixed bug with the combination of withNack and never, where the
+	negative acknowledgement is never generated.  Thanks to Heath
+	Putnam for the bug report and fix.
+
+[2005-02-28]
+	Fixed serious bug in structure Atom. (Must use mvar, not mailbox!)
+
+[2005-02-24]
+	Reuse signature ATOM from $/smlnj-lib.cm, thus tracking all changes.
+	Implement structure Atom in terms of structure Atom in $/smlnj-lib.cm
+	by protecting access to the global hashtable using an mbox lock.
+	Atoms can now be created (sequentially) prior to calling RunCML.doit.
+
+[2004-11-24]
+        Made the IO implementation agnostic of size of Position.int.
+        (Now compiles with either Position = Int31 or Position = Int64.)
+
+[2003-09-23]
+	Accounted for changes to socket API in Basis. (Non-blocking
+	behavior is no longer a stateful property of a socket.  Instead,
+	there are non-blocking versions of most functions in the
+	interface.  This simplifies the CML code since it no longer
+	has to do OS-specific handling of "wouldblock" etc.
+	On the other hand, (trivial) CML implementations of those
+	non-blocking operations had to be added.)
+
+[2003-09-12]
+        Accounted for changed type of inputLine.
+
+[2003-09-09]
+        Made CML compile under Win32 again.
+
+[2003-09-03]
+	Added *_SLICE signatures and *Slice structures (copied from
+	"normal" Basis into CML Basis).
+	Fixed code broken due to API changes (slices).
+
+[2003-05-09]
+	Added the missing implementation of StreamIO event constructors
+	(e.g., TextIO.StreamIO.inputEvt).  Note that if you use these
+	operations, then the system may not shutdown when all user threads
+	are blocked.
+
+[2003-04-21]
+	The CleanUp.logMailbox function was not protected against
+	interrupts (thanks to David Benson for catching this bug).
+
+[2003-04-09]
+	Changed the name of the directory cml-lib/cm to cml-lib/cm-descr
+	in order to avoid a name conflict with cml-lib/CM which gets
+	created by the compilation manager.  (On case-insensitive
+	filesystems such as the one used by MacOS X the two names clash.)
+
+[2003-03-10]
+	Documentation cleanup.
+
+[2002-10-01]
+	Fixed a bad space leak in the stream I/O implementations.  The
+	cleanup hooks were holding onto the initial buffer, which
+	meant that the entire buffer chain would remain live as long
+	as the stream was live.
+
+[2001-06-20]
+	Ported to SML/NJ 110.33 (in particular, the new CM).
+	Under the new CM, the CML library is known as $cml/cml.cm
+	and there is a CML-specific replacement for $/basis.cm
+	known as $cml/basis.cm.  Two additional libraries
+	($cml/cml-internal.cm and $cml/core-cml.cm) are used
+	internally but should not be referred to directly by client code.
+	A CML-specific replacement for $/smlnj-lib.cm is
+	known as $cml-lib/smlnj-lib.cm.  The trace module is
+	$cml-lib/trace-cml.cm. (The aforementioned $cml/core-cml.cm
+	exists mainly to make it possible for $cml-lib/trace-cml.cm
+	to refer to it.)
+
+[2001-03-8]
+	Fixed a problem in the ordering of clean-up actions.  IO streams
+	were being cleaned before servers, which meant that servers could
+	not use I/O in initialization or shutdown.
+
+[2001-01-14]
+	Fixed a bug in the timeout manager.  Cleanup actions were being
+	executed twice, which breaks withNack.
+
+[2000-12-12]
+	Fixed a bug in the I/O manager (core-cml/io-manager.sml), where
+	if there were two threads blocked on the same descriptor (one
+	reading and one writing), the result might be matched to the
+	wrong thread.
+
+[2000-09-28]
+	Version 1.0.13 (SML/NJ Version 110.0.7)
+
+[2000-09-27]
+	Updated the CML Library to track additions to the SML/NJ Library.
+
+[1999-12-08]
+	Fixed a collection of bugs in event.sml related to the handling of
+	negative acknowledgements.
+
+[1999-12-01]
+	Modified RunCML.doit to install a dummy print hook.  This prevents
+	the bug of SML/NJ's print function being called during CML execution
+	(the CML print function is installed by code in TextIO, but that
+	code isn't loaded by CML when the application does not specifically
+	mention TextIO).
+
+Version 1.0.12 (SML/NJ 110.0.6 and 110.8)
+-----------------------------------------
+
+[1999-09-29]
+	Updated the CML Library to track additions to the SML/NJ Library.
+
+[1999-07-05]
+	Added support for Win32 sockets (thanks to Riccardo Pucella).
+
+[1998-08-04]
+	Added preliminary Win32 implementation (thanks to Riccardo Pucella).
+
+[1998-06-01]
+	Fixed type of inputLineEvt in CML_TEXT_STREAM_IO (thanks to A. Appel).
+
+[1998-03-12]
+	Fixed bug in ChanIOFn (failure to spawn threads).
+
+
+Version 1.0.11 (SML/NJ 109.33 and 110)
+--------------------------------------
+
+[1997-11-21]
+	Added TextIO.scanStream function.
+
+[1997-11-21]
+	Added import of PathUtil:PATH_UTIL to CML library.
+
+
+Version 1.0.10 (SML/NJ 109.32)
+------------------------------
+
+[1997-09-18]
+	Fixed a scheduler bug that occured when the atomicState was SignalPending
+	and atomicSwitchTo was used to exit the atomic region.
+
+[1997-09-15]
+	Fixed a bug in the RunCML.doit code that prevented multiple runs (this bug
+	was exposed by the previous bug fix).
+
+[1997-09-15]
+	Fixed a serious bug with the internal condition variables (Event.atomicCVarSet
+	was not changing the state of the variable).
+
+[1997-09-15]
+	Introduced datatype rebinding to eliminate some structure opening.
+
+[1997-09-14]
+	Moved definition of tidToString to RepTypes, so that it can be used in
+	debugging the CML internals.
+
+[1997-09-12]
+	Server initialization/shutdown is now handled by a dedicated cleanup
+	routine.  Eventually, each server should define its own cleanup routine,
+	and we'll get rid of logServer.
+
+[1997-09-12]
+	Fixed bugs in the initialization and shutdown protocols for the standard
+	text streams.
+
+
+Version 1.0.9 (SML/NJ 109.31)
+-----------------------------
+
+[1997-09-02]
+	Added cleanup code for the I/O stacks (including the standard I/O streams).
+
+[1997-08-29]
+	Implemented a clean-up mechansim that is similar to that provided by
+	SML/NJ.  The logging of global servers for initialization/shutdown
+	is now done using cleaners, which provide somewhat finer control.
+	Channel and mailbox logging is still supported, but the initialization
+	is done by a dedicated cleaner.  This change is part of the overhaul
+	of RunCML.
+
+[1997-08-28]
+	Qualified the use of the "cont" type constructor, which is no longer
+	available at top level.
+
+[1997-08-28]
+	Replaced a few holdover uses of "abstraction" with opaque signature matching.
+
+[1997-08-15]
+	RunCML.doit now returns an OS.Process.status value.  If a CML program
+	uses OS.Process.{exit,terminate} to shutdown, then the status argument
+	is returned as the result.  If the system shuts down because of deadlock,
+	the OS.Process.failure is returned.
+
+[1997-08-15]
+	Many changes to ensure that exportFn images do not include the entire
+	top-level environment.  These include: using SMLofNJ.isolate to create
+	top-level continuations, and reimplementing RunCML.exportFn to do better
+	housekeeping.  To get this to work also required a number of changes
+	to the SML/NJ sources.
+
+[1997-08-15]
+	Fixed bug in scheduler, where a timer interrupt in an atomic region
+	was not getting marked by SignalPending.
+
+[1997-07-24]
+	The TextIO.output* functions did not implement line buffering; this
+	has now been added.
+
+
+Version 1.0.8 (SML/NJ 109.30)
+-----------------------------
+
+[1997-07-11]
+	Changed uses of System.Unsafe to Unsafe.
+
+[1997-07-11]
+	Eliminated redefinition of Scheduler structure to avoid loss of inlining,
+	since the compiler handles this properly now.
+
+[1997-07-11]
+	Added Atom.atom' (tracking SML/NJ library changes)
+
+[1997-06-30]
+	Removed Array2:ARRAY2 from library, as this is now gone from the
+	SML/NJ library.
+
+
+Version 1.0.7 (SML/NJ 109.29)
+-----------------------------
+
+[1997-06-11]
+	Changed OS.IO.{pollErr,isErr} to OS.IO.{pollPri,isPri} (this tracks fixes
+	in the SML/NJ implementation of the SML Basis Library.
+
+[1997-06-11]
+	Changes to src/Unix/posix-bin-prim-io.sml to track basis fixes.
+
+
+Version 1.0.6 (SML/NJ 109.28)
+-----------------------------
+
+[1997-05-21]
+	Added a temporary fix so that input operations do not cause the whole
+	CML system to block waiting for input.  Eventually, there should be a
+	CML version of the complete Posix API, which is the right way to avoid
+	this problem.
+
+[1997-05-21]
+	Added RunCML.exportFn.
+	NOTE: there are some problems with the size of exported images that
+	need to be tracked down and fixed.
+
+
+Version 1.0.5 (SML/NJ 109.26)
+-----------------------------
+
+[1997-03-18]
+	Added SyncVar.{mSwap,mSwapEvt} operations, and changed the implementation
+	of multicast channels to use it.
+
+[1997-03-17]
+	Modified SyncVar.{mGet,mGetEvt} to resume other blocked threads (just
+	as iGet does).
+
+[1997-03-16]
+	Fixed a bug in SyncVar.{mTake,mTakeEvt}, where the cell was not getting
+	emptied in some execution paths.
+
+[1997-03-15]
+	Added an "error thread," which is enqueued when CML is not running.
+	This thread will get dispatched if someone tries to execute a CML
+	operation without using RunCML.doit (not including channel allocation,
+	etc.).  I also added a top-level call to Scheduler.reset, which will
+	ensure that the current thread ID is initialized.
+
+[1997-03-13]
+	Fixed a serious bug in SyncVar.{iPut,mPut}, where the cell was not
+	getting filled in some cases.
+
+
+Version 1.0.4 (SML/NJ 109.25.2)
+-------------------------------
+
+[1997-02-28]
+	Added some additional modules to the CML Library: IOUtil:IO_UTIL and
+	KeywordsFn.  These were recent additions to the SML/NJ Library.  I also
+	reorganized the directory structure of the CML library to make it easier
+	to track changes in the SML/NJ Library.
+    
+[1997-02-28]
+	Tracked changes in location of continuation operations changed in SML/NJ.
+
+
+Version 1.0.3 (SML/NJ 109.25.1)
+-------------------------------
+
+[1997-02-25]
+	Fixed bugs in the implementation of the pauseHook and schedulerHook in
+	RunCMLFn (missing atomicBegin).
+
+[1997-02-25]
+	Fixed bug in implementation of TraceCML when TraceToFile was set as the
+	destination.
+
+[1997-02-18]
+	Fixed bug in random access support in BinIOFn and TextIOFn (bug also in
+	SML/NJ implementation).
+
+[1997-02-17]
+	Added logging/unlogging for global mailboxes.
+
+[1997-02-17]
+	Fixed bug in the TraceCML.unwatchThread.  Also changed the implementation
+	to avoid potential races between unwatching a thread and its termination.
+
+[1997-02-15]
+	Various changes to the Scheduler module to improve robustness.  Added
+	an exception handler around the function in enqueueTmpThread.  Replaced
+	enqueueCurThread with enqueueAndSwitchCurThread, which keeps the thread
+	ID bookkeeping in the same place.  And fixed a bug(?) where atomicSwitchTo
+	was failing to set the current thread ID properly.
+
+[1997-02-04]
+	Added sendPoll operation on channels to CML structure.
+
+
+Version 1.0.2 (SML/NJ 109.25)
+-----------------------------
+
+[1997-01-30]
+	Added documentation for the Multicast and TraceCML library modules.
+
+[1997-01-30]
+	Made minor improvements to the implementation of TraceCML.
+
+[1997-01-29]
+	Changes to the SML/NJ system (available in 109.25) now make it possible
+	to use the top-level print function in CML programs (it gets dynamically
+	rebound to CML's version of TextIO.print when a CML program starts running).
+
+[1997-01-27]
+	Renamed CML.atEvt to CML.atTimeEvt.
+
+[1997-01-26]
+	Added SimpleRPC:SIMPLE_RPC to the CML library.
+
+[1997-01-26]
+	Fixed a bug in the I/O manager for the case when two I/O events became
+	enabled for the same thread at the same time.
+
+
+Version 1.0.1 (SML/NJ 109.22)
+-----------------------------
+
+[1996-11-09]
+	Added UnixEnv:UNIX_ENV to the structures reexported from the CML library.
+
+[1996-11-07]
+	Fixed bug in {TextIO,BinIO}.StreamIO.endOfStream, where more m-variable
+	was getting multiple puts.
+
+
+Version 1.0 (SML/NJ 109.21.1)
+-----------------------------
+
+[1996-11-01]
+	Added version and banner to CML structure.
+
+[1996-11-01]
+	Added CML version of Unix structure.
+
+[1996-11-01]
+	Changed the implementation of the internal condition variables to make
+	them work correctly.
+
+[1996-11-01]
+	Added implementation of OS.IO.poll and OS.IO.pollEvt.
+
+[1996-11-01]
+	Fixed implementation of Socket.connect.
+

@@ -1,0 +1,659 @@
+\section{The MLTREE Language}
+
+\newdef{MLTree} is the 
+register transfer language used in the MLRISC system.
+It serves two important purposes:
+\image{MLTree}{pictures/png/mlrisc-ir.png}{align=right}
+\begin{enumerate}
+\item As an intermediate representation for a compiler front-end 
+  to talk to the MLRISC system,
+\item As specifications for instruction semantics
+\end{enumerate}
+The latter is needed for optimizations which require precise knowledge of such;
+for example, algebraic simplification and constant folding.
+
+MLTree is a low-level \newdef{typed} language: 
+all operations are typed by its width or precision.  
+Operations on floating point, integer, and condition code 
+are also segregated, to prevent accidental misuse. 
+MLTree is also \emph{tree-oriented} so that it is possible to write efficient
+MLTree transformation routines that uses SML pattern matching.
+
+Here are a few examples of MLTree statements.
+\begin{SML}
+   MV(32,t,
+      ADDT(32,
+        MULT(32,REG(32,b),REG(32,b)),
+        MULT(32,
+          MULT(32,LI(4),REG(32,a)),REG(32,c))))
+\end{SML}
+computes \sml{t := b*b + 4*a*c}, all in 32-bit precision and overflow
+trap enabled; while
+\begin{SML}
+   MV(32,t,
+      ADD(32,
+        CVTI2I(32,SIGN_EXTEND,8,
+          LOAD(8,
+            ADD(32,REG(32,a),REG(32,i))))))
+\end{SML}
+loads the byte in address \sml{a+i} and sign extend it to a 32-bit
+value. 
+
+The statement
+\begin{SML}
+   IF([],CMP(64,GE,REG(64,a),LI 0),
+         MV(64, t, REG(64, a)),
+         MV(64, t, NEG(64, REG(64, a)))
+     )
+\end{SML}
+in more traditional form means:
+\begin{verbatim}
+   if a >= 0 then 
+      t := a
+   else
+      t := -a
+\end{verbatim} 
+This example can be also expressed in a few different ways: 
+\begin{enumerate}
+   \item With the conditional move construct described in 
+Section~\ref{sec:cond-move}:
+     \begin{SML}
+    MV(64, t, 
+       COND(CMP(64, GE, REG(64, a)), 
+            REG(64, a), 
+            NEG(64, REG(64, a))))
+     \end{SML}
+  \item With explicit branching using the conditional branch
+construct \verb|BCC|:
+    \begin{SML}
+     MV(64, t, REG(64, a));
+     BCC([], CMP(64, GE, REG(64, a)), L1);
+     MV(64, t, NEG(64, REG(64, a)));
+     DEFINE L1;
+    \end{SML}
+\end{enumerate}
+\subsection{The Definitions}
+
+MLTree is defined in the signature \mlrischref{mltree/mltree.sig}{\sml{MLTREE}}
+and the functor \mlrischref{mltree/mltree.sml}{\sml{MLTreeF}}
+
+The functor \sml{MLTreeF} is parameterized in terms of
+the label expression type, the client supplied region datatype,
+the instruction stream type, and the client defined MLTree extensions.
+\begin{SML}
+  functor MLTreeF
+    (structure LabelExp : \href{labelexp.html}{LABELEXP}
+     structure Region : \href{regions.html}{REGION}
+     structure Stream : \href{streams.html}{INSTRUCTION_STREAM}
+     structure Extension : \mlrischref{mltree/mltree-extension.sig}{MLTREE_EXTENSION}
+    ) : MLTREE
+\end{SML}
+
+\subsubsection{Basic Types}
+
+  The basic types in MLTree are statements (\newtype{stm})
+integer expressions (\newtype{rexp}), 
+floating point expression (\newtype{fexp}), 
+and conditional expressions (\newtype{ccexp}). 
+Statements are evaluated for their effects,
+while expressions are evaluated for their value. (Some expressions
+could also have trapping effects.  The semantics of traps are unspecified.)
+These types are parameterized by an extension
+type, which we can use to extend the set of MLTree 
+operators.  How this is used is described in Section~\ref{sec:mltree-extension}.
+
+References to registers are represented internally as integers, and are denoted
+as the type \sml{reg}. In addition, we use the types \sml{src} and \sml{dst}
+as abbreviations for source and destination registers.
+\begin{SML}
+   type reg = int
+   type src = reg
+   type dst = reg
+\end{SML}
+
+All operators on MLTree are \emph{typed}
+by the number of bits that 
+they work on.  For example, 32-bit addition between \sml{a} and \sml{b}
+is written as \sml{ADD(32,a,b)}, while 64-bit addition between the same
+is written as \sml{ADD(64,a,b)}.  Floating point operations are
+denoted in the same manner.  For example, IEEE single-precision floating
+point add is written as \sml{FADD(32,a,b)}, while the same in
+double-precision is written as \sml{FADD(64,a,b)} 
+
+Note that these types are low level.  Higher level distinctions such
+as signed and unsigned integer value, are not distinguished by the type.  
+Instead, operators are usually partitioned into signed and unsigned versions, 
+and it is legal (and often useful!) to mix signed and unsigned operators in
+an expression.
+
+Currently, we don't provide a direct way to specify non-IEEE floating point 
+together with
+IEEE floating point arithmetic.  If this distinction is needed then
+it can be encoded using the extension mechanism described
+in Section~\ref{sec:mltree-extension}.
+
+We use the types \sml{ty} and \sml{fty} to stand for the number of
+bits in integer and floating point operations.  
+\begin{SML}
+  type ty  = int
+  type fty = int
+\end{SML}
+
+\subsubsection{The Basis}
+The signature \mlrischref{mltree/mltree-basis.sig}{MLTREE\_BASIS}
+defines the basic helper types used in the MLTREE signature.  
+\begin{SML}
+signature MLTREE_BASIS =
+sig
+ 
+  datatype cond = LT | LTU | LE | LEU | EQ | NE | GE | GEU | GT | GTU 
+
+  datatype fcond = 
+     ? | !<=> | == | ?= | !<> | !?>= | < | ?< | !>= | !?> |
+     <= | ?<= | !> | !?<= | > | ?> | !<= | !?< | >= | ?>= |
+     !< | !?= | <> | != | !? | <=> | ?<>
+
+  datatype ext = SIGN_EXTEND | ZERO_EXTEND
+
+  datatype rounding_mode = TO_NEAREST | TO_NEGINF | TO_POSINF | TO_ZERO
+
+  type ty = int
+  type fty = int
+
+end
+\end{SML}
+
+The most important of these are the 
+types \newtype{cond} and \newtype{fcond}, which represent the set of integer
+and floating point comparisions.  These types can be combined with
+the comparison constructors \verb|CMP| and \verb|FCMP| to form
+integer and floating point comparisions.
+\begin{Table}{|c|c|}{align=left} \hline
+   Operator & Comparison \\ \hline
+    \sml{LT}     & Signed less than \\
+    \sml{LTU}    & Unsigned less than \\
+    \sml{LE}     & Signed less than or equal \\
+    \sml{LEU}    & Unsigned less than or equal \\
+    \sml{EQ}     & Equal \\
+    \sml{NE}     & Not equal \\
+    \sml{GE}     & Signed greater than or equal \\
+    \sml{GEU}    & Unsigned greater than or equal \\
+    \sml{GT}     & Signed greater than \\
+    \sml{GTU}    & Unsigned greater than \\
+\hline
+\end{Table}
+
+Floating point comparisons can be ``decoded'' as follows.
+In IEEE floating point, there are four different basic comparisons 
+tests that we can performed given two numbers $a$ and $y$:
+\begin{description}
+   \item[$a < b$] Is $a$ less than $b$?
+   \item[$a = b$] Is $a$ equal to $b$?
+   \item[$a > b$] Is $a$ greater than to $b$?
+   \item[$a ? b$] Are $a$ and $b$ unordered (incomparable)?
+\end{description}
+Comparisons can be joined together.  For example, 
+given two double-precision floating point expressions $a$ and $b$,
+the expression \verb|FCMP(64,<=>,a,b)| 
+asks whether $a$ is less than, equal to or greater than $b$, i.e.~whether
+$a$ and $b$ are comparable.  
+The special symbol \verb|!| negates
+the meaning the of comparison.    For example, \verb|FCMP(64,!>=,a,b)| 
+means testing whether $a$ is less than or incomparable with $b$. 
+
+\subsection{Integer Expressions}
+
+A reference to the $i$th 
+integer register with an $n$-bit value is written 
+as \sml{REG(}$n$,$i$\sml{)}.  The operators \sml{LI}, \sml{LI32},
+and \sml{LABEL}, \sml{CONST} are used to represent constant expressions 
+of various forms.  The sizes of these constants are inferred from context.
+\begin{SML}  
+  REG   : ty * reg -> rexp
+  LI    : int -> rexp
+  LI32  : Word32.word -> rexp
+  LABEL : LabelExp.labexp -> rexp
+  CONST : Constant.const -> rexp
+\end{SML}
+
+The following figure lists all the basic integer operators and their
+intuitive meanings.  All operators except \sml{NOTB, NEG, NEGT} are binary 
+and have the type
+\begin{SML}
+  ty * rexp * rexp -> rexp
+\end{SML}
+The operators \sml{NOTB, NEG, NEGT} have the type
+\begin{SML}
+  ty * rexp -> rexp
+\end{SML}
+
+\begin{tabular}{|l|l|} \hline
+   \sml{ADD} & Twos complement addition \\
+  \sml{NEG}      & negation \\
+  \sml{SUB}      & Twos complement subtraction \\
+  \sml{MULS}     & Signed multiplication \\
+  \sml{DIVS}     & Signed division, round to zero (nontrapping) \\
+  \sml{QUOTS}    & Signed division, round to negative infinity (nontrapping) \\
+  \sml{REMS}     & Signed remainder (???) \\
+  \sml{MULU}     & Unsigned multiplication \\
+  \sml{DIVU}     & Unsigned division \\
+  \sml{REMU}     & Unsigned remainder \\
+  \sml{NEGT}      & signed negation, trap on overflow \\
+  \sml{ADDT}     & Signed addition, trap on overflow \\
+  \sml{SUBT}     & Signed subtraction, trap on overflow \\
+  \sml{MULT}     & Signed multiplication, trap on overflow \\
+  \sml{DIVT}     & Signed division, round to zero,
+   trap on overflow or division by zero \\
+  \sml{QUOTT}    & Signed division, round to negative infinity, trap on overflow or division by zero \\
+  \sml{REMT}     & Signed remainder, trap on division by zero \\
+  \sml{ANDB}     & bitwise and \\
+  \sml{ORB}      & bitwise or \\
+  \sml{XORB}     & bitwise exclusive or \\
+  \sml{NOTB}     & ones complement \\
+  \sml{SRA}      & arithmetic right shift \\
+  \sml{SRL}      & logical right shift \\
+  \sml{SLL}      & logical left shift \\
+\hline\end{tabular}
+
+\subsubsection{Sign and Zero Extension}
+Sign extension and zero extension are written using the operator
+\sml{CVTI2I}. \sml{CVTI2I(}$m$,\sml{SIGN_EXTEND},$n$,$e$\sml{)} 
+sign extends the $n$-bit value $e$ to an $m$-bit value, i.e. the
+$n-1$th bit is of $e$ is treated as the sign bit.  Similarly,
+\sml{CVTI2I(}$m$,\sml{ZERO_EXTEND},$n$,$e$\sml{)} 
+zero extends an $n$-bit value to an $m$-bit
+value.  If $m \le n$, then 
+\sml{CVTI2I(}$m$,\sml{SIGN_EXTEND},$n$,$e$\sml{)} = 
+\sml{CVTI2I}($m$,\sml{ZERO_EXTEND},$n$,$e$\sml{)}.
+
+\begin{SML}
+    datatype ext = SIGN_EXTEND | ZERO_EXTEND
+    CVTI2I : ty * ext * ty * rexp -> rexp 
+\end{SML}
+
+\subsubsection{Conditional Move} \label{sec:cond-move}
+Most new superscalar architectures incorporate conditional move 
+instructions in their ISAs.  
+Modern VLIW architectures also directly support full predication.  
+Since branching (especially with data dependent branches) can
+introduce extra latencies in highly pipelined architectures,
+condtional moves should be used in place of short branch sequences. 
+MLTree provide a conditional move instruction \sml{COND},
+to make it possible to directly express conditional moves without using
+branches. 
+\begin{SML}
+   COND : ty * ccexp * rexp * rexp -> rexp
+\end{SML}
+
+Semantically, \sml{COND(}\emph{ty},\emph{cc},$a$,$b$\sml{)} means to evaluate
+\emph{cc}, and if \emph{cc} evaluates to true then the value of the entire expression is
+$a$; otherwise the value is $b$.  Note that $a$ and $b$ are allowed to be
+\emph{eagerly}
+evaluated.  In fact, we are allowed to evaluate to \emph{both}
+branches, one branch, or neither~\footnote{When possible.}. 
+
+Various idioms of the \sml{COND} form are useful for expressing common
+constructs in many programming languages.  For example, MLTree does not
+provide a primitive construct for converting an integer value \sml{x} to a
+boolean value (0 or 1).  But using \sml{COND}, this is expressible as
+\sml{COND(32,CMP(32,NE,x,LI 0),LI 1,LI 0)}.  SML/NJ represents
+the boolean values true and false as machine integers 3 and 1 respectively.
+To convert a boolean condition $e$ into an ML boolean value, we can use
+\begin{SML}
+   COND(32,e,LI 3,LI 1)
+\end{SML}
+
+Common C idioms can be easily mapped into the \sml{COND} form. For example,
+\begin{itemize}
+  \item \verb|if (e1) x = y| translates into
+  \sml{MV(32,x,COND(32,e1,REG(32,y),REG(32,x)))}
+  \item
+   \begin{verbatim}
+     x = e1; 
+     if (e2) x = y
+   \end{verbatim}
+    translates into 
+  \sml{MV(32,x,COND(32,e2,REG(32,y),e1))}
+  \item \verb|x = e1 == e2| translates into
+  \sml{MV(32,x,COND(32,CMP(32,EQ,e1,e2),LI 1,LI 0)}
+  \item \verb|x = ! e| translates into
+   \sml{MV(32,x,COND(32,CMP(32,NE,e,LI 0),LI 1,LI 0)}
+  \item \verb|x = e ? y : z| translates into
+   \sml{MV(32,x,COND(32,e,REG(32,y),REG(32,z)))}, and
+  \item \verb|x = y < z ? y : z| translates into
+   \begin{alltt}
+     MV(32,x,
+         COND(32,
+            CMP(32,LT,REG(32,y),REG(32,z)),
+               REG(32,y),REG(32,z)))
+   \end{alltt} 
+\end{itemize}
+
+In general, the \sml{COND} form should be used in place of MLTree's branching
+constructs whenever possible, since the former is usually highly 
+optimized in various MLRISC backends. 
+
+\subsubsection{Integer Loads}
+
+Integer loads are written using the constructor \verb|LOAD|.
+\begin{SML}
+   LOAD  : ty * rexp * Region.region -> rexp
+\end{SML}
+The client is required to specify a \href{regions.html}{region} that
+serves as aliasing information for the load.  
+
+\subsubsection{Miscellaneous Integer Operators}
+
+An expression of the \sml{LET}($s$,$e$) evaluates the statement $s$ for
+its effect, and then return the value of expression $e$.
+\begin{SML}
+  LET  : stm * rexp -> rexp
+\end{SML}
+Since the order of evaluation is MLTree operators are 
+\emph{unspecified}
+the use of this operator should be severely restricted to only 
+\emph{side-effect}-free forms.
+
+\subsection{Floating Point Expressions}
+
+ Floating registers are referenced using the term \sml{FREG}.  The
+$i$th floating point register with type $n$ is written 
+as \sml{FREG(}$n$,$i$\sml{)}.
+\begin{SML}
+   FREG   : fty * src -> fexp
+\end{SML}
+
+Built-in floating point operations include addition (\sml{FADD}), 
+subtraction (\sml{FSUB}), multiplication (\sml{FMUL}), division 
+(\sml{FDIV}), absolute value (\sml{FABS}), negation (\sml{FNEG})
+and square root (\sml{FSQRT}).
+\begin{SML}
+   FADD  : fty * fexp * fexp -> fexp
+   FSUB  : fty * fexp * fexp  -> fexp
+   FMUL  : fty * fexp * fexp -> fexp
+   FDIV  : fty * fexp * fexp -> fexp
+   FABS  : fty * fexp -> fexp
+   FNEG  : fty * fexp -> fexp
+   FSQRT : fty * fexp -> fexp
+\end{SML}
+
+A special operator is provided for manipulating signs.
+To combine the sign of $a$ with the magnitude of $b$, we can
+write \sml{FCOPYSIGN(}$a$,$b$\sml{)}\footnote{What should 
+happen if $a$ or $b$ is nan?}.
+\begin{SML}
+   FCOPYSIGN : fty * fexp * fexp -> fexp
+\end{SML}
+
+To convert an $n$-bit signed integer $e$ into an $m$-bit floating point value,
+we can write \sml{CVTI2F(}$m$,$n$,$e$\sml{)}\footnote{What happen to unsigned integers?}.
+\begin{SML}
+   CVTI2F : fty * ty * rexp -> fexp
+\end{SML}
+
+Similarly, to convert an $n$-bit floating point value $e$ to an $m$-bit
+floating point value, we can write \sml{CVTF2F(}$m$,$n$,$e$\sml{)}\footnote{
+What is the rounding semantics?}.
+\begin{SML}
+   CVTF2F : fty * fty * -> fexp
+\end{SML}
+
+\begin{SML}
+  datatype rounding_mode = TO_NEAREST | TO_NEGINF | TO_POSINF | TO_ZERO
+  CVTF2I : ty * rounding_mode * fty * fexp -> rexp
+\end{SML}
+
+\begin{SML}
+   FLOAD : fty * rexp * Region.region -> fexp
+\end{SML}
+
+\subsection{Condition Expressions}
+Unlike languages like C, MLTree makes the distinction between condition 
+expressions and integer expressions.  This distinction is necessary for
+two purposes:
+\begin{itemize}
+  \item It clarifies the proper meaning intended in a program, and
+  \item It makes to possible for a MLRISC backend to map condition
+expressions efficiently onto various machine architectures with different
+condition code models.  For example, architectures like the Intel x86, 
+Sparc V8, and PowerPC contains dedicated condition code registers, which
+are read from and written to by branching and comparison instructions.
+On the other hand, architectures such as the Texas Instrument C6, PA RISC,
+Sparc V9, and Alpha does not include dedicated condition code registers.
+Conditional code registers in these architectures
+can be simulated by integer registers.
+\end{itemize}
+
+
+A conditional code register bit can be referenced using the constructors
+\sml{CC} and \sml{FCC}.  Note that the \emph{condition} must be specified
+together with the condition code register.
+\begin{SML}
+   CC   : Basis.cond * src -> ccexp 
+   FCC  : Basis.fcond * src -> ccexp    
+\end{SML}
+For example, to test the \verb|Z| bit of the \verb|%psr| register on the
+Sparc architecture, we can used \sml{CC(EQ,SparcCells.psr)}.  
+
+The comparison operators \sml{CMP} and \sml{FCMP} performs integer and
+floating point tests.  Both of these are \emph{typed} by the precision
+in which the test must be performed under.
+\begin{SML}
+   CMP  : ty * Basis.cond * rexp * rexp -> ccexp  
+   FCMP : fty * Basis.fcond * fexp * fexp -> ccexp
+\end{SML}
+
+Condition code expressions may be combined with the following
+logical connectives, which have the obvious meanings.
+\begin{SML}
+   TRUE  : ccexp 
+   FALSE : ccexp 
+   NOT   : ccexp -> ccexp 
+   AND   : ccexp * ccexp -> ccexp 
+   OR    : ccexp * ccexp -> ccexp 
+   XOR   : ccexp * ccexp -> ccexp 
+\end{SML}
+
+\subsection{Statements}
+
+Statement forms in MLTree includes assignments, parallel copies,
+jumps and condition branches, calls and returns, stores, sequencing,
+and annotation.
+
+\subsubsection{Assignments}
+
+Assignments are segregated among the integer, floating point and
+conditional code types.  In addition, all assignments are \emph{typed}
+by the precision of destination register.
+
+\begin{SML}
+   MV   : ty * dst * rexp -> stm
+   FMV  : fty * dst * fexp -> stm
+   CCMV : dst * ccexp -> stm
+\end{SML}  
+
+\subsubsection{Parallel Copies}
+
+Special forms are provided for parallel copies for integer and
+floating point registers.  It is important to emphasize that
+the semantics is that all assignments are performed in parallel.
+
+\begin{SML}
+   COPY  : ty * dst list * src list -> stm
+   FCOPY : fty * dst list * src list -> stm
+\end{SML}
+
+\subsubsection{Jumps and Conditional Branches}  
+
+Jumps and conditional branches in MLTree take two additional set of
+annotations.  The first represents the \newdef{control flow} and is denoted
+by the type \sml{controlflow}.  The second represent 
+\newdef{control-dependence} and \newdef{anti-control-dependence} 
+and is denoted by the type \sml{ctrl}.
+
+\begin{SML}
+   type controlflow = Label.label list
+   type ctrl = reg list
+\end{SML}
+Control flow annotation is simply a list of labels, which represents
+the set of possible targets of the associated jump.  Control dependence
+annotations attached to a branch or jump instruction represents the
+new definition of \newdef{pseudo control dependence predicates}.  These
+predicates have no associated dynamic semantics; rather they are used
+to constraint the set of potential code motion in an optimizer
+(more on this later).
+
+The primitive jumps and conditional branch forms are represented
+by the constructors \sml{JMP}, \sml{BCC}.
+\begin{SML}
+   JMP : ctrl * rexp * controlflow  -> stm
+   BCC : ctrl * ccexp * Label.label -> stm
+\end{SML}
+
+In addition to \sml{JMP} and \sml{BCC}, 
+there is a \emph{structured} if/then/else statement.
+\begin{SML}
+   IF  : ctrl * ccexp * stm * stm -> stm
+\end{SML}
+
+Semantically, \sml{IF}($c,x,y,z$) is identical to
+\begin{SML}
+   BCC(\(c\), \(x\), L1)
+   \(z\)
+   JMP([], L2)
+   DEFINE L1
+   \(y\)
+   DEFINE L2
+\end{SML}
+where \verb|L1| and \verb|L2| are new labels, as expected.
+
+Here's an example of how control dependence predicates are used.
+Consider the following MLTree statement:
+\begin{SML}
+   IF([p], CMP(32, NE, REG(32, a), LI 0),
+        MV(32, b, PRED(LOAD(32, m, ...)), p),
+        MV(32, b, LOAD(32, n, ...)))
+\end{SML}
+In the first alternative of the \verb|IF|, the \verb|LOAD|
+expression is constrainted by the control dependence 
+predicate \verb|p| defined in the \verb|IF|,
+using the predicate constructor \verb|PRED|.  These states that
+the load is \emph{control dependent} on the test of the branch,
+and thus it may not be legally hoisted above the branch without
+potentially violating the semantics of the program. 
+For example,
+semantics violation may happen  if the value of \verb|m| and \verb|a|
+is corrolated, and whenever \verb|a| = 0, the address in \verb|m| is
+not a legal address. 
+
+Note that on architectures with speculative loads, 
+the control dependence information can be used to 
+guide the transformation of control dependent loads into speculative loads.
+
+Now in constrast, the \verb|LOAD| in the second alternative is not
+control dependent on the control dependent predicate \verb|p|, and
+thus it is safe and legal to hoist the load above the test, as in
+\begin{SML}
+   MV(32, b, LOAD(32, n, ...));
+   IF([p], CMP(32, NE, REG(32, a), LI 0),
+        MV(32, b, PRED(LOAD(32, m, ...)), p),
+        SEQ []
+     )
+\end{SML}
+Of course, such transformation is only performed if the optimizer
+phases think that it can benefit performance.  Thus the control dependence
+information does \emph{not} directly specify any transformations, but it
+is rather used to indicate when aggressive code motions are legal and safe.
+
+\subsubsection{Calls and Returns}
+
+Calls and returns in MLTree are specified using the constructors
+\verb|CALL| and \verb|RET|, which have the following types.
+\begin{SML}
+   CALL : rexp * controlflow * mlrisc * mlrisc * 
+          ctrl * ctrl * Region.region -> stm
+   RET  : ctrl * controlflow -> stm
+\end{SML}
+
+The \verb|CALL| form is particularly complex, and require some explanation.
+Basically the seven parameters are, in order:
+\begin{description}
+   \item[address] of the called routine.
+   \item[control flow] annotation for this call.  This information 
+specifies the potential targets of this call instruction.  Currently
+this information is ignored but will be useful for interprocedural   
+optimizations in the future.
+   \item[definition and use]  These lists specify the list of
+potential definition and uses during the execution of the call.
+Definitions and uses are represented as the type \newtype{mlrisc} list.
+The contructors for this type is:
+\begin{SML}
+  CCR : ccexp -> mlrisc
+  GPR : rexp -> mlrisc
+  FPR : fexp -> mlrisc
+\end{SML}
+   \item[definition of control and anti-control dependence] 
+These two lists specifies definitions of control and anti-control dependence.
+   \item[region] annotation for the call, which summarizes
+the set of potential memory references during execution of the call.
+\end{description}
+
+The matching return statement constructor \verb|RET| has two
+arguments.  These are:
+\begin{description}
+  \item[anti-control dependence]  This parameter represents
+the set of anti-control dependence predicates defined by the return
+statement.
+  \item[control flow]  This parameter specifies the set of matching
+procedure entry points of this return.  For example, suppose we have
+a procedure with entry points \verb|f| and \verb|f'|.  
+Then the MLTree statements 
+\begin{verbatim}
+  f:   ...
+       JMP L1
+  f':  ...
+  L1:  ...
+       RET ([], [f, f'])
+\end{verbatim}
+\noindent can be used to specify that the return is either from
+the entries \verb|f| or \verb|f'|.  
+\end{description}
+
+\subsubsection{Stores}
+Stores to integer and floating points are specified using the
+constructors \verb|STORE| and \verb|FSTORE|.   
+\begin{SML}
+   STORE  : ty * rexp * rexp * Region.region -> stm
+   FSTORE : fty * rexp * fexp * Region.region -> stm
+\end{SML}
+
+The general form is
+\begin{SML}
+   STORE(\(width\), \(address\), \(data\), \(region\))
+\end{SML}
+
+Stores for condition codes are not provided.
+\subsubsection{Miscelleneous Statements}
+
+Other useful statement forms of MLTree are for sequencing (\verb|SEQ|),
+defining a local label (\verb|DEFINE|).
+\begin{SML}
+   SEQ    : stm list -> stm
+   DEFINE : Label.label -> stm
+\end{SML}
+The constructor \sml{DEFINE L} has the same meaning as 
+executing the method \sml{defineLabel L} in the 
+\href{stream.html}{stream interface}.
+
+\subsection{Annotations}
+\href{annotations.html}{Annotations} are used as the generic mechanism for
+exchanging information between different phases of the MLRISC system, and
+between a compiler front end and the MLRISC back end.
+The following constructors can be used to annotate a MLTree term with
+an annotation:
+\begin{SML}
+   MARK : rexp * Annotations.annotation -> rexp
+   FMARK : fexp * Annotations.annotation -> fexp
+   CCMARK : ccexp * Annotations.annotation -> ccexp 
+   ANNOTATION : stm * Annotations.annotation -> stm
+\end{SML}

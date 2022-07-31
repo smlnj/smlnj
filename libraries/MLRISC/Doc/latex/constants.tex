@@ -1,0 +1,36 @@
+\section{Client Defined Constants}
+\subsubsection{Introduction}
+MLRISC allows the client to inject abstract 
+\newdef{constants} that are resolved
+only at the end of the compilation phase into the instruction stream.
+These constants can be used whereever an integer literal is expected.
+Typical usage are stack frame offsets for spill locations which are only
+known after register allocation, 
+and garbage collection and exception map which are resolved only
+when all address calculation are performed.
+
+\subsubsection{The Details}
+Client defined constants should satsify the following signature:
+\begin{SML}
+signature \mlrischref{instructions/constant.sig}{CONSTANT} = sig
+   type const
+
+   val toString : const -> string
+   val valueOf  : const -> int
+   val hash     : const -> word
+   val ==       : const * const -> bool
+end
+\end{SML}
+
+The methods are:
+\begin{methods}
+ toString & a pretty printing function \\
+ valueOf & returns the value of the constant \\
+ hash & returns the hash value of the constant \\
+ == & compare two constants for identity \\
+\end{methods}
+
+The method \sml{toString} should be implemented in all cases.
+The method \sml{valueOf} is necessary only if machine code generation
+is used.  The last two methods, \sml{hash} and \sml{==} are necessary
+only if SSA optimizations are used.

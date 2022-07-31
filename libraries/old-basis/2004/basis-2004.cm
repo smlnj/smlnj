@@ -1,0 +1,49 @@
+(* basis-2004.cm
+ *
+ * The 2004 version of the Standard ML Basis Library.
+ *
+ * Copyright (c) 2015 by The Fellowship of SML/NJ
+ *)
+
+Library
+
+	library($SMLNJ-BASIS/basis-common.cm)
+	- (
+      (* new modules *)
+	signature EITHER	(* proposal 2015-002 *)
+	signature FN		(* proposal 2015-005 *)
+	signature REF		(* proposal 2015-007 *)
+	structure Either	(* proposal 2015-002 *)
+	structure Fn		(* proposal 2015-005 *)
+	structure Ref		(* proposal 2015-007 *)
+      (* backward compatible signatures *)
+	signature ARRAY_2004
+	signature ARRAY_SLICE_2004
+	signature LIST_2004
+	signature LIST_PAIR_2004
+        signature MATH_2004
+	signature MONO_ARRAY_2004
+	signature MONO_ARRAY_SLICE_2004
+	signature MONO_VECTOR_2004
+	signature MONO_VECTOR_SLICE_2004
+	signature OPTION_2004
+        signature REAL_2004
+	signature STRING_2004
+	signature TEXT_2004
+	signature VECTOR_2004
+	signature VECTOR_SLICE_2004
+	signature WORD_2004
+	)
+
+is
+
+(* the basis with the old versions of the APIs *)
+  $SMLNJ-BASIS/basis-common.cm
+
+(* code to rebind modules and signatures to the old APIs *)
+  basis.sml
+#if defined(SIZE_64)
+  target32-basis.sml
+#else (* SIZE_32 *)
+  target64-basis.sml
+#endif

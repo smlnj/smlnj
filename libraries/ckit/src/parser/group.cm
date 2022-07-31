@@ -1,0 +1,66 @@
+Group
+is
+
+#if defined(NEW_CM)
+#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11029)
+        (* standard basis *)
+        $/basis.cm
+
+	(* standard library *)
+	$/smlnj-lib.cm
+
+	(* ml-yacc *)
+	$/ml-yacc-lib.cm
+
+	(* pretty printer library *)
+	$/pp-lib.cm
+#else
+        (* standard basis *)
+	basis.cm
+
+	(* standard library *)
+	smlnj-lib.cm
+
+	(* ml-yacc *)
+	ml-yacc-lib.cm
+
+	(* pretty printer library *)
+        pp-lib.cm
+#endif
+#else
+	smlnj-lib.cm
+	ml-yacc-lib.cm
+	pp-lib.cm
+#endif
+
+        (* configuration *)
+        ../variants/group.cm
+
+	(* utilitities *)
+	util/old-pp.sml
+	util/ascii.sml
+	util/sourcemap-sig.sml
+	util/sourcemap.sml
+	util/error-sig.sml
+	util/error.sml
+
+	(* lexer and parser *)
+	grammar/tdefs.sml
+        grammar/tokentable.sml
+	grammar/c.lex
+
+	parser-sig.sml
+        parser.sml
+	parse-tree-sig.sml	
+	parse-tree.sml
+
+        (* extensions *)
+#if (defined(d))
+        extensions/d/parse-tree-ext-sig.sml
+        extensions/d/parse-tree-ext.sml        
+	grammar/d.grm
+#else
+        extensions/c/parse-tree-ext-sig.sml
+        extensions/c/parse-tree-ext.sml        
+	grammar/c.grm
+#endif

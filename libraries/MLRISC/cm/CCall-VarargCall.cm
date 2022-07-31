@@ -1,0 +1,28 @@
+(primitive c-int)
+Library
+	structure VarargCall
+	structure Vararg
+is
+
+	$/basis.cm
+	$/MLRISC.cm
+	$/MLTREE.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/StagedAlloc.cm
+	$/CCall.cm
+	$/CCall-Vararg.cm
+	$/AMD64.cm
+	$/IA32.cm
+	$/SPARC.cm
+	$smlnj-tdp/plugins.cm
+        $c/internals/c-int.cm
+	$c/c.cm
+	$smlnj/init/init.cmi : cm
+
+	../c-call/varargs/call/smlnj-prim-c-call.sml
+	../c-call/varargs/call/marshal.sml
+	../c-call/varargs/call/located-arg-fn.sml
+	../c-call/varargs/call/vararg-call-fn.sml
+	../c-call/varargs/call/vararg-call.sml

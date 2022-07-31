@@ -1,0 +1,31 @@
+\section{Graphical Interface}
+  All the major data structures and intermediate program states can be
+  viewed graphically using 
+    \externhref{http://www.Informatik.Uni-Bremen.DE/~davinci/}{\begin{color}{red}daVinci\end{color}} and
+    \externhref{http://www.cs.uni-sb.de/RW/users/sander/html/gsvcg1.html}{\begin{color}{red}vcg\end{color}}
+  The following screen dumps are intended to represent the range of
+  possibilities. Graphical tools like these are an indispensible
+  debugging aid. Each of the dumps below were taken when generating
+  code for the \begin{color}{red}mandelbrot\end{color} on the HPPA
+  architecture. It will be necessary to make netscape fill the size of
+  the screen to view these easily. Even though some of these graphs
+  look quite complex, daVinci has several \emph{navigational} modes
+  that allow walking to successors, or predecessors, or navigating
+  through a scaled down map of the graph. The navigational view is
+shown as another window, and the view into the graph that is being
+displayed is usually outlined in \begin{color}{blue}blue\end{color}.
+
+  \begin{description}
+   \item[\href{graphics/mandelbrot-opt.gif}{Control Flowgraph after Optimization:}] Each basic block is shown with its dynamic profile and
+    code before and after a specific optimization. This view
+    saves having to pour through pages of assembly code listings -- 
+    a tedious and frustrating activity.
+   \item[\href{graphics/mandelbrot-ssa.gif}{SSA form:}]
+     The generated flow graph is converted to SSA form which
+makes many code improvement optimizations easy and efficient.
+   \item[\href{graphics/mandelbrot-ddg.gif}{Data Dependency Graph}]
+         A graphical view of the data dependency graph and the various
+kinds of dependencies decorating the edges, provides a useful clue to
+why instructions got rearranged the way they did. The navigational
+view helps to control the complexity in the display.
+  \end{description}

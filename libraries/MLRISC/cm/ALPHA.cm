@@ -1,0 +1,41 @@
+(* This file is created by makeallcm *)
+Library
+	signature ALPHACELLS
+	signature ALPHAINSTR
+	signature ALPHASHUFFLE
+	signature ALPHA_PSEUDO_INSTR
+	structure AlphaCells
+	functor Alpha
+	functor AlphaAsmEmitter
+	functor AlphaFreqProps
+	functor AlphaGasPseudoOps
+	functor AlphaInstr
+	functor AlphaJumps
+	functor AlphaMCEmitter
+	functor AlphaProps
+	functor AlphaRewrite
+	functor AlphaShuffle
+	functor	AlphaSpillInstr
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+
+	../alpha/instructions/alphaCells.sml
+	../alpha/instructions/alphaInstr.sml
+	../alpha/instructions/alphaShuffle.sig
+	../alpha/instructions/alphaShuffle.sml
+	../alpha/instructions/alphaProps.sml
+	../alpha/instructions/alphaFreqProps.sml
+	../alpha/emit/alphaAsm.sml
+	../alpha/emit/alphaMC.sml
+	../alpha/backpatch/alphaJumps.sml
+	../alpha/flowgraph/alphaGasPseudoOps.sml
+	../alpha/mltree/alphaPseudoInstr.sig
+	../alpha/mltree/alpha.sml
+	../alpha/ra/alphaRewrite.sml
+	../alpha/ra/alphaSpillInstr.sml

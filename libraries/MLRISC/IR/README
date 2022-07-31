@@ -1,0 +1,7 @@
+This directory contains the main IR used by the MLRISC optimizer.
+The IR is mainly concerned with control flow and control dependence.
+The IR contains the CFG, (post-)dominator tree, control depenence graph,
+loop (interval) structure, plus other facets.  
+
+This IR is quite different from the cluster datatype, which is used by the basic
+MLRISC system.  In any case the cluster and the CFG are interconvertible.

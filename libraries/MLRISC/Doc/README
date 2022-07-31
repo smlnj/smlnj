@@ -1,0 +1,16 @@
+You will need the following programs to build the documentation.
+
+1.  Perl 5.004 or more recent
+2.  LaTeX        (I use the TeTeX distribution)
+3.  fig2dev 3.2  (from xfig)
+
+To build the documentation do the following:
+
+1.  In this directory, type make
+2.  cd latex
+3.  make again
+4.  make again
+5.  make again  (Three times to make LaTeX stablize on the cross references)
+
+The HTML pages will be in the directory html, starting from html/index.html
+The LaTeX documents will be in the directory latex.

@@ -1,0 +1,33 @@
+Group is 
+
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+        $/basis.cm
+        $/smlnj-lib.cm
+#else
+        basis.cm
+        smlnj-lib.cm
+#endif
+#else
+        smlnj-lib.cm
+#endif
+
+	../cm/Control.cm
+	../cm/Lib.cm
+	../cm/MLRISC.cm
+	../cm/ALPHA.cm
+	../cm/SPARC.cm
+
+	spill-table.sml
+
+	(* common type definitions *)
+	demo-types.sml	   
+
+	(* generic backend *)
+	demo-backend.sml   
+
+	(* backend specialized to alpha instructions *)
+	demo-alpha.sml	   
+
+	(* backend specialized to sparc instructions *)
+	demo-sparc.sml	   

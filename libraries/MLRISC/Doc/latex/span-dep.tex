@@ -1,0 +1,106 @@
+\section{Span Dependency Resolution} \label{sec:span-dep}
+
+The span dependency resolution phase is used to resolve the values of
+client defined \href{constants.html}{constants} and \href{labels.html}{labels}
+in a program.  An instruction whose immediate operand field contains a
+constant or \href{labexp.html}{label expression} which
+is too large is rewritten into a sequence of instructions to compute
+the same result.  Similarly, short branches referencing labels that are 
+too far are rewritten into the long form.   For architectures
+that require the filling of delay slots, this is performed at the same
+time as span depedency resolution, to ensure maximum benefit results.
+
+\subsubsection{The Interface}
+
+The signature \sml{SDI_JUMPS} describes
+architectural information about span dependence resolution.
+
+\begin{SML}
+signature \mlrischref{backpatch/sdi-jumps.sig}{SDI_JUMPS} = sig
+  structure I : \href{instructions.html}{INSTRUCTIONS}
+  structure C : \href{cells.html}{CELLS}
+    sharing I.C = C
+
+  val branchDelayedArch : bool
+  val isSdi : I.instruction -> bool
+  val minSize : I.instruction -> int
+  val maxSize : I.instruction -> int
+  val sdiSize : I.instruction * (C.cell -> C.cell)
+                              * (Label.label -> int) * int -> int
+  val expand : I.instruction * int * int -> I.instruction list
+end
+\end{SML}
+
+The components in this interface are:
+\begin{description}
+  \item[branchDelayedArch] A flag indicating whether the architecture
+contains delay slots.  For example, this would be true on the MIPS,
+Sparc, PA RISC; but would be false on the x86 and on the Alpha.
+   \item[isSdi] This function returns true if the instruction is 
+\newdef{span dependent}, i.e.~its size depends either on some unresolved
+constants, or on its position in the code stream.
+   \item[sdiSize]  This function takes a span dependent instruction, 
+a \href{regmap.html}{regmap},
+a mapping from labels to code stream position, and 
+its current code stream position and returns the size of its
+expansion in bytes.
+   \item[expand] This function takes a span dependent instruction,
+its size, and its location and return its expansion.
+\end{description}
+
+The signature \sml{BBSCHED} is the signature of the phase that performs
+span depedennce resolution and code generation.
+\begin{SML}
+signature \mlrischref{backpatch/bbsched.sig}{BBSCHED} = sig
+  structure F : \href{cluster.html}{FLOWGRAPH}
+
+  val bbsched : F.cluster -> unit
+  val finish : unit -> unit
+  val cleanUp : unit -> unit
+end
+\end{SML}
+
+\subsubsection{The Modules}
+
+Three different functors are present in the \MLRISC{} system for
+performing span dependence resolution and code generator.
+Functor \sml{BBSched2} is the simplest one, which does not perform
+delay slot filling.
+\begin{SML}
+functor BBSched2
+  (structure Flowgraph : \mlrischref{cluster/flowgraph.sig}{FLOWGRAPH}
+   structure Jumps : \mlrischref{backpatch/sdi-jumps.sig}{SDI_JUMPS}
+   structure Emitter : \href{mc.html}{INSTRUCTION_EMITTER}
+     sharing Emitter.P = Flowgraph.P
+     sharing Flowgraph.I = Jumps.I = Emitter.I
+  ): BBSCHED 
+\end{SML}
+
+Functor \sml{SpanDependencyResolution} performs both span dependence
+resolution and delay slot filling at the same time.
+\begin{SML}
+functor SpanDependencyResolution
+  (structure Flowgraph : \mlrischref{cluster/flowgraph.sig}{FLOWGRAPH}
+   structure Emitter : \href{mc.html}{INSTRUCTION_EMITTER}
+   structure Jumps : \mlrischref{backpatch/sdi-jumps.sig}{SDI_JUMPS}
+   structure DelaySlot : \href{delayslots.html}{DELAY_SLOT_PROPERTIES}
+   structure Props : \mlrischref{instructions/insnProps.sig}{INSN_PROPERTIES}
+     sharing Flowgraph.P = Emitter.P
+     sharing Flowgraph.I = Jumps.I = DelaySlot.I = Props.I = Emitter.I
+  ) : BBSCHED 
+\end{SML}
+
+Finally, functor \sml{BackPatch} is a span dependency resolution
+module specially written for the \href{x86.html}{x86} architecture.
+\begin{SML}
+functor BackPatch
+  (structure CodeString : \mlrischref{emit/code-string.sig}{CODE_STRING}
+   structure Jumps: \mlrischref{backpatch/sdi-jumps.sig}{SDI_JUMPS}
+   structure Props : \mlrischref{instructions/insnProps.sig}{INSN_PROPERTIES}
+   structure Emitter : \mlrischref{backpatch/vlBatchPatch.sig}{MC_EMIT}
+   structure Flowgraph : \href{cluster.html}{FLOWGRAPH}
+   structure Asm : \href{asm.html}{INSTRUCTION_EMITTER}
+      sharing Emitter.I = Jumps.I = Flowgraph.I = Props.I = Asm.I) : BBSCHED 
+\end{SML}
+
+

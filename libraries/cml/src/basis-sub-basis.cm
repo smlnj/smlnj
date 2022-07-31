@@ -1,0 +1,36 @@
+(* basis-sub-basis.cm
+ *
+ * This group provides a restricted view on $/basis.cm (much like
+ * cml-sub-basis.cm but even more restrictive).  It is used to build
+ * CML's own basis.cm without name conflicts.
+ *
+ * This file is for use with the new CM.  The old CM cannot process it.
+ *)
+Group
+
+    library($/basis.cm)
+
+     - (signature OS
+	signature OS_IO
+	signature OS_PROCESS
+	signature PRIM_IO
+
+	structure OS
+	structure BinIO
+	structure BinPrimIO
+	structure TextIO
+	structure TextPrimIO
+
+	signature INET_SOCK
+	signature GENERIC_SOCK
+
+	structure GenericSock
+	structure INetSock
+	structure Socket
+
+	signature UNIX
+	structure Unix
+	signature UNIX_SOCK
+	structure UnixSock)	
+is
+	$/basis.cm

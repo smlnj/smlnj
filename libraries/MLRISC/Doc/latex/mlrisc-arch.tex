@@ -1,0 +1,115 @@
+\section{Architecture of MLRISC}
+
+\subsection{Core Components}
+
+  The core components of MLRISC allow the client to quickly construct 
+an backend for various architectures.  These components include:
+\begin{itemize}
+  \item The \href{mltree.html}{MLTREE} language, 
+       which is a RTL-like intermediate language
+       that is used by the client
+       to communicate to the MLRISC system.  A client is
+       responsible for writing the module that generates MLTREE from
+       the source program representation.
+  \item \href{instrsel.html}{Instruction selection modules}, 
+      which generates target machine 
+       instructions from MLTREE.
+  \item The \href{ra.html}{Register Allocator},
+       which performs register allocation.
+  \item \href{asm.html}{Assemblers}, which emits assembly code.
+\end{itemize}
+
+For systems that require direct machine code generation, the following
+modules are included:
+\begin{itemize}
+  \item \href{span-dep.html}{Span dependency resolution} 
+       modules, which compute addresses    
+       from symbolic addresses,
+       fill delay slots, and expand instructions that are 
+       \newdef{span dependent}
+  \item \href{mc.html}{Machine code emitters}, 
+        which emit executable machine code into a binary stream.
+\end{itemize}
+
+\subsection{Optimization Modules}
+
+In addition, MLRISC has been enhanced to support various types of
+machine level optimizations.  These include:
+
+\begin{itemize}
+  \item Core optimizations, which includes
+       various types of control flow transformation, 
+       and architectural specific peephole optimizations. 
+  \item SSA based scalar optimizations
+  \item ILP optimizations for superscalars
+  \item ILP optimizations for VLIW/EPIC architectures
+  \item GC safety analysis
+\end{itemize}
+
+\subsection{Basic Concepts}
+
+  Basic concepts in MLRISC are: 
+\begin{itemize}
+    \item \href{instructions.html}{Instructions} --
+    the instruction set of the target architecture.
+    \item \href{cells.html}{Cells} -- which describes registers,
+memory and other mutable resources in the machine.
+    \item \href{regions.html}{Regions} -- a client defined
+   abstract type used to represent aliasing information available from
+the front-end.
+    \item \href{constants.html}{Constants} -- a client defined
+   place holder used to represent constants whose values are unknown 
+   in the front-end. 
+    \item \href{pseudo-ops.html}{Pseudo Ops} -- a client defined
+      
+    \item \href{annotations.html}{Annotations} -- this is
+   a generic mechinism for propagating information in the MLRISC sstem.
+   The client may attach arbitrary annotation of various granularity 
+   to MLRISC's program representation,
+   which can then be propagated to later phases.
+   These can be information related to profiling frequency, dependence, 
+   comments, and/or types.
+   The same mechanism is also used to propagate 
+   analysis information one optimization phase to 
+   another.
+    \item \href{streams.html}{Instruction Streams} -- an abstraction
+   for describing a stream of instructions.  Instruction streams are
+   used to connect modules such as instruction selection,  assembler, 
+   machine code emitter, and 
+   control flow graph builder.
+   \item \href{regmap.html}{Regmap} -- a mapping between registers
+     names.  MLRISC register allocators represent the result of register
+   allocation as a regmap.
+   \item \href{labels.html}{Labels} -- a type representing
+symbolic labels.
+   \item \href{labelexp.html}{Label Expressions} -- a type representing
+     constant expressions
+    involving symbolic labels.
+\end{itemize}
+
+\subsection{How Things Are Fit Together}
+
+  MLRISC uses two different program representations, clusters and MLRISC IR.
+\begin{itemize}
+  \item \href{cluster.html}{Cluster} is light-weight representation
+that is used when only the most basic optimizations are required.
+  \item \href{mlrisc-ir.html}{MLRISC IR} is more heavy-weight
+   representation that is built from the 
+    \href{graphs.html}{MLRISC graph library} and the
+    \href{compiler-graphs.html}{MLRISC compiler graph library}.
+   MLRISC IR allows more complex transformations and analysis of the
+   program graph.
+\end{itemize}
+Conversion modules between the two representations are provided.
+
+In general MLRISC optimization phases are transformations applied on one
+of these representations.  Optimizations may be chained together to form
+a compiler backend.  For example, a minimal backend consists of
+\begin{itemize}
+  \item the instruction selection module, which translates 
+\href{mltree.html}{MLTree} into target instructions,
+  \item the flowgraph builder, which conversts a stream of target instructions
+   into a cluster,
+  \item the register allocator, which performs register allocation, and
+  \item the assembly code emitter, which generates assembly output
+\end{itemize}

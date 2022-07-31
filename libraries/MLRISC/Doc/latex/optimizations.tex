@@ -1,0 +1,60 @@
+\section{Optimizations}
+
+  MLRISC assumes that all high level optimizations (target
+  independent) have already been performed. This includes things like
+  inlining, array dependence analysis, and array bounds check
+  elimination.  The target dependent optimizations that remain include
+  register allocation, scheduling and traditional optimizations to
+  support scheduling. 
+
+\subsection{Register allocation}
+  
+  MLRISC includes a state-of-the-art graph-coloring based register
+  allocator that has an aggressive algorithm for copy-propagation. The
+  latter guarantees to eliminate copy instructions without introducing
+  spills.
+
+   Spills in the register allocator are under the control of the
+client via call-backs to the front end. Where to spill registers and
+the associated information that must be maintained is client specific
+and varies with the compiler. 
+
+\subsection{Scheduling for Superscalar Architectures}
+  Several algorithms for acyclic global scheduling are provided. These
+include:
+
+  \begin{itemize}
+    \item Superblock,
+    \item a variant of Bernstein/Rodeh, and
+    \item Percolation based scheduling.
+  \end{itemize}
+
+These algorithms tend to be quite complex and require a large number
+of support data structures and analysis. These include data structures
+such as:
+
+  \begin{itemize}
+    \item dominator/post dominator trees,
+    \item loop nesting tree,
+    \item control dependency graphs, and 
+    \item data dependency graphs.
+ \end{itemize}
+
+Support analysis and optimization include:
+
+  \begin{itemize}
+    \item constant propagation,
+    \item global value numbering,
+    \item global code motion, and
+    \item loop invariant hoisting.
+  \end{itemize}
+
+\subsection{VLIW Compilation}
+  MLRISC also contains a framework for the compilation of 
+predicated VLIW architectures.
+Currently, the following algorithms have been implemented.
+  \begin{itemize} 
+    \item hyperblock formation
+    \item hyperblock scheduling
+    \item modulo scheduling
+  \end{itemize}

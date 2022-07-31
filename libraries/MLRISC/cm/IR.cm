@@ -1,0 +1,58 @@
+(* This file is created by makeallcm *)
+Library
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/MLRISC.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/Visual.cm
+	$/ir-archive.cm
+	$/MLTREE.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLTREE.cm
+#endif
+#else
+	smlnj-lib.cm
+	MLRISC.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	Visual.cm
+	ir-archive.cm
+	MLTREE.cm
+#endif
+	../cluster/clusterGraph.sig
+	../cluster/clusterGraph.sml
+	../cluster/clusterViewer.sig
+	../cluster/clusterViewer.sml
+	../IR/dataflow.sig
+	../IR/dataflow.sml
+	../IR/mlrisc-branch-chaining.sml
+	../IR/mlrisc-cfg-util.sig
+	../IR/mlrisc-cfg-util.sml
+	../IR/mlrisc-cpr.sml
+	../IR/idefs2.sig
+	../IR/idefs2.sml
+	../IR/mlrisc-idefs.sig
+	../IR/mlrisc-idefs.sml
+	../IR/mlrisc-ir.sig
+	../IR/mlrisc-ir.sml
+	../IR/mlrisc-ir-optimization.sig
+	../IR/mlrisc-liveness.sml
+	../IR/mlrisc-preheaders.sml
+	../IR/mlrisc-reshape-branches.sml
+	../IR/static-branch-prediction.sml
+	../Glue/mlrisc-glue.sig
+	../Glue/mlrisc-glue.sml

@@ -1,0 +1,21 @@
+\section{SSA Optimizations}\label{sec:ssa}
+
+All SSA optimization modules satisfy the signature
+\mlrischref{SSA/ssa-optimization.sig}{SSA\_OPTIMIZATION},
+which is defined as:
+\begin{SML}
+signature SSA_OPTIMIZATION = sig
+   structure SSA : SSA 
+
+   val optimize : SSA.ssa -> SSA.ssa
+end
+\end{SML}
+
+The following SSA based scalar optimizations have been implemented in MLRISC.
+\begin{itemize}
+\item \mlrischref{SSA/ssa-dead-code-elim.sml}{Dead code elimination}
+\item \mlrischref{SSA/ssa-gvn.sml}{Global value numbering, constant folding, algebraic simplication}
+\item \mlrischref{SSA/ssa-gcm.sml}{Global code motion} 
+\item \mlrischref{SSA/ssa-cond-const-prop.sml}{Conditional constant propagation}
+\item \mlrischref{SSA/ssa-op-str-red.sml}{Strength reduction}
+\end{itemize}

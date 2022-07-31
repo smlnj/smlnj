@@ -1,0 +1,609 @@
+\section{The MLRISC IR}
+\subsection{Introduction}
+
+In this section we will describe the MLRISC intermediate representation.
+
+\subsubsection{Control Flow Graph}
+The control flow graph is the main view of the IR.  
+A control flow graph satisfies the following signature:
+\begin{SML}
+ signature \mlrischref{IR/mlrisc-cfg.sig}{CONTROL_FLOW_GRAPH} = sig
+   structure I : INSTRUCTIONS
+   structure P : PSEUDO_OPS
+   structure C : CELLS
+   structure W : FIXED_POINT 
+      sharing I.C = C
+   
+   \italics{definitions}
+ end
+\end{SML}
+
+The following structures nested within a CFG:
+\begin{itemize}
+   \item \sml{I : INSTRUCTIONS} is the instruction structure.
+   \item \sml{P : PSEUDO_OPS} is the structure with the definition
+of pseudo ops.
+   \item \sml{C : CELLS} is the cells structure describing the
+register conventions of the architecture.
+   \item \sml{W : FIXED_POINT} is a structure that contains
+a fixed point type used in execution frequency annotations.
+\end{itemize}
+
+The type \sml{weight} below is used in execution frequency annotations:
+\begin{SML}
+   type weight = W.fixed_point
+\end{SML}
+
+There are a few different kinds of basic blocks, described
+by the type \sml{block_kind} below:
+\begin{SML}
+   datatype block_kind = 
+       START          
+     | STOP          
+     | FUNCTION_ENTRY
+     | NORMAL        
+     | HYPERBLOCK   
+\end{SML}
+
+A basic block is defined as the datatype \sml{block}, defined below:
+\begin{SML}
+   and data = LABEL  of Label.label
+            | PSEUDO of P.pseudo_op
+
+   and block = 
+      BLOCK of
+      \{  id          : int,                      
+         kind        : block_kind,                 
+         name        : B.name,                    
+         freq        : weight ref,                
+         data        : data list ref,             
+         labels      : Label.label list ref,     
+         insns       : I.instruction list ref,     
+         annotations : Annotations.annotations ref 
+      \}
+\end{SML}
+
+Edges in a CFG are annotated with the type \sml{edge_info},
+defined below:
+\begin{SML}
+   and edge_kind = ENTRY           
+                 | EXIT           
+                 | JUMP          
+                 | FALLSTHRU     
+                 | BRANCH of bool
+                 | SWITCH of int 
+                 | SIDEEXIT of int 
+
+   and edge_info = 
+       EDGE of \{ k : edge_kind,                 
+                 w : weight ref,               
+                 a : Annotations.annotations ref
+               \}
+\end{SML}
+
+Type \sml{cfg} below defines a control flow graph:
+\begin{SML}
+   type edge = edge_info edge
+   type node = block node
+
+   datatype info = 
+       INFO of \{ regmap      : C.regmap,
+                 annotations : Annotations.annotations ref,
+                 firstBlock  : int ref,
+                 reorder     : bool ref
+               \}
+   type cfg = (block,edge_info,info) graph
+\end{SML}
+
+\subsubsection{Low-level Interface}
+   The following subsection describes the low-level interface to a CFG.
+These functions should be used with care since they do not
+always maintain high-level structural invariants imposed on
+the representation.  In general, higher level interfaces exist
+so knowledge of this interface is usually not necessary for customizing
+MLRISC. 
+   
+   Various kinds of annotations on basic blocks are defined below:
+\begin{SML}
+   exception LIVEOUT of C.cellset   
+   exception CHANGED of unit -> unit
+   exception CHANGEDONCE of unit -> unit
+\end{SML}
+The annotation \sml{LIVEOUT} is used record live-out information
+on an escaping block.
+The annotations \sml{CHANGED} and \sml{CHANGEDONCE} are used
+internally for maintaining views on a CFG.  These should not be used
+directly. 
+
+    The following are low-level functions for building new basic blocks.
+The functions \sml{new}\emph{XXX} build empty basic blocks of a specific
+type.  The function \sml{defineLabel} returns a label to a basic block;
+and if one does not exist then a new label will be generated automatically.
+The functions \sml{emit} and \sml{show_block} are low-level
+routines for displaying a basic block.
+\begin{SML}
+   val newBlock          : int * B.name -> block      
+   val newStart          : int -> block              
+   val newStop           : int -> block             
+   val newFunctionEntry  : int -> block            
+   val copyBlock         : int * block -> block   
+   val defineLabel       : block -> Label.label  
+   val emit              : C.regmap -> block -> unit
+   val show_block        : C.regmap -> block -> string 
+\end{SML}
+
+   Methods for building a CFG are listed as follows:
+\begin{SML}
+   val cfg      : info -> cfg    
+   val new      : C.regmap -> cfg
+   val subgraph : cfg -> cfg     
+   val init     : cfg -> unit    
+   val changed  : cfg -> unit   
+   val removeEdge : cfg -> edge -> unit
+\end{SML}
+ Again, these methods should be used only with care.
+
+  The following functions allow the user to extract low-level information
+from a flowgraph.  Function \sml{regmap} returns the current register map.
+Function \sml{regmap} returns a function that lookups the current register
+map.  Function \sml{liveOut} returns liveOut information from a block;
+it returns the empty cellset if the block is not an escaping block.
+Function \sml{fallsThruFrom} takes a node id $v$ and locates the
+block $u$ (if any) that flows into $v$ without going through a branch
+instruction.  Similarly, the function \sml{fallsThruTo}  takes
+a node id $u$ and locates the block (if any) that $u$ flows into
+with going through a branch instruction.  If $u$ falls through to
+$v$ in any feasible code layout $u$ must preceed $v$.
+\begin{SML}
+   val regmap    : cfg -> C.regmap
+   val reglookup : cfg -> C.register -> C.register
+   val liveOut   : block -> C.cellset
+   val fallsThruFrom : cfg * node_id -> node_id option
+   val fallsThruTo   : cfg * node_id -> node_id option
+\end{SML}
+
+   To support graph viewing of a CFG, the following low-level
+primitives are provided: 
+\begin{SML}
+   val viewStyle      : cfg -> (block,edge_info,info) GraphLayout.style
+   val viewLayout     : cfg -> GraphLayout.layout
+   val headerText     : block -> string
+   val footerText     : block -> string
+   val subgraphLayout : { cfg : cfg, subgraph : cfg } -> GraphLayout.layout
+\end{SML}
+
+   Finally, a miscellany function for control dependence graph building.
+\begin{SML} 
+   val cdgEdge : edge_info -> bool
+\end{SML}
+
+\subsubsection{IR}
+The MLRISC intermediate representation is a composite
+view of various compiler data structures, including the control
+flow graph, (post-)dominator trees, control dependence graph, and
+loop nesting tree.   Basic compiler optimizations in MLRISC
+operate on this data structure; advance optimizations
+operate on more complex representations which use this
+representation as the base layer.  
+\begin{wrapfigure}{r}{4.5in}
+   \begin{Boxit}
+%   \psfig{figure=../pictures/eps/mlrisc-IR.eps,width=4.5in} 
+   \includegraphics[width=4.5in]{../pictures/pdf/mlrisc-IR} 
+   \end{Boxit}
+   \caption{The MLRISC IR}
+\end{wrapfigure}
+
+This IR provides a few additional functionalities:
+\begin{itemize}
+  \item Edge frequencies -- execution frequencies
+are maintained on all control flow edges.
+  \item Extensible annotations -- semantics information can be 
+       represented as annotations on the graph. 
+  \item Multiple facets -- 
+   Facets are high-level views that automatically keep themselves
+up-to-date.  Computed facets are cached and out-of-date facets 
+are recomputed by demand.
+The IR defines a mechanism to attach multiple facets to the IR.
+\end{itemize}
+
+The signature of the IR is listed below
+\begin{SML}
+ signature \mlrischref{IR/mlrisc-ir.sig}{MLRISC_IR} = sig
+   structure I    : INSTRUCTIONS
+   structure CFG  : CONTROL_FLOW_GRAPH
+   structure Dom  : DOMINATOR_TREE
+   structure CDG  : CONTROL_DEPENDENCE_GRAPH
+   structure Loop : LOOP_STRUCTURE
+   structure Util : CFG_UTIL
+      sharing Util.CFG = CFG
+      sharing CFG.I = I 
+      sharing Loop.Dom = CDG.Dom = Dom
+  
+   type cfg  = CFG.cfg  
+   type IR   = CFG.cfg  
+   type dom  = (CFG.block,CFG.edge_info,CFG.info) Dom.dominator_tree
+   type pdom = (CFG.block,CFG.edge_info,CFG.info) Dom.postdominator_tree
+   type cdg  = (CFG.block,CFG.edge_info,CFG.info) CDG.cdg
+   type loop = (CFG.block,CFG.edge_info,CFG.info) Loop.loop_structure
+ 
+   val dom   : IR -> dom
+   val pdom  : IR -> pdom
+   val cdg   : IR -> cdg
+   val loop  : IR -> loop
+
+   val changed : IR -> unit  
+   val memo : (IR -> 'facet) -> IR -> 'facet
+   val addLayout : string -> (IR -> GraphLayout.layout) -> unit
+   val view : string -> IR -> unit      
+   val views : string list -> IR -> unit      
+   val viewSubgraph : IR -> cfg -> unit 
+ end
+\end{SML}
+
+The following facets are predefined: dominator, post-dominator tree,
+control dependence graph and loop nesting structure.
+The functions \sml{dom}, \sml{pdom}, \sml{cdg}, \sml{loop}
+are \newdef{facet extraction} methods that
+compute up-to-date views of these facets.
+
+The following protocol is used for facets:
+\begin{itemize}
+\item When the IR is changed, 
+the function \sml{changed} should be called to 
+signal that all facets attached to the IR should be updated.
+\item To add a new facet of type \sml{F} that is computed by demand,
+the programmer has to provide a facet construction 
+function \sml{f : IR -> F}.  Call the function \sml{mem}
+to register the new facet.  For example, let \sml{val g = memo f}. 
+Then the function \sml{g} can be used to as a new facet extraction
+function for facet \sml{F}.
+\item To register a graph viewing function, call
+the function \sml{addLayout} and provide an appropriate 
+graph layout function.  For example, we can say
+\sml{addLayout "F" layoutF} to register a graph layout function
+for a facet called ``F''.
+\end{itemize}
+
+To view an IR, the functions \sml{view}, \sml{views} or
+\sml{viewSubgraph} can be used.  They have the following interpretation:
+\begin{itemize}
+\item \sml{view} computes a layout for one facet of the IR and displays
+it.  The predefined facets are called
+``dom'', ``pdom'', ``cdg'', ``loop.''  The IR can be
+viewed as the facet ``cfg.'' In addition, there is a layout
+named ``doms'' which displays the dominator tree and the post-dominator
+tree together, with the post-dominator inverted.
+\item \sml{views} computes a set of facets and displays it together
+in one single picture.
+\item \sml{viewSubgraph} layouts a subgraph of the IR.
+This creates a picture with the subgraph highlighted and embedded
+in the whole IR.
+\end{itemize}
+
+\subsubsection{Building a CFG}
+
+There are two basic methods of building a CFG:
+\begin{itemize}
+\item convert a sequence of machine instructions
+into a CFG through the emitter interface, described below, and 
+\item convert it from a \newdef{cluster}, which is
+the basic linearized representation used in the MLRISC system.
+\end{itemize}
+The first method requires you to perform instruction selection
+from a compiler front-end, but allows you to bypass all other
+MLRISC phases if desired.  The second method allows you
+to take advantage of various MLRISC's instruction selection modules
+currently available.  We describe these methods in this section.
+
+\paragraph{Directly from Instructions}
+ Signature \sml{CODE_EMITTER} below describes an abstract emitter interface
+for accepting a linear stream of instructions from a source 
+and perform a sequence of actions based on this
+stream\footnote{Unlike the signature {\tt EMITTER\_NEW} or 
+{\tt FLOWGRAPH\_GEN}, it has the advantage that it is not 
+tied into any form of specific flowgraph representation.}.  
+
+\begin{SML}
+ signature \mlrischref{extensions/code-emitter.sig}{CODE_EMITTER} = sig 
+   structure I : INSTRUCTIONS
+   structure C : CELLS
+   structure P : PSEUDO_OPS
+      sharing I.C = C
+
+   type emitter =
+   \{  defineLabel : Label.label -> unit,   
+      entryLabel  : Label.label -> unit,   
+      exitBlock   : C.cellset -> unit,    
+      pseudoOp    : P.pseudo_op -> unit,  
+      emitInstr   : I.instruction -> unit, 
+      comment     : string -> unit,        
+      init        : int -> unit,           
+      finish      : unit -> unit   
+   \} 
+ end
+\end{SML}
+
+The code emitter interface has the following informal protocol. 
+\begin{methods}
+ init($n$)   & Initializes the emitter and signals that
+               the back-end should 
+               allocate space for $n$ bytes of machine code.
+               The number is ignored for non-machine code back-ends. \\
+ defineLabel($l$) & Defines a new label $l$ at the current position.\\
+ entryLabel($l$)  & Defines a new entry label $l$ at the current position.  
+ An entry label defines an entry point into the current flow graph.
+ Note that multiple entry points are allowed\\
+ exitBlock($c$) & Defines an exit at the current position. 
+ The cellset $c$ represents the live-out information \\
+ pseudOp($p$)  & Emits an pseudo op $p$ at the current position \\
+ emitInstr($i$)  & Emits an instruction $i$ at the current position \\
+ blockName($b$) & Changes the block name to $b$ \\
+ comment($msg$) & Emits a comment $msg$ at the current position \\
+ finish      & Signals that the use of the emitter is finished.
+ The emitter is free to perform its post-processing functions.
+ When this is finished the CFG is built. 
+\end{methods}
+
+The functor \sml{ControlFlowGraphGen} below can be
+used to create a CFG builder that uses the \sml{CODE_EMITTER} interface.
+\begin{SML}
+ signature \mlrischref{IR/mlrisc-cfg-gen.sig}{CONTROL_FLOW_GRAPH_GEN} = sig
+   structure CFG     : CONTROL_FLOW_GRAPH
+   structure Emitter : CODE_EMITTER
+       sharing Emitter.I = CFG.I
+       sharing Emitter.P = CFG.P
+   val emitter : CFG.cfg -> Emitter.emitter
+ end
+ functor \mlrischref{IR/mlrisc-cfg-gen.sml}{ControlFlowGraphGen}
+    (structure CFG     : CONTROL_FLOW_GRAPH
+     structure Emitter : CODE_EMITTER
+     structure P       : INSN_PROPERTIES
+         sharing CFG.I = Emitter.I = P.I
+         sharing CFG.P = Emitter.P
+         sharing CFG.B = Emitter.B
+    ) : CONTROL_FLOW_GRAPH_GEN
+\end{SML}
+
+\paragraph{Cluster to CFG}
+
+The core \MLRISC{} system implements many instruction selection
+front-ends.  The result of an instruction selection module is a linear 
+code layout block called a cluster.  The functor \sml{Cluster2CFG} below 
+generates a translator that translates a cluster into a CFG:
+\begin{SML}
+ signature \mlrischref{IR/mlrisc-cluster2cfg.sig}{CLUSTER2CFG} = sig
+   structure CFG : CONTROL_FLOW_GRAPH
+   structure F   : FLOWGRAPH
+      sharing CFG.I = F.I
+      sharing CFG.P = F.P
+      sharing CFG.B = F.B
+   val cluster2cfg : F.cluster -> CFG.cfg
+ end 
+ functor \mlrischref{IR/mlrisc-cluster2cfg.sml}{Cluster2CFG}
+   (structure CFG : CONTROL_FLOW_GRAPH 
+    structure F   : FLOWGRAPH
+    structure P   : INSN_PROPERTIES
+       sharing CFG.I = F.I = P.I 
+       sharing CFG.P = F.P
+       sharing CFG.B = F.B
+   ) : CLUSTER2CFG 
+\end{SML}
+
+\paragraph{CFG to Cluster}
+
+The basic \MLRISC{} system also implements many back-end functions
+such as register allocation, assembly output and machine code output.
+These modules all utilize the cluster representation.  The 
+functor \mlrischref{IR/mlrisc-cfg2cluster.sml}{CFG2Cluster} 
+below generates a translator
+that converts a CFG into a cluster.  With the previous functor,
+the CFG and the cluster presentation can be freely inter-converted.
+\begin{SML}
+ signature \mlrischref{IR/mlrisc-cfg2cluster.sig}{CFG2CLUSTER} = sig
+   structure CFG : CONTROL_FLOW_GRAPH
+   structure F   : FLOWGRAPH
+      sharing CFG.I = F.I
+      sharing CFG.P = F.P
+      sharing CFG.B = F.B
+   val cfg2cluster : { cfg : CFG.cfg, relayout : bool } -> F.cluster
+ end 
+ functor \mlrischref{IR/mlrisc-cfg2cluster.sml}{CFG2Cluster}
+   (structure CFG  : CONTROL_FLOW_GRAPH
+    structure F    : FLOWGRAPH
+       sharing CFG.I = F.I
+       sharing CFG.P = F.P
+       sharing CFG.B = F.B
+    val patchBranch : {instr:CFG.I.instruction, backwards:bool} -> 
+                         CFG.I.instruction list
+   ) : CFG2CLUSTER
+\end{SML}
+
+When a CFG originates from a cluster, we try to preserve
+the same code layout through out all optimizations when possible.
+The function \sml{cfg2cluster} takes an optional flag 
+that specifies we should force the recomputation of
+the code layout of a control flow graph when translating a CFG
+back into a cluster.
+
+\subsubsection{Basic CFG Transformations}
+
+Basic CFG transformations are implemented in the functor 
+\sml{CFGUtil}.  These transformations include splitting edges, merging
+edges, removing unreachable code and tail duplication.
+\begin{SML}
+   functor \mlrischref{IR/mlrisc-cfg-util.sml}{CFGUtil}
+      (structure CFG : CONTROL_FLOW_GRAPH
+       structure P   : INSN_PROPERTIES
+          sharing P.I = CFG.I
+      ) : CFG_UTIL
+\end{SML}
+
+The signature of \sml{CFGUtil} is defined below:
+\begin{SML}
+ signature \mlrischref{IR/mlrisc-cfg-util.sig}{CFG_UTIL} = sig
+    structure CFG : CONTROL_FLOW_GRAPH
+    val updateJumpLabel : CFG.cfg -> node_id -> unit
+    val mergeEdge       : CFG.cfg -> CFG.edge -> bool
+    val eliminateJump   : CFG.cfg -> node_id -> bool
+    val insertJump      : CFG.cfg -> node_id -> bool
+    val splitEdge  : CFG.cfg -> { edge : CFG.edge, jump : bool }
+                      -> { edge : CFG.edge, node : CFG.node }
+    val isMerge        : CFG.cfg -> node_id -> bool
+    val isSplit        : CFG.cfg -> node_id -> bool
+    val hasSideExits   : CFG.cfg -> node_id -> bool
+    val isCriticalEdge : CFG.cfg -> CFG.edge -> bool
+    val splitAllCriticalEdges : CFG.cfg -> unit
+    val ceed : CFG.cfg -> node_id * node_id -> bool
+    val tailDuplicate : CFG.cfg -> \{ subgraph : CFG.cfg, root : node_id \} 
+                                -> \{ nodes : CFG.node list, 
+                                     edges : CFG.edge list \} 
+    val removeUnreachableCode : CFG.cfg -> unit
+    val mergeAllEdges : CFG.cfg -> unit
+ end
+\end{SML}
+
+These functions have the following meanings:
+\begin{itemize}
+  \item  \sml{updateJumpLabel} $G u$.  This function
+     updates the label of the branch instruction in a block $u$
+     to be consistent with the control flow edges with source $u$.  
+     This is an nop if the CFG is already consistent. 
+  \item \sml{mergeEdge} $G e$. This function merges edge 
+        $e \equiv u \edge{} v$
+        in the graph $G$ if possible.   This is successful only if
+        there are no other edges flowing into $v$ and no other edges
+        flowing out from $u$.  It returns true if the merge
+        operation is successful.  If successful, the nodes $u$ and $v$
+        will be coalesced into the block $u$.   The jump instruction (if any)
+        in the node $u$ will also be elided.
+  \item \sml{eliminateJump} $G u$.  This function eliminate the
+      jump instruction at the end of block $u$ if it is feasible.
+  \item \sml{insertJump} $G u$.  This function inserts a jump
+       instruction in block $u$ if it is feasible.
+  \item \sml{splitEdge} $G e$.  This function 
+     split the control flow edge $e$, and return a new edge $e'$ and the 
+     new block $u$ as return values.  It addition, it takes as
+     argument a flag \sml{jump}.  If this flag is true, 
+     then a jump instruction is always placed in the 
+     split; otherwise, we try to eliminate the jump when feasible.
+  \item \sml{isMerge} $G u$.  This function tests whether block $u$
+          is a \newdef{merge} node.  A merge node is a node that
+          has two or more incoming flow edges.
+  \item \sml{isSplit} $G u$.  This function tests whether block $u$
+           is a \newdef{split} node.  A split node is a node that
+            has two or more outgoing flow edges.
+  \item \sml{hasSideExits} $G u$.  This function tests whether
+           a block has side exits $G$.  This assumes that $u$
+           is a hyperblock.
+  \item \sml{isCriticalEdge} $G e$.  This function tests whether
+      the edge $e$ is a \newdef{critical} edge.  The 
+       edge $e \equiv u \edge{} v$ is critical iff 
+      there are $u$ is merge node and $v$ is a split node.
+  \item  \sml{splitAllCriticalEdges} $G$.  This function goes
+        through the CFG $G$ and splits
+      all critical edges in the CFG.
+      This can introduce extra jumps and basic blocks in the program.
+  \item  \sml{mustPreceed} $G (u,v)$.   This function
+      checks whether two blocks $u$ and $v$ are necessarily adjacent.
+      Blocks $u$ and $v$ must be adjacent iff $u$ must preceed $v$
+      in any feasible code layout.
+  \item  \sml{tailDuplicate}.  
+   \begin{SML}
+    val tailDuplicate : CFG.cfg -> \{ subgraph : CFG.cfg, root : node_id \} 
+                                -> \{ nodes : CFG.node list, 
+                                     edges : CFG.edge list \} 
+   \end{SML}
+\begin{Figure}
+\begin{boxit}
+%\cpsfig{figure=../pictures/eps/tail-duplication.eps,width=3in}
+\begin{center}
+  \includegraphics[width=3in]{../pictures/pdf/tail-duplication}
+\end{center}%
+\end{boxit}
+\label{fig:tail-duplication} 
+\caption{Tail-duplication}
+\end{Figure}
+
+      This function tail-duplicates the region \sml{subgraph}
+      until it only has a single entry \sml{root}.
+      Return the set of new nodes and new edges.  
+      The region is represented as a subgraph view of the CFG.
+      Figure~\ref{fig:tail-duplication} illustrates 
+      this transformation.
+
+  \item  \sml{removeUnreachableCode} $G$. This function
+          removes all unreachable code  from the graph.
+  \item  \sml{mergeAllEdges} $G$.  This function tries to merge all
+         the edges in the flowgraph $G$.  Merging is performed in the
+         non-increasing order of edge frequencies. 
+\end{itemize}
+
+\subsubsection{Dataflow Analysis}
+MLRISC provides a simple customizable module for performing
+iterative dataflow analysis.   A dataflow analyzer
+has the following signature:
+
+\begin{SML}
+ signature \mlrischref{IR/dataflow.sig}{DATAFLOW_ANALYZER} = sig
+   structure CFG : CONTROL_FLOW_GRAPH
+   type dataflow_info
+   val analyze : CFG.cfg * dataflow_info -> dataflow_info
+ end
+\end{SML}
+
+A dataflow problem is described by the signature \sml{DATAFLOW_PROBLEM}, 
+described below:
+\begin{SML}
+ signature \mlrischref{IR/dataflow.sig}{DATAFLOW_PROBLEM} = sig
+   structure CFG : CONTROL_FLOW_GRAPH
+   type domain
+   type dataflow_info
+   val forward   : bool
+   val bot       : domain
+   val ==        : domain * domain -> bool
+   val join      : domain list -> domain
+   val prologue  : CFG.cfg * dataflow_info ->
+                       CFG.block node ->
+                           \{ input    : domain,
+                             output   : domain,
+                             transfer : domain -> domain
+                           \}
+   val epilogue  : CFG.cfg * dataflow_info ->
+                       \{ node   : CFG.block node,
+                         input  : domain,
+                         output : domain
+                       \} -> unit
+ end
+\end{SML}
+This description contains the following items
+\begin{itemize}
+\item \sml{type domain} is the abstract lattice domain $D$.
+\item \sml{type dataflow_info} is where the dataflow information
+is stored.
+\item \sml{forward} is true iff the dataflow problem is in the
+forward direction
+\item \sml{bot} is the bottom element of $D$.
+\item \sml{==} is the equality function on $D$.
+\item \sml{join} is the least-upper-bound function on $D$.
+\item \sml{prologue} is a user-supplied function that performs
+pre-processing and setup.  For each CFG node $X$, this function
+computes
+\begin{itemize}
+ \item  \sml{input} -- which is the initial input value of $X$
+ \item \sml{output} -- which is the initial output value of $X$
+ \item \sml{transfer} -- which is the transfer function on $X$.
+\end{itemize}
+\item \sml{epilogue} is a function that performs post-processing.
+It visits each node $X$ in the flowgraph and return the resulting
+\sml{input} and \sml{output} value for $X$. 
+\end{itemize}
+
+To generate a new dataflow analyzer from a dataflow problem, 
+the functor \sml{Dataflow} can be used:
+\begin{SML}
+ functor \mlrischref{IR/dataflow.sml}{Dataflow}(P : DATAFLOW_PROBLEM) : DATAFLOW_ANALYZER =
+\end{SML}
+
+\subsubsection{Static Branch Prediction} 
+
+\subsubsection{Branch Optimizations}

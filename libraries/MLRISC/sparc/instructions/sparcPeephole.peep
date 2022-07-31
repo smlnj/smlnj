@@ -1,0 +1,40 @@
+local
+
+   structure I =
+   struct
+     include "sparcInstr.sml"
+   end
+
+in
+
+functor SparcPeephole
+   (structure Instr : SPARCINSTR
+    structure Eval  : MLTREE_EVAL
+      sharing Eval.T = Instr.T
+   ) : PEEPHOLE =
+struct
+   structure I = Instr
+   structure CB = CellsBasis
+
+   (* IMPORTANT: instructions are now given in forward order *)
+   fun peephole instrs =
+   let fun isZero(I.LAB le)  = ((Eval.valueOf le = 0) handle _ => false)
+         | isZero(I.REG r)   = CB.registerNum r = 0
+         | isZero(I.IMMED i) = i = 0
+         | isZero _ = false
+
+       fun removable(I.INSTR(I.ARITH{a=(I.ADD | I.SUB), r, i, d})) =
+             CB.sameColor(r,d) andalso isZero i
+         | removable(I.ANNOTATION{i,a}) = removable i
+         | removable _ = false
+
+       fun loop(current, instrs) = 
+           case current of
+             [] => instrs
+           | i::rest where removable i => loop(rest, instrs)
+           | i::rest => loop(rest, i::instrs)
+   in  loop(instrs, [])
+   end
+end 
+
+end

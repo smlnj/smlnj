@@ -1,0 +1,2 @@
+This directory contains a bunch of modules for implementing gc-safe global
+optimizations.  

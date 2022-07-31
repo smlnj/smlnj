@@ -1,0 +1,17 @@
+(* This file is created by makeallcm *)
+Library
+	signature MLRISC_CONTROL
+	signature MLRISC_ERROR_MSG
+	signature MLRISC_TIMING
+	structure MLRiscControl
+	structure MLRiscErrorMsg
+	structure MLRiscTiming
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/controls-lib.cm
+
+        ../control/mlriscErrormsg.sml
+        ../control/mlrisc-control.sml
+        ../control/mlrisc-timing.sml

@@ -1,0 +1,174 @@
+\section{Delay Slot Filling}
+\subsection{ Overview }
+
+    Superscalar architectures such as the Sparc, MIPS, and PA-RISC
+contain delayed branch and/or load instructions.  
+Delay slot filling is necessary 
+task of the back end to keep the instruction pipelines busy.  To accomodate
+the intricate semantics of branch delay slot in various architectures, 
+MLRISC uses the following very general framework for dealing with 
+delayed instructions. 
+   
+\begin{description}
+  \item[Instruction representation]
+      To make it easy to deal with instruction with delay slot, MLRISC allow
+       the following extensions to instruction representations.
+  \begin{itemize}
+    \item Instructions with delay slot may have a
+        \begin{color}{#aa0000}nop\end{color} flag.   When this flag is true
+        the delay slot is assumed to be filled with a NOP instruction.
+    \item Instructions with delay slots that can be nullified may have a
+        \begin{color}{#aa0000}nullified\end{color} flag.   
+       When this flag is true the branch delay slot is assumed to be
+       nullified.  
+    \end{itemize}
+   \item[Nullification semantics]
+     Unfortunately, nullification semantics
+        in architectures vary. In general, MLRISC allows the following
+        additional nullification characteristics to be specified. 
+     \begin{itemize}
+     \item Nullification can be specified as illegal; this is needed 
+           because some instructions can not be nullified
+     \item When nullification is enabled, the semantics of the delay slot
+          instruction may depend on the direction of the branch, and whether
+          a conditional test succeeds. 
+     \item Certain class of instructions may be declared to be illegal
+          to fit into certain class of delay slots.
+     \end{itemize}
+\end{description} 
+
+For example, conditional branch instructions on the Sparc are defined 
+as follows:
+\begin{verbatim}
+   Bicc of {b:branch, a:bool, label:Label.label, nop:bool}
+     asm: ``b<b><a>\t<label><nop>''
+     padding: nop = true
+     nullified: a = true and (case b of I.BA => false | _ => true)
+     delayslot candidate: false
+\end{verbatim}
+\noindent where \sml{a} is \emph{annul} flag and \sml{nop} is the nop 
+flag (see \mlrischref{sparc/sparc.md}{the Sparc machine description}).
+A constructor term
+\begin{SML}
+   Bicc\{b=BE, a=true, label=label, nop=true\}
+\end{SML}
+denotes the instruction sequence
+\begin{verbatim}
+   be,a label
+   nop
+\end{verbatim}
+while
+\begin{SML}
+   Bicc\{b=BE, a=false, label=label, nop=false\}
+\end{SML}
+denotes 
+\begin{verbatim}
+   be label
+\end{verbatim}
+
+
+\subsection{The Interface}
+
+Architecture information about how delay slot filling is to be performed
+is described in the signature
+\mlrischref{backpatch/delaySlotProps.sig}{DELAY\_SLOT\_PROPERTIES}.
+\begin{SML}
+signature DELAY_SLOT_PROPERTIES =
+sig
+   structure I : INSTRUCTIONS
+
+   datatype delay_slot = 
+     D_NONE   | D_ERROR   | D_ALWAYS  
+   | D_TAKEN  | D_FALLTHRU 
+
+   val delaySlotSize : int 
+   val delaySlot : \{ instr : I.instruction, backward : bool \} -> 
+		   \{ n    : bool,      
+		     nOn  : delay_slot,
+		     nOff : delay_slot,
+		     nop  : bool      
+		   \} 
+   val enableDelaySlot : 
+	 \{instr : I.instruction, n:bool, nop:bool\} -> I.instruction
+   val conflict : 
+         \{regmap:int->int,src:I.instruction,dst:I.instruction\} -> bool
+   val delaySlotCandidate : 
+         \{ jmp : I.instruction, delaySlot : I.instruction \} -> bool
+   val setTarget : I.instruction * Label.label -> I.instruction
+end
+\end{SML}
+
+The components of this signature are:
+\begin{description}
+  \item[delay\_slot] This datatype describes properties related to a 
+      delay slot.
+   \begin{description}
+     \item[D\_NONE]   This indicates that no delay slot is possible.
+     \item[D\_ERROR]  This indicates that it is an error 
+     \item[D\_ALWAYS] This indicates that the delay slot is always active
+     \item[D\_TAKEN]  This indicates that the 
+              delay slot is only active when branch is taken
+     \item[D\_FALLTHRU]  This indicates that the delay slot 
+       is only active when branch is not taken 
+   \end{description} 
+  \item[delaySlotSize] This is size of delay slot in bytes.
+
+  \item[delaySlot]  This method takes an instruction \sml{instr}
+      and a flag indicating whether the branch is \sml{backward},
+     and returns the delay slot properties of an instruction.   The
+      properties is described by four fields.
+      \begin{description}
+        \item[n : bool]  This bit is if the nullified bit in the
+   instruction is currently set.
+        \item[nOn : delay\_slot] This field indicates the delay slot 
+          type when the instruction is nullified.
+        \item[nOff : delay\_slot] This field indiciates the delay slot
+         type when the instruction is not nullified. 
+         \item[nop  : bool] This bit indicates whether there is an 
+implicit padded nop.
+      \end{description}
+
+
+   \item[enableDelaySlot]
+       This method set the nullification and nop flags of an instruction.
+
+   \item[conflict] This method checks whether there are any conflicts
+      between instruction \sml{src} and \sml{dst}.
+   \item[delaySlotCandidate] 
+       This method checks whether instruction \sml{delaySlot} is within the
+       class of instructions that can fit within the delay slot of 
+       instruction \sml{jmp}.
+
+   \item[setTarget]
+       This method changes the branch target of an instruction.
+\end{description}
+
+\subsubsection{Examples}
+  For example,
+\begin{SML}
+    delaySlot\{instr=instr, backward=true\} =
+    \{n=true, nOn=D_ERROR, nOff=D_ALWAYS, nop=true\}
+\end{SML}
+\noindent means that the instruction nullification bit is on, the
+the nullification cannot be turned off, delay slot is always active 
+(when not nullified), and there is currently an implicit padded nop.
+
+\begin{SML}
+   delaySlot\{instr=instr, backward=false\} =
+  \{n=false, nOn=D_NONE, nOff=D_TAKEN, nop=false\}
+\end{SML}
+\noindent means that the nullification bit is off, the delay slot
+is inactive when the nullification bit is off,  the delay slot is only
+active when the (forward) branch is taken when \sml{instr} is 
+not-nullified, and there
+is no implicitly padded nop.
+
+\begin{SML}
+   delaySlot\{instr=instr, backward=true\} =
+  \{n=true, nOn=D_TAKEN, nOff=D_ALWAYS, nop=true\}
+\end{SML}
+\noindent means that the nullification bit is on, the delay slot
+is active on a taken (backward) branch when the nullification bit is off, 
+the delay slot is always active when \sml{instr} is not-nullified, 
+and there is currently an implicitly padded nop.
+

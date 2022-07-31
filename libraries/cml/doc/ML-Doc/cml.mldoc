@@ -1,0 +1,331 @@
+<!-- ../doc/mldoc/cml.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Bell Laboratories" YEAR=1995>
+<COPYRIGHT OWNER="John H. Reppy" YEAR=1991>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The CML structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/CML/ structure</HEAD>
+<SEEALSO>
+  <STRREF DOCUMENT=SML-BASIS-DOC TOPID/Option/
+  <STRREF DOCUMENT=SML-BASIS-DOC TOPID/Time/
+</SEEALSO>
+
+<PP>
+<!-- Some general introductory text -->
+
+<STRUCTURE STRID="CML">
+  <SIGBODY SIGID="CML" FILE=CML-SIG>
+    <SPEC>
+      <TYPE><ID>thread_id
+	<COMMENT>
+	<PP>
+	  Thread IDs are the unique IDs associated with &CML; threads.
+	  These IDs are in an unspecified total order that can be used to
+	  break cyclic depedencies (see <VALREF/compareTid/).
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>chan
+	<COMMENT>
+	<PP>
+          This is the type constructor for synchronous channels.
+    <SPEC>
+      <TYPE><TYPARAM>'a<ID>event
+	<COMMENT>
+	<PP>
+	  Event values are abstract representations of synchronous operations
+	  (so called <EM>first-class sychronous operations</EM>).
+    <SPEC>
+      <VAL>version<TY>{system : string, version_id : int list, date : string}
+      <VAL>banner<TY>string
+        <COMMENT>
+	<PP>
+	These specify the version of &CML; in the same format as &SMLNJ;.
+    <SPEC>
+      <VAL>spawnc<TY>('a -> unit) -> 'a -> thread_id
+      <VAL>spawn<TY>(unit -> unit) -> thread_id
+        <COMMENT>
+        <PROTOTY>
+          spawnc <ARG/f/ <ARG/x/
+	<PROTO>
+          spawn <ARG/f/
+        </PROTOTY>
+	creates a new thread of control to evaluate the body of <ARG/f/.
+	A new unique ID for the thread is created and returned.
+    <SPEC>
+      <VAL>yield<TY>unit -> unit
+      <COMMENT>
+	<PP>
+	This function can be used to implement an explicit context switch.
+	Since CML is preemptively scheduled, it should never be necessary for
+	user programs to call this function.
+	It is mainly used for performance measurements.
+    <SPEC>
+      <VAL>exit<TY>unit -> 'a
+      <COMMENT>
+	<PROTOTY>
+	  exit ()
+	</PROTOTY>
+	causes the calling thread to terminate.
+<!-- say something about <VALREF/joinEvt/ -->
+    <SPEC>
+      <VAL>getTid<TY>unit -> thread_id
+        <COMMENT>
+          <PROTOTY>
+          getTid ()
+          </PROTOTY>
+          returns the thread ID of the calling thread.
+    <SPEC>
+      <VAL>sameTid<TY>(thread_id * thread_id) -> bool
+        <COMMENT>
+          <PROTOTY>
+          sameTid (<ARG/tid1/, <ARG/tid2/)
+          </PROTOTY>
+          returns <CD/true/, if the two thread IDs are the same ID.
+    <SPEC>
+      <VAL>compareTid<TY>(thread_id * thread_id) -> order
+        <COMMENT>
+          <PROTOTY>
+          compareTid (<ARG/tid1/, <ARG/tid2/)
+          </PROTOTY>
+          compares the two thread IDs and returns their order in the total
+	  ordering of thread IDs.
+	  The precise semantics of this ordering is left unspecified, other
+	  than to say it is a total order.
+    <SPEC>
+      <VAL>hashTid<TY>thread_id -> word
+        <COMMENT>
+          <PROTOTY>
+          hashTid <ARG/tid/
+          </PROTOTY>
+          returns a hashing of the thread ID <ARG/tid/.
+    <SPEC>
+      <VAL>tidToString<TY>thread_id -> string
+        <COMMENT>
+          <PROTOTY>
+          tidToString <ARG/tid/
+          </PROTOTY>
+          returns a string representation of the thread ID <ARG/tid/.
+    <SPEC>
+      <VAL>joinEvt<TY>thread_id -> unit event
+        <COMMENT>
+          <PROTOTY>
+          joinEvt <ARG/tid/
+          </PROTOTY>
+          creates an event value for synchronizing on the termination of
+	  the thread with the ID <ARG/tid/.
+	  There are three ways that a thread may terminate: the function that
+	  was passed to <VALREF/spawn/ (or <VALREF/spawnc/) may return; it
+	  may call the <VALREF/exit/ function, or it may have an uncaught
+	  exception.
+	  Note that <VALREF NOLINK/joinEvt/ does not distinguish between these
+	  cases; it also does not become enabled if the named thread deadlocks
+	  (even if it is garbage collected).
+    <SPEC>
+      <VAL>channel<TY>unit -> 'a chan
+        <COMMENT>
+          <PROTOTY>
+          channel ()
+          </PROTOTY>
+          creates a new synchronous channel.
+    <SPEC>
+      <VAL>sameChannel<TY>('a chan * 'a chan) -> bool
+        <COMMENT>
+          <PROTOTY>
+          sameChannel (<ARG/ch1/, <ARG/ch2/)
+          </PROTOTY>
+          returns <CD/true/, if the two channels are the same channel.
+    <SPEC>
+      <VAL>send<TY>('a chan * 'a) -> unit
+        <COMMENT>
+          <PROTOTY>
+            send (<ARG/ch/, <ARG/msg/)
+          </PROTOTY>
+	  sends the message <ARG/msg/ on the synchronous channel <ARG/ch/.
+	  This operation blocks the calling thread until there is another
+	  thread attempting to receive a message from the channel <ARG/ch/,
+	  at which point the receiving thread gets the message and both threads
+	  continue execution.
+    <SPEC>
+      <VAL>recv<TY>'a chan -> 'a
+        <COMMENT>
+          <PROTOTY>
+            recv <ARG/ch/
+          </PROTOTY>
+          receives a message from the channel <ARG/ch/.
+	  This operation blocks the calling thread until there is another
+	  thread attempting to send a message on the channel <ARG/ch/,
+	  at which point both threads continue execution.
+    <SPEC>
+      <VAL>sendEvt<TY>('a chan * 'a) -> unit event
+      <VAL>recvEvt<TY>'a chan -> 'a event
+        <COMMENT>
+	<PP>
+	  These functions create event values to represent the <VALREF/send/
+	  and <VALREF/recv/ operations.
+    <SPEC>
+      <VAL>sendPoll<TY>('a chan * 'a) -> bool
+        <COMMENT>
+          <PROTOTY>
+            sendPoll (<ARG/ch/, <ARG/msg/)
+          </PROTOTY>
+	  attempts to send the message <ARG/msg/ on the synchronous channel <ARG/ch/.
+	  If this operation can complete without blocking the calling thread, then
+	  the message is sent and <CD/true/ is returned.
+	  Otherwise, no communication is preformed and <CD/false/ is returned.
+	  This function is not recommended for general use; it is provided
+	  as an efficiency aid for certain kinds of protocols.
+    <SPEC>
+      <VAL>recvPoll<TY>'a chan -> 'a option
+        <COMMENT>
+          <PROTOTY>
+            recvPoll <ARG/ch/
+          </PROTOTY>
+          attempts to receive a message from the channel <ARG/ch/.
+	  If there is no other thread offering to <VALREF/send/ a message
+	  on <ARG/ch/, then this returns
+	  <CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/NONE/, otherwise it
+	  returns <CONREF DOCUMENT=SML-BASIS-DOC STRID="Option"/SOME/ wrapped
+	  around the message.
+	  This function is not recommended for general use; it is provided
+	  as an efficiency aid for certain kinds of protocols.
+    <SPEC>
+      <VAL>wrap<TY>('a event * ('a -> 'b)) -> 'b event
+        <COMMENT>
+          <PROTOTY>
+          wrap (<ARG/ev/, <ARG/f/)
+          </PROTOTY>
+          wraps the post-synchronization action <ARG/f/ around the event
+	  value <ARG/ev/.
+    <SPEC>
+      <VAL>wrapHandler<TY>('a event * (exn -> 'a event)) -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          wrapHandler (<ARG/ev/, <ARG/h/)
+          </PROTOTY>
+          wraps the exception handler function <ARG/h/ around the event
+	  value <ARG/ev/.
+	  If, during execution of some post-synchronization action in
+	  <ARG/ev/, an exception is raised, it will be caught and passed
+	  to <ARG/h/.
+	  Nesting of handlers works as would be expected: the innermost
+	  handler is the first one invoked.
+	  Note that exceptions raised in the pre-synchronization actions in
+	  <ARG/ev/ (i.e., actions defined by <VALREF/guard/ and <VALREF/withNack/)
+	  are not handled by <ARG/h/.
+    <SPEC>
+      <VAL>guard<TY>(unit -> 'a event) -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          guard <ARG/g/
+          </PROTOTY>
+          creates a <IT>delayed</IT> event value from the function <ARG/g/.
+	  When the resulting event value is synchronized on, the function
+	  <ARG/g/ will be evaluated and the resulting event value will be
+	  used in its place in the synchronization.
+	  This provides a mechanism for implementing pre-synchronization
+	  actions, such as sending a request to a server.
+    <SPEC>
+      <VAL>withNack<TY>(unit event -> 'a event) -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          withNack <ARG/g/
+          </PROTOTY>
+          creates a <IT>delayed</IT> event value from the function <ARG/g/.
+	  As in the case of <VALREF/guard/, the function <ARG/g/ will be evaluated
+	  at synchronization time and the resulting event value will be
+	  used in its place in the synchronization.
+	  Furthermore, when <ARG/g/ is evaluated, it is passed a <IT>negative
+	  acknowledgement</IT> event as an argument.
+	  This negative acknowledgement event is enabled in the case where
+	  some other event involved in the synchronization is chosen instead
+	  of the one produced by <ARG/g/.
+	  The <VALREF NOLINK/withNack/ combinator provides a mechanism for
+	  informing servers that a client has aborted a transaction.
+    <SPEC>
+      <VAL>choose<TY>'a event list -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          choose <ARG/evs/
+          </PROTOTY>
+	  constructs an event value that represents the non-deterministic
+	  choice of the events in the list <ARG/evs/.
+    <SPEC>
+      <VAL>sync<TY>'a event -> 'a
+        <COMMENT>
+          <PROTOTY>
+          sync <ARG/ev/
+          </PROTOTY>
+          synchronizes the calling thread on the event <ARG/ev/.
+    <SPEC>
+      <VAL>select<TY>'a event list -> 'a
+        <COMMENT>
+          <PROTOTY>
+          select <ARG/evs/
+          </PROTOTY>
+          synchronizes on the non-deterministic choice of the events in the
+	  list <ARG/evs/.
+	  It is semantically equivalant to:
+	  <CODE>
+	    <VALREF/sync/ (<VALREF/choose/ <ARG/evs/)
+	  </CODE>
+	  but is more efficient.
+    <SPEC>
+      <VAL>never<TY>'a event
+        <COMMENT>
+          <PROTOTY>
+          never
+          </PROTOTY>
+          is an event value that is never enabled for synchronization.
+	  It is semantically equivalant to the expression:
+	  <CODE>
+	    <VALREF/choose/ []
+	  </CODE>
+    <SPEC>
+      <VAL>alwaysEvt<TY>'a -> 'a event
+        <COMMENT>
+          <PROTOTY>
+          alwaysEvt <ARG/x/
+          </PROTOTY>
+          creates an event value that is always enabled, and that returns
+	  the value <ARG/x/ upon synchronization.
+    <SPEC>
+      <VAL>timeOutEvt<TY>Time.time -> unit event
+        <COMMENT>
+          <PROTOTY>
+          timeOutEvt <ARG/t/
+          </PROTOTY>
+	  creates an event value that becomes enabled at the time
+	  interval <ARG/t/ after synchronization.
+	  For example, the expression:
+	  <CODE>
+	    <VALREF/sync/ (timeOutEvt (<VALREF DOCUMENT=SML-BASIS-DOC STRID="Time"/Time.fromSeconds/ 1))
+	  </CODE>
+	  will delay the calling thread for one second.
+	  Note that the specified time interval is actually a minimum
+	  waiting time, and the delay may be longer.
+    <SPEC>
+      <VAL>atTimeEvt<TY>Time.time -> unit event
+        <COMMENT>
+          <PROTOTY>
+          atTimeEvt <ARG/t/
+          </PROTOTY>
+	  creates an event value that becomes enabled at the specified time
+	  <ARG/t/.
+	  For example, the expression:
+	  <CODE>
+	    <VALREF/sync/ (atTimeEvt (<VALREF DOCUMENT=SML-BASIS-DOC STRID="Date"/Date.toTime/ (<VALREF DOCUMENT=SML-BASIS-DOC STRID="Date"/Date.date/ {
+		year = 2000, month = <CONREF DOCUMENT=SML-BASIS-DOC STRID="Date"/Date.Jan/, day = 0,
+		hour = 0, minute = 0, second = 0, 
+		offset = NONE
+	      })))
+	  </CODE>
+	  blocks the calling thread until the beginning of the year 2000.
+    </SIGBODY>
+</STRUCTURE>
+</INTERFACE>

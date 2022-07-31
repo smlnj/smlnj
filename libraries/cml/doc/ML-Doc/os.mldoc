@@ -1,0 +1,40 @@
+<!-- os.mldoc -->
+
+<!DOCTYPE ML-DOC SYSTEM>
+
+<AUTHOR
+  NAME="John Reppy"
+  EMAIL="jhr@research.att.com"
+  YEAR=1996>
+<COPYRIGHT OWNER="John H. Reppy" YEAR=2003>
+<COPYRIGHT OWNER="Bell Labs, Lucent Technologies" YEAR=1998>
+<COPYRIGHT OWNER="AT&AMP;T Research" YEAR=1996>
+<VERSION VERID="1.1" YEAR=2003 MONTH=3 DAY=10>
+
+<TITLE>The OS structure</TITLE>
+
+<INTERFACE>
+<HEAD>The <CD/OS/ structure</HEAD>
+<SEEALSO>
+  <SIGREF DOCUMENT=SML-BASIS-DOC/OS/
+  <STRREF DOCUMENT=SML-BASIS-DOC STRID="OS"/OS.FileSys/
+  <STRREF DOCUMENT=SML-BASIS-DOC STRID="OS"/OS.Path/
+  <STRREF STRID="OS"/OS.Process/
+  <STRREF STRID="OS"/OS.IO/
+</SEEALSO>
+
+<PP>
+The <STRREF NOLINK/OS/ structure is a container for a collection of
+structures for interacting with the operating system's file system,
+directory paths, processes and I/O subsystem.
+
+<STRUCTURE STRID="OS" STATUS=REQUIRED>
+  <SIGBODY SIGID="CML_OS" FILE=OS-SIG>
+    <SPEC>
+      <INCLUDE><SIGREF DOCUMENT=SML-BASIS-DOC/OS/
+    <SPEC>
+      <SUBSTRUCT>Process<SIGREF/CML_OS_PROCESS/</SUBSTRUCT>
+    <SPEC>
+      <SUBSTRUCT>IO<SIGREF/CML_OS_IO/</SUBSTRUCT>
+</STRUCTURE>
+</INTERFACE>

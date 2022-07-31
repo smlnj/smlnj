@@ -1,0 +1,33 @@
+Library
+	signature POLY_GEN
+	signature REWRITE_GEN
+	structure RewriterGen
+	functor PolyGen
+	functor RewriteGen
+is
+
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+        $/basis.cm
+        $/smlnj-lib.cm
+	$smlnj/MLRISC/Control.cm
+#else
+        basis.cm
+        smlnj-lib.cm
+	../../cm/Control.cm
+#endif
+#else
+        smlnj-lib.cm
+	../../cm/Control.cm
+#endif
+
+	../SourceMap/sources.cm 
+	../FakeSMLAst/sources.cm (* the fake SML abstract syntax *)
+	../PP/sources.cm         (* pretty printer utilities *)
+	../Parser/sources.cm     (* parser *)
+
+	poly-gen.sig
+	poly-gen.sml
+	rewrite-gen.sig
+	rewrite-gen.sml
+	glue.sml

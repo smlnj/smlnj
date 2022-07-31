@@ -1,0 +1,29 @@
+(* smlnj-lib.cm
+ *
+ * COPYRIGHT (c) 2001 Bell Labs, Lucent Technologies.
+ *
+ * The public interface to CML's own version of smlnj-lib.cm.
+ * (Actually, it also includes unix-lib.cm and inet-lib.cm.  This should
+ * perhaps later be cleaned up.)
+ *
+ * This file is used with the new CM only.  Clients compiled using
+ * the old CM refer to ../sources.cm directly.
+ *)
+Library
+
+(** CML specific modules **)
+  signature MULTICAST
+  signature SIMPLE_RPC
+  signature TRACE_CML
+
+  structure Multicast
+  structure SimpleRPC
+  structure TraceCML
+
+  library($/smlnj-lib.cm) - structure TimeLimit
+#if defined(OPSYS_UNIX)
+  library($/unix-lib.cm)
+#endif
+  library($/inet-lib.cm)
+is
+  ../sources.cm

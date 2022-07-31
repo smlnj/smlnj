@@ -1,0 +1,26 @@
+\section{Regions}
+\subsubsection{Overview}
+
+The MLRISC system uses user defined type called
+\newdef{regions} to propagate
+aliasing information to the backend. This type is
+abstract and no constraint is imposed on how it is implemented.
+The advantage of this is that the client can optimize the representation
+of the region information according to the semantics of the source language.
+The downside of this freedom is that the client has to implement
+various modules to extract information from the regions datatype
+required by various optimization phases.
+
+For clients that do not want to implement their own regions datatype,
+there is now a new generic mechanism, called 
+\newdef{MLRiscRegions}, built on top of
+the regions concept, for propagating both:
+\begin{itemize}
+  \item Aliasing information, and
+  \item Control dependence/anti-control dependence information
+\end{itemize}
+Both kinds of information are crucial for extracting parallelism
+from the target code, and are used in all optimizations that perform code
+motion, such as SSA optimizations and all scheduling optimizations. 
+
+\subsubsection{MLRisc Regions}

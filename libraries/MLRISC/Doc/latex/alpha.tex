@@ -1,0 +1,97 @@
+\section{The Alpha Back End}
+
+\subsection{Trap Shadows, Floating Exceptions, and Denormalized Numbers on the DEC Alpha}
+
+  \emph{By Andrew W. Appel and Lal George, Nov 28, 1995}
+
+  See section 4.7.5.1 of the \emph{Alpha Architecture Reference Manual}.
+
+  The Alpha has imprecise exceptions, meaning that if a floating
+  point instruction raises an IEEE exception, the exception may
+  not interrupt the processor until several successive instructions have
+  completed.  ML, on the other hand, may want a "precise" model
+  of floating point exceptions.
+
+  Furthermore, the Alpha hardware does not support denormalized numbers
+  (for ``gradual underflow'').  Instead, underflow always rounds to zero.
+  However, each floating operation (add, mult, etc.) has a trapping
+  variant that will raise an exception (imprecisely, of course) on
+  underflow; in that case, the instruction will produce a zero result
+  AND an exception will occur.  In fact, there are several variants
+  of each instruction; three variants of MULT are:
+\begin{description}
+ \item[MULT  s1,s2,d]  truncate denormalized result to zero; no exception
+ \item[MULT/U  s1,s2,d] truncate denormalized result to zero; raise UNDERFLOW
+ \item[MULT/SU  s1,s2,d]  software completion, producing denormalized result
+\end{description}
+
+  The hardware treats the \verb|MULT/U| and \verb|MULT/SU| 
+  instructions identically,
+  truncating a denormalized result to zero and raising the UNDERFLOW
+  exception.  But the operating system, on an UNDERFLOW exception,
+  examines the faulting instruction to see if it's an \verb|/SU| 
+  form, and if so,
+  recalculates \verb|s1*s2|, puts the right answer in \verb|d|, and continues,
+  all without invoking the user's signal handler.
+
+  Because most machines compute with denormalized numbers in hardware,
+  to maximize portability of SML programs, we use the \verb|MULT/SU| form.
+  (and \verb|ADD/SU|, \verb|SUB/SU|, etc.)  But to use this form successfully,
+  certain rules have to be followed.  Basically, d cannot be the same
+  register as s1 or s2, because the opsys needs to be able to 
+  recalculate the operation using the original contents of s1 and s2,
+  and the MULT/SU instruction will overwrite d even if it traps.
+
+  More generally, we may want to have a sequence of floating-point
+  instructions.  The rules for such a sequence are:
+
+  1. The sequence should end with a \verb|TRAPB| (trap barrier) instruction.
+     (This could be relaxed somewhat, but certainly a \verb|TRAPB| would
+      be a good idea sometime before the next branch instruction or
+      update of an ML reference variable, or any other ML side effect.)
+  2. No instruction in the sequence should destroy any operand of itself
+     or of any previous instruction in the sequence.
+  3. No two instructions in the sequence should write the same destination
+     register.
+
+  We can achieve these conditions by the following trick in the
+  Alpha code generator.  Each instruction in the sequence will write
+  to a different temporary; this is guaranteed by the translation from
+  ML-RISC.  At the beginning of the sequence, we will put a special
+  pseudo-instruction (we call it \verb|DEFFREG|) that ``defines'' 
+   the destination
+  register of the arithmetic instruction.  If there are $K$ arithmetic
+  instructions in the sequence, then we'll insert $K$ 
+   \verb|DEFFREG| instructions
+  all at the beginning of the sequence.
+  Then, each arithop will not only ``define'' its destination temporary
+  but will ``use'' it as well.  When all these instructions are fed to
+  the liveness analyzer, the resulting interference graph will then
+  have inteference edges satisfying conditions 2 and 3 above.
+
+  Of course, \verb|DEFFREG| doesn't actually generate any code.  In our model
+  of the Alpha, every instruction generates exactly 4 bytes of code
+  except the ``span-dependent'' ones.  Therefore, we'll specify \verb|DEFFREG|
+  as a span-dependent instruction whose minimum and maximum sizes are zero.
+
+  At the moment, we do not group arithmetic operations into sequences;
+  that is, each arithop will be preceded by a single \verb|DEFFREG| and
+  followed by a \verb|TRAPB|.  To avoid the cost of all those \verb|TRAPB|'s, 
+  we should improve this when we have time.  Warning:  Don't put more 
+  than 31 instructions in the sequence, because they're all required
+  to write to different destination registers!  
+
+  What about multiple traps?  For example, suppose a sequence of
+  instructions produces an Overflow and  a Divide-by-Zero exception?
+  ML would like to know only about the earliest trap, but the hardware
+  will report \emph{BOTH} traps to the operating system.  However, as long
+  as the rules above are followed (and the software-completion versions
+  of the arithmetic instructions are used), the operating system will
+  have enough information to know which instruction produced the
+  trap.  It is very probable that the operating system will report \emph{ONLY}
+  the earlier trap to the user process, but I'm not sure.
+
+  For a hint about what the operating system is doing in its own
+  trap-handler (with software completion), see section 6.3.2 of
+  ``\emph{OpenVMS Alpha Software}'' (Part II of the Alpha Architecture
+  Manual).  This stuff should apply to Unix (OSF1) as well as VMS.

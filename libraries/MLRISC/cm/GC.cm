@@ -1,0 +1,42 @@
+(* This file is created by makeallcm *)
+Library
+is
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/Control.cm
+	$/Lib.cm
+	$/Graphs.cm
+	$/MLRISC.cm
+	$/IR.cm
+	$/RTL.cm
+#else
+	basis.cm
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	MLRISC.cm
+	IR.cm
+	RTL.cm
+#endif
+#else
+	smlnj-lib.cm
+	Control.cm
+	Lib.cm
+	Graphs.cm
+	MLRISC.cm
+	IR.cm
+	RTL.cm
+#endif
+	../gc-safety/gc-gen.sig
+	../gc-safety/gc-gen.sml
+	../gc-safety/gc-liveness.sig
+	../gc-safety/gc-liveness.sml
+	../gc-safety/gc-typemap.sig
+	../gc-safety/gc-typemap.sml
+	../gc-safety/gc-dummy-type.sml
+	../gc-safety/gc-type-system.sig
+	../gc-safety/gc-type-system.sml
+	../gc-safety/gc-invariants.sml

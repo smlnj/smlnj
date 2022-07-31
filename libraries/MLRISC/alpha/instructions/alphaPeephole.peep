@@ -1,0 +1,58 @@
+local
+   structure I = 
+   struct
+      include "alphaInstr.sml"
+   end
+in
+
+functor AlphaPeephole
+   (structure Instr : ALPHAINSTR
+    structure Eval : MLTREE_EVAL 
+      sharing Instr.T = Eval.T
+   ) : PEEPHOLE =
+struct
+   structure I = Instr
+   structure CB = CellsBasis
+
+   (* IMPORTANT: instructions are now given in forward order *)
+   fun peephole instrs =
+   let fun isZero(I.LABop le) = ((Eval.valueOf le = 0) handle _ => false)
+         | isZero(I.REGop r) = CB.registerNum r = 31 
+         | isZero(I.IMMop i) = i = 0
+         | isZero _ = false
+
+       fun removable(I.INSTR(I.LDA{r, b, d})) = 
+             isZero d andalso CB.sameColor(r,b)
+         | removable(I.INSTR(I.OPERATE{oper=(I.ADDQ | I.SUBQ), ra, rb, rc})) =
+             CB.sameColor(ra,rc) andalso isZero rb
+         | removable(I.ANNOTATION{i,a}) = removable i
+         | removable _ = false
+
+       fun symmetric(I.STQ, I.LDQ) = true
+         | symmetric(I.STL, I.LDL) = true
+         | symmetric(I.STW, I.LDW) = true
+         | symmetric(I.STB, I.LDB) = true
+         | symmetric _             = false
+
+       fun sameOperand (I.REGop r1, I.REGop r2) = CB.sameColor(r1,r2)
+         | sameOperand (I.IMMop i1, I.IMMop i2) = i1 = i2
+         | sameOperand (I.LABop l1, I.LABop l2) = 
+               ((Eval.valueOf l1 = Eval.valueOf l2) handle _ => false)
+         | sameOperand _ = false
+
+       fun loop(current, instrs) = 
+           case current of
+             [] => instrs
+           | (st as I.INSTR(I.STORE{stOp, r=r1, b=b1, d=d1, ...}))::
+             (ld as I.INSTR(I.LOAD {ldOp, r=r2, b=b2, d=d2, ...}))::rest 
+              where symmetric(stOp, ldOp) andalso 
+                    CB.sameColor(r1,r2) andalso 
+                    CB.sameColor(b1,b2) andalso 
+                    sameOperand(d1,d2) => loop(rest, st::instrs)
+           | i::rest where removable i => loop(rest, instrs)
+           | i::rest => loop(rest, i::instrs)
+   in  loop(instrs, [])
+   end
+end 
+
+end

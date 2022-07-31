@@ -1,0 +1,15 @@
+(* This file is created by makeallcm *)
+Library
+is
+
+	$/basis.cm
+	$/smlnj-lib.cm
+
+	Control.cm
+	Lib.cm
+	MLRISC.cm
+	ALPHA.cm
+	Sched.cm
+	Region.cm
+
+	../alpha/scheduling/alphaSchedProps.sml

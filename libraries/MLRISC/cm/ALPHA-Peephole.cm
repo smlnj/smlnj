@@ -1,0 +1,11 @@
+(* This file is created by makeallcm *)
+Library
+	functor AlphaPeephole
+is
+        $/basis.cm
+
+	MLRISC.cm
+	Peephole.cm
+	ALPHA.cm
+
+	../alpha/instructions/alphaPeephole.sml

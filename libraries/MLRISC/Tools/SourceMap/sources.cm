@@ -1,0 +1,31 @@
+Library
+	signature GENERATE_FILE
+	signature MDL_ERROR
+	signature SOURCE_MAPPING
+	signature UNIQUE_SYMBOL
+	structure GenFile
+	structure MDLError
+	structure SourceMapping
+	structure UniqueSymbol
+is
+
+#if defined(NEW_CM)
+#if SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11030
+        $/basis.cm
+        $/smlnj-lib.cm
+#else
+        basis.cm
+        smlnj-lib.cm
+#endif
+#else
+        smlnj-lib.cm
+#endif
+
+	error.sig
+	error.sml
+	symbol.sig
+	symbol.sml
+	sourceMap.sig
+	sourceMap.sml
+	gen-file.sig
+	gen-file.sml

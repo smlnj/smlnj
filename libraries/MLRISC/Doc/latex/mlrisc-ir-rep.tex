@@ -1,0 +1,158 @@
+\section{MLRISC Intermediate Representation}
+   The MLRISC intermediate language is called 
+   \newdef{MLTREE} At the lowest level, the core of MLTREE is a 
+    \italics{Register Transfer Language (RTL)} 
+   but represented in tree form. The tree
+   form makes it convenient to use tree pattern matching tools like
+   BURG (where appropriate) to do target instruction selection. Thus a
+   tree such as: 
+
+   \begin{SML}  
+  MV(32, t, 
+     ADDT(32, MULT(32, REG(32, b), REG(32, b)),
+              MULT(32, MULT(REG(32, a), LI(4)), REG(32, c))))
+   \end{SML}
+
+   computes \sml{t := b*b + 4*a*c} to 32-bit precision. 
+   The nodes \sml{ADDT} and
+   \sml{MULT} are the trapping form of addition and multiplication,
+   and \sml{LI} is used for integer constants. An infinite number
+   of registers are assumed by the model, however depending on the
+   target machine the first \sml{0..K} registers map onto the first
+   \sml{K} registers on the target machine. Everything else is
+   assumed to be a pseudo-register. The \sml{REG} node is used to
+   indicate a  general purpose register. 
+
+   
+   The core MLTREE language makes no assumptions about instructions or
+   calling convections of the target architecture. Trees can be
+   created and combined in almost any form, with certain meaningless
+   trees such as \sml{LOAD(32, FLOAD(64, LI 0))} being forbidden by the
+   MLTREE type structure.
+
+    Such pure trees are nice but inadequate in real compilers. One
+   needs to be able to propagate front end specific information, such
+   as frame sizes and frame offsets where the actual values are only
+   available after register allocation and spilling. One could add
+   support for frames in MLRISC, however this becomes a slippery slope
+   because some compilers (e.g. SML/NJ) do not have a conventional
+   notion of frames --- indeed there is no runtime stack in the
+   execution of SML/NJ. A frame organization for one person may not
+   meet the needs for another, and so on.  In MLRISC, the special
+   requirements of different compilers is communicated into the MLTREE
+   language, and subsequently into the optimizations phases, by
+   specializing the MLTREE data structure with client specific
+   information. There are currently \emph{five} dimensions over
+   which one could specialize the MLTREE language.
+
+  \begin{description} 
+    \item[Constants] Constants are an
+    abstraction for integer literals whose value is known after
+    certain phases of code generation. Frame sizes and offsets are an
+    example.  
+    \image{MLRISC intermediate representation}{pictures/png/mlrisc-ir.png}{align=right}
+    \item[Regions] While the data
+    dependencies between arithmetic operations is implicit in the
+    instruction, the data dependencies between memory operations is
+    not. Regions are an abstract view of memory that make this
+    dependence explicit and is specially useful for instruction
+    reordering. 
+
+    \item[Pseudo-ops] Pseudo-ops are
+    intended to correspond to pseudo-op directives provided by native
+    assemblers to lay out data, jump tables, and perform alignment.
+
+    \item[Annotations]
+    \href{annotations.html}{Annotations} are used
+    for injecting semantics and other program information from the front-end 
+    into the backend.  For example, a probability annotation can be
+    attached to a branch instruction.  Similarly, line number annotations
+    can be attached to basic blocks to aid debugging.   
+    In many language implementations function local variables are
+    spilled to activation frames on the stack. Spill slots contribute
+    to the size of a function's frame. When an instruction produces a
+    spill, we may need to update the frame associated to that
+    instruction (increase the size of its spilling area). The frame
+    for the current function can be injected in an annotation, which
+    can be later examined by the spill callback during register allocation. 
+
+     Annotations are
+    implemented as an universal type and can be arbitrarily extended.
+    Individual annotations can be associated
+    with compiler objects of varying granularity, 
+    from compilation units, to regions, basic blocks, flow edges,
+    and down to the instructions.
+
+
+    \item[User Defined Extensions]
+    In the most extreme case, the basic constructors defined in the MLTREE
+    language may be inadequate for the task at hand.  
+    MLTREE allows the client to arbitrarily extend
+    the set of statements and expressions to more closely match the
+    source language and the target architecture(s). 
+    
+     For example, when using MLRISC for the backend of a DSP compiler 
+     it may be useful to extend the set of MLRISC operators to include 
+     fix point and saturated arithmetic.  
+     Similarly, when developing a language for loop parallelization, it may
+     be useful to extend the MLTREE language with higher-level loop 
+     constructs.
+  \end{description} 
+
+\subsection{Examples}
+   
+   In the SML/NJ compiler, an encoding of a list of registers
+   is passed to the garbage collector as the roots of live
+   variables. This encoding cannot be computed until register
+   allocation has been performed, therefore the integer literal
+   encoding is represented as an abstract 
+   \href{constants.html}{constant}.
+
+    Again, in the SML/NJ compiler, most stores are for initializing 
+   records in the allocation space, therefore representing every slot in
+   the allocation space as a unique region allows one to commute
+   most store instructions. Similarly, most loads are from
+   \emph{immutable} records, and a simple analysis marks these are
+   being accesses to \emph{read-only} memory. Read-only memory is
+   characterized as having multiple \emph{uses} but no
+   \emph{definitions}.
+
+    In the TIL compiler, a \emph{trace table} is generated for
+   every call site that records the set of live variables, their
+   location (register or stack offset), and the type associated with
+   the variable. This table is integrated into the program using the
+   abstract pseudo-op mechanism. An interesting aspect of these tables
+   is that they may need adjustment based on the results of register
+   spilling.
+
+    The more convention use of the psuedo-op abstraction is to
+   propagate function prologue and epilogue information.
+
+    The constants abstraction are created by a tree node called
+   \sml{CONST}. In the SML/NJ compiler, the tree that communicates
+   garbage collection information looks like:
+
+\begin{verbatim}
+   MV(32, maskReg, CONST{r110,r200,r300,r400 ...})
+\end{verbatim}
+
+  where \sml{maskReg} is a dedicated register. On the DEC Alpha,
+  this would get translated to:
+
+\begin{verbatim}
+   LDA maskReg, {encode(r110,r200,r300,r400, ...)}
+\end{verbatim}
+
+   which indicates that the alpha instruction set (and optimization
+   suite) know about these types of values. Further, after
+   register allocation, the \sml{LDA} instruction may not be
+   sufficient as the encoding may result in a value that is too large
+   as an operand to \sml{LDA}. Two instructions may ultimately be
+   required to load the encoding into the \sml{maskReg}
+   register. This expansion is done during 
+   \href{span-dep.html}{span-dependency resolution}.
+
+    All these examples are intended to indicate that one
+   intermediate representation and optimization suite does not fit
+   all, but that the intermediate representation and optimization
+   suite needs to be specialized to the needs of the client.
