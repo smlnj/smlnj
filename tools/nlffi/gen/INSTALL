@@ -1,0 +1,22 @@
+Installation instructions for ML-NLFFI-Gen
+------------------------------------------
+
+ML-NLFFI-Gen will normally be automatically
+installed as part of the SML/NJ system
+by the SML/NJ installer.
+
+To install by hand (e.g., if you make
+your own modifications), run the
+
+    ./build
+
+script in this directory and then move
+the file
+
+    ml-nlffigen.$ARCH-$OS
+
+to the heap-file directory.
+
+Running ./build requires a properly
+functioning installation of SML/NJ and
+the C-Kit (i.e., CM library $/ckit-lib.cm).

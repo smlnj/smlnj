@@ -1,0 +1,73 @@
+(*
+ * gen.cm - CM description file describing the ml-ffigen program.
+ *
+ *  (C) 2002, Lucent Technologies, Bell Labs
+ *
+ * author: Matthias Blume (blume@research.bell-labs.com)
+ *)
+Library
+	structure Main
+	structure Spec
+	structure Gen
+	structure AstToSpec
+is
+	$/basis.cm
+	$/smlnj-lib.cm
+	$/pp-lib.cm
+	$/ckit-lib.cm
+	$/regexp-lib.cm
+
+	spec.sml
+	cpif-dev.sml
+	pp.sml
+	gen.sml
+	ast-to-spec.sml
+	main.sml
+	hash.sml
+
+	sizes-sparc.sml
+	sizes-x86.sml
+	sizes-ppc.sml
+
+	endian-little.sml
+	endian-big.sml
+
+	string-key.sml
+	string-set.sml
+	string-map.sml
+	intlist-map.sml
+
+# if defined (ARCH_SPARC)
+	default-sizes-sparc.sml
+#   if defined (OPSYS_UNIX)
+	default-name-sparc-unix.sml
+#   else
+#	error Operating system for SPARC is not UNIX!
+#   endif
+# elif defined (ARCH_X86)
+	default-sizes-x86.sml
+#   if defined (OPSYS_UNIX)
+	default-name-x86-unix.sml
+#   elif defined (OPSYS_WIN32)
+	default-name-x86-win32.sml
+#   else
+#       error Operating system for X86 is neither UNIX nor WIN32!
+#   endif
+# elif defined (ARCH_PPC)
+	default-sizes-ppc.sml
+#   if defined (OPSYS_UNIX)
+	default-name-ppc-unix.sml
+#   else
+#	error Operating system for PPC is not UNIX!
+#   endif
+# else
+#       error Architecture not defined or not (yet) supported!
+# endif
+
+# if defined (LITTLE_ENDIAN)
+	default-endian-little.sml
+# elif defined (BIG_ENDIAN)
+	default-endian-big.sml
+# else
+# error Endianness not defined!
+# endif

@@ -1,0 +1,13 @@
+(* heap2asm.cm
+ *
+ *   Generating an assembly code file corresponding to a heap image.
+ *
+ * Copyright (c) 2005 by The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+library
+	structure Main
+is
+	$/basis.cm
+	heap2asm.sml

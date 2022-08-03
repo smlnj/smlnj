@@ -1,0 +1,1 @@
+structure DefaultEndian = EndianBig

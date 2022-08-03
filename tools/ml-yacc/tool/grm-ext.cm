@@ -1,0 +1,12 @@
+(*
+ * Plugin for registering the "grm" classifier.
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	structure YaccGrmExt
+is
+	$smlnj/cm/tools.cm
+	ext.sml

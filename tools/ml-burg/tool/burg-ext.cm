@@ -1,0 +1,12 @@
+(*
+ * Plugin for registering "burg" classifier.
+ *
+ * (C) 2007 The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	structure BurgBurgExt
+is
+	$smlnj/cm/tools.cm
+	ext.sml

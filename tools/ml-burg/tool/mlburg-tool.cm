@@ -1,0 +1,12 @@
+(*
+ * The plugin library for ML-Burg.
+ *
+ * (C) 2000 Lucent Technologies, Bell Laboratories
+ *
+ * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ *)
+Library
+	structure BurgTool
+is
+	$smlnj/cm/tools.cm
+	tool.sml

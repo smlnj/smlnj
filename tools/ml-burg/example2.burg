@@ -1,0 +1,252 @@
+
+
+%{
+(* this is the header *)
+%}
+
+
+
+%term INT
+    | VAR
+    | ADD
+    | SUB
+    | MUL
+    | DIV
+    | NEG
+
+%termprefix T_
+%ruleprefix R_
+
+%start reg
+
+%%
+
+
+reg:	INT		= reg_INT		(1);
+sreg:	INT		= sreg_INT		(1);
+ureg:	INT		= ureg_INT		(1);
+
+reg:	VAR		= reg_VAR		(1); (* fetch *)
+
+reg:	sreg		= reg_sreg		(1); (* inc *)
+sreg:	reg		= sreg_reg		(1); (* dec *)
+sreg:	ureg		= sreg_ureg		(1); (* shl *)
+ureg:	sreg		= ureg_sreg_or_reg	(1); (* shr *)
+ureg:	reg		= ureg_sreg_or_reg	(1); (* shr *)
+
+reg:	ADD(reg,sreg)	= r_ADD_r_r		(1); (* add *)
+reg:	ADD(sreg,reg)	= r_ADD_r_r		(1); (* add *)
+reg:	ADD(INT,reg)	= r_ADD_2i_r		(1); (* add 2*imm *)
+reg:	ADD(reg,INT)	= r_ADD_r_2i		(1); (* add 2*imm *)
+reg:	ADD(INT,sreg)	= r_ADD_2ip_r		(1); (* add 2*imm+1 *)
+reg:	ADD(sreg,INT)	= r_ADD_r_2ip		(1); (* add 2*imm+1 *)
+sreg:	ADD(sreg,sreg)	= r_ADD_r_r		(1); (* add *)
+sreg:	ADD(INT,sreg)	= r_ADD_2i_r		(1); (* add 2*imm *)
+sreg:	ADD(sreg,INT)	= r_ADD_r_2i		(1); (* add 2*imm *)
+sreg:	ADD(INT,reg)	= r_ADD_2im_r		(1); (* add 2*imm-1 *)
+sreg:	ADD(reg,INT)	= r_ADD_r_2im		(1); (* add 2*imm-1 *)
+
+reg:	SUB(reg,sreg)	= r_SUB_r_r		(1); (* sub *)
+reg:	SUB(INT,reg)	= r_SUB_2ipp_r		(2); (* sub 2*imm+2,x *)
+reg:	SUB(reg,INT)	= r_SUB_r_2i		(1); (* sub x,2*imm *)
+reg:	SUB(sreg,INT)	= r_SUB_r_2im		(1); (* sub x,2*imm-1 *)
+sreg:	SUB(sreg,sreg)	= r_SUB_r_r		(1); (* sub *)
+sreg:	SUB(reg,reg)	= r_SUB_r_r		(1); (* sub *)
+sreg:	SUB(sreg,INT)	= r_SUB_r_2i		(1); (* sub x,2*imm *)
+sreg:	SUB(reg,INT)	= r_SUB_r_2ip		(1); (* sub x,2*imm+1 *)
+
+sreg:	MUL(sreg,ureg)	= r_MUL_r_r		(1); (* mul *)
+sreg:	MUL(ureg,sreg)	= r_MUL_r_r		(1); (* mul *)
+sreg:	MUL(INT,sreg)	= r_MUL_i_r		(1); (* mul *)
+sreg:	MUL(sreg,INT)	= r_MUL_r_i		(1); (* mul *)
+sreg:	MUL(INT,ureg)	= r_MUL_2i_r		(1); (* mul 2*imm,x *)
+sreg:	MUL(ureg,INT)	= r_MUL_r_2i		(1); (* mul x,2*imm *)
+
+ureg:	DIV(sreg,sreg)	= r_DIV_r_r		(1); (* div *)
+ureg:	DIV(ureg,ureg)	= r_DIV_r_r		(1); (* div *)
+ureg:	DIV(ureg,INT)	= r_DIV_r_i		(1); (* div *)
+
+reg:	NEG(reg)	= r_NEG_r_p_2		(2); (* 2-r *)
+ureg:	NEG(ureg)	= r_NEG_r		(1); (* 0-r *)
+sreg:	NEG(sreg)	= r_NEG_r		(1); (* 0-r *)
+
+
+
+%%
+
+structure In = struct
+
+  open BurmOps
+
+  datatype tree =
+    INT of int
+  | VAR of string
+  | ADD of tree * tree
+  | SUB of tree * tree
+  | MUL of tree * tree
+  | DIV of tree * tree
+  | NEG of tree
+
+  fun opchildren t =
+    case t of
+      INT _ =>       (T_INT, [])
+    | VAR _ =>       (T_VAR, [])
+    | ADD (t1,t2) => (T_ADD, [t1,t2])
+    | SUB (t1,t2) => (T_SUB, [t1,t2])
+    | MUL (t1,t2) => (T_MUL, [t1,t2])
+    | DIV (t1,t2) => (T_DIV, [t1,t2])
+    | NEG (t1) =>    (T_NEG, [t1])
+
+end
+
+
+
+
+structure Example = struct 
+
+  structure Burm = BurmGen (In)
+  open In
+
+  fun say s = print s
+
+
+  local
+    val num = ref 1
+    fun inc iref = iref := (!iref + 1)
+  in
+    fun resetreg () = (num := 1)
+    fun newreg () = ("r"^(Int.toString (!num)) before inc num)
+  end
+
+
+  fun walk (Burm.R_reg_INT, INT n) =
+        let val reg = newreg () in
+	  say ("ldi "^reg^","^(Int.toString (n+n+1))^"\n"); reg
+	end
+    | walk (Burm.R_sreg_INT, INT n) =
+	let val reg = newreg () in
+	  say ("ldi "^reg^","^(Int.toString (n+n))^"\n"); reg
+	end
+    | walk (Burm.R_ureg_INT, INT n) =
+	let val reg = newreg () in
+	  say ("ldi "^reg^","^(Int.toString n)^"\n"); reg
+	end
+    | walk (Burm.R_reg_VAR, VAR v) =
+	let val reg = newreg () in
+	  say ("ld "^reg^",["^v^"]\n"); reg
+	end
+    | walk (Burm.R_reg_sreg reg, _) =
+        let val reg' = walk reg in
+	  say ("inc "^reg'^"\n"); reg'
+	end
+    | walk (Burm.R_sreg_reg reg, _) =
+        let val reg' = walk reg in
+	  say ("dec "^reg'^"\n"); reg'
+	end
+    | walk (Burm.R_sreg_ureg reg, _) =
+        let val reg' = walk reg in
+	  say ("shl "^reg'^"\n"); reg'
+	end
+    | walk (Burm.R_ureg_sreg_or_reg reg, _) =
+        let val reg' = walk reg in
+	  say ("shr "^reg'^"\n"); reg'
+	end
+    | walk (Burm.R_r_ADD_r_r (r1,r2), _) =
+	let val (r1',r2') = (walk r1, walk r2) in
+	  say ("add "^r1'^","^r2'^"\n"); r1'
+	end
+    | walk (Burm.R_r_ADD_2i_r reg, ADD (INT n,_)) =
+        let val reg' = walk reg in
+	  say ("addi "^reg'^","^(Int.toString (n+n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_ADD_r_2i reg, ADD (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("addi "^reg'^","^(Int.toString (n+n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_ADD_2ip_r reg, ADD (INT n,_)) =
+        let val reg' = walk reg in
+	  say ("addi "^reg'^","^(Int.toString (n+n+1))^"\n"); reg'
+	end
+    | walk (Burm.R_r_ADD_r_2ip reg, ADD (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("addi "^reg'^","^(Int.toString (n+n+1))^"\n"); reg'
+	end
+    | walk (Burm.R_r_ADD_2im_r reg, ADD (INT n,_)) =
+        let val reg' = walk reg in
+	  say ("addi "^reg'^","^(Int.toString (n+n-1))^"\n"); reg'
+	end
+    | walk (Burm.R_r_ADD_r_2im reg, ADD (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("addi "^reg'^","^(Int.toString (n+n-1))^"\n"); reg'
+	end
+    | walk (Burm.R_r_SUB_r_r (r1,r2), _) =
+	let val (r1',r2') = (walk r1, walk r2) in
+	   say ("sub "^r1'^","^r2'^"\n"); r1'
+	end
+    | walk (Burm.R_r_SUB_2ipp_r reg, SUB (INT n,_)) =
+        let val reg' = walk reg val r = newreg () in
+	   say ("ldi "^r^","^(Int.toString (n+n+1))^"\n");
+	   say ("sub "^r^","^reg'^"\n");
+	   r
+	end
+    | walk (Burm.R_r_SUB_r_2i reg, SUB (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("subi "^reg'^","^(Int.toString (n+n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_SUB_r_2im reg, SUB (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("subi "^reg'^","^(Int.toString (n+n-1))^"\n"); reg'
+	end
+    | walk (Burm.R_r_SUB_r_2ip reg, SUB (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("subi "^reg'^","^(Int.toString (n+n+1))^"\n"); reg'
+	end
+    | walk (Burm.R_r_MUL_r_r (r1,r2), _) =
+	let val (r1',r2') = (walk r1, walk r2) in
+	  say ("mul "^r1'^","^r2'^"\n"); r1'
+	end
+    | walk (Burm.R_r_MUL_i_r reg, MUL (INT n,_)) =
+        let val reg' = walk reg in
+	  say ("muli "^reg'^","^(Int.toString (n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_MUL_r_i reg, MUL (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("muli "^reg'^","^(Int.toString (n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_MUL_2i_r reg, MUL (INT n,_)) =
+        let val reg' = walk reg in
+	  say ("muli "^reg'^","^(Int.toString (n+n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_MUL_r_2i reg, MUL (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("muli "^reg'^","^(Int.toString (n+n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_DIV_r_r (r1,r2), _) =
+	let val (r1',r2') = (walk r1, walk r2) in
+	  say ("div "^r1'^","^r2'^"\n"); r1'
+	end
+    | walk (Burm.R_r_DIV_r_i reg, DIV (_,INT n)) =
+        let val reg' = walk reg in
+	  say ("divi "^reg'^","^(Int.toString (n))^"\n"); reg'
+	end
+    | walk (Burm.R_r_NEG_r reg, _) =
+        let val reg' = walk reg in
+	  say ("neg "^reg'^"\n"); reg'
+	end
+    | walk (Burm.R_r_NEG_r_p_2 reg, _) =
+        let val reg' = walk reg in
+	  say ("neg "^reg'^"\n");
+	  say ("addi "^reg'^",\n");
+	  reg'
+	end
+    | walk _ = (print "Error, bad match in walk\n"; raise Match)
+
+
+  fun doit t = walk (Burm.reduce t)
+
+  val a = SUB (ADD (VAR "a", INT 2), INT 5)
+  val b = ADD (DIV (SUB (VAR "a", INT 1), VAR "b"), INT 1)
+  val c = ADD (VAR "a", INT 1)
+
+end
+

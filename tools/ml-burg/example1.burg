@@ -1,0 +1,182 @@
+
+
+%{
+(* this is the header *)
+%}
+
+
+
+%term ASGNI
+    | ADDI
+    | CVCI
+    | INDIRC
+    | I0I
+    | ADDRLP
+    | CNSTI
+
+%termprefix T_
+
+%start stmt
+
+
+%%
+
+stmt:   ASGNI(disp,reg)		= stmt_ASGNI_disp_reg	(1);
+stmt:   reg			= stmt_reg;
+reg:    ADDI(reg,rc)		= reg_ADDI_reg_rc	(1);
+reg:    CVCI(INDIRC(disp))	= reg_CVCI_INDIRC_disp	(1);
+reg:    I0I			= reg_I0I;
+reg:    disp			= reg_disp		(1);
+disp:   ADDI(reg,con)		= disp_ADDI_reg_con;
+disp:   ADDRLP			= disp_ADDRLP;
+rc:     con			= rc_con;
+rc:     reg			= rc_reg;
+con:    CNSTI			= con_CNSTI;
+con:    I0I			= con_I0I;
+
+
+
+%%
+
+structure In = struct
+
+  open BurmOps
+
+  datatype tree =
+    ASGNI of tree * tree
+  | ADDI of tree * tree
+  | CVCI of tree
+  | INDIRC of tree
+  | I0I
+  | ADDRLP of string
+  | CNSTI of int
+
+  fun opchildren t =
+    case t of
+      ASGNI (t1,t2) => (T_ASGNI, [t1,t2])
+    | ADDI (t1,t2) =>  (T_ADDI, [t1,t2])
+    | CVCI (t1) =>     (T_CVCI, [t1])
+    | INDIRC (t1) =>   (T_INDIRC, [t1])
+    | I0I =>           (T_I0I, [])
+    | ADDRLP _ =>      (T_ADDRLP, [])
+    | CNSTI _ =>       (T_CNSTI, [])
+
+end
+
+
+
+
+structure Example = struct 
+
+  structure Burm = BurmGen (In)
+  open In
+
+  fun say s = print s
+
+
+  local
+    val num = ref 1
+    fun inc iref = iref := (!iref + 1)
+  in
+    fun new s = (s^(Int.toString (!num)) before inc num)
+  end
+
+
+  fun walk (Burm.stmt_ASGNI_disp_reg (disp,reg), _) =
+	let
+	  val (disp',reg') = (walk disp, walk reg)
+	  val stmt = new "stmt"
+	in
+	  say (stmt^" <- ASGNI ("^disp'^" + "^reg'^")\n"); stmt
+	end
+    | walk (Burm.stmt_reg reg, _) =
+	let
+	  val reg' = walk reg
+	  val stmt = new "stmt"
+	in
+	  say (stmt^" <- "^reg'^"\n"); stmt
+	end
+    | walk (Burm.reg_ADDI_reg_rc (reg,rc), _) =
+	let
+	  val (reg',rc') = (walk reg, walk rc)
+	  val reg2 = new "reg"
+	in
+	  say (reg2^" <- ADDI ("^reg'^","^rc'^")\n"); reg2
+	end
+    | walk (Burm.reg_CVCI_INDIRC_disp disp, _) =
+	let
+	  val disp' = walk disp
+	  val reg = new "reg"
+	in
+	  say (reg^" <- CVCI (INDIRC ("^disp'^"))\n"); reg
+	end
+    | walk (Burm.reg_I0I, _) =
+	let
+	  val reg = new "reg"
+	in
+	  say (reg^" <- ZERO\n"); reg
+	end
+    | walk (Burm.reg_disp disp, _) =
+	let
+	  val disp' = walk disp
+	  val reg = new "reg"
+	in
+	  say (reg^" <- "^disp'^"\n"); reg
+	end
+    | walk (Burm.disp_ADDI_reg_con (reg,con), _) =
+	let
+	  val (reg',con') = (walk reg, walk con)
+	  val disp = new "disp"
+	in
+	  say (disp^" <- ADDI ("^reg'^","^con'^")\n"); disp
+	end
+    | walk (Burm.disp_ADDRLP, ADDRLP addr) =
+	let
+	  val disp = new "disp"
+	in
+	  say (disp^" <- ADDRLP "^addr^"\n"); disp
+	end
+    | walk (Burm.rc_con con, _) =
+	let
+	  val con' = walk con
+	  val rc = new "rc"
+	in
+	  say (rc^" <- "^con'^"\n"); rc
+	end
+    | walk (Burm.rc_reg reg, _) =
+	let
+	  val reg' = walk reg
+	  val rc = new "rc"
+	in
+	  say (rc^" <- "^reg'^"\n"); rc
+	end
+    | walk (Burm.con_CNSTI, CNSTI i) =
+	let
+	  val con = new "con"
+	in
+	  say (con^" <- CNSTI "^(Int.toString i)^"\n"); con
+	end
+    | walk (Burm.con_I0I, _) =
+	let
+	  val con = new "con"
+	in
+	  say (con^" <- CNSTI ZERO\n"); con
+	end
+    | walk _ = (print "Error, bad match in walk\n"; raise Match)
+
+
+
+  fun doit t = walk (Burm.reduce t)
+
+
+  (*
+   * int p;
+   * char c;
+   * p = c+4;
+   *)
+  val a = ASGNI (ADDRLP "p",
+		 ADDI (CVCI (INDIRC (ADDRLP "c")),
+		       CNSTI 4))
+
+end
+

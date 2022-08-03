@@ -1,0 +1,336 @@
+% code.sty: -*- latex -*-
+% Latex macros for a "weak" verbatim mode.
+% -- like verbatim, except \, {, and } have their usual meanings.
+
+% Environments: code, tightcode,  codeaux, codebox, centercode
+% Commands: \dcd, \cddollar, \cdmath, \cd, \codeallowbreaks, \codeskip, \^
+% Already defined in LaTeX, but of some relevance: \#, \$, \%, \&, \_, \{, \}
+
+% Changelog at the end of the file.
+
+% These commands give you an environment, code, that is like verbatim
+% except that you can still insert commands in the middle of the environment:
+%     \begin{code}
+%     for(x=1; x<loop_bound; x++)
+%         y += x^3; /* {\em Add in {\tt x} cubed} */
+%     \end{code}
+%
+% All characters are ordinary except \{}. To get \{} in your text, 
+% you use the commands \\, \{, and \}.
+
+% These macros mess with the definition of the special chars (e.g., ^_~%).
+% The characters \{} are left alone, so you can still have embedded commands:
+%	\begin{code} f(a,b,\ldots,y,z) \end{code}
+% However, if your embedded commands use the formerly-special chars, as in
+%    	\begin{code} x := x+1 /* \mbox{\em This is $y^3$} */ \end{code}
+% then you lose. The $ and ^ chars are scanned in as non-specials,
+% so they don't work. If the chars are scanned *outside* the code env,
+% then you have no problem:
+% 	\def\ycube{$y^3$}
+% 	\begin{code} x := x+1 /* {\em This is \ycube} */ \end{code}
+% If you must put special chars inside the code env, you do it by
+% prefixing them with the special \dcd ("decode") command, that
+% reverts the chars to back to special status:
+%    	\begin{code} x := x+1 /* {\dcd\em This is $y^3$} */ \end{code}
+% \dcd's scope is bounded by its enclosing braces. It is only defined within
+% the code env. You can also turn on just $ with the \cddollar command;
+% you can turn on just $^_ with the \cdmath command. See below.
+%
+% Alternatively, just use \(...\) for $...$, \sp for ^, and \sb for _.
+
+% WARNING:
+% Like \verb, you cannot put a \cd{...} inside an argument to a macro
+% or a command. If you try, for example,
+%     \mbox{\cd{$x^y$}}
+% you will lose. That is because the text "\cd{$x^y$}" gets read in
+% as \mbox's argument before the \cd executes. But the \cd has to
+% have a chance to run before LaTeX ever reads the $x^y$ so it can
+% turn off the specialness of $ and ^. So, \cd has to appear at
+% top level, not inside an argument. Similarly, you can't have
+% a \cd or a \code inside a macro (Although you could use \gdef to
+% define a macro *inside* a \cd, which you could then use outside.
+% Don't worry about this if you don't understand it.)
+
+% BUG: In the codebox env, the effect of a \dcd, \cddollar, or \cdmath
+%   command is reset at the end of each line. This can be hacked by
+%   messing with the \halign's preamble, if you feel up to it.
+
+% Useage note: the initial newline after the \begin{code} or 
+%   \begin{codebox} is eaten, but the last newline is not.
+%   So,
+%     \begin{code}
+%     foo
+%     bar
+%     \end{code}
+%  leaves one more blank line after bar than does
+%     \begin{code}
+%     foo
+%     bar\end{code}
+%  Moral: get in the habit of terminating code envs without a newline
+%  (as in the second example).
+%
+
+%
+% get the paragraph indentation (use \edef and \the to force evaluation)
+%
+%\edef\codeindent{\the\parindent}
+\edef\codeindent{0pt}
+
+
+% All this stuff tweaks the meaning of space, tab, and newline.
+%===============================================================================
+% \cd@obeyspaces
+% Turns all spaces into non-breakable spaces.
+% Note: this is like \@vobeyspaces except without spurious space in defn.
+% @xobeysp is basically a space; it's defined in latex.tex.
+%
+{\catcode`\ =\active\gdef\cd@obeyspaces{\catcode`\ =\active\let =\@xobeysp}}
+
+
+
+% \cd@obeytabs
+% Turns all tabs into 8 non-breakable spaces (which is bogus).
+%
+{\catcode`\^^I=\active %
+  \gdef\cd@obeytabs{\catcode`\^^I=\active\let^^I=\cd@tab}}
+
+\def\cd@tab{\@xobeysp\@xobeysp\@xobeysp\@xobeysp\@xobeysp\@xobeysp\@xobeysp\@xobeysp}
+
+
+
+% \cd@obeylines
+% Turns all cr's into linebreaks. Pagebreaks are not permitted between lines.
+% This is copied from lplain.tex's \obeylines, with the cr def'n changed.
+%
+{\catcode`\^^M=\active % these lines must end with %
+  \gdef\cd@obeylines{\catcode`\^^M=\active\let^^M=\cd@cr}}
+
+% What ^M turns into.
+\def\cd@cr{\par\penalty10000 } 	% TeX magicness
+%
+% If the "\leavevmode" is included, the blank lines are not compressed out
+% but you will end up with extra space at the bottom of your code if you
+% put the "\end{code}" on a new line.
+%\def\cd@cr{\par\penalty10000\leavevmode} 	% TeX magicness
+%\def\cd@cr{\par\penalty10000\mbox{}}		% LaTeX
+
+
+% \codeallowbreaks
+% Same as \cd@obeylines, except pagebreaks are allowed.
+% Put this command inside a code env to allow pagebreaks.
+
+{\catcode`\^^M=\active % these lines must end with %
+  \gdef\codeallowbreaks{\catcode`\^^M\active\let^^M\cd@crbr}}
+
+\def\cd@crbr{\leavevmode\endgraf} % What ^M turns into.
+
+
+% \cd@obeycrsp 
+% Turns cr's into non-breakable spaces. Used by \cd.
+
+{\catcode`\^^M=\active % these lines must end with %
+  \gdef\cd@obeycrsp{\catcode`\^^M=\active\let^^M=\@xobeysp}}
+
+% =============================================================================
+
+% Set up code environment, in which most of the common special characters
+% appearing in code are treated verbatim, namely: $&#^_~%
+% \ { } are still enabled so that macros can be called in this
+% environment.  Use \\, \{, and \} to use these characters verbatim
+% in this environment.
+% 
+% Inside a group, you can make
+% all the hacked chars	special with the	\dcd		command
+% $			special with the 	\cddollar	command
+% $^_			special with the	\cdmath		command.
+% If you have a bunch of math $..$'s in your code env, then a global \cddollar
+% or \cdmath at the beginning of the env can save a lot of trouble.
+% When chars are special (e.g., after a \dcd), you can still get #$%&_{} with
+% \#, \$, \%, \&, \_, \{, and \} -- this is standard LaTeX.
+% Additionally, \\ gives \ inside the code env, and when \cdmath
+% makes ^ special, it also defines \^ to give ^.
+
+%The hacked characters can be made special again
+% within a group by using the \dcd command.
+
+% Note: this environment allows no breaking of lines whatsoever; not
+% at spaces or hypens.  To arrange for a break use the standard \- command,
+% or a \discretionary{}{}{} which breaks, but inserts nothing.  This is useful,
+% for example for allowing hypenated identifiers to be broken, e.g.
+% \def\={\discretionary{}{}{}} %optional break
+% FOO-\=BAR.
+
+% setupsmallcode added by JHR
+%
+\def\setupsmallcode{\parsep=0pt\parindent=0pt%
+  \renewcommand{\baselinestretch}{1.0}%
+  \small\tt\frenchspacing\catcode``=13\@noligs%
+  \def\\{\char`\\}\def\_{\char`\_}%
+  \def\{{\char`\{}\def\}{\char`\}}%
+  \let\dcd=\cd@dcd\let\cddollar=\cd@dollarspecial\let\cdmath=\cd@mathspecial%
+  \@makeother\$\@makeother\&\@makeother\#%
+  \@makeother\^\@makeother\_\@makeother\~%
+  \@makeother\%\cd@obeytabs\cd@obeyspaces}
+
+\def\setupcode{\parsep=0pt\parindent=0pt%
+  \tt\frenchspacing\catcode``=13\@noligs%
+  \def\\{\char`\\}\def\_{\char`\_}%
+  \def\{{\char`\{}\def\}{\char`\}}%
+  \let\dcd=\cd@dcd\let\cddollar=\cd@dollarspecial\let\cdmath=\cd@mathspecial%
+  \@makeother\$\@makeother\&\@makeother\#%
+  \@makeother\^\@makeother\_\@makeother\~%
+  \@makeother\%\cd@obeytabs\cd@obeyspaces}
+% other: $&#^_~%
+% left special: \{}
+% unnecessary: @`'"
+
+
+%% codebox, centerbox
+%%=============================================================================
+%% The codebox env makes a box exactly as wide as it needs to be
+%% (i.e., as wide as the longest line of code is). This is useful
+%% if you want to center a chunk of code, or flush it right, or
+%% something like that. The optional argument to the environment,
+%% [t], [c], or [b], specifies how to vertically align the codebox,
+%% just as with arrays or other boxes. Default is [c].
+
+%% Must be a newline immediately after "\begin{codebox}[t]"!
+
+{\catcode`\^^M=\active % these lines must end with %
+  \gdef\cd@obeycr{\catcode`\^^M=\active\let^^M=\cr}}
+
+% If there is a [<letter>] option, then the following newline will
+% be read *after* ^M is bound to \cr, so we're cool. If there isn't
+% an option given (i.e., default to [c]), then the @\ifnextchar will
+% gobble up the newline as it gobbles whitespace. So we insert the
+% \cr explicitly. Isn't TeX fun?
+\def\codebox{\leavevmode\@ifnextchar[{\@codebox}{\@codebox[c]\cr}} %]
+
+\def\@codebox[#1]%
+  {\hbox\bgroup$\if #1t\vtop \else \if#1b\vbox \else \vcenter \fi\fi\bgroup%
+   \tabskip\z@\setupsmallcode\cd@obeycr% just before cd@obey
+   \halign\bgroup##\hfil\span}
+
+\def\endcodebox{\crcr\egroup\egroup\m@th$\egroup}
+
+% Center the box on the page:
+\newenvironment{centercode}%
+  {\begin{center}\begin{codebox}[c]}%
+  {\end{codebox}\end{center}}
+
+
+%% code, codeaux, tightcode
+%%=============================================================================
+%% Code environment as described above. Lines are kept on one page.
+%% This actually works by setting a huge penalty for breaking
+%% between lines of code. Code is indented same as other displayed paras.
+%% Note: to increase left margin, use \begin{codeaux}{\leftmargin=1in}.
+
+% To allow pagebreaks, say \codeallowbreaks immediately inside the env.
+% You can allow breaks at specific lines with a \pagebreak form.
+
+%% N.B.: The \global\@ignoretrue command must be performed just inside
+%% the *last* \end{...} before the following text. If not, you will
+%% get an extra space on the following line. Blech.
+
+%% This environment takes two arguments. 
+%% The second, required argument is the \list parameters to override the
+%%     \@listi... defaults.
+%%     - Usefully set by clients: \topsep \leftmargin
+%%     - Possible, but less useful: \partopsep
+%% The first, optional argument is the extra \parskip glue that you get around
+%%     \list environments. It defaults to the value of \parskip.
+\def\codeaux{\@ifnextchar[{\@codeaux}{\@codeaux[\parskip]}} %]
+\def\@codeaux[#1]#2{%
+  \bgroup\parskip#1%
+    \begin{list}{}%
+      {\parsep\z@\leftmargin=\codeindent\rightskip\z@\listparindent\z@\itemindent\z@#2}%
+        \item[]\setupsmallcode\cd@obeylines}%
+\def\endcodeaux{\end{list}\leavevmode\egroup\ignorespaces\global\@ignoretrue}
+
+%% Code env is codeaux with the default margin and spacing \list params:
+\def\code{\codeaux{}} \let\endcode=\endcodeaux
+
+%% Like code, but with no extra vertical space above and below.
+\def\tightcode{\codeaux[=0pt]{\topsep\z@}}%
+\let\endtightcode\endcodeaux
+%  {\vspace{-1\parskip}\begin{codeaux}{\partopsep\z@\topsep\z@}}%
+%  {\end{codeaux}\vspace{-1\parskip}}
+
+
+
+% Reasonable separation between lines of code
+\newcommand{\codeskip}{\penalty0\vspace{2ex}}
+
+
+% \cd is used to build a code environment in the middle of text.
+% Note: only difference from display code is that cr's are taken
+% as unbreakable spaces instead of linebreaks.
+
+\def\cd{\leavevmode\begingroup\ifmmode\let\startcode=\startmcode\else%
+	\let\startcode\starttcode\fi%
+	\setupcode\cd@obeycrsp\startcode}
+
+\def\cdm{\leavevmode\begingroup\ifmmode\let\startcode=\startmcode\else%
+	\let\startcode\starttcode\fi%
+	\setupcode\cd@obeycrsp\cd@mathspecial\startcode}
+
+\def\starttcode#1{#1\endgroup}
+\def\startmcode#1{\hbox{#1}\endgroup}
+
+
+% Restore $&#^_~% to their normal catcodes
+% Define \^ to give the ^ char.
+% \dcd points to this guy inside a code env.
+\def\cd@dcd{\catcode`\$=3\catcode`\&=4\catcode`\#=6\catcode`\^=7%
+	   \catcode`\_=8\catcode`\~=13\catcode`\%=14\def\^{\char`\^}}
+
+% Selectively enable $, and $^_ as special.
+% \cd@mathspecial also defines \^ give the ^ char.
+% \cddollar and \cdmath point to these guys inside a code env.
+\def\cd@dollarspecial{\catcode`\$=3}
+\def\cd@mathspecial{\catcode`\$=3\catcode`\^=7\catcode`\_=8%
+		    \def\^{\char`\^}}
+
+
+% Change log:
+% Started off as some macros found in C. Rich's library.
+% Olin 1/90:
+% Removed \makeatletter, \makeatother's -- they shouldn't be there,
+%   because style option files are read with makeatletter. The terminal
+%   makeatother screwed things up for the following style options.
+% Olin 3/91:
+% Rewritten. 
+% - Changed things so blank lines don't get compressed out (the \leavevmove
+%   in \cd@cr and \cd@crwb). 
+% - Changed names to somewhat less horrible choices. 
+% - Added lots of doc, so casual hackers can more easily mess with all this.
+% - Removed `'"@ from the set of hacked chars, since they are already
+%   non-special. 
+% - Removed the bigcode env, which effect can be had with the \codeallowbreaks
+%   command.
+% - Removed the \@noligs command, since it's already defined in latex.tex.
+% - Win big with the new \dcd, \cddollar, and \cdmath commands.
+% - Now, *only* the chars \{} are special inside the code env. If you need
+%   more, use the \dcd command inside a group.
+% - \cd now works inside math mode. (But if you use it in a superscript,
+%   it still comes out full size. You must explicitly put a \scriptsize\tt
+%   inside the \cd: $x^{\cd{\scriptsize\tt...}}$. A \leavevmode was added
+%   so that if you begin a paragraph with a \cd{...}, TeX realises you
+%   are starting a paragraph.
+% - Added the codebox env. Tricky bit involving the first line hacked
+%   with help from David Long.
+%
+% JHR 8/19/91:
+% - Added \setupsmallcode to use in multi-line code displays (code, codeaux and
+%   codebox environments).
+%
+% JHR 8/31/91:
+% - changed size of small code to \small (from \footnotesize).  Also added
+%   code to set the baselinestretch to 1 in smallcode.
+%
+% JHR 9/12/91:
+% - added \codeindent (set to \parindent)
+%
+% JHR 11/19/91
+% - added \cdm{} command for supporting math mode in \cd{}

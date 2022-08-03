@@ -1,0 +1,48 @@
+(*
+ * A new foreign-function interface for SML.
+ *   This interface is actually an interface to C.  It is based on
+ *   an encoding of C's type system in ML.
+ *   This library is a helper library for use by automatically generated
+ *   code.  (An auxiliary tool produces this code directly from C code.)
+ *
+ *   (C) 2001, Lucent Technologies, Bell Laboratories
+ *
+ * author: Matthias Blume (blume@research.bell-labs.com)
+ *)
+c-int
+Library
+	structure Tag
+
+	structure MLRep
+
+	signature C
+	structure C
+	signature C_INT
+	structure C_Int
+	signature C_DEBUG
+	structure C_Debug
+
+	signature ZSTRING
+	structure ZString
+
+	signature DYN_LINKAGE
+	structure DynLinkage
+
+	signature CMEMORY
+	structure CMemory
+is
+	$/basis.cm
+
+	$c/memory/memory.cm
+
+	tag.sml
+
+	../c.sig	(lambdasplit:infinity)
+	../c-debug.sig	(lambdasplit:infinity)
+	c.sml		(lambdasplit:infinity)
+	c-debug.sml	(lambdasplit:infinity)
+	c-int.sig	(lambdasplit:infinity)
+	c-int.sml	(lambdasplit:infinity)
+
+	../zstring.sig	(lambdasplit:infinity)
+	zstring.sml	(lambdasplit:infinity)

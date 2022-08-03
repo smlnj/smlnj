@@ -1,0 +1,25 @@
+Installation instructions for ML-Burg
+-------------------------------------
+
+ML-Burg can be automatically
+installed as part of the SML/NJ system
+by the SML/NJ installer.
+
+To install by hand (e.g., if you make
+your own modifications), run the
+
+    ./build
+
+script in this directory and then move
+the file
+
+    ml-burg.$ARCH-$OS
+
+to the heap-file directory.  Also,
+make sure that you have a symbolic
+link from "ml-burg" to ".run-sml"
+in the bin directory.
+
+Running ./build requires a properly
+functioning installation of SML/NJ,
+including ml-lex and ml-yacc.

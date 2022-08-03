@@ -1,0 +1,6 @@
+library
+	library(FFI/various.cm)
+is
+	$/basis.cm
+	$c/c.cm
+	FFI/various.cm : make (-f various.make)

@@ -1,0 +1,9 @@
+library
+	library(FFI/pdb.cm)
+	structure PDBC
+is
+	$/basis.cm
+	$c/c.cm
+	FFI/pdb.cm : make (-f pdb.make)
+
+	pdb-client.sml

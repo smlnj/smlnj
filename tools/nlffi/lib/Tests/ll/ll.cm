@@ -1,0 +1,6 @@
+library
+	library(FFI/ll.cm)
+is
+	$/basis.cm
+	$c/c.cm
+	FFI/ll.cm : make (-f ll.make)

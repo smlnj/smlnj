@@ -1,0 +1,35 @@
+Test cases:
+===========
+
+Currently, there are 4 test cases -- each in its own subdirectory:
+
+    intr/
+           A potentially long-running C function to demonstrate how
+           interrupts get suspended but properly remembered if they
+           occur within C code.
+    math/
+           Various <math.h> routines.
+    pdb/
+           A more substantial example (a "person data base").  The
+           logic and datastructures in this example are intentionally
+           much more clumsy, strange, and awkward than any reasonable
+           C programmer would make them.  But they serve to stress-test
+           some of the features of NLFFI.
+    printf/
+           An example demonstrating an existing (but very clumsy)
+           workaround for the varargs problem.  (The problem is that
+           currently there is no NLFFI type encoding variadic C
+           functions.)
+
+For intr/ and pdb/ you first need to build the corresponding shared
+library.  See README in the respective directory.
+
+Eventually, you can compile each example <d> (where <d> ranges over
+intr, math, pdb, and printf) by saying:
+
+    cd <d>
+    sml -m <d>.cm
+
+Enjoy!
+
+Matthias

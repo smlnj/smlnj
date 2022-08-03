@@ -1,0 +1,2 @@
+structure DefaultSizes = SizesSparc
+

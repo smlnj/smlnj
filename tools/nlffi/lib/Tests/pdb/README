@@ -1,0 +1,11 @@
+How to build the shared library:
+
+On x86/linux:
+
+    cc -c pdb.c forward.c
+    ld -shared -o pdb.so pdb.o forward.o
+
+On sparc/solaris:
+
+    cc -c pdb.c forward.c
+    ld -G -o pdb.so pdb.o forward.o

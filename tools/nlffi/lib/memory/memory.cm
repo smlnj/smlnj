@@ -1,0 +1,54 @@
+(* memory.cm
+ *
+ *   Primitives for "raw" memory access, allocation, and dynamic linkage.
+ *
+ * Copyright (c) 2004 by The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
+ *)
+(primitive)
+Library
+	signature CMEMORY	
+	structure CMemory
+	signature DYN_LINKAGE
+	structure DynLinkage
+	structure MLRep
+is
+
+	$/basis.cm
+	$smlnj/init/init.cmi : cm
+
+	memaccess.sig
+	memalloc.sig
+	memory.sig
+	linkage.sig
+	bitop-fn.sml			(lambdasplit:infinity)
+
+# if defined (BIG_ENDIAN)
+     	memaccess-64-big.sml		(lambdasplit:infinity)
+# elif defined (LITTLE_ENDIAN)
+     	memaccess-64-little.sml		(lambdasplit:infinity)
+# else
+# error Cannot determine endianess.
+# endif
+
+# if (defined(ARCH_X86) orelse defined(ARCH_SPARC) orelse defined(ARCH_PPC)) andalso (defined(OPSYS_UNIX) orelse defined(OPSYS_WIN32))
+
+	memaccess-a4s2i4l4f4d8.sml	(lambdasplit:infinity)
+# else
+# error architecture not supported yet
+# endif
+
+
+# if defined(OPSYS_WIN32)
+	main-lib-win32.sml
+	memalloc-a4-win32.sml		(lambdasplit:infinity)
+# else
+	main-lib-unix.sml
+	memalloc-a4-unix.sml		(lambdasplit:infinity)
+# endif
+
+	memory.sml			(lambdasplit:infinity)
+
+	linkage-dlopen.sml
+	mlrep-i32f64.sml		(lambdasplit:infinity)
