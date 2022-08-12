@@ -21,6 +21,14 @@ BUILD_TYPE=Release
 USE_GOLD_LD=no
 NPROCS=2
 
+# the install location should be specified as an environment variable RUNTIMEDIR
+#
+if [ x"$SMLNJ_ROOT" != x ] ; then
+  INSTALL_PREFIX="$SMLNJ_ROOT/runtime"
+else
+  INSTALL_PREFIX=..
+fi
+
 # system specific defaults
 #
 case `uname -s` in
@@ -88,7 +96,7 @@ fi
 # most of the definitions are specified in the CMakePresets.json file
 #
 CMAKE_DEFS="\
-  -DCMAKE_INSTALL_PREFIX=.. \
+  -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
   -DLLVM_TARGETS_TO_BUILD=$TARGETS \
 "
 

@@ -16,7 +16,7 @@ RANLIB =	ranlib
 #
 # LLVM configuration
 #
-LLVM_DIR =      ../llvm
+LLVM_DIR =      ..
 LLVM_CONFIG =	$(LLVM_DIR)/bin/llvm-config
 
 # the LLVM target architectures

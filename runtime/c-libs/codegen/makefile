@@ -22,7 +22,7 @@ RANLIB =	ranlib
 #
 # LLVM configuration
 #
-LLVM_CONFIG =	$(RUNTIME_ROOT)/llvm/bin/llvm-config
+LLVM_CONFIG =	$(RUNTIME_ROOT)/bin/llvm-config
 
 TARGETS_BUILT =	$(shell $(LLVM_CONFIG) --targets-built)
 ifeq ($(findstring AArch64,$(TARGETS_BUILT)),AArch64)

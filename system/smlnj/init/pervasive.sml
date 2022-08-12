@@ -1,12 +1,12 @@
 (* pervasive.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * These are the pervasive bindings as defined by the SML'97
  * Basis Library specification (Chapter 3 of Gansner and
  * Reppy, 2004).  Note that this file must be processed before
- * the code in base/system/Basis/Implementation, so we have to
+ * the code in system/Basis/Implementation, so we have to
  * reverse the order of the bindings (e.g., Real.round is bound
  * to the top-level round, instead of the other way around).
  *)

@@ -1,6 +1,6 @@
 (* nix-install.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Unix-specific invocation of LibInstall.proc (see libinstall.sml).
@@ -13,11 +13,20 @@ structure UnixInstall : sig end =
 
     structure I = GenericInstall
 
+    fun getEnv var = (case OS.Process.getEnv var
+           of SOME v => v
+            | NONE => raise Fail("No definition for " ^ var)
+          (* end case *))
+
+    fun getEnvOpt (var, dflt) = (case OS.Process.getEnv var
+           of SOME v => v
+            | NONE => dflt
+          (* end case *))
+
     fun proc () = let
-	  val home = valOf (OS.Process.getEnv "ROOT")
-	  val installdir = getOpt (OS.Process.getEnv "INSTALLDIR", home)
-	  val configdir = getOpt (OS.Process.getEnv "CONFIGDIR",
-				  OS.Path.concat (home, "config"))
+	  val home = getEnv "SMLNJ_ROOT"
+	  val installdir = getEnvOpt ("INSTALLDIR", home)
+	  val configdir = getEnvOpt ("CONFIGDIR", OS.Path.concat (home, "config"))
 	  val unpackcmd = OS.Path.concat (configdir, "unpack")
 	  fun unpack modules = let
 	        val cmdline =
@@ -26,8 +35,7 @@ structure UnixInstall : sig end =
 	        in
 		  OS.Process.system cmdline = OS.Process.success
 	        end
-	  val bindir = getOpt (OS.Process.getEnv "BINDIR",
-			       OS.Path.concat (installdir, "bin"))
+	  val bindir = getEnvOpt ("BINDIR", OS.Path.concat (installdir, "bin"))
 	  fun bincmd cmd = OS.Path.concat (bindir, cmd)
 	  val runsml = ".run-sml"		(* don't prepend bindir! *)
 	(* the config and build commands are standard scripts that take a size argument *)

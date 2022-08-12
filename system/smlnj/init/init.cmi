@@ -101,7 +101,7 @@
 #   ifndef ARCH_SPARC ifndef ARCH_X86  bind foo = foo-default.sml (bar, baz)
 #   ...
 #
-# See base/cm/bootstrap/build-initdg.sml for the code that processes this file.
+# See cm/bootstrap/build-initdg.sml for the code that processes this file.
 #
 
 #### END OF EXPLANATION, SPEC STARTS HERE...

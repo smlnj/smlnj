@@ -1,11 +1,12 @@
 (* basis-common.cm
  *
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
  * This is the full SML/NJ Basis with both the latest Basis Library APIs as
  * well as the signatures for previous versions (e.g., the version published
- * in 2004).  It is included in the base/system/Basis/basis.cm file, but is
- * also used to implement the libraries in the old-basis package (base/old-basis).
- *
- * Copyright (c) 2020 by The Fellowship of SML/NJ
+ * in 2004).  It is included in the system/Basis/basis.cm file, but is
+ * also used to implement the libraries in the old-basis package (libraries/old-basis).
  *)
 
 (primitive)
