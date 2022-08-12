@@ -1,0 +1,323 @@
+= The `FormatComb` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `FormatComb` structure provides well-typed formating (or _unparsing_)
+combinators in the style of Olivier Danvy's
+https://www.brics.dk/RS/98/12/[__Functional Unparsing__] work.
+
+The idea is to use combinators for constructing something akin to
+the format string of *C*'s `printf` function.  The difference is, however,
+that our formats are not strings.  Instead, format fragments have
+meaningful types, and passing them to the `format` function results
+in a curried function whose arguments have precisely the types that
+correspond to argument-consuming parts of the format.  (Such
+argument-consuming parts are similar to the conversion-specifications
+the xref:str-Format.adoc[`Format`] structure.)
+
+There is an underlying notion of "abstract formats" of type `'a format`,
+but the user operates at the level of "format fragments," which
+have type `('a, 'b) fragment` and are typically polymorphic
+in ``'a`` (where ``'b`` is instantiated to some type containing ``'a``).
+Fragments are functions from formats to formats and can be composed
+freely using the infix function-composition operator (`o`).  This
+form of format composition translates to a corresponding concatenation
+of the resulting output.
+
+Fragments are composed from two kids of primitve fragments called
+_elements_ and _glue_, respectively.  An element is a fragment that
+consumes some argument (which thanks to the typing magic appears as a
+curried argument when the format gets executed).  Glue are fragments
+that do not consume arguments but merely insert fixed text (fixed
+at format construction time) into the output.
+
+There are also adjustment operations that pad, trim, or fit the output
+of entire fragments (primitive or not) to a given size.
+
+Matthias Blume wrote the code for this module.
+
+== Synopsis
+
+[source,sml]
+------------
+signature FORMAT_COMB
+structure FormatComb : FORMAT_COMB
+------------
+
+== Interface
+
+[source,sml]
+------------
+type 'a format
+type ('a, 'b) fragment = 'a format -> 'b format
+
+type 'a glue = ('a, 'a) fragment
+type ('a, 't) element = ('a, 't -> 'a) fragment
+type 'a gg
+
+val format  : (string, 'a) fragment -> 'a
+
+val format' : (string list -> 'b) -> ('b, 'a) fragment -> 'a
+
+val using : ('t -> string) -> ('a, 't) element
+
+val int     : ('a, int) element
+val real    : ('a, real) element
+val bool    : ('a, bool) element
+val string  : ('a, string) element
+val string' : ('a, string) element
+val char    : ('a, char) element
+val char'   : ('a, char) element
+
+val int'  : StringCvt.radix   -> ('a, int) element
+val real' : StringCvt.realfmt -> ('a, real) element
+
+val list   : ('a, 'x) element -> ('a, 'x list) element
+val option : ('a, 'x) element -> ('a, 'x option) element
+val seq    : (('x * 'a gg -> 'a gg) -> 'a gg -> 's -> 'a gg)
+	     -> 'a glue
+	     -> ('a, 'x) element
+	     -> ('a, 's) element
+
+val glue : ('a, 't) element -> 't -> 'a glue
+
+val elem : ('t -> 'a glue) -> ('a, 't) element
+
+val nothing :           'a glue
+val text    : string -> 'a glue
+val sp      : int ->    'a glue
+val nl      :           'a glue
+val tab     :           'a glue
+
+val listg   : ('t -> 'a glue) -> ('t list -> 'a glue)
+val optiong : ('t -> 'a glue) -> ('t option -> 'a glue)
+
+val seqg   : (('x * 'a gg -> 'a gg) -> 'a gg -> 's -> 'a gg)
+	     -> 'a glue
+	     -> ('x -> 'a glue)
+	     -> 's -> 'a glue
+
+type place
+val left   : place
+val center : place
+val right  : place
+
+val pad  : place -> int -> ('a, 't) fragment -> ('a, 't) fragment
+val trim : place -> int -> ('a, 't) fragment -> ('a, 't) fragment
+val fit  : place -> int -> ('a, 't) fragment -> ('a, 't) fragment
+
+val padl : int -> ('a, 't) fragment -> ('a, 't) fragment
+val padr : int -> ('a, 't) fragment -> ('a, 't) fragment
+------------
+
+== Description
+
+`[.kw]#type# 'a format`::
+  An abstract type; values of this type are internal to the
+  implementation.
+
+`[.kw]#type# ('a, 'b) fragment = 'a format \-> 'b format`::
+  A fragment is a function from formats to formats.
+
+`[.kw]#type# 'a glue          = ('a, 'a) fragment`::
+  A `glue` fragment insertes text into the output without consuming
+  and argument.
+
+`[.kw]#type# ('a, 't) element = ('a, 't \-> 'a) fragment`::
+  An `element` fragment consumes an argument of type ``'t``, converts it to a string,
+  and inserts the result in the output.
+
+`[.kw]#type# 'a gg`::
+  An abstract helper type that is internal to the implementation.
+
+[[val:format]]
+`[.kw]#val# format  : (string, 'a) fragment \-> 'a`::
+  `format fmt` returns a format function as defined by the expression `fmt`
+  that will produce a string result when applied to the necessary arguments.
+
+`[.kw]#val# format' : (string list \-> 'b) \-> ('b, 'a) fragment \-> 'a`::
+  `format' consumer fmt` returns a format function as defined by the
+  expression `fmt` that will invoke the `consumer` on the list of strings
+  produced by formating when applied to the necessary arguments.
+  (The argument to the `consumer` is a string list to avoid
+  premature string concatenation in the implementation).
+  Note that the xref:#val:format[`format`] function can be defined in
+  terms of ``format'`` as follows:
+[source,sml]
+------------
+val format = format' String.concat
+------------
+
+  (* Make a type-specific element given a toString function for this type *)
+`[.kw]#val# using : ('t \-> string) \-> ('a, 't) element`::
+  `using tos` returns an element fragment that represents the given
+  "value-to-string" conversion.
+
+`[.kw]#val# int : ('a, int) element`::
+  an element fragment for formating integers; it is equivalent to the
+  expression `using {sml-basis-url}/integer.html#SIG:INTEGER.toString:VAL[Int.toString]`.
+
+`[.kw]#val# int' : StringCvt.radix \-> ('a, int) element`::
+  `int' radix` returns an element fragment for formating integers in the specified
+  `radix`. It is equivalent to the expression
+  `using ({sml-basis-url}/integer.html#SIG:INTEGER.fmt:VAL[Int.fmt] radix)`.
+
+`[.kw]#val# real : ('a, real) element`::
+  an element fragment for formating reals; it is equivalent to the
+  expression `using {sml-basis-url}/real.html#SIG:REAL.toString:VAL[Real.toString]`.
+
+`[.kw]#val# real' : StringCvt.realfmt \-> ('a, real) element`::
+  `real' rf` returns an element fragment for formating reals with the specified
+  format. It is equivalent to the expression
+  `using ({sml-basis-url}/real.html#SIG:REAL.fmt:VAL[Real.fmt] rf)`.
+
+`[.kw]#val# bool : ('a, bool) element`::
+  an element fragment for formating booleans; it is equivalent to the
+  expression `using {sml-basis-url}/bool.html#SIG:BOOL.toString:VAL[Bool.toString]`.
+
+`[.kw]#val# string : ('a, string) element`::
+  an element fragment for formating raw strings; it is equivalent to the
+  expression `using (fn x => x)`.
+
+`[.kw]#val# string' : ('a, string) element`::
+  an element fragment for formating strings with escapes; it is equivalent to the
+  expression `using {sml-basis-url}/string.html#SIG:STRING.toString:VAL[String.toString]`.
+
+`[.kw]#val# char : ('a, char) element	(* using String.str *)`::
+  an element fragment for formating raw characters; it is equivalent to the
+  expression `using {sml-basis-url}/string.html#SIG:STRING.str:VAL[String.str]`.
+
+`[.kw]#val# char' : ('a, char) element	(* using Char.toString *)`::
+  an element fragment for formating characters with escapes; it is equivalent to the
+  expression `using {sml-basis-url}/char.html#SIG:CHAR.toString:VAL[Char.toString]`.
+
+  (* "polymorphic" elements *)
+`[.kw]#val# list : ('a, 'x) element \-> ('a, 'x list) element (* "[", ", ", "]" *)`::
+  `list elemFmt` returns an element fragment that formats lists of items
+  using the `elemFmt` element fragment to format items.  The list will be enclosed
+  in brackets ("``[``" "``]``") with elements separated by commas.
+
+`[.kw]#val# option : ('a, 'x) element \-> ('a, 'x option) element`::
+  `option elemFmt` returns an element fragment that formats optional items
+  using the `elemFmt` element fragment to format the item value.  For
+  an argument of `NONE`, the string `"NONE"` is returned, while for an argument
+  of `SOME v`, the string `"SOME(s)"` is returned, where `s` is the result
+  of formatting `v` using `elemFmt`.
+
+`[.kw]#val# seq : (('x * 'a gg \-> 'a gg) \-> 'a gg \-> 's \-> 'a gg) \-> 'a glue \-> ('a, 'x) element \-> ('a, 's) element`::
+  something
+
+[[val:glue]]
+`[.kw]#val# glue : ('a, 't) element \-> 't \-> 'a glue`::
+  `glue fmt arg` returns a glue element that renders as the string
+  that results from using `fmt` to convert `arg` to a string.
+
+`[.kw]#val# elem : ('t \-> 'a glue) \-> ('a, 't) element`::
+  `elem glueGen` returns an element for rendering arguments to the
+  `glueGen` function.  This function is the inverse of xref:#val:glue[`glue`]
+  and is useful for extending the set of combinators.
+
+`[.kw]#val# nothing : 'a glue`::
+  A glue fragment that renders as the empty string.
+
+`[.kw]#val# text : string \-> 'a glue`::
+  `text s` returns a glue fragment that renders as the text `s`.
+
+`[.kw]#val# sp : int \-> 'a glue`::
+  `sp n` returns a glue fragment that renders as `n` space characters.
+
+`[.kw]#val# nl : 'a glue`::
+  A glue fragment that renders as a newline character.
+
+`[.kw]#val# tab : 'a glue`::
+  A glue fragment that renders as a tab character.
+
+`[.kw]#val# listg : ('t \-> 'a glue) \-> ('t list \-> 'a glue)`::
+  something
+
+`[.kw]#val# optiong : ('t \-> 'a glue) \-> ('t option \-> 'a glue)`::
+  something
+
+`[.kw]#val# seqg : (('x * 'a gg \-> 'a gg) \-> 'a gg \-> 's \-> 'a gg) \-> 'a glue \-> ('x \-> 'a glue) \-> 's \-> 'a glue`::
+  something
+
+`[.kw]#type# place`::
+  An abstract type that represents how to pad or trim of string.
+
+`[.kw]#val# left : place`::
+  Pad or trim the left side of a string.
+
+`[.kw]#val# center : place`::
+  Pad or trim both sides of a string.
+
+`[.kw]#val# right : place`::
+  Pad or trim the left side of a string.
+
+[[val:pad]]
+`[.kw]#val# pad : place \-> int \-> ('a, 't) fragment \-> ('a, 't) fragment`::
+  `pad place n frag` wraps the fragment `frag` with padding to bring the total
+  with to no fewer than `n` characters.  The `place` specifies where padding
+  spaces will be added.  Padding never reduces the size of the result.
+
+[[val:trim]]
+`[.kw]#val# trim : place \-> int \-> ('a, 't) fragment \-> ('a, 't) fragment`::
+  `trim place n frag` wraps the fragment `frag` with a trimming operation
+  to bring the total with to no more than `n` characters.  The `place` specifies
+  where trimming occurs.  Trimming never increases the size of the result.
+
+[[val:fit]]
+`[.kw]#val# fit : place \-> int \-> ('a, 't) fragment \-> ('a, 't) fragment`::
+  `fit place n frag` wraps the fragment `frag` with an operation that
+  guarantees the result will be exactly `n` characters by either padding or
+  trimming as necessary.
+
+`[.kw]#val# padl : int \-> ('a, 't) fragment \-> ('a, 't) fragment`::
+  `padl n frag` is equivalent to `pad left n frag`.
+
+`[.kw]#val# padr : int \-> ('a, 't) fragment \-> ('a, 't) fragment`::
+  `padr n frag` is equivalent to `pad right n frag`.
+
+== Examples
+
+Here are examples on how to use this facility.
+
+[source,sml]
+------------
+format nothing          (* ==> "" *)
+format int 1234         (* ==> "1234" *)
+
+format (text "The square of " o int o text " is " o int o text ".") 2 4
+                        (* ==> "The square of 2 is 4." *)
+
+format (int o bool o char) 1 true #"x"
+                        (* ==> "1truex" *)
+
+format (glue string "glue vs. " o string o glue int 42 o sp 5 o int)
+       "ordinary text " 17
+                        (* ==> "glue vs. ordinary text 42     17" *)
+------------
+
+and here are examples of how the
+xref:#val:pad[`pad`]/xref:#val:trim[`trim`]/xref:#val:fit[`fit`] functions work.
+
+[source,sml]
+------------
+format (pad left 6 int) 1234        (* ==> "  1234" *)
+format (pad center 6 int) 1234      (* ==> " 1234 " *)
+format (pad right 6 int) 1234       (* ==> "1234  " *)
+format (trim left 2 int) 1234       (* ==> "34"     *)
+format (trim center 2 int) 1234     (* ==> "23"     *)
+format (trim right 2 int) 1234      (* ==> "12"     *)
+format (fit left 3 int) 12          (* ==> " 12"    *)
+format (fit left 3 int) 123         (* ==> "123"    *)
+format (fit left 3 int) 1234        (* ==> "234"    *)
+------------
+
+
+== See Also
+
+xref:str-Format.adoc[`Format`],
+xref:smlnj-lib.adoc[__The Util Library__]

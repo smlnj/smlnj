@@ -1,0 +1,74 @@
+= The `ControlUtil` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ControlUtil` structure provides some utility functions
+for defining controls.
+
+== Synopsis
+
+[source,sml]
+------------
+signature CONTROL_UTIL
+structure ControlUtil : CONTROL_UTIL
+------------
+
+== Interface
+
+[source,sml]
+------------
+structure Cvt : sig
+    val int : int Controls.value_cvt
+    val bool : bool Controls.value_cvt
+    val real : real Controls.value_cvt
+
+    val stringList : string list Controls.value_cvt
+
+    val string : string Controls.value_cvt
+  end
+
+structure EnvName : sig
+    val toUpper : string -> string -> string
+  end
+------------
+
+== Description
+
+=== `structure Cvt`
+
+The `ControlUtil.Cvt` structure provides some common value-conversion
+functions.
+
+`[.kw]#val# int : int xref:str-Controls.adoc#type:value_cvt[Controls.value_cvt]`::
+  A xref:str-Controls.adoc#type:value_cvt[value converter] for the `int` type.
+
+`[.kw]#val# bool : bool xref:str-Controls.adoc#type:value_cvt[Controls.value_cvt]`::
+  A xref:str-Controls.adoc#type:value_cvt[value converter] for the `bool` type.
+  This converter is case-insensitive, and accepts `"yes"` for `true` and
+  `"no"` for `false`.
+
+`[.kw]#val# real : real xref:str-Controls.adoc#type:value_cvt[Controls.value_cvt]`::
+  A xref:str-Controls.adoc#type:value_cvt[value converter] for the `real` type.
+
+`[.kw]#val# stringList : string list xref:str-Controls.adoc#type:value_cvt[Controls.value_cvt]`::
+  A xref:str-Controls.adoc#type:value_cvt[value converter] for the
+  comma-separated lists of strings.
+
+`[.kw]#val# string : string xref:str-Controls.adoc#type:value_cvt[Controls.value_cvt]`::
+  A xref:str-Controls.adoc#type:value_cvt[value converter] for the `string` type.
+  This converter is just the identity.
+
+=== `structure EnvName`
+
+`[.kw]#val# toUpper : string \-> string \-> string`::
+  `toUpper prefix s` returns the string ``prefix ^ s'``, where ``s'`` is
+  the string `s` with lower-case letters converted to upper-case and any
+  occurrences of the minus character converted to the underscore character.
+
+== See Also
+
+xref:str-Controls.adoc[`Controls`],
+xref:controls-lib.adoc[__The Controls Library__]

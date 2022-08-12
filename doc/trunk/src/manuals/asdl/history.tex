@@ -1,0 +1,60 @@
+%!TEX root = manual.tex
+%
+\chapter{Document history}
+\label{ch:history}
+
+\asdl{} and \asdlgen{} (originally named \texttt{asdlGen}) were developed as part
+of the National Compiler Infrastructure Project at Princeton University in the
+late 1990's~\cite{usenix:zephyr-asdl}.
+The original version of this manual was written by Dan Wang as part of that project.
+As part of reimplementing and modernizing \asdl{}, John Reppy converted the original
+manual to \LaTeX{} and did some light editing (this version of the old manual
+can be found in the \texttt{doc/manual-2.0} directory).
+The original implementation of \texttt{asdlGen} can be
+found at \url{http://asdl.sourceforge.net}.
+
+Here is a history of changes to \asdl{}, \asdlgen{}, and this manual.
+The changes are indexed by SML/NJ release numbers.
+
+\begin{description}
+  \item[SML/NJ 2021.1]
+    \mbox{}\\[0.5em]
+    Reorganized the \sml{} library to separate input and output into separate
+    structures.  For example, the ``\cd{ASDLFilePickle}'' structure is now
+    implemented as the pair of structures: ``\cd{ASDLFileReadPickle}'' for input
+    and ``\cd{ASDLFileWritePickle}'' for output.  The structure ``\cd{ASDLFilePickle}''
+    is provided as a combined structure that provides support for both input
+    and output.
+
+  \item[SML/NJ 110.99]
+    \mbox{}\\[0.5em]
+    Fixed various inconsistencies between the implementation (both \Cplusplus{} and
+    \sml{}) and the documented representation.
+
+  \item[SML/NJ 110.98]
+    \mbox{}\\[0.5em]
+    Initial support for the sharing type operator has been added, but it is incomplete.
+
+    The semantics of the \cd{suppress} view item has been changed to allow more
+    fine-grained control.  Instead of a boolean flag, it now takes a list of
+    aspects to suppress.
+
+    General improvements to the documentation.
+
+  \item[SML/NJ 110.86]
+    \mbox{}\\[0.5em]
+    The interface to the file and memory picklers was unified: the ``\cd{encode}''
+    was changed to ``\cd{write},'' ``\cd{decode}'' was changed to
+    ``\cd{read}'' in the memory pickler, and the read operations were made
+    imperative.
+    Also added support for writing to an S-Expression textual format and improved
+    the documentation.
+
+    Changed the ``\texttt{--pickler}'' option to ``\texttt{--gen}'' and made it take
+    a list of targets.
+
+  \item[SML/NJ 110.84]
+    \mbox{}\\[0.5em]
+    First release of ASDL 3.0; see \secref{sec:changes} for differences from previous
+    version.
+\end{description}%

@@ -1,0 +1,83 @@
+%!TEX root = manual.tex
+%
+
+\chapter{The {\tt sml} command line}
+\label{chap:cmdline}
+
+The SML/NJ interactive system---including CM---is started from the
+operating system shell by invoking the command {\tt sml}.
+This section describes those arguments accepted by {\tt sml} that
+are related to (and processed by) CM.
+
+CM accepts {\em file names}, {\em mode switching flags}, {\em
+preprocessor definitions}, and {\em control parameters} as arguments.
+All these arguments are processed one-by-one from left to right.
+
+\section{File arguments}
+
+Names of ML source files and CM description files can appear as
+arguments in any order.
+
+\begin{description}
+\item[ML source files] are recognized by their filename extensions
+({\tt .sig}, {\tt .sml}, or {\tt .fun}) and cause the named file to be
+loaded via {\tt use} at the time the argument is being considered.
+Names of ML source files are specified using the underlying operating
+system's native pathname syntax.
+\item[CM description files] are recognized by their extension {\tt
+.cm}.  They must be specified in CM's {\em standard} pathname syntax.
+At the time the argument is being considered, the named library (or
+group) will be loaded by passing the name to either {\tt CM.autoload}
+or {\tt CM.make}---depending on which {\em mode switching flag} ({\tt
+-a} or {\tt -m}) was specified last.  The default is {\tt -a} (i.e.,
+{\tt CM.autoload}).
+\end{description}
+
+\section{Mode-switching flags}
+
+By default, CM description files are loaded via {\tt CM.autoload}.  By
+specifying {\tt -m} somewhere on the command line one can force the
+system to use {\tt CM.make} for all following description files up to
+the next occurence of {\tt -a}.  The {\tt -a} flag switches back to
+the default behavior, using {\tt CM.autoload}, which will then again
+be in effect up to the next occurrence of another {\tt -m}.
+
+Mode-switching flags can be specified arbitrarily often on the same
+command line.
+
+\section{Defining and undefining CM preprocessor symbols}
+\label{sec:cmdline:defundef}
+
+The following options for defining and undefining CM preprocessor
+symbols can also occur arbitrarily often.  Their effects accumulate
+while processing the command line from left to right.  The resulting
+final state of the internal preprocessor registry becomes observable
+in the interactive system.
+
+\begin{description}
+\item[{\tt -D$v$=$n$}] acts like {\tt (\#set (CM.symval "$v$") (SOME $n$))}.
+\item[{\tt -D$v$}] is equivalent to {\tt -D$v$=1}.
+\item[{\tt -U$v$}] acts like {\tt (\#set (CM.symval "$v$") NONE)}.
+\end{description}
+
+\section{Control Parameters}
+
+There are three kinds of control parameters:
+
+\begin{description}
+\item[{\bf help}] A request of help is one of {\tt -h},
+{\tt -h}{\it num}, or {\tt -H}.  In general, {\tt -h}{\it num}
+produces a help listing with all configurable controls up to obscurity
+level {\it num}.  If {\it num} is omitted, it defaults to 0.  The
+{\tt -H} flag requests a full help listing with all controls.
+\item[{\bf current settings}] This is similar to requesting
+help---except {\tt -h} and {\tt -H} are replaced with {\tt -s} and
+{\tt -S}, respectively.  Instead of showing the help message
+associated with each control, this requests showing the current
+settings.
+\item[{\bf set a control}] A control value can be set using an
+argument of the form {\tt -C}{\it control}{\tt =}{\it value}, where
+{\it control} is the name of a control and {\tt value} is a string
+that can be parsed and converted to a new value appropriate for the
+type of the control.
+\end{description}

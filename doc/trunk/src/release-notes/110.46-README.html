@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.46 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                 1  1  0  .  4  6      N  E  W  S
+			
+                            June 17, 2004
+
+                               WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.46/">http://smlnj.cs.uchicago.edu/dist/working/110.46/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+This release fixes some bugs, moves the Basis implementation closer
+to conformance with the specification (i.e., the upcoming Basis Library
+book by Gansner and Reppy), and enhances some of the functionality by
+incorporating contributions from our users.
+
+<hr>
+
+<h2>Details:</h2>
+
+Basis:
+<br>
+<ul>
+<li>interface to <tt>structure Timer</tt> now matches spec</li>
+<li>interface to <tt>structure Unix</tt> now matches spec<br>
+    (<i>Caveat:</i>  There probably still is a problem with the spec -
+     concerning the behavior of <tt>reap</tt> as well as
+     {<tt>text</tt>,<tt>bin</tt>}{<tt>In</tt>,<tt>Out</tt>}<tt>streamOf</tt>
+     when they get called multiple times.  However, fixing this will
+     in all likelihood not change any types.)</li>
+<li><tt>signature PACK_REAL</tt> added</li>
+<li><tt>functor PrimIO</tt> exported</li>
+<li>added <tt>Posix.IO.mk</tt>{<tt>Bin</tt>,<tt>Text</tt>}{<tt>Reader</tt>,<tt>Writer</tt>}
+    by lifting their respective implementations from internal modules
+    <tt>PosixBinPrimIO</tt> and <tt>PosixTextPrimIO</tt></li>
+<li>exceptions <tt>Option</tt> and <tt>Option.Option</tt> are now
+    identical (as they should be)</li>
+<li>bug in <tt>IntInf.fmt</tt> fixed</li>
+</ul>
+
+<br>
+Compilation Manager:
+<br>
+
+<ul>
+<li>CM now ignores (but still syntactically accepts) the "owner"
+     information in group descriptions.  It continues to enforce the
+     "single owner rule" for groups within each run of CM.make, but
+     can no longer do so across multiple runs.  (Fortunately, there is
+     no fundamental problem with this.)  The advantage of the new
+     scheme is that the programmer no longer needs to provide this
+     awkward piece of information.</li>
+<li>fixed IEEEReal.scan (and .fromString) so that if there is an
+     overflow in the exponent calculation we get INF or ZERO
+     (depending on the mantissa and the sign of the exponent)</li>
+</ul>
+
+<br>
+Windows port:
+<br>
+
+<ul>
+<li>incorporated a voluminous patch kindly provided by David Hansel
+     from Reactive Systems, implementing previously missing support
+     for many socket-related functions</li>
+</ul>
+
+<br>
+Command-line tools:
+</br>
+
+<ul>
+<li>arranged for ml-build to clean up after itself a little bit better
+     (The script generates a temporary SML source file and
+     compiles it using CM, so CM generates metadata (GUID, SKEL,
+     objectfile) for it.  It now gets rid of those at the end, so they
+     don't accumulate under .cm.)</li>
+<li>ml-build now terminates with a non-0 status when something goes wrong</li>
+</ul>
+
+<br>
+Installer:
+<br>
+
+<ul>
+<li>bugs fixed</li>
+<li>src-smlnj now recognized as a valid target (in config/targets) again
+     (The meaning of this has changed from "all sources required for the
+      compiler" to "all sources the installer knows about".)</li>
+</ul>
+
+<br>
+NLFFI:
+<br>
+
+<ul>
+<li>support for NetBSD added (thanks to Vesa A. Norrman)</li>
+<li>ml-nlffi-lib made to run on cygwin</li>
+</ul>
+
+<br>
+Compiler internals:
+</br>
+
+<ul>
+<li>as per request by Adam Chlipala, extended
+     various export lists in compiler-related .cm-files</li>
+</ul>
+</body>
+</html>

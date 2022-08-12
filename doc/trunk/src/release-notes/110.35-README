@@ -1,0 +1,167 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  5      N  E  W  S
+			
+  		           August 24, 2001
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+  Compiler sources have been reorganized into serveral CM libraries.
+  There have been various changes to the exported interfaces themselves
+  as well.
+
+  Reorganization (and simplification) of the "Cells" interface in MLRISC.
+
+  "Cluster" data structure removed from MLRISC, now using "graph"s
+  throughout.
+
+  Bug fixes to MLRISC.
+
+  Updates to closure phase in compiler.  
+
+--------------------------------------------------------------------------
+
+Details:
+
+Compiler library reorganization:
+
+  We are currently making an effort of modularizing the compiler's sources
+  so that well-defined parts can be easily reused by other projects.  For
+  example, we now provide an ML parser library that is independent of
+  the rest of the compiler.  An ML parser might be of interest to program
+  analysis folks.  Similarly, there is an ML elaborator library, although
+  its interface is not yet as clean as we would like it to make.
+  Another important library that can be used independently by other
+  projects (and has been for some time already, e.g., C-- and Moby), is
+  MLRISC.  In the future we expect the FLINT optimizer to become its
+  own library as well.  With this design, SML/NJ will consist of several
+  large but generic and independently useful libraries together with SML/NJ-
+  specific "glue" code.
+
+  Here is the new library organization as implemented in 110.35:
+
+  "Visible compiler"...
+
+      $smlnj/viscomp/basics.cm
+          - common definitions used by many or all of the libraries below
+      $smlnj/viscomp/parser.cm
+          - a Standard ML parser and data structures (ast)
+      $smlnj/viscomp/elabdata.cm
+          - data structures and utility functions for elaboration
+            (absyn, types, static environments, ...)
+      $smlnj/viscomp/elaborate.cm
+          - a Standard ML type checker and elaborator
+      $smlnj/viscomp/core.cm
+          - FLINT optimizer and SML/NJ-specific glue code
+      $smlnj/viscomp/execute.cm
+          - SML/NJ object file ("binfile") handling, linking, execution
+      $smlnj/viscomp/debugprof.cm
+          - instrumentation phases (operating on data structures exported
+            by elabdata.cm) for debugging (e.g., backtracing) and profiling
+      $smlnj/compiler.cm
+          - collection of structures (no longer nested within a single
+            structure Compiler) that make up the "visible compiler"
+
+      $smlnj/compiler/compiler.cm
+          - legacy "structure Compiler"
+
+  Architecture specific backends, part of the "visible compiler"...
+      $smlnj/viscomp/alpha32.cm
+      $smlnj/viscomp/hppa.cm
+      $smlnj/viscomp/ppc.cm
+      $smlnj/viscomp/sparc.cm
+      $smlnj/viscomp/x86.cm
+
+  Visible cross-compilers (collection of structures analogous to
+  $smlnj/compiler.cm)...
+      $smlnj/compiler/current.cm
+      $smlnj/compiler/alpha32.cm
+      $smlnj/compiler/hppa.cm
+      $smlnj/compiler/ppc.cm
+      $smlnj/compiler/sparc.cm
+      $smlnj/compiler/x86.cm
+
+  MLRISC:
+      $smlnj/MLRISC/Control.cm
+      $smlnj/MLRISC/Lib.cm
+      $smlnj/MLRISC/Graphs.cm
+      $smlnj/MLRISC/MLTREE.cm
+      $smlnj/MLRISC/MLRISC.cm
+      $smlnj/MLRISC/ALPHA.cm
+      $smlnj/MLRISC/HPPA.cm
+      $smlnj/MLRISC/PPC.cm
+      $smlnj/MLRISC/SPARC.cm
+      $smlnj/MLRISC/IA32.cm
+
+  Compilation manager:
+
+      $smlnj/cm.cm
+      $smlnj/cm/cm.cm
+      $smlnj/cm/tools.cm
+
+  Bootstrap compiler(s), including cross-compilers:
+      $smlnj/cmb.cm
+      $smlnj/cmb/current.cm
+      $smlnj/cmb/alpha32-unix.cm
+      $smlnj/cmb/hppa-unix.cm
+      $smlnj/cmb/ppc-unix.cm
+      $smlnj/cmb/sparc-unix.cm
+      $smlnj/cmb/x86-unix.cm
+      $smlnj/cmb/x86-win32.cm
+
+MLRISC changes:
+
+* Lal has dramatically simplified the interface for CELLS in MLRISC.
+
+  In summary, the cells interface is broken up into three parts:
+
+  1. CellsBasis : CELLS_BASIS
+
+	CellsBasis is a top level structure and common for all
+        architectures.  it contains the definitions of basic datatypes
+        and utility  functions over these types.
+
+  2. functor Cells() : CELLS
+
+	Cells generates an interface for CELLS that incorporates the
+	specific resources on the target architecture, such as the 
+	presence of special register classes, their number and size, 
+	and various useful substructures.
+
+  3. <ARCH>CELLS 
+	
+	e.g. SparcCells: SPARCCELLS
+
+        <ARCH>CELLS usually contains additional bindings for special
+	registers  on the architecture, such as:
+	
+		val r0 : cell		(* register zero *)
+		val y : cell		(* Y register *)
+		val psr : cell		(* processor status register *) 
+		...
+	
+        The structure returned by applying the Cells functor is opened
+        in this interface. 
+
+  The main implication of all this is that the datatypes for cells is 
+  split between CellsBasis and CELLS -- a fairly simple change for user
+  code. 
+
+* Removed "clusters" from MLRISC completely and replaced with "graphs".
+  This will make it possible to integrate into SML/NJ various optimizations
+  that had already been implemented for "graphs" (but for the benefit of
+  other projects).
+
+Bug fixes:
+
+* Improved "closure" phase in FLINT.
+* Bug fixes in MLRISC.

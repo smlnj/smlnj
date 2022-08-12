@@ -1,0 +1,96 @@
+                         S  M  L   /   N  J
+
+                 1  1  0  .  4  6      N  E  W  S
+			
+                            June 17, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.46/
+
+
+Summary:
+
+  This release fixes some bugs, moves the Basis implementation closer
+  to conformance with the specification (i.e., the upcoming Basis Library
+  book by Gansner and Reppy), and enhances some of the functionality by
+  incorporating contributions from our users.
+
+--------------------------------------------------------------------------
+
+Basis:
+------
+
+  - interface to structure Timer now matches spec
+  - interface to structure Unix now matches spec
+    (Caveat:  There probably still is a problem with the spec --
+     concerning the behavior of reap as well as {text,bin}{In,Out}streamOf
+     when they get called multiple times.  However, fixing this will
+     in all likelihood not change any types.)
+  - signature PACK_REAL added
+  - functor PrimIO exported
+  - added Posix.IO.mk{Bin,Text}{Reader,Writer} by lifting their
+    respective implementations from internal modules PosixBinPrimIO
+    and PosixTextPrimIO
+  - exceptions Option and Option.Option are now identical (as they
+    should be)
+  - bug in IntInf.fmt fixed
+
+
+Compilation Manager:
+--------------------
+
+   - CM now ignores (but still syntactically accepts) the "owner"
+     information in group descriptions.  It continues to enforce the
+     "single owner rule" for groups within each run of CM.make, but
+     can no longer do so across multiple runs.  (Fortunately, there is
+     no fundamental problem with this.)  The advantage of the new
+     scheme is that the programmer no longer needs to provide this
+     awkward piece of information.
+   - fixed IEEEReal.scan (and .fromString) so that if there is an
+     overflow in the exponent calculation we get INF or ZERO
+     (depending on the mantissa and the sign of the exponent)
+
+
+Windows port:
+-------------
+
+   - incorporated a voluminous patch kindly provided by David Hansel
+     from Reactive Systems, implementing previously missing support
+     for many socket-related functions
+
+Command-line tools:
+-------------------
+
+   - arranged for ml-build to clean up after itself a little bit
+     better
+     (The script generates a temporary SML source file and
+     compiles it using CM, so CM generates metadata (GUID, SKEL,
+     objectfile) for it.  It now gets rid of those at the end, so they
+     don't accumulate under .cm.)
+   - ml-build now terminates with a non-0 status when something goes wrong
+
+Installer:
+----------
+
+   - bugs fixed
+   - src-smlnj now recognized as a valid target (in config/targets) again
+     (The meaning of this has changed from "all sources required for the
+      compiler" to "all sources the installer knows about".)
+
+NLFFI:
+------
+
+   - support for NetBSD added (thanks to Vesa A. Norrman)
+   - ml-nlffi-lib made to run on cygwin
+
+
+Compiler internals:
+-------------------
+
+   - As per request by Adam Chlipala, extended
+     various export lists in compiler-related .cm-files.

@@ -1,0 +1,202 @@
+// A template for creating release notes for a version
+//
+:version: 2022.1
+:date: ??
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:issue-base: https://github.com/smlnj/smlnj/issues
+:release-notes: {dist-dir}{version}-README.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+== GitHub Migration
+
+With this release, we have migrated the bug tracking infrastructure to a system using
+**GitHub** issues.  We have prepopulated the issues for the legacy repository with
+the entries from the old bug database.
+
+Since issues are associated with a repository, we now have separate trackers for the
+legacy and main development versions.  While most bugs that are present in one version
+will also be present in the other version, it is not necessary to create two issues
+when reporting a bug.
+
+== Details
+
+=== Compiler
+
+Update LLVM to 14.0.5
+
+=== Runtime System
+
+=== Basis Library
+
+Added support for the following proposed https://github.com/SMLFamily/BasisLibrary[**Basis
+Library** extensions]:
+
+--
+  * https://github.com/SMLFamily/BasisLibrary/wiki/2021-001-Add-getWindowSz-function-to-Posix.TTY-structure[
+    2021-001 Add getWindowSz function to Posix.TTY structure]
+
+  * https://github.com/SMLFamily/BasisLibrary/wiki/2022-001-Add-value-tau-to-MATH-signature[
+    2022-001 Add value tau to MATH signature]
+--
+
+=== SML/NJ Library
+
+--
+  * Added the `findAndRemove` function to `ORD_MAP` interface.
+  * Generalized comparisons on ordered maps; added `equiv` and
+    `extends` functions to `ORD_MAP` interface and made type of
+    `collate` more polymorphic.
+  * The *SExp* library now uses *Scheme* syntax for string values.
+  * The *SExp* parser accepts empty files as valid input (producing
+    an empty list of S-Expressions).
+--
+
+=== Installation
+
+The `config/install.sh` script continues to work as before.  We have added a `-dev`
+command-line option to enable cross compilation (__i.e.__, it compiles *LLVM*
+for all of the supported target architectures).
+
+==== Windows
+
+The MSI installer now correctly sets the version of *SML/NJ* (see
+https://github.com/smlnj/legacy/issues/59[issue 59] for details).
+We also add a shortcut for uninstalling *SML/NJ* to the Program
+Menu.
+
+== Closed Issues
+
+Here is a list of the issues that are fixed (or closed) with this release.
+We include the original bug numbers for bugs that were reported using the
+old https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker].
+
+[.buglist,cols="^2,<10,^2",strips="none",options="header"]
+|=======
+| Issue No.
+| Description
+| Gforge Bug
+| [.bugid]#26#
+| {issue-base}/26[Garbage collection does not trigger `sigGC`]
+| 65
+| [.bugid]#51#
+| {issue-base}/51[makeml and installml scripts do not like locations with spaces]
+| 90
+| [.bugid]#141#
+| {issue-base}/141[Pretty printing of Absyn in error message does not respect fixity]
+| 141
+| [.bugid]#205#
+| {issue-base}/205[Last branch of case expression omitted from `PPAst`]
+| 270
+| [.bugid]#219#
+| {issue-base}/219[Compiler bug: Contract: UsageMap on 132]
+| 284
+| [.bugid]#223#
+| {issue-base}/223[Incorrect pattern matching for exceptons]
+| 290
+| [.bugid]#224#
+| {issue-base}/224[Signals are not delivered for corresponding events]
+| 291
+| [.bugid]#234#
+| {issue-base}/234[ml-build fails on Windows with error]
+| 301
+| [.bugid]#235#
+| {issue-base}/235[MSI installer for SMLNJ 110.99.2 reports as version 0.0.0.0]
+| 302
+| [.bugid]#239#
+| {issue-base}/239[Word8VectorSlice: mapping a subslice produces wrong result or crashes SML/NJ]
+| 306
+| [.bugid]#240#
+| {issue-base}/240[`SExpParser.parseFile` should return empty list on empty file]
+| 307
+| [.bugid]#240#
+| {issue-base}/241[Add function for converting `HTML4.html` to string]
+| 308
+| [.bugid]#242#
+| {issue-base}/242[SExp: parsing the output of the printer produces a different SExp]
+| 309
+| [.bugid]#243#
+| {issue-base}/243[Error when REPL tries to print value of type `Posix.FileSys.ST.stat`]
+| 310
+| [.bugid]#244#
+| {issue-base}/244[Unable to interrupt execution by using `SIGINT`]
+| 311
+| [.bugid]#245#
+| {issue-base}/245[`CM.make` is unable to handle filenames that contain a backslash]
+| 312
+| [.bugid]#247#
+| {issue-base}/247[`IEEEReal.setRoundingMode` is a no-op on Linux]
+| 314
+| [.bugid]#248#
+| {issue-base}/248[`IEEEReal.float_class` does not match the Basis Library]
+| 315
+| [.bugid]#249#
+| {issue-base}/249[`Real.fromManExp` does not return expected value if `man = 0.0`]
+| 316
+| [.bugid]#250#
+| {issue-base}/250[Conversion from string to real does not accept non-finite values]
+| 317
+| [.bugid]#251#
+| {issue-base}/251[`IEEEReal.decimal_approx` does not match the Basis Library]
+| 318
+| [.bugid]#252#
+| {issue-base}/252[Type of `Real.fromDecimal` does not match the Basis Library]
+| 319
+|=======
+
+The following unnumbered bug was also fixed:
+--
+  * Performance bug in the compilation of deeply-nested modules.
+--
+
+The following bugs were reported for the legacy version, but do not affect
+the new versions.
+
+[.buglist,cols="^2,<10,^2",strips="none",options="header"]
+|=======
+| Issue No.
+| Description
+| Gforge Bug
+| [.bugid]#246#
+| {issue-base}/246[`Real.fromLargeInt` crashes on large integer input]
+| 313
+|=======
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD |
+| | macOS 11 (Big Sur) | Tested
+| | macOS 12 (Monterey) | Tested
+| | Ubuntu 20.04 | Tested
+|=======

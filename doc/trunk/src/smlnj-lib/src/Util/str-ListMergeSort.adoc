@@ -1,0 +1,50 @@
+= The `ListMergeSort` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ListMergeSort` structure implements the merge-sort
+algorithm for lists.
+
+== Synopsis
+
+[source,sml]
+------------
+signature LIST_SORT
+structure ListMergeSort : LIST_SORT
+------------
+
+== Interface
+
+[source,sml]
+------------
+ val sort : ('a * 'a -> bool) -> 'a list -> 'a list
+
+ val uniqueSort : ('a * 'a -> order) -> 'a list -> 'a list
+
+ val sorted : ('a * 'a -> bool) -> 'a list -> bool
+------------
+
+== Description
+
+`[.kw]#val# sort : ('a * 'a \-> bool) \-> 'a list \-> 'a list`::
+  `sort gt l` sorts the list `l` in _ascending_ order using the
+  "greater-than" relationship defined by `gt`.  This sort is _stable_
+  and detects initial increasing and decreasing runs and thus is linear
+  time on ordered inputs.
+
+`[.kw]#val# uniqueSort : ('a * 'a \-> order) \-> 'a list \-> 'a list`::
+  `uniquesort cmp l` sorts the list `l` in _ascending_ order using the
+  comparison function `cmp`, while removing duplicate elements.
+
+`[.kw]#val# sorted : ('a * 'a \-> bool) \-> 'a list \-> bool`::
+  `sorted gt l` returns `true` if the list is sorted in _ascending_
+  order under the _greater-than_ relation `gt`.
+
+== See Also
+
+sig-MONO_ARRAY_SORT.adoc[`MONO_ARRAY_SORT`],
+sig-ARRAY_SORT.adoc[`ARRAY_SORT`],
+xref:smlnj-lib.adoc[__The Util Library__]

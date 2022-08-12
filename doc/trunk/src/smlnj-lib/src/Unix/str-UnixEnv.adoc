@@ -1,0 +1,77 @@
+= The `UnixEnv` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `UnixEnv` structure supports operations on the host process's _environment_,
+which is essentially a list of strings of the form "``__name__=__value__``", where
+the "`=`" character does not appear in ``__name__``.  We assume that environments
+are "well formed;" _i.e._, that an environment variable is only defined once.
+
+[WARNING]
+=========
+Binding the user's environment as an SML value and then exporting the
+SML heap image can result in incorrect behavior, since the environment bound
+in the heap image may differ from the user's environment when the exported
+heap image is loaded.
+=========
+
+== Synopsis
+
+[source,sml]
+------------
+signature UNIX_ENV
+structure UnixEnv : UNIX_ENV
+------------
+
+== Interface
+
+[source,sml]
+------------
+val getFromEnv : (string * string list) -> string option
+
+val getValue : {name : string, default : string, env : string list} -> string
+
+val removeFromEnv : (string * string list) -> string list
+
+val addToEnv : (string * string list) -> string list
+
+val environ : unit -> string list
+
+val getEnv : string -> string option
+------------
+
+== Description
+
+`[.kw]#val# getFromEnv : (string * string list) \-> string option`::
+  `getEnv (name, env)` returns `SOME v` if `(name, v)` is in the environment
+  `env`.  Otherwise, it returns `NONE` if `name` is not bound in `env`.
+
+`[.kw]#val# getValue : {name : string, default : string, env : string list} \-> string`::
+  `getEnv {name, default, env}` returns `v` if `(name, v)` is in the
+  environment `env`.  Otherwise, it returns `default` if `name` is not
+  bound in `env`.
+
+`[.kw]#val# removeFromEnv : (string * string list) \-> string list`::
+  `removeFromEnv (name, env)` removes any binding of `name` from the
+  environment.  Note that if `env` has multiple bindings of `name`
+  (_i.e._, `env` is *not* well formed), then only the first binding
+  is removed.
+
+`[.kw]#val# addToEnv : (string * string list) \-> string list`::
+  `addToEnv (bind, env)` adds the binding `bind`, which should be of the
+  form "``__name__=__value__``", to the environment.  If there was an
+  existing binding of ``__name__`` in `env`, then it will be replaced.
+
+`[.kw]#val# environ : unit \-> string list`::
+  `env ()` returns the user's (host process) environment.
+
+`[.kw]#val# getEnv : string \-> string option`::
+  `getEnv name` returns the binding of the environment variable `name`
+  in the user's (host process) environment.
+
+== See Also
+
+xref:unix-lib.adoc[__The Unix Library__]

@@ -1,0 +1,42 @@
+Standard ML of New Jersey User Guide
+====================================
+:Date: {release-date}
+:VERSION: {smlnj-version}
+:Author: David MacQueen and John Reppy
+:stem: latexmath
+:source-highlighter: pygments
+
+This guide gives an overview and introduction to using the
+*Standard ML of New Jersey* (*SML/NJ*) system.
+
+== Table of Contents
+
+* xref:intro.adoc[Introduction]
+
+* xref:usage.adoc[Basic Usage]
+
+* xref:extensions.adoc[Language Extensions]
+
+* xref:successor-ml.adoc[Successor ML]
+
+* xref:error-messages.adoc[Understanding Error Messages]
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include:intro.adoc[]
+
+include:usage.adoc[]
+
+include:extensions.adoc[]
+
+include:successor-ml.adoc[]
+
+include:error-messages.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

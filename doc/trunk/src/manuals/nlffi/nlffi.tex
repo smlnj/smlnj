@@ -1,0 +1,1081 @@
+% -*- latex -*-
+\documentclass[titlepage,letterpaper]{article}
+\usepackage{latexsym}
+\usepackage{times}
+%\usepackage{hyperref}
+
+\newcommand{\gentool}{{\tt ml-nlffigen}}
+
+\marginparwidth0pt\oddsidemargin0pt\evensidemargin0pt\marginparsep0pt
+\topmargin0pt\advance\topmargin by-\headheight\advance\topmargin by-\headsep
+\textwidth6.7in\textheight9.1in
+\columnsep0.25in
+
+\newcommand{\smlmj}{110}
+\newcommand{\smlmn}{46}
+
+\author{Matthias Blume \\
+Toyota Technological Institute at Chicago}
+
+\title{{\bf NLFFI}\\
+A new SML/NJ Foreign-Function Interface \\
+{\it\small (for SML/NJ version \smlmj.\smlmn~and later)} \\
+User Manual}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 3pt minus 2pt}
+
+\newcommand{\nt}[1]{{\it #1}}
+\newcommand{\tl}[1]{{\underline{\bf #1}}}
+\newcommand{\ttl}[1]{{\underline{\tt #1}}}
+\newcommand{\ar}{$\rightarrow$\ }
+\newcommand{\vb}{~$|$~}
+
+\begin{document}
+
+\bibliographystyle{alpha}
+
+\maketitle
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+Introduce...
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The C Library}
+
+The C library...
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Translation conventions}
+
+The {\gentool} tool generates one ML structure for each
+exported C definition.  In particular, there is one structure per
+external variable, function, {\tt typedef}, {\tt struct}, {\tt union},
+and {\tt enum}.
+Each generated ML structure contains the ML type and values necessary
+to manipulate the corresponding C item.
+
+%-------------------------------------------------------------------------
+\subsection{External variables}
+
+An external C variable $v$ of type $t_C$ is represented by an ML
+structure {\tt G\_}$v$.  This structure always contains a type {\tt t}
+encoding $t_C$ and a value {\tt obj'} providing (``light-weight'')
+access to the memory location that $v$ stands for in C.  If $t_C$ is
+{\em complete}, then {\tt G\_}$v$ will also contain a value {\tt obj}
+(the ``heavy-weight'' equivalent of {\tt obj'}) as well as value {\tt
+  typ} holding run-time type information corresponding to $t_C$ (and
+{\tt t}).
+
+\paragraph*{Details}
+
+\begin{description}\setlength{\itemsep}{0pt}
+\item[{\tt type t}] is the type to be substituted for $\tau$ in {\tt
+    ($\tau$, $\zeta$) C.obj} to yield the correct type for ML values
+  representing C memory objects of type $t_C$ (i.e., $v$'s type).
+  (This assumes a properly instantiated $\zeta$ based on whether or
+  not the corresponding object was declared {\tt const}.)
+\item[!{\tt val typ}] is the run-time type information corresponding
+  to type {\tt t}.  The ML type of {\tt typ} is {\tt t C.T.typ}.  This
+  value is not present if $t_C$ is {\em incomplete}.
+\item[!{\tt val obj}] is a function that returns the ML-side
+  representative of the C object (i.e., the memory location) referred
+  to by $v$.  Depending on whether or not $v$ was declared {\tt
+    const}, the type of {\tt obj} is either {\tt unit -> (t, C.ro)
+    C.obj} or {\tt unit -> (t, C.rw) C.obj}.  The result of {\tt
+    obj()} is ``heavy-weight,'' i.e., it implicitly carries run-time
+  type information.  This value is not present if $t_C$ is {\em
+    incomplete}.
+\item[{\tt val obj'}] is analogous to {\tt val obj}, the only
+  difference being that its result is ``light-weight,'' i.e., without
+  run-time type information.  The type of {\tt val obj'} is
+  either {\tt unit -> (t, C.ro) C.obj} or {\tt unit -> (t, C.rw) C.obj}.
+\end{description}
+
+(Elements that are subject to omission due to incompleteness of types
+are marked with an exclamation mark(!).)
+
+\subsubsection*{Examples}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+extern int i;
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure G_i : sig
+    type t   = C.sint
+    val typ  : t C.T.typ
+    val obj  : unit -> (t, C.rw) C.obj
+    val obj' : unit -> (t, C.rw) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+extern const double d;
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure G_d : sig
+    type t   = C.double
+    val typ  : t C.T.typ
+    val obj  : unit -> (t, C.ro) C.obj
+    val obj' : unit -> (t, C.ro) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+extern struct str s1;
+/* str complete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure G_s1 : sig
+    type t   = (S_str.tag C.su, rw) C.obj C.ptr
+    val typ  : t C.T.typ
+    val obj  : unit -> (t, C.rw) C.obj
+    val obj' : unit -> (t, C.rw) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+extern struct istr s2;
+/* istr incomplete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure G_s2 : sig
+    type t   = (ST_istr.tag C.su, rw) C.obj C.ptr
+    val obj' : unit -> (t, C.rw) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+%-------------------------------------------------------------------------
+\subsection{Functions}
+
+An external C function $f$ is represented by an ML structure {\tt
+  F\_}$f$.  Each such structure always contains at last three values:
+{\tt typ}, {\tt fptr}, and {\tt f'}.  Variable {\tt typ} holds
+run-time type information regarding function pointers that share $f$'s
+prototype.  The most important part of this information is the code
+that implements native C calling conventions for these functions.
+Variable {\tt fptr} provides access to a C pointer to $f$.  And {\tt
+  f'} is an ML function that dispatches a call of $f$ (through {\tt
+  fptr}), using ``light-weight'' types for arguments and results.  If
+the result type of $f$ is {\em complete}, then {\tt F\_}$f$ will also
+contain a function {\tt f}, using ``heavy-weight'' argument- and
+result-types.
+
+\paragraph*{Details}
+
+\begin{description}\setlength{\itemsep}{0pt}
+\item[{\tt val typ}] holds run-time type information for pointers to
+  functions of the same prototype.  The ML type of {\tt typ} is {\tt
+    ($A$ -> $B$) C.fptr C.T.typ} where $A$ and $B$ are types encoding
+  $f$'s argument list and result type, respectively.  A
+  description of $A$ and $B$ is given below.
+\item[{\tt val fptr}] is a function that returns the (heavy-weight)
+  function pointer to $f$. The type of {\tt fptr} is {\tt unit -> ($A$
+    -> $B$) C.fptr}.  The encodings of argument- and result types in
+  $A$ and $B$ is the same as the one used for {\tt typ} (see below).
+  Notice that although {\tt fptr} is a heavy-weight value carrying
+  run-time type information, pointer arguments within $A$ or $B$ still
+  use the light-weight version!
+\item[!{\tt val f}] is an ML function that dispatches a call to $f$
+  via {\tt fptr}.  For convenience, {\tt f} has built-in conversions
+  for arguments (from ML to C) and the result (from C to ML).  For
+  example, if $f$ has an argument of type {\tt double}, then {\tt f}
+  will take an argument of type {\tt MLRep.Real.real} in its place and
+  implicitly convert it to its C equivalent using {\tt
+    C.Cvt.c\_double}.  Similarly, if $f$ returns an {\tt unsigned
+    int}, then {\tt f} has a result type of {\tt MLRep.Unsigned.word}.
+  This is done for all types that have a conversion function in
+  {\tt C.Cvt}.
+  Pointer values (as well as the object argument used for {\tt
+    struct}- or {\tt union}-return values) are taken and returned in
+  their heavy-weight versions.  Function {\tt f} will not be generated
+  if the return type of $f$ is incomplete.
+\item[{\tt val f'}] is the light-weight equivalent to {\tt f}.  a
+  light-weight function.  The main difference is that pointer- and
+  object-values are passed and returned in their light-weight
+  versions.
+\end{description}
+
+\subsubsection*{Type encoding rules for {\tt ($A$ -> $B$) C.fptr}}
+
+A C function $f$'s prototype is encoded as an ML type {\tt $A$ ->
+  $B$}.  Calls of $f$ from ML take an argument of type $A$ and
+produce a result of type $B$.
+
+\begin{itemize}
+\item Type $A$ is constructed from a sequence $\langle T_1, \ldots,
+  T_k \rangle$ of types.  If that sequence is empty, then {\tt $A =$
+    unit}; if the sequence has only one element $T_1$, then $A = T_1$.
+  Otherwise $A$ is a tuple type {\tt $T_1$ * $\ldots$ * $T_k$}.
+\item If $f$'s result is neither a {\tt struct} nor a {\tt union},
+  then $T_1$ encodes the type of $f$'s first argument, $T_2$ that of
+  the second, $T_3$ that of the third, and so on.
+\item If $f$'s result is some {\tt struct} or some {\tt union}, then
+  $T_1$ will be {\tt ($\tau$ C.su, C.rw) C.obj'} with $\tau$
+  instantiated to the appropriate {\tt struct}- or {\tt union}-tag
+  type.  Moreover, we then also have $B = T_1$. $T_2$ encodes the type
+  of $f$'s {\em first} argument, $T_3$ that of the second.  (In
+  general, $T_{i+1}$ will encode the type of the $i$th argument of
+  $f$ in this case.)
+\item The encoding of the $i$th argument of $f$ ($T_i$ or $T_{i+1}$
+  depending on $f$'s return type) is the light-weight ML equivalent of
+  the C type of that argument.
+\item An argument of C {\tt struct}- or {\tt union}-type corresponds
+  to {\tt ($\tau$ C.su, C.ro) C.obj'} with $\tau$ instantiated to the
+  appropriate tag type.
+\item If $f$'s result type is {\tt void}, then {\tt $B =$ unit}.  If
+  the result type is not a {\tt struct}- or {\tt union}-type, then $B$
+  is the light-weight ML encoding of that type.  Otherwise $B = T_1$
+  (see above).
+\end{itemize}
+
+\subsubsection*{Examples}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+{\tt void f1 (void);}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f1 : sig
+    val typ  : (unit -> unit) C.fptr C.T.typ
+    val fptr : unit -> (unit -> unit) C.fptr
+    val f    : unit -> unit
+    val f'   : unit -> unit
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+{\tt int f2 (void);}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f2 : sig
+    val typ  : (C.sint -> unit) C.fptr C.T.typ
+    val fptr : unit -> (C.sint -> unit) C.fptr
+    val f    : MLRep.Signed.int -> unit
+    val f'   : MLRep.Signed.int -> unit
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+{\tt void f3 (int);}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f3 : sig
+    val typ  : (unit -> C.sint) C.fptr C.T.typ
+    val fptr : unit -> (unit -> C.sint) C.fptr
+    val f    : unit -> MLRep.Signed.int
+    val f'   : unit -> MLRep.Signed.int
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+{\tt void f4 (double, struct s*);}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f4 : sig
+    val typ  : (C.double *
+                (ST_s.tag C.su, C.rw) C.obj C.ptr'
+                -> unit)
+                    C.fptr C.T.typ
+    val fptr : unit -> (C.double *
+                        (ST_s.tag C.su, C.rw) C.obj C.ptr'
+                        -> unit) C.fptr
+    val f    : MLRep.Real.real *
+               (ST_s.tag C.su, C.rw) C.obj C.ptr
+               -> unit
+    val f'   : MLRep.Real.real *
+               (ST_s.tag C.su, C.rw) C.obj C.ptr'
+               -> unit
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+struct s *f5 (float);
+/* s incomplete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f5 : sig
+    val typ  : (C.float
+                -> (ST_s.tag C.su, C.rw) C.obj C.ptr')
+                    C.fptr C.T.typ
+    val fptr : unit -> (C.float
+                       -> (ST_s.tag C.su, C.rw) C.obj C.ptr')
+                           C.fptr
+    val f'   : MLRep.Real.real ->
+               (ST_s.tag C.su, C.rw) C.obj C.ptr'
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+struct t *f6 (float);
+/* t complete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f6 : sig
+    val typ  : (C.float
+                -> (S_t.tag C.su, C.rw) C.obj C.ptr')
+                    C.fptr C.T.typ
+    val fptr : unit -> (C.float
+                       -> (S_t.tag C.su, C.rw) C.obj C.ptr')
+                           C.fptr
+    val f    : MLRep.Real.real ->
+               (S_t.tag C.su, C.rw) C.obj C.ptr
+    val f'   : MLRep.Real.real ->
+               (S_t.tag C.su, C.rw) C.obj C.ptr'
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+struct t f7 (int, double);
+/* t complete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure F_f7 : sig
+    val typ  : ((S_t.tag C.su, C.rw) C.obj' *
+                C.sint * C.double
+                -> (S_t.tag C.su, C.rw) C.obj')
+                    C.fptr C.T.typ
+    val fptr : unit -> ((S_t.tag C.su, C.rw) C.obj' *
+                        C.sint * C.double
+                        -> (S_t.tag C.su, C.rw) C.obj')
+                            C.fptr
+    val f    : (S_t.tag C.su, C.rw) C.obj *
+               MLRep.Signed.int *
+               MLRep.Real.real
+               -> (S_t.tag C.su, C.rw) C.obj
+    val f'   : (S_t.tag C.su, C.rw) C.obj' *
+               MLRep.Signed.int *
+               MLRep.Real.real
+               -> (S_t.tag C.su, C.rw) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+\subsection{Type definitions ({\tt typedef})}
+
+In C a {\tt typedef} declaration associates a type name $t$ with a
+type $t_C$.  On the ML side, $t$ is represented by an ML structure
+{\tt T\_$t$}.  This structure contains a type abbreviation {\tt t} for
+the ML encoding of $t_C$ and, provided $t_C$ is not {\em incomplete},
+a value {\tt typ} of type {\tt t C.T.typ} with run-time type
+information regarding $t_C$.
+
+\subsubsection*{Examples}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+typedef int t1;
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure T_t1 : sig
+    type t   = C.sint
+    val typ  : t C.T.typ
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+typedef struct s t2;
+/* s incomplete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure T_t2 : sig
+    type t  = ST_s.tag C.su
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+typedef struct s *t3;
+/* s incomplete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure T_t3 : sig
+    type t  = (ST_s.tag C.su, C.rw) C.obj C.ptr
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+typedef struct t t4;
+/* t complete */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure T_t4 : sig
+    type t  = ST_t.tag C.su
+    val typ : t T.typ
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+\subsection{{\tt struct} and {\tt union}}
+ 
+The type identity of a named C {\tt struct} (or {\tt union}) is
+provided by a unique ML {\em tag} type.  There is a 1-1 correspondence
+between C tag names $t$ for {\tt struct}s on one side and ML tag types
+$s_t$ on the other.  An analogous correspondence exists between C tag
+names $t$ for {\tt union}s and ML tag types $u_t$.  Notice that these
+correspondences are {\em independent of the actual declaration} of the
+C {\tt struct} or {\tt union} in question.
+
+A C type of the form {\tt struct $t$} is represented in ML as {\tt
+  $s_t$ C.su}, a type of the form {\tt union $t$} as {\tt $u_t$ C.su}.
+For example, this means that a heavy-weight non-constant memory object
+of C type {\tt struct $t$} has ML type {\tt ($s_t$ C.su, C.rw) C.obj}
+which can be abbreviated to {\tt ($s_t$ C.su, C.rw) C.obj}.
+
+All ML types {\tt ($\tau$ C.su, $\zeta$) C.obj} are originally
+completely abstract: they does not come with any operations that could
+be applied to their values.  In C, the operations to be applied to a
+{\tt struct}- or {\tt union}-value is field selection.  Field
+selection {\em does} depend on the actual C declaration, so it is
+{\gentool}'s job to generate a set of ML-side field-accessors that
+correspond to field-access operations in C.
+
+Each field is represented by a function mapping a memory object of the
+{\tt struct}- or {\tt union}-type to an object of the respective field
+type.  Let {\tt int i;} and {\tt const double d;} be fields of some
+{\tt struct t} and let {\tt tag} be the ML tag type corresponding to
+{\tt t}.  Here are the types of the (heavy-weight) access functions
+for {\tt i} and {\tt d}:
+
+\begin{small}
+\begin{center}
+\begin{tabular}{l@{~~~~$\leadsto$~~~~}l}
+{\tt int i;} &
+  {\tt val f\_i : (tag C.su, 'c) C.obj -> (C.sint, 'c) C.obj} \\
+{\tt const double d;} &
+  {\tt val f\_d : (tag C.su, 'c) C.obj -> (C.double, C.ro) C.obj}
+\end{tabular}
+\end{center}
+\end{small}
+
+\noindent Notice how each field access function is polymorphic in the
+{\tt const} property of the argument object.  For fields declared {\tt
+  const}, the result always uses {\tt C.ro} while for ordinary fields
+the argument's type is used---reflecting the idea that a field is
+considered writable if it has not been declared {\tt const} and, at
+the same time, the enclosing {\tt struct} or {\tt union} is writable.
+
+\subsubsection*{Incomplete declarations}
+
+If the {\tt struct} or {\tt union} is incomplete (i.e., if only its
+tag $t$ is known), then {\gentool} will merely generate an ML structure
+(called {\tt ST\_$t$} for {\tt struct} and {\tt UT\_$t$} for {\tt
+  union}) with a single type {\tt tag} that is an abbreviation for the
+library-defined type that corresponds to tag $t$.
+
+\subsubsection*{Complete declarations}
+
+If the {\tt struct} or {\tt union} with tag $t$ is complete, then
+{\gentool} will generate an ML structure (called {\tt S\_$t$} for {\tt
+  struct} and {\tt U\_$t$} for {\tt union}) which contains at least:
+\begin{description}\setlength{\itemsep}{0pt}
+\item[{\tt type tag}] --- an abbreviation for the library-defined type
+  that corresponds to $t$
+\item[{\tt val size}] --- a value representing information about the
+  size of memory objects of this {\tt struct}- or {\tt union}-type.
+  The ML type of {\tt size} is {\tt tag C.su C.S.size}.
+\item[{\tt val typ}] --- a value representing run-time type
+  information corresponding to this {\tt struct}- or {\tt union}-type.
+  The ML type of {\tt typ} is {\tt tag C.su C.T.typ}.
+\end{description}
+
+\subsubsection*{Fields}
+
+In addition to {\tt type tag}, {\tt val size}, and {\tt val typ}, the
+{\gentool} tool will generate a small set of structure elements for
+each field $f$ of the {\tt struct} or {\tt union}.  Let $t_f$ be the
+type of $f$:
+
+\begin{description}\setlength{\itemsep}{0pt}
+\item[{\tt type t\_f\_$f$}] is an abbreviation for the ML encoding of $t_f$.
+\item[!{\tt val typ\_f\_$f$}] holds runtime type information regarding
+  $t_f$.  If $t_f$ is incomplete, then {\tt typ\_f\_$f$} is omitted.
+\item[!{\tt val f\_$f$}] is the heavy-weight access function for $f$.
+  It maps a value of type {\tt (tag C.su, $\zeta$) C.obj} to a value
+  of type {\tt (t\_f\_$f$, ${\zeta}_f$) C.obj} and is polymorphic in
+  $\zeta$.  If $f$ was declared {\tt const}, then {\tt ${\zeta}_f =$
+    C.ro}.  Otherwise ${\zeta}_f = \zeta$.  If $t_f$ is incomplete,
+  then {\tt f\_$f$} is omitted.
+\item[{\tt val f\_$f$'}] is the light-weight access function for $f$.
+  It maps a value of type {\tt (tag C.su, $\zeta$) C.obj'} to a value
+  of type {\tt (t\_f\_$f$, ${\zeta}_f$) C.obj'} and is polymorphic in
+  $\zeta$.  If $f$ was declared {\tt const}, then {\tt ${\zeta}_f =$
+    C.ro}.  Otherwise ${\zeta}_f = \zeta$.
+\end{description}
+
+\subsubsection*{Bitfields}
+
+If $f$ is a bitfield, then two access functions are generated:
+
+\begin{description}\setlength{\itemsep}{0pt}
+\item[{\tt val f\_$f$}] is the heavy-weight access function, mapping
+  values of type {\tt (tag C.su, $\zeta$) C.obj} to either {\tt
+    ${\zeta}_f$ C.sbf} or {\tt ${\zeta}_f$ C.ubf}, depending on
+  whether the type of $f$ is {\tt signed} or {\tt unsigned}.  The
+  function is polymorphic in $\zeta$.  If $f$ was declared {\tt
+    const}, then {\tt ${\zeta}_f =$ C.ro}.  Otherwise, ${\zeta}_f =
+  \zeta$.
+\item[{\tt val f\_$f$'}] is the light-weight access function, mapping
+  values of type {\tt (tag C.su, $\zeta$) C.obj'} to either {\tt
+    ${\zeta}_f$ C.sbf} or {\tt ${\zeta}_f$ C.ubf}, using the same
+  conventions as those used for {\tt f\_$f$}.
+\end{description}
+
+\subsubsection*{Example}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+struct t {
+  int i;
+  const double d;
+  struct t *nx;
+    /* complete */
+  struct s *ms;
+    /* incomplete */
+  const int f : 2;
+  unsigned g : 3;
+};
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure S_t : sig
+  type tag = ...
+  val size : tag C.su C.S.size
+  val typ : tag C.su C.T.typ
+
+  type t_f_i = C.T.sint
+  val typ_f_i : t_f_i C.T.typ
+  val f_i  : (tag C.su, 'c) obj  -> (t_f_i, 'c) C.obj
+  val f_i' : (tag C.su, 'c) obj' -> (t_f_i, 'c) C.obj'
+
+  type t_f_d = C.T.double
+  val typ_f_d : t_f_d C.T.typ
+  val f_d  : (tag C.su, 'c) obj  -> (t_f_d, C.ro) C.obj
+  val f_d' : (tag C.su, 'c) obj' -> (t_f_d, C.ro) C.obj'
+
+  type t_f_nx = (tag C.su, C.rw) C.obj C.ptr
+  val typ_f_nx : t_f_nx C.T.typ
+  val f_nx  : (tag C.su, 'c) obj  -> (t_f_nx, 'c) C.obj
+  val f_nx' : (tag C.su, 'c) obj' -> (t_f_nx, 'c) C.obj'
+
+  type t_f_ms = (ST_s.tag C.su, C.rw) C.obj C.ptr
+  val f_ms' : (tag C.su, 'c) obj' -> (t_f_ms, 'c) C.obj'
+
+  val f_f  : (tag C.su, 'c) C.obj  -> C.ro C.sbf
+  val f_f' : (tag C.su, 'c) C.obj' -> C.ro C.sbf
+
+  val f_g  : (tag C.su, 'c) C.obj  -> 'c C.ubf
+  val f_g' : (tag C.su, 'c) C.obj' -> 'c C.ubf
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+\subsubsection*{Unnamed {\tt struct}s or {\tt union}s}
+
+Each occurrence of an unnamed {\tt struct} or {\tt union} in C has its
+own type identity.  The {\gentool} tool models this by artificially
+generating a unique tag for each such occurrence.  The tags are chosen
+in such a way that they cannot clash with real tag names that might
+occur elsewhere in the C code.  After choosing a fresh tag $t$,
+{\gentool} produces ML code according to the same rules that it uses
+when $t$ is a real tag explicitly present in the C code.
+
+Here are the rules for generating tags:
+
+\begin{itemize}\setlength{\itemsep}{0pt}
+\item If the {\tt struct}- or {\tt union}-declaration occurs at top
+  level, i.e., not within the context of a {\tt typedef} or another
+  {\tt struct}- or {\tt union}-declaration, the generated tag consists
+  of a sequence of decimal digits and can be read as a non-negative
+  number.
+\item If the immediate context of the unnamed {\tt struct} or {\tt
+    union} is a {\tt typedef} for a type name $t$, then the generated
+  tag will be {\tt '$t$}.
+\item The tag of an unnamed {\tt struct} or {\tt union} is another
+  (named or unnamed) {\tt struct} or {\tt union} with (real or
+  generated) tag $t$ is chosen to be {\tt $t$'$n$} where $n$ is a
+  fresh sequence of decimal digits that can be read as a non-negative
+  number.
+\end{itemize}
+
+\subsubsection*{Examples}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+struct {
+  int i;
+};
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure S_0 : sig
+  type tag = ...
+  val size : tag C.su C.S.size
+  val typ : tag C.su C.T.typ
+
+  type t_f_i = C.T.sint
+  val typ_f_i : t_f_i C.T.typ
+  val f_i  : (tag C.su, 'c) obj  -> (t_f_i, 'c) C.obj
+  val f_i' : (tag C.su, 'c) obj' -> (t_f_i, 'c) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}  
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+typedef struct {
+  int j;
+} s;
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure S_'s : sig
+  type tag = ...
+  val size : tag C.su C.S.size
+  val typ : tag C.su C.T.typ
+
+  type t_f_j = C.T.sint
+  val typ_f_j : t_f_j C.T.typ
+  val f_j  : (tag C.su, 'c) obj  -> (t_f_j, 'c) C.obj
+  val f_j' : (tag C.su, 'c) obj' -> (t_f_j, 'c) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}  
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+struct s {
+  struct {
+    int j;
+  } x;
+};
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure S_s'0 : sig
+    type tag = ...
+    val size : tag C.su C.S.size
+    val typ : tag C.su C.T.typ
+
+    type t_f_j = C.sint
+    val typ_f_j : t_f_j C.T.typ
+    val f_j  : (tag C.su, 'c) C.obj  -> (t_f_j, 'c) C.obj
+    val f_j' : (tag C.su, 'c) C.obj' -> (t_f_j, 'c) C.obj'
+end
+
+structure S_s : sig
+    type tag = ...
+    val size : tag C.su C.S.size
+    val typ : tag C.su C.T.typ
+
+    type t_f_x = S_s'0.tag C.su
+    val typ_f_x : t_f_x C.T.typ
+    val f_x  : (tag C.su, 'c) C.obj  -> (t_f_x, 'c) C.obj
+    val f_x' : (tag C.su, 'c) C.obj' -> (t_f_x, 'c) C.obj'
+end
+
+\end{verbatim}
+\end{minipage}  
+\end{tabular}
+\end{center}
+\end{small}
+
+\subsection{Enumerations ({\tt enum})}
+
+A C enumeration of constants $c_1, c_2, \ldots, c_k$ declared via {\tt
+  enum} is represented by $k$ ML values of a chosen ML representation
+type.  By default, that type is {\tt MLRep.Signed.int}, i.e., the same
+type that also represents the C type {\tt int}.  A command line switch
+({\tt -enum-constructors} or {\tt -ec}) to {\gentool} can change this
+behavior in such a way that whenever possible the representation type
+for an enumeration becomes an ML datatype, thus making it possible to
+perform pattern-matching on constants.  The representation type cannot be a
+datatype if two or more {\tt enum} constants share the same value as in:
+
+\begin{verbatim}
+  enum ab { A = 12, B = 12 };
+\end{verbatim}
+
+\subsubsection*{Complete enumerations}
+
+Let $t$ be the tag of the C {\tt enum} declaration, and let
+$c_1,\ldots,c_k$ be its set of constants.  The ML-side representative
+of such a declaration is a structure {\tt E\_$t$} which contains $10+k$
+elements, the first 10 being:
+
+\begin{description}\setlength{\itemsep}{0pt}
+\item[{\tt type tag}] The ML-side encoding of type {\tt enum $t$} is
+  {\tt tag C.enum}.  Values of this type are abstract.  They can be
+  converted to and from concrete integer values of type {\tt
+    MLRep.Signed.int} using {\tt C.Cvt.c2i\_enum} and {\tt
+    C.Cvt.i2c\_enum}, respectively.  Like in the case of {\tt struct}
+  or {\tt union}, type {\tt tag} is an abbreviation for the
+  pre-defined type that uniquely corresponds to the tag name $t$.
+\item[{\tt type mlrep}] This is the type of concrete ML-side values
+  representing the $c_1,\ldots,c_k$.  This type is not the same as
+  {\tt tag C.enum} and defaults to {\tt MLRep.Signed.int}.  As
+  mentioned above, by specifying the {\tt -enum-constructors} or {\tt
+    -ec} command-line flag one can force {\gentool} to generate a
+  datatype definition for type {\tt mlrep}.
+\item[{\tt val m2i}] This is a function for converting {\tt mlrep}
+  values to values of type {\tt MLRep.Signed.int}.  If the former is
+  the same type as the latter (see above), then {\tt m2i} is the
+  identity function.  Otherwise {\gentool} generates explicit code to
+  map each {\tt mlrep} constructor to an integer value.
+\item[{\tt val i2m}] This is the inverse of {\tt m2i}.  If {\tt mlrep}
+  is a datatype, then {\tt m2i} will raise exception {\tt Domain} when
+  the argument does not correspond to one of the constructors.
+\item[{\tt val c}] Function {\tt c} converts values of type {\tt
+    mlrep} to values of type {\tt tag C.enum}.  It is merely a
+  composition of {\tt C.Cvt.i2c\_enum} and {\tt m2i}.
+\item[{\tt val ml}] Function {\tt ml} is the composition of {\tt i2m}
+  and {\tt C.Cvt.c2i\_enum} and converts values of type {\tt tag
+    C.enum} to values of type {\tt mlrep}.  It can raise exception
+  {\tt Domain} if the C type system had been subverted (which is
+  always a real possibility).
+\item[{\tt val get}] Function {\tt get} fetches a value of type {\tt
+    mlrep} from a memory object of type {\tt (tag C.enum, $\zeta$)
+    C.obj}.  It is a composition of {\tt i2m} and {\tt C.Get.enum}.
+\item[{\tt val get'}] Function {\tt get}' fetches a value of type {\tt
+    mlrep} from a memory object of type {\tt (tag C.enum, $\zeta$)
+    C.obj'}.  It is a composition of {\tt i2m} and {\tt C.Get.enum'}.
+\item[{\tt val set}] Function {\tt set} stores a value of type {\tt
+    mlrep} into a memory object of type {\tt (tag C.enum, C.rw)
+    C.obj}.  It is a composition of {\tt m2i} and {\tt C.Set.enum}.
+\item[{\tt val set'}] Function {\tt set'} stores a value of type {\tt
+    mlrep} into a memory object of type {\tt (tag C.enum, C.rw)
+    C.obj'}.  It is a composition of {\tt m2i} and {\tt C.Set.enum'}.
+\end{description}
+
+Each of the remaining $k$ elements corresponds to one of the
+enumeration constants $c_i$.  Concretely, the element generated for
+$c_i$ is {\tt val e\_$c_i$} and has type {\tt mlrep}.  If {\tt mlrep}
+is a datatype, then the {\tt e\_$c_i$} are constructors which can be
+used in ML patterns.
+
+\subsubsection*{Examples}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+enum e { A, B, C };
+/* default treatment */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure E_e : sig
+    type tag = ...
+    type mlrep = MLRep.Signed.int
+    val e_A  : mlrep  (* = 0 *)
+    val e_B  : mlrep  (* = 1 *)
+    val e_C  : mlrep  (* = 2 *)
+    val m2i  : mlrep -> MLRep.Signed.int
+    val i2m  : MLRep.Signed.int -> mlrep
+    val c    : mlrep -> tag C.enum
+    val ml   : tag C.enum -> mlrep
+    val get  : (tag C.enum, 'c) C.obj  -> mlrep
+    val get' : (tag C.enum, 'c) C.obj' -> mlrep
+    val set  : (tag C.enum, C.rw) C.obj  * mlrep -> unit
+    val set' : (tag C.enum, C.rw) C.obj' * mlrep -> unit
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+enum e { A, B, C };
+/* -enum-constructors */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure E_e : sig
+    type tag = ...
+    datatype mlrep = e_A | e_B | e_C
+    val m2i  : mlrep -> MLRep.Signed.int
+    val i2m  : MLRep.Signed.int -> mlrep
+    val c    : mlrep -> tag C.enum
+    val ml   : tag C.enum -> mlrep
+    val get  : (tag C.enum, 'c) C.obj  -> mlrep
+    val get' : (tag C.enum, 'c) C.obj' -> mlrep
+    val set  : (tag C.enum, C.rw) C.obj  * mlrep -> unit
+    val set' : (tag C.enum, C.rw) C.obj' * mlrep -> unit
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+enum e { A = 0, B = 1,
+         C = 0 };
+/* with or without
+ *  -enum-constructors */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure E_e : sig
+    type tag = ...
+    type mlrep = MLRep.Signed.int
+    val e_A  : mlrep  (* = 0 *)
+    val e_B  : mlrep  (* = 1 *)
+    val e_C  : mlrep  (* = 0 *)
+    val m2i  : mlrep -> MLRep.Signed.int
+    val i2m  : MLRep.Signed.int -> mlrep
+    val c    : mlrep -> tag C.enum
+    val ml   : tag C.enum -> mlrep
+    val get  : (tag C.enum, 'c) C.obj  -> mlrep
+    val get' : (tag C.enum, 'c) C.obj' -> mlrep
+    val set  : (tag C.enum, C.rw) C.obj  * mlrep -> unit
+    val set' : (tag C.enum, C.rw) C.obj' * mlrep -> unit
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+
+\subsubsection*{Incomplete enumerations}
+
+If the enumeration is incomplete, i.e., if only its tag $t$ is known,
+then no structure {\tt E\_$t$} is generated.  Instead, a structure
+{\tt ET\_$t$} takes its place which merely contains the type {\tt tag}
+as described above.
+
+\subsubsection*{Unnamed enumerations}
+
+Anonymous enumerations ({\tt enum}s without a tag) are handled in a
+way that is very similar to the treatment of unnamed {\tt struct}s and
+{\tt union}s.  In particular, the rules for assigning a generated tag
+are the same if the {\tt enum} occurs in the context of a {\tt
+  typedef} or another {\tt struct} or {\tt union}.
+
+However, by default all constants in unnamed top-level {\tt enum}s get
+collected into one single virtual enumeration whose tag is {\tt '}
+(apostrophe).  If this is not desired, then the command line flag {\tt
+  -nocollect} turns this off and lets {\gentool} fall back to the
+exact same rules that are used for unnamed top-level {\tt struct}s and
+{\tt union}s: a fresh ``numeric'' tag gets generated for each such
+{\tt enum}.
+
+\subsubsection*{Examples for collected unnamed enumerations}
+
+\begin{small}
+\begin{center}
+\begin{tabular}{c|c}
+C declaration & signature of ML-side representation \\ \hline\hline
+\begin{minipage}{2in}
+\begin{verbatim}
+enum { A, B };
+enum { C, D };
+/* with or without
+ *  -enum-constructors */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure E_' : sig
+    type tag = ...
+    type mlrep = MLRep.Signed.int
+    val e_A  : mlrep  (* = 0 *)
+    val e_B  : mlrep  (* = 1 *)
+    val e_C  : mlrep  (* = 0 *)
+    val e_D  : mlrep  (* = 1 *)
+    ...
+end
+
+\end{verbatim}
+\end{minipage}
+\\ \hline
+\begin{minipage}{2in}
+\begin{verbatim}
+enum { A, B };
+enum { C = 2, D };
+/* -enum-constructors */
+\end{verbatim}
+\end{minipage}
+&
+\begin{minipage}{4in}
+\begin{verbatim}
+
+structure E_' : sig
+    type tag = ...
+    datatype mlrep = e_A | e_B | e_C | e_D
+    ...
+end
+
+\end{verbatim}
+\end{minipage}
+\end{tabular}
+\end{center}
+\end{small}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\appendix
+%\input{A-syntax}
+
+\bibliography{blume,appel,ml}
+
+\end{document}

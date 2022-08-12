@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.82 Release Notes</title>
+<style type="text/css">
+  body {
+    font-size: 12pt;
+  }
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: 200%;
+    text-align: center;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  h3 {
+    font-size: 140%;
+  }
+  dt.component {
+    font-size: 120%;
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  span.important {
+    color: red;
+    text-weight: bold;
+  }
+  span.tt {
+    font-family: "Courier", monospace;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    color: darkblue;
+  }
+  span.kw {
+    font-family: "Courier", monospace;
+    font-weight: bold;
+    color: darkgreen;
+  }
+  span.com {
+    font-style: italic;
+    color: indianred;
+  }
+  span.exe {
+    font-weight: bold;
+  }
+  table.buglist {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+  p.compact {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+  #support-table {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  #support-table th {
+    text-align: left;
+    padding-right: 1em;
+    border-bottom: 2px solid black;
+  }
+  #support-table td {
+    padding-right: 1em;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br>
+                          Version 110.82 NEWS
+<br>
+                            October 16, 2017
+</div>
+
+<hr>
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><span class="tt">http://www.smlnj.org/index.html</span></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.82/index.html">
+    <span class="tt">http://smlnj.cs.uchicago.edu/dist/working/110.82/</span></a>
+  </dd>
+</dl>
+<hr>
+
+<h3>Summary:</h3>
+<p>
+This release continues the march toward 64-bit support (it looks to be a long march).
+There are many under-the-hood changes to the compiler to make supporting both 32-bit and
+64-bit targets possible, as well as a number of bug fixes.
+It also adds support for <b>macOS</b> 10.13 (High Sierra).
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">Compiler</dt>
+  <dd>
+    <p>
+      Rationalized the treatment of primitive operators in Absyn and FLINT, and removed
+      unused primitive operators.
+      These changes affected the pickle format, which means that the
+      <span class="tt">--rebuild</span> option must be used when building
+      the compiler from sources.
+    </p>
+    <p>
+      Added <span class="code">Target</span> structure to Basics; this module
+      specifies properties of the target, such as the size of ML values and
+      the size of the default <span class="code">int</span> type.
+    </p>
+    <p>
+      Changed the way that the <span class="code">InlineT</span> structure is
+      defined to be target sensitive.  For example, on 32-bit targets, there
+      will be an <span class="code">InlineT.i31add</span> function for adding
+      the default <span class="code">int</span> type, whereas
+      on 64-bit targets the corresponding function will be
+      <span class="code">InlineT.i63add</span>.
+    </p>
+    <p>
+      Restored the pre-110.80 behavior of having the shell command <span class="tt">sml foo.sml</span>
+      return a non-zero exit status when there is an error in the compilation of
+      <span class="tt">foo.sml</span> (bug #183).
+    </p>
+  </dd>
+
+  <dt class="component">Run-time system</dt>
+  <dd>
+    <p>
+      Changed the way that we test for allocation-space addresses in minor GCs.
+      Instead of using the BIBOP, we now do a pointer range test; this change
+      produces a small speedup on 32-bit machines, but we expect a bigger benefit
+      on 64-bit machines, which use the 2-level BIBOP.
+    </p>
+    <p>
+      Various changes to prepare for 64-bit targets, including adding a
+      2-level BIBOP implementation, and splitting <span class="tt">assyntax.h</span>
+      into 32-bit (<span class="tt">assyntax.h</span>) and 64-bit
+      (<span class="tt">assyntax64.h</span>) versions.
+    </p>
+  </dd>
+</dl>
+
+<h3>Bugs:</h3>
+    <p>
+    Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a>
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">123</td><td>missing warning for non-exaustive binding at top level.</td></tr>
+      <tr><td class="bugid">183</td><td>status code returned by sml REPL.</td></tr>
+      <tr><td class="bugid">185</td><td>Bring command line help text into parity with man page.</td></tr>
+<!--      <tr><td class="bugid">XXX</td><td>DESCRIPTION</td></tr> -->
+    </table>
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul class="buglist">
+      <li>JSON Library: printing of strings was fixed to match JSON specification.</li>
+      <li>Eliminated false positives in assertion checking in
+        <span class="tt">build-literals.c</span>.
+        Also fixed a bookkeeping bug in the tracking of available space in
+	<span class="tt">build-literals.c</span>.
+      </li>
+      <li>Fixed a bug in the <span class="code">IntInf.mod</span> and
+        <span class="code">IntInf.rem</span> operators,
+        where the <span class="code">Div</span> exception was <b>not</b>
+	getting raised when both arguments are zero.
+      </li>
+      <li>
+        Fixed a runtime-system build issue on <b>macOS</b> for the situation where <b>Xcode</b>
+        in installed, but <span class="tt">/usr/include</span> does not exist.
+      </li>
+    </ul>
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+</p>
+<div>
+<table id="support-table">
+  <tr><th>Architecture</th> <th>Operating System</th> <th>Status</th></tr>
+  <tr><td>Power PC</td> <td>Mac OS X 10.5 (Leopard)</td> <td></td></tr>
+  <tr><td></td> <td>AIX</td> <td></td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>Sparc</td> <td>Solaris</td> <td></td></tr>
+  <tr><td></td> <td>Linux</td> <td></td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.11 (El Capitan)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>macOS 10.12 (Sierra)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>macOS 10.13 (High Sierra)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Ubuntu 14.04.3 (GNU/Linux 3.13.0)&nbsp;</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Other Linux variants</td><td></td></tr>
+  <tr><td></td> <td>BSD variants</td><td></td></tr>
+  <tr><td></td> <td>Windows 7</td> <td></td></tr>
+  <tr><td></td> <td>Windows 10</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7 or 10)</td></tr>
+</table>
+</div>
+</blockquote>
+
+</body>
+</html>

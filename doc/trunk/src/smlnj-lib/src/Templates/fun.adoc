@@ -1,0 +1,47 @@
+= The `@NAME@` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `@NAME@` functor ...
+
+== Synopsis
+
+[source,sml]
+------------
+functor @NAME@ ()
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+------------
+
+== Functor Argument Description
+
+`[.kw]#type# foo`::
+  something
+
+`[.kw]#val# bar : foo -> foo`::
+  something
+
+== Interface
+
+[source,sml]
+------------
+------------
+
+== Interface Description
+
+`[.kw]#type# foo`::
+  something
+
+`[.kw]#val# bar : foo -> foo`::
+  something
+
+== See Also
+
+xref:@LIBRARY@.adoc[__The @DIR@ Library__]

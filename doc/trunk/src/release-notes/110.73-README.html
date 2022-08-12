@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.73 NEWS</title>
+<style>
+  dd {
+    margin-bottom: 0.5em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    font-size: smaller;
+  }
+  table.buglist {
+    margin-left: 1em;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+</style>
+</head>
+
+<body>
+<div align="center">
+<big><b>
+                       Standard ML of New Jersey
+<br/>
+                          Version 110.73 NEWS
+<br/>
+                           May 16, 2011
+<br/>
+<br/>
+</b>
+</big>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.73/index.html">
+<tt>http://smlnj.cs.uchicago.edu/dist/working/110.73/</tt></a></dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+<p>
+SML/NJ 110.73 provides a number of new library features, including a
+new library for working with HTML 4, as well as many bug fixes. 
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+
+ <dt>CM:</dt>
+ <dd>
+   <ul>
+      <li>
+	Added boolean literals (true and false) to the conditional-expression
+	syntax in CM.  Thus, you can write<br/>
+	<blockquote class="code">
+#if true
+  structure Foo
+#endif
+	</blockquote>
+	in a CM file.  This change is meant to make it easier to use autoconf
+	to configure the build process of an SML application.
+      </li>
+   </ul>
+ </dd>
+
+ <dt>ML-Yacc:</dt>
+ <dd>
+   <ul>
+     <li>
+	Fixed ml-yacc examples to respect the changed signatures with respect
+	to TextIO.inputLine.
+     </li>
+   </ul>
+ </dd><p>
+
+  <dt>SML/NJ Library:</dt>
+  <dd>
+    <ul>
+      <li>
+	Added findExe function to PathUtil module.
+      </li>
+      <li>
+	Modified the implementation of GetOpt.usageInfo so that if the help
+	string has embedded newlines, then the extra lines are properly
+	indented.
+      </li>
+      <li>
+	Changed the interface of JSONStreamParser to support both parsing files
+	and TextIO.instreams.
+      </li>
+      <li>
+        Added HTML4 library.
+      </li>
+      <li>
+	Fixed bug in hashed cons library (bug #55).
+      </li>
+      <li>
+	Added array iterators to DynamicArray module.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>Concurrent ML:</dt>
+  <dd>
+    <ul>
+      <li>
+      The paths used to specify the CML versions of libraries in a CM file have been
+      rationalized (bug #68)
+      <blockquote class="code">
+$cml/basis.cm         -- the CML version of $/basis.cm
+$cml/cml.cm           -- core CML features
+$cml/cml-lib.cm       -- CML library code
+$cml/trace-cml.cm     -- TraceCML library for debugging
+$cml/smlnj-lib.cm     -- CML version of the $/smlnj-lib.cm library
+$cml/inet-lib.cm      -- CML version of the $/inet-lib.cm library
+$cml/unix-lib.cm      -- CML version of the $/unix-lib.cm library
+      </blockquote>
+      Note that the old naming scheme is still supported, but may be removed
+      in some future version.
+      </li>
+      <li>
+        Added Barriers module to CML.
+      </li>
+      <li>
+        Fixed the Win32 socket and polling implementation to work correctly
+	with CML. Signature of poll was wrong and didn't handle sockets at all.
+      </li>
+    </ul>
+  </dd>
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>
+      Added support for the RTDSC and RTDSCP instructions to the amd64 code generator.
+      </li>
+    </ul>
+  </dd><p>
+
+  <dt>Bugs:</dt>
+  <dd>
+    <p>Here is a list of tracked bugs fixed by this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a> 
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">38</td><td>CM bug in calling ML-Lex/Yacc in Windows</td></tr>
+      <tr><td class="bugid">39</td><td>SML/NJ doesn't build on NetBSD out of the box</td></tr>
+      <tr><td class="bugid">49</td><td>Slight syntactic difference between ml-lex and ml-ulex in backward compatibility mode</td></tr>
+      <tr><td class="bugid">50</td><td>CM can't invoke ml-yacc or ml-lex on Windows</td></tr>
+      <tr><td class="bugid">55</td><td>HashCons equality test doesn't work because tags aren't incremented</td></tr>
+      <tr><td class="bugid">56</td><td>CM still can't invoke ml-yacc on Windows</td></tr>
+      <tr><td class="bugid">59</td><td>Non-blocking socket functions broken</td></tr>
+      <tr><td class="bugid">61</td><td>Problem with quoting, CM, and Windows</td></tr>
+      <tr><td class="bugid">63</td><td>Comments not lexed correctly in mlyacc grammar files</td></tr>
+      <tr><td class="bugid">67</td><td>Installation fails on mac OSX (10.7, Lion)</td></tr>
+      <tr><td class="bugid">68</td><td>CM anchors for CML need rationalization</td></tr>
+      <tr><td class="bugid">69</td><td>String.scan function missing from basis library</td></tr>
+      <tr><td class="bugid">70</td><td>confusing error message when trying to install on 64-bit Linux without 32-bit support</td></tr>
+    </table>
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul>
+      <li>
+	Changed the Win32 implementation of validArc to support directories
+	with extended characters (umlauts, etc.).
+      </li>
+      <li>
+        Fixed Real.toString and Real.fmt to include sign for negative zero.
+      </li>
+      <li>
+        Fixed the bug with Win32 calls to OS.Process.system not quoting the string.
+      </li>
+    </ul>
+  </dd>
+
+</body>
+</html>

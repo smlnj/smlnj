@@ -1,0 +1,76 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  8      N  E  W  S
+			
+  		         January 28, 2002
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+    Major internal improvements to MLRISC.  A re-worked FFI.  Bug fixes.
+
+--------------------------------------------------------------------------
+
+Details:
+
+FFI:
+
+  - A complete overhaul of the library interfaces and the glue-code
+    generator (ml-nlffigen).  The implementation now scales much better,
+    making it possible to target huge C libraries such as gtk+ etc.
+    (See the README file under src/ml-nlffigen.)
+
+  - ML represenation types have been streamlined
+
+  - Getter and setter functions work with concrete values, not abstract
+    ones where possible.
+  - WORD-style bit-operations on INTEGER representations added.
+
+  - Ml-nlffigen command line more flexible (see README file).
+
+  - C_Debug added as an alternative to structure C.  The difference is
+    that it always checks for NULL on pointer-dereference operations.
+
+  - DynLinkage.open_lib' added.  This function takes an additional list
+    of library handles.  This is used for expressing inter-library
+    (symbol-resolution-)dependencies.
+
+  - bug fixes
+
+MLRISC:
+
+  - There is a dramatic simplification in the interface to the
+    register allocator for RISC architectures as a result of making 
+    parallel copy instructions explicit. 
+
+  - Bugs in x86-fast-fp have been fixed.  It is now turned on by default
+    in SML/NJ.
+
+  - Changed the representation of instructions from being fully abstract 
+    to being partially concrete.  See HISTORY file for more details.
+
+  - Removed the native COPY and FCOPY instructions from all the
+    architectures and replaced it with the explicit COPY instruction
+    from the previous commit.
+
+  - Since COPY instructions are no longer native to the architecture, 
+    a generic functor can be used to implement the expandCopies function.
+
+  - Allowed EXPORT and IMPORT pseudo-op declarations to appear inside a
+    TEXT segment.
+
+  - bug fixes
+
+misc:
+
+  - Allen Leung's "nowhere" tool added.
+  - Minor modifications to pgraph.
+  - rounding mode-related bug fixed in Basis library

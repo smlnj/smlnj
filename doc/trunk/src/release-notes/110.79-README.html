@@ -1,0 +1,345 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.79 Release Notes</title>
+<style type="text/css">
+  body {
+    font-size: 12pt;
+  }
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: 200%;
+    text-align: center;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  h3 {
+    font-size: 140%;
+  }
+  dt.component {
+    font-size: 120%;
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  span.important {
+    color: red;
+    text-weight: bold;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    color: darkblue;
+  }
+  span.code {
+    font-size: 80%;
+  }
+  span.kw {
+    font-family: "Courier", monospace;
+    font-weight: bold;
+    color: darkgreen;
+  }
+  span.com {
+    font-style: italic;
+    color: indianred;
+  }
+  span.exe {
+    font-weight: bold;
+  }
+  table.buglist {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+  p.compact {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br>
+                          Version 110.79 NEWS
+<br>
+                            October 4, 2015
+</div>
+
+<hr>
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.79/index.html">
+    <tt>http://smlnj.cs.uchicago.edu/dist/working/110.79/</tt></a>
+  </dd>
+</dl>
+<hr>
+
+<h3>Summary:</h3>
+<p>
+This release is fairly substantial and incudes new
+<a href="https://github.com/SMLFamily/BasisLibrary/wiki/Home"><b>Basis Library</b></a> modules and the start of support for
+<a href="https://github.com/SMLFamily/Proposed-Definition-of-Successor-ML"><b>Successor ML</b></a>,
+which is an evolution of the Standard ML language.
+It also has support for the latest version of Mac OS X (El Capitan) and Linux 4.x kernels,
+and many bug fixes.
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">Compiler:</dt>
+  <dd>
+    <p>
+      The compiler is somewhat faster (about 7% when compiling itself).
+    </p>
+  </dd>
+  <dt class="component">Basis Library:</dt>
+  <dd>
+    <p>
+    This version implements a number of proposed improvements to the <b>Basis Library</b>.
+    <span class="important">Note that these improvements are <i>proposals</i>
+    that have not yet been ratified and are subject to change!</span>
+    Specifically, the following proposals are supported by this version of SML/NJ:
+    </p>
+    <dl>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-001-Correction-to-ListPair"><b>[2015-001]</b> Correction to ListPair</a></dt>
+        <dd>SML/NJ already implemented the semantics described in this proposal.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-002-Addition-of-Either-module"><b>[2015-002]</b> Addition of Either module</a></dt>
+        <dd>This change adds the <span class="code">Either</span> structure to the Basis Library.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-003-Additional-operations-on-sequences"><b>[2015-003]</b> Additional operations on sequences</a></dt>
+        <dd>This change adds operations to the <span class="code">Array</span>,
+	  <span class="code">List</span>, <span class="code">ListPair</span>, <span class="code">Option</span>,
+	  and <span class="code">Vector</span> structures, and to the <span class="code">MONO_ARRAY</span>
+	  and <span class="code">MONO_VECTOR</span> signatures.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-005-Addition-of-Fn-module"><b>[2015-005]</b> Addition of Fn module</a></dt>
+        <dd>This change adds the <span class="code">Fn</span> structure to the Basis Library.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-007-Addition-of-Ref-module"><b>[2015-007]</b> Addition of Ref module</a></dt>
+        <dd>This change adds the <span class="code">Ref</span> structure to the Basis Library.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-009-Policy-for-exceptions-and-partial-applications"><b>[2015-009]</b> Policy for exceptions and partial applications</a></dt>
+        <dd>This change standardizes the generation of exceptions when partially applying curried basis functions.
+          The change fixed bug <b>136</b>.
+        </dd>
+    </dl>
+    <p style="margin-bottom: 0pt;">
+      It is very unlikely that these changes will break existing code, but there are
+      a couple of scenarios in which the code might break.  The first is conflicts created
+      by the use of <span class="kw">open</span>.  For example, the implementation
+      of <span class="exe">ml-yacc</span> had declarations of the form
+    </p>
+    <div class="code">
+    <span class="kw">open</span> Array List
+    </div>
+    <p style="margin-top: 0pt;">
+      which created a type error because <span class="code">List.sub</span> shadowed
+      <span class="code">Array.sub</span>.
+    </p>
+    <p>
+      The second class of problem is when a module implements one of the affected Basis
+      signatures.  For example, the <b>MLRISC</b> library had two modules that implemented
+      extensions of the <span class="code">ARRAY</span> signature and which required
+      modification to compile.
+    </p>
+    <p>
+      In such cases, we recommend updating the source code, but it is also possible to compile
+      against the old version of the <b>Basis Library</b> by changing the line
+    </p>
+    <div class="code">
+    $/basis.cm
+    </div>
+    <p class="compact">
+      to
+    </p>
+    <div class="code">
+    $/basis-2004.cm
+    </div>
+    <p style="margin-top: 0pt;">
+      in your CM files.  Note that backward-compatible version of the <b>Basis Library</b> is only
+      available if the <tt>old-basis</tt> target in <tt>config/targets</tt>
+      was requested when <b>SML/NJ</b> was built (this target is requested
+      by default).
+    </p>
+    <p style="margin-bottom: 0pt;">
+      We have also added implementations of the following optional <b>Basis Library</b>
+      structures:
+    </p>
+    <div class="code">
+      <span class="kw">structure</span> PackReal64Big : PACK_REAL
+      <span class="kw">structure</span> PackReal64Little : PACK_REAL
+      <span class="kw">structure</span> PackRealBig : PACK_REAL
+      <span class="kw">structure</span> PackRealLittle : PACK_REAL
+    </div>
+  </dd>
+</dl>
+
+<dl>
+  <dt class="component">SML/NJ Library:</dt>
+  <dd>
+    <p>
+    Added additional array operations <span class="code">toList</span>,
+    <span class="code">fromVector</span>, and <span class="code">toVector</span> to
+    <span class="code">BitArray</span> module so that it matches the new
+    proposed <b>Basis Library</b> specification.
+    </p>
+  </dd>
+</dl>
+
+<dl>
+  <dt class="component">Concurrent ML:</dt>
+  <dd>
+    <p>
+    Added the additional <b>Basis Library</b> modules described above
+    to the <b>CML</b> version of the library.
+    </p>
+  </dd>
+</dl>
+
+<dl>
+  <dt class="component">Successor ML:</dt>
+  <dd>
+    <p style="margin-bottom: 0pt;">
+    <a href="https://github.com/SMLFamily/Proposed-Definition-of-Successor-ML"><b>Successor ML</b></a>
+    is collection of proposed enhancements to the <b>Standard ML</b> language.
+    In collaboration with the <a href="http://mlton.org"><b>MLton</b></a> implementors, we are
+    starting to add support for these features the <b>SML/NJ</b>.
+    In this release, we have added support for the lexical extensions to the language:
+    </p>
+    <ul>
+      <li>
+        Allow underscore ("<span class="code">_</span>") as a separator in numeric literals;
+	<i>e.g.</i>, <span class="code">123_456</span>,
+        <span class="code">0wxff_ff_ff_f3</span>, <span class="code">123_456.1</span>, ...
+      </li>
+      <li>
+	end-of-line comments, which are denoted using <span class="code">(*)</span>.
+        End-of-line comments properly nest into conventional block comments.  For example,
+	the following block comment is well formed:
+	<div class=code>
+	<span class="com">(*
+	fun f x = x (*) my identity function *)
+	*)</span>
+	</div>
+      </li>
+      <li>
+	binary literals for both integers and words;
+	<i>e.g.</i>, <span class="code">0b0101_1110</span>, or
+	<span class="code">0wb1101</span>.
+      </li>
+    </ul>
+    <p class="compact">
+    These features can be enabled using the command-line option <tt>-Cparser.succ-ml=true</tt>
+    or by using the assignment
+    </p>
+    <div class=code>
+    Control.succML := true;
+    </div>
+    <p style="margin-top: 0pt; margin-bottom: 0pt;">
+    at the REPL.  It is also possible to mark individual source files as
+    being &quot;<b>Successor ML</b>&quot; sources in a CM file.  There are
+    several ways to do so; the easiest is to specify that they should be
+    handled by the &quot;<tt>succ-ml</tt>&quot; tool:
+    </p>
+    <div class="code">
+      foo.sml : succ-ml
+    </div>
+    <p style="margin-top: 0pt; margin-bottom: 0pt;">
+    Alternatively, one can give the &quot;<tt>succ-ml</tt>&quot; argument to the
+    &quot;<tt>sml</tt>&quot; tool:
+    </p>
+    <div class="code">
+      foo.sml : sml (succ-ml)
+      foo.sml (succ-ml)
+    </div>
+    <p style="margin-top: 0pt; margin-bottom: 0pt;">
+    It is also possible to enable them by setting the control flag
+    using the <span class="kw">with</span> keyword in a CM file as
+    illustrated by the following equivalent forms:
+    </p>
+    <div class="code">
+      foo.sml (<span class="kw">with</span>: parser.succ-ml)
+      foo.sml (<span class="kw">with</span>: parser.succ-ml=true)
+      foo.sml (<span class="kw">with</span>:(<span class="kw">name</span>:parser.succ-ml))
+      foo.sml (<span class="kw">with</span>:(<span class="kw">name</span>:parser.succ-ml <span class="kw">value</span>:true))
+    </div>
+  </dd>
+</dl>
+
+<h3>Bugs:</h3>
+    <p>
+    Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a>
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">45</td><td>Compiler bug in specialize phase</td></tr>
+      <tr><td class="bugid">53</td><td>psfig.sty is deprecated, use epsfig.sty wrapper or graphicx.sty</td></tr>
+      <tr><td class="bugid">82</td><td>Implementations of PACK_REAL missing</td></tr>
+      <tr><td class="bugid">131</td><td>ml-ulex does not allow comments in %states directives</td></tr>
+      <tr><td class="bugid">134</td><td>Fails to build with Linux kernel 4.x</td></tr>
+      <tr><td class="bugid">135</td><td>Fails to build on Linux PowerPC</td></tr>
+      <tr><td class="bugid">136</td><td>Incorrect raising of exceptions in Real.fmt and Time.fmt</td></tr>
+      <tr><td class="bugid">137</td><td>Adapt Linux PPC build to use mkstemp instead of tmpnam</td></tr>
+      <tr><td class="bugid">138</td><td>Incorrect behavior for Date.fromTimeLocal</td></tr>
+      <tr><td class="bugid">139</td><td>Date.date is broken</td></tr>
+      <tr><td class="bugid">140</td><td>Lookup failure in closure.sml when compiling Twelf</td></tr>
+<!--      <tr><td class="bugid">XXX</td><td>DESCRIPTION</td></tr> -->
+    </table>
+<!--
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul class="buglist">
+      <li class="bug"></li>
+    </ul>
+-->
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We have verified that the system builds and runs on the following systems.
+</p>
+<div>
+<table>
+  <tr><th>Architecture</th> <th>Operating System</th></tr>
+  <tr><td>PowerPC</td> <td>Mac OS X 10.5 (Leopard)</td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.11 (El Capitan)</td></tr>
+  <tr><td></td> <td>Ubuntu 12.04.4 (GNU/Linux 3.2.0) </td></tr>
+  <tr><td></td> <td>Windows 7</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7)</td></tr>
+</table>
+</div>
+<p>
+We believe that it runs on any recent Linux distribution that has support for 32-bit
+executables, as well as on BSD variants, SPARC/Solaris, and PPC/AIX, but we have not
+tested these systems.
+</p>
+</blockquote>
+
+</body>
+</html>

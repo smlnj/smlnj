@@ -1,0 +1,81 @@
+# Makefile for SML/NJ documentation
+#
+# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =         @SHELL@
+INSTALL =       @INSTALL@
+@SET_MAKE@
+
+# default target base
+#
+TARGET_BASE =		http://smlnj.org
+
+# place to put documentation for doc target
+#
+DOC_DIR =		@OUT_DIR@
+HTML_DST_ROOT =		$(DOC_DIR)/html
+STYLES_DST =		$(HTML_DST_ROOT)/styles  # not used yet
+IMAGES_DST =		$(HTML_DST_ROOT)/images  # not used yet
+
+# root path to place generated HTML files for the SML/NJ web site
+#
+WEB_HTMLDST_ROOT =	@ROOT_DIR@/htdocs
+WEB_STYLES_DST =	$(WEB_HTML_DST_ROOT)/styles
+WEB_IMAGES_DST =	$(WEB_HTML_DST_ROOT)/images
+
+include @MK_DIR@/doc-rules.gmk
+
+DOC_SUBDIRS =		changelog \
+			release-notes \
+			install-notes \
+			extensions \
+			man \
+			manuals
+
+STYLE_IN_FILES =	$(notdir $(wildcard styles/*.in))
+STYLE_DST_FILES =	$(addprefix $(STYLES_DST)/,$(STYLE_IN_FILES:_css.in=.css)))
+IMAGE_FILES =		$(notdir $(wildcard images/*.png images/*jpg))
+IMAGE_DST_FILES =	$(addprefix $(IMAGES_DST)/,$(IMAGE_FILES))
+
+.PHONY:		doc
+doc:		html $(DOC_DIR) readmes smlnj-lib-doc
+
+.PHONY:		html
+html:
+		(cd man; $(MAKE) man)
+		for dir in $(DOC_SUBDIRS) ; do \
+		  (cd $$dir; $(MAKE) doc); \
+		done
+
+$(DOC_DIR):
+	mkdir -p $(DOC_DIR)
+
+# copy the HTML README files into the doc/html/README directory
+#
+.PHONY:		readmes
+readmes:
+	mkdir -p $(HTML_DST_ROOT)/readme
+	cp -p release-notes/*.html $(HTML_DST_ROOT)/readme
+
+# configure and make the SML/NJ Library documentation
+#
+.PHONY:		smlnj-lib-doc
+smlnj-lib-doc:	smlnj-lib/configure
+	(cd smlnj-lib && configure \
+	  --with-smlnj-root="@ROOT_DIR@/.." \
+	  --with-output-dir="$(HTML_DST_ROOT)/smlnj-lib" \
+	  --with-version="@SMLNJ_VERSION@" \
+	  --with-date="@SMLNJ_DATE@")
+	(cd smlnj-lib && make tools)
+	(cd smlnj-lib && make install-offline)
+
+smlnj-lib/configure:
+	(cd smlnj-lib && autoconf -Iconfig)
+
+include @MK_DIR@/clean-rules.gmk
+
+CLEAN_SUBDIRS =	$(DOC_SUBDIRS) smlnj-lib

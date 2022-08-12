@@ -1,0 +1,11 @@
+This directory tree contains general documentation for the SML/NJ system.  It
+is meant as a supplement to more specific documentation for the tools (e.g.,
+CM and ML-LPT) and libraries that are distributed with the system.  The
+documentation is written using the asciidoctor (http://asciidoctor.org) tool.
+
+	src/changelog		-- changelog for SML/NJ system
+	src/extensions		-- a description of language extensions supported
+				   by the SML/NJ system
+	src/man			-- UNIX manual pages for command-line programs
+	src/release-notes	-- the README files for the SML/NJ releases
+

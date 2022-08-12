@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>SML/NJ 110.38 NEWS</title>
+             
+  <meta name="author" content="Matthias Blume">
+       
+  <meta name="description" content="working release announcement for SML/NJ">
+</head>
+  <body>
+     
+<div align="center">   
+<h1>S  M  L   /   N  J &nbsp;                    1  1  0  . 38 &nbsp;   
+  N  E  W  S</h1>
+   </div>
+   <br>
+     
+<div align="center"><i>January 28, 2002</i><br>
+   </div>
+   <br>
+     
+<div align="center"><b>WARNING    	This version is intended for compiler hackers.
+The  	version ought to be stable, however we have not run 	our full regression
+testing.          <a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">
+  http://cm.bell-labs.com/cm/cs/what/smlnj/index.html</a> </b><a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html"><b><br>
+   </b></a> </div>
+   <br>
+     
+<hr width="100%" size="2" align="left">   
+<h3>Summary:</h3>
+     
+<ul>
+   <li>Major internal improvements to MLRISC.</li>
+  <li>A re-worked FFI.</li>
+  <li>Bug fixes.<br>
+  </li>
+       
+</ul>
+     
+<div align="left">   
+<hr width="100%" size="2" align="left">   
+<h3>Details:</h3>
+<ul>
+  <li>
+    <h4>FFI:</h4>
+  </li>
+</ul>
+<blockquote>
+  <ul type="circle">
+    <li>A complete overhaul of the library interfaces and the glue-code generator
+(ml-nlffigen).&nbsp; The implementation now scales much better, making it
+possible to target huge C libraries such as gtk+ etc. (See the README file
+under src/ml-nlffigen.)</li>
+    <li>ML represenation types have been streamlined.</li>
+    <li>Getter and setter functions work with concrete values, not abstract
+ ones where possible.</li>
+    <li>WORD-style bit-operations on INTEGER representations added.</li>
+    <li>Ml-nlffigen command line more flexible (see README file).</li>
+    <li>C_Debug added as an alternative to structure C.&nbsp; The difference
+is that it always checks for NULL on pointer-dereference operations.</li>
+    <li>DynLinkage.open_lib' added.&nbsp; This function takes an additional
+list of library handles.&nbsp; This is used for expressing inter-library
+(symbol-resolution-)dependencies.</li>
+    <li>bug fixes</li>
+  </ul>
+  </blockquote>
+  <ul>
+    <li>
+      <h4>MLRISC:</h4>
+    </li>
+    <ul>
+      <li>There is a dramatic simplification in the interface to the register
+allocator for RISC architectures as a result of making parallel copy instructions
+explicit.&nbsp;</li>
+      <li>Bugs in x86-fast-fp have been fixed.&nbsp; It is now turned on
+by default in SML/NJ.</li>
+      <li>Changed the representation of instructions from being fully abstract
+&nbsp;to being partially concrete.&nbsp; See HISTORY file for more details.</li>
+      <li>Removed the native COPY and FCOPY instructions from all the architectures
+and replaced it with the explicit COPY instruction from the previous commit.</li>
+      <li>Since COPY instructions are no longer native to the architecture,
+a generic functor can be used to implement the expandCopies function.</li>
+      <li>Allowed EXPORT and IMPORT pseudo-op declarations to appear inside
+a TEXT segment.</li>
+      <li>bug fixes<br>
+      </li>
+    </ul>
+  </ul>
+  <ul>
+    <li>
+      <h4>misc:</h4>
+    </li>
+    <ul>
+      <li>Allen Leung's "nowhere" tool added.</li>
+      <li>Minor modifications to pgraph.</li>
+      <li>rounding mode-related bug fixed in Basis library</li>
+    </ul>
+  </ul>
+ 
+  <h5></h5>
+ 
+  <h4></h4>
+   
+  <h4></h4>
+   </div>
+     
+  </body>
+  </html>

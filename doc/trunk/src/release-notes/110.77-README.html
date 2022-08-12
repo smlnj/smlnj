@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.77 NEWS</title>
+<style>
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: x-large;
+    text-align: center;
+  }
+  dt.component {
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    font-size: smaller;
+  }
+  table.buglist {
+    margin-left: 2em;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br/>
+                          Version 110.77 NEWS
+<br/>
+                            August 22, 2014
+<br/>
+<br/>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.77/index.html">
+    <tt>http://smlnj.cs.uchicago.edu/dist/working/110.77/</tt></a>
+  </dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+<p>
+The primary purpose of this release is bug fixes, but it does include some new features
+and adds support for Mac OS X 10.10 (Yosemite).
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">SML/NJ compiler:</dt>
+  <dd>
+    <p>
+    We added the <tt>PackWord</tt>{<tt>16</tt>,<tt>32</tt>}{<tt>Big</tt>,<tt>Little</tt>}
+    structures to the <tt>Unsafe</tt> module.
+    This change makes SML/NJ's <tt>UNSAFE</tt> signature closer to the MLton version.
+    </p>
+  </dd>
+  <dt class="component">ml-lpt</dt>
+  <dd>
+    <p>
+    Fixed an inconsistency in the way that ml-antlr and ml-ulex handled the contents of
+    a <tt>%defs</tt> declaration.  Ml-ulex made these definitions visible in the <tt>UserDeclarations</tt>
+    substructure, whereas ml-antlr hid them.  We have changed the behavior of ml-ulex to match
+    that of ml-antlr (<i>i.e.</i>, hide the user definitions).  We chose to hide the user definitions
+    in ml-ulex because they are usually not useful outside the lexer, hiding them reduces The
+    size of the generated code, and definitions that are needed outside the lexer can be
+    defined in an external module.  Note that the previous behavior remains when ml-ulex is
+    run in ml-lex compatibility mode.  (This change addresses bug #79).
+    </p>
+    <p>
+    Added the <tt>actionToString'</tt> and <tt>repairToString'</tt> functions
+    to the <tt>AntlrRepair</tt> structure.  These functions allow one to
+    specialize the printing of tokens based on whether they are
+    being added or deleted.
+    </p>
+    <p>
+    Removed the <tt>toksToString</tt> function from the tokens structure that ml-antlr
+    generates.  It was originally for use by the <tt>AntlrRepair</tt> structure, but that
+    structure does not use it.
+    </p>
+    <p>
+    Fixed a minor bug where a syntax error in the grammar specification could go undetected and
+    result in a syntatically incorrect output file.
+    </p>
+    <p>
+    Improvements to the documentation.
+    </p>
+  </dd>
+  <dt class="component">SML/NJ Library:</dt>
+  <dd>
+    <p>
+    Added new library for parsing XML files.  The library does not support validation
+    or the full XML syntax.  It is designed to for applications that need to process
+    XML-format data files.  To include the library in a project, add the following
+    line in your CM file:
+    </p>
+    <blockquote class="code">
+$/xml-lib.cm
+    </blockquote>
+    <p>
+    Reimplementation of the delete/remove operations in the red-black-tree
+    versions of sets and maps.  The previous implementation had a bug
+    that could result in violations of the data-structure invariants,
+    which was leading to unbalanced trees and loss of performance.
+    </p>
+    <p>
+    Fixes and improvements to the S-expression parsing library.  The supported syntax
+    is now a proper subset of that found in Lisp-like languages.
+    </p>
+  </dd>
+  <dt class="component">Build scripts</dt>
+  <dd>
+    <p>
+    Changed how the system handles running on Cygwin.  Previously, the default behavior
+    was to run the Win32 version of the runtime.  Now the default behavior is to run
+    the Cygwin (<i>i.e.</i>, Unix) version of the runtime.  Setting the shell variable
+    <tt>SMLNJ_WINDOWS_RUNTIME</tt> to any non-empty value will cause the Win32 runtime
+    to be used.  The script <tt>config/build-windows.sh</tt> has been added to make
+    using Cygwin to build the windows version more convenient.
+    </p>
+  </dd>
+  <dt class="component">Documentation</dt>
+  <dd>
+    <p>
+    This release includes Unix-style manual pages for the command-line tools.  On Mac OS X
+    (x86 only), the installer will copy these to <tt>/usr/local/share/man</tt> (if it exists).
+    </p>
+  </dd>
+</ul>
+
+<h3>Bugs:</h3>
+    <p>
+    Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a>
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">35</td><td>Please ship manpages for binaries</td></tr>
+      <tr><td class="bugid">79</td><td>ml-lpt: inconsistent treatment of <tt>%defs</tt> directive between ml-antlr and ml-ulex</td></tr>
+      <tr><td class="bugid">85</td><td>top-level identfiers in generated code clash with legacy code</td></tr>
+      <tr><td class="bugid">110</td><td><tt>IntInf.~&gt;&gt;</tt> returns the wrong answer on negative input</td></tr>
+      <tr><td class="bugid">119</td><td>Conversion from vector of tuple to vector of vector causes a crash</td></tr>
+      <tr><td class="bugid">120</td><td>Install fails w/ map failure on Chromebook</td></tr>
+      <tr><td class="bugid">124</td><td>Add support for OpenBSD/powerpc</td></tr>
+      <tr><td class="bugid">125</td><td>build script is broken on Cygwin-x86</td></tr>
+      <tr><td class="bugid">127</td><td>Crash on windows with <tt>OS.Process.system</tt></td></tr>
+      <tr><td class="bugid">128</td><td>Basis spec violation, race condition in <tt>OS.Filesys.tmpName()</tt></td></tr>
+<!--      <tr><td class="bugid">XXX</td><td>DESCRIPTION</td></tr> -->
+    </table>
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul class="buglist">
+      <li class="bug">
+        Fixed a long-standing bug in <tt>Socket.recvVec</tt>, which prevented the result
+	from being used in a string pattern match (thanks to Vesa Norrman
+	for the fix).
+      </li>
+      <li class="bug">
+        Fixed minor issue in an error message; type variable name should be
+	printed with leading <tt>'</tt>.
+      </li>
+    </ul>
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We have verified that the system builds and runs on the following systems.
+</p>
+<div>
+<table>
+  <tr><th>Architecture</th> <th>Operating System</th></td>
+  <tr><td>PowerPC</td> <td>Mac OS X 10.5 (Leopard)</td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td></tr>
+  <tr><td></td> <td>Ubuntu 12.04.4 (GNU/Linux 3.2.0) </td></tr>
+  <tr><td></td> <td>Windows 7</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7)</td></tr>
+</table>
+</div>
+<p>
+We believe that it runs on any recent Linux distribute that has support for 32-bit
+executables, as well as on BSD variants, SPARC/Solaris, and PPC/AIX, but we have not
+tested these systems.
+</p>
+</blockquote>
+
+</body>
+</html>

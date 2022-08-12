@@ -1,0 +1,612 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Member classes and tools}
+\label{chap:classes}
+
+Most members of groups and libraries are either plain ML files or
+other description files.  However, it is possible to incorporate other
+types of files---as long as their contents can in some way be expanded
+into ML code or CM descriptions.  The expansion is carried out by CM's
+{\it tools} facility.
+
+CM maintains an internal registry of {\em classes} and associated {\em
+rules}.  Each class represents the set of source files that its
+corresponding rule is applicable to.  For example, the class {\tt
+mlyacc} is responsible for files that contain input for the parser
+generator ML-Yacc~\cite{tarditi90:yacc}.  The rule for {\tt mlyacc}
+takes care of expanding an ML-Yacc specifications {\tt foo.grm} by
+invoking the auxiliary program {\tt ml-yacc}.  The resulting ML files
+{\tt foo.grm.sig} and {\tt foo.grm.sml} are then used as if their
+names had directly been specified in place of {\tt foo.grm}.
+
+CM knows a small number of built-in classes.  In many situations these
+classes will be sufficient, but in more complicated cases it may be
+worthwhile to add a new class.  Since class rules are programmed in
+ML, adding a class is not as simple a matter as writing a rule for
+{\sc Unix}' {\tt make} program~\cite{feldman79}.  Of course,
+using ML has also advantages because it keeps CM extremely flexible in
+what rules can do.  Moreover, it is not necessary to learn yet another
+``little language'' in order to be able to program CM's tool facility.
+
+When looking at the member of a description file, CM determines which
+tool to use by looking at clues like the file name suffix.  However,
+it is also possible to specify the class of a member explicitly.  For
+this, the member name is followed by a colon {\bf :} and the name of
+the member class.  All class names are case-insensitive.
+
+In addition to genuine tool classes, there are four member classes
+that refer to facilities internal to CM:
+\begin{description}
+\item[{\tt sml}] is the class of ordinary ML source files.
+\item[{\tt cm}] is the class of CM library or group description files.
+\item[{\tt tool}] is the class of {\em plugin tools}.  Its purpose is
+to trigger the loading of an auxiliary plugin module---usually with the
+purpose of extending the set of tool classes that CM understands.
+See \secref{sec:plugintools} for more information.
+\item[{\tt suffix}] is a class similar to {\tt tool}.  Its purpose is
+to declare additional filename suffixes and their associated classes.
+See \secref{sec:plugintools}.
+\end{description}
+
+By default, CM automatically classifies files with a {\tt .sml}
+suffix, a {\tt .sig} suffix, or a {\tt .fun} suffix as ML-source, file
+names ending in {\tt .cm} as CM descriptions.  Failure to classify a
+member will be reported as an error.
+
+\section{Tool parameters}
+\label{sec:toolparam}
+
+In many cases the name of the member that caused a rule to be invoked
+is the only input to that rule.  However, rules can be written in such
+a way that they take additional parameters.  Those parameters, if
+present, must be specified in the CM description file between
+parentheses following the name of the member and the optional member
+class.
+
+CM's core mechanism parses these tool options and breaks them up into
+a list of items, where each item is either a filename (i.e., {\em
+looks} like a filename) or a named list of sub-options.  However, CM
+itself does not interpret the result but passes it on to the tool's
+rule function.  It is in each rule's own responsibility to assign
+meaning to its options.
+
+All named sub-option lists (for any class) are specified by a name
+string followed by a colon {\bf :} and a parenthesized list of other
+tool options.  If the list contains precisely one element, then its
+parentheses may be omitted.
+
+\subsection{Parameters for class {\tt sml}}
+\label{sec:toolparam:sml}
+
+The {\tt sml} class accepts four optional parameters.  One is the {\em
+sharing annotation} that was explained earlier (see
+\secref{sec:sharing}).  The sharing annotation must be one of the
+two strings {\tt shared} and {\tt private}.  If {\tt shared} is
+specified, then dynamic state created by the compilation unit at
+link-time must be shared across invocations of {\tt CM.make} or {\tt
+CM.autoload}.  The {\tt private} annotation, on the other hand, means
+that dynamic state cannot be shared across such calls to {\tt CM.make}
+or {\tt CM.autoload}.
+
+The second possible parameter for class {\tt sml} is a sub-option
+list labeled {\tt setup} and can be used to specify code that will be
+executed just before and just after the compiler is invoked for the
+ML source file.  Code to be executed before compilation is labeled
+{\tt pre}, code to be executed after compilation is complete is
+labeled {\tt post}; either part is optional.  Executable code itself
+is specified using strings that contain ML source text.
+
+For example, if one wishes to disable warning messages for a specific
+source file {\tt poorlywritten.sml} (but not for others), then one
+could write:
+
+\begin{lstlisting}[language=CM]
+  poorlywritten.sml (setup:(pre: "local open Compiler.Control\n\
+                                 \   in val w = !printWarnings before\n\
+                                 \              printWarnings := false\n\
+                                 \  end;"
+                            post:"Compiler.Control.printWarnings := w;"))
+\end{lstlisting}%
+
+\noindent Note that neither the pre- nor the post-section will be
+executed if the ML file does not need to be compiled.
+
+The pre-section is compiled and executed in the current
+toplevel-environment while the post-section uses the
+toplevel-environment augmented with definitions from the pre-section.
+After the ML file has been compiled and the post-section (if present)
+has completed execution, definitions made by either section will be
+erased.  This means that setup code for other files {\em cannot} refer
+to them, and neither can code that in the future might be entered at
+top level.
+
+The third possible parameter for class {\tt sml} is a
+sub-option labelled {\tt lambdasplit}.  It controls the cross-module
+inlining mechanism of SML/NJ.\footnote{The label is named after the
+technique (``$\lambda$-splitting''~\cite{blume97:lsplit}) used to
+achieve the effect of cross-module inlining.}  The value of the option
+can either be a non-negative decimal integer or one of the following
+words: {\tt default}, {\tt on}, {\tt off}, or {\tt infinity}.  The
+effect of this parameter also depends on a system-wide setting
+(accessible via structure {\tt Compiler.Control.LambdaSplitting}).
+In the following table, the per-file {\tt lambdasplit} parameter is
+shown at the top and the system-wide default is shown on the left
+side.  Table entries show the combined effect of the two: -1
+means ``no inlinable exports from this file'', $\infty$ means
+``as many inlinable exports as possible'', and a non-negative numeric
+value specifies some intermediate ``aggressiveness'' of the splitting
+engine.
+
+\begin{center}
+\begin{tabular}{r||l|l|l|l|l}
+             & {\tt default} & {\tt on} & {\tt off} & {\tt infinity} & $n$ \\
+\hline \hline
+{\tt Off}    & $-1$          & $-1$     & $-1$      & $-1$           & $-1$ \\
+\hline
+{\tt Default NONE } & $-1$   & $0$      & $-1$      & $\infty$       & $n$ \\
+\hline
+{\tt Default (SOME $m$)} & $m$ & $m$    & $-1$      & $\infty$       & $n$
+\end{tabular}
+\end{center}
+
+Finally, the last possible parameter for class {\tt sml} is the string
+{\tt local}.  A file marked {\tt local} will be ignored when
+calculating the symbol set for an occurence of {\tt source(-)} within
+the export list (see \chapref{chap:exportcalculus}).
+
+\subsection{Parameters for class {\tt cm}}
+\label{sec:toolparam:cm}
+
+The {\tt cm} class understands two kinds of parameters.  The first is
+a named parameter labeled by the string {\tt version}.  It must have
+the format of a version number.  CM will interpret this as a version
+request, thereby insuring that the imported library is not too old or
+too new. (See \chapref{chap:versions} for more on this topic.)
+
+Example:
+
+\begin{lstlisting}[language=CM]
+  euler.cm (version:2.71828)
+  pi.cm    (version:3.14159)
+\end{lstlisting}%
+
+Normally, CM looks for stable library files in directory
+{\tt CM/}{\it arch}{\tt -}{\it os} (see \chapref{chap:files}).
+However, if an explicit version has been requested, it will first try
+directory {\tt CM/}{\it version}{\tt /}{\it arch}{\tt -}{\it os}
+before looking at the default location.  This way it is possible to
+keep several versions of the same library in the file system.
+
+However, CM normally does {\em not} permit the simultaneous use of
+multiple versions of the same library in one session.  The
+disambiguating rule is that the version that gets loaded first
+``wins''; subsequent attempts to load different versions result in
+warnings or errors.  (See the discussion of {\tt CM.unshare} in
+\secref{sec:libreg} for how to to circumvent this restriction.)
+
+The second kind of parameter understood by {\tt cm} is a named
+parameter labeled by the string {\tt bind} (see
+\secref{sec:anchor:env}).  It can occur arbitrarily many times
+and each occurence must be a suboption-list of the form {\tt
+(anchor:$a$ value:$v$)}.  The set of {\tt bind}-parameters augments
+the current anchor environment to form the environment that is used
+while processing the contents of the named CM description file.
+
+\subsection{Parameters for classes {\tt tool} and {\tt suffix}}
+
+Class {\tt tool} (see the discussion is \secref{sec:localtools})
+does not accept any parameters.
+
+Class {\tt suffix} (see \secref{sec:localsuffixes}) takes one
+mandatory parameter which is either simply a class name or the same
+class name labeled by {\tt class}.  Thus, the following two lines are
+equivalent:
+
+\begin{lstlisting}[language=CM]
+ml : suffix (sml)
+ml : suffix (class:sml)
+\end{lstlisting}%
+
+There are no recognized filename suffixes for these two classes.
+
+\section{Built-in tools}
+\label{sec:builtin-tools}
+
+\subsection{Program generators}
+
+Ths SML/NJ installation includes a number of program generators that
+come with CM tools.
+These are summarized in the following table, which lists the tool name, its class,
+the file suffixes that are mapped to the tool, and a description of the tool.
+\begin{center}\small
+  \begin{tabular}{ccccp{3in}}
+    \textbf{Name} & \textbf{Class} & \textbf{Suffixes} & \textbf{Options?} & \textbf{Description} \\ \hline
+    ASDLGen & \texttt{asdlgen} & \texttt{.asdl} & no
+      & Source file is an ASDL specification that should be processed by the \CMD{asdlgen}
+        command to produce type definitions and pickling code.
+    \\[0.5em]
+    ML-Antlr & \texttt{ml-antlr} & \texttt{.grm} (see below) & no
+      & Source file is
+    \\[0.5em]
+    ML-Burg & \texttt{ml-burg} & \texttt{.burg} & no
+      & Source file is a specification file for the \CMD{ml-burg}
+        code-generater generator~\cite{mlburg93}.
+    \\[0.5em]
+    ML-Lex & \texttt{mllex} & \texttt{.lex} and \texttt{.l} & no
+      & Source file is  a lexer-specification that should be processed with the
+        \CMD{ml-ulex} parser generator tool run with the \texttt{--ml-lex-mode}
+        command-line flag.
+    \\[0.5em]
+    ML-ULex & \texttt{ml-ulex} & \texttt{.lex} (see below) & no
+      & Source file is a lexer-specification that should be processed with the
+        \CMD{ml-ulex} parser generator tool.
+    \\[0.5em]
+    ML-Yacc & \texttt{mlyacc} & \texttt{.grm} and \texttt{.y} & yes
+      & Source file is a grammar file that should be processed with the
+        \CMD{ml-yacc} parser generator tool.
+    \\
+    \hline
+  \end{tabular}%
+\end{center}%
+
+These tools invoke the corresponding command if the target is outdated.
+Unless anchored using the path anchor mechanism (see
+\secref{sec:anchor:env}), the command is located
+using the operating system's path search mechanism (\eg{}, the {\tt
+\$PATH} environment variable).
+
+The suffixes for the ML-Antlr and ML-ULex tools are in conflict with those of the
+ML-Yacc and ML-Lex tools (resp.).  In the default installation of SML/NJ, the \texttt{.grm}
+suffix is mapped to ML-Yacc and the \texttt{.lex} suffix is mapped to ML-Lex.
+It is possible to change this behavior by editing the \texttt{config/targets} file
+prior to installation.
+
+As noted in the above table, the {\tt mlyacc} class accepts two optional
+tool parameters labeled {\tt sigoptions}
+and {\tt smloptions}.  They specify tool options to be passed on to
+the generated {\tt .sig}- and {\tt .sml}-files, respectively.
+Example\footnote{Since the generated {\tt .sig}-file contains nothing
+more than an ML signature definition, it is typically not very useful
+to pass any options to it.}:
+
+\begin{lstlisting}[language=CM]
+  lang.grm (sigoptions:(setup:(pre:"print \"compiling lang.grm.sig\\n\";"))
+            smloptions:(private))
+\end{lstlisting}%
+
+\subsection{Shell}
+
+The Shell tool can be used to specify arbitrary shell commands to be
+invoked on behalf of a given file.  The name of the class is {\tt
+shell}.  There are no recognized file name suffixes.  This means that
+in order to use the shell tool one must always specify the {\tt shell}
+member class explicitly.
+
+The rule for the {\tt shell} class relies on tool parameters.  The
+parameter list must be given in parentheses and follow the {\tt shell}
+class specification.
+
+Consider the following example:
+
+\begin{lstlisting}[language=CM]
+  foo.pp : shell (target:foo.sml options:(shared)
+                        /lib/cpp -P -Dbar=baz %s %t)
+\end{lstlisting}%
+
+This member specification says that file {\tt foo.sml} can be obtained
+from {\tt foo.pp} by running it through the C preprocessor {\tt cpp}.
+The fact that the target file is given as a tool parameter implies
+that the member itself is the source.  The named parameter {\tt
+options} lists the tool parameters to be used for that target. (In the
+example, the parentheses around {\tt shared} are optional because it
+is the only element of the list.) The command line itself is given by
+the remaining non-keyword parameters.  Here, a single {\bf \%s} is
+replaced by the source file name, and a single {\bf \%t} is replaced
+by the target file name; any other string beginning with {\bf \%} is
+shortened by its first character.
+
+In the specification one can swap the positions of source and target
+(i.e., let the member name be the target) by using a {\tt source}
+parameter:
+
+\begin{lstlisting}[language=CM]
+  foo.sml : shell (source:foo.pp options:shared
+                         /lib/cpp -P -Dbar=baz %s %t)
+\end{lstlisting}%
+
+Exactly one of the {\tt source} and {\tt target} parameters must be
+specified; the other one is taken to be the member name itself.  The
+target class can be given by writing a {\tt class} parameter whose
+single sub-option must be the desired class name.
+
+The usual distinction between native and standard filename syntax
+applies to any given {\tt source} or {\tt target} parameter.
+
+For example, if one were working on a Win32 system and the target file
+is supposed to be in the root directory on volume {\tt D:},
+then one must use native syntax to write it.  One way of doing this
+would be:
+
+\begin{lstlisting}[language=CM]
+  "D:\\foo.sml" : shell (source : foo.pp options : shared
+                               cpp -P -Dbar=baz %s %t)
+\end{lstlisting}%
+
+\noindent As a result, {\tt foo.sml} is interpreted using native
+syntax while {\tt foo.pp} uses standard conventions (although in this
+case it does not make a difference).  Had we used the {\tt target}
+version from above, one would have to write:
+
+\begin{lstlisting}[language=CM]
+  foo.pp : shell (target : "D:\\foo.sml" options : shared
+                                 cpp -P -Dbar=baz %s %t)
+\end{lstlisting}%
+
+The shell tool invokes its command whenever the target is outdated
+with respect to the source.
+
+\subsection{Make}
+
+The Make tool (class {\tt make}) can (almost) be seen as a specialized
+version of the Shell tool.  It has no source and one target (the
+member itself) which is always considered outdated.  As with the Shell
+tool, it is possible to specify target class and parameters using the
+{\tt class} and {\tt options} keyword parameters.
+
+The tool invokes the shell command {\tt make} on the target.  Unless
+anchored using the path anchor mechanism~\ref{sec:anchor:env}, the
+command will be located using the operating system's path search
+mechanism (\eg{}, the {\tt \$PATH} environment variable).
+
+Any parameters other than the {\tt class} and {\tt options}
+specifications must be plain strings and are given as additional
+command line arguments to {\tt make}.  The target name is always the
+last command line argument.
+
+Example:
+
+\begin{lstlisting}[language=CM]
+  bar-grm : make (class:mlyacc -f bar-grm.mk)
+\end{lstlisting}%
+
+Here, file {\tt bar-grm} is generated (and kept up-to-date) by
+invoking the command:
+\begin{lstlisting}[language=CM]
+  make -f bar-grm.mk bar-grm
+\end{lstlisting}%
+\noindent The target file is then treated as input for {\tt ml-yacc}.
+
+Cascading Shell- and Make-tools is easily possible.  Here is an
+example that first uses Make to build {\tt bar.pp} and then filters
+the contens of {\tt bar.pp} through the C preprocessor to arrive at
+{\tt bar.sml}:
+
+\begin{lstlisting}[language=CM]
+  bar.pp : make (class:shell
+                     options:(target:bar.sml cpp -Dbar=baz %s %t)
+                 -f bar-pp.mk)
+\end{lstlisting}%
+
+\subsection{Noweb}
+\label{sec:builtin-tools:noweb}
+
+The {\tt noweb} class handles sources written for Ramsey's {\it noweb}
+literate programming facility~\cite{ramsey:simplified}.  Files ending
+with suffix {\tt .nw} are automatically recognized as belonging to
+this class.
+
+The list of targets that are to be extracted from a noweb file must be
+specified using tool options.  A target can then have a variety of its
+own options.  Each target is specified by a separate tool option
+labelled {\tt target}.  The option usually has the form of a
+sub-option list.  Recognized sub-options are:
+
+\begin{description}
+\item[name] the name of the target
+\item[root] the (optional) root tag for the target (given to the {\tt
+-R} command line switch for the {\tt notangle} command); if {\tt root}
+is missing, {\tt name} is used instead
+\item[class] the (optional) class of the target
+\item[options] (optional) options for the tool that handles the
+target's class
+\item[lineformat] a string that will be passed to the {\tt -L} command
+line option of {\tt notangle}
+\end{description}
+
+Example:
+
+\begin{lstlisting}[language=CM]
+  project.nw (target:(name:main.sml options:(private))
+              target:(name:grammar class:mlyacc)
+              target:(name:parse.sml))
+\end{lstlisting}%
+
+In place of the sub-option list there can be a single string option
+which will be used for {\tt name} or even an unnamed parameter (i.e.,
+without the {\tt target} label).  If no targets are specified, the
+tool will assume two default targets by stripping the {\tt .nw}
+suffix (if present) from the source name and adding {\tt .sig} as well
+as {\tt .sml}.
+
+The following four examples are all equivalent:
+
+\begin{lstlisting}[language=CM]
+  foo.nw (target:(name:foo.sig) target:(name:foo.sml))
+  foo.nw (target:foo.sig target:foo.sml)
+  foo.nw (foo.sig foo.sml)
+  foo.nw
+\end{lstlisting}%
+
+If {\tt lineformat} is missing, then a default based on the target
+class is used.  Currently only the {\tt sml} and {\tt cm} classes are
+known to CM; other classes can be added or removed by using the {\tt
+NowebTool.lineNumbering} controller function exported from library
+{\tt \$/noweb-tool.cm}:
+
+\begin{lstlisting}[language=CM]
+  val lineNumbering: string -> { get: unit -> string option,
+                                 set: string option -> unit }
+\end{lstlisting}%
+
+The {\tt noweb} class accepts two other parameter besides {\tt
+target}:
+
+\begin{description}
+\item[subdir] specifies a sub-option that is used to specify a
+directory where derived files (i.e., target files and witness files as
+far as they have been specified using relative path names) are
+created.  If the {\tt subdir} option is missing, its value defaults to
+{\tt NW}.
+\item[witness] specifies an auxiliary derived file whose time stamp is
+used by CM to avoid recompiling extracted files whose contents have
+not changed.  If {\tt witness} has not been specified, then CM uses
+time stamps on extracted files directly to determine whether {\tt
+notangle} needs to be run.  Thus, with no witness, any change to the
+master file causes time stamps on all extracted files to be updated as
+well.  If a witness was specified, then CM will write over extracted
+files, causing their time stamps to change, only if their contents
+have also changed.  The {\tt subdir} specification also applies to the
+name of the witness file.
+\end{description}
+
+Example:
+
+\begin{lstlisting}[language=CM]
+  foo.nw (subdir:NOWEBFILES
+          witness:foo.wtn
+          target:(name:main.sml))
+\end{lstlisting}%
+
+Here, the files named {\tt main.sml} and {\tt foo.wtn} will be
+created as
+\begin{lstlisting}[language=CM]
+  NOWEBFILES/main.sml
+  NOWEBFILES/foo.wtn
+\end{lstlisting}%
+\noindent while without the {\tt subdir}-option it would have been
+\begin{lstlisting}[language=CM]
+  NW/main.sml
+  NW/foo.wtn
+\end{lstlisting}%
+\noindent To avoid the creation of such a sub-directory, one can use
+the {\em current arc} ``{\bf .}'' and write:
+\begin{lstlisting}[language=CM]
+  foo.nw (subdir:.
+          witness:foo.wtn
+          target:(name:main.sml))
+\end{lstlisting}%
+
+\subsection{Dir}
+\label{sec:builtin-tools:dir}
+
+Using the Dir tool one can use directory names in description files.
+There are two possible uses for the Dir tool:
+
+\begin{enumerate}
+\item Factoring out common directory names.
+\item Scanning the contents of directories for files with ML code.
+\end{enumerate}
+
+\paragraph{Directory factoring:}
+The main purpose of the Dir tool (class {\tt dir}) is to simplify CM
+descriptions that mention a large number of files all of which are
+located in in the same directory.  For this style of usage, tool
+options have to be specified.
+
+For example, writing
+
+\begin{lstlisting}[language=CM]
+Group is
+  long/directory/name : dir (a.sml b/c.sml d.sml)
+\end{lstlisting}%
+
+is equivalent to the following verbose description:
+
+\begin{lstlisting}[language=CM]
+Group is
+  long/directory/name/a.sml
+  long/directory/name/b/c.sml
+  long/directory/name/d.sml
+\end{lstlisting}%
+
+Since CM automatically classifies directory names as members of class
+{\tt dir}, the example can be further simplified:
+
+\begin{lstlisting}[language=CM]
+Group is
+  long/directory/name (a.sml b/c.sml d.sml)
+\end{lstlisting}%
+
+Options for class {\tt dir} consist of a list of items, each item
+having one of two possible forms:
+
+\begin{enumerate}
+\item The item can be a sub-option list of the form
+{\tt member:($m$ class:$c$ options:$o$)} which emulates an ordinary
+member specification with class and options.  The {\tt class}- and
+{\tt options}-fields may (independently of each other) be missing, but
+the order of fields that are present is fixed.
+\item The item can be a simple name (as shown in the example).  Such a
+simple name $m$ is equivalent to the longer form {\tt member:($m$)}.
+\end{enumerate}
+
+Members $m$ must always be specified using {\em relative} path names.
+
+For example, the description
+
+\begin{lstlisting}[language=CM]
+Group is
+  alpha/a.sml (private)
+  alpha/b.ml : sml (shared)
+  alpha/c.cm
+  beta/d.sml
+  beta/e.sml
+\end{lstlisting}%
+
+can be simplified as:
+
+\begin{lstlisting}[language=CM]
+Group is
+  alpha (member:(a.sml options:private)
+         member:(b.ml class:sml options:shared)
+         c.cm)
+  beta (d.sml e.sml)
+\end{lstlisting}%
+
+\paragraph{Directory scanning:}
+Another use of the Dir tool, indicated by the absence of tool options,
+is to include all ML code in a given directory ``whole-sale style''.
+For example, a member of the form
+
+\begin{lstlisting}[language=CM]
+  projects/ml/foo : dir
+\end{lstlisting}%
+
+lets CM scan the contents of directory {\tt projects/ml/foo} and
+proceed as if a list of all discovered ML files had been written
+in place of the {\tt dir} member.  For this, the usual classification
+mechanism is used to decide which directory entries are to be
+considered files containing ML code.
+
+As before, the example could be further simplified by omitting the
+class name.  Thus, a very quick way of putting together a small
+project is to use a generic description file of the form:
+
+\begin{lstlisting}[language=CM]
+Group is $/basis.cm .
+\end{lstlisting}%
+% $
+
+As usual, the dot denotes the current directory.  Therefore, CM will
+scan the current directory and include any ML code it finds there.
+(Library {\tt \$/basis.cm} is necessary for most non-trivial programs,
+so we included it also.)
+
+This is deceptively simple, but be warned: The technique of letting CM
+scan the physical directory is to be avoided for any serious project
+because it is very fragile.  It does not mix well with the use of
+other tools, it will break when certain otherwise unrelated ML files
+are present, and so on, and so forth. In short, for serious
+programming the Dir tool should not be used without specifying
+options.

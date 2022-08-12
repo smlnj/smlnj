@@ -1,0 +1,19 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure GenTOC
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/json-lib.cm
+
+  ../index/sources.cm
+
+  gen-toc.sml

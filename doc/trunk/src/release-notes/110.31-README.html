@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>SML/NJ Version 110.31 NEWS</title>
+  </head>
+
+  <body bgcolor="white">
+   <center><h1>Standard ML of New Jersey<BR>
+        Version 110.31, December 8, 2000</h1>
+   </center>
+
+   <center>
+      <a href=http://cm.bell-labs.com/cm/cs/what/smlnj/index.html>
+      Home page</a>
+   </center>
+
+<blockquote>
+<center>
+<h2> Warning </h2>
+</center>
+ <blockquote>
+ <blockquote>
+    <em>
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+    </em>
+ </blockquote> 
+ </blockquote>
+
+
+<hr>
+
+<center><h2>Summary:</h2></center>
+<UL>
+<LI>  Socket related bug fixes.
+<p>
+<LI>  Improvements to CM autoloading.
+<p>
+<LI> General cleanup in the use of CM libraries in the compiler. 
+<p>
+<LI> A new x86 fp compilation strategy. 
+<p>
+<LI> Removal of regmaps from MLRISC.
+<p>
+</UL>
+<hr>
+
+<center><h3>Bug fixes </h3></center>
+<ul>
+<li> 1514.  sockets c-library broken 
+<p>
+<li> 1582.  SysErr exception connecting to socket
+<p>
+<li> 1585. getpeername in sockets
+<p>
+</ul>
+
+<hr>
+<center><h3>CM </h3></center>
+  Drastically improved link traversal code, resulting is faster load
+  times for CM and CMB.
+<p>
+  Changed CM tool-plugin mechanism. See new manual
+<p>
+  Made pickle-lib.cm and eliminated use of comp-lib.cm
+<p>
+
+<hr>
+
+<center><h3>SML/NJ Library </h3></center>
+  Fixed "where" clause to GraphSCCFn.
+<hr>
+<center><h3>MLRISC </h3></center>
+ <h4>Intel x86 floating point </h4>
+   As of 110.31, there is an alternative floating point code generator
+   and register allocator for the x86.  Since this is still experimental,
+   by default this is turned off.  To turn this on, do:
+ 
+<pre>
+     CM.autoload "$smlnj/compiler.cm";
+     Compiler.Control.MLRISC.getFlag "x86-fast-fp" := true;
+</pre>
+
+   The new floating point code generator treats the x86 fp stack as
+   7 registers, plus one temporary, and directly allocates floating point
+   values into these registers.  
+   Currently, fp parameter passing is still
+   done through memory, so the new code generator only benefits floating
+   point heavy loops.  However, code compiled under the old and new 
+   code generator can coexist. The algorithm is described in 	
+   <a href=http://cm.bell-labs.com/cm/cs/what/smlnj/compiler-notes/x86-fp.ps> 
+   this paper</a>.
+<p>
+    We compared Version 110.30 compiling the PCLubIN entry in the
+    ICFP'00 programming context. 
+
+<pre>
+			   110.30    new fp   Speedup
+     (ICFP00, PCLubIN)
+     chess.gml             22.16     20.98       5.63%
+     cone-fractal.gml       5.70      5.45       4.51%
+     cylinder.gml           1.61      1.58       2.28%
+     dice.gml               7.33      6.88       6.57%
+     ellipsoid.gml          1.35      1.30       4.16%
+     fov.gml                2.63      2.51       4.70%
+     Fractal.gml           42.08     41.03       2.56%
+     golf.gml               3.09      2.95       4.75%
+     holes.gml              3.72      3.50       6.40%
+     house.gml              1.41      1.33       5.71%
+     intercyl.gml           3.02      2.78       8.41%
+     large.gml              8.01      7.81       2.64%
+     pipe.gml               6.35      5.78      10.01%
+     snowgoon.gml           4.70      4.31       8.95%
+     spheres.gml            1.26      1.17       6.98%
+     spotlight.gml          0.71      0.68       4.69% 
+</pre>
+
+     By inlining Array2 in the same benchmark we get the following results:
+
+<pre>
+			       110.30   new fp Speedup
+     chess.gml                 21.85s  21.46s  1.83%
+     cone-fractal.gml           5.82s   5.47s  6.28%
+     cylinder.gml               1.57s   1.61s -2.85%
+     dice.gml                   7.57s   6.85s 10.50%
+     ellipsoid.gml              1.33s   1.25s  6.74%
+     fov.gml                    2.75s   2.57s  7.01%
+     fractal.gml               22.64s  21.52s  5.20%
+     golf.gml                   3.04s   2.92s  4.25%
+     holes.gml                  3.66s   3.48s  5.11%
+     house.gml                  1.39s   1.29s  7.74%
+     intercyl.gml               3.00s   2.78s  7.91%
+     large.gml                  7.91s   7.82s  1.13%
+     pipe.gml                   6.44s   5.65s 13.98%
+     snowgoon.gml               4.75s   4.29s 10.53%
+     spheres.gml                1.22s   1.12s  8.36%
+     spotlight.gml              0.71s   0.68s  5.62%
+</pre>
+
+     Results from other benchmarks:
+<pre>
+     barnes-hut            1.714     1.696        1.0%   
+     fft                   0.954     0.906        5.2%
+     mandelbrot            19.91     14.99       32.8%
+     matrix-multiply(a)    47.77     45.81        4.3%
+     matrix-multiply(b)    17.04     15.42       10.5%
+     simple                 3.02      2.69       12.3%
+     tsp                    1.75      1.656       5.6%
+</pre>
+	NOTE: Matrix multiply(b) has all bounds checking removed.
+
+     Each test is run 10 times and I take the average.
+
+     Overall, the numbers do not improve as much as I was hoping, except for
+     mandelbrot.  The following benchmarks compare smlnj with mlton and C:
+
+<pre>
+		     mandelbrot fft    barnes-hut 
+     sml/nj 110.30   19.91      0.96   1.71       
+     sml/nj new fp   14.99      0.90   1.71       
+     gcc -O          14.83      
+     gcc -O6         14.01      0.68
+     mlton -O6       17.46      1.04   1.62       
+     (version 200000906) 
+</pre>
+
+ <h4>Internal <tt> regmap</tt> Changes </h4>
+<ol>
+<p><li> Changed interface to <tt>CELLS</tt> and the type of <tt>cell</tt>, <tt>cellkind</tt>, <tt>cellset</tt> etc. 
+
+<p><li> No more regmaps!!  The attributes of cells, including its current color,  
+      are accessible from <tt>CELLS</tt> interface.  Cells can now take arbitrary 
+      annotations.  [They will also have a width attribute in the next 
+      go around.]
+
+<p><li> Interface of <tt>STREAM</tt> etc have changed (again, no more regmap).
+
+<p><li> Some MLTREE constructors, like <tt>IF</tt>, <tt>BCC</tt>, <tt>JMP</tt>, <tt>CALL</tt>, etc have 
+      been simplified.  <tt>CVTI2I</tt> has been renamed into <tt>SX</tt> and <tt>ZX</tt> respectively,
+      following the lambda rtl convention.
+
+<p><li> The old RA interface was getting too complicated.  There are now
+      two functors, <tt>RISC_RA</tt> (in ra/risc_ra.sml) and <tt>X86RA</tt> (in x86/ra/x86RA.sml)
+      which abstract out from all the ugly business.  The first is for
+      RISC machines, and the second is for x86.  Please let us know if you
+      use these functors.
+
+<p><li> The cell change broke the peephole phases, because they used to
+      pattern match on specific cell number.  I (Allen) hacked up a simple 
+      tool to translate fake SML with where clauses into real ML.  This makes 
+      it much easier to write the rules.  Seems to work. (See Tools/WhereGen) 
+</ol>
+
+<hr>
+
+    <font size=-2>
+    <address><a href="mailto:george@research.bell-labs.com">
+		Lal George</a></address>
+<!-- Created: Thu Aug  6 00:13:09 EDT 1998 -->
+<!-- hhmts start -->
+Last modified: Fri Dec  8 15:15:08 EST 2000
+<!-- hhmts end -->
+    </font>
+</blockquote>
+</body>
+</html>

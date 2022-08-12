@@ -1,0 +1,64 @@
+= The `XMLParserFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `XMLParserFn` functor generates a parser for the given *SML*
+tree representation.  The treatment of whitespace and comments
+when parsing is determined by the `Schema` substructure of the
+functor argument.
+
+== Synopsis
+
+[source,sml]
+------------
+signature XML_PARSER
+functor XMLParserFn (XT : XML_TREE) : XML_PARSER
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+XT : XML_TREE
+------------
+
+== Functor Argument Description
+
+`XT : XML_TREE`::
+  Defines the tree representation used for the result of the parser, as well
+  as the policy for handling whitespace and comments.
+
+== Interface
+
+[source,sml]
+------------
+structure XMLTree : XML_TREE
+
+val parseFile : string -> XMLTree.tree
+
+exception ParseError of string
+------------
+
+== Interface Description
+
+`[.kw]#structure# XMLTree : XML_TREE`::
+  The argument structure.
+
+`[.kw]#val# parseFile : string \-> XMLTree.tree`::
+  `parseFile file` returns the tree representation of the named text file.
+  The xref:#exn:ParseError[`ParseError`] exception is raised if a syntax
+  error is encountered during parsing.
+
+[[exn:ParseError]]
+`[.kw]#exception# ParseError of string`::
+  This exception is raise with a useful error message as its argument when
+  a syntax error is encountered by the parser.
+
+== See Also
+
+xref:sig-XML_SCHEMA.adoc[`XML_SCHEMA`],
+xref:sig-XML_TREE.adoc[`XML_TREE`],
+xref:xml-lib.adoc[__The XML Library__]

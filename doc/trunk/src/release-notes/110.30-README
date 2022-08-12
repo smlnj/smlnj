@@ -1,0 +1,84 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  0      N  E  W  S
+			
+  		           November 4, 2000
+
+Summary:
+	
+	o Port to ppc Linux (thanks to Carl Pulley).
+
+        o support for fsqrt, fptan, fcos, fsin.
+
+	o Several CM and CMB changes.
+ 
+ 	o Some critical bug fixes
+
+ 		------------------------------------
+
+Bug fixes:
+	o 1514.  sockets c-library broken 
+	o 1582.  SysErr exception connecting to socket
+
+
+Back ends:
+
+ x86:
+
+   All back ends now directly generate the sqrt instruction, and the Intel 
+   x86 also generate the trig instructions to implement sine, cosine, and
+   tangent.
+
+   The ICFP00, PCLubIN entry shows a significant improvement as a result
+   (most of it coming from fsqrt).
+
+
+			     110.29	110.30	     Speedup%
+			 ------------------------------------
+    tests/chess.gml:	      21.63      18.38	      17.67	
+    tests/cone-fractal.gml:    6.24       4.71	      32.46	
+    tests/dice.gml:	       8.81       6.14	      43.53	
+    tests/fractal.gml:	      46.25      35.57	      30.03     
+    tests/golf.gml:	       3.24       2.62	      23.73     
+    tests/holes.gml:	       4.26       3.15	      35.41     
+    tests/intercyl.gml:	       4.43       2.52	      75.87     
+    tests/large.gml:	       7.27       6.68	       8.83     
+    tests/pipe.gml:	       8.71       5.23	      66.42     
+    tests/snowgoon.gml:	       5.41       3.99	      35.83     
+    ---------------------------------------------------------
+    Geometric Mean	       8.06	  5.94	      31.64%    
+
+
+CM (compilation manager):
+
+  Changes to scripts:
+      * "ml-build" for generating standalone programs
+      * "ml-makedepend" (new!) for generating Makefile dependencies
+        (not generally required but some project might want them)
+      * "sml" - the main driver script for running SML/NJ.
+     + All these scripts now accept more CM-related command-line options.
+     + ml-build is faster and cleverer in avoiding unnecessary work.
+
+  Type of CM.mk_standalone has changed.
+
+  All user-visible changes to CM (including the above-mentioned scripts)
+    are documented in the CM manual.  Some errors and omissions have been
+    corrected as well.
+
+  Bug fixes to CM's internals (e.g., missing or repeated error messages).
+
+  Pickling/Unpickling improvements result in faster autoloading and
+    reduce resident memory size.
+
+CMB (bootstrap compiler):
+
+  Conditional compilation within the "init library".
+    (One can now use "ifdef" and "ifndef" guards in init.cmi.
+     This is documented in the long comment at the beginning of
+     that file (src/system/smlnj/init/init.cmi).)
+
+
+Basis Library:
+
+  Added SMLofNJ.SysInfo.getHeapSuffix (for use by "ml-build").
+

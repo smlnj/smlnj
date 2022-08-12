@@ -1,0 +1,45 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  6      N  E  W  S
+			
+                            October 25, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.56/
+
+
+Summary:
+
+  Bug fixes and minor feature enhancements.
+
+--------------------------------------------------------------------------
+
+
+Libraries:
+----------
+
+- Added interval sets to utility library (signatures INTERVAL_DOMAIN
+  and INTERVAL_SET, and functor IntervalSetFn).
+
+Compiler:
+---------
+
+- Improved code generation for polymorphic equality on datatypes.
+
+MLRISC:
+-------
+
+- Fixed bug in x86 register allocator.
+- Some code cleanup.
+
+Tools:
+------
+
+- ml-lex now correctly recognizes \r as representing carriage return.
+- ml-yacc now works with files that use non-native end-of-line encodings
+  (e.g., Windows text files on a Unix system).

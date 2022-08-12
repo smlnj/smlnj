@@ -1,0 +1,39 @@
+ML-LEX(1)
+=========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+ml-lex - a scanner generator for *Standard ML*.
+
+SYNOPSIS
+--------
+*ml-lex* 'file'
+
+DESCRIPTION
+-----------
+
+*ML-Lex* is a scanner generator for *Standard ML*.
+
+This software is deprecated; we recommend using the *ml-ulex*(1) tool
+in *ml-lex*-compatibility mode instead.
+
+AUTHOR
+------
+ml-lex(1) was written by James S. Mattson and David Tarditi.
+
+SEE-ALSO
+--------
+ml-ulex(1)
+
+https://smlnj.cs.uchicago.edu/doc/ML-Lex/manual.html[ML-Lex User's Manual]
+(also included in the *SML/NJ* documentation).
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

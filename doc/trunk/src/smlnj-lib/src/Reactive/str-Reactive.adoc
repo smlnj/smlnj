@@ -1,0 +1,246 @@
+= The `Reactive` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Reactive` structure provides types and operations to build and
+run reactive systems.  The inputs and outputs of a reactive system
+are sets of _signals_, which can either be _present_ (_i.e._, `true`)
+or _absent_ (_i.e._, `false`).  A reactive system runs in discrete
+timesteps.
+
+
+== Synopsis
+
+[source,sml]
+------------
+signature REACTIVE
+structure Reactive : REACTIVE
+------------
+
+== Interface
+
+[source,sml]
+------------
+type machine
+type instruction
+type signal = Atom.atom
+type config
+type in_signal
+type out_signal
+
+val machine : {
+	inputs : signal list,
+	outputs : signal list,
+	body : instruction
+      } -> machine
+
+val run : machine -> bool
+val reset : machine -> unit
+
+val inputsOf : machine -> in_signal list
+val outputsOf : machine -> out_signal list
+
+val inputSignal : in_signal -> signal
+val outputSignal : out_signal -> signal
+
+val setInSignal  : (in_signal * bool) -> unit
+val getInSignal  : in_signal -> bool
+val getOutSignal : out_signal -> bool
+
+val || : (instruction * instruction) -> instruction
+val &  : (instruction * instruction) -> instruction
+
+val nothing : instruction
+val stop : instruction
+val suspend : instruction
+
+val action : (machine -> unit) -> instruction
+val exec   : (machine -> {stop : unit -> unit, done : unit -> bool})
+	      -> instruction
+
+val ifThenElse : ((machine -> bool) * instruction * instruction) -> instruction
+val repeat     : (int * instruction) -> instruction
+val loop       : instruction -> instruction
+val close      : instruction -> instruction
+
+val signal   : (signal * instruction) -> instruction
+val rebind   : (signal * signal * instruction) -> instruction
+val when     : (config * instruction * instruction) -> instruction
+val trap     : (config * instruction) -> instruction
+val trapWith : (config * instruction * instruction) -> instruction
+val emit     : signal -> instruction
+val await    : config -> instruction
+
+val posConfig : signal -> config
+val negConfig : signal -> config
+val orConfig  : (config * config) -> config
+val andConfig : (config * config) -> config
+------------
+
+== Description
+
+The description of the interface is organized into sections.
+
+=== Types
+
+`[.kw]#type# machine`::
+  The type of a reactive system.
+
+`[.kw]#type# instruction`::
+  The abstract representation of a reactive program.
+
+`[.kw]#type# signal = xref:../Util/str-Atom.adoc#type:atom[Atom.atom]`::
+  The name of a signal.
+
+`[.kw]#type# config`::
+  A signal configuration is a logical combination of signals.
+
+`[.kw]#type# in_signal`::
+  An input signal for a reactive system.
+
+`[.kw]#type# out_signal`::
+  An output signal for a reactive system.
+
+=== Machines
+
+`[.kw]#val# machine : { ... } \-> machine`::
+  `machine {inputs, outputs, body}` creates a new reactive system (or machine)
+  from a list of input signal names, a list of output signal names, and a reactive
+  program.
+
+`[.kw]#val# run : machine \-> bool`::
+  `run m` will run the reactive system `m` one instant (or activation).
+  It returns `true` if, and only if, the machine ends in a terminal state
+  (_i.e., by executing the xref:val:stop[`stop`] instruction).
+
+`[.kw]#val# reset : machine \-> unit`::
+  `reset m` resets the state of `m` to its initial state.
+
+`[.kw]#val# inputsOf : machine \-> in_signal list`::
+  `inputsOf m` returns a list of the input signals in the machine.
+
+`[.kw]#val# outputsOf : machine \-> out_signal list`::
+  `outputsOf m` returns a list of the output signals in the machine.
+
+[[val:nameOfInput]]
+`[.kw]#val# nameOfInput : in_signal \-> signal`::
+  `inputSignal inSig` returns the name of the input signal.
+
+[[val:nameOfOutput]]
+`[.kw]#val# nameOfOutput : out_signal \-> signal`::
+  `inputSignal outSig` returns the name of the output signal.
+
+`[.kw]#val# setInSignal : (in_signal * bool) \-> unit`::
+  `setInSignal (inSig, b)` sets the value of the input signal to `b`.
+
+`[.kw]#val# getInSignal : in_signal \-> bool`::
+  `getInSignal inSig` gets the current value of the input signal.
+
+`[.kw]#val# getOutSignal : out_signal \-> bool`::
+  `getOutSignal inSig` gets the current value of the output signal.
+
+=== Instructions
+
+`[.kw]#val# || : (instruction * instruction) \-> instruction`::
+  `|| (i1, i2)` forms the parallel composition of the two programs.
+  Activation of the resulting program will interleave the two
+  programs until either one of them suspends (see the
+  xref:val:suspend[`suspend`] instruction) or both programs terminate.
+
+`[.kw]#val# & : (instruction * instruction) \-> instruction`::
+ `& (i1, i2)` forms the sequential composition of the two programs.
+
+`[.kw]#val# nothing : instruction`::
+  The program that does nothing.
+
+[[val:stop]]
+`[.kw]#val# stop : instruction`::
+  The program that stops; _i.e._, reaches the terminal state for
+  the current and all future activations.
+
+[[val:suspend]]
+`[.kw]#val# suspend : instruction`::
+  The program that suspends the current activation.
+
+`[.kw]#val# action : (machine \-> unit) \-> instruction`::
+  *something*
+
+`[.kw]#val# exec : (machine \-> {stop : unit \-> unit, done : unit \-> bool}) \-> instruction`::
+  `exec f` returns a program that encapsulates the *SML* computation defined by
+  the function `f`.
+
+`[.kw]#val# ifThenElse : ((machine \-> bool) * instruction * instruction) \-> instruction`::
+  *something*
+
+`[.kw]#val# repeat : (int * instruction) \-> instruction`::
+  *something*
+
+`[.kw]#val# loop : instruction \-> instruction`::
+  *something*
+
+`[.kw]#val# close : instruction \-> instruction`::
+  *something*
+
+`[.kw]#val# signal : (signal * instruction) \-> instruction`::
+  *something*
+
+`[.kw]#val# rebind : (signal * signal * instruction) \-> instruction`::
+  *something*
+
+`[.kw]#val# when : (config * instruction * instruction) \-> instruction`::
+  *something*
+
+`[.kw]#val# trapWith : (config * instruction * instruction) \-> instruction`::
+  `trapWith (cfg, i1, i2)` returns the program that ...
+
+`[.kw]#val# trap : (config * instruction) \-> instruction`::
+  `trap (cfg, i)`
+  This expression is equivalent to
++
+[source,sml]
+------------
+trapWith (cfg, i, nothing)
+------------
+
+`[.kw]#val# emit : signal \-> instruction`::
+  `emit sigId` returns the program that emits the signal with the given
+  name (_i.e._, the signal is _present_).
+
+`[.kw]#val# await : config \-> instruction`::
+  `await cfg` returns the program that waits for the configuration to hold.
+
+=== Signal configurations
+
+`[.kw]#val# posConfig : signal \-> config`::
+  `posConfig sigId` defines a configuration that holds if, and only if,
+  the signal named `sigId` is present.
+
+`[.kw]#val# negConfig : signal \-> config`::
+  `negConfig sigId` defines a configuration that holds if, and only if,
+  the signal named `sigId` is *not* present.
+
+`[.kw]#val# orConfig : (config * config) \-> config`::
+  `orConfig (cfg1, cfg2)` defines a configuration that holds if either `cfg1`
+  or `cfg2` (inclusive) holds.
+
+`[.kw]#val# andConfig : (config * config) \-> config`::
+  `andConfig (cfg1, cfg2)` defines a configuration that holds if both `cfg1`
+  and `cfg2` hold.
+
+=== Deprecated functions
+
+The following functions are part of the interface, but have been
+deprecated.
+
+`[.kw]#val# inputSignal : in_signal -> signal`::
+  use xref:#val:nameOfInput[`nameOfInput`] instead.
+
+`[.kw]#val# outputSignal : out_signal -> signal`::
+  use xref:#val:nameOfOutput[`nameOfOutput`] instead.
+
+== See Also
+
+xref:reactive-lib.adoc[__The Reactive Library__]

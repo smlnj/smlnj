@@ -1,0 +1,139 @@
+= The `PropList` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `PropList` structure provides a extensible, but type safe, implementation
+of property lists.
+
+== Synopsis
+
+[source,sml]
+------------
+structure PropList
+------------
+
+== Interface
+
+[source,sml]
+------------
+type holder
+
+val newHolder : unit -> holder
+
+val hasProps : holder -> bool
+
+val clearHolder : holder -> unit
+
+val sameHolder : (holder * holder) -> bool
+
+val newProp : (('a -> holder) * ('a -> 'b)) -> {
+        peekFn : 'a -> 'b option,
+        getFn  : 'a -> 'b,
+        setFn  : ('a * 'b) -> unit,
+        clrFn  : 'a -> unit
+      }
+
+val newFlag : ('a -> holder) -> {
+        getFn : 'a -> bool,
+        setFn : ('a * bool) -> unit
+      }
+------------
+
+== Description
+
+`[.kw]#type# holder`::
+  The type of a property-list container.
+
+`[.kw]#val# newHolder : unit \-> holder`::
+  `newHolder ()` creates a new property-list holder.
+
+[[val:hasProps]]
+`[.kw]#val# hasProps : holder \-> bool`::
+  `hasProps holder` return `true` if, and only if, the holder contains
+  properties (including set flags).
+
+`[.kw]#val# clearHolder : holder \-> unit`::
+  `clearHolder holder` removes all properties and flags from the holder.
+
+`[.kw]#val# sameHolder : (holder * holder) \-> bool`::
+  `sameHolder (holder1, holder2)` returns `true` if, and only if,
+  the two holders are the same.
+
+`[.kw]#val# newProp : (('a \-> holder) * ('a \-> 'b)) \-> { ... }`::
+  `newProp (getHolder, init)` creates a new property of type ``'b``
+  associated with values of type ``'a``, where `getHolder` is a function
+  for getting the holder from a value and `init` is a function for
+  defining the initial value of the property for a value.  The property
+  is represented by a record of operations, which are as follows:
++
+--
+    `peekFn : 'a \-> 'b option`::
+        `peekFn obj` returns `SOME v`, where `v` is the value of the
+        property for `obj`.  If the property has not been set for `obj`,
+        then `NONE` is returned.
+
+    `getFn : 'a \-> 'b`::
+        `getFn obj` returns the value of the property for `obj`.  If the
+        property has not been set for `obj`, then the `init` function is
+        used to set the initial value of the property.
+
+    `setFn: ('a * 'b) \-> unit`::
+        `setFn (obj, v)` sets the value of the property to `v` for `obj`.
+
+    `clrFn : 'a \-> unit`::
+        `clrFn obj` removes the property from `obj`.
+--
+
+`[.kw]#val# newFlag : ('a \-> holder) \-> { ... }`::
+  `newFlag getHolder` creates a new boolean property for values of type ``'a``.
+  The property is represented by a record of two functions:
++
+--
+    `getFn : 'a \-> bool`::
+        `getFn obj` returns the value of the flag for `obj`.
+
+    `setFn : ('a * bool) \-> unit`::
+        `setFn (obj, b)` sets the value of the flag to `b` for `obj`.
+--
++
+Flags represent boolean properties in a way that is more space efficient
+than using `newProp`.   Basically, a `true` value is represented by the
+presence of the property in the holder, while `false` is represented by
+its absence.  This representation affects the behavior of
+xref:val:hasProps[`hasProps`] as flags that are `false` are not counted.
+
+== Examples
+
+A common use of property lists is to provide a mechanism for attaching
+attributes to existing types.  For example, we might define a representation
+of variables in a compiler as:
+
+[source,sml]
+------------
+datatype var = V of {
+    name : string,
+    props : PropList.holder
+  }
+------------
+
+We might define a _use count_ property as follows:
+
+[source,sml]
+------------
+local
+  val {getFn, setFn, ...} = PropList.newProp (
+        fn (V{props, ...}) => props,
+        fn _ => 0)
+in
+fun use x = setFn(x, getFn x + 1)
+fun countOf x = getFn x
+end
+------------
+
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

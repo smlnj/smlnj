@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.84 Release Notes</title>
+<style type="text/css">
+  body {
+    font-size: 14pt;
+  }
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: 200%;
+    text-align: center;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  h3 {
+    font-size: 140%;
+  }
+  dt.component {
+    font-size: 120%;
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  span.important {
+    color: red;
+    text-weight: bold;
+  }
+  span.tt {
+    font-family: "Courier", monospace;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    color: darkblue;
+  }
+  span.kw {
+    font-family: "Courier", monospace;
+    font-weight: bold;
+    color: darkgreen;
+  }
+  span.com {
+    font-style: italic;
+    color: indianred;
+  }
+  span.exe {
+    font-weight: bold;
+  }
+  table.buglist {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+  p.compact {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+  #support-table {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  #support-table th {
+    text-align: left;
+    padding-right: 1em;
+    border-bottom: 2px solid black;
+  }
+  #support-table td {
+    padding-right: 1em;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br>
+                          Version 110.84 NEWS
+<br>
+                           September 3, 2018
+</div>
+
+<hr>
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="https://www.smlnj.org/index.html"><span class="tt">https://smlnj.org</span></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="https://smlnj.org/dist/working/110.84/index.html">
+    <span class="tt">https://smlnj.org/dist/working/110.84/</span></a>
+  </dd>
+</dl>
+<hr>
+
+<h3>Summary:</h3>
+<p>
+  This is a minor release whose primary purpose is to support future changes to the
+  compiler's implementation.
+<p>
+</p>
+  This release introduces a new implementation of the
+  <i>Abstract Syntax Description Library</i> (ASDL).
+  It also adds support for Mac OS X 10.14 (Mojave) and includes a few other
+  enhancements and bug fixes.
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">ASDL</dt>
+  <dd>
+    <p>
+      This release of SML/NJ includes a beta-version of a new implementation of the
+      <i>Abstract Syntax Description Library</i> (ASDL), which was originally designed
+      and implemented by Daniel Wang as part of the Zephyr project.  ASDL allows one
+      to declare a collection of inductive types and then use the <b>asdlgen</b> tool
+      to generate an implementation of the types with pickler/unpickler operations.
+      We plan to replace the compiler's current environment pickler with ASDL and
+      eventually also use it in a new LLVM-based backend.
+    </p>
+    <p>
+      While the previous versions of ASDL supported many different target languages,
+      the new version currently only supports SML and C++ (note that C++ support is
+      currently incomplete).
+    </p>
+    <p>
+      See the ASDL Manual (Version 3.0) for details about the specification
+      language and the <b>asdlgen</b> tool.
+    </p>
+    <p>
+      Also note that ASDL is not currently part of the Windows installation.
+    </p>
+  </dd>
+  <dt class="component">Basis Library:</dt>
+  <dd>
+    <p>
+    This version adds support for the Basis Library proposal:
+    </p>
+    <dl>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2018-002-Additional-slice-operations">
+        <b>[2018-002]</b> Additional slice operations</a></dt>
+        <dd>
+	  This proposal adds four functions to the various slice structures:
+	  <span class="code">triml</span>,
+	  <span class="code">trimr</span>,
+	  <span class="code">splitAt</span>, and
+	  <span class="code">getVec</span>.
+        </dd>
+      </dt>
+    </dl>
+    <p>
+    <span class="important">Note that this change is a <i>proposal</i>
+    that have not yet been ratified and is subject to change!</span>
+    </p>
+  </dt>
+  <dt class="component">SML/NJ Library</dt>
+  <dd>
+    <p>
+      Added pretty printing (<span class="code"><span class="kw">structure</span> SExpPP</span>)
+      to the S-Expression library.
+    </p>
+  </dd>
+  <dt class="component">Installer</dt>
+  <dd>
+    <p>
+      A couple of changes were made to the installer
+     (<span class="code">base/base/system/smlnj/installer</span>).
+    </p>
+    <ul>
+      <li>
+        The name of build scripts used for the <b>prog</b> and <b>dprog</b> actions
+	was changed from "<span class="code">build</span>" to
+	"<span class="code">build.sh</span>" on Unix systems (it is still
+	"<span class="code">build.bat</span>" on Windows).
+      </li>
+      <li>
+        A new <b>config</b> action was added that causes a configuration script
+        to be run.  The script should be named <b>config.sh</b> (or <b>config.bat</b>
+        on Windows).
+      </li>
+    </ul>
+  </dd>
+</dl>
+
+<h3>Bugs:</h3>
+<p>
+  There are no numbered bug fixes in this release, but the following
+  unnumbered bugs were fixed:
+</p>
+<ul class="buglist">
+  <li>
+    Fixed a compiler bug ("<span class="code">arg ty lists have wrong length</span>") in
+    <span class="code">unifyTy</span> that could occur when one of the type constructors
+    is the <span class="code">ERRORtyc</span> (because a type error had been previously
+    detected).
+  </li>
+  <li>
+    Fixed a bug in the implementation of monomorphic buffers:
+    the functions <span class="code">CharBuffer.add1</span> and
+    <span class="code">Word8Buffer.add1</span> had an incorrect length
+    test.
+  </li>
+  <li>
+    Fixed a bug in the <span class="code">SExp.same</span> function, where
+    lists of unequal length would compare as equal if the shorter list was
+    a prefix of the longer list.
+  </li>
+  <li>
+    Fixed a bug where the <span class="code">findi</span> function in the various
+    slice structures (<i>e.g.</i>, <span class="code">Word8ArraySlice</span>)
+    passed the wrong index value to the predicate function (the index is supposed
+    to be relative to the start of the slice, not the underlying vector or array).
+  </li>
+</ul>
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+</p>
+<div>
+<table id="support-table">
+  <tr><th>Architecture</th> <th>Operating System</th> <th>Status</th></tr>
+  <tr><td>Power PC</td> <td>Mac OS X 10.5 (Leopard)</td> <td></td></tr>
+  <tr><td></td> <td>AIX</td> <td></td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>Sparc</td> <td>Solaris</td> <td></td></tr>
+  <tr><td></td> <td>Linux</td> <td></td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.11 (El Capitan)</td> <td></td></tr>
+  <tr><td></td> <td>macOS 10.12 (Sierra)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>macOS 10.13 (High Sierra)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>macOS 10.14 (Mojave)</td> <td>Tested (see note below)</td></tr>
+  <tr><td></td> <td>Ubuntu 16.04.3 LTS</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Other Linux variants</td><td></td></tr>
+  <tr><td></td> <td>BSD variants</td><td></td></tr>
+  <tr><td></td> <td>Windows 7</td> <td></td></tr>
+  <tr><td></td> <td>Windows 10</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7 or 10)&nbsp;</td></tr>
+</table>
+</div>
+</blockquote>
+<p>
+Apple is in the process of deprecating 32-bit support in macOS.  With macOS 10.14
+(Mojave), it is no longer possible to compile 32-bit applications, such as the
+SML/NJ runtime system.  Thus, while it is possible to install SML/NJ using the
+<a href="https://smlnj.org/dist/working/110.84/smlnj-x86-110.84.pkg">
+installer</a>, installing using the <b>config/install.sh</b> script will not
+work without extra effort.
+</p>
+<p>
+We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.
+</p>
+
+</body>
+</html>

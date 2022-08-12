@@ -1,0 +1,298 @@
+%!TEX root = manual.tex
+%
+\chapter{Available libraries}
+
+Compiler and interactive system of SML/NJ consist of several hundred
+individual compilation units.  Like modules of application programs,
+these compilation units are also organized using CM libraries.
+
+Some of the libraries that make up SML/NJ are actually the same ones
+that application programmers are likely to use, others exist for
+organizational purposes only.  There are ``plugin'' libraries---mainly
+for the CM ``tools'' subsystem---that will be automatically loaded on
+demand, and libraries such as {\tt \$smlnj/cmb.cm} can be used to
+obtain access to functionality that by default is not present.
+
+\section{Libraries for general programming}
+
+Libraries listed in the following two tables provide a broad palette of
+general-purpose programming tools:\footnote{
+  Recall that anchored paths of the form \texttt{\$$/x[/\cdots]$}
+  act as an abbreviation for \texttt{\$$x/x[/\cdots]$}.
+}
+
+\newcommand{\CMLIB}[1]{\texttt{\$/#1}}
+\begin{small}
+\begin{center}
+\begin{tabular}{p{1.7in}||p{3.0in}|c|c}
+name & description & installed & loaded \\
+\hline\hline
+\CMLIB{basis.cm} & Standard Basis Library & always & auto \\
+\hline\hline
+\CMLIB{ml-yacc-lib.cm} & ML-Yacc library & always & no \\
+\hline
+\CMLIB{ml-lpt-lib.cm} & Language Processing Tools library & always & no \\
+\end{tabular}
+\end{center}
+\end{small}
+
+The following libraries comprise the SML/NJ Library Suite.
+We list them in alphabetical order.
+\begin{small}
+\begin{center}
+\begin{tabular}{p{1.7in}||p{3.0in}|c|c}
+name & description & installed & loaded \\
+\hline\hline
+\CMLIB{controls-lib.cm} & & always & no \\
+\hline
+\CMLIB{html-lib.cm} & HTML 3 library & optional & no \\
+\hline
+\CMLIB{html4-lib.cm} & HTML 4 library & optional & no \\
+\hline
+\CMLIB{hash-cons-lib.cm} & hash-consing library & optional & no \\
+\hline
+\CMLIB{inet-lib.cm} & internet programming utility library & optional & no \\
+\hline
+\CMLIB{json-lib.cm} & JSON parsing, printing, and utility library library & optional & no \\
+\hline
+\CMLIB{pp-extras-lib.cm} & additional pretty-printing devices & optional & no \\
+\hline
+\CMLIB{pp-lib.cm} & pretty-printing library & always & no \\
+\hline
+\CMLIB{reactive-lib.cm} & reactive programming library & optional & no \\
+\hline
+\CMLIB{regexp-lib.cm} & regular expression library & optional & no \\
+\hline
+\CMLIB{sexp-lib.cm} & S-Expression parsing and printing library & optional & no \\
+\hline
+\CMLIB{uuid-lib.cm} & UUID generation library & optional & no \\
+\hline
+\CMLIB{unix-lib.cm} & Unix programming utility library & optional & no \\
+\hline
+\CMLIB{smlnj-lib.cm} & general-purpose utility library & always & no \\
+\hline
+\CMLIB{xml-lib.cm} & XML parsing and printing library & optional & no \\
+\end{tabular}%
+\end{center}%
+\end{small}%
+
+\section{Libraries for controlling SML/NJ's operation}
+
+The following table lists those libraries that provide access to the
+so-called {\em visible compiler} infrastructure and to the compilation
+manager API.
+
+\begin{small}
+\begin{center}
+\begin{tabular}{p{2.3in}||p{2.5in}|c|c}
+name & description & installed & loaded \\
+\hline\hline
+{\tt \$smlnj/compiler.cm} \newline
+{\tt \$smlnj/compiler/current.cm} & visible compiler for current
+architecture & always & auto \\
+{\tt \$smlnj/compiler/compiler.cm} & structure {\tt Compiler} (the
+visible compiler in one big structure) & always & no \\
+\hline\hline
+{\tt \$smlnj/cm.cm} \newline
+{\tt \$smlnj/cm/cm.cm} & compilation manager & always & auto \\
+\hline
+{\tt \$smlnj/cm/tools.cm} & API for extending CM with new tools &
+always & no \\
+\hline\hline
+{\tt \$/mllex-tool.cm} & plugin library for class {\tt mllex} & always
+& on demand \\
+\hline
+{\tt \$/lex-ext.cm} & plugin library for extension {\tt .lex} & always
+& on demand \\
+\hline
+{\tt \$/mlyacc-tool.cm} & plugin library for class {\tt mlyacc} &
+always & on demand \\
+\hline
+{\tt \$/grm-ext.cm} & plugin library for extension {\tt .grm} & always
+& on demand \\
+\hline
+{\tt \$/mlburg-tool.cm} & plugin library for class {\tt mlburg} &
+always & on demand \\
+\hline
+{\tt \$/burg-ext.cm} & plugin library for extension {\tt .burg} &
+always & on demand \\
+\hline
+{\tt \$/noweb-tool.cm} & plugin library for class {\tt noweb} & always
+& on demand \\
+\hline
+{\tt \$/nw-ext.cm} & plugin library for extension {\tt .nw} & always &
+on demand \\
+\hline
+{\tt \$/make-tool.cm} & plugin library for class {\tt make} & always &
+on demand \\
+\hline
+{\tt \$/shell-tool.cm} & plugin library for class {\tt shell} & always
+& on demand \\
+\hline
+{\tt \$/dir-tool.cm} & plugin library for class {\tt dir} & always
+& on demand
+\end{tabular}
+\end{center}
+\end{small}
+
+\section{Libraries for SML/NJ compiler hackers}
+
+The following table lists libraries that provide access to the SML/NJ
+{\em bootstrap compiler}.  The bootstrap compiler is a derivative of
+the compilation manager.  In addition to being able to recompile
+SML/NJ for the ``host'' system there are also cross-compilers that
+can target all of SML/NJ's supported platforms.
+
+\begin{small}
+\begin{center}
+\begin{tabular}{p{2.3in}||p{2.9in}|c|c}
+name & description & installed & loaded \\
+\hline\hline
+{\tt \$smlnj/cmb.cm} \newline
+{\tt \$smlnj/cmb/current.cm} & bootstrap compiler for current
+architecture and OS & always & no \\
+\hline\hline
+{\tt \$smlnj/cmb/alpha32-unix.cm} & bootstrap compiler for Alpha/Unix
+systems & always & no \\
+\hline
+{\tt \$smlnj/cmb/hppa-unix.cm} & bootstrap compiler for HP-PA/Unix
+systems & always & no \\
+\hline
+{\tt \$smlnj/cmb/ppc-macos.cm} & bootstrap compiler for PowerPC/Unix
+systems & always & no \\
+\hline
+{\tt \$smlnj/cmb/ppc-unix.cm} & bootstrap compiler for PowerPC/MacOS
+systems & always & no \\
+\hline
+{\tt \$smlnj/cmb/sparc-unix.cm} & bootstrap compiler for Sparc/Unix
+systems & always & no \\
+\hline
+{\tt \$smlnj/cmb/x86-unix.cm} & bootstrap compiler for IA32/Unix
+systems & always & no \\
+\hline
+{\tt \$smlnj/cmb/x86-win32.cm} & bootstrap compiler for IA32/Win32
+systems & always & no \\
+\hline\hline
+{\tt \$smlnj/compiler/alpha32.cm} & visible compiler with backend for
+Alpha-specific cross-compiler & always & no \\
+\hline
+{\tt \$smlnj/compiler/hppa.cm} & visible compiler with backend for
+HP-PA-specific cross-compiler & always & no \\
+\hline
+{\tt \$smlnj/compiler/ppc.cm} & visible compiler with backend for
+PowerPC-specific cross-compiler & always & no \\
+\hline
+{\tt \$smlnj/compiler/sparc.cm} & visible compiler with backend for
+Sparc-specific cross-compiler & always & no \\
+\hline
+{\tt \$smlnj/compiler/x86.cm} & visible compiler with backend for
+IA32-specific cross-compiler & always & no \\
+\hline
+{\tt \$smlnj/compiler/all.cm} & visible compiler, backends and
+bootstrap compilers for all architectures & always & no \\
+\hline
+{\tt \$/pgraph.cm} & definition of ``portable dependency graph'' data
+structure & always & no \\
+\hline
+{\tt \$/pgraph-util.cm} & utility routines for use with portable
+dependency graphs & optional & no
+\end{tabular}
+\end{center}
+\end{small}
+
+\section{Internal libraries}
+
+For completeness, here is the list of other libraries that are part of
+SML/NJ's implementation:
+
+\begin{small}
+\begin{center}
+\begin{tabular}{p{2.5in}||p{2.6in}|c|c}
+name & description & installed & loaded \\
+\hline\hline
+{\tt \$SMLNJ-MLRISC/Lib.cm} & utility library for MLRISC backend & always &
+no \\
+\hline
+{\tt \$SMLNJ-MLRISC/Control.cm} & control facilities for MLRISC backend &
+always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/Graphs.cm} & control flow graphs for MLRISC backend &
+always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/Visual.cm} & visualization for MLRISC & always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/MLRISC.cm} & architecture-neutral core of MLRISC backend
+& always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/MLTREE.cm} & utility routines for dealing with
+mltree data structures & always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/ALPHA.cm} & Alpha-specific MLRISC backend & always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/HPPA.cm} & HP-PA-specific MLRISC backend & always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/PPC.cm} & PowerPC-specific MLRISC backend & always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/SPARC.cm} & Sparc-specific MLRISC backend & always & no \\
+\hline
+{\tt \$SMLNJ-MLRISC/IA32.cm} & IA32-specific MLRISC backend & always & no \\
+\hline\hline
+{\tt \$/pickle-lib.cm} & utility library for compiler and CM & always & no \\
+\hline
+{\tt \$smlnj/viscomp/core.cm} & architecture-neutral core of compiler
+& always & no \\
+\hline
+{\tt \$smlnj/viscomp/alpha32.cm} & Alpha-specific part of compiler &
+always & no \\
+\hline
+{\tt \$smlnj/viscomp/hppa.cm} & HP-PA-specific part of compiler &
+always & no \\
+\hline
+{\tt \$smlnj/viscomp/ppc.cm} & PowerPC-specific part of compiler &
+always & no \\
+\hline
+{\tt \$smlnj/viscomp/sparc.cm} & Sparc-specific part of compiler &
+always & no \\
+\hline
+{\tt \$smlnj/viscomp/x86.cm} & IA32-specific part of compiler & always
+& no \\
+\hline \hline
+{\tt \$smlnj/init/init.cmi} & initial ``glue''; implementation of
+pervasive environment & always & no \\
+\hline \hline
+{\tt \$smlnj/internal/cm-sig-lib.cm} & signatures {\tt CM} and {\tt
+CMB} & always & no \\
+\hline
+{\tt \$smlnj/internal/srcpath-lib.cm} & implementation of an internal
+``source path'' abstraction used by the compilation manager & always &
+no \\
+\hline
+{\tt \$smlnj/internal/cm-lib.cm} & implementation of CM
+(not yet specialized to specific backends) & always & no \\
+\hline
+{\tt \$smlnj/internal/cm0.cm} & specialization of compilation manager
+to host compiler & always &
+no \\
+\hline
+{\tt \$smlnj/internal/intsys.cm} & root library, containing
+interactive system and glue for all the other parts & always &
+no
+\end{tabular}
+\end{center}
+\end{small}
+
+Libraries for the MLRISC backend have internal dependencies.  However,
+when referring to a {\tt \$SMLNJ-MLRISC/{\it lib}.cm} library, all
+anchor names that correspond to these dependencies are still unbound.
+Thus, a client would have to provide its own bindings for
+them.\footnote{The anchor names coincide with the {\it lib}{\tt .cm}
+components of the above names.} There is an analogous set of library
+names of the form {\tt \$smlnj/MLRISC/}{\it lib}{\tt .cm} which
+provides the SML/NJ-specific bindings for all the anchors.  In
+practice this means that if one refers to, e.g., {\tt
+\$smlnj/MLRISC/MLRISC.cm}, one will implicitly pick up {\tt
+\$smlnj/MLRISC/Graphs.cm}, and the {\tt \$Graphs.cm} anchor within the
+former will be resolved to the latter.  On the other hand, when
+referring directly to the ``raw'' library {\tt
+\$SMLNJ-MLRISC/MLRISC.cm}, one still can (and must) provide one's own
+binding for {\tt \$Graphs.cm}.

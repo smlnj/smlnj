@@ -1,0 +1,47 @@
+= The `REGEXP_PARSER` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `REGEXP_PARSER` signature defines the interface to a parser for a
+concrete regular-expression syntax.
+
+== Synopsis
+
+[source,sml]
+------------
+signature REGEXP_PARSER
+
+structure AwkSyntax : REGEXP_PARSER
+------------
+
+== Interface
+
+[source,sml]
+------------
+val scan : (char, 'a) StringCvt.reader -> (RegExpSyntax.syntax, 'a) StringCvt.reader
+------------
+
+== Description
+
+`[.kw]#val# scan : (char, 'a) StringCvt.reader \-> (RegExpSyntax.syntax, 'a) StringCvt.reader`::
+  `scan getc strm` parses a regular expression from the input stream `strm` using
+  the {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[character reader] `getc`.
+  If successful, it returns `SOME(re, strm')`, where `re` is the abstract syntax
+  of the regular expression and ``strm'`` is the residual input stream.  It returns
+  `NONE` if there is a syntax error in the input.
+
+== Instances
+
+[[str:AwkSyntax]]
+`[.kw]#structure# xref:str-AwkSyntax.adoc[AwkSyntax]`::
+  A parser for the regular-expression syntax defined by the AWK language.
+
+== See Also
+
+xref:str-AwkSyntax.adoc[`AwkSyntax`],
+xref:fun-RegExpFn.adoc[`RegExpFn`],
+xref:str-RegExpSyntax.adoc[`RegExpSyntax`],
+xref:regexp-lib.adoc[__The RegExp Library__]

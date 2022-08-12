@@ -1,0 +1,17 @@
+(* config_sml.in
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Information set by the configuration.
+ *)
+
+structure Config =
+  struct
+
+    val releaseDate = "@SMLNJ_DATE@"
+    val version = "@SMLNJ_VERSION@"
+    val asciidoctor = "@ASCIIDOCTOR@"
+    val fragDir = "@SRC_DIR@/fragments"
+
+  end

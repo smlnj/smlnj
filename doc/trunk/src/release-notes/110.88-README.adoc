@@ -1,0 +1,104 @@
+:version: 110.88
+:date: May 15, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release does not have any user-visible changes.  It consists of
+a reimplementation of the `Int64.int` and `Word64.word` types.
+With this new implementation in place, we expect to rebind the
+`LargeWord`, `FixedInt`, and `Position` structures to 64-bit
+implementations in the next release.
+
+== Details
+
+=== Installation
+
+While the {dist-dir}smlnj-x86-{version}.pkg[installer]
+for {version} works on macOS 10.14 Mojave, building from source
+requires some extra steps.
+
+=== Compiler
+
+Previously, 64-bit numbers were represented as pairs of 32-bit words
+and the `Int64` and `Word64` Basis Library structures were built on this
+implementation.  While the compiler supported 64-bit literals, the
+compiler translated these to pairs of 32-bit words when converting
+to FLINT.
+
+In order to support 64-bit targets, it is desirable to make 64-bit
+numbers a primitive type (just like `Int32.int`).  In this version,
+we have replaced the old implementation of the `Int64` and `Word64`
+modules with compiler primops.  A new pass, `Num64Cnv`, that runs
+before closure conversion is used to expand 64-bit operations into
+32-bit operations on 32-bit targets.  While the main purpose of
+this change is to make porting to 64-bit targets easier, the new
+implementation of `Int64.int` and `Word64.word` is faster and
+more space efficient than before.
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+|=======
+
+=== A note about 64-bit support
+
+Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ {dist-dir}smlnj-x86-{version}.pkg[installer],
+however, works without issue on macOS 10.14 Mojave.
+
+We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.

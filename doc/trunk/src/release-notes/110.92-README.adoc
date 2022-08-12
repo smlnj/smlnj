@@ -1,0 +1,165 @@
+:version: 110.92
+:date: August 10, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release has a major improvement in the compiler that makes the
+use of polymorphic arrays more efficient; namely, we have removed
+the dictionary passing for polymorphic array operations from FLINT.
+Besides that change, this release is primarily a checkpoint of work
+being done to support 64-bit targets, including new infrastructure
+for cross compilation.
+
+We have had reports of a problem with using **CM** on **Windows**
+(bug #223).  We have not been able to reproduce this problem, but
+we are leaving the bug open for now.  If you encounter problems
+with this release on Windows, please submit a bug report using
+the https://smlnj-gforge.cs.uchicago.edu/bugform.php[bug form].
+
+== Details
+
+=== Installation
+
+While the {dist-dir}smlnj-x86-{version}.pkg[installer]
+for {version} works on macOS 10.14 Mojave, building from source
+requires some extra steps.  Another issue that you may encounter
+when building on macOS 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+
+=== Compiler
+
+We have removed the runtime-type passing from the FLINT IR.  This mechanism was
+solely used to allow the `real array` type to be implemented using a packed
+representation (__i.e.__, like `RealArray.array`), but it incurred an overhead
+on all polymorphic array code.  By removing this mechanism, we have spead-up
+the compiler by almost 10% and we see significant improvements in most uses
+of polymorphic arrays.  The downside is that code that uses the `real array`
+type heavily will be somewhat slower; in that case, we recommend switching
+to the monomorphic `RealArray.array` type.
+
+We have a new version of the cross-compilation script (`system/cmb-cross`)
+thatsupports target-specific dependencies in the front-end (i.e.,
+representation of numeric types and endianess).  We use this new script
+in the `allcross` script too.
+
+
+=== MLRISC
+
+--
+* Some cleanup in the **x86** backend.  Removed the `MULB`, `MULW`, and `MULL`
+  unsigned-multiplication instructions, since they are not binary operations.
+  The `MULL` instruction is covered by the `MULL1` constructor in the `multDivOp`
+  datatype.  The same change was applied to the **amd64** backend.
+
+* Many changes to the **amd64** machine description:
+** Removed the `PUSHB`, `PUSHW`, and `PUSHL` instructions, since the matching
+   `POP` operations are not supported.
+** Removed the `CALLQ` operation, since it is the same as `CALL`.
+** Removed the `CLTD` and `CQTO` operations, since those names are just
+   synonyms for `CDQ` and `CDO`.
+** Replaced the `INTO` operation (which is not valid in 64-bit mode) with
+   `INT of byte`.
+
+* Restructured the **amd64** machine-code generation implementation and
+  filled in many of the missing encodings.  It should be complete for
+  **SML/NJ** code generation, but needs more work to support the full set
+  of operations described in the `amd64.mdl` file.
+--
+
+=== Runtime System
+
+Made a bunch of changes to fix compilation issues on 64-bit targets.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#224#
+| `Word64.fromLargeInt` fails
+|=======
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+|=======
+
+=== A note about 64-bit support
+
+Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ {dist-dir}smlnj-x86-{version}.pkg[installer],
+however, works without issue on macOS 10.14 Mojave.
+
+We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.

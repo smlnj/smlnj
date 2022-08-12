@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html> <head>
+<title>SML/NJ 110.47 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  4  7      N  E  W  S
+			
+                             August 4, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.47/">http://smlnj.cs.uchicago.edu/dist/working/110.47/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+The most important and noticable changes in 110.47 concern preliminary
+implementations of the NLFFI foreign-function interface under Mac OS X
+(PowerPC) and Win32 (x86).  There are also a number of important bug
+fixes.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>NLFFI:</dt>
+  <dd>
+    <ul>
+      <li>preliminary support for Mac OS X added</li>
+      <li>preliminary support for Win32 added
+      (untested;
+      currently can only interface with C functions using the stdcall
+      calling conventions)</li>
+      <li>function arguments that are C unions are now handled</li>
+      <li>various minor bug fixes to ml-nlffigen</li>
+      <li>preliminary documentation for nlffi and ml-nlffigen
+      (currently only describes the output of ml-nlffigen;
+      see src/ml-nlffi-lib/Doc/manual/nlffi.tex)</li>
+    </ul>
+  </dd>
+
+  <dt>Compilation Manager:</dt>
+  <dd>
+    <ul>
+      <li>made <tt>make</tt> commend in CM's <tt>make</tt> tool
+      configurable</li>
+
+      <li>added option (default: <tt>on</tt>) for passing the name of
+      the SML/NJ's </tt>bin</tt> directory to <tt>make</tt>;
+      This can be used by the Makefile to, e.g., pick the "right" version
+      of ml-nlffigen.</li>
+    </ul>
+  </dd>
+
+  <dt>Basis:</dt>
+  <dd>
+    <ul>
+      <li>Changed the implementation of structure Unix so that the
+      same stream is returned every time one of the
+      <tt>{text,bin}{In,Out}streamOf</tt> functions is invoked on the
+      same proc. (NOTE: This is not what the spec says, so it will
+      probably change again.  Don't rely on it!)</li>
+    </ul>
+  </dd>
+
+  <dt>Windows port:</dt>
+  <dd>
+    <ul>
+      <li>bug fixes:
+      <ul>
+	<li>NULL test in gmtime and localtime</li>
+	<li><tt>toSeconds</tt> -> <tt>toMilliseconds</tt> in
+	<tt>win32-process.sml</tt> (Basis implementation)</li>
+      </ul>
+    </ul>
+  </dd>
+
+  <dt>Installer:</dt>
+  <dd>
+    <ul>
+      <li>eliminated some shell syntax not understood by
+      <tt>/bin/sh</tt> under Solaris</li> 
+    </ul>
+  </dd>
+
+  <dt>Compiler internals:</dt>
+  <dd>
+    <ul>
+      <li>low-level support for choosing C calling conventions by
+      twiddling the type of of the <tt>rawccall</tt> primop  (see
+      <tt>src/compiler/Semant/types/cproto.sml</tt> for details)<li>
+      <li>use <tt>paramAlloc</tt> to report c-calls with too many
+      arguments (for PPC version where parameter area is
+      pre-allocated)</li>
+      <li>added <tt>ccall_maxargspace</tt> to machspec (to implement
+      the above)</li>
+    </ul>
+  </dd>
+
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>redesigned c-calls interface</li>
+      <li>c-calls implementation for ppc-macosx added</li>
+      <li>Added these instructions to the PowerPC architecture:
+      <tt>LWARX</tt>, <tt>STWCX</tt>, <tt>LBZU(X)</tt>,
+      <tt>LHZU(X)</tt>, <tt>LWZU(X)</tt>, <tt>STWU(X)</tt>,
+      <tt>STFDU</tt>, <tt>STFSU</tt>, etc.
+      (Instruction encodings not added yet, though.)</li>
+      <li>loop-structure.sml has been rewritten</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

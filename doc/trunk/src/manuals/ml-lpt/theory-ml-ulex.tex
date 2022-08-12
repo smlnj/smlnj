@@ -1,0 +1,179 @@
+\chapter[\ulex]{Theory: \ulex}\label{ch:ulex-theory}
+
+{\Large NOTE: this chapter has been integrated into a paper, and thereafter much improved.  In the near future, the paper will be re-adapted to replace this chapter.}
+
+\section{Regular expressions}
+
+Throughout this section, we assume an \emph{alphabet} $\Sigma$; any $a \in \Sigma$ is a \emph{symbol}.  Since we support unicode, $\Sigma$ can be quite large.  Our abstract regular expression (RE) language is as follows:
+
+\Grammar{
+\GFirst{\rm RE}{\epsilon}{empty string}
+\GNext{\CS}{symbol set, $\CS \subseteq \Sigma$}
+\GNext{\rm RE\cdot RE}{concatenation}
+\GNext{\rm RE^*}{Kleene-closure}
+\GNext{\rm RE \OR RE}{alternation (union)}
+\GNext{\rm RE \AND RE}{intersection}
+\GNext{\neg \rm RE}{negation}
+}
+
+Note that we treat symbol sets (\ie{}, character classes) as primitive; this matches the implementation strategy and simplifies the description of DFA generation.  With this representation, the empty set $\emptyset$ and the alphabet $\Sigma$ are both treated as symbol sets.  The former will yield an RE that matches no input (\ie{}, $\CL\Sem{\emptyset} = \emptyset$), and the latter will match any single symbol.  Notice also that our language of REs allows for intersection and negation in addition to the standard operations.
+
+The semantics of our RE language are given in the form of a function $\Ls{-} \ : \ \mathrm{RE} \rightarrow \Sigma^*$ from REs to their corresponding language over $\Sigma$:
+
+\begin{eqnarray*}
+\Ls{\epsilon} 	&=& 	\epsilon \\
+\Ls{\CS}		&=& 	\CS \\
+\Ls{r\cdot s}	&=& 	\Ls{r} \cdot \Ls{s} \\
+\Ls{r^*}		&=& 	\epsilon \cup \Ls{r}\cdot\Ls{r^*} \\
+\Ls{r \OR s}	&=&		\Ls{r} \cup \Ls{s} \\
+\Ls{r \AND s}	&=& 	\Ls{r} \cap \Ls{s} \\
+\Ls{\neg r}		&=& 	\Sigma \setminus \Ls{r}
+\end{eqnarray*}
+
+\section{Derivatives}\label{sec:derivatives}
+
+Brzozowski introduced \emph{derivatives} of regular expressions as an alternative means of DFA construction \cite{derivatives}.  His approach is attrative because it easily allows the language of REs to be extended with arbitrary boolean operations.  Further, it is intuitive, relatively easy to implement, goes directly from an RE to a DFA, and with some care in implementation can be made competitive with other DFA construction approaches.  We begin by introducing the notion of a derivative of some language $\CL$.
+
+\begin{definition}  The \New{derivative} of a set of symbol sequences $\CL \subset \Sigma^*$ with respect to a finite symbol sequence $u$ is defined to be $D_u(\CL) = \{ v \ | \ u\cdot v \in \CL \}$.
+\end{definition} 
+
+Derivatives give a very natural algorithm for DFA construction.  Before giving that algorithm, however, we need a means of computing derivatives for regular expressions.
+
+\begin{definition} A regular expression $\RE$ is \New{nullable} if the language it defines contains the empty string, that is, if $\epsilon \in \Ls{\RE}$.
+\end{definition}
+
+We also need the following function:
+\[ \delta(\RE) =
+    \begin{cases}
+        \epsilon & \textrm{if} \ \epsilon \in \CL\Sem{\RE} \\
+        \emptyset & \textrm{if} \ \epsilon \notin \CL\Sem{\RE}
+    \end{cases}
+\]
+The $\delta$ function takes REs to REs (recall that the empty set is a symbol set, which is an RE).  Intuitively, $\delta$ collapses an RE to the ``smallest'' RE with the same nullability.
+
+The following function, due to Brzozowski, gives the derivative of a regular expression with respect to a symbol $a$.  
+\begin{eqnarray*}
+D_a (\epsilon)  &=& \emptyset \\
+D_a (\CS)         &=& 
+    \begin{cases}
+        \epsilon & \textrm{if} \ a \in \CS \\
+        \emptyset & \textrm{if} \ a \notin \CS \\
+    \end{cases} \\
+D_a (r \cdot s) &=& D_a(r)\cdot s \OR \delta(r) \cdot D_a(s) \\
+D_a (r^*)       &=& D_a(r) \cdot r^* \\
+D_a (r \OR s)   &=& D_a(r) \OR D_a(s) \\
+D_a (r \AND s)  &=& D_a(r) \AND D_a(s) \\
+D_a (\neg r)    &=& \neg D_a(r)
+\end{eqnarray*}
+
+We can take the derivative of an RE with respect to a sequence of symbols in a straightforward way:
+\begin{eqnarray*}
+D_\epsilon (r) &=& r \\
+D_{ua} (r) &=& D_a(D_u(r))
+\end{eqnarray*}
+
+Intuitively, the derivative of an RE with respect to a symbol $a$ yields a new RE after matching $a$.  The following two theorems, again due to Brzozowski, make this precise.
+
+\begin{theorem} The derivative $D_s(\RE)$ of any regular expression $\RE$ with respect to any sequence $u$ is a regular expression.
+\end{theorem}
+
+\begin{theorem} A sequence $u$ is contained in $\Ls{\RE}$ if and only if $\Ls{D_u(\RE)}$ is nullable.
+\end{theorem}
+
+Derivatives provide an easy method of DFA construction.  Suppose we want to build a DFA that recognizes $\RE$.  We can think of each state of the DFA as a regular expression.  We start with a state $Q_0$ that represents $\RE$.  We then take the derivative of $\RE$ with respect to each symbol of the alphabet and create a new state each time a new derivative is found, adding each new state to the work list.  We pop a state from the work list and repeat, until the work list is empty.  There will be a transition from $Q_j$ to $Q_k$ if and only if (identifying states and their REs) $D_a (Q_j) = Q_k$ for some symbol $a$; the transition will be labeled with the set of all such $a$.  Finally, any state that represents a nullable RE is an accepting state.  The correctness of the recognizer is a direct consequence of the above theorems.
+
+The sketch glosses over several important details.  First, what notion of equality do we intend for the equation $D_a (Q_j) = Q_k$?  Ideally, we would identify as a single state all those REs which admit the same language, so that $D_a (Q_j) = Q_k$ if and only if $\Ls{D_a (Q_j)} = \Ls{Q_k}$.  This is expensive to compute, so Brzozowski introduced the notion of RE similarity, an equivalence on REs which is easy to compute but still guarantees that the DFA is finite.
+
+Let $\approx$ denote the least equivalence relation on REs such that
+\begin{eqnarray*}
+r \OR r &\approx& r \\
+r \OR s &\approx& s \OR r \\
+(r \OR s) \OR t &\approx& r \OR (s \OR t)
+\end{eqnarray*}
+
+\begin{definition} Two regular expressions $r$ and $s$ are \New{similar} if $r \approx s$ and are \New{dissimilar} otherwise.
+\end{definition}
+
+\begin{theorem} Every regular expression has only a finite number of dissimilar derivatives.
+\end{theorem}
+
+Hence, DFA construction is guaranteed to succeed if new states are only created when no existing state is similar to a given derivative.  In fact, we want to do much better then this to avoid blowup in DFA size.
+
+\begin{remark}
+In a practical implementation of DFA construction using derivatives, it is crucial to aggresively identify when a derivative admits the same language as an existing state (RE) in the DFA.  The cost of this identification must be balanced against the number of duplicate states avoided.
+\end{remark}
+
+In \ulex{}, we accomplish this by canonicalizing all input and derived REs.  The canonicalization is described in detail in section~\ref{sec:reg-exp}.
+
+\section{Factorings}\label{sec:factorings}
+
+Another problem with DFA construction is the size of the unicode alphabet: taking the derivative with respect to each unicode symbol is not feasible.  But to construct the DFA, we have to examine every possible derivative of a given RE.  We must try to conservatively estimate what sets of symbols will yield the same derivative for an RE.  Here we break from Brzozowski's work and introduce new terminology and an algorithm to make derivatives more amenable to large alphabets.
+
+Let $\sim_\RE$ be the relation defined as follows.  For a regular expression $\RE$ and symbols $a, b$, $a \sim_\RE b$ if and only if $D_a (\RE) = D_b (\RE)$.
+
+\begin{definition}
+The \New{derivative classes} of $\RE$ are the the equivalence classes $\Sigma/{\sim_\RE}$.
+\end{definition}
+
+Ultimately, the outedges for a DFA state and the derivative classes of the RE for that state are in one-to-one correspondence.\footnote{This is not quite true: we usually drop error transitions, that is, transitions going to the RE $\emptyset$.}   Hence, we must eventually determine all the derivative classes for an RE in order to construct the DFA.  To avoid testing the entire alphabet a symbol at a time, we introduce an algorithm which (over)partitions $\Sigma$, so that each partition is a subset of a derivative class.   We can then take the derivative with respect to a representative from each partition, and determine which partitions actually belong to the same derivative class.
+
+\begin{definition}
+Let $r$ be an RE.  A \New{factoring} of $\Sigma$ under $r$ is a partitioning of $\Sigma$ such that each partition is a subset of a derivative class for $\RE$.
+\end{definition}
+
+To be clear: we are factoring the \emph{alphabet} into partitions, but the factoring is guided by (\emph{under}) a regular expression.  A factoring under a given RE is not unique.  The derivative classes for an RE are one possible factoring (with a minimal number of partitions) while the set of all singleton sets of symbols is another factoring (with a maximal number of partitions).  We will present a simple recursive factoring algorithm and prove its correctness, but first, an example.
+
+Suppose we have two regular expressions $r$ and $s$ yielding factorings $\{ \CR_1, \CR_2 \}$ and $\{ \CS_1, \CS_2 \}$ respectively.  Let $t = r \OR s$.  The derivative of $t$ with respect to some symbol $a$ is $D_a(t) = D_a(r) \OR D_a(s)$.  Hence, if $D_a(r) = D_b(r)$ and $D_a(s) = D_b(s)$ for some symbols $a, b$, then $D_a(t) = D_b(t)$ and so $a \sim_t b$.  We can use this to give a factoring under $t$.  The relationship between the factorings under $r$, $s$ and $t$ can be visualized as follows:
+
+\[
+  \xymatrix{
+    \bullet \ar@{-}[rrr]|{\Sigma} &&& \bullet \\
+    \bullet \ar@{-}[rr]|{\CR_1} && \bullet \ar@{-}[r]|{\CR_2} & \bullet \\
+    \bullet \ar@{-}[r]|{\CS_1} & \bullet \ar@{-}[rr]|{\CS_2} &&  \bullet \\
+    \bullet \ar@{-}[r]|{\CR_1 \cap \CS_1} & 
+    \bullet \ar@{-}[r]|{\CR_1 \cap \CS_2} & 
+    \bullet \ar@{-}[r]|{\CR_2 \cap \CS_2} &
+    \bullet
+  }
+\]
+
+This small example captures the essential idea of the algorithm.  To give a factoring under an RE, we recursively find factorings under its components and ``compress'' those factorings into a single new factoring that respects them.  The factorings are being compressed (flattened) in the sense that the boundaries of one factoring are forced onto another, causing some partitions to split.  The algorithm we present is in two stages: first, a factoring function recurively collects factorings under an RE; then, a compress function compresses them all onto $\Sigma$ to produce a single factoring for an RE.  We now make this precise.
+
+The \emph{factoring} function $F$ takes a regular expression and gives a factoring of $\Sigma$ under that RE.  It is defined recursively as follows:
+\begin{eqnarray*}
+F(\epsilon)     &=& \emptyset \\
+F(\CS)          &=& \{ \CS \} \\
+F(r \cdot s)    &=&
+    \begin{cases}
+        F(r) & \epsilon \notin \Ls{r} \\
+        F(r) \cup F(s) & \textrm{otherwise}
+    \end{cases} \\
+F(r \OR s)      &=& F(r) \cup F(s) \\
+F(r \AND s)     &=& F(r) \cup F(s) \\
+F(r^*)          &=& F(r) \\
+F(\neg r)       &=& F(r)
+\end{eqnarray*}
+
+The \emph{compress} function $C : \CP(\Sigma) \longrightarrow \CP(\Sigma)$ takes a set of subsets of the alphabet and produces the smallest partitioning of $\Sigma$ that respects them.  In particular, if
+\[ C(\{\CS_1, \CS_2, \dots, \CS_m \}) = \{ \CS'_1, \CS'_2, \dots, \CS'_n \} \]
+then we have that $\{ \CS'_1, \CS'_2, \dots, \CS'_n \}$ is a partitioning of $\Sigma$ such that for each $\CS'_i$ and $\CS_k$ either $\CS'_i \subseteq \CS_k$ or $\CS'_i \cap \CS_k = \emptyset$.
+
+\begin{theorem}  Let $\RE$ be an RE.  Then $C(F(r))$ is a factoring of $\Sigma$ under $\RE$.
+\end{theorem}
+
+\emph{Proof:} by induction on the structure of $\RE$.  We use $a$ to denote an arbitrary symbol.
+
+\vskip 5pt
+\emph{Case} $\epsilon$: we have $D_a(\epsilon) = \emptyset$ for all $a \in \Sigma$, so $\Sigma/{\sim_\epsilon} = \{ \Sigma \}$.  We have $C(F(\epsilon)) = C(\{ \emptyset \})= \{ \Sigma \}$.
+
+\vskip 5pt
+\emph{Case} $\CS$: we have $D_a(\CS) = \epsilon$ if $a \in \CS$ and $D_a(\CS) = \emptyset$ otherwise. Thus the derivative classes are $\CS$ and $\Sigma \setminus \CS$, which are exactly the sets produced by $C(F(\CS)) = C(\{ \CS \})$.
+
+\vskip 5pt
+\emph{Case} $s \cdot t$ and $\epsilon \notin \Ls{s}$:  here $D_a(s \cdot t) = D_a(s) \cdot t$. Because $t$ is fixed as $a$ varies, the derivative classes are just the derivative classes of $s$.  Since $F(s \cdot t) = F(s)$ the result holds by the induction hypothesis on $s$.
+
+\vskip 5pt
+\emph{Case} $s \cdot t$ and $\epsilon \in \Ls{s}$: here $D_a(s \cdot t) = D_a(s) \cdot t \OR \epsilon \cdot D_a(t)$.  Let $b, c \in \Sigma$ such that $b \sim_s c$ and $b \sim_t c$.  Then $b \sim_{s \cdot t} c$.  The result follows from this fact and the inductive hypothesis applied to $s$ and $t$.
+
+\vskip 5pt
+The other cases are similar.

@@ -1,0 +1,46 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  1      N  E  W  S
+			
+                          November 18, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.51/
+
+
+Summary:
+
+   This version adds implementations of structures Int64 and (inofficially)
+   Word64.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Basis:
+------
+
+  - Added structure Int64, an implementation of non-native 64-bit
+    integer arithmetic.
+  - Added an inofficial structure Word64, an implementation of non-native
+    64-bit word arithmetic.
+    The structure is inofficial in the sense that:
+      - LargeWord is still the same as Word32
+      - the implementations of toLargeWord, toLargeWordX, and fromLargeWord
+        are dummy placeholders that raise an exception when called
+
+  Neither Int64 nor Word64 are very efficient at the moment as they
+  do not rely on native machine support for 64-bit arithmetic
+  (and not even on such things as 32-bit multiplications with 64-bit
+   results).
+
+Compiler:
+---------
+
+  - Added a few primops in support of the implementation of 64-bit
+    arithmetic mentioned above.

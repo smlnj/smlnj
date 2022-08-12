@@ -1,0 +1,59 @@
+%!TEX root = btcomp.tex
+%
+
+\section{Structure CMB}
+
+This section describes the signature of {\tt structure CMB}.  Since
+structures representing cross-compilers have the same signature,
+everything said here applies ({\em mutatis mutandis}) to them as well.
+
+The primary function to invoke the bootstrap compiler is {\tt
+CMB.make'}:
+
+\begin{lstlisting}
+  val make' : string option -> bool
+\end{lstlisting}%
+
+This (re-)compiles the interactive system's entire source tree,
+constructing stable versions for all libraries involved.  In the
+process, binfiles are placed under directory {\tt $u$.bin.{\it
+arch}-{\it os}} where {\it arch} and {\it os} are strings describing
+target architecture and target OS, respectively.  The string $u$ is
+the optional argument to {\tt CMB.make'}.  If set to {\tt NONE}, it
+defaults to \verb|"sml"|.
+
+An alternative equivalent to invoking {\tt CMB.make'} with {\tt NONE}
+is to use {\tt CMB.make}:
+
+\begin{lstlisting}
+  val make : unit -> bool
+\end{lstlisting}%
+
+CMB---like CM---maintains a lot of internal state to speed up repeated
+invocations.  (Between sessions, much of this state is preserved in
+those binfile- and stablefile-directories.  However, reloading is
+still quite a bit more expensive than directly using existing in-core
+information.)
+
+Information that CMB keeps in memory can be completely erased by
+issuing the {\tt CMB.reset} command:
+
+\begin{lstlisting}
+  val reset : unit -> unit
+\end{lstlisting}%
+
+After a {\tt CMB.reset()}, the next {\tt CMB.make} (or {\tt CMB.make'})
+will have to re-load everything from the file system.
+
+CMB has its own registry of ``CM identifiers''---named values that can
+be queried by using the conditional compilation facility.  This
+registry is initialized according to CM's rules. Of course, initial
+values are not based on current architecture and OS but on those of the
+target system.  To explicitly set or erase the values of specific
+variables, one can use {\tt CMB.symval} (which acts in a way analogous
+to {\tt CM.symval}):
+
+\begin{lstlisting}
+  val symval : string ->
+               { get : unit -> int option, set : int option -> unit}
+\end{lstlisting}%

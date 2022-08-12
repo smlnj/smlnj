@@ -1,0 +1,29 @@
+= Language Extensions
+:Date: {release-date}
+:VERSION: {smlnj-version}
+:Author: David MacQueen and John Reppy
+:stem: latexmath
+:source-highlighter: pygments
+
+== Core Language Extensions
+
+To be written
+
+// or patterns (cross reference with Successor ML)
+
+// vector patterns and expressions (cross reference with Successor ML)
+
+// "lazy"
+
+// quote/anti-quote
+
+// continuations (or should these be discussed as part of the SML/NJ Basis?)
+
+
+== Module Language Extensions
+
+To be written
+
+// "where structure"
+
+// higher-order functors

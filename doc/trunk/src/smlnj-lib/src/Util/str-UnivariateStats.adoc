@@ -1,0 +1,33 @@
+= The `UnivariateStats` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `UnivariateStats` structure ...
+
+== Synopsis
+
+[source,sml]
+------------
+structure UnivariateStats
+------------
+
+== Interface
+
+[source,sml]
+------------
+------------
+
+== Description
+
+`[.kw]#type# foo`::
+  something
+
+`[.kw]#val# bar : foo \-> foo`::
+  something
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

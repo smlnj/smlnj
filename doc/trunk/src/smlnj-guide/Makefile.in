@@ -1,0 +1,55 @@
+# Makefile for SML/NJ User Guide
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =		@SHELL@
+INSTALL =	@INSTALL@
+@SET_MAKE@
+
+ASCIIDOCTOR =	@ASCIIDOCTOR@
+
+SMLNJ_VERSION =	@SMLNJ_VERSION@
+SMLNJ_DATE =	@SMLNJ_DATE@
+
+HTML_OUT_DIR =	@OUT_DIR@/smlnj-guide/html
+WEB_OUT_DIR =	@WEB_OUT_DIR@
+
+ATTRS =		-a stylesheet=release-notes.css -a stylesdir=../conf
+
+CONF =		-r ../conf/changelog-macros.rb
+
+ADOC_FILES =	$(wildcard *.adoc)
+
+HTML_FILES =	$(ADOC_FILES:.adoc=.html)
+
+# build rule for generating the distribution documentation
+#
+.PHONY:	doc
+doc:		html
+#		mkdir -p $(HTML_OUT_DIR)
+#		cp -p $(SMLNJ_VERSION)-README.html $(HTML_OUT_DIR)
+
+.PHONY:	html
+html:		$(HTML_FILES)
+
+%.html : %.adoc
+	$(ASCIIDOCTOR) $(ATTRS) $(CONF) -b html5 $<
+
+smlnj-guide.pdf:	smlnj-guide.adoc $(ADOC_FILES)
+	asciidoctor-pdf -o smlnj-guide.pdf smlnj-guide.txt
+	rm -f smlnj-guide.xml
+
+#################### Cleanup ####################
+
+CLEAN_SUBDIRS =
+
+CLEAN_FILES =
+
+DISTCLEAN_FILES +=	Makefile \
+			$(HTML_FILES)
+
+include @ROOT_DIR@/mk/clean-rules.gmk

@@ -1,0 +1,25 @@
+= The `ListSetFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ListSetFn` functor provides a sorted-list implementation of the
+xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+This implementation is light weight and fast for small sets, but
+for larger applications, it is recommended that one use the
+xref:fun-RedBlackSetFn.adoc[`RedBlackSetFn`] functor instead.
+
+== Synopsis
+
+[source,sml]
+------------
+functor ListSetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key
+------------
+
+== See Also
+
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:sig-ORD_SET.adoc[`ORD_SET`],
+xref:smlnj-lib.adoc[__The Util Library__]

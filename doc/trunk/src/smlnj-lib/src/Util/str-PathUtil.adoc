@@ -1,0 +1,79 @@
+= The `PathUtil` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `PathUtil` structure provides support for searching for files
+in the file system using a list of possible locations.  It is implemented
+using the {sml-basis-url}/index.html[*SML Basis Library*] portable
+file-system mechanisms and, thus, it itself portable across different
+operating systems.
+
+== Synopsis
+
+[source,sml]
+------------
+signature PATH_UTIL
+structure PathUtil : PATH_UTIL
+------------
+
+== Interface
+
+[source,sml]
+------------
+val findFile : string list -> string -> string option
+
+val findFiles : string list -> string -> string list
+
+val existsFile : (string -> bool) -> string list -> string -> string option
+
+val allFiles : (string -> bool) -> string list -> string -> string list
+
+val findExe : string list -> string -> string option
+------------
+
+== Description
+
+`[.kw]#val# findFile : string list \-> string \-> string option`::
+  `findFile paths __name__` returns `SOME path`, where `path` is a string of
+   the form ``"__p__/__name__"`` and ``__p__`` is the first string in `paths`
+   such that `path` exists.  If no such file exists, then `NONE` is returned.
+   If `__name__` is an absolute path, then `SOME __name__` is returned
+   if it exists.
+
+`[.kw]#val# findFiles : string list \-> string \-> string list`::
+  `findFiles (paths, mode) __name__` returns a list of strings, such that each string
+  `s` in the result has the form ``"__p__/__name__"`` with ``__p__`` in `paths`
+  and the file named by `path` existing in the file system.
+
+`[.kw]#val# existsFile : (string \-> bool) \-> string list \-> string \-> string option`::
+  `existsFile pred paths name` returns `SOME path`, where `path` is a string of
+   the form ``"__p__/__name__"`` and ``__p__`` is the first string in `paths`
+   such that `path` exists and that `pred path` returns true.  If no such file exists,
+   then `NONE` is returned.  If `__name__` is an absolute path, then
+   `SOME __name__` is returned if it exists and satisfies the predicate.
+
+`[.kw]#val# allFiles : (string \-> bool) \-> string list \-> string \-> string list`::
+  `allFiles pred paths name` returns a list of strings, such that each string
+  `s` in the result has the form ``"__p__/__name__"`` with ``__p__`` in `paths`,
+  the file named by `path` existing in the file system, and `pred path` returns
+  `true`.  The order of the path list is preserved in the result.  If `__name__`
+  is an absolute path, then the list `[__name__]` is returned if `__name__` exists
+  and satisfies the predicate.
+
+`[.kw]#val# findExe : string list \-> string \-> string option`::
+  `findExe paths name` searches `paths` for an _executable_ file with the given
+  name.  This expression is equivalent to
++
+[source,sml]
+------------
+existsFile (fn p => OS.FileSys.access(p, [OS.FileSys.A_EXEC])) paths name
+------------
+
+
+== See Also
+
+xref:../Unix/str-UnixPath.adoc[`UnixPath`],
+xref:smlnj-lib.adoc[__The Util Library__]

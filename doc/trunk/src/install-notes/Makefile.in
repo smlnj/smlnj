@@ -1,0 +1,52 @@
+# Makefile for SML/NJ Installation Notes
+#
+# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =		@SHELL@
+INSTALL =	@INSTALL@
+@SET_MAKE@
+
+ASCIIDOCTOR =	@ASCIIDOCTOR@
+
+SMLNJ_VERSION =	@SMLNJ_VERSION@
+SMLNJ_DATE =	@SMLNJ_DATE@
+
+HTML_OUT_DIR =	@OUT_DIR@/html/install-notes
+WEB_OUT_DIR =	@WEB_OUT_DIR@
+
+ATTRS =         -a version=$(SMLNJ_VERSION) \
+                -a release-date="$(SMLNJ_DATE)"
+
+CONF =
+
+TXT_FILES =	$(wildcard *.txt)
+
+HTML_FILES =	$(TXT_FILES:.txt=.html)
+
+# build rule for generating the distribution documentation
+#
+.PHONY:	doc
+doc:		html
+		mkdir -p $(HTML_OUT_DIR)
+		cp -p $(HTML_FILES) $(HTML_OUT_DIR)
+
+.PHONY:	html
+html:		$(HTML_FILES)
+
+%.html : %.txt
+	$(ASCIIDOCTOR) $(ATTRS) $(CONF) -b html5 $<
+
+#################### Cleanup ####################
+
+CLEAN_SUBDIRS =
+
+CLEAN_FILES =
+
+DISTCLEAN_FILES +=	Makefile \
+			$(HTML_FILES)
+
+include @ROOT_DIR@/mk/clean-rules.gmk

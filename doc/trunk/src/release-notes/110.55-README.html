@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.55 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  5      N  E  W  S
+			
+                             May 18, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.55/">http://smlnj.cs.uchicago.edu/dist/working/110.55/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+   Bugfixes and minor feature enhancements.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Libraries:</dt>
+  <dd>
+    <ul>
+      <li>Fixed bug regarding the copy function in
+      <tt>*array-slice.sml</tt> modules.</li>
+      <li>Refactored the pretty printing library.  The declarative way
+      to construct pretty-printing descriptions now sits on top of the
+      <tt>PP_STREAM interface</tt>.</li>
+      <li>Removed <tt>onNewline</tt> function, which was not
+      implemented.</li>
+      <li>Added <tt>ANSITerm</tt> structure, which provides support
+      for ANSI terminal display attributes (e.g., <font
+      color=red>red</font> text).</li>
+      <li>Added <tt>ANSITermDev</tt> device that uses ANSI terminal
+      display attributes and added a <tt>ANSITermPP</tt> for pretty
+      printing to such a device.</li>
+    </ul>
+  </dd>
+  <dt>Runtime system:</dt>
+  <dd>
+    <ul>
+      <li>Support for HPUX 11 added.  (There is still a problem,
+      though.)</li>
+      <li>Updated Cygwin's fault/signal handling.</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

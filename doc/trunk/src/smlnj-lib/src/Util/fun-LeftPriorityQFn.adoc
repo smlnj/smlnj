@@ -1,0 +1,128 @@
+= The `MONO_PRIORITYQ` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `LeftPriorityQFn` functor provides a functional implementation of priority
+queues using leaftist heaps.
+
+== Synopsis
+
+[source,sml]
+------------
+signature PRIORITY
+signature MONO_PRIORITYQ
+functor LeftPriorityQFn (P : PRIORITY) : MONO_PRIORITYQ
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+type priority
+val compare : (priority * priority) -> order
+
+type item
+val priority : item -> priority
+------------
+
+== Functor Argument Description
+
+`[.kw]#type# priority`::
+  The abstract type of priority values.
+
+`[.kw]#val# compare : (priority * priority) \-> order`::
+  `compare (pri1, pri2)` returns the order of the two priority values.
+
+`[.kw]#type# item`::
+  The type of items in the priority queue.
+
+`[.kw]#val# priority : item \-> priority`::
+  `priority item` returns the priority value for `item`.
+
+== Interface
+
+[source,sml]
+------------
+type item
+type queue
+
+val empty : queue
+
+val singleton : item -> queue
+
+val fromList : item list -> queue
+
+val insert : (item * queue) -> queue
+
+val remove : queue -> (item * queue)
+
+val next : queue -> (item * queue) option
+
+val findAndRemove : queue * (item -> bool) -> (item * queue) option
+
+val delete : queue * (item -> bool) -> queue
+
+val merge : (queue * queue) -> queue
+
+val numItems : queue -> int
+
+val isEmpty : queue -> bool
+------------
+
+== Interface Description
+
+`[.kw]#type# item`::
+  The type of items in the priority queue.
+
+`[.kw]#type# queue`::
+  The priority queue type.
+
+`[.kw]#val# empty : queue`::
+  The empty priority queue.
+
+`[.kw]#val# singleton : item \-> queue`::
+  `singleton item` returns a queue containing just `item`.
+
+`[.kw]#val# fromList : item list \-> queue`::
+  `fromList items` returns a queue containing the `items`.
+
+`[.kw]#val# insert : (item * queue) \-> queue`::
+  `insert (pq, item)` returns the queue that is `pq` with `item` added.
+
+`[.kw]#val# remove : queue \-> (item * queue)`::
+  `remove pq` returns `(item, pq')`, where `item` is the highest priority item
+  in `pq` and ``pq'`` is the result of removing `item` from `pq`.  This function
+  raises the {sml-basis-url}/list.html#SIG:LIST.Empty:EXN[Empty] exception
+  when `pq` is empty.
+
+`[.kw]#val# next : queue \-> (item * queue) option`::
+  `remove pq` returns `SOME(item, pq')`, where `item` is the highest
+  priority item in `pq` and ``pq'`` is the result of removing `item`
+  from `pq`.  If `pq` is empty, then `NONE` is returned.
+
+`[.kw]#val# findAndRemove : queue * (item -> bool) -> (item * queue) option`::
+  `findAndRemove (pq, pred)` returns `SOME(item, pq')`, where `item` is the
+  highest priority item in `pq` such that `pred item` returns `true`, and
+  and ``pq'`` is the result of removing `item` from `pq`.  If no such item
+  exists, then `NONE` is returned.
+
+`[.kw]#val# delete : queue * (item -> bool) -> queue`::
+  `delete (pq, pred)` deletes any item in `pq` that satisfies the predicate
+  and returns the resulting queue.
+
+`[.kw]#val# merge : (queue * queue) \-> queue`::
+  `merge (pq1, pq2)` returns the priority queue formed by merging the items in
+  the two queues.
+
+`[.kw]#val# numItems : queue \-> int`::
+  `numItems pq` returns the number of items in `pq`.
+
+`[.kw]#val# isEmpty : queue \-> bool`::
+  `isEmpty pq` returns `true` if, and only if, `pq` is empty.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

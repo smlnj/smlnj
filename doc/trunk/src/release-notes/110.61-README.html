@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.61 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  6  1      N  E  W  S
+			
+                           December 14, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.61/">http://smlnj.cs.uchicago.edu/dist/working/110.61/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+    This is mostly a bugfixing release.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>runtime:</dt>
+  <dd>
+    <ul>
+      <li>Fixed the code in
+      <tt>runtime/c-libs/posix-tty/{tcgetattr,tcsetattr}.c</tt> to get the
+      <tt>c_cc termios</tt> data copied correctly.  Also moved the
+      allocation of the string to avoid problems if it caused a GC.
+      Thanks to Timothy Bourke for the bug report and fix.</li>
+    </ul>
+  </dd>
+
+  <dt>CM:</dt>
+  <dd>
+    <ul>
+      <li>CM's <em>standard shell tools</em> (e.g., <tt>mlyacc</tt>,
+      <tt>mllex</tt>, etc.) that are implemented in terms of
+      <tt>Tools.registerStdShellCmdTool</tt> now tolerate (with a
+      warning) the situation where target files exist and appear
+      outdated, but the shell command in question fails (e.g., because
+      the program in question has not been installed yet).</li>
+
+      <li>CM now reports undefined anchors as errors and aborts
+      execution rather than silently pressing on using bogus
+      values.</li>
+
+      <li>"<tt>[autoloading]</tt>" messages can now be suppressed
+      using the <tt>CM.Control.verbose control</tt> (or the
+      <tt>-Ccm.verbose=false</tt> command line option).</li>
+
+      <li>Fixed bug in CM where "<tt>fwith:</tt>" specifications that
+      affect compilation (as opposed to parsing) were ignored.</li>
+    </ul>
+  </dd>
+
+  <dt>Basis:</dt>
+  <dd>
+    <ul>
+      <li>Fixed the types of <tt>recvVecFrom</tt>,
+      <tt>recvVecFrom'</tt>, <tt>recvVecFromNB</tt>, and
+      <tt>recvVecFromNB'</tt> in the <tt>SOCKET</tt> signature.  This
+      error is actually in the SML Basis specification too.</li>
+    </ul>
+  </dd>
+
+  <dt>Language processing tools (<tt>ml-lpt</tt>):</dt>
+  <dd>
+    <ul>
+      <li>The implementations of our new language processing tools
+      (<tt>fml-ulex</tt>, <tt>ml-antlr</tt>) have been improved, but
+      documenation is not yet up-to-date.</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

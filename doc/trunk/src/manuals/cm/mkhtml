@@ -1,0 +1,4 @@
+#!/bin/sh
+
+exec latex2html -scalable_fonts -local_icons -show_section_numbers \
+	-toc_depth 5 "$@"

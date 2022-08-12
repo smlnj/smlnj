@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>SML/NJ 110.42 NEWS</title>
+</head>
+<body>
+<pre>
+			S  M  L   /   N  J
+
+                 1  1  0  .  4  2      N  E  W  S
+			
+                          October 16, 2002
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+        <a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">http://cm.bell-labs.com/cm/cs/what/smlnj/index.html</a>
+        <a href="ftp://ftp.research.bell-labs.com/dist/smlnj/working/110.42">ftp://ftp.research.bell-labs.com/dist/smlnj/working/110.42/</a>
+</pre>
+
+<dl>
+<dt>Summary:
+<dd>A number of small, but important bug fixes.</dd>
+</dl>
+
+<hr>
+
+<h3>Details:</h3>
+
+<ul>
+<li>Fixed a space leak in the CML implementation of TextIO and BinIO.</li>
+<li>Fixed the handling of <tt>%g</tt> in the Format library module.</li>
+<li>Ported to MacOS X 10.2 (Jaguar).  The MacOS X 10.1 and 10.2 runtime
+systems are different.  The former is called run.ppc-darwin5
+and the latter is run.ppc-darwin.</li>
+<li>Fixed a bug in division by zero on the PowerPC.</li>
+<li>Sml now senses the <tt>SMLNJ_HOME</tt> environment variable.
+If this is set,
+then the bin dir is assumed to be in <tt>$SMLNJ_HOME/bin</tt> and (unless
+<tt>CM_PATHCONFIG</tt> is also set), the path configuration file is
+assumed to be in <tt>$SMLNJ_HOME/lib/pathconfig</tt>.  This way one can
+easily move the entire tree to some other place and everything will
+``just work''.  Companion commands such as <tt>ml-build</tt> and
+<tt>ml-makedepend</tt> also sense this variable.</li>
+</ul>
+</body>
+</html>

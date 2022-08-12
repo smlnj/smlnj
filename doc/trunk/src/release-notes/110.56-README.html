@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.56 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  6      N  E  W  S
+			
+                            October 25, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.56/">http://smlnj.cs.uchicago.edu/dist/working/110.56/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+   Bugfixes and minor feature enhancements.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Libraries:</dt>
+  <dd>
+    <ul>
+      <li>Added interval sets to utility library (signatures
+      <tt>INTERVAL_DOMAIN</tt> and <tt>INTERVAL_SET</tt>, and functor
+      <tt>IntervalSetFn</tt>).</li>
+    </ul>
+  </dd>
+  <dt>Compiler:</dt>
+  <dd>
+    <ul>
+      <li>Improved code generation for polymorphic equality on datatypes.</li>
+    </ul>
+  </dd>
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>Fixed bug in <tt>x86</tt> register allocator.</li>
+      <li>Some code cleanup.</li>
+    </ul>
+  </dd>
+  <dt>Tools:</dt>
+  <dd>
+    <ul>
+      <li>ML-Lex now correctly recognizes <tt>\r</tt> as representing
+      carriage return.</li>
+      <li>ML-Yacc now works with files that use non-native end-of-line
+      encodings (e.g., Windows text files on a Unix system).</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

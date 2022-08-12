@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.51 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  1      N  E  W  S
+			
+                          November 18, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.51/">http://smlnj.cs.uchicago.edu/dist/working/110.51/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+   This version adds implementations of structures <tt>Int64</tt> and
+   (inofficially) <tt>Word64</tt>.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Basis:</dt>
+  <dd>
+    <ul>
+      <li>Added <tt>structure Int64</tt>, an implementation of
+      non-native 64-bit integer arithmetic.</li>
+
+      <li>Added an inofficial <tt>structure Word64</tt>, an
+      implementation of non-native 64-bit word arithmetic.
+      The structure is inofficial in the sense that:
+      <ul>
+	<li><tt>LargeWord</tt> is still the same as <tt>Word32</tt></li>
+	<li>the implementations of <tt>toLargeWord</tt>,
+	<tt>toLargeWordX</tt>, and <tt>fromLargeWord</tt>
+	are dummy placeholders that raise an exception when called.</li>
+      </ul></li>
+    </ul>
+    Neither Int64 nor Word64 are very efficient at the moment as they
+    do not rely on native machine support for 64-bit arithmetic
+    (and not even on such things as 32-bit multiplications with 64-bit
+    results).
+  </dd>
+    
+  <dt>Compiler</dt>
+  <dd>
+    <ul>
+      <li>Added a few primops in support of the implementation of
+      64-bit arithmetic mentioned above.</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

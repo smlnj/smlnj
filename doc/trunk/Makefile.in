@@ -1,0 +1,42 @@
+# Makefile for SML/NJ documentation
+#
+# COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =		@SHELL@
+INSTALL =	@INSTALL@
+@SET_MAKE@
+
+.PHONY:		help doc clean distclean devclean
+
+help:
+	@echo "This Makefile supports the following targets:"
+	@echo "  help          -- print this message."
+	@echo "  doc           -- generate the documentation for the distribution into @OUT_DIR@"
+	@echo "  clean         -- remove intermediate files generated during building"
+	@echo "  distclean     -- remove files generated during configuration"
+	@echo "                   and building; the resulting tree has the same"
+	@echo "                   files as the distribution."
+	@echo "The following additional targets are primarily for developers:"
+	@echo "  devclean      -- remove everything that is not part of the SVN"
+	@echo "                   repository."
+
+doc:
+	(cd src; $(MAKE) doc)
+
+#################### Cleanup ####################
+
+CLEAN_SUBDIRS =		src
+
+CLEAN_FILES =
+
+DISTCLEAN_FILES +=	Makefile config.status config.log \
+			autom4te*.cache
+
+DEVCLEAN_FILES =	configure \
+			doc/html doc/man doc/pdf
+
+include @ROOT_DIR@/mk/clean-rules.gmk

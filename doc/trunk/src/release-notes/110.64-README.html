@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.64 NEWS</title>
+</head>
+
+<body>
+<div align="center">
+<big><b>
+                       Standard ML of New Jersey
+<br/>
+                         Version 110.64 NEWS
+<br/>
+                              May 31, 2007
+<br/>
+<br/>
+</b>
+<!--
+                                WARNING
+</b><br/>
+        This working version is believed to be stable, and 
+        has passed the regression test suite. However, there is
+        quite a bit of new code in the FLINT middle end and 
+        at the interface between the Front End and FLINT.
+-->
+</big>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.64/index.html">
+<tt>http://smlnj.cs.uchicago.edu/dist/working/110.64/</tt></a></dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+
+Many of the changes affect FLINT and its interaction with the
+front end, and particularly the system for supporting primops
+(primitive operations). Additional bugs have been fixed, and
+ml-lpt as well as AMD64 support have been updated. 
+
+<h3>Details:</h3>
+
+<dl>
+
+  <dt>Front End and FLINT:</dt>
+  <dd>
+    <ul>
+      <li>
+	Implemented a new scheme for defining primops and tracking
+        and analyzing their types in the type checker and in FLINT.
+        Improved the way that the type checker captures type
+        information used by the translate phase to calculate 
+        FLINT types.
+      </li>
+      <li>
+        Improved signature printing by making it faithfully reflect
+        the original order of specifications or (for inferred
+        signatures) definitions.
+      </li>
+      <li>
+        First phase of streamlining the type system of the plambda and flint
+        intermediate languages.
+      </li>
+      <li>
+        Fixed some bugs in the type checker and module system.
+      </li>
+      <li>
+	Infinite loop in FLINT (<tt>tests/typing/tests/25.sml</tt>)
+	(fix by Stefan Monnier).
+      </li>
+      <li>
+	Implemented integer and word division operations (div, mod,
+	rem, quot) with an explicit test for zero division.  This
+	fixes several previously open bugs related to the treatment of
+	divide-by-zero errors.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>SML Basis library:</dt>
+  <dd>
+    <ul>
+      <li>
+	Fixed a bug in the implementation of order operations
+        and min and max for Int32. Fixed several other bugs in the Basis
+        that were revealed by running the regression tests.
+      </li>
+      <li>
+	A number of fixes related to the formatting of dates.  These
+	include fixes for bugs #1415 and #1416.  We also now correctly
+	handle format characters that lie outside the specified set.
+      </li>
+      <li>
+	Timer.cpu_timer, etc. type printing corrected (by making Timer
+	have opaque sig constraint in <tt>basis/Implementation/timer.sml</tt>)
+      </li>
+      <li>
+	Added missing <tt>toLarge</tt>/<tt>fromLarge</tt> operations to <tt>Word</tt><i>N</i> modules.
+      </li>
+      <li>
+	Added missing <tt>InvalidArc</tt> to <tt>OS.Path</tt>.
+      </li>
+      <li>
+	Fixed bug in printing negative time values.
+      </li>
+      <li>
+	<tt>Char.fromString</tt> now handles the <tt>\u</tt><i>xxxx</i> escape sequence.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>CM:</dt>
+  <dd>
+    <ul>
+      <li>
+	Added a boolean control named cm.tolerate-tool-failures
+	(env. variable name: CM_TOLERATE_TOOL_FAILURES).  The default
+	is false and makes CM fail if a shell tool reports a
+	non-success exit status.  If the control is set to true, then
+	CM will press on after tool failures in the event that all
+	target files exist (even when some of them are considered
+	outdated).  Turning the control to true can be useful for
+	bootstrapping.
+      </li>
+      <li>
+	Changed the installation mechanism for CM tool plugins.  These
+	are just libaries and now get installed like ordinary
+	libaries.<br/>
+
+	There are now a number of new installation targets that give
+	some fine-grain control over what classes and suffixes are
+	known, and what they will map to.  See config/targets for
+	details.<br/>
+
+	The code that caused plugin installation as part of running a
+	tool's "build" script has been removed.  (The build script is for
+	building, not for installing.)
+      </li>
+    </ul>
+  </dd>
+
+  <dt>SML/NJ Library</dt>
+  <dd>
+    <ul>
+      <li>
+	Added <tt>next</tt> function to <tt>Fifo</tt> and <tt>Queue</tt> modules.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>ml-lpt:</dt>
+  <dd>
+    <ul>
+      <li>
+	The name of several ml-lpt-lib modules has changed:
+	<pre>
+	  Repair	=> AntlrRepair
+	  StreamPos	=> AntlrStreamPos
+	  ErrHandlerFn	=> AntlrErrHandler
+	  EBNF		=> AntlrEBNF
+        </pre>
+      </li>
+      <li>
+	The ml-antlr specification format has changed: declarations such as
+	%tokens and nonterminal definitions can occur *multiple* times in the
+	same specification.  The semantics are such that each new
+	declaration extends the previous ones.  This does not apply to
+	%start or %name, of course.
+      </li>
+
+      <li>
+	Importing a grammar via %import now includes <em>all</em>
+	declarations in from the imported grammar, except for %name,
+	%entry, and %start.  Tokens and nonterminals can be dropped
+	using the new %dropping clause of the
+	%import directive; the separate %drop and %extend have been
+	removed.
+      </li>
+
+      <li>
+	We now allow optional type annotations on nonterminals, using
+	the %nonterms directive as in ml-yacc.
+      </li>
+
+      <li>
+	The refcell construct is now implemented using SML's regular
+	reference cells, so the :== and !! notation has been
+	deprecated.
+      </li>
+
+      <li>
+	The ml-antlr tool now does much more checking of
+	specifications, and its error messages have been greatly
+	improved.  Error repair for generated parsers has been
+	completely rewritten, and is now both much faster and more
+	accurate.
+      </li>
+      <li>
+	ml-ulex is now more lenient with escape codes
+	(non-SML-standard escape codes are now interpreted literally,
+	so e.g. \| denotes "|").  Also, character classes may now
+	include a "-" character at the beginning as is standard in
+	most other regexp tools.
+      </li>
+      <li>
+	All of these changes are documented in the user guide, which
+	has been updated and improved.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>AMD64 support:</dt>
+  <dd>
+    <ul>
+      <li>
+	Added the new MLRISC code generator for the AMD64.  This
+	version, in contrast to the previous one, uses SSE registers
+	and instructions for all floating-point computations.
+      </li>
+      <li>
+	Added FSQRT instructions for the AMD64 code generator.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>Regression Tests:</dt>
+  <dd>
+    <ul>
+      <li>
+	Revised the regression test suite and brought the tests and
+        reference outputs up to date. Added a few new tests. Cleaned
+        up the test scripts.
+      </li>
+    </ul>
+  </dd>
+
+</dl>
+
+</body>
+</html>

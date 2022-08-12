@@ -1,0 +1,37 @@
+# doc-rules.gmk
+#
+# COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# common variables and rules for building the SML3d documentation.
+#
+# @configure_input@
+#
+# variables to be defined by parent:
+#
+#    TARGET_BASE	-- the target's base URL (e.g., http://sml3d.cs.uchicago.edu/)
+#    DOC_BASE		-- the target document's root URL
+#    DST_DIR		-- the location where generated files should be placed
+
+# delete default suffixes to improve make performance
+#
+.SUFFIXES:
+
+SHELL =			/bin/sh
+
+CONF_DIR =		@SRC_CONFIG_DIR@
+IMAGES_URL =		$(TARGET_BASE)/images
+STYLES_URL =		$(TARGET_BASE)/styles
+IMAGES_DST_DIR =	$(DST_DIR)/images
+STYLES_DST_DIR =	$(DST_DIR)/styles
+
+# directory for helper scripts
+#
+DOCBIN_DIR =		@ROOT_DIR@/bin
+
+# paths and flags for documentation toolchain
+#
+ASCIIDOCTOR =   	@ASCIIDOCTOR@
+
+LATEXMK =		@LATEXMK@
+LATEXMK_PDF =		$(LATEXMK) -pdf

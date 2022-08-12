@@ -1,0 +1,265 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.83 Release Notes</title>
+<style type="text/css">
+  body {
+    font-size: 14pt;
+  }
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: 200%;
+    text-align: center;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  h3 {
+    font-size: 140%;
+  }
+  dt.component {
+    font-size: 120%;
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  span.important {
+    color: red;
+    text-weight: bold;
+  }
+  span.tt {
+    font-family: "Courier", monospace;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    color: darkblue;
+  }
+  span.kw {
+    font-family: "Courier", monospace;
+    font-weight: bold;
+    color: darkgreen;
+  }
+  span.com {
+    font-style: italic;
+    color: indianred;
+  }
+  span.exe {
+    font-weight: bold;
+  }
+  table.buglist {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+  p.compact {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+  #support-table {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  #support-table th {
+    text-align: left;
+    padding-right: 1em;
+    border-bottom: 2px solid black;
+  }
+  #support-table td {
+    padding-right: 1em;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br>
+                          Version 110.83 NEWS
+<br>
+                            June 1, 2018
+</div>
+
+<hr>
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><span class="tt">http://www.smlnj.org/index.html</span></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.83/index.html">
+    <span class="tt">http://smlnj.cs.uchicago.edu/dist/working/110.83/</span></a>
+  </dd>
+</dl>
+<hr>
+
+<h3>Summary:</h3>
+<p>
+This release continues the march toward 64-bit support (it looks to be a long march).
+There are many under-the-hood changes to the compiler to make supporting both 32-bit and
+64-bit targets possible, as well as a number of bug fixes.
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">Basis Library:</dt>
+  <dd>
+    <p>
+    This version continues to track proposed Basis Library improvements.
+    <span class="important">Note that these improvements are <i>proposals</i>
+    that have not yet been ratified and are subject to change!</span>
+    Specifically, the following proposals are supported by this version of SML/NJ:
+    </p>
+    <dl>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2018-001-Addition-of-monomorphic-buffers">
+        <b>[2018-001]</b> Addition of monomorphic buffers</a></dt>
+        <dd>This change adds the <span class="code">MONO_BUFFER</span> signature
+	  to the Basis Library, with instances <span class="code">CharBuffer</span>
+	  and <span class="code">Word8Buffer</span>.
+        </dd>
+    </dl>
+    <p>
+      We also fixed a number of cases where our implementation of Basis functions
+      did not agree with the specification.  See the list of bug fixes for details.
+    </p>
+  </dd>
+  <dt class="component">Compiler</dt>
+  <dd>
+    <p>
+      Changed the internal representation of real literals from strings to a more
+      structured representation (see <span class="code">compiler/Basics/reals/</span>
+      for the code).
+    </p>
+    <p>
+      Changed the <span class="code">Absyn</span>, <span class="code">PLambda</span>,
+      <span class="code">FLINT</span>, and <span class="code">CPS</span> IRs to
+      represent integer and word literals as <span class="code">IntInf.int</span>
+      values.  This change removes unnecessary complexity in code generation, improves
+      constant folding, and lays the groundwork for 64-bit support.
+    </p>
+    <p>
+      Improved the reporting of errors involving literal values.  We now
+      use the original source text when describing the value in the error
+      message.  We also report an error in the front-end when real literals
+      are too large to be represented (instead of letting the code generator fail).
+    </p>
+    <p>
+      Fixed a number of bugs where the compiler did not handle the language syntax
+      as specified in the Definition.  See the list of bug fixes for details.
+    </p>
+  </dd>
+</dl>
+
+<h3>Bugs:</h3>
+    <p>
+    Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a>
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">191</td><td>Compiler crash when handling large reals</td></tr>
+      <tr><td class="bugid">194</td><td>Real.fromString overflows or hangs</td></tr>
+      <tr><td class="bugid">201</td><td>The AMD64.cm library is missing</td></tr>
+      <tr><td class="bugid">206</td><td>Parsing of explicit type variables and val rec is broken</td></tr>
+<!--      <tr><td class="bugid">XXX</td><td>DESCRIPTION</td></tr> -->
+    </table>
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul class="buglist">
+      <li>
+	Fixed the scanning of type variables to agree with the Definition
+        (<i>e.g.</i>, <span class="code">'1</span> and <span class="code">'_</span>
+	are now accepted as type variables).
+      </li>
+      <li>
+	Modified the parser to enforce the restriction that module-language
+	identifiers must be alphanumeric (not symbolic).
+      </li>
+      <li>
+	Modified the parser to disallow the rebinding of <span class="code">=</span>.
+	Note that we still allow the syntax
+	<span class="code"><span class="kw">val</span> <span class="kw">op</span> = = ...</span>
+	because it is needed
+	when bootstrapping the initial Basis environment.
+      </li>
+      <li>
+	Fixed the behavior of <span class="code">Int.sameSign</span> and
+	<span class="code">Int32.sameSign</span> to correctly handle the situation
+	where one argument was zero and the other was greater than zero.
+      </li>
+      <li>
+	Fixed the scanner to allow unmatched close comment sequences
+	(<i>e.g.</i>, <span class="code">(<span class="kw">op</span> *)(2,3)</span>).
+      </li>
+      <li>
+	Fixed the parser's handling of <span class="kw">op</span> combined with
+	long identifiers.
+      </li>
+      <li>
+	Fixed scanning of prefixes of word values in strings to match Basis
+	Library specification ("<span class="code">0w</span>" is <b>not</b>
+	a valid prefix for hexadecimal values).
+      </li>
+      <li>
+        Fixed <span class="code">Char.toCString</span> to produce <span class="code">"\000"</span>
+        (instead of <span class="code">"\0"</span>) for the nul character.
+      </li>
+      <li>
+        Fixed the scanner to produce the correct error message for bad escape sequences in string
+        literals.
+      </li>
+      <li>
+	Fixed parser to allow parentheses around <span class="code">val rec</span> patterns.
+      </li>
+      <li>
+	Fixed minor bug in Date.toString (missing leading "<span class="code">0</span>"
+        for day of month).
+      </li>
+    </ul>
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+</p>
+<div>
+<table id="support-table">
+  <tr><th>Architecture</th> <th>Operating System</th> <th>Status</th></tr>
+  <tr><td>Power PC</td> <td>Mac OS X 10.5 (Leopard)</td> <td></td></tr>
+  <tr><td></td> <td>AIX</td> <td></td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>Sparc</td> <td>Solaris</td> <td></td></tr>
+  <tr><td></td> <td>Linux</td> <td></td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td> <td></td></tr>
+  <tr><td></td> <td>Mac OS X 10.11 (El Capitan)</td> <td></td></tr>
+  <tr><td></td> <td>macOS 10.12 (Sierra)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>macOS 10.13 (High Sierra)</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Ubuntu 16.04.3 LTS</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Other Linux variants</td><td></td></tr>
+  <tr><td></td> <td>BSD variants</td><td></td></tr>
+  <tr><td></td> <td>Windows 7</td> <td></td></tr>
+  <tr><td></td> <td>Windows 10</td> <td>Tested</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7 or 10)&nbsp;</td></tr>
+</table>
+</div>
+</blockquote>
+
+</body>
+</html>

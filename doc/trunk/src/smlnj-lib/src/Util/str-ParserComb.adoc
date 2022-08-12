@@ -1,0 +1,254 @@
+= The `ParserComb` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ParserComb` structure provides parser combinators over
+character readers. This structure is modeled after the Haskell
+combinators of Hutton and Meijer. The main difference is that
+they return a single result, instead of a list of results.
+This fact means that the `or` combinator is a *committed* choice;
+once one branch succeeds, the others will not be enabled.  While
+this property is somewhat limiting, for many applications it
+will not be a problem.
+
+== Synopsis
+
+[source,sml]
+------------
+signature PARSER_COMB
+structure ParserComb : PARSER_COMB
+------------
+
+== Interface
+
+[source,sml]
+------------
+type ('a, 'strm) parser =
+      (char, 'strm) StringCvt.reader -> ('a, 'strm) StringCvt.reader
+
+val result : 'a -> ('a, 'strm) parser
+
+val failure : ('a, 'strm) parser
+
+val wrap : (('a, 'strm) parser * ('a -> 'b)) -> ('b, 'strm) parser
+
+val seq : (('a, 'strm) parser * ('b, 'strm) parser) -> (('a * 'b), 'strm) parser
+val seqWith : (('a * 'b) -> 'c)
+      -> (('a, 'strm) parser * ('b, 'strm) parser)
+	-> ('c, 'strm) parser
+
+val bind : (('a, 'strm) parser * ('a -> ('b, 'strm) parser))
+      -> ('b, 'strm) parser
+
+val eatChar : (char -> bool) -> (char, 'strm) parser
+
+val char   : char -> (char, 'strm) parser
+val string : string -> (string, 'strm) parser
+
+val skipBefore : (char -> bool) -> ('a, 'strm) parser -> ('a, 'strm) parser
+
+val or : (('a, 'strm) parser * ('a, 'strm) parser) -> ('a, 'strm) parser
+val or' : ('a, 'strm) parser list -> ('a, 'strm) parser
+
+val zeroOrMore : ('a, 'strm) parser -> ('a list, 'strm) parser
+val oneOrMore  : ('a, 'strm) parser -> ('a list, 'strm) parser
+
+val option : ('a, 'strm) parser -> ('a option, 'strm) parser
+val join   : ('a option, 'strm) parser -> ('a, 'strm) parser
+
+val token : (char -> bool) -> (string, 'strm) parser
+------------
+
+== Description
+
+[[type:parser]]
+`[.kw]#type# ('a, 'strm) parser = (char, 'strm) StringCvt.reader \-> ('a, 'strm) StringCvt.reader`::
+  A parser is a function that takes a
+  {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[character reader]
+  and returns reader for the type of values the parser accepts.
+
+`[.kw]#val# result : 'a \-> ('a, 'strm) parser`::
+  `result v getc strm` returns `SOME(v, strm)`; _i.e._, `result v`
+  lifts the value `v` to a parser that returns `v` without consuming
+  any input.
+
+`[.kw]#val# failure : ('a, 'strm) parser`::
+  `failure getc strm` returns `NONE`; _i.e._ it is the parser that
+  does not accept any input.
+
+`[.kw]#val# wrap : (('a, 'strm) parser * ('a \-> 'b)) \-> ('b, 'strm) parser`::
+  `wrap parser f` composes the function `f` with `parser`
+
+`[.kw]#val# seq : (('a, 'strm) parser * ('b, 'strm) parser) \-> (('a * 'b), 'strm) parser`::
+  `seq (parser1, parser2)` returns a parser is the sequential combination of the
+  two parsers; _i.e._, a parser that will first parse a value `v1`
+  from the input using `parser1` and then parse a value `v2` using `parser2`
+  yielding the pair `(v1, v2)`.
+
+`[.kw]#val# seqWith : (('a * 'b) \-> 'c) \-> (('a, 'strm) parser * ('b, 'strm) parser) \-> ('c, 'strm) parser`::
+  `seq f (parser1, parser2)` is the sequential combination of the two parsers composed
+  with the function `f`;  _i.e._, a parser that will first parse a value `v1`
+  from the input using `parser1` and then parse a value `v2` using `parser2`
+  yielding the result of `f(v1, v2)`.  This expression is equivalent to
++
+[source,sml]
+------------
+wrap (seq (parser1, parser2), f)
+------------
+
+`[.kw]#val# bind : (('a, 'strm) parser * ('a \-> ('b, 'strm) parser)) \-> ('b, 'strm) parser`::
+ `bind parser f` returns a parser that first uses `parser` to parse a value `v`
+ from the input and then continues using the parser that results from `f v`.
+
+`[.kw]#val# eatChar : (char \-> bool) \-> (char, 'strm) parser`::
+  `eatChar pred` returns a parser that parses *one* character `c` for which
+  `pred c` returns `true`.
+
+`[.kw]#val# char : char \-> (char, 'strm) parser`::
+  `char c` returns a parser that parses the character `c`.
+
+`[.kw]#val# string : string \-> (string, 'strm) parser`::
+  `string s`returns a parser that parses the string `s`.
+
+`[.kw]#val# skipBefore : (char \-> bool) \-> ('a, 'strm) parser \-> ('a, 'strm) parser`::
+  `skipBefore pred parser` returns a parser that first skips any prefix of characters
+  that satisfy the predicate `pred` and then applies `parser` to the input.
+
+`[.kw]#val# or : (('a, 'strm) parser * ('a, 'strm) parser) \-> ('a, 'strm) parser`::
+  `or (parser1, parser2)` returns the ordered choice of the two parsers; _i.e._,
+  it returns a parser that first attempts to parse the input using `parser1`; if
+  `parser1` fails on the input, then it uses `parser2`.
+
+`[.kw]#val# or' : ('a, 'strm) parser list \-> ('a, 'strm) parser`::
+  `or' parsers` returns the ordered choice of a list of parsers.  This
+  expression is equivalent to
++
+[source,sml]
+------------
+List.foldr or failure parsers
+------------
+
+`[.kw]#val# zeroOrMore : ('a, 'strm) parser \-> ('a list, 'strm) parser`::
+  `zeroOrMore parser` returns a parser that parses a list of zero or more
+  items using `parser`.
+
+`[.kw]#val# oneOrMore : ('a, 'strm) parser \-> ('a list, 'strm) parser`::
+  `oneOrMore parser` returns a parser that parses a list of one or more
+  items using `parser`.
+
+`[.kw]#val# option : ('a, 'strm) parser \-> ('a option, 'strm) parser`::
+  `option parser` returns a parser that parses an optional item
+  (_i.e._, zero or one occurrences) using `parser`.
+
+`[.kw]#val# join : ('a option, 'strm) parser \-> ('a, 'strm) parser`::
+  `join parser` returns a parser that requires the optional item parsed
+  by `parser` to be present.
+
+`[.kw]#val# token : (char \-> bool) \-> (string, 'strm) parser`::
+  `token pred` returns a parser for a string of characters, where every
+  character satisfies the predicate function `pred`.
+
+== Examples
+
+As noted above, the xref:#type:parser[`parser`] type and combinators are
+designed around the
+{sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader]
+representation of input streams.
+Thus, the `scan` functions defined in the {basis-lib-url}/index.html[*Basis Library*]
+are compatible with the `parser` type defined here.  For example,
+
+[source,sml]
+------------
+val boolParser : (bool, 'strm) parser = Bool.scan
+val intParser  : (int, 'strm) parser = Int.scan StringCvt.DEC
+------------
+
+Let us define the abstract syntax of a small expression language with
+addition, numbers, and let-bound variables.
+
+[source,sml]
+------------
+datatype exp
+  = VAR of string
+  | NUM of int
+  | ADD of exp * exp
+  | LET of string * exp * exp
+------------
+
+We can use parser combinators to implement a simple parser
+for this language as follows.
+
+We start by defining a few utility definitions:
+
+[source,sml]
+------------
+structure P = ParserComb
+
+val +> = P.seq
+infixr 3 +>
+
+fun skipWS getc = P.skipBefore Char.isSpace getc
+------------
+
+We can then define parsers for the atomic expressions
+(numbers and variables):
+
+[source,sml]
+------------
+fun numParser getc = P.wrap (Int.scan StringCvt.DEC, NUM) getc
+fun idParser getc = P.seqWith String.^ (
+      P.wrap (P.eatChar Char.isAlpha, str),
+      P.token Char.isAlphaNum) getc
+fun varParser getc = P.wrap(idParser, VAR) getc
+------------
+
+We need the separate `idParser` to parse let-bound identifiers.
+
+We then define three, mutually-recursive, functions to parse
+expressions.
+
+[source,sml]
+------------
+fun letParser getc = P.wrap (
+      P.string "let" +> skipWS(idParser) +> skipWS(P.char #"=") +> expParser
+      +> skipWS(P.string "in") +> expParser,
+      fn (_, (x, (_, (e1, (_, e2))))) => LET(x, e1, e2)) getc
+and expParser getc = P.wrap (
+      skipWS (P.seq (
+	P.or' [letParser, numParser, varParser],
+	addParser)),
+      fn (e, es) => List.foldl (fn (a, b) => ADD(b, a)) e es) getc
+and addParser getc =
+      P.zeroOrMore (skipWS (P.wrap (P.char #"+" +> expParser, #2))) getc
+------------
+
+Note that the `letParser` must appear before the `varParser` in the
+list of parsers combined by ``or'`` to avoid treating the string `"let"`
+as a variable. Another detail is that we use
+{sml-basis-url}/list.html#SIG:LIST.foldl:VAL[`List.foldl`] with a
+function that swaps the order of its arguments in order
+that addition is left associative.
+
+If we evaluate the expression
+
+[source,sml]
+------------
+StringCvt.scanString expParser " let x = 1+2 in x + x ";
+------------
+
+we get the expected result
+
+[source,sml]
+------------
+SOME (LET ("x", ADD (NUM 1, NUM 2), ADD (VAR "x", VAR "x")))
+------------
+
+
+== See Also
+
+https://smlnj.org/doc/ml-lpt/manual.pdf[__SML/NJ Language Processing Tools: User Guide__],
+https://smlnj.org/doc/ML-Yacc/index.html[__ML-Yacc User's Manual__],
+xref:smlnj-lib.adoc[__The Util Library__]

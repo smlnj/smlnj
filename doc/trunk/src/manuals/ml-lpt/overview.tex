@@ -1,0 +1,26 @@
+\chapter{Overview}\label{chap:overview}
+
+In software, language recognition is ubiquitous: nearly every program deals at some level with structured input given in textual form.  The simplest recognition problems can be solved directly, but as the complexity of the language grows, recognition and processing become more difficult.  
+
+Although sophisticated language processing is sometimes done by hand, the use of scanner and parser generators\footnote{
+  ``Scanner generator'' and ``parser generator'' will often be shortened to ``scanner'' and ``parser'' respectively.  This is justified by viewing a parser generator as a parameterized parser.
+} is more common.  The Unix tools {\tt lex} and {\tt yacc} are the archetypical examples of such generators.  Tradition has it that when a new programming language is introduced, new scanner and parser generators are written in that language, and generate code for that language.  Traditional \emph{also} has it that the new tools are modeled after the old {\tt lex} and {\tt yacc} tools, both in terms of the algorithms used, and often the syntax as well.  The language Standard ML is no exception: {\tt ml-lex} and {\tt ml-yacc} are the SML incarnations of the old Unix tools.
+
+This manual describes two new tools, \ulex{} and \mlantlr{}, that follow tradition in separating scanning from parsing, but break from tradition in their implementation: \ulex{} is based on \emph{regular expression derivatives} rather than subset-construction, and \mlantlr{} is based on $LL(k)$ parsing rather than $LALR(1)$ parsing.   
+
+\section{Motivation}
+
+Most parser generators use some variation on $LR$ parsing, a form of \emph{bottom-up} parsing that tracks possible interpretations (reductions) of an input phrase until only a single reduction is possible.  While this is a powerful technique, it has the following downsides:
+\begin{itemize}
+  \item Compared to predictive parsing, it is more complicated and difficult to understand.  This is particularly troublesome when debugging an $LR$-ambiguous grammar.
+  \item Because reductions take place as late as possible, the choice of reduction cannot depend on any semantic information; such information would only become available \emph{after} the choice was made.
+  \item Similarly, information flow in the parser is strictly bottom-up.  For (syntactic or semantic) context to influence a semantic action, higher-order programming is necessary.
+\end{itemize} 
+The main alternative to $LR$ parsing is the top-down, $LL$ approach, which is commonly used for hand-coded parsers.  An $LL$ parser, when faced with a decision point in the grammar, utilizes lookahead to unambiguously predict the correct interpretation of the input.  As a result, $LL$ parsers do not suffer from the problems above.  $LL$ parsers have been considered impractical because the size of their prediction table is exponential in $k$ --- the number of tokens to look ahead --- and many languages need $k > 1$.  However, Parr showed that an approximate form of lookahead, using tables linear in $k$, is usually sufficient.
+
+To date, the only mature $LL$ parser based on Parr's technique is his own parser, {\tt antlr}.  While {\tt antlr} is sophisticated and robust, it is designed for and best used within imperative languages.  The primary motivation for the tools this manual describes is to bring practical $LL$ parsing to a functional language.
+Our hope with \ulex{} and \mlantlr{} is to modernize and improve the Standard ML language processing infrastructure, while demonstrating the effectiveness of regular expression derivatives and $LL(k)$ parsing.  The tools are more powerful than their predecessors, and they raise the level of discourse in language processing.  
+
+%\section{Outline}
+
+%This manual is organized into three parts: usage, theory, and implementation.  Each of these parts is further broken down into two chapters, one on \ulex{} and one on \mlantlr{}.  The usage section is self-contained, and gives a fairly complete specification of the two tools.  Full details on the algorithms used are given in the theory section.  Data structures, system organization, and other code-related particulars are described in the implementation section.

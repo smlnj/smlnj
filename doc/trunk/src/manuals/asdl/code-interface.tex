@@ -1,0 +1,352 @@
+%!TEX root = manual.tex
+%
+\chapter{Code Interface}
+\label{chap:code-interface}
+
+In this section, we describe the default translation of \asdl{} definitions to target
+languages and describe some of the runtime assumptions that users need to be aware of
+when using the generated code.
+
+\section{Translation to \sml{}}
+
+The translation from an \asdl{} specification to \sml{} code is straightforward.
+\asdl{} modules map to \sml{} structures, \asdl{} product types map to either tuples or records,
+and \asdl{} sum types map the \sml{} datatypes.
+\tblref{tbl:asdl-to-sml} summarizes this translation.
+If an \asdl{} identifier conflicts with an \sml{} keyword or pervasive identifier, then the translation
+adds a trailing prime character (\lstinline[language=SML]!'!) to the identifier.
+
+For an \asdl{} module \lstinline[mathescape=true]@$M$@, we generate an \sml{} signature
+and several \sml{} structures:
+\begin{code}\begin{lstlisting}[language=SML,mathescape=true]
+structure $M$ = struct ... end
+signature $M$_PICKLE = sig ... end
+structure $M$MemoryPickle : $M$_PICKLE = struct ... end
+structure $M$FilePickle : $M$_PICKLE = struct ... end
+structure $M$SExpPickle : $M$_PICKLE = struct ... end (* optional *)
+\end{lstlisting}\end{code}%
+where \lstinline[language=SML,mathescape=true]@$M$@ structure contains the type definitions
+for the \asdl{} specification,
+\lstinline[language=SML,mathescape=true]@$M$MemoryPickle@ structure
+implements functions to convert between the types and byte vectors, and the
+\lstinline[language=SML,mathescape=true]@$M$FilePickle@ structure implements functions to
+read and write pickles from binary files.
+The optional \lstinline[language=SML,mathescape=true]@$M$SExpPickle@ structure implements
+functions to  read and write textual pickles in S-Expression syntax.\footnote{
+  Currently, only output of S-Expression pickles is implemented.
+}
+This module is generated when the ``\texttt{--sexp}'' option is specified
+(see see \secref{sec:s-expressions} for more details).
+
+For an \asdl{} source file \texttt{f.asdl}, \asdlgen{} will produce four \sml{} source files.
+\begin{description}
+  \item[\normalfont\texttt{f.sml}] \mbox{}\\
+    contains type definition structures (\eg{},
+    \lstinline[mathescape=true]@structure $M$@)
+  \item[\normalfont\texttt{f-pickle.sig}] \mbox{}\\
+    contains memory-pickler signatures (\eg{},
+    \lstinline[mathescape=true]@signature $M$_PICKLE@)
+  \item[\normalfont\texttt{f-memory-pickle.sml}] \mbox{}\\
+    contains memory-pickler structures (\eg{},
+    \lstinline[mathescape=true]@structure $M$MemoryPickle@)
+  \item[\normalfont\texttt{f-file-pickle.sml}] \mbox{}\\
+    contains file-pickler structures (\eg{},
+    \lstinline[mathescape=true]@structure $M$FilePickle@)
+  \item[\normalfont\texttt{f-sexp-pickle.sml}] \mbox{}\\
+    contains the optional S-Expression pickler structures (\eg{},
+    \lstinline[mathescape=true]@structure $M$SExpPickle@).
+    This file is only generated when the ``\texttt{--sexp}''
+    command-line option is specified.
+\end{description}%
+
+\begin{table}[tp]
+  \caption{Translation of \asdl{} types to \sml{}}
+  \label{tbl:asdl-to-sml}
+  \begin{center}
+    \begin{tabular}{|l|p{3in}|}
+      \hline
+      \textbf{\asdl{} type} & \textbf{\sml{} type} \\
+      \hline
+      \textit{Named types ($T$)} &  ($\widehat{T}$) \\[0.25em]
+      \lstinline!bool! & \lstinline[language=SML]!bool! \\[0.5em]
+      \lstinline!int! & \lstinline[language=SML]!int! \\[0.5em]
+      \lstinline!uint! & \lstinline[language=SML]!word! \\[0.5em]
+      \lstinline!integer! & \lstinline[language=SML]!IntInf.int! \\[0.5em]
+      \lstinline!string! & \lstinline[language=SML]!string! \\[0.5em]
+      \lstinline!identifier! & \lstinline[language=SML]!Atom.atom! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$t$@ & \lstinline[language=SML,mathescape=true]!$t$! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$M$.$t$@ & \lstinline[language=SML,mathescape=true]!$M$.$t$! \\[0.5em]
+      \hline
+      \textit{Type expressions ($\tau$)} &  ($\widehat{\tau}$) \\[0.25em]
+      \lstinline[language=ASDL,mathescape=true]@$T$@ & \lstinline[language=SML,mathescape=true]!$\widehat{T}$! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$T$?@ & \lstinline[language=SML,mathescape=true]!$\widehat{T}$ option! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$T$*@ & \lstinline[language=SML,mathescape=true]!$\widehat{T}$ list! \\[0.5em]
+      \hline
+      \textit{Product types ($\rho$)} & ($\widehat{\rho}$) \\[0.25em]
+      \lstinline[language=ASDL,mathescape=true]@($\tau_1$, $\ldots$, $\tau_n$)@
+        & \lstinline[language=SML,mathescape=true]!$\widehat{\tau}_1$ * $\cdots$ * $\widehat{\tau}_n$! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@($\tau_1$ $f_1$, $\ldots$, $\tau_n$ $f_n$)@
+        & \lstinline[language=SML,mathescape=true]!{$f_1$ : $\widehat{\tau}_1$, $\ldots$, $f_n$ : $\widehat{\tau}_n$}! \\[0.5em]
+      \hline
+      \textit{Type definitions} & \\[0.25em]
+      \lstinline[language=ASDL,mathescape=true]@$t$ = $\rho$@
+        & \lstinline[language=SML,mathescape=true]!type $t$ = $\widehat{\rho}$! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$t$ = $C_1$ | $\cdots$ | $C_n$@
+        & \lstinline[language=SML,mathescape=true]!datatype $t$ = $C_1$ | $\cdots$ | $C_n$! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$t$ = $C_1$($\rho_1$) | $\cdots$ | $C_n$($\rho_n$)@
+        & \lstinline[language=SML,mathescape=true]!datatype $t$ = $C_1$ of $\widehat{\rho}_1$ | $\cdots$ | $C_n$ of $\widehat{\rho}_n$! \\[0.25em]
+      \hline
+    \end{tabular}%
+  \end{center}%
+\end{table}%
+
+\subsection{Sharing}
+Shared types change the representation of a pickle from a tree to a DAG
+(Directed Acyclic Graph).
+If an ASDL specification includes shared types (\ie{}, uses of the ``\kw{!}''
+type operator, then a more complicated interface to the pickler/unpickler
+is required.
+Basically, we need to augment the input and output streams with sharing
+state that tracks repeated occurrences of the same value.
+For unpickling, \asdlgen{} generates additional data structures to track
+shared values (see \secref{sec:shared-pickle-rep} for details), which changes
+the unpickling interface but does not require any user-supplied code.
+
+For pickling, however, we require that the user implement a mapping for
+each shared type in the specification.
+We expect that for typical use cases, shared values will have a unique key
+embedded in their representation that can be used to efficiently detect sharing on
+output.
+Since \asdlgen{} cannot easily determine what the key value might be, we
+require user-defined code.
+For each shared type $\tau$, the user must implement a function with the
+type ``\lstinline[language=sml,mathescape=true]@($\tau$, 'a) share_map@,''
+where
+\begin{code}
+\begin{lstlisting}[language=sml]
+type ('key, 'a) share_map = unit -> {
+       insert : 'key * 'a -> unit,
+       find : 'key -> 'a option
+     }
+\end{lstlisting}%
+\end{code}%
+
+
+For example, say that we had the following \asdl{} specification fragment
+as part of a compiler's intermediate representation:
+\begin{code}
+\begin{lstlisting}[language=asdl]
+  var_rep = (int id, string name, ty ty)
+  var = var_rep!
+\end{lstlisting}%
+\end{code}%
+where the ``\cd{id}'' field is a unique ID for each variable.
+Then we could implement the sharing map for variables using the
+``\cd{IntHashTable}'' module from the \smlnj{} Library:
+\begin{code}
+\begin{lstlisting}[language=sml]
+val var_sharemap = fn () => let
+      val tbl = IntHashTable.mkTable (32, Fail "var_sharemap")
+      in {
+        insert = fn (x : var, y) => IntHashTable.insert tbl (#id x, y),
+        find = fn (x : var) => IntHashTable.find tbl (#id x)
+      } end
+\end{lstlisting}%
+\end{code}%
+
+\subsection{CM support}
+The SML/NJ Compilation Manager (CM) knows about \asdl{} files (as of version 110.84).
+If one specifies ``\texttt{foo.asdl}'' in the file list of a \texttt{.cm} file, CM will
+infer the generation of the five \sml{} files as described above.
+
+\section{Translation to \Cplusplus{}}
+
+The translation of an \asdl{} specification to \Cplusplus{} is more complicated than for \sml{}.
+For each \asdl{} module, we define a corresponding \Cplusplus{} namespace.
+
+\subsection{Translation of named types}
+
+The following table summarizes how type names are mapped to \Cplusplus{} type expressions.
+%
+\begin{center}
+  \begin{tabular}{|p{2in}|p{3in}|}
+    \hline
+      \textbf{Named \asdl{} type ($T$)} &  \textbf{\Cplusplus{} type $\widehat{T}$} \\
+    \hline
+      \lstinline!bool! & \lstinline[language=c++]!bool! \\[0.5em]
+      \lstinline!int! & \lstinline[language=c++]!int! \\[0.5em]
+      \lstinline!uint! & \lstinline[language=c++]!unsigned int! \\[0.5em]
+      \lstinline!integer! & \lstinline[language=c++]!asdl::integer! \\[0.5em]
+      \lstinline!string! & \lstinline[language=c++]!std::string! \\[0.5em]
+      \lstinline!identifier! & \lstinline[language=c++]!asdl::identifier! \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$t$@ &
+        $\left\{
+        \begin{array}{ll}
+          t & \text{if $t$ is an \lstinline[language=c++]!enum! type} \\
+          \text{\lstinline[language=c++,mathescape=true]@$t$ *@} & otherwise \\
+        \end{array}
+        \right.$ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$M$.$t$@ & \lstinline[language=c++,mathescape=true]@$M$::$t$@ \\[0.5em]
+    \hline
+  \end{tabular}%
+\end{center}%
+%
+In the subsequent discussion, we write $\widehat{T}$ to denote the \Cplusplus{} type
+that corresponds the the \asdl{} named type $T$.
+
+\subsection{Translation of type expressions}
+
+The translation of \asdl{} type expressions formed by applying a type operator to
+a named type $T$ is described in the following table.
+%
+\begin{center}
+  \begin{tabular}{|p{2in}|p{3in}|}
+    \hline
+      \textbf{\asdl{} type expression ($\tau$)} &  \textbf{\Cplusplus{} type $\widehat{\tau}$} \\[0.25em]
+    \hline
+      \lstinline[language=ASDL,mathescape=true]@$T$@ & \lstinline[language=c++,mathescape=true]@$\widehat{T}$@ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$T$?@ &
+        $\left\{
+        \begin{array}{ll}
+          \text{\lstinline[language=c++,mathescape=true]@asdl::option< $\widehat{T}$ >@}
+            & \text{if $t$ is an \lstinline[language=c++]!enum! type} \\
+          \text{\lstinline[language=c++,mathescape=true]@$\widehat{T}$@} & otherwise \\[0.5em]
+        \end{array}
+        \right.$ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$T$*@ & \lstinline[language=c++,mathescape=true]@std::vector< $\widehat{T}$ >@ \\[0.5em]
+    \hline
+  \end{tabular}%
+\end{center}%
+%
+Notice that the for option types, we use \lstinline[language=c++]@nullptr@ to
+represent the empty option for those \asdl{} types that are represented by
+\Cplusplus{} pointer types.
+For other \asdl{} types, which are not represented by pointers, we wrap the type
+with the template class ``\lstinline[language=c++]@option<>@''
+from the \asdl{} library.
+This class provides methods for testing if an option is empty (\lstinline[language=c++]@isEmpty@
+and for getting the value when it is not (\lstinline[language=c++]@valOf@).
+
+\subsection{Translation of type definitions}
+
+The translation of type definitions depends on the form of the right-hand-side
+of the definition.
+For product types, we map the fields of the product to a sequence of \Cplusplus{}
+member declarations (as described below) enclosed in a \Cplusplus{} \kw{struct} type.
+For enumerations, we use \Cplusplus{} scoped enumerations to represent the type.
+For other sum types, we define an abstract base class for the type with subclasses
+for each constructor.
+This translation is summarized in the following table, where we are using
+\lstinline[mathescape=true]@$\rho$@ to represent the fields of an \asdl{}
+product type and \lstinline[mathescape=true]@$\widehat{\rho}$@ for its translation:
+%
+\begin{center}
+  \begin{tabular}{|p{2in}|p{3in}|}
+    \hline
+      \textbf{\asdl{} type definition} &  \textbf{\Cplusplus{} type} \\
+    \hline
+      \lstinline[language=ASDL,mathescape=true]@$t$ = $\rho$@
+        & \lstinline[language=c++,mathescape=true]@struct $t$ { $\hat{\rho}$ };@ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$t$ = $C_1$ | $\cdots$ | $C_n$@
+        & \lstinline[language=c++,mathescape=true]@class enum $t$ { $C_1$, $\ldots$, $C_n$ };@ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$t$ = $C_1$($\rho_1$) | $\cdots$ | $C_n$($\rho_n$)@
+        &
+\vspace*{-1em}
+\begin{lstlisting}[language=c++,mathescape=true]
+class $t$ { $\cdots$ };
+class $C_1$ : public $t$ {
+  private: $\hat{\rho}_1$
+  $\cdots$
+};
+$\cdots$
+class $C_n$ : public $t$ {
+  private: $\hat{\rho}_n$
+  $\cdots$
+};
+\end{lstlisting}%
+      \\[0.25em]
+    \hline
+  \end{tabular}%
+\end{center}%
+
+The translation of product types is described by the following table:
+%
+\begin{center}
+  \begin{tabular}{|p{2in}|p{3in}|}
+    \hline
+      \textbf{\asdl{} product type ($\rho$)} &  \textbf{\Cplusplus{} type $\widehat{\rho}$} \\
+    \hline
+      \lstinline[language=ASDL,mathescape=true]@($\tau_1$, $\ldots$, $\tau_n$)@
+        & \lstinline[language=c++,mathescape=true]@$\hat{\tau}_1$ _v1; $\ldots$ $\hat{\tau}_n$ _vn@ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@($\tau_1$ $f_1$, $\ldots$, $\tau_n$ $f_n$)@
+        & \lstinline[language=c++,mathescape=true]@$\hat{\tau}_1$ _$f_1$; $\ldots$ $\hat{\tau}_n$ _$f_n$@ \\[0.5em]
+    \hline
+  \end{tabular}%
+\end{center}%
+
+\subsection{Pickling and unpickling operations}
+
+The code generator for the \Cplusplus{} view uses a mix of methods, static methods,
+and overloaded functions to implement the pickler and unpickler operations.
+
+\subsection{Memory management}
+
+\subsection{Makefile support}
+Currently there is no support for generating makefile dependencies or rules,
+but it may be added in a future release.
+
+
+\section{The Rosetta Stone for Sum Types}
+\label{sec:rosetta-stone}
+
+For languages that support algebraic data types, \asdlgen{} maps sum types directly
+to the language's mechanism (\eg{}, \lstinline[language=SML]!datatype! declarations
+in \sml{}).
+For class-based object-oriented languages, like \Cplusplus{}, \asdlgen{} maps
+sum types to abstract base classes and the constructors to individual subclasses.
+The previous example written in \sml{} would be
+\begin{quote}\begin{lstlisting}[language=SML]
+structure M =
+  struct
+    datatype sexpr
+      = Int of (int)
+      | String of (string)
+      | Symbol of (identifier)
+      | Cons of (sexpr * sexpr)
+      | Nil
+  end
+\end{lstlisting}\end{quote}%
+and in \Cplusplus{} it translates to
+\begin{quote}\begin{lstlisting}[language=c++]
+namespace M {
+
+    struct sexpr {
+        enum tag {
+            _Int, _String, _Symbol, _Cons, _Nil
+        };
+        tag _tag;
+        sexpr (tag t) : _tag(t) { }
+        virtual ~sexpr ();
+    };
+
+    struct Int : public sexpr {
+        int _v1;
+        Int (int v) : sexpr(sexpr::_Int), _v1(v) { }
+        ~Int () { }
+    };
+
+    struct String : public sexpr {
+        std::string _v1;
+        String (const char *v) : sexpr(sexpr::_String), _v1(v) { }
+        String (std::string const &v) : sexpr(sexpr::_String), _v1(v) { }
+        ~String () { }
+    };
+
+    struct Symbol : public sexpr { ... };
+
+    struct Cons : public sexpr { ... };
+
+    struct Nil : public sexpr { ... };
+
+}
+\end{lstlisting}\end{quote}%

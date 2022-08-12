@@ -1,0 +1,166 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  7      N  E  W  S
+			
+  		         November 21, 2001
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+--------------------------------------------------------------------------
+
+Details:
+
+MLRISC:
+
+  * Implemented a complete redesign of MLRISC pseudo-ops. Now there
+    ought to never be any question of incompatabilities with 
+    pseudo-op syntax expected by host assemblers.
+
+    For now, only modules supporting GAS syntax are implemented
+    but more should follow, such as MASM, and vendor assembler
+    syntax, e.g. IBM as, Sun as, etc.
+
+    The new pseudo-ops design is used to add a string to the end
+    of the code stream that represents the file name.
+
+  * Fix for a backpatching bug reported by Allen.
+
+    Because the boundary between short and long span-dependent 
+    instructions is +/- 128, there are an astounding number of
+    span-dependent instructions whose size is over estimated. 
+
+    Allen came up with the idea of letting the size of span 
+    dependent instructions be non-monotonic, for a maxIter
+    number of times, after which the size must be monotonically
+    increasing.
+  
+    This table shows the number of span-dependent instructions
+    whose size was over-estimated as a function of maxIter, for the
+    file Parse/parse/ml.grm.sml:
+ 
+     maxIter		# of instructions:
+ 	10			687
+ 	20			438
+ 	30			198
+        40			  0
+ 
+    In compiling the compiler, there is no significant difference in
+    compilation speed between maxIter=10 and maxIter=40. Actually, 
+    my measurements showed that maxIter=40 was a tad faster than
+    maxIter=10! Also 96% of the  files in the compiler reach a fix
+    point within 13 iterations, so fixing maxIter at 40, while high, 
+    is okay.
+
+  * Fixed the bug described in blume-20010920-slowfp.
+
+    The fix involves 
+       1. generating FCOPYs in FSTP in ia32-svid
+       2. marking a CALL with the appropriate annotation
+
+    (x86-fast-fp is still off by default.)
+
+  * X86RA now uses a valid (instead of dummy) PrintFlowgraph module.
+
+  * The representation of a program point never expected to see more 
+    than 65536 instructions in a basic block!  Fixed.
+
+CM:
+
+  * avoid "/../" in filenames as much as possible (but only where it is safe)
+
+  * experimental implementation of "portable graphs"
+    (See the proposal in
+        http://cm.bell-labs.com/cm/cs/who/blume/pgraph/proposal.pdf
+     for details on portable library graphs.)
+
+  * there are also new libraries $/pgraph.cm and $/pgraph-util.cm
+
+  * CM now implements a simple "set calculus" for specifying export lists.
+    In particular, it is now possible to refer to the export lists of
+    other libraries/groups/sources and form unions as well as differences.
+    See the latest CM manual for details.
+
+  * A separate notion of "proxy" libraries has been eliminated from
+    CM's model.  (Proxy libraries are now simply a special case of using
+    the export list calculus.)
+
+compiler:
+
+  * routed the name of the current source file to mlriscgen where it
+    gets directly emitted into the code object
+    (This uses the new pseudo-op infrastructure of MLRISC.)
+
+runtime:
+
+  * Underscore patch from Chris Richards (fixing problem with compiling
+    runtime system under recent NetBSD).
+
+  * Removed handling of code object name strings from runtime code.
+    (The only remaining code-name-string-related code in the runtime
+    is for extracting/reading of same.)
+
+CKIT:
+
+  * Changed the "Function" constructor of type Ast.ctype to carry optional
+    argument identifiers.
+  * Changed the return type of TypeUtil.getFunction accordingly.
+  * Type equality ignores the argument names.
+  * TypeUtil.composite tries to preserve argument names but gives up quickly
+    if there is a mismatch.
+
+installation script:
+
+  * attempts to use "curl" if available (unless "wget" is available as well)
+
+  * put relative anchor names for tool commands into pathconfig
+
+run script:
+
+  * Changed config/_run-sml (resulting in a changed bin/.run-sml) so
+    that arguments that contain delimiters are passed through correctly.
+    This change also means that all "special" arguments of the form
+    @SMLxxx... must come first.
+
+NLFFI-LIB:
+  * some cleanup (all cosmetic)
+
+NLFFIGEN:
+  * temporarily disabled the mechanism that suppresses ML output for
+    C definitions whose identifiers start with an underscore character
+  * generate val bindings for enum constants
+  * user can request that only one style (light or heavy) is being used;
+    default is to use both (command-line arguments: -heavy and -light)
+  * fixed bug in handling of function types involving incomplete pointers
+  * generate ML entry points that take record arguments (i.e., using
+    named arguments) for C functions that have a prototype with named
+    arguments (see changes to CKIT)
+
+Basis implementation:
+
+  * provided a non-hook implementation of exnName (at the toplevel) and
+    made the "dummy" implementation of exnMessage (at the toplevel) more
+    useful: if nothing gets "hooked in", then at least you are going to
+    see the exception name and a message indicating why you don't see more.
+
+    [For the time being, programs that need exnMessage and want to use
+    ml-build should either use General.exnMessage (strongly recommended) or
+    refer to structure General at some other point so that CM sees a
+    static dependency.]
+
+    [Similar remarks go for "print" and "use":  If you want to use their
+    functionality in stand-alone programs generated by ml-build, then use
+    TextIO.output and Backend.Interact.useFile (from $smlnj/compiler.cm).]
+
+ml-yacc/ml-lex/ml-burg:
+
+  * Don't use "exnMessage" -- use "General.exnMessage"!
+    (see "Basis implementation")

@@ -1,0 +1,13 @@
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/@LIBRARY@.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/@DIR@/@LIBRARY@.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+

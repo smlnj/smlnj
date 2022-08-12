@@ -1,0 +1,118 @@
+<html>
+<head>
+<title>SML/NJ 110.39 NEWS</title>
+</head>
+<body>
+<pre>
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  9      N  E  W  S
+			
+  		         February 15, 2002
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+</pre>
+
+<dl>
+<dt>Summary:
+<dd>Important bug fixes, improvements to libraries, FFI generator,
+    and installer.</dd>
+</dl>
+
+<hr>
+
+<h3>Details:</h3>
+
+<h4>MLRISC:</h4>
+
+<ul>
+<li>Important bug fixes.  (Isabelle now compiles again on the x86.)</i>
+<li>Compilers that generate assembly code may produce  global labels 
+    whose value is resolved at link time. The various peephole optimization
+    modules did not take this in account.
+<br>
+    TODO: The Labels.addrOf function should really return an option
+    type so that clients are forced to deal with this issue, rather
+    than an exception being raised.</li>
+<li>Some internal reorganization.</li>
+<li>c-calls API changed: accept a client-callback for allocating
+    extra stack space.  TODO: x86 version currently ignores it.</li>
+
+<li>Fixed bug in sparc-ccalls.</li>
+</ul>
+
+<h4>Basis:</h4>
+
+<ul>
+<li>Added missing implementations for List.collate and Option.app.</li>
+</ul>
+
+<h4>SML/NJ library:</h4>
+
+<ul>
+<li>Added priority queue implementation to smlnj-lib.cm.</li>
+</ul>
+
+<h4>FFI:</h4>
+
+Various improvements to ml-nlffigen:
+
+<ul>
+<li>improved name encoding scheme that avoids most "global" gensym
+counters</li>
+<li>don't write over files unless their contents would change</li>
+<li>implemented a "repository" mechanism for dealing with "incomplete
+     pointers" that are to be shared between different runs of
+     ml-nlffigen</li>
+<li>"-match" option requires an exact match now</li>
+<li>improved internal datastructures, resulting in slight speedup</li>
+<li>bug fixes</li>
+</ul>
+
+<h4>Compiler/CM:</h4>
+
+<ul>
+<li>A new PID (persistent ID) generation scheme is place.  This
+     fixes the long-standing (but little-known) problem that it was
+     possible to defeat ML's type abstractions because types in
+     different compilation units could be mistaken for one another.
+<br>
+     See the HISTORY file and click <a
+     href="http://cm.bell-labs.com/cm/cs/who/blume/pid-confusion.tgz">here</a>
+     for more information.<li>
+</ul>
+
+<h4>Installer:</h4>
+
+<ul>
+<li>Installation instructions added (file INSTALL).</li>
+<li>Syntax in config/targets changed.</li>
+<li>Installer automatically satisfies inter-target dependencies.</li>
+<li>Build hash-cons-lib.cm if smlnj-lib was selected.</li>
+<li>Installer can run in "quiet" mode.</li>
+<li>Bug fixes.</li>
+</ul>
+
+<h4>REPL:</h4>
+
+<ul>
+<li>Added functions CM.State.showBindings and EnvRef.listBoundSymbols
+for exploring available toplevel bindings.</li>
+</ul>
+
+<h4>Misc:</h4>
+
+<ul>
+<li>GenSML.gen now makes generation of topl-level "local" optional
+    (because it is not Standard ML).</li>
+<li>bug fixes in "nowhere" tool</li>
+</ul>
+
+</body>
+</html>

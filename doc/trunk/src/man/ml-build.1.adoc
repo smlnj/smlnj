@@ -1,0 +1,64 @@
+ML-BUILD(1)
+===========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+ml-build - command-line build tool for SML/NJ programs
+
+SYNOPSIS
+--------
+*ml-build* ['OPTIONS'] 'group.cm' ['main' ['heap-image']]
+
+DESCRIPTION
+-----------
+*ML-Build* is a command-line tool for building applications from SML source
+files using the Compilation Manager and SML/NJ compiler.
+
+OPTIONS
+-------
+
+*-C*'ctl'='value'::
+  set the control 'ctl' to 'value'.
+
+*-D*'name'='value'::
+  define the CM variable 'name' to have the given value.
+
+*-D*'name::
+  define the CM variable 'name' to have the value 1.
+
+*-U*'name'::
+  remove any definition of the CM variable 'name'.
+
+*-S* 'setup.cm'::
+  load and execute the code specified by the CM file 'setup.cm' prior to the main
+  build process.  This option allows one to customize the compiler via side-effect.
+
+EXAMPLES
+--------
+
+`ml-build foo.cm`::
+  builds the program `foo` assuming a main function named `Test.main`.
+
+`ml-build foo.cm Main.main`::
+  builds the program `foo` with main function named `Main.main`.
+
+`ml-build sources.cm Main.main prog`::
+  builds the program `prog` with main function named `Main.main`.
+
+AUTHOR
+------
+*ML-Build* was written by Matthias Blume.
+
+SEE-ALSO
+--------
+*ml-makedepend*(1), *sml*(1), *smlnj*(7)
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

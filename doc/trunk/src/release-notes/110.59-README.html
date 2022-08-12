@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.59 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  9      N  E  W  S
+			
+                             June 5, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.59/">http://smlnj.cs.uchicago.edu/dist/working/110.59/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+    Bugfixes and minor improvements in various areas.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>eXene:</dt>
+  <dd>
+    <ul>
+      <li>committed changes to eXene from Alley Stoughton:
+      "fixed bugs in X authorization and resource handling, as well
+      as in the pile and viewport widgets"</li>
+    </ul>
+  </dd>
+  <dt>Runtime:</dt>
+  <dd>
+    <ul>
+      <li>fixed linking problem with NetBSD 3.x.</li>
+    </ul>
+  </dd>
+  <dt>Lexgen:</dt>
+  <dd>
+    <ul>
+      <li><tt>lexgen</tt> tool handles non-ascii characters in 7-bit mode
+      the same way that <tt>ml-lex</tt> does</li>
+      <li><tt>lexgen</tt> propagates exceptions the same way that
+      <tt>ml-lex</tt> does</li>
+    </ul>
+  </dd>
+  <dt>CML:</dt>
+  <dd>
+    <ul>
+      <li>Fixed a bug in the SyncVar polling functions (<tt>iGetPoll</tt>,
+      <tt>mTakePoll</tt>, and <tt>mGetPoll<?tt>) that could lead to
+      livelock.</li>
+    </ul>
+  </dd>
+  <dt>Scripts:</dt>
+  <dd>
+    <ul>
+      <li>bug in <tt>ml-makedepend</tt> fixed</li>
+      <li>patches to <tt>heap2exec</tt> for Linux and FreeBSD (received
+      from Johannes 5 Joemann) applied</li>
+    </ul>
+  </dd>
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>renamed <tt>GAS_PSEUDO_OPS</tt> to <tt>AS_PSEUDO_OPS</tt> and
+      put it in its own file.</li>
+      <li>added support for <tt>NOTB</tt> and <tt>XORB</tt> operators in
+      pseudo-op expressions</li>
+      <li>added <tt>DarwinPseudoOp</tt> functor that supports Darwin's
+      assembler syntax.</li>
+      <li>added support for 64-bit integer literals</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

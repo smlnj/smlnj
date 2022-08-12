@@ -1,0 +1,39 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  5      N  E  W  S
+			
+                            July 20, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.55/
+
+
+Summary:
+
+   Bugfixes and minor feature enhancements.
+
+--------------------------------------------------------------------------
+
+Libraries:
+----------
+
+- Fixed bug regarding the copy function in *array-slice.sml modules.
+- Refactored the pretty printing library.  The declarative way to
+  construct pretty-printing descriptions now sits on top of the
+  PP_STREAM interface.
+- Removed "onNewline" function, which was not implemented.
+- Added ANSITerm structure, which provides support for ANSI terminal
+  display attributes (e.g., red text).
+- Added ANSITermDev device that uses ANSI terminal display attributes
+  and added a ANSITermPP for pretty printing to such a device.
+
+Runtime system:
+---------------
+
+- Support for HPUX 11 added.  (There is still a problem, though.)
+- Updated Cygwin's fault/signal handling.

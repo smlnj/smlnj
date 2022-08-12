@@ -1,0 +1,46 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  4  8      N  E  W  S
+			
+                             August 10, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.48/
+
+
+Summary:
+
+     This is a bugfix release.  Its main purpose is to solve
+     a showstopper problem introduced into the x86 c-calls
+     implementation which is used by NLFFI.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Interactive System:
+-------------------
+
+  - Command-line arguments are handled slightly differently:
+      * system automatically quits after processing -S, -H, -s<n> or
+        -h<n> if one of these appears as the last command-line argument
+      * new option -q which forces a quit
+
+Basis:
+------
+
+  - Race condition in signal handling code fixed.
+
+MLRISC:
+-------
+
+  - fixed problem with c-calls implementation on x86, preventing the
+    compilation of calls of any C function returning any form of int
+  - bug in dijkstra.sml fixed
+  - bug in udgraph.sml fixed
+  - some support for IBM assempler syntax (PPC) added

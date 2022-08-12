@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>SML/NJ Version 110.32 NEWS</title>
+  </head>
+
+  <body bgcolor="white">
+   <center><h1>Standard ML of New Jersey<BR>
+        Version 110.32, December 22, 2000</h1>
+   </center>
+
+   <center>
+      <a href=http://cm.bell-labs.com/cm/cs/what/smlnj/index.html>
+      Home page</a>
+   </center>
+
+<blockquote>
+<center>
+<h2> Warning </h2>
+</center>
+ <blockquote>
+ <blockquote>
+    <em>
+  	This version is intended for compiler hackers. The 
+	version ought to be quite stable, however we have not run
+	our full regression testing.
+    </em>
+ </blockquote> 
+ </blockquote>
+
+
+<hr>
+
+<center><h2>Summary:</h2></center>
+  This version is being used to check point a large number of changes 
+  to MLRISC, which now uses infinite precision integers on all
+  architectures. We have run the Basis regressions tests so the
+  changes ought to be fairly robust.   
+<p>
+  There are a number of other CM, Basis, and Tool related changes as
+  well. 
+
+<hr>
+<center><h3>MLRISC </h3></center>
+<h3> Fixes </h3>
+    This change fixes two problems:
+<p>
+
+<ol>
+
+<p><li>   There was a proliferation of constructors in MLRISC to
+	  handle integers of various sizes, e.g.
+<pre>
+    LI of int   | LI32 of Int32.int  | LI64 of Int64.int
+    ...
+</pre>
+	   which are all replaced with
+<pre>
+    LI of IntInf.int
+</pre>
+
+<p><li>   There is the ever nagging question of cross compiling to
+ 	  64bits.  
+</ol>
+
+<h3>Compilation Speed</h3>
+    The x86 compiling the compiler is 9% slower than 110.31, however,
+    a lot of this, and more, can be recovered. The compiler presently
+    uses infinite precision in the front end (AST creation), which is converted to 31
+    and 32 bit integers in the middle end (FLINT and CPS), and then
+    converted back to infinite precision in MLRISC (with the current 
+    changes). 
+<p>
+    Infinite precision in the middle end will allow a uniform
+    treatment of optimizations across words and integers of different
+    widths/sizes. Currently, most optimizations are biased towards
+    integers and words represented in 31 bits only.
+<p>
+
+<h3>  What's next</h3>
+    Not in chronological order:
+
+<ol>	
+<li>    Use infinite precision in the middle end to allow a 
+	cleaner and more uniform optimization module for arithmetic.
+
+<p><li>	Support for the generation of infinite precision values
+        in the back end.
+
+<p><li>	 Changes to support the single toplevel declaration:
+<pre>
+   structure LargeInt = IntInf
+</pre>
+</ol>
+
+<hr>
+
+<center><h3>Basis </h3></center>
+    Added the missing bit level functions to the Basis <tt>IntInf</tt>
+structure.    
+
+<hr>
+<center><h3>Tools </h3></center>
+    Improvements to the 'nowhere' tool to handle OR-patterns.
+    The nowhere tool is a syntactic extension that allows for
+    guarded patterns. See MLRISC/Tools/Doc/nowhere.tex.
+
+<hr>
+<center><h3>CM </h3></center>
+<ul>
+  <li> Added a new "dir" tool to CM's toolset; this can simplify writing
+    CM descriptions (see the manual)
+  
+<p><li> Made some modifications to CM's "Tools" API and documented everything
+
+<p><li>    CM now leaves exceptions (from the compiler) alone if they are not
+    expected; this causes such exceptions to travel up to the top-level
+    where they are reported as usual
+  
+<p><li>    Eliminated the "[wrote ...]" progress message in favor of reporting
+    some size information for the generated binfile instead
+  
+<p><li>    Removed source code for some project-in-progress that is not ready
+    for prime-time (yet)
+  
+<p><li>    Made anchor environments ("bind:"-option for class "cm") inter-operate
+    in a more useful way with CMB.make 
+</ol>
+<hr>
+    <font size=-2>
+    <address><a href="mailto:george@research.bell-labs.com">
+		Lal George</a></address>
+<!-- Created: Thu Aug  6 00:13:09 EDT 1998 -->
+<!-- hhmts start -->
+Last modified: Sat Dec 23 11:23:17 EST 2000
+<!-- hhmts end -->
+    </font>
+</blockquote>
+</body>
+</html>

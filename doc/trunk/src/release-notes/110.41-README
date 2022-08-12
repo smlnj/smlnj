@@ -1,0 +1,39 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  1      N  E  W  S
+			
+  		           July 5, 2002
+
+			      WARNING
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+     A number of small, but important bug fixes.
+
+--------------------------------------------------------------------------
+
+Details:
+
+      * Fixed a bug in MatchTree.nth (regexp library).
+
+      * Fixed a long-standing memory leak in the GC where a program
+	with fixed-sized live data could suffer from unbounded VM
+	growth (bugs 1119 and 1131).  Note that we thought that this
+	bug was fixed in 110.40, but we were wrong.
+
+      * Fixed inlined versions of Real.min and Real.max.
+
+      * Resurrected SMLofNJ.Internals.BTrace.mode, which had gone missing.
+
+      * Added missing implementation of IEEEReal.fromString.
+
+      * Added missing implementations of OS.Path.{from,to}UnixPath.
+
+      * Exported structure BTImp from $smlnj/viscomp/debugprof.cm so that
+	other clients can set up backtracing support.

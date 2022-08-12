@@ -1,0 +1,60 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  6  0      N  E  W  S
+			
+                            November 9, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.60/
+
+
+Summary:
+
+    Support for Mac OS X on Intel machines, new directory layout,
+    subversion-based source repository, preliminary amd64 support
+    in MLRISC and backend, new code generator tools (ml-ulex, ml-antlr).
+
+--------------------------------------------------------------------------
+
+MLRISC:
+
+  - support for AMD64 added (not yet thoroughly tested)
+
+compiler:
+
+  - preliminary hook-up of AMD64 backend
+
+runtime:
+
+  - worked around problem with signal delivery on Intel-based Macs
+    
+ml-lpt ("language processing tools"):
+
+  - two new tools: ml-ulex, ml-antlr
+  - ml-ulex: lexer generator with unicode support
+  - ml-antlr: ANTLR-inspired LL(k) parser generator
+  - first public release; still "beta" quality
+
+source repository:
+
+  - the SML/NJ sources are now hosted at smlnj-gforge.cs.uchicago.edu
+  - the revision control system is now subversion
+  - the project name is "smlnj"
+  - source code available via anonymous svn from
+      svn://smlnj-gforge.cs.uchicago.edu/smlnj
+  - source code (directory-) tree has new layout
+
+scripts:
+  - scripts adjusted to deal with new directory layout
+  - three scripts for simplifying svn access added:
+      check out svn://smlnj-gforge.cs.uchicago.edu/smlnj/admin
+    and put it on your shell's PATH
+  - use checkout-all.sh to get a fresh copy of the sources
+  - refresh-all.sh: perform "svn update" on each source (sub-)tree
+  - stat-all.sh: perform "svn stat" on each source (sub-)tree
+  - see HISTORY file for details on new layout

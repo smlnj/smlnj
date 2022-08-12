@@ -1,0 +1,333 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>SML/NJ Version 110.28 NEWS</title>
+  </head>
+
+  <body bgcolor="white">
+   <center><h1>Standard ML of New Jersey<BR>
+        Version 110.28, May 1, 2000</h1>
+   </center>
+
+   <center>
+      <tt> http://cm.bell-labs.com/cm/cs/what/smlnj/index.html </tt>
+   </center>
+
+<blockquote>
+<center>
+<h2> Warning </h2>
+</center>
+ <blockquote>
+ <blockquote>
+    <em>
+  	This version is intended for compiler hackers.  
+	We are in the midst of substantial structural changes, 
+	and this is a snapshot. 
+    </em>
+ </blockquote> 
+ </blockquote>
+      
+<hr>
+
+<center><h2>Summary:</h2></center>
+<UL>
+<LI> This version has some tuning of phase ordering for FLINT, which
+mostly solves the excessive space problem during compilation. With
+this tuning, 110.28 is slightly better than 110.25 in performance,
+but not quite as good as 110.25+latest MLRISC.  See the benchmarks
+below.  Futher work on the register allocator in MLRISC should
+improve space performance further.
+<p>
+<LI>CM: 
+Installation scripts have been tweaked.  A new noweb tool has been
+added.  ".fun" suffix has been added to those that imply sml compilation.
+New version numbering scheme added.  Alternative syntax for anchored
+paths added.  Parallel make made smarter.  Support for "unsharing".
+Simple "makedepend" functionality added.  Further details below.
+<p> 
+See src/system/README and the latest version of the CM manual at 
+<blockquote>
+<a href="http://www.kurims.kyoto-u.ac.jp/~blume/SMLNJ-DEV/manual/index.html">&lt;http://www.kurims.kyoto-u.ac.jp/~blume/SMLNJ-DEV/manual/index.html&gt;</a>
+<a href="http://www.kurims.kyoto-u.ac.jp/~blume/SMLNJ-DEV/manual.ps">&lt;http://www.kurims.kyoto-u.ac.jp/~blume/SMLNJ-DEV/manual.ps&gt;</a>
+</blockquote>
+for further information about visible changes.
+<p>
+<li> A few MLRISC changes, most not SML/NJ related.
+<p>
+<li> ML-Yacc: updated manual and examples to be SML '97, SML/NJ 110+ compliant.
+Examples now compiled with CM.
+<p>
+<li> Reported bug fixes:
+<pre>
+   1498. Specialized real arrays not pretty-printed correctly
+   1510. Signature matching bug makes "casts" possible
+   1562. CM complains about unrecognized file extension ".fun"
+   1563. redundant pathconfig contents with multiple builds
+</pre>
+<p>
+<hr>
+<h2> Change Details </h2>
+<center><h3> FLINT </h3></center>
+Tuned ordering of phases to improve time/space performance.  See
+src/compiler/FLINT/opt/flintopt.txt for description of some of the
+issues.
+<p>
+<hr>
+<center><h3> MLRISC </h3></center>
+This update synchronizes my repository with Yale's.  Most of these
+changes, however, do not affect SML/NJ at all (the RA is an exception).
+<p>
+<ol>
+<li>Register Allocator
+<ol type="a">
+<li> An improvement in the interference graph construction:  
+Given a copy
+<pre>
+            s <- t
+</pre>
+no interference edge between s and t is added for this definition of s.
+<p> 
+<li> I've added two new spill heuristic modules that Fermin and I developed
+(in the new library RA.cm). These are unused in SML/NJ but maybe
+useful for others (Moby?)
+<p>
+<li> Added a flag "ra-dump-size" to print out the size of the flowgraph
+and the interference graph.
+</ol>
+<li> X86
+<ol type="a">
+<li> Various fixes in the backend provided by Fermin [C--] and Lal.
+</ol>
+<p>
+<li> Alpha
+<ol type="a">
+<li> Added the BSR instruction and code generation that goes with it [C--]
+<p>
+<li> Other fixes too numerous to recount provided by Fermin [C--]
+<p>
+<li>PSEUDOARITH was missing in AlphaRewrite.  This causes an endless
+loop in C--. 
+</ol>
+<p>
+<li> Regmaps
+<ol type="a">
+<li> The regmaps are not initialized with the identity physical bindings 
+at creation time.  This is unneeded.
+</ol>
+<p>
+<li> MLRISC Optimizations
+<ol type="a">
+<li> The DJ-Graph module can now compute the iterated dominance frontiers
+intersects with liveness incrementally in linear time! Woohoo! 
+This is now used in my new SSA construction algorithm.
+<p>
+<li> THe branch reorganization module is now smarter about linear chains of
+basic blocks.
+</ol>
+</ol>
+<p>
+<hr>
+<center><h3> CM </h3></center>
+<ul>
+<li>Several manual updates
+<blockquote>
+I always try to keep the manual in sync with CM's latest features.
+</blockquote>
+<p>
+<li>New noweb tool
+<blockquote>
+The existing system is entirely unaffected by this, but some CM users
+have asked for renewed noweb support.  Everything is documented in the
+CM manual.
+<p>
+New (plugin) libraries:
+<pre>
+   noweb-tool.cm
+   nw-ext.cm
+</pre>
+</blockquote>
+<p>
+<li>CM version numbering added
+<blockquote>
+This is an implementation of Lal's proposal for adding version
+numbers and version checking to .cm files.  Lal said that his
+proposal was just that -- a proposal.  For the time being I went
+ahead and implemented it so that people can comment on it.
+Everything is completely backward-compatible (except for the stable
+library format, i.e., new bootfiles!).
+<p>
+As usual, see the CM manual for details.
+</blockquote>
+<p>
+<li> Alternative syntax for anchored paths
+<blockquote>   
+Dave has recently voiced the same concerns that I had when I did
+this, so there should be some support.  My take is that eventually
+I will let support for the current syntax (where anchors are
+"implicit") fade out in favor of the new, explicit syntax.
+In order to be backward-compatible, both old and new syntax are
+currently supported.
+<p>
+Again, see the CM manual for details.
+</blockquote>
+<p>
+<li> Parallel make is trying to be slightly smarter
+<blockquote>   
+When the master process finds a "bottleneck", i.e., when there is
+only one compilation unit that can be compiled and everybody else
+is waiting on it, then it will simply compile it directly instead
+of clumsily telling one of the slaves to do it.
+</blockquote>   
+<p>
+<li> Support for "unsharing" added
+<blockquote>   
+This is necessary in order to be able to have two different
+versions of the same library running at the same time (e.g., for
+trying out a new MLRISC while still having the old MLRISC linked
+into the current compiler, etc.)  See the CM manual.
+</blockquote>   
+<p>
+<li> makedepend
+<blockquote>   
+Simple "makedepend" functionality added for generating Makefile
+dependency information.  (This is rather crude at the moment.
+Expect some changes here in the future.)
+</blockquote>   
+<p>
+<li> New sml class prefix   
+<blockquote>   
+".fun" added as a recognized suffix for ML files. Also documented
+explicitly in the manual that the fallback behavior (unknown suffix
+-&gt; ML file) is not an official feature!
+</blockquote>   
+<p>
+<li>Pickler   
+<blockquote>   
+Small changes to the pickler for stable libraries.
+</blockquote>   
+<p>
+<li>Internal cleanup
+<blockquote>   
+Several internal changes to CM (for cleanup/improvement).
+</blockquote>   
+<p>
+<li>install.sh changes   
+<blockquote>   
+I changed config/install.sh to remove duplicate entries from the
+lib/pathconfig file at the end.  Moreover, the final version of
+lib/pathconfig is sorted alphabetically.  The same (sorting) is done
+in src/system/installml.
+<p>
+The config/install.sh script now consistently uses relative
+pathnames in lib/pathconfig whenever the anchor is in the lib
+directory.  (So far this was true for the libraries that come
+pre-compiled and bundled as part of the bootfiles but not for
+libraries that are compiled by the script itself.)
+<p>
+Changed install.sh script to handle archive files without version number
+and to use "boot.<arch>-<os>" instead of "sml.boot.<arch>-<os>" for the
+name of the boot file archive.
+</blockquote>   
+</ul>
+<p>
+<hr>
+<center><h3> BENCHMARKS </h3></center>
+Allen Leung, 28 April 2000:
+<p>   
+I've rerun the benchmarks to see if anything has slowed down in
+MLRISC recently, but found nothing.  I compared 110.25, 110.25+latest
+MLRISC, and 110.27+ (which also has the latest MLRISC).  110.25 uses
+cpsopt, and 110.27+ uses flintopt.  [110.27+ is repository state
+at the end of April, which is essentially 110.28 - dbm].
+<p>
+The results are:
+<pre>
+  110.25 versus 110.25+latest MLRISC
+  ----------------------------------
+           Name   Compilation             Runtime    Speedup
+      barnesHut  5.560  5.368  3.57%    3.690  3.302  11.76%
+          boyer  8.678  7.672 13.12%    0.313  0.312   0.53%
+   count-graphs  2.048  1.915  6.96%   28.577 27.128   5.34%
+            fft  1.325  1.233  7.43%    1.060  0.982   7.98%
+    knuthBendix  5.337  4.680 14.03%    0.962  0.918   4.72%
+         lexgen 10.310  9.950  3.62%    0.917  0.902   1.66%
+           life  1.230  1.127  9.17%    0.128  0.100  28.33%
+          logic  3.533  3.258  8.44%    5.750  5.413   6.22%
+     mandelbrot  0.145  0.148 -2.25%    0.700  0.685   2.19%
+         mlyacc 34.557 33.342  3.64%    0.553  0.533   3.75%
+        nucleic  6.675  6.507  2.59%    0.173  0.167   4.00%
+  ratio-regions  6.358  6.218  2.25%  119.753 120.772 -0.84%
+            ray  2.280  2.247  1.48%    3.563  3.517   1.33%
+         simple  9.798  9.650  1.54%    2.987  3.083  -3.14%
+            tsp  1.763  1.528 15.38%    8.657  7.718  12.16%
+           vliw 33.938 32.570  4.20%    1.982  2.000  -0.92%
+Average speedup:  5.32%
+Average compile time speedup:  5.95%
+</pre>
+As you can see, MLRISC on x86 has improved slightly since the
+110.25.  Now comparing 110.25 with 110.27+:
+<pre>
+   110.25 versus 110.27+
+   ---------------------
+           Name   Compilation             Runtime    Speedup
+      barnesHut  5.560  5.568  -0.15%   3.690  3.347  10.26%
+          boyer  8.678 10.058 -13.72%   0.313  0.322  -2.59%
+   count-graphs  2.048  2.125  -3.61%  28.577 31.533  -9.38%
+            fft  1.325  1.297   2.19%   1.060  1.052   0.79%
+    knuthBendix  5.337  3.737  42.82%   0.962  1.175 -18.16%
+         lexgen 10.310  9.985   3.25%   0.917  0.992  -7.56%
+           life  1.230  1.105  11.31%   0.128  0.125   2.67%
+          logic  3.533  3.302   7.02%   5.750  5.357   7.34%
+     mandelbrot  0.145  0.162 -10.31%   0.700  0.753  -7.08%
+         mlyacc 34.557 37.292  -7.33%   0.553  0.493  12.16%
+        nucleic  6.675  7.717 -13.50%   0.173  0.165   5.05%
+  ratio-regions  6.358  3.915  62.41% 119.753 126.153 -5.07%
+            ray  2.280  2.142   6.46%   3.563  2.827  26.06%
+         simple  9.798 10.067  -2.67%   2.987  2.812   6.22%
+            tsp  1.763  1.605   9.87%   8.657  8.870  -2.41%
+           vliw 33.938 46.907 -27.65%   1.982  1.802   9.99%
+Average speedup:  1.77%
+Average compile time speedup:  4.15%
+
+  110.25+latest MLRISC versus 110.27+
+  -----------------------------------
+           Name   Compilation              Runtime    Speedup
+      barnesHut  5.368  5.568  -3.59%    3.302  3.347  -1.34%
+          boyer  7.672 10.058 -23.73%    0.312  0.322  -3.11%
+   count-graphs  1.915  2.125  -9.88%   27.128 31.533 -13.97%
+            fft  1.233  1.297  -4.88%    0.982  1.052  -6.66%
+    knuthBendix  4.680  3.737  25.25%    0.918  1.175 -21.84%
+         lexgen  9.950  9.985  -0.35%    0.902  0.992  -9.08%
+           life  1.127  1.105   1.96%    0.100  0.125 -20.00%
+          logic  3.258  3.302  -1.31%    5.413  5.357   1.06%
+     mandelbrot  0.148  0.162  -8.25%    0.685  0.753  -9.07%
+         mlyacc 33.342 37.292 -10.59%    0.533  0.493   8.11%
+        nucleic  6.507  7.717 -15.68%    0.167  0.165   1.01%
+  ratio-regions  6.218  3.915  58.83%  120.772 126.153 -4.27%
+            ray  2.247  2.142   4.90%    3.517  2.827  24.41%
+         simple  9.650 10.067  -4.14%    3.083  2.812   9.66%
+            tsp  1.528  1.605  -4.78%    7.718  8.870 -12.98%
+           vliw 32.570 46.907 -30.56%    2.000  1.802  11.01%
+Average speedup: -2.94%
+Average compile time speedup: -1.68%
+</pre>
+Overall, I'd say 110.27+ is pretty competitive with 110.25.  There are
+some big improvements (ray, vliw, mlyacc) which can only be attributed to FLINT
+changes.   But something has slowed down (tsp, knuth-bendix, life, mandelbrot,
+count-graphs).  [We know the reasons with knuth-bendix.]
+Also, compilation time in 110.27+ is generally slower (which is offset 
+by huge improvements in knuth-bendix and ratio-regions).
+<p>
+<hr>
+
+    <font size=-2>
+    <address><a href="mailto:george@research.bell-labs.com">
+		Lal George</a></address>
+<!-- Created: Thu Aug  6 00:13:09 EDT 1998 -->
+<!-- hhmts start -->
+Last modified: Tue May  2 15:34:00 EDT 2000
+<!-- hhmts end -->
+    </font>
+</blockquote>
+</body>
+</html>

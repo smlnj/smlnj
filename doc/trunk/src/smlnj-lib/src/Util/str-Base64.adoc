@@ -1,0 +1,95 @@
+= The `Base64` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Base64` structure provides support for *Base-64* encoding/decoding
+as specified by https://www.ietf.org/rfc/rfc4648.txt[RFC 4648].
+
+== Synopsis
+
+[source,sml]
+------------
+signature BASE64
+structure Base64 : BASE64
+------------
+
+== Interface
+
+[source,sml]
+------------
+val isBase64 : char -> bool
+
+val encode : Word8Vector.vector -> string
+val encodeSlice : Word8VectorSlice.slice -> string
+
+exception Incomplete
+
+exception Invalid of (int * char)
+
+val decode : string -> Word8Vector.vector
+val decodeSlice : substring -> Word8Vector.vector
+
+val decodeStrict : string -> Word8Vector.vector
+val decodeSliceStrict : substring -> Word8Vector.vector
+------------
+
+== Description
+
+`[.kw]#val# isBase64 : char \-> bool`::
+  `isBase64 c` returns true if the character `c` is in the *Base-64*
+  alphabet (_i.e._, a letter, digit, or a slash or plus character).
+  Note that the padding character (the equals sign) is not considered
+  to be in the alphabet.
+
+`[.kw]#val# encode : Word8Vector.vector \-> string`::
+  `encode bv` returns a string that is the *Base-64* encoding of
+  the byte vector `bv`.
+
+`[.kw]#val# encodeSlice : Word8VectorSlice.slice \-> string`::
+  `encode bvs` returns a string that is the *Base-64* encoding of
+  the byte-vector slice `bvs`.
+
+[[exn:Incomplete]]
+`[.kw]#exception# Incomplete`::
+  This exception is raised by the decoding functions if a *Base-64* string
+  does not end in a complete encoding quantum (_i.e._, four characters including
+  padding characters).
+
+[[exn:Invalid]]
+`[.kw]#exception# Invalid of (int * char)`::
+  This exception is raised by the decoding functions if an invalid *Base-64*
+  character is encountered.  The int is the position of the character and
+  the char is the invalid character.
+
+`[.kw]#val# decode : string \-> Word8Vector.vector`::
+  `decode s` returns the result of decoding the *Base-64* string `s`.
+  This function ignores whitespace (_e.g._, line breaks), but
+  will raise the xref:#exn:Incomplete[`Incomplete`] exception if the
+  last quantum is incomplete.
+
+`[.kw]#val# decodeSlice : substring \-> Word8Vector.vector`::
+  `decode ss` returns the result of decoding the *Base-64* substring `ss`.
+  This function ignores whitespace (_e.g._, line breaks), but
+  will raise the xref:#exn:Incomplete[`Incomplete`] exception if the
+  last quantum is incomplete.
+
+`[.kw]#val# decodeStrict : string \-> Word8Vector.vector`::
+  `decodeStrict s` returns the result of decoding the *Base-64* string `s`.
+  The string `s` maust only contain valid *Base-64* characters, otherwise
+  the xref:#exn:Invalid[`Invalid`] exception is raised.  This function
+  will also raise the xref:#exn:Incomplete[`Incomplete`] exception if the
+  last quantum is incomplete.
+
+`[.kw]#val# decodeSliceStrict : substring \-> Word8Vector.vector`::
+  `decode ss` returns the result of decoding the *Base-64* substring `ss`.
+  The string `s` maust only contain valid *Base-64* characters, otherwise
+  the xref:#exn:Invalid[`Invalid`] exception is raised.  This function
+  will also raise the xref:#exn:Incomplete[`Incomplete`] exception if the
+  last quantum is incomplete.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

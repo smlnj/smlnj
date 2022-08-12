@@ -1,0 +1,16 @@
+%!TEX root = manual.tex
+%
+
+\chapter{The pervasive environment}
+
+The {\em pervasive environment} can be thought of as a compilation
+unit that all compilation units implicitly depend upon.  The pervasive
+enviroment exports all non-modular bindings (types, values, infix
+operators, overloaded symbols) that are mandated by the specification
+for the Standard ML Basis Library~\cite{reppy99:basis}.  (All other
+bindings of the Basis Library are exported by {\tt \$/basis.cm} which is
+a genuine CM library.)
+
+The pervasive environment is the only place where CM conveys
+non-modular bindings from one compilation unit to another, and its
+definition is fixed.

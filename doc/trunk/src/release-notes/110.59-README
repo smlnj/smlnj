@@ -1,0 +1,54 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  9      N  E  W  S
+			
+                             June 5, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.59/
+
+
+Summary:
+
+    Bugfixes and minor improvements in various areas.
+
+--------------------------------------------------------------------------
+
+eXene:
+
+  - committed changes to eXene from Alley Stoughton:
+    "fixed bugs in X authorization and resource handling, as well
+    as in the pile and viewport widgets"
+
+Runtime:
+
+  - fixed linking problem with NetBSD 3.x.
+
+Lexgen:
+
+  - lexgen tool handles non-ascii characters in 7-bit mode the same
+    way that ml-lex does
+  - lexgen propagates exceptions the same way that ml-lex does
+
+CML:
+
+  - Fixed a bug in the SyncVar polling functions (iGetPoll,
+    mTakePoll, and mGetPoll) that could lead to livelock.
+
+Scripts:
+
+  - bug in ml-makedepend fixed
+  - patches to heap2exec for Linux and FreeBSD (received from
+    Johannes 5 Joemann) applied
+
+MLRISC:
+
+  - renamed GAS_PSEUDO_OPS to AS_PSEUDO_OPS and put it in its own file.
+  - added support for NOTB and XORB operators in pseudo-op expressions
+  - added DarwinPseudoOp functor that supports Darwin's assembler syntax.
+  - added support for 64-bit integer literals

@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+			<body>
+<div align="Center">
+<h1>S  M  L   /   N  J                    1  1  0  .  3  4      N  E  W 
+S</h1>
+</div>
+<br>
+<div align="Center"><i>June 10, 2001</i><br>
+</div>
+<br>
+<div align="Center"><b>WARNING    	This version is intended for compiler
+hackers. The  	version ought to be stable, however we have not run 	our full
+regression testing.          http://cm.bell-labs.com/cm/cs/what/smlnj/index.html</b><b><br>
+</b></div>
+<br>
+<hr width="100%" size="2" align="Left">
+<h3>Summary:</h3>
+<ul>
+  <li>A long-standing signal-handling bug has been fixed.</li>
+  <li>As a result, CML finally works again, and so does eXene.</li>
+  <li>NLFFI has been further revised and improved.  It now supports   the
+Sparc architecture in addition to x86/Linux.</li>
+  <li>There are various bugfixes and some organizational changes.&nbsp;</li>
+</ul>
+<div align="Left">
+<hr width="100%" size="2" align="Left">
+<h4>NLFFI:   </h4>
+<ul>
+  <li>The types in the public interface to the "C" module have been     simplified:
+the annoying 'f type parameter has been dropped in     most places.  This
+requires some cheating under the hood, but     fortunately the cheat is a
+provably safe cheat.</li>
+  <li>Various bugs in ml-nlffigen have been fixed so that it should be  
+  more robust now.</li>
+  <li>C functions and function types that use variable-length argument  
+  lists are no longer rejected.  Instead, ml-nlffigen will produce     ML
+code that lets you call the function with just its mandatory     arguments.
+ This means that ml-nlffigen will not bail out just     because there is
+one odd occurence of a varargs function somewhere     in one big .h-file.</li>
+  <li>Default names for files are now derived from the C files's basename 
+    so that ml-nlffigen will always place them in the current directory.</li>
+  <li>Default names for generated ML identifiers are also derived from  
+  the C file's basename.</li>
+  <li>Sparc architecture supported now.</li>
+  <li>Support for x86/win32 mostly in place.  (All missing pieces are   
+ in the runtime system.)  </li>
+</ul>
+<h4>CM:   </h4>
+<ul>
+  <li>CM can now generate "index files" which are human-readable     files
+that list on a per-.cm-file basis each toplevel symbol     defined or imported.</li>
+  <li>some internal improvements in the tools subsystem</li>
+  <li>"lambdasplit" parameter for class "sml" to control the cross-module 
+    inliner documented</li>
+  <li>other documentation updates</li>
+  <li>bug fixes</li>
+</ul>
+<h4>runtime:</h4>
+<ul>
+  <li>A serious signal handling problem that affected CML has been fixed.</li>
+  <li>Support for dlopen/dlsym on Sparc/Solaris added. </li>
+</ul>
+<h4>CML:</h4>
+<ul>
+  <li>Compiles under the new CM.</li>
+  <li>Libraries and anchors for version 110.34 and later are organized  
+  as follows:</li>
+  <ul>
+    <li><b>$cml/cml.cm</b>            : Main CML library.</li>
+    <li><b>$cml/basis.cm</b>          : CML's version of $/basis.cm.</li>
+    <li><b>$cml/cml-internal.cm</b>   : Internal helper library.</li>
+    <li><b>$cml/core-cml.cm</b>       : Internal helper library.</li>
+    <li><b>$cml-lib/trace-cml.cm</b>  : Tracing facility.</li>
+    <li><b>$cml-lib/smlnj-lib.cm</b>  : CML's version of $/smlnj-lib.cm  </li>
+  </ul>
+</ul>
+<h4>eXene:</h4>
+<ul>
+  <li>Compiles under the new CM.</li>
+  <li>The library's name for version 110.34 is <b>$/eXene.cm</b>.  </li>
+</ul>
+<h4>scripts:</h4>
+<ul>
+  <li>The config/install.sh script has been updated to support the installation 
+    of CML and eXene under the New World Order (aka new CM). </li>
+</ul>
+<h4>compiler:</h4>
+<ul>
+  <li>bug fixes</li>
+  <li>cross-module inliner now in the compilation pipeline by default   
+ <i>(By default it is still turned off. But it can be enabled either    
+ globally or selectively by using CM's new "lambdasplit" parameter.)</i>  
+  </li>
+</ul>
+<h4>MLRISC:   </h4>
+<ul>
+  <li>Sparc implementation of c-calls API.  (This is used by NLFFI.)    
+    <i>(Caveat: Register assignments in the Sparc backend of SML/NJ     
+still need to be redone.  In particular, the ASM temp register      must
+not be %o2.  It is unlikely but not impossible that the      current situation
+leads to certain subtle code-generation bugs.)</i> </li>
+  <li>Support for "stdcall" calling convention in x86 version of c-calls. 
+ </li>
+</ul>
+<h4>CKIT:</h4>
+<ul>
+  <li>structure Error exported from ckit-lib.cm </li>
+</ul>
+</div>
+</body>
+</html>

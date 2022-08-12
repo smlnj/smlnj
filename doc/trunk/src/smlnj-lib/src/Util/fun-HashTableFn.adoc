@@ -1,0 +1,28 @@
+= The `HashTableFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashTableFn` functor provides an implementation of the
+xref:sig-MONO_HASH_TABLE.adoc[`MONO_HASH_TABLE`] signature parameterized
+over the key type.
+
+The tables are implemented as an array of _buckets_, which are
+lists of key-value pairs.  The number of buckets grows with the number
+of table entries.
+
+== Synopsis
+
+[source,sml]
+------------
+functor HashTableFn (Key : HASH_KEY) : MONO_HASH_TABLE
+------------
+
+== See Also
+
+xref:sig-HASH_KEY.adoc[`HASH_KEY`],
+xref:str-HashTable.adoc[`HashTable`],
+xref:sig-MONO_HASH_TABLE.adoc[`MONO_HASH_TABLE`],
+xref:smlnj-lib.adoc[__The Util Library__]

@@ -1,0 +1,57 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  6  1      N  E  W  S
+			
+                            December 14, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.61/
+
+
+Summary:
+
+    This is mostly a bugfixing release.
+
+--------------------------------------------------------------------------
+
+runtime:
+
+    - Fixed the code in runtime/c-libs/posix-tty/{tcgetattr,tcsetattr}.c
+      to get the c_cc termios data copied correctly.  Also moved the
+      allocation of the string to avoid problems if it caused a GC.
+      Thanks to Timothy Bourke for the bug report and fix.
+
+CM:
+
+    - CM's "standard shell tools" (e.g., mlyacc, mllex, etc.) that are
+      implemented in terms of Tools.registerStdShellCmdTool now
+      tolerate (with a warning) the situation where target files
+      exist and appear outdated, but the shell command in question fails
+      (e.g., because the program in question has not been installed yet).
+
+    - CM now reports undefined anchors as errors and aborts execution
+      rather than silently pressing on using bogus values.
+
+    - "[autoloading]" messages can now be suppressed using the
+      CM.Control.verbose control (or the -Ccm.verbose=false command
+      line option).
+
+    - Fixed bug in CM where "with:" specifications that affect compilation
+      (as opposed to parsing) were ignored.
+
+Basis:
+
+    - Fixed the types of recvVecFrom, recvVecFrom', recvVecFromNB, and
+      recvVecFromNB' in the SOCKET signature.  This error is actually
+      in the SML Basis specification too.
+
+Language processing tools (ml-lpt):
+
+    - The implementations of our new language processing tools
+      (ml-ulex, ml-antlr) have been improved, but documenation is
+      not yet up-to-date.

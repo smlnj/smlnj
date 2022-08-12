@@ -1,0 +1,98 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  4      N  E  W  S
+			
+  		         November 6, 2003
+
+			      WARNING
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.44/
+
+
+Summary:
+
+Again, there are a number of important bug fixes and updates, mostly
+to the Basis library and the installer.
+
+--------------------------------------------------------------------------
+
+Details:
+========
+
+Basis:
+------
+
+ - fixed bugs and improved code for Real.{from,to}LargeInt
+ - fixed bug in Posix.ProcEnv.times
+ - changed inputLine functions to return an option
+ - implemented native int32->real64 conversion
+ - slices implemented according to spec
+ - Time.{from,to}NanoSeconds added to Time
+ - made SOCKET API match the spec
+ - OS-specific details of socket implementation moved into separate files
+   (this makes it possible to share the bulk of the code between Unix and
+   Win32)
+ - added signature SYNCHRONOUS_SOCKET to Basis
+ - precision of real64 is 53 (not 52)
+ - added openVector, nullRd, and nullWr to PRIM_IO
+
+Installer:
+----------
+
+ - new installer (which is mostly written in SML) is no longer optional
+   (old installer has been removed)
+ - the ML code of the installer is now in its own library and gets
+   compiled by CMB.make; the installer script simply invokes
+     sml -m $smlnj/installer.cm
+   (the ML code does not have to be compiled as part of the installation
+    process)
+ - minor improvements and bugfixes
+ - sense environment variable CM_DIR_ARC that lets one override the
+   default name for CM meta-data (default is .cm -- see CM section)
+ - sense value of INSTALLDIR environment variable and behave accordingly
+ - "dont_move_libraries" directive eliminated from config/targets
+   (This was a legacy mechanism which turned out to be broken anyway.)
+
+Scripts:
+--------
+
+ - changed default @SMLalloc parameter for x86/celeron to 64k
+ - made .bat-files Win95-compatible
+
+CM:
+---
+
+ - default name of meta-data directory changed from CM to .cm
+ - a different name can be chosen at installation time
+ - added missing wrapper for privilege "primitive" in $smlnj/viscomp/core.cm
+
+CML:
+----
+
+ - tracked Basis changes
+   (non-blocking Socket functions are left out since they are redundant:
+    CML_SOCKET is defined in terms of SYNCHRONOUS_SOCKET)
+ - make use of non-blocking socket functions from Basis; CML socket
+   implementation is now OS-independent
+
+Interactive loop:
+-----------------
+
+ - added hook to prettyprinter so it can invoke the autoloader if
+   a qid to be printed is not currently bound in the toplevel environment;
+   this eliminates many instances where the prettyprinter used to
+   print "?" in front of a name
+
+MLRISC:
+-------
+
+ - minor bug fixes
+
+runtime:
+--------
+
+ - works with Mac OS X 10.3 (Panther)

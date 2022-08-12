@@ -1,0 +1,86 @@
+= Installing SML/NJ under Windows
+:revnumber: {version}
+:revdate: {release-date}
+:source-highlighter: pygments
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:release-notes: {dist-dir}{version}-README.html
+:stem: latexmath
+:source-highlighter: pygments
+
+== Introduction
+These instructions are for installing Standard ML of New Jersey
+(**SML/NJ**) as an application on Microsoft Windows.  To use **SML/NJ** under the
+**cygwin** environment, see the {dist-dir}cygwin.html[installation
+instructions].
+
+== Using the installer package
+
+We provide a Microsoft Installer package for **SML/NJ**
+({dist-dir}smlnj-{version}.msi[[.tt]#{dist-dir}smlnj-{version}.msi#]).
+The installer contains a full installation including
+nearly all of the optional components (it does not
+include "asdl", "mlrisc-tools", or "nowhere").
+
+You can choose the installation directory. The default
+is `C:\Program Files\SMLNJ`. The `bin` directory containing
+the `sml` command is added to the default `PATH`, although
+you will need to re-open a command window to see
+the binding. The `SMLNJ_HOME` environment variable is also
+set to point at the location where **SML/NJ** was installed.
+
+== Using SML/NJ on Windows
+
+Once you have **SML/NJ** installed, you can launch the interactive
+top-level loop by selecting the application in the Start Menu.
+Alternatively, you can open a shell window and running the **sml**
+command.
+
+== Building from sources
+
+To build **SML/NJ** from the runtime sources and precompiled "bin"
+files requires a Unix shell (we use https://cygwin.com[**Cygwin**])
+to fetch and unbundle the files.  In addition, you will need to
+have a version of Microsoft's
+https://docs.microsoft.com/en-us/visualstudio/install/install-visual-studio[Visual Studio]
+available.
+
+To build the Windows installation, use the following steps.
+We have marked those steps that must be done in a Unix shell
+with a "**[UNIX]**" prefix and those that must be done in the
+Visual Studio shell with "**[VS]**".
+--
+1.  Create an installation directory for **SML/NJ**.
+
+2.  **[UNIX]** Use **curl** or **wget** to download the
+    {dist-dir}/config.tgz[[.tt]#config.tgz#] file.
++
+[source,shell]
+--------------
+% curl -O {dist-dir}/config.tgz
+--------------
+
+3.  **[UNIX]** Unbundle the `config.tgz` file.
++
+[source,shell]
+--------------
+% tar -xzf config.tgz
+--------------
+
+4. **[UNIX]** Run the `prepare-win-install.sh` script to download and unbundle the
+   necessary source files.  This script those files used in the standard
+   installation on Windows.
++
+[source,shell]
+--------------
+% config/prepare-win-install.sh
+--------------
+
+5. **[VS]** Run the **SML/NJ** installation script for Windows
++
+[source,shell]
+--------------
+config\install.bat
+--------------
+
+--

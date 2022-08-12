@@ -1,0 +1,61 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  4  9      N  E  W  S
+			
+                           September 13, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.49/
+
+
+Summary:
+
+     This is a bugfix release.  Its main purpose is to solve
+     a another showstopper problem introduced into the x86 c-calls
+     implementation which is used by NLFFI.  It also fixes a
+     problem with the signal masking/unmasking code.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Basis:
+------
+
+  - Fixed the signal masking code to properly nest mask/unmask
+    operations on a per-signal basis.
+
+MLRISC:
+-------
+
+  - fixed problem in x86/c-calls that caused NLFFI to generate bogus code
+  - bug fix in udgraph.sml
+  - The IBM/MacOS syntax switch on PPC was incorrectly swapped. Fixed.
+
+Runtime:
+--------
+
+  - heap image magic number updated
+    (causes a graceful exit rather than a crash when an outdated
+     heap image is being loaded)
+  - Cygwin support
+
+Libraries:
+----------
+
+  - added some exports to src/compiler/core.cm
+  - added a ptreql functon to structure InlineT (exported from
+    $smlnj/init/init.cmi)
+
+
+Installer:
+----------
+
+  - falls back to copying when renaming of files fails
+    (usually this happens when source and destination are in different
+     file systems)

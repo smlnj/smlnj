@@ -1,0 +1,222 @@
+:version: 110.98
+:date: July 16, 2020
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release includes substantial improvements to the documentation
+(the *SML/NJ Library* is now mostly documented) as well as many small
+improvements to the *SML/NJ Library*, various
+improvements in other parts of the system, and bug fixes.
+
+== Future Plans
+
+We are reworking the back-end of the compiler in preparation for
+migrating from our current *MLRISC* code generator to one based
+on *LLVM*.  With that migration, we expect to drop support for
+all processors other than the *x86-64* (aka *amd64*), but we plan
+to add support for the *arm64* (aka *AArch64*).
+
+If you are a user of *SML/NJ* on the *Sparc*, *PowerPC*, or 32-bit
+*x86* and would like to see support for that system continued,
+please contact us.
+
+== Details
+
+=== Compiler
+
+Made the `LambdaVar.lvar` type abstract.  This is an internal change
+that should not affect compiler behavior.
+
+We have started a project to migrate the backend of SML/NJ to use
+the https://llvm.org[*LLVM*] infrastructure for code generation.
+The prepare the ground for this migration, we have made a number
+of changes to the compiler internals:
+--
+* Support for mapping the trigonometry functions `sin`, `cos`, and `tan`
+  to hardware instructions on the *x86* architecture has been removed.
+  This change was made to simplify the code generator as we work on
+  migrating to a new *LLVM* backend.
+
+* The *SML* operators `div` and `mod` have a __floor__ rounding semantics
+  instead of the __truncation__ semantics supported by hardware.  Previously,
+  we relied on *MLRISC* to handle the implementation of these operators,
+  but we now do that in a new lowering pass.  We also added optimizations
+  for when the second argument to `div` or `mod` is a power of two to
+  the *CPS* contraction phase.
+
+* The lowering pass also lowers trapping conversions (**CPS** primops
+  `TEST` and `TESTU`) such that they only involve conversions that
+  can be checked using trapping add operations.
+--
+
+=== MLRISC
+
+The *MLRISC* instruction selector for the *x86* and *amd64* targets
+erroneously assumed that the `idiv` instruction sets the `OF` (overflow)
+condition code when dividing the largest negative number by ``~1``.
+In fact, such a division operation traps, which is okay, because the
+runtime system maps the trap to the `Overflow` exception.  Since the
+check for overflow is unnecessary, it has been removed from the files
+`MLRISC/amd64/mltree/amd64-gen.sml` and `MLRISC/x86/mltree/x86.sml`.
+
+=== Basis Library
+
+This version implements the following Basis Library proposal:
+--
+**[2020-001]**::
+https://github.com/SMLFamily/BasisLibrary/wiki/2020-001-Addition-of-Universal-module[
+Basis Library proposal 2020-001 (Addition of Universal module)] --
+This proposal adds the `Universal` structure found in **Poly/ML** to the
+Basis Library.
+--
+
+=== SML/NJ Library
+
+The *SML/NJ Library* is now mostly documented; see `doc/html/smlnj-lib/index.html`
+in the distribution or the https://smlnj.org/doc/smlnj-lib/index.html[online
+documentation].
+
+The `HTMLDev` structure in the pretty-printing library (`$/pp-lib.cm`) has
+been renamed as `HTML3Dev` and moved into its own library (`pp-extras-lib.cm`).
+The renaming is in anticipation of renaming the HTML Library to "HTML3"
+and the moving it to its own library removes a dependency from the compiler
+on `$/html-lib.cm`.
+
+There were many small improvements (and a couple of bug fixes) to various
+parts of the *SML/NJ Library*; see the `smlnj-lib/CHANGES` file for details.
+
+=== ML-LPT
+
+Changed the semantics of the `--debug` command-line option for *ml-antlr*.
+Previously this option replaced the actions with a print expression, but that
+limited its usefulness because of type errors in the generated code.  The new
+behavior is to preserve the existing actions and just add the printing code.
+
+=== Documentation
+
+This release contains a substantial amount of new documentation for the
+*SML/NJ Library* (see `doc/html/smlnj-lib`).  While the documentation is
+not complete, it does cover the most commonly used components (with the
+exception of the pretty-printing library).
+
+=== Installation
+
+The default installation for machines that report "``x86_64``" as their
+hardware is now 64 bits.  See the installation instructions for more
+details.
+
+=== 32-bit macOS issues
+
+While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
+for {version} works on **macOs** 10.14 Mojave, building from source
+requires some extra steps because the version of **Xcode**
+distributed for Mojave does not include a 32-bit SDK.
+
+Another issue that you may encounter
+when building on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#238#
+| Cross compilation from *amd64* to *x86* does not work
+| [.bugid]#256#
+| `Ref.exchange` incorrect
+| [.bugid]#257#
+| `HASH_TABLE` `listItems` error in reference manual
+| [.bugid]#260#
+| Perform divide on `Position.int` crashes with FPE on Linux
+| [.bugid]#261#
+| Weird "calc_strictness" message being printed
+| [.bugid]#262#
+| JSON parser fails on empty object
+| [.bugid]#263#
+| JSON parser ignores suffixes
+|=======
+
+// ***** include a list of unnumbered bugs here *****
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | macOS 11.0 (Big Sur) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

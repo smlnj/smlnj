@@ -1,0 +1,40 @@
+= The Unix Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *Unix Library* provides some *Unix*-specific utilities.
+
+== Contents
+
+xref:str-UnixEnv.adoc[`[.kw]#structure# UnixEnv`]::
+  This structure provides support for querying the user's environment.
+
+xref:str-UnixPath.adoc[`[.kw]#structure# UnixPath`]::
+  This structure supports *Unix*-specific file-system searches.
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/unix-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/Unix/unix-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-UnixEnv.adoc[]
+
+include::str-UnixPath.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

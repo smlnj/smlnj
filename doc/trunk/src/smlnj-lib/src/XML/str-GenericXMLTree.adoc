@@ -1,0 +1,25 @@
+= The `GenericXMLTree` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `GenericXMLTree` structure provides a generic representation of
+*XML* trees where elements and attribute names are represented as
+xref:../Util/str-Atom.adoc#type:atom[`Atom.atom`] values.
+
+== Synopsis
+
+[source,sml]
+------------
+structure GenericXMLTree : XML_TREE
+    where type Schema.element = Atom.atom
+    where type Scheme.attribute = Atom.atom * string
+------------
+
+== See Also
+
+xref:sig-XML_SCHEMA.adoc[`XML_SCHEMA`],
+xref:sig-XML_TREE.adoc[`XML_TREE`],
+xref:xml-lib.adoc[__The XML Library__]

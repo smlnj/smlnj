@@ -1,0 +1,43 @@
+ML-BURG(1)
+==========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+ml-burg - a tree parser generator for Standard ML
+
+SYNOPSIS
+--------
+*ml-burg* 'file'
+
+DESCRIPTION
+-----------
+
+The *ml-burg* program generates a *Standard ML* program to perform
+bottom-up rewriting of an input tree. Cost information associated
+with each rewrite rule is used to derive the minimum rewrite cost
+for the entire tree. A successful reduction corresponds to rewriting
+the input tree to a special non-terminal symbol called the
+__start non-terminal__. Upon successful reduction, facilities are
+provided to walk the tree emitting semantic actions corresponding to
+the rules that matched.
+
+AUTHOR
+------
+*ML-Burg* was written by Lal George and Florent Guillaume.
+
+SEE-ALSO
+--------
+sml(1)
+
+__ML-Burg -- Documentation__ by Florent Guillaume and Lal George (included
+in the *SML/NJ* documentation).
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

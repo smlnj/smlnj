@@ -1,0 +1,55 @@
+\documentclass[11pt,letterpaper]{book}
+
+\usepackage[textwidth=6in,textheight=8.5in]{geometry}
+
+\input{defs}
+
+\title{ASDL 3.0 Reference Manual}
+\author{
+  John Reppy\\
+  \texttt{jhr@cs.chicago.edu}}
+\date{Revised: July 2021}
+
+
+\begin{document}
+
+\frontmatter
+
+\maketitle
+
+\phantom{.}
+\vspace{\stretch{1}}
+
+\noindent Copyright \copyright{}2021.  Fellowship of SML/NJ.  All rights reserved.
+
+\vskip 12pt
+
+\pagebreak
+
+\tableofcontents
+
+\mainmatter
+
+%	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+%	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
+
+\newpage
+
+\input{introduction}
+%\input{invocation}
+%\input{tutorial}
+\input{syntax}
+\input{views}
+\input{code-interface}
+\input{pickles}
+%\input{support-code}
+\input{usage}
+\input{history}
+
+\backmatter
+
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{plain}
+\bibliography{refs.bib}
+
+\end{document}

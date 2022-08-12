@@ -1,0 +1,82 @@
+= The `KeywordFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `KeywordFn` functor provides a simple way to support a table of keyword
+(or reserved) identifiers in a scanner.
+
+== Synopsis
+
+[source,sml]
+------------
+functor KeywordFn ()
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+type token
+type pos
+val ident : (Atom.atom * pos * pos) -> token
+val keywords : (string * ((pos * pos) -> token)) list
+------------
+
+== Functor Argument Description
+
+`[.kw]#type# token`::
+  The type of tokens in the scanner.
+
+`[.kw]#type# pos`::
+  The type of source file positions used by the scanner (_e.g._, character
+  positions in the source file).
+
+[[val:ident]]
+`[.kw]#val# ident : (Atom.atom * pos * pos) \-> token`::
+ `ident (id, pos, pos)` is used to create an identifier token (_i.e._, non-keyword)
+  for the given string, and start and end file positions.
+
+[[val:keywords]]
+`[.kw]#val# keywords : (string * ((pos * pos) \-> token)) list`::
+  A list of string-function pairs, where the strings are the keywords and
+  the functions are used to create the corresponding scanner tokens from
+  start and end file positions.
+
+== Interface
+
+[source,sml]
+------------
+    type token
+    type pos
+    val keyword : (string * pos * pos) -> token
+------------
+
+== Interface Description
+
+`[.kw]#type# token`::
+  The type of tokens in the scanner.
+
+`[.kw]#type# pos`::
+  The type of source file positions used by the scanner.
+
+`[.kw]#val# keyword : (string * pos * pos) -> token`::
+  `keyword (id, p1, p2)` returns the token for the identifier `id`,
+  which is either one of the keyword tokens from the
+  xref:#val:keywords[`keywords`] list or otherwise is an identifier
+  token created using the xref:#val:ident[`ident`] function.
+
+== Discussion
+
+This functor was designed for the https://smlnj.org/doc/ML-Yacc/index.html[*ml-yacc*]
+scanner interface, where tokens contain their file position.  It is not clear that
+it adds much utility over just using the xref:str-Atom.adoc[`atom`] type, but
+is maintained for backward compatibility.
+
+== See Also
+
+xref:str-Atom.adoc[`Atom`],
+xref:sig-MONO_HASH_TABLE.adoc#str:AtomTable[`AtomTable`],
+xref:smlnj-lib.adoc[__The Util Library__]

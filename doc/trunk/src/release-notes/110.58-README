@@ -1,0 +1,78 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  8      N  E  W  S
+			
+                             March 2, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.58/
+
+
+Summary:
+
+    Support for Intel Macs and x86-64 under Linux, a brand-new
+    replacement for ml-lex, and other minor improvements as well
+    as bugfixes.
+
+--------------------------------------------------------------------------
+
+Lexer generator:
+
+  - A new, much improved  lexer generator tool has been developed by
+    Aaron Turon and John Reppy.  The new tool, called lexgen, can be
+    used as a drop-in replacement for ml-lex.
+
+  - The compilation manager is able to have lex specification files
+    processed by either lexgen or the original ml-lex.  For the time
+    being, the latter is the default.
+
+    To change this aspect of CM's behavior, invoke sml (and related
+    commands such as ml-build) using the -Ccm.use-legacy-lex=false
+    command line switch.  Alternatively, one can define an environment
+    variable CM_USE_LEGACY_LEX and set it to false.
+
+  - Binaries (bootfiles) shipped with this version have been compiled
+    using lexgen.
+
+Newly supported platforms:
+
+  - SML/NJ builds and runs on Intel-based Macs running Mac OS X.
+  - SML/NJ builds and runs on x86-64 systems using 32-bit mode.
+  - SML/NJ should build and run on NetBSD 3.x (untested).
+
+Platforms no longer supported:
+
+  - Support for pre-2.2 Linux kernels has been dropped.
+
+Runtime system:
+
+  - Signal handling on x86/Linux has been cleaned up.
+
+MLRISC:
+
+  - Scripts for rebuilding MLRISC-generated files have been updated
+    to reflect changes to CM.
+
+Backend:
+
+  - Darwin-specific Intel ABI (for foreign-function interface)
+    implemented.  The solution is temporary since it currently relies
+    on the fact that the compiler itself does not use the FFI.
+
+Compilation manager:
+
+  - Improved CM-specific error reporting and handling.
+
+Installation:
+
+  - Enabling $/html-lib.cm in config/preloads now works.
+
+CML:
+
+  - withNack wrapped around a never event will now properly
+    signal the negative acknowledgement.

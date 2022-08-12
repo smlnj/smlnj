@@ -1,0 +1,41 @@
+HTML Library:
+
+  needs documentation (also, we are going to change the name of the library to
+  HTML3).
+
+HTML4 Library:
+
+  needs documentation
+
+PP Library:
+
+  needs documentation (including a tutorial)
+
+Reactive Library:
+
+  - str-Reactive.adoc
+	many functions still need documentation
+
+RegExp Library:
+
+  - tutorial is incomplete
+
+  - str-AwkSyntax.adoc
+
+  - sig-REGEXP_ENGINE.adoc
+ 
+Util Library:
+
+  - str-FormatComb.adoc
+	a few functions remain to be documented (seq, listg, optiong, and seqg).
+
+  - str-RealOrderStats.adoc
+
+  - str-Scan.adoc
+
+  - str-UnivariateStats.adoc
+
+## General checking:
+
+Scan generated HTML for &#8594;, which is the Unicode arrow symbol (occurs when
+we forget to write arrow as \->.

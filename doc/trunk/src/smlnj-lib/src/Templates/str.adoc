@@ -1,0 +1,33 @@
+= The `@NAME@` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `@NAME@` structure ...
+
+== Synopsis
+
+[source,sml]
+------------
+structure @NAME@
+------------
+
+== Interface
+
+[source,sml]
+------------
+------------
+
+== Description
+
+`[.kw]#type# foo`::
+  something
+
+`[.kw]#val# bar : foo -> foo`::
+  something
+
+== See Also
+
+xref:@LIBRARY@.adoc[__The @DIR@ Library__]

@@ -1,0 +1,77 @@
+structure AtomBinaryMap
+structure AtomBinarySet
+structure AtomRedBlackMap
+structure AtomRedBlackSet
+structure IntBinaryMap
+structure IntBinarySet
+structure IntHashTable		(* should be IntTable *)
+structure IntListMap
+structure IntListSet
+structure IntRedBlackMap
+structure IntRedBlackSet
+structure WordHashTable		(* should be WordTable *)
+structure WordRedBlackMap
+structure WordRedBlackSet
+functor BinaryMapFn
+functor BinarySetFn
+functor ListMapFn
+functor ListSetFn
+functor RedBlackMapFn
+functor RedBlackSetFn
+functor SplayMapFn
+functor SplaySetFn
+
+
+signature HASH_KEY
+
+signature HASH_SET
+	functor HashSetFn
+
+signature MONO_ARRAY_SORT
+	structure ArrayQSort
+	functor ArrayQSortFn
+
+signature MONO_DYNAMIC_ARRAY
+	functor DynamicArrayFn
+
+signature MONO_HASH_TABLE
+    structure AtomTable :> MONO_HASH_TABLE
+    structure IntHashTable :> MONO_HASH_TABLE where type Key.hash_key = int
+    structure WordHashTable :> MONO_HASH_TABLE where type Key.hash_key = word
+    functor HashTableFn
+
+signature MONO_HASH2_TABLE
+
+signature MONO_PRIORITYQ
+
+signature ORD_KEY
+
+signature ORD_MAP
+	structure AtomBinaryMap
+	structure AtomRedBlackMap
+	structure IntBinaryMap
+	structure IntListMap
+	structure IntRedBlackMap
+	structure WordRedBlackMap
+	functor BinaryMapFn
+	functor ListMapFn
+	functor RedBlackMapFn
+	functor SplayMapFn
+
+signature ORD_SET
+	structure AtomBinarySet
+	structure AtomRedBlackSet
+	structure IntBinarySet
+	structure IntListSet
+	structure IntRedBlackSet
+	structure WordRedBlackSet
+	functor BinarySetFn
+	functor ListSetFn
+	functor RedBlackSetFn
+	functor SplaySetFn
+
+signature PRIORITY
+
+signature UREF
+	structure SimpleURef
+	structure URef

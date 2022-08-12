@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.60 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  6  0      N  E  W  S
+			
+                           November 9, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.60/">http://smlnj.cs.uchicago.edu/dist/working/110.60/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+    Support for Mac OS X on Intel machines, new directory layout,
+    subversion-based source repository, preliminary <tt>amd64</tt> support
+    in <tt>MLRISC</tt> and backend, new code generator tools
+    (<tt>ml-ulex</tt>, <tt>ml-antlr</tt>).
+
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>support for <tt>amd64</tt> added (not yet thoroughly tested)</li>
+    </ul>
+  </dd>
+
+  <dt>compiler:</dt>
+  <dd>
+    <ul>
+      <li>preliminary hook-up of <tt>amd64</tt> backend</li>
+    </ul>
+  </dd>
+
+  <dt>runtime:</dt>
+  <dd>
+    <ul>
+      <li>worked around problem with signal delivery on Intel-based Macs</li>
+    </ul>
+  </dd>
+
+  <dt>ml-lpt (<em>language processing tools</em>):</dt>
+  <dd>
+    <ul>
+      <li>two new tools: <tt>ml-ulex</tt>, <tt>ml-antlr</tt></li>
+      <li><b>ml-ulex</b>: lexer generator with unicode support</li>
+      <li><b>ml-antlr</b>: <tt>ANTLR</tt>-inspired LL(k) parser generator</li>
+      <li>first public release; still <em>"beta"</em> quality</li>
+    </ul>
+  </dd>
+
+  <dt>source repository:</dt>
+  <dd>
+    <ul>
+      <li>the SML/NJ sources are now hosted at <tt>smlnj-gforge.cs.uchicago.edu</tt></li>
+      <li>the revision control system is now <a href="http://subversion.tigris.org">subversion</a></li>
+      <li>the project name is <tt>"smlnj"</tt></li>
+      <li>source code available via anonymous <tt>subversion</tt> from
+          <tt>svn://smlnj-gforge.cs.uchicago.edu/smlnj</tt></li>
+      <li>source code (directory-) tree has new layout</li>
+    </ul>
+  </dd>
+
+  <dt>scripts:</dt>
+  <dd>
+    <ul>
+      <li>scripts adjusted to deal with new directory layout</li>
+      <li>three scripts for simplifying svn access added: <br>
+          check out <tt>svn://smlnj-gforge.cs.uchicago.edu/smlnj/admin</tt>
+          and put it on your shell's <tt>PATH</tt></li>
+      <li>use <tt>checkout-all.sh</tt> to get a fresh copy of the sources</li>
+      <li><tt>refresh-all.sh</tt>: perform <tt>svn update</tt> on each source (sub-)tree</li>
+      <li><tt>stat-all.sh</tt>: perform <tt>svn stat</tt> on each source (sub-)tree</li>
+      <li>see <a href="../NOTES/HISTORY"><tt>HISTORY</tt> file</a> for details
+          on new layout</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

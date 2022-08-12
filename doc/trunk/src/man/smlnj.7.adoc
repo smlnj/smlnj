@@ -1,0 +1,73 @@
+SMLNJ(7)
+========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+smlnj - an implementation of the Standard ML language with supporting tools and libraries.
+
+DESCRIPTION
+-----------
+
+Compiled programs in the SML/NJ system are represented using a pair of the
+runtime system executable and a _heap image_ file.  Heap images have a filename
+suffix that is based on the architecture and operating system.
+
+AUTHOR
+------
+The Standard ML of New Jersey system was originally created by Andrew Appel
+and David MacQueen in 1987, and is currently supported by Matthias Blume,
+David MacQueen, and John Reppy.
+
+Many people have contributed to SML/NJ over the 30+ years since the
+project was started.  These include (but are not limited to)
+William Aitken
+Lars Bergstrom,
+Matthias Blume,
+Pierre Cregut,
+Adam T. Dingle,
+Damien Doligez,
+Scott Draves,
+Bruce F. Duba
+Emden Gansner,
+Lal George,
+Georges Gonthier,
+Yngvi Guttesen,
+Lorenz Huelsbergen,
+Trevor Jim,
+George Kuan,
+Christopher League,
+Mark Leone,
+Allen Leung,
+Stefan Monnier,
+Greg Morrisett,
+Riccardo Pucella,
+Mike Rainey,
+Norman Ramsey,
+Jon Riehl,
+John Reppy,
+Gene Rollins,
+Nick Rothwell,
+Bratin Saha,
+Zhong Shao,
+Konrad Slind,
+David Tarditti,
+Andrew Tolmach,
+Valery Trifonov,
+Aaron Turon,
+and Peter Weinberger.
+
+SEE-ALSO
+--------
+sml(1)
+
+https://smlnj.org[_Standard ML of New Jersey website_]
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

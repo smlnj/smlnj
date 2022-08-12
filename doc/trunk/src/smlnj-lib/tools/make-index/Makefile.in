@@ -1,0 +1,33 @@
+# Makefile.in
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Makefile for make-index tool
+#
+# @configure_input@
+#
+
+SHELL =         	@SHELL@
+INSTALL =       	@INSTALL@
+@SET_MAKE@
+
+TOOL_BIN =		@TOOL_BIN_DIR@
+ML_BUILD =		@ML_BUILD@
+HEAP_SUFFIX =		@SMLNJ_HEAP_SUFFIX@
+INSTALL_WRAPPER =       @ROOT_DIR@/bin/install-sml-wrapper.sh
+
+PROGRAM =		make-index
+
+HEAP_IMAGE =		$(PROGRAM).$(HEAP_SUFFIX)
+
+.PHONY:			install
+install:		$(HEAP_IMAGE)
+	$(INSTALL_WRAPPER) $(PROGRAM) $(TOOL_BIN)
+
+$(HEAP_IMAGE):		$(wildcard ../*.sml) make-index.sml
+	$(ML_BUILD) sources.cm MakeIndex.main $(PROGRAM)
+
+include @MK_DIR@/clean-rules.gmk
+
+CLEAN_FILES = $(HEAP_IMAGE)

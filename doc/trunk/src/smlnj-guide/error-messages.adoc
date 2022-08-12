@@ -1,0 +1,8 @@
+= Understanding Error Messages
+:Date: {release-date}
+:VERSION: {smlnj-version}
+:Author: David MacQueen and John Reppy
+:stem: latexmath
+:source-highlighter: pygments
+
+To be written

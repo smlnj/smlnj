@@ -1,0 +1,110 @@
+= The `XML_TREE` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `XML_TREE` signature defines a tree representation of *XML* files.
+
+== Synopsis
+
+[source,sml]
+------------
+signature XML_TREE
+------------
+
+== Interface
+
+[source,sml]
+------------
+structure Schema : XML_SCHEMA
+
+datatype doctype = DOCTYPE of string * external_id option
+
+and external_id
+  = SYSTEM of string
+  | PUBLIC of string * string
+
+datatype content
+  = TEXT of string
+  | CDATA of string
+  | ELEMENT of {
+	name : Schema.element,
+	attrs : Schema.attribute list,
+	content : content list
+      }
+
+type tree = {
+    xmlDecl : Schema.attribute list option,
+    doctype : doctype option,
+    content : content
+  }
+------------
+
+== Description
+
+`[.kw]#structure# Schema : XML_SCHEMA`::
+  This substructure defines the representation of elements and attributes.
+
+`[.kw]#datatype# doctype = DOCTYPE of string * external_id option`::
+  This datatype represents the contents of the optional `DOCTYPE`
+  element found the beginning of the file (following the optional
+  *XML* declaration).  We currently only support external DTDs.
+
+`[.kw]#datatype# external_id`::
+  This datatype represents an external DTD specification; its constructors
+  are defined as follows:
++
+--
+    `SYSTEM of url`::
+      specifies a "private" external DTD, where the string `url` specifies
+      the DTD's location.
+
+    `PUBLIC(name, url)`::
+      specifies a "public" external DTD, where the string `name` is the name
+      of the DTD and `url` specifies the DTD's location.
+--
+
+`[.kw]#datatype# content`::
+  This datatype is used to represent the content of an *XML* file as a tree.
+  The constructors have the following meanings:
++
+--
+    `TEXT s`::
+      represents the text described by the string `s`.  When parsing, entities
+      in the source (_e.g._, `&lt;`) are replaced by their definition and,
+      when printing, special characters (_e.g._, `<`) are replaced by their
+      entities.
+
+    `CDATA s`::
+      represents the literal text described by the string `s`.
+
+    `ELEMENT{name, attrs, content}`::
+      represents a subtree enclosed by "`<element>` ... `</element>" tags,
+      where `name` is the name of the element, `attrs` is a list of attributes
+      in the start tag, and `content` is the stuff between the tags.
+--
+
+`[.kw]#type# tree`::
+  An *XML* tree, which is a record type with the following fields:
++
+--
+    `xmlDecl : Schema.attribute list option`::
+	This field represents the optional *XML* declaration at the beginning of
+	a file, where a value of `SOME attrs` means that there was an
+	*XML* declaration present with the list of attributes `attrs`.
+
+    `doctype : doctype option`::
+	This field represents the optional `DOCTYPE` element that follows the
+	*XML* declaration.
+
+    `content : content`::
+      This field is the root of the content and will always be an `ELEMENT`.
+--
+
+== See Also
+
+xref:sig-XML_SCHEMA.adoc[`XML_SCHEMA`],
+xref:fun-XMLTreeFn.adoc[`XMLTreeFn`],
+xref:xml-lib.adoc[__The XML Library__]

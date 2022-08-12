@@ -1,0 +1,327 @@
+= The `ORD_SET` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ORD_SET` signature defines an interface to finite sets of
+ordered elements.  The **SML/NJ Library** provides a number of
+different implementations of this interface.  Functors are
+provided for constructing sets for user-defined item types;
+in addition, a number of instances for specific types
+are also provided.
+
+== Synopsis
+
+[source,sml]
+------------
+signature ORD_SET
+
+structure AtomSet : ORD_SET where type Key.ord_key = Atom.atom
+structure AtomBinarySet : ORD_SET where type Key.ord_key = Atom.atom
+structure AtomRedBlackSet : ORD_SET where type Key.ord_key = Atom.atom
+structure IntBinarySet : ORD_SET where type Key.ord_key = int
+structure IntListSet : ORD_SET where type Key.ord_key = int
+structure IntRedBlackSet : ORD_SET where type Key.ord_key = int
+structure WordRedBlackSet : ORD_SET where type Key.ord_key = word
+------------
+
+== Interface
+
+[source,sml]
+------------
+structure Key : ORD_KEY
+
+type item = Key.ord_key
+type set
+
+val empty : set
+
+val singleton : item -> set
+
+val fromList : item list -> set
+
+val toList : set -> item list
+
+val add  : set * item -> set
+val add' : (item * set) -> set
+
+val addList : set * item list -> set
+
+val subtract  : set * item -> set
+val subtract' : (item * set) -> set
+
+val subtractList : set * item list -> set
+
+val delete : set * item -> set
+
+val member : set * item -> bool
+
+val isEmpty : set -> bool
+
+val minItem : set -> item
+val maxItem : set -> item
+
+val equal : (set * set) -> bool
+
+val compare : (set * set) -> order
+
+val isSubset : (set * set) -> bool
+
+val disjoint : set * set -> bool
+
+val numItems : set ->  int
+
+val listItems : set -> item list
+
+val union : set * set -> set
+val intersection : set * set -> set
+val difference : set * set -> set
+
+val map : (item -> item) -> set -> set
+val mapPartial : (item -> item option) -> set -> set
+val app : (item -> unit) -> set -> unit
+val foldl : (item * 'b -> 'b) -> 'b -> set -> 'b
+val foldr : (item * 'b -> 'b) -> 'b -> set -> 'b
+
+val partition : (item -> bool) -> set -> (set * set)
+val filter : (item -> bool) -> set -> set
+
+val exists : (item -> bool) -> set -> bool
+val all : (item -> bool) -> set -> bool
+
+val find : (item -> bool) -> set -> item option
+------------
+
+== Description
+
+`[.kw]#`structure# Key : ORD_KEY`::
+  This substructure defines the type of elements in the set and
+  the comparison function used to order them.
+
+`[.kw]#type# item = Key.ord_key`::
+  The type of elements in the set.
+
+`[.kw]#type# set`::
+  A finite set of `item` values.
+
+`[.kw]#val# empty : set`::
+  The empty set.
+
+`[.kw]#val# singleton : item \-> set`::
+  `singleton item` returns a singleton set containing `item`.
+
+`[.kw]#val# fromList : item list \-> set`::
+  `fromList items` returns the set containing the list of items.
+
+[[val:toList]]
+`[.kw]#val# toList : set \-> item list`::
+  `toList set` returns a list of the items in `set`.  The items will be
+  sorted in increasing order.
+
+`[.kw]#val# add  : set * item \-> set`::
+  `add (set, item)` adds the item to the set.
+
+`[.kw]#val# add' : (item * set) \-> set`::
+  `add' (item, set)` adds the item to the set.
+
+`[.kw]#val# addList : set * item list \-> set`::
+  `addList (set, items)` adds the list of items to the set.
+
+`[.kw]#val# subtract  : set * item \-> set`::
+  `subtract (set, item)` removes the object `item` from `set`.
+  Acts as the identity if `item` is not in the set.
+
+`[.kw]#val# subtract' : (item * set) \-> set`::
+  `subtract' (item, set)` removes the object `item` from `set`.
+  Acts as the identity if `item` is not in the set.
+
+`[.kw]#val# subtractList : set * item list \-> set`::
+  `subtractList (set, items)` removes the items from the set.
+
+`[.kw]#val# delete : set * item \-> set`::
+  `delete (set, item)` removes the object `item` from `set`.
+  Unlike `subtract`, the `delete` function raises the
+  xref:str-LibBase.adoc#exn:NotFound[`NotFound`]
+  exception if `item` is not in the set.
+
+`[.kw]#val# member : set * item \-> bool`::
+  `member (item, set)` returns `true` if, and only if, `item`
+  is an element of `set`.
+
+`[.kw]#val# isEmpty : set \-> bool`::
+  `isEmpty set` returns true if, and only if, `set` is empty.
+
+`[.kw]#val# minItem : set \-> item`::
+  `minItem set` returns the *smallest* element of the set.  This function
+  raises the {sml-basis-url}/list.html#SIG:LIST.Empty:EXN[`Empty`]
+  exception if the set is empty.
+
+`[.kw]#val# maxItem : set \-> item`::
+  `minItem set` returns the *largest* element of the set.  This function
+  raises the {sml-basis-url}/list.html#SIG:LIST.Empty:EXN[`Empty`]
+  exception if the set is empty.
+
+`[.kw]#val# equal : (set * set) \-> bool`::
+  `equal (set1, set2)` returns true if, and only if, the two
+  sets are equal (_i.e._, they contain the same elements).
+
+`[.kw]#val# compare : (set * set) \-> order`::
+  `compare (set1, set2)` returns the lexical order of
+  the two sets.
+
+`[.kw]#val# isSubset : (set * set) \-> bool`::
+  `isSubset (set1, set2)` returns true if, and only if, `set1`
+  is a subset of `set2` (_i.e._, any element of `set1` is an
+  element of `set2`).
+
+`[.kw]#val# disjoint : set * set \-> bool`::
+  `equal (set1, set2)` returns true if, and only if, the two
+  sets are disjoint (_i.e._, their intersection is empty).
+
+`[.kw]#val# numItems : set \->  int`::
+  `numItems set` returns the number of items in the `set`.
+
+`[.kw]#val# union : set * set \-> set`::
+  `union (set1, set2)` returns the union of the two sets.
+
+`[.kw]#val# intersection : set * set \-> set`::
+  `intersection (set1, set2)` returns the intersection of the two sets.
+
+`[.kw]#val# difference : set * set \-> set`::
+  `difference (set1, set2)` returns the difference of the two sets;
+  _i.e._, the set of items that are in `set1`, but not in
+  `set2`.
+
+`[.kw]#val# map : (item \-> item) \-> set \-> set`::
+  `map f set` constructs a new set from the result of applying the
+  function `f` to the elements of `set`.  This expression is
+  equivalent to
++
+[source,sml]
+------------
+fromList (List.map f (toList set))
+------------
+
+`[.kw]#val# mapPartial : (item \-> item option) \-> set \-> set``::
+  `mapPartial f set` constructs a new set from the result of applying the
+  function `f` to the elements of `set`.  This expression is
+  equivalent to
++
+[source,sml]
+------------
+fromList (List.mapPartial f (toList set))
+------------
+
+`[.kw]#val# app : (item \-> unit) \-> set \-> unit`::
+  `app f set` applies the function `f` to the items in `set`.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.app f (toList set)
+------------
+
+`[.kw]#val# foldl : (item * 'b \-> 'b) \-> 'b \-> set \-> 'b`::
+  `foldl f init set` folds the function `f` over the items in
+  `set` in increasing order using `init` as the initial value.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldl f init (toList set)
+------------
+
+`[.kw]#val# foldr : (item * 'b \-> 'b) \-> 'b \-> set \-> 'b`::
+  `foldr f init set` folds the function `f` over the items in
+  `set` in decreasing order using `init` as the initial value.
+  This expression is equivalent to
++
+[source,sml]
+------------
+List.foldr f init (toList set)
+------------
+
+`[.kw]#val# partition : (item \-> bool) \-> set \-> (set * set)`::
+  `partition pred set` returns a pair of disjoint sets `(tSet, fSet)`, where
+  the predicate `pred` returns true for every element of `tSet`,
+ `false` for every element of `fSet`, and `set` is the union of `tSet`
+  and `fSet`.
+
+`[.kw]#val# filter : (item \-> bool) \-> set \-> set`::
+  `filter pred set` filters out any elements of set for which the
+  predicate `pred` returns false.
+  This expression is equivalent to
++
+[source,sml]
+------------
+#1 (partition pred set)
+------------
+
+`[.kw]#val# exists : (item \-> bool) \-> set \-> bool`::
+  `all pred set` returns `true` if, and only if, `pred item` returns
+  true for all elements `item` in `set`. Elements are checked in increasing
+  order.
+
+`[.kw]#val# all : (item \-> bool) \-> set \-> bool`::
+  `exists pred set` returns `true` if, and only if, there exists an
+  element `item` in `set` such that `pred item` returns `true`.
+  Elements are checked in increasing order.
+
+`[.kw]#val# find : (item \-> bool) \-> set \-> item option`::
+  `find pred set` returns `SOME item` if there exists an object `item`
+  in the set for which `pred item` returns `true`; otherwise `NONE` is
+  returned.  Items are tested in increasing order.
+
+=== Deprecated functions
+
+The following functions are part of the interface, but have been
+deprecated.
+
+`[.kw]#val# listItems : set \-> item list``::
+  Use xref:#val:toList[`toList`] instead.
+
+== Instances
+
+[[str:AtomSet]]
+`[.kw]#structure# AtomSet`::
+  This structure is an alias for `AtomRedBlackSet`.
+
+[[str:AtomBinarySet]]
+`[.kw]#structure# AtomBinarySet`::
+  Sets of atoms implemented using balanced binary trees.
+  Note that it is recommended that one use the `AtomSet` structure
+  as it provides better performance.
+
+[[str:AtomRedBlackSet]]
+`[.kw]#structure# AtomRedBlackSet`::
+  Sets of atoms implemented using red-black trees.
+
+[[str:IntBinarySet]]
+`[.kw]#structure# IntBinarySet`::
+  Sets of ints implemented using balanced binary trees.
+  Note that it is recommended that one use the `IntRedBlackSet` structure
+  as it provides better performance.
+
+[[str:IntListSet]]
+`[.kw]#structure# IntListSet`::
+  Sets of words implemented using sorted lists.  This implementation
+  is fast for small sets, but does not scale well to large sizes.
+
+[[str:IntRedBlackSet]]
+`[.kw]#structure# IntRedBlackSet`::
+  Sets of ints implemented using red-black binary trees.
+
+[[str:WordRedBlackSet]]
+`[.kw]#structure# WordRedBlackSet`::
+  Sets of words implemented using red-black binary trees.
+
+== See Also
+
+xref:fun-BinarySetFn.adoc[`BinarySetFn`],
+xref:fun-ListSetFn.adoc[`ListSetFn`],
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:fun-RedBlackSetFn.adoc[`RedBlackSetFn`],
+xref:fun-SplaySetFn.adoc[`SplaySetFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

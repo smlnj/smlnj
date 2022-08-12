@@ -1,0 +1,78 @@
+= The `XML_SCHEMA` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `XML_SCHEMA` signature describes the elements and attributes of
+an *XML* schema that are required to parse files of that schema.
+
+== Synopsis
+
+[source,sml]
+------------
+signature XML_SCHEMA
+------------
+
+== Interface
+
+[source,sml]
+------------
+type element
+type attribute
+
+val element : string -> element option
+
+val preserveWS : element -> bool
+
+val preserveComment : element -> bool
+
+val same : element * element -> bool
+
+val toString : element -> string
+
+val attribute : (string * string) -> attribute
+------------
+
+== Description
+
+`[.kw]#type# element`::
+  the representation type for *XML* elements.  Note that this type is *not*
+  the type of a tree node in an *XML* tree, but rather the label or tag
+  associated with the tree.
+
+`[.kw]#type# attribute`::
+  the representation type for *XML* attributes.
+
+`[.kw]#val# element : string \-> element option`::
+  `element tag` returns `SOME elem` where `elem` is the representation of
+  the element with the given tag.  It returns `NONE` when `tag` is not the
+  name of any element in the schema.
+
+`[.kw]#val# preserveWS : element \-> bool`::
+  `preserveWS elem` returns `true` if whitespace should be preserved in
+  the element's content and `false` if whitespace can be normalized in
+  the element's content.  Note that if true, this property is inherited by any
+  nested elements.
+
+`[.kw]#val# preserveComment : element \-> bool`::
+  `preserveComment elem` returns `true` if comments should be preserved in
+  the element's content and `false` if comments if they should be deleted.
+
+`[.kw]#val# same : element * element \-> bool`::
+  `same (elem1, elem2)` returns `true` if, and only if, the two elements
+  are the same.
+
+`[.kw]#val# toString : element \-> string`::
+  `toString elem` returns the string representation of the element
+  (without the "`<`" and "`>`" brackets).
+
+`[.kw]#val# attribute : (string * string) \-> attribute`::
+  `attribute (name, value)` returns an attribute value for the given
+  name-value pair.
+
+== See Also
+
+xref:fun-XMLTreeFn.adoc[`XMLTreeFn`],
+xref:xml-lib.adoc[__The XML Library__]

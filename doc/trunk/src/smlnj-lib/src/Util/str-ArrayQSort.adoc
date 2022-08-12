@@ -1,0 +1,40 @@
+= The `ArrayQSort` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ArrayQSort` structure provides _in situ_ sorting of polymorphic arrays
+using the quicksort algorithm.
+
+== Synopsis
+
+[source,sml]
+------------
+signature ARRAY_SORT
+structure ArrayQSort : ARRAY_SORT
+------------
+
+== Interface
+
+[source,sml]
+------------
+val sort   : ('a * 'a -> order) -> 'a array -> unit
+val sorted : ('a * 'a -> order) -> 'a array -> bool
+------------
+
+== Description
+
+`[.kw]#val# sort : ('a * 'a \-> order) \-> 'a array \-> unit`::
+  `sort cmp arr` sorts the array `arr` into ascending order
+  according to the comparison function `cmp`.
+
+`[.kw]#val# sorted : ('a * 'a \-> order) \-> 'a array \-> bool`::
+  `sorted cmp arr` returns true if, and only if, the array `arr=` is
+  sorted in ascending order.
+
+== See Also
+
+xref:fun-ArrayQSortFn.adoc[`ArrayQSortFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

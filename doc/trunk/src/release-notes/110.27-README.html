@@ -1,0 +1,696 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>SML/NJ Version 110.25 NEWS</title>
+  </head>
+
+  <body bgcolor="white">
+   <center><h1>Standard ML of New Jersey<BR>
+        Version 110.27, April 10, 2000</h1>
+   </center>
+
+   <center>
+      <tt> http://cm.bell-labs.com/cm/cs/what/smlnj/index.html </tt>
+   </center>
+
+<blockquote>
+<center>
+<h2> Warning </h2>
+</center>
+ <blockquote>
+ <blockquote>
+    <em>
+  	This version is intended for compiler hackers.  
+	We are in the midst of substantial structural changes, 
+	and this is a snapshot. 
+    </em>
+ </blockquote> 
+ </blockquote>
+      
+<hr>
+
+<center><h2>Summary:</h2></center>
+<UL>
+<LI> This version has some minor tweeks to FLINT (after the major merge
+   in 110.26).  Work continues on tuning FLINT and the various optimizations
+   it implements.
+<p>
+<LI> CM has been revised extensively, and the modmap environment mechanism
+   supporting stubbified pickles has been reworked completely.  The pathconfig
+   file has been simplified.  Installation scripts have been further
+   modified.  See src/system/README and the latest version of the
+   CM manual at 
+<blockquote>
+    <//http://www.kurims.kyoto-u.ac.jp/~blume/SMLNJ-DEV/manual/index.html>
+    <//http://www.kurims.kyoto-u.ac.jp/~blume/SMLNJ-DEV/manual.ps>
+</blockquote>
+   for further information about these changes.
+<p>
+<li> MRISC, and particularly the x86 back end have been modified extensively.
+<p>
+<li> There are a few updates to the SML/NJ Library
+<p>
+<li> Reported bug fixes:<br>
+     1556. (jhr) signal race condition<br>
+     Some CM bugs (not recorded)
+<p>
+<li> Distribution file names have been simplified.  They no longer start
+   with the version number (e.g. "110.27-config.tar.gz" is now
+   simply "config.tar.gz").  The boot directory tarballs are now
+   "boot.alpha32-unix.tar.gz", etc. (i.e. no version number and the
+   "sml." prefix is dropped).  The new install script will restore
+   the usual name (e.g. "sml.boot.alpha32-unix" when the tarball is
+   unpacked.  [We dropped the initial "sml." for the boot tarballs to
+   get the file names under 28 characters because of a limitation of
+   the Bell Labs ftp server.]
+   The version README file is still named 110.27-README, however.
+<blockquote>
+<pre>
+     110.27-README
+     HISTORY
+     MLRISC.tar.gz
+     boot.alpha32-unix.tar.gz
+     boot.hppa-unix.tar.gz
+     boot.ppc-unix.tar.gz
+     boot.sparc-unix.tar.gz
+     boot.x86-unix.tar.gz
+     cm.tar.gz
+     compiler.tar.gz
+     config.tar.gz
+     ml-burg.tar.gz
+     ml-lex.tar.gz
+     ml-yacc.tar.gz
+     runtime.tar.gz
+     smlnj-lib.tar.gz
+     system.tar.gz
+</pre>
+</blockquote>
+
+<hr>
+<h2> Change Details </h2>
+<center><h3> FLINT </h3></center>
+Improved handling of branches (mostly those generated from
+polymorphic equality), removed switchoff and changed the
+default optimization settings (more cpsopt and less flintopt).
+
+<hr>
+<center><h3> MLRISC </h3></center>
+<ol>
+<li> Register Allocator
+<ol type="a">
+<li> The interface and implementation of the register allocator have been 
+changed slightly to accommodate the possibility of skipping 
+the register allocation phases completely and go directly to 
+memory allocation.  This is needed for C-- use.
+<li> I've improved the spill propagation algorithm, using an approximation
+of maximal weighted independent sets. This affects only the x86
+platform. 
+</ol>
+<p>
+<li> MLTREE
+<ol type="a">
+<li> Renamed the constructor CALL in MLTREE by popular demand.
+</ol>
+<p>
+<li> X86
+<ol type="a">
+<li> More assembly output problems involving the indexed addressing mode
+on the x86 have been found and corrected. Thanks to Fermin Reig for the
+fix.
+<li> x86Rewrite bug with MUL3 (found by Lal)
+<li> Added the instructions FSTS, FSTL
+<li> The old code generated for SETcc was completely wrong.  
+The Intel optimization guide is VERY misleading.
+<li> Various fixes related floating point, and extensions.
+<li> Things like
+<pre>
+       jmp %eax
+       jmp (%eax)
+</pre>
+are now output as
+<pre>
+       jmp *%eax
+       jmp *(%eax)
+</pre>
+<li> Yet another fix for x86 assembly for idivl, imull, mull and friends.
+<li> I've changed andl to testl in the floating point test sequence
+whenever appropriate.  The Intel optimization guide states that
+testl is perferable to andl.
+</ol>
+<p>
+<li> Alpha 
+<ol type="a">
+<li> Some extra patterns related to loads with signed/zero extension
+provided by Fermin.
+<li> Added the instructions LDBU, LDWU, STB, STW as per Fermin's suggestion.
+<li> Added a new mode byteWordLoadStores to the functor parameter to Alpha()
+<li> Added reassociation code for address computation.
+</ol>
+<p>
+<li> PA-RISC 
+<ol type="a">
+<li> B label should not be a delay slot candidate!  Why did this work?
+<li> <code>ADDT(32, REG(32, r), LI n)</code> now generates one
+instruction instead of two, as it should be.
+<li> The assembly syntax for fstds and fstdd was wrong.
+<li> Added the composite instruction <code>COMICLR/LDO</code>, which is the immediate
+operand variant of <code>COMCLR/LDO</code>.
+<li> Long jumps in span dependence resolution used to depend on the existence
+of the base pointer in the SML/NJ runtime.  
+<p>
+A jump to a long label <code>L</code> was expanded into the following sequence:
+<pre>     
+      LDIL %hi(L-8192), %r29
+      LDO  %lo(L-8192)(%r29), %r29
+      ADD  %r29, baseptr, %r29
+      BV,n %r0(%r29)
+</pre>
+I've changed it so that the following sequence of instructions 
+are generated, which doesn't mention the base pointer at all:
+<pre>
+         BL,n  L', %r29           /* branch and link, L' + 4 -> %r29 */
+    L':  ADDIL L-(L'+4), %r29     /* Compute address of L */ 
+         BV,n  %r0(%r29)          /* Jump */ 
+</pre>
+</ol>
+<p>
+<li> Generic MLRISC
+<ol type="a">
+<li> shuffle.sml rewritten to be slightly more efficient
+<li> <code>DIV</code> bug in mltree-simplify fixed (found by Fermin)
+</ol>
+<p>
+<li> Assembly Output
+<ol type="a">
+<li> When generating assemby, resolve the value of client defined constants, 
+instead of generating symbolic values.  This is controlled by the 
+new flag "asm-resolve-constants", which is default to true.
+<li> Added a new flag 
+<blockquote>
+<code>asm-indent-copies</code> (default to false)
+</blockquote>
+When this flag is on, parallel copies will be indented an extra level.
+<li> Machine Descriptions/Generation
+<ol type="i">
+<li> The precedence parser was slightly broken when parsing infixr symbols.
+<li> The type generalizing code had the bound variables reversed, resulting
+in a problem during arity raising. 
+<li> Various fixes in machine descriptions.
+</ol>
+</ol>
+</ol>
+<h3> CPS->MLRISC Code Generation </h3>
+<p>
+This release contains *MAJOR* changes to the way code is generated from CPS
+in the module mlriscGen, and in various backend modules.
+<p>
+<ol>
+<li> <strong>Forward propagation fix</strong>.
+<p>
+There was a bug in forward propagation introduced at about the same time
+as the MLRISC x86 backend, which prohibits coalescing to be 
+performed effectively in loops. 
+<p>
+Effect: speed up of loops in RISC architectures.
+By itself, this actually slowed down certain benchmarks on the x86.
+<p>
+<li> <strong>Forward propagating addresses from consing</strong>.
+<p>
+I've changed the way consing code is generated.  Basically I separated 
+out the initialization part:
+<pre>
+        store tag,   offset(allocptr)
+        store elem1, offset+4(allocptr)
+        store elem2, offset+8(allocptr)
+        ...
+        store elemn, offset+4n(allocptr)
+</pre>
+and the address computation part:
+<pre>
+        celladdr <- offset+4+alloctpr
+</pre>
+and move the address computation part
+<p>
+Effect:  register pressure is generally lower as a result.  This 
+makes compilation of certain expressions much faster, such as
+long lists with non-trivial elements.
+<pre>
+       [(0,0), (0,0), .... (0,0)]
+</pre>
+<p>
+<li> <strong>Base pointer elimination</strong>.
+<p>
+As part of the linkage mechanism, we generate the sequence:
+<pre>
+     L:  ...  <- start of the code fragment
+ 
+     L1:
+         base pointer <- linkreg - L1 + L
+</pre>
+The base pointer was then used for computing relocatable addresses
+in the code fragment.  Frequently (such as in lots of continuations) 
+this is not needed.  We now eliminate this sequence whenever possible.
+<p>
+For compile time efficiency, I'm using a very stupid local heuristic.  
+But in general, this should be done as a control flow analysis.
+<p>
+Effect:  Smaller code size.  Speed up of most programs.
+<p>
+<li> <strong>Frequency annotations</strong>.
+<p>
+I've added an annotation that states that all call gc blocks have zero
+execution frequencies.  This improves register allocation on the x86.
+</ol>
+<p>    
+<h3> Aliasing </h3>
+<p>
+This update contains a rewritten (and hopefully more correct) module 
+for extracting aliasing information from CPS.  
+<p>
+To turn on this feature:  
+<pre>
+    Compiler.Control.CG.memDisambiguate := true
+</pre>
+To pretty print the region information with assembly
+<pre>
+    Compiler.Control.MLRISC.getFlag "asm-show-region" := true;
+</pre>
+To control how many levels of aliasing information are printed, use:
+<pre>
+    Compiler.Control.MLRISC.getInt "points-to-show-level" := n
+</pre>
+The default value of n is 3.
+
+<h3> Benchmarks </h3>
+<p>
+I've only performed the comparison with 110.25.
+<p>
+   The platforms are:
+<pre>  
+    HPPA  A four processor HP machine (E9000) with 5G of memory.
+    X86   A 300Hhz Pentium II with 128M of memory, and 
+    SPARC An Ultra sparc 2 with 512M of memory.
+</pre>
+I used the following parameters for the SML benchmarks:
+<pre>
+             @SMLalloc
+     HPPA    256k
+     SPARC   512k
+     X86     256k
+</pre>
+<p>
+<h4> COMPILATION TIME </h4>
+<p>
+   Here are the numbers comparing the compilation times of the compilers.
+   I've only compared 110.25 compiling the new sources versus
+   a fixpoint version of the new compiler compiling the same.
+<pre>
+                 110.25                                  New
+           Total  Time in RA  Spill+Reload   Total  Time In RA Spill+Reload
+     HPPA   627s    116s        2684+3584     599s    95s       1003+1879
+     SPARC  892s    173s        2891+3870     708s    116s      1004+1880
+     X86    999s    315s       94006+130691   987s    296s    108877+141957
+
+               110.25         New
+            Code Size      Code Size
+     HPPA   8596736         8561421
+     SPARC  8974299         8785143
+     X86    9029180         8716783
+</pre>
+   So in summary, things are at least as good as before.   Dramatic 
+   reduction in compilation is obtained on the Sparc; I can't explain it, 
+   but it is reproducible.  Perhaps someone should try to reproduce this 
+   on their own machines.
+
+<h4> SML BENCHMARKS </h4>
+<p>
+    On the average, all benchmarks perform at least as well as before. 
+<pre>
+      HPPA         Compilation Time     Spill+Reload      Run Time
+                 110.25  New            110.25    New   110.25  New    
+
+      barnesHut  3.158  3.015  4.75%    1+1       0+0   2.980  2.922   2.00%
+          boyer  6.152  5.708  7.77%    0+0       0+0   0.218  0.213   2.34%
+   count-graphs  1.168  1.120  4.32%    0+0       0+0  22.705 23.073  -1.60%
+            fft  0.877  0.792 10.74%    1+3       1+3   0.602  0.587   2.56%
+    knuthBendix  3.180  2.857 11.32%    0+0       0+0   0.675  0.662   2.02%
+         lexgen  6.190  5.290 17.01%    0+0       0+0   0.913  0.788  15.86%
+           life  0.803  0.703 14.22%   25+25      0+0   0.153  0.140   9.52%
+          logic  2.048  2.007  2.08%    6+6       1+1   4.133  4.008   3.12%
+     mandelbrot  0.077  0.080 -4.17%    0+0       0+0   0.765  0.712   7.49%
+         mlyacc 22.932 20.937  9.53%  154+181    32+57  0.468  0.430   8.91%
+        nucleic  5.183  5.060  2.44%    2+2       0+0   0.125  0.120   4.17%
+  ratio-regions  3.357  3.142  6.84%    0+0       0+0  116.225 113.173 2.70%
+            ray  1.283  1.290 -0.52%    0+0       0+0   2.887  2.855   1.11%
+         simple  6.307  6.032  4.56%   28+30      5+7   3.705  3.658   1.28%
+            tsp  0.888  0.862  3.09%    0+0       0+0   7.040  6.893   2.13%
+           vliw 24.378 23.455  3.94%  106+127    25+45  2.758  2.707   1.91%
+  --------------------------------------------------------------------------
+   Average                     6.12%                                   4.09%
+
+      SPARC        Compilation Time     Spill+Reload      Run Time
+                 110.25  New            110.25    New   110.25  New    
+
+      barnesHut  3.778  3.592  5.20%    2+2       0+0   3.648  3.453    5.65%
+          boyer  6.632  6.110  8.54%    0+0       0+0   0.258  0.242    6.90%
+   count-graphs  1.435  1.325  8.30%    0+0       0+0  33.672 34.737   -3.07%
+            fft  0.980  0.940  4.26%    3+9       2+6   0.838  0.827    1.41%
+    knuthBendix  3.590  3.138 14.39%    0+0       0+0   0.962  0.967   -0.52%
+         lexgen  6.593  6.072  8.59%    1+1       0+0   1.077  1.078   -0.15%
+           life  0.972  0.868 11.90%   26+26      0+0   0.143  0.140    2.38%
+          logic  2.525  2.387  5.80%    7+7       1+1   5.625  5.158    9.05%
+     mandelbrot  0.090  0.093 -3.57%    0+0       0+0   0.855  0.728   17.39%
+         mlyacc 26.732 23.827 12.19%  162+189    32+57  0.550  0.560   -1.79%
+        nucleic  6.233  6.197  0.59%    3+3       0+0   0.163  0.173   -5.77%
+  ratio-regions  3.780  3.507  7.79%    0+0       0+0 133.993 131.035   2.26%
+            ray  1.595  1.550  2.90%    1+1       0+0   3.440  3.418    0.63%
+         simple  6.972  6.487  7.48%   29+32      5+7   3.523  3.525   -0.05%
+            tsp  1.115  1.063  4.86%    0+0       0+0   7.393  7.265    1.77%
+           vliw 27.765 24.818 11.87%  110+135    25+45  2.265  2.135    6.09%
+  ----------------------------------------------------------------------------
+   Average                     6.94%                                    2.64%
+
+      X86          Compilation Time     Spill+Reload      Run Time
+                 110.25  New            110.25    New   110.25  New    
+
+      barnesHut  5.530  5.420  2.03%  593+893   597+915   3.532  3.440   2.66%
+          boyer  8.768  7.747 13.19%  493+199   301+289   0.327  0.297  10.11%
+   count-graphs  2.040  2.010  1.49%  298+394   315+457  26.578 28.660  -7.26%
+            fft  1.327  1.302  1.92%  112+209   115+210   1.055  0.962   9.71%
+    knuthBendix  5.218  5.475 -4.69%  451+598   510+650   0.928  0.932  -0.36%
+         lexgen  9.970  9.623  3.60% 1014+841  1157+885   0.947  0.928   1.97%
+           life  1.183  1.183  0.00%  162+182   145+148   0.127  0.103  22.58%
+          logic  3.285  3.512 -6.45%  514+684   591+836   5.682  5.577   1.88%
+     mandelbrot  0.147  0.143  2.33%   38+41     33+54    0.703  0.690   1.93%
+         mlyacc 35.457 32.763  8.22% 3496+4564 3611+4860  0.552  0.550   0.30%
+        nucleic  7.100  6.888  3.07%  239+168   201+158   0.175  0.173   0.96%
+  ratio-regions  6.388  6.843 -6.65% 1182+257   981+300  120.142 120.345 -0.17%
+            ray  2.332  2.338 -0.29%  346+398   402+494   3.593  3.540   1.51%
+         simple  9.912  9.903  0.08% 1475+941  1579+1168  3.057  3.178  -3.83%
+            tsp  1.623  1.532  5.98%  266+200   250+211   8.045  7.878   2.12%
+           vliw 33.947 35.470 -4.29% 2629+2774 2877+3171  2.072  1.890   9.61%
+  ----------------------------------------------------------------------------
+   Average                     1.22%                                     3.36%
+</pre>
+
+
+<hr>
+<center><h3> Boot code and glue scripts </h3></center>
+
+<h4> Size info in BOOTLIST </h4>
+<p>
+  The BOOTLIST file now has an optional first line that specifies an
+  upper bound on the number of boot files and an upper bound on the
+  length of each individual name.  With this, there are no longer
+  hard-wired restrictions on these values in the runtime system.
+  (If the specification is missing in BOOTLIST, the runtime system
+  falls back to its old behavior, i.e., hard-wired defaults.)
+<p>
+<h4> Allocation-size heuristics in .run-sml </h4>
+<p>
+  The .run-sml scripts tries to read processor cache size from
+  /proc/cpuinfo.  This works on Linux and is important for small-cache
+  Celeron systems that suffer badly when allocation size is set too
+  high.
+<p>
+<h4> Install script </h4>
+<p>
+<ul>
+<li> Written in a more modular fashion (using shell functions).
+<li> Made more robust.
+<li> Automagically fetches archive files over the network if they do not
+    exist locally.  Thus, you only need to fetch config.tar.gz yourself.
+    Unpack it and go!
+    (Requires "wget" or "lynx" to be installed on the system and a
+    live connection to the internet.  Moreover, the contents of
+    config/srcarchiveurl must be set properly.)
+    For CVS users, this may be convenient when fetching new sets of binfiles.
+<li> Handles archive files with or without version number and compressed
+    with one of "gzip", "compress", or "bzip2".  Recognized suffixes are
+    ".tar.gz", ".tgz", ".tar", ".tar.Z", and ".tar.bz2".
+</ul>
+<p>
+<h4> PIDMAP file </h4>
+<p>
+There is a file called PIDMAP in the bootfile directory.
+It is used to minimize the amount of dynamic state that needs to be
+stowed away for the purpose of sharing between interactive system
+and user code.
+<p>
+<h4> Building standalone programs </h4>
+<p>
+The command ml-build can be used to build standalone programs.
+ml-build takes three arguments:
+<ol>
+<li> the name of the CM library that implements and exports the "main"
+function of your program
+<li> the name of the "main" function of your program as exported by 1.
+(The function must have a type that makes it suitable as an argument
+to SMLofNJ.exportFn.)
+<li> the name of the heapfile to be generated
+</ol>
+<h4> Other build scripts </h4>
+<p>
+ml-{lex,yacc} build scripts now make use of the new mechanism for
+building standalone programs.
+<p>
+<h4> Fixpoint script </h4>
+<p>
+I added a re-written version of Dave's fixpt script to src/system.
+Changes relative to the original version:
+<p>
+<ul>
+<li> sh-ified (not everybody has ksh)
+<li> automatically figures out which architecture it runs on
+<li> uses ./makeml a bit more cleverly
+<li> never invokes ./installml (and, thus, does not clobber your
+good and working installation of sml in case something goes wrong)
+<li> accepts max iteration count using option "-iter <n>"
+<li> accepts a "base" name using option "-base <base>"
+</ul>
+<p>
+It does not build any extraneous heap images but directly rebuilds
+bin- and boot-hierarchies using makeml's "-rebuild" switch. Finally,
+it can incorporate existing bin- and boot- hierarchies.  For example,
+suppose the base is set to "sml" (which is the default).  Then it
+successively builds
+<pre>
+          sml.bin.&lt;arch&gt;-unix and sml.boot.&lt;arch&gt;-unix
+  then    sml1.bin.&lt;arch&gt;-unix and sml1.boot.&lt;arch&gt;-unix
+  then    sml2.bin.&lt;arch&gt;-unix and sml2.boot.&lt;arch&gt;-unix
+  ...
+  then    sml&lt;n&gt;.bin.&lt;arch&gt;-unix and sml&lt;n&gt;.boot.&lt;arch&gt;-unix
+</pre>
+and so on.  If any of these already exist, it will just use what's
+there.  In particular, many people will have the initial set of bin
+and boot files around, so this saves time for at least one full
+rebuild.  Having sets of the form &lt;base&gt;&lt;k&gt;.{bin,boot}.&lt;arch&gt;-unix for
+&lt;k&gt;=1,2,... is normally not a good idea when invoking fixpt.  However,
+they might be the result of an earlier partial run of fixpt (which
+perhaps got accidentially killed).  In this case, fixpt will quickly
+move through what exists before continuing where it left off earlier,
+and, thus, saves a lot of time.
+<p>
+<h4> Runtime system code </h4>
+<p>
+<ul>
+<li> fixed several gcc -Wall warnings that were caused by missing header
+files, missing initializations, etc., in runtime (not all warnings
+eliminated, though)
+<li> had to "un-fix" some of them later because they broke the HPPA compile
+</ul>
+<p>
+<hr>
+<center><h3> CM </h3></center>
+<p>
+<h4> Several manual updates </h4>
+<p>
+I always try to keep the manual in sync with CM's latest features.
+<p>
+<h4> Bootstrap compilation </h4>
+<p>
+No more "CMB.deliver"
+<p>
+<ul>
+<li> All work is done by CMB.make (as it used to be in the old CM).
+<li> CMB.make can be used even with existing bootfiles, i.e., bootfiles do
+not have to be removed beforehand.
+<li> In "paranoid mode" CM checks a stable libraries CRC checksum to
+verify that it is "valid".  (In "normal mode", such checks do not
+occur.)  Paranoid mode is used for bootstrap compilation.  This is
+what makes it possible to re-use existing bootfiles.
+</ul>
+<p>
+<h4> Initial glue code (init.cmi) </h4>
+<ul>
+<li> treated as a genuine library now
+<li> there are no more "built-in" modules
+</ul>
+<p>
+<h4> CM API </h4>
+<p>
+<ol>
+<li> CM.Anchor.anchor instead of CM.Anchor.{set,cancel}
+<ul>
+<li>Upon request by Elsa.  Anchors now controlled by get-set-pair
+like most other CM state variables.
+</ul>
+<p>
+<li> CM tools:
+<ul>
+<li> It is now possible to have tools that accept additional
+"command line" parameters (specified in the .cm file at each
+instance where the tool's class is used).
+<li> The parser understands named parameters and recursive options.
+<li> new "make" and "shell" tools added to facilitate fairly seemless
+hookup to portions of code managed using Makefiles or Shell scripts.
+<li> There are no classes "shared" or "private" anymore.  Instead,
+the sharing annotation is now a parameter to the "sml" class.
+<li> Tools.registerStdShellCmdTool (from smlnj/cm/tool.cm) takes an
+additional argument called "template" which is an optional
+string that specifiel the layout of the tool command line.  See
+the CM manual for explanation.
+<li> A special-purpose tool can be "registered" by simply dropping
+the corresponding &lt;...&gt;-tool.cm (and/or &lt;...&gt;-ext.cm) into the
+same directory where the .cm file lives that uses this tool.
+(The behavior/misfeature until now was to look for the tool
+description files in the current working directory.)  As
+before, tool description files could also be anchored -- in
+which case they can live anywhere they like.  Following the
+recent e-mail discussion, this change should make it easier to
+have special-purpose tools that are shipped together with the
+sources of the program that uses them.
+<strong>Bug</strong>: such a tool does not get un-registered after being done.
+</ul>
+</ol>
+<p>
+<h4> Library names </h4>
+<p>
+Library names have been completely re-organized.
+Many libraries have been consolidated so that they share the same
+path anchor.  For example, all MLRISC-related libraries are
+anchored at MLRISC, most libraries that are SML/NJ-specific are
+under "smlnj".  Notice that names like host-cmb.cm or
+host-compiler.cm no longer exist.  See system/README for a
+complete description of the new naming scheme.  Quick reference:
+<pre>
+    host-cmb.cm        -&gt; smlnj/cmb.cm
+    host-compiler.cm   -&gt; smlnj/compiler.cm
+    full-cm.cm         -&gt; smlnj/cm.cm
+    &lt;arch&gt;-&lt;os&gt;.cm     -&gt; smlnj/cmb/&lt;arch&gt;-&lt;os&gt;.cm
+    &lt;arch&gt;-compiler.cm -&gt; smlnj/compiler/&lt;arch&gt;.cm
+</pre>
+<p>
+<h4> CM bug fixes </h4>
+<ul>
+<li> exceptions in user code are being passed through (i.e., reach top level)
+<li> more bugs in paranoia mode fixed
+<li> bug related to checking group owners fixed
+<li> better error handling (suppresses many followup-messages)
+</ul>
+<p>
+<h4> Internals </h4>
+<p>
+<dl>
+<dt>"Global" modmap:
+<dd>CM now maintains one "global" modmap that is used for all stable
+libraries.  The use of such a global modmap maximizes sharing and
+minimizes the need for re-traversing parts of environments during
+modmap construction.  (However, this has minor impact since modmap
+construction seems to account for just one percent or less of total
+compile time.)
+</dl>
+<p>
+
+<hr>
+<center><h3> Compiler Internals </h3></center>
+<h4> Environment data structures: No more <code>CMStaticEnv</code> </h4>
+<ul>
+<li> no <code>CMEnv</code>, no <code>BareEnvironment</code> (actually,
+<em>only</em> <code>BareEnvironment</code>,
+but it is called <code>Environment</code>), no conversions between different
+kinds of static environments.
+<p>
+<li> There is still a notion of a "modmap", but such modmaps are generated
+on demand at the time when they are needed.  This sounds slow, but I
+sped up the code that generates modmaps enough for this not to lead to
+a slowdown of the compiler (at least I didn't detect any).
+<p>
+<li> To facilitate rapid modmap generation, static environments now
+contain an (optional) "modtree" structure.  Modtree annotations are
+constructed by the unpickler during unpickling.  (This means that
+the elaborator does not have to worry about modtrees at all.)
+Modtrees have the advantage that they are compositional in the same
+way as the environment data structure itself is compositional.
+As a result, modtrees never hang on to parts of an environment that
+has already been rendered "stale" by filtering or rebinding.
+<p>
+<li> all files that I touched now compile without warnings (other than
+"polyEqual" warnings).
+<p>
+<li> compiler now tends to run "leaner" (i.e., ties up less memory in
+redundant modmaps)
+</ul>
+<p>
+<h4> Stats phase "genmap" added </h4>
+<ul>
+<li>It measures time spent during on-the-fly modmap generation.
+</ul>
+<p>
+<h4> Changes on behalf of CM </h4>
+<p>
+<ul>
+<li><code>Compiler.CMSA</code> eliminated
+<p>
+No longer supported by CM anyway.
+<p>
+<li> Fixed bugs in pickler that kept biting Stefan
+<ul>
+<li> past refs to past refs (was caused by the possibility that
+ad-hoc sharing is more discriminating than hash-cons sharing)
+<li> integer overflow on LargeInt.minInt
+</ul>
+<p>
+<li> Handling of "core" environment
+<p>
+I eliminated coreEnv from compInfo.  Access to the <code>Core</code>
+structure is now done via the ordinary static environment that is
+context to each compilation unit.
+<p>
+To this end, I arranged that instead of "structure Core" a
+"structure _Core" is bound in the pervasive environment.  Core
+access is done via _Core (which can never be accidentially rebound
+because _Core is not a legal surface-syntax symbol).
+<p>
+The current solution is much cleaner because the core environment
+is now simply part of the pervasive environment which is part of
+every compilation unit's context anyway.  In particular, this
+eliminates all special-case handling that was necessary until now
+in order to deal with dynamic and symbolic parts of the core
+environment.
+<p>
+Remaining hackery (to bind the "magic" symbol <code>_Core</code>) is localized
+in the compilation mananger's bootstrap compiler (actually: in the
+"init group" handling).  See the comments in
+src/system/smlnj/init/init.cmi for more details.
+<p>
+I also tried to track down all mentions of <code>"Core"</code> (as string
+argument to Symbol.strSymbol) in the compiler and replaced them
+with a reference to the new <code>CoreSym.coreSym</code>.  Seems cleaner since
+the actual name appears in one place only.
+</ul>
+<p>
+
+<hr>
+
+    <font size=-2>
+    <address><a href="mailto:george@research.bell-labs.com">
+		Lal George</a></address>
+<!-- Created: Thu Aug  6 00:13:09 EDT 1998 -->
+<!-- hhmts start -->
+Last modified: Wed Apr 19 16:24:39 EDT 2000
+<!-- hhmts end -->
+    </font>
+</blockquote>
+</body>
+</html>

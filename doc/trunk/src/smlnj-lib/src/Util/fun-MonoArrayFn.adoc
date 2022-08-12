@@ -1,0 +1,33 @@
+= The `MonoArrayFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `MonoArrayFn` functor allows easy construction of new monomorphic array
+structures.
+
+== Synopsis
+
+[source,sml]
+------------
+functor MonoArrayFn (type elem) :> MONO_ARRAY where type elem = elem
+------------
+
+== Description
+
+This functor takes an element type and defines a structure that
+matches the
+{sml-basis-url}/mono-array.html[`MONO_ARRAY`]
+signature from the {sml-basis-url}/Basis/index.html[*SML Basis Library*],
+which can then be supplied to other functors that require such
+an argument.
+
+== See Also
+
+xref:fun-ArrayQSortFn.adoc[`ArrayQSortFn`],
+xref:fun-BSearchFn.adoc[`BSearchFn`],
+xref:fun-DynamicArrayFn.adoc[`DynamicArrayFn`],
+{sml-basis-url}/Basis/mono-array.html[`MONO_ARRAY`],
+xref:smlnj-lib.adoc[__The Util Library__]

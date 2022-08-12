@@ -1,0 +1,22 @@
+%!TEX root = btcomp.tex
+%
+
+\section{Introduction}
+
+With the exception of the runtime system which is written in C,
+compiler and interactive system for Standard ML of New Jersey
+(SML/NJ)~\cite{appel91:sml} are themselves implemented in Standard
+ML~\cite{milner97}.  When the new Compilation and Library Manager
+(CM)~\cite{blume00:newcm} was introduced, all ML code of SML/NJ was
+reorganized in such a way that the system itself works like any other
+stand-alone ML program compiled by SML/NJ.
+
+However, there are a few important differences between compiling an
+ordinary ML program using CM and (re-)compiling the interactive system
+itself.  These differences are handled by a special-purpose version of
+the compilation manager: the bootstrap compiler.  Its interface is
+{\tt structure CMB}, exported from library {\tt \$smlnj/cmb.cm}.
+
+This document describes how to use the bootstrap compiler and also
+explains how bootstrapping the SML/NJ compiler differs from compiling
+ordinary ML code.

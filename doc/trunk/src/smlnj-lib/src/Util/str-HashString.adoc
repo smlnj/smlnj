@@ -1,0 +1,39 @@
+= The `HashString` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashString` structure provides hashing functions for strings
+and substrings.  It is currently implemented as an alias for the
+same functions from the xref:str-FNVHash.adoc[`FNVHash`] structure.
+
+== Synopsis
+
+[source,sml]
+------------
+structure HashString
+------------
+
+== Interface
+
+[source,sml]
+------------
+val hashString  : string -> word
+
+val hashSubstring : substring -> word
+------------
+
+== Description
+
+`[.kw]#val# hashString  : string \-> word`::
+  `hashString s` returns a hash code for the string `s`.
+
+`[.kw]#val# hashSubstring : substring \-> word`::
+  `hashSubstring s` returns a hash code for the substring `ss`.
+
+== See Also
+
+xref:str-FNVHash.adoc[`FNVHash`],
+xref:smlnj-lib.adoc[__The Util Library__]

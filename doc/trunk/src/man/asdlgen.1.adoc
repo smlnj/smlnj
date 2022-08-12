@@ -1,0 +1,97 @@
+ASDLGEN(1)
+==========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+== NAME
+
+asdlgen - compiler for the Abstract Syntax Description Language (ASDL).
+
+== SYNOPSIS
+
+*asdlgen* 'COMMAND' [ 'OPTIONS' ] 'FILE' ...
+
+where 'COMMAND' is one of the following:
+
+*help*::
+  prints information about the available options to the standard output.
+
+*version*::
+  prints the version of *asdlgen* to the standard output.
+
+*c++* or *cxx*::
+  generate *C++* code.
+
+*sml*::
+  generate *SML* code.
+
+*check*::
+  check the correctness of the input specifications, but do not generate
+  output.
+
+== DESCRIPTION
+
+*Asdlgen* reads the specified of files, which should
+contain ASDL module and view declarations, and produces pickling
+and unpickling code.
+
+== OPTIONS
+
+=== COMMON OPTIONS
+
+*-n*::
+  Do not write any output files. Instead write the list of files that
+  would have been written to the standard output.
+
+*-d* 'DIR', *--output-directory=*'DIR'::
+  Specify the output directory to place the generated files.
+  By default the output will be placed in the same directory
+  as the input file from which it was produced.
+
+*--gen=*'NAMES'::
+  Specifies the components to generate, where 'NAMES' is a comma-separated
+  list of names taken from the following:
+    * *types* -- generate the type definitions from the ASDL specification.
+
+    * *memory* -- generate the memory pickler
+
+    * *file* -- generate the file pickler
+
+    * *sexp* -- generate the S-Expression pickler (SML only).
+
+=== C++ OPTIONS
+
+*--base-include=*'FILE'::
+  Specify the name of the *C++* header file that defines the primitive ASDL types and functions. The default value is asdl/asdl.hxx.
+
+=== SML OPTIONS
+
+*--cm=*'FILE'::
+  Generate a CM file for the pickler; this will define a CM library.
+  Note that if the ASDL specification includes primitive modules, these
+  will be included in the list of exported structures, but the supporting
+  source files will have to be added to the CM file by hand.
+
+*--mlb=*'FILE'::
+  Generate an MLB file for the pickler. Note that if the ASDL specification
+  includes primitive modules, these will be included in the list of
+  exported structures, but the supporting source files will have to be
+  added to the MLB file by hand.
+
+== AUTHOR
+
+The original version of *asdlgen* was written by Dan Wang as part of
+the National Compiler Infrastructure Project at Princeton University.
+This version of the tool was implemented by John Reppy.
+
+== SEE-ALSO
+
+_ASDL Reference Manual_ (included in the *SML/NJ* documentation).
+
+== COPYING
+
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

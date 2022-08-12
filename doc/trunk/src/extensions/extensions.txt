@@ -1,0 +1,133 @@
+Standard ML of New Jersey Extensions
+====================================
+The Fellowship of SML/NJ
+{version}, {release-date}:
+
+The Standard ML of New Jersey (SML/NJ) system implements a number of extensions
+to the language as defined by the Definition.
+
+== Module language extensions
+
+=== Higher-order functors
+
+=== Structure constraints for signatures
+
+[source,sml]
+------------
+structure ASTRUCT :> ASIG where B = BSTRUCT
+------------
+
+== Core language extensions
+
+=== Vector expressions and patterns
+SML/NJ extends the expression and pattern matching syntax to include support
+for vectors of some known size.  The syntax is similar to that of list patterns,
+except that the opening bracket has a preceeding ++#++ character.
+For example,
+[source,sml]
+------------
+  fun scaleV (s : real, #[x, y, z]) = #[s*x, s*y, s*z]
+------------
+This extension is always enabled in SML/NJ.
+
+=== Or patterns
+
+_TO BE WRITTEN_
+
+=== Lazy datatypes and functions
+
+SML/NJ provides support for lazy data structures with an extension to the datatype
+and function declaration forms (+val rec+).  There are a number of ways to enable
+this feature, depending on the ??
+
+* From the command-line, you can use the ++-Clazysml=true++ flag when launching
+  SML/NJ.
+
+* From the REPL, you can enable the feature using the SML command:
++
+[source,sml]
+------------
+  Control.lazysml := true;
+------------
+
+* In a CM, file you can specify that a source file uses the lazy keyword in a number
+  of different ways.  The following three lines all have the effect of enabling the
+  ++lazy++ keyword during compilation of the file.
+[source,sml]
+------------
+  foo.sml : lazysml
+  foo.sml : sml (lazy)
+  foo.sml (with:parser.lazy-keyword=true)
+------------
+
+_TO BE WRITTEN_
+
+[source,sml]
+------------
+  datatype lazy 'a stream = Nil | Cons of 'a * 'a stream;
+
+  fun lazy map f Nil =  Nil
+         | map f (Cons(x,xs))  =  Cons(f x, map f xs);
+------------
+
+=== Quotation/antiquotation
+
+_TO BE WRITTEN_
+
+== Successor ML extensions
+
+_Successor ML_ (sML) is an effort to continue to grow and improve the SML language.
+Andreas Rossberg has defined and implemented an some of the proposed features in
+a version of http://www.mpi-sws.org/~rossberg/hamlet[HaMLet].  We are beginning to
+implement these features in SML/NJ in coordination with the MLton implementation.
+
+=== Lexical extensions
+
+As of version 110.79, SML/NJ supports the sML lexical extensions.  These can be
+enabled using the command-line option ++-Cparser.succ-ml=true++ or the assignment
+[source,sml]
+------------
+  Control.succML := true;
+------------
+in the REPL.
+
+==== Numeric literals (SML/NJ 110.79)
+
+The syntax of numeric literals is extended in two ways.  First, the underscore
+character ("++_++") is now allowed as a separator between digits in a numeric
+literal.  For example,
+[source,sml]
+------------
+  123_456
+  0wxff_ff_ff_f3
+  123_456.1
+------------
+are valid numeric literals under this extension, but the following are not:
+[source,sml]
+------------
+  123._456		(* underscore not proceeded by digit *)
+  0wx_ff_ff_ff_f3	(* leading underscore *)
+------------
+
+The second extension is binary literals for both integers and words.  Similar to
+hexidecimal literals, the syntax uses a leading "++0b++" to signal a binary
+literal.  Examples include
+[source,sml]
+------------
+  0b0101_1110	(* the same value as 0x56 or 86 *)
+  0wb1101	(* the same value as 0wD or 13 *)
+------------
+
+==== Line comments (SML/NJ 110.79)
+
+This extension adds _line comments_ (__i.e.__, comments that are terminated by
+the end of the line) to SML.  These comments are denoted using the character
+sequence "++(*)++".  Line comments properly nest into conventional block
+comments.  For example, the following block comment is well formed:
+
+[source,sml]
+------------
+  (*
+  fun f x = x (*) my identity function *)
+  *)
+------------

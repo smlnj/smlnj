@@ -1,0 +1,9 @@
+signature HTML4
+structure HTML4
+structure HTML4Attrs
+structure HTML4Entities
+structure HTML4Parser
+structure HTML4Tokens
+structure HTML4TokenUtils
+structure HTML4Utils
+structure HTML4Print

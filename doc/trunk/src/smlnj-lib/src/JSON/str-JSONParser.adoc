@@ -1,0 +1,89 @@
+= The `JSONParser` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `JSONParser` structure implements a parser for the
+xref:str-JSON.adoc#type:value[`JSON.value`] type.
+
+== Synopsis
+
+[source,sml]
+------------
+structure JSONParser
+------------
+
+== Interface
+
+[source,sml]
+------------
+type source
+
+val openStream : TextIO.instream -> source
+val openFile : string -> source
+val openString : string -> source
+
+val close : source -> unit
+
+val parse : source -> JSON.value
+
+val parseFile : string -> JSON.value
+------------
+
+== Description
+
+[[type:source]]
+`[.kw]#type# source`::
+  The abstract type of JSON input sources.  Note that this type is the
+  same as xref:str-JSONStreamParser.adoc#type:source[`JSONStreamParser.source`].
+
+[[val:openStream]]
+`[.kw]#val# openStream : TextIO.instream -> source`::
+  `openStream inS` returns a input source for the given input stream.
+
+[[val:openFile]]
+`[.kw]#val# openFile : string -> source`::
+  `openStream file` returns a input source for the given file.  This function
+  opens an input stream for reading from the file, so one should make sure to
+  call xref:val:close[`close`] on the source once all of the *JSON* values
+  have been read from the file.
+
+`[.kw]#val# openString : string -> source`::
+  `openStream s` returns a input source for the given string.
+
+[[val:close]]
+`[.kw]#val# close : source -> unit`::
+  `close src` closes the input source, which has the effect of marking the source
+  as _closed_.  Furthermore, if `src` was created by a call to
+  xref:#val:openFile[`openFile`], then the underlying input stream that
+  was created for the file is closed.  This function does *not* close the
+  input stream for sources created by xref:#val:openStream[`openStream`]
+
+[[val:parse]]
+`[.kw]#val# parse : source \-> JSON.value`::
+  `parse src` parses a *JSON* value from the input source `src`.
+  If `src` is closed or if there is a syntax error, then the
+  {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`]
+  exception is raised.
+
+`[.kw]#val# parseFile : string \-> JSON.value`::
+  `parse f` parses a *JSON* value from the text file `f`.
+  If there is a syntax error, then the
+  {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`]
+  exception is raised.
+  This function can also raise the
+  {sml-basis-url}/io.html#SIG:IO.Io:EXN[`Io`] exception if
+  there is an error opening `f`.
+  Note that this function will only parse a single
+  *JSON* value from the file; to parse multiple values, one should used
+  the xref:val:parse[`parse`] function with a source created by
+  xref:val:openFile[`openFile`].
+
+== See Also
+
+xref:str-JSON.adoc[`JSON`],
+xref:str-JSONStreamParser.adoc[`JSONStreamParser`],
+xref:str-JSONUtil.adoc[`JSONUtil`],
+xref:json-lib.adoc[__The JSON Library__]

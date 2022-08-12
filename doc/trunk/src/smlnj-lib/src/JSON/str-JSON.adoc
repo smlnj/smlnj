@@ -1,0 +1,87 @@
+= The `JSON` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Synopsis
+
+[source,sml]
+------------
+structure JSON
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype value
+  = OBJECT of (string * value) list
+  | ARRAY of value list
+  | NULL
+  | BOOL of bool
+  | INT of IntInf.int
+  | FLOAT of real
+  | STRING of string
+------------
+
+== Description
+
+`[.kw]#datatype# value = ...`::
+  [[type:value]]
+  This datatype represents *JSON* values as trees.  The constructors
+  are
++
+--
+    `OBJECT [.kw]#of# (string * value) list`::
+      represents a *JSON* object value; _i.e._, a list of key-value pairs.
+      Note that the keys should be unique.
+
+    `ARRAY [.kw]#of# value list`::
+      represents a *JSON* array value.
+
+    `NULL`::
+      represents the *JSON* value `"null"`.
+
+    `BOOL [.kw]#of# bool`::
+      represents the *JSON* values `"true"` and `"false"`.
+
+    `INT [.kw]#of# IntInf.int`::
+      represents *JSON* integer numbers.
+
+    `FLOAT [.kw]#of# real`::
+      represents *JSON* floating-point numbers.
+
+    `STRING [.kw]#of# string`::
+      represents *JSON* strings, which are assumed to be UTF-8 encoded.
+--
+
+== Example
+
+The *JSON* value
+
+[source,json]
+-------------
+{ "a" : 23,
+  "b" : [ false, true ],
+  "c" : "hello world"
+}
+-------------
+
+has the following representation using the *value* datatype:
+
+[source,sml]
+------------
+OBJECT[
+  ("a", INT 23),
+  ("b", ARRAY[BOOL false, BOOL true]),
+  ("c", STRING "hello world")
+]
+------------
+
+
+== See Also
+
+xref:str-JSONUtil.adoc[`JSONUtil`],
+xref:json-lib.adoc[__The JSON Library__]

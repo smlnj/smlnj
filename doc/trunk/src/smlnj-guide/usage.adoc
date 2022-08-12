@@ -1,0 +1,43 @@
+= Basic Usage
+:Date: {release-date}
+:VERSION: {smlnj-version}
+:Author: David MacQueen and John Reppy
+:stem: latexmath
+:source-highlighter: pygments
+
+== Interactive Usage
+
+The quickest way to use **SML/NJ** is to run the `sml` command from
+the shell, which brings up the interactive system.
+
+[source,shell]
+------------
+% sml
+Standard ML of New Jersey (64-bit) v110.99.1 [built: Mon Apr 12 18:45:14 2021]
+-
+------------
+
+At this point, you can enter SML top-level declarations and expressions
+terminated by a semicolon.  These will be immediately checked, compiled,
+and executed.  Assuming that there are no errors, the result of the
+compilation is then printed.  For example,
+
+[source,sml]
+------------
+- fun f x = x;
+val f = fn : 'a -> 'a
+------------
+
+== Putting Code in Files
+
+// use
+
+== Building Programs with the Compilation Manager
+
+// CM files
+// CM.make
+
+== Building Programs from the Shell
+
+// ml-build
+// ml-makedepend

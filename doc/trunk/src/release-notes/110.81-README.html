@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.81 Release Notes</title>
+<style type="text/css">
+  body {
+    font-size: 12pt;
+  }
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: 200%;
+    text-align: center;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  h3 {
+    font-size: 140%;
+  }
+  dt.component {
+    font-size: 120%;
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  span.important {
+    color: red;
+    text-weight: bold;
+  }
+  span.tt {
+    font-family: "Courier", monospace;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    color: darkblue;
+  }
+  span.kw {
+    font-family: "Courier", monospace;
+    font-weight: bold;
+    color: darkgreen;
+  }
+  span.com {
+    font-style: italic;
+    color: indianred;
+  }
+  span.exe {
+    font-weight: bold;
+  }
+  table.buglist {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+  p.compact {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br>
+                          Version 110.81 NEWS
+<br>
+                             May 1, 2017
+</div>
+
+<hr>
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><span class="tt">http://www.smlnj.org/index.html</span></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.81/index.html">
+    <span class="tt">http://smlnj.cs.uchicago.edu/dist/working/110.81/</span></a>
+  </dd>
+</dl>
+<hr>
+
+<h3>Summary:</h3>
+<p>
+This release has some fairly substantial <i>under-the-hood</i> changes to the compiler
+to clean up the interface between the front-end and FLINT, and changes to the
+compiler and runtime system to prepare the ground for 64-bit support.
+The release also contains some bug fixes and adds
+additional support for
+<a href="https://github.com/SMLFamily/Proposed-Definition-of-Successor-ML"><b>Successor ML</b></a>,
+which is an evolution of the Standard ML language.
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">Successor ML:</dt>
+  <dd>
+    <p style="margin-bottom: 0pt;">
+    The 110.81 release adds additional support for <b>Successor ML</b> syntactic extensions.
+    It is now possible to use record-punning syntax in expressions (as well as in patterns);
+    <i>e.g.</i>, you can write the following function definition
+    </p>
+<div class="code">
+<span class="kw">fun</span> f x = {x}
+</div>
+    <p style="margin-bottom: 0pt;">
+    which is equivalent to
+    </p>
+<div class="code">
+<span class="kw">fun</span> f x = {x = x}
+</div>
+    <p>
+    And we have added support for <span class="kw">do</span> syntax in
+    <span class="kw">let</span> bindings.
+    </p>
+    <p>
+      We have also changed the way that <b>Successor ML</b> features are enabled from the REPL.
+      Instead of assigning <span class="code">true</span> to the
+      <span class="code">Control.succML</span> variable, one should use the
+      function <span class="code">Control.setSuccML</span> is used to enable or disable
+      <b>Successor ML</b> (<i>i.e.</i>, pass the argument
+      <span class="code">true</span> to enable <b>Successor ML</b> features).
+    </p>
+  </dd>
+
+  <dt class="component">Compiler</dt>
+  <dd>
+    <p>
+    This version eliminates dependencies on FLINT types in the front
+    end.  In particular, uses of <span class="code">PlambdaType</span> have been eliminated.
+    </p>
+  </dd>
+
+  <dt class="component">SML/NJ Library:</dt>
+  <dd>
+    <p>
+    Added the <span class="code">JSONUtil</span> module to the <b>JSON</b> library.
+    This module provides helper functions for deconstructing and editing the
+    tree (<i>aka</i> DOM) representation of a JSON file.
+    </p>
+  </dd>
+
+  <dt class="component">ml-lpt</dt>
+  <dd>
+    <p>
+    Added <span class="tt">--debug</span> command-line option to <b>ml-antlr</b>.
+    This flag causes <b>ml-antlr</b> to generate debug actions that print
+    the left-hand-side non-terminal of the production.
+    </p>
+    <p>
+    Added <span class="kw">%tokentype</span> directive to <b>ml-antlr</b>, which allows
+    user-defined datatypes to be used to represent tokens.
+    </p>
+  </dd>
+
+  <dt class="component">MLRISC:</dt>
+  <dd>
+    <p>
+    Changed the interface to <span class="code">AMD64Gen</span>; the
+    <span class="code">signBit</span> and <span class="code">negateSignBit</span>
+    callback functions now return an <span class="code">MLTree.rexp</span> (instead of a label).
+    </p>
+  </dd>
+
+</dl>
+
+<h3>Bugs:</h3>
+    <p>
+    Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a>
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">129</td><td>Symbolic identifiers are allowed as strids</td></tr>
+      <tr><td class="bugid">149</td><td>Datatype replication exposes hidden constructors</td></tr>
+      <tr><td class="bugid">153</td><td>Enabling Successor ML features is delayed</td></tr>
+      <tr><td class="bugid">175</td><td>Executable stack on Linux</td></tr>
+      <tr><td class="bugid">179</td><td>ml-ulex writing debug messages to stdOut</td></tr>
+<!--      <tr><td class="bugid">XXX</td><td>DESCRIPTION</td></tr> -->
+    </table>
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul class="buglist">
+      <li>Parser bugfix: we now allow `*` as a field label in record-punning patterns.</li>
+    </ul>
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We have verified that the system builds and runs on the following systems.
+</p>
+<div>
+<table>
+  <tr><th>Architecture</th> <th>Operating System</th></tr>
+  <tr><td>PowerPC</td> <td>Mac OS X 10.5 (Leopard)</td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.11 (El Capitan)</td></tr>
+  <tr><td></td> <td>macOS 10.12 (Sierra)</td></tr>
+  <tr><td></td> <td>Ubuntu 14.04.3 (GNU/Linux 3.13.0)</td></tr>
+  <tr><td></td> <td>Windows 7</td></tr>
+  <tr><td></td> <td>Windows 10</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7 or 10)</td></tr>
+</table>
+</div>
+<p>
+We believe that it runs on any recent Linux distribution that has support for 32-bit
+executables, as well as on BSD variants, SPARC/Solaris, and PPC/AIX, but we have not
+tested these systems.
+</p>
+</blockquote>
+
+</body>
+</html>

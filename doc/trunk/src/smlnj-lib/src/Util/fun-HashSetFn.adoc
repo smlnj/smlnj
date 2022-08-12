@@ -1,0 +1,225 @@
+= The `HashSetFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashSetFn` functor provides a hash-table-based implementation
+of imperative sets parameterized over a `Key` structure.
+
+== Synopsis
+
+[source,sml]
+------------
+signature MONO_HASH_SET
+functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+Key : HASH_KEY
+------------
+
+== Functor Argument Description
+
+`Key : xref:sig:HASH_KEY.adoc[HASH_KEY]`::
+  A structure that implements the xref:sig:HASH_KEY.adoc[HASH_KEY]`
+  signature, where xref:sig:HASH_KEY.adoc#type:hash_key[`Key.hash_key`]
+  will be the type of the elements in the hash set.
+
+== Interface
+
+[source,sml]
+------------
+structure Key : HASH_KEY
+
+type item = Key.hash_key
+type set
+
+val mkEmpty : int -> set
+
+val mkSingleton : item -> set
+
+val mkFromList : item list -> set
+
+val toList : set -> item list
+
+val add  : set * item -> unit
+val addc : set -> item -> unit
+
+val addList : set * item list -> unit
+
+val subtract  : set * item -> unit
+val subtractc : set -> item -> unit
+
+val subtractList : set * item list -> unit
+
+val delete : set * item -> bool
+
+val member : set * item -> bool
+
+val isEmpty : set -> bool
+
+val isSubset : (set * set) -> bool
+
+val numItems : set ->  int
+
+val map : (item -> item) -> set -> set
+val mapPartial : (item -> item option) -> set -> set
+val app : (item -> unit) -> set -> unit
+val fold : (item * 'b -> 'b) -> 'b -> set -> 'b
+
+val partition : (item -> bool) -> set -> (set * set)
+
+val filter : (item -> bool) -> set -> unit
+
+val exists : (item -> bool) -> set -> bool
+val all : (item -> bool) -> set -> bool
+
+val find : (item -> bool) -> set -> item option
+
+val listItems : set -> item list
+val without : set * item -> unit
+------------
+
+== Interface Description
+
+`[.kw]#structure# Key : HASH_KEY`::
+  This substructure is the argument structure, which defines the type
+  of set elements, and hash and equality functions on the key type.
+
+`[.kw]#type# item = Key.hash_key`::
+  The type of items in the sets.
+
+`[.kw]#type# set`::
+  The type of imperative sets of items.
+
+`[.kw]#val# mkEmpty : int \-> set`::
+  `mkEmpty n` creates an empty set that has initial space to store
+  at least `n` items.
+
+`[.kw]#val# mkSingleton : item \-> set`::
+  `mkSingleton item` creates a set with `item` as its only initial element.
+
+`[.kw]#val# mkFromList : item list \-> set`::
+  `mkFromList items` creates a set with `items` as its initial elements.
+
+[[val:toList]]
+`[.kw]#val# toList : set \-> item list`::
+  `toList set` returns a list of the items in `set`.
+
+`[.kw]#val# add  : set * item \-> unit`::
+  `add (set, item)` destructively adds the item to the set.
+
+`[.kw]#val# addc : set \-> item \-> unit`::
+   `addc set item` destructively adds the item to the set.
+
+`[.kw]#val# addList : set * item list \-> unit`::
+  `addList (set, items)` destructively adds the list of items to the set.
+
+[[val:subtract]]
+`[.kw]#val# subtract : set * item \-> unit`::
+  `subtract (set, item)` removes the object `item` from `set`; it has no
+  effect if `item` is not in `set`.
+
+`[.kw]#val# subtractc : set \-> item \-> unit`::
+  `subtractc set item` removes the object `item` from `set`; it has no
+  effect if `item` is not in `set`.
+
+`[.kw]#val# subtractList : set \-> item list \-> unit`::
+  `subtractList set items` removes the `items` from `set`.  This expression
+  is equivalent to
++
+[source,sml]
+------------
+List.app (subtractc set) items
+------------
+
+`[.kw]#val# delete : set * item \-> bool`::
+  `subtract (set, item)` removes the object `item` from `set` (if present)
+  and returns `true` if the item was removed and `false` if it was not
+  present.
+
+`[.kw]#val# member : set * item \-> bool`::
+  `member (item, set)` returns `true` if, and only if, `item`
+  is an element of `set`.
+
+`[.kw]#val# isEmpty : set \-> bool`::
+  `isEmpty set` returns true if, and only if, `set` is empty.
+
+`[.kw]#val# isSubset : (set * set) \-> bool`::
+  `isSubset (set1, set2)` returns true if, and only if, `set1`
+  is a subset of `set2` (_i.e._, any element of `set1` is an
+  element of `set2`).
+
+`[.kw]#val# numItems : set \->  int`::
+  `numItems set` returns the number of items in the `set`.
+
+`[.kw]#val# map : (item \-> item) \-> set \-> set`::
+  `map f set` creates a new set from the result of applying the
+  function `f` to the elements of `set`.  This expression is
+  equivalent to
++
+[source,sml]
+------------
+mkFromList (List.map f (toList set))
+------------
+
+`[.kw]#val# mapPartial : (item \-> item option) \-> set \-> set`::
+  `mapPartial f set` creates a new set from the result of applying the
+  partial function `f` to the elements of `set`.  This expression is
+  equivalent to
++
+[source,sml]
+------------
+mkFromList (List.mapPartial f (toList set))
+------------
+
+`[.kw]#val# app : (item \-> unit) \-> set \-> unit`::
+  `app f set` applies the function `f` to the items in `set`.
+
+`[.kw]#val# fold : (item * 'b \-> 'b) \-> 'b \-> set \-> 'b`::
+  `foldl f init set` folds the function `f` over the items in
+  `set` using `init` as the initial value.
+
+`[.kw]#val# partition : (item \-> bool) \-> set \-> (set * set)`::
+  `partition pred set` returns a pair of disjoint sets `(tSet, fSet)`,
+  where the predicate `pred` returns true for every element of `tSet`,
+ `false` for every element of `fSet`, and `set` is the union of `tSet`
+  and `fSet`.
+
+`[.kw]#val# filter : (item \-> bool) \-> set \-> unit`::
+  `filter pred set` removes any elements of set for which the
+  predicate `pred` returns false.
+
+`[.kw]#val# exists : (item \-> bool) \-> set \-> bool`::
+  `all pred set` returns `true` if, and only if, `pred item` returns
+  true for all elements `item` in `set`. Elements are checked in
+  an undefined order.
+
+`[.kw]#val# all : (item \-> bool) \-> set \-> bool`::
+  `exists pred set` returns `true` if, and only if, there exists an
+  element `item` in `set` such that `pred item` returns `true`.
+  Elements are checked in an undefined order.
+
+`[.kw]#val# find : (item \-> bool) \-> set \-> item option`::
+  `find pred set` returns `SOME item` if there exists an object `item`
+  in the set for which `pred item` returns `true`; otherwise `NONE` is
+  returned.  Items are tested in an undefined order.
+
+=== Deprecated functions
+
+`[.kw]#val# without : set * item \-> unit`::
+  Use xref:#val:subtract[`subtract`] instead.
+
+`[.kw]#val# listItems : set \-> item list`::
+  Use xref:#val:toList[`toList`] instead.
+
+== See Also
+
+xref:sig-HASH_KEY.adoc[`HASH_KEY`],
+xref:sig-ORD_SET.adoc[`ORD_SET`],
+xref:smlnj-lib.adoc[__The Util Library__]

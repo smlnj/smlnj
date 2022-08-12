@@ -1,0 +1,89 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  4  7      N  E  W  S
+			
+                             August 4, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.47/
+
+
+Summary:
+
+     The most important and noticable changes in 110.47 concern
+     preliminary implementations of the NLFFI foreign-function
+     interface under Mac OS X (PowerPC) and Win32 (x86).  There are
+     also a number of important bug fixes.
+
+--------------------------------------------------------------------------
+
+Details:
+
+NLFFI:
+------
+
+  - preliminary support for Mac OS X added
+  - preliminary support for Win32 added
+    (untested;
+     currently can only interface with C functions using the stdcall
+     calling conventions)
+  - function arguments that are C unions are now handled
+  - various minor bug fixes to ml-nlffigen
+  - preliminary documentation for nlffi and ml-nlffigen
+    (currently only describes the output of ml-nlffigen;
+     see src/ml-nlffi-lib/Doc/manual/nlffi.tex)
+
+Compilation Manager:
+--------------------
+
+  - made "make" commend in CM's "make" tool configurable
+  - added option (default: on) for passing the name of the SML/NJ's "bin"
+    directory to "make";
+    This can be used by the Makefile to, e.g., pick the "right" version
+     of ml-nlffigen.
+
+Basis:
+------
+
+  - Changed the implementation of structure Unix so that the
+    same stream is returned every time one of the
+    {text,bin}{In,Out}streamOf functions is invoked on the
+    same proc. (NOTE: This is not what the spec says, so it will
+    probably change again. Don't rely on it!)
+
+Windows port:
+-------------
+
+  - bug fixes:
+     * NULL test in gmtime and localtime
+     * toSeconds -> toMilliseconds in win32-process.sml (Basis implementation)
+
+Installer:
+----------
+
+  - eliminated some shell syntax not understood by /bin/sh under Solaris
+
+Compiler internals:
+-------------------
+
+  - low-level support for choosing C calling conventions by twiddling the
+    type of of the rawccall primop  (see src/compiler/Semant/types/cproto.sml
+    for details)
+  - use paramAlloc to report c-calls with too many arguments
+    (for PPC version where parameter area is pre-allocated)
+  - added ccall_maxargspace to machspec (to implement the above)
+
+MLRISC:
+-------
+
+  - redesigned c-calls interface
+  - c-calls implementation for ppc-macosx added
+  - Added these instructions to the PowerPC architecture:
+    LWARX, STWCX, LBZU(X), LHZU(X), LWZU(X), STWU(X), STFDU, STFSU, etc.
+    (Instruction encodings not added yet, though.)
+  - loop-structure.sml has been rewritten

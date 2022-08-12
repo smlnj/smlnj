@@ -1,0 +1,145 @@
+// A template for creating release notes for a version
+//
+:version: 110.99.1
+:date: April 12, 2021
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This is a patch release that includes a few bug fixes and which enables
+running **SML/NJ** on **M1** (aka **Arm**) Macs under
+https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment[Rosetta2].
+Because the system is running under emulation, it may not be as reliable
+as when running as a native application on a *AMD64* processor.  We are
+working on a native *Arm64* port that we hope to release this summer.
+
+== Details
+
+=== Runtime System
+
+Modified the stack frame layout on **AMD64** to better support the **LLVM**
+backend (currently under development).
+
+=== SML/NJ Library
+
+The `ListMergeSort.sort` function is now stable (as claimed by the documantation).
+
+Added some additional mechanism to the `JSONUtil` structure to make
+writing robust queries easier.
+
+=== Installation
+
+It is possible to install the *amd64* version of the system on *M1* Macs.
+Because these machines run Big Sur, you will need to control-click on the
+installer package and open it with the installer application.
+
+=== 32-bit macOS issues
+
+While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
+for {version} works on **macOs** 10.14 Mojave, building from source
+requires some extra steps because the version of **Xcode**
+distributed for Mojave does not include a 32-bit SDK.
+
+Another issue that you may encounter
+when building on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#278#
+| `ListMergeSort` is documented as stable, but is not (esp. since 110.78 rewrite!)
+| [.bugid]#280#
+| 110.99 `config/install.sh -64` fails on macOS 10.15.7
+// | [.bugid]#@ID#
+// | @DESCRIPTION@
+|=======
+
+The following unnumbered bug was also fixed:
+--
+  * Fixed a performance bug in the implementation of the `CharBuffer` and `MonoBuffer` structures.
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Arm64 | macOS 11 (Big Sur) | Tested under Rosetta2
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

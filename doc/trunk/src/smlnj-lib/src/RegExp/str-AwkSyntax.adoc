@@ -1,0 +1,60 @@
+= The `AwkSyntax` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `AwkSyntax` structure implements the AWK syntax for regular expressions.
+The syntax is defined on pp. 28-30 of _The AWK Programming Language_,
+by Aho, Kernighan and Weinberger.  The syntax has been extended with interval
+syntax, which was added as part of the POSIX standard.
+
+== Synopsis
+
+[source,sml]
+------------
+structure AwkSyntax : REGEXP_PARSER
+------------
+
+== Description
+
+The meta characters are:
+       "\" "^" "$" "." "[" "]" "|" "(" ")" "*" "+" "?"
+
+   Atomic REs:
+     c	matches the character c (for non-metacharacters c)
+     "^"	matches the empty string at the beginning of a line
+       "$"	matches the empty string at the end of a line
+     "."	matches any single character (except \000 and \n)
+
+   Escape sequences:
+       "\b"	matches backspace
+       "\f"	matches formfeed
+       "\n"	matches newline (linefeed)
+       "\r"	matches carriage return
+       "\t"	matches tab
+       "\"ddd	matches the character with octal code ddd.
+       "\"c	matches the character c (e.g., \\ for \, \" for ")
+     "\x"dd  matches the character with hex code dd.
+
+   Character classes:
+       [...]	matches any character in "..."
+       [^...]	a complemented character list, which matches any character not
+	       in the list "..."
+
+   Compound regular expressions, where A and B are REs:
+       A|B	matches A or B
+       AB	matches A followed by B
+       A?	matches zero or one As
+       A*	matches zero or more As
+       A+	matches one or more As
+       A{n}	matches n copies of A
+       A{n,}	matches n copies of A
+       A{n,m}	matches n copies of A
+       (A)	matches A
+
+
+== See Also
+
+xref:regexp-lib.adoc[__The RegExp Library__]

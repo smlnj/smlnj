@@ -1,0 +1,86 @@
+= The `Atom` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Atom` structure provides hashed strings that have fast
+equality testing.  The *Util Library* provides predefined
+finite maps and sets of atoms, as well as hash tables keyed by atoms.
+
+== Synopsis
+
+[source,sml]
+------------
+signature ATOM
+structure Atom : ATOM
+------------
+
+== Interface
+
+[source,sml]
+------------
+type atom
+
+val atom : string -> atom
+val atom' : substring -> atom
+
+val toString : atom -> string
+
+val same : (atom * atom) -> bool
+val sameAtom : (atom * atom) -> bool
+
+val compare : (atom * atom) -> order
+val lexCompare : (atom * atom) -> order
+
+val hash : atom -> word
+------------
+
+== Description
+
+[[type:atom]]
+`[.kw]#type# atom`::
+  The abstract type of hashed strings that support fast equality testing.
+
+`[.kw]#val# atom : string \-> atom`::
+  `atom s` returns the unique hashed representation of the string `s` as an atom.
+
+`[.kw]#val# atom' : substring \-> atom`::
+  `atom ss` returns the unique hashed representation of the substring `ss`
+   as an atom.
+
+`[.kw]#val# toString : atom \-> string`::
+  `toString atm` returns the string representation of the atom `atm`.
+
+[[val:same]]
+`[.kw]#val# same : (atom * atom) \-> bool`::
+  `same (atm1, atm2)` returns true if the two atoms are the same (_i.e._, their
+  string representations are equal).
+
+`[.kw]#val# compare : (atom * atom) \-> order`::
+  `compare (atm1, atm2)` returns the relation of the two atoms in some
+  unspecified total order.  Use xref:#val:lexCompare[`lexCompare`] to
+  compare atoms lexicographically.
+
+[[val:lexCompare]]
+`[.kw]#val# lexCompare : (atom * atom) \-> order`::
+  `compare (atm1, atm2)` returns the relation of the two atoms in lexical order.
+
+`[.kw]#val# hash : atom \-> word`::
+  `hash atm` returns a hash key for the atom.
+
+=== Deprecated functions
+
+The following functions are part of the interface, but have been
+deprecated.
+
+`[.kw]#val# sameAtom : (atom * atom) \-> bool`::
+    Use xref:#val:same[`same`] instead.
+
+== See Also
+
+xref:sig-ORD_MAP.adoc#str:AtomMap[`AtomMap`],
+xref:sig-ORD_SET.adoc#str:AtomSet[`AtomSet`],
+xref:sig-MONO_HASH_TABLE.adoc#str:AtomTable[`AtomTable`],
+xref:smlnj-lib.adoc[__The Util Library__]

@@ -1,0 +1,93 @@
+:version: 110.98.1
+:date: August 25, 2020
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This patch release fixes a number of regressions in the *110.98* pretty
+printer.  It also has some internal changes that are part of the effort
+to migrate to a https://llvm.org[*LLVM*] backend.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#266#
+| Pretty printing regression in SML/NJ 110.98
+| [.bugid]#268#
+| Polymorphic Type Pretty Printing Regression
+| [.bugid]#269#
+| `Word64.fromString` causes an `Overflow` for greater than 2^32^-1
+| [.bugid]#271#
+| pretty printer regression for structure binding
+|=======
+
+// ***** include a list of unnumbered bugs here *****
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

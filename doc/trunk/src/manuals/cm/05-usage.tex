@@ -1,0 +1,598 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Using CM}
+
+\section{Structure CM}
+\label{sec:api}
+
+Functions that control CM's operation are accessible as members of a
+structure named {\tt CM} which itself is exported from a library
+called {\tt \$smlnj/cm.cm} (or, alternatively, {\tt
+\$smlnj/cm/cm.cm}).  This library is pre-registered for auto-loading
+at the interactive top level.
+
+Other libraries can exploit CM's functionality simply by putting a
+{\tt \$smlnj/cm.cm} entry into their own description file.
+\chapref{chap:dynlink} shows one interesting use of this feature.
+
+Here is a description of all members:
+
+\subsection{Compiling}
+\label{sec:api:compiling}
+
+Two main activities when using CM are to compile ML source code and to
+build stable libraries:
+
+\begin{lstlisting}
+  val recomp : string -> bool
+  val stabilize : bool -> string -> bool
+\end{lstlisting}%
+
+{\tt CM.recomp} takes the name of a program's ``root'' description
+file and compiles or recompiles all ML source files that are necessary
+to provide definitions for the root library's export list.  ({\em
+Note:} The difference to {\tt CM.make} is that no linking takes
+place.)
+
+{\tt CM.stabilize} takes a boolean flag and then the name of a library
+and {\em stabilizes} this library.  A library is stabilized by writing
+all information pertaining to it, including all of its library
+components (i.e., subgroups), into a single file.  Sublibraries do not
+become part of the stabilized library; CM records stub entries for them.
+When a stabilized library is used in other programs, all members of
+the library are guaranteed to be up-to-date; no dependency analysis
+work and no recompilation work will be necessary.  If the boolean flag
+is {\tt false}, then all sublibraries of the library must already be
+stable.  If the flag is {\tt true}, then CM will recursively stabilize
+all libraries reachable from the given root.
+
+After a library has been stabilized it can be used even if none of its
+original sources---including the description file---are present.
+
+The boolean result of {\tt CM.recomp} and {\tt CM.stabilize} indicates
+success or failure of the operation ({\tt true} = success).
+
+\subsection{Linking and execution}
+
+In SML/NJ, linking means executing top-level code (i.e., module
+creation and initialization code) of each compilation unit.  The
+resulting bindings can then be registered at the interactive top
+level.
+
+\begin{lstlisting}
+  val make : string -> bool
+  val autoload : string -> bool
+\end{lstlisting}%
+
+{\tt CM.make} first acts like {\tt CM.recomp}.  If the
+(re-)compilation is successful, then it proceeds by linking all
+modules that require linking.  Provided there are no link-time errors,
+it finally introduces new bindings at top level.
+
+During the course of the same {\tt CM.make}, the code of each
+compilation module that is reachable from the root will be executed at
+most once.  Code in units that are marked as {\it private} (see
+\secref{sec:sharing}) will be executed exactly once.  Code in
+other units will be executed only if the unit has been recompiled
+since it was executed last time or if it depends on another
+compilation unit whose code has been executed since.
+
+In effect, different invocations of {\tt CM.make} (and {\tt
+CM.autoload}) will share dynamic state created at link time as much as
+possible unless the compilation units in question have been explicitly
+marked private.
+
+{\tt CM.autoload} acts like {\tt CM.make}, only ``lazily''. See
+\secref{sec:autoload} for more information.
+
+As before, the result of {\tt CM.make} indicates success or failure of
+the operation.  The result of {\tt CM.autoload} indicates success or
+failure of the {\em registration}.  (It does not know yet whether
+loading will actually succeed.)
+
+\subsection{Registers}
+\label{sec:registers}
+
+Several internal registers control the operation of CM.  A register of
+type $T$ is accessible via a variable of type $T$ {\tt controller},
+i.e., a pair of {\tt get} and {\tt set} functions.\footnote{The type
+constructor {\tt controller} is defined as part of {\tt structure
+CM}.}  Any invocation of the corresponding {\tt get} function reads
+the current value of the register.  An invocation of the {\tt set}
+function replaces the current value with the argument given to {\tt
+set}.
+
+Controllers are members of {\tt CM.Control}, a sub-structure of
+structure {\tt CM}.
+
+\begin{lstlisting}
+  type 'a controller = { get: unit -> 'a, set: 'a -> unit }
+  structure Control : sig
+    val verbose : bool controller
+    val debug : bool controller
+    val keep_going : bool controller
+    val parse_caching : int controller
+    val warn_obsolete : bool controller
+    val conserve_memory : bool controller
+    val generate_index : bool controller
+  end
+\end{lstlisting}%
+
+{\tt CM.Control.verbose} can be used to turn off CM's progress
+messages.  The default is {\em true} and can be overriden at startup
+time by the environment variable {\tt CM\_VERBOSE}.
+
+In the case of a compile-time error {\tt CM.Contol.keep\_going}
+instructs the {\tt CM.recomp} phase to continue working on parts of
+the dependency graph that are not related to the error.  (This does
+not work for outright syntax errors because a correct parse is needed
+before CM can construct the dependency graph.)  The default is {\em
+false}, meaning ``quit on first error'', and can be overriden at
+startup by the environment variable {\tt CM\_KEEP\_GOING}.
+
+{\tt CM.Control.parse\_caching} sets a limit on how many parse trees
+are cached in main memory.  In certain cases CM must parse source
+files in order to be able to calculate the dependency graph.  Later,
+the same files may need to be compiled, in which case an existing
+parse tree saves the time to parse the file again.  Keeping parse
+trees can be expensive in terms of memory usage.  Moreover, CM makes
+special efforts to avoid re-parsing files in the first place unless
+they have actually been modified.  Therefore, it may not make much
+sense to set this value very high.  The default is {\em 100} and can
+be overriden at startup time by the environment variable {\tt
+CM\_PARSE\_CACHING}.
+
+This version of CM uses an ML-inspired syntax for expressions in its
+conditional compilation subsystem (see \chapref{chap:preproc}).
+However, for the time being it will accept most of the original
+C-inspired expressions but produces a warning for each occurrence of
+an old-style operator. {\tt CM.Control.warn\_obsolete} can be used to
+turn these warnings off. The default is {\em true}, meaning ``warnings
+are issued'', and can be overriden at startup time by the environment
+variable {\tt CM\_WARN\_OBSOLETE}.
+
+{\tt CM.Control.debug} can be used to turn on debug mode.  This
+currently has the effect of dumping a trace of the master-slave
+protocol for parallel and distributed compilation (see
+\chapref{chap:parmake}) to TextIO.stdOut. The default is {\em
+false} and can be overriden at startup time by the environment
+variable {\tt CM\_DEBUG}.
+
+Using {\tt CM.Control.conserve\_memory}, CM can be told to be slightly
+more conservative with its use of main memory at the expense of
+occasionally incurring additional input from stable library files.
+This does not save very much and, therefore, is normally turned off.
+The default ({\em false}) can be overridden at startup by the
+environment variable {\tt CM\_CONSERVE\_MEMORY}.
+
+{\tt CM.Control.generate\_index} is used to control the generation of
+human-readable {\em index files} (see \secref{sec:indexfiles}).
+The default setting is {\em false} and can be overridden at startup by
+the environment variable {\tt CM\_GENERATE\_INDEX}.
+
+\subsection{Path anchors}
+\label{sec:api:anchors}
+
+Structure {\tt CM} also provides functions to explicitly manipulate
+the path anchor configuration.  These functions are members of
+structure {\tt CM.Anchor}.
+
+\begin{lstlisting}
+  structure Anchor : sig
+    val anchor : string -> string option controller
+    val reset : unit -> unit
+  end
+\end{lstlisting}%
+
+{\tt CM.Anchor.anchor} returns a pair of {\tt get} and {\tt set}
+functions that can be used to query and modify the status of the named
+anchor.  Note that the {\tt get}-{\tt set}-pair operates over type
+{\tt string option}; a value of {\tt NONE} means that the anchor is
+currently not bound (or, in the case of {\tt set}, that it is being
+cancelled).  The (optional) string given to {\tt set} must be a
+directory name in native syntax ({\em without} trailing arc separator,
+e.g., {\bf /} in Unix).  If it is specified as a relative path name,
+then it will be expanded by prepending the name of the current working
+directory.
+
+{\tt CM.Anchor.reset} erases the entire existing path configuration.
+After a call of this function has completed, all root environment
+locations are marked as being ``undefined''.
+
+\subsection{Setting CM variables}
+
+CM variables are used by the conditional compilation system (see
+\secref{sec:cmvars}).  Some of these variables are predefined,
+but the user can add new ones and alter or remove those that already
+exist.
+
+\begin{lstlisting}
+  val symval : string -> int option controller
+\end{lstlisting}%
+
+Function {\tt CM.symval} returns a {\tt get}-{\tt set}-pair for the
+symbol whose name string was specified as the argument.  Note that the
+{\tt get}-{\tt set}-pair operates over type {\tt int option}; a value
+of {\tt NONE} means that the variable is not defined.
+
+\noindent Examples:
+\begin{lstlisting}
+  #get (CM.symval "X") ();       (* query value of X *)
+  #set (CM.symval "Y") (SOME 1); (* set Y to 1 *)
+  #set (CM.symval "Z") NONE;     (* remove definition for Z *)
+\end{lstlisting}%
+
+Some care is necessary as {\tt CM.symval} does not check whether the
+syntax of the argument string is valid.  (However, the worst thing
+that could happen is that a variable defined via {\tt CM.symval} is
+not accessible\footnote{from within CM's description files} because
+there is no legal syntax to name it.)
+
+\subsection{Library registry}
+\label{sec:libreg}
+
+To be able to share associated data structures such as symbol tables
+and dependency graphs, CM maintains an internal registry of all stable
+libraries that it has encountered during an ongoing interactive
+session.  The {\tt CM.Library} sub-structure of structure {\tt CM}
+provides access to this registry.
+
+\begin{lstlisting}
+  structure Library : sig
+    type lib
+    val known : unit -> lib list
+    val descr : lib -> string
+    val osstring : lib -> string
+    val dismiss : lib -> unit
+    val unshare : lib -> unit
+  end
+\end{lstlisting}%
+
+{\tt CM.Library.known}, when called, produces a list of currently
+known stable libraries.  Each such library is represented by an
+element of the abstract data type {\tt CM.Library.lib}.
+
+{\tt CM.Library.descr} extracts a string describing the location of
+the CM description file associated with the given library.  The syntax
+of this string is almost the same as that being used by CM's
+master-slave protocol (see \secref{sec:pathencode}).
+
+{\tt CM.Library.osstring} produces a string denoting the given
+library's description file using the underlying operating system's
+native pathname syntax.  In other words, the result of a call of {\tt
+CM.Library.osstring} is suitable as an argument to {\tt
+TextIO.openIn}.
+
+{\tt CM.Library.dismiss} is used to remove a stable library from CM's
+internal registry.  Although removing a library from the registry may
+recover considerable amounts of main memory, doing so also eliminates
+any chance of sharing the associated data structures with later
+references to the same library.  Therefore, it is not always in the
+interest of memory-conscious users to use this feature.
+
+While dependency graphs and symbol tables need to be reloaded when a
+previously dismissed library is referenced again, the sharing of
+link-time state created by this library is {\em not} affected.
+(Link-time state is independently maintained in a separate data
+structure.  See the discussion of {\tt CM.unshare} below.)
+
+{\tt CM.Library.unshare} is used to remove a stable library from CM's
+internal registry, and---at the same time---to inhibit future sharing
+with its existing link-time state.  Any future references to this
+library will see newly created state (which will then be properly
+shared again).  ({\bf Warning:} {\it This feature is not the preferred
+way of creating unshared state; use functors for that.  However, it
+can come in handy when two different (and perhaps incompatible)
+versions of the same library are supposed to coexist---especially if
+one of the two versions is used by SML/NJ itself.  Normally, only
+programmers working on SML/NJ's compiler are expected to be using this
+facility.})
+
+\subsection{Internal state}
+
+For CM to work correctly, it must maintain an up-to-date picture of
+the state of the surrounding world (as far as that state affects CM's
+operation).  Most of the time, this happens automatically and should be
+transparent to the user.  However, occasionally it may become
+necessary to intervene expliticly.
+
+Access to CM's internal state is facilitated by members of the {\tt
+CM.State} structure.
+
+\begin{lstlisting}
+  structure State : sig
+    val pending : unit -> string list
+    val synchronize : unit -> unit
+    val reset : unit -> unit
+  end
+\end{lstlisting}%
+
+{\tt CM.State.pending} produces a list of strings, each string naming
+one of the symbols that are currently registered (i.e., ``virtually
+bound'') but not yet resolved by the autoloading mechanism.
+
+{\tt CM.State.synchronize} updates tables internal to CM to reflect
+changes in the file system.  In particular, this will be necessary
+when the association of file names to ``file IDs'' (in Unix: inode
+numbers) changes during an ongoing session.  In practice, the need for
+this tends to be rare.
+
+{\tt CM.State.reset} completely erases all internal state in CM.  To
+do this is not very advisable since it will also break the association
+with pre-loaded libraries.  It may be a useful tool for determining
+the amount of space taken up by the internal state, though.
+
+\subsection{Compile servers}
+
+On Unix-like systems, CM supports parallel compilation.  For computers
+connected using a LAN, this can be extended to distributed compilation
+using a network file system and the operating system's ``rsh''
+facility.  For a detailed discussion, see \chapref{chap:parmake}.
+
+Sub-structure {\tt CM.Server} provides access to and manipulation of
+compile servers.  Each attached server is represented by a value of
+type {\tt CM.Server.server}.
+
+\begin{lstlisting}
+  structure Server : sig
+    type server
+    val start : { name: string,
+                  cmd: string * string list,
+                  pathtrans: (string -> string) option,
+                  pref: int } -> server option
+    val stop : server -> unit
+    val kill : server -> unit
+    val name : server -> string
+  end
+\end{lstlisting}%
+
+CM is put into ``parallel'' mode by attaching at least one compile
+server.  Compile servers are attached using invocations of {\tt
+CM.Server.start}.  The function takes the name of the server (as an
+arbitrary string) ({\tt name}), the Unix command used to
+start the server in a form suitable as an argument to {\tt
+Unix.execute} ({\tt cmd}), an optional ``path transformation
+function'' for converting local path names to remote pathnames ({\tt
+pathtrans}), and a numeric ``preference'' value that is used to choose
+servers at times when more than one is idle ({\tt pref}).  The
+optional result is the handle representing the successfully attached
+server.
+
+An existing server can be shut down and detached using {\tt
+CM.Server.stop} or {\tt CM.Server.kill}.  The argument in either case
+must be the result of an earlier call of {\tt CM.Server.start}.
+Function {\tt CM.Server.stop} uses CM's master-slave protocol to
+instruct the server to shut down gracefully.  Only if this fails it
+may become necessary to use {\tt CM.Server.kill}, which will send a
+Unix TERM signal to destroy the server.
+
+Given a server handle, function {\tt CM.Server.name} returns the
+string that was originally given to the call of\linebreak {\tt
+CM.Server.start} used to created the server.
+
+\subsection{Plug-ins}
+
+As an alternative to {\tt CM.make} or {\tt CM.autoload}, where the
+main purpose is to subsequently be able to access the library from
+interactively entered code, one can instruct CM to load libraries
+``for effect''.
+
+\begin{lstlisting}
+  val load_plugin : string -> bool
+\end{lstlisting}%
+
+Function {\tt CM.load\_plugin} acts exactly like {\tt CM.make} except
+that even in the case of success no new symbols will be bound in the
+interactive top-level environment.  That means that link-time
+side-effects will be visible, but none of the exported definitions
+become available.  This mechanism can be used for ``plug-in'' modules:
+a core library provides hooks where additional functionality can be
+registered later via side-effects; extensions to this core are
+implemented as additional libraries which, when loaded, register
+themselves with those hooks.  By using {\tt CM.load\_plugin} instead
+of {\tt CM.make}, one can avoid polluting the interactive top-level
+environment with spurious exports of the extension module.
+
+CM itself uses plug-in modules in its member-class subsystem (see
+\chapref{chap:moretools}).  This makes it possible to add new classes
+and tools very easily without having to reconfigure or recompile CM,
+not to mention modify its source code.
+
+\subsection{Support for stand-alone programs}
+\label{sec:mlbuild:support}
+
+CM can be used to build stand-alone programs. In fact SML/NJ
+itself---including CM---is an example of this.  (The interactive
+system cannot rely on an existing compilation manager when starting
+up.)
+
+A stand-alone program is constructed by the runtime system from
+existing binfiles or members of existing stable libraries.  CM must
+prepare those binfiles or libraries together with a list that
+describes them to the runtime system.
+
+\begin{lstlisting}
+  val mk_standalone : bool option ->
+                      { project: string, wrapper: string, target: string } ->
+                      string list option
+\end{lstlisting}%
+
+Here, {\tt project} and {\tt wrapper} name description files and {\tt
+target} is the name of a heap image---with or without the usual
+implicit heap image suffix; see the description of {\tt
+SMLofNJ.exportFn} from the (SML/NJ-specific extension of the) Basis
+Library~\cite{reppy99:basis}.
+
+A call of {\tt mk\_standalone} triggers the following three-stage
+procedure:
+\begin{enumerate}
+\item Depending on the optional boolean argument, {\tt project} is
+subjected to the equivalent of either {\tt CM.recomp} or {\tt
+CM.stabilize}.  {\tt NONE} means {\tt CM.recomp}, and {\tt (SOME $r$)}
+means {\tt CM.stabilize $r$}.
+There are tree ways of how to continue from here:
+\begin{enumerate}
+\item If recompilation of {\tt project}
+failed, then a result of {\tt NONE} will be returned immediately.
+\item If everything was up-to-date (i.e, if no ML source had to be compiled
+and all these sources were older than the existing {\tt target}), then
+a result of {\tt SOME []} will be returned.
+\item Otherwise execution proceeds to the next stage.
+\end{enumerate}
+\item The {\em wrapper library} named by {\tt wrapper} is being
+recompiled (using the equivalent of {\tt CM.recomp}).  If this
+fails, {\tt NONE} is returned.  Otherwise execution proceeds to the
+next stage.
+\item {CM.mk\_standalone} constructs a topologically sorted list $l$
+of strings that, when written to a file, can be passed to the runtime
+system in order to perform stand-alone linkage of the program given by
+{\tt wrapper}.  The final result is {\tt SOME $l$}.
+\end{enumerate}
+
+The idea is that {\tt project} names the library that actually
+implements the main program while {\tt wrapper} names an auxiliary
+wrapper library responsible for issuing a call of {\tt
+SMLofNJ.exportFn} (generating {\tt target}) on behalf of {\tt
+project}.
+
+The programmer should normally never have a need to invoke {\tt
+CM.mk\_standalone} directly.  Instead, this function is used by an
+auxiliary script called {\tt ml-build} (see
+\chapref{chap:mlbuild}).
+
+\subsection{Finding all sources}
+\label{sec:makedepend:support}
+
+The {\tt CM.sources} function can be used to find the names of all
+source files that a given library depends on.  It returns the names of
+all files involved with the exception of skeleton files and binfiles
+(see \chapref{chap:files}).  Stable libraries are represented by
+their library file; their description file or consitutent members are
+{\em not} listed.
+
+Normally, the function reports actual file names as used for accessing
+the file system.  For (stable) library files this behavior can be
+inconvenient because these names depend on architecture and operating
+system.  For this reason, {\tt CM.sources} accepts an optional pair of
+strings that then will be used in place of the architecture- and
+OS-specific part of these names.
+
+\begin{lstlisting}
+  val sources :
+    { arch: string, os: string } option ->
+    string ->
+    { file: string, class: string, derived: bool } list option
+\end{lstlisting}%
+
+In case there was some error analyzing the specified library or group,
+{\tt CM.sources} returns {\tt NONE}.  Otherwise the result is a list
+of records, each carrying a file name, the corresponding class, and
+information about whether or not the source was created by some tool.
+
+Examples:
+
+\begin{description}
+\item[generating ``make'' dependencies:]
+To generate dependency information usable by Unix' {\tt make} command,
+one would be interested in all files that were not derived by some
+tool application.  Moreover, one would probably like to use shell
+variables instead of concrete architecture- and OS-names:
+\begin{lstlisting}
+  Option.map (List.filter (not o #derived))
+    (CM.sources (SOME { arch = "$ARCH", os = "$OPSYS" })
+         "foo.cm");
+\end{lstlisting}%
+A call of {\tt CM.sources} similar to the one shown here is used by
+the auxiliary script {\tt ml-makedepend} (see
+\secref{sec:makedepend}).
+\item[finding all {\tt noweb} sources:]
+To find all {\tt noweb} sources (see \secref{sec:builtin-tools:noweb}),
+e.g., to be able to run the document preparation program {\tt noweave}
+on them, one can simply look for entries of the {\tt noweb} class.
+Here, one would probably want to include derived sources:
+\begin{lstlisting}
+  Option.map (List.filter (fn x => #class x = "noweb"))
+    (CM.sources NONE "foo.cm");
+\end{lstlisting}%
+\end{description}
+
+\section{The autoloader}
+\label{sec:autoload}
+
+From the user's point of view, a call of {\tt CM.autoload} acts very
+much like the corresponding call of {\tt CM.make} because the same
+bindings that {\tt CM.make} would introduce into the top-level
+enviroment are also introduced by {\tt CM.autoload}.  However, most
+work will be deferred until some code that is entered later refers to
+one or more of these bindings.  Only then will CM go and perform just
+the minimal work necessary to provide the actual definitions.
+
+The autoloader plays a central role for the interactive system.
+Unlike in earlier versions, it cannot be turned off since it provides
+many of the standard pre-defined top-level bindings.
+
+The autoloader is a convenient mechanism for virtually ``loading'' an
+entire library without incurring an undue increase in memory
+consumption for library modules that are not actually being used.
+
+\section{Sharing of state}
+\label{sec:sharing}
+
+Whenever it is legal to do so, CM lets multiple invocations of {\tt
+CM.make} or {\tt CM.autoload} share dynamic state created by link-time
+effects.  Of course, sharing is not possible (and hence not ``legal'')
+if the compilation unit in question has recently been recompiled or
+depends on another compilation unit whose code has recently been
+re-executed.  The programmer can explicitly mark certain ML files as
+{\em shared}, in which case CM will issue a warning whenever the
+unit's code has to be re-executed.
+
+State created by compilation units marked as {\em private} is never
+shared across multiple calls to {\tt CM.make} or {\tt CM.autoload}.
+To understand this behavior it is useful to introduce the notion of a
+{\em traversal}.  A traversal is the process of traversing the
+dependency graph on behalf of {\tt CM.make} or {\tt CM.autoload}.
+Several traversals can be executed interleaved with each other because
+a {\tt CM.autoload} traversal normally stays suspended and is
+performed incrementally driven by input from the interactive top level
+loop.
+
+As far as sharing is concerned, the rule is that during one traversal
+each compilation unit will be executed at most once.  This means that
+the same ``program'' will not see multiple instantiations of the same
+compilation unit (where ``program'' refers to the code managed by one
+call of {\tt CM.make} or {\tt CM.autoload}).  Each compilation unit
+will be linked at most once during a traversal and private state
+will not be confused with private state of other traversals that might
+be active at the same time.
+
+% Need a good example here.
+
+\subsection{Sharing annotations}
+
+ML source files in CM description files can be specified as being {\em
+private} or {\em shared}.  This is done by adding a {\em tool
+parameter} specification for the file in the library- or group
+description file (see \chapref{chap:classes}). To mark an ML file
+as {\em private}, follow the file name with the word {\tt private} in
+parentheses.  For {\em shared} ML files, replace {\tt private} with
+{\tt shared}.
+
+An ML source file that is not annotated will typically be treated as
+{\em shared} unless it statically depends on some other {\em private}
+source.  It is an error, checked by CM, for a {\em shared} source to
+depend on a {\em private} source.
+
+\subsection{Sharing with the interactive system}
+
+The SML/NJ interactive system, which includes the compiler, is itself
+created by linking modules from various libraries. Some of these
+libraries can also be used in user programs.  Examples are the
+Standard ML Basis Library {\tt \$/basis.cm}, the SML/NJ library {\tt
+\$/smlnj-lib.cm}, and the ML-Yacc library {\tt \$/ml-yacc-lib.cm}.
+
+If a module from a library is used by both the interactive system and
+a user program running under control of the interactive system, then
+CM will let them share code and dynamic state.  Moreover, the affected
+portion of the library will never have to be ``relinked''.

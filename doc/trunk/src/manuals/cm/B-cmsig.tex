@@ -1,0 +1,78 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Full signature of {\tt structure CM}}
+
+Structure {\tt CM} serves as the compilation manager's user interface
+and also constitutes the major part of the API.  The structure is the
+(only) export of library {\tt \$smlnj/cm.cm}.  The standard
+installation procedure of SML/NJ registers this library for
+autoloading at the interactive top level.
+
+\begin{lstlisting}
+  signature CM = sig
+
+      val autoload : string -> bool
+      val make : string -> bool
+      val recomp : string -> bool
+      val stabilize : bool -> string -> bool
+
+      type 'a controller = { get : unit -> 'a, set : 'a -> unit }
+
+      structure Anchor : sig
+          val anchor : string -> string option controller
+          val reset : unit -> unit
+      end
+
+      structure Control : sig
+          val keep_going : bool controller
+          val verbose : bool controller
+          val parse_caching : int controller
+          val warn_obsolete : bool controller
+          val debug : bool controller
+          val conserve_memory : bool controller
+          val generate_index : bool controller
+      end
+
+      structure Library : sig
+          type lib
+          val known : unit -> lib list
+          val descr : lib -> string
+          val osstring : lib -> string
+          val dismiss : lib -> unit
+          val unshare : lib -> unit
+      end
+
+      structure State : sig
+          val synchronize : unit -> unit
+          val reset : unit -> unit
+          val pending : unit -> string list
+      end
+
+      structure Server : sig
+          type server
+          val start : { cmd : string * string list,
+                        name : string,
+                        pathtrans : (string -> string) option,
+                        pref : int } -> server option
+          val stop : server -> unit
+          val kill : server -> unit
+          val name : server -> string
+      end
+
+      val sources :
+          { arch: string, os: string } option ->
+          string ->
+          { file: string, class: string, derived: bool } list option
+
+      val symval : string -> int option controller
+      val load_plugin : string -> bool
+
+      val mk_standalone :
+          bool option ->
+          { project: string, wrapper: string, target: string } ->
+          string list option
+  end
+
+  structure CM : CM
+\end{lstlisting}%

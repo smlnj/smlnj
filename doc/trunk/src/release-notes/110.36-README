@@ -1,0 +1,52 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  6      N  E  W  S
+			
+  		         September 18, 2001
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+   This is a bugfix release, mainly with the purpose of solving
+   a problem with the FLINT optimizer that was erroneously
+   throwing away code in some cases.
+
+   Other changes include a minor bugfix for ml-lex, the implementation
+   of a "minimal" structure Compiler, and switching over to an improved
+   code generator on the x86 (affecting floating-point computations).
+
+--------------------------------------------------------------------------
+
+Details:
+
+FLINT:
+
+   There was a problem with FLINT occasionally using the wrong
+   continuation for certain functions because of a faulty internal
+   analysis.  Fixed.
+
+MLRISC (x86):
+
+   An updated version of the x86-fp module has been enabled by default.
+   This results in significant speedups for FP-intensive code.
+
+Interactive system / libraries:
+
+   A minimal version of structure Compiler is that only contains
+   "version" and "architecture" is available at toplevel.  Thus,
+   legacy code that wants to test the current version number can do
+   so without having to load the rather heavy (and obsolete) full
+   structure Compiler from $smlnj/compiler/compiler.cm.
+
+ML-Lex:
+
+   Bug 1581 (concerning open parentheses in constant strings) has
+   been fixed.

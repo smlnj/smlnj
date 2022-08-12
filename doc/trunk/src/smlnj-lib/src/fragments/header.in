@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="Asciidoctor 2.0.10">@AUTHOR@@KEYWORDS@
+  <meta name="keywords" content="Standard ML, SML, SML/NJ Library">
+  <title>@TITLE@</title>
+  <link rel="stylesheet" href="@BASE@styles/smlnj-lib-base.css" type="text/css" />
+  <link rel="stylesheet" href="@BASE@styles/smlnj-lib.css" type="text/css" />
+  <link rel="stylesheet" href="@BASE@styles/smlnj-lib-pygments.css">
+  <!-- support for latexmath -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      messageStyle: "none",
+      tex2jax: {
+	inlineMath: [["\\(", "\\)"]],
+	displayMath: [["\\[", "\\]"]],
+	ignoreClass: "nostem|nolatexmath"
+      },
+      asciimath2jax: {
+	delimiters: [["\\$", "\\$"]],
+	ignoreClass: "nostem|noasciimath"
+      },
+      TeX: { equationNumbers: { autoNumber: "none" } }
+    })
+    MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+      MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+	if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains('stemblock')) {
+	  data.math.root.display = "block"
+	}
+	return data
+      })
+    })
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</head>
+<body class="article">
+  <div id="layout-top-mask"></div> <!-- to mask scrolled content from below -->
+  <div id="layout-main">
+    <div id="layout-banner-spacer"></div>
+    <div id="layout-banner">
+      <div id="layout-logo">
+        <a href="https://smlnj.org">
+          <img src="@IMAGES_URL@/smlnj-logo.png" height="120" alt="SML/NJ logo" />
+        </a>
+      </div> <!-- layout-logo -->
+      <div id="layout-title">
+	<div id="layout-title-main"><a href="@BASE@index.html">The SML of NJ Library</a></div>
+	<div id="layout-title-description">@STYLED-TITLE@</div>
+      </div> <!-- layout-title -->
+    </div> <!-- layout-banner -->
+    <div class="clearer"></div>

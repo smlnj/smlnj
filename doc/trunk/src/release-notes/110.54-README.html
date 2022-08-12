@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.54 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  4      N  E  W  S
+			
+                             May 18, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.54/">http://smlnj.cs.uchicago.edu/dist/working/110.54/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+   Important bugfixes and minor feature enhancements.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Runtime system:</dt>
+  <dd>
+    <ul>
+      <li>Fixed a GC bug that occasionally caused data corruption.</li>
+      <li>Improved the heap sizing policy.</li>
+      <li>Added a runtime flag that lets the user turn of aggressive
+      heap trimming.  This can improve performance of programs with
+      very large heaps at the expense of causing a (very slow) space
+      leak.</li>
+      <li>Added support for Mac OS X 10.4 ("Tiger").</li>
+    </ul>
+  </dd>
+  <dt>Compiler:</dt>
+  <dd>
+    <ul>
+      <li>Added workaround for overloading bug in type checker.</li>
+    </ul>
+  </dd>
+  <dt>Basis:</dt>
+  <dd>
+    <ul>
+      <li> <tt>Word64.fromString</tt> should now behave correctly.
+      (Notice that <tt>Word64</tt> is not an official feature.  It's
+      current implementation is extremely
+      inefficient.  We provided it just for the benefit of NLFFI so that
+      C functions that pass long long values can be used.)</li>
+      <li>Fixed a bug in the implementation of <tt>div</tt> and
+      <tt>mod</tt> for <tt>IntInf</tt>.  This also fixes a
+      corresponding problem with <tt>Word64</tt> and <tt>Int64</tt>.
+    </ul>
+  </dd>
+  <dt>Libraries:</dt>
+  <dd>
+    <ul>
+      <li>Added a <tt>join</tt> combinator to <tt>ParserComb</tt> in
+      <tt>smlnj-lib.cm</tt>.
+      <li>Fixed serious bug in new implementation of <tt>structure
+      Atom</tt> in CML.</li>
+      <li>Added <tt>singleton</tt> function to <tt>MONO_PRIORITYQ</tt>
+      interface.</li>
+      <li>Fixed bug in <tt>GetOpt.getOpt</tt>.</li>
+      <li>Added <tt>Atom.same</tt> and <tt>Atom.lexCompare</tt>.
+    </ul>
+  </dd>
+  <dt>Interactive system:</dt>
+  <dd>
+    <ul>
+      <li>Added mechanism for re-creating a heap file for the
+      interactive system after configuration variables have been
+      changed.</li>
+    </ul>
+  </dd>
+  <dt>Installer:</dt>
+  <dd>
+    <ul>
+      <li>Added support scripts for Mac OS X PackageMaker and modified
+      <tt>config/install.sh</tt> so that it supports re-dumping a heap image
+      after customization.</li>
+    </ul>
+  </dd>
+  <dt>Code generator:</dt>
+  <dd>
+    <ul>
+      <li>Added a gc protocol checking phase.  This phase is enabled
+      with the flag <tt>check-gc</tt>.  Flag <tt>debug-check-gc</tt>
+      turns on the verbose mode.</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

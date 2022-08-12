@@ -1,0 +1,417 @@
+= The `ORD_MAP` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `ORD_MAP` signature defines an interface to finite maps
+over ordered keys. The **SML/NJ Library** provides a number of
+different implementations of this interface.  Functors are
+provided for constructing maps for user-defined key types;
+in addition, a number of instances for specific types
+are also provided.
+
+== Synopsis
+
+[source,sml]
+------------
+signature ORD_MAP
+
+structure AtomMap : ORD_MAP where type Key.ord_key = Atom.atom
+structure AtomBinaryMap : ORD_MAP where type Key.ord_key = Atom.atom
+structure AtomRedBlackMap : ORD_MAP where type Key.ord_key = Atom.atom
+structure IntBinaryMap : ORD_MAP where type Key.ord_key = int
+structure IntListMap : ORD_MAP where type Key.ord_key = int
+structure IntRedBlackMap : ORD_MAP where type Key.ord_key = int
+structure WordRedBlackMap : ORD_MAP where type Key.ord_key = word
+------------
+
+== Interface
+
+[source,sml]
+------------
+structure Key : ORD_KEY
+
+type 'a map
+
+val empty : 'a map
+
+val isEmpty : 'a map -> bool
+
+val singleton : (Key.ord_key * 'a) -> 'a map
+
+val insert  : 'a map * Key.ord_key * 'a -> 'a map
+val insert' : ((Key.ord_key * 'a) * 'a map) -> 'a map
+
+val insertWith  : ('a * 'a -> 'a) -> 'a map * Key.ord_key * 'a -> 'a map
+val insertWithi : (Key.ord_key * 'a * 'a -> 'a) -> 'a map * Key.ord_key * 'a -> 'a map
+
+val find : 'a map * Key.ord_key -> 'a option
+
+val lookup : 'a map * Key.ord_key -> 'a
+
+val inDomain : ('a map * Key.ord_key) -> bool
+
+val remove : 'a map * Key.ord_key -> 'a map * 'a
+
+val findAndRemove : 'a map * Key.ord_key -> ('a map * 'a) option
+
+val first : 'a map -> 'a option
+val firsti : 'a map -> (Key.ord_key * 'a) option
+
+val numItems : 'a map ->  int
+
+val listItems  : 'a map -> 'a list
+val listItemsi : 'a map -> (Key.ord_key * 'a) list
+
+val listKeys : 'a map -> Key.ord_key list
+
+val collate : ('a * 'a -> order) -> ('a map * 'a map) -> order
+
+val unionWith  : ('a * 'a -> 'a) -> ('a map * 'a map) -> 'a map
+val unionWithi : (Key.ord_key * 'a * 'a -> 'a) -> ('a map * 'a map) -> 'a map
+
+val intersectWith  : ('a * 'b -> 'c) -> ('a map * 'b map) -> 'c map
+val intersectWithi : (Key.ord_key * 'a * 'b -> 'c) -> ('a map * 'b map) -> 'c map
+
+val mergeWith : ('a option * 'b option -> 'c option)
+      -> ('a map * 'b map) -> 'c map
+val mergeWithi : (Key.ord_key * 'a option * 'b option -> 'c option)
+      -> ('a map * 'b map) -> 'c map
+
+val app  : ('a -> unit) -> 'a map -> unit
+val appi : ((Key.ord_key * 'a) -> unit) -> 'a map -> unit
+
+val map  : ('a -> 'b) -> 'a map -> 'b map
+val mapi : (Key.ord_key * 'a -> 'b) -> 'a map -> 'b map
+
+val foldl  : ('a * 'b -> 'b) -> 'b -> 'a map -> 'b
+val foldli : (Key.ord_key * 'a * 'b -> 'b) -> 'b -> 'a map -> 'b
+val foldr  : ('a * 'b -> 'b) -> 'b -> 'a map -> 'b
+val foldri : (Key.ord_key * 'a * 'b -> 'b) -> 'b -> 'a map -> 'b
+
+val filter  : ('a -> bool) -> 'a map -> 'a map
+val filteri : (Key.ord_key * 'a -> bool) -> 'a map -> 'a map
+
+val mapPartial  : ('a -> 'b option) -> 'a map -> 'b map
+val mapPartiali : (Key.ord_key * 'a -> 'b option) -> 'a map -> 'b map
+
+val exists : ('a -> bool) -> 'a map -> bool
+val existsi : (Key.ord_key * 'a -> bool) -> 'a map -> bool
+val all : ('a -> bool) -> 'a map -> bool
+val alli : (Key.ord_key * 'a -> bool) -> 'a map -> bool
+------------
+
+== Description
+
+`[.kw]#structure# Key : ORD_KEY`::
+  This substructure defines the type of keys used to index the maps and
+  the comparison function used to order them.
+
+`[.kw]#type# 'a map`::
+  A finite map from `Key.ord_key` values to ``'b`` values.
+
+`[.kw]#val# empty : 'a map`::
+  The empty map.
+
+`[.kw]#val# isEmpty : 'a map \-> bool`::
+  `isEmpty m` returns true if, and only if, `m` is empty.
+
+`[.kw]#val# singleton : (Key.ord_key * 'a) \-> 'a map`::
+  `singleton (key, v)` creates the singleton map that maps `key` to `v`.
+
+`[.kw]#val# insert  : 'a map * Key.ord_key * 'a \-> 'a map`::
+  `insert (m, key, v)` adds the mapping from `key` to `v` to `m`.
+  This mapping overrides any previous mapping from `key`.
+
+`[.kw]#val# insert' : ((Key.ord_key * 'a) * 'a map) \-> 'a map`::
+  `insert' ((key, v), map)` adds the mapping from `key` to `v` to `m`.
+  This mapping overrides any previous mapping from `key`.
+
+`[.kw]#val# insertWith  : ('a * 'a \-> 'a) \-> 'a map * Key.ord_key * 'a \-> 'a map`::
+  `insertWith comb (m, key, v)` adds the mapping from `key` to `value` to `m`,
+  where `value = comb(v', v)`, if `m` already contained a mapping from `key`
+  to `v'`; otherwise, `value = v`.
+
+`[.kw]#val# insertWithi : (Key.ord_key * 'a * 'a \-> 'a) \-> 'a map * Key.ord_key * 'a \-> 'a map`::
+  `insertWithi comb (m, key, v)` adds the mapping from `key` to `value` to `m`,
+  where `value = comb(key, v', v)`, if `m` already contained a mapping from `key`
+  to `v'`; otherwise, `value = v`.
+
+`[.kw]#val# find : 'a map * Key.ord_key \-> 'a option`::
+  `find (m, key)` returns `SOME v`, if `m` maps `key` to `v` and `NONE` otherwise.
+
+`[.kw]#val# lookup : 'a map * Key.ord_key \-> 'a`::
+  `lookup (m, key)` returns `v`, if `m` maps `key` to `v`; otherwise it
+  raises the exception xref:str-LibBase.adoc#exn:NotFound[`NotFound`].
+
+`[.kw]#val# inDomain : ('a map * Key.ord_key) \-> bool`::
+  `inDomain (m, key)` returns `true` if `key` is in the domain of `m`.
+
+`[.kw]#val# remove : 'a map * Key.ord_key \-> 'a map * 'a`::
+  `remove (m, key)` returns the pair `(m', v)`, if `m` maps `key` to `v`
+  and where `m'` is `m` with `key` removed from its domain.  If `key`
+  is not in the domain of `m`, then it raises the exception
+  xref:str-LibBase.adoc#exn:NotFound[`NotFound`].
+
+`[.kw]#val# findAndRemove : 'a map * Key.ord_key \-> ('a map * 'a) option`::
+  `findAndRemove (m, key)` returns `SOME(m', v)`, if `m` maps `key` to `v`
+  and where `m'` is `m` with `key` removed from its domain.  If `key`
+  is not in the domain of `m`, then it returns `NONE`.
+
+`[.kw]#val# first : 'a map \-> 'a option`::
+  `first m` returns `SOME item` when `item` is the value associated with
+  the first (or smallest) key in the domain of the map `m`.  It returns
+  `NONE` when the map is empty.
+
+`[.kw]#val# firsti : 'a map \-> (Key.ord_key * 'a) option`::
+  `first m` returns `SOME(key, item)` when `key` is the first (or smallest)
+  key in the domain of the map `m` and `key` maps to `item`.  It returns
+  `NONE` when the map is empty.
+
+`[.kw]#val# numItems : 'a map \->  int`::
+  `numItems m` returns the size of ``m``'s domain.
+
+`[.kw]#val# listItems  : 'a map \-> 'a list`::
+  `listItems m` returns a list of the values in the _range_ of `m`.
+  Note that this list will contain duplicates when multiple keys in
+  ``m``'s domain map to the same value.
+
+`[.kw]#val# listItemsi : 'a map \-> (Key.ord_key * 'a) list`::
+  `listItemsi m` returns a list of the key-value pairs in `m`.
+
+`[.kw]#val# listKeys : 'a map \-> Key.ord_key list`::
+  `listKeys m` returns a list of the keys in the domain of `m`.
+
+`[.kw]#val# equiv : ('a * 'b \-> order) \-> ('a map * 'b map) \-> bool`::
+  `equiv eqV (m1, m2)` returns true if the two maps have the same domains
+  and if, for all `x` in the domain of the maps, `eqV(lookup(m1, x), lookup(m2, x))`
+  evaluates to `true`.
+
+`[.kw]#val# collate : ('a * 'b \-> order) \-> ('a map * 'b map) \-> order`::
+  `collate cmpV (m1, m2)` returns the order of the two maps, where `cmpV` is
+  used to compare the values in the range of the maps.
+
+`[.kw]#val# extends : ('a * 'b \-> order) \-> ('a map * 'b map) \-> order`::
+  `extends exV (m1, m2)` returns `true` if the domain of `m2` is a subset of the
+  domain of `m1` and if, for all `x` in the domain of `m2`,
+  `exV(lookup(m1, x), lookup(m2, x))` evaluates to `true`.
+
+`[.kw]#val# unionWith  : ('a * 'a \-> 'a) \-> ('a map * 'a map) \-> 'a map`::
+  `unionWith comb (m1, m2)` returns the union of the two maps, using the function `comb`
+  to combine values when there is a collision of keys.  More formally, this expression
+  returns the map
++
+[latexmath]
++++++++++++
+  \begin{array}{l}
+  \{ (k, \mathtt{m1}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \setminus \mathbf{dom}(\mathtt{m2}) \}
+  \cup \\
+  \{ (k, \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m2}) \setminus \mathbf{dom}(\mathtt{m1}) \}
+  \cup \\
+  \{ (k, \mathtt{comb}(\mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
+  \end{array}
++++++++++++
++
+For example, we could implement a _multiset_ of keys by mapping keys to their
+multiplicity.  Then, the union of two multisets could be defined by
++
+[source,sml]
+------------
+fun union (ms1, ms2) = unionWith Int.+ (ms1, ms2)
+------------
+
+`[.kw]#val# unionWithi : (Key.ord_key * 'a * 'a \-> 'a) \-> ('a map * 'a map) \-> 'a map`::
+  `unionWithi comb (m1, m2)` returns the union of the two maps, using the function `comb`
+  to combine values when there is a collision of keys.  More formally, this expression
+  returns the map
++
+[latexmath]
++++++++++++
+  \begin{array}{l}
+  \{ (k, \mathtt{m1}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \setminus \mathbf{dom}(\mathtt{m2}) \}
+  \cup \\
+  \{ (k, \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m2}) \setminus \mathbf{dom}(\mathtt{m1}) \}
+  \cup \\
+  \{ (k, \mathtt{comb}(k, \mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
+  \end{array}
++++++++++++
+
+`[.kw]#val# intersectWith  : ('a * 'b \-> 'c) \-> ('a map * 'b map) \-> 'c map`::
+  `intersectWith comb (m1, m2)` returns the intersection of the two maps,
+  where the values in the range are a computed by applying the function
+  `comb` to the values from the two maps.  More formally, this expression
+  returns the map
++
+[latexmath]
++++++++++++
+  \{ (k, \mathtt{comb}(\mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
++++++++++++
+
+`[.kw]#val# intersectWithi : (Key.ord_key * 'a * 'b \-> 'c) \-> ('a map * 'b map) \-> 'c map`::
+  `intersectWithi comb (m1, m2)` returns the intersection of the two maps,
+  where the values in the range are a computed by applying the function
+  `comb` to the kay and the values from the two maps.  More formally, this
+  expression returns the map
++
+[latexmath]
++++++++++++
+  \{ (k, \mathtt{comb}(k, \mathtt{m1}(k), \mathtt{m2}(k))
+    \;|\;k \in \mathbf{dom}(\mathtt{m1}) \cap \mathbf{dom}(\mathtt{m2}) \}
++++++++++++
+
+`[.kw]#val# mergeWith : ('a option * 'b option \-> 'c option) \-> ('a map * 'b map) \-> 'c map`::
+  `mergeWith comb (m1, m2)` merges the two maps using the function `comb`
+  as a decision procedure for adding elements to the new map.  For each key
+  latexmath:[\mathtt{key} \in \mathbf{dom}(\mathtt{m1}) \cup \mathbf{dom}(\mathtt{m2})],
+  we evaluate `comb(optV1, optV2)`, where `optV1` is `SOME v` if
+  latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m1}] and is `NONE` if
+  latexmath:[\mathtt{key} \not\in \mathbf{dom}(\mathtt{m1}); likewise for `optV2`.
+  If `comb(optV1, optV2)` returns ``SOME v'``, then we add ``(key, v')``
+  to the result.
++
+The `mergeWith` function is a generalization of the `unionWith` and
+`intersectionWith` functions.
+
+`[.kw]#val# mergeWithi : (Key.ord_key * 'a option * 'b option \-> 'c option) \-> ('a map * 'b map) \-> 'c map`::
+  `mergeWithi comb (m1, m2)` merges the two maps using the function `comb`
+  as a decision procedure for adding elements to the new map.  The difference
+  between this function and `mergeWith` is that the `comb` function takes the
+  `key` value in addition to the optional values from the range.
+
+`[.kw]#val# app  : ('a \-> unit) \-> 'a map \-> unit`::
+  `app f m` applies the function `f` to the values in the range of `m`.
+
+`[.kw]#val# appi : ((Key.ord_key * 'a) \-> unit) \-> 'a map \-> unit`::
+  `appi f map` applies the function `f` to the key-value pairs that
+  define `m`.
+
+`[.kw]#val# map  : ('a \-> 'b) \-> 'a map \-> 'b map`::
+  `map f m` creates a new finite map ``m'`` by applying the function `f` to the
+  values in the range of `m`.  Thus, if
+  latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m}], then
+  `(key, f v)` will be in ``m'``.
+
+`[.kw]#val# mapi : (Key.ord_key * 'a \-> 'b) \-> 'a map \-> 'b map`::
+  `mapi f m` creates a new finite map ``m'`` by applying the function `f` to the
+  key-value pairs of `m`.  Thus, if
+  latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m}], then
+  `(key, f(key, v))` will be in ``m'``.
+
+`[.kw]#val# foldl  : ('a * 'b \-> 'b) \-> 'b \-> 'a map \-> 'b`::
+  `foldl fl init m` folds the function `f` over the range of
+  `m` using `init` as the initial value.  Items are processed in
+  increasing order of their key values.
+
+`[.kw]#val# foldli : (Key.ord_key * 'a * 'b \-> 'b) \-> 'b \-> 'a map \-> 'b`::
+  `foldli f init m` folds the function `f` over the key-value pairs in
+  `m` using `init` as the initial value.  Items are processed in
+  increasing order of their key values.
+
+`[.kw]#val# foldr  : ('a * 'b \-> 'b) \-> 'b \-> 'a map \-> 'b`::
+  `foldr fl init m` folds the function `f` over the range of
+  `m` using `init` as the initial value.  Items are processed in
+  decreasing order of their key values.
+
+`[.kw]#val# foldri : (Key.ord_key * 'a * 'b \-> 'b) \-> 'b \-> 'a map \-> 'b`::
+  `foldri f init m` folds the function `f` over the key-value pairs in
+  `m` using `init` as the initial value.  Items are processed in
+  decreasing order of their key values.
+
+`[.kw]#val# filter  : ('a \-> bool) \-> 'a map \-> 'a map`::
+  `filter pred m` filters out those items `(key, v)` from `m`, such that
+  `pred v` returns `false`.  More formally, this expression returns the map
+  latexmath:[\{ (\mathtt{key}, \mathtt{v})\;|\;\mathtt{key} \in \mathbf{dom}(\mathtt{m})
+  \wedge \mathtt{pred}(\mathtt{v}) \}].
+
+`[.kw]#val# filteri : (Key.ord_key * 'a \-> bool) \-> 'a map \-> 'a map`::
+  `filteri pred m` filters out those items `(key, v)` from `m`, such that
+  `pred(key, v)` returns `false`.  More formally, this expression returns the map
+  latexmath:[\{ (\mathtt{key}, \mathtt{v})\;|\;\mathtt{key} \in \mathbf{dom}(\mathtt{m})
+  \wedge \mathtt{pred}(\mathtt{key}, \mathtt{v}) \}].
+
+`[.kw]#val# mapPartial  : ('a \-> 'b option) \-> 'a map \-> 'b map`::
+  `mapPartial f m` maps the partial function `f` over the items of `m`.
+  More formally, this expression returns the map
+[latexmath]
++++++++++++
+  \{ (k, v') \;|\; (k, v) \in \mathtt{m} \wedge \mathtt{f}(v) = \mathtt{SOME}(v') \}
++++++++++++
+
+`[.kw]#val# mapPartiali : (Key.ord_key * 'a \-> 'b option) \-> 'a map \-> 'b map`::
+  `mapPartiali f m` maps the partial function `f` over the items of `m`.
+  More formally, this expression returns the map
+[latexmath]
++++++++++++
+  \{ (k, v') \;|\; (k, v) \in \mathtt{m} \wedge \mathtt{f}(k, v) = \mathtt{SOME}(v') \}
++++++++++++
+
+`[.kw]#val# exists : ('a \-> bool) \-> 'a map \-> bool`::
+  `exists pred m` returns `true` if, and only if, there exists an item
+  latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m}],
+  such that `pred v` returns `true`.
+
+`[.kw]#val# existsi : (Key.ord_key * 'a \-> bool) \-> 'a map \-> bool`::
+  `exists pred m` returns `true` if, and only if, there exists an item
+  latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m}], such that
+  `pred(key, v)` returns `true`.
+
+`[.kw]#val# all : ('a \-> bool) \-> 'a map \-> bool`::
+  `all pred m` returns `true` if, and only if, `pred v` returns `true`
+  for all items latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m}].
+
+`[.kw]#val# alli : (Key.ord_key * 'a \-> bool) \-> 'a map \-> bool`::
+  `all pred m` returns `true` if, and only if, `pred(key, v)` returns `true`
+  for all items latexmath:[(\mathtt{key}, \mathtt{v}) \in \mathtt{m}].
+
+== Instances
+
+[[str:AtomMap]]
+`[.kw]#structure# AtomMap`::
+  This structure is an alias for `AtomRedBlackMap`.
+
+[[str:AtomBinaryMap]]
+`[.kw]#structure# AtomBinaryMap`::
+  Maps over atoms implemented using balanced binary trees.
+  Note that it is recommended that one use the `AtomMap` structure
+  as it provides better performance.
+
+[[str:AtomRedBlackMap]]
+`[.kw]#structure# AtomRedBlackMap`::
+  Maps over atoms implemented using red-black trees.
+
+[[str:IntBinaryMap]]
+`[.kw]#structure# IntBinaryMap`::
+  Maps over ints implemented using balanced binary trees.
+  Note that it is recommended that one use the `IntRedBlackMap` structure
+  as it provides better performance.
+
+[[str:IntListMap]]
+`[.kw]#structure# IntListMap`::
+  Maps over words implemented using sorted lists.  This implementation
+  is fast for small sets, but does not scale well to large sizes.
+
+[[str:IntRedBlackMap]]
+`[.kw]#structure# IntRedBlackMap`::
+  Maps over ints implemented using red-black binary trees.
+
+[[str:WordRedBlackMap]]
+`[.kw]#structure# WordRedBlackMap`::
+  Maps over words implemented using red-black binary trees.
+
+== See Also
+
+xref:fun-BinaryMapFn.adoc[`BinaryMapFn`],
+xref:fun-ListMapFn.adoc[`ListMapFn`],
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:fun-RedBlackMapFn.adoc[`RedBlackMapFn`],
+xref:fun-SplayMapFn.adoc[`SplayMapFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

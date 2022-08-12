@@ -1,0 +1,136 @@
+<html>
+<head>
+<title>SML/NJ 110.43 NEWS</title>
+</head>
+<body>
+<pre>
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  3      N  E  W  S
+			
+  		         September 9, 2003
+
+			      WARNING
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+             HOME:  <a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a>
+             FILES: <a href="http://smlnj.cs.uchicago.edu/dist/working/110.43/">http://smlnj.cs.uchicago.edu/dist/working/110.43/</a> 
+</pre>
+
+<h2>Summary:</h2>
+
+In addition to a number of important bugfixes, this working version
+brings us a big step closer to a new full release: the win32 port works
+again (but requires extensive testing!), <tt>IntInf.int</tt> has been put into
+the Basis (with compiler support), and many Basis interfaces have
+been updated or added in accordance with the Basis spec.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+<dt>Basis:
+<dd>
+<ul>
+<li><tt>IntInf</tt> implemented; <tt>LargeInt</tt> = <tt>IntInf</tt>; <tt>FixedInt</tt> = <tt>Int32</tt></li>
+<li>added some missing <tt>Real64</tt> operations (in particular, <tt>Real.toLargeInt</tt>)</li>
+<li>a lot of work went into bringing the Basis closer to the spec:
+      missing functions added, types adjusted, *<tt>Slice</tt> modules
+      written and added</li>
+<li>new implementation of structure <tt>Time</tt> based on <tt>IntInf</tt></li>
+<li>major overhaul of code in structure <tt>Date</tt>; added missing functionality</li>
+<li>various bug fixes</li>
+<li>a lot of cleanup work</li>
+</ul>
+
+<dt>installer:
+<dd>
+<ul>
+<li>large parts of installer script written in ML for portability</li>
+<li>new installer script for win32 (uses above ML code)</li>
+<li>new installer script for *nix that uses the above ML code</li>
+<li>new target "mlrisc" (MLRISC modules that don't get compiled
+    into the SML/NJ compiler but are useful for other projects
+    such as Moby)</li>
+</ul>
+
+<dt>runtime:
+<dd>
+<ul>
+<li>compiles and works under Win32 again</li>
+</ul>
+
+<dt>CM:
+<dd>
+<ul>
+<li>no longer gets confused by files that "change their identity"
+    (e.g., by getting unlinked and recreated by a text editor)</li>
+<li>parse-errors in init group (bootstrap compiler) no longer get
+    swallowed</li>
+</ul>
+
+<dt>Compiler:
+<dd>
+<ul>
+<li>compiler support for <tt>IntInf.int</tt></li>
+<li>exported structure <tt>Typecheck</tt> from <tt>$smlnj/viscomp/core.cm</tt></li>
+<li>added casse for IF, WHILE, ANDALSO, ORELSE to Absyn; improves
+    error messages and simplifies translation<li>
+<li>flag added for treating non-exhaustive bindings as errors</li>
+<li>improved organization of structure <tt>InlineT</tt></li>
+<li>important bug fixes</li>
+</ul>
+
+<dt>interactive system:
+<dd>
+<ul>
+<li><tt>Control.Print.intinfDepth</tt> control max length of intinf constants</li>
+</ul>
+
+<dt>global:
+<dd>
+<ul>
+<li>source tree "cleaned" so that <tt>CMB.make</tt> goes through without any
+    warning other than polyequal warnings; (not quite true for
+    win32 version which still needs some more cleaning)</li>
+<li>many unnecessary calls of polyequal removed</li>
+<li>started using <tt>IntInf.int</tt> literals where appropriate</li>
+</ul>
+
+<dt>ml-nlffigen:
+<dd>
+<ul>
+<li>exports structures <tt>ST_</tt>* corresponding to incomplete types</li>
+</ul>
+
+<dt>CML:
+<dd>
+<ul>
+<li>compiles under Win32 again</li>
+</ul>
+
+<dt>eXene:
+<dd>
+<ul>
+<li>now also compiles under Win32 -- but is untested;
+    (it is still an X toolkit, so you need to be able to
+     connect to an X server to test it)</li>
+</ul>
+
+<dt>nowhere:
+<dd>
+<ul>
+<li>compiles under Win32</li>
+</ul>
+
+<dt>ckit:
+<dd>
+<ul>
+<li>mismatched uses of <tt>LargeInt</tt> vs. <tt>Int32</tt> fixed</li>
+</ul>
+</dl>
+</body>
+</html>

@@ -1,0 +1,74 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  4      N  E  W  S
+			
+                             May 18, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.54/
+
+
+Summary:
+
+   Important bugfixes and minor feature enhancements.
+
+--------------------------------------------------------------------------
+
+Runtime system:
+---------------
+
+- Fixed a GC bug that occasionally caused data corruption.
+- Improved the heap sizing policy.
+- Added a runtime flag that lets the user turn of aggressive
+  heap trimming.  This can improve performance of programs with
+  very large heaps at the expense of causing a (very slow) space
+  leak.
+- Added support for Mac OS X 10.4 ("Tiger").
+
+Compiler:
+---------
+
+- Added workaround for overloading bug in type checker.
+
+Basis:
+------
+
+- Word64.fromString should now behave correctly.  (Notice that Word64
+  is not an official feature.  It's current implementation is extremely
+  inefficient.  We provided it just for the benefit of NLFFI so that
+  C functions that pass long long values can be used.)
+- Fixed a bug in the implementation of div and mod for IntInf.
+  This also fixes a corresponding problem with Word64 and Int64.
+
+Libraries:
+----------
+
+- Added a "join" combinator to ParserComb in smlnj-lib.cm.
+- Fixed serious bug in new implementation of structure Atom in CML.
+- Added singleton function to MONO_PRIORITYQ interface.
+- Fixed bug in GetOpt.getOpt.
+- Added Atom.same and Atom.lexCompare.
+
+Interactive system:
+-------------------
+
+- Added mechanism for re-creating a heap file for the interactive system
+  after configuration variables have been changed.
+
+Installer:
+----------
+
+- Added support scripts for Mac OS X PackageMaker and modified
+  config/install.sh so that it supports re-dumping a heap image
+  after customization.
+
+Code generator:
+---------------
+
+- Added a gc protocol checking phase.  This phase is enabled with 
+  the flag "check-gc".  "debug-check-gc" turns on the verbose mode.

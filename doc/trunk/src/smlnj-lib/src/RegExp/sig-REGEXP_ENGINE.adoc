@@ -1,0 +1,101 @@
+= The `REGEXP_ENGINE` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `REGEXP_ENGINE` signature ...
+
+== Synopsis
+
+[source,sml]
+------------
+signature REGEXP_ENGINE
+
+structure BackTrackEngine : REGEXP_ENGINE
+structure DfaEngine : REGEXP_ENGINE
+structure ThompsonEngine : REGEXP_ENGINE
+------------
+
+== Interface
+
+[source,sml]
+------------
+type regexp
+
+type 'a match = {pos : 'a, len : int} MatchTree.match_tree
+
+val compile : RegExpSyntax.syntax -> regexp
+
+val find : regexp -> (char,'a) StringCvt.reader -> ('a match, 'a) StringCvt.reader
+
+val prefix : regexp ->(char,'a) StringCvt.reader -> ('a match, 'a) StringCvt.reader
+
+val match : (RegExpSyntax.syntax * ('a match -> 'b)) list
+	      -> (char,'a) StringCvt.reader -> ('b, 'a) StringCvt.reader
+------------
+
+== Description
+
+`[.kw]#type# regexp`::
+  *something*
+	(* the type of a compiled regular expression
+	 *)
+
+  (* a match specifies the position (as a stream) and the length of the match *)
+`[.kw]#type# 'a match = {pos : 'a, len : int} MatchTree.match_tree`::
+  *something*
+
+`[.kw]#val# compile : RegExpSyntax.syntax \-> regexp`::
+  *something*
+	(* compile a regular expression from the abstract syntax
+	 *)
+
+`[.kw]#val# find : regexp \-> (char,'a) StringCvt.reader \-> ('a match, 'a) StringCvt.reader`::
+  *something*
+	(* scan the stream for the first occurence of the regular expression.  The call
+	 *
+	 *    find re getc strm
+	 *
+	 * returns NONE if the end of stream is reached without a match.  Otherwise it
+	 * returns SOME(match, strm'), where match is the match-tree for the match and
+	 * strm' is the stream following the match.
+	 *)
+
+`[.kw]#val# prefix : regexp \->(char,'a) StringCvt.reader \-> ('a match, 'a) StringCvt.reader`::
+  *something*
+	(* attempt to match the stream at the current position with the
+	 * regular expression
+	 *)
+
+`[.kw]#val# match : (RegExpSyntax.syntax * ('a match \-> 'b)) list \-> (char,'a) StringCvt.reader \-> ('b, 'a) StringCvt.reader`::
+  *something*
+	(* attempt to the match the stream at the current position with one of
+	 * the abstract syntax representations of regular expressions and trigger
+	 * the corresponding action
+	 *)
+
+== Instances
+
+[[str:BackTrackEngine]]
+`[.kw]#structure# BackTrackEngine`::
+  A backtracking interpreter for the regular-expression syntax.  This implementation
+  requires no extra compilation time, but backtracking can result in slow searches
+  for some regular expressions.
+
+[[str:DfaEngine]]
+`[.kw]#structure# DfaEngine`::
+  This implementation compiles the regular expression to a nondeterministic
+  finite-state machine and then coverts that to a deterministic machine.
+  The resulting machine is fast, but can be exponential in size for some
+  regular expressions.
+
+[[str:ThompsonEngine]]
+`[.kw]#structure# ThompsonEngine`::
+  An implementation of Ken Thompson's famous
+  https://doi.org/10.1145/363347.363387[__Regular Expression Search Algorithm__].
+
+== See Also
+
+xref:regexp-lib.adoc[__The RegExp Library__]

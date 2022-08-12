@@ -1,0 +1,142 @@
+:version: 110.91
+:date: June 20, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release is another checkpoint on the march to 64-bits.  Most of the changes
+are related to porting the runtime system to build on the AMD64, but we have also
+made a few improvements elsewhere in the system.
+
+== Details
+
+=== Installation
+
+While the {dist-dir}smlnj-x86-{version}.pkg[installer]
+for {version} works on macOS 10.14 Mojave, building from source
+requires some extra steps.  Another issue that you may encounter
+when building on macOS 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+
+=== Compiler
+
+We added a new primop, `REAL_TO_BITS` that casts a floating-point value to the
+same-size word value.  This primop allows the Assembly.logb function to be
+implemented in *SML*.
+
+The `Target` structure defined in `Basis/mlcomp` now includes endianess information.
+This information was neede to implement the `REAL_TO_BITS` primop on 32-bit
+targets.
+
+=== Basis Library
+
+We have added implementations of the optional *Basis Library* modules
+`PackWord64Big` and `PackWord64Little`.
+
+We have also refactored the implementation of the `Math` structure to share
+common code across the versions that are specialized for different levels of
+hardware support.
+
+=== Runtime System
+
+--
+* The `mach-dep/assyntax.h` file, which provides a set of macros to allow the assembly
+  code to work with both AT&T and GNU assembler syntax, has been replaced by
+  `mach-dep/x86-syntax.h`.  This new file has been stripped down to only cover the
+  instructions actually used in the assembly code.  Furthermore, it covers both
+  the Unix and Windows assemblers, and both the *x86* and *amd64* architectures.
+
+* Because we now assume *C99* support, we can use the **C** Library functions
+  `fegetround` and `fesetround` to control rounding modes.  Therefore, we have
+  removed these from the assembly code.
+
+* With the compiler support for bitcasting a `real` value to `Word64.word`, we can
+  implement the `logb` function in **SML**.  Therefore, we have removed `logb`
+  from the assembly code.
+--
+
+
+== Bugs
+
+This release does not fix any known bugs.
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+|=======
+
+=== A note about 64-bit support
+
+Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ {dist-dir}smlnj-x86-{version}.pkg[installer],
+however, works without issue on macOS 10.14 Mojave.
+
+We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.

@@ -1,0 +1,51 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  7      N  E  W  S
+			
+                            November 16, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.57/
+
+
+Summary:
+
+  Bug fixes and minor feature enhancements.
+
+--------------------------------------------------------------------------
+
+
+Libraries:
+----------
+
+- Replaced stub for Array2.copy with an actual implementation.
+- Fixed erroneous out-of-bounds test in *ArraySlice.update.
+- Removed deprecated function Substring.all.
+- Tweaked the new interval set API (in SML/NJ library) somewhat.
+- Renamed Pack<N>{Big,Little} to their correct names
+  PackWord<N>{Big,Little}.
+- Changed hex digits to upper-case as required by the Basis spec.
+- EXene is now maintained by a group of people at K-State:
+  http://www.cis.ksu.edu/~stough/eXene/index.html
+
+Tools:
+------
+
+- Fixed problem in back-trace facility where a spurious
+  message about exception ExnDuringExecution would be printed.
+
+System:
+-------
+
+- Re-organized the way the compiler refers to libraries such as
+  the Basis, various components of the SML/NJ library, and the
+  ML-Yacc library.
+  (It is now possible to redefine the pathname anchors that normally
+  are used to refer to these libraries (for the purpose of pointing
+  user code to alternative implementations etc.) without disturbing
+  the proper functioning of the interactive system and the compiler.)

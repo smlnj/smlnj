@@ -1,0 +1,22 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Some history}
+
+Although its programming model is more general, CM's implementation is
+closely tied to the Standard ML programming language~\cite{milner97}
+and its SML/NJ implementation~\cite{appel91:sml}.
+
+The current version is preceded by several other compilation managers.
+Of those, the most recent went by the same name
+``CM'', while earlier ones were known as IRM ({\it
+Incremental Recompilation Manager})~\cite{harper94:irm} and SC (for
+{\it Separate Compilation})~\cite{harper-lee-pfenning-rollins-CM}.  CM
+owes many ideas to SC and IRM.
+
+Separate compilation in the SML/NJ system heavily relies on mechanisms
+for converting static environments (i.e., the compiler's symbol
+tables) into linear byte stream suitable for storage on
+disks~\cite{appel94:sepcomp}.  Unlike all its predecessors, however,
+the current implementation of CM is integrated into the main compiler
+and no longer relies on the \emph{Visible Compiler} interface.

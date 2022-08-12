@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.58 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  8      N  E  W  S
+			
+                             March 3, 2006
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.58/">http://smlnj.cs.uchicago.edu/dist/working/110.58/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+    Support for Intel Macs and x86-64 under Linux, a brand-new
+    replacement for ml-lex, and other minor improvements as well
+    as bugfixes.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Lexer generator:</dt>
+  <dd>
+    <ul>
+      <li>A new, much improved  lexer generator tool has been developed by
+      Aaron Turon and John Reppy.  The new tool, called <tt>lexgen</tt>, can be
+      used as a drop-in replacement for <tt>ml-lex</tt>.</li>
+
+      <li>The compilation manager is able to have lex specification
+      files processed by either <tt>lexgen</tt> or the original
+      <tt>ml-lex</tt>.  For the time being, the latter is the default.</li>
+
+      <li>To change this aspect of CM's behavior, invoke <tt>sml</tt>
+      (and related commands such as <tt>ml-build</tt>) using the
+      <tt>-Ccm.use-legacy-lex=false</tt> command line switch.
+      Alternatively, one can define an environment variable
+      <tt>CM_USE_LEGACY_LEX</tt> and set it to <tt>false</tt>.</li>
+
+      <li>Binaries (bootfiles) shipped with this version have been
+      compiled using <tt>lexgen</tt>.
+    </ul>
+  </dd>
+  <dt>Newly supported platforms:</dt>
+  <dd>
+    <ul>
+      <li>SML/NJ builds and runs on Intel-based Macs running Mac OS X.</li>
+      <li>SML/NJ builds and runs on x86-64 systems using 32-bit mode.</li>
+      <li>SML/NJ should build and run on NetBSD 3.x (untested).</li>
+    </ul>
+  </dd>
+  <dt>Platforms no longer supported:</dt>
+  <dd>
+    <ul>
+      <li>Support for pre-2.2 Linux kernels has been dropped.</li>
+    </ul>
+  </dd>
+  <dt>Runtime system:</dt>
+  <dd>
+    <ul>
+      <li>Signal handling on x86/Linux has been cleaned up.</li>
+    </ul>
+  </dd>
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>Scripts for rebuilding MLRISC-generated files have been updated
+      to reflect changes to CM.</li>
+    </ul>
+  </dd>
+  <dt>Backend:</dt>
+  <dd>
+    <ul>
+      <li>Darwin-specific Intel ABI (for foreign-function interface)
+      implemented.  The solution is temporary since it currently relies
+      on the fact that the compiler itself does not use the FFI.</li>
+    </ul>
+  </dd>
+  <dt>Compilation manager:</dt>
+  <dd>
+    <ul>
+      <li>Improved CM-specific error reporting and handling.</li>
+    </ul>
+  </dd>
+  <dt>Installation:</dt>
+  <dd>
+    <ul>
+      <li>Enabling <tt>$/html-lib.cm</tt> in config/preloads now works.</li>
+    </ul>
+  </dd>
+  <dt>CML:</dt>
+  <dd>
+    <ul>
+      <li><tt>withNack</tt> wrapped around a <tt>never</tt> event will
+      now properly signal the negative acknowledgement.</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

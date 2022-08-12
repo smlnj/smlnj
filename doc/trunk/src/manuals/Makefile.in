@@ -1,0 +1,92 @@
+# Makefile for external manuals
+#
+# COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+
+SHELL =         @SHELL@
+INSTALL =       @INSTALL@
+@SET_MAKE@
+
+include @MK_DIR@/doc-rules.gmk
+
+# place to put documentation for doc target
+#
+DOC_DIR =		@OUT_DIR@
+PDF_DIR =		$(DOC_DIR)/pdf
+
+ASDL_SRCS =		$(wildcard asdl/*.tex asdl/*.bib)
+CM_SRCS =		$(wildcard cm/*.tex cm/*.bib)
+ML_BURG_SRCS =		ml-burg/doc.tex ml-burg/doc.bib
+ML_LPT_SRCS =		$(wildcard ml-lpt/*.tex ml-lpt/*.bib)
+
+ALL_MANUALS =		asdl/manual.pdf \
+			cm/manual.pdf \
+			cm/btcomp.pdf \
+			ml-burg/doc.pdf \
+			ml-lex/ml-lex.pdf \
+			ml-lpt/manual.pdf \
+			ml-yacc/mlyacc.pdf \
+			nlffi/nlffi.pdf
+
+# doc target for all manuals
+#
+.PHONY:			doc
+doc:			$(ALL_MANUALS) $(PDF_DIR)
+	cp -p asdl/manual.pdf $(PDF_DIR)/asdl-manual.pdf
+	cp -p cm/manual.pdf $(PDF_DIR)/cm-manual.pdf
+	cp -p cm/btcomp.pdf $(PDF_DIR)/btcomp-manual.pdf
+	cp -p ml-burg/doc.pdf $(PDF_DIR)/ml-burg-manual.pdf
+	cp -p ml-lex/ml-lex.pdf $(PDF_DIR)/ml-lex-manual.pdf
+	cp -p ml-lpt/manual.pdf $(PDF_DIR)/ml-lpt-manual.pdf
+	cp -p ml-yacc/mlyacc.pdf $(PDF_DIR)/ml-yacc-manual.pdf
+	cp -p nlffi/nlffi.pdf $(PDF_DIR)/nlffi-manual.pdf
+
+$(PDF_DIR):
+	mkdir -p $(PDF_DIR)
+
+# ASDL manual
+#
+asdl/manual.pdf:	$(ASDL_SRCS)
+	(cd asdl; $(LATEXMK_PDF) manual.tex)
+
+# CM manual
+#
+cm/manual.pdf:		$(CM_SRCS)
+	(cd cm; $(LATEXMK_PDF) manual.tex)
+
+# bootstrap compiler manual
+#
+cm/btcomp.pdf:		$(CM_SRCS)
+	(cd cm; $(LATEXMK_PDF) btcomp.tex)
+
+# ML-Burg manual
+#
+ml-burg/doc.pdf:	$(ML_BURG_SRCS)
+	(cd ml-burg; $(LATEXMK_PDF) doc.tex)
+
+# ML-LPT manual
+#
+ml-lpt/manual.pdf:	$(ML_LPT_SRCS)
+	(cd ml-lpt; $(LATEXMK_PDF) manual.tex)
+
+# Legacy ML-Lex manual
+#
+ml-lex/ml-lex.pdf:	ml-lex/ml-lex.tex
+	(cd ml-lex; $(LATEXMK_PDF) ml-lex.tex)
+
+# ML-Yacc manual
+#
+ml-yacc/mlyacc.pdf:	ml-yacc/mlyacc.tex
+	(cd ml-yacc; $(LATEXMK_PDF) mlyacc.tex)
+
+# NLFFI library manual
+#
+nlffi/nlffi.pdf:	nlffi/nlffi.tex
+	(cd nlffi; $(LATEXMK_PDF) nlffi.tex)
+
+##### CLEANUP #####
+
+include @MK_DIR@/clean-rules.gmk
+
+CLEAN_FILES =		$(ALL_MANUALS)

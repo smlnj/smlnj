@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.72 NEWS</title>
+</head>
+
+<body>
+<div align="center">
+<big><b>
+                       Standard ML of New Jersey
+<br/>
+                          Version 110.72 NEWS
+<br/>
+                           February 2, 2010
+<br/>
+<br/>
+</b>
+</big>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.72/index.html">
+<tt>http://smlnj.cs.uchicago.edu/dist/working/110.72/</tt></a></dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+
+SML/NJ 110.72 adds a new flag for determining the heap suffix, new
+directives and MLton compatibility to ML-Ulex and ML-Antlr, and fixes
+several bugs.
+
+<h3>Details:</h3>
+
+<dl>
+
+  <dt>General:</dt>
+  <dd>
+    <ul>
+      <li>Added "@SMLsuffix" flag to sml command.  This can be used to
+      get the suffix for heap files.</li>
+
+      <li>Fixed an overrun during major GC. If the string arena was
+      nearly full, it was possible for alignment padding added during
+      copy to the to-space to overrun the allocated size.</li>
+
+      <li>Fixed the Win32 unable to print long strings bug.</li>
+
+      <li>Fixed performance bugs in List module by making @ and foldr
+      be tail recursive.</li>
+
+
+    </ul>
+  </dd><p>
+
+ <dt>ML-Ulex:</dt>
+ <dd>
+   <ul>
+     <li>Added "--strict-sml" flag to ml-ulex for MLton
+     compatibility.</li>
+
+     <li>Added %header directive to the ml-ulex scanner generator.
+     Also updated the documentation.</li>
+
+     <li>The ml-ulex program has been ported to build under
+     mlton.</li>
+
+   </ul>
+ </dd><p>
+
+ <dt>ML-Antlr:</dt>
+ <dd>
+   <ul>
+     <li>Added %header directive to the ml-antlr parser generator.
+     Also updated the documentation.</li>
+
+     <li>The ml-antlr program has been ported to build under
+     mlton.</li>
+   </ul>
+ </dd><p>
+
+</body>
+</html>

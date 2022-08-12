@@ -1,0 +1,57 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  2      N  E  W  S
+			
+                          December 15, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.52/
+
+
+Summary:
+
+   Minor additions and improvements to library code; bug fixes.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Interactive system:
+-------------------
+
+  - improved error messages related to .cm- and .sml-files that
+    appear as part of the command line
+
+Basis:
+------
+
+  - The system can now (optionally) be compiled with 64-bit position
+    values (structure Position = Int64).  See the HISTORY file for
+    more information.
+
+Libraries:
+----------
+
+  - HashString.hashSubstring added.
+  - Atom.atom' now extracts a string from the given substring only
+    if it is not already in the table.
+  - Two simple but potentially useful statistics modules added to
+    SML/NJ library.
+  - Minor performance improvements.
+
+Compiler/MLRISC:
+----------------
+
+  - bug fixes in PPC backend (does not affect SML/NJ directly)
+
+Scripts:
+--------
+
+  - fixed bug in ml-makedepend
+  - tried to make scripts more robust against filenames that contain
+    whitespace (common under Win32 and Mac OS X)

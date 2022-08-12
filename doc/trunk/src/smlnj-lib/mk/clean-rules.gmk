@@ -1,0 +1,67 @@
+# Common makerules for cleaning directory trees.
+#
+# COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# This file defines standard rules for the clean, distclean, and devclean
+# targets.  To use, define the following make variables:
+#
+#	CLEAN_SUBDIRS		-- subdirectories to recursively clean.
+#	CLEAN_FILES		-- extra files to remove for clean target.
+#				   The default is to remove .o files, .so files,
+#				   .a files, .dSYM directories and the $(TARGET).
+#	DISTCLEAN_FILES		-- extra files to remove for distclean target
+#				   The default is to remove Makefile.
+#	DEVCLEAN_FILES		-- extra files to remove for devclean target
+#
+
+CLEAN_FILES +=		$(wildcard *.o) \
+			$(wildcard *.so) \
+			$(wildcard *.a) \
+			$(wildcard *.dSYM) \
+			$(TARGET)
+DISTCLEAN_FILES +=	Makefile
+
+.PHONY:		sub-clean local-clean clean
+sub-clean:
+	dirs="$(CLEAN_SUBDIRS)"; \
+        if test -n "$$dirs" ; then \
+	  for dir in $$dirs ; do \
+	    (cd $$dir && $(MAKE) clean) \
+	  done \
+	fi
+
+local-clean:
+	-rm -rf $(CLEAN_FILES)
+	find . \( -name .cm -exec rm -rf {} \; -prune -print \)
+
+clean:		sub-clean local-clean
+
+.PHONY: 	sub-distclean local-distclean distclean
+sub-distclean:
+	dirs="$(CLEAN_SUBDIRS)"; \
+        if test -n "$$dirs" ; then \
+	  for dir in $$dirs ; do \
+	    (cd $$dir && $(MAKE) distclean) \
+	  done \
+	fi
+
+local-distclean:	local-clean
+	-rm -rf $(DISTCLEAN_FILES)
+
+distclean:		sub-distclean local-distclean
+
+.PHONY: 	sub-devclean local-devclean devclean
+sub-devclean:
+	dirs="$(CLEAN_SUBDIRS)"; \
+        if test -n "$$dirs" ; then \
+	  for dir in $$dirs ; do \
+	    (cd $$dir && $(MAKE) devclean) \
+	  done \
+	fi
+
+local-devclean:	local-distclean
+	-rm -rf $(DEVCLEAN_FILES)
+
+devclean:		sub-devclean local-devclean
+

@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.57 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  7      N  E  W  S
+			
+                            November 16, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.57/">http://smlnj.cs.uchicago.edu/dist/working/110.57/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+   Bugfixes and minor feature enhancements.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Libraries:</dt>
+  <dd>
+    <ul>
+      <li>Replaced stub for <tt>Array2.copy</tt> with an actual
+      implementation.</li>
+      <li>Fixed erroneous out-of-bounds test in
+      <tt>*ArraySlice.update</tt>.</li>
+      <li>Removed deprecated function <tt>Substring.all</tt>.</li>
+      <li>Tweaked the new interval set API (in SML/NJ library)
+      somewhat.</li>
+      <li>Renamed
+      <tt>Pack</tt><em><N>{</em><tt>Big</tt><em>,</em><tt>Little</tt><em>}</em>
+      to their correct names
+      <tt>PackWord</tt><em><N>{</em><tt>Big</tt><em>,</em><tt>Little</tt><em>}</em>.</li>
+      <li>Changed hexadecimal digits to upper-case as required by the
+      Basis specification.</li>
+      <li>EXene is now maintained by a group of people at K-State:
+	<tt>http://www.cis.ksu.edu/~stough/eXene/index.html</tt></li>
+    </ul>
+  </dd>
+  <dt>Tools:</dt>
+  <dd>
+    <ul>
+      <li>Fixed problem in <tt>back-trace</tt> facility where a spurious
+      message about <tt>exception ExnDuringExecution</tt> would be printed.</li>
+    </ul>
+  </dd>
+  <dt>System:</dt>
+  <dd>
+    <ul>
+      <li>Re-organized the way the compiler refers to libraries such as
+      the Basis, various components of the SML/NJ library, and the
+      ML-Yacc library.<br>
+      (It is now possible to redefine the pathname anchors that normally
+      are used to refer to these libraries (for the purpose of pointing
+      user code to alternative implementations etc.) without disturbing
+      the proper functioning of the interactive system and the compiler.)</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

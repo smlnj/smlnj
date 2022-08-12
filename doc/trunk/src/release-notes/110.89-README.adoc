@@ -1,0 +1,143 @@
+:version: 110.89
+:date: June 1, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release continues the march toward 64-bit support.  The main
+change is that the bindings of the `FixedInt`, `LargeWord`, and
+`Position` structure aliases are now 64-bit.  This change will
+break code that assumes that these structures are the same as `Int32`,
+`Word32`, and `Int32` (respectively).
+
+This version may be unstable, so we recommend sticking with
+https://smlnj.org/dist/working/110.87/index.html[Version 110.87]
+for production work.  Also, we have not finished porting
+changes to the Windows version of the runtime system, so we are
+not releasing a Windows MSI file for this version.
+
+== Details
+
+=== Installation
+
+While the {dist-dir}smlnj-x86-{version}.pkg[installer]
+for {version} works on macOS 10.14 Mojave, building from source
+requires some extra steps.
+
+=== Compiler
+
+ * Fixed some bugs in the implementation of the `Word64` arithmetic
+   operations.
+
+ * Simplified the code generator by removing disabled optimization
+   features (memory disambiguation and GC types).
+
+ * Added missing contractions for `QUOT` and `REM` primops.
+
+=== Basis Library
+
+ * The `FixedInt`, `LargeWord`, and `Position` structures are now all
+   64-bit.  Thus the `Int64` and `Word64` structures properly conform
+   to the Basis Specification. +
+   Another effect of this change is that files that are over 2^30^-1
+   bytes in size are now supported (bugs *33* and *36*).
+
+=== MLRISC and NLFFI
+
+ * Fixed code that assumed that `LargeWord` and `Word32` are the same.
+
+=== Runtime System
+
+ * The runtime system was written assuming ANSI X3.159-1989 Standard *C*; in
+   this releaser, we have added the use of *inline* functions, which
+   where added in ISO *C99*.  While Microsoft's Visual Studio does not
+   fully support the standard, it is generally compatible with the ISO C99.
+
+ * Allocation of small objects was previously implemented using macros;
+   we now use inline functions.  Inline functions are more robust and type safe, and
+   also enable cleaner handling of 32-bit integers, which are boxed on
+   32-bit targets, but unboxed on 64-bit targets.
+
+ * Removed makefiles and code for arichtectures and operating systems that
+   are no longer supported.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#33#
+| Overflow exception with inputLine function
+| [.bugid]#36#
+| Can't open very large file
+|=======
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+|=======
+
+=== A note about 64-bit support
+
+Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ {dist-dir}smlnj-x86-{version}.pkg[installer],
+however, works without issue on macOS 10.14 Mojave.
+
+We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.

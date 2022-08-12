@@ -1,0 +1,27 @@
+= The `SplayMapFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `SplayMapFn` functor provides a splay-tree implementation of the
+xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
+
+It is recommended, however, that one use the xref:fun-RedBlackMapFn.adoc[`RedBlackMapFn`]
+functor instead of `SplayMapFn`, since experimentation has shown it to be
+faster across the board.
+
+== Synopsis
+
+[source,sml]
+------------
+functor SplayMapFn (K : ORD_KEY) :> ORD_MAP where type Key.ord_key = K.ord_key
+------------
+
+== See Also
+
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:sig-ORD_MAP.adoc[`ORD_MAP`],
+xref:fun-RedBlackMapFn.adoc[`RedBlackMapFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

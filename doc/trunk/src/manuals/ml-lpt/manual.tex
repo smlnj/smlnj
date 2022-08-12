@@ -1,0 +1,206 @@
+\documentclass[11pt,letterpaper]{book}
+
+\usepackage{times}
+%-------------------------
+% the following magic makes the tt font in math mode be the same as the
+% normal tt font (i.e., Courier)
+%
+\SetMathAlphabet{\mathtt}{normal}{OT1}{pcr}{n}{n}
+\SetMathAlphabet{\mathtt}{bold}{OT1}{pcr}{bx}{n}
+%-------------------------
+
+\usepackage[top=1.33in, bottom=1.33in, left=1.33in, right=1.33in]{geometry}
+\usepackage{amsmath}
+\usepackage[all]{xy}
+\usepackage{graphicx}
+\usepackage{stmaryrd}
+
+\newcommand{\ulex}{\texttt{ml-ulex}}
+\newcommand{\mlantlr}{\texttt{ml-antlr}}
+\newcommand{\antlr}{\texttt{ml-antlr}}
+\newcommand{\Antlr}{\texttt{Ml-antlr}}
+
+\title{
+  SML/NJ Language Processing Tools:\\
+  User Guide}
+\author{
+  Aaron Turon\\
+  \texttt{adrassi@gmail.com}\\[0.5em]
+  John Reppy\\
+  \texttt{jhr@cs.chicago.edu}}
+\date{Revised: October 2020}
+
+\newcommand{\Carat}{\^{ }}
+\newcommand{\RE}{r}
+\newcommand{\OR}{\ | \ }
+\newcommand{\AND}{\ \& \ }
+\newcommand{\CL}{\mathcal{L}}
+\newcommand{\CS}{\mathcal{S}}
+\newcommand{\CR}{\mathcal{R}}
+\newcommand{\CP}{\mathcal{P}}
+\newcommand{\Sem}[1]{[ \! [ #1 ] \! ]}
+\newcommand{\Ls}[1]{\CL\Sem{#1}}
+
+\newcommand{\eg}{{\em e.g.}}
+\newcommand{\cf}{{\em cf.}}
+\newcommand{\ie}{{\em i.e.}}
+
+\newcommand{\nm}[1]{\texttt{#1}}
+
+\newcommand{\ra}{\rightarrow}
+\newcommand{\Ra}{\Rightarrow}
+
+\newcommand{\New}[1]{\emph{\textbf{#1}}}
+
+% Grammar
+\newcommand{\Grammar}[1]{\[ \begin{array}{rcll} #1 \end{array} \]}
+\newcommand{\GFirst}[3]{#1 & ::= & #2 & \textrm{#3} \\ }
+\newcommand{\GNext}[2]{ & | & #1 & \textrm{#2} \\ }
+
+\newcommand{\GFirstB}[2]{\textit{#1} & ::= & \multicolumn{2}{l}{\textit{#2}} \\ }
+\newcommand{\GNextB}[1]{ & | & \multicolumn{2}{l}{\textit{#1}} \\ }
+
+\newcommand{\GFirstC}[3]{\textit{#1} & ::= & \textit{#2} & \textrm{#3} \\ }
+\newcommand{\GNextC}[2]{ & | & \textit{#1} & \textrm{#2} \\ }
+\newcommand{\GNextCC}[2]{ & | & \multicolumn{2}{l}{\textit{#1}} \\ & & & \textrm{#2} \\ }
+
+%\newcommand{\T}[1]{{\tt '#1'}}
+\newcommand{\T}[1]{{\textbf{\tt #1}}}
+\newcommand{\kw}[1]{{\T{\%#1}}}
+
+\usepackage{amsthm}
+
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{definition}{Definition}
+\newtheorem*{remark}{Remark}
+
+\usepackage{ifpdf}
+
+\usepackage{mathpazo}
+%\renewcommand{\ttdefault}{cmtt}
+
+%\newcommand{\parttext}{}
+%\newcommand{\cpart}[1]{\renewcommand{\parttext}{#1}\part{#1}}
+
+\usepackage{fancyhdr}
+\usepackage{multicol}
+
+\newcommand{\sem}[1]{\llbracket #1\rrbracket}
+
+\usepackage{color}
+\definecolor{Red}{rgb}{0.9,0.0,0.0}
+\definecolor{DarkBlue}{rgb}{0.0,0.0,0.75}
+\definecolor{Purple}{rgb}{0.5,0.0,0.4}
+\definecolor{DarkGreen}{rgb}{0.0,0.5,0.0}
+\newcommand{\cdColor}{DarkBlue}
+\newcommand{\kwColor}{Purple}
+\newcommand{\dirColor}{Purple}
+\newcommand{\strColor}{DarkGreen}
+\newcommand{\comColor}{Red}
+
+\usepackage{listings}
+
+\lstdefinelanguage{SML}{%
+  morekeywords={%
+    abstype, and, andalso, as, case, datatype, do, else, end, eqtype, exception,%
+    fn, fun, functor, handle, if, in, include, infix, infixr, let, local, nonfix,%
+    of, op, open, orelse, raise, rec, sharing, sig, signature, struct, structure,%
+    then, type, val, where, while, with, withtype%
+  },%
+  otherkeywords={[,],\{,\},\,,:,...,_,|,=,=>,->,\#,:>},
+  sensitive,%
+  alsoletter={_},
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstdefinelanguage{CM}{%
+  morekeywords={%
+    functor, signature, structure,%
+    Library, is,%
+  },%
+  sensitive,%
+  alsoletter={_},
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstdefinelanguage{MLULex}[]{SML}{%
+  moredirectives={arg,defs,header,let,name,states},
+  moredelim=*[directive]\%,%
+  alsoletter={_},
+}[keywords,comments,strings,directives]%
+
+\lstdefinelanguage{MLAntlr}{%
+  morekeywords={\%defs,\%entry,\%header,\%import,\%keywords,\%name,\%nonterms,of,
+    \%refcell,\%tokens,\%tokentype,\%start,\%value},
+  sensitive,%
+  alsoletter={_,\%},%
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstset{
+  basicstyle=\footnotesize\ttfamily\color{\cdColor},
+  keywordstyle=\color{\kwColor}\bfseries,
+  commentstyle=\color{\comColor}\itshape,
+  directivestyle=\color{\dirColor}\bfseries,
+  stringstyle=\color{\strColor}\itshape,
+  showstringspaces=false,
+  language=SML
+}
+
+\begin{document}
+
+\frontmatter
+
+	\maketitle
+	
+	\phantom{.}
+	\vspace{\stretch{1}}
+	
+	\noindent Copyright \copyright{}2016.  Fellowship of SML/NJ.  All rights reserved.
+	
+	\vskip 12pt
+	\noindent This document was written with support. in part, from NSF grant
+	CNS-0454136, ``CRI: Standard ML Software Infrastructure.''
+	
+	\pagebreak
+	
+	\tableofcontents
+
+\mainmatter
+
+%	\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+%	\renewcommand{\sectionmark}[1]{\markright{\thesection. \ #1}{}}
+
+	\newpage
+
+	\input{overview}
+	
+%	\renewcommand{\chaptermark}[1]{\markboth{\parttext{}: #1}{}}
+
+%	\cpart{Usage}
+	
+		\input{usage-ml-ulex}
+		\input{usage-ml-antlr}
+		\input{ml-lpt-lib}
+		\input{example}
+		\input{history}
+	
+%	\cpart{Theory}
+%	
+%		\input{theory-ml-ulex}
+%		\input{theory-ml-antlr}
+
+%	\cpart{Implementation}
+
+%		\input{code-ml-ulex}
+%		\input{code-ml-antlr}
+
+%\backmatter
+
+%	\bibliographystyle{plain}
+%	\bibliography{deriv.bib}
+
+\end{document}

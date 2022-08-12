@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>SML/NJ Version 110.30 NEWS</title>
+  </head>
+
+  <body bgcolor="white">
+   <center><h1>Standard ML of New Jersey<BR>
+        Version 110.30, November 4, 2000</h1>
+   </center>
+
+   <center>
+      <tt> http://cm.bell-labs.com/cm/cs/what/smlnj/index.html </tt>
+   </center>
+
+<blockquote>
+      
+<hr>
+
+<center><h2>Summary:</h2></center>
+<UL>
+<LI>  Port to ppc Linux (thanks to Carl Pulley).
+<p>
+<LI>  support for fsqrt, fptan, fcos, fsin.
+<p>
+<LI>  Several CM and CMB changes.
+<p>
+<LI>  Some critical bug fixes
+<p>
+</UL>
+<hr>
+
+<center><h3>Bug fixes </h3></center>
+<ul>
+<li> 1514.  sockets c-library broken 
+<p>
+<li> 1582.  SysErr exception connecting to socket
+</ul>
+
+<hr>
+<center><h3>Back ends </h3></center>
+<h4> x86 </h4>
+   All back ends now directly generate the sqrt instruction, and the Intel 
+   x86 also generate the trig instructions to implement sine, cosine, and
+   tangent.
+<p>
+   The ICFP00, PCLubIN entry shows a significant improvement as a result
+   (most of it coming from fsqrt).
+<p>
+<pre>
+			     110.29	110.30	     Speedup%
+			 ------------------------------------
+    tests/chess.gml:	      21.63      18.38	      17.67	
+    tests/cone-fractal.gml:    6.24       4.71	      32.46	
+    tests/dice.gml:	       8.81       6.14	      43.53	
+    tests/fractal.gml:	      46.25      35.57	      30.03     
+    tests/golf.gml:	       3.24       2.62	      23.73     
+    tests/holes.gml:	       4.26       3.15	      35.41     
+    tests/intercyl.gml:	       4.43       2.52	      75.87     
+    tests/large.gml:	       7.27       6.68	       8.83     
+    tests/pipe.gml:	       8.71       5.23	      66.42     
+    tests/snowgoon.gml:	       5.41       3.99	      35.83     
+    ---------------------------------------------------------
+    Geometric Mean	       8.06	  5.94	      31.64%    
+
+</pre>
+
+<hr>
+<center><h3>CM </h3></center>
+  <h4>Changes to scripts</h4>
+     <ul>
+      <li> "ml-build" for generating standalone programs
+      <li> "ml-makedepend" (new!) for generating Makefile dependencies
+        (not generally required but some project might want them)
+      <li> "sml" - the main driver script for running SML/NJ.
+     </ul>
+ <p>
+ <blockquote>
+ All these scripts now accept more CM-related command-line options.
+ <p>
+ ml-build is faster and cleverer in avoiding unnecessary work.
+ </blockquote>
+
+<h4>Other Changes</h4>
+  Type of CM.mk_standalone has changed.
+<p>
+  All user-visible changes to CM (including the above-mentioned scripts)
+    are documented in the CM manual.  Some errors and omissions have been
+    corrected as well.
+<p>
+  Bug fixes to CM's internals (e.g., missing or repeated error messages).
+<p>
+  Pickling/Unpickling improvements result in faster autoloading and
+    reduce resident memory size.
+
+<hr>
+<center><h3>CMB</h3></center>
+  Conditional compilation within the "init library".
+    (One can now use "ifdef" and "ifndef" guards in init.cmi.
+     This is documented in the long comment at the beginning of
+     that file (src/system/smlnj/init/init.cmi).)
+<hr>
+<center><h3>Basis Library </h3></center>
+
+  Added SMLofNJ.SysInfo.getHeapSuffix (for use by "ml-build").
+
+
+<hr>
+
+    <font size=-2>
+    <address><a href="mailto:george@research.bell-labs.com">
+		Lal George</a></address>
+<!-- Created: Thu Aug  6 00:13:09 EDT 1998 -->
+<!-- hhmts start -->
+Last modified: Tue Nov  7 15:36:53 EST 2000
+<!-- hhmts end -->
+    </font>
+</blockquote>
+</body>
+</html>

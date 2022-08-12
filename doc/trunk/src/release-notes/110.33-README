@@ -1,0 +1,115 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  3      N  E  W  S
+			
+  		           May 23, 2001
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+  This version will build under Mac OS X.
+
+  This version is being used to introduce the new experimental C FFI
+  (currently only available for x86/Linux) and to check point a number
+  of changes to MLRISC.
+
+  The CKIT is now part of the release because it is needed for ml-nlffigen.
+
+  In support of the C FFI, the new $/c.cm library (from src/ml-nlffi-lib)
+  implements an encoding of the C type system in ML.  It receives help
+  from the ml-nlffigen glue code generator (from src/ml-nlffigen) which
+  transforms C source input into corresponding ML glue code.
+
+  The compiler has been modified to support the C FFI.
+
+  There are various bugfixes and some organizational changes.
+
+		--------------------------------
+
+Mac OS X:
+
+   - This version will build under the new Apple Mac OS X 
+     operating system. 
+
+MLRISC:
+
+   - infinite precision throughout
+   - support for virtual frame pointers ("omit-frame-pointer")
+     (This was needed for a correct implementation of raw C calls,
+      but it should also come in handy for clients of MLRISC other
+      than SML/NJ.  Currently x86 only.)
+   - see http://cm.bell-labs.com/cm/cs/what/smlnj/compiler-notes
+   - support for alternative control-flow in MLTREE
+   - other API changes
+   - bug fixes
+
+CM:
+
+    - "lambdasplit" parameter for class "sml" to control status and
+      aggressiveness of cross-module inlining
+    - parallel make now works again
+    - "proxy libraries"
+    - other bug fixes
+
+CKIT:
+
+    The ckit source tree is now part of the SML/NJ distribution.
+
+compiler:
+
+    - bug fixes (e.g., dead-up logic in cpsopt/contract.sml)
+    - lambda-split phase now in the optimization pipeline by default
+      control via Compiler.Control.LambdaSplitting.* (and/or via CM)
+    - compiler now aware of certain offsets in runtime-system data
+      structures to be able to generate code for raw C calls
+    - added raw memory access primops and a primop for raw C calls
+      and handled them throughout the compiler
+    - prim.sml now has correct types for all primops
+
+ML-NLFFI:
+
+    - two source trees in support of the new NLFFI ("no-longer foreign
+      function interface") added:
+         src/ml-nlffi-lib     --- support library
+         src/ml-nlffigen      --- glue code generator
+    - some preliminary documentation under src/ml-nlffi-lib/Doc
+      (The tar file for this will be retrieved only if you enable
+       ml-nlffi-lib in config/targets.  Be sure to do this only on
+       x86/Linux platforms, though.  If you use a different platform
+       and want to look at the source or the documentation, fetch
+       the tar file by hand.)
+
+smlnj-lib:
+
+    - some API cleanup and bug fixes
+
+runtime:
+
+    - dlopen and friends added (currently x86/Linux only)
+    - changes to vproc-state.h to support efficient signal handling
+      by new raw C call mechanism
+    - support for Mac OS X; Darwin
+
+overall organization:
+
+    - use CM "proxy libraries" where possible
+
+scripts:
+
+    - various bug fixes to config/install.sh
+    - config/install.sh now knows about ckit, ml-nlffi-lib, and ml-nlffigen
+    - config/install.sh will use config/targets.customized if it exist
+      (falls back to config/targets if not)
+    - makeml verbosity level controllable via MAKEML_VERBOSITY
+      or command line switch
+   - This version should build under the new Apple Mac OS X 
+     operating system. 
+

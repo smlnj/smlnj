@@ -1,0 +1,110 @@
+= Installing SML/NJ under macOS
+:revnumber: {version}
+:revdate: {release-date}
+:source-highlighter: pygments
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:release-notes: {dist-dir}{version}-README.html
+:stem: latexmath
+:source-highlighter: pygments
+
+== Introduction
+These instructions are for installing Standard ML of New Jersey
+(**SML/NJ**) on **macOS**.
+
+== Using the installer package
+
+The most direct way to install **SML/NJ** is to use one of the
+provided installer packages:
+--
+  * {dist-dir}smlnj-x86-{version}.pkg[[.tt]#smlnj-x86-{version}.pkg#] (32-bits)
+
+  * {dist-dir}smlnj-amd64-{version}.pkg[[.tt]#smlnj-amd64-{version}.pkg#] (64-bits)
+--
+These packages put the installation in `/usr/local/smlnj`.  If there is an
+existing installation, then it will be updated.  We recommend that you
+add `/usr/local/smlnj/bin` to your shell's `PATH` variable.
+
+There is also a https://brew.sh[Homebrew] cask that wraps the 64-bit installation
+package.  If you have homebrew installed, then you can run the following command
+to install **SML/NJ**:
+
+[source,shell]
+--------------
+% brew cask install smlnj
+--------------
+
+If you have previously installed **SML/NJ** using Homebrew, then you will
+need to use the command
+
+[source,shell]
+--------------
+% brew cask upgrade smlnj
+--------------
+
+== Installing from source
+
+It is also possible to install **SML/NJ** from source code and the pre-compiled
+bin files.  To do so, you will need a copy of Apple's **Xcode** development
+environment.  Furthermore, you will need to install the command-line tools,
+which you can do by running the command
+
+[source,shell]
+--------------
+% xcode-select --install
+--------------
+
+With the command-line tools installed, you can follow the standard
+{dist-dir}install.html[instructions] for installing on **Unix/Linux**
+systems.
+
+[NOTE]
+=========
+For **macOS** 10.13 High Sierra and earlier, the default install is 32-bits.
+Starting with **macOS** 10.14 Mojave, the default install is 64 bits.
+It is possible to install **SML/NJ** on Mojave, but it requires some
+extra steps (see the instructions below).
+=========
+
+== Installing 32-bit SML/NJ on macOS 10.14 (Mojave)
+
+**Xcode** 10.1 (and later) does not include the libraries needed to
+build 32-bit executables, such as the **SML/NJ** runtime.
+
+To support building on Mojave, there is a special makefile (`mk.x86-darwin18`)
+for the runtime system and the `config/install.sh` uses this makefile
+when necessary.  This makefile expects that the `MacOSX10.13.sdk` directory
+from **Xcode** 9 has been
+copied into the **Xcode** 10 `SDKs` directory.  Note that updating **Xcode**
+from the AppStore will remove the 10.13 SDK, so you should keep
+a copy in a safe place.
+
+The **Xcode** SDKs live in `Platforms/MacOSX.platform/Developer/SDKs`
+under the `Developer` directory.  One can determine the path to the
+current developer directory using the command
+
+[source,shell]
+--------------
+% xcode-select -p
+--------------
+
+== Quarantine issues
+
+Another issue that you may encounter when building from source
+on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the shell script has the `com.apple.quarantine`
+attribute set.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+% xattr -d com.apple.quarantine shell-script
+-----
+
+and resume the build.
+

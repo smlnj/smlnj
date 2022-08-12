@@ -1,0 +1,67 @@
+= The `FNVHash` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `FNVHash` structure provides an implementation of the
+https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function[__Fowler-Noll-Vo__]
+(FNV) hashing algorithm (specifically the 64-bit FNV-1a algorithm).
+
+== Synopsis
+
+[source,sml]
+------------
+structure FNVHash
+------------
+
+== Interface
+
+[source,sml]
+------------
+val offsetBasis : Word64.word
+
+val hashByte : Word8.word * Word64.word -> Word64.word
+val hashChar : char * Word64.word -> Word64.word
+
+val hashString : string -> word
+val hashSubstring : substring -> word
+------------
+
+== Description
+
+`[.kw]#val# offsetBasis : Word64.word`::
+  The `offsetBasis` should be used as the initial value when
+  using `hashByte` and/or `hashChar` to incrementally hash a
+  data value.
+
+`[.kw]#val# hashByte : Word8.word * Word64.word \-> Word64.word`::
+  `hashByte (b, h)` computes one step of the FNV hashing algorithm
+  for byte `b` and initial hash value `h`.
+
+`[.kw]#val# hashChar : char * Word64.word \-> Word64.word`::
+  `hashByte (c, h)` computes one step of the FNV hashing algorithm
+  for character `c` and initial hash value `h`.
+
+`[.kw]#val# hashString : string \-> word`::
+  `hashString s` returns the hash of the given string.  It is equivalent to
+  the expression
++
+[source,sml]
+------------
+CharVector.foldl hashChar offsetBasis s
+------------
+
+`[.kw]#val# hashSubstring : substring \-> word`::
+  `hashSubstring ss` returns the hash of the given substring.  It is equivalent to
+  the expression
++
+[source,sml]
+------------
+Substring.foldl hashChar offsetBasis ss
+------------
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

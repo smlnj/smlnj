@@ -1,0 +1,41 @@
+= The `SExpParser` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `SExpParser` structure implements a parser for S-Expressions.
+
+== Synopsis
+
+[source,sml]
+------------
+structure SExpParser
+------------
+
+== Interface
+
+[source,sml]
+------------
+val parse : TextIO.instream -> SExp.value list
+
+val parseFile : string -> SExp.value list
+------------
+
+== Description
+
+`[.kw]#val# parse : TextIO.instream \-> SExp.value list`::
+  `parse inS` parses a sequence of S-Expressions from the input
+  stream `inS`.  The {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`]
+  exception is raised if a syntax error is encountered.
+
+`[.kw]#val# parseFile : string \-> SExp.value list`::
+  `parse f` parses a sequence of S-Expressions from the file `f`.
+  The {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`]
+  exception is raised if a syntax error is encountered.
+
+== See Also
+
+xref:str-SExp.adoc[`SExp`],
+xref:sexp-lib.adoc[__The SExp Library__]

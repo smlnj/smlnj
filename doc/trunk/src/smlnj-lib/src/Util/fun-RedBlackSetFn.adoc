@@ -1,0 +1,25 @@
+= The `RedBlackSetFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `RedBlackSetFn` functor provides a red-black-tree implementation of the
+xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+This functor is the preferred implementation of finite sets of ordered
+elements as it is faster than the other implementations.
+
+== Synopsis
+
+[source,sml]
+------------
+functor RedBlackSetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key
+------------
+
+== See Also
+
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:sig-ORD_SET.adoc[`ORD_SET`],
+xref:smlnj-lib.adoc[__The Util Library__]

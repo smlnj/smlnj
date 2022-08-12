@@ -1,0 +1,181 @@
+:version: 110.99
+:date: December 24, 2020
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release is primarily a bug fix release with some additional runtime-system
+changes to help prepare for the planned switch to using an *LLVM* backend for
+the *AMD64* target.
+
+https://smlnj.org/dist/working/110.98.1/110.98.1-README.html[Version 110.98.1]
+was a patch release that addressed some of the pretty printing regressions
+introduced in 110.98.  The release notes for those fixes are included
+here.
+
+Also note that this release is the last *110* series release.  We are switching
+our release numbering scheme to the format __<year>.<relnum>__, so the next
+release will be *2021.1*.
+
+== Details
+
+// **** details: include those sections that are relevant
+
+=== Compiler
+
+The binary-file format used to store compiled code has been simplified
+by eliminating support for multiple code objects in a file (a feature that
+has not been used in many years).  We have also changed the format of
+the "magic string" that is used to identify binfiles.
+
+=== Runtime System
+
+The boot loader was updated to work with the new binary-file format for
+code.
+
+The layout of the stack frame used by *SML* code was changed to be
+compatible with the register spilling conventions used by *LLVM*.
+Specifically, the spill area is now at the top of the frame (_i.e._,
+at offset zero from the stack pointer and the various bits of
+stack-allocated state are at the bottom of the frame.
+
+=== SML/NJ Library
+
+Made a number of improvements to the pretty-printing library.
+The `PP_DEVICE` signature was extended with a number of additional
+properties (max indentation, max depth, ellipses, ...), as well
+as functions for setting properties on a device.  The pretty-printer
+engine was updated to to use the max depth and max indentation
+properties when rendering.
+
+A new device module (`CharBufferDev`) was added.  This is a device
+for pretty printing to a character buffer and is the device structure
+that underlies the `CharBufferPP` structure.
+
+=== ML-LPT
+
+Changed the semantics of the spans returned by *ml-ulex* so that the
+second component of a span is the position of the rightmost character
+in the token (instead of the character following the token).
+Specifically, the span latexmath:[(p_1, p_2)] specifies the
+latexmath:[p_2 - p_1 + 1] characters that start with the character at
+position latexmath:[p_1] and run to latexmath:[p_2] (inclusive).
+
+=== 32-bit macOS issues
+
+While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
+for {version} works on **macOs** 10.14 Mojave, building from source
+requires some extra steps because the version of **Xcode**
+distributed for Mojave does not include a 32-bit SDK.
+
+Another issue that you may encounter
+when building on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) since *110.98* (including
+those patched in *110.98.1*).  Please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#254#
+| `Real.fromLargeInt` produces negative results
+| [.bugid]#266#
+| Pretty printing regression in *SML/NJ* 110.98
+| [.bugid]#267#
+| Returns an incorrect result for a calculation on `Position.int` for 32-bit mode.
+| [.bugid]#268#
+| Polymorphic Type Pretty Printing Regression
+| [.bugid]#269#
+| `Word64.fromString` causes an `Overflow` for greater than 2^32^-1
+| [.bugid]#271#
+| Pretty printer regression for structure binding
+| [.bugid]#274#
+| Minor pretty printing glitch when printing structure specs
+| [.bugid]#276#
+| Missing option to control extra newlines in REPL
+| [.bugid]#277#
+| Excess white space when pretty printing a module signature
+|=======
+
+// ***** include a list of unnumbered bugs here *****
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

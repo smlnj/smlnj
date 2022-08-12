@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.67 NEWS</title>
+</head>
+
+<body>
+<div align="center">
+<big><b>
+                       Standard ML of New Jersey
+<br/>
+                          Version 110.67 NEWS
+<br/>
+                           November 14, 2007
+<br/>
+<br/>
+</b>
+</big>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.67/index.html">
+<tt>http://smlnj.cs.uchicago.edu/dist/working/110.67/</tt></a></dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+
+This release includes a revamped installer for Windows, support for Mac OS X 10.5
+(Leopard), a few enhancements and many bug fixes.
+The detailed description below includes changes that were part of the 110.66
+release, since it was not widely announced.
+
+<h3>Details:</h3>
+
+<dl>
+
+  <dt>Windows:</dt>
+  <dd>
+    <ul>
+      <li>The installer now uses the MSI mechanism and should be much more robust.</li>
+      <li>We have dropped support for Windows 95 and Windows 98.</li>
+      <li>The long-standing problem with handling ^C on Windows has been fixed.</li>
+    </ul>
+  </dd>
+
+  <dt>Bug fixes:</dt>
+  <dd>
+    <ul>
+      <li> Fixed a type error in the <tt>ml-lpt</tt> library that occurs when compiling
+	against a basis that was compiled with the <tt>USE_64_BIT_POSITIONS</tt>
+	symbol set.
+      <li> A collection of bug fixes for the Reactive library. </li>
+      <li> Patches to support Mac OS X 10.5 (Leopard) on both Intel and PPC Macs. </li>
+      <li> Many fixes to the AMD64 code generator in MLRISC. </li>
+      <li> Fixed performance bugs when dealing with very large structures and record values. </li>
+      <li> Fixed bug in {TextIO,BinIO}.StreamIO.endOfStream that would incorrectly
+	signal end of stream. (110.66) </li>
+      <li> Real.signBit(~0.0) now returns true. (110.66) </li>
+    </ul>
+  </dd>
+
+</body>
+</html>

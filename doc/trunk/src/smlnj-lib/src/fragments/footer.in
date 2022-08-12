@@ -1,0 +1,13 @@
+      </div> <!-- content -->
+    </div> <!-- layout-content-box -->
+    <div id="layout-footer-box">
+      <div id="layout-footer">
+	<div id="layout-footer-text">
+	  <strong>SML/NJ</strong> Version @VERSION@ (@DATE@)<br />
+	  Last updated @FILEDATE@ @FILETIME@
+	</div> <!-- layout-footer-text -->
+      </div> <!-- layout-footer -->
+    </div> <!-- layout-footer-box -->
+  </div> <!-- layout-main -->
+</body>
+</html>

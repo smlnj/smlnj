@@ -1,0 +1,86 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  0      N  E  W  S
+			
+                           October 28, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.50/
+
+
+Summary:
+
+   This release fixes important bugs and provides some additional
+   functionality.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Basis:
+------
+
+  - Added specialized implementation of Int31.fromString.
+
+MLRISC:
+-------
+
+  - Fixed bugs in x86/c-calls related to passing structs as arguments
+    or results.
+  - Fixed bug in x86 assembly syntax (FU?COMIP?).
+
+Libraries:
+----------
+
+  - Minor enhancements to interfaces exported from the "controls"
+    library.
+  - Added libraries $smlnj-tdp/plugins.cm, $smlnj-tdp/back-trace.cm,
+    and $smlnj-tdp/coverage.cm.  This moves back-trace support out of
+    the main compiler and into a library of trace/debug/profile plugins.
+    The test-coverage plugin is new.
+
+Command-line:
+-------------
+
+  - Added flags "-e" and "-E" which print the names of environment
+    variables that can be used to control internal settings.
+  - Added support for tracing, debugging, and profiling (using
+    stuff from $smlnj-tdp/plugins.cm) for stand-alone programs.
+    (Stand-alone programs are those constructed using ml-build.)
+
+Runtime:
+--------
+
+  - Applied patch for setting rounding modes under Mac OS X.
+
+Compiler:
+---------
+
+  - PPC backend now silent (by default) even when it uses the "long
+    form of branch".
+  - Made the former backtrace-instrumentation pass more generic.
+  - Some internal cleanup (consolidation of duplicated functionality).
+
+Compilation Manager:
+--------------------
+
+  - Direct support for lazy sml (keyword "lazy") via new toolclass
+    "lazysml" and filename suffix ".lml".
+  - Support for selectively setting arbitrary control flags on
+    a per-sourcefile basis.
+  - Fixed handling of CM keywords, thereby eliminating a bug with
+    the shell tool.
+  - CM now issues an "obsolete feature" warning when group files
+    use the old "owner" syntax.
+
+Bootstrap compiler:
+-------------------
+
+  - Adde a "version tool" and some CM magic to have the file version.sml
+    be auto-generated during CMB.make.
+  - Moved version.sml (and above-mentioned magic) into its own library.

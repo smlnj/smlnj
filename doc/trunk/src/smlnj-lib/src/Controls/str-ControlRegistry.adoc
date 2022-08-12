@@ -1,0 +1,144 @@
+= The `ControlRegistry` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter:  CONTROL_REGISTRY
+:VERSION: {smlnj-version}
+
+The `ControlRegistry` structure provides infrastructure for defining
+a hierarchical registry of controls.
+
+== Synopsis
+
+[source,sml]
+------------
+signature CONTROL_REGISTRY
+structure ControlRegistry : CONTROL_REGISTRY
+------------
+
+== Interface
+
+[source,sml]
+------------
+type registry
+
+type control_info = { envName : string option }
+
+val new : {help : string} -> registry
+
+val register : registry -> {
+        ctl : string Controls.control,
+        envName : string option
+      } -> unit
+
+val registerSet : registry -> {
+        ctls : (string, 'a) ControlSet.control_set,
+        mkEnvName : string -> string option
+      } -> unit
+
+val nest : registry -> {
+        prefix : string option,
+        pri : Controls.priority,
+        obscurity : int,
+        reg : registry
+      } -> unit
+
+val control : registry -> string list -> string Controls.control option
+
+val init : registry -> unit
+
+datatype registry_tree = RTree of {
+    path : string list,
+    help : string,
+    ctls : { ctl : string Controls.control, info : control_info } list,
+    subregs : registry_tree list
+  }
+
+val controls : (registry * int option) -> registry_tree
+------------
+
+== Description
+
+`[.kw]#type# registry`::
+  the type of a control registry hierarchy.
+
+`[.kw]#type# control_info = { envName : string option }`::
+  a record of information about a control.  Currently, this record type
+  only contains an optional environment-variable name for the control.
+
+`[.kw]#val# new : {help : string} \-> registry`::
+  `new {help}` creates a new registry, where the `help` string
+  describes the registry.
+
+`[.kw]#val# register : registry \-> {ctl, envName} \-> unit`::
+  `register {ctl, envName}` adds the control `ctl` to the registry `reg`.
+  The optional string `envName` specifies the name of the environment
+  variable that can be used to specify the value of the control.
+
+`[.kw]#val# registerSet : registry \-> {ctls, mkEnvName} \-> unit`::
+  `registerSet {ctls, mkEnvName}` registers the controls in the
+  xref:str-ControlSet.adoc#type:control_set[control set] `ctls`.
+  The function `mkEnvName` is applied to the names of the controls
+  to generate the optional environment-variable names.
+
+`[.kw]#val# nest : registry \-> {prefix, pri, obscurity, reg} \-> unit`::
+  `nest parent {prefix, pri, obscurity, reg}` adds the registry `reg` as
+  a child of the registry `parent`.  The fields of the second argument
+  have the following meaning:
++
+--
+    `prefix : string option`::
+        The prefix (or name) that qualifies the child registry
+	(see the xref:#val:control[control] function).
+
+    `pri : Controls.priority`::
+        The registry's priority; used when ordering the elements in a
+	registry.
+
+    `obscurity : int`::
+        The _obscurity_ level of the registrion (higher means more obscure).
+
+    `reg : registry`::
+        The child registry being added to `parent`.
+--
+
+[[val:control]]
+`[.kw]#val# control : registry \-> string list \-> string Controls.control option`::
+  `control reg path` searches the registry for a control with the given `path`.
+
+`[.kw]#val# init : registry \-> unit`::
+  `init reg` uses the host process's environment (as accessed by the
+  {sml-basis-url}/os-process.html#SIG:OS_PROCESS.getEnv:VAL[`OS.Process.getEnv`]
+  function) to initialize those controls that have associated environment-variables.
+
+`[.kw]#datatype# registry_tree = RTree of { ... }`::
+  The `registry_tree` datatype provides a concrete representation of the
+  registry hierarchy.
++
+--
+    `path : string list`::
+        is the full path to the node in the tree.
+
+    `help : string`::
+        is the description of the node in the tree.
+
+    `ctls : { ctl : string Controls.control, info : control_info } list`::
+        is a priority-ordered list of the controls at the node
+	in the tree.
+
+    `subregs : registry_tree list`::
+        is a priority-ordered list of the sub-registries at the node
+	in the tree.
+--
+
+`[.kw]#val# controls : (registry * int option) \-> registry_tree`::
+  `controls (reg, optLevel)` returns the `registry_tree` representation
+  of the registry `reg`.  If `optLevel` is `SOME n`, then sub-registries
+  that have an obscurity level greater or equal to `n` are omitted
+  from the result.
+
+== See Also
+
+xref:str-Controls.adoc[`Controls`],
+xref:str-ControlSet.adoc[`ControlSet`],
+xref:controls-lib.adoc[__The Controls Library__]

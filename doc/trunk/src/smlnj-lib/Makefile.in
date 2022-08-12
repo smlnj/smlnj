@@ -1,0 +1,62 @@
+# Makefile.in
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# Makefile for SML/NJ Library documentation
+#
+# @configure_input@
+#
+
+SHELL =         @SHELL@
+INSTALL =       @INSTALL@
+@SET_MAKE@
+
+.PHONY:		help
+help:
+	@echo "This Makefile supports the following targets:"
+	@echo "  help            -- print this message."
+	@echo "  tools           -- build documentation generation tools"
+	@echo "  install-offline -- generate HTML documentation suitable for"
+	@echo "                     offline viewing in @OUT_DIR@."
+	@echo "  install-web     -- generate HTML documentation suitable for"
+	@echo "                     online viewing in @OUT_DIR@."
+	@echo "  clean           -- remove intermediate files"
+	@echo "  distclean       -- remove files generated during configuration"
+	@echo "                     and building; the resulting tree has the same"
+	@echo "                     files as the distribution."
+	@echo "The following additional targets are primarily for developers:"
+	@echo "  devclean        -- remove everything that is not part of the SVN"
+	@echo "                     repository."
+
+# target for generating the documentation for off-line viewing
+#
+.PHONY:         install-offline
+install-offline:
+	(cd src && make WEB=no install-offline)
+
+# target for generating the documentation for the SML/NJ website
+#
+.PHONY:         install-web
+install-web:
+	(cd src && make WEB=yes install)
+
+# target for building the documentation generation tools
+#
+.PHONY:		tools
+tools:
+	(cd tools && make install)
+
+
+#################### Cleanup ####################
+
+CLEAN_SUBDIRS = src tools
+
+CLEAN_FILES =
+
+DISTCLEAN_FILES +=	Makefile config.status config.log \
+			autom4te*.cache
+
+DEVCLEAN_FILES =	configure
+
+include @MK_DIR@/clean-rules.gmk

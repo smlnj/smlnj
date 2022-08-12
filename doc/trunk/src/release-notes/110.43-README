@@ -1,0 +1,103 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  3      N  E  W  S
+			
+  		         September 10, 2003
+
+			      WARNING
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.43/
+
+
+Summary:
+
+  In addition to a number of important bugfixes, this working version
+  brings us a big step closer to a new full release: win32 port works
+  again (but requires extensive testing!), IntInf.int has been put into
+  the Basis (with compiler support), and many Basis interfaces have
+  been updated or added in accordance with the Basis spec.
+
+--------------------------------------------------------------------------
+
+Details:
+========
+
+Basis:
+
+  - IntInf implemented; LargeInt = IntInf; FixedInt = Int32
+  - added some missing Real64 operations (in particular, Real.toLargeInt)
+  - a lot of work went into bringing the Basis closer to the spec:
+      missing functions added, types adjusted, *Slice modules
+      written and added
+  - new implementation of structure Time based on IntInf
+  - major overhaul of code in structure Date; added missing functionality
+  - various bug fixes
+  - a lot of cleanup work
+
+installer:
+
+  - large parts of installer script written in ML for portability
+  - new installer script for win32 (uses above ML code)
+  - new installer script for *nix that uses the above ML code
+  - new target "mlrisc" (MLRISC modules that don't get compiled
+    into the SML/NJ compiler but are useful for other projects
+    such as Moby)
+
+runtime:
+
+  - compiles and works under Win32 again
+
+CM:
+
+  - no longer gets confused by files that "change their identity"
+    (e.g., by getting unlinked and recreated by a text editor)
+  - parse-errors in init group (bootstrap compiler) no longer get
+    swallowed
+
+Compiler:
+
+  - compiler support for IntInf.int
+  - exported structure Typecheck from $smlnj/viscomp/core.cm
+  - added casse for IF, WHILE, ANDALSO, ORELSE to Absyn; improves
+    error messages and simplifies translation
+  - flag added for treating non-exhaustive bindings as errors
+  - improved organization of structure InlineT
+  - important bug fixes
+
+interactive system:
+
+  - Control.Print.intinfDepth control max length of intinf constants
+
+global:
+
+  - source tree "cleaned" so that CMB.make goes through without any
+    warning other than polyequal warnings; (not quite true for
+    win32 version which still needs some more cleaning)
+  - many unnecessary calls of polyequal removed
+  - started using IntInf.int literals where appropriate
+
+ml-nlffigen:
+
+  - exports structures ST_* corresponding to incomplete types
+
+CML:
+
+  - compiles under Win32 again
+
+eXene:
+
+  - now also compiles under Win32 -- but is untested;
+    (it is still an X toolkit, so you need to be able to
+     connect to an X server to test it)
+
+nowhere:
+
+  - compiles under Win32
+
+ckit:
+
+  - mismatched uses of LargeInt vs. Int32 fixed

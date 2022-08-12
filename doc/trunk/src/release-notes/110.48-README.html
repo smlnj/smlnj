@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html> <head>
+<title>SML/NJ 110.48 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  4  8      N  E  W  S
+			
+                             August 10, 2004
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.48/">http://smlnj.cs.uchicago.edu/dist/working/110.48/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+This is a bugfix release.  Its main purpose is to solve a showstopper
+problem introduced into the x86 c-calls implementation which is used
+by NLFFI.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>Interactive System:</dt>
+  <dd>
+    <ul>
+      <li>Command-line arguments are handled slightly differently:
+      <ul>
+	<li>system automatically quits after processing <tt>-S</tt>,
+	<tt>-H</tt>, <tt>-s</tt><i>n</i> or <tt>-h</tt><i>n</i> if one
+	of these appears as the last command-line argument</li>
+	<li>new option <tt>-q</tT> which forces a quit</li>
+      </ul>
+      </li>
+    </ul>
+  </dd>
+
+  <dt>Basis:</dt>
+  <dd>
+    <ul>
+      <li>Race condition in signal handling code fixed.</li>
+    </ul>
+  </dd>
+
+  <dt>MLRISC:</dt>
+  <dd>
+    <ul>
+      <li>fixed problem with c-calls implementation on x86, preventing the
+      compilation of calls of any C function returning any form of int</li>
+      <li>bug in <tt>dijkstra.sml</tt> fixed</li>
+      <li>bug in <tt>udgraph.sml</tt> fixed</li>
+      <li>some support for IBM assempler syntax (PPC) added</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

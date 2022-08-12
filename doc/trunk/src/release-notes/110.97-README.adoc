@@ -1,0 +1,244 @@
+:version: 110.97
+:date: April 21, 2020
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release is fairly substantial, with a bunch of bug fixes, additional
+documentation, and a large number of changes and additions to the
+**SML/NJ Library**.
+
+== Details
+
+=== Compiler
+
+As part of the fix for bug *220*, there has been a change to the way
+that "meta" (or "unification") type variables are printed in error
+messages.  Such meta variables will be represented by type variables
+with upper-case letters from the end of the alphabet (_e.g._, ``'X``,
+and ``''Z``).  Overloading constraints are added as a suffix enclosed
+in square brackets.  For example, the variable ``''Z[OL(*)]`` has
+an equality constraint (denoted by the double quotes and an overload
+constraint introduced by an occurrence of the overloaded multiplication
+operator.  Overload constraints for literals are denoted by `WORD`
+and `INT`.
+
+=== SML/NJ Library
+
+We are in the process of documenting the **SML/NJ Library**
+using https://asciidoctor.org[*asciidoctor*].  As a result of
+this documentation effort, we have been tweaking the interfaces
+and implementations of many of the *SML/NJ* modules, which has
+resulted in a large number of fairly small changes.  The biggest
+change is the addition of the new *UUID Library*, but here is the
+complete list of changes.
+
+  * Added the `disjoint` function to the `ORD_SET` signature.
+
+  * Added more modes to the `ANSITerm` command set.  Specifically, we added
+    the `Default` color specifier and the styles `DIM`, `NORMAL`, `UL_OFF`,
+    `BLINK_OFF`, `REV_OFF`, `INVIS_OFF`, and `RESET`.
+
+  * Added the structure `FNVHash` to the `Util` library.  This
+    structure implements the
+    https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function[Fowler-Noll-Vo]
+    hashing algorithm.
+
+  * Added a new library for generating and manipulating "Universally
+    Unique Identifiers" (`UUID/uuid-lib.cm`).
+
+  * Made some changes to the stream processing modules in the *JSON*
+    library.  The return type for the `error` call-back function in
+    the `JSONStreamParser.callbacks` type is changed to `unit` (note
+    that the function is not expected to return).  The `JSONStreamPrinter`
+    implementation now raises the `Fail` exception when printing is
+    attempted on a closed printer.
+
+  * Reimplemented the `find` functions in `UnixPath` to use the
+    `PathUtil` implementation, rather than reimplementing it.
+    Also changed the result types of `findFile` and `findFileOfType`
+    to return `string option`, instead of raising an exception.
+
+  * Added a `QUOTE` constructor to the `SExp.value` datatype and
+    cleaned up the details of the syntax of identifiers.  Also
+    added a `compare` function for the `SExp.value` datatype.
+
+  * Added operations to the `HashConsSet` and `HashConsMap` structures
+    (and corresponding signatures) to bring them inline with the
+    `ORD_SET` and `ORD_MAP` interfaces.  Also reimplemented these
+
+  * Added `insertWith` and `insertWithi` functions to the `ORD_MAP`
+    signature.
+
+  * Replaced the "directional" fold functions (_e.g._, `foldl`, `foldri`)
+    with non-directional functions (_e.g., `fold`, `foldi`) in the
+    `HashConsSet` and `HashConsMap` structures.  The reason for this
+    change is that the order of objects is pretty arbitrary, so there
+    is not any usefulness to processing elements in increasing or
+    decreasing order.
+    For backward compatibility, the old names will continue to work,
+    but they are deprecated amd will be removed in some future release.
+
+  * Made the `ControlUtil.Cvt.bool` converter case insensitive.  Also,
+    it now allows "yes"/"no" as values.
+
+  * Updated the `BitArray:BIT_ARRAY` interface to follow standard patterns
+    (this interfaces was originally designed before the SML Basis Library,
+    so it did not follow the conventions).
+    The changes are to have the `fromString` function return `NONE`,
+    instead of raising an exception on bad input, and to use deprecate
+    the `lshift` and `rshift` operations in favor of `>>` and `<<` (which
+    use `word` for the shift amount).
+
+  * Added the `fromVector`, `toList`, and `toVector` functions to
+    the `DynamicArray:DYNAMIC_ARRAY` interface.
+
+  * Renamed the `HASH_SET` signature to `MONO_HASH_SET`, which is
+    the correct name given the naming conventions.
+
+  * Added `implode`, `map`, `app`, `all`, and `exists` functions to
+    the `UTF8` signature. Also implemented the handling of 4-byte
+    encodings, which were previously not supported.
+
+  * Removed the `version` and `banner` components from the `LibBase`
+    structure, since the library has been tracking *SML/NJ* release
+    versions for a very long time.
+
+=== Documentation
+
+Additional manual pages have been added for the commands that are part
+of the standard installation.
+
+=== Installation
+
+We have updated our infrastructure for building MSI files for Windows
+to use the latest version of the https://wixtoolset.org[WiX Toolset].
+This change should not have any impact on the user-side of the
+installation process.
+
+=== 32-bit macOS issues
+
+While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
+for {version} works on **macOs** 10.14 Mojave, building from source
+requires some extra steps because the version of **Xcode**
+distributed for Mojave does not include a 32-bit SDK.
+
+Another issue that you may encounter
+when building on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#176#
+| Manpages
+| [.bugid]#195#
+| SuccessorML [.kw]#do# expression in functor arguments.
+| [.bugid]#196#
+| `dontPickle` error when trying to use SuccessorML
+| [.bugid]#209#
+| Special identifiers can be rebound in datatype and exception declarations
+| [.bugid]#214#
+| exception raised by pretty printer in REPL
+| [.bugid]#220#
+| Incorrect error message for equality-type failure?
+| [.bugid]#239#
+| `Date.toTime` is incorrect (by a factor of 10E9)
+| [.bugid]#240#
+| Non-default 64-bit installation build failure
+| [.bugid]#244#
+| Compiler bug: PPObj: ppFields in ppval.sml (also bugs **248** and **255**)
+| [.bugid]#245#
+| Lazy data types result in Compiler Bug error (also **249**)
+| [.bugid]#247#
+| `@SMLVersion` should report 64/32 bit
+| [.bugid]#252#
+| Boyer Benchmark Compile Failure
+|=======
+
+The following unnumbered bug was also fixed:
+--
+  * Fixed the calculation of the maximum array/vector length for 64-bit targets.
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

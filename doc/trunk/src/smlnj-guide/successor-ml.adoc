@@ -1,0 +1,212 @@
+= Successor ML
+:Date: {release-date}
+:VERSION: {smlnj-version}
+:Author: David MacQueen and John Reppy
+:stem: latexmath
+:source-highlighter: pygments
+
+https://github.com/SMLFamily/Proposed-Definition-of-Successor-ML[Successor ML]
+is collection of proposed enhancements to the *Standard ML* language.
+In collaboration with the http://mlton.org/SuccessorML[*MLton* implementors,
+we are starting to add support for these features the *SML/NJ*.  Here we
+describe the features that are implemented in Version {smlnj-version}
+and how to enable them.
+
+== Using Successor ML Features
+
+Currently, by default, Successor ML features are not enabled in *SML/NJ*,
+but it is easy to turn them on.
+
+=== From the Command Line
+
+One can enable Successor ML features when invoking the *sml* (or *ml-build*)
+command by including "++-Cparser.succ-ml=true++" on the command line.  For
+example,
+
+[source]
+--------
+% sml -Cparser.succ-ml=true
+Standard ML of New Jersey (64-bit) v110.97 [built: Tue Apr 21 17:39:48 2020]
+- 123_456;
+val it = 123456 : int
+-
+--------
+
+=== From the REPL
+
+In the interactive REPL, Successor ML features can be enabled (or disabled)
+using the `Control.setSuccML` function.  For example:
+
+[source]
+--------
+- Control.setSuccML true;
+- 123_456;
+val it = 123456 : int
+-
+--------
+
+=== In CM Files
+
+The Compilation Manager provides facilities to enable Successor ML features
+on a file-by-file basis.  There are several ways to do so; the easiest is to
+specify that they should be handled by the "`succ-ml`" tool:
+
+[sources,cm]
+------------
+foo.sml : succ-ml
+------------
+
+== Lexical Extensions
+
+We support all of the lexical extensions proposed for *Successor ML*.
+
+=== End-of-line Comments
+
+End-of-line comments are specified by the character sequence "++(*)++" and run
+until the end of the current line.  End-of-line comments properly nest into
+conventional block comments. For example, the following block comment
+is well formed, since the end-of-line comment comments out the first "++*)++":
+
+[source,sml]
+------------
+(*
+  fun f x = x (*) my identity function *)
+*)
+------------
+
+On the other hand, the following code is ill formed, since the opening "++(*++"
+is commented out by the end-of-line comment:
+
+[source,sml]
+------------
+  fun f x = x (*) my identity function (*
+*)
+------------
+
+=== Underscores in Numeric Literals
+
+The syntax of numeric literals is extended to allow the use of the underscore
+character ("++_++") as a separator.  The underscore must have digits on both
+sides, but otherwise can be placed anywhere in the literal.  Some examples:
+
+[source,sml]
+------------
+123_456
+0wxff_ff_ff_f3
+123_456.1
+------------
+
+=== Binary Integer and Word Literals
+
+The syntax of integer and word literals is extended to allow binary literals.
+For integers, which may be signed, these have the prefix "++0b++" followed
+by a sequence of one or more binary digits ("++0++" or "++1++").  Word
+literals are similar, but begin with the prefix "++0wb++".  Some examples:
+
+[source,sml]
+------------
+0b00010002      (* = 0x12 *)
+~0b1000         (* = ~8 *)
+0wb1001_1001    (* = 0w55 *)
+------------
+
+== Syntactic Extensions
+
+We support all of the syntactic extensions proposed for *Successor ML*.
+
+=== Match Syntax
+
+The syntax of matches in `case`, `fn`, and `handle` expressions is extended
+to allow an initial bar ("++|++") at the beginning.  Some examples,
+
+[source,sml]
+------------
+case e of
+| LESS => ...
+| EQUAL => ...
+| GREATER => ...
+
+fn
+| false => true
+| true => false
+
+e handle
+  | Overflow => 0
+  | ex => raise ex
+------------
+
+=== Datatype Syntax
+
+Similar to the change to match syntax, `*datatype*` declarations may also have
+an extra initial bar at the beginning; for example,
+
+[source,sml]
+------------
+datatype t =
+  | FOO
+  | BAR of int
+  | BAZ of t * t
+------------
+
+=== Extra Semicolons
+
+Successor ML is more lenient about extra semicolons in expression sequences
+than SML.  Specifically, you can include a terminating semicolon in a sequence
+of expressions.
+For example, the following code is syntqctically well formed in Successor ML:
+
+[source,sml]
+------------
+let fun f x = (print "hello world\n"; x;)
+in
+  f 1; f 2;
+end
+------------
+
+The extra semicolon has no semantic significance.
+
+=== If-then Expressions
+
+
+== Core Language Features
+
+The first two of these extensions have been extensions supported by *SML/NJ*
+since the 0.93 release in 1993.  As such, they are always enabled.
+
+=== Or Patterns
+
+=== Vector Patterns and Expressions
+
+=== `do` Declarations
+
+The syntax of declarations (_dec_) is extended with the derived form
+
+[source]
+--------
+do exp
+--------
+
+which is equivalent to
+
+[source,sml]
+------------
+val () = exp
+------------
+
+
+=== Record Punning in Expressions
+
+As with record patterns, one can now specify a field in an
+record expression using only its name.  For example,
+
+[source,sml]
+------------
+fun setName ({name, dob, id}, s) = {name = s, dob, id}
+------------
+
+is a derived form for
+
+[source,sml]
+------------
+fun setName ({name, id}, s) = {name = s, dob = dob, id = id}
+------------

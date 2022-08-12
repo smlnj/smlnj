@@ -1,0 +1,562 @@
+    
+			S  M  L   /   N  J
+
+                  1  1  0  .  2  9      N  E  W  S
+			
+  		           July 18, 2000
+
+			      WARNING
+
+  	This version is intended for compiler hackers.
+	We are in the midst of substantial structural changes,
+	and this is a snapshot.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+------------------------------------------------------------------------ 
+Summary:
+
+ * Improvements to MLRISC, many of them unrelated to SML/NJ.
+
+ * CM:
+   - implicit anchors are no longer supported; all anchored paths must
+     now start with a dollar symbol $
+   - generally improved internal pathname handling; rationalized
+     pathname encoding (and reporting)
+   - support for anchor environments ("bind"-parameter for "cm" class)
+   - autoloading of libraries made lazier; this results in smaller
+     initial heap images when many libraries are pre-registered;
+       + $smlnj/compiler.cm now pre-registered
+       + $smlnj/cm/minimal.cm gone
+       + $smlnj/cm.cm (= $smlnj/cm/full.cm) pre-registered
+   - CM.sources as a generalization of CM.makedepend (which has been dropped)
+   - slight changes to TOOLS API
+   - "setup"-parameter for "sml" class
+   - "subdir"- and "witness"-parameters for "noweb" class
+   - "sigoptions"- and "smloptions"-parameters for "mlyacc" class
+   - Many enhancements to the CM manual; all of the above is documented.
+
+ * support for back-tracing (with help from a new instrumentation pass
+   to be used during debug sessions)
+   - see "details" below
+
+ * fixed some bugs in installation scripts
+
+======================================================================
+Details of changes (mostly directly snipped from the HISTORY file)
+
+======================================================================
+MLRISC:
+======================================================================
+
+  Fermin has found a few assembly problems with constant expressions 
+  generated in LabelExp.  Mostly, the problems involve extra parentheses,
+  which choke on dumb assemblers.
+
+--
+
+  Various bug fixes and new features for C--, Moby and MLRISC optimizations.
+  None of these affect SML/NJ.
+
+1. Register Allocation
+
+    a. A new ra spilling module (ra/ra-spill-with-renaming) is implemented.
+       This module tries to remove local (i.e. basic block level) redundancies
+       during spilling.  
+
+    b. A new framework for performing region based register allocation.
+       Not yet entirely functional.
+
+2. X86
+
+   a. DefUse for POP was missing the stack pointer [found by Lal]
+   b. Reload for CALL was incorrect in X86Spill [found by John]
+   c. Various fixes in X86Spill so that it can be used correctly for 
+      the new spilling module.
+
+3. SSA/IR
+
+   a. New module ir/dj-dataflow.sml implements elimination based
+      data flow analysis.
+
+4. MLRiscGen
+
+   a. Fix for gc type annotation
+
+5. MDGen
+
+   Various fixes for machine description -> ml code translation.  For ssa
+   only.
+
+--
+
+  1. Alpha
+
+      Slight cleanup.  Removed the instruction SGNXL
+
+  2. X86
+
+      Added the following instructions to the instruction set:
+   
+        ROLx, RORx,
+        BTx, BTSx, BTLx, BTRx, 
+        XCHGx, and variants with the LOCK prefix
+
+  3. Register Allocation
+
+      The module ra-rewrite-with-renaming has been improved.
+
+  These have no effect on SML/NJ.
+
+--
+
+  Fixed a bug in freezing phase of the register allocator.
+
+--
+
+None of these things should affect normal SML/NJ operations
+
+1. Peephole improvements provided by Fermin (c--)
+2. New annotation DEFUSE for adding extra dependence (moby)
+3. New X86 LOCK instructions (moby)
+4. New machine description language for reservation tables (scheduling)
+5. Fixes to various optimization/analysis modules (branch chaining, dominator
+   trees etc.)
+6. I've changed the CM files so that they can work with versions
+   110.0.6, 110.25 and 110.28
+
+--
+
+x86 Peephole fix by Fermin.  Affects c-- and moby only.
+
+--
+
+1. x86 peephole improvement sp += k; sp -= k => nop  [from John]
+2. fix to x86 RET bug [found by Dan Grossman] 
+3. sparc assembly bug fix for ticc instructions [found by Fermin]
+
+   Affects c-- and moby only
+
+======================================================================
+CM
+======================================================================
+
+Added function CM.sources as a generalized version of the earlier
+CM.makedepend.  This entails the following additional changes:
+
+  - CM.makedepend has been dropped.
+  - TOOLS signature and API have been changed.
+
+--
+
+Preparation for fading out support for "implicitly anchored path
+names".  I went through all sources and used the explicit (and
+relatively new) $-notation.
+
+Modified the anchoring scheme for some things such as "smlnj",
+"MLRISC", "cm", etc. to take advantage of the fact that explicit
+anchors are more expressive: anchor name and first arc do not have to
+coincide.  This entails the following user-visible change:
+
+You have to write $smlnj/foo/bar instead of smlnj/foo/bar.  In
+particular, when you fire up sml with a command-line argument, say,
+e.g.:
+
+   sml '$smlnj/cmb.cm'
+
+At the ML toplevel prompt:
+
+   CM.autoload "$smlnj/cmb.cm";
+
+--
+
+* Made library pickles lazier in order to reduce the initial space
+penalty for autoloading a library.  As a result, it is now possible to
+have $smlnj/compiler.cm pre-registered.  This should take care of the
+many complaints or inquiries about missing structure Compiler.  This
+required changes to CM's internal data structures and small tweaks to
+some algorithms.
+
+* No more distinction between a "minimal" CM and a "full" CM.  Now,
+there is only one CM (i.e., the "full" version: $smlnj/cm.cm aka
+$smlnj/cm/full.cm), and it is always available at the interactive top
+level. ($smlnj/cm/minimal.cm is gone.)
+
+* "makeml" now also pre-registers $smlnj/cmb.cm (aka
+$smlnj/cmb/current.cm).  In other words, after you bootstrap a new sml
+for the first time, you will not have to autoload $smlnj/cmb.cm again
+afterwards.  (The first time around you will still have to do it,
+though.)
+
+--
+
+* Implemented an "anchor environment" mechanism.  Also re-implemented
+CM's internal "SrcPath" module from scratch.  The new one should be
+more robust in certain boundary cases.  In any case, it is a lot
+cleaner than its predecessor (IMHO).
+
+Visible changes:
+
+** 0. Implicit path anchors (without the leading $-symbol) are no
+longer recognized at all. This means that such path names are not
+illegal either.  For example, the name basis.cm simply refers to a
+local file called "basis.cm" (i.e, the name is an ordinary path
+relative to .cm-files directory).  Or, to put it differently, only
+names that start with $ are anchored paths.
+
+** 1. The $<singlearc> abbreviation for $/<singlearc> has finally
+vanished.
+
+** 2. The "cm" class now accepts an option "bind".  The option's value
+is a sub-option list of precisely two items -- one labeled "anchor"
+and the other one labeled "value".  As you might expect, "anchor" is
+used to specify an anchor name to be bound, and "value" specifies what
+the anchor is being bound to.
+
+The value must be a directory name and can be given in either standard
+syntax (including the possibility that it is itself an anchored path)
+or native syntax.
+
+Examples:
+
+   foo.cm (bind:(anchor:bar value:$mystuff/bar))
+   lib.cm (bind:(anchor:a value:"H:\\x\\y\\z"))  (* only works under windows *)
+
+and so on.
+
+The meaning of this is that the .cm-file will be processed with an
+augmented anchor environment where the given anchor(s) is/are bound to
+the given values(s).
+
+The rationale for having this feature is this: Suppose you are trying
+to use two different (already stable) libraries a.cm and b.cm (that
+you perhaps didn't write yourself).  Further, suppose each of these
+two libraries internally uses its own auxiliary library $lib/aux.cm.
+Normally you would now have a problem because the anchor "lib" can not
+be bound to more than one value globally.  Therefore, the project that
+uses both a.cm and b.cm must locally redirect the anchor to some other
+place:
+
+   a.cm (bind:(anchor:lib value:/usr/lib/smlnj/a-stuff))
+   b.cm (bind:(anchor:lib value:/usr/lib/smlnj/b-stuff))
+
+This hard-wires $lib/aux.cm to /usr/lib/smlnj/a-stuff/aux.cm or
+/usr/lib/smlnj/b-stuff/aux.cm, respectively.
+
+Hard-wiring path names is a bit inflexible (and CM will verbosely warn
+you when you do so at the time of CM.stabilize).  Therefore, you can
+also use an anchored path as the value:
+
+  a.cm (bind:(anchor:lib value:$a-lib))
+  b.cm (bind:(anchor:lib value:$b-lib))
+
+Now you can globally configure (using the usual CM.Anchor.anchor or
+pathconfig machinery) bindings for "a-lib" and "b-lib".  Since "lib"
+itself is always locally bound, setting it globally is no longer
+meaningful or necessary (but it does not hurt either).  In fact, "lib"
+can still be used as a global anchor for separate purposes.  
+For example, one can even locally define "lib" in terms of a global
+"lib":
+
+  a.cm (bind:(anchor:lib value:$lib/a))
+  b.cm (bind:(anchor:lib value:$lib/b))
+
+** 3: The encoding of path names has changed.  This affects the way
+path names are shown in CM's progress report and also the internal
+protocol encoding used for parallel make.
+
+The encoding now uses one or more ':'-separated segments.  Each
+segments corresponds to a file that has been specified relative to the
+file given by its preceding segment.  The first segment is either
+relative to the CWD, absolute, or anchored.  Each segment itself is
+basically a Unix pathname; all segments but the first are relative.
+
+Example:
+
+   $foo/bar/baz.cm:a/b/c.sml
+
+This path denotes the file bar/a/b/c.sml relative to the directory
+denoted by anchor "foo".  Notice that the encoding also includes
+baz.cm which is the .cm-file that listed a/b/c.sml.  As usual, such
+paths are resolved relative to the .cm-files directory, so baz.cm must
+be ignored to get the "real" pathname.
+
+To make this fact more obvious, CM puts the names of such "virtual
+arcs" into parentheses when they appear in progress reports. (No
+parentheses will appear in the internal protocol encoding.)  Thus,
+what you really see is:
+
+  $foo/bar/(baz.cm):a/b/c.sml
+
+I find this notation to be much more informative than before.
+
+Another new feature of the encoding is that special characters
+including parentheses, colons, (back)slashes, and white space are
+written as \ddd (where ddd is the decimal encoding of the character).
+
+--
+
+Setup-parameter to "sml" added; this can be used to run arbitrary ML
+code before and after compiling a file (e.g., to set compiler flags)
+
+--
+
+ * Implemented "subdir" and "witness" options for noweb tool.
+   This caused some slight internal changes in CM's tool implementation.
+ * Fixed bug in "tool plugin" mechanism.  This is essentially cleaning
+   some remaining issues from earlier path anchor changes.
+--
+
+ * Class "mlyacc" now takes separate arguments to pass options to
+   generated .sml- and .sig-files independently.
+
+======================================================================
+back-tracing
+======================================================================
+
+Added a backtrace facility to aid programmers in debugging their
+programs.  This involves the following changes:
+
+1. Module system/smlnj/init/core.sml (structure _Core) now has hooks for
+   keeping track of the current call stack.  When programs are compiled
+   in a special mode, the compiler will insert calls to these hooks
+   into the user program.
+   "Hook" means that it is possible for different implementations of
+   back-tracing to register themselves (at different times).
+
+2. compiler/MiscUtil/profile/btrace.sml implements the annotation phase
+   as an Absyn.dec->Absyn.dec rewrite.  Normally this phase is turned off.
+   It can be turned on using this call:
+       SMLofNJ.Internals.BTrace.mode (SOME true);
+   Turning it off again:
+       SMLofNJ.Internals.BTrace.mode (SOME false);
+   Querying the current status:
+       SMLofNJ.Internals.BTrace.mode NONE;
+   Annotated programs are about twice as big as normal ones, and they
+   run a factor of 2 to 4 slower with a dummy back-trace plugin (one
+   where all hooks do nothing).  The slowdown with a plugin that is
+   actually useful (such as the one supplied by default) is even greater,
+   but in the case of the default plugin it is still only an constant
+   factor (amortized).
+
+3. system/Basis/Implementation/NJ/internals.{sig,sml} have been augmented
+   with a sub-structure BTrace for controlling back-tracing.  In particular,
+   the above-mentioned function "mode" controls whether the annotation
+   phase is invoked by the compiler.  Another important function is
+   "trigger": when called it aborts the current execution and causes
+   the top-level loop to print a full back-trace.
+
+4. compiler/MiscUtil/profile/btimp.sml is the current default plugin
+   for back-tracing.  It keeps track of the dynamic call stack and in
+   addition to that it keeps a partial history at each "level" of that
+   stack.  For example, if a tail-calls b, b tail-calls c, and c tail-calls
+   d and b (at separate times, dynamically), then the report will show:
+
+   GOTO   d
+         /c
+   GOTO  \b
+   CALL   a
+
+   This shows that there was an initial non-tail call of a, then a
+   tail-call to b or c, looping behavior in a cluster of functions that
+   consist of b and c, and then a goto from that cluster (i.e., either from
+   b or from c) to d.
+
+   Note that (depending on the user program) the amount of information
+   that the back-trace module has to keep track of at each level is bounded
+   by a constant.  Thus, the whole implementation has the same asymptotical
+   complexity as the original program (both in space and in time).
+
+5. compiler/TopLevel/interact/evalloop.sml has been modified to
+   handle the special exception SMLofNJ.Internals.BTrace.BTrace
+   which is raised by the "trigger" function mentioned above.
+
+Notes on usage:
+
+- Annotated code works well together with unannotated code:
+Unannotated calls simply do not show up at all in the backtrace.
+
+- Back-tracing can be confused by callcc and capture.
+
+- While it is possible to compile the compiler with back-trace
+annotations turned on (I did it to get some confidence in
+correctness), you must make absolutely sure that core.sml and
+btimp.sml are compiled WITHOUT annotation!  (core.sml cannot actually
+be compiled with annotation because there is no core access yet, but
+if you compile btimp.sml with annotation, then the system will go into
+an infinite recursion and crash.)  Since CM currently does not know
+about BTrace, the only way to turn annotations on and off for
+different modules of the compiler is to interrupt CMB.make, change the
+settings, and re-invoke it.  Of course, this is awkward and clumsy.
+(Actually, you can now also use CM's new "setup" parameter for to this
+end.)
+
+Sample sessions:
+
+Standard ML of New Jersey v110.28.1 [FLINT v1.5], June 5, 2000
+- SMLofNJ.Internals.BTrace.mode (SOME true);
+[autoloading]
+[autoloading done]
+val it = false : bool
+- structure X = struct
+-     fun main n = let
+-         fun a (x, 0) = d x
+-           | a (x, n) = b (x, n - 1)
+-         and b (x, n) = c (x, n)
+-         and c (x, n) = a (x, n)
+-         and d x = e (x, 3)
+-         and e (x, 0) = f x
+-           | e (x, n) = e (x, n - 1)
+-         and f 0 = SMLofNJ.Internals.BTrace.trigger ()
+-           | f n = n * g (n - 1)
+-         and g n = a (n, 3)
+-     in
+-         f n
+-     end
+- end;
+structure X : sig val main : int -> int end
+- X.main 3;
+*** BACK-TRACE ***
+GOTO   stdIn:4.2-13.20: X.main[2].f
+GOTO-( stdIn:4.2-13.20: X.main[2].e
+GOTO   stdIn:4.2-13.20: X.main[2].d
+     / stdIn:4.2-13.20: X.main[2].a
+     | stdIn:4.2-13.20: X.main[2].b
+GOTO-\ stdIn:4.2-13.20: X.main[2].c
+CALL   stdIn:4.2-13.20: X.main[2].g
+GOTO   stdIn:4.2-13.20: X.main[2].f
+GOTO-( stdIn:4.2-13.20: X.main[2].e
+GOTO   stdIn:4.2-13.20: X.main[2].d
+     / stdIn:4.2-13.20: X.main[2].a
+     | stdIn:4.2-13.20: X.main[2].b
+GOTO-\ stdIn:4.2-13.20: X.main[2].c
+CALL   stdIn:4.2-13.20: X.main[2].g
+GOTO   stdIn:4.2-13.20: X.main[2].f
+GOTO-( stdIn:4.2-13.20: X.main[2].e
+GOTO   stdIn:4.2-13.20: X.main[2].d
+     / stdIn:4.2-13.20: X.main[2].a
+     | stdIn:4.2-13.20: X.main[2].b
+GOTO-\ stdIn:4.2-13.20: X.main[2].c
+CALL   stdIn:4.2-13.20: X.main[2].g
+GOTO   stdIn:4.2-13.20: X.main[2].f
+CALL   stdIn:2.15-17.4: X.main[2]
+- 
+
+Here is another example, using my modified Tiger compiler:
+
+Standard ML of New Jersey v110.28.1 [FLINT v1.5], June 5, 2000
+- SMLofNJ.Internals.BTrace.mode (SOME true);
+[autoloading]
+[autoloading done]
+val it = false : bool
+- CM.make "sources.cm";
+[autoloading]
+...
+[autoloading done]
+[scanning sources.cm]
+[parsing (sources.cm):parse.sml]
+[creating directory CM/SKEL ...]
+[parsing (sources.cm):tiger.lex.sml]
+...
+[wrote CM/sparc-unix/semant.sml]
+[compiling (sources.cm):main.sml]
+[wrote CM/sparc-unix/main.sml]
+[New bindings added.]
+val it = true : bool
+- Main.compile ("../testcases/merge.tig", "foo.out");
+*** BACK-TRACE ***
+CALL   lib/semant.sml:99.2-396.21: SemantFun[2].transExp.trvar
+CALL   lib/semant.sml:99.2-396.21: SemantFun[2].transExp.trexp
+CALL   lib/semant.sml:289.3-295.22: SemantFun[2].transExp.trexp.check[2]
+GOTO   lib/semant.sml:289.3-295.22: SemantFun[2].transExp.trexp.check[2]
+CALL   lib/semant.sml:99.2-396.21: SemantFun[2].transExp.trexp
+CALL   lib/semant.sml:99.2-396.21: SemantFun[2].transExp.trexp
+CALL   lib/semant.sml:488.3-505.6: SemantFun[2].transDec.trdec[2].transBody[2]
+     / lib/semant.sml:411.65-543.8: SemantFun[2].transDec
+CALL-\ lib/semant.sml:413.2-540.9: SemantFun[2].transDec.trdec[2]
+CALL   lib/semant.sml:99.2-396.21: SemantFun[2].transExp.trexp
+CALL   lib/semant.sml:8.52-558.4: SemantFun[2].transProg[2]
+CALL   main.sml:1.18-118.4: Main.compile[2]
+- 
+
+--
+
+    If you are running BTrace-instrumented code and
+    there is an uncaught exception (regardless of whether or not it was
+    raised in instrumented code), the top-level evalloop will print
+    the back-trace.
+
+    Features:
+
+      - Instrumented and uninstrumented code work together seemlessly.
+        (Of course, uninstrumented code is never mentioned in actual
+         back-traces.)
+
+      - Asymptotic time- and space-complexity of instrumented code is
+        equal to that of uninstrumented code.  (This means that
+        tail-recursion is preserved by the instrumentation phase.)
+
+      - Modules whose code has been instrumented in different sessions
+        work together without problem.
+
+      - There is no penalty whatsoever on uninstrumented code.
+
+      - There is no penalty on "raise" expressions, even in
+        instrumented code.
+
+    A potential bug (or perhaps it is a feature, too):
+
+      A back-trace reaches no further than the outermost instrumented
+      non-trivial "raise".  Here, a "trivial" raise is one that is the
+      sole RHS of a "handle" rule.  Thus, back-traces reach trough
+
+           <exp> handle e => raise e
+
+      and even
+
+           <exp> handle Foo => raise Bar
+
+      and, of course, through
+
+           <exp> handle Foo => ...
+
+     if the exception was not Foo.
+
+     Back-traces always reach right through any un-instrumented code
+     including any of its "handle" expressions, trivial or not.
+
+   To try this out, do the following:
+
+     - Erase all existing binfiles for your program.
+       (You may keep binfiles for those modules where you think you
+        definitely don't need back-tracing.)
+     - Turn on back-trace instrumentation:
+          SMLofNJ.Internals.BTrace.mode (SOME true);
+     - Recompile your program.  (I.e., run "CM.make" or "use".)
+     - You may now turn instrumentation off again (if you want):
+          SMLofNJ.Internals.BTrace.mode (SOME false);
+     - Run your program as usual.  If it raises an exception that
+       reaches the interactive toplevel, then a back-trace will
+       automatically be printed.  After that, the toplevel loop
+       will print the exception history as usual.
+
+--
+
+*  BTrace module now also reports call sites.  (However, for loop clusters
+   it only shows from where the cluster was entered.)  There are associated
+   modifications to core.sml, internals.{sig,sml}, btrace.sml, and btimp.sml.
+
+--
+
+ * SMLofNJ.Internals.BTrace.trigger: when called, raises an
+   internal exception which explicitly carries the full back-trace history,
+   so it is unaffected by any intervening handle-raise pairs ("trivial"
+   or not).  The interactive loop will print that history once it arrives
+   at top level.
+   Short of having all exceptions implicitly carry the full history, the
+   recommended way of using this facility is:
+     - compile your program with instrumentation "on"
+     - run it, when it raises an exception, look at the history
+     - if the history is "cut off" because of some handler, go and modify
+       your program so that it explicitly calls BTrace.trigger
+     - recompile (still instrumented), and rerun; look at the full history

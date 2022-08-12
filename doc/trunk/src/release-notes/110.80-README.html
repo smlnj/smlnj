@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.80 Release Notes</title>
+<style type="text/css">
+  body {
+    font-size: 12pt;
+  }
+  div.smlnj-banner {
+    font-weight: bold;
+    font-size: 200%;
+    text-align: center;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+  h3 {
+    font-size: 140%;
+  }
+  dt.component {
+    font-size: 120%;
+    font-weight: bold;
+  }
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+  ul.buglist {
+    margin-left: 1em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  span.important {
+    color: red;
+    text-weight: bold;
+  }
+  span.tt {
+    font-family: "Courier", monospace;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    color: darkblue;
+  }
+  span.kw {
+    font-family: "Courier", monospace;
+    font-weight: bold;
+    color: darkgreen;
+  }
+  span.com {
+    font-style: italic;
+    color: indianred;
+  }
+  span.exe {
+    font-weight: bold;
+  }
+  table.buglist {
+    margin-left: 2em;
+    font-size: 100%;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+  p.compact {
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+  }
+</style>
+</head>
+
+<body>
+<div class="smlnj-banner">
+                       Standard ML of New Jersey
+<br>
+                          Version 110.80 NEWS
+<br>
+                            August 19, 2016
+</div>
+
+<hr>
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><span class="tt">http://www.smlnj.org/index.html</span></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.80/index.html">
+    <span class="tt">http://smlnj.cs.uchicago.edu/dist/working/110.80/</span></a>
+  </dd>
+</dl>
+<hr>
+
+<h3>Summary:</h3>
+<p>
+This release incudes further additions to the
+<a href="https://github.com/SMLFamily/BasisLibrary/wiki/Home"><b>Basis Library</b></a>
+and many bug fixes.
+As did 110.79, it includes some initial support for
+<a href="https://github.com/SMLFamily/Proposed-Definition-of-Successor-ML"><b>Successor ML</b></a>,
+which is an evolution of the Standard ML language.
+It also has support for the upcoming version of macOS Sierra.
+</p>
+
+<h3>Details:</h3>
+
+<dl>
+  <dt class="component">Basis Library:</dt>
+  <dd>
+    <p>
+    This version continues to track proposed Basis Library improvements.
+    <span class="important">Note that these improvements are <i>proposals</i>
+    that have not yet been ratified and are subject to change!</span>
+    Specifically, the following proposals are supported by this version of SML/NJ:
+    </p>
+    <dl>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-001-Correction-to-ListPair">
+        <b>[2015-001]</b> Correction to ListPair</a></dt>
+        <dd>SML/NJ already implemented the semantics described in this proposal.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-002-Addition-of-Either-module">
+        <b>[2015-002]</b> Addition of Either module</a></dt>
+        <dd>This change adds the <span class="code">Either</span> structure to the Basis Library.<br>
+          In version 110.80, we have added the functions <span class="code">mapLeft</span>,
+          <span class="code">mapRight</span>, <span class="code">appLeft</span>, and
+          <span class="code">appRight</span> functions to the <span class="code">Either</span>
+          module.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-003-Additional-operations-on-sequences">
+        <b>[2015-003]</b> Additional operations on sequences</a></dt>
+        <dd>
+          This change adds operations to the <span class="code">Array</span>,
+	  <span class="code">List</span>, <span class="code">ListPair</span>, <span class="code">Option</span>,
+	  and <span class="code">Vector</span> structures, and to the <span class="code">MONO_ARRAY</span>
+	  and <span class="code">MONO_VECTOR</span> signatures.<br>
+          In version 110.80, we have added the functions <span class="code">unzipMap</span>,
+          <span class="code">unzipMapi</span>, <span class="code">find</span>, and
+          <span class="code">findi</span> functions to the <span class="code">ListPair</span>
+          module.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-005-Addition-of-Fn-module">
+        <b>[2015-005]</b> Addition of Fn module</a></dt>
+        <dd>This change adds the <span class="code">Fn</span> structure to the Basis Library.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-007-Addition-of-Ref-module">
+        <b>[2015-007]</b> Addition of Ref module</a></dt>
+        <dd>This change adds the <span class="code">Ref</span> structure to the Basis Library.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2015-009-Policy-for-exceptions-and-partial-applications">
+        <b>[2015-009]</b> Policy for exceptions and partial applications</a></dt>
+        <dd>This change standardizes the generation of exceptions when partially applying curried basis functions.
+          The change fixed bug <b>136</b>.
+        </dd>
+      <dt><a href="https://github.com/SMLFamily/BasisLibrary/wiki/2016-001-Add-popCount-to-WORD-signature">
+        <b>[2016-001]</b> Add popCount to WORD signature</a></dt>
+	<dd>This change adds the <span class="code">popCount</span> function to the <span class="code">WORD</span>
+	  signature.
+        </dd>
+    </dl>
+    <p style="margin-bottom: 0pt;">
+      It is very unlikely that these changes will break existing code, but there are
+      a couple of scenarios in which the code might break.  The first is conflicts created
+      by the use of <span class="kw">open</span>.  For example, the implementation
+      of <span class="exe">ml-yacc</span> had declarations of the form
+    </p>
+    <div class="code">
+      <span class="kw">open</span> Array List
+    </div>
+    <p>
+      which created a type error because <span class="code">List.sub</span> shadowed
+      <span class="code">Array.sub</span>.
+    </p>
+    <p>
+      The second class of problem is when a module implements one of the affected Basis
+      signatures.  For example, the <b>MLRISC</b> library had two modules that implemented
+      extensions of the <span class="code">ARRAY</span> signature and which required
+      modification to compile.
+    </p>
+    <p>
+      In such cases, we recommend updating the source code, but it is also possible to compile
+      against the old version of the <b>Basis Library</b> by changing the line
+    </p>
+    <div class="code">
+    $/basis.cm
+    </div>
+    <p class="compact">
+      to
+    </p>
+    <div class="code">
+    $/basis-2004.cm
+    </div>
+    <p style="margin-top: 0pt;">
+      in your CM files.  Note that backward-compatible version of the <b>Basis Library</b> is only
+      available if the <span class="tt">old-basis</span> target in <span class="tt">config/targets</span>
+      was requested when <b>SML/NJ</b> was built (this target is requested
+      by default).
+    </p>
+  </dd>
+</dl>
+
+<dl>
+  <dt class="component">Successor ML:</dt>
+  <dd>
+    <p style="margin-bottom: 0pt;">
+    <a href="https://github.com/SMLFamily/Proposed-Definition-of-Successor-ML"><b>Successor ML</b></a>
+    is collection of proposed enhancements to the <b>Standard ML</b> language.
+    In collaboration with the <a href="http://mlton.org"><b>MLton</b></a> implementors, we are
+    starting to add support for these features the <b>SML/NJ</b>.
+    This release does not include any new features over what was supported in version 110.79
+    (<i>i.e.</i>, lexical extensions).
+    We plan to start adding syntactic extensions to the core language in the next release.
+    </p>
+    <p class="compact">
+    The <b>Successor ML</b> features can be enabled using the command-line
+    option <span class="tt">-Cparser.succ-ml=true</span> or by using the assignment
+    </p>
+    <div class=code>
+    Control.succML := true;
+    </div>
+    <p style="margin-top: 0pt; margin-bottom: 0pt;">
+    at the REPL.
+    There is a known bug (#153) that you man encounter when enabling <b>Successor ML</b>
+    features from the REPL; namely, there is some latency from when you set the
+    <span class="code">Control.succML</span> flag and when the lexer switches mode.
+    </p>
+    <p>
+    It is also possible to mark individual source files as
+    being &quot;<b>Successor ML</b>&quot; sources in a CM file.  There are
+    several ways to do so; the easiest is to specify that they should be
+    handled by the &quot;<span class="tt">succ-ml</span>&quot; tool:
+    </p>
+    <div class="code">
+      foo.sml : succ-ml
+    </div>
+    <p style="margin-top: 0pt; margin-bottom: 0pt;">
+    Alternatively, one can give the &quot;<span class="tt">succ-ml</span>&quot; argument to the
+    &quot;<span class="tt">sml</span>&quot; tool:
+    </p>
+    <div class="code">
+      foo.sml : sml (succ-ml)
+      foo.sml (succ-ml)
+    </div>
+    <p style="margin-top: 0pt; margin-bottom: 0pt;">
+    It is also possible to enable them by setting the control flag
+    using the <span class="kw">with</span> keyword in a CM file as
+    illustrated by the following equivalent forms:
+    </p>
+    <div class="code">
+      foo.sml (<span class="kw">with</span>: parser.succ-ml)
+      foo.sml (<span class="kw">with</span>: parser.succ-ml=true)
+      foo.sml (<span class="kw">with</span>:(<span class="kw">name</span>:parser.succ-ml))
+      foo.sml (<span class="kw">with</span>:(<span class="kw">name</span>:parser.succ-ml <span class="kw">value</span>:true))
+    </div>
+  </dd>
+</dl>
+
+<dl>
+  <dt class="component">SML/NJ Library:</dt>
+  <dd>
+    <p style="margin-bottom: 0pt;">
+    A number of changes to the <span class="code">ORD_SET</span> signature.
+    The following functions were added:
+    </p>
+    <div class="code">
+    <span class="kw">val</span> minItem <span class="kw">:</span> set <span class="kw">-></span> item
+    <span class="kw">val</span> maxItem <span class="kw">:</span> set <span class="kw">-></span> item
+    <span class="kw">val</span> toList  <span class="kw">:</span> set <span class="kw">-></span> item list
+    </div>
+    <p style="margin-top: 0pt;">
+    In addition, the function <span class="code">listItems</span> is now considered deprecated.
+    </p>
+    <p>
+    Added the function <span class="code">Controls.help</span> for getting the help
+    string from a control.
+    </p>
+    <p>
+    Added the functions <span class="code">mkOption</span>, <span class="code">mkOptionReqArg</span>,
+    and <span class="code">mkOptionFlag</span> to the <span class="code">Controls</span> module.
+    These functions make it easier to package controls as command-line options.
+    They provide an alternative to the usual approach of using a
+    &quot;<span class="tt">--C</span>&lt;ctl&gt;<span class="tt">=</span>&lt;value&gt;&quot;
+    form for all of the controls.
+    </p>
+    <p>
+    Fixed a bug (#144) in the implementation of the <span class="code">all</span> function in the
+    splay-tree implementation of sets
+    (<span class="kw">functor</span> <span class="code">SplaySetFn</span>).
+    </p>
+    <p>
+    Fixed a bug (#167) in the way that the <span class="code">GetOpt</span> module handles long
+    arguments.
+    Previously, it was not possible to have one long argument that was a prefix of another
+    (<i>e.g.</i>, &quot;<span class="tt">--foo</span>&quot; and &quot;<span class="tt">--foobar</span>&quot;).
+    The new behavior is to allow long-option prefixes to overlap with other long options, but to
+    favor an exact match over prefix matches.
+    For example, if the long options are &quot;<span class="tt">--foo</span>,&quot;
+    &quot;<span class="tt">--foobar</span>,&quot; and &quot;<span class="tt">--foobaz</span>,&quot; then
+    &quot;<span class="tt">--foo</span>&quot; will match the first, but &quot;<span class="tt">--foob</span>&quot;
+    will be flagged as ambiguous.
+    </p>
+  </dd>
+</dl>
+
+<h3>Bugs:</h3>
+    <p>
+    Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a>
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">144</td><td>Splay sets are broken</td></tr>
+      <tr><td class="bugid">145</td><td>Internal exception occurs on bogus annotation instead of typechecking diagnostic</td></tr>
+      <tr><td class="bugid">146</td><td>Problems building on recent versions of 64-bit Ubuntu</td></tr>
+      <tr><td class="bugid">147</td><td>Hexadecimal escapes in strings are not supported</td></tr>
+      <tr><td class="bugid">150</td><td>Add title to batch script</td></tr>
+      <tr><td class="bugid">151</td><td>Error installing from source on Mac OS X</td></tr>
+      <tr><td class="bugid">154</td><td>Return code for ml-ulex when there is an error</td></tr>
+      <tr><td class="bugid">155</td><td>Misleading printing of word literals in error messages</td></tr>
+      <tr><td class="bugid">156</td><td>SML resumes after SIGSTOP with bogus exception report</td></tr>
+      <tr><td class="bugid">161</td><td>MLRISC incorrect dividend sign extension before 32-bit divide in x86_64</td></tr>
+      <tr><td class="bugid">164</td><td>Inaccurate install instructions, ia32-libs have been deprecated</td></tr>
+      <tr><td class="bugid">166</td><td>Can't install SML/NJ in directories containing spaces</td></tr>
+      <tr><td class="bugid">167</td><td>Bug in handling of long options in GetOpt</td></tr>
+<!--      <tr><td class="bugid">XXX</td><td>DESCRIPTION</td></tr> -->
+    </table>
+    <p>The following unnumbered bugs were also fixed:
+    </p>
+    <ul class="buglist">
+      <li class="bug">
+	Fixed the handling of the <span class="code">Error</span> exception
+	in the interactive loop so that we no longer get an exception traceback
+	from syntax and type errors in user code.
+      </li>
+       <li class="bug">
+	Fixed a bug in the implementation of <i>ml-lex-mode</i> in <b>ml-ulex</b>.
+        The '<span class="code">\h</span>' escape was not supported (it is supposed to match
+        the character range <span class="code">[\128-\255]</span>).
+      </li>
+   </ul>
+
+<h3>Supported systems:</h3>
+<blockquote>
+<p>
+We have verified that the system builds and runs on the following systems.
+</p>
+<div>
+<table>
+  <tr><th>Architecture</th> <th>Operating System</th></tr>
+  <tr><td>PowerPC</td> <td>Mac OS X 10.5 (Leopard)</td></tr>
+  <tr><td>&nbsp;</td> <td>&nbsp;</td></tr>
+  <tr><td>x86</td> <td>Mac OS X 10.6 (Snow Leopard)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.7 (Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.8 (Mountain Lion)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.9 (Mavericks)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.10 (Yosemite)</td></tr>
+  <tr><td></td> <td>Mac OS X 10.11 (El Capitan)</td></tr>
+  <tr><td></td> <td>macOS Sierra</td></tr>
+  <tr><td></td> <td>Ubuntu 14.04.3 (GNU/Linux 3.13.0)</td></tr>
+  <tr><td></td> <td>Windows 7</td></tr>
+  <tr><td></td> <td>Cygwin (hosted on Windows 7)</td></tr>
+</table>
+</div>
+<p>
+We believe that it runs on any recent Linux distribution that has support for 32-bit
+executables, as well as on BSD variants, SPARC/Solaris, and PPC/AIX, but we have not
+tested these systems.
+</p>
+</blockquote>
+
+</body>
+</html>

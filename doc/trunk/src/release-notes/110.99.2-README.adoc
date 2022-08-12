@@ -1,0 +1,148 @@
+// A template for creating release notes for a version
+//
+:version: @VERSION@
+:date: @DATE@
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This is a patch release that includes a few bug fixes and
+adds support for *macOS 12* (Monterey).
+
+== Details
+
+// **** details: include those sections that are relevant
+
+=== Compiler
+
+=== CM
+
+=== MLRISC
+
+=== Runtime System
+
+=== Basis Library
+
+=== SML/NJ Library
+
+=== Successor ML
+
+=== ML-LPT
+
+=== Documentation
+
+=== Installation
+
+=== 32-bit macOS issues
+
+While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
+for {version} works on **macOs** 10.14 Mojave, building from source
+requires some extra steps because the version of **Xcode**
+distributed for Mojave does not include a 32-bit SDK.
+
+Another issue that you may encounter
+when building on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#279#
+| `Real.toLargeInt` returns zero for anything in range `[-512,512]`
+| [.bugid]#286#
+| Installation of *SML/NJ* v110.99.1 fails in fresh *Ubuntu* 20.04/*macOS* 10.15
+| [.bugid]#287#
+| Install errors with `request asdl`
+| [.bugid]#293#
+| SMLNJ Incompatibility with *macOS* 12 Beta
+|=======
+
+The following unnumbered bug was also fixed:
+--
+  * Floating-point spill records were twice as large as necessary on 64-bit
+    systems.
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | macOS 11 (Big Sur) | Tested
+| | macOS 12 (Monterey) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

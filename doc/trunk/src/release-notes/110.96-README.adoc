@@ -1,0 +1,184 @@
+:version: 110.96
+:date: December 13, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release fixes a couple of scripting bugs related to supporting both
+32 and 64-bit versions of the system, as well as some other 64-bit-related
+issues.  It also adds 64-bit support for **FreeBSD**.
+
+== Details
+
+=== Installation
+
+==== 64-bit support
+
+The various installation and configuration scripts have been updated
+to accept a command-line argument to override the
+default machine size when running on the x86/amd64 architecture.
+For the `config/install.sh` script, you can specify the machine-word
+size of the target architecture as follows:
+
+--
+  **-default** __size__::
+    specify the default size for the **sml** and other commands, where
+    __size__ is either **32** or **64**.
+
+  **-32**::
+    install the 32-bit version of the system.
+
+  **-64**::
+    install the 64-bit version of the system.
+--
+
+It is possible to install both versions in the same location by running
+the `install.sh` script twice.  For example, the commands
+
+[source,shell]
+--------------
+  % config/install.sh -32
+  % config/install.sh -default 64
+--------------
+
+will install both versions with the 64-bit version as default.  One
+would then use the command **sml -32** to run the 32-bit version of
+the system.
+
+If both versions are installed, then use the **-32** or **-64** flag
+to override the default version.
+
+==== 32-bit macOS issues
+
+While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
+for {version} works on **macOs** 10.14 Mojave, building from source
+requires some extra steps because the version of **Xcode**
+distributed for Mojave does not include a 32-bit SDK.
+
+Another issue that you may encounter
+when building on **macOs** 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+=== MLRISC
+
+Fixed a bug in the way that floating-point comparisons were being generated
+for the **AMD64** target.  This was the root cause of bug 234, but could affect
+other code.
+
+=== Runtime System
+
+We now use *POSIX* signal handling on *FreeBSD* (instead of the "Traditional BSD"
+signal handling).
+
+=== ML-LPT
+
+The `AntlrStreamPos` structure now has a `FilePos` substructure that has the
+`INTEGER` signature.  This substructure defines the representation type for
+positions and can be used to write code that will be portable against any
+future changes in that type (__e.g.__, the switch from `Position.int` to `int`
+in 110.94).
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#168#
+| `heap2exec` broken on 64-bit machines with default toolchains
+| [.bugid]#233#
+| eXene build fails for 64bit install
+| [.bugid]#234#
+| Converting NaN to a string causes an infinite loop on 64-bit machines
+| [.bugid]#235#
+| Mac OS Catalina Compilation Failure
+| [.bugid]#236#
+| Unable to package smlnj for 64-bit x86, for Arch Linux
+| [.bugid]#237#
+| heap2exec script fails on 110.95
+|=======
+
+The following unnumbered bug was also fixed:
+--
+  * Fixed a problem where a **control-C** (`SIGINT`), or other signal, might
+    be ignored.
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD 12.0 | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | macOS 10.15 (Catalina) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Ubuntu 18.04.3 LTS | Tested
+| {nbsp} | |
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | FreeBSD 12.0 | Tested
+| | Other BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+| {nbsp} | |
+|=======

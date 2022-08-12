@@ -1,0 +1,94 @@
+= The `INTERVAL_DOMAIN` signature
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `INTERVAL_DOMAIN` signature defines a representation of an
+abstract ordered domain. It is required that the domain
+consist of discrete values that are totally orders and that there
+be a minimum and maximum value.  This signature is used as the
+argument signature for the xref:fun-IntervalSetFn.adoc[`IntervalSetFn`]
+functor.
+
+== Synopsis
+
+[source,sml]
+------------
+signature INTERVAL_DOMAIN
+------------
+
+== Interface
+
+[source,sml]
+------------
+type point
+
+val compare : (point * point) -> order
+
+val succ : point -> point
+val pred : point -> point
+
+val isSucc : (point * point) -> bool
+
+val minPt : point
+val maxPt : point
+------------
+
+== Description
+
+`[.kw]#type# point`::
+  The abstract type of elements in the ordered domain.
+
+[[val:compare]]
+`[.kw]#val# compare : (point * point) \-> order`::
+  `compare (pt1, pt2)` returns the relation between two points
+  in the domain.
+
+`[.kw]#val# succ : point \-> point`::
+  `succ item` returns the successor to `item`.  If `item` is
+  the maximum element (xref:#val:maxPt[`maxPt`]), then `maxPt` is
+  returned.
+
+`[.kw]#val# pred : point \-> point`::
+  `succ item` returns the successor to `item`.  If `item` is
+  the minimum element (xref:#val:minPt[`minPt`]), then `minPt` is
+  returned.
+
+`[.kw]#val# isSucc : (point * point) \-> bool`::
+  `isSucc (pt1, pt2)` returns `true` if `pt1` is the predecessor
+  of `pt2` and `pt2 is the successor of `pt1`.
+
+[[val:minPt]]
+`[.kw]#val# minPt : point`::
+  The minimum point in the domain.
+
+[[val:maxPt]]
+`[.kw]#val# maxPt : point`::
+  The maximum point in the domain.
+
+== Example
+
+Here is an example of the 8-bit character type as an interval domain.
+
+[source,sml]
+------------
+structure CharDom : INTERVAL_DOMAIN =
+  struct
+    type point = char
+    val compare = Char.compare
+    fun succ #"\255" = #"\255"
+      | succ c = chr(ord c + 1)
+    fun pred #"\000" = #"\000"
+      | pred c = chr(ord c - 1)
+    fun isSucc (c1, c2) = (ord c1 + 1 = ord c2)
+    val minPt = #"\000"
+    val maxPt = #"\255"
+  end
+------------
+
+== See Also
+
+xref:fun-IntervalSetFn.adoc[`IntervalSetFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

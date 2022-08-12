@@ -1,0 +1,76 @@
+= The `SExp` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `SExp` structure defines the tree representation of S-expression data.
+
+== Synopsis
+
+[source,sml]
+------------
+structure SExp
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype value
+  = SYMBOL of Atom.atom
+  | BOOL of bool
+  | INT of IntInf.int
+  | FLOAT of real
+  | STRING of string
+  | QUOTE of value
+  | LIST of value list
+
+val same : value * value -> bool
+val compare : value * value -> order
+------------
+
+== Description
+
+`[.kw]#datatype# value = ...`::
+  This datatype represents S-expression trees.  The constuctors are
+  defined as follows:
++
+--
+    `SYMBOL [.kw]#of# Atom.atom`::
+	represents an identifier.  We use the xref:../Util/str-Atom.adoc#type:atom[`atom`]
+	type to represent these for fast equality testing.
+
+    `BOOL [.kw]#of# bool`::
+	represents a boolean literal.
+
+    `INT [.kw]#of# IntInf.int`::
+	represents an integer number.
+
+    `FLOAT [.kw]#of# real`::
+	represents a floating-point number.
+
+    `STRING [.kw]#of# string`::
+	represents a string value.
+
+    `QUOTE [.kw]#of# value list`::
+	represents a quoted value.
+
+    `LIST [.kw]#of# value list`::
+	represents a list of values.
+--
+
+`[.kw]#val# same : value * value \-> bool`::
+  `same (se1, se2)` compares `se1` and `se2` for equality and returns
+  true if, and only if, they are equal.
+
+`[.kw]#val# compares : value * value \-> order`::
+  `same (se1, se2)` compares `se1` and `se2` for their order.
+
+== See Also
+
+xref:str-SExpParser.adoc[`SExpParser`],
+xref:str-SExpPP.adoc[`SExpPP`],
+xref:str-SExpPrinter.adoc[`SExpPrinter`],
+xref:sexp-lib.adoc[__The SExp Library__]

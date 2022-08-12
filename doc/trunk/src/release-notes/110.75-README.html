@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.75 NEWS</title>
+<style>
+  dd {
+    margin-bottom: 0.5em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  .code {
+    font-family: "Courier", monospace;
+    white-space: pre;
+    font-size: smaller;
+  }
+  table.buglist {
+    margin-left: 1em;
+  }
+  td.bugid {
+    font-weight: bold;
+    padding-right: 1em;
+    padding-left: 0px;
+    margin-left: 0px;
+  }
+</style>
+</head>
+
+<body>
+<div align="center">
+<big><b>
+                       Standard ML of New Jersey
+<br/>
+                          Version 110.75 NEWS
+<br/>
+                            October 1, 2012
+<br/>
+<br/>
+</b>
+</big>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.75/index.html">
+    <tt>http://smlnj.cs.uchicago.edu/dist/working/110.75/</tt></a>
+  </dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+<blockquote>
+<p>
+The primary purpose of this release is to support the latest version of
+Mac OS X (10.8/Mountain Lion).
+There are also a number of other bug fixes and additions to the SML/NJ Library.
+</p>
+</blockquote>
+
+<h3>Details:</h3>
+
+<dl>
+
+  <dt>SML/NJ Library:</dt>
+  <dd>
+    <ul>
+      <li>
+	Added <tt>subtract</tt>, <tt>subtract'</tt>, and <tt>subtractList</tt>
+        functions to the <tt>ORD_SET</tt> interface and implementations.
+      </li>
+      <li>
+	Added <tt>all</tt> function to the <tt>ORD_SET</tt> interface and implementations.
+      </li>
+      <li>
+	Added <tt>exists</tt>, <tt>existsi</tt>, <tt>all</tt>, and <tt>alli</tt> functions
+	to the <tt>ORD_MAP</tt> interface and implementations.
+      </li>
+      <li>
+	Added Base64 module that supports encoding/decoding between Word8 vectors and
+	base64 strings.
+      </li>
+      <li>
+	Modified <tt>PathUtil</tt> module to handle the case where the filename is an
+	absolute path.
+      </li>
+    </ul>
+  </dd>
+
+  <dt>Language Processing Tools (ML-LPT)</dt>
+  <dd>
+    <ul>
+      <li>Performance improvements and eliminated the direct dependency of ml-ulex
+        lexers on the SML/NJ Library.
+      </li>
+      <li>
+        Bug fix in ml-antlr to ensure that the generated toString function
+        for tokens is strictly legal SML code (i.e., non-printing characters
+        and UTF8 multibyte sequences are properly escaped).
+      </li>
+    </ul>
+  </dd>
+
+  <dt>Bugs:</dt>
+  <dd>
+    <p>Here is a list of tracked bugs fixed (or closed) with this release, please see the
+    <a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs/">bug tracker</a> 
+    for more details.
+    </p>
+    <table class="buglist">
+      <tr><td class="bugid">87</td><td>Buildling SML/NJ on Windows fails if there is a number in the path</td></tr>
+      <tr><td class="bugid">88</td><td>Support for UTF8 path names</td></tr>
+      <tr><td class="bugid">89</td><td>Building on OS X Lion</td></tr>
+      <tr><td class="bugid">92</td><td>IntInf.scan does not work on Hex numbers</td></tr>
+      <tr><td class="bugid">94</td><td>Running on OS X Mountain Lion</td></tr>
+      <tr><td class="bugid">96</td><td>Build Failure with Xcode 4.3</td></tr>
+      <tr><td class="bugid">101</td><td>errono = 12</td></tr>
+      <tr><td class="bugid">104</td><td>ckit number parsing</td></tr>
+    </table>
+  </dd>
+
+</body>
+</html>

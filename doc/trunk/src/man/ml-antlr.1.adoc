@@ -1,0 +1,54 @@
+ML-ANTLR(1)
+===========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+ml-antlr - an LL(k) parser generator for Standard ML
+
+SYNOPSIS
+--------
+*ml-antlr* ['OPTIONS'] 'file'
+
+DESCRIPTION
+-----------
+
+*ML-Antlr* is an LL(k) parser generator for Standard ML that is loosely modeled
+on Terence Parr's *ANTLR* parser generator.
+
+OPTIONS
+-------
+
+*-32*::
+  run the 32-bit version of the program (currently the default).
+
+*-64*::
+  run the 64-bit version of the program.  This option only applies to
+  the **x86-64** (aka **amd64**) architecture.
+
+*--dot*::
+  generate DOT output (http://www.graphviz.org[]).  The generated file will be named +file.dot+,
+  where +file+ is the input file.
+
+*--latex*::
+  generate a simple LaTeX version of the grammar, named +file.tex+.
+
+*--unit-actions*::
+  ignore the action code in the grammar, and instead return +unit+ for every production.
+
+AUTHOR
+------
+*ML-Antlr* was written by Aaron Turon.
+
+SEE-ALSO
+--------
+ml-ulex(1), ml-yacc(1)
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

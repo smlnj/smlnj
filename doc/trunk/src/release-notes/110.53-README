@@ -1,0 +1,86 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  5  3      N  E  W  S
+			
+                          February 25, 2005
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.53/
+
+
+Summary:
+
+   Bugfixes and minor feature improvements.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Basis
+-----
+
+  - SMLofNJ.Susp is back.
+
+CML
+---
+
+  - Thread-safe version of structure Atom matches original signature
+    and re-uses the original implementation.  Moreover, since an mvar
+    is used as a lock (instead of a separate server thread) to protect
+    the global hashtable, it is now possible to create atoms even before
+    RunCML.doit has started executing.
+
+Library
+-------
+
+  - Moved source tree from smlnj-lib/TraceDebugProf to a new
+    tools/TraceDebugProf.
+
+NLFFI
+-----
+
+  - Handles access to signed and unsigned "long long" data.
+  - Handles "long long" function arguments and results (but so far
+    only on the PowerPC).
+  - Some organizational cleanup of the library code.
+
+ML-Yacc
+-------
+
+  - Fixed formatting bug that sometimes caused syntactically incorrect
+    code from being formed.
+
+Runtime
+-------
+
+  - Fixed bug in PC-sampling profiler.
+  - Fixed off-by-1 bug in ML_STRING macro (which caused the names
+    of certain exceptions to be garbled).
+
+Scripts
+-------
+
+  - Added an experimental heap2exec script (with a helper heap2asm
+    script in the background).  This is experimental and so far
+    only works under Mac OS X.
+  - Made ml-build script slightly smarter.  (One can now omit the
+    3rd argument -- which in this case is taken to be the same as the
+    1st argument without the extension.)
+  - _run-sml now converts SMLNJ_HOME to a POSIX pathname on cygwin.
+
+CM
+--
+
+  - Fixed its incorrect assumption about the PowerPC being little-endian.
+    (PPC couldn be little-endian, but on the only supported platform --
+     Mac OS X -- it is big-endian.)
+
+MLRISC
+------
+
+  - Bugfixes in c-calls implementation.

@@ -1,0 +1,104 @@
+    
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  2      N  E  W  S
+			
+  		           December 22, 2000
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+  This version is being used to check point a large number of changes 
+  to MLRISC, which now uses infinite precision integers on all
+  architectures. We have run the Basis regressions tests so the
+  changes ought to be fairly robust.   
+
+  There are a number of other CM, Basis, and Tool related changes as
+  well. 
+
+		--------------------------------
+
+MLRISC:
+
+  Fixes:
+     This change fixes two problems:
+
+       a) There was a proliferation of constructors in MLRISC to
+	  handle integers of various sizes, e.g.
+
+		LI of int   | LI32 of Int32.int  | LI64 of Int64.int
+		...
+
+	   which are all replaced with
+
+		LI of IntInf.int
+
+       b) There is the ever nagging question of cross compiling to
+ 	  64bits.  
+
+
+  Compilation Speed:
+    The x86 compiling the compiler is 9% slower than 110.31, however,
+    a lot of this, and more, can be recovered. The compiler presently
+    uses infinite precision in the front end (AST creation), which is 
+    converted to 31 and 32 bit integers in the middle end (FLINT and CPS), 
+    and then converted back to infinite precision in MLRISC (with the 
+    current changes). 
+
+    Infinite precision in the middle end (FLINT) will allow a uniform
+    treatment of optimizations across words and integers of different
+    widths/sizes. Currently, most optimizations are biased towards
+    integers and words represented in 31 bits only.
+
+
+  What's next:
+    Not in chronological order:
+	
+	1. Use infinite precision in the middle end to allow a 
+	cleaner and more uniform optimization module for arithmetic.
+
+ 	2. Support for the generation of infinite precision values
+        in the back end.
+
+	3. Changes to support the single toplevel declaration:
+
+		structure LargeInt = IntInf
+
+Basis:
+
+    Added the missing bit level functions to the Basis IntInf structure.  
+
+
+Tools:
+    Improvements to the 'nowhere' tool to handle OR-patterns.
+    The nowhere tool is a syntactic extension that allows for
+    guarded patterns. See <tt> MLRISC/Tools/Doc/nowhere.tex</tt>.
+
+CM:
+  o Added a new "dir" tool to CM's toolset; this can simplify writing
+    CM descriptions (see the manual)
+  
+  o Made some modifications to CM's "Tools" API and documented everything
+
+  o CM now leaves exceptions (from the compiler) alone if they are not
+    expected; this causes such exceptions to travel up to the top-level
+    where they are reported as usual
+  
+  o Eliminated the "[wrote ...]" progress message in favor of reporting
+    some size information for the generated binfile instead
+  
+  o Removed source code for some project-in-progress that is not ready
+    for prime-time (yet)
+  
+  o Made anchor environments ("bind:"-option for class "cm") inter-operate
+    in a more useful way with CMB.make 
+
+

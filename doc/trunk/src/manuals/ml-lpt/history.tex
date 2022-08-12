@@ -1,0 +1,92 @@
+%!TEX root = manual.tex
+%
+\chapter{Change history}
+\label{ch:history}
+
+Here is a history of changes to the SML/NJ Language Processing Tools.
+More details can be found in the SML/NJ \texttt{HISTORY} and \texttt{README} files.
+\begin{description}
+  \item[SML/NJ 110.99]
+    \mbox{}\\[0.5em]
+    Changed the semantics of the spans returned by \ulex{} so that the second
+    component of a span is the position of the rightmost character in the token (instead
+    of the character following the token).
+    Specifically, the span $(p_1, p_2)$ specifies the $p_2 - p_1 + 1$ characters
+    that start with the character at position $p_1$ and run to $p_2$ (inclusive).
+    This change avoids a potential problem when the span of a token ends at the last
+    character in a file (when the input is spread across multiple files).
+  \item[SML/NJ 110.98]
+    \mbox{}\\[0.5em]
+    Changed the semantics of the \texttt{--debug} command-line option for \mlantlr{}.
+    Previously this option replaced the actions with a print expression, but that
+    limited its usefulness because of type errors in the generated code.  The new
+    behavior is to preserve the existing actions and just add the printing code.
+  \item[SML/NJ 110.96]
+    \mbox{}\\[0.5em]
+    Added the \texttt{FilePos} sub-structure to the \texttt{AntlrStreamPos} structure.
+    This addition allows code to be written that is independent of the precision
+    of the \texttt{AntlrStreamPos.pos} type.
+  \item[SML/NJ 110.94]
+    \mbox{}\\[0.5em]
+    Changed type of source-file positions from \texttt{Position.int} to \texttt{Int.int}.
+    This change is because the \texttt{Position.int} type was changed to 64-bit integers
+    in Version 110.89, which is overkill for processing text files (especially since
+    we are moving to 64-bit executables).
+  \item[SML/NJ 110.81]
+    \mbox{}\\[0.5em]
+    Added ``\texttt{--debug}'' command-line option to \mlantlr{} to expose the generation
+    of debug actions.
+    \\[0.5em]
+    Added \texttt{\%tokentype} directive to \mlantlr{}.
+    \\[0.5em]
+    Modified \mlantlr{} and \ulex{} to direct status and debugging messages to
+    \texttt{stdErr} instead of \texttt{stdOut}.
+%
+ \item[SML/NJ 110.79]
+    \mbox{}\\[0.5em]
+    Modified scanner to allow comments in \ulex{} directives.
+    \\[0.5em]
+    \mlantlr{} now inlines the \texttt{EBNF} structure in the generated parser (instead of using
+    the \texttt{AntlrEBNF} functor from the \texttt{ml-lpt} library.
+    \\[0.5em]
+    Preliminary work on supporting the \texttt{\%prefer} and \texttt{\%change} directives
+    from \texttt{ml-yacc}.  The front-end accepts and checks these declaration forms, but
+    the back-end does not yet generate code for them.  These will be documented once the
+    implementation is complete.
+%
+  \item[SML/NJ 110.78]
+    \mbox{}\\[0.5em]
+    Improved the error message for when the lookahead computation fails in \mlantlr{}.
+    \\[0.5em]
+    Added \texttt{\%value} directive to allow non-nullary tokens to be inserted as
+    an error-repair action.
+    Note that the first version of this feature used the directive \texttt{\%default}, but
+    this name was changed to \texttt{\%value} to match the ML-Yacc feature.
+    \\[0.5em]
+    Improved error messages for the situation where the lexer specification has an unclosed string.
+%
+  \item[SML/NJ 110.77]
+    \mbox{}\\[0.5em]
+    Fixed an inconsistency in the way that \mlantlr{} and \ulex{} handled the contents of
+    a \texttt{\%defs} declaration.  \ulex{} made these definitions visible in the \texttt{UserDeclarations}
+    substructure, whereas \mlantlr{} hid them.  We have changed the behavior of \ulex{} to match
+    that of \mlantlr{} (\ie{}, hide the user definitions).  We chose to hide the user definitions
+    in \ulex{} because they are usually not useful outside the lexer, hiding them reduces The
+    size of the generated code, and definitions that are needed outside the lexer can be
+    defined in an external module.  Note that the \texttt{UserDeclarations} substructure remains
+    visible when \ulex{} is run in \texttt{ml-lex} compatibility mode.
+    \\[0.5em]
+    Added the \texttt{actionToString'} and \texttt{repairToString'} functions
+    to the \texttt{AntlrRepair} structure.  These functions allow one to
+    specialize the printing of tokens based on whether they are being added or deleted.
+    \\[0.5em]
+    Removed the \texttt{toksToString} function from the tokens structure that ml-antlr
+    generates.  It was originally for use by the \texttt{AntlrRepair} structure, but that
+    structure does not use it.
+%
+  \item[SML/NJ 110.72]
+    \mbox{}\\[0.5em]
+    Added \texttt{--strict-sml} flag to \ulex{} for MLton compatibility.
+    \\[0.5em]
+    Added \texttt{\%header} directive to the \mlantlr{} parser generator.
+\end{description}%

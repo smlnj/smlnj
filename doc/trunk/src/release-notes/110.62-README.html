@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.62 NEWS</title>
+</head>
+
+<body>
+<pre>
+                         S  M  L   /   N  J
+
+                   1  1  0  .  6  2      N  E  W  S
+			
+                           February 2, 2007
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+</pre>
+
+<dl>
+  <dt>HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html">http://www.smlnj.org/index.html</a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.62/">http://smlnj.cs.uchicago.edu/dist/working/110.62/</a></dd>
+</dl>
+
+<h2>Summary:</h2>
+
+    Improvements to language processing tools and installation procedure.
+    Other minor bugfixes and enhancements.
+
+<hr>
+
+<h2>Details:</h2>
+
+<dl>
+  <dt>installer:</dt>
+  <dd>
+    <ul>
+      <li>Installer now handles the new <tt>ml-lpt-lib.cm</tt>.</li>
+      <li>There is now a new <em>library installer</em> that can be
+      used by shell scripts.</li>
+    </ul>
+  </dd>
+
+  <dt>SML/NJ library:</dt>
+  <dd>
+    <ul>
+      <li>UTF8 structure and signature (from Moby) added.</li>
+    </ul>
+  </dd>
+
+  <dt>CML:</dt>
+  <dd>
+    <ul>
+      <li>UTF8 structure and signature exported.</li>
+    </ul>
+  </dd>
+
+  <dt>runtime:</dt>
+  <dd>
+    <ul>
+      <li>Added functionality to "shift" command line arguments
+      (like <tt>/bin/sh</tt>'s <b>shift</b> command).</li>
+    </ul>
+  </dd>
+
+  <dt>CM:</dt>
+  <dd>
+    <ul>
+      <li>During startup, while processing command-line arguments,
+      CM uses the new <em>shift</em> functionality (see above) to trim
+      down the argument list.<br>
+      This way one can easily write ML code that (when executed via
+      the command line) takes over control and processes all
+      remaining arguments.<br>
+      This functionality is utilized by the new library installer.</li>
+
+      <li>CM plugins for tools (e.g., <tt>ml-burg</tt>,
+      <tt>ml-ulex</tt>, <tt>ml-antlr</tt>) now live
+      within their respective source trees and are installed
+      by the library installer.</li>
+    </ul>
+  </dd>
+
+  <dt>language processing tools:</dt>
+  <dd>
+    <ul>
+      <li>manual is up-to-date with the code</li>
+      <li>many minor improvements</li>
+      <li>a few minor bugfixes</li>
+      <li>added support for stream created from several kinds of sources</li>
+    </ul>
+  </dd>
+</dl>
+
+</body>
+</html>

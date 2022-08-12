@@ -1,0 +1,55 @@
+Things to cover in the guide (in no particular order)
+
+Introduction
+  - supported systems
+  - installation
+
+Programming Resources
+
+How to report bugs
+
+Using the REPL
+  - use
+
+Using CM
+  - CM files
+  - CM.make
+
+Building applications
+  - exportML
+  - batch compilation with ml-build
+  - heap2asm
+
+Catalog of error messages
+
+SML/NJ extensions
+  - higher-order functors
+  - where structure
+  - vector literals/patterns
+  - or-patterns
+  - lazy
+  - quote/anti-quote
+  - continuations
+
+Successor ML features
+
+Basis Library extensions
+
+The SMLofNJ structure
+
+SML/NJ Library
+
+Overview of the components of the system
+  - ml-build / ml-makedepend
+  - ml-yacc
+  - ml-lpt (ml-ulex and ml-antlr)
+  - heap2exec
+
+Misc
+  - backtrace
+  - profiling (does this actually work?)
+
+SML programming style recommendations
+  - naming conventions
+  - deprecated features (e.g. abstype)
+  - code editor support (e.g. sml-mode in emacs)

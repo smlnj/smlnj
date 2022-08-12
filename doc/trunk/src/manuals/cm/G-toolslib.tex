@@ -1,0 +1,136 @@
+%!TEX root = manual.tex
+%
+\chapter{Exports of library \texttt{\$smlnj/cm/tools.cm}}
+
+As described in \chapref{chap:moretools}, it is possible to extend
+CM's set of available tools using the programming interface provided
+by {\tt structure Tools}.  This structure---together with its
+corresponding {\tt signature TOOLS}---is exported by library {\tt
+\$smlnj/cm/tools.cm}.  The same library also exports {\tt structure
+Sharing}, {\tt structure Version}, and a corresponding {\tt signature
+VERSION}.
+
+\section{The public signature of {\tt structure Tools}}
+
+\begin{lstlisting}
+  signature TOOLS = sig
+
+      type class = string
+
+      type srcpath
+      type presrcpath
+
+      type rebindings = { anchor: string, value: presrcpath } list
+
+      val nativeSpec : srcpath -> string
+      val nativePreSpec : presrcpath -> string
+      val srcpath : presrcpath -> srcpath
+      val augment : presrcpath -> string list -> presrcpath
+
+      exception ToolError of { tool: string, msg: string }
+
+      type pathmaker = unit -> presrcpath
+
+      type fnspec = { name: string, mkpath: pathmaker }
+
+      datatype toolopt =
+          STRING of fnspec
+        | SUBOPTS of { name: string, opts: toolopts }
+      withtype toolopts = toolopt list
+
+      type tooloptcvt = toolopts option -> toolopts option
+
+      type spec = { name: string, mkpath: pathmaker,
+                    class: class option, opts: toolopts option, derived: bool }
+
+      type setup = string option * string option (* (pre, post) *)
+
+      type expansion =
+           { smlfiles: (srcpath * Sharing.request * setup) list,
+             cmfiles: (srcpath * Version.t option * rebindings) list,
+             sources: (srcpath * { class: class, derived: bool}) list }
+
+      type partial_expansion = expansion * spec list
+
+      type rulefn = unit -> partial_expansion
+      type rulecontext = rulefn -> partial_expansion
+      type rule = { spec: spec,
+                    native2pathmaker: string -> pathmaker,
+                    context: rulecontext,
+                    defaultClassOf: fnspec -> class option }
+                  -> partial_expansion
+
+      val registerClass : class * rule -> unit
+
+      datatype classifier =
+          SFX_CLASSIFIER of string -> class option
+        | GEN_CLASSIFIER of { name: string, mkfname: unit -> string } ->
+                            class option
+
+      val stdSfxClassifier : { sfx: string , class: class } -> classifier
+
+      datatype extensionStyle =
+          EXTEND of (string * class option * tooloptcvt) list
+        | REPLACE of string list * (string * class option * tooloptcvt) list
+
+      val extend : extensionStyle ->
+                   (string * toolopts option) ->
+                   (string * class option * toolopts option) list
+
+      val outdated : string -> string list * string -> bool
+
+      val outdated' :
+          string -> { src: string, wtn: string, tgt: string } -> bool
+
+      val openTextOut : string -> TextIO.outstream
+
+      val makeDirs : string -> unit
+
+      val registerClassifier : classifier -> unit
+
+      val parseOptions :
+          { tool : string, keywords : string list, options : toolopts } ->
+          { matches : string -> toolopts option, restoptions : string list }
+
+      val say : string list -> unit
+      val vsay : string list -> unit
+
+      val mkCmdName : string -> string
+
+      val registerStdShellCmdTool :
+          { tool: string, class: string, suffixes: string list,
+            cmdStdPath: string, extensionStyle: extensionStyle,
+            template: string option, dflopts: toolopts }
+          -> unit
+  end
+
+  structure Tools :> TOOLS
+\end{lstlisting}%
+
+\section{The public signature of {\tt structure Version}}
+
+\begin{lstlisting}
+  signature VERSION = sig
+
+      type t
+
+      val fromString : string -> t option
+      val toString: t -> string
+      val compare : t * t -> order
+
+      val nextMajor : t -> t
+
+      val zero: t
+  end
+
+  structure Version :> VERSION
+\end{lstlisting}%
+
+\section{The public signature of {\tt structure Sharing}}
+
+\begin{lstlisting}
+  structure Sharing : sig
+      datatype request = PRIVATE | SHARED | DONTCARE
+      datatype mode = SHARE of bool | DONTSHARE
+  end
+\end{lstlisting}%

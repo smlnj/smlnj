@@ -1,0 +1,25 @@
+/*
+  pygmentize filter for SML code
+*/
+pre.pygments .hll { background-color: #ffffcc }
+pre.pygments { font-size: 0.9em; background: @CODE_BACKGROUND@; }	/* code background */
+pre.pygments .tok-k { color: @KW_COLOR@; font-weight: bold }		/* Keyword */
+pre.pygments .tok-kr { color: @KW_COLOR@; font-weight: bold; }		/* keywords */
+pre.pygments .tok-kt { color: @TY_COLOR@; }				/* type */
+pre.pygments .tok-o { color: @KW_COLOR@; }				/* Operator */
+pre.pygments .tok-c { color: @COM_COLOR@; font-style: italic; }		/* comments */
+pre.pygments .tok-cm { color: @COM_COLOR@; font-style: italic; }	/* comments */
+pre.pygments .tok-s2 { color: @LIT_COLOR@; }				/* strings */
+pre.pygments .tok-mb { color: @LIT_COLOR@; }				/* Literal.Number.Bin */
+pre.pygments .tok-mf { color: @LIT_COLOR@; }				/* Literal.Number.Float */
+pre.pygments .tok-mh { color: @LIT_COLOR@; }				/* Literal.Number.Hex */
+pre.pygments .tok-mi { color: @LIT_COLOR@; }				/* Literal.Number.Integer */
+pre.pygments .tok-mo { color: @LIT_COLOR@; }				/* Literal.Number.Oct */
+pre.pygments .tok-kt { color: @BIND_COLOR@; }				/* lhs type names */
+pre.pygments .tok-n { color: @CODE_COLOR@; }				/* type names on rhs; parameters */
+pre.pygments .tok-p { color: @PUNCT_COLOR@; }				/* punctuation */
+pre.pygments .tok-nn { color: @BIND_COLOR@; font-weight: bold; }	/* Module names */
+pre.pygments .tok-nv { color: @BIND_COLOR@; font-weight: bold; }	/* variable names in val bindings */
+pre.pygments .tok-nf { color: @BIND_COLOR@; font-weight: bold; }	/* function names in fun bindings */
+pre.pygments .tok-nc { color: @BIND_COLOR@; font-weight: bold; }	/* data constructor name in rhs of datatype */
+pre.pygments .tok-nd { color: @TV_COLOR@; }				/* type variable */

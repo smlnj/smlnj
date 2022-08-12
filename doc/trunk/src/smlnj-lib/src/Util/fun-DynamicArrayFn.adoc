@@ -1,0 +1,135 @@
+= The `DynamicArrayFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `DynamicArrayFn` functor provides dynamically sized monomorphic
+arrays.  Each array has an associated _default_ value, which is
+covers those elements that have not been explicitly initialized
+(conceptually, one can view an array as having an infinite size).
+Thus, reads from indices above the bound will return the default value.
+The __bound__ of an array is the highest index of an initialized
+element (or `~1` if there are no initialized elements).  The
+__defined range__ of the array are the elements in the positions
+indexed from zero to the bound.
+
+== Synopsis
+
+[source,sml]
+------------
+signature MONO_DYNAMIC_ARRAY
+functor DynamicArrayFn (A : MONO_ARRAY) : MONO_DYNAMIC_ARRAY
+------------
+
+== Functor Argument Interface
+
+[source,sml]
+------------
+A : MONO_ARRAY
+------------
+
+== Functor Argument Description
+
+`A : MONO_ARRAY`::
+  A structure that implements the
+  {sml-basis-url}/mono-array.html[`MONO_ARRAY`] signature from
+  the {sml-basis-url}/index.html[*SML Basis Library*].
+
+== Interface
+
+[source,sml]
+------------
+type elem
+type array
+
+val array : (int * elem) -> array
+
+val subArray : array * int * int -> array
+
+val fromList : elem list * elem -> array
+val toList : array -> elem list
+
+val tabulate: int * (int -> elem) * elem -> array
+
+val default : array -> elem
+
+val sub : array * int -> elem
+
+val update : array * int * elem -> unit
+
+val bound : array -> int
+
+val truncate : array * int -> unit
+------------
+
+== Interface Description
+
+`[.kw]#type# elem`::
+  The type of array elements.
+
+`[.kw]#type# array`::
+  The type of dynamic arrays.
+
+`[.kw]#val# array : (int * elem) \-> array`::
+  `array (sz, dflt)` returns a new array with bound `~1` and default
+  value `dflt`.  The `sz` argument, which must be non-negative, is used
+  as a hint of the potential range of indices.  This function raises
+  the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
+  exception if `sz < 0`.
+
+`[.kw]#val# subArray : array * int * int \-> array`::
+  `subArray (arr, lo, hi)` returns a new array with the same default
+  as `arr`, and whose values in the range `[0, hi-lo]` are equal to
+  the values in `arr` in the range `[lo, hi]`.  This function raises
+  the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
+  exception if `lo > hi`.
+
+`[.kw]#val# fromList : elem list * elem \-> array`::
+  `fromList (lst, dflt)` returns a new array created from the elements
+  of `lst` and with default value `dflt`.  The bound of the array will be
+  `length lst - 1`.
+
+`[.kw]#val# toList : 'a array \-> 'a list`::
+  `toList arr` returns a list of the array's contents.  The resulting
+  list will have the array's bound plus one elements.
+
+`[.kw]#val# tabulate: int * (int \-> elem) * elem \-> array`::
+  `tabulate (sz, init, dflt)` returns a new array with the first
+  `sz` elements initialized using the function `init` and the
+  default value `dflt`.  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
+  exception if `sz < 0`.
+
+`[.kw]#val# default : array \-> elem`::
+  `default arr` returns the default value for the array.
+
+`[.kw]#val# sub : array * int \-> elem`::
+  `sub (arr, ix)` returns the value of the array at index `ix`.
+  If that value has not been explicitly set, then it returns the array's
+  default value.  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Subscript:EXN:SPEC[`Subscript`]
+  exception if `ix < 0`.
+
+`[.kw]#val# update : array * int * elem \-> unit`::
+  `update (arr, ix, v)` sets the value at index `ix` of the array to `v`.
+  If `ix` is greater than the current bound of the array, then the bound
+  is set to `ix`.  This function raises the
+  {sml-basis-url}/general.html#SIG:GENERAL.Subscript:EXN:SPEC[`Subscript`]
+  exception if `ix < 0`.
+
+`[.kw]#val# bound : array \-> int`::
+  `bound arr` returns the current bound of the array, which is the highest
+  index that has been explicitly set (__e.g.__, by `update`).
+
+`[.kw]#val# truncate : array * int \-> unit`::
+  `truncate (arr, sz)` sets every entry with index greater or equal to
+  `sz` to the array's default value.
+
+== See Also
+
+xref:str-DynamicArray.adoc[`DynamicArray`],
+{sml-basis-url}/Basis/mono-array.html[`MONO_ARRAY`],
+xref:fun-MonoArrayFn.adoc[`MonoArrayFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

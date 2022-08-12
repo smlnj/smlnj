@@ -1,0 +1,66 @@
+ML-MAKEDEPEND(1)
+================
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+ml-makedepend - makefile dependency generator for SML/NJ programs
+
+SYNOPSIS
+--------
+*ml-makedepend* ['OPTIONS'] 'project.cm' 'target'
+
+DESCRIPTION
+-----------
+
+*ML-Makedepend* is a tool for generating dependency information to allow the
+Unix *make*(1) program to be used to build SML/NJ programs.
+
+OPTIONS
+-------
+*-f* 'makefile'::
+  Specify the name of the makefile to which the dependency information is appended.  If this
+  option is _not_ given, then the output is appended to the end of the file +makefile+
+  (or +Makefile+).  It is an error if neither file exists and the *-f* option is not specified.
+
+*-a* 'arch'::
+  specifies the name a make variable for architecture-specific filenames and paths
+  (the default is +ARCH+).
+
+*-o* 'os'::
+  specifies the name a make variable for operating-system-specific filenames and paths
+  (the default is +OPSYS+).
+
+*-n*::
+  generates full filenames and paths with any architecture or operating-system-specific
+  parts expanded out to their definition for the host system.  If this option is specified,
+  then any *-a* and *-o* options are ignored.
+
+*-C*'ctl'='value'::
+  set the control 'ctl' to 'value'.
+
+*-D*'name'='value'::
+  define the CM variable 'name' to have the given value.
+
+*-D*'name::
+  define the CM variable 'name' to have the value 1.
+
+*-U*'name'::
+  remove any definition of the CM variable 'name'.
+
+AUTHOR
+------
+*ML-Makedepend* was written by Matthias Blume.
+
+SEE-ALSO
+--------
+*ml-build*(1), *sml*(1), *smlnj*(7)
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

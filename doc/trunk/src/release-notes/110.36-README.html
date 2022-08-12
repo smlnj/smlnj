@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>SML/NJ 110.36 NEWS</title>
+  <meta name="author" content="Matthias Blume">
+  <meta name="description" content="working release announcement for SML/NJ">
+</head>
+  <body>
+ 
+<div align="Center"> 
+<h1>S  M  L   /   N  J &nbsp;                    1  1  0  . 36 &nbsp;   
+  N  E  W  S</h1>
+ </div>
+ <br>
+ 
+<div align="Center"><i>September 18, 2001</i><br>
+ </div>
+ <br>
+ 
+<div align="Center"><b>WARNING    	This version is intended for compiler hackers.
+The  	version ought to be stable, however we have not run 	our full regression
+testing.          <a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">
+http://cm.bell-labs.com/cm/cs/what/smlnj/index.html</a>
+</b><a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html"><b><br>
+ </b></a>
+</div>
+ <br>
+ 
+<hr width="100%" size="2" align="Left"> 
+<h3>Summary:</h3>
+ 
+<ul>
+   <li>This is a bugfix release, mainly with the purpose of solving a problem
+with the FLINT optimizer that was erroneously throwing away code in some
+cases.</li>
+  <li>Other changes include a minor bugfix for ml-lex, the implementation
+of a "minimal" structure Compiler, and switching over to an improved code
+generator on the x86 (affecting floating-point computations).<br>
+  </li>
+ 
+</ul>
+ 
+<div align="Left"> 
+<hr width="100%" size="2" align="Left"> 
+<h4>FLINT:   </h4>
+ 
+<ul>
+  <li>There was a problem with FLINT occasionally using the wrong continuation
+for certain functions because of a faulty internal analysis.&nbsp; Fixed.<br>
+  </li>
+</ul>
+<h4>MLRISC (x86):   </h4>
+ 
+<ul>
+   <li>An updated version of the x86-fp module has been enabled by default.
+ This results in significant speedups for FP-intensive code.</li>
+ 
+</ul>
+ 
+<h4>Interactive system / libraries:</h4>
+ 
+<ul>
+  <li>A minimal version of structure Compiler is that only contains "version"
+and "architecture" is available at toplevel.&nbsp; Thus, legacy code that
+wants to test the current version number can do so without having to load
+the rather heavy (and obsolete) full structure Compiler from $smlnj/compiler/compiler.cm.<br>
+  </li>
+</ul>
+<h4>ML-Lex:</h4>
+ 
+<ul>
+  <li>Bug 1581 (concerning open parentheses in constant strings) has been
+fixed.</li>
+</ul>
+<h4></h4>
+ </div>
+ 
+</body>
+</html>

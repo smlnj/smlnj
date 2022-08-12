@@ -1,0 +1,126 @@
+%!TEX root = manual.tex
+%
+
+\chapter{Conditional compilation}
+\label{chap:preproc}
+
+In its description files, CM offers a simple conditional compilation
+facility inspired by the preprocessor for the C language~\cite{k&r2}.
+However, it is not really a {\it pre}-processor, and the syntax of the
+controlling expressions is borrowed from SML.
+
+Sequences of members can be guarded by {\tt \#if}-{\tt \#endif}
+brackets with optional {\tt \#elif} and {\tt \#else} lines in between.
+The same guarding syntax can also be used to conditionalize the export
+list.  {\tt \#if}-, {\tt \#elif}-, {\tt \#else}-, and {\tt
+\#endif}-lines must start in the first column and always
+extend to the end of the current line.  {\tt \#if} and {\tt \#elif}
+must be followed by a boolean expression.
+
+Boolean expressions can be formed by comparing arithmetic expressions
+(using operators {\tt <}, {\tt <=}, {\tt =}, {\tt >=}, {\tt >}, or
+{\tt <>}), by logically combining two other boolean expressions (using
+operators {\tt andalso}, {\tt orelse}, {\tt =}, or {\tt <>}, by
+querying the existence of a CM symbol definition, or by querying the
+existence of an exported ML definition.
+
+Arithmetic expressions can be numbers or references to CM symbols, or
+can be formed from other arithmetic expressions using operators {\tt
++}, {\tt -} (subtraction), \verb|*|, {\tt div}, {\tt mod}, or $\tilde{~}$
+(unary minus).  All arithmetic is done on signed integers.
+
+Any expression (arithmetic or boolean) can be surrounded by
+parentheses to enforce precedence.
+
+\section{CM variables}
+\label{sec:cmvars}
+
+CM provides a number of ``variables'' (names that stand for certain
+integers). These variables may appear in expressions of the
+conditional-compilation facility. The exact set of variables provided
+depends on SML/NJ version number, machine architecture, and
+operating system.  A reference to a CM variable is considered an
+arithmetic expression. If the variable is not defined, then it
+evaluates to 0.  The expression {\tt defined}($v$) is a boolean
+expression that yields true if and only if $v$ is a defined CM
+variable.
+
+The names of CM variables are formed starting with a letter followed
+by zero or more occurences of letters, decimal digits, apostrophes, or
+underscores.
+
+The following variables will be defined and bound to 1:
+\begin{itemize}
+\item depending on the operating system: \\
+{\tt OPSYS\_UNIX}, {\tt OPSYS\_WIN32}, {\tt OPSYS\_MACOS}, {\tt
+OPSYS\_OS2}, or {\tt OPSYS\_BEOS}
+\item depending on processor architecture: \\
+{\tt ARCH\_SPARC}, {\tt ARCH\_ALPHA}, {\tt ARCH\_MIPS}, {\tt
+ARCH\_X86}, {\tt ARCH\_HPPA}, {\tt ARCH\_RS6000}, or {\tt ARCH\_PPC}
+\item depending on the processor's endianness:
+{\tt BIG\_ENDIAN} or {\tt LITTLE\_ENDIAN}
+\item depending on the native word size of the implementation:
+{\tt SIZE\_32} or {\tt SIZE\_64}
+\item the symbol {\tt NEW\_CM}
+\end{itemize}
+
+Furthermore, the symbol {\tt SMLNJ\_VERSION} will be bound to the
+major version number of SML/NJ (i.e., the number before the first dot)
+and {\tt SMLNJ\_MINOR\_VERSION} will be bound to the system's minor
+version number (i.e., the number after the first dot).
+
+Using the {\tt CM.symval} interface one can define additional
+variables or modify existing ones.
+
+\section{Querying exported definitions}
+
+An expression of the form {\tt defined}($n$ $s$), where $s$ is an ML
+symbol and $n$ is an ML namespace specifier, is a boolean expression
+that yields true if and only if any member included before this test
+exports a definition under this name.  Therefore, order among members
+matters after all (but it remains unrelated to the problem of
+determining static dependencies)!  The namespace specifier must be one
+of: {\tt structure}, {\tt signature}, {\tt functor}, or {\tt funsig}.
+
+If the query takes place in the ``exports'' section of a description
+file, then it yields true if {\em any} of the included members exports
+the named symbol.
+
+\noindent Example:
+
+\begin{lstlisting}[language=CM]
+  Library
+      structure Foo
+  #if defined(structure Bar)
+      structure Bar
+  #endif
+  is
+  #if SMLNJ_VERSION > 110
+      new-foo.sml
+  #else
+      old-foo.sml
+  #endif
+  #if defined(structure Bar)
+      bar-client.sml
+  #else
+      no-bar-so-far.sml
+  #endif
+\end{lstlisting}%
+
+Here, the file {\tt bar-client.sml} gets included if {\tt
+SMLNJ\_VERSION} is greater than 110 and {\tt new-foo.sml} exports a
+structure {\tt Bar} {\em or} if {\tt SMLNJ\_VERSION <= 110} and {\tt
+old-foo.sml} exports structure {\tt Bar}.  Otherwise file {\tt
+no-bar-so-far.sml} gets included instead.  In addition, the export of
+structure {\tt Bar} is guarded by its own existence.  (Structure {\tt
+Bar} could also be defined by {\tt no-bar-so-far.sml} in
+which case it would get exported regardless of the outcome of the
+other {\tt defined} test.)
+
+\section{Explicit errors}
+
+A pseudo-member of the form {\tt \#error $\ldots$}, which---like other
+{\tt \#}-items---starts in the first column and extends to the end of
+the line, causes an explicit error message to be printed unless it
+gets excluded by the conditional compilation logic.  The error message
+is given by the remainder of the line after the word {\tt error}.

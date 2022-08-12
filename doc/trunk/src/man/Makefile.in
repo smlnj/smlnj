@@ -1,0 +1,73 @@
+# Makefile for SML/NJ Manual pages
+#
+# COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# @configure_input@
+#
+
+SHELL =		@SHELL@
+INSTALL =	@INSTALL@
+@SET_MAKE@
+
+ASCIIDOCTOR =	@ASCIIDOCTOR@
+
+SMLNJ_VERSION =	@SMLNJ_VERSION@
+SMLNJ_DATE =	@SMLNJ_DATE@
+
+MAN_OUT_DIR =	@OUT_DIR@/man
+HTML_OUT_DIR =	@OUT_DIR@/html/man
+WEB_OUT_DIR =	@WEB_OUT_DIR@/man
+
+ATTRS =		--attribute=version=$(SMLNJ_VERSION) \
+		--attribute=release-date="$(SMLNJ_DATE)"
+
+# Section 1 pages
+#
+ADOC1_FILES =	$(wildcard *.1.adoc)
+
+# Section 7 pages
+#
+ADOC7_FILES =	smlnj.7.adoc
+
+ADOC_FILES =	$(ADOC1_FILES) $(ADOC7_FILES)
+
+MAN1_PAGES =	$(ADOC1_FILES:.adoc=)
+MAN7_PAGES =	$(ADOC7_FILES:.adoc=)
+
+MAN1_HTML =	$(ADOC1_FILES:.adoc=.html)
+MAN7_HTML =	$(ADOC7_FILES:.adoc=.html)
+HTML =		$(MAN1_HTML) $(MAN7_HTML)
+
+.PHONY:		doc
+doc:		man html
+		mkdir -p $(MAN_OUT_DIR)/man1 $(MAN_OUT_DIR)/man7
+		cp -p $(MAN1_PAGES) $(MAN_OUT_DIR)/man1
+		cp -p $(MAN7_PAGES) $(MAN_OUT_DIR)/man7
+		mkdir -p $(HTML_OUT_DIR)/man1 $(HTML_OUT_DIR)/man7
+		cp -p $(MAN1_HTML) $(HTML_OUT_DIR)/man1
+		cp -p $(MAN7_HTML) $(HTML_OUT_DIR)/man7
+
+.PHONY:		man
+man:		$(MAN1_PAGES) $(MAN7_PAGES)
+
+.PHONY:		html
+html:		$(HTML)
+
+% : %.adoc
+	$(ASCIIDOCTOR) $(ATTRS) -d manpage -b manpage $<
+
+%.html : %.adoc
+	$(ASCIIDOCTOR) $(ATTRS) -d manpage -b html5 $<
+
+#################### Cleanup ####################
+
+CLEAN_SUBDIRS =
+
+CLEAN_FILES =
+
+DISTCLEAN_FILES +=	Makefile \
+			$(MAN1_PAGES) $(MAN7_PAGES) \
+			$(HTML)
+
+include @ROOT_DIR@/mk/clean-rules.gmk

@@ -1,0 +1,203 @@
+%!TEX root = btcomp.tex
+%
+
+\section{Differences between CMB and CM}
+
+In this section we discuss why compiling the compiler is different
+from compiling other ML programs.  Each of the following sub-sections
+focuses on one particular aspect.
+
+\subsection{Code sharing}
+
+CM keeps compiled code within the same directory tree that contains
+the corresponding ML source code.  Thus, there is a fixed function
+that maps the names of source files to the names of corresponding
+binfiles and the names of CM description files (for libraries) to
+their corresponding stable files.
+
+As a result, these files will be shared between programs that use the
+same libraries.  Moreover, CM will let different programs that are
+loaded into an interactive session at the same time share their
+in-memory copies of common compiled modules.  (There is also an issue of
+state-sharing, but this does not concern CMB because the bootstrap
+compiler only compiles code without linking it.)
+
+Sharing of code is useful for ordinary usage, but when compiling the
+compiler itself, it is not desirable.  During bootstrap compilation,
+it is often the case that several different versions of compiled code
+have to coexist.  Some, or even all of these versions can differ
+significantly from those of the currently running system.
+
+Therefore, CMB keeps binfiles and stable files in separate directory
+trees.  The names of the directories where these trees are rooted at
+are constructed from three parts; the binfile directory's name is {\tt
+$u$.bin.{\it arch}-{\it os}} and the stablefile directory's name is
+{\tt $u$.boot.{\it arch}-{\it os}}.  As mentioned before, {\it arch}
+is a string describing the current CPU architecture and {\it os} is a
+string describing the current operating system kind. Component $u$ is
+a string that can be selected freely when the bootstrap compiler is
+invoked.  When using {\tt CMB.make} it defaults to {\tt sml},
+otherwise it is the argument given to {\tt CMB.make'}.  (The $u$
+component is kept variable to make it possible to keep and use several
+compiled versions of the system at the same time.)
+
+The auxiliary script {\tt makeml} (which is responsible for
+bootstrapping a new system) also accepts a parameters to select $u$.
+If the parameter is missing, it defaults to {\tt sml} (in accordance
+with {\tt CMB.make}'s behavior).
+
+\subsection{Init library}
+
+The {\em init library} ({\tt \$smlnj/internal/init.cmi}) is a library
+that is used implicitly by all programs.  This library is ``special''
+in several ways and cannot be described using an ordinary CM
+description file.  It is the bootstrap compiler's responsibility to
+properly prepare a stable version.
+
+Ordinary programs (those managed by CM) do not have to worry about the
+special aspects of how to construct this library; they just have to be
+able to use its stable version.
+
+There are several reasons why the library cannot be described as an
+ordinary CM library:
+
+\begin{itemize}
+\item The library exports the {\em pervasive environment} which
+normally is imported implicitly by every compilation unit.  Within the
+init library, no pervasive environment is available yet.
+\item One binding in the above-mentioned pervasive environment is a
+binding for {\tt structure \_Core}.  The symbol {\tt \_Core} is not a
+legal SML identifier, and the bootstrap compiler has to take special
+action to create a binding for it anyway.
+\item One of the compilation units in this library is merely a
+placeholder which at link time has to be replaced by the SML/NJ
+runtime system (which is written in C).
+\end{itemize}
+
+\subsubsection{Linkage to runtime system}
+
+The ML source file {\tt dummy.sml} (located in directory {\tt
+src/system/smlnj/init}) contains a carefully constructed module whose
+signature matches that of the runtime system's binary API.  This file
+is being compiled as part of constructing the init library, but it has
+been marked specially as {\em runtime system placeholder}.  During
+compilation, this file pretends to {\em be} the runtime system; other
+modules that use the runtime system ``think'' they are using {\tt
+dummy.sml}.
+
+At link time (i.e., bootstrap time---when {\tt makeml} is run), the
+boot loader will ignore {\tt dummy.sml} and use the actual runtime
+system in its place.  This trick makes it possible that (from the
+point of view of all other modules) using services from the runtime
+system appears to be no different than using services from an ordinary
+ML compilation unit.
+
+\subsection{BOOTLIST file}
+
+Linking of SML/NJ programs involves executing the code of each of the
+concerned compilation units.  The code of each compilation unit is
+technically a closed function; all its imports have been turned into
+arguments and all exports have been turned into return values.
+
+For ordinary programs, this process is under control of CM; CM will
+take care of properly passing the exports of one compilation unit to
+the imports of the next.
+
+When booting a stand-alone program, though, there is no CM available
+yet.  Thus, executing module-level code and passing exports to imports
+has to be done by the (bare) runtime system.  The runtime system
+understands enough about the layout of binfiles and library files so
+that it can do that---provided there is a special {\em bootlist}
+file that contains instructions about which modules to load in what
+order.
+
+The bootlist mechanism is not restricted to building SML/NJ.  Ordinary
+ML code can also be turned into stand-alone programs, and as far as the
+runtime system is concerned, the mechanisms are the same.  The
+bootlist file used by such ordinary stand-alone ML programs will be
+constructed by CM; only in the case of bootstrapping SML/NJ itself it
+will be constructed by CMB.
+
+The name of the bootlist file is {\tt BOOTLIST}, and it is located at
+the root of the directory tree that contains stable files (i.e., its
+name is {\tt $u$.boot.{\it arch}-{\it os}/BOOTLIST}).
+
+\subsection{PIDMAP file}
+
+The last file to be loaded by the bootstrap process contains
+module-level code which will trigger the self-initialization of the
+interactive system---including CM.  One job of CM is to manage sharing
+of link-time state (i.e., dynamic state created by module-level code
+at link time).  Link-time state of a module used by the interactive
+system should be shared with any program using the same module.  The
+file {\tt $u$.boot.{\it arch}-{\it os}/PIDMAP} contains information
+that enables CM to relate existing link-time state to particular
+library modules and also to identify any link-time state that will
+never be shared and which can therefore be dropped.  It is CMB's
+responsibility to construct the {\tt PIDMAP} file.
+
+\subsection{Cross-compiling}
+
+Several different versions of the bootstrap compiler can
+coexist---each being responsible for targeting another CPU-OS
+combination.  Structure {\tt CMB} is the default bootstrap compiler
+that targets the current system; it is exported from {\tt
+\$smlnj/cmb.cm}.  The following table lists the names of other
+structures---those corresponding to various cross-compilers.  All
+these structures share the same signature.
+
+The table also shows the names of libraries that the structures are
+exported from as well as those {\it arch} and {\it os} strings that
+are used to name binfile- and stablefile-directory.
+
+\begin{small}
+\begin{center}
+\begin{tabular}{p{2.2in}||p{1.5in}|l|l|l|l}
+library & structure & architecture & OS & {\it arch} & {\it os} \\
+\hline\hline
+{\tt \$smlnj/cmb.cm} \newline
+{\tt \$smlnj/cmb/current.cm} & {\tt CMB} & current & current & & \\
+\hline\hline
+{\tt \$smlnj/cmb/alpha32-unix.cm} & {\tt Alpha32UnixCMB} &
+  Alpha & Unix & {\tt alpha32} & {\tt unix} \\
+\hline
+{\tt \$smlnj/cmb/hppa-unix.cm} & {\tt HPPAUnixCMB} &
+  HP-PA & Unix & {\tt hppa} & {\tt unix} \\
+\hline
+{\tt \$smlnj/cmb/ppc-macos.cm} & {\tt PPCMacOSCMB} &
+  Power-PC & Mac-OS & {\tt ppc} & {\tt macos} \\
+\hline
+{\tt \$smlnj/cmb/ppc-unix.cm} & {\tt PPCUnixCMB} &
+  Power-PC & Unix & {\tt ppc} & {\tt unix} \\
+\hline
+{\tt \$smlnj/cmb/sparc-unix.cm} & {\tt SparcUnixCMB} &
+  Sparc & Unix & {\tt sparc} & {\tt unix} \\
+\hline
+{\tt \$smlnj/cmb/x86-unix.cm} & {\tt X86UnixCMB} &
+  Intel x86 & Unix & {\tt x86} & {\tt unix} \\
+\hline
+{\tt \$smlnj/cmb/x86-win32.cm} & {\tt X86Win32CMB} &
+  Intel x86 & Win32 & {\tt x86} & {\tt win32} \\
+\hline\hline
+{\tt \$smlnj/cmb/all.cm} & all of the above (except {\tt CMB}) & & & & \\
+\end{tabular}
+\end{center}
+\end{small}
+
+As an example, consider targeting a Sparc/Unix system.  The first step
+is to load the library that exports the corresponding cross-compiler:
+
+\begin{lstlisting}
+  CM.autoload "$smlnj/cmb/sparc-unix.cm";
+\end{lstlisting}%
+% $
+
+Once this is done, run the equivalent of \lstinline@CMB.make@:
+
+\begin{lstlisting}
+  SparcUnixCMB.make ();
+\end{lstlisting}%
+
+This will recompile the compiler, producing object code for a Sparc.
+Binfiles will be stored under {\tt sml.bin.sparc-unix} and stable
+libraries under {\tt sml.boot.sparc-unix}.

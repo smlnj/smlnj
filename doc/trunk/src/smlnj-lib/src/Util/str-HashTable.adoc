@@ -1,0 +1,171 @@
+= The `HashTable` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `HashTable` structure implements hash tables that are polymorphic
+in the key type.
+
+The tables are implemented as an array of _buckets_, which are
+lists of key-value pairs.  The number of buckets grows with the number
+of table entries.
+
+== Synopsis
+
+[source,sml]
+------------
+structure HashTable
+------------
+
+== Interface
+
+[source,sml]
+------------
+type ('a, 'b) hash_table
+
+val mkTable : (('a -> word) * (('a * 'a) -> bool)) -> (int * exn)
+      -> ('a,'b) hash_table
+
+val clear : ('a, 'b) hash_table -> unit
+
+val insert : ('a, 'b) hash_table -> ('a * 'b) -> unit
+
+val inDomain : ('a, 'b) hash_table -> 'a -> bool
+
+val lookup : ('a, 'b) hash_table -> 'a -> 'b
+
+val find : ('a, 'b) hash_table -> 'a -> 'b option
+
+val remove : ('a, 'b) hash_table -> 'a -> 'b
+
+val numItems : ('a, 'b) hash_table ->  int
+
+val listItems  : ('a, 'b) hash_table -> 'b list
+val listItemsi : ('a, 'b) hash_table -> ('a * 'b) list
+
+val app  : ('b -> unit) -> ('a, 'b) hash_table -> unit
+val appi : (('a * 'b) -> unit) -> ('a, 'b) hash_table -> unit
+
+val map  : ('b -> 'c) -> ('a, 'b) hash_table -> ('a, 'c) hash_table
+val mapi : (('a * 'b) -> 'c) -> ('a, 'b) hash_table -> ('a, 'c) hash_table
+
+val fold  : (('b *'c) -> 'c) -> 'c -> ('a, 'b) hash_table -> 'c
+val foldi : (('a * 'b * 'c) -> 'c) -> 'c -> ('a, 'b) hash_table -> 'c
+
+val modify  : ('b -> 'b) -> ('a, 'b) hash_table -> unit
+val modifyi : (('a * 'b) -> 'b) -> ('a, 'b) hash_table -> unit
+
+val filter  : ('b -> bool) -> ('a, 'b) hash_table -> unit
+val filteri : (('a * 'b) -> bool) -> ('a, 'b) hash_table -> unit
+
+val copy : ('a, 'b) hash_table -> ('a, 'b) hash_table
+
+val bucketSizes : ('a, 'b) hash_table -> int list
+------------
+
+== Description
+
+`[.kw]#type# ('a, 'b) hash_table`::
+  The type of imperative hash tables indexed by ``'a`` values
+
+`[.kw]#val# mkTable : (('a \-> word) * (('a * 'a) \-> bool)) \-> (int * exn) \-> ('a,'b) hash_table`::
+  `mkTable (hash, same) (n, ex)` creates a new hash table that uses the `hash`
+  function to compute hash values for keys and the `same` function to test
+  key equality.  The table will be initially sized to hold at least `n` items.
+  The exception `ex` is raised by the xref:#val:lookup[`lookup`] and
+  xref:#val:remove[`remove`] functions when the search key is not in the domain.
+
+`[.kw]#val# clear : ('a, 'b) hash_table \-> unit`::
+  `clear tbl` removes all of the entries in the table.
+
+`[.kw]#val# insert : ('a, 'b) hash_table \-> ('a * 'b) \-> unit`::
+  `insert tbl (key, item)` inserts a mapping from `key` to `item` into `tbl`.
+  Any existing mapping of `key` is discarded.
+
+`[.kw]#val# inDomain : ('a, 'b) hash_table \-> 'a \-> bool`::
+  `inDomain tbl key` returns `true` if, and only if, `key` is in the
+  domain of the table
+
+[[val:lookup]]
+`[.kw]#val# lookup : ('a, 'b) hash_table \-> 'a \-> 'b`::
+  `lookup tbl key` returns the item that `key` maps to if `key` is in
+  the domain of `tbl`.  Otherwise, the table's exception is raised.
+
+`[.kw]#val# find : ('a, 'b) hash_table \-> 'a \-> 'b option`::
+  `find tbl key` returns the `SOME v` if `key` is mapped to `v` in `tbl`.
+  Otherwise, it returns `NONE`.
+
+[[val:remove]]
+`[.kw]#val# remove : ('a, 'b) hash_table \-> 'a \-> 'b`::
+  `remove tbl key` returns the item that `key` maps to if `key` is in
+  the domain of `tbl` and removes it from the table.  Otherwise, the
+  table's exception is raised.
+
+`[.kw]#val# numItems : ('a, 'b) hash_table \->  int`::
+  `numItems tbl` returns the number of entries in the table.
+
+`[.kw]#val# listItems  : ('a, 'b) hash_table \-> 'b list`::
+  `listItems tbl` returns a list of the items in the range of `tbl`.
+
+`[.kw]#val# listItemsi : ('a, 'b) hash_table \-> ('a * 'b) list`::
+  `listItemsi tbl` returns a list of the key-value entries in `tbl`.
+
+`[.kw]#val# app  : ('b \-> unit) \-> ('a, 'b) hash_table \-> unit`::
+  `app f tbl` applies the function `f` to each item in the range of `tbl`.
+
+`[.kw]#val# appi : (('a * 'b) \-> unit) \-> ('a, 'b) hash_table \-> unit`::
+  `appi f tbl` applies the function `f` to each item in the
+  key-value entries in `tbl`.
+
+`[.kw]#val# map  : ('b \-> 'c) \-> ('a, 'b) hash_table \-> ('a, 'c) hash_table`::
+  `map f tbl` creates a new table with an entry `(key, f(lookup tbl key))`
+  in the new table for every `key` in `tbl`.  The new table inherits its
+  hash and key-equality functions, and exception from `tbl`.
+
+`[.kw]#val# mapi : (('a * 'b) \-> 'c) \-> ('a, 'b) hash_table \-> ('a, 'c) hash_table`::
+  `mapi f tbl` creates a new table with an entry `(key, f(key, lookup tbl key))`
+  in the new table for every `key` in `tbl`.  The new table inherits its
+  hash and key-equality functions, and exception from `tbl`.
+
+`[.kw]#val# fold  : (('b *'c) \-> 'c) \-> 'c \-> ('a, 'b) hash_table \-> 'c`::
+  `fold f init tbl` folds the function `f` over the items in the range of `tbl`
+  using `init` as an initial value.
+
+`[.kw]#val# foldi : (('a * 'b * 'c) \-> 'c) \-> 'c \-> ('a, 'b) hash_table \-> 'c`::
+  `foldi f init tbl` folds the function `f` over the key-velu entries in `tbl`
+  using `init` as an initial value.
+
+`[.kw]#val# modify  : ('b \-> 'b) \-> ('a, 'b) hash_table \-> unit`::
+  `modify f tbl` applies the function `f` for effect to the items in the
+  range of `tbl`, replacing the old items with the result of applying `f`.
+
+`[.kw]#val# modifyi : (('a * 'b) \-> 'b) \-> ('a, 'b) hash_table \-> unit`::
+  `modifyi f tbl` applies the function `f` for effect to the key-value
+  entries in `tbl`, replacing the old items with the result of applying `f`.
+
+`[.kw]#val# filter  : ('b \-> bool) \-> ('a, 'b) hash_table \-> unit`::
+  `filter pred tbl` removes any entry `(key, item)` from `tbl` for which
+  `pred item` returns `false`.
+
+`[.kw]#val# filteri : (('a * 'b) \-> bool) \-> ('a, 'b) hash_table \-> unit`::
+  `filteri pred tbl` removes any entry `(key, item)` from `tbl` for which
+  `pred(key, item)` returns `false`.
+
+`[.kw]#val# copy : ('a, 'b) hash_table \-> ('a, 'b) hash_table`::
+  `copy tbl` creates a copy of `tbl`.  This expression is equivalent to
++
+[source,sml]
+------------
+map (fn x => x) tbl
+------------
+
+`[.kw]#val# bucketSizes : ('a, 'b) hash_table \-> int list`::
+  `bucketSizes tbl` returns a list of the current number of items per
+  bucket.  This function allows users to gauge the quality of their
+  hashing function.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

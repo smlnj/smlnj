@@ -1,0 +1,64 @@
+HEAP2EXEC(1)
+============
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+heap2exec - generate standalone executable from a *SML/NJ* heap image.
+
+SYNOPSIS
+--------
+*heap2exec* [ *-32* | *-64* ] [ 'LINKMODE' ] 'file'
+
+DESCRIPTION
+-----------
+
+Under normal usage, *SML/NJ* represents a program as a heap-image file
+with a name of the form `foo.arch-opsys`
+*Heap2exec* generates a standalone executable from a heap image.
+You have the option to specify a preferred linking mode.
+
+The default is to link statically on *FreeBSD* and *Linux*.
+
+Note that *heap2exec* is an _optional_ component of the SML/NJ
+installation process that is not included by default.  Edit the
+`config/targets` file before installation to include it.
+
+OPTIONS
+-------
+
+*-32*::
+  run the 32-bit version of the program (currently the default).
+
+*-64*::
+  run the 64-bit version of the program.  This option only applies to
+  the **x86-64** (aka **amd64**) architecture.
+
+*-static, -linkwith-a*::
+  statically link the program with the runtime system.  Static linking
+  is the default on *Linux* and *FreeBSD*.
+
+*-dynamic, -linkwith-so*::
+  dynamically link the program with the runtime system.
+
+AUTHOR
+------
+*Heap2exec* was written by Matthias Blume.
+
+SEE-ALSO
+--------
+sml(1)
+
+BUGS
+----
+*Heap2exec* is limited to the *x86* and *amd64* architectures and to the
+*macOS*, *Linux*, and *FreeBSD* operating systems.
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

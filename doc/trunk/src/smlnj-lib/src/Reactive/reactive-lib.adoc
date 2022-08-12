@@ -1,0 +1,41 @@
+= The Reactive Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *Reactive Library* is an implementation of a low-level reactive
+engine (or toolkit).  This implementation is a port of the Java
+http://www-sop.inria.fr/meije/rc/SugarCubes/index.html[*SugarCubes*]
+Library.  The main difference (aside from the implementation language)
+is that we support preemption of actions (as in Berry's
+https://doi.org/10.1145/158511.158526[_Communicating Reactive Processes_]
+model).
+
+== Contents
+
+xref:str-Reactive.adoc[`[.kw]#structure# Reactive`]::
+  something
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/reactive-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/Reactive/reactive-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-Reactive.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

@@ -1,0 +1,373 @@
+= The Util Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *Util Library* provides a large collection of utility data structures
+and algorithms.  It is the core library in the *SML/NJ Library* suite
+and dates back to the early 1990's, where it was originally developed
+by Emden Gansner and John Reppy as part of the *eXene* *X11* toolkit.
+Modules from this library are autoloaded into the *SML/NJ* interactive
+environment by default.
+
+== Contents
+
+xref:str-ANSITerm.adoc[`[.kw]#structure# ANSITerm`]::
+  provides support for displaying stylized text using the
+  https://en.wikipedia.org/wiki/ANSI_escape_code[ANSI escape codes].
+
+xref:str-ArrayQSort.adoc[`[.kw]#structure# ArrayQSort`]::
+  Provides _in situ_ sorting of polymorphic arrays
+  using the quicksort algorithm.
+
+xref:fun-ArrayQSortFn.adoc[`[.kw]#functor# ArrayQSortFn`]::
+  Provides _in situ_ sorting of monomorphic arrays
+  using the quicksort algorithm.
+
+xref:str-Atom.adoc[`[.kw]#structure# Atom`]::
+  provides hashed strings that have fast equality testing.
+
+xref:str-Base64.adoc[`[.kw]#structure# Base64`]::
+  Provides support for *Base-64* encoding/decoding as specified
+  by https://www.ietf.org/rfc/rfc4648.txt[RFC 4648].
+
+xref:fun-BinaryMapFn.adoc[`[.kw]#functor# BinaryMapFn`]::
+  Provides a balanced-binary-tree implementation of the
+  xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
+
+xref:fun-BinarySetFn.adoc[`[.kw]#functor# BinarySetFn`]::
+  Provides a balanced-binary-tree implementation of the
+  xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+xref:str-BitArray.adoc[`[.kw]#structure# BitArray`]::
+  Provides mutable arrays of booleans represented by one bit per element.
+
+xref:fun-BSearchFn.adoc[`[.kw]#functor# BSearchFn`]::
+  Provides binary search on sorted monomorphic arrays.
+
+xref:str-CharMap.adoc[`[.kw]#structure# CharMap`]::
+  Provides fast, read-only, maps from 8-bit characters to values.
+
+// 10
+
+xref:str-DynamicArray.adoc[`[.kw]#structure# DynamicArray`]::
+  Provides dynamically sized polymorphic arrays.
+
+xref:fun-DynamicArrayFn.adoc[`[.kw]#functor# DynamicArrayFn`]::
+  Provides dynamically sized monomorphic arrays.
+
+xref:str-Fifo.adoc[`[.kw]#structure# Fifo`]::
+  Provides a functional queue data structure.
+
+xref:str-FNVHash.adoc[`[.kw]#structure# FNVHash`]::
+  Provides an implementation of the
+  https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function[__Fowler-Noll-Vo__]
+  hashing algorithm.
+
+xref:str-Format.adoc[`[.kw]#structure# Format`]::
+  Provides `printf`-style string formatting.
+
+xref:str-FormatComb.adoc[`[.kw]#structure# FormatComb`]::
+  **To be written**
+
+xref:str-GetOpt.adoc[`[.kw]#structure# GetOpt`]::
+  Provides command-line argument processing.
+
+xref:fun-GraphSCCFn.adoc[`[.kw]#functor# GraphSCCFn`]::
+  Provides an algorithm for computing the strongly-connected
+  components of a directed graph.
+
+xref:fun-Hash2TableFn.adoc[`[.kw]#functor# Hash2TableFn`]::
+  Provides hash tables that are keyed by two different key types.
+
+xref:sig-HASH_KEY.adoc[`[.kw]#signature# HASH_KEY`]::
+  Defines an interface to a monomorphic type with an equality
+  test and hashing function.
+
+// 20
+
+xref:fun-HashSetFn.adoc[`[.kw]#functor# HashSetFn`]::
+  Provides a hash-table-based implementation of imperative sets
+  parameterized over a `Key` structure.
+
+xref:str-HashString.adoc[`[.kw]#structure# HashString`]::
+  Provides hashing functions for strings and substrings.
+
+xref:str-HashTable.adoc[`[.kw]#structure# HashTable`]::
+  Provides an implementation of polymorphic hash tables.
+
+xref:fun-HashTableFn.adoc[`[.kw]#functor# HashTableFn`]::
+  Provides a functor that implements the
+  xref:sig-MONO_HASH_TABLE.adoc[`MONO_HASH_TABLE`] signature.
+
+xref:sig-INTERVAL_DOMAIN.adoc[`[.kw]#signature# INTERVAL_DOMAIN`]::
+  Defines a representation of an abstract ordered domain that is
+  used as an argument to the xref:fun-IntervalSetFn.adoc[`IntervalSetFn`]
+  functor.
+
+xref:fun-IntervalSetFn.adoc[`[.kw]#functor# IntervalSetFn`]::
+  Provides sets over a discrete ordered domain, where the
+  sets are represented by intervals.
+
+xref:str-IOUtil.adoc[`[.kw]#structure# IOUtil`]::
+  Provides support for redirecting the standard input and output streams.
+
+xref:fun-KeywordFn.adoc[`[.kw]#functor# KeywordFn`]::
+  Provides a simple way to support a table of keyword
+  (or reserved) identifiers in a scanner.
+
+xref:fun-LeftPriorityQFn.adoc[`[.kw]#functor# LeftPriorityQFn`]::
+  Provides a functional implementation of priority
+  queues using leaftist heaps.
+
+xref:str-LibBase.adoc[`[.kw]#structure# LibBase`]::
+  Provides some common definitions that are
+  shared across the *SML/NJ Lbrary*.
+
+// 30
+
+xref:str-ListFormat.adoc[`[.kw]#structure# ListFormat`]::
+  Provides some utility functions for converting
+  lists into strings (and back).
+
+xref:fun-ListMapFn.adoc[`[.kw]#functor# ListMapFn`]::
+  Provides a sorted-list implementation of the
+  xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
+
+xref:str-ListMergeSort.adoc[`[.kw]#structure# ListMergeSort`]::
+ Provides a merge-sort algorithm for lists.
+
+xref:fun-ListSetFn.adoc[`[.kw]#functor# ListSetFn`]::
+  Provides a sorted-list implementation of the
+  xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+xref:str-ListXProd.adoc[`[.kw]#structure# ListXProd`]::
+  Provides list combinators for computing
+  over the "Cartesian product" of two lists.
+
+xref:fun-MonoArrayFn.adoc[`[.kw]#functor# MonoArrayFn`]::
+  Provides easy construction of new monomorphic array structures.
+
+xref:sig-MONO_HASH_TABLE.adoc[`[.kw]#signature# MONO_HASH_TABLE`]::
+  Defines an interface to imperative hash tables with monomorphic keys.
+
+xref:sig-ORD_KEY.adoc[`[.kw]#signature# ORD_KEY`]::
+  Defines an interface to an abstract type
+  of keys with a comparison function.
+
+xref:sig-ORD_MAP.adoc[`[.kw]#signature# ORD_MAP`]::
+  Defines an interface to finite maps over ordered keys.
+
+xref:sig-ORD_SET.adoc[`[.kw]#signature# ORD_SET`]::
+  Defines an interface to finite sets of ordered elements.
+
+// 40
+
+xref:str-ParserComb.adoc[`[.kw]#structure# ParserComb`]::
+  Provides parser combinators over character readers.
+
+xref:str-PathUtil.adoc[`[.kw]#structure# PathUtil`]::
+  Provides support for searching for files
+  in the file system using a list of possible locations.
+
+xref:str-PropList.adoc[`[.kw]#structure# PropList`]::
+  Provides a extensible, but type safe, implementation
+  of property lists.
+
+xref:str-Queue.adoc[`[.kw]#structure# Queue`]::
+  Provides an imperative queue data structure.
+
+xref:str-Rand.adoc[`[.kw]#structure# Rand`]::
+  Provides a simple random number generator.
+
+xref:str-Random.adoc[`[.kw]#structure# Random`]::
+  Provides a more sophisticated random number generator.
+
+xref:str-RealOrderStats.adoc[`[.kw]#structure# RealOrderStats`]::
+  **To be written**
+
+xref:fun-RedBlackMapFn.adoc[`[.kw]#functor# RedBlackMapFn`]::
+  Provides a red-black-tree implementation of the
+  xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
+
+xref:fun-RedBlackSetFn.adoc[`[.kw]#functor# RedBlackSetFn`]::
+  Provides a red-black-tree implementation of the
+  xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+xref:str-Scan.adoc[`[.kw]#structure# Scan`]::
+  **To be written**
+
+// 50
+
+xref:fun-SplayMapFn.adoc[`[.kw]#functor# SplayMapFn`]::
+  Provides a splay-tree implementation of the
+  xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
+
+xref:fun-SplaySetFn.adoc[`[.kw]#functor# SplaySetFn`]::
+  Provides a splay-tree implementation of the
+  xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+xref:str-TimeLimit.adoc[`[.kw]#structure# TimeLimit`]::
+  Provides a mechanism for limiting the execution
+  time of a computation.
+
+xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
+  **To be written**
+
+xref:str-URef.adoc[`[.kw]#structure# URef`]::
+  Provides mutable references with __Union-Find__ semantics.
+
+xref:str-UTF8.adoc[`[.kw]#structure# UTF8`]::
+  Provides support for working with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
+  encoded strings.
+
+// 56
+
+== Usage
+
+By default, the *Util Library* is autoloaded by *CM*, which means that it is
+immediately available to interactive use in the *SML/NJ* REPL.
+
+For https://smlnj.org[*SML/NJ*], include `$/smlnj-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-ANSITerm.adoc[]
+
+include::str-ArrayQSort.adoc[]
+
+include::fun-ArrayQSortFn.adoc[]
+
+include::str-Atom.adoc[]
+
+include::str-Base64.adoc[]
+
+include::fun-BinaryMapFn.adoc[]
+
+include::fun-BinarySetFn.adoc[]
+
+include::str-BitArray.adoc[]
+
+include::fun-BSearchFn.adoc[]
+
+include::str-CharMap.adoc[]
+
+// 10
+
+include::str-DynamicArray.adoc[]
+
+include::fun-DynamicArrayFn.adoc[]
+
+include::str-Fifo.adoc[]
+
+include::str-FNVHash.adoc[]
+
+include::str-Format.adoc[]
+
+include::str-FormatComb.adoc[]
+
+include::str-GetOpt.adoc[]
+
+include::fun-GraphSCCFn.adoc[]
+
+include::fun-Hash2TableFn.adoc[]
+
+include::sig-HASH_KEY.adoc[]
+
+// 20
+
+include::fun-HashSetFn.adoc[]
+
+include::str-HashString.adoc[]
+
+include::str-HashTable.adoc[]
+
+include::fun-HashTableFn.adoc[]
+
+include::sig-INTERVAL_DOMAIN.adoc[]
+
+include::fun-IntervalSetFn.adoc[]
+
+include::str-IOUtil.adoc[]
+
+include::fun-KeywordFn.adoc[]
+
+include::fun-LeftPriorityQFn.adoc[]
+
+include::str-LibBase.adoc[]
+
+// 30
+
+include::str-ListFormat.adoc[]
+
+include::fun-ListMapFn.adoc[]
+
+include::str-ListMergeSort.adoc[]
+
+include::fun-ListSetFn.adoc[]
+
+include::str-ListXProd.adoc[]
+
+include::fun-MonoArrayFn.adoc[]
+
+include::sig-MONO_HASH_TABLE.adoc[]
+
+include::sig-ORD_KEY.adoc[]
+
+include::sig-ORD_MAP.adoc[]
+
+include::sig-ORD_SET.adoc[]
+
+// 40
+
+include::str-ParserComb.adoc[]
+
+include::str-PathUtil.adoc[]
+
+include::str-PropList.adoc[]
+
+include::str-Queue.adoc[]
+
+include::str-Rand.adoc[]
+
+include::str-Random.adoc[]
+
+include::str-RealOrderStats.adoc[]
+
+include::fun-RedBlackMapFn.adoc[]
+
+include::fun-RedBlackSetFn.adoc[]
+
+include::str-Scan.adoc[]
+
+// 50
+
+include::fun-SplayMapFn.adoc[]
+
+include::fun-SplaySetFn.adoc[]
+
+include::str-TimeLimit.adoc[]
+
+include::str-UnivariateStats.adoc[]
+
+include::str-URef.adoc[]
+
+include::str-UTF8.adoc[]
+
+// 56
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

@@ -1,0 +1,163 @@
+// A template for creating release notes for a version
+//
+:version: 2021.1
+:date: December 31, 2021
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:release-notes: {dist-dir}{version}-README.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release contains significant changes to the *SML/NJ* system.  As such, it should
+be viewed as *beta* software.  The major changes are
+--
+* The version numbering scheme has changed to a `YYYY.NN` scheme, where `YYYY` is the
+  year of the release and `NN` is the release number for the year.
+* The **MLRISC** code generator that we have used for over 25 years has been replaced
+  with one based on the https://llvm.org[**LLVM Libraries**]
+* We have dropped support for 32-bit systems.  Since we do not
+  have a 64-bit Windows port yet, this version only supports "Unix"
+  systems on the *AMD64* processor (we have tested *Linux* and
+  *macOS).  For other systems, we recommend using the __legacy__ 110.99.2 version
+  of *SML/NJ*.
+  A 64-bit Windows version is a high priority and we hope to include
+  it in the next release.
+* The pattern-match compiler has been completely rewritten.
+--
+
+While we hope that people will experiment with this version (and report any problems),
+we recommend sticking with the "legacy" releases of the system (currently
+https://smlnj.org/dist/working/110.99.2/110.99.2-README.html[110.99.2]) for
+production work.
+
+Using the new backend, we have added code generation support for the 64-bit *ARM* processor
+(currently for *macOS* only).  Unfortunately, we have not been able to finish
+debugging this port, but we hope to have a release early in 2022 that adds both native
+ARM support and 64-bit Windows support.
+
+== Details
+
+=== Compiler
+
+The compiler has a new implementation of pattern-match compilation (see the
+{history}/[change log] for details).
+
+The *CPS* to *MLRISC* code generator has been replaced by a new backend with
+a new IR (*CFG*).  After optimization and closure-conversion, we now translate
+the first-order *CPS* IR to *CFG*.  The *CFG* IR is then serialized and passed
+to the runtime system, where a *LLVM*-based code generator translates it to
+machine code.  This new backend is described in the paper
+
+____
+https://dl.acm.org/doi/10.1145/3462172.3462191[A New Backend for Standard ML of New Jersey],
+by Kavon Farvardin and John Reppy. +
+_Proceedings of the 32nd Symposium on Implementation and Application of
+Functional Languages (IFL 2020)_, September 2020.
+____
+
+=== MLRISC
+
+The *MLRISC* library has been removed from the core part of *SML/NJ* and is no
+longer an enabled target in the build.  We plan to restore it as a target in the
+next release (there is some installation-script issues that have to be resolved
+first).
+
+=== Runtime System
+
+The runtime system now includes much of the *LLVM* source tree in the directory
+`base/runtime/llvm`.  If you are building from source code, the installation
+script will compile *LLVM* before building the runtime system.  Be warned that
+compiling *LLVM* can take significant time on slower systems.
+
+=== SML/NJ Library
+
+Several improvements to the *JSON* library:
+--
+* Added convenience function `int` to the `JSON_STREAM_OUTPUT` interface.
+
+* Refactored the output modules in the *JSON* library.  These changes should
+  not affect current clients of the library, but allow the addition of
+  printing *JSON* to a `CharBuffer.buf`.
+
+* Bug fix to `JSONUtil` module; the `FIND` path arc was not getting
+  handled for the update functions (_i.e._, `replace`, `insert`, and `append`).
+--
+
+=== Installation
+
+The `config/install.sh` script continues to work as before.  We have added a `-dev`
+command-line option to enable cross compilation (__i.e.__, it compiles *LLVM*
+for all of the supported target architectures).
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+Note that this list is relative to Version 110.99 and includes fixes that were
+part of the 110.99.* patch releases.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#278#
+| `ListMergeSort` is documented as stable, but is not (esp. since 110.78 rewrite!)
+| [.bugid]#279#
+| `Real.toLargeInt` returns zero for anything in range `[-512,512]`
+| [.bugid]#280#
+| 110.99 `config/install.sh -64` fails on macOS 10.15.7
+| [.bugid]#281#
+| Redundant error messages for when a constructor name is misspelled
+| [.bugid]#286#
+| Installation of *SML/NJ* v110.99.1 fails in fresh *Ubuntu* 20.04/*macOS* 10.15
+| [.bugid]#287#
+| Install errors with `request asdl`
+| [.bugid]#293#
+| SMLNJ Incompatibility with *macOS* 12 Beta
+| [.bugid]#294#
+| Compiler bug: Recover
+|=======
+
+The following unnumbered bug was also fixed:
+--
+  * Floating-point spill records were twice as large as necessary on 64-bit
+    systems.
+  * Fixed a bug in the printing of `char` values in the REPL.
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | FreeBSD |
+| | macOS 11 (Big Sur) | Tested
+| | macOS 12 (Monterey) | Tested
+| | Ubuntu 20.04 | Tested
+|=======

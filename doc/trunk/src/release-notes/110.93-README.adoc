@@ -1,0 +1,151 @@
+:version: 110.93
+:date: September 5, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release fixes a critical bug in the Windows implementation,
+as well as several other serious bugs.  In addition, it contains
+a number of changes that are part of the 64-bit porting effort,
+but these should not affect 32-bit behavior.
+
+== Details
+
+=== Installation
+
+While the {dist-dir}smlnj-x86-{version}.pkg[installer]
+for {version} works on macOS 10.14 Mojave, building from source
+requires some extra steps.  Another issue that you may encounter
+when building on macOS 10.14 Mojave is an error message for a shell
+script of the form
+
+.....
+  /bin/sh: bad interpreter: Operation not permitted
+.....
+
+This error arises because the `com.apple.quarantine` attribute is set on the
+shell script.  To fix the problem, remove the attribute using the command
+
+[source,shell]
+-----
+  xattr -d com.apple.quarantine shell-script
+-----
+and resume the build.
+
+
+=== Compiler
+
+--
+  * Restructured the CPS contraction phase to make the fusion of
+    integer/word conversions more uniform.
+
+  * Rewrote the expansion of the `INLLSHIFT`, `INLRSHIFTL`, and `INLRSHIFT`
+    primops to correcly handle shift operations on types that are smaller
+    than the default integer size.  This change also allows the `Word8`
+    shift operations to be inlined.
+
+  * Generalized code generation for conversions involving tagged integers/words,
+    where the size is _not_ the default integer size.
+--
+
+=== Runtime System
+
+Made a bunch of changes to fix issues on 64-bit targets.
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#173#
+| `OS.Process.sleep` only works with whole numbers
+| [.bugid]#208#
+| `Real.toManExp` produces incorrect results in some cases
+| [.bugid]#223#
+| Incremental Build fails on Windows
+|=======
+
+The following unnumbered bugs were also fixed:
+--
+  * Fixed a bug where `Int32.fromLarge(Word32.toLargeInt 0wxffffffff)` would
+    return `~1` instead of raising `Overflow`.
+
+  * `Int64` comparisons were incorrect for the case where bit 31 of the low
+    word was set.
+
+  * `Real.toManExp` computed an exponent that was off by one.  This bug also
+    broke the `Real.toLargeInt` function.
+
+  * Fixed a bug in the constant folding of arithmetic-right-shift operations.
+--
+
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+|=======
+
+=== A note about 64-bit support
+
+Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ {dist-dir}smlnj-x86-{version}.pkg[installer],
+however, works without issue on macOS 10.14 Mojave.
+
+We have been working on 64-bit support since 110.81 we expect to have it in place
+before the release of macOS 10.15.

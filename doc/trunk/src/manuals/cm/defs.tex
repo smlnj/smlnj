@@ -1,0 +1,76 @@
+%!TEX root = manual.tex
+%
+
+\usepackage{times}
+%-------------------------
+% the following magic makes the tt font in math mode be the same as the
+% normal tt font (i.e., Courier)
+%
+\SetMathAlphabet{\mathtt}{normal}{OT1}{pcr}{n}{n}
+\SetMathAlphabet{\mathtt}{bold}{OT1}{pcr}{bx}{n}
+%-------------------------
+
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\ie}{\textit{i.e.}}
+
+\newcommand{\appref}[1]{Appendix~\ref{#1}}
+\newcommand{\chapref}[1]{Chapter~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+
+% the name of a command run in the shell
+%
+\newcommand{\CMD}[1]{\textbf{#1}}
+
+\usepackage{color}
+\definecolor{Red}{rgb}{0.9,0.0,0.0}
+\definecolor{DarkBlue}{rgb}{0.0,0.0,0.75}
+\definecolor{Purple}{rgb}{0.5,0.0,0.4}
+\definecolor{DarkGreen}{rgb}{0.0,0.5,0.0}
+\newcommand{\cdColor}{DarkBlue}
+\newcommand{\kwColor}{Purple}
+\newcommand{\strColor}{DarkGreen}
+\newcommand{\comColor}{Red}
+
+\usepackage{listings}
+
+\lstdefinelanguage{SML}{%
+  morekeywords={%
+    abstype, and, andalso, as, case, datatype, do, else, end, eqtype, exception,%
+    fn, fun, functor, handle, if, in, include, infix, infixr, let, local, nonfix,%
+    of, op, open, orelse, raise, rec, sharing, sig, signature, struct, structure,%
+    then, type, val, where, while, with, withtype%
+  },%
+  otherkeywords={[,],\{,\},\,,:,...,_,|,=,=>,->,\#,:>},
+  sensitive,%
+  alsoletter={_},
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstdefinelanguage{CM}{%
+  morekeywords={%
+    functor, signature, structure,%
+    Library, Group, is,%
+  },%
+  sensitive,%
+  alsoletter={_},
+  morecomment=[n]{(*}{*)},%
+  morestring=[d]",%
+}[keywords,comments,strings]%
+
+\lstset{
+  basicstyle=\small\ttfamily\color{\cdColor},
+  keywordstyle=\color{\kwColor}\bfseries,
+  commentstyle=\color{\comColor}\itshape,
+  stringstyle=\color{\strColor}\itshape,
+  showstringspaces=false,
+  language=SML
+}
+
+\newcommand{\nt}[1]{{\it #1}}
+\newcommand{\tl}[1]{{\underline{\bf #1}}}
+\newcommand{\ttl}[1]{{\underline{\tt #1}}}
+\newcommand{\ar}{$\rightarrow$\ }
+\newcommand{\vb}{~$|$~}
+
+\usepackage{hyperref}

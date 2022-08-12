@@ -1,0 +1,53 @@
+    
+			S  M  L   /   N  J
+
+                  1  1  0  .  3  1      N  E  W  S
+			
+  		           December 8, 2000
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be usable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+  A couple of bug fixes and internal changes.
+
+Bug Fixes:
+  1514. sockets c-library broken
+  1582. SysErr exception connecting to socket
+  1585. getpeername in sockets
+
+MLRISC:
+	
+ Intel X86:
+
+ Internal Changes:
+
+   1. Interface to CELLS and the type of cell, cellkind, cellset etc.
+
+   2. No more regmaps!!  The attributes of cells, including its current color,  
+      are accessible from CELLS interface.  Cells can now take arbitrary 
+      annotations.  [They will also have a width attribute in the next 
+      go around.]
+
+   3. Interface of STREAM etc have changed (again, no more regmap).
+
+   4. Some MLTREE constructors, like, IF, BCC, JMP, CALL, etc have 
+      been simplified.  CVTI2I has been renamed into SX and ZX respectively,
+      following the lambda rtl convention.
+
+   5. The old RA interface was getting too complicated.  There are now
+      two functors, RISC_RA (in ra/risc_ra.sml) and X86RA (in x86/ra/x86RA.sml)
+      which abstract out from all the ugly business.  The first is for
+      RISC machines, and the second is for x86.  Please let us know if you
+      use these functors.
+
+   6. The cell change broke the peephole phases, because they used to
+      pattern match on specific cell number.  I (Allen) hacked up a simple 
+      tool to translate fake SML with where clauses into real ML.  This makes 
+      it much easier to write the rules.  Seems to work. (See Tools/WhereGen) 

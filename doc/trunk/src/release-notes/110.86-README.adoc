@@ -1,0 +1,185 @@
+:version: 110.86
+:date: May 2, 2019
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+The main purpose of this release is to provide a stable checkpoint
+for a series of internal compiler changes, which are part of the
+effort to support  64-bit systems.  In addition, however, it also
+contains a number of bug fixes and other improvements.
+
+== Details
+
+=== Installation
+
+While the {dist-dir}smlnj-x86-{version}.pkg[installer]
+for {version} works on macOS 10.14 Mojave, building from source
+requires some extra steps.
+
+=== SML/NJ Library
+
+Renamed the function `CharBufferPP.openOut` to `openBuf`, and added the
+`TextPP` structure that supports pretty printing to either an output
+stream (like `TextIOPP`) or a character buffer (like `CharBufferPP`).
+
+=== ASDL
+
+Further improvements to the new implementation of ASDL.
+--
+  * The interface to file and memory picklers was unified for the SML view.
+
+  * Added support for S-Expression pickling for the SML view (unpickling
+    has not yet been implemented).
+
+  * Significant editing of the documentation to make it more accurately
+    reflect the implementation.
+--
+
+=== Compiler
+
+We have made a number of changes to internal representations and
+implementations as part of the preparation for supporting 64-bit targets.
+We summarize these below (see the {history}[change log] for details).
+--
+  * Moved CPS related code out of the FLINT directory and into its own
+    `compiler/CPS` directory tree.
+
+  * Split out the utility code from the `CPS` structure into a new
+    `CPSUtil` structure.
+
+  * Renamed the various CPS primitive constructors so as to be compatible
+    with ASDL (*i.e.*, changed symbolic and lower-case constructor names to
+    upper-case identifiers).
+
+  * Moved the `F_SGN` constructor from the `fcmp` datatype to the `branch`
+    datatype (and renamed it `FSGN`).
+
+  * Many changes to the internal representation of primitive operators.
+--
+
+We have also made improvements to the core 64-bit arithmetic operations.
+
+Culled unused flags from the `Control` structure (mostly from `Control.CG`).
+
+=== Interactive System
+
+The implementation of the `use` function in the REPL has been rewritten to
+fix bugs [.bugid]#193#, [.bugid]#217#, and [.bugid]#219#.  The semantics of
+`use` are as follows:
+--
+  * If an invocation of `use` encounters a compilation error (either in the
+    initial file or in a nested invocation of `use`), then the compiler error
+    message will be printed and the call to `use` will immediately return `()`.
+
+  * If an invocation of `use` raises an exception during execution
+    of the compiled code (either in the initial file or in a nested
+    invocation of `use`), then the exception will be reported at
+    the top-level.
+
+  * Otherwise, if no errors or uncaught exceptions are encountered, then
+    `()` will be returned once the code in the used file has executed.
+--
+
+Note that any change to the global state or environment
+that occurs before an error is encountered, will **not** be rolled
+back.  Also, wrapping calls to `use` in exception handlers or using
+`callcc` in combination with `use` may break it.
+
+Files specified as command-line arguments to the **sml** command
+are treated as if `use` was invoked on them.  If there is an
+error, then the error is reported and the **sml** command
+will terminate with a non-zero exit status (at least on Unix).
+
+
+== Bugs
+
+Here is a list of tracked bugs fixed (or closed) with this release, please see the
+https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
+for more details.
+
+[.buglist,cols="^1,<15"]
+|=======
+| [.bugid]#193#
+| SML/NJ does not print unhandled exceptions in loaded files
+| [.bugid]#213#
+| `Int32.div` raises `Div` instead of `Overflow` when dividing `minInt` by `~1`
+| [.bugid]#217#
+| Unhandled exceptions no longer print anything when inside used file
+| [.bugid]#219#
+| "use" fails silently when a function inside a structure raises an exception
+|=======
+
+The following unnumbered bugs were also fixed:
+--
+  * The `Word32.toInt` function did not raise `Overflow` when given an
+    argument with its sign bit set in some cases (__e.g.__,
+    `Word32.toInt 0wx8002DE32;` would return `187954`).
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| Power PC | Mac OS X 10.5 (Leopard) |
+| | AIX |
+| {nbsp} | |
+| Sparc | Solaris |
+| | Linux |
+| {nbsp} | |
+| x86 (32-bit) | Mac OS X 10.6 (Snow Leopard) |
+| | Mac OS X 10.7 (Lion) |
+| | Mac OS X 10.8 (Mountain Lion) |
+| | Mac OS X 10.9 (Mavericks) |
+| | Mac OS X 10.10 (Yosemite) |
+| | Mac OS X 10.11 (El Capitan) |
+| | macOS 10.12 (Sierra) | Tested
+| | macOS 10.13 (High Sierra) | Tested
+| | macOS 10.14 (Mojave) | Tested
+| | Ubuntu 16.04.3 LTS | Tested
+| | Other Linux variants |
+| | BSD variants |
+| | Windows 7 |
+| | Windows 10 |
+| | Cygwin (32-bit) |
+|=======
+
+=== A note about 64-bit support
+
+Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ {dist-dir}smlnj-x86-{version}.pkg[installer],
+however, works without issue on macOS 10.14 Mojave.
+
+We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.

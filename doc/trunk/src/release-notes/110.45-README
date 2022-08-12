@@ -1,0 +1,55 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  5      N  E  W  S
+			
+  		         February 13, 2004
+
+			      WARNING
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.45/
+
+
+Summary:
+
+This is a maintenance release which fixes some minor problems, most
+notably an incompatibility with GCC 3.3.
+
+--------------------------------------------------------------------------
+
+Basis:
+------
+
+  - Timer interface changed in anticipation of a change to the spec
+  - POSIX_FLAGS replaced with BIT_FLAGS
+  - type of top-level app corrected
+  - other minor discrepancies with spec fixed
+
+runtime:
+--------
+
+  - added vp_limitPtrMask to win32-specific code
+  - added win32 Sleep function to runtime
+  - dropped "-ansi" flag from gcc invocation when used on assembly code
+    (fixes problem related to gcc 3.3)
+
+interactive loop:
+-----------------
+
+  - exception reporting improved (don't show part of exception history trace
+    that reaches into the implementation of the toplevel loop itself)
+
+MLRISC:
+-------
+
+  - preliminary support for c-calls interface on PPC architecture added
+    (not yet used for NLFFI)
+  - bug in getreg fixed
+
+compiler:
+---------
+
+  - code generation for int32 comparisons added

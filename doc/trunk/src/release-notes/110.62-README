@@ -1,0 +1,56 @@
+                         S  M  L   /   N  J
+
+                   1  1  0  .  6  2      N  E  W  S
+			
+                            February 2, 2007
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.62/
+
+
+Summary:
+
+    Improvements to language processing tools and installation procedure.
+    Other minor bugfixes and enhancements.
+
+--------------------------------------------------------------------------
+
+installer:
+    - now handles the new ml-lpt-lib.cm
+
+    - there is now a new "library installer" that can be used
+      by shell scripts
+
+SML/NJ library:
+    - UTF8 structure and signature (from Moby) added
+
+CML:
+    - UTF8 structure and signature exported
+
+runtime:
+    - added functionality to "shift" command line arguments
+      (like /bin/sh's "shift" command)
+
+CM:
+    - during startup, while processing command-line arguments,
+      use the new "shift" functionality (see above) to trim
+      down the argument list;
+      this way one can easily write ML code that (when executed via
+      the command line) takes over control and processes all
+      remaining arguments;
+      this functionality is utilized by the new library installer
+
+    - CM plugins for tools (e.g., ml-burg, ml-ulex, ml-antlr) now live
+      within their respective source trees and are installed
+      by the library installer
+
+language processing tools:
+    - manual is up-to-date with the code
+    - many minor improvements
+    - a few minor bugfixes
+    - added support for stream created from several kinds of sources

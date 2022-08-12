@@ -1,0 +1,193 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  0      N  E  W  S
+			
+  		           May 21, 2002
+
+			      WARNING
+
+  	This version is intended for compiler hackers. The 
+	version ought to be stable, however we have not run
+	our full regression testing.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+     Significant work in the MLRISC backend.  Many improvements
+     and bugfixes in various parts of the implementation.
+
+--------------------------------------------------------------------------
+
+Details:
+
+Libraries:
+
+   * added $/controls-lib.cm, a library of configurable "controls"
+     (In essence, controls are managed ref cells that can be
+     grouped in sets and put in "registries" to facilitate
+     configuration and customization via, e.g., environment variables
+     and command-line arguments.)
+     $/controls-lib.cm is a distillation of what used to be a CM-only
+     mechanism.  It is now used throughout the compiler.
+
+   * bug fixed in IntInf (parsing of hex literals)
+
+   * == and != added to INT_INF interface  (just placeholders for now)
+
+   * added mergeWith function to ORD_MAP interface
+
+   * added an implementation of Danvy-style format combinators to
+     $/smlnj-lib.cm
+
+   * priority queues added to Util library (using Okasaki's leftist-tree
+     implementation)
+
+   * updates to $/hash-cons-lib.cm (consR1 ... consR5 added)
+
+   * fixed bug in outputSubstr (in TextIO)
+
+   * new scrollbar implementation (eXene) courtesy of Allen Stoughton
+
+Basis:
+
+   * implemented Knuth-Morris-Pratt string matching and used it
+     for String.isSubstring, Substring.isSubstring, and Substring.position.
+
+   * added {String,Substring}.{concatWith,isSuffix,isSubstring} and
+     Substring.full
+
+MLRISC:
+
+   * jump chaining
+
+   * static block frequency calculation
+
+   * Ball-Larus branch prediction heuristics implemented
+
+   * graphical viewer for control flow graphs added
+
+   * treatment of pseudo-ops changed (get emitted first now)
+
+   * REMT removed from mltree; DIV and MOD now take a rounding
+     mode (DIV_TO_ZERO and DIV_TO_NEGINF)
+
+   * made generic implementations of DIV_TO_NEGINF more efficient
+
+   * CFG edge splitting added
+
+   * buggy parts of x86-fp recoded
+
+   * added instructions for 64-bit support on x86 (not enabled yet)
+
+CM:
+
+   * a new PID generation scheme is in place;  it guarantees freedom
+     from accidental clashes that could subvert the type system but
+     is "stable" enough to maintain cutoff recompilation properties
+
+   * documentation updates
+
+   * minor bug fixes
+
+   * lambda-split aggressiveness can now be specified on a per-file
+     basis in init.cmi as well
+
+   * CM is now aware of (_)overload, so it calculates dependecies for
+     it correctly
+
+   * support for non-0 entrypoint offsets added
+
+   * command-line argument handling for showing/setting controls added
+
+   * bug in command-line handling of noweb (in noweb tool) fixed
+
+   * improved handling of pathnames in make tool
+
+Runtime:
+
+   * fix for bug 1131 (excessive heap usage)
+
+   * heap export now silent unless GC messages are on
+
+   * fixed assembly code so that X86.prim.asm now compiles without
+     warnings
+
+   * support for non-0 entrypoint offsets added
+
+Compiler:
+
+   * cross-module inlining works much better now
+
+   * stopgap fix for problem with ppDec in the presence of multiple
+     declarations of the same type name within one compilation unit
+
+   * full support for div/mod/rem/quot added to x86 code generator
+
+   * primops added for divisions of all flavors; track those operations
+     to the backend instead of clumsily macro-expanding them out
+     at "translate" time
+
+   * INLMIN, INLMAX, INLABS parameterized by numkind; use this
+     to implement all flavors of min, max, and abs
+     (Real.abs still maps to a separate FP primop.)
+
+   * preliminary support for "raw record" allocation and reentrant
+     C function calls added
+
+   * conditional move added to cps (still buggy, therefore disabled)
+
+   * _overload now accepted as synonym for overload (when overloading
+     is enabled); this is for backward-compatibility
+
+   * support for non-0 entrypoint offsets added;  this (or something
+     similar) is needed to be able to deal with block reordering
+
+   * new, better scaling CPS spill phase
+
+   * compiler "knows" its native C calling convention (no longer needs
+     to be told by ml-nlffigen); X86Backend now split into X86CCallBackend
+     and X86StdCallBackend
+
+FFI:
+
+   * all C FFI libraries now anchored under $c
+
+   * tweaks to type encoding (use polymorphism to emulate subtyping)
+
+   * encoding of incomplete type is now equal to that of the
+     corresponding complete type; no more POINTER_TO_INCOMPLETE_TYPE
+     etc.
+     (This restores the full generality of the translation -- something
+     that was lost when we removed functors.)
+
+   * support for (optional) mapping enum types to datatypes added
+
+   * types in structures C and C_Debug are now equal
+
+   * added "witness value" mechanism to ml-nlffi-lib.cm to
+     implement efficient arbitrary-depth "casts" that strip away
+     or add "const" modifiers
+
+   * ML representation of "" changed so that conversion to C string
+     is very efficient
+
+Installer/scripts:
+
+   * suggestions for more preloads added to config/preloads
+
+   * don't use ?_DEFAULT environment variables. (They no longer
+     exist since we switched to $/controls-lib.cm.)
+
+   * buggy transitive-closure algorithm fixed; it caused more things
+     than necessary to be compiled
+
+Miscellanea:
+
+   * minor bug fixes and improvements to mlrisc tools
+
+   * mdl tool compiles again, but without anything that depends on
+     RTL specs (since this is currently broken)
+
+   * added #[...] expressions to mlrisc tools

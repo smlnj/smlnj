@@ -1,0 +1,26 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Main
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/json-lib.cm
+
+  ../index/sources.cm
+
+  config.sml
+  copy-file.sml
+  gen-toc.sml
+  main.sml
+  options.sml
+  run-asciidoctor.sml
+  util.sml
+

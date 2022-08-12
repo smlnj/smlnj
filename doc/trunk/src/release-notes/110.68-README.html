@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>SML/NJ 110.68 NEWS</title>
+</head>
+
+<body>
+<div align="center">
+<big><b>
+                       Standard ML of New Jersey
+<br/>
+                          Version 110.68 NEWS
+<br/>
+                           August 13, 2008
+<br/>
+<br/>
+</b>
+</big>
+</div>
+<p>
+<hr>
+
+<dl>
+  <dt>SML/NJ HOME:</dt>
+  <dd><a href="http://www.smlnj.org/index.html"><tt>http://www.smlnj.org/index.html</tt></a></dd>
+  <dt>FILES:</dt>
+  <dd><a href="http://smlnj.cs.uchicago.edu/dist/working/110.67/index.html">
+<tt>http://smlnj.cs.uchicago.edu/dist/working/110.68/</tt></a></dd>
+</dl>
+
+<hr>
+
+<h3>Summary:</h3>
+
+<h3>Details:</h3>
+
+<dl>
+
+  <dt>General:</dt>
+  <dd>
+    <ul>
+      <li>first batch of changes moving FLINT transforms and
+  computations out of front end to translate phase; improves type
+  checking and type error messages for val declarations.
+      </li>
+      <li>added build support for OpenBSD (not tested)</li>
+      <li>fixed Int64.fromString to use base-10</li>
+    </ul>
+  </dd><p>
+
+  <dt>SML/NJ Library:</dt>
+  <dd>
+    <ul>
+      <li>New library to support the reading and writing of JSON files.</li>
+      <li>Committed a major overhaul of the RegExp library.  There is now a new
+	engine that implements Ken Thompson's RE matching algorithm.  The result
+	type of the RE matches has also been simplified by removing an unecessary
+	option type.
+	<br/>
+	NOTE: the new RE engine is not complete in that it does not yet support
+	end marks.
+      </li>
+      <li>Added additional operations to the FormatComb module</li>
+    </ul>
+  </dd><p>
+
+  <dt>ml-lpt changes:</dt>
+  <dd>
+    <ul>
+      <li>ml-ulex bug fix for corner case</li>
+      <li>documentation updates</li>
+      <li>bugs in the parsing of specifications were fixed</li>
+      <li>changes to be more compatable with MLton</li>
+    </ul>
+  </dd><p>
+
+  <dt>Windows:</dt>
+  <dd>
+    <ul>
+      <li>implemented timer-based profiling</li>
+      <li>completed implementation of SML Basis Library Windows structure.</li>
+      <li>added nlffi support (see README for info)</li>
+      <li>various fixes to installation process</li>
+    </ul>
+  </dd>
+
+</body>
+</html>

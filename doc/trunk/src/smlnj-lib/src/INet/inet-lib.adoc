@@ -1,0 +1,40 @@
+= The INet Library
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+== Overview
+
+The *INet Library* provides utilities for network programming with sockets.
+
+== Contents
+
+xref:str-SockUtil.adoc[`[.kw]#structure# SockUtil`]::
+  Various utility functions for programming with sockets.
+
+xref:str-UnixSockUtil.adoc[`[.kw]#structure# UnixSockUtil`]::
+  Various utility functions for programming with Unix-domain sockets.
+
+== Usage
+
+For https://smlnj.org[*SML/NJ*], include `$/inet-lib.cm` in your
+*CM* file.
+
+For use in https://www.mlton.org/[*MLton*], include
+`$(SML_LIB)/smlnj-lib/INet/inet-lib.mlb` in your *MLB* file.
+
+ifdef::backend-pdf[]
+
+// Push titles down one level.
+:leveloffset: 1
+
+include::str-SockUtil.adoc[]
+
+include::str-UnixSockUtil.adoc[]
+
+// Return to normal title levels.
+:leveloffset: 0
+
+endif::[]

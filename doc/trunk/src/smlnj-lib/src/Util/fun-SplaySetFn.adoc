@@ -1,0 +1,27 @@
+= The `SplaySetFn` functor
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `SplaySetFn` functor provides a splay-tree implementation of the
+xref:sig-ORD_SET.adoc[`ORD_SET`] signature parameterized over the element type.
+
+It is recommended, however, that one use the xref:fun-RedBlackSetFn.adoc[`RedBlackSetFn`]
+functor instead of `SplaySetFn`, since experimentation has shown it to be
+faster across the board.
+
+== Synopsis
+
+[source,sml]
+------------
+functor SplaySetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key
+------------
+
+== See Also
+
+xref:sig-ORD_KEY.adoc[`ORD_KEY`],
+xref:sig-ORD_SET.adoc[`ORD_SET`],
+xref:fun-RedBlackSetFn.adoc[`RedBlackSetFn`],
+xref:smlnj-lib.adoc[__The Util Library__]

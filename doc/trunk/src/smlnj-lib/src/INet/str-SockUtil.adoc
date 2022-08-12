@@ -1,0 +1,114 @@
+= The `SockUtil` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `SockUtil` structure provides a collection of utility functions for
+programming with the *Basis Library*
+{sml-basis-url}/socket.html[`Socket`] structure
+
+== Synopsis
+
+[source,sml]
+------------
+signature SOCK_UTIL
+structure SockUtil : SOCK_UTIL
+------------
+
+== Interface
+
+[source,sml]
+------------
+datatype port = PortNumber of int | ServName of string
+
+datatype hostname = HostName of string | HostAddr of NetHostDB.in_addr
+
+val scanAddr : (char, 'a) StringCvt.reader
+      -> ({host : hostname, port : port option}, 'a) StringCvt.reader
+val addrFromString : string -> {host : hostname, port : port option} option
+
+exception BadAddr of string
+
+val resolveAddr : {host : hostname, port : port option}
+      -> {host : string, addr : NetHostDB.in_addr, port : int option}
+
+type 'a stream_sock = ('a, Socket.active Socket.stream) Socket.sock
+
+val connectINetStrm : {addr : NetHostDB.in_addr, port : int}
+      -> INetSock.inet stream_sock
+
+val recvVec : ('a stream_sock * int) -> Word8Vector.vector
+val recvStr : ('a stream_sock * int) -> string
+
+val sendVec : ('a stream_sock * Word8Vector.vector) -> unit
+val sendStr : ('a stream_sock * string) -> unit
+val sendArr : ('a stream_sock * Word8Array.array) -> unit
+------------
+
+== Description
+
+`[.kw]#datatype# port = PortNumber [.kw]#of# int | ServName [.kw]#of# string`::
+  specifies a port identifier, which either be a number (`Port`)
+  or the name of a service (`ServName`).
+
+`[.kw]#datatype# hostname = HostName [.kw]#of# string | HostAddr [.kw]#of# NetHostDB.in_addr`::
+  something
+
+[[val:scanAddr]]
+`[.kw]#val# scanAddr : (char, 'a) StringCvt.reader \-> ({host : hostname, port : port option}, 'a) StringCvt.reader`::
+  `scanAddr getc` returns an address reader.  An address is a string of
+  the form latexmath:[\mathit{addr}\,[\,\mathtt{:}\,\mathit{port}\,]],
+  where latexmath:[\mathit{addr}] may either be a numeric or symbolic host
+  name and the optional port is either a decimal port number or alphanumeric service
+  name. Legal host names must begin with a letter, and may contain any alphanumeric
+  character, the minus sign (`-`) and period (`.`), where the period is used as a
+  domain separator.
+
+`[.kw]#val# addrFromString : string \-> {host : hostname, port : port option} option`::
+  `addrFromString addr` converts the string `addr` to a host-port address specifier.
+  The syntax of addresses is as described for xref:#val:scanAddr[`scanAddr`].
+
+[[exn:BadAddr]]
+`[.kw]#exception# BadAddr [.kw]#of# string`::
+  This exception is raised by xref:#val:resolveAddr[`resolveAddr`].
+
+[[val:resolveAddr]]
+`[.kw]#val# resolveAddr : {host : hostname, port : port option} \-> {host : string, addr : NetHostDB.in_addr, port : int option}`::
+  `resolveAddr {host, port}` resolves the hostname and optional port in the
+  host and service databases.  If either the host or service name is not
+  found, then the xref:#exn:BadAddr[`BadAddr`] exception is raised.
+
+`[.kw]#type# 'a stream_sock = ('a, Socket.active Socket.stream) Socket.sock`::
+  A type abbreviation for active stream sockets.
+
+`[.kw]#val# connectINetStrm : {addr : NetHostDB.in_addr, port : int} \-> INetSock.inet stream_sock`::
+  `connectINetStrm {addr, port}` establishs a client-side connection to an
+  INET domain stream socket.
+
+`[.kw]#val# recvVec : ('a stream_sock * int) \-> Word8Vector.vector`::
+  `recvVec (sock, n)` reads `n` bytes from the stream socket `sock`; fewer than
+  `n` bytes is returned when the stream is closed at the other end of the connection.
+  It raises the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN[`Size`] exception
+  when `n` is negative.
+
+`[.kw]#val# recvStr : ('a stream_sock * int) \-> string`::
+  `recvStr (sock, n)` reads `n` characters from the stream socket `sock`; fewer than
+  `n` characters is returned when the stream is closed at the other end of the connection.
+  It raises the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN[`Size`] exception
+  when `n` is negative.
+
+`[.kw]#val# sendVec : ('a stream_sock * Word8Vector.vector) \-> unit`::
+  `sendVec (sock, vec)` sends the vector `vec` on the stream socket `sock`.
+
+`[.kw]#val# sendStr : ('a stream_sock * string) \-> unit`::
+  `sendStr (sock, s)` sends the string `s` on the stream socket `sock`.
+
+`[.kw]#val# sendArr : ('a stream_sock * Word8Array.array) \-> unit`::
+  `sendArr (sock, arr)` sends the array `arr` on the stream socket `sock`.
+
+== See Also
+
+{sml-basis-url}/socket.html[`Socket` (*SML Basis*)],
+xref:inet-lib.adoc[__The INet Library__]

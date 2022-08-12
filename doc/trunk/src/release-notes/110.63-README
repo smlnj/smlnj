@@ -1,0 +1,57 @@
+                       Standard ML of New Jersey
+
+                          Version 110.63 NEWS
+			
+                            March 22, 2007
+
+                                WARNING
+
+        This working version is believed to be stable, but
+        we have not run our full regression-test suite.
+
+             HOME:  http://www.smlnj.org/index.html
+             FILES: http://smlnj.cs.uchicago.edu/dist/working/110.63/
+
+
+--------------------------------------------------------------------------
+
+Summary:
+
+	This release is primarily a bugfix release.
+
+installer:
+      - Eliminated any mention of lexgen.  (Lexgen was an early precursor
+	to ml-ulex.)
+
+command-line tools:
+      - Fixed typo in ml-build script that prevented library anchors
+	from being registered.
+
+SML Basis Library:
+      - Fixed a number of inconsistencies between the Posix.TTY structure
+	and the Basis specification.  Thanks to Adam Chilpala.
+
+CM:
+      - Fixed bug in CM's parallel make facility that failed to have
+	the master re-link modules after letting slaves compile them.
+
+MLRISC:
+      - x86MCEmitter crashed when the immediate operand to MOVB was outside
+	of the range -128 ... 127.   Only the low order 8 bits of the
+	immediate operand are now significant.
+
+      - Added preliminary support in MLRISC for Staged Allocation, a technique
+	for specifying calling conventions.  See
+
+		http://www.eecs.harvard.edu/~nr/pubs/staged-abstract.html
+
+	Initially, this mechanism is being used to generate C calls for the
+	AMD64.
+
+      - Fixed bogus operand sizes in AMD64 instruction spilling.
+
+runtime:
+      - Fixed a problem with files that have very large numbers of literals.
+	When SaveCState was called with two values to save, a subsequent
+	GC could cause the RestoreCState to fail because the saved state had been
+	promoted to tagless pair.

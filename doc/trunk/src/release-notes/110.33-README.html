@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>SML/NJ Version 110.33 NEWS</title>
+  </head>
+
+  <body bgcolor="white">
+   <center><h1>Standard ML of New Jersey<BR>
+        Version 110.33, May 23, 2001</h1>
+   </center>
+
+   <center>
+      <a href=http://cm.bell-labs.com/cm/cs/what/smlnj/index.html>
+      Home page</a>
+   </center>
+
+<blockquote>
+<center>
+<h2> Warning </h2>
+</center>
+ <blockquote>
+ <blockquote>
+    <em>
+  	This version is intended for compiler hackers. The 
+	version ought to be quite stable, however we have not run
+	our full regression testing.
+    </em>
+ </blockquote> 
+ </blockquote>
+
+
+<hr>
+
+<center><h2>Summary:</h2></center>
+  This version should build under Mac OS X.
+<p>
+  This version is being used to introduce the new experimental C FFI
+  (currently only available for x86/Linux) and to check point a number
+  of changes to MLRISC.
+<p>
+  The CKIT is now part of the release because it is needed for ml-nlffigen.
+<p>
+  In support of the C FFI, the new $/c.cm library (from src/ml-nlffi-lib)
+  implements an encoding of the C type system in ML.  It receives help
+  from the ml-nlffigen glue code generator (from src/ml-nlffigen) which
+  transforms C source input into corresponding ML glue code.
+<p>
+  The compiler has been modified to support the C FFI.
+<p>
+  There are various bugfixes and some organizational changes.
+
+
+<hr>
+<center><h3>Mac OS X </h3></center>
+ <ol>
+  <li>This version should build under the new Apple <tt>Mac OS X </tt>
+  operating system. 
+ </ol>
+
+<hr>
+<center><h3>MLRISC</h3></center>
+ <ol>
+   <p><li> infinite precision throughout
+   <p><li> support for virtual frame pointers ("<tt>omit-frame-pointer</tt>")
+     (This was needed for a correct implementation of raw C calls,
+      but it should also come in handy for clients of MLRISC other
+      than SML/NJ.  Currently x86 only.)
+   <p><li> see the <a href=http://cm.bell-labs.com/cm/cs/what/smlnj/compiler-notes>
+	              omit-frame-pointer notes</a>
+   <p><li> support for alternative control-flow in MLTREE
+   <p><li> other API changes
+   <p><li> bug fixes
+ </ol>
+
+
+
+
+
+<hr>
+<center><h3>CM</h3></center>
+
+ <ol>
+    <p><li> "lambdasplit" parameter for class "sml" to control status and
+	      aggressiveness of cross-module inlining
+    <p><li> parallel make now works again
+    <p><li> "proxy libraries"
+    <p><li> other bug fixes
+ </ol>
+
+
+
+
+<hr>
+<center><h3>CKIT</h3></center>
+ <ol>
+   <li> The ckit source tree is now part of the SML/NJ distribution.
+ </ol>
+
+
+
+<hr>
+<center><h3>compiler</h3></center>
+
+ <ol>
+    <p><li> bug fixes (e.g., dead-up logic in cpsopt/contract.sml)
+    <p><li> lambda-split phase now in the optimization pipeline by default
+      control via Compiler.Control.LambdaSplitting.* (and/or via CM)
+    <p><li> compiler now aware of certain offsets in runtime-system data
+      structures to be able to generate code for raw C calls
+    <p><li> added raw memory access primops and a primop for raw C calls
+      and handled them throughout the compiler
+    <p><li> prim.sml now has correct types for all primops
+ </ol>
+
+
+
+
+<hr>
+<center><h3>ML-NLFFI</h3></center>
+ 
+ <ol>
+    <p><li> two source trees in support of the new NLFFI ("no-longer foreign
+      function interface") added:
+       <pre>
+    src/ml-nlffi-lib     --- support library
+    src/ml-nlffigen      --- glue code generator
+       </pre>
+    <p><li> some preliminary documentation under src/ml-nlffi-lib/Doc
+      (The tar file for this will be retrieved only if you enable
+       ml-nlffi-lib in config/targets.  Be sure to do this only on
+       x86/Linux platforms, though.  If you use a different platform
+       and want to look at the source or the documentation, fetch
+       the tar file by hand.)
+ </ol>
+
+
+<hr>
+<center><h3>smlnj-lib</h3></center>
+ <ol>
+     <li>Some API cleanup and bug fixes
+ </ol>
+
+
+<hr>
+<center><h3>runtime</h3></center>
+
+  <ol>
+    <p><li> dlopen and friends added (currently x86/Linux only)
+    <p><li> changes to vproc-state.h to support efficient signal handling
+      by new raw C call mechanism
+    <p><li> support for Mac OS X; Darwin
+  </ol>
+
+
+
+<hr>
+<center><h3>overall organization</h3></center>
+  <ol>
+    <li>Use CM "proxy libraries" where possible
+  </ol>
+
+
+
+<hr>
+<center><h3>scripts</h3></center>
+ <ol>
+    <p><li> various bug fixes to config/install.sh
+    <p><li> config/install.sh now knows about ckit, ml-nlffi-lib, and ml-nlffigen
+    <p><li> config/install.sh will use config/targets.customized if it exist
+      (falls back to config/targets if not)
+    <p><li> makeml verbosity level controllable via MAKEML_VERBOSITY
+      or command line switch
+ </ol>
+
+<hr>
+    <font size=-2>
+    <address><a href="mailto:george@research.bell-labs.com">
+		Lal George</a></address>
+<!-- Created: Thu Aug  6 00:13:09 EDT 1998 -->
+<!-- hhmts start -->
+Last modified: Thu May 24 11:27:19 EDT 2001
+<!-- hhmts end -->
+    </font>
+</blockquote>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>Standard ML of New Jersey Release Notes</title>
+<style>
+body {
+  font-size: 14pt;
+}
+div.smlnj-banner {
+  font-weight: bold;
+  text-align: center;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.smlnj-banner span.title {
+  font-size: 200%;
+}
+div.smlnj-banner span.subtitle {
+  font-size: 150%;
+}
+h2 {
+  font-size: 140%;
+}
+h3 {
+  font-size: 120%;
+}
+dd {
+  margin-left: 2em;
+  margin-bottom: 0.5em;
+}
+li {
+  margin-bottom: 0.5em;
+}
+span.important {
+  color: red;
+  text-weight: bold;
+}
+span.tt {
+  font-family: "Courier", monospace;
+}
+code {
+  font-family: "Courier", monospace;
+  white-space: pre;
+  color: darkblue;
+}
+.code {
+  font-family: "Courier", monospace;
+  white-space: pre;
+  color: darkblue;
+}
+span.kw {
+  font-family: "Courier", monospace;
+  font-weight: bold;
+  color: darkgreen;
+}
+span.com {
+  font-style: italic;
+  color: indianred;
+}
+span.exe {
+  font-weight: bold;
+}
+table.buglist {
+  margin-left: 2em;
+  font-size: 100%;
+}
+table.buglist span.bugid {
+  padding-right: 1em;
+  padding-left: 0px;
+  margin-left: 0px;
+}
+span.bugid {
+  font-weight: bold;
+}
+p.compact {
+  margin-top: 0pt;
+  margin-bottom: 0pt;
+}
+.support-table {
+  margin-left: 2em;
+  font-size: 100%;
+}
+.support-table th {
+  text-align: left;
+  padding-right: 1em;
+  border-bottom: 2px solid black;
+}
+.support-table td {
+  padding-right: 1em;
+}
+p.tableblock {
+  padding-right: 1em;
+  margin-top: 0pt;
+  margin-bottom: 0pt;
+}
+
+</style>
+</head>
+<body class="article">
+<div id="header">
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version 110.86 <br/> May 2, 2019 </span>
+</div>
+<hr>
+<div class="openblock">
+<div class="content">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">SML/NJ HOME</dt>
+<dd>
+<p><a href="https://www.smlnj.org/index.html"><span class="tt">https://smlnj.org</span></a></p>
+</dd>
+<dt class="hdlist1">FILES</dt>
+<dd>
+<p><a href="https://smlnj.org/dist/working/110.86/index.html"><span class="tt">https://smlnj.org/dist/working/110.86/</span></a></p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The main purpose of this release is to provide a stable checkpoint
+for a series of internal compiler changes, which are part of the
+effort to support  64-bit systems.  In addition, however, it also
+contains a number of bug fixes and other improvements.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_details">Details</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_installation">Installation</h3>
+<div class="paragraph">
+<p>While the <a href="https://smlnj.org/dist/working/110.86/smlnj-x86-110.86.pkg">installer</a>
+for 110.86 works on macOS 10.14 Mojave, building from source
+requires some extra steps.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_smlnj_library">SML/NJ Library</h3>
+<div class="paragraph">
+<p>Renamed the function <code>CharBufferPP.openOut</code> to <code>openBuf</code>, and added the
+<code>TextPP</code> structure that supports pretty printing to either an output
+stream (like <code>TextIOPP</code>) or a character buffer (like <code>CharBufferPP</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_asdl">ASDL</h3>
+<div class="paragraph">
+<p>Further improvements to the new implementation of ASDL.</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>The interface to file and memory picklers was unified for the SML view.</p>
+</li>
+<li>
+<p>Added support for S-Expression pickling for the SML view (unpickling
+has not yet been implemented).</p>
+</li>
+<li>
+<p>Significant editing of the documentation to make it more accurately
+reflect the implementation.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_compiler">Compiler</h3>
+<div class="paragraph">
+<p>We have made a number of changes to internal representations and
+implementations as part of the preparation for supporting 64-bit targets.
+We summarize these below (see the <a href="https://smlnj.org/dist/working/110.86/HISTORY.html">change log</a> for details).</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>Moved CPS related code out of the FLINT directory and into its own
+<code>compiler/CPS</code> directory tree.</p>
+</li>
+<li>
+<p>Split out the utility code from the <code>CPS</code> structure into a new
+<code>CPSUtil</code> structure.</p>
+</li>
+<li>
+<p>Renamed the various CPS primitive constructors so as to be compatible
+with ASDL (<strong>i.e.</strong>, changed symbolic and lower-case constructor names to
+upper-case identifiers).</p>
+</li>
+<li>
+<p>Moved the <code>F_SGN</code> constructor from the <code>fcmp</code> datatype to the <code>branch</code>
+datatype (and renamed it <code>FSGN</code>).</p>
+</li>
+<li>
+<p>Many changes to the internal representation of primitive operators.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>We have also made improvements to the core 64-bit arithmetic operations.</p>
+</div>
+<div class="paragraph">
+<p>Culled unused flags from the <code>Control</code> structure (mostly from <code>Control.CG</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_interactive_system">Interactive System</h3>
+<div class="paragraph">
+<p>The implementation of the <code>use</code> function in the REPL has been rewritten to
+fix bugs <span class="bugid">193</span>, <span class="bugid">217</span>, and <span class="bugid">219</span>.  The semantics of
+<code>use</code> are as follows:</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>If an invocation of <code>use</code> encounters a compilation error (either in the
+initial file or in a nested invocation of <code>use</code>), then the compiler error
+message will be printed and the call to <code>use</code> will immediately return <code>()</code>.</p>
+</li>
+<li>
+<p>If an invocation of <code>use</code> raises an exception during execution
+of the compiled code (either in the initial file or in a nested
+invocation of <code>use</code>), then the exception will be reported at
+the top-level.</p>
+</li>
+<li>
+<p>Otherwise, if no errors or uncaught exceptions are encountered, then
+<code>()</code> will be returned once the code in the used file has executed.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that any change to the global state or environment
+that occurs before an error is encountered, will <strong>not</strong> be rolled
+back.  Also, wrapping calls to <code>use</code> in exception handlers or using
+<code>callcc</code> in combination with <code>use</code> may break it.</p>
+</div>
+<div class="paragraph">
+<p>Files specified as command-line arguments to the <strong>sml</strong> command
+are treated as if <code>use</code> was invoked on them.  If there is an
+error, then the error is reported and the <strong>sml</strong> command
+will terminate with a non-zero exit status (at least on Unix).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bugs">Bugs</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Here is a list of tracked bugs fixed (or closed) with this release, please see the
+<a href="https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs">bug tracker</a>
+for more details.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch buglist">
+<colgroup>
+<col style="width: 6.25%;">
+<col style="width: 93.75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><span class="bugid">193</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SML/NJ does not print unhandled exceptions in loaded files</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><span class="bugid">213</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Int32.div</code> raises <code>Div</code> instead of <code>Overflow</code> when dividing <code>minInt</code> by <code>~1</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><span class="bugid">217</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unhandled exceptions no longer print anything when inside used file</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><span class="bugid">219</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"use" fails silently when a function inside a structure raises an exception</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The following unnumbered bugs were also fixed:</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>The <code>Word32.toInt</code> function did not raise <code>Overflow</code> when given an
+argument with its sign bit set in some cases (<em>e.g.</em>,
+<code>Word32.toInt 0wx8002DE32;</code> would return <code>187954</code>).</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_supported_systems">Supported systems</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch support-table">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 44.4444%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">Architecture</th>
+<th class="tableblock halign-center valign-top">Operating System</th>
+<th class="tableblock halign-center valign-top">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Power PC</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.5 (Leopard)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">AIX</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>&#160;</strong></p></td>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>Sparc</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Solaris</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Linux</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>&#160;</strong></p></td>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><strong>x86 (32-bit)</strong></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.6 (Snow Leopard)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.7 (Lion)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.8 (Mountain Lion)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.9 (Mavericks)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.10 (Yosemite)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Mac OS X 10.11 (El Capitan)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">macOS 10.12 (Sierra)</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Tested</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">macOS 10.13 (High Sierra)</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Tested</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">macOS 10.14 (Mojave)</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Tested</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Ubuntu 16.04.3 LTS</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Tested</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Other Linux variants</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">BSD variants</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Windows 7</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Windows 10</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Cygwin (32-bit)</p></td>
+<td class="tableblock halign-center valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="_a_note_about_64_bit_support">A note about 64-bit support</h3>
+<div class="paragraph">
+<p>Apple is in the process of deprecating 32-bit support in macOS.
+With macOS 10.14 Mojave, compiling 32-bit applications, such as the SML/NJ
+runtime system, requires using an older SDK.
+The SML/NJ <a href="https://smlnj.org/dist/working/110.86/smlnj-x86-110.86.pkg">installer</a>,
+however, works without issue on macOS 10.14 Mojave.</p>
+</div>
+<div class="paragraph">
+<p>We have been working on 64-bit support since 110.82 we expect to have it in place
+before the release of macOS 10.15.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2019-05-02 08:36:27 -0500
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains('stemblock')) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

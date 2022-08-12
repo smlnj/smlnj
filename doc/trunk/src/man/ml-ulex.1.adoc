@@ -1,0 +1,74 @@
+ML-ULEX(1)
+==========
+:doctype:	manpage
+:man source:	SML/NJ
+:man version:	{version}
+
+NAME
+----
+ml-ulex - a Unicode-compatible lexical analyser generator for Standard ML
+
+SYNOPSIS
+--------
+*ml-ulex* ['OPTIONS'] 'file'
+
+DESCRIPTION
+-----------
+
+*ML-Ulex* is a lexer generator that supports Unicode characters (in UTF-8 representation) and
+an extended form of regular expressions.
+
+OPTIONS
+-------
+
+*-32*::
+  run the 32-bit version of the program (currently the default).
+
+*-64*::
+  run the 64-bit version of the program.  This option only applies to
+  the **x86-64** (aka **amd64**) architecture.
+
+*--dot*::
+  generate DOT output (http://www.graphviz.org[]).  The generated file will be named +file.dot+,
+  where +file+ is the input file.
+
+*--match*::
+  enter interactive matching mode.  This will allow interactive testing of the machine; presently,
+  only the +INITIAL+ start state is available for testing
+  (see the http://www.smlnj.org/doc/ml-lpt/manual.pdf[User Guide] for details on start states).
+
+*--ml-lex-mode*::
+  operate in *ml-lex* compatibility mode.
+
+*--table-based*::
+  generate a table-based lexer.
+
+*--fn-based*::
+  generate a lexer that represents states as functions and transitions as tail calls.
+
+*--minimize*::
+  generate a minimal machine.  Note that this is slow, and is almost never necessary.
+
+*--strict-sml*::
+  generate strict SML (_i.e._, do not use SML/NJ extensions).  This flag
+  is useful if you want to use the output with a different SML system.
+
+AUTHOR
+------
+*ML-Ulex* was written by Aaron Turon.
+
+SEE-ALSO
+--------
+ml-antlr(1), ml-yacc(1)
+
+The https://www.smlnj.org/doc/ml-lpt/manual.pdf[_SML/NJ Language Processing Tools: User Guide_].
+
+*Regular-expression derivatives reexamined* by Scott Owens, John Reppy, and Aaron Turon.
+_Journal of Functional Programming_, 19(2):173-190, 2009.
+
+COPYING
+-------
+Copyright (C) 2020 The Fellowship of SML/NJ
+
+This is free software; see the source for copying  conditions.   There  is  NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

@@ -1,0 +1,41 @@
+			S  M  L   /   N  J
+
+                  1  1  0  .  4  2      N  E  W  S
+			
+  		         October 16, 2002
+
+			      WARNING
+
+  	This working version is believed to be stable, but
+	we have not run our full regression-test suite.
+
+        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+
+
+Summary:
+
+     A number of small, but important bug fixes.
+
+--------------------------------------------------------------------------
+
+Details:
+
+      * Fixed a space leak in the CML implementation of TextIO and
+	BinIO.
+
+      * Fixed the handling of %g in the Format library module.
+
+      * Ported to MacOS X 10.2 (Jaguar).  The MacOS X 10.1 and 10.2 runtime
+	systems are different.  The former is called run.ppc-darwin5
+	and the latter is run.ppc-darwin.
+
+      * Fixed a bug in division by zero on the PowerPC.
+
+      * Sml now senses the SMLNJ_HOME environment variable.  If this is set,
+	then the bin dir is assumed to be in $SMLNJ_HOME/bin and (unless
+	CM_PATHCONFIG is also set), the path configuration file is assumed
+	to be in $SMLNJ_HOME/lib/pathconfig.  This way one can easily move
+	the entire tree to some other place and everything will "just work".
+	Companion commands such as ml-build and ml-makedepend also sense this
+	variable.
+
