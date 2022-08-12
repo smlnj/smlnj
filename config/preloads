@@ -1,0 +1,62 @@
+#
+# Modules to be pre-loaded during bootstrap.
+#   Each line should have the form "command libname" where "command" is
+#   either "autoload" or "make" and where "libname" is suitable as an
+#   argument to CM.autoload or CM.make.
+#
+# Make sure that at least $smlnj/cm.cm is being registered here.
+#
+
+########################### BASICS ####################################
+
+# The SML Basis library:
+autoload $smlnj/basis/basis.cm
+
+# The Compilation Manager (structure CM)
+autoload $smlnj/cm.cm
+
+# The "Util" portion of the SML/NJ Library
+autoload $smlnj/smlnj-lib/smlnj-lib.cm
+
+
+##################### ADDITIONAL LIBRARIES ############################
+
+# The "Pretty-Printing" portion of the SML/NJ library
+#autoload $smlnj/smlnj-lib/pp-lib.cm
+
+# The "Configurable Controls" portion of the SML/NJ library
+#autoload $smlnj/smlnj-lib/controls-lib.cm
+
+# The "HTML" portion of the SML/NJ library
+#autoload $smlnj/smlnj-lib/html-lib.cm
+
+
+################## FOR SML/NJ COMPILER HACKERS ########################
+
+# The Visible Compiler (collection of structures)
+autoload $smlnj/compiler.cm
+
+# The Visible Compiler (old style: structure Compiler)
+#autoload $smlnj/compiler/compiler.cm
+
+# If you don't autoload the old-style visible compiler above, then
+# you should make a minimal version of it available so that
+# Compiler.version as well as Compiler.achitecture are available:
+autoload $smlnj/compiler/minimal.cm
+
+# The Bootstrap Compilation Manager (structure CMB)
+#autoload $smlnj/cmb.cm
+
+# Cross-compiler version of CMB for alpha, hppa, ppc, sparc, x86
+# on unix, macos, and win32 (where applicable).
+#autoload $smlnj/cmb/alpha32-unix.cm
+#autoload $smlnj/cmb/hppa-unix.cm
+#autoload $smlnj/cmb/ppc-macos.cm
+#autoload $smlnj/cmb/ppc-unix.cm
+#autoload $smlnj/cmb/sparc-unix.cm
+#autoload $smlnj/cmb/x86-unix.cm
+#autoload $smlnj/cmb/x86-win32.cm
+
+# All cross-compiler versions of CMB at once (together with
+# their corresponding architecture-specific compiler structures):
+#autoload $smlnj/compiler/all.cm

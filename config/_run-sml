@@ -1,0 +1,265 @@
+#!@SHELL@
+#
+# Copyright 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# The standard driver for SML/NJ under the new runtime system
+#
+
+CMD=`basename "$0"`
+
+#
+# for /bin/ksh, disable reading user's environment file
+#
+unset ENV
+
+#############################################################################
+#
+# BEGIN SITE SPECIFIC STUFF
+#
+#############################################################################
+
+#
+# SITE SPECIFIC CONFIGURATION INFO
+#
+
+# On cygwin, make sure SMLNJ_HOME is given a POSIX-style pathname.
+if [ x"$SMLNJ_HOME" != x ] ; then
+   if [ x"$SMLNJ_CYGWIN_RUNTIME" != x ] ; then
+      if [ "`uname -o`" = "Cygwin" ] ; then
+         # Convert to Unix style, absolute pathname.
+         SMLNJ_HOME=`cygpath -u -a "$SMLNJ_HOME"`
+      fi
+   fi
+fi
+
+# the path of the directory in which executables (like this file) are kept.
+if [ x"$SMLNJ_HOME" = x ] ; then
+    BIN_DIR="@BINDIR@"
+    if [ ! -d "$BIN_DIR" ]; then
+	cmddir=`dirname "$0"`
+	case "$cmddir" in
+	    /* ) BIN_DIR="$cmddir";;
+	    * ) BIN_DIR=`cd $cmddir; pwd` ;;
+	esac
+    fi
+else
+    if [ x"$CM_PATHCONFIG" = x ] ; then
+	CM_PATHCONFIG=${SMLNJ_HOME}/lib/pathconfig
+	export CM_PATHCONFIG
+    fi
+    BIN_DIR=${SMLNJ_HOME}/bin
+fi
+
+# the path of the directory in which the runtime system executables are kept.
+RUN_DIR=$BIN_DIR/.run
+
+# the path of the directory in which the heap images are kept.
+HEAP_DIR=$BIN_DIR/.heap
+
+#############################################################################
+#
+# END SITE SPECIFIC STUFF
+#
+#############################################################################
+
+# special shortcut for frequent use (and for Linux' binfmt)
+if [ `basename "$0"` = sml ] ; then
+    case "$1" in
+	/* | ./* | ../* )
+	    case "$1" in
+		*.cm | *.sml | *.sig | *.fun )
+		    ;;
+		* )
+		    HEAP="@SMLload=$1"
+		    shift
+		    ;;
+	    esac
+	    ;;
+    esac
+fi
+
+ALLOC=""
+
+# the default size; this is set by the config/install.sh script
+#
+SIZE_OPT="-"@SIZE@
+
+# if "yes" then we report the heap suffix and quit
+#
+REPORT_SUFFIX=no
+
+#
+# Process command line arguments
+#
+while [ "$#" != "0" ]; do
+  arg=$1
+  case "$arg" in
+    -32) shift; SIZE_OPT=$arg ;;
+    -64) shift; SIZE_OPT=$arg ;;
+    @SMLrun=*)
+      shift
+      RUN=`echo $arg | sed 's/@SMLrun=//'`
+      ;;
+    @SMLload=*)
+      shift
+      HEAP=$arg
+      ;;
+    @SMLappl)
+      shift
+      if [ "$#" = "0" ]; then
+        echo "$CMD: missing argument for @SMLappl option"
+        exit 1
+      fi
+      APPL=$1
+      shift
+      ;;
+    @SMLversion)
+      echo "$CMD @VERSION@"
+      exit 0
+      ;;
+    @SMLwordsize)
+      case $SIZE_OPT in
+	-32) echo "32" ;;
+	-64) echo "64" ;;
+      esac
+      exit 0
+      ;;
+    @SMLsuffix)
+      shift
+      REPORT_SUFFIX=yes
+      ;;
+    @SMLalloc=*)
+      shift
+      ALLOC=$arg
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+#
+# the following could be replaced with some site specific code
+#
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys" $SIZE_OPT`
+if [ "$?" != "0" ]; then
+  echo "$CMD: unable to determine architecture/operating system"
+  exit 1
+fi
+eval $ARCH_N_OPSYS
+
+# if the `@SMLsuffix` option was specified, then report the suffix and quit
+#
+if [ $REPORT_SUFFIX = yes ] ; then
+    echo $HEAP_SUFFIX
+    exit 0
+fi
+
+#
+# Try to figure out the CPU's cache size and set the allocation area
+# size accordingly.  This is majorly important for Celeron systems
+# which suffer badly when the allocation area is too big.
+#
+if [ "$ALLOC" = "" ] ; then
+    if [ -f /proc/cpuinfo ] ; then
+	# "head" is called to make sure we consider only one matching line.
+	# (On linux SMP systems there is more than one such line.)
+	cache=`fgrep 'cache size' </proc/cpuinfo | head -1`
+	if [ "x$cache" = "x" ] ; then
+	    # No cache info in /proc/cputype.  No we are checking the CPU
+	    # type....
+	    cpu=`fgrep 'cpu	' </proc/cpuinfo | head -1`
+	    cputype=`echo $cpu | sed -e 's/^.*:[ \t]*\(.*\)$/\1/'`
+	    case $cputype in
+		586)
+		    # An old Pentium.  Seems to work best with 64k.
+		    # Some extreme cases run best with even less
+		    #  (32k, 16k, or even just 8k).
+		    ALLOC="@SMLalloc=64k"
+		    ;;
+		*)
+		    ;;
+	    esac
+	else
+	    kb=`echo $cache | sed -e 's/^[^0-9]*\([0-9]*\).*$/\1/'`
+	    case $kb in
+		128)
+		    # This is the Celeron case.
+		    # ALLOC="@SMLalloc=32k"
+		    ALLOC="@SMLalloc=64k"
+		    ;;
+		256)
+		    # Do CPUs like this exist?
+		    ALLOC="@SMLalloc=256k"
+		    ;;
+		512)
+		    # The Pentium II case...
+		    ALLOC="@SMLalloc=512k"
+		    ;;
+		1024) ALLOC="@SMLalloc=512k" ;;
+		2048) ALLOC="@SMLalloc=1024k" ;;
+		3072) ALLOC="@SMLalloc=1024k" ;;
+		12288) ALLOC="@SMLalloc=1024k" ;;
+		*)
+		    ;;
+	    esac
+	fi
+    elif [ x"$OPSYS" = "darwin" ] ; then
+      cache=`/usr/sbin/sysctl -n hw.l3cachesize`
+      if [ x"$cache" = "x" ] ; then
+	cache=`/usr/sbin/sysctl -n hw.l2cachesize`
+	if [ x"$cache" = "x" ] ; then
+	  cache=262144  # fallback
+	fi
+      fi
+    # possible cache sizes for Intel Macs
+    # see list at http://en.wikipedia.org/wiki/List_of_Macintosh_models_grouped_by_CPU_type
+      case $cache in
+	262144) kb=256;;
+	524288) kb=512;;
+	1048576) kb=512;;
+	2097152) kb=1024;;
+	3145728) kb=1024;;
+	4194304) kb=1024;;
+	6291456) kb=1024;;
+	8388608) kb=1024;;
+	12582912) kb=1024;;
+      esac
+      ALLOC="@SMLalloc=$kb"
+    fi
+fi
+
+if [ "$RUN" = "" ]; then
+  #
+  # Construct the runtime system path from the ARCH and OS
+  #
+  RUN="$RUN_DIR/run.$ARCH-$OPSYS"
+  if [ ! -x "$RUN" ]; then
+    if [ "$ALT_OPSYS" = "" ]; then
+      echo "$CMD: cannot find runtime system $RUN"
+      exit 1
+    else
+      RUN="$RUN_DIR/run.$ARCH-$ALT_OPSYS"
+      if [ ! -x "$RUN" ]; then
+	echo "$CMD: cannot find runtime system $RUN"
+	exit 1
+      fi
+    fi
+  fi
+fi
+
+if [ "$HEAP" = "" ]; then
+  #
+  # Construct the heap image path from the APPL and ARCH
+  #
+  if [ "$APPL" = "" ]; then
+    APPL=$CMD
+  fi
+  HEAP="@SMLload=$HEAP_DIR/$APPL"
+fi
+
+#
+# run the sucker!
+#
+exec "$RUN" @SMLcmdname="$0" "$HEAP" $ALLOC "$@"

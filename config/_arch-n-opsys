@@ -1,0 +1,83 @@
+#!@SHELL@
+#
+# .arch-n-opsys -- get architecture and system info
+#
+# Running `eval .arch-n-opsys` will define the following shell variables:
+#
+#	ARCH		-- one of amd64 or arm64
+#	OPSYS		-- one of cygwin, darwin, freebsd, linux, netbsd
+#	HEAP_SUFFIX	-- usually $ARCH-$OPSYS, but in some cases the OPSYS is replaced
+#                          by $HEAP_OPSYS
+#
+
+export PATH
+PATH="/bin:/usr/bin"
+
+HEAP_OPSYS=""
+case `uname -s` in
+  Darwin)
+    OPSYS=darwin
+    case `uname -p` in
+      i386) ARCH=amd64 ;;
+      arm) ARCH=arm64 ;;
+      *) exit 1 ;;
+    esac
+    # check that we support this version of the OS
+    case `uname -r` in
+      16*) ;; # macOS 10.12 Sierra
+      17*) ;; # macOS 10.13 High Sierra
+      18*) ;; # macOS 10.14 Mojave
+      19*) ;; # macOS 10.15 Catalina
+      20*) ;; # macOS 11 Big Sur
+      21*) ;; # macOS 12 Monterey
+      22*) ;; # macOS 13 Ventura
+      *) exit 1 ;;
+    esac
+    ;;
+  Linux)
+    OPSYS=linux
+    case `uname -m` in
+      x86_64) ARCH=amd64 ;;
+      *) exit 1;;
+    esac
+    ;;
+  FreeBSD)
+    OPSYS=freebsd
+    HEAP_OPSYS=bsd
+    case `uname -m` in
+      x86_64) ARCH=amd64 ;;
+      amd64) x86 ARCH=amd64 ;;
+      *) exit 1 ;;
+    esac
+    ;;
+  NetBSD)
+    OPSYS=netbsd
+    HEAP_OPSYS=bsd
+    case `uname -r` in
+      1.*) exit 1 ;;
+      2.*) exit 1 ;;
+      *) ;;
+    esac
+    case `uname -p` in
+      x86_64) ARCH=amd64 ;;
+      *) exit 1;;
+    esac
+    ;;
+  OpenBSD)
+    OPSYS=openbsd
+    HEAP_OPSYS=bsd
+    case `uname -p` in
+      x86_64) ARCH=amd64 ;;
+      *) exit 1;;
+    esac
+    ;;
+  *) exit 1;;
+esac
+
+if [ "$HEAP_OPSYS" = "" ]; then
+  HEAP_SUFFIX="$ARCH-$OPSYS"
+else
+  HEAP_SUFFIX="$ARCH-$HEAP_OPSYS"
+fi
+
+echo "ARCH=$ARCH; OPSYS=$OPSYS; HEAP_SUFFIX=$HEAP_SUFFIX"

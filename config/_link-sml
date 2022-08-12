@@ -1,0 +1,117 @@
+#!@SHELL@
+#
+# Copyright 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# The standard "link" script for SML/NJ
+#
+
+#
+# for /bin/ksh, disable reading user's environment file
+#
+unset ENV
+
+# the default size; this is set by the config/install.sh script
+#
+SIZE_OPT="-"@SIZE@
+
+RUN=""
+BOOT=""
+HEAP="sml"
+
+#
+# Process command line arguments
+#
+while [ "$#" != "0" ]; do
+  arg=$1
+  case "$arg" in
+    -32) SIZE_OPT=$arg ; shift ;;
+    -64) SIZE_OPT=$arg ; shift ;;
+    @SMLrun=*)
+      RUN=`echo "$arg" | sed 's/@SMLrun=//'`
+      shift
+      ;;
+    @SMLboot=*)
+      BOOT=`echo "$arg" | sed 's/@SMLboot=//'`
+      shift
+      ;;
+    @SMLheap=*)
+      HEAP=`echo "$arg" | sed 's/@SMLheap=//'`
+      shift
+      ;;
+    @SMLversion)
+      echo "$CMD @VERSION@"
+      exit 0
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+#############################################################################
+#
+# BEGIN SITE SPECIFIC STUFF
+#
+#############################################################################
+
+#
+# SITE SPECIFIC CONFIGURATION INFO
+#
+
+# the path of the directory in which executables (like this file) are kept.
+if [ x"$SMLNJ_HOME" = x ] ; then
+    BIN_DIR="@BINDIR@"
+    if [ ! -d "$BIN_DIR" ]; then
+	cmddir=`dirname $0`
+	case "$cmddir" in
+	    /* ) BIN_DIR="$cmddir";;
+	    * ) BIN_DIR=`cd $cmddir; pwd` ;;
+	esac
+    fi
+else
+    if [ x"$CM_PATHCONFIG" = x ] ; then
+	CM_PATHCONFIG="$SMLNJ_HOME"/lib/pathconfig
+	export CM_PATHCONFIG
+    fi
+    BIN_DIR="$SMLNJ_HOME"/bin
+fi
+
+# the path of the directory in which the runtime system executables are kept.
+RUN_DIR=$BIN_DIR/.run
+
+#
+# the following could be replaced with some site specific code
+#
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys" $SIZE_OPT`
+if [ "$?" != "0" ]; then
+  echo "$CMD: unable to determine architecture/operating system"
+  exit 1
+fi
+eval $ARCH_N_OPSYS
+
+#############################################################################
+#
+# END SITE SPECIFIC STUFF
+#
+#############################################################################
+
+# if the runtime was not specified, use the default
+if [ x"$RUN" = x ]; then
+    RUN="$RUN_DIR/run.$ARCH-$OPSYS"
+fi
+
+if [ ! -x "$RUN" ]; then
+    echo "$CMD: cannot find runtime system $RUN"
+    exit 1
+fi
+
+if [ "$BOOT" = "" ]; then
+    echo "@SMLboot=<bootlist> must be specified."
+    exit 1
+fi
+
+#
+# run the sucker!
+#
+exec "$RUN" @SMLboot="$BOOT" @SMLheap="$HEAP" "$@"

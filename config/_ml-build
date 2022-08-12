@@ -1,0 +1,117 @@
+#!@SHELL@
+#
+# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# usage: ml-build [-S setup] root-group [main-function [heapfile]]
+#
+
+if [ x${SMLNJ_HOME} = x ] ; then
+    BIN_DIR="@BINDIR@"
+    LIB_DIR="@LIBDIR@"
+else
+    BIN_DIR=${SMLNJ_HOME}/bin
+    LIB_DIR=${SMLNJ_HOME}/lib
+fi
+
+if [ x"$CM_PATHCONFIG" = x ] ; then
+    CM_PATHCONFIG=${LIB_DIR}/pathconfig
+    export CM_PATHCONFIG
+fi
+
+SML=$BIN_DIR/sml
+LINK=$BIN_DIR/.link-sml
+
+thisscript=$0
+
+xx=$$
+smlfile=$xx-export.sml
+cmfile=$xx-export.cm
+listfile=$xx-BOOTLIST
+linkargsfile=$xx-LINKARGS
+
+dulist=''
+
+trap 'rm -rf $smlfile $cmfile $listfile $linkargsfile @CMDIRARC@/*/$smlfile' 0 1 2 3 15
+
+usage() {
+    echo ${thisscript}: $*
+    echo Usage: $thisscript '[-32 | -64] [-S setup] root-group [main-function [heapfile]]'
+    exit 1
+}
+
+# the default size; this is set by the config/install.sh script
+#
+SIZE_OPT="-"@SIZE@
+setup=
+
+while [ $# != 0 ] ; do
+    case $1 in
+    -32) SIZE_OPT="-32"; shift ;;
+    -64) SIZE_OPT="-64"; shift ;;
+    -D*|-U*|-C*)
+	dulist="$dulist $1"
+	shift
+	;;
+    -S)
+	shift
+	if [ $# = 0 ] ; then
+	    usage missing argument for -S
+	fi
+	setup=$1
+	shift
+	;;
+    *)
+	break
+	;;
+    esac
+done
+
+if [ $# = 4 ] ; then
+  # assume that first argument is setup; e.g., "$smlnj-tdp/back-trace.cm"
+    if [ x"$setup" != x ] ; then
+        usage setup was already specified
+    fi
+    setup=$1
+    root=$2
+    main=$3
+    heap=$4
+elif [ $# = 3 ] ; then
+    root=$1
+    main=$2
+    heap=$3
+elif [ $# = 2 ] ; then
+    root=$1
+    main=$2
+    heap=`basename "$root" .cm`
+elif [ $# = 1 ] ; then
+    root=$1
+    # quick hack for now:
+    main=Test.main
+    heap=`basename "$root" .cm`
+else
+    usage no CM description file specified
+fi
+
+rare=XYZ_XXX_0123
+
+cat >$smlfile <<EOF
+structure ${rare} = struct val _ = SMLofNJ.exportFn ("${heap}", ${main}) end
+EOF
+
+cat >$cmfile <<EOF
+Group structure ${rare} is \$/basis.cm ${root} ${smlfile}
+EOF
+
+# Invoke sml with special option that causes CM to do its magic.
+# Unless the heap image exists and is up-to-date CM will write the arguments
+# for the link script into $linkargsfile.
+# (See src/cm/main/cm-boot.sml [function "mlbuild"] for details.)
+if "$SML" $SIZE_OPT $dulist @CMbuild $setup "$root" "$cmfile" "$heap" "$listfile" "$linkargsfile"
+then
+    if [ -r "$linkargsfile" ]; then
+	"$LINK" $SIZE_OPT `cat "$linkargsfile"`
+    fi
+else
+    exit $?
+fi

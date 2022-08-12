@@ -1,0 +1,173 @@
+#!@SHELL@
+
+if [ x${SMLNJ_HOME} = x ] ; then
+    BIN_DIR="@BINDIR@"
+else
+    if [ x${CM_PATHCONFIG} = x ] ; then
+	CM_PATHCONFIG=${SMLNJ_HOME}/lib/pathconfig
+	export CM_PATHCONFIG
+    fi
+    BIN_DIR=${SMLNJ_HOME}/bin
+fi
+SML=$BIN_DIR/sml
+
+mf=""
+xx=$$
+tmpmf=$xx-makefile
+mlscript=$xx-mlscript.sml
+thisscript=$0
+archos=substitute
+archstring='$(ARCH)'
+osstring='$(OS)'
+dulist=''
+
+trap 'rm -f $tmpmf $mlscript' 0 1 2 3 15
+
+usage() {
+    echo $thisscript: $*
+    echo Usage: $thisscript '[-f makefile] [-n] [-a arch] [-o os]' project.cm target
+    exit 1
+}
+
+# the default size; this is set by the config/install.sh script
+#
+SIZE_OPT="-"@SIZE@
+
+#
+# process options
+#
+while [ $# != 0 ] ; do
+    case $1 in
+    -32)
+	shift
+	SIZE_OPT="-32"
+	;;
+    -64)
+	shift
+	SIZE_OPT="-64"
+	;;
+    -n)
+	shift
+	archos=real
+	;;
+    -a)
+	shift
+	if [ $# = 0 ] ; then
+	    usage
+	else
+	    archstring=$1
+	    shift
+	fi
+	;;
+    -o)
+	shift
+	if [ $# = 0 ] ; then
+	    usage
+	else
+	    osstring=$1
+	    shift
+	fi
+	;;
+    -f)
+	shift
+	if [ $# = 0 ] ; then
+	    usage
+	else
+	    mf=$1
+	    shift
+	fi
+	if [ -f "$mf" ] ; then
+	    : ok
+	else
+	    echo $thisscript: $mf does not exist
+	    exit 1
+	fi
+	;;
+    -D*|-U*)
+	dulist="$dulist $1"
+	shift
+	;;
+    *)
+	break
+	;;
+    esac
+done
+
+#
+# if there was no -f option, check for makefile and then Makefile
+#
+if [ x$mf = x ] ; then
+    if [ -f makefile ] ; then
+	mf=makefile
+    elif [ -f Makefile ] ; then
+	mf=Makefile
+    else
+	echo $thisscript: no makefile, no Makefile, and no -f option
+	exit 1
+    fi
+fi
+
+#
+# get the two mandatory arguments
+#
+if [ $# = 2 ] ; then
+    cmfile=$1
+    target=$2
+else
+    usage
+fi
+
+if [ $archos = substitute ] ; then
+    archosarg="(SOME { arch = \"${archstring}\", os = \"${osstring}\" })"
+else
+    archosarg=NONE
+fi
+
+#
+# the delimiter strings (start and end)
+#
+delims="# START: ml-makedepend (${cmfile}:${target}); DO NOT DELETE!"
+delime="# END  : ml-makedepend (${cmfile}:${target}); DO NOT DELETE!"
+
+#
+# remove previous result of ml-makedepend
+#  (other cmfile/target combinations are unaffected)
+#
+awk "BEGIN { c = 1; s = \"${delims}\"; e = \"${delime}\"; }
+(\$0 == s) { c = 0; next; }
+(\$0 == e) { c = 1; next; }
+(c == 1) { print }" <$mf >$tmpmf
+cp $tmpmf $mf
+rm $tmpmf
+
+#
+# construct the ML script
+#
+cat >$mlscript <<stop
+let val archos = ${archosarg}
+    val lopt = CM.sources archos "${cmfile}"
+in
+    case lopt of
+        NONE => ignore (OS.Process.exit OS.Process.failure)
+      | SOME l => let
+            val s = TextIO.openOut "$tmpmf"
+            fun pr { derived = true, file, class } = ()
+              | pr { file, ... } = TextIO.output (s, " \\\\\\n    " ^ file)
+        in
+            TextIO.output (s, "${delims}\\n${target}:");
+            app pr l;
+            TextIO.output (s, "\\n${delime}\\n");
+            TextIO.closeOut s;
+            ignore (OS.Process.exit OS.Process.success)
+        end
+end
+stop
+
+if $SML $SIZE_OPT '$smlnj/cm.cm' $dulist $mlscript ; then
+    cat $tmpmf >>$mf
+else
+    echo $thisscript: CM dependency analysis failed
+    exit 1
+fi
+
+exit 0

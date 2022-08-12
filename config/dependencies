@@ -1,0 +1,18 @@
+#
+# module dependencies (used by install script)
+#  each line has the form
+#     m0 m1 m2 ... mk
+#  implying that to install m0 one also needs m1 .. mk
+#
+# (C) 2006 The Fellowship of SML/NJ
+#
+
+ml-yacc ml-ulex
+ml-burg ml-yacc ml-ulex
+ml-nlffigen ckit smlnj-lib
+nowhere mlrisc-tools
+eXene cml cml-lib
+cml-lib cml
+cml smlnj-lib
+ml-ulex smlnj-lib ml-lpt-lib
+ml-antlr smlnj-lib ml-lpt-lib

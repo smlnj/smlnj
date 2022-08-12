@@ -1,0 +1,223 @@
+#
+# This file describes the actions to be taken when installing a "module".
+# See system/smlnj/installer/generic-install.sml for how this file
+# is to be interpreted.
+#
+# (C) 2006-2018 The Fellowship of SML/NJ
+#
+# Each action is on a single line and has one of the following forms:
+#
+#	<module> lib <a> <r> <d>
+#	<module> lib <a> <r> <d> <aa>
+#	<module> ulib <a> <r> <d>
+#	<module> ulib <a> <r> <d> <aa>
+#	<module> anchor <a> <p>
+#	<module> libanchor <a> <p>
+#	<module> prog ...
+#	<module> dprog ...
+#	<module> config <d>
+#	<module> src
+#
+# Short explanation:
+#
+# The <module> tag defines the scope of the command.  It should be a name
+# used in the config/targets file.
+#
+# "lib" (library) and "ulib" (library for Unix-like systems only):
+#   <a>: "anchor" -- the anchor name currently used by the library
+#           to be registered for compilation
+#   <aa>: "alternative anchor" -- optional alternative anchor name which is
+#           to be used once the library is in its final location
+#           (this must be used if "anchor" is already bound
+#           and used for other libraries which come from the
+#           bootfile bundle),
+#   <r>: "relative name" -- path to library's .cm file relative to anchor
+#           (standard syntax)
+#   <d>: "dir" -- directory name that anchor should be bound to,
+#           name is relative to smlnjroot and in standard syntax
+#
+# "anchor" (assign path name to anchor) and
+# "libanchor" (assign path name relative to lib dir to anchor)
+#   <a>: "anchor" -- the anchor name to be defined
+#   <p>: "path" -- the path name that is the value
+#
+# "prog" (install "standalone" program, e.g., ml-yacc, etc.) and
+# "dprog" (install standalone program, but defer this action until all
+#          libraries are installed)
+#   These have 0, 1, 2, or 3 arguments:
+#     {prog|dprog} <t> <h> <d>
+#  <t>: "target" -- name of program; this is the same as the basename
+#      of the heap image to be generated as well as the
+#      final arc of the source tree's directory name
+#      if <t> is not given, it is taken to be identical to the module name
+#  <h>: "optional heap directory" -- optional subdirectory where the
+#      build command drops the heap image; default is "-", which means
+#      no subdirectory is given (i.e., the heap image winds up
+#      in the toplevel directory of the respective program's source tree)
+#  <d>: "dir" -- directory relative to installation root where source
+#     tree for this program resides; by default, this is taken to be
+#     identical to the module name
+#
+# "config" (configure a module) has one argument, which is the directory
+#    relative to the installation root where the config.sh (resp. config.bat)
+#    script can be found.
+#
+# "src" (register a source package that needs to be unpacked but requires
+#        no further action)
+#
+
+# modules that don't require installer actions other than
+# unpacking their respective source trees:
+#runtime        src
+#compiler	src
+#cm		src
+#system		src
+#doc		src
+
+# Backwards compatible views of the SML Basis Library
+#
+old-basis lib basis-2004.cm basis-2004.cm libraries/old-basis/2004
+
+# Addional components of the SML/NJ library that are not used by the compiler:
+#    (unix-lib.cm is installed only on Unix-like systems)
+smlnj-lib ulib unix-lib.cm      unix-lib.cm      smlnj-lib/Unix
+smlnj-lib  lib hash-cons-lib.cm hash-cons-lib.cm smlnj-lib/HashCons
+smlnj-lib  lib html-lib.cm	html-lib.cm	 smlnj-lib/HTML
+smlnj-lib  lib html4-lib.cm	html4-lib.cm	 smlnj-lib/HTML4
+smlnj-lib  lib inet-lib.cm      inet-lib.cm      smlnj-lib/INet
+smlnj-lib  lib json-lib.cm      json-lib.cm      smlnj-lib/JSON
+smlnj-lib  lib pp-extras-lib.cm pp-extras-lib.cm smlnj-lib/PP
+smlnj-lib  lib regexp-lib.cm    regexp-lib.cm    smlnj-lib/RegExp
+smlnj-lib  lib reactive-lib.cm  reactive-lib.cm  smlnj-lib/Reactive
+smlnj-lib  lib sexp-lib.cm      sexp-lib.cm      smlnj-lib/SExp
+smlnj-lib  lib uuid-lib.cm      uuid-lib.cm      smlnj-lib/UUID
+smlnj-lib  lib xml-lib.cm       xml-lib.cm       smlnj-lib/XML
+
+# Concurrent ML:
+cml lib cml core-cml.cm     libraries/cml/src
+cml lib cml cml-internal.cm libraries/cml/src
+cml lib cml cml.cm          libraries/cml/src
+cml lib cml basis.cm        libraries/cml/src
+
+# Concurrent ML support libraries:
+cml-lib  lib cml-lib      trace-cml.cm libraries/cml/cml-lib/cm-descr
+cml-lib  lib cml-lib      smlnj-lib.cm libraries/cml/cml-lib/cm-descr
+cml-lib  lib cml          trace-cml.cm libraries/cml/src
+cml-lib  lib cml          smlnj-lib.cm libraries/cml/src
+cml-lib  lib cml          inet-lib.cm  libraries/cml/src
+cml-lib ulib cml          unix-lib.cm  libraries/cml/src
+cml-lib  lib cml          cml-lib.cm   libraries/cml/src
+
+# eXene toolkit:
+# eXene lib eXene.cm eXene.cm eXene
+
+# C Kit:
+ckit lib ckit-lib.cm ckit-lib.cm libraries/ckit/src
+
+# NLFFI foreign function interface library
+ml-nlffi-lib lib c memory/memory.cm   tools/nlffi/lib
+ml-nlffi-lib lib c internals/c-int.cm tools/nlffi/lib
+ml-nlffi-lib lib c c.cm               tools/nlffi/lib
+
+# portable dependency graph library:
+pgraph-util lib pgraph-util.cm pgraph-util.cm libraries/pgraph
+
+# tracing/debugging/profiling:
+tdp-util lib smlnj-tdp plugins.cm       libraries/trace-debug-profile
+tdp-util lib smlnj-tdp back-trace.cm    libraries/trace-debug-profile
+tdp-util lib smlnj-tdp coverage.cm      libraries/trace-debug-profile
+
+# MLRISC libraries (those that are not already included in the compiler):
+mlrisc libanchor Control.cm SMLNJ-MLRISC
+mlrisc libanchor Lib.cm     SMLNJ-MLRISC
+mlrisc libanchor Visual.cm  SMLNJ-MLRISC
+mlrisc libanchor MLRISC.cm  SMLNJ-MLRISC
+mlrisc libanchor MLTREE.cm  SMLNJ-MLRISC
+mlrisc libanchor Graphs.cm  SMLNJ-MLRISC
+mlrisc libanchor IA32.cm    SMLNJ-MLRISC
+mlrisc libanchor AMD64.cm   SMLNJ-MLRISC
+mlrisc libanchor SPARC.cm   SMLNJ-MLRISC
+
+#mlrisc libanchor StagedAlloc.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall-x86-64.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall-x86.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall-sparc.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall-Vararg.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall-VarargCall.cm SMLNJ-MLRISC
+#mlrisc libanchor CCall-VarargInterp.cm SMLNJ-MLRISC
+
+mlrisc anchor RA.cm libraries/MLRISC/cm
+#mlrisc anchor SPARC.cm libraries/MLRISC/cm
+mlrisc anchor Peephole.cm libraries/MLRISC/cm
+mlrisc anchor StagedAlloc.cm libraries/MLRISC/cm
+#mlrisc anchor IA32.cm libraries/MLRISC/cm
+mlrisc anchor AMD64.cm libraries/MLRISC/cm
+mlrisc anchor CCall.cm libraries/MLRISC/cm
+mlrisc anchor CCall-x86-64.cm libraries/MLRISC/cm
+mlrisc anchor CCall-x86.cm libraries/MLRISC/cm
+mlrisc anchor CCall-sparc.cm libraries/MLRISC/cm
+mlrisc anchor CCall-Vararg.cm libraries/MLRISC/cm
+mlrisc anchor CCall-VarargCall.cm libraries/MLRISC/cm
+mlrisc anchor CCall-VarargInterp.cmlibraries/ MLRISC/cm
+
+mlrisc lib OTHER-MLRISC RA.cm                   libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC Peephole.cm             libraries/MLRISC/cm SMLNJ-MLRISC
+#mlrisc lib OTHER-MLRISC IA32.cm                libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC IA32-Peephole.cm        libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC AMD64.cm                libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC AMD64-Peephole.cm       libraries/MLRISC/cm SMLNJ-MLRISC
+#mlrisc lib OTHER-MLRISC SPARC.cm               libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC StagedAlloc.cm          libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC CCall.cm                libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC CCall-x86-64.cm         libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC CCall-x86.cm            libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC CCall-sparc.cm          libraries/MLRISC/cm SMLNJ-MLRISC
+mlrisc lib OTHER-MLRISC CCall-Vararg.cm         libraries/MLRISC/cm SMLNJ-MLRISC
+
+# libraries supporting MLRISC tools:
+mlrisc-tools lib mlrisc-tools pp.cm             libraries/MLRISC/Tools
+mlrisc-tools lib mlrisc-tools source-map.cm     libraries/MLRISC/Tools
+mlrisc-tools lib mlrisc-tools sml-ast.cm        libraries/MLRISC/Tools
+mlrisc-tools lib mlrisc-tools prec-parser.cm    libraries/MLRISC/Tools
+mlrisc-tools lib mlrisc-tools parser.cm         libraries/MLRISC/Tools
+mlrisc-tools lib mlrisc-tools match-compiler.cm libraries/MLRISC/Tools
+
+# LALR(1) parser generator:
+ml-yacc            prog  ml-yacc - tools/ml-yacc
+ml-yacc   	   lib   mlyacc-tool.cm mlyacc-tool.cm tools/ml-yacc/tool
+ml-yacc-grm-ext    lib   grm-ext.cm     grm-ext.cm     tools/ml-yacc/tool
+
+# new (unicode-capable) lexer generator:
+ml-ulex    	   dprog ml-ulex - ml-lpt/ml-ulex
+ml-ulex	   	   lib 	 ml-ulex-tool.cm ml-ulex-tool.cm tools/ml-lpt/ml-ulex/tool
+ml-ulex-mllex-tool lib 	 mllex-tool.cm   mllex-tool.cm   tools/ml-lpt/ml-ulex/tool
+ml-ulex-lex-ext    lib 	 lex-ext.cm      lex-ext.cm      tools/ml-lpt/ml-ulex/tool
+
+# LL(k) parser generator:
+ml-antlr           dprog ml-antlr - ml-lpt/ml-antlr
+ml-antlr   	   lib 	 ml-antlr-tool.cm ml-antlr-tool.cm tools/ml-lpt/ml-antlr/tool
+ml-antlr-grm-ext   lib 	 grm-ext.cm       grm-ext.cm       tools/ml-lpt/ml-antlr/tool
+
+# support library for ml-ulex and ml-antlr:
+ml-lpt-lib 	   lib 	 ml-lpt-lib.cm ml-lpt-lib.cm tools/ml-lpt/lib
+
+# ASDL generator and support library
+asdl               config tools/asdl
+asdl               dprog  asdlgen src/asdlgen tools/asdl
+asdl               lib    asdlgen-tool.cm asdlgen-tool.cm tools/asdl/tool
+asdl               lib    asdl-ext.cm     asdl-ext.cm     tools/asdl/tool
+asdl               lib    asdl-lib.cm     asdl-lib.cm     tools/asdl/src/lib/sml
+
+# bottom-up rewrite code generator generator:
+ml-burg    	   prog
+ml-burg		   lib	 mlburg-tool.cm mlburg-tool.cm tools/ml-burg/tool
+ml-burg		   lib 	 burg-ext.cm    burg-ext.cm    tools/ml-burg/tool
+
+# utility program for use by heap2exec:
+heap2asm   prog heap2asm - tools/heap2asm
+
+# NLFFI foreign function interface generator:
+ml-nlffigen dprog ml-nlffigen - tools/nlffi/gen
+
+#nowhere     dprog nowhere - MLRISC/Tools/nowhere
