@@ -1,4 +1,16 @@
 #!/bin/sh
+#
+# COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# usage: installml [ options ]
+#   options:
+#       -boot           -- gzip a tarball of the boot files and copy it to the root
+#       -clean          -- remove existing pre-compiled libraries and executables
+#       -cleanall       -- like "-clean" but also removes CM metadata files
+#
+
+#!/bin/sh
 
 # The tmpfile is for pathconfig editing (see below).
 tmpfile=pathconfig.tmp.$$
@@ -6,69 +18,70 @@ tmpfile=pathconfig.tmp.$$
 trap 'rm -f $tmpfile; exit 1' 1 2 3 15
 
 this=$0
-here=`pwd`
-cd ../..
-twoup=`pwd`
-cd "$here"
+HERE=`pwd`
+cd ..
+ROOT=`pwd`
+cd "$HERE"
 
 #
 # Parse command line
 #
-SIZE_OPT="-64"
 CLEAN=false
 CLEAN_CM=false
+INSTALL_BOOTFILES=no
 STEM=sml
 # Process command-line arguments
 #
 while [ "$#" != "0" ] ; do
-    arg=$1; shift
-    case $arg in
-    -32) SIZE_OPT=$arg ;;
-    -64) SIZE_OPT=$arg ;;
+  arg=$1; shift
+  case $arg in
+    -boot)
+      INSTALL_BOOTFILES=yes
+      ;;
     -clean)
-	CLEAN=true
-	;;
+      CLEAN=true
+      ;;
     -cleanall)
-	CLEAN=true
-	CLEAN_CM=true
-	;;
+      CLEAN=true
+      CLEAN_CM=true
+      ;;
     *)
 # TODO: check for excess arguments
-	STEM=$arg
-	;;
-    esac
+      STEM=$arg
+      ;;
+  esac
 done
 
-MAIN_HEAP_DIR="$twoup/bin/.heap"
-MAIN_LIB_DIR="$twoup/lib"
-MAIN_CONFIG_DIR="$twoup/config"
+MAIN_HEAP_DIR="$ROOT/bin/.heap"
+MAIN_LIB_DIR="$ROOT/lib"
+MAIN_CONFIG_DIR="$ROOT/config"
 
 # A function to move all stable library files to a parallel directory
 # hierarchy.
 # The first argument must be a simple path (no / inside), and
 # the second argument must be an absolute path.
 move() {
-    if [ -d "$1" ] ; then
-	if [ ! -d "$2" ] ; then
-	    if [ -f "$2" ] ; then
-		echo $this: '$2' exists as a non-directory.
-		exit 1
-	    fi
-	    mkdir "$2"
-	fi
-	cd "$1"
-	for i in * .[a-zA-Z0-9]* ; do
-	    move $i "$2/$i"
-	done
-	cd ..
-    elif [ -f "$1" ] ; then
-	rm -f "$2"
-	mv "$1" "$2"
+  if [ -d "$1" ] ; then
+    if [ ! -d "$2" ] ; then
+      if [ -f "$2" ] ; then
+        echo $this: '$2' exists as a non-directory.
+        exit 1
+      fi
+      mkdir "$2"
     fi
+    cd "$1"
+    for i in * .[a-zA-Z0-9]* ; do
+      move $i "$2/$i"
+    done
+    cd ..
+  elif [ -f "$1" ] ; then
+    rm -f "$2"
+    mv "$1" "$2"
+  fi
 }
 
-if [ -f "$twoup/bin/.arch-n-opsys" ]; then
-  ARCH_N_OPSYS=`"$twoup/bin/.arch-n-opsys" $SIZE_OPT`
+if [ -f "$ROOT/bin/.arch-n-opsys" ]; then
+  ARCH_N_OPSYS=`"$ROOT/bin/.arch-n-opsys"`
   if [ "$?" = "0" ]; then
     eval $ARCH_N_OPSYS
   else
@@ -77,48 +90,63 @@ if [ -f "$twoup/bin/.arch-n-opsys" ]; then
   fi
 fi
 
+if [ x"$INSTALL_BOOTFILES" = xyes ] ; then
+  BOOTARCHIVE="$ROOT"/boot."$ARCH"-unix.tgz
+  BOOTFILES=sml.boot."$ARCH"-unix
+  if [ -d $BOOTFILES ] ; then
+    if [ -f "$BOOTARCHIVE" ] ; then
+      echo "$this: removing existing boot-file archive"
+      rm -f "$BOOTARCHIVE"
+    fi
+    tar -cf "$BOOTARCHIVE" $BOOTFILES
+  else
+    echo "$this: The directory $BOOTFILES is missing."
+    exit 1
+  fi
+fi
+
 HEAP_FILE=$STEM.$HEAP_SUFFIX
 LIB_DIR=$STEM.lib
 
 if [ ! -f $HEAP_FILE ] ; then
-    echo "$this: The heap file $HEAP_FILE is missing."
-    exit 1
+  echo "$this: The heap file $HEAP_FILE is missing."
+  exit 1
 fi
 
 if [ ! -d $LIB_DIR ] ; then
-    echo "$this: The library directory $LIB_DIR is missing."
-    exit 1
+  echo "$this: The library directory $LIB_DIR is missing."
+  exit 1
 fi
 
 # source directories (other than base) that might have ".cm" files
 SRC_DIRS="\
-  MLRISC \
-  asdl \
-  ckit \
-  cml \
-  eXene \
-  heap2asm \
-  ml-burg \
-  ml-lex \
-  ml-lpt \
-  ml-yacc \
-  nlffi \
-  pgraph \
   smlnj-lib \
-  trace-debug-profile \
+  libraries/MLRISC \
+  libraries/ckit \
+  libraries/cml \
+  libraries/eXene \
+  libraries/pgraph \
+  libraries/trace-debug-profile \
+  tools/asdl \
+  tools/heap2asm \
+  tools/ml-burg \
+  tools/ml-lex \
+  tools/ml-lpt \
+  tools/ml-yacc \
+  tools/nlffi \
   "
 
 if $CLEAN ; then
-    echo "cleaning $MAIN_LIB_DIR and $MAIN_HEAP_DIR"
-    rm -rf "$MAIN_LIB_DIR"/* "$MAIN_HEAP_DIR"/*
-    if $CLEAN_CM ; then
-	echo "removing old CM files"
-	for d in $SRC_DIRS ; do
-	    if [ -d "$twoup/$d" ] ; then
-		find "$twoup/$d" \( -name .cm -exec rm -rf {} \; -prune -print \)
-	    fi
-	done
-    fi
+  echo "cleaning $MAIN_LIB_DIR and $MAIN_HEAP_DIR"
+  rm -rf "$MAIN_LIB_DIR"/* "$MAIN_HEAP_DIR"/*
+  if $CLEAN_CM ; then
+    echo "removing old CM files"
+    for d in $SRC_DIRS ; do
+      if [ -d "$ROOT/$d" ] ; then
+        find "$ROOT/$d" \( -name .cm -exec rm -rf {} \; -prune -print \)
+      fi
+    done
+  fi
 fi
 
 #
@@ -137,9 +165,9 @@ mv $HEAP_FILE "$MAIN_HEAP_DIR/sml.$HEAP_SUFFIX"
 # Moving each individual library...
 cd "$LIB_DIR"
 for anchor in * ; do
-    if [ -d $anchor ] ; then
-	move $anchor "$MAIN_LIB_DIR/$anchor"
-    fi
+  if [ -d $anchor ] ; then
+    move $anchor "$MAIN_LIB_DIR/$anchor"
+  fi
 done
 cd ..
 
@@ -149,7 +177,7 @@ cd ..
 #  are retained and brand new ones are added.
 pcfile="$MAIN_LIB_DIR/pathconfig"
 if [ -f "$pcfile" ] ; then
-    cp "$pcfile" "$tmpfile"
+  cp "$pcfile" "$tmpfile"
 fi
 rm -f "$pcfile"
 cat "$LIB_DIR/pathconfig" >>"$tmpfile"

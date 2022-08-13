@@ -1,11 +1,12 @@
 #!/bin/sh
 #
+# COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
 # usage: makeml [options]
 #
 # where options are
 #
-#	-64 or -32              - specify word size for machines that support both 32
-#				  64-bit executables.
 #	-run <path>		- use the specified runtime system
 #	-bare			-
 #	-quiet			- suppress printing of most status messages
@@ -23,12 +24,12 @@
 #
 
 this=$0
-here=`pwd`
-cd ../..
-twoup=`pwd`
-cd "$here"
+HERE=`pwd`
+cd ..
+ROOT=`pwd`
+cd "$HERE"
 
-LINK="$twoup/bin/.link-sml"
+LINK="$ROOT/bin/.link-sml"
 
 if [ ! -x "$LINK" ] ; then
     echo $this: link script $LINK is not operational.
@@ -60,10 +61,6 @@ case $verbosity in
 	;;
 esac
 
-# default to 64-bits, since that is our primary development architecture
-#
-SIZE_OPT="-64"
-
 rebuilt=no
 bare=no
 
@@ -72,8 +69,6 @@ bare=no
 while [ "$#" != "0" ] ; do
     arg=$1; shift
     case $arg in
-    -32) SIZE_OPT=$arg ;;
-    -64) SIZE_OPT=$arg ;;
     -run)
 	if [ "$#" = "0" ]; then
 	    echo "$this: missing argument for \"-run\" option"
@@ -141,18 +136,18 @@ while [ "$#" != "0" ] ; do
 done
 
 #
-# Set CM_PATHCONFIG to ../../../lib/pathconfig
+# Set CM_PATHCONFIG to ../lib/pathconfig
 # (using an absolute path!)
 # ... unless it was already set at the time we run this script.
 #
-CM_PATHCONFIG=${CM_PATHCONFIG:-"$twoup/lib/pathconfig"}
+CM_PATHCONFIG=${CM_PATHCONFIG:-"$ROOT/lib/pathconfig"}
 export CM_PATHCONFIG
 
 #
 # use the arch-n-opsys script to determine the ARCH/OS if possible
 #
-if [ -f "$twoup/bin/.arch-n-opsys" ]; then
-    ARCH_N_OPSYS=`"$twoup/bin/.arch-n-opsys" $SIZE_OPT`
+if [ -f "$ROOT/bin/.arch-n-opsys" ]; then
+    ARCH_N_OPSYS=`"$ROOT/bin/.arch-n-opsys"`
     if [ "$?" = "0" ]; then
 	eval $ARCH_N_OPSYS
 	echo $this: architecture = $ARCH
@@ -197,10 +192,10 @@ cd "$BOOT_DIR"
 # FIXME: if the "-run" option is given with a pathname that
 # involves spaces, this step will fail.
 #
-echo "$LINK" $RUN $SIZE_OPT \
+echo "$LINK" $RUN \
     @SMLboot=BOOTLIST @SMLheap="$HEAP" @SMLalloc=$ALLOC \
     $VERBOSITY $ARGS $MODE
-if "$LINK" $RUN $SIZE_OPT \
+if "$LINK" $RUN \
     @SMLboot=BOOTLIST @SMLheap="$HEAP" @SMLalloc=$ALLOC \
     $VERBOSITY $ARGS $MODE
 then
@@ -221,7 +216,7 @@ fi
 # Now move the libraries, generate the pathconfig file, and delete the bootdir.
 #
 
-cd "$here"
+cd "$HERE"
 if [ $bare = no ] ; then
     LIB_DIR="`pwd`/${HEAP}.lib"
 
@@ -237,5 +232,5 @@ if [ $bare = no ] ; then
 	fi
     done >"$LIB_DIR/pathconfig"
 
-    cd $here
+    cd $HERE
 fi

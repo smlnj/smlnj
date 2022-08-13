@@ -4,8 +4,6 @@
 #
 # where options are
 #
-#	-64 or -32              - specify word size for machines that support both 32
-#				  64-bit executables.
 #	-load <name>		- specify the prefix of the heap image to load
 #
 # all other options are passed to runtime system
@@ -15,13 +13,9 @@
 this=$0
 cmddir=`dirname $0`
 cmddir=`cd "$cmddir"; pwd`
-bindir=`cd "$cmddir/../../bin"; pwd`
+bindir=`cd "$cmddir/../bin"; pwd`
 
 ARGS=""
-
-# default to 64-bits, since that is our primary development architecture
-#
-SIZE_OPT="-64"
 
 HEAP_IMAGE=sml
 
@@ -30,8 +24,6 @@ HEAP_IMAGE=sml
 while [ "$#" != "0" ] ; do
     arg=$1; shift
     case $arg in
-    -32) SIZE_OPT=$arg ;;
-    -64) SIZE_OPT=$arg ;;
     -load)
 	if [ "$#" = "0" ]; then
 	    echo "$this: missing argument for \"-load\" option"
@@ -49,7 +41,7 @@ done
 # use the arch-n-opsys script to determine the ARCH/OS if possible
 #
 if [ -f $twoup/bin/.arch-n-opsys ]; then
-    ARCH_N_OPSYS=`"$bindir/.arch-n-opsys" $SIZE_OPT`
+    ARCH_N_OPSYS=`"$bindir/.arch-n-opsys"`
     if [ "$?" = "0" ]; then
 	eval $ARCH_N_OPSYS
     fi
@@ -66,4 +58,4 @@ rm -f "$LPC"
 cp ../../config/extrapathconfig "$LPC"
 
 CM_PATHCONFIG="$LIB_DIR/pathconfig" CM_LOCAL_PATHCONFIG="$LPC" \
-    "$bindir/sml" $SIZE_OPT @SMLload="$HEAP_IMAGE" "$@"
+    "$bindir/sml" @SMLload="$HEAP_IMAGE" "$@"

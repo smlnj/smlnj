@@ -27,6 +27,9 @@ structure UnixInstall : sig end =
 	  val home = getEnv "SMLNJ_ROOT"
 	  val installdir = getEnvOpt ("INSTALLDIR", home)
 	  val configdir = getEnvOpt ("CONFIGDIR", OS.Path.concat (home, "config"))
+(* FIXME: with the GitHub mono-repository, we can just use "git clone" to download
+ * everything, so we do not need to use the "unpack" script.
+ *)
 	  val unpackcmd = OS.Path.concat (configdir, "unpack")
 	  fun unpack modules = let
 	        val cmdline =
@@ -41,6 +44,7 @@ structure UnixInstall : sig end =
 	(* the config and build commands are standard scripts that take a size argument *)
 	  val (configcmd, buildcmd) = let
 		val sz = Int.toString(SMLofNJ.SysInfo.getArchSize())
+(* FIXME: we can get rid of the size arguments *)
 		val configcmd = "./config.sh -" ^ sz
 		val buildcmd = "CM_LOCAL_PATHCONFIG=/dev/null ./build.sh -" ^ sz
 		in

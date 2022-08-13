@@ -314,8 +314,10 @@ esac
 #
 # the name of the bin files directory
 #
-BOOT_ARCHIVE=boot.$ARCH-unix
-BOOT_FILES=sml.$BOOT_ARCHIVE
+# FIXME: should make these file names more consistent!!
+#
+BOOT_ARCHIVE=boot.$ARCH-unix.tgz
+BOOT_FILES=sml.boot.$ARCH-unix
 
 #
 # build the run-time system
@@ -380,7 +382,7 @@ else
   cd "$SMLNJ_ROOT"
 
   if [ ! -d "$BOOT_FILES"/smlnj/basis ] ; then
-    if [ ! -f "$BOOT_ARCHIVE" ] ; then
+    if [ -f "$BOOT_ARCHIVE" ] ; then
       vsay "$cmd: unpacking the boot files"
       tar -xzf "$BOOT_ARCHIVE"
     else
@@ -413,7 +415,7 @@ else
       cd "$BINDIR"
       ln -s .run-sml sml
       #
-      # Now move all stable libraries to #LIBDIR and generate
+      # Now move all stable libraries to $LIBDIR and generate
       # the pathconfig file.
       #
       cd "$SMLNJ_ROOT"/"$BOOT_FILES"
@@ -442,7 +444,7 @@ installdriver _ml-build ml-build
 
 #
 # Now do all the rest using the precompiled installer
-# (see base/system/smlnj/installer for details)
+# (see system/smlnj/installer for details)
 #
 if [ x"$NOLIB" = xno ] ; then
   vsay "$cmd: Installing other libraries and programs:"
