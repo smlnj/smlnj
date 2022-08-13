@@ -1,2 +1,8 @@
-Group is 
+(* ckit.cm
+ *
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Group is
   ast/sources.cm

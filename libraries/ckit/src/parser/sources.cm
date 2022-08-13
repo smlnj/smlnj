@@ -1,76 +1,54 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
 Group is
 
-#if defined(NEW_CM)
-#if (SMLNJ_VERSION * 100 + SMLNJ_MINOR_VERSION >= 11029)
-        (* standard basis *)
-        $/basis.cm
+  (* standard basis *)
+  $/basis.cm
 
-        (* Compiler *)
-	$smlnj/compiler.cm
+  (* Compiler *)
+  $smlnj/compiler.cm
 
-	(* standard library *)
-	$/smlnj-lib.cm
+  (* standard library *)
+  $/smlnj-lib.cm
 
-	(* ml-yacc *)
-	$/ml-yacc-lib.cm
+  (* ml-yacc *)
+  $/ml-yacc-lib.cm
 
-	(* pretty printer library *)
-	$/pp-lib.cm
-#else
-        (* standard basis *)
-	basis.cm
+  (* pretty printer library *)
+  $/pp-lib.cm
 
-        (* Compiler *)
-        host-compiler.cm
+  (* configuration *)
+  ../variants/sources.cm
 
-	(* standard library *)
-	smlnj-lib.cm
+  (* utilitities *)
+  util/old-pp.sml
+  util/ascii.sml
+  util/sourcemap-sig.sml
+  util/sourcemap.sml
+  util/error-sig.sml
+  util/error.sml
 
-	(* ml-yacc *)
-	ml-yacc-lib.cm
+  (* lexer and parser *)
+  grammar/tdefs.sml
+  grammar/tokentable.sml
+  grammar/c.lex
 
-	(* pretty printer library *)
-        pp-lib.cm
-#endif
-#else
-	(* standard library *)
-	smlnj-lib.cm
+  parser-sig.sml
+  parser.sml
+  parse-tree-sig.sml
+  parse-tree.sml
 
-	(* ml-yacc *)
-	ml-yacc-lib.cm
-
-	(* pretty printer library *)
-        pp-lib.cm
-#endif
-
-        (* configuration *)
-        ../variants/sources.cm
-
-	(* utilitities *)
-	util/old-pp.sml
-	util/ascii.sml
-	util/sourcemap-sig.sml
-	util/sourcemap.sml
-	util/error-sig.sml
-	util/error.sml
-
-	(* lexer and parser *)
-	grammar/tdefs.sml
-        grammar/tokentable.sml
-	grammar/c.lex
-
-	parser-sig.sml
-        parser.sml
-	parse-tree-sig.sml	
-	parse-tree.sml
-
-        (* extensions *)
+  (* extensions *)
 #if (defined(d))
-        extensions/d/parse-tree-ext-sig.sml
-        extensions/d/parse-tree-ext.sml        
-	grammar/d.grm
+  extensions/d/parse-tree-ext-sig.sml
+  extensions/d/parse-tree-ext.sml
+  grammar/d.grm
 #else
-        extensions/c/parse-tree-ext-sig.sml
-        extensions/c/parse-tree-ext.sml        
-	grammar/c.grm
+  extensions/c/parse-tree-ext-sig.sml
+  extensions/c/parse-tree-ext.sml
+  grammar/c.grm
 #endif

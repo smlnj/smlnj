@@ -1,3 +1,9 @@
+(* ckit-lib.cm
+ *
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
 Library
   signature PARSE_TO_AST
   structure ParseToAst
@@ -29,5 +35,5 @@ Library
   structure Sizes
   structure TypeUtil
   structure Sizeof
-is 
+is
   ast/group.cm
