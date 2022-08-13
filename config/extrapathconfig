@@ -1,0 +1,5 @@
+basis.cm smlnj/basis
+smlnj-lib.cm smlnj/smlnj-lib
+pp-lib.cm smlnj/smlnj-lib
+controls-lib.cm smlnj/smlnj-lib
+ml-yacc-lib.cm smlnj/ml-yacc
