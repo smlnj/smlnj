@@ -1,11 +1,15 @@
-(*
- * Some hard-wired file names used by the bootstrap compiler.
+(* names.sml
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Some hard-wired file names used by the bootstrap compiler.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
-structure BtNames = struct
+
+structure BtNames =
+  struct
     val initgspec = "$smlnj/init/init.cmi"
     val maingspec = "$/root.cm"
     val dirbaseDefault = "sml"

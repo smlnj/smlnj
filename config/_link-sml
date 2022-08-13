@@ -1,6 +1,6 @@
 #!@SHELL@
 #
-# Copyright 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# Copyright 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
 # The standard "link" script for SML/NJ
@@ -10,10 +10,6 @@
 # for /bin/ksh, disable reading user's environment file
 #
 unset ENV
-
-# the default size; this is set by the config/install.sh script
-#
-SIZE_OPT="-"@SIZE@
 
 RUN=""
 BOOT=""
@@ -25,8 +21,6 @@ HEAP="sml"
 while [ "$#" != "0" ]; do
   arg=$1
   case "$arg" in
-    -32) SIZE_OPT=$arg ; shift ;;
-    -64) SIZE_OPT=$arg ; shift ;;
     @SMLrun=*)
       RUN=`echo "$arg" | sed 's/@SMLrun=//'`
       shift
@@ -83,7 +77,7 @@ RUN_DIR=$BIN_DIR/.run
 #
 # the following could be replaced with some site specific code
 #
-ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys" $SIZE_OPT`
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys"`
 if [ "$?" != "0" ]; then
   echo "$CMD: unable to determine architecture/operating system"
   exit 1

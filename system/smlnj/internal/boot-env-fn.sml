@@ -1,31 +1,36 @@
-(*
- * Copyright 1996 by Bell Laboratories
- *  boot.sml -- bootstrap environments
+(* boot-env-fn.sml
  *
- *   completely redone by M.Blume (5/1998)
- *   ... and again in the course of switching over to the new CM
- *       (M. Blume, 7/1999)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * bootstrap environments
  *)
-signature BOOTENV = sig
-    val init:
-	string -> { heapfile: string, procCmdLine: (unit -> unit) option }
-end
 
-functor BootEnvF (datatype envrequest = AUTOLOAD | BARE
-		  val architecture: string
-		  val cminit : string * DynamicEnv.env * envrequest
-			       * (TextIO.instream -> unit)(* useStream *)
-			       * (string -> unit) (* useFile *)
-			       * ((string -> unit) -> (string -> unit))
-			                          (* errorwrap *)
-			       * ({ manageImport:
-				      Ast.dec * EnvRef.envref -> unit,
-				    managePrint:
-				      Symbol.symbol * EnvRef.envref -> unit,
-				    getPending : unit -> Symbol.symbol list }
-				  -> unit)
-			       -> (unit -> unit) option
-		  val cmbmake: string * bool -> unit) :> BOOTENV = struct
+signature BOOTENV = sig
+    val init : string -> { heapfile: string, procCmdLine: (unit -> unit) option }
+  end
+
+functor BootEnvF (
+
+    datatype envrequest = AUTOLOAD | BARE
+
+    val architecture: string
+
+    val cminit : string * DynamicEnv.env * envrequest
+                 * (TextIO.instream -> unit)                    (* useStream *)
+                 * (string -> unit)                             (* useFile *)
+                 * ((string -> unit) -> (string -> unit))       (* errorwrap *)
+                 * ({ manageImport:
+                        Ast.dec * EnvRef.envref -> unit,
+                      managePrint:
+                        Symbol.symbol * EnvRef.envref -> unit,
+                      getPending : unit -> Symbol.symbol list }
+                    -> unit)
+                 -> (unit -> unit) option
+
+    val cmbmake: string * bool -> unit
+
+  ) :> BOOTENV = struct
 
     exception BootFailure
 

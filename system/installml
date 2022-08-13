@@ -118,22 +118,11 @@ if [ ! -d $LIB_DIR ] ; then
   exit 1
 fi
 
-# source directories (other than base) that might have ".cm" files
+# source directories (other than cm, compiler, and system) that might have ".cm" files
 SRC_DIRS="\
   smlnj-lib \
-  libraries/MLRISC \
-  libraries/ckit \
-  libraries/cml \
-  libraries/eXene \
-  libraries/pgraph \
-  libraries/trace-debug-profile \
-  tools/asdl \
-  tools/heap2asm \
-  tools/ml-burg \
-  tools/ml-lex \
-  tools/ml-lpt \
-  tools/ml-yacc \
-  tools/nlffi \
+  libraries \
+  tools \
   "
 
 if $CLEAN ; then
@@ -182,7 +171,7 @@ fi
 rm -f "$pcfile"
 cat "$LIB_DIR/pathconfig" >>"$tmpfile"
 if [ -f "$MAIN_CONFIG_DIR/extrapathconfig" ] ; then
-    cat "$MAIN_CONFIG_DIR/extrapathconfig" >>"$tmpfile"
+  cat "$MAIN_CONFIG_DIR/extrapathconfig" >>"$tmpfile"
 fi
 awk <"$tmpfile" 'NF == 2 { mapping[$1] = $2 }
 NF != 2 { print $0 }
