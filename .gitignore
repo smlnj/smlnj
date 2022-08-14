@@ -89,3 +89,7 @@ latex.out/
 configure
 config.status
 autom4te.cache
+
+# project-specific files
+tools/asdl/**/Makefile
+
