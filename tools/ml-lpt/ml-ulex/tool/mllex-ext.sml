@@ -1,15 +1,15 @@
 (* ext.sml
  *
- *   Plugin for registering classifiers.
+ *   Classifier plug-in for suffixes.
  *
  * Copyright (c) 2007 by The Fellowship of SML/NJ
  *
  * Author: Matthias Blume (blume@tti-c.org)
  *)
-structure ULexLexExt = struct
+structure LexLexExt = struct
     local
-	val suffixes = ["lex"]
-	val class = "ml-ulex"
+	val suffixes = ["lex", "l"]
+	val class = "mllex"
 	fun sfx s =
 	    Tools.registerClassifier
 		(Tools.stdSfxClassifier { sfx = s, class = class })

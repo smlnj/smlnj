@@ -43,21 +43,25 @@ request old-basis
 #
 request ml-ulex
 #
+# Register the "mllex" CM tool class in such a way that "legacy" ml-lex
+# input is processed by "ml-ulex --ml-lex-mode".  Since the legacy ml-lex
+# is no longer included in the sources, this request should always be
+# enabled
+request ml-ulex-mllex-tool
+#
 # Arrange for the .lex suffix to be recognized by CM as (new-style)
 # ML-ULex input.
 #   (Notice that you should NOT select this option even if you want to have
 #    ml-ulex process legacy ml-lex input using the --ml-lex-mode option.)
-# Since most existing projects have legacy .lex files, this should be
-# kept off by default.
+# Since most existing projects have legacy .lex files, this is kept off by default.
 # WARNING: This is incompatible with ml-lex-lex-ext!!
 #request ml-ulex-lex-ext
 #
-# Register the "mllex" CM tool class in such a way that "legacy" ml-lex
-# input is processed by "ml-ulex --ml-lex-mode".
-#   (If you want the .lex extension to be mapped to the "mllex" class
-#   and have that be processed by ml-ulex, you should request
-#   ml-ulex-mllex-tool and ml-lex-lex-ext, but NOT ml-ulex-lex-ext.)
-request ml-ulex-mllex-tool
+# Arrange for the .lex suffix to be processed by "ml-ulex --ml-lex-mode"
+# Since most existing projects have legacy .lex files, this should be
+# kept on by default.
+# WARNING: This is incompatible with ml-ulex-lex-ext!!
+request ml-ulex-mllex-ext
 
 # build ML-Yacc (must come after ml-lex)
 #

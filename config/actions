@@ -184,40 +184,41 @@ mlrisc-tools lib mlrisc-tools parser.cm         libraries/MLRISC/Tools
 mlrisc-tools lib mlrisc-tools match-compiler.cm libraries/MLRISC/Tools
 
 # LALR(1) parser generator:
-ml-yacc            prog  ml-yacc - tools/ml-yacc
-ml-yacc   	   lib   mlyacc-tool.cm mlyacc-tool.cm tools/ml-yacc/tool
-ml-yacc-grm-ext    lib   grm-ext.cm     grm-ext.cm     tools/ml-yacc/tool
+ml-yacc         prog    ml-yacc         src             tools/ml-yacc
+ml-yacc         lib     mlyacc-tool.cm  mlyacc-tool.cm  tools/ml-yacc/tool
+ml-yacc-grm-ext lib     grm-ext.cm      grm-ext.cm      tools/ml-yacc/tool
 
 # new (unicode-capable) lexer generator:
-ml-ulex    	   dprog ml-ulex - ml-lpt/ml-ulex
-ml-ulex	   	   lib 	 ml-ulex-tool.cm ml-ulex-tool.cm tools/ml-lpt/ml-ulex/tool
-ml-ulex-mllex-tool lib 	 mllex-tool.cm   mllex-tool.cm   tools/ml-lpt/ml-ulex/tool
-ml-ulex-lex-ext    lib 	 lex-ext.cm      lex-ext.cm      tools/ml-lpt/ml-ulex/tool
+ml-ulex    	        dprog   ml-ulex         ml-ulex         tools/ml-lpt/ml-ulex
+ml-ulex	   	        lib 	ml-ulex-tool.cm ml-ulex-tool.cm tools/ml-lpt/ml-ulex/tool
+ml-ulex-mllex-tool      lib 	mllex-tool.cm   mllex-tool.cm   tools/ml-lpt/ml-ulex/tool
+ml-ulex-lex-ext         lib 	lex-ext.cm      lex-ext.cm      tools/ml-lpt/ml-ulex/tool
+ml-ulex-mllex-ext       lib 	mllex-ext.cm    mllex-ext.cm    tools/ml-lpt/ml-ulex/tool
 
 # LL(k) parser generator:
-ml-antlr           dprog ml-antlr - ml-lpt/ml-antlr
-ml-antlr   	   lib 	 ml-antlr-tool.cm ml-antlr-tool.cm tools/ml-lpt/ml-antlr/tool
-ml-antlr-grm-ext   lib 	 grm-ext.cm       grm-ext.cm       tools/ml-lpt/ml-antlr/tool
+ml-antlr                dprog   ml-antlr         ml-antlr               tools/ml-lpt/ml-antlr
+ml-antlr                lib     ml-antlr-tool.cm ml-antlr-tool.cm       tools/ml-lpt/ml-antlr/tool
+ml-antlr-grm-ext        lib     grm-ext.cm       grm-ext.cm             tools/ml-lpt/ml-antlr/tool
 
 # support library for ml-ulex and ml-antlr:
 ml-lpt-lib 	   lib 	 ml-lpt-lib.cm ml-lpt-lib.cm tools/ml-lpt/lib
 
 # ASDL generator and support library
-asdl               config tools/asdl
-asdl               dprog  asdlgen src/asdlgen tools/asdl
-asdl               lib    asdlgen-tool.cm asdlgen-tool.cm tools/asdl/tool
-asdl               lib    asdl-ext.cm     asdl-ext.cm     tools/asdl/tool
-asdl               lib    asdl-lib.cm     asdl-lib.cm     tools/asdl/src/lib/sml
+asdl    config tools/asdl
+asdl    dprog  asdlgen src/asdlgen tools/asdl
+asdl    lib    asdlgen-tool.cm asdlgen-tool.cm tools/asdl/tool
+asdl    lib    asdl-ext.cm     asdl-ext.cm     tools/asdl/tool
+asdl    lib    asdl-lib.cm     asdl-lib.cm     tools/asdl/src/lib/sml
 
 # bottom-up rewrite code generator generator:
-ml-burg    	   prog
-ml-burg		   lib	 mlburg-tool.cm mlburg-tool.cm tools/ml-burg/tool
-ml-burg		   lib 	 burg-ext.cm    burg-ext.cm    tools/ml-burg/tool
+ml-burg prog  ml-burg - tools/ml-burg
+ml-burg lib	 mlburg-tool.cm mlburg-tool.cm tools/ml-burg/tool
+ml-burg lib 	 burg-ext.cm    burg-ext.cm    tools/ml-burg/tool
 
 # utility program for use by heap2exec:
-heap2asm   prog heap2asm - tools/heap2asm
+heap2asm        prog heap2asm - tools/heap2asm
 
 # NLFFI foreign function interface generator:
 ml-nlffigen dprog ml-nlffigen - tools/nlffi/gen
 
-#nowhere     dprog nowhere - MLRISC/Tools/nowhere
+#nowhere        dprog nowhere - libraries/MLRISC/Tools/nowhere

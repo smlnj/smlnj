@@ -1,13 +1,15 @@
-(*
- * Plugin for "lex" suffix that points to ml-ulex.
+(* lex-ext.cm
  *
- * (C) 2007 The Fellowship of SML/NJ.
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *
- * This should currently not be installed as it conflicts with
- * the equally-named plugin library for legacy ml-lex.
+ * Classifier plugin that maps the ".lex" extension to the ml-ulex tool.
+ *
+ * Author: Matthias Blume (blume@tti-c.org)
  *)
+
 Library
-	structure ULexLexExt
+  structure ULexLexExt
 is
-	$smlnj/cm/tools.cm
-	ext.sml
+  $smlnj/cm/tools.cm
+  ext.sml
