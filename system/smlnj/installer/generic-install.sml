@@ -25,8 +25,7 @@ structure GenericInstall : sig
 	    installdir : string,
 	    configcmd : string,
 	    buildcmd : string,
-	    instcmd : string -> unit,
-	    unpack : (string list -> bool) option
+	    instcmd : string -> unit
 	  } -> unit
 
   end = struct
@@ -213,7 +212,7 @@ structure GenericInstall : sig
    *
    * where NL represents end-of-line and SYMBOL is one of
    *
-   *	SIZE_32		-- true for 32-bit systems
+   *	SIZE_32		-- true for 32-bit systems (deprecated)
    *	SIZE_64		-- true for 64-bit systems
    *	WINDOWS		-- true for Microsoft Windows
    *	UNIX		-- true for Unix systems (including macOS and Linux)
@@ -295,7 +294,7 @@ structure GenericInstall : sig
 	  end
 
   (* our main routine *)
-    fun proc { smlnjroot, installdir, configcmd, buildcmd, instcmd, unpack } = let
+    fun proc { smlnjroot, installdir, configcmd, buildcmd, instcmd } = let
 	  val smlnjroot = F.fullPath smlnjroot
 	  val installdir = F.fullPath installdir
 	  val libdir = P.concat (installdir, "lib")
@@ -345,16 +344,6 @@ structure GenericInstall : sig
 	  val moduleset = if allsrc
 		then SS.union (moduleset, allmoduleset)
 		else SS.addList (moduleset, srcReqs)
-	(* fetch and unpack source trees, using auxiliary helper command
-	 * which takes the root directory as its first and the module
-	 * names to be fetched as subsequent arguments.
-	 *)
-	  val _ = (case unpack
-		 of NONE => ()		(* archives must exist *)
-		  | SOME upck =>
-		      if upck (SS.listItems moduleset) then ()
-		      else fail ["unpacking failed\n"]
-		(* end case *))
 	(* at the end, read lib/pathconfig and eliminate duplicate entries *)
 	  fun uniqconfig () = let
 		fun swallow (f, m) = pc_fold SM.insert m f

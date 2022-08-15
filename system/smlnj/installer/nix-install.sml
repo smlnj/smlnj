@@ -27,17 +27,6 @@ structure UnixInstall : sig end =
 	  val home = getEnv "SMLNJ_ROOT"
 	  val installdir = getEnvOpt ("INSTALLDIR", home)
 	  val configdir = getEnvOpt ("CONFIGDIR", OS.Path.concat (home, "config"))
-(* FIXME: with the GitHub mono-repository, we can just use "git clone" to download
- * everything, so we do not need to use the "unpack" script.
- *)
-	  val unpackcmd = OS.Path.concat (configdir, "unpack")
-	  fun unpack modules = let
-	        val cmdline =
-		      concat ("\"" :: unpackcmd :: "\" \"" :: home :: "\"" ::
-			      foldl (fn (f, l) => " " :: f :: l) [] modules)
-	        in
-		  OS.Process.system cmdline = OS.Process.success
-	        end
 	  val bindir = getEnvOpt ("BINDIR", OS.Path.concat (installdir, "bin"))
 	  fun bincmd cmd = OS.Path.concat (bindir, cmd)
 	  val runsml = ".run-sml"		(* don't prepend bindir! *)
@@ -50,7 +39,6 @@ structure UnixInstall : sig end =
 		installdir = installdir,
 	 	configcmd = configcmd,
 		buildcmd = buildcmd,
-		unpack = SOME unpack,
 		instcmd = fn target => let
 		  val new = bincmd target
 		  in

@@ -29,7 +29,6 @@ structure WinInstall : sig end =
 		installdir = home,
 	 	configcmd = "config.bat " ^ home,
 		buildcmd = "build.bat",
-		unpack = NONE,
 		instcmd = fn target => copy {
 		    from = concat [home, "\\config\\", target, ".bat"],
 		    to = concat [home, "\\bin\\", target, ".bat"]
