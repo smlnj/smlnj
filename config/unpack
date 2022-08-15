@@ -1,0 +1,312 @@
+#!/bin/sh
+#
+# NOTE: this script is not really necessary anymore, since the sources are
+# fetched by cloning the GitHub repository.  We are keeping it for now because
+# the SML installer (`system/smlnj/installer`) in 2021.1 uses it.
+#
+# This script was extracted from install.sh and deals with the fetching
+# and unpacking of source/bootfile trees.  The first argument must be
+# the installation root directory.  Subsequent arguments are the names
+# of modules whose source trees are required.  It is invoked by both the
+# config/install.sh script and by base/system/smlnj/installer/generic-install.sml.
+#
+# (C) 2003 The Fellowship of SML/NJ
+#
+# Author: Matthias Blume (blume@tti-c.org)
+#
+
+this="$0"
+ROOT="$1"
+shift
+
+LIBS="$ROOT"/libraries
+TOOLS="$ROOT"/tools
+
+CONFIGDIR="$ROOT/config"
+
+VERSION=`cat "$CONFIGDIR"/version`
+#. "$CONFIGDIR"/srcarchiveurl
+
+vsay() {
+    if [ x${INSTALL_DEBUG} = xtrue ] ; then
+	echo "$@"
+    elif [ x${INSTALL_QUIETLY} = xtrue ] ; then
+	:
+    else
+	echo "$@"
+    fi
+}
+
+#
+# Function for asking user to fetch source archive.
+#   $1 - descriptive name
+#   $2 - base name without extension, without version, and without dir
+#   $3 - remote directory
+#
+askurl() {
+    echo "$this: Please, fetch $1 archive"
+    echo ' ('$2.'*' or $VERSION-$2.'*)'
+    echo " from $3"
+    echo " and then re-run this script!"
+    exit 1
+}
+
+#
+# Function for fetching source archives automatically using wget or lynx.
+#   $1 - command to actually get the stuff
+#   $2 - descriptive name
+#   $3 - base name without extension and without dir
+#   $4 - remote directory
+#
+fetchurl() {
+    getter=$1 ; shift
+    vsay $this: Fetching $1 from $3. Please stand by...
+    fetched=no
+    for base in "$2" "$VERSION-$2" ; do
+	for ext in tgz tar.gz tar.Z tz tar tar.bz2 ; do
+	    try=$base.$ext
+	    vsay $this: Trying $try ...
+	    if "$getter" "$3"/"$try" "$ROOT"/"$try" ; then
+		fetched=yes
+		vsay $this: Fetching $try was a success.
+		break 2		# get out of both for-loops
+	    else
+		rm -f "$ROOT"/"$try"
+	    fi
+	done
+    done
+    if [ $fetched = no ] ; then
+	echo $this: Fetching $try was no success.
+	echo '  ' You should try to do it manually now.
+	askurl "$1" "$2" "$3"
+    fi
+}
+
+# wrapper for wget
+usewget() {
+    wget -nv -O "$2" "$1"
+}
+
+# wrapper for lynx
+uselynx() {
+    lynx -source "$1" >"$2"
+}
+
+# wrapper for curl
+usecurl() {
+    curl -s "$1" >"$2"
+}
+
+testurlgetter() {
+    (exec >/dev/null 2>&1 ; exec $*)
+}
+
+#
+# Function to check whether wget or lynx is available.
+# Set URLGETTER accordingly.  URLGETTER can be set externally
+# to either 'wget' or 'curl' or 'lynx' -- in which case the
+# corresponding command will be used (properly wrapped).  Any
+# other external setting will be passed directly to fetchurl (without
+# wrapping -- meaning it must take precisely two argumets: source and
+# destination, in that order).
+#
+urlgetter() {
+    case ${URLGETTER:-unknown} in
+	fetchurl*)
+	    ;;
+	unknown)
+	    # automatically figure out which wrapper to use
+	    if testurlgetter wget --help ; then
+		URLGETTER="fetchurl usewget"
+	    elif testurlgetter curl -s file:///dev/null -o /dev/null ; then
+		URLGETTER="fetchurl usecurl"
+	    elif testurlgetter lynx -help ; then
+		URLGETTER="fetchurl uselynx"
+	    else
+		URLGETTER="askurl"
+	    fi
+	    ;;
+	wget|curl|lynx)
+	    # special getters we know how to wrap
+	    URLGETTER="fetchurl use${URLGETTER}"
+	    ;;
+	*)
+	    # other -- must be able to work without wrapper
+	    URLGETTER="fetchurl ${URLGETTER}"
+	    ;;
+    esac
+}
+
+# wrapper for tar
+un_tar() {
+    vsay "$this: Un-TAR-ing $1 archive."
+    tar -xf "$2"
+}
+
+# wrapper for zcat followed by tar
+un_tar_Z() {
+    vsay "$this: Un-COMPRESS-ing and un-TAR-ing $1 archive."
+    zcat "$2" | tar -xf -
+}
+
+# wrapper for gunzip followed by tar
+un_tar_gz() {
+    vsay "$this: Un-GZIP-ing and un-TAR-ing $1 archive."
+    gunzip -c "$2" | tar -xf -
+}
+
+# wrapper for bunzip2 followed by tar
+un_tar_bz2() {
+    vsay "$this: Un-BZIP2-ing and un-TAR-ing $1 archive."
+    bunzip2 -c "$2" | tar -xf -
+}
+
+# unarchive archive without and with version number attached
+unarchive() {
+    # $1: descriptive string, $2: archive, $3: unpacker
+    if [ -r "$ROOT"/"$2" ] ; then
+	"$3" "$1" "$ROOT"/"$2"
+    elif [ -r "$ROOT"/"$VERSION"-"$2" ]; then
+	$3 "$1" "$ROOT"/"$VERSION"-"$2"
+    else
+	return 1
+    fi
+}
+
+#
+# Function to unpack a source archive.
+#
+# $1: descriptive name of the sources to be unpacked
+# $2: the directory into which to unpack the sources
+# $3: the sub-directory of $2 that is going to be created by unpacking
+# $4: the basename of the source archive (the script will check several
+#     different suffixes to determine what kind of de-compression is to
+#     be used)
+#
+# fetch_n_unpack is the helper function that does the real work.  If
+# no archive is found locally, it invokes $URLGETTER and tries again.
+# The variable $tryfetch is used to make sure this happens only once.
+fetch_n_unpack() {
+    cd "$2"
+    if unarchive "$1" "$4".tgz un_tar_gz ||
+       unarchive "$1" "$4".tar.gz un_tar_gz ||
+       unarchive "$1" "$4".tar.Z un_tar_Z ||
+       unarchive "$1" "$4".tar un_tar ||
+       unarchive "$1" "$4".tar.bz2 un_tar_bz2 ||
+       unarchive "$1" "$4".tz un_tar_Z
+    then
+	: we are done
+    elif [ $tryfetch = yes ] ; then
+	urlgetter
+	$URLGETTER "$1" "$4" "$SRCARCHIVEURL"
+	tryfetch=no
+	fetch_n_unpack "$1" "$2" "$3" "$4"
+    fi
+}
+
+#
+# The main "unpack" driver function that invokes the above helper.
+#
+unpack() {
+    tryfetch=yes
+    if [ -d "$2"/"$3" ]; then
+	vsay "$this: The $1 tree already exists."
+    else
+	fetch_n_unpack "$1" "$2" "$3" "$4"
+    fi
+    if [ ! -d "$2"/"$3" ]; then
+	echo "$this: !!! Unable to unpack $1 archive."
+	exit 1
+    fi
+}
+
+#
+# Now do it:
+#
+
+for i
+do
+    case "$i" in
+#       runtime)
+#         unpack run-time "$ROOT"/base runtime runtime
+# 	;;
+#       boot.*)
+#         unpack bootfiles "$ROOT" sml.$i $i
+# 	;;
+      compiler)
+	unpack compiler "$ROOT" compiler compiler
+	;;
+      cm)
+	unpack compiler "$ROOT" cm cm
+	;;
+      old-basis)
+	unpack "Old Basis Libraries" "$LIBS" old-basis old-basis
+	;;
+      system)
+	unpack compiler "$ROOT" system system
+	;;
+      ml-yacc|ml-yacc-grm-ext)
+	unpack ML-Yacc "$TOOLS" ml-yacc ml-yacc
+	;;
+#       ml-lex|ml-lex-mllex-tool|ml-lex-lex-ext)
+# 	unpack ML-Lex "$TOOLS" ml-lex ml-lex
+# 	;;
+      ml-burg)
+        unpack ML-Burg "$TOOLS" ml-burg ml-burg
+	;;
+      smlnj-lib)
+        unpack "SML/NJ Library" "$ROOT" smlnj-lib smlnj-lib
+	;;
+      cml|cml-lib)
+        unpack CML "$LIBS" cml cml
+	;;
+#       eXene)
+#         unpack EXene "$ROOT" eXene eXene
+# 	;;
+      ckit)
+        unpack "C-Kit" "$LIBS" ckit ckit
+	;;
+      ml-nlffi-lib|ml-nlffigen)
+        unpack "NLFFI" "$TOOLS" nlffi nlffi
+	;;
+      pgraph-util)
+	unpack "CM source code" "$LIBS" pgraph pgraph
+	;;
+      tdp-util)
+        unpack "Trace/Debug/Profile code" "$LIBS" trace-debug-profile trace-debug-profile
+	;;
+      mlrisc|mlrisc-tools|nowhere)
+	unpack "MLRISC Library" "$LIBS" MLRISC MLRISC
+	;;
+#       smlnj-c)
+# 	unpack "SML/NJ-C FFI" "$ROOT" smlnj-c smlnj-c
+# 	;;
+      heap2asm)
+	unpack "Heap->ASM tool" "$TOOLS" heap2asm heap2asm
+	;;
+      ml-ulex|ml-ulex-mllex-tool|ml-ulex-lex-ext|ml-ulex-mllex-ext)
+	unpack "new unicode lexer generator" "$TOOLS" ml-lpt ml-lpt
+	;;
+      ml-antlr|ml-antlr-grm-ext)
+	unpack "new LL(k) parser generator" "$TOOLS" ml-lpt ml-lpt
+	;;
+      ml-lpt-lib)
+	unpack "utilities for language processing tools" "$TOOLS" ml-lpt ml-lpt
+	;;
+      doc)
+	unpack "documentation" "$ROOT" doc doc
+        # cd $ROOT/doc
+	# build $ROOT
+	;;
+      asdl)
+        unpack "asdlgen tool and libraries" "$TOOLS" asdl asdl
+        ;;
+      *)
+	echo Unknown package: ${i}.
+	echo Trying default method...
+	unpack ${i} "$ROOT" ${i} ${i}
+	;;
+    esac
+done
+
+exit 0
