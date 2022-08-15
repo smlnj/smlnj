@@ -7,6 +7,9 @@
 #
 # usage: build.sh [ options ]
 #
+# TODO:
+#    add support for fetching the boot files
+#    dump output from build process to a log (instead of to the terminal)
 
 cmd=$0
 here=$(pwd)
@@ -19,6 +22,7 @@ complain() {
 usage() {
   echo "usage: build.sh [ options ]"
   echo "options:"
+  echo "    -h,-help      print this message and exit"
   echo "    -nolib        skip building libraries/tools"
   echo "    -verbose      emit feedback messages"
   echo "    -debug        debug installation (enables verbose mode)"
