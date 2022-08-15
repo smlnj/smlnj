@@ -1,6 +1,6 @@
 #!@SHELL@
 #
-# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
 # usage: heap2exec [ <options> ] heapfile execfile
@@ -17,7 +17,7 @@
 CMD=`basename "$0"`
 
 usage() {
-	echo "usage: $CMD [ -32 | -64 ] [ <link> ] <heapfile> <execfile>"
+	echo "usage: $CMD [ <link> ] <heapfile> <execfile>"
 	echo "  where <link> is one of"
 	echo "      -static,  --linkwith-a    -- use static linking (Linux/FreeBSD)"
 	echo "      -dynamic, --linkwith-so   -- use dynamic linking (Linux/FreeBSD)"
@@ -29,23 +29,13 @@ die () {
 	exit 1
 }
 
-# the default size; this is set by the config/install.sh script
-#
-SIZE=@SIZE@
-if [ x"$1" = x-32 ] ; then
-  SIZE=32 ; shift
-elif [ x"$1" = x-64 ] ; then
-  SIZE=64 ; shift
-fi
-SIZE_OPT="-"$SIZE
-
 if [ x${SMLNJ_HOME} = x ] ; then
     BIN_DIR="@BINDIR@"
 else
     BIN_DIR=${SMLNJ_HOME}/bin
 fi
 
-ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys" $SIZE_OPT`
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys"`
 if [ "$?" != "0" ]; then
 	die "unable to determine architecture/operating system"
 fi
@@ -145,7 +135,7 @@ fi
 #
 
 RESULT=0
-if ${H2A} $SIZE_OPT "$heapfile" "$execfile".s ; then
+if ${H2A} "$heapfile" "$execfile".s ; then
     if [ -f "$execfile".s ] ; then
 	if ${CC} -c -o "$execfile".o "$execfile".s ; then
 	    rm "$execfile".s

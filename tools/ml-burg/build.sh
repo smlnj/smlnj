@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
+# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
 #
 # build script for ml-burg under the new runtime system.
 #
@@ -12,10 +12,9 @@ CMD=$0
 
 ROOT="ml-burg"
 HEAP_IMAGE=""
-SMLNJROOT=`pwd`/..
+SMLNJROOT=`pwd`/../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
 BUILD=$BIN/ml-build
-SIZE_OPT="-32"
 
 #
 # process command-line options
@@ -24,8 +23,6 @@ while [ "$#" != "0" ] ; do
     arg=$1
     shift
     case $arg in
-	-32) SIZE_OPT=$arg ;;
-	-64) SIZE_OPT=$arg ;;
 	-o)
 	    if [ "$#" = "0" ]; then
 		echo "$CMD: must supply image name for -o option"
@@ -46,6 +43,6 @@ fi
 
 #
 # Build the ml-burg standalone program:
-"$BUILD" $SIZE_OPT -DNO_ML_LEX -DNO_ML_YACC ml-burg.cm Main.main $HEAP_IMAGE
+"$BUILD" -DNO_ML_LEX -DNO_ML_YACC ml-burg.cm Main.main $HEAP_IMAGE
 
 exit 0

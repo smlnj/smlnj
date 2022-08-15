@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
+# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
 #
 # build script for ml-ulex
 #
@@ -12,12 +12,11 @@ CMD=$0
 
 ROOT="ml-ulex"
 HEAP_IMAGE=""
-SMLNJROOT=`pwd`/../..
+SMLNJROOT=`pwd`/../../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
 LIB=${INSTALLDIR:-$SMLNJROOT}/lib
 BUILD=$BIN/ml-build
 SML=$BIN/sml
-SIZE_OPT="-32"
 
 #
 # process command-line options
@@ -26,8 +25,6 @@ while [ "$#" != "0" ] ; do
     arg=$1
     shift
     case $arg in
-	-32) SIZE_OPT=$arg ;;
-	-64) SIZE_OPT=$arg ;;
 	-o)
 	    if [ "$#" = "0" ]; then
 		echo "$CMD: must supply image name for -o option"
@@ -48,6 +45,6 @@ fi
 
 #
 # Build the ml-ulex standalone program:
-"$BUILD" $SIZE_OPT -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main $HEAP_IMAGE
+"$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main $HEAP_IMAGE
 
 exit 0

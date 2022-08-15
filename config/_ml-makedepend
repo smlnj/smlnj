@@ -29,23 +29,11 @@ usage() {
     exit 1
 }
 
-# the default size; this is set by the config/install.sh script
-#
-SIZE_OPT="-"@SIZE@
-
 #
 # process options
 #
 while [ $# != 0 ] ; do
     case $1 in
-    -32)
-	shift
-	SIZE_OPT="-32"
-	;;
-    -64)
-	shift
-	SIZE_OPT="-64"
-	;;
     -n)
 	shift
 	archos=real
@@ -163,7 +151,7 @@ in
 end
 stop
 
-if $SML $SIZE_OPT '$smlnj/cm.cm' $dulist $mlscript ; then
+if $SML '$smlnj/cm.cm' $dulist $mlscript ; then
     cat $tmpmf >>$mf
 else
     echo $thisscript: CM dependency analysis failed

@@ -81,10 +81,6 @@ fi
 
 ALLOC=""
 
-# the default size; this is set by the config/install.sh script
-#
-SIZE_OPT="-"@SIZE@
-
 # if "yes" then we report the heap suffix and quit
 #
 REPORT_SUFFIX=no
@@ -95,8 +91,6 @@ REPORT_SUFFIX=no
 while [ "$#" != "0" ]; do
   arg=$1
   case "$arg" in
-    -32) shift; SIZE_OPT=$arg ;;
-    -64) shift; SIZE_OPT=$arg ;;
     @SMLrun=*)
       shift
       RUN=`echo $arg | sed 's/@SMLrun=//'`
@@ -119,10 +113,8 @@ while [ "$#" != "0" ]; do
       exit 0
       ;;
     @SMLwordsize)
-      case $SIZE_OPT in
-	-32) echo "32" ;;
-	-64) echo "64" ;;
-      esac
+      # we only support 64-bit targets
+      echo "64"
       exit 0
       ;;
     @SMLsuffix)
@@ -142,7 +134,7 @@ done
 #
 # the following could be replaced with some site specific code
 #
-ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys" $SIZE_OPT`
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys"`
 if [ "$?" != "0" ]; then
   echo "$CMD: unable to determine architecture/operating system"
   exit 1

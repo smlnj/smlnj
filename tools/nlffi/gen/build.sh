@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
+# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
 #
 # build script for ml-nlffigen
 #
@@ -15,7 +15,6 @@ HEAP_IMAGE=""
 TWOUP=`pwd`/../..
 BIN=${INSTALLDIR:-$TWOUP}/bin
 BUILD="$BIN/ml-build"
-SIZE_OPT="-32"
 
 #
 # process command-line options
@@ -24,8 +23,6 @@ while [ "$#" != "0" ] ; do
     arg=$1
     shift
     case $arg in
-	-32) SIZE_OPT=$arg ;;
-	-64) SIZE_OPT=$arg ;;
 	-o)
 	    if [ "$#" = "0" ]; then
 		echo "$CMD: must supply image name for -o option"
@@ -44,4 +41,4 @@ if [ "$HEAP_IMAGE" = "" ]; then
     HEAP_IMAGE="$ROOT"
 fi
 
-exec "$BUILD" $SIZE_OPT ml-nlffigen.cm Main.main "$HEAP_IMAGE"
+exec "$BUILD" ml-nlffigen.cm Main.main "$HEAP_IMAGE"
