@@ -10,4 +10,4 @@ Library
   structure ULexTool
 is
   $smlnj/cm/tools.cm
-  tool.sml
+  ml-ulex-tool.sml

@@ -10,6 +10,7 @@
 
 structure ULexLexExt =
   struct
+
     local
       val suffixes = ["lex"]
       val class = "ml-ulex"
