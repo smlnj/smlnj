@@ -127,7 +127,7 @@ The `base` directory has been eliminated; most of its components
 (`cm`, `compiler`, `runtime` and `system`) have been lifted to
 the top-level of the source tree.  The other top-level directories
 are `doc`, `libraries`, `llvm`, `smlnj-lib`, and `tools`.
-The `libraries` and `tools` firectories hold most of the non-core
+The `libraries` and `tools` directories hold most of the non-core
 components of the system, such as `cml`, `ml-yacc`, __etc__.
 +
 The `config/install.sh` script has been replaced by the `build.sh`
