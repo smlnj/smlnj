@@ -22,25 +22,26 @@ SML=$BIN/sml
 # process command-line options
 #
 while [ "$#" != "0" ] ; do
-    arg=$1
-    shift
-    case $arg in
-	-o)
-	    if [ "$#" = "0" ]; then
-		echo "$CMD: must supply image name for -o option"
-		exit 1
-	    fi
-	    HEAP_IMAGE=$1; shift
-	    ;;
-	*)
-	    echo $CMD: invalid argument: $arg
-	    exit 1
-	    ;;
-    esac
+  arg=$1
+  shift
+  case $arg in
+    -o)
+      if [ "$#" = "0" ]; then
+        echo "$CMD: must supply image name for -o option"
+        exit 1
+      fi
+      HEAP_IMAGE=$1; shift
+      ;;
+    -64) ;; # ignore size specification for compatibility with 2021.1
+    *)
+      echo $CMD: invalid argument: $arg
+      exit 1
+      ;;
+  esac
 done
 
 if [ "$HEAP_IMAGE" = "" ]; then
-    HEAP_IMAGE="$ROOT"
+  HEAP_IMAGE="$ROOT"
 fi
 
 #
