@@ -9,7 +9,7 @@ Currently, only Intel-based Macs are known to work.
 
 ## Building From Source
 
-The proecss for building the system from source code has
+The process for building the system from source code has
 changed.
 
 1. clone the repository
