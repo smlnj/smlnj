@@ -134,7 +134,7 @@ old https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker].
 | [.bugid]#240#
 | {issue-base}/240[`SExpParser.parseFile` should return empty list on empty file]
 | 307
-| [.bugid]#240#
+| [.bugid]#241#
 | {issue-base}/241[Add function for converting `HTML4.html` to string]
 | 308
 | [.bugid]#242#
