@@ -1,6 +1,6 @@
 (* newpp.cm *)
 
-Group
+Library
 
 	signature NEW_PP
 	structure NewPP
