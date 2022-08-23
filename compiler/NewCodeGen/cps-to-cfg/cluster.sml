@@ -178,8 +178,8 @@ structure Cluster : sig
 	  val say = Control.Print.say
 	  fun prCluster (fn1::fns) = (
 		say "***** CLUSTER START *****\n";
-		PPCps.printcps0 fn1;
-		List.app (fn f => (say "***** FRAG *****\n"; PPCps.printcps0 f)) fns;
+		PPCps.ppFunction fn1;
+		List.app (fn f => (say "***** FRAG *****\n"; PPCps.ppFunction f)) fns;
 		say "***** CLUSTER END *****\n")
 	  in
 	    List.app prCluster clusters;

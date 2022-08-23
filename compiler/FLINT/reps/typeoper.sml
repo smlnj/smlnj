@@ -29,7 +29,6 @@ structure TypeOper : TYPEOPER =
 struct
 
 local
-  structure DI = DebIndex
   structure LT = Lty
   structure FR = FunRecMeta
   structure LK = LtyKernel
@@ -203,7 +202,7 @@ val tcode_real = RT.tcode_real
 val tcode_realN = RT.tcode_realN
 
 
-(* tcLexp maps LT.TC_VAR to proper lvars, LT.TC_PRIM to proper constants *)
+(* tcLexp maps LT.TC_DVAR to proper lvars, LT.TC_PRIM to proper constants *)
 (* val tcLexp : kenv -> tyc -> lexp *)
 
 val initKE = RT.initKE
@@ -235,7 +234,7 @@ fun tcTag (kenv, tc) =
 	   | (LT.TC_FIX _) => YES
 	   | (LT.TC_APP(tx, _)) =>
 		(case LK.tc_whnm_out tx
-		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _) =>
+		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_DVAR _) =>
 		       MAYBE (tcLexp kenv x)
 		   | _ => YES)
 	   | _ => (MAYBE (tcLexp kenv x)))

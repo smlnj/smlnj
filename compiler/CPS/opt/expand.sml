@@ -379,7 +379,7 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
 	val depth = 2 and max = 2
 
     in  if false andalso debug
-	    then (PPCps.prcps e;
+	    then (PPCps.ppCps e;
 		  debugprint(Int.toString predicted); debugprint "   ";
 		  debugprint(Int.toString bodysize); debugprint "\n")
 	else ();
@@ -564,7 +564,7 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
       notearg fvar;
       app notearg fargs;
 (***>
-      if !CG.printit then PPCps.prcps cexp
+      if !CG.printit then PPCps.ppCps cexp
 	  else ();
 <***)
       debugprint("Expand: pass1: ");

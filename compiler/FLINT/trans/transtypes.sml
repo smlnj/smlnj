@@ -6,15 +6,15 @@
 
 signature TRANSTYPES =
 sig
+
   val genTT  : unit -> {tpsKnd : Types.tycpath -> Lty.tkind,
-                        tpsTyc : DebIndex.depth -> Types.tycpath
-                                 -> Lty.tyc,
-                        toTyc  : DebIndex.depth -> Types.ty -> Lty.tyc,
-                        toLty  : DebIndex.depth -> Types.ty -> Lty.lty,
-                        strLty : Modules.Structure * DebIndex.depth
-                                 * ElabUtil.compInfo -> Lty.lty,
-                        fctLty : Modules.Functor * DebIndex.depth
-                                 * ElabUtil.compInfo -> Lty.lty}
+                        tpsTyc : int -> Types.tycpath -> Lty.tyc,
+                        toTyc  : int -> Types.ty -> Lty.tyc,
+                        toLty  : int -> Types.ty -> Lty.lty,
+                        strLty : Modules.Structure * int * ElabUtil.compInfo -> Lty.lty,
+                        fctLty : Modules.Functor * int * ElabUtil.compInfo -> Lty.lty}
+     (* int = deBruijn context *)
+
 end (* signature TRANSTYPES *)
 
 structure TransTypes : TRANSTYPES =
@@ -22,7 +22,6 @@ structure TransTypes : TRANSTYPES =
 
     structure BT = BasicTypes
     structure DA = Access
-    structure DI = DebIndex
     structure EE = EntityEnv
     structure EM = ErrorMsg
     structure EPC = EntPathContext
@@ -73,10 +72,12 @@ structure TransTypes : TRANSTYPES =
 	handle _ => say "fail to print anything")
 
 
-    fun ppLtyc ltyc =
-	PP.with_default_pp (fn ppstrm => PPLty.ppTyc 20 ppstrm ltyc)
+    fun ppLtyc (ltyc: LT.tyc) = PPLty.ppTyc 20 ltyc
 
-
+    (* deBruijn index *)
+    type depth = int  (* deBruijn context *)
+    val top : depth = 0  (* no surrounding type abstractions *)
+			   
   (****************************************************************************
    *               TRANSLATING ML TYPES INTO FLINT TYPES                      *
    ****************************************************************************)
@@ -87,14 +88,14 @@ in
   fun exitRecTy () = (recTyContext := tl (!recTyContext))
   fun recTyc (i) =
 	let val x = hd(!recTyContext)
-	 in if x = 0 then LD.tcc_var (1, i)  (* innermost TFN *)
-	    else if x > 0 then LD.tcc_var (2, i)  (* second innermost TFN *)
+	 in if x = 0 then LD.tcc_dvar (1, i)  (* innermost TFN *)
+	    else if x > 0 then LD.tcc_dvar (2, i)  (* second innermost TFN *)
 		 else bug "unexpected RECtyc"
 	end
   fun freeTyc (i) =
 	let val x = hd (!recTyContext)
-	 in if x = 0 then LD.tcc_var (2, i)  (* second innermost TFN *)
-	    else if x > 0 then LD.tcc_var (3, i)  (* third innermost TFN *)
+	 in if x = 0 then LD.tcc_dvar (2, i)  (* second innermost TFN *)
+	    else if x > 0 then LD.tcc_dvar (3, i)  (* third innermost TFN *)
 		 else bug "unexpected RECtyc"
 	end
 end (* end of recTyc and freeTyc hack *)
@@ -112,7 +113,7 @@ fun tycpathToTyc tfd tycpath =
 	   in if dbindex < 0
 	      then bug ("tycpathToTyc: dbindex = " ^ Int.toString dbindex ^ " < 0")
 	      else ();
-              LD.tcc_var (dbindex, num)
+              LD.tcc_dvar (dbindex, num)
 	  end
         | setTyvarIndex (TP_TYC tc, curTfd) = tycTyc(tc, curTfd)
         | setTyvarIndex (TP_SEL (tp, i), curTfd) = LD.tcc_proj(setTyvarIndex(tp, curTfd), i)
@@ -134,7 +135,7 @@ and tycTyc x =
 
 and tycTyc (tc, d) =
   let fun dtsTyc nd ({dcons: dconDesc list, arity=i, ...} : dtmember) =
-            let val nnd = if i=0 then nd else DI.next nd
+            let val nnd = if i=0 then nd else nd + 1
                 fun f ({domain=NONE, rep, name}, r) = (LB.tcc_unit)::r
                   | f ({domain=SOME t, rep, name}, r) = (toTyc nnd t)::r
 
@@ -162,9 +163,9 @@ and tycTyc (tc, d) =
                   val ks = map ttk freetycs
                   val (nd, hdr) =
                       case ks of [] => (d, fn t => t)
-                               | _ => (DI.next d, fn t => LD.tcc_fn(ks, t))
+                               | _ => (d + 1, fn t => LD.tcc_fn(ks, t))
                   val mbs = Vector.foldr (op ::) nil members
-                  val mtcs = map (dtsTyc (DI.next nd)) mbs
+                  val mtcs = map (dtsTyc (nd + 1)) mbs
                   val (fks, fts) = ListPair.unzip mtcs
                   val nft = case fts of [x] => x | _ => LD.tcc_seq fts
                   val tc = hdr(LD.tcc_fn(fks, nft))
@@ -210,10 +211,10 @@ and tycTyc (tc, d) =
 and tfTyc (TYFUN{arity=0, body}, d) = toTyc d body
   | tfTyc (TYFUN{arity, body}, d) =
       let val ks = LD.tkc_arg arity
-       in LD.tcc_fn(ks, toTyc (DI.next d) body)
+       in LD.tcc_fn(ks, toTyc (d + 1) body)
       end
 
-(* toTyc : DI.depth -> ty -> LT.tyc *)
+(* toTyc : depth -> ty -> LT.tyc *)
 and toTyc d t =
   let val tvDict : (tyvar * LT.tyc) list ref = ref []
       fun lookTv tv =
@@ -238,7 +239,7 @@ and toTyc d t =
 				 "\n"]);
 		     bug "trMTyvarKind: dbindex < 0")
 	       else ();
-               LD.tcc_var (dbindex, index)
+               LD.tcc_dvar (dbindex, index)
 	    end
         | trMTyvarKind (UBOUND _) = LB.tcc_void
             (* dbm: a user-bound type variable that didn't get generalized;
@@ -265,7 +266,7 @@ and toTyc d t =
                else LD.tcc_app(tycTyc(tc, d), [trTy t1, trTy t2])
 	     | _ => LD.tcc_app (tycTyc (tc, d), map trTy ts))
         | trTy (CONty(tyc, ts)) = LD.tcc_app(tycTyc(tyc, d), map trTy ts)
-        | trTy (IBOUND i) = LD.tcc_var(DI.innermost, i)
+        | trTy (IBOUND i) = LD.tcc_dvar(1, i)
 			 (* [KM] IBOUNDs are encountered when toTyc
                           * is called on the body of a POLYty in
                           * toLty (see below). *)
@@ -280,7 +281,7 @@ and toTyc d t =
 and toLty d (POLYty {tyfun=TYFUN{arity=0, body}, ...}) = toLty d body
   | toLty d (POLYty {tyfun=TYFUN{arity, body},...}) =
       let val ks = LD.tkc_arg arity
-       in LD.ltc_poly(ks, [toLty (DI.next d) body])
+       in LD.ltc_poly(ks, [toLty (d + 1) body])
       end
   | toLty d x = LD.ltc_tyc (toTyc d x)
 
@@ -349,7 +350,7 @@ and signLty (sign, depth, compInfo) =
                    INS.instParam {sign=sign, entEnv=EE.empty, depth=depth,
                                   rpath=InvPath.IPATH[], compInfo=compInfo,
                                   region=SourceMap.nullRegion}
-                 val nd = DI.next depth
+                 val nd = depth + 1
                  val nlty = strMetaLty(sign, rlzn, nd, compInfo)
 
                  val ks = map tpsKnd tycpaths
@@ -405,7 +406,7 @@ and fctRlznLty (sign, rlzn, depth, compInfo) =
                 INS.instParam {sign=paramsig, entEnv=env, tdepth=depth,
                                rpath=InvPath.IPATH[], compInfo=compInfo,
                                region=SourceMap.nullRegion}
-            val nd = DI.next depth
+            val nd = depth + 1
             val paramLty = strMetaLty(paramsig, argRlzn, nd, compInfo)
             val ks = map tpsKnd tycpaths
             val bodyRlzn =

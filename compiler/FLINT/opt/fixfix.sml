@@ -34,7 +34,8 @@ local
   structure LE = LtyExtern
   structure PL = PLambda
   structure F  = FLINT
-  structure PF = PrintFlint
+  structure PP = NewPP
+  structure PPF = PPFlint
   structure OU = OptUtils
   structure CTRL = FLINT_Control
 in
@@ -54,9 +55,9 @@ fun dbsay msg =
     else ()
 fun dbsays msgs = dbsay (concat msgs)
 
-fun buglexp (msg,le) = (say "\n"; PF.printLexp le; say " "; bug msg)
-fun bugval (msg,v) = (say "\n"; PF.printValue v; say " "; bug msg)
-fun bugsay s = say ("!*!*! Fixfix: "^s^" !*!*!\n")
+fun buglexp (msg, lexp) = (newline(); PP.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
+fun bugval (msg, value) = (newline(); PP.printFormatNL (PPF.fmtValue value); bug msg)
+fun bugsay s = saynl ("!*!*! Fixfix: " ^ s ^ " !*!*!")
 
 (* copyLvar : LV.lvar -> LV.lvar
  *  returns a fresh lvar with the same name (if any) as the argument *)

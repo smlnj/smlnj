@@ -37,7 +37,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		      then (say["\n\n[After ", s, " ...]\n\n"]; printE e; e)
 		      else e
 		in
-		  prGen (Control.CG.printit, PPCps.printcps0)
+		  prGen (Control.CG.printit, PPCps.ppFunction)
 		end
 
 	  fun contract last f = let
@@ -222,7 +222,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 	    | apply ("flatten",f)        = flatten f
 	    | apply ("zeroexpand",f)     = zeroexpand f
 	    | apply ("expand",f)         = expand(f, bodysize, false)
-	    | apply ("print",f)          = (PPCps.printcps0 f; f)
+	    | apply ("print",f)          = (PPCps.ppFunction f; f)
 	    | apply (p,f)                = (say["\n!! Unknown cps phase '", p, "' !!\n"]; f)
 	  in
 	    (if rounds < 0
@@ -244,7 +244,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		  if !CG.printit
 		    then (
 		      say ["\n\n[Before lowering]\n\n"];
-		      PPCps.printcps0 optimized)
+		      PPCps.ppFunction optimized)
 		    else ();
 		  last_contract (LowerCPS.transform optimized)
 		end)

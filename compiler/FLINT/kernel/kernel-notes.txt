@@ -1,0 +1,6 @@
+compiler/FLINT/kernel/kernel-notes.txt
+
+* The signatures LTY, LTYKERNEL, LTYDEF, LTYBASIC, and LTYEXTERN are now disjoint.
+
+1. LTY: lty.{sig,sml}
+

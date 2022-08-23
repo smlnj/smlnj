@@ -28,16 +28,27 @@ structure TransPrim :
   end =
 struct
 
-    structure PO = Primop
-    structure PL = PLambda
-    structure LT = Lty
-    structure LD = LtyDef
-    structure LB = LtyBasic
-    structure Tgt = Target
+local
+  structure PO = Primop
+  structure PL = PLambda
+  structure LT = Lty
+  structure LD = LtyDef
+  structure LB = LtyBasic
+  structure Tgt = Target
+  structure PP = NewPP
 
-    fun bug msg = ErrorMsg.impossible("TransPrim: " ^ msg)
+  fun bug msg = ErrorMsg.impossible("TransPrim: " ^ msg)
 
-    fun warn s = Control.Print.say(concat["*** WARNING: ", s, "\n"])
+  val say = Control.Print.say
+  fun newline () = say "\n"
+  fun saynl msg = (say msg, newline ())
+
+  fun warn msg = saynl ("*** WARNING: " ^ msg)
+
+  val printDepth = Control.Print.printDepth  (* local printDepth *)
+  val dbpd = 20 (* local debugging printDepth *)
+
+in
 
   (* various useful PLambda types *)
     val lt_tyc = LD.ltc_tyc
@@ -57,14 +68,14 @@ struct
     val unitLexp = PL.RECORD[]
 
     val boolsign = BasicTypes.boolsign
-    val (trueDcon', falseDcon') = let
-	  val lt = LD.ltc_parrow(LB.ltc_unit, LB.ltc_bool)
-	  fun mk (Types.DATACON{name, rep, typ,...}) = (name, rep, lt)
-	  in
-	    (mk BasicTypes.trueDcon, mk BasicTypes.falseDcon)
-          end
 
-    val trueLexp = PL.CON(trueDcon', [], unitLexp)
+    val (trueDcon', falseDcon') =
+	let val lt = LD.ltc_parrow(LB.ltc_unit, LB.ltc_bool)
+	    fun mk (Types.DATACON{name, rep, typ,...}) = (name, rep, lt)
+	 in (mk BasicTypes.trueDcon, mk BasicTypes.falseDcon)
+        end
+
+    val trueLexp  = PL.CON(trueDcon', [], unitLexp)
     val falseLexp = PL.CON(falseDcon', [], unitLexp)
 
   (* unsigned comparison on tagged integers used for bounds checking *)
@@ -285,11 +296,12 @@ struct
 			  | _ => PL.PRIM(po, lt, ts)
 			(* end *))
 		    | chkPrim (po as PO.TESTU(64, to), lt, ts) = let
-			val (argTy, resTy) = (case LD.ltd_arrow lt
-			       of (_, [a], [r]) => (a, r)
-				| _ => bug (concat[
-				      "unexpected type ", LB.lt_print lt, " of TEST"
-				    ])
+			val (argTy, resTy) =
+			      (case LD.ltd_arrow lt
+			         of (_, [a], [r]) => (a, r)
+				  | _ => (say "unexpected lty for TESTU: ";
+					  PPLty.ppLty dbpd lt;
+					  bug "unexpected lty for TESTU")
 			      (* end case *))
 			val extraTy = lt_arw (argTy, resTy)
 			val primTy = lt_arw (lt_tup [argTy, extraTy], resTy)
@@ -299,11 +311,12 @@ struct
 			      PL.RECORD[arg, coreAcc "w64ToInt32"]))
 			end
 		    | chkPrim (po as PO.TEST(64, to), lt, ts) = let
-			val (argTy, resTy) = (case LD.ltd_arrow lt
-			       of (_, [a], [r]) => (a, r)
-				| _ => bug (concat[
-				      "unexpected type ", LB.lt_print lt, " of TEST"
-				    ])
+			val (argTy, resTy) =
+			      (case LD.ltd_arrow lt
+			         of (_, [a], [r]) => (a, r)
+				  | _ => (say "unexpected lty for TEST: ";
+					  PPLty.ppLty dbpd lt;
+					  bug "unexpected lty for TEST")
 			      (* end case *))
 			val extraTy = lt_arw (argTy, resTy)
 			val primTy = lt_arw (lt_tup [argTy, extraTy], resTy)
@@ -461,12 +474,12 @@ struct
 		(* end case *))
 	(* conversion from fixed int to intinf *)
 	  fun inlToInf (opname: string, cvtName: string, primop, primoplt) = let
-		val (orig_arg_lt, res_lt) = (
-		      case LD.ltd_arrow primoplt handle LD.DeconExn => bug "inlToInfPrec"
-		       of (_, [a], [r]) => (a, r)
-			| _ => bug (concat[
-			      "unexpected type ", LB.lt_print primoplt, " of ", opname
-			    ])
+		val (orig_arg_lt, res_lt) =
+		      (case LD.ltd_arrow primoplt handle LD.DeconExn => bug "inlToInfPrec"
+		         of (_, [a], [r]) => (a, r)
+			  | _ => (say ("unexpected type [" ^ opname ^ "]: ");
+				  PPLty.ppLty dbpd primoplt;
+				  bug "unexpected type of primop")
 		      (* end case *))
 		val extra_arg_lt = LD.ltc_parrow(lt_fixed_int, res_lt)
 		val new_arg_lt = LD.ltc_tuple [orig_arg_lt, extra_arg_lt]
@@ -477,12 +490,12 @@ struct
 		end
 	(* conversion from intinf to fixed int *)
 	  fun inlFromInf (opname, cvtName, primop, primoplt) = let
-		val (orig_arg_lt, res_lt) = (
-		      case LD.ltd_arrow primoplt handle LD.DeconExn => bug "inlFromInfPrec"
-		       of (_, [a], [r]) => (a, r)
-			| _ => bug (concat[
-			      "unexpected type ", LB.lt_print primoplt, " of ", opname
-			    ])
+		val (orig_arg_lt, res_lt) =
+		      (case LD.ltd_arrow primoplt handle LD.DeconExn => bug "inlFromInfPrec"
+		         of (_, [a], [r]) => (a, r)
+			  | _ => (say ("unexpected type [" ^ opname ^ "]: ");
+				  PPLty.ppLty dbpd primoplt;
+				  bug "unexpected type of primop")
 		      (* end case *))
 		val extra_arg_lt = LD.ltc_parrow (orig_arg_lt, lt_fixed_int)
 		val new_arg_lt = LD.ltc_tuple [orig_arg_lt, extra_arg_lt]
@@ -492,11 +505,12 @@ struct
 		    mkApp2 (PL.PRIM (primop, new_lt, []), x, coreAcc cvtName))
 		end
 	(* useful error message *)
-	  fun unexpectedTy () = bug(concat[
-		  "unexpected type (", LB.lt_print lt, "; [",
-		  String.concatWithMap "," LB.tc_print ts, "]) for ",
-		  PrimopUtil.toString prim
-		])
+	  fun unexpectedTy () = 
+	      (say "unexpected type: lt = "; PPLty.ppLty dbpd lt; say "; ";
+	       PP.printFormatNL (PP.formatList (PPLty.fmtTyc dbpd) ts);
+	       say "for: "; say (PrimopUtil.toString prim);
+	       bug "unexpected type")
+
 	  in
 	    case prim
 	     of PO.INLDIV(k as (PO.INT sz)) =>
@@ -644,4 +658,5 @@ struct
 	    (* end case *)
 	  end (* trans *)
 
-  end (* PrimTrans *)
+end (* top local *)
+end (* PrimTrans *)

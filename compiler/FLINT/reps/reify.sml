@@ -22,7 +22,6 @@ local
   structure LE = LtyExtern
   structure LV = LambdaVar
   structure DA = Access
-  structure DI = DebIndex
   structure PO = Primop
   structure PL = PLambda
   structure FU = FlintUtil
@@ -111,7 +110,7 @@ let val getlty =  Recover.recover (fdec, false)
        in (tc, rt, (name,rep,lt_vfn))
       end
 
-    (* transform: kenv * DI.depth -> lexp -> lexp *)
+    (* transform: kenv * int -> lexp -> lexp *)  (* int is deBruijn context *)
     fun transform (kenv) =
      let (* lpfd: fundec -> fundec *)
          fun lpfd (fk, f, vts, e) =
@@ -182,15 +181,15 @@ let val getlty =  Recover.recover (fdec, false)
                   end
               | TAPP(v, ts) =>
                   let val _ = debugmsg ">>loop TAPP"
-		      val _ = if !debugging then PrintFlint.printLexp le
+		      val _ = if !debugging then PPFlint.ppLexp le
 			      else ()
 		      val args = LP.tsLexp(kenv, ts)
 		      val _ = debugmsg "--loop TAPP tsLexp args:"
-		      val _ = if !debugging then PrintFlint.printLexp args
+		      val _ = if !debugging then PPFlint.ppLexp args
 			      else ()
 		      val (u, hdr) = lpev(args)
 		      val _ = debugmsg "--loop TAPP lpev: "
-		      val _ = if !debugging then PrintFlint.printLexp (hdr(RET [v]))
+		      val _ = if !debugging then PPFlint.ppLexp (hdr(RET [v]))
 			      else ()
                       (* a temporary hack that fixes type mismatches *)
                       val lt = getlty v

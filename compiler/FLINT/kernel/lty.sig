@@ -76,7 +76,7 @@ datatype fflag                                (* function "calling conventions" 
   | FF_FIXED                                  (* used after rep. analysis *)
 
 datatype tycI
-  = TC_VAR of DebIndex.index * int            (* tyc variable *)
+  = TC_DVAR of int * int                      (* tyc variable: deBruijn index * binding index *)
   | TC_NVAR of tvar                           (* named tyc variable *)
   | TC_PRIM of PrimTyc.primtyc                (* primitive tyc *)
   | TC_FN of tkind list * tyc                 (* tyc abstraction *)

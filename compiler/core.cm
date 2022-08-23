@@ -129,9 +129,6 @@ Group
 (* new codegen structures *)
 	structure CFG
 	structure PPCfg
-(*
-	functor NewMLRiscGenFn
-*)
 
 is
 
@@ -176,8 +173,6 @@ FLINT/flint/chkflint.sml
 FLINT/flint/flint.sig
 FLINT/flint/flint.sml
 FLINT/flint/flintutil.sml
-FLINT/flint/printflint.sig
-FLINT/flint/printflint.sml
 FLINT/flint/ppflint.sig
 FLINT/flint/ppflint.sml
 FLINT/flint/tvarcvt.sml

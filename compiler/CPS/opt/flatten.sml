@@ -237,7 +237,7 @@ val rec reduce =
       end
 
  fun fprint (function, s : string) =
-     (say "\n"; say s; say "\n \n"; PPCps.printcps0 function)
+     (say "\n"; say s; say "\n \n"; PPCps.ppFunction function)
 
    val _ = (debugprint "Flatten: ";  debugflush())
    val _ = if debug then fprint ((fkind, fvar, fargs, ctyl, cexp), "Before flatten:") else ()

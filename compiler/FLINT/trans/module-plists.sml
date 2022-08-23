@@ -11,28 +11,28 @@ structure ModulePropLists =
 
     val { getFn = strEntityLty, setFn = setStrEntityLty, ... } = let
 	  fun holder (e: Modules.strEntity) = #properties e
-	  fun init _ = NONE: (Lty.lty * DebIndex.depth) option
+	  fun init _ = NONE: (Lty.lty * int) option
 	  in
 	    PropList.newProp (holder, init)
 	  end
 
     val { getFn = fctEntityLty, setFn = setFctEntityLty, ... } = let
 	  fun holder (e: Modules.fctEntity) = #properties e
-	  fun init _ = NONE: (Lty.lty * DebIndex.depth) option
+	  fun init _ = NONE: (Lty.lty * int) option
 	  in
 	    PropList.newProp (holder, init)
 	  end
 
     val { getFn = sigLty, setFn = setSigLty, ... } = let
 	  fun holder (e: Modules.sigrec) = #properties e
-	  fun init _ = NONE: (Lty.lty * DebIndex.depth) option
+	  fun init _ = NONE: (Lty.lty * int) option
 	  in
 	    PropList.newProp (holder, init)
 	  end
 
     val { getFn = dtfLtyc, setFn = setDtfLtyc, ... } = let
 	  fun holder (f: Types.dtypeFamily) = #properties f
-	  fun init _ = NONE: (Lty.tyc * DebIndex.depth) option
+	  fun init _ = NONE: (Lty.tyc * int) option
 	  in
 	    PropList.newProp (holder, init)
 	  end

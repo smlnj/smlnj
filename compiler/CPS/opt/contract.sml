@@ -88,8 +88,8 @@ fun sameName (x, VAR y) = LV.sameName(x,y)
 
 fun complain(t1,t2,s) =
   (say (s^"  ____ Type conflicting while contractions =====> \n    ");
-   say (LB.lt_print t1); say "\n and   \n    "; say (LB.lt_print t2);
-   say "\n \n";
+   PPLty.ppLty 20 t1; say "\n and   \n    ";
+   PPLty.ppLty 20 t2; say "\n \n";
    say "_____________________________________________________ \n")
 
 fun checklty s (t1,t2) =  ()
@@ -358,7 +358,7 @@ fun pass1 cexp = let
       in
 	p1 false cexp
       end
-(*DEBUG*)handle ex => (say "****** pass1 ******\n"; PPCps.prcps cexp; raise ex)
+(*DEBUG*)handle ex => (say "****** pass1 ******\n"; PPCps.ppCps cexp; raise ex)
 
 local
   exception Beta
@@ -1065,7 +1065,7 @@ and g hdlr = let
       in
 (*DEBUG*)
         fn cexp => ((g' cexp)
-	     handle ex => (say "****** g' ******\n"; PPCps.prcps cexp; raise ex))
+	     handle ex => (say "****** g' ******\n"; PPCps.ppCps cexp; raise ex))
       end (* g *)
 
 in  debugprint "Contract: "; debugflush();
@@ -1076,7 +1076,7 @@ in  debugprint "Contract: "; debugflush();
     in  debugprint "\n";
 	if debug
 	    then (debugprint "After contract: \n";
-		  PPCps.prcps cexp')
+		  PPCps.ppCps cexp')
 	else ();
 	(fkind, fvar, fargs, ctyl, cexp')
     end

@@ -19,7 +19,6 @@ structure LContract : LCONTRACT =
 struct
 
 local  (* local definitions *)
-  structure DI = DebIndex
   structure DA = Access
   structure LV = LambdaVar
   structure M  = LambdaVar.Tbl
@@ -48,6 +47,10 @@ local  (* local definitions *)
   fun dbsays msgs = if !debugging then saysnl msgs else ()
   fun bug s = ErrorMsg.impossible ("LContract: "^s)
 
+  (* deBruijn indexes for TC_VAR *)
+  type depth = int
+  val top = 0
+
 in
 
 fun isDiffs (vs, us) =
@@ -74,7 +77,7 @@ exception LContPass1
 
 (* pass1 : F.fundec -> (LV.lvar -> bool) * (unit -> unit) *)
 fun pass1 fdec =
-    let val tbl : (DI.depth option) M.hash_table = M.mkTable(32, LContPass1)
+    let val tbl : (depth option) M.hash_table = M.mkTable(32, LContPass1)
 	val add = M.insert tbl
 	val get = M.lookup tbl
 	fun rmv i = ignore (M.remove tbl i) handle LContPass1 => ()
@@ -92,11 +95,11 @@ fun pass1 fdec =
         (* candidate : LV.lvar -> bool *)
 	fun candidate x = (get x; true) handle LContPass1 => false
 
-        (* lpfd : DI.depth -> F.fundec -> unit *)
+        (* lpfd : depth -> F.fundec -> unit *)
 	fun lpfd d (({isrec=SOME _,...}, _, _, e) : F.fundec) = lple d e
 	  | lpfd d (_, v, _, e) = (enter(v, d); lple d e)
 
-        (* lple : DI.depth -> F.lexp -> unit *)
+        (* lple : depth -> F.lexp -> unit *)
 	and lple d e =
 	    let fun psv (VAR x) = kill x
 		  | psv _ = ()
@@ -106,7 +109,7 @@ fun pass1 fdec =
 		  | pse (FIX(fdecs, e)) = (app (lpfd d) fdecs; pse e)
 		  | pse (APP(VAR x, vs)) = (mark x; app psv vs)
 		  | pse (APP(v, vs)) = (psv v; app psv vs)
-		  | pse (TFN((_, _, _, e1): F.tfundec, e2)) = (lple (DI.next d) e1; pse e2)
+		  | pse (TFN((_, _, _, e1): F.tfundec, e2)) = (lple (d + 1) e1; pse e2)
 		  | pse (TAPP(v, _)) = psv v
 		  | pse (RECORD(_,vs,_,e)) = (app psv vs; pse e)
 		  | pse (SELECT(u,_,_,e)) = (psv u; pse e)
@@ -122,7 +125,7 @@ fun pass1 fdec =
 	     in pse e
 	    end
 
-     in lpfd DI.top fdec;
+     in lpfd top fdec;
         (candidate, fn () => M.clear tbl)
     end (* pass1 *)
 
@@ -439,7 +442,6 @@ end (* branchopt local *)
                                      map lpsv vs, v, z)),
                      false (* PO.purePrimop p *), v, StdExp, e))
 
-val d = DI.top
 val (fk, f, vts, e) = fdec
 
 in (fk, f, vts, #1 (loop e))

@@ -134,7 +134,7 @@ struct
   fun dump(title, cpsFun) =
       if !debug_cps_spill
       then (pr ("------------ "^title^" the spill phase ---------- \n");
-            PPCps.printcps0 cpsFun;
+            PPCps.ppFunction cpsFun;
             pr "--------------------------------------\n\n")
       else ()
 

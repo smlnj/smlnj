@@ -20,9 +20,9 @@ local
   structure LD = LtyDef
   structure LB = LtyBasic
   structure LE = LtyExtern
-  structure DI = DebIndex
   structure LV = LambdaVar
   structure PL = PLambda
+  structure PPF = PPFlint
   open FLINT
 in
 
@@ -101,7 +101,7 @@ fun recover (fdec: prog, postRep : bool) =
 		      in (#2(LE.ltd_fkfun u')
 			  handle LD.DeconExn =>
 			   (print "\nError Application:\n";
-			    PrintFlint.printLexp (APP(u, vs));
+			    PPF.ppLexp (APP(u, vs));
 			    raise LD.DeconExn))
 		      end
 		  | lpe (TFN((tfk, v, tvks, e1), e2)) =
@@ -135,13 +135,12 @@ fun recover (fdec: prog, postRep : bool) =
 		      (addv (v, reslty (lt, ts)); lpe e)
 
 	     in lpe e handle LD.DeconExn => (print "\nWhole Expr:\n";
-					     PrintFlint.printLexp e; bug "ltd decon")
+					     PPF.ppLexp e; bug "ltd decon")
 	    end (* function loop *)
 
 	val (fkind, f, vts, e) = fdec
 	val _ = addvs vts
 	val atys = map #2 vts
-	(* val _ = PrintFlint.printLexp e *)
 	val rtys = loop e
 	val _ = addv (f, LE.ltc_fkfun(fkind, atys, rtys))
 

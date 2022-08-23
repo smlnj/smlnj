@@ -16,7 +16,6 @@ structure Specialize : SPECIALIZE =
 struct
 
 local
-  structure DI = DebIndex
   structure LT = Lty
   structure FR = FunRecMeta
   structure LK = LtyKernel
@@ -27,22 +26,20 @@ local
   structure PT = PrimTyc
   structure PF = PFlatten
   structure LVMap = LambdaVar.Map
-  structure PP = PrettyPrint
+  structure PP = NewPP
+  structure PPT = PPLty
   structure PL = PLambda
   open FLINT
 in
 
 val debugging = FLINT_Control.spdebugging
-fun bug s = ErrorMsg.impossible ("SpecializeNvar: " ^ s)
+fun bug s = ErrorMsg.impossible ("Specialize: " ^ s)
 
 val say = Control_Print.say
-fun pp_fflag (fflag : LT.fflag) =
-    PP.with_default_pp (fn ppstrm => PPLty.ppFflag ppstrm fflag)
-fun pp_lvar (lvar : LambdaVar.lvar) =
-    PP.with_default_pp (fn ppstrm => PP.string ppstrm
-			  ("f = "^(LambdaVar.prLvar lvar)))
-fun pp_lty (lty : LT.lty) =
-    PP.with_default_pp (fn ppstrm => PPLty.ppLty 20 ppstrm lty)
+
+fun pp_fflag (fflag : LT.fflag) = say (PPT.fflagToString fflag)
+fun pp_lvar (lvar : LambdaVar.lvar) = say ("f = " ^ (LV.toString lvar))
+val pp_lty = PPT.ppLty 20
 
 fun mkv _ = LV.mkLvar()
 val ident = fn le : FLINT.lexp => le
@@ -74,6 +71,10 @@ fun mk_click () =
  *                  TYPES FOR INFO ENVIRONMENTS                             *
  ****************************************************************************)
 
+(* deBruijn indexes *)
+type depth = int  (* deBruijn context: number of enclosing type variable binders *)
+val top = 0
+
 (*
  * Bnd is a lattice on the type hierarchy, used to infer minimum type bounds;
  * Right now, we only deal with first-order kinds. All higher-order kinds
@@ -101,7 +102,7 @@ datatype dinfo
   | NOCSTR
   | CSTR of bnds
 
-type depth = DI.depth
+type depth = int  (* deBruijn context -- number of enclosing type variable bindings *)
 type info = (LT.tyc list * LV.lvar list) list
 type itable = info LambdaVar.Tbl.hash_table   (* lvar --> (tyc list * lvar list) list *)
 type dtable = (depth * dinfo) LambdaVar.Tbl.hash_table
@@ -113,8 +114,8 @@ datatype infoEnv = IENV of kenv * dtable
 (* THE FOLLOWING FUNCTION IS NOT FULLY DEFINED! (how?)
  * kBnd will only return KBOX or KTOP, never TBND. *)
 fun kBnd kenv tc =
-    if LD.tcp_var tc then
-	let val (i,j) = LD.tcd_var tc
+    if LD.tcp_dvar tc then
+	let val (i,j) = LD.tcd_dvar tc
 	    val (_,ks) =
 		List.nth(kenv, i-1)
 		handle Subscript =>
@@ -172,7 +173,7 @@ fun bndGen(oks, bnds, d, info) =
       val spk = g(bnds, [], true)
 
       val adj = case spk of FULL => (fn tc => tc)
-                          | _ => (fn tc => LB.tc_adj(tc, d, DI.next d)
+                          | _ => (fn tc => LB.tc_adj(tc, d, (d + 1))
 				           handle LK.TCENV => bug "bndGen")
         (* if not full-specializations, we push depth one-level down *)
 
@@ -400,8 +401,8 @@ fun addsmap (tvks, ts, smap) =
     end
 (***** end of the substitution intmapf hack *********************)
 
-(***** the nvar-depth intmapf: named variable -> DI.depth *********)
-type nmap = DI.depth LVMap.map
+(***** the nvar-depth intmapf: named variable -> depth *********)
+type nmap = depth LVMap.map
 val initnmap = LVMap.empty
 fun addnmap (tvks, d, nmap) =
   let fun h ((tv,_)::xs, nmap) =
@@ -410,7 +411,7 @@ fun addnmap (tvks, d, nmap) =
    in h(tvks, nmap)
   end
 fun looknmap nmap nvar =
-    case LVMap.find(nmap, nvar) of SOME d => d | NONE => DI.top
+    case LVMap.find(nmap, nvar) of SOME d => d | NONE => 0
      (*  bug "unexpected case in looknmap") *)
 (***** end of the substitution intmapf hack *********************)
 
@@ -426,9 +427,9 @@ val (click, num_click) = mk_click ()
  *)
 val getlty = Recover.recover (fdec, false)
 
-(* transform: infoEnv * DI.depth * lty cvt * tyc cvt
+(* transform: infoEnv * depth * lty cvt * tyc cvt
               * smap * bool -> (lexp -> lexp)
- *            where type 'a cvt = DI.depth -> 'a -> 'a
+ *            where type 'a cvt = depth -> 'a -> 'a
  * The 2nd argument is the depth of the resulting expression.
  * The 3rd and 4th arguments are used to encode the type translations.
  * The 5th argument is the substitution map.
@@ -495,7 +496,7 @@ fun transform (ienv, d, nmap, smap, did_flat) =
 		   if !debugging
 		   then (pp_lvar f; print "fflag = "; pp_fflag fflag;
 			 print "fflag(f) = "; pp_fflag fflag_f;
-	                 print "lpfd: f_lty = "; pp_lty f_lty)
+	                 print "lpfd: f_lty = "; PPT.ppLty 20 f_lty)
 		   else ()
                val (b1,b2) =
                  (* if LE.ff_eqv (fflag, fflag_f) then *) LB.ffd_fspec fflag
@@ -530,7 +531,7 @@ fun transform (ienv, d, nmap, smap, did_flat) =
       (* lptf : tfundec * lexp -> lexp *** Invariant: ne2 has been processed *)
       and lptf ((tfk, v, tvks, e1), ne2) =
         let val nienv = pushItable(ienv, tvks)
-            val nd = DI.next d
+            val nd = d + 1
             val nnmap = addnmap(tvks, nd, nmap)
             val ne1 = transform (nienv, nd, nnmap, smap, false) e1
             val hdr = popItable nienv
@@ -611,7 +612,7 @@ fun transform (ienv, d, nmap, smap, did_flat) =
                       | PARTSP {ntvks, nts, ...} =>
                           (* assume nts is already shifted one level down *)
                           let val nienv = pushItable(ienv, ntvks)
-                              val xd = DI.next d
+                              val xd = d + 1
                               val nnmap = addnmap(ntvks, xd, nmap)
                               val nsmap = addsmap(tvks, nts, smap)
                               val ne1 =
@@ -682,7 +683,7 @@ in
 (case fdec
   of (fk as {cconv=FR.CC_FCT, ...}, f, vts, e) =>
       let val ienv = initInfoEnv()
-          val d = DI.top
+          val d = top  (* deBruijn context *)
           val _ = app (fn (x,_) => entDtable(ienv, x, (d, ESCAPE))) vts
           val ne = transform (ienv, d, initnmap, initsmap, false) e
           val hdr = chkOutEscs (ienv, map #1 vts)

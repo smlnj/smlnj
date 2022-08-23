@@ -6,7 +6,7 @@
  * lty defined inside Lty. For each entity, we provide a series of 
  * constructor funtions, deconstructor functions, predicate functions, and
  * functions that test equivalence and do pretty-printing. This interface 
- * should only refer to DebIndex, Lty, PrimTyc, and Symbol. 
+ * should only refer to Lty, PrimTyc, and Symbol. 
  *)
 
 signature LTYDEF = 
@@ -77,7 +77,7 @@ val tkIsMono : Lty.tkind -> bool
  * FLINT tyc is roughly equivalent to the following ML datatype 
  *
  *    datatype tyc
- *      = TC_VAR of index * int
+ *      = TC_DVAR of index * int
  *      | TC_NVAR of tvar
  *      | TC_PRIM of primtyc
  *      | TC_FN of tkind list * tyc
@@ -100,7 +100,7 @@ val tkIsMono : Lty.tkind -> bool
  *)
 
 (** tyc constructors *)
-val tcc_var    : DebIndex.index * int -> Lty.tyc
+val tcc_dvar    : int * int -> Lty.tyc
 val tcc_nvar   : Lty.tvar -> Lty.tyc
 val tcc_prim   : PrimTyc.primtyc -> Lty.tyc
 val tcc_fn     : Lty.tkind list * Lty.tyc -> Lty.tyc
@@ -114,7 +114,7 @@ val tcc_box    : Lty.tyc -> Lty.tyc
 val tcc_tuple  : Lty.tyc list -> Lty.tyc
 
 (** tyc deconstructors *)
-val tcd_var    : Lty.tyc -> DebIndex.index * int 
+val tcd_dvar    : Lty.tyc -> int * int 
 val tcd_nvar   : Lty.tyc -> Lty.tvar
 val tcd_prim   : Lty.tyc -> PrimTyc.primtyc 
 val tcd_fn     : Lty.tyc -> Lty.tkind list * Lty.tyc 
@@ -129,7 +129,7 @@ val tcd_tuple  : Lty.tyc -> Lty.tyc list
 val tcd_arrow  : Lty.tyc -> Lty.fflag * Lty.tyc list * Lty.tyc list 
 
 (** tyc predicates *)
-val tcp_var    : Lty.tyc -> bool
+val tcp_dvar    : Lty.tyc -> bool
 val tcp_nvar   : Lty.tyc -> bool
 val tcp_prim   : Lty.tyc -> bool
 val tcp_fn     : Lty.tyc -> bool
@@ -144,7 +144,7 @@ val tcp_tuple  : Lty.tyc -> bool
 val tcp_arrow  : Lty.tyc -> bool
 
 (** tyc one-arm switch *)
-val tcw_var    : Lty.tyc * (DebIndex.index * int -> 'a) * (Lty.tyc -> 'a) -> 'a
+val tcw_dvar    : Lty.tyc * (int * int -> 'a) * (Lty.tyc -> 'a) -> 'a
 val tcw_nvar   : Lty.tyc * (Lty.tvar -> 'a) * (Lty.tyc -> 'a) -> 'a
 val tcw_prim   : Lty.tyc * (PrimTyc.primtyc -> 'a) * (Lty.tyc -> 'a) -> 'a
 val tcw_fn     : Lty.tyc * (Lty.tkind list * Lty.tyc -> 'a) * (Lty.tyc -> 'a) -> 'a
@@ -197,25 +197,25 @@ val ltw_poly   : Lty.lty * (Lty.tkind list * Lty.lty list -> 'a) * (Lty.lty -> '
  * on simple mono tycs. *)
 
 (** tyc-lty constructors *)
-val ltc_var    : DebIndex.index * int -> Lty.lty
+val ltc_dvar    : int * int -> Lty.lty
 val ltc_prim   : PrimTyc.primtyc -> Lty.lty
 val ltc_tuple  : Lty.lty list -> Lty.lty
 val ltc_arrow  : Lty.fflag * Lty.lty list * Lty.lty list -> Lty.lty
 
 (** tyc-lty deconstructors *)
-val ltd_var    : Lty.lty -> DebIndex.index * int
+val ltd_dvar    : Lty.lty -> int * int
 val ltd_prim   : Lty.lty -> PrimTyc.primtyc
 val ltd_tuple  : Lty.lty -> Lty.lty list
 val ltd_arrow  : Lty.lty -> Lty.fflag * Lty.lty list * Lty.lty list
 
 (** tyc-lty predicates *)
-val ltp_var    : Lty.lty -> bool
+val ltp_dvar    : Lty.lty -> bool
 val ltp_prim   : Lty.lty -> bool
 val ltp_tuple  : Lty.lty -> bool
 val ltp_arrow  : Lty.lty -> bool
 
 (** tyc-lty one-arm switches *)
-val ltw_var    : Lty.lty * (DebIndex.index * int -> 'a) * (Lty.lty -> 'a) -> 'a
+val ltw_dvar    : Lty.lty * (int * int -> 'a) * (Lty.lty -> 'a) -> 'a
 val ltw_prim   : Lty.lty * (PrimTyc.primtyc -> 'a) * (Lty.lty -> 'a) -> 'a
 val ltw_tuple  : Lty.lty * (Lty.tyc list -> 'a) * (Lty.lty -> 'a) -> 'a
 val ltw_arrow  : Lty.lty * (Lty.fflag * Lty.tyc list * Lty.tyc list -> 'a) 

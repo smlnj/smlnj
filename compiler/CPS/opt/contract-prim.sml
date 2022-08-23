@@ -72,14 +72,14 @@ structure ContractPrim : sig
 		  "RECinfo(_, [", String.concatWithMap "," PPCps.vpathToString args, "])"
 		]
 	    | SELinfo(i, v, cty) => concat[
-		  "SELinfo(", Int.toString i, ", ", PPCps.value2str v, ", ",
+		  "SELinfo(", Int.toString i, ", ", PPCps.valueToString v, ", ",
 		  CPSUtil.ctyToString cty, ")"
 		]
 	    | OFFinfo(i, v) => concat[
-		  "OFFinfo(", Int.toString i, ", ", PPCps.value2str v, ")"
+		  "OFFinfo(", Int.toString i, ", ", PPCps.valueToString v, ")"
 		]
 	    | WRPinfo(nk, v) => concat[
-		  "WRPinfo(", PPCps.numkindToString nk, ", ", PPCps.value2str v, ")"
+		  "WRPinfo(", PPCps.numkindToString nk, ", ", PPCps.valueToString v, ")"
 		]
 	    | IFIDIOMinfo _ => "IFIDIOMinfo{...}"
 	    | MISCinfo cty => concat[

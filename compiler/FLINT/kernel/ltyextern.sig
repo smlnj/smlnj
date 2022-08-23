@@ -23,8 +23,8 @@
  * (2) functions should all be accessed as "LtyExtern.foo". The client
  * in general should never need to access LtyKernel (?).
  *
- * This interface only refers to structures DebIndex, Lty,
- * FunRecMeta, PrimOp.  No types are exported by LTYEXTERN.
+ * LTYEXTERN only refers to structures Lty, FunRecMeta, PrimOp.
+ * No types are exported by LTYEXTERN.
  *)
 
 signature LTYEXTERN =
@@ -41,10 +41,10 @@ val lt_inst_chk_gen : unit -> Lty.lty * Lty.tyc list * Lty.tkindEnv -> Lty.lty l
 
 (* substitution of named type variables *)
 (*** CLEAN THIS UP ***)
-val tc_nvar_elim_gen : unit -> (Lty.tvar * DebIndex.depth -> Lty.tyc option)
-                            -> DebIndex.depth -> Lty.tyc -> Lty.tyc
-val lt_nvar_elim_gen : unit -> (Lty.tvar * DebIndex.depth -> Lty.tyc option)
-                            -> DebIndex.depth -> Lty.lty -> Lty.lty
+val tc_nvar_elim_gen : unit -> (Lty.tvar * int -> Lty.tyc option)
+                            -> int -> Lty.tyc -> Lty.tyc
+val lt_nvar_elim_gen : unit -> (Lty.tvar * int -> Lty.tyc option)
+                            -> int -> Lty.lty -> Lty.lty
 
 (* !! BEWARE !!
  * The `subst' argument is assumed to be sorted with increasing tvars *)
@@ -52,9 +52,9 @@ val tc_nvar_subst_gen : unit -> (Lty.tvar * Lty.tyc) list -> Lty.tyc -> Lty.tyc
 val lt_nvar_subst_gen : unit -> (Lty.tvar * Lty.tyc) list -> Lty.lty -> Lty.lty
 
 val tc_nvar_cvt_gen : unit -> (Lty.tvar * int) list
-                           -> DebIndex.depth -> Lty.tyc -> Lty.tyc
+                           -> int -> Lty.tyc -> Lty.tyc
 val lt_nvar_cvt_gen : unit -> (Lty.tvar * int) list
-                           -> DebIndex.depth -> Lty.lty -> Lty.lty
+                           -> int -> Lty.lty -> Lty.lty
 
 (* The equivalent to ltc_poly for the nvar case *)
 val lt_nvpoly : (Lty.tvar * Lty.tkind) list * Lty.lty list -> Lty.lty
@@ -62,8 +62,8 @@ val lt_nvpoly : (Lty.tvar * Lty.tkind) list * Lty.lty list -> Lty.lty
 (* special adjustment functions used during type specializations *)
 val lt_sp_adj : Lty.tkind list * Lty.lty * Lty.tyc list * int * int -> Lty.lty
 val tc_sp_adj : Lty.tkind list * Lty.tyc * Lty.tyc list * int * int -> Lty.tyc
-val lt_sp_sink: Lty.tkind list * Lty.lty * DebIndex.depth * DebIndex.depth -> Lty.lty
-val tc_sp_sink: Lty.tkind list * Lty.tyc * DebIndex.depth * DebIndex.depth -> Lty.tyc
+val lt_sp_sink: Lty.tkind list * Lty.lty * int * int -> Lty.lty
+val tc_sp_sink: Lty.tkind list * Lty.tyc * int * int -> Lty.tyc
 
 (** utility functions used in CPS only, should go away soon ! *)
 val lt_iscont   : Lty.lty -> bool

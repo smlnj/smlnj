@@ -23,7 +23,6 @@ structure RuntimeType (* :> RTTYPE *) =
 struct
 
 local
-  structure DI = DebIndex
   structure LT = Lty
   structure LK = LtyKernel
   structure LD = LtyDef
@@ -44,9 +43,13 @@ val debugging = FLINT_Control.rtdebugging
 fun bug s = ErrorMsg.impossible ("RuntimeType: " ^ s)
 fun say (s : string) = Control.Print.say s
 
-fun debugmsg(m) = if !debugging then (say m; say "\n") else ()
-fun ppTyc tc =
-    PrettyPrint.with_default_pp (fn ppstrm => PPLty.ppTycEnv 20 ppstrm tc)
+fun debugmsg msg =
+    if !debugging then (say msg; say "\n") else ()
+
+fun debugTyc tyc =
+    if !debugging then PPLty.ppTyc 20 tyc else ()
+
+val ppTyc: LT.tyc -> unit = PPLty.ppTyc 20
 
 fun mkv _ = LV.mkLvar()
 val ident = fn le => le
@@ -83,11 +86,11 @@ fun split(RET [v]) = (v, ident)
 
 fun SELECTg(i, e) =
   let val _ = debugmsg ">>SELECTg"
-      val _ = if !debugging then PrintFlint.printLexp e else ()
+      val _ = if !debugging then PPFlint.ppLexp e else ()
       val (v, hdr) = split e
       val x = mkv()
       val res = hdr(SELECT(v, i, x, RET [VAR x]))
-      val _ = if !debugging then PrintFlint.printLexp res else ()
+      val _ = if !debugging then PPFlint.ppLexp res else ()
       val _ = debugmsg "<<SELECTg"
    in res
   end
@@ -128,7 +131,7 @@ fun SRECORDg es =
                end
         | f (e::r, vs, hdr) =
               let val _ = debugmsg "--SRECORD g"
-		  val _ = if !debugging then PrintFlint.printLexp e else ()
+		  val _ = if !debugging then PPFlint.ppLexp e else ()
 		  val (v, h) = split e
                in f(r, v::vs, hdr o h)
               end
@@ -272,13 +275,11 @@ fun tkTfn (kenv, ks) =
   end
 
 
-(* rtLexp maps LT.TC_VAR to proper lvars, LT.TC_PRIM to proper constants *)
+(* rtLexp maps LT.TC_DVAR to proper lvars, LT.TC_PRIM to proper constants *)
 (* val rtLexp : kenv -> tyc -> rtype *)
 
 fun rtLexp (kenv : kenv) (tc : LT.tyc) =
-  let val _ = (debugmsg ">>rtLexp";
-	       if !debugging then debugmsg(LB.tc_print tc)
-				  else ())
+  let val _ = (debugmsg ">>rtLexp: "; debugTyc tc)
       fun loop (x : LT.tyc) =
 	(case (LK.tc_whnm_out x)
 	  of (LT.TC_FN(ks, tx)) =>
@@ -288,11 +289,11 @@ fun rtLexp (kenv : kenv) (tc : LT.tyc) =
 	   | (LT.TC_APP(tx, ts)) =>
 	       (debugmsg ">>rtLexp TC_APP";
 		if !debugging
-		then (debugmsg(LB.tc_print tx); debugmsg "\n";
-		     app (fn tx => (debugmsg(LB.tc_print tx); debugmsg ", ")) ts)
+		then (PPLty.ppTyc 20 tx; say "\n";
+		     app (fn tx => (PPLty.ppTyc 20 tx; say ", ")) ts)
 		else ();
 		(case LK.tc_whnm_out tx
-		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _ | LT.TC_NVAR _) =>
+		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_DVAR _ | LT.TC_NVAR _) =>
 			APPg(loop tx, tcsLexp(kenv, ts))
 		   | _ => (debugmsg "--rtLexp LT.TC_APP void!!"; tcode_void))
 		(* [GK 5/2/07] This looks very, very wrong. If we have any
@@ -300,14 +301,13 @@ fun rtLexp (kenv : kenv) (tc : LT.tyc) =
 		before debugmsg "<<rtLexp LT.TC_APP")
 	   | (LT.TC_SEQ ts) => tcsLexp(kenv, ts)
 	   | (LT.TC_PROJ(tx, i)) => (debugmsg ">>rtLexp LT.TC_PROJ: ";
-				  if !debugging then debugmsg(LB.tc_print tx)
-				  else ();
-				  SELECTg(i, loop tx)
-				  before debugmsg "<<rtLexp LT.TC_PROJ")
+				     debugTyc tx;
+				     SELECTg(i, loop tx)
+				     before debugmsg "<<rtLexp LT.TC_PROJ")
 	   | (LT.TC_PRIM pt) =>
 		if (pt = PT.ptc_real) then tcode_real
 		else tcode_void
-	   | (LT.TC_VAR(i, j)) => RET[(VAR(vlookKE(kenv, i, j)))]
+	   | (LT.TC_DVAR(i, j)) => RET[(VAR(vlookKE(kenv, i, j)))]
 	   | (LT.TC_TUPLE [t1,t2]) =>
 	       (debugmsg ">>rtLexp LT.TC_TUPLE";
 		(case (isFloat(kenv,t1), isFloat(kenv,t2))
@@ -361,9 +361,10 @@ and tcsLexp (kenv, ts) =
   end (* function tcsLexp *)
 
 and tsLexp (kenv, ts) =
-  let val _ = (debugmsg ">>tsLexp";
-	       if !debugging then app (fn tc => (debugmsg(LB.tc_print tc); debugmsg "\n")) ts
-	       else ())
+  let val _ = if !debugging then
+		 (say ">>tsLexp: ";
+		  app (fn tc => (PPLty.ppTyc 20 tc; say "\n")) ts)
+	      else ()
       fun h tc = rtLexp kenv tc
    in SRECORDg(map h ts)
   end (* function tsLexp *)
@@ -379,10 +380,10 @@ and isFloat (kenv, tc) =
 	   | (LT.TC_FIX _) => NO
 	   | (LT.TC_APP(tx, _)) =>
 		(case LK.tc_whnm_out tx
-		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _) =>
+		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_DVAR _) =>
 		       MAYBE(rtLexp kenv x)
 		   | _ => NO)
-	   | (LT.TC_VAR(i,j)) =>
+	   | (LT.TC_DVAR(i,j)) =>
 		let val k = klookKE(kenv, i, j)
 		 in case (LT.tk_out k)
 		     of LT.TK_BOX => NO
@@ -404,7 +405,7 @@ fun isPair (kenv, tc) =
 	   | (LT.TC_FIX _) => NO
 	   | (LT.TC_APP(tx, _)) =>
 		(case LK.tc_whnm_out tx
-		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _ | LT.TC_NVAR _) =>
+		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_DVAR _ | LT.TC_NVAR _) =>
 		       MAYBE(rtLexp kenv x)
 		   | _ => NO)
 	   | _ => MAYBE(rtLexp kenv x))

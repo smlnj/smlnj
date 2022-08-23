@@ -14,8 +14,8 @@ val lt_eqv   : Lty.lty * Lty.lty -> bool
 val ff_eqv   : Lty.fflag * Lty.fflag -> bool
 
 (** finding out the depth for a tyc's innermost-bound free variables *)
-val tc_depth : Lty.tyc * DebIndex.depth -> DebIndex.depth
-val tcs_depth: Lty.tyc list * DebIndex.depth -> DebIndex.depth
+val tc_depth : Lty.tyc * int -> int        (* deBruijn context *)
+val tcs_depth: Lty.tyc list * int -> int   (* deBruijn context *)
 val tc_nvars : Lty.tyc -> Lty.tvar list
 val lt_nvars : Lty.lty -> Lty.tvar list
 

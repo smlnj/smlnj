@@ -17,6 +17,9 @@ Group
 	signature PPUTIL
 	structure PrintUtil
 
+	signature NEW_PP
+	structure NewPP
+
 	signature SYMBOL
 	signature FASTSYMBOL
 	signature FIXITY
@@ -91,6 +94,14 @@ is
 	print/prettyprint.sml
 	print/pputil.sig
 	print/pputil.sml
+
+        newpp/format.sml
+        newpp/measure.sig
+        newpp/measure.sml
+        newpp/render.sig
+        newpp/render.sml
+        newpp/newpp.sig
+        newpp/newpp.sml
 
 	util/wordstr-hashtable.sml
 

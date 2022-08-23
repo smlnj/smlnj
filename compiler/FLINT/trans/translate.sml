@@ -27,7 +27,6 @@ local
   structure B  = Bindings
   structure BT = BasicTypes
   structure DA = Access
-  structure DI = DebIndex
   structure EM = ErrorMsg
   structure LV = LambdaVar
   structure V  = Variable
@@ -41,7 +40,7 @@ local
   structure M  = Modules
   structure MC = MatchComp
   structure PO = Primop
-  structure PP = PrettyPrint
+  structure PP = PrettyPrint  (* still using old prettyprinter for absyn, types *)
   structure PU = PPUtil
   structure S  = Symbol
   structure SP = SymPath
@@ -56,6 +55,11 @@ local
 				   val compare = IntInf.compare)
 
   open Absyn PLambda TransUtil
+
+  (* deBruijn index *)
+  type depth = int (* deBruijn context *)
+  val top : depth = 0
+
 in
 
 (****************************************************************************
@@ -71,6 +75,7 @@ fun says strs = say (concat strs)
 fun newline () = say "\n"
 fun saynl str = (say str; newline())
 fun saysnl strs = saynl (concat strs)
+
 fun dbsay (msg : string) =
     if !debugging then say msg else ()
 fun dbsaynl (msg : string) =
@@ -78,34 +83,35 @@ fun dbsaynl (msg : string) =
 fun dbsaysnl (msgs : string list) =
     if !debugging then saysnl msgs else ()
 
-val ppDepth = Control.Print.printDepth
+val printDepth = Control.Print.printDepth
 
-val with_pp = PP.with_default_pp
+
+(* absyn printing functions *)
 
 fun ppPat pat =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (!printDepth)))
 
 fun ppExp exp =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (!printDepth)))
 
 fun ppDec dec =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (!printDepth)))
 
 fun ppType msg ty =
     PP.with_default_pp
 	(fn ppstrm => (PP.string ppstrm (msg^": "); PPType.ppType StaticEnv.empty ppstrm ty))
 
-fun ppLexp lexp =
-    PP.with_default_pp
-      (fn ppstrm => PPLexp.ppLexp (!ppDepth) ppstrm lexp)
 
-fun ppTycArgs tycs =
-    PP.with_default_pp
-      (fn ppstrm =>
-	  PPUtil.ppBracketedSequence ("[", "]", (PPLty.ppTyc 50)) ppstrm tycs)
+(* plambda printing functions *)
+
+fun ppLexp (lexp: PLambda.lexp) = PPLexp.ppLexp (!printDepth) lexp
+
+fun ppTycArgs (tycs: Lty.tyc list) =
+    NewPP.printFormat
+      (NewPP.formatList (PPLty.fmtTyc 50) tycs)
 
 	
 (****************************************************************************
@@ -171,7 +177,7 @@ fun selectTyArgs (pattvs, vartvs) =
 	  | lookup (tv, (tv',k)::r) = if tv = tv' then SOME k else lookup (tv,r)
 	val targs = map (fn tv => case lookup (tv, tvToIndex)
 				   of NONE => LB.tcc_void
-				    | SOME k => LD.tcc_var(1,k))
+				    | SOME k => LD.tcc_dvar(1,k))
 			pattvs
     in targs
     end
@@ -200,7 +206,7 @@ val {tpsKnd, tpsTyc, toTyc, toLty, strLty, fctLty} =
     TT.genTT()
 fun toTcLt d = (toTyc d, toLty d)
 
-(* toDconLty : DebIndex.depth -> Types.ty -> lty *)
+(* toDconLty : depth -> Types.ty -> lty *)
 (** translating the typ field in DATACON into lty; constant datacons
     will take ltc_unit as the argument *)
 fun toDconLty d ty =
@@ -463,7 +469,7 @@ exception NoCore
 fun coreExn ids =
     (case CoreAccess.getCon' (fn () => raise NoCore) oldenv ids
       of T.DATACON { name, rep as DA.EXN _, typ, ... } =>
-	   let val lty = toDconLty DI.top typ
+	   let val lty = toDconLty top typ
 	       val newrep = mkRep(rep, lty, name)
 	       val _ = dbsaynl ">>coreExn in translate.sml: "
               (* val _ = PPLexp.printLexp (CON'((name, nrep, nt), [], unitLexp))
@@ -480,7 +486,7 @@ fun coreExn ids =
 and coreAcc id =
     (case CoreAccess.getVar' (fn () => raise NoCore) oldenv [id]
        of V.VALvar { access, typ, path, ... } =>
-	    VAR (transAccess (access, toLty DI.top (!typ), getNameOp path))
+	    VAR (transAccess (access, toLty top (!typ), getNameOp path))
         | _ => bug "coreAcc in translate"
     (* end case *))
     handle NoCore =>
@@ -521,7 +527,7 @@ val eqDict =
 	      SOME e => e
 	    | NONE => let val e =
 			      TAPP (coreAcc "polyequal",
-				    [toTyc DI.top BT.intinfTy])
+				    [toTyc top BT.intinfTy])
 		      in
 			  intInfEqRef := SOME e; e
 		      end
@@ -611,12 +617,12 @@ fun genintinfswitch (subject: lexp, cases, default) =
  *                                                                         *
  * Translating various bindings into lambda expressions:                   *
  *                                                                         *
- *   val mkVar : V.var * DI.depth -> L.lexp                                *
- *   val mkVE : V.var * T.ty list * DI.depth -> L.lexp                     *
- *   val mkCE : T.datacon * T.ty list * L.lexp option * DI.depth -> L.lexp *
- *   val mkStr : M.Structure * DI.depth -> L.lexp                          *
- *   val mkFct : M.Functor * DI.depth -> L.lexp                            *
- *   val mkBnd : DI.depth -> B.binding -> L.lexp                           *
+ *   val mkVar : V.var * depth -> L.lexp                                *
+ *   val mkVE : V.var * T.ty list * depth -> L.lexp                     *
+ *   val mkCE : T.datacon * T.ty list * L.lexp option * depth -> L.lexp *
+ *   val mkStr : M.Structure * depth -> L.lexp                          *
+ *   val mkFct : M.Functor * depth -> L.lexp                            *
+ *   val mkBnd : depth -> B.binding -> L.lexp                           *
  *                                                                         *
  ***************************************************************************)
 (* [KM???] mkVar is calling transAccess, which just drops the prim!!! *)
@@ -945,7 +951,7 @@ and transRVBs (nil, _) = bug "transRVBs - no rbv"
 				  
         (* argLtcs : T.tyvar list -> LD.tyc list *)
         fun argLtcs btvs =
-	    mkTyargs (boundTvs, btvs, LB.tcc_void, (fn (k,_) => LD.tcc_var(1,k)))
+	    mkTyargs (boundTvs, btvs, LB.tcc_void, (fn (k,_) => LD.tcc_dvar(1,k)))
 
 	val rvbLexp =
 	    let val lexps =
@@ -1019,7 +1025,7 @@ and transVARSELdec (pvar, ptupleVar, i) (body: lexp) =
 			       | _ => (* both ptupleVarBtvs and pvarBtvs non null *)
 				 let val pvarArity = length pvarBtvs
 				     val argTvs = mkTyargs (ptupleVarBtvs, pvarBtvs,
-							    LB.tcc_void, (fn (k,_) => LD.tcc_var(1,k)))
+							    LB.tcc_void, (fn (k,_) => LD.tcc_dvar(1,k)))
 				     val _ = if !debugging then
 						(says
 						 ["transVS: pvar = ", S.name(V.varName pvar),
@@ -1069,7 +1075,7 @@ and mkFctexp (fe, d) =
 	  (case access of
 	       DA.LVAR v =>
                let val knds = map tpsKnd argtycs
-                   val nd = DI.next d  (* reflecting type abstraction *)
+                   val nd = d + 1  (* increment deBruijn context, reflecting type abstraction *)
                    val body = mkStrexp (def, nd)
                    val hdr = buildHeader v
                (* binding of all v's components *)
@@ -1146,8 +1152,8 @@ and mkFctbs (fbs, d) =
 (***************************************************************************
  * Translating absyn decls and exprs into lambda expression:               *
  *                                                                         *
- *    val mkDec : A.dec * DI.depth -> PLambda.lexp -> PLambda.lexp         *
- *    val mkExp : A.exp * DI.depth -> PLambda.lexp                         *
+ *    val mkDec : A.dec * depth -> PLambda.lexp -> PLambda.lexp         *
+ *    val mkExp : A.exp * depth -> PLambda.lexp                         *
  *                                                                         *
  ***************************************************************************)
 and mkDec (dec, d) =
@@ -1525,7 +1531,7 @@ and mkExp (exp, d) =
 
         | mkExp0 e =
             EM.impossibleWithBody "untranslateable expression:\n  "
-              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, !ppDepth)))
+              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, !printDepth)))
 
    in mkExp0 exp
   end
@@ -1564,7 +1570,7 @@ and transIntInf d s =
 
 (* Wrap bindings for IntInf.int literals around body. *)
 fun wrapII body = let
-    fun one (n, v, b) = LET (v, transIntInf DI.top n, b)
+    fun one (n, v, b) = LET (v, transIntInf top n, b)
 in
     IIMap.foldli one body (!iimap)
 end
@@ -1628,7 +1634,7 @@ val exportLexp = SRECORD (map VAR exportLvars)
 
 (* val _ = dbsaynl ">>mkDec" *)
 (** translating the ML absyn into the PLambda expression *)
-val body = mkDec (rootdec, DI.top) exportLexp
+val body = mkDec (rootdec, top) exportLexp
 (* val _ = dbsaynl "<<mkDec" *)
 val _ = if CompInfo.anyErrors compInfo
 	then raise EM.Error
@@ -1643,19 +1649,19 @@ val (plexp, imports) = wrapPidInfo (body, PersMap.listItemsi (!persmap))
 val ltyerrors = if !FLINT_Control.checkPLambda
 		then ChkPlexp.checkLtyTop(plexp,0)
 		else false
+
 val _ = if ltyerrors
-        then (print "**** Translate: checkLty failed ****\n";
-              with_pp(fn str =>
-                (PU.pps str "absyn:"; PP.newline str;
+        then (saynl "**** Translate: checkLty failed ****";
+              PP.with_default_pp (fn ppstrm =>
+                (PU.pps ppstrm "absyn:"; PP.newline ppstrm;
                  ElabDebug.withInternals
-                  (fn () => PPAbsyn.ppDec (env,NONE) str (rootdec,1000));
-		 PP.newline str;
-                 PU.pps str "lexp:"; PP.newline str;
-                 PPLexp.ppLexp 25 str plexp));
+                  (fn () => PPAbsyn.ppDec (env,NONE) ppstrm (rootdec,1000));
+		 PP.newline ppstrm;
+                 PU.pps ppstrm "lexp:"; PP.newline ppstrm;
+                 PPLexp.ppLexp 25 plexp));
               complain EM.WARN "checkLty" EM.nullErrorBody;
 	     bug "PLambda type check error!")
         else ()
-
 
 (* print plambda IR if enabled by Control.FLINT flags printAll or
  * printLambda *)
@@ -1673,7 +1679,7 @@ val flint = let val _ = dbsaynl ">> FlintNM.norm"
  * printFlint *)
 val _ = if !Control.FLINT.printAllIR orelse !Control.FLINT.printFlint
 	then (say "\n[After FlintNM.norm ...]\n\n";
-	      PrintFlint.printFundec flint;
+	      PPFlint.ppProg flint;
 	      say "\n")
 	else ()
 

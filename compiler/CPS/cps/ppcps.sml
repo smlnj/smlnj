@@ -5,19 +5,12 @@
  *)
 
 signature PPCPS =
-  sig
-
-    val value2str : CPS.value -> string
-
+sig
+    val valueToString : CPS.value -> string
     val vpathToString : CPS.value * CPS.accesspath -> string
-
     val rkToString : CPS.record_kind -> string
 
-    val printcps : (CPS.function * Lty.lty LambdaVar.Tbl.hash_table) -> unit
-    val printcps0: CPS.function -> unit
-    val prcps : CPS.cexp -> unit
-
-  (* string conversions for various CPS.P types *)
+    (* string conversions for various CPS.P types *)
     val numkindToString : CPS.P.numkind -> string
     val arithopToString : CPS.P.arithop -> string
     val pureopToString : CPS.P.pureop -> string
@@ -29,35 +22,57 @@ signature PPCPS =
     val arithToString : CPS.P.arith -> string
     val pureToString : CPS.P.pure -> string
 
-  end (* signature PPCPS *)
+(* NOT USED!
+    val printLvarLtyTable : Lty.lty LambdaVar.Tbl.hash_table -> unit
+      (* this does not belong here -- some debugging printing -- never called (via former cpsprint) *)
+*)
+
+    val ppFunction : CPS.function -> unit
+    val ppCps : CPS.cexp -> unit
+
+end (* signature PPCPS *)
 
 structure PPCps : PPCPS =
-  struct
+struct
+
+local
 
     structure LV = LambdaVar
     structure U = CPSUtil
-    (* uses Lty and LtyBasic *)
+    structure LT = Lty
+    structure PP = NewPP
 
     open CPS
 
+in
+
     val say = Control.Print.say
 
-    val sayt = say o U.ctyToString
+(* NOT USED!
+    type lvarLtyTable = LT.lty LV.Tbl.hash_table
 
-    fun value2str (VAR v) = LV.lvarName v
-      | value2str (LABEL v) = "(L)" ^ LV.lvarName v
-      | value2str (NUM{ival, ty={sz=0, ...}}) = "(II)" ^ IntInf.toString ival
-      | value2str (NUM{ival, ty={sz, tag=true}}) = concat[
-	    "(I", Int.toString sz, "t)", IntInf.toString ival
-	  ]
-      | value2str (NUM{ival, ty={sz, ...}}) = concat[
-	    "(I", Int.toString sz, ")", IntInf.toString ival
-	  ]
-      | value2str (REAL{rval, ty}) = concat[
-	    "(R", Int.toString ty, ")", RealLit.toString rval
-	  ]
-      | value2str (STRING s) = concat["\"", String.toString s, "\""]
-      | value2str (VOID) = "(void)"
+    (* printLvarLtyTable : lvarLtyTable -> unit *)
+    fun printLvarLtyTable (table: lvarLtyTable) =
+        let fun ppLvarLty (lvar, lty) = 
+		  PP.printFormatNL (PP.hblock [fmtLvar lvar, colon, PPLty.fmtLty 20 lty])
+	 in (say "### lvar-lty table\n";
+	    say "************************************************\n";
+	    LV.Tbl.appi ppLvarLty m;
+	    say "************************************************\n")
+	end
+*)
+
+    fun valueToString (VAR v) = LV.lvarName v
+      | valueToString (LABEL v) = "(L)" ^ LV.lvarName v
+      | valueToString (NUM{ival, ty={sz=0, ...}}) = "(II)" ^ IntInf.toString ival
+      | valueToString (NUM{ival, ty={sz, tag=true}}) =
+	  concat["(I", Int.toString sz, "t)", IntInf.toString ival]
+      | valueToString (NUM{ival, ty={sz, ...}}) =
+	  concat["(I", Int.toString sz, ")", IntInf.toString ival]
+      | valueToString (REAL{rval, ty}) =
+	  concat["(R", Int.toString ty, ")", RealLit.toString rval]
+      | valueToString (STRING s) = concat["\"", String.toString s, "\""]
+      | valueToString (VOID) = "<<void>>"
 
     fun numkindToString (P.INT bits) = "i" ^ Int.toString bits
       | numkindToString (P.UINT bits) = "u" ^ Int.toString bits
@@ -119,9 +134,8 @@ structure PPCps : PPCPS =
       | arithToString (P.TEST{from, to}) = cvtParams ("test_", from, to)
       | arithToString (P.TESTU{from, to}) = cvtParams ("testu_", from, to)
       | arithToString (P.TEST_INF i) = "test_inf_" ^ cvtParam i
-      | arithToString (P.REAL_TO_INT{floor, from, to}) = concat[
-	    if floor then "floor_" else "round_", cvtParam from, "to", cvtParam to
-	  ]
+      | arithToString (P.REAL_TO_INT{floor, from, to}) =
+	  concat[if floor then "floor_" else "round_", cvtParam from, "to", cvtParam to]
 
     fun pureToString P.LENGTH = "length"
       | pureToString (P.PURE_ARITH{oper,kind}) = pureopToString oper ^ numkindToString kind
@@ -152,7 +166,9 @@ structure PPCps : PPCPS =
       | pureToString P.NEWARRAY0 = "newarray0"
       | pureToString (P.RAWRECORD rk) = "rawrecord_"^getOpt(Option.map rkToString rk, "notag")
 
-    and rkToString rk = (case rk
+    (* rkToString : record_kind -> string *)
+    and rkToString rk =
+	(case rk
 	   of RK_VECTOR => "RK_VECTOR"
 	    | RK_RECORD => "RK_RECORD"
 	    | RK_ESCAPE => "RK_ESCAPE"
@@ -161,143 +177,169 @@ structure PPCps : PPCPS =
 	    | RK_KNOWN => "RK_KNOWN"
 	    | RK_RAW64BLOCK => "RK_RAW64BLOCK"
 	    | RK_RAWBLOCK => "RK_RAWBLOCK"
-	  (* end case *))
+	(* end case *))
 
-    fun vpathToString (v, p) = let
-	  fun toList (OFFp 0) = []
-	    | toList (OFFp n) = ["+", Int.toString n] (* assumes n > 0 *)
-	    | toList (SELp(i, p)) = "." :: toList p
-	  in
-	    String.concat(value2str v :: toList p)
+    fun funkindToString (fk: fun_kind) =
+	  (case fk
+	     of CONT => "std_cont"
+	      | KNOWN => "known"
+	      | KNOWN_REC => "known_rec"
+	      | KNOWN_CHECK => "known_check"
+	      | KNOWN_TAIL => "known_tail"
+	      | KNOWN_CONT => "known_cont"
+	      | ESCAPE => "std"
+	      | NO_INLINE_INTO => "no_inline"
+	   (* end case *))
+
+    (* vpathToString : value * accesspath -> string *)
+    fun vpathToString (v, p) =
+	let fun toList (OFFp 0) = nil
+	      | toList (OFFp n) = ["+", Int.toString n] (* assumes n > 0 *)
+	      | toList (SELp(i, p)) = "." :: toList p
+	 in String.concat (valueToString v :: toList p)
+	end
+
+    (* fmtLvar : LV.lvar -> PP.format *)
+    fun fmtLvar (lvar: LV.lvar) = PP.text (LV.lvarName lvar)
+
+    (* fmtCty : cty -> PP.format *)
+    fun fmtCty cty = PP.text (U.ctyToString cty)
+
+    (* fmtTypedLvar : lvar * cty -> format *)
+    fun fmtTypedLvar (lvar, cty) = 
+        PP.hcat (PP.ccat (fmtLvar lvar, PP.colon), fmtCty cty)
+
+    (* fmtValue : value -> PP.format *)
+    fun fmtValue (v: value) : PP.format = PP.text (valueToString v)
+    
+    (* fmtValues : value list -> PP.format *)
+    fun fmtValues (vs: value list) =
+	PP.formatSeq {alignment=PP.H, sep=PP.comma, formatter=fmtValue} vs
+
+    (* fmtRecord : record_kind * int -> PP.format *)
+    fun fmtRecord (RK_RECORD, _) = PP.empty
+      | fmtRecord (RK_VECTOR, _) = PP.empty
+      | fmtRecord (k, n) = PP.hcat (PP.text (rkToString k), PP.integer n)
+
+    (* fmtParams : lvar list * cty list -> P.format *)
+    fun fmtParams (lvars, ctys) =
+	  let fun fmtParam (lvar,cty) =
+		  PP.hcat (PP.ccat (fmtLvar lvar, PP.colon), fmtCty cty)
+	   in PP.formatTuple fmtParam (ListPair.zipEq (lvars, ctys))
 	  end
 
-    fun show0 say = let
-	  fun sayc (#"\n") = say "\\n"
-	    | sayc c = say(String.str c)
+    (* fmtVpath : value * accesspath -> PP.format *)
+    fun fmtVpath (v, path) = PP.text (vpathToString(v, path))
 
-	  fun sayv v = say(value2str v)
-
-	  fun sayvlist [v] = sayv v
-	    | sayvlist nil = ()
-	    | sayvlist (v::vl) = (sayv v; say ","; sayvlist vl)
-
-	  fun sayrk (RK_RECORD, n) = ()
-	    | sayrk (RK_VECTOR, n) = ()
-	    | sayrk (k, n) = (say (rkToString k); say " "; say (Int.toString n); say ",")
-
-	  fun sayparam ([v],[ct]) = (sayv v; sayt ct)
-	    | sayparam (nil,nil) = ()
-	    | sayparam (v::vl,ct::cl) = (sayv v; sayt ct; say ","; sayparam(vl,cl))
-	    | sayparam _ = ErrorMsg.impossible "sayparam in ppcps.sml"
-
-	  fun sayvp (v,path) = say(vpathToString(v, path))
-	  fun saylist f [x] = f x | saylist f nil = ()
-	    | saylist f (x::r) = (f x; say ","; saylist f r)
-	  fun indent n = let
-		fun space 0 = () | space k = (say " "; space(k-1))
-		fun nl() = say "\n"
-		fun f (RECORD(k,vl,v,c)) = (
-			space n;
-			case k of RK_VECTOR => say "#{" | _ => say "{";
-			sayrk(k,length vl);
-			saylist sayvp vl; say "} -> ";
-			sayv(VAR v);
-			nl(); f c)
-		  | f (SELECT(i,v,w,t,c)) = (
-			space n; sayv v; say "."; say(Int.toString i); say " -> ";
-			 sayv(VAR w); sayt(t); nl(); f c)
-		  | f (OFFSET(i,v,w,c)) = (
-			space n; sayv v; say "+"; say(Int.toString i); say " -> ";
-			sayv(VAR w); nl(); f c)
-		  | f (APP(w,vl)) = (
-			space n; sayv w; say "("; sayvlist vl; say ")\n")
-		  | f (FIX(bl,c)) = let
-			fun g (_,v,wl,cl,d) = (
-				space n; sayv(VAR v); say "(";
-				sayparam (map VAR wl,cl);
-				say ") =\n";
-				indent (n+3) d)
-			in
-			  app g bl; f c
-			end
-		  | f (SWITCH(v,c,cl)) = let
-			fun g (i,c::cl) = (
-			      space(n+1); say(Int.toString(i:int));
-			      say " =>\n"; indent (n+3) c; g(i+1,cl))
-			  | g (_,nil) = ()
-			in
-			  space n; say "case "; sayv v; say "  [";
-			  say(LV.prLvar c);
-			  say "] of\n";
-			  g(0,cl)
-			end
-		  | f (LOOKER(i,vl,w,t,e)) = (
-			space n; say(lookerToString i); say "("; sayvlist vl;
-			say ") -> "; sayv(VAR w); sayt(t); nl(); f e)
-		  | f (ARITH(i,vl,w,t,e)) = (
-			space n; say(arithToString i); say "("; sayvlist vl;
-			say ") -> "; sayv(VAR w); sayt(t); nl(); f e)
-		  | f (PURE(i,vl,w,t,e)) = (
-			space n; say(pureToString i); say "("; sayvlist vl;
-			say ") -> "; sayv(VAR w); sayt(t); nl(); f e)
-		  | f (SETTER(i,vl,e)) = (
-			space n; say(setterToString i); say "("; sayvlist vl;
-			say ")"; nl(); f e)
-		  | f (BRANCH(i,vl,c,e1,e2)) = (
-			space n; say "if "; say(branchToString i);
-			say "("; sayvlist vl; say ") [";
-			sayv(VAR c); say "] then\n";
-			indent (n+3) e1;
-			space n; say "else\n";
-			indent (n+3) e2)
-		  | f (RCC(k,l,p,vl,wtl,e)) = (
-			space n;
-			if k then say "reentrant " else ();
-			if l = "" then () else (say l; say " ");
-			say "rcc("; sayvlist vl; say ") -> ";
-			app (fn (w, t) => (sayv (VAR w); sayt(t))) wtl;
-			nl(); f e)
-		in
-		  f
-		end
-	  in
-	    indent
-	  end (* show0 *)
-
-    fun printcps ((fk,f,vl,cl,e),m) = let
-	  fun ptv(v,t) = (say(LV.lvarName v); say " type ===>>>";
-			  say(LtyBasic.lt_print t); say "\n")
-	  val _ = if (!Control.CG.debugRep)
-		  then (say "************************************************\n";
-			LV.Tbl.appi ptv m;
-			say "************************************************\n")
-		  else ()
-	  fun sayv(v) = say(LV.lvarName v)
-	  fun sayparam ([v],[ct]) = (sayv v; sayt ct)
-	    | sayparam (nil,nil) = ()
-	    | sayparam (v::vl,ct::cl) = (sayv v; sayt ct; say ","; sayparam(vl,cl))
-	    | sayparam _ = ErrorMsg.impossible "sayparam in ppcps.sml 3435"
-	  in
-	    case fk
-	     of CONT => say "std_cont "
-	      | KNOWN => say "known "
-	      | KNOWN_REC => say "known_rec "
-	      | KNOWN_CHECK => say "known_chk "
-	      | KNOWN_TAIL => say "known_tail "
-	      | KNOWN_CONT => say "known_cont "
-	      | ESCAPE => say "std "
-	      | NO_INLINE_INTO => ()
-	    (* end case *);
-	    say(LV.lvarName f); say "("; sayparam(vl,cl); say ") =\n";
-	    show0 say 3 e
+    (* fmtCexp : cexp -> PP.format *)
+    fun fmtCexp (RECORD (rk,vps,lvar,cexp')) =
+	  let val front = PP.text (case rk of RK_VECTOR => "#{" | _ => "{")
+	      val back = PP.text "} -> "
+	   in PP.vcat
+		 (PP.hcat
+		    (PP.enclose {front=front, back=back}
+		       (PP.hcat (fmtRecord (rk, length vps),
+				 PP.formatList fmtVpath vps)),
+		     fmtLvar lvar),
+		  fmtCexp cexp')
 	  end
 
-    exception NULLTABLE
-    val nulltable : Lty.lty LV.Tbl.hash_table =
-	  LV.Tbl.mkTable(8, NULLTABLE)
+      | fmtCexp (SELECT(i,v,w,t,e)) =
+	  PP.vcat (PP.hblock [PP.concat [fmtValue v, PP.text ".", PP.integer i],
+			      PP.text "->", fmtTypedLvar (w, t)],
+		   fmtCexp e)
 
-    fun printcps0 f = printcps(f,nulltable)
+      | fmtCexp (OFFSET(i,v,w,e)) =
+	  PP.vcat (PP.hblock [PP.concat[fmtValue v, PP.text "+", PP.integer i],
+			      PP.text "->", fmtLvar w],
+		   fmtCexp e)
 
-    fun prcps(ce) = show0 (Control.Print.say) 1 ce
+      | fmtCexp (APP(rator,argvals)) =
+	  PP.hcat (fmtValue rator, PP.formatTuple fmtValue argvals)
 
-  end (* structure PPCps *)
+      | fmtCexp (FIX (functions, body)) =
+	  let fun fmtFunction (_,flvar,arglvars,argctys,body) =
+		    PP.vblock
+		      [PP.hblock [fmtLvar flvar,
+			          fmtParams (arglvars, argctys),
+			          PP.text "="],
+		       PP.hardIndent (3, fmtCexp body)]
+	  in PP.vblock [PP.hcat (PP.text "FIX", PP.vblock (map fmtFunction functions)),
+		        PP.hcat (PP.text " IN", fmtCexp body)]
+	  end
+
+      | fmtCexp (SWITCH (subject, lvar, cases)) =
+	  let fun fmtCase (i,rhs) =
+		  PP.hblock [PP.integer i, PP.text "=>", PP.hardIndent (3, rhs)]
+	      fun folder (cexp, (i, fmts)) = (i+1, fmtCase (i, fmtCexp cexp) :: fmts)
+	      val caseFmts = rev (#2 (foldl folder (0, nil) cases))
+	   in PP.vcat 
+		(PP.hcat (PP.text "case", PP.ccat (fmtValue subject, PP.brackets (fmtLvar lvar))),
+		 PP.hcat (PP.text "of", PP.vblock caseFmts))
+	  end
+
+      | fmtCexp (LOOKER (i,vl,w,t,e)) =
+	  (PP.vcat
+	     (PP.hblock
+		[PP.text (lookerToString i),
+		 PP.formatTuple fmtValue vl,
+		 PP.text "->", fmtTypedLvar (w, t)],
+	      fmtCexp e))
+
+      | fmtCexp (ARITH (i,vl,w,t,e)) =
+	  (PP.vcat
+	     (PP.hblock
+		[PP.text (arithToString i),
+		 PP.formatTuple fmtValue vl,
+		 PP.text "->", fmtTypedLvar (w, t)],
+	      fmtCexp e))
+
+      | fmtCexp (PURE (i,vl,w,t,e)) =
+	  (PP.vcat
+	     (PP.hblock
+		[PP.ccat (PP.text (pureToString i), PP.formatTuple fmtValue vl),
+		 PP.text "->", fmtTypedLvar (w, t)],
+	      fmtCexp e))
+
+      | fmtCexp (SETTER (i,vl,e)) =
+	   PP.vcat
+	     (PP.ccat (PP.text (setterToString i), PP.formatTuple fmtValue vl),
+	      fmtCexp e)
+
+      | fmtCexp (BRANCH (i,vl,c,e1,e2)) =
+	  PP.vblock
+	    [PP.hblock
+	       [PP.text "if",
+		PP.ccat (PP.text (branchToString i), PP.formatTuple fmtValue vl),
+		PP.brackets (fmtLvar c)],
+	     PP.text "then",
+	     PP.hardIndent (3, fmtCexp e1),
+	     PP.text "else",
+	     PP.hardIndent (3, fmtCexp e2)]
+
+      | fmtCexp (RCC (b, l, p, values, lvars_ctys, e)) =
+	  PP.vcat
+	    (PP.hblock
+	      [PP.ccat (if b then PP.text "reentrant " else PP.empty,
+			if l = "" then PP.empty else PP.text l),  (* sp *)
+	       PP.ccat (PP.text "rcc", PP.formatTuple fmtValue values), (* sp *)
+	       PP.text "->",  (* sp *)
+	       PP.formatTuple fmtTypedLvar lvars_ctys],
+	     fmtCexp e)
+
+
+    (* fmtFunction : function -> P.format *)
+    fun fmtFunction (fk, f, vl, cl, body) =
+	  PP.pblock
+	    [PP.text (funkindToString fk),
+	     fmtLvar f, fmtParams (vl,cl), PP.text "=",
+	     PP.hardIndent (3, fmtCexp body)]
+
+    (* ppFunction : function -> unit  -- was printcps0 *)
+    fun ppFunction (f : function) = PP.printFormat (fmtFunction f)
+
+    (* ppCps : cexp -> unit *)
+    fun ppCps (cexp : cexp) = PP.printFormat (fmtCexp cexp)
+
+end (* top local *)
+end (* structure PPCps *)

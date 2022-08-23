@@ -98,7 +98,8 @@ local
   structure FU = FlintUtil
   structure LV = LambdaVar
   structure PU = PrintUtil
-  structure PF = PrintFlint
+  structure PP = NewPP
+  structure PPF = PPFlint
   structure PO = Primop
 
   val debugging = FLINT_Control.fcdebugging
@@ -110,9 +111,11 @@ local
   fun saysnl (msgs: string list) = saynl (PU.interpws msgs)
   fun dbsay msg = if !debugging then saynl msg else ()
   fun dbsays msgs = if !debugging then saysnl msgs else ()
+
   fun bug msg = ErrorMsg.impossible ("Collect: "^msg)
-  fun buglexp (msg,lexp) = (newline(); PF.printLexp lexp; bug msg)
-  fun bugval (msg,value) = (newline(); PF.printValue value; bug msg)
+
+  fun buglexp (msg, lexp) = (newline(); PP.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
+  fun bugval (msg, value) = (newline(); say (PPF.valueToString value); newline (); bug msg)
 
 in
 
@@ -457,7 +460,6 @@ fun copylexp alpha lexp =
 (* collect : F.fundec -> unit *)
 fun collect (fundec as (_,f,_,_) : F.fundec) : unit =
     (T.clear infoTable;	   (* clear the infoTable hashtable to start from a fresh state *)
-     PF.lvarToStringRef := lvarToString;
      analyze (F.FIX([fundec], F.RET[F.VAR f])))
 
 

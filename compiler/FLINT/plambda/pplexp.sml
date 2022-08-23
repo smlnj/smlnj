@@ -4,16 +4,16 @@
  * All rights reserved.
  *)
 
-(* _Real_ pretty printing for plambda lexp *)
+(* Pretty printing of plambda lexps, using the NewPP prettyprinter. *)
 
 signature PPLEXP =
 sig
 
   val conToString : PLambda.con -> string
-  val ppLexp : int -> PrettyPrint.stream -> PLambda.lexp -> unit
-  val ppFun : PrettyPrint.stream -> PLambda.lexp -> LambdaVar.lvar -> unit
+  val lexpTag : PLambda.lexp -> string
 
-  val stringTag : PLambda.lexp -> string
+  val fmtLexp: int -> PLambda.lexp -> NewPP.format
+  val ppLexp: int -> PLambda.lexp -> unit
 
 end (* signature PPLEXP *)
 
@@ -21,390 +21,209 @@ end (* signature PPLEXP *)
 structure PPLexp : PPLEXP =
 struct
 
-local structure A = Absyn
-      structure DA = Access
-      structure S = Symbol
-      structure PP = PrettyPrint
-      structure PU = PPUtil
-      open PLambda
+local
+  structure LV = LambdaVar
+  structure A = Absyn
+  structure DA = Access
+  structure S = Symbol
+  structure PP = NewPP  (* New Prettyprinter *)
+
+  open PLambda NewPP
+
+  (* zipEq3: zipEq for 3 lists *)
+  fun zipEq3 (x::xs, y::ys, z::zs) =
+        (x, y, z) :: zipEq3 (xs, ys, zs)
+    | zipEq3 (nil,nil,nil) = nil
+    | zipEq3 _ = raise ListPair.UnequalLengths
+
+  fun bug s = ErrorMsg.impossible ("PPLexp: "^s)
+
 in
 
-fun bug s = ErrorMsg.impossible ("PPLexp: "^s)
+(* fun lexpTag : lexp -> string *)
+(* for holophrastic printing constroled by print depth parameter *)
+fun lexpTag (VAR _) = "VAR"
+  | lexpTag (INT _) = "INT"
+  | lexpTag (WORD _) = "WORD"
+  | lexpTag (REAL _) = "REAL"
+  | lexpTag (STRING _) = "STRING"
+  | lexpTag (PRIM _) = "PRIM"
+  | lexpTag (GENOP _) = "GENOP"
+  | lexpTag (FN _) = "FN"
+  | lexpTag (FIX _) = "FIX"
+  | lexpTag (APP _) = "APP"
+  | lexpTag (LET _) = "LET"
+  | lexpTag (TFN _) = "TFN"
+  | lexpTag (TAPP _) = "TAPP"
+  | lexpTag (ETAG _) = "ETAG"
+  | lexpTag (RAISE _) = "RAISE"
+  | lexpTag (HANDLE _) = "HANDLE"
+  | lexpTag (CON _) = "CON"
+  | lexpTag (SWITCH _) = "SWITCH"
+  | lexpTag (VECTOR _) = "VECTOR"
+  | lexpTag (RECORD _) = "RECORD"
+  | lexpTag (SRECORD _) = "SRECORD"
+  | lexpTag (SELECT _) = "SELECT"
+  | lexpTag (WRAP _) = "WRAP"
+  | lexpTag (UNWRAP _) = "UNWRAP"
 
-val lvarName = LambdaVar.lvarName
-
-fun app2(f, [], []) = ()
-  | app2(f, a::r, b::z) = (f(a, b); app2(f, r, z))
-  | app2(f, _, _) = bug "unexpected list arguments in function app2"
-
-fun conToString (DATAcon((sym, _, _), _, v)) = ((S.name sym) ^ "." ^ (lvarName v))
+(* conToString : PLambda.con -> string *)
+fun conToString (DATAcon((sym, _, _), _, lvar)) = ((S.name sym) ^ "." ^ (LV.lvarName lvar))
   | conToString (INTcon{ival, ty=0}) =
-      concat["(II)", IntInf.toString ival]
+      String.concat ["(II)", IntInf.toString ival]
   | conToString (INTcon{ival, ty}) =
-      concat["(I", Int.toString ty, ")", IntInf.toString ival]
+      String.concat ["(I", Int.toString ty, ")", IntInf.toString ival]
   | conToString (WORDcon{ival, ty}) =
-      concat["(W", Int.toString ty, ")", IntInf.toString ival]
+      String.concat ["(W", Int.toString ty, ")", IntInf.toString ival]
   | conToString (STRINGcon s) = PrintUtil.formatString s
-(*  | conToString (VLENcon n) = Int.toString n *)
 
-(* complex : lexp -> bool *)
-(* An lexp is "complex" if it contains a subexpression of form
- * FIX, LET, TAPP, GENOP, SWITCH, CON, or HANDLE.
- * Use of complex in ppLexp may lead to stupid n^2 behavior. *)
-fun complex (le: lexp) : bool =
-    case le
-     of FN(_, _, b) => complex b
-      | FIX(vl, _, ll, b) => true
-      | APP(FN _, _) => true
-      | APP(l, r) => complex l orelse complex r
-      | LET _ => true
-      | TFN(_, b) => complex b
-      | TAPP(l, []) => complex l
-      | TAPP(l, _) => true
-      | GENOP(_,_,_,_) => true
 
-      | (RECORD l | SRECORD l | VECTOR(l, _)) => List.exists complex l
-      | SELECT(_, l) => complex l
+(* fmtLexp : int -> lexp -> format
+ * holophrastic PLambda.lexp formatter, with depth limited by pd argument *)
+fun fmtLexp (pd:int) (l: lexp): format =
+    if pd < 1 then text (lexpTag l) else
+    let 
+        val fmtLexp' = fmtLexp (pd-1)
+        val fmtLty' = PPLty.fmtLty (pd-1)
+        val fmtTyc' = PPLty.fmtTyc (pd-1)
+        val fmtTKind' = PPLty.fmtTKind (pd-1)
 
-      | SWITCH _ => true
-      | CON(_, _, l) => true
+        (* fmtI : PLambda.lexp -> format *)
+        fun fmtI (VAR v) = text (LV.lvarName v)
+	  | fmtI (INT{ival, ty=0}) = hcat (text "(II)", text (IntInf.toString ival))
+	  | fmtI (INT{ival, ty}) =
+	      text (String.concat ["(I", Int.toString ty, ")", IntInf.toString ival])
+	  | fmtI (WORD{ival, ty}) =
+	      text (String.concat ["(W", Int.toString ty, ")", IntInf.toString ival])
+          | fmtI (REAL{rval, ty}) =
+	      text (String.concat ["(R", Int.toString ty, ")", RealLit.toString rval])
+          | fmtI (STRING s) = string s
+          | fmtI (ETAG (lexp,_)) =
+              enclose {front = text "ETAG(", back = rparen} (fmtLexp' lexp)
 
-      | HANDLE _ => true
-      | RAISE(l, _) => complex l
+          | fmtI (RECORD lexps) =
+              ccat (text "REC", formatTuple fmtLexp' lexps)
 
-      | WRAP(_, _, l) => complex l
-      | UNWRAP(_, _, l) => complex l
-      | _ => false
+          | fmtI (SRECORD lexps) =
+              ccat (text "SREC", formatTuple fmtLexp' lexps)
 
-fun ppLexp (pd:int) ppstrm (l: lexp): unit =
-    let val {openHOVBox, openHVBox, closeBox, break, newline, pps, ppi, ...} =
-            PU.en_pp ppstrm
+          | fmtI (VECTOR (lexps, _)) =
+              ccat (text "VEC", formatTuple fmtLexp' lexps)
 
-        val ppLexp' = ppLexp (pd-1) ppstrm
-        val ppLty' = PPLty.ppLty (pd-1) ppstrm
-        val ppTyc' = PPLty.ppTyc (pd-1) ppstrm
-        fun br0 n = PP.break ppstrm {nsp=0,offset=n}
-        fun br1 n = PP.break ppstrm {nsp=1,offset=n}
-        fun br(n,m) = PP.break ppstrm {nsp=n,offset=m}
-        fun ppClosedSeq (start,sep,close) ppfn elems =
-            PU.ppClosedSequence ppstrm
-              {front = (fn s => PP.string s start),
-               back = (fn s => PP.string s close),
-               sep = PPUtil.sepWithCut sep,
-               pr = ppfn,
-               style = PU.INCONSISTENT}
-              elems
+          | fmtI (PRIM(p,t,ts)) =
+              enclose {front = text "PRIM(", back = rparen}
+		 (pblock
+		   [ccat (text (PrimopUtil.toString p), comma),
+		    ccat (fmtLty' t, comma),
+		    formatTuple fmtTyc' ts])
 
-        fun ppl pd (VAR v) = pps (lvarName v)
-	  | ppl pd (INT{ival, ty=0}) = (pps "(II)"; pps(IntInf.toString ival))
-	  | ppl pd (INT{ival, ty}) =
-	      pps(concat["(I", Int.toString ty, ")", IntInf.toString ival])
-	  | ppl pd (WORD{ival, ty}) =
-	      pps(concat["(W", Int.toString ty, ")", IntInf.toString ival])
-          | ppl pd (REAL{rval, ty}) =
-	      pps(concat["(R", Int.toString ty, ")", RealLit.toString rval])
-          | ppl pd (STRING s) = PU.ppString ppstrm s
-          | ppl pd (ETAG (l,_)) = (pps "ETAG("; ppl pd l; pps ")")
+          | fmtI (l as SELECT(i, _)) =
+	      let fun gather(SELECT(i,l)) =
+			let val (more,root) = gather l
+			 in  (i :: more,root)
+			end
+		    | gather l = (nil, l)
+		  val (path, root) = gather l
+	       in ccat (fmtLexp' root, formatList integer (rev path))
+	      end
 
-          | ppl pd (RECORD l) =
-            if pd < 1 then pps "<REC>" else
-              (openHOVBox 3;
-               pps "RCD";
-               ppClosedSeq ("(",",",")") (fn s => ppl (pd-1)) l;
-               closeBox ())
+          | fmtI (FN(v,t,body)) =
+	      pcat (PP.concat [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
+		    softIndent (4, fmtLexp' body))
 
-          | ppl ps (SRECORD l) =
-            if pd < 1 then pps "<SREC>" else
-              (openHOVBox 4;
-               pps "SRCD";
-               ppClosedSeq ("(",",",")") (fn s => ppl (pd-1)) l;
-               closeBox ())
+          | fmtI (CON ((s, c, lt), ts, l)) =
+	      pblock
+		[text "CON",
+		 parens (pblock [hcat (ccat (text (S.name s), comma),
+				       ccat (text (DA.prRep c), comma)),
+				 fmtLty' lt]),
+		comma,
+		formatList fmtTyc' ts,
+		comma,
+		softIndent (4, fmtLexp' l),
+		rparen]
 
-          | ppl pd (le as VECTOR (l, _)) =
-            if pd < 1 then pps "<VEC>" else
-              (openHOVBox 3;
-               pps "VEC";
-               ppClosedSeq ("(",",",")") (fn s => ppl (pd-1)) l;
-               closeBox ())
+          | fmtI (APP (FN (lvar, _, body), r)) =
+            ccat
+              (text "APP-",
+               fmtLexp' (LET(lvar, r, body)))
 
-          | ppl pd (PRIM(p,t,ts)) =
-            if pd < 1 then pps "<PRIM>" else
-            (openHOVBox 4;
-              pps "PRM(";
-              openHOVBox 0;
-               pps(PrimopUtil.toString p); pps ","; br1 0;
-               ppLty' t;
-	       pps ",";
-	       br1 0;
-               ppClosedSeq ("[",",","]") (PPLty.ppTyc (pd-1)) ts;
-              closeBox();
-              pps ")";
-             closeBox ())
+          | fmtI (LET(v, r, l)) =
+            vcat 
+ 	      (pcat
+		 (hblock [text "LET", text (LV.lvarName v), text "="],
+		  softIndent (4, (fmtLexp' r))),
+               hardIndent (1, hcat (text "IN", fmtLexp' l)))
 
-          | ppl pd (l as SELECT(i, _)) =
-            if pd < 1 then pps "<SEL>" else
-            let fun gather(SELECT(i,l)) =
-                      let val (more,root) = gather l
-                       in  (i :: more,root)
-                      end
-                  | gather l = (nil, l)
+          | fmtI (APP(l, r)) =
+	      enclose {front = text "APP(", back = rparen}
+                (tryFlat (vcat (ccat (fmtLexp' l, comma), fmtLexp' r)))
 
-                val (path,root) = gather l
-                fun ipr (i:int) = pps(Int.toString i)
-             in openHOVBox 2;
-                ppl (pd-1) root;
-                ppClosedSeq ("[",",","]") (fn s => ppi) (rev path);
-                closeBox ()
+          | fmtI (TFN(ks, b)) =
+              enclose {front = text "TFN(", back = rparen}
+		(pcat (formatTuple fmtTKind' ks,
+		       softIndent (3, fmtLexp' b)))
+
+          | fmtI (TAPP(l, ts)) =
+              enclose {front=text "TAPP(", back=rparen}
+	        (pcat (fmtLexp' l,
+		       formatTuple fmtTyc' ts))
+
+          | fmtI (GENOP(dict, p, t, ts)) =
+              enclose {front=text "GEN(", back=rparen}
+                (pblock
+                   [ccat (text (PrimopUtil.toString p), comma),
+                    ccat (fmtLty' t, comma),
+                    formatTuple fmtTyc' ts])
+
+          | fmtI (SWITCH (l,_,llist,default)) =
+            let fun switchCase (c,l) =
+                      pcat (hcat (text (conToString c), text " =>"), softIndent (4, fmtLexp' l))
+		val defaultCase =
+		    (case default
+		      of NONE => nil
+		       | SOME lexp => [pcat (text "_ =>", softIndent (4, fmtLexp' lexp))])
+             in vblock
+		  [hcat (text "SWITCH ", fmtLexp' l),
+		   hardIndent (2, hcat (text "of", vblock (map switchCase llist @ defaultCase)))]
             end
 
-          | ppl pd (FN(v,t,l)) =
-            if pd < 1 then pps "<FN>" else
-            (openHOVBox 3; pps "FN(";
-              pps(lvarName v); pps ":"; br1 0; ppLty' t; pps ",";
-              if complex l then newline() else ();
-              ppl (pd-1) l; pps ")";
-             closeBox())
-
-          | ppl pd (CON((s, c, lt), ts, l)) =
-            if pd < 1 then pps "<CON>" else
-            (openHOVBox 4;
-              pps "CON(";
-              openHOVBox 1; pps "("; pps(S.name s); pps ",";
-               pps(DA.prRep c); pps ",";
-               ppLty' lt; pps ")";
-              closeBox ();
-              pps ","; br1 0;
-              ppClosedSeq ("[",",","]") (PPLty.ppTyc (pd-1)) ts;
-              pps ","; br1 0;
-              ppl (pd-1) l; pps ")";
-             closeBox())
-
-          | ppl pd (APP(FN(v,_,l),r)) =
-            if pd < 1 then pps "<LET*>" else
-            (openHOVBox 5;
-              pps "(APP)";
-              ppl (pd-1) (LET(v, r, l));
-             closeBox())
-
-          | ppl pd (LET(v, r, l)) =
-            if pd < 1 then pps "<LET>" else
-            (openHVBox 2;
-              openHOVBox 4;
-               pps (lvarName v); br1 0; pps "="; br1 0; ppl (pd-1) r;
-              closeBox();
-              newline();
-              ppl (pd-1) l;
-             closeBox())
-
-          | ppl pd (APP(l, r)) =
-            if pd < 1 then pps "<APP>" else
-            (pps "APP(";
-             openHVBox 0;
-             ppl (pd-1) l; pps ","; br1 0; ppl (pd-1) r;
-             closeBox();
-             pps ")")
-
-          | ppl pd (TFN(ks, b)) =
-            if pd < 1 then pps "<TFN>" else
-            (openHOVBox 0;
-             pps "TFN(";
-             openHVBox 0;
-             ppClosedSeq ("(",",",")") (PPLty.ppTKind (pd-1)) ks; br1 0;
-             ppl (pd-1) b;
-             closeBox();
-             pps ")";
-             closeBox())
-
-          | ppl pd (TAPP(l, ts)) =
-            if pd < 1 then pps "<TAP>" else
-            (openHOVBox 0;
-              pps "TAPP(";
-              openHVBox 0;
-               ppl (pd-1) l; br1 0;
-               ppClosedSeq ("[",",","]") (PPLty.ppTyc (pd-1)) ts;
-              closeBox();
-              pps ")";
-             closeBox())
-
-          | ppl pd (GENOP(dict, p, t, ts)) =
-            if pd < 1 then pps "<GEN>" else
-            (openHOVBox 4;
-              pps "GEN(";
-              openHOVBox 0;
-               pps(PrimopUtil.toString p); pps ","; br1 0;
-               ppLty' t; br1 0;
-               ppClosedSeq ("[",",","]") (PPLty.ppTyc (pd-1)) ts;
-              closeBox();
-              pps ")";
-             closeBox ())
-
-          | ppl pd (SWITCH (l,_,llist,default)) =
-            if pd < 1 then pps "<SWI>" else
-            let fun switch [(c,l)] =
-                      (openHOVBox 2;
-                       pps (conToString c); pps " =>"; br1 0; ppl (pd-1) l;
-                       closeBox())
-                  | switch ((c,l)::more) =
-                      (openHOVBox 2;
-                       pps (conToString c); pps " =>"; br1 0; ppl (pd-1) l;
-                       closeBox();
-                       newline();
-                       switch more)
-                  | switch [] = () (* bug "unexpected case in switch" *)
-
-             in openHOVBox 3;
-                pps "SWI ";
-                ppl (pd-1) l; newline();
-                pps "of ";
-                openHVBox 0;
-                switch llist;
-                case (default,llist)
-                 of (NONE,_) => ()
-                  | (SOME l,nil) => (openHOVBox 2; pps "_ =>"; br1 0; ppl (pd-1)l;
-                                     closeBox())
-                  | (SOME l,_) => (newline();
-                                   openHOVBox 2;
-                                   pps "_ =>"; br1 0; ppl (pd-1) l;
-                                   closeBox());
-                closeBox();
-                closeBox()
+          | fmtI (FIX (varlist, ltylist, lexplist, body)) =
+            let fun ffun (v, t, l) =
+                      ccat (hblock [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
+			    hardIndent (2, fmtLexp' l))
+             in vcat (hcat (text "FIX",
+		            vblock (map ffun (zipEq3 (varlist, ltylist, lexplist)))),
+		      hcat (text "IN",
+			    fmtLexp' body))
             end
 
-          | ppl pd (FIX(varlist,ltylist,lexplist,lexp)) =
-            if pd < 1 then pps "<FIX>" else
-            let fun flist([v],[t],[l]) =
-                      let val lv = lvarName v
-                       in pps lv; pps ": "; ppLty' t; pps " == ";
-			  newline();
-                          ppl (pd-1) l
-                      end
-                  | flist(v::vs,t::ts,l::ls) =
-                      let val lv = lvarName v
-                       in pps lv; pps ": "; ppLty' t; pps " == ";
-                          newline();
-			  ppl (pd-1) l;
-			  newline();
-                          flist(vs,ts,ls)
-                      end
-                  | flist(nil,nil,nil) = ()
-                  | flist _ = bug "unexpected cases in flist"
+          | fmtI (RAISE(l,t)) =
+	      enclose {front = text "RAISE(", back = rparen}
+                (pcat (ccat (fmtLty' t, comma), fmtLexp' l))
 
-             in openHOVBox 0;
-                pps "FIX(";
-                openHVBox 0; flist(varlist,ltylist,lexplist); closeBox();
-                newline(); pps "IN ";
-                ppl (pd-1) lexp;
-                pps ")";
-                closeBox()
-            end
+          | fmtI (HANDLE (lexp, withlexp)) =
+            vblock
+              [hcat (text "HANDLE", fmtLexp' lexp),
+               hcat (text "WITH", fmtLexp' withlexp)]
 
-          | ppl pd (RAISE(l,t)) =
-            if pd < 1 then pps "<RAISE>" else
-            (openHOVBox 0;
-              pps "RAISE(";
-              openHVBox 0;
-               ppLty' t; pps ","; br1 0; ppl (pd-1) l;
-              closeBox();
-              pps ")";
-             closeBox())
+          | fmtI (WRAP(t, _, l)) =
+              enclose {front = text "WRAP(", back = rparen}
+		(vcat
+                   (ccat (fmtTyc' t, comma),
+		    fmtLexp' l))
 
-          | ppl pd (HANDLE (lexp,withlexp)) =
-            if pd < 1 then pps "<HANDLE>" else
-            (openHOVBox 0;
-             pps "HANDLE"; br1 0; ppl (pd-1) lexp;
-             newline();
-             pps "WITH"; br1 0; ppl (pd-1) withlexp;
-             closeBox())
+          | fmtI (UNWRAP(t, _, l)) =
+              enclose {front = text "UNWRAP(", back = rparen}
+		(vcat
+                   (ccat (fmtTyc' t, comma),
+		    fmtLexp' l))
 
-          | ppl pd (WRAP(t, _, l)) =
-            if pd < 1 then pps "<WRAP>" else
-            (openHOVBox 0;
-              pps "WRAP("; ppTyc' t; pps ",";
-              newline();
-              ppl (pd-1) l;
-              pps ")";
-             closeBox())
-
-          | ppl pd (UNWRAP(t, _, l)) =
-            if pd < 1 then pps "<WRAP>" else
-            (openHOVBox 0;
-              pps "UNWRAP("; ppTyc' t; pps ",";
-              newline();
-              ppl (pd-1) l;
-              pps ")";
-             closeBox())
-
-   in ppl pd l; newline(); newline()
+   in fmtI l
   end
 
-fun ppFun ppstrm l v =
-  let fun last (DA.LVAR x) = x
-        | last (DA.PATH(r,_)) = last r
-        | last _ = bug "unexpected access in last"
-
-      fun find le =
-        case le
-          of VAR w =>
-               if (v=w)
-               then PU.pps ppstrm ("VAR " ^ lvarName v ^ " is free in <lexp>\n")
-               else ()
-           | l as FN(w,_,b) => if v=w then ppLexp 20 ppstrm l else find b
-           | l as FIX(vl,_,ll,b) =>
-             if List.exists (fn w => v=w) vl then ppLexp 20 ppstrm l
-             else (app find ll; find b)
-           | APP(l,r) => (find l; find r)
-           | LET(w,l,r) => (if v=w then ppLexp 20 ppstrm l else find l; find r)
-           | TFN(_, r) => find r
-           | TAPP(l, _) => find l
-           | SWITCH (l,_,ls,d) =>
-             (find l; app (fn(_,l) => find l) ls;
-              case d of NONE => () | SOME l => find l)
-           | RECORD l => app find l
-           | SRECORD l => app find l
-           | VECTOR (l, _) => app find l
-           | SELECT(_,l) => find l
-           | CON((_, DA.EXN p, _), _, e) => (find(VAR(last p)); find e)
-           | CON(_,_,e) => find e
-           | HANDLE(e,h) => (find e; find h)
-           | RAISE(l,_) => find l
-           | INT _ => ()
-           | WORD _ => ()
-	   | REAL _ => ()
-           | STRING _ => ()
-           | ETAG (e,_) => find e
-           | PRIM _ => ()
-           | GENOP ({default=e1,table=es}, _, _, _) =>
-             (find e1; app (fn (_, x) => find x) es)
-           | WRAP(_, _, e) => find e
-           | UNWRAP(_, _, e) => find e
-
-   in find l
-  end
-
-fun stringTag (VAR _) = "VAR"
-  | stringTag (INT _) = "INT"
-  | stringTag (WORD _) = "WORD"
-  | stringTag (REAL _) = "REAL"
-  | stringTag (STRING _) = "STRING"
-  | stringTag (PRIM _) = "PRIM"
-  | stringTag (GENOP _) = "GENOP"
-  | stringTag (FN _) = "FN"
-  | stringTag (FIX _) = "FIX"
-  | stringTag (APP _) = "APP"
-  | stringTag (LET _) = "LET"
-  | stringTag (TFN _) = "TFN"
-  | stringTag (TAPP _) = "TAPP"
-  | stringTag (ETAG _) = "ETAG"
-  | stringTag (RAISE _) = "RAISE"
-  | stringTag (HANDLE _) = "HANDLE"
-  | stringTag (CON _) = "CON"
-  | stringTag (SWITCH _) = "SWITCH"
-  | stringTag (VECTOR _) = "VECTOR"
-  | stringTag (RECORD _) = "RECORD"
-  | stringTag (SRECORD _) = "SRECORD"
-  | stringTag (SELECT _) = "SELECT"
-  | stringTag (WRAP _) = "WRAP"
-  | stringTag (UNWRAP _) = "UNWRAP"
+fun ppLexp (pd: int) (lexp : PLambda.lexp) =
+    printFormat (fmtLexp pd lexp)			 
 
 end (* toplevel local *)
-end (* struct PPLexp *)
+end (* structure PPLexp *)

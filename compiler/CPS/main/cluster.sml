@@ -37,8 +37,8 @@ val print : cluster list -> cluster list
 	  val say = Control.Print.say
 	  fun prCluster (fn1::fns) = (
 		say "***** CLUSTER START *****\n";
-		PPCps.printcps0 fn1;
-		List.app (fn f => (say "***** FRAG *****\n"; PPCps.printcps0 f)) fns;
+		PPCps.ppFunction fn1;
+		List.app (fn f => (say "***** FRAG *****\n"; PPCps.ppFunction f)) fns;
 		say "***** CLUSTER END *****\n")
 	  in
 	    List.app prCluster clusters;
@@ -163,9 +163,9 @@ val print : cluster list -> cluster list
 		     of SOME cluster => (
 			  say "********** BOGUS CLUSTERS AFTER NORMALIZE **********\n";
 			  say "*** INITIAL FUNCS ***\n";
-			    List.app PPCps.printcps0 funcs;
+			    List.app PPCps.ppFunction funcs;
 			  say "*** BAD CLUSTER ***\n";
-			    List.app PPCps.printcps0 cluster;
+			    List.app PPCps.ppFunction cluster;
 			  say "**********\n";
 			  error "bogus cluster")
 		      | NONE => clusters

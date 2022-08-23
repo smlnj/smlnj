@@ -36,14 +36,13 @@ structure LtyKindChk : LTYKINDCHK =
 struct
 
 structure LD = LtyDef
-structure PP = PrettyPrint
-structure PU = PPUtil
+structure PP = NewPP
+
 open Lty
 
 fun bug s = ErrorMsg.impossible ("LtyKindChk:" ^ s)
 
-val pd = ref 10
-val with_pp = PP.with_default_pp
+val printDepth = 20  (* local print depth limit *)
 
 (********************************************************************
  *                      KIND-CHECKING ROUTINES                      *
@@ -143,18 +142,15 @@ let val dict = Memo.newDict()
         (* how to compute the kind of a tyc *)
 	fun mkI tycI =
             case tycI
-             of TC_VAR (i, j) =>
+             of TC_DVAR (i, j) =>
                 (tkLookup (kenv, i, j)
                  handle tkUnbound =>
-                  (with_pp (fn s =>
-                     (PU.pps s "KindChk: unbound tv: ";
-                      PPLty.ppTyc (!pd) s (tc_inj tycI);
-                      PP.newline s;
-                      PU.pps s "kenv: ";
-                      PP.openHOVBox s (PP.Rel 0);
-                      PPLty.ppKindEnv (!pd) s kenv;
-                      PP.newline s;
-                      PP.closeBox s));
+                  (PP.printFormatNL
+		     (PP.vblock
+                     [PP.hcat (PP.text "KindChk: unbound tv:",
+			       PPLty.ppTyc printDepth (tc_inj tycI)),
+                      PP.hcat (PU.pps s "kenv:",
+			       PPLty.ppKindEnv printDepth kenv)]))
                    raise KindChk "unbound tv"))
               | TC_NVAR _ => 
                 bug "TC_NVAR not supported yet in tcKindChk"
@@ -332,9 +328,8 @@ let val (tcKindChk, _, teKindChk) = tcteKindCheckGen()
     and ltyChk' kenv lty =
          ltyIChk kenv (lt_out lty)
          handle x => 
-           (with_pp (fn ppstrm => (PPLty.ppLty (!pd) ppstrm lty;
-                                   PP.newline ppstrm));
-            raise x)
+		(PPLty.ppLty printDepth lty;
+                 raise x)
  in ltyChk'
 end (* function ltKindCheckGen *)	   
 

@@ -14,7 +14,6 @@ struct
 
 local
   structure CO = Coerce
-  structure DI = DebIndex
   structure PO = Primop
   structure LV = LambdaVar 
   structure DA = Access
@@ -26,7 +25,9 @@ local
   structure LE = LtyExtern
   structure PL = PLambda
   structure F = FLINT
-  structure PF = PrintFlint
+  structure PP = NewPP
+  structure PPT = PPLty
+  structure PPF = PPFlint
   open FLINT
 in
 
@@ -119,7 +120,7 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
              end
 	else ltyWrap lt
 
-    (* transform : CO.wpEnv * DI.depth -> (lexp -> lexp) *)
+    (* transform : CO.wpEnv * int -> (lexp -> lexp) *)
     fun transform (wenv, d) =
       let (* lpfd : fkind * v? * vts? * F.lexp -> fkind * v? * ? * lexp *)
 	  fun lpfd ({isrec,known,inline,cconv}, v, vts, e) =
@@ -171,7 +172,7 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 
           (* lpsw : con * lexp -> con * lexp *)
           and lpsw (PL.DATAcon(dc, ts, v), e) =
-                let val (ndc, nts, hdr, u) = lpdc(dc, ts, VAR v, false)
+                let val (ndc, nts, hdr, u) = lpdc (dc, ts, VAR v, false)
                  in (case u
                       of VAR nv => (PL.DATAcon(ndc, nts, nv), hdr(loop e))
                        | _ => bug "unexpected case in lpsw")
@@ -227,33 +228,42 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
                | APP _ => le
                | TFN ((tfk, v, tvks, e1), e2) =>  (* put down all wrappers *)
                    let val nwenv = CO.wpNew(wenv, d)
-                       val ne1 = transform (nwenv, DI.next d) e1
+                       val ne1 = transform (nwenv, d + 1) e1
                     in TFN((tfk, v, tvks, CO.wpBuild(nwenv, ne1)), loop e2)
                    end
 
                | TAPP (v, ts) =>
                    let val _ = if !debugging
-			     then (say ">>> Wrapping.transform.loop#TAPP: v = ";
-				   PF.printValue v; say "\n")
-			     else ()
+			       then (say ">>> Wrapping.transform.loop#TAPP: v = ";
+				     say (PPF.valueToString v); say "\n")
+			       else ()
 		       val _ = if !debugging
-				then (say "ty: "; PF.printTycList ts; say "\n")
-				else ()
+			       then PP.printFormatNL
+				      (PP.hcat (PP.text "ty:",
+						PP.formatList (PPT.fmtTyc 100) ts))
+			       else ()
 		       val olt: LT.lty = getlty v
 		       val _ = if !debugging
-			       then (say "olt: "; PF.printLty olt; say "\n")
+			       then PP.printFormatNL
+				      (PP.hcat (PP.text "olt:", PPT.fmtLty 100 olt))
 			       else ()
                        val nts : LT.tyc list = map tycWrap ts
 		       val _ = if !debugging
-			       then (say "nts: "; PF.printTycList nts; say "\n")
+			       then PP.printFormatNL
+				       (PP.hcat (PP.text "nts:",
+						 PP.formatList (PPT.fmtTyc 100) nts))
 			       else ()
                        val nlts: LT.lty list = LE.lt_inst(ltyUnwrap olt, nts)
 		       val _ = if !debugging
-			       then (say "nlts: "; PF.printLtyList nlts; say "\n")
+			       then PP.printFormatNL
+				      (PP.hcat (PP.text "nlts:",
+						PP.formatList (PPT.fmtLty 100) nlts))
 			       else ()
                        val olts: LT.lty list = map ltyUnwrap (LE.lt_inst(olt, ts))
 		       val _ = if !debugging
-			       then (say "olts: "; PF.printLtyList olts; say "\n")
+			       then PP.printFormatNL
+				      (PP.hcat (PP.text "olts:",
+						PP.formatList (PPT.fmtLty 100) olts))
 			       else ()
                        val hdr = CO.unwrapOp (wenv, nlts, olts, d)
                     in case hdr
@@ -261,8 +271,9 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 			     let val _ = dbsay "loop#TAPP: hdr = NONE\n";
 				 val result = TAPP(v, nts)
 			     in if !debugging
-				then (say "result:\n"; PF.printLexp result;
-				      say "<<<Wrapping.transform.loop#TAPP\n")
+				then PP.printFormatNL
+				       (PP.vblock [PP.text "result:", PPF.fmtLexp 100 result,
+						   PP.text "<<< Wrapping.transform.loop#TAPP"])
 				else ();
 				result
 			     end
@@ -271,8 +282,9 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 			         val nvs = mkLvars (length nlts)
 				 val result = LET(nvs, TAPP(v, nts), hhh(map VAR nvs))
                               in if !debugging
-				 then (say "result:\n"; PF.printLexp result;
-				       say "<<<Wrapping.transform.loop#TAPP\n")
+				 then PP.printFormatNL
+					(PP.vblock [PP.text "result:", PPF.fmtLexp 100 result,
+				                    PP.text "<<< Wrapping.transform.loop#TAPP"])
 				 else ();
 				 result
                              end
@@ -344,7 +356,7 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
     val (fk, f, vts, e) = fdec
     val nvts = map (fn (v, t) => (v, ltyUnwrap t)) vts
     val wenv = CO.initWpEnv()
-    val ne = transform (wenv, DI.top) e
+    val ne = transform (wenv, 0) e
  in (fk, f, nvts, CO.wpBuild(wenv, ne))
 end (* function wrapping *)
 

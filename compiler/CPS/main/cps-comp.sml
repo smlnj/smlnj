@@ -61,7 +61,7 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
     fun prC s e = if !Control.CG.printit
 	  then (
 	    say (concat["\n[After ", s, " ...]\n\n"]);
-	    PPCps.printcps0 e;
+	    PPCps.ppFunction e;
 	    say "\n"; e)
 	  else e
 

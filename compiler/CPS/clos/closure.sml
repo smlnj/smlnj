@@ -39,7 +39,7 @@ local
 
   val dumcs = NONE              (* dummy callee-save reg contents *)
   val zip = ListPair.zip
-  val pr = Control.Print.say
+  val say = Control.Print.say
   fun inc (ri as ref i) = ri := i+1
 
 (* static profiling *)
@@ -392,55 +392,55 @@ fun augEscFun(v,i,CR(off,x),env) =
  ****************************************************************************)
 
 val im : int -> string = Int.toString
-val vp = pr o LambdaVar.lvarName
-fun Vp (v,m,n) = (vp v; pr " fd="; pr (im m); pr " ld=";
-                  pr (im n))
-fun ifkind (KNOWN_TAIL) = pr " KNOWN_TAIL "
-  | ifkind (KNOWN) = pr " KNOWN "
-  | ifkind (KNOWN_REC) = pr " KNOWN_REC "
-  | ifkind (ESCAPE) = pr " ESCAPE "
-  | ifkind (CONT) = pr " CONT "
-  | ifkind (KNOWN_CONT) = pr " KNOWN_CONT "
-  | ifkind _ = pr " STRANGE_KIND "
-fun plist p l = (app (fn v => (pr " "; p v)) l; pr "\n")
+val vp = say o LambdaVar.lvarName
+fun Vp (v,m,n) = (vp v; say " fd="; say (im m); say " ld=";
+                  say (im n))
+fun ifkind (KNOWN_TAIL) = say " KNOWN_TAIL "
+  | ifkind (KNOWN) = say " KNOWN "
+  | ifkind (KNOWN_REC) = say " KNOWN_REC "
+  | ifkind (ESCAPE) = say " ESCAPE "
+  | ifkind (CONT) = say " CONT "
+  | ifkind (KNOWN_CONT) = say " KNOWN_CONT "
+  | ifkind _ = say " STRANGE_KIND "
+fun plist p l = (app (fn v => (say " "; p v)) l; say "\n")
 val ilist = plist vp
 val iVlist = plist Vp
 val iKlist = plist ifkind
-val sayv = pr o PPCps.value2str
+val sayv = say o PPCps.valueToString
 val vallist = plist sayv
 
 fun printEnv(Env(valueL,closureL,dispL,whatMap)) =
-  let fun ip (i : int) = pr(Int.toString i)
-      val tlist = plist (fn (a,b) => (vp a; pr "/"; sayv(LABEL b)))
+  let fun ip (i : int) = say (Int.toString i)
+      val tlist = plist (fn (a,b) => (vp a; say "/"; sayv(LABEL b)))
       fun fp(v,Function{label,gpfree,fpfree,...}) =
-   	      (vp v; pr "/known "; sayv(LABEL label); pr " -";
+   	      (vp v; say "/known "; sayv(LABEL label); say " -";
                ilist (gpfree@fpfree))
         | fp _ = ()
       fun cp (v,Callee(v',gl, fl)) =
-  	   (vp v; pr "/callee(G) "; sayv v'; pr " -"; vallist gl;
-            vp v; pr "/callee(F) "; sayv v'; pr " -"; vallist fl)
+  	   (vp v; say "/callee(G) "; sayv v'; say " -"; vallist gl;
+            vp v; say "/callee(F) "; sayv v'; say " -"; vallist fl)
         | cp _ = ()
       fun p(indent,l,seen) =
 	let fun c(v,CR(off, {functions,values,closures,stamp,kind,...})) =
-	      (indent(); pr "Closure "; vp v; pr "/"; pr(LV.prLvar stamp);
-	       pr " @"; ip off;
+	      (indent(); say "Closure "; vp v; say "/"; say (LV.prLvar stamp);
+	       say " @"; ip off;
 	       if SL.member seen stamp
-	       then pr "(seen)\n"
-	       else (pr ":\n";
+	       then say "(seen)\n"
+	       else (say ":\n";
 		     case functions
 		       of nil => ()
-		        | _ => (indent(); pr "  Funs:"; tlist functions);
+		        | _ => (indent(); say "  Funs:"; tlist functions);
 		     case values
 		       of nil => ()
-		        | _ => (indent(); pr "  Vals:"; ilist values);
-		     p(fn() => (indent();pr "  "),closures,SL.enter(stamp,seen))))
+		        | _ => (indent(); say "  Vals:"; ilist values);
+		     p(fn() => (indent();say "  "),closures,SL.enter(stamp,seen))))
 	 in app c l
 	end
-  in  pr "Values:"; ilist valueL;
-      pr "Closures:\n"; p(fn () => (),closureL,nil);
-      pr "Disposable records:\n"; ilist dispL;
-      pr "Known function mapping:\n"; LV.Tbl.appi fp whatMap;
-      pr "Callee-save continuation mapping:\n";
+  in  say "Values:"; ilist valueL;
+      say "Closures:\n"; p(fn () => (),closureL,nil);
+      say "Disposable records:\n"; ilist dispL;
+      say "Known function mapping:\n"; LV.Tbl.appi fp whatMap;
+      say "Callee-save continuation mapping:\n";
       LV.Tbl.appi cp whatMap
   end
 
@@ -1325,30 +1325,30 @@ fun checkfree(v) =
       val {fv=nfree,lv=loopv,sz=_} = nfreevars v
       val nfree = map #1 nfree
       val _ = if (free <> nfree)
-              then (pr "^^^^ wrong free variable subset ^^^^ \n";
-                    pr "OFree in "; vp v; pr ":"; ilist free;
-                    pr "NFree in "; vp v; pr ":"; ilist nfree;
-                    pr "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \n")
+              then (say "^^^^ wrong free variable subset ^^^^ \n";
+                    say "OFree in "; vp v; say ":"; ilist free;
+                    say "NFree in "; vp v; say ":"; ilist nfree;
+                    say "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \n")
               else ()
       val _ = case loopv
                of NONE => ()
                 | SOME sfree =>
                     (if subset (sfree,nfree) then ()
-                     else (pr "****wrong free variable subset*** \n";
-                           pr "Free in "; vp v; pr ":"; ilist nfree;
-                           pr "SubFree in "; vp v; pr ":";ilist sfree;
-                           pr "*************************** \n"))
+                     else (say "****wrong free variable subset*** \n";
+                           say "Free in "; vp v; say ":"; ilist nfree;
+                           say "SubFree in "; vp v; say ":";ilist sfree;
+                           say "*************************** \n"))
    in ()
   end
 val _ = app checkfree (map #2 bindings)
 <***)
 
 (***>
-val _ = COMMENT(fn() => (pr "BEGINNING MAKENV.\nFunctions: ";
-           ilist (map #2 bindings); pr "Initial environment:\n";
-           printEnv initEnv; pr "\n"))
-val _ = COMMENT(fn() => (pr "BASE CALLEE SAVE REGISTERS: ";
-           vallist bcsg; vallist bcsf; pr "\n"))
+val _ = COMMENT(fn() => (say "BEGINNING MAKENV.\nFunctions: ";
+           ilist (map #2 bindings); say "Initial environment:\n";
+           printEnv initEnv; say "\n"))
+val _ = COMMENT(fn() => (say "BASE CALLEE SAVE REGISTERS: ";
+           vallist bcsg; vallist bcsf; say "\n"))
 <***)
 
 (* partition the function bindings into different fun_kinds *)
@@ -1370,12 +1370,12 @@ val (fixKind,nret) =
     | ([],[],[v],[],[_]) => (KNOWN_CONT,SOME(#2 v))
     | ([],[],[v],[],[]) => (CONT,SOME(#2 v))
     | (_,_,[],_,[]) => (ESCAPE,bret)
-    | _ => (pr "^^^ Assumption No.2 is violated in closure phase  ^^^\n";
-            pr "KNOWN bindings: "; ilist (map #2 knownB);
-            pr "ESCAPE bindings: "; ilist (map #2 escapeB);
-            pr "CONT bindings: "; ilist (map #2 calleeB);
-            pr "KNOWN_CONT bindings: "; ilist (map #2 kcontB);
-            pr "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \n";
+    | _ => (say "^^^ Assumption No.2 is violated in closure phase  ^^^\n";
+            say "KNOWN bindings: "; ilist (map #2 knownB);
+            say "ESCAPE bindings: "; ilist (map #2 escapeB);
+            say "CONT bindings: "; ilist (map #2 calleeB);
+            say "KNOWN_CONT bindings: "; ilist (map #2 kcontB);
+            say "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \n";
             bug "Violating basic closure conventions closure.sml")
 
 (****************************************************************************
@@ -1383,8 +1383,8 @@ val (fixKind,nret) =
  ****************************************************************************)
 
 (***>
-val _ = COMMENT(fn() => (pr "Known functions:"; ilist (map #2 knownB);
-                         pr "                "; iKlist (map #1 knownB)))
+val _ = COMMENT(fn() => (say "Known functions:"; ilist (map #2 knownB);
+                         say "                "; iKlist (map #1 knownB)))
 <***)
 
 (*** Get the call graph of all known functions in this FIX. ***)
@@ -1443,8 +1443,8 @@ val (knownB,recFlag) = foldr
         val (gpfree,fpfree) = freeAnalysis(gpfree,fpfree,initEnv)
 
 (***>
-val _ = COMMENT(fn() => (pr "*** Current Known Free Variables: ";
-           iVlist gpfree; pr "\n"))
+val _ = COMMENT(fn() => (say "*** Current Known Free Variables: ";
+           iVlist gpfree; say "\n"))
 <***)
 
         (* some free variables must stay in registers for KNOWN_TAIL *)
@@ -1460,8 +1460,8 @@ val _ = COMMENT(fn() => (pr "*** Current Known Free Variables: ";
         fun deep2(_,m,n) = (m > sn)
 
 (***>
-val _ = COMMENT(fn() => (pr "*** Current Stage number and fun kind: ";
-           ilist [sn]; ifkind kind; pr "\n"))
+val _ = COMMENT(fn() => (say "*** Current Stage number and fun kind: ";
+           ilist [sn]; ifkind kind; say "\n"))
 <***)
 
         (* for recursive functions, always spill deeper level free variables *)
@@ -1482,8 +1482,8 @@ val _ = COMMENT(fn() => (pr "*** Current Stage number and fun kind: ";
                      else (partition deep2 gpfree,partition deep2 fpfree,flag)
 
 (***>
-val _ = COMMENT(fn() => (pr "*** Current Spilled Known Free Variables: ";
-           iVlist gpspill; pr "\n"))
+val _ = COMMENT(fn() => (say "*** Current Spilled Known Free Variables: ";
+           iVlist gpspill; say "\n"))
 <***)
 
         (* find out the register limit for this known functions *)
@@ -1531,7 +1531,7 @@ val (knownB,gpcollected,fpcollected) =
  ****************************************************************************)
 
 (***>
-val _ = COMMENT(fn() => (pr "Escaping functions:"; ilist (map #2 escapeB)))
+val _ = COMMENT(fn() => (say "Escaping functions:"; ilist (map #2 escapeB)))
 <***)
 
 (* get the set of free variables for escaping functions *)
@@ -1567,8 +1567,8 @@ val fpFree = mergeV(fpfree,fpcollected)
  ***************************************************************************)
 
 (***>
-val _ = COMMENT(fn() => (pr "CS continuations:"; ilist (map #2 calleeB);
-                         pr "                 "; iKlist (map #1 calleeB)))
+val _ = COMMENT(fn() => (say "CS continuations:"; ilist (map #2 calleeB);
+                         say "                 "; iKlist (map #1 calleeB)))
 <***)
 
 (* get the set of free variables for continuation functions *)
@@ -1818,8 +1818,8 @@ val knownFrags : frags =
             val ncl = ncl @ (map get_cty ngpfree) @ (map get_cty fpfree)
 
 (***>
-            val _ = COMMENT(fn () => (pr "\nEnvironment in known ";
-                            vp v; pr ":\n"; printEnv env))
+            val _ = COMMENT(fn () => (say "\nEnvironment in known ";
+                            vp v; say ":\n"; printEnv env))
 <***)
          in case nret
              of NONE => ((KNOWN,l,nargs,ncl,body,env,sn,bcsg,bcsf,bret)::z)
@@ -1847,8 +1847,8 @@ val escapeFrags : frags =
                   val ncl = U.BOGt::U.BOGt::ncl
                   val sn = snum v
 (***>
-                  val _ = COMMENT(fn () => (pr "\nEnvironment in escaping ";
-                              vp v; pr ":\n";printEnv env))
+                  val _ = COMMENT(fn () => (say "\nEnvironment in escaping ";
+                              vp v; say ":\n";printEnv env))
 <***)
                in inc CGoptions.escapeGen;  (* nret must not be NONE *)
                   case nret
@@ -1901,8 +1901,8 @@ val (nenv, calleeFrags : frags) =
                   val env = faugValue(args,cl,env)
 (***>
                   val _ = COMMENT(fn () =>
-                            (pr "\nEnvironment in callee-save continuation ";
-                             vp v; pr ":\n"; printEnv env))
+                            (say "\nEnvironment in callee-save continuation ";
+                             vp v; say ":\n"; printEnv env))
 <***)
                in inc CGoptions.calleeGen;
                   (nk,l,nargs,ncl,body,env,sn,csg,csf,bret)::z
@@ -1913,8 +1913,8 @@ val (nenv, calleeFrags : frags) =
 val frags = escapeFrags@knownFrags@calleeFrags
 
 (***>
-val _ = COMMENT(fn () => (pr "\nEnvironment after FIX:\n";
-                          printEnv nenv; pr "MAKENV DONE.\n\n"));
+val _ = COMMENT(fn () => (say "\nEnvironment after FIX:\n";
+                          printEnv nenv; say "MAKENV DONE.\n\n"));
 <***)
 
 in  (* body of makenv *)
@@ -1926,13 +1926,14 @@ end
  ****************************************************************************)
 
 fun closefix(fk,f,vl,cl,ce,env,sn,csg,csf,ret) =
-  ((fk,f,vl,cl,close(ce,env,sn,csg,csf,ret))
-       handle Lookup(f,v,env) => (pr(concat["LOOKUP FAILS on ", f, " "]); vp v;
-				pr "\nin environment:\n";
-                                printEnv env;
-                                pr "\nin function:\n";
-                                PPCps.prcps ce;
-                                bug "Lookup failure in cps/closure.sml"))
+    (fk,f,vl,cl,close(ce,env,sn,csg,csf,ret))
+    handle Lookup (f,v,env) =>
+      (say (concat["LOOKUP FAILS on ", f, " "]); vp v;
+       say "\nin environment:\n";
+       printEnv env;
+       say "\nin function:\n";
+       PPCps.ppCps ce;
+       bug "Lookup failure in cps/closure.sml")
 
 and close(ce,env,sn,csg,csf,ret) =
   case ce

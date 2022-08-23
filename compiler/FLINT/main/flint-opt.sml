@@ -14,7 +14,7 @@ structure FLINTOpt : sig
 end = struct
 
     structure CTRL = FLINT_Control  (* == Control.FLINT *)
-    structure PF = PrintFlint  (* structure PPF = PPFlint *)
+    structure PPF = PPFlint
     structure LB = LtyBasic
     structure LE = LtyExtern
     structure F  = FLINT
@@ -85,7 +85,7 @@ end = struct
     fun printProg (phaseName: string, prog: F.prog) : F.prog =
 	if !CTRL.printAllIR
 	then (say (concat["\n[After ", phaseName, " ...]\n\n"]);
-	      PrintFlint.printProg prog; say "\n";
+	      PPF.ppProg prog; say "\n";
 	      prog)
 	else prog
 
@@ -98,7 +98,7 @@ end = struct
 			   flush = fn () => TextIO.flushOut outS}
 	    fun finish () = (TextIO.closeOut outS; Control.Print.out := savedOut)
          in Control.Print.out := tempOut;
-	    PrintFlint.printFundec prog  (* PPF.ppProg prog *)
+	    PPF.ppProg prog
 	      handle x => (finish () handle _ => (); raise x);
 	    finish ()
         end (* function dumpProg *)
@@ -188,11 +188,11 @@ end = struct
 			    of "id" => ()  (* does nothing *)
 			     | "wellformed" => wff(f,l)
 			     | "recover" =>
-			         let val getlty = recover(f, fk = FK_REIFY)
-				  in CTRL.recover := (say o LB.lt_print o getlty o F.VAR)
-				 end
+				 CTRL.recover :=
+				   (fn lvar =>
+				       PPLty.ppLty 20 (recover (f, fk = FK_REIFY) (F.VAR lvar)))
 			     | "print" =>
-			         (say("\n[After "^l^"...]\n\n"); PF.printFundec f; say "\n")
+			         (say ("\n[After "^l^"...]\n\n"); PPF.ppProg f; say "\n")
 			     | "check" => check (l, (fk = FK_REIFY), f)
 			     | _ => say(concat["\n!! Unknown or badly scheduled FLINT phase '", phase,
 					       "' !!\n"])

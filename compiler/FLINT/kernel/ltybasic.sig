@@ -69,23 +69,18 @@ val ltc_etag   : Lty.lty -> Lty.lty
 
 val ltc_top    : Lty.lty    (* used in a dirty hack in prim.sml *)
 
-(** pretty printing of tkinds, tycs, and ltys *)
-val tk_print   : Lty.tkind -> string
-val tc_print   : Lty.tyc -> string
-val lt_print   : Lty.lty -> string
+(** adjusting an lty or tyc from one deBruijn index to another *)
+val lt_adj     : Lty.lty * int * int -> Lty.lty
+val tc_adj     : Lty.tyc * int * int -> Lty.tyc
 
-(** adjusting an lty or tyc from one DebIndex.depth to another *)
-val lt_adj     : Lty.lty * DebIndex.depth * DebIndex.depth -> Lty.lty
-val tc_adj     : Lty.tyc * DebIndex.depth * DebIndex.depth -> Lty.tyc
-
-val lt_adj_k   : Lty.lty * DebIndex.depth * DebIndex.depth * int -> Lty.lty
-val tc_adj_k   : Lty.tyc * DebIndex.depth * DebIndex.depth * int -> Lty.tyc
+val lt_adj_k   : Lty.lty * int * int * int -> Lty.lty
+val tc_adj_k   : Lty.tyc * int * int * int -> Lty.tyc
 
 (** an ltyEnv maps from lvars to their ltys; notice that the ltys are depth-dependent *)
 type ltyEnv
 val initLtyEnv : ltyEnv
-val ltLookup : ltyEnv * LambdaVar.lvar * DebIndex.depth -> Lty.lty option
-val ltInsert : ltyEnv * LambdaVar.lvar * Lty.lty * DebIndex.depth -> ltyEnv
+val ltLookup : ltyEnv * LambdaVar.lvar * int -> Lty.lty option
+val ltInsert : ltyEnv * LambdaVar.lvar * Lty.lty * int -> ltyEnv
 
 end (* signature LTYBASIC *)
 

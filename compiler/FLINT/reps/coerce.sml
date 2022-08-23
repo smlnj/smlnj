@@ -5,13 +5,13 @@ signature COERCE = sig
 
   type wpEnv
   val initWpEnv: unit -> wpEnv
-  val wpNew    : wpEnv * DebIndex.depth -> wpEnv
+  val wpNew    : wpEnv * int -> wpEnv
   val wpBuild  : wpEnv * FLINT.lexp -> FLINT.lexp
 
-  val unwrapOp : wpEnv * Lty.lty list * Lty.lty list * DebIndex.depth
+  val unwrapOp : wpEnv * Lty.lty list * Lty.lty list * int (* deBruijn context *)
                    -> (FLINT.value list -> FLINT.lexp) option
 
-  val wrapOp   : wpEnv * Lty.lty list * Lty.lty list * DebIndex.depth
+  val wrapOp   : wpEnv * Lty.lty list * Lty.lty list * int (* deBruijn context *)
                    -> (FLINT.value list -> FLINT.lexp) option
 
 end (* signature COERCE *)
@@ -20,7 +20,6 @@ structure Coerce : COERCE =
 struct
 
 local
-  structure DI = DebIndex
   structure LV = LambdaVar
   structure PF = PFlatten
   structure FU = FlintUtil
@@ -273,8 +272,8 @@ fun tcLoop wflag (nx, ox) =
           end
      | (_, _) =>
           if LK.tc_eqv(nx, ox) then NONE
-          else (say " Type nx is : \n"; say (LB.tc_print nx);
-                say "\n Type ox is : \n"; say (LB.tc_print ox); say "\n";
+          else (say " Type nx is : \n"; PPLty.ppTyc 20 nx;
+                say "\n Type ox is : \n"; PPLty.ppTyc 20 ox; say "\n";
                 bug "unexpected other tycs in tcLoop")))
 
 fun ltLoop wflag (nx, ox) =
@@ -329,7 +328,7 @@ fun ltLoop wflag (nx, ox) =
           end
      | (LT_POLY(nks, nzs), LT_POLY(oks, ozs)) =>
           let val nwenv = wpNew(wenv, d)
-              val wp = wrapperGen (wflag, sflag) (nwenv, nzs, ozs, DI.next d)
+              val wp = wrapperGen (wflag, sflag) (nwenv, nzs, ozs, d + 1)
            in (case wp
                 of NONE => NONE
                  | SOME (hdr : value list -> lexp) =>
@@ -337,7 +336,7 @@ fun ltLoop wflag (nx, ox) =
                         val (ax, aks, rxs)  =
                           if wflag then (ox, nks, ozs) else (nx, oks, nzs)
                         val nl = fromto(0, length nks)
-                        val ts = map (fn i => LD.tcc_var(DI.innermost, i)) nl
+                        val ts = map (fn i => LD.tcc_dvar (1, i)) nl
                         val avs = map mkv rxs
                         val rbody =
                           LET(avs, TAPP(VAR f, ts), hdr (map VAR avs))
@@ -349,8 +348,8 @@ fun ltLoop wflag (nx, ox) =
                     end)
           end
      | _ =>
-          (say " Type nx is : \n"; say (LB.lt_print nx);
-           say "\n Type ox is : \n"; say (LB.lt_print ox); say "\n";
+          (say " Type nx is : \n"; PPLty.ppLty 20 nx;
+           say "\n Type ox is : \n"; PPLty.ppLty 20 ox; say "\n";
            bug "unexpected other ltys in ltLoop")))
 
 val wps = ListPair.map (ltLoop wflag) (nts, ots)
