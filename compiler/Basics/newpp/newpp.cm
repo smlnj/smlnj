@@ -1,0 +1,18 @@
+(* newpp.cm *)
+
+Group
+
+	signature NEW_PP
+	structure NewPP
+
+is
+
+$smlnj/basis/basis.cm
+
+format.sml
+measure.sig
+measure.sml
+render.sig
+render.sml
+newpp.sig
+newpp.sml
