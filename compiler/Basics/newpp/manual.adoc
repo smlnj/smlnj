@@ -507,6 +507,22 @@ _Binary format combinators_
  those formats as a list (bracketed with comma separator), aligned according to the alignment parameter.
 
 [discrete]
+==== Setting and accessing the line width
+
+* `setLineWidthFun : (unit -> int) -> unit`
+
+ Defines the function that returns the current lineWidth value.
+
+* `resetLineWidthFun : unit -> unit`
+
+ Reset the lineWidthFun to the default lineWidthFun (which returns 90).
+
+* `getLineWidth : unit -> int`
+
+ Returns the current line width, obtained by calling the current lineWidthFun function.
+
+
+[discrete]
 ==== Render and print functions
 
 * `render : format * (string -> unit) * int -> unit`
