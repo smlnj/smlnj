@@ -1,12 +1,16 @@
 (* versiontool.cm
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
 library
-	structure VersionTool
+
+  structure VersionTool
+
 is
-	versiontool.sml
-	$/basis.cm
-	$smlnj/cm/tools.cm
+
+  $/basis.cm
+  $smlnj/cm/tools.cm
+
+  versiontool.sml
