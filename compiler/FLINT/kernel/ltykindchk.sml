@@ -147,10 +147,10 @@ let val dict = Memo.newDict()
                  handle tkUnbound =>
                   (PP.printFormatNL
 		     (PP.vblock
-                     [PP.hcat (PP.text "KindChk: unbound tv:",
-			       PPLty.ppTyc printDepth (tc_inj tycI)),
-                      PP.hcat (PU.pps s "kenv:",
-			       PPLty.ppKindEnv printDepth kenv)]))
+			 [PP.hcat (PP.text "KindChk: unbound tv:",
+				   PPLty.ppTyc printDepth (tc_inj tycI)),
+			  PP.hcat (PU.pps s "kenv:",
+				   PPLty.ppKindEnv printDepth kenv)]);
                    raise KindChk "unbound tv"))
               | TC_NVAR _ => 
                 bug "TC_NVAR not supported yet in tcKindChk"
