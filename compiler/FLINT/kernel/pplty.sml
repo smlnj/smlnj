@@ -14,6 +14,7 @@ sig
   val fmtTKind : int -> Lty.tkind -> NewPP.format
   val fmtTyc : int -> Lty.tyc -> NewPP.format
   val fmtLty : int -> Lty.lty -> NewPP.format
+  val fmtTkindEnv : int -> Lty.tkindEnv -> NewPP.format
 
   val ppTKind : int -> Lty.tkind -> unit
   val ppTyc : int -> Lty.tyc -> unit
@@ -105,7 +106,6 @@ val csf = seqFormats {alignment=P, sep=comma}
 fun fmtTagged (tag: string, fmt: PP.format) =
     PP.ccat (PP.text tag, PP.parens fmt)
 
-
 (* fmtTKind : int -> tkind -> format
  * Format a hashconsed representation of the kind *)
 fun fmtTKind pd (tk : LT.tkind) =
@@ -133,15 +133,15 @@ fun tycEnvFlatten tycenv =
        of NONE => []
         | SOME (elem, rest) => elem::tycEnvFlatten(rest))
 
-(* fmtKeFrame : int -> tkind list -> format *)
-fun fmtKeFrame pd ks =
-    formatList (fmtTKind pd) ks
+(* fmtKeFrame : int -> Lty.tkind list -> PP.format *)
+fun fmtKeFrame pd ks = formatList (fmtTKind pd) ks
 
-(* NOT USED!
-fun fmtKindEnv pd kenv =
-    if pd < 1 then text "<tkenv>" else
-    formatList (fmtKeFrame (pd-1)) kenv
- *)
+(* fmtKindEnv : int -> Lty.tkindEnv -> PP.format
+ * used (once) in FLINT/kernel/ltykindchk.sml *)
+fun fmtTkindEnv pd kenv =
+    if pd < 1
+    then text "<tkenv>"
+    else formatList (fmtKeFrame (pd-1)) kenv
 
 (* fmtTEBinder : int -> LT.teBinder -> format *)
 fun fmtTEBinder pd (binder: LT.teBinder) =

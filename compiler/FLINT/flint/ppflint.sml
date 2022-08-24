@@ -62,7 +62,7 @@ in
     fun fmtFKind fkind = text (fkindToString fkind)
 
     (* csf = "comma separated formats *)
-    val csf = seqFormats {alignment=P, sep=comma}
+    val csf = sequence {alignment=P, sep=comma}
 
     (* fmtRKind : FR.rkind -> format *)
     (* format record kinds (FR.rkind) *)
@@ -278,7 +278,7 @@ in
 		 in vblock
 		     [hblock [text "IF",
 			      fmtTagged (tag,
-					 seqFormats {alignment=P, sep=comma}
+					 sequence {alignment=P, sep=comma}
 					   [text (PrimopUtil.toString primop),
 					    fmtLty' lty,
 					    PP.formatList fmtTyc' tycs]),
