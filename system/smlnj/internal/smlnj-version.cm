@@ -19,8 +19,8 @@ is
 	versiontool.cm : tool
 
 	version.template : version (target: version.sml
-                                    versionfile: ../../../../config/version
-                                    releasedate: ../../../../config/releasedate)
+                                    versionfile: ../../../config/version
+                                    releasedate: ../../../config/releasedate)
 
 # endif
 
