@@ -14,11 +14,11 @@
 
 usage() {
   echo "usage: cmb-make [ options ] [ <sml-cmd> ]"
-  echo "  Options:"
+  echo "  options:"
   echo "    -h            -- print this message"
   echo "    -verbose      -- set CM's verbose mode to true"
   echo "    -C<ctl>=<v>   -- control argument passed to compile command"
-  echo "    -D<ctl>=<v>   -- CM define argument passed to compile command"
+  echo "    -D<sym>=<v>   -- CM-define argument passed to compile command"
   exit 1
 }
 
