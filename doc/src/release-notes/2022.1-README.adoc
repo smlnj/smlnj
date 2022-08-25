@@ -1,7 +1,5 @@
-// A template for creating release notes for a version
-//
 :version: 2022.1
-:date: ??
+:date: August 25, 2022
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -33,6 +31,12 @@ FILES::
 
 == Summary
 
+The main purpose of this release is to provide a baseline set of boot files for
+building from the https://github.com/smlnj/smlnj[**GitHub** repository].  It
+also includes the bug fixes from legacy version
+https://smlnj.org/dist/working/110.99.3/index.html[110.99.3] and a new
+implementation of the pattern-match compiler.
+
 == GitHub Migration
 
 With this release, we have migrated the bug tracking infrastructure to a system using
@@ -45,12 +49,6 @@ will also be present in the other version, it is not necessary to create two iss
 when reporting a bug.
 
 == Details
-
-=== Compiler
-
-Update LLVM to 14.0.5
-
-=== Runtime System
 
 === Basis Library
 
@@ -82,13 +80,6 @@ Library** extensions]:
 The `config/install.sh` script continues to work as before.  We have added a `-dev`
 command-line option to enable cross compilation (__i.e.__, it compiles *LLVM*
 for all of the supported target architectures).
-
-==== Windows
-
-The MSI installer now correctly sets the version of *SML/NJ* (see
-https://github.com/smlnj/legacy/issues/59[issue 59] for details).
-We also add a shortcut for uninstalling *SML/NJ* to the Program
-Menu.
 
 == Closed Issues
 
@@ -122,12 +113,6 @@ old https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker].
 | [.bugid]#224#
 | {issue-base}/224[Signals are not delivered for corresponding events]
 | 291
-| [.bugid]#234#
-| {issue-base}/234[ml-build fails on Windows with error]
-| 301
-| [.bugid]#235#
-| {issue-base}/235[MSI installer for SMLNJ 110.99.2 reports as version 0.0.0.0]
-| 302
 | [.bugid]#239#
 | {issue-base}/239[Word8VectorSlice: mapping a subslice produces wrong result or crashes SML/NJ]
 | 306
@@ -195,8 +180,8 @@ tested some of them:
 [.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
 |=======
 | Architecture | Operating System | Status
-| AMD64 | FreeBSD |
+| AMD64 | |
 | | macOS 11 (Big Sur) | Tested
 | | macOS 12 (Monterey) | Tested
-| | Ubuntu 20.04 | Tested
+| | macOS 13 (Vecntura) |
 |=======
