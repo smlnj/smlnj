@@ -108,4 +108,26 @@ tools/asdl/src/asdlgen/common/config.sml
 tools/asdl/src/gen/fragments/mkfrags.sh
 tools/asdl/src/gen/fragments/mkmk.sh
 tools/asdl/src/lib/cxx/include/asdl/config.h
+doc/**/Makefile
+doc/doc/html/
+doc/mk/doc-rules.gmk
+doc/src/changelog/HISTORY.html
+doc/src/release-notes/110.87-README.html
+doc/src/release-notes/110.88-README.html
+doc/src/release-notes/110.89-README.html
+doc/src/release-notes/110.90-README.html
+doc/src/release-notes/110.91-README.html
+doc/src/release-notes/110.92-README.html
+doc/src/release-notes/110.93-README.html
+doc/src/release-notes/110.94-README.html
+doc/src/release-notes/110.95-README.html
+doc/src/release-notes/110.96-README.html
+doc/src/release-notes/110.97-README.html
+doc/src/release-notes/110.98-README.html
+doc/src/release-notes/110.98.1-README.html
+doc/src/release-notes/110.99-README.html
+doc/src/release-notes/110.99.1-README.html
+doc/src/release-notes/110.99.2-README.html
+doc/src/release-notes/2021.1-README.html
+doc/src/release-notes/2022.1-README.html
 
