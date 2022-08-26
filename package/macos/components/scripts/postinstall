@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# usage:
+#
+#	postinstall <pkg-path> <dst-path> <dst-vol> <root-dir>
+#
+# where
+#
+#	<pkg-path>	Full path to the installation package the Installer application
+#			is processing. For example: /Volumes/Users/jhr/Desktop/smlnj-x86.pkg
+#
+#	<dst-path>	Full path to the installation destination. For example: /usr/local/smlnj
+#
+#	<dst-vol>	Installation volume (or mount point) to receive the payload.
+#
+#	<root-dir>	The root directory for the system
+#
+
+# the directory where the scripts live
+#
+SCRIPTDIR=`pwd`
+
+DST=$2
+
+cd $DST
+
+config/install.sh -nolib
+
+$SCRIPTDIR/copy-doc $DST
+
+exit 0
