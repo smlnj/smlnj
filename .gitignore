@@ -135,3 +135,5 @@ doc/src/release-notes/2022.1-README.html
 doc/src/man/*.1
 doc/src/man/*.7
 doc/src/**/*.html
+package/macos/*.pkg
+
