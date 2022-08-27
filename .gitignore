@@ -87,6 +87,7 @@ latex.out/
 
 # autoconf files
 configure
+configure~
 config.status
 autom4te.cache
 
@@ -109,9 +110,10 @@ tools/asdl/src/gen/fragments/mkfrags.sh
 tools/asdl/src/gen/fragments/mkmk.sh
 tools/asdl/src/lib/cxx/include/asdl/config.h
 doc/**/Makefile
-doc/doc/html/
+doc/doc
 doc/mk/doc-rules.gmk
 doc/src/changelog/HISTORY.html
+doc/src/release-notes/110.86-README.html
 doc/src/release-notes/110.87-README.html
 doc/src/release-notes/110.88-README.html
 doc/src/release-notes/110.89-README.html
@@ -130,4 +132,6 @@ doc/src/release-notes/110.99.1-README.html
 doc/src/release-notes/110.99.2-README.html
 doc/src/release-notes/2021.1-README.html
 doc/src/release-notes/2022.1-README.html
-
+doc/src/man/*.1
+doc/src/man/*.7
+doc/src/**/*.html
