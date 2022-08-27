@@ -59,7 +59,13 @@ if [ "$?" != 0 ] ; then
   exit 1
 fi
 
+# switch to the cloned source directory
+#
 cd $DISTROOT
+
+# remove stuff that we do not need
+#
+rm -rf .gitignore .github package
 
 # get the version from the source code
 #
@@ -102,15 +108,22 @@ curl -s -S -O $BOOTURL
 
 # build the distribution (note that this assumes that config/targets is what we want!)
 #
-./build.sh $VERBOSE
+./build.sh -doc $VERBOSE
 if [ "$?" != 0 ] ; then
   echo "$CMD [Error]: problem building SML/NJ"
   exit 1
 fi
 
-# get the other files to include in the distribution
 #
-cp -p $HERE/components/license.html .
+# replace the document source tree with the generated documentation
+#
+mv doc/doc tmp-doc
+rm -rf doc
+if [ -d doc ] ; then
+  echo "$CMD [Error]: unable to remove documentation source"
+  exit 1
+fi
+mv tmp-doc doc
 
 # cleanup
 #
