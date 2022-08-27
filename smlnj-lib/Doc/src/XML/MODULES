@@ -1,5 +1,0 @@
-signature XML_SCHEMA
-functor XMLTreeFn
-functor XMLParserFn
-structure GenericXMLTree
-
