@@ -31,7 +31,7 @@ doc:
 
 CLEAN_SUBDIRS =		src
 
-CLEAN_FILES =		config.status config.log autom4te*.cache
+CLEAN_FILES =		config.status config.log autom4te*.cache configure~
 
 DISTCLEAN_FILES +=	configure Makefile config/doc-rules.gmk
 
