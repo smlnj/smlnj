@@ -1,14 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+dnl COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
 dnl All rights reserved.
 dnl
-dnl This the configuration script for autoconf version 2.60+.
+dnl This the configuration script for autoconf version 2.71+.
 
-AC_INIT([smlnj-doc],[1.0],[],[],[http://smlnj.org])
+AC_INIT([smlnj-doc],[1.0],[],[],[https://smlnj.org])
 
-AC_PREREQ(2.70)
-AC_COPYRIGHT([[COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)]])
+AC_PREREQ(2.71)
+AC_COPYRIGHT([[COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)]])
 AC_CONFIG_SRCDIR(src/man/smlnj.7.adoc)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
@@ -39,15 +39,13 @@ OUT_DIR=$ROOT_DIR/doc
 WEB_OUT_DIR=$ROOT_DIR/htdocs
 MK_DIR=$ROOT_DIR/mk
 SRC_CONFIG_DIR=$SRC_DIR/config
-SRC_STYLES_DIR=$SRC_DIR/styles
 
 AC_SUBST(ROOT_DIR)
+AC_SUBST(SRC_DIR)
 AC_SUBST(OUT_DIR)
 AC_SUBST(WEB_OUT_DIR)
-AC_SUBST(SRC_DIR)
 AC_SUBST(MK_DIR)
 AC_SUBST(SRC_CONFIG_DIR)
-AC_SUBST(SRC_STYLES_DIR)
 
 dnl
 dnl ******************** get SML/NJ release number and date ********************
