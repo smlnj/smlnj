@@ -25,6 +25,7 @@ usage() {
   echo "    -h,-help      print this message and exit"
   echo "    -nolib        skip building libraries/tools"
   echo "    -verbose      emit feedback messages"
+  echo "    -doc          generate documentation"
   echo "    -debug        debug installation (enables verbose mode)"
   echo "    -dev          developer install (includes cross compiler support)"
   echo "    -debug-llvm   build a debug version of the LLVM libraries"
@@ -36,6 +37,7 @@ NOLIB=no
 QUIET=yes
 INSTALL_DEBUG=no
 INSTALL_DEV=no
+MAKE_DOC=no
 BUILD_LLVM_FLAGS=""
 while [ "$#" != "0" ] ; do
   arg=$1; shift
@@ -48,6 +50,7 @@ while [ "$#" != "0" ] ; do
       INSTALL_DEV=yes;
       BUILD_LLVM_FLAGS="--all-targets $BUILD_LLVM_FLAGS"
     ;;
+    -doc) MAKE_DOC=yes ;;
     -debug-llvm) BUILD_LLVM_FLAGS="--debug $BUILD_LLVM_FLAGS" ;;
     *) usage ;;
   esac
@@ -464,6 +467,32 @@ if [ x"$NOLIB" = xno ] ; then
     vsay $cmd: Installation complete.
   else
     complain "$cmd: !!! Installation of libraries and programs failed."
+  fi
+fi
+
+#
+# generate the documentation and manual pages (if requested)
+#
+if [ x"$MAKE_DOC" = xyes ] ; then
+  vsay "$cmd: Generating documentation."
+  #
+  # first we clear CM related shell variables so that the documentation tool
+  # builds are not confused.
+  #
+  unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
+  cd doc
+  if autoconf -Iconfig ; then
+    :
+  else
+    complain "$cmd: !!! error configuring documentation."
+  fi
+
+  ./configure
+
+  if make doc && make distclean ; then
+    vsay $cmd: Documentation generation complete.
+  else
+    complain "$cmd: !!! error generating documentation."
   fi
 fi
 
