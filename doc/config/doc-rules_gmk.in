@@ -1,9 +1,9 @@
 # doc-rules.gmk
 #
-# COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
-# common variables and rules for building the SML3d documentation.
+# common variables and rules for building the SML/NJ documentation.
 #
 # @configure_input@
 #
