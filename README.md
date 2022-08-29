@@ -22,7 +22,7 @@ changed.
     cd smlnj
     curl -O https://smlnj.org/dist/working/$VERSION/boot.amd64-unix.tgz
     ```
-    where `$VERSION` is the version that you are building (*e.g.*, `2021.1`).
+    where `$VERSION` is the version that you are building (*e.g.*, `2022.1`).
 
     We plan to incorporate this step into the `build.sh` script in the near future.
 
