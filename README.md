@@ -8,7 +8,6 @@ very stable.  For most uses, we recommend the
 Currently, only Intel-based Macs are known to work.
 
 ---
-<br>
 
 # Index
 
@@ -16,7 +15,6 @@ Currently, only Intel-based Macs are known to work.
 - [Recompiling the System](#recompiling-the-system)
 
 ---
-<br>
 
 ## Building From Source
 
