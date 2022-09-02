@@ -33,7 +33,7 @@ changed.
     ```
     where `$VERSION` is the version that you are building (*e.g.*, `2022.1`).
 
-    We plan to incorporate this step into the `build.sh` script in the near future.
+    We plan to incorporate this step into the [`build.sh`](build.sh) script in the near future.
 
 3. build the installation
     ``` bash
@@ -41,10 +41,10 @@ changed.
     ```
     Use `build.sh -h` to see the list of options accepted by the build script.
 
-    As before, you can modify the `config/targets` file to add/remove components
+    As before, you can modify the [`config/targets`](config/targets) file to add/remove components
     from the build.
 
-After successful running of the `build.sh` script, `bin/sml` will be the interactive
+After successful running of the [`build.sh`](build.sh) script, `bin/sml` will be the interactive
 system.
 
 ## Recompiling the System
@@ -52,7 +52,7 @@ system.
 The process of recompiling the system from source code is fairly similar
 to before.
 
-1. Switch to the `system` directory and run the `cmb-make` command:
+1. Switch to the [`system`](system/) directory and run the `cmb-make` command:
     ``` bash
     cd system
     ./cmb-make ../bin/sml
