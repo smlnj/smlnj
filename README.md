@@ -7,6 +7,17 @@ very stable.  For most uses, we recommend the
 
 Currently, only Intel-based Macs are known to work.
 
+---
+<br>
+
+# Index
+
+- [Building From Source](#building-from-source)
+- [Recompiling the System](#recompiling-the-system)
+
+---
+<br>
+
 ## Building From Source
 
 The process for building the system from source code has
