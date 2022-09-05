@@ -157,6 +157,10 @@ cp -p components/conclusion.html $RSRC/conclusion.html
 # NOTE: this command relies on the fact that there is only one absolute
 # font-size command in the README file (the others are relative)
 #
+if [ ! -f "$DISTROOT/doc/html/readme/$VERSION-README.html" ] ; then
+  echo "$CMD [Error]: cannot find $DISTROOT/doc/html/readme/$VERSION-README.html"
+  exit 1
+fi
 sed -E 's/font-size: [0-9]+pt;/font-size: 9pt;/' \
   $DISTROOT/doc/html/readme/$VERSION-README.html > $RSRC/readme.html
 
