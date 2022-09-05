@@ -9,7 +9,7 @@ Currently, only Intel-based Macs are known to work.
 
 ---
 
-# Index
+## Contents
 
 - [Building From Source](#building-from-source)
 - [Recompiling the System](#recompiling-the-system)
@@ -57,6 +57,10 @@ to before.
     cd system
     ./cmb-make ../bin/sml
     ```
+
+    The "`../bin/sml`" argument is optional; if omitted, then the `sml` command in the
+    user's `PATH` will be used.  Once can also specify a different path to an `sml`
+    command, when appropriate.
 
 2. Bootstrap the system
     ``` bash
