@@ -53,11 +53,11 @@ signature ACCESS =
       | CNIL
 
   (** for printing the access *)
-    val prAcc   : access -> string
+    val accessToString   : access -> string
   (** for printing the conrep *)
-    val prRep   : conrep -> string
+    val conrepToString   : conrep -> string
   (** for printing the data sign *)
-    val prCsig  : consig -> string
+    val consigToString  : consig -> string
   (** testing if a conrep is an exception or not *)
     val isExn   : conrep -> bool
 

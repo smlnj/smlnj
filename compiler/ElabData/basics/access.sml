@@ -50,33 +50,32 @@ structure Access : ACCESS =
    ****************************************************************************)
 
   (*  shortened print name for pid *)
-    fun prPid pid =  let
-	  val s = PS.toHex pid
-	  val n = size s
-	  in
-	    String.extract (s, size s - 5, NONE)
-	  end
+    fun pidShortName pid =
+	let val s = PS.toHex pid
+	    val n = size s
+	in String.extract (s, size s - 5, NONE)
+	end
 
   (** printing the access *)
-    fun prAcc (LVAR i) = concat["LVAR(", LV.prLvar i, ")"]
-      | prAcc (PATH(a,i)) = concat["PATH(", prAcc a, ",", Int.toString i, ")"]
-      | prAcc (EXTERN pid) = concat["EXTERN(.", prPid pid, ")"]
-      | prAcc (NO_ACCESS) = "NO_ACCESS"
+    fun accessToString (LVAR i) = concat["LVAR(", LV.prLvar i, ")"]
+      | accessToString (PATH(a,i)) = concat["PATH(", accessToString a, ",", Int.toString i, ")"]
+      | accessToString (EXTERN pid) = concat["EXTERN(.", pidShortName pid, ")"]
+      | accessToString (NO_ACCESS) = "NO_ACCESS"
 
   (** printing the conrep *)
-    fun prRep UNTAGGED = "UT"
-      | prRep (TAGGED i) = concat["TG(", Int.toString i, ")"]
-      | prRep TRANSPARENT = "TN"
-      | prRep (CONSTANT i) = concat["CN(", Int.toString i, ")"]
-      | prRep REF = "RF"
-      | prRep (EXN acc) = concat["EXN(" ^ prAcc acc, ")"]
-      | prRep LISTCONS = "LC"
-      | prRep LISTNIL = "LN"
-      | prRep (SUSP _) = "SS"
+    fun conrepToString UNTAGGED = "UT"
+      | conrepToString (TAGGED i) = concat["TG(", Int.toString i, ")"]
+      | conrepToString TRANSPARENT = "TN"
+      | conrepToString (CONSTANT i) = concat["CN(", Int.toString i, ")"]
+      | conrepToString REF = "RF"
+      | conrepToString (EXN acc) = concat["EXN(" ^ accessToString acc, ")"]
+      | conrepToString LISTCONS = "LC"
+      | conrepToString LISTNIL = "LN"
+      | conrepToString (SUSP _) = "SS"
 
   (** printing the data sign *)
-    fun prCsig (CSIG(i,j)) = concat["B", Int.toString i, "U", Int.toString j]
-      | prCsig CNIL = "CNIL"
+    fun consigToString (CSIG(i,j)) = concat["B", Int.toString i, "U", Int.toString j]
+      | consigToString CNIL = "CNIL"
 
   (** testing if a conrep is an exception or not *)
     fun isExn (EXN _) = true

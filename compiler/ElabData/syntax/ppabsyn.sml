@@ -99,22 +99,21 @@ fun lookFIX (env,sym) =
 fun stripMark (MARKexp(a,_)) = stripMark a
   | stripMark x = x
 
-fun ppRpath ppstrm rpath = PP.string ppstrm (InvPath.toString rpath)
+fun fmtRpath rpath = PP.text (InvPath.toString rpath)
 
 fun ppStr ppstrm str =
     (case str
       of M.STR{access,rlzn={rpath,...},...} =>
-	 (ppRpath ppstrm rpath;
-	  PP.string ppstrm "[";
-	  PV.ppAccess ppstrm access;
-	  PP.string ppstrm "]")
-       | M.STRSIG _ => PP.string ppstrm "SIGSTR"
-       | M.ERRORstr => PP.string ppstrm "ERRORstr")
+	 PP.ccat
+	   (fmtRpath rpath,
+	    PP.brackets (PV.fmtAccess access))
+       | M.STRSIG _ => PP.text "SIGSTR"
+       | M.ERRORstr => PP.text "ERRORstr")
 
 fun ppFct ppstrm fct =
     (case fct
       of M.FCT{access,rlzn={rpath,...},...} =>
-	 (ppRpath ppstrm rpath;
+	 (fmtRpath ppstrm rpath;
 	  PP.string ppstrm "[";
 	  PV.ppAccess ppstrm access;
 	  PP.string ppstrm "]")

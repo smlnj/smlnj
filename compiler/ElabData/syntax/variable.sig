@@ -40,4 +40,4 @@ signature VARIABLE =
 
     val toString : var -> string
 
-  end (* signature VARCON *)
+  end (* signature VARIABLE *)
