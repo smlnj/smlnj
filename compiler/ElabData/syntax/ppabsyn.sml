@@ -6,21 +6,21 @@
 
 signature PPABSYN =
 sig
-  val ppPat  : StaticEnv.staticEnv -> PrettyPrint.stream
-               -> Absyn.pat * int -> unit
-  val ppExp  : StaticEnv.staticEnv * Source.inputSource option
-               -> PrettyPrint.stream -> Absyn.exp * int -> unit
-  val ppRule : StaticEnv.staticEnv * Source.inputSource option
-               -> PrettyPrint.stream -> Absyn.rule * int -> unit
-  val ppVB   : StaticEnv.staticEnv * Source.inputSource option
-               -> PrettyPrint.stream -> Absyn.vb * int -> unit
-  val ppRVB  : StaticEnv.staticEnv * Source.inputSource option
-               -> PrettyPrint.stream -> Absyn.rvb * int -> unit
-  val ppDec  : StaticEnv.staticEnv * Source.inputSource option
-               -> PrettyPrint.stream -> Absyn.dec * int -> unit
+
+  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> unit
+  val fmtExp  : StaticEnv.staticEnv * Source.inputSource option
+                -> Absyn.exp * int -> unit
+  val fmtRule : StaticEnv.staticEnv * Source.inputSource option
+                -> Absyn.rule * int -> unit
+  val fmtVB   : StaticEnv.staticEnv * Source.inputSource option
+                -> Absyn.vb * int -> unit
+  val fmtRVB  : StaticEnv.staticEnv * Source.inputSource option
+                -> Absyn.rvb * int -> unit
+  val fmtDec  : StaticEnv.staticEnv * Source.inputSource option
+                -> Absyn.dec * int -> unit
 
   val ppStrexp : StaticEnv.staticEnv * Source.inputSource option
-                 -> PrettyPrint.stream -> Absyn.strexp * int -> unit
+                 -> Absyn.strexp * int -> unit
 
 end (* signature PPABSYN *)
 
@@ -33,14 +33,21 @@ local
   structure M = Modules
   structure B = Bindings
   structure S = Symbol
+  structure F = Fixity
   structure LV = LambdaVar
   structure A = Access
+  structure T = Types
+  structure V = Variables
+  structure AS = Absyn
   structure AU = AbsynUtil
-  structure PP = PrettyPrint
-  structure PU = PPUtil
-  structure PV = PPVal
+  structure AT = Tuples		     
+  structure SE = StaticEnv
+  structure PP = NewPP
+  structure PPU = NewPPUtil
+  structure PPT = PPType
+  structure PPV = PPVal
 
-  open Absyn Tuples Fixity Variable Types PPType
+  open Absyn
 in
 
 (* debugging *)
@@ -48,7 +55,7 @@ val debugging = ElabDataControl.ppabsyndebugging
 
 val say = Control_Print.say
 fun dbsaynl (msg: string) =
-      if !debugging then (say msg; say "\n") else ()
+    if !debugging then (say msg; say "\n") else ()
 
 fun bug msg = ErrorMsg.impossible("PPAbsyn: "^msg)
 
@@ -56,52 +63,56 @@ fun bug msg = ErrorMsg.impossible("PPAbsyn: "^msg)
 val lineprint = ElabDataControl.absynLineprint
 val internals = ElabDataControl.absynInternals
 
-fun C f x y = f y x
-
-val nullFix = INfix(0,0)
-val infFix = INfix(1000000,100000)
-fun strongerL(INfix(_,m),INfix(n,_)) = m >= n
+val nullFix = F.INfix(0,0)
+val infFix = F.INfix(1000000,100000)
+fun strongerL (F.INfix(_,m), F.INfix(n,_)) = m >= n
   | strongerL _ = false			(* should not matter *)
-fun strongerR(INfix(_,m),INfix(n,_)) = n > m
+fun strongerR (F.INfix(_,m), F.INfix(n,_)) = n > m
   | strongerR _ = true			(* should not matter *)
 
-fun prpos(ppstrm: PP.stream,
-          source: Source.inputSource, charpos: int) =
-    if (!lineprint) then
-      let val {line,column,...} = Source.filepos source charpos
-       in PU.ppi ppstrm line;
-	  PU.pps ppstrm ".";
-	  PU.ppi ppstrm column
+(* fmtPos : Source.inputSource * int -> PP.format *)
+fun fmtPos(source: Source.inputSource, charpos: int) =
+    if !lineprint then
+      let val {line, column,...} = Source.filepos source charpos
+       in PP.concat [PP.integer line, PP.period, PP.integer column]
       end
-    else PU.ppi ppstrm charpos
+    else PP.integer charpos
 
+(* isTUPLEpat and isTUPLEexp belong in AbsynUtil *)
 
-fun checkpat (n,nil) = true
+(* checkpat (int * (S.symbol * 'a) list -> bool
+ *   check that a pattern is a tuple pattern
+ *   called with n = 1 in isTUPLEpat *)
+fun checkpat (n, nil) = true
   | checkpat (n, (sym,_)::fields) =
     S.eq(sym, numlabel n) andalso checkpat(n+1,fields)
 
+fun isTUPLEpat (RECORDpat{fields=[_],...}) = false
+  | isTUPLEpat (RECORDpat{flex=false,fields,...}) = checkpat(1,fields)
+  | isTUPLEexp (MARKpat (p,_)) = isTUPLEexp p
+  | isTUPLEpat _ = false
+
+(* checkexp : (int * (AS.numberedLabel * 'a) list -> bool
+ *   check that an expression is a tuple expression
+ *   called in isTUPLEexp with n = 1 *)
 fun checkexp (n,nil) = true
   | checkexp (n, (LABEL{name=sym,...},_)::fields) =
 	S.eq(sym, numlabel n) andalso checkexp(n+1,fields)
 
-fun isTUPLEpat (RECORDpat{fields=[_],...}) = false
-  | isTUPLEpat (RECORDpat{flex=false,fields,...}) = checkpat(1,fields)
-  | isTUPLEpat _ = false
-
 fun isTUPLEexp (RECORDexp [_]) = false
   | isTUPLEexp (RECORDexp fields) = checkexp(1,fields)
-  | isTUPLEexp (MARKexp(a,_)) = isTUPLEexp a
+  | isTUPLEexp (MARKexp (e,_)) = isTUPLEexp e
   | isTUPLEexp _ = false
 
-fun lookFIX (env,sym) =
-    Lookup.lookFix (env,S.fixSymbol(S.name sym))
+fun lookFIX (env : SE.staticEnv, sym: S.symbol) =
+    Lookup.lookFix (env ,S.fixSymbol(S.name sym))
 
 fun stripMark (MARKexp(a,_)) = stripMark a
   | stripMark x = x
 
 fun fmtRpath rpath = PP.text (InvPath.toString rpath)
 
-fun ppStr ppstrm str =
+fun fmStr str =
     (case str
       of M.STR{access,rlzn={rpath,...},...} =>
 	 PP.ccat
@@ -110,7 +121,7 @@ fun ppStr ppstrm str =
        | M.STRSIG _ => PP.text "SIGSTR"
        | M.ERRORstr => PP.text "ERRORstr")
 
-fun ppFct ppstrm fct =
+fun fmtFct ppstrm fct =
     (case fct
       of M.FCT{access,rlzn={rpath,...},...} =>
 	 (fmtRpath ppstrm rpath;
@@ -119,9 +130,8 @@ fun ppFct ppstrm fct =
 	  PP.string ppstrm "]")
        | M.ERRORfct => PP.string ppstrm "ERRORfct")
 
-fun ppPat env ppstrm =
-    let val {openHOVBox, openHVBox, closeBox, pps, ppi, ...} = PU.en_pp ppstrm
-	fun ppPat' (_,0) = pps "<pat>"
+fun fmtPat env =
+    let fun ppPat' (_,0) = pps "<pat>"
 	  | ppPat' (VARpat v,_) = PV.ppVar ppstrm v
 	  | ppPat' (WILDpat,_) = pps "_"
           | ppPat' (NUMpat(src, _), _) = pps src
