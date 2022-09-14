@@ -127,13 +127,15 @@ fun fmtStr str =
        | M.STRSIG _ => PP.text "SIGSTR"
        | M.ERRORstr => PP.text "ERRORstr")
 
-fun fmtFct ppstrm fct =
+(* fmtFct : (fct : M.Functor) -> PP.format *)
+fun fmtFct fct =
     (case fct
       of M.FCT{access,rlzn={rpath,...},...} =>
-	   PP.ccat (fmtInvPath ppstrm rpath, PP.brackets (PPV.fmtAccess access))
+	   PP.ccat (fmtInvPath rpath, PP.brackets (PPV.fmtAccess access))
        | M.ERRORfct => PP.text "ERRORfct")
 
-fun fmtPat env =
+(* fmtPat : SE.staticEnv -> AS.pat * int -> PP.format *)
+fun fmtPat env (pat, depth) =
     let fun fmtPat' (_, _, _, 0) = PP.text "<pat>"
 	  | fmtPat' (VARpat v, _, _, _) = PV.fmtVar v
 	  | fmtPat' (WILDpat, _, _, _) = PP.text "_"
@@ -227,71 +229,12 @@ fun fmtPat env =
           | fmtPat' (MARKpat (pat, region), lpull, rpull d) =
 	      fmtPat' (pat, lpull, rpull, d)
 	  | fmtPat' _ = bug "fmtPat'"
-     in fmtPat'
+     in fmtPat' (pat, 0, 0, depth)
     end (* fun fmtPat *)
 
-and ppDconPat(env,ppstrm) =
-    let val {openHOVBox, openHVBox, closeBox, pps, ppi, ...} = PU.en_pp ppstrm
-	fun lpcond(atom) = if atom then pps "(" else ()
-	fun rpcond(atom) = if atom then pps ")" else ()
-	fun ppDconPat'(_,_,_,0) = pps "<pat>"
-	  | ppDconPat'(MARKpat(p,_),l:fixity,r:fixity,d:int) =
-              ppDconPat'(p,l,r,d)
-	  | ppDconPat'(CONpat(DATACON{name,...},_),l,r,_) =
-	      PU.ppSym ppstrm name
-	  | ppDconPat'(CONSTRAINTpat(p,t),l,r,d) =
-	     (openHOVBox 0;
-	      pps "("; ppPat env ppstrm (p,d-1); pps " :";
-	      PP.break ppstrm {nsp=1,offset=2};
-	      ppType env ppstrm t; pps ")";
-	      closeBox ())
-	  | ppDconPat'(LAYEREDpat(v,p),l,r,d) =
-	     (openHOVBox 0;
-	      pps "("; ppPat env ppstrm (v,d); PP.break ppstrm {nsp=1,offset=2};
-	      pps " as "; ppPat env ppstrm (p,d-1); pps ")";
-	      closeBox ())
-	  | ppDconPat'(APPpat(DATACON{name,...}, _, argPat), l, r, d) =
-	      let val dname = S.name name
-		      (* should really have original path, like for VARexp *)
-		  val thisFix = lookFIX(env,name)
-		  val effFix = case thisFix of NONfix => infFix | x => x
-		  val atom = strongerR(effFix,r) orelse strongerL(l,effFix)
-	       in openHOVBox 2;
-		  lpcond(atom);
-		  case thisFix
-		    of INfix _ => 
-                         (case AU.headStripPat argPat
-			    of RECORDpat{fields=[(_,leftPat),(_,rightPat)],...} =>
-			       (* BUG? assuming field pairs are in the right order! *)
-				 let val (left,right) =
-					 if atom then (nullFix,nullFix)
-					 else (l,r)
-				  in ppDconPat' (leftPat,left,thisFix,d-1);
-				     PP.break ppstrm {nsp=1,offset=0};
-				     pps dname;
-				     PP.break ppstrm {nsp=1,offset=0};
-				     ppDconPat' (rightPat, thisFix, right, d-1)
-				 end
-		            | _ => bug "ppDconPat'")
-		     | NONfix =>
-		        (pps dname; PP.break ppstrm {nsp=1,offset=0};
-			 ppDconPat' (argPat, infFix, infFix, d-1));
-		  rpcond(atom);
-		  closeBox ()
-	      end
-	  | ppDconPat' (p,_,_,d) = ppPat env ppstrm (p,d)
-     in ppDconPat'
-    end
-
-fun trim [x] = []
-  | trim (a::b) = a::trim b
-  | trim [] = []
-
-fun ppExp (context as (env,source_opt)) ppstrm =
-    let val {openHOVBox, openHVBox, closeBox, pps, ppi, ...} = PU.en_pp ppstrm
-	fun lparen () = pps "("
-	fun rparen () = pps ")"
-	fun lpcond atom = if atom then pps "(" else ()
+(* ppExp : context -> AS.exp * int -> PP.format *)
+fun ppExp (context as (env,source_opt)) (exp : AS.exp, depth : int)  =
+    let fun lpcond atom = if atom then pps "(" else ()
 	fun rpcond atom = if atom then pps ")" else ()
 	fun ppExp' (_,_,0) = pps "<exp>"
 	  | ppExp' (VARexp(ref var,_),_,_) = PV.ppVar ppstrm var
