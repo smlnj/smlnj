@@ -87,6 +87,7 @@ fun checkpat (n, nil) = true
   | checkpat (n, (sym,_)::fields) =
     S.eq(sym, numlabel n) andalso checkpat(n+1,fields)
 
+(* isTUPLEpat : AS.pat -> bool *)
 fun isTUPLEpat (RECORDpat{fields=[_],...}) = false
   | isTUPLEpat (RECORDpat{flex=false,fields,...}) = checkpat(1,fields)
   | isTUPLEexp (MARKpat (p,_)) = isTUPLEexp p
@@ -99,110 +100,135 @@ fun checkexp (n,nil) = true
   | checkexp (n, (LABEL{name=sym,...},_)::fields) =
 	S.eq(sym, numlabel n) andalso checkexp(n+1,fields)
 
+(* isTUPLEexp : AS.exp -> bool *)
 fun isTUPLEexp (RECORDexp [_]) = false
   | isTUPLEexp (RECORDexp fields) = checkexp(1,fields)
   | isTUPLEexp (MARKexp (e,_)) = isTUPLEexp e
   | isTUPLEexp _ = false
 
+(* lookFIX : SE.staticEnv * S. symbol -> F.fixity *)
 fun lookFIX (env : SE.staticEnv, sym: S.symbol) =
     Lookup.lookFix (env ,S.fixSymbol(S.name sym))
 
+(* stripMark : AS.exp -> AS.exp  -- belongs in AbsynUtil *)
 fun stripMark (MARKexp(a,_)) = stripMark a
   | stripMark x = x
 
-fun fmtRpath rpath = PP.text (InvPath.toString rpath)
+(* fmtInvPath : InvPath.path -> PP.format *)
+fun fmtInvPath (rpath : InvPath.path) = PP.text (InvPath.toString rpath)
 
-fun fmStr str =
+(* fmtStr : (str : M.Structure) -> PP.format *)
+fun fmtStr str =
     (case str
       of M.STR{access,rlzn={rpath,...},...} =>
 	 PP.ccat
-	   (fmtRpath rpath,
-	    PP.brackets (PV.fmtAccess access))
+	   (fmtInvPath rpath,
+	    PP.brackets (PPV.fmtAccess access))
        | M.STRSIG _ => PP.text "SIGSTR"
        | M.ERRORstr => PP.text "ERRORstr")
 
 fun fmtFct ppstrm fct =
     (case fct
       of M.FCT{access,rlzn={rpath,...},...} =>
-	 (fmtRpath ppstrm rpath;
-	  PP.string ppstrm "[";
-	  PV.ppAccess ppstrm access;
-	  PP.string ppstrm "]")
-       | M.ERRORfct => PP.string ppstrm "ERRORfct")
+	   PP.ccat (fmtInvPath ppstrm rpath, PP.brackets (PPV.fmtAccess access))
+       | M.ERRORfct => PP.text "ERRORfct")
 
 fun fmtPat env =
-    let fun ppPat' (_,0) = pps "<pat>"
-	  | ppPat' (VARpat v,_) = PV.ppVar ppstrm v
-	  | ppPat' (WILDpat,_) = pps "_"
-          | ppPat' (NUMpat(src, _), _) = pps src
-	  | ppPat' (STRINGpat s,_) = PU.ppString ppstrm s
-	  | ppPat' (CHARpat c,_) = (pps "#"; PU.ppString ppstrm (Char.toString c))
-	  | ppPat' (LAYEREDpat (v,p),d) =
-	      (openHVBox 0;
-	       ppPat'(v,d); pps " as "; ppPat'(p,d-1);
-	       closeBox ())
-		    (* Handle 0 length case specially to avoid {,...}: *)
-	  | ppPat' (RECORDpat{fields=[],flex,...},_) =
-	      if flex then pps "{...}"
-	      else pps "()"
-	  | ppPat' (r as RECORDpat{fields,flex,...},d) =
-	      if isTUPLEpat r
-	      then PU.ppClosedSequence ppstrm
-		     {front=(C PP.string "("),
-		      sep = PU.sepWithCut ",",
-		      back=(C PP.string ")"),
-		      pr=(fn _ => fn (sym,pat) => ppPat'(pat,d-1)),
-		      style=PU.INCONSISTENT}
-		     fields
-	      else PU.ppClosedSequence ppstrm
-		     {front=(C PP.string "{"),
-		      sep = PU.sepWithCut ",",
-		      back=(fn ppstrm => if flex then PP.string ppstrm ",...}"
-				         else PP.string ppstrm "}"),
-		      pr=(fn ppstrm => fn (sym,pat) =>
-			  (PU.ppSym ppstrm sym; PP.string ppstrm "=";
-			   ppPat'(pat,d-1))),
-		      style=PU.INCONSISTENT}
-		     fields
-	  | ppPat' (VECTORpat(nil,_), d) = pps "#[]"
-	  | ppPat' (VECTORpat(pats,_), d) =
-	      let fun pr _ pat = ppPat'(pat, d-1)
-	       in PU.ppClosedSequence ppstrm
-		    {front=(C PP.string "#["),
-		     sep= PU.sepWithCut ",",
-		     back=(C PP.string "]"),
-		     pr=pr,
-		     style=PU.INCONSISTENT}
-		    pats
+    let fun fmtPat' (_, _, _, 0) = PP.text "<pat>"
+	  | fmtPat' (VARpat v, _, _, _) = PV.fmtVar v
+	  | fmtPat' (WILDpat, _, _, _) = PP.text "_"
+          | fmtPat' (NUMpat(src, _), _, _, _) = PP.text src
+	  | fmtPat' (STRINGpat s, _, _, _) = PP.string s
+	  | fmtPat' (CHARpat c, _, _, _) = PP.char c
+	  | fmtPat' (LAYEREDpat (v,p), lpull, rpull, d) =
+	      (* v should be VARpat, so lpull cannot disrupt it *)
+	      if lpull > 0 orelse rpull > 0
+	      then (* have to parenthsize to hold on to args *)
+		  let val leftFmt = fmtPat' (v, 0, 0, d-1)
+		      val rightFmt = fmtPat' (rightPat, 0, 0, d-1)
+		  in PP.parens (PP.pblock [leftFmt, PP.text "as", rightFmt])
+		  end
+	      else (* lpull = rpull = 0; can hold both args against outer pulls *)
+		  let val leftFmt = fmtPat' (v, lpull, 0, d-1)
+		      val rightFmt = fmtPat' (rightPat, 0, rpull, d-1)
+		  in PP.pblock [leftFmt, PP.text "as", rightFmt]
+		  end
+	  | fmtPat' (RECORDpat{fields=[],flex,...},_) =
+	      (* Special case 0 length record pats to avoid {,...} *)
+	      if flex then PP.text "{...}" else PP.text "()"
+	  | fmtPat' (r as RECORDpat{fields, flex, ...},d) =
+	      let fun fmtField (sym, pat) =
+		      PP.pcat (PP.hcat (PPU.fmtSym sym, PP.text "="),
+			       fmtPat' (pat, 0, 0, d-1))
+	      in if isTUPLEpat r  (* implies not flex *)
+		 then PP.parens 
+		     (PP.sequence {alignment = PP.P, sep = PP.comma} 
+		       (map (fn (sym,pat) => fmtPat' (pat, 0, 0, d-1)) fields))
+		 else PP.braces
+			(PP.sequence {alignment = PP.P, sep = PP.comma}
+			   (map fmtField fields @
+			    if flex then [PP.text "..."] else nil))
 	      end
-	  | ppPat' (pat as (ORpat _), d) = let
-	      fun mkList (ORpat(hd, tl)) = hd :: mkList tl
-		| mkList p = [p]
-	      fun pr _ pat = ppPat'(pat, d-1)
-	      in
-		PU.ppClosedSequence ppstrm {
-		    front = (C PP.string "("),
-		    sep = fn ppstrm => (PP.space ppstrm 1;
-                                        PP.string ppstrm "|";
-					PP.space ppstrm 1),
-		    back = (C PP.string ")"),
-		    pr = pr,
-		    style = PU.INCONSISTENT
-		  } (mkList pat)
+	  | fmtPat' (VECTORpat (nil, _), d) = PP.text "#[]"
+	  | fmtPat' (VECTORpat (pats, _), d) =
+	      let fun fmtElem pat = fmtPat'(pat, d-1)
+	       in PP.ccat
+		    (PP.text "#",
+		       (PP.brackets
+			  (PP.sequence {alignment = PP.P, sep = PP.comma}
+			     (map fmtElem pats))))
 	      end
-	  | ppPat' (CONpat(e,_),_) = PV.ppDcon ppstrm e
-	  | ppPat' (p as APPpat _, d) =
-	      ppDconPat (env,ppstrm) (p,nullFix,nullFix,d)
-	  | ppPat' (CONSTRAINTpat (p,t),d) =
-	     (openHOVBox 0;
-	      ppPat'(p,d-1); pps " :";
-	      PP.break ppstrm {nsp=1,offset=2};
-	      ppType env ppstrm t;
-	      closeBox ())
-          | ppPat' (MARKpat(p,region), d) = ppPat' (p,d)
-	  | ppPat' _ = bug "ppPat'"
-     in ppPat'
-    end (* fun ppPat *)
+	  | fmtPat' (pat as (ORpat _), d) =
+	      let fun flattenORs (ORpat (p1, p2)) = p1 :: mkList p2
+		      (* assuming p1 not an ORpat, but p2 might be one *)
+		    | flattenORs p = [p]
+		  fun fmtOne pat = fmtPat' (pat, d-1)
+	       in PP.parens
+		    (PP.sequence {alignment = PP.P, sep = PP.text " |"}
+		      (map fmtOne (flattenORs pat)))
+	      end
+	  | fmtPat' (CONpat (dcon,_),_) = PPV.fmtDatacon dcon
+	  | fmtPat' (APPpat(DATACON{name,...}, _, argPat), lpull, rpull, d) =
+	      let fun getArgs pat =
+                      (case AU.headStripPat pat
+			of RECORDpat{fields=[(_,leftPat),(_,rightPat)],...} =>
+			   (* assumes pair elements are in the right order in the RECORDpat *)
+		           (leftPat, rightPat)
+			 | _ => bug "getArgs")
+	       in case lookFIX(env,name)
+		    of INfix (left, right) => 
+			 let val (leftArg, rightArg) = getArgs argPat
+			     val appFmt =  
+				 PP.pblock [fmtPat' (leftArg, lpull, left, d-1),
+					    PPU.fmtSym name,
+					    fmtPat' (rightArg, right, rpull, d-1)]
+			  in if lpull >= left orelse rpull > right
+			     then (* have to parenthsize to hold on to args *)
+			       let val leftFmt = fmtPat' (leftPat, 0, left, d-1)
+				   val rightFmt = fmtPat' (rightPat, right, 0, d-1)
+				in PP.parens (PP.pblock [leftFmt, PPU.fmtSym name, rightFmt])
+			       end
+			     else (* can hold both args against outer pulls *)
+			       let val leftFmt = fmtPat' (leftPat, lpull, left, d-1)
+				   val rightFmt = fmtPat' (rightPat, right, rpull, d-1)
+				in PP.pblock [leftFmt, PPU.fmtSym name, rightFmt]
+			       end
+			 end
+		     | NONfix =>
+		        (PPU.fmtSym name, fmtPat' (argPat, infFix, rpull, d-1));
+		  rpcond(atom);
+		  closeBox ()
+	      end
+	  | fmtPat' (CONSTRAINTpat (pat,t), lpull, rpull, d) =
+	      let val patFmt = fmtPat' (pat, 0, 0, d-1)
+		  val typFmt = PPT.fmtType env t
+	      in PP.parens (PP.pblock [patFmt, PP.colon, typFmt])
+	      end
+          | fmtPat' (MARKpat (pat, region), lpull, rpull d) =
+	      fmtPat' (pat, lpull, rpull, d)
+	  | fmtPat' _ = bug "fmtPat'"
+     in fmtPat'
+    end (* fun fmtPat *)
 
 and ppDconPat(env,ppstrm) =
     let val {openHOVBox, openHVBox, closeBox, pps, ppi, ...} = PU.en_pp ppstrm
@@ -295,7 +321,7 @@ fun ppExp (context as (env,source_opt)) ppstrm =
 	  | ppExp' (RSELECTexp (exp, index), atom, d) =
 	      (openHVBox 0;
 	        lpcond(atom);
-	        pps "#"; PP.string ppstrm (Int.toString index);
+	        pps "#"; PP.text (Int.toString index);
 	        PP.break ppstrm {nsp=1, offset=0};
 		ppExp' (exp, false, d-1);
 		rpcond(atom);
@@ -303,7 +329,7 @@ fun ppExp (context as (env,source_opt)) ppstrm =
 	  | ppExp' (VSELECTexp (exp, _, index), atom, d) =
 	      (openHVBox 0;
 	        lpcond(atom);
-	        pps "V#"; PP.string ppstrm (Int.toString index);
+	        pps "V#"; PP.text (Int.toString index);
 	        PP.break ppstrm {nsp=1, offset=0};
 		ppExp' (exp,false,d-1);
 		rpcond(atom);
@@ -472,7 +498,7 @@ fun ppExp (context as (env,source_opt)) ppstrm =
 	         | NONE => ppExp'(exp,atom,d))
 	  | ppExp' (SWITCHexp (exp,srules,defaultOp), _, d) =
 	      (PP.openVBox ppstrm (PP.Abs 2);
-	       PP.string ppstrm "(SWITCH "; ppExp'(exp,true,d-1); PP.cut ppstrm;
+	       PP.text "(SWITCH "; ppExp'(exp,true,d-1); PP.cut ppstrm;
 	       PU.ppvlist ppstrm ("of ", "   | ",
 		 (fn ppstrm => fn srule => ppSRule context ppstrm (srule, d-1)),
                  srules);
@@ -480,28 +506,28 @@ fun ppExp (context as (env,source_opt)) ppstrm =
 		  of NONE => ()
 		   | SOME default =>
 		     (PP.openHBox ppstrm;
-		      PP.string ppstrm "   | _ => ";
+		      PP.text "   | _ => ";
 		      ppExp' (default, true, d-1);
 		      PP.closeBox ppstrm));
 	       rparen();
 	       closeBox ())
 	  | ppExp' (VSWITCHexp (exp,_,srules,default), _, d) =
 	      (PP.openVBox ppstrm (PP.Abs 2);
-	       PP.string ppstrm "(VSWITCH "; ppExp'(exp,true,d-1); PP.cut ppstrm;
+	       PP.text "(VSWITCH "; ppExp'(exp,true,d-1); PP.cut ppstrm;
 	       PU.ppvlist ppstrm ("of ", "   | ",
 		 (fn ppstrm => fn srule => ppSRule context ppstrm (srule, d-1)),
                  srules);
 	       (PP.openHBox ppstrm;
-		  PP.string ppstrm "   | _ => ";
+		  PP.text "   | _ => ";
 		  ppExp' (default, true, d-1);
 		PP.closeBox ppstrm);
 	       rparen();
 	       PP.closeBox ppstrm)
           (* end ppExp' *)
 
-	and ppAppExp (_,_,_,0) = PP.string ppstrm "<exp>"
+	and ppAppExp (_,_,_,0) = PP.text "<exp>"
 	  | ppAppExp arg =
-	    let val pps = PP.string ppstrm
+	    let val pps = PP.text
 		fun fixitypp(name,rand,leftFix,rightFix,d) =
 		    let val pathString = SymPath.toString(SymPath.SPATH name)
 			val thisFix = case name
@@ -579,43 +605,43 @@ and ppRule (context as (env,source_opt)) ppstrm (RULE(pat,exp),d) =
     if d > 0
     then (PP.openHVBox ppstrm (PP.Rel 0);
 	  ppPat env ppstrm (pat,d-1);
-	  PP.string ppstrm " =>"; PP.break ppstrm {nsp=1,offset=2};
+	  PP.text " =>"; PP.break ppstrm {nsp=1,offset=2};
 	  ppExp context ppstrm (exp,d-1);
 	  PP.closeBox ppstrm)
-    else PP.string ppstrm "<rule>"
+    else PP.text "<rule>"
 
 and ppSRule (context as (env,source_opt)) ppstrm (SRULE(con,_,exp),d) =
     if d > 0
     then (PP.openHVBox ppstrm (PP.Rel 0);
-	  PP.string ppstrm (AU.conToString con);
-	  PP.string ppstrm " =>"; PP.break ppstrm {nsp=1,offset=2};
+	  PP.text (AU.conToString con);
+	  PP.text " =>"; PP.break ppstrm {nsp=1,offset=2};
 	  ppExp context ppstrm (exp,d-1);
 	  PP.closeBox ppstrm)
-    else PP.string ppstrm "<srule>"
+    else PP.text "<srule>"
 
 and ppVB (context as (env,source_opt)) ppstrm (VB{pat,exp,...},d) =
     if d > 0
     then (PP.openHVBox ppstrm (PP.Rel 0);
-	  ppPat env ppstrm (pat,d-1); PP.string ppstrm " =";
+	  ppPat env ppstrm (pat,d-1); PP.text " =";
 	  PP.break ppstrm {nsp=1,offset=2}; ppExp context ppstrm (exp,d-1);
 	  PP.closeBox ppstrm)
-    else PP.string ppstrm "<binding>"
+    else PP.text "<binding>"
 
 and ppRVB context ppstrm (RVB{var, exp, ...},d) =
     if d > 0
     then (PP.openHOVBox ppstrm (PP.Rel 0);
-	  PV.ppVar ppstrm var; PP.string ppstrm " =";
+	  PV.ppVar ppstrm var; PP.text " =";
 	  PP.break ppstrm {nsp=1,offset=2}; ppExp context ppstrm (exp,d-1);
 	  PP.closeBox ppstrm)
-    else PP.string ppstrm "<rec binding>"
+    else PP.text "<rec binding>"
 
 and ppVARSEL ppstrm (var1, var2, index) =
     (PP.openHVBox ppstrm (PP.Rel 0);
-     PP.string ppstrm "val";
+     PP.text "val";
      PP.break ppstrm {nsp=1,offset=0};
      PV.ppVar ppstrm var1;
-     PP.string ppstrm " = #";
-     PP.string ppstrm (Int.toString index);
+     PP.text " = #";
+     PP.text (Int.toString index);
      PV.ppVar ppstrm var2;
      PP.closeBox ppstrm)
 
@@ -663,7 +689,7 @@ and ppDec (context as (env,source_opt)) ppstrm =
 				  pps " ");
 			PU.ppSym ppstrm (InvPath.last path); pps " = ..."(*;
 		        PU.ppSequence ppstrm
-			{sep=(fn ppstrm => (PP.string ppstrm " |";
+			{sep=(fn ppstrm => (PP.text " |";
 					    PP.break ppstrm {nsp=1,offset=0})),
 			 pr=(fn ppstrm => fn (DATACON{name,...}) =>
 					     PU.ppSym ppstrm name),
@@ -818,7 +844,7 @@ and ppDec (context as (env,source_opt)) ppstrm =
     end
 
 and ppStrexp (context as (statenv,source_opt)) ppstrm =
-    let val pps = PP.string ppstrm
+    let val pps = PP.text
 
       fun ppStrexp'(_,0) = pps "<strexp>"
 
@@ -857,7 +883,7 @@ and ppStrexp (context as (statenv,source_opt)) ppstrm =
   end
 
 and ppFctexp (context as (_,source_opt)) ppstrm =
-  let val pps = PP.string ppstrm
+  let val pps = PP.text
 
       fun ppFctexp'(_, 0) = pps "<fctexp>"
 
