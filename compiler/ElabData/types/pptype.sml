@@ -8,23 +8,31 @@
 
 signature PPTYPE =
 sig
+
   val typeFormals : int -> string list
-  val tyvarPrintname : Types.tyvar -> string
-  val ppTycon : StaticEnv.staticEnv -> PrettyPrint.stream
-                -> Types.tycon -> unit
-  val ppTyfun : StaticEnv.staticEnv -> PrettyPrint.stream
-                -> Types.tyfun -> unit
-  val ppType  : StaticEnv.staticEnv -> PrettyPrint.stream
-                -> Types.ty -> unit
+  val tyvarToString : Types.tyvar -> string
+
+  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
+  val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPP.format
+  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPP.format
+  val fmtFormals : int -> PP.format
+  val fmtDconDomain : (Types.dtmember vector * Types.tycon list)
+                      -> StaticEnv.staticEnv
+                      -> Types.ty
+		      -> NewPP.format
+(* NOT USED!
+  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
+ *)
+
+  val ppTycon : StaticEnv.staticEnv -> Types.tycon -> unit
+  val ppType  : StaticEnv.staticEnv -> Types.ty -> unit
+  val ppTyfun : StaticEnv.staticEnv -> Types.tyfun -> unit
   val ppDconDomain : (Types.dtmember vector * Types.tycon list)
                      -> StaticEnv.staticEnv
-                     -> PrettyPrint.stream -> Types.ty -> unit
-  val ppDataconTypes : StaticEnv.staticEnv -> PrettyPrint.stream
-                -> Types.tycon -> unit
-  val resetPPType : unit -> unit
-  val ppFormals : PrettyPrint.stream -> int -> unit
+                     -> Types.ty
+		     -> unit
 
-  val unalias : bool ref
+  val resetPPType : unit -> unit
 
 end (* signature PPTYPE *)
 
@@ -32,14 +40,15 @@ structure PPType : PPTYPE =
 struct
 
 local
+  structure S = Symbol
   structure SP = SymPath
   structure IP = InvPath
   structure BT = BasicTypes
   structure T = Types
   structure TU = TypesUtil
-  structure PP = PrettyPrint
-  structure PU = PPUtil
-  open Types PPUtil
+  structure SE = StaticEnv
+  structure PP = NewPP
+  open Types
 in
 
 val debugging = ElabDataControl.tpdebugging
@@ -59,33 +68,36 @@ val internals = ElabDataControl.typesInternals
 
 val unitPath = IP.extend(IP.empty,Symbol.tycSymbol "unit")  (* [<unit>] *)
 
-fun boundTyvarName k =
-    let val a = Char.ord #"a"
+(* boundTyvarName : int -> string
+ * boundTyvarName translates a type variable represented as
+ * an "index" (int) into a one- or two-character string from the sequence
+ * "a", "b", ..., "z", "aa", "ab", ..., "az", "ba", ... "zz" *)
+fun boundTyvarName (k: int) =
+    let val base = Char.ord #"a"
      in if k < 26
-	then String.str(Char.chr(a+k))
-	else implode[Char.chr(Int.div(k,26) + a),
-                     Char.chr(Int.mod(k,26) + a)]
+	then String.str (Char.chr (base + k))
+	else implode[Char.chr(Int.div(k,26) + base),
+                     Char.chr(Int.mod(k,26) + base)]
     end
 
-(* metaTyvarName' : int -> string *)
-fun metaTyvarName' k =
-    let val a = Char.ord #"Z" (* use reverse order for meta vars *)
+(* metaTyvarName' : int -> string
+ * metaTyvarName' translates a meta type variable represented as
+ * an "index" (int) into a one- or two-character string from the descending sequence
+ * "Z", "Y", "X", ... *)
+fun metaTyvarName' (k: int) =
+    let val base = Char.ord #"Z" (* use reverse order for meta vars *)
      in if k < 26
-	then String.str(Char.chr(a - k))
-	else implode[Char.chr(a - (Int.div(k,26))),
-                     Char.chr(a - (Int.mod(k,26)))]
+	then String.str (Char.chr (base - k))
+	else implode [Char.chr (base - (Int.div(k,26))),
+                      Char.chr (base - (Int.mod(k,26)))]
     end
 
-fun typeFormals n =
-    let fun loop i =
-	if i>=n then []
-	else (boundTyvarName i)::loop(i+1)
-     in loop 0
-    end
+(* typeFormals : int -> string list *)
+fun typeFormals n = List.tabulate n boundTyvarName
 
 local  (* WARNING -- compiler global variables. Imposes reset requirement. *)
-  val count = ref(~1)
-  val metaTyvars = ref([]:tyvar list)
+  val count = ref (~1)
+  val metaTyvars = ref (nil: tyvar list)
 in
   fun metaTyvarName(tv: tyvar) =
       let fun find([],_) =
@@ -98,38 +110,44 @@ in
 		else find(rest,k+1)
        in metaTyvarName' (find(!metaTyvars,0))
       end
+
   fun resetPPType() = (count := ~1; metaTyvars := [])
 end
 
-fun tyvarInternals (annotation,depthOp) =
+(* tyvarInternals : string * int option -> string *)
+fun tyvarInternals (annotation, depthOp) =
     if !internals
-    then concat(annotation::
-		(case depthOp
-		  of SOME depth => ["[",(Int.toString depth),"]"]
-		   | NONE => nil))
+    then String.concat
+           (annotation::
+	    (case depthOp
+	       of SOME depth => ["[",(Int.toString depth),"]"]
+	        | NONE => nil))
     else ""
 
+(* sourcesToString : (string * 'a) list -> string *)
 fun sourcesToString [(name,_)] = Symbol.name name
   | sourcesToString ((name,_)::rest) =
-    concat[Symbol.name name,",",sourcesToString rest]
+      String.concat [Symbol.name name, ",", sourcesToString rest]
   | sourcesToString nil = bug "sourcesToString"
 
+(* tyvarHead : bool -> string *)
 fun tyvarHead true = "''"
   | tyvarHead false = "'"
 
-fun tyvarPrintname (tyvar) =
+(* tyvarToString : tyvar -> string *)
+fun tyvarToString (tyvar) =
     let fun prKind info =
 	    case info
-	     of INSTANTIATED(VARty(tyvar)) => tyvarPrintname tyvar
+	     of INSTANTIATED(VARty(tyvar)) => tyvarToString tyvar
 	      | INSTANTIATED _ => "[INSTANTIATED]"
 	      | OPEN{depth,eq,kind} =>
-		concat[tyvarHead eq,
-		       metaTyvarName tyvar,
-		       tyvarInternals(case kind of META => ".M" | FLEX _ => ".F",
-				      SOME depth) ]
+		String.concat
+		  [tyvarHead eq,
+		   metaTyvarName tyvar,
+		   tyvarInternals(case kind of META => ".M" | FLEX _ => ".F", SOME depth) ]
 	      | UBOUND{name,depth,eq} =>
-		concat[tyvarHead eq, Symbol.name name,
-		       tyvarInternals(".U",SOME depth)]
+		String.concat
+		  [tyvarHead eq, Symbol.name name, tyvarInternals(".U",SOME depth)]
 	      | OVLDV{sources,eq} =>
 		concat[tyvarHead eq, metaTyvarName tyvar,
 		       "[OL(",sourcesToString sources,")]"]
@@ -144,23 +162,29 @@ fun tyvarPrintname (tyvar) =
 	prKind (!tyvar)
     end
 
-fun ppkind ppstrm kind =
-    PP.string ppstrm
-      (case kind
-	 of PRIMITIVE => "P" | FORMAL => "F"
-          | FLEXTYC _ => "X" | ABSTRACT _ => "A"
-	  | TEMP => "T"
-	  | DATATYPE {stripped,...} =>
-	    if stripped then "DS" else "D")
+(* tyckindTag : T.tyckind -> string *)
+fun tyckindTag (kind: T.tyckind) =
+    case kind
+      of PRIMITIVE => "P" | FORMAL => "F"
+       | FLEXTYC _ => "X" | ABSTRACT _ => "A" | TEMP => "T"
+       | DATATYPE {stripped,...} => if stripped then "DS" else "D"
 
-(* effectivePath : IP.path * T.tycon * StaticEnv.statenv -> string *)
-fun effectivePath(path: IP.path, tyc: T.tycon, env: StaticEnv.staticEnv) : string =
+(* fmtTyckind : T.tyckind -> format *)
+fun fmtTyckind tyckind =
+    PP.text (tyckindTag tyckind)
+
+(* ppkind : T.tyckind -> unit *)
+fun ppkind tyckind =
+    PP.printFormat (fmtTyckind tyckind)
+
+(* effectivePath : IP.path * T.tycon * SE.statenv -> string *)
+fun effectivePath(path: IP.path, tyc: T.tycon, env: SE.staticEnv) : string =
     let val _ = dbsaysnl [">>> effectivePath: ", IP.toString path]
 	fun find (path: IP.path, tycon: T.tycon) =
             let fun check tycon' = TU.equalTycon (tycon', tycon)
 		fun look sympath =
-		    SOME (Lookup.lookTyc (env, sympath, (fn _ => raise StaticEnv.Unbound)))
-		    handle StaticEnv.Unbound => NONE
+		    SOME (Lookup.lookTyc (env, sympath, (fn _ => raise SE.Unbound)))
+		    handle SE.Unbound => NONE
 	     in ConvertPaths.findPath (path, check, look)
 	    end
 	fun search (path, tyc) =
@@ -200,297 +224,227 @@ fun strength(ty) =
        | MARKty(ty, region) => strength ty
        | _ => 2
 
-fun ppEqProp ppstrm p =
-    let val a = case p
-		  of NO => "NO"
-		   | YES => "YES"
-		   | IND => "IND"
-		   | OBJ => "OBJ"
-		   | DATA => "DATA"
-		   | ABS => "ABS"
-		   | UNDEF => "UNDEF"
-     in PP.string ppstrm a
-    end
+(* eqpropTag : T.eqprop -> string *)
+fun eqpropTag (p: T.eqprop) =
+    case p
+      of NO => "NO"
+       | YES => "YES"
+       | IND => "IND"
+       | OBJ => "OBJ"
+       | DATA => "DATA"
+       | ABS => "ABS"
+       | UNDEF => "UNDEF"
 
-(* the following two functions used to be defined in PPUtil *)
-fun ppSymPath ppstream (path: SymPath.path) =
-    PP.string ppstream (SymPath.toString path)
+(* fmtEqprop : T.eqprop -> PP.format *)
+(* NOT USED! *)
+fun fmtEqprop (p: T.eqprop) = PP.text (eqpropTag p)
 
-fun ppInvPath ppstrm (ipath: InvPath.path) =
-    PP.string ppstrm (SymPath.toString(ConvertPaths.invertIPath ipath))
+(* fmtSym : Symbol.symbol -> PP.format *)
+fun fmtSym (sym: S.symbol) = PP.text (S.name sym)
 
-fun ppBool ppstrm b =
-    PP.string ppstrm (case b of true => "t" | false => "f")
+(* fmtSymPath : SymPath.path -> PP.format *)
+fun fmtSymPath (path: SymPath.path) = PP.text (SymPath.toString path)
 
-(* ppTycon1 : StaticEnv.staticEnv -> PP.ppstream -> (T.dtmembers * T.tycon list) option -> unit *)
-fun ppTycon1 env ppstrm membersOp =
-    let val {openHVBox,openHOVBox,closeBox,pps,break,...} = en_pp ppstrm
-	fun ppTyc (tyc as GENtyc { path, stamp, eq, kind, ... }) =
-	    if !internals
-	    then (openHOVBox 1;
-		    ppInvPath ppstrm path;
-		    PP.string ppstrm "[";
-		    PP.string ppstrm "G";
-		    ppkind ppstrm kind; pps ";";
-		    PP.string ppstrm (Stamps.toShortString stamp);
-		    PP.string ppstrm ";";
-		    ppEqProp ppstrm (!eq);
-		    PP.string ppstrm "]";
-		  closeBox())
-	    else pps(effectivePath(path,tyc,env))
-	  | ppTyc(tyc as DEFtyc{path,strict,tyfun=TYFUN{body,...},...}) =
-	     if !internals
-	     then (openHOVBox 1;
-		    ppInvPath ppstrm path;
-		    pps "["; pps "D";
-                    ppClosedSequence ppstrm
-                      {front=C PP.string "(",
-                       sep=PU.sepWithCut ",",
-		       back=C PP.string ");",
-		       style=CONSISTENT,
-                       pr=ppBool} strict;
-		    ppType env ppstrm body;
-		    pps "]";
-		   closeBox())
-	     else pps(effectivePath(path,tyc,env))
-	  | ppTyc(RECORDtyc labels) =
-	      ppClosedSequence ppstrm
-		{front=C PP.string "{",
-		 sep=PU.sepWithCut ",",
-		 back=C PP.string "}",
-		 style=INCONSISTENT,
-		 pr=ppSym} labels
+(* fmtInvPath : InvPath.path -> PP.format *)
+fun fmtInvPath (ipath: InvPath.path) =
+    PP.text (SymPath.toString (ConvertPaths.invertIPath ipath))
 
-          | ppTyc (RECtyc n) =
+(* formatBool : bool -> PP.format *)
+(* bool values formated as "true" and "false" *)
+fun formatBool (b: bool) = PP.text (Bool.toString b)
+
+(* fmtBool : bool -> PP.format *)
+(* bool values formated as "t" and "f" *)
+fun fmtBool (b: bool) = PP.text (case b of true => "t" | false => "f")
+
+val arrow = PP.text "->"
+val langle = PP.text "<"
+val rangle = PP.text ">"
+
+(* NOTE: need to reintroduce "internals" printing for GENtyc and PATHtyc tycons *)
+
+(* fmtTycon1 : SE.staticEnv -> (T.dtmembers * T.tycon list) option -> PP.format *)
+fun fmtTycon1 env membersOp =
+    let fun fmtTyc (tyc as GENtyc { path, stamp, eq, kind, ... }) =
+	      PP.text (effectivePath (path,tyc,env))
+
+	  | fmtTyc (tyc as DEFtyc{path,strict,tyfun=TYFUN{body,...},...}) =
+	      PP.text (effectivePath (path,tyc,env))
+
+	  | fmtTyc (RECORDtyc labels) =
+	      PP.fmtClosedSeq
+		{alignment = PP.P, front = lbrace, sep = comma, back = rbrace, formatter = fmtSym}
+		labels
+
+          | fmtTyc (RECtyc n) =
               (case membersOp
                 of SOME (members,_) =>
-                    let val {tycname,dcons,...} = Vector.sub(members,n)
-                     in ppSym ppstrm tycname
-                    end
-                 | NONE => pps (String.concat ["<RECtyc ",Int.toString n,">"]))
+                     let val {tycname,dcons,...} = Vector.sub(members,n)
+                      in fmtSym tycname
+                     end
+                 | NONE =>
+		     PP.enclose {front = langle, back = rangle}
+		       (PP.hcat (PP.text "RECtyc ", PP.integer n))
 
-          | ppTyc (FREEtyc n) =
+          | fmtTyc (FREEtyc n) =
               (case membersOp
                 of SOME (_, freetycs) =>
                     let val tyc = (List.nth(freetycs, n) handle _ =>
-                                    bug "unexpected freetycs in ppTyc")
-                     in ppTyc tyc
+                                    bug "unexpected freetycs in fmtTyc")
+                     in fmtTyc tyc
                     end
                  | NONE =>
-                    pps (String.concat ["<FREEtyc ",Int.toString n,">"]))
+		     PP.enclose {front = langle, back = rangle}
+		       (PP.hcat (PP.text "FREEtyc ", PP.integer n))
 
- 	  | ppTyc (tyc as PATHtyc{arity,entPath,path}) =
-	     if !internals
-	     then (openHOVBox 1;
-		     ppInvPath ppstrm path;
-		     PP.string ppstrm "[P;";
-		     PP.string ppstrm (EntPath.entPathToString entPath);
-		     PP.string ppstrm "]";
-		   closeBox())
-	     else PP.string ppstrm (SP.toString (ConvertPaths.stripPath path))
+ 	  | fmtTyc (tyc as PATHtyc{arity,entPath,path}) =
+	      PP.text (SP.toString (ConvertPaths.stripPath path))
 
-	  | ppTyc ERRORtyc = pps "[E]"
-     in ppTyc
+	  | fmtTyc ERRORtyc = PP.text "[E]"
+     in fmtTyc
     end
 
-and ppType1 env ppstrm (ty: ty, sign: T.polysign,
-                        membersOp: (T.dtmember vector * T.tycon list) option) : unit =
-    let val {openVBox,openHVBox,openHOVBox,closeBox,pps,ppi,break,newline} =
-	    en_pp ppstrm
-        fun prty ty =
+(* fmtType1 : SE.staticEnv
+              -> (T.ty * T.polysign * (T.dtmember vector * T.tycon list) option
+              -> PP.format *)
+and fmtType1 env (ty: ty, sign: T.polysign,
+                  membersOp: (T.dtmember vector * T.tycon list) option) : PP.format =
+    let val unitFmt = PP.text (effectivePath (unitPath, RECORDtyc [], env))
+	fun fmtAtomTy (ty, str: int) =
+	    let val fmt = fmtTy ty
+	    in if strength ty <= str then PP.parens fmt else fmt
+	    end
+	fun fmtTy ty =
 	    case ty
-	      of VARty(ref(INSTANTIATED ty')) => prty(ty')
-	       | VARty(tv) => ppTyvar tv
+	      of VARty(ref(INSTANTIATED ty')) => fmtTy(ty')
+	       | VARty(tv) => fmtTyvar tv
 	       | IBOUND n =>
 		   let val eq = List.nth(sign,n)
 		                handle Subscript => false
-		    in pps ((if eq then "''" else "'") ^ boundTyvarName n)
+		    in PP.text (tyvarHead eq ^ boundTyvarName n)
 		   end
 	       | CONty(tycon, args) =>
 		   let fun otherwise () =
-			     (openHOVBox 2;
-			        ppTypeArgs args;
-			        break{nsp=0,offset=0};
-			        ppTycon1 env ppstrm membersOp tycon;
-			      closeBox())
+			     PP.pblock [ppTypeArgs args, ppTycon1 env membersOp tycon]
 		    in case tycon
 		         of GENtyc { stamp, kind, ... } =>
-			      (case kind of
-				   PRIMITIVE =>
-				   if Stamps.eq(stamp,arrowStamp)
-				   then case args
-					 of [domain,range] =>
-					    (openHVBox 0;
-					     if strength domain = 0
-					     then (openHVBox 1;
-						   pps "(";
-						   prty domain;
-						   pps ")";
-						   closeBox())
-					     else prty domain;
-					     break{nsp=1,offset=0};
-					     pps "-> ";
-					     prty range;
-					     closeBox())
-					  | _ => bug "CONty:arity"
-				   else (openHOVBox 2;
-					 ppTypeArgs args;
-					 break{nsp=0,offset=0};
-					 ppTycon1 env ppstrm membersOp tycon;
-					 closeBox())
-				 | _ => otherwise ())
+			      (case kind
+				 of PRIMITIVE =>
+				      if Stamps.eq(stamp,arrowStamp)
+				      then case args
+					    of [domain,range] =>
+					       let val domainFmt = fmtAtomTy (domain, 0)
+						   val rangeFmt = fmtTy range
+					       in PP.pblock [PP.hcat (domainFmt, arrow),
+							     PP.softIndent (2, rangeFmt)]
+					       end
+					     | _ => bug "CONty:arity"
+				      else PP.hcat (ppTypeArgs args, ppTycon1 env membersOp tycon)
+				  | _ => otherwise ())
 			  | RECORDtyc labels =>
 			     if Tuples.isTUPLEtyc(tycon)
-			     then ppTUPLEty args
-			     else ppRECORDty(labels, args)
+			     then fmtTUPLEty args
+			     else fmtRECORDty(labels, args)
 			  | _ => otherwise ()
 		   end
-	       | POLYty{sign,tyfun=TYFUN{arity,body}} =>
-                   if !internals
-                   then (openHOVBox 1;
-                         pps "[POLY("; pps(Int.toString arity); pps ")";
-                         ppType1 env ppstrm (body,sign, membersOp);
-                         pps "]";
-                         closeBox())
-                   else ppType1 env ppstrm (body,sign, membersOp)
-	       | MARKty(ty, region) => prty ty
-	       | WILDCARDty => pps "_"
-	       | UNDEFty => pps "undef"
+	       | POLYty{sign,tyfun=TYFUN{arity,body}} =>  (* dropped internals variant *)
+                   ppType1 env (body,sign, membersOp)
+	       | MARKty(ty, region) => fmtTy ty
+	       | WILDCARDty => PP.text "_"
+	       | UNDEFty => PP.text "<UNDEFty>"
 
-	and ppTypeArgs [] = ()
-	  | ppTypeArgs [ty] =
-	     (if strength ty <= 1
-	      then (openHOVBox 1;
-                      PP.string ppstrm "(";
-                      prty ty;
-                      PP.string ppstrm ")";
-                    closeBox())
-	      else prty ty;
-	      break{nsp=1,offset=0})
-	  | ppTypeArgs tys =
-              ppClosedSequence ppstrm
-	        {front=C PP.string "(",
-		 sep=PU.sepWithCut ",",
-		 back=C PP.string ") ",
-		 style=INCONSISTENT,
-                 pr=fn _ => fn ty => prty ty}
-		tys
+	and fmtTypeArgs [] = ()
+	  | fmtTypeArgs [ty] =fmtAtomTy (ty, 1)
+	  | fmtTypeArgs tys = PP.formatTuple fmtTy tys
 
-	and ppTUPLEty [] = pps(effectivePath(unitPath,RECORDtyc [],env))
-	  | ppTUPLEty tys =
-	      ppSequence ppstrm
-		 {sep = fn ppstrm => (PP.break ppstrm {nsp=1,offset=0};
-				    PP.string ppstrm "* "),
-		  style = INCONSISTENT,
-		  pr = (fn _ => fn ty =>
-			  if strength ty <= 1
-			  then (openHOVBox 1;
-				pps "(";
-				prty ty;
-				pps ")";
-				closeBox())
-			  else prty ty)}
-	        tys
+	and fmtTUPLEty [] = unitFmt
+	  | fmtTUPLEty tys =
+	      let fun formatter ty = fmtAtomTy (ty, 1)
+	       in PP.formatSeq {alignment = PP.P, sep = PP.text " *", formatter = formatter} tys
+	      end
 
-	and ppField(lab,ty) = (openHVBox 0;
-			       ppSym ppstrm lab;
-			       pps ":";
-			       prty ty;
-			       closeBox())
+	and fmtField (lab,ty) = PP.hcat (PP.ccat (fmtSym lab, PP.colon), fmtTy ty)
 
-	and ppRECORDty([],[]) = pps(effectivePath(unitPath,RECORDtyc [],env))
+	and ppRECORDty ([],[]) = unitFmt
               (* this case should not occur *)
-	  | ppRECORDty(lab::labels, arg::args) =
-	      (openHOVBox 1;
-               pps "{";
-               ppField(lab,arg);
-	       ListPair.app
-		 (fn field => (pps ","; break{nsp=1,offset=0}; ppField field))
-		 (labels,args);
-               pps "}";
-               closeBox())
+	  | ppRECORDty (labels, args) =
+	      PP.braces 
+		(PP.sequence {alignment = PP.P, sep = comma} (ListPair.map fmtField (labels, args)))
 	  | ppRECORDty _ = bug "PPType.ppRECORDty"
 
 	and ppTyvar (tv as (ref info) :tyvar) :unit =
-	    let val printname = tyvarPrintname tv
+	    let val printname = tyvarToString tv
 	     in case info
 		  of OPEN{depth,eq,kind} =>
 		       (case kind
 			  of FLEX fields =>
 			      (case fields
-				 of [] => (pps "{"; pps printname; pps "}")
-				  | field::fields =>
-				      (openHOVBox 1;
-				       pps "{";
-				       ppField field;
-				       app (fn x => (pps ",";
-						     break{nsp=1,offset=0};
-						     ppField x))
-					    fields;
-				       pps ";";
-				       break{nsp=1,offset=0};
-				       pps printname;
-				       pps "}";
-				       closeBox()))
-			   | _ => pps printname)
-		   | _ => pps printname
+				 of [] => PP.braces (PP.empty)
+				  | fields =>
+				      PP.braces
+				        (PP.pblock
+					   [PP.formatSeq {alignment=PP.P, sep=comma, formatter=fmtField}
+							 fields,
+					    PP.semicolon,
+					    PP.text printname])
+			   | _ => PP.text printname)
+		   | _ => PP.text printname
 	    end
-    in
-      prty ty
+
+     in fmtTy ty
     end  (* ppType1 *)
 
-and ppType (env:StaticEnv.staticEnv) ppstrm (ty:ty) : unit = (
-     PP.openHOVBox ppstrm (PP.Rel 1);
-       ppType1 env ppstrm (ty, [], NONE);
-     PP.closeBox ppstrm)
+and fmtType (env: SE.staticEnv) (ty: T.ty) : PP.format =
+    fmtType1 env (ty, [], NONE)
 
-fun ppDconDomain members (env:StaticEnv.staticEnv)
-                 ppstrm (ty:ty) : unit =
-      (PP.openHOVBox ppstrm (PP.Rel 1);
-       ppType1 env ppstrm (ty,[],SOME members);
-       PP.closeBox ppstrm)
+fun fmtTycon env tycon = fmtTycon1 env NONE, tycon)
 
-fun ppTycon env ppstrm tyc = ppTycon1 env ppstrm NONE tyc
+fun fmtTyfun env (TYFUN{arity,body}) =
+    PP.hcat
+       (PP.text "TYFUN"
+	PP.braces (PP.sequence {alignment=PP.H, sep=comma}
+			       [PP.ccat (PP.text "arity=", PP.integer arity),
+				PP.ccat (PP.text "body=", fmtType env body)]
 
-fun ppTyfun env ppstrm (TYFUN{arity,body}) =
-    let val {openHVBox, openHOVBox, closeBox, pps, break,...} = en_pp ppstrm
-     in openHOVBox 2;
-	  PP.string ppstrm "TYFUN{arity=";
-	  ppi ppstrm arity; ppcomma ppstrm;
-	  PP.break ppstrm {nsp=0,offset=0};
-	  PP.string ppstrm "body=";
-	  ppType env ppstrm body;
-	  PP.string ppstrm "}";
-        closeBox()
+(* fmtFormals : int -> PP.format *)
+fun fmtFormals n =
+    let val formals = map (fn s => PP.text ("'" ^ s)) (typeFormals n)
+     in case formals
+ 	  of nil => PP.empty
+	   | [x] => x
+  	   | fmts => PP.tupleFormats fmts
     end
 
-(* ppFormals : PP.stream -> int -> unit *)
-fun ppFormals ppstrm =
-    let fun ppF 0 = ()
-	  | ppF 1 = PP.string ppstrm " 'a"
-	  | ppF n = (PP.string ppstrm " ";
-		     ppTuple ppstrm (fn ppstrm => fn s => PP.string ppstrm ("'"^s))
-				    (typeFormals n))
-     in ppF
-    end
+(* NOT USED!
+(* fmtDataconsWithTypes : SE.staticEnv -> T.tycon -> PP.format *)
+fun fmtDataconsWithTypes env tycon =
+    (case tycon
+       of GENtyc { kind = DATATYPE dt, ... } =>
+	  let val {index, freetycs, family = {members,...}, ...} = dt
+	      val {dcons, ...} = Vector.sub (members, index)
+	   in PP.vblock
+	        (map (fn {name, domain, ...} =>
+			 PP.hcat (PP.ccat (fmtSym name, PP.colon),
+				  case domain
+				    of SOME ty =>
+					 fmtType1 env (ty,[],SOME (members,freetycs))
+				     | NONE => PP.text "CONST"))
+		     dcons)
+	  end
+	| _ = bug "ppDataconTypes")
+*)
 
-fun ppDataconTypes env ppstrm (GENtyc { kind = DATATYPE dt, ... }) =
-    let val {index,freetycs,family={members,...},...} = dt
-	val {openHVBox, openHOVBox, closeBox, pps, break,...} = en_pp ppstrm
-	val {dcons,...} = Vector.sub(members,index)
-    in
-	openHVBox 0;
-	app (fn {name,domain,...} =>
-		(pps (Symbol.name name); pps ":";
-		 case domain
-		  of SOME ty =>
-		     ppType1 env ppstrm (ty,[],SOME (members,freetycs))
-		   | NONE => pps "CONST";
-		 break{nsp=1,offset=0}))
-	    dcons;
-	    closeBox()
-    end
-  | ppDataconTypes env ppstrm _ = bug "ppDataconTypes"
+(* ppTycon : SE.staticEnv -> T.tycon -> unit *)
+fun ppTycon (env: SE.staticEnv) (tycon: T.tycon) = PP.printFormat (fmtTycon env  tycon)
+
+(* ppType : SE.staticEnv -> T.ty -> unit *)
+fun ppType (env: SE.staticEnv) (ty: T.ty) = PP.printFormat (fmtType env ty)
+
+(* ppTyfun : SE.staticEnv -> T.tyfun -> unit *)
+fun ppTyfun (env: SE.staticEnv) (tyfun : T.tyfun) = PP.printFormat (fmtTyfun env tyfun)
+
+fun ppDconDomain members (env: SE.staticEnv) (ty:T.ty) : unit =
+    PP.printFormat (fmtType1 env (ty, [], SOME members))
 
 end (* toplevel local *)
 end (* structure PPType *)

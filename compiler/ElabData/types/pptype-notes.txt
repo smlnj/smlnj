@@ -1,0 +1,14 @@
+Notes of new type and absyn prettyprinters using NewPP.
+
+* ElabData/types/pptype.sml
+
+1. signature PPTYPE
+
+* tyvarPrintName --> tyvarToString
+* ppTycon, etc. drop PrettyPrint.stream argument
+* add fmt versions producing formats, replacing pp... versions
+* drop unused exports
+
+* ElabData/syntax/ppval.sml
+
+* ElabData/syntax/ppabsyn.sml
