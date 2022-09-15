@@ -65,7 +65,7 @@ structure Absyn : ABSYN =
       | SWITCHexp of exp * srule list * exp option
       | VSWITCHexp of exp * T.ty * srule list * exp
           (* SWITCHexp, VSWITCHexp created only by match compiler,
-           * VSWITCHexp for vector length, where default is required(?) *)
+           * VSWITCHexp for vector length, where default is mandatory *)
       | RAISEexp of exp * T.ty
       | IFexp of { test: exp, thenCase: exp, elseCase: exp }
       | ANDALSOexp of exp * exp
@@ -82,7 +82,7 @@ structure Absyn : ABSYN =
     and srule = SRULE of con * V.var option * exp  (* in SWITCHexp, VSWITCHexp *)
        (* INVARIANT: var option will be SOME iff con is DATAcon(datacon,_) where datacon
 	* is not a constant. The var, when present, will be bound to the decon[con] of the
-        * subject value (where?) *)
+        * subject value in scope exp *)
 
     and pat
       = WILDpat
