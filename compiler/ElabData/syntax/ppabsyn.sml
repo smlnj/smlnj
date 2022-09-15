@@ -7,20 +7,20 @@
 signature PPABSYN =
 sig
 
-  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> unit
+  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> NewPP.format
   val fmtExp  : StaticEnv.staticEnv * Source.inputSource option
-                -> Absyn.exp * int -> unit
+                -> Absyn.exp * int -> NewPP.format
   val fmtRule : StaticEnv.staticEnv * Source.inputSource option
-                -> Absyn.rule * int -> unit
+                -> Absyn.rule * int -> NewPP.format
   val fmtVB   : StaticEnv.staticEnv * Source.inputSource option
-                -> Absyn.vb * int -> unit
+                -> Absyn.vb * int -> NewPP.format
   val fmtRVB  : StaticEnv.staticEnv * Source.inputSource option
-                -> Absyn.rvb * int -> unit
+                -> Absyn.rvb * int -> NewPP.format
   val fmtDec  : StaticEnv.staticEnv * Source.inputSource option
-                -> Absyn.dec * int -> unit
+                -> Absyn.dec * int -> NewPP.format
 
-  val ppStrexp : StaticEnv.staticEnv * Source.inputSource option
-                 -> Absyn.strexp * int -> unit
+  val fmtStrexp : StaticEnv.staticEnv * Source.inputSource option
+                 -> Absyn.strexp * int -> NewPP.format
 
 end (* signature PPABSYN *)
 
