@@ -63,13 +63,6 @@ fun bug msg = ErrorMsg.impossible("PPAbsyn: "^msg)
 val lineprint = ElabDataControl.absynLineprint
 val internals = ElabDataControl.absynInternals
 
-val nullFix = F.INfix(0,0)
-val infFix = F.INfix(1000000,100000)
-fun strongerL (F.INfix(_,m), F.INfix(n,_)) = m >= n
-  | strongerL _ = false			(* should not matter *)
-fun strongerR (F.INfix(_,m), F.INfix(n,_)) = n > m
-  | strongerR _ = true			(* should not matter *)
-
 (* fmtPos : Source.inputSource * int -> PP.format *)
 fun fmtPos(source: Source.inputSource, charpos: int) =
     if !lineprint then
@@ -142,6 +135,12 @@ fun expTag exp = "<exp>"
 
 (* decTag : dec -> string *)
 fun decTag dec = "<dec>"	      
+
+fun fmtTyFormals arity =
+    (case arity
+       of 0 => PP.empty
+	| 1 => PP.text "'a"
+	| n => PP.tupleFormats (map PP.text (PPT.typeFormals n)))
 
 (* fmtStr : (str : M.Structure) -> PP.format *)
 fun fmtStr str =
@@ -271,31 +270,16 @@ fun ppExp (context as (env,source_opt)) (exp : AS.exp, depth : int)  =
 		   [PP.ccat (fmtPat env (pat, d), PP.text "=>"),
 		    PP.softIndent (fmtExp (exp, 0, 0, d), 4)]
 	fun fmtMatch (lead: string, rules, depth) =
-	    (case rules
-	       of nil => bug "fmtMatch: no rules"
-		| [rule] => PP.hcat (PP.text lead, fmtRule (rule, d-1))
-		| rule :: rest => 
-		    let val sep = StringCVT.padLeft #" " (size lead - 1) "|"
-			fun fmtRule' hdr r = PP.hcat (PP.text hdr, fmtRule (rule, d-1))
-		     in PP.vblock (fmtRule' lead rule :: map (fmtRule' sep) rest) 
-		    end)
+	    PPU.fmtVerticalFormats {header1 = lead, header2 = StringCVT.padLeft #" " (size lead - 1) "|"}
+              (map fmtRule rules)
 	fun fmtSRule (SRULE (con, _, exp), d) : PP.format =
 	    if d <= 0 then PP.text "<srule>"
 	    else PP.pblock
 		   [PP.ccat (PPV.fmtDcon con, PP.text "=>"),
 		    PP.softIndent (fmtExp (exp, 0, 0, d), 4)]
 	fun fmtSMatch (rules, defaultOp, depth) =
-	    (case rules
-	       of nil => bug "fmtSMatch: no rules"
-		| [rule] => PP.hcat (PP.text "of", fmtRule (rule, d-1))
-		| rule :: rest => 
-		    let fun fmtRule' hdr r = PP.hcat (PP.text hdr, fmtSRule (r, d-1))
-			val defaultFmt =
-			    case defaultOp
-			      of NONE => nil
-			       | SOME exp => [PP.hcat (PP.text "_ =>", fmtExp' (exp, 0, 0, d-1)]
-		     in PP.vblock (fmtRule' "of" rule :: map (fmtRule' " |") rest @ defaultFmt) 
-		    end)
+	    PPU.fmtVerticalFormats {header1 = "of", header2 = " |"}
+              (map fmtSRule rules)
         (* fmtExp' : AS.exp * int * int * int -> PP.format
          *   fmtExp' (exp, lpull, rpull, depth) *)
 	fun fmtExp' (exp, _, _, 0) = PP.text (expTag exp)
@@ -494,64 +478,45 @@ and fmtVARSEL (var1, var2, index) =
     PP.hblock
       [PP.text "val", PPV.fmtVar var1, PP.text " = #", PP.integer index, PPV.fmtVar var2]
 
+
 and fmtDec (context as (env,source_opt)) (dec, depth) =
     let fun ppDec' (dec, 0) = PP.text (decTag dec)  (* "<dec>" *)
           | ppDec' (VALdec vbs, d) =
-	      
-	      PU.ppvlist ("val", "and",
-	         (fn vb => ppVB context (vb,d-1)), vbs);
-
+	      PPU.fmtVerticalFormats {header1 = "val", header2 = "and"}
+	        (map (fn vb => ppVB context (vb,d-1)) vbs)
           | ppDec'(VALRECdec rvbs,d) =
-	  (openHVBox 0;
-	   PU.ppvlist ("val rec ","and ",
-	     (fn => fn rvb => ppRVB context (rvb,d-1)),rvbs);
-	   closeBox ())
+	      PPU.fmtVerticalFormats {header1 = "val rec", header2 = "and"}
+	        (map (fn rvb => ppRVB context (rvb,d-1)),rvbs)
 	  | ppDec'(DOdec exp, d) =
-	  (openHVBox 0;
-	   pps "do";
-	   PP.break {nsp=1,offset=2}; ppExp context (exp,d-1);
-	   closeBox ())
-        | ppDec'(TYPEdec tycs,d) =
-	    let fun f (DEFtyc{path, tyfun=TYFUN{arity,body},...}) =
-		    (case arity
-		      of 0 => ()
-		       | 1 => (pps "'a ")
-		       | n => (PU.ppTuple PP.string (typeFormals n);
-			       pps " ");
-		     PU.ppSym (InvPath.last path);
-		     pps " = "; ppType env body)
-		  | f _ _ = bug "ppDec'(TYPEdec)"
-	     in openHVBox 0;
-		PU.ppvlist ("type "," and ", f, tycs);
-		closeBox ()
+	      PP.hcat (PP.text "do", ppExp context (exp,d-1))
+          | ppDec'(TYPEdec tycs,d) =
+	    let fun fmtDEFtyc (DEFtyc{path, tyfun=TYFUN{arity,body},...}) =
+		    PP.hblock [fmtTyFormals arity, PPU.fmtSym (InvPath.last path),
+			       PP.text "=", ppType env body]
+		  | fmtDEFtyc _ = bug "fmtDEFtyc"
+	     in PPU.fmtVerticalFormats {header1 = "type", header2 = "and"}
+ 	          (map fmtDEFtyc tycs)
 	    end
-        | ppDec'(DATATYPEdec{datatycs,withtycs},d) =
+          | ppDec'(DATATYPEdec{datatycs,withtycs},d) =
 	    let fun ppDATA (GENtyc { path, arity, kind, ... }) =
 		  (case kind
 		     of DATATYPE(_) =>
-		       (case arity
-			 of 0 => ()
-			  | 1 => (pps "'a ")
-			  | n => (PU.ppTuple PP.string (typeFormals n);
-				  pps " ");
-			PU.ppSym (InvPath.last path); pps " = ..."(*;
+			fmtTyFormals arity,
+			PU.ppSym (InvPath.last path),
+			PP.text "=", 
+
 		        PU.ppSequence ppstrm
-			{sep=(fn => (PP.text " |";
-					    PP.break {nsp=1,offset=0})),
+			{sep= PP.text " |",
 			 pr=(fn => fn (DATACON{name,...}) =>
 					     PU.ppSym name),
 			 style=PU.INCONSISTENT}
 			dcons*))
 		     | _ => bug "ppDec'(DATATYPEdec) 1.1")
 		  | ppDATA _ _ = bug "ppDec'(DATATYPEdec) 1.2"
-		fun ppWITH (DEFtyc{path, tyfun=TYFUN{arity,body},...}) =
-		  (case arity
-		    of 0 => ()
-		     | 1 => (pps "'a ")
-		     | n => (PU.ppTuple PP.string (typeFormals n);
-                             pps " ");
+		fun fmtWITHTYPE (DEFtyc{path, tyfun=TYFUN{arity,body},...}) =
+		  (fmtTyFormals arity,
 		   PU.ppSym (InvPath.last path);
-		   pps " = "; ppType env body)
+		   pps "="; ppType env body)
 		| ppWITH _ _ = bug "ppDec'(DATATYPEdec) 2"
 	    in
 	      (* could call PPDec.ppDec here *)
