@@ -137,6 +137,12 @@ fun patTag pat =
        | MARKpat (pat, _) => patTag pat
        | NOpat => "<NOpat>"
 
+(* expTag : exp -> string *)
+fun expTag exp = "<exp>"	      
+
+(* decTag : dec -> string *)
+fun decTag dec = "<dec>"	      
+
 (* fmtStr : (str : M.Structure) -> PP.format *)
 fun fmtStr str =
     (case str
@@ -274,7 +280,7 @@ fun ppExp (context as (env,source_opt)) (exp : AS.exp, depth : int)  =
 		     in PP.vblock (fmtRule' lead rule :: map (fmtRule' sep) rest) 
 		    end)
 	fun fmtSRule (SRULE (con, _, exp), d) : PP.format =
-	    if d <= 0 then PP.text "<rule>"
+	    if d <= 0 then PP.text "<srule>"
 	    else PP.pblock
 		   [PP.ccat (PPV.fmtDcon con, PP.text "=>"),
 		    PP.softIndent (fmtExp (exp, 0, 0, d), 4)]
@@ -473,138 +479,34 @@ fun ppExp (context as (env,source_opt)) (exp : AS.exp, depth : int)  =
 	         hardIndent (fmtSMatch (srules, SOME default, d-1), 2)
           (* end fmtExp' *)
 
-	and ppAppExp (_,_,_,0) = PP.text "<exp>"
-	  | ppAppExp arg =
-	    let val pps = PP.text
-		fun fixitypp(name,rand,leftFix,rightFix,d) =
-		    let val pathString = SymPath.toString(SymPath.SPATH name)
-			val thisFix = case name
-					of [id] => lookFIX(env,id)
-					 | _ => NONfix
-			fun prNon exp =
-			    (openHOVBox 2;
-			     pps pathString; PP.break {nsp=1,offset=0};
-			     fmtExp'(exp,true,d-1);
-			     closeBox ())
-		     in case thisFix
-			  of INfix _ =>   (* path is single symbol *)
-			     (case AU.headStripExp rand
-				of RECORDexp[(_,pl),(_,pr)] =>
-				    let val atom = strongerL(leftFix,thisFix)
-					     orelse strongerR(thisFix,rightFix)
-					val (left,right) =
-					    if atom then (nullFix,nullFix)
-					    else (leftFix,rightFix)
-				     in (openHOVBox 2;
-					  lpcond(atom);
-					  ppAppExp (pl,left,thisFix,d-1);
-					  PP.break {nsp=1,offset=0};
-					  pps pathString;
-					  PP.break {nsp=1,offset=0};
-					  ppAppExp (pr,thisFix,right,d-1);
-					  rpcond(atom);
-					 closeBox ())
-				    end
-				 | e' => prNon e')
-			   | NONfix => prNon rand
-		    end
-		fun appPrint(_,_,_,0) = pps "#"
-		  | appPrint(APPexp(rator,rand),l,r,d) =
-		    (case stripMark rator
-		       of CONexp(DATACON{name,...},_) =>
-		           fixitypp([name],rand,l,r,d)
-		        | VARexp(v,_) =>
-			   let val path =
-			           case !v
-				     of VALvar{path=SymPath.SPATH path', access, ...} =>
-					(case access
-					   of A.LVAR lvar =>
-					      if !internals
-					      then [S.varSymbol(S.name (hd path') ^
-								"." ^ LV.toString lvar)]
-					      else path'
-					   | _ => path')
-				      | OVLDvar{name,...} => [name]
-				      | ERRORvar => [S.varSymbol "<errorvar>"]
-			    in fixitypp(path,rand,l,r,d)
-			   end
-		        | rator =>
-			   (openHOVBox 2;
-			     fmtExp'(rator,true,d-1); PP.break {nsp=1,offset=2};
-			     fmtExp'(rand,true,d-1);
-			    closeBox ()))
-		  | appPrint(MARKexp(exp,(s,e)),l,r,d) =
-		      (case source_opt
-			of SOME source =>
-			     if !internals
-			     then (pps "<MARK(";
-				   prpos(ppstrm,source,s); pps ",";
-				   prpos(ppstrm,source,e); pps "): ";
-				   fmtExp'(exp,false,d); pps ">")
-			     else appPrint(exp,l,r,d)
-			 | NONE => appPrint(exp,l,r,d))
-		  | appPrint (e,_,_,d) = fmtExp'(e,true,d)
-	     in appPrint arg
-	    end
-     in (fn (exp,depth) => fmtExp'(exp,false,depth))
-    end
+     in fmtExp' (exp, 0, 0, depth)
+    end (* end fmtExp *)
 
-and ppRule (context as (env,source_opt)) (RULE(pat,exp), d) =
-    if d <= 0 then PP.text "<rule>"
-    else PP.pblock
-	   [PP.ccat (ppPat env (pat, d-1), PP.text "=>"),
-	    PP.softIndent (ppExp context (exp, d-1), 3)]
+and fmtVB (context as (env,source_opt)) (VB{pat,exp,...},d) =
+    if d <= 0 then PP.text "<VB>"
+    else PP.pblock [fmtPat env (pat, d-1), PP.text "=", fmtExp context (exp,d-1)]
 
-and ppSRule (context as (env,source_opt)) (SRULE(con,_,exp),d) =
-    if d > 0
-    then (PP.openHVBox (PP.Rel 0);
-	  PP.text (AU.conToString con);
-	  PP.text " =>"; PP.break {nsp=1,offset=2};
-	  ppExp context (exp,d-1);
-	  PP.closeBox ppstrm)
-    else PP.text "<srule>"
+and fmtRVB context (RVB{var, exp, ...},d) =
+    if d <= 0 then PP.text "<RVB>"
+    then PP.pblock [PPV.fmtVar var, PP.text "=", ppExp context (exp,d-1)]
 
-and ppVB (context as (env,source_opt)) (VB{pat,exp,...},d) =
-    if d > 0
-    then (PP.openHVBox (PP.Rel 0);
-	  ppPat env (pat,d-1); PP.text " =";
-	  PP.break {nsp=1,offset=2}; ppExp context (exp,d-1);
-	  PP.closeBox ppstrm)
-    else PP.text "<binding>"
+and fmtVARSEL (var1, var2, index) =
+    PP.hblock
+      [PP.text "val", PPV.fmtVar var1, PP.text " = #", PP.integer index, PPV.fmtVar var2]
 
-and ppRVB context (RVB{var, exp, ...},d) =
-    if d > 0
-    then (PP.openHOVBox (PP.Rel 0);
-	  PV.ppVar var; PP.text " =";
-	  PP.break {nsp=1,offset=2}; ppExp context (exp,d-1);
-	  PP.closeBox ppstrm)
-    else PP.text "<rec binding>"
+and fmtDec (context as (env,source_opt)) (dec, depth) =
+    let fun ppDec' (dec, 0) = PP.text (decTag dec)  (* "<dec>" *)
+          | ppDec' (VALdec vbs, d) =
+	      
+	      PU.ppvlist ("val", "and",
+	         (fn vb => ppVB context (vb,d-1)), vbs);
 
-and ppVARSEL (var1, var2, index) =
-    (PP.openHVBox (PP.Rel 0);
-     PP.text "val";
-     PP.break {nsp=1,offset=0};
-     PV.ppVar var1;
-     PP.text " = #";
-     PP.text (Int.toString index);
-     PV.ppVar var2;
-     PP.closeBox ppstrm)
-
-and ppDec (context as (env,source_opt)) =
-  let val {openHOVBox, openHVBox, closeBox, pps, ppi, ...} = PU.en_pp ppstrm
-
-      fun ppDec'(_,0) = pps "<dec>"
-        | ppDec'(VALdec vbs,d) =
-	  (openHVBox 0;
-	   PU.ppvlist ("val ","and ",
-	     (fn => fn vb => ppVB context (vb,d-1)),vbs);
-	   closeBox ())
-        | ppDec'(VALRECdec rvbs,d) =
+          | ppDec'(VALRECdec rvbs,d) =
 	  (openHVBox 0;
 	   PU.ppvlist ("val rec ","and ",
 	     (fn => fn rvb => ppRVB context (rvb,d-1)),rvbs);
 	   closeBox ())
-	| ppDec'(DOdec exp, d) =
+	  | ppDec'(DOdec exp, d) =
 	  (openHVBox 0;
 	   pps "do";
 	   PP.break {nsp=1,offset=2}; ppExp context (exp,d-1);
