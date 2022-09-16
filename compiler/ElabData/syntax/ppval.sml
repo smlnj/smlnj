@@ -8,14 +8,15 @@
 
 signature PPVAL =
 sig
-  val fmtAccess :  Access.access -> PP.format
-  val fmtRep :     Access.conrep -> PP.format
-  val fmtDatacon : Types.datacon -> PP.format
-  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> PP.format
-  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> PP.format
-  val fmtVar :     Variable.var -> PP.format
-  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> PP.format
-  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> PP.format
+  val fmtAccess :       Access.access -> NewPP.format
+  val fmtRep :          Access.conrep -> NewPP.format
+  val fmtDatacon :      Types.datacon -> NewPP.format
+  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> NewPP.format
+  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> NewPP.format
+  val fmtConBinding :   StaticEnv.staticEnv * Types.datacon -> NewPP.format
+  val fmtVar :          Variable.var -> NewPP.format
+  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> NewPP.format
+  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> NewPP.format
 end (* signature PPVAL *)
 
 structure PPVal : PPVAL =
@@ -70,7 +71,8 @@ fun fmtDataconDebug (env: SE.staticEnv, T.DATACON {name, rep, const, typ, sign, 
 	       fmtField ("conrep", fmtConrep rep),
 	       fmtField ("sign", PP.brackets (fmtConsig sign))])))
 
-(* BUG: not exported, not used *)
+(* fmtConBinding : SE.staticEnv * T.datacon -> PP.format
+ * used in PPModule *)
 fun fmtConBinding (env : SE.staticEnv, dcon: T.datacon) =
     (case dcon
        of T.DATACON{name, typ, rep=A.EXN _, ...} =>  (* exception constructor case *)
