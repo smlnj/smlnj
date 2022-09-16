@@ -11,6 +11,9 @@ in
 (* fmtSym: S.symbol -> PP.format *)
 fun fmtSym sym = PP.text (S.name sym)
 
+(* could also vertically align the element formats, taking account of the possibly
+ * different sizes of the header strings *)
+
 fun fmtVerticalList {header1: string, header2: string, formatter: 'a -> PP.format}
 		    (elems: 'a list) =
       case elems
