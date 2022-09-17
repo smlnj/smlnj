@@ -218,12 +218,12 @@ fun appendNewLine fmt = sblock [FMT fmt, SEP HardLine]
 
 (* "indenting" formats *)
 
-(* hardIndent : format * int -> format *)
-fun hardIndent (n: int, fmt: format) =
+(* hardIndent : int -> format -> format *)
+fun hardIndent (n: int) (fmt: format) =
     hiblock (HI n) [fmt]
 
-(* softIndent : format * int -> format *)
-fun softIndent (n: int, fmt: format) =
+(* softIndent : int -> format -> format *)
+fun softIndent (n: int) (fmt: format) =
     hiblock (SI n) [fmt]
 
 (* functions for setting and accessing the line width

@@ -144,10 +144,10 @@ sig
 
   (* indenting formats *)
 
-    val hardIndent : int * format -> format
+    val hardIndent : int -> format -> format
     (* produces a hard indented HBLOCK containing the format as sole component *)
 
-    val softIndent : int * format -> format
+    val softIndent : int -> format -> format
     (* produces a soft indented HBLOCK containing the format as sole component *)
 
 

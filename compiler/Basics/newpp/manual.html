@@ -1110,7 +1110,7 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 <div class="ulist">
 <ul>
 <li>
-<p><code>softIndent : format * int &#8594; format</code></p>
+<p><code>softIndent : int &#8594; format &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
 <pre>softIndent (fmt, n) : indent fmt n additional spaces (relative to parent block's blm) only if following a newline+indent.
@@ -1119,7 +1119,7 @@ Otherwise render fmt normally.</pre>
 </div>
 </li>
 <li>
-<p><code>hardIndent : format * int &#8594; format</code></p>
+<p><code>hardIndent : int &#8594; format &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
 <pre>hardIndent (fmt, n) : indent fmt n additional spaces (relative to parent block's blm) unconditionally.
@@ -1328,6 +1328,35 @@ which renders as:
 <div class="content">
 <pre>formatAlignedList alignment formatter xs : format the members of xs using formatter and then format
 those formats as a list (bracketed with comma separator), aligned according to the alignment parameter.</pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+<h4 id="_setting_and_accessing_the_line_width" class="discrete">Setting and accessing the line width</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><code>setLineWidthFun : (unit &#8594; int) &#8594; unit</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>Defines the function that returns the current lineWidth value.</pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>resetLineWidthFun : unit &#8594; unit</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>Reset the lineWidthFun to the default lineWidthFun (which returns 90).</pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>getLineWidth : unit &#8594; int</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>Returns the current line width, obtained by calling the current lineWidthFun function.</pre>
 </div>
 </div>
 </li>
@@ -1758,7 +1787,7 @@ expected to be the "wider" of the two formats.</p>
 <div class="paragraph">
 <p>The measure of a compound block format is the length of the format as rendered on a single, unbounded line.
 This is the sum of the flat measures of its component formats plus <code>sepMeasure s</code> for each explicit or
-implicit separator <code>s</code>, where</p>
+implicit separator <code>s</code>, where <code>sepMeasure</code> is defined as follows:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1768,8 +1797,8 @@ implicit separator <code>s</code>, where</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The <em>measure</em> fields of the <code>SBLOCK</code> and <code>ABLOCK</code> constructors are use to <em>memoize</em> the measure function
-over formats.</p>
+<p>The <em>measure</em> fields of the <code>SBLOCK</code> and <code>ABLOCK</code> constructors are used to <em>memoize</em> the measure function
+over formats to avoid having to recompute the measures of nested blocks.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1795,20 +1824,27 @@ rendering indented blocks.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Having a vblock vertical alignment mode implies unconditional line breaks.</p>
+<p>Having a vblock vertical alignment mode implies unconditional line breaks anyway.</p>
 </li>
 <li>
-<p>Providing more control of the layout.</p>
+<p>Having a choice of hard and soft (conditional) line breaks provides more control of the layout.</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p>An indented block produces its own preceding newline+indent only if
-the block does not follow a newline+indent.</p>
+<p>An indented block produces its own preceding newline+indent only if the block does not follow a newline+indent, and only if the indentation is hard.</p>
 </li>
 <li>
 <p>The importance of the blm boundary (and no "outdent").</p>
+<div class="paragraph">
+<p>We claim that is simplifies the "semantics" of the prettyprinting system if the content of a block
+is bounded by a left margin, the <code>blm</code>, determined by the column in which the block starts. This goes
+along with the indentation principle: a block is indented as a whole, and the indentation applies to
+the entire content of the block. Other systems, where indentation only applies after newlines in a
+block&#8217;s multi-line layout, make it harder to keep track of the indentation structure and what it
+represents in terms of the data structure being presented.</p>
+</div>
 </li>
 </ol>
 </div>
@@ -1820,10 +1856,11 @@ the block does not follow a newline+indent.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Multi-line measurement of formats.</p>
+<p>Multi-line measurement of formats (this has been implemented in Version 8 of this library).</p>
 </li>
 <li>
-<p>Tabs.</p>
+<p>Tabs. Setting tabs would be related to separators and would only be accessible at a block&#8217;s
+"top level".</p>
 </li>
 <li>
 <p>Tabular formatting (i.e. tables).</p>
@@ -1832,7 +1869,8 @@ the block does not follow a newline+indent.</p>
 <p>Rendering to a layout type (instead of printing directly in the render function).</p>
 </li>
 <li>
-<p>Ribbon percentage as a second constraint controling rendering.</p>
+<p>Ribbon percentage as a second constraint controling rendering. This should be easy to
+add to this scheme.</p>
 </li>
 <li>
 <p><em>styles</em> (similar to WL <em>annotations</em>).</p>
@@ -1842,7 +1880,7 @@ the block does not follow a newline+indent.</p>
 <p>non-fixed character widths (fonts and type faces).</p>
 </li>
 <li>
-<p>color and emphasis.</p>
+<p>color and emphasis (italics and boldface).</p>
 </li>
 </ul>
 </div>
@@ -1852,6 +1890,12 @@ the block does not follow a newline+indent.</p>
 </li>
 <li>
 <p><em>Holophrastic</em> formatting or rendering, <em>i.e.</em>, truncating or abbreviating to conserve space.</p>
+<div class="paragraph">
+<p>This is probably not something that should be supported in a generic way by the prettyprinting
+library. It is normally implemented as part of a particular prettyprinter (as is done, for
+instance, in the SML/NJ prettyprinters for abstract syntax and for various IRs by passing a
+"printdepth" parameter through the prettyprinter and decrementing it for each level of structure.</p>
+</div>
 </li>
 </ul>
 </div>
@@ -1866,7 +1910,7 @@ the block does not follow a newline+indent.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-08-20 19:41:26 -0700
+Last updated 2022-09-17 11:11:28 -0700
 </div>
 </div>
 </body>
