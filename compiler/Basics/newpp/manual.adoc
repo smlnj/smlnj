@@ -397,9 +397,9 @@ _Indented block constructor functions:_
 [discrete]
 ==== Basic formats
 
-* `comma, colon, semicolon, lparen, rparen, lbracket, rbracket, lbrace, rbrace : format`
+* `comma, colon, semicolon, period, lparen, rparen, lbracket, rbracket, lbrace, rbrace, equal : format`
 
- Punctuation characters as formats.
+ Punctuation characters as formats (plus the equal symbol).
 
 * `integer : int -> format`
 

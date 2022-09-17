@@ -87,12 +87,14 @@ fun string (s: string) = text (concat ["\"", s, "\""])  (* was using PrintUtil.f
 val comma : format = text ","
 val colon : format = text ":"
 val semicolon : format = text ";"
+val period : format = text "."
 val lparen = text "("
 val rparen = text ")"
 val lbracket = text "["		  
 val rbracket = text "]"		  
 val lbrace = text "{"		  
 val rbrace = text "}"		  
+val equal = text "="
 
 (* xcat: binary versions of xblock functions (x = p, h, v) *)
 

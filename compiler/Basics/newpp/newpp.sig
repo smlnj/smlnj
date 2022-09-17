@@ -64,15 +64,17 @@ sig
 
     (* a few "punctuation" characters as formats *)
 
-    val comma : format
-    val colon : format
-    val semicolon : format
-    val lparen : format
-    val rparen : format
+    val comma : format     (* text "," *)
+    val colon : format     (* text ":" *)
+    val semicolon : format (* text ";" *)
+    val period : format    (* text "." *)
+    val lparen : format    (* text "(" *)
+    val rparen : format    (* text ")" *)
     val lbracket : format  (* text "[" *)
     val rbracket : format  (* text "]" *)
     val lbrace : format    (* text "{" *)
     val rbrace : format    (* text "}" *)
+    val equal : format     (* text "=" *)
 
     val concat : format list -> format
         (* concatenate a list of formats with no separators *)
