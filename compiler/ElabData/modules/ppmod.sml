@@ -48,14 +48,13 @@ local
 
   structure PP = NewPP
   structure PPU = NewPPUtil
+  structure PPT = PPType
 
   fun bug msg = ErrorMsg.impossible("PPModules: "^msg)
 
-  val pps = PP.string
-  val ppType = PPType.ppType
-  val ppTycon = PPType.ppTycon
-  val ppTyfun = PPType.ppTyfun
-  val ppFormals = PPType.ppFormals
+  val fmtTycon = PPType.fmtTycon
+  val fmtTyfun = PPType.fmtTyfun
+  val fmtFormals = PPType.fmtFormals
 
 in
 
@@ -203,7 +202,7 @@ and fmtElement (env, depth, entityEnvOp) (sym, spec) =
        of M.STRspec {sign, entVar, def, slot} =>
 	    PP.pcat
               (PP.hblock [PP.text "structure", PPU.fmtSym sym, PP.colon],
-	       PP.softIndent (2, 
+	       PP.softIndent 2 
 		 (case entityEnvOp
 		    of NONE => fmtSignature0 (sign, env, depth-1, true, NONE)
 		     | SOME eenv =>
@@ -218,9 +217,9 @@ and fmtElement (env, depth, entityEnvOp) (sym, spec) =
 	| M.FCTspec {sign, entVar, slot} =>
             PP.pcat
 	      (PP.hblock [PP.text "functor ", PPU.fmtSym sym, PP.colon],
-	       PP.softIndent (2, fmtFunsig env (sign, depth-1)))
+	       PP.softIndent 2 fmtFunsig env (sign, depth-1))
 
-	| M.TYCspec{entVar,info} =>
+	| M.TYCspec {entVar, info} =>
 	   (case info
 	      of M.RegTycSpec{spec,repl,scope} =>
 		   (case entityEnvOp
@@ -235,27 +234,27 @@ and fmtElement (env, depth, entityEnvOp) (sym, spec) =
 				  then fmtReplBind (tyc,env)
 				  else fmtTycBind (tyc,env)
 			      | M.ERRORent => PP.text "<ERRORent>"
-			      | _ => bug "fmtElements:TYCent"))
+			      | _ => bug "fmtElements:TYCent 1"))
 	       | M.InfTycSpec{name,arity} =>
 		   (case entityEnvOp
 		      of NONE => PP.hblock [PP.text "type", fmtFormals arity, PPU.fmtSym name]
 		       | SOME eenv =>
 			   (case EE.look(eenv,entVar)
 			      of M.TYCent tyc => fmtTycBind (tyc,env)
-			      | M.ERRORent => PP.text "<ERRORent>"
-			      | _ => bug "fmtElements:TYCent"))
+			       | M.ERRORent => PP.text "<ERRORent>"
+			       | _ => bug "fmtElements:TYCent 2"))
 
 
-	| M.VALspec{spec=typ,...} =>
-	    PP.hblock [PP.text "val", PPU.fmtSym sym, PP.colon, fmtType env (typ)]
+	| M.VALspec {spec, ...} =>
+	    PP.hblock [PP.text "val", PPU.fmtSym sym, PP.colon, fmtType env spec]
 
-	| M.CONspec{spec=dcon as T.DATACON{rep=A.EXN _,...}, ...} =>
+	| M.CONspec {spec = dcon as T.DATACON{rep=A.EXN _, ...}, ...} =>
             (* exception constructor *)
-	    PPV.fmtConBinding (dcon,env)
+	    PPV.fmtConBinding (dcon, env)
 
-	| M.CONspec{spec=dcon,...} => PP.empty
-	    (* don't print ordinary data constructor,
-	     * because it was printed with its datatype *)
+	| M.CONspec _ => PP.empty
+	    (* We don't print ordinary, non-exception, data constructor elements
+	     * because they are printed with their datatype. *)
         (* end case *))
         (* end fmtElement *)
 
@@ -297,15 +296,15 @@ and ppSignature0 (sign, env, depth: int, entityEnvOp) =
 			   PP.vblock
 			     [PP.text "sig"
 			      PP.hardIndent 2 
-				 (PP.vblock
-				    (List.concat
-				      [map (fmtElement (env,depth,entityEnvOp)) nonConsElems,
-				       case strsharing
-					 of nil => nil
-					  | _ => [fmtConstraints (PP.empty, strsharing)],
-				       case typsharing
-					 of nil => nil
-					  | _ => [fmtConstraints (PP.text "type", typsharing)]]))
+				(PP.vblock
+				   (List.concat
+				     [map (fmtElement (env,depth,entityEnvOp)) nonConsElems,
+				      case strsharing
+					of nil => nil
+					 | _ => [fmtConstraints (PP.empty, strsharing)],
+				      case typsharing
+					of nil => nil
+					 | _ => [fmtConstraints (PP.text "type", typsharing)]]))
 			      PP.text "end"]
 
 		   in case nonConsElems
@@ -369,7 +368,7 @@ and fmtTycBind (tyc, env) =
 		  | find [] = []
 	     in find dcons
 	    end
-	fun ppDcon (T.DATACON {name, typ,...}) =
+	fun fmtDcon (T.DATACON {name, typ,...}) =
 	    PP.hcat
 	      (PPU.fmtSym name,
 	       let val typ = 
@@ -377,7 +376,7 @@ and fmtTycBind (tyc, env) =
 			  of (T.POLYty{tyfun=T.TYFUN{body,...},...}) => body
 			   | _ => typ)
 		in if BT.isArrowType typ
-		   then PP.hcat (PP.text "of", ppType env (BT.domain typ))
+		   then PP.hcat (PP.text "of", PPT.fmtType env (BT.domain typ))
 		   else ()
 	       end)
     in case tyc
@@ -385,7 +384,7 @@ and fmtTycBind (tyc, env) =
 	      (case kind
 		 of T.ABSTRACT _ =>
 		      (* abstype *)
-		      PP.hblock [PP.text "type", ppFormals arity, PPU.fmtSym (IP.last path)]
+		      PP.hblock [PP.text "type", PPT.fmtFormals arity, PPU.fmtSym (IP.last path)]
 		  | T.DATATYPE {index, family = {members, ...}, ...} =>
 		      (* ordinary datatype *)
 		      let val {dcons,...} = Vector.sub(members,index)
@@ -393,20 +392,20 @@ and fmtTycBind (tyc, env) =
 			  val incomplete = length visdcons < length dcons
 		      in PP.hcat
 			   (PP.hblock
-			      [PP.text "datatype", ppFormals arity, PPU.fmtSym (IP.last path),
+			      [PP.text "datatype", PPT.fmtFormals arity, PPU.fmtSym (IP.last path),
 			       PP.equal],
 			    case visdcons
 			      of nil => PP.text "..."
 			       | first :: rest =>
 				 PP.pblock
-				   (fmtDatacon first ::
-				    map (fn dcon => PP.hcat (PP.text " |", fmtDatacon dcon))
+				   (fmtDcon first ::
+				    map (fn dcon => PP.hcat (PP.text " |", fmtDcon dcon))
 				      rest
 				    @ (if incomplete then PP.text "..." else PP.empty)))
 		      end
 		  | _ =>
 		      PP.hblock [if EqTypes.isEqTycon tyc then PP.text "eqtype" else PP.text "type",
-				 ppFormals arity;
+				 PPT.fmtFormals arity;
 				 PPU.fmtSym (IP.last path)])
 	  | T.DEFtyc {path, tyfun=T.TYFUN{arity,body}, ...} =>
 	      PP.hblock
@@ -417,103 +416,67 @@ and fmtTycBind (tyc, env) =
 	  | tycon => PP.hcat (PP.text "strange tycon: ", fmtTycon env tycon)
     end (* fun fmtTycBind *)
 
-(* ppReplBind : PP.stream -> T.tycon * SE.staticEnv -> unit *)
-and ppReplBind =
-    fn (T.DEFtyc{tyfun=T.TYFUN{body=T.CONty(rightTyc,_),...},path,...}, env) =>
+(* fmtReplBind : T.tycon * SE.staticEnv -> PP.format *)
+(* ??? Needs revision? See comment in DEFtyc case. *)
+and fmtReplBind (tycon, env) =
+    (case tycon
+       of T.GENtyc{stamp, arity, eq, kind, path, stub} =>
+	   PP.hblock
+	     [PP.text "datatype", PPU.fmtSym (IP.last path), PP.equal, fmtTycBind (tycon, env)]
+        | T.DEFtyc{tyfun=T.TYFUN{body=T.CONty(rightTyc,_),...},path,...} =>  (* ??? *)
 	   (* [GK 5/4/07] Does this case ever occur? All datatype
 	      replication tycs are GENtycs after elaboration *)
-	   (PP.openHOVBox (PP.Abs 2);
-            PP.text "datatype"; break {nsp=1,offset=0};
-            PPU.fmtSym (IP.last path);
-            PP.text " ="; break {nsp=1,offset=0};
-            PP.text "datatype"; break {nsp=1,offset=0};
-            ppTycon env rightTyc;
-            PP.closeBox)
-	 | (tyc as T.GENtyc{stamp, arity, eq, kind, path, stub}, env) =>
-	   (PP.openHOVBox (PP.Abs 2);
-	    PP.text "datatype"; PP.break {nsp=1,offset=0};
-	    PPU.fmtSym (IP.last path);
-	    PP.text " ="; PP.break {nsp=1,offset=0};
-	    fmtTycBind (tyc, env);
-	    PP.closeBox)
-	 | (T.PATHtyc _, _) => ErrorMsg.impossible "<replbind:PATHtyc>"
-	 | (T.RECtyc _, _) => ErrorMsg.impossible "<replbind:RECtyc>"
-	 | (T.FREEtyc _, _) => ErrorMsg.impossible "<replbind:FREEtyc>"
-	 | _ => ErrorMsg.impossible "ppReplBind"
+	   PP.hblock
+             [PP.text "datatype", PPU.fmtSym (IP.last path), PP.equal,
+              PP.text "datatype", ppTycon env rightTyc]
+	| (T.PATHtyc _, _) => ErrorMsg.impossible "<replbind:PATHtyc>"
+	| (T.RECtyc _, _) => ErrorMsg.impossible "<replbind:RECtyc>"
+	| (T.FREEtyc _, _) => ErrorMsg.impossible "<replbind:FREEtyc>"
+	| _ => ErrorMsg.impossible "fmtReplBind"
 
-(* ppBinding : PP.stream -> SE.staticEnv ->  (S.symbol * B.binding * int) -> unit
- *  assumes no newline is needed before pping *)
-and ppBinding (env: SE.staticEnv) (name: S.symbol, binding: B.binding, depth: int) =
+(* fmtBinding : SE.staticEnv ->  (S.symbol * B.binding * int) -> PP.format *)
+and fmtBinding (env: SE.staticEnv) (name: S.symbol, binding: B.binding, depth: int) =
     case binding
       of B.VALbind var => PP.hcat (PP.text "val", PPV.fmtVarTyped (env,var))
-       | B.CONbind con => ppConBinding (con,env)
-       | B.TYCbind tycon => fmtTycBind (tycon,env)
+       | B.CONbind con => fmtConBinding (con, env)
+       | B.TYCbind tycon => fmtTycBind (tycon, env)
        | B.SIGbind sign =>
-	  (PP.openHVBox (PP.Abs 0);
-	    PP.text "signature ";
-	    PPU.fmtSym name; PP.text " =";
-	    PP.break {nsp=1,offset=2};
-	    ppSignature0 (sign,env,depth,true,NONE);
-	   PP.closeBox)
+	   PP.hblock [PP.text "signature", PPU.fmtSym name, PP.equal,
+		      fmtSignature0 (sign,env,depth,true,NONE)]
        | B.FSGbind fs =>
-	   (PP.openHVBox (PP.Abs 2);
-	     PP.text "funsig "; PPU.fmtSym name;
-	     fmtFunsig env (fs, depth);
-	    PP.closeBox)
-       | B.STRbind str => (
-          PP.openHVBox (PP.Abs 0);
-	    PP.openHBox;
-	      PP.text "structure";
-	      PP.space 1;
-              PPU.fmtSym name;
-	      PP.space 1;
-	      PP.text ":";
-	      PP.space 1;
-            PP.closeBox;
-	    ppStructure env (str, depth);
-	   PP.closeBox)
+	   PP.hblock [PP.text "funsig " PPU.fmtSym name, PP.equal, fmtFunsig env (fs, depth)]
+       | B.STRbind str =>
+	   PP.hblock [PP.text "structure", PPU.fmtSym name, PP.colon, fmtStructure env (str, depth)]
        | B.FCTbind fct =>
-	  (PP.openHVBox (PP.Abs 0);
-	    PP.text "functor ";
-	    PPU.fmtSym name;
-	    PP.text " : <sig>";  (* DBM -- should print the signature *)
-	   PP.closeBox)
+	   (case fct
+	     of FCT {sign, ...} =>
+		  PP.hblock [PP.text "functor", PPU.fmtSym name, PP.colon, fmtFunsig env (sign, depth)]
+	      | ERRORfct => PP.empty)
        | B.FIXbind fixity =>
-	  (PP.text (Fixity.fixityToString fixity); PPU.fmtSym name)
+	   PP.hcat (PP.text (Fixity.fixityToString fixity), PPU.fmtSym name)
 
-(* ppOpen : PP.stream -> SE.staticEnv -> (SP.path * M.Structure * int) -> unit *)
-fun ppOpen env (path, str, depth) =
-      (PP.openVBox (PP.Abs 0);
-         PP.openVBox (PP.Abs 2);
-           PP.openHBox;
-	     PP.text "opening ";
-             PP.text (SymPath.toString path);
-           PP.closeBox;
-	   if depth < 1 then ()
-	   else (case str
-		   of M.STR { sign, rlzn as {entities,...}, ... } =>
-			(case sign
-			   of M.SIG {elements = [],...} => ()
-			    | M.SIG {elements,...} =>
-				let fun fmtElem elem =
-					(PP.cut;
-					 fmtElement (SE.atop(sigToEnv sign, env),
-						    depth, SOME entities)
-						  elem)
-				in PP.openVBox (PP.Abs 0);
-				     List.app fmtElem (removeDCons elements);
-				   PP.closeBox
-				end
-			      | M.ERRORsig => ())
-		    | M.ERRORstr => ()
-		    | M.STRSIG _ => bug "ppOpen");
-         PP.closeBox;
-       PP.cut;  (* generates final newline (?) *)
-       PP.closeBox)
+(* fmtOpen : SE.staticEnv -> (SP.path * M.Structure * int) -> PP.format *)
+fun fmtOpen env (path, str, depth) =
+      PP.vcat
+	(PP.hcat (PP.text "opening ", PPU.fmtSymPath path),
+	 if depth <= 0 then PP.empty
+	 else (case str
+		 of M.STR { sign, rlzn as {entities,...}, ... } =>
+		      (case sign
+			 of M.SIG {elements = [],...} => PP.empty
+			  | M.SIG {elements,...} =>
+			      let fun fmtElem elem =
+				      fmtElement (SE.atop(sigToEnv sign, env),
+						  depth, SOME entities)
+						 elem
+			       in PP.vblock (map fmtElem (removeDCons elements))
+			      end
+			  | M.ERRORsig => PP.empty)
+		  | M.ERRORstr => PP.empty
+		  | M.STRSIG _ => bug "ppOpen"))
 
-(* ppSignature : PP.stream -> SE.staticEnv -> (M.Signature * int) -> unit *)
-fun ppSignature env (sign, depth) =
-    ppSignature0 (sign,env,depth,true,NONE)
+(* fmtSignature : SE.staticEnv -> (M.Signature * int) -> PP.format *)
+fun fmtSignature env (sign, depth) = ppSignature0 (sign, env, depth, NONE)
 
 end (* local *)
 end (* structure PPModules *)
