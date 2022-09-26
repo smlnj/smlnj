@@ -2,7 +2,7 @@ File: newpp/README.md
 
 # README for NewPP, A New Prettyprinter
 
-Version 7.2.
+Version 7.3.
 
 This is a revision of Version 7 generation implmentation of the New
 PrettyPrinter. It is a 2-phase prettyprinter where a value to be
@@ -33,6 +33,32 @@ arguments.
 4. Added functions for managing the line width: setLineWidthFun, 
 resetLineWidthFun, getLineWidth. These are used to isolate the prettyprinter
 library from compiler internals like Control.Print.lineWidth.
+
+Version 7.3 Changes
+
+1. Added functions to the interface: labeled, printFormat, etc.
+
+2. Added a new alignment constructor (alignment mode) named "C", for
+"compact".  This mode introduces no separators between format
+elements.  So cblock is the same as concat, which is now depricated as
+redundant and will be removed in the next version.
+
+3. Added a new EMPTY constructor for blocks.  This means the EMPTY
+block is now _first class_.  It will also act as an _identity_ element
+for binary format operators like ccat, hcat, vcat, pcat, and it will
+"disappear" when it occurs within a block.  So, for instance, a format
+like hcat (text "abc", empty) when rendered will not produce a
+spurious space character after the text "abc", because
+
+  hcat (fmt,empty) == fmt.
+
+4. New sequence operators specializing the general "sequence" function.: E.g.
+
+    psequence sepfmt fmts == sequence {alignment = P, sep = sepfmt} fmts
+
+5. New str-NewPP.adoc file documents the NEWPP signature in the style
+   of the smlnj-lib documentation.
+
 
 ## Features
 
