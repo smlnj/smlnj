@@ -7,8 +7,8 @@
 structure ErrorMsg : ERRORMSG =
 struct
 
-  structure PP = NewPP
-  structure SM = SourceMap
+  structure PP = PrettyPrint
+  open PP SourceMap
 
  (* error reporting *)
 
@@ -16,46 +16,46 @@ struct
 
   datatype severity = WARN | COMPLAIN
 
-  type output = string -> unit
-
-  type complainer = severity -> string -> (* output -> *) -> unit
+  type complainer = severity -> string -> (PP.stream -> unit) -> unit
 
   type errorFn = region -> complainer
 
-  type errors = {error: errorFn,
+  type errors = {error: region->complainer,
                  errorMatch: region->string,
                  anyErrors: bool ref}
 
-  fun defaultOutput () = Control.Print.say
+  fun defaultConsumer () = PP.defaultDevice
 
-  val nullErrorBody = PP.empty
+  val nullErrorBody = (fn (ppstrm: PP.stream) => ())
 
-  fun printMessage (output: output, location: string, severity: severity,
-		    msg: string, body: PP.format) =
+  fun ppmsg(errConsumer: PP.device, location, severity, msg, body) =
       case (!BasicControl.printWarnings, severity)
-	of (false, WARN) => ()
+	of (false,WARN) => ()
 	 | _ =>
-	    PP.printFormatNL output
-	      (PP.hblock
-		[PP.text location,
-	         PP.text (* print error label *)
-		   (case severity
-		      of WARN => "Warning:"
-		       | COMPLAIN => "Error:"),
-		 PP.text msg, 
-		 body])
+	    with_pp errConsumer (fn ppstrm =>
+	      (openHVBox ppstrm (PP.Rel 0);
+	       openHVBox ppstrm (PP.Rel 2);
+	       PP.string ppstrm location;
+	       PP.string ppstrm  (* print error label *)
+		  (case severity
+		     of WARN => " Warning: "
+		      | COMPLAIN => " Error: ");
+	       PP.string ppstrm msg;
+	       body ppstrm;
+	       closeBox ppstrm;
+	       PP.newline ppstrm;
+	       closeBox ppstrm))
 
-
-  fun record (COMPLAIN, anyErrors) = anyErrors := true
-    | record (WARN,_) = ()
+  fun record(COMPLAIN,anyErrors) = anyErrors := true
+    | record(WARN,_) = ()
 
   fun impossible msg =
-      (app Control_Print.say ["Error: Compiler bug: ", msg, "\n"];
+      (app Control_Print.say ["Error: Compiler bug: ",msg,"\n"];
        Control_Print.flush();
        raise Error)
 
   fun warn msg =
-      (app Control_Print.say ["Warning: ", msg, "\n"];
+      (app Control_Print.say ["Warning: ",msg,"\n"];
        Control_Print.flush())
 
 (* [Ramsey] With the advent of source-map resynchronization (a.k.a
@@ -75,10 +75,9 @@ struct
  *    the file names of both endpoints (even if the endpoints are the same
  *    file).
  *)
-(* [DBM] hasn't been supported for along while. get rid of the associated complications! *)
+(* [DBM] hasn't been supported for along while. get rid of the complication *)
 
-  (* locationTostring : Source.inputSource -> SourceMap.region -> string *)
-  fun locationTostring ({sourceMap,fileOpened,...}:Source.inputSource)
+  fun location_string ({sourceMap,fileOpened,...}:Source.inputSource)
                       ((p1,p2): SourceMap.region) : string =
       let fun shortpoint ({line, column,...}:sourceloc, l) =
              Int.toString line :: "." :: Int.toString column :: l
@@ -89,7 +88,7 @@ struct
             | allfiles(f, []) = true
           fun lastpos [(_, hi)] = hi
             | lastpos (h::t) = lastpos t
-            | lastpos [] = impossible "lastpos botch in ErrorMsg.locationToString"
+            | lastpos [] = impossible "lastpos botch in ErrorMsg.location_string"
       in  concat (
             case fileregion sourceMap (p1, p2)
               of [(lo, hi)] =>
@@ -105,13 +104,13 @@ struct
       end
 
   fun error (source as {anyErrors, errConsumer,...}: Source.inputSource)
-            ((p1,p2): SourceMap.region) (severity: severity)
-            (msg: string) (body : PP.format) =
-      (printMessage (errConsumer, (locationToString source (p1,p2)), severity, msg, body);
+            ((p1,p2): SourceMap.region) (severity:severity)
+            (msg: string) (body : PP.stream -> unit) =
+      (ppmsg(errConsumer,(location_string source (p1,p2)),severity,msg,body);
        record(severity,anyErrors))
 
-  fun errorNoSource (output, anyE) locs sev msg body =
-      (printMessage (output, locs, sev, msg, body); record (sev, anyE))
+  fun errorNoSource (cons, anyE) locs sev msg body =
+      (ppmsg (cons, locs, sev, msg, body); record (sev, anyE))
 
   fun errorNoFile (errConsumer,anyErrors) ((p1,p2): region) severity msg body =
       (ppmsg(errConsumer,
@@ -120,24 +119,25 @@ struct
              severity, msg, body);
        record(severity,anyErrors))
 
-  fun impossibleWithBody (msg: string) (body: PP.format) =
-      (PP.printFormatNL
-        (PP.vcat
-	   (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg),
-            body);
+  fun impossibleWithBody msg body =
+      (with_pp (defaultConsumer()) (fn ppstrm =>
+        (PP.string ppstrm "Error: Compiler bug: ";
+         PP.string ppstrm msg;
+         body ppstrm;
+         PP.newline ppstrm));
        raise Error)
 
-  val matchErrorString = locationToString
+  val matchErrorString = location_string
 
   fun errors source =
       {error = error source,
        errorMatch = matchErrorString source,
        anyErrors = #anyErrors source}
 
-  fun anyErrors {anyErrors, error, errorMatch} = !anyErrors
+  fun anyErrors{anyErrors,error,errorMatch} = !anyErrors
 
-  fun errorsNoFile (output : output, any : bool ref) =
-      {error = errorNoFile (output, any),
+  fun errorsNoFile (consumer,any) =
+      {error = errorNoFile (consumer,any),
        errorMatch = fn _ => "Match",
        anyErrors = any}
 
