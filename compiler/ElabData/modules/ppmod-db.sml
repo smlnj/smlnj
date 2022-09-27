@@ -6,7 +6,8 @@
 
 (* Modified to use SML/NJ Lib PP. [dbm, 7/30/03]).
  * Debugging version of module printing showing internals;
- * roughly equivalent to the old ppmod with internals true [DBM, 2021/12/12]. *)
+ * roughly equivalent to the old ppmod with internals true [DBM, 2021/12/12].
+ * [DBM, 2022.09.26] Converted to NewPP pretty printer library *)
 
 signature PPMOD_DB =
 sig
@@ -271,7 +272,7 @@ and fmtSignature0 env (sign, entityEnvOp, depth: int) =
 		(map (fn paths =>
 		         PP.pblock
 			   [PP.text "sharing ", PP.text variety,
-		            PP.sequence {alignment = PP.P, sep = PP.equal} (map PPU.fmtSymPath paths)])
+		            PP.psequence PP.equal (map PPU.fmtSymPath paths)])
 		      constraints)
 
      in if depth <= 0 then PP.text "<sig>" else
@@ -331,58 +332,30 @@ and fmtFunsig env (sign, depth) =
 	   | M.ERRORfsig => PP.text "<error fsig>")
     end
 
-(* fmtStrEntity : SE.staticEnv -> (M.entity * int) -> PP.format *)
-and fmtStrEntity env (e, depth) =
-    let val {stamp,entities,properties,rpath,stub} = e
-     in if depth <= 1
-	then PP.text "<structure entity>"
-	else (openHVBox 0;
-	       PP.text "strEntity:";
-	       nl_indent 2;
-	       openHVBox 0;
-		PP.text "rpath: ";
-		PP.text (IP.toString rpath);
-		newline();
-		PP.text "stamp: ";
-		PP.text (Stamps.toShortString stamp);
-		newline();
-		PP.text "entities:";
-		nl_indent 2;
-		fmtEntityEnv env (entities, depth-1);
-		newline();
-		PP.text "lambdaty:";
-		nl_indent 2;
-	       closeBox ();
-	      closeBox ())
-    end
+(* fmtStrEntity : SE.staticEnv -> (M.strEntity * int) -> PP.format *)
+and fmtStrEntity env ({stamp, entities, properties, rpath, stub}: M.strEntity, depth) =
+      if depth <= 1
+      then PP.text "<structure entity>"
+      else PP.vcat
+	       (PP.text "strEntity:",
+		PP.viblock (PP.HI 2)
+		  [PP.labeled "rpath" (PPU.fmtInvPath rpath),
+		   PP.labeled "stamp" (PP.text (Stamps.toShortString stamp)),
+		   PP.labeled "entities" (fmtEntityEnv env (entities, depth-1)),
+		   PP.labeled "lambdaty" PP.empty])
 
-(* fmtFctEntity : SE.staticEnv -> (M.entity * int) -> PP.format *)
-and fmtFctEntity env (e, depth) =
-    let val {stamp,closure,properties,tycpath,rpath,stub} = e
-    in if depth <= 1
-	then PP.text "<functor entity>"
-	else (openHVBox 0;
-	       PP.text "fctEntity:";
-	       nl_indent 2;
-	       openHVBox 0;
-		PP.text "rpath: ";
-		PP.text (IP.toString rpath);
-		newline();
-		PP.text "stamp: ";
-		PP.text (Stamps.toShortString stamp);
-		newline();
-		PP.text "closure:";
-		break{nsp=1,offset=2};
-		fmtClosure (closure,depth-1);
-		newline();
-		PP.text "lambdaty:";
-		break{nsp=1,offset=2};
-		PP.text "tycpath:";
-		break{nsp=1,offset=2};
-		PP.text "--printing of tycpath not implemented yet--";
-	       closeBox ();
-	      closeBox ())
-    end
+(* fmtFctEntity : SE.staticEnv -> (M.fctEntity * int) -> PP.format *)
+and fmtFctEntity env ({stamp,closure,properties,tycpath,rpath,stub}: M.fctEntity, depth) =
+    if depth <= 0
+    then PP.text "<functor entity>"
+    else PP.vcat
+	   (PP.text "fctEntity:",
+	    PP.viblock (PP.HI 2),
+	      [PP.labeled "rpath" (PPU.fmtInvPath rpath),
+	       PP.labeled "stamp" (PP.text (Stamps.toShortString stamp)),
+	       PP.labeled "closure" (fmtClosure (closure,depth-1)),
+	       PP.labeled "lambdaty" PP.empty,
+	       PP.labeled "tycpath" (PP.text "--tycpath formatting not implemented--")])
 
 (* fmtFunctor : SE.staticEnv -> (M.Functor * int) -> PP.format *)
 and fmtFunctor env (fct, depth) =
