@@ -51,11 +51,9 @@ local structure S  = Symbol
       structure INS = Instantiate
       structure SE = StaticEnv
       structure EM = ErrorMsg
-      structure PP = PrettyPrint
       structure A  = Absyn
       structure DA = Access
       structure DI = DebIndex
-      structure PPU = PPUtil
       structure ED = ElabDebug
       structure ST = RedBlackSetFn(type ord_key = S.symbol
                                    val compare = S.compare)

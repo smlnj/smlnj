@@ -14,12 +14,15 @@ local
   structure V = Variable
   structure AS = Absyn
   structure AU = AbsynUtil
+  structure SE = StaticEnv
   structure EU = ElabUtil
   structure PO = Primop
   structure P = Paths
   structure MC = MCCommon
   structure MU = MCUtil
-  structure PP = PrettyPrint
+  structure PP = NewPP
+  structure PPT = PPType
+  structure PPA = PPAbsyn
 
   open MCCommon
 
@@ -41,42 +44,37 @@ local
   fun bug msg = ErrorMsg.impossible ("Generate: " ^ msg)
 
   fun ppAndor andor =
-      PP.with_default_pp
-	  (fn ppstrm =>
-	      (PP.string ppstrm "andor:\n";
-	       MCPrint.ppAndor ppstrm andor;
-	       PP.newline ppstrm))
+      PP.printFormatNL
+	 (PP.vcat
+	    (PP.text "andor:",
+	     PP.hardIndent 3 (PPMC.fmtAndor andor)))
 
   fun ppDecisionTree dectree =
-      PP.with_default_pp
-	  (fn ppstrm =>
-	      (PP.string ppstrm "dectree:\n";
-	       MCPrint.ppDectree ppstrm dectree;
-	       PP.newline ppstrm))
+      PP.printFormatNL
+	 (PP.vcat
+	    (PP.text "andor:",
+	     PP.hardIndent 3 (PPMC.fmtDectree dectree)))
 
   fun ppExp (exp, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppExp (StaticEnv.empty, NONE) ppstrm (exp, 100);
-	       PP.newline ppstrm))
+      PP.printFormatNL
+	 (PP.vcat
+	    (PP.text msg,
+	     PP.hardIndent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))))
 
   fun ppDec (dec, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppDec (StaticEnv.empty, NONE) ppstrm (dec, 100);
-	       PP.newline ppstrm))
+      PP.printFormatNL
+	 (PP.vcat
+	    (PP.text msg,
+	     PP.hardIndent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
 
   fun ppPat pat =
-      PP.with_default_pp(fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, 20))
+      PP.printFormatNL (PPA.fmtPat (SE.empty, NONE) (pat, 100))
 
   fun ppVar var =
-      PP.with_default_pp(fn ppstrm => PPVal.ppVar ppstrm var)
+      PP.printFormatNL (PPVal.fmtVar var)
 
   fun ppType msg ty =
-      PP.with_default_pp
-	(fn ppstrm => (PP.string ppstrm (msg^": "); PPType.ppType StaticEnv.empty ppstrm ty))
+      PP.printFormatNL (PP.hcat (PP.text (msg^":"), PPT.fmtType SE.empty ty))
 
   fun timeIt x = TimeIt.timeIt (!stats) x
 			       

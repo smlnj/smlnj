@@ -1028,12 +1028,8 @@ let
 		  in  (vb::vbs,var2::vars)
 		  end
 
-	    fun zip3(x::xs,y::ys,z::zs) = (x,y,z)::zip3(xs,ys,zs)
-	      | zip3(nil,_,_) = nil
-	      | zip3 _ = bug "zip3"
-
 	    val (vbs,vars) =
-		foldr forceStrict ([],[]) (zip3(lhsSyms,lhsVars,map #2 exps))
+		foldr forceStrict ([],[]) (List3.zip3Eq (lhsSyms, lhsVars, map #2 exps))
 
 	    val env' = ListPair.foldl
 		  (fn (s, v, env) => SE.bind(s, B.VALbind v, env))

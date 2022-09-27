@@ -14,7 +14,7 @@ struct
         sourceStream: TextIO.instream,
         content: string option ref,
         anyErrors: bool ref,
-        errConsumer: PrettyPrint.device
+        errConsumer: string -> unit
       }
 
 (* -- inactive diagnostic printing

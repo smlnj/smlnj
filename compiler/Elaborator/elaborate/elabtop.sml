@@ -17,8 +17,7 @@ signature ELABTOP =
 structure ElabTop : ELABTOP =
   struct
 
-    structure PP = PrettyPrint
-    structure PU = PPUtil
+    structure PP = NewPP
     structure S = Symbol
     structure SP = SymPath
     structure IP = InvPath
@@ -42,7 +41,7 @@ structure ElabTop : ELABTOP =
     val debugging = ElabControl.etopdebugging (* default false *)
     fun debugmsg (msg: string) =
           if !debugging then (say msg; say "\n") else ()
-    val debugPrint = (fn x => ElabDebug.debugPrint debugging x)
+    val debugPrint = (fn x => ElabDebug.debugPrint debugging x) (* eta-expanded for polymorphism *)
 
     fun ppAbsynDec ppstrm (dec,env) =
 	PPAbsyn.ppDec (env, NONE) ppstrm (dec, !Control_Print.printDepth)
@@ -141,13 +140,10 @@ structure ElabTop : ELABTOP =
 
 	    | elab(OpenDec paths, env, top, region) =
 		let val _ = debugPrint("top level open: ",
-			      (fn pps => fn paths =>
-				 PU.ppSequence pps
-				   {sep=(fn pps => PP.string pps ","),
-				    pr=(fn ppstrm => (fn sympath =>
-					  PP.string ppstrm (SymPath.toString sympath))),
-				    style=PU.INCONSISTENT}
-				 (List.map SymPath.SPATH paths)), paths)
+			      (fn paths =>
+				  PP.sequence {alignment = PP.P, sep = PP.comma}
+				     (map PPU.fmtSymPath (map SymPath.SPATH paths))
+			      paths
 
 		    val err = error region
 
@@ -213,7 +209,7 @@ structure ElabTop : ELABTOP =
 	  val (dec, env) = elab(dec,env,true,SourceMap.nullRegion)
     in
         debugmsg "<<elabTop";
-	ElabDebug.debugPrint ElabControl.printAbsyn ("ABSYN::", ppAbsynDec, (dec,env));
+	ElabDebug.debugPrint ElabControl.printAbsyn ("ABSYN::", fmtAbsynDec, (dec,env));
 	CheckUnused.check error dec;
 	(dec, env)
     end (* fun elabTop *)

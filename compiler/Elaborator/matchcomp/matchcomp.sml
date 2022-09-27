@@ -48,10 +48,9 @@ local
   structure EU = ElabUtil
   structure LV = LambdaVar
   structure EM = ErrorMsg
-  structure PP = PrettyPrint
-  structure PU = PPUtil
+  structure PP = NewPP
+  structure PPMC = PPMatchComp
   structure DT = DecisionTree
-  structure MCP = MCPrint
   structure ST = MCStats
   structure MCC = MCControl (* match compiler control flags *)
  
@@ -79,14 +78,12 @@ local
   val db_printDepth = 100
 
   fun ppDectree dectree =
-      PP.with_default_pp (fn ppstrm => MCPrint.ppDectree ppstrm dectree)
+      PP.printFormatNL (PPMC.fmtDectree dectree)
 
-  fun ppExp (exp, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppExp (StaticEnv.empty, NONE) ppstrm (exp, db_printDepth);
-	       PP.newline ppstrm))
+  fun ppExp (exp : AS.exp, msg: string) =
+      PP.printFormatNL
+        (PP.vcat (PP.string msg,
+		  PPA.fmtExp (StaticEnv.empty, NONE) (exp, db_printDepth)))
 
 in
 
@@ -115,8 +112,7 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
     val location = "nolocation"
         (* might be derived from region argument, but need current Source.inputSource or
          * errorMatch function from the ErrorMsg.errors record (found in compInfo now)  *)
-    val _ = MCPrint.debugPrint mcdebugging
-              ("matchComp: match = \n", MCPrint.ppMatch, rules)
+    val _ = PPMC.debugPrint mcdebugging ("matchComp: match =", PPMC.fmtMatch rules)
 
     val (numExpandedRules, expandedPats, rhsFunBinders, ruleMap) =
 	Preprocessing.expandPats (rules, lhsTy, rhsTy)
@@ -130,21 +126,21 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
     val protoAndor: protoAndor = (* ProtoAndor.makeProtoAndor expandedPats *)
         timeIt ("makeProtoAndor", location, ProtoAndor.makeProtoAndor, expandedPats)
 
-    val _ = MCPrint.debugPrint printProtoAndor
-	      ("** matchComp: protoAndor = ", MCPrint.ppProtoAndor, protoAndor)
+    val _ = PPMC.debugPrint printProtoAndor
+	      ("** matchComp: protoAndor =", PPMC.fmtProtoAndor protoAndor)
 
     val andor: andor =
 	(* Andor.makeAndor (protoAndor, allRules) *)
 	timeIt ("Andor.makeAndor", location, Andor.makeAndor, (protoAndor, allRules))
     val _ = if !stats then ST.collectAndorStats andor else ()
 
-    val _ = MCPrint.debugPrint printAndor ("** matchComp: andor", MCPrint.ppAndor, andor)
+    val _ = PPMC.debugPrint printAndor ("** matchComp: andor =", PPMC.ppAndor andor)
 
     val dectree = (* DecisionTree.makeDectree (andor, allRules) *)
 	timeIt ("makeDectree", location, DT.makeDectree, (andor, allRules))
     val _ = ST.collectDectreeStats dectree  (* must collect dectree stats for rulesUsed and numFAIL *)
 
-    val _ = MCPrint.debugPrint printDectree ("** matchComp: dectree = ", MCPrint.ppDectree, dectree)
+    val _ = PPMC.debugPrint printDectree ("** matchComp: dectree =", PPMC.fmtDectree dectree)
 
     (* checking exhaustiveness and redundancy of rules *)
     (* It may be that there are unused _ramified_ rules, but all original rules are used!? Example? *)
@@ -229,12 +225,12 @@ fun bindCompile (rules: (AS.pat * AS.exp) list, lhsTy: T.ty, rhsTy: T.ty, errorF
         then errorFn region
 	       (if !MCC.bindNonExhaustiveError then EM.COMPLAIN else EM.WARN)
 	       ("binding not exhaustive" ^ (if noVarsF then " and contains no variables" else ""))
-	       (MatchPrint.bindPrint (env,rules))
+	       (PPMC.formatBind (env,rules))
         else if noVarsF
         then errorFn region
 	       EM.WARN
 	       "binding contains no variables"
-               (MatchPrint.bindPrint(env,rules))
+               (PPMC.formatBind (env,rules))
         else ();
 	(code, rootVar)
     end
@@ -248,19 +244,19 @@ fun bindCompile (rules: (AS.pat * AS.exp) list, lhsTy: T.ty, rhsTy: T.ty, errorF
 fun handlerCompile (rules, rhsTy, errorFn, region, env): (AS.exp * V.var) =
     let val (code, rootVar, unused, redundant, _) =
 	      matchComp (rules, BT.exnTy, rhsTy, NONE, region)
+
 	val redundantF= !MCC.matchRedundantWarn andalso redundant
 
      in if redundantF
 	then errorFn region
 	     (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
 	     "redundant patterns in match"
-             (MatchPrint.matchPrint(env,rules,unused))
+             (PPMC.formatMatch(env,rules,unused))
 	else ();
 	(code, rootVar)
     end
 
-(*
- * matchCompile: Entry point for compiling matches induced by function expressions
+(* matchCompile: Entry point for compiling matches induced by function expressions
  *  (and thus case expression, if-then-else expressions, while expressions
  *  and fun declarations) (e.g., fn (x::y) => ([x],y)). If the control flag
  *  MCC.matchRedundantWarn is set, and match is redundant, a warning
@@ -277,23 +273,24 @@ fun matchCompile (rules, lhsTy, rhsTy, errorFn, region, env): (AS.exp * V.var) =
 	    nonexhaustive andalso (!MCC.matchNonExhaustiveError orelse !MCC.matchNonExhaustiveWarn)
 	val redundantF =
 	    redundant andalso (!MCC.matchRedundantError orelse !MCC.matchRedundantWarn)
+
      in case (nonexhaustiveF,redundantF)
 	  of (true, true) =>
              errorFn region
 	       (if !MCC.matchRedundantError orelse !MCC.matchNonExhaustiveError
 		then EM.COMPLAIN else EM.WARN)
 	       "match redundant and nonexhaustive"
-	       (MatchPrint.matchPrint(env, rules, unused))
+	       (PPMC.formatMatch (env, rules, unused))
            | (true, false) =>
              errorFn region
 	       (if !MCC.matchNonExhaustiveError then EM.COMPLAIN else EM.WARN)
                "match nonexhaustive"
-	       (MatchPrint.matchPrint(env, rules, unused))
+	       (PPMC.formatMatch (env, rules, unused))
            | (false, true) =>
              errorFn region
 	       (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
 	       "match redundant"
-	       (MatchPrint.matchPrint(env, rules, unused))
+	       (PPMC.formatMatch (env, rules, unused))
            | _ => ();
         (matchExp, rootVar)
     end

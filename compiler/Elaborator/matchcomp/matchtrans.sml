@@ -22,9 +22,11 @@ local
   structure AS = Absyn
   structure AU = AbsynUtil
   structure EU = ElabUtil
-  structure PP = PrettyPrint
+  structure PP = NewPP
+  structure PPA = PPAbsyn
   structure MU = MCUtil
   structure MC = MatchComp
+
   open Absyn
 
   fun bug msg = ErrorMsg.impossible ("MatchTrans: " ^ msg)
@@ -47,21 +49,19 @@ local
   fun dbsays msgs = dbsay (concat msgs)
 
   fun ppExp (exp, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppExp (StaticEnv.empty, NONE) ppstrm (exp, 20);
-	       PP.newline ppstrm))
+      PP.printFormatNL
+	 (PP.vcat
+	    (PP.text msg,
+	     PP.hardIndent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))))
 
   fun ppDec (dec, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppDec (StaticEnv.empty, NONE) ppstrm (dec, 20);
-	       PP.newline ppstrm))
+      PP.printFormatNL
+	 (PP.vcat
+	    (PP.text msg,
+	     PP.hardIndent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
 
   fun ppPat pat =
-      PP.with_default_pp(fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, 20))
+      PP.printFormatNL (PPA.fmtPat (SE.empty, NONE) (pat, 100))
 
 in
 

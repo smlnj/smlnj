@@ -11,7 +11,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
     structure EM = ErrorMsg
     structure S = Symbol
     structure E  = Environment
-    structure PP = PrettyPrint
+    structure PP = NewPP
     structure T = Time
     structure U = Unsafe
     structure PC = SMLofNJ.Internals.ProfControl
@@ -29,20 +29,14 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		    (* diagnostic printing of Ast and Absyn *)
 		      val printDepth = Control_Print.printDepth
 
-    fun debugPrint flag (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
+    fun debugPrint flag (msg: string, formatter: ('a -> PP.format), arg: 'a) =
 	if !flag
-	then PP.with_pp (EM.defaultConsumer())
-	  (fn ppstrm =>
-	      (PP.openHVBox ppstrm (PP.Rel 0);
-	       PP.string ppstrm msg;
-	       PP.newline ppstrm;
-	       PP.openHVBox ppstrm (PP.Rel 0);
-	       printfn ppstrm arg;
-	       PP.closeBox ppstrm;
-	       PP.newline ppstrm;
-	       PP.closeBox ppstrm;
-	       PP.flushStream ppstrm))
+	then let val format = PP.vcat (PP.text msg, PP.hardIndent 2 (formatter arg))
+	      in PP.printFormatNL format
+	     end
 	else ()
+
+    val lineWidth = Control.Print.lineWidth
 
     val compManagerHook : {
 	    manageImport : Ast.dec * EnvRef.envref -> unit,
@@ -114,9 +108,8 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
 		      (* conditional diagnostic code to print ast - could it be involked from parser?
 			 if so, what statenv would be used? *)
-		      val _ = let fun ppAstDec ppstrm astdec =
-				      PPAst.ppDec NONE ppstrm (astdec, 1000)
-			      in debugPrint debugging ("AST::", ppAstDec, ast)
+		      val _ = let fun formatAstDec astdec = PPAst.fmtDec NONE (astdec, 1000)
+			      in debugPrint debugging ("AST::", formatAstDec, ast)
 			      end
 
 		      val {csegments, newstatenv, absyn, exportPid, exportLvars, imports, ...} =
@@ -132,9 +125,9 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		      val _ = if !Control.progressMsgs
 			    then say "### C.compile successful\n"
 			    else ()
-		      val _ = let fun ppAbsynDec ppstrm absyn_dec =
-				      PPAbsyn.ppDec (statenv, NONE) ppstrm (absyn_dec, 1000)
-			      in debugPrint debugging ("Absyn: ", ppAbsynDec, absyn)
+		      val _ = let fun formatAbsynDec absyn_dec =
+				      PPAbsyn.fmtDec (statenv, NONE) (absyn_dec, 1000)
+			      in debugPrint debugging ("Absyn: ", formatAbsynDec, absyn)
 			      end
 
 		      val executable = Execute.mkExec
@@ -188,11 +181,8 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		      val e1 = E.mkenv { static = ste1, dynamic = E.dynamicPart e0 }
 		      val _ = if !Control.progressMsgs then say "### e1 successful\n" else ()
 
-		      in
-			PP.with_pp
-			    (#errConsumer source)
-			    (fn ppstrm => PPDec.ppDec e1 ppstrm (absyn, exportLvars));
-		        if !Control.progressMsgs then say "### oneUnit\n" else ()
+		       in PP.render (PPDec.fmtDec e1 (absyn, exportLvars), (#errConsumer source), !lineWidth)
+		          if !Control.progressMsgs then say "### oneUnit\n" else ()
 		      end
 		  (* end case *))
 

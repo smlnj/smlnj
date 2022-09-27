@@ -4,18 +4,12 @@
 signature ELABDEBUG =
 sig
   val debugMsg : bool ref -> string -> unit
-  val debugPrint : bool ref
-                   -> (string *
-		       (PrettyPrint.stream -> 'a -> unit) *
-		       'a)
-                   -> unit
-  val ppSymList : PrettyPrint.stream -> Symbol.symbol list -> unit
+  val debugPrint : bool ref -> (string * ('a -> NewPP.format) * 'a) -> unit
+  val fmtSymList : Symbol.symbol list -> NewPP.format
   val envSymbols : StaticEnv.staticEnv -> Symbol.symbol list
   val checkEnv : StaticEnv.staticEnv * Symbol.symbol -> string
   val withInternals : (unit -> 'a) -> 'a
-
 end (* signature ELABDEBUG *)
-
 
 structure ElabDebug : ELABDEBUG =
 struct
@@ -23,48 +17,28 @@ struct
 local
   structure S  = Symbol
   structure SE = StaticEnv
-  structure PP = PrettyPrint
-  structure PU = PPUtil
+  structure PP = NewPP
+  structure PPU = NewPPUtil
   structure EM = ErrorMsg
-
-  open PP
 
 in
 
 fun debugMsg (debugging: bool ref) (msg: string) =
     if (!debugging)
-    then with_default_pp
-	  (fn ppstrm =>
-	    (openHVBox ppstrm (PP.Rel 0);
-	     PP.string ppstrm msg;
-	     closeBox ppstrm;
-	     newline ppstrm;
-	     PP.flushStream ppstrm))
+    then PP.printFormatNL (PP.text msg)
     else ()
 
 fun debugPrint (debugging: bool ref)
-               (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
+               (msg: string, formatter: 'a -> PP.format, arg: 'a) =
     if (!debugging)
-    then with_default_pp
-	  (fn ppstrm =>
-	    (openHVBox ppstrm (PP.Abs 2);
-	     PP.string ppstrm msg;
-	     PP.nbSpace ppstrm 1;
-	     printfn ppstrm arg;
+    then PP.printFormatNL
+	    (PP.vcat
+	       (PP.text msg,
+		formatter arg)
 	     closeBox ppstrm;
-	     newline ppstrm;
-	     PP.flushStream ppstrm))
     else ()
 
-fun ppSymList ppstrm (syms: S.symbol list) =
-     PU.ppClosedSequence ppstrm
-     {front=(fn ppstrm => PP.string ppstrm "["),
-      sep=(fn ppstrm => (PP.string ppstrm ",")),
-      back=(fn ppstrm => PP.string ppstrm "]"),
-      style=PU.INCONSISTENT,
-      pr=PU.ppSym}
-     syms
-
+fun fmtSymList (syms: S.symbol list) = PP.formatList PPU.fmtSym syms
 
 (* more debugging *)
 fun envSymbols (env: SE.staticEnv) =

@@ -16,7 +16,9 @@ local
   structure BT = BasicTypes
   structure P = Paths
   structure MC = MCCommon	     
-  structure PP = PrettyPrint
+  structure PP = NewPP
+  structure PPA = PPAbsyn
+  structure PPMC = PPMatchComp
 
   open Absyn Paths MCCommon
 
@@ -28,10 +30,10 @@ local
   fun saysnl strings = saynl (concat strings)
 
   fun ppProtoAndor pandor =
-      PP.with_default_pp (fn ppstrm => MCPrint.ppProtoAndor ppstrm pandor)
+      PP.printFormatNL (PPMC.fmtProtoAndor pandor)
 
   fun ppPat pat =
-      PP.with_default_pp(fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, 20))
+      PP.printFormatNL (PPA.fmtPat (SE.empty, NONE) (pat, 100))
 
 in
 

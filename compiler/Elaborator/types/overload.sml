@@ -28,11 +28,14 @@ structure Overload : OVERLOAD =
     val debugging = ElabControl.ovlddebugging
 
     structure EM = ErrorMsg
+    structure T = Types
     structure BT = BasicTypes
     structure TU = TypesUtil
+    structure SE = StaticEnv
     structure ED = ElabDebug
-    structure PP = PrettyPrint
-    structure PU = PPUtil
+    structure PP = NewPP
+    structure PPU = NewPPUtil
+    structure PPT = PPType
     structure Ty = Types
     structure V = Variable
     structure OLV = OverloadVar
@@ -41,8 +44,8 @@ structure Overload : OVERLOAD =
 
     fun debugMsg (msg: string) = ED.debugMsg debugging msg
 
-    val ppType = PPType.ppType StaticEnv.empty
-    fun debugPPType (msg, ty) = ED.debugPrint debugging (msg, ppType, ty)
+    fun ppType (ty: T.ty) = PP.printFormat (PPT.fmtType SE.empty ty)
+    fun debugPPType (msg, ty) = ED.debugPrint debugging (msg, (PPT.fmtType SE.empty ty))
 
   (* information about overloaded literals; once the type has been resolved, we use this
    * information to check that the literal value is within range for its type.
@@ -100,14 +103,11 @@ structure Overload : OVERLOAD =
 			     of SOME var => varref := var
 			     |  NONE =>
 				err EM.COMPLAIN "overloaded variable not defined at type"
-				    (fn ppstrm =>
-					(PPType.resetPPType();
-					 PP.newline ppstrm;
-					 PP.string ppstrm "symbol: ";
-					 PU.ppSym ppstrm name;
-					 PP.newline ppstrm;
-					 PP.string ppstrm "type: ";
-					 PPType.ppType env ppstrm (Ty.VARty context))))
+				    (PPType.resetPPType();
+				     PP.hblock
+				       [PP.hcat (PP.text "symbol:", PPU.fmtSym name),
+					PP.hcat (PP.text "type:",
+						 PPType.ppType env ppstrm (Ty.VARty context))))
 		    end (* fun resolveOVLDvar *)
 
 	        (* resolve overloaded literals *)

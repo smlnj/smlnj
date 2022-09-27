@@ -10,12 +10,13 @@ sig
   val decType : StaticEnv.staticEnv * Absyn.dec * bool
 		* ErrorMsg.errorFn * (unit -> bool) * SourceMap.region
                 -> Absyn.dec
-    (* decType (senv, dec, toplev, errFn, anyErrors, region):
-         senv: the context static environment
-         dec: the declaration to be type checked
-         errFn: error reporting function
+    (* decType (senv, dec, toplev, errorFn, anyErrors, region):
+         senv: SE.staticEnv -- the context static environment
+         dec: Absyn.dec -- the declaration to be type checked
+         toplev : bool -- @ top level?
+         errorFn: error reporting function
          anyErrors : unit -> bool  -- have errors been detected
-         region: source region of dec
+         region: sourceMap.region -- region of dec
      *)
   val debugging : bool ref
 
@@ -24,20 +25,24 @@ end (* signature TYPECHECK *)
 structure Typecheck : TYPECHECK =
 struct
 
-local open Types TypesUtil Unify Absyn
-	   ErrorMsg PPUtil PPType PPAbsyn
-
+local
   structure SE = StaticEnv
   structure DI = DebIndex
-  structure DA = Access
+  structure A = Access
+  structure AS = Absyn
+  structure T = Types
   structure BT = BasicTypes
   structure TU = TypesUtil
   structure OC = Occurrence
   structure V = Variable
   structure EU = ElabUtil
   structure ED = ElabDebug
-  structure PP = PrettyPrint
+  structure PP = NewPP
+  structure PPT = PPType
+  structure PPA = PPAbsyn
   structure MC = MatchComp
+ 
+  open Types TypesUtil Unify Absyn ErrorMsg
 in
 
 (* debugging *)
@@ -61,8 +66,9 @@ val showCulprits = ElabControl.showTypeErrorCulprits
 fun refNewDcon(DATACON{name, const, rep, typ, sign, lazyp}) =
     DATACON{name=name, const=const, rep=rep, typ=BT.refPatType, sign=sign, lazyp=lazyp}
 
-fun message(msg,mode: Unify.unifyFail) =
-    String.concat[msg," [",Unify.failMessage mode,"]"]
+(* mkMessage : string * Unify.unifyFail -> string *)
+fun mkMessage (msg: string, mode: Unify.unifyFail) : string =
+    String.concat [msg, "[", Unify.failMessage mode, "]"]
 
 fun mkDummy0 () = BasicTypes.unitTy
 
@@ -73,60 +79,66 @@ let
 (* setup for recording and resolving overloaded variables and literals *)
 val { pushv = olv_push, pushl = oll_push, resolve = ol_resolve } = Overload.new ()
 
-val ppType = PPType.ppType env
-val ppTycon = PPType.ppTycon env
-val ppPat = PPAbsyn.ppPat env
-val ppExp = PPAbsyn.ppExp(env,NONE)
-val ppRule = PPAbsyn.ppRule(env,NONE)
-val ppVB = PPAbsyn.ppVB(env,NONE)
-val ppRVB = PPAbsyn.ppRVB(env,NONE)
-val ppDec = PPAbsyn.ppDec(env, NONE)
+(* formatting/prettyprinting functions for type errors *)
 
-fun ppType' ty = (dbsaynl ">>> ppType'";
-		  PP.with_default_pp
-		      (fn ppstrm => (ppType ppstrm ty));
-		  dbsaynl "<<< ppType'")
+fun fmtType ty = PPT.fmtType env ty
+fun ppType ty = PP.printFormat (fmtType ty)
+fun fmtTycon tycon = PPT.fmtTycon env tycon
+fun ppTycon tycon = PP.printFormat (fmtTycon tycon)
+fun fmtPat pat = PPA.fmtPat env (pat, !printDepth)
+fun ppPat pat = PP.printFormat (fmtPat pat)
+fun fmtExp exp = PPA.fmtExp (env, NONE) (exp, !printDepth)
+fun ppExp exp = PP.printFormat (fmtExp exp)
+fun fmtRule rule = PPA.fmtRule (env,NONE) (rule, !printDepth)
+fun ppRule rule = PP.printFormat (fmtRule rule)
+fun fmtVB vb = PPA.fmtVB (env,NONE) (vb, !printDepth)
+fun ppVB vb = PP.printFormat (fmtVB vb)
+fun fmtRVB rvb = PPA.fmtRVB (env,NONE) (rvb, !printDepth)
+fun ppRVB rvb = PP.printFormt (fmtRVB rvb)
+fun fmtDec dec = PPA.fmtDec (env, NONE) (dec, !printDepth)
+fun ppDec dec = PP.printFormat (fmtDec dec)
 
-val ppDec' =
-  (fn ppstrm => fn d => PPAbsyn.ppDec (env,NONE) ppstrm (d,!printDepth))
+fun ppType' ty =
+    PP.printFormat
+       (PP.hblock [PP.text ">>> ppType'", PPT.fmtType SE.empty ty), PP.text "<<< ppType'"]
 
-fun ppDecDebug (msg,dec) =
-  ED.withInternals(fn () => ED.debugPrint debugging (msg, ppDec', dec))
+fun ppDec' dec =
+    PP.printFormat (PPA.fmtDec (env,NONE) (dec,!printDepth))
+
+fun ppDecDebug (msg, dec) =
+    ED.withInternals (fn () => ED.debugPrint debugging (msg, PPA.fmtDec dec))
 
 fun ppTypeDebug (msg,ty) =
-  ED.withInternals(fn () => ED.debugPrint debugging (msg, ppType, ty))
+    ED.withInternals (fn () => ED.debugPrint debugging (msg, PPT.fmtType SE.emtpy ty))
 
 fun ppTyvarDebug tv =
-  ED.withInternals(fn () => dbsaynl (PPType.tyvarPrintname tv))
+    ED.withInternals (fn () => dbsaynl (PPT.tyvarPrintname tv))
 
-fun ppRegion ppstrm ((l,u): SourceMap.region) =
-    (PP.string ppstrm (Int.toString l);
-     PP.string ppstrm "-";
-     PP.string ppstrm (Int.toString u))
+fun fmtRegion ((l,u): SourceMap.region) : PP.format =
+    PP.hblock [PP.integer l, PP.text "-" PP.integer u]
 
-fun ppModeErrorMsg ppstrm (mode: Unify.unifyFail) =
+(* fmtModeErrorMsg : Unify.unifyFail -> PP.format *)
+fun fmtModeErrorMsg (mode: Unify.unifyFail) =
     if !showCulprits then
       (case mode
-	of TYC(tyc1,tyc2,reg1,reg2) =>
-	   (PP.newline ppstrm;
-	    PP.string ppstrm "Mode: tycon mismatch"; PP.newline ppstrm;
-	    PP.string ppstrm "tycon1: ";
-	    ppTycon ppstrm tyc1; PP.newline ppstrm;
-	    PP.string ppstrm "from: "; ppRegion ppstrm reg1; PP.newline ppstrm;
-	    PP.string ppstrm "tycon2: ";
-	    ppTycon ppstrm tyc2; PP.newline ppstrm;
-	    PP.string ppstrm "from: "; ppRegion ppstrm reg2)
-	 | TYP(ty1,ty2,reg1,reg2) =>
-	   (PP.newline ppstrm;
-	    PP.string ppstrm "Mode: type mismatch"; PP.newline ppstrm;
-	    PP.string ppstrm "type1: ";
-	    ppType ppstrm ty1; PP.newline ppstrm;
-	    PP.string ppstrm "from: "; ppRegion ppstrm reg1; PP.newline ppstrm;
-	    PP.string ppstrm "type2: ";
-	    ppType ppstrm ty2; PP.newline ppstrm;
-	    PP.string ppstrm "from: "; ppRegion ppstrm reg2)
-	  | _ => ())
-    else ()
+	of TYC (tyc1, tyc2, reg1, reg2) =>
+	    PP.vcat
+	      (PP.text "Mode: tycon mismatch",
+	       PP.viblock (PP.HI 3)
+		 [PP.hcat (PP.text "tycon1:", fmtTycon tyc1),
+		  PP.hcat (PP.text "from:", fmtRegion reg1),
+		  PP.hcat (PP.text "tycon2:", fmtTycon tyc2),
+		  PP.hcat (PP.text "from:", fmtRegion reg2)])
+	 | TYP (ty1, ty2, reg1, reg2) =>
+	    PP.vcat
+	      (PP.text "Mode: type mismatch",
+	       PP.viblock (PP.HI 3)
+		 [PP.hcat (PP.text "type1:", fmtTycon tyc1),
+		  PP.hcat (PP.text "from:", fmtRegion reg1),
+		  PP.hcat (PP.text "type2:", fmtTycon tyc2),
+		  PP.hcat (PP.text "from:", fmtRegion reg2)])
+	 | _ => PP.empty)
+    else PP.empty
 
 (* setup for recording FLEX tyvars and checking that they are eventually
  * resolved to exact record types. This is to prevent the leakage of
@@ -140,13 +152,9 @@ fun checkFlex (): unit =
     let fun check1 (tv,r) =
             (case !tv
                of OPEN{kind=FLEX _,...} =>
-                  (err region COMPLAIN
-			  "unresolved flex record (hidden)"
-		       (fn ppstrm =>
-			     (PPType.resetPPType();
-			      PP.newline ppstrm;
-			      PP.string ppstrm "type: ";
-			      ppType ppstrm (VARty(tv)))))
+                  (err region COMPLAIN "unresolved flex record (hidden)"
+		       (PPT.resetPPType();
+			PP.hcat (PP.text "type:" fmtType (VARty(tv)))))
                 | INSTANTIATED _ => ()
                 | _ => bug "checkFlex")
     in if anyErrors () then ()
@@ -166,44 +174,46 @@ fun tyToLoc (MARKty (t as MARKty _, region)) = tyToLoc t
   | tyToLoc (MARKty (ty,region)) = region
   | tyToLoc _ = SourceMap.nullRegion
 
-(* unifyErr : {ty1: T.ty, name1: string, ty2: T.ty, name2: string,
-               message: string, region: region,
-               kind: PP.ppstream -> ('phrase * int) -> unit, kindname: string, phrase: 'phrase}
+(* unifyErr : {ty1: T.ty, name1: string,
+               ty2: T.ty, name2: string,
+               message: string,
+	       region: region,
+	       kindName: string,
+	       kindFormat: PP.format}
               -> bool *)
-fun unifyErr{ty1,name1,ty2,name2,message=m,region,kind,kindname,phrase} =
-    (unifyTy(ty1, ty2, tyToLoc ty1, tyToLoc ty2); true)
-    handle Unify(mode) =>
-      (err region COMPLAIN (message(m,mode))
-       (fn ppstrm =>
-	 (PPType.resetPPType();
-	  let val len1 = size name1
-	      val len2 = size name2
-	      val spaces = "                                   "
-	      val pad1 = substring(spaces,0,Int.max(0,len2-len1))
-	      val pad2 = substring(spaces,0,Int.max(0,len2-len1))
-	      val m = if m = ""
-		      then concat[name1, " and ", name2, " do not agree"]
-		      else m   (* but name1 and name2 may be "" ! *)
-	  in if name1="" then ()
-             else (PP.newline ppstrm;
-                   PP.string ppstrm (concat[name1, ": ", pad1]);
-	           ppType ppstrm ty1);
-	     if name2="" then ()
-	      else (PP.newline ppstrm;
-                    PP.string ppstrm (concat[name2, ": ", pad2]);
-		    ppType ppstrm ty2);
-	     if kindname="" then ()
-	     else (
-		PP.newline ppstrm;
-		PP.string ppstrm(concat["in ", kindname, ":"]);
-		PP.break ppstrm {nsp=1,offset=2};
-		kind ppstrm (phrase,!printDepth));
-             ppModeErrorMsg ppstrm mode
-	 end));
-       false)  (* false will never be returned, because of the call of err *)
+fun unifyErr {ty1, name1, ty2, name2, message, region, kindName, kindFormat} =
+    (unifyTy (ty1, ty2, tyToLoc ty1, tyToLoc ty2); true)
+    handle Unify mode =>
+      (err region COMPLAIN (mkMessage (message, mode))
+	 (PPT.resetPPType();
+	  let val spaceChar = #" "
+	      val maxNameLength = Int.max (size name1, size name2) + 1  (* +1 for added ":" *)
+	      val message' =
+		  if size message = 0
+		  then String.concat [name1, " and ", name2, " do not agree"]
+		  else msg   (* But name1 or name2 may be ""! Should check for this. *)
+           in PP.vcat
+		(PP.text msg',
+		 (PP.viblock (PP.HI 3)
+		    (List.mapPartial (fn x => x)
+		       [if size name1 = 0
+			then NONE
+			else SOME (PP.hcat (PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
+					    fmtType ty1)),
+			if size name2 = 0
+			then NONE
+			else SOME (PP.hcat (PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
+					    fmtType ty2)),
+			if size kindName = 0
+			then NONE
+			else SOME (PP.hcat (PP.text (String.concat["in ", kindname, ":"]),
+					    kindFormat)),
+			SOME (fmtModeErrorMsg mode)])))
+	  end;
+	  false) (* false will never be returned, because the call of err raises the ERROR exception *)
 
 val _ = dbsaynl (">>decType: toplev = " ^ Bool.toString toplev)
-val _ = ppDecDebug(">>decType: dec = ",dec)
+val _ = ppDecDebug(">>decType: dec = ", dec)
 
 (* generalizeTy : V.var         -- (bound) VALvar whose type is being generalized
                 * tyvar list    -- user bound tyvars
@@ -276,11 +286,8 @@ fun generalizeTy(V.VALvar{typ,path,btvs,...}, userbound: tyvar list,
   			   (err region COMPLAIN
 			        "unresolved flex record (need to know the \
 			        \names of ALL the fields\n in this context)"
-			    (fn ppstrm =>
-			       (PPType.resetPPType();
-				PP.newline ppstrm;
-				PP.string ppstrm "type: ";
-				ppType ppstrm ty));
+			    	(PPT.resetPPType ();
+				 PP.hcat (PP.text "type:", fmtType ty));
                             tv := INSTANTIATED WILDCARDty;
 			    WILDCARDty)
                          else ty
@@ -471,9 +478,9 @@ fun patType(pat: pat, depth, region) : pat * ty =
        | ORpat (p1, p2) =>
            let val (p1, ty1) = patType(p1, depth, region)
   	       val (p2, ty2) = patType(p2, depth, region)
-	    in unifyErr{ty1=ty1,ty2=ty2,name1="expected",name2="found",
-			message="or-patterns do not agree",region=region,
-			kind=ppPat,kindname="pattern",phrase=pat};
+	    in unifyErr{ty1=ty1, ty2=ty2, name1="expected", name2="found",
+			message="or-patterns do not agree", region=region,
+			kindname="pattern", kindFormat = fmtPat pat};
 	       (ORpat(p1, p2), MARKty(ty1, region))
 	   end
        | CONpat (dcon as DATACON{typ,...}, _) =>
@@ -490,30 +497,26 @@ fun patType(pat: pat, depth, region) : pat * ty =
        | APPpat (dcon as DATACON{typ,rep,...}, _, argPat) =>
 	   let val (typedArgPat, argTy) = patType (argPat, depth, region)
                val (ty1, ndcon) = case rep
-                                    of DA.REF => (BT.refPatType, refNewDcon dcon)
+                                    of A.REF => (BT.refPatType, refNewDcon dcon)
                                      | _ => (typ,dcon)
                val (ty2,insts) = instantiatePoly ty1
                val npat = APPpat (ndcon, insts, typedArgPat)
             in (npat, MARKty (applyType (ty2, argTy), region))
 	       handle Unify(mode) =>
 		(err region COMPLAIN
-                  (message("constructor and argument do not agree in pattern",mode))
-		  (fn ppstrm =>
-		   (PPType.resetPPType();
-		    PP.newline ppstrm;
-		    PP.string ppstrm "constructor: ";
-		    ppType ppstrm typ; PP.newline ppstrm;
-		    PP.string ppstrm "argument:    ";
-		    ppType ppstrm argTy; PP.newline ppstrm;
-		    PP.string ppstrm "in pattern:"; PP.break ppstrm {nsp=1,offset=2};
-		    ppPat ppstrm (pat,!printDepth)));
-		 (pat,WILDCARDty))
+                  (mkMessage ("constructor and argument do not agree in pattern",mode))
+		  (PPT.resetPPType();
+		   PP.viblock (PP.HI 3)
+		     [PP.hcat (PP.text "constructor:", fmtType typ),
+		      PP.hcat (PP.text "argument:", fmtType argTy),
+		      PP.hcat (PP.text "in pattern:", fmtPat (pat,!printDepth))]);
+		 (pat, WILDCARDty))
 	   end
        | CONSTRAINTpat (pat', constraintTy) =>
 	   let val (typedPat, patTy) = patType(pat',depth,region)
 	    in if unifyErr{ty1=patTy, name1="pattern", ty2=constraintTy, name2="constraint",
 			   message="pattern and constraint do not agree",
-			   region=region, kind=ppPat, kindname="pattern", phrase=pat}
+			   region=region, kindname="pattern", kindFormt = fmtPat pat}
 		then (CONSTRAINTpat (typedPat, MARKty(constraintTy, region)),
 		      (MARKty(constraintTy, region)))
 		else (pat, WILDCARDty)
@@ -529,7 +532,7 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		 let val (npat,patTy) = patType (basePat,depth,region)
 		  in if unifyErr{ty1=patTy, name1="pattern", ty2=ty, name2="constraint",
 				 message="pattern and constraint do not agree",
-				 region=region, kind=ppPat, kindname="pattern", phrase=pat}
+				 region=region, kindname="pattern", kindFormat = fmtPat pat}
 		     then (typ := ty; (LAYEREDpat(cpat,npat),MARKty(ty, region)))
 		     else (pat,WILDCARDty)
 		 end)
@@ -538,9 +541,9 @@ fun patType(pat: pat, depth, region) : pat * ty =
 (* expType : exp * OC.occ * region -> exp * ty *)
 fun expType(exp: exp, occ: OC.occ, region) : exp * ty =
 let fun boolUnifyErr { ty, name, message } =
-	unifyErr { ty1 = ty, name1 = name, ty2 = BT.boolTy, name2 = "",
-		   message = message, region = region, kind = ppExp,
-		   kindname = "expression", phrase = exp }
+	unifyErr {ty1 = ty, name1 = name, ty2 = BT.boolTy, name2 = "",
+		  message = message, region = region,
+		  kindname = "expression", kindFormat = fmtExp exp}
     fun boolshortcut (con, what, e1, e2) =
 	let val (e1', t1) = expType (e1, occ, region)
 	    val (e2', t2) = expType (e2, occ, region)
@@ -593,18 +596,12 @@ in
 		(RSELECTexp(nexp,index), MARKty(res, region)))
                handle Unify(mode) =>
                  (err region COMPLAIN
-                  (message("selecting a non-existing field from a record",mode))
-                  (fn ppstrm =>
-                   (PPType.resetPPType();
-                    PP.newline ppstrm;
-                    PP.string ppstrm "the field name: ";
-                    ppSym ppstrm label;
-                    PP.newline ppstrm;
-                    PP.string ppstrm "the record type:    ";
-                    ppType ppstrm nty; PP.newline ppstrm;
-                    PP.string ppstrm "in expression:";
-                    PP.break ppstrm {nsp=1,offset=2};
-                    ppExp ppstrm (exp,!printDepth)));
+                    (mkMessage ("selecting a non-existing field from a record", mode))
+                    (PP.viblock (PP.HI 3)
+		       (PPT.resetPPType();
+			[PP.hcat (PP.text "the field name:", PPU.fmtSym label),
+			 PP.hcat (PP.text "the record type:", fmtType nty),
+			 PP.hcat (PP.text "in expression:", fmtExp exp)]));
                     (exp, WILDCARDty))
            end
        | VSELECTexp (exp, elemTy, index) => bug "expType:VSELECTexp"
@@ -643,42 +640,31 @@ in
 	       handle Unify(mode) =>
 	       let val ratorTy = prune ratorTy
 		   val reducedRatorTy = headReduceType ratorTy
-		in PPType.resetPPType();
+		in PPT.resetPPType();
 		   if BT.isArrowType(reducedRatorTy)
 		   then (err region COMPLAIN
 			  (message("operator and operand do not agree",mode))
-			  (fn ppstrm =>
-			   (PP.newline ppstrm;
-			    PP.string ppstrm "operator domain: ";
-			    ppType ppstrm (BT.domain reducedRatorTy);
-			    PP.newline ppstrm;
-			    PP.string ppstrm "operand:         ";
-			    ppType ppstrm randTy; PP.newline ppstrm;
-			    PP.string ppstrm "in expression:";
-			    PP.break ppstrm {nsp=1,offset=2};
-			    ppExp ppstrm (exp,!printDepth);
-			    ppModeErrorMsg ppstrm mode));
+			  (PP.viblock (PP.HI 3)
+			     [PP.hcat (PP.text "operator domain:", fmtType (BT.domain reducedRatorTy)),
+			      PP.hcat (PP.text "operand:", fmtType randTy),
+			      PP.hcat (PP.text "in expression:", fmtExp exp),
+			      ppModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
 			  (message("operator is not a function",mode))
-			  (fn ppstrm =>
-			    (PP.newline ppstrm;
-			     PP.string ppstrm "operator: ";
-			     ppType ppstrm (ratorTy); PP.newline ppstrm;
-			     PP.string ppstrm "in expression:";
-			     PP.break ppstrm {nsp=1,offset=2};
-			     ppExp ppstrm (exp,!printDepth);
-			     ppModeErrorMsg ppstrm mode));
+			  (PP.viblock (PP.HI 3)
+			     [PP.hcat (PP.text "operator:", fmtType ratorTy)
+			      PP.hcat (PP.text "in expression:", fmtExp exp)
+			      ppModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 	       end
 	   end
 
        | CONSTRAINTexp(e,ty) =>
 	   let val (e',ety) = expType (e, occ, region)
-	    in if unifyErr{ty1=ety,name1="expression", ty2=ty, name2="constraint",
-			message="expression does not match constraint",
-			region=region,kind=ppExp,kindname="expression",
-			phrase=exp}
+	    in if unifyErr {ty1=ety, name1="expression", ty2=ty, name2="constraint",
+			    message="expression does not match constraint", region=region,
+			    kindname="expression", kindFormat = fmtExp exp}
 		then (CONSTRAINTexp(e',MARKty(ty, region)),
 			MARKty(ty, region))
 		else (exp,WILDCARDty)
@@ -691,16 +677,13 @@ in
 	    in (unifyTy(argTy-->resTy, BT.exnTy --> baseTy, region, tyToLoc baseTy); (* unifyErr? *)
 		(handleExp, MARKty(baseTy, region)))
 	       handle Unify(mode) =>
-		 (if unifyErr{ty1=prune argTy, name1="handler domain",
-			      ty2=BT.exnTy, name2="",
+		 (if unifyErr{ty1=prune argTy, name1="handler domain", ty2=BT.exnTy, name2="",
 			      message="handler domain is not exn",
-			      region=region,kind=ppExp,kindname="expression",
-			      phrase=exp}
+			      region=region, kindname="expression", kindFormat = fmtExp exp}
 		     then unifyErr{ty1=baseTy, name1="body",
 				   ty2=prune resTy, name2="handler range",
-				   message="expression and handler do not agree",
-				   region=region,
-				   kind=ppExp,kindname="expression",phrase=exp}
+				   message="expression and handler do not agree", region=region,
+				   kindname="expression", kindFormat = fmtExp exp}
 		     else false;
 		  (exp,WILDCARDty))
 	   end
@@ -709,8 +692,8 @@ in
 	   let val (exnExp',ety) = expType (exnExp, occ, region)
                val newty = mkMETAty() (* new type metavariable, will unify with context *)
 	    in unifyErr{ty1=ety, name1="raised", ty2=BT.exnTy, name2="",
-			message="argument of raise is not an exception",
-			region=region,kind=ppExp,kindname="expression",phrase=exp};
+			message="argument of raise is not an exception", region=region,
+			kindname="expression", kindFormat = fmtExp exp};
 	       (RAISEexp (exnExp', newty), MARKty (newty, region))
 	   end
 
@@ -727,11 +710,10 @@ in
 	    in (unifyTy (scrutTy, argTy, region, tyToLoc scrutTy);  (* unifyErr? *)
                 (exp', MARKty(resTy, region)))
 	       handle Unify(mode) =>
-	       (unifyErr{ty1 = argTy, name1 = "rule domain",
-			 ty2 = scrutTy, name2 = "object",
-			 message = "case object and rules do not agree",
-			 region = region, kind = ppExp, kindname = "expression",
-			 phrase = exp};
+	       (unifyErr {ty1 = argTy, name1 = "rule domain",
+			  ty2 = scrutTy, name2 = "object",
+			  message = "case object and rules do not agree", region = region,
+			  kindname = "expression", kindFormat = fmtExp exp};
 	        (exp,WILDCARDty))
 	   end (* this causes case to behave differently from let, i.e.
 		  bound variables do not have polymorphic types *)
@@ -742,14 +724,13 @@ in
 	       val (elseCase', ect) = expType (elseCase, occ, region)
 	   in
 	       if boolUnifyErr
-		      { ty = tty, name = "test expression",
-			message="test expression in if is not of type bool" }
+		      {ty = tty, name = "test expression",
+		       message="test expression in if is not of type bool"}
 	       andalso
-	          unifyErr { ty1 = tct, name1 = "then branch",
-			     ty2 = ect, name2 = "else branch",
-			     message="types of if branches do not agree",
-			     region = region, kind = ppExp,
-			     kindname = "expression", phrase = exp }
+	          unifyErr {ty1 = tct, name1 = "then branch",
+			    ty2 = ect, name2 = "else branch",
+			    message="types of if branches do not agree", region = region,
+			    kindname = "expression", kindFormat = fmtExp exp}
 	       then
 		   (IFexp { test = test', thenCase = thenCase',
 			    elseCase = elseCase' },
@@ -805,9 +786,8 @@ and matchType (rules, occ, region) =
 		   let val (rule1, lhsTy1, rhsTy1) = ruleType (rule, occ, region)
 		    in unifyErr{ty1 = (lhsTy0 --> rhsTy0), ty2 = (lhsTy1 --> rhsTy1),
 				name1 = "earlier rule(s)", name2 = "this rule",
-				message = "types of rules do not agree",
-				region = region, kind = ppRule, kindname = "rule",
-				phrase = rule1};
+				message = "types of rules do not agree", region = region,
+				kindname = "rule", kindFormat = fmtRule rule1};
 		       rule1
 		   end
 	     in (rule0::(map checkrule rest), lhsTy0, rhsTy0)
@@ -825,18 +805,15 @@ and decType0 (decl, occ, region) : dec =
 			    * expression on RHS *)
 			   TypesUtil.isValue exp andalso not (TypesUtil.refutable pat)
 					(* orelse isVarTy expTy ?? *)
-		       val _ = unifyErr{ty1=patTy, ty2=expTy, name1="pattern", name2="expression",
-				message="pattern and expression in val dec do not agree",
-				region=region,kind=ppVB,kindname="declaration",
-				phrase=vb};
+		       val _ = unifyErr {ty1=patTy, ty2=expTy, name1="pattern", name2="expression",
+					 message="pattern and expression in val dec do not agree",
+					 region=region, kindname="declaration", kindFormat = fmtVb vb};
 		       val boundtvs = generalizePat(typedPat, tyvars, occ, generalize, region)
 		       (* doesn't matter whether pat or typedPat is used here, since the
 			* pattern structure is identical, and patType updates the var typ
 			* fields of pattern variables. *)
-		       val vb = VB{pat = typedPat, exp = typedExp,
-				   typ = patTy,
-				   boundtvs = boundtvs,
-				   tyvars = tv}  (* preserve the ref for explicit tyvars *)
+		       val vb = VB {pat = typedPat, exp = typedExp, typ = patTy, boundtvs = boundtvs,
+				    tyvars = tv}  (* preserve the ref for explicit tyvars *)
 		     in debugPrint ("decType0 VALdec VB: ", ppVB, (vb,100));
 			dbsaysnl ["   generalize: ", Bool.toString generalize];
 			dbsaysnl ["   occ: ", Int.toString (OC.lamdepth occ), ", ",
@@ -869,12 +846,11 @@ and decType0 (decl, occ, region) : dec =
 			   case resultty
 			    of NONE => true
 			     | SOME constraintTy =>  (* should be a function type *)
-			       unifyErr{ty1 = funty, name1="",
-					ty2 = constraintTy, name2="constraint",
-					message="type constraint of val rec dec\
-							   \ is not a function type",
-					region=region, kind=ppRVB,
-					kindname="declaration", phrase=rvb}
+			       unifyErr {ty1 = funty, name1="",
+					 ty2 = constraintTy, name2="constraint",
+					 message="type constraint of val rec dec is not a function type",
+					 region=region,
+					 kindname="declaration", kindFormat = fmtRvb rvb}
 
                        (* pre: exp * region -> (unit -> exp) *)
 		       (* type the defn expression, which will be a FNexp, possibly inside
@@ -892,12 +868,11 @@ and decType0 (decl, occ, region) : dec =
 
 				 fun checkRuleExp (exp,region) =
 				     let val (typedExp, expTy) = expType (exp, inside_occ, region)
-				      in unifyErr{ty1 = expTy, name1 = "expression",
-						  ty2 = rangety, name2 = "result type",
-						  message="right-hand-side of function clause\
-					            \ does not agree with function result type",
-						  region=region, kind=ppRVB,
-						  kindname="declaration", phrase=rvb};
+				      in unifyErr {ty1 = expTy, name1 = "expression",
+						   ty2 = rangety, name2 = "result type",
+						   message="right-hand-side of function clause\
+					              \ does not agree with function result type",
+						   region=region, kindname="declaration", kindFormat = fmtRvb rvb};
 					 typedExp
 				     end
 
@@ -906,8 +881,7 @@ and decType0 (decl, occ, region) : dec =
 					     ty2 = funty, name2 = "previous clauses",
 					     message = "parameter or result constraints\
 						       \ of clauses do not agree",
-					     region=region, kind=ppRVB,
-					     kindname="declaration", phrase=rvb};
+					     region=region, kindname="declaration", kindFormat = fmtRvb rvb};
 				    ())
 
 			         (* could be constructed by foldl rather than map? *)
@@ -925,11 +899,10 @@ and decType0 (decl, occ, region) : dec =
 			      in fn () => MARKexp (typeExp (), region)
 			     end
                          | pre (CONSTRAINTexp (exp, constraintTy), region) =
-			     (unifyErr{ty1 = constraintTy, name1 = "this constraint",
-				       ty2 = funty, name2 = "outer constraints",
-				       message="type constraints on val rec declaraction disagree",
-				       region=region, kind=ppRVB,
-				       kindname="declaration", phrase=rvb};
+			     (unifyErr {ty1 = constraintTy, name1 = "this constraint",
+				        ty2 = funty, name2 = "outer constraints",
+				        message="type constraints on val rec declaraction disagree",
+				        region=region, kindname="declaration", kindFormat = fmtRvb rvb};
 			      let val typeExp = pre (exp, region)
 			       in (fn () => CONSTRAINTexp (typeExp (), constraintTy))
 			      end)
@@ -963,17 +936,13 @@ and decType0 (decl, occ, region) : dec =
 	       VALRECdec typedRVBs
 	   end
 
-       | DOdec exp => let
-	  val (exp',ety) = expType (exp, occ, region)
-	  val _ = unifyErr{
-		    ty1=BT.unitTy, ty2=ety, name1="", name2="expression",
-		    message="do expression does not have type unit",
-		    region=region, kind=ppDec, kindname="declaration",
-		    phrase=decl
-		  }
-	  in
-	    DOdec exp'
-	  end
+       | DOdec exp =>
+	   let val (exp',ety) = expType (exp, occ, region)
+	       val _ = unifyErr {ty1=BT.unitTy, ty2=ety, name1="", name2="expression",
+				 message="do expression does not have type unit",
+				 region=region, kindname="declaration", kindFormat = fmtDec decl}
+	    in DOdec exp'
+	   end
 
        | EXCEPTIONdec ebs =>
 	   let fun check(VARty(ref(UBOUND _))) =

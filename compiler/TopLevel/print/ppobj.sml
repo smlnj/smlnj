@@ -8,68 +8,65 @@ signature PPOBJ =
 sig
   type object
   val ppObj : StaticEnv.staticEnv
-              -> PrettyPrint.stream
-                 -> object * Types.ty * int
-                    -> unit
-  val debugging : bool ref
+              -> object * Types.ty * int
+              -> NewPP.format
 end
-
 
 structure PPObj : PPOBJ =
 struct
 
-structure PP = PrettyPrint
-structure PU = PPUtil
-structure V = Vector
-structure A = Access
-structure T = Types
-structure TU = TypesUtil
-structure BT = BasicTypes
-structure F = Fixity
-structure Obj = Unsafe.Object
+local (* top *)
 
-open PrettyPrint PPUtil
+  structure PP = NewPP
+  structure PPU = NewPPUtil
+  structure S = Symbol
+  structure V = Vector
+  structure A = Access
+  structure T = Types
+  structure TU = TypesUtil
+  structure BT = BasicTypes
+  structure F = Fixity
+  structure Obj = Unsafe.Object
 
-(* debugging *)
-val say = Control.Print.say
-val debugging = ref false
-fun debugmsg (msg: string) =
-    if !debugging then (say msg; say "\n") else ()
+  (* debugging
+  NOT USED:
+  val say = Control.Print.say
+  val debugging = ref false
+  fun dbsaynl (msg: string) =
+      if !debugging then (say msg; say "\n") else ()
+  *)
 
-fun bug msg = ErrorMsg.impossible("PPObj: "^msg)
+  fun bug msg = ErrorMsg.impossible("PPObj: "^msg)
 
+in
 
 type object = Obj.object
 
-fun gettag obj = Obj.toInt (Obj.nth(obj, 0))
+(* gettag : object -> int -- should be defined in Unsafe.Object *)
+fun gettag obj = Obj.toInt (Obj.nth (obj, 0))
 
 exception Switch
 
-fun switch(obj, dcons) = let
-      fun chk (f, tag : int) =
+fun switch(obj, dcons) =
+    let fun check (f : object -> int, tag : int) : bool =
 	    (f obj = tag) handle Obj.Representation => false
-      fun try ((d as {name,rep,domain})::r) = (case rep
-	     of A.TAGGED i =>
-		  if chk(gettag, i) then d else try r
-	      | A.CONSTANT i =>
-		  if chk(Obj.toInt, i) then d else try r
-	      | A.TRANSPARENT => d
-	      | A.UNTAGGED => if Obj.boxed obj then d else try r
-	      | A.REF => d
-	      | A.LISTCONS => if (Obj.boxed obj) then d else try r
-	      | A.LISTNIL => if chk(Obj.toInt, 0) then d else try r
-              | A.SUSP _ => d  (* LAZY *)
-	      | _ => bug "switch: funny datacon"
-	    (* end case *))
-	| try [] = bug "switch: none of the datacons matched"
-      in
-	try dcons
-      end
-
-(** a temporary hack for printing UNTAGGEDREC objects *)
-fun isRecordTy (T.VARty(ref (T.INSTANTIATED t))) = isRecordTy t
-  | isRecordTy (T.CONty(T.RECORDtyc _, _::_)) = true
-  | isRecordTy _ = false
+	fun try ((d as {name,rep,domain})::r) =
+	    (case rep
+	       of A.TAGGED i =>
+		    if check (gettag, i) then d else try r
+		| A.CONSTANT i =>
+		    if check (Obj.toInt, i) then d else try r
+		| A.TRANSPARENT => d
+		| A.UNTAGGED => if Obj.boxed obj then d else try r
+		| A.REF => d
+		| A.LISTCONS => if (Obj.boxed obj) then d else try r
+		| A.LISTNIL => if check (Obj.toInt, 0) then d else try r
+		| A.SUSP _ => d  (* LAZY *)
+		| _ => bug "switch: funny datacon"
+	      (* end case *))
+	  | try [] = bug "switch: none of the datacons matched"
+     in try dcons
+    end
 
 (* FIXME: I think that this function is needed because the "TRANSPARENT"
  * representation was disabled (see ElabData/types/conreps.sml)
@@ -77,12 +74,13 @@ fun isRecordTy (T.VARty(ref (T.INSTANTIATED t))) = isRecordTy t
 fun isUbxTy (T.VARty(ref (T.INSTANTIATED t))) = isUbxTy t
   | isUbxTy (T.CONty(tc as T.GENtyc _, [])) =
       (Target.is64 andalso
-        (TU.eqTycon(tc, BT.int64Tycon) orelse TU.eqTycon(tc, BT.word64Tycon)))
+       (TU.eqTycon (tc, BT.int64Tycon) orelse TU.eqTycon (tc, BT.word64Tycon)))
       orelse
-        (TU.eqTycon(tc, BT.int32Tycon) orelse TU.eqTycon(tc, BT.word32Tycon))
+      (TU.eqTycon (tc, BT.int32Tycon) orelse TU.eqTycon (tc, BT.word32Tycon))
   | isUbxTy _ = false
 
-fun decon (obj, {rep, name, domain}) = (case rep
+fun decon (obj, {rep, name, domain}) =
+    (case rep
        of A.UNTAGGED => (case domain
              of SOME t => if (isRecordTy t) orelse (isUbxTy t)
                   then obj
@@ -94,10 +92,10 @@ fun decon (obj, {rep, name, domain}) = (case rep
 	   let (* skip first element, i.e. discard tag *)
 	       val a = tuple obj
 	       fun f i =
-		   if i < V.length a
-		   then V.sub(a,i) :: f(i+1)
+		   if i < Vector.length a
+		   then Vector.sub (a,i) :: f(i+1)
 		   else []
-	    in U.cast (V.fromList (f(1)))
+	    in U.cast (Vector.fromList (f 1))
 	   end
 *)
 	| A.CONSTANT _ => Obj.toObject ()
@@ -109,84 +107,120 @@ fun decon (obj, {rep, name, domain}) = (case rep
 	| A.SUSP _ => obj
       (* end case *))
 
-val noparen = F.INfix(0,0)
-
 local
-    fun dconsOf (T.GENtyc
-		     { kind = T.DATATYPE
-				  { family =
-				    { members = #[{dcons, ... }], ... },
-				    ... },
-		       ... }) = dcons
+    fun dconsOf (T.GENtyc {kind = T.DATATYPE {family = {members = #[{dcons, ...}],...},...},...}) = dcons
       | dconsOf _ = bug "(u)listDcons"
 in
     val listDcons = dconsOf BT.listTycon
     val ulistDcons = dconsOf BT.ulistTycon
 end
 
+type sharingKey = unit ref
+type sharingMemo = int option ref
+type sharingEnv = (sharingKey * sharingMemo) list
+
 local
   (* counter to generate identifier *)
-  val cpt = ref 0
+  val counter : int ref = ref 0
 
-  (* test membership in an association list and gives back
-   * the second element *)
-  fun mem (a: unit ref) =
-      let fun m [] = NONE | m ((x,r)::l) = if a = x then SOME r else m l
-       in m
+  (* incCounter : unit -> int *)
+  fun incCounter () =
+      let val id = !counter
+       in counter := id + 1;
+	  id
       end
 
-  (* verifies if an object has been seen and if yes, gives back its
-   * identification number, creating a new one if necessary *)
-  fun isSeen obj l =
-      let val obj' = Unsafe.cast obj : unit ref
-       in case mem obj' l
-	    of NONE => (false,0)
-	     | SOME (r as ref NONE) => let
-		val id = !cpt
-		in cpt := id+1; r := SOME id; (true,id) end
-	     | SOME (ref (SOME id)) => (true,id)
+(*  val sharingEnvRef : sharingEnv ref = ref nil *)
+
+  (* lookup : sharingKey * sharingEnv -> (int option ref) option
+   * association list lookup with unit ref keys *)
+  fun sharingLookup (key: sharingKey, senv: sharingEnv) =
+      let fun lookup nil = NONE
+	    | lookup ((x,r)::rest) = if x = key then SOME r else lookup rest
+       in lookup sharingEnv
       end
 
+  (* sharingBind : sharingKey * sharingMemo * sharingEnv -> sharingEnv *)
+  fun sharingBind (key: sharingKey, memo : sharingMemo, senv : sharingEnv) =
+      (key, memo) :: senv
+
+  (* wasSeen : object * (unit ref * int option ref) list -> int option
+   * The object is either a ref or array value, i.e. an impure or statefull value.
+   * Casts the object to type unit ref to use it as key for lookup in the sharing
+   * environment. If a binding is found, returns SOME of an "identification number",
+   * creating a new one if object memo was not "set". *)
+  fun wasSeen (obj, senv: sharingEnv) =
+      let val key : unit ref = Unsafe.cast obj
+       in case sharingLookup (key, senv)
+	    of NONE => NONE               (* not in sharingEnv domain *)
+	     | SOME (memo as ref NONE) => (* uninitialized memo exists *)
+	 	 let val idOp = SOME (incCounter ())
+		  in memo := idOp;        (* update the memo with the next id *)
+		     idOp
+		 end
+	     | SOME (ref (id as (SOME _))) => id  (* memo exists and is initialized *)
+      end
 in
 
-(* reset the identifier counter *)
-fun initCpt () = cpt := 0
+val emptySharingEnv : sharingEnv = nil
 
-(* print with sharing if necessary. The "printer" already knows the
-   ppstream.      *)
-fun printWithSharing ppstrm (obj,accu,printer) =
+(* resetSharing : () -> () *)
+fun resetSharing () = (counter := 0)
+
+(* formatWithSharing : object * (object * sharingEnv -> PP.format) * sharingEnv -> format
+ * Format with "sharing". An occurrence of a mutable object (a ref or array)
+ * within its own contents is printed as a reference number (%n) associated with
+ * the "outermost occurrence" of the object. See example in [sharing-note.txt]. 
+ * A memo for such an object is set only when an occurrence of that object within
+ * its own contents (an "inner" occurrence) is detected. Memo bindings for an object
+ * are only accessible while formatting its contents, not in "parallel" objects.
+ * Thus parallel sharing like "let val x = ref 0 in (x, x) end" are not handled.
+ * It looks like self-cyclical values have to involve recursive types. *)
+fun formatWithSharing (object, formatter, senv) =
     if !Control.Print.printLoop then
-      let val (seen,nb) = isSeen obj accu
-       in if seen then
-	     (PP.string ppstrm "%";
-	      PP.string ppstrm (Int.toString nb))
-	  else let val modif = ref NONE
-		   val nlAccu = (Unsafe.cast obj : unit ref,modif) :: accu
-	        in printer (obj,nlAccu);
-		   case !modif
-		     of NONE => ()
-		      | SOME i => (PP.string ppstrm " as %";
-				   PP.string ppstrm (Int.toString i))
+       (case wasSeen (object, senv)  (* was this object seen before, on the way inward? *)
+	  of SOME id => PP.ccat (PP.text "%", PP.integer id)  (* format using sharing reference *)
+	   | NONE =>  (* this object will now be formatted for the first time *)
+	       let val memo = ref NONE
+		   val key : unit ref = Unsafe.cast object
+	           val senv' = sharingBind (key, memo, senv)  (* bind an unset memo for this object *)
+	        in let val objFmt = formatter (object, senv')
+			   (* format the object, including its content; this can set the memo *)
+		    in case !memo  
+		         of NONE => objFmt
+			    (* memo was not set, so object not found shared within itself *)
+		          | SOME id => (* memo was set, defining an "id" number for this object *)
+			    PP.hblock [objFmt, PP.text "as", PP.ccat (PP.text "%", PP.integer id)]
+		   end
 	       end
-      end
-    else printer (obj,accu)
+    else formatter (obj, senv)  (* in this case, senv is always ignored *)
 
 end (* local *)
 
-fun interpArgs(tys,NONE) = tys
-  | interpArgs(tys,SOME (members,freetycs)) =
-    let fun subst(T.CONty(T.RECtyc n,args)) =
-	      let val tyc' = (List.nth(members,n)
+(* tyContext is a pair of tycon lists, the 
+ * first a list of datatype family members (for interpretting RECtyc), and 
+ * the second a list of tycons used to interpret FREEtyc tycons *)
+type tyContext : T.tycon list * T.tycon list
+
+(* interpArgs : T.ty list * tyContext option -> T.ty list *)
+(* Used to "instantiate" RECtyc and FREEtyc tycons in the argument types of ref and array tycons.
+ * Instantiation of RECtyc and FREEtyc tycons in the main type are instantiated directly using
+ * tycontextOP argument *)
+fun interpArgs (tys, NONE) = tys
+  | interpArgs (tys, SOME (members,freetycs)) =
+        (* subst : T.ty -> T.ty *)
+    let fun subst (T.CONty (T.RECtyc n, args)) =
+	      let val tyc' = (List.nth (members,n)
 	                     handle Subscript => bug "interpArgs 1")
-	       in T.CONty(tyc', map subst args)
+	       in T.CONty (tyc', map subst args)
 	      end
-	  | subst(T.CONty(T.FREEtyc n,args)) =
-	      let val tyc' = (List.nth(freetycs,n)
+	  | subst (T.CONty (T.FREEtyc n,args)) =
+	      let val tyc' = (List.nth (freetycs,n)
 	                     handle Subscript => bug "interpArgs 2")
-	       in T.CONty(tyc', map subst args)
+	       in T.CONty (tyc', map subst args)
 	      end
-	  | subst(T.CONty(tyc,args)) = T.CONty(tyc, map subst args)
-	  | subst(T.VARty(ref(T.INSTANTIATED ty))) = subst ty
+	  | subst (T.CONty (tyc,args)) = T.CONty (tyc, map subst args)
+	  | subst (T.VARty (ref(T.INSTANTIATED ty))) = subst ty
 	  | subst ty = ty
      in map subst tys
     end
@@ -236,372 +270,277 @@ in
   fun primToString tyc = List.find (fn (tyc', _) => TU.eqTycon(tyc, tyc')) toStringTbl
 end (* local *)
 
-(* main function: ppObj: staticEnv -> ppstream -> (object * ty * int) -> unit *)
+(* Main Function: 
+ * fmtObj: staticEnv -> (object * ty * int) -> PP.format *)
+fun fmtObj env (obj: object, ty: T.ty, depth: int) : PP.format =
+let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tyContext option,
+		     senv: sharingEnv, depth:int) =
+        fmtObj' (obj, ty, tycontextOp, senv, depth, noparen, noparen)
 
-fun ppObj env ppstrm =
-let fun ppValue (obj: object, ty: T.ty, depth: int) : unit =
-        ppVal' (obj, ty, NONE, depth, noparen, noparen, [])
-
-    and ppValShare (obj:object, ty:T.ty, membersOp: (T.tycon list * T.tycon list) option,
-		    depth:int, accu) =
-        ppVal' (obj, ty, membersOp, depth, noparen, noparen, accu)
-
-    and ppVal' (_,_,_,0,_,_,_) = PP.string ppstrm  "#"
-      | ppVal' (obj: object, ty: T.ty, membersOp: (T.tycon list * T.tycon list) option,
-                depth: int, l: F.fixity, r: F.fixity, accu) : unit = ((
-	  case ty
-	   of T.VARty(ref(T.INSTANTIATED t)) =>
-		ppVal'(obj,t,membersOp,depth,r,l,accu)
-	    | T.POLYty{tyfun=T.TYFUN{body,arity},...} =>
+    and fmtObj' (_, _, _, _, 0, _, _) = PP.text  "#"
+      | fmtObj' (obj: object, ty: T.ty, tycontextOp: tyContext option,
+                 senv: sharingEnv, depth: int, l: int, r: int) : unit =
+	((case ty
+	   of T.VARty (ref(T.INSTANTIATED t)) =>
+		fmtObj' (obj, t, tycontextOp, senv, depth, r, l)
+	    | T.POLYty {tyfun=T.TYFUN{body,arity},...} =>
 		if arity=0
-	          then  ppVal'(obj, body,membersOp,depth,l,r,accu)
-	          else let
-		    val args = Obj.mkTuple (List.tabulate(arity, fn i => Obj.toObject 0))
-		    val tobj : object -> object = Unsafe.cast obj
-		    val res = tobj args
-		    in
-		      ppVal'(res, body, membersOp, depth, l, r, accu)
-		    end
-	    | T.CONty(tyc as T.GENtyc { kind, stamp, eq, ... }, argtys) => (
-		case (kind, !eq)
-		 of (T.PRIMITIVE, _) => (case primToString tyc
-		       of SOME(_, fmt) => PP.string ppstrm (fmt obj)
-			| NONE => (* check for vector/array type constructors *)
-			    if TU.eqTycon(tyc,BT.vectorTycon)
-			      then ppVector (
-				Obj.toVector obj, hd argtys,
-				membersOp, depth,
-				!Control.Print.printLength, accu)
-				handle Obj.Representation => PP.string ppstrm  "<primvec?>"
-			    else if TU.eqTycon(tyc,BT.arrayTycon)
-			      then (printWithSharing ppstrm
-				(obj,accu,
-				 fn (obj,accu) =>
-				    (case Obj.rep obj
-				      of Obj.PolyArray =>
-					 ppArray(Obj.toArray obj, hd argtys,
-						 membersOp, depth,
-						 !Control.Print.printLength, accu)
-				       | Obj.RealArray =>
-					 ppRealArray(Obj.toRealArray obj,
-						     !Control.Print.printLength)
-				       | _ => bug "array (neither Real nor Poly)"
-					 ))
-				handle Obj.Representation => PP.string ppstrm  "<primarray?>")
-			    else PP.string ppstrm  "<prim?>"
-		      (* end case *))
-		  | (T.DATATYPE _, T.ABS) =>
-		    (PPTable.pp_object ppstrm stamp obj
-		     handle PP_NOT_INSTALLED => PP.string ppstrm  "-" )
-		  | (T.DATATYPE{index,stamps,
-				family as {members,...}, freetycs, root, stripped}, _) =>
-		    if TU.eqTycon(tyc,BT.ulistTycon) then
-			ppUrList(obj,hd argtys,membersOp,depth,
-				 !Control.Print.printLength,accu)
-		    else if TU.eqTycon(tyc,BT.suspTycon) then
-			PP.string ppstrm  "$$"  (* LAZY *)
-		    else if TU.eqTycon(tyc,BT.listTycon) then
-			ppList(obj,hd argtys,membersOp,depth,
-			       !Control.Print.printLength,accu)
-		    else if TU.eqTycon(tyc,BT.refTycon) then
-			(printWithSharing ppstrm
-			 (obj,accu,
-			  let val argtys' = interpArgs(argtys,membersOp)
-			  in fn (obj,accu) =>
-				ppDcon(obj,
-				       (Vector.sub(stamps,index),
-					Vector.sub(members,index)),
-				       SOME([BT.refTycon],[]),argtys',
-				       depth,l,r,accu)
-			  end))
-		    else let val argtys' = interpArgs(argtys,membersOp)
-			 in
-			     ppDcon(obj,(Vector.sub(stamps,index),
-					 Vector.sub(members,index)),
-				    SOME(transMembers (stamps, freetycs,
-						       root, family)),
-				    argtys',depth,l,r,accu)
-			 end
-		  | _ => PP.string ppstrm "-"
+	        then  fmtObj' (obj, body, tycontextOp, senv, depth, l, r)
+	        else let val args = Obj.mkTuple (List.tabulate(arity, fn i => Obj.toObject 0))
+			 val tobj : object -> object = Unsafe.cast obj   (* DBM: dummy runtime types? *)
+			 val res = tobj args
+		      in fmtObj' (res, body, tycontextOp, senv, depth, l, r)
+		     end
+	    | T.CONty (tyc as T.GENtyc { kind, stamp, eq, ... }, argtys) =>
+		(case (kind, !eq)
+		   of (T.PRIMITIVE, _) =>
+			(case primToString tyc
+			   of SOME(_, fmt) => PP.text (fmt obj)
+			    | NONE => (* check for vector/array type constructors *)
+				if TU.eqTycon(tyc,BT.vectorTycon)
+				then fmtVector (Obj.toVector obj, hd argtys, tycontextOp, senv, depth,
+					       !Control.Print.printLength)
+				     handle Obj.Representation => PP.text  "<primvec?>"
+				else if TU.eqTycon (tyc, BT.arrayTycon)
+				then let fun formatter obj =
+					     (case Obj.rep obj
+						of Obj.PolyArray =>
+						   fmtArray(Obj.toArray obj, hd argtys, tycontextOp, senv,
+							    depth, !Control.Print.printLength)
+						 | Obj.RealArray =>
+						   ppRealArray(Obj.toRealArray obj, !Control.Print.printLength)
+						 | _ => bug "array (neither Real nor Poly)")
+				      in formatWithSharing (obj, formatter, senv)
+				     end
+				     handle Obj.Representation => PP.text  "<primarray?>"
+				else PP.text  "<prim?>")
+		    | (T.DATATYPE _, T.ABS) =>  (* [DBM, 09.20.22] !eq = T.ABS does not imply kind = ABSTRACT? *)
+	                (PPTable.pp_object stamp obj
+			 handle PP_NOT_INSTALLED => PP.text  "-" )
+		    | (T.DATATYPE{index,stamps, family as {members,...}, freetycs, root, stripped}, _) =>
+			 if TU.eqTycon(tyc,BT.ulistTycon)
+			 then fmtUrList (obj, hd argtys, tycontextOp, depth, !Control.Print.printLength)
+			 else if TU.eqTycon (tyc,BT.suspTycon)
+			 then PP.text  "$$"  (* LAZY *)
+			 else if TU.eqTycon (tyc,BT.listTycon)
+			 then fmtList (obj, hd argtys, tycontextOp, depth, !Control.Print.printLength)
+			 else if TU.eqTycon (tyc,BT.refTycon)
+			 then let val argtys' = interpArgs(argtys,tycontextOp)
+				  fun formatter (obj, senv) =
+				      fmtDcon (obj, (Vector.sub(stamps,index), Vector.sub(members,index)),
+					       SOME([BT.refTycon],[]), argtys', senv, depth, l, r)
+			      in formatWithSharing (obj, formatter, senv)
+			      end
+			 else let val argtys' = interpArgs(argtys,tycontextOp)
+			       in fmtDcon (obj, (Vector.sub(stamps,index), Vector.sub(members,index)),
+					   SOME(transMembers (stamps, freetycs, root, family)),
+					   argtys', senv, depth, l, r)
+			      end
+		    | _ => PP.text "-"
 		(* end case *))
-	    | T.CONty(tyc as T.RECORDtyc [], _) => PP.string ppstrm  "()"
-	    | T.CONty(tyc as T.RECORDtyc labels, argtys) => if Tuples.isTUPLEtyc tyc
-		then ppTuple(Obj.toTuple obj, argtys, membersOp, depth, accu)
-		else ppRecord(Obj.toTuple obj, labels, argtys, membersOp, depth, accu)
+	    | T.CONty(tyc as T.RECORDtyc [], _) => PP.text "()"
+	    | T.CONty(tyc as T.RECORDtyc labels, argtys) =>
+	        if Tuples.isTUPLEtyc tyc
+		then fmtTuple (Obj.toTuple obj, argtys, tycontextOp, senv, depth)
+		else fmtRecord (Obj.toTuple obj, labels, argtys, tycontextOp, senv, depth)
 	    | T.CONty(tyc as T.DEFtyc _, _) =>
-		ppVal'(obj, TU.reduceType ty, membersOp, depth, l, r,accu)
-	    | T.CONty(tyc as T.RECtyc i,argtys) => (case membersOp
-		  of SOME (memberTycs,_) =>
-		       let val tyc' =
-			       List.nth(memberTycs,i)
-			       handle Subscript =>
-				(flushStream ppstrm;
-				 print "#ppVal':  ";
-				 print (Int.toString i);
-				 print " "; print(Int.toString(length memberTycs));
-				 print "\n";
-				 bug "ppVal': bad index for RECtyc")
-			in case tyc'
-			     of T.GENtyc { kind =
-					   T.DATATYPE{index,stamps,
-						      family={members,...},...},
-					   ... } =>
-				ppDcon(obj,(Vector.sub(stamps,index),
-					    Vector.sub(members,index)),
-				       membersOp, argtys,
-				       depth,l,r,accu)
-			      | _ => bug "ppVal': bad tycon in members"
-		       end
-		   | NONE => bug "ppVal': RECtyc with no members"
-		 (* end case *))
-	    | T.CONty(tyc as T.FREEtyc i,argtys) => (case membersOp
-		  of SOME (_, freeTycs) =>
-		       let val tyc' =
-			       List.nth(freeTycs,i)
-			       handle Subscript =>
-				(flushStream ppstrm;
-				 print "#ppVal':  ";
-				 print (Int.toString i);
-				 print " ";
-				 print(Int.toString(length freeTycs));
-				 print "\n";
-				 bug "ppVal': bad index for FREEtyc")
-			in ppVal'(obj, T.CONty(tyc', argtys), membersOp,
-				  depth, l, r, accu)
-		       end
-		   | NONE => bug "ppVal': RECtyc with no members"
-		 (* end case *))
-
-	    | _ => PP.string ppstrm  "-"
+		fmtObj'(obj, TU.reduceType ty, tycontextOp, depth, l, r)
+	    | T.CONty(tyc as T.RECtyc i,argtys) =>
+		(case tycontextOp
+		   of SOME (memberTycs,_) =>
+			let val tyc' =
+				List.nth(memberTycs,i)
+				handle Subscript =>
+				 (print "#fmtObj':  ";
+				  print (Int.toString i);
+				  print " "; print(Int.toString(length memberTycs));
+				  print "\n";
+				  bug "fmtObj': bad index for RECtyc")
+			 in case tyc'
+			      of T.GENtyc {kind = T.DATATYPE{index,stamps, family={members,...},...}, ...} =>
+				 fmtDcon (obj, (Vector.sub(stamps,index), Vector.sub(members,index)),
+					 tycontextOp, argtys, depth, l, r)
+			       | _ => bug "fmtObj': bad tycon in members"
+			end
+		    | NONE => bug "fmtObj': RECtyc with no members"
+		  (* end case *))
+	    | T.CONty(tyc as T.FREEtyc i,argtys) =>
+		(case tycontextOp
+		    of SOME (_, freeTycs) =>
+			 let val tyc' =
+				 List.nth(freeTycs,i)
+				 handle Subscript =>
+				  (print "#fmtObj': ";
+				   print (Int.toString i);
+				   print " ";
+				   print(Int.toString(length freeTycs));
+				   print "\n";
+				   bug "fmtObj': bad index for FREEtyc")
+			  in fmtObj'(obj, T.CONty(tyc', argtys), tycontextOp, depth, l, r)
+			 end
+		     | NONE => bug "fmtObj': RECtyc with no members"
+		   (* end case *))
+	    | _ => PP.text  "-"
 	  (* end case *))
-	    handle e => raise e)
+	  handle e => raise e)
 
-and ppDcon(_,_,_,_,0,_,_,_) = PP.string ppstrm  "#"
-  | ppDcon(obj:object, (stamp, {tycname,dcons,...}), membersOp : (T.tycon list * T.tycon list) option,
-	   argtys, depth:int, l:F.fixity, r:F.fixity, accu) =
-     PPTable.pp_object ppstrm stamp obj
-	   (* attempt to find and apply user-defined pp on obj *)
+and fmtDcon (_, _, _, _, 0, _, _) = PP.text  "#"
+  | fmtDcon (obj:object, (stamp, {tycname,dcons,...}), tycontextOp : tyContext option,
+	     argtys, senv: sharingEnv, depth:int, lpull: int, rpull: int) =
+     PPTable.format_object stamp obj (* attempt to find and apply user-defined formatter to obj *)
      handle PP_NOT_INSTALLED =>
-       if length dcons = 0 then PP.string ppstrm "-"
-       else
+        if length dcons = 0 then PP.text "-" else
 	let val dcon as {name,domain,...} = switch(obj,dcons)
-	    val dname = Symbol.name name
+	    val dname = S.name name
 	 in case domain
-	      of NONE => PP.string ppstrm dname
+	      of NONE => PP.text dname
 	       | SOME dom =>
-		  let val fixity =
-		          Lookup.lookFix(env,Symbol.fixSymbol dname)
-		      (* (??) may be inaccurate *)
-		  val dom = TU.applyTyfun(T.TYFUN{arity=length argtys,body=dom},
-					  argtys)
-		  val dom = TU.headReduceType dom (* unnecessary *)
-		  fun prdcon() =
-		      case (fixity,dom)
-			of (F.INfix _,T.CONty(domTyc as T.RECORDtyc _, [tyL,tyR])) =>
-			   let val (a, b) =
-				   case Obj.toTuple(decon(obj,dcon)) of
-				       [a, b] => (a, b)
-				     | _ => bug "ppDcon [a, b]"
-			    in if Tuples.isTUPLEtyc domTyc
-			       then (openHOVBox ppstrm (PP.Rel 0);
-				     ppVal'(a,tyL,
-					    membersOp,
-					    depth-1,F.NONfix,fixity,accu);
-				     break ppstrm {nsp=1,offset=0};
-				     PP.string ppstrm  dname;
-				     break ppstrm {nsp=1,offset=0};
-				     ppVal'(b,tyR,
-					    membersOp,
-					    depth-1,fixity, F.NONfix,accu);
-				     closeBox ppstrm)
-			       else (openHOVBox ppstrm (PP.Rel 2);
-				     PP.string ppstrm  dname;
-				     break ppstrm {nsp=1,offset=0};
-				     ppVal'(decon(obj,dcon),dom,
-					    membersOp, depth-1,
-					    F.NONfix,F.NONfix,accu);
-				     closeBox ppstrm)
-			   end
-			 | _ => (openHOVBox ppstrm (PP.Rel 2);
-				 PP.string ppstrm  dname; break ppstrm {nsp=1,offset=0};
-				 ppVal'(decon(obj,dcon),dom,membersOp,depth-1,
-					F.NONfix,F.NONfix,accu);
-				 closeBox ppstrm)
-                  fun prpardcon() =
-		      (openHOVBox ppstrm (PP.Rel 0);
-		       PP.string ppstrm  "("; prdcon(); PP.string ppstrm  ")";
-		       closeBox ppstrm)
-	       in case(l,r,fixity)
-		    of (F.NONfix,F.NONfix,_) => prpardcon()
-		     | (F.INfix _,F.INfix _,_) => prdcon()
-		       (* special case: only on first iteration, for no parens *)
-		     | (_,_,F.NONfix) => prdcon()
-		     | (F.INfix(_,p1),_,F.INfix(p2,_)) =>
-			 if p1 >= p2 then prpardcon()
-			 else prdcon()
-		     | (_,F.INfix(p1,_),F.INfix(_,p2)) =>
-			 if p1 > p2 then prpardcon()
-			 else prdcon()
-	      end
-      end
+		  let val fixity = Lookup.lookFix(env,S.fixSymbol dname) (* may be inaccurate? *)
+		      val dom = TU.applyTyfun(T.TYFUN{arity=length argtys,body=dom}, argtys)
+		      val dom = TU.headReduceType dom (* unnecessary *)
+		      fun prdcon () =
+			  case (fixity, dom)
+			    of (F.INfix (leftPull, rightPull), T.CONty(domTyc as T.RECORDtyc _, [leftTy,rightTy])) =>
+			       let val (leftArg, rightArg) =
+				       case Obj.toTuple (decon(obj,dcon))
+					 of [a, b] => (a, b)
+					  | _ => bug "fmtDcon [a, b]"
+				in if Tuples.isTUPLEtyc domTyc
+				   then PP.pblock
+					 [fmtObj'(leftArg, leftTy, tycontextOp, senv, depth-1, 0, leftPull),
+					  PP.text  dname,
+					  fmtObj'(rightArg, rightTy, tycontextOp, senv, depth-1, rightPull, 0)]
+				   else PP.pcat
+					  (PP.text dname,
+					   softIndent 2 (fmtObj' (decon(obj,dcon), dom, tycontextOp, senv,
+								  depth-1, 0, 0)))
+			       end
+			     | _ =>
+			       PP.pcat (PP.text  dname, fmtObj'(decon(obj,dcon), dom, tycontextOp, senv, depth-1, 0, 0))
+		   in case fixity
+			of F.NONfix => prdcon ()
+			 | F.INfix (myleft, myright) => 
+			     if (lpull = 0 andalso rpull = 0) orelse lpull >= myleft orelse rpull > myright
+			     then PP.parens (prdcon())
+			     else prdcon()
+		  end
+	end
 
-and ppList(obj:object, ty:T.ty, membersOp, depth:int, length: int,accu) =
-    let fun list_case p =
-	    case switch(p, listDcons)
-	      of {domain=NONE,...} => NONE
-	       | dcon => (case Obj.toTuple(decon(p, dcon)) of
-			      [a, b] => SOME(a, b)
-			    | _ => bug "ppList [a, b]")
+and fmtList (obj: object, ty: T.ty, tycontextOp, senv: sharingEnv, depth:int, length: int) =
+    let fun listDestruct (p: object) =
+	    case switch (p, listDcons)
+	      of {domain=NONE,...} => NONE                    (* nil case *)
+	       | dcon => (case Obj.toTuple (decon (p, dcon))  (* cons case *)
+			    of [a, b] => SOME(a, b)
+			     | _ => bug "fmtList [a, b]")
 
-       fun ppTail(p, len) =
-	   case list_case p
-	     of NONE => ()
-	      | SOME(hd,tl) =>
-		  if len <= 0 then (PP.string ppstrm  "...")
-		  else (case list_case tl
-			 of NONE =>
-			      ppValShare (hd, ty, membersOp, depth-1,accu)
-			  | _ =>
-			      (ppValShare (hd, ty, membersOp, depth-1,accu);
-			       PP.string ppstrm  ",";
-			       break ppstrm {nsp=0,offset=0};
-			       ppTail(tl,len-1)))
+        val (elems, more) =
+	    let fun gather (p, len, elems) =
+		    case listDestruct obj
+		      of NONE => (rev elems, false)  (* obj = nil, ran out of elements *)
+		       | SOME (x, xs) =>             (* obj = x :: xs *)
+			   if len <= 0
+			   then (rev elems, true)    (* more elements, not printed *)
+			   else gather (xs, len-1, x::elems)
+	     in gather (obj, length, nil)
+	    end
 
-     in openHOVBox ppstrm (PP.Rel 1);
-        PP.string ppstrm  "[";
-        ppTail(obj,length);
-	PP.string ppstrm  "]";
-        closeBox ppstrm
+	val elementsFormats =
+	    let val fmts = map (fn e => fmtClosed (e, ty, tycontextOp, senv, depth - 1)
+	     in if more
+		then fmts @ [PP.text "..."]
+		else fmts
+	    end
+
+     in PP.listFormats elementsFormats
     end
 
-and ppUrList(obj:object, ty:T.ty, membersOp, depth:int, length: int,accu) =
-    let fun list_case p =
-	    case switch(p, ulistDcons)
-	      of {domain=NONE,...} => NONE
-	       | dcon => (case Obj.toTuple(decon(p, dcon)) of
-			      [a, b] => SOME (a, b)
-			    | _ => bug "ppUrList [a, b]")
+and fmtUrList (obj:object, ty:T.ty, tycontextOp, depth:int, length: int) =
+    PP.brackets (PP.text  "unrolled list")
 
-        fun ppTail(p, len) =
-	   case list_case p
-	     of NONE => ()
-	      | SOME(hd,tl) =>
-		  if len <= 0 then (PP.string ppstrm  "...")
-		  else (case list_case tl
-			 of NONE =>
-			      ppValShare (hd, ty, membersOp, depth-1,accu)
-			  | _ =>
-			      (ppValShare (hd, ty, membersOp, depth-1,accu);
-			       PP.string ppstrm  ",";
-	      	               break ppstrm {nsp=0,offset=0};
-			       ppTail(tl,len-1)))
+and fmtTuple (objs: object list, tys: T.ty list, tycontextOp, senv: sharingEnv, depth:int) : PP.format =
+    tupleFormats (map (fn (obj, ty) => fmtClosed (obj, ty, tycontextOp, senv, depth - 1))
+		      (ListPair.zipEq (objs, tys)))
 
-     in openHOVBox ppstrm (PP.Rel 1);
-        PP.string ppstrm  "[ unrolled list ";
-        (* ppTail(obj,length); *)
-	PP.string ppstrm  "]";
-        closeBox ppstrm
+and fmtRecord (objs: object list, labels: T.label list, tys: T.ty list,
+	       tycontextOp, senv: sharingEnv, depth: int) =
+    let fun fmtField (f,l,ty) =
+	      PP.hblock [PP.text (S.name l), PP.equal, fmtClosed (f, ty, tycontextOp, senv, depth-1))
+     in PP.braces (PP.sequence {alignment = PP.P, sep = PP.comma}
+			       (map fmtFields (List3.zip3Eq (objs, labels, tys))))
     end
 
-and ppTuple (objs: object list, tys: T.ty list, membersOp, depth:int, accu) : unit =
-    let fun ppFields ([f],[ty]) = ppValShare (f, ty, membersOp, depth-1, accu)
-	  | ppFields (f::restf, ty::restty) =
-	      (ppValShare (f, ty, membersOp, depth-1, accu);
-               PP.string ppstrm (",");
-               break ppstrm {nsp=0,offset=0};
-	       ppFields(restf,restty))
-	  | ppFields ([], []) = ()
-          | ppFields _ = bug(concat[
-		"ppTuple.ppFields: arity mismatch; ", Int.toString(length objs),
-		" objects vs. ", Int.toString(length tys), " fields"
-	      ])
-     in openHOVBox ppstrm (PP.Rel 1);
-        PP.string ppstrm ("(");
-        ppFields(objs, tys);
-        PP.string ppstrm (")");
-        closeBox ppstrm
+and fmtVector (vectorObj: object vector, ty: T.ty, tycontextOp,
+	      senv: sharingEnv, depth:int, length: int) =
+    let val vectorLength  = Vector.length vectorObj
+	val (elems, more) =
+	    let val minLength = Int.min (vectorLength, length)
+		fun gather (index, elems) =
+		    if index < minLength
+		    then gather (index+1, Vector.sub (vectorObj, index) :: elems)
+		    else (rev elems)  (* more elements than printed because of length limit *)
+	    in gather (0, nil)
+	    end
+
+	val elementsFormats =
+	    let val fmts = map (fn elem => fmtClosed (elem, ty, tycontextOp, senv, depth - 1) elems
+	     in if length < vectorLength
+		then fmts @ [PP.text "..."]  (* printing incomplete *)
+		else fmts
+	    end
+
+     in PP.brackets (PP.sequence {alignment = PP.P, sep = PP.comma} elementFormats)
     end
 
-and ppRecord (objs: object list, labels: T.label list,
-	     tys: T.ty list, membersOp, depth: int, accu) =
-    let fun ppFields([f],[l],[ty]) =
-	      (openHVBox ppstrm (PP.Rel 2);
-               PP.string ppstrm (Symbol.name l);
-               PP.string ppstrm ("=");
-               ppValShare (f, ty, membersOp, depth-1, accu);
-               closeBox ppstrm)
-	  | ppFields(f::restf, l::restl, ty::restty) =
-	      (openHVBox ppstrm (PP.Rel 2);
-               PP.string ppstrm (Symbol.name l);
-               PP.string ppstrm ("=");
-               ppValShare (f,ty,membersOp,depth-1,accu);
-               closeBox ppstrm;
-	       PP.string ppstrm (",");
-               break ppstrm {nsp=0,offset=0};
-               ppFields(restf,restl,restty))
-	  | ppFields([],[],[]) = ()
-          | ppFields _ = bug "ppRecord.ppFields in ppval.sml"
-     in openHOVBox ppstrm (PP.Rel 1);
-        PP.string ppstrm ("{");
-        ppFields(objs,labels,tys);
-        PP.string ppstrm ("}");
-        closeBox ppstrm
+and fmtArray (arrayObj: object array, ty: T.ty, tycontextOp, senv: sharingEnv, depth: int, length: int) =
+    let val arrayLength  = Array.length arrayObj
+
+        fun fmtElem elem = fmtClosed (elem, ty, tycontextOp, senv, depth - 1)
+
+	val (fmts, more) =
+	    let val minLength = Int.min (arrayLength, length)
+		fun gather (index, elemFmts) =
+		    if index < minLength
+		    then gather (index+1, fmtElem (Array.sub (arrayObj, index)) :: elemFmts)
+		    else (rev elemFmts)
+	     in gather (0, nil)
+	    end
+
+	val elementFormats =
+	    if length < arrayLength
+	    then fmts @ [PP.text "..."]
+	    else fmts
+
+     in PP.formatClosedSeq {front = PP.text "[|", back = PP.text "|]", sep = PP.comma, formatter = (fn x => x)}
+			   elementsFormats
     end
 
-and ppVector(objs:object vector, ty:T.ty, membersOp, depth:int, length,accu) =
-      let val vectorLength  = V.length objs
-          val (len, closing) =
-	        if length >= vectorLength then
-		  (vectorLength,fn _ => PP.string ppstrm "]")
-		else (length,fn sep => (PP.string ppstrm sep;
-                                        PP.string ppstrm "...]"))
-          fun printRest(sep,breaker, index) =
-	        if index >= len then closing sep
-                else (PP.string ppstrm  sep; breaker ();
-		      ppValShare (V.sub (objs,index),ty,membersOp,
-				  depth-1,accu);
-		      printRest (",",fn () => break ppstrm {nsp=0,offset=0}, index + 1))
-       in openHOVBox ppstrm (PP.Rel 1);
-	  PP.string ppstrm "#["; printRest("",fn () => (), 0);
-          closeBox ppstrm
-      end
+and ppRealArray (arrayObj : Real64Array.array, length: int) =
+    let val arrayLength  = Real64Array.length arrayObj
 
-and ppArray (objs: object array, ty: T.ty, membersOp, depth: int, length, accu) =
-      let val vectorLength  = Array.length objs
-          val (len, closing) =
-	        if length >= vectorLength then
-		  (vectorLength,fn _ => PP.string ppstrm "|]")
-		else (length,fn sep => (PP.string ppstrm sep;
-                                        PP.string ppstrm "...|]"))
-          fun printRest(sep,breaker, index) =
-	        if index >= len then closing sep
-                else (PP.string ppstrm  sep; breaker ();
-		      ppValShare (Array.sub (objs,index),ty,membersOp,
-				  depth-1,accu);
-		      printRest (",",fn () => break ppstrm {nsp=0,offset=0}, index + 1))
-       in openHOVBox ppstrm (PP.Rel 1);
-	  PP.string ppstrm "[|"; printRest("",fn () => (), 0);
-          closeBox ppstrm
-      end
-and ppRealArray (objs : Real64Array.array, length: int) =
-      let val vectorLength  = Real64Array.length objs
-          val (len, closing) =
-	        if length >= vectorLength then
-		  (vectorLength,fn _ => PP.string ppstrm "|]")
-		else (length,fn sep => (PP.string ppstrm sep;
-                                        PP.string ppstrm "...|]"))
-          fun printRest(sep,breaker, index) =
-	        if index >= len then closing sep
-                else (PP.string ppstrm  sep; breaker ();
-		      PP.string ppstrm (Real.toString(Real64Array.sub(objs,index)));
-		      printRest (",",fn () => break ppstrm {nsp=0,offset=0}, index + 1))
-       in openHOVBox ppstrm (PP.Rel 1);
-	  PP.string ppstrm "[|"; printRest("",fn () => (), 0);
-          closeBox ppstrm
-      end
- in ppValue
+	val (fmts, more) =
+	    let val minLength = Int.min (arrayLength, length)
+		fun gather (index, elemFmts) =
+		    if index < minLength
+		    then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index)) :: elemFmts)
+		    else (rev elemFmts)
+	    in gather (0, nil)
+	    end
+
+	val elementFormats =
+	    if length < arrayLength
+	    then fmts @ [PP.text "..."]
+	    else fmts
+
+     in PP.formatClosedSeq {front = PP.text "[|", back = PP.text "|]", sep = PP.comma, formatter = (fn x => x)}
+			   elementFormats
+    end
+
+ in resetSharing ();
+    fmtObj' (obj, ty, NONE, emptySharingEnv, depth, noparen, noparen)
 end (* fun ppObj *)
 
+end (* top local *)
 end (* structure PPObj *)
 
 

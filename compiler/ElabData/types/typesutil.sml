@@ -1296,6 +1296,12 @@ structure TypesUtil : TYPESUTIL =
 		BT.domain dconTy
 	end
 
+    (* isRecordTy : ty -> bool *)
+    fun isRecordTy ty =
+	case (prune ty)
+	  of CONty(RECORDtyc _, _::_)) => true
+	   | _ => false
+
     (* destructRecordTy : ty -> ty list *)
     fun destructRecordTy recTy =
 	(case headReduceType recTy

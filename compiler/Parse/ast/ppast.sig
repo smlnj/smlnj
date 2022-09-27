@@ -5,46 +5,27 @@
 signature PPAST =
 
 sig
-	val ppExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.exp * int -> unit 
-	val ppPat	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.pat * int -> unit
-	val ppStrExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.strexp * int -> unit
-	val ppFctExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.fctexp * int -> unit
-	val ppWhereSpec :Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.wherespec * int -> unit
-	val ppSigExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.sigexp * int -> unit
-	val ppFsigExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.fsigexp * int -> unit
-	val ppSpec	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.spec * int -> unit 
-	val ppDec	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.dec * int -> unit
-	val ppVb   	: Source.inputSource option 
-                         -> PrettyPrint.stream -> Ast.vb * int -> unit
-  	val ppRvb  	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.rvb * int -> unit
-	val ppFb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> string -> Ast.fb * int -> unit
-	val ppClause	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.clause * int -> unit
-	val ppTb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.tb * int -> unit
-	val ppDb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.db * int -> unit  
-	val ppDbrhs	: Source.inputSource option
-               		 -> PrettyPrint.stream -> (Symbol.symbol * Ast.ty option) list * int -> unit
-	val ppEb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.eb * int -> unit
-	val ppStrb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.strb * int -> unit
-	val ppFctb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.fctb * int -> unit
-	val ppTyvar	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.tyvar * int -> unit
-	val ppTy	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.ty * int -> unit 
-end
+
+   val fmtExp	    : Source.inputSource option -> Ast.exp * int       -> NewPP.format 
+   val fmtPat	    : Source.inputSource option -> Ast.pat * int       -> NewPP.format
+   val fmtStrExp    : Source.inputSource option -> Ast.strexp * int    -> NewPP.format
+   val fmtFctExp    : Source.inputSource option -> Ast.fctexp * int    -> NewPP.format
+   val fmtWhereSpec : Source.inputSource option -> Ast.wherespec * int -> NewPP.format
+   val fmtSigExp    : Source.inputSource option -> Ast.sigexp * int    -> NewPP.format
+   val fmtFsigExp   : Source.inputSource option -> Ast.fsigexp * int   -> NewPP.format
+   val fmtSpec	    : Source.inputSource option -> Ast.spec * int      -> NewPP.format 
+   val fmtDec	    : Source.inputSource option -> Ast.dec * int       -> NewPP.format
+   val fmtVb   	    : Source.inputSource option -> Ast.vb * int        -> NewPP.format
+   val fmtRvb  	    : Source.inputSource option -> Ast.rvb * int       -> NewPP.format
+   val fmtFb	    : Source.inputSource option -> string -> Ast.fb * int -> NewPP.format
+   val fmtClause    : Source.inputSource option -> Ast.clause * int    -> NewPP.format
+   val fmtTb	    : Source.inputSource option -> Ast.tb * int        -> NewPP.format
+   val fmtDb	    : Source.inputSource option -> Ast.db * int        -> NewPP.format  
+   val fmtDbrhs	    : Source.inputSource option -> (Symbol.symbol * Ast.ty option) list * int -> NewPP.format
+   val fmtEb	    : Source.inputSource option -> Ast.eb * int        -> NewPP.format
+   val fmtStrb	    : Source.inputSource option -> Ast.strb * int      -> NewPP.format
+   val fmtFctb	    : Source.inputSource option -> Ast.fctb * int      -> NewPP.format
+   val fmtTyvar	    : Source.inputSource option -> Ast.tyvar * int     -> NewPP.format
+   val fmtTy	    : Source.inputSource option -> Ast.ty * int        -> NewPP.format 
+
+end (* signature PPAST *)

@@ -28,6 +28,7 @@ structure TransTypes : TRANSTYPES =
     structure EV = EvalEntity
     structure INS = Instantiate
     structure IP = InvPath
+    structure ED = ElabDebug
     structure LT = Lty
     structure LK = LtyKernel
     structure LD = LtyDef
@@ -37,8 +38,7 @@ structure TransTypes : TRANSTYPES =
     structure MU = ModuleUtil
     structure SE = StaticEnv
     structure TU = TypesUtil
-    structure PP = PrettyPrint
-    open Types Modules ElabDebug
+    open Types Modules
 
     fun bug msg = ErrorMsg.impossible ("TransTypes: " ^ msg)
     fun say msg = (Control.Print.say msg; Control.Print.flush ())
@@ -55,24 +55,7 @@ structure TransTypes : TRANSTYPES =
     val defaultError =
 	  EM.errorNoFile(EM.defaultConsumer(),ref false) SourceMap.nullRegion
 
-    val env = StaticEnv.empty
-
-    fun ppType x =
-     ((PP.with_pp (EM.defaultConsumer())
-	       (fn ppstrm => (PP.string ppstrm "find: ";
-			      PPType.resetPPType();
-			      PPType.ppType env ppstrm x)))
-      handle _ => say "fail to print anything")
-
-    fun ppTycon x =
-	((PP.with_pp (EM.defaultConsumer())
-	    (fn ppstrm => (PP.string ppstrm "find: ";
-			   PPType.resetPPType();
-			   PPType.ppTycon env ppstrm x)))
-	handle _ => say "fail to print anything")
-
-
-    fun ppLtyc (ltyc: LT.tyc) = PPLty.ppTyc 20 ltyc
+    val env = SE.empty
 
     (* deBruijn index *)
     type depth = int  (* deBruijn context *)

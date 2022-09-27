@@ -29,6 +29,7 @@ structure PEqual : PEQUAL =
     structure EM = ErrorMsg
     structure T  = Types
     structure BT = BasicTypes
+    structure ED = ElabDebug
     structure LT = Lty
     structure LK = LtyKernel
     structure LD = LtyDef
@@ -38,7 +39,8 @@ structure PEqual : PEQUAL =
     structure SE = StaticEnv
     structure PO = Primop
     structure PU = PrimopUtil
-    structure PP = PrettyPrint
+    structure PP = NewPP
+
     open Types PLambda
     (* mentions Target *)
 
@@ -57,7 +59,8 @@ structure PEqual : PEQUAL =
    * "compInfo". Similarly, should we replace all mkLvar in the backend
    * with the mkv in "compInfo" ? (ZHONG)
    * DBM: is it worth cleaning up, what harm might come from using a single
-   * global generator -- maybe resetting between compilations?
+   * global generator -- resetting the generator between compilations _might_
+   * be advisable, just in case.
    *)
     val mkv = LambdaVar.mkLvar
 
@@ -195,12 +198,9 @@ structure PEqual : PEQUAL =
 	  fun enter ty = let
 		val v = VAR(mkv())
 		val r = ref v
-		in
-		  if !debugging
-		    then PP.with_pp (EM.defaultConsumer())
-			  (fn ppstrm => (PP.string ppstrm "enter: ";
-			     PPType.resetPPType(); PPType.ppType env ppstrm ty))
-		    else ();
+		in ED.debugPrint debugging 
+		     (PPType.resetPPType();
+		      PP.hcat (PP.text "enter:", (PPType.fmtType env ty)));
 		  cache := (ty, v, r) :: !cache; (v,r)
 		end
 	  fun find ty = let
@@ -208,13 +208,9 @@ structure PEqual : PEQUAL =
 		  | f [] = (if !debugging
 			    then say "equal.sml-find-notfound\n" else ();
 			    raise Notfound)
-		in
-		  if !debugging
-		    then PP.with_pp (EM.defaultConsumer())
-			 (fn ppstrm => (PP.string ppstrm "find: ";
-					PPType.resetPPType();
-					PPType.ppType env ppstrm ty))
-		    else ();
+		in ED.debugPrint debugging
+		     (PPType.resetPPType();
+		      PP.hcat (PP.text "find:", ( PPType.fmtType env ty)));
 		  f (!cache)
 		end
 
@@ -260,12 +256,9 @@ structure PEqual : PEQUAL =
 
 	  fun test (ty, 0) = raise Poly
 	    | test (ty, depth) = (
-		if !debugging
-		  then PP.with_pp (EM.defaultConsumer())
-		       (fn ppstrm => (PP.string ppstrm "test: ";
-				      PPType.resetPPType();
-				      PPType.ppType env ppstrm ty))
-		  else ();
+		ED.debugPrint debugging
+		  (PPType.resetPPType();
+		   PP.hcat (PP.text "test:", (PPType.fmtType env ty)));
 		case ty
 		 of VARty(ref(INSTANTIATED t)) => test(t,depth)
 		  | MARKty(ty, region) => test(ty, depth)
