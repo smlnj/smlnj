@@ -3,11 +3,13 @@
 
 signature ELABDEBUG =
 sig
+
   val debugMsg : bool ref -> string -> unit
   val debugPrint : bool ref -> (string * NewPP.format) -> unit
   val envBoundSymbols : StaticEnv.staticEnv -> Symbol.symbol list
   val checkBound : StaticEnv.staticEnv * Symbol.symbol -> string
-  val withInternals : ('a -> NewPP.format) -> unit  (* ??? will this work? *)
+  val withInternals : (unit -> 'a) -> 'a
+
 end (* signature ELABDEBUG *)
 
 structure ElabDebug : ELABDEBUG =
@@ -48,5 +50,5 @@ fun withInternals (f: unit -> 'a) =
         handle exn => (ElabDataControl.resetInternals savedInternals; raise exn)
     end
 
-end (* local *)
+end (* top local *)
 end (* structure ElabDebug *)

@@ -1,6 +1,6 @@
-(* ppprim.sml
+(* ElabData/prim/ppprim-new.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017, 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -8,36 +8,25 @@ structure PPPrim =
 struct
 
 local
-  structure PP = PrettyPrint
-  structure PU = PPUtil
-  open PPUtil
+  structure PP = NewPP
 in
 
-fun ppPrim ppstrm prim =
-    let val pps = PU.pps ppstrm
-    in (case prim
-	  of PrimopId.NonPrim => pps "<NonPrim>"
-	   | PrimopId.Prim prim => (pps "<PrimE "; pps(PrimopBind.nameOf prim); pps ">"))
-    end (* function ppPrim *)
+(* fmtPrim : PrimopId.prim_id -> PP.format *)
+fun fmtPrim prim =
+    (case prim
+      of PrimopId.NonPrim => PP.text "<NonPrim>"
+       | PrimopId.Prim prim => PP.text ("<Prim: " ^  PrimopBind.nameOf prim ^ ">")
+    (* function fmtPrim *)
 
-fun ppStrPrimInfo ppstrm strPrimInfo =
-    let val {openHOVBox, closeBox, pps, ...} = en_pp ppstrm
-	fun ppStrPrimElem ppstrm (PrimopId.PrimE p) = ppPrim ppstrm p
-	  | ppStrPrimElem ppstrm (PrimopId.StrE ps) = ppStrPrimInfo ppstrm ps
-    in
-	ppSequence ppstrm
-         {sep = fn ppstrm => (PP.string ppstrm ", ";
-                              PP.break ppstrm {nsp=1, offset=0}),
-          pr = (fn _ => fn elem =>
-                           (openHOVBox 1;
-                            pps "(";
-                            ppStrPrimElem ppstrm elem;
-                            pps ")";
-                            closeBox())),
-          style = INCONSISTENT}
-	 strPrimInfo
-    end (* function ppStrPrimInfo *)
+(* fmtStrPrimElem : PrimopId.str_prim_elem -> PP.format *)
+fun fmtStrPrimElem (PrimopId.PrimE p) = fmtPrim p
+  | fmtStrPrimElem (PrimopId.StrE ps) = PP.listFormats (map fmtStrPrimInfo ps)
 
-end (* local *)
+(* fmtStrPrimInfo : PrimopId.str_prim_info -> PP.format *)
+fun fmtStrPrimInfo strPrimInfo = PP.tupleFormats (map fmtStrPrimElem strPrimInfo)
 
+end (* top local *)
 end (* structure PPPrim *)
+
+(* [DBM, 09.17.2022]: converted to use NewPP instead of PrettyPrint *)
+

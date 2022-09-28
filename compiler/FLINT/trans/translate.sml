@@ -40,9 +40,9 @@ local
   structure M  = Modules
   structure MC = MatchComp
   structure PO = Primop
-  structure PP = PrettyPrint  (* still using old prettyprinter for absyn, types *)
+  structure PP = NewPP
+  structure PPU = NewPPUtil
   structure PPA = PPAbsyn
-  structure PU = PPUtil
   structure S  = Symbol
   structure SP = SymPath
   structure LN = LiteralToNum
