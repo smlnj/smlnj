@@ -1,41 +1,42 @@
-(* Basics/source/source.sml
+(* source.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
 structure Source : SOURCE =
 struct
 
-  type inputSource =
-       {sourceMap: SourceMap.sourcemap,
+  type inputSource = {
+        sourceMap: SourceMap.sourcemap,
         fileOpened: string,
         interactive: bool,
         sourceStream: TextIO.instream,
         content: string option ref,
-        anyErrors: bool ref}
+        anyErrors: bool ref,
+        errConsumer: string -> unit
+      }
 
-  (* DBM: why is anyErrors a component of the inputSource?
-   *   if not global state, where would it go? *)
+(* -- inactive diagnostic printing
+  fun say (msg : string) = Control_Print.say msg
+*)
 
-  (* newSource : string * TextIO.instream * bool -> inputSource *)
-  fun newSource (fileName, sourceStream, interactive) =
+  fun newSource(fileName, sourceStream, interactive, errConsumer) =
       {sourceMap=SourceMap.newSourceMap fileName,
        fileOpened=fileName,
        interactive=interactive,
        sourceStream=sourceStream,
        content=ref NONE,
-       anyErrors=ref false}
+       anyErrors=ref false,
+       errConsumer=errConsumer}
 
-  (* closeSource : inputSource -> unit *)
   fun closeSource ({interactive=true, ...} : inputSource) = ()
     | closeSource ({sourceStream, ...}) = (
+        (* app say ["[closing ", (Pathnames.trim fileName), "]\n"];*)
         TextIO.closeIn sourceStream handle IO.Io _ => ())
 
-  (* filepos: inputSource -> SourceMap.charpos -> SourceMap.sourceloc *)
   fun filepos ({sourceMap,...}: inputSource) pos = SourceMap.filepos sourceMap pos
 
-  (* getContent : inputSource -> string option *)
   fun getContent ({fileOpened,interactive,content,...}: inputSource) : string option =
       case !content
         of NONE =>
@@ -47,8 +48,9 @@ struct
 		  end handle IO.Io _ => NONE)
          | s => s
 
-  (* regionContent: inputSource * SourceMap.region
-                    -> (string * SourceMap.region * int) option *)
+  (* regionContent:
+          inputSource * SourceMap.region
+       -> (SourceMap.region * string * int) option *)
   fun regionContent (src as {sourceMap,...}: inputSource, region) =
       case getContent src
         of NONE => NONE

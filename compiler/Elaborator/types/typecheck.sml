@@ -114,9 +114,6 @@ fun ppTypeDebug (msg,ty) =
 fun ppTyvarDebug tv =
     ED.withInternals (fn () => dbsaynl (PPT.tyvarPrintname tv))
 
-fun fmtRegion ((l,u): SourceMap.region) : PP.format =
-    PP.hblock [PP.integer l, PP.text "-" PP.integer u]
-
 (* fmtModeErrorMsg : Unify.unifyFail -> PP.format *)
 fun fmtModeErrorMsg (mode: Unify.unifyFail) =
     if !showCulprits then
@@ -126,17 +123,17 @@ fun fmtModeErrorMsg (mode: Unify.unifyFail) =
 	      (PP.text "Mode: tycon mismatch",
 	       PP.viblock (PP.HI 3)
 		 [PP.hcat (PP.text "tycon1:", fmtTycon tyc1),
-		  PP.hcat (PP.text "from:", fmtRegion reg1),
+		  PP.hcat (PP.text "from:", PPU.fmtRegion reg1),
 		  PP.hcat (PP.text "tycon2:", fmtTycon tyc2),
-		  PP.hcat (PP.text "from:", fmtRegion reg2)])
+		  PP.hcat (PP.text "from:", PPU.fmtRegion reg2)])
 	 | TYP (ty1, ty2, reg1, reg2) =>
 	    PP.vcat
 	      (PP.text "Mode: type mismatch",
 	       PP.viblock (PP.HI 3)
 		 [PP.hcat (PP.text "type1:", fmtTycon tyc1),
-		  PP.hcat (PP.text "from:", fmtRegion reg1),
+		  PP.hcat (PP.text "from:", PPU.fmtRegion reg1),
 		  PP.hcat (PP.text "type2:", fmtTycon tyc2),
-		  PP.hcat (PP.text "from:", fmtRegion reg2)])
+		  PP.hcat (PP.text "from:", PPU.fmtRegion reg2)])
 	 | _ => PP.empty)
     else PP.empty
 

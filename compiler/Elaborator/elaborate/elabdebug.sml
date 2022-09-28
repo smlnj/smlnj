@@ -4,11 +4,10 @@
 signature ELABDEBUG =
 sig
   val debugMsg : bool ref -> string -> unit
-  val debugPrint : bool ref -> (string * ('a -> NewPP.format) * 'a) -> unit
-  val fmtSymList : Symbol.symbol list -> NewPP.format
-  val envSymbols : StaticEnv.staticEnv -> Symbol.symbol list
-  val checkEnv : StaticEnv.staticEnv * Symbol.symbol -> string
-  val withInternals : (unit -> 'a) -> 'a
+  val debugPrint : bool ref -> (string * NewPP.format) -> unit
+  val envBoundSymbols : StaticEnv.staticEnv -> Symbol.symbol list
+  val checkBound : StaticEnv.staticEnv * Symbol.symbol -> string
+  val withInternals : ('a -> NewPP.format) -> unit  (* ??? will this work? *)
 end (* signature ELABDEBUG *)
 
 structure ElabDebug : ELABDEBUG =
@@ -28,25 +27,21 @@ fun debugMsg (debugging: bool ref) (msg: string) =
     then PP.printFormatNL (PP.text msg)
     else ()
 
-fun debugPrint (debugging: bool ref)
-               (msg: string, formatter: 'a -> PP.format, arg: 'a) =
+fun debugPrint (debugging: bool ref) (msg: string, format: PP.format) =
     if (!debugging)
-    then PP.printFormatNL
-	    (PP.vcat
-	       (PP.text msg,
-		formatter arg)
-	     closeBox ppstrm;
+    then PP.printFormatNL (PP.vcat (PP.text msg, format))
     else ()
 
-fun fmtSymList (syms: S.symbol list) = PP.formatList PPU.fmtSym syms
-
-(* more debugging *)
-fun envSymbols (env: SE.staticEnv) =
+(* envBoundSymbols : SE.staticEnv -> S.symbol list *)
+fun envBoundSymbols (env: SE.staticEnv) =
       SE.fold (fn ((s,_),sl) => s::sl) nil env
 
-fun checkEnv (env: SE.staticEnv, sym: S.symbol) =
+(* checkBound : SE.staticEnv * S.symbol -> bool *)
+fun checkBound (env: SE.staticEnv, sym: S.symbol) =
       (SE.look(env,sym); "YES") handle SE.Unbound => "NO"
 
+(* withInternals : (unit -> 'a) -> 'a
+ *  execute a thunk with internals flags on, restoring the flags afterward *)
 fun withInternals (f: unit -> 'a) =
     let val savedInternals = ElabDataControl.setInternals ()
      in (f() before ElabDataControl.resetInternals savedInternals)

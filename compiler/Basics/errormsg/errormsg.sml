@@ -1,50 +1,61 @@
-(* errormsg.sml
+(* Basics/errormsg/errormsg.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
 structure ErrorMsg : ERRORMSG =
 struct
 
+local
+
   structure PP = NewPP
+  structure PPU = NewPPUtil
   structure SM = SourceMap
 
+in
  (* error reporting *)
 
-  exception Error  (* was Syntax, changed to Error in 0.92 *)
+  exception Error
 
   datatype severity = WARN | COMPLAIN
 
   type output = string -> unit
 
-  type complainer = severity -> string -> (* output -> *) -> unit
+  type complainer = severity -> string -> PP.format -> unit
 
   type errorFn = region -> complainer
+  (* the four arguments of errorFn are: region, severity, string, format *)
 
   type errors = {error: errorFn,
                  errorMatch: region->string,
                  anyErrors: bool ref}
 
+  (* defaultOutput : unit -> (string -> unit) *)
   fun defaultOutput () = Control.Print.say
 
-  val nullErrorBody = PP.empty
+  (* nullErrorBody : PP.format *)
+  val nullErrorBody = PP.empty  (* default format argument *)
 
-  fun printMessage (output: output, location: string, severity: severity,
+  val lineWidth : int ref = Control.Print.lineWidth
+
+  fun printMessage (output: output, location: PP.format, severity: severity,
 		    msg: string, body: PP.format) =
       case (!BasicControl.printWarnings, severity)
-	of (false, WARN) => ()
+	of (false, WARN) => ()  (* no Warning messages if suppressed *)
 	 | _ =>
-	    PP.printFormatNL output
-	      (PP.hblock
-		[PP.text location,
-	         PP.text (* print error label *)
-		   (case severity
-		      of WARN => "Warning:"
-		       | COMPLAIN => "Error:"),
-		 PP.text msg, 
-		 body])
-
+	   let val msgFormat =
+		   (PP.appendNewline
+		      (PP.hblock
+			[location,
+			 PP.text (* print error label *)
+			   (case severity
+			      of WARN => "Warning:"
+			       | COMPLAIN => "Error:"),
+			 PP.text msg, 
+			 PP.hardIndent 2 body]))
+	   in PP.render output msgFormat (!lineWidth)
+	   end
 
   fun record (COMPLAIN, anyErrors) = anyErrors := true
     | record (WARN,_) = ()
@@ -58,87 +69,67 @@ struct
       (app Control_Print.say ["Warning: ", msg, "\n"];
        Control_Print.flush())
 
-(* [Ramsey] With the advent of source-map resynchronization (a.k.a
- * ( *#line...* ) comments), a contiguous region as seen by the compiler
- * can correspond to one or more contiguous segments in source code, with
- * different segments possibly lying in different source files.
- * We can imagine myriad ways of displaying such information, but we
- * confine ourselves to two:
- *  * When there's just one source region, we have what we had in the old
- *    compiler, and we display it the same way:
- *
- *      name:line.col or
- *      name:line1.col1-line2.col2
- *
- *  * When the region spans two or more source segments, we use an ellipsis instead
- *    of a dash, and if not all regions are from the same file, we provide
- *    the file names of both endpoints (even if the endpoints are the same
- *    file).
- *)
-(* [DBM] hasn't been supported for along while. get rid of the associated complications! *)
+  fun fmtSourceloc ({line, column, ...}: SM.sourceloc) = 
+        PP.parens (PP.cblock [PP.integer line, PP.period, PP.integer column])
 
-  (* locationTostring : Source.inputSource -> SourceMap.region -> string *)
-  fun locationTostring ({sourceMap,fileOpened,...}:Source.inputSource)
-                      ((p1,p2): SourceMap.region) : string =
-      let fun shortpoint ({line, column,...}:sourceloc, l) =
-             Int.toString line :: "." :: Int.toString column :: l
-          fun showpoint (p as {fileName,...}:sourceloc, l) =
-             Pathnames.trim fileName :: ":" :: shortpoint (p, l)
-          fun allfiles(f, (src:sourceloc, _)::l) =
-                f = #fileName src andalso allfiles(f, l)
-            | allfiles(f, []) = true
-          fun lastpos [(_, hi)] = hi
-            | lastpos (h::t) = lastpos t
-            | lastpos [] = impossible "lastpos botch in ErrorMsg.locationToString"
-      in  concat (
-            case fileregion sourceMap (p1, p2)
-              of [(lo, hi)] =>
-                    if p1+1 >= p2 then showpoint (lo, [])
-                    else showpoint(lo, "-" :: shortpoint(hi, []))
-               | (lo, _) :: rest =>
-                    if allfiles(#fileName lo, rest) then
-                      showpoint(lo, "..." :: shortpoint(lastpos rest, []))
-                    else
-                      showpoint(lo, "..." :: showpoint (lastpos rest, []))
-               | [] => [Pathnames.trim fileOpened, ":<nullRegion>"]
-          )
+  (* fmtRegion : Source.inputSource option -> SourceMap.region -> string *)
+  fun fmtRegion (sourceOp : Source.inputSource option)
+                 ((p1,p2): SourceMap.region) : PP.format =
+      in if (p1 + 1 >= p2)
+	 then PP.text "<bad region>"
+	 else (case sourceOp
+		 of SOME({sourceMap, fileOpened, ...}) =>
+		      let val (lo, hi) = fileregion sourceMap (p1, p2)
+		       in PP.hcat (PP.ccat (PP.text fileOpened, PP.colon),
+				   PP.hblock [fmtSourceloc lo,  PP.text "-", fmtSourceloc hi])
+		      end
+		  | NONE => PPU.fmtRegion (p1, p2))
       end
 
-  fun error (source as {anyErrors, errConsumer,...}: Source.inputSource)
-            ((p1,p2): SourceMap.region) (severity: severity)
+  fun error (source: Source.inputSource) ((p1,p2): SourceMap.region) (severity: severity)
             (msg: string) (body : PP.format) =
-      (printMessage (errConsumer, (locationToString source (p1,p2)), severity, msg, body);
-       record(severity,anyErrors))
+      (printMessage (defaultOutput, (fmtRegion (SOME source) (p1,p2)), severity, msg, body);
+       record(severity, #anyErrors source))
 
-  fun errorNoSource (output, anyE) locs sev msg body =
-      (printMessage (output, locs, sev, msg, body); record (sev, anyE))
+  fun errorNoSource (output, source) locs severity msg body =
+      (printMessage (output, locs, sev, msg, body); record (severity, #anyErrors source))
 
-  fun errorNoFile (errConsumer,anyErrors) ((p1,p2): region) severity msg body =
-      (ppmsg(errConsumer,
-             if p2>0 then concat[Int.toString p1, "-", Int.toString p2]
-                     else "",
-             severity, msg, body);
-       record(severity,anyErrors))
+  fun errorNoFile (output, anyErrors) ((p1,p2): region) severity msg body =
+      (printMessage (output, fmtRegion NONE (p1, p2), severity, msg, body);
+       record(severity, anyErrors))
 
   fun impossibleWithBody (msg: string) (body: PP.format) =
       (PP.printFormatNL
-        (PP.vcat
-	   (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg),
-            body);
+        (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body);
        raise Error)
 
-  val matchErrorString = locationToString
+  val matchErrorFormat = fmtRegion
 
   fun errors source =
       {error = error source,
-       errorMatch = matchErrorString source,
+       errorMatch = matchErrorFormat source,
        anyErrors = #anyErrors source}
 
-  fun anyErrors {anyErrors, error, errorMatch} = !anyErrors
+  (* anyErrors : errors -> bool *)
+  fun anyErrors ({anyErrors, error, errorMatch}: errors) = !anyErrors
 
   fun errorsNoFile (output : output, any : bool ref) =
       {error = errorNoFile (output, any),
        errorMatch = fn _ => "Match",
        anyErrors = any}
 
-end  (* structure ErrorMsg *)
+end (* top local *)
+end (* structure ErrorMsg *)
+
+(* [DBM, 2022.09]
+    (0) Using formats rather than strings in composing error messages (complainer type).
+        This will lead to lots of revised error messages!
+    (1) Ramsey's NoWeb hasn't been supported for a long while, so we have
+        removed the associated complications!
+    (2) The ERRORMSG interface is still a mess, and needs to be revised.
+        -- the output (errConsumer) function no longer comes from Source.inputSource
+        -- anyErrors (bool ref) still comes from Source.inputSource. Why?
+           Where do the anyErrors values come from when calling errorNoFile, errorNoSource,
+           etc?
+    (3) Is there any problem with having a default output (defaultOutput = Control.Print.say)?
+*)

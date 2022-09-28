@@ -1,34 +1,37 @@
-(* errormsg.sig
+(* Basics/errormsg/errormsg.sig
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
 signature ERRORMSG =
-  sig
+sig
+
     datatype severity = WARN | COMPLAIN
-    type complainer = severity -> string -> (PrettyPrint.stream -> unit) -> unit
+    type complainer = severity -> string -> NewPP.format -> unit
+    type output = string -> unit
     type errorFn = SourceMap.region -> complainer
     type errors (* = {error: errorFn,
-                      errorMatch: region->string,
+                      errorMatch: region -> string,
                       anyErrors : bool ref} *)
-    val anyErrors : errors -> bool
+
     exception Error
-    val defaultConsumer : unit -> PrettyPrint.device
-    val nullErrorBody : PrettyPrint.stream -> unit
+
+    val anyErrors : errors -> bool
+    val defaultOutput : unit -> (string -> unit)
+    val nullErrorBody : NewPP.format
+
     val error : Source.inputSource -> SourceMap.region -> complainer
     (* with a known location string but without access to the actual source: *)
-    val errorNoSource :
-	PrettyPrint.device * bool ref -> string -> complainer
-    val errorNoFile : PrettyPrint.device * bool ref -> SourceMap.region
-                      -> complainer
-
-    val matchErrorString : Source.inputSource -> SourceMap.region -> string
     val errors : Source.inputSource -> errors
-    val errorsNoFile : PrettyPrint.device * bool ref -> errors
+    val errorNoSource : output * bool ref -> string -> complainer
+    val errorNoFile : output * bool ref -> SourceMap.region -> complainer
+    val errorsNoFile : output * bool ref -> errors
+
+    val matchErrorFormat : Source.inputSource option -> SourceMap.region -> NewPP.format
 
     val impossible : string -> 'a
     val warn : string -> unit
-    val impossibleWithBody : string -> (PrettyPrint.stream -> unit) -> 'a
+    val impossibleWithBody : string -> NewPP.format -> 'a
 
-  end (* signature ERRORMSG *)
+end (* signature ERRORMSG *)

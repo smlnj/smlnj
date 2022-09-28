@@ -1,43 +1,39 @@
-(* Basics/source/source.sig
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ
+(* source.sig
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ
  *)
 
 signature SOURCE =
   sig
+    type inputSource = {
+        sourceMap: SourceMap.sourcemap,
+        fileOpened: string,
+        interactive: bool,
+        sourceStream: TextIO.instream,
+        content: string option ref,
+        anyErrors: bool ref,
+        errConsumer: PrettyPrint.device
+      }
 
-    type inputSource =
-         {sourceMap: SourceMap.sourcemap,
-          fileOpened: string,
-          interactive: bool,
-          sourceStream: TextIO.instream,
-          content: string option ref,
-          anyErrors: bool ref}
-
-    val newSource : (string * TextIO.instream * bool) -> inputSource
-    (* args are fileOpened, sourceStream, and interactive *)
+    val newSource : (string * TextIO.instream * bool * PrettyPrint.device)
+          -> inputSource
 
     val closeSource: inputSource -> unit
-    (* close the "fileOpened" if not interactive *)
 
     val filepos: inputSource -> SourceMap.charpos -> SourceMap.sourceloc
     (* simply calls SourceMap.filepos on the sourceMap component of inputSource,
      * provided for convenience. *)
 
     val getContent : inputSource -> string option
-    (* return NONE if inputSource interactive, otherwise SOME of complete contents of
-     * fileOpened as string *)
 
     val regionContent : inputSource * SourceMap.region ->
 			(string * SourceMap.region * int) option
-    (* contents of region in inputSource widened to complete lines. Returns:
-     * content of widened region, the widened region, and the starting line number *)
 
     val sourceName : inputSource -> string
-    (* contents of fileOpened field of inputSource *)
+    (* returns contents of fileOpened field *)
 
 end (* signature SOURCE *)
 
-(* [Ramsey, ?] OBSOLETE
+(*
 The fileOpened field contains the name of the file that was opened to
 produce a particular inputSource.  It is used to derive related
 file names (for example, see CompileF.codeopt and CompileF.parse

@@ -11,8 +11,21 @@ in
 (* fmtSym: S.symbol -> PP.format *)
 fun fmtSym sym = PP.text (S.name sym)
 
-(* Could also vertically align the element formats, taking account of the possibly
- * that the two header strings have different sizes. *)
+(* fmtSymList : S.symbol list -> PP.format *)
+fun fmtSymList (syms: S.symbol list) = PP.formatList PPU.fmtSym syms
+
+(* fmtSymPath : SymPath.path -> PP.format *)			 
+fun fmtSymPath (path: SymPath.path) = PP.text (SymPath.toString path)
+
+(* fmtInvPath : InvPath.path -> PP.format *)			 
+fun fmtInvPath (path: InvPath.path) = PP.text (InvPath.toString path)
+
+fun fmtRegion ((l,u): SourceMap.region) : PP.format =
+    PP.cblock [PP.integer l, PP.text "-" PP.integer u]
+
+(* TODO: Vertically align the element formats, taking account of the possibly
+ * that the two header strings have different sizes by left-padding the 
+ * shorter header. *)
 
 fun fmtVerticalList {header1: string, header2: string, formatter: 'a -> PP.format}
 		    (elems: 'a list) =

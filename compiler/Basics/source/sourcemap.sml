@@ -4,60 +4,8 @@
  * All rights reserved.
  *)
 
-(* Norman Ramsey: *)
-(* I can imagine at least three implementations: one that doesn't
- * support resynchronization, one that supports resynchronization only at
- * column 1, and one that supports arbitrary resynchronization.
- *
- * This implementation supports arbitary resynchronization.
- *
- * Changed ErrorMsg to use SourceMap to get source locations; only the
- * formatting is done internally.
- *
- * Added SourceMap structure.
- *)
-
-(* DBM: what is "resynchronization" and what is it used for?  Is there any
- * reason to continue to support it (and maintain the extra code complexity)?
- * If this was a feature used only by Ramsey's noweb utility, which is defunct,
- * then we could simplify the sourcemap code.  -- John claims that resynchronization
- * is still relevant (examples?). *)
-
-(* DBM: "Resynchonization" supports a model where the input stream for a compilation
- * unit is made up of multiple source files.  These may be combined either by
- * concatenation or inserting one file in the middle of another (like #include
- * in cpp).  We'll call the pieces of source that are being combined "file segments"
- * or "segments" for short.
- *
- * We'll assume that minimal granularity for resynchonization is a
- * source line (i.e. no switching files in the middle of a line).
- * The boundaries between source file segments will be marked by #line
- * commands embedded in comments.  These have the form '(*#line nn "filename"*)'
- * or '(*#line nn*)' where nn is a new line number at which the next segment
- * starts, and filename is the name of the file for the next segment. It is
- * assumed that the #line command comment will appear on a line by itself
- * (presumably inserted by an external preprocessor that is responsible for
- * combining source segments to form the input stream).  These #line commands
- * are recognized and interpreted by the lexer, which calls resynch to change
- * the state of the current sourcemap.
- *
- * QUESTION: Can a source region, which designates a contiguous region in the
- * input stream, cross one or more file segments?  Or should all regions created
- * during parsing and used in elaboration be within a single segment (and therefore
- * be associated with a single source file)? The type and implementation of
- * function fileregion imply that a region can span multiple segments.
- *
- * QUESTION: Presumably, the original motivation for adding this feature was to support
- * Norman Ramsey's nw "literate programming" system, which we no longer support.
- * What new clients use this functionality?
- *
- * Obviously, the implementation of sourcemap could be made much simpler without
- * resynchronization.
- *
- * New functionality for mapping regions to source strings (for enhanced type error
- * messages) is currently incompatible with resynchronization.
- *
- *)
+(* [DBM, 2022.09] Reversion to single-file (or interactive stream) model. Thus no
+ * no "#line" directives, and no "resynchronization". *)
 
 structure SourceMap :> SOURCE_MAP =
 struct
@@ -68,54 +16,49 @@ struct
 
   (* types ------------------------------- *)
 
-  (* A character position is an integer.  A region is delimited by the
-   * position of the start character and one beyond the end.
+  (* A character position (charpos) is an integer.  A region is delimited by the
+   * position of the start character and one beyond the last character.
    * It might help to think of Icon-style positions, which fall between
    * characters.
    *)
 
   type charpos = int
     (* charpos is 1-based. I.e. the (default) position of the first character in the
-     * input stream is 1 (????) *)
+     * input stream is 1 (not 0!) *)
 
   type region = charpos * charpos
     (* INVARIANT: (lo,hi) : region ==> lo <= hi
      * If region /= (0,0), then lo < hi, i.e. all non-null regions are nonempty. *)
+    (* region should have been a datatype! (in-band representation of the null region!) *)
+
+  (* line numbers, 1 based: INVARIANT lineno >= 1 *)
+  type lineno = int
+
+  type lines = (charpos * lineno) list
 
   type sourceloc = {fileName:string, line:int, column:int}
-    (* lines and columns are 1-based (minimum value is 1) *)
+    (* lines and columns are both 1-based (minimum value is 1) *)
 
-(* The representation of a sourcemap is a pair of lists.
-     lines: line numbers for newlines and resynchronizations,
-            labeled by initial charpos of each lines.
-     files: file name for resynchronization, labeled by
-            initial position for resynchronization
+(* The representation of a sourcemap is record with fields
+     - filename : string  (the name of the fixed source file)
+     - lines: (charpos * lineno) list ref
+         initial charpos and line number of lines in decreasing order, so the last
+         "line" in the list is represented as (1,1). Lines are numbered from 1.
 
    The representation satisfies these invariants:
-     * The lists are never empty (initialization is treated as a resynchronization).
-     * Initial positions strictly decrease as we traverse the line list.
-     * The last element in the line list contains the smallest valid position (1).
-     * For every element in files, there is a corresponding SYNC element in
-       lines, and visa versa.
+     * The line list is never empty (initialized to [(1,1)], and thereafter lines are added).
+     * Initial positions are strictly decreasing accross the line list,
+       even for "empty" lines, which have length at least 1 because we count the newline char.
+     * The last element in the line list contains the smallest valid starting charpos (namely 1).
 *)
 
-  (* line -- elements of lines list *)
-  datatype line
-    = LINE of int         (* line number, simple line bump *)
-    | SYNC of int * int * int
-       (* resynch point with line, column, and the size of the #line directive gap;
-        * there will be an associated entry in files list, which MAY change
-        * the current file name, but may be the same as the previous file name
-        * if the #line directive does not specify a file name. *)
-
-  type sourcemap = {lines: (charpos * line) list ref,
-		    files: string list ref}
+  type sourcemap = {file: string, lines: lines ref}
+		    
   (* INVARIANTS for sourcemaps:
    * (1) length (!lines) > 0
-   * (2) length (!files) > 0
-   * (3) charpos components of lines are strictly decreasing (ending in 1)
-   * (4) length (!files) = number of SYNC elements in lines
-   * (5) last (initial) element of lines is the SYNC line: (1, SYNC(1,1,0))
+   * (2) charpos components of !lines are strictly decreasing,
+       ending in initial charpos 1 for the last element, which is the 1st line
+   * (3) last (initial) element of lines is the initial line: (1, 1).
    *)
 
   val nullRegion : region = (0,0)
@@ -128,144 +71,112 @@ struct
 
   (* newSourceMap: create a new sourcemap, given initial file name.
    * called only one place, in Source.newSource.  Initial position at the
-   * start of the first line is 1, initial line number is 1. *)
+   * start of the first line is 1, initial line number is 1. A source is
+   * assumed to have at least one line, (i.e. to be nonempty). *)
   fun newSourceMap (fileName: string) : sourcemap =
-      {files = ref [fileName],
-       lines = ref [(1, SYNC(1,1,0))]}
+      {file = fileName,
+       lines = ref [(1, 1)]}  (* initial lines: line 1 starts at char 1 *)
 
-  (* resynch: implements a #line directive, changing the current filename, line and column.
-   * initpos is the position of the initial character of the #line comment
-   * newpos is the character immediately following the end of the #line comment
-   * ASSUMPTION: newpos > last line position in the sourcemap argument *)
-  fun resynch ({files, lines}: sourcemap) (initpos, newpos, line, column, fileNameOp) =
-      let val newFileName =
-              case fileNameOp
-                of SOME f => f
-                 | NONE => hd (!files)   (* same as the current file name *)
-       in files := newFileName :: !files;
-	  lines := (newpos, SYNC(line,column,newpos-initpos)) :: !lines
-      end
-
-  fun lineNo (LINE l | SYNC(l,_,_)) = l
-
-  (* Since pos is the position of the newline character, the next line doesn't
+  (* pos is the position of the newline character, so the next line doesn't
    * start until the succeeding position, pos+1. *)
   fun newline ({lines, ...}: sourcemap) pos =
       case !lines
-        of (_,line) :: _ =>  lines := (pos+1, LINE(lineNo(line)+1)) :: !lines
-         | nil => bug "newline"  (* invariant (1) violated *)
+        of (_,line) :: _ =>  lines := (pos+1, line+1) :: !lines
+         | nil => bug "newline"  (* sourcemap invariant (1) violated *)
 
   fun lastLinePos ({lines, ...}: sourcemap) : charpos =
       case !lines
         of ((pos,line)::_) => pos
-         | nil => bug "lastLineNumber" (* invariant (1) violated *)
+         | nil => bug "lastLineNumber" (* sourcemap invariant (1) violated *)
 
-  (* remove: remove from sourcemap lines those lines whose initial positions
-   * exceed a target position, while maintaining the lines/files invariants.
+  (* remove : charpos -> lines -> lines *)
+  (* remove: remove from a lines list those lines whose initial positions
+   * exceed the target position pos, while maintaining the lines invariants.
    * The first line of the result will contain the target position.
-   * ASSUMPTION: pos is >= initial pos of the sourcemap (normally 1). *)
-  fun remove pos (lines: (charpos * line) list, files: string list) =
-      let fun strip (lines as (pos', line)::lines', files as (_ :: files')) =
-              if pos' > pos then
-                 (case line
-                    of LINE _ => strip (lines', files)
-		     | SYNC _ => strip (lines', files'))
-              else (lines, files)
+   * ASSERT: pos >= 1. the initial charpos of any sourcemap *)
+  fun remove (pos, (lines: lines)) =
+      let fun strip (lines as (pos', line)::lines') =
+              if pos' > pos then strip lines'
+              else lines
 	    | strip _ = bug "remove"
-       in strip(lines, files)
+       in strip lines
       end
 
-  (* ASSUMPTION: pos lies within the given line:
-   *   lineStart <= pos < start of next line  *)
-  fun column ((lineStart, line), pos) =
-      let val col = case line
-		      of LINE _  => 1
-		       | SYNC(_,c,_) => c
-       in pos - lineStart + col
-      end
+  (* ASSERT: pos lies within a line starting at lineStartPos:
+   *   lineStartPos <= pos < start of next line  *)
+  fun column (lineStartPos: charpos, pos: charpos) =
+      pos - lineStartPos + 1  (* each line starts at column 1 *)
 
-  fun filepos ({lines,files}:sourcemap) pos : sourceloc =
-      case remove pos (!lines,!files)
-        of ((linePos,line)::_, file::_) =>   (* pos is within top line *)
-           {fileName = file, line = lineNo line, column = column((linePos,line), pos)}
-         | _ => bug "filepos"
+  (* posToSourceloc : sourcemap -> charpos -> sourceloc *)
+  fun posToSourceloc ({file, lines}:sourcemap) pos : sourceloc =
+      case remove (pos, !lines)
+        of (linePos,line) :: _ =>   (* pos is within top line *)
+             {fileName = file, line = line, column = column (linePos, pos)}
+         | _ => bug "posToSourceloc"
+
+  fun posToLineColumn (pos: charpos, lines : lines) : (int * int) = 
+      case remove (pos, lines)
+        of (linePos,line) :: _ =>   (* pos is within top line *)
+             (line, column (linePos, pos))
+         | _ => bug "posToLineColumn"
 
   (* Searching regions is a bit trickier, since we track file and line
    * simultaneously.  We exploit the invariant that every file entry has a
    * corresponding line entry.  We also exploit that only file entries
    * correspond to new regions. *)
 
+  (* isNullRegion : region -> bool *)
   fun isNullRegion (0,0) = true
     | isNullRegion _ = false
 
-  fun fileregion ({lines,files}: sourcemap) ((lo, hi): region) =
+  (* fileregion : sourcemap -> region -> (sourceloc * sourceloc) *)
+  (* result sourceloc pair have same file component, the file from the sourcemap *)
+  fun fileregion ({file, lines}: sourcemap) ((lo, hi): region) =
       if isNullRegion(lo,hi) then [] else
-      let fun posToSourceLoc(pos, (linePos, line)::_,  file::_): sourceloc =
-		 {fileName=file, line=lineNo(line), column=column((linePos,line), pos)}
-	    | posToSourceLoc _ = bug "posToSourceLoc"
-
-	  fun gather((linePos, line)::lines', files as file::files',
-		     segment_end, answers) =
-	       if linePos <= lo then (* last item *)
-		 ({fileName=file, line=lineNo(line), column=column((linePos,line),lo)},
-		  segment_end)
-                 :: answers
-	       else (case line
-                       of LINE _ => gather(lines', files, segment_end, answers)
-                        | SYNC(l,c,g) => (* crossing segment boundary *)
-			  let val endpos =
-				  (case lines'
-				    of (linePos', _)::_ =>
-                                       if linePos - g = linePos' then linePos' - 1
-                                       else linePos - g)
-                          in gather(lines', files',
-				    posToSourceLoc (endpos, lines', files'),
-				    ({fileName = file, line = l, column = c},
-				     segment_end) :: answers)
-			  end)
-	    | gather _ = bug "fileregion"
-	  val (lines0, files0) = remove hi (!lines,!files)
-       in gather(lines0, files0, posToSourceLoc(hi,lines0,files0), [])
+      let (* ASSERT: pos is in the first line *)
+	  val (lo_line, lo_column) = posToLineColumn (lo, lines)
+	  val (hi_line, hi_column) = posToLineColumn (hi, lines)
+       in ({file = file, line = lo_line, column = lo_column},
+	  {file = file, line = hi_line, column = hi_column})
       end
 
    (* newlineCount : sourcemap -> region -> int
-    * determines the (approximate) number of newlines occurring in a region,
-    * which may be 0 for a region that lies within a single line. Any lines
-    * containing #line directives (i.e. SYNC lines) are not counted. *)
-   fun newlineCount ({lines,files}: sourcemap) ((lo, hi): region) =
-       let val his as (hilines, hifiles) = remove hi (!lines,!files)
-	   val (lolines, lofiles) = remove lo his
-	in (length hilines - length lolines) - (length hifiles - length lofiles)
+    * determines the number of newlines occurring within a region,
+    * which may be 0 for a region that lies within a single line. *)
+   fun newlineCount (sm: sourcemap) (region: region) =
+       let val ({line=lo_line, ...}, {line=hi_line,...}) = fileregion sm region
+	in hi_line - lo_line
        end
 
-   (* removeLines - remove lines, stoping when the next line contains pos *)
-   fun removeLines (pos, (lines: (charpos * line) list)) =
-       let fun strip (lines as (pos1, _)::lines') =
-	       if pos1 > pos then strip (lines') else lines
-	     | strip _ = bug "removeLines"
+   (* endOfContainingLine: charpos * lines -> lines
+    *  The first line of the result contains the charpos
+    * ASSUME:
+    *  (1) file ends in newline (no positions within empty "last" line)
+    *  (2) pos is before the last newline (pos < posLast)
+    * Note that the line number components of lines are irrelevant. *)
+   fun endOfContainingLine (pos, lines: lines) =
+       let fun strip (lines0 as ((pos0, _) :: (lines1 as ((pos1, _) :: _)))) =
+	       let fun strip2 (lines0 as ((p1, _) :: (lines1 as ((p2, _) :: _)))) =
+	           if p2 <= pos then lines0 else strip2 lines1
+	        in if pos < pos0
+		   then if pos1 <= pos  (* pos1 <= pos < pos0 *)
+			then lines0
+			else strip2 lines1 (* pos < pos1 *) 
+		   else bug "endOfContainingLine1" (* pos >= pos0 -- too "late?" *)
+	     | strip _ = bug "endOfContainingLine2" (* need at least two lines to bracket pos! *)
 	in strip lines
        end
 
-   (* removeABO - remove all-but-one.
-    * removes lines until pos is in the next to last line *)
-   fun removeABO (pos, (line::lines: (charpos * line) list)) =
-       let fun strip (lines as (pos1, line1)::lines', (pos0, line0)) =
-	       if pos1 > pos then strip (lines', (pos1, line1))
-	       else (pos0,line0)::lines
-	     | strip _ = bug "removeABO"
-	in strip(lines, line)
-       end
-
-   (* widenToLines - take a region and expand it to the beginning, respectively end,
-    * of the first and last lines intersecting the region. This works only
-    * for nonsegmented inputs (no noninitial SYNCs). Also assumes that the
-    * region hi limit comes before the last newline in the input, which
-    * should be the case if the input ends with a newline. *)
-   fun widenToLines ({lines,files}: sourcemap) ((lo, hi) : region) =
+   (* widenToLines : sourcemap -> region -> region
+    * expand a region to the beginning, respectively end,
+    * of the first and last lines intersecting the region.
+    * ASSUME: the region hi limit comes before the last newline in the input,
+    * which should be the case if the input ends with a newline. *)
+   fun widenToLines ({lines,...}: sourcemap) ((lo, hi) : region) : region =
        if isNullRegion (lo,hi) then nullRegion
-       else let val (lines1 as (pos1,_)::lines1') = removeABO(hi, !lines)
-                val (pos2,_)::_ = removeLines(lo, lines1')
-             in (pos2, pos1-1)
+       else let val (lines1 as ((after_hi,_) :: _)) = endOfContainingLine (hi, lines)
+                val (before_lo, _) :: _ = remove (lo, lines1)
+             in (before_lo, after_hi - 1)
 	    end
 
 end (* structure SourceMap *)
