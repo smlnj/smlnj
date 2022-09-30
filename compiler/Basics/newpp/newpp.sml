@@ -24,6 +24,13 @@ open Format  (* defines types format, element, separator, bindent *)
 
 (* basic block building functions *)
 
+(* reduce : format list -> format list *)
+fun reduce (formats: format list) =
+    let fun notEmpty EMPTY = false
+	  | notEmpty _ = true
+     in List.filter notEmpty formats
+    end
+
 (* specialBlock : bindent -> element list -> format
  *   construct a SBLOCK with explicit, possibly heterogeous, separators *)
 fun specialBlock bindent elements =
@@ -31,8 +38,14 @@ fun specialBlock bindent elements =
 
 (* alignedBlock : alignment -> bindent -> format list -> format *)
 fun alignedBlock alignment bindent formats =
-    ABLOCK {formats = formats, alignment = alignment, bindent = bindent,
-	    measure = M.measureFormats formats}
+    let val sepsize = case alignment of C => 0 |  _ => 1)
+     in case formats
+	  of nil => EMPTY
+	   | _ => let val formats' = reduce formats
+		   in ABLOCK {formats = formats', alignment = alignment, bindent = bindent,
+	                      measure = M.measureFormats (sepsize, formats')}
+		  end
+     end
 
 (* block building functions for non-indenting blocks *)
 
@@ -41,9 +54,11 @@ fun alignedBlock alignment bindent formats =
 fun sblock elements = specialBlock NI elements
 
 (* xblock : format list -> format, for x = h, v, p *)
+(* constructing nonindented alighned blocks *)
 val hblock = alignedBlock H NI
 val vblock = alignedBlock V NI
 val pblock = alignedBlock P NI
+val cblock = alignedBlock C NI
 
 (* block building functions producing (for bindent =  HI, SI) indented blocks
  * For Version 7, we measure indented blocks the same as non-indented blocks *)  
@@ -52,11 +67,12 @@ val pblock = alignedBlock P NI
 (* construct a block with explicit, possibly heterogeous, separators *)
 val siblock = specialBlock
 
-(* xiblock : bindent -> format list -> format, for x = h, v, p
+(* xiblock : bindent -> format list -> format, for x = h, v, p, c
  *  for constructing aligned and possibly indented blocks *)
 val hiblock = alignedBlock H
 val viblock = alignedBlock V
 val piblock = alignedBlock P
+val ciblock = alignedBlock C
 
 (* "conditional" formats *)
 
@@ -112,27 +128,7 @@ fun vcat (leftFmt, rightFmt) = vblock [leftFmt, rightFmt]
 
 (* ccat : format * format -> format
  * concatenate left and right formats with no separater *)
-fun ccat (left, right) = sblock [FMT left, FMT right]
-
-(* NOT USED, could delete *)
-(* separate : format list * separator -> element list *)
-fun separate (fmts: format list, separator: separator) : element list = 
-    let val elements = map FMT fmts (* translate the formats to SBLOCK elements *)
-	fun addSeps nil = nil
-	  | addSeps fmts =
-	    let fun inter nil = nil
-		  | inter [fmt] = [fmt]
-		  | inter (fmt :: rest) =  (* rest non-null *)
-		      fmt :: SEP separator :: inter rest
-	      in inter fmts
-	     end
-      in addSeps elements
-     end
-
-(* concat : format list -> format
- * WARNING: be careful of multi-line formats *)				  
-fun concat nil = empty
-  | concat fmts = sblock (map FMT fmts)  (* no separators! *)
+fun ccat (left, right) = cblock [left, right]
 
 (* enclose : {front : format, back : format} -> format -> format *)
 (* tight -- no space between front, back, and fmt *)
@@ -143,31 +139,53 @@ fun enclose {front: format, back: format} fmt =
 val parens = enclose {front = lparen, back = rparen}
 
 (* brackets : format -> format *)
-val brackets = enclose {front = text "[", back = text "]"}
+val brackets = enclose {front = lbracket, back = rbracket}
 
 (* braces : format -> format *)
-val braces = enclose {front = text "{", back = text "}"}
+val braces = enclose {front = lbrace, back = rbrace}
+
+(* appendNewLine : format -> format *)
+fun appendNewLine fmt = sblock [FMT fmt, SEP HardLine]
+
+(* labeled : string -> format -> format *)
+fun labeled str fmt = hcat (ccat(text str, colon), fmt)
+
 
 (* sequence : {alignement: alignment, sep: format} -> format list -> format *)
 fun sequence {alignment: alignment, sep: format} (formats: format list) =
-    let val separator = alignmentSeparator alignment
+    let val separatorOp = 
+	val addSepsFn =
+	    (case alignmentSeparator alignment
+	      of NONE => (fn elems => FMT sep :: elems)  (* alignment = C *)
+	       | SOME separator => (fn elems => FMT sep :: SEP separator :: elems))
 	fun addSeps nil = nil
 	  | addSeps fmts =  (* fmts non-null *)
 	    let fun inter [fmt] = [FMT fmt]
 		  | inter (fmt :: rest) =  (* rest non-null *)
-		      FMT fmt :: FMT sep :: SEP separator :: inter rest
+		      FMT fmt :: (addSepsFn (inter rest))
 		  | inter nil = nil (* won't happen *)
 	     in inter fmts
 	     end
       in sblock (addSeps formats)
      end
 
+(* hsequence : format -> format list -> format *)
+fun hsequence sepfmt = sequence {alignment = H, sep = sepfmt}
+
+(* psequence : format -> format list -> format *)
+fun hsequence sepfmt = sequence {alignment = P, sep = sepfmt}
+
+(* vsequence : format -> format list -> format *)
+fun hsequence sepfmt = sequence {alignment = V, sep = sepfmt}
+
+(* csequence : format -> format list -> format *)
+fun hsequence sepfmt = sequence {alignment = C, sep = sepfmt}
+
 (* tupleFormats : format list -> format *)
 fun tupleFormats formats = parens (sequence {alignment=P, sep=comma} formats)
 
 (* listFormats : format list -> format *)
 fun listFormats formats = brackets (sequence {alignment=P, sep=comma} formats)
-
 
 (* formatSeq : {alignment: alignment, sep: format, formatter : 'a -> format} -> 'a list -> format *)
 fun 'a formatSeq
@@ -195,28 +213,31 @@ fun 'a formatClosedSeq
        (xs: 'a list) =
     enclose {front=front, back=back} (formatSeq {alignment=alignment, sep=sep, formatter=formatter} xs)
 
-(* formatTuple : ('a -> format) -> 'a list -> format *)
+(* tuple : ('a -> format) -> 'a list -> format *)
 (* packed-style formatting of a tuple *)
-fun 'a formatTuple (formatter : 'a -> format) (xs: 'a list) =
+fun 'a tuple (formatter : 'a -> format) (xs: 'a list) =
     formatClosedSeq
       {alignment=P, front = lparen, back = rparen, sep = comma, formatter = formatter}
       xs
 
-(* formatAlignedList : alignment -> ('a -> format) -> 'a list -> format *)
-fun 'a formatAlignedList alignment (formatter : 'a -> format) (xs: 'a list) =
+(* alignedList : alignment -> ('a -> format) -> 'a list -> format *)
+fun 'a alignedList alignment (formatter : 'a -> format) (xs: 'a list) =
     formatClosedSeq
       {alignment=alignment, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
       xs
 
-(* formatList : ('a -> format) -> 'a list -> format *)
+(* list : ('a -> format) -> 'a list -> format *)
 (* packed-style formatting of a list *)
-fun 'a formatList (formatter : 'a -> format) (xs: 'a list) =
+fun 'a list (formatter : 'a -> format) (xs: 'a list) =
     formatClosedSeq
       {alignment=P, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
       xs
 
-(* appendNewLine : format -> format *)
-fun appendNewLine fmt = sblock [FMT fmt, SEP HardLine]
+(* option : ('a -> format) -> 'a option -> format *)
+fun 'a option (formatter: 'a -> format) (xOp: 'a option) = 
+    case xOp
+      of NONE => text "NONE"
+       | SOME x => ccat (text "SOME", parens (formatter x))
 
 (* "indenting" formats *)
 

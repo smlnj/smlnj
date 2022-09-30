@@ -44,10 +44,10 @@ elements.  So cblock is the same as concat, which is now depricated as
 redundant and will be removed in the next version.
 
 3. Added a new EMPTY constructor for blocks.  This means the EMPTY
-block is now _first class_.  It will also act as an _identity_ element
+block is now _first class_.  EMPTY will act as an _identity_ element
 for binary format operators like ccat, hcat, vcat, pcat, and it will
-"disappear" when it occurs within a block.  So, for instance, a format
-like hcat (text "abc", empty) when rendered will not produce a
+"disappear" (be absorbed) when it occurs within a block.  So, for instance,
+a format like hcat (text "abc", empty) when rendered will not produce a
 spurious space character after the text "abc", because
 
   hcat (fmt,empty) == fmt.
@@ -56,8 +56,11 @@ spurious space character after the text "abc", because
 
     psequence sepfmt fmts == sequence {alignment = P, sep = sepfmt} fmts
 
-5. New str-NewPP.adoc file documents the NEWPP signature in the style
+5. New str-NewPP.adoc file to document the NEWPP signature in the style
    of the smlnj-lib documentation.
+
+6. Created newpp/doc directory and put design-notes.txt and
+   manual.adoc in the new doc directory.
 
 
 ## Features
@@ -71,9 +74,11 @@ spurious space character after the text "abc", because
 - **FLAT** format constructor (replaces **TRYFLAT** constructor from earlier versions)
 
 - _indented_ and _nonindented_ blocks; indentation is associated with
-  blocks
-
-
+  blocks, not with line breaks; indentation affects the complete
+  content of a block -- an indented block always starts on a fresh
+  line (after possible indentation).
+  
+  
 ## Files
 
 - format.sml, the datatypes defining formats
@@ -87,4 +92,12 @@ spurious space character after the text "abc", because
 
 - newpp.cm, the CM file for compiling the prettyprinter
 
-- manual.{adoc, html}, the manual for the prettyprinter
+- doc/manual.{adoc, html}, the manual for the prettyprinter
+
+- doc/design-notes.txt, extensive notes on the design of NewPP and
+  prettyprinter library design in general.
+
+Eventually the *.{sig,sml} files should be moved to a src directory.
+
+Eventually, the NewPP library and documentation should be moved to
+smlnj-lib.

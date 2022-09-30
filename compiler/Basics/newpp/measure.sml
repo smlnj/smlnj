@@ -5,6 +5,8 @@
    -- measuring functions moved to new Measure structure
  * Version 7.1
    -- BLOCK --> ABLOCK
+ * Version 7.3
+   -- added EMPTY block constructor in measure function
  *)
 
 structure Measure : MEASURE =
@@ -32,7 +34,8 @@ in
  *   using memoization of the measure in the block measure fields. *)
 fun measure (format: format) =
     case format
-      of TEXT s => size s
+      of EMPTY => 0
+       | TEXT s => size s
        (* special blocks *)
        | SBLOCK {measure, ...} => measure
        (* ordinary (moded) blocks *)
@@ -55,11 +58,12 @@ fun measureElements elements =
      in mElements (elements, 0)
     end
 
-fun measureFormats formats =
+(* measureFormats : (int * format list) -> int *)
+fun measureFormats (sepsize: int) (formats: format list) =
     let fun mFormats (nil, n) = n
           | mFormats ([format], n) = measure format + n
           | mFormats (format :: rest, n) =  (* rest not null *)
-              mFormats (rest, measure format + 1 + n)  (* add 1 representing virtual separator *)
+              mFormats (rest, measure format + sepsize + n)  (* add sepsize for virtual separator, in any *)
      in mFormats (formats, 0)
     end
 

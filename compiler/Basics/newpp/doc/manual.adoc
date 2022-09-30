@@ -48,15 +48,15 @@ with compound blocks.
 
 Pretty Printing::
      Pretty printing is the process of presenting a datastructure in text in a "readable" fashion,
-     using layout, that is newlines, spacing, and indentation, to make the inherent structure more visible
-     and more easily recognized. It involves a kind of "markup", meaning additional information
-     that is overlayed onto the underlying "content" to produce the physical layout when printed.
+     using layout, that is newlines, spacing, and indentation, to make the inherent structure more
+     obvious. It involves a kind of "markup", meaning that additional information
+     is overlayed onto the underlying "content" to produce the physical layout when printed.
 
 Content::
     The _content_ of a format is the list of text strings appearing in the format,
-    listed in depth-first, left-to-right order. Usually the content of a format, stripped of
-    all white space, should stand on its own, e.g. as a syntactic phrase in a
-    programming language or data description language. We are ignoring the special cases of
+    presented as a list in depth-first, left-to-right order. Usually the content of a format,
+    stripped of all extraneous white space, should stand on its own, e.g. as a syntactic phrase
+    in a programming language or data description language. We are ignoring the special cases of
     languages where white space (for instance, indentation) has syntactic significance.
     A prettyprinter may produce different layouts of the same content, but these layouts are
     expected to convey the same "meaning" or "information".
@@ -84,10 +84,10 @@ Rendering::
     limits how much of a line is occupied by text.
 
 Blocks::
-* varieties of blocks: text, "aligned", and "special" (COMMENT: what about empty?)
+* varieties of blocks: text, "aligned", "special", and empty.
 * compound (aligned or special) blocks contain a sequence of (sub)formats and separators
 ** _separators_ in blocks: Space, SoftLine, and HardLine
-** block alignment (h, v, p) determined by implicit separator
+** block alignment (H, V, P, C) determined by implicit separator
 * block "extent"
 ** block left margin (blm)
    the content of a block (its text and white space) is bounded on top by its initial line
@@ -309,11 +309,15 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 
 * `empty : format`
 
- The empty format that prints nothing when rendered, equivalent to (text "").
+ The empty format that prints nothing when rendered, equivalent to (text ""). Empty formats are
+ absorbed by adjacent nonempty formats, so that no "separation" whitespace will be printed between and
+ empty format and adjacent nonempty formats. Empty serves as an identity element for binary
+ format concatenation operators. For instance, hcat (fmt, empty) == fmt.
 
 * `text : string -> format`
 
- Create an atomic "text" block consisting of a string, which renders as that string. Note that the string may contain, indeed may consist only of, white space.
+ Create an atomic "text" block consisting of a string, which renders as that string. Note that the string may contain, indeed may consist only of, white space.  As a mater of style, however, whitespace should usually be produced by formatting rather than being built into text strings.
+ 
 
 _General block constructor functions:_
 
@@ -339,6 +343,10 @@ _Basic (nonindented) block constructor functions:_
 
  pblock fmts : Create a "packed" aligned block (with implicit (SoftLine 1) separators) with fmts as components.
 
+* `cblock : format list -> format`
+
+ cblock fmts : Create a "compact" aligned block with fmts as components, with no separators between components.
+
 * `sblock : element list -> format`
 
  sblock elems : Create a special block with elems as components (possibly mixing formats and separators).
@@ -356,6 +364,10 @@ _Indented block constructor functions:_
 * `piblock : bindent -> format list -> format`
 
  piblock binent fmts : Create a horizontally aligned block (with implicit (Space 1) separators) with fmts as components and the indentation specified by bindent.
+
+* `ciblock : bindent -> format list -> format`
+
+ ciblock binent fmts : Create a horizontally aligned block with no separators, with fmts as components and the indentation specified by bindent.
 
 * `siblock : bindent -> element list -> format`
 
@@ -412,16 +424,8 @@ _Indented block constructor functions:_
 [discrete]
 ==== Utility format construction functions
 
-* `concat : format list -> format`
-
- concat fmts = sblock (map FMT fmts) : Concatenates the fmts without separators between them.
-
 _Binary format combinators_
 
-* `ccat : format * format -> format`
-
- ccat (fmt1, fmt2) = concat [fmt1, fmt2] : Concatenates fmt1 and fmt2 without a separator.
- 
 * `hcat : format * format -> format`
 
  hcat (fmt1, fmt2) = hblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (Space 1) separator.
@@ -433,6 +437,12 @@ _Binary format combinators_
 * `pcat : format * format -> format`
 
  pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) separator:
+
+* `ccat : format * format -> format`
+
+ ccat (fmt1, fmt2) = cblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 without a separator.
+ 
+Note that the empty format is an identity element for all of these binary concatenation operators.
 
 [discrete]
 ==== Enclosing a format
@@ -455,6 +465,17 @@ _Binary format combinators_
 
  braces fmt = enclose {front=lbrace, back=rbrace} fmt
    Enclose fmt with left and right curly braces. 
+
+[discrete]
+==== Modifying a format
+
+* `labeled : string -> format -> format
+
+ labeled str fmt = hcat (ccat (text str, colon), fmt)
+
+* `appendNewLine : format -> format
+
+ append a hard newline after the format
 
 [discrete]
 ==== Formatting lists of formats
@@ -494,17 +515,22 @@ _Binary format combinators_
  formatClosedSeq {alignment, front, sep, back, formatter} xs = 
    enclose {front=front, back=back} (formatSeq {alignment, sep, formatter} xs).
 
-* `formatTuple : ('a -> format) -> 'a list -> format`
+* `tuple : ('a -> format) -> 'a list -> format`
 
-* `formatList : ('a -> format) -> 'a list -> format`
+* `list : ('a -> format) -> 'a list -> format`
 
- formatList formatter xs =
+ list formatter xs =
     enclose {front=lbracket, back=rbracket} (formatSeq {alignment=P, sep=comma, formatter=formatter} xs) 
 
-* `formatAlignedList : alignment -> ('a -> format) -> 'a list -> format`
+* `alignedList : alignment -> ('a -> format) -> 'a list -> format`
 
- formatAlignedList alignment formatter xs : format the members of xs using formatter and then format
- those formats as a list (bracketed with comma separator), aligned according to the alignment parameter.
+ alignedList alignment formatter xs : format the members of xs using formatter and then format
+ those formats as a list (bracketed, with comma separator), aligned according to the alignment parameter.
+
+* `option : ('a -> format) -> 'a option -> format
+
+ option values are treated as honorary sequences with 0 or 1 element. NONE is rendered as
+ text "NONE", and SOME v is rendered as "SOME(formatter v)".
 
 [discrete]
 ==== Setting and accessing the line width
@@ -530,13 +556,18 @@ _Binary format combinators_
  render (fmt, output, lineWidth): render fmt to output given lineWidth as the right margin.
  This prints directly using output without building a "layout" data structure.
 
-* `printFormat : int -> format -> unit`
+* `printFormatLW : int -> format -> unit`
 
+ Printing with an explicit lineWidth argument:
  printFormat lineWidth fmt = render (fmt, print, lineWidth)
+ 
+* `printFormat : format -> unit`
 
-* `printFormat' : format -> int -> unit`
+ printFormat' fmt = printFormatLW (getLineWidth ()) fmt
 
- printFormat' fmt lineWidth = printFormat lineWidth fmt
+* `printFormatNL : format -> unit`
+
+ printFormat' fmt = printFormatLW (getLineWidth ()) (appendNewLine fmt)
 
 
 == Usage and Examples
@@ -799,13 +830,15 @@ Rough analogs of Haskell Prettyprinter types and functions:
 
       flatten                   FLAT (format data constructor, hidden)
 
-      nest                      hiblock, viblock, piblock,
+      nest                      hiblock, viblock, piblock, ciblock
                                 softIndent, hardIndent
 ----
 
 == Implementation
 
 * The basic datatypes for formats
+ ** `EMPTY` is the empty format that prints nothing and acts as an identity element with respect to
+    concatenation of formats or composition of blocks.
  ** `TEXT` constructs atomic text blocks.
  ** `SBLOCK` constructs "special" blocks with explicit separator (`SEP`) elements mixed with format (`FMT`) elements.
  ** `ABLOCK` constructs "aligned" blocks, where alignment is determined by the choice of the alignment,

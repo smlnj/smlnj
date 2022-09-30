@@ -18,6 +18,7 @@ sig
       = H  (* Horizontal alignment, with implicit single space separtors between format components *)
       | V  (* Vertical alignment, with implicit hardline separtors between format components *)
       | P  (* Packed alignment, with implicit softline separtors between format components *)
+      | C  (* compact, no separators between block format elements *)
 
     datatype separator  (* used to separate doc elements of a block *)
       = HardLine         (* hard line break *)
@@ -37,10 +38,10 @@ sig
 
   (* Basic formats and format building operations: *)
 
-    val empty : format           (* == TEXT "", renders as empty string *)
+    val empty : format           (* == EMPTY, renders as empty string, composition identity *)
     val text : string -> format  (* == the TEXT format constructor *)
     val integer : int -> format  (* integer n renders as Int.toString n *)
-    val string : string -> format (* previously used PrintUtil.formatString *)
+    val string : string -> format (* previously used PrintUtil.formatString, adds double quotes *)
 
     (* basic block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
     (* specialBlock -- the elements may include explicit separators *)
@@ -54,6 +55,7 @@ sig
     val hblock : format list -> format   (* = alignedBlock H NI *)
     val vblock : format list -> format   (* = alignedBlock V NI *)
     val pblock : format list -> format   (* = alignedBlock P NI *)
+    val cblock : format list -> format   (* = alignedBlock C NI *)
 
     (* (possibly) indented blocks -- bindent specified as curried first argument *)
 
@@ -61,6 +63,7 @@ sig
     val hiblock : bindent -> format list -> format   (* = alignedBlock H *)
     val viblock : bindent -> format list -> format   (* = alignedBlock V *)
     val piblock : bindent -> format list -> format   (* = alignedBlock P *)
+    val ciblock : bindent -> format list -> format   (* = alignedBlock C *)
 
     (* a few "punctuation" characters as formats *)
 
@@ -74,12 +77,10 @@ sig
     val rbracket : format  (* text "]" *)
     val lbrace : format    (* text "{" *)
     val rbrace : format    (* text "}" *)
-    val equal : format     (* text "=" *)
+    val equal : format     (* text "=", an honorary punctuation mark *)
 
-    val concat : format list -> format
-        (* concatenate a list of formats with no separators *)
-
-    (* xcat: "binary versions" of the xblock functions (x = p, h, v) *)
+    (* xcat: "binary versions" of the xblock functions (x = p, h, v), the empty format
+     *  acts like an identy element for all these binary concatenation operators *)
 
     val pcat : format * format -> format
         (* combinds two formats in a P (packed) block, with an implicit soft line break
@@ -94,8 +95,8 @@ sig
          * (HardLine separator) between them *)
 
     val ccat : format * format -> format
-        (* combinds two formats in a "compact" S block, with no separator between them;
-         * a binary version of concat *)
+        (* combinds two formats in a C block, with no separator between them;
+         * a binary version of cblock *)
 
     val enclose : {front: format, back: format} -> format -> format
         (* concatenates front and back to the front, respecively back, of the format *)
@@ -112,18 +113,24 @@ sig
     val appendNewLine : format -> format
         (* append a newline to the format -- normally used for "top-level" printing *)
 
+    val labeled : string -> format -> format
 
   (* composing lists of formats *)
 
     val sequence : {alignment: alignment, sep: format} -> format list -> format
         (* inserts sep between constituent formats and aligns *)
 
+    (* aligned sequence formatters, first argument is sep format, e.g. comma *)
+    val hsequence : format -> format list -> format
+    val psequence : format -> format list -> format
+    val vsequence : format -> format list -> format
+    val csequence : format -> format list -> format
+
     val tupleFormats : format list -> format  (* default packed alignment *)
         (* formats as a tuple *)
 
     val listFormats : format list -> format  (* default packed alignment *)
         (* formats as a list *)
-
 
   (* formating of lists of values of arbitrary type *)
 
@@ -137,11 +144,13 @@ sig
 	-> 'a list
 	-> format
 
-    val formatTuple : ('a -> format) -> 'a list -> format
+    val tuple : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
 
-    val formatAlignedList : alignment -> ('a -> format) -> 'a list -> format
+    val list : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
 
-    val formatList : ('a -> format) -> 'a list -> format  (* default packed alignment *)
+    val alignedList : alignment -> ('a -> format) -> 'a list -> format
+
+    val option : ('a -> format) -> 'a option -> format
 
 
   (* indenting formats *)
@@ -184,9 +193,6 @@ sig
 
     val printFormatLW  : int -> format -> unit 
         (* printing to stdOut, with line width as first argument *)
-
-    val printFormatLW' : format -> int -> unit
-        (* like printFormatLW, with arguments reversed *)
 
     val printFormat : format -> unit
         (* print to stdOut with lineWidth = !Control.Print.lineWidth *)
