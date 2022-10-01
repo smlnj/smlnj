@@ -1,28 +1,7 @@
-(*
- * Copyright (c) 1996 by Satish Chandra, Brad Richards, Mark D. Hill, 
- * James R. Larus, and David A. Wood.
- *
- * Teapot is distributed under the following conditions:
- * 
- *     You may make copies of Teapot for your own use and modify those copies.
- * 
- *     All copies of Teapot must retain our names and copyright notice.
- * 
- *     You may not sell Teapot or distributed Teapot in conjunction with a
- *     commercial product or service without the expressed written consent of
- *     the copyright holders.
- * 
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- * 
- *)
-
 (* error.sml
  *
- * CS703 --- Project --- Spring '94
- *
- * COPYRIGHT (c) 1992 AT&T Bell Laboratories
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *)
 
 structure Error : ERROR =
@@ -51,7 +30,7 @@ struct
  * used to keep track of the current line number and starting
  * character positions of the scanned lines.
  *)
-  fun mkErrState (dst: TextIO.outstream) = 
+  fun mkErrState (dst: TextIO.outstream) =
 	ES {outStrm   = dst,
 	    numErrors = ref 0,
 	    numWarnings = ref 0,
@@ -94,17 +73,17 @@ struct
     else ()
 
   fun warningf (es as ES{numWarnings,warningsLimit,warningsEnabled,...},
-		loc, fmt, items) = 
+		loc, fmt, items) =
     if !warningsEnabled then
       (fmtError(es, loc, "warning: ", fmt, items);
        inc numWarnings;
        if !numWarnings > warningsLimit then
 	 (warningsEnabled := false;
 	  sayError(es, loc, "warning: ", "additional warnings suppressed"))
-       else ())	 
+       else ())
     else ()
 
-  fun noMoreWarnings (es as ES{warningsEnabled,...}) = 
+  fun noMoreWarnings (es as ES{warningsEnabled,...}) =
     (warningsEnabled := false;
      sayError(es, SM.UNKNOWN, "warning: ", "additional warnings suppressed."))
 
@@ -114,7 +93,7 @@ struct
   fun hint s = (lastHint := SOME s)
 
 (* generate error messages to the error stream *)
-  fun error (es as ES{numErrors, errorsLimit, errorsEnabled,...}, loc, msg) = 
+  fun error (es as ES{numErrors, errorsLimit, errorsEnabled,...}, loc, msg) =
       if !errorsEnabled then
 	(case !lastHint of
 	   SOME s => (sayError(es, loc, "error: ", msg ^ "\n" ^ s);

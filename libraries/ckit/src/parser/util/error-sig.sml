@@ -1,28 +1,7 @@
-(*
- * Copyright (c) 1996 by Satish Chandra, Brad Richards, Mark D. Hill, 
- * James R. Larus, and David A. Wood.
- *
- * Teapot is distributed under the following conditions:
- * 
- *     You may make copies of Teapot for your own use and modify those copies.
- * 
- *     All copies of Teapot must retain our names and copyright notice.
- * 
- *     You may not sell Teapot or distributed Teapot in conjunction with a
- *     commercial product or service without the expressed written consent of
- *     the copyright holders.
- * 
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- * 
- *)
-
 (* error-sig.sml
  *
- * CS703 --- Project --- Spring '94
- *
- * COPYRIGHT (c) 1992 AT&T Bell Laboratories
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *)
 
 signature ERROR =
@@ -59,7 +38,7 @@ sig
 (* generating warning messages *)
 
   val warning : (errorState * SourceMap.location * string) -> unit
-    (* warning(es,loc,message): the message and location loc will be printed 
+    (* warning(es,loc,message): the message and location loc will be printed
      * to the destination outstream component of es *)
 
   val warningf : (errorState * SourceMap.location * string * Format.fmt_item list)
@@ -82,7 +61,7 @@ sig
      * it is a hint as to why the error occurred. *)
 
   val error : (errorState * SourceMap.location * string) -> unit
-    (* warning(es,loc,message): the message and location loc will be printed 
+    (* warning(es,loc,message): the message and location loc will be printed
      * to the destination outstream component of es *)
 
   val errorf : (errorState * SourceMap.location * string * Format.fmt_item list)
