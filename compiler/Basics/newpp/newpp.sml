@@ -38,7 +38,7 @@ fun specialBlock bindent elements =
 
 (* alignedBlock : alignment -> bindent -> format list -> format *)
 fun alignedBlock alignment bindent formats =
-    let val sepsize = case alignment of C => 0 |  _ => 1)
+    let val sepsize = case alignment of C => 0 |  _ => 1
      in case formats
 	  of nil => EMPTY
 	   | _ => let val formats' = reduce formats
@@ -96,7 +96,10 @@ val text : string -> format = TEXT
 fun integer (i: int) : format = text (Int.toString i)
 
 (* string : string -> format *)
-fun string (s: string) = text (concat ["\"", s, "\""])  (* was using PrintUtil.formatString *)
+fun string (s: string) = text (String.concat ["\"", s, "\""])  (* was using PrintUtil.formatString *)
+
+(* bool : bool -> format *)
+fun bool (b: bool) = text (Bool.toString b)
 
 (* "punctuation" characters *)
 
@@ -133,7 +136,7 @@ fun ccat (left, right) = cblock [left, right]
 (* enclose : {front : format, back : format} -> format -> format *)
 (* tight -- no space between front, back, and fmt *)
 fun enclose {front: format, back: format} fmt =
-    concat [front, fmt, back]
+    cblock [front, fmt, back]
 
 (* parens : format -> format *)
 val parens = enclose {front = lparen, back = rparen}
@@ -147,14 +150,13 @@ val braces = enclose {front = lbrace, back = rbrace}
 (* appendNewLine : format -> format *)
 fun appendNewLine fmt = sblock [FMT fmt, SEP HardLine]
 
-(* labeled : string -> format -> format *)
-fun labeled str fmt = hcat (ccat(text str, colon), fmt)
+(* label : string -> format -> format *)
+fun label (str:string) (fmt: format) = hcat (ccat(text str, colon), fmt)
 
 
 (* sequence : {alignement: alignment, sep: format} -> format list -> format *)
 fun sequence {alignment: alignment, sep: format} (formats: format list) =
-    let val separatorOp = 
-	val addSepsFn =
+    let val adder =
 	    (case alignmentSeparator alignment
 	      of NONE => (fn elems => FMT sep :: elems)  (* alignment = C *)
 	       | SOME separator => (fn elems => FMT sep :: SEP separator :: elems))
@@ -162,7 +164,7 @@ fun sequence {alignment: alignment, sep: format} (formats: format list) =
 	  | addSeps fmts =  (* fmts non-null *)
 	    let fun inter [fmt] = [FMT fmt]
 		  | inter (fmt :: rest) =  (* rest non-null *)
-		      FMT fmt :: (addSepsFn (inter rest))
+		      FMT fmt :: (adder (inter rest))
 		  | inter nil = nil (* won't happen *)
 	     in inter fmts
 	     end
@@ -173,13 +175,13 @@ fun sequence {alignment: alignment, sep: format} (formats: format list) =
 fun hsequence sepfmt = sequence {alignment = H, sep = sepfmt}
 
 (* psequence : format -> format list -> format *)
-fun hsequence sepfmt = sequence {alignment = P, sep = sepfmt}
+fun psequence sepfmt = sequence {alignment = P, sep = sepfmt}
 
 (* vsequence : format -> format list -> format *)
-fun hsequence sepfmt = sequence {alignment = V, sep = sepfmt}
+fun vsequence sepfmt = sequence {alignment = V, sep = sepfmt}
 
 (* csequence : format -> format list -> format *)
-fun hsequence sepfmt = sequence {alignment = C, sep = sepfmt}
+fun csequence sepfmt = sequence {alignment = C, sep = sepfmt}
 
 (* tupleFormats : format list -> format *)
 fun tupleFormats formats = parens (sequence {alignment=P, sep=comma} formats)
@@ -191,13 +193,16 @@ fun listFormats formats = brackets (sequence {alignment=P, sep=comma} formats)
 fun 'a formatSeq
        {alignment: alignment, sep: format, formatter: 'a -> format}
        (xs: 'a list) =
-    let val separator = alignmentSeparator alignment
+    let val adder =
+	    (case alignmentSeparator alignment
+	      of NONE => (fn elems => FMT sep :: elems)  (* alignment = C *)
+	       | SOME separator => (fn elems => FMT sep :: SEP separator :: elems))
 	val formats = map formatter xs
 	fun addSeps nil = nil
 	  | addSeps fmts =  (* fmts non-null *)
 	    let fun inter [fmt] = [FMT fmt]
 		  | inter (fmt :: rest) =  (* rest non-null *)
-		      FMT fmt :: FMT sep :: SEP separator :: inter rest
+		      FMT fmt :: (adder (inter rest))
 		  | inter nil = nil (* won't happen *)
 	     in inter fmts
 	     end

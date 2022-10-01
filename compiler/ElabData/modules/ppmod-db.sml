@@ -181,9 +181,9 @@ fun fmtStructure env (str, depth) =
               PP.vcat
 	        (PP.text "STR",
 		 PP.viblock (HI 2)
-	           [PP.labeled "sign:" (fmtSignature0 env (sign, SOME entities, depth-1)),
-		    PP.labeled "rlzn:" (fmtStrEntity env (rlzn, depth-1)),
-		    PP.labeled "prim:" (PrimopId.fmtStrInfo prim)]) (* or PPPrim.fmtStrPrimInfo prim ? *)
+	           [PP.label "sign:" (fmtSignature0 env (sign, SOME entities, depth-1)),
+		    PP.label "rlzn:" (fmtStrEntity env (rlzn, depth-1)),
+		    PP.label "prim:" (PrimopId.fmtStrInfo prim)]) (* or PPPrim.fmtStrPrimInfo prim ? *)
 			(* GK: This should be cleaned up soon so as to use a
 			   fmtStrInfo that is an actual pretty printer conforming
 			   to the pattern of the other pretty printers. *)
@@ -198,7 +198,7 @@ and fmtElement (entityEnvOp, env) (sym, spec, depth) =
        of M.STRspec {sign, entVar, def, slot} =>
             PP.vblock
 	      [PP.hblock [PP.text "structure", PPU.fmtSym sym,
-		  	  PP.brackets (PP.labeled "entVar" (fmtEntVar entVar)),
+		  	  PP.brackets (PP.label "entVar" (fmtEntVar entVar)),
 			  PP.colon],
 	       PP.hardIndent 2
 		 (case entityEnvOp
@@ -215,7 +215,7 @@ and fmtElement (entityEnvOp, env) (sym, spec, depth) =
             PP.vblock
 	      [PP.hblock
                  [PP.text "functor", PPU.fmtSym sym,
-	          PP.brackets (PP.labeled "entVar" (fmtEntVar entVar)),
+	          PP.brackets (PP.label "entVar" (fmtEntVar entVar)),
 		  PP.colon],
                PP.hardIndent 2 (fmtFunsig env (sign, depth-1))]
 
@@ -236,8 +236,8 @@ and fmtElement (entityEnvOp, env) (sym, spec, depth) =
 				 else fmtTycBind env tyc
 			       | M.ERRORent => PP.text "<ERRORent>"
 			       | _ => bug "fmtElements:TYCent")),
-		    PP.labeled "entVar" (fmtEntVar entVar),
-		    PP.labeled "scope" (PP.integer scope)]
+		    PP.label "entVar" (fmtEntVar entVar),
+		    PP.label "scope" (PP.integer scope)]
 
 		| M.InfTycSpec{name,arity} =>
 		   PP.vcat
@@ -248,7 +248,7 @@ and fmtElement (entityEnvOp, env) (sym, spec, depth) =
 				of M.TYCent tyc => fmtTycBind env tyc
 				 | M.ERRORent => PP.text "<ERRORent>"
 				 | _ => bug "fmtElements:TYCent")),
-		     PP.labeled "entVar" (fmtEntVar entVar)))
+		     PP.label "entVar" (fmtEntVar entVar)))
 
 	| M.VALspec{spec=typ,...} =>
 	    PP.hblock [PP.text "val", PPU.fmtSym sym, PP.colon, fmtType env typ]
@@ -287,24 +287,24 @@ and fmtSignature0 env (sign, entityEnvOp, depth: int) =
 		 in PP.vcat 
 		      (PP.text "Signature.SIG:",
 		       PP.viblock (PP.HI 2)
-			 [PP.labeled "stamp" (PP.text (Stamps.toShortString stamp)),
+			 [PP.label "stamp" (PP.text (Stamps.toShortString stamp)),
 			  PP.text "label"
 			     (case name
 				of NONE => PP.text "ANONYMOUS"
 				 | SOME sym => PP.hcat (PP.text "NAMED", PPU.fmtSym sym)),
 			  case elements
 			    of nil => PP.empty
-			     | _ => PP.labeled "elements"
+			     | _ => PP.label "elements"
 				     (PP.viblock (PP.HI 2)
 					(map (fn (sym, spec) =>
 						 fmtElement (entityEnvOp, env) (sym, spec, depth))
 					     nonConsElems)),
 			  case strsharing
 			    of nil => PP.empty
-			     | _ => PP.labeled "strsharing" (fmtConstraints ("",strsharing)),
+			     | _ => PP.label "strsharing" (fmtConstraints ("",strsharing)),
 			  case typsharing
 			    of nil => PP.empty
-			     | _ => PP.labeled "tycsharing" (fmtConstraints ("type ",typsharing))])
+			     | _ => PP.label "tycsharing" (fmtConstraints ("type ",typsharing))])
 		end
 	    | M.ERRORsig => PP.text "<error sig>")
     end (* end fmtSignature0 *)
@@ -322,13 +322,13 @@ and fmtFunsig env (sign, depth) =
                PP.vcat
 		 (PP.text "Funsig.FSIG:";
 		  PP.viblock (PP.HI 2)
-		    [PP.labeled "psig" (fmtSignature0 env (paramsig, NONE, depth-1)),
-		     PP.labeled "pvar" (PP.text (EntPath.entVarToString paramvar)),
-		     PP.labeled "psym"
+		    [PP.label "psig" (fmtSignature0 env (paramsig, NONE, depth-1)),
+		     PP.label "pvar" (PP.text (EntPath.entVarToString paramvar)),
+		     PP.label "psym"
 			(case paramsym
 			  of NONE => PP.text "<anonymous>"
 			   | SOME sym => PPU.fmtSym sym),
-		    PP.labeled "bsig" (fmtSignature0 env (bodysig, NONE, depth-1))])
+		    PP.label "bsig" (fmtSignature0 env (bodysig, NONE, depth-1))])
 	   | M.ERRORfsig => PP.text "<error fsig>")
     end
 
@@ -339,10 +339,10 @@ and fmtStrEntity env ({stamp, entities, properties, rpath, stub}: M.strEntity, d
       else PP.vcat
 	       (PP.text "strEntity:",
 		PP.viblock (PP.HI 2)
-		  [PP.labeled "rpath" (PPU.fmtInvPath rpath),
-		   PP.labeled "stamp" (PP.text (Stamps.toShortString stamp)),
-		   PP.labeled "entities" (fmtEntityEnv env (entities, depth-1)),
-		   PP.labeled "lambdaty" PP.empty])
+		  [PP.label "rpath" (PPU.fmtInvPath rpath),
+		   PP.label "stamp" (PP.text (Stamps.toShortString stamp)),
+		   PP.label "entities" (fmtEntityEnv env (entities, depth-1)),
+		   PP.label "lambdaty" PP.empty])
 
 (* fmtFctEntity : SE.staticEnv -> (M.fctEntity * int) -> PP.format *)
 and fmtFctEntity env ({stamp,closure,properties,tycpath,rpath,stub}: M.fctEntity, depth) =
@@ -351,11 +351,11 @@ and fmtFctEntity env ({stamp,closure,properties,tycpath,rpath,stub}: M.fctEntity
     else PP.vcat
 	   (PP.text "fctEntity:",
 	    PP.viblock (PP.HI 2),
-	      [PP.labeled "rpath" (PPU.fmtInvPath rpath),
-	       PP.labeled "stamp" (PP.text (Stamps.toShortString stamp)),
-	       PP.labeled "closure" (fmtClosure (closure,depth-1)),
-	       PP.labeled "lambdaty" PP.empty,
-	       PP.labeled "tycpath" (PP.text "--tycpath formatting not implemented--")])
+	      [PP.label "rpath" (PPU.fmtInvPath rpath),
+	       PP.label "stamp" (PP.text (Stamps.toShortString stamp)),
+	       PP.label "closure" (fmtClosure (closure,depth-1)),
+	       PP.label "lambdaty" PP.empty,
+	       PP.label "tycpath" (PP.text "--tycpath formatting not implemented--")])
 
 (* fmtFunctor : SE.staticEnv -> (M.Functor * int) -> PP.format *)
 and fmtFunctor env (fct, depth) =
@@ -365,8 +365,8 @@ and fmtFunctor env (fct, depth) =
 	    PP.vcat
               (PP.text "Functor.FCT:"
 	       PP.viblock (PP.HI 2)
-	         [PP.labeled "sign" (fmtFunsig env (sign, depth-1)),
-		  PP.labeled "rlzn" (fmtFctEntity env (rlzn, depth-1))])
+	         [PP.label "sign" (fmtFunsig env (sign, depth-1)),
+		  PP.label "rlzn" (fmtFctEntity env (rlzn, depth-1))])
 	| M.ERRORfct => PP.text "Functor.ERROR")
 
 (* fmtTycBind : SE.staticEnv -> T.tycon -> PP.format *)
@@ -391,8 +391,8 @@ and fmtTycBind (env: SE.staticEnv) (tyc: T.tycon) =
 				   (PP.printFormatNL
 				      (PP.vblock
 				         [PP.text "fmtTycBind failure",
-					  PP.labeled "looking for" (fmtTycon env tyc),
-					  PP.labeled "found" (fmtTycon env tycon)]);
+					  PP.label "looking for" (fmtTycon env tyc),
+					  PP.label "found" (fmtTycon env tycon)]);
 				    find rest))
 			| NONE => find rest)
 		  | find [] = []
@@ -463,70 +463,70 @@ and fmtEntDec (entDec, depth) =
 and fmtStrExp (strExp,depth) =
     if depth <= 0 then PP.text "<strExp>" else
     case strExp
-      of M.VARstr ep => PP.labeled "SE.VAR" (fmtEntPath ep)
-       | M.CONSTstr { stamp, rpath, ... } => PP.labeled "SE.CONST" (PPU.fmtInvPath rpath)
+      of M.VARstr ep => PP.label "SE.VAR" (fmtEntPath ep)
+       | M.CONSTstr { stamp, rpath, ... } => PP.label "SE.CONST" (PPU.fmtInvPath rpath)
        | M.STRUCTURE {stamp,entDec} => PP.text "SE.STRUCTURE" (fmtEntDec (entDec,depth-1))
        | M.APPLY (fctExp,strExp) =>
 	   PP.vcat
 	     (PP.text "SE.APPLY:",
 	      PP.viblock (PP.HI 2)
-	        [PP.labeled "fct" (fmtFctExp (fctExp, depth-1)),
-		 PP.labeled "arg" (fmtStrExp (strExp, depth-1))])
+	        [PP.label "fct" (fmtFctExp (fctExp, depth-1)),
+		 PP.label "arg" (fmtStrExp (strExp, depth-1))])
        | M.LETstr (entDec,strExp) =>
 	  PP.vcat
             (PP.text "SE.LET:",
 	     PP.viblock (PP.HI 2)
-	       [PP.labeled "let" (fmtEntDec (entDec,depth-1)),
-		PP.labeled "in" (fmtStrExp (strExp, depth-1))])
+	       [PP.label "let" (fmtEntDec (entDec,depth-1)),
+		PP.label "in" (fmtStrExp (strExp, depth-1))])
        | M.ABSstr (sign,strExp) =>
           PP.vcat
             (PP.text "SE.ABS",
              PP.viblock (PP.HI 2)
-	       [PP.labeled "sign" (PP.text "<omitted>"),
-		PP.labeled "strExp" (fmtStrExp (strExp, depth-1))])
+	       [PP.label "sign" (PP.text "<omitted>"),
+		PP.label "strExp" (fmtStrExp (strExp, depth-1))])
        | M.CONSTRAINstr {boundvar,raw,coercion} =>
           PP.vcat
             (PP.text "SE.CONSTRAIN:",
              PP.viblock (PP.HI 2)
-               [PP.labeled "boundvar" (fmtEntVar boundvar),
-		PP.labeled "source" (fmtStrExp (raw, depth-1)),
-		PP.labeled "target:" (fmtStrExp (coercion, depth-1))])
+               [PP.label "boundvar" (fmtEntVar boundvar),
+		PP.label "source" (fmtStrExp (raw, depth-1)),
+		PP.label "target:" (fmtStrExp (coercion, depth-1))])
        | M.FORMstr(sign) => PP.text "SE.FORM:"
 
 (* fmtFctExp : M.fctExp * int -> PP.format *)
 and fmtFctExp (fctExp,depth) =
     if depth <= 0 then PP.text "<fctExp>" else
     case fctExp
-      of M.VARfct ep => PP.labeled "FE.VARfct" (fmtEntPath ep)
-       | M.CONSTfct {rpath, ...} => PP.labeled "FE.CONSTfct" (PP.text (InvPath.toString rpath))
+      of M.VARfct ep => PP.label "FE.VARfct" (fmtEntPath ep)
+       | M.CONSTfct {rpath, ...} => PP.label "FE.CONSTfct" (PP.text (InvPath.toString rpath))
        | M.LAMBDA_TP {param, body, ...} =>
            PP.vcat
 	     (PP.text "FE.LAMBDA_TP:",
 	      PP.viblock (PP.HI 2)
-                [PP.labeled "param" (fmtEntVar param),
+                [PP.label "param" (fmtEntVar param),
 		 PP.break {nsp=1,offset=0};
-		 PP.labeled "body" (fmtStrExp (body, depth-1))])
+		 PP.label "body" (fmtStrExp (body, depth-1))])
        | M.LAMBDA {param, body} =>
            PP.vcat
        	     (PP.text "FE.LAMBDA:",
 	      PP.viblock (PP.HI 2)
-	        [PP.labeled "param" (fmtEntVar param),
-		 PP.labeled "body" (fmtStrExp (body, depth-1))])
+	        [PP.label "param" (fmtEntVar param),
+		 PP.label "body" (fmtStrExp (body, depth-1))])
        | M.LETfct (entDec,fctExp) =>
            PP.vcat
              (PP.text "FE.LETfct:",
 	      PP.viblock (PP.HI 2)
-		[PP.labeled "let" (fmtEntDec (entDec,depth-1))
-		 PP.labeled "in" (fmtFctExp (fctExp, depth-1))])
+		[PP.label "let" (fmtEntDec (entDec,depth-1))
+		 PP.label "in" (fmtFctExp (fctExp, depth-1))])
 
 (* fmtClosure : M.fctClosure * int -> PP.format *)
 and fmtClosure (M.CLOSURE {param, body, env}, depth) =
       PP.vcat
 	(PP.text "CLOSURE:";
 	 PP.viblock (PP.HI 2)
-	   [PP.labeled "param" (fmtEntVar param),
-	    PP.labeled "body" (fmtStrExp (body, depth-1)),
-	    PP.labeled "env" (fmtEntityEnv SE.empty (env, depth-1))])
+	   [PP.label "param" (fmtEntVar param),
+	    PP.label "body" (fmtStrExp (body, depth-1)),
+	    PP.label "env" (fmtEntityEnv SE.empty (env, depth-1))])
 
 (* fmtBinding : SE.staticEnv -> (S.symbol * B.binding * int) -> PP.format
  *  assumes no newline is needed before pping *)
@@ -575,7 +575,7 @@ and fmtEnv (boundsyms, topenv) (env, depth) =
 (* fmtOpen : SE.staticEnv -> (SP.path * M.Structure * int) -> PP.format *)
 fun fmtOpen env (path, str, depth) =
       PP.vcat
-	(PP.labeled "opening" (PPU.fmtSymPath),
+	(PP.label "opening" (PPU.fmtSymPath),
 	 if depth < 1 then ()
 	 else (case str
 		 of M.STR { sign, rlzn as {entities,...}, ... } =>

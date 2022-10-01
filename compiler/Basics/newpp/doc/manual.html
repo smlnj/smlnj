@@ -513,16 +513,16 @@ with compound blocks.</p>
 <dt class="hdlist1">Pretty Printing</dt>
 <dd>
 <p>Pretty printing is the process of presenting a datastructure in text in a "readable" fashion,
-using layout, that is newlines, spacing, and indentation, to make the inherent structure more visible
-and more easily recognized. It involves a kind of "markup", meaning additional information
-that is overlayed onto the underlying "content" to produce the physical layout when printed.</p>
+using layout, that is newlines, spacing, and indentation, to make the inherent structure more
+obvious. It involves a kind of "markup", meaning that additional information
+is overlayed onto the underlying "content" to produce the physical layout when printed.</p>
 </dd>
 <dt class="hdlist1">Content</dt>
 <dd>
 <p>The <em>content</em> of a format is the list of text strings appearing in the format,
-listed in depth-first, left-to-right order. Usually the content of a format, stripped of
-all white space, should stand on its own, e.g. as a syntactic phrase in a
-programming language or data description language. We are ignoring the special cases of
+presented as a list in depth-first, left-to-right order. Usually the content of a format,
+stripped of all extraneous white space, should stand on its own, e.g. as a syntactic phrase
+in a programming language or data description language. We are ignoring the special cases of
 languages where white space (for instance, indentation) has syntactic significance.
 A prettyprinter may produce different layouts of the same content, but these layouts are
 expected to convey the same "meaning" or "information".</p>
@@ -558,7 +558,7 @@ limits how much of a line is occupied by text.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>varieties of blocks: text, "aligned", and "special" (COMMENT: what about empty?)</p>
+<p>varieties of blocks: text, "aligned", "special", and empty.</p>
 </li>
 <li>
 <p>compound (aligned or special) blocks contain a sequence of (sub)formats and separators</p>
@@ -568,7 +568,7 @@ limits how much of a line is occupied by text.</p>
 <p><em>separators</em> in blocks: Space, SoftLine, and HardLine</p>
 </li>
 <li>
-<p>block alignment (h, v, p) determined by implicit separator</p>
+<p>block alignment (H, V, P, C) determined by implicit separator</p>
 </li>
 </ul>
 </div>
@@ -954,7 +954,10 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 <p><code>empty : format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>The empty format that prints nothing when rendered, equivalent to (text "").</pre>
+<pre>The empty format that prints nothing when rendered, equivalent to (text ""). Empty formats are
+absorbed by adjacent nonempty formats, so that no "separation" whitespace will be printed between and
+empty format and adjacent nonempty formats. Empty serves as an identity element for binary
+format concatenation operators. For instance, hcat (fmt, empty) == fmt.</pre>
 </div>
 </div>
 </li>
@@ -962,7 +965,7 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 <p><code>text : string &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>Create an atomic "text" block consisting of a string, which renders as that string. Note that the string may contain, indeed may consist only of, white space.</pre>
+<pre>Create an atomic "text" block consisting of a string, which renders as that string. Note that the string may contain, indeed may consist only of, white space.  As a mater of style, however, whitespace should usually be produced by formatting rather than being built into text strings.</pre>
 </div>
 </div>
 </li>
@@ -1021,6 +1024,14 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 </div>
 </li>
 <li>
+<p><code>cblock : format list &#8594; format</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>cblock fmts : Create a "compact" aligned block with fmts as components, with no separators between components.</pre>
+</div>
+</div>
+</li>
+<li>
 <p><code>sblock : element list &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
@@ -1056,6 +1067,14 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 <div class="literalblock">
 <div class="content">
 <pre>piblock binent fmts : Create a horizontally aligned block (with implicit (Space 1) separators) with fmts as components and the indentation specified by bindent.</pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>ciblock : bindent &#8594; format list &#8594; format</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>ciblock binent fmts : Create a horizontally aligned block with no separators, with fmts as components and the indentation specified by bindent.</pre>
 </div>
 </div>
 </li>
@@ -1144,7 +1163,7 @@ This will produce a newline + incremented indent (blm+n) if it does not follow a
 <p><code>integer : int &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>integer n : returns the string representation of n (Int.toString n) as a text format.</pre>
+<pre>integer n : Returns the string representation of n (Int.toString n) as a text format.</pre>
 </div>
 </div>
 </li>
@@ -1152,38 +1171,26 @@ This will produce a newline + incremented indent (blm+n) if it does not follow a
 <p><code>string : string &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>string s : formats the string s enclosed in double quotation marks.</pre>
+<pre>string s : Formats the string s enclosed in double quotation marks.</pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>bool : string &#8594; format</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>bool b : Formats the boolean value b as `text "true"` or `text "false"`.</pre>
 </div>
 </div>
 </li>
 </ul>
 </div>
 <h4 id="_utility_format_construction_functions" class="discrete">Utility format construction functions</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><code>concat : format list &#8594; format</code></p>
-<div class="literalblock">
-<div class="content">
-<pre>concat fmts = sblock (map FMT fmts) : Concatenates the fmts without separators between them.</pre>
-</div>
-</div>
-</li>
-</ul>
-</div>
 <div class="paragraph">
 <p><em>Binary format combinators</em></p>
 </div>
 <div class="ulist">
 <ul>
-<li>
-<p><code>ccat : format * format &#8594; format</code></p>
-<div class="literalblock">
-<div class="content">
-<pre>ccat (fmt1, fmt2) = concat [fmt1, fmt2] : Concatenates fmt1 and fmt2 without a separator.</pre>
-</div>
-</div>
-</li>
 <li>
 <p><code>hcat : format * format &#8594; format</code></p>
 <div class="literalblock">
@@ -1196,7 +1203,7 @@ This will produce a newline + incremented indent (blm+n) if it does not follow a
 <p><code>vcat : format * format &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>vcat (fmt1, fmt2) = vblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a HardLine separator:</pre>
+<pre>vcat (fmt1, fmt2) = vblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a HardLine separator.</pre>
 </div>
 </div>
 </li>
@@ -1204,11 +1211,22 @@ This will produce a newline + incremented indent (blm+n) if it does not follow a
 <p><code>pcat : format * format &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) separator:</pre>
+<pre>pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) separator.</pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>ccat : format * format &#8594; format</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>ccat (fmt1, fmt2) = cblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 without a separator.</pre>
 </div>
 </div>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>Note that the empty format is an identity element for all of these binary concatenation operators.</p>
 </div>
 <h4 id="_enclosing_a_format" class="discrete">Enclosing a format</h4>
 <div class="ulist">
@@ -1245,6 +1263,27 @@ This will produce a newline + incremented indent (blm+n) if it does not follow a
 <div class="content">
 <pre>braces fmt = enclose {front=lbrace, back=rbrace} fmt
   Enclose fmt with left and right curly braces.</pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+<h4 id="_modifying_a_format" class="discrete">Modifying a format</h4>
+<div class="ulist">
+<ul>
+<li>
+<p>`label : string &#8594; format &#8594; format</p>
+<div class="literalblock">
+<div class="content">
+<pre>label str fmt = hcat (ccat (text str, colon), fmt)</pre>
+</div>
+</div>
+</li>
+<li>
+<p>`appendNewLine : format &#8594; format</p>
+<div class="literalblock">
+<div class="content">
+<pre>append a hard newline after the format</pre>
 </div>
 </div>
 </li>
@@ -1311,23 +1350,32 @@ which renders as:
 </div>
 </li>
 <li>
-<p><code>formatTuple : ('a &#8594; format) &#8594; 'a list &#8594; format</code></p>
+<p><code>tuple : ('a &#8594; format) &#8594; 'a list &#8594; format</code></p>
 </li>
 <li>
-<p><code>formatList : ('a &#8594; format) &#8594; 'a list &#8594; format</code></p>
+<p><code>list : ('a &#8594; format) &#8594; 'a list &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>formatList formatter xs =
+<pre>list formatter xs =
    enclose {front=lbracket, back=rbracket} (formatSeq {alignment=P, sep=comma, formatter=formatter} xs)</pre>
 </div>
 </div>
 </li>
 <li>
-<p><code>formatAlignedList : alignment &#8594; ('a &#8594; format) &#8594; 'a list &#8594; format</code></p>
+<p><code>alignedList : alignment &#8594; ('a &#8594; format) &#8594; 'a list &#8594; format</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>formatAlignedList alignment formatter xs : format the members of xs using formatter and then format
-those formats as a list (bracketed with comma separator), aligned according to the alignment parameter.</pre>
+<pre>alignedList alignment formatter xs : format the members of xs using formatter and then format
+those formats as a list (bracketed, with comma separator), aligned according to the alignment parameter.</pre>
+</div>
+</div>
+</li>
+<li>
+<p>`option : ('a &#8594; format) &#8594; 'a option &#8594; format</p>
+<div class="literalblock">
+<div class="content">
+<pre>option values are treated as honorary sequences with 0 or 1 element. NONE is rendered as
+text "NONE", and SOME v is rendered as "SOME(formatter v)".</pre>
 </div>
 </div>
 </li>
@@ -1375,18 +1423,27 @@ This prints directly using output without building a "layout" data structure.</p
 </div>
 </li>
 <li>
-<p><code>printFormat : int &#8594; format &#8594; unit</code></p>
+<p><code>printFormatLW : int &#8594; format &#8594; unit</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>printFormat lineWidth fmt = render (fmt, print, lineWidth)</pre>
+<pre>Printing with an explicit lineWidth argument:
+printFormat lineWidth fmt = render (fmt, print, lineWidth)</pre>
 </div>
 </div>
 </li>
 <li>
-<p><code>printFormat' : format &#8594; int &#8594; unit</code></p>
+<p><code>printFormat : format &#8594; unit</code></p>
 <div class="literalblock">
 <div class="content">
-<pre>printFormat' fmt lineWidth = printFormat lineWidth fmt</pre>
+<pre>printFormat' fmt = printFormatLW (getLineWidth ()) fmt</pre>
+</div>
+</div>
+</li>
+<li>
+<p><code>printFormatNL : format &#8594; unit</code></p>
+<div class="literalblock">
+<div class="content">
+<pre>printFormat' fmt = printFormatLW (getLineWidth ()) (appendNewLine fmt)</pre>
 </div>
 </div>
 </li>
@@ -1715,7 +1772,7 @@ end</pre>
 
       flatten                   FLAT (format data constructor, hidden)
 
-      nest                      hiblock, viblock, piblock,
+      nest                      hiblock, viblock, piblock, ciblock
                                 softIndent, hardIndent</pre>
 </div>
 </div>
@@ -1730,6 +1787,10 @@ end</pre>
 <p>The basic datatypes for formats</p>
 <div class="ulist">
 <ul>
+<li>
+<p><code>EMPTY</code> is the empty format that prints nothing and acts as an identity element with respect to
+concatenation of formats or composition of blocks.</p>
+</li>
 <li>
 <p><code>TEXT</code> constructs atomic text blocks.</p>
 </li>
@@ -1910,7 +1971,7 @@ instance, in the SML/NJ prettyprinters for abstract syntax and for various IRs b
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-09-17 11:55:10 -0700
+Last updated 2022-09-30 12:36:08 -0700
 </div>
 </div>
 </body>

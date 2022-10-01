@@ -42,6 +42,7 @@ sig
     val text : string -> format  (* == the TEXT format constructor *)
     val integer : int -> format  (* integer n renders as Int.toString n *)
     val string : string -> format (* previously used PrintUtil.formatString, adds double quotes *)
+    val bool : bool -> format    (* formats true as TEXT "true", false as TEXT "false" *)
 
     (* basic block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
     (* specialBlock -- the elements may include explicit separators *)
@@ -113,7 +114,7 @@ sig
     val appendNewLine : format -> format
         (* append a newline to the format -- normally used for "top-level" printing *)
 
-    val labeled : string -> format -> format
+    val label : string -> format -> format
 
   (* composing lists of formats *)
 

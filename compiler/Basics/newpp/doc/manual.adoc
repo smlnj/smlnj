@@ -415,11 +415,15 @@ _Indented block constructor functions:_
 
 * `integer : int -> format`
 
- integer n : returns the string representation of n (Int.toString n) as a text format.
+ integer n : Returns the string representation of n (Int.toString n) as a text format.
 
 * `string : string -> format`
 
- string s : formats the string s enclosed in double quotation marks.
+ string s : Formats the string s enclosed in double quotation marks.
+
+* `bool : string -> format`
+
+ bool b : Formats the boolean value b as `text "true"` or `text "false"`.
 
 [discrete]
 ==== Utility format construction functions
@@ -432,11 +436,11 @@ _Binary format combinators_
 
 * `vcat : format * format -> format`
 
- vcat (fmt1, fmt2) = vblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a HardLine separator:
+ vcat (fmt1, fmt2) = vblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a HardLine separator.
 
 * `pcat : format * format -> format`
 
- pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) separator:
+ pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) separator.
 
 * `ccat : format * format -> format`
 
@@ -469,9 +473,9 @@ Note that the empty format is an identity element for all of these binary concat
 [discrete]
 ==== Modifying a format
 
-* `labeled : string -> format -> format
+* `label : string -> format -> format
 
- labeled str fmt = hcat (ccat (text str, colon), fmt)
+ label str fmt = hcat (ccat (text str, colon), fmt)
 
 * `appendNewLine : format -> format
 

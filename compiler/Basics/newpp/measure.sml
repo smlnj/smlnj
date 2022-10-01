@@ -59,7 +59,7 @@ fun measureElements elements =
     end
 
 (* measureFormats : (int * format list) -> int *)
-fun measureFormats (sepsize: int) (formats: format list) =
+fun measureFormats (sepsize: int, formats: format list) =
     let fun mFormats (nil, n) = n
           | mFormats ([format], n) = measure format + n
           | mFormats (format :: rest, n) =  (* rest not null *)

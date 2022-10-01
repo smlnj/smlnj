@@ -276,8 +276,8 @@ and fmtFctExp sourceOp =
 	  | fmtFctExp' (VarFct (path, _), _) = fmtPath path
           | fmtFctExp' (LetFct(dec,body),d) =
               PP.vblock
-	        [PP.labeled ("let", fmtDec sourceOp (dec,d-1)),
-		 PP.labeled (" in", fmtFctExp'(body,d-1)),
+	        [PP.label ("let", fmtDec sourceOp (dec,d-1)),
+		 PP.label (" in", fmtFctExp'(body,d-1)),
 	         PP.text "end"]
 	  | fmtFctExp'(AppFct(path,sblist, fsigconst),d) =
               PP.hcat
@@ -504,25 +504,25 @@ and fmtDec sourceOp (dec, depth) =
 	       (map (fn rvb => fmtRvb sourceOp (rvb, d-1)) rvbs)
 
 	  | fmtDec' (DoDec exp, d) =
-	     PP.labeled ("do", fmtExp sourceOp (exp,d-1))
+	     PP.label ("do", fmtExp sourceOp (exp,d-1))
 
 	  | fmtDec' (FunDec (fbs,tyvars), d) =
 	     PPU.fmtVerticalFormats {header1 = "fun", header2 = "and"}
 	       (map (fn fb => fmtFb sourceOp (fb, d-1)) fbs)
 
 	  | fmtDec' (TypeDec tycs, d) =
-	      PP.labeled "type"
+	      PP.label "type"
 	        (PP.pblock (map (fn tyc => fmtTb sourceOp (tyc, d-1)) tycs))
 
 	  | fmtDec' (DatatypeDec{datatycs,withtycs=[]}, d) =
-	      PP.labeled "datatype"
+	      PP.label "datatype"
 	        (PP.pblock (map (fn dbing => fmtDataBind (dbing, d-1)) datatycs))
 
 	  | fmtDec' (DatatypeDec{datatycs,withtycs},d) =
 	      PP.vcat
-		(PP.labeled "datatype"
+		(PP.label "datatype"
 		   (PP.pblock (map (fn db => fmtDataBind (db, d)) datatycs)),
-		 PP.labeled "withtype"
+		 PP.label "withtype"
 		   (PP.pblock (map (fn tb => fmtTypeBind (tb, d)) datatycs)))
 
 	  | fmtDec' (DataReplDec(symb, path), _) =
@@ -531,15 +531,15 @@ and fmtDec sourceOp (dec, depth) =
 
 	  | fmtDec' (AbstypeDec{abstycs,withtycs=[],body}, d) =
 	      PP.vcat
-		(PP.labeled "abstype"
+		(PP.label "abstype"
 		   (PP.pblock (map (fn db => fmtDataBind (db, d-1)) abstycs)),
 		 fmtDec' (body, d))
 
 	  | fmtDec' (AbstypeDec{abstycs,withtycs,body}, d) =
 	      PP.vblock
-		[PP.labeled "abstype"
+		[PP.label "abstype"
 		   (PP.pblock (map (fn db => fmtDataBind (db, d-1)) abstycs)),
-		 PP.labeled "withtype"
+		 PP.label "withtype"
 		   (PP.pblock (map (fn db => fmtDataBind (db, d-1)) withtycs)),
 		 fmtDec' (body, d)]
 
@@ -579,9 +579,9 @@ and fmtDec sourceOp (dec, depth) =
 	       PP.vblock (map (fn dec => fmtDec'(dec,d)) decs)
 
 	  | fmtDec' (OpenDec paths, d) =
-	      PP.labeled "open " (PP.hblock (map fmtPath paths))
+	      PP.label "open " (PP.hblock (map fmtPath paths))
 
-	  | fmtDec' (OvldDec (sym, explist), d) = PP.labeled "overload" (PPU.fmtSym sym)
+	  | fmtDec' (OvldDec (sym, explist), d) = PP.label "overload" (PPU.fmtSym sym)
 
 	  | fmtDec' (FixDec {fixity, vars}, d) =
               PP.hcat

@@ -7,6 +7,6 @@ sig
 				
   val measureElements : Format.element list -> int
 
-  val measureFormats : Format.format list -> int
+  val measureFormats : int * Format.format list -> int
 
 end  (* signature MEASURE *)

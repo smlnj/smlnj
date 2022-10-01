@@ -37,7 +37,8 @@ fun flatRender (format, output) =
          *   -- recurses over the format structure *)
 	fun render0  (format: format) =
 	    (case format
-	      of TEXT s => output s
+	      of EMPTY => ()
+	       | TEXT s => output s
 	       | SBLOCK {elements, ...} => renderElements elements
 	       | ABLOCK {formats, ...} => renderBlock formats
 	       | FLAT format => render0 format
@@ -107,7 +108,8 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	 *   -- INVARIANT: blm <= cc -- we will never print to the left of the current block's blm *)
 	fun render0  (format: format, blm: int, cc: int, newlinep: bool) =
 	      (case format
-	         of TEXT s => (output s; (cc + size s, false))
+	         of EMPTY => (cc, false)
+		  | TEXT s => (output s; (cc + size s, false))
  		  | SBLOCK {elements, bindent, ...} => 
 		      (case bindent
 			 of NI => (* "special" block, with blm = cc, which may be greater than parent's blm *)
@@ -161,7 +163,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	     in re (elements, blm, newlinep)
 	    end (* end renderElements *)
 
-        (* renderBlock : format list * separator * bindent * int * int * bool -> int * bool *)
+        (* renderBlock : format list * separator option * bindent * int * int * bool -> int * bool *)
         (* the first three elements are the components of the block being rendered,
          * the last three arguments are:
 	 *   blm: int -- parent block's blm (or 0 at "top-level", with no parent block),
@@ -171,7 +173,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	      (* Special case of "empty" block, containing no formats, renders as the empty format, producing no output;
                * but should bindent, if not NI, take effect? See Notes and end of file. *)
 	      (cc, newlinep)
-          | renderBlock (formats, separator, bindent, parentBlm, cc, newlinep) =
+          | renderBlock (formats, separatorOp, bindent, parentBlm, cc, newlinep) =
 	      let 
 		  (* renderFormats : format list * int * int * bool -> int * bool 
 		   * Arguments:
@@ -184,13 +186,16 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		      let val myBlm = cc  (* defining the blm of the this new block = cc on entry *)
 
 			  val renderSeparator =
-				(case separator
-				   of Space n => (fn (cc, m) => (sp n; (cc+n, false)))  (* n = 1 *)
-				    | HardLine => (fn (cc, m) => (nlIndent myBlm; (myBlm, true)))
-				    | SoftLine n => (fn (cc, m) =>  (* ASSERT: n = 1 *)
-				       if m <= (lw - cc) - n  (* conditional on m *)
-				       then (sp n; (cc+n, false))
-				       else (nlIndent myBlm; (myBlm, true))))
+				(case separatorOp
+				   of NONE => (fn (cc, m) => (cc, false))
+				    | SOME separator =>
+				      (case separator
+					 of Space n => (fn (cc, m) => (sp n; (cc+n, false)))  (* n = 1 *)
+				          | HardLine => (fn (cc, m) => (nlIndent myBlm; (myBlm, true)))
+				          | SoftLine n => (fn (cc, m) =>  (* ASSERT: n = 1 *)
+				              if m <= (lw - cc) - n  (* conditional on m *)
+				              then (sp n; (cc+n, false))
+				              else (nlIndent myBlm; (myBlm, true)))))
 
 			  fun renderRest (nil, cc, newlinep) = (cc, newlinep) (* when we've rendered all the formats *)
 			    | renderRest (format :: rest, cc, newlinep) =  (* newlinep argument not used in this case! *)
