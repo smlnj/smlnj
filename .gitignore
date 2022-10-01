@@ -109,3 +109,4 @@ tools/asdl/src/gen/fragments/mkfrags.sh
 tools/asdl/src/gen/fragments/mkmk.sh
 tools/asdl/src/lib/cxx/include/asdl/config.h
 
+*.html
