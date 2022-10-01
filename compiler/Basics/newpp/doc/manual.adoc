@@ -488,6 +488,22 @@ Note that the empty format is an identity element for all of these binary concat
 
  inserts sep between constituent formats and aligns according to the alignment parameter.
 
+* `hsequence : format -> format list -> format`
+
+ hsequence sep fmts = sequence {alignment = H, sep = sep} fmts
+
+* `psequence : format -> format list -> format`
+
+ psequence sep fmts = sequence {alignment = P, sep = sep} fmts
+
+* `vsequence : format -> format list -> format`
+
+ vsequence sep fmts = sequence {alignment = V, sep = sep} fmts
+
+* `csequence : format -> format list -> format`
+
+ csequence sep fmts = sequence {alignment = C, sep = sep} fmts
+
 * `tupleFormats : format list -> format`
 
  formats the members of the format list as a tuple (parenthesized, with elements
@@ -521,17 +537,18 @@ Note that the empty format is an identity element for all of these binary concat
 
 * `tuple : ('a -> format) -> 'a list -> format`
 
+ tuple formatter xs = parens (psequence comma (map formatter xs))
+
 * `list : ('a -> format) -> 'a list -> format`
 
- list formatter xs =
-    enclose {front=lbracket, back=rbracket} (formatSeq {alignment=P, sep=comma, formatter=formatter} xs) 
+ list formatter xs = brackets (psequence comma (map formatter xs))
 
 * `alignedList : alignment -> ('a -> format) -> 'a list -> format`
 
  alignedList alignment formatter xs : format the members of xs using formatter and then format
  those formats as a list (bracketed, with comma separator), aligned according to the alignment parameter.
 
-* `option : ('a -> format) -> 'a option -> format
+* `option : ('a -> format) -> 'a option -> format`
 
  option values are treated as honorary sequences with 0 or 1 element. NONE is rendered as
  text "NONE", and SOME v is rendered as "SOME(formatter v)".
