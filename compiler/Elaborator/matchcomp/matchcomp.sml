@@ -110,8 +110,9 @@ fun reportStats (nodeCount: int, {rulesUsed, failures, choiceTotal, choiceDist}:
 fun matchComp (rules, lhsTy: T.ty, rhsTy: T.ty, failExnOp: T.datacon option, region) =
 let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
     val location = "nolocation"
-        (* might be derived from region argument, but need current Source.inputSource or
-         * errorMatch function from the ErrorMsg.errors record (found in compInfo now)  *)
+        (* punting on location! -- just used in calls of timeIt, could derive it from region,
+	   using either SourceMap.regionToString or PPErrorMsg.fmtRegion NONE *)
+
     val _ = PPMC.debugPrint mcdebugging ("matchComp: match =", PPMC.fmtMatch rules)
 
     val (numExpandedRules, expandedPats, rhsFunBinders, ruleMap) =
@@ -140,7 +141,7 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
 	timeIt ("makeDectree", location, DT.makeDectree, (andor, allRules))
     val _ = ST.collectDectreeStats dectree  (* must collect dectree stats for rulesUsed and numFAIL *)
 
-    val _ = PPMC.debugPrint printDectree ("** matchComp: dectree =", PPMC.fmtDectree dectree)
+\    val _ = PPMC.debugPrint printDectree ("** matchComp: dectree =", PPMC.fmtDectree dectree)
 
     (* checking exhaustiveness and redundancy of rules *)
     (* It may be that there are unused _ramified_ rules, but all original rules are used!? Example? *)

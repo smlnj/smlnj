@@ -230,6 +230,9 @@ val printFormatNL : format -> unit
 `[.kw]#val# string : string \-> format`::
   `string s` : Formats the string s enclosed in double quotation marks.
 
+`[.kw]#val# char : char -> format`::
+   `char c` : Formats c as `# ^ (string (Char.toString c))`.
+
 `[.kw]#val# bool : bool \-> format`::
   `bool b` : Formats the boolean b as `true` or `folse`.
 

@@ -358,8 +358,10 @@ fun elabWhere (sigexp,env,epContext,mkStamp,error,region) =
  * It does not need to return an updated statenv.
  *)
 fun elabBody(specs, env, entEnv, sctxt, epContext, region,
-             compInfo as {mkStamp,error,...} : EU.compInfo) =
+             compInfo as {mkStamp, source, ...} : EU.compInfo) =
 let
+
+val error = ErrorMsg.error source
 
 (*** elaborating type specification --- returning "env * elements" ***)
 fun elabTYPEspec(tspecs, env, elements, eqspec, region) =
@@ -1066,11 +1068,12 @@ end (* function elabBody *)
 
 
 and elabFctSig0 {fsigexp, curried, nameOp, env, entEnv, sigContext, epContext,
-                 region, compInfo as {mkStamp,error,...}: EU.compInfo} =
+                 region, compInfo as {mkStamp, source, ...}: EU.compInfo} =
 let val sname = case nameOp
 		  of SOME name => S.name name
 		   | _ => "<anonfsig>"
     val _ = debugmsg (">>elabFctSig: " ^ sname)
+    val error = ErrorMsg.error source
 in
 
 case fsigexp
@@ -1135,11 +1138,12 @@ case fsigexp
 end (* function elabFctSig0 *)
 
 and elabSig0 {sigexp, nameOp, env, entEnv, sigContext, epContext, region,
-             compInfo as {mkStamp,error,...}: EU.compInfo} =
+             compInfo as {mkStamp,source,...}: EU.compInfo} =
 let val region0 = region
     val sname = case nameOp
 		  of SOME name => S.name name
 		   | _ => "<anonfsig>"
+    val error = ErrorMsg.error source
     val _ = debugmsg (">>elabSig: " ^ sname)
 
     val (sigexp,whereDefs,region) =

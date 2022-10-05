@@ -25,7 +25,7 @@ signature TDP_INSTRUMENT = sig
     val enabled : bool ref
     val instrument :
 	(Symbol.symbol -> bool) ->	(* isSpecial *)
-	SE.staticEnv * A.dec CompInfo.compInfo -> A.dec -> A.dec
+	SE.staticEnv * CompInfo.compInfo -> A.dec -> A.dec
 end
 
 structure TDPInstrument :> TDP_INSTRUMENT = struct
@@ -67,11 +67,9 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
     val iiis_u_Ty =
 	BT.tupleTy [BT.intTy, BT.intTy, BT.intTy, BT.unitTy] --> BT.unitTy
 
-    fun instrument0 isSpecial (senv, cinfo: A.dec CompInfo.compInfo) d = let
+    fun instrument0 isSpecial (senv, {mkLvar,...}: CompInfo.compInfo) d = let
 
-	val matchstring = #errorMatch cinfo
-
-	val mkv = #mkLvar cinfo
+	val mkv = mkLvar
 
 	fun tmpvar (n, t) = let
 	    val sy = Symbol.varSymbol n
@@ -196,7 +194,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 		fun dot ([z], a) = name (z, a)
 		  | dot (h :: t, a) = dot (t, "." :: name (h, a))
 		  | dot ([], a) = impossible (what ^ ": no path")
-		val ms = matchstring r
+		val ms = SourceMap.regionToString r
 	    in
 		concat (ms :: ": " :: dot (n, []))
 	    end

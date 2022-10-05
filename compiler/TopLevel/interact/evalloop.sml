@@ -74,7 +74,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
    *)
     fun evalLoop source = let
 	  val parser = SmlFile.parseOne source
-	  val cinfo = C.mkCompInfo { source = source, transform = fn x => x }
+	  val cinfo = C.mkCompInfo source
 
 	  fun checkErrors (s: string) =
 		if CompInfo.anyErrors cinfo
@@ -113,7 +113,8 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 			      end
 
 		      val {csegments, newstatenv, absyn, exportPid, exportLvars, imports, ...} =
-			  C.compile {source=source, ast=ast,
+			  C.compile {source=source,
+				     ast=ast,
 				     statenv=statenv,
 				     compInfo=cinfo,
 				     checkErr=checkErrors,
@@ -181,9 +182,9 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		      val e1 = E.mkenv { static = ste1, dynamic = E.dynamicPart e0 }
 		      val _ = if !Control.progressMsgs then say "### e1 successful\n" else ()
 
-		       in PP.render (PPDec.fmtDec e1 (absyn, exportLvars), (#errConsumer source), !lineWidth)
-		          if !Control.progressMsgs then say "### oneUnit\n" else ()
-		      end
+		  in PP.render (PPDec.fmtDec e1 (absyn, exportLvars), say, !lineWidth);
+		     if !Control.progressMsgs then say "### oneUnit\n" else ()
+		  end
 		  (* end case *))
 
 	  fun loop() = (oneUnit(); loop())

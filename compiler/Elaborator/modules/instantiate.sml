@@ -1706,10 +1706,13 @@ and getTkFct{sign as M.FSIG{paramvar, paramsig, bodysig, ...}, entEnv,
 
 (*** the generic instantiation function ***)
 and instGeneric{sign, entEnv, instKind, rpath, region,
-                compInfo as {mkStamp,error,...} : EU.compInfo} =
+                compInfo as {mkStamp,source,...} : EU.compInfo} =
   let val _ = debugmsg (">>> [INS]instGeneric: " ^ signName sign)
+
       val _ = error_found := false
+      val error = EM.error source     
       fun err sev msg = (error_found := true; error region sev msg)
+
       val baseStamp = mkStamp()
 
       val (inst, abstycs, tyceps, cnt) =
@@ -1785,8 +1788,10 @@ fun instParam{sign, entEnv, tdepth, rpath, region, compInfo} =
 
 (*** fetching the list of tycpaths for a particular structure ***)
 fun getTycPaths{sign as M.SIG sr, rlzn : M.strEntity, entEnv,
-	        compInfo as {error,...}: EU.compInfo} =
-      let val { entities, ... } = rlzn
+	        compInfo as {source,...}: EU.compInfo} =
+      let val error = EM.error source
+	  val { entities, ... } = rlzn
+				      
 	  val epslist =
            case SPL.sigBoundeps sr
              of SOME x => x

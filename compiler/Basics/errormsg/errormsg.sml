@@ -18,34 +18,38 @@ in
 
   exception Error
 
-  datatype severity = WARN | COMPLAIN
-
   type output = string -> unit
+
+  datatype severity = WARN | COMPLAIN
 
   type complainer = severity -> string -> PP.format -> unit
 
-  type errorFn = region -> complainer
+  type errorFn = SM.region -> complainer
   (* the four arguments of errorFn are: region, severity, string, format *)
 
   type errors = {error: errorFn,
-                 errorMatch: region->string,
+                 errorMatch: SM.region -> PP.format,
                  anyErrors: bool ref}
 
+  val say = Control_Print.say
+
   (* defaultOutput : unit -> (string -> unit) *)
-  fun defaultOutput () = Control.Print.say
+  fun defaultOutput () = say
 
-  (* nullErrorBody : PP.format *)
-  val nullErrorBody = PP.empty  (* default format argument *)
+  (* nullErrorBody : PP.format
+   * default body format *)
+  val nullErrorBody = PP.empty
 
-  val lineWidth : int ref = Control.Print.lineWidth
+  val lineWidth : int ref = Control_Print.lineWidth
 
+  (* printMessage : output * PP.format * severity * string * PP.format -> unit *)
   fun printMessage (output: output, location: PP.format, severity: severity,
 		    msg: string, body: PP.format) =
       case (!BasicControl.printWarnings, severity)
 	of (false, WARN) => ()  (* no Warning messages if suppressed *)
 	 | _ =>
 	   let val msgFormat =
-		   (PP.appendNewline
+		   (PP.appendNewLine
 		      (PP.hblock
 			[location,
 			 PP.text (* print error label *)
@@ -54,69 +58,76 @@ in
 			       | COMPLAIN => "Error:"),
 			 PP.text msg, 
 			 PP.hardIndent 2 body]))
-	   in PP.render output msgFormat (!lineWidth)
+	    in PP.render (msgFormat, output, !lineWidth)
 	   end
 
+  (* record : severity * bool ref -> unit *)
   fun record (COMPLAIN, anyErrors) = anyErrors := true
     | record (WARN,_) = ()
 
+  (* impossible : string -> 'a *)
   fun impossible msg =
-      (app Control_Print.say ["Error: Compiler bug: ", msg, "\n"];
+      (app say ["Error: Compiler bug: ", msg, "\n"];
        Control_Print.flush();
        raise Error)
 
+  (* warn : string -> unit *)
   fun warn msg =
       (app Control_Print.say ["Warning: ", msg, "\n"];
        Control_Print.flush())
 
+  (* fmtSourceloc : SM.sourceloc -> PP.format *)
   fun fmtSourceloc ({line, column, ...}: SM.sourceloc) = 
-        PP.parens (PP.cblock [PP.integer line, PP.period, PP.integer column])
+        PP.cblock [PP.integer line, PP.period, PP.integer column]
 
-  (* fmtRegion : Source.inputSource option -> SourceMap.region -> string *)
-  fun fmtRegion (sourceOp : Source.inputSource option)
-                 ((p1,p2): SourceMap.region) : PP.format =
-      in if (p1 + 1 >= p2)
-	 then PP.text "<bad region>"
-	 else (case sourceOp
-		 of SOME({sourceMap, fileOpened, ...}) =>
-		      let val (lo, hi) = fileregion sourceMap (p1, p2)
-		       in PP.hcat (PP.ccat (PP.text fileOpened, PP.colon),
-				   PP.hblock [fmtSourceloc lo,  PP.text "-", fmtSourceloc hi])
-		      end
-		  | NONE => PPU.fmtRegion (p1, p2))
-      end
+  (* fmtRegion : Source.inputSource option -> SM.region -> PP.format *)
+  fun fmtRegion (sourceOp : Source.inputSource option) ((p1,p2): SM.region) : PP.format =
+      if (p1 + 1 >= p2)
+      then PP.text "<bad region>"
+      else (case sourceOp
+	      of SOME({sourceMap, fileOpened, ...}) =>
+		   let val (lo, hi) = SM.fileregion sourceMap (p1, p2)
+		    in PP.hcat (PP.ccat (PP.text fileOpened, PP.colon),
+				PP.hblock [fmtSourceloc lo,  PP.text "-", fmtSourceloc hi])
+		   end
+	       | NONE => PP.cblock [PP.integer p1, PP.text "-", PP.integer p2])
 
-  fun error (source: Source.inputSource) ((p1,p2): SourceMap.region) (severity: severity)
+  (* error : Source.inputSource -> SM.region -> complainer *)
+  fun error (source: Source.inputSource) ((p1,p2): SM.region) (severity: severity)
             (msg: string) (body : PP.format) =
-      (printMessage (defaultOutput, (fmtRegion (SOME source) (p1,p2)), severity, msg, body);
+      (printMessage (defaultOutput (), (fmtRegion (SOME source) (p1,p2)), severity, msg, body);
        record(severity, #anyErrors source))
 
-  fun errorNoSource (output, source) locs severity msg body =
-      (printMessage (output, locs, sev, msg, body); record (severity, #anyErrors source))
+  (* errorNoSource : output * bool ref -> PP.format -> complainer *)
+  fun errorNoSource (output: output, anyErrors: bool ref) loc severity msg body =
+      (printMessage (output, loc, severity, msg, body);
+       record (severity, anyErrors))
 
-  fun errorNoFile (output, anyErrors) ((p1,p2): region) severity msg body =
+  (* errorNoFile : output * bool ref -> SM.region -> complainer *)
+  fun errorNoFile (output, anyErrors) ((p1,p2): SM.region) severity msg body =
       (printMessage (output, fmtRegion NONE (p1, p2), severity, msg, body);
        record(severity, anyErrors))
 
+  (* impossibleWithBody : string -> PP.format -> 'a *)
   fun impossibleWithBody (msg: string) (body: PP.format) =
       (PP.printFormatNL
-        (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body);
+        (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body));
        raise Error)
 
-  val matchErrorFormat = fmtRegion
-
-  fun errors source =
+  (* errors : Source.inputSource -> errors *)
+  fun errors (source: Source.inputSource) : errors =
       {error = error source,
-       errorMatch = matchErrorFormat source,
+       errorMatch = fmtRegion (SOME source),
        anyErrors = #anyErrors source}
 
   (* anyErrors : errors -> bool *)
   fun anyErrors ({anyErrors, error, errorMatch}: errors) = !anyErrors
 
-  fun errorsNoFile (output : output, any : bool ref) =
-      {error = errorNoFile (output, any),
-       errorMatch = fn _ => "Match",
-       anyErrors = any}
+  (* errorsNoFile : output * bool ref -> errors *)
+  fun errorsNoFile (output : output, anyErrors : bool ref) =
+      {error = errorNoFile (output, anyErrors),
+       errorMatch = fmtRegion NONE,
+       anyErrors = anyErrors}
 
 end (* top local *)
 end (* structure ErrorMsg *)
@@ -131,5 +142,5 @@ end (* structure ErrorMsg *)
         -- anyErrors (bool ref) still comes from Source.inputSource. Why?
            Where do the anyErrors values come from when calling errorNoFile, errorNoSource,
            etc?
-    (3) Is there any problem with having a default output (defaultOutput = Control.Print.say)?
+    (3) Is there any problem with having a default output (defaultOutput = say)?
 *)

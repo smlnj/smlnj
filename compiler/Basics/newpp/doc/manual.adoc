@@ -421,6 +421,10 @@ _Indented block constructor functions:_
 
  string s : Formats the string s enclosed in double quotation marks.
 
+* `char : char -> format`
+
+ char c : Formats c as #(string (toString c)).
+
 * `bool : string -> format`
 
  bool b : Formats the boolean value b as `text "true"` or `text "false"`.

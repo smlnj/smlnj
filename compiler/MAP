@@ -223,9 +223,9 @@ Basic datastructures used in elaboration (including type checking)
     absyn.sig/sml
       the abstract syntax types
       defs: ABSYN, Absyn: ABSYN
-    varcon.sig/sml
-      variable and data constructor representations
-      defs: VARCON, VarCon: VARCON
+    variable.sig/sml
+      variable representations
+      defs: VARIABLE, Variable: VARIABLE
     absynutil.sml
       utility functions for building tuple patterns and expressions
       defs: AbsynUtil
@@ -234,7 +234,7 @@ Basic datastructures used in elaboration (including type checking)
       uses: PPUtil(pputil.s??), PPVal(ppval.sml), PPType(pptype.sml))
       defs: PPAbsyn : PPABSYN
     ppval.sml
-      pretty printing vars, datacons, access, conrep
+      prettyprinting (formatting) vars, datacons, access, conrep, consig
       defs : PPVal : PPVAL
 
   ElabData/types/
@@ -255,7 +255,7 @@ Basic datastructures used in elaboration (including type checking)
       inferring conreps for data constructors
       defs: ConRep: CONREP
     pptype.sml
-      prettyprint types
+      prettyprint (formatting) types
       defs: PPType: PPTYPE
 
   ElabData/statenv/

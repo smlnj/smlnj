@@ -87,7 +87,7 @@ fun hvblock fmts = tryFlat (vblock fmts)
 
 (* some format-building utility functions *)
 
-val empty : format = TEXT ""
+val empty : format = EMPTY
 
 (* text : string -> format *)
 val text : string -> format = TEXT
@@ -98,22 +98,25 @@ fun integer (i: int) : format = text (Int.toString i)
 (* string : string -> format *)
 fun string (s: string) = text (String.concat ["\"", s, "\""])  (* was using PrintUtil.formatString *)
 
+(* char : char -> format *)
+fun char (c: char) = cblock [text "#", string (Char.toString c)]
+
 (* bool : bool -> format *)
 fun bool (b: bool) = text (Bool.toString b)
 
 (* "punctuation" characters *)
 
-val comma : format = text ","
-val colon : format = text ":"
+val comma : format     = text ","
+val colon : format     = text ":"
 val semicolon : format = text ";"
-val period : format = text "."
-val lparen = text "("
-val rparen = text ")"
-val lbracket = text "["		  
-val rbracket = text "]"		  
-val lbrace = text "{"		  
-val rbrace = text "}"		  
-val equal = text "="
+val period : format    = text "."
+val lparen : format    = text "("
+val rparen : format    = text ")"
+val lbracket : format  = text "["		  
+val rbracket : format  = text "]"		  
+val lbrace : format    = text "{"		  
+val rbrace : format    = text "}"		  
+val equal  : format    = text "="
 
 (* xcat: binary versions of xblock functions (x = p, h, v) *)
 
@@ -151,8 +154,7 @@ val braces = enclose {front = lbrace, back = rbrace}
 fun appendNewLine fmt = sblock [FMT fmt, SEP HardLine]
 
 (* label : string -> format -> format *)
-fun label (str:string) (fmt: format) = hcat (ccat(text str, colon), fmt)
-
+fun label (str:string) (fmt: format) = hcat (text str, fmt)
 
 (* sequence : {alignement: alignment, sep: format} -> format list -> format *)
 fun sequence {alignment: alignment, sep: format} (formats: format list) =

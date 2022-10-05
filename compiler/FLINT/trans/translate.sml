@@ -13,7 +13,7 @@ sig
                    oldenv: StaticEnv.staticEnv,
                    env: StaticEnv.staticEnv,
 		   cproto_conv: string,
-		   compInfo: Absyn.dec CompInfo.compInfo }
+		   compInfo: CompInfo.compInfo }
                  -> {flint: FLINT.prog,
                      imports: (PersStamps.persstamp
                                * ImportTree.importTree) list}
@@ -181,10 +181,11 @@ fun selectTyArgs (pattvs, vartvs) =
  *                               * ImportTree.importTree) list}             *
  ****************************************************************************)
 
-fun transDec
-	{ rootdec, exportLvars, oldenv, env, cproto_conv,
-	 compInfo as {errorMatch,error,...}: Absyn.dec CompInfo.compInfo } =
+fun transDec {rootdec, exportLvars, oldenv, env, cproto_conv,
+	      compInfo as {source,...}: CompInfo.compInfo } =
 let
+
+val error = ErrorMsg.error source
 
 fun fmtType ty = PPT.fmtType env ty
 fun fmtExp exp = PPA.fmtExp (env, NONE) (exp, (!printDepth))
@@ -245,7 +246,7 @@ fun withRegion loc f x =
 
 fun mkRaise(x, lt) =
   let val e = if !Control.trackExn
-              then APP(markexn, RECORD[x, STRING(errorMatch(!region))])
+              then APP(markexn, RECORD[x, STRING(SourceMap.regionToString(!region))])
               else x
    in RAISE(e, lt)
   end
@@ -1513,7 +1514,7 @@ and mkExp (exp, d) =
 
         | mkExp0 e =
             EM.impossibleWithBody "untranslateable expression"
-              (PPA.fmtExp (env,NONE) (e, !printDepth)))
+              (PPA.fmtExp (env,NONE) (e, !printDepth))
 
    in mkExp0 exp
   end

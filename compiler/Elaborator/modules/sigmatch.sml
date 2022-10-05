@@ -126,10 +126,10 @@ fun matchStr1(specSig as SIG {stamp=sigStamp,closed,fctflag,
               rpath: IP.path,
               statenv: SE.staticEnv,
               region: SM.region,
-	      compInfo as {mkStamp, mkLvar=mkv, error, ...}: EU.compInfo) =
+	      compInfo as {mkStamp, mkLvar=mkv, source, ...}: EU.compInfo) =
 let
 
-  val err = error region
+  val err = EM.error source region
   val _ = let fun h ppstrm sign = PPModules.ppSignature ppstrm statenv (sign, 6)
               val s = ">>matchStr1 - specSig :"
            in debugPrint debugging (s, h, specSig)

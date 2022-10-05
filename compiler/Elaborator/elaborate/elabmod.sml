@@ -670,9 +670,11 @@ fun elabStr
        entsv: EP.entVar option,
        rpath: IP.path,
        region: SourceMap.region,
-       compInfo as {mkLvar=mkv, mkStamp, error, ...}: EU.compInfo)
+       compInfo as {mkLvar=mkv, mkStamp, source}: EU.compInfo)
       : A.dec * M.Structure * M.strExp * EE.entityEnv =
 let
+
+val error = ErrorMsg.error source
 
 val sname : string =
     (case name

@@ -166,9 +166,10 @@ fun elabABSTYPEdec({abstycs,withtycs,body},env,context,isFree,
 
 (**** ELABORATE GENERAL (core) DECLARATIONS ****)
 and elabDec (dec, env, isFree, rpath, region,
-             compInfo as {mkLvar=mkv,error,errorMatch,...}) =
+             compInfo as {mkLvar=mkv,source,...}) =
 
 let
+    val error = EM.error source
     val _ = debugmsg ">>ElabCore.elabDec"
 
     (* newVALvar : S.symbol -> V.var

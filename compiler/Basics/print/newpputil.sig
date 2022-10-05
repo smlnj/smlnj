@@ -1,16 +1,14 @@
 (* Basics/print/newpputil.sig *)
 
-structure NEW_PP_UTIL =
-struct
+signature NEW_PP_UTIL =
+sig
 
-val fmtSym: Symbol.symbol -> NewPP.format
+val vHeaders : {header1: string, header2: string, formatter: 'a -> NewPP.format}
+	       -> 'a list
+	       -> NewPP.format
 
-val fmtVerticalList : {header1: string, header2: string, formatter: 'a -> NewPP.format}
-		      -> 'a list
-		      -> NewPP.format
+val vHeaderFormats : {header1: string, header2: string}
+		     -> NewPP.format list
+		     -> NewPP.format
 
-val fmtVerticalFormats : {header1: string, header2: string}
-			    -> NewPP.format list
-			    -> NewPP.format
-
-end (* structure NewPPUtil *)
+end (* signature NEW_PP_UTIL *)

@@ -69,10 +69,11 @@ sig
   (* regions *)
   val nullRegion : region              (* (0,0), by convention *)
   val isNullRegion : region -> bool
+  val regionToString : region -> string
 
   (* creating and modifying sourcemaps *)
-  val newSourceMap : string -> sourcemap (* string is file name *)
-  val newline : sourcemap -> charpos -> unit
+  val newSourceMap : string -> sourcemap      (* string is a file name *)
+  val newline : sourcemap -> charpos -> unit  (* modifies the sourcemap arg *)
 
   (* using sourcemaps to translate charpos to sourceloc *)
   val filepos     : sourcemap -> charpos -> sourceloc

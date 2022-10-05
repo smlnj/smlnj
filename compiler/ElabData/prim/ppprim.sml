@@ -15,7 +15,7 @@ in
 fun fmtPrim prim =
     (case prim
       of PrimopId.NonPrim => PP.text "<NonPrim>"
-       | PrimopId.Prim prim => PP.text ("<Prim: " ^  PrimopBind.nameOf prim ^ ">")
+       | PrimopId.Prim prim => PP.text ("<Prim: " ^  PrimopBind.nameOf prim ^ ">"))
     (* function fmtPrim *)
 
 (* fmtStrPrimElem : PrimopId.str_prim_elem -> PP.format *)

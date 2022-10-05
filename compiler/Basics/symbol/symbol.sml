@@ -1,25 +1,32 @@
-(* symbol.sml
+(* Basics/symbol/symbol.sml
  *
- * (C) 2001 Lucent Technologies, Bell Labs
+ * (C) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  *)
-structure Symbol = struct
+
+structure Symbol = 
+struct
+
   val varInt = 0w0 and sigInt = 0w1 and strInt = 0w2 and fsigInt = 0w3 and
       fctInt = 0w4 and tycInt = 0w5 and labInt = 0w6 and tyvInt = 0w7 and
       fixInt = 0w8
 
   datatype symbol = SYMBOL of word * string
+
   datatype namespace =
      VALspace | TYCspace | SIGspace | STRspace | FCTspace | FIXspace |
      LABspace | TYVspace | FSIGspace
 
   fun eq(SYMBOL(a1,b1),SYMBOL(a2,b2)) = a1=a2 andalso b1=b2
+
   fun symbolGt(SYMBOL(_,s1), SYMBOL(_,s2)) = s1 > s2
+
   fun symbolCMLt (SYMBOL (a1, s1), SYMBOL (a2, s2)) =
         a1 < a2 orelse a1 = a2 andalso s1 < s2
+
   fun compare(SYMBOL(a1,s1),SYMBOL(a2,s2)) =
       case Word.compare(a1,a2)
-       of EQUAL => String.compare(s1,s2)
-	| order => order
+        of EQUAL => String.compare(s1,s2)
+	 | order => order
 
   fun varSymbol (name: string) =
         SYMBOL(HashString.hashString name + varInt,name)
@@ -46,7 +53,9 @@ structure Symbol = struct
 	end
 
   fun name (SYMBOL(_,name)) = name
+
   fun number (SYMBOL(number,_)) = number
+
   fun nameSpace (SYMBOL(number,name)) : namespace =
         case number - HashString.hashString name
 	 of 0w0 => VALspace
@@ -58,7 +67,7 @@ structure Symbol = struct
           | 0w6 => LABspace
           | 0w7 => TYVspace
 	  | 0w3 => FSIGspace
-	  | _ => ErrorMsg.impossible "Symbol.nameSpace"
+	  | _ => raise Fail "Symbol.nameSpace"
 
   fun nameSpaceToString (n : namespace) : string =
         case n
@@ -85,5 +94,6 @@ structure Symbol = struct
           | 0w6 => "LAB$"^name
           | 0w7 => "TYV$"^name
           | 0w8 => "FIX$"^name
-          | _ => ErrorMsg.impossible "Symbol.toString"
+          | _ => raise Fail "Symbol.symbolToString"
+
 end (* structure Symbol *)

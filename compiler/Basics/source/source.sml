@@ -55,7 +55,7 @@ struct
          | SOME content =>
            let val wideregion as (lo,hi) = SourceMap.widenToLines sourceMap region
 	       val content = substring(content, lo-1, hi-lo)
-	       val ({line,...},_)::_ = SourceMap.fileregion sourceMap wideregion
+	       val ({line,...}, _) = SourceMap.fileregion sourceMap wideregion
 	    in SOME(content, wideregion, line)
 	   end
 

@@ -42,7 +42,7 @@ val unitLexp = PL.RECORD []
 fun getNameOp p = if SP.null p then NONE else SOME(SP.last p)
 
 type pid = PersStamps.persstamp
-type compInfo = Absyn.dec CompInfo.compInfo
+type compInfo = CompInfo.compInfo
 
 (* foldr' : ('a * 'b -> 'b) -> 'a list -> 'b -> 'b
  *   old-style foldr for cases where it is partially applied *)

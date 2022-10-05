@@ -26,10 +26,9 @@ structure MLParser : SMLNJ_PARSER =
     val dummyEOF = LrVals.Tokens.EOF(0,0)
     val dummySEMI = LrVals.Tokens.SEMICOLON(0,0)
 
-    fun parse (source : Source.inputSource) = let
-	  val {sourceStream, errConsumer, interactive, sourceMap, anyErrors, ...} = source
+    fun parse (source : Source.inputSource) =
+	let val {sourceStream, interactive, sourceMap, anyErrors, ...} = source
           val err = ErrorMsg.error source
-	  val complainMatch = ErrorMsg.matchErrorString source
 	  fun parseerror (s, p1, p2) = err (p1, p2) COMPLAIN s nullErrorBody
 	  val lexarg = {
 		  comLevel = ref 0,

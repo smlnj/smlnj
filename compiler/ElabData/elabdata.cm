@@ -29,7 +29,6 @@ Group
 	signature ENTITY_ENV
 	signature PRIMOP_ID
 	signature PRIMOP
-	signature PPUTIL
 	signature PPTYPE
 	signature PPABSYN
 	signature PPMOD
@@ -87,9 +86,9 @@ Group
 	structure CTypes
 	structure TKind
 	structure SigPropList
-	structure PPUtil
 	structure PPVal
 	structure ConRep
+        structure PPSymPaths
 
 is
 	main/edcontrol.sig
@@ -110,6 +109,7 @@ is
 	basics/access.sml
 	basics/sympaths.sig
 	basics/sympaths.sml
+        basics/ppsympaths.sml
 	basics/tkind.sml
 	basics/sig-plist.sml
 

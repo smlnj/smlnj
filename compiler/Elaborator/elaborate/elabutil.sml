@@ -50,7 +50,7 @@ datatype context
              (* within functor body *)
   | INSIG    (* within a signature body *)
 
-type compInfo = Absyn.dec CompInfo.compInfo
+type compInfo = CompInfo.compInfo
 
 fun mkVALvar(s, mkv) = V.mkVALvar(s, A.namedAcc(s, mkv))
 

@@ -108,8 +108,9 @@ structure ElabTop : ELABTOP =
    *)
     (* elabTop : Ast.dec * SE.staticEnv * EU.compInfo
 	         -> AS.dec * SE.staticEnv *)
-    fun elabTop(dec, env, compInfo as {error,...}: EU.compInfo) =
+    fun elabTop(dec, env, compInfo as {source,...}: EU.compInfo) =
 	let val _ = debugmsg ">>elabTop";
+	    val error = ErrorMsg.error source
 
 	  val _ = EU.initializeMatchBind env
                 (* initialize the definitions of the Match and Bind exceptions *)

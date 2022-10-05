@@ -11,7 +11,7 @@ sig
      * times.  In practical terms, this means call/cc. *)
   val instrumDec :
       (PrimopId.prim_id -> bool) ->
-      (StaticEnv.staticEnv * Absyn.dec CompInfo.compInfo)
+      (StaticEnv.staticEnv * CompInfo.compInfo)
       -> Absyn.dec -> Absyn.dec
 
 end (* signature TPROF *)
@@ -110,7 +110,7 @@ fun clean (path as name::names) = if S.eq(name,anonSym) then names else path
 
 fun intLiteral n = NUMexp("<lit>", {ival = IntInf.fromInt n, ty = intTy})
 
-fun instrumDec' mayReturnMoreThanOnce (env, compInfo) absyn =
+fun instrumDec' mayReturnMoreThanOnce (env, {mkLvar,...}: CompInfo.compInfo) absyn =
  let fun getVar name = CoreAccess.getVar env [name]
      val updateop = getVar "unboxedupdate"
      val assignop = getVar "assign"
@@ -118,7 +118,7 @@ fun instrumDec' mayReturnMoreThanOnce (env, compInfo) absyn =
      val derefop = getVar "deref"
      val addop = getVar "iadd"
 
-     val mkv = #mkLvar (compInfo: Absyn.dec CompInfo.compInfo)
+     val mkv = mkLvar
      val countarrayvar = tmpvar("countarray", CONty(arrayTycon,[intTy]),mkv)
      val countarray = varexp countarrayvar
 

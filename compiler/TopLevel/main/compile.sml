@@ -12,11 +12,10 @@ functor CompileF (
 
   ) : COMPILE0 = struct
 
-    fun mkCompInfo { source, transform } = CompInfo.mkCompInfo {
-	    source = source,
-	    transform = transform,
-	    mkStampGenerator = CC.mkMkStamp
-	  }
+    fun mkCompInfo source =
+	CompInfo.mkCompInfo
+	  {source = source,
+	   mkStampGenerator = CC.mkMkStamp}
 
     type pickle     = CC.pickle		(* pickled format *)
     type hash       = CC.hash		(* environment hash id *)
@@ -156,10 +155,9 @@ functor CompileF (
 		    compInfo=compInfo
 		  }
 		before check "translate"
-	  val {csegments, imports} = codegen {
-		    flint = flint, imports = imports,
-                    sourceName = #sourceName compInfo
-		  }
+	  val {csegments, imports} =
+	        codegen {flint = flint, imports = imports,
+			 sourceName = #fileOpened (#source compInfo) }
 		before (check "codegen")
 	(*
 	 * interp mode was currently turned off.

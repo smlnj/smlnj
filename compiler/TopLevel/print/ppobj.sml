@@ -1,6 +1,6 @@
 (* ppobj.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017, 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -36,7 +36,7 @@ local (* top *)
       if !debugging then (say msg; say "\n") else ()
   *)
 
-  fun bug msg = ErrorMsg.impossible("PPObj: "^msg)
+  fun bug msg = ErrorMsg.impossible ("PPObj: " ^ msg)
 
 in
 
@@ -192,17 +192,17 @@ fun formatWithSharing (object, formatter, senv) =
 		          | SOME id => (* memo was set, defining an "id" number for this object *)
 			    PP.hblock [objFmt, PP.text "as", PP.ccat (PP.text "%", PP.integer id)]
 		   end
-	       end
+	       end)
     else formatter (obj, senv)  (* in this case, senv is always ignored *)
 
 end (* local *)
 
-(* tyContext is a pair of tycon lists, the 
+(* tycContext is a pair of tycon lists, the 
  * first a list of datatype family members (for interpretting RECtyc), and 
  * the second a list of tycons used to interpret FREEtyc tycons *)
-type tyContext : T.tycon list * T.tycon list
+type tycContext = T.tycon list * T.tycon list
 
-(* interpArgs : T.ty list * tyContext option -> T.ty list *)
+(* interpArgs : T.ty list * tycContext option -> T.ty list *)
 (* Used to "instantiate" RECtyc and FREEtyc tycons in the argument types of ref and array tycons.
  * Instantiation of RECtyc and FREEtyc tycons in the main type are instantiated directly using
  * tycontextOP argument *)
@@ -273,12 +273,12 @@ end (* local *)
 (* Main Function: 
  * fmtObj: staticEnv -> (object * ty * int) -> PP.format *)
 fun fmtObj env (obj: object, ty: T.ty, depth: int) : PP.format =
-let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tyContext option,
+let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option,
 		     senv: sharingEnv, depth:int) =
         fmtObj' (obj, ty, tycontextOp, senv, depth, noparen, noparen)
 
     and fmtObj' (_, _, _, _, 0, _, _) = PP.text  "#"
-      | fmtObj' (obj: object, ty: T.ty, tycontextOp: tyContext option,
+      | fmtObj' (obj: object, ty: T.ty, tycontextOp: tycContext option,
                  senv: sharingEnv, depth: int, l: int, r: int) : unit =
 	((case ty
 	   of T.VARty (ref(T.INSTANTIATED t)) =>
@@ -385,7 +385,7 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tyContext option,
 	  handle e => raise e)
 
 and fmtDcon (_, _, _, _, 0, _, _) = PP.text  "#"
-  | fmtDcon (obj:object, (stamp, {tycname,dcons,...}), tycontextOp : tyContext option,
+  | fmtDcon (obj:object, (stamp, {tycname,dcons,...}), tycontextOp : tycContext option,
 	     argtys, senv: sharingEnv, depth:int, lpull: int, rpull: int) =
      PPTable.format_object stamp obj (* attempt to find and apply user-defined formatter to obj *)
      handle PP_NOT_INSTALLED =>
@@ -446,7 +446,7 @@ and fmtList (obj: object, ty: T.ty, tycontextOp, senv: sharingEnv, depth:int, le
 	    end
 
 	val elementsFormats =
-	    let val fmts = map (fn e => fmtClosed (e, ty, tycontextOp, senv, depth - 1)
+	    let val fmts = map (fn e => fmtClosed (e, ty, tycontextOp, senv, depth - 1)) elems
 	     in if more
 		then fmts @ [PP.text "..."]
 		else fmts
@@ -465,7 +465,7 @@ and fmtTuple (objs: object list, tys: T.ty list, tycontextOp, senv: sharingEnv, 
 and fmtRecord (objs: object list, labels: T.label list, tys: T.ty list,
 	       tycontextOp, senv: sharingEnv, depth: int) =
     let fun fmtField (f,l,ty) =
-	      PP.hblock [PP.text (S.name l), PP.equal, fmtClosed (f, ty, tycontextOp, senv, depth-1))
+	      PP.hblock [PP.text (S.name l), PP.equal, fmtClosed (f, ty, tycontextOp, senv, depth-1)]
      in PP.braces (PP.sequence {alignment = PP.P, sep = PP.comma}
 			       (map fmtFields (List3.zip3Eq (objs, labels, tys))))
     end
@@ -483,7 +483,7 @@ and fmtVector (vectorObj: object vector, ty: T.ty, tycontextOp,
 	    end
 
 	val elementsFormats =
-	    let val fmts = map (fn elem => fmtClosed (elem, ty, tycontextOp, senv, depth - 1) elems
+	    let val fmts = map (fn elem => fmtClosed (elem, ty, tycontextOp, senv, depth - 1)) elems
 	     in if length < vectorLength
 		then fmts @ [PP.text "..."]  (* printing incomplete *)
 		else fmts
@@ -522,7 +522,7 @@ and ppRealArray (arrayObj : Real64Array.array, length: int) =
 	    let val minLength = Int.min (arrayLength, length)
 		fun gather (index, elemFmts) =
 		    if index < minLength
-		    then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index)) :: elemFmts)
+		    then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index))) :: elemFmts)
 		    else (rev elemFmts)
 	    in gather (0, nil)
 	    end

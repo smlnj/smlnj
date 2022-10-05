@@ -42,7 +42,8 @@ sig
     val text : string -> format  (* == the TEXT format constructor *)
     val integer : int -> format  (* integer n renders as Int.toString n *)
     val string : string -> format (* previously used PrintUtil.formatString, adds double quotes *)
-    val bool : bool -> format    (* formats true as TEXT "true", false as TEXT "false" *)
+    val char : char -> format    (* c --> #"c" *)
+    val bool : bool -> format    (* true --> TEXT "true", false --> TEXT "false" *)
 
     (* basic block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
     (* specialBlock -- the elements may include explicit separators *)

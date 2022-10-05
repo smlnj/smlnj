@@ -110,8 +110,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 		     (case access
 		        of A.LVAR lv =>  (* access is expected to be an LVAR *)
 			    (case StaticEnv.look (static, SP.last path)
-			      of Bindings.VALbind(V.VALvar{access = A.PATH (A.EXTERN pid, pos),
-							   ...}) =>
+			      of Bindings.VALbind(V.VALvar{access = A.PATH (A.EXTERN pid, pos), ...}) =>
 				  if isExport lv  (* is it "exported"? *)
 				  then (case DynamicEnv.look dynamic pid
 					 of SOME objv =>
@@ -122,11 +121,11 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 						   PPT.ppType static (trueValType (path,ty))]
 					     end
 					  | NONE => bug "fmtVar: objv")
-				   else PP.hblock [PP.text "<hidden>", PP.colon, PPT.ppType static ty)]
+				   else PP.hblock [PP.text "<hidden>", PP.colon, PPT.ppType static ty]
 				| _ => PP.text "<hidden>"
 			     (* end case *))
 		        | _ => bug "fmtVar"
-		        (* end case *))))
+		        (* end case *)))))
          | fmtVar _ = PP.empty
 
        (* fmtVb : AS.vb -> PP.format *)
@@ -163,7 +162,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 		       [PP.text "type", PPT.ppFormals arity, PPU.fmtSym (InvPath.last path)]
 		| _ =>  (* same! *)
 		     PP.hblock
-		       [PP.text "type", PPT.ppFormals arity, PPU.fmtSym (InvPath.last path)]
+		       [PP.text "type", PPT.ppFormals arity, PPU.fmtSym (InvPath.last path)])
           | fmtAbsTyc _ = bug "fmtAbsTyc:tycKind"
 
         (* fmtDataTyc : T.tycon -> PP.format *)
@@ -218,7 +217,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	        case fct
 		  of M.FCT { sign, ... } =>
 		       PP.softIndent 2 (PPModules.fmtFunsig static (sign, !signatures))
-		   | _ => PP.text "<sig>")  (* blume: cannot (?) happen *)
+		   | _ => PP.text "<sig>"))  (* blume: cannot (?) happen *)
 
         and fmtSigb sign =
 	    let val name = case sign
@@ -239,7 +238,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	           PPModules.ppFunsig static (fsig, !signatures)]
             end
 
-	and fmtFixity{fixity,ops} =
+	and fmtFixity {fixity,ops} =
 	      PP.hcat (PP.text (Fixity.fixityToString fixity),
 		       PP.sequence {alignment = PP.H, sep = PP.empty}
 			           (map PPU.fmtSym ops))

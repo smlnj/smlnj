@@ -37,16 +37,17 @@ struct
   type lines = (charpos * lineno) list
 
   type sourceloc = {fileName:string, line:int, column:int}
-    (* lines and columns are both 1-based (minimum value is 1) *)
+    (* lines and columns are both positive, 1-based (minimum value is 1) *)
 
 (* The representation of a sourcemap is record with fields
-     - filename : string  (the name of the fixed source file)
-     - lines: (charpos * lineno) list ref
+     - filename : string  (the name of a single, fixed source file)
+     - lines: lines ref
          initial charpos and line number of lines in decreasing order, so the last
-         "line" in the list is represented as (1,1). Lines are numbered from 1.
+         "line" in the list is the first line in the file, represented as (1,1).
+	 Lines are numbered from 1.
 
    The representation satisfies these invariants:
-     * The line list is never empty (initialized to [(1,1)], and thereafter lines are added).
+     * The line list is never empty (initialized to [(1,1)], and thereafter lines are only added).
      * Initial positions are strictly decreasing accross the line list,
        even for "empty" lines, which have length at least 1 because we count the newline char.
      * The last element in the line list contains the smallest valid starting charpos (namely 1).
@@ -55,9 +56,9 @@ struct
   type sourcemap = {file: string, lines: lines ref}
 		    
   (* INVARIANTS for sourcemaps:
-   * (1) length (!lines) > 0
+   * (1) length (!lines) > 0 (initialized to [(1,1)] and only grows)
    * (2) charpos components of !lines are strictly decreasing,
-       ending in initial charpos 1 for the last element, which is the 1st line
+       ending in initial charpos 1 for the last element, which represents the 1st line
    * (3) last (initial) element of lines is the initial line: (1, 1).
    *)
 
@@ -66,10 +67,16 @@ struct
    * a proper region, and does not have a location in the file. In particular, it
    * should not be viewed as an empty region at the beginning of the input. *)
 
+  (* isNullRegion : region -> bool *)
   fun isNullRegion ((_,0): region) = true
     | isNullRegion _ = false
 
-  (* newSourceMap: create a new sourcemap, given initial file name.
+  (* regionToString : region -> string *)
+  fun regionToString ((lo, hi): region) =
+      String.concat [Int.toString lo, "-", Int.toString hi]
+
+  (* newSourceMap: string -> sourcemap
+   * create a new sourcemap, given initial file name.
    * called only one place, in Source.newSource.  Initial position at the
    * start of the first line is 1, initial line number is 1. A source is
    * assumed to have at least one line, (i.e. to be nonempty). *)
@@ -77,13 +84,15 @@ struct
       {file = fileName,
        lines = ref [(1, 1)]}  (* initial lines: line 1 starts at char 1 *)
 
-  (* pos is the position of the newline character, so the next line doesn't
-   * start until the succeeding position, pos+1. *)
-  fun newline ({lines, ...}: sourcemap) pos =
+  (* newline : sourcemap -> charpos -> unit
+   * pos is the position of the newline character, so the next line doesn't
+   * start until the succeeding character position, pos+1. *)
+  fun newline ({lines, ...}: sourcemap) (pos: charpos) =
       case !lines
         of (_,line) :: _ =>  lines := (pos+1, line+1) :: !lines
          | nil => bug "newline"  (* sourcemap invariant (1) violated *)
 
+  (* lastLinePos : sourcemap -> charpos *)
   fun lastLinePos ({lines, ...}: sourcemap) : charpos =
       case !lines
         of ((pos,line)::_) => pos
@@ -102,7 +111,8 @@ struct
        in strip lines
       end
 
-  (* ASSERT: pos lies within a line starting at lineStartPos:
+  (* column : charpos * charpos -> int
+   * ASSERT: pos lies within a line starting at lineStartPos:
    *   lineStartPos <= pos < start of next line  *)
   fun column (lineStartPos: charpos, pos: charpos) =
       pos - lineStartPos + 1  (* each line starts at column 1 *)
@@ -129,15 +139,22 @@ struct
   fun isNullRegion (0,0) = true
     | isNullRegion _ = false
 
-  (* fileregion : sourcemap -> region -> (sourceloc * sourceloc) *)
+  (* filepos : sourcemap -> charpos -> sourceloc *)
+  fun filepos ({file, lines} : sourcemap) (pos : charpos) : sourceloc =
+      let val (lin, col) = posToLineColumn  (pos, !lines)
+       in {fileName = file, line = lin, column = col}
+      end
+
+  (* fileregion : sourcemap -> region -> sourceloc * sourceloc *)
   (* result sourceloc pair have same file component, the file from the sourcemap *)
-  fun fileregion ({file, lines}: sourcemap) ((lo, hi): region) =
-      if isNullRegion(lo,hi) then [] else
+  fun fileregion ({file, lines}: sourcemap) ((lo, hi): region) : sourceloc * sourceloc =
+      if isNullRegion (lo,hi) then bug "fileregion" else
       let (* ASSERT: pos is in the first line *)
-	  val (lo_line, lo_column) = posToLineColumn (lo, lines)
-	  val (hi_line, hi_column) = posToLineColumn (hi, lines)
-       in ({file = file, line = lo_line, column = lo_column},
-	  {file = file, line = hi_line, column = hi_column})
+          val lines' = !lines
+	  val (lo_line, lo_column) = posToLineColumn (lo, lines')
+	  val (hi_line, hi_column) = posToLineColumn (hi, lines')
+       in ({fileName = file, line = lo_line, column = lo_column},
+	   {fileName = file, line = hi_line, column = hi_column})
       end
 
    (* newlineCount : sourcemap -> region -> int
@@ -163,6 +180,7 @@ struct
 			then lines0
 			else strip2 lines1 (* pos < pos1 *) 
 		   else bug "endOfContainingLine1" (* pos >= pos0 -- too "late?" *)
+	       end
 	     | strip _ = bug "endOfContainingLine2" (* need at least two lines to bracket pos! *)
 	in strip lines
        end
@@ -174,7 +192,7 @@ struct
     * which should be the case if the input ends with a newline. *)
    fun widenToLines ({lines,...}: sourcemap) ((lo, hi) : region) : region =
        if isNullRegion (lo,hi) then nullRegion
-       else let val (lines1 as ((after_hi,_) :: _)) = endOfContainingLine (hi, lines)
+       else let val (lines1 as ((after_hi,_) :: _)) = endOfContainingLine (hi, !lines)
                 val (before_lo, _) :: _ = remove (lo, lines1)
              in (before_lo, after_hi - 1)
 	    end

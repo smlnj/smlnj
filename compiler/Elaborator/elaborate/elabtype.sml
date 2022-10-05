@@ -24,7 +24,7 @@ val say = Control_Print.say
 fun debugmsg (msg: string) =
     if !debugging then (say msg; say "\n") else ()
 
-fun bug msg = ErrorMsg.impossible("ElabType: " ^ msg)
+fun bug msg = EM.impossible("ElabType: " ^ msg)
 
 (**** TYPES ****)
 
@@ -173,9 +173,10 @@ fun elabDB((tyc,args,name,def,region,lazyp),env,rpath:IP.path,error) =
 (**** TYPE DECLARATIONS ****)
 
 fun elabTBlist(tbl:Ast.tb list,notwith:bool,env0,rpath,region,
-	       {mkStamp,error,...}: EU.compInfo)
+	       {mkStamp,source,...}: EU.compInfo)
       : T.tycon list * S.symbol list * SE.staticEnv =
-    let fun elabTB(tb: Ast.tb, env, region): (T.tycon * symbol) =
+    let val error = EM.error source
+	fun elabTB(tb: Ast.tb, env, region): (T.tycon * symbol) =
 	    case tb
 	      of Tb{tyc=name,def,tyvars} =>
 		   let val tvs = elabTyvList(tyvars,error,region)
@@ -203,13 +204,13 @@ fun elabTBlist(tbl:Ast.tb list,notwith:bool,env0,rpath,region,
     end
 
 fun elabTYPEdec(tbl: Ast.tb list,env,rpath,region,
-		compInfo as {error,mkStamp,...}: EU.compInfo)
+		compInfo as {source, mkStamp, ...}: EU.compInfo)
       : Absyn.dec * SE.staticEnv =
     let	val _ = debugmsg ">>elabTYPEdec"
 	val (tycs,names,env') =
             elabTBlist(tbl,true,env,rpath,region,compInfo)
 	val _ = debugmsg "--elabTYPEdec: elabTBlist done"
-     in EU.checkUniq(error region, "duplicate type definition", names);
+     in EU.checkUniq(EM.error source region, "duplicate type definition", names);
 	debugmsg "<<elabTYPEdec";
         (TYPEdec tycs, env')
     end

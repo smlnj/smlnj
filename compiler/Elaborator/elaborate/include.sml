@@ -67,8 +67,8 @@ fun elabInclude(SIG {stamp, elements=newElements,
 		     properties, typsharing, strsharing,
 		     name, closed, fctflag, stub},
                 oldEnv, oldElements, oldSlots,
-                region, compInfo as {mkStamp,error,...} : EU.compInfo) =
-let val err = error region
+                region, compInfo as {mkStamp,source,...} : EU.compInfo) =
+let val err = EM.error source region
 
 (*
  * When including a list of specs into the current signature; some tycon's

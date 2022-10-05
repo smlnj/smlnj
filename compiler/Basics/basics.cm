@@ -13,8 +13,8 @@ Group
 
 	signature PRINTCONTROL
 	structure Control_Print
-	signature PRETTYPRINT
-	signature PPUTIL
+	signature NEW_PP_UTIL
+        structure NewPPUtil
 	structure PrintUtil
 
 	signature NEW_PP
@@ -28,6 +28,7 @@ Group
 	structure Fixity
 	structure SymbolHashTable
 	structure SpecialSymbols
+        structure PPSymbols
 
 	signature PERSSTAMPS
 	structure PersStamps
@@ -41,9 +42,8 @@ Group
 	structure Source
 	structure SourceMap
 	structure ErrorMsg
+        structure PPErrorMsg
 	structure CompileExn
-	structure PrettyPrint
-        structure PPUtil
 	
 	structure Stats
 	structure WordStringHashTable
@@ -70,6 +70,7 @@ is
 	symbol/symbol-hashtable.sml
 	symbol/fixity.sml
 	symbol/specialsyms.sml
+        symbol/ppsymbols.sml
 
 	pid/persstamps.sig
 	pid/persstamps.sml
@@ -85,15 +86,14 @@ is
 
 	errormsg/errormsg.sig
 	errormsg/errormsg.sml
-
+        errormsg/pperrormsg.sml
 	stats/stats.sml
 
 	print/printcontrol.sml
 	print/printutil.sig
 	print/printutil.sml
-	print/prettyprint.sml
-	print/pputil.sig
-	print/pputil.sml
+        print/newpputil.sig
+        print/newpputil.sml
 
         newpp/format.sml
         newpp/measure.sig

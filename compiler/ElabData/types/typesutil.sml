@@ -1299,7 +1299,7 @@ structure TypesUtil : TYPESUTIL =
     (* isRecordTy : ty -> bool *)
     fun isRecordTy ty =
 	case (prune ty)
-	  of CONty(RECORDtyc _, _::_)) => true
+	  of CONty (RECORDtyc _, _::_) => true
 	   | _ => false
 
     (* destructRecordTy : ty -> ty list *)

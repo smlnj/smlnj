@@ -15,7 +15,7 @@ sig
   val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
   val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPP.format
   val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPP.format
-  val fmtFormals : int -> PP.format
+  val fmtFormals : int -> NewPP.format
   val fmtDconDomain : (Types.dtmember vector * Types.tycon list)
                       -> StaticEnv.staticEnv
                       -> Types.ty
@@ -48,6 +48,7 @@ local
   structure TU = TypesUtil
   structure SE = StaticEnv
   structure PP = NewPP
+  structure PPS = PPSymbols
   open Types
 in
 
@@ -66,7 +67,7 @@ fun C f x y = f y x
 
 val internals = ElabDataControl.typesInternals
 
-val unitPath = IP.extend(IP.empty,Symbol.tycSymbol "unit")  (* [<unit>] *)
+val unitRPath = IP.extend (IP.empty, Symbol.tycSymbol "unit")  (* [<unit>] *)
 
 (* boundTyvarName : int -> string
  * boundTyvarName translates a type variable represented as
@@ -93,7 +94,7 @@ fun metaTyvarName' (k: int) =
     end
 
 (* typeFormals : int -> string list *)
-fun typeFormals n = List.tabulate n boundTyvarName
+fun typeFormals n = List.tabulate (n, boundTyvarName)
 
 local  (* WARNING -- compiler global variables. Imposes reset requirement. *)
   val count = ref (~1)
@@ -239,12 +240,6 @@ fun eqpropTag (p: T.eqprop) =
 (* NOT USED! *)
 fun fmtEqprop (p: T.eqprop) = PP.text (eqpropTag p)
 
-(* fmtSym : Symbol.symbol -> PP.format *)
-fun fmtSym (sym: S.symbol) = PP.text (S.name sym)
-
-(* fmtSymPath : SymPath.path -> PP.format *)
-fun fmtSymPath (path: SymPath.path) = PP.text (SymPath.toString path)
-
 (* fmtInvPath : InvPath.path -> PP.format *)
 fun fmtInvPath (ipath: InvPath.path) =
     PP.text (SymPath.toString (ConvertPaths.invertIPath ipath))
@@ -261,30 +256,28 @@ val arrow = PP.text "->"
 val langle = PP.text "<"
 val rangle = PP.text ">"
 
-(* NOTE: need to reintroduce "internals" printing for GENtyc and PATHtyc tycons *)
+(* NOTE: will need to reintroduce "internals" printing for GENtyc and PATHtyc tycons *)
 
-(* fmtTycon1 : SE.staticEnv -> (T.dtmembers * T.tycon list) option -> PP.format *)
-fun fmtTycon1 env membersOp =
+(* fmtTycon1 : SE.staticEnv -> (T.dtmember vector * T.tycon list) option -> T.tycon -> PP.format *)
+fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
     let fun fmtTyc (tyc as GENtyc { path, stamp, eq, kind, ... }) =
 	      PP.text (effectivePath (path,tyc,env))
 
-	  | fmtTyc (tyc as DEFtyc{path,strict,tyfun=TYFUN{body,...},...}) =
+	  | fmtTyc (tyc as DEFtyc {path, strict, tyfun=TYFUN{body,...}, ...}) =
 	      PP.text (effectivePath (path,tyc,env))
 
 	  | fmtTyc (RECORDtyc labels) =
-	      PP.fmtClosedSeq
-		{alignment = PP.P, front = lbrace, sep = comma, back = rbrace, formatter = fmtSym}
-		labels
+	      PP.braces (PP.psequence PP.comma (map PPS.fmtSym labels))
 
           | fmtTyc (RECtyc n) =
               (case membersOp
                 of SOME (members,_) =>
-                     let val {tycname,dcons,...} = Vector.sub(members,n)
-                      in fmtSym tycname
+                     let val {tycname,dcons,...} = Vector.sub (members,n)
+                      in PPS.fmtSym tycname
                      end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat (PP.text "RECtyc ", PP.integer n))
+		       (PP.hcat (PP.text "RECtyc ", PP.integer n)))
 
           | fmtTyc (FREEtyc n) =
               (case membersOp
@@ -295,26 +288,27 @@ fun fmtTycon1 env membersOp =
                     end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat (PP.text "FREEtyc ", PP.integer n))
+		       (PP.hcat (PP.text "FREEtyc ", PP.integer n)))
 
- 	  | fmtTyc (tyc as PATHtyc{arity,entPath,path}) =
+ 	  | fmtTyc (tyc as PATHtyc {arity, entPath, path}) =
 	      PP.text (SP.toString (ConvertPaths.stripPath path))
 
-	  | fmtTyc ERRORtyc = PP.text "[E]"
+	  | fmtTyc ERRORtyc = PP.text "<ERRORtyc>"
      in fmtTyc
     end
+
 
 (* fmtType1 : SE.staticEnv
               -> (T.ty * T.polysign * (T.dtmember vector * T.tycon list) option
               -> PP.format *)
-and fmtType1 env (ty: ty, sign: T.polysign,
+fun fmtType1 env (ty: ty, sign: T.polysign,
                   membersOp: (T.dtmember vector * T.tycon list) option) : PP.format =
-    let val unitFmt = PP.text (effectivePath (unitPath, RECORDtyc [], env))
+    let val unitFmt = PP.text (effectivePath (unitRPath, RECORDtyc [], env))
 	fun fmtAtomTy (ty, str: int) =
 	    let val fmt = fmtTy ty
 	    in if strength ty <= str then PP.parens fmt else fmt
 	    end
-	fun fmtTy ty =
+	and fmtTy ty =
 	    case ty
 	      of VARty(ref(INSTANTIATED ty')) => fmtTy(ty')
 	       | VARty(tv) => fmtTyvar tv
@@ -325,7 +319,7 @@ and fmtType1 env (ty: ty, sign: T.polysign,
 		   end
 	       | CONty(tycon, args) =>
 		   let fun otherwise () =
-			     PP.pblock [ppTypeArgs args, ppTycon1 env membersOp tycon]
+			     PP.pblock [fmtTypeArgs args, fmtTycon1 env membersOp tycon]
 		    in case tycon
 		         of GENtyc { stamp, kind, ... } =>
 			      (case kind
@@ -336,26 +330,26 @@ and fmtType1 env (ty: ty, sign: T.polysign,
 					       let val domainFmt = fmtAtomTy (domain, 0)
 						   val rangeFmt = fmtTy range
 					       in PP.pblock [PP.hcat (domainFmt, arrow),
-							     PP.softIndent (2, rangeFmt)]
+							     PP.softIndent 2 rangeFmt]
 					       end
 					     | _ => bug "CONty:arity"
-				      else PP.hcat (ppTypeArgs args, ppTycon1 env membersOp tycon)
+				      else PP.hcat (fmtTypeArgs args, fmtTycon1 env membersOp tycon)
 				  | _ => otherwise ())
 			  | RECORDtyc labels =>
 			     if Tuples.isTUPLEtyc(tycon)
 			     then fmtTUPLEty args
-			     else fmtRECORDty(labels, args)
+			     else fmtRECORDty (labels, args)
 			  | _ => otherwise ()
 		   end
 	       | POLYty{sign,tyfun=TYFUN{arity,body}} =>  (* dropped internals variant *)
-                   ppType1 env (body,sign, membersOp)
+                   fmtType1 env (body,sign, membersOp)
 	       | MARKty(ty, region) => fmtTy ty
 	       | WILDCARDty => PP.text "_"
 	       | UNDEFty => PP.text "<UNDEFty>"
 
-	and fmtTypeArgs [] = ()
-	  | fmtTypeArgs [ty] =fmtAtomTy (ty, 1)
-	  | fmtTypeArgs tys = PP.formatTuple fmtTy tys
+	and fmtTypeArgs [] = PP.empty
+	  | fmtTypeArgs [ty] = fmtAtomTy (ty, 1)
+	  | fmtTypeArgs tys = PP.tuple fmtTy tys
 
 	and fmtTUPLEty [] = unitFmt
 	  | fmtTUPLEty tys =
@@ -363,16 +357,14 @@ and fmtType1 env (ty: ty, sign: T.polysign,
 	       in PP.formatSeq {alignment = PP.P, sep = PP.text " *", formatter = formatter} tys
 	      end
 
-	and fmtField (lab,ty) = PP.hcat (PP.ccat (fmtSym lab, PP.colon), fmtTy ty)
+	and fmtField (lab,ty) = PP.hcat (PP.ccat (PPS.fmtSym lab, PP.colon), fmtTy ty)
 
-	and ppRECORDty ([],[]) = unitFmt
+	and fmtRECORDty (nil, nil) = unitFmt
               (* this case should not occur *)
-	  | ppRECORDty (labels, args) =
-	      PP.braces 
-		(PP.sequence {alignment = PP.P, sep = comma} (ListPair.map fmtField (labels, args)))
-	  | ppRECORDty _ = bug "PPType.ppRECORDty"
+	  | fmtRECORDty (labels, args) =
+	      PP.braces (PP.psequence PP.comma (ListPair.map fmtField (labels, args)))
 
-	and ppTyvar (tv as (ref info) :tyvar) :unit =
+	and fmtTyvar (tv as (ref info) : tyvar) : PP.format =
 	    let val printname = tyvarToString tv
 	     in case info
 		  of OPEN{depth,eq,kind} =>
@@ -383,28 +375,31 @@ and fmtType1 env (ty: ty, sign: T.polysign,
 				  | fields =>
 				      PP.braces
 				        (PP.pblock
-					   [PP.formatSeq {alignment=PP.P, sep=comma, formatter=fmtField}
-							 fields,
+					   [PP.psequence PP.comma (map fmtField fields),
 					    PP.semicolon,
-					    PP.text printname])
+					    PP.text printname]))
 			   | _ => PP.text printname)
 		   | _ => PP.text printname
 	    end
 
      in fmtTy ty
-    end  (* ppType1 *)
+    end  (* fmtType1 *)
 
 and fmtType (env: SE.staticEnv) (ty: T.ty) : PP.format =
     fmtType1 env (ty, [], NONE)
 
-fun fmtTycon env tycon = fmtTycon1 env NONE, tycon)
+(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> NewPP.format *)
+fun fmtDconDomain members (env: SE.staticEnv) (ty:T.ty) : PP.format =
+    fmtType1 env (ty, [], SOME members)
+
+fun fmtTycon env tycon = fmtTycon1 env NONE tycon
 
 fun fmtTyfun env (TYFUN{arity,body}) =
     PP.hcat
-       (PP.text "TYFUN"
-	PP.braces (PP.sequence {alignment=PP.H, sep=comma}
-			       [PP.ccat (PP.text "arity=", PP.integer arity),
-				PP.ccat (PP.text "body=", fmtType env body)]
+       (PP.text "TYFUN",
+	PP.braces (PP.hsequence PP.comma
+		     [PP.ccat (PP.text "arity=", PP.integer arity),
+		      PP.ccat (PP.text "body=", fmtType env body)]))
 
 (* fmtFormals : int -> PP.format *)
 fun fmtFormals n =
@@ -424,7 +419,7 @@ fun fmtDataconsWithTypes env tycon =
 	      val {dcons, ...} = Vector.sub (members, index)
 	   in PP.vblock
 	        (map (fn {name, domain, ...} =>
-			 PP.hcat (PP.ccat (fmtSym name, PP.colon),
+			 PP.hcat (PP.ccat (PPS.fmtSym name, PP.colon),
 				  case domain
 				    of SOME ty =>
 					 fmtType1 env (ty,[],SOME (members,freetycs))
@@ -435,7 +430,7 @@ fun fmtDataconsWithTypes env tycon =
 *)
 
 (* ppTycon : SE.staticEnv -> T.tycon -> unit *)
-fun ppTycon (env: SE.staticEnv) (tycon: T.tycon) = PP.printFormat (fmtTycon env  tycon)
+fun ppTycon (env: SE.staticEnv) (tycon: T.tycon) = PP.printFormat (fmtTycon env tycon)
 
 (* ppType : SE.staticEnv -> T.ty -> unit *)
 fun ppType (env: SE.staticEnv) (ty: T.ty) = PP.printFormat (fmtType env ty)
@@ -443,8 +438,9 @@ fun ppType (env: SE.staticEnv) (ty: T.ty) = PP.printFormat (fmtType env ty)
 (* ppTyfun : SE.staticEnv -> T.tyfun -> unit *)
 fun ppTyfun (env: SE.staticEnv) (tyfun : T.tyfun) = PP.printFormat (fmtTyfun env tyfun)
 
+(* ppDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> unit *)
 fun ppDconDomain members (env: SE.staticEnv) (ty:T.ty) : unit =
-    PP.printFormat (fmtType1 env (ty, [], SOME members))
+    PP.printFormat (fmtDconDomain members env ty)
 
 end (* toplevel local *)
 end (* structure PPType *)

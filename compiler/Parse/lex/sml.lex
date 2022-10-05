@@ -65,17 +65,6 @@ end (* local *)
 (* strip "_" out of real literal *)
 fun stripReal s = String.translate (fn #"_" => "" | c => str c) s
 
-fun mysynch (srcmap, initpos, pos, args) =
-    let fun cvt digits = getOpt(Int.fromString digits, 0)
-	val resynch = SourceMap.resynch srcmap
-     in case args
-          of [col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, NONE)
-           | [file, col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, SOME file)
-           | _ => impossible "ill-formed args in (*#line...*)"
-    end
-
 fun has_quote s =
     let fun loop i = ((String.sub(s,i) = #"`") orelse loop (i+1))
 	             handle _ => false
@@ -209,12 +198,10 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
 <LL>[0-9]+                => (YYBEGIN LLC; addString(charlist, yytext); continue());
 <LL>0*               	  => (YYBEGIN LLC; addString(charlist, "1");    continue()
 		(* note hack, since ml-lex chokes on the empty string for 0* *));
-<LLC>"*)"                 => (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+2, !charlist);
-		              comLevel := 0; charlist := []; continue());
+<LLC>"*)"                 => (YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());
 <LLC>{ws}\"		  => (YYBEGIN LLCQ; continue());
 <LLCQ>[^\"]*              => (addString(charlist, yytext); continue());
-<LLCQ>\""*)"              => (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+3, !charlist);
-		              comLevel := 0; charlist := []; continue());
+<LLCQ>\""*)"              => (YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());
 <L,LLC,LLCQ>"*)" => (err (!stringstart, yypos+1) WARN
                        "ill-formed (*#line...*) taken as comment" nullErrorBody;
                      YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());

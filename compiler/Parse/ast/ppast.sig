@@ -17,7 +17,7 @@ sig
    val fmtDec	    : Source.inputSource option -> Ast.dec * int       -> NewPP.format
    val fmtVb   	    : Source.inputSource option -> Ast.vb * int        -> NewPP.format
    val fmtRvb  	    : Source.inputSource option -> Ast.rvb * int       -> NewPP.format
-   val fmtFb	    : Source.inputSource option -> string -> Ast.fb * int -> NewPP.format
+   val fmtFb	    : Source.inputSource option -> Ast.fb * int        -> NewPP.format
    val fmtClause    : Source.inputSource option -> Ast.clause * int    -> NewPP.format
    val fmtTb	    : Source.inputSource option -> Ast.tb * int        -> NewPP.format
    val fmtDb	    : Source.inputSource option -> Ast.db * int        -> NewPP.format  
@@ -25,7 +25,7 @@ sig
    val fmtEb	    : Source.inputSource option -> Ast.eb * int        -> NewPP.format
    val fmtStrb	    : Source.inputSource option -> Ast.strb * int      -> NewPP.format
    val fmtFctb	    : Source.inputSource option -> Ast.fctb * int      -> NewPP.format
-   val fmtTyvar	    : Source.inputSource option -> Ast.tyvar * int     -> NewPP.format
+   val fmtTyvar	    : Ast.tyvar                                        -> NewPP.format
    val fmtTy	    : Source.inputSource option -> Ast.ty * int        -> NewPP.format 
 
 end (* signature PPAST *)

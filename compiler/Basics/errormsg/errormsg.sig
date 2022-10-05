@@ -7,28 +7,29 @@
 signature ERRORMSG =
 sig
 
+    type output = string -> unit
+
     datatype severity = WARN | COMPLAIN
     type complainer = severity -> string -> NewPP.format -> unit
-    type output = string -> unit
     type errorFn = SourceMap.region -> complainer
+
     type errors (* = {error: errorFn,
-                      errorMatch: region -> string,
+                      errorMatch: region -> NewPP.format,
                       anyErrors : bool ref} *)
+
+    val defaultOutput : unit -> output
 
     exception Error
 
+    val errors : Source.inputSource -> errors
+    val errorsNoFile  : output * bool ref -> errors
     val anyErrors : errors -> bool
-    val defaultOutput : unit -> (string -> unit)
+
     val nullErrorBody : NewPP.format
 
-    val error : Source.inputSource -> SourceMap.region -> complainer
-    (* with a known location string but without access to the actual source: *)
-    val errors : Source.inputSource -> errors
-    val errorNoSource : output * bool ref -> string -> complainer
-    val errorNoFile : output * bool ref -> SourceMap.region -> complainer
-    val errorsNoFile : output * bool ref -> errors
-
-    val matchErrorFormat : Source.inputSource option -> SourceMap.region -> NewPP.format
+    val error         : Source.inputSource -> SourceMap.region -> complainer
+    val errorNoSource : output * bool ref  -> NewPP.format     -> complainer  (* location format *)
+    val errorNoFile   : output * bool ref  -> SourceMap.region -> complainer
 
     val impossible : string -> 'a
     val warn : string -> unit
