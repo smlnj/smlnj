@@ -7,23 +7,26 @@
 structure ElabUtil : ELABUTIL =
 struct
 
-local structure SP = SymPath
-      structure LU = Lookup
-      structure A = Access
-      structure AS = Absyn
-      structure AU = AbsynUtil
-      structure B  = Bindings
-      structure SE = StaticEnv
-      structure EE = EntityEnv
-      structure T = Types
-      structure TU = TypesUtil
-      structure TS = TyvarSet
-      structure S = Symbol
-      structure V = Variable
-      structure BT = BasicTypes
+local (* top local *)
 
-      open Symbol Absyn Ast ErrorMsg PrintUtil AstUtil Types BasicTypes
-           EqTypes ModuleUtil TypesUtil Variable
+  structure SP = SymPath
+  structure LU = Lookup
+  structure A = Access
+  structure AS = Absyn
+  structure AU = AbsynUtil
+  structure B  = Bindings
+  structure SE = StaticEnv
+  structure EE = EntityEnv
+  structure T = Types
+  structure TU = TypesUtil
+  structure TS = TyvarSet
+  structure S = Symbol
+  structure V = Variable
+  structure BT = BasicTypes
+  structure PP = NewPP
+
+  open Symbol Absyn Ast ErrorMsg PrintUtil AstUtil Types BasicTypes
+       EqTypes ModuleUtil TypesUtil Variable
 
 in
 
@@ -402,15 +405,13 @@ fun aconvertPat (pat: AS.pat) : Absyn.pat * V.var list * V.var list =
 
 (* checkBoundTyvars: check whether the tyvars appearing in a type (used) are
    bound (as parameters in a type declaration) *)
-fun checkBoundTyvars(used,bound,err) =
+fun checkBoundTyvars (used, bound, err) =
     let val boundset =
-              foldr (fn (v,s) => TS.union(TS.singleton v,s,err))
-	        TS.empty bound
+              foldr (fn (v,s) => TS.union(TS.singleton v,s,err)) TS.empty bound
 	fun nasty(ref(INSTANTIATED(VARty v))) = nasty v
 	  | nasty(ubound as ref(UBOUND _)) =
-	     err COMPLAIN ("unbound type variable in type declaration: " ^
-			   (PPType.tyvarPrintname ubound))
-		 nullErrorBody
+	      err COMPLAIN "unbound type variable in type declaration: "
+		  (PP.text (PPType.tyvarToString ubound))
 	  | nasty _ = bug "checkBoundTyvars"
      in app nasty (TS.elements(TS.diff(used, boundset, err)))
     end
@@ -424,13 +425,13 @@ exception IsRec
  * This is used in elabMod when elaborating LOCALdec as a cheap
  * approximate check of whether a declaration contains any functor
  * declarations. *)
-fun hasModules(StrDec _) = true
-  | hasModules(FctDec _) = true
-  | hasModules(LocalDec(dec_in,dec_out)) =
+fun hasModules (StrDec _) = true
+  | hasModules (FctDec _) = true
+  | hasModules (LocalDec(dec_in,dec_out)) =
       hasModules dec_in orelse hasModules dec_out
-  | hasModules(SeqDec decs) =
+  | hasModules (SeqDec decs) =
       List.exists hasModules decs
-  | hasModules(MarkDec(dec,_)) = hasModules dec
+  | hasModules (MarkDec(dec,_)) = hasModules dec
   | hasModules _ = false
 
 end (* top-level local *)

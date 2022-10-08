@@ -12,7 +12,7 @@ sig
              (* predicate recognizing flexible stamps *)
     | INSIG  (* within a signature body *)
 
-  type compInfo = Absyn.dec CompInfo.compInfo
+  type compInfo = CompInfo.compInfo
 
   val debugging : bool ref
   val for : 'a list -> ('a -> unit) -> unit

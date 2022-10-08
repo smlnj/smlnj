@@ -330,7 +330,7 @@ and tc_lzrd(t: tyc) =
 						   PP.hcat (PP.text "length(ts) = ",
 							    PP.integer (length ts)),
 						   PP.hcat (PP.text "ts elements: ",
-							    PP.formatTuple (PPLty.fmtTyc (!printDepth)) ts)]);
+							    PP.tuple (PPLty.fmtTyc (!printDepth)) ts)]);
 					     raise TeUnbound)
                                  in (* ASSERT: nl >= nl' *)
                                     if nl' > nl then

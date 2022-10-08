@@ -47,7 +47,7 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
 			PP.hcat (PP.text "|ts| =", PP.integer (length ts)),
 			PP.hcat (PP.text "lt:", PPLty.fmtLty 20 lt),
 			PP.hcat (PP.text "nt:", PPLty.fmtLty 20 nt),
-			PP.hcat (PP.text "ts:", PP.formatList (PPLty.fmtTyc 20) ts)]);
+			PP.hcat (PP.text "ts:", PP.list (PPLty.fmtTyc 20) ts)]);
                    bug "lt_inst - arity mismatch")
              else
              let val nenv = LT.teCons(LT.Beta(0,ts,ks), LT.teEmpty)

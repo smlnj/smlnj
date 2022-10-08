@@ -156,9 +156,9 @@ fun appendNewLine fmt = sblock [FMT fmt, SEP HardLine]
 (* label : string -> format -> format *)
 fun label (str:string) (fmt: format) = hcat (text str, fmt)
 
-(* sequence : {alignement: alignment, sep: format} -> format list -> format *)
-fun sequence {alignment: alignment, sep: format} (formats: format list) =
-    let val adder =
+(* sequence : alignement -> format -> format list -> format *)
+fun sequence (alignment: alignment) (sep: format) (formats: format list) =
+    let val separate =
 	    (case alignmentSeparator alignment
 	      of NONE => (fn elems => FMT sep :: elems)  (* alignment = C *)
 	       | SOME separator => (fn elems => FMT sep :: SEP separator :: elems))
@@ -166,7 +166,7 @@ fun sequence {alignment: alignment, sep: format} (formats: format list) =
 	  | addSeps fmts =  (* fmts non-null *)
 	    let fun inter [fmt] = [FMT fmt]
 		  | inter (fmt :: rest) =  (* rest non-null *)
-		      FMT fmt :: (adder (inter rest))
+		      FMT fmt :: (separate (inter rest))
 		  | inter nil = nil (* won't happen *)
 	     in inter fmts
 	     end
@@ -174,28 +174,28 @@ fun sequence {alignment: alignment, sep: format} (formats: format list) =
      end
 
 (* hsequence : format -> format list -> format *)
-fun hsequence sepfmt = sequence {alignment = H, sep = sepfmt}
+val hsequence = sequence H
 
 (* psequence : format -> format list -> format *)
-fun psequence sepfmt = sequence {alignment = P, sep = sepfmt}
+val psequence = sequence P
 
 (* vsequence : format -> format list -> format *)
-fun vsequence sepfmt = sequence {alignment = V, sep = sepfmt}
+val vsequence = sequence V
 
 (* csequence : format -> format list -> format *)
-fun csequence sepfmt = sequence {alignment = C, sep = sepfmt}
+val csequence = sequence C
 
-(* tupleFormats : format list -> format *)
-fun tupleFormats formats = parens (sequence {alignment=P, sep=comma} formats)
+(* tupleFormats : format list -> format  -- packed alignment *)
+fun tupleFormats formats = parens (psequence comma formats)
 
-(* listFormats : format list -> format *)
-fun listFormats formats = brackets (sequence {alignment=P, sep=comma} formats)
+(* listFormats : format list -> format  -- packed alignment *)
+fun listFormats formats = brackets (psequence comma formats)
 
 (* formatSeq : {alignment: alignment, sep: format, formatter : 'a -> format} -> 'a list -> format *)
 fun 'a formatSeq
        {alignment: alignment, sep: format, formatter: 'a -> format}
        (xs: 'a list) =
-    let val adder =
+    let val separate =
 	    (case alignmentSeparator alignment
 	      of NONE => (fn elems => FMT sep :: elems)  (* alignment = C *)
 	       | SOME separator => (fn elems => FMT sep :: SEP separator :: elems))
@@ -204,7 +204,7 @@ fun 'a formatSeq
 	  | addSeps fmts =  (* fmts non-null *)
 	    let fun inter [fmt] = [FMT fmt]
 		  | inter (fmt :: rest) =  (* rest non-null *)
-		      FMT fmt :: (adder (inter rest))
+		      FMT fmt :: (separate (inter rest))
 		  | inter nil = nil (* won't happen *)
 	     in inter fmts
 	     end
@@ -221,7 +221,8 @@ fun 'a formatClosedSeq
     enclose {front=front, back=back} (formatSeq {alignment=alignment, sep=sep, formatter=formatter} xs)
 
 (* tuple : ('a -> format) -> 'a list -> format *)
-(* packed-style formatting of a tuple *)
+(* packed-style formatting of a _homogeneous_ tuple of 'a values.
+ * This is of limited value since most tuples are not homogeneous! *)
 fun 'a tuple (formatter : 'a -> format) (xs: 'a list) =
     formatClosedSeq
       {alignment=P, front = lparen, back = rparen, sep = comma, formatter = formatter}
@@ -234,7 +235,7 @@ fun 'a alignedList alignment (formatter : 'a -> format) (xs: 'a list) =
       xs
 
 (* list : ('a -> format) -> 'a list -> format *)
-(* packed-style formatting of a list *)
+(* packed-style formatting of an 'a list *)
 fun 'a list (formatter : 'a -> format) (xs: 'a list) =
     formatClosedSeq
       {alignment=P, front = lbracket, back = rbracket, sep = comma, formatter = formatter}

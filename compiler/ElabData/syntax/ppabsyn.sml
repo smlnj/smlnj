@@ -199,18 +199,14 @@ fun fmtPat env (pat, depth) =
 	      let fun fmtElem pat = fmtPat'(pat, 0, 0, d-1)
 	       in PP.ccat
 		    (PP.text "#",
-		     (PP.brackets
-			(PP.sequence {alignment = PP.P, sep = PP.comma}
-			   (map fmtElem pats))))
+		     PP.brackets (PP.psequence PP.comma (map fmtElem pats)))
 	      end
 	  | fmtPat' (pat as (ORpat _), _, _, d) =
 	      let fun flattenORs (ORpat (p1, p2)) = p1 :: flattenORs p2
 		      (* assuming p1 not an ORpat, but p2 might be one *)
 		    | flattenORs p = [p]
 		  fun fmtfn pat = fmtPat' (pat, 0, 0, d-1)
-	       in PP.parens
-		    (PP.sequence {alignment = PP.P, sep = PP.text " |"}
-		      (map fmtfn (flattenORs pat)))
+	       in PP.parens (PP.psequence (PP.text " |") (map fmtfn (flattenORs pat)))
 	      end
 	  | fmtPat' (CONpat (dcon,_), _, _, _) = PPV.fmtDatacon dcon
 	  | fmtPat' (APPpat(T.DATACON{name,...}, _, argPat), lpull, rpull, d) =
@@ -634,7 +630,7 @@ and fmtStrexp (context as (statenv,sourceOp)) =
           | fmtStrexp' (STRstr bindings, d) =
               PP.vblock
 	        [PP.text "struct",
-	         PP.sequence {alignment = PP.V, sep = PP.empty}
+	         PP.viblock (PP.HI 2)
 		   (map (fn binding =>
 		            PPModules.fmtBinding statenv
 			      (Bindings.bindingSymbol binding, binding, d-1))
@@ -647,7 +643,7 @@ and fmtStrexp (context as (statenv,sourceOp)) =
 	          PP.hcat (PP.text "in",  fmtStrexp'(body,d-1)),
 		  PP.text "end"]
 
-           | fmtStrexp' (MARKstr(body,(s,e)),d) = fmtStrexp' (body, d)
+           | fmtStrexp' (MARKstr (body, _), d) = fmtStrexp' (body, d)  (* ignore region *)
 (*
 	      (case sourceOp
 		of SOME source =>

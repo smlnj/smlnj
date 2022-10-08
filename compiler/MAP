@@ -153,11 +153,29 @@ Basics/
       map character positions in source to line no/column supporting #line "declaration"
       defs: SourceMap: SOURCE_MAP
 
+  Basics/newpp
+  New prettyprinter library (ultimately belongs in smlnj-lib)
+    format.sml
+      basic datastructures
+    measure.sig/sml
+      flat (no line breaks) measure of formats
+    render.sig/sml
+      rendering (printing) formats (relative to lineWidth limit)
+    newpp.sig/sml
+      user interface of the prettyprinter library
+      defs: NEW_PP, NewPP: NEW_PP   (abbrev: PP = NewPP)
+    /doc/str-NewPP.adoc
+      smlnj-lib style documentation of the NEW_PP signature
+    /doc/manual.adoc
+
   Basics/print/
   utilities for prettyprinting
-    prettyprint.sml
+    prettyprint.sml (obsolete -- the old prettyprinter library derived from OCaml Format)
       extend smlnj-lib/PP prettyprinter interface to match old one
       defs: PrettyPrint: PRETTYPRINT
+    pputil.sig/sml (obsolete)
+      prettyprint utilities (generic)
+      defs: PPUtil: PPUTIL
     printutil.sig/sml
       some simple, non-pretty-printing print/formatting utility functions
       defs: PrintUtil: PRINTUTIL
@@ -166,9 +184,9 @@ Basics/
     printcontrol.sml
       print control flags, out, say
       defs: PRINTCONTROL, Control_Print
-    pputil.sig/sml
-      prettyprint utilities (generic)
-      defs: PPUtil: PPUTIL
+    newpputil.sig/sml
+      additional utility functions for NewPP
+      defs: NEW_PP_UTIL, NewPPUtil: NEW_PP_UTIL
 
   Basics/stats/
     stats.sml

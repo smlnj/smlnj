@@ -86,7 +86,7 @@ val braces : format -> format
 val appendNewLine : format -> format
 val label : string -> format -> format
 
-val sequence : {alignment: alignment, sep: format} -> format list -> format
+val sequence : alignment -> format -> format list -> format
 val hsequence : format -> format list -> format
 val psequence : format -> format list -> format
 val vsequence : format -> format list -> format
@@ -266,8 +266,20 @@ val printFormatNL : format -> unit
 `[.kw]#val# appendNewLine : format \-> format::
   Append a hard newline after the format.
 
-`[.kw]#val# sequence : {alignment: alignment, sep: format} \-> format list \-> format`::
-  Inserts sep between constituent formats and aligns according to the alignment parameter.
+`[.kw]#val# sequence : alignment \-> format \-> format list \-> format`::
+  `sequence a sep fmts`: Inserts `sep` between constituent formats in `fmts` and aligns according to `a`.
+
+`[.kw]#val# hsequence : format \-> format list \-> format`::
+  `hsequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `H` alignment.
+
+`[.kw]#val# psequence : format \-> format list \-> format`::
+  `psequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `P` alignment.
+
+`[.kw]#val# vsequence : alignment \-> format \-> format list \-> format`::
+  `vsequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `V` alignment.
+
+`[.kw]#val# csequence : alignment \-> format \-> format list \-> format`::
+  `csequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `C` alignment.
 
 `[.kw]#val# tupleFormats : format list \-> format`::
   Formats the members of the format list as a tuple (parenthesized, with elements

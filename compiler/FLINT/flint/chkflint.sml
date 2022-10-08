@@ -137,7 +137,8 @@ fun check phase envs lexp = let
 
   fun fmtLtys (s, ltys) = 
       PP.vcat (PP.text s,
-	       PP.hardIndent (2, PP.formatSeq {alignment=PP.V, sep=PP.comma, formatter = PPT.fmtLty 100} ltys))
+	       PP.hardIndent 2
+	         (PP.formatSeq {alignment=PP.V, sep=PP.comma, formatter = PPT.fmtLty 100} ltys))
 
   fun print2Lists (s,s',ltys,ltys') =
       PP.printFormat
@@ -186,7 +187,7 @@ fun check phase envs lexp = let
 		   PP.hcat (PP.text "** function Lty:",
 			    PPT.fmtLty 100 lt),
 		   PP.hcat (PP.text "** argument Tycs:",
-			    PP.formatList (PPT.fmtTyc 100) ts)]);
+			    PP.list (PPT.fmtTyc 100) ts)]);
 	   nil)))
 
   fun ltArrow (le,s) (cconv,alts,rlts) =

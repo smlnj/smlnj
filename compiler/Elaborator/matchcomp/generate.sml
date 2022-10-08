@@ -20,6 +20,7 @@ local
   structure P = Paths
   structure MC = MCCommon
   structure MU = MCUtil
+  structure PPMC = PPMatchComp
   structure PP = NewPP
   structure PPT = PPType
   structure PPA = PPAbsyn
@@ -68,7 +69,7 @@ local
 	     PP.hardIndent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
 
   fun ppPat pat =
-      PP.printFormatNL (PPA.fmtPat (SE.empty, NONE) (pat, 100))
+      PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
   fun ppVar var =
       PP.printFormatNL (PPVal.fmtVar var)

@@ -102,20 +102,20 @@ fun fmtLexp (pd:int) (l: lexp): format =
               enclose {front = text "ETAG(", back = rparen} (fmtLexp' lexp)
 
           | fmtI (RECORD lexps) =
-              ccat (text "REC", formatTuple fmtLexp' lexps)
+              ccat (text "REC", tuple fmtLexp' lexps)
 
           | fmtI (SRECORD lexps) =
-              ccat (text "SREC", formatTuple fmtLexp' lexps)
+              ccat (text "SREC", tuple fmtLexp' lexps)
 
           | fmtI (VECTOR (lexps, _)) =
-              ccat (text "VEC", formatTuple fmtLexp' lexps)
+              ccat (text "VEC", tuple fmtLexp' lexps)
 
           | fmtI (PRIM(p,t,ts)) =
               enclose {front = text "PRIM(", back = rparen}
 		 (pblock
 		   [ccat (text (PrimopUtil.toString p), comma),
 		    ccat (fmtLty' t, comma),
-		    formatTuple fmtTyc' ts])
+		    tuple fmtTyc' ts])
 
           | fmtI (l as SELECT(i, _)) =
 	      let fun gather(SELECT(i,l)) =
@@ -124,23 +124,23 @@ fun fmtLexp (pd:int) (l: lexp): format =
 			end
 		    | gather l = (nil, l)
 		  val (path, root) = gather l
-	       in ccat (fmtLexp' root, formatList integer (rev path))
+	       in ccat (fmtLexp' root, list integer (rev path))
 	      end
 
           | fmtI (FN(v,t,body)) =
-	      pcat (PP.concat [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
-		    softIndent (4, fmtLexp' body))
+	      pcat (cblock [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
+		    softIndent 4 (fmtLexp' body))
 
           | fmtI (CON ((s, c, lt), ts, l)) =
 	      pblock
 		[text "CON",
 		 parens (pblock [hcat (ccat (text (S.name s), comma),
-				       ccat (text (DA.prRep c), comma)),
+				       ccat (text (DA.conrepToString c), comma)),
 				 fmtLty' lt]),
 		comma,
-		formatList fmtTyc' ts,
+		list fmtTyc' ts,
 		comma,
-		softIndent (4, fmtLexp' l),
+		softIndent 4 (fmtLexp' l),
 		rparen]
 
           | fmtI (APP (FN (lvar, _, body), r)) =
@@ -152,8 +152,8 @@ fun fmtLexp (pd:int) (l: lexp): format =
             vcat 
  	      (pcat
 		 (hblock [text "LET", text (LV.lvarName v), text "="],
-		  softIndent (4, (fmtLexp' r))),
-               hardIndent (1, hcat (text "IN", fmtLexp' l)))
+		  softIndent 4 (fmtLexp' r)),
+               hardIndent 1 (hcat (text "IN", fmtLexp' l)))
 
           | fmtI (APP(l, r)) =
 	      enclose {front = text "APP(", back = rparen}
@@ -161,37 +161,37 @@ fun fmtLexp (pd:int) (l: lexp): format =
 
           | fmtI (TFN(ks, b)) =
               enclose {front = text "TFN(", back = rparen}
-		(pcat (formatTuple fmtTKind' ks,
-		       softIndent (3, fmtLexp' b)))
+		(pcat (tuple fmtTKind' ks,
+		       softIndent 3 (fmtLexp' b)))
 
           | fmtI (TAPP(l, ts)) =
               enclose {front=text "TAPP(", back=rparen}
 	        (pcat (fmtLexp' l,
-		       formatTuple fmtTyc' ts))
+		       tuple fmtTyc' ts))
 
           | fmtI (GENOP(dict, p, t, ts)) =
               enclose {front=text "GEN(", back=rparen}
                 (pblock
                    [ccat (text (PrimopUtil.toString p), comma),
                     ccat (fmtLty' t, comma),
-                    formatTuple fmtTyc' ts])
+                    tuple fmtTyc' ts])
 
           | fmtI (SWITCH (l,_,llist,default)) =
             let fun switchCase (c,l) =
-                      pcat (hcat (text (conToString c), text " =>"), softIndent (4, fmtLexp' l))
+                      pcat (hcat (text (conToString c), text " =>"), softIndent 4 (fmtLexp' l))
 		val defaultCase =
 		    (case default
 		      of NONE => nil
-		       | SOME lexp => [pcat (text "_ =>", softIndent (4, fmtLexp' lexp))])
+		       | SOME lexp => [pcat (text "_ =>", softIndent 4 (fmtLexp' lexp))])
              in vblock
 		  [hcat (text "SWITCH ", fmtLexp' l),
-		   hardIndent (2, hcat (text "of", vblock (map switchCase llist @ defaultCase)))]
+		   hardIndent 2 (hcat (text "of", vblock (map switchCase llist @ defaultCase)))]
             end
 
           | fmtI (FIX (varlist, ltylist, lexplist, body)) =
             let fun ffun (v, t, l) =
                       ccat (hblock [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
-			    hardIndent (2, fmtLexp' l))
+			    hardIndent 2 (fmtLexp' l))
              in vcat (hcat (text "FIX",
 		            vblock (map ffun (zipEq3 (varlist, ltylist, lexplist)))),
 		      hcat (text "IN",

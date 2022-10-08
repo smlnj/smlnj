@@ -17,13 +17,13 @@ signature PEQUAL =
 		 * StaticEnv.staticEnv
 		 -> (Types.ty * Types.ty * toTcLt) -> PLambda.lexp
 
-    val debugging : bool ref
-
   end (* signature PEQUAL *)
 
 
 structure PEqual : PEQUAL =
-  struct
+struct
+
+local 
 
     structure DA = Access
     structure EM = ErrorMsg
@@ -44,16 +44,19 @@ structure PEqual : PEQUAL =
     open Types PLambda
     (* mentions Target *)
 
-    val debugging = ref false
+    val debugging = ref false   (* should be a debugging flag in Control.FLINT *)
     fun bug msg = ErrorMsg.impossible("PEqual: "^msg)
     val say = Control.Print.say
 
-    type toTcLt = (ty -> LT.tyc) * (ty -> LT.lty)
+    val debugPrint = ED.debugPrint debugging
 
+ in
     val --> = BT.-->
     infix -->
 
-  (*
+    type toTcLt = (ty -> LT.tyc) * (ty -> LT.lty)
+
+  (* NOT!
    * MAJOR CLEANUP REQUIRED ! The function mkv is currently directly taken
    * from the LambdaVar module; I think it should be taken from the
    * "compInfo". Similarly, should we replace all mkLvar in the backend
@@ -64,6 +67,7 @@ structure PEqual : PEQUAL =
    * lvar generator, so using the mkLvar of compInfo would not do anything
    * unless different compInfo values were used.
    *)
+
     val mkv = LambdaVar.mkLvar  (* CLAIM: same as the one in compInfo *)
 
   (** translating the typ field in DATACON into lty; constant datacons
@@ -195,47 +199,46 @@ structure PEqual : PEQUAL =
  ****************************************************************************)
     fun equal
         ({getStrEq, getIntInfEq, getPolyEq}, env)
-	(polyEqTy : ty, concreteType : ty, toTcLc as (toTyc, toLty)) = let
-	  val cache : (ty * lexp * lexp ref) list ref = ref nil
-	  fun enter ty = let
-		val v = VAR(mkv())
-		val r = ref v
-		in ED.debugPrint debugging 
-		     (PPType.resetPPType();
-		      PP.hcat (PP.text "enter:", (PPType.fmtType env ty)));
-		  cache := (ty, v, r) :: !cache; (v,r)
+	(polyEqTy : ty, concreteType : ty, toTcLc as (toTyc, toLty)) =
+	let val cache : (ty * lexp * lexp ref) list ref = ref nil
+	    fun enter ty =
+		let val v = VAR(mkv())
+		    val r = ref v
+		in PPType.resetPPType ();
+		   debugPrint ("enter:", PPType.fmtType env ty);
+		   cache := (ty, v, r) :: !cache; (v,r)
 		end
-	  fun find ty = let
-		fun f ((t,v,e)::r) = if equivType(ty,t) then v else f r
-		  | f [] = (if !debugging
-			    then say "equal.sml-find-notfound\n" else ();
-			    raise Notfound)
-		in ED.debugPrint debugging
-		     (PPType.resetPPType();
-		      PP.hcat (PP.text "find:", ( PPType.fmtType env ty)));
-		  f (!cache)
+	    fun find ty =
+		let fun f ((t,v,e)::r) = if equivType(ty,t) then v else f r
+		      | f [] = (if !debugging
+				then say "equal.sml-find-notfound\n" else ();
+				raise Notfound)
+		in PPType.resetPPType ();
+		   debugPrint ("find:", PPType.fmtType env ty);
+		   f (!cache)
 		end
 
-	  fun eqTy ty = eqLty(toLty ty)
-	  fun ptrEq(p, ty) = PRIM(p, eqTy ty, [])
-	  fun prim(p, lt) = PRIM(p, lt, [])
+	    fun eqTy ty = eqLty(toLty ty)
+	    fun ptrEq(p, ty) = PRIM(p, eqTy ty, [])
+	    fun prim(p, lt) = PRIM(p, lt, [])
 
-	  val dSz = Target.defaultIntSz  (* 31 or 63 *)
-	  fun numKind tyc =
-		if      TU.equalTycon(tyc, BT.intTycon)     then SOME(PO.INT dSz)
-		else if TU.equalTycon(tyc, BT.wordTycon)    then SOME(PO.UINT dSz)
-		else if TU.equalTycon(tyc, BT.word8Tycon)   then SOME(PO.UINT dSz)  (* could be 8? *)
-		else if TU.equalTycon(tyc, BT.charTycon)    then SOME(PO.INT dSz)
-		else if TU.equalTycon(tyc, BT.int32Tycon)   then SOME(PO.INT 32)
-		else if TU.equalTycon(tyc, BT.word32Tycon)  then SOME(PO.UINT 32)
-		else if TU.equalTycon(tyc, BT.int64Tycon)   then SOME(PO.INT 64)
-		else if TU.equalTycon(tyc, BT.word64Tycon)  then SOME(PO.UINT 64)
-		else NONE
+	    val dSz = Target.defaultIntSz  (* 31 or 63 *)
+	    fun numKind tyc =
+		  if      TU.equalTycon(tyc, BT.intTycon)     then SOME(PO.INT dSz)
+		  else if TU.equalTycon(tyc, BT.wordTycon)    then SOME(PO.UINT dSz)
+		  else if TU.equalTycon(tyc, BT.word8Tycon)   then SOME(PO.UINT dSz)  (* could be 8? *)
+		  else if TU.equalTycon(tyc, BT.charTycon)    then SOME(PO.INT dSz)
+		  else if TU.equalTycon(tyc, BT.int32Tycon)   then SOME(PO.INT 32)
+		  else if TU.equalTycon(tyc, BT.word32Tycon)  then SOME(PO.UINT 32)
+		  else if TU.equalTycon(tyc, BT.int64Tycon)   then SOME(PO.INT 64)
+		  else if TU.equalTycon(tyc, BT.word64Tycon)  then SOME(PO.UINT 64)
+		  else NONE
 
-	  fun atomeq (tyc, ty) = (case numKind tyc
-		 of SOME(PO.INT sz) => prim(PU.mkIEQL sz, intEqTy sz)
-		  | SOME(PO.UINT sz) => prim(PU.mkUIEQL sz, uintEqTy sz)
-		  | NONE =>
+	    fun atomeq (tyc, ty) =
+		(case numKind tyc
+		   of SOME(PO.INT sz) => prim(PU.mkIEQL sz, intEqTy sz)
+		    | SOME(PO.UINT sz) => prim(PU.mkUIEQL sz, uintEqTy sz)
+		    | NONE =>
 		      if TU.equalTycon(tyc, BT.boolTycon)   then prim(PU.IEQL,booleqty)
 (* FIXME: since real is **not** an equality type, this case is not needed!!! *)
 		      else if TU.equalTycon(tyc, BT.realTycon)   then prim(PU.FEQLd,realeqty)
@@ -257,11 +260,10 @@ structure PEqual : PEQUAL =
 		(* end case *))
 
 	  fun test (ty, 0) = raise Poly
-	    | test (ty, depth) = (
-		ED.debugPrint debugging
-		  (PPType.resetPPType();
-		   PP.hcat (PP.text "test:", (PPType.fmtType env ty)));
-		case ty
+	    | test (ty, depth) =
+	        (PPType.resetPPType();
+	         debugPrint ("test:", PPType.fmtType env ty);
+		 case ty
 		 of VARty(ref(INSTANTIATED t)) => test(t,depth)
 		  | MARKty(ty, region) => test(ty, depth)
 		  | CONty(DEFtyc _, _) => test(TU.reduceType ty,depth)
@@ -397,4 +399,6 @@ structure PEqual : PEQUAL =
 		   PO.POLYEQL, toLty polyEqTy,
 		   [toTyc concreteType]))
 
-  end (* structure PEqual *)
+
+end (* top local *)
+end (* structure PEqual *)

@@ -8,22 +8,24 @@ structure PPPrim =
 struct
 
 local
+  structure PI = PrimopId
+  structure PB = PrimopBind
   structure PP = NewPP
 in
 
 (* fmtPrim : PrimopId.prim_id -> PP.format *)
-fun fmtPrim prim =
+fun fmtPrimId (prim: PI.prim_id) =
     (case prim
-      of PrimopId.NonPrim => PP.text "<NonPrim>"
-       | PrimopId.Prim prim => PP.text ("<Prim: " ^  PrimopBind.nameOf prim ^ ">"))
+      of PI.NonPrim => PP.text "<NonPrim>"
+       | PI.Prim prim => PP.text ("<Prim: " ^  PB.nameOf prim ^ ">"))
     (* function fmtPrim *)
 
-(* fmtStrPrimElem : PrimopId.str_prim_elem -> PP.format *)
-fun fmtStrPrimElem (PrimopId.PrimE p) = fmtPrim p
-  | fmtStrPrimElem (PrimopId.StrE ps) = PP.listFormats (map fmtStrPrimInfo ps)
+(* fmtStrPrimElem : PI.str_prim_elem -> PP.format *)
+fun fmtStrPrimElem (PI.PrimE p) = fmtPrimId p
+  | fmtStrPrimElem (PI.StrE ps) = fmtStrPrimInfo ps
 
 (* fmtStrPrimInfo : PrimopId.str_prim_info -> PP.format *)
-fun fmtStrPrimInfo strPrimInfo = PP.tupleFormats (map fmtStrPrimElem strPrimInfo)
+and fmtStrPrimInfo (strPrimInfo: PI.str_prim_info) = PP.tupleFormats (map fmtStrPrimElem strPrimInfo)
 
 end (* top local *)
 end (* structure PPPrim *)

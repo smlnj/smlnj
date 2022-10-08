@@ -40,7 +40,7 @@ fun formatMatch (env, rules, unused) =
 (* bindPrint : StaticEnv.staticEnv * (AS.pat * AS.exp) list -> PP.format
  * prints only the first rule pattern, which should be the only one for a binding *)
 fun formatBind (env, (pat, _) :: _) =
-      PP.hblock [(PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
+      PP.hblock [PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
   | bindPrint _ = bug "bindPrint -- unexpected args"
 
 end (* local printutil *)

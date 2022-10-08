@@ -12,6 +12,7 @@ sig
   val typeFormals : int -> string list
   val tyvarToString : Types.tyvar -> string
 
+  (* formatting functions *)
   val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
   val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPP.format
   val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPP.format
@@ -24,6 +25,7 @@ sig
   val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
  *)
 
+  (* actual printing functions *)
   val ppTycon : StaticEnv.staticEnv -> Types.tycon -> unit
   val ppType  : StaticEnv.staticEnv -> Types.ty -> unit
   val ppTyfun : StaticEnv.staticEnv -> Types.tyfun -> unit
@@ -33,6 +35,7 @@ sig
 		     -> unit
 
   val resetPPType : unit -> unit
+  (* DBM: try to avoid the global state that requires this reset function *)
 
 end (* signature PPTYPE *)
 
@@ -398,8 +401,8 @@ fun fmtTyfun env (TYFUN{arity,body}) =
     PP.hcat
        (PP.text "TYFUN",
 	PP.braces (PP.hsequence PP.comma
-		     [PP.ccat (PP.text "arity=", PP.integer arity),
-		      PP.ccat (PP.text "body=", fmtType env body)]))
+		     [PP.label "arity:" (PP.integer arity),
+		      PP.label "body:" (fmtType env body)]))
 
 (* fmtFormals : int -> PP.format *)
 fun fmtFormals n =

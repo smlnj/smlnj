@@ -274,8 +274,7 @@ and fmtSignature0 (sign, env, depth: int, entityEnvOp) =
 		  (fn paths =>
 		        PP.hcat
 			  (PP.hcat (PP.text "sharing ", variety),
-			   PP.sequence {alignment = PP.P, sep = (PP.text " =")}
-			     (map PPP.fmtSymPath paths)))
+			   PP.psequence (PP.text " =") (map PPP.fmtSymPath paths)))
 		  constraints)
 
      in if depth <= 0 then PP.text "<sig>"

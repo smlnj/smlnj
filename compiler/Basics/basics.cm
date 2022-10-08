@@ -60,6 +60,9 @@ Group
 
 	signature TARGET
 	structure Target
+
+        structure List3
+
 is
 	control/basiccontrol.sml
 
@@ -104,6 +107,7 @@ is
         newpp/newpp.sml
 
 	util/wordstr-hashtable.sml
+        util/list3.sml
 
 	reals/real-lit.sml
 	reals/real-to-bits.sig

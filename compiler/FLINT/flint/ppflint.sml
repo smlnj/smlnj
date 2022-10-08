@@ -61,8 +61,8 @@ in
 
     fun fmtFKind fkind = text (fkindToString fkind)
 
-    (* csf = "comma separated formats *)
-    val csf = sequence {alignment=P, sep=comma}
+    (* csf = "comma separated formats" (packed alignmnet) *)
+    val csf = psequence comma
 
     (* fmtRKind : FR.rkind -> format *)
     (* format record kinds (FR.rkind) *)
@@ -99,11 +99,11 @@ in
     fun fmtLvar lvar = text (LV.lvarName lvar)
 
     fun fmtTvTk (tv:LT.tvar, tk) =
-	PP.concat [text (LV.lvarName tv), text ":", PPT.fmtTKind 100 tk]
+	cblock [text (LV.lvarName tv), text ":", PPT.fmtTKind 100 tk]
 
-    val fmtValList = formatList fmtValue
-    val fmtLvarList = formatList fmtLvar
-    val fmtTvTkList = formatList fmtTvTk
+    val fmtValList = list fmtValue
+    val fmtLvarList = list fmtLvar
+    val fmtTvTkList = list fmtTvTk
 
     (* fmtTagged : string * PP.format -> PP.format *)
     fun fmtTagged (tag: string, fmt: format) =
@@ -119,9 +119,9 @@ in
 	  enclose {front = text "DECON(", back = rparen}
 	   (pblock
 	     [text (S.name symbol), comma,
-	      text (Access.prRep conrep), comma,
+	      text (Access.conrepToString conrep), comma,
 	      PPT.fmtLty 100 lty, comma,
-	      PP.formatList (PPT.fmtTyc 100) tycs])]
+	      PP.list (PPT.fmtTyc 100) tycs])]
       | fmtDecon _ = empty
 
     (** the definitions of the lambda expressions *)
@@ -150,7 +150,7 @@ in
 	      | fmtE (F.TAPP (tf, tycs)) =
 		(* TAPP(tf, [tycs]) *)
 		fmtTagged ("TAPP", 
-			   pblock [fmtValue tf, comma, PP.formatList fmtTyc' tycs])
+			   pblock [fmtValue tf, comma, PP.list fmtTyc' tycs])
 
 	      | fmtE (F.LET (vars, def, body)) =
 		(* [vars] = lexp   OR   [vars] =
@@ -163,9 +163,9 @@ in
 		 in vcat
 		      (pcat (header,
 			     if complex def
-			     then hardIndent (4, defFmt)
-			     else softIndent (4, defFmt)),
-		       hardIndent (2, bodyFmt))
+			     then hardIndent 4 defFmt
+			     else softIndent 4 defFmt),
+		       hardIndent 2 bodyFmt)
 		end
 
 	      | fmtE (F.FIX (fundecs, body)) =
@@ -189,11 +189,11 @@ in
 		    val inlineFmt = text (inlineToString inline)
 		    val tfnFmt = pblock [ccat (text "TFN", inlineFmt),
 					 fmtTvTkList tv_tk_list, text ".",
-					 softIndent (2, fmtLexp' tfnbody)]
+					 softIndent 2 (fmtLexp' tfnbody)]
 		 in vblock
 		      [header,
-		       hardIndent (4, tfnFmt),
-		       hardIndent (2, fmtLexp' body)]
+		       hardIndent 4 tfnFmt,
+		       hardIndent 2 (fmtLexp' body)]
 		end
 
 	      (** NOTE: ignoring consig when formatting SWITCH **)
@@ -211,13 +211,13 @@ in
 
 		in vblock
 		    ([hcat (text "SWITCH", fmtValue value),
-		      hardIndent (2, vblock (map fmtCase cases))]
+		      hardIndent 2 (vblock (map fmtCase cases))]
 		     @ (case  lexpOp
 			  of NONE => nil
 			   | SOME default => (* default case *)
 			      [pblock
 				[text "_ =>",
-				 softIndent (4, fmtLexp' default)]]))
+				 softIndent 4 (fmtLexp' default)]]))
 		end
 
 	      | fmtE (F.CON ((symbol,_,_), tycs, value, lvar, body)) =
@@ -228,7 +228,7 @@ in
 		   [hblock [fmtLvar lvar, text "=",
 			    fmtTagged ("CON",
 				       csf [text (S.name symbol), 
-					    formatTuple fmtTyc' tycs,
+					    tuple fmtTyc' tycs,
 					    fmtValue value])],
 		    fmtLexp' body]
 
@@ -240,7 +240,7 @@ in
 		  [hblock [fmtLvar lvar, text "=",
 			   fmtTagged ("RECORD",
 				      (csf [fmtRKind rkind,
-					    formatList fmtValue values]))],
+					    list fmtValue values]))],
 		   fmtLexp' body]
 
 	      | fmtE (F.SELECT (value, i, lvar, body)) =
@@ -257,7 +257,7 @@ in
 		 (* RAISE(<value> : <ltys>) *)
 		 hblock [fmtTagged ("RAISE", fmtValue value),
 			 colon,
-			 PP.formatTuple fmtLty' ltys]
+			 PP.tuple fmtLty' ltys]
 
 	      | fmtE (F.HANDLE (body, value)) =
 		 (* <body>
@@ -278,13 +278,13 @@ in
 		 in vblock
 		     [hblock [text "IF",
 			      fmtTagged (tag,
-					 sequence {alignment=P, sep=comma}
+					 psequence comma
 					   [text (PrimopUtil.toString primop),
 					    fmtLty' lty,
-					    PP.formatList fmtTyc' tycs]),
-			      formatList fmtValue values],
-		      hcat (text "THEN", softIndent (2, fmtLexp' body1)),
-		      hcat (text "ELSE", softIndent (2, fmtLexp' body2))]
+					    PP.list fmtTyc' tycs]),
+			      list fmtValue values],
+		      hcat (text "THEN", softIndent 2 (fmtLexp' body1)),
+		      hcat (text "ELSE", softIndent 2 (fmtLexp' body2))]
 		end
 
 	      | fmtE (F.PRIMOP (p as (_, PO.MKETAG, _, _), [value], lvar, body)) =
@@ -330,7 +330,7 @@ in
 			       fmtTagged (tag,
 					  csf [text (PrimopUtil.toString primop),
 					       fmtLty' lty,
-					       PP.formatList (PPT.fmtTyc (pd - 1)) tycs]),
+					       PP.list (PPT.fmtTyc (pd - 1)) tycs]),
 			       fmtValList values],
 		       fmtLexp' body]
 		end
@@ -356,7 +356,7 @@ in
 	     (*** the result lty no longer available ---- fmtLty lty; **)
 	      fmtTagged ("FN",
 			 (hcat (brackets (vblock (map fmtarg lvar_lty_list)),
-				hardIndent (4, fmtLexp (pd - 1) body)))))
+				hardIndent 4 (fmtLexp (pd - 1) body)))))
 	end
 
     (* ppLexp : lexp -> unit *)

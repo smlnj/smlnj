@@ -9,26 +9,30 @@
 structure PPMatchComp =
 struct
 
-local
-   structure PP = NewPP
-   structure LV = LambdaVar
-   structure A = Access
-   structure V = Variable
-   structure AS = Absyn
-   structure AU = AbsynUtil
-   structure PPA = PPAbsyn
-   structure P = Paths
-   structure MU = MCUtil
+local (* top local *)
 
-   open MCCommon  (* includes RS = RuleSet *)
+  structure PP = NewPP
+  structure LV = LambdaVar
+  structure A = Access
+  structure V = Variable
+  structure SE = StaticEnv
+  structure AS = Absyn
+  structure AU = AbsynUtil
+  structure PPA = PPAbsyn
+  structure P = Paths
+  structure MU = MCUtil
+
+  open MCCommon  (* includes RS = RuleSet *)
+
+  val say = Control_Print.say
+  fun newline () = say "\n"
+  fun saynl msg = (say msg; newline())
+
+  fun bug msg = ErrorMsg.impossible ("MCPrint: " ^ msg)
+
+  val printDepth = Control_Print.printDepth
 
 in
-
-val say = Control.Print.say
-fun newline () = say "\n"
-fun saynl msg = (say msg, newline())
-
-fun bug msg = ErrorMsg.impossible ("MCPrint: " ^ msg)
 
 (* debugMsg : bool ref -> string -> unit *)
 fun debugMsg flag (msg: string) =
@@ -47,6 +51,7 @@ fun fmtCon (con : AS.con) : PP.format = PP.text (AU.conToString con)
 fun fmtPath (path: P.path) = PP.text (P.pathToString path)
 
 (* fmtOption : ('a -> PP.format) -> 'a option -> PP.format *)
+(* local variant, superceding PP.option *)
 fun fmtOption formatter elemOp =
     case elemOp
       of NONE => PP.text "<<>>"
@@ -54,25 +59,25 @@ fun fmtOption formatter elemOp =
 
 (* fmtConsig : A.consig -> PP.format *)
 fun fmtConsig (A.CSIG(n,m)) = 
-      PP.ccat (PP.text "CSIG", PP.parens (PP.concat [PP.integer n, PP.comma, PP.integer m]))
-  | fmtConsig A.CNIL => PP.text "NIL"
+      PP.ccat (PP.text "CSIG", PP.parens (PP.cblock [PP.integer n, PP.comma, PP.integer m]))
+  | fmtConsig A.CNIL = PP.text "NIL"
 
-(* fmtRuleset : RS.ruleset -> PP.format *)
-fun fmtRuleset (ruleset: RS.ruleset) =
-    PP.braces (PP.sequence {alignment = PP.P, sep = PP.comma} (map PP.integer (RS.listItems ruleset)))
+(* fmtRuleset : ruleset -> PP.format *)
+fun fmtRuleset (ruleset: ruleset) =
+    PP.braces (PP.psequence PP.comma (map PP.integer (RS.listItems ruleset)))
 
-(* fmtSubcase : -> ('a -> PP.format) -> subcase -> PP.format *)
-fun fmtSubcase fmtcase subcase =
+(* fmtSubcase : ('a -> PP.format) -> subcase -> PP.format *)
+fun fmtSubcase caseFormatter subcase =
     (case subcase
       of CONST => PP.text "CONST"
-       | DCARG thing => fmtcase thing
+       | DCARG thing => caseFormatter thing
        | VELEMS elems => 
-	   PP.vcat (PP.text "VELEMS",
-		    PP.hardIndent 2 (PP.vblock (map fmtcase elems))))
+	   PP.vcat (PP.text "VELEMS:",
+		    PP.viblock (PP.HI 3) (map caseFormatter elems)))
 
 (* fmtProtoAndor : protoAndor -> PP.format
  * pretty printer for protoAndor nodes *)
-fun fmtProtoAndor =
+val fmtProtoAndor =
     let fun fmtNode (ANDp {varRules, children}) =
 	      PP.vcat (PP.hcat (PP.text "ANDp", fmtRuleset varRules),
 		       PP.hardIndent 3 (fmtAndChildren children))
@@ -80,7 +85,7 @@ fun fmtProtoAndor =
 	      PP.vcat
 	        (PP.hblock [PP.text "OR", fmtRuleset varRules, fmtConsig sign],
 		 PP.hardIndent 3 (fmtVariants cases))
-	  | fmtNode (VAR {varRules}) = PP.hcat (PP.text "VAR", fmtRuleset varRules)
+	  | fmtNode (VARp {varRules}) = PP.hcat (PP.text "VAR", fmtRuleset varRules)
 	  | fmtNode WCp = PP.string "WCp"
 
 	and fmtAndChildren nodes = PP.vblock (map fmtNode nodes)
@@ -90,52 +95,52 @@ fun fmtProtoAndor =
 	and fmtVariant (con, rules, subcase) =
 	      PP.hcat
 	        (PP.hcat (PP.text (AU.conToString con), fmtRuleset rules),
-		 fmtSubcase fmtAndor subcase)
+		 fmtSubcase fmtNode subcase)
 
     in fmtNode 
-    end  (* fun fmtProtoAndor *)
+    end  (* fmtProtoAndor *)
 
 (* fmtAndor : andor -> unit
- *  pretty printer for AND-OR nodes *)
-fun ppAndor =
+ *  pretty print formatter for AND-OR nodes *)
+val fmtAndor =
     let fun fmtNode (AND {id, children}) =
 	      PP.vcat (PP.hcat (PP.string "AND", PP.integer id),
-		       PP.hardIndent 3 (fmtAndChildren children))
+		       fmtAndChildren children)
 	  | fmtNode (OR {id, path, sign, defaults, cases}) =
 	      PP.vcat
 	        (PP.hblock [PP.text "OR", PP.integer id, fmtPath path, fmtRuleset defaults, fmtConsig sign],
-		 PP.hardIndent 3 (fmtVariants cases))
+		 fmtVariants cases)
 	  | fmtNode (VAR {id}) =
-	      PP.hcat (PP.text "VAR", PP.integer id);
+	      PP.hcat (PP.text "VAR", PP.integer id)
 	  | fmtNode WC = PP.string "WC"
 
 	and fmtAndChildren nodes =
-	      PP.vblock (map fmtNode nodes)
+	      PP.viblock (PP.HI 3) (map fmtNode nodes)
 
 	and fmtVariants variants =
-	      PP.vblock (map fmtVariant variants)
+	      PP.viblock (PP.HI 3) (map fmtVariant variants)
 
 	and fmtVariant (con, rules, subcase) =
 	      PP.hcat
 	        (PP.text (AU.conToString con),
-		 fmtSubcase fmtAndor subcase)
+		 fmtSubcase fmtNode subcase)
 
-     in fmtNode 
-    end (* fun ppAndor *)
+     in fmtNode
+    end (* fmtAndor *)
 
 (* fmtDectree : decTree -> PP.format *)
 val fmtDectree =
     let fun fmtDec (SWITCH {id, path, sign, cases, defaultOp, live}) =
               PP.vcat
                 (PP.hblock [PP.text "SWITCH", PP.integer id, fmtPath path, fmtConsig sign],
-	         hardIndent 3 (fmtSwitch (cases, defaultOp)))
+	         fmtSwitch (cases, defaultOp))
 	  | fmtDec (RHS ruleno) =
-	      PP.hcat (PP.text "RHS", PP.integer ruleno))
+	      PP.hcat (PP.text "RHS", PP.integer ruleno)
 	  | fmtDec (FAIL) =
-	      PP.text "FAIL";
+	      PP.text "FAIL"
 
 	and fmtSwitch (cases,defaultOp) =
-              PP.vblock
+              PP.viblock (PP.HI 3)
 	        (map fmtCase cases @
 		 (case defaultOp
 	            of SOME dectree =>
@@ -145,7 +150,7 @@ val fmtDectree =
 	and fmtCase (con, decTree) =
 	      PP.pcat
 	        (PP.text (AU.conToString con),
-		 PP.softIndent 3 (fmtDec decTree)
+		 PP.softIndent 3 (fmtDec decTree))
      in fmtDec
     end (* fmtDectree *)
 
@@ -162,14 +167,14 @@ fun fmtMatch match = PP.vblock (map fmtRule match)
 (* formatMatch and formatBind were formerly MatchPrint.matchPrint and MatchPrint.bindPrint.
  * These are used in error messages in the *Compile functions. *)
 
-(* formatMatch: StaticEnv.staticEnv * (AS.pat * AS.exp) list * int list -> PP.format
+(* formatMatch: SE.staticEnv * (AS.pat * AS.exp) list * int list -> PP.format
  * Prints abbreviated rules, indicating unused rules with a preceeding "-->".
  * Assumes unused is a "ruleset", an ordered list of rule numbers, rule numbers start with 0 *)
 fun formatMatch (env, rules, unused) =
     let val postfix = PP.text "=> ..."
 	val uprefix =  PP.text "       "   (* 8 spaces *)
         val unuprefix = PP.text "  -->  "
-        fun ruleFmts (nil, _, _, fmts) = ref fmts
+        fun ruleFmts (nil, _, _, fmts) = rev fmts
 	  | ruleFmts ((pat,_)::rest, n, u::us, fmts) = 
 	    let val n_vs_u = Int.compare (n, u)
 		val (prefix, remaining_unused) =
@@ -177,16 +182,16 @@ fun formatMatch (env, rules, unused) =
 		      of EQUAL => (unuprefix, us)   (* u matches n, unused rule *)
 		       | _ => (uprefix, u::us)      (* n_vs_u will only be LESS *)
 		val fmt = PP.hblock [prefix, PPA.fmtPat env (pat, !printDepth), postfix]
-	    in ruleFmt (rest, n+1, remaining_unused, fmt::fmts)
+	    in ruleFmts (rest, n+1, remaining_unused, fmt::fmts)
 	    end
-     in PP.vblock (ruleFmts (rules, 0, unused))
+     in PP.vblock (ruleFmts (rules, 0, unused, nil))
     end
 
-(* bindPrint : StaticEnv.staticEnv * (AS.pat * AS.exp) list -> PP.format
+(* bindPrint : SE.staticEnv * (AS.pat * AS.exp) list -> PP.format
  * prints only the first rule pattern, which should be the only one for a binding *)
-fun formatBind (env, (pat, _) :: _) =
-      PP.hblock [(PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
-  | bindPrint _ = bug "bindPrint -- unexpected args"
+fun formatBind (env: SE.staticEnv, (pat, _) :: _) =
+      PP.hblock [PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
+  | formatBind _ = bug "bindPrint -- unexpected args"
 
 end (* top local *)
 end (* structure PPMatchComp *)

@@ -14,20 +14,24 @@ end (* signature EVALENTITY *)
 structure EvalEntity : EVALENTITY =
 struct
 
-local (* structure DI = DebIndex *)
-      structure SS = SpecialSymbols
-      structure EP = EntPath
-      structure IP = InvPath
-      structure S = SourceMap
-      structure T = Types
-      structure TU = TypesUtil
-      structure EE = EntityEnv
-      structure EPC = EntPathContext
-      structure EU = ElabUtil
-      structure MI = ModuleId
-      structure MU = ModuleUtil
-      structure I = Instantiate
-      open Modules
+local
+
+  structure EM = ErrorMsg
+  structure SS = SpecialSymbols
+  structure EP = EntPath
+  structure IP = InvPath
+  structure S = SourceMap
+  structure T = Types
+  structure TU = TypesUtil
+  structure EE = EntityEnv
+  structure EPC = EntPathContext
+  structure EU = ElabUtil
+  structure MI = ModuleId
+  structure MU = ModuleUtil
+  structure I = Instantiate
+
+  open Modules
+
 in
 
 (* debugging *)
@@ -49,11 +53,7 @@ val anonStrSym = Symbol.strSymbol "<AnonStr>"
 val resultId = SS.resultId
 val returnId = SS.returnId
 
-val defaultError =
-    ErrorMsg.errorNoFile(ErrorMsg.defaultConsumer(),ref false) (0,0)
-
-fun evalTyc (entv, tycExp, entEnv, epc, rpath,
-             compInfo as {mkStamp,...}: EU.compInfo) =
+fun evalTyc (entv, tycExp, entEnv, epc, rpath, {mkStamp,...}: EU.compInfo) =
       case tycExp
        of CONSTtyc tycon => tycon
         | FORMtyc (T.GENtyc { kind, arity, eq, path, ... }) =>
@@ -155,8 +155,7 @@ and evalStr(strExp, depth, epc, entsv, entEnv, rpath,
 	    let val (srcRlzn, entEnv1) =
                   evalStr(strExp, depth, epc, entsv, entEnv, rpath, compInfo)
                 val {rlzn=rlzn, abstycs=abstycs, tyceps=tyceps} =
-                  I.instAbstr{sign=sign, entEnv=entEnv, rlzn=srcRlzn,
-                              rpath=rpath,
+                  I.instAbstr{sign=sign, entEnv=entEnv, rlzn=srcRlzn, rpath=rpath,
                               region=S.nullRegion, compInfo=compInfo}
 
                 (* because the abstraction creates a bunch of new stamps,
@@ -170,25 +169,19 @@ and evalStr(strExp, depth, epc, entsv, entEnv, rpath,
 	     in (rlzn, entEnv1)
 	    end
 
-        | CONSTRAINstr {boundvar,raw,coercion} =>
+        | CONSTRAINstr {boundvar, raw, coercion} =>
             (* propagage the context rpath into the raw uncoerced structure *)
             let val (rawEnt, entEnv1) =
-                  evalStr(raw, depth, epc, SOME boundvar,
-                          entEnv, rpath, compInfo)
-                val entEnv2 = EE.bind(boundvar, STRent rawEnt, entEnv1)
-            (*  val entEnv' = EE.bind(boundvar, STRent rawEnt, entEnv) *)
+                    evalStr (raw, depth, epc, SOME boundvar, entEnv, rpath, compInfo)
+                val entEnv2 = EE.bind (boundvar, STRent rawEnt, entEnv1)
                 val (strEnt, entEnv3) =
- 	          evalStr(coercion, depth, epc, entsv,
-                          entEnv2, IP.empty, compInfo)
-
+ 	            evalStr (coercion, depth, epc, entsv, entEnv2, IP.empty, compInfo)
              in (strEnt, entEnv3)
             end
 
         | FORMstr _ => bug "unexpected FORMstr in evalStr")
 
-
-and evalFct (fctExp, depth, epc, entEnv,
-             compInfo as {mkStamp,...}: EU.compInfo) =
+and evalFct (fctExp, depth, epc, entEnv, compInfo as {mkStamp,...}: EU.compInfo) =
       case fctExp
        of VARfct entPath =>
 	    (debugmsg (">>evalFct[VARfct]: "^EP.entPathToString entPath);
@@ -332,10 +325,9 @@ and evalDec(dec, depth, epc, entEnv, rpath,
 and evalStp (stpExp, depth, epc, entEnv,
              compInfo as {mkStamp,...}: EU.compInfo) =
       case stpExp
-       of (* CONST stamp     => stamp
-        | *) NEW             => mkStamp()
-        | GETSTAMP strExp => #stamp (#1 (evalStr(strExp, depth, epc, NONE,
-						 entEnv, IP.empty, compInfo)))
+        of NEW             => mkStamp()
+         | GETSTAMP strExp => #stamp (#1 (evalStr(strExp, depth, epc, NONE,
+						  entEnv, IP.empty, compInfo)))
 
 (*
 val evalApp = Stats.doPhase(Stats.makePhase "Compiler 044 x-evalApp") evalApp

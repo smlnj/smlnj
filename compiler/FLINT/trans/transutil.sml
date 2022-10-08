@@ -32,8 +32,8 @@ fun dbsaysnl (msgs : string list) =
 
 fun ppType ty =
     ElabDebug.withInternals
-     (fn () => ElabDebug.debugPrint debugging
-		("type: ", PPType.ppType StaticEnv.empty, ty))
+      (fn () => ElabDebug.debugPrint debugging
+		  ("type: ", PPType.fmtType StaticEnv.empty ty))
 
 fun ident x = x
 val unitLexp = PL.RECORD []

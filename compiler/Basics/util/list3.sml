@@ -1,4 +1,6 @@
-Basics/util/list3.sml
+(* Basics/util/list3.sml *)
+
+(* utility list operators for 3 lists, like ListPair for 2 lists *)
 
 structure List3 =
 struct

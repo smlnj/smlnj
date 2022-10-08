@@ -72,12 +72,10 @@ val minSubnormalReal64 = RealLit.real{isNeg = false, whole="4", frac="9", exp = 
 val minNormalReal64 = RealLit.real{isNeg = false, whole="2", frac="2250738585072014", exp = ~308}
 val maxReal64 = RealLit.real{isNeg = false, whole="1", frac="7976931348623157", exp = 308}
 
-fun showDec(msg,dec,env) =
-    ED.withInternals (fn () =>
-      debugPrint(msg,
-		 (fn pps => fn dec =>
-		   PPAbsyn.ppDec (env,NONE) pps (dec, 100)),
-		 dec) )
+fun showDec (msg, dec, env) =
+    ED.withInternals
+      (fn () => ED.debugPrint debugging
+		  (msg, PPAbsyn.fmtDec (env, NONE) (dec, 100)))
 
 infix -->
 

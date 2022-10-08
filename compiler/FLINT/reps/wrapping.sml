@@ -240,7 +240,7 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 		       val _ = if !debugging
 			       then PP.printFormatNL
 				      (PP.hcat (PP.text "ty:",
-						PP.formatList (PPT.fmtTyc 100) ts))
+						PP.list (PPT.fmtTyc 100) ts))
 			       else ()
 		       val olt: LT.lty = getlty v
 		       val _ = if !debugging
@@ -251,19 +251,19 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 		       val _ = if !debugging
 			       then PP.printFormatNL
 				       (PP.hcat (PP.text "nts:",
-						 PP.formatList (PPT.fmtTyc 100) nts))
+						 PP.list (PPT.fmtTyc 100) nts))
 			       else ()
                        val nlts: LT.lty list = LE.lt_inst(ltyUnwrap olt, nts)
 		       val _ = if !debugging
 			       then PP.printFormatNL
 				      (PP.hcat (PP.text "nlts:",
-						PP.formatList (PPT.fmtLty 100) nlts))
+						PP.list (PPT.fmtLty 100) nlts))
 			       else ()
                        val olts: LT.lty list = map ltyUnwrap (LE.lt_inst(olt, ts))
 		       val _ = if !debugging
 			       then PP.printFormatNL
 				      (PP.hcat (PP.text "olts:",
-						PP.formatList (PPT.fmtLty 100) olts))
+						PP.list (PPT.fmtLty 100) olts))
 			       else ()
                        val hdr = CO.unwrapOp (wenv, nlts, olts, d)
                     in case hdr

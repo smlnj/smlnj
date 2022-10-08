@@ -22,6 +22,7 @@ structure TransTypes : TRANSTYPES =
 
     structure BT = BasicTypes
     structure DA = Access
+    structure ED = ElabDebug
     structure EE = EntityEnv
     structure EM = ErrorMsg
     structure EPC = EntPathContext
@@ -38,6 +39,7 @@ structure TransTypes : TRANSTYPES =
     structure MU = ModuleUtil
     structure SE = StaticEnv
     structure TU = TypesUtil
+
     open Types Modules
 
     fun bug msg = ErrorMsg.impossible ("TransTypes: " ^ msg)
@@ -51,10 +53,7 @@ structure TransTypes : TRANSTYPES =
     fun dbsaysnl (msgs: string list) =
 	if !debugging then saysnl msgs else ()
 
-    val debugPrint = (fn x => debugPrint debugging x)
-    val defaultError =
-	  EM.errorNoFile(EM.defaultConsumer(),ref false) SourceMap.nullRegion
-
+    val debugPrint = ED.debugPrint debugging
     val env = SE.empty
 
     (* deBruijn index *)
@@ -292,11 +291,9 @@ fun specLty (elements, entEnv, depth, compInfo) =
                     ((MU.transType entEnv ty)
                       handle EE.Unbound =>
                          (dbsaynl "$specLty";
-                          withInternals(fn () =>
-                           debugPrint("entEnv: ",
-                                 (fn pps => fn ee =>
-                                    PPModules_DB.ppEntityEnv pps SE.empty (ee, 12)),
-                                 entEnv));
+                          ED.withInternals
+			    (fn () => debugPrint
+					("entEnv: ", PPModules_DB.fmtEntityEnv SE.empty (entEnv, 12)));
                           dbsaynl ("$specLty: should have printed entEnv");
                           raise EE.Unbound))
 

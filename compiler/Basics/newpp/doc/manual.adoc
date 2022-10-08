@@ -423,7 +423,7 @@ _Indented block constructor functions:_
 
 * `char : char -> format`
 
- char c : Formats c as #(string (toString c)).
+ char c : Formats c as "#" ^ (string (Char.toString c)).
 
 * `bool : string -> format`
 
@@ -488,25 +488,25 @@ Note that the empty format is an identity element for all of these binary concat
 [discrete]
 ==== Formatting lists of formats
 
-* `sequence : {alignment: alignment, sep: format} -> format list -> format`
+* `sequence : alignment -> format -> format list -> format`
 
- inserts sep between constituent formats and aligns according to the alignment parameter.
+ sequence a sep fmts: inserts sep between the elements of fmts, aligning according to a.
 
 * `hsequence : format -> format list -> format`
 
- hsequence sep fmts = sequence {alignment = H, sep = sep} fmts
+ hsequence = sequence H
 
 * `psequence : format -> format list -> format`
 
- psequence sep fmts = sequence {alignment = P, sep = sep} fmts
+ psequence = sequence P
 
 * `vsequence : format -> format list -> format`
 
- vsequence sep fmts = sequence {alignment = V, sep = sep} fmts
+ vsequence = sequence V
 
 * `csequence : format -> format list -> format`
 
- csequence sep fmts = sequence {alignment = C, sep = sep} fmts
+ csequence = sequence C
 
 * `tupleFormats : format list -> format`
 

@@ -44,7 +44,7 @@ in
 val dtPrintNames : bool ref = FLINT_Control.printDTNames  (* default true *)
 val printIND : bool ref = FLINT_Control.printINDltys (* default false *)
 
-(* fflagToString : Lty.fflag -> string *)
+(* fflagToString : LT.fflag -> string *)
 fun fflagToString fflag =
     (case fflag
        of LT.FF_FIXED => "f"
@@ -97,14 +97,8 @@ fun ltyITag (LT.LT_TYC _)  = "<ltyI.LT_TYC>"
 (* formatting utilities *)
 
 (* fmtSeq : format list -> format *)
-val fmtSeq = PP.seqFormats {alignment=P, sep=comma}
-
-(* csf : format list -> format  -- "comma separated formats *)
-val csf = seqFormats {alignment=P, sep=comma}
-
-(* fmtTagged : string * PP.format -> PP.format *)
-fun fmtTagged (tag: string, fmt: PP.format) =
-    PP.ccat (PP.text tag, PP.parens fmt)
+(* packed, comma separated formatting of a format list -- no surrounding brackets *)
+val fmtSeq = psequence comma
 
 (* fmtTKind : int -> tkind -> format
  * Format a hashconsed representation of the kind *)
@@ -117,14 +111,9 @@ fun fmtTKind pd (tk : LT.tkind) =
 	      (* resTkind may be a TK_SEQ wrapping some tkinds
 	       * These are produced by Elaborate/modules/instantiate.sml
 	       *)
-	     parens
-	       (hblock
-		  [formatList fmtTKind' argTkinds,
-	           text "=>", fmtTKind' resTkind])
+	     parens (hblock [list fmtTKind' argTkinds, text "=>", fmtTKind' resTkind])
 	  | fmtTKindI(LT.TK_SEQ tkinds) =
-	     pblock
-	      [text "KSEQ",
-	       formatList (fmtTKind (pd-1)) tkinds]
+	     pblock [text "KSEQ", list (fmtTKind (pd-1)) tkinds]
      in fmtTKindI (LT.tk_out tk)
     end (* fmtTKind *)
 
@@ -134,27 +123,25 @@ fun tycEnvFlatten tycenv =
         | SOME (elem, rest) => elem::tycEnvFlatten(rest))
 
 (* fmtKeFrame : int -> Lty.tkind list -> PP.format *)
-fun fmtKeFrame pd ks = formatList (fmtTKind pd) ks
+fun fmtKeFrame pd ks = list (fmtTKind pd) ks
 
 (* fmtKindEnv : int -> Lty.tkindEnv -> PP.format
  * used (once) in FLINT/kernel/ltykindchk.sml *)
 fun fmtTkindEnv pd kenv =
     if pd < 1
     then text "<tkenv>"
-    else formatList (fmtKeFrame (pd-1)) kenv
+    else list (fmtKeFrame (pd-1)) kenv
 
 (* fmtTEBinder : int -> LT.teBinder -> format *)
 fun fmtTEBinder pd (binder: LT.teBinder) =
     if pd < 1 then text (teBinderTag binder) else
     (case binder
       of LT.Lamb (level, ks) =>
-	 pcat (PP.concat [text "L", integer level, text ":"], fmtKeFrame (pd-1)  ks)
+	 pcat (PP.cblock [text "L", integer level, colon], fmtKeFrame (pd-1)  ks)
        | LT.Beta (level, args, ks) =>
 	 pblock [PP.ccat (text "B", integer level),
 		 parens
-		   (pblock [formatTuple (fmtTyc (pd-1)) args,
-			    text ":",
-			    fmtKeFrame (pd-1) ks])])
+		   (fmtSeq [tuple (fmtTyc (pd-1)) args, fmtKeFrame (pd-1) ks])])
      (* function fmtTEBinder *)
 
 (* fmtTyc : int -> LT.tyc -> format *)
@@ -170,67 +157,62 @@ and fmtTyc pd (tyc : LT.tyc) =
 	     * -- index is a deBruijn index set in elabmod.sml/instantiate.sml
 	     * -- cnt is computed in instantiate.sml sigToInst or
 	          alternatively may be the IBOUND index in a polytype body ??? *)
-	    fmtTagged ("DTV", csf [integer index, integer cnt])
+	    label "DTV:" (fmtSeq [integer index, integer cnt])
 	  | fmtTycI (LT.TC_NVAR tvar) =
             (* Named type variable; tvar = lvar [= int] *)
-	    fmtTagged ("NTV", text (LambdaVar.prLvar tvar))
+	    label "NTV:" (text (LambdaVar.prLvar tvar))
 	  | fmtTycI (LT.TC_PRIM primtyc) =
-	    fmtTagged ("PRIM", text (PT.pt_print primtyc))
+	    label "PRIM:" (text (PT.pt_print primtyc))
 	  | fmtTycI (LT.TC_FN (argTkinds, resultTyc)) =
-	    fmtTagged ("TCFN",
-		       pcat (formatList fmtTKind' argTkinds, fmtTyc' resultTyc))
+	    label "TCFN:" (pcat (list fmtTKind' argTkinds, fmtTyc' resultTyc))
 	  | fmtTycI (LT.TC_APP (contyc, tys)) =
-	    fmtTagged ("TCAP",
-	               (tryFlat (csf [fmtTyc' contyc, formatList fmtTyc' tys])))
+	    label "TCAP:" (tryFlat (fmtSeq [fmtTyc' contyc, list fmtTyc' tys]))
 	  | fmtTycI (LT.TC_SEQ tycs) =
-	    fmtTagged ("SEQ", formatSeq {alignment=P, sep=comma, formatter=fmtTyc'} tycs)
+	    label "SEQ:" (formatSeq {alignment=P, sep=comma, formatter=fmtTyc'} tycs)
 	  | fmtTycI (LT.TC_PROJ (tyc', index)) =
-	    fmtTagged ("PROJ", csf [fmtTyc' tyc', integer index])
+	    label "PROJ:" (fmtSeq [fmtTyc' tyc', integer index])
 	  | fmtTycI (LT.TC_SUM tycs) =
-	    fmtTagged ("SUM", formatSeq {alignment=P, sep=comma, formatter=fmtTyc'} tycs)
+	    label "SUM" (formatSeq {alignment=P, sep=comma, formatter=fmtTyc'} tycs)
 	    (* TC_FIX is a recursive datatype constructor
 	       from a (mutually-)recursive family *)
 	  | fmtTycI (LT.TC_FIX {family={size,names,gen,params},index}) =
             if !dtPrintNames
 	    then text (Vector.sub (names,index))
-            else fmtTagged ("FIX",
-			    hvblock
-			      [hvblock
-				[hcat (text "size =", integer size),
-				 hcat (text "index =", integer index),
-				 hcat (text "gen =", fmtTyc' gen)],
-			       hcat (text "prms =", formatList fmtTyc' params)])
-
+            else label "FIX:"
+		   (hvblock
+		     [hvblock
+		       [label "size:" (integer size),
+			label "index:" (integer index),
+			label "gen:" (fmtTyc' gen)],
+		      label "prms:" (list fmtTyc' params)])
 	  | fmtTycI (LT.TC_BOX tyc) =
-	    fmtTagged ("BOX", fmtTyc' tyc)
+	      label "BOX:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_TUPLE tycs) =
-	    formatClosedSeq
-              {alignment = P, front = lbrace, sep = comma, back = rbrace, formatter = fmtTyc'}
-	      tycs
+	      formatClosedSeq
+		{alignment = P, front = lbrace, sep = comma, back = rbrace, formatter = fmtTyc'}
+		tycs
 	  | fmtTycI (LT.TC_ARROW (fflag, argTycs, resTycs)) =  (* was "AR ..." *)
 	    (* fflag records the calling convention: either FF_FIXED or FF_VAR *)
-	    pblock
-	     [hblock
-               [lparen, formatList fmtTyc' argTycs,
-	        text ("->" ^ fflagToString fflag)],
-	      softIndent (2, formatList fmtTyc' resTycs),
-	      rparen]
+	      parens
+		(pblock
+		   [hblock [list fmtTyc' argTycs, text "->", text (fflagToString fflag)],
+		    softIndent 2 (list fmtTyc' resTycs)])
 	    (* According to ltykernel.sml comment, this arrow tyc is not used *)
 	  | fmtTycI (LT.TC_PARROW (argTyc, resTyc)) =  (* was "PAR ..." *)
-	    pblock
-	     [hblock [lparen, (fmtTyc' argTyc), text "-->"],
-	      softIndent (2, (fmtTyc' resTyc)),
-	      rparen]
+	      parens
+		(pblock
+	           [hblock [lparen, (fmtTyc' argTyc), text "-->"],
+		    softIndent 2 (fmtTyc' resTyc)])
 	  | fmtTycI (LT.TC_WRAP tyc) =
-	    fmtTagged ("WRAP", fmtTyc' tyc)
+	      label "WRAP:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_CONT tycs) =
-	    fmtTagged ("CONT", formatTuple fmtTyc' tycs)
+	      label "CONT:" (tuple fmtTyc' tycs)
 	  | fmtTycI (LT.TC_IND (tyc, tycI)) =
-            if !printIND
-            then fmtTagged ("IND", pblock [fmtTyc' tyc, comma, fmtTycI tycI])
-            else fmtTyc' tyc
+              if !printIND
+              then label "IND" (pblock [fmtTyc' tyc, comma, fmtTycI tycI])
+              else fmtTyc' tyc
 	  | fmtTycI (LT.TC_ENV (tyc, ol, nl, tenv)) =  (* (over) simplified Nadathur closure *)
-	    fmtTagged ("ENV", fmtTyc' tyc)
+	      label "ENV:" (fmtTyc' tyc)
 
      in fmtTycI (LT.tc_out tyc)
     end (* fmtTyc *)
@@ -238,7 +220,7 @@ and fmtTyc pd (tyc : LT.tyc) =
 
 fun fmtTycEnv pd (tycEnv : LT.tycEnv) =
     if pd < 1 then text "<tycEnv>" else
-    fmtTagged ("TycEnv", formatList (fmtTEBinder (pd-1)) (tycEnvFlatten tycEnv))
+    label "TycEnv:" (list (fmtTEBinder (pd-1)) (tycEnvFlatten tycEnv))
     (* fmtTycEnv *)
 
 
@@ -248,25 +230,25 @@ fun fmtLty pd (lty: LT.lty) =
 	val fmtLty' = fmtLty (pd-1)
 
         fun fmtLtyI (LT.LT_TYC tc) =
-            fmtTagged ("TYC", fmtTyc pd tc)
+              label "TYC:" (fmtTyc pd tc)
           | fmtLtyI (LT.LT_STR ltys) =
-            fmtTagged ("STR", formatList fmtLty' ltys)
+              label "STR:" (list fmtLty' ltys)
           | fmtLtyI (LT.LT_FCT (args,res)) =
-	    fmtTagged ("FCT", csf [formatList fmtLty' args, formatList fmtLty' res])
+	      label "FCT:" (fmtSeq [list fmtLty' args, list fmtLty' res])
           | fmtLtyI (LT.LT_POLY (ks,ltys)) =
-	    fmtTagged ("POL", csf [formatList fmtTKind' ks, formatList fmtLty' ltys])
+	      label "POL:" (fmtSeq [list fmtTKind' ks, list fmtLty' ltys])
           | fmtLtyI (LT.LT_CONT ltys) =
-	    fmtTagged ("CONT", formatList fmtLty' ltys)
+	      label "CONT:" (list fmtLty' ltys)
           | fmtLtyI (LT.LT_IND(nt,ot)) =
-            if !printIND
-	    then fmtTagged ("IND", csf [fmtLty' nt, fmtLtyI ot])
-            else fmtLty pd nt
+              if !printIND
+	      then label "IND" (fmtSeq [fmtLty' nt, fmtLtyI ot])
+              else fmtLty pd nt
 	  | fmtLtyI (LT.LT_ENV (lty, ol, nl, tenv)) =
-	    fmtTagged ("LT_ENV",
-	      csf [ccat (text "ol=", integer ol),
-		   ccat (text "nl=", integer nl),
-		   fmtLty' lty,
-		   formatList (fmtTEBinder (pd-1)) (tycEnvFlatten tenv)])
+	      label "LT_ENV:"
+	        (fmtSeq [ccat (text "ol=", integer ol),
+		         ccat (text "nl=", integer nl),
+			 fmtLty' lty,
+			 list (fmtTEBinder (pd-1)) (tycEnvFlatten tenv)])
 
      in fmtLtyI (LT.lt_out lty)
     end (* fmtLty *)

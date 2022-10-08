@@ -217,9 +217,10 @@ fun elabTYPEdec(tbl: Ast.tb list,env,rpath,region,
 
 fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
                      sigEntEnv, isFree, rpath, region,
-                     compInfo as {mkStamp,error,...}: EU.compInfo) =
+                     compInfo as {source, mkStamp,...}: EU.compInfo) =
     let (* predefine datatypes *)
 	val _ = debugmsg ">>elabDATATYPEdec"
+	val error : EM.errorFn = EM.error source
 	fun preprocess region (Db{tyc=name,rhs=def,tyvars,lazyp}) =
 	    let val tvs = elabTyvList(tyvars,error,region)
 		val strictName =

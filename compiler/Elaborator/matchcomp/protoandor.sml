@@ -10,6 +10,7 @@ struct
 local
   structure DA = Access
   structure V = Variable
+  structure SE = StaticEnv
   structure AS = Absyn
   structure AU = AbsynUtil
   structure TU = TypesUtil
@@ -33,7 +34,7 @@ local
       PP.printFormatNL (PPMC.fmtProtoAndor pandor)
 
   fun ppPat pat =
-      PP.printFormatNL (PPA.fmtPat (SE.empty, NONE) (pat, 100))
+      PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
 in
 

@@ -507,7 +507,7 @@ in
 	(* useful error message *)
 	  fun unexpectedTy () = 
 	      (say "unexpected type: lt = "; PPLty.ppLty dbpd lt; say "; ";
-	       PP.printFormatNL (PP.formatList (PPLty.fmtTyc dbpd) ts);
+	       PP.printFormatNL (PP.list (PPLty.fmtTyc dbpd) ts);
 	       say "for: "; say (PrimopUtil.toString prim);
 	       bug "unexpected type")
 

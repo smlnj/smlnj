@@ -55,7 +55,7 @@ fun stripMarkExp (MarkExp (a, _)) = stripMarkExp a
 
 (* fmtPath : S.symbol list -> PP.format *)
 fun fmtPath (symbols: S.symbol list) =
-    PP.sequence {alignment = PP.C, sep = PP.period} (map PPS.fmtSym symbols)
+    PP.csequence PP.period (map PPS.fmtSym symbols)
 
 (* fmtTyvar : tyvar -> PP.format *)
 fun fmtTyvar tyvar =
@@ -109,8 +109,7 @@ fun fmtPat sourceOp (pat, d) =
 		      else fmtPat' (pat,d)
 		  | NONE => fmtPat' (pat,d))
           | fmtPat' (OrPat pats, d) =
-	      PP.parens (PP.sequence {alignment = PP.P, sep = PP.text " |"}
-				     (map (fn pat => fmtPat' (pat, d-1)) pats))
+	      PP.parens (PP.psequence (PP.text " |") (map (fn pat => fmtPat' (pat, d-1)) pats))
     in fmtPat' (pat, d)
     end
 
@@ -146,9 +145,7 @@ and fmtExp (sourceOp: SRC.inputSource option) (exp: exp, depth: int) =
 	       PP.text "end"]
  	| fmtExp' (SeqExp exps, d) =
             let val defaultFmt =
-		    PP.parens
-		      (PP.sequence {alignment = PP.P, sep = PP.semicolon}
-		         (map (fn exp => fmtExp' (exp, d-1)) exps))
+		    PP.parens (PP.psequence PP.semicolon (map (fn exp => fmtExp' (exp, d-1)) exps))
                 fun subExpCount (MarkExp (expr, _)) = subExpCount expr
                   | subExpCount (FlatAppExp subexps) = length subexps
                   | subExpCount _ = 1
@@ -165,9 +162,7 @@ and fmtExp (sourceOp: SRC.inputSource option) (exp: exp, depth: int) =
 	| fmtExp' (CharExp s, _) = PP.ccat (PP.text "#", PP.string s)
 	| fmtExp' (r as RecordExp fields, d) =
 	    let fun fmtField (name, exp) = PP.hblock [PPS.fmtSym name, PP.equal, fmtExp' (exp, d)]
-	     in PP.braces
-	          (PP.sequence {alignment = PP.P, sep = PP.comma}
-			       (map fmtField fields))
+	     in PP.braces (PP.psequence PP.comma (map fmtField fields))
             end
 	| fmtExp' (ListExp exps, d) =
 	    PP.list (fn exp => fmtExp' (exp, d-1)) exps
@@ -622,7 +617,7 @@ and fmtDbrhs sourceOp (constrs : (S.symbol * Ast.ty option) list, d: int) =
 		 of SOME a =>
 		    PP.hblock [PPS.fmtSym sym, PP.text "of", fmtTy sourceOp (a, d)]
 		  | NONE => PPS.fmtSym sym)
-    in  PP.sequence {alignment = PP.P, sep = PP.text " |"} (map fmtConstr constrs)
+    in  PP.psequence (PP.text " |") (map fmtConstr constrs)
     end
 
 and fmtEb sourceOp (eb, d) =
@@ -699,8 +694,7 @@ and fmtTy sourceOp (ty, d) =
 		(map (fn (sym:symbol, tv:Ast.ty) =>
 			 PP.hblock [PPS.fmtSym sym, PP.colon, fmtTy sourceOp (tv, d)]) fields))
 	| fmtTy' (TupleTy tys, d) =
-	    PP.sequence {alignment = PP.P, sep = PP.text "*"}
-	      (map (fn ty => fmtTy sourceOp (ty, d)) tys)
+	    PP.psequence (PP.text "*") (map (fn ty => fmtTy sourceOp (ty, d)) tys)
 	| fmtTy' (MarkTy (ty,_), d) = fmtTy sourceOp (ty, d)
 
       and fmtTypeArgs (tys, d) = PP.tuple (fn ty => fmtTy' (ty, d)) tys

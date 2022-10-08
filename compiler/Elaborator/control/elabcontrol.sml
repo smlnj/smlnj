@@ -71,6 +71,7 @@ structure ElabControl : ELAB_CONTROL =
         (* ElabCore, ElabTop, ElabUtil, Control_MC *)
 
     val printAbsyn = onew ("printAbsyn", "absyn print mode", false)
+    val printAst = onew ("printAst", "ast print mode", false)
     val stats = onew ("stats", "match compiler timings and stats", false)
 
 

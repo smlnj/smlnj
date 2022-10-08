@@ -23,6 +23,7 @@ local
   structure EP = EntPath
   structure EPC = EntPathContext
   structure EU = ElabUtil
+  structure ED = ElabDebug
   structure EV = EvalEntity
   structure INS = Instantiate
   structure M  = Modules
@@ -31,8 +32,10 @@ local
   structure SM = SourceMap
   structure EM = ErrorMsg
   structure PP = NewPP
+  structure PPT = PPType
+  structure PPS = PPSymbols
 
-  open Types Modules Variable ElabDebug  (* trim to Types, Modules? *)
+  open Types Modules
 
 in
 
@@ -44,8 +47,11 @@ fun dbsaynl (msg: string) =
       if !debugging then (say msg; say "\n") else ()
 
 fun bug msg = EM.impossible ("SigMatch:" ^ msg)
-val nth = List.nth
-fun for l f = app f l
+
+val debugPrint = ED.debugPrint debugging
+val withInternals = ED.withInternals
+
+fun for l f = List.app f l  (* List.app with arguments reversed for convenience *)
 
 fun unTYCent (TYCent x) = x
   | unTYCent ERRORent = ERRORtyc (* [GK 5/7/07] Avoid secondary bug, bug 1599.1 *)
@@ -66,13 +72,9 @@ val BogusTy = UNDEFty
 val bogusStrExp = M.VARstr []
 val bogusFctExp = M.VARfct []
 
-fun showStr (msg,str) =
-    withInternals(fn () =>
-      debugPrint debugging
-       (msg,
-	(fn pps => fn str =>
-	    PPModules.ppStructure pps SE.empty (str, 100)),
-	str))
+fun showStr (msg: string, str : M.Structure) =
+    withInternals
+      (fn () => debugPrint (msg, PPModules.fmtStructure SE.empty (str, 100)))
 
 fun exnRep (DA.EXN _, dacc) = DA.EXN dacc
   | exnRep _ = bug "unexpected conrep in exnRep"
@@ -102,13 +104,13 @@ val paramSym = S.strSymbol "<FsigParamInst>"
  *      strName: S.symbol *
  *      tdepth: int *
  *      matchEntEnv: entityEnv *
- *      epath: EP.entPath *
+ *      epath: EP.entPath *  (note)
  *      rpath: IP.path *
  *      statenv: staticEnv *
  *      region: SM.region *
  *      EU.compInfo
  *   -> A.dec *
- *      M.Structure
+ *      M.Structure *
  *      M.strExp
  *
  * WARNING: epath is an inverse entPath, so it has to be reversed to
@@ -130,10 +132,8 @@ fun matchStr1(specSig as SIG {stamp=sigStamp,closed,fctflag,
 let
 
   val err = EM.error source region
-  val _ = let fun h ppstrm sign = PPModules.ppSignature ppstrm statenv (sign, 6)
-              val s = ">>matchStr1 - specSig :"
-           in debugPrint debugging (s, h, specSig)
-          end
+  val _ = debugPrint (">>matchStr1 - specSig :",
+		      PPModules.fmtSignature statenv (specSig, 6))
 
   (* matchTypes checks whether the spec type is a generic instance of
    * the actual type, and if so it returns two lists of type metavariables
@@ -154,12 +154,12 @@ let
        of x as SOME(btvs,ptvs) => x
         | NONE =>
           (err EM.COMPLAIN "value type in structure does not match signature spec"
-               (PPType.resetPPType();
+               (PPT.resetPPType();
 		PP.vblock
 		  [PP.hcat (PP.text "name:", PP.text (S.name name)),
-		   PP.hcat (PP.text "spec:", PPType.fmtType statenv spec),
-		   PP.hcat (PP.text "actual:", PPType.fmtType statenv actual)])
-               NONE)
+		   PP.hcat (PP.text "spec:", PPT.fmtType statenv spec),
+		   PP.hcat (PP.text "actual:", PPT.fmtType statenv actual)]);
+           NONE)
 
   fun complain s = err EM.COMPLAIN s EM.nullErrorBody
   fun complain' x = (complain x; raise BadBinding)
@@ -246,10 +246,8 @@ let
                                           " must be an equality type")
                            else stripTycon strTycon
                       | _ =>
-                           (debugPrint(debugging)("specTycon: ",
-                            PPType.ppTycon statenv, specTycon);
-                            debugPrint(debugging)("strTycon: ",
-                            PPType.ppTycon statenv, strTycon);
+                           (debugPrint ("specTycon: ", PPT.fmtTycon statenv specTycon);
+                            debugPrint ("strTycon: ",  PPT.fmtTycon statenv strTycon);
                             bug "checkTycBinding 1" ))
             end
           | DEFtyc{tyfun=TYFUN{arity,body},strict,stamp,path} =>
@@ -258,12 +256,9 @@ let
                                           stamp=stamp,path=path}
                in if TU.equalTycon(specTycon',strTycon)
                   then strTycon
-                  else (debugPrint(debugging)("specTycon': ",
-                          PPType.ppTycon statenv, specTycon);
-                        debugPrint(debugging)("strTycon: ",
-                          PPType.ppTycon statenv, strTycon);
-                        complain'("type " ^ specName ^
-                                  " does not match definitional specification"))
+                  else (debugPrint ("specTycon': ", PPT.fmtTycon statenv specTycon);
+                        debugPrint ("strTycon: ", PPT.fmtTycon statenv strTycon);
+                        complain' ("type " ^ specName ^ " does not match definitional specification"))
               end
           | ERRORtyc => raise BadBinding
           | _ => bug "checkTycBinding 2"
@@ -517,16 +512,11 @@ let
                          val tycM = unTYCent (EE.look(eeM,evM))
 			 val speceq = TU.equalTycon(tycD,tycM)
 		     in (if speceq then speceq
-			 else
-			     (withInternals
-				  (fn() =>
-				     (debugPrint(debugging)
-					("Tycon mismatch def: ",
-					 PPType.ppTycon statenv, tycD);
-				      debugPrint(debugging)
-					("Tycon mismatch mod: ",
-					 PPType.ppTycon statenv, tycM)));
-			      speceq)) andalso loop rest
+			 else (withInternals
+				(fn() =>
+				     (debugPrint ("Tycon mismatch def: ", PPT.fmtTycon statenv tycD);
+				      debugPrint ("Tycon mismatch mod: ", PPT.fmtTycon statenv tycM)));
+			       speceq andalso loop rest))
                      end
                   | STRspec{sign=SIG {elements,...},...} =>
                      let fun unSTRspec (STRspec x) = x
@@ -591,13 +581,13 @@ let
            fun typeInMatched (kind,typ) =
                  (MU.transType entEnv typ)
                     handle EE.Unbound =>
-                      (debugPrint (debugging) (kind, PPType.ppType statenv,typ);
+                      (debugPrint (kind, PPT.fmtType statenv typ);
                        raise EE.Unbound)
 
            fun typeInOriginal (kind,typ) =
                  (MU.transType strEntEnv typ)
                     handle EE.Unbound =>
-                      (debugPrint (debugging) (kind, PPType.ppType statenv,typ);
+                      (debugPrint (kind, PPT.fmtType statenv typ);
                        raise EE.Unbound)
 
         in case spec
@@ -608,10 +598,7 @@ let
                      val (strTycon, strEntVar) =
                             MU.getTyc(strElements, strEntEnv, sym)
                             handle EE.Unbound =>
-                              (debugPrint(debugging) ("strEntEnv: ",
-                                (fn ppstrm => fn ee =>
-                                   PPModules_DB.ppEntityEnv ppstrm statenv (ee, 6)),
-                                strEntEnv);
+                              (debugPrint ("strEntEnv: ", PPModules_DB.fmtEntityEnv statenv (strEntEnv, 6));
 			       raise EE.Unbound)
 
                      val _ = dbsaynl ("--matchElems TYCspec - strEntVar: "^
@@ -662,10 +649,9 @@ let
                                            EP.entPathToString ep ^ "\n")
                                        | M.CONSTstrDef _ =>
                                           dbsaynl("spec def CONST\n");
-                                     showStr("specStr: ", specStr);
-                                     showStr("strStr:  ", strStr);
-                                     complain("structure def spec for "^
-                                              S.name sym ^ " not matched"))
+                                     showStr ("specStr: ", specStr);
+                                     showStr ("strStr:  ", strStr);
+                                     complain ("structure def spec for "^ S.name sym ^ " not matched"))
                                end
 
                      val epath' = strEntVar::epath
@@ -725,12 +711,8 @@ let
                    of VALspec{spec=acttyp, slot=actslot} =>
                      let
                          val _ =
-                             (debugPrint debugging
-                                ("spectype[0]", PPType.ppType statenv,
-                                 spectyp);
-                              debugPrint debugging
-                                ("acttyp[0]", PPType.ppType statenv,
-                                  acttyp))
+                             (debugPrint ("spectype[0]", PPT.fmtType statenv spectyp);
+                              debugPrint ("acttyp[0]", PPT.fmtType statenv acttyp))
 
                          val spectyp = typeInMatched("$specty(val/val)", spectyp)
                          val acttyp = typeInOriginal("$actty(val/val)", acttyp)
@@ -738,48 +720,28 @@ let
                          val prim = PrimopId.selValPrimFromStrPrim(rootPrim, actslot)
 
                          val _ =
-                             (debugPrint debugging
-                                ("spectype[1]", PPType.ppType statenv,
-                                 spectyp);
-                              debugPrint debugging
-                                ("acttyp[1]", PPType.ppType statenv,
-                                  acttyp))
+                             (debugPrint ("spectype[1]", PPT.fmtType statenv spectyp);
+                              debugPrint ("acttyp[1]", PPT.fmtType statenv acttyp))
 
                      in case matchTypes(spectyp, acttyp, sym)
                           of NONE => matchErr NONE
                            | SOME (btvs,ptvs) =>
                              let val _ =
-                                 (dbsaynl "###SM: ";
-                                  dbsaynl (S.name sym);
-                                  dbsaynl "\n";
-                                  debugPrint debugging
-                                    ("spectype", PPType.ppType statenv,
-                                     spectyp);
-                                  debugPrint debugging
-                                    ("acttyp", PPType.ppType statenv,
-                                      acttyp);
-                                  debugPrint debugging
-                                    ("ptvs",
-                                     (fn pps =>
-                                         PU.ppTuple pps
-                                           (fn pps => (fn tv =>
-                                              PPType.ppType statenv pps
-                                                            (T.VARty tv)))),
-                                     ptvs);
-                                  debugPrint debugging
-                                    ("btvs",
-                                     (fn pps =>
-                                         PU.ppTuple pps
-                                           (fn pps => (fn tv =>
-                                              PPType.ppType statenv pps
-                                                            (T.VARty tv)))),
-                                     btvs);
-                                  dbsaynl "\n")
+                                     PP.printFormatNL
+				       (PP.vcat
+                                          (PP.label "###SM:" (PPS.fmtSym sym),
+					   PP.viblock (PP.HI 2) 
+					     [PP.label "spectype:" (PPT.fmtType statenv spectyp),
+					      PP.label "acttyp:" (PPT.fmtType statenv acttyp),
+					      PP.label "ptvs:" 
+						(PP.tuple (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs),
+					      PP.label "btvs:"
+						(PP.tuple (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs)]))
 
                                  val spath = SP.SPATH[sym]
-                                 val actvar = VALvar{path=spath, typ=ref acttyp,
-                                             access=dacc, prim=prim,
-					     btvs = ref []}
+                                 val actvar = V.VALvar{path=spath, typ=ref acttyp,
+						       access=dacc, prim=prim,
+						       btvs = ref []}
 			         (* spectyp may be polymorphic even if
 				    acttyp is monomorphic (for nonstrict
 				    type operators), see modules test case 309 *)
@@ -790,9 +752,9 @@ let
                                         | _ =>
                                           let val acc = DA.namedAcc(sym, mkv)
                                               val specvar =
-                                                VALvar{path=spath, typ=ref spectyp,
-                                                       access=acc, prim=prim,
-						       btvs = ref []}
+                                                V.VALvar{path=spath, typ=ref spectyp,
+							 access=acc, prim=prim,
+							 btvs = ref []}
                                               val vb =
                                                 A.VB {pat=A.VARpat specvar,
                                                       exp=A.VARexp(ref actvar, ptvs),
@@ -825,10 +787,10 @@ let
                                                       rep=nrep, sign=sign, lazyp=lazyp}
                                           val acc = DA.namedAcc(name, mkv)
                                           val specvar =
-                                              VALvar{path=SP.SPATH[name], access=acc,
-                                                     prim=PrimopId.NonPrim,
-						     btvs = ref [],
-                                                     typ=ref spectyp}
+                                              V.VALvar{path=SP.SPATH[name], access=acc,
+                                                       prim=PrimopId.NonPrim,
+						       btvs = ref [],
+                                                       typ=ref spectyp}
                                           val vb =
                                               A.VB {pat=A.VARpat specvar,
                                                     exp=A.CONexp(con, paramtvs),

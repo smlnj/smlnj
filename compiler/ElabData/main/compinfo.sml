@@ -17,8 +17,7 @@ structure CompInfo =
          mkLvar: Symbol.symbol option -> LambdaVar.lvar,
          source : Source.inputSource}
 
-    fun mkCompInfo {source : Source.inputSource, mkStampGenerator : unit -> Stamps.generator}
-	           : compInfo =
+    fun mkCompInfo {source : Source.inputSource, mkStampGenerator : unit -> Stamps.generator} : compInfo =
 	let val _ = LambdaVar.clear () (* reset base lambda var to 0 *)
             val gen = mkStampGenerator ()
             fun mkLvar NONE = LambdaVar.mkLvar ()
@@ -28,6 +27,7 @@ structure CompInfo =
 	      source = source}
 	end
 
-    fun anyErrors ({source, ...} : 'a compInfo) = ! (#anyErrors source)
+    (* anyErrors : compInfo -> bool *)
+    fun anyErrors ({source, ...} : compInfo) = ! (#anyErrors source)
 
   end (* structure CompInfo *)

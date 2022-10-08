@@ -19,7 +19,7 @@ structure LContract : LCONTRACT =
 struct
 
 local  (* local definitions *)
-  structure DA = Access
+  structure A = Access
   structure LV = LambdaVar
   structure M  = LambdaVar.Tbl
   structure LT = Lty
@@ -208,7 +208,7 @@ fun swiInfo (VAR v, arms, defaultOp) =
          of (_, SimpVal u) => swiInfo(u, arms, defaultOp)
           | (_, ConExp ((_,rep,_), _, value)) =>  (* subject is a Constr exp *)
 	    (case rep
-	       of DA.EXN _ => NONE
+	       of A.EXN _ => NONE
 	        | _ => 
 		  let fun check ((PL.DATAcon((_,nrep,_), _, lvar), e) :: rest) =
 			    if nrep = rep then SOME(LET([lvar], RET [value], e)) else check rest
@@ -239,21 +239,21 @@ fun isBoolLty lt =
      | _ => false)
 
 fun isBool true (RECORD(RK_TUPLE, [], x,
-                  CON((_,DA.CONSTANT 1,lt), [], VAR x', v, RET [VAR v']))) =
+                  CON((_,A.CONSTANT 1,lt), [], VAR x', v, RET [VAR v']))) =
       (x = x') andalso (v = v') andalso (isBoolLty lt)
   | isBool false (RECORD(RK_TUPLE, [], x,
-                  CON((_,DA.CONSTANT 0,lt), [], VAR x', v, RET [VAR v']))) =
+                  CON((_,A.CONSTANT 0,lt), [], VAR x', v, RET [VAR v']))) =
       (x = x') andalso (v = v') andalso (isBoolLty lt)
   | isBool _ _ = false
 
 (* functions that do the branch optimizations *)
-fun boolDcon((PL.DATAcon((_,DA.CONSTANT 1,lt1),[],v1), e1),
-             (PL.DATAcon((_,DA.CONSTANT 0,lt2),[],v2), e2)) =
+fun boolDcon((PL.DATAcon((_,A.CONSTANT 1,lt1),[],v1), e1),
+             (PL.DATAcon((_,A.CONSTANT 0,lt2),[],v2), e2)) =
       if (isBoolLty lt1) andalso (isBoolLty lt2) then
         SOME(RECORD(FU.rk_tuple,[],v1,e1), RECORD(FU.rk_tuple,[],v2,e2))
       else NONE
-  | boolDcon(ce1 as (PL.DATAcon((_,DA.CONSTANT 0,_),[],_), _),
-             ce2 as (PL.DATAcon((_,DA.CONSTANT 1,_),[],_), _)) =
+  | boolDcon(ce1 as (PL.DATAcon((_,A.CONSTANT 0,_),[],_), _),
+             ce2 as (PL.DATAcon((_,A.CONSTANT 1,_),[],_), _)) =
       boolDcon (ce2, ce1)
   | boolDcon _ = NONE
 
@@ -281,17 +281,17 @@ end (* branchopt local *)
 
 (** the main transformation function *)
 
-     (* lpacc : DA.access -> DA.access *)
+     (* lpacc : A.access -> A.access *)
      (* expects an LVAR and returns an LVAR *)
-     fun lpacc (DA.LVAR v) =
+     fun lpacc (A.LVAR v) =
          (case lpsv (VAR v)
-	    of VAR w => DA.LVAR w
+	    of VAR w => A.LVAR w
              | _ => bug "unexpected in lpacc")
-       | lpacc da = (print "LContract.lpacc: "; print (DA.prAcc da);
+       | lpacc da = (print "LContract.lpacc: "; print (A.accessToString da);
 		     print "\n";
 		     bug "unexpected path in lpacc")
 
-     and lpdc (s, DA.EXN acc, t) = (s, DA.EXN(lpacc acc), t)
+     and lpdc (s, A.EXN acc, t) = (s, A.EXN(lpacc acc), t)
        | lpdc (s, rep, t) = (s, rep, t)
 
      and lpcon (PL.DATAcon (dc, ts, v)) = PL.DATAcon(lpdc dc, ts, v)

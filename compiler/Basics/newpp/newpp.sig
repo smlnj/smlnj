@@ -119,14 +119,14 @@ sig
 
   (* composing lists of formats *)
 
-    val sequence : {alignment: alignment, sep: format} -> format list -> format
-        (* inserts sep between constituent formats and aligns *)
+    val sequence : alignment -> format -> format list -> format
+        (* sequence a sep fmts: inserts sep between constituent fmts and aligns by a *)
 
     (* aligned sequence formatters, first argument is sep format, e.g. comma *)
-    val hsequence : format -> format list -> format
-    val psequence : format -> format list -> format
-    val vsequence : format -> format list -> format
-    val csequence : format -> format list -> format
+    val hsequence : format -> format list -> format  (* = sequence H *)
+    val psequence : format -> format list -> format  (* = sequence P *)
+    val vsequence : format -> format list -> format  (* = sequence V *)
+    val csequence : format -> format list -> format  (* = sequence C *)
 
     val tupleFormats : format list -> format  (* default packed alignment *)
         (* formats as a tuple *)

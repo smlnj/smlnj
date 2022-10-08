@@ -725,10 +725,9 @@ fun elabDATATYPEspec(dtycspec, env, elements, region) =
             addTycs(ndtycs@nwtycs, env, elements)
       val _ = debugmsg "--elabDATATYPEspec: tycs added"
 
-      fun addDcons([], elems) = elems
-        | addDcons((T.DATACON{name,rep,const,sign,typ,lazyp})::ds, elems) =
-            let val _ = debugPrint("addDcons - typ: ",
-		   (fn pps => fn ty => PPType.ppType env pps ty), typ)
+      fun addDcons ([], elems) = elems
+        | addDcons ((T.DATACON {name,rep,const,sign,typ,lazyp})::ds, elems) =
+            let val _ = debugPrint ("addDcons - typ: ", PPType.fmtType env typ)
 		val nd = T.DATACON {name=name, rep=rep, const=const, lazyp=lazyp,
                                     sign=sign, typ=vizty typ}
                 (** NOTICE that the call to vizty will kill all the
@@ -1186,7 +1185,7 @@ let val region0 = region
 			      stub = NONE}
 
 	      in debugPrint("--elabSig: returned signature:",
-		   (fn pps => fn s => PPModules.ppSignature pps env (s, 6)),sign);
+			    PPModules.fmtSignature env (sign, 6));
 		 debugmsg "--elabSig: << BaseSig";
 		 sign
 	     end

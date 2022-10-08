@@ -21,6 +21,7 @@ local
   structure V = Variable
   structure AS = Absyn
   structure AU = AbsynUtil
+  structure SE = StaticEnv
   structure EU = ElabUtil
   structure PP = NewPP
   structure PPA = PPAbsyn
@@ -61,7 +62,7 @@ local
 	     PP.hardIndent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
 
   fun ppPat pat =
-      PP.printFormatNL (PPA.fmtPat (SE.empty, NONE) (pat, 100))
+      PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
 in
 

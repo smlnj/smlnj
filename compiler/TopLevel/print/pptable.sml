@@ -26,39 +26,46 @@ struct
  * the default manner as "-"
  *)
 
-  type object = Unsafe.Object.object
+local
+  structure EM = ErrorMsg
+  structure S = Symbol
+  structure SM = StampMap
 
-  exception FORMATTER_NOT_INSTALLED
+  val global_formatter_table = ref SM.empty
+
+  val nullRegion = SourceMap.nullRegion
 
   fun error msg =
-        (ErrorMsg.errorNoFile (ErrorMsg.defaultConsumer(), ref false)
-			      (0,0) ErrorMsg.COMPLAIN msg ErrorMsg.nullErrorBody;
-	 raise ErrorMsg.Error)
-  local
-      val global_formatter_table = ref StampMap.empty
-  in
+        (EM.errorNoFile (EM.defaultOutput (), ref false) nullRegion
+           EM.COMPLAIN msg EM.nullErrorBody;
+	 raise EM.Error)
 
-  fun make_path([s],p) = SymPath.SPATH (rev (Symbol.tycSymbol(s) :: p))
-    | make_path(s::r,p) = make_path (r, Symbol.strSymbol(s)::p)
+  (* make_path : string list * S.symbol list *)
+  fun make_path ([s], p) = SymPath.SPATH (rev (S.tycSymbol(s) :: p))
+    | make_path (s::r, p) = make_path (r, S.strSymbol(s)::p)
     | make_path _ = error "install_pp: empty path"
+
+  type object = Unsafe.Object.object
+
+in
+
+  exception FORMATTER_NOT_INSTALLED
 
   fun install_formatter (path_names: string list) (formatter: object -> NewPP.format) =
       let val sym_path = make_path (path_names, [])
 	  val tycon = Lookup.lookTyc ((#static(EnvRef.combined())),
 				      sym_path,
-				      ErrorMsg.errorNoFile(ErrorMsg.defaultConsumer(),ref false) (0,0))
+				      EM.errorNoFile (EM.defaultOutput (), ref false) (0,0))
        in case tycon
 	    of Types.GENtyc {stamp, ...} =>
-	       global_formatter_table := StampMap.insert (!global_formatter_table, stamp, formatter)
+	         global_formatter_table := SM.insert (!global_formatter_table, stamp, formatter)
 	     | _ => error "install_formatter: nongenerative type constructor"
       end
 
   fun format_object (s: Stamps.stamp) (obj:object) =
-      case StampMap.find (!global_formatter_table, s)
+      case SM.find (!global_formatter_table, s)
         of SOME formatter => formatter obj
 	 | NONE => raise FORMATTER_NOT_INSTALLED
 
-  end
-
+end (* top local *)
 end (* structure PPTABLE *)
-

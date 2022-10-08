@@ -45,6 +45,7 @@ local
   structure V  = Variable
   structure AS = Absyn
   structure AU = AbsynUtil
+  structure PPA = PPAbsyn
   structure EU = ElabUtil
   structure LV = LambdaVar
   structure EM = ErrorMsg
@@ -135,13 +136,14 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
 	timeIt ("Andor.makeAndor", location, Andor.makeAndor, (protoAndor, allRules))
     val _ = if !stats then ST.collectAndorStats andor else ()
 
-    val _ = PPMC.debugPrint printAndor ("** matchComp: andor =", PPMC.ppAndor andor)
+    val _ = PPMC.debugPrint printAndor ("** matchComp: andor =", PPMC.fmtAndor andor)
 
     val dectree = (* DecisionTree.makeDectree (andor, allRules) *)
 	timeIt ("makeDectree", location, DT.makeDectree, (andor, allRules))
+
     val _ = ST.collectDectreeStats dectree  (* must collect dectree stats for rulesUsed and numFAIL *)
 
-\    val _ = PPMC.debugPrint printDectree ("** matchComp: dectree =", PPMC.fmtDectree dectree)
+    val _ = PPMC.debugPrint printDectree ("** matchComp: dectree =", PPMC.fmtDectree dectree)
 
     (* checking exhaustiveness and redundancy of rules *)
     (* It may be that there are unused _ramified_ rules, but all original rules are used!? Example? *)

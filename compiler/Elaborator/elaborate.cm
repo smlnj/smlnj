@@ -29,6 +29,7 @@ Group
 	structure DecisionTree
         structure MCUtil
 	structure MatchComp
+        structure PPMatchComp
 
 	structure BasicTypes
 	structure ElabUtil
@@ -82,6 +83,7 @@ is
         matchcomp/preprocessing.sml
         matchcomp/matchcomp.sml
         matchcomp/matchtrans.sml
+	matchcomp/ppmatchcomp.sml
 
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/basics.cm

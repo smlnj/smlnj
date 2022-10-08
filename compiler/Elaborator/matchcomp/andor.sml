@@ -17,8 +17,12 @@ struct
 
 local
   structure AS = Absyn
+  structure AU = AbsynUtil
   structure P = Paths
+  structure T = Types
   structure PP = NewPP
+  structure PPT = PPType
+  structure PPMC = PPMatchComp
 
   open MCCommon
 
@@ -31,12 +35,12 @@ local
   fun saynl msg = (say msg; newline())
   fun says strings = saynl (concat strings)
 
-  (* ppCon : T.datacon -> unit *)
-  fun ppCon (con: T.datacon) =
-      PP.printFormat (PPT.fmtCon con)
+  (* ppCon : AS.con -> unit *)
+  fun ppCon (con: AS.con) =
+      say (AU.conToString con)
 
-  (* ppRules : RS.ruleset -> unit *)
-  fun ppRules (rules: RS.ruleset) =
+  (* ppRules : ruleset -> unit *)
+  fun ppRules (rules: ruleset) =
       PP.printFormatNL (PPMC.fmtRuleset rules)
 
 in
