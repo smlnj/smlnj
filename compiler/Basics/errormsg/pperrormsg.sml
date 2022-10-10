@@ -4,11 +4,12 @@ structure PPErrorMsg =
 struct
 
 local (* top local *)
+  structure SR = Source
   structure SM = SourceMap
   structure PP = NewPP
 in
 
-fun fmtRegion ((lo,hi): SM.region) : PP.format =
+fun fmtRegion (REGION (lo,hi): SM.region) : PP.format =
     PP.cblock [PP.integer lo, PP.text "-", PP.integer hi]
 
 (* add fmtSourceloc, etc. *)

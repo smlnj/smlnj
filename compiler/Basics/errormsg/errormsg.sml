@@ -11,6 +11,7 @@ local
 
   structure PP = NewPP
   structure PPU = NewPPUtil
+  structure SR = Source
   structure SM = SourceMap
 
 in
@@ -80,20 +81,18 @@ in
   fun fmtSourceloc ({line, column, ...}: SM.sourceloc) = 
         PP.cblock [PP.integer line, PP.period, PP.integer column]
 
-  (* fmtRegion : Source.inputSource option -> SM.region -> PP.format *)
-  fun fmtRegion (sourceOp : Source.inputSource option) ((p1,p2): SM.region) : PP.format =
-      if (p1 + 1 >= p2)
-      then PP.text "<bad region>"
-      else (case sourceOp
-	      of SOME({sourceMap, fileOpened, ...}) =>
+  (* fmtRegion : SR.source option -> SM.region -> PP.format *)
+  fun fmtRegion (sourceOp : SR.source option) (SM.REGION (p1,p2)) : PP.format =
+      (case sourceOp
+         of SOME({sourceMap, fileOpened, ...}) =>
 		   let val (lo, hi) = SM.fileregion sourceMap (p1, p2)
 		    in PP.hcat (PP.ccat (PP.text fileOpened, PP.colon),
 				PP.hblock [fmtSourceloc lo,  PP.text "-", fmtSourceloc hi])
 		   end
 	       | NONE => PP.cblock [PP.integer p1, PP.text "-", PP.integer p2])
 
-  (* error : Source.inputSource -> SM.region -> complainer *)
-  fun error (source: Source.inputSource) ((p1,p2): SM.region) (severity: severity)
+  (* error : SR.source -> SM.region -> complainer *)
+  fun error (source: SR.source) ((p1,p2): SM.region) (severity: severity)
             (msg: string) (body : PP.format) =
       (printMessage (defaultOutput (), (fmtRegion (SOME source) (p1,p2)), severity, msg, body);
        record(severity, #anyErrors source))
@@ -114,8 +113,8 @@ in
         (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body));
        raise Error)
 
-  (* errors : Source.inputSource -> errors *)
-  fun errors (source: Source.inputSource) : errors =
+  (* errors : SR.source -> errors *)
+  fun errors (source: SR.source) : errors =
       {error = error source,
        errorMatch = fmtRegion (SOME source),
        anyErrors = #anyErrors source}
@@ -138,8 +137,8 @@ end (* structure ErrorMsg *)
     (1) Ramsey's NoWeb hasn't been supported for a long while, so we have
         removed the associated complications!
     (2) The ERRORMSG interface is still a mess, and needs to be revised.
-        -- the output (errConsumer) function no longer comes from Source.inputSource
-        -- anyErrors (bool ref) still comes from Source.inputSource. Why?
+        -- the output (errConsumer) function no longer comes from SR.source
+        -- anyErrors (bool ref) still comes from SR.source. Why?
            Where do the anyErrors values come from when calling errorNoFile, errorNoSource,
            etc?
     (3) Is there any problem with having a default output (defaultOutput = say)?
