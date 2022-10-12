@@ -4,19 +4,22 @@
 structure ElabType : ELABTYPE =
 struct
 
-local structure EM = ErrorMsg
-      structure S  = Symbol
-      structure SP = SymPath
-      structure IP = InvPath
-      structure SE = StaticEnv
-      structure L  = Lookup
-      structure B  = Bindings
-      structure T  = Types
-      structure TU = TypesUtil
-      structure BT = BasicTypes
-      structure EU = ElabUtil
-      structure TS = TyvarSet
-      open Symbol Absyn Ast PrintUtil Types TypesUtil Variable
+local
+  structure EM = ErrorMsg
+  structure S  = Symbol
+  structure SP = SymPath
+  structure IP = InvPath
+  structure SE = StaticEnv
+  structure L  = Lookup
+  structure B  = Bindings
+  structure T  = Types
+  structure TU = TypesUtil
+  structure BT = BasicTypes
+  structure EU = ElabUtil
+  structure TS = TyvarSet
+  structure SM = SourceMap
+  open Symbol Absyn Ast PrintUtil Types TypesUtil Variable
+  type region = SM.region
 in
 
 val debugging = ElabControl.etdebugging (* ref false *)
@@ -31,49 +34,49 @@ fun bug msg = EM.impossible("ElabType: " ^ msg)
 val --> = BT.-->
 infix -->
 
-fun elabTyv(tyv:Ast.tyvar,error,region:region)  =
+fun elabTyv(tyv:Ast.tyvar, error: EM.errorFn, region: region)  =
     case tyv
      of Tyv vt => mkTyvar(mkUBOUND(vt))
       | MarkTyv(tyv,region) => elabTyv(tyv,error,region)  (* ignore MarkTy *)
 
-fun elabTyvList (tyvars,error,region) =
-  let val tvs = map (fn tyv => elabTyv(tyv,error,region)) tyvars
-      val names = map (fn (ref(UBOUND{name,...})) => name
-                        | _ => bug "elabTyvList") tvs
-   in EU.checkUniq((error region),"duplicate type variable name",names);
-      tvs
-  end
+fun elabTyvList (tyvars, error: EM.errorFn, region: region) =
+    let val tvs = map (fn tyv => elabTyv(tyv,error,region)) tyvars
+	val names = map (fn (ref(UBOUND{name,...})) => name
+			  | _ => bug "elabTyvList") tvs
+     in EU.checkUniq (error region, "duplicate type variable name", names);
+	tvs
+    end
 
-fun elabType(ast:Ast.ty,env:SE.staticEnv,error,region:region)
+fun elabType(ast:Ast.ty, env:SE.staticEnv, error: EM.errorFn, region: region)
             : (Types.ty * TS.tyvarset) =
      case ast
       of VarTy vt =>
-	   let val tyv = elabTyv(vt,error,region)
+	   let val tyv = elabTyv (vt, error, region)
 	    in (VARty tyv, TS.singleton tyv)
 	   end
        | ConTy (co,ts) =>
 	   let val co1 =
 		   if (S.name (hd co)) = "->"
 		   then BT.arrowTycon
-		   else L.lookArTyc(env,SP.SPATH co,length ts,error region)
+		   else L.lookArTyc (env, SP.SPATH co, length ts, error region)
 	       val (lts1,lvt1) = elabTypeList(ts,env,error,region)
 	    in (CONty (co1,lts1),lvt1)
 	   end
        | RecordTy lbs =>
 	   let val (lbs1,lvt1) = elabTLabel(lbs,env,error,region)
-	    in (BT.recordTy(EU.sortRecord(lbs1,error region)),lvt1)
+	    in (BT.recordTy (EU.sortRecord (lbs1, error region)), lvt1)
 	   end
        | TupleTy ts =>
 	   let val (lts1,lvt1) = elabTypeList(ts,env,error,region)
 	    in (BT.tupleTy lts1,lvt1)
 	   end
-       | MarkTy (ty,region) => elabType(ty,env,error,region)  (* ignore MarkTy *)
+       | MarkTy (ty, region) => elabType(ty,env,error,region)  (* ignore MarkTy *)
 	 (*  let val (tyc,lvt) = elabType(ty,env,error,region)
 	      in (MARKty(tyc,region),lvt)
 	     end
           *)
 
-and elabTLabel(labs,env,error,region:region) =
+and elabTLabel (labs, env, error: EM.errorFn, region: region) =
     foldr
       (fn ((lb2,t2),(lts2,lvt2)) =>
 	  let val (t3,lvt3) = elabType(t2,env,error,region)
@@ -81,7 +84,7 @@ and elabTLabel(labs,env,error,region:region) =
 	  end)
       ([],TS.empty) labs
 
-and elabTypeList(ts,env,error,region:region) =
+and elabTypeList(ts,env,error: EM.errorFn, region: region) =
     foldr
       (fn (t2,(lts2,lvt2)) =>
 	  let val (t3,lvt3) = elabType(t2,env,error,region)
@@ -93,7 +96,7 @@ and elabTypeList(ts,env,error,region:region) =
 (**** DATACON DECLARATIONS ****)
 exception ISREC
 
-fun elabDB((tyc,args,name,def,region,lazyp),env,rpath:IP.path,error) =
+fun elabDB((tyc, args, name, def, region: region, lazyp), env, rpath: IP.path, error: EM.errorFn) =
    let val rhs = CONty(tyc, map VARty args)
 
        fun checkrec(_,NONE) = ()
@@ -132,7 +135,7 @@ fun elabDB((tyc,args,name,def,region,lazyp),env,rpath:IP.path,error) =
 		    in (dc2::dcl1,TS.union(tv2,tvs1,error region))
 		   end)
 		([],TS.empty) def
-	val _ = EU.checkBoundTyvars(tvs,args,error region)
+	val _ = EU.checkBoundTyvars(tvs, args, error region)
 	val _ = TU.bindTyvars args
 	val sdcl = EU.sort3 dcl
 	val (reps, sign) = ConRep.infer isrec sdcl
@@ -172,15 +175,15 @@ fun elabDB((tyc,args,name,def,region,lazyp),env,rpath:IP.path,error) =
 
 (**** TYPE DECLARATIONS ****)
 
-fun elabTBlist(tbl:Ast.tb list,notwith:bool,env0,rpath,region,
+fun elabTBlist(tbl:Ast.tb list, notwith:bool, env0, rpath, region: region,
 	       {mkStamp,source,...}: EU.compInfo)
       : T.tycon list * S.symbol list * SE.staticEnv =
-    let val error = EM.error source
-	fun elabTB(tb: Ast.tb, env, region): (T.tycon * symbol) =
+    let val error : EM.errorFn = EM.error source
+	fun elabTB(tb: Ast.tb, env, region: region): (T.tycon * symbol) =
 	    case tb
 	      of Tb{tyc=name,def,tyvars} =>
-		   let val tvs = elabTyvList(tyvars,error,region)
-		       val (ty,tv) = elabType(def,env,error,region)
+		   let val tvs = elabTyvList(tyvars, error, region)
+		       val (ty,tv) = elabType(def, env, error, region)
 		       val arity = length tvs
 		       val _ = EU.checkBoundTyvars(tv,tvs,error region)
 		       val _ = TU.bindTyvars tvs
@@ -192,7 +195,7 @@ fun elabTBlist(tbl:Ast.tb list,notwith:bool,env0,rpath,region,
 				  tyfun=TYFUN{arity=arity, body=ty}}
 		    in (tycon,name)
 		   end
-	      | MarkTb(tb',region') => elabTB(tb',env,region')
+	      | MarkTb (tb',region') => elabTB(tb', env, region')
 	fun loop(nil,tycons,names,env) = (rev tycons,rev names,env)
 	  | loop(tb::rest,tycons,names,env) =
 	      let val env' = if notwith then env0 else SE.atop(env,env0)
@@ -203,7 +206,7 @@ fun elabTBlist(tbl:Ast.tb list,notwith:bool,env0,rpath,region,
      in loop(tbl,nil,nil,SE.empty)
     end
 
-fun elabTYPEdec(tbl: Ast.tb list,env,rpath,region,
+fun elabTYPEdec(tbl: Ast.tb list, env, rpath, region: region,
 		compInfo as {source, mkStamp, ...}: EU.compInfo)
       : Absyn.dec * SE.staticEnv =
     let	val _ = debugmsg ">>elabTYPEdec"
@@ -216,7 +219,7 @@ fun elabTYPEdec(tbl: Ast.tb list,env,rpath,region,
     end
 
 fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
-                     sigEntEnv, isFree, rpath, region,
+                     sigEntEnv, isFree, rpath, region: region,
                      compInfo as {source, mkStamp,...}: EU.compInfo) =
     let (* predefine datatypes *)
 	val _ = debugmsg ">>elabDATATYPEdec"
@@ -315,16 +318,16 @@ fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
 
 	fun transType t =
 	    case TU.headReduceType t
-	      of CONty(tyc, args) =>
-		   CONty(transTyc tyc,map transType args)
-	       | POLYty{sign,tyfun=TYFUN{arity,body}} =>
-		   POLYty{sign=sign,
-			  tyfun=TYFUN{arity=arity,body=transType body}}
-	       | MARKty(tyc, region) => transType tyc
+	      of CONty (tyc, args) =>
+		   CONty (transTyc tyc, map transType args)
+	       | POLYty {sign, tyfun=TYFUN {arity, body}} =>
+		   POLYty {sign=sign,
+			   tyfun=TYFUN {arity=arity, body=transType body}}
+	       | MARKty(tyc, region) => transType tyc  (* MARKty ignored *)
 	       | t => t
 
 	(* elaborate the definition of a datatype *)
-	fun elabRHS ({tvs,name,def,region,tyc,lazyp,binddef,strictName},
+	fun elabRHS ({tvs,name,def,region: region,tyc,lazyp,binddef,strictName},
 		     (i,done)) =
 	    let val datacons =
                       elabDB((tyc,tvs,name,def,region,lazyp),fullEnv,rpath,error)

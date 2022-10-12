@@ -26,13 +26,13 @@ structure SMLParser : SMLNJ_PARSER =
     val dummyEOF = LrVals.Tokens.EOF(0,0)
     val dummySEMI = LrVals.Tokens.SEMICOLON(0,0)
 
-    fun parse (source : Source.inputSource) = let
+    fun parse (source : Source.source) = let
 	  val {sourceStream, interactive, sourceMap, anyErrors, ...} = source
-          val err = ErrorMsg.error source
+          fun err (lo: int, hi: int) = ErrorMsg.error source (SourceMap.REGION (lo, hi))
 	  fun parseerror (s, p1, p2) = err (p1, p2) COMPLAIN s nullErrorBody
 	  val lexarg = {
 		  comLevel = ref 0,
-		  sourceMap = sourceMap,
+		  source = source,
 		  charlist = ref (nil : string list),
 		  stringtype = ref false,
 		  stringstart = ref 0,
@@ -71,10 +71,10 @@ structure SMLParser : SMLNJ_PARSER =
 		    then EOF
 		    else let
 		      val _ = prompt := !ParserControl.secondaryPrompt;
-		      val initialLinePos = SourceMap.lastLinePos sourceMap
+		      val initialLinePos = SourceMap.lastLineStartPos (!sourceMap)
 		      val (result, lexer'') = P.parse(lookahead, !lexer', parseerror, err)
-		      val linesRead = SourceMap.newlineCount sourceMap
-			    (initialLinePos, SourceMap.lastLinePos sourceMap)
+		      val linesRead = SourceMap.newlineCount (!sourceMap,
+			    SourceMap.REGION (initialLinePos, SourceMap.lastLineStartPos (!sourceMap)))
 		      in
 			addLines linesRead;
 			lexer' := lexer'';

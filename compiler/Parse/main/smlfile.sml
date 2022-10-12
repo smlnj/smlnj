@@ -6,8 +6,8 @@
 
 signature SMLFILE =
   sig
-    val parseOne : Source.inputSource -> unit -> Ast.dec option
-    val parse : Source.inputSource -> Ast.dec
+    val parseOne : Source.source -> unit -> Ast.dec option
+    val parse : Source.source -> Ast.dec
   end
 
 structure SmlFile :> SMLFILE = struct
@@ -22,6 +22,7 @@ structure SmlFile :> SMLFILE = struct
 	  then SMLParser.parse source
 	  else MLParser.parse source
 
+    (* parseOne : Source.source -> unit -> Ast.dec option *)
     fun parseOne source = let
 	val parser = parser source
 	val parser = Stats.doPhase parsePhase parser (* for correct timing *)
@@ -36,6 +37,7 @@ structure SmlFile :> SMLFILE = struct
 	  doit
 	end
 
+    (* parse : Source.source -> Ast.dec *)
     fun parse source = let
 	val parser = parser source
 	val parser = Stats.doPhase parsePhase parser (* for correct timing *)

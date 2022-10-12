@@ -37,8 +37,9 @@ local
   structure V = Variable
   structure EU = ElabUtil
   structure ED = ElabDebug
+  structure SM = SourceMap
   structure PP = NewPP
-  structure PPE = PPErrorMsg
+  structure PPSM = PPSourceMap
   structure PPS = PPSymbols
   structure PPT = PPType
   structure PPA = PPAbsyn
@@ -75,7 +76,7 @@ fun mkMessage (msg: string, mode: Unify.unifyFail) : string =
 fun mkDummy0 () = BasicTypes.unitTy
 
 (* ================================================================================ *)
-(* decType : SE.staticEnv * A.dec * bool * EM.errorFn * region -> A.dec *)
+(* decType : SE.staticEnv * A.dec * bool * EM.errorFn * SM.region -> A.dec *)
 fun decType (env, dec, toplev, err, anyErrors, region) =
 let
 
@@ -126,17 +127,17 @@ fun fmtModeErrorMsg (mode: Unify.unifyFail) =
 	      (PP.text "Mode: tycon mismatch",
 	       PP.viblock (PP.HI 3)
 		 [PP.hcat (PP.text "tycon1:", fmtTycon tyc1),
-		  PP.hcat (PP.text "from:", PPE.fmtRegion reg1),
+		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
 		  PP.hcat (PP.text "tycon2:", fmtTycon tyc2),
-		  PP.hcat (PP.text "from:", PPE.fmtRegion reg2)])
+		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg2)])
 	 | TYP (ty1, ty2, reg1, reg2) =>
 	    PP.vcat
 	      (PP.text "Mode: type mismatch",
 	       PP.viblock (PP.HI 3)
 		 [PP.hcat (PP.text "type1:", fmtType ty1),
-		  PP.hcat (PP.text "from:", PPE.fmtRegion reg1),
+		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
 		  PP.hcat (PP.text "type2:", fmtType ty2),
-		  PP.hcat (PP.text "from:", PPE.fmtRegion reg2)])
+		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg2)])
 	 | _ => PP.empty)
     else PP.empty
 
@@ -430,15 +431,15 @@ fun stripMarksVar (MARKpat(p as VARpat _, reg)) = p
       CONSTRAINTpat(stripMarksVar p, ty)
   | stripMarksVar p = p
 
-(* patType : pat * int * region -> pat * ty *)
+(* patType : AS.pat * int * SM.region -> AS.pat * T.ty *)
 (* essentially just copies the pattern structure, except variable patterns, which
  * may be updated (UNDEFty replaced by (bounded?) meta tyvar. Could possibly return
  * the original pattern instead.  Could pass occ instead of int for depth, but then
  * would have to apply lamdepth to occ on each recursive call. *)
-fun patType(pat: pat, depth, region) : pat * ty =
+fun patType(pat: pat, depth, region: SM.region) : pat * ty =
     case pat
       of WILDpat => (pat, mkMETAtyBounded depth)
-       | MARKpat (p,region') => patType (p, depth, region')
+       | MARKpat (p, region') => patType (p, depth, region')
        | VARpat (V.VALvar{typ as ref UNDEFty,...}) =>
 	   (typ := mkMETAtyBounded depth; (pat, MARKty(!typ, region)))
 	   (* multiple occurrence due to or-pat, but all occurrences share the same type *)
@@ -527,7 +528,7 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		     val _ = (typ := patTy)
 		  in (LAYEREDpat(vpat,npat),MARKty(patTy, region))
 		 end
-	       | (cpat as CONSTRAINTpat(VARpat(V.VALvar{typ,...}),ty)) =>
+	       | (cpat as CONSTRAINTpat (VARpat (V.VALvar{typ,...}), ty)) =>
 		 let val (npat,patTy) = patType (basePat,depth,region)
 		  in if unifyErr{ty1=patTy, name1="pattern", ty2=ty, name2="constraint",
 				 message="pattern and constraint do not agree",
@@ -537,8 +538,8 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		 end)
        | p => bug "patType -- unexpected pattern"
 
-(* expType : exp * OC.occ * region -> exp * ty *)
-fun expType(exp: exp, occ: OC.occ, region) : exp * ty =
+(* expType : exp * OC.occ * SM.region -> exp * ty *)
+fun expType(exp: exp, occ: OC.occ, region: SM.region) : exp * ty =
 let fun boolUnifyErr { ty, name, message } =
 	unifyErr {ty1 = ty, name1 = name, ty2 = BT.boolTy, name2 = "",
 		  message = message, region = region,
@@ -764,7 +765,7 @@ end
 
 (* ruleType : rule * occ * region -> rule * ty * ty *)
 (* the types returned are the lhs (pat) type and the rhs (exp) types *)
-and ruleType (RULE(pat,exp), occ, region) =
+and ruleType (RULE(pat,exp), occ, region: SM.region) =
     let val occ = OC.Abstr occ
 	val (pat',patTy) = patType (pat, OC.lamdepth occ, region)
 	val (exp',expTy) = expType (exp, occ, region)
@@ -772,7 +773,7 @@ and ruleType (RULE(pat,exp), occ, region) =
     end
 
 (* matchType : rule list * occ * region -> rule list * ty * ty *)
-and matchType (rules, occ, region) =
+and matchType (rules, occ, region: SM.region) =
     case rules
       of [] => bug "empty rule list in Typecheck.matchType"
        | [rule] =>

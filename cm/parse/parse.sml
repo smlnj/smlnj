@@ -29,7 +29,7 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 
     val lookAhead = 30
 
-    structure PP = PrettyPrint
+    structure PP = NewPP
     structure S = Source
     structure EM = ErrorMsg
     structure SM = SourceMap
@@ -105,9 +105,9 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 	 sgc := #1 (SrcPathMap.remove (!sgc, l)))
 	handle LibBase.NotFound => ()
 
-    fun parse args = let
+    fun parse args =
 
-	val _ = SrcPath.sync ()
+    let val _ = SrcPath.sync ()
 
 	val { load_plugin, gr, param, stabflag, group,
 	      init_group, paranoid } = args
@@ -165,89 +165,76 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 	      majorGC ())
 	     handle LibBase.NotFound => ())
 
-	fun hasCycle (group, groupstack) = let
-	    (* checking for cycles among groups and printing them nicely *)
-	    fun findCycle ([], _) = []
-	      | findCycle ((h as (g, (s, p1, p2))) :: t, cyc) =
-		if SrcPath.compare (g, group) = EQUAL then rev (h :: cyc)
-		else findCycle (t, h :: cyc)
-	    fun report ((g, (s, p1, p2)), hist) = let
-		fun pphist pps = let
-		    fun loop (_, []) = ()
-		      | loop (g0, (g, (s, p1, p2)) :: t) = let
-			    val s = EM.matchErrorString s (p1, p2)
-			in
-			    PP.newline pps;
-			    PP.string pps s;
-			    PP.string pps ": importing ";
-			    PP.string pps (SrcPath.descr g0);
-			    loop (g, t)
-			end
-		in
-		    loop (g, hist)
-		end
-	    in
-		EM.error s (p1, p2) EM.COMPLAIN
-		           ("group hierarchy forms a cycle with " ^
-			    SrcPath.descr group)
-			   pphist
+	fun hasCycle (group, groupstack) =
+	    let (* checking for cycles among groups and printing them nicely *)
+		fun findCycle (nil, _) = nil
+		  | findCycle ((h as (g, (s, p1, p2))) :: t, cyc) =
+		      (case SrcPath.compare (g, group)
+			of EQUAL => rev (h :: cyc)
+		         | _ => findCycle (t, h :: cyc))
+		fun report ((g, (s, p1, p2)), hist) =
+		      let val errorBody =
+			      let fun loop (_, nil) = nil
+				    | loop (g0, (g, (s, p1, p2)) :: rest) =   (* s: source *)
+				      let val locFmt = PPSourceMap.fmtSourceRegion (s, SM.REGION (p1, p2))
+				       in PP.hblock [locFmt, PP.text ": importing", PP.text (SrcPath.descr g0)] ::
+					  loop (g, rest)
+				      end
+			      in PP.vblock (loop (g, hist))
+			      end
+		       in EM.error s (p1, p2) EM.COMPLAIN
+			     ("group hierarchy forms a cycle with " ^ SrcPath.descr group)
+			     errorBody
+		      end
+	     in case findCycle (groupstack, [])
+		  of h :: t => (report (h, t); true)
+		   | [] => false
 	    end
-	in
-	    case findCycle (groupstack, []) of
-		h :: t => (report (h, t); true)
-	      | [] => false
-	end
 
-	fun mparse args = let
-	    val (group, vers, groupstack, pErrFlag, stabthis, curlib,
-		 ginfo, rb, error) = args
-	    fun getStable stablestack (ginfo, gpath, vers, rb) = let
-		(* This is a separate "findCycle" routine that detects
-		 * cycles among stable libraries.  These cycles should
-		 * never occur unless someone purposefully renames
-		 * stable library files in a bad way. *)
-		fun findCycle ([], _) = NONE
-		  | findCycle (h :: t, cyc) =
-		    if SrcPath.compare (h, gpath) = EQUAL then SOME (h :: cyc)
-		    else findCycle (t, h :: cyc)
-		fun report cyc = let
-		    fun pphist pps = let
-			fun loop [] = ()
-			  | loop (h :: t) =
-			    (PP.newline pps;
-			     PP.string pps (SrcPath.descr h);
-			     loop t)
-		    in
-			loop (rev cyc)
-		    end
-		in
-		    EM.errorNoFile (errcons, pErrFlag) SM.nullRegion
-		      EM.COMPLAIN
-		      ("stable libraries form a cycle with " ^
-		       SrcPath.descr gpath)
-		      pphist
-		end
-		fun load () = let
-		    val go = Stabilize.loadStable
-			{ getGroup = getStable (gpath :: stablestack),
-			  anyerrors = pErrFlag }
-			(ginfo, gpath, vers, rb)
-		in
-		    case go of
-			NONE => NONE
-		      | SOME g => 
-			    (registerNewStable (gpath, g);
-			     Say.vsay ["[library ", SrcPath.descr gpath,
-				       " is stable]\n"];
-			     SOME g)
-		end
-	    in
-		case findCycle (stablestack, []) of
-		    NONE => (case cachedStable (gpath, init_group) of
-				 SOME g => SOME g
-			       | NONE => load ())
-		  | SOME cyc => (report cyc; NONE)
-	    end
+	fun mparse args =
+	    let val (group, vers, groupstack, pErrFlag, stabthis, curlib, ginfo, rb, error) = args
+		fun getStable stablestack (ginfo, gpath, vers, rb) =
+		    (* This is a separate "findCycle" routine that detects
+		     * cycles among stable libraries.  These cycles should
+		     * never occur unless someone purposefully renames
+		     * stable library files in a bad way. *)
+		    let fun findCycle ([], _) = NONE
+			  | findCycle (h :: t, cyc) =
+			      if SrcPath.compare (h, gpath) = EQUAL then SOME (h :: cyc)
+			      else findCycle (t, h :: cyc)
+			fun report cyc =
+			    let fun pphist pps =
+				    let fun loop [] = ()
+					  | loop (h :: t) =
+					      (PP.newline pps;
+					       PP.string pps (SrcPath.descr h);
+					       loop t)
+				    in loop (rev cyc)
+				    end
+			    in EM.errorNoFile (errcons, pErrFlag) SM.nullRegion EM.COMPLAIN
+					      ("stable libraries form a cycle with " ^
+					       SrcPath.descr gpath)
+					      pphist
+			    end
+			fun load () =
+			    let val go = Stabilize.loadStable
+					     { getGroup = getStable (gpath :: stablestack),
+					       anyerrors = pErrFlag }
+					     (ginfo, gpath, vers, rb)
+			    in case go
+				of NONE => NONE
+				 | SOME g => 
+				     (registerNewStable (gpath, g);
+				      Say.vsay ["[library ", SrcPath.descr gpath,
+						" is stable]\n"];
+				      SOME g)
+			    end
+		    in case findCycle (stablestack, [])
+			 of NONE => (case cachedStable (gpath, init_group)
+				       of SOME g => SOME g
+					| NONE => load ())
+			  | SOME cyc => (report cyc; NONE)
+		    end (* getStable *)
 
 	    fun stabilize (NONE, _) = NONE
 	      | stabilize (SOME g, rb) =

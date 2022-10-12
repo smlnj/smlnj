@@ -1,4 +1,4 @@
-(* sourcemap.sml
+(* Basics/source/sourcemap.sml 
  *
  * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -10,191 +10,199 @@
 structure SourceMap :> SOURCE_MAP =
 struct
 
-  (* compiler bug errors *)
-  exception SourceMap of string
-  fun bug msg = raise SourceMap(msg)
+local
+
+  structure SR = Source
+
+  (* compiler bug errors; precedes ErrorMsg, so cannot use ErrorMsg.impossible *)
+  exception SOURCEMAP of string
+  fun bug msg = raise SOURCEMAP msg
+
+in 
 
   (* types ------------------------------- *)
 
-  (* A character position (charpos) is an integer.  A region is delimited by the
-   * position of the start character and one beyond the last character.
-   * It might help to think of Icon-style positions, which fall between
-   * characters.
+  (* A character position (charpos) is a positive integer.  A region is delimited
+   * by the position of the first character the position one beyond the last character
+   * of the region. Positions fall between characters, but "belong" to the "next"
+   * character.
+   *     a b c  ...   -- characters
+   *    1 2 3  ...    -- character positions
    *)
 
-  type charpos = int
-    (* charpos is 1-based. I.e. the (default) position of the first character in the
-     * input stream is 1 (not 0!) *)
+  type charpos = SR.charpos
+    (* INVARIANT : charpos >= 1:
+     *  charpos is 1-based. I.e. the position of the first character in the
+     *  input stream is 1 (not 0!) *)
 
-  type region = charpos * charpos
-    (* INVARIANT: (lo,hi) : region ==> lo <= hi
-     * If region /= (0,0), then lo < hi, i.e. all non-null regions are nonempty. *)
-    (* region should have been a datatype! (in-band representation of the null region!) *)
+  type lineno = SR.lineno
+    (* line numbers, 1 based: INVARIANT lineno >= 1 *)
 
-  (* line numbers, 1 based: INVARIANT lineno >= 1 *)
-  type lineno = int
+  type sourceMap = SR.sourceMap
 
-  type lines = (charpos * lineno) list
+  datatype region
+    = NULLregion
+    | REGION of charpos * charpos
+      (* INVARIANT: REGION (lo,hi) ==> lo < hi.
+       * All REGION regions are nonempty. *)
 
-  type sourceloc = {fileName:string, line:int, column:int}
-    (* lines and columns are both positive, 1-based (minimum value is 1) *)
+  type location = {line : lineno, column: int}
+    (* Line and column are both positive, 1-based (minimum value is 1),
+     * Thus the first line is line 1, and the first column is column 1. *)
 
-(* The representation of a sourcemap is record with fields
-     - filename : string  (the name of a single, fixed source file)
-     - lines: lines ref
-         initial charpos and line number of lines in decreasing order, so the last
-         "line" in the list is the first line in the file, represented as (1,1).
-	 Lines are numbered from 1.
+  type sourceLoc = {source : SR.source, loc : location}
 
-   The representation satisfies these invariants:
-     * The line list is never empty (initialized to [(1,1)], and thereafter lines are only added).
-     * Initial positions are strictly decreasing accross the line list,
-       even for "empty" lines, which have length at least 1 because we count the newline char.
-     * The last element in the line list contains the smallest valid starting charpos (namely 1).
-*)
+  type sourceRegion = {source : SR.source, start : location, finish : location}
+    (* a "region" within a source, delineated by locations instead of charposes *)
 
-  type sourcemap = {file: string, lines: lines ref}
-		    
-  (* INVARIANTS for sourcemaps:
-   * (1) length (!lines) > 0 (initialized to [(1,1)] and only grows)
-   * (2) charpos components of !lines are strictly decreasing,
-       ending in initial charpos 1 for the last element, which represents the 1st line
-   * (3) last (initial) element of lines is the initial line: (1, 1).
-   *)
-
-  val nullRegion : region = (0,0)
-  (* nullRegion is a conventional default region value.  It does not represent
-   * a proper region, and does not have a location in the file. In particular, it
-   * should not be viewed as an empty region at the beginning of the input. *)
+  val nullRegion : region = NULLregion
+    (* nullRegion is a conventional default region value.  It does not represent
+     * a proper region, and does not have a location in the file. In particular, it
+     * should not be interpretted as an empty region at the beginning of the input. *)
 
   (* isNullRegion : region -> bool *)
-  fun isNullRegion ((_,0): region) = true
+  fun isNullRegion (NULLregion: region) = true
     | isNullRegion _ = false
 
-  (* regionToString : region -> string *)
-  fun regionToString ((lo, hi): region) =
-      String.concat [Int.toString lo, "-", Int.toString hi]
 
-  (* newSourceMap: string -> sourcemap
-   * create a new sourcemap, given initial file name.
-   * called only one place, in Source.newSource.  Initial position at the
-   * start of the first line is 1, initial line number is 1. A source is
-   * assumed to have at least one line, (i.e. to be nonempty). *)
-  fun newSourceMap (fileName: string) : sourcemap =
-      {file = fileName,
-       lines = ref [(1, 1)]}  (* initial lines: line 1 starts at char 1 *)
+  (* initSourceMap: sourceMap *)
+  val initSourceMap : sourceMap = [(1, 1)]
 
-  (* newline : sourcemap -> charpos -> unit
-   * pos is the position of the newline character, so the next line doesn't
-   * start until the succeeding character position, pos+1. *)
-  fun newline ({lines, ...}: sourcemap) (pos: charpos) =
-      case !lines
-        of (_,line) :: _ =>  lines := (pos+1, line+1) :: !lines
-         | nil => bug "newline"  (* sourcemap invariant (1) violated *)
-
-  (* lastLinePos : sourcemap -> charpos *)
-  fun lastLinePos ({lines, ...}: sourcemap) : charpos =
-      case !lines
+  (* UNUSED locally, NOT exported *)
+  (* lastLineStartPos : sourceMap -> charpos *)
+  fun lastLineStartPos (smap: sourceMap) : charpos =
+      case smap
         of ((pos,line)::_) => pos
-         | nil => bug "lastLineNumber" (* sourcemap invariant (1) violated *)
+         | nil => bug "lastLineStartPos" (* sourceMap invariant (1) violated *)
 
-  (* remove : charpos -> lines -> lines *)
-  (* remove: remove from a lines list those lines whose initial positions
-   * exceed the target position pos, while maintaining the lines invariants.
-   * The first line of the result will contain the target position.
-   * ASSERT: pos >= 1. the initial charpos of any sourcemap *)
-  fun remove (pos, (lines: lines)) =
-      let fun strip (lines as (pos', line)::lines') =
-              if pos' > pos then strip lines'
-              else lines
-	    | strip _ = bug "remove"
-       in strip lines
+  (* uptoPos : charpos * sourceMap -> sourceMap
+   * REQUIRE: pos is "within" the sourceMap (no newlines since #1 (hd smap))
+   * uptoPos lines from the sourceMap until the charpos occurs in the
+   * first line of the remainder, i.e. the first line of the result will contain
+   * the target position. *)
+  fun uptoPos (pos: charpos, smap: sourceMap) =
+      let fun strip (lines as (pos', _) :: lines') =
+              if pos < pos' then strip lines' (* pos comes before this first line *)
+              else lines (* pos is in the first line *)
+	    | strip _ = bug "uptoPos"
+       in strip smap
       end
 
   (* column : charpos * charpos -> int
-   * ASSERT: pos lies within a line starting at lineStartPos:
-   *   lineStartPos <= pos < start of next line  *)
-  fun column (lineStartPos: charpos, pos: charpos) =
-      pos - lineStartPos + 1  (* each line starts at column 1 *)
+   * REQUIRE: pos lies within the line starting at startPos:
+   *   startPos <= pos < start of next line  *)
+  fun column (startPos: charpos, pos: charpos) =
+      pos - startPos + 1  (* each line starts at column 1 *)
 
-  (* posToSourceloc : sourcemap -> charpos -> sourceloc *)
-  fun posToSourceloc ({file, lines}:sourcemap) pos : sourceloc =
-      case remove (pos, !lines)
-        of (linePos,line) :: _ =>   (* pos is within top line *)
-             {fileName = file, line = line, column = column (linePos, pos)}
-         | _ => bug "posToSourceloc"
+  (* charposToLocation : sourceMap * charpos -> location
+   * REQUIRE: pos is within top line (last line, current line?) of smap *)
+  fun charposToLocation (smap: sourceMap, pos: charpos) : location =
+      case uptoPos (pos, smap)
+        of (startPos,lineno) :: _ => 
+             {line = lineno, column = column (startPos, pos)}
+         | _ => bug "charposToLocation"
 
-  fun posToLineColumn (pos: charpos, lines : lines) : (int * int) = 
-      case remove (pos, lines)
-        of (linePos,line) :: _ =>   (* pos is within top line *)
-             (line, column (linePos, pos))
-         | _ => bug "posToLineColumn"
+  (* FROM Source.filepos => SM.sourceLocation (also replaces SM.filepos) *)
+  (* charposToSourceLoc: source * SourceMap.charpos -> sourceLoc *)
+  fun charposToSourceLoc (source as {sourceMap,...}: SR.source, pos: charpos) : sourceLoc =
+      {source = source, loc = charposToLocation (!sourceMap, pos)}
 
-  (* Searching regions is a bit trickier, since we track file and line
-   * simultaneously.  We exploit the invariant that every file entry has a
-   * corresponding line entry.  We also exploit that only file entries
-   * correspond to new regions. *)
+  (* regionToLocations : sourceMap * region -> (location * location) option *)
+  fun regionToLocations (smap: sourceMap, REGION (lo, hi)) : (location * location) option =
+        SOME (charposToLocation (smap, lo), charposToLocation (smap, hi))
+    | regionToLocations (_, NULLregion) = NONE
 
-  (* isNullRegion : region -> bool *)
-  fun isNullRegion (0,0) = true
-    | isNullRegion _ = false
+  (* sourceRegion : SR.source * region -> sourceRegion option *)
+  fun sourceRegion (source as {sourceMap, ...}: SR.source, region: region)
+                  : sourceRegion option =
+      (case regionToLocations (!sourceMap, region)
+	of SOME (start, finish) =>		
+	     SOME {source = source, start = start, finish = finish}
+	 | NONE => NONE)
 
-  (* filepos : sourcemap -> charpos -> sourceloc *)
-  fun filepos ({file, lines} : sourcemap) (pos : charpos) : sourceloc =
-      let val (lin, col) = posToLineColumn  (pos, !lines)
-       in {fileName = file, line = lin, column = col}
-      end
+  (* regionNewlineCount : sourceMap * region -> int
+   * determines the number of newlines occurring within a region,
+   * which may be 0 for a region that lies within a single line.
+   * Also, by convention, returns 0 for NULLregion *)
+  fun newlineCount (smap: sourceMap, region: region) =
+      (case regionToLocations (smap, region)
+	 of SOME ({line=lo_line, ...}, {line=hi_line,...}) =>
+	      hi_line - lo_line  (* hi_line and lo_line may be equal *)
+	  | NONE => 0)
 
-  (* fileregion : sourcemap -> region -> sourceloc * sourceloc *)
-  (* result sourceloc pair have same file component, the file from the sourcemap *)
-  fun fileregion ({file, lines}: sourcemap) ((lo, hi): region) : sourceloc * sourceloc =
-      if isNullRegion (lo,hi) then bug "fileregion" else
-      let (* ASSERT: pos is in the first line *)
-          val lines' = !lines
-	  val (lo_line, lo_column) = posToLineColumn (lo, lines')
-	  val (hi_line, hi_column) = posToLineColumn (hi, lines')
-       in ({fileName = file, line = lo_line, column = lo_column},
-	   {fileName = file, line = hi_line, column = hi_column})
-      end
-
-   (* newlineCount : sourcemap -> region -> int
-    * determines the number of newlines occurring within a region,
-    * which may be 0 for a region that lies within a single line. *)
-   fun newlineCount (sm: sourcemap) (region: region) =
-       let val ({line=lo_line, ...}, {line=hi_line,...}) = fileregion sm region
-	in hi_line - lo_line
+  (* uptoPos': sourceMap -> charpos -> sourceMap
+   * The next to last line of the result sourceMap contains the charpos.
+   * REQUIRE: pos comes before the last line in the sourceMap argument.
+   * NOTE. If a file ends with a newline, there will be no characters 
+   * within the empty "last" line, so the target position can't be in the last line.
+   * The line number components of lines are irrelevant here.
+   * EDGE CASE. What if charpos is in the last line, possibly the first position
+   *   in an empty last line? *)
+  fun uptoPos' (pos: charpos, smap: sourceMap) =
+      let fun strip (lines0 as ((pos0, _) :: (lines1 as ((pos1, _) :: _)))) =
+	        let fun strip2 (lines0 as ((p1, _) :: (lines1 as ((p2, _) :: _)))) =
+	                if p2 <= pos then lines0 else strip2 lines1
+	         in if pos < pos0
+		    then if pos1 <= pos  (* pos1 <= pos < pos0 *)
+			 then lines0
+			 else strip2 lines1 (* pos < pos1 *) 
+		    else bug "uptoPos': too late" (* pos >= pos0 -- too "late?" *)
+		end
+	     | strip _ = bug "uptoPos': not enough lines"
+			 (* need at least two lines to bracket pos! ?? *)
+	in strip smap
        end
 
-   (* endOfContainingLine: charpos * lines -> lines
-    *  The first line of the result contains the charpos
-    * ASSUME:
-    *  (1) file ends in newline (no positions within empty "last" line)
-    *  (2) pos is before the last newline (pos < posLast)
-    * Note that the line number components of lines are irrelevant. *)
-   fun endOfContainingLine (pos, lines: lines) =
-       let fun strip (lines0 as ((pos0, _) :: (lines1 as ((pos1, _) :: _)))) =
-	       let fun strip2 (lines0 as ((p1, _) :: (lines1 as ((p2, _) :: _)))) =
-	           if p2 <= pos then lines0 else strip2 lines1
-	        in if pos < pos0
-		   then if pos1 <= pos  (* pos1 <= pos < pos0 *)
-			then lines0
-			else strip2 lines1 (* pos < pos1 *) 
-		   else bug "endOfContainingLine1" (* pos >= pos0 -- too "late?" *)
-	       end
-	     | strip _ = bug "endOfContainingLine2" (* need at least two lines to bracket pos! *)
-	in strip lines
-       end
+  (* LATENT BUG!? *)
+  (* widenToLines : sourceMap -> region -> region
+   * expand a region to the beginning, respectively end,
+   * of the first and last lines intersecting the region.
+   * ASSUME: the region hi limit comes before the last newline in the input,
+   * which should be the case if the input ends with a newline.
+   * EDGE CASE: What if "hi" is the position after a final newline in a file? FIXME! *)
+  fun widenToLines (smap: sourceMap) (region: region) : region =
+      (case region
+	 of NULLregion => NULLregion
+          | REGION (lo, hi) =>
+	      let val (lines1 as ((after_hi, _) :: _)) = uptoPos' (hi, smap)
+		  val (before_lo, _) :: _ = uptoPos (lo, lines1)
+               in REGION (before_lo, after_hi - 1)
+	      end)
 
-   (* widenToLines : sourcemap -> region -> region
-    * expand a region to the beginning, respectively end,
-    * of the first and last lines intersecting the region.
-    * ASSUME: the region hi limit comes before the last newline in the input,
-    * which should be the case if the input ends with a newline. *)
-   fun widenToLines ({lines,...}: sourcemap) ((lo, hi) : region) : region =
-       if isNullRegion (lo,hi) then nullRegion
-       else let val (lines1 as ((after_hi,_) :: _)) = endOfContainingLine (hi, !lines)
-                val (before_lo, _) :: _ = remove (lo, lines1)
-             in (before_lo, after_hi - 1)
-	    end
+  (* regionContent: source * region -> (string * region * int) option
+   * returns NONE if the source's content is not available or if region = NULLregion,
+   * content is widened to full lines, with region = widenedRegion and first line, line*)
+  fun regionContent (source as {sourceMap,...}: SR.source, region) =
+	case SR.getContent source
+	  of NONE => NONE  (* interactive source without content history *)
+	   | SOME content =>
+	     (case widenToLines (!sourceMap) region
+	       of (widenedRegion as REGION (lo, hi)) =>
+		  let val content = substring(content, lo-1, hi-lo)
+		      val {line,...} = charposToLocation (!sourceMap, lo)
+		   in SOME (content, widenedRegion, line)
+		  end
+		| NULLregion => NONE)
+ 
 
+  (* translating types to strings *)
+
+  (* regionToString : region -> string *)
+  fun regionToString (REGION (lo, hi): region) =
+        String.concat [Int.toString lo, "-", Int.toString hi]
+    | regionToString NULLregion = "<<>>"  (* conventional presentation of NULLregion *)
+
+  (* locationToString : location -> string *)
+  fun locationToString ({line, column}: location) =
+      String.concat [Int.toString line, ".", Int.toString column]
+
+  (* sourceLocToString : sourceLoc -> string *)
+  fun sourceLocToString ({source = {fileOpened, ...}, loc}: sourceLoc) =
+        String.concat [fileOpened, ":", locationToString loc]
+
+  (* sourceRegionToString : sourceRegion -> string *)
+  fun sourceRegionToString ({source = {fileOpened,...}, start, finish}: sourceRegion) =
+        String.concat [fileOpened, ":", locationToString start, "-", locationToString finish]
+
+end (* top local *)
 end (* structure SourceMap *)

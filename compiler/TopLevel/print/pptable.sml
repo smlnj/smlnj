@@ -7,8 +7,8 @@
 signature PPTABLE =
 sig
   exception FORMATTER_NOT_INSTALLED
-  val format_object : Stamps.stamp -> Unsafe.Object.object -> NewPP.format
-  val install_formatter : string list -> (Unsafe.Object.object -> NewPP.format) -> unit
+  val formatObject : Stamps.stamp -> Unsafe.Object.object -> NewPP.format
+  val installFormatter : string list -> (Unsafe.Object.object -> NewPP.format) -> unit
 end
 
 structure PPTable : PPTABLE =
@@ -30,39 +30,42 @@ local
   structure EM = ErrorMsg
   structure S = Symbol
   structure SM = StampMap
+  structure SRM = SourceMap
+  structure PP = NewPP
 
-  val global_formatter_table = ref SM.empty
+  type object = Unsafe.Object.object
+
+  val global_formatter_table = ref (SM.empty: (object -> PP.format) SM.map)
 
   val nullRegion = SourceMap.nullRegion
 
-  fun error msg =
-        (EM.errorNoFile (EM.defaultOutput (), ref false) nullRegion
-           EM.COMPLAIN msg EM.nullErrorBody;
-	 raise EM.Error)
+  (* error : string -> 'a *)
+  fun error (msg: string) =
+       (EM.errorNoSource (ref false) nullRegion EM.COMPLAIN msg
+           EM.nullErrorBody;
+	raise EM.Error)
 
-  (* make_path : string list * S.symbol list *)
-  fun make_path ([s], p) = SymPath.SPATH (rev (S.tycSymbol(s) :: p))
-    | make_path (s::r, p) = make_path (r, S.strSymbol(s)::p)
-    | make_path _ = error "install_pp: empty path"
-
-  type object = Unsafe.Object.object
+  (* makePath : string list * S.symbol list *)
+  fun makePath ([s], p) = SymPath.SPATH (rev (S.tycSymbol(s) :: p))
+    | makePath (s::r, p) = makePath (r, S.strSymbol(s)::p)
+    | makePath _ = error "install_pp: empty path"
 
 in
 
   exception FORMATTER_NOT_INSTALLED
 
-  fun install_formatter (path_names: string list) (formatter: object -> NewPP.format) =
-      let val sym_path = make_path (path_names, [])
-	  val tycon = Lookup.lookTyc ((#static(EnvRef.combined())),
-				      sym_path,
-				      EM.errorNoFile (EM.defaultOutput (), ref false) (0,0))
+  fun installFormatter (path_names: string list) (formatter: object -> NewPP.format) =
+      let val sym_path = makePath (path_names, [])
+	  val err = (fn severity => (fn msg => (fn body => (error msg))))
+	  val tycon = Lookup.lookTyc (#static(EnvRef.combined()), sym_path, err)
        in case tycon
 	    of Types.GENtyc {stamp, ...} =>
-	         global_formatter_table := SM.insert (!global_formatter_table, stamp, formatter)
-	     | _ => error "install_formatter: nongenerative type constructor"
+	         global_formatter_table :=
+		   SM.insert (!global_formatter_table, stamp, formatter)
+	     | _ => error "install_formatter: non-GENtyc type constructor"
       end
 
-  fun format_object (s: Stamps.stamp) (obj:object) =
+  fun formatObject (s: Stamps.stamp) (obj:object) =
       case SM.find (!global_formatter_table, s)
         of SOME formatter => formatter obj
 	 | NONE => raise FORMATTER_NOT_INSTALLED

@@ -3,9 +3,9 @@
 
 signature PRECEDENCE =
 sig
-  val parse: {apply: 'a * 'a -> 'a, pair: 'a * 'a -> 'a} -> 
-                'a Ast.fixitem list * StaticEnv.staticEnv * 
-                (Ast.region->ErrorMsg.complainer) -> 'a
+  val parse: {apply: 'a * 'a -> 'a, pair: 'a * 'a -> 'a}
+	     -> 'a Ast.fixitem list * StaticEnv.staticEnv * ErrorMsg.errorFn
+	     -> 'a
 
 end (* signature PRECEDENCE *)
 
@@ -13,9 +13,10 @@ end (* signature PRECEDENCE *)
 structure Precedence : PRECEDENCE = 
 struct    
 
-local structure EM = ErrorMsg 
-      structure F = Fixity
-
+local
+  structure EM = ErrorMsg 
+  structure F = Fixity
+  structure SM = SourceMap  
 in 
 
 datatype 'a precStack 
@@ -63,20 +64,20 @@ fun parse {apply,pair} =
         | finish (NILf,err) = EM.impossible "Corelang.finish NILf"
         | finish _ = EM.impossible "Corelang.finish"
 
-   in fn (items as item1 :: items',env,error) =>
-        let fun getfix{item,region,fixity} =
+   in fn (items as item1 :: items', env, error: EM.errorFn) =>
+        let fun getfix {item, fixity, region} =
 	      (item,  case fixity of NONE => F.NONfix 
                                    | SOME sym => Lookup.lookFix(env,sym),
                fixity, error region)
 
-            fun endloc[{region=(_,x),item,fixity}] = error(x,x)
+            fun endloc[{region = SM.REGION (_,x), item, fixity}] = error (SM.REGION (x,x))
               | endloc(_::a) = endloc a
 	      | endloc _ = EM.impossible "precedence:endloc"
 	      
             fun loop(state, a::rest) = loop(parse(state,getfix a),rest)
               | loop(state,nil) = finish(state, endloc items)
 
-         in loop(start(getfix item1), items')
+         in loop (start (getfix item1), items')
         end
        | _ => EM.impossible "precedence:parse"
   end

@@ -296,12 +296,18 @@ let
 
     (**** PATTERNS ****)
 
-    fun apply_pat (c as MarkPat(_,(l1,r1)),p as MarkPat(_,(l2,r2))) =
-	  MarkPat(AppPat{constr=c, argument=p},(Int.min(l1,l2),Int.max(r1,r2)))
+    fun regionUnion (SM.REGION (l1, r1), SM.REGION (l2, r2)) =
+	  SM.REGION (Int.min (l1, l2), Int.max (r1, r2))
+      | regionUnion (SM.NULLregion, reg2 as SM.REGION _) = reg2
+      | regionUnion (reg1 as SM.REGION _, SM.NULLregion) = reg1
+      | regionUnion (SM.NULLregion, SM.NULLregion) = SM.NULLregion
+
+    fun apply_pat (c as MarkPat(_,regc), p as MarkPat(_,regp)) =
+	  MarkPat (AppPat{constr=c, argument=p}, regionUnion (regc, regp))
       | apply_pat (c ,p) = AppPat{constr=c, argument=p}
 
-    fun tuple_pat (a as MarkPat(_,(l,_)),b as MarkPat(_,(_,r))) =
-	  MarkPat(TuplePat[a,b],(l,r))
+    fun tuple_pat (a as MarkPat(_,rega), b as MarkPat(_,regb)) =
+	  MarkPat (TuplePat[a,b], regionUnion (rega, regb))
       | tuple_pat (a,b) = TuplePat[a,b]
 
     val patParse = Precedence.parse{apply=apply_pat, pair=tuple_pat}

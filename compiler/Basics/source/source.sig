@@ -3,57 +3,41 @@
  *)
 
 signature SOURCE =
-  sig
+sig
 
-    type inputSource =
-         {sourceMap: SourceMap.sourcemap,
-          fileOpened: string,
-          interactive: bool,
-          sourceStream: TextIO.instream,
-          content: string option ref,
-          anyErrors: bool ref}
+  type charpos = int  (* INVARIANT: charpos > 0 *)
+  type lineno = int   (* INVARIANT: lineno > 0 *)
+  type sourceMap = (charpos * lineno) list
 
-    val newSource : (string * TextIO.instream * bool) -> inputSource
-    (* args are fileOpened, sourceStream, and interactive *)
+  type source =
+       {sourceMap: sourceMap ref,
+	fileOpened: string,
+	interactive: bool,
+	sourceStream: TextIO.instream,
+	content: string option ref,
+	anyErrors: bool ref}
 
-    val closeSource: inputSource -> unit
-    (* close the "fileOpened" if not interactive *)
+  val initSourceMap : sourceMap  (* ever needed? - used in sourceMap *)
 
-    val filepos: inputSource -> SourceMap.charpos -> SourceMap.sourceloc
-    (* simply calls SourceMap.filepos on the sourceMap component of inputSource,
-     * provided for convenience. *)
+  val newSource : (string * TextIO.instream * bool) -> source
+  (* args are fileOpened, sourceStream, and interactive *)
 
-    val getContent : inputSource -> string option
-    (* return NONE if inputSource interactive, otherwise SOME of complete contents of
-     * fileOpened as string *)
+  val closeSource: source -> unit
+  (* close the "fileOpened" if not interactive *)
 
-    val regionContent : inputSource * SourceMap.region ->
-			(string * SourceMap.region * int) option
-    (* contents of region in inputSource widened to complete lines. Returns:
-     * content of widened region, the widened region, and the starting line number *)
+  val newline : source * charpos -> unit
+  (* records that newline char occurred at charpos, updating sourceMap field *)
 
-    val sourceName : inputSource -> string
-    (* contents of fileOpened field of inputSource *)
+  val getContent : source -> string option
+  (* return NONE if source interactive, otherwise SOME of complete contents of
+   * fileOpened as string *)
+
+  val sourceName : source -> string
+  (* contents of fileOpened field of source *)
 
 end (* signature SOURCE *)
 
-(* [Ramsey, ?] OBSOLETE
-The fileOpened field contains the name of the file that was opened to
-produce a particular inputSource.  It is used to derive related
-file names (for example, see CompileF.codeopt and CompileF.parse
-in build/compile.sml.). It is also used when we need to access the content
-of the sourcefile for error messages (getContent).  This assumes that the
-current directory remains fixed if the file name is a relative path.
-
-newSource takes as argument a file name, the corresponding instream of the
-opened file, a boolean flag indicating whether the source is interactive
-(i.e. stdIn), and a prettyPrint device. (Note: Formerly newSource also took
-an additional int argument representing the initial line number, but this
-argument was always 1).
-
-getContent only works if the source is a single file (no #line directives
-changing the source file), and it won't work for an interactive source.
-[This needs to be fixed.]
-
-*)
+(* filepos replaced by SourceMap.charposToLocation *)
+(* regionContent moved to SourceMap.regionContent *)
+(* type inputSource renamed source *)
 

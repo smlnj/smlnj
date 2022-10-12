@@ -1,4 +1,4 @@
-(* sourcemap.sig
+(* sourceMap.sig
  *
  * COPYRIGHT (c) 2012, 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -8,7 +8,7 @@
 
 The goal of this interface is to map character positions to locations
 in source files, where a location is described in ``file-line-column''
-format.  The major type exported by this interface is sourcemap,
+format.  The major type exported by this interface is sourceMap,
 which maintains the mapping.  This way, most of a compiler can work
 with character positions, but we can use real source locations in
 error messages.
@@ -33,8 +33,8 @@ happens. The only interesting event is:
   file.
 
 Character positions are nonnegative (in fact, positive), and they increase
-in successive lines added to a sourcemap, and the initial line of
-the sourcemap starts at charpos 1.
+in successive lines added to a sourceMap, and the initial line of
+the sourceMap starts at charpos 1.
 
 The functions filepos and fileregion map character positions and
 regions back to the source level. In the pair of sourcelocs returned by
@@ -61,27 +61,43 @@ signature SOURCE_MAP =
 sig
 
   (* types *)
-  type charpos = int  (* base 1 *)
-  type region = charpos * charpos
-  type sourceloc = {fileName : string, line : int, column : int}
-  type sourcemap (* opaque mutable *)
+  datatype region = NULLregion | REGION of Source.charpos * Source.charpos
+  type location = {line : int, column: int}
+  type sourceLoc = {source : Source.source, loc: location}
+  type sourceRegion = {source: Source.source, start : location, finish: location}
 
   (* regions *)
-  val nullRegion : region              (* (0,0), by convention *)
+  val nullRegion : region              (* == NULLregion *)
   val isNullRegion : region -> bool
+
+  val charposToLocation : Source.sourceMap * Source.charpos -> location
+
+  val regionToLocations : Source.sourceMap * region -> (location * location) option
+      (* using sourceMaps to translate charpos to sourceLoc -- produces NONE for NULLregion *)
+
+  val sourceRegion : Source.source * region -> sourceRegion option
+      (* produces NONE for NULLregion *)
+
+  val lastLineStartPos : Source.sourceMap -> Source.charpos
+      (* the charpos of the last line (hd) of the sourceMap *)
+
+  val newlineCount : Source.sourceMap * region -> int
+      (* number of newlines within the region -- 0 for NULL region *)
+
+  val widenToLines : Source.sourceMap -> region -> region
+      (* widens a region to the containing region with full lines *)
+
+  val regionContent : Source.source * region -> (string * region * int) option
+      (* Contents of region in source widened to complete lines.
+       * For region # REGION _, returns:
+       * content of widened region, the widened region, and the starting line number
+       * of the widened region, which is the same as the first line of the original
+       * region.
+       * For region # NULLregion, returns NONE. *)
+
   val regionToString : region -> string
-
-  (* creating and modifying sourcemaps *)
-  val newSourceMap : string -> sourcemap      (* string is a file name *)
-  val newline : sourcemap -> charpos -> unit  (* modifies the sourcemap arg *)
-
-  (* using sourcemaps to translate charpos to sourceloc *)
-  val filepos     : sourcemap -> charpos -> sourceloc
-  val fileregion  : sourcemap -> region  -> (sourceloc * sourceloc)
-
-  val lastLinePos : sourcemap -> charpos
-  val newlineCount : sourcemap -> region -> int
-
-  val widenToLines : sourcemap -> region -> region
+  val locationToString : location -> string
+  val sourceLocToString : sourceLoc -> string
+  val sourceRegionToString : sourceRegion -> string
 
 end (* signature SOURCE_MAP *)

@@ -42,7 +42,7 @@ structure BuildDepend :> BUILDDEPEND = struct
     structure DE = DAEnv
     structure EM = ErrorMsg
     structure SP = SymPath
-    structure PP = PrettyPrint
+    structure PP = NewPP
 
     type impexp = DG.impexp
 
@@ -141,38 +141,33 @@ structure BuildDepend :> BUILDDEPEND = struct
 	(* - detect cycles using locking *)
 	(* - maintain root set *)
 	fun getResult (i, history) =
-	    case fetch i of
-		NONE => (lock i; release (i, analyze (i, history)))
-	      | SOME (SOME r) => r
-	      | SOME NONE => let	(* cycle found --> error message *)
-		    val f = SmlInfo.sourcepath i
-		    fun pphist pps = let
-			fun recur (_, []) = () (* shouldn't happen *)
-			  | recur (n'', (s, i') :: r) = let
-				val f' = SmlInfo.sourcepath i'
-				val n' = SrcPath.descr f'
-				val _ =
-				    if SmlInfo.eq (i, i') then ()
-				    else recur (n', r)
-				val l =
-				    n' :: " refers to " ::
-				    symDesc (s, [" defined in ", n''])
+	    case fetch i
+	      of NONE => (lock i; release (i, analyze (i, history)))
+	       | SOME (SOME r) => r
+	       | SOME NONE =>	(* cycle found --> error message *)
+		    let val f = SmlInfo.sourcepath i
+			val errorBody =
+			    let fun recur (_, nil) = nil
+				      (* shouldn't happen because i should = i' for some (s, i') in history *)
+				  | recur (n'', (s, i') :: r) =
+				      let val f' = SmlInfo.sourcepath i'
+					  val n' = SrcPath.descr f'
+					  val line = PP.text (concat (n' :: " refers to " ::
+								      symDesc (s, [" defined in ", n''])))
+				       in if SmlInfo.eq (i, i')
+					  then [line]
+					  else line :: recur (n', r, lines)
+				      end
 			    in
-				app (PP.string pps) l;
-				PP.newline pps
+				PP.vblock (rev (recur (SrcPath.descr f, history)))
 			    end
-		    in
-			PP.newline pps;
-			recur (SrcPath.descr f, history)
+		     in SmlInfo.error gp i
+		           EM.COMPLAIN "cyclic ML dependencies" errorBody;
+		        release (i, (DG.SNODE { smlinfo = i,
+						localimports = [],
+						globalimports = [] },
+				     DE.EMPTY))
 		    end
-		in
-		    SmlInfo.error gp i EM.COMPLAIN
-		         "cyclic ML dependencies" pphist;
-		    release (i, (DG.SNODE { smlinfo = i,
-					    localimports = [],
-					    globalimports = [] },
-				 DE.EMPTY))
-		end
 
 	(* do the actual analysis of an ML source and generate the
 	 * corresponding node *)

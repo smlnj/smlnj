@@ -13,7 +13,7 @@ local
     structure GG = GroupGraph
     structure EM = ErrorMsg
 
-    structure PP = PrettyPrint
+    structure PP = NewPP
     structure SM = SourceMap
     structure GP = GeneralParams
     structure Pid = PersStamps
@@ -680,45 +680,32 @@ struct
 		    (reg, get)
 		end
 
-		fun prepath2list what p = let
-		    fun warn_relabs (abs, descr) = let
-			val relabs = if abs then "absolute" else "relative"
-			val gdesc = SrcPath.descr grouppath
-			fun ppb pps = let
-			    fun space () = PP.break pps {nsp=1,offset=0}
-			    fun string s = PP.string pps s
-			    fun ss s = (string s; space ())
-			    fun nl () = PP.newline pps
-			in
-			    nl ();
-			    PP.openHOVBox pps (PP.Rel 0);
-			    app ss ["The", "path", "specifying"];
-			    app ss [what, descr, "is"];
-			    string relabs; string "."; nl ();
-			    app ss ["(This", "means", "that", "in", "order",
-				    "to", "be", "able", "to", "use", "the",
-				    "stabilized", "library"];
-			    string gdesc; ss ",";
-			    app ss ["it", "will", "be", "necessary", "to",
-				    "keep", "all", "imported", "libraries",
-				    "with", "names", "derived", "from", "or",
-				    "equal", "to"];
-			    ss descr;
-			    app ss ["in", "the", "same"];
-			    ss relabs;
-			    app ss ["location", "as", "they", "are"];
-			    string "now.)";
-			    PP.closeBox pps
-			end
-		    in
-			EM.errorNoFile
-			    (#errcons gp, anyerrors) SM.nullRegion EM.WARN
-			    (gdesc ^ ": uses non-anchored path") ppb
+		fun prepath2list (what: string) file =
+		    let fun warn_relabs (abs: bool, descr: string) =
+			    let val relabs: string = if abs then "absolute" else "relative"
+				val gdesc = SrcPath.descr grouppath
+				val errorFmt =
+				    PP.pblock
+				      (map PP.text 
+					  ["The", "path", "specifying",
+					    what, descr, "is", relabs, ".", "\n",
+					    "(This", "means", "that", "in", "order",
+					    "to", "be", "able", "to", "use", "the",
+					    "stabilized", "library",
+					    gdesc, ",", "it", "will", "be", "necessary", "to",
+					    "keep", "all", "imported", "libraries",
+					    "with", "names", "derived", "from", "or",
+					    "equal", "to", descr, "in", "the", "same",
+					    relabs, "location", "as", "they", "are", "now.)"])
+				    end
+			     in EM.errorNoFile
+				  (#errcons gp, anyerrors) SM.nullRegion EM.WARN
+				  (gdesc ^ ": uses non-anchored path")
+				  errorFmt
+			    end
+		     in SrcPath.pickle { warn = warn_relabs }
+				       { file = file, relativeTo = grouppath }
 		    end
-		in
-		    SrcPath.pickle { warn = warn_relabs }
-				   { file = p, relativeTo = grouppath }
-		end
 
 		(* Collect all BNODEs that we see and build
 		 * a context suitable for P.envPickler. *)

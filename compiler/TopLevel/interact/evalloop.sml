@@ -261,7 +261,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
   (*** interactive loop, with error handling ***)
     fun interact () = let
-	  val source = Source.newSource ("stdIn", TextIO.stdIn, true, EM.defaultConsumer ())
+	  val source = Source.newSource ("stdIn", TextIO.stdIn, true)
 	  fun flush' () = (
 		case TextIO.canInput(TextIO.stdIn, 4096)
 		 of (NONE | SOME 0) => ()
@@ -294,7 +294,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
     fun evalStream (fname, stream) = let
 	  val interactive = isTermIn stream
-	  val source = Source.newSource (fname, stream, interactive, EM.defaultConsumer ())
+	  val source = Source.newSource (fname, stream, interactive)
 	  in
 	    evalLoop source
 	      handle exn => (

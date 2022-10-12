@@ -7,8 +7,11 @@
  *)
 
 structure MLParser : SMLNJ_PARSER =
-  struct
+struct
 
+local
+  structure EM = ErrorMsg
+in
     structure LrVals = MLLrValsFun(structure Token = LrParser.Token)
     structure Lex = MLLexFun(structure Tokens = LrVals.Tokens)
     structure P = JoinWithArg(
@@ -17,22 +20,20 @@ structure MLParser : SMLNJ_PARSER =
 	structure LrParser = LrParser)
 
   (* the following two functions are also defined in build/computil.sml *)
-    val addLines = Stats.addStat(Stats.makeStat "Source Lines")
-
-    open ErrorMsg
+    val addLines = Stats.addStat (Stats.makeStat "Source Lines")
 
     datatype parseResult = datatype ParseResult.parseResult
 
     val dummyEOF = LrVals.Tokens.EOF(0,0)
     val dummySEMI = LrVals.Tokens.SEMICOLON(0,0)
 
-    fun parse (source : Source.inputSource) =
+    fun parse (source : Source.source) =
 	let val {sourceStream, interactive, sourceMap, anyErrors, ...} = source
-          val err = ErrorMsg.error source
-	  fun parseerror (s, p1, p2) = err (p1, p2) COMPLAIN s nullErrorBody
+          fun err (lo: int, hi: int) = ErrorMsg.error source (SourceMap.REGION (lo, hi))
+	  fun parseerror (s, p1, p2) = err (p1, p2) EM.COMPLAIN s EM.nullErrorBody
 	  val lexarg = {
 		  comLevel = ref 0,
-		  sourceMap = sourceMap,
+		  source = source,
 		  charlist = ref (nil : string list),
 		  stringtype = ref false,
 		  stringstart = ref 0,
@@ -71,10 +72,10 @@ structure MLParser : SMLNJ_PARSER =
 		    then EOF
 		    else let
 		      val _ = prompt := !ParserControl.secondaryPrompt;
-		      val initialLinePos = SourceMap.lastLinePos sourceMap
+		      val initialLinePos = SourceMap.lastLineStartPos (!sourceMap)
 		      val (result, lexer'') = P.parse(lookahead, !lexer', parseerror, err)
-		      val linesRead = SourceMap.newlineCount sourceMap
-			    (initialLinePos, SourceMap.lastLinePos sourceMap)
+		      val linesRead = SourceMap.newlineCount (!sourceMap,
+			    SourceMap.REGION (initialLinePos, SourceMap.lastLineStartPos (!sourceMap)))
 		      in
 			addLines linesRead;
 			lexer' := lexer'';
@@ -87,4 +88,5 @@ structure MLParser : SMLNJ_PARSER =
 	    fn () => (anyErrors := false; oneparse ())
 	  end
 
-  end
+end (* top local *)
+end (* structure MLParser *)

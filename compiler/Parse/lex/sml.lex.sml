@@ -135,8 +135,11 @@ LCOM | AQ | LL | LLC | F | A | L | Q | S | INITIAL | ALC | LLCQ
  * ml-lex's parser is broken.
  *)
 
-open ErrorMsg;
-open UserDeclarations;
+structure EM = ErrorMsg;
+structure UD = UserDeclarations;
+
+type arg = UD.arg
+type pos = UD.pos
 
 structure TokTable = TokenTable(Tokens);
 
@@ -609,7 +612,7 @@ fun dec (ri as ref i) = (ri := i-1)
         fun lex 
 (yyarg as ({
   comLevel,
-  sourceMap,
+  source,
   err,
   charlist,
   stringstart,
@@ -650,7 +653,7 @@ fun dec (ri as ref i) = (ri := i-1)
 let
 fun yyAction0 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction1 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; continue()))
+      (Source.newline (source, yypos); continue()))
 fun yyAction2 (strm, lastMatch : yymatch) = let
       val oldStrm = !(yystrm)
       fun REJECT () = (yystrm := oldStrm; yystuck(lastMatch))
@@ -727,8 +730,8 @@ fun yyAction19 (strm, lastMatch : yymatch) = (yystrm := strm;
                                   charlist := [];
                                   Tokens.BEGINQ(yypos,yypos+1))
                             else (err(yypos, yypos+1)
-                                     COMPLAIN "quotation implementation error"
-				     nullErrorBody;
+                                     EM.COMPLAIN "quotation implementation error"
+				     EM.nullErrorBody;
                                   Tokens.BEGINQ(yypos,yypos+1))))
 fun yyAction20 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -807,7 +810,7 @@ fun yyAction33 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction34 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN LCOM; continue()))
 fun yyAction35 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; YYBEGIN INITIAL; continue()))
+      (Source.newline (source, yypos); YYBEGIN INITIAL; continue()))
 fun yyAction36 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction37 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN A; stringstart := yypos; comLevel := 1; continue()))
@@ -815,15 +818,15 @@ fun yyAction38 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (err (yypos,yypos) COMPLAIN
+        (err (yypos,yypos) EM.COMPLAIN
 		      (concat[
 			  "non-Ascii character (ord ",
 			  Int.toString(Char.ord(String.sub(yytext, 0))), ")"
-			]) nullErrorBody;
+			]) EM.nullErrorBody;
 		    continue())
       end
 fun yyAction39 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (yypos,yypos) COMPLAIN "illegal token" nullErrorBody;
+      (err (yypos,yypos) EM.COMPLAIN "illegal token" EM.nullErrorBody;
 		    continue()))
 fun yyAction40 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -835,10 +838,11 @@ fun yyAction41 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction42 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (YYBEGIN LLC; addString(charlist, yytext); continue())
+        yystrm := strm;
+        (YYBEGIN LLC; UD.addString(charlist, yytext); continue())
       end
 fun yyAction43 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (YYBEGIN LLC; addString(charlist, "1");    continue()
+      (YYBEGIN LLC; UD.addString(charlist, "1");    continue()
 		(* note hack, since ml-lex chokes on the empty string for 0* *)))
 fun yyAction44 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN INITIAL; comLevel := 0; charlist := []; continue()))
@@ -847,36 +851,36 @@ fun yyAction45 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction46 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (addString(charlist, yytext); continue())
+        yystrm := strm; (UD.addString(charlist, yytext); continue())
       end
 fun yyAction47 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN INITIAL; comLevel := 0; charlist := []; continue()))
 fun yyAction48 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
+      (err (!stringstart, yypos+1) EM.WARN
+                       "ill-formed (*#line...*) taken as comment" EM.nullErrorBody;
                      YYBEGIN INITIAL; comLevel := 0; charlist := []; continue()))
 fun yyAction49 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
+      (err (!stringstart, yypos+1) EM.WARN
+                       "ill-formed (*#line...*) taken as comment" EM.nullErrorBody;
                      YYBEGIN A; continue()))
 fun yyAction50 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN ALC; continue()))
 fun yyAction51 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; YYBEGIN A; continue()))
+      (Source.newline (source, yypos); YYBEGIN A; continue()))
 fun yyAction52 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction53 (strm, lastMatch : yymatch) = (yystrm := strm;
       (inc comLevel; continue()))
 fun yyAction54 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; continue()))
+      (Source.newline (source, yypos); continue()))
 fun yyAction55 (strm, lastMatch : yymatch) = (yystrm := strm;
       (dec comLevel; if !comLevel=0 then YYBEGIN INITIAL else (); continue()))
 fun yyAction56 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction57 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (let val s = makeString charlist
+      (let val s = UD.makeString charlist
                         val s = if size s <> 1 andalso not(!stringtype)
-                                 then (err(!stringstart,yypos) COMPLAIN
+                                 then (err(!stringstart,yypos) EM.COMPLAIN
                                       "character constant not length 1"
-                                       nullErrorBody;
+                                       EM.nullErrorBody;
                                        substring(s^"x",0,1))
                                  else s
                         val t = (s,!stringstart,yypos+1)
@@ -884,44 +888,44 @@ fun yyAction57 (strm, lastMatch : yymatch) = (yystrm := strm;
                        if !stringtype then Tokens.STRING t else Tokens.CHAR t
                     end))
 fun yyAction58 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (!stringstart,yypos) COMPLAIN "unclosed string"
-		        nullErrorBody;
-		    SourceMap.newline sourceMap yypos;
-		    YYBEGIN INITIAL; Tokens.STRING(makeString charlist,!stringstart,yypos)))
+      (err (!stringstart,yypos) EM.COMPLAIN "unclosed string"
+		        EM.nullErrorBody;
+		    Source.newline (source, yypos);
+		    YYBEGIN INITIAL; Tokens.STRING(UD.makeString charlist,!stringstart,yypos)))
 fun yyAction59 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap (yypos+1);
+      (Source.newline (source, yypos+1);
 		    YYBEGIN F; continue()))
 fun yyAction60 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN F; continue()))
 fun yyAction61 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\007"); continue()))
+      (UD.addString(charlist, "\007"); continue()))
 fun yyAction62 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\008"); continue()))
+      (UD.addString(charlist, "\008"); continue()))
 fun yyAction63 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\012"); continue()))
+      (UD.addString(charlist, "\012"); continue()))
 fun yyAction64 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\010"); continue()))
+      (UD.addString(charlist, "\010"); continue()))
 fun yyAction65 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\013"); continue()))
+      (UD.addString(charlist, "\013"); continue()))
 fun yyAction66 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\009"); continue()))
+      (UD.addString(charlist, "\009"); continue()))
 fun yyAction67 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\011"); continue()))
+      (UD.addString(charlist, "\011"); continue()))
 fun yyAction68 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\\"); continue()))
+      (UD.addString(charlist, "\\"); continue()))
 fun yyAction69 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "\""); continue()))
+      (UD.addString(charlist, "\""); continue()))
 fun yyAction70 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (addChar(charlist,
+        (UD.addChar(charlist,
 			Char.chr(Char.ord(String.sub(yytext,2))-Char.ord #"@"));
 		    continue())
       end
 fun yyAction71 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err(yypos,yypos+2) COMPLAIN "illegal control escape; must be one of \
-	  \@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" nullErrorBody;
+      (err(yypos,yypos+2) EM.COMPLAIN "illegal control escape; must be one of \
+	  \@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" EM.nullErrorBody;
 	 continue()))
 fun yyAction72 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -931,10 +935,10 @@ fun yyAction72 (strm, lastMatch : yymatch) = let
                     val x = Word.toIntX (valOf (Word.fromString (String.substring(yytext, 2, 4))))
                     in
 		      if x>255
-			then err (yypos,yypos+4) COMPLAIN (concat[
+			then err (yypos,yypos+4) EM.COMPLAIN (concat[
                             "illegal string escape '", yytext, "' is too large"
-                          ]) nullErrorBody
-			else addChar(charlist, Char.chr x);
+                          ]) EM.nullErrorBody
+			else UD.addChar(charlist, Char.chr x);
 		      continue()
 		    end)
       end
@@ -945,59 +949,59 @@ fun yyAction73 (strm, lastMatch : yymatch) = let
         (let val SOME x = Int.fromString (String.substring(yytext, 1, 3))
 		    in
 		      if x>255
-			then err (yypos,yypos+4) COMPLAIN (concat[
+			then err (yypos,yypos+4) EM.COMPLAIN (concat[
                             "illegal string escape '", yytext, "' is too large"
-                          ]) nullErrorBody
-			else addChar(charlist, Char.chr x);
+                          ]) EM.nullErrorBody
+			else UD.addChar(charlist, Char.chr x);
 		      continue()
 		    end)
       end
 fun yyAction74 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (yypos,yypos+1) COMPLAIN "illegal string escape" nullErrorBody;
+      (err (yypos,yypos+1) EM.COMPLAIN "illegal string escape" EM.nullErrorBody;
 		    continue()))
 fun yyAction75 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (yypos,yypos+1) COMPLAIN "illegal non-printing character in string" nullErrorBody;
+      (err (yypos,yypos+1) EM.COMPLAIN "illegal non-printing character in string" EM.nullErrorBody;
                     continue()))
 fun yyAction76 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (addString(charlist,yytext); continue())
+        yystrm := strm; (UD.addString(charlist,yytext); continue())
       end
 fun yyAction77 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; continue()))
+      (Source.newline (source, yypos); continue()))
 fun yyAction78 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction79 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN S; stringstart := yypos; continue()))
 fun yyAction80 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (err (!stringstart,yypos) COMPLAIN "unclosed string"
-		        nullErrorBody;
-		    YYBEGIN INITIAL; Tokens.STRING(makeString charlist,!stringstart,yypos+1)))
+      (err (!stringstart,yypos) EM.COMPLAIN "unclosed string"
+		        EM.nullErrorBody;
+		    YYBEGIN INITIAL; Tokens.STRING(UD.makeString charlist,!stringstart,yypos+1)))
 fun yyAction81 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "`"); continue()))
+      (UD.addString(charlist, "`"); continue()))
 fun yyAction82 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (addString(charlist, "^"); continue()))
+      (UD.addString(charlist, "^"); continue()))
 fun yyAction83 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN AQ;
-                    let val x = makeString charlist
+                    let val x = UD.makeString charlist
                     in
                     Tokens.OBJL(x,yypos,yypos+(size x))
                     end))
 fun yyAction84 (strm, lastMatch : yymatch) = (yystrm := strm;
       ((* a closing quote *)
                     YYBEGIN INITIAL;
-                    let val x = makeString charlist
+                    let val x = UD.makeString charlist
                     in
                     Tokens.ENDQ(x,yypos,yypos+(size x))
                     end))
 fun yyAction85 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; addString(charlist,"\n"); continue()))
+      (Source.newline (source, yypos); UD.addString(charlist,"\n"); continue()))
 fun yyAction86 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
-        yystrm := strm; (addString(charlist,yytext); continue())
+        yystrm := strm; (UD.addString(charlist,yytext); continue())
       end
 fun yyAction87 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (SourceMap.newline sourceMap yypos; continue()))
+      (Source.newline (source, yypos); continue()))
 fun yyAction88 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction89 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -1029,9 +1033,9 @@ fun yyAction92 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (err (yypos,yypos+1) COMPLAIN
+        (err (yypos,yypos+1) EM.COMPLAIN
 		       ("ml lexer: bad character after antiquote "^yytext)
-		       nullErrorBody;
+		       EM.nullErrorBody;
                     Tokens.AQID(FastSymbol.rawSymbol(0w0,""),yypos,yypos))
       end
 val yyactTable = Vector.fromList([yyAction0, yyAction1, yyAction2, yyAction3,

@@ -15,9 +15,9 @@ structure CompInfo =
    type compInfo =
         {mkStamp: unit -> Stamps.stamp,
          mkLvar: Symbol.symbol option -> LambdaVar.lvar,
-         source : Source.inputSource}
+         source : Source.source}
 
-    fun mkCompInfo {source : Source.inputSource, mkStampGenerator : unit -> Stamps.generator} : compInfo =
+    fun mkCompInfo {source : Source.source, mkStampGenerator : unit -> Stamps.generator} : compInfo =
 	let val _ = LambdaVar.clear () (* reset base lambda var to 0 *)
             val gen = mkStampGenerator ()
             fun mkLvar NONE = LambdaVar.mkLvar ()

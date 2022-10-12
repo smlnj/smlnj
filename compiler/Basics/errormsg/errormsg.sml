@@ -10,6 +10,7 @@ struct
 local
 
   structure PP = NewPP
+  structure PPS = PPSourceMap  (* fmtRegion, fmtSourceRegion *)
   structure PPU = NewPPUtil
   structure SR = Source
   structure SM = SourceMap
@@ -29,10 +30,15 @@ in
   (* the four arguments of errorFn are: region, severity, string, format *)
 
   type errors = {error: errorFn,
-                 errorMatch: SM.region -> PP.format,
-                 anyErrors: bool ref}
+                 anyErrors: bool ref,
+                 fmtRegion: SM.region -> PP.format}
 
-  val say = Control_Print.say
+  val say = Control_Print.say  (* == (fn s => TextIO.output (TextIO.stdOut, s)) *)
+
+  (* Default output is currently fixed (= Control.Print.say), but we could make default
+   * output "settable" with a function "setOutput: (string -> unit) -> unit".
+   * The error reporting functions use defaultOutput for printing/rendering.
+   * Could, for instance, use TextIO.stdErr instead of TextIO.stdOut for printing error messages. *)
 
   (* defaultOutput : unit -> (string -> unit) *)
   fun defaultOutput () = say
@@ -43,90 +49,65 @@ in
 
   val lineWidth : int ref = Control_Print.lineWidth
 
-  (* printMessage : output * PP.format * severity * string * PP.format -> unit *)
-  fun printMessage (output: output, location: PP.format, severity: severity,
-		    msg: string, body: PP.format) =
-      case (!BasicControl.printWarnings, severity)
-	of (false, WARN) => ()  (* no Warning messages if suppressed *)
-	 | _ =>
-	   let val msgFormat =
-		   (PP.appendNewLine
-		      (PP.hblock
-			[location,
-			 PP.text (* print error label *)
-			   (case severity
-			      of WARN => "Warning:"
-			       | COMPLAIN => "Error:"),
-			 PP.text msg, 
-			 PP.hardIndent 2 body]))
-	    in PP.render (msgFormat, output, !lineWidth)
-	   end
-
-  (* record : severity * bool ref -> unit *)
-  fun record (COMPLAIN, anyErrors) = anyErrors := true
-    | record (WARN,_) = ()
+  (* recordError : severity * bool ref -> unit *)
+  fun recordError (COMPLAIN, anyErrors) = anyErrors := true
+    | recordError (WARN,_) = ()
 
   (* impossible : string -> 'a *)
-  fun impossible msg =
+  fun impossible (msg: string) =
       (app say ["Error: Compiler bug: ", msg, "\n"];
        Control_Print.flush();
        raise Error)
 
-  (* warn : string -> unit *)
-  fun warn msg =
-      (app Control_Print.say ["Warning: ", msg, "\n"];
-       Control_Print.flush())
-
-  (* fmtSourceloc : SM.sourceloc -> PP.format *)
-  fun fmtSourceloc ({line, column, ...}: SM.sourceloc) = 
-        PP.cblock [PP.integer line, PP.period, PP.integer column]
-
-  (* fmtRegion : SR.source option -> SM.region -> PP.format *)
-  fun fmtRegion (sourceOp : SR.source option) (SM.REGION (p1,p2)) : PP.format =
-      (case sourceOp
-         of SOME({sourceMap, fileOpened, ...}) =>
-		   let val (lo, hi) = SM.fileregion sourceMap (p1, p2)
-		    in PP.hcat (PP.ccat (PP.text fileOpened, PP.colon),
-				PP.hblock [fmtSourceloc lo,  PP.text "-", fmtSourceloc hi])
-		   end
-	       | NONE => PP.cblock [PP.integer p1, PP.text "-", PP.integer p2])
-
-  (* error : SR.source -> SM.region -> complainer *)
-  fun error (source: SR.source) ((p1,p2): SM.region) (severity: severity)
-            (msg: string) (body : PP.format) =
-      (printMessage (defaultOutput (), (fmtRegion (SOME source) (p1,p2)), severity, msg, body);
-       record(severity, #anyErrors source))
-
-  (* errorNoSource : output * bool ref -> PP.format -> complainer *)
-  fun errorNoSource (output: output, anyErrors: bool ref) loc severity msg body =
-      (printMessage (output, loc, severity, msg, body);
-       record (severity, anyErrors))
-
-  (* errorNoFile : output * bool ref -> SM.region -> complainer *)
-  fun errorNoFile (output, anyErrors) ((p1,p2): SM.region) severity msg body =
-      (printMessage (output, fmtRegion NONE (p1, p2), severity, msg, body);
-       record(severity, anyErrors))
-
   (* impossibleWithBody : string -> PP.format -> 'a *)
   fun impossibleWithBody (msg: string) (body: PP.format) =
       (PP.printFormatNL
-        (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body));
+         (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body));
        raise Error)
+
+  (* warn : string -> unit *)
+  fun warn (msg: string) =
+      (app Control_Print.say ["Warning: ", msg, "\n"];
+       Control_Print.flush())
+
+  fun fmtSeverity WARN = PP.text "Warning:"
+    | fmtSeverity COMPLAIN = PP.text "Error:"
+
+  (* fmtMessage : output * PP.format * severity * string * PP.format -> unit *)
+  fun fmtMessage (location: PP.format, severity: severity, msg: string, body: PP.format) =
+      case (!BasicControl.printWarnings, severity)
+	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
+	 | _ => PP.appendNewLine
+		  (PP.hblock
+		     [location,
+		      fmtSeverity severity,
+		      PP.text msg,
+		      PP.hardIndent 2 body])
+
+  (* error : SR.source -> errorFn *)
+  fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =
+      let val errorFmt = fmtMessage (PPS.fmtSourceRegion (source, region), severity, msg, body)
+       in recordError (severity, #anyErrors source);
+	  PP.render (errorFmt, defaultOutput (), !lineWidth)
+      end
+
+  (* errorNoSource : errorFn
+   *   2 Uses: compiler: TopLevel/print/pptable.sml, cm: cm/stable/stabilize.sml *)
+  val errorNoSource =
+      let val dummySource = SR.newSource ("dummy", TextIO.stdIn, false)
+          (* dummySource is not "relevant", only field referenced is anyErrors, which
+	     may be set to true, but is not accessed elsewhere so it has no effect. *)
+       in error dummySource
+      end
 
   (* errors : SR.source -> errors *)
   fun errors (source: SR.source) : errors =
       {error = error source,
-       errorMatch = fmtRegion (SOME source),
-       anyErrors = #anyErrors source}
+       anyErrors = #anyErrors source,
+       fmtRegion = (fn region => PPS.fmtSourceRegion (source, region))}
 
   (* anyErrors : errors -> bool *)
-  fun anyErrors ({anyErrors, error, errorMatch}: errors) = !anyErrors
-
-  (* errorsNoFile : output * bool ref -> errors *)
-  fun errorsNoFile (output : output, anyErrors : bool ref) =
-      {error = errorNoFile (output, anyErrors),
-       errorMatch = fmtRegion NONE,
-       anyErrors = anyErrors}
+  fun anyErrors ({anyErrors, ...}: errors) = !anyErrors
 
 end (* top local *)
 end (* structure ErrorMsg *)
@@ -142,4 +123,11 @@ end (* structure ErrorMsg *)
            Where do the anyErrors values come from when calling errorNoFile, errorNoSource,
            etc?
     (3) Is there any problem with having a default output (defaultOutput = say)?
+
+  [DBM: 2022.10.10]
+    (1) Revised Source and SourceMap and PPSourceMap.
+    (2) Changed field name errorMatch to fmtRegion in errors type record.
+    (3) errorNoFile was removed because it was the same as errorNoSource. Two uses of errorNoFile
+        in TopLevel/print/pptable.sml were replaced.
+    (4) Renamed errorsNoFile to errorsNoSource.
 *)

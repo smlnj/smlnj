@@ -7,7 +7,7 @@
 signature ABSYN =
   sig
 
-    type region = Ast.region  (* = int * int *)
+    type region = SourceMap.region  (* not "int * int" ! *)
 
     datatype value
       = VAR of Variable.var

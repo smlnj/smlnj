@@ -8,18 +8,18 @@ signature PPABSYN =
 sig
 
   val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> NewPP.format
-  val fmtExp  : StaticEnv.staticEnv * Source.inputSource option
+  val fmtExp  : StaticEnv.staticEnv * Source.source option
                 -> Absyn.exp * int -> NewPP.format
-  val fmtRule : StaticEnv.staticEnv * Source.inputSource option
+  val fmtRule : StaticEnv.staticEnv * Source.source option
                 -> Absyn.rule * int -> NewPP.format
-  val fmtVB   : StaticEnv.staticEnv * Source.inputSource option
+  val fmtVB   : StaticEnv.staticEnv * Source.source option
                 -> Absyn.vb * int -> NewPP.format
-  val fmtRVB  : StaticEnv.staticEnv * Source.inputSource option
+  val fmtRVB  : StaticEnv.staticEnv * Source.source option
                 -> Absyn.rvb * int -> NewPP.format
-  val fmtDec  : StaticEnv.staticEnv * Source.inputSource option
+  val fmtDec  : StaticEnv.staticEnv * Source.source option
                 -> Absyn.dec * int -> NewPP.format
 
-  val fmtStrexp : StaticEnv.staticEnv * Source.inputSource option
+  val fmtStrexp : StaticEnv.staticEnv * Source.source option
                  -> Absyn.strexp * int -> NewPP.format
 
 end (* signature PPABSYN *)
@@ -42,11 +42,14 @@ local
   structure AU = AbsynUtil
   structure AT = Tuples		     
   structure SE = StaticEnv
+  structure SR = Source
+  structure SM = SourceMap
   structure PP = NewPP
   structure PPU = NewPPUtil
   structure PPS = PPSymbols
   structure PPT = PPType
   structure PPV = PPVal
+  structure PPSM = PPSourceMap
 
   open Absyn
 in
@@ -64,15 +67,15 @@ fun bug msg = ErrorMsg.impossible("PPAbsyn: "^msg)
 val lineprint = ElabDataControl.absynLineprint
 val internals = ElabDataControl.absynInternals
 
-(* fmtPos : Source.inputSource * int -> PP.format *)
-fun fmtPos(source: Source.inputSource, charpos: int) =
+(* fmtPos : Source.source * Source.charpos -> PP.format *)
+fun fmtPos({sourceMap, ...}: SR.source, charpos: SR.charpos) =
     if !lineprint then
-      let val {line, column,...} = Source.filepos source charpos
+      let val {line, column} = SM.charposToLocation (!sourceMap, charpos)
        in PP.cblock [PP.integer line, PP.period, PP.integer column]
       end
     else PP.integer charpos
 
-type context = SE.staticEnv * Source.inputSource option
+type context = SE.staticEnv * Source.source option
 
 (* isTUPLEpat and isTUPLEexp belong in AbsynUtil, and probably also checkpat and checkexp *)
 
@@ -444,17 +447,15 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	         PP.hcat (PP.text "do", fmtExp' (expr, 0, rpull, d-1)))
 	  | fmtExp' (FNexp (rules, _, _), _, _, d) =
 	      PP.parens (fmtMatch ("fn", rules, d))
-	  | fmtExp' (MARKexp (exp, (s,e)), lpull, rpull, d) =
+	  | fmtExp' (MARKexp (exp, region), lpull, rpull, d) =
 	      (case sourceOp
 		of SOME source =>
 		     if !internals
 		     then PP.enclose {front = PP.text "<", back = PP.text ">"}
 			    (PP.pblock
-			       [PP.text "MARK",
-				PP.parens
-				   (PP.cblock [fmtPos (source,s), PP.comma,
-					       fmtPos (source,e)]),
-				PP.colon,
+			       [PP.cblock [PP.text "@",
+					   PP.parens (PPSM.fmtRegion region),
+					   PP.colon],
 				fmtExp' (exp, 0, 0, d)])
 		     else fmtExp'(exp, lpull, rpull, d)
 	         | NONE => fmtExp'(exp, lpull, rpull, d))
@@ -601,7 +602,7 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 	   PP.hblock
 	     (PP.text "open" :: map (fn (sp,_) => fmtSymPath sp) strbs)
 
-        | fmtDec' (MARKdec (dec, (s,e)), d) = fmtDec' (dec, d)
+        | fmtDec' (MARKdec (dec, _), d) = fmtDec' (dec, d)
 (*
 	  (case sourceOp
 	    of SOME source =>  (* ??? *)
@@ -676,7 +677,7 @@ and fmtFctexp (context as (_,sourceOp)) =
   	       PP.hcat (PP.text "in", fmtFctexp' (body, d-1)),
 	       PP.text "end"]
 
-	| fmtFctexp' (MARKfct(body,(s,e)),d) = fmtFctexp' (body, d)
+	| fmtFctexp' (MARKfct (body,_), d) = fmtFctexp' (body, d)
 (*
 	    (case sourceOp
 	      of SOME source =>

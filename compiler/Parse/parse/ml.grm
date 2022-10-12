@@ -5,15 +5,69 @@
  *)
 
 open Ast ErrorMsg Symbol FastSymbol AstUtil Fixity
+structure SM = SourceMap
 
 type raw_symbol = FastSymbol.raw_symbol
 
-fun markexp (e as MarkExp _, _, _) = e
-  | markexp(e,a,b) = MarkExp(e,(a,b))
-fun markpat (p as MarkPat _, _, _) = p
-  | markpat(p,a,b) = MarkPat(p,(a,b))
-fun markdec(d as MarkDec _, _,_) = d
-  | markdec(d,a,b) = MarkDec(d,(a,b))
+fun markexp (exp as MarkExp _, _, _) = exp
+  | markexp (exp,a,b) = MarkExp (exp, SM.REGION(a,b))
+
+fun markpat (pat as MarkPat _, _, _) = pat
+  | markpat (pat,a,b) = MarkPat(pat, SM.REGION(a,b))
+
+fun markdec (dec as MarkDec _, _, _) = dec
+  | markdec (dec,a,b) = MarkDec(dec, SM.REGION (a,b))
+
+fun markspec (spec as MarkSpec _, _, _) = spec
+  | markspec (spec,a,b) = MarkSpec(spec, SM.REGION (a,b))
+
+fun marksig (sigexp as MarkSig _, _, _) = sigexp
+  | marksig (sigexp,a,b) = MarkSig(sigexp, SM.REGION (a,b))
+
+fun markfsig (fsigexp as MarkFsig _, _, _) = fsigexp
+  | markfsig (fsigexp,a,b) = MarkFsig(fsigexp, SM.REGION (a,b))
+
+fun markstr (strexp as MarkStr _, _, _) = strexp
+  | markstr (strexp,a,b) = MarkStr (strexp, SM.REGION (a,b))
+
+fun markfct (fctexp as MarkFct _, _, _) = fctexp
+  | markfct (fctexp,a,b) = MarkFct (fctexp, SM.REGION (a,b))
+
+fun markvb (vb as MarkVb _, _, _) = vb
+  | markvb (vb,a,b) = MarkVb(vb, SM.REGION (a,b))
+
+fun markrvb (rvb as MarkRvb _, _, _) = rvb
+  | markrvb (rvb,a,b) = MarkRvb(rvb, SM.REGION (a,b))
+
+fun markfb (fb as MarkFb _, _, _) = fb
+  | markfb (fb,a,b) = MarkFb(fb, SM.REGION (a,b))
+
+fun marktb (tb as MarkTb _, _, _) = tb
+  | marktb (tb,a,b) = MarkTb(tb, SM.REGION (a,b))
+
+fun markdb (db as MarkDb _, _, _) = db
+  | markdb (db,a,b) = MarkDb(db, SM.REGION (a,b))
+
+fun markeb (eb as MarkEb _, _, _) = eb
+  | markeb (eb,a,b) = MarkEb(eb, SM.REGION (a,b))
+
+fun markstrb (strb as MarkStrb _, _, _) = strb
+  | markstrb (strb,a,b) = MarkStrb (strb, SM.REGION (a,b))
+
+fun markfctb (fctb as MarkFctb _, _, _) = fctb
+  | markfctb (fctb,a,b) = MarkFctb (fctb, SM.REGION (a,b))
+
+fun marksigb (sigb as MarkSigb _, _, _) = sigb
+  | marksigb (sigb,a,b) = MarkSigb (sigb, SM.REGION (a,b))
+
+fun markfsigb (fsigb as MarkFsigb _, _, _) = fsigb
+  | markfsigb (fsigb,a,b) = MarkFsigb (fsigb, SM.REGION (a,b))
+
+fun markty (ty as MarkTy _, _, _) = ty
+  | markty (ty,a,b) = MarkTy (ty, SM.REGION (a,b))
+
+fun marktyv (tyv as MarkTyv _, _, _) = tyv
+  | marktyv (tyv,a,b) = MarkTyv (tyv, SM.REGION (a,b))
 
 val asteriskHash = HashString.hashString "*"
 val asteriskString = "*"
@@ -221,17 +275,16 @@ tlabel	: selector COLON ty	(selector, ty )
 tlabels : tlabel COMMA tlabels	(tlabel :: tlabels)
 	| tlabel		([tlabel])
 
-ty'	: TYVAR		(MarkTy (VarTy(Tyv(tyvSymbol TYVAR)),
-				 (TYVARleft,TYVARright)))
+ty'	: TYVAR		(markty (VarTy(Tyv(tyvSymbol TYVAR)), TYVARleft, TYVARright))
 	| LBRACE tlabels RBRACE
-			(MarkTy(RecordTy tlabels,(LBRACEleft,RBRACEright)))
+			(markty (RecordTy tlabels, LBRACEleft, RBRACEright))
 	| LBRACE RBRACE	(RecordTy [])
 	| LPAREN ty0_pc RPAREN tycon
-			(MarkTy(ConTy(tycon,ty0_pc),(tyconleft,tyconright)))
+			(markty (ConTy(tycon,ty0_pc), tyconleft,tyconright))
 	| LPAREN ty RPAREN
 			(ty)
-	| ty' tycon	(MarkTy(ConTy(tycon,[ty']),(tyconleft,tyconright)))
-	| tycon		(MarkTy(ConTy(tycon,[]),(tyconleft,tyconright)))
+	| ty' tycon	(markty (ConTy(tycon,[ty']), tyconleft, tyconright))
+	| tycon		(markty (ConTy(tycon,[]), tyconleft, tyconright))
 
 tuple_ty : ty' ASTERISK tuple_ty 	(ty' :: tuple_ty)
 	 | ty' ASTERISK ty'	 	([ty'1,ty'2])
@@ -279,18 +332,18 @@ exp	: exp HANDLE match	(HandleExp{expr=exp,rules=match})
 					 RAISEleft,expright))
 
 app_exp	: aexp	        ([{item=markexp(aexp,aexpleft,aexpright),
-			   region=(aexpleft,aexpright), fixity=NONE}])
+			   region = SM.REGION (aexpleft,aexpright), fixity=NONE}])
 	| ident		([let val (v,f) = var'n'fix ident
 			    in {item=markexp(VarExp [v],identleft,identright),
-				region=(identleft,identright),
+				region = SM.REGION (identleft,identright),
 				fixity=SOME f}
 			    end])
 	| aexp app_exp	({item=markexp(aexp,aexpleft,aexpright),
-			  region=(aexpleft,aexpright), fixity=NONE}
+			  region = SM.REGION (aexpleft,aexpright), fixity=NONE}
                             :: app_exp)
 	| ident app_exp (let val (v,f) = var'n'fix ident
 			  in {item=markexp(VarExp [v],identleft,identright),
-			      region=(identleft,identright),
+			      region = SM.REGION (identleft,identright),
 				fixity=SOME f} :: app_exp
 			 end)
 
@@ -341,25 +394,25 @@ pat	: pat AS pat		(layered(pat1, pat2,
 	| apats			(markpat(FlatAppPat apats, apatsleft, apatsright))
 
 apat	: apat'		        ({item=markpat(apat',apat'left,apat'right),
-				  region=(apat'left,apat'right),
+				  region = SM.REGION (apat'left,apat'right),
 			          fixity=NONE})
 	| LPAREN pat RPAREN	({item=pat,
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE})
 	| id			(let val (v,f) = var'n'fix id
 				 in {item=markpat(VarPat [v],idleft,idright),
-				     region=(idleft,idright),
+				     region = SM.REGION (idleft,idright),
 				     fixity=SOME f} end)
 	| LPAREN RPAREN		({item=markpat(unitPat,LPARENleft,RPARENright),
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE})
 	| LPAREN pat COMMA  pat_list RPAREN
   				({item=markpat(TuplePat(pat :: pat_list),LPARENleft,RPARENright),
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE})
 	| LPAREN pat BAR or_pat_list RPAREN
 				({item=markpat(OrPat(pat :: or_pat_list),LPARENleft,RPARENright),
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE})
 
 (* FIXME: should be "OP id", but that breaks smlnj/init/built-in.sml *)
@@ -408,24 +461,22 @@ or_pat_list : pat			([pat])
 	    | pat BAR or_pat_list	(pat :: or_pat_list)
 
 vb	: vb AND vb		(vb1 @ vb2)
-	| LAZY pat EQUALOP exp	([MarkVb(Vb{exp=exp, pat=pat, lazyp=true},
-	                                 (patleft,expright))])
-	| pat EQUALOP exp	([MarkVb(Vb{exp=exp, pat=pat, lazyp=false},
-	                                 (patleft,expright))])
+	| LAZY pat EQUALOP exp	([markvb (Vb{exp=exp, pat=pat, lazyp=true}, patleft, expright)])
+	| pat EQUALOP exp	([markvb (Vb{exp=exp, pat=pat, lazyp=false}, patleft, expright)])
 
 constraint :	 		(NONE)
 	   | COLON ty	 	(SOME ty)
 
 rvb	: rvb AND rvb		(rvb1 @ rvb2)
-	| rpat EQUALOP exp	([MarkRvb(rpat (false, exp), (rpatleft, expright))])
-	| LAZY rpat EQUALOP exp	([MarkRvb(rpat (true, exp), (LAZYleft, expright))])
+	| rpat EQUALOP exp	([markrvb (rpat (false, exp), rpatleft, expright)])
+	| LAZY rpat EQUALOP exp	([markrvb (rpat (true, exp), LAZYleft, expright)])
 
 rpat	: LPAREN rpat RPAREN	(rpat)
 	| id constraint		(fn (lazy, exp) => let
 				  val (v,f) = var'n'fix id
 	                	  in
 				    Rvb{
-				        var = v, fixity = SOME(f, (idleft, idright)),
+				        var = v, fixity = SOME (f, SM.REGION (idleft, idright)),
 				        resultty = constraint,
 				        exp = exp, lazyp = lazy
 				      }
@@ -440,10 +491,10 @@ rpat	: LPAREN rpat RPAREN	(rpat)
 fb'	: clause		([clause])
 	| clause BAR fb'	(clause :: fb')
 
-fb	: fb'			([MarkFb(Fb(fb',false), (fb'left,fb'right))])
-	| LAZY fb'		([MarkFb(Fb(fb',true), (fb'left,fb'right))])
-	| fb' AND fb		(MarkFb(Fb(fb',false), (fb'left,fb'right)) :: fb)
-	| LAZY fb' AND fb	(MarkFb(Fb(fb',true), (fb'left,fb'right)) :: fb)
+fb	: fb'			([markfb (Fb(fb',false), fb'left, fb'right)])
+	| LAZY fb'		([markfb (Fb(fb',true), fb'left, fb'right)])
+	| fb' AND fb		(markfb (Fb(fb',false), fb'left, fb'right) :: fb)
+	| LAZY fb' AND fb	(markfb (Fb(fb',true), fb'left, fb'right) :: fb)
 
 apats	: apat			([apat])
 	| apat apats		(apat :: apats)
@@ -454,22 +505,19 @@ clause	: apats constraint EQUALOP exp
 			exp=markexp(exp,expleft,expright)})
 
 
-tb	: tyvars idtyc EQUALOP ty ([MarkTb(
-				   Tb{tyvars=tyvars,tyc=tycSymbol idtyc,def=ty},
-				   (tyvarsleft,tyright))])
+tb	: tyvars idtyc EQUALOP ty ([marktb (Tb{tyvars=tyvars,tyc=tycSymbol idtyc,def=ty},
+				    tyvarsleft, tyright)])
 	| tb AND tb		(tb1 @ tb2)
 
-tyvars	: TYVAR			([MarkTyv(Tyv(tyvSymbol TYVAR),
-					 (TYVARleft,TYVARright))])
+tyvars	: TYVAR			([marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)])
 	| LPAREN tyvar_pc RPAREN  (tyvar_pc)
 	|			  (nil)
 
-tyvarseq: TYVAR			([MarkTyv(Tyv(tyvSymbol TYVAR),
-					 (TYVARleft,TYVARright))])
+tyvarseq: TYVAR			([marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)])
 	| LPAREN tyvar_pc RPAREN  (tyvar_pc)
 
-tyvar_pc: TYVAR                 ([MarkTyv(Tyv(tyvSymbol TYVAR), (TYVARleft,TYVARright))])
-	| TYVAR COMMA tyvar_pc  (MarkTyv(Tyv(tyvSymbol TYVAR),(TYVARleft,TYVARright))
+tyvar_pc: TYVAR                 ([marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)])
+	| TYVAR COMMA tyvar_pc  (marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)
 				 :: tyvar_pc)
 
 dtrepl  : idtyc EQUALOP DATATYPE tycon      ((tycSymbol idtyc, tycon))
@@ -501,10 +549,10 @@ eb	: op_op id		([EbGen{exn=(varSymbol id),etype=NONE}])
 qid_p	: qid			([qid strSymbol])
 	| qid qid_p		(qid strSymbol :: qid_p)
 
-fixity	: INFIX			(infixleft 0)
-	| INFIX int		(infixleft (checkFix(#2 int, error(intleft, intright))))
-	| INFIXR		(infixright 0)
-	| INFIXR int		(infixright (checkFix(#2 int, error(intleft, intright))))
+fixity	: INFIX			(Fixity.infixleft 0)
+	| INFIX int		(Fixity.infixleft (checkFix(#2 int, error(intleft, intright))))
+	| INFIXR		(Fixity.infixright 0)
+	| INFIXR int		(Fixity.infixright (checkFix(#2 int, error(intleft, intright))))
 	| NONFIX		(NONfix)
 
 ldec	: VAL vb		(ValDec(vb,nil))
@@ -587,10 +635,10 @@ exnspec : exnspec AND exnspec	(exnspec1 @ exnspec2)
 	| id OF ty		([(varSymbol id,SOME ty)])
 
 sharespec: sharespec AND sharespec	(sharespec1 @ sharespec2)
-	 | TYPE patheqn	([MarkSpec (ShareTycSpec(patheqn tycSymbol),
-				    (patheqnleft,patheqnright))])
-	 | patheqn	([MarkSpec (ShareStrSpec (patheqn strSymbol),
-				    (patheqnleft,patheqnright))])
+	 | TYPE patheqn	([markspec (ShareTycSpec(patheqn tycSymbol),
+				    patheqnleft, patheqnright)])
+	 | patheqn	([markspec (ShareStrSpec (patheqn strSymbol),
+				    patheqnleft, patheqnright)])
 
 patheqn : qid EQUALOP qid	(fn kind => [qid1 kind, qid2 kind])
         | qid EQUALOP patheqn	(fn kind => qid kind :: patheqn kind)
@@ -600,10 +648,9 @@ whspec  : whspec AND whspec     (whspec1 @ whspec2)
 				([WhType(qid tycSymbol,tyvars,ty)])
         | qid EQUALOP qid	([WhStruct(qid1 strSymbol,qid2 strSymbol)])
 
-sign	: IDA			(MarkSig(VarSig (sigSymbol IDA),
-				         (IDAleft,IDAright)))
-	| SIG spec_s END	(MarkSig(BaseSig(spec_s),(spec_sleft,spec_sright)))
-        | sign WHERE whspec     (MarkSig(AugSig(sign,whspec),(signleft,whspecright)))
+sign	: IDA			(marksig (VarSig (sigSymbol IDA), IDAleft, IDAright))
+	| SIG spec_s END	(marksig (BaseSig(spec_s), spec_sleft, spec_sright))
+        | sign WHERE whspec     (marksig (AugSig(sign,whspec), signleft, whspecright))
 
 sigconstraint_op :		(NoSig)
 	| COLON sign		(Transparent(sign))
@@ -624,51 +671,45 @@ fsigb	: fsigb AND fsigb	(fsigb1 @ fsigb2)
 fsig	: COLON IDA	        (VarFsig (fsigSymbol IDA))
 	| fparamList COLON sign	(BaseFsig{param=fparamList,result=sign})
 
-str	: qid	((MarkStr(VarStr(qid strSymbol),(qidleft,qidright))))
+str	: qid	(markstr (VarStr(qid strSymbol), qidleft, qidright))
 	| STRUCT strdecs END
-		(MarkStr(BaseStr strdecs,(STRUCTleft,ENDright)))
+		(markstr (BaseStr strdecs, STRUCTleft,ENDright))
 	| qid arg_fct
-		(MarkStr(AppStr(qid fctSymbol,arg_fct),
-			 (qidleft,arg_fctright)))
+		(markstr (AppStr(qid fctSymbol,arg_fct), qidleft, arg_fctright))
 	| LET strdecs IN str END
-		(MarkStr(LetStr(strdecs, str), (LETleft,ENDright)))
+		(markstr (LetStr(strdecs, str), LETleft, ENDright))
         | str COLON sign
-	        (MarkStr(ConstrainedStr(str,Transparent sign),
-		         (strleft,signright)))
+	        (markstr (ConstrainedStr(str,Transparent sign), strleft, signright))
         | str COLONGT sign
-	        (MarkStr(ConstrainedStr(str,Opaque sign),
-		         (strleft,signright)))
+	        (markstr (ConstrainedStr(str,Opaque sign), strleft, signright))
 
-arg_fct : LPAREN strdecs RPAREN arg_fct  ((MarkStr(BaseStr strdecs,
-						  (strdecsleft,strdecsright)),
+arg_fct : LPAREN strdecs RPAREN arg_fct  ((markstr (BaseStr strdecs, strdecsleft, strdecsright),
 					  false) :: arg_fct)
 	| LPAREN str RPAREN arg_fct	 ((str, true) :: arg_fct)
 	| LPAREN str RPAREN 		 ([(str, true)])
-	| LPAREN strdecs RPAREN 	 ([(MarkStr(BaseStr strdecs,
-						   (strdecsleft,strdecsright)),
+	| LPAREN strdecs RPAREN 	 ([(markstr (BaseStr strdecs, strdecsleft, strdecsright),
 					   false)])
 
-strdecs	: strdec strdecs	(makeSEQdec (markdec(strdec,strdecleft,strdecright),
+strdecs	: strdec strdecs	(makeSEQdec (markdec (strdec,strdecleft,strdecright),
 					     strdecs))
 	| SEMICOLON strdecs	(strdecs)
 	|			(SeqDec[])
 
-sdecs	: sdec sdecs		(makeSEQdec (markdec(sdec,sdecleft,sdecright),
+sdecs	: sdec sdecs		(makeSEQdec (markdec (sdec, sdecleft, sdecright),
 					     sdecs))
 	| SEMICOLON sdecs	(sdecs)
 	|			(SeqDec[])
 
-sdecs'	: sdec sdecs'		(makeSEQdec (markdec(sdec,sdecleft,sdecright),
+sdecs'	: sdec sdecs'		(makeSEQdec (markdec (sdec, sdecleft, sdecright),
 					     sdecs'))
-	| sdec			(markdec(sdec, sdecleft,sdecright))
+	| sdec			(markdec (sdec, sdecleft, sdecright))
 
 strdec	: STRUCTURE strb	(StrDec strb)
 	| FUNCTOR fctb		(FctDec fctb)
 	| LOCAL strdecs IN strdecs END
-		                (LocalDec(markdec(strdecs1,
-						  strdecs1left,strdecs1right),
-  					  markdec(strdecs2,strdecs2left,strdecs2right)))
-	| ldec			(markdec(ldec,ldecleft,ldecright))
+		                (LocalDec(markdec(strdecs1, strdecs1left, strdecs1right),
+  					  markdec (strdecs2, strdecs2left, strdecs2right)))
+	| ldec			(markdec (ldec, ldecleft, ldecright))
 
 sdec	: STRUCTURE strb	(StrDec strb)
 	| SIGNATURE sigb	(SigDec sigb)
@@ -681,39 +722,36 @@ sdec	: STRUCTURE strb	(StrDec strb)
 	| ldec			(markdec(ldec,ldecleft,ldecright))
 
 strb	: IDA sigconstraint_op EQUALOP str
-	                        ([MarkStrb(Strb{name = strSymbol IDA, def = str,
+	                        ([markstrb (Strb{name = strSymbol IDA, def = str,
 						constraint=sigconstraint_op},
-					   (IDAleft,strright))])
+					    IDAleft,strright)])
 	| strb AND strb		(strb1 @ strb2)
 
-fparam	: IDA COLON sign	((SOME(strSymbol IDA),sign))
-	| spec_s		((NONE,MarkSig(BaseSig(spec_s),
-					       (spec_sleft,spec_sright))))
+fparam	: IDA COLON sign	((SOME(strSymbol IDA), sign))
+	| spec_s		((NONE, marksig (BaseSig(spec_s), spec_sleft, spec_sright)))
 
 fparamList
 	: LPAREN fparam	RPAREN			([fparam])
 	| LPAREN fparam RPAREN fparamList	(fparam :: fparamList)
 
 fctb	: IDA fparamList sigconstraint_op EQUALOP str
-		([MarkFctb(Fctb {name = fctSymbol IDA,
-                                 def = BaseFct{params=fparamList, body=str,
-				              constraint=sigconstraint_op}},
-			   (IDAleft,strright))])
+		([markfctb (Fctb {name = fctSymbol IDA,
+                                  def = BaseFct{params=fparamList, body=str,
+						constraint=sigconstraint_op}},
+			    IDAleft,strright)])
 	| IDA fsigconstraint_op EQUALOP fct_exp
-		([MarkFctb(Fctb {name=fctSymbol IDA,
-				 def=fct_exp (fsigconstraint_op)},
-			   (IDAleft,fct_expright))])
+		([markfctb (Fctb {name=fctSymbol IDA,
+				  def=fct_exp (fsigconstraint_op)},
+			    IDAleft,fct_expright)])
 	| fctb AND fctb	   (fctb1 @ fctb2)
 
 fct_exp: qid	(fn constraint => VarFct(qid fctSymbol,constraint))
        | qid arg_fct
   		(fn constraint =>
-		    MarkFct(AppFct(qid fctSymbol,arg_fct,constraint),
-			    (qidleft,arg_fctright)))
+		    markfct (AppFct(qid fctSymbol,arg_fct,constraint), qidleft, arg_fctright))
        | LET strdecs IN fct_exp END
 		(fn constraint =>
-		   MarkFct(LetFct(strdecs, fct_exp constraint),
-		   (LETleft,ENDright)))
+		   markfct (LetFct(strdecs, fct_exp constraint), LETleft, ENDright))
 
 interdec: sdecs'	(markdec(sdecs',sdecs'left,sdecs'right))
 

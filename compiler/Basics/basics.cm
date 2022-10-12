@@ -41,8 +41,8 @@ Group
 	signature SOURCE_MAP
 	structure Source
 	structure SourceMap
+        structure PPSourceMap
 	structure ErrorMsg
-        structure PPErrorMsg
 	structure CompileExn
 	
 	structure Stats
@@ -85,11 +85,11 @@ is
 	source/source.sml
 	source/sourcemap.sig
 	source/sourcemap.sml
+        source/ppsourcemap.sml
 	source/pathnames.sml
 
 	errormsg/errormsg.sig
 	errormsg/errormsg.sml
-        errormsg/pperrormsg.sml
 	stats/stats.sml
 
 	print/printcontrol.sml

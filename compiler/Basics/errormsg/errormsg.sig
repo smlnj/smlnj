@@ -10,29 +10,33 @@ sig
     type output = string -> unit
 
     datatype severity = WARN | COMPLAIN
+
     type complainer = severity -> string -> NewPP.format -> unit
     type errorFn = SourceMap.region -> complainer
 
     type errors (* = {error: errorFn,
-                      errorMatch: region -> NewPP.format,
+                      fmtRegion: region -> NewPP.format,
                       anyErrors : bool ref} *)
 
-    val defaultOutput : unit -> output
-
     exception Error
+    (* Raised by terminal errors (impossible and impossibleWithBody).
+     * Should not be handled! *)
 
-    val errors : Source.inputSource -> errors
-    val errorsNoFile  : output * bool ref -> errors
+    val defaultOutput : unit -> output
+    (* Is the default output the responsibility of ErrorMsg?
+     * Or should it be in Control.Print? Or compInfo? Or ?
+     * Should it be settable? *)
+
+    val errors : Source.source -> errors
     val anyErrors : errors -> bool
 
-    val nullErrorBody : NewPP.format
+    val nullErrorBody : NewPP.format  (* == NewPP.empty *)
 
-    val error         : Source.inputSource -> SourceMap.region -> complainer
-    val errorNoSource : output * bool ref  -> NewPP.format     -> complainer  (* location format *)
-    val errorNoFile   : output * bool ref  -> SourceMap.region -> complainer
+    val error         : Source.source -> errorFn
+    val errorNoSource : errorFn  (* == error Source.dummySource, only 2 uses *)
 
-    val impossible : string -> 'a
-    val warn : string -> unit
-    val impossibleWithBody : string -> NewPP.format -> 'a
+    val impossible : string -> 'a  (* raises Error exception *)
+    val impossibleWithBody : string -> NewPP.format -> 'a  (* raises Error exception *)
+    val warn : string -> unit  (* prints warning message, no exception raised *)
 
 end (* signature ERRORMSG *)

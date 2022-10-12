@@ -14,7 +14,7 @@ structure Absyn : ABSYN =
     structure T = Types
     structure V = Variable
 
-    type region = Ast.region  (* = int * int *)
+    type region = SourceMap.region  (* not "int * int" ! *)
 
     (* "value" -- "denotation" of a core language "value" identifier,
      *  which denotes either a variable or data constructor;

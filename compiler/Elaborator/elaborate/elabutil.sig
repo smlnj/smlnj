@@ -82,7 +82,7 @@ sig
                   resultty: Types.ty option,
                   exp: Absyn.exp} list,
         tyvars: Types.tyvar list ref,
-	region: Ast.region } list
+	region: SourceMap.region } list
        * compInfo -> Absyn.dec (* * StaticEnv.staticEnv *)
 
   val labsym : Absyn.numberedLabel -> Symbol.symbol

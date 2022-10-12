@@ -11,7 +11,7 @@ local
     structure GG = GroupGraph
     structure SE = StaticEnv
     structure Pid = PersStamps
-    structure PP = PrettyPrint
+    structure PP = NewPP
     structure EM = ErrorMsg
     structure SF = SmlFile
 
@@ -274,12 +274,10 @@ in
 					  cleanup = cleanup }
 			 before TStamp.setTime (binname, SmlInfo.lastseen i))
 			handle exn => let
-			    fun ppb pps =
-				(PP.newline pps;
-				 PP.string pps (General.exnMessage exn))
+			    fun errorBody = PP.text (General.exnMessage exn)
 			in
-			    SmlInfo.error gp i EM.WARN
-					  ("failed to write " ^ binname) ppb;
+			    SmlInfo.error gp i
+				EM.WARN ("failed to write " ^ binname) errorBody;
 			    { code = 0, env = 0, data = 0 }
 			end
 		    end (* save *)

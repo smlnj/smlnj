@@ -19,7 +19,7 @@ structure GeneralParams = struct
 
     type info = { param: param,
 		  groupreg: GroupReg.groupreg,
-		  errcons: PrettyPrint.device,
+		  errcons: string -> unit,  (* output function, was PrettyPrint.device *)
 		  youngest: TStamp.t ref }
 
     fun bind { param = { penv, archos, fnpolicy, symval,

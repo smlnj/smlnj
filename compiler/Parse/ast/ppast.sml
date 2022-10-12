@@ -13,11 +13,13 @@ local
 
   structure S = Symbol
   structure F = Fixity
-  structure SRC = Source
+  structure SR = Source
+  structure SM = SourceMap
 
   structure PP = NewPP
   structure PPU = NewPPUtil
   structure PPS = PPSymbols  (* fmtSym, fmtSymList *)
+  structure PPSM = PPSourceMap
 
   open Ast
 
@@ -28,10 +30,10 @@ local
 
 in
 
-(* fmtPos : Source.inputSource * int -> PP.format *)
-fun fmtPos (source: Source.inputSource, charpos: int) =
+(* fmtPos : Source.source * int -> PP.format *)
+fun fmtPos ({sourceMap, ...}: SR.source, charpos: int) =
     if (!lineprint) then
-      let val {line, column, ...} = Source.filepos source charpos
+      let val {line, column, ...} = SM.charposToLocation (!sourceMap, charpos)
        in PP.cblock [PP.integer line, PP.period, PP.integer column]
       end
     else PP.integer charpos
@@ -96,7 +98,7 @@ fun fmtPat sourceOp (pat, d) =
 	  | fmtPat' (VectorPat nil, d) = PP.text "#[]"
 	  | fmtPat' (VectorPat pats, d) =
 	      PP.ccat (PP.text "#", PP.listFormats (map (fn pat => fmtPat' (pat, d-1)) pats))
-	  | fmtPat' (MarkPat (pat, (s,e)), d) =
+	  | fmtPat' (MarkPat (pat, SM.REGION (s,e)), d) =
 	      (case sourceOp
 		 of SOME source =>
 		      if !internals
@@ -113,7 +115,7 @@ fun fmtPat sourceOp (pat, d) =
     in fmtPat' (pat, d)
     end
 
-and fmtExp (sourceOp: SRC.inputSource option) (exp: exp, depth: int) =
+and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
   let fun fmtExp' (_, 0) = PP.text "<exp>"
 	| fmtExp' (VarExp p, _) = fmtPath p
 	| fmtExp' (FnExp nil, _ ) = PP.text "<function>"
@@ -196,16 +198,17 @@ and fmtExp (sourceOp: SRC.inputSource option) (exp: exp, depth: int) =
 	 | fmtExp'(VectorExp nil, d) = PP.text "#[]"
 	 | fmtExp'(VectorExp exps, d) =
 	     PP.ccat (PP.text "#", PP.list (fn exp => fmtExp' (exp, d-1)) exps)
-	 | fmtExp'(MarkExp (exp,(s,e)), d) =
+	 | fmtExp'(MarkExp (exp, region), d) =
 	      (case sourceOp
 		 of SOME source =>
 		      if !internals
 		      then PP.enclose {front = PP.text "<", back = PP.text ">"}
-			     (PP.hcat
-				(PP.ccat
-				   (PP.text "MARK",
-				    PP.parens (PP.hblock [fmtPos (source, s), PP.comma, fmtPos (source, e)])),
-				 PP.hcat (PP.colon, fmtExp' (exp, d))))
+			     (PP.pcat
+				(PP.cblock
+				   [PP.text "@",
+				    PP.parens (PPSM.fmtRegion region),
+				    PP.colon],
+				 fmtExp' (exp, d)))
 		      else fmtExp' (exp, d)
 		  | NONE => fmtExp' (exp, d))
 
@@ -267,7 +270,7 @@ and fmtStrExp sourceOp (strexp, d) =
 	       PP.label "in" (fmtStrExp sourceOp (body, d-1)),
 	       PP.text "end"]
 
-        | MarkStr (body,(s,e)) => fmtStrExp sourceOp (body, d))
+        | MarkStr (body,_) => fmtStrExp sourceOp (body, d))
 
 and fmtFctExp sourceOp (fctexp, d) =
     if d <= 0 then PP.text "<fctexp>" else
@@ -284,7 +287,7 @@ and fmtFctExp sourceOp (fctexp, d) =
 	       PP.parens
 		 (PP.hblock
 		    (map (fn (strexp,_) => fmtStrExp sourceOp (strexp, d-1)) sblist)))
-	| MarkFct(body,(s,e)) => fmtFctExp sourceOp (body, d)
+	| MarkFct(body,_) => fmtFctExp sourceOp (body, d)
         | BaseFct _ => ErrorMsg.impossible "fmtFctExp: BaseFct")
 
 and fmtWhereSpec sourceOp =
@@ -539,13 +542,12 @@ and fmtDec sourceOp (dec, depth) =
 			   else PP.empty),
 		 PP.pblock (map PPS.fmtSym ops))
 
-	  | fmtDec'(MarkDec(dec,(s,e)),d) =
+	  | fmtDec'(MarkDec(dec,region),d) =
 	     (case sourceOp
 		of SOME source =>
 		     PP.hcat
 		       (PP.ccat (PP.text "@",
-			         PP.parens
-				   (PP.cblock [fmtPos (source,s), PP.comma, fmtPos (source,e)])),
+			         PP.parens (PPSM.fmtRegion region)),
 			fmtDec' (dec, d))
 		 | NONE => fmtDec' (dec, d))
 
@@ -580,7 +582,7 @@ and fmtFb sourceOp (fb, d) =
 
 and fmtClause sourceOp (Clause {pats, resultty, exp}, d) =
     if d <= 0 then PP.text "<clause>" else
-    let fun fmt {item: pat, fixity: symbol option, region: region} =
+    let fun fmt {item: pat, fixity: S.symbol option, region: SM.region} =
 	    (case (fixity, item)
 	       of (NONE, (FlatAppPat _ | ConstraintPat _ | LayeredPat _ | OrPat _)) =>
 		    PP.parens (fmtPat sourceOp (item, d))
@@ -673,7 +675,7 @@ and fmtFsigb sourceOp (fsigb, d) =
 	       PP.softIndent 2 (fmtFsigExp sourceOp (def,d-1))]
 	| MarkFsigb (fsigb', _) => fmtFsigb sourceOp (fsigb', d))
 
-(* fmtTy : SRC.source option -> ty * int -> PP.format *)
+(* fmtTy : SR.source option -> ty * int -> PP.format *)
 and fmtTy sourceOp (ty, d) =
   let fun fmtTy' (_,0) = PP.text "<type>"
         | fmtTy' (VarTy t, _) = fmtTyvar t
@@ -691,7 +693,7 @@ and fmtTy sourceOp (ty, d) =
 	| fmtTy' (RecordTy fields, d) =
             PP.braces
 	      (PP.psequence PP.comma
-		(map (fn (sym:symbol, tv:Ast.ty) =>
+		(map (fn (sym: S.symbol, tv: Ast.ty) =>
 			 PP.hblock [PPS.fmtSym sym, PP.colon, fmtTy sourceOp (tv, d)]) fields))
 	| fmtTy' (TupleTy tys, d) =
 	    PP.psequence (PP.text "*") (map (fn ty => fmtTy sourceOp (ty, d)) tys)
