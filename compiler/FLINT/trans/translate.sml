@@ -30,6 +30,7 @@ local
   structure EM = ErrorMsg
   structure LV = LambdaVar
   structure V  = Variable
+  structure SM = SourceMap
   structure AS = Absyn
   structure AU = AbsynUtil
   structure ED = ElabDebug
@@ -247,15 +248,15 @@ fun patToConsig (APPpat(dcon,_,_)) = TU.dataconSign dcon
  *)
 
 local
-  val region = ref(0,0)
+  val region : SM.region ref = ref (SM.NULLregion)
   val markexn = PRIM(PO.MARKEXN,
 		  LD.ltc_parrow(LD.ltc_tuple [LB.ltc_exn, LB.ltc_string],
 				LB.ltc_exn), [])
 in
 
-fun withRegion loc f x =
+fun 'a withRegion (loc: SM.region) (thunk : unit -> 'a) =
   let val r = !region
-   in (region := loc; f x before region:=r)
+   in (region := loc; thunk () before region:=r)
       handle e => (region := r; raise e)
   end
 
@@ -1062,7 +1063,7 @@ and mkStrexp (se, d) =
                in APP(TAPP(e1, tycs), e2)
               end
         | transStrexp (LETstr (dec, b)) = mkDec (dec, d) (transStrexp b)
-        | transStrexp (MARKstr (b, reg)) = withRegion reg transStrexp b
+        | transStrexp (MARKstr (b, reg)) = withRegion reg (fn () => transStrexp b)
    in transStrexp se
   end
 
@@ -1081,7 +1082,7 @@ and mkFctexp (fe, d) =
                end
 	     | _ => bug "mkFctexp: unexpected access")
         | transFctexp (LETfct (dec, b)) = mkDec (dec, d) (transFctexp b)
-        | transFctexp (MARKfct (b, reg)) = withRegion reg transFctexp b
+        | transFctexp (MARKfct (b, reg)) = withRegion reg (fn () => transFctexp b)
         | transFctexp _ = bug "unexpected functor expressions in mkFctexp"
    in transFctexp fe
   end
@@ -1174,8 +1175,8 @@ and mkDec (dec, d) =
 	      end
 	  | mkDec0 (SEQdec ds) =  foldr (op o) ident (map mkDec0 ds)
 	  | mkDec0 (MARKdec(x, reg)) =
-	      let val f = withRegion reg mkDec0 x
-	       in fn y => withRegion reg f y
+	      let val f = withRegion reg (fn () => mkDec0 x)
+	       in fn y => withRegion reg (fn () => f y)
 	      end
 	  | mkDec0 (OPENdec xs) =
 	      let (* special hack to make the import tree simpler *)
@@ -1369,7 +1370,7 @@ and mkExp (exp, d) =
         | mkExp0 (SEQexp (e::r)) = LET(mkv(), mkExp0 e, mkExp0 (SEQexp r))
 
         | mkExp0 (APPexp (e1, e2)) = APP(mkExp0 e1, mkExp0 e2)
-        | mkExp0 (MARKexp (e, reg)) = withRegion reg mkExp0 e
+        | mkExp0 (MARKexp (e, reg)) = withRegion reg (fn () => mkExp0 e)
         | mkExp0 (CONSTRAINTexp (e,_)) = mkExp0 e
 
         | mkExp0 (RAISEexp (e, ty)) = mkRaise(mkExp0 e, tLty ty)

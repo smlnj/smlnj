@@ -154,7 +154,7 @@ Basics/
       defs: SourceMap: SOURCE_MAP
 
   Basics/newpp
-  New prettyprinter library (ultimately belongs in smlnj-lib)
+  New prettyprinter library (should move to smlnj-lib)
     format.sml
       basic datastructures
     measure.sig/sml

@@ -39,5 +39,5 @@ end (* signature SOURCE *)
 
 (* filepos replaced by SourceMap.charposToLocation *)
 (* regionContent moved to SourceMap.regionContent *)
-(* type inputSource renamed source *)
+(* type inputSource renamed "source" *)
 

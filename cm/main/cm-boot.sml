@@ -516,7 +516,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
       fun al_ginfo () = {
               param = param false,
               groupreg = al_greg,
-              errcons = EM.defaultConsumer (),
+              errcons = EM.defaultOutput (),
               youngest = ref TStamp.ancient
             }
 
@@ -622,7 +622,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                         slave_mode = false
                       },
                     groupreg = GroupReg.new (),
-                    errcons = EM.defaultConsumer (),
+                    errcons = EM.defaultOutput (),
                     youngest = ref TStamp.ancient
                   }
             fun loadInitGroup () = Stabilize.loadStable {

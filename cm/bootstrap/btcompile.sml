@@ -164,7 +164,7 @@ struct
 	 * deal with the pervasive env and friends... *)
 
 	val groupreg = GroupReg.new ()
-	val errcons = EM.defaultConsumer ()
+	val errcons = EM.defaultOutput ()
 	val ginfo = { param = param false, groupreg = groupreg,
 		      errcons = errcons,
 		      youngest = ref TStamp.ancient }

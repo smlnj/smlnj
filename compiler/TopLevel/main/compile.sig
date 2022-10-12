@@ -17,7 +17,7 @@ sig
   type pid = PersStamps.persstamp
   type guid
 
-  val mkCompInfo : Source.inputSource -> CompInfo.compInfo
+  val mkCompInfo : Source.source -> CompInfo.compInfo
 
   (** take ast, do semantic checks,
    ** then output the new env, absyn and pickles *)
@@ -37,7 +37,7 @@ sig
 
   (** elaborate as above, then keep on to compile into the binary code *)
   val compile : {
-	  source: Source.inputSource,
+	  source: Source.source,
 	  ast: Ast.dec,
 	  statenv: StaticEnv.staticEnv,
 	  compInfo: CompInfo.compInfo,

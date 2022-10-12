@@ -353,7 +353,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 	      A.MARKfct (i_fctexp (n, r) f, r)
 	  | i_fctexp _ f = f
 
-	val d' = i_dec ([], (0, 0)) d
+	val d' = i_dec ([], SourceMap.REGION (0, 0)) d
     in
 	A.LOCALdec (A.SEQdec [VALdec (tdp_reserve_var, VARexp tdp_reserve),
 			      VALdec (tdp_module_var,

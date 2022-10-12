@@ -244,9 +244,8 @@ struct
 	val errcons = #errcons (gp: GeneralParams.info)
 	val grpSrcInfo = (errcons, anyerrors)
 	val gdescr = SrcPath.descr group
-	fun error l = EM.errorNoFile (errcons, anyerrors) SM.nullRegion
-              EM.COMPLAIN (concat ("(stable) " :: gdescr :: ": " :: l))
-                EM.nullErrorBody
+	fun error l = EM.errorNoSource SM.nullRegion EM.COMPLAIN
+			(concat ("(stable) " :: gdescr :: ": " :: l)) EM.nullErrorBody
 	exception Format = UU.Format
 
 	val penv = #penv (#param gp)
@@ -417,7 +416,7 @@ struct
 				val offset = int () + offset_adjustment
 				val rts_pid = pidoption ()
 				val sh_mode = shm ()
-				val error = EM.errorNoSource grpSrcInfo locs
+				val error = EM.errorNoSource SM.nullRegion
 			    in
 				BinInfo.new { group = group,
 					      mkStablename = mksname,
@@ -697,9 +696,7 @@ struct
 					    "with", "names", "derived", "from", "or",
 					    "equal", "to", descr, "in", "the", "same",
 					    relabs, "location", "as", "they", "are", "now.)"])
-				    end
-			     in EM.errorNoFile
-				  (#errcons gp, anyerrors) SM.nullRegion EM.WARN
+			     in EM.errorNoSource SM.nullRegion EM.WARN
 				  (gdesc ^ ": uses non-anchored path")
 				  errorFmt
 			    end
@@ -989,8 +986,7 @@ struct
 						handle _ => ()) };
 		 refetchStableGroup ())
 		handle exn =>
-		       (EM.errorNoFile (#errcons gp, anyerrors) SM.nullRegion
-			   EM.COMPLAIN
+		       (EM.errorNoSource SM.nullRegion EM.COMPLAIN
 			   (concat ["Exception raised while stabilizing ",
 				    SrcPath.descr grouppath])
 			   EM.nullErrorBody;
@@ -1001,47 +997,33 @@ struct
 		GG.LIB { kind = GG.STABLE _, ... } => SOME g
 	      | GG.NOLIB _ => EM.impossible "stabilize: no library"
 	      | GG.LIB { kind = GG.DEVELOPED { wrapped, ... }, version } =>
-		(case recomp gp g of
-		     NONE => (anyerrors := true; NONE)
-		   | SOME bfc_acc => let
-			 fun notStable (_, gth, _) =
-			     case gth () of
-				 GG.GROUP { kind =
-					    GG.LIB { kind = GG.STABLE _,
-						     ... }, ... } =>
-				 false
-			       | _ => true
-		     in
-			 case List.filter notStable (#sublibs grec) of
-			     [] => doit (wrapped, bfc_acc, version)
-			   | l => let
-				 val grammar =
-				     case l of [_] => " is" | _ => "s are"
-				 fun ppb pps = let
-				     fun loop [] = ()
-				       | loop ((p, _, _) :: t) =
-					 (PP.string pps (SrcPath.descr p);
-					  PP.newline pps;
-					  loop t)
-				 in
-				     PP.newline pps;
-				     PP.string pps
-				    (concat ["because the following sub-group",
-					     grammar, " not stable:"]);
-				     PP.newline pps;
-				     loop l
+		(case recomp gp g
+		   of NONE => (anyerrors := true; NONE)
+		    | SOME bfc_acc =>
+		       let fun notStable (_, gth, _) =
+			       case gth ()
+				 of GG.GROUP { kind = GG.LIB { kind = GG.STABLE _, ... }, ... } =>
+				    false
+				  | _ => true
+		        in case List.filter notStable (#sublibs grec)
+			     of nil => doit (wrapped, bfc_acc, version)
+			      | l =>
+				 let val grammar =
+					   case l of [_] => " is" | _ => "s are"
+				     val errorBody =
+					   PP.vcat
+					     (PP.text
+						(concat ["because the following sub-group",
+							 grammar, " not stable:"]),
+					      PP.viblock (PP.HI 2)
+						(map (fn (p, _, _) => PP.text (SrcPath.descr p)) l))
+				     val gdescr = SrcPath.descr (#grouppath grec)
+				  in EM.errorNoSource SM.nullRegion EM.COMPLAIN
+					  (gdescr ^ " cannot be stabilized")
+					  errorBody;
+				     NONE
 				 end
-				 val errcons = #errcons gp
-				 val gdescr = SrcPath.descr (#grouppath grec)
-			     in
-				 EM.errorNoFile (errcons, anyerrors)
-					SM.nullRegion
-					EM.COMPLAIN
-					(gdescr ^ " cannot be stabilized")
-					ppb;
-				 NONE
-			     end
-		     end)
+		       end)
 	end
 end (* functor Stabilize *)
 

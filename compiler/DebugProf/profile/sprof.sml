@@ -4,7 +4,7 @@
 signature SPROF =
 sig
   val instrumDec : StaticEnv.staticEnv * CompInfo.compInfo
-		   -> Source.inputSource
+		   -> Source.source
 		   -> Absyn.dec
 		   -> Absyn.dec
 
@@ -19,7 +19,7 @@ structure SProf :> SPROF = struct
  *)
 
 fun instrumDec (env: StaticEnv.staticEnv, compInfo : CompInfo.compInfo) 
-               (source: Source.inputSource) (absyn: Absyn.dec) =
+               (source: Source.source) (absyn: Absyn.dec) =
     absyn
 
 end

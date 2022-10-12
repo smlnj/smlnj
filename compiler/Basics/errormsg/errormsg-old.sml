@@ -77,7 +77,7 @@ struct
  *)
 (* [DBM] hasn't been supported for along while. get rid of the complication *)
 
-  fun location_string ({sourceMap,fileOpened,...}:Source.inputSource)
+  fun location_string ({sourceMap,fileOpened,...}:Source.source)
                       ((p1,p2): SourceMap.region) : string =
       let fun shortpoint ({line, column,...}:sourceloc, l) =
              Int.toString line :: "." :: Int.toString column :: l
@@ -103,7 +103,7 @@ struct
           )
       end
 
-  fun error (source as {anyErrors, errConsumer,...}: Source.inputSource)
+  fun error (source as {anyErrors, errConsumer,...}: Source.source)
             ((p1,p2): SourceMap.region) (severity:severity)
             (msg: string) (body : PP.stream -> unit) =
       (ppmsg(errConsumer,(location_string source (p1,p2)),severity,msg,body);

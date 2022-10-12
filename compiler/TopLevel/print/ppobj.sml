@@ -316,7 +316,7 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 				else PP.text  "<prim?>")
 		    | (T.DATATYPE _, T.ABS) =>  (* [DBM, 09.20.22] !eq = T.ABS does not imply kind = ABSTRACT? *)
 	                (PPTable.formatObject stamp obj
-			 handle PPTable.FORMATTER_NOT_INSTALLED => PP.text  "-" )
+			 handle PPTable.NO_FORMATTER => PP.text  "-" )
 		    | (T.DATATYPE{index,stamps, family as {members,...}, freetycs, root, stripped}, _) =>
 			 if TU.eqTycon(tyc,BT.ulistTycon)
 			 then fmtUrList (obj, hd argtys, tycontextOp, depth, !Control.Print.printLength)
@@ -388,7 +388,7 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
       | fmtDcon (obj:object, (stamp, {tycname,dcons,...}), tycontextOp : tycContext option,
 		 argtys, senv: sharingEnv, depth:int, lpull: int, rpull: int) =
 	 PPTable.formatObject stamp obj (* attempt to find and apply user-defined formatter for obj *)
-	 handle PPTable.FORMATTER_NOT_INSTALLED =>
+	 handle PPTable.NO_FORMATTER =>
 	    if length dcons = 0 then PP.text "-" else
 	    let val dcon as {name,domain,...} = switch(obj,dcons)
 		val dname = S.name name
@@ -437,7 +437,7 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 
 	    val (elems, more) =
 		let fun gather (p, len, elems) =
-			case listDestruct obj
+			case listDestruct p
 			  of NONE => (rev elems, false)  (* obj = nil, ran out of elements *)
 			   | SOME (x, xs) =>             (* obj = x :: xs *)
 			       if len <= 0

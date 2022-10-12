@@ -10,6 +10,7 @@
  *)
 
 structure S = CMSemant
+structure SM = SourceMap
 
 type svalue = Tokens.svalue
 type pos = int
@@ -27,8 +28,8 @@ type lexarg = {
 	       getS: pos * (string * pos * pos -> lexresult) -> lexresult,
 	       handleEof: unit -> pos,
 	       newline: pos -> unit,
-	       obsolete: pos * pos -> unit,
-	       error: pos * pos -> string -> unit,
+	       obsolete: SourceMap.region -> unit,
+	       error: SourceMap.region -> string -> unit,
 	       sync: pos * string -> unit,
 	       in_section2: bool ref
 	      }
@@ -158,8 +159,8 @@ sharp="#";
 <C,PC,PMC,MC>{eol}      => (newline yypos; continue ());
 <C,PC,PMC,MC>.          => (continue ());
 
-<INITIAL,P,PM,M>"*)"	=> (error (yypos, yypos+2)
-			      "unmatched comment delimiter";
+<INITIAL,P,PM,M>"*)"	=> (error (SM.REGION (yypos, yypos+2))
+				  "unmatched comment delimiter";
 			    continue ());
 
 <INITIAL>"\""		=> (YYBEGIN S; newS yypos; continue ());
@@ -189,13 +190,13 @@ sharp="#";
 <S>"\\"{eol}	        => (YYBEGIN SS; newline (yypos + 1); continue ());
 <S>"\\"{ws}+	        => (YYBEGIN SS; continue ());
 
-<S>"\\".		=> (error (yypos, yypos+2)
+<S>"\\".		=> (error (SM.REGION (yypos, yypos+2))
 			     ("illegal escape character in string " ^ yytext);
 			    continue ());
 
 <S>"\""		        => (YYBEGIN INITIAL; getS (yypos, Tokens.FILE_NATIVE));
 <S>{eol}		=> (newline yypos;
-			    error (yypos, yypos + size yytext)
+			    error (SM.REGION (yypos, yypos + size yytext))
 			      "illegal linebreak in string";
 			    continue ());
 
@@ -204,7 +205,7 @@ sharp="#";
 <SS>{eol}	        => (newline yypos; continue ());
 <SS>{ws}+	        => (continue ());
 <SS>"\\"	        => (YYBEGIN S; continue ());
-<SS>.		        => (error (yypos, yypos+1)
+<SS>.		        => (error (SM.REGION (yypos, yypos+1))
 			     ("illegal character in stringskip " ^ yytext);
 			    continue ());
 
@@ -215,13 +216,13 @@ sharp="#";
 <P>"-"		        => (Tokens.ADDSYM (S.MINUS, yypos, yypos + 1));
 <P>"*"		        => (Tokens.MULSYM (S.TIMES, yypos, yypos + 1));
 <P>"<>"		        => (Tokens.EQSYM (S.NE, yypos, yypos + 2));
-<P>"!="                 => (obsolete (yypos, yypos + 2);
+<P>"!="                 => (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.EQSYM (S.NE, yypos, yypos+2));
 <P>"<="		        => (Tokens.INEQSYM (S.LE, yypos, yypos + 2));
 <P>"<"		        => (Tokens.INEQSYM (S.LT, yypos, yypos + 1));
 <P>">="		        => (Tokens.INEQSYM (S.GE, yypos, yypos + 2));
 <P>">"		        => (Tokens.INEQSYM (S.GT, yypos, yypos + 1));
-<P>"=="                 => (obsolete (yypos, yypos + 2);
+<P>"=="                 => (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.EQSYM (S.EQ, yypos, yypos + 2));
 <P>"="		        => (Tokens.EQSYM (S.EQ, yypos, yypos + 1));
 <P>"~"		        => (Tokens.TILDE (yypos, yypos + 1));
@@ -229,22 +230,22 @@ sharp="#";
 <P>{digit}+	        => (Tokens.NUMBER
 			     (valOf (Int.fromString yytext)
 			      handle _ =>
-				  (error (yypos, yypos + size yytext)
+				  (error (SM.REGION (yypos, yypos + size yytext))
 				     "number too large";
 				   0),
 			      yypos, yypos + size yytext));
 
 <P>{id}                 => (idToken (yytext, yypos, pp_ids, Tokens.CM_ID,
 				     fn () => YYBEGIN PM, in_section2));
-<P>"/"                  => (obsolete (yypos, yypos + 1);
+<P>"/"                  => (obsolete (SM.REGION (yypos, yypos + 1));
 			    Tokens.MULSYM (S.DIV, yypos, yypos + 1));
-<P>"%"                  => (obsolete (yypos, yypos + 1);
+<P>"%"                  => (obsolete (SM.REGION (yypos, yypos + 1));
 			    Tokens.MULSYM (S.MOD, yypos, yypos + 1));
-<P>"&&"                 => (obsolete (yypos, yypos + 2);
+<P>"&&"                 => (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.ANDALSO (yypos, yypos + 2));
-<P>"||"                 => (obsolete (yypos, yypos + 2);
+<P>"||"                 => (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.ORELSE (yypos, yypos + 2));
-<P>"!"                  => (obsolete (yypos, yypos + 1);
+<P>"!"                  => (obsolete (SM.REGION (yypos, yypos + 1));
 			    Tokens.NOT (yypos, yypos + 1));
 
 <M>({id}|{sym}+)        => (YYBEGIN INITIAL;
@@ -272,7 +273,7 @@ sharp="#";
 
 <INITIAL,M,PM,P>{ws}+   => (continue ());
 
-<M,PM>.                 => (error (yypos, yypos+1)
+<M,PM>.                 => (error (SM.REGION (yypos, yypos+1))
 			    ("illegal character at start of ML symbol: " ^
 			     yytext);
 			    continue ());
@@ -283,7 +284,7 @@ sharp="#";
 				     fn () => YYBEGIN M, in_section2));
 
 
-<INITIAL>.		=> (error (yypos, yypos+1)
+<INITIAL>.		=> (error (SM.REGION (yypos, yypos+1))
 			    ("illegal character: " ^ yytext);
 			    continue ());
 

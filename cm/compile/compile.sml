@@ -273,13 +273,12 @@ in
 					  work = writer,
 					  cleanup = cleanup }
 			 before TStamp.setTime (binname, SmlInfo.lastseen i))
-			handle exn => let
-			    fun errorBody = PP.text (General.exnMessage exn)
-			in
-			    SmlInfo.error gp i
-				EM.WARN ("failed to write " ^ binname) errorBody;
-			    { code = 0, env = 0, data = 0 }
-			end
+			handle exn =>
+			    (SmlInfo.error gp i
+				EM.WARN ("failed to write " ^ binname)
+				(PP.text (General.exnMessage exn));
+			     { code = 0, env = 0, data = 0 })
+
 		    end (* save *)
 		in
 		    case SmlInfo.parsetree gp i of
@@ -315,8 +314,7 @@ in
 					raise CompileExn.Compile
 						  (phase ^ " failed")
 				    else ()
-				val cinfo = C.mkCompInfo { source = source,
-							   transform = fn x => x }
+				val cinfo = C.mkCompInfo source
 				val guid = SmlInfo.guid i
 				val { csegments, newstatenv, exportPid,
 				      staticPid, imports, pickle = senvP,

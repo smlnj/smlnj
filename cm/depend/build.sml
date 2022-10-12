@@ -156,7 +156,7 @@ structure BuildDepend :> BUILDDEPEND = struct
 								      symDesc (s, [" defined in ", n''])))
 				       in if SmlInfo.eq (i, i')
 					  then [line]
-					  else line :: recur (n', r, lines)
+					  else line :: recur (n', r)
 				      end
 			    in
 				PP.vblock (rev (recur (SrcPath.descr f, history)))

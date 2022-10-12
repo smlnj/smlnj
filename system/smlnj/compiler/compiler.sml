@@ -2,7 +2,8 @@
  * 
  * (C) 2001 Lucent Technologies, Bell Labs
  *)
-structure Compiler = struct
+structure Compiler =
+struct
     structure Stats = Stats
     structure Control = Control
     structure Source = Source
@@ -16,7 +17,7 @@ structure Compiler = struct
     structure EnvRef = EnvRef
     structure ModuleId = ModuleId
     structure PersStamps = PersStamps
-    structure PrettyPrint = PrettyPrint
+    structure NewPP = NewPP
     structure PPTable =	CompilerPPTable
     structure Ast = Ast
     structure SmlFile = SmlFile
