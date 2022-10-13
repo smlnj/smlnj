@@ -423,21 +423,20 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 			    (* handling #line directives -- OBSOLETE, does nothing *)
 			    fun sync (initpos, t) = ()
 
-		    in
-			{ enterC = enterC,
-			  leaveC = leaveC,
-			  newS = newS,
-			  addS = addS,
-			  addSC = addSC,
-			  addSN = addSN,
-			  getS = getS,
-			  handleEof = handleEof,
-			  newline = newline,
-			  obsolete = obsolete,
-			  error = error,
-			  sync = sync,
-			  in_section2 = ref false }
-		    end
+			in { enterC = enterC,
+			     leaveC = leaveC,
+			     newS = newS,
+			     addS = addS,
+			     addSC = addSC,
+			     addSN = addSN,
+			     getS = getS,
+			     handleEof = handleEof,
+			     newline = newline,
+			     obsolete = obsolete,
+			     error = error,
+			     sync = sync,
+			     in_section2 = ref false }
+			end  (* val lexarg *)
 
 		    fun inputc k = TextIO.input stream
 
