@@ -17,8 +17,8 @@ smlnj-tdp		../libraries/trace-debug-profile
 
 mlyacc-tool.cm		../tools/ml-yacc/tool
 grm-ext.cm		../tools/ml-yacc/tool
-mllex-tool.cm		../tools/ml-lpt/ml-ulex/tool
-lex-ext.cm		../tools/ml-lpt/ml-ulex/tool
+mllex-tool.cm		../tools/ml-lpt/ml-ulex/mllex-tool
+lex-ext.cm		../tools/ml-lpt/ml-ulex/mllex-tool
 make-tool.cm		../cm/tools/make
 shell-tool.cm		../cm/tools/shell
 noweb-tool.cm		../cm/tools/noweb

@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# helper script for copying the SML/NJ documentation to a public place.
+#
+# usage:
+#	copy-doc <dst>
+#
+#	<dst>	Path to the installation destination. For example: /usr/local/smlnj
+#
+
+# get the destination path
+#
+if [ $# != 1 ] ; then
+  exit 1
+fi
+
+DST=$1
+cd $DST
+
+MANDIR=$DST/../share/man	# e.g., /usr/local/share/man
+
+if test -d $MANDIR -a -d doc/man ; then
+#
+# copy manual pages to their location
+#
+  cd doc/man
+  for d in man* ; do
+    mkdir -p $MANDIR/$d || exit 1
+    cp -p $d/* $MANDIR/$d/
+  done
+fi
+
+#
+# TODO: copy other documentation to $DST/../doc/smlnj/
+#
+
+exit 1

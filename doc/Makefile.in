@@ -31,12 +31,10 @@ doc:
 
 CLEAN_SUBDIRS =		src
 
-CLEAN_FILES =
+CLEAN_FILES =		config.status config.log autom4te*.cache configure~
 
-DISTCLEAN_FILES +=	Makefile config.status config.log \
-			autom4te*.cache
+DISTCLEAN_FILES +=	configure Makefile config/doc-rules.gmk
 
-DEVCLEAN_FILES =	configure \
-			doc/html doc/man doc/pdf
+DEVCLEAN_FILES =	doc/html doc/man doc/pdf
 
 include @ROOT_DIR@/mk/clean-rules.gmk

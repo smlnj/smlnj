@@ -21,10 +21,13 @@ where 'COMMAND' is one of the following:
   prints the version of *asdlgen* to the standard output.
 
 *c++* or *cxx*::
-  generate *C++* code.
+  generate a C++ implementation of the ASDL modules.
 
 *sml*::
-  generate *SML* code.
+  generate a Standard ML implementation of the ASDL modules.
+
+//*typ*::
+//  generate a machine readable type description of the ASDL modules.
 
 *check*::
   check the correctness of the input specifications, but do not generate
@@ -39,6 +42,8 @@ and unpickling code.
 == OPTIONS
 
 === COMMON OPTIONS
+
+Options common to all the commands include
 
 *-n*::
   Do not write any output files. Instead write the list of files that
@@ -91,7 +96,7 @@ _ASDL Reference Manual_ (included in the *SML/NJ* documentation).
 
 == COPYING
 
-Copyright (C) 2020 The Fellowship of SML/NJ
+Copyright (C) 2022 The Fellowship of SML/NJ
 
 This is free software; see the source for copying  conditions.   There  is  NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

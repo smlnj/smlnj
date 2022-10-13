@@ -98,7 +98,7 @@ if [ x"$INSTALL_BOOTFILES" = xyes ] ; then
       echo "$this: removing existing boot-file archive"
       rm -f "$BOOTARCHIVE"
     fi
-    tar -cf "$BOOTARCHIVE" $BOOTFILES
+    tar -czf "$BOOTARCHIVE" $BOOTFILES
   else
     echo "$this: The directory $BOOTFILES is missing."
     exit 1

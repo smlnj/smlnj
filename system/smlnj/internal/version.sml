@@ -30,14 +30,14 @@ structure SMLNJVersion : sig
     val buildDate = Date.toString (Date.fromTimeLocal (Time.now ()))
 
     (* use buildDate (i.e., boot time) if no release date *)
-    val releaseDate = (case "December 31, 2021"
+    val releaseDate = (case "August 25, 2022"
            of "" => Date.toString (Date.fromTimeLocal (Time.now ()))
             | d => d
           (* end case *))
 
     val version = {
 	    system = "Standard ML of New Jersey",
-	    version_id = [2021, 1],
+	    version_id = [2022, 1],
 	    suffix = "",
 	    releaseDate = releaseDate
           }

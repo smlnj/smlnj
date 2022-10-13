@@ -12,6 +12,7 @@
 INSTALL="@INSTALL@"
 INSTALL_DATA="@INSTALL_DATA@"
 HEAP_SUFFIX="@SMLNJ_HEAP_SUFFIX@"
+SIZE_OPT="@SMLNJ_SIZE@"
 
 if test $# -lt 2 ; then
   echo "usage: install-sml-wrapper.sh <program-name> <install-dir>"
@@ -35,7 +36,7 @@ fi
 cat > $TARGET <<XXXX
 #!/bin/sh
 #
-exec @SMLNJ_CMD@ @SMLcmdname=\$0 @SMLload=$INSTALL_HEAP_IMAGE \$@
+exec @SMLNJ_CMD@ $SIZE_OPT @SMLcmdname=\$0 @SMLload=$INSTALL_HEAP_IMAGE \$@
 XXXX
 
 #install the script and heap image

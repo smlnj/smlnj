@@ -1,6 +1,0 @@
-structure HashCons
-structure HashConsAtom
-structure HashConsMap
-structure HashConsString
-structure HashConsSet
-functor HashConsGroundFn

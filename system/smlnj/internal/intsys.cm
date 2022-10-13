@@ -2,9 +2,7 @@
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
- *)
-
-(*
+ *
  * Revised for using the new CM. (M.Blume, 7/1999)
  *)
 
@@ -63,7 +61,7 @@ is
 	 * itself) is always "plugged-in". *)
 	$/dir-tool.cm
 
-	(* The next are installers.  They just needs to get compiled
+	(* The next are installers.  They just need to be compiled
 	 * so we know they are in sync with the rest of the code... *)
 	$smlnj/installer.cm
 	$smlnj/library-install.cm
@@ -81,4 +79,3 @@ is
 
 	(* need access to the Controls module initialization *)
 	$smlnj/smlnj-lib/controls-lib.cm
-

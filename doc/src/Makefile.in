@@ -64,16 +64,18 @@ readmes:
 # configure and make the SML/NJ Library documentation
 #
 .PHONY:		smlnj-lib-doc
-smlnj-lib-doc:	smlnj-lib/configure
-	(cd smlnj-lib && configure \
-	  --with-smlnj-root="@ROOT_DIR@/.." \
-	  --with-output-dir="$(HTML_DST_ROOT)/smlnj-lib" \
-	  --with-version="@SMLNJ_VERSION@" \
-	  --with-date="@SMLNJ_DATE@")
+smlnj-lib-doc:	smlnj-lib/Makefile
 	(cd smlnj-lib && make tools)
 	(cd smlnj-lib && make install-offline)
 
-smlnj-lib/configure:
+smlnj-lib/Makefile:	smlnj-lib/configure
+	(cd smlnj-lib && ./configure \
+          --with-smlnj-root="@ROOT_DIR@/.." \
+          --with-output-dir="$(HTML_DST_ROOT)/smlnj-lib" \
+          --with-version="@SMLNJ_VERSION@" \
+          --with-date="@SMLNJ_DATE@")
+
+smlnj-lib/configure:	smlnj-lib/configure.ac
 	(cd smlnj-lib && autoconf -Iconfig)
 
 include @MK_DIR@/clean-rules.gmk

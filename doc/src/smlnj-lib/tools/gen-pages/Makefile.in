@@ -31,3 +31,5 @@ $(HEAP_IMAGE):		$(wildcard ../*.sml) $(wildcard *.sml)
 include @MK_DIR@/clean-rules.gmk
 
 CLEAN_FILES = $(HEAP_IMAGE)
+
+DISTCLEAN_FILES = config.sml

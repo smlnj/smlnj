@@ -1,15 +1,21 @@
-(*
- * Internal library exporting signatures for CM and CMB.
+(* cm-sig-lib.cm
  *
- * (C) 2000 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Internal library exporting signatures for CM and CMB.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 Library
-	signature CM
-	signature CMB
+
+  signature CM
+  signature CMB
+
 is
-	$smlnj/basis/basis.cm
-	$/pgraph.cm
-	cm.sig
-	cmb.sig
+
+  $smlnj/basis/basis.cm
+  $/pgraph.cm
+  cm.sig
+  cmb.sig
