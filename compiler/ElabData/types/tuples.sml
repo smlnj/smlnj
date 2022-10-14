@@ -8,7 +8,6 @@
 signature TUPLES =
 sig
 
-  val numlabel : int -> Types.label
   val mkTUPLEtyc : int -> Types.tycon
   val isTUPLEtyc : Types.tycon -> bool
   val mkRECORDtyc : Types.label list -> Types.tycon
@@ -22,14 +21,6 @@ open Types
 
 type labelOpt = label option
 type tyconOpt = tycon option
-
-structure LabelArray = DynamicArrayFn (
-  struct
-    open Array
-    type array = labelOpt array
-    type vector = labelOpt vector
-    type elem = labelOpt
-  end)
 
 structure TyconArray = DynamicArrayFn (
   struct
@@ -69,14 +60,6 @@ fun mkRECORDtyc labels =
 val numericLabels = LabelArray.array (0,NONE)
 val tupleTycons = TyconArray.array (0,NONE)
 
-fun numlabel i =
-    case LabelArray.sub(numericLabels,i)
-      of NONE =>
-	   let val newlabel = Symbol.labSymbol(Int.toString i)
-	    in LabelArray.update(numericLabels,i,SOME newlabel);
-	       newlabel
-	   end
-       | SOME label => label
 
 fun numlabels n =
     let fun labels (0,acc) = acc

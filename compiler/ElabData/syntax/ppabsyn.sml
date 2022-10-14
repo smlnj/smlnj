@@ -40,7 +40,6 @@ local
   structure V = Variable
   structure AS = Absyn
   structure AU = AbsynUtil
-  structure AT = Tuples		     
   structure SE = StaticEnv
   structure SR = Source
   structure SM = SourceMap
@@ -77,41 +76,9 @@ fun fmtPos({sourceMap, ...}: SR.source, charpos: SR.charpos) =
 
 type context = SE.staticEnv * Source.source option
 
-(* isTUPLEpat and isTUPLEexp belong in AbsynUtil, and probably also checkpat and checkexp *)
-
-(* checkpat (int * (S.symbol * 'a) list -> bool
- *   check that a pattern is a tuple pattern
- *   called with n = 1 in isTUPLEpat *)
-fun checkpat (n, nil) = true
-  | checkpat (n, (sym,_)::fields) =
-    S.eq(sym, AT.numlabel n) andalso checkpat (n+1,fields)
-
-(* isTUPLEpat : AS.pat -> bool *)
-fun isTUPLEpat (RECORDpat{fields=[_],...}) = false
-  | isTUPLEpat (RECORDpat{flex=false,fields,...}) = checkpat(1,fields)
-  | isTUPLEpat (MARKpat (p,_)) = isTUPLEpat p
-  | isTUPLEpat _ = false
-
-(* checkexp : (int * (AS.numberedLabel * 'a) list -> bool
- *   check that an expression is a tuple expression
- *   called in isTUPLEexp with n = 1 *)
-fun checkexp (n,nil) = true
-  | checkexp (n, (LABEL{name=sym,...},_)::fields) =
-    S.eq(sym, AT.numlabel n) andalso checkexp (n+1,fields)
-
-(* isTUPLEexp : AS.exp -> bool *)
-fun isTUPLEexp (RECORDexp [_]) = false
-  | isTUPLEexp (RECORDexp fields) = checkexp(1,fields)
-  | isTUPLEexp (MARKexp (e,_)) = isTUPLEexp e
-  | isTUPLEexp _ = false
-
 (* lookFIX : SE.staticEnv * S. symbol -> F.fixity *)
 fun lookFIX (env : SE.staticEnv, sym: S.symbol) =
     Lookup.lookFix (env, S.fixSymbol (S.name sym))
-
-(* stripMark : AS.exp -> AS.exp  -- belongs in AbsynUtil *)
-fun stripMark (MARKexp (exp, _)) = stripMark exp
-  | stripMark exp = exp
 
 (* fmtSymPath : SymPath.path -> PP.format *)
 fun fmtSymPath (path : SymPath.path) = PP.text (SymPath.toString path)
@@ -190,7 +157,7 @@ fun fmtPat env (pat, depth) =
 		     let fun fmtField (sym, pat) =
 			     PP.pcat (PP.hcat (PPS.fmtSym sym, PP.equal),
 				      fmtPat' (pat, 0, 0, d-1))
-		      in if isTUPLEpat r  (* implies not flex *)
+		      in if isTuplePat r  (* implies not flex *)
 			 then PP.parens (* tuple special case *)
 				(PP.psequence PP.comma
 				   (map (fn (sym, pat) => fmtPat' (pat, 0, 0, d-1)) fields))
@@ -213,40 +180,36 @@ fun fmtPat env (pat, depth) =
 	      end
 	  | fmtPat' (CONpat (dcon,_), _, _, _) = PPV.fmtDatacon dcon
 	  | fmtPat' (APPpat(T.DATACON{name,...}, _, argPat), lpull, rpull, d) =
-	      let fun getArgs pat =
-                      (case AU.headStripPat pat
-			of RECORDpat{fields=[(_,leftPat),(_,rightPat)],...} =>
-			   (* assumes pair elements are in the right order in the RECORDpat *)
-		           (leftPat, rightPat)
-			 | _ => bug "getArgs")
-	       in case lookFIX(env,name)
-		    of F.INfix (left, right) => 
-			 let val (leftArg, rightArg) = getArgs argPat
-			     val appFmt =  
-				 PP.pblock [fmtPat' (leftArg, lpull, left, d-1),
-					    PPS.fmtSym name,
-					    fmtPat' (rightArg, right, rpull, d-1)]
-			  in if lpull >= left orelse rpull > right
-			     then (* have to parenthsize to hold on to args *)
-			       let val leftFmt = fmtPat' (leftArg, 0, left, d-1)
-				   val rightFmt = fmtPat' (rightArg, right, 0, d-1)
-				in PP.parens (PP.pblock [leftFmt, PPS.fmtSym name, rightFmt])
-			       end
-			     else (* can hold both args against outer pulls *)
-			       let val leftFmt = fmtPat' (leftArg, lpull, left, d-1)
-				   val rightFmt = fmtPat' (rightArg, right, rpull, d-1)
-				in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
-			       end
-			 end
-		     | F.NONfix =>
-		        PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1))
-	      end
+	      (case lookFIX (env, name)  (* this may not be correct for the actual datacon _path_ *)
+		 of F.INfix (left, right) => 
+		      (case AU.destTuplePat (AU.headStripPat argPat)
+			 of SOME [leftArg, rightArg] =>  (* argpat is a pair *)
+			      let val appFmt =  
+				      PP.pblock [fmtPat' (leftArg, lpull, left, d-1),
+						 PPS.fmtSym name,
+						 fmtPat' (rightArg, right, rpull, d-1)]
+			      in if lpull >= left orelse rpull > right
+				 then (* have to parenthsize to hold on to args *)
+				   let val leftFmt = fmtPat' (leftArg, 0, left, d-1)
+				       val rightFmt = fmtPat' (rightArg, right, 0, d-1)
+				    in PP.parens (PP.pblock [leftFmt, PPS.fmtSym name, rightFmt])
+				   end
+				 else (* can hold both args against outer pulls *)
+				   let val leftFmt = fmtPat' (leftArg, lpull, left, d-1)
+				       val rightFmt = fmtPat' (rightArg, right, rpull, d-1)
+				    in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
+				   end
+			      end
+			  | NONE =>  (* argPat is not a tuple pat or does not have two elements *)
+			      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
+		  | F.NONfix =>
+		      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
 	  | fmtPat' (CONSTRAINTpat (pat,t), lpull, rpull, d) =
 	      let val patFmt = fmtPat' (pat, 0, 0, d-1)
 		  val typFmt = PPT.fmtType env t
 	      in PP.parens (PP.pblock [patFmt, PP.colon, typFmt])
 	      end
-          | fmtPat' (MARKpat (pat, region), lpull, rpull, d) =
+          | fmtPat' (MARKpat (pat, _), lpull, rpull, d) =
 	      fmtPat' (pat, lpull, rpull, d)
 	  | fmtPat' _ = bug "fmtPat'"
      in fmtPat' (pat, 0, 0, depth)
@@ -318,7 +281,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	      let fun fmtField (LABEL {name, ...}, exp) =
 		      PP.pcat (PP.hcat (PPS.fmtSym name, PP.equal),
 			       fmtExp' (exp, 0, 0, d-1))
-	       in if isTUPLEexp r  (* implies not flex *)
+	       in if isTupleExp r  (* implies not flex *)
 		  then PP.parens 
 		         (PP.psequence PP.comma
 			    (map (fn (_, exp) => fmtExp' (exp, 0, 0, d-1)) fields))
@@ -347,7 +310,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	      end
 	  | fmtExp' (APPexp (rator, rand), lpull, rpull, d) =
 	      let val pathOp = 
-		    (case stripMark rator
+		    (case AU.headStripExp rator
 		       of CONexp(T.DATACON{name,...},_) => SOME [name]
 		        | VARexp(varRef,_) =>
 			    (case !varRef
@@ -372,7 +335,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 			   (* assumes pair elements are in the right order in the RECORDpat,
 			    * hence not checking field labels *)
 				    (leftArg, rightArg)
-				  | _ => bug "getArgs")
+				  | _ => bug "fmtExp'[Appexp].getArgs")
 			   val (leftArg, rightArg) = getArgs rand
 			   val appFmt =  
 			         PP.pblock [fmtExp' (leftArg, lpull, left, d-1),

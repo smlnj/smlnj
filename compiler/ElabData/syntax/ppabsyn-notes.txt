@@ -1,0 +1,51 @@
+ElabData/syntax/ppabsyn-notes.txt
+
+* [BUG] Problem with PP-formatting APPpat patterns:
+
+Suppose
+
+   structure A =
+   struct
+     datatype t = $$ of int * int * int 
+     ...
+   end
+
+   infix $$ 
+
+   fun foo (A.$$ (x, y, z)) = true
+
+Then assume we want to prettyprint the defintion of foo.
+
+When we try to format the pattern "A.$$ (x, y, z)" in PPAbsyn, the non-binary operator
+A.$$ will be taken as binary because "$$" is determined (by its fixity binding) to
+be infix, and therefore it will be expected to take a pair of argument patterns instead
+of a triple. This is because the DATACON bound to A.$$ and appearing in the APPpat,
+has only a simple name field containing the symbol "$$", not the more accurate path "A.$$".
+("$$" is not really the "name" of the datacon).
+
+If we knew that the "path" of the datacon was actually A.$$, we would not treat it as a binary
+infix constructor.  We could also check the DATACON's type to see if it is consistent with an
+infix operator.  Or we could just check whether the APPpat argpat is a pair, and if not,
+don't format it as infix (if we have type checked the APPpat pattern, we know that the
+rator DATACON and the argpat are consistent).
+
+What if $$ actually took a pair of arguments?
+
+     datatype t = $$ of int * int
+
+Then would it be ok to print "A.$$ (x, y)" as "x $$ y" in another context where
+$$ has been declared as infix?
+
+So there are two factors:
+
+  (1) operator is a nontrivial path in the source, such as A.$$.
+  (2) operator's type is inconsistent with a infix, thus binary, operation.
+
+Both of these individually should prevent prettyprinting the constructor as infix
+in an application (APPpat).
+
+Suggestion: revise Absyn so that APPpat saves the source _path_ of the rator datacon.
+If this path is not a simple symbol (singleton path), then the rator datacon cannot
+be infix, even it it takes a pair as argument!
+
+These same considerations apply to an operator in an expression.
