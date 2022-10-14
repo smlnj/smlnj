@@ -15,34 +15,46 @@ sig
 
 end  (* signature TUPLES *)
 
-structure Tuples : TUPLES = struct
+structure Tuples : TUPLES =
+struct
 
-open Types
+local (* top local *)
 
-type labelOpt = label option
-type tyconOpt = tycon option
+  structure S = Symbol
+  structure NL = NumericLabel
+  structure T = Types
 
-structure TyconArray = DynamicArrayFn (
-  struct
-    open Array
-    type array = tyconOpt array
-    type vector = tyconOpt vector
-    type elem = tyconOpt
-  end)
+  structure TyconArray =
+    DynamicArrayFn
+      (struct
+	 open Array
+	 type array = T.tycon option array
+	 type vector = T.tycon option vector
+	 type elem = T.tycon option
+	end)
+
+  val tupleTycons = TyconArray.array (0, NONE)
+
+  structure Tbl = WordStringHashTable
+
+  open Types
+
+in
 
 exception New
-structure Tbl = WordStringHashTable
 val tyconTable = Tbl.mkTable (32, New) : tycon Tbl.hash_table
 val tyconMap = Tbl.lookup tyconTable
 val tyconAdd = Tbl.insert tyconTable
 
+(* labelsToSymbol : label list -> S.symbol *)
 fun labelsToSymbol(labels: label list) : Symbol.symbol =
     let fun wrap [] = ["}"]
 	  | wrap [id] = [Symbol.name id, "}"]
 	  | wrap (id::rest) = Symbol.name id :: "," :: wrap rest
-     in Symbol.tycSymbol(concat("{" :: wrap labels))
+     in Symbol.tycSymbol (concat("{" :: wrap labels))
     end
 
+(* mkRECORDtyc : label list -> tycon *)
 (* this is an optimization to make similar record tycs point to the same thing,
 	thus speeding equality testing on them *)
 fun mkRECORDtyc labels =
@@ -57,13 +69,10 @@ fun mkRECORDtyc labels =
 	  end
     end
 
-val numericLabels = LabelArray.array (0,NONE)
-val tupleTycons = TyconArray.array (0,NONE)
-
-
+(* numlabels : int -> label list *)
 fun numlabels n =
     let fun labels (0,acc) = acc
-	  | labels (i,acc) = labels (i-1, numlabel i :: acc)
+	  | labels (i,acc) = labels (i-1, NL.numericLabel i :: acc)
     in labels (n,nil)
     end
 
@@ -76,15 +85,11 @@ fun mkTUPLEtyc n =
 	   end
        | SOME tycon => tycon
 
-fun checklabels (2,nil) = false   (* {1:t} is not a tuple *)
-  | checklabels (n,nil) = true
-  | checklabels (n, lab::labs) =
-	Symbol.eq(lab, numlabel n) andalso checklabels(n+1,labs)
-
-fun isTUPLEtyc(RECORDtyc labels) = checklabels(1,labels)
+fun isTUPLEtyc(RECORDtyc labels) = NL.checkTupleLabels labels
   | isTUPLEtyc _ = false
 
 (* mkTUPLEtype : ty list -> ty *)
 fun mkTUPLEtype (elemTys) = CONty(mkTUPLEtyc (length elemTys), elemTys)
 
+end (* top local *)
 end (* structure Tuples *)

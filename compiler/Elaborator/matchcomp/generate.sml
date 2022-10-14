@@ -139,7 +139,7 @@ fun generate (decTree: MC.dectree, ruleMap: Preprocessing.ruleMap, allRules: rul
 	       val argLexp =
 	           case varPaths
 		     of [path] => pathToExp pathenv path  (* single pvar pattern *)
-		      | _ => AU.TUPLEexp (map (pathToExp pathenv) varPaths)
+		      | _ => AU.mkTupleExp (map (pathToExp pathenv) varPaths)
 			 (* for multiple pvars, _or none_ *)
 	   in AS.APPexp(EU.varToExp fvar, argLexp)
 	   end

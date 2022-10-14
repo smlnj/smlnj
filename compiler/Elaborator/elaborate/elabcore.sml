@@ -217,24 +217,24 @@ let
 	    (* "ref($(raise Match))" *)
 	    fun rdrExp _ = APPexp(CONexp(BT.refDcon,[]),
 				  delayExp(RAISEexp(CONexp(exn,[]),T.UNDEFty)))
-	    val rpat  = EU.TUPLEpat (map VARpat rvars)
-	    val rexp  = EU.TUPLEexp (repeat rdrExp)
+	    val rpat  = AU.mkTuplePat (map VARpat rvars)
+	    val rexp  = AU.mkTupleExp (repeat rdrExp)
 	    val rdec  = VALdec([VB{pat=rpat, exp=rexp,
 				   typ=T.UNDEFty, boundtvs=[], tyvars=ref[]}])
 
 	    (* "$(force(!ri))" *)
 	    fun dfbr rv = hold(APPexp(mkBangExp env,VARexp(ref rv,[])))
-	    val ddec  = VALdec[VB{pat=VARpat dvar, exp=EU.TUPLEexp(map dfbr rvars),
+	    val ddec  = VALdec[VB{pat=VARpat dvar, exp=AU.mkTupleExp(map dfbr rvars),
 				  typ=T.UNDEFty,boundtvs=[],tyvars=ref[]}]
 
 	    fun dexp () = VARexp(ref dvar,[])
 	    fun setrExp (rv,fv) =
 		APPexp(mkAssignExp env,
-		       EU.TUPLEexp([VARexp(ref rv,[]),
+		       AU.mkTupleExp([VARexp(ref rv,[]),
 				 hold(APPexp(VARexp(ref fv,[]),dexp()))]))
 	    val updates = ListPair.map setrExp (rvars,fvars)
 
-	    val yexp = FNexp([RULE(EU.TUPLEpat(map VARpat fvars),
+	    val yexp = FNexp([RULE(AU.mkTuplePat(map VARpat fvars),
 				   LETexp(SEQdec[rdec,ddec],
 					  SEQexp(updates@[dexp()])))],
 			     T.UNDEFty, T.UNDEFty)
@@ -341,7 +341,7 @@ let
 	    end
        | TuplePat pats =>
 	    let val (ps,tyv) = elabPatList(pats, env, region)
-	     in (EU.TUPLEpat ps, tyv)
+	     in (AU.mkTuplePat ps, tyv)
 	    end
        | VectorPat pats =>
 	    let val (ps,tyv) = elabPatList(pats, env, region)
@@ -572,7 +572,7 @@ let
 	       end
 	   | TupleExp exps =>
 	       let val (es,tyv,updt) = elabExpList (exps,env,region)
-		in (EU.TUPLEexp es,tyv,updt)
+		in (AU.mkTupleExp es,tyv,updt)
 	       end
 	   | VectorExp exps =>
 	       let val (es,tyv,updt) = elabExpList (exps,env,region)
@@ -1018,8 +1018,8 @@ let
 		end
 
 	    val declAppY =
-		VALdec[VB{pat=EU.TUPLEpat(map VARpat lhsVars),
-			  exp=APPexp(VARexp(ref yvar,[]),EU.TUPLEexp fns),
+		VALdec[VB{pat=AU.mkTuplePat(map VARpat lhsVars),
+			  exp=APPexp(VARexp(ref yvar,[]),AU.mkTupleExp fns),
 			  typ=T.UNDEFty, boundtvs=[], tyvars=tvref}]
 
 	    fun forceStrict ((sym,var1,lazyp),(vbs,vars)) =

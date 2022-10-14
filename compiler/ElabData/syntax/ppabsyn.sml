@@ -157,14 +157,16 @@ fun fmtPat env (pat, depth) =
 		     let fun fmtField (sym, pat) =
 			     PP.pcat (PP.hcat (PPS.fmtSym sym, PP.equal),
 				      fmtPat' (pat, 0, 0, d-1))
-		      in if isTuplePat r  (* implies not flex *)
-			 then PP.parens (* tuple special case *)
-				(PP.psequence PP.comma
-				   (map (fn (sym, pat) => fmtPat' (pat, 0, 0, d-1)) fields))
-			 else PP.braces (* record *)
-				(PP.psequence PP.comma
-				   (map fmtField fields @ (if flex then [PP.text "..."] else nil)))
-		   end)
+		      in (case AU.destTuplePat r
+			    of SOME pats => (* implies not flex *)
+			         PP.parens (* tuple special case *)
+				   (PP.psequence PP.comma
+				      (map (fn pat => fmtPat' (pat, 0, 0, d-1)) pats))
+			     | NONE =>
+			         PP.braces (* record *)
+				   (PP.psequence PP.comma
+				      (map fmtField fields @ (if flex then [PP.text "..."] else nil))))
+		     end)
 	  | fmtPat' (VECTORpat (pats, _), _, _, d) =
 	      let fun fmtElem pat = fmtPat'(pat, 0, 0, d-1)
 	       in PP.ccat
@@ -281,11 +283,12 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	      let fun fmtField (LABEL {name, ...}, exp) =
 		      PP.pcat (PP.hcat (PPS.fmtSym name, PP.equal),
 			       fmtExp' (exp, 0, 0, d-1))
-	       in if isTupleExp r  (* implies not flex *)
-		  then PP.parens 
-		         (PP.psequence PP.comma
-			    (map (fn (_, exp) => fmtExp' (exp, 0, 0, d-1)) fields))
-		  else PP.braces (PP.psequence PP.comma (map fmtField fields))
+	       in case AU.destTupleExp r  (* implies not flex *)
+		    of SOME exps =>
+		         PP.parens 
+		           (PP.psequence PP.comma
+			      (map (fn exp => fmtExp' (exp, 0, 0, d-1)) exps))
+		     | NONE => PP.braces (PP.psequence PP.comma (map fmtField fields))
 	      end
 	  | fmtExp' (RSELECTexp (exp, index), _, rpull, d) =
 	      let val expFmt0 = fmtExp' (exp, 0, 0, d-1)
@@ -329,29 +332,27 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 				  fmtExp' (rand, 1000, rpull, d-1))
 		     | F.INfix (left, right) => 
 		       let val SOME [name] = pathOp
-			   fun getArgs exp =
-			       (case AU.headStripExp rand
-				 of RECORDexp [(_,leftArg),(_,rightArg)] =>
-			   (* assumes pair elements are in the right order in the RECORDpat,
-			    * hence not checking field labels *)
-				    (leftArg, rightArg)
-				  | _ => bug "fmtExp'[Appexp].getArgs")
-			   val (leftArg, rightArg) = getArgs rand
-			   val appFmt =  
-			         PP.pblock [fmtExp' (leftArg, lpull, left, d-1),
-					    PPS.fmtSym name,
-					    fmtExp' (rightArg, right, rpull, d-1)]
-		       in if lpull >= left orelse rpull > right
-			  then (* have to parenthsize to hold on to args *)
-			    let val leftFmt = fmtExp' (leftArg, 0, left, d-1)
-				val rightFmt = fmtExp' (rightArg, right, 0, d-1)
-			     in PP.parens (PP.pblock [leftFmt, PPS.fmtSym name, rightFmt])
-			    end
-			  else (* can hold both args against outer pulls *)
-			    let val leftFmt = fmtExp' (leftArg, lpull, left, d-1)
-				val rightFmt = fmtExp' (rightArg, right, rpull, d-1)
-			     in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
-			    end
+			in case AU.destTupleExp (AU.headStripExp rand)
+			     of SOME [leftArg, rightArg] =>
+			        let val appFmt =  
+					PP.pblock [fmtExp' (leftArg, lpull, left, d-1),
+						   PPS.fmtSym name,
+						   fmtExp' (rightArg, right, rpull, d-1)]
+				in if lpull >= left orelse rpull > right
+				   then (* have to parenthsize to hold on to args *)
+				     let val leftFmt = fmtExp' (leftArg, 0, left, d-1)
+					 val rightFmt = fmtExp' (rightArg, right, 0, d-1)
+				      in PP.parens (PP.pblock [leftFmt, PPS.fmtSym name, rightFmt])
+				     end
+				   else (* can hold both args against outer pulls *)
+				     let val leftFmt = fmtExp' (leftArg, lpull, left, d-1)
+					 val rightFmt = fmtExp' (rightArg, right, rpull, d-1)
+				      in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
+				     end
+				end
+			     | _ =>  (* rand is not a pair *)
+			       PP.hcat (fmtExp' (rator, lpull, 1000, d-1),
+					fmtExp' (rand, 1000, rpull, d-1))
 		       end
 	      end
 

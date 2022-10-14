@@ -23,11 +23,13 @@ Group
 	signature SYMBOL
 	signature FASTSYMBOL
 	signature FIXITY
+        signature NUMERIC_LABEL
 	structure Symbol
 	structure FastSymbol
 	structure Fixity
 	structure SymbolHashTable
 	structure SpecialSymbols
+        structure NumericLabel
         structure PPSymbols
 
 	signature PERSSTAMPS
@@ -69,6 +71,8 @@ is
 	symbol/symbol.sig
 	symbol/symbol.sml
 	symbol/fastsymbol.sig
+        symbol/numericlabel.sig
+        symbol/numericlabel.sml
 	symbol/fastsymbol.sml
 	symbol/symbol-hashtable.sml
 	symbol/fixity.sml

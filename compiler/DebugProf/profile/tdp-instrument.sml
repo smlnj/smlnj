@@ -130,7 +130,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 
 	fun mkmodidexp fctvar id =
 	    A.APPexp (VARexp fctvar,
-		      AU.TUPLEexp [VARexp tdp_module_var, INTexp id])
+		      AU.mkTupleExp [VARexp tdp_module_var, INTexp id])
 
 	val mkenterexp = mkmodidexp tdp_enter_var
 	val mkpushexp = mkmodidexp tdp_push_var
@@ -138,7 +138,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 
 	fun mkregexp (k, id, s) =
 	    A.APPexp (VARexp tdp_register_var,
-		      AU.TUPLEexp [VARexp tdp_module_var,
+		      AU.mkTupleExp [VARexp tdp_module_var,
 				   INTexp k, INTexp id, A.STRINGexp s])
 
 	val regexps = ref []

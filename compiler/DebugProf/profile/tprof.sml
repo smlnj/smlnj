@@ -27,10 +27,11 @@ local structure SP = SymPath
       (* structure II' = InlInfo *)
       (* structure P = PrimOp *)
       structure S = Symbol
+      structure AU = AbsynUtil
       open Absyn Variable Types
 
-      val TUPLEexp = AbsynUtil.TUPLEexp
-      val TUPLEpat = AbsynUtil.TUPLEpat
+      val mkTupleExp = AU.mkTupleExp
+      val mkTuplePat = AU.mkTuplePat
 
       structure T = Types
       structure BT = BasicTypes
@@ -155,12 +156,12 @@ fun instrumDec' mayReturnMoreThanOnce (env, {mkLvar,...}: CompInfo.compInfo) abs
      fun BUMPCCexp (ccvara : int) =
        let val lvar = tmpvar("indexvar",intTy,mkv)
 	in APPexp(VARexp(ref updateop, [ref(INSTANTIATED(intTy))]),
-	       TUPLEexp[countarray,
+	       mkTupleExp[countarray,
 		intLiteral ccvara,
 		   APPexp(varexp addop,
-		     TUPLEexp[
+		     mkTupleExp[
 			APPexp(VARexp(ref subop,[ref(INSTANTIATED(intTy))]),
-			       TUPLEexp[countarray, intLiteral ccvara]),
+			       mkTupleExp[countarray, intLiteral ccvara]),
 			intLiteral 1])])
        end
 
@@ -170,12 +171,12 @@ fun instrumDec' mayReturnMoreThanOnce (env, {mkLvar,...}: CompInfo.compInfo) abs
 	 let val lvar = tmpvar("indexvar",intTy, mkv)
 	  in LETexp(VALdec[VB{pat=VARpat(lvar),
 			      exp=APPexp(varexp addop,
-					 TUPLEexp[intLiteral ccvara, baseexp]),
+					 mkTupleExp[intLiteral ccvara, baseexp]),
 			      typ = T.UNDEFty,
 			      tyvars=ref nil,
 			      boundtvs=[]}],
 		    APPexp(VARexp(ref assignop,[ref(INSTANTIATED(intTy))]),
-			   TUPLEexp[currentexp, varexp lvar]))
+			   mkTupleExp[currentexp, varexp lvar]))
 	 end
 
      fun instrdec(sp as (names,ccvara), VALdec vbl) =
@@ -387,7 +388,7 @@ fun instrumDec' mayReturnMoreThanOnce (env, {mkLvar,...}: CompInfo.compInfo) abs
       *)
 
      val absyn2 =
-       LOCALdec(VALdec[VB{pat=TUPLEpat[VARpat basevar,
+       LOCALdec(VALdec[VB{pat=mkTuplePat[VARpat basevar,
                                        VARpat countarrayvar,
                                        VARpat currentvar],
                           exp=APPexp(APPexp(VARexp(ref derefop,

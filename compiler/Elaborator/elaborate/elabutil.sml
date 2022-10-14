@@ -129,7 +129,7 @@ val NILexp = CONexp(nilDcon,[])
 val CONSpat = fn pat => APPpat(consDcon,[],pat)
 val CONSexp = CONexp(consDcon,[])
 
-val unitExp = AbsynUtil.unitExp
+val unitExp = AU.unitExp
 val unitPat = RECORDpat{fields = nil, flex = false, typ = ref UNDEFty}
 val bogusExp = VARexp(ref(V.mkVALvar(bogusID, A.nullAcc)), [])
 
@@ -202,10 +202,6 @@ fun makeRECORDexp(fields,err) =
      in assign(0, sortRecord(fields',err)); RECORDexp(f(0,fields'))
     end
 
-val TUPLEexp = AbsynUtil.TUPLEexp
-
-val TUPLEpat = AbsynUtil.TUPLEpat
-
 fun varToExp var = VARexp (ref var, [])
 
 (* FUNdec : {var : V.var,  -- name of the (recursive) function
@@ -222,16 +218,16 @@ fun FUNdec (fundecs, compInfo as {mkLvar=mkv, ...}: compInfo) =
 		fun not1(f,[a]) = a
 		  | not1(f,l) = f l
 		fun clauseToRule {pats,exp,resultty=NONE} =
-			      RULE(not1(TUPLEpat,pats), exp)
+			      RULE (not1 (AU.mkTuplePat, pats), exp)
 		  | clauseToRule {pats,exp,resultty=SOME ty} =
-			      RULE(not1(TUPLEpat,pats),CONSTRAINTexp(exp,ty))
+			      RULE (not1 (AU.mkTuplePat, pats), CONSTRAINTexp(exp,ty))
 
 		fun buildFnExp [var] =
                       FNexp (map clauseToRule clauses, UNDEFty, UNDEFty)
 		  | buildFnExp vars =
                       foldr (fn (w,e) => FNexp([RULE(VARpat w, e)], UNDEFty, UNDEFty))
-			    (CASEexp(TUPLEexp (map varToExp vars),
-				     (map clauseToRule clauses, UNDEFty, UNDEFty)))
+			    (CASEexp (AU.mkTupleExp (map varToExp vars),
+				      (map clauseToRule clauses, UNDEFty, UNDEFty)))
 			    vars
 		val exp0 = buildFnExp argVars
 		val exp = if !ElabControl.markabsyn then MARKexp (exp0, region) else exp0

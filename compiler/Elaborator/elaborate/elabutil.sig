@@ -37,8 +37,6 @@ sig
   val NILpat : Absyn.pat
   val TRUEexp : Absyn.exp
   val TRUEpat : Absyn.pat
-  val TUPLEexp : Absyn.exp list -> Absyn.exp
-  val TUPLEpat : Absyn.pat list -> Absyn.pat
   val unitExp : Absyn.exp
   val unitPat : Absyn.pat
   val bogusExp: Absyn.exp

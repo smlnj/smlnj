@@ -1,0 +1,109 @@
+hoy$ pwd
+/Users/dbm/sml/Dev/github/smlnj/system
+hoy$ ./cmb-make ../bin/sml
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+- ###SM: array
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: bind_cfun
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: callc
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: create_b
+  spectype: object -> word8array
+  acttyp: object -> word8array
+  ptvs: ()
+  btvs: ()
+###SM: create_r
+  spectype: object -> real64array
+  acttyp: object -> real64array
+  ptvs: ()
+  btvs: ()
+###SM: create_s
+  spectype: object -> string
+  acttyp: object -> string
+  ptvs: ()
+  btvs: ()
+###SM: create_v
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: floor
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: logb
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: scalb
+  spectype: object -> object
+  acttyp: object -> object
+  ptvs: ()
+  btvs: ()
+###SM: try_lock
+  spectype: spin_lock -> object
+  acttyp: spin_lock -> object
+  ptvs: ()
+  btvs: ()
+###SM: unlock
+  spectype: spin_lock -> object
+  acttyp: spin_lock -> object
+  ptvs: ()
+  btvs: ()
+###SM: profCurrent
+  spectype: int ref
+  acttyp: int ref
+  ptvs: ()
+  btvs: ()
+###SM: pollEvent
+  spectype: bool ref
+  acttyp: bool ref
+  ptvs: ()
+  btvs: ()
+###SM: pollFreq
+  spectype: int ref
+  acttyp: int ref
+  ptvs: ()
+  btvs: ()
+###SM: pollHandler
+  spectype: (unit cont -> unit cont) ref
+  acttyp: (unit cont -> unit cont) ref
+  ptvs: ()
+  btvs: ()
+###SM: activeProcs
+  spectype: int ref
+  acttyp: int ref
+  ptvs: ()
+  btvs: ()
+###SM: pstruct
+  spectype: object ref
+  acttyp: object ref
+  ptvs: ()
+  btvs: ()
+###SM: sighandler
+  spectype: (int * int * unit cont -> unit cont) ref
+  acttyp: (int * int * unit cont -> unit cont) ref
+  ptvs: ()
+  btvs: ()
+###SM: vector0
+  spectype: object vector
+  acttyp: 'a vector
+  ptvs: (object)
+  btvs: ()
+  ^C ^C
+Interrupt
+- 
+hoy$
+

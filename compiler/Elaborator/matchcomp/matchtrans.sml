@@ -208,7 +208,7 @@ and transDec (region: SourceMap.region) (dec: AS.dec): AS.dec =
 			  end
 			| _ =>  (* "multiple" pattern variables (1 or more) *)
 			  let val pvarsTy = BT.tupleTy (map TU.dePolyVar oldpvars)  (* was map V.varType oldpvars *)
-			      val newPvarTuple = EU.TUPLEexp(map EU.varToExp newpvars)
+			      val newPvarTuple = AU.mkTupleExp(map EU.varToExp newpvars)
 			      val bindRules = [(newpat, newPvarTuple)]  (* single rule match, with new pvars *)
 			      val (matchExp, rootVar) =
 				  MC.bindCompile (bindRules, typ, pvarsTy, errorFn, region, env)

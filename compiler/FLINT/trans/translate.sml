@@ -1543,7 +1543,7 @@ and transIntInf d s =
 	  | build (d :: ds) = let
 	      val i = Word.toIntX d
 	      in
-		APPexp (consexp, EU.TUPLEexp [
+		APPexp (consexp, AU.mkTupleExp [
 		    NUMexp("<lit>", {ival = IntInf.fromInt i, ty = BT.wordTy}),
 		    build ds
 		  ])
