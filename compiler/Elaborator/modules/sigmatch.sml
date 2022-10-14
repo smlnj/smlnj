@@ -727,6 +727,7 @@ let
                           of NONE => matchErr NONE
                            | SOME (btvs,ptvs) =>
                              let val _ =
+				   if !debugging then
                                      PP.printFormatNL
 				       (PP.vcat
                                           (PP.label "###SM:" (PPS.fmtSym sym),
@@ -737,6 +738,7 @@ let
 						(PP.tuple (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs),
 					      PP.label "btvs:"
 						(PP.tuple (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs)]))
+				       else ()
 
                                  val spath = SP.SPATH[sym]
                                  val actvar = V.VALvar{path=spath, typ=ref acttyp,
