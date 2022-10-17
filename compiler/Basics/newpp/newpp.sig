@@ -15,10 +15,10 @@ sig
     type format  (* abstract, defined in Format structure *)
 
     datatype alignment  (* the alignment property of "aligned" blocks *)
-      = H  (* Horizontal alignment, with implicit single space separtors between format components *)
+      = H  (* Horizontal alignment, with implicit single space separtors between format components, unbreakable *)
       | V  (* Vertical alignment, with implicit hardline separtors between format components *)
       | P  (* Packed alignment, with implicit softline separtors between format components *)
-      | C  (* compact, no separators between block format elements *)
+      | C  (* compact, no separators between block format elements, unbreakable *)
 
     datatype separator  (* used to separate doc elements of a block *)
       = HardLine         (* hard line break *)
@@ -81,8 +81,9 @@ sig
     val rbrace : format    (* text "}" *)
     val equal : format     (* text "=", an honorary punctuation mark *)
 
-    (* xcat: "binary versions" of the xblock functions (x = p, h, v), the empty format
-     *  acts like an identy element for all these binary concatenation operators *)
+
+  (* xcat: "binary versions" of the xblock functions (x = p, h, v, c), the empty format
+   *  acts like an identy element for all these binary concatenation operators *)
 
     val pcat : format * format -> format
         (* combinds two formats in a P (packed) block, with an implicit soft line break
@@ -99,6 +100,9 @@ sig
     val ccat : format * format -> format
         (* combinds two formats in a C block, with no separator between them;
          * a binary version of cblock *)
+
+
+  (* wrapping or enclosing formats, plus appending newlines and prepending labels *)
 
     val enclose : {front: format, back: format} -> format -> format
         (* concatenates front and back to the front, respecively back, of the format *)
@@ -117,6 +121,7 @@ sig
 
     val label : string -> format -> format
 
+
   (* composing lists of formats *)
 
     val sequence : alignment -> format -> format list -> format
@@ -134,7 +139,11 @@ sig
     val listFormats : format list -> format  (* default packed alignment *)
         (* formats as a list *)
 
-  (* formating of lists of values of arbitrary type *)
+    val optionFormat : format option -> format
+        (* formats a format option by producing text "NONE" or wrapping "SOME(.)" around the format *)
+
+
+  (* formating of lists (or options) of values of arbitrary type *)
 
     val formatSeq :
         {alignment: alignment, sep : format, formatter : 'a -> format}

@@ -22,7 +22,7 @@ in
 
 open Format  (* defines types format, element, separator, bindent *)
 
-(* basic block building functions *)
+(*** the basic block building functions ***)
 
 (* reduce : format list -> format list *)
 fun reduce (formats: format list) =
@@ -51,7 +51,8 @@ fun alignedBlock alignment bindent formats =
 		  end
      end
 
-(* block building functions for non-indenting blocks *)
+
+(*** block building functions for non-indenting blocks ***)
 
 (* sblock : element list -> format *)
 (* construct a block with explicit, possibly heterogeous, separators, NI bindent *)
@@ -91,7 +92,8 @@ val alt = ALT
 (* hvblock : format list -> format *)
 fun hvblock fmts = tryFlat (vblock fmts)
 
-(* some format-building utility functions *)
+
+(*** format-building utility functions for some primitive types ***)
 
 val empty : format = EMPTY
 
@@ -110,7 +112,8 @@ fun char (c: char) = cblock [text "#", string (Char.toString c)]
 (* bool : bool -> format *)
 fun bool (b: bool) = text (Bool.toString b)
 
-(* "punctuation" characters *)
+
+(*** "punctuation" characters and related symbols ***)
 
 val comma : format     = text ","
 val colon : format     = text ":"
@@ -124,7 +127,8 @@ val lbrace : format    = text "{"
 val rbrace : format    = text "}"		  
 val equal  : format    = text "="
 
-(* xcat: binary versions of xblock functions (x = p, h, v) *)
+
+(*** xcat: binary versions of xblock functions (x = p, h, v) ***)
 
 (* pcat : format * format -> format
  * separate r, l with soft line break *)
@@ -141,6 +145,9 @@ fun vcat (leftFmt, rightFmt) = vblock [leftFmt, rightFmt]
 (* ccat : format * format -> format
  * concatenate left and right formats with no separater *)
 fun ccat (left, right) = cblock [left, right]
+
+
+(*** wrapping or closing formats, e.g. parenthesizing a format ***)
 
 (* enclose : {front : format, back : format} -> format -> format *)
 (* tight -- no space between front, back, and fmt *)
@@ -167,7 +174,7 @@ fun label (str:string) (fmt: format) = hcat (text str, fmt)
 (*** functions for formatting sequences of formats (format lists) ***)
 
 (* sequence : alignement -> format -> format list -> format
- *  The second, format, argument is a printable separator such as comma or semicolon *)
+ *  The second argument (sep: format) is a printable separator such as comma or semicolon *)
 fun sequence (alignment: alignment) (sep: format) (formats: format list) =
     let val separate =
 	    (case alignmentSeparator alignment
@@ -269,7 +276,8 @@ fun 'a option (formatter: 'a -> format) (xOp: 'a option) =
       of NONE => text "NONE"
        | SOME x => ccat (text "SOME", parens (formatter x))
 
-(* "indenting" formats *)
+
+(*** "indenting" formats ***)
 
 (* hardIndent : int -> format -> format *)
 (* When applied to EMPTY, produces EMPTY *)
@@ -285,8 +293,10 @@ fun softIndent (n: int) (fmt: format) =
        of EMPTY => EMPTY
         | _ => hiblock (SI n) [fmt])
 
-(* functions for setting and accessing the line width
- * NOTE: setLineWidthFun does not have an effect until actuall pretty printing occurs,
+
+(*** functions for setting and accessing the line width ***)
+
+(* NOTE: setLineWidthFun does not have an effect until actuall pretty printing occurs,
  *   so it does not make sense to call it within the modules defining particular pretty printers!
 *)
 
@@ -303,7 +313,8 @@ in
   fun getLineWidth () = getLineWidthFun () ()
 end
 
-(* printing (i.e., rendering) formats *)
+
+(*** printing (i.e., rendering) formats ***)
 
 (* render : format * (string -> unit) * int -> unit *)
 val render = R.render
@@ -322,3 +333,14 @@ fun printFormatNL format = R.render (appendNewLine format, print, getLineWidth (
 
 end (* top local *)
 end (* structure NewPP *)
+
+(* NOTES:
+
+1. We have sequence formating funtions that act on lists of arbitrary values (of a given type),
+   with a supplied formatting function for the element type, and other functions that act on lists of formats.
+
+   The first sort can easily be simulated by translating the value list into a format list
+   by mapping the formatter over the values.  This seems to be preferabel, so the former sequencing
+   functions (formatSeq, formatClosedSeq, tuple, list, alignedList) can be viewed as redundant.
+   [DBM: 2022.10.17].
+*)    

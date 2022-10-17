@@ -289,6 +289,9 @@ val printFormatNL : format -> unit
   Formats the members of the format list as a list (bracketed, with elements
   separated by commas) with default packed (P) alignment of the element formats.
 
+`[.kw]#val# optionFormat : format option \-> format`::
+  Formats a format option, producing `text "NONE"` or `"SOME(.)"`.
+
 `[.kw]#val# formatSeq : {alignment: alignment, sep: format, formatter: 'a \-> format} \-> 'a list \-> format`::
   `formatSeq {alignment, sep, formatter} xs` : Format the elements of xs using formatter, then 
   insert sep between these formats, and align the sequence elements according to the alignment

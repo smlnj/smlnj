@@ -518,6 +518,10 @@ Note that the empty format is an identity element for all of these binary concat
  formats the members of the format list as a list (bracketed, with elements
  separated by commas) with default packed (P) alignment of the element formats.
 
+* `optionFormat : format option -> format`
+
+ formats `fmtOp: format option` as `text "NONE"` or `ccat (text "SOME", parens (valof fmtOp)).
+
 [discrete]
 ==== Formatting sequences of values of arbitrary types
 
