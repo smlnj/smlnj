@@ -143,3 +143,7 @@ package/macos/*.pkg
 # lex and yacc generated source files
 *.grm.sml
 *.lex.sml
+
+# files in boot directories
+BOOTLIST
+PIDMAP
