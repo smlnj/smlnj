@@ -1,0 +1,11 @@
+$./build.sh  (newpp bin files in system/sml.bin.*, system/sml.boot.*)
+
+Building ml-burg.
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Scheduling library $mlburg-tool.cm/mlburg-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mlburg-tool.cm/.cm/amd64-unix/mlburg-tool.cm
+Scheduling library $burg-ext.cm/burg-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/burg-ext.cm/.cm/amd64-unix/burg-ext.cm
+^C^C^C^C
+
+./build.sh: line 471: 91295 Killed: 9               "$BINDIR"/sml -m \$smlnj/installer.cm
+./build.sh: !!! ./build.sh: !!! Installation of libraries and programs failed.
+hoy$ 
