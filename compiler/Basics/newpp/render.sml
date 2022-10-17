@@ -171,7 +171,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
          *   newlinep: bool -- flag indicating whether this block follows a newline+indent *)
 	and renderBlock (nil, _, _, _, cc, newlinep) =
 	      (* Special case of "empty" block, containing no formats, renders as the empty format, producing no output;
-               * but should bindent, if not NI, take effect? See Notes and end of file. *)
+               * but should bindent, if not NI, take effect? See Notes at the bottom of this file. *)
 	      (cc, newlinep)
           | renderBlock (formats, separatorOp, bindent, parentBlm, cc, newlinep) =
 	      let 
@@ -239,7 +239,7 @@ end (* structure Render *)
 
 1. All newlines are followed by a (cumulative) block indentation, which may be 0, produced by the nlIndent output function.
 
-2. blm (block left margin) values represent the cummulative effect of indentations of containing blocks.
+2. blm (block left margin) values represent the cummulative effect of the indentations of containing blocks.
    -- the blm of an "in-line" (or non-indented) block is set to the current column (cc) at the entry to the block
    -- the blm of an indented block is set to the parent block's blm incremented by the block's indentation (if triggered)
 
@@ -256,12 +256,13 @@ but a normal block will not end with a (virtual) separator so "normal" blocks do
 newline.
 
 Another possibility is at an indented, but empty, block (e.g. hiblock (HI 3) nil), which could
-appear on its own or as the last format in a block.
+appear on its own or as the last format in a block.  But we can have indentX n empty --> empty, in which
+case an indented empty block turns into an empty block and the indentation is nullified.
 
 Also, a special block whose last element is a SEP (HardLine) is possible. Such a block would end with
-a newline+indent.
+a newline+indent (to its blm?).
 
-Should this be ruled out?  Probably not, until we can see that it is causing problems or confusion for users.
+Should this be disallowed?  Probably not, until we can see that it is causing problems or confusion for users.
 
 *)
 

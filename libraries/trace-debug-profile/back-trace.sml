@@ -21,9 +21,13 @@ structure BackTrace : sig
     val trigger : unit -> 'a
     val monitor : (unit -> 'a) -> 'a
     val install : unit -> unit
-end = struct
+  end =
 
-    structure M = IntRedBlackMap
+struct
+
+local
+  structure M = IntRedBlackMap
+in
 
     (* Home-cooked set representation:
      *  This relies on two things:
@@ -234,4 +238,6 @@ end = struct
 	end
 
     fun trigger () = raise BTraceTriggered (report ())
-end
+
+end (* top local *)
+end (* structure BackTrace *)

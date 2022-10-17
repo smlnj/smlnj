@@ -18,14 +18,20 @@ structure Coverage : sig
     val hot_spots : kind list -> int -> unit
 
     val install : unit -> unit
-end = struct
+end =
 
-    structure M = IntRedBlackMap
-    structure F = FormatComb
+struct
 
-    structure TDP = SMLofNJ.Internals.TDP
+local (* top local *)
+
+  structure M = IntRedBlackMap
+  structure F = FormatComb
+  structure TDP = SMLofNJ.Internals.TDP
+
+in
 
     type kind = int
+
     val functions = TDP.idk_entry_point
     val tail_calls = TDP.idk_tail_call
     val non_tail_calls = TDP.idk_non_tail_call
@@ -78,6 +84,7 @@ end = struct
 	    addto TDP.active_plugins plugin
 	end
 
+
     fun not_covered kinds =
 	let fun zerocnt (idx, r: record) =
 		count idx = 0 andalso List.exists (fn k => k = #kind r) kinds
@@ -105,4 +112,6 @@ end = struct
 	in
 	    loop (sortedcountlist, n)
 	end
-end
+
+end (* top local *)
+end (* structure Coverage *)
