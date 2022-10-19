@@ -18,8 +18,6 @@ sig
           compInfo  : ElabUtil.compInfo} -> {absyn     : Absyn.dec,
                                              statenv   : StaticEnv.staticEnv}
 
-  val debugging : bool ref
-
 end (* signature ELABMOD *)
 
 
@@ -32,6 +30,7 @@ local
   structure S  = Symbol
   structure IP = InvPath
   structure SP = SymPath
+  structure PN = PathName
   structure EP = EntPath
   structure EPC = EntPathContext
   structure EE = EntityEnv
@@ -242,15 +241,18 @@ fun bindReplTyc(EU.INFCT _, epctxt, mkStamp, dtyc) =
  *         DEFtyc refers to tycons occurring after itself.
  *)
 fun bindNewTycs(EU.INFCT _, epctxt, mkStamp, dtycs, wtycs, rpath, err) =
-      let fun stripPath path =
-	    let val namePath = IP.IPATH[IP.last path]
-	        val prefix = IP.lastPrefix path
-	        val _ = if IP.equal(rpath,prefix) then ()
-		        else err EM.WARN
-			     "Harmless compiler bug: bad type path prefix"
-			     EM.nullErrorBody
-	     in namePath
-	    end
+      let fun stripPath (IP.IPATH syms: IP.path) =
+	      case syms
+	        of nil => bug "bindNewTycs: stripPath"
+	         | name :: rest => 
+		     let val namePath = IP.IPATH [name]
+			 val prefix = IP.IPATH rest
+			 val _ = if IP.equal(rpath,prefix) then ()
+		                 else err EM.WARN
+					  "Harmless compiler bug: bad type path prefix"
+					  EM.nullErrorBody
+		     in namePath
+		     end
 
 	  val vizty = (fn ty => #1(MU.relativizeType epctxt ty))
 	  val viztc = (fn tc => #1(MU.relativizeTyc epctxt tc))
@@ -521,9 +523,9 @@ fun extractSig (env, epContext, context,
 		| procdatatycs(T.GENtyc{kind=T.DATATYPE dt, path, ...}::rest) =
 		    let val {index,family as {members,...},...} = dt
 			val {tycname,dcons,...} = Vector.sub(members,index)
-			val pathname = InvPath.last path
-		    in (map (fn ({name,...}) => name) dcons)@
-		       (pathname::procdatatycs rest)
+			val name = PN.getTycNameIP path
+		    in (map (fn ({name,...}) => name) dcons) @
+		       (name::procdatatycs rest)
 		    end
 		| procdatatycs(_) = bug "elabmod: extractSig -- bad datatycs"
 	      fun procebs([]) = []
@@ -1288,7 +1290,7 @@ fun loop([], decls, entDecls, env, entEnv) =
                                          | _ => false))
                        then str
                        else (error region' EM.COMPLAIN
-                             ("structure " ^ S.name(IP.last rpath) ^
+                             ("structure " ^ S.name (PN.getStrNameIP rpath) ^
                               " defined by partially applied functor")
                              EM.nullErrorBody;
                              ERRORstr)
@@ -1516,7 +1518,7 @@ in
 			if !ElabControl.instantiateSigs andalso not (!anyErrors)
 			then (INS.instParam
 			        {sign=s,entEnv=EE.empty,tdepth=DI.top,
-				 rpath=InvPath.empty,region=region',
+				 rpath=IP.empty,region=region',
 				 compInfo=compInfo};
 			      ())
 			else ()
@@ -1692,7 +1694,7 @@ in
 			   end
 			 | _ => (M.EMPTYdec,EE.empty)
 		   val tyc' = T.GENtyc{stamp=stamp, arity=arity,
-				       eq=eq, path=InvPath.extend(InvPath.empty,name),
+				       eq=eq, path=IP.extend(IP.empty,name),
 				       stub=stub, kind=dt}
 		   val resDec = A.DATATYPEdec{datatycs=[tyc' (* tyc *)],
 					      withtycs=[]}

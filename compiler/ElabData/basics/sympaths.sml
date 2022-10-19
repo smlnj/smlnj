@@ -1,5 +1,5 @@
-(* Copyright 1996 by AT&T Bell Laboratories *)
 (* sympaths.sml *)
+(* Copyright 2022 The Fellowship of SML/NJ *)
 
 structure SymPath : SYMPATH =
 struct
@@ -58,7 +58,7 @@ struct
 
   datatype path = IPATH of S.symbol list
 
-  exception InvPath
+  exception InvPath of string
 
   val empty = IPATH nil
 
@@ -68,13 +68,13 @@ struct
 
   fun append(IPATH front: path, IPATH back: path) = IPATH(back @ front)
 
-  fun last(IPATH []: path) = raise InvPath
+  fun last(IPATH []: path) = raise InvPath "last"
     | last(IPATH(s::_)) = s
 
-  fun lastPrefix(IPATH []: path) = raise InvPath
+  fun lastPrefix(IPATH []: path) =  raise InvPath "lastPrefix"
     | lastPrefix(IPATH(_::p)) = IPATH p
 
-  fun equal(IPATH p1:path, IPATH p2:path) = ListPair.all Symbol.eq (p1, p2)
+  fun equal (IPATH p1:path, IPATH p2:path) = ListPair.allEq Symbol.eq (p1, p2)
 
   fun toString(IPATH p: path) =
      let fun f [s] = [Symbol.name s, ">"]

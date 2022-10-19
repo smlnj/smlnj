@@ -9,6 +9,7 @@ local
   structure S  = Symbol
   structure SP = SymPath
   structure IP = InvPath
+  structure PN = PathName
   structure SE = StaticEnv
   structure L  = Lookup
   structure B  = Bindings
@@ -423,9 +424,8 @@ fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
              in f
             end
 
-        fun augTycmap (tyc as DEFtyc{tyfun=TYFUN{arity,body},stamp,
-                                     strict,path}, tycmap) =
-            {old=tyc,name=IP.last path,
+        fun augTycmap (tyc as DEFtyc{tyfun=TYFUN{arity,body}, stamp, strict, path}, tycmap) =
+            {old=tyc, name=PN.getTycNameIP path,
 	     new=DEFtyc{tyfun=TYFUN{arity=arity,body=applyMap tycmap body},
 			strict=strict,stamp=stamp,path=path}}
 	    :: tycmap

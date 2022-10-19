@@ -12,9 +12,10 @@ structure TypesUtil : TYPESUTIL =
     structure EP = EntPath
     structure T = Types
     structure BT = BasicTypes
+    structure S = Symbol
     structure SP = SymPath
     structure IP = InvPath
-    structure S = Symbol
+    structure PN = PathName	       
     structure ST = Stamps
     structure A = Access
     structure V = Variable
@@ -125,10 +126,10 @@ structure TypesUtil : TYPESUTIL =
 
   (*************** primitive operations on tycons ***************)
     fun bugTyc (s: string, tyc) = (case tyc
-	   of GENtyc { path, ... } => bug (s ^ " GENtyc " ^ S.name (IP.last path))
-	    | DEFtyc {path,...} => bug (s ^ " DEFtyc " ^ S.name(IP.last path))
+	   of GENtyc { path, ... } => bug (s ^ " GENtyc " ^ S.name (PN.getTycNameIP path))
+	    | DEFtyc {path,...} => bug (s ^ " DEFtyc " ^ S.name (PN.getTycNameIP path))
 	    | RECORDtyc _ => bug (s ^ " RECORDtyc")
-	    | PATHtyc{path,...} => bug (s ^ " PATHtyc " ^ S.name(IP.last path))
+	    | PATHtyc{path,...} => bug (s ^ " PATHtyc " ^ S.name (PN.getTycNameIP path))
 	    | RECtyc _ => bug (s ^ " RECtyc")
 	    | FREEtyc _ => bug (s ^ " FREEtyc")
 	    | ERRORtyc => bug (s ^ " ERRORtyc")
@@ -136,7 +137,7 @@ structure TypesUtil : TYPESUTIL =
 
   (* short (single symbol) name of tycon *)
     fun tycName (GENtyc { path, ... } | DEFtyc{path,...} | PATHtyc{path,...}) =
-	  IP.last path
+	  PN.getTycNameIP path
       | tycName (RECORDtyc _) = S.tycSymbol "<RECORDtyc>"
       | tycName (RECtyc _) = S.tycSymbol "<RECtyc>"
       | tycName (FREEtyc _) = S.tycSymbol "<FREEtyc>"
@@ -149,7 +150,7 @@ structure TypesUtil : TYPESUTIL =
     (* tycPath : T.tycon -> InvPath.path option
      *  full (inv-)path name of tycon *)
     fun tycPath (GENtyc{path,...} | DEFtyc{path,...} | PATHtyc{path,...}) = SOME path
-      | tycPath ERRORtyc = SOME (IP.IPATH[S.tycSymbol "error"])
+      | tycPath ERRORtyc = SOME (IP.IPATH[S.tycSymbol "ERRORtyc"])
       | tycPath tycon = NONE
 
     fun tycEntPath(PATHtyc{entPath,...}) = entPath

@@ -33,6 +33,7 @@ local
   structure M = Modules
   structure B = Bindings
   structure S = Symbol
+  structure IP = InvPath
   structure F = Fixity
   structure LV = LambdaVar
   structure A = Access
@@ -433,7 +434,7 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 	      PP.hcat (PP.text "do", fmtExp context (exp,d-1))
           | fmtDec' (TYPEdec tycs, d) =
 	    let fun fmtDEFtyc (T.DEFtyc{path, tyfun=T.TYFUN{arity,body},...}) =
-		    PP.hblock [PPT.fmtFormals arity, PPS.fmtSym (InvPath.last path),
+		    PP.hblock [PPT.fmtFormals arity, PPP.fmtTycName path,
 			       PP.equal, PPT.fmtType env body]
 		  | fmtDEFtyc _ = bug "fmtDEFtyc"
 	     in PPU.vHeaderFormats {header1 = "type", header2 = "and"}
@@ -447,7 +448,7 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 				  val dconNames = map #name dcons
 			       in PP.hblock
 				    [PPT.fmtFormals arity,
-				     PPS.fmtSym (InvPath.last path),
+				     PPP.fmtTycName path,
 				     PP.equal, 
 				     PP.psequence (PP.text " |") (map PPS.fmtSym dconNames)]
 			      end
@@ -456,7 +457,7 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 		fun fmtWITHTYPE (T.DEFtyc{path, tyfun=T.TYFUN{arity,body},...}) =
 		    PP.hblock
 		      [PPT.fmtFormals arity,
-		       PPS.fmtSym (InvPath.last path),
+		       PPP.fmtTycName path,
 		       PP.equal, PPT.fmtType env body]
 		  | fmtWITHTYPE _ = bug "fmtDec'(DATATYPEdec) 3"
 	     in (* could call PPDec.fmtDec here *)

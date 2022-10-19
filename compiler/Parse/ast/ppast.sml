@@ -77,7 +77,7 @@ fun fmtPat sourceOp (pat, d) =
 	  | fmtPat' (IntPat (src, _), _) = PP.text src
 	  | fmtPat' (WordPat(src, _), _) = PP.text src
 	  | fmtPat' (StringPat s, _) = PP.text s
-	  | fmtPat' (CharPat c, _) = PP.char (Option.valOf (Char.fromString c))  (* c: string, should be char *)
+	  | fmtPat' (CharPat c, _) = PP.char (String.sub (c, 0))  (* c: string, size c = 1 *)
 	  | fmtPat' (LayeredPat {varPat,expPat},d) =
 	      PP.pblock [fmtPat'(varPat, d), PP.text "as", fmtPat'(expPat,d-1)]
 	  | fmtPat' (RecordPat {def=[], flexibility}, _) =
@@ -161,7 +161,7 @@ and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
 	| fmtExp' (WordExp (src, _), _) = PP.text src
 	| fmtExp' (RealExp (src, _), _) = PP.text src
 	| fmtExp' (StringExp s, _) = PP.string s
-	| fmtExp' (CharExp s, _) = PP.ccat (PP.text "#", PP.string s)
+	| fmtExp' (CharExp s, _) = PP.char (String.sub (s, 0)) (* expect size s = 1 *)
 	| fmtExp' (r as RecordExp fields, d) =
 	    let fun fmtField (name, exp) = PP.hblock [PPS.fmtSym name, PP.equal, fmtExp' (exp, d)]
 	     in PP.braces (PP.psequence PP.comma (map fmtField fields))

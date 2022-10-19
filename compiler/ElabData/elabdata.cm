@@ -51,6 +51,7 @@ Group
 	structure AbsynUtil
 	structure SymPath
 	structure InvPath
+        structure PathName
 	structure ConvertPaths
 	structure LambdaVar
 	structure Stamps
@@ -109,6 +110,7 @@ is
 	basics/access.sml
 	basics/sympaths.sig
 	basics/sympaths.sml
+        basics/pathname.sml
         basics/ppsympaths.sml
 	basics/tkind.sml
 	basics/sig-plist.sml

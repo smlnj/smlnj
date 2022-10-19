@@ -5,12 +5,15 @@
  *)
 
 structure Bindings : BINDINGS =
-  struct
+struct
 
-    structure S  = Symbol
-    structure T  = Types
-    structure V  = Variable
-    structure M =  Modules
+local (* top local *)
+  structure S  = Symbol
+  structure PN = PathName
+  structure T  = Types
+  structure V  = Variable
+  structure M =  Modules
+in
 
     datatype binding
       = VALbind of V.var
@@ -41,34 +44,34 @@ structure Bindings : BINDINGS =
 	      | LESS => false
 	  end
 
-    (* bindingSymbol : binding -> Symbol.symbol
+    (* bindingSymbol : binding -> S.symbol
      * tries to determine the bound name associated with a binding from the
      * binding itself. This name is not always available. So here we are
-     * returning "suggestive" pseudo-names, e.g. <ERRORvar>.
-     * It would probably be better to returns a symbol option. *)
+     * returning "suggestive" pseudo-names, e.g. <ERRORvar>, in such cases.
+     * It would probably be better to return a symbol option. (?) *)
     fun bindingSymbol (VALbind v) =
 	(case v
-	  of V.VALvar{path,...} => SymPath.last path
-	   | V.OVLDvar{name,...} => name
+	  of V.VALvar {path,...} => PN.getVarNameSP path
+	   | V.OVLDvar {name,...} => name
 	   | ERRORvar => S.varSymbol "<ERRORvar")
       | bindingSymbol (CONbind(T.DATACON{name,...})) = name
       | bindingSymbol (TYCbind(tyc)) =
 	(case tyc
-	  of T.GENtyc{path,...} => InvPath.last path
-	   | T.DEFtyc{path,...} => InvPath.last path
-	   | T.PATHtyc{path,...} => InvPath.last path
+	  of T.GENtyc {path,...} => PN.getTycNameIP path
+	   | T.DEFtyc {path,...} => PN.getTycNameIP path
+	   | T.PATHtyc {path,...} => PN.getTycNameIP path
 	   | T.ERRORtyc => S.tycSymbol "<ERRORtyc>"
 	   | _ => S.tycSymbol "anonTyc")
       | bindingSymbol (SIGbind sg) =
 	(case sg
-	  of M.SIG{name,...} =>
+	  of M.SIG {name,...} =>
 	     (case name
-	       of SOME s => s
-		| NONE => S.sigSymbol "<anonSig>")
+	        of SOME s => s
+		 | NONE => PN.defaultSig)
 	   | M.ERRORsig => S.sigSymbol "<ERRORsig>")
       | bindingSymbol (STRbind str) =
 	(case str
-	  of M.STR{rlzn={rpath,...},...} => InvPath.last rpath
+	  of M.STR {rlzn={rpath,...},...} => PN.getStrNameIP rpath
 	   | M.STRSIG _ => S.strSymbol "<STRSIG>"
 	   | M.ERRORstr => S.strSymbol "<ERRORstr>")
       | bindingSymbol (FSGbind fsig) =
@@ -78,9 +81,10 @@ structure Bindings : BINDINGS =
 	   | M.ERRORfsig => S.fsigSymbol "<ERRORfsig>")
       | bindingSymbol (FCTbind fct) =
 	(case fct
-	  of M.FCT{rlzn={rpath,...},...} => InvPath.last rpath
+	  of M.FCT{rlzn={rpath,...},...} => PN.getFctNameIP rpath
 	   | M.ERRORfct => S.fctSymbol "<ERRORfct>")
       | bindingSymbol (FIXbind _) = S.fixSymbol "<FIXITY>"
-        (* the name bound is not recoverable from the binding *)
+        (* the name bound is not recoverable from the binding for FIXbind *)
 
-  end (* structure Bindings *)
+end (* top local *)
+end (* structure Bindings *)

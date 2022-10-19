@@ -139,7 +139,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	   let val {path, tyfun = T.TYFUN {arity,body},...} =
 		   getOpt (trueTycon (#path dt), dt)
 	    in PP.hblock
-	         [PP.text "type", PPT.fmtFormals arity, PPS.fmtSym (InvPath.last path), PP.equal,
+	         [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path, PP.equal,
 		  PPT.fmtType static body]
 	   end
 	 | fmtTb _ = bug "fmtTb:nonDEFtyc"
@@ -147,11 +147,9 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	and fmtAbsTyc (T.GENtyc { path, arity, eq, kind, ... }) =
 	    (case kind
 	       of T.ABSTRACT _ =>
-		     PP.hblock
-		       [PP.text "type", PPT.fmtFormals arity, PPS.fmtSym (InvPath.last path)]
+		     PP.hblock [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path]
 		| _ =>  (* same! *)
-		     PP.hblock
-		       [PP.text "type", PPT.fmtFormals arity, PPS.fmtSym (InvPath.last path)])
+		     PP.hblock [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path])
           | fmtAbsTyc _ = bug "fmtAbsTyc:tycKind"
 
         (* fmtDataTyc : T.tycon -> PP.format *)
@@ -175,7 +173,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 		    end
 		val {dcons, ...} = Vector.sub(members,index)
 	     in PP.hblock
-		  [PP.text "datatype", PPT.fmtFormals arity, PPS.fmtSym (InvPath.last path),
+		  [PP.text "datatype", PPT.fmtFormals arity, PPP.fmtTycName path,
 		   fmtDcons dcons]
 	    end
 	  | fmtDataTyc _ = bug "unexpected case in fmtDataTyc"

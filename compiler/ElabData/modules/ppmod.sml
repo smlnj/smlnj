@@ -95,7 +95,7 @@ fun sigToEnv(M.SIG {elements,...}) =
                 let val tyc =
                         T.GENtyc {stamp = Stamps.special "x", arity = arity,
                                   eq = ref(T.UNDEF), kind = T.FORMAL, stub = NONE,
-                                  path = InvPath.extend(InvPath.empty,name)}
+                                  path = IP.extend (IP.empty,name)}
                  in SE.bind (sym, B.TYCbind tyc, env)
                 end
 	     | M.STRspec {sign, slot, def, entVar=ev} =>
@@ -122,7 +122,7 @@ fun visibleConBinding (T.DATACON{rep=A.EXN _, ...}, _) = true
 		      (LU.lookTyc
 			 (env,
 			  (case TU.tycPath tyc
-			     of SOME ipath => SP.SPATH[IP.last ipath]
+			     of SOME ipath => PN.getTycNameIP ipath  (* PN = PathName *)
 			      | NONE => bug "visibleConBinding"),
 			  fn _ => raise Hidden),
 		       tyc)
@@ -384,34 +384,33 @@ and fmtTycBind (tyc, env) =
 	       end)
     in case tyc
          of T.GENtyc { path, arity, eq, kind, ... } =>
-	      (case kind
-		 of T.ABSTRACT _ =>
-		      (* abstype *)
-		      PP.hblock [PP.text "type", PPT.fmtFormals arity, PPS.fmtSym (IP.last path)]
-		  | T.DATATYPE {index, family = {members, ...}, ...} =>
-		      (* ordinary datatype *)
-		      let val {dcons,...} = Vector.sub(members,index)
-			  val visdcons = visibleDcons(tyc,dcons)
-			  val incomplete = length visdcons < length dcons
-		      in PP.hcat
-			   (PP.hblock
-			      [PP.text "datatype", PPT.fmtFormals arity, PPS.fmtSym (IP.last path),
-			       PP.equal],
-			    case visdcons
-			      of nil => PP.text "..."
-			       | first :: rest =>
-				 PP.pblock
-				   (fmtDcon first ::
-				    (map (fn dcon => PP.hcat (PP.text " |", fmtDcon dcon)) rest
-				     @ [if incomplete then PP.text "..." else PP.empty])))
-		      end
-		  | _ =>
-		      PP.hblock [if EqTypes.isEqTycon tyc then PP.text "eqtype" else PP.text "type",
-				 PPT.fmtFormals arity,
-				 PPS.fmtSym (IP.last path)])
+	      let val tycNameFmt : PP.format = PPP.fmtTycName path
+	       in case kind
+		   of T.ABSTRACT _ =>
+			(* abstype *)
+			PP.hblock [PP.text "type", PPT.fmtFormals arity, tycNameFmt]
+		    | T.DATATYPE {index, family = {members, ...}, ...} =>
+			(* ordinary datatype *)
+			let val {dcons,...} = Vector.sub(members,index)
+			    val visdcons = visibleDcons(tyc,dcons)
+			    val incomplete = length visdcons < length dcons
+			in PP.hcat
+			     (PP.hblock [PP.text "datatype", PPT.fmtFormals arity, tycNameFmt, PP.equal],
+			      case visdcons
+				of nil => PP.text "..."
+				 | first :: rest =>
+				   PP.pblock
+				     (fmtDcon first ::
+				      (map (fn dcon => PP.hcat (PP.text " |", fmtDcon dcon)) rest
+				       @ [if incomplete then PP.text "..." else PP.empty])))
+			end
+		    | _ =>
+			PP.hblock [if EqTypes.isEqTycon tyc then PP.text "eqtype" else PP.text "type",
+				   PPT.fmtFormals arity, tycNameFmt]
+	      end
 	  | T.DEFtyc {path, tyfun=T.TYFUN{arity,body}, ...} =>
 	      PP.hblock
-		[PP.text "type", PPT.fmtFormals arity, PPS.fmtSym (InvPath.last path), PP.equal,
+		[PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path, PP.equal,
 		 PPT.fmtType env body]
 	  | T.ERRORtyc => PP.text "ERRORtyc"
 	  | T.PATHtyc _ => PP.hcat (PP.text "PATHtyc:", fmtTycon env tyc)
@@ -424,12 +423,12 @@ and fmtReplBind (tycon, env) =
     (case tycon
        of T.GENtyc{stamp, arity, eq, kind, path, stub} =>
 	   PP.hblock
-	     [PP.text "datatype", PPS.fmtSym (IP.last path), PP.equal, fmtTycBind (tycon, env)]
+	     [PP.text "datatype", PPP.fmtTycName path, PP.equal, fmtTycBind (tycon, env)]
         | T.DEFtyc{tyfun=T.TYFUN{body=T.CONty(rightTyc,_),...},path,...} =>  (* ??? *)
 	   (* [GK 5/4/07] Does this case ever occur? All datatype
 	      replication tycs are GENtycs after elaboration *)
 	   PP.hblock
-             [PP.text "datatype", PPS.fmtSym (IP.last path), PP.equal,
+             [PP.text "datatype", PPP.fmtTycName path, PP.equal,
               PP.text "datatype", fmtTycon env rightTyc]
 	| T.PATHtyc _ => ErrorMsg.impossible "<replbind:PATHtyc>"
 	| T.RECtyc _  => ErrorMsg.impossible "<replbind:RECtyc>"

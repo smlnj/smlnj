@@ -47,6 +47,7 @@ local
   structure S = Symbol
   structure SP = SymPath
   structure IP = InvPath
+  structure PN = PathName
   structure A = Access
   structure T = Types
   structure TU = TypesUtil
@@ -409,11 +410,11 @@ and fmtReplBind (env: SE.staticEnv) (tyc: T.tycon) =
 	   (* [GK 5/4/07] Does this case ever occur? All datatype
 	      replication tycs are GENtycs after elaboration *)
 	      PP.hblock
-		[PP.text "datatype", PPS.fmtSym (IP.last path), PP.equal,
+		[PP.text "datatype", PPS.fmtSym (PN.getTycNameIP path), PP.equal,
 		 PP.text "datatype", fmtTycon env rightTyc]
 	 | (tyc as T.GENtyc{stamp, arity, eq, kind, path, stub}) =>
 	      PP.hblock
-		[PP.text "datatype", PPS.fmtSym (IP.last path), PP.equal, fmtTycBind env tyc]
+		[PP.text "datatype", PPS.fmtSym (PN.getTycNameIP path), PP.equal, fmtTycBind env tyc]
 	 | T.PATHtyc _ => ErrorMsg.impossible "<replbind:PATHtyc>"
 	 | T.RECtyc _ => ErrorMsg.impossible "<replbind:RECtyc>"
 	 | T.FREEtyc _ => ErrorMsg.impossible "<replbind:FREEtyc>"

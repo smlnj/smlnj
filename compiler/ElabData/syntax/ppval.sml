@@ -28,6 +28,7 @@ local
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType
+  structure IP = InvPath
   structure TU = TypesUtil
   structure LU = Lookup
   structure A = Access
@@ -39,7 +40,7 @@ in
 
 val internals = ElabDataControl.varconInternals
 
-fun fmtSymPath path = PP.text (SymPath.toString path)
+exception PPVAL of string
 
 fun fmtAccess a = PP.brackets (PP.text (A.accessToString a))
 
@@ -88,21 +89,25 @@ fun fmtConBinding (env : SE.staticEnv, dcon: T.datacon) =
 	    let exception Hidden
 		val visible =
 		      let val tyc = TU.dataconTyc con
-		       in TypesUtil.equalTycon
-			    (LU.lookTyc
-			       (env, SymPath.SPATH
-				       [InvPath.last(valOf(TypesUtil.tycPath tyc))],
-				fn _ => raise Hidden),
-			     tyc)
+		       in (case TU.tycPath tyc
+		             of NONE => raise (PPVAL "fmtConBinding: is hidden?")
+			      | SOME (IP.IPATH syms) =>
+				  (case syms
+				     of nil => raise (PPVAL "fmtConBinding: null rpath")
+				      | tycName :: _ => 
+					  (TypesUtil.equalTycon
+					     (LU.lookTyc (env, SymPath.SPATH [tycName],
+							  fn _ => raise Hidden),
+					      tyc))))
 			  handle Hidden => false
 		      end
-	     in if !internals orelse not visible
-	        then PP.hcat (PP.text "con ", fmtDatacon con)
+	     in if visible orelse !internals
+	        then PP.hcat (PP.text "con", fmtDatacon con)
 	        else PP.empty
 	    end)
 
 fun fmtVar (V.VALvar {access,path,...}) =
-       PP.ccat (fmtSymPath path,
+       PP.ccat (PPP.fmtSymPath path,
 		if !internals
 		then (case access
 		       of A.LVAR lvar => PP.ccat (PP.period, PP.text (LV.toString lvar))
