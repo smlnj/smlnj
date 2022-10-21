@@ -26,31 +26,34 @@ end (* signature ELABCORE *)
 structure ElabCore: ELABCORE =
 struct
 
-local structure EM = ErrorMsg
-      structure SP = SymPath
-      structure IP = InvPath
-      structure SE = StaticEnv
-      structure LU = Lookup
-      structure V = Variable
-      structure AS = Absyn
-      structure AU = AbsynUtil
-      structure B  = Bindings
-      structure M  = Modules
-      structure MU = ModuleUtil
-      structure T  = Types
-      structure TU = TypesUtil
-      structure BT = BasicTypes
-      structure EE = EntityEnv
-      structure EU = ElabUtil
-      structure ED = ElabDebug
-      structure TS = TyvarSet
-      structure ET = ElabType
-      structure SM = SourceMap
-      structure S = Symbol
-      structure A = Access
-      structure Tbl = SymbolHashTable
+local (* top local *)
 
-      open Absyn Ast
+  structure EM = ErrorMsg
+  structure SP = SymPath
+  structure IP = InvPath
+  structure SE = StaticEnv
+  structure LU = Lookup
+  structure V = Variable
+  structure AS = Absyn
+  structure AU = AbsynUtil
+  structure B  = Bindings
+  structure M  = Modules
+  structure MU = ModuleUtil
+  structure T  = Types
+  structure TU = TypesUtil
+  structure BT = BasicTypes
+  structure EE = EntityEnv
+  structure EU = ElabUtil
+  structure ED = ElabDebug
+  structure TS = TyvarSet
+  structure ET = ElabType
+  structure SM = SourceMap
+  structure S = Symbol
+  structure A = Access
+  structure Tbl = SymbolHashTable
+
+  open Absyn Ast
+
 in
 
 fun cMARKpat (p, r) = if !ElabControl.markabsyn then MARKpat (p, r) else p
@@ -74,10 +77,8 @@ val maxReal64 = RealLit.real{isNeg = false, whole="1", frac="7976931348623157", 
 
 fun showDec (msg, dec, env) =
     ED.withInternals
-      (fn () => ED.debugPrint debugging
-		  (msg, PPAbsyn.fmtDec (env, NONE) (dec, 100)))
+      (fn () => ED.debugPrint debugging (msg, PPAbsyn.fmtDec (env, NONE) (dec, 100)))
 
-infix -->
 
 fun mkIntLiteralTy (v : IntInf.int, r : SourceMap.region) : T.ty =
       T.VARty(T.mkTyvar(T.OVLDI [(v, r)]))
@@ -254,7 +255,7 @@ let
 		         of NONE => (BT.exnTy, TS.empty, NONE, true)
 			  | SOME typ =>
 			    let val (ty,vt) = ET.elabType(typ,env,error,region)
-                             in (BT.-->(ty, BT.exnTy), vt, SOME ty, false)
+                             in (BT.--> (ty, BT.exnTy), vt, SOME ty, false)
 			    end
 	           val exn =
 		     T.DATACON{name=ename, const=const, typ=ety, lazyp=false,
@@ -296,25 +297,20 @@ let
 
     (**** PATTERNS ****)
 
-    fun regionUnion (SM.REGION (l1, r1), SM.REGION (l2, r2)) =
-	  SM.REGION (Int.min (l1, l2), Int.max (r1, r2))
-      | regionUnion (SM.NULLregion, reg2 as SM.REGION _) = reg2
-      | regionUnion (reg1 as SM.REGION _, SM.NULLregion) = reg1
-      | regionUnion (SM.NULLregion, SM.NULLregion) = SM.NULLregion
-
     fun apply_pat (c as MarkPat(_,regc), p as MarkPat(_,regp)) =
-	  MarkPat (AppPat{constr=c, argument=p}, regionUnion (regc, regp))
+	  MarkPat (AppPat{constr=c, argument=p}, SM.regionUnion (regc, regp))
       | apply_pat (c ,p) = AppPat{constr=c, argument=p}
 
     fun tuple_pat (a as MarkPat(_,rega), b as MarkPat(_,regb)) =
-	  MarkPat (TuplePat[a,b], regionUnion (rega, regb))
+	  MarkPat (TuplePat[a,b], SM.regionUnion (rega, regb))
       | tuple_pat (a,b) = TuplePat[a,b]
 
     val patParse = Precedence.parse{apply=apply_pat, pair=tuple_pat}
 
     exception FreeOrVars
-    fun elabPat(pat: Ast.pat, env: SE.staticEnv, region: region)
-		 : Absyn.pat * TS.tyvarset =
+
+    fun elabPat (pat: Ast.pat, env: SE.staticEnv, region: region)
+		: Absyn.pat * TS.tyvarset =
       case pat
       of WildPat => (WILDpat, TS.empty)
        | VarPat path =>
@@ -503,7 +499,7 @@ let
 		     {apply=fn(f,a) => AppExp{function=f,argument=a},
 		      pair=fn (a,b) => TupleExp[a,b]}
 
-    fun elabExp(exp: Ast.exp, env: SE.staticEnv, region: region)
+    fun elabExp (exp: Ast.exp, env: SE.staticEnv, region: region)
 		: (Absyn.exp * TS.tyvarset * tyvUpdate) =
 	(case exp
 	  of VarExp path =>
@@ -661,7 +657,7 @@ let
 		end
 	   | FlatAppExp items => elabExp(expParse(items,env,error),env,region))
 
-    and elabELabel(labs,env,region) =
+    and elabELabel (labs, env, region) =
 	let val (les1,lvt1,updt1) =
 	      foldr
 		(fn ((lb2,e2),(les2,lvt2,updts2)) =>
@@ -674,7 +670,7 @@ let
 	 in (les1, lvt1, updt)
 	end
 
-    and elabExpList(es,env,region) =
+    and elabExpList (es, env, region) =
 	let val (les1,lvt1,updt1) =
 	      foldr
 		(fn (e2,(es2,lvt2,updts2)) =>
@@ -687,7 +683,7 @@ let
 	 in (les1, lvt1, updt)
 	end
 
-    and elabMatch(rs,env,region) =
+    and elabMatch (rs, env, region) =
 	let val (rs,lvt,updt1) =
 	      foldr
 		(fn (r1,(rs1,lvt1,updt1)) =>
@@ -700,7 +696,7 @@ let
 	 in (rs, lvt, updt)
 	end
 
-    and elabRule(Rule{pat,exp},env,region)  =
+    and elabRule (Rule{pat,exp}, env, region)  =
 	let val region' = case pat of MarkPat (p,reg) => reg | _ => region
 	    val (p,tv1) = elabPat(pat, env, region)
 	    val env' = SE.atop(EU.bindVARp ([p],error region'), env)
@@ -711,21 +707,21 @@ let
 
     (**** SIMPLE DECLARATIONS ****)
 
-    and elabDec'(dec,env,rpath,region)
+    and elabDec' (dec, env, rpath, region)
 		: (Absyn.dec * SE.staticEnv * TS.tyvarset * tyvUpdate) =
 	(case dec
 	  of TypeDec tbs =>
 	      let val (dec', env') =
-		  ET.elabTYPEdec(tbs,env,(* EU.TOP,??? *) rpath,region,compInfo)
+		      ET.elabTYPEdec(tbs,env,(* EU.TOP,??? *) rpath,region,compInfo)
 	       in noTyvars(dec', env')
 	      end
-	   | DatatypeDec(x) =>
+	   | DatatypeDec x =>
 	      let val (dtycs, wtycs, _, env') =
 		      ET.elabDATATYPEdec(x,env,[],EE.empty,isFree,
                                          rpath,region,compInfo)
 	       in noTyvars(DATATYPEdec{datatycs=dtycs,withtycs=wtycs}, env')
 	      end
-	   | DataReplDec(name,path) =>
+	   | DataReplDec (name, path) =>
 	     (* LAZY: not allowing "datatype lazy t = datatype t'" *)
 	     (* BUG: what to do if rhs is lazy "datatype"? (DBM) *)
 	      (case LU.lookTyc(env, SP.SPATH path, error region)
@@ -749,31 +745,30 @@ let
 		     noTyvars(SEQdec[], SE.empty)))
 	   | AbstypeDec x =>
 	      let val (dec', env') =
-  		    elabABSTYPEdec(x,env,EU.TOP,isFree,
-                                   rpath,region,compInfo)
+  		    elabABSTYPEdec (x, env, EU.TOP, isFree, rpath, region, compInfo)
 	       in noTyvars(dec', env')
 	      end
 	   | ExceptionDec ebs => elabEXCEPTIONdec(ebs,env,region)
 	   | ValDec(vbs,explicitTvs) =>
-	       elabVALdec(vbs,explicitTvs,env,rpath,region)
-	   | DoDec exp => elabDOdec(exp, env, region)
+	       elabVALdec (vbs, explicitTvs, env, rpath, region)
+	   | DoDec exp => elabDOdec (exp, env, region)
 	   | FunDec(fbs,explicitTvs) =>
-	       elabFUNdec(fbs,explicitTvs,env,rpath,region)
+	       elabFUNdec (fbs, explicitTvs, env, rpath, region)
 	   | ValrecDec(rvbs,explicitTvs) =>
-	       elabVALRECdec(rvbs,explicitTvs,env,rpath,region)
-	   | SeqDec ds => elabSEQdec(ds,env,rpath,region)
-	   | LocalDec ld => elabLOCALdec(ld,env,rpath,region)
-	   | OpenDec ds => elabOPENdec(ds,env,region)
+	       elabVALRECdec (rvbs, explicitTvs, env, rpath, region)
+	   | SeqDec ds => elabSEQdec (ds, env, rpath, region)
+	   | LocalDec ld => elabLOCALdec (ld, env, rpath, region)
+	   | OpenDec ds => elabOPENdec (ds, env, region)
 	   | FixDec (ds as {fixity,ops}) =>
 	       let val env =
 		 foldr (fn (id,env) => SE.bind(id,B.FIXbind fixity,env))
 			SE.empty ops
 		in (FIXdec ds,env,TS.empty,no_updt)
 	       end
-	   | OvldDec dec  => elabOVERLOADdec(dec,env,rpath,region)
-	   | MarkDec(dec,region') =>
-	       let val (d,env,tv,updt)= elabDec'(dec,env,rpath,region')
-		in (cMARKdec(d,region'), env,tv,updt)
+	   | OvldDec dec  => elabOVERLOADdec (dec, env, rpath, region)
+	   | MarkDec (dec, region') =>
+	       let val (d,env,tv,updt)= elabDec' (dec, env, rpath, region')
+		in (cMARKdec (d, region'), env, tv, updt)
 	       end
 	   | StrDec _ => bug "strdec"
 	   | FctDec _ => bug "fctdec"
@@ -1068,14 +1063,15 @@ let
 	  end
 
     and elabFUNdec(fb,etvs,env,rpath,region) =
-	let val etvs = TS.mkTyvarset(ET.elabTyvList(etvs,error,region))
+	let val _ = debugmsg ">>elabFUNdec"
+	    val etvs = TS.mkTyvarset(ET.elabTyvList(etvs,error,region))
             (* makevar: parse the function header to determine the function name *)
-	    fun makevar _ (MarkFb(fb,fbregion),ctx) = makevar fbregion (fb,ctx)
-	      | makevar fbregion (Fb(clauses,lazyp),(lcl,env')) =
+	    fun makevar _ (MarkFb (fb, fbregion), ctx) = makevar fbregion (fb, ctx)
+	      | makevar fbregion (Fb (clauses, lazyp), (lcl, env')) =
 		 let fun getfix(SOME f) = LU.lookFix(env,f)
 		       | getfix NONE = Fixity.NONfix
 
-		     fun ensureInfix{item,fixity,region} =
+		     fun ensureInfix {item, fixity, region} =
 			 (case getfix fixity
 			   of Fixity.NONfix =>
 			        error region EM.COMPLAIN
@@ -1084,7 +1080,7 @@ let
 			    | _ => ();
 			  item)
 
-		     fun ensureNonfix{item,fixity,region} =
+		     fun ensureNonfix {item, fixity, region} =
 			 (case (getfix fixity, fixity)
 			   of (Fixity.NONfix,_) => ()
 			    | (_,SOME sym) =>
@@ -1095,15 +1091,15 @@ let
 			    | _ => bug "ensureNonfix";
 			  item)
 
-		     fun getname(MarkPat(p,region),_) = getname(p,region)
-		       | getname(VarPat[v], _) = v
-		       | getname(_, region) =
+		     fun getname (MarkPat (p, region), _) = getname (p,region)
+		       | getname (VarPat[v], _) = v
+		       | getname (_, region) =
                            (error region EM.COMPLAIN
 			      "illegal function symbol in clause"
 			      EM.nullErrorBody;
 			    EU.bogusID)
 
-   	             fun parse'({item=FlatAppPat[a,b as {region,...},c],...}
+   	             fun parse' ({item=FlatAppPat[a,b as {region,...},c],...}
                                 ::rest) =
 			   (getname(ensureInfix b, region),
 			    tuple_pat(ensureNonfix a, ensureNonfix c)
@@ -1118,7 +1114,7 @@ let
 			    map ensureNonfix rest)
 		       | parse' [] = bug "parse':[]"
 
-		     fun parse({item=MarkPat(p,_),region,fixity}::rest) =
+		     fun parse ({item=MarkPat(p,_),region,fixity}::rest) =
 			   parse({item=p,region=region,fixity=fixity}::rest)
 		       | parse (pats as [a as {region=ra,...},
 					 b as {item,fixity,region},c]) =
@@ -1128,7 +1124,7 @@ let
 				  [tuple_pat(ensureNonfix a, ensureNonfix c)]))
 		       | parse pats = parse' pats
 
-		     fun parseClause(Clause{pats,resultty,exp}) =
+		     fun parseClause (Clause{pats,resultty,exp}) =
 			 let val (funsym,argpats) = parse pats
 			  in {kind=STRICT,funsym=funsym,argpats=argpats,
 			      resultty=resultty,exp=exp}
@@ -1210,10 +1206,10 @@ let
 	    val (fundecs, funsEnv) = foldl (makevar region) ([],SE.empty) fb
 	    val env'' = SE.atop(funsEnv,env)
 
-	    fun elabClause(region,({kind,argpats,resultty,exp,funsym})) =
-		let val (pats,tv1) = elabPatList(argpats, env, region)
-                    val nenv = SE.atop(EU.bindVARp(pats,error region), env'')
-		    val (exp,tv2,updt) = elabExp(exp, nenv,region)
+	    fun elabClause (region, {kind,argpats,resultty,exp,funsym}) =
+		let val (pats,tv1) = elabPatList (argpats, env, region)
+                    val nenv = SE.atop (EU.bindVARp (pats, error region), env'')
+		    val (exp, tv2, updt) = elabExp(exp, nenv, region)
 		    (* LAZY: wrap delay or force around rhs as appropriate*)
 		    val exp =
 			case kind
@@ -1266,11 +1262,12 @@ let
 
 	    val funsDec = EU.FUNdec(map makefb fbs1,compInfo)
 
-         in showDec("elabFUNdec: ", funsDec, funsEnv);
+         in showDec ("elabFUNdec: ", funsDec, funsEnv);
+	    debugmsg "<< elabFUNdec";
 	    (funsDec, funsEnv, TS.empty, updt)
 	end (* fun elabFUNdec *)
 
-    and elabSEQdec(ds,env,rpath:IP.path,region) =
+    and elabSEQdec (ds, env, rpath:IP.path, region) =
 	let val (ds1,env1,tv1,updt1) =
 	      foldl
 	       (fn (decl2,(ds2,env2,tvs2,updt2)) =>
@@ -1284,12 +1281,12 @@ let
 	 in (SEQdec(rev ds1), env1, tv1, updt)
 	end
 
-    val _ = debugmsg ("EC.elabDec calling elabDec' - foo")
-    val (dec',env',tyvars,tyvUpdate) = elabDec'(dec,env,rpath,region)
+    val _ = debugmsg "EC.elabDec >> elabDec'"
+    val (dec', env', tyvars, tyvUpdate) = elabDec' (dec, env, rpath, region)
 
  in tyvUpdate tyvars;
-    (dec',env')
-
+    debugmsg "<< EC.elabDec";
+    (dec', env')
 end (* function elabDec *)
 
 end (* top-level local *)

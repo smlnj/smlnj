@@ -45,15 +45,15 @@ local
   structure V  = Variable
   structure AS = Absyn
   structure AU = AbsynUtil
-  structure PPA = PPAbsyn
   structure EU = ElabUtil
   structure LV = LambdaVar
   structure EM = ErrorMsg
-  structure PP = NewPP
-  structure PPMC = PPMatchComp
   structure DT = DecisionTree
   structure ST = MCStats
   structure MCC = MCControl (* match compiler control flags *)
+  structure PP = NewPP
+  structure PPA = PPAbsyn
+  structure PPMC = PPMatchComp
  
   open MCCommon 
 		     
@@ -254,7 +254,7 @@ fun handlerCompile (rules, rhsTy, errorFn, region, env): (AS.exp * V.var) =
 	then errorFn region
 	     (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
 	     "redundant patterns in match"
-             (PPMC.formatMatch(env,rules,unused))
+             (PPMC.formatMatch (env, (map #1 rules), unused))
 	else ();
 	(code, rootVar)
     end
@@ -283,23 +283,24 @@ fun matchCompile (rules, lhsTy, rhsTy, errorFn, region, env): (AS.exp * V.var) =
 	       (if !MCC.matchRedundantError orelse !MCC.matchNonExhaustiveError
 		then EM.COMPLAIN else EM.WARN)
 	       "match redundant and nonexhaustive"
-	       (PPMC.formatMatch (env, rules, unused))
+	       (PPMC.formatMatch (env, (map #1 rules), unused))
            | (true, false) =>
              errorFn region
 	       (if !MCC.matchNonExhaustiveError then EM.COMPLAIN else EM.WARN)
                "match nonexhaustive"
-	       (PPMC.formatMatch (env, rules, unused))
+	       (PPMC.formatMatch (env, (map #1 rules), unused))
            | (false, true) =>
              errorFn region
 	       (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
 	       "match redundant"
-	       (PPMC.formatMatch (env, rules, unused))
+	       (PPMC.formatMatch (env, (map #1 rules), unused))
            | _ => ();
         (matchExp, rootVar)
     end
 
-val matchCompile : (AS.pat * AS.exp) list * T.ty * T.ty * ErrorMsg.errorFn * SourceMap.region * StaticEnv.staticEnv
-                   -> AS.exp * V.var
+val matchCompile : (AS.pat * AS.exp) list * T.ty * T.ty * ErrorMsg.errorFn
+		   * SourceMap.region * StaticEnv.staticEnv
+                  -> AS.exp * V.var
     = Stats.doPhase(Stats.makePhase "Compiler 045 matchcomp") matchCompile
 
 end (* topleve local *)

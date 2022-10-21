@@ -10,8 +10,14 @@ functor CompileF (
     structure CC : CCONFIG
     val cproto_conv : string
 
-  ) : COMPILE0 = struct
+  ) : COMPILE0 =
 
+struct
+
+local
+    structure SE = StaticEnv
+    structure LV = LambdaVar
+in
     fun mkCompInfo source =
 	CompInfo.mkCompInfo
 	  {source = source,
@@ -21,6 +27,8 @@ functor CompileF (
     type hash       = CC.hash		(* environment hash id *)
     type pid        = CC.pid
     type guid       = CC.guid
+
+    fun say msg = (Control.Print.say msg; Control.Print.flush())
 
     (*************************************************************************
      *                             ELABORATION                               *
@@ -36,31 +44,38 @@ functor CompileF (
 	(* Stats.doPhase (Stats.makePhase "Compiler 006 lazycomp") *)
 	    LazyComp.lazycomp
      *)
-    val pickUnpick =
-	  Stats.doPhase (Stats.makePhase "Compiler 036 pickunpick") CC.pickUnpick
 
-    (** take ast, do semantic checks,
-     ** and output the new env, absyn and pickles *)
-    fun elaborate {ast, statenv=senv, compInfo, guid} = let
-	  val (absyn, nenv) = ElabTop.elabTop(ast, senv, compInfo)
-	  val (absyn, nenv) = if CompInfo.anyErrors compInfo
-		then (Absyn.SEQdec nil, StaticEnv.empty)
-	        else (absyn, nenv)
-	  val { pid, pickle, exportLvars, exportPid, newenv } =
-	        pickUnpick { context = senv, env = nenv, guid = guid }
-	  in {
-	    absyn=absyn, newstatenv=newenv, exportPid=exportPid,
-	    exportLvars=exportLvars, staticPid = pid, pickle = pickle
-	  } end (* function elaborate *)
+    val pickUnpick : {context : SE.staticEnv, env : SE.staticEnv, guid : guid}
+		  -> {pid: hash, pickle: pickle, exportLvars : LV.lvar list, exportPid: pid option, newenv: SE.staticEnv}
+	  = CC.pickUnpick
+
+    val pickUnpick =
+	  Stats.doPhase (Stats.makePhase "Compiler 036 pickunpick") pickUnpick
+
+    (* elaborate {ast: Ast.ast, statenv: SE.staticEnv, compInfo: compInfo.compInfo} -> absyn * SE.staticEnv *)
+    (* take ast and staticEnv, elaborate the ast, and output the new absyn, staticEnv *)
+    fun elaborate {ast: Ast.dec, statenv: SE.staticEnv, compInfo: CompInfo.compInfo} =
+	  let val (absyn, nenv) = ElabTop.elabTop (ast, statenv, compInfo)
+	   in if CompInfo.anyErrors compInfo
+	      then (Absyn.SEQdec nil, StaticEnv.empty)
+	      else (absyn, nenv)
+	  end (* function elaborate *)
+(*
+	      val { pid, pickle, exportLvars, exportPid, newenv } =
+		    pickUnpick { context = statenv, env = nenv, guid = guid }
+	   in {absyn=absyn, newstatenv=newenv, exportPid=exportPid,
+	       exportLvars=exportLvars, staticPid = pid, pickle = pickle}
+*)
 
     val elaborate =
-	  Stats.doPhase(Stats.makePhase "Compiler 030 elaborate") elaborate
+	  Stats.doPhase (Stats.makePhase "Compiler 030 elaborate") elaborate
 
     (*************************************************************************
      *                        ABSYN INSTRUMENTATION                          *
      *************************************************************************)
 
     local
+
       val specialSyms = [
 	      SpecialSymbols.paramId,
 	      SpecialSymbols.functorId,
@@ -73,13 +88,16 @@ functor CompileF (
 	      SpecialSymbols.returnId,
 	      SpecialSymbols.internalVarId
 	    ]
+
       fun isSpecial s = List.exists (fn s' => Symbol.eq (s, s')) specialSyms
+
     in
-    (** instrumenting the abstract syntax to do time- and space-profiling *)
-    fun instrument {source, senv, compInfo} =
-	  SProf.instrumDec (senv, compInfo) source
-	  o TProf.instrumDec PrimopId.isPrimCallcc (senv, compInfo)
-	  o TDPInstrument.instrument isSpecial (senv, compInfo)
+      (** instrumenting the abstract syntax to do time- and space-profiling *)
+      fun instrument {source, senv, compInfo} =
+	    SProf.instrumDec (senv, compInfo) source
+	    o TProf.instrumDec PrimopId.isPrimCallcc (senv, compInfo)
+	    o TDPInstrument.instrument isSpecial (senv, compInfo)
+
     end (* local *)
 
     val instrument =
@@ -90,18 +108,16 @@ functor CompileF (
      *************************************************************************)
 
     (** take the abstract syntax tree, generate the flint intermediate code *)
-    fun translate{absyn, exportLvars, newstatenv, oldstatenv, compInfo} = let
+    fun translate {absyn, exportLvars, newstatenv, oldstatenv, compInfo} =
 	(*** statenv used for printing Absyn in messages ***)
-	  val statenv = StaticEnv.atop (newstatenv, oldstatenv)
-	  in
-	    Translate.transDec {
-		rootdec = absyn,
-		exportLvars = exportLvars,
-		oldenv = oldstatenv,
-		env = statenv,
-		cproto_conv = cproto_conv,
-		compInfo = compInfo
-	      }
+	  let val statenv = StaticEnv.atop (newstatenv, oldstatenv)
+	   in Translate.transDec
+		{rootdec = absyn,
+		 exportLvars = exportLvars,
+		 oldenv = oldstatenv,
+		 env = statenv,
+		 cproto_conv = cproto_conv,
+		 compInfo = compInfo}
 	  end
 
     val translate =
@@ -140,40 +156,45 @@ functor CompileF (
      *        = ELABORATION + TRANSLATION TO FLINT + CODE GENERATION         *
      * used by interact/evalloop.sml, cm/compile/compile.sml only            *
      *************************************************************************)
-    (** compiling the ast into the binary code = elab + translate + codegen *)
-    fun compile {source, ast, statenv, compInfo, checkErr=check, guid} = let
-	  val {absyn, newstatenv, exportLvars, exportPid, staticPid, pickle } =
-		elaborate {ast=ast, statenv=statenv, compInfo=compInfo, guid = guid}
-		before (check "elaborate")
-	  val absyn =
-		instrument {source=source, senv = statenv, compInfo=compInfo} absyn
-		before (check "instrument")
-	  val {flint, imports} =
-		translate {
-		    absyn=absyn, exportLvars=exportLvars,
-		    newstatenv=newstatenv, oldstatenv=statenv,
-		    compInfo=compInfo
-		  }
-		before check "translate"
-	  val {csegments, imports} =
-	        codegen {flint = flint, imports = imports,
-			 sourceName = #fileOpened (#source compInfo) }
-		before (check "codegen")
-	(*
-	 * interp mode was currently turned off.
-	 *
-	 * if !Control.interp then Interp.interp flint
-	 *  else codegen {flint=flint, splitting=splitting, compInfo=cinfo})
-	 *)
-	  in {
-	    csegments = csegments,
-	    newstatenv = newstatenv,
-	    absyn = absyn,
-	    exportPid = exportPid,
-	    exportLvars = exportLvars,
-	    staticPid = staticPid,
-	    pickle = pickle,
-	    imports = imports
-	  } end (* function compile *)
+    (* compile: {source: Source.source, ast: Ast.ast; statenv: StaticEnv.staticEnv,
+                 compInfo: ?.compInfo, checkErr : string -> unit, guid: guid} -> { ... }
+     * compiling the ast into the binary code: elab; pickUnpick; instrument; translate; codegen *)
+    fun compile {source, ast, statenv, compInfo, checkErr, guid} =
+	  let val (absyn, nenv) =
+		    elaborate {ast=ast, statenv=statenv, compInfo=compInfo}
+		    before (checkErr "elaborate")
+	      val {pid, pickle, exportLvars, exportPid, newenv} =
+		    pickUnpick { context = statenv, env = nenv, guid = guid }
+		    before (checkErr "pickUnpick")
+	      val absyn =
+		    instrument {source=source, senv = statenv, compInfo=compInfo} absyn
+		    before (checkErr "instrument")
+	      val {flint, imports} =
+		    translate {absyn=absyn, exportLvars=exportLvars,
+			       newstatenv=newenv, oldstatenv=statenv,
+			       compInfo=compInfo}
+		    before checkErr "translate"
+	      val {csegments, imports} =
+		    codegen {flint = flint, imports = imports,
+			     sourceName = #fileOpened (#source compInfo)}
+		    before (checkErr "codegen")
 
-  end (* functor CompileF *)
+	 (* interp mode was [is] currently turned off.
+	  *   [DBM 2022.10.19] Does interp mode still exist?]
+	  *
+	  * if !Control.interp then Interp.interp flint
+	  *  else codegen {flint=flint, splitting=splitting, compInfo=cinfo}) *)
+
+	  in {csegments = csegments,     (* produced by codegen *)
+	      imports = imports,         (* produced by translate > codegen *)
+	      absyn = absyn,             (* produced by elaborate > instrument*)
+	      newstatenv = newenv,       (* produced by elaborate (nenv) > pickUnpick (newenv) *)
+	      exportPid = exportPid,     (* produced by pickUnpick *)
+	      exportLvars = exportLvars, (* produced by pickUnpick *)
+	      staticPid = pid,           (* produced by pickUnpick *)
+	      pickle = pickle}           (* produced by pickUnpick *)
+
+	 end (* function compile *)
+
+end (* top local *)
+end (* functor CompileF *)

@@ -204,5 +204,12 @@ in
   fun sourceRegionToString ({source = {fileOpened,...}, start, finish}: sourceRegion) =
         String.concat [fileOpened, ":", locationToString start, "-", locationToString finish]
 
+  (* regionUnion : region * region -> region *)
+  fun regionUnion (REGION (l1, r1), REGION (l2, r2)) =
+        REGION (Int.min (l1, l2), Int.max (r1, r2))
+    | regionUnion (NULLregion, reg2 as REGION _) = reg2
+    | regionUnion (reg1 as REGION _, NULLregion) = reg1
+    | regionUnion (NULLregion, NULLregion) = NULLregion
+
 end (* top local *)
 end (* structure SourceMap *)

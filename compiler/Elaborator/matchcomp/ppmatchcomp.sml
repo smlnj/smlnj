@@ -1,6 +1,6 @@
-(* mcprint.sml
+(* Elaborator/matchcomp/mcmatchcomp.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -167,23 +167,26 @@ fun fmtMatch match = PP.vblock (map fmtRule match)
 (* formatMatch and formatBind were formerly MatchPrint.matchPrint and MatchPrint.bindPrint.
  * These are used in error messages in the *Compile functions. *)
 
-(* formatMatch: SE.staticEnv * (AS.pat * AS.exp) list * int list -> PP.format
+(* formatMatch: SE.staticEnv * AS.pat list * int list (ruleset) -> PP.format
  * Prints abbreviated rules, indicating unused rules with a preceeding "-->".
  * Assumes unused is a "ruleset", an ordered list of rule numbers, rule numbers start with 0 *)
-fun formatMatch (env, rules, unused) =
+fun formatMatch (env: SE.staticEnv, rules: AS.pat list, unused: int list) =
     let val postfix = PP.text "=> ..."
-	val uprefix =  PP.text "       "   (* 8 spaces *)
-        val unuprefix = PP.text "  -->  "
+	val usedPrefix =  PP.text "       "   (* 8 spaces *)
+        val unusedPrefix = PP.text "  -->  "
         fun ruleFmts (nil, _, _, fmts) = rev fmts
-	  | ruleFmts ((pat,_)::rest, n, u::us, fmts) = 
-	    let val n_vs_u = Int.compare (n, u)
-		val (prefix, remaining_unused) =
-		    case n_vs_u
-		      of EQUAL => (unuprefix, us)   (* u matches n, unused rule *)
-		       | _ => (uprefix, u::us)      (* n_vs_u will only be LESS *)
-		val fmt = PP.hblock [prefix, PPA.fmtPat env (pat, !printDepth), postfix]
-	    in ruleFmts (rest, n+1, remaining_unused, fmt::fmts)
-	    end
+	  | ruleFmts (pat::rest, n, u::us, fmts) = 
+	      let val (prefix, remaining_unused) =
+		      case Int.compare (n, u)
+			of EQUAL => (unusedPrefix, us)   (* u matches n, unused rule *)
+			 | _ => (usedPrefix, u::us)      (* n < u *)
+		  val fmt = PP.hblock [prefix, PPA.fmtPat env (pat, !printDepth), postfix]
+	      in ruleFmts (rest, n+1, remaining_unused, fmt::fmts)
+	      end
+	  | ruleFmts (pat::rest, n, nil, fmts) =  (* beyond the last unused ruleno *)
+	      let val fmt = PP.hblock [usedPrefix, PPA.fmtPat env (pat, !printDepth), postfix]
+	       in ruleFmts (rest, n, nil, fmt::fmts)
+	      end
      in PP.vblock (ruleFmts (rules, 0, unused, nil))
     end
 

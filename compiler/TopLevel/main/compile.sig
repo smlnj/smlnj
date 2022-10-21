@@ -21,19 +21,11 @@ sig
 
   (** take ast, do semantic checks,
    ** then output the new env, absyn and pickles *)
-  val elaborate : {
-	  ast: Ast.dec,
-	  statenv: StaticEnv.staticEnv,
-	  compInfo: CompInfo.compInfo,
-	  guid: guid
-	} -> {
-	  absyn: Absyn.dec,
-	  newstatenv: StaticEnv.staticEnv,
-	  exportLvars: LambdaVar.lvar list,
-	  exportPid: pid option,
-	  staticPid: hash,
-	  pickle: pickle
-	}
+  val elaborate :
+	{ast: Ast.dec,
+	 statenv: StaticEnv.staticEnv,
+	 compInfo: CompInfo.compInfo}
+     -> Absyn.dec * StaticEnv.staticEnv
 
   (** elaborate as above, then keep on to compile into the binary code *)
   val compile : {

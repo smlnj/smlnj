@@ -95,6 +95,8 @@ sig
        * region.
        * For region # NULLregion, returns NONE. *)
 
+  val regionUnion : region * region -> region
+
   val regionToString : region -> string
   val locationToString : location -> string
   val sourceLocToString : sourceLoc -> string

@@ -29,14 +29,14 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		    (* diagnostic printing of Ast and Absyn *)
 		      val printDepth = Control_Print.printDepth
 
-    fun debugPrint flag (msg: string, formatter: ('a -> PP.format), arg: 'a) =
+    (* debugPrint : bool ref -> (string * PP.format) -> unit *)
+    fun debugPrint flag (msg: string, format: PP.format) =
 	if !flag
-	then let val format = PP.vcat (PP.text msg, PP.hardIndent 2 (formatter arg))
-	      in PP.printFormatNL format
-	     end
+	then PP.printFormatNL (PP.vcat (PP.text msg, PP.hardIndent 2 format))
 	else ()
 
     val lineWidth = Control.Print.lineWidth
+    val progressMsgs = Control.progressMsgs
 
     val compManagerHook : {
 	    manageImport : Ast.dec * EnvRef.envref -> unit,
@@ -78,24 +78,23 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
 	    fun checkErrors (s: string) =
 		  if CompInfo.anyErrors cinfo
-		    then (
-		      if !Control.progressMsgs
+		  then (if !progressMsgs
 			then saysnl ["<<< Error stop after ", s]
 			else ();
-		      raise EM.Error)
-		  else if !Control.progressMsgs
-		    then saysnl ["### ", s, " successful"]
-		    else ()
+			raise EM.Error)
+		  else if !progressMsgs
+		  then saysnl ["<<< ", s, " successful"]
+		  else ()
 
 	    fun oneUnit () = (* perform one transaction  *)
-		 (if !Control.progressMsgs
-		    then saysnl ["<<< oneUnit [compiling \"", #fileOpened source, "\"]"]
-		    else ();
+		 (if !progressMsgs
+		  then saysnl [">>> oneUnit [compiling \"", #fileOpened source, "\"]"]
+		  else ();
 		  case parser ()
-		   of NONE => raise EndOfFile
-		    | SOME ast =>
-			let val _ = if !Control.progressMsgs
-				    then say "### parsing successful\n"
+		    of NONE => raise EndOfFile
+		     | SOME ast =>
+			let val _ = if !progressMsgs
+				    then say "<<< parsing successful\n"
 				    else ()
 
 			    val loc = EnvRef.loc ()
@@ -108,9 +107,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
 			    (* conditional diagnostic code to print ast - could it be involked from parser?
 			       if so, what statenv would be used? *)
-			    val _ = let fun formatAstDec astdec = PPAst.fmtDec NONE (astdec, 1000)
-				    in debugPrint debugging ("AST::", formatAstDec, ast)
-				    end
+			    val _ = debugPrint debugging ("AST::", PPAst.fmtDec NONE (ast, 1000))
 
 			    val {csegments, newstatenv, absyn, exportPid, exportLvars, imports, ...} =
 				C.compile {source=source,
@@ -123,13 +120,10 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 				they hold on things unnecessarily; this must be
 				fixed in the long run. (ZHONG)
 			     *)
-			    val _ = if !Control.progressMsgs
-				  then say "### C.compile successful\n"
+			    val _ = if !progressMsgs
+				  then say "<<< C.compile successful\n"
 				  else ()
-			    val _ = let fun formatAbsynDec absyn_dec =
-					    PPAbsyn.fmtDec (statenv, NONE) (absyn_dec, 1000)
-				    in debugPrint debugging ("Absyn: ", formatAbsynDec, absyn)
-				    end
+			    val _ = debugPrint debugging ("Absyn: ", PPAbsyn.fmtDec (statenv, NONE) (absyn, 1000))
 
 			    val executable = Execute.mkExec
 						 { cs = csegments,
@@ -174,18 +168,18 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 				end
 
 			    val ste1 = StaticEnv.special (look_and_load, get_symbols)
-			    val _ = if !Control.progressMsgs then say "### ste1 successful\n" else ()
+			    val _ = if !progressMsgs then say "<<< ste1 successful\n" else ()
 
 			    val e0 = getenv ()
-			    val _ = if !Control.progressMsgs then say "### e0 successful\n" else ()
+			    val _ = if !progressMsgs then say "<<< e0 successful\n" else ()
 
 			    val e1 = E.mkenv { static = ste1, dynamic = E.dynamicPart e0 }
-			    val _ = if !Control.progressMsgs then say "### e1 successful\n" else ()
+			    val _ = if !progressMsgs then say "<<< e1 successful\n" else ()
 
 			    val unitFmt = PP.appendNewLine (PPDec.fmtDec e1 (absyn, exportLvars))
 
 			 in PP.render (unitFmt, say, !lineWidth);
-			    if !Control.progressMsgs then say "### oneUnit\n" else ()
+			    if !progressMsgs then say "<<< oneUnit\n" else ()
 			end)  (* oneUnit *)
 
 	    fun loop() = (oneUnit(); loop())
