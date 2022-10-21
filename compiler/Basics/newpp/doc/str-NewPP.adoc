@@ -41,11 +41,12 @@ datatype bindent (* block indents *)
   | HI of int   (* Hard Indent: always taken, supplying its own newline+indent if necessary *)
   | SI of int   (* Soft Indent: taken only if the block is preceded by a newline+indent *)
 
-val empty : format
-val text : string -> format
-val integer : int -> format  (* integer n renders as Int.toString n *)
-val string : string -> format (* previously used PrintUtil.formatString, adds double quotes *)
-val bool : bool -> format
+val empty : format            (* == EMPTY, renders as empty string, composition identity *)
+val text : string -> format   (* == the TEXT format constructor *)
+val integer : int -> format   (* integer n renders as Int.toString n *)
+val string : string -> format (* adds double quotes *)
+val char : char -> format     (* c --> #"c" *)
+val bool : bool -> format     (* true --> TEXT "true", false --> TEXT "false" *)
 
 val specialBlock : bindent -> element list -> format
 val alignedBlock : alignment -> bindent -> format list -> format
@@ -55,23 +56,24 @@ val hblock : format list -> format   (* = alignedBlock H NI *)
 val vblock : format list -> format   (* = alignedBlock V NI *)
 val pblock : format list -> format   (* = alignedBlock P NI *)
 val cblock : format list -> format   (* = alignedBlock C NI *)
+
 val siblock : bindent -> element list -> format  (* = specialBlock *)
 val hiblock : bindent -> format list -> format   (* = alignedBlock H *)
 val viblock : bindent -> format list -> format   (* = alignedBlock V *)
 val piblock : bindent -> format list -> format   (* = alignedBlock P *)
 val ciblock : bindent -> format list -> format   (* = alignedBlock C *)
 
-val comma : format
-val colon : format
-val semicolon : format
-val period : format
-val lparen : format
-val rparen : format
-val lbracket : format
-val rbracket : format
-val lbrace : format
-val rbrace : format
-val equal : format
+val comma : format     (* text "," *)
+val colon : format     (* text ":" *)
+val semicolon : format (* text ";" *)
+val period : format    (* text "." *)
+val lparen : format    (* text "(" *)
+val rparen : format    (* text ")" *)
+val lbracket : format  (* text "[" *)
+val rbracket : format  (* text "]" *)
+val lbrace : format    (* text "{" *)
+val rbrace : format    (* text "}" *)
+val equal : format     (* text "=", an honorary punctuation mark *)
 
 val pcat : format * format -> format
 val hcat : format * format -> format
@@ -94,6 +96,7 @@ val csequence : format -> format list -> format
 
 val tupleFormats : format list -> format
 val listFormats : format list -> format
+val optionFormat : format option -> format
 
 val formatSeq :
     {alignment: alignment, sep : format, formatter : 'a -> format}
