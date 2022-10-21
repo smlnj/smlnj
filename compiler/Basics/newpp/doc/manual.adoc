@@ -624,10 +624,7 @@ fun formatTree (Node (s, trees)) =
     ccat (text s, formatTrees trees)
 
 and formatTrees nil = empty
-  | formatTrees trees =
-      formatClosedSeq HardLine
-        {front=lbracket, sep=comma, back=rbracket, formatter=formatTree}
-	trees;
+  | formatTrees trees = brackets (vsequence comma (map formatTree trees)
 
 val tree1 =
     Node ("aaa",
@@ -663,9 +660,7 @@ fun formatTree' (Node (s, trees)) =
       of nil => text s
        | _ =>
           vblock [ccat (text s, lbracket),
-                  hardIndent (2,
-                    formatSeq HardLine
-                      {sep=comma, formatter=formatTree'} trees),
+                  hardIndent 2  (vsequence comma (map formatTree' trees))
                   rbracket];
 ----
 ====
@@ -712,7 +707,7 @@ fun formatExp (Var s) = text s
 and formatExps (exps) = vblock (map formatExp exps)
 
 and fmtDcl (Val (name, exp)) =
-    hblock [text "val", text name, text "=", formatExp exp]
+    hblock [text "val", text name, equal, formatExp exp]
 
 and fmtDcls dcls = vblock (map fmtDcl dcls)
 
@@ -865,13 +860,13 @@ Rough analogs of Haskell Prettyprinter types and functions:
 
 == Implementation
 
-* The basic datatypes for formats
+* The datatype constructors for formats
  ** `EMPTY` is the empty format that prints nothing and acts as an identity element with respect to
     concatenation of formats or composition of blocks.
  ** `TEXT` constructs atomic text blocks.
  ** `SBLOCK` constructs "special" blocks with explicit separator (`SEP`) elements mixed with format (`FMT`) elements.
  ** `ABLOCK` constructs "aligned" blocks, where alignment is determined by the choice of the alignment,
- which in turn determines the virtual separator between component formats:
+which in turn determines the virtual separator between component formats:
 Horizontal: `Space 1`; Vertical: `HardLine`; Packed: `SoftLine 1`.
  ** `FLAT` converts an arbitrary format to one which is rendered as flat.
  ** `ALT` takes a pair of formats, `(fmt1, fmt2)` and constructs a format that is
