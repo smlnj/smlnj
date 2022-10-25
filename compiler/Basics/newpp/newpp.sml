@@ -24,32 +24,41 @@ open Format  (* defines types format, element, separator, bindent *)
 
 (*** the basic block building functions ***)
 
-(* reduce : format list -> format list *)
-fun reduce (formats: format list) =
+(* reduceFormats : format list -> format list *)
+fun reduceFormats (formats: format list) =
     let fun notEmpty EMPTY = false
 	  | notEmpty _ = true
      in List.filter notEmpty formats
+    end
+
+(* reduceElements : element list -> element list *)
+(* eliminate EMPTY format elements *)
+fun reduceElements (elements: element list) =
+    let fun notEmpty (FMT EMPTY) = false
+	  | notEmpty _ = true
+     in List.filter notEmpty elements
     end
 
 (* specialBlock : bindent -> element list -> format
  *   Construct an SBLOCK with explicit, possibly heterogeous, separators.
  *   Returns EMPTY if the element list is null. *)
 fun specialBlock bindent elements =
-    (case elements
+    (case reduceElements elements
        of nil => EMPTY
+	| [FMT fmt] => fmt  (* special blocks consisting of a single (FMT fmt) element, reduce to fmt *)
         | _ => SBLOCK {elements = elements, bindent = bindent, measure = M.measureElements elements})
 
 (* alignedBlock : alignment -> bindent -> format list -> format *)
 (* A block with no element formats reduces to EMPTY, regardless of alignment or indentation. *)
 fun alignedBlock alignment bindent formats =
     let val sepsize = case alignment of C => 0 |  _ => 1
-     in case formats
+     in case reduceFormats formats
 	  of nil => EMPTY
-	   | _ => let val formats' = reduce formats
-		   in ABLOCK {formats = formats', alignment = alignment, bindent = bindent,
-	                      measure = M.measureFormats (sepsize, formats')}
-		  end
-     end
+	   | [fmt] => fmt  (* singleton aligned blocks reduce to their sole component format *)
+	   | formats' =>
+	       ABLOCK {formats = formats', alignment = alignment, bindent = bindent,
+	               measure = M.measureFormats (sepsize, formats')}
+    end
 
 
 (*** block building functions for non-indenting blocks ***)
@@ -342,5 +351,10 @@ end (* structure NewPP *)
    The first sort can easily be simulated by translating the value list into a format list
    by mapping the formatter over the values.  This seems to be preferabel, so the former sequencing
    functions (formatSeq, formatClosedSeq, tuple, list, alignedList) can be viewed as redundant.
-   [DBM: 2022.10.17].
+   [DBM: 2022.10.17]
+
+   specialBlock and alignedBlock revised so that a block with a single format member reduces to
+   that format.  This prevents trivial nesting of blocks nesting of blocks, e.g. block(block(block(...))).
+   [DBM: 2022.10.24]
+
 *)    
