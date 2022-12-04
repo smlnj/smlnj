@@ -1,9 +1,9 @@
-(*
+(* cm/compile/compile.sml
  * Compilation traversals.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure GP = GeneralParams
@@ -11,7 +11,7 @@ local
     structure GG = GroupGraph
     structure SE = StaticEnv
     structure Pid = PersStamps
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
     structure EM = ErrorMsg
     structure SF = SmlFile
 

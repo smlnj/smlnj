@@ -1,10 +1,11 @@
-(*
+(* cm/parse/parse.sml
  * Parser for CM description files.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
+
 signature PARSE = sig
     val parse : { load_plugin: SrcPath.dir -> string -> bool,
 		  gr: GroupReg.groupreg,
@@ -29,7 +30,7 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 
     val lookAhead = 30
 
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
     structure SR = Source
     structure EM = ErrorMsg
     structure SM = SourceMap

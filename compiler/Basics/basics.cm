@@ -13,12 +13,10 @@ Group
 
 	signature PRINTCONTROL
 	structure Control_Print
-	signature NEW_PP_UTIL
-        structure NewPPUtil
 	structure PrintUtil
 
-	signature NEW_PP
-	structure NewPP
+	signature NEW_PRETTYPRINT
+	structure NewPrettyPrint
 
 	signature SYMBOL
 	signature FASTSYMBOL
@@ -99,16 +97,14 @@ is
 	print/printcontrol.sml
 	print/printutil.sig
 	print/printutil.sml
-        print/newpputil.sig
-        print/newpputil.sml
 
         newpp/format.sml
         newpp/measure.sig
         newpp/measure.sml
         newpp/render.sig
         newpp/render.sml
-        newpp/newpp.sig
-        newpp/newpp.sml
+        newpp/newprettyprint.sig
+        newpp/newprettyprint.sml
 
 	util/wordstr-hashtable.sml
         util/list3.sml

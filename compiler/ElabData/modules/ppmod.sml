@@ -10,17 +10,17 @@
 signature PPMOD =
 sig
 
-  val fmtSignature:  StaticEnv.staticEnv -> Modules.Signature * int -> NewPP.format
+  val fmtSignature:  StaticEnv.staticEnv -> Modules.Signature * int -> NewPrettyPrint.format
 
-  val fmtStructure:  StaticEnv.staticEnv -> Modules.Structure * int -> NewPP.format
+  val fmtStructure:  StaticEnv.staticEnv -> Modules.Structure * int -> NewPrettyPrint.format
 
-  val fmtOpen:  StaticEnv.staticEnv -> SymPath.path * Modules.Structure * int -> NewPP.format
+  val fmtOpen:  StaticEnv.staticEnv -> SymPath.path * Modules.Structure * int -> NewPrettyPrint.format
 
-  val fmtStructureName :  StaticEnv.staticEnv -> Modules.Structure -> NewPP.format
+  val fmtStructureName :  StaticEnv.staticEnv -> Modules.Structure -> NewPrettyPrint.format
 
-  val fmtFunsig :  StaticEnv.staticEnv -> Modules.fctSig * int -> NewPP.format
+  val fmtFunsig :  StaticEnv.staticEnv -> Modules.fctSig * int -> NewPrettyPrint.format
 
-  val fmtBinding:  StaticEnv.staticEnv -> Symbol.symbol * Bindings.binding * int -> NewPP.format
+  val fmtBinding:  StaticEnv.staticEnv -> Symbol.symbol * Bindings.binding * int -> NewPrettyPrint.format
 
 end (* signature PPMOD *)
 
@@ -46,8 +46,7 @@ local
   structure EE = EntityEnv
   structure LU = Lookup
 
-  structure PP = NewPP
-  structure PPU = NewPPUtil
+  structure PP = NewPrettyPrint
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType

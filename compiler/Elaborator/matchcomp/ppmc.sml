@@ -18,7 +18,7 @@ local
    structure AU = AbsynUtil
    structure P = Paths
 
-   structure PP = NewPP
+   structure PP = NewPrettyPrint
    open MCCommon
 
 in

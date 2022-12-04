@@ -2,15 +2,12 @@
 
 (* Version 7
  * -- added memoization for block measure to speed up the measure function
- * -- The prettyprinter is partitioned into a number of structures and signatures: Format, Measure, Render, NewPrettyPrint.
+ * -- The prettyprinter is partitioned into a number of structures and signatures: Format, Measure, Render, NewPP.
  * -- The Format structure defines the types, related to formats: format, separator, element, bindent. 
  *    These types defined as datatypes and are therefore concrete within the Prettyprinter modules, but format
  *    becomes abstract when it is re-exported from NewPP.
  * Version 7.1
- * -- add alignment datatype (partially replacing separator)
- * Version 7.4
- * -- name changes: "separator" --> "break", and SEP --> BRK (element constructor)
- * -- name change: SBLOCK --> BLOCK (format constructor)
+ * -- add alignment datatype (partially replacing separator
  *)
 
 (* Abbreviations:
@@ -18,7 +15,6 @@
 
  (* Format: no signature, exports only datatypes and the one value "alignmentSeparator", which
     could/should be defined in Render?  *)
-
 structure Format = 
 struct
 
@@ -26,12 +22,12 @@ struct
  *  BLOCKS, elements, separators
  * ================================================================================ *)
 
-(* type break:
- * Breaks are used in two ways:
+(* type separator:
+ * Separators are used in two ways:
  *
- *  (1) as explicit separators (turned into "elements" by the BRK constructor) in blocks
- *      (BLOCK constructor);
- *  (2) to determine the "alignment" (horizontal, vertical, or packed) of _aligned_ blocks (ABLOCK constructor).
+ *  (1) as explicit separators (turned into "elements" by the SEP constructor) in special blocks
+ *      (SBLOCK constructor);
+ *  (2) to determine the "alignment" (horizontal, vertical, or packed) of _aligned_ blocks (BLOCK constructor).
  *
  * There are three forms of separators:
  *
@@ -47,7 +43,7 @@ struct
  * A "null" separator (i.e. "no separator") can be represented by Space 0, but this is not really needed,
  * since we can create a special block with no separators at all, containing only formats. This allows us to
  * "tightly" concatenate a sequence of formats so that their layouts will abut one another (see the cblock and
- * ccat functions in NewPrettyPrint).
+ * ccat functions in NewPP).
  *)
 
 (* alignment: alignment mode for "aligned" blocks *)
@@ -58,16 +54,14 @@ datatype alignment  (* the alignment property of "aligned" blocks *)
   | P  (* Packed alignment, with implicit softline separtors between format components *)	
   | C  (* Compact alignment, horizontal with no separators between format components *)
 
-(* breaks: used to separate format elements of a special block and categorize alignment in aligned blocks
+(* separators:  used to separate format elements of a special block and categorize alignment in aligned blocks
  *   separators are concerned only with "formatting" and do not contribute any content *)
-datatype break
+datatype separator
   = HardLine         (* hard line break; rendered as a newline + indent to current block left margin (blm) *)
   | SoftLine of int  (* soft line break (n >= 0); rendered as n spaces, if the line break is not triggered;
 		      * if the line break is triggered because the following format does not fit in remaining
                       * line space, renders as newline + indent to current block left margin (blm) *)
   | Space of int     (* spaces (n >= 0); rendered as n spaces *)
-  | NullBreak        (* a default break that does nothing, i.e. neither breaks a line nor inserts spaces
-		      * This is essentially equivalent to Space 0, but included for logical "completeness". *)
 		
 (* block indents: specify the indentation behavior on entering a block *)
 datatype bindent
@@ -83,17 +77,16 @@ datatype bindent
  *  There are three basic forms of formats that carry the "contents" of a format:
  *
  *  -- TEXT: atomic formats containing a string;
- *  -- ABLOCK: _aligned_ compound blocks of formats, with implicit breaks separating the formats.
- *  -- BLOCK: _basic_ compound blocks of formats, possibly with explicit breaks among the formats.
+ *  -- BLOCK: _aligned_ compound blocks of formats, with implicit "separators" between the formats.
+ *  -- SBLOCK: _special_ compound blocks of formats, possibly with explicit "separators" among the formats.
  *
  *  There are two kinds of blocks:
  *
- *  -- BLOCK: basic blocks, with arbitrary break elements interleaved with format elements,
- *     and an bindent attribute. These are essentually "manually constructed" blocks that allow use of
- *     heterogeneous breaks.
+ *  -- BLOCK: _aligned_ blocks with separator and bindent attributes. The alignment can be horizontal
+ *     (Space separator), vertical (HardLine), or packed (SoftLine).
  *
- *  -- ABLOCK: _aligned_ blocks with break and bindent attributes. The alignment can be horizontal
- *     (Space break), vertical (HardLine), or packed (SoftLine).
+ *  -- SBLOCK: special blocks, with arbitrary separators between format elements, and an bindent attribute;
+ *     These are essentually "manually constructed" blocks that allow use of heterogeneous separators.
  *
  *  Blocks can be "indented" or not, as specified by the bindent field of the block record.
  *  -- A "hard" indented block (with bindent - HI n) always starts on a new line (after a line break),
@@ -121,8 +114,8 @@ datatype bindent
  *  Finally, there is a "conditional" format constructor, ALT (format1, format2). This renders as format1
  *  if it fits, and otherwise renders format2.
  *
- *    Note: See the definition of the "tryFlat" function (in NewPrettyPrint) to see an example
- *    of how FLAT and ALT can be used together.
+ *    Note: See the definition of the "tryFlat" function (in NewPP) to see an example of how FLAT and ALT
+ *    can be used together.
  *
  *    Note: ALT and FLAT are related to Wadler's Union documents and the FlatAlt constructor in recent
  *    Wadler-Leijen prettyprinters. In a format of the form ALT(format1, format2) it will usually be the
@@ -131,24 +124,25 @@ datatype bindent
  *
  *  Normalization of formats [not implemented]:
  *
- *    (1) The list of elements or formats of an BLOCK or ABLOCK could be "normalized" by merging adjacent
- *    TEXT elements and inserting an "empty" TEXT element between adjacent BRKs and inserting null breaks
- *    of the form BRK (NullBreak) between adjacent FMTs, so that the list contains alternating FMT and SEP elements
+ *    (1) The list of elements or formats of an SBLOCK or BLOCK could be "normalized" by merging adjacent
+ *    TEXT elements and inserting an "empty" TEXT element between adjacent SEPs and inserting "empty" separators
+ *    of the form SEP (Space 0) between adjacent FMTs, so that the list contains alternating FMT and SEP elements
  *    with single SEPs occurring as separators between the FMT elements. Such a normalization would also have
- *    a policy for "merging" adjacent BRK elements in BLOCKs. This normalization is probably not needed.
+ *    a policy for "merging" adjacent SEP elements in SBLOCKs. This normalization is probably not needed.
  *
  *    (2) A non-indenting BLOCK with only one element could be replaced by that element without changing anything:
  *
- *        BLOCK {indent = NI, elements = [FMT format]}  ==>  format
+ *        SBLOCK {indent = NI, elements = [FMT format]}  ==>  format
  *
  *    Such reduction rules could also be used in the "normalization" of formats.
  *
- *    (3) We might normalize ABLOCK {formats = nil, ...} to EMPTY. But it is not clear how an empty indented block
- *    should behave: should it produce the newline+indent even if its content is empty?  We will assume not.
+ *    (3) If we add an EMPTY format constructor, representing an empty format that produces no output, we might
+ *    normalize BLOCK {formats = nil, ...} to EMPTY. But it is not clear how an empty indented block should behave:
+ *    should it produce the newline+indent even if its content is empty?
  *
- *    We assume that in a BLOCK with a single element, that element ought to be a FMT, not a BRK, although
- *    there are conceivable uses for BLOCKs containing only breaks, like two HardLines to produce
- *    a blank line in the layout (e.g. BLOCK {formats = [BRK HardLine, BRK HardLine],...}).
+ *    We assume that in a SBLOCK with a single element, that element ought to be a FMT, not a SEP, although
+ *    there are conceivable uses for SBLOCKs containing only separators, like two HardLines to produce
+ *    a blank line in the layout (e.g. SBLOCK {formats = [SEP HardLine, SEP HardLine],...}).
  *
  *  Memoized block measures.
  *    When blocks are constructed, their "flat" measure is memoized in an internal measure: int field.
@@ -159,23 +153,24 @@ datatype bindent
  *    is based only on the structure of the format. [Does this constitute a form of "dynamic programming"?]
  *
  * type element:
- *   The type of elements of a basic block (BLOCK), which can use heterogeneous breaks interleaved in
- *   any way with formats. A BLOCK contains a list of "elements" instead of just a list of sub-formats
- *   to allow for the explicit specification of break elements, which normally will appear between
- *   the sub-formats in the block's elements list. But we allow the cases where all the elements to are formats
- *   or all the elements are breaks. *)
+ *   The type of elements of a special block (SBLOCK), which can use heterogeneous separators interleaved in
+ *   any way with formats. An SBLOCK contains a list of "elements" instead of just a list of sub-formats
+ *   to allow for the explicit specification of separator elements, which normally will appear between
+ *   the sub-formats in the block's elements list. But it is possible for the elements to consist only of
+ *   formats, or even only of separators. *)
 
 (* The formats of an ABLOCK will be reduced, meaning that there will be no empty formats. *)
 
 datatype format (* aka "format" *)
   = EMPTY
       (* empty format; rendering this produces no output, identity for format compositions *)
-  | TEXT of string
+  | TEXT  of string
       (* unique form of atomic doc with content*)
-  | BLOCK of {elements: element list, bindent: bindent, measure: int}
-      (* "basic" or "ad hoc" blocks with explicit break (BRK) elements interleaved with format (FMT) elements *)
-  | ABLOCK of {formats: format list, alignment: alignment, bindent: bindent, measure: int}
-      (* "aligned" blocks *)
+  | SBLOCK of {elements: element list, bindent: bindent, measure: int}
+      (* "special" or "ad hoc" block with explicit separator (SEP) elements mixed with format (FMT) elements *)
+  | ABLOCK of 
+      {formats: format list, alignment: alignment, bindent: bindent, measure: int}
+      (* "normal" blocks, where alignment (H, V, P) is determined by the choice of the separator *)
   | FLAT of format
       (* render (and measure) the format as flat *)
   | ALT of format * format
@@ -183,38 +178,28 @@ datatype format (* aka "format" *)
        * content! But normally they should, or at least content fmt2 << content fmt1. *)
 
 and element  (* components of special blocks *)
-  = BRK of break
+  = SEP of separator
   | FMT of format
 
-(* Why don't we merge format and element into one type?
- * (1) Breaks do not carry "content", whereas formats generally do (except for EMPTY).
- * (2) On general principles, we want to use the type system to express differences (in usage, properties, ...)
- *     whenever possible.  Here we want to express the fact that breaks are subsidiary to formats. They are
- *     elements that are used to construct formats, but they do not acts as formats on their own. Nevertheless,
- *     it is easy to _coerce_ a break to a format: break => BLOCK [BRK break], since we allow basic blocks that
- *     contain only formats. *)
-
-(* alignmentToBreak : alignment -> break
- * -- only value exported from Format (but used only internally, in Render, NewPrettyPrint) *)
-fun alignmentToBreak H = Space 1
-  | alignmentToBreak V = HardLine
-  | alignmentToBreak P = SoftLine 1
-  | alignmentToBreak C = NullBreak
+(* alignmentSeparator : alignment -> separator option
+ * -- only value exported from Format (internal use only, in Render, NewPP) *)
+fun alignmentSeparator H = SOME (Space 1)
+  | alignmentSeparator V = SOME (HardLine)
+  | alignmentSeparator P = SOME (SoftLine 1)
+  | alignmentSeparator C = NONE
 
 end (* structure Format *)
 
 (* NOTES:
 
-  (1) CONTEXT or CONTEXTUAL formats of WL -- not implemented
+  (1) CONTEXT or CONTEXTUAL formats (not implemented). 
 
-    WL has "document" constructors (Column, Next) supporting "render-time" conditional
+    WL has "documenent" constructors (Column, Next) supporting "render-time" conditional
     formatting, using functions over render-time variables like cc and blm (or "current
-    indentation level") to produce a specialized format to be rendered at this point, generating
-    formats (documents) on the fly during rendering.
-
-    The problem with these is that it not clear how to "statically" measure the a format
-    whose layout is produced using render-time information, like the current column (cc),
-    that is not available when measuring the format "statically" (i.e. it is not
-    "structural" information intrinsic to the format itself).
+    indentation level") to produce a specialized format to be rendered at this point. The
+    problem with these is that it not clear how to "statically" measure the a format whose
+    layout is produced using render-time information, like the current column (cc), that is
+    not available when measuring the format "statically" (i.e. it is not "structural" information
+    intrinsic to the format itself).
 
  *)

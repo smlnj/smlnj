@@ -8,23 +8,22 @@
 
 signature PPVAL =
 sig
-  val fmtAccess :       Access.access -> NewPP.format
-  val fmtConrep :       Access.conrep -> NewPP.format
-  val fmtDatacon :      Types.datacon -> NewPP.format
-  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> NewPP.format
-  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> NewPP.format
-  val fmtConBinding :   StaticEnv.staticEnv * Types.datacon -> NewPP.format
-  val fmtVar :          Variable.var -> NewPP.format
-  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> NewPP.format
-  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> NewPP.format
+  val fmtAccess :       Access.access -> NewPrettyPrint.format
+  val fmtConrep :       Access.conrep -> NewPrettyPrint.format
+  val fmtDatacon :      Types.datacon -> NewPrettyPrint.format
+  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> NewPrettyPrint.format
+  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> NewPrettyPrint.format
+  val fmtConBinding :   StaticEnv.staticEnv * Types.datacon -> NewPrettyPrint.format
+  val fmtVar :          Variable.var -> NewPrettyPrint.format
+  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> NewPrettyPrint.format
+  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> NewPrettyPrint.format
 end (* signature PPVAL *)
 
 structure PPVal : PPVAL =
 struct
 
 local
-  structure PP = NewPP
-  structure PPU = NewPPUtil
+  structure PP = NewPrettyPrint
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType

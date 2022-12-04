@@ -1,19 +1,13 @@
-(* compiler/Basics/newpp/newprettyprint.sig *)
+(* sml/Dev/pp/new/new7/newpp.sig *)
 
 (* Version 7.
- *  -- The main interface of the new Prettyprinter.
- *  -- New: memoized measure for blocks (does not alter NEW_PP signature)
- *
- * Version 7.4
- *  -- signature NEW_PP --> NEW_PRETTYPRINT
- *  -- sblock --> block; siblock --> iblock; separator --> break; SEP --> BRK
- *  -- added vHeaders, vHeaderFormats (from NEW_PPUTIL)
- *  -- removed tuple
+ * The main interface of the new Prettyprinter.
+ * New: memoized measure for blocks (does not alter NEW_PP signature)
  *)
 
-(* Defines: signature NEW_PRETTYPRINT *)
+(* Defines: signature NEW_PP *)
 
-signature NEW_PRETTYPRINT =
+signature NEW_PP =
 sig
 
   (* types *)
@@ -21,60 +15,57 @@ sig
     type format  (* abstract, defined in Format structure *)
 
     datatype alignment  (* the alignment property of "aligned" blocks *)
-      = H  (* Horizontal alignment, with implicit single space breaks between format components, unbreakable *)
+      = H  (* Horizontal alignment, with implicit single space separtors between format components, unbreakable *)
       | V  (* Vertical alignment, with implicit hardline separtors between format components *)
       | P  (* Packed alignment, with implicit softline separtors between format components *)
       | C  (* compact, no separators between block format elements, unbreakable *)
 
-    datatype break  (* used to separate doc elements of a block; conditional and unconditional line breaks *)
+    datatype separator  (* used to separate doc elements of a block *)
       = HardLine         (* hard line break *)
       | SoftLine of int  (* soft line break; rendered to n spaces when not triggered; n >= 0 *)
-      | Space of int     (* n spaces; n >= 0; Space 0 == NullBreak *)
-      | NullBreak        (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
-			  * This is essentially equivalent to Space 0, but included for logical "completeness",
-			  * and also eliminates the need for break option in some places (alignmentToBreak). *)
+      | Space of int     (* n spaces; n >= 0 *)
 
     datatype element
-      = BRK of break   (* breaks are atomic and do not contain content *)
+      = SEP of separator  (* separators are _not_, and do not contain, content *)
       | FMT of format
 
     (* block indents: specify the indentation behavior on entering a block *)
     datatype bindent
-      = NI          (* No Indent *)
+      = NI          (* No indent *)
       | HI of int   (* Hard Indent: always taken, supplying its own newline+indent if necessary *)
       | SI of int   (* Soft Indent: taken only if the block is preceded by a newline+indent *)
 
 
   (* Basic formats and format building operations: *)
 
-    val empty   : format           (* == EMPTY, renders as empty string, composition identity *)
-    val text    : string -> format (* == the TEXT format constructor *)
-    val integer : int -> format    (* integer n renders as Int.toString n *)
-    val string  : string -> format (* previously used PrintUtil.formatString, adds double quotes *)
-    val char    : char -> format   (* c --> #"c" *)
-    val bool    : bool -> format   (* true --> TEXT "true", false --> TEXT "false" *)
+    val empty : format           (* == EMPTY, renders as empty string, composition identity *)
+    val text : string -> format  (* == the TEXT format constructor *)
+    val integer : int -> format  (* integer n renders as Int.toString n *)
+    val string : string -> format (* previously used PrintUtil.formatString, adds double quotes *)
+    val char : char -> format    (* c --> #"c" *)
+    val bool : bool -> format    (* true --> TEXT "true", false --> TEXT "false" *)
 
-    (* block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
-    (* basicBlock -- the elements may include explicit separators *)
+    (* basic block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
+    (* specialBlock -- the elements may include explicit separators *)
 
-    val basicBlock : bindent -> element list -> format
+    val specialBlock : bindent -> element list -> format
     val alignedBlock : alignment -> bindent -> format list -> format
 
     (* nonindented aligned blocks: bindent = NI *)
 
-    val block  : element list -> format  (* = basicBlock NI *)
-    val hblock : format list  -> format  (* = alignedBlock H NI *)
-    val vblock : format list  -> format  (* = alignedBlock V NI *)
-    val pblock : format list  -> format  (* = alignedBlock P NI *)
-    val cblock : format list  -> format  (* = alignedBlock C NI *)
+    val sblock : element list -> format  (* = specialBlock NI *)
+    val hblock : format list -> format   (* = alignedBlock H NI *)
+    val vblock : format list -> format   (* = alignedBlock V NI *)
+    val pblock : format list -> format   (* = alignedBlock P NI *)
+    val cblock : format list -> format   (* = alignedBlock C NI *)
 
     (* (possibly) indented blocks -- bindent specified as curried first argument *)
 
-    val iblock  : bindent -> element list -> format  (* = basicBlock *)
-    val hiblock : bindent -> format list  -> format  (* = alignedBlock H *)
-    val viblock : bindent -> format list  -> format  (* = alignedBlock V *)
-    val piblock : bindent -> format list  -> format  (* = alignedBlock P *)
-    val ciblock : bindent -> format list  -> format  (* = alignedBlock C *)
+    val siblock : bindent -> element list -> format  (* = specialBlock *)
+    val hiblock : bindent -> format list -> format   (* = alignedBlock H *)
+    val viblock : bindent -> format list -> format   (* = alignedBlock V *)
+    val piblock : bindent -> format list -> format   (* = alignedBlock P *)
+    val ciblock : bindent -> format list -> format   (* = alignedBlock C *)
 
     (* a few "punctuation" characters as formats *)
 
@@ -100,14 +91,14 @@ sig
 
     val hcat : format * format -> format
         (* combinds two formats in an H block, with an implicit single space
-         * (Space 1 break) between them *)
+         * (Space 1 separator) between them *)
 
     val vcat : format * format -> format
         (* combinds two formats in an V block, with an implicit hard line break
-         * (HardLine) between them *)
+         * (HardLine separator) between them *)
 
     val ccat : format * format -> format
-        (* combinds two formats in a C block, with no separator (NullBreak) between them;
+        (* combinds two formats in a C block, with no separator between them;
          * a binary version of cblock *)
 
 
@@ -122,6 +113,7 @@ sig
     val brackets : format -> format
         (* like parens, but with lbracket and rbracket *)
 
+
     val braces : format -> format
         (* like parens, but with lbrace and rbrace *)
 
@@ -134,7 +126,7 @@ sig
   (* composing lists of formats *)
 
     val sequence : alignment -> format -> format list -> format
-        (* sequence a break fmts: inserts break between constituent fmts and aligns by a *)
+        (* sequence a sep fmts: inserts sep between constituent fmts and aligns by a *)
 
     (* aligned sequence formatters, first argument is sep format, e.g. comma *)
     val hsequence : format -> format list -> format  (* = sequence H *)
@@ -164,18 +156,13 @@ sig
 	-> 'a list
 	-> format
 
+    val tuple : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
+
     val list : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
 
     val alignedList : alignment -> ('a -> format) -> 'a list -> format
 
     val option : ('a -> format) -> 'a option -> format
-
-
-  (* vertical alignment with header strings *)
-
-    val vHeaders : {header1: string, header2: string, formatter: 'a -> format} -> 'a list -> format
-
-    val vHeaderFormats : {header1: string, header2: string} -> format list -> format
 
 
   (* indenting formats *)
@@ -197,7 +184,7 @@ sig
 	   NOTE: the two argument formats may not have the same content! But usually they should! *)
 
     val hvblock : format list -> format
-	(* acts as hblock if it fits, otherwise as vblock *)
+	(* hblock if it fits, otherwise vblock *)
 
 
   (* functions used to define and access the line width *)
@@ -209,7 +196,7 @@ sig
 	(* reset the lineWidthFun to the default lineWidthFun (which returns 90) *)
 
     val getLineWidth : unit -> int
-	(* returns the current line width, the value returned by the current lineWidthFun *)
+	(* returns the current line width *)
 
 
   (* Printing formats *)
@@ -220,9 +207,9 @@ sig
         (* printing to stdOut, with line width as first argument *)
 
     val printFormat : format -> unit
-        (* print to stdOut with lineWidth = getLineWidth (), (typically = !Control.Print.lineWidth) *)
+        (* print to stdOut with lineWidth = !Control.Print.lineWidth *)
 
     val printFormatNL : format -> unit
 	(* like printFormat, but with newline appened *)
 
-end (* end NEW_PRETTYPRINT *)
+end (* end NEW_PP *)

@@ -6,7 +6,7 @@
 
 signature PPDEC =
 sig
-  val fmtDec : Environment.environment -> (Absyn.dec * LambdaVar.lvar list) -> NewPP.format
+  val fmtDec : Environment.environment -> (Absyn.dec * LambdaVar.lvar list) -> NewPrettyPrint.format
 end (* signature PPDEC *)
 
 structure PPDec : PPDEC =
@@ -22,8 +22,7 @@ local
   structure AS = Absyn
   structure T = Types
   structure M = Modules
-  structure PP = NewPP
-  structure PPU = NewPPUtil
+  structure PP = NewPrettyPrint
   structure PPT = PPType
   structure PPS = PPSymbols
   structure PPP = PPSymPaths

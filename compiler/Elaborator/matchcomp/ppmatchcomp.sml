@@ -11,7 +11,7 @@ struct
 
 local (* top local *)
 
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure LV = LambdaVar
   structure A = Access
   structure V = Variable

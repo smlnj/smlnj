@@ -17,7 +17,7 @@ local
   structure LB = LtyBasic
   structure LKC = LtyKindChk
   structure PO = Primop     (* really should not refer to this *)
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
 
   val wrdebugging = FLINT_Control.wrdebugging
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)

@@ -7,20 +7,20 @@
 signature PPABSYN =
 sig
 
-  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> NewPP.format
+  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> NewPrettyPrint.format
   val fmtExp  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.exp * int -> NewPP.format
+                -> Absyn.exp * int -> NewPrettyPrint.format
   val fmtRule : StaticEnv.staticEnv * Source.source option
-                -> Absyn.rule * int -> NewPP.format
+                -> Absyn.rule * int -> NewPrettyPrint.format
   val fmtVB   : StaticEnv.staticEnv * Source.source option
-                -> Absyn.vb * int -> NewPP.format
+                -> Absyn.vb * int -> NewPrettyPrint.format
   val fmtRVB  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.rvb * int -> NewPP.format
+                -> Absyn.rvb * int -> NewPrettyPrint.format
   val fmtDec  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.dec * int -> NewPP.format
+                -> Absyn.dec * int -> NewPrettyPrint.format
 
   val fmtStrexp : StaticEnv.staticEnv * Source.source option
-                 -> Absyn.strexp * int -> NewPP.format
+                 -> Absyn.strexp * int -> NewPrettyPrint.format
 
 end (* signature PPABSYN *)
 
@@ -44,8 +44,7 @@ local
   structure SE = StaticEnv
   structure SR = Source
   structure SM = SourceMap
-  structure PP = NewPP
-  structure PPU = NewPPUtil
+  structure PP = NewPrettyPrint
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType
@@ -194,8 +193,9 @@ fun fmtPat env (pat, depth) =
 				    in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
 				   end
 			      end
+			  | SOME _ => bug "AU.destTuplePat returned bad result"
 			  | NONE =>  (* argPat is not a tuple pat or does not have two elements *)
-			      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
+	x		      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
 		  | F.NONfix =>
 		      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
 	  | fmtPat' (CONSTRAINTpat (pat,t), lpull, rpull, d) =
@@ -234,7 +234,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 
 	and fmtMatch (lead: string, rules: rule list, d: int) : PP.format =
 	    if d <= 0 then PP.text "<match>" else
-	    PPU.vHeaderFormats {header1 = lead, header2 = "|"}
+	    PP.vHeaderFormats {header1 = lead, header2 = "|"}
 			       (map (fn rule => fmtRule (rule, d-1)) rules)
 
 	and fmtSRule (SRULE (con, _, exp) : srule, d: int) : PP.format =
@@ -244,7 +244,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	and fmtSMatch (srules : srule list, defaultOp: exp option, d: int) : PP.format =
 	    if d <= 0 then PP.text "<smatch>" else
 	    let val d' = d - 1
-	     in PPU.vHeaderFormats {header1 = "of", header2 = " |"}
+	     in PP.vHeaderFormats {header1 = "of", header2 = " |"}
                    ((map (fn srule => fmtSRule (srule, d')) srules) @
 		    (case defaultOp
 		       of NONE => nil
@@ -308,29 +308,30 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 			 PP.hcat (fmtExp' (rator, lpull, 1000, d-1),
 				  fmtExp' (rand, 1000, rpull, d-1))
 		     | F.INfix (left, right) => 
-		       let val SOME [name] = pathOp
-			in case AU.destTupleExp (AU.headStripExp rand)
-			     of SOME [leftArg, rightArg] =>
-			        let val appFmt =  
-					PP.pblock [fmtExp' (leftArg, lpull, left, d-1),
-						   PPS.fmtSym name,
-						   fmtExp' (rightArg, right, rpull, d-1)]
-				in if lpull >= left orelse rpull > right
-				   then (* have to parenthsize to hold on to args *)
-				     let val leftFmt = fmtExp' (leftArg, 0, left, d-1)
-					 val rightFmt = fmtExp' (rightArg, right, 0, d-1)
-				      in PP.parens (PP.pblock [leftFmt, PPS.fmtSym name, rightFmt])
-				     end
-				   else (* can hold both args against outer pulls *)
-				     let val leftFmt = fmtExp' (leftArg, lpull, left, d-1)
-					 val rightFmt = fmtExp' (rightArg, right, rpull, d-1)
-				      in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
-				     end
-				end
-			     | _ =>  (* rand is not a pair *)
-			       PP.hcat (fmtExp' (rator, lpull, 1000, d-1),
-					fmtExp' (rand, 1000, rpull, d-1))
-		       end
+			 let val SOME [name] = pathOp
+			  in case AU.destTupleExp (AU.headStripExp rand)
+			       of SOME [leftArg, rightArg] =>
+				  let val appFmt =  
+					  PP.pblock [fmtExp' (leftArg, lpull, left, d-1),
+						     PPS.fmtSym name,
+						     fmtExp' (rightArg, right, rpull, d-1)]
+				  in if lpull >= left orelse rpull > right
+				     then (* have to parenthsize to hold on to args *)
+				       let val leftFmt = fmtExp' (leftArg, 0, left, d-1)
+					   val rightFmt = fmtExp' (rightArg, right, 0, d-1)
+					in PP.parens (PP.pblock [leftFmt, PPS.fmtSym name, rightFmt])
+				       end
+				     else (* can hold both args against outer pulls *)
+				       let val leftFmt = fmtExp' (leftArg, lpull, left, d-1)
+					   val rightFmt = fmtExp' (rightArg, right, rpull, d-1)
+					in PP.pblock [leftFmt, PPS.fmtSym name, rightFmt]
+				       end
+				  end
+				| SOME _ => bug "AU.destTupleExp returned bad arg for binary app"
+				| NONE =>  (* rand is not a pair *)
+				    PP.hcat (fmtExp' (rator, lpull, 1000, d-1),
+					     fmtExp' (rand, 1000, rpull, d-1))
+			 end
 	      end
 
 	  | fmtExp' (CONSTRAINTexp(exp, ty), lpull, rpull, d) =
@@ -425,10 +426,10 @@ and fmtVARSEL (var1, var2, index) =
 and fmtDec (context as (env,sourceOp)) (dec, depth) =
     let fun fmtDec' (dec, 0) = PP.text (decTag dec)  (* "<dec>" *)
           | fmtDec' (VALdec vbs, d) =
-	      PPU.vHeaderFormats {header1 = "val", header2 = "and"}
+	      PP.vHeaderFormats {header1 = "val", header2 = "and"}
 	        (map (fn vb => fmtVB context (vb,d-1)) vbs)
           | fmtDec' (VALRECdec rvbs, d) =
-	      PPU.vHeaderFormats {header1 = "val rec", header2 = "and"}
+	      PP.vHeaderFormats {header1 = "val rec", header2 = "and"}
 	        (map (fn rvb => fmtRVB context (rvb,d-1)) rvbs)
 	  | fmtDec' (DOdec exp, d) =
 	      PP.hcat (PP.text "do", fmtExp context (exp,d-1))
@@ -437,7 +438,7 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 		    PP.hblock [PPT.fmtFormals arity, PPP.fmtTycName path,
 			       PP.equal, PPT.fmtType env body]
 		  | fmtDEFtyc _ = bug "fmtDEFtyc"
-	     in PPU.vHeaderFormats {header1 = "type", header2 = "and"}
+	     in PP.vHeaderFormats {header1 = "type", header2 = "and"}
  	          (map fmtDEFtyc tycs)
 	    end
           | fmtDec' (DATATYPEdec{datatycs,withtycs}, d) =
@@ -462,9 +463,9 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 		  | fmtWITHTYPE _ = bug "fmtDec'(DATATYPEdec) 3"
 	     in (* could call PPDec.fmtDec here *)
 	        PP.vcat
-		  (PPU.vHeaderFormats {header1 = "datatype", header2 = "and"}
+		  (PP.vHeaderFormats {header1 = "datatype", header2 = "and"}
                      (map fmtDATATYPE datatycs),
-	           PPU.vHeaderFormats {header1 = "withtype", header2 = "and"}
+	           PP.vHeaderFormats {header1 = "withtype", header2 = "and"}
                      (map fmtWITHTYPE withtycs))
 	    end
         | fmtDec' (ABSTYPEdec _, _) = PP.text "<ABSTYPEdec>"
@@ -477,21 +478,23 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 			   | SOME ty' => PP.hcat (PP.text "of", PPT.fmtType env ty'))
 		  | fmtEB (EBdef{exn=T.DATACON{name,...}, edef=T.DATACON{name=dname,...}}) =
 		      PP.hblock [PPS.fmtSym name, PP.equal, PPS.fmtSym dname]
-	     in PPU.vHeaderFormats {header1 = "exception", header2 = "and"} (map fmtEB ebs)
+	     in PP.vHeaderFormats {header1 = "exception", header2 = "and"} (map fmtEB ebs)
 	    end
         | fmtDec' (STRdec sbs,d) =
-	    let fun fmtSTRB (STRB{name, str=M.STR { access, ... }, def}) =
+	    let fun fmtSTRB (STRB {name, str=M.STR { access, ... }, def}) =
 		    PP.pcat (PP.hblock [PPS.fmtSym name, PPV.fmtAccess access, PP.equal],
 			     fmtStrexp context (def, d-1))
+		  | fmtSTRB (STRB {name, str = M.ERRORstr, ...}) =
+		    PP.hblock [PPS.fmtSym name, PP.equal, PP.text "<unbound>"]
 		  | fmtSTRB _ = bug "fmtDec:STRdec:STRB"
-	     in PPU.vHeaderFormats {header1 = "structure", header2 = "and"} (map fmtSTRB sbs)
+	     in PP.vHeaderFormats {header1 = "structure", header2 = "and"} (map fmtSTRB sbs)
 	    end
         | fmtDec' (FCTdec fbs,d) =
 	    let fun fmtFCTB (FCTB{name=fname, fct=M.FCT { access, ... }, def}) =
                       PP.pcat (PP.hblock [PPS.fmtSym fname, PPV.fmtAccess access, PP.equal],
 			       fmtFctexp context (def,d-1))
 		  | fmtFCTB _ = bug "fmtDec':FCTdec"
-	     in PPU.vHeaderFormats {header1 = "functor", header2 = "and"} (map fmtFCTB fbs)
+	     in PP.vHeaderFormats {header1 = "functor", header2 = "and"} (map fmtFCTB fbs)
 	    end
         | fmtDec' (SIGdec sigvars, d) =
 	    let fun fmtSIG (M.SIG { name, ... }) =

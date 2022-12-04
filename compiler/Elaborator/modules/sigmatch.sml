@@ -31,7 +31,7 @@ local
   structure TU = TypesUtil
   structure SM = SourceMap
   structure EM = ErrorMsg
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPT = PPType
   structure PPS = PPSymbols
 
@@ -709,8 +709,7 @@ let
              | VALspec{spec=spectyp, ...} =>
                 ((case (MU.getSpec(strElements, sym))
                    of VALspec{spec=acttyp, slot=actslot} =>
-                     let
-                         val _ =
+                     let val _ =
                              (debugPrint ("spectype[0]", PPT.fmtType statenv spectyp);
                               debugPrint ("acttyp[0]", PPT.fmtType statenv acttyp))
 
@@ -727,18 +726,18 @@ let
                           of NONE => matchErr NONE
                            | SOME (btvs,ptvs) =>
                              let val _ =
-				   if !debugging then
-                                     PP.printFormatNL
-				       (PP.vcat
-                                          (PP.label "###SM:" (PPS.fmtSym sym),
-					   PP.viblock (PP.HI 2) 
-					     [PP.label "spectype:" (PPT.fmtType statenv spectyp),
-					      PP.label "acttyp:" (PPT.fmtType statenv acttyp),
-					      PP.label "ptvs:" 
-						(PP.tuple (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs),
-					      PP.label "btvs:"
-						(PP.tuple (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs)]))
-				       else ()
+				   if !debugging
+                                   then PP.printFormatNL
+					  (PP.vcat
+					     (PP.label "###SM:" (PPS.fmtSym sym),
+					      PP.viblock (PP.HI 2) 
+						[PP.label "spectype:" (PPT.fmtType statenv spectyp),
+						 PP.label "acttyp:" (PPT.fmtType statenv acttyp),
+						 PP.label "ptvs:" 
+						   (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs)),
+						 PP.label "btvs:"
+						   (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs))]))
+				   else ()
 
                                  val spath = SP.SPATH[sym]
                                  val actvar = V.VALvar{path=spath, typ=ref acttyp,

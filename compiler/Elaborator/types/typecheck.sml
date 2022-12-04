@@ -38,7 +38,7 @@ local
   structure EU = ElabUtil
   structure ED = ElabDebug
   structure SM = SourceMap
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPSM = PPSourceMap
   structure PPS = PPSymbols
   structure PPT = PPType

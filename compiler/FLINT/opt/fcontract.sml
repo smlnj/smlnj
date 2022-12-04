@@ -229,7 +229,7 @@ struct
     structure F  = FLINT
     structure FU = FlintUtil
     structure PU = PrintUtil
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
     structure PPF = PPFlint
     structure OU = OptUtils
     structure PO = Primop

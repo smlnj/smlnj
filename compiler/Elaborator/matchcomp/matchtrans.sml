@@ -23,7 +23,7 @@ local
   structure AU = AbsynUtil
   structure SE = StaticEnv
   structure EU = ElabUtil
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPA = PPAbsyn
   structure MU = MCUtil
   structure MC = MatchComp

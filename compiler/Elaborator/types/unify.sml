@@ -36,7 +36,7 @@ local
   structure T = Types
   structure TU = TypesUtil
   structure OLC = OverloadClasses
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPT = PPType
   structure ED = ElabDebug
   open Types

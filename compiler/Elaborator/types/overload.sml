@@ -31,7 +31,7 @@ local
     structure TU = TypesUtil
     structure SE = StaticEnv
     structure ED = ElabDebug
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
     structure PPS = PPSymbols
     structure PPT = PPType
     structure Ty = Types

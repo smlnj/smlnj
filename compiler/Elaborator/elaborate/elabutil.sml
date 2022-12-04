@@ -23,7 +23,7 @@ local (* top local *)
   structure S = Symbol
   structure V = Variable
   structure BT = BasicTypes
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
 
   open Symbol Absyn Ast ErrorMsg PrintUtil AstUtil Types BasicTypes
        EqTypes ModuleUtil TypesUtil Variable

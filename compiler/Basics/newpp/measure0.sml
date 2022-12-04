@@ -7,8 +7,6 @@
    -- BLOCK --> ABLOCK
  * Version 7.3
    -- added EMPTY block constructor in measure function
- * Version 7.4
-   -- separator --> break; SEP --> BRK; SBLOCK --> BLOCK
  *)
 
 structure Measure : MEASURE =
@@ -38,21 +36,19 @@ fun measure (format: format) =
     case format
       of EMPTY => 0
        | TEXT s => size s
-         (* atomic formats *)
-       | BLOCK {measure, ...} => measure
-         (* basic blocks *)
+       (* special blocks *)
+       | SBLOCK {measure, ...} => measure
+       (* ordinary (moded) blocks *)
        | ABLOCK {measure, ...} => measure
-	 (* aligned blocks *)
        | FLAT format => measure format
        | ALT (format1, format2) => measure format1
          (* measure the first format, which will normally be the wider one,
 	  * alternatively, measure both arguments and return the max of the two measures. *)
 
-fun measureElement (BRK break) =
-    (case break
+fun measureElement (SEP sep) =
+    (case sep
       of HardLine => 1
-       | (SoftLine n | Space n) => n  (* measured as n spaces, since flat rendered as n spaces *)
-       | NullBreak => 0)
+       | (SoftLine n | Space n) => n)  (* measured as n spaces, since flat rendered as n spaces *)
   | measureElement (FMT format) = measure format
 
 fun measureElements elements =
@@ -63,11 +59,11 @@ fun measureElements elements =
     end
 
 (* measureFormats : (int * format list) -> int *)
-fun measureFormats (breaksize: int, formats: format list) =
+fun measureFormats (sepsize: int, formats: format list) =
     let fun mFormats (nil, n) = n
           | mFormats ([format], n) = measure format + n
           | mFormats (format :: rest, n) =  (* rest not null *)
-              mFormats (rest, measure format + breaksize + n)  (* add breaksize for virtual separator, if any *)
+              mFormats (rest, measure format + sepsize + n)  (* add sepsize for virtual separator, in any *)
      in mFormats (formats, 0)
     end
 

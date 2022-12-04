@@ -1,11 +1,11 @@
-(* stabilize.sml
+(* cm/stable/stabilize.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Reading, generating, and writing stable libraries.
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 
 local
@@ -13,7 +13,7 @@ local
     structure GG = GroupGraph
     structure EM = ErrorMsg
 
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
     structure SM = SourceMap
     structure GP = GeneralParams
     structure Pid = PersStamps

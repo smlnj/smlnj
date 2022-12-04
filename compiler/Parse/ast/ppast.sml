@@ -16,8 +16,7 @@ local
   structure SR = Source
   structure SM = SourceMap
 
-  structure PP = NewPP
-  structure PPU = NewPPUtil
+  structure PP = NewPrettyPrint
   structure PPS = PPSymbols  (* fmtSym, fmtSymList *)
   structure PPSM = PPSourceMap
 
@@ -137,7 +136,7 @@ and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
             PP.parens
 	      (PP.vcat
 		 (PP.hcat (PP.text "case", fmtExp' (expr, d-1)),
-	          PPU.vHeaders {header1 = "of ", header2 ="   | ",
+	          PP.vHeaders {header1 = "of ", header2 ="   | ",
 			       formatter = (fn r => fmtRule (r,d-1))}
 			      rules))
 	| fmtExp' (LetExp {dec, expr}, d) =
@@ -169,7 +168,7 @@ and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
 	| fmtExp' (ListExp exps, d) =
 	    PP.list (fn exp => fmtExp' (exp, d-1)) exps
 	| fmtExp' (TupleExp exps, d) =
-	    PP.tuple (fn exp => (fmtExp' (exp, d-1))) exps
+	    PP.tupleFormats (map (fn exp => (fmtExp' (exp, d-1))) exps)
 	| fmtExp' (SelectorExp name, d) =
 	    PP.ccat (PP.text "#", PPS.fmtSym name)
 	| fmtExp' (ConstraintExp {expr,constraint}, d) =
@@ -178,7 +177,7 @@ and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
 	    PP.vcat
 	      (fmtExp' (expr, d-1),
 	       PP.hcat (PP.text "handle",
-			PPU.vHeaderFormats {header1 = "  ", header2 = "| "}
+			PP.vHeaderFormats {header1 = "  ", header2 = "| "}
 		          (map (fn r => fmtRule (r,d-1)) rules)))
 	| fmtExp' (RaiseExp exp, d) =
 	    PP.hcat (PP.text "raise", fmtExpClosed (exp, d-1))
@@ -319,15 +318,15 @@ and fmtSigExp sourceOp =
 	       (fmtSigExp' (sign, d),
 		(case sign
 		   of VarSig s =>
-			PPU.vHeaders {header1 = "where ", header2 = "and",
+			PP.vHeaders {header1 = "where ", header2 = "and",
 				     formatter = (fn r => fmtWhereSpec sourceOp (r,d-1))}
 				    wherel
 		    | MarkSig(VarSig s, r) =>
-			PPU.vHeaders {header1 = "where", header2 = "and",
+			PP.vHeaders {header1 = "where", header2 = "and",
 				     formatter = (fn r => fmtWhereSpec sourceOp (r,d-1))}
 				    wherel
 		    | _ =>
-			PPU.vHeaders {header1 = "where", header2 = "and",
+			PP.vHeaders {header1 = "where", header2 = "and",
 				     formatter = (fn r => fmtWhereSpec sourceOp (r,d-1))}
 				    wherel))
 	  | fmtSigExp'(BaseSig [],d) = PP.hcat (PP.text "sig", PP.text "end")
@@ -383,19 +382,19 @@ and fmtSpec sourceOp (spec, d) =
 			  of SOME ty => PP.hblock [front, PP.equal, fmtTy sourceOp (ty, d)]
 			   | NONE => front)
 		    end
-	     in PPU.vHeaders {header1 = "text", header2 = "and", formatter = formatter} stto_list
+	     in PP.vHeaders {header1 = "text", header2 = "and", formatter = formatter} stto_list
 	    end
 
 	| fmtSpec' (FctSpec sf_list, d) =
 	  let fun formatter (symbol, fsigexp) =
                     PP.hblock [PPS.fmtSym symbol, PP.colon, fmtFsigExp sourceOp (fsigexp, d-1)]
-	   in PPU.vHeaders {header1 = "functor", header2 = "and", formatter = formatter} sf_list
+	   in PP.vHeaders {header1 = "functor", header2 = "and", formatter = formatter} sf_list
 	  end
 
 	| fmtSpec' (ValSpec st_list, d) =
 	  let fun formatter (symbol, ty) =
                   PP.hblock [PPS.fmtSym symbol, PP.colon, fmtTy sourceOp (ty, d)]
-	   in PPU.vHeaders {header1 = "val", header2 = "and", formatter = formatter} st_list
+	   in PP.vHeaders {header1 = "val", header2 = "and", formatter = formatter} st_list
 	  end
 
         | fmtSpec' (DataReplSpec(name,path), d) =
@@ -405,15 +404,15 @@ and fmtSpec sourceOp (spec, d) =
 
 	| fmtSpec' (DataSpec{datatycs,withtycs=[]}, d) =
 	    let fun formatter dbing = fmtDb sourceOp (dbing, d)
-	     in PPU.vHeaders {header1 = "datatype", header2 = "and", formatter = formatter} datatycs
+	     in PP.vHeaders {header1 = "datatype", header2 = "and", formatter = formatter} datatycs
 	    end
 
 	| fmtSpec' (DataSpec {datatycs, withtycs}, d) =
 	    let fun fmtd dbing = (fmtDb sourceOp (dbing, d))
 		fun fmtw tbing = (fmtTb sourceOp (tbing, d))
 	     in PP.vcat
-		 (PPU.vHeaders {header1 = "datatype", header2 = "and", formatter = fmtd} datatycs,
-		  PPU.vHeaders {header1 = "withtype", header2 = "and", formatter = fmtw} withtycs)
+		 (PP.vHeaders {header1 = "datatype", header2 = "and", formatter = fmtd} datatycs,
+		  PP.vHeaders {header1 = "withtype", header2 = "and", formatter = fmtw} withtycs)
 	    end
 
 	| fmtSpec' (ExceSpec sto_list, d) =
@@ -422,14 +421,14 @@ and fmtSpec sourceOp (spec, d) =
 		    of SOME ty =>
                          PP.hblock [PPS.fmtSym symbol, PP.colon, fmtTy sourceOp (ty, d)]
 		     | NONE =>  PPS.fmtSym symbol)
-	   in PPU.vHeaders {header1 = "exception", header2 = "and", formatter = fmtr} sto_list
+	   in PP.vHeaders {header1 = "exception", header2 = "and", formatter = fmtr} sto_list
 	  end
 
 	| fmtSpec' (ShareStrSpec paths, d) =
-            PPU.vHeaders {header1 = "sharing", header2 = "=", formatter = fmtPath} paths
+            PP.vHeaders {header1 = "sharing", header2 = "=", formatter = fmtPath} paths
             
         | fmtSpec' (ShareTycSpec paths, d) =
-            PPU.vHeaders {header1 = "sharing type", header2 = "=", formatter = fmtPath} paths
+            PP.vHeaders {header1 = "sharing type", header2 = "=", formatter = fmtPath} paths
 
 	| fmtSpec' (IncludeSpec sigexp, d) = fmtSigExp sourceOp (sigexp, d)
 
@@ -443,17 +442,17 @@ and fmtDec sourceOp (dec, depth) =
 	fun fmtTypeBind (tbing, d) = (fmtTb sourceOp (tbing, d))
 	fun fmtDec' (_, 0) = PP.text "<dec>"
 	  | fmtDec' (ValDec (vbs, tyvars), d) =
-	     PPU.vHeaderFormats {header1 = "val", header2 = "and"}
+	     PP.vHeaderFormats {header1 = "val", header2 = "and"}
 	       (map (fn vb => fmtVb sourceOp (vb, d-1)) vbs)
 
 	  | fmtDec' (ValrecDec (rvbs, tyvars), d) =
-	     PPU.vHeaderFormats {header1 = "val rec", header2 = "and"}
+	     PP.vHeaderFormats {header1 = "val rec", header2 = "and"}
 	       (map (fn rvb => fmtRvb sourceOp (rvb, d-1)) rvbs)
 
 	  | fmtDec' (DoDec exp, d) = PP.label "do" (fmtExp sourceOp (exp,d-1))
 
 	  | fmtDec' (FunDec (fbs,tyvars), d) =
-	     PPU.vHeaderFormats {header1 = "fun", header2 = "and"}
+	     PP.vHeaderFormats {header1 = "fun", header2 = "and"}
 	       (map (fn fb => fmtFb sourceOp (fb, d-1)) fbs)
 
 	  | fmtDec' (TypeDec tycs, d) =
@@ -492,11 +491,11 @@ and fmtDec sourceOp (dec, depth) =
 	      PP.pblock (map (fn eb => fmtEb sourceOp (eb,d-1)) ebs)
 
 	  | fmtDec' (StrDec strbs, d) =
-	      PPU.vHeaderFormats {header1 = "structure", header2 = "and"}
+	      PP.vHeaderFormats {header1 = "structure", header2 = "and"}
 		(map (fn strb => fmtStrb sourceOp (strb, d-1)) strbs)
 
 	  | fmtDec' (FctDec fctbs, d) =
-	      PPU.vHeaderFormats {header1 = "functor", header2 = "and"}
+	      PP.vHeaderFormats {header1 = "functor", header2 = "and"}
 		(map (fn fctb => fmtFctb sourceOp (fctb,d)) fctbs)
 
 	  | fmtDec' (SigDec sigbs, d) =
@@ -504,12 +503,12 @@ and fmtDec sourceOp (dec, depth) =
 		        PP.vcat (PP.hcat (PPS.fmtSym fname, PP.equal),
 				 PP.hardIndent 4 (fmtSigExp sourceOp (def,d)))
 		    | fmt (MarkSigb(sigb,r)) = fmt sigb
-	       in PPU.vHeaderFormats {header1 = "signature", header2 = "and"}
+	       in PP.vHeaderFormats {header1 = "signature", header2 = "and"}
 		    (map fmt sigbs)
 	      end
 
 	  | fmtDec' (FsigDec fsigbs, d) =
-	      PPU.vHeaderFormats {header1 = "funsig", header2 = "and"}
+	      PP.vHeaderFormats {header1 = "funsig", header2 = "and"}
                 (map (fn fsigb => fmtFsigb sourceOp (fsigb, d)) fsigbs)
 
 	  | fmtDec' (LocalDec(inner,outer), d) =
@@ -576,7 +575,7 @@ and fmtFb sourceOp (fb, d) =
     if d <= 0 then PP.text "<FunBinding>" else
     (case fb
        of Fb (clauses, ops) =>
-              PPU.vHeaderFormats {header1 = "", header2 = "|"}
+              PP.vHeaderFormats {header1 = "", header2 = "|"}
 	       (map (fn (cl: clause) => (fmtClause sourceOp (cl,d))) clauses)
 	| MarkFb (fb, _) => fmtFb sourceOp (fb, d))
 
@@ -699,7 +698,7 @@ and fmtTy sourceOp (ty, d) =
 	    PP.psequence (PP.text "*") (map (fn ty => fmtTy sourceOp (ty, d)) tys)
 	| fmtTy' (MarkTy (ty,_), d) = fmtTy sourceOp (ty, d)
 
-      and fmtTypeArgs (tys, d) = PP.tuple (fn ty => fmtTy' (ty, d)) tys
+      and fmtTypeArgs (tys, d) = PP.tupleFormats (map (fn ty => fmtTy' (ty, d)) tys)
 
    in fmtTy' (ty, d)
   end
@@ -729,6 +728,6 @@ end (* structure PPAst *)
      are still not handled).
 
 [DBM, 2022.09.26]
-   Converted to use NewPP from old pretty printer library.
+   Converted to use NewPrettyPrint from old (PrettyPrint) pretty printer library.
 
  *)

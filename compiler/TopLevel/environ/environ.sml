@@ -16,7 +16,7 @@ local structure A = Access
       structure B  = Bindings
       structure SE = StaticEnv
       structure DE = DynamicEnv
-      structure PP = NewPP
+      structure PP = NewPrettyPrint
 in
 
 type symbol = S.symbol

@@ -43,8 +43,7 @@ local
   structure M  = Modules
   structure MC = MatchComp
   structure PO = Primop
-  structure PP = NewPP
-  structure PPU = NewPPUtil
+  structure PP = NewPrettyPrint
   structure PPA = PPAbsyn
   structure S  = Symbol
   structure SP = SymPath
@@ -55,7 +54,7 @@ local
   structure TU = TypesUtil
   structure EU = ElabUtil
   structure Tgt = Target
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPT = PPType
   structure PPA = PPAbsyn
   structure PPP = PPSymPaths

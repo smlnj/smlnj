@@ -35,7 +35,7 @@ local
   structure LD = LtyDef
   structure LB = LtyBasic
   structure Tgt = Target
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
 
   fun bug msg = ErrorMsg.impossible("TransPrim: " ^ msg)
 

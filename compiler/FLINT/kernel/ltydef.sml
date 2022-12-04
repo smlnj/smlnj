@@ -8,7 +8,7 @@ local
   structure PT = PrimTyc
   structure LT = Lty
   structure LK = LtyKernel
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
 
   (* debugging *)
   structure EM = ErrorMsg

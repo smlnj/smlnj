@@ -34,7 +34,7 @@ local
   structure LE = LtyExtern
   structure PL = PLambda
   structure F  = FLINT
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPF = PPFlint
   structure OU = OptUtils
   structure CTRL = FLINT_Control

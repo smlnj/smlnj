@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Pretty Printer (formatter) for Flint IL, using NewPP prettyprint library.
+ * Pretty Printer (formatter) for Flint IL, using NewPrettyPrint prettyprint library.
  *)
 
 structure PPFlint :> PPFLINT =
@@ -24,10 +24,10 @@ local
   structure FU = FlintUtil
   structure PO = Primop
   structure PU = PrintUtil
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPT = PPLty
 
-  open NewPP
+  open NewPrettyPrint
 
 in
 
@@ -228,7 +228,7 @@ in
 		   [hblock [fmtLvar lvar, text "=",
 			    fmtTagged ("CON",
 				       csf [text (S.name symbol), 
-					    tuple fmtTyc' tycs,
+					    tupleFormats (map fmtTyc' tycs),
 					    fmtValue value])],
 		    fmtLexp' body]
 
@@ -257,7 +257,7 @@ in
 		 (* RAISE(<value> : <ltys>) *)
 		 hblock [fmtTagged ("RAISE", fmtValue value),
 			 colon,
-			 PP.tuple fmtLty' ltys]
+			 PP.tupleFormats (map fmtLty' ltys)]
 
 	      | fmtE (F.HANDLE (body, value)) =
 		 (* <body>

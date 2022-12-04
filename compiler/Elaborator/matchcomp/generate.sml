@@ -21,7 +21,7 @@ local
   structure MC = MCCommon
   structure MU = MCUtil
   structure PPMC = PPMatchComp
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPT = PPType
   structure PPA = PPAbsyn
 

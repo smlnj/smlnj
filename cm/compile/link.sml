@@ -1,10 +1,10 @@
-(*
+(* cm/compile/link.sml
  * Link traversals.
  *   - manages shared state
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure GP = GeneralParams
@@ -12,7 +12,7 @@ local
     structure GG = GroupGraph
     structure DE = DynamicEnv
     structure EM = ErrorMsg
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
 
     type env = DynamicEnv.env
     type posmap = env IntMap.map

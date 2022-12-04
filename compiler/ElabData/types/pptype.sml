@@ -13,16 +13,16 @@ sig
   val tyvarToString : Types.tyvar -> string
 
   (* formatting functions *)
-  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
-  val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPP.format
-  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPP.format
-  val fmtFormals : int -> NewPP.format
+  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPrettyPrint.format
+  val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPrettyPrint.format
+  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPrettyPrint.format
+  val fmtFormals : int -> NewPrettyPrint.format
   val fmtDconDomain : (Types.dtmember vector * Types.tycon list)
                       -> StaticEnv.staticEnv
                       -> Types.ty
-		      -> NewPP.format
+		      -> NewPrettyPrint.format
 (* NOT USED!
-  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> NewPP.format
+  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> NewPrettyPrint.format
  *)
 
   (* actual printing functions *)
@@ -50,7 +50,7 @@ local
   structure T = Types
   structure TU = TypesUtil
   structure SE = StaticEnv
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure PPS = PPSymbols
   open Types
 in
@@ -352,7 +352,7 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 
 	and fmtTypeArgs [] = PP.empty
 	  | fmtTypeArgs [ty] = fmtAtomTy (ty, 1)
-	  | fmtTypeArgs tys = PP.tuple fmtTy tys
+	  | fmtTypeArgs tys = PP.tupleFormats (map fmtTy tys)
 
 	and fmtTUPLEty [] = unitFmt
 	  | fmtTUPLEty tys =
@@ -391,7 +391,7 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 and fmtType (env: SE.staticEnv) (ty: T.ty) : PP.format =
     fmtType1 env (ty, [], NONE)
 
-(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> NewPP.format *)
+(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> NewPrettyPrint.format *)
 fun fmtDconDomain members (env: SE.staticEnv) (ty:T.ty) : PP.format =
     fmtType1 env (ty, [], SOME members)
 

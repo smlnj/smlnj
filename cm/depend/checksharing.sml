@@ -1,14 +1,14 @@
-(*
+(* cm/depend/checksharing.sml
  * Check for consistency of "private" and "shared" annotations.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure DG = DependencyGraph
     structure EM = ErrorMsg
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
 in
   signature CHECKSHARING = sig
     val check : DG.impexp SymbolMap.map * GeneralParams.info -> unit

@@ -3,7 +3,7 @@
  * (c) 2006 SML/NJ Fellowship
  *
  * Prettyprinting functions for PLambda types tkind, tyc, lty,
- * using the NewPP prettyprinter library
+ * using the NewPrettyPrint prettyprinter library
  *
  *)
 
@@ -11,10 +11,10 @@ signature PPLTY =
 sig
 
   val fflagToString : Lty.fflag -> string
-  val fmtTKind : int -> Lty.tkind -> NewPP.format
-  val fmtTyc : int -> Lty.tyc -> NewPP.format
-  val fmtLty : int -> Lty.lty -> NewPP.format
-  val fmtTkindEnv : int -> Lty.tkindEnv -> NewPP.format
+  val fmtTKind : int -> Lty.tkind -> NewPrettyPrint.format
+  val fmtTyc : int -> Lty.tyc -> NewPrettyPrint.format
+  val fmtLty : int -> Lty.lty -> NewPrettyPrint.format
+  val fmtTkindEnv : int -> Lty.tkindEnv -> NewPrettyPrint.format
 
   val ppTKind : int -> Lty.tkind -> unit
   val ppTyc : int -> Lty.tyc -> unit
@@ -32,9 +32,9 @@ struct
 local
   structure LT = Lty
   structure PT = PrimTyc
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
 
-  open NewPP
+  open NewPrettyPrint
 
   val lineWidth = Control.Print.lineWidth
   val say = Control.Print.say
@@ -140,8 +140,7 @@ fun fmtTEBinder pd (binder: LT.teBinder) =
 	 pcat (PP.cblock [text "L", integer level, colon], fmtKeFrame (pd-1)  ks)
        | LT.Beta (level, args, ks) =>
 	 pblock [PP.ccat (text "B", integer level),
-		 parens
-		   (fmtSeq [tuple (fmtTyc (pd-1)) args, fmtKeFrame (pd-1) ks])])
+		 parens (fmtSeq [tupleFormats (map (fmtTyc (pd-1)) args), fmtKeFrame (pd-1) ks])])
      (* function fmtTEBinder *)
 
 (* fmtTyc : int -> LT.tyc -> format *)
@@ -206,7 +205,7 @@ and fmtTyc pd (tyc : LT.tyc) =
 	  | fmtTycI (LT.TC_WRAP tyc) =
 	      label "WRAP:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_CONT tycs) =
-	      label "CONT:" (tuple fmtTyc' tycs)
+	      label "CONT:" (tupleFormats (map fmtTyc' tycs))
 	  | fmtTycI (LT.TC_IND (tyc, tycI)) =
               if !printIND
               then label "IND" (pblock [fmtTyc' tyc, comma, fmtTycI tycI])

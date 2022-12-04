@@ -36,7 +36,7 @@ structure LtyKindChk : LTYKINDCHK =
 struct
 
 structure LD = LtyDef
-structure PP = NewPP
+structure PP = NewPrettyPrint
 
 open Lty
 

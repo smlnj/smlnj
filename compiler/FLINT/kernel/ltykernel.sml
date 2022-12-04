@@ -5,7 +5,7 @@ structure LtyKernel :> LTYKERNEL =
 struct
 
 local
-  structure PP = NewPP
+  structure PP = NewPrettyPrint
   structure EM = ErrorMsg
   structure PT = PrimTyc
   structure LT = Lty
@@ -330,7 +330,7 @@ and tc_lzrd(t: tyc) =
 						   PP.hcat (PP.text "length(ts) = ",
 							    PP.integer (length ts)),
 						   PP.hcat (PP.text "ts elements: ",
-							    PP.tuple (PPLty.fmtTyc (!printDepth)) ts)]);
+							    PP.tupleFormats (map (PPLty.fmtTyc (!printDepth)) ts))]);
 					     raise TeUnbound)
                                  in (* ASSERT: nl >= nl' *)
                                     if nl' > nl then

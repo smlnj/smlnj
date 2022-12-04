@@ -35,7 +35,7 @@ local
     structure LV = LambdaVar
     structure U = CPSUtil
     structure LT = Lty
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
 
     open CPS
 
@@ -220,7 +220,7 @@ in
     fun fmtParams (lvars, ctys) =
 	  let fun fmtParam (lvar,cty) =
 		  PP.hcat (PP.ccat (fmtLvar lvar, PP.colon), fmtCty cty)
-	   in PP.tuple fmtParam (ListPair.zipEq (lvars, ctys))
+	   in PP.tupleFormats (map fmtParam (ListPair.zipEq (lvars, ctys)))
 	  end
 
     (* fmtVpath : value * accesspath -> PP.format *)
@@ -250,7 +250,7 @@ in
 		   fmtCexp e)
 
       | fmtCexp (APP(rator,argvals)) =
-	  PP.hcat (fmtValue rator, PP.tuple fmtValue argvals)
+	  PP.hcat (fmtValue rator, PP.tupleFormats (map fmtValue argvals))
 
       | fmtCexp (FIX (functions, body)) =
 	  let fun fmtFunction (_,flvar,arglvars,argctys,body) =
@@ -277,7 +277,7 @@ in
 	  (PP.vcat
 	     (PP.hblock
 		[PP.text (lookerToString i),
-		 PP.tuple fmtValue vl,
+		 PP.tupleFormats (map fmtValue vl),
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e))
 
@@ -285,27 +285,27 @@ in
 	  (PP.vcat
 	     (PP.hblock
 		[PP.text (arithToString i),
-		 PP.tuple fmtValue vl,
+		 PP.tupleFormats (map fmtValue vl),
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e))
 
       | fmtCexp (PURE (i,vl,w,t,e)) =
 	  (PP.vcat
 	     (PP.hblock
-		[PP.ccat (PP.text (pureToString i), PP.tuple fmtValue vl),
+		[PP.ccat (PP.text (pureToString i), PP.tupleFormats (map fmtValue vl)),
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e))
 
       | fmtCexp (SETTER (i,vl,e)) =
 	   PP.vcat
-	     (PP.ccat (PP.text (setterToString i), PP.tuple fmtValue vl),
+	     (PP.ccat (PP.text (setterToString i), PP.tupleFormats (map fmtValue vl)),
 	      fmtCexp e)
 
       | fmtCexp (BRANCH (i,vl,c,e1,e2)) =
 	  PP.vblock
 	    [PP.hblock
 	       [PP.text "if",
-		PP.ccat (PP.text (branchToString i), PP.tuple fmtValue vl),
+		PP.ccat (PP.text (branchToString i), PP.tupleFormats (map fmtValue vl)),
 		PP.brackets (fmtLvar c)],
 	     PP.text "then",
 	     PP.hardIndent 3 (fmtCexp e1),
@@ -317,9 +317,9 @@ in
 	    (PP.hblock
 	      [PP.ccat (if b then PP.text "reentrant " else PP.empty,
 			if l = "" then PP.empty else PP.text l),  (* sp *)
-	       PP.ccat (PP.text "rcc", PP.tuple fmtValue values), (* sp *)
+	       PP.ccat (PP.text "rcc", PP.tupleFormats (map fmtValue values)), (* sp *)
 	       PP.text "->",  (* sp *)
-	       PP.tuple fmtTypedLvar lvars_ctys],
+	       PP.tupleFormats (map fmtTypedLvar lvars_ctys)],
 	     fmtCexp e)
 
 

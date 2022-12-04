@@ -2,11 +2,7 @@
 
 (* Version 7.1
  *  the Render structure 
- *  -- revised measure function with measures memoized in blocks
- *
- * Version 7.4
- *  -- SEP --> BRK (separator --> break)
- *)
+ *  -- revised measure function with measures memoized in blocks *)
 
 structure Render : RENDER =
 struct
@@ -15,7 +11,7 @@ local
   open Format
   structure M = Measure
 
-  fun error (msg: string) = (print ("NewPrettyPrint Error: " ^ msg); raise Fail msg)
+  fun error (msg: string) = (print ("NewPP Error: " ^ msg); raise Fail msg)
 in
 
 (* newlines and spaces *)
@@ -43,24 +39,23 @@ fun flatRender (format, output) =
 	    (case format
 	      of EMPTY => ()
 	       | TEXT s => output s
-	       | BLOCK {elements, ...} => renderElements elements
+	       | SBLOCK {elements, ...} => renderElements elements
 	       | ABLOCK {formats, ...} => renderBlock formats
 	       | FLAT format => render0 format
 	       | ALT (format, _) => render0 format)   (* any format fits *)
 
         (* renderElements : element list -> unit *)
-        and renderElements nil = sp 1  (* render an empty BLOCK as a single space *)
+        and renderElements nil = sp 1  (* render an empty SBLOCK as a single space *)
           | renderElements elements =
             let fun re nil = ()
 		  | re (element::rest) = 
 		    (case element
 		       of FMT format => (render0 format; re rest)
-		        | BRK break =>
-			   (case break
+		        | SEP sep =>
+			   (case sep
 			     of HardLine   => (sp 1; re rest)
 			      | SoftLine n => (sp n; re rest)
-			      | Space n    => (sp n; re rest)
-			      | NullBreak  => re rest))
+			      | Space n    => (sp n; re rest)))
 	     in re elements
 	    end
 
@@ -68,7 +63,7 @@ fun flatRender (format, output) =
         and renderBlock nil = sp 1
           | renderBlock formats =  (* formats not empty *)
             let fun rf nil = ()
-		  | rf [format] = render0 format (* no break after last format *)
+		  | rf [format] = render0 format (* no separator after last format *)
 		  | rf (format::rest) = (render0 format; sp 1; rf rest)
 	     in rf formats
 	    end
@@ -105,7 +100,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
          *   blm: block left margin of parent block containing this format, or 0 for top-level format
          *        i.e., the inherited cumulative indentation
 	 *     rebound at the entrance to each block to that block's block left margin (initially cc, which may = blm)
-	 *   newlinep: bool indicating whether the immediately previously rendered format or break resulted in a
+	 *   newlinep: bool indicating whether the immediately previously rendered format or separator resulted in a
 	 *     newline+indent
          * Outputs:
 	 *   cc' : int -- the current column when the rendrer is completed (position where next character will be printed
@@ -115,7 +110,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	      (case format
 	         of EMPTY => (cc, false)
 		  | TEXT s => (output s; (cc + size s, false))
- 		  | BLOCK {elements, bindent, ...} => 
+ 		  | SBLOCK {elements, bindent, ...} => 
 		      (case bindent
 			 of NI => (* "special" block, with blm = cc, which may be greater than parent's blm *)
 			      renderElements (elements, cc, newlinep)
@@ -134,7 +129,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 				  else renderElements (elements, cc, false) (* there is no newline+indent, proceed without *)
 			      end)
 		  | ABLOCK {formats, alignment, bindent, ...} =>
-		      renderBlock (formats, alignmentToBreak alignment, bindent, blm, cc, newlinep)
+		      renderBlock (formats, alignmentSeparator alignment, bindent, blm, cc, newlinep)
 		  | FLAT format => (flatRender (format, output); (cc + M.measure format, false))
 		  | ALT (format1, format2) =>
 		      if M.measure format1 <= lw - cc  (* format1 fits flat *)
@@ -142,7 +137,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		      else render0 (format2, blm, cc, newlinep))
 
         (* renderElements : element list * int * bool -> int * bool
-         *  rendering the elements of an BLOCK *)
+         *  rendering the elements of an SBLOCK *)
         and renderElements (elements, blm, newlinep) =
             let fun re (nil, cc, newlinep) = (cc, newlinep)
 		  | re (element::rest, cc, newlinep) =
@@ -151,25 +146,24 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 			      let val (cc', newlinep') = render0 (format, blm, cc, newlinep)
 			       in re (rest, cc', newlinep')
 			      end
-			  | BRK break =>  (* rest should start with a FMT! *)
-			      (case break
-				 of NullBreak  => re (rest, cc, false)
-				  | HardLine   => (nlIndent blm; re (rest, blm, true))
+			  | SEP sep =>  (* rest should start with a FMT! *)
+			      (case sep
+				 of HardLine   => (nlIndent blm; re (rest, blm, true))
 				  | Space n    => (sp n; re (rest, cc + n, newlinep))
 				  | SoftLine n =>
 				      (case rest
-					 of FMT format' :: rest' =>    (* ASSERT: rest = FMT _ :: _ *)
+					 of FMT format' :: rest' =>    (* rest must start with FMT *)
 					      if M.measure format' <= (lw - cc) - n
 					      then let val (cc', newlinep') =
 							   (sp n; render0 (format', blm, cc + n, false))
 						   in re (rest', cc', newlinep')
 						   end
 					      else (nlIndent blm; re (rest, blm, true))
-					  | _ => error "renderElements 1: adjacent breaks")))
+					  | _ => error "renderElements 1: adjacent separators")))
 	     in re (elements, blm, newlinep)
 	    end (* end renderElements *)
 
-        (* renderBlock : format list * break * bindent * int * int * bool -> int * bool *)
+        (* renderBlock : format list * separator option * bindent * int * int * bool -> int * bool *)
         (* the first three elements are the components of the block being rendered,
          * the last three arguments are:
 	 *   blm: int -- parent block's blm (or 0 at "top-level", with no parent block),
@@ -179,7 +173,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	      (* Special case of "empty" block, containing no formats, renders as the empty format, producing no output;
                * but should bindent, if not NI, take effect? See Notes at the bottom of this file. *)
 	      (cc, newlinep)
-          | renderBlock (formats, break, bindent, parentBlm, cc, newlinep) =
+          | renderBlock (formats, separatorOp, bindent, parentBlm, cc, newlinep) =
 	      let 
 		  (* renderFormats : format list * int * int * bool -> int * bool 
 		   * Arguments:
@@ -191,20 +185,21 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		      (* new blm values are bound at calls of renderFormats, when there are block indentations *)
 		      let val myBlm = cc  (* defining the blm of the this new block = cc on entry *)
 
-			  val renderBreak =
-				(case break
-				   of NullBreak => (fn (cc, m) => (cc, false))
-				    | Space n => (fn (cc, m) => (sp n; (cc+n, false)))  (* ASSERT: n = 1 *)
-				    | HardLine => (fn (cc, m) => (nlIndent myBlm; (myBlm, true)))
-				    | SoftLine n =>  (* ASSERT: n = 1 *)
-				        (fn (cc, m) =>
-					    if m <= (lw - cc) - n  (* conditional on m *)
-				            then (sp n; (cc+n, false))
-				            else (nlIndent myBlm; (myBlm, true))))
+			  val renderSeparator =
+				(case separatorOp
+				   of NONE => (fn (cc, m) => (cc, false))
+				    | SOME separator =>
+				      (case separator
+					 of Space n => (fn (cc, m) => (sp n; (cc+n, false)))  (* n = 1 *)
+				          | HardLine => (fn (cc, m) => (nlIndent myBlm; (myBlm, true)))
+				          | SoftLine n => (fn (cc, m) =>  (* ASSERT: n = 1 *)
+				              if m <= (lw - cc) - n  (* conditional on m *)
+				              then (sp n; (cc+n, false))
+				              else (nlIndent myBlm; (myBlm, true)))))
 
 			  fun renderRest (nil, cc, newlinep) = (cc, newlinep) (* when we've rendered all the formats *)
 			    | renderRest (format :: rest, cc, newlinep) =  (* newlinep argument not used in this case! *)
-				let val (cc0, newlinep0) = renderBreak (cc, M.measure format)
+				let val (cc0, newlinep0) = renderSeparator (cc, M.measure format)
 				    val (cc1, newlinep1) = render0 (format, myBlm, cc0, newlinep0)  (* render the next format *)
 				 in renderRest (rest, cc1, newlinep1)  (* then render the rest *)
 				end
@@ -252,19 +247,19 @@ end (* structure Render *)
    newline+indent (for the HI 2 bindent) and nothing else?
 
 4. [Q1] Does rendering a format ever end with a final newline+indent?
-   [Q2] Is BLOCK {elements = [BRK HardLine], ...} a valid block? If so, it "ends with a newline".
-   [Q3] Is vblock [empty, BRK HardLine, empty] (or similar BLOCK formats) treated as equavalent to a newline?
+   [Q2] Is SBLOCK {elements = [SEP HardLine], ...} a valid block? If so, it "ends with a newline".
+   [Q3] Is vblock [empty, SEP HardLine, empty] (or similar SBLOCK formats) treated as equavalent to a newline?
 
 A1: Yes?
-We only emit a newline+indent at a HardLine or triggered SoftLine break,
-but a normal block will not end with a (virtual) break so "normal" blocks do not end with a
+We only emit a newline+indent at a HardLine or triggered SoftLine separator,
+but a normal block will not end with a (virtual) separator so "normal" blocks do not end with a
 newline.
 
 Another possibility is at an indented, but empty, block (e.g. hiblock (HI 3) nil), which could
 appear on its own or as the last format in a block.  But we can have indentX n empty --> empty, in which
 case an indented empty block turns into an empty block and the indentation is nullified.
 
-Also, a special block whose last element is a BRK (HardLine) is possible. Such a block would end with
+Also, a special block whose last element is a SEP (HardLine) is possible. Such a block would end with
 a newline+indent (to its blm?).
 
 Should this be disallowed?  Probably not, until we can see that it is causing problems or confusion for users.

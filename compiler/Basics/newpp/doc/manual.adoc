@@ -84,10 +84,10 @@ Rendering::
     limits how much of a line is occupied by text.
 
 Blocks::
-* varieties of blocks: text, "aligned", "special", and empty.
-* compound (aligned or special) blocks contain a sequence of (sub)formats and separators
-** _separators_ in blocks: Space, SoftLine, and HardLine
-** block alignment (H, V, P, C) determined by implicit separator
+* varieties of blocks: text, "basic", "aligned", and empty.
+* compound (basic or aligned) blocks contain a sequence of (sub)formats and breaks
+** _breaks_ in blocks: Space, SoftLine, HardLine, and NullBreak
+** block alignment (H, V, P, C) determin the implicit break in aligned blocks
 * block "extent"
 ** block left margin (blm)
    the content of a block (its text and white space) is bounded on top by its initial line
@@ -116,7 +116,7 @@ Measurement::
 
 === Nesting of blocks
 
-* blocks contain formats and explicit or virtual separators, and their format elements
+* blocks contain formats and explicit or virtual breaks, and their format elements
   can also be blocks or can contain blocks.
 * Relative to the the context of a "root" format containing a given format or element,
   that format or element has a _block nesting level_ (BNL) that represents the depth of
@@ -125,24 +125,24 @@ Measurement::
 
 === Text formats
 
-* Text formats considered to be "atomic blocks" consisting of a single string, and contain no subformats or separators. The string contents of a text block may contain white space, but generally should not as a matter of style.
+* Text formats considered to be "atomic blocks" consisting of a single string, and contain no subformats or breaks. The string contents of a text block may contain white space, but generally should not as a matter of style.
 
 * Text formats lack the alignment and indentation attributes of compound blocks.
 
 === Block "alignment" modes
 
+* _Basic_ blocks lack an alignment property, and treat alignment in an _ad hoc_ way using
+  user-specified breaks between subformats. The breaks of a basic block can be heterogeneous.
+
 * _Aligned_ blocks can be either horizontal (hblock), vertical (vblock) or packed (pblock), these
   are
 
-* _Special_ blocks lack an alignment property, and treat alignment in an _ad hoc_ way using
-  user-specified separators between subformats. The separators of a special block can be heterogeneous.
-
-* The alignment mode of an aligned block is represented
-  by the value of the alignment field of the block (H for horizontal alignment, V
-  for vertical alignment, and P for packed alignment). An aligned block has homogeneous
-  (virtual) separators that separate its constituent subformats. Those virtual separators
-  are Space 1 for horizontal alignment (H), SoftLine 1 for packed alignment (P), and
-  HardLine for vertical alignment (V).
+* The alignment mode of an aligned block is represented by the value of the alignment field
+  of the block (H for horizontal alignment, V for vertical alignment, P for packed alignment,
+  and C for compact alignment). An aligned block has homogeneous (virtual) breaks that separate
+  its constituent subformats. Those virtual breaks are Space 1 for horizontal alignment (H),
+  SoftLine 1 for packed alignment (P), HardLine for vertical alignment (V) and NullBreak for
+  compact alignment (C).
 
 === Block indentation and "block left margin" or `blm`
 
@@ -153,7 +153,7 @@ The block indentation attribute has type `bindent`, which has three variants: `N
 For indented blocks, there are two modes of indentation: _hard_ and _soft_ (`bindent = HI n`
 or `SI n`, respectively). Technically, a soft indented block is only _potentially_ indented,
 with actual indentation depending on whether it immediatly follows a newline caused by a HardLine
-or triggered SoftLine separator or by being at the beginning of an enclosing indented block.
+or triggered SoftLine break or by being at the beginning of an enclosing indented block.
 
 * The indentation of an indented block applies to the complete block, in comparison with other
 pretty printing schemes where the indentation only applies after newlines within the block, and
@@ -170,8 +170,8 @@ indentation is less than the containing block's blm.
 * Thus Indentation is always associated with a preceding newline, because it makes no sense to indent
 other than at the beginning of a line. An indented block will always start on an indented new line.
 +
-If a hard indented block is not preceeded by a newline (produced by a HardLine separator or a triggered
-SoftLine separator), then it generates its own newline and adds its indentation to the parent blm to
+If a hard indented block is not preceeded by a newline (produced by a HardLine break or a triggered
+SoftLine break), then it generates its own newline and adds its indentation to the parent blm to
 get its indentation or blm. If such a block is preceeded by a newline, then it produces only the incremental
 indentation n (new blm = parent blm + n). This applies to a hard indented block occurring as the first
 component format of a hard indented block or "triggered" soft indented block; an indented block at
@@ -190,10 +190,12 @@ a particular line break that applies only to the following line.
 
 === Well-formedness of blocks
 
-* For aligned blocks, the separator for that block is properly interleaved between the subformats of the block.
-* For special blocks, separators would typically come between format elements, but it is possible to intermix
-  subformats (FMT elements) and separators (SEP elements) arbitrarily, including having no formats or no
-  separators at all.
+* For basic blocks, breaks typically come between format elements, but it is possible to intermix
+  subformats (FMT elements) and breaks (BRK elements) arbitrarily, including having no formats or no
+  breaks at all.
+
+* For aligned blocks, the (virtual) break for that block is properly interleaved between the subformats
+  of the block.
 
 === Rendering a format (against lthe line width constraint)
 
@@ -205,8 +207,8 @@ fit within the specified line width.
 
 * Rendering is dependent on a _static_ format measure that depends only on the structure of the format.
 +
-_flat measure_ assumes that all newlines are suppressed, with HardLine separators treated as Space 1
-and `SoftLine n` separators treated as `Space n`. The flat measure is essentially the length of the rendered
+_flat measure_ assumes that all newlines are suppressed, with HardLine breaks treated as Space 1
+and `SoftLine n` breaks treated as `Space n`. The flat measure is essentially the length of the rendered
 format if it were rendered on a single, unbounded line.
 +
 Alternate measures, such as a _multi-line_ measure, are possible, but are not used in this version
@@ -219,11 +221,11 @@ and the line width (`lsp = lw - cc`).
 
 * There are three constructs that introduce conditional rendering:
 
-. Soft line breaks, represented by separators of the form `SoftLine n`.
+. Soft line breaks, represented by breaks of the form `SoftLine n`.
 . _alt_ formats, formed by application of the function `alt`, as in `alt (fmt1, fmt2)`.
 . Soft indented blocks, for example as produced by `hiblock (SI n) fmt`.
 
-* A soft line break (separator `SoftLine n`) is _triggered_ (i.e. rendered as a newline) if the format following it _fits_. (Note: a `SoftLine` separator that is not followed by a format is anomalous and will be ignored; this situation could only occur in a special block.)
+* A soft line break (break `SoftLine n`) is _triggered_ (i.e. rendered as a newline) if the format following it _fits_. (Note: a `SoftLine` break that is not followed by a format is anomalous and will be ignored; this situation could only occur in a basic block.)
 
 * When rendering the format returned by `alt (fmt1, fmt2)`, the first format `fmt1` is rendered if
 it _fits_ (_i.e._, its measure is less than the line space available), and otherwise the alternate
@@ -274,26 +276,28 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 ==== Types
 
 * type `format` -- abstract
-* datatype `separator` -- Used in special blocks
+* datatype `break` -- Used in basic blocks
 
- datatype separator   (* separators are not, and do not contain, content *)
+ datatype break       (* breaks are not, and do not contain, content *)
    = HardLine         (* hard line break; rendered as a newline + indent to current blm *)
    | SoftLine of int  (* soft line break (n >= 0); rendered as n spaces, if the line break
                        * is not triggered; if it is triggered, renders as newline + indent
                        * to current blm *)
    | Space of int     (* spaces (n >= 0); rendered as n spaces *)
+   | NullBreak        (* does nothing when rendered: no spaces, no line break *)
 
 * datatype `alignment` -- used to determine the alignment of aligned blocks, etc.
 
  datatype alignment
-   = H   (* Horizontal, implicit separator = Space 1 *)
-   | V   (* Vertical, implicit separator = HardLine *)
-   | P   (* Packed, implicit separator = SoftLine 1 *)
+   = H   (* Horizontal, implicit break = Space 1 *)
+   | V   (* Vertical, implicit break = HardLine *)
+   | P   (* Packed, implicit break = SoftLine 1 *)
+   | C   (* Compact, no implicit break *)
 
-* datatype `element` -- the components of special blocks
+* datatype `element` -- the components of basic blocks
 
  datatype element
-   = SEP of separator
+   = BRK of break
    | FMT of format
 
 * datatype `bindent` -- block indentation
@@ -321,9 +325,9 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 
 _General block constructor functions:_
 
-* `specialBlock : bindent -> element list -> format`
+* `basicBlock : bindent -> element list -> format`
 
- build a block with ad hoc alignment determined by explicit separators among the elements and indentation specified by the bindent parameter.
+ build a block with ad hoc alignment determined by explicit breaks among the elements and indentation specified by the bindent parameter.
 
 * `alignedBlock : alignment -> bindent -> format list -> format`
 
@@ -331,47 +335,47 @@ _General block constructor functions:_
 
 _Basic (nonindented) block constructor functions:_
 
+* `block : element list -> format`
+
+ block elems : Create a basic block with elems as components.
+
 * `hblock : format list -> format`
 
- hblock fmts : Create a horizontally aligned block (with implicit (Space 1) separators) with fmts as components.
+ hblock fmts : Create a horizontally aligned block (with implicit (Space 1) breaks) with fmts as components.
 
 * `vblock : format list -> format`
 
- vblock fmts : Create a vertically aligned block (with implicit HardLine separators) with fmts as components.
+ vblock fmts : Create a vertically aligned block (with implicit HardLine breaks) with fmts as components.
 
 * `pblock : format list -> format`
 
- pblock fmts : Create a "packed" aligned block (with implicit (SoftLine 1) separators) with fmts as components.
+ pblock fmts : Create a "packed" aligned block (with implicit (SoftLine 1) breaks) with fmts as components.
 
 * `cblock : format list -> format`
 
- cblock fmts : Create a "compact" aligned block with fmts as components, with no separators between components.
-
-* `sblock : element list -> format`
-
- sblock elems : Create a special block with elems as components (possibly mixing formats and separators).
+ cblock fmts : Create a "compact" aligned block with fmts as components, with no breaks between components.
 
 _Indented block constructor functions:_
 
+* `iblock : bindent -> element list -> format`
+
+ block bindent elems : Create a basic block with elems as components (mixing formats and breaks) and the indentation specified by bindent.
+
 * `hiblock : bindent -> format list -> format`
 
- hiblock bindent fmts : Create a horizontally aligned block (with implicit (Space 1) separators) with fmts as components and the indentation specified by bindent.
+ hiblock bindent fmts : Create a horizontally aligned block (with implicit (Space 1) breaks) with fmts as components and the indentation specified by bindent.
 
 * `viblock : bindent -> format list -> format`
 
- viblock bindent fmts : Create a vertically aligned block (with implicit HardLine separators) with fmts as components and the indentation specified by bindent.
+ viblock bindent fmts : Create a vertically aligned block (with implicit HardLine breaks) with fmts as components and the indentation specified by bindent.
 
 * `piblock : bindent -> format list -> format`
 
- piblock binent fmts : Create a horizontally aligned block (with implicit (Space 1) separators) with fmts as components and the indentation specified by bindent.
+ piblock binent fmts : Create a horizontally aligned block (with implicit (Space 1) breaks) with fmts as components and the indentation specified by bindent.
 
 * `ciblock : bindent -> format list -> format`
 
- ciblock binent fmts : Create a horizontally aligned block with no separators, with fmts as components and the indentation specified by bindent.
-
-* `siblock : bindent -> element list -> format`
-
- sblock bindent elems : Create a special block with elems as components (mixing formats and separators) and the indentation specified by bindent.
+ ciblock binent fmts : Create a horizontally aligned block with no breaks, with fmts as components and the indentation specified by bindent.
 
 
 [discrete]
@@ -436,19 +440,19 @@ _Binary format combinators_
 
 * `hcat : format * format -> format`
 
- hcat (fmt1, fmt2) = hblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (Space 1) separator.
+ hcat (fmt1, fmt2) = hblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (Space 1) break.
 
 * `vcat : format * format -> format`
 
- vcat (fmt1, fmt2) = vblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a HardLine separator.
+ vcat (fmt1, fmt2) = vblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a HardLine break.
 
 * `pcat : format * format -> format`
 
- pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) separator.
+ pcat (fmt1, fmt2) = pblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 with a (SoftLine 1) break.
 
 * `ccat : format * format -> format`
 
- ccat (fmt1, fmt2) = cblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 without a separator.
+ ccat (fmt1, fmt2) = cblock [fmt1, fmt2] : Concatenates fmt1 and fmt2 without a break.
  
 Note that the empty format is an identity element for all of these binary concatenation operators.
 
@@ -531,7 +535,7 @@ Note that the empty format is an identity element for all of these binary concat
  insert sep between these formats, and align the sequence elements according to the alignment
  parameter. E.g.
      formatSeq {alignment=H, sep=comma, formatter=integer} [1,2] =>
-       sblock [FMT(integer 1), FMT comma, SEP(Space 1), FMT(integer 2)],
+       block [FMT(integer 1), FMT comma, BRK(Space 1), FMT(integer 2)],
  which renders as:
      1, 2
 
@@ -540,12 +544,8 @@ Note that the empty format is an identity element for all of these binary concat
      -> 'a list
      -> format`
 
- formatClosedSeq {alignment, front, sep, back, formatter} xs = 
-   enclose {front=front, back=back} (formatSeq {alignment, sep, formatter} xs).
-
-* `tuple : ('a -> format) -> 'a list -> format`
-
- tuple formatter xs = parens (psequence comma (map formatter xs))
+ `formatClosedSeq {alignment, front, sep, back, formatter} xs = 
+    enclose {front=front, back=back} (formatSeq {alignment, sep, formatter} xs)`
 
 * `list : ('a -> format) -> 'a list -> format`
 
@@ -558,8 +558,22 @@ Note that the empty format is an identity element for all of these binary concat
 
 * `option : ('a -> format) -> 'a option -> format`
 
- option values are treated as honorary sequences with 0 or 1 element. NONE is rendered as
- text "NONE", and SOME v is rendered as "SOME(formatter v)".
+ option values are treated as honorary sequences with 0 or 1 element. `NONE` is rendered as
+ `text "NONE"`, and `SOME v` is rendered as `SOME(formatter v)`.
+
+* `val vHeaders : {header1: string, header2: string, formatter: 'a -> format} -> 'a list -> format`
+
+ Vertically align the formats produced by mapping formatter over the list with header1 as header
+ for the first format and header2 as header for subsequent format. If header1 and header2 are of
+ unequal sizes, the shorter one is padded with spaces on the left to make its size equal to the
+ longer.
+
+* `val vHeaderFormats : {header1: string, header2: string} -> format list -> format`
+
+ Vertically align the formats in the format list with header1 as header for the first format
+ and header2 as header for subsequent format. If header1 and header2 are of unequal sizes,
+ the shorter one is padded with spaces on the left to make its size equal to the longer.
+
 
 [discrete]
 ==== Setting and accessing the line width
@@ -603,7 +617,7 @@ Note that the empty format is an identity element for all of these binary concat
 
 * How to produce a blank line in a layout?
 
- val doubleNewline : format = sblock [SEP Hardline, SEP HardLine]
+ val doubleNewline : format = sblock [BRK Hardline, BRK HardLine]
 
 .String to "paragraph"
 ====
@@ -638,7 +652,7 @@ val tree1 =
 		  Node ("ii", nil)])]);
 ----
 ====
-Note that in this example, there are no SoftLine separators or soft indented blocks, so
+Note that in this example, there are no SoftLine breaks or soft indented blocks, so
 the rendering of a tree value will not be sensitive to line width.
 ====
 ----
@@ -864,9 +878,9 @@ Rough analogs of Haskell Prettyprinter types and functions:
  ** `EMPTY` is the empty format that prints nothing and acts as an identity element with respect to
     concatenation of formats or composition of blocks.
  ** `TEXT` constructs atomic text blocks.
- ** `SBLOCK` constructs "special" blocks with explicit separator (`SEP`) elements mixed with format (`FMT`) elements.
+ ** `BLOCK` constructs "basic" blocks with explicit break (`BRK`) elements mixed with format (`FMT`) elements.
  ** `ABLOCK` constructs "aligned" blocks, where alignment is determined by the choice of the alignment,
-which in turn determines the virtual separator between component formats:
+which in turn determines the virtual break between component formats:
 Horizontal: `Space 1`; Vertical: `HardLine`; Packed: `SoftLine 1`.
  ** `FLAT` converts an arbitrary format to one which is rendered as flat.
  ** `ALT` takes a pair of formats, `(fmt1, fmt2)` and constructs a format that is
@@ -877,13 +891,13 @@ constrained to have the same content; for instance, `fmt2` might be an abbreviat
 ----
 datatype format
   = TEXT  of string
-  | SBLOCK of {elements: element list, bindent: bindent, measure: int}
+  | BLOCK of {elements: element list, bindent: bindent, measure: int}
   | ABLOCK of {formats: format list, alignment: alignment, bindent: bindent, measure: int}
   | FLAT of format
   | ALT of format * format
 
-and element  (* of SBLOCKs *)
-  = SEP of separator  (* separators are _not_, and do not contain, content *)
+and element  (* of a BLOCK *)
+  = BRK of break  (* breaks are _not_, and do not contain, content *)
   | FMT of format
 ----
 
@@ -896,20 +910,21 @@ The measure of a `ALT (fmt1, fmt2)` format is the (flat) measure of `fmt1`, whic
 expected to be the "wider" of the two formats.
 
 The measure of a compound block format is the length of the format as rendered on a single, unbounded line.
-This is the sum of the flat measures of its component formats plus `sepMeasure s` for each explicit or
-implicit separator `s`, where `sepMeasure` is defined as follows:
+This is the sum of the flat measures of its component formats plus `breakMeasure b` for each explicit or
+implicit break `b`, where `breakMeasure` is defined as follows:
 ----
-fun sepMeasure (Space n) = n
-  | sepMeasure (SoftLine n) = n
-  | sepMeasure HardLine = 1
+fun breakMeasure (Space n) = n
+  | breakMeasure (SoftLine n) = n
+  | breakMeasure HardLine = 1
+  | breakMeasure NullBreak = 0
 ----
 
-The _measure_ fields of the `SBLOCK` and `ABLOCK` constructors are used to _memoize_ the measure function
+The _measure_ fields of the `BLOCK` and `ABLOCK` constructors are used to _memoize_ the measure function
 over formats to avoid having to recompute the measures of nested blocks. 
 
 * Rendering
 
-`FLAT` formats (used in `tryFlat`, for instance) are rendered _flat_, meaning that all separators `s`
+`FLAT` formats (used in `tryFlat`, for instance) are rendered _flat_, meaning that all breaks `s`
 are rendered as though they were `Space (sepMeasure s)`, and no newline+indent are generated when
 rendering indented blocks.
 
@@ -935,7 +950,7 @@ represents in terms of the data structure being presented.
 
 * Multi-line measurement of formats (this has been implemented in Version 8 of this library).
 
-* Tabs. Setting tabs would be related to separators and would only be accessible at a block's
+* Tabs. Setting tabs would be related to breaks and would only be accessible at a block's
 "top level".
 
 * Tabular formatting (i.e. tables).

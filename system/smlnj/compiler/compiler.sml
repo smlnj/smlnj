@@ -1,7 +1,8 @@
-(* compiler/compiler.sml
+(* system/smlnj/compiler/compiler.sml
  * 
- * (C) 2001 Lucent Technologies, Bell Labs
+ * (C) 2022 The Fellowship of SML/NJ (www.smlnj.org)
  *)
+
 structure Compiler =
 struct
     structure Stats = Stats
@@ -17,7 +18,7 @@ struct
     structure EnvRef = EnvRef
     structure ModuleId = ModuleId
     structure PersStamps = PersStamps
-    structure NewPP = NewPP
+    structure NewPrettyprint = NewPrettyPrint
     structure PPTable =	CompilerPPTable
     structure Ast = Ast
     structure SmlFile = SmlFile

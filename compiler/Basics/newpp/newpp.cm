@@ -2,8 +2,8 @@
 
 Library
 
-	signature NEW_PP
-	structure NewPP
+	signature NEW_PRETTYPRINT
+	structure NewPrettyPrint
 
 is
 
@@ -14,5 +14,5 @@ measure.sig
 measure.sml
 render.sig
 render.sml
-newpp.sig
-newpp.sml
+newprettyprint.sig
+newprettyprint.sml

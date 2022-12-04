@@ -50,7 +50,7 @@ Change Log:
   - added SourceMap structure
 
 2. [DBM, 2022.09] Revised, along with ErrorMsg:
-  - convert to the NewPP library
+  - convert to the NewPP (now NewPrettyPrint) library
   - remove Ramsey's NoWeb(?) machinery supporting "#line" directives
     and "resynchronization" with multiple input files.
     A source is associated with a single file, or with an interactive

@@ -39,7 +39,7 @@ local
     structure SE = StaticEnv
     structure PO = Primop
     structure PU = PrimopUtil
-    structure PP = NewPP
+    structure PP = NewPrettyPrint
 
     open Types PLambda
     (* mentions Target *)

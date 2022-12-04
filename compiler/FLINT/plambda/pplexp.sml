@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-(* Pretty printing of plambda lexps, using the NewPP prettyprinter. *)
+(* Pretty printing of plambda lexps, using the NewPrettyPrint prettyprinter. *)
 
 signature PPLEXP =
 sig
@@ -12,7 +12,7 @@ sig
   val conToString : PLambda.con -> string
   val lexpTag : PLambda.lexp -> string
 
-  val fmtLexp: int -> PLambda.lexp -> NewPP.format
+  val fmtLexp: int -> PLambda.lexp -> NewPrettyPrint.format
   val ppLexp: int -> PLambda.lexp -> unit
 
 end (* signature PPLEXP *)
@@ -26,9 +26,9 @@ local
   structure A = Absyn
   structure DA = Access
   structure S = Symbol
-  structure PP = NewPP  (* New Prettyprinter *)
+  structure PP = NewPrettyPrint
 
-  open PLambda NewPP
+  open PLambda NewPrettyPrint
 
   (* zipEq3: zipEq for 3 lists *)
   fun zipEq3 (x::xs, y::ys, z::zs) =
@@ -102,20 +102,20 @@ fun fmtLexp (pd:int) (l: lexp): format =
               enclose {front = text "ETAG(", back = rparen} (fmtLexp' lexp)
 
           | fmtI (RECORD lexps) =
-              ccat (text "REC", tuple fmtLexp' lexps)
+              ccat (text "REC", tupleFormats (map fmtLexp' lexps))
 
           | fmtI (SRECORD lexps) =
-              ccat (text "SREC", tuple fmtLexp' lexps)
+              ccat (text "SREC", tupleFormats (map fmtLexp' lexps))
 
           | fmtI (VECTOR (lexps, _)) =
-              ccat (text "VEC", tuple fmtLexp' lexps)
+              ccat (text "VEC", tupleFormats (map fmtLexp' lexps))
 
           | fmtI (PRIM(p,t,ts)) =
               enclose {front = text "PRIM(", back = rparen}
 		 (pblock
 		   [ccat (text (PrimopUtil.toString p), comma),
 		    ccat (fmtLty' t, comma),
-		    tuple fmtTyc' ts])
+		    tupleFormats (map fmtTyc' ts)])
 
           | fmtI (l as SELECT(i, _)) =
 	      let fun gather(SELECT(i,l)) =
@@ -161,20 +161,20 @@ fun fmtLexp (pd:int) (l: lexp): format =
 
           | fmtI (TFN(ks, b)) =
               enclose {front = text "TFN(", back = rparen}
-		(pcat (tuple fmtTKind' ks,
+		(pcat (tupleFormats (map fmtTKind' ks),
 		       softIndent 3 (fmtLexp' b)))
 
           | fmtI (TAPP(l, ts)) =
               enclose {front=text "TAPP(", back=rparen}
 	        (pcat (fmtLexp' l,
-		       tuple fmtTyc' ts))
+		       tupleFormats (map fmtTyc' ts)))
 
           | fmtI (GENOP(dict, p, t, ts)) =
               enclose {front=text "GEN(", back=rparen}
                 (pblock
                    [ccat (text (PrimopUtil.toString p), comma),
                     ccat (fmtLty' t, comma),
-                    tuple fmtTyc' ts])
+                    tupleFormats (map fmtTyc' ts)])
 
           | fmtI (SWITCH (l,_,llist,default)) =
             let fun switchCase (c,l) =

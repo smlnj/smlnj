@@ -1,7 +1,10 @@
-File: ~/sml/Dev/pp/new/paper/design-notes-1.txt
+File: smlnj/compiler/Basics/newpp/doc/design-notes.txt
 
 Title: A New Prettyprinter Library for SML/NJ
 Author: David MacQueen (DBM)
+
+NOTE: This version of design-notes.txt is not up-to-date. The
+maintained version is in the newpptr github repo.
 
 Here we are describing the Pettyprinter Version 7, with some additional material about
 later versions (Version 8 with multi-line measure, Version 9 with tabs).

@@ -24,7 +24,7 @@ Library
 	signature MODULE_ID
 	signature PICKMOD
 	signature UNPICKMOD
-	signature NEW_PP
+	signature NEW_PRETTYPRINT
 	signature AST
 	signature ABSYN
 	signature SMLFILE
@@ -51,7 +51,7 @@ Library
 	structure Rehash
 	structure PickleSymPid
 	structure UnpickleSymPid
-	structure NewPP
+	structure NewPrettyPrint
 	structure CompilerPPTable
 	structure Ast
 	structure Absyn
