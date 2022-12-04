@@ -195,7 +195,7 @@ fun fmtPat env (pat, depth) =
 			      end
 			  | SOME _ => bug "AU.destTuplePat returned bad result"
 			  | NONE =>  (* argPat is not a tuple pat or does not have two elements *)
-	x		      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
+			      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
 		  | F.NONfix =>
 		      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
 	  | fmtPat' (CONSTRAINTpat (pat,t), lpull, rpull, d) =
