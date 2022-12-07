@@ -43,7 +43,6 @@ fun measure (format: format) =
          (* basic blocks *)
        | ABLOCK {measure, ...} => measure
 	 (* aligned blocks *)
-       | (HINDENT (_, fmt) | SINDENT (_, fmt)) => measure fmt
        | FLAT format => measure format
        | ALT (format1, format2) => measure format1
          (* measure the first format, which will normally be the wider one,
@@ -65,10 +64,10 @@ fun measureElements elements =
 
 (* measureFormats : (int * format list) -> int *)
 fun measureFormats (breaksize: int, formats: format list) =
-    let fun mFormats (nil, acc) = acc
-          | mFormats ([format], acc) = measure format + acc
-          | mFormats (format :: rest, acc) =  (* rest not null *)
-              mFormats (rest, measure format + breaksize + acc)  (* add breaksize for virtual separator, if any *)
+    let fun mFormats (nil, n) = n
+          | mFormats ([format], n) = measure format + n
+          | mFormats (format :: rest, n) =  (* rest not null *)
+              mFormats (rest, measure format + breaksize + n)  (* add breaksize for virtual separator, if any *)
      in mFormats (formats, 0)
     end
 

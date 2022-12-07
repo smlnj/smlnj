@@ -46,6 +46,8 @@ local
   structure MC = MatchComp
  
   open Types TypesUtil Unify Absyn ErrorMsg
+
+  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
 in
 
 (* debugging *)
@@ -125,7 +127,7 @@ fun fmtModeErrorMsg (mode: Unify.unifyFail) =
 	of TYC (tyc1, tyc2, reg1, reg2) =>
 	    PP.vcat
 	      (PP.text "Mode: tycon mismatch",
-	       PP.viblock (PP.HI 3)
+	       viblock
 		 [PP.hcat (PP.text "tycon1:", fmtTycon tyc1),
 		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
 		  PP.hcat (PP.text "tycon2:", fmtTycon tyc2),
@@ -133,7 +135,7 @@ fun fmtModeErrorMsg (mode: Unify.unifyFail) =
 	 | TYP (ty1, ty2, reg1, reg2) =>
 	    PP.vcat
 	      (PP.text "Mode: type mismatch",
-	       PP.viblock (PP.HI 3)
+	       viblock
 		 [PP.hcat (PP.text "type1:", fmtType ty1),
 		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
 		  PP.hcat (PP.text "type2:", fmtType ty2),
@@ -195,7 +197,7 @@ fun unifyErr {ty1, name1, ty2, name2, message, region, kindName, kindFormat} =
 		  else message   (* but name1 or name2 may be ""! Should check for this. *)
            in PP.vcat
 		(PP.text message',
-		 PP.viblock (PP.HI 3)
+		 viblock
 		   (List.mapPartial (fn x => x)
 		       [if size name1 = 0
 			then NONE
@@ -506,7 +508,7 @@ fun patType(pat: pat, depth, region: SM.region) : pat * ty =
 		(err region COMPLAIN
                   (mkMessage ("constructor and argument do not agree in pattern", mode))
 		  (PPT.resetPPType();
-		   PP.viblock (PP.HI 3)
+		   viblock
 		     [PP.hcat (PP.text "constructor:", fmtType typ),
 		      PP.hcat (PP.text "argument:", fmtType argTy),
 		      PP.hcat (PP.text "in pattern:", fmtPat pat)]);
@@ -597,7 +599,7 @@ in
                handle Unify(mode) =>
                  (err region COMPLAIN
                     (mkMessage ("selecting a non-existing field from a record", mode))
-                    (PP.viblock (PP.HI 3)
+                    (viblock
 		       (PPT.resetPPType();
 			[PP.hcat (PP.text "the field name:", PPS.fmtSym label),
 			 PP.hcat (PP.text "the record type:", fmtType nty),
@@ -644,7 +646,7 @@ in
 		   if BT.isArrowType(reducedRatorTy)
 		   then (err region COMPLAIN
 			  (mkMessage ("operator and operand do not agree",mode))
-			  (PP.viblock (PP.HI 3)
+			  (viblock
 			     [PP.hcat (PP.text "operator domain:", fmtType (BT.domain reducedRatorTy)),
 			      PP.hcat (PP.text "operand:", fmtType randTy),
 			      PP.hcat (PP.text "in expression:", fmtExp exp),
@@ -652,7 +654,7 @@ in
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
 			  (mkMessage ("operator is not a function",mode))
-			  (PP.viblock (PP.HI 3)
+			  (viblock
 			     [PP.hcat (PP.text "operator:", fmtType ratorTy),
 			      PP.hcat (PP.text "in expression:", fmtExp exp),
 			      fmtModeErrorMsg mode]);

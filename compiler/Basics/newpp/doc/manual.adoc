@@ -96,11 +96,8 @@ Blocks::
 * block nesting level (BNL)
 
 Indentation::
-* Indented blocks, specified by block indentation (type bindent).
-** Soft indentation (SI n)
-** Hard indentation (HI n)
-** No indentation (NI)
-* Only compound blocks can have indentation
+* Indented formats are produced using the `hardIndent` and `softIndent` functions, where the first argument
+is the number of spaces to indent.
 
 Measurement::
 * The flat measure of a format.
@@ -146,21 +143,20 @@ Measurement::
 
 === Block indentation and "block left margin" or `blm`
 
-* Indentation is regarded as an attribute of blocks, rather than an independent format element or form.
-The block indentation attribute has type `bindent`, which has three variants: `NI`, `HI n`, and `SI n`.
+* Indentation is an attribute of formats that are created using the `hardIndent` and `softIndent`
+functions.
 
-* Blocks can be _indented_ (`bindent = HI n` or `SI n`) or _nonindented_ (`bindent = NI`).
-For indented blocks, there are two modes of indentation: _hard_ and _soft_ (`bindent = HI n`
-or `SI n`, respectively). Technically, a soft indented block is only _potentially_ indented,
+* For indented formats, there are two modes of indentation: _hard_ and _soft_, depending on which
+indentation function is used to create them. Technically, a soft indented format is only _potentially_ indented,
 with actual indentation depending on whether it immediatly follows a newline caused by a HardLine
-or triggered SoftLine break or by being at the beginning of an enclosing indented block.
+or triggered SoftLine break.
 
-* The indentation of an indented block applies to the complete block, in comparison with other
-pretty printing schemes where the indentation only applies after newlines within the block, and
-thus does not affect the first line of the block. This is why an indented block (hard indent
-or triggered soft indent) always starts on a fresh line.
+* The indentation of an indented format applies to the complete format, in comparison with other
+pretty printing schemes where the indentation only applies after newlines occuring within the block, and
+thus does not affect the first line of the block. This is why an indented format (hard indentation
+or triggered soft indentation) always starts on a fresh line.
 
-* The indentation level of a block is called the _block left margin_, or `blm` for short. The `blm` is
+* The indentation level of a compound block is called the _block left margin_, or `blm` for short. The `blm` is
 not a "static" or "structural" property of a block -- it is determined dynamically during rendering.
 All characters printed during the rendering of a block will be at or to the right of that block's `blm`,
 and thus the block occupies the "south-east" quadrant determined by the location of its first character.
@@ -168,11 +164,11 @@ Thus there in no way to achieve "outdents" or negative incremental indentation, 
 indentation is less than the containing block's blm.
 
 * Thus Indentation is always associated with a preceding newline, because it makes no sense to indent
-other than at the beginning of a line. An indented block will always start on an indented new line.
+other than at the beginning of a line. An indented format will always start on an indented new line.
 +
 If a hard indented block is not preceeded by a newline (produced by a HardLine break or a triggered
 SoftLine break), then it generates its own newline and adds its indentation to the parent blm to
-get its indentation or blm. If such a block is preceeded by a newline, then it produces only the incremental
+get its indentation or blm. But if such a block is preceeded by a newline, then it produces only the incremental
 indentation n (new blm = parent blm + n). This applies to a hard indented block occurring as the first
 component format of a hard indented block or "triggered" soft indented block; an indented block at
 the beginning of an indented block does not introduce an additional newline+indent.
@@ -231,8 +227,8 @@ and the line width (`lsp = lw - cc`).
 it _fits_ (_i.e._, its measure is less than the line space available), and otherwise the alternate
 format `fmt2` is rendered.
 
-* A soft indented block (with block indentation `bindent = SI n` for some `n`) actually performs
-the indentation `n` (relative to its parent's `blm`) if it immediately follows a newline+indent,
+* A soft indented block with incremental indentation `n` actually performs
+the indentation `n` (relative to its parent's `blm`) only if it immediately follows a newline+indent,
 and otherwise is rendered as an ordinary nonindented block with the same contents.
 
 * The function `flat : format -> format`, forces flat rendering and measuring of its argument format.
@@ -300,14 +296,6 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
    = BRK of break
    | FMT of format
 
-* datatype `bindent` -- block indentation
-
- datatype bindent
-   = NI        (* No Indent: the block begins at the current column on the current line *)
-   | HI of int (* Hard Indent: unconditional, adding a newline+indent if necessary; n >= 0 *)
-   | SI of int (* Soft Indent: triggered if preceded by a newline+indent; n >= 0 *)
-
-
 [discrete]
 ==== Format construction functions
 
@@ -325,13 +313,13 @@ layout-based syntax, that is up to the writer of the prettyprinter to achieve th
 
 _General block constructor functions:_
 
-* `basicBlock : bindent -> element list -> format`
+* `basicBlock : element list -> format`
 
- build a block with ad hoc alignment determined by explicit breaks among the elements and indentation specified by the bindent parameter.
+ build a block with ad hoc alignment determined by explicit breaks among the elements.
 
-* `alignedBlock : alignment -> bindent -> format list -> format`
+* `alignedBlock : alignment -> format list -> format`
 
- build an aligned block with the specified alignment and indentation.
+ build an aligned block with the specified alignment.
 
 _Basic (nonindented) block constructor functions:_
 
@@ -354,28 +342,6 @@ _Basic (nonindented) block constructor functions:_
 * `cblock : format list -> format`
 
  cblock fmts : Create a "compact" aligned block with fmts as components, with no breaks between components.
-
-_Indented block constructor functions:_
-
-* `iblock : bindent -> element list -> format`
-
- block bindent elems : Create a basic block with elems as components (mixing formats and breaks) and the indentation specified by bindent.
-
-* `hiblock : bindent -> format list -> format`
-
- hiblock bindent fmts : Create a horizontally aligned block (with implicit (Space 1) breaks) with fmts as components and the indentation specified by bindent.
-
-* `viblock : bindent -> format list -> format`
-
- viblock bindent fmts : Create a vertically aligned block (with implicit HardLine breaks) with fmts as components and the indentation specified by bindent.
-
-* `piblock : bindent -> format list -> format`
-
- piblock binent fmts : Create a horizontally aligned block (with implicit (Space 1) breaks) with fmts as components and the indentation specified by bindent.
-
-* `ciblock : bindent -> format list -> format`
-
- ciblock binent fmts : Create a horizontally aligned block with no breaks, with fmts as components and the indentation specified by bindent.
 
 
 [discrete]
@@ -891,8 +857,10 @@ constrained to have the same content; for instance, `fmt2` might be an abbreviat
 ----
 datatype format
   = TEXT  of string
-  | BLOCK of {elements: element list, bindent: bindent, measure: int}
-  | ABLOCK of {formats: format list, alignment: alignment, bindent: bindent, measure: int}
+  | BLOCK of {elements: element list, measure: int}
+  | ABLOCK of {formats: format list, alignment: alignment, measure: int}
+  | HINDENT of int * format
+  | SINDENT of int * format
   | FLAT of format
   | ALT of format * format
 

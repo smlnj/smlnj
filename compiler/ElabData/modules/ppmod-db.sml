@@ -74,6 +74,8 @@ local
   val fmtTyfun = PPT.fmtTyfun
   val fmtFormals = PPT.fmtFormals
 
+  fun viblock (formats: PP.format list) = PP.hardIndent 2 (PP.vblock formats)
+
 in
 
 val resultId = S.strSymbol "<resultStr>"
@@ -181,10 +183,10 @@ fun fmtStructure env (str, depth) =
 	 of M.STR { sign, rlzn as { entities, ... }, prim, ... } =>
               PP.vcat
 	        (PP.text "STR",
-		 PP.viblock (PP.HI 2)
-	           [PP.label "sign:" (fmtSignature0 env (sign, SOME entities, depth-1)),
-		    PP.label "rlzn:" (fmtStrEntity env (rlzn, depth-1)),
-		    PP.label "prim:" (PPPrim.fmtStrPrimInfo prim)]) (* or PPPrim.fmtStrPrimInfo prim ? *)
+		 viblock
+		    [PP.label "sign:" (fmtSignature0 env (sign, SOME entities, depth-1)),
+		     PP.label "rlzn:" (fmtStrEntity env (rlzn, depth-1)),
+		     PP.label "prim:" (PPPrim.fmtStrPrimInfo prim)]) (* or PPPrim.fmtStrPrimInfo prim ? *)
 			(* GK: This should be cleaned up soon so as to use a
 			   fmtStrInfo that is an actual pretty printer conforming
 			   to the pattern of the other pretty printers. *)
@@ -287,7 +289,7 @@ and fmtSignature0 env (sign, entityEnvOp, depth: int) =
 		    val nonConsElems = removeDCons elements
 		 in PP.vcat 
 		      (PP.text "Signature.SIG:",
-		       PP.viblock (PP.HI 2)
+		       viblock
 			 [PP.label "stamp:" (PP.text (Stamps.toShortString stamp)),
 			  PP.label "label:"
 			    (case name
@@ -296,7 +298,7 @@ and fmtSignature0 env (sign, entityEnvOp, depth: int) =
 			  (case elements
 			     of nil => PP.empty
 			      | _ => PP.label "elements:"
-				       (PP.viblock (PP.HI 2)
+				       (viblock
 					  (map (fn (sym, spec) =>
 						   fmtElement (entityEnvOp, env) (sym, spec, depth))
 					       nonConsElems))),
@@ -322,7 +324,7 @@ and fmtFunsig env (sign, depth) =
 	  of M.FSIG {paramsig, paramvar, paramsym, bodysig, ...} =>
                PP.vcat
 		 (PP.text "Funsig.FSIG:",
-		  PP.viblock (PP.HI 2)
+		  viblock
 		    [PP.label "psig:" (fmtSignature0 env (paramsig, NONE, depth-1)),
 		     PP.label "pvar:" (PP.text (EntPath.entVarToString paramvar)),
 		     PP.label "psym:"
@@ -339,7 +341,7 @@ and fmtStrEntity env ({stamp, entities, properties, rpath, stub}: M.strEntity, d
       then PP.text "<structure entity>"
       else PP.vcat
 	       (PP.text "strEntity:",
-		PP.viblock (PP.HI 2)
+		viblock
 		  [PP.label "rpath:" (PPP.fmtInvPath rpath),
 		   PP.label "stamp:" (PP.text (Stamps.toShortString stamp)),
 		   PP.label "entities:" (fmtEntityEnv env (entities, depth-1)),
@@ -351,7 +353,7 @@ and fmtFctEntity env ({stamp,closure,properties,tycpath,rpath,stub}: M.fctEntity
     then PP.text "<functor entity>"
     else PP.vcat
 	   (PP.text "fctEntity:",
-	    PP.viblock (PP.HI 2)
+	    viblock
 	      [PP.label "rpath:" (PPP.fmtInvPath rpath),
 	       PP.label "stamp:" (PP.text (Stamps.toShortString stamp)),
 	       PP.label "closure:" (fmtClosure (closure,depth-1)),
@@ -365,7 +367,7 @@ and fmtFunctor env (fct, depth) =
        of (M.FCT { sign, rlzn, ... }) =>
 	    PP.vcat
               (PP.text "Functor.FCT:",
-	       PP.viblock (PP.HI 2)
+	       viblock
 	         [PP.label "sign:" (fmtFunsig env (sign, depth-1)),
 		  PP.label "rlzn:" (fmtFctEntity env (rlzn, depth-1))])
 	| M.ERRORfct => PP.text "Functor.ERROR")
@@ -467,25 +469,25 @@ and fmtStrExp (strExp,depth) =
        | M.APPLY (fctExp,strExp) =>
 	   PP.vcat
 	     (PP.text "SE.APPLY:",
-	      PP.viblock (PP.HI 2)
+	      viblock
 	        [PP.label "fct:" (fmtFctExp (fctExp, depth-1)),
 		 PP.label "arg:" (fmtStrExp (strExp, depth-1))])
        | M.LETstr (entDec,strExp) =>
 	  PP.vcat
             (PP.text "SE.LET:",
-	     PP.viblock (PP.HI 2)
+	     viblock
 	       [PP.label "let:" (fmtEntDec (entDec,depth-1)),
 		PP.label "in:" (fmtStrExp (strExp, depth-1))])
        | M.ABSstr (sign,strExp) =>
           PP.vcat
             (PP.text "SE.ABS:",
-             PP.viblock (PP.HI 2)
+             viblock
 	       [PP.label "sign:" (PP.text "<omitted>"),
 		PP.label "strExp:" (fmtStrExp (strExp, depth-1))])
        | M.CONSTRAINstr {boundvar,raw,coercion} =>
           PP.vcat
             (PP.text "SE.CONSTRAIN:",
-             PP.viblock (PP.HI 2)
+             viblock
                [PP.label "boundvar:" (fmtEntVar boundvar),
 		PP.label "source:" (fmtStrExp (raw, depth-1)),
 		PP.label "target:" (fmtStrExp (coercion, depth-1))])
@@ -500,19 +502,19 @@ and fmtFctExp (fctExp,depth) =
        | M.LAMBDA_TP {param, body, ...} =>
            PP.vcat
 	     (PP.text "FE.LAMBDA_TP:",
-	      PP.viblock (PP.HI 2)
+	      viblock
                 [PP.label "param:" (fmtEntVar param),
 		 PP.label "body:" (fmtStrExp (body, depth-1))])
        | M.LAMBDA {param, body} =>
            PP.vcat
        	     (PP.text "FE.LAMBDA:",
-	      PP.viblock (PP.HI 2)
+	      viblock
 	        [PP.label "param:" (fmtEntVar param),
 		 PP.label "body:" (fmtStrExp (body, depth-1))])
        | M.LETfct (entDec,fctExp) =>
            PP.vcat
              (PP.text "FE.LETfct:",
-	      PP.viblock (PP.HI 2)
+	      viblock
 		[PP.label "decl:" (fmtEntDec (entDec,depth-1)),
 		 PP.label "body:" (fmtFctExp (fctExp, depth-1))])
 
@@ -520,7 +522,7 @@ and fmtFctExp (fctExp,depth) =
 and fmtClosure (M.CLOSURE {param, body, env}, depth) =
       PP.vcat
 	(PP.text "CLOSURE:",
-	 PP.viblock (PP.HI 2)
+	 viblock
 	   [PP.label "param:" (fmtEntVar param),
 	    PP.label "body:" (fmtStrExp (body, depth-1)),
 	    PP.label "env:" (fmtEntityEnv SE.empty (env, depth-1))])

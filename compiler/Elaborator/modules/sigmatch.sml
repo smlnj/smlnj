@@ -730,13 +730,14 @@ let
                                    then PP.printFormatNL
 					  (PP.vcat
 					     (PP.label "###SM:" (PPS.fmtSym sym),
-					      PP.viblock (PP.HI 2) 
-						[PP.label "spectype:" (PPT.fmtType statenv spectyp),
-						 PP.label "acttyp:" (PPT.fmtType statenv acttyp),
-						 PP.label "ptvs:" 
-						   (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs)),
-						 PP.label "btvs:"
-						   (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs))]))
+					      PP.hardIndent 2 
+					        (PP.vblock
+						   [PP.label "spectype:" (PPT.fmtType statenv spectyp),
+						    PP.label "acttyp:" (PPT.fmtType statenv acttyp),
+						    PP.label "ptvs:" 
+						      (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs)),
+						    PP.label "btvs:"
+						      (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs))])))
 				   else ()
 
                                  val spath = SP.SPATH[sym]

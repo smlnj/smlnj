@@ -68,6 +68,8 @@ local
   type depth = int (* deBruijn context *)
   val top : depth = 0
 
+  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
+
 in
 
 (****************************************************************************
@@ -654,13 +656,13 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
                 of SOME(_, tvs) =>
 		   (if !debugging then
                       complain EM.WARN "mkVE -> matchInstTypes -> pruneTyvar"
-                        (PP.viblock (PP.HI 3)
-				    (PP.label "var:" (PPVal.fmtVarDebug (env, e)) ::
-			   PP.label "tvs length:" (PP.integer (length tvs)) ::
-                           (case tvs
-			      of [tyvar] =>
-				 [PP.label "tyvar(1):" (fmtType (T.VARty (hd tvs)))]
-                               | _ => nil)))
+                        (viblock
+			   (PP.label "var:" (PPVal.fmtVarDebug (env, e)) ::
+			    PP.label "tvs length:" (PP.integer (length tvs)) ::
+                            (case tvs
+			       of [tyvar] =>
+				    [PP.label "tyvar(1):" (fmtType (T.VARty (hd tvs)))]
+				| _ => nil)))
                     else ();
                     map TU.pruneTyvar tvs)
                  | NONE =>
@@ -668,7 +670,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
 		      (fn () =>
 			  (complain EM.COMPLAIN
 				    "mkVE:primop intrinsic type doesn't match occurrence type"
-                      (PP.viblock (PP.HI 3)
+                      (viblock
                          [PP.label "VALvar" (PPVal.fmtVar e),
 			  PP.label "occtypes" (fmtType occurenceTy),
                           PP.label "intrinsicType" (fmtType intrinsicType),
@@ -1648,7 +1650,7 @@ val _ = if ltyerrors
         then (PP.printFormat
 		 (PP.vcat
 		   (PP.text "**** Translate: checkLty failed ****",
-		    PP.viblock (PP.HI 3)
+		    viblock
 		      [PP.label "absyn" (PPA.fmtDec (env,NONE) (rootdec,1000)),
                        PP.label "lexp" (PPLexp.fmtLexp 25 plexp)]));
               complain EM.WARN "checkLty" EM.nullErrorBody;

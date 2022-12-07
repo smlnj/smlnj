@@ -3,18 +3,14 @@
 (* New Prettyprinter, main interface
  * Version 7:
  *   -- prettyprinter factored into Format, Measure: MEASURE, Render : RENDER,
-        and NewPrettyPrint: NEW_PRETTYPRINT (NewPP : NEW_PP) structures
+        and NewPP : NEW_PP structures
  *   -- memoized block flat measures
- *
  * Version 7.4:
  *   -- structure NewPP --> NewPrettyPrint
  *   -- signature NEW_PP --> NEW_PRETTYPRINT
  *   -- separator --> break, SEP --> BRK, SBLOCK --> BLOCK, sblock --> block, siblock --> iblock
  *   -- added: vHeaders and vHeaderFormats (moved from NewPPUtil)
  *   -- removed: tuple
- *
- * Version 8:
- *   -- bindent, xiblock, etc. eliminated; replaced by HINDENT, SINDENT format constructors
  *)
 
 (* Defines:
@@ -31,7 +27,7 @@ local
 
 in		      
 
-open Format  (* import datatypes format, element, break; format exported as abstract in NEW_PRETTYPRINT *)
+open Format  (* defines types format, element, break, bindent *)
 
 (*** the basic block building functions ***)
 
@@ -50,42 +46,64 @@ fun reduceElements (elements: element list) =
      in List.filter notEmpty elements
     end
 
-(* basicBlock : element list -> format
+(* basicBlock : bindent -> element list -> format
  *   Construct an BLOCK with explicit, possibly heterogeous, breaks.
  *   Returns EMPTY if the element list is null. *)
-fun basicBlock elements =
+fun basicBlock bindent elements =
     (case reduceElements elements
        of nil => EMPTY
 	| [FMT fmt] => fmt  (* special blocks consisting of a single (FMT fmt) element, reduce to fmt *)
-        | _ => BLOCK {elements = elements, measure = M.measureElements elements})
+        | _ => BLOCK {elements = elements, bindent = bindent, measure = M.measureElements elements})
 
-(* alignedBlock : alignment -> format list -> format *)
+(* alignedBlock : alignment -> bindent -> format list -> format *)
 (* A block with no element formats reduces to EMPTY, regardless of alignment or indentation. *)
-fun alignedBlock alignment formats =
-    let val breaksize = case alignment of C => 0 |  _ => 1
+fun alignedBlock alignment bindent formats =
+    let val sepsize = case alignment of C => 0 |  _ => 1
      in case reduceFormats formats
 	  of nil => EMPTY
-	   | [fmt] => fmt  (* watch out for this probably obsolete (since bindent is gone) bug:
+	   | [fmt] => (* fmt *) (* singleton aligned blocks reduce to their sole component format
 			    * BUG! this is wrong if block is indented, since this looses the ABLOCK
 			    * that should carry the indentation (in its bindent field)!
 			    * E.G. iblock (HI 3) [text "aa"] ==> text "aa", indentation lost! *)
+             (case bindent
+	        of NI => fmt
+		      | _ => ABLOCK {formats = [fmt], alignment = alignment, bindent = bindent,
+	                             measure = M.measure fmt})  (* no virtual breaks *)
+
 	   | formats' =>
-	       ABLOCK {formats = formats', alignment = alignment, measure = M.measureFormats (breaksize, formats')}
+	       ABLOCK {formats = formats', alignment = alignment, bindent = bindent,
+	               measure = M.measureFormats (sepsize, formats')}
     end
 
 
 (*** block building functions for non-indenting blocks ***)
 
 (* block : element list -> format *)
-(* construct a block with explicit, possibly heterogeous, breaks. A synonym for basicBlock *)
-val block = basicBlock
+(* construct a block with explicit, possibly heterogeous, breaks, NI bindent *)
+fun block elements = basicBlock NI elements
 
-(* constructing aligned blocks: common abbreviations *)
+(* constructing nonindented aligned blocks *)
 (* xblock : format list -> format, for x = h, v, p, c *)
-val hblock = alignedBlock H
-val vblock = alignedBlock V
-val pblock = alignedBlock P
-val cblock = alignedBlock C
+val hblock = alignedBlock H NI
+val vblock = alignedBlock V NI
+val pblock = alignedBlock P NI
+val cblock = alignedBlock C NI
+
+(* block building functions producing (for bindent =  HI, SI) indented blocks
+ * For Version 7, we measure indented blocks the same as non-indented blocks *)  
+
+(* iblock : bindent * element list -> format *)
+(* construct a block with explicit, possibly heterogeous, breaks *)
+val iblock = basicBlock
+
+(* xiblock : bindent -> format list -> format, for x = h, v, p, c
+ *  for constructing aligned and possibly indented blocks.
+ *  The alignment and indentation do not matter if applied to an empty list of formats;
+ *  in this case the result is always EMPTY. *)
+val hiblock = alignedBlock H
+val viblock = alignedBlock V
+val piblock = alignedBlock P
+val ciblock = alignedBlock C
 
 (* "conditional" formats *)
 
@@ -179,9 +197,8 @@ fun label (str:string) (fmt: format) = hcat (text str, fmt)
 
 (*** functions for formatting sequences of formats (format lists) ***)
 
-(* alignmentToBreak : alignment -> break
- * The virtual break associated with each alignment.
- * This is a utility function used in functions sequence and formatSeq *)
+(* alignmentToBreak : alignment -> break *)
+(* a utility function used in functions sequence and formatSeq *)
 fun alignmentToBreak H = Space 1
   | alignmentToBreak V = HardLine
   | alignmentToBreak P = SoftLine 1
@@ -208,10 +225,16 @@ fun sequence (alignment: alignment) (sep: format) (formats: format list) =
       in block (addBreaks formats)
      end
 
-(* xsequence : [sep:]format -> format list -> format, x = h, v, p, c *)
+(* hsequence : format -> format list -> format *)
 val hsequence = sequence H
+
+(* psequence : format -> format list -> format *)
 val psequence = sequence P
+
+(* vsequence : format -> format list -> format *)
 val vsequence = sequence V
+
+(* csequence : format -> format list -> format *)
 val csequence = sequence C
 
 (* tupleFormats : format list -> format  -- parenthesized, comma separated, packed alignment sequence 
@@ -232,7 +255,9 @@ fun optionFormat (formatOp: format option) =
 (*** functions for formatting sequences of values (of homogeneous types, i.e. 'a lists) ***)
 
 (* formatSeq : {alignment: alignment, sep: format, formatter : 'a -> format} -> 'a list -> format *)
-fun 'a formatSeq {alignment: alignment, sep: format, formatter: 'a -> format} (xs: 'a list) =
+fun 'a formatSeq
+       {alignment: alignment, sep: format, formatter: 'a -> format}
+       (xs: 'a list) =
     let val separate =
 	    (case alignment
 	       of C => (fn elems => FMT sep :: elems)  (* alignment = C *)
@@ -248,7 +273,7 @@ fun 'a formatSeq {alignment: alignment, sep: format, formatter: 'a -> format} (x
 		      FMT fmt :: (separate (inter rest))
 		  | inter nil = nil (* won't happen *)
 	     in inter fmts
-	    end
+	     end
      in block (addBreaks formats)
     end
 
@@ -260,6 +285,16 @@ fun 'a formatClosedSeq
        {alignment: alignment, front: format, sep: format, back: format, formatter: 'a -> format}
        (xs: 'a list) =
     enclose {front=front, back=back} (formatSeq {alignment=alignment, sep=sep, formatter=formatter} xs)
+
+(* DROPPED!
+(* tuple : ('a -> format) -> 'a list -> format *)
+(* packed-style formatting of a _homogeneous_ tuple of 'a values.
+ * This was of limited value since most tuples are not homogeneous! Use tupleFormats instead. *)
+fun 'a tuple (formatter : 'a -> format) (xs: 'a list) =
+    formatClosedSeq
+      {alignment=P, front = lparen, back = rparen, sep = comma, formatter = formatter}
+      xs
+*)
 
 (* alignedList : alignment -> ('a -> format) -> 'a list -> format *)
 fun 'a alignedList alignment (formatter : 'a -> format) (xs: 'a list) =
@@ -297,7 +332,8 @@ fun padHeaders (s1, s2) =
 	 StringCvt.padLeft #" " maxsize s2)
     end
 
-(* vHeaders : {header1 : string, header2 : string, formatter: 'a -> format} -> 'a list -> format *)
+(* vHeaders : {header1 : string, header2 : string, formatter: 'a -> format}
+              -> 'a list -> format *)
 fun vHeaders {header1: string, header2: string, formatter: 'a -> format}
 		    (elems: 'a list) =
     let val (header1, header2) = padHeaders (header1, header2)
@@ -328,14 +364,14 @@ fun vHeaderFormats {header1: string, header2: string} (elems: format list) =
 fun hardIndent (n: int) (fmt: format) =
     (case fmt
        of EMPTY => EMPTY
-        | _ => HINDENT (n, fmt))
+        | _ => hiblock (HI n) [fmt])
 
 (* softIndent : int -> format -> format *)
 (* When applied to EMPTY, produces EMPTY *)
 fun softIndent (n: int) (fmt: format) =
     (case fmt
        of EMPTY => EMPTY
-        | _ => SINDENT (n, fmt))
+        | _ => hiblock (SI n) [fmt])
 
 
 (*** functions for setting and accessing the line width ***)

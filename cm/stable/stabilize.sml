@@ -1015,8 +1015,7 @@ struct
 					     (PP.text
 						(concat ["because the following sub-group",
 							 grammar, " not stable:"]),
-					      PP.viblock (PP.HI 2)
-						(map (fn (p, _, _) => PP.text (SrcPath.descr p)) l))
+					      PP.hardIndent 2 (PP.vblock (map (fn (p, _, _) => PP.text (SrcPath.descr p)) l)))
 				     val gdescr = SrcPath.descr (#grouppath grec)
 				  in EM.errorNoSource SM.nullRegion EM.COMPLAIN
 					  (gdescr ^ " cannot be stabilized")

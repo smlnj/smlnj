@@ -571,11 +571,12 @@ and fmtStrexp (context as (statenv,sourceOp)) =
           | fmtStrexp' (STRstr bindings, d) =
               PP.vblock
 	        [PP.text "struct",
-	         PP.viblock (PP.HI 2)
-		   (map (fn binding =>
+	         PP.hardIndent 2
+	           (PP.vblock
+		     (map (fn binding =>
 		            PPModules.fmtBinding statenv
 			      (Bindings.bindingSymbol binding, binding, d-1))
-			bindings),
+			  bindings)),
 		 PP.text "end"]
 		
 	   | fmtStrexp' (LETstr(dec,body),d) =

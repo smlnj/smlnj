@@ -32,6 +32,8 @@ local (* top local *)
 
   val printDepth = Control_Print.printDepth
 
+  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
+
 in
 
 (* debugMsg : bool ref -> string -> unit *)
@@ -73,7 +75,7 @@ fun fmtSubcase caseFormatter subcase =
        | DCARG thing => caseFormatter thing
        | VELEMS elems => 
 	   PP.vcat (PP.text "VELEMS:",
-		    PP.viblock (PP.HI 3) (map caseFormatter elems)))
+		    viblock (map caseFormatter elems)))
 
 (* fmtProtoAndor : protoAndor -> PP.format
  * pretty printer for protoAndor nodes *)
@@ -114,11 +116,9 @@ val fmtAndor =
 	      PP.hcat (PP.text "VAR", PP.integer id)
 	  | fmtNode WC = PP.string "WC"
 
-	and fmtAndChildren nodes =
-	      PP.viblock (PP.HI 3) (map fmtNode nodes)
+	and fmtAndChildren nodes = viblock (map fmtNode nodes)
 
-	and fmtVariants variants =
-	      PP.viblock (PP.HI 3) (map fmtVariant variants)
+	and fmtVariants variants = viblock (map fmtVariant variants)
 
 	and fmtVariant (con, rules, subcase) =
 	      PP.hcat
@@ -140,7 +140,7 @@ val fmtDectree =
 	      PP.text "FAIL"
 
 	and fmtSwitch (cases,defaultOp) =
-              PP.viblock (PP.HI 3)
+              viblock
 	        (map fmtCase cases @
 		 (case defaultOp
 	            of SOME dectree =>

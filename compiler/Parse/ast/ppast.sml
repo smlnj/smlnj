@@ -334,7 +334,7 @@ and fmtSigExp sourceOp =
 	    let val specFmts = map (fn speci => fmtSpec sourceOp (speci,d)) specl
 	     in PP.vblock
 		  [PP.text "sig",
-		   PP.viblock (PP.HI 2) specFmts,
+		   PP.hardIndent 2 (PP.vblock specFmts),
 		   PP.text "end"]
 	    end
 	  | fmtSigExp'(MarkSig (m,r),d) = fmtSigExp sourceOp (m,d)
