@@ -368,12 +368,12 @@ _Basic (nonindented) block constructor functions:_
 
 * `softIndent : int -> format -> format`
 
- softIndent (fmt, n) : indent fmt n additional spaces (relative to parent block's blm) only if following a newline+indent.
+ softIndent n fmt : indent fmt n additional spaces (relative to parent block's blm) only if following a newline+indent.
  Otherwise render fmt normally.
 
 * `hardIndent : int -> format -> format`
 
- hardIndent (fmt, n) : indent fmt n additional spaces (relative to parent block's blm) unconditionally.
+ hardIndent n fmt : indent fmt n additional spaces (relative to parent block's blm) unconditionally.
  This will produce a newline + incremented indent (blm+n) if it does not follow a newline+indent, otherwise it just increases the indentation.
 
 [discrete]
