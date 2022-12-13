@@ -105,8 +105,17 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
 
+[2022/12/13]::
++
+Fixing some issues with building a macOS package.  The
+`postinstall`/`postupgrade` scripts needed to be updated to use
+the `build.sh` script and the `build.sh` script needed a fix so
+that it can build the documentation even when there
+is not an installation of *SML/NJ* present.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //====================================================================
 == Version 2022.1; 2022/08/25
