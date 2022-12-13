@@ -25,7 +25,7 @@ SCRIPTDIR=`pwd`
 DST=$2
 cd $DST
 
-config/install.sh -nolib
+./build.sh -nolib
 
 $SCRIPTDIR/copy-doc $DST
 

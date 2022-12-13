@@ -480,6 +480,8 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   # builds are not confused.
   #
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
+  export SMLNJ_HOME
+  SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
   cd doc
   if autoconf -Iconfig ; then
     :
