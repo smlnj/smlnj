@@ -91,6 +91,10 @@ configure~
 config.status
 autom4te.cache
 
+# ml-yacc description files
+#
+*.grm.desc
+
 # project-specific files
 sml.boot.*
 sml.bin.*
