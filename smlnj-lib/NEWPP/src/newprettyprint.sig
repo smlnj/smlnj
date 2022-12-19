@@ -1,14 +1,18 @@
 (* compiler/Basics/newpp/newprettyprint.sig *)
 
-(* Version 7.
+(* Version 8.
+ *  -- Eliminated bindent type, xiblock functions
+ *  -- added HINDENT, SINDENT format constructors
+ *
+ * Version 7.
  *  -- The main interface of the new Prettyprinter.
  *  -- New: memoized measure for blocks (does not alter NEW_PP signature)
  *
  * Version 7.4
  *  -- signature NEW_PP --> NEW_PRETTYPRINT
  *  -- sblock --> block; siblock --> iblock; separator --> break; SEP --> BRK
- *  -- added vHeaders, vHeaderFormats (from NEW_PPUTIL)
- *  -- removed tuple
+ *  -- added: vHeaders, vHeaderFormats (from NEW_PPUTIL)
+ *  -- removed: tuple
  *)
 
 (* Defines: signature NEW_PRETTYPRINT *)
@@ -38,13 +42,6 @@ sig
       = BRK of break   (* breaks are atomic and do not contain content *)
       | FMT of format
 
-    (* block indents: specify the indentation behavior on entering a block *)
-    datatype bindent
-      = NI          (* No Indent *)
-      | HI of int   (* Hard Indent: always taken, supplying its own newline+indent if necessary *)
-      | SI of int   (* Soft Indent: taken only if the block is preceded by a newline+indent *)
-
-
   (* Basic formats and format building operations: *)
 
     val empty   : format           (* == EMPTY, renders as empty string, composition identity *)
@@ -57,24 +54,17 @@ sig
     (* block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
     (* basicBlock -- the elements may include explicit separators *)
 
-    val basicBlock : bindent -> element list -> format
-    val alignedBlock : alignment -> bindent -> format list -> format
+    val basicBlock : element list -> format
+    val alignedBlock : alignment -> format list -> format
 
-    (* nonindented aligned blocks: bindent = NI *)
+    (* building blocks, basic and aligned; n-ary versions taking lists, empty format args are absorbed
+     *   empty argument list produces empty format *)
 
     val block  : element list -> format  (* = basicBlock NI *)
     val hblock : format list  -> format  (* = alignedBlock H NI *)
     val vblock : format list  -> format  (* = alignedBlock V NI *)
     val pblock : format list  -> format  (* = alignedBlock P NI *)
     val cblock : format list  -> format  (* = alignedBlock C NI *)
-
-    (* (possibly) indented blocks -- bindent specified as curried first argument *)
-
-    val iblock  : bindent -> element list -> format  (* = basicBlock *)
-    val hiblock : bindent -> format list  -> format  (* = alignedBlock H *)
-    val viblock : bindent -> format list  -> format  (* = alignedBlock V *)
-    val piblock : bindent -> format list  -> format  (* = alignedBlock P *)
-    val ciblock : bindent -> format list  -> format  (* = alignedBlock C *)
 
     (* a few "punctuation" characters as formats *)
 
@@ -181,11 +171,10 @@ sig
   (* indenting formats *)
 
     val hardIndent : int -> format -> format
-    (* produces a hard indented HBLOCK containing the format as sole component *)
+    (* hardIndent n fmt ==> HINDENT (n, frmt) *)
 
     val softIndent : int -> format -> format
-    (* produces a soft indented HBLOCK containing the format as sole component *)
-
+    (* softIndent n fmt ==> SINDENT (n, frmt) *)
 
   (* Conditional formats: *)
 
@@ -193,7 +182,7 @@ sig
 	(* if the format fits flat, then render it flat, otherwise render it normally *)
 
     val alt : format * format -> format
-	(* if the first format fits, use it, otherwise render the second format,
+	(* if the first format fits flat, use it, otherwise render the second format,
 	   NOTE: the two argument formats may not have the same content! But usually they should! *)
 
     val hvblock : format list -> format

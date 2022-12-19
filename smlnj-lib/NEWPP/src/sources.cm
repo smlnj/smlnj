@@ -1,0 +1,19 @@
+(* smlnj-lib/NEWPP/src/sources.cm *)
+(* The New PrettyPrinter Library *)
+
+Library
+
+	signature NEW_PRETTYPRINT
+	structure NewPrettyPrint
+
+is
+
+$smlnj/basis/basis.cm
+
+format.sml
+measure.sig
+measure.sml
+render.sig
+render.sml
+newprettyprint.sig
+newprettyprint.sml
