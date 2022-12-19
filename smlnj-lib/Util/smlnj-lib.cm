@@ -83,6 +83,8 @@ structure LibBase
 structure ListFormat
 structure ListMergeSort
 structure ListXProd
+structure NativeInt
+structure NativeWord
 structure ParserComb
 structure PathUtil
 structure PrimeSizes
@@ -211,8 +213,10 @@ path-util.sml
 plist-sig.sml
 plist.sml
 #if defined(SIZE_32)
+  target32-native.sml
   target32-prime-sizes.sml
 #else
+  target64-native.sml
   target64-prime-sizes.sml
 #endif
 priority-sig.sml
@@ -242,4 +246,3 @@ real-order-stats.sml
 univariate-stats.sml
 utf8-sig.sml
 utf8.sml
-
