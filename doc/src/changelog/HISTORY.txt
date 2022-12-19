@@ -107,6 +107,15 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 //====================================================================
 == Recent updates
 
+//--------------------------------------------------------------------
+[2022/12/19]::
++
+Port fixes for Slice `all` combinators from legacy branch (see
+https://github.com/smlnj/legacy/pull/264[pull request 264]).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2022/12/13]::
 +
 Fixing some issues with building a macOS package.  The
