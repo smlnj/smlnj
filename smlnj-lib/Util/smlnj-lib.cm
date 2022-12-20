@@ -45,6 +45,7 @@ signature PROP_LIST
 signature QUEUE
 signature RAND
 signature RANDOM
+signature RANDOM_ENGINE
 signature SCAN
 signature SPLAY_TREE
 signature UREF
@@ -118,6 +119,7 @@ functor LeftPriorityQFn
 functor ListMapFn
 functor ListSetFn
 functor MonoArrayFn
+functor RandomFn
 functor RedBlackMapFn
 functor RedBlackSetFn
 functor SplayMapFn
@@ -125,7 +127,7 @@ functor SplaySetFn
 
 is
 
-  $/basis.cm
+$/basis.cm
 
 ansi-term.sml
 array-qsort-fn.sml
