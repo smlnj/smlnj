@@ -1,0 +1,6 @@
+smlnj[newpp]/notes/noweb.txt
+
+We should really remove the noweb stuff, since it is no longer
+supported in the compiler itself (specifically in Basics/source). The
+lexer specs in Parse/lex/ml.lex and sml.lex could also be slightly
+implified by getting rid of the #line directives.

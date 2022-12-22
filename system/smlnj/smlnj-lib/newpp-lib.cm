@@ -1,0 +1,24 @@
+(* $smlnj/smlnj-lib/newpp-lib.cm
+ *
+ *   This is a proxy for $SMLNJ-LIB/NEWPP/newpp-lib.cm and represents
+ *   the version of the new SML/NJ pretty-printing library that is internally
+ *   used in the implementation of the system itself.
+ *
+ *   User code can refer to it as $/newpp-lib.cm, but the $newpp-lib.cm
+ *   anchor may be redefined to point to a different version
+ *   without affecting the compiler itself (???).
+ *
+ *   Copyright (c) 2022 by The Fellowship of SML/NJ (https://www.smlnj.org)
+ *
+ * author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	library ($SMLNJ-LIB/NEWPP/newpp-lib.cm)
+is
+	$SMLNJ-LIB/NEWPP/newpp-lib.cm
+		(bind:(anchor:basis.cm value:$SMLNJ-BASIS)
+		 bind:(anchor:smlnj-lib.cm value:$SMLNJ-LIB/Util)
+		 bind:(anchor:newpp-lib.cm value:$SMLNJ-LIB/NEWPP)
+		 bind:(anchor:controls-lib.cm value:$SMLNJ-LIB/Controls)
+		 bind:(anchor:ml-yacc-lib.cm value:$SMLNJ-ML-YACC-LIB))
+

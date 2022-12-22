@@ -1,25 +1,25 @@
-= The `NewPP` structure
+= The `NewPrettyPrint` structure
 :Author: David MacQueen
-:Date: 2022.12.06
+:Date: 2022.12.21
 :stem: latexmath
 :source-highlighter: pygments
 :VERSION: 8.0
 
-The `NewPP` structure is the user-facing module of the new prettyprinter library.
+The `NewPrettyPrint` structure is the user-facing module of the new prettyprinter library.
 It is based on mapping data structures to "formats", which are then rendered using
-an output function to print them.
+a provided string output function to print them.
 
 == Synopsis
 
 [source,sml]
 ------------
-signature NEWPP
-structure NewPP :> NEWPP
+signature NEW_PRETTYPRINT
+structure NewPrettyPrint :> NEW_PRETTYPRINT
 ------------
 
 [source,sml]
 ------------
-type format
+type format  (* abstract *)
 
 datatype alignment  (* alignment property of "aligned" blocks *)
   = H  (* Horizontal alignment, with implicit single space separtors between format components *)
@@ -29,8 +29,8 @@ datatype alignment  (* alignment property of "aligned" blocks *)
 
 datatype break       (* separate format elements in a basic block, allowing line breaks *)
   = HardLine         (* hard line break *)
-  | SoftLine of int  (* soft line break; rendered to n spaces when not triggered; n >= 0 *)
-  | Space of int     (* n spaces; n >= 0 *)
+  | SoftLine of int  (* soft line break; rendered to n spaces when not triggered, where n >= 0 *)
+  | Space of int     (* n spaces, where n >= 0 *)
   | NullBreak
 
 datatype element
