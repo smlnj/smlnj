@@ -41,7 +41,7 @@ with compound blocks.
 == Synopsis
 
 [source,sml]
-   structure NewPP : NEW_PP
+   structure NewPrettyPrint : NEW_PRETTYPRINT
 
 
 == Key Concepts and Terminology
@@ -264,9 +264,9 @@ In any case, this prettyprinter library is not designed to support notations tha
 layout-dependent syntaxes. If the prettyprinted layout is supposed to faithfully represent
 layout-based syntax, that is up to the writer of the prettyprinter to achieve that.
 
-== Interface
+== Interface (NEWPP/src/newprettyprint.sig)
 
-=== signature NEW_PP
+=== signature NEW_PRETTYPRINT
 
 [discrete]
 ==== Types
