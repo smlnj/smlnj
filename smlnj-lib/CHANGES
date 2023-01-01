@@ -5,6 +5,15 @@ correspond to SML/NJ releases.
 SML/NJ 2023.1
 -------------------
 
+[2023-01-01]
+        Reimplementation of the `Random` structure to use the Mersenne Twister
+        algorithm.  There are both 32-bit and 64-bit versions of the generator
+        (which one is included depends on the target platform).  The
+        implementations are derived from the C code at
+        http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/emt.html.  The `RANDOM`
+        signature also has some additional operations, such as generation of
+        native-sized integers and words.
+
 [2022-12-19]
         Added the `NativeInt` and `NativeWord` structure aliases to provice
         a portable way to refer to the native numeric types in signatures.
