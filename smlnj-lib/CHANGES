@@ -14,6 +14,8 @@ SML/NJ 2023.1
         signature also has some additional operations, such as generation of
         native-sized integers and words.
 
+        This change fixes legacy issue #256 (https://github.com/smlnj/legacy/issues/256).
+
 [2022-12-19]
         Added the `NativeInt` and `NativeWord` structure aliases to provice
         a portable way to refer to the native numeric types in signatures.
