@@ -191,14 +191,14 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	and fmtStrb (AS.STRB{name, str, ...}) =
 	      PP.pcat
 		(PP.hblock [PP.text "structure", PPS.fmtSym name, PP.colon], 
-		 PP.softIndent 2 (PPModules.fmtStructure static (str, !signatures)))
+		 PP.indent 2 (PPModules.fmtStructure static (str, !signatures)))
 
 	and fmtFctb (AS.FCTB{name, fct, ...}) =
 	    (PP.pcat
 	       (PP.hblock [PP.text "functor", PPS.fmtSym name, PP.colon],
 	        case fct
 		  of M.FCT { sign, ... } =>
-		       PP.softIndent 2 (PPModules.fmtFunsig static (sign, !signatures))
+		       PP.indent 2 (PPModules.fmtFunsig static (sign, !signatures))
 		   | _ => PP.text "<sig>"))  (* blume: cannot (?) happen *)
 
         and fmtSigb sign =

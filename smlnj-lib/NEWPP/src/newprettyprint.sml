@@ -15,6 +15,11 @@
  *
  * Version 8:
  *   -- bindent, xiblock, etc. eliminated; replaced by HINDENT, SINDENT format constructors
+ * 
+ * Version 8.1 [2023.1.2]
+ *   -- Merge HINDENT and SINDENT into a single INDENT constructor acting like SINDENT
+ *   -- the breakIndent function replaces hardIndent (but breakIndent _unconditionally_ performs
+ *      a line break before the indented format, so its behavior is different from hardIndent).
  *)
 
 (* Defines:
@@ -323,20 +328,20 @@ fun vHeaderFormats {header1: string, header2: string} (elems: format list) =
 
 (*** "indenting" formats ***)
 
-(* hardIndent : int -> format -> format *)
-(* When applied to EMPTY, produces EMPTY *)
-fun hardIndent (n: int) (fmt: format) =
+(* indent : int -> format -> format *)
+(* When applied to EMPTY, produces EMPTY
+ * The resulting format soft-indents n spaces (iff following a line break) *)
+fun indent (n: int) (fmt: format) =
     (case fmt
        of EMPTY => EMPTY
-        | _ => HINDENT (n, fmt))
+        | _ => INDENT (n, fmt))
 
-(* softIndent : int -> format -> format *)
+(* breakIndent : int -> format -> format *)
 (* When applied to EMPTY, produces EMPTY *)
-fun softIndent (n: int) (fmt: format) =
+fun breakIndent (n: int) (fmt: format) =
     (case fmt
        of EMPTY => EMPTY
-        | _ => SINDENT (n, fmt))
-
+        | _ => block [BRK HardLine, FMT (INDENT (n, fmt))])
 
 (*** functions for setting and accessing the line width ***)
 

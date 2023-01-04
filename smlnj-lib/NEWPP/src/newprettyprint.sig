@@ -1,6 +1,9 @@
 (* compiler/Basics/newpp/newprettyprint.sig *)
 
-(* Version 8.
+(* Version 8.1 [2023.1.2]
+ *  -- hardIndent replaced by breakIndent with a different behavior (uncondition line break preceeding indentation)
+ *
+ * Version 8.
  *  -- Eliminated bindent type, xiblock functions
  *  -- added HINDENT, SINDENT format constructors
  *
@@ -170,11 +173,13 @@ sig
 
   (* indenting formats *)
 
-    val hardIndent : int -> format -> format
-    (* hardIndent n fmt ==> HINDENT (n, frmt) *)
+    val indent : int -> format -> format
+    (* indent n fmt ==> INDENT (n, frmt); but softIndent n EMPTY ==> EMPTY *)
 
-    val softIndent : int -> format -> format
-    (* softIndent n fmt ==> SINDENT (n, frmt) *)
+    val breakIndent : int -> format -> format
+    (* breakIndent n fmt ==> (unconditional) line break followed by fmt indented n spaces; but
+     * breakIndent n EMPTY ==> EMPTY *)
+
 
   (* Conditional formats: *)
 

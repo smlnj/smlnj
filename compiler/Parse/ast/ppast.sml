@@ -214,7 +214,7 @@ and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
      and fmtRule (Rule {pat,exp}, d) =
 	 if d <= 0 then PP.text "<rule>"
 	 else PP.pcat (PP.hcat (fmtPat sourceOp (pat, d-1), PP.text "=>"),
-		       PP.softIndent 3 (fmtExpClosed (exp, d-1)))
+		       PP.indent 3 (fmtExpClosed (exp, d-1)))
 
      and fmtExpClosed (exp, d) = 
 	 (case stripMarkExp exp
@@ -236,7 +236,7 @@ and fmtStrExp sourceOp (strexp, d) =
         | BaseStr de =>
             PP.vblock
               [PP.text "struct",
-               PP.hardIndent 2 (fmtDec sourceOp (de, d-1)),
+               PP.indent 2 (fmtDec sourceOp (de, d-1)),
                PP.text "end"]
 
 	| ConstrainedStr (stre, constraint) =>
@@ -334,7 +334,7 @@ and fmtSigExp sourceOp =
 	    let val specFmts = map (fn speci => fmtSpec sourceOp (speci,d)) specl
 	     in PP.vblock
 		  [PP.text "sig",
-		   PP.hardIndent 2 (PP.vblock specFmts),
+		   PP.indent 2 (PP.vblock specFmts),
 		   PP.text "end"]
 	    end
 	  | fmtSigExp'(MarkSig (m,r),d) = fmtSigExp sourceOp (m,d)
@@ -352,7 +352,7 @@ and fmtFsigExp sourceOp (fsigexp, d) =
 			(PP.pcat (PP.hcat (PPS.fmtSym symbol, PP.colon),
 				  fmtSigExp sourceOp (sigexp, d-1)))
 		  | formatter (NONE, sigexp) =
-		      PP.softIndent 4 (PP.parens (fmtSigExp sourceOp (sigexp, d)))
+		      PP.indent 4 (PP.parens (fmtSigExp sourceOp (sigexp, d)))
 	     in PP.hblock
 		  [PP.vblock (map formatter param),
 		   PP.text "=>",
@@ -501,7 +501,7 @@ and fmtDec sourceOp (dec, depth) =
 	  | fmtDec' (SigDec sigbs, d) =
 	      let fun fmt (Sigb{name=fname, def}) =
 		        PP.vcat (PP.hcat (PPS.fmtSym fname, PP.equal),
-				 PP.hardIndent 4 (fmtSigExp sourceOp (def,d)))
+				 PP.indent 4 (fmtSigExp sourceOp (def,d)))
 		    | fmt (MarkSigb(sigb,r)) = fmt sigb
 	       in PP.vHeaderFormats {header1 = "signature", header2 = "and"}
 		    (map fmt sigbs)
@@ -514,9 +514,9 @@ and fmtDec sourceOp (dec, depth) =
 	  | fmtDec' (LocalDec(inner,outer), d) =
 	      PP.vblock
 	       [PP.text "local",
-	        PP.hardIndent 2 (fmtDec' (inner, d-1)),
+	        PP.indent 2 (fmtDec' (inner, d-1)),
 		PP.text "in",
-	        PP.hardIndent 2 (fmtDec' (outer, d-1)),
+	        PP.indent 2 (fmtDec' (outer, d-1)),
 	        PP.text "end"]
 
 	  | fmtDec' (SeqDec decs, d) =
@@ -559,7 +559,7 @@ and fmtVb sourceOp (vb, d) =
        of Vb{pat,exp,...} =>
             PP.pcat
 	      (PP.hcat (fmtPat sourceOp (pat, d-1), PP.equal),
-	       PP.softIndent 4 (fmtExp sourceOp (exp,d-1)))
+	       PP.indent 4 (fmtExp sourceOp (exp,d-1)))
 	| MarkVb (vb,region) => fmtVb sourceOp (vb, d))
 
 and fmtRvb sourceOp (rvb, d) =
@@ -568,7 +568,7 @@ and fmtRvb sourceOp (rvb, d) =
       of Rvb {var, exp, ...} =>
            PP.pcat
 	     (PP.hcat (PPS.fmtSym var, PP.equal),
-	      PP.softIndent 4 (fmtExp sourceOp (exp,d-1)))
+	      PP.indent 4 (fmtExp sourceOp (exp,d-1)))
        | MarkRvb (rvb, _) => fmtRvb sourceOp (rvb, d))
 
 and fmtFb sourceOp (fb, d) =
@@ -659,7 +659,7 @@ and fmtFctb sourceOp (fctb, d) =
 			   | Opaque(sigexp) =>
 			       PP.hcat (PP.text ":>", fmtSigExp sourceOp (sigexp,d))),
 			PP.equal),
-		     PP.softIndent 2 (fmtStrExp sourceOp (body,d))]
+		     PP.indent 2 (fmtStrExp sourceOp (body,d))]
 	       end)
 	| Fctb {name, def} =>
             PP.hblock [PPS.fmtSym name, PP.equal, fmtFctExp sourceOp (def,d-1)]
@@ -671,7 +671,7 @@ and fmtFsigb sourceOp (fsigb, d) =
        of Fsigb {name, def} =>
 	    PP.pblock
 	      [PP.text "funsig ", PPS.fmtSym name, PP.equal,
-	       PP.softIndent 2 (fmtFsigExp sourceOp (def,d-1))]
+	       PP.indent 2 (fmtFsigExp sourceOp (def,d-1))]
 	| MarkFsigb (fsigb', _) => fmtFsigb sourceOp (fsigb', d))
 
 (* fmtTy : SR.source option -> ty * int -> PP.format *)

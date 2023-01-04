@@ -9,6 +9,8 @@
    -- added EMPTY block constructor in measure function
  * Version 7.4
    -- separator --> break; SEP --> BRK; SBLOCK --> BLOCK
+ * Version 8.1
+   -- merge HINDENT, SINDENT into single INDENT constructor acting like SINDENT
  *)
 
 structure Measure : MEASURE =
@@ -43,11 +45,11 @@ fun measure (format: format) =
          (* basic blocks *)
        | ABLOCK {measure, ...} => measure
 	 (* aligned blocks *)
-       | (HINDENT (_, fmt) | SINDENT (_, fmt)) => measure fmt
+       | INDENT (_, fmt) => measure fmt
        | FLAT format => measure format
        | ALT (format1, format2) => measure format1
          (* measure the first format, which will normally be the wider one,
-	  * alternatively, measure both arguments and return the max of the two measures. *)
+	  * alternatively, measure both arguments and return the max (min?) of the two measures. *)
 
 fun measureElement (BRK break) =
     (case break

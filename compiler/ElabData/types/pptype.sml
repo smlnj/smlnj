@@ -332,8 +332,8 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 					    of [domain,range] =>
 					       let val domainFmt = fmtAtomTy (domain, 0)
 						   val rangeFmt = fmtTy range
-					       in PP.pblock [PP.hcat (domainFmt, arrow),
-							     PP.softIndent 2 rangeFmt]
+					       in PP.pcat (PP.hcat (domainFmt, arrow),
+							   PP.indent 2 rangeFmt)
 					       end
 					     | _ => bug "CONty:arity"
 				      else PP.hcat (fmtTypeArgs args, fmtTycon1 env membersOp tycon)

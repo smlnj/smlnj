@@ -84,10 +84,12 @@ Rendering::
     limits how much of a line is occupied by text.
 
 Blocks::
-* varieties of blocks: text, "basic", "aligned", and empty.
+* varieties of blocks: empty, text, "basic", aligned "aligned"
 * compound (basic or aligned) blocks contain a sequence of (sub)formats and breaks
 ** _breaks_ in blocks: Space, SoftLine, HardLine, and NullBreak
 ** block alignment (H, V, P, C) determin the implicit break in aligned blocks
+   Aligned blocks are referred to using the terms _hblock_, _vblock_, _pblock_, and _cblock_,
+   according to their alignment property.
 * block "extent"
 ** block left margin (blm)
    the content of a block (its text and white space) is bounded on top by its initial line
@@ -96,8 +98,8 @@ Blocks::
 * block nesting level (BNL)
 
 Indentation::
-* Indented formats are produced using the `hardIndent` and `softIndent` functions, where the first argument
-is the number of spaces to indent.
+* Indented formats are produced using the `indent` and function, where the
+  first argument is the number of spaces to indent.
 
 Measurement::
 * The flat measure of a format.
@@ -366,15 +368,14 @@ _Basic (nonindented) block constructor functions:_
 [discrete]
 ==== Indented formats
 
-* `softIndent : int -> format -> format`
+* `indent : int -> format -> format`
 
- softIndent n fmt : indent fmt n additional spaces (relative to parent block's blm) only if following a newline+indent.
- Otherwise render fmt normally.
+ indent n fmt : indent fmt n additional spaces (relative to parent block's blm) only if immediately
+ following a line break (newline+indent); otherwise render fmt normally.
 
-* `hardIndent : int -> format -> format`
+* `breakIndent : int -> format -> format`
 
- hardIndent n fmt : indent fmt n additional spaces (relative to parent block's blm) unconditionally.
- This will produce a newline + incremented indent (blm+n) if it does not follow a newline+indent, otherwise it just increases the indentation.
+ breakIndent n fmt : unconditionally produce a line break (newline + indent (blm+n)) followed by fmt.
 
 [discrete]
 ==== Basic formats
@@ -640,7 +641,7 @@ fun formatTree' (Node (s, trees)) =
       of nil => text s
        | _ =>
           vblock [ccat (text s, lbracket),
-                  hardIndent 2  (vsequence comma (map formatTree' trees))
+                  indent 2  (vsequence comma (map formatTree' trees))
                   rbracket];
 ----
 ====
@@ -724,39 +725,35 @@ and decl
   | TYPd of string * string
   | STRd of string * str
 
-(* formatDecl : (str -> format) -> decl -> format *)
-fun formatDecl formatStr decl =
+fun ident (format: format) = format
+
+(* formatDecl : (format -> format) -> decl -> format *)
+fun formatDecl strdef decl =
     (case decl
        of VALd (name, def) => hblock [text "val", text name, text "=", text def]
 	| TYPd (name, def) => hblock [text "type", text name, text "=", text def]
-	| STRd (name, str) => hblock [text "structure", text name, text "=", formatStr str])
+	| STRd (name, str) =>
+	    hblock [text "structure", text name, text "=", strdef (formatStr strdef str)])
 
-(* formatStr1 : str -> format *)
-fun formatStr1 (SVAR name) = text name
-  | formatStr1 (STRUCT decls) = 
-    let val body = viblock (HI 2) (map (formatDecl formatStr1) decls)
-    in tryFlat (vblock [text "struct", body, text "end"])
-    end
-
-(* formatStr2 : str -> format *)
-fun formatStr2 (SVAR name) = text name
-  | formatStr2 (STRUCT decls) = 
-    let val body = viblock (HI 2) (map (formatDecl formatStr2) decls)
-    in tryFlat (viblock (HI 0) [text "struct", body, text "end"])
+(* formatStr : str -> format *)
+and formatStr _ (SVAR name) = text name
+  | formatStr strdef (STRUCT decls) = 
+    let val body = vblock (map (formatDecl strdef) decls)
+    in tryFlat (vblock [text "struct", indent 2 body, text "end"])
     end
 
 (* formatDecl? : decl -> format *)
-val formatDecl1 = formatDecl formatStr1
-val formatDecl2 = formatDecl formatStr2
+val formatDecl1 = formatDecl ident
+val formatDecl2 = formatDecl (breakIndent 0)
 
 fun formatDecl3 (STRd (name, SVAR svar)) =
       hblock [text "structure", text name, text "=", text svar]
   | formatDecl3 (STRd (name, STRUCT decls)) =
       vblock
         [hblock [text "structure", text name, text "=", text "struct"],
-	 viblock (HI 2) (map formatDecl3 decls),
+	 indent 2 (vblock (map formatDecl3 decls)),
 	 text "end"]
-  | formatDecl3 decl = formatDecl formatStr1 decl
+  | formatDecl3 decl = formatDecl ident decl  (* decl is VALd or TYPd *)
 
 (* examples *)
 
@@ -834,8 +831,7 @@ Rough analogs of Haskell Prettyprinter types and functions:
 
       flatten                   FLAT (format data constructor, hidden)
 
-      nest                      hiblock, viblock, piblock, ciblock
-                                softIndent, hardIndent
+      nest                      indent
 ----
 
 == Implementation
@@ -859,8 +855,7 @@ datatype format
   = TEXT  of string
   | BLOCK of {elements: element list, measure: int}
   | ABLOCK of {formats: format list, alignment: alignment, measure: int}
-  | HINDENT of int * format
-  | SINDENT of int * format
+  | INDENT of int * format
   | FLAT of format
   | ALT of format * format
 
@@ -898,12 +893,14 @@ rendering indented blocks.
 
 == Discussion
 
-. Why have both hard and soft line breaks?
+. How is an indented block rendered?
 +
-* Having a vblock vertical alignment mode implies unconditional line breaks anyway.
-* Having a choice of hard and soft (conditional) line breaks provides more control of the layout.
-+
-. An indented block produces its own preceding newline+indent only if the block does not follow a newline+indent, and only if the indentation is hard.
+* The indentation of an indented block is conditional, and is _triggered_ when the indented
+  block comes immediately after a line break.
+* The subformats of a vblock (vertically aligned block) are separated by unconditional line breaks,
+  so any indented subformat in a vblock, other than the first, will be triggered. If the first
+  subformat of a vblock is indented, it will be triggered only if the whole vblock occurs immediately
+  after a (triggered) line break.
 +
 . The importance of the blm boundary (and no "outdent").
 +

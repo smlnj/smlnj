@@ -331,4 +331,4 @@ formatSeq {alignment=H, sep=comma, formatter=integer} [1,2] =>
 
 == See Also
 
-xref:manual.adoc (?)
+xref:newpp-manual.adoc

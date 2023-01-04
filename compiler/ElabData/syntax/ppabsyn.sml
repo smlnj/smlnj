@@ -224,7 +224,7 @@ fun fmtCon (DATAcon (dcon, _)) = PPV.fmtDatacon dcon
 
 (* ruleFmt : PP.format * PP.format -> PP.format *)
 fun ruleFmt (patFmt: PP.format, expFmt: PP.format) =
-    PP.pcat (PP.hcat (patFmt, ruleArrow), PP.softIndent 2 expFmt)
+    PP.pcat (PP.hcat (patFmt, ruleArrow), PP.indent 2 expFmt)
 
 (* fmtExp : context -> AS.exp * int -> PP.format *)
 fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
@@ -340,7 +340,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	      PP.parens
 	        (PP.vblock
 	           [fmtExp' (exp, 0, 0, d-1),
-		    PP.hardIndent 2 (fmtMatch ("handle", rules, d))])
+		    PP.indent 2 (fmtMatch ("handle", rules, d))])
 	  | fmtExp' (RAISEexp (exp,_), lpull, rpull, d) =
 	      mkAtomic (lpull, rpull,
 			PP.hcat (PP.text "raise", fmtExp' (exp, 0, 0, d-1)))
@@ -352,14 +352,14 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	  | fmtExp' (LETVexp(var, defexp, bodyexp), _, _, d) =
 	      PP.hvblock
 		[PP.pcat (PP.hblock [PP.text "letv", PPV.fmtVar var, PP.equal],
-			  PP.softIndent 2 (fmtExp' (defexp, 0, 0, d-1))),
+			  PP.indent 2 (fmtExp' (defexp, 0, 0, d-1))),
 		 PP.hcat (PP.text " in", fmtExp' (bodyexp, 0, 0, d-1)),
 		 PP.text "end"]
 	  | fmtExp' (CASEexp(exp, (rules,_,_)), _, _, d) =
 	      PP.parens
 	        (PP.vblock
 	           [PP.hcat (PP.text "case", fmtExp' (exp, 0, 0, d-1)),
-		    PP.hardIndent 2 (fmtMatch ("of", rules, d))])
+		    PP.indent 2 (fmtMatch ("of", rules, d))])
 	  | fmtExp' (IFexp { test, thenCase, elseCase }, lpull, rpull, d) =
 	      mkAtomic (lpull, rpull, 
 		PP.hvblock
@@ -401,11 +401,11 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	  | fmtExp' (SWITCHexp (exp, srules, defaultOp), _, _, d) =
 	      PP.vcat
 	        (PP.hcat (PP.text "SWITCH", fmtExp' (exp, 0, 0, d-1)),
-	         PP.hardIndent 2 (fmtSMatch (srules, defaultOp, d-1)))
+	         PP.indent 2 (fmtSMatch (srules, defaultOp, d-1)))
 	  | fmtExp' (VSWITCHexp (exp, _, srules, default), _, _, d) =
 	      PP.vcat
 	        (PP.hcat (PP.text "VSWITCH", fmtExp' (exp, 0, 0, d-1)),
-	         PP.hardIndent 2 (fmtSMatch (srules, SOME default, d-1)))
+	         PP.indent 2 (fmtSMatch (srules, SOME default, d-1)))
           (* end fmtExp' *)
 
      in fmtExp' (exp, 0, 0, depth)
@@ -519,9 +519,9 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
         | fmtDec' (LOCALdec(inner,outer), d) =
 	    PP.vblock
 	      [PP.text "local",
-	       PP.hardIndent 2 (fmtDec' (inner, d-1)),
+	       PP.indent 2 (fmtDec' (inner, d-1)),
 	       PP.text "in",
-	       PP.hardIndent 2 (fmtDec' (outer, d-1)),
+	       PP.indent 2 (fmtDec' (outer, d-1)),
 	       PP.text "end"]
         | fmtDec' (SEQdec decs, d) =
 	    PP.vblock (map (fn dec => fmtDec' (dec, d)) decs)
@@ -571,7 +571,7 @@ and fmtStrexp (context as (statenv,sourceOp)) =
           | fmtStrexp' (STRstr bindings, d) =
               PP.vblock
 	        [PP.text "struct",
-	         PP.hardIndent 2
+	         PP.indent 2
 	           (PP.vblock
 		     (map (fn binding =>
 		            PPModules.fmtBinding statenv

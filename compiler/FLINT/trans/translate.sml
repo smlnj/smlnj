@@ -68,7 +68,7 @@ local
   type depth = int (* deBruijn context *)
   val top : depth = 0
 
-  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
+  fun viblock formats = PP.breakIndent 3 (PP.vblock formats)
 
 in
 

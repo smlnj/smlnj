@@ -691,7 +691,7 @@ and tc_eqv (x, y) =
        (if !debugging
         then PP.printFormatNL
 	       (PP.hcat (PP.text "tc_eqv:",
-			 PP.hardIndent 2
+			 PP.breakIndent 2
 		           (PP.vblock
 			      [PP.hcat (PP.text "t1:", PPLty.fmtTyc 20 t1),
 			       PP.hcat (PP.text "t2:", PPLty.fmtTyc 20 t2)])))

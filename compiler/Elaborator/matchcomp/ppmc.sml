@@ -110,13 +110,15 @@ fun fmtAndor andor =
     in case andor
 	of (AND {id, children}) =>
 	      PP.vcat (PP.hcat (PP.text "AND", PP.integer id),
-		       PP.hardIndent (2, PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtNode children)))
+		       PP.indent 2
+			 (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtNode children)))
 	 | (OR {id, path, sign, defaults, cases}) =>
 	      PP.vcat
 		  (PP.hblock
 		     [PP.text "OR", PP.integer id, fmtPath path, fmtRuleset defaults,
 		      fmtSign sign],
-		   PP.hardIndent (2, PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtVariant cases)))
+		   PP.indent 2 
+                     (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtVariant cases)))
 	 | (VAR {id}) =>
 	      PP.hcat (PP.text "VAR", PP.integer id)
 	 | WC = PP.text "WC"

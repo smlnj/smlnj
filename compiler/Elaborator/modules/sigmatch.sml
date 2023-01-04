@@ -730,7 +730,7 @@ let
                                    then PP.printFormatNL
 					  (PP.vcat
 					     (PP.label "###SM:" (PPS.fmtSym sym),
-					      PP.hardIndent 2 
+					      PP.indent 2 
 					        (PP.vblock
 						   [PP.label "spectype:" (PPT.fmtType statenv spectyp),
 						    PP.label "acttyp:" (PPT.fmtType statenv acttyp),

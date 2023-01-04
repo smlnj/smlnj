@@ -254,18 +254,18 @@ in
 
       | fmtCexp (FIX (functions, body)) =
 	  let fun fmtFunction (_,flvar,arglvars,argctys,body) =
-		    PP.vblock
-		      [PP.hblock [fmtLvar flvar,
+		    PP.vcat
+		      (PP.hblock [fmtLvar flvar,
 			          fmtParams (arglvars, argctys),
 			          PP.text "="],
-		       PP.hardIndent 3 (fmtCexp body)]
+		       PP.indent 3 (fmtCexp body))
 	  in PP.vblock [PP.hcat (PP.text "FIX", PP.vblock (map fmtFunction functions)),
 		        PP.hcat (PP.text " IN", fmtCexp body)]
 	  end
 
       | fmtCexp (SWITCH (subject, lvar, cases)) =
 	  let fun fmtCase (i,rhs) =
-		  PP.hblock [PP.integer i, PP.text "=>", PP.hardIndent 3 rhs]
+		  PP.hblock [PP.integer i, PP.text "=>", PP.breakIndent 3 rhs]
 	      fun folder (cexp, (i, fmts)) = (i+1, fmtCase (i, fmtCexp cexp) :: fmts)
 	      val caseFmts = rev (#2 (foldl folder (0, nil) cases))
 	   in PP.vcat 
@@ -308,9 +308,9 @@ in
 		PP.ccat (PP.text (branchToString i), PP.tupleFormats (map fmtValue vl)),
 		PP.brackets (fmtLvar c)],
 	     PP.text "then",
-	     PP.hardIndent 3 (fmtCexp e1),
+	     PP.indent 3 (fmtCexp e1),
 	     PP.text "else",
-	     PP.hardIndent 3 (fmtCexp e2)]
+	     PP.indent 3 (fmtCexp e2)]
 
       | fmtCexp (RCC (b, l, p, values, lvars_ctys, e)) =
 	  PP.vcat
@@ -325,10 +325,10 @@ in
 
     (* fmtFunction : function -> P.format *)
     fun fmtFunction (fk, f, vl, cl, body) =
-	  PP.pblock
-	    [PP.text (funkindToString fk),
-	     fmtLvar f, fmtParams (vl,cl), PP.text "=",
-	     PP.hardIndent 3 (fmtCexp body)]
+	  PP.vcat
+	    (PP.hblock [PP.text (funkindToString fk), fmtLvar f,
+			fmtParams (vl,cl), PP.text "="],
+	     PP.indent 3 (fmtCexp body))
 
     (* ppFunction : function -> unit  -- was printcps0 *)
     fun ppFunction (f : function) = PP.printFormat (fmtFunction f)

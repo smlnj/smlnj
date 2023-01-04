@@ -20,6 +20,9 @@
  * -- eliminate iblock and xiblock functions for building indented blocks. Indentation is
  *    performed solely with HINDENT and SINDENT (and functions in NewPrettyPrint derived from
  *    them: hardIndent and softIndent.
+ *
+ * Version 8.1 [2023.1.2]
+ * -- HINDENT and SINDENT merged into single INDENT constructor that renders as SINDENT did.
  *)
 
 (* structure Format:
@@ -48,8 +51,10 @@ datatype break
 		      * It is the separator break for C alignment. *)
 
 (* datatype format corresponds to doc (short for "document") type in Hughes-Wadler-Leijen *)
-datatype format
-  = EMPTY
+datatype format =
+
+  (* format builders *)
+    EMPTY
       (* empty format; rendering this produces no output, identity for format compositions *)
   | TEXT of string
       (* unique form of atomic doc with content*)
@@ -58,12 +63,13 @@ datatype format
   | ABLOCK of {formats: format list, alignment: alignment, measure: int}
       (* "aligned" blocks, with implicit breaks between formats determined by the alignment *)
 
-  | HINDENT of int * format  (* hard indent the format n spaces *)
-  | SINDENT of int * format  (* soft indent the format n spaces *)
-
+  (* format modifiers *)
+  | INDENT of int * format
+      (* soft indent the format n spaces, sinilar to Hughes's nest *)
   | FLAT of format
       (* render (and measure) the format as flat *)
 
+  (* conditional choice of formats *)
   | ALT of format * format
       (* render format1 if it fits, otherwise render format2. Note that formats not constrained to have same
        * content! But normally they should, or at least content fmt2 << content fmt1. *)

@@ -155,9 +155,39 @@ spurious space character after the text "abc", because
   format.sml
     format constructors: HINDENT, SINDENT (hard and soft indented formats)
 
-4. NewPrettyPrint
+4. Changed:
 
-  Implementation of hardIndent and softIndent have been changed. These
-  functions are defined directly in terms of the HINDENT and SINDENT
-  constructors, but are curried.
+  newprettyprint.sig, sml (structure NewPrettyPrint)
 
+	Implementation of hardIndent and softIndent have been changed. These
+	functions are defined directly in terms of the HINDENT and SINDENT
+	constructors, but are curried.
+
+** Version 8.1 [2023.1.2]**
+
+0. Merged HINDENT and SINDENT into a single format constructor INDENT
+   that retains the behavior of SINDENT.  Function softIndent renamed
+   to indent, and hardIndent replaced by breakIndent in NewPrettyPrint.
+   
+1. Renamed
+
+   format.sml
+     SINDENT --> INDENT  (* same semantics *)
+	 
+   newprettyprint.sig,sml
+     softIndent --> indent
+
+2. Removed
+
+   format.sml
+     HINDENT
+	 
+   newprettyprint.sig, sml
+     hardIndent
+   
+3. Added
+
+   newprettyprint.sig,sml
+     breakIndent : int -> format -> format
+
+   

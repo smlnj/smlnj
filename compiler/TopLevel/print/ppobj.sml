@@ -412,7 +412,7 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 					      fmtObj'(rightArg, rightTy, tycontextOp, senv, depth-1, rightPull, 0)]
 				       else PP.pcat
 					      (PP.text dname,
-					       PP.softIndent 2 (fmtObj' (decon(obj,dcon), dom, tycontextOp, senv,
+					       PP.indent 2 (fmtObj' (decon(obj,dcon), dom, tycontextOp, senv,
 									 depth-1, 0, 0)))
 				   end
 				 | _ =>

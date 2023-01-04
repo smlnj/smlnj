@@ -195,13 +195,13 @@ and fmtTyc pd (tyc : LT.tyc) =
 	      parens
 		(pblock
 		   [hblock [list fmtTyc' argTycs, text "->", text (fflagToString fflag)],
-		    softIndent 2 (list fmtTyc' resTycs)])
+		    indent 2 (list fmtTyc' resTycs)])
 	    (* According to ltykernel.sml comment, this arrow tyc is not used *)
 	  | fmtTycI (LT.TC_PARROW (argTyc, resTyc)) =  (* was "PAR ..." *)
 	      parens
 		(pblock
 	           [hblock [lparen, (fmtTyc' argTyc), text "-->"],
-		    softIndent 2 (fmtTyc' resTyc)])
+		    indent 2 (fmtTyc' resTyc)])
 	  | fmtTycI (LT.TC_WRAP tyc) =
 	      label "WRAP:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_CONT tycs) =

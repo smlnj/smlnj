@@ -6,6 +6,9 @@
  *
  * Version 7.4
  *  -- SEP --> BRK (separator --> break)
+ *
+ * Version 8.1 [2023.1.1]
+ *  -- HINDENT dropped, SINDENT --> INDENT
  *)
 
 structure Render : RENDER =
@@ -33,7 +36,7 @@ fun spaces n = implode (List.tabulate (n, (fn _ => #" ")))
 
 (* flatRender : format * (string -> unit) -> unit
  *   render as though on an unbounded line (lw = "infinity"), thus "flat" (i.e. no line space pressure).
- *   _No_ newlines are triggered, not even Hardline breaks and HINDENT formats, which are 
+ *   _No_ newlines are triggered, not even HardLine breaks and INDENT formats, which are 
  *   rendered as single spaces, like Softline breaks.
  *   flatRender is called once when rendering a FLAT format when the format fits. *)
 fun flatRender (format, output) =
@@ -46,7 +49,7 @@ fun flatRender (format, output) =
 		 | TEXT s => output s
 		 | BLOCK {elements, ...} => renderElements elements
 		 | ABLOCK {formats, ...} => renderABLOCK formats
-		 | (HINDENT (_, fmt) | SINDENT (_, fmt)) => render0 fmt
+		 | INDENT (_, fmt) => render0 fmt
 		 | FLAT fmt => render0 fmt
 		 | ALT (fmt, _) => render0 fmt)   (* any format fits *)
 
@@ -98,18 +101,21 @@ fun flatRender (format, output) =
  * is no intermediate "layout" structure.
  * Internal rendering functions (render0, renderBLOCK, renderABLOCK) : state -> state, where state = int * bool
  * (state = (cc, newlinep)). cc represents the "print cursor", while newlinep indicates whether we are starting 
- * a new line (after indentation).
+ * immediately after a line break (a newline + indentation).
  *)
 fun render (format: format, output: string -> unit, lw: int) : unit =
     let fun sp n = output (spaces n)
-	fun newlineIndent n = (output newlineChar; sp n)
+
+        (* lineBreak : int -> unit  -- perform a newline and indentation of n spaces *)
+	fun lineBreak n = (output newlineChar; sp n)
 
         (* render0: format * int * int * bool -> int * bool
 	 * the main recursive rendering of the format
 	 * Inputs:
-         *   cc: current column, incremented or reset after any output actions (TEXT, sp, newlineIndent)
+         *   cc: current column, incremented or reset after any output actions (TEXT, sp, lineBreak)
          *   outerBlm: block left margin of "parent" block containing this format; defaults to 0 for top-level format
-         *        blm = the cumulative inherited indentation from containing formats (increased by surrounding HINDENT, SINDENT constrs)
+         *        blm = the cumulative inherited indentation from containing formats
+         *              (incremented by surrounding nested INDENT constrs)
 	 *     rebound at the entrance to each block to that block's block left margin (initially cc, which may = blm)
 	 *   newlinep: bool indicating whether the immediately previously rendered format or break resulted in a
 	 *     newline+indent; the top-level call of render0 is treated as though it followed a newline with 0 indent.
@@ -134,19 +140,11 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		  | ABLOCK {formats, alignment, ...} => (* establishes a new local blm = cc; outerBlm not relevant *)
 		      renderABLOCK (formats, alignment, cc, newlinep)
 
-		  | HINDENT (n, fmt) => (* hard indented block; depends on outerBlm *)
-		      let val cc' = outerBlm + n  (* increased (if n > 0) indentation for indented block *)
-		       in if newlinep  (* already at outerBlm *)
-			  then sp n    (* add n additional spaces of indentation *)
-			  else newlineIndent cc';  (* produce the newline+indent associated with the indented block *)
-			  render0 (fmt, outerBlm, cc', true)
-		      end
-
-		  | SINDENT (n, fmt) => (* soft indented block; depends on outerBlm *)
+		  | INDENT (n, fmt) => (* soft indented block; depends on outerBlm *)
 		      if newlinep  (* ASSERT: at outerBlm after newline+indent (i.e. cc = outerBlm) *)
-		      then (sp n;  (* increase outerBlm indentation up to cc' = outerBlm + n *)
+		      then (sp n;  (* increase outerBlm indentation to cc' = outerBlm + n *)
 			    render0 (fmt, outerBlm, outerBlm + n, true))
-		      else render0 (fmt, outerBlm, cc, false) (* no newline+indent, proceed at cc without newline+indent *)
+		      else render0 (fmt, outerBlm, cc, false) (* not on new line, proceed at cc without line break *)
 
 		  | FLAT format =>  (* unconditionally render the format as flat; outerBlm not relevant *)
 		      (flatRender (format, output); (cc + M.measure format, false))
@@ -170,7 +168,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 			  | BRK break =>  (* rest should start with a FMT! *)
 			      (case break
 				 of NullBreak  => re (rest, cc, false)
-				  | HardLine   => (newlineIndent blm; re (rest, blm, true))
+				  | HardLine   => (lineBreak blm; re (rest, blm, true))
 				  | Space n    => (sp n; re (rest, cc + n, newlinep))
 				  | SoftLine n =>
 				      (case rest  (* ASSERT: rest = FMT _ :: _; a BRK should be followed by a FMT *)
@@ -179,7 +177,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 					      then let val (cc', newlinep') = (sp n; render0 (format', blm, cc + n, false))
 						    in re (rest', cc', newlinep')
 						   end
-					      else (newlineIndent blm; re (rest, blm, true))  (* trigger newline+indent *)
+					      else (lineBreak blm; re (rest, blm, true))  (* trigger newline+indent *)
 					  | _ => error "renderBLOCK 1: adjacent breaks")))
 	     in re (elements, cc, newlinep)
 	    end (* end renderBLOCK *)
@@ -209,12 +207,12 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 				  (case alignment
 				     of C => (fn (cc, m) => (cc, false))
 				      | H => (fn (cc, m) => (sp 1; (cc+1, false)))
-				      | V => (fn (cc, m) => (newlineIndent blm; (blm, true)))
+				      | V => (fn (cc, m) => (lineBreak blm; (blm, true)))
 				      | P =>  (* virtual break is SoftLine 1 *)
 					  (fn (cc, m) =>
 					      if m <= (lw - cc) - 1  (* conditional on m *)
 					      then (sp 1; (cc+1, false)) (* no line break, print 1 space *)
-					      else (newlineIndent blm; (blm, true))))  (* triggered line break *)
+					      else (lineBreak blm; (blm, true))))  (* triggered line break *)
 
 			    fun renderRest (nil, cc, newlinep) = (cc, newlinep) (* when we've rendered all the formats *)
 			      | renderRest (format :: rest, cc, newlinep) =  (* newlinep argument not used in this case! *)
@@ -232,7 +230,8 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	       in renderFormats (formats, cc, newlinep)
 	      end (* fun renderABLOCK *)
 
-    in ignore (render0 (format, 0, 0, true))  (* the initial context of the render treated like a newline + 0 indentation ??? *)
+    in (* the initial "context" of a render is a vitrual newline + 0 indentation *)
+       ignore (render0 (format, 0, 0, true))
    end (* fun render *)
 
 end (* top local *)
@@ -240,14 +239,14 @@ end (* structure Render *)
 
 (* NOTES:
 
-1. All newlines are followed by the cumulative block indentation, which may be 0, produced by the newlineIndent output function.
+1. All newlines are followed by the cumulative block indentation, which may be 0, produced by the lineBreak output function.
 
 2. blm (block left margin) values represent the cummulative effect of the indentations of containing blocks.
    -- the blm of an "in-line" (or non-indented) block is set to the current column (cc) at the entry to the block
    -- the blm of an indented block is set to the parent block's blm incremented by the block's indentation (if triggered)
 
-3. [Edge case] Should HINDENT (n, EMPTY) produce nothing (since the format has no content) or should it produce
-   a newline+indent (for the HINDENT (2,_) and nothing else?
+3. [Q: Edge case] Should INDENT (n, EMPTY) produce nothing (since the format has no content) or should it produce
+   a line break (newline+indent) and nothing else?
 
 4. [Q1] Does rendering a format ever end with a final newline+indent?
    [Q2] Is BLOCK {elements = [BRK HardLine], ...} a valid block? If so, it "ends with a newline".
@@ -257,10 +256,10 @@ A1: Yes?
 We only emit a newline+indent at a HardLine or triggered SoftLine break,
 but a normal block will not end with a (virtual) break so "normal" blocks do not end with a newline+indent.
 
-Another possibility is at an indented, but empty, block (e.g. HINDENT (3, emtpy)), which could
+Another possibility is at an indented, but empty, block (e.g. INDENT (3, emtpy)), which could
 appear on its own or as the last format in a block.  But we can have the reduction
 
-   XINDENT (n,EMPTY) --> EMPTY
+   INDENT (n,EMPTY) --> EMPTY
 
 in which case an indented empty format turns into the empty format and the indentation is ignored
 (does not occur).

@@ -74,7 +74,7 @@ local
   val fmtTyfun = PPT.fmtTyfun
   val fmtFormals = PPT.fmtFormals
 
-  fun viblock (formats: PP.format list) = PP.hardIndent 2 (PP.vblock formats)
+  fun viblock (formats: PP.format list) = PP.breakIndent 2 (PP.vblock formats)
 
 in
 
@@ -203,7 +203,7 @@ and fmtElement (entityEnvOp, env) (sym, spec, depth) =
 	      [PP.hblock [PP.text "structure", PPS.fmtSym sym,
 		  	  PP.brackets (PP.label "entVar" (fmtEntVar entVar)),
 			  PP.colon],
-	       PP.hardIndent 2
+	       PP.indent 2
 		 (case entityEnvOp
 		    of NONE => fmtSignature0 env (sign, NONE, depth-1)
 		     | SOME eenv =>
@@ -220,7 +220,7 @@ and fmtElement (entityEnvOp, env) (sym, spec, depth) =
                  [PP.text "functor", PPS.fmtSym sym,
 	          PP.brackets (PP.label "entVar" (fmtEntVar entVar)),
 		  PP.colon],
-               PP.hardIndent 2 (fmtFunsig env (sign, depth-1))]
+               PP.indent 2 (fmtFunsig env (sign, depth-1))]
 
 	| M.TYCspec {entVar, info} =>
 	    (case info
@@ -434,7 +434,7 @@ and fmtEntityEnv env (entEnv, depth) =
     if depth <= 0 then PP.text "<entityEnv>" else
     let fun fmt (entVar,entity) =
 	    PP.vcat (PP.hcat (PP.text (EntPath.entVarToString entVar), PP.colon),
-		     PP.hardIndent 2 (fmtEntity env (entity, depth-1)))
+		     PP.indent 2 (fmtEntity env (entity, depth-1)))
      in PP.vblock (map fmt (EE.toList entEnv))
     end
 
@@ -454,7 +454,7 @@ and fmtEntDec (entDec, depth) =
 	| M.SEQdec entityDecs =>
 	   PP.vcat
 	     (PP.text "ED.SEQ:",
-	      PP.hardIndent 2 (PP.vblock (map (fn entDec => fmtEntDec (entDec,depth)) entityDecs)))
+	      PP.indent 2 (PP.vblock (map (fn entDec => fmtEntDec (entDec,depth)) entityDecs)))
 	| M.LOCALdec (entityDecL,entityDecB) => PP.text "ED.LOCAL:"
 	| M.ERRORdec => PP.text "ED.ERROR:"
 	| M.EMPTYdec => PP.text "ED.EMPTY:")
@@ -536,7 +536,7 @@ and fmtBinding (env: SE.staticEnv) (name: S.symbol, binding:B.binding, depth:int
        | B.TYCbind tycon => fmtTycBind env tycon
        | B.SIGbind sign =>
            PP.pcat (PP.hblock [PP.text "signature", PPS.fmtSym name, PP.equal], 
-		    PP.softIndent 4 (fmtSignature0 env (sign, NONE, depth)))
+		    PP.indent 4 (fmtSignature0 env (sign, NONE, depth)))
 
        | B.FSGbind fs =>
            PP.hblock [PP.text "funsig", PPS.fmtSym name, fmtFunsig env (fs, depth)]

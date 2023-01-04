@@ -32,7 +32,7 @@ local (* top local *)
 
   val printDepth = Control_Print.printDepth
 
-  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
+  fun viblock formats = PP.breakIndent 3 (PP.vblock formats)
 
 in
 
@@ -43,7 +43,7 @@ fun debugMsg flag (msg: string) =
 (* debugPrint : bool ref -> string * PP.format -> unit *)
 fun debugPrint flag (msg: string, format: PP.format) =
     if !flag
-    then PP.printFormatNL (PP.vcat (PP.text msg, PP.hardIndent 2 format))
+    then PP.printFormatNL (PP.vcat (PP.text msg, PP.indent 2 format))
     else ()
 
 (* fmtCon : AS.con -> PP.format *)
@@ -82,11 +82,11 @@ fun fmtSubcase caseFormatter subcase =
 val fmtProtoAndor =
     let fun fmtNode (ANDp {varRules, children}) =
 	      PP.vcat (PP.hcat (PP.text "ANDp", fmtRuleset varRules),
-		       PP.hardIndent 3 (fmtAndChildren children))
+		       PP.indent 3 (fmtAndChildren children))
 	  | fmtNode (ORp {varRules, sign, cases}) =
 	      PP.vcat
 	        (PP.hblock [PP.text "OR", fmtRuleset varRules, fmtConsig sign],
-		 PP.hardIndent 3 (fmtVariants cases))
+		 PP.indent 3 (fmtVariants cases))
 	  | fmtNode (VARp {varRules}) = PP.hcat (PP.text "VAR", fmtRuleset varRules)
 	  | fmtNode WCp = PP.string "WCp"
 
@@ -150,7 +150,7 @@ val fmtDectree =
 	and fmtCase (con, decTree) =
 	      PP.pcat
 	        (PP.text (AU.conToString con),
-		 PP.softIndent 3 (fmtDec decTree))
+		 PP.indent 3 (fmtDec decTree))
      in fmtDec
     end (* fmtDectree *)
 
@@ -160,7 +160,7 @@ fun fmtRule (pat, exp) =
       PP.pblock
         [PPA.fmtPat StaticEnv.empty (pat, 100),
 	 PP.text "=>",
-         PP.softIndent 3 (PPA.fmtExp (StaticEnv.empty, NONE) (exp, 100))]
+         PP.indent 3 (PPA.fmtExp (StaticEnv.empty, NONE) (exp, 100))]
 
 fun fmtMatch match = PP.vblock (map fmtRule match)
 

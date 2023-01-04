@@ -204,7 +204,7 @@ and fmtElement (env, depth, entityEnvOp) (sym, spec) =
        of M.STRspec {sign, entVar, def, slot} =>
 	    PP.pcat
               (PP.hblock [PP.text "structure", PPS.fmtSym sym, PP.colon],
-	       PP.softIndent 2 
+	       PP.indent 2 
 		 (case entityEnvOp
 		    of NONE => fmtSignature0 (sign, env, depth-1, NONE)
 		     | SOME eenv =>
@@ -219,7 +219,7 @@ and fmtElement (env, depth, entityEnvOp) (sym, spec) =
 	| M.FCTspec {sign, entVar, slot} =>
             PP.pcat
 	      (PP.hblock [PP.text "functor ", PPS.fmtSym sym, PP.colon],
-	       PP.softIndent 2 (fmtFunsig env (sign, depth-1)))
+	       PP.indent 2 (fmtFunsig env (sign, depth-1)))
 
 	| M.TYCspec {entVar, info} =>
 	   (case info
@@ -296,7 +296,7 @@ and fmtSignature0 (sign, env, depth: int, entityEnvOp) =
 		     fun fmtsig () =
 			   PP.vblock
 			     [PP.text "sig",
-			      PP.hardIndent 2 
+			      PP.indent 2 
 				(PP.vblock
 				   (List.concat
 				     [map (fmtElement (env,depth,entityEnvOp)) nonConsElems,

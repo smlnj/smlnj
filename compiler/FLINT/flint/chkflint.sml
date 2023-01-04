@@ -137,7 +137,7 @@ fun check phase envs lexp = let
 
   fun fmtLtys (s, ltys) = 
       PP.vcat (PP.text s,
-	       PP.hardIndent 2
+	       PP.indent 2
 	         (PP.formatSeq {alignment=PP.V, sep=PP.comma, formatter = PPT.fmtLty 100} ltys))
 
   fun print2Lists (s,s',ltys,ltys') =

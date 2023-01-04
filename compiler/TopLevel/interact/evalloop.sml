@@ -32,7 +32,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
     (* debugPrint : bool ref -> (string * PP.format) -> unit *)
     fun debugPrint flag (msg: string, format: PP.format) =
 	if !flag
-	then PP.printFormatNL (PP.vcat (PP.text msg, PP.hardIndent 2 format))
+	then PP.printFormatNL (PP.vcat (PP.text msg, PP.indent 2 format))
 	else ()
 
     val lineWidth = Control.Print.lineWidth

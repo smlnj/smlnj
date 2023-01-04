@@ -163,9 +163,9 @@ in
 		 in vcat
 		      (pcat (header,
 			     if complex def
-			     then hardIndent 4 defFmt
-			     else softIndent 4 defFmt),
-		       hardIndent 2 bodyFmt)
+			     then breakIndent 4 defFmt
+			     else indent 4 defFmt),
+		       indent 2 bodyFmt)
 		end
 
 	      | fmtE (F.FIX (fundecs, body)) =
@@ -189,11 +189,11 @@ in
 		    val inlineFmt = text (inlineToString inline)
 		    val tfnFmt = pblock [ccat (text "TFN", inlineFmt),
 					 fmtTvTkList tv_tk_list, text ".",
-					 softIndent 2 (fmtLexp' tfnbody)]
+					 indent 2 (fmtLexp' tfnbody)]
 		 in vblock
 		      [header,
-		       hardIndent 4 tfnFmt,
-		       hardIndent 2 (fmtLexp' body)]
+		       indent 4 tfnFmt,
+		       indent 2 (fmtLexp' body)]
 		end
 
 	      (** NOTE: ignoring consig when formatting SWITCH **)
@@ -211,13 +211,13 @@ in
 
 		in vblock
 		    ([hcat (text "SWITCH", fmtValue value),
-		      hardIndent 2 (vblock (map fmtCase cases))]
+		      indent 2 (vblock (map fmtCase cases))]
 		     @ (case  lexpOp
 			  of NONE => nil
 			   | SOME default => (* default case *)
 			      [pblock
 				[text "_ =>",
-				 softIndent 4 (fmtLexp' default)]]))
+				 indent 4 (fmtLexp' default)]]))
 		end
 
 	      | fmtE (F.CON ((symbol,_,_), tycs, value, lvar, body)) =
@@ -283,8 +283,8 @@ in
 					    fmtLty' lty,
 					    PP.list fmtTyc' tycs]),
 			      list fmtValue values],
-		      hcat (text "THEN", softIndent 2 (fmtLexp' body1)),
-		      hcat (text "ELSE", softIndent 2 (fmtLexp' body2))]
+		      pcat (text "THEN", indent 2 (fmtLexp' body1)),
+		      pcat (text "ELSE", indent 2 (fmtLexp' body2))]
 		end
 
 	      | fmtE (F.PRIMOP (p as (_, PO.MKETAG, _, _), [value], lvar, body)) =
@@ -356,7 +356,7 @@ in
 	     (*** the result lty no longer available ---- fmtLty lty; **)
 	      fmtTagged ("FN",
 			 (hcat (brackets (vblock (map fmtarg lvar_lty_list)),
-				hardIndent 4 (fmtLexp (pd - 1) body)))))
+				breakIndent 4 (fmtLexp (pd - 1) body)))))
 	end
 
     (* ppLexp : lexp -> unit *)

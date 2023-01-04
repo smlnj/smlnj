@@ -72,7 +72,7 @@ in
   fun fmtSeverity WARN = PP.text "Warning:"
     | fmtSeverity COMPLAIN = PP.text "Error:"
 
-  (* fmtMessage : output * PP.format * severity * string * PP.format -> unit *)
+  (* fmtMessage : PP.format * severity * string * PP.format -> unit *)
   fun fmtMessage (location: PP.format, severity: severity, msg: string, body: PP.format) =
       case (!BasicControl.printWarnings, severity)
 	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
@@ -81,7 +81,7 @@ in
 		     [location,
 		      fmtSeverity severity,
 		      PP.text msg,
-		      PP.hardIndent 2 body])
+		      PP.breakIndent 2 body])
 
   (* error : SR.source -> errorFn *)
   fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =

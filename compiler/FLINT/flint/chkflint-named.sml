@@ -40,7 +40,7 @@ fun ppLexp d lexp = PP.printFormat (PPF.fmtLexp d lexp)
 fun prMsgLty (msg, lty) = (say msg; ppLexp 10 lexp)
 
 fun fmtList (s, ltys) = 
-    PP.vcat (PP.text s, hardIndent (2, PP.formatSeq V (PPT.fmtLty 100) ltys))
+    PP.vcat (PP.text s, PP.indent 2 (PP.formatSeq V (PPT.fmtLty 100) ltys))
 
 fun pp2Lists (s,s',ltys,ltys') =
     PP.printFormat

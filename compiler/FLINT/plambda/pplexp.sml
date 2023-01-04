@@ -129,7 +129,7 @@ fun fmtLexp (pd:int) (l: lexp): format =
 
           | fmtI (FN(v,t,body)) =
 	      pcat (cblock [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
-		    softIndent 4 (fmtLexp' body))
+		    indent 4 (fmtLexp' body))
 
           | fmtI (CON ((s, c, lt), ts, l)) =
 	      pblock
@@ -140,7 +140,7 @@ fun fmtLexp (pd:int) (l: lexp): format =
 		comma,
 		list fmtTyc' ts,
 		comma,
-		softIndent 4 (fmtLexp' l),
+		indent 4 (fmtLexp' l),
 		rparen]
 
           | fmtI (APP (FN (lvar, _, body), r)) =
@@ -152,8 +152,8 @@ fun fmtLexp (pd:int) (l: lexp): format =
             vcat 
  	      (pcat
 		 (hblock [text "LET", text (LV.lvarName v), text "="],
-		  softIndent 4 (fmtLexp' r)),
-               hardIndent 1 (hcat (text "IN", fmtLexp' l)))
+		  indent 4 (fmtLexp' r)),
+               indent 1 (hcat (text "IN", fmtLexp' l)))
 
           | fmtI (APP(l, r)) =
 	      enclose {front = text "APP(", back = rparen}
@@ -162,7 +162,7 @@ fun fmtLexp (pd:int) (l: lexp): format =
           | fmtI (TFN(ks, b)) =
               enclose {front = text "TFN(", back = rparen}
 		(pcat (tupleFormats (map fmtTKind' ks),
-		       softIndent 3 (fmtLexp' b)))
+		       indent 3 (fmtLexp' b)))
 
           | fmtI (TAPP(l, ts)) =
               enclose {front=text "TAPP(", back=rparen}
@@ -178,20 +178,20 @@ fun fmtLexp (pd:int) (l: lexp): format =
 
           | fmtI (SWITCH (l,_,llist,default)) =
             let fun switchCase (c,l) =
-                      pcat (hcat (text (conToString c), text " =>"), softIndent 4 (fmtLexp' l))
+                      pcat (hcat (text (conToString c), text " =>"), indent 4 (fmtLexp' l))
 		val defaultCase =
 		    (case default
 		      of NONE => nil
-		       | SOME lexp => [pcat (text "_ =>", softIndent 4 (fmtLexp' lexp))])
-             in vblock
-		  [hcat (text "SWITCH ", fmtLexp' l),
-		   hardIndent 2 (hcat (text "of", vblock (map switchCase llist @ defaultCase)))]
+		       | SOME lexp => [pcat (text "_ =>", indent 4 (fmtLexp' lexp))])
+             in vcat
+		  (hcat (text "SWITCH ", fmtLexp' l),
+		   indent 2 (hcat (text "of", vblock (map switchCase llist @ defaultCase))))
             end
 
           | fmtI (FIX (varlist, ltylist, lexplist, body)) =
             let fun ffun (v, t, l) =
-                      ccat (hblock [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
-			    hardIndent 2 (fmtLexp' l))
+                      vcat (hblock [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
+			    indent 2 (fmtLexp' l))
              in vcat (hcat (text "FIX",
 		            vblock (map ffun (zipEq3 (varlist, ltylist, lexplist)))),
 		      hcat (text "IN",
