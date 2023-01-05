@@ -1,10 +1,10 @@
-(* smlnj-lib/NEWPP/src/sources.cm *)
+(* smlnj-lib/PRETTYPRINT/src/sources.cm *)
 (* The New PrettyPrinter Library *)
 
 Library
 
-	signature NEW_PRETTYPRINT
-	structure NewPrettyPrint
+	signature PRETTYPRINT
+	structure PrettyPrint
 
 is
 
@@ -15,5 +15,5 @@ measure.sig
 measure.sml
 render.sig
 render.sml
-newprettyprint.sig
-newprettyprint.sml
+prettyprint.sig
+prettyprint.sml

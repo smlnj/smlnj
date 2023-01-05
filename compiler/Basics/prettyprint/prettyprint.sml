@@ -1,4 +1,4 @@
-(* compiler/Basics/newpp/newprettyprint.sml *)
+(* compiler/Basics/prettyprint/prettyprint.sml *)
 
 (* New Prettyprinter, main interface
  * Version 7:
@@ -20,13 +20,19 @@
  *   -- Merge HINDENT and SINDENT into a single INDENT constructor acting like SINDENT
  *   -- the breakIndent function replaces hardIndent (but breakIndent _unconditionally_ performs
  *      a line break before the indented format, so its behavior is different from hardIndent).
+ *
+ * Version 8.2 [2023.1.5]
+ *   -- files newprettyprint.{sig,sml} renamed prettyprint.{sig,sml}
+ *   -- Renamed
+ *      NEW_PRETTYPRINT --> PRETTYPRINT
+ *      NewPrettyPrint --> PrettyPrint
  *)
 
 (* Defines:
- *   structure NewPrettyPrint: NEW_PRETTYPRINT
+ *   structure PrettyPrint: PRETTYPRINT
  *)
 
-structure NewPrettyPrint :> NEW_PRETTYPRINT =
+structure PrettyPrint :> PRETTYPRINT =
 struct
 
 local
@@ -381,7 +387,7 @@ fun printFormat format = R.render (format, print, getLineWidth ())
 fun printFormatNL format = R.render (appendNewLine format, print, getLineWidth ())
 
 end (* top local *)
-end (* structure NewPrettyPrint *)
+end (* structure PrettyPrint *)
 
 (* NOTES:
 

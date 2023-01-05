@@ -1,8 +1,9 @@
-(* sml/Dev/pp/new/new71/format.sml *)
+(* compiler/Basics/prettprint/format.sml *)
 
 (* Version 7
  * -- added memoization for block measure to speed up the measure function
- * -- The prettyprinter is partitioned into a number of structures and signatures: Format, Measure, Render, NewPrettyPrint.
+ * -- The prettyprinter is partitioned into a number of structures and signatures: Format, Measure, Render,
+ *      NewPrettyPrint.
  * -- The Format structure defines the types, related to formats: format, separator, element, bindent. 
  *    These types defined as datatypes and are therefore concrete within the Prettyprinter modules, but format
  *    becomes abstract when it is re-exported from NewPP.

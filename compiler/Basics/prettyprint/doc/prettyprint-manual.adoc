@@ -41,7 +41,7 @@ with compound blocks.
 == Synopsis
 
 [source,sml]
-   structure NewPrettyPrint : NEW_PRETTYPRINT
+   structure PrettyPrint : PRETTYPRINT
 
 
 == Key Concepts and Terminology
@@ -806,8 +806,8 @@ end
 
 Rough analogs of Haskell Prettyprinter types and functions: 
 ----
-      Haskell Prettyprinter     New Prettyprinter
-      ---------------------     -----------------
+      Haskell Prettyprinter     Prettyprinter
+      ---------------------     -------------
 
       type doc                  type format
 

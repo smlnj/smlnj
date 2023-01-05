@@ -1,11 +1,11 @@
-= The `NewPrettyPrint` structure
+= The `PrettyPrint` structure
 :Author: David MacQueen
 :Date: 2022.12.21
 :stem: latexmath
 :source-highlighter: pygments
 :VERSION: 8.0
 
-The `NewPrettyPrint` structure is the user-facing module of the new prettyprinter library.
+The `PrettyPrint` structure is the user-facing module of the new prettyprinter library.
 It is based on mapping data structures to "formats", which are then rendered using
 a provided string output function to print them.
 
@@ -13,8 +13,8 @@ a provided string output function to print them.
 
 [source,sml]
 ------------
-signature NEW_PRETTYPRINT
-structure NewPrettyPrint :> NEW_PRETTYPRINT
+signature PRETTYPRINT
+structure PrettyPrint :> PRETTYPRINT
 ------------
 
 [source,sml]
@@ -104,8 +104,8 @@ val option : ('a -> format) -> 'a option -> format
 val vHeaders : {header1: string, header2: string, formatter: 'a -> format} -> 'a list -> format
 val vHeaderFormats : {header1: string, header2: string} -> format list -> format
 
-val hardIndent : int -> format -> format
-val softIndent : int -> format -> format
+val indent : int -> format -> format
+val breakIndent : int -> format -> format
 
 val tryFlat : format -> format
 val alt : format * format -> format
@@ -186,14 +186,13 @@ val printFormatNL : format -> unit
 `[.kw]#val# hvblock : format list \-> format`::
   `hvblock fmts` : Renders as (hblock fmts) if that fits, and otherwise renders as (vblock fmts).
 
-`[.kw]#val# softIndent : int \-> format \-> format`::
+`[.kw]#val# indent : int \-> format \-> format`::
   `softIndent (fmt, n)` : Indent fmt n additional spaces (relative to parent block's blm)
-  but only if following a newline+indent. Otherwise render fmt normally.
+  but only if following a line break. Otherwise render fmt normally, without indentation.
 
-`[.kw]#val# hardIndent : int \-> format \-> format`::
+`[.kw]#val# breakIndent : int \-> format \-> format`::
   `hardIndent (fmt, n)` : Indent fmt n additional spaces (relative to parent block's blm)
-  unconditionally. This will produce a newline + incremented indent (blm+n) if it does not
-  follow a newline+indent, otherwise it just increases the indentation.
+  unconditionally. The format will follow a linebreak with the incrementally increased indentation.
 
 `[.kw]#val# comma, colon, semicolon, period, lparen, rparen, lbracket, rbracket, lbrace, rbrace, equal : format`::
   Punctuation characters as formats (plus the equal symbol, an honorary punctuation symbol).

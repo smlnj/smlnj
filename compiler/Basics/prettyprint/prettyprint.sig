@@ -1,4 +1,4 @@
-(* compiler/Basics/newpp/newprettyprint.sig *)
+(* compiler/Basics/prettyprint/prettyprint.sig *)
 
 (* Version 8.1 [2023.1.2]
  *  -- hardIndent replaced by breakIndent with a different behavior (uncondition line break preceeding indentation)
@@ -16,11 +16,23 @@
  *  -- sblock --> block; siblock --> iblock; separator --> break; SEP --> BRK
  *  -- added: vHeaders, vHeaderFormats (from NEW_PPUTIL)
  *  -- removed: tuple
+ * 
+ * Version 8.0
+ *  -- new format constructors HINDENT and SINDENT
+ *  -- removed: bindent type and bindent fields in blocks
+ *
+ * Version 8.1
+ *  -- Removed: hardIndent (conditionally breaks line before indented format)
+ *  -- Added: breakIndent  (unconditionally breaks line before indented format)
+ *
+ * Version 8.2
+ *  -- this file renamed prettyprint.sig
+ *  -- NEW_PRETTYPRINT --> PRETTYPRINT
  *)
 
-(* Defines: signature NEW_PRETTYPRINT *)
+(* Defines: signature PRETTYPRINT *)
 
-signature NEW_PRETTYPRINT =
+signature PRETTYPRINT =
 sig
 
   (* types *)
@@ -219,4 +231,4 @@ sig
     val printFormatNL : format -> unit
 	(* like printFormat, but with newline appened *)
 
-end (* end NEW_PRETTYPRINT *)
+end (* end PRETTYPRINT *)

@@ -1,6 +1,6 @@
 File: newpp/README.md
 
-# README for NewPP, A New Prettyprinter
+# README for PrettyPrint, A New Prettyprinter Library
 
 Version 7:
 
@@ -91,6 +91,25 @@ Version 7.4 Changes.
 
   newprettyprint.sig/sml
     tuple (use tupleFormat instead)
+
+Version 8.0
+
+Version 8.1
+   format.sml
+     Delete HINDENT
+	 Rename SINDENT INDENT
+   newprettyprint.sig,sml
+     delete hardIndent
+	 add breakIndent
+	 
+Version 8.2
+   files renamed
+     newprettyprint.x -> prettyprint.x (x = sig,sml)
+   prettyprint.sig
+     NEW_PRETTYPRINT -> PRETTYPRINT
+   prettyprint.sml
+     NewPrettyPrint -> PrettyPrint
+
 
 ## Features
 
