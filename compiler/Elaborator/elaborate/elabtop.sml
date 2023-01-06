@@ -19,7 +19,7 @@ structure ElabTop : ELABTOP =
 
     structure EM = ErrorMsg
 
-    structure PP = NewPrettyPrint
+    structure PP = PrettyPrint
     structure PSP = PPSymPaths
     structure PPA = PPAbsyn
 

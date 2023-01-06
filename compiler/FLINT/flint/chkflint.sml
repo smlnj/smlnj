@@ -31,7 +31,7 @@ local
   structure LE = LtyExtern
   structure LV = LambdaVar
   structure DA = Access
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPT = PPLty
   structure PPF = PPFlint
   structure PO = Primop

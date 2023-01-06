@@ -10,7 +10,7 @@ struct
 local
   structure PI = PrimopId
   structure PB = PrimopBind
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
 in
 
 (* fmtPrim : PrimopId.prim_id -> PP.format *)
@@ -30,5 +30,5 @@ and fmtStrPrimInfo (strPrimInfo: PI.str_prim_info) = PP.tupleFormats (map fmtStr
 end (* top local *)
 end (* structure PPPrim *)
 
-(* [DBM, 09.17.2022]: converted to use NewPrettyPrint instead of PrettyPrint *)
+(* [DBM, 09.17.2022]: converted to use new PrettyPrint *)
 

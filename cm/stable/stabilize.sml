@@ -13,7 +13,7 @@ local
     structure GG = GroupGraph
     structure EM = ErrorMsg
 
-    structure PP = NewPrettyPrint
+    structure PP = PrettyPrint
     structure SM = SourceMap
     structure GP = GeneralParams
     structure Pid = PersStamps

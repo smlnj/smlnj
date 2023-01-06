@@ -25,7 +25,7 @@ local structure LE = LtyExtern
       structure DA = Access
       structure PO = Primop
       structure S  = LV.Set
-      structure PP = NewPrettyPrint
+      structure PP = PrettyPrint
       structure PPF = PPFlint
       open FLINT
 

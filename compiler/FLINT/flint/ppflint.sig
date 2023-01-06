@@ -1,9 +1,9 @@
-(* FLINT/flint/ppflint-new.sig
+(* FLINT/flint/ppflint.sig
  *
  * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Signature PPFLINT of pretty printer for FLINT IR, using the NewPrettyPrint library.
+ * Signature PPFLINT of pretty printer for FLINT IR, using the PrettyPrint library.
  *)
 
 (* This PPFLINT replaces th old PRINT_FLINT and the previous PPFLINT.
@@ -13,12 +13,12 @@ signature PPFLINT =
 sig
 
   (* formatter functions for FLINT types *)
-  val fmtFKind : FunRecMeta.fkind -> NewPrettyPrint.format
-  val fmtRKind : FunRecMeta.rkind -> NewPrettyPrint.format
-  val fmtCon   : PLambda.con -> NewPrettyPrint.format
-  val fmtValue : FLINT.value -> NewPrettyPrint.format         (* was printSval *)
-  val fmtFundec: int -> FLINT.fundec -> NewPrettyPrint.format  (* also applies to FLINT.prog *)
-  val fmtLexp  : int -> FLINT.lexp -> NewPrettyPrint.format
+  val fmtFKind : FunRecMeta.fkind -> PrettyPrint.format
+  val fmtRKind : FunRecMeta.rkind -> PrettyPrint.format
+  val fmtCon   : PLambda.con -> PrettyPrint.format
+  val fmtValue : FLINT.value -> PrettyPrint.format         (* was printSval *)
+  val fmtFundec: int -> FLINT.fundec -> PrettyPrint.format  (* also applies to FLINT.prog *)
+  val fmtLexp  : int -> FLINT.lexp -> PrettyPrint.format
 
   (* "top-level" printing functions *)
   val ppLexp : FLINT.lexp -> unit

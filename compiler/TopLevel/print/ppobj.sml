@@ -9,7 +9,7 @@ sig
   type object
   val fmtObj : StaticEnv.staticEnv
               -> object * Types.ty * int
-              -> NewPrettyPrint.format
+              -> PrettyPrint.format
 end
 
 structure PPObj : PPOBJ =
@@ -17,7 +17,7 @@ struct
 
 local (* top *)
 
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure S = Symbol
   structure V = Vector
   structure A = Access

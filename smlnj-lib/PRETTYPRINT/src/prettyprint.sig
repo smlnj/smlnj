@@ -1,4 +1,4 @@
-(* compiler/Basics/prettyprint/prettyprint.sig *)
+(* smlnj-lib/PRETTYPRINT/src/prettyprint.sig *)
 
 (* Version 8.1 [2023.1.2]
  *  -- hardIndent replaced by breakIndent with a different behavior (uncondition line break preceeding indentation)
@@ -16,7 +16,7 @@
  *  -- sblock --> block; siblock --> iblock; separator --> break; SEP --> BRK
  *  -- added: vHeaders, vHeaderFormats (from NEW_PPUTIL)
  *  -- removed: tuple
- * 
+ *
  * Version 8.0
  *  -- new format constructors HINDENT and SINDENT
  *  -- removed: bindent type and bindent fields in blocks
@@ -222,7 +222,7 @@ sig
 
     val render : format * (string -> unit) * int -> unit
 
-    val printFormatLW  : int -> format -> unit 
+    val printFormatLW  : int -> format -> unit
         (* printing to stdOut, with line width as first argument *)
 
     val printFormat : format -> unit

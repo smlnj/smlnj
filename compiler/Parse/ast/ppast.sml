@@ -16,7 +16,7 @@ local
   structure SR = Source
   structure SM = SourceMap
 
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPS = PPSymbols  (* fmtSym, fmtSymList *)
   structure PPSM = PPSourceMap
 
@@ -728,6 +728,6 @@ end (* structure PPAst *)
      are still not handled).
 
 [DBM, 2022.09.26]
-   Converted to use NewPrettyPrint from old (PrettyPrint) pretty printer library.
+   Converted to use new PrettyPrint library.
 
  *)

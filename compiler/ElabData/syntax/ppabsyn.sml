@@ -7,20 +7,20 @@
 signature PPABSYN =
 sig
 
-  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> NewPrettyPrint.format
+  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> PrettyPrint.format
   val fmtExp  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.exp * int -> NewPrettyPrint.format
+                -> Absyn.exp * int -> PrettyPrint.format
   val fmtRule : StaticEnv.staticEnv * Source.source option
-                -> Absyn.rule * int -> NewPrettyPrint.format
+                -> Absyn.rule * int -> PrettyPrint.format
   val fmtVB   : StaticEnv.staticEnv * Source.source option
-                -> Absyn.vb * int -> NewPrettyPrint.format
+                -> Absyn.vb * int -> PrettyPrint.format
   val fmtRVB  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.rvb * int -> NewPrettyPrint.format
+                -> Absyn.rvb * int -> PrettyPrint.format
   val fmtDec  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.dec * int -> NewPrettyPrint.format
+                -> Absyn.dec * int -> PrettyPrint.format
 
   val fmtStrexp : StaticEnv.staticEnv * Source.source option
-                 -> Absyn.strexp * int -> NewPrettyPrint.format
+                 -> Absyn.strexp * int -> PrettyPrint.format
 
 end (* signature PPABSYN *)
 
@@ -44,7 +44,7 @@ local
   structure SE = StaticEnv
   structure SR = Source
   structure SM = SourceMap
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType

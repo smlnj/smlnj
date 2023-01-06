@@ -8,7 +8,7 @@
 local
     structure DG = DependencyGraph
     structure EM = ErrorMsg
-    structure PP = NewPrettyPrint
+    structure PP = PrettyPrint
 in
   signature CHECKSHARING = sig
     val check : DG.impexp SymbolMap.map * GeneralParams.info -> unit

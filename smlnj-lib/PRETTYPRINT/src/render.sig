@@ -1,4 +1,4 @@
-(* sml/Dev/pp/new/new7/render.sig *)
+(* smlnj-lib/PRETTYPRINT/src/render.sig *)
 
 (* Version 7.4
  *   -- no change

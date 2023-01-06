@@ -1,7 +1,7 @@
-(* sml/Dev/pp/new/new7/render.sml *)
+(* smlnj-lib/PRETTYPRINT/src/render.sml *)
 
 (* Version 7.1
- *  the Render structure 
+ *  the Render structure
  *  -- revised measure function with measures memoized in blocks
  *
  * Version 7.4
@@ -36,7 +36,7 @@ fun spaces n = implode (List.tabulate (n, (fn _ => #" ")))
 
 (* flatRender : format * (string -> unit) -> unit
  *   render as though on an unbounded line (lw = "infinity"), thus "flat" (i.e. no line space pressure).
- *   _No_ newlines are triggered, not even HardLine breaks and INDENT formats, which are 
+ *   _No_ newlines are triggered, not even HardLine breaks and INDENT formats, which are
  *   rendered as single spaces, like Softline breaks.
  *   flatRender is called once when rendering a FLAT format when the format fits. *)
 fun flatRender (format, output) =
@@ -57,7 +57,7 @@ fun flatRender (format, output) =
         and renderElements nil = sp 1  (* render an empty BLOCK as a single space *)
           | renderElements elements =
             let fun rend nil = ()
-		  | rend (element::rest) = 
+		  | rend (element::rest) =
 		      (case element
 			 of FMT format => (render0 format; rend rest)
 			  | BRK break =>
@@ -84,7 +84,7 @@ fun flatRender (format, output) =
 (* Block Left Margin (blm: int)
  * The blm is the "left margin" of a block assigned to it by the renderer.  No non-blank character
  * in the block should be printed to the left of this margin.
- * 
+ *
  * The blm of a nonindenting block is defined as the cc at the point where that block is rendered.
  * The blm of an indenting block is the parent block's blm + the specified incremental indentation.
  * The blm only changes when entering an indented block.
@@ -92,7 +92,7 @@ fun flatRender (format, output) =
 
 (* render : format * (string -> unit) * int -> unit
  *   format: format  -- the format to be rendered and printed
- *   output: string -> unit  -- the output function 
+ *   output: string -> unit  -- the output function
  *   lw: int  -- the line width, assumed fixed during the rendering
  * The top-level render function decides where to conditionally break lines, and how much indentation should follow
  * each line break, based on the line space available (the difference between the currend column and the line width).
@@ -100,7 +100,7 @@ fun flatRender (format, output) =
  * function passed as the second argument. So in this version, rendering and printing are unified and there
  * is no intermediate "layout" structure.
  * Internal rendering functions (render0, renderBLOCK, renderABLOCK) : state -> state, where state = int * bool
- * (state = (cc, newlinep)). cc represents the "print cursor", while newlinep indicates whether we are starting 
+ * (state = (cc, newlinep)). cc represents the "print cursor", while newlinep indicates whether we are starting
  * immediately after a line break (a newline + indentation).
  *)
 fun render (format: format, output: string -> unit, lw: int) : unit =
@@ -123,7 +123,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
          * Outputs:
 	 *   cc' : int -- the current column when the render is completed (= position where next character will be printed)
 	 *   newlinep' : bool -- reports whether this render0 call _ended_ with a newline+indent
-	 *   -- INVARIANT: outerBlm <= cc 
+	 *   -- INVARIANT: outerBlm <= cc
 	 *   -- INVARIANT: we will never print to the left of the outer block's blm (outerBlm)
 	 *   -- ASSERT: if newlinep is true, then cc = outerBlm *)
 	fun render0  (format: format, outerBlm: int, cc: int, newlinep: bool) =
@@ -195,7 +195,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
           | renderABLOCK (formats, alignment, cc, newlinep) =
 	      let (* val _ = print ">>> renderABLOCK[not nil]\n" *)
 		  val blm = cc  (* the blm of _this_ block is defined as the entrance cc *)
-		  (* renderFormats : format list * int * bool -> int * bool 
+		  (* renderFormats : format list * int * bool -> int * bool
 		   * Arguments:
 		   *   format :: rest : format list -- the formats constituting the body (children) of the block
 		   *   cc : int -- the current column where the block starts; used to define the block's blm
@@ -270,5 +270,3 @@ a newline+indent (to its blm?).
 Should this be disallowed?  Probably not, until we find that it is causing problems or confusion for users.
 
 *)
-
-    

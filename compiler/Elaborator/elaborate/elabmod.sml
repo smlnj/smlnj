@@ -57,7 +57,7 @@ local
   structure ED = ElabDebug
   structure ST = RedBlackSetFn(type ord_key = S.symbol
 			       val compare = S.compare)
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPS = PPSymbols
 
   open Ast Modules

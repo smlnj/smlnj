@@ -9,7 +9,7 @@ struct
 
 local
 
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPS = PPSourceMap  (* fmtRegion, fmtSourceRegion *)
   structure SR = Source
   structure SM = SourceMap

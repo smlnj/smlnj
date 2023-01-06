@@ -26,7 +26,7 @@ local
   structure PT = PrimTyc
   structure PF = PFlatten
   structure LVMap = LambdaVar.Map
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPT = PPLty
   structure PL = PLambda
   open FLINT

@@ -1,4 +1,4 @@
-(* ~/sml/Dev/pp/new/new7/measure.sml *)
+(* smlnj-lib/PRETTYPRINT/src/measure.sml *)
 
 (* Version 7
    -- TRYFLAT replaced by FLAT
@@ -18,7 +18,7 @@ struct
 
 local
   open Format
-in	     
+in
 
 (* --------------------------------------------------------------------------------
  *  Measuring
@@ -28,7 +28,7 @@ in
  * We use the most conservative measure, assuming that a format will be rendered "flat", with
  * no line breaks (we call this "flat measure").
  * Measuring a format takes place before rendering, so it must be a conservative estimate
- * of the line space required by a format. This estimate is the length of its rendering on a 
+ * of the line space required by a format. This estimate is the length of its rendering on a
  * single unbounded line, with HardLine separators being treated as a single space and
  * indenting blocks treated as non-indenting for the sake of measurement.
  *)

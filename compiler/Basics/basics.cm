@@ -15,8 +15,8 @@ Group
 	structure Control_Print
 	structure PrintUtil
 
-	signature NEW_PRETTYPRINT
-	structure NewPrettyPrint
+	signature PRETTYPRINT
+	structure PrettyPrint
 
 	signature SYMBOL
 	signature FASTSYMBOL
@@ -98,13 +98,13 @@ is
 	print/printutil.sig
 	print/printutil.sml
 
-        newpp/format.sml
-        newpp/measure.sig
-        newpp/measure.sml
-        newpp/render.sig
-        newpp/render.sml
-        newpp/newprettyprint.sig
-        newpp/newprettyprint.sml
+        prettyprint/format.sml
+        prettyprint/measure.sig
+        prettyprint/measure.sml
+        prettyprint/render.sig
+        prettyprint/render.sml
+        prettyprint/prettyprint.sig
+        prettyprint/prettyprint.sml
 
 	util/wordstr-hashtable.sml
         util/list3.sml

@@ -8,7 +8,7 @@
 structure PrintHooks :
   sig
     (* all output goes to Control.Print.out *)
-    val fmtAbsyn : StaticEnv.staticEnv -> Absyn.dec -> NewPrettyPrint.format
+    val fmtAbsyn : StaticEnv.staticEnv -> Absyn.dec -> PrettyPrint.format
   end = 
 
 struct

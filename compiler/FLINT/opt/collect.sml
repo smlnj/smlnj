@@ -98,7 +98,7 @@ local
   structure FU = FlintUtil
   structure LV = LambdaVar
   structure PU = PrintUtil
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPF = PPFlint
   structure PO = Primop
 

@@ -1,9 +1,9 @@
-(* newpp.cm *)
+(* prettyprint.cm *)
 
 Library
 
-	signature NEW_PRETTYPRINT
-	structure NewPrettyPrint
+	signature PRETTYPRINT
+	structure PrettyPrint
 
 is
 
@@ -14,5 +14,5 @@ measure.sig
 measure.sml
 render.sig
 render.sml
-newprettyprint.sig
-newprettyprint.sml
+prettyprint.sig
+prettyprint.sml

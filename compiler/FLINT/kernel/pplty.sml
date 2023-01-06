@@ -3,7 +3,7 @@
  * (c) 2006 SML/NJ Fellowship
  *
  * Prettyprinting functions for PLambda types tkind, tyc, lty,
- * using the NewPrettyPrint prettyprinter library
+ * using the new PrettyPrint library
  *
  *)
 
@@ -11,10 +11,10 @@ signature PPLTY =
 sig
 
   val fflagToString : Lty.fflag -> string
-  val fmtTKind : int -> Lty.tkind -> NewPrettyPrint.format
-  val fmtTyc : int -> Lty.tyc -> NewPrettyPrint.format
-  val fmtLty : int -> Lty.lty -> NewPrettyPrint.format
-  val fmtTkindEnv : int -> Lty.tkindEnv -> NewPrettyPrint.format
+  val fmtTKind : int -> Lty.tkind -> PrettyPrint.format
+  val fmtTyc : int -> Lty.tyc -> PrettyPrint.format
+  val fmtLty : int -> Lty.lty -> PrettyPrint.format
+  val fmtTkindEnv : int -> Lty.tkindEnv -> PrettyPrint.format
 
   val ppTKind : int -> Lty.tkind -> unit
   val ppTyc : int -> Lty.tyc -> unit
@@ -32,9 +32,9 @@ struct
 local
   structure LT = Lty
   structure PT = PrimTyc
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
 
-  open NewPrettyPrint
+  open PrettyPrint
 
   val lineWidth = Control.Print.lineWidth
   val say = Control.Print.say

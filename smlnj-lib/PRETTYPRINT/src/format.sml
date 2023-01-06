@@ -1,9 +1,9 @@
-(* sml/Dev/pp/new/new71/format.sml *)
+(* smlnj-lib/PRETTYPRINT/src/format.sml *)
 
 (* Version 7
  * -- added memoization for block measure to speed up the measure function
  * -- The prettyprinter is partitioned into a number of structures and signatures: Format, Measure, Render, NewPrettyPrint.
- * -- The Format structure defines the types, related to formats: format, separator, element, bindent. 
+ * -- The Format structure defines the types, related to formats: format, separator, element, bindent.
  *    These types defined as datatypes and are therefore concrete within the Prettyprinter modules, but format
  *    becomes abstract when it is re-exported from NewPP.
  *
@@ -28,14 +28,14 @@
 (* structure Format:
  *   no signature, exports only datatypes alignment, break, and format *)
 
-structure Format = 
+structure Format =
 struct
 
 (* datatype alignment: alignment modes for "aligned" blocks *)
 datatype alignment  (* the alignment property of "aligned" blocks *)
   = H  (* Horizontal alignment, with implicit single space (Space 1) breaks between format components *)
   | V  (* Vertical alignment, with implicit hardline breaks (HardLine) between format components *)
-  | P  (* Packed alignment, with implicit softline (SoftLine 1) breaks between format components *)	
+  | P  (* Packed alignment, with implicit softline (SoftLine 1) breaks between format components *)
   | C  (* Compact alignment, with implicit NullBreak between format components, hence also horizontal *)
 
 (* breaks: used to separate format elements of a special block and categorize alignment in aligned blocks

@@ -5,7 +5,7 @@ struct
 
 local
   structure S = Symbol
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
 in
 
 (* fmtSym: S.symbol -> PP.format *)

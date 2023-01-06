@@ -5,7 +5,7 @@ structure MatchPrint =
 struct
 
 local
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPA = PPAbsyn
   val printDepth = Control_Print.printDepth
 

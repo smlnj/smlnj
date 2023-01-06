@@ -6,7 +6,7 @@ struct
 local (* top local *)
   structure SR = Source
   structure SM = SourceMap
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
 in
 
 (* fmtRegion : SM.region -> PP.format *)

@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Pretty Printer (formatter) for Flint IL, using NewPrettyPrint prettyprint library.
+ * Pretty Printer (formatter) for Flint IL, using new PrettyPrint library.
  *)
 
 structure PPFlint :> PPFLINT =
@@ -24,10 +24,10 @@ local
   structure FU = FlintUtil
   structure PO = Primop
   structure PU = PrintUtil
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPT = PPLty
 
-  open NewPrettyPrint
+  open PrettyPrint
 
 in
 

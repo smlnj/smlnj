@@ -17,7 +17,7 @@ local
   structure BT = BasicTypes
   structure P = Paths
   structure MC = MCCommon	     
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPA = PPAbsyn
   structure PPMC = PPMatchComp
 

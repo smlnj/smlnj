@@ -35,7 +35,7 @@ local
     structure LV = LambdaVar
     structure U = CPSUtil
     structure LT = Lty
-    structure PP = NewPrettyPrint
+    structure PP = PrettyPrint
 
     open CPS
 

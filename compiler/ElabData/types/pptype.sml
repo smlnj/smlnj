@@ -13,16 +13,16 @@ sig
   val tyvarToString : Types.tyvar -> string
 
   (* formatting functions *)
-  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPrettyPrint.format
-  val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPrettyPrint.format
-  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPrettyPrint.format
-  val fmtFormals : int -> NewPrettyPrint.format
+  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> PrettyPrint.format
+  val fmtType  : StaticEnv.staticEnv -> Types.ty -> PrettyPrint.format
+  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> PrettyPrint.format
+  val fmtFormals : int -> PrettyPrint.format
   val fmtDconDomain : (Types.dtmember vector * Types.tycon list)
                       -> StaticEnv.staticEnv
                       -> Types.ty
-		      -> NewPrettyPrint.format
+		      -> PrettyPrint.format
 (* NOT USED!
-  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> NewPrettyPrint.format
+  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> PrettyPrint.format
  *)
 
   (* actual printing functions *)
@@ -50,7 +50,7 @@ local
   structure T = Types
   structure TU = TypesUtil
   structure SE = StaticEnv
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPS = PPSymbols
   open Types
 in
@@ -391,7 +391,7 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 and fmtType (env: SE.staticEnv) (ty: T.ty) : PP.format =
     fmtType1 env (ty, [], NONE)
 
-(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> NewPrettyPrint.format *)
+(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> PrettyPrint.format *)
 fun fmtDconDomain members (env: SE.staticEnv) (ty:T.ty) : PP.format =
     fmtType1 env (ty, [], SOME members)
 

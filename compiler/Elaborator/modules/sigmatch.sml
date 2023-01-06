@@ -31,7 +31,7 @@ local
   structure TU = TypesUtil
   structure SM = SourceMap
   structure EM = ErrorMsg
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPT = PPType
   structure PPS = PPSymbols
 

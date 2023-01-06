@@ -30,7 +30,7 @@ local
   structure F  = FLINT
   structure FU = FlintUtil
   structure FL = PFlatten		(* argument flattening *)
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPF = PPFlint
 in
 

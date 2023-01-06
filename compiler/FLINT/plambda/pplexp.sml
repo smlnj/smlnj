@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-(* Pretty printing of plambda lexps, using the NewPrettyPrint prettyprinter. *)
+(* Pretty printing of plambda lexps, using the new PrettyPrint library. *)
 
 signature PPLEXP =
 sig
@@ -12,7 +12,7 @@ sig
   val conToString : PLambda.con -> string
   val lexpTag : PLambda.lexp -> string
 
-  val fmtLexp: int -> PLambda.lexp -> NewPrettyPrint.format
+  val fmtLexp: int -> PLambda.lexp -> PrettyPrint.format
   val ppLexp: int -> PLambda.lexp -> unit
 
 end (* signature PPLEXP *)
@@ -26,9 +26,9 @@ local
   structure A = Absyn
   structure DA = Access
   structure S = Symbol
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
 
-  open PLambda NewPrettyPrint
+  open PLambda PrettyPrint
 
   (* zipEq3: zipEq for 3 lists *)
   fun zipEq3 (x::xs, y::ys, z::zs) =

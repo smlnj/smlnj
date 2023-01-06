@@ -51,7 +51,7 @@ local
   structure DT = DecisionTree
   structure ST = MCStats
   structure MCC = MCControl (* match compiler control flags *)
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPA = PPAbsyn
   structure PPMC = PPMatchComp
  

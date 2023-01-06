@@ -1,4 +1,4 @@
-(* compiler/Basics/prettyprint/prettyprint.sml *)
+(* smlnj-lib/PRETTYPRINT/src/prettyprint.sml *)
 
 (* New Prettyprinter, main interface
  * Version 7:
@@ -15,7 +15,7 @@
  *
  * Version 8:
  *   -- bindent, xiblock, etc. eliminated; replaced by HINDENT, SINDENT format constructors
- * 
+ *
  * Version 8.1 [2023.1.2]
  *   -- Merge HINDENT and SINDENT into a single INDENT constructor acting like SINDENT
  *   -- the breakIndent function replaces hardIndent (but breakIndent _unconditionally_ performs
@@ -40,7 +40,7 @@ local
   structure M = Measure
   structure R = Render
 
-in		      
+in
 
 open Format  (* import datatypes format, element, break; format exported as abstract in NEW_PRETTYPRINT *)
 
@@ -138,10 +138,10 @@ val semicolon : format = text ";"
 val period : format    = text "."
 val lparen : format    = text "("
 val rparen : format    = text ")"
-val lbracket : format  = text "["		  
-val rbracket : format  = text "]"		  
-val lbrace : format    = text "{"		  
-val rbrace : format    = text "}"		  
+val lbracket : format  = text "["
+val rbracket : format  = text "]"
+val lbrace : format    = text "{"
+val rbrace : format    = text "}"
 val equal  : format    = text "="
 
 
@@ -225,7 +225,7 @@ val psequence = sequence P
 val vsequence = sequence V
 val csequence = sequence C
 
-(* tupleFormats : format list -> format  -- parenthesized, comma separated, packed alignment sequence 
+(* tupleFormats : format list -> format  -- parenthesized, comma separated, packed alignment sequence
  *  not really restricted to actual "tuples", just "tuple-style" formatting. Constituent formats can represent
  *  values of heterogeneous types. *)
 fun tupleFormats formats = parens (psequence comma formats)
@@ -286,7 +286,7 @@ fun 'a list (formatter : 'a -> format) (xs: 'a list) =
       xs
 
 (* option : ('a -> format) -> 'a option -> format *)
-fun 'a option (formatter: 'a -> format) (xOp: 'a option) = 
+fun 'a option (formatter: 'a -> format) (xOp: 'a option) =
     case xOp
       of NONE => text "NONE"
        | SOME x => ccat (text "SOME", parens (formatter x))
@@ -403,4 +403,4 @@ end (* structure PrettyPrint *)
    that format.  This prevents trivial nesting of blocks nesting of blocks, e.g. block(block(block(...))).
    [DBM: 2022.10.24]
 
-*)    
+*)

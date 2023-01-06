@@ -7,8 +7,8 @@
 signature PPTABLE =
 sig
   exception NO_FORMATTER
-  val formatObject : Stamps.stamp -> Unsafe.Object.object -> NewPrettyPrint.format
-  val installFormatter : string list -> (Unsafe.Object.object -> NewPrettyPrint.format) -> unit
+  val formatObject : Stamps.stamp -> Unsafe.Object.object -> PrettyPrint.format
+  val installFormatter : string list -> (Unsafe.Object.object -> PrettyPrint.format) -> unit
 end
 
 structure PPTable : PPTABLE =
@@ -19,7 +19,7 @@ struct
  *
  *     formatter : d -> PP.format
  *
- * for d, defined using the NewPrettyPrint interface. Then formatter is        
+ * for d, defined using the new PrettyPrint interface. Then formatter is        
  * installed in the "pp table" via install_pp. Subsequently, when a value of
  * type d comes to be printed out, we look in the table, find formatter and
  * apply it to the value. If it is not found, we print the value in
@@ -31,7 +31,7 @@ local
   structure S = Symbol
   structure SM = StampMap
   structure SRM = SourceMap
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
 
   type object = Unsafe.Object.object
 

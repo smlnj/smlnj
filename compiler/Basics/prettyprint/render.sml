@@ -18,7 +18,9 @@ local
   open Format
   structure M = Measure
 
-  fun error (msg: string) = (print ("NewPrettyPrint Error: " ^ msg); raise Fail "Render")
+  fun error (msg: string) =
+      (print ("PrettyPrint Render Error: " ^ msg);
+       raise Fail "Render")
 in
 
 (* newlines and spaces *)

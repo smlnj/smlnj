@@ -20,7 +20,7 @@ local
   structure AU = AbsynUtil
   structure P = Paths
   structure T = Types
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPT = PPType
   structure PPMC = PPMatchComp
 

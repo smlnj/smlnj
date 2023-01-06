@@ -30,7 +30,7 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 
     val lookAhead = 30
 
-    structure PP = NewPrettyPrint
+    structure PP = PrettyPrint
     structure SR = Source
     structure EM = ErrorMsg
     structure SM = SourceMap

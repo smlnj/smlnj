@@ -25,7 +25,7 @@ local
   structure LE = LtyExtern
   structure PL = PLambda
   structure F = FLINT
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPT = PPLty
   structure PPF = PPFlint
   open FLINT

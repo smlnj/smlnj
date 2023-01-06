@@ -11,11 +11,11 @@ sig
 
     datatype severity = WARN | COMPLAIN
 
-    type complainer = severity -> string -> NewPrettyPrint.format -> unit
+    type complainer = severity -> string -> PrettyPrint.format -> unit
     type errorFn = SourceMap.region -> complainer
 
     type errors (* = {error: errorFn,
-                      fmtRegion: region -> NewPrettyPrint.format,
+                      fmtRegion: region -> PrettyPrint.format,
                       anyErrors : bool ref} *)
 
     exception Error
@@ -30,13 +30,13 @@ sig
     val errors : Source.source -> errors
     val anyErrors : errors -> bool
 
-    val nullErrorBody : NewPrettyPrint.format  (* == NewPrettyPrint.empty *)
+    val nullErrorBody : PrettyPrint.format  (* == PrettyPrint.empty *)
 
     val error         : Source.source -> errorFn
     val errorNoSource : errorFn  (* == error Source.dummySource, only 2 uses *)
 
     val impossible : string -> 'a  (* raises Error exception *)
-    val impossibleWithBody : string -> NewPrettyPrint.format -> 'a  (* raises Error exception *)
+    val impossibleWithBody : string -> PrettyPrint.format -> 'a  (* raises Error exception *)
     val warn : string -> unit  (* prints warning message, no exception raised *)
 
 end (* signature ERRORMSG *)

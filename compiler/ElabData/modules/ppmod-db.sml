@@ -7,35 +7,35 @@
 (* Modified to use SML/NJ Lib PP. [dbm, 7/30/03]).
  * Debugging version of module printing showing internals;
  * roughly equivalent to the old ppmod with internals true [DBM, 2021/12/12].
- * [DBM, 2022.09.26] Converted to NewPrettyPrint pretty printer library *)
+ * [DBM, 2022.09.26] Converted to new PrettyPrint pretty printer library *)
 
 signature PPMOD_DB =
 sig
 
-  val fmtSignature: StaticEnv.staticEnv -> Modules.Signature * int -> NewPrettyPrint.format
+  val fmtSignature: StaticEnv.staticEnv -> Modules.Signature * int -> PrettyPrint.format
 
-  val fmtStructure: StaticEnv.staticEnv -> Modules.Structure * int -> NewPrettyPrint.format
+  val fmtStructure: StaticEnv.staticEnv -> Modules.Structure * int -> PrettyPrint.format
 
-  val fmtOpen: StaticEnv.staticEnv -> SymPath.path * Modules.Structure * int -> NewPrettyPrint.format
+  val fmtOpen: StaticEnv.staticEnv -> SymPath.path * Modules.Structure * int -> PrettyPrint.format
 									    
-  val fmtStructureName : StaticEnv.staticEnv -> Modules.Structure -> NewPrettyPrint.format
+  val fmtStructureName : StaticEnv.staticEnv -> Modules.Structure -> PrettyPrint.format
 
-  val fmtFunsig : StaticEnv.staticEnv -> Modules.fctSig * int -> NewPrettyPrint.format
+  val fmtFunsig : StaticEnv.staticEnv -> Modules.fctSig * int -> PrettyPrint.format
 
-  val fmtBinding: StaticEnv.staticEnv -> Symbol.symbol * Bindings.binding * int -> NewPrettyPrint.format
+  val fmtBinding: StaticEnv.staticEnv -> Symbol.symbol * Bindings.binding * int -> PrettyPrint.format
 
   (* module internals *)
   val fmtElement : Modules.entityEnv option * StaticEnv.staticEnv
-		  -> Symbol.symbol * Modules.spec * int -> NewPrettyPrint.format
+		  -> Symbol.symbol * Modules.spec * int -> PrettyPrint.format
 
-  val fmtEntity : StaticEnv.staticEnv -> Modules.entity * int -> NewPrettyPrint.format
+  val fmtEntity : StaticEnv.staticEnv -> Modules.entity * int -> PrettyPrint.format
 
-  val fmtEntityEnv : StaticEnv.staticEnv -> Modules.entityEnv * int -> NewPrettyPrint.format
+  val fmtEntityEnv : StaticEnv.staticEnv -> Modules.entityEnv * int -> PrettyPrint.format
 
-  val fmtFunctor : StaticEnv.staticEnv -> Modules.Functor * int -> NewPrettyPrint.format
+  val fmtFunctor : StaticEnv.staticEnv -> Modules.Functor * int -> PrettyPrint.format
 
   val fmtEnv : Symbol.symbol list option * StaticEnv.staticEnv
-	      -> StaticEnv.staticEnv * int -> NewPrettyPrint.format
+	      -> StaticEnv.staticEnv * int -> PrettyPrint.format
 
 end (* signature PPMOD *)
 
@@ -62,7 +62,7 @@ local
   structure EE = EntityEnv
   structure LU = Lookup
 
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType

@@ -42,7 +42,7 @@ val fname_ref : string ref = ref "yyy"
 fun bug s = ErrorMsg.impossible ("CheckLty: "^s)
 val say = Control.Print.say
 
-structure PP = NewPrettyPrint
+structure PP = PrettyPrint
 
 val printDepth = 20
 

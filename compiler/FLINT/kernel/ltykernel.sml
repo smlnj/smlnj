@@ -5,7 +5,7 @@ structure LtyKernel :> LTYKERNEL =
 struct
 
 local
-  structure PP = NewPrettyPrint
+  structure PP = PrettyPrint
   structure EM = ErrorMsg
   structure PT = PrimTyc
   structure LT = Lty
