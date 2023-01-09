@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/render.sml *)
+(* smlnj-lib/PrettyPrint/src/render.sml *)
 
 (* Version 7.1
  *  the Render structure

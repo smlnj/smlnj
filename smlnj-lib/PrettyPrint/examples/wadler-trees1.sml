@@ -1,4 +1,4 @@
-(* pp/tnew/wadler-trees1.sml *)
+(* smlnj-lib/PrettyPrint/examples/wadler-trees1.sml *)
 
 local open PrettyPrint
 in

@@ -1,4 +1,4 @@
-(* PRETTYPRINT/test/expdecl.sml, for PrettyPrint, Version 8.3 *)
+(* smlnj-lib/PrettyPrint/examples/expdecl.sml, for PrettyPrint, Version 8.3 *)
 
 (* (JHR, 2022-0606)
 
@@ -63,6 +63,3 @@ val exp1 = Let ([Val ("x", Num 1), Val ("y", Num 2)], [Plus (Var "x", Num 3), Va
 fun test fmt n = printFormatLW n fmt;
 
 val test1 = test (formatExp exp1);
-
-(* outputs:
-

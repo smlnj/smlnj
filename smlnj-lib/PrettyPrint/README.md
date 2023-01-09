@@ -1,6 +1,6 @@
-File: smlnj-lib/NEWPP/README.md
+File: smlnj-lib/PrettyPrint/README.md
 
-# README for NewPrettyPrint, A New Prettyprinter Library
+# README for PrettyPrint, the New Prettyprinter Library
 
 The implmentation of the New PrettyPrinter. This is a 2-phase prettyprinter
 where a value to be prettyprinted is first mapped to a _format_, which is then
@@ -218,3 +218,5 @@ spurious space character after the text "abc", because
   The PrettyPrint.breakIndent function is removed from PrettyPrint and PRETTYPRINT.
   It did not work correctly, because it was defined in terms of block, which resets
   the blm relative to which the indentation is taken.
+
+  The smlnj-lib/PRETTYPRINT directory is renamed smlnj-lib/PrettyPrint.

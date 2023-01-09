@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/prettyprint.sml *)
+(* smlnj-lib/PrettyPrint/src/prettyprint.sml *)
 
 (* New Prettyprinter, main interface
  * Version 7:

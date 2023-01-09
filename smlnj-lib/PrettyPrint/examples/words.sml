@@ -1,4 +1,4 @@
-(* pp/new/test/words.sml *)
+(* smlnj-lib/PrettyPrint/examples/words.sml *)
 
 local
 

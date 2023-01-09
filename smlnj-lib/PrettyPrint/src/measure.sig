@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/measure.sig *)
+(* smlnj-lib/PrettyPrint/src/measure.sig *)
 
 signature MEASURE =
 sig

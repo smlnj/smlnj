@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/measure.sml *)
+(* smlnj-lib/PrettyPrint/src/measure.sml *)
 
 (* Version 7
    -- TRYFLAT replaced by FLAT

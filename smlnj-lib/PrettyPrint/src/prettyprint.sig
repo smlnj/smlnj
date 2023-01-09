@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/prettyprint.sig *)
+(* smlnj-lib/PrettyPrint/src/prettyprint.sig *)
 
 (* Version 8.1 [2023.1.2]
  *  -- hardIndent replaced by breakIndent with a different behavior (uncondition line break preceeding indentation)

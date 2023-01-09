@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/format.sml *)
+(* smlnj-lib/PrettyPrint/src/format.sml *)
 
 (* Version 7
  * -- added memoization for block measure to speed up the measure function

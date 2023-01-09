@@ -1,4 +1,4 @@
-(* PRETTYPRINT/test/strdecl.sml, for Version 8.3 of PrettyPrint *)
+(* smlnj-lib/PrettyPrint/examples/strdecl.sml, for PrettyPrint, Version 8.3 *)
 
 local
 

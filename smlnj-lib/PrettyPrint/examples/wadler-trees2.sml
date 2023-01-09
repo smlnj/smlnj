@@ -1,4 +1,4 @@
-(* pp/tnew/wadler-trees2.sml *)
+(* smlnj-lib/PrettyPrint/examples/wadler-trees2.sml *)
 
 fun formatTree' (Node (s, trees)) = 
     case trees

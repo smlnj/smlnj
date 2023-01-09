@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/sources.cm *)
+(* smlnj-lib/PrettyPrint/src/sources.cm *)
 (* The New PrettyPrinter Library *)
 
 Library

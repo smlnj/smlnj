@@ -1,4 +1,4 @@
-(* smlnj-lib/PRETTYPRINT/src/render.sig *)
+(* smlnj-lib/PrettyPrint/src/render.sig *)
 
 (* Version 7.4
  *   -- no change
