@@ -20,11 +20,15 @@ copy in smlnj[newpp]/compiler/Basics/newpp can be removed.
    have duplicate sources loaded from Basics/basics.cm and
    system/smlnj/smlnj-lib/newpp-lib.cm.
 
-3. What would cause the following path to be defined (as an alias for
+3. What would cause the following path to be defined (perhaps as an alias for
    $smlnj/smlnj-lib/prettyprint-lib.cm)?
 
      $/prettyprint-lib.cm
 
+   [There are a number of other instances of "short" paths similar to this,
+    but I am not sure how they are defined.]
+   Does this have something to do with the system/smlnj/smlnj-lib/prettyprint-lib.cm
+   file?
 
 4. Renaming:
    NewPP -> PrettyPrint
