@@ -105,7 +105,6 @@ val vHeaders : {header1: string, header2: string, formatter: 'a -> format} -> 'a
 val vHeaderFormats : {header1: string, header2: string} -> format list -> format
 
 val indent : int -> format -> format
-val breakIndent : int -> format -> format
 
 val tryFlat : format -> format
 val alt : format * format -> format
@@ -187,12 +186,8 @@ val printFormatNL : format -> unit
   `hvblock fmts` : Renders as (hblock fmts) if that fits, and otherwise renders as (vblock fmts).
 
 `[.kw]#val# indent : int \-> format \-> format`::
-  `softIndent (fmt, n)` : Indent fmt n additional spaces (relative to parent block's blm)
-  but only if following a line break. Otherwise render fmt normally, without indentation.
-
-`[.kw]#val# breakIndent : int \-> format \-> format`::
-  `hardIndent (fmt, n)` : Indent fmt n additional spaces (relative to parent block's blm)
-  unconditionally. The format will follow a linebreak with the incrementally increased indentation.
+  `indent n fmt` : Indent `fmt` `n` additional spaces (relative to parent block's blm)
+  but only if following a line break. Otherwise render `fmt` normally, without indentation.
 
 `[.kw]#val# comma, colon, semicolon, period, lparen, rparen, lbracket, rbracket, lbrace, rbrace, equal : format`::
   Punctuation characters as formats (plus the equal symbol, an honorary punctuation symbol).

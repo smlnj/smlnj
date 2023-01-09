@@ -265,7 +265,7 @@ in
 
       | fmtCexp (SWITCH (subject, lvar, cases)) =
 	  let fun fmtCase (i,rhs) =
-		  PP.hblock [PP.integer i, PP.text "=>", PP.breakIndent 3 rhs]
+		  PP.vcat (PP.hcat (PP.integer i, PP.text "=>"), PP.indent 3 rhs)
 	      fun folder (cexp, (i, fmts)) = (i+1, fmtCase (i, fmtCexp cexp) :: fmts)
 	      val caseFmts = rev (#2 (foldl folder (0, nil) cases))
 	   in PP.vcat 

@@ -93,6 +93,9 @@ Version 7.4 Changes.
     tuple (use tupleFormat instead)
 
 Version 8.0
+   format.sml
+	 Delete bindent type and bindent fields of block constructors
+	 Add HINDENT and SINDENT constructors to format datatype
 
 Version 8.1
    format.sml
@@ -109,6 +112,10 @@ Version 8.2
      NEW_PRETTYPRINT -> PRETTYPRINT
    prettyprint.sml
      NewPrettyPrint -> PrettyPrint
+
+Version 8.3
+   prettyprint.sig,sml
+	 removed breakIndent
 
 
 ## Features

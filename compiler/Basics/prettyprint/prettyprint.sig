@@ -28,6 +28,9 @@
  * Version 8.2
  *  -- this file renamed prettyprint.sig
  *  -- NEW_PRETTYPRINT --> PRETTYPRINT
+ *
+ * Version 8.3
+ *  -- removed breakIndent (it was a mistake, because it resets blm before the indent)
  *)
 
 (* Defines: signature PRETTYPRINT *)
@@ -187,10 +190,6 @@ sig
 
     val indent : int -> format -> format
     (* indent n fmt ==> INDENT (n, frmt); but softIndent n EMPTY ==> EMPTY *)
-
-    val breakIndent : int -> format -> format
-    (* breakIndent n fmt ==> (unconditional) line break followed by fmt indented n spaces; but
-     * breakIndent n EMPTY ==> EMPTY *)
 
 
   (* Conditional formats: *)

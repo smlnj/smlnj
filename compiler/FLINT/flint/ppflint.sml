@@ -161,10 +161,7 @@ in
 		    val defFmt = fmtLexp' def
 		    val bodyFmt = fmtLexp' body
 		 in vcat
-		      (pcat (header,
-			     if complex def
-			     then breakIndent 4 defFmt
-			     else indent 4 defFmt),
+		      (pcat (header, indent 4 defFmt),
 		       indent 2 bodyFmt)
 		end
 
@@ -355,8 +352,8 @@ in
 		      text "="],
 	     (*** the result lty no longer available ---- fmtLty lty; **)
 	      fmtTagged ("FN",
-			 (hcat (brackets (vblock (map fmtarg lvar_lty_list)),
-				breakIndent 4 (fmtLexp (pd - 1) body)))))
+			 (pcat (brackets (vblock (map fmtarg lvar_lty_list)),
+			       indent 4 (fmtLexp (pd - 1) body)))))
 	end
 
     (* ppLexp : lexp -> unit *)

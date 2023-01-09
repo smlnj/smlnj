@@ -77,11 +77,9 @@ in
       case (!BasicControl.printWarnings, severity)
 	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
 	 | _ => PP.appendNewLine
-		  (PP.hblock
-		     [location,
-		      fmtSeverity severity,
-		      PP.text msg,
-		      PP.breakIndent 2 body])
+                  (PP.vcat
+		     (PP.hblock [location, fmtSeverity severity, PP.text msg],
+		      PP.indent 2 body))
 
   (* error : SR.source -> errorFn *)
   fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =

@@ -32,7 +32,7 @@ local (* top local *)
 
   val printDepth = Control_Print.printDepth
 
-  fun viblock formats = PP.breakIndent 3 (PP.vblock formats)
+  fun viblock formats = PP.indent 3 (PP.vblock formats)
 
 in
 

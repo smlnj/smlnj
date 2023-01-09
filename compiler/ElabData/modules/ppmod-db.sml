@@ -74,7 +74,7 @@ local
   val fmtTyfun = PPT.fmtTyfun
   val fmtFormals = PPT.fmtFormals
 
-  fun viblock (formats: PP.format list) = PP.breakIndent 2 (PP.vblock formats)
+  fun viblock (formats: PP.format list) = PP.indent 2 (PP.vblock formats)
 
 in
 
@@ -297,11 +297,11 @@ and fmtSignature0 env (sign, entityEnvOp, depth: int) =
 				| SOME sym => PP.hcat (PP.text "NAMED", PPS.fmtSym sym)),
 			  (case elements
 			     of nil => PP.empty
-			      | _ => PP.label "elements:"
-				       (viblock
-					  (map (fn (sym, spec) =>
-						   fmtElement (entityEnvOp, env) (sym, spec, depth))
-					       nonConsElems))),
+			      | _ => PP.vcat
+				       (PP.text "elements:",
+					(viblock
+					  (map (fn (sym, spec) => fmtElement (entityEnvOp, env) (sym, spec, depth))
+					       nonConsElems)))),
 			  (case strsharing
 			     of nil => PP.empty
 			      | _ => PP.label "strsharing:" (fmtConstraints ("",strsharing))),

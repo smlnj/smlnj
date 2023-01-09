@@ -47,7 +47,7 @@ local
  
   open Types TypesUtil Unify Absyn ErrorMsg
 
-  fun viblock formats = PP.breakIndent 3 (PP.vblock formats)
+  fun viblock formats = PP.indent 3 (PP.vblock formats)
 in
 
 (* debugging *)
@@ -508,10 +508,10 @@ fun patType(pat: pat, depth, region: SM.region) : pat * ty =
 		(err region COMPLAIN
                   (mkMessage ("constructor and argument do not agree in pattern", mode))
 		  (PPT.resetPPType();
-		   viblock
-		     [PP.hcat (PP.text "constructor:", fmtType typ),
-		      PP.hcat (PP.text "argument:", fmtType argTy),
-		      PP.hcat (PP.text "in pattern:", fmtPat pat)]);
+		   PP.vblock
+		    [PP.hcat (PP.text "constructor:", fmtType typ),
+		     PP.hcat (PP.text "argument:", fmtType argTy),
+		     PP.hcat (PP.text "in pattern:", fmtPat pat)]);
 		 (pat, WILDCARDty))
 	   end
        | CONSTRAINTpat (pat', constraintTy) =>
@@ -599,7 +599,7 @@ in
                handle Unify(mode) =>
                  (err region COMPLAIN
                     (mkMessage ("selecting a non-existing field from a record", mode))
-                    (viblock
+                    (PP.vblock
 		       (PPT.resetPPType();
 			[PP.hcat (PP.text "the field name:", PPS.fmtSym label),
 			 PP.hcat (PP.text "the record type:", fmtType nty),
@@ -645,16 +645,16 @@ in
 		in PPT.resetPPType();
 		   if BT.isArrowType(reducedRatorTy)
 		   then (err region COMPLAIN
-			  (mkMessage ("operator and operand do not agree",mode))
-			  (viblock
+			  (mkMessage ("operator and operand do not agree", mode))
+			  (PP.vblock
 			     [PP.hcat (PP.text "operator domain:", fmtType (BT.domain reducedRatorTy)),
 			      PP.hcat (PP.text "operand:", fmtType randTy),
 			      PP.hcat (PP.text "in expression:", fmtExp exp),
 			      fmtModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
-			  (mkMessage ("operator is not a function",mode))
-			  (viblock
+			  (mkMessage ("operator is not a function", mode))
+			  (PP.vblock
 			     [PP.hcat (PP.text "operator:", fmtType ratorTy),
 			      PP.hcat (PP.text "in expression:", fmtExp exp),
 			      fmtModeErrorMsg mode]);

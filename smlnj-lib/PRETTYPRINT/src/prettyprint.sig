@@ -18,7 +18,7 @@
  *  -- removed: tuple
  *
  * Version 8.0
- *  -- new format constructors HINDENT and SINDENT
+ *  -- added: new format (modifier) constructors HINDENT and SINDENT
  *  -- removed: bindent type and bindent fields in blocks
  *
  * Version 8.1
@@ -28,6 +28,10 @@
  * Version 8.2
  *  -- this file renamed prettyprint.sig
  *  -- NEW_PRETTYPRINT --> PRETTYPRINT
+ *
+ * Verion 8.3 [2023.1.6]
+ *   -- Removed
+ *      breakIndent  (didn't work, resets blm)
  *)
 
 (* Defines: signature PRETTYPRINT *)
@@ -186,11 +190,7 @@ sig
   (* indenting formats *)
 
     val indent : int -> format -> format
-    (* indent n fmt ==> INDENT (n, frmt); but softIndent n EMPTY ==> EMPTY *)
-
-    val breakIndent : int -> format -> format
-    (* breakIndent n fmt ==> (unconditional) line break followed by fmt indented n spaces; but
-     * breakIndent n EMPTY ==> EMPTY *)
+        (* indent n EMPTY ==> EMPTY; indent n fmt ==> INDENT (n, frmt) *)
 
 
   (* Conditional formats: *)

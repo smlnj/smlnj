@@ -26,22 +26,23 @@ local
 
 
   (* simple2 : string * int * int * (format list -> format) * (format list -> format) -> unit *)
-  fun simple2 (name: string, w: int, n: int, mkblock_outer, mkblock_inner) () =
+  fun simple2 (name: string, w: int, n: int, outer, inner) () =
         printFormatLW w
 	  (vcat
 	     (text name,
-	      mkblock_outer  (* always broken because of hardIndent call *)
+	      outer
 		[text (repeat #"v" n),
-		 hardIndent 2 
-		   (mkblock_inner [text (repeat #"w" n), text (repeat #"x" n), text (repeat #"y" n)]),
+		 indent 2 
+		   (inner [text (repeat #"w" n), text (repeat #"x" n), text (repeat #"y" n)]),
 		 text (repeat #"z" n)]))
 
 in
 
-(* BOGUS! Replaced "openBox" with "cblock", but openBox does not correspond with cblock!
+(* BOGUS! Replaced "openBox" with "cblock", but openBox does not correspond to cblock!
  *   openBox is a variant of openHOVBox (pblock) with a weird undent behavior relating to
  *   openXBox indent parameters. It is not at all clear whether we can replace openBox in
- *   a sensible manner. *)
+ *   a sensible manner. Tests that used "openBox" are probably not relevant, and it is
+ *   not clear what corresponding relevant tests would be. *)
 
 val t01a = simple1 ("Test 01a [hblock]", 10, 2, hblock)
 val t01b = simple1 ("Test 01b [hblock]", 10, 3, hblock)
@@ -133,15 +134,15 @@ val t35c = simple2 ("Test 35c [cblock/cblock]", 10, 4, cblock, cblock)
 fun t40 () =
     printFormatLW 20 
       (vcat
-        (text "Test 20 [C code]",
+        (text "Test t40 [C code], width 20",
          pblock
 	   [hblock [text "if", text "(x < y)", text "{"],
-	    softIndent 4
+	    indent 4
 	      (hvblock
 	         [text "stmt1;",
 		  hvblock
 		    [hblock [text "if", text "(w < z)", text "{"],
-		     softIndent 4
+		     indent 4
 		       (hvblock [text "stmt2;" text "stmt3;", text "stmt4;"]),
 		     text "}"]]),
 	    text "stmt5;",
@@ -152,23 +153,23 @@ fun t40 () =
 fun t50 () =
     printFormatLW 20 
      (vcat
-	(text "Test 40 [vbox]",
+	(text "Test t50 [vblock], width 20",
 	 let fun strings l = hblock (map text l)
 	  in vblock 
 	       [strings ["0:", "line", "1"],
 		strings ["0:", "line", "2"],
-		hardIndent 2
+		indent 2
 		  (vblock
 		     [strings ["2:", "line", "3"],
 		      strings ["2:", "line", "4"]]),
-		hardIndent 2
+		indent 2
 		  (vblock
 		     [strings ["2:", "line", "5"],
 		      strings ["2:", "line", "6"]]),
 
 		strings ["0:", "line", "7"],
 		strings ["0:", "line", "8"],
-		hardIndent 4
+		indent 4
 		  (vblock
 		     [strings ["4:", "line", "9"]
 		      strings ["4:", "line", "10"]]),

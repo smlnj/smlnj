@@ -26,6 +26,10 @@
  *   -- Renamed
  *      NEW_PRETTYPRINT --> PRETTYPRINT
  *      NewPrettyPrint --> PrettyPrint
+ *
+ * Verion 8.3 [2023.1.6]
+ *   -- Removed
+ *      breakIndent
  *)
 
 (* Defines:
@@ -342,12 +346,6 @@ fun indent (n: int) (fmt: format) =
        of EMPTY => EMPTY
         | _ => INDENT (n, fmt))
 
-(* breakIndent : int -> format -> format *)
-(* When applied to EMPTY, produces EMPTY *)
-fun breakIndent (n: int) (fmt: format) =
-    (case fmt
-       of EMPTY => EMPTY
-        | _ => block [BRK HardLine, FMT (INDENT (n, fmt))])
 
 (*** functions for setting and accessing the line width ***)
 

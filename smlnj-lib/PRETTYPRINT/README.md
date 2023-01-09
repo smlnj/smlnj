@@ -24,29 +24,32 @@ _rendered_ to printed text (or sometimes, to a "layout" type, such as string).
   
 ## Files
 
-- format.sml, the datatypes defining formats
+- src/format.sml, the datatypes defining formats
 
-- measure.{sig,sml}, computing the static, flat measure of a format
+- src/measure.{sig,sml}, computing the static, flat measure of a format
 
-- render.{sig,sml}, rendering a format to printed characters
+- src/render.{sig,sml}, rendering a format to printed characters
 
-- newprettyprint.{sig,sml}, the interface used for writing formatter functions
-    Defines `NewPP : NEW_PP`
+- src/prettyprint.{sig,sml}, the interface used for writing formatter functions
+    Defines `PrettyPrint : PRETTYPRINT`
 
-- newpp.cm, the CM file for compiling the prettyprinter
+- src/source.cm, the CM file for compiling the prettyprinter, 
 
-- doc/str-newprettyprint.{adoc, html}, the interface documentation
+- prettyprint.cm, the CM file for compiling the prettyprinter, 
+  referring to src/sources.cm
 
-- doc/manual.{adoc, html}, the manual for the prettyprinter
+[Following files are located in compiler/Basics/prettyprint/doc:
+- doc/str-PrettyPrint.{adoc, html}, the interface documentation
 
-- doc/design-notes.txt, extensive notes on the design of NewPP and
+- doc/prettyprint-manual.{adoc, html}, the manual for the prettyprinter library
+
+- doc/design-notes.txt, extensive notes on the design of PrettyPrint and
   prettyprinter library design in general.
   (now maintained in github/newpptr repo)
+]
 
-Eventually the *.{sig,sml} files should be moved to a src directory.
-
-Eventually, the NewPrettyPrint library and documentation should be moved to
-smlnj-lib (directory smlnj-lib/NPP).
+This copy of the PrettyPrint library [and documentation] is found in
+smlnj-lib/PRETTYPRINT, and it should supercede the copy in compiler/Basics/prettyprint.
 
 
 ## Change Log:
@@ -58,6 +61,7 @@ smlnj-lib (directory smlnj-lib/NPP).
 with respect to alignment and indentation (bindent).
 
 2. add "generic" version of formatList taking an alignment argument.
+
 
 **Version 7.2**
 
@@ -75,6 +79,7 @@ arguments.
 4. Added functions for managing the line width: setLineWidthFun, 
 resetLineWidthFun, getLineWidth. These are used to isolate the prettyprinter
 library from compiler internals like Control.Print.lineWidth.
+
 
 **Version 7.3**
 
@@ -103,6 +108,7 @@ spurious space character after the text "abc", because
 
 6. Created newpp/doc directory and put design-notes.txt and
    manual.adoc in the new doc directory.
+
 
 **Version 7.4**
 
@@ -134,6 +140,7 @@ spurious space character after the text "abc", because
   newprettyprint.sig/sml
     tuple (use tupleFormat instead)
 
+
 **Version 8.0**
 
 0. Major change in the handling of indentation. Indentation is
@@ -163,6 +170,7 @@ spurious space character after the text "abc", because
 	functions are defined directly in terms of the HINDENT and SINDENT
 	constructors, but are curried.
 
+
 ** Version 8.1 [2023.1.2]**
 
 0. Merged HINDENT and SINDENT into a single format constructor INDENT
@@ -191,3 +199,22 @@ spurious space character after the text "abc", because
      breakIndent : int -> format -> format
 
    
+** Version 8.2**
+
+  NewPrettyPrint renamed PrettyPrint, and the corresponding change is made to file names,
+  signatures, etc, and all former references to NewPrettyPrint throughout the compiler are
+  replaced by references to PrettyPrint. The old PrettyPrint structure that was defined in
+  Basics/print/prettyprint.sml is no longer used (or even compiled).
+  
+    NewPrettyPrint --> PrettyPrint
+	NEW_PRETTYPRINT --> PRETTYPRINT
+    smlnj-lib/NEWPP --> smlnj-lib/PRETTYPRINT
+	src/newprettyprint.{sig,sml} --> src/prettyprint{sig,sml}
+	smlnj-lib/NEWPP/newpp-lib.cm -> smlnj-lib/PRETTYPRINT/prettyprint-lib.cm
+
+
+** Version 8.3**
+
+  The PrettyPrint.breakIndent function is removed from PrettyPrint and PRETTYPRINT.
+  It did not work correctly, because it was defined in terms of block, which resets
+  the blm relative to which the indentation is taken.

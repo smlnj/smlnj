@@ -68,7 +68,7 @@ local
   type depth = int (* deBruijn context *)
   val top : depth = 0
 
-  fun viblock formats = PP.breakIndent 3 (PP.vblock formats)
+  fun viblock formats = PP.indent 3 (PP.vblock formats)
 
 in
 
@@ -656,7 +656,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
                 of SOME(_, tvs) =>
 		   (if !debugging then
                       complain EM.WARN "mkVE -> matchInstTypes -> pruneTyvar"
-                        (viblock
+                        (PP.vblock
 			   (PP.label "var:" (PPVal.fmtVarDebug (env, e)) ::
 			    PP.label "tvs length:" (PP.integer (length tvs)) ::
                             (case tvs
@@ -670,7 +670,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
 		      (fn () =>
 			  (complain EM.COMPLAIN
 				    "mkVE:primop intrinsic type doesn't match occurrence type"
-                      (viblock
+                      (PP.vblock
                          [PP.label "VALvar" (PPVal.fmtVar e),
 			  PP.label "occtypes" (fmtType occurenceTy),
                           PP.label "intrinsicType" (fmtType intrinsicType),
