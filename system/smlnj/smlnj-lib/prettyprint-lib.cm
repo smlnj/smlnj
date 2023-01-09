@@ -1,0 +1,24 @@
+(* $smlnj/smlnj-lib/prettyprint-lib.cm
+ *
+ *   This is a proxy for $SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm and represents
+ *   (should represent) the version of the new SML/NJ pretty-printing library that
+ *   is internally used in the implementation of the system itself.
+ *
+ *   User code can refer to it as $/prettyprint-lib.cm, but the $prettyprint-lib.cm
+ *   anchor may be redefined to point to a different version
+ *   without affecting the compiler itself (???).
+ *
+ *   Copyright (c) 2023 by The Fellowship of SML/NJ (https://www.smlnj.org)
+ *
+ * author: Matthias Blume (blume@tti-c.org)
+ *)
+Library
+	library ($SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm)
+is
+	$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm
+		(bind:(anchor:basis.cm value:$SMLNJ-BASIS)
+		 bind:(anchor:smlnj-lib.cm value:$SMLNJ-LIB/Util)
+		 bind:(anchor:prettyprint-lib.cm value:$SMLNJ-LIB/PrettyPrint)
+		 bind:(anchor:controls-lib.cm value:$SMLNJ-LIB/Controls)
+		 bind:(anchor:ml-yacc-lib.cm value:$SMLNJ-ML-YACC-LIB))
+
