@@ -1,0 +1,134 @@
+smlnj[newpp]/notes/smlnj-lib.txt
+
+How to configure CM so that smlnj-lib/PrettyPrint gets compiled and is accessible
+(via something like $smlnj/smlnj-lib/prettyprint-lib.cm, and by autoloading).
+
+The idea is that PP and PrettyPrint will co-exist in smlnj-lib. If NEWPP becomes
+accessible as a component of smlnj-lib (along with smlnj-lib/PP), then the
+copy in smlnj[newpp]/compiler/Basics/newpp can be removed.
+
+1. Added system/smlnj/smlnj-lib/newpp-lib.cm, a modified version of
+   pp-lib.cm in the same directory that refers to smlnj-lib/NEWPP instead
+   of smlnj-lib/PP (and NEWPP/newpp-lib.cm in place of PP/pp-lib.cm).
+   [Q: why do we need (all)the bind: specifications in this cm description
+   file?]
+
+2. system/pathconfig: it looks like this does not need to be changed,
+   because it does not define a root for the prettyprinter library.
+
+3. Remove Basics/newpp entries from Basics/basics.cm (don't want to
+   have duplicate sources loaded from Basics/basics.cm and
+   system/smlnj/smlnj-lib/newpp-lib.cm.
+
+3. What would cause the following path to be defined (as an alias for
+   $smlnj/smlnj-lib/prettyprint-lib.cm)?
+
+     $/prettyprint-lib.cm
+
+
+4. Renaming:
+   NewPP -> PrettyPrint
+   smlnj-lib/NEWPP -> smlnj-lib/PrettyPrint
+   smlnj-lib/NEWPP/newpp-lib.cm -> smlnj-lib/PrettyPrint/prettyprint-lib.cm
+
+   New:
+   system/smlnj/smlnj-lib/prettyprint-lib.cm
+     (aliases smlnj-lib/PrettyPrint/prettyprint-lib.cm?)
+
+   Edit:
+   compiler/Basics/basics.cm
+     $smlnj/smlnj-lib/pp-lib.cm  ->
+       $smlnj/smlnj-lib/prettyprint-lib.cm  [$smlnj = system/smlnj]
+
+4. Remove PrettyPrint from various compiler .cm files in system/smlnj/compiler
+   (this was originally refering to the Basics/print/prettyprint.sml structure,
+    making it visible at top level. These cm files were modified so now it is the
+    new PrettyPrint structure that is visible at top level.)
+     
+5. Make PrettyPrint autoloadable?
+
+6. Any things need to be changed in system/smlnj/viscomp? (e.g. delete PrettyPrint
+   made available through basics.cm).
+
+7. Add something like
+
+     $smlnj/smlnj-lib/prettyprint-lib.cm
+
+   To all the subdirectory cm files like Basics/basics.cm, ElabData/elabdata.cm,
+   Elaborate/elaborate.cm, etc. where the PrettyPrint structure is referred to
+   (e.g. in file ElabData/modules/ppmod.sml). This would make PrettyPrint available
+   to those files that refer to PrettyPrint:
+
+     Basics/basics.cm
+       errormsg/errormsg.sml
+       errormsg/pperrormsg.sml
+       source/ppsourcemap.sml
+       symbol/ppsymbols.sml
+
+     CPS: core.cm (cps.cm?)
+       cps/ppcps.sml
+
+     ElabData/elabdata.cm
+       basics/ppsympaths.sml
+       modules/ppmod.sml
+       modules/ppmod-db.sml
+       prim/ppprim.sml
+       syntax/ppabsyn.sml
+       syntax/ppval.sml
+       types/pptype.sml
+
+     Elaborator/elaborate.cm
+       elaborate/elabdebug.sml
+       elaborate/elabmod.sml
+       elaborate/elabtop.sml
+       elaborate/elabutil.sml
+       matchcomp/mcprint.sml
+       matchcomp/ppmatchcomp.sml
+       matchcomp/generate.sml
+       matchcomp/mcpp.sml
+       matchcomp/protoandor.sml
+       types/overload.sml
+       types/typecheck.sml
+       types/unify.sml
+
+     FLINT: core.cm (flint.cm?)
+       flint/chkflint.sml
+       flint/chkflint-named.sml
+       flint/ppflint.sml
+       kernel/ltydef.sml
+       kernel/ltyextern.sml
+       kernel/ltykernel.sml
+       kernel/ltykindchk.sml
+       kernel/pplty
+       opt/collect.sml
+       opt/fcontract.sml
+       opt/fixfix.sml
+       opt/specialize.sml
+       plambda/chkplexp.sml
+       plambda/flintnm.sml
+       plambda/pplexp.sml
+       reps/wrapping.sml
+       trans/pequal.sml
+       trans/translate.sml
+
+     Parse: core.cm (parser.cm?)
+       ast/ppast.sml
+
+     TopLevel: core.cm (toplevel.cm?)
+       environ/environ.sml
+       interact/evalloop.sml
+       print/compilerpptable.sml
+       print/ppdec.sml
+       print/ppobj.sml
+       print/pptable.sml
+       print/printhooks.sml
+       
+   Also there are a few files in cm that use PrettyPrint:
+
+     compile/compile.sml
+     compile/link.sml
+     depend/build.sml
+     depend/checksharing.sml
+     main/general-params.sml
+     parse/parse.sml
+     stable/stabilize.sml
