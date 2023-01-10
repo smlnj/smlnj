@@ -66,7 +66,7 @@ Library
 	structure Rehash
 	structure PickleSymPid
 	structure UnpickleSymPid
-	structure PrettyPrint
+(*	structure PrettyPrint *)
 	structure CompilerPPTable
 	structure Ast
 	structure Absyn

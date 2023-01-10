@@ -299,8 +299,12 @@ $smlnj/viscomp/execute.cm
 
 (* Other libaries. *)
 $smlnj/basis/basis.cm
+
+(* smlnj-lib *)
 $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
 $smlnj/asdl/asdl-lib.cm
 $/pickle-lib.cm
 

@@ -95,7 +95,7 @@ copy in smlnj[newpp]/compiler/Basics/newpp can be removed.
        types/typecheck.sml
        types/unify.sml
 
-     FLINT: core.cm (flint.cm?)
+     FLINT: core.cm (no flint.cm? why?)
        flint/chkflint.sml
        flint/chkflint-named.sml
        flint/ppflint.sml
@@ -115,10 +115,10 @@ copy in smlnj[newpp]/compiler/Basics/newpp can be removed.
        trans/pequal.sml
        trans/translate.sml
 
-     Parse: core.cm (parser.cm?)
+     Parse: parser.cm
        ast/ppast.sml
 
-     TopLevel: core.cm (toplevel.cm?)
+     TopLevel: core.cm (no toplevel.cm? why?)
        environ/environ.sml
        interact/evalloop.sml
        print/compilerpptable.sml
@@ -136,3 +136,83 @@ copy in smlnj[newpp]/compiler/Basics/newpp can be removed.
      main/general-params.sml
      parse/parse.sml
      stable/stabilize.sml
+
+   So this requires modifiction of some cm configuration files.
+
+
+8. First attempt to switch over to smlnj-lib/PrettyPrint.
+
+  [After already having added system/smlnj-lib/prettyprint-lib.cm.]
+
+  a. Comment out PrettyPrint in system/smlnj/compiler and system/smlnj/viscomp cm
+     files. [What about CompilerPPTable?]
+
+     This means PrettyPrint (from compiler/Basics/PrettyPrint) is not included in the
+     top-level environment.
+     ++ Done
+
+  b. Add line
+
+        $smlnj/smlnj-lib/prettyprint-lib.cm
+
+     to the cm configuration files listed in point 7 above.
+
+     Uncomment the $smlnj/smlnj-lib/prettyprint-lib.cm line in compiler/Basics/basics.cm
+     This makes the smlnj-lib/PrettyPrint bindings available within Basics.
+     (actually part of b. above)
+     ++ added to: basics.cm, core.cm (covers CPS, TopLevel), elabdata.cm, elaborate.cm,
+        and parser.cm
+
+  c. Comment out the prettyprint/* files in compiler/Basics/basics.cm. 
+     This means that files in Basics/prettyprint will not be compiled and are
+     therefore redundant (and that directory should be removed after finding
+     new homes for the doc files).
+     ++ Done
+
+  d. Comment out the "structure PrettyPrint = PrettyPrint" declaration in
+     system/smlnj/compiler/compiler.sml.
+
+  e. Check what needs to change in system/pathconfig and config/extrapathconfig
+     [Why are there two separate pathconfig files? Could config/extrapathconfig
+      be merged into system/pathconfig? How are these files related to lib/pathconfig?]
+     [Do we need to define any new path roots, like $smlnj?]
+     ++ added line
+
+        prettyprint-lib.cm smlnj/smlnj-lib
+
+     to config/extrapathconfig. [What does that do?]
+     
+  f. Try compiling the compiler.  Problems:
+     (1) system/smlnj/compiler/compiler.sml fails because of unbound PrettyPrint.
+         ++ FIX: comment out PrettyPrint declaration in compiler.sml
+     (2) ./cmb-make ../bin/sml was successful, but ./build.sh failed:
+     
+/Users/dbm/sml/Dev/github/smlnj/smlnj-lib/PP/pp-extras-lib.cm:36.3-36.14 Error: Io: openIn failed on "/Users/dbm/sml/Dev/github/smlnj/lib/smlnj/smlnj-lib/pp-lib.cm", No such file or directory
+FAILURE: stabilization of libraries failed
+./build.sh: !!! ./build.sh: !!! Installation of libraries and programs failed.
+
+  ++ At this point, all the subdirectories of lib/smlnj are empty! So indeed,
+     there is no file lib/smlnj/smlnj-lib/pp-lib.cm.
+     So when are these directories supposed to be populated?
+  ++ Tried deleting smlnj/lib directory, tarring up system/sml.boot.amd64-unix
+     to get a new boot.amd64-unix.tgz and moving that to the root directory (smlnj).
+     No change. The subdirectories of lib/smlnj remain empty.
+
+  g. Figure out how to register smlnj-lib/PrettyPrint for autoloading.
+     [Where and how is this done?]
+
+
+More Questions
+--------------
+
+* Where does the path $/pickle-lib.cm (used in core.cm) get defined? 
+The pickle-lib.cm file is at compiler/Library/pickle/pickle-lib.cm.
+It looks like this is defined by the pickle-lib.cm line in system/pathconfig.
+So does the prettyprint-lib.cm line in config/extrapathconfig define
+the path $/prettyprint-lib.cm ?
+
+* How many of the bind: declarations in (for instance)
+system/smlnj/smlnj-lib/prettyprint-lib.cm are necessary? Why?
+Are they needed, or are they there pro-forma?
+
+

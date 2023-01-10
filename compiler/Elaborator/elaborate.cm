@@ -91,4 +91,6 @@ is
 
 	$smlnj/smlnj-lib/smlnj-lib.cm
 	$smlnj/smlnj-lib/controls-lib.cm
+        $smlnj/smlnj-lib/prettyprint-lib.cm
+
 	$smlnj/basis/basis.cm

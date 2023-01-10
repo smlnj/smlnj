@@ -18,7 +18,7 @@ struct
     structure EnvRef = EnvRef
     structure ModuleId = ModuleId
     structure PersStamps = PersStamps
-    structure Prettyprint = PrettyPrint
+(*    structure Prettyprint = PrettyPrint *)
     structure PPTable =	CompilerPPTable
     structure Ast = Ast
     structure SmlFile = SmlFile

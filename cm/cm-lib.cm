@@ -126,4 +126,5 @@ is
 
 	(* auxiliary libraries *)
 	$smlnj/ml-yacc/ml-yacc-lib.cm
+        $smlnj/smlnj-lib/prettyprint-lib.cm
 	$/pgraph.cm
