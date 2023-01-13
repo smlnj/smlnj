@@ -17,7 +17,7 @@ autoload $smlnj/cm.cm
 # The Bootstrap Compilation Manager (structure CMB)
 autoload $smlnj/cmb.cm
 
-# The Visisble Compiler (collection of structures)
+# The Visible Compiler (collection of structures)
 autoload $smlnj/compiler.cm
 
 # The Visible Compiler (old style: structure Compiler)

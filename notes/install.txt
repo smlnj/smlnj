@@ -1,0 +1,84 @@
+~/sml/Dev/github/smlnj/notes/install.txt  [newpp branch of smlnj]
+
+Notes on smlnj install process and files
+----------------------------------------
+
+Trying to understand the install process in order to trouble-shoot the problem of
+adding smlnj-lib/prettyprint without breaking the build process.
+
+Important files:
+
+build.sh
+config/actions
+config/dependencies
+config/extrapathconfig
+
+system
+  /README [:text/doc] ("Compiler Hacker's Guide to new CM...")
+
+  /cmb-make  [:shell]
+  /makeml    [:shell]
+  /installml [:shell]
+
+  /pathconfig [:CM specs?]  (CM path definitions)
+  /preloads.bare [:CM specs?] (autoload declarations?)
+  /preloads.standard [:CM specs?] (autoload declarations?)
+  /root.cm [:CM desc]
+
+  /batchcomp.sml [:sml]
+  /serv.sml  [:sml]
+  /rserv.sml [:sml]
+  /tserv.sml [:sml]
+
+  /sml.bin.amd64-unix [:dir]
+  /sml.boot.amd64-unix [:dir - compiled code]
+
+system/smlnj
+  /smlnj-lib 
+    /controls-lib.cm [:CM desc]
+    /pp-lib.cm [:CM desc]
+    /prettyprint-lib.cm [:CM desc]
+    /smlnj-lib.cm [:CM desc]
+
+  /cm.cm
+  /cm/ [:dir]
+  /cmb.cm
+  /cmb/ [:dir]
+
+  /init/ [:dir]
+
+  /installer.cm [:CM desc]
+  /library-install.cm 
+  /installer/ [:dir]
+    /util.cm [:CM desc]
+    /installer-util.sml [:sml}
+    /patch-file.sml [:sml}
+    /generic-install.sml [:sml}
+    /library-install.sml [:sml}
+    /nix-install.sml [:sml}
+    /win-install.sml [:sml}
+
+  /internal/ [:dir]
+    /cm0.cm
+    /cm-lib.cm [:CM desc]
+    /cm-sig-lib.cm [:CM desc]
+
+    /versiontoo.cm
+    /smlnj-version.cm
+    /version.sml [:sml] (defines buildData, releaseDate, version, banner)
+    /version.template [:sml]  (template for building version.sml)
+    /versiontool.sml [:sml]
+
+    /srcpath-lib.cm
+    
+    /intsys.cm
+    /int-sys.sml
+
+
+
+  /basis/ [:dir]
+  /asdl/ [:dir]
+
+  /compiler.cm
+  /compiler/ [:dir]
+  /viscomp/ [:dir]
