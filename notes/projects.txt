@@ -74,3 +74,6 @@ The following might be potential tasks for new volunteers joining the SML/NJ Fel
       and therefore is impacted by projects 3 and 4.
 
 18. Hand-made recursive descent parser with good syntax error messages.
+    - does such a thing already exist (e.g. in MLton or in Shwestrick's
+      smlfmt [https://github.com/shwestrick/smlfmt])?
+    
