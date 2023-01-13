@@ -33,7 +33,7 @@ The following might be potential tasks for new volunteers joining the SML/NJ Fel
       (using only conventional "named" type variables)
 
 6. Revision or replacement of the FLINT middle end
-   - Reppy-Shivers ideas?
+   - Reppy-Shivers plans?
    [JHR: ...]
 
 7. Support of the Windows port of SML/NJ
@@ -73,3 +73,4 @@ The following might be potential tasks for new volunteers joining the SML/NJ Fel
     - presume interacts with front-end representations (types, absyn)
       and therefore is impacted by projects 3 and 4.
 
+18. Hand-made recursive descent parser with good syntax error messages.
