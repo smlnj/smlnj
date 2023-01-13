@@ -112,7 +112,7 @@ architecture=$(to_lower $TARGET_ARCH)
 unset VERSIONTOOL_BUMP_RELEASE
 
 echo "$this: build $TARGET-cross bin/boot files"
-../../bin/sml -DNO_PLUGINS \$smlnj/cmb.cm << XXXX
+$ROOT/bin/sml -DNO_PLUGINS \$smlnj/cmb.cm << XXXX
 #set (CMB.symval "CMB_CROSS") (SOME 1);
 #set (CMB.symval "ARCH_${HOST_ARCH}") NONE;
 #set (CMB.symval "OPSYS_${HOST_OPSYS}") NONE;
