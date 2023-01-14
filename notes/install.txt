@@ -6,79 +6,139 @@ Notes on smlnj install process and files
 Trying to understand the install process in order to trouble-shoot the problem of
 adding smlnj-lib/prettyprint without breaking the build process.
 
-Important files:
+------------------------------------------------------------------------------------------
+1. Catalog of files (involved in build?):
+------------------------------------------------------------------------------------------
 
-build.sh
-config/actions
-config/dependencies
-config/extrapathconfig
+build.sh [:shell]
+  - the main (top-level) build script
 
-system
-  /README [:text/doc] ("Compiler Hacker's Guide to new CM...")
+config/ [:dir]
+  actions [:txt/config]
+  dependencies [:txt/config]
+  extrapathconfig [:txt/config]
+  targets [:txt/config]
 
-  /cmb-make  [:shell]
-  /makeml    [:shell]
-  /installml [:shell]
+system/ [:dir]
+  README [:txt/doc] ("Compiler Hacker's Guide to new CM...")
 
-  /pathconfig [:CM specs?]  (CM path definitions)
-  /preloads.bare [:CM specs?] (autoload declarations?)
-  /preloads.standard [:CM specs?] (autoload declarations?)
-  /root.cm [:CM desc]
+  cmb-make  [:shell]
+  makeml    [:shell]
+  installml [:shell]
+  cmb-cross [:shell]
+  all-cross [:shell]
+  iter-make [:shell]
+  testml    [:shell]  
 
-  /batchcomp.sml [:sml]
-  /serv.sml  [:sml]
-  /rserv.sml [:sml]
-  /tserv.sml [:sml]
+  pathconfig [:txt/config]  (CM path definitions)
+  preloads.bare [:txt/config] (autoload declarations?)
+  preloads.standard [:txt/config] (autoload declarations?)
+  root.cm [:CM desc]
 
-  /sml.bin.amd64-unix [:dir]
-  /sml.boot.amd64-unix [:dir - compiled code]
+  batchcomp.sml [:sml]
+  serv.sml  [:sml]
+  rserv.sml [:sml]
+  tserv.sml [:sml]
 
-system/smlnj
-  /smlnj-lib 
-    /controls-lib.cm [:CM desc]
-    /pp-lib.cm [:CM desc]
-    /prettyprint-lib.cm [:CM desc]
-    /smlnj-lib.cm [:CM desc]
+  sml.bin.amd64-unix/ [:dir]
+  sml.boot.amd64-unix/ [:dir] (compiled code]
 
-  /cm.cm
-  /cm/ [:dir]
-  /cmb.cm
-  /cmb/ [:dir]
+system/smlnj/ [:dir]
 
-  /init/ [:dir]
+  smlnj-lib/ [:dir]
+     controls-lib.cm [:CM desc]
+     pp-lib.cm [:CM desc]
+     prettyprint-lib.cm [:CM desc]
+     smlnj-lib.cm [:CM desc]
 
-  /installer.cm [:CM desc]
-  /library-install.cm 
-  /installer/ [:dir]
-    /util.cm [:CM desc]
-    /installer-util.sml [:sml}
-    /patch-file.sml [:sml}
-    /generic-install.sml [:sml}
-    /library-install.sml [:sml}
-    /nix-install.sml [:sml}
-    /win-install.sml [:sml}
+  cm.cm
+  cm/ [:dir]
+  cmb.cm
+  cmb/ [:dir]
 
-  /internal/ [:dir]
-    /cm0.cm
-    /cm-lib.cm [:CM desc]
-    /cm-sig-lib.cm [:CM desc]
+  init/ [:dir]
 
-    /versiontoo.cm
-    /smlnj-version.cm
-    /version.sml [:sml] (defines buildData, releaseDate, version, banner)
-    /version.template [:sml]  (template for building version.sml)
-    /versiontool.sml [:sml]
+  installer.cm [:CM desc]
+  library-install.cm 
+  installer/ [:dir]
+    util.cm [:CM desc]
+    installer-util.sml [:sml}
+      - defines "fail" function, which prints "FAILURE:" messages
+    patch-file.sml [:sml}
+    generic-install.sml [:sml}
+      - generates error messages like
+          "FAILURE: Built ml-ulex; ml-ulex.amd64-darwin still missing"
+    library-install.sml [:sml}
+    nix-install.sml [:sml}
+    win-install.sml [:sml}
 
-    /srcpath-lib.cm
+  internal/ [:dir]
+    cm0.cm
+    cm-lib.cm [:CM desc]
+    cm-sig-lib.cm [:CM desc]
+
+    versiontoo.cm
+    smlnj-version.cm
+    version.sml [:sml] (defines buildData, releaseDate, version, banner)
+    version.template [:sml]  (template for building version.sml)
+    versiontool.sml [:sml]
+
+    srcpath-lib.cm
     
-    /intsys.cm
-    /int-sys.sml
+    intsys.cm
+    int-sys.sml
 
+  compiler.cm [:CM desc]
+  compiler/ [:dir]
+    all.cm [:CM desc]
+    amd64.cm  [:CM desc]
+    amd64.sml [:sml]
+    arm64.cm  [:CM desc]
+    arm64.sml [:sml]
+    compiler.cm [:CM desc]
+    compiler.sml [:sml]
+    current.cm [:CM desc]
+    minimal.cm [:CM desc]
+    minimal-only.cm [:CM desc]
+    minimal-compiler.sml [:sml]
+    
+  viscomp/ [:dir]
+    amd64.cm [:CM desc]
+    arm64.cm [:CM desc]
+    core.cm [:CM desc] 
+    basics.cm [:CM desc]
+    debugprof.cm [:CM desc]
+    elabdata.cm [:CM desc]
+    elaborate.cm [:CM desc]
+    execute.cm [:CM desc]
+    parser.cm [:CM desc]
 
+  basis/ [:dir]
+    ...
+  asdl/ [:dir]
+    ...
 
-  /basis/ [:dir]
-  /asdl/ [:dir]
+smlnj/lib/ [:dir]
+  pathconfig [:txt/config]
+    - how derived? Relation to system/pathconfig and config/extrapathconfig?
+    - why repeated lines?
+  pp-lib.cm/ [:dir] (e.g.)
+    .cm/ [:dir]
+      amd64-unix/ [:dir]
+        pp-lib.cm [:binary?, 69089 bytes] 
+      
+system/Basis/ [:dir]
+  basis.cm [:CM desc]
+  basis-common.cm  [:CM desc]
 
-  /compiler.cm
-  /compiler/ [:dir]
-  /viscomp/ [:dir]
+  Exports/ [:dir]
+  TypesOnly/ [:dir]
+  Implementation/ [:dir]
+    - Basis source code
+  
+
+------------------------------------------------------------------------------------------    
+2. build.sh
+------------------------------------------------------------------------------------------    
+What happens in build.sh?
+
