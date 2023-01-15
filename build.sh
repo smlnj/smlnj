@@ -466,7 +466,7 @@ if [ x"$NOLIB" = xno ] ; then
     fi
     vsay $cmd: Installation complete.
   else
-    complain "$cmd: !!! Installation of libraries and programs failed."
+    complain "Installation of libraries and programs failed."
   fi
 fi
 
@@ -484,7 +484,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   if autoconf -Iconfig ; then
     :
   else
-    complain "$cmd: !!! error configuring documentation."
+    complain "Error configuring documentation."
   fi
 
   ./configure
@@ -492,7 +492,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   if make doc && make distclean ; then
     vsay $cmd: Documentation generation complete.
   else
-    complain "$cmd: !!! error generating documentation."
+    complain "$Error generating documentation."
   fi
 fi
 

@@ -97,6 +97,7 @@ is
 	print/printcontrol.sml
 	print/printutil.sig
 	print/printutil.sml
+        print/pp-dummy.sml  (* dummy use of pp-lib library *)
 
 (*  These are now compiled from smlnj-lib/PrettyPrint/src --
         prettyprint/format.sml

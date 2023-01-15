@@ -18,6 +18,8 @@ config/ [:dir]
   dependencies [:txt/config]
   extrapathconfig [:txt/config]
   targets [:txt/config]
+  releasedate [:txt/config]
+    - contents is release date (a string), e.g "August 25, 2022\n"
 
 system/ [:dir]
   README [:txt/doc] ("Compiler Hacker's Guide to new CM...")
@@ -53,10 +55,14 @@ system/smlnj/ [:dir]
 
   cm.cm
   cm/ [:dir]
+    cm.cm
+      - something wierd related to pickling and sequencing
   cmb.cm
   cmb/ [:dir]
 
   init/ [:dir]
+    init.cmi [:CM cmi]
+    (24 sml files related to: initialization of (pervasiv environment?), ml-nlffi)
 
   installer.cm [:CM desc]
   library-install.cm 
@@ -68,16 +74,20 @@ system/smlnj/ [:dir]
     generic-install.sml [:sml}
       - generates error messages like
           "FAILURE: Built ml-ulex; ml-ulex.amd64-darwin still missing"
+      - generates messages like
+          "Library <libname> already existed in <file path>"
     library-install.sml [:sml}
     nix-install.sml [:sml}
     win-install.sml [:sml}
 
   internal/ [:dir]
     cm0.cm
+      - appears in ../cm/cm.cm 
     cm-lib.cm [:CM desc]
     cm-sig-lib.cm [:CM desc]
+      - appears in ../cm/cm.cm 
 
-    versiontoo.cm
+    versiontool.cm
     smlnj-version.cm
     version.sml [:sml] (defines buildData, releaseDate, version, banner)
     version.template [:sml]  (template for building version.sml)
@@ -138,7 +148,10 @@ system/Basis/ [:dir]
   
 
 ------------------------------------------------------------------------------------------    
-2. build.sh
+2. build.sh  (shell script)
 ------------------------------------------------------------------------------------------    
 What happens in build.sh?
 
+* Redundancy between complain and arguments of complain. Both printing "$cmd !!!", so
+error messages start with, e.g. "./build.sh !!! ./build.sh !!! ...".
+[Fixed]

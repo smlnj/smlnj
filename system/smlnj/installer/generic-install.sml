@@ -294,57 +294,70 @@ structure GenericInstall : sig
 	  end
 
   (* our main routine *)
-    fun proc { smlnjroot, installdir, configcmd, buildcmd, instcmd } = let
-	  val smlnjroot = F.fullPath smlnjroot
-	  val installdir = F.fullPath installdir
-	  val libdir = P.concat (installdir, "lib")
-	  val configdir = P.concat (smlnjroot, "config")
-	  val bindir = P.concat (installdir, "bin")
-	  val heapdir = P.concat (bindir, ".heap")
-	  val cm_pathconfig = P.concat (libdir, "pathconfig")
-	(* dependency file: config/dependencies *)
-	  val depfile = P.concat (configdir, "dependencies")
-	(* where to get additional path configurations *)
-	  val extrapathconfig = P.concat (configdir, "extrapathconfig")
-	(* action file: mapping from "modules" to lists of "actions" *)
-	  val actionfile = P.concat (configdir, "actions")
-	(* add an entry to lib/pathconfig *)
-	  fun write_cm_pathconfig (a, p) = let
-	        val s = TextIO.openAppend cm_pathconfig
-		in
-		  TextIO.output (s, concat [a, " ", p, "\n"])
-		  before TextIO.closeOut s
+    fun proc { smlnjroot, installdir, configcmd, buildcmd, instcmd } =
+	let val smlnjroot = F.fullPath smlnjroot
+	    val installdir = F.fullPath installdir
+	    val libdir = P.concat (installdir, "lib")
+	    val configdir = P.concat (smlnjroot, "config")
+	    val bindir = P.concat (installdir, "bin")
+	    val heapdir = P.concat (bindir, ".heap")
+	    val cm_pathconfig = P.concat (libdir, "pathconfig")
+
+	    (* dependency file: config/dependencies *)
+	    val depfile = P.concat (configdir, "dependencies")
+
+	    (* where to get additional path configurations *)
+	    val extrapathconfig = P.concat (configdir, "extrapathconfig")
+
+	    (* action file: mapping from "modules" to lists of "actions" *)
+	    val actionfile = P.concat (configdir, "actions")
+
+	    (* add an entry to lib/pathconfig *)
+	    fun write_cm_pathconfig (a, p) =
+	        let val s = TextIO.openAppend cm_pathconfig
+		 in TextIO.output (s, concat [a, " ", p, "\n"])
+		    before TextIO.closeOut s
 		end
-	  fun augment_anchor_mapping pcfile =
+
+	    fun augment_anchor_mapping pcfile =
 		pc_fold (fn ((), k, v) =>
 			    (#set (CM.Anchor.anchor k)
 				  (SOME (P.concat (libdir, native v)));
 			     write_cm_pathconfig (k, v)))
 			()
 			pcfile
-	(* augment anchor mapping with extra bindings: *)
+
+	  (* augment anchor mapping with extra bindings: *)
 	  val _ = augment_anchor_mapping extrapathconfig
-	(* find and open first usable targetsfiles *)
-	  val targetsfiles = [
-	          P.concat (configdir, "targets.customized"),
-	          P.concat (configdir, "targets")
-		]
-	  val targetFile = (case List.find U.fexists targetsfiles
+
+	  (* find and open first usable targetsfiles *)
+	  val targetsfiles =
+	        [P.concat (configdir, "targets.customized"),
+	         P.concat (configdir, "targets")]
+
+	  val targetFile =
+	      (case List.find U.fexists targetsfiles
 		 of SOME f => f
 		  | NONE => fail ["cannot find targets file in '", configdir, "'\n"]
-		(* end case *))
-	(* get the actions from the actionfile *)
+	      (* end case *))
+
+	  (* get the actions from the actionfile *)
 	  val (actions, allmoduleset) = parseActions actionfile
-	(* parse the targets file *)
+
+	  (* parse the targets file *)
 	  val (modules, srcReqs, allsrc) = parseTargets (targetFile, actions)
-	(* now resolve dependencies; get full list of modules in correct build order: *)
+
+	  (* now resolve dependencies; get full list of modules in correct build order: *)
 	  val modules = resolve (modules, depfile)
 	  val moduleset = SS.fromList modules
-	(* add requested source modules *)
-	  val moduleset = if allsrc
-		then SS.union (moduleset, allmoduleset)
-		else SS.addList (moduleset, srcReqs)
-	(* at the end, read lib/pathconfig and eliminate duplicate entries *)
+
+	  (* add requested source modules *)
+	  val moduleset =
+	      if allsrc
+	      then SS.union (moduleset, allmoduleset)
+	      else SS.addList (moduleset, srcReqs)
+
+	  (* at the end, read lib/pathconfig and eliminate duplicate entries *)
 	  fun uniqconfig () = let
 		fun swallow (f, m) = pc_fold SM.insert m f
 		fun finish m = let
@@ -403,10 +416,12 @@ structure GenericInstall : sig
 		      movlist := movelib srcfinalloc finalloc :: !movlist;
 		      write_cm_pathconfig (finalanchor, finalconfigpath))
 		end (* reglib *)
+
 	  fun command_pathconfig target =
 		write_cm_pathconfig (target, P.concat (P.parentArc, "bin"))
-	(* build a standalone program, using an auxiliary build script *)
-	  fun standalone { target, optheapdir, dir } = let
+
+	  (* build a standalone program, using an auxiliary build script *)
+	  fun standalone { target, optheapdir, dir } =
 	      (* target: name of program; this is the same as the basename
 	       *   of the heap image to be generated as well as the
 	       *   final arc of the source tree's directory name
@@ -415,46 +430,55 @@ structure GenericInstall : sig
 	       * dir:
 	       *   The source tree for the target, relative to smlnjroot.
 	       *)
-		val heapname = concat [target, ".", heap_suffix]
-	      (* where we expect the resulting heap image to be placed *)
-		val targetheaploc = (case optheapdir
-		       of NONE => heapname
-			| SOME hd => P.concat (native hd, heapname)
-		      (* end case *))
-	      (* directory that has the build script *)
-		val treedir = P.concat (smlnjroot, native dir)
-	      (* path to the final heap image *)
-		val finalheaploc = P.concat (heapdir, heapname)
-		val alreadyExists = U.fexists finalheaploc
-		fun finish () = (
-		      instcmd target;
-		      #set (CM.Anchor.anchor target) (SOME bindir))
-		in
+	      let val heapname = concat [target, ".", heap_suffix]
+
+	         (* where we expect the resulting heap image to be placed *)
+		 val targetheaploc =
+		     (case optheapdir
+		        of NONE => heapname
+			 | SOME hd => P.concat (native hd, heapname)
+		     (* end case *))
+
+	         (* directory that has the build script *)
+		 val treedir = P.concat (smlnjroot, native dir)
+
+	         (* path to the final heap image *)
+		 val finalheaploc = P.concat (heapdir, heapname)
+		 val alreadyExists = U.fexists finalheaploc
+
+		 fun finish () =
+		       (instcmd target;
+		        #set (CM.Anchor.anchor target) (SOME bindir))
+
+	      in
 		  if alreadyExists
-		    then say ["Target ", target, " already exists; will rebuild.\n"]
-		    else ();
+		  then say ["Target ", target, " already exists; will rebuild.\n"]
+		  else ();
+
 		  if not (U.fexists treedir)
-		    then fail [
-			"Source tree for ", target, " at ", treedir, " does not exist.\n"
-		      ]
-		    else (
-		      say ["Building ", target, ".\n"];
-		      F.chDir treedir;
-		      if OS.Process.system buildcmd <> OS.Process.success
-			then fail ["Building ", target, " failed.\n"]
-		      else if not alreadyExists
-		      andalso not(U.fexists targetheaploc)
-		      andalso U.fexists finalheaploc
-		        (* the build script already put the heap image where it belongs *)
-			then finish ()
-		      else if U.fexists targetheaploc
-			then (
-			  if alreadyExists
-			    then U.rmfile finalheaploc
-			    else ();
-			  U.rename { old = targetheaploc, new = finalheaploc };
-			  finish ())
-			else fail ["Built ", target, "; ", targetheaploc, " still missing.\n"]
+		  then fail ["Source tree for ", target, " at ", treedir, " does not exist.\n"]
+		  else
+		    (say ["Building ", target, ".\n"];
+		     F.chDir treedir;
+		     if OS.Process.system buildcmd <> OS.Process.success
+		     then fail ["Building ", target, " failed.\n"]
+		     else if not alreadyExists
+		             andalso not (U.fexists targetheaploc)
+		             andalso U.fexists finalheaploc
+		     (* the build script already put the heap image where it belongs *)
+		     then finish ()
+		     else if U.fexists targetheaploc
+		     then (if alreadyExists
+			   then U.rmfile finalheaploc
+			   else ();
+			   U.rename { old = targetheaploc, new = finalheaploc };
+			   finish ())
+		     else fail ["Built ", target, "; ", targetheaploc, " still missing.\n"];
+(* DBM: added missing semicolon at end of previous line. *)
+(* <<< old version segment *)
+		      command_pathconfig target;
+		      F.chDir smlnjroot)
+		end (* standalone *)
 (* old version
 		      if OS.Process.system buildcmd = OS.Process.success
 			then if U.fexists targetheaploc
@@ -468,10 +492,8 @@ structure GenericInstall : sig
 			  else fail ["Built ", target, "; ", heapname, " still missing.\n"]
 			else fail ["Building ", target, " failed.\n"];
 *)
-		      command_pathconfig target;
-		      F.chDir smlnjroot)
-		end (* standalone *)
-	(* configure a module *)
+
+	  (* configure a module *)
 	  fun configure {target, dir} = let
 		val treedir = P.concat (smlnjroot, native dir)
 		in
@@ -487,7 +509,8 @@ structure GenericInstall : sig
 			else fail ["Configuration of ", target, " failed.\n"];
 		      F.chDir smlnjroot)
 		end
-	(* perform the actions for the given module in order of specification *)
+
+	  (* perform the actions for the given module in order of specification *)
 	  fun one module = let
 		fun perform (RegLib (args, justunix)) =
 		      if not justunix orelse isUnix then reglib args else ()
@@ -506,6 +529,7 @@ structure GenericInstall : sig
 		   of SOME al => app perform (rev al)
 		    | NONE => fail ["unknown module: ", module, "\n"]
 		end
+
 	  in
 	    ( command_pathconfig "bindir";	(* dummy -- for CM make tool *)
 	      app one modules;
