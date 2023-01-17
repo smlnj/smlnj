@@ -10,6 +10,10 @@ adding smlnj-lib/prettyprint without breaking the build process.
 1. Catalog of files (involved in build?):
 ------------------------------------------------------------------------------------------
 
+Note: all filenames/paths are relative to the SML/NJ ROOT directory
+      (e.g. ~/sml/Dev/github/smlnj in my case, which is a GitHub clone of the newpp branch
+       of the smlnj/smlnj repository)
+
 build.sh [:shell]
   - the main (top-level) build script
 
@@ -128,15 +132,6 @@ system/smlnj/ [:dir]
   asdl/ [:dir]
     ...
 
-smlnj/lib/ [:dir]
-  pathconfig [:txt/config]
-    - how derived? Relation to system/pathconfig and config/extrapathconfig?
-    - why repeated lines?
-  pp-lib.cm/ [:dir] (e.g.)
-    .cm/ [:dir]
-      amd64-unix/ [:dir]
-        pp-lib.cm [:binary?, 69089 bytes] 
-      
 system/Basis/ [:dir]
   basis.cm [:CM desc]
   basis-common.cm  [:CM desc]
@@ -145,13 +140,101 @@ system/Basis/ [:dir]
   TypesOnly/ [:dir]
   Implementation/ [:dir]
     - Basis source code
-  
+
+lib/ [:dir]
+  pathconfig [:txt/config]
+    - how derived? Relation to system/pathconfig and config/extrapathconfig?
+    - why repeated lines?
+  pp-lib.cm/ [:dir] (e.g.)
+    .cm/ [:dir]
+      amd64-unix/ [:dir]
+        pp-lib.cm [:binary?, 69089 bytes] 
+      
+bin/ [:dir]
+  .arch-n-opsys [:shell]
+  .run-sml [:shell]
+  .link-sml [:shell]
+  .heap/ [:dir]
+    sml.amd64-darwin [:heap image]
+    ml-yacc.amd64-darwin [:heap image]
+    ml-burg.amd64-darwin [:heap image]
+    ...
+  .run/ [:dir]
+    run.amd64-darwin [:x86-64 executable]
+
+  ml-build [:shell]  
+    - script for building stand-alone programs (e.g. ml-yacc), (using SMLofNJ.exportFn)
+    - documented in CM Manual, Section 15
+  ml-makedepend [:shell]  
+  heap2exec [:shell]  
+
+  sml [:symlink] ( -> .run-sml) 
+  ml-yacc [:symlink] ( -> .run-sml) 
+  ml-burg [:symlink] ( -> .run-sml) 
+  ...
+
+[Q] Why is .link-sml hidden and ml-build not hidden?
+    Is .link-sml ever used independently of ml-build?
+    Does ml-build ever use other values of $LINK?
+
+-----------
+Note: where do the compiled binary files live?
+
+(1) system/sml.boot.amd64-unix
+    (binary files for the compiler itself?)
+    [description of contents
+     per-library binary files?]
+
+(2) system/sml.bin.amd64-unix
+    [description of contents -- redundant?
+     per-source file binary files?]
+
+(2) in .cm directories in source directories [for libraries and tools
+    These .cm directories contain three subdirectories:
+      - GUID/
+      - SKEL/
+      - amd64-unix/
+    The adm64-unix subdirectory contains one binary file per
+    source file, with the same names (!) as the source files.
+
+    E.g. smlnj/smlnj-lib/PP/src/.cm
+    E.g. smlnj/tools/ml-lpt/ml-ulex/.cm 
+    E.g. smlnj/tools/ml-lpt/ml-ulex/BackEnds/.cm 
+
+[Q] Why do we need both sml.bin and sml.boot?
+[Q] Is sml.bin just used to build sml.boot and is thereafter redundant?
+
 
 ------------------------------------------------------------------------------------------    
 2. build.sh  (shell script)
 ------------------------------------------------------------------------------------------    
 What happens in build.sh?
 
+
+
+---------------------
+Comments, bugs, fixes
+
 * Redundancy between complain and arguments of complain. Both printing "$cmd !!!", so
 error messages start with, e.g. "./build.sh !!! ./build.sh !!! ...".
 [Fixed]
+
+
+------------------------------------------------------------------------------------------    
+3. bin/ml-build  (shell script)
+------------------------------------------------------------------------------------------    
+What happens in ml-build?
+
+
+------------------------------------------------------------------------------------------    
+2. bin/.link-sml (shell script)
+------------------------------------------------------------------------------------------    
+What happens in .link-sml?  [and why isn't it just bin/link-sml? or bin/ml-link?]
+
+Why does it need to be a separate script from bin/ml-build? Could bin/ml-build and
+bin/.link-sml be merged into a single script?
+
+
+
+
+
