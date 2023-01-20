@@ -41,7 +41,7 @@ while [ "$#" != "0" ] ; do
 done
 
 if [ "$HEAP_IMAGE" = "" ]; then
-  HEAP_IMAGE="$ROOT"
+  HEAP_IMAGE="$ROOT"  # this is the normal case
 fi
 
 #
