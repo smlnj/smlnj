@@ -17,17 +17,6 @@ end
 structure PPDummy : PPDUMMY =
 struct
 
-(* defined in pp-lib.cm 
-structure StringToken : PP_TOKEN =
-struct
-  type style = unit
-  type token = string
-  fun string s = s
-  fun style _ = ()
-  fun size s = String.size s
-end
-*)
-
 structure Dev =
 struct
   type device =

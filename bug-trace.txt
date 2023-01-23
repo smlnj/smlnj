@@ -1,0 +1,189 @@
+hoy$ ./build.sh
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Generating heap image...
+This is...
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+$Execute: required privileges are:
+  cm-init
+Library $basis-2004.cm/basis-2004.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/basis-2004.cm/.cm/amd64-unix/basis-2004.cm.  Will rebuild.
+Scheduling library $basis-2004.cm/basis-2004.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/basis-2004.cm/.cm/amd64-unix/basis-2004.cm
+Library $ml-lpt-lib.cm/ml-lpt-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/ml-lpt-lib.cm/.cm/amd64-unix/ml-lpt-lib.cm.  Will rebuild.
+Scheduling library $ml-lpt-lib.cm/ml-lpt-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-lpt-lib.cm/.cm/amd64-unix/ml-lpt-lib.cm
+Library $unix-lib.cm/unix-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/unix-lib.cm/.cm/amd64-unix/unix-lib.cm.  Will rebuild.
+Scheduling library $unix-lib.cm/unix-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/unix-lib.cm/.cm/amd64-unix/unix-lib.cm
+Library $hash-cons-lib.cm/hash-cons-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/hash-cons-lib.cm/.cm/amd64-unix/hash-cons-lib.cm.  Will rebuild.
+Scheduling library $hash-cons-lib.cm/hash-cons-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/hash-cons-lib.cm/.cm/amd64-unix/hash-cons-lib.cm
+Library $html-lib.cm/html-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/html-lib.cm/.cm/amd64-unix/html-lib.cm.  Will rebuild.
+Scheduling library $html-lib.cm/html-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/html-lib.cm/.cm/amd64-unix/html-lib.cm
+Library $html4-lib.cm/html4-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/html4-lib.cm/.cm/amd64-unix/html4-lib.cm.  Will rebuild.
+Scheduling library $html4-lib.cm/html4-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/html4-lib.cm/.cm/amd64-unix/html4-lib.cm
+Library $inet-lib.cm/inet-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/inet-lib.cm/.cm/amd64-unix/inet-lib.cm.  Will rebuild.
+Scheduling library $inet-lib.cm/inet-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/inet-lib.cm/.cm/amd64-unix/inet-lib.cm
+Library $json-lib.cm/json-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/json-lib.cm/.cm/amd64-unix/json-lib.cm.  Will rebuild.
+Scheduling library $json-lib.cm/json-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/json-lib.cm/.cm/amd64-unix/json-lib.cm
+Library $pp-lib.cm/pp-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm.  Will rebuild.
+Scheduling library $pp-lib.cm/pp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm
+Library $pp-extras-lib.cm/pp-extras-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/pp-extras-lib.cm/.cm/amd64-unix/pp-extras-lib.cm.  Will rebuild.
+Scheduling library $pp-extras-lib.cm/pp-extras-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/pp-extras-lib.cm/.cm/amd64-unix/pp-extras-lib.cm
+Library $regexp-lib.cm/regexp-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/regexp-lib.cm/.cm/amd64-unix/regexp-lib.cm.  Will rebuild.
+Scheduling library $regexp-lib.cm/regexp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/regexp-lib.cm/.cm/amd64-unix/regexp-lib.cm
+Library $reactive-lib.cm/reactive-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/reactive-lib.cm/.cm/amd64-unix/reactive-lib.cm.  Will rebuild.
+Scheduling library $reactive-lib.cm/reactive-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/reactive-lib.cm/.cm/amd64-unix/reactive-lib.cm
+Library $sexp-lib.cm/sexp-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/sexp-lib.cm/.cm/amd64-unix/sexp-lib.cm.  Will rebuild.
+Scheduling library $sexp-lib.cm/sexp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/sexp-lib.cm/.cm/amd64-unix/sexp-lib.cm
+Library $uuid-lib.cm/uuid-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/uuid-lib.cm/.cm/amd64-unix/uuid-lib.cm.  Will rebuild.
+Scheduling library $uuid-lib.cm/uuid-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/uuid-lib.cm/.cm/amd64-unix/uuid-lib.cm
+Library $xml-lib.cm/xml-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/xml-lib.cm/.cm/amd64-unix/xml-lib.cm.  Will rebuild.
+Scheduling library $xml-lib.cm/xml-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/xml-lib.cm/.cm/amd64-unix/xml-lib.cm
+Library $ml-ulex-tool.cm/ml-ulex-tool.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/ml-ulex-tool.cm/.cm/amd64-unix/ml-ulex-tool.cm.  Will rebuild.
+Scheduling library $ml-ulex-tool.cm/ml-ulex-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-ulex-tool.cm/.cm/amd64-unix/ml-ulex-tool.cm
+Library $mllex-tool.cm/mllex-tool.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/mllex-tool.cm/.cm/amd64-unix/mllex-tool.cm.  Will rebuild.
+Scheduling library $mllex-tool.cm/mllex-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mllex-tool.cm/.cm/amd64-unix/mllex-tool.cm
+Library $lex-ext.cm/lex-ext.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/lex-ext.cm/.cm/amd64-unix/lex-ext.cm.  Will rebuild.
+Scheduling library $lex-ext.cm/lex-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/lex-ext.cm/.cm/amd64-unix/lex-ext.cm
+Target ml-yacc already exists; will rebuild.
+Building ml-yacc.
+%%% ML_BUILD: running /Users/dbm/sml/Dev/github/smlnj/bin/sml
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+%%%% ML_BUILD: /Users/dbm/sml/Dev/github/smlnj/bin/sml successful
+%%%% ML_BUILD: running .link-sml
+@@@@ LINK: running bin/.run/run.amd64-darwin
+@@@@ LINK: @SMLboot=MLBUILD_BOOTLIST
+@@@@ LINK: @SMLheap=sml
+@@@@ LINK: other args = 
+%%%% ML_BUILD: finished .link-sml
+Library $mlyacc-tool.cm/mlyacc-tool.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/mlyacc-tool.cm/.cm/amd64-unix/mlyacc-tool.cm.  Will rebuild.
+Scheduling library $mlyacc-tool.cm/mlyacc-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mlyacc-tool.cm/.cm/amd64-unix/mlyacc-tool.cm
+Library $grm-ext.cm/grm-ext.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/grm-ext.cm/.cm/amd64-unix/grm-ext.cm.  Will rebuild.
+Scheduling library $grm-ext.cm/grm-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/grm-ext.cm/.cm/amd64-unix/grm-ext.cm
+Library $ml-antlr-tool.cm/ml-antlr-tool.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/ml-antlr-tool.cm/.cm/amd64-unix/ml-antlr-tool.cm.  Will rebuild.
+Scheduling library $ml-antlr-tool.cm/ml-antlr-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-antlr-tool.cm/.cm/amd64-unix/ml-antlr-tool.cm
+Configuring asdl.
+checking build system type... x86_64-apple-darwin22.2.0
+checking host system type... x86_64-apple-darwin22.2.0
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to enable C11 features... none needed
+checking how to run the C preprocessor... gcc -E
+checking whether the compiler supports GNU C... (cached) yes
+checking whether gcc accepts -g... (cached) yes
+checking for gcc option to enable C11 features... (cached) none needed
+checking for clang++... clang++
+checking whether the compiler supports GNU C++... yes
+checking whether clang++ accepts -g... yes
+checking for clang++ option to enable C++11 features... none needed
+checking whether clang++ supports C++14 features by default... no
+checking whether clang++ supports C++14 features with -std=gnu++14... yes
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether make sets $(MAKE)... yes
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking size of int... 4
+checking size of long... 8
+checking size of float... 4
+checking size of double... 8
+checking version of SML/NJ... 2022.1
+checking heap suffix of SML/NJ... amd64-darwin
+checking for ml-makedepend... /Users/dbm/sml/Dev/github/smlnj/bin/ml-makedepend
+checking for ml-build... /Users/dbm/sml/Dev/github/smlnj/bin/ml-build
+checking for ld... /opt/local/bin/ld
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating doc/Makefile
+config.status: creating doc/manual-2.0/Makefile
+config.status: creating doc/manual-3.0/Makefile
+config.status: creating examples/Makefile
+config.status: creating src/Makefile
+config.status: creating src/asdlgen/Makefile
+config.status: creating src/lib/Makefile
+config.status: creating src/lib/cxx/Makefile
+config.status: creating src/tests/Makefile
+config.status: creating src/tests/basics/Makefile
+config.status: creating src/tests/options/Makefile
+config.status: creating src/tests/primitives/Makefile
+config.status: creating src/tests/sequences/Makefile
+config.status: creating src/asdlgen/common/config.sml
+config.status: creating bin/install-sml-wrapper.sh
+config.status: creating src/gen/fragments/mkfrags.sh
+config.status: creating src/gen/fragments/mkmk.sh
+config.status: creating src/lib/cxx/include/asdl/config.h
+config.status: src/lib/cxx/include/asdl/config.h is unchanged
+Library $asdlgen-tool.cm/asdlgen-tool.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/asdlgen-tool.cm/.cm/amd64-unix/asdlgen-tool.cm.  Will rebuild.
+Scheduling library $asdlgen-tool.cm/asdlgen-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/asdlgen-tool.cm/.cm/amd64-unix/asdlgen-tool.cm
+Library $asdl-ext.cm/asdl-ext.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/asdl-ext.cm/.cm/amd64-unix/asdl-ext.cm.  Will rebuild.
+Scheduling library $asdl-ext.cm/asdl-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/asdl-ext.cm/.cm/amd64-unix/asdl-ext.cm
+Library $asdl-lib.cm/asdl-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/asdl-lib.cm/.cm/amd64-unix/asdl-lib.cm.  Will rebuild.
+Scheduling library $asdl-lib.cm/asdl-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/asdl-lib.cm/.cm/amd64-unix/asdl-lib.cm
+Library $smlnj-tdp/plugins.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/plugins.cm.  Will rebuild.
+Scheduling library $smlnj-tdp/plugins.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/plugins.cm
+Library $smlnj-tdp/back-trace.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/back-trace.cm.  Will rebuild.
+Scheduling library $smlnj-tdp/back-trace.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/back-trace.cm
+Library $smlnj-tdp/coverage.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/coverage.cm.  Will rebuild.
+Scheduling library $smlnj-tdp/coverage.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/coverage.cm
+Library $cml/core-cml.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/core-cml.cm.  Will rebuild.
+Scheduling library $cml/core-cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/core-cml.cm
+Library $cml/cml-internal.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml-internal.cm.  Will rebuild.
+Scheduling library $cml/cml-internal.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml-internal.cm
+Library $cml/cml.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml.cm.  Will rebuild.
+Scheduling library $cml/cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml.cm
+Library $cml/basis.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/basis.cm.  Will rebuild.
+Scheduling library $cml/basis.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/basis.cm
+Library $cml-lib/trace-cml.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml-lib/.cm/amd64-unix/trace-cml.cm.  Will rebuild.
+Scheduling library $cml-lib/trace-cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml-lib/.cm/amd64-unix/trace-cml.cm
+Library $cml-lib/smlnj-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml-lib/.cm/amd64-unix/smlnj-lib.cm.  Will rebuild.
+Scheduling library $cml-lib/smlnj-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml-lib/.cm/amd64-unix/smlnj-lib.cm
+Library $cml/trace-cml.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/trace-cml.cm.  Will rebuild.
+Scheduling library $cml/trace-cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/trace-cml.cm
+Library $cml/smlnj-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/smlnj-lib.cm.  Will rebuild.
+Scheduling library $cml/smlnj-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/smlnj-lib.cm
+Library $cml/inet-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/inet-lib.cm.  Will rebuild.
+Scheduling library $cml/inet-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/inet-lib.cm
+Library $cml/unix-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/unix-lib.cm.  Will rebuild.
+Scheduling library $cml/unix-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/unix-lib.cm
+Library $cml/cml-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml-lib.cm.  Will rebuild.
+Scheduling library $cml/cml-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml-lib.cm
+Library $ckit-lib.cm/ckit-lib.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/ckit-lib.cm/.cm/amd64-unix/ckit-lib.cm.  Will rebuild.
+Scheduling library $ckit-lib.cm/ckit-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ckit-lib.cm/.cm/amd64-unix/ckit-lib.cm
+Target ml-burg already exists; will rebuild.
+Building ml-burg.
+%%% ML_BUILD: running /Users/dbm/sml/Dev/github/smlnj/bin/sml
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+%%%% ML_BUILD: /Users/dbm/sml/Dev/github/smlnj/bin/sml successful
+%%%% ML_BUILD: running .link-sml
+@@@@ LINK: running bin/.run/run.amd64-darwin
+@@@@ LINK: @SMLboot=MLBUILD_BOOTLIST
+@@@@ LINK: @SMLheap=sml
+@@@@ LINK: other args = 
+%%%% ML_BUILD: finished .link-sml
+Library $mlburg-tool.cm/mlburg-tool.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/mlburg-tool.cm/.cm/amd64-unix/mlburg-tool.cm.  Will rebuild.
+Scheduling library $mlburg-tool.cm/mlburg-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mlburg-tool.cm/.cm/amd64-unix/mlburg-tool.cm
+Library $burg-ext.cm/burg-ext.cm already existed in /Users/dbm/sml/Dev/github/smlnj/lib/burg-ext.cm/.cm/amd64-unix/burg-ext.cm.  Will rebuild.
+Scheduling library $burg-ext.cm/burg-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/burg-ext.cm/.cm/amd64-unix/burg-ext.cm
+Building ml-ulex.
+%%% ML_BUILD: running /Users/dbm/sml/Dev/github/smlnj/bin/sml
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+%%%% ML_BUILD: /Users/dbm/sml/Dev/github/smlnj/bin/sml successful
+%%%% ML_BUILD: running .link-sml
+@@@@ LINK: running bin/.run/run.amd64-darwin
+@@@@ LINK: @SMLboot=MLBUILD_BOOTLIST
+@@@@ LINK: @SMLheap=sml
+@@@@ LINK: other args = 
+/Users/dbm/sml/Dev/github/smlnj/bin/ml-build: line 121: 33128 Segmentation fault: 11  "$LINK" `cat "$linkargsfile"`
+%%%% ML_BUILD: finished .link-sml
+FAILURE: Built ml-ulex; ml-ulex.amd64-darwin still missing.
+./build.sh: !!! Installation of libraries and programs failed.
+hoy$

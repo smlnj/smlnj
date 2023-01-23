@@ -46,6 +46,7 @@ fi
 
 #
 # Build the ml-ulex standalone program:
+# ml-build <-D args> (root=sources.cm), (main=Main.main), (heap="ml-ulex")
 "$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main $HEAP_IMAGE
 
 exit 0
