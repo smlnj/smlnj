@@ -304,6 +304,7 @@ $smlnj/basis/basis.cm
 $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
+$smlnj/smlnj-lib/pp-lib.cm  (* build into compiler for ml-ulex build *)
 
 $smlnj/asdl/asdl-lib.cm
 $/pickle-lib.cm

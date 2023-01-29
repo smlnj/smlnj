@@ -8,10 +8,10 @@
 
 Library
 
-	signature PRETTYPRINT
-	structure PrettyPrint
+  signature PRETTYPRINT
+  structure PrettyPrint
 
 is
 
-src/sources.cm
+  src/sources.cm
 

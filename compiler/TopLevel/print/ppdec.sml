@@ -39,6 +39,10 @@ local
   fun bug msg = ErrorMsg.impossible ("PPDec: "^msg)
 in
 
+(* BUG WORKAROUND: This declaration to force smlnj-lib/PP library to be built into the compiler
+ * so that tools like ml-ulex that use PP will build. *)
+(* val xxx = TextIOPP.openOut *)
+
 type object = Unsafe.Object.object
 
 val signatures = Control.Print.signatures

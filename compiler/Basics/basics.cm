@@ -97,17 +97,7 @@ is
 	print/printcontrol.sml
 	print/printutil.sig
 	print/printutil.sml
-        print/pp-dummy.sml  (* dummy use of pp-lib library *)
 
-(*  These are now compiled from smlnj-lib/PrettyPrint/src --
-        prettyprint/format.sml
-        prettyprint/measure.sig
-        prettyprint/measure.sml
-        prettyprint/render.sig
-        prettyprint/render.sml
-        prettyprint/prettyprint.sig
-        prettyprint/prettyprint.sml
-*) 
 	util/wordstr-hashtable.sml
         util/list3.sml
 
@@ -146,6 +136,5 @@ is
 	$smlnj/smlnj-lib/smlnj-lib.cm (* Util *)
 	$smlnj/smlnj-lib/controls-lib.cm
 	$smlnj/smlnj-lib/prettyprint-lib.cm
-        $smlnj/smlnj-lib/pp-lib.cm
 
 	$smlnj/basis/basis.cm

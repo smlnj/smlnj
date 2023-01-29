@@ -287,7 +287,7 @@ eval $ARCH_N_OPSYS
 #  (except ml-build, since we don't know $CM_DIR_ARC yet)
 #
 installdriver _run-sml .run-sml
-# installdriver _link-sml .link-sml
+# installdriver _link-sml .link-sml  #preserve debugging version
 installdriver _ml-makedepend ml-makedepend
 ## TODO: install-sml-wrapper script
 
@@ -422,14 +422,14 @@ else
       cd "$BINDIR"
       ln -s .run-sml sml
       #
-      # Now move all stable libraries to $LIBDIR and generate
+      # Now moveall stable libraries to $LIBDIR and generate
       # the pathconfig file.
       #
       cd "$SMLNJ_ROOT"/"$BOOT_FILES"
       for anchor in * ; do
         if [ -d $anchor ] ; then
           dsay "move $anchor to $LIBDIR"
-          echo $anchor $anchor >>$CM_PATHCONFIG
+          echo $anchor $anchor >> $CM_PATHCONFIG
           move $anchor "$LIBDIR"/$anchor
         fi
       done
@@ -447,7 +447,7 @@ fi
 #
 # now that we know CM_DIR_ARC we can install the ml-build driver...
 #
-# installdriver _ml-build ml-build
+# installdriver _ml-build ml-build  # preserve debugging version
 
 #
 # Now do all the rest using the precompiled installer

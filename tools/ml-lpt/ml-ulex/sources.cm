@@ -8,7 +8,9 @@
  *)
 
 Library
+
   structure Main
+
 is
 
   $/basis.cm
@@ -73,5 +75,5 @@ is
   lex-gen.sml
   reg-exp-sig.sml
   reg-exp.sml
-  main.sml
   options.sml
+  main.sml
