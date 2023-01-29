@@ -1,8 +1,6 @@
-File: smlnj-lib/PrettyPrint/README.md
-
 # README for PrettyPrint, the New Prettyprinter Library
 
-The implmentation of the New PrettyPrinter. This is a 2-phase prettyprinter
+The implementation of the new pretty printer. This is a two-phase pretty printer
 where a value to be prettyprinted is first mapped to a _format_, which is then
 _rendered_ to printed text (or sometimes, to a "layout" type, such as string).
 
