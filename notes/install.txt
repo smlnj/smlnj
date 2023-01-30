@@ -613,6 +613,8 @@ Then (as a first approximation)
           If successful, this leaves a new (improved?) heap image at "$SMLNJ_ROOT"/sml.amd65-darwin
 	  which is then moved to bin/.heap.
 
+      [Q] What does @CMredump do? Is it like (re)building a heap image from a BOOTLIST?
+
    If the bin/.heap/sml.amd64-darwin heap image does not exist, it must be created and
    moved there.
       a. If there is no sml.boot.amd64-unix ($BOOTFILES) directory then create it by
@@ -635,9 +637,9 @@ Then (as a first approximation)
 
 7. finish using the "precompiled installer" (build tools, etc.)
       a. set CM_TOLERATE_TOOL_FAILURES=true
-      b. run
+      b. build the tools (and other stuff?) by running
 
-         bin/sml -m \$smlnj/installer.cm
+           bin/sml -m \$smlnj/installer.cm
 
          This presumably builds the tools by calling their respective build.sh scripts
 	 and then moves the resulting heap images to bin/.heap.
@@ -1305,5 +1307,9 @@ Summary: the build process in general
     [In other words, what is lacking in sml as a shell? I would prefer more SML and
     less shell, myself.]
 
+14. What do the "heap rebuilding" steps ("@CMredump" for an existing sml heap image and
+    calls of .link-sml when building a new sml heap image or heap images for tools) do?
+    Presumably these produce smaller images than exportML or exportFn.
 
-14. Nevertheless, CM is a great system that is enormously useful for SML/NJ programmers!
+
+15. Nevertheless, CM is a great system that is enormously useful for SML/NJ programmers!
