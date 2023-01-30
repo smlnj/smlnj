@@ -598,13 +598,57 @@ Then (as a first approximation)
 
 	    dirarcs "$ORIG_CM_DIR_ARC" "$CM_DIR_ARC" "$BOOT_FILES" ]
 
-5. building the runtime system
+5. building the runtime system (not detailed)
 
-6. boot the base SML system
+6. boot the base SML system (starting l. 376)
+   Check if the sml.amd64-darwin heap image exists in bin/.heap ($HEAPDIR).
+   If it exists:
+      a. Use fish to determine the CM directory names (arc), which is always (and by
+         default) ".cm". Assign this as the value of exported variable CM_DIR_ARC.
 
-7. finish using the "precompiled installer"
+      b. "recreate a (customized) heap image"
 
-8. generate documentation and manual pages (when $MAKE_DOC=yes)
+             bin/sml @CMredump "$SMLNJ_ROOT"/sml
+
+          If successful, this leaves a new (improved?) heap image at "$SMLNJ_ROOT"/sml.amd65-darwin
+	  which is then moved to bin/.heap.
+
+   If the bin/.heap/sml.amd64-darwin heap image does not exist, it must be created and
+   moved there.
+      a. If there is no sml.boot.amd64-unix ($BOOTFILES) directory then create it by
+      	 unpacking the boot archive boot.amd64-unix.tgz.
+      b. Check if the name of the CM directories has changed using fish (it will still be ".cm")
+      c. If the .cm name has changed (it won't), fix it by calling dirarcs.
+      d. cd to sml.boot.amd64-unix
+      e. build the sml heap image:
+
+         bin/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLallow=$ALLOC
+
+         This, if successful, builds an sml.amd64-darwin heap image and puts it in
+         $SMLNJ_ROOT.
+      f. cd to $SMLNJ_ROOT
+      g. if it exists, move the sml.amd64-darwin heap image into bin/.heap
+      h. move all stable libraries from sml.boot.amd64-unix to lib, and as we do this
+         add corresponding "$anchor $anchor" line to lib/pathconfig ($CM_PATHCONFIG) for
+	 each stable library name "anchor".
+      i. complain if something didn't work
+
+7. finish using the "precompiled installer" (build tools, etc.)
+      a. set CM_TOLERATE_TOOL_FAILURES=true
+      b. run
+
+         bin/sml -m \$smlnj/installer.cm
+
+         This presumably builds the tools by calling their respective build.sh scripts
+	 and then moves the resulting heap images to bin/.heap.
+         Not sure what else $smlnj/installer.cm does.
+	 Have to look at
+ 
+	   system/smlnj/installer/installer-util.sml 
+	   system/smlnj/installer/genericinstall.sml 
+	   system/smlnj/installer/nix-install.sml    (Unix installer)
+
+8. generate documentation and manual pages (if $MAKE_DOC=yes)
 
    
 ---------------------
@@ -982,39 +1026,6 @@ version of sml (i.e. the one found by the command "which sml"). This could cause
 if that sml is "broken" or otherwise inappropriate.
 
 
-
-==========================================================================================
-Summary: The ml-ulex build process
-
-
-ml-ulex/build.sh + bin/ml-build together amount to defining a bunch of arguments to pass
-to sml (invoking CM/CMB). They provide an (unused?) opportunity to affect some parameters
-(e.g. the heap file name) through command-line arguments, or shell environment variables
-(CM_PATHCONFIG).  The parameters are all strings, some of which are (native) file names.
-
-One can imagine a simpler, more direct, one step process of defining these $SML
-parameters (perhaps in ml-ulex/build.sh, or in a combined shell script).  The build.sh
-files for the different tools are almost identical, differing only in 
-
-  (1) The name of the tool's CM discription file (source.cm for ml-ulex, ml-burg.cm for ml-burg) 
-      This becomes the $root parameter passed to $SML in ml-build.
-
-  (2) The name of the function to be exported by exportFn (Main.main for ml-ulex and
-      ml-burg, ExportParseGen.parseGen for ml-yacc), which becomes the second argument
-      of SMLofNJ.exportFn in the generated source file ($smlfile) in ml-build.
-
-and in the definition of the ROOT variable (the directory containing the build.sh
-script: ml-ulex, ml-burg, ml-yacc, etc.).
-
-The "outputs" of the $SML command run in (e.g.) the ml-ulex directory
-
-  - a heap file: ./$HEAP_IMAGE.amd64-darwin = ./ml-ulex.amd64-darwin
-
-  - a $linkargsfile: $pid-LINKARGS, where $pid is the process id of the ml-build process.
-
-The $linkargsfile contains command-line arguments to be passed to bin/.link-sml.
-
-
 ------------------------------------------------------------------------------------------
 scripts involved in building/installing ml-ulex
 ------------------------------------------------------------------------------------------
@@ -1033,6 +1044,7 @@ let ulex = $SMLNJ/tools/ml-lpt/ml-ulex
 
 Not clear where the tool build process is "launched", i.e. who calls ml-ulex/build.sh,
 and with what CL options/arguments (assume none).
+
 
 ------------------------------------------------------------------------------------------
 Attempt(s) to simplify and coalesce the tool build scripts
@@ -1186,6 +1198,52 @@ exec $RUN @SMLboot=BOOTLIST @SMLheap=sml
     For each version of export.sml we appropriately modify the tool name and main (exported) function
     name in the call of SMLofNJ.exportFn in export.sml. For each version of export.cm, we modifiy 
     the line for the tools cm file (e.g. ml-yacc/src/export.cm refers to ml-yacc.cm).
+
+  * Since the build.sh scripts for the various tools differ only in
+
+     (1) The tools CM description file (e.g. ml-yacc/src/ml-yacc.cm, ml-burg/ml-burg.cm, etc.)
+     (2) The name of the "main" function to be exported by SMLofNJ.exportFn
+
+    These could be 2 (positional) command line arguments of a unified build script, which
+    we call bin/tool-build.
+
+    We would still need individual build.sh scripts for each tool that would determine
+    the $BIN_DIR value and call
+  
+      $BIN_DIR/build <toolname> <tool CM file>
+
+    with the appropriate tool-specific values of <toolname> and <tool CM file>.
+
+========================================================================================== 
+Summary: The ml-ulex build process
+
+ml-ulex/build.sh + bin/ml-build together amount to defining a bunch of arguments to pass
+to sml (invoking CM/CMB). They provide an (unused?) opportunity to affect some parameters
+(e.g. the heap file name) through command-line arguments, or shell environment variables
+(CM_PATHCONFIG).  The parameters are all strings, some of which are (native) file names.
+
+One can imagine a simpler, more direct, one step process of defining these $SML
+parameters (perhaps in ml-ulex/build.sh, or in a combined shell script).  The build.sh
+files for the different tools are almost identical, differing only in 
+
+  (1) The name of the tool's CM discription file (source.cm for ml-ulex, ml-burg.cm for ml-burg) 
+      This becomes the $root parameter passed to $SML in ml-build.
+
+  (2) The name of the function to be exported by exportFn (Main.main for ml-ulex and
+      ml-burg, ExportParseGen.parseGen for ml-yacc), which becomes the second argument
+      of SMLofNJ.exportFn in the generated source file ($smlfile) in ml-build.
+
+and in the definition of the ROOT variable (the directory containing the build.sh
+script: ml-ulex, ml-burg, ml-yacc, etc.).
+
+The "outputs" of the $SML command run in (e.g.) the ml-ulex directory
+
+  - a heap file: ./$HEAP_IMAGE.amd64-darwin = ./ml-ulex.amd64-darwin
+
+  - a $linkargsfile: $pid-LINKARGS, where $pid is the process id of the ml-build process.
+
+The $linkargsfile contains command-line arguments to be passed to bin/.link-sml.
+
 
 ==========================================================================================
 Summary: the build process in general

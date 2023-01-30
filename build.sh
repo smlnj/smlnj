@@ -302,6 +302,7 @@ installdriver _heap2exec heap2exec
 #
 ALLOC=1M
 
+
 # OS-specific things for building the runtime system
 #
 RT_MAKEFILE=mk.$ARCH-$OPSYS
@@ -365,6 +366,8 @@ else
     complain "Run-time system build failed for some reason."
   fi
 fi
+
+# return to $SMLNJ_ROOT directory
 cd "$SMLNJ_ROOT"
 
 #
@@ -422,7 +425,7 @@ else
       cd "$BINDIR"
       ln -s .run-sml sml
       #
-      # Now moveall stable libraries to $LIBDIR and generate
+      # Now move all stable libraries to $LIBDIR and generate
       # the pathconfig file.
       #
       cd "$SMLNJ_ROOT"/"$BOOT_FILES"
