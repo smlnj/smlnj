@@ -46,7 +46,7 @@ while [ "$#" != "0" ] ; do
   esac
 done
 
-# if a the "sml" command is specified by a path, then we add the directory
+# if the "sml" command is specified by a path, then we add the directory
 # containing the "sml" command to the end of the user's PATH.  This allows
 # CM to find the ml-yacc and ml-ulex programs when they are not in the path.
 # NOTE: the "-DNO_PLUGINS" option used below should obviate the need for these
