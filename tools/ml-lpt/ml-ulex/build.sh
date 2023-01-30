@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
+# Copyright (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
 #
 # tool build script for: ml-ulex
 #
@@ -16,7 +16,6 @@ trap 'rm -f BOOTLIST XXXX .cm/*/export.sml' 0 1 2 3 15
 
 SMLNJROOT=`pwd`/../../..  # $SMLNJ (e.g. = ~/sml/Dev/github/smlnj in my case)
 BIN_DIR=$SMLNJROOT/bin
-BUILD=$BIN_DIR/tool-build
 SML=$BIN_DIR/sml
 
 # define ARCH and OPSYS using bin/.arch-n-opsys
@@ -40,9 +39,8 @@ touch export.sml
 # Build the tool as a standalone program - step 1:
 # The 5 positional arguments (no setup) after @CMbuild are: project, wrapper, target, listfile,
 # linkargsfile in the terminology of mlbuild in CM/main/cm-boot.sml. mlbuild expects its first
-# two positional arguments to be CDF files, namely "project" (here sources.cm) and "wrapper"
-# (here export.cm).
-# We use the generated BOOTLIST file in the $RUN command below, but the XXXX file is not used.
+# two positional arguments to be CM description files, namely "project" and "wrapper".
+# We use the generated BOOTLIST file in the $RUN command below, but the XXXX file (listargsfile) is not used.
 $SML -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC @CMbuild "sources.cm" "export.cm" "ml-ulex" BOOTLIST XXXX
 
 # Build the tool - step 2: call $RUN with the BOOTLIST produced by the previous command.

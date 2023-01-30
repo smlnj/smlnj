@@ -1,45 +1,47 @@
 #!/bin/sh
 #
-# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
+# Copyright (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
 #
-# build script for ml-nlffigen
+# tool build script for: ml-nlffigen
 #
-# options:
-#   -o image		-- specify the name of the heap image, "ml-nlffigen"
-#			   is the default.
+# location: $SMLNJ/tools/nlffi/gen/build.sh
+# options: None
 
 CMD=$0
 
-ROOT="ml-nlffigen"
-HEAP_IMAGE=""
-TWOUP=`pwd`/../..
-BIN=${INSTALLDIR:-$TWOUP}/bin
-BUILD="$BIN/ml-build"
+# cleanup trap: delete BOOTLIST and XXXX files output by (sml @CMbuild), and also
+# the bin file .cm/*/export.sml, because this will force compilation and execution
+# of export.sml at the next call of build.sh.
+trap 'rm -f BOOTLIST XXXX .cm/*/export.sml' 0 1 2 3 15
 
-#
-# process command-line options
-#
-while [ "$#" != "0" ] ; do
-  arg=$1
-  shift
-  case $arg in
-    -o)
-      if [ "$#" = "0" ]; then
-        echo "$CMD: must supply image name for -o option"
-        exit 1
-      fi
-      HEAP_IMAGE=$1; shift
-      ;;
-    -64) ;; # ignore size specification for compatibility with 2021.1
-    *)
-      echo $CMD: invalid argument: $arg
-      exit 1
-      ;;
-  esac
-done
+SMLNJROOT=`pwd`/../../..  # $SMLNJ (e.g. = ~/sml/Dev/github/smlnj in my case)
+BIN_DIR=$SMLNJROOT/bin
+SML=$BIN_DIR/sml
 
-if [ "$HEAP_IMAGE" = "" ]; then
-  HEAP_IMAGE="$ROOT"
+# define ARCH and OPSYS using bin/.arch-n-opsys
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys"`
+if [ "$?" != "0" ]; then
+  echo "$CMD: unable to determine architecture/operating system"
+  exit 1
 fi
+eval $ARCH_N_OPSYS
 
-exec "$BUILD" ml-nlffigen.cm Main.main "$HEAP_IMAGE"
+RUN=$BIN_DIR/.run/run.$ARCH-$OPSYS
+
+# ml-ulex/build.sh does not take command line options, so no option processing is done.
+
+# REDUNDANT: update the modification time for export.sml so that it will get compiled
+# and executed by export.cm (invoked through the $SML @CMbuild command). This is redundant,
+# because the trap will delelet .cm/*/export.sml, and this also causes CM to
+# compile and execute "export.sml" when this script is run next.
+touch export.sml
+
+# Build the tool as a standalone program - step 1:
+# The 5 positional arguments (no setup) after @CMbuild are: project, wrapper, target, listfile,
+# linkargsfile in the terminology of mlbuild in CM/main/cm-boot.sml. mlbuild expects its first
+# two positional arguments to be CM description files, namely "project" and "wrapper".
+# We use the generated BOOTLIST file in the $RUN command below, but the XXXX file (listargsfile) is not used.
+$SML -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC @CMbuild "ml-nlffigen.cm" "export.cm" "ml-nlffigen" BOOTLIST XXXX
+
+# Build the tool - step 2: call $RUN with the BOOTLIST produced by the previous command.
+exec $RUN @SMLboot=BOOTLIST @SMLheap=sml

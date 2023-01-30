@@ -1072,26 +1072,28 @@ Information flow from $ml-ulex/build.sh to bin.ml-build to bin/.link-sml:
      execs
        bin/.run/run.amd64-darwin @SMLboot=$pid-BOOTLIST @SMLheap="sml"
 
-Where is ml-build called? (with what args?):
+Where is/was ml-build called? (with what args?):
 
-  tools/ml-yacc/build.sh args:    (2 * -D) + 3  (ml-yacc.cm, ExportParseGen, "ml-yacc")
+  tools/ml-yacc/build.sh args:    (2 * -D) + 3  (ml-yacc.cm, ExportParseGen.parseGen, "ml-yacc")
   tools/ml-burg/build.sh args:    (2 * -D) + 3  (ml-burg.cm, Main.main, "ml-burg")
   tools/ml-lpt/ml-ulex/build.sh:  (3 * -D) + 3  (sources.cm, Main.main, "ml-ulex")
   tools/ml-lpt/ml-antlr/build.sh: (2 * -D) + 3  (sources.cm, Main.main, "ml-antlr")
   tools/heap2asm/build.sh:        (0 * -D) + 3  (heap2asm.cm, Main.main, "heap2asm")
   tools/nlffi/gen/build.sh        (0 * -D) + 3  (ml-nlffigen.cm, Main.main, "ml-nlffigen")
-  [tools/asdl/build.sh            -- (tool-build not called here)]
+  [tools/asdl/build.sh            -- ml-build is not called here]
 
   Extra Args (after leading -D,-U,-D args):
-    1. toolCDF = tool CM desc file (e.g. ml-yacc.cm, ml-burg.cm, sources.cm, ...)
-    2. "main" function of the tool, to be exported as a stand-alone heap image by exportFn
+    1. toolCMfile = tool CM desc file (e.g. ml-yacc.cm, ml-burg.cm, sources.cm, ...)
+    2. the name of "main" function of the tool, which is to be exported as a stand-alone heap image by exportFn
     2. toolname = name of the tool, used as the base name of heap image file for the tool
        (e.g. "ml-yacc", "ml-burg", "ml-ulex", etc.).
 
-  All calls pass the 3 extra arguments (after sml options), called project, wrapper, heap (in cm-boot.sml)
-  There are no calls with -S option (thus setup is never defined). Thus setup is never defined
-  by a -S CL option or as the 1st of 4 extra arguments.
+  All calls pass the 3 extra arguments (after the CM options); these are called "root/project", "cmfile/wrapper",
+  "heap/target" in the mlbuild function in cm-boot.sml.
+  There are no calls of mlbuild with -S option (thus setup is never defined). Thus setup is never defined
+  by a -S CL option nor as the 1st of _4_ extra positional arguments.
 
+  Note: tool ml-nlffigen is not currently being built.
 
 Simplification attempt 1:
 
@@ -1145,7 +1147,6 @@ CMD=$0
 
 SMLNJROOT=`pwd`/../../..  # $SMLNJ (e.g. = ~/sml/Dev/github/smlnj in my case)
 BIN_DIR=$SMLNJROOT/bin
-BUILD=$BIN_DIR/tool-build
 SML=$BIN_DIR/sml
 
 # define ARCH and OPSYS using bin/.arch-n-opsys
@@ -1167,7 +1168,7 @@ touch export.sml
 # Build the tool as a standalone program, step 1:
 # The 5 positional arguments (no setup) after @CMbuild are: project, wrapper, target, listfile, linkargsfile
 # in the terminology of mlbuild in CM/main/cm-boot.sml. mlbuild expects its first two positional 
-# arguments to be CDF files, namely "project" and "wrapper".
+# arguments to be CM files, namely "root/project" and "cmfile/wrapper".
 $SML -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC @CMbuild "sources.cm" "export.cm" "ml-ulex" BOOTLIST XXXX
 
 # Build the tool, step 2: call $RUN with the BOOTLIST produced by the previous command.
@@ -1177,12 +1178,14 @@ exec $RUN @SMLboot=BOOTLIST @SMLheap=sml
   * Surprisingly, using this new, simplified version of ml-ulex/build.sh, we no longer
     need the bug workaround (adding a reference to TextIOPP to TopLevel/print/ppdec.sml)
     to successfully build ml-ulex. The new ml-ulex/build.sh builds ml-ulex even without that
-    line mentioning TexhIOPP being added to ppdec.sml.
+    earlier fix. So that dummy declaration in ppdec.sml can be (and was) removed.
 
-  * We should be able to use variants of this new ml-ulex build.sh for ml-burg, ml-yacc,
-    ml-antlr, heap2asm, and nlffi/gen, with corresponding added export.sml and export.cm
-    files.
-
+  * We can use variants of this new ml-ulex build.sh for ml-burg, ml-yacc, ml-antlr, heap2asm,
+    [and nlffi/gen, which is not currently being built], with corresponding added export.sml
+    and export.cm files for each of these tools.
+    For each version of export.sml we appropriately modify the tool name and main (exported) function
+    name in the call of SMLofNJ.exportFn in export.sml. For each version of export.cm, we modifiy 
+    the line for the tools cm file (e.g. ml-yacc/src/export.cm refers to ml-yacc.cm).
 
 ==========================================================================================
 Summary: the build process in general
