@@ -1216,6 +1216,18 @@ exec $RUN @SMLboot=BOOTLIST @SMLheap=sml
 
     with the appropriate tool-specific values of <toolname> and <tool CM file>.
 
+  * A potential further simplication of the tool build process: since the simplified
+    build.sh essentially just calls sml twice (first as a call to sml (bin/sml), and then
+    as a call to the runtime system (bin/.run/run.amd64-darwin, perhaps these two calls
+    could be merged into one, where sml first does the @CMbuild (mlbuild) processing to produce
+    a BOOTLIST "file" (list?), and then invokes the runtime directly and "internally"
+    to do the @SMLboot stuff. Would this be possible?
+ 
+    If it is not currently possible, why not? Could additional functionality be added to make
+    this possible? The base functionality is clearly already there, but does it have to be
+    invoked "externally", from the shell?
+
+
 ========================================================================================== 
 Summary: The ml-ulex build process
 
@@ -1307,9 +1319,10 @@ Summary: the build process in general
     [In other words, what is lacking in sml as a shell? I would prefer more SML and
     less shell, myself.]
 
-14. What do the "heap rebuilding" steps ("@CMredump" for an existing sml heap image and
+14. What do the "heap building/rebuilding" steps ("@CMredump" for an existing sml heap image and
     calls of .link-sml when building a new sml heap image or heap images for tools) do?
-    Presumably these produce smaller images than exportML or exportFn.
+    Presumably these produce smaller images than exportML or exportFn would, otherwise why
+    not use exportML and exportFn?
 
 
 15. Nevertheless, CM is a great system that is enormously useful for SML/NJ programmers!

@@ -86,7 +86,6 @@ smlnj-lib  lib html-lib.cm	html-lib.cm	 smlnj-lib/HTML
 smlnj-lib  lib html4-lib.cm	html4-lib.cm	 smlnj-lib/HTML4
 smlnj-lib  lib inet-lib.cm      inet-lib.cm      smlnj-lib/INet
 smlnj-lib  lib json-lib.cm      json-lib.cm      smlnj-lib/JSON
-smlnj-lib  lib pp-lib.cm        pp-lib.cm        smlnj-lib/PP
 smlnj-lib  lib pp-extras-lib.cm pp-extras-lib.cm smlnj-lib/PP
 smlnj-lib  lib regexp-lib.cm    regexp-lib.cm    smlnj-lib/RegExp
 smlnj-lib  lib reactive-lib.cm  reactive-lib.cm  smlnj-lib/Reactive
