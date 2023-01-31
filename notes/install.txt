@@ -10,8 +10,8 @@ adding smlnj-lib/prettyprint without breaking the build process.
 A couple of hypotheses:
 
 1. I screwed up somewhere in adding smlnj-lib/PrettyPrint while trying not to remove or
-"disable" the older smlnj-lib/PP library. Possibly I deleted or edited some CM description
-file improperly.
+"disable" the existing smlnj-lib/PP library. Possibly I deleted or edited some CM description
+file improperly. [Was adding a pp-lib.cm line to config/actions part of the problem?]
 
 2. There is a bug in the CM functionality around BOOT_LIST files (and associated
 "rebuilding" of heap files. This bug may cause CM not to properly take account of the fact
@@ -378,6 +378,11 @@ bin/ [:dir]
   ml-yacc [:symlink] ( -> .run-sml) 
   ml-burg [:symlink] ( -> .run-sml) 
   ...
+
+config/ [:dir]
+  actions
+  dependencies
+  extrapathconfig
 
 [Q] Why is .link-sml hidden and ml-build not hidden?
     Is .link-sml ever used independently of ml-build?
@@ -1310,7 +1315,7 @@ Summary: the build process in general
     files.  Does it need special treatment, or is this just an historical artifact?
 
 12. CM is fairly well documented for users, but we need more complete and detailed
-    documentation for "maintainers". [See also my "errata" note on the CM manual.]
+    documentation for "maintainers" (compiler hackers). [See also my "errata" note on the CM manual.]
 
 13. The build process is a collaboration (kind of coroutine-like) between shell scripts
     and SML code. What is the rationale for what belongs on the shell side, and what
@@ -1324,5 +1329,18 @@ Summary: the build process in general
     Presumably these produce smaller images than exportML or exportFn would, otherwise why
     not use exportML and exportFn?
 
+15. What is the role of the config/ files actions, dependencies, preloads, and extrapathconfig?
+    According to JHR, actions specifies things that need to be compiled after the compiler
+    itself is bootstrapped.  Whatever they are used for, why is it beyound the scope of
+    what CM could handle?
 
-15. Nevertheless, CM is a great system that is enormously useful for SML/NJ programmers!
+    The actions, dependencies, extrapathconfig files are loaded (and their contents processed) by
+    system/smlnj/installer/generic-install.sml. Not sure where preloads is processed.
+    Could these files be replaced by appropriate cm files?  If not, why not?
+    [JHR proposes to replace them by Cmake files. But why, given that these are dealing
+    with sml source code?]
+
+------------------------------------------------------------------------------------------
+
+Nevertheless, CM is a great system that is enormously useful for SML/NJ programmers, and
+has served us vary well, as is, for over 20 years!
