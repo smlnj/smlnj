@@ -625,24 +625,43 @@ have to have a better grasp of what is going on than I do!]
 * Libraries vs. Groups
 ----------------------
 
-With the old CM, "group" was the primary concept while "library" and
-"stabilization" could be considered afterthoughts.  This has changed.
-Now "library" is the primary concept, "stabilization" is semantically
-significant, and "groups" are a secondary mechanism.
+With the old CM, "group" was the primary concept while "library" and "stabilization" could
+be considered afterthoughts.  This has changed.  Now "library" is the primary concept,
+"stabilization" is semantically significant, and "groups" are a secondary mechanism.
 
-Libraries are used to "structure the world"; groups are used to give
-structure to libraries.  Each group can be used either in precisely
-one library (in which case it cannot be used at the interactive
-toplevel) or at the toplevel (in which case it cannot be used in any
-library).  In other words, if you count the toplevel as a library,
-then each group has a unique "owner" library.  Of course, there still
-is no limit on how many times a group can be mentioned as a member of
-other groups -- as long as all these other groups belong to the same
-owner library.
+[DBM: We should assume in this document that we are using the "new" (20-year-old) CM. No
+need to discuss what the old CM was like, or how the "new" CM differs from it. So para
+above is unneeded.]
 
-Normally, collections of files that belong together should be made
-into proper CM libraries.  CM groups (aka "library components") should
-be used only when there are namespace problems within a library.
+Libraries are used to "structure the world"; groups are used to give structure to
+libraries [DBM: so that libraries do not have to be monolythic].  Each group can be used
+either in precisely one library (in which case it cannot be used at the interactive
+toplevel) or at the toplevel (in which case it cannot be used in any library).  In other
+words, if you count the toplevel as a library, then each group has a unique "owner"
+library.  Of course, there still is no limit on how many times a group can be mentioned as
+a member of other groups -- as long as all these other groups belong to the same owner
+library.
+
+[DBM: How disruptive would it be to now disallow "top-level" groups that do not belong
+to any library?  Another point. A group G.cm can "declare" that it belongs to library A.cm,
+but the A.cm (i.e. its CDF) may not even mention G.cm, in which case A.cm does not use or
+depend on G.cm. This situation seems anomalous; should it be detected? Should it be considered
+an error?]
+
+Normally, collections of files that belong together should be made into proper CM
+libraries.  CM groups (aka "library components") should be used only when there are
+namespace problems within a library.
+
+[DBM: I assume that if a library "contains/has" multiple groups, then the export lists of
+its groups must be disjoint. But two different groups could have their own definitions of
+a structure Foo (in files foo1.sml, foo2.sml respectively), as long as Foo was not
+exported from both groups. Actually, the CM Manual, Section 2.4 allows two subgroups of
+a library to export the same symbol, say "Foo", as long as the corresponding source
+files where Foo is defined (say foo1.sml and foo2.sml) are "identical" (textually, or
+ignoring comments and white space?).  This seems too liberal. I think two subgroups of
+a library should not be allowed to export the same symbol (i.e. subgoup exports should
+be disjoint).
+Can we identify some realistic examples in the compiler?]
 
 Aside from the fact that I find this design quite natural, there is
 actually a technical reason for it: when you stabilize a library
@@ -663,6 +682,7 @@ must explicitly state which library they belong to. CM will verify
 that.  The owner library is specified in parentheses after the "group"
 keyword.  If the specification is missing (that's the "old" syntax),
 then the the owner will be taken to be the interactive toplevel.
+[DBM: see my comments on Sec 2.4 in CM-manual-errata.txt.]
 
 
 * Pervasive environment, core environment, the init library "init.cmi"
@@ -677,50 +697,52 @@ because it uses "magic" in three ways:
 
 The pervasive environment no longer includes the entire basis library
 but only non-modular bindings (top-level bindings of variables and
-types).
+types, and "fixity bindings").
 
 CM cannot automatically determine dependencies (or exports) for the
 init library source files, but it still does use its regular cutoff
 recompilation mechanism.  Therefore, dependencies must be given
 explicitly.  This is done by a special description file which
-currently lives in smlnj/init/init.cmi (as an anchored path:
-"$smlnj/init/init.cmi").  See the long comment at the beginning of
+currently lives in $SMLNJ/system/smlnj/init/init.cmi (as an anchored path:
+"$smlnj/init/init.cmi"). See the long comment at the beginning of
 that file for more details.
 
-After it is built, $smlnj/init/init.cmi can be used as an "ordinary"
-library by other libraries.  (This is done, for example, by the
-implementation of the Basis library.)  Access to
-"$smlnj/init/init.cmi" is protected by the privilege named
-"primitive".  Also, note that the .cmi-file is not automatically
-recognized as as CM description file. ("cmi" should remind you of "CM
-- Initial library".)  Therefore, it must be given an explicit member
-class:
+After it is built, $smlnj/init/init.cmi can be used as an "ordinary" library by other
+libraries.  (This is done, for example, by the implementation of the Basis library.)
+Access to "$smlnj/init/init.cmi" is protected by the privilege named "primitive".  Also,
+note that the .cmi-file [DBM: which file?] is not automatically recognized as a CM
+description file. ("cmi" should remind you of "CM - Initial library".)  Therefore, it must
+be given an explicit member class:
 
      $smlnj/init/init.cmi : cm
+
+[DBM: might it be possible to "codify" the magic involved in the "init library"
+so that it is less ad hoc?]
 
 
 * Autoloader
 ------------
 
-The new system heavily relies on the autoloader.  As a result, almost
-no static environments need to get unpickled at bootstrap time.  The
-construction of such environments is deferred until they become
-necessary.  Thanks to this, it was possible to reduce the size of the
-heap image by more than one megabyte (depending on the architecture).
-The downside (although not really terribly bad) is that there is a
-short wait when you first touch an identifier that hasn't been touched
-before.  (I acknowledge that the notion of "short" may depend on your
-sense of urgency. :-)
+The new system heavily relies on the autoloader.  As a result, almost no static
+environments need to get unpickled at bootstrap time [DBM: what is "bootstrap time"? Does
+this refer to the running of system/.makeml? (but not running system/.cmb-make?)].  The
+construction of such environments is deferred until they become necessary.  Thanks to
+this, it was possible to reduce the size of the heap image by more than one megabyte
+(depending on the architecture) [DBM: one megabyte used to be a lot of memory. Now it is
+1/64000th of my iMac's RAM.]  The downside (although not really terribly bad) is that
+there is a short wait when you first touch an identifier that hasn't been touched before.
+(I acknowledge that the notion of "short" may depend on your sense of urgency. :-)
+[DBM: my iMac is also at least 100 times faster than what I was using in 2000.]
 
 The reliance on the autoloader (and therefore CM's library mechanism)
 means that in order to be able to use the system, your paths must be
 properly configured.
+[DBM: how much of a "black art" is this process of properly configuring your paths?]
 
-Several libraries get pre-registered at bootstap time.  Here, at least
-the following two should be included: the basis library ($/basis.cm)
-and CM itself ($smlnj/cm.cm).  Currently, we also pre-register the
-library exporting structure Compiler ($smlnj/compiler.cm) and the
-SML/NJ library ($/smlnj-lib.cm).
+Several libraries get pre-registered [DBM: for autoloading] at bootstap time.  Here, at
+least the following two should be included: the basis library ($/basis.cm) and CM itself
+($smlnj/cm.cm).  Currently, we also pre-register the library exporting structure Compiler
+($smlnj/compiler.cm) and the SML/NJ library ($/smlnj-lib.cm) [DBM: just the Util libraries.].
 
 Here are some other useful libraries that are not pre-registered but
 which can easily be made accessible via CM.autoload (or, non-lazily,
@@ -764,7 +786,8 @@ in description files are preceeded by certain strings, sometimes in
 parentheses.  These strings are the names of "privileges".  Don't
 worry about them too much at the moment.  For the time being, access
 control is not enforced, but the infrastructure is in place.
-
+[DBM: so "access control" is currently not operational. What are the
+chances that this will change?]
 
 * Preprocessor
 --------------
@@ -773,6 +796,7 @@ The syntax of expressions in #if and #elif clauses is now more ML-ish
 instead of C-ish.  (Hey, this is ML after all!)  In particular, you
 must use "andalso", "orelse", and "not" instead of "&&", "||" and "!".
 Unary minus is "~".
+[DBM: another comparison with "old CM" this is unnecessary.]
 
 A more interesting change is that you can now query the exports of
 sources/subgroups/sublibraries:
@@ -781,7 +805,8 @@ sources/subgroups/sublibraries:
     The expression
 	defined(<namespace> <name>)
     is true if any of the included members preceeding this clause exports
-    a symbol "<namespace> <name>".
+    a symbol "<namespace> <name>". [DBM: thus introducing an order dependence
+    between members.]
   - Within the "exports" section of the description (i.e., before "is"):
     The same expression is true if _any_ of the members exports the
     named symbol.
@@ -851,6 +876,7 @@ original alias mechanism).  For example, the root.cm file (which is the
 root of the whole system as far as CMB.make is concerned) acts as an
 alias for $smlnj/internal/intsys.cm.  In this case, root.cm is a group
 to avoid having a (trivial) stable library file built for it.
+[DBM: not a very strong justification for still allowing library-less groups.]
 
 A library can act as an "alias" for another library if it has a
 verbatim copy of the export list and mentions the other library as its
@@ -872,13 +898,30 @@ refer to library B from library A, you will be committed to keeping B
 in the same relative (to A) or absolute location.  This, clearly,
 would be undesirable in many situations (although perhaps not always).
 
-[DBM: Does "pathname" in this section refer to [native] "file paths" rather than
-CM paths/pathnames?]
+[DBM: These "relative or absolute pathnames" refer to CM pathnames that
+are not "anchored", and are thus indistinguiable from (Unix-nomalized)
+OS pathnames.]
 
 
 ==========================================================================================
-DBM: Some other things that are out-of-date in $SMLNJ/system:
+DBM: A couple of other things that are out-of-date in $SMLNJ/system:
 
 * system/serv.sml ("../../bin/sml" should be "../bin/sml")
 
 * system/rserv.sml (mentions "/home/blume/ML/...")
+
+
+==========================================================================================
+I would like to see this README file updated and revised as suggested by my comments, and
+perhaps combined with a revision of my notes/install.txt to provide a reasonably deep
+and complete description of the system build process.
+
+This would also require more documentation about the SML files in $SMLNJ/system/smlnj/installer,
+and a bunch more information about the full, compiler-hacker's view of CM functionality,
+including command-line options like @CMbuild and @CMredump that are used in build shell scripts
+like $SMLNJ/build.sh, $SMLNJ/bin/ml-build, $SMLNJ/bin/.link-sml. In fact, it would be good to
+have a separate "implementors" manual or tech-report describing the internals and special
+functionalities of CM. Either of these documents might incorporate the contents of the existing
+CMB Manual.
+
+
