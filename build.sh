@@ -287,7 +287,7 @@ eval $ARCH_N_OPSYS
 #  (except ml-build, since we don't know $CM_DIR_ARC yet)
 #
 installdriver _run-sml .run-sml
-# installdriver _link-sml .link-sml  #preserve debugging version
+installdriver _link-sml .link-sml
 installdriver _ml-makedepend ml-makedepend
 ## TODO: install-sml-wrapper script
 
@@ -450,7 +450,7 @@ fi
 #
 # now that we know CM_DIR_ARC we can install the ml-build driver...
 #
-# installdriver _ml-build ml-build  # preserve debugging version
+installdriver _ml-build ml-build
 
 #
 # Now do all the rest using the precompiled installer
@@ -495,7 +495,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   if make doc && make distclean ; then
     vsay $cmd: Documentation generation complete.
   else
-    complain "$Error generating documentation."
+    complain "Error generating documentation."
   fi
 fi
 
