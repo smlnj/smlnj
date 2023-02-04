@@ -3,6 +3,9 @@ Compiler Hacker's Guide to the new CM...
 
 Last change: 12/5/2000
 
+With added comments and questions by DBM: 2/3/2023
+(and suggestions for updating)
+
 * Libraries
 -----------
 
@@ -924,4 +927,6 @@ have a separate "implementors" manual or tech-report describing the internals an
 functionalities of CM. Either of these documents might incorporate the contents of the existing
 CMB Manual.
 
+My goal is be a complete explanation of the build process and how CM is used in it that I can
+understand and verify.
 
