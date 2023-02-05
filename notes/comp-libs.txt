@@ -56,3 +56,7 @@ ElabData/pickle/rehash.sml
 ElabData/prim/prim-env.sml
 
 
+------------------
+It would be good to have a comprehensive map of the CM group/library structure
+of the compiler, with a dependency graph or chart or table.  Would this be difficult?
+
