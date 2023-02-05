@@ -1,0 +1,58 @@
+# smlnj/notes/comp-libs.txt [newpp branch]
+
+Note on organization of the compiler into CM libraries
+
+Several of the main source directories under compiler have their own .cm files defining
+corresponding libraries:
+
+Basics/basics.cm        -- Group
+Parser/parser.cm        -- Group
+ElabData/elabdata.cm    -- Group
+Elaborator/elaborate.cm -- Group
+Execution/execute.cm    -- Group
+
+These Group defintions do not specify a parent library (they are "top-level" groups).
+
+[Q] Why are these defined as groups and not libraries?
+
+Other top-level compiler source directories do not have their own .cm files
+(defining them as groups or libraries). Instead, they are covered by compiler/core.cm:
+
+compiler/core.cm  -- Group
+
+FLINT/
+CPS/
+TopLevel/
+NewCodeGen/
+DebugProf/
+
+
+[Q] Why don't these directories have their own .cm description files (Group or Library)?
+
+[Q] Is there a rule or assumption that some "components" of the compiler are too big to form
+libraries?  Or that big "top-level" groups are OK because they are not stabilized, so we
+don't create very large stabilized library bin files?
+Is this the reason why the existing component CM description files (bascis.cm, etc.)
+define top-level CM Groups rather than CM Libraries? Would something break if they were
+changed to Libraries?
+
+[Q] Put another way, is there any reason why the existing top-level groups for Basics,
+etc. could not be changed to libraries?
+
+[Q] Is there a reason why the components FLINT, CPS, TopLevel, and DebugProf could not
+be organized as either libraries or top-level groups by adding their own CM description
+files (FLINT/flint.cm, etc.)?  Their members would be moved from core.cm to the respective
+"component" CDFs (CM description files).
+
+[Q] Even though ElabData/elabdata.cm exists, there are a few source files are found
+in ElabData but are included in core.cm instead of ElabData/elabdata.cm:
+
+ElabData/pickle/pickle-sym-pid.sml
+ElabData/pickle/unpickle-sym-pid.sml
+ElabData/pickle/pickmod.sml
+ElabData/pickle/unpickmod.sml
+ElabData/pickle/rehash.sml
+
+ElabData/prim/prim-env.sml
+
+
