@@ -33,6 +33,7 @@ body:
       description: What version of SML/NJ are you using?
       options:
         - "2021.1"
+        - "2022.1"
     validations:
       required: true
   - type: checkboxes
