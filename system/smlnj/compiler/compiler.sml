@@ -1,6 +1,7 @@
-(* compiler/compiler.sml
- * 
- * (C) 2001 Lucent Technologies, Bell Labs
+(* compiler.sml
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *)
 structure Compiler = struct
     structure Stats = Stats
