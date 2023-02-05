@@ -6,6 +6,7 @@
  *
  * Author: Matthias Blume (blume@tti-c.org)
  *)
+
 structure Coverage : sig
 
     type kind
@@ -18,7 +19,8 @@ structure Coverage : sig
     val hot_spots : kind list -> int -> unit
 
     val install : unit -> unit
-end = struct
+
+  end = struct
 
     structure M = IntRedBlackMap
     structure F = FormatComb
@@ -105,4 +107,5 @@ end = struct
 	in
 	    loop (sortedcountlist, n)
 	end
-end
+
+  end
