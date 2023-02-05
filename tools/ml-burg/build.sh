@@ -1,45 +1,49 @@
 #!/bin/sh
 #
-# Copyright (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
+# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
 #
-# tool build script for: ml-burg
+# build script for ml-burg under the new runtime system.
 #
-# location: $SMLNJ/tools/ml-burg/build.sh
-# options: None
+# options:
+#   -o image		-- specify the name of the heap image, "ml-burg"
+#			   is the default.
 
 CMD=$0
 
-# cleanup trap: delete BOOTLIST and XXXX files output by (sml @CMbuild), and also
-# the bin file .cm/*/export.sml, because this will force compilation and execution
-# of export.sml at the next call of build.sh.
-trap 'rm -f BOOTLIST XXXX .cm/*/export.sml' 0 1 2 3 15
+ROOT="ml-burg"
+HEAP_IMAGE=""
+SMLNJROOT=`pwd`/../..
+BIN=${INSTALLDIR:-$SMLNJROOT}/bin
+BUILD=$BIN/ml-build
 
-SMLNJROOT=`pwd`/../..  # $SMLNJ (e.g. = ~/sml/Dev/github/smlnj in my case)
-BIN_DIR=$SMLNJROOT/bin
-SML=$BIN_DIR/sml
+#
+# process command-line options
+#
+while [ "$#" != "0" ] ; do
+  arg=$1
+  shift
+  case $arg in
+    -o)
+      if [ "$#" = "0" ]; then
+        echo "$CMD: must supply image name for -o option"
+        exit 1
+      fi
+      HEAP_IMAGE=$1; shift
+    ;;
+    -64) ;; # ignore size specification for compatibility with 2021.1
+    *)
+      echo $CMD: invalid argument: $arg
+      exit 1
+      ;;
+  esac
+done
 
-# define ARCH and OPSYS using bin/.arch-n-opsys
-ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys"`
-if [ "$?" != "0" ]; then
-  echo "$CMD: unable to determine architecture/operating system"
-  exit 1
+if [ "$HEAP_IMAGE" = "" ]; then
+  HEAP_IMAGE="$ROOT"
 fi
-eval $ARCH_N_OPSYS
 
-RUN=$BIN_DIR/.run/run.$ARCH-$OPSYS
+#
+# Build the ml-burg standalone program:
+"$BUILD" -DNO_ML_LEX -DNO_ML_YACC ml-burg.cm Main.main $HEAP_IMAGE
 
-# REDUNDANT?: "touch export.sml": updates the modification time for export.sml so that it will
-# get compiled and executed by export.cm (invoked through the $SML @CMbuild command).
-# This is probably redundant, because the trap will delelet .cm/*/export.sml, and this will also
-# cause CM to compile and execute "export.sml" when this script is run next.
-touch export.sml
-
-# Build the tool as a standalone program, step 1:
-# The 5 positional arguments (no setup) after @CMbuild are: project, wrapper, target, listfile, linkargsfile
-# in the terminology of mlbuild in CM/main/cm-boot.sml. mlbuild expects the first two positional 
-# arguments to be CDF files, namely "project" and "wrapper". We use the generated BOOTLIST file in
-# the $RUN command below, but the XXXX file (linkargsfile)is not used.
-$SML -DNO_ML_LEX -DNO_ML_YACC @CMbuild "ml-burg.cm" "export.cm" "ml-burg" BOOTLIST XXXX
-
-# Build the tool, step 2: call $RUN with the BOOTLIST produced by the previous command.
-exec $RUN @SMLboot=BOOTLIST @SMLheap=sml
+exit 0
