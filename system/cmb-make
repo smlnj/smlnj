@@ -11,7 +11,6 @@
 # the path to the SML compiler to use for the build.
 #
 
-
 usage() {
   echo "usage: cmb-make [ options ] [ <sml-cmd> ]"
   echo "  options:"
@@ -46,6 +45,28 @@ while [ "$#" != "0" ] ; do
 	;;
   esac
 done
+
+# if the "sml" command is specified by a path, then we add the directory
+# containing the "sml" command to the end of the user's PATH.  This allows
+# CM to find the ml-yacc and ml-ulex programs when they are not in the path.
+# NOTE: the "-DNO_PLUGINS" option used below should obviate the need for these
+# commands, but the way that the CM parser handles #ifdef is broken.
+#
+SMLBIN=`dirname $SML`
+case $SMLBIN in
+  .) ;;
+  /*) ;;
+  *) if [ -d $SMLBIN ] ; then
+      SMLBIN=$(cd $SMLBIN; pwd)
+    else
+      echo "$this: directory '$SMLBIN' does not exist"
+      exit 1
+    fi ;;
+esac
+if [ $SMLBIN != "." ] ; then
+  echo "$this: adding '$SMLBIN' to PATH"
+  PATH=$PATH:$SMLBIN
+fi
 
 exec $SML $ARGS $@ -DNO_PLUGINS '$smlnj/cmb.cm' <<XXXX
 CMB.make();

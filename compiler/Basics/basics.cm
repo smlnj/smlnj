@@ -44,7 +44,7 @@ Group
         structure PPSourceMap
 	structure ErrorMsg
 	structure CompileExn
-	
+
 	structure Stats
 	structure WordStringHashTable
 
@@ -133,8 +133,8 @@ is
 	compiler/target64.sml
 #endif
 
-	$smlnj/smlnj-lib/smlnj-lib.cm (* Util *)
+	$smlnj/basis/basis.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/pp-lib.cm
 	$smlnj/smlnj-lib/controls-lib.cm
 	$smlnj/smlnj-lib/prettyprint-lib.cm
-
-	$smlnj/basis/basis.cm

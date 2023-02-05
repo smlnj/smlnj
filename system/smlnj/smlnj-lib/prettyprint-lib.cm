@@ -18,6 +18,7 @@ is
 	$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm
 		(bind:(anchor:basis.cm value:$SMLNJ-BASIS)
 		 bind:(anchor:smlnj-lib.cm value:$SMLNJ-LIB/Util)
+		 bind:(anchor:pp-lib.cm value:$SMLNJ-LIB/PP)
 		 bind:(anchor:prettyprint-lib.cm value:$SMLNJ-LIB/PrettyPrint)
 		 bind:(anchor:controls-lib.cm value:$SMLNJ-LIB/Controls)
 		 bind:(anchor:ml-yacc-lib.cm value:$SMLNJ-ML-YACC-LIB))

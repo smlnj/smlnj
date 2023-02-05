@@ -10,18 +10,15 @@ functor CompileF (
     structure CC : CCONFIG
     val cproto_conv : string
 
-  ) : COMPILE0 =
+  ) : COMPILE0 = struct
 
-struct
-
-local
     structure SE = StaticEnv
     structure LV = LambdaVar
-in
-    fun mkCompInfo source =
-	CompInfo.mkCompInfo
-	  {source = source,
-	   mkStampGenerator = CC.mkMkStamp}
+
+    fun mkCompInfo source = CompInfo.mkCompInfo {
+            source = source,
+	     mkStampGenerator = CC.mkMkStamp
+          }
 
     type pickle     = CC.pickle		(* pickled format *)
     type hash       = CC.hash		(* environment hash id *)
@@ -54,9 +51,10 @@ in
 
     (* elaborate {ast: Ast.ast, statenv: SE.staticEnv, compInfo: compInfo.compInfo} -> absyn * SE.staticEnv *)
     (* take ast and staticEnv, elaborate the ast, and output the new absyn, staticEnv *)
-    fun elaborate {ast: Ast.dec, statenv: SE.staticEnv, compInfo: CompInfo.compInfo} =
-	  let val (absyn, nenv) = ElabTop.elabTop (ast, statenv, compInfo)
-	   in if CompInfo.anyErrors compInfo
+    fun elaborate {ast: Ast.dec, statenv: SE.staticEnv, compInfo: CompInfo.compInfo} = let
+	  val (absyn, nenv) = ElabTop.elabTop (ast, statenv, compInfo)
+	  in
+            if CompInfo.anyErrors compInfo
 	      then (Absyn.SEQdec nil, StaticEnv.empty)
 	      else (absyn, nenv)
 	  end (* function elaborate *)
@@ -75,7 +73,6 @@ in
      *************************************************************************)
 
     local
-
       val specialSyms = [
 	      SpecialSymbols.paramId,
 	      SpecialSymbols.functorId,
@@ -88,9 +85,7 @@ in
 	      SpecialSymbols.returnId,
 	      SpecialSymbols.internalVarId
 	    ]
-
       fun isSpecial s = List.exists (fn s' => Symbol.eq (s, s')) specialSyms
-
     in
       (** instrumenting the abstract syntax to do time- and space-profiling *)
       fun instrument {source, senv, compInfo} =
@@ -108,16 +103,18 @@ in
      *************************************************************************)
 
     (** take the abstract syntax tree, generate the flint intermediate code *)
-    fun translate {absyn, exportLvars, newstatenv, oldstatenv, compInfo} =
+    fun translate {absyn, exportLvars, newstatenv, oldstatenv, compInfo} = let
 	(*** statenv used for printing Absyn in messages ***)
-	  let val statenv = StaticEnv.atop (newstatenv, oldstatenv)
-	   in Translate.transDec
-		{rootdec = absyn,
-		 exportLvars = exportLvars,
-		 oldenv = oldstatenv,
-		 env = statenv,
-		 cproto_conv = cproto_conv,
-		 compInfo = compInfo}
+	  val statenv = StaticEnv.atop (newstatenv, oldstatenv)
+	  in
+            Translate.transDec {
+	        rootdec = absyn,
+                exportLvars = exportLvars,
+                oldenv = oldstatenv,
+                env = statenv,
+                cproto_conv = cproto_conv,
+                compInfo = compInfo
+              }
 	  end
 
     val translate =
@@ -157,44 +154,46 @@ in
      * used by interact/evalloop.sml, cm/compile/compile.sml only            *
      *************************************************************************)
     (* compile: {source: Source.source, ast: Ast.ast; statenv: StaticEnv.staticEnv,
-                 compInfo: ?.compInfo, checkErr : string -> unit, guid: guid} -> { ... }
-     * compiling the ast into the binary code: elab; pickUnpick; instrument; translate; codegen *)
-    fun compile {source, ast, statenv, compInfo, checkErr, guid} =
-	  let val (absyn, nenv) =
-		    elaborate {ast=ast, statenv=statenv, compInfo=compInfo}
-		    before (checkErr "elaborate")
-	      val {pid, pickle, exportLvars, exportPid, newenv} =
-		    pickUnpick { context = statenv, env = nenv, guid = guid }
-		    before (checkErr "pickUnpick")
-	      val absyn =
-		    instrument {source=source, senv = statenv, compInfo=compInfo} absyn
-		    before (checkErr "instrument")
-	      val {flint, imports} =
-		    translate {absyn=absyn, exportLvars=exportLvars,
-			       newstatenv=newenv, oldstatenv=statenv,
-			       compInfo=compInfo}
-		    before checkErr "translate"
-	      val {csegments, imports} =
-		    codegen {flint = flint, imports = imports,
-			     sourceName = #fileOpened (#source compInfo)}
-		    before (checkErr "codegen")
+     *           compInfo: ?.compInfo, checkErr : string -> unit, guid: guid} -> { ... }
+     * compiling the ast into the binary code: elab; pickUnpick; instrument; translate; codegen
+     *)
+    fun compile {source, ast, statenv, compInfo, checkErr, guid} = let
+	  val (absyn, nenv) =
+                elaborate {ast=ast, statenv=statenv, compInfo=compInfo}
+                before (checkErr "elaborate")
+          val {pid, pickle, exportLvars, exportPid, newenv} =
+                pickUnpick { context = statenv, env = nenv, guid = guid }
+                before (checkErr "pickUnpick")
+          val absyn =
+                instrument {source=source, senv = statenv, compInfo=compInfo} absyn
+                before (checkErr "instrument")
+          val {flint, imports} = translate {
+                    absyn=absyn, exportLvars=exportLvars,
+                    newstatenv=newenv, oldstatenv=statenv,
+                    compInfo=compInfo
+                  }
+                before checkErr "translate"
+          val {csegments, imports} = codegen {
+                    flint = flint, imports = imports,
+                    sourceName = #fileOpened (#source compInfo)
+                  }
+		before (checkErr "codegen")
+        (*
+         * interp mode was [is] currently turned off.
+         *   [DBM 2022.10.19] Does interp mode still exist?]
+         *
+         * if !Control.interp then Interp.interp flint
+         *  else codegen {flint=flint, splitting=splitting, compInfo=cinfo})
+         *)
+	  in {
+            csegments = csegments,      (* produced by codegen *)
+            imports = imports,          (* produced by translate > codegen *)
+            absyn = absyn,              (* produced by elaborate > instrument*)
+            newstatenv = newenv,        (* produced by elaborate (nenv) > pickUnpick (newenv) *)
+            exportPid = exportPid,      (* produced by pickUnpick *)
+            exportLvars = exportLvars,  (* produced by pickUnpick *)
+            staticPid = pid,            (* produced by pickUnpick *)
+            pickle = pickle             (* produced by pickUnpick *)
+	  } end (* function compile *)
 
-	 (* interp mode was [is] currently turned off.
-	  *   [DBM 2022.10.19] Does interp mode still exist?]
-	  *
-	  * if !Control.interp then Interp.interp flint
-	  *  else codegen {flint=flint, splitting=splitting, compInfo=cinfo}) *)
-
-	  in {csegments = csegments,     (* produced by codegen *)
-	      imports = imports,         (* produced by translate > codegen *)
-	      absyn = absyn,             (* produced by elaborate > instrument*)
-	      newstatenv = newenv,       (* produced by elaborate (nenv) > pickUnpick (newenv) *)
-	      exportPid = exportPid,     (* produced by pickUnpick *)
-	      exportLvars = exportLvars, (* produced by pickUnpick *)
-	      staticPid = pid,           (* produced by pickUnpick *)
-	      pickle = pickle}           (* produced by pickUnpick *)
-
-	 end (* function compile *)
-
-end (* top local *)
-end (* functor CompileF *)
+  end (* functor CompileF *)

@@ -199,7 +199,7 @@ fish() {
     fi
   done
   if [ $ORIG_CM_DIR_ARC = unknown ] ; then
-    complain "$cmd: could not determine CM metadata directory name"
+    complain "Could not determine CM metadata directory name"
   else
     vsay "$cmd: CM metadata directory name is \"${ORIG_CM_DIR_ARC}\""
   fi
@@ -302,7 +302,6 @@ installdriver _heap2exec heap2exec
 #
 ALLOC=1M
 
-
 # OS-specific things for building the runtime system
 #
 RT_MAKEFILE=mk.$ARCH-$OPSYS
@@ -341,11 +340,11 @@ else
   if [ x"$INSTALL_DEV" = xyes ] ; then
     vsay $cmd: Building LLVM for all targets
     cd "$LLVMDIR"
-    ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "unable to build LLVM"
+    ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
     vsay $cmd: Building LLVM
     cd "$LLVMDIR"
-    ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "unable to build LLVM"
+    ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   fi
   cd "$RUNTIMEDIR/objs"
   vsay $cmd: Compiling the run-time system.
@@ -366,8 +365,6 @@ else
     complain "Run-time system build failed for some reason."
   fi
 fi
-
-# return to $SMLNJ_ROOT directory
 cd "$SMLNJ_ROOT"
 
 #
@@ -483,6 +480,8 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   # builds are not confused.
   #
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
+  export SMLNJ_HOME
+  SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
   cd doc
   if autoconf -Iconfig ; then
     :

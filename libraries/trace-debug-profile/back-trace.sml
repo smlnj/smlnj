@@ -17,17 +17,16 @@
  *
  * Author: Matthias Blume (blume@tti-c.org)
  *)
+
 structure BackTrace : sig
+
     val trigger : unit -> 'a
     val monitor : (unit -> 'a) -> 'a
     val install : unit -> unit
-  end =
 
-struct
+end = struct
 
-local
-  structure M = IntRedBlackMap
-in
+    structure M = IntRedBlackMap
 
     (* Home-cooked set representation:
      *  This relies on two things:
@@ -239,5 +238,4 @@ in
 
     fun trigger () = raise BTraceTriggered (report ())
 
-end (* top local *)
-end (* structure BackTrace *)
+  end

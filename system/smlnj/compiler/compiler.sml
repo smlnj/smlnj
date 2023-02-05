@@ -1,10 +1,11 @@
-(* system/smlnj/compiler/compiler.sml
- * 
- * (C) 2022 The Fellowship of SML/NJ (www.smlnj.org)
+(* compiler.sml
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *)
 
 structure Compiler =
-struct
+  struct
     structure Stats = Stats
     structure Control = Control
     structure Source = Source
@@ -29,4 +30,5 @@ struct
     open Backend
 
     val version = Version.version
-end
+
+  end

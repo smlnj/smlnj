@@ -168,9 +168,9 @@ structure VectorSlice :> VECTOR_SLICE =
 
     fun all pred (SL(base, start, len)) = let
 	  val stop = start ++ len
-	  fun ex i = (i < stop) andalso (pred (usub (base, i)) orelse ex (i ++ 1))
+	  fun al i = (i >= stop) orelse (pred (usub (base, i)) andalso al (i ++ 1))
 	  in
-	    ex start
+	    al start
 	  end
 
     fun concat sll =

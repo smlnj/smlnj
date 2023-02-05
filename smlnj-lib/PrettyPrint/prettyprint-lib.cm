@@ -1,4 +1,4 @@
-(* smlnj-lib/PrettyPrint/prettyprint-lib.cm
+(* prettyprint-lib.cm
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -14,4 +14,3 @@ Library
 is
 
   src/sources.cm
-
