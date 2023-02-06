@@ -125,7 +125,7 @@ val text : string -> format = TEXT
 fun integer (i: int) : format = text (Int.toString i)
 
 (* string : string -> format *)
-fun string (s: string) = text (String.concat ["\"", s, "\""])  (* was using PrintUtil.formatString *)
+fun string (s: string) = text (String.concat ["\"", String.toString s, "\""])  (* was using PrintUtil.formatString *)
 
 (* char : char -> format *)
 fun char (c: char) = cblock [text "#", string (Char.toString c)]
