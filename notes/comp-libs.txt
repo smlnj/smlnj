@@ -55,6 +55,14 @@ ElabData/pickle/rehash.sml
 
 ElabData/prim/prim-env.sml
 
+-----------------
+If the top-level "components/directories" of the compiler like Elaborate are too big
+to form CM Libraries for some reason (bin files too big?), then perhaps there should
+be a third form of CM description (in addition to Group and Library) for such big
+groups that do not and cannot be members of libraries. Not sure what these could be called,
+maybe "Component", "Supergroup", "Cluster"?  I'm just bothered that the "Group" designation
+is essentially overloaded and used for two quite different purposes (internal subdivision
+of largish libraries, and top-level, library-less groups like basis.cm.
 
 ------------------
 It would be good to have a comprehensive map of the CM group/library structure
