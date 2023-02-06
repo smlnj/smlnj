@@ -230,7 +230,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	       in renderFormats (formats, cc, newlinep)
 	      end (* fun renderABLOCK *)
 
-    in (* the initial "context" of a render is a vitrual newline + 0 indentation *)
+    in (* the initial "context" of a render is a virtual newline + 0 indentation *)
        ignore (render0 (format, 0, 0, true))
    end (* fun render *)
 
