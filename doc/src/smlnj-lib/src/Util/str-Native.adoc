@@ -1,0 +1,23 @@
+= Native structure aliases
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+These structure aliases provide portable names for the host machine's
+native numeric types.
+
+== Synopsis
+
+[source,sml]
+------------
+structure NativeInt : INTEGER
+structure NativeWord : WORD
+------------
+
+== Description
+
+See the {sml-basis-url}/integer.html[`INTEGER`]
+and {sml-basis-url}/word.html[`WORD`] signatures for
+details about the structures.

@@ -155,6 +155,12 @@ xref:fun-MonoArrayFn.adoc[`[.kw]#functor# MonoArrayFn`]::
 xref:sig-MONO_HASH_TABLE.adoc[`[.kw]#signature# MONO_HASH_TABLE`]::
   Defines an interface to imperative hash tables with monomorphic keys.
 
+xref:str-Native.adoc[`[.kw]#structure# NativeInt`]::
+  An alias to the native-sized integer structure (_e.g._, `Int64`).
+
+xref:str-Native.adoc[`[.kw]#structure# NativeWord`]::
+  An alias to the native-sized word structure (_e.g._, `Word64`).
+
 xref:sig-ORD_KEY.adoc[`[.kw]#signature# ORD_KEY`]::
   Defines an interface to an abstract type
   of keys with a comparison function.
@@ -185,7 +191,9 @@ xref:str-Rand.adoc[`[.kw]#structure# Rand`]::
   Provides a simple random number generator.
 
 xref:str-Random.adoc[`[.kw]#structure# Random`]::
-  Provides a more sophisticated random number generator.
+  Pseudo-random-number generation using the
+  http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/emt.html[_Mersenne Twister_
+  algorithm].
 
 xref:str-RealOrderStats.adoc[`[.kw]#structure# RealOrderStats`]::
   **To be written**

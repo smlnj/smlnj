@@ -91,6 +91,10 @@ configure~
 config.status
 autom4te.cache
 
+# ml-yacc description files
+#
+*.grm.desc
+
 # project-specific files
 sml.boot.*
 sml.bin.*
@@ -101,6 +105,8 @@ runtime/bin/
 runtime/include/llvm-c/
 runtime/include/llvm/
 runtime/lib/
+system/sml.amd64-*
+system/sml.arm64-*
 tools/asdl/**/Makefile
 tools/asdl/config/config_h.in
 tools/asdl/src/asdlgen/back-end/sml/fragments.gmk

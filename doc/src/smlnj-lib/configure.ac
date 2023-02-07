@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+dnl COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
 dnl All rights reserved.
 dnl
 dnl This the configuration script for autoconf version 2.60+.
@@ -8,7 +8,7 @@ dnl This the configuration script for autoconf version 2.60+.
 AC_INIT([smlnj-lib-doc],[1.0],[],[],[http://smlnj.org])
 
 AC_PREREQ([2.71])
-AC_COPYRIGHT([[COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)]])
+AC_COPYRIGHT([[COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)]])
 AC_CONFIG_SRCDIR(src/JSON/json-lib.adoc)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
