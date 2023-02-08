@@ -1,0 +1,65 @@
+(* compiler/CPS/cps.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The CPS stages
+ * redirected as Library in $smlnj/viscomp/cps.cm
+ *)
+
+Group
+
+  (* what needs to be exported? *)
+
+is
+
+CPS/clos/globalfix.sml
+CPS/clos/closure.sml
+CPS/clos/freeclose.sml
+CPS/clos/staticprof.sml
+CPS/clos/unrebind.sml
+
+CPS/convert/convert.sml
+CPS/convert/cpstrans.sml
+CPS/convert/switch.sml
+
+CPS/cps/cps.sig
+CPS/cps/cps.sml
+CPS/cps/ppcps.sml
+CPS/cps/cps-util.sml
+
+CPS/opt/contract.sml
+CPS/opt/contract-prim.sml
+CPS/opt/cpsopt.sml
+CPS/opt/divcnv.sml
+CPS/opt/eta.sml
+CPS/opt/etasplit.sml
+CPS/opt/expand.sml
+CPS/opt/flatten.sml
+CPS/opt/infcnv.sml
+CPS/opt/lower.sml
+CPS/opt/num64cnv.sml
+CPS/opt/streqlcnv.sml
+CPS/opt/testcnv.sml
+CPS/opt/uncurry.sml
+
+CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
+CPS/main/cps-comp.sml
+CPS/main/feedback.sml
+CPS/main/limit.sml
+CPS/main/literals.sml
+CPS/main/new-literals.sml
+CPS/main/normalize-cluster.sml
+CPS/main/spill-fn.sml
+
+(* Basis libaries *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm     (* smlnj-lib/Util *)
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* need to add access to:
+   structure Control  - TopLevel/main/control.sml
+   FLINT - FLINT/flint/flint.sml (flint.cm) 
+ *)

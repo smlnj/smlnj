@@ -1,0 +1,12 @@
+(* smlnj/viscomp/cps.cm
+ *
+ * (C) 2023 The Fellowship of SML/NJ (www.smlnj.org)
+ *
+ * CPS optimization stages
+ *)
+
+Library
+	group($compiler/CPS/cps.cm)
+is
+	(* reference to our only group... *)
+	$compiler/CPS/cps.cm

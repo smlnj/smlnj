@@ -32,7 +32,7 @@ Group
 	structure FLINTOpt
 
 	(* stuff that lived (or should have) in Frontend (aka GenericVC) *)
-	structure Control
+	structure Control   (* TopLevel/main/control.sml *)
 	structure ArithOps
 	structure Primop
 	structure PrimopBind
@@ -55,20 +55,23 @@ Group
 	structure CoreSym
 	structure FLINT
 
-        structure Types
-        structure EntityEnv
-        structure Modules
-        structure Stamps
-        structure Bindings
-        structure TypesUtil
-        structure Variable
-        structure ModuleUtil
-	structure PrimopId
-        structure BasicTypes
-        structure PPType
-        structure Access
-	structure Unify
-	structure SigMatch
+        (* ElabData structures - from $smlnj/viscomp/elabdata.cm *)
+        structure Types         (* types/types.sml *)
+        structure EntityEnv     (* modules/entityenv.sml *)
+        structure Modules       (* modules/modlules.sml *)
+        structure Stamps        (* basics/stamps.sml *)
+        structure Bindings      (* statenv/bindings.sml *)
+        structure TypesUtil     (* types/typesutil.sml *)
+        structure Variable      (* syntax/variable.sml *)
+        structure ModuleUtil    (* modules/moduleutil.sml *)
+	structure PrimopId      (* prim/primop-id.sml *)
+        structure BasicTypes    (* types/basictypes.sml *)
+        structure PPType        (* types/pptype.sml *)
+        structure Access        (* basics/access.sml *)
+
+        (* Elaborator structures - from $smlnj/viscomp/elaborate.cm *)
+	structure Unify         (* types/unify.sml *)
+	structure SigMatch      (* modules/sigmatch.sml *)
 
 	structure PickleSymPid
 	structure UnpickleSymPid
@@ -79,7 +82,8 @@ Group
 	structure PrimEnv
 
 	(* corresponding signatures *)
-	signature CONTROL
+
+	signature CONTROL      (* TopLevel/main/control.sig *)
 	signature ENVIRONMENT
 	signature PRIM_ENV
 	signature ENVREF
@@ -90,23 +94,26 @@ Group
 
 	signature PRIM_ENV
 
+        (* FLINT signatures - from $smlnj/viscomp/flint.cm *)
 	signature FLINT
 
-        (* ElabData *)
-	signature TYPES
-	signature ENTITY_ENV
-	signature MODULES
-	signature STAMPS
-	signature BINDINGS
-	signature TYPESUTIL
-	signature VARIABLE
-	signature MODULEUTIL
-	signature BASICTYPES
-	signature PPTYPE
-	signature ACCESS
+        (* ElabData signatures - from $smlnj/viscomp/elabdata.cm *)
+	signature TYPES         (* types/types.sig *)
+	signature ENTITY_ENV    (* modules/entityenv.sig *)
+	signature MODULES       (* modules/modlules.sig *)
+	signature STAMPS        (* basics/stamps.sig *)
+	signature BINDINGS      (* statenv/bindings.sig *)
+	signature TYPESUTIL     (* types/typesutil.sig *)
+	signature VARIABLE      (* syntax/variable.sig *)
+	signature MODULEUTIL    (* modules/moduleutil.sig *)
+	signature BASICTYPES    (* types/basictypes.sig *)
+	signature PPTYPE        (* types/pptype.sig *)
+	signature ACCESS        (* basics/access.sig *)
+
+        (* Elaborator signatures - from $smlnj/viscomp/elaborate.cm *)
 	signature UNIFY
 
-	(* FLINT: export of structures required to use FLINT directly *)
+	(* FLINT structures - from $smlnj/viscomp/flint.cm *)
 	structure TransUtil
 	structure Translate
 	structure Lty
@@ -121,8 +128,8 @@ Group
 	structure Specialize
 	structure LambdaVar
 	structure ChkFlint
-	structure DebIndex
 
+	structure DebIndex
 
 	signature TARGET
 	structure Target
@@ -169,104 +176,11 @@ ElabData/pickle/rehash.sml
 
 ElabData/prim/prim-env.sml
 
-(* The FLINT optimizer ("middle-end"). *)
-(* move to FLINT/flint.cm ? *)
-FLINT/flint/chkflint.sml
-FLINT/flint/flint.sig
-FLINT/flint/flint.sml
-FLINT/flint/flintutil.sml
-FLINT/flint/ppflint.sig
-FLINT/flint/ppflint.sml
-FLINT/flint/tvarcvt.sml
-FLINT/kernel/lty.sig
-FLINT/kernel/lty.sml
-FLINT/kernel/ltykernel.sig
-FLINT/kernel/ltykernel.sml
-FLINT/kernel/ltydef.sig
-FLINT/kernel/ltydef.sml
-FLINT/kernel/funrecmeta.sig
-FLINT/kernel/funrecmeta.sml
-FLINT/kernel/ltybasic.sig
-FLINT/kernel/ltybasic.sml
-FLINT/kernel/ltyextern.sig
-FLINT/kernel/ltyextern.sml
-FLINT/kernel/ltydict.sml
-FLINT/kernel/primtyc.sig
-FLINT/kernel/primtyc.sml
-FLINT/kernel/ltykindchk.sml
-FLINT/kernel/pplty.sml
+(* FLINT stuff moved to FLINT/flint.cm *)
 
-FLINT/main/flint-opt.sml
-FLINT/main/control.sig
-FLINT/main/control.sml
-FLINT/opt/fixfix.sml
-FLINT/opt/collect.sml
-FLINT/opt/fcontract.sml
-FLINT/opt/optutils.sml
-FLINT/opt/lcontract.sml
-FLINT/opt/recover.sml
-FLINT/opt/specialize.sml
-FLINT/opt/loopify.sml
-FLINT/opt/lift.sml
-FLINT/plambda/chkplexp.sml
-FLINT/plambda/flintnm.sml
-FLINT/plambda/pflatten.sig
-FLINT/plambda/pflatten.sml
-FLINT/plambda/plambda.sig
-FLINT/plambda/plambda.sml
-FLINT/plambda/pplexp.sml
-FLINT/plambda/reorder.sml
-FLINT/reps/coerce.sml
-FLINT/reps/equal.sml
-FLINT/reps/reify.sml
-FLINT/reps/rttype.sml
-FLINT/reps/typeoper.sml
-FLINT/reps/wrapping.sml
-FLINT/trans/module-plists.sml
-FLINT/trans/transtkind.sml
-FLINT/trans/pequal.sml
-FLINT/trans/transutil.sml
-FLINT/trans/translate.sml
-FLINT/trans/transprim.sml
-FLINT/trans/transtypes.sml
-FLINT/trans/literal-to-num.sml    (* uses CoreIntInf functionality *)
+(* CPS stuff moved to CPS/cps.cm *)
 
-(* The CPS stages - move to CPS/cps.cm? *)
-CPS/clos/globalfix.sml
-CPS/clos/closure.sml
-CPS/clos/freeclose.sml
-CPS/clos/staticprof.sml
-CPS/clos/unrebind.sml
-CPS/convert/convert.sml
-CPS/convert/cpstrans.sml
-CPS/convert/switch.sml
-CPS/cps/cps.sig
-CPS/cps/cps.sml
-CPS/cps/ppcps.sml
-CPS/cps/cps-util.sml
-CPS/opt/contract.sml
-CPS/opt/contract-prim.sml
-CPS/opt/cpsopt.sml
-CPS/opt/divcnv.sml
-CPS/opt/eta.sml
-CPS/opt/etasplit.sml
-CPS/opt/expand.sml
-CPS/opt/flatten.sml
-CPS/opt/infcnv.sml
-CPS/opt/lower.sml
-CPS/opt/num64cnv.sml
-CPS/opt/streqlcnv.sml
-CPS/opt/testcnv.sml
-CPS/opt/uncurry.sml
-CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
-CPS/main/cps-comp.sml
-CPS/main/feedback.sml
-CPS/main/limit.sml
-CPS/main/literals.sml
-CPS/main/new-literals.sml
-CPS/main/normalize-cluster.sml
-CPS/main/spill-fn.sml
-
+(* NewCodeGen *)
 NewCodeGen/cfg/cfg.sml
 NewCodeGen/cfg/ppcfg.sml
 NewCodeGen/cfg/cfg-util.sml
@@ -298,6 +212,8 @@ $smlnj/viscomp/elabdata.cm
 $smlnj/viscomp/elaborate.cm
 $smlnj/viscomp/debugprof.cm
 $smlnj/viscomp/execute.cm
+$smlnj/viscomp/flint.cm
+$smlnj/viscomp/cps.cm
 
 (* Other libaries. *)
 $smlnj/basis/basis.cm

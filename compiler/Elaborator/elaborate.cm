@@ -2,6 +2,9 @@
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
+ * 
+ * Elaboration modules
+ * Redirected as Library in $smlnj/viscomp/elaborate.cm
  *)
 
 Group

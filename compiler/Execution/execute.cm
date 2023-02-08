@@ -1,10 +1,11 @@
-(* execute.cm
+(* compiler/Execution/execute.cm
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Library containing code related to code objects, binfile contents, and
+ * Group containing code related to code objects, binfile contents, and
  * execution (aka "linking").
+ * Redirected as Library in $smlnj/viscomp/execute.cm
  *)
 
 Group
