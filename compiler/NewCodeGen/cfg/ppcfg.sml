@@ -66,7 +66,8 @@ structure PPCfg : sig
 	    | P.LIMIT n => concat["needGC(", Word.fmt StringCvt.DEC n, ")"]
 	  (* end case *))
 
-    fun allocToString (P.RECORD{desc, mut=false}) =
+    fun allocToString P.SPECIAL = "special"
+      | allocToString (P.RECORD{desc, mut=false}) =
 	  concat["record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
       | allocToString (P.RECORD{desc, mut=true}) =
 	  concat["mut_record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
