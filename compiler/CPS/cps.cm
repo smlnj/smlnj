@@ -11,14 +11,23 @@ Group
 
   (* What modules need to be exported?
    * What other CM groups or libraries import from cps.cm? (What are the clients of cps.cm?) *)
-  functor CPSCompFn  (* CPS/main/cps-comp.sml -- called in NewCodeGen/main/code-gen-fn.sml!! Circularity! *)
-(* internal use:
-  functor CPStrans   (* CPS/convert/cpstrans.sml *)
-  functor CPSopt     (* CPS/opt/cpsopt.sml *)
-  functor Closure    (* CPS/clos/closure.sml *)
-  functor SpillFn    (* CPS/main/spill-fn.sml *)
-*)
+  structure CPS
+  structure CPSUtil
+  structure PPCps
+
+  (* functor CPSCompFn  (CPS/main/cps-comp.sml)
+   -- CPSCompFn is called in NewCodeGen/main/code-gen-fn.sml, but it depends on several things
+   defined in NewCodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
+   to NewCodeGen or its functionality should be split between a function in CSP that does not
+   depend on NewCodeGen, and a function in NewCodeGen that deals with the cfg part.  If we move it
+   to NewCodeGen, we will have to export 9 CSP modules that it depends on.  See MAP-CPS.txt. *)
+
 is
+
+CPS/cps/cps.sig
+CPS/cps/cps.sml
+CPS/cps/ppcps.sml
+CPS/cps/cps-util.sml
 
 CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
 CPS/main/cps-comp.sml
@@ -29,20 +38,15 @@ CPS/main/new-literals.sml
 CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 
+CPS/convert/convert.sml
+CPS/convert/cpstrans.sml
+CPS/convert/switch.sml
+
 CPS/clos/globalfix.sml
 CPS/clos/closure.sml
 CPS/clos/freeclose.sml
 CPS/clos/staticprof.sml
 CPS/clos/unrebind.sml
-
-CPS/convert/convert.sml
-CPS/convert/cpstrans.sml
-CPS/convert/switch.sml
-
-CPS/cps/cps.sig
-CPS/cps/cps.sml
-CPS/cps/ppcps.sml
-CPS/cps/cps-util.sml
 
 CPS/opt/contract.sml
 CPS/opt/contract-prim.sml

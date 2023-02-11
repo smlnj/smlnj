@@ -3,12 +3,16 @@ compiler/MAP-NCG.txt
 Map of NewCodeGen (as a "library")
 
 * Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
-* Imports from outside the CPS library are indicated by an asterisk (e.g. LambdaVar*)
+* Imports from outside the NewCodeGen library are indicated by an asterisk (e.g. LambdaVar*)
   [We assume import of basis.cm and smlnj-lib.cm.] 
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
 
 NewCodeGen/
 
 newcodegen.cm  -- the NewCodeGen Group/Library CDF
+[see also $smlnj/viscomp/newcodegen.cm]
 
 NewCodeGen/cfg/
 

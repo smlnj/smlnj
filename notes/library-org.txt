@@ -1,0 +1,51 @@
+smlnj/notes/library-org.txt
+
+Notes on the compiler "component" CM libraries
+
+[Desired] Dependency graph (skeleton, missing some import edges):
+
+    TopLevel
+       |
+    CodeGen (CFG)
+       |
+      CPS
+       |
+     FLINT   Elaborate
+       \      /
+        \    /
+       ElabData	   Parse
+          |
+        Basics
+
+May possibly want a finer-grain library structure (E.g. break
+up Basics into multiple libraries).
+
+
+* Most of the libraries depend on toplevel.cm for Control. So TopLevel
+  is also a common import!
+
+* Should Control, ErrorMsg, Target be included in a new "low-level"
+  library, maybe called Core? or Admin?
+
+  Core/
+    control/
+      < Control: CONTROL
+        (incl. Contro.Print?)
+
+    errormsg/
+      < ErrorMsg ...
+      
+    target/
+      < Target
+
+  TopLevel should not be at the bottom of the dependency graph!
+
+* TopLevel should be renamed. To what?
+  It should be responsible for the interactive system, the so called
+  REPL. This needs access to the whole chain: lexer, parser, elaborator,
+  FLINT, CPS, NCG.
+
+  Interact, REPL
+
+* NewCodeGen should be renamed CodeGen? Or what?
+

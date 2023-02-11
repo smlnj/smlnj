@@ -157,7 +157,8 @@ is
 
 (* ------------------------------- Members ------------------------------- *)
 
-(* A (miscellaneous) utility. Why is this here? It's the only thing compiled by core.cm. *)
+(* A (miscellaneous) utility. Why is this here? It's the only thing compiled by core.cm.
+ * Its exported structure ConstArith, is not re-exported from core.cm. *)
 Library/const-arith/sources.cm
 
 (* Moved:

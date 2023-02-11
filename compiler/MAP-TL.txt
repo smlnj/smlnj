@@ -1,0 +1,70 @@
+compiler/MAP-TL.txt
+
+Map of TopLevel (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the CPS library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.] 
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+TopLevel/
+
+toplevel.cm  CDF for TopLevel Group/Library
+[see also $smlnj/viscomp/toplevel.cm]
+
+(* TopLevel files *)
+TopLevel/environ/
+  environ.sig
+  environ.sml
+
+TopLevel/interact/
+  envref.sml
+  evalloop.sig
+  evalloop.sml
+  interact.sig
+  interact.sml
+
+TopLevel/backend/
+  backend.sig
+  backend-fn.sml
+
+TopLevel/main/
+  control.sig
+  control.sml
+  cconfig.sig
+  code-generator.sig
+  compile.sig
+  compile.sml
+
+TopLevel/print/
+  ppdec.sml
+  ppobj.sml
+  pptable.sml
+  compilerpptable.sml
+  printhooks.sml
+
+
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* elabdata.cm: PickMod, UnpickMod, Stamps, GenModId
+   basics.cm: PersStamps, Symbol, ErrorMsg
+   elaborate.cm: ElabDebug
+   basis.cm: Time, SMLofNJ, Unsafe, ...
+*)
+
+(* viscomp *)
+$smlnj/viscomp/basics.cm    (* PersStamps, Symbol, ErrorMsg *)
+$smlnj/viscomp/elabdata.cm  (* Stamps, PickMod, UnpickMod, GenModIdMap *)
+$smlnj/viscomp/elaborate.cm (* ElabDebug *)
+
+(* Basis *)
+$smlnj/basis/basis.cm  (* Time, SMLofNJ, Unsafe, etc. *)
+
+(* smlnj-lib "incorporated" libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
