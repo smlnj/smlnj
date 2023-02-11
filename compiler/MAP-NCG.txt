@@ -1,0 +1,171 @@
+compiler/MAP-NCG.txt
+
+Map of NewCodeGen (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the CPS library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.] 
+
+NewCodeGen/
+
+newcodegen.cm  -- the NewCodeGen Group/Library CDF
+
+NewCodeGen/cfg/
+
+  cfg.sml
+    < CFG_Prim
+      CFG
+    > LambdaVar* elabdata.cm
+      CTypes*    elabdata.cm  (ElabData/prim/c-types.sml) 
+      CPS* [str] cps.cm
+
+    Note: Why does the file NewCodeGen/cfg-pickle/cfg.sml exist? It duplicates the definition
+      of CFG_Prim from NewCodeGen/cgf/cfg.sml and the definition of CTypes from
+      ElabData/prim/c-types.sml. But cfg-pickle/cfg.sml is not included in the CDF for
+      NewCodeGen (original core.cm or new NewCodeGen/newcodegen.cm), so presumably it is
+      not being compiled or used. It should be deleted, if only to avoid confusion.
+
+  ppcfg.sml
+    < PPCfg
+    > LambdaVar* elabdata.cm 
+      Control*   toplevel.cm
+      ArithOps*  elabdata.cm
+      PPCps*     cps.cm
+
+      CFG (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim (NewCodeGen/cfg/cfg.sml)
+
+  cfg-util.sml
+    < CFGUtil
+    > CFG (NewCodeGen/cfg/cfg.sml)
+
+NewCodeGen/cfg-pickle/
+
+  cfg-pickle.sig
+    < LAMBDA_VAR_PICKLE
+      CTYPES_PICKLE
+      CFG_PRIM_PICKLE
+      CFGPICKLE
+    > LambdaVar* elabdata.cm 
+      CTypes*    elabdata.cm  (ElabData/prim/c-types.sml) 
+
+      CFG (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim (NewCodeGen/cfg/cfg.sml)
+   
+  cfg-pickler.sml
+    < CFGPickler
+    > ASDLFilePickle*   ?
+      ASDLMemoryPickle* ?
+
+      CFGFilePickle
+      CFGMemoryPickle
+
+  cfg-file-pickle.sml
+    < LambdaVarFilePickle
+      CTypesFilePickle
+      CFG_PrimFilePickle 
+      CFGFilePickle
+    > ASDLFilePickle* ?
+      CTypes*     elabdata.cm
+
+      CFG (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim (NewCodeGen/cfg/cfg.sml)
+
+  cfg-memory-pickle.sml
+    < LambdaVarMemoryPickle
+      CTypesMemoryPickle
+      CFG_PrimMemoryPickle 
+      CFGMemoryPickle
+    > ASDLMemoryPickle*
+      CTypes*     elabdata.cm
+
+      CFG (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+
+  lambda-var-pickle.sml
+    < LambdaVarPickle
+    > LambdaVar* elabdata.cm
+
+
+NewCodeGen/cps-to-cfg/
+
+  cps-info.sml
+    < CPSInfo
+    > LambdaVar*  elabdata.cm 
+      Target*     toplevel.cm
+      CPS*        cps.cm
+      CPSUtil*    cps.cm
+
+      CFG (NewCodeGen/cfg/cfg.sml) 
+      InvokeGC (NewCodeGen/cps-to-cfg/invoke-gc.sml)
+
+  invoke-gc.sml
+    < InvokeGC
+    > LambdaVar*  elabdata.cm 
+
+      CFG (NewCodeGen/cfg/cfg.sml) 
+      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+      ObjectDesc (NewCodeGen/main/object-desc.sml)
+
+  cps-to-cfg-fn.sml
+    < CPStoCFGFn
+    > LambdaVar*   elabdata.cm 
+      CPS* [str]   cps.cm
+      CPSUtil*     cps.cm
+      CPSInfo*     cps.cm
+      PPCps*       cps.cm
+      Cluster*     cps.cm
+      Control*     toplevel.cm
+
+      MACH_SPEC (NewCodeGen/main/mach-spec.sig)
+      CFG (NewCodeGen/cfg/cfg.sml) 
+      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+
+  tagged-arith.sml
+    < TaggedArith
+    > LambdaVar*   elabdata.cm 
+      CPS*         cps.cm
+      PPCps*       cps.cm
+
+      CFG (NewCodeGen/cfg/cfg.sml) 
+      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+
+
+NewCodeGen/main/
+
+  code-gen-fn.sml
+    < CodeGeneratorFn
+    > CODE_GENERATOR*  toplevel.cm (TopLevel/main/code-generator.sig)  
+      CPSCompFn* [fct] cps.cm
+
+      MACH_SPEC (NewCodeGen/main/mach-spec.sig)
+      CFGPickler (NewCodeGen/cfg-pickle/cfg-pickler.sml)
+
+  mach-spec.sig
+    < MACH_SPEC
+    > 
+      OBJECT_DESC (NewCodeGen/main/object-desc.sig)
+
+  default-machspec-fn.sml
+    < DefaultMachSpecFn
+    > 
+      MACH_SPEC (NewCodeGen/main/mach-spec.sig)
+
+  object-desc.sig
+    < OBJECT_DESC
+    >
+
+  object-desc.sml
+    < ObjectDesc
+    > Target*     basics.cm
+
+
+NewCodeGen/cps-to-cfg/cluster.sml -- replaced by CPS/main/cluster.sml?
+
+------------------------------------------------------------------------------------------
+Overall imports:
+
+   basics.cm
+   elabdata.cm
+   cps.cm
+   toplevel.cm

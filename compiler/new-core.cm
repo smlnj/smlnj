@@ -1,231 +1,203 @@
 (* core.cm
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * This is the machine-independent "core" part of the compiler
- * (but without the parser and elaborator data structures).
+ * New reorganized version where TopLevel, CPS, FLINT, and NewCodeGen member specs have been
+ * moved to corresponding local .cm files, e.g. TopLevel/toplevel.cm.
+ * [DBM, 2023.2]
+ *
+ * This is the machine-independent "core" part of the compiler, (mostly) re-exporting modules
+ * defined in the subsidiary component cm libraries (accessed via $smlnj/viscomp).
  * Machine-dependent parts are in backend-<arch>.cm.
  *
- * The parser is in Parse/parser.cm.
- * Elaborator data structures are in ElabData/elabdata.cm.
- * Basic definitions are in Basics/basics.cm.
+ * Subsidiary cm description files for top-level $SMLNJ/compiler directories:
+ *   Parse/parser.cm          -- lexer and parser
+ *   Basics/basics.cm         -- basic definitions
+ *   ElabData/elabdata.cm     -- elaboration data structures
+ *   Elaborator/elaborate.cm  -- elaboration (type checking, modules, etc.)
+ *   FLINT/flint.cm           -- FLINT IR and optimizations
+ *   CPS/cps.cm               -- CPS IR and optimizations
+ *   NewCodeGen/newcodegen.cm -- Flow graph IR, optimization, and generating LLVM input
+ *   TopLevel/toplevel.cm     -- interactive system, ...
  *
- * The present file is a group which gets referred to by the actual library
- * file in system/smlnj/viscomp/core.cm.
+ * No modules are re-exported from parser.cm, so it is not imported.
+ * 
+ * So this represents basically a partial union of the exports of basics.cm, elabdata.cm,
+ * flint.cm, cps.cm, newcodegen.cm, and toplevel.cm.
+ *
+ * The group defined here is used by the actual Library defined in the file
+ * system/smlnj/viscomp/core.cm.
  *)
 
 Group
-	signature BACKEND
 
-	(* To be able to separate machine-dependent parts of viscomp-lib.cm
+	(* [old comment] To be able to separate machine-dependent parts of viscomp-lib.cm
 	 * from machine-independent parts, we must also export the
 	 * the following things.... *)
 
-	signature MACH_SPEC
-	functor DefaultMachSpecFn
+        (* <- $smlnj/internal/smlnj-version.cm *)
+	structure SMLNJVersion    (* system/smlnj/internal/version.sml *)
 
-        functor BackendFn
 
-        functor CodeGeneratorFn
+        (* TopLevel <- $smlnj/viscomp/toplevel.cm *)
+	structure Control         (* main/control.sml *)
+	signature CONTROL         (* main/control.sig *)
 
-	structure FLINTOpt
+	structure Environment     (* environ/environ.sml *)
+	signature ENVIRONMENT     (* environ/environ.sig *)
 
-	(* stuff that lived (or should have) in Frontend (aka GenericVC) *)
-	structure Control   (* TopLevel/main/control.sml *)
-	structure ArithOps
-	structure Primop
-	structure PrimopBind
-	structure PrimopBindings
-	structure PrimEnv
-	structure Environment
-	structure EnvRef
-	structure ModuleId
-	structure GenModIdMap
+	structure EnvRef          (* interact/envref.sml *)
+	signature ENVREF          (* interact/envref.sml *)
 
-	structure PickMod
-	structure UnpickMod
-	structure Rehash
-	structure PickleSymPid
-	structure UnpickleSymPid
+	structure CompilerPPTable (* print/compilerpptable.sml *)
+	structure PrintHooks      (* print/compilerpptable.sml *)
 
-	structure CompilerPPTable
-	structure PrintHooks
-	structure SMLNJVersion
-	structure CoreSym
-	structure FLINT
+	signature BACKEND         (* backend/backend.sig *)
+        functor BackendFn         (* backend/backend-fn.sml *)
 
-        (* ElabData structures - from $smlnj/viscomp/elabdata.cm *)
-        structure Types         (* types/types.sml *)
-        structure EntityEnv     (* modules/entityenv.sml *)
-        structure Modules       (* modules/modlules.sml *)
-        structure Stamps        (* basics/stamps.sml *)
-        structure Bindings      (* statenv/bindings.sml *)
-        structure TypesUtil     (* types/typesutil.sml *)
-        structure Variable      (* syntax/variable.sml *)
-        structure ModuleUtil    (* modules/moduleutil.sml *)
-	structure PrimopId      (* prim/primop-id.sml *)
-        structure BasicTypes    (* types/basictypes.sml *)
-        structure PPType        (* types/pptype.sml *)
-        structure Access        (* basics/access.sml *)
 
-        (* Elaborator structures - from $smlnj/viscomp/elaborate.cm *)
-	structure Unify         (* types/unify.sml *)
-	structure SigMatch      (* modules/sigmatch.sml *)
+        (* NewCodeGen <- $smlnj/viscomp/newcodegen.cm *)
+	signature MACH_SPEC       (* main/mach-spec.sig *)
+        functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
+	functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
 
-	structure PickleSymPid
-	structure UnpickleSymPid
-	structure PickMod
-	structure UnpickMod
-	structure Rehash
+	structure CFG             (* cfg/cfg.sml *)
+	structure PPCfg           (* cfg/ppcfg.sml *)
 
-	structure PrimEnv
 
-	(* corresponding signatures *)
+        (* CPS -- anything to re-export from $smlnj/viscomp/cps.cm ? *)
 
-	signature CONTROL      (* TopLevel/main/control.sig *)
-	signature ENVIRONMENT
-	signature PRIM_ENV
-	signature ENVREF
-	signature MODULE_ID
 
-	signature PICKMOD
-	signature UNPICKMOD
+        (* FLINT <- $smlnj/viscomp/flint.cm *)
+	structure FLINTOpt        (* main/flint-opt.sml *)
 
-	signature PRIM_ENV
+	structure FLINT           (* flint/flint.sml *)
+	signature FLINT           (* flint/flint.sig *)
+	structure ChkFlint        (* flint/chkflint.sml *)
+	structure PPFlint         (* flint/ppflint.sml *)
 
-        (* FLINT signatures - from $smlnj/viscomp/flint.cm *)
-	signature FLINT
+	structure TransUtil       (* trans/transutil.sml *)
+	structure Translate       (* trans/translate.sml *)
 
-        (* ElabData signatures - from $smlnj/viscomp/elabdata.cm *)
-	signature TYPES         (* types/types.sig *)
-	signature ENTITY_ENV    (* modules/entityenv.sig *)
-	signature MODULES       (* modules/modlules.sig *)
-	signature STAMPS        (* basics/stamps.sig *)
-	signature BINDINGS      (* statenv/bindings.sig *)
-	signature TYPESUTIL     (* types/typesutil.sig *)
-	signature VARIABLE      (* syntax/variable.sig *)
-	signature MODULEUTIL    (* modules/moduleutil.sig *)
-	signature BASICTYPES    (* types/basictypes.sig *)
-	signature PPTYPE        (* types/pptype.sig *)
-	signature ACCESS        (* basics/access.sig *)
+	structure Lty             (* kernel/lty.sml *)
+	structure LtyKindChk      (* kernel/ltykindchk.sml *)
+	structure LtyKernel       (* kernel/ltykernel.sml *)
+	structure LtyDef          (* kernel/ltydef.sml *)
+	structure LtyExtern       (* kernel/ltyextern.sml *)
+	structure PrimTyc         (* kernel/primtyc.sml *)
+	structure PPLty           (* kernel/pplty.sml *)
 
-        (* Elaborator signatures - from $smlnj/viscomp/elaborate.cm *)
-	signature UNIFY
+	structure LContract       (* opt/lcontract.sml *)
+	structure Specialize      (* opt/specialize.sml *)
 
-	(* FLINT structures - from $smlnj/viscomp/flint.cm *)
-	structure TransUtil
-	structure Translate
-	structure Lty
-	structure LtyKindChk
-	structure LtyKernel
-	structure LtyDef
-	structure LtyExtern
-	structure PrimTyc
-	structure PPLty
-	structure PPFlint
-	structure LContract
-	structure Specialize
-	structure LambdaVar
-	structure ChkFlint
 
-	structure DebIndex
+        (* ElabData <- $smlnj/viscomp/elabdata.cm *)
+        structure Stamps          (* basics/stamps.sml *)
+	signature STAMPS          (* basics/stamps.sig *)
+        structure Access          (* basics/access.sml *)
+	signature ACCESS          (* basics/access.sig *)
+	structure CoreSym         (* basics/coresym.sml *)
+	structure LambdaVar       (* basics/lambdavar.sml *)
+	structure DebIndex        (* basics/debindex.sml -- probably don't need *)
 
-	signature TARGET
-	structure Target
+        structure Types           (* types/types.sml *)
+	signature TYPES           (* types/types.sig *)
+        structure TypesUtil       (* types/typesutil.sml *)
+	signature TYPESUTIL       (* types/typesutil.sig *)
+        structure BasicTypes      (* types/basictypes.sml *)
+	signature BASICTYPES      (* types/basictypes.sig *)
+        structure PPType          (* types/pptype.sml *)
+	signature PPTYPE          (* types/pptype.sig *)
 
-(* new codegen structures *)
-	structure CFG   (* NewCodeGen/cfg/cfg.sml *)
-	structure PPCfg (* NewCodeGen/cfg/ppcfg.sml *)
+        structure EntityEnv       (* modules/entityenv.sml *)
+	signature ENTITY_ENV      (* modules/entityenv.sig *)
+        structure Modules         (* modules/modlules.sml *)
+	signature MODULES         (* modules/modlules.sig *)
+        structure ModuleUtil      (* modules/moduleutil.sml *)
+	signature MODULEUTIL      (* modules/moduleutil.sig *)
+	structure ModuleId        (* modules/moduleid.sml *)
+	signature MODULE_ID       (* modules/moduleid.sml *)
+
+        structure Variable        (* syntax/variable.sml *)
+	signature VARIABLE        (* syntax/variable.sig *)
+
+	structure ArithOps        (* prim/arithops.sml *)
+	structure PrimopId        (* prim/primop-id.sml *)
+	structure Primop          (* prim/primop.sml *)
+	structure PrimopBind      (* prim/primop-bind.sml *)
+	structure PrimopBindings  (* prim/primop-bindings.sml *)
+	structure PrimEnv         (* prim/prim-env.sml *)
+	signature PRIM_ENV        (* prim/prim-env.sml *)
+
+        structure Bindings        (* statenv/bindings.sml *)
+	signature BINDINGS        (* statenv/bindings.sig *)
+	structure GenModIdMap     (* statenv/genmap.sml *)
+
+	structure PickleSymPid    (* pickle/pickle-sym-pid.sml *)
+	structure UnpickleSymPid  (* pickle/unpickle-sym-pid.sml *)
+	structure PickMod         (* pickle/pickmod.sml *)
+	signature PICKMOD         (* pickle/pickmod.sml *)
+	structure UnpickMod       (* pickle/unpickmod.sml *)
+	signature UNPICKMOD       (* pickle/unpickmod.sml *)
+	structure Rehash          (* pickle/rehash.sml *)
+
+
+        (* Elaborator <- $smlnj/viscomp/elaborate.cm *)
+	structure Unify           (* types/unify.sml *)
+	signature UNIFY           (* types/unify.sml *)
+	structure SigMatch        (* modules/sigmatch.sml *)
+
+
+        (* Basics <- $smlnj/viscomp/basics.cm *)
+	signature TARGET          (* compiler/target.sig *)
+	structure Target          (* compiler/target32.sml or target64.sml *)
 
 is
 
-TopLevel/environ/environ.sig
-TopLevel/environ/environ.sml
+(* ------------------------------- Members ------------------------------- *)
 
-TopLevel/interact/envref.sml
-TopLevel/interact/evalloop.sig
-TopLevel/interact/evalloop.sml
-TopLevel/interact/interact.sig
-TopLevel/interact/interact.sml
-
-TopLevel/backend/backend.sig
-TopLevel/backend/backend-fn.sml
-
-TopLevel/main/control.sig
-TopLevel/main/control.sml
-TopLevel/main/cconfig.sig
-TopLevel/main/code-generator.sig
-TopLevel/main/compile.sig
-TopLevel/main/compile.sml
-
-TopLevel/print/ppdec.sml
-TopLevel/print/ppobj.sml
-TopLevel/print/pptable.sml
-TopLevel/print/compilerpptable.sml
-TopLevel/print/printhooks.sml
-
-(* Semantic analysis (elaborator) specialized for SML/NJ. *)
-
-(* pickling and unpickling *)
-ElabData/pickle/pickle-sym-pid.sml
-ElabData/pickle/unpickle-sym-pid.sml
-ElabData/pickle/pickmod.sml
-ElabData/pickle/unpickmod.sml
-ElabData/pickle/rehash.sml
-
-ElabData/prim/prim-env.sml
-
-(* FLINT stuff moved to FLINT/flint.cm *)
-
-(* CPS stuff moved to CPS/cps.cm *)
-
-(* NewCodeGen *)
-NewCodeGen/cfg/cfg.sml
-NewCodeGen/cfg/ppcfg.sml
-NewCodeGen/cfg/cfg-util.sml
-NewCodeGen/cfg-pickle/cfg-pickle.sig
-NewCodeGen/cfg-pickle/cfg-pickler.sml
-NewCodeGen/cfg-pickle/cfg-file-pickle.sml
-NewCodeGen/cfg-pickle/cfg-memory-pickle.sml
-NewCodeGen/cfg-pickle/lambda-var-pickle.sml
-(*
-NewCodeGen/cps-to-cfg/cluster.sml
-*)
-NewCodeGen/cps-to-cfg/cps-info.sml
-NewCodeGen/cps-to-cfg/invoke-gc.sml
-NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml
-NewCodeGen/cps-to-cfg/tagged-arith.sml
-NewCodeGen/main/code-gen-fn.sml
-NewCodeGen/main/mach-spec.sig
-NewCodeGen/main/default-machspec-fn.sml
-NewCodeGen/main/object-desc.sig
-NewCodeGen/main/object-desc.sml
-
-(* Miscellaneous utilities. *)
+(* A (miscellaneous) utility. Why is this here? It's the only thing compiled by core.cm. *)
 Library/const-arith/sources.cm
 
-(* Libraries that are part of the visible compiler framework. *)
+(* Moved:
+   ElabData/pickle/*.sml, ElabData/prim/prim-env.sml --> elabdata.cm
+   TopLevel/* --> TopLevel/toplevel.cm
+   FLINT/* --> FLINT/flint.cm
+   CPS/* --> CPS/cps.cm
+   NewCodeGen/* --> NewCodeGen/newcodegen.cm
+
+NOTE: There is a cyclical dependency between CPS and NewCodeGen (as Groups) must be fixed.
+  As files (in core.cm), there is no cycle. So some files need to be moved, or possibly
+  the distribution of files in CPS, NewCodeGen, and (possibly) TopLevel needs to be rethought.
+*)
+
+
+(* ------------------------------- Imports ------------------------------- *)
+
+(* viscomp Libraries -- used for re-exports *)
 $smlnj/viscomp/basics.cm
-$smlnj/viscomp/parser.cm
-$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/elabdata.cm  (* now including ElabData/pickle and ElabData/prim/prim-env.sml *)
 $smlnj/viscomp/elaborate.cm
-$smlnj/viscomp/debugprof.cm
 $smlnj/viscomp/execute.cm
 $smlnj/viscomp/flint.cm
-$smlnj/viscomp/cps.cm
+$smlnj/viscomp/cps.cm  (* ?? what exports? what exports need to be re-exported here? *)
+$smlnj/viscomp/toplevel.cm
+$smlnj/viscomp/newcodegen.cm
 
 (* Other libaries. *)
 $smlnj/basis/basis.cm
 
-(* smlnj-lib *)
+(* smlnj-lib "incorporated" libraries *)
 $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
 
-$smlnj/asdl/asdl-lib.cm
-$/pickle-lib.cm
+$smlnj/asdl/asdl-lib.cm  (* what needs this? *)
 
-$smlnj/init/init.cmi : cm          (* to gain access at CoreIntInf *)
+$smlnj/internal/smlnj-version.cm  (* SMLNJVersion *)
 
-$smlnj/internal/smlnj-version.cm
+(* Moved:
+   $/pickle-lib.cm                         -- moved to elabdata.cm imports
+   $smlnj/init/init.cmi : cm  (CoreIntInf) -- moved to flint.cm imports
+*)

@@ -14,10 +14,10 @@ a pdf file, or Omnigraffle source file.
 
 Parse/
   lexing and parsing, producing ast (concrete syntax trees)
+  parser.cm
 
   Parse/ast/
-  "syntax trees" (really concrete, in contrast to absyn, which is
-  the true abstract syntax)
+    "syntax trees" (really concrete, in contrast to absyn, which is the true abstract syntax)
     ast.sig/sml
       the syntax tree types
       defs: AST, Ast: AST
@@ -66,9 +66,10 @@ Parse/
   * code found in directories ElabData, Elaborator
 
 Basics/
+  basics.cm
 
   Basics/symbol/
-  Symbol types involved in absyn and statenv and elaboration process
+    Symbol types involved in absyn and statenv and elaboration process
     symbol.sig/sml
       symbols (should be in ElabData/basics)
       defs: Symbol: SYMBOL
@@ -201,7 +202,8 @@ Basics/
 
 
 ElabData/
-Basic datastructures used in elaboration (including type checking)
+  Basic datastructures used in elaboration (including type checking)
+  elabdata.cm
 
   ElabData/basics/
   basic representation types used in elaboration, plus coresym
@@ -391,6 +393,7 @@ Basic datastructures used in elaboration (including type checking)
 Elaborator/
   The main elaborator code, plus some representation stuff in basics/,
   plus printing modules in print/.
+  elaborate.cm
 
   Elaborator/control/
   some control flags
@@ -524,11 +527,11 @@ Library/   (was MiscUtil)
   Utility modules that are candidates for eventual
   promotion to general libraries (crc and pickling)
   [if this is our choice for a general purpose pickling technology!]
+    pickle-lib.cm
+      CM description for smlnj-lib pickling/unpickling library
     crc.sml
       crc codes
       defs: CRC, CRC :> CRC
-    pickle-lib.cm
-      CM description for basic pickling/unpickling library
     pickle-util.sml
       supporting pickling
       defs: PICKLE_UTIL, PickleUtil :> PICKLE_UTIL
@@ -543,10 +546,10 @@ Library/   (was MiscUtil)
 FLINT/
 intermediate representation (a form of typed lambda calculus)
 
-  [see FLINT/MAP]
+  [see FLINT/MAP -- UNFINISHED]
 
 
-4. Back End
+4. Back End -- OBSOLETE
 -----------
 
 CodeGen/
@@ -565,11 +568,11 @@ CodeGen/
   sparc/
   x86/
 
-MLRISC/
+MLRISC/  -- INACTIVE/OBSOLETE
 MLRISC based code generators
 
 
-5. Execution Model
+5. Execution Model  -- OBSOLETE
 -----------------
 
 Execution/
@@ -699,38 +702,38 @@ absyn (abstract syntax)
     prettyprinting absyn
 
 types (internal representation of types)
- representations
-  Types          (ElabData/types/types.sig,sml)
-  ConRep         (Elaborator/basics/conrep.sml)
-  TKind          (ElabData/basics/tkind.sml) FLINT!
+ -- representations
+   Types          (ElabData/types/types.sig,sml)
+   ConRep         (Elaborator/basics/conrep.sml)
+   TKind          (ElabData/basics/tkind.sml) FLINT!
 
- utilities, manipulating and comparing types
-  TypesUtil      (ElabData/types/typesutil.sig,sml)
-  Tuples         (ElabData/types/tuples.sml)
-  EqTypes        (Elaborator/types/eqtypes.sml)
-  Unify          (Elaborator/types/unify.sml)
+ -- utilities, manipulating and comparing types
+   TypesUtil      (ElabData/types/typesutil.sig,sml)
+   Tuples         (ElabData/types/tuples.sml)
+   EqTypes        (Elaborator/types/eqtypes.sml)
+   Unify          (Elaborator/types/unify.sml)
 
- primitive types
-  BasicTypes     (ElabData/types/basictypes.sig,sml)
-  PrimEnv        (Semant/statenv/prim.sml)
+ -- primitive types
+   BasicTypes     (ElabData/types/basictypes.sig,sml)
+   PrimEnv        (Semant/statenv/prim.sml)
 
- printing types
-  PPType         (Elaborator/print/pptype.sml)
+ -- printing types
+   PPType         (Elaborator/print/pptype.sml)
 
-dynamic access info
-  LambdaVar      (ElabData/basics/lambdavar.sig,sml)
+dynamic access
+  LambdaVar        (ElabData/basics/lambdavar.sig,sml)
     lambda variables (dynamic access roots for variables)
-  Access         (ElabData/basics/access.sml)
+  Access           (ElabData/basics/access.sml)
     dynamic access modes
 
 environment  (generic environment: 'b env)
-  Env            (ElabData/basics/env.sml)
+  Env              (ElabData/basics/env.sml)
 
 static environment
-  Bindings       (ElabData/statenv/bindings.sig,sml)
-  StaticEnv      (ElabData/statenv/statenv.sml)
-  Lookup         (ElabData/statenv/lookup.sml)
-  BrowseStatEnv  (ElabData/statenv/browse.sml)
+  Bindings         (ElabData/statenv/bindings.sig,sml)
+  StaticEnv        (ElabData/statenv/statenv.sml)
+  Lookup           (ElabData/statenv/lookup.sml)
+  BrowseStatEnv    (ElabData/statenv/browse.sml)
 
 modules (signatures, structures, functors)
   Modules          (ElabData/modules/modules.sig,sml)
@@ -738,7 +741,7 @@ modules (signatures, structures, functors)
   ModuleId         (ElabData/modules/moduleid.sml)
   EntPath          (ElabData/modules/entpath.sml)
   EntityEnv        (ElabData/modules/entityenv.sml)
-  ModulePropLists  (Semant/modules/module-plists.sml) [FLINT]
+  ModulePropLists  (Semant/modules/module-plists.sml) [FLINT] -- obsolete?
 
 primop
   PrimOp           (ElabData/prim/primop.sml)
@@ -762,6 +765,10 @@ control
   Control_MC       (TopLevel/main/control.sml)
     controls for match compiler, substructure of Control
 
+outsiders
+  Time
+  Unsafe
+  SMLofNJ
 
 ==========================================================================
 
@@ -770,7 +777,7 @@ Notes
 
 1. CoreBasicTypes/BasicTypes and CorePrimTycNum/PrimTycNum splits are
 part of an attempt to have a subset of the front end modules that
-can be used as a generic, implementation dependent SML front-end.  That
+can be used as a generic, implementation-independent SML front-end.  That
 is, CoreBasicTypes defines only those types that must be provided in
 any SML implementation.  BasicTypes adds those types that are specific
 to SML/NJ.

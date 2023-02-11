@@ -133,8 +133,12 @@ is
 	compiler/target64.sml
 #endif
 
-	$smlnj/basis/basis.cm
-	$smlnj/smlnj-lib/smlnj-lib.cm
-	$smlnj/smlnj-lib/pp-lib.cm
-	$smlnj/smlnj-lib/controls-lib.cm
-	$smlnj/smlnj-lib/prettyprint-lib.cm
+(* ------------------------------- Imports ------------------------------- *)
+
+$smlnj/basis/basis.cm
+
+$smlnj/smlnj-lib/smlnj-lib.cm
+
+$smlnj/smlnj-lib/pp-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm

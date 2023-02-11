@@ -1,9 +1,10 @@
-(* elabdata.cm
+(* compiler/ElabData/elabdata.cm
  *
  * (C) 2001 Lucent Technologies, Bell Labs
  *
- * A library defining data structures used by the SML/NJ elaborator.
+ * A group(!) defining data structures used by the SML/NJ elaborator.
  *)
+
 Group
 	signature ELABDATA_CONTROL
 	signature ACCESS
@@ -37,6 +38,9 @@ Group
 	signature EQTYPES
 	signature EXPAND_TYCON
 	signature CONREP
+	signature PRIM_ENV      (* prim/prim-env.sml *)
+	signature PICKMOD       (* pickle/pickmod.sml *)
+	signature UNPICKMOD     (* pickle/unpickmod.sml *)
 
 	structure ElabDataControl
 	structure Access
@@ -90,6 +94,12 @@ Group
 	structure PPVal
 	structure ConRep
         structure PPSymPaths
+
+	structure PickleSymPid    (* pickle/pickle-sym-pid.sml *)
+	structure UnpickleSymPid  (* pickle/unpickle-sym-pid.sml *)
+	structure PickMod         (* pickle/pickmod.sml *)
+	structure UnpickMod       (* pickle/unpickmod.sml *)
+	structure Rehash          (* pickle/rehash.sml *)
 
 is
 	main/edcontrol.sig
@@ -170,10 +180,26 @@ is
 	prim/cproto.sml
 	prim/c-types.sml
 	prim/primop-bindings.sml
+	prim/prim-env.sml
 
-	$smlnj/viscomp/basics.cm
-	$smlnj/viscomp/parser.cm
+        (* pickling and unpickling *)
+	pickle/pickle-sym-pid.sml
+        pickle/unpickle-sym-pid.sml
+        pickle/pickmod.sml
+        pickle/unpickmod.sml
+        pickle/rehash.sml
+
+        (* ---------------------- Imports --------------------- *)
+
+        (* "imported" libraries *)
+	$smlnj/basis/basis.cm  (* Basis library *)
+        $/pickle-lib.cm        (* pickle library, for pickle code *)
+
+        (* viscomp libraries *)
+	$smlnj/viscomp/basics.cm  (* from $compiler/Basics/basics.cm *)
+	$smlnj/viscomp/parser.cm  (* from $compiler/Parse/parser.cm *)
+
+        (* "incorporated" smlnj-lib libraries *)
 	$smlnj/smlnj-lib/smlnj-lib.cm
 	$smlnj/smlnj-lib/controls-lib.cm
 	$smlnj/smlnj-lib/prettyprint-lib.cm
-	$smlnj/basis/basis.cm

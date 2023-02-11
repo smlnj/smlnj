@@ -9,9 +9,25 @@
 
 Group
 
-  (* what needs to be exported? *)
-
+  (* What modules need to be exported?
+   * What other CM groups or libraries import from cps.cm? (What are the clients of cps.cm?) *)
+  functor CPSCompFn  (* CPS/main/cps-comp.sml -- called in NewCodeGen/main/code-gen-fn.sml!! Circularity! *)
+(* internal use:
+  functor CPStrans   (* CPS/convert/cpstrans.sml *)
+  functor CPSopt     (* CPS/opt/cpsopt.sml *)
+  functor Closure    (* CPS/clos/closure.sml *)
+  functor SpillFn    (* CPS/main/spill-fn.sml *)
+*)
 is
+
+CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
+CPS/main/cps-comp.sml
+CPS/main/feedback.sml
+CPS/main/limit.sml
+CPS/main/literals.sml
+CPS/main/new-literals.sml
+CPS/main/normalize-cluster.sml
+CPS/main/spill-fn.sml
 
 CPS/clos/globalfix.sml
 CPS/clos/closure.sml
@@ -43,23 +59,22 @@ CPS/opt/streqlcnv.sml
 CPS/opt/testcnv.sml
 CPS/opt/uncurry.sml
 
-CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
-CPS/main/cps-comp.sml
-CPS/main/feedback.sml
-CPS/main/limit.sml
-CPS/main/literals.sml
-CPS/main/new-literals.sml
-CPS/main/normalize-cluster.sml
-CPS/main/spill-fn.sml
 
-(* Basis libaries *)
+(* ------------------------------- Imports ------------------------------- *)
+
+(* toplevel.cm:  Control
+   flint.cm: FLINT, ...
+ *)
+
+(* viscomp Libraries *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/elabdata.cm (* Access, LambdaVar *)
+$smlnj/viscomp/flint.cm    (* FLINT *)
+$smlnj/viscomp/toplevel.cm (* Control *)
+
+(* Other libaries. *)
 $smlnj/basis/basis.cm
 
-(* smlnj-lib libraries *)
-$smlnj/smlnj-lib/smlnj-lib.cm     (* smlnj-lib/Util *)
+(* smlnj-lib "incorporated" libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
-
-(* need to add access to:
-   structure Control  - TopLevel/main/control.sml
-   FLINT - FLINT/flint/flint.sml (flint.cm) 
- *)

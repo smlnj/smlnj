@@ -1,0 +1,77 @@
+(* compiler/TopLevel/toplevel.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The interactive top-level (REPL)
+ * redirected as Library in $smlnj/viscomp/toplevel.cm
+ *)
+
+Group
+
+  (* Exports: re-exported by new-core.cm; more exports needed? *)
+
+  structure Control         (* main/control.sml *)
+  signature CONTROL         (* main/control.sig *)
+
+  structure Environment     (* environ/environ.sml *)
+  signature ENVIRONMENT     (* environ/environ.sig *)
+
+  structure EnvRef          (* interact/envref.sml *)
+  signature ENVREF          (* interact/envref.sml *)
+
+  structure CompilerPPTable (* print/compilerpptable.sml *)
+  structure PrintHooks      (* print/compilerpptable.sml *)
+
+  signature BACKEND         (* backend/backend.sig *)
+  functor BackendFn         (* backend/backend-fn.sml *)
+
+is
+
+(* TopLevel files *)
+TopLevel/environ/environ.sig
+TopLevel/environ/environ.sml
+
+TopLevel/interact/envref.sml
+TopLevel/interact/evalloop.sig
+TopLevel/interact/evalloop.sml
+TopLevel/interact/interact.sig
+TopLevel/interact/interact.sml
+
+TopLevel/backend/backend.sig
+TopLevel/backend/backend-fn.sml
+
+TopLevel/main/control.sig
+TopLevel/main/control.sml
+TopLevel/main/cconfig.sig
+TopLevel/main/code-generator.sig
+TopLevel/main/compile.sig
+TopLevel/main/compile.sml
+
+TopLevel/print/ppdec.sml
+TopLevel/print/ppobj.sml
+TopLevel/print/pptable.sml
+TopLevel/print/compilerpptable.sml
+TopLevel/print/printhooks.sml
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* elabdata.cm: PickMod, UnpickMod, Stamps, GenModId
+   basics.cm: PersStamps, Symbol, ErrorMsg
+   elaborate.cm: ElabDebug
+   basis.cm: Time, SMLofNJ, Unsafe, ...
+*)
+
+(* viscomp *)
+$smlnj/viscomp/basics.cm    (* PersStamps, Symbol, ErrorMsg *)
+$smlnj/viscomp/elabdata.cm  (* Stamps, PickMod, UnpickMod, GenModIdMap *)
+$smlnj/viscomp/elaborate.cm (* ElabDebug *)
+
+(* Basis *)
+$smlnj/basis/basis.cm  (* Time, SMLofNJ, Unsafe, etc. *)
+
+(* smlnj-lib "incorporated" libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+

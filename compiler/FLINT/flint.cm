@@ -95,6 +95,8 @@ FLINT/reps/rttype.sml
 FLINT/reps/typeoper.sml
 FLINT/reps/wrapping.sml
 
+(* ------------------------------- Imports ------------------------------- *)
+
 (* Basis libaries *)
 $smlnj/basis/basis.cm
 
@@ -103,4 +105,4 @@ $smlnj/smlnj-lib/smlnj-lib.cm        (* smlnj-lib/Util *)
 $smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
 $smlnj/smlnj-lib/prettyprint-lib.cm  (* smlnj-lib/PrettyPrint *)
 
-$smlnj/init/init.cmi : cm          (* access to CoreIntInf *)
+$smlnj/init/init.cmi : cm          (* CoreIntInf *)

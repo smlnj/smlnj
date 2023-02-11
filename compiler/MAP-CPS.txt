@@ -1,0 +1,252 @@
+compiler/MAP-CPS.txt
+
+Map of CPS (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the CPS library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.]
+
+CPS/
+
+cps.cm  -- the CPS Group/Library CDF
+
+CPS/main/
+  cluster.sml    (* move to NewCodeGen/main? [DBM: No! used in cps-comp.sml) *)
+    < Cluster
+    > LambdaVar*  elabdata.cm
+      Control*    toplevel.cm 
+
+      CPS            (CPS/cps/cps.sml)
+      PPCps          (CPS/cps/ppcps.sml) 
+      NormalizeCluster (CPS/main/normalize-cluster.sml)
+
+  cps-comp.sml
+    < sig CPS_COMP
+      CPSCompFn [fct]
+    > FLINT*      flint.cm
+      Control*    toplevel.cm 
+      LambdaVar*  elabdata.cm
+      OS*         basis.cm
+      CPStoCFGFn* [fct] newcodegen.cm (NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml) 
+      MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
+      PPCfg*      newcodegen.cm (NewCodeGen/cfg/ppcfg.sml)
+      CFGPickler* newcodegen.cm (NewCodeGen/cfg-pickle/cfg-pickler.sml)
+
+      Cluster        (CPS/main/cluster.sml; [not NewCodeGen/cps-to-cfg/cluster.sml])
+      CPS [str]      (CPS/cps/cps.sml)
+      Convert [fct]  (CPS/convert/convert.sml)
+      CPStrans [fct] (CPS/convert/cpstrans.sml)
+      CPSopt [fct]   (CPS/opt/cpsopt.sml)
+      Closure [fct]  (CPS/clos/closure.sml)
+      Spill [fct]    (CPS/main/spill-fn.sml)
+      Literals       (CPS/main/literals.sml)
+      NewLiterals    (CPS/main/new-literals.sml)
+      GlobalFix      (CPS/close/globalfix.sml)
+      Limit          (CPS/main/limit.sml)
+      PPCps          (CPS/cps/ppcps.sml) 
+
+  feedback.sml
+    < Feedback
+    > LambdaVar*  elabdata.cm
+      ErrorMsg*   basics.cm
+
+  limit.sml
+    < Limit
+    > LambdaVar* elabdata.cm
+      Control*   toplevel.cm 
+      ErrorMsg*  basics.cm 
+      Target*    basics.cm 
+      RealLit*   basics.cm (Basics/reals/real-lit.sml)
+
+      CPS [str]      (CPS/cps/cps.sml)
+      Cluster        (CPS/main/cluster.sml)
+      Feedback       (CPS/main/feedback.sml)
+
+  literals.sml
+    < LITERALS
+      Literals
+    > LambdaVar* elabdata.cm
+      ErrorMsg*  basics.cm
+      Control*   toplevel.cm 
+
+  new-literals.sml
+    < NewLIterals
+    > LambdaVar* elabdata.cm
+      Control*   toplevel.cm 
+      Target*    basics.cm 
+      ErrorMsg*  basics.cm 
+      RealConst* basics.cm
+      IntConst*  basics.cm
+
+      CPS [str]      (CPS/cps/cps.sml) 
+      PPCps          (CPS/cps/ppcps.sml) 
+      LITERALS       (CPS/main/literals.sml)
+
+  normalize-cluster.sml
+    < NormalizeCluster
+    > LambdaVar* elabdata.cm
+      ErrorMsg*  basics.cm 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+
+  spill-fn.sml
+    < SPILL
+      SpillFn
+    > LambdaVar*  elabdata.cm 
+      Control*    toplevel.cm 
+      Control_GC* toplevel.cm 
+      ErrorMsg*   basics.cm 
+      Target*     basics.cm 
+      MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+      CPSUtil        (CPS/cps/cps-util.sml) 
+
+
+CPS/clos/
+
+  globalfix.sml
+    < GLOBALFIX
+      GlobalFix
+    > CPS [str]      (CPS/cps/cps.sml) 
+
+  closure.sml
+    < CLOSURE
+      Closure [fct]
+    > MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig)
+      LambdaVar*  elabdata.cm 
+      Control*    toplevel.cm 
+      Target*     basics.cm 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+      CPSUtil        (CPS/cps/cps-util.sml) 
+      StaticProf [fct] (CPS/clos/staticprof.sml)
+
+  freeclose.sml
+    < FREECLOSE
+      FreeClose
+    > LambdaVar*  elabdata.cm 
+      Access*     elabdata.cm
+      Control*    toplevel.cm 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+      CPSUtil        (CPS/cps/cps-util.sml) 
+
+  staticprof.sml
+    < STATICPROF
+      StaticProf [fct]
+    > MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig)
+      Control*    toplevel.cm 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+
+  unrebind.sml
+    < UNREBIND
+      UnRebind
+    > LambdaVar*  elabdata.cm 
+      ErrorMsg*   basics.cm 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+
+
+CPS/convert/
+
+  convert.sml
+    < CONVERT
+      Convert [fct]
+    > Access*, LambdaVar* elabdata.cm
+      Lty*, LtyDef*, LtyBasic*, LtyExtern*, FunRecMeta*, FLINT*, FlintUtil* flint.cm
+      PLambda*   flint.cm
+      Primop*    elabdata.cm (ElabData/prim/primop.sml)
+      MACH_SPEC* newcodegen.cm (NewCodeGen/main/mach-spec.sig)
+
+      CPS [str]      (CPS/cps/cps.sml) 
+      CPSUtil (CPS/cps/cps-util.sml)
+
+  cpstrans.sml
+    < CPStrans [fct]
+    > LambdaVar*  elabdata.cm 
+      ErrorMsg*   basics.cm 
+      MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig)
+
+      CPS [str]      (CPS/cps/cps.sml) 
+
+  switch.sml
+    < Switch
+    > LambdaVar*  elabdata.cm 
+      ErrorMsg*   basics.cm 
+      Access*     elabdata.cm
+      FLINT*      flint.cm
+
+      CPS [str]      (CPS/cps/cps.sml) 
+
+CPS/cps
+  cps.sig
+    < CPS [sig]
+    > RealConst* basics.cm
+      IntConst*  basics.cm
+
+  cps.sml
+    < CPS [str]
+    > RealConst* basics.cm
+      IntConst*  basics.cm
+
+  ppcps.sml
+    < PPCPS
+      PPCps
+    > LambdaVar*    elabdata.cm 
+      Lty*          flint.cm  (not used)
+      PrettyPrint*  prettyprint-lib.cm
+
+      CPS [str]      (CPS/cps/cps.sml) 
+      CPSUtil (CPS/cps/cps-util.sml)
+
+  cps-util.sml
+    < CPSUtil
+    > Lty*, LtyDef*, LtyBasic*, LtyKernel*, PrimTyc*  flint.cm
+      ErrorMsg*   basics.cm 
+      Target*     basics.cm 
+
+      CPS [str]      (CPS/cps/cps.sml) 
+ 
+
+CPS/opt/  [to be completed]
+
+  contract.sml
+
+  contract-prim.sml
+
+  cpsopt.sml
+
+  divcnv.sml
+
+  eta.sml
+
+  etasplit.sml
+
+  expand.sml
+
+  flatten.sml
+
+  infcnv.sml
+
+  lower.sml
+
+  num64cnv.sml
+
+  streqlcnv.sml
+
+  testcnv.sml
+
+  uncurry.sml
+
+------------------------------------------------------------------------------------------
+Overall imports:
+
+	basics.cm
+	elabdata.cm
+	flint.cm
+        toplevel.cm [Control]
+	prettyprint-lib.cm
+      
+        newcodegen.cm !!!
