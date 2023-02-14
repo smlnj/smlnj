@@ -44,9 +44,10 @@ CPS/main/
     > FLINT*      flint.cm
       Control*    toplevel.cm 
       LambdaVar*  elabdata.cm
-      CPStoCFGFn* [fct] newcodegen.cm (NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml) 
-      PPCfg*      newcodegen.cm (NewCodeGen/cfg/ppcfg.sml)
-      CFGPickler* newcodegen.cm (NewCodeGen/cfg-pickle/cfg-pickler.sml)
+      [CPStoCFGFn* [fct] newcodegen.cm (NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml)  
+       PPCfg*      newcodegen.cm (NewCodeGen/cfg/ppcfg.sml)
+       CFGPickler* newcodegen.cm (NewCodeGen/cfg-pickle/cfg-pickler.sml)
+       -- in debugging code that is commented out]
 
       CPS [str]      (CPS/cps/cps.sml) 
       MACH_SPEC      (CPS/main/mach-spec.sig) 
