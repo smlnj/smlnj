@@ -25,27 +25,156 @@ up Basics into multiple libraries).
   is also a common import!
 
 * Should Control, ErrorMsg, Target be included in a new "low-level"
-  library, maybe called Core? or Admin?
+  library, maybe called Admin?  This would contain functionality that
+  is not properly part of the compilation process.
+  
 
-  Core/
+  Admin/
     control/
       < Control: CONTROL
-        (incl. Contro.Print?)
+        Control_Print  (or PrintControl? : PRINTCONTROL)
+        [what about ElabDataControl, etc.?]
+        The "component" control structures will have "compiler-specific" control flags.
 
     errormsg/
       < ErrorMsg ...
       
-    target/
+    compiler/  ?
       < Target
 
-  TopLevel should not be at the bottom of the dependency graph!
+    stats/
+
+    source/ ?
+
+  TopLevel should not be at the bottom of the dependency graph
+  (because of Control)!  Moving Control into Admin would accomplish this.
+
+* Basics/print should go away -- PrettyPrint should be used instead of
+  "fancy" print formatting routines.
+  -- prettyprint.sml, pputil.sig,sml are subsummed by PrettyPrint
+  -- printutil.{sig,sml}: the other sequence printing and "string formatting" functions can
+     also be replaced by PrettyPrint.
+     [used mainly in obsolete printing code like printflint.sml]
+  -- printcontrol.sml can be moved to Admin/control?
+  
 
 * TopLevel should be renamed. To what?
   It should be responsible for the interactive system, the so called
   REPL. This needs access to the whole chain: lexer, parser, elaborator,
-  FLINT, CPS, NCG.
+  FLINT, CPS, NCG (IR optimization, code generation).
 
   Interact, REPL
 
 * NewCodeGen should be renamed CodeGen? Or what?
+
+* Basics/symbol should be moved to ElabData/basics (or whatever that
+  is called).
+
+* Basics/pid should also be moved to ElabData/basics.  (PersStamps, etc.)
+
+* Basics/real -> ElabData/basics?
+
+* "Basics" -> "Foundations" or "Common" or "Library"
+
+* "LambdaVar" -> generic "Var"
+   variables represented as integers, possibly "named"
+   used for bound value variables in expressions, and another variety used for
+   expression-level type variables, and another variety for module-level typcon variables
+
+* ElabData/basics/debindex.* -> *  [delete]
+   plan to eliminate the use of DeBruijn variables to types/type constructors in front end
+   and FLINT.  In the meantime, use the concrete integers, etc.
+
+* ElabData/basics/tkind.sml -> ? [FLINT]
+   could temporarily move to ElabData/types.
+
+* ElabData/basics/coresym.sml -> ? [a single special structure symbol "_Core"]
+   probably belongs somewhere else, not a "generic" and "fundamental" compiler type
+
+* ElabData/basics/sig-plist.sml (SigPropList)
+   a property list used in the translation of modules (see FLINT/trans/module-plists.sml)
+   Not generic or fundamental. Move (back) to FLINT/trans?
+
+------------------------------------------------------------------------------------------
+
+Basics-Compiler: fundamental and/or "generic" types that are used in the compiler
+
+symbol:
+  symbol.{sig,sml} moved from Basics/symbol
+  ...
+
+paths:
+  sympaths.{sig,sml}
+  ppsympaths.sml
+  pathname.sml (could/should be included in sympaths)
+  
+pids:
+  PersStamps
+  pid
+
+"dynamic access"
+  var.{sig,sml}  (LambdaVar is a special "instance" of generic variables)
+  access.{sig,sml}
+
+environments
+  env.{sig,sml}
+
+reals
+  real-const.sml (from Basics/compiler)
+
+ints
+  int-const.sml (from Basics/compiler)
+
+const-arith/ from Library)  
+
+bignums/ (from Library)
+
+extras that don't belong
+  debindex.{sig,sml}  -->  *
+  pathname.sml --> sympath.sml
+  sig-plist.sml --> FLINT/trans?
+  tkind.sml --> ElabData/types?
+
+------------------------------------------------------------------------------------------ 
+Basics (or "Library") or ?
+Basics/util + Library/* ? 
+
+prettyprint --> *
+
+pickle (from Library/pickle)
+
+util/
+  list3.sml
+  wordstr-hashtable.sml
+
+------------------------------------------------------------------------------------------
+Admin (or ?)
+
+compiler/
+  target.sig
+  target32.sml
+  target64.sml
+  endianess-big.sml
+  endianess-little.sml
+  compileexn.sml --> ?
+
+control/
+  basiccontrol.sml
+  print-control.sml
+  elabdata-control.sml
+  mc-control.sml    -- match compiler 
+  elab-control.sml  -- general elaborator
+  flint-control.sml
+  codegen-control.sml
+  control.sig
+  control.sml
+
+errormsg/
+
+source/
+
+stats/
+
+
+
 
