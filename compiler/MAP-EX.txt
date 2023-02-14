@@ -1,0 +1,106 @@
+compiler/MAP-EX.txt
+
+Map of compiler/Execution (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the CPS library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.] 
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+Execution/
+
+execute.cm  CDF for Execution Group/Library
+  [see also $smlnj/viscomp/execute.cm (alias, conversion from Group to Library)]
+
+
+(* ---------------------------- Exports ---------------------------- *) 
+
+  -- these are all included because they are re-exported by core.cm (new-core.cm)
+
+  signature CODE_OBJ 
+  structure CodeObj
+
+  signature DYNAMICENV 
+  structure DynamicEnv
+
+  signature BINFILE 
+  structure Binfile       -- never used?
+
+  structure ImportTree
+  structure Execute
+  structure Isolate
+
+(* ---------------------------- Members ---------------------------- *) 
+
+Execution/main/
+
+  importtree.sml
+    < ImportTree
+    > PersStamps     basics.cm
+
+  isolate.sml
+    < Isolate
+    >
+
+  execute.sml
+    < Execute
+    > PersStamps*   basics.cm
+      Control*	    toplevel.cm
+      ErrorMsg*     basics.cm
+      CompileExn*   basics.cm (Basics/compiler/compileexn.sml)
+      Stats*        basics.cm
+
+      CodeObj       (Execution/codeobj/code-obj.sml)
+      ImportTree    (Execution/main/importtree.sml)
+      DynamicEnv    (Execution/dynenv/dynenv.sml)
+
+Execution/codeobj/
+
+  code-obj.sig
+    < CODE_OBJ
+    > [Unsafe, BinIO, Word8Vector, Word8Array: basis.cm]
+
+  code-obj.sml
+    < CodeObj
+    > [Unsafe, ... basis.cm]
+      
+      CODE_OBJ      (Execution/codeobj/code-obj.sig)
+
+Execution/dynenv/
+
+  dynenv.sig
+    < DYNAMICENV
+    > PIDENV*      basics.cm
+
+  dynenv.sml
+    < DynamicEnv
+    > PidEnvFn*	   basics.cm (Basics/pid/pidenv.sml)	
+
+      DYNAMICENV   (Execution/dynenv/dynenv.sig)
+
+Execution/binfile/
+
+  binfile.sig
+    < BINFILE
+    > PersStamps*  basics.cm
+
+      CodeObj
+      ImportTree
+      DynamicEnv
+
+  binfile.sml
+    < Binfile
+    > PersStamps*  basics.cm
+
+      BINFILE
+      CodeObj
+      ImportTree
+      Execute
+
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+  $smlnj/basis/basis.cm 
+  $smlnj/viscomp/basics.cm

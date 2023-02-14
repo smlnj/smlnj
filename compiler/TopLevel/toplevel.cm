@@ -11,17 +11,17 @@ Group
 
   (* Exports: re-exported by new-core.cm; more exports needed? *)
 
-  structure Control         (* main/control.sml *)
   signature CONTROL         (* main/control.sig *)
+  structure Control         (* main/control.sml *)
 
-  structure Environment     (* environ/environ.sml *)
   signature ENVIRONMENT     (* environ/environ.sig *)
+  structure Environment     (* environ/environ.sml *)
 
-  structure EnvRef          (* interact/envref.sml *)
   signature ENVREF          (* interact/envref.sml *)
+  structure EnvRef          (* interact/envref.sml *)
 
   structure CompilerPPTable (* print/compilerpptable.sml *)
-  structure PrintHooks      (* print/compilerpptable.sml *)
+  structure PrintHooks      (* print/printhooks.sml *)
 
   signature BACKEND         (* backend/backend.sig *)
   functor BackendFn         (* backend/backend-fn.sml *)

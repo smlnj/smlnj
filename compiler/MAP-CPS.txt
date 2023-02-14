@@ -14,6 +14,20 @@ CPS/
 cps.cm  -- the CPS Group/Library CDF
 [see also $smlnj/viscomp/cps.cm]
 
+(* ---------------------------- Exports ---------------------------- *) 
+   
+  structure CPS
+  structure CPSUtil
+  structure PPCps
+  signature MACH_SPEC
+  functor CPSCompFn
+
+  + ??? (What else needs to exported for what clients, after cyclical
+         dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
+
+
+(* ---------------------------- Members ---------------------------- *) 
+
 CPS/main/
   cluster.sml    (* move to NewCodeGen/main? [DBM: No! used in cps-comp.sml) *)
     < Cluster
@@ -31,11 +45,11 @@ CPS/main/
       Control*    toplevel.cm 
       LambdaVar*  elabdata.cm
       CPStoCFGFn* [fct] newcodegen.cm (NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml) 
-      MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
       PPCfg*      newcodegen.cm (NewCodeGen/cfg/ppcfg.sml)
       CFGPickler* newcodegen.cm (NewCodeGen/cfg-pickle/cfg-pickler.sml)
 
       CPS [str]      (CPS/cps/cps.sml) 
+      MACH_SPEC      (CPS/main/mach-spec.sig) 
       PPCps          (CPS/cps/ppcps.sml) 
       Cluster        (CPS/main/cluster.sml; [not NewCodeGen/cps-to-cfg/cluster.sml!])
       Spill [fct]    (CPS/main/spill-fn.sml) 
@@ -100,10 +114,23 @@ CPS/main/
       Control_GC* toplevel.cm 
       ErrorMsg*   basics.cm 
       Target*     basics.cm 
-      MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
 
       CPS [str]      (CPS/cps/cps.sml) 
       CPSUtil        (CPS/cps/cps-util.sml) 
+      MACH_SPEC      (CPS/main/mach-spec.sig) 
+
+  object-desc.sig
+    < OBJECT_DESC
+    >
+
+  object-desc.sml
+    < ObjectDesc
+    > Target*     basics.cm
+
+  mach-spec.sig
+    < MACH_SPEC
+    > 
+      OBJECT_DESC (CPS/main/object-desc.sig)
 
 
 CPS/clos/
@@ -116,14 +143,14 @@ CPS/clos/
   closure.sml
     < CLOSURE
       Closure [fct]
-    > MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig)
-      LambdaVar*  elabdata.cm 
+    > LambdaVar*  elabdata.cm 
       Control*    toplevel.cm 
       Target*     basics.cm 
 
       CPS [str]        (CPS/cps/cps.sml) 
       CPSUtil          (CPS/cps/cps-util.sml) 
       StaticProf [fct] (CPS/clos/staticprof.sml)
+      MACH_SPEC        (CPS/main/mach-spec.sig)
 
   freeclose.sml
     < FREECLOSE
@@ -138,10 +165,10 @@ CPS/clos/
   staticprof.sml
     < STATICPROF
       StaticProf [fct]
-    > MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig)
-      Control*    toplevel.cm 
+    > Control*    toplevel.cm 
 
       CPS [str]      (CPS/cps/cps.sml) 
+      MACH_SPEC      (CPS/main/mach-spec.sig)
 
   unrebind.sml
     < UNREBIND
@@ -161,18 +188,18 @@ CPS/convert/
       Lty*, LtyDef*, LtyBasic*, LtyExtern*, FunRecMeta*, FLINT*, FlintUtil* flint.cm
       PLambda*   flint.cm
       Primop*    elabdata.cm (ElabData/prim/primop.sml)
-      MACH_SPEC* newcodegen.cm (NewCodeGen/main/mach-spec.sig)
 
-      CPS [str]      (CPS/cps/cps.sml) 
-      CPSUtil (CPS/cps/cps-util.sml)
+      CPS [str]    (CPS/cps/cps.sml) 
+      CPSUtil      (CPS/cps/cps-util.sml)
+      MACH_SPEC    (CPS/main/mach-spec.sig) 
 
   cpstrans.sml
     < CPStrans [fct]
     > LambdaVar*  elabdata.cm 
       ErrorMsg*   basics.cm 
-      MACH_SPEC*  newcodegen.cm (NewCodeGen/main/mach-spec.sig)
 
       CPS [str]      (CPS/cps/cps.sml) 
+      MACH_SPEC      (CPS/main/mach-spec.sig) 
 
   switch.sml
     < Switch
@@ -242,8 +269,7 @@ CPS/opt/  [to be completed]
   cpsopt.sml 
     < CPSOPT
       CPSopt [fct]
-    > MACH_SPEC*   newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
-      Control*     toplevel.cm 
+    > Control*     toplevel.cm 
 
       CPS [str]     (CPS/cps/cps.sml) 
       Contract      (CPS/opt/contract.sml)
@@ -253,6 +279,7 @@ CPS/opt/  [to be completed]
       Eta           (CPS/opt/eta.sml)
       EtaSplit      (CPS/opt/etasplit.sml)
       PPCps	    (CPS/cps/ppcps.sml 
+      MACH_SPEC     (CPS/main/mach-spec.sig) 
 
   divcnv.sml
     < DivCnv
@@ -284,9 +311,9 @@ CPS/opt/  [to be completed]
     > LambdaVar*   elabdata.cm 
       Control*     toplevel.cm 
       ErrorMsg*    basics.cm 
-      MACH_SPEC*   newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
 
-      CPS [str]     (CPS/cps/cps.sml) 
+      CPS [str]    (CPS/cps/cps.sml) 
+      MACH_SPEC    (CPS/main/mach-spec.sig) 
 
   flatten.sml
     < FLATTEN
@@ -295,9 +322,9 @@ CPS/opt/  [to be completed]
       Control*     toplevel.cm 
       ErrorMsg*    basics.cm 
       LtyExtern*   flint.cm
-      MACH_SPEC*   newcodegen.cm (NewCodeGen/main/mach-spec.sig) 
 
-      CPS [str]     (CPS/cps/cps.sml) 
+      CPS [str]    (CPS/cps/cps.sml) 
+      MACH_SPEC    (CPS/main/mach-spec.sig) 
 
   infcnv.sml
     < IntInfCnv
@@ -315,7 +342,7 @@ CPS/opt/  [to be completed]
       Num64Cnv     (CPS/opt/num64cnv.sml)
       StrEqlCnv    (CPS/opt/streqlcnv.sml)
       IntInfCnv    (CPS/opt/infcnv.sml)
-      TestCnv       (CPS/opt/testcnv.sml 
+      TestCnv      (CPS/opt/testcnv.sml 
 
   num64cnv.sml
     < Num64Cnv
@@ -343,8 +370,7 @@ CPS/opt/  [to be completed]
 
   uncurry.sml
     < Uncurry [fct]
-    > MACH_SPEC*   newcodegen.cm (NewCodeGen/main/mach-spec.sig)
-      LambdaVar*   elabdata.cm 
+    > LambdaVar*   elabdata.cm 
       ErrorMsg*    basics.cm 
       Control*     toplevel.cm 
       LtyDef       flint.cm
@@ -352,15 +378,16 @@ CPS/opt/  [to be completed]
 
       CPS [str]    (CPS/cps/cps.sml) 
       ETASPLIT     (CPS/opt/etasplit.sml)
+      MACH_SPEC    (CPS/main/mach-spec.sig)
 
+(* ---------------------------- Imports ---------------------------- *) 
 
-------------------------------------------------------------------------------------------
-Overall imports:
-
-	basics.cm
-	elabdata.cm
-	flint.cm
-        toplevel.cm [Control]
-	prettyprint-lib.cm
+  basics.cm     (Target, ErrorMsg, ...)
+  elabdata.cm   (LambdaVar, ...)
+  flint.cm
+  toplevel.cm   (Control)
+  prettyprint-lib.cm (PrettyPrint)
       
-        newcodegen.cm !!!  (Circularity, since newcodegen.cm imports cps.cm)
+  -- eliminated (circular) dependence on newcodegen.cm:
+     (1) moved MACH_SPEC, OBJECT_DESC, ObjectDesc from NewCodeGen/main to CPS/main
+     (2) edited CPS/main/cps-comp to eliminate debugging code dependent on CFG

@@ -14,6 +14,19 @@ NewCodeGen/
 newcodegen.cm  -- the NewCodeGen Group/Library CDF
 [see also $smlnj/viscomp/newcodegen.cm]
 
+(* ---------------------------- Exports ---------------------------- *) 
+
+  -- these two are re-exported by core.cm (and new-core.cm) 
+
+  structure CFG   (* NewCodeGen/cfg/cfg.sml *)
+  structure PPCfg (* NewCodeGen/cfg/ppcfg.sml *)
+   
+
+  + ??? (What are the clients (importers) of newcodegen.cm and what do
+         they need to import?)
+
+(* ---------------------------- Members ---------------------------- *) 
+
 NewCodeGen/cfg/
 
   cfg.sml
@@ -25,7 +38,7 @@ NewCodeGen/cfg/
 
     Note: Why does the file NewCodeGen/cfg-pickle/cfg.sml exist? It duplicates the definition
       of CFG_Prim from NewCodeGen/cgf/cfg.sml and the definition of CTypes from
-      ElabData/prim/c-types.sml. But cfg-pickle/cfg.sml is not included in the CDF for
+      ElabData/prim/c-types.sml. But cfg-pickle/cfg.sml is not included in the members for
       NewCodeGen (original core.cm or new NewCodeGen/newcodegen.cm), so presumably it is
       not being compiled or used. It should be deleted, if only to avoid confusion.
 
@@ -145,31 +158,23 @@ NewCodeGen/main/
       MACH_SPEC (NewCodeGen/main/mach-spec.sig)
       CFGPickler (NewCodeGen/cfg-pickle/cfg-pickler.sml)
 
-  mach-spec.sig
-    < MACH_SPEC
-    > 
-      OBJECT_DESC (NewCodeGen/main/object-desc.sig)
-
   default-machspec-fn.sml
     < DefaultMachSpecFn
     > 
       MACH_SPEC (NewCodeGen/main/mach-spec.sig)
 
-  object-desc.sig
-    < OBJECT_DESC
-    >
 
-  object-desc.sml
-    < ObjectDesc
-    > Target*     basics.cm
+-- NewCodeGen/cps-to-cfg/cluster.sml not used -- replaced by CPS/main/cluster.sml
 
 
-NewCodeGen/cps-to-cfg/cluster.sml -- replaced by CPS/main/cluster.sml?
+(* ---------------------------- Imports ---------------------------- *) 
 
-------------------------------------------------------------------------------------------
-Overall imports:
+   $smlnj/basis/basis.cm
 
-   basics.cm
-   elabdata.cm
-   cps.cm
-   toplevel.cm
+   $smlnj/viscomp/basics.cm
+   $smlnj/viscomp/elabdata.cm
+
+   toplevel.cm (Control) 
+
+   cps.cm (no longer producing a cyclical dependency)
+ 
