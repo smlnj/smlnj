@@ -261,7 +261,7 @@ CPS/opt/num64cnv.sml
 CPS/opt/streqlcnv.sml
 CPS/opt/testcnv.sml
 CPS/opt/uncurry.sml
-CPS/main/cluster.sml    (* move to NewCodeGen/main? *)
+CPS/main/cluster.sml    (* move to CodeGen/main? *)
 CPS/main/cps-comp.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml
@@ -270,26 +270,26 @@ CPS/main/new-literals.sml
 CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 
-NewCodeGen/cfg/cfg.sml
-NewCodeGen/cfg/ppcfg.sml
-NewCodeGen/cfg/cfg-util.sml
-NewCodeGen/cfg-pickle/cfg-pickle.sig
-NewCodeGen/cfg-pickle/cfg-pickler.sml
-NewCodeGen/cfg-pickle/cfg-file-pickle.sml
-NewCodeGen/cfg-pickle/cfg-memory-pickle.sml
-NewCodeGen/cfg-pickle/lambda-var-pickle.sml
+CodeGen/cfg/cfg.sml
+CodeGen/cfg/ppcfg.sml
+CodeGen/cfg/cfg-util.sml
+CodeGen/cfg-pickle/cfg-pickle.sig
+CodeGen/cfg-pickle/cfg-pickler.sml
+CodeGen/cfg-pickle/cfg-file-pickle.sml
+CodeGen/cfg-pickle/cfg-memory-pickle.sml
+CodeGen/cfg-pickle/lambda-var-pickle.sml
 (*
-NewCodeGen/cps-to-cfg/cluster.sml
+CodeGen/cps-to-cfg/cluster.sml
 *)
-NewCodeGen/cps-to-cfg/cps-info.sml
-NewCodeGen/cps-to-cfg/invoke-gc.sml
-NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml
-NewCodeGen/cps-to-cfg/tagged-arith.sml
-NewCodeGen/main/code-gen-fn.sml
-NewCodeGen/main/mach-spec.sig
-NewCodeGen/main/default-machspec-fn.sml
-NewCodeGen/main/object-desc.sig
-NewCodeGen/main/object-desc.sml
+CodeGen/cps-to-cfg/cps-info.sml
+CodeGen/cps-to-cfg/invoke-gc.sml
+CodeGen/cps-to-cfg/cps-to-cfg-fn.sml
+CodeGen/cps-to-cfg/tagged-arith.sml
+CodeGen/main/code-gen-fn.sml
+CodeGen/main/mach-spec.sig
+CodeGen/main/default-machspec-fn.sml
+CodeGen/main/object-desc.sig
+CodeGen/main/object-desc.sml
 
 (* Miscellaneous utilities. *)
 Library/const-arith/sources.cm

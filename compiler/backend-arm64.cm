@@ -15,7 +15,7 @@ is
 
   TopLevel/backend/arm64-backend.sml
 
-  NewCodeGen/targets/arm64-spec.sml
+  CodeGen/targets/arm64-spec.sml
 
   $smlnj/basis/basis.cm
   $smlnj/smlnj-lib/smlnj-lib.cm
