@@ -116,7 +116,7 @@ pids:
   var.{sig,sml}  (LambdaVar is a special "instance" of generic variables)
   access.{sig,sml}
 
-environments
+(generic) environments (over symbols)
   env.{sig,sml}
 
 reals
@@ -129,22 +129,24 @@ const-arith/ from Library)
 
 bignums/ (from Library)
 
-extras that don't belong
-  debindex.{sig,sml}  -->  *
-  pathname.sml --> sympath.sml
+extras that don't belong here
+  debindex.{sig,sml}  -->  * (delete)
+  pathname.sml --> sympath.sml  (integrate into sympath)
   sig-plist.sml --> FLINT/trans?
-  tkind.sml --> ElabData/types?
+  tkind.sml --> ElabData/modules? (eventually a front-end version of kinds in ElabData/modules)
 
 ------------------------------------------------------------------------------------------ 
 Basics (or "Library") or ?
-Basics/util + Library/* ? 
+  from Basics/util + Library/* ? 
 
-prettyprint --> *
+prettyprint --> *  (delete, except for prettyprint/doc -> ?)
+  replaced by smlnj-lib/PrettyPrint (except for prettyprint/doc)
 
-pickle (from Library/pickle)
+pickle (from Library/pickle; relation with smlnj-lib/pickle?)
+ this should eventually be replaced, probably by ASDL pickling
 
 util/
-  list3.sml
+  list3.sml               (like ListPair, but for triples)
   wordstr-hashtable.sml
 
 ------------------------------------------------------------------------------------------
