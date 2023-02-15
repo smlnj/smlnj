@@ -25,12 +25,13 @@ execute.cm  CDF for Execution Group/Library
   signature DYNAMICENV 
   structure DynamicEnv
 
-  signature BINFILE 
-  structure Binfile       -- never used?
+  signature BINFILE     (used: ?)
+  structure Binfile     (used: ?)
 
-  structure ImportTree
-  structure Execute
-  structure Isolate
+  structure ImportTree  (used: FLINT/trans/translate.sml, TopLevel/main/compile.sig)  
+  structure Execute     (used: TopLevel/interact/evalloop.sml)
+  structure Isolate     (used: TopLevel/interact/evalloop.sml)
+
 
 (* ---------------------------- Members ---------------------------- *) 
 
@@ -56,6 +57,7 @@ Execution/main/
       ImportTree    (Execution/main/importtree.sml)
       DynamicEnv    (Execution/dynenv/dynenv.sml)
 
+
 Execution/codeobj/
 
   code-obj.sig
@@ -67,6 +69,7 @@ Execution/codeobj/
     > [Unsafe, ... basis.cm]
       
       CODE_OBJ      (Execution/codeobj/code-obj.sig)
+
 
 Execution/dynenv/
 
@@ -80,10 +83,11 @@ Execution/dynenv/
 
       DYNAMICENV   (Execution/dynenv/dynenv.sig)
 
+
 Execution/binfile/
 
   binfile.sig
-    < BINFILE
+    < BINFILE      never used?
     > PersStamps*  basics.cm
 
       CodeObj
@@ -91,7 +95,7 @@ Execution/binfile/
       DynamicEnv
 
   binfile.sml
-    < Binfile
+    < Binfile      never used?
     > PersStamps*  basics.cm
 
       BINFILE
@@ -102,5 +106,6 @@ Execution/binfile/
 
 (* ---------------------------- Imports ---------------------------- *) 
 
-  $smlnj/basis/basis.cm 
-  $smlnj/viscomp/basics.cm
+  $smlnj/basis/basis.cm    
+  $smlnj/viscomp/basics.cm (PersStamps, PIDENV, PidEnvFn, CompileExn,
+                            Control, ErrorMsg, Stats)

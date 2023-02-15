@@ -9,18 +9,20 @@ Map of NewCodeGen (as a "library")
   to be structures, unless they end in "Fn", in which case they are assumed to be functors.
   These defaults can be overridden by qualifiers, e.g. "CPS [str]".
 
+Note: NewCodeGen will be renamed as "CodeGen".
+
 NewCodeGen/
 
-newcodegen.cm  -- the NewCodeGen Group/Library CDF
+codegen.cm  -- the NewCodeGen Group/Library CDF
 [see also $smlnj/viscomp/newcodegen.cm]
 
 (* ---------------------------- Exports ---------------------------- *) 
 
   -- these two are re-exported by core.cm (and new-core.cm) 
 
-  structure CFG   (* NewCodeGen/cfg/cfg.sml *)
-  structure PPCfg (* NewCodeGen/cfg/ppcfg.sml *)
-   
+  structure CFG           (* NewCodeGen/cfg/cfg.sml *)
+  structure PPCfg         (* NewCodeGen/cfg/ppcfg.sml *)
+  functor CodeGeneratorFn (* NewCodeGen/main/code-gen-fn.sml, used TopLevel/backend/amd64-*.sml, *-backend.sml *)
 
   + ??? (What are the clients (importers) of newcodegen.cm and what do
          they need to import?)
@@ -49,8 +51,8 @@ NewCodeGen/cfg/
       ArithOps*  elabdata.cm
       PPCps*     cps.cm
 
-      CFG (NewCodeGen/cfg/cfg.sml)
-      CFG_Prim (NewCodeGen/cfg/cfg.sml)
+      CFG        (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim   (NewCodeGen/cfg/cfg.sml)
 
   cfg-util.sml
     < CFGUtil
@@ -66,8 +68,8 @@ NewCodeGen/cfg-pickle/
     > LambdaVar* elabdata.cm 
       CTypes*    elabdata.cm  (ElabData/prim/c-types.sml) 
 
-      CFG (NewCodeGen/cfg/cfg.sml)
-      CFG_Prim (NewCodeGen/cfg/cfg.sml)
+      CFG        (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim   (NewCodeGen/cfg/cfg.sml)
    
   cfg-pickler.sml
     < CFGPickler
@@ -85,8 +87,8 @@ NewCodeGen/cfg-pickle/
     > ASDLFilePickle* ?
       CTypes*     elabdata.cm
 
-      CFG (NewCodeGen/cfg/cfg.sml)
-      CFG_Prim (NewCodeGen/cfg/cfg.sml)
+      CFG         (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim    (NewCodeGen/cfg/cfg.sml)
 
   cfg-memory-pickle.sml
     < LambdaVarMemoryPickle
@@ -96,8 +98,8 @@ NewCodeGen/cfg-pickle/
     > ASDLMemoryPickle*
       CTypes*     elabdata.cm
 
-      CFG (NewCodeGen/cfg/cfg.sml)
-      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+      CFG         (NewCodeGen/cfg/cfg.sml)
+      CFG_Prim    (NewCodeGen/cfg/cfg.sml) 
 
   lambda-var-pickle.sml
     < LambdaVarPickle
@@ -113,16 +115,16 @@ NewCodeGen/cps-to-cfg/
       CPS*        cps.cm
       CPSUtil*    cps.cm
 
-      CFG (NewCodeGen/cfg/cfg.sml) 
-      InvokeGC (NewCodeGen/cps-to-cfg/invoke-gc.sml)
+      CFG         (NewCodeGen/cfg/cfg.sml) 
+      InvokeGC    (NewCodeGen/cps-to-cfg/invoke-gc.sml)
 
   invoke-gc.sml
     < InvokeGC
     > LambdaVar*  elabdata.cm 
 
-      CFG (NewCodeGen/cfg/cfg.sml) 
-      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
-      ObjectDesc (NewCodeGen/main/object-desc.sml)
+      CFG         (NewCodeGen/cfg/cfg.sml) 
+      CFG_Prim    (NewCodeGen/cfg/cfg.sml) 
+      ObjectDesc  (NewCodeGen/main/object-desc.sml)
 
   cps-to-cfg-fn.sml
     < CPStoCFGFn
@@ -133,10 +135,10 @@ NewCodeGen/cps-to-cfg/
       PPCps*       cps.cm
       Cluster*     cps.cm
       Control*     toplevel.cm
+      MACH_SPEC*   cps.cm (CPS/main/mach-spec.sig) 
 
-      MACH_SPEC (NewCodeGen/main/mach-spec.sig)
-      CFG (NewCodeGen/cfg/cfg.sml) 
-      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+      CFG          (NewCodeGen/cfg/cfg.sml) 
+      CFG_Prim     (NewCodeGen/cfg/cfg.sml) 
 
   tagged-arith.sml
     < TaggedArith
@@ -144,8 +146,8 @@ NewCodeGen/cps-to-cfg/
       CPS*         cps.cm
       PPCps*       cps.cm
 
-      CFG (NewCodeGen/cfg/cfg.sml) 
-      CFG_Prim (NewCodeGen/cfg/cfg.sml) 
+      CFG          (NewCodeGen/cfg/cfg.sml) 
+      CFG_Prim     (NewCodeGen/cfg/cfg.sml) 
 
 
 NewCodeGen/main/
@@ -153,15 +155,17 @@ NewCodeGen/main/
   code-gen-fn.sml
     < CodeGeneratorFn
     > CODE_GENERATOR*  toplevel.cm (TopLevel/main/code-generator.sig)  
+      MACH_SPEC*       cps.cm (CPS/main/mach-spec.sig) 
       CPSCompFn* [fct] cps.cm
+      Stats*	       basics.cm
+      CodeObj*	       execute.cm (Execution/codeobj/code-obj.sml)
 
-      MACH_SPEC (NewCodeGen/main/mach-spec.sig)
-      CFGPickler (NewCodeGen/cfg-pickle/cfg-pickler.sml)
+      CFGPickler       (NewCodeGen/cfg-pickle/cfg-pickler.sml)
 
   default-machspec-fn.sml
     < DefaultMachSpecFn
-    > 
-      MACH_SPEC (NewCodeGen/main/mach-spec.sig)
+    > MACH_SPEC*   cps.cm (CPS/main/mach-spec.sig) 
+
 
 
 -- NewCodeGen/cps-to-cfg/cluster.sml not used -- replaced by CPS/main/cluster.sml

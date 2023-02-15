@@ -7,8 +7,8 @@ Notes on the compiler "component" CM libraries
     TopLevel
        |
     CodeGen (CFG)
-       |
-      CPS
+       |        \
+      CPS     Execution
        |
      FLINT   Elaborate
        \      /
@@ -142,6 +142,7 @@ extras that don't belong here
   prettyprint --> *  (delete, except for prettyprint/doc -> ?)
     replaced by smlnj-lib/PrettyPrint (except for prettyprint/doc)
 
+
 ------------------------------------------------------------------------------------------ 
 Library
   from Basics/util + Library/* ? 
@@ -153,9 +154,10 @@ pickle (from Library/pickle; relation with smlnj-lib/pickle?)
 util/
   list3.sml               (like ListPair, but for triples)
   wordstr-hashtable.sml
-  print-util.sml?
-    minimized version of Basics/print/printutil.sml
+  print-util.sml? -> string-util.sml?
+    minimized version of Basics/print/printutil.sml; no longer prints, so -> string-util.sml
     -- may be minimized to nothing (except trimmed?)
+
 
 ------------------------------------------------------------------------------------------
 Admin (or ?)
@@ -170,12 +172,14 @@ compiler/
 
 control/
   basiccontrol.sml
-  print-control.sml
-  elabdata-control.sml
-  mc-control.sml    -- match compiler 
-  elab-control.sml  -- general elaborator
-  flint-control.sml
-  codegen-control.sml
+  print-control.sml    (Control_Print -> PrintControl = Control.Print)
+  parser-control.sml   (ParserControl, from Parse/main/parsercontrol.sml)
+  elabdata-control.sml (ElabDataControl)
+  mc-control.sml       (MCControl -> MatchCompControl -- match compiler)
+  elab-control.sml     (ElabControl -- general elaborator)
+  flint-control.sml    (FLINT_Control -> FLINTControl)
+  codegen-control.sml  (Control_CG -> CodeGenControl)
+  toplevel-control.sml (TopLevelControl (new): eldebugging, pddebugging, ...)
   control.sig
   control.sml
 
