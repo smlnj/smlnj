@@ -152,8 +152,10 @@ pickle (from Library/pickle; relation with smlnj-lib/pickle?)
   this should eventually be replaced, probably by ASDL pickling
 
 util/
-  list3.sml               (like ListPair, but for triples)
+  list3.sml
+    ListPair for triples (zip3). used: Elaborator/elaborate/elacore.sml, TopLevel/print/ppobjs.ml
   wordstr-hashtable.sml
+    used: ElabData/types/tuples.sml, Parse/lex/tokentable.sml
   print-util.sml? -> string-util.sml?
     minimized version of Basics/print/printutil.sml; no longer prints, so -> string-util.sml
     -- may be minimized to nothing (except trimmed?)
@@ -171,7 +173,7 @@ compiler/
   compileexn.sml --> ?
 
 control/
-  basiccontrol.sml
+  basiccontrol.sml     (BasicControl: BASIC_CONTROL -> GeneralControl?)
   print-control.sml    (Control_Print -> PrintControl = Control.Print)
   parser-control.sml   (ParserControl, from Parse/main/parsercontrol.sml)
   elabdata-control.sml (ElabDataControl)
@@ -180,6 +182,7 @@ control/
   flint-control.sml    (FLINT_Control -> FLINTControl)
   codegen-control.sml  (Control_CG -> CodeGenControl)
   toplevel-control.sml (TopLevelControl (new): eldebugging, pddebugging, ...)
+  general-control.sml  (GeneralControl -- whats left in Control after above)
   control.sig
   control.sml
 
