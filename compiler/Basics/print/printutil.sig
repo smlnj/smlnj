@@ -5,7 +5,7 @@ signature PRINTUTIL =
 sig
 
 (* following functions actually print (to stdout) *)
-
+(* Obsolete -- use PrettyPrint instead
   val newline : unit -> unit
   val tab : int -> unit
   val nlindent : int -> unit
@@ -16,8 +16,9 @@ sig
   val printSym : Symbol.symbol -> unit
 
   val printvseq : int -> string -> ('a -> unit) -> 'a list -> unit
-
+*)
 (* following functions translate to strings, and do not print *)
+(* DBM: should eliminate all uses of the following, mostly vestigial in FLINT *)
 
   (*  val quoteString : string -> string *)
       (* was "mlstr"? -- puts double quote characters around string *)

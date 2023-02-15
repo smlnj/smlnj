@@ -18,8 +18,7 @@ Notes on the compiler "component" CM libraries
         Basics
 
 May possibly want a finer-grain library structure (E.g. break
-up Basics into multiple libraries).
-
+up Basics + ElabData/basics into multiple libraries -- see below).
 
 * Most of the libraries depend on toplevel.cm for Control. So TopLevel
   is also a common import!
@@ -28,7 +27,6 @@ up Basics into multiple libraries).
   library, maybe called Admin?  This would contain functionality that
   is not properly part of the compilation process.
   
-
   Admin/
     control/
       < Control: CONTROL
@@ -49,6 +47,8 @@ up Basics into multiple libraries).
   TopLevel should not be at the bottom of the dependency graph
   (because of Control)!  Moving Control into Admin would accomplish this.
 
+  More detail below.
+
 * Basics/print should go away -- PrettyPrint should be used instead of
   "fancy" print formatting routines.
   -- prettyprint.sml, pputil.sig,sml are subsummed by PrettyPrint
@@ -65,7 +65,7 @@ up Basics into multiple libraries).
 
   Interact, REPL
 
-* NewCodeGen should be renamed CodeGen? Or what?
+* NewCodeGen should be renamed CodeGen (Or something else?)
 
 * Basics/symbol should be moved to ElabData/basics (or whatever that
   is called).
@@ -97,7 +97,8 @@ up Basics into multiple libraries).
 
 ------------------------------------------------------------------------------------------
 
-Basics-Compiler: fundamental and/or "generic" types that are used in the compiler
+compiler/Basics (or "Base"?): fundamental and/or "generic" types that are used in the compiler
+  Top-level directory replacing ElabData/basics.
 
 symbol:
   symbol.{sig,sml} moved from Basics/symbol
@@ -106,17 +107,19 @@ symbol:
 paths:
   sympaths.{sig,sml}
   ppsympaths.sml
-  pathname.sml (could/should be included in sympaths)
+  pathname.sml -> * (should be integrated into sympaths)
   
 pids:
   PersStamps
   pid
 
 "dynamic access"
-  var.{sig,sml}  (LambdaVar is a special "instance" of generic variables)
+  var.{sig,sml} (<- LambdaVar)  [VarFn functor, used to create stateful instances]
+    A "generic" version of variables represented by ints/words. LambdaVar is then
+    a special "instance" of generic variables, which has other instances, e.g. type variables.
   access.{sig,sml}
 
-(generic) environments (over symbols)
+environments (generic environments over symbols)
   env.{sig,sml}
 
 reals
@@ -129,25 +132,30 @@ const-arith/ from Library)
 
 bignums/ (from Library)
 
+compinfo.sml (<- ElabData/main/compinfo.sml)
+
 extras that don't belong here
-  debindex.{sig,sml}  -->  * (delete)
+  debindex.{sig,sml}  -->  * (delete -- replaced by "Var" type/tycon/module variables)
   pathname.sml --> sympath.sml  (integrate into sympath)
   sig-plist.sml --> FLINT/trans?
   tkind.sml --> ElabData/modules? (eventually a front-end version of kinds in ElabData/modules)
+  prettyprint --> *  (delete, except for prettyprint/doc -> ?)
+    replaced by smlnj-lib/PrettyPrint (except for prettyprint/doc)
 
 ------------------------------------------------------------------------------------------ 
-Basics (or "Library") or ?
+Library
   from Basics/util + Library/* ? 
-
-prettyprint --> *  (delete, except for prettyprint/doc -> ?)
-  replaced by smlnj-lib/PrettyPrint (except for prettyprint/doc)
+  Could be added to "Base" library above
 
 pickle (from Library/pickle; relation with smlnj-lib/pickle?)
- this should eventually be replaced, probably by ASDL pickling
+  this should eventually be replaced, probably by ASDL pickling
 
 util/
   list3.sml               (like ListPair, but for triples)
   wordstr-hashtable.sml
+  print-util.sml?
+    minimized version of Basics/print/printutil.sml
+    -- may be minimized to nothing (except trimmed?)
 
 ------------------------------------------------------------------------------------------
 Admin (or ?)

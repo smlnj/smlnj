@@ -6,7 +6,7 @@ struct
 
   (* printing functions -- print to stdOut *)
   val say = Control_Print.say
-
+(*
   fun newline () = say "\n"
   fun tab 0 = () | tab n = (say " "; tab(n-1))
   fun nlindent n = (newline(); tab n)
@@ -29,7 +29,7 @@ struct
       (say front; printSequence sep pr elems; say back)
 
   fun printSym(s: Symbol.symbol) = say (Symbol.name s)
-
+*)
   (* formatting functions -- translate to "formatted" string *)
 
   fun trimmed (s, maxsz) =
