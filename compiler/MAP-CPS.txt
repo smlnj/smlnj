@@ -16,11 +16,11 @@ cps.cm  -- the CPS Group/Library CDF
 
 (* ---------------------------- Exports ---------------------------- *) 
    
-  structure CPS
-  structure CPSUtil
-  structure PPCps
-  signature MACH_SPEC
-  functor CPSCompFn
+  structure CPS        (cps/cps.sml)
+  structure CPSUtil    (cps/cps-util.sml)
+  structure PPCps      (cps/ppcps.sml)
+  signature MACH_SPEC  (main/mach-spec.sig)
+  functor CPSCompFn    (main/cps-comp.sml)
 
   + ??? (What else needs to exported for what clients, after cyclical
          dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
@@ -50,8 +50,8 @@ CPS/main/
        -- in debugging code that is commented out]
 
       CPS [str]      (CPS/cps/cps.sml) 
-      MACH_SPEC      (CPS/main/mach-spec.sig) 
       PPCps          (CPS/cps/ppcps.sml) 
+      MACH_SPEC      (CPS/main/mach-spec.sig) 
       Cluster        (CPS/main/cluster.sml; [not NewCodeGen/cps-to-cfg/cluster.sml!])
       Spill [fct]    (CPS/main/spill-fn.sml) 
       Literals       (CPS/main/literals.sml) 
@@ -61,7 +61,7 @@ CPS/main/
       CPStrans [fct] (CPS/convert/cpstrans.sml)
       CPSopt [fct]   (CPS/opt/cpsopt.sml)
       Closure [fct]  (CPS/clos/closure.sml)
-      GlobalFix      (CPS/close/globalfix.sml)
+      GlobalFix      (CPS/clos/globalfix.sml)
 
   feedback.sml
     < Feedback
@@ -248,7 +248,7 @@ CPS/opt/  [to be completed]
       Contract
     > LambdaVar*   elabdata.cm
       LtyBasic*    flint.cm
-      ConstArith*  Library/const-arith/sources.cm
+      ConstArith*  Library/const-arith/sources.cm [core.cm]
       Control*     toplevel.cm 
       ErrorMsg*    basics.cm 
       Target*      basics.cm 
@@ -383,12 +383,14 @@ CPS/opt/  [to be completed]
 
 (* ---------------------------- Imports ---------------------------- *) 
 
-  basics.cm     (Target, ErrorMsg, ...)
-  elabdata.cm   (LambdaVar, ...)
-  flint.cm
-  toplevel.cm   (Control)
-  prettyprint-lib.cm (PrettyPrint)
-      
+  basics.cm:    Target, ErrorMsg, RealConst, IntConst
+  elabdata.cm:  LambdaVar, Primop, Access
+  flint.cm:     Lty, LtyDef, LtyBasic, LtyKernel, PrimTyc, FunRecMeta,
+                PLambda, FLINT, FlintUtil
+  toplevel.cm:  Control, Control_CG
+  prettyprint-lib.cm: PrettyPrint
+  Library/const-arith/sources.cm [core.cm]: ConstArith
+
   -- eliminated (circular) dependence on newcodegen.cm:
      (1) moved MACH_SPEC, OBJECT_DESC, ObjectDesc from NewCodeGen/main to CPS/main
-     (2) edited CPS/main/cps-comp to eliminate debugging code dependent on CFG
+     (2) edited CPS/main/cps-comp to comment out debugging code dependent on CFG

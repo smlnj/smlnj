@@ -122,17 +122,13 @@ pids:
 environments (generic environments over symbols)
   env.{sig,sml}
 
-reals
+numbers/  (ints and reals)
   real-const.sml (from Basics/compiler)
-
-ints
   int-const.sml (from Basics/compiler)
+  const-arith/ (from Library)  
+  bignums/ (from Library)
 
-const-arith/ from Library)  
-
-bignums/ (from Library)
-
-compinfo.sml (<- ElabData/main/compinfo.sml)
+compinfo.sml? (<- ElabData/main/compinfo.sml)
 
 extras that don't belong here
   debindex.{sig,sml}  -->  * (delete -- replaced by "Var" type/tycon/module variables)
@@ -146,11 +142,15 @@ extras that don't belong here
 ------------------------------------------------------------------------------------------ 
 Library
   from Basics/util + Library/* ? 
-  Could be added to "Base" library above
+  The following subdirectories could be moved to "Base" (or Basics) library, followed by elimination
+  of the then empty Library.
 
-pickle (from Library/pickle; relation with smlnj-lib/pickle?)
-  this should eventually be replaced, probably by ASDL pickling
-
+pickle/ (current Library/pickle)
+  The whole pickling scheme should eventually be replaced, probably by ASDL pickling.
+  But now it seems to be a basic pickle library used by ElabData/pickle, and it perhaps
+  belongs in smlnj-lib. The README suggests that Library/pickle should be replaced
+  by a new Pickle library in smlnj-lib.
+  
 util/
   list3.sml
     ListPair for triples (zip3). used: Elaborator/elaborate/elacore.sml, TopLevel/print/ppobjs.ml
@@ -158,40 +158,54 @@ util/
     used: ElabData/types/tuples.sml, Parse/lex/tokentable.sml
   print-util.sml? -> string-util.sml?
     minimized version of Basics/print/printutil.sml; no longer prints, so -> string-util.sml
-    -- may be minimized to nothing (except trimmed?)
+    -- may be minimized to nothing (except trimmed?) or just a small string utility module
+       defining trimmed and quoated.
 
 
 ------------------------------------------------------------------------------------------
-Admin (or ?)
+Admin/ (or whatever we decide to call it)
 
-compiler/
+compiler/ (or "features" or "options")
   target.sig
   target32.sml
   target64.sml
   endianess-big.sml
   endianess-little.sml
-  compileexn.sml --> ?
+
+    compileexn.sml --> ? (somewhere in Basics?)
 
 control/
-  basiccontrol.sml     (BasicControl: BASIC_CONTROL -> GeneralControl?)
-  print-control.sml    (Control_Print -> PrintControl = Control.Print)
-  parser-control.sml   (ParserControl, from Parse/main/parsercontrol.sml)
-  elabdata-control.sml (ElabDataControl)
-  mc-control.sml       (MCControl -> MatchCompControl -- match compiler)
-  elab-control.sml     (ElabControl -- general elaborator)
-  flint-control.sml    (FLINT_Control -> FLINTControl)
-  codegen-control.sml  (Control_CG -> CodeGenControl)
-  toplevel-control.sml (TopLevelControl (new): eldebugging, pddebugging, ...)
-  general-control.sml  (GeneralControl -- whats left in Control after above)
-  control.sig
-  control.sml
+  compiler-control.s??   (<- Basics/control/basiccontrol.sml (BasicControl: BASIC_CONTROL)	
+                          plus a few items from old Control (TopLevel/main/control.s??))
+  print-control.s??      (<- Control_Print (Basics/print/printcontrol.sml))
+  parser-control.s??     (<- Parse/main/parsercontrol.sml)
+  elabdata-control.s??   (<- (ElabData/main/edcontrol.{sig,sml})
+  matchcomp-control.s??  (<- MCControl (Elaborator/control/mccontrol.s??
+  elaborator-control.s?? (<- ElabControl (Elaborator/control/elabcontrol.s??
+  flint-control.s??      (<- FLINT_Control
+  codegen-control.s??    (<- Control_CG (TopLevel/main/control.s??))
+  toplevel-control.s??   (TopLevelControl [new]: <- select items from old Control (TopLevel/main/control.s??))
+  control.s??            -- bundles all the "component" control modules listed above, for
+                          convenient access in the interactive REPL
+   
+  Note: These new control structures in Admin/control are simplified by using plain ref values
+    for controls without depending on smlnj-lib/Controls with its "registries", "priorities",
+    "obscurities", etc. We didn't really use those facilities in any essential way in the old
+    control structures. As far as I know, we were just working around these extra, and irrelevant,
+    complexities.
+
+  Note: There is no control structure for CPS. This is because the control flags for CPS seem to be
+    found in CodeGenControl (codegen-control.s??).
 
 errormsg/
+  (old versions of files eliminated)
 
 source/
+  (old versions of files eliminated)
 
 stats/
+  stats.sml
 
+Note: only Admin (admin.cm) will have to import
 
-
-
+  $smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)

@@ -1,0 +1,123 @@
+compiler/MAP-FL.txt
+
+Map of FLINT (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.]
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+FLINT/ flint.cm -- the CPS Group/Library CDF
+
+(* ---------------------------- Exports ---------------------------- *)
+
+  structure TransUtil
+  structure Translate
+  structure Lty
+  structure LtyKindChk
+  structure LtyKernel
+  structure LtyDef
+  structure LtyExtern
+  structure PrimTyc
+  structure PPLty
+  structure PPFlint
+  structure LContract
+  structure Specialize
+  structure LambdaVar
+  structure ChkFlint
+  structure FLINTOpt
+  signature FLINT 
+  structure FLINT
+
+
+(* ---------------------------- Members ---------------------------- *)
+
+FLINT/
+
+FLINT/main/
+  flint-opt.sml
+  control.sig
+  control.sml
+
+FLINT/plambda/
+  chkplexp.sml
+  flintnm.sml
+  pflatten.sig
+  pflatten.sml
+  plambda.sig
+  plambda.sml
+  pplexp.sml
+  reorder.sml
+
+FLINT/trans/
+  module-plists.sml
+  transtkind.sml
+  pequal.sml
+  transutil.sml
+  translate.sml
+  transprim.sml
+  transtypes.sml
+  literal-to-num.sml    (* uses CoreIntInf functionality *)
+    <
+    > CoreIntInf*    $smlnj/init/init.cmi : cm
+
+FLINT/flint/
+  chkflint.sml
+  flint.sig
+  flint.sml
+  flintutil.sml
+  ppflint.sig
+  ppflint.sml
+  tvarcvt.sml
+
+FLINT/kernel/
+  lty.sig
+  lty.sml
+  ltykernel.sig
+  ltykernel.sml
+  ltydef.sig
+  ltydef.sml
+  funrecmeta.sig
+  funrecmeta.sml
+  ltybasic.sig
+  ltybasic.sml
+  ltyextern.sig
+  ltyextern.sml
+  ltydict.sml
+  primtyc.sig
+  primtyc.sml
+  ltykindchk.sml
+  pplty.sml
+
+FLINT/opt/
+  fixfix.sml
+  collect.sml
+  fcontract.sml
+  optutils.sml
+  lcontract.sml
+  recover.sml
+  specialize.sml
+  loopify.sml
+  lift.sml
+
+FLINT/reps/
+  coerce.sml
+  equal.sml
+  reify.sml
+  rttype.sml
+  typeoper.sml
+  wrapping.sml
+
+(* ------------------------------- Imports ------------------------------- *)
+
+(* Basis libaries *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm        (* smlnj-lib/Util *)
+$smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
+$smlnj/smlnj-lib/prettyprint-lib.cm  (* smlnj-lib/PrettyPrint *)
+
+$smlnj/init/init.cmi : cm            (* CoreIntInf *)
