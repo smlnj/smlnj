@@ -206,6 +206,10 @@ source/
 stats/
   stats.sml
 
-Note: only Admin (admin.cm) will have to import
+Note: Only Admin (admin.cm) might have to import
 
   $smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
+
+but we have revised the code for the control structures to use plain references that
+are not produced through the registry mechanismls of the Controls library. So Admin will
+not use smlnj-lib/Controls.

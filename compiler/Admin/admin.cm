@@ -1,0 +1,107 @@
+(* Admin/admin.cm
+ *
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Admin library: Some basic compiler support modules not involving the compiler
+ *    internal structures.
+ *)
+
+Library
+
+structure PrintControl
+structure ElabDataControl
+structure ElaboratorControl
+structure FLINTControl
+structure CodeGenControl
+structure TopLevelControl
+structure CompilerControl
+structure Control
+
+structure ErrorMsg
+structure Source
+structure SourceMap
+
+structure Endianess
+structure Target
+
+structure Stats
+
+is
+
+(* ------------------------------- Members ------------------------------- *)
+
+(* Admin/control/ *)
+control/print-control.sig
+control/print-control.sml
+control/parser-control.sig
+control/parser-control.sml
+control/elabdata-control.sig
+control/elabdata-control.sml
+control/elaborator-control.sig
+control/elaborator-control.sml
+control/matchcomp-control.sig
+control/matchcomp-control.sml
+control/flint-control.sig
+control/flint-control.sml
+control/codegen-control.sig
+control/codegen-control.sml
+control/toplevel-control.sig
+control/toplevel-control.sml
+control/compiler-control.sig
+control/compiler-control.sml
+control/control.sig
+control/control.sml
+
+(* Admin/errormsg *)
+errormsg/errormsg.sig
+errormsg/errormsg.sml
+errormsg/pperrormsg.sml
+
+(* Admin/config *)
+#if defined(TARGET_BIG_ENDIAN)
+        config/endianess-big.sml
+#elif defined(TARGET_LITTLE_ENDIAN)
+        config/endianess-little.sml
+        (* falling back on host-specific endianness spec *)
+#elif defined(BIG_ENDIAN)
+	config/endianess-big.sml
+#else
+	config/endianess-little.sml
+#endif
+
+config/target.sig
+
+#if defined(TARGET_SIZE_32)
+        config/target32.sml
+#elif defined(TARGET_SIZE_64)
+        config/target64.sml
+        (* falling back on host-specific size spec *)
+#elif defined(SIZE_32)
+	config/target32.sml
+#else
+	config/target64.sml
+#endif
+
+(* Admin/source *)
+soure/pathnames.sml
+source/source.sig
+source/source.sml
+source/sourceutil.sml
+source/sourcemap.sig
+source/sourcemap.sml
+source/ppsourcemap.sml
+
+(* Admin/stats *)
+stats/stats.sml
+
+(* ------------------------------- Imports ------------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib libraries (via *)
+
+$smlnj/viscomp/prettyprint-lib.cm
+  (* PrettyPrint, used in errormsg/pperrormsg.sml, source/ppsourcemap.sml, ... *)
+  (* alternatively, $compiler/smlnj-lib/PrettyPrint/prettyprint-lib.cm *)

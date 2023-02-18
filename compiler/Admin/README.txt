@@ -28,3 +28,6 @@ source/
 
 stats/
   -- moved with minimal necessary changes from Basics
+
+
+CM description file: Admin/admin.cm

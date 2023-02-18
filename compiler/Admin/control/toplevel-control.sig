@@ -1,4 +1,4 @@
-(* Admin/control/codegen-control.sig
+(* Admin/control/toplevel-control.sig
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.

@@ -20,6 +20,6 @@ sig
   val saveCPSopt : bool ref
   val saveClosure : bool ref
 
-  val tdp_instrument : bool ref
+(* val tdp_instrument : bool ref -- investigate! Who would miss it? *)
 
 end (* signature COMPILER_CONTROL *)
