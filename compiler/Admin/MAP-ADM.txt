@@ -33,30 +33,81 @@ Admin/admin.cm -- the CPS Group/Library CDF
 
   structure Stats
 
+  We don't need to export any signatures?
 
 (* ---------------------------- Members ---------------------------- *)
 
 Admin/control/
   print-control.sig
+    < PRINT_CONTROL
+    >
   print-control.sml
+    < PrintControl
+    >
+      PRINT_CONTROL       (Admin/control/print-control.sig) 
   parser-control.sig
+    < PARSER_CONTROL
+    >
   parser-control.sml
+    < ParserControl
+    >
+      PARSER_CONTROL      (Admin/control/parser-control.sig) 
   elabdata-control.sig
+    < ELABDATA_CONTROL
+    >
   elabdata-control.sml
+    < ElabDataControl
+    >
+      ELABDATA_CONTROL    (Admin/control/elabdata-control.sig) 
   elaborator-control.sig
+    < ELABORATOR_CONTROL
+    >
   elaborator-control.sml
+    < ElaboratorControl
+    >
+      ELABORATOR_CONTROL  (Admin/control/elaborator-control.sig) 
   matchcomp-control.sig
+    < MATCHCOMP_CONTROL
+    >
   matchcomp-control.sml
+    < MatchCompControl
+    >
+      MATCHCOMP_CONTROL   (Admin/control/matchcomp-control.sig) 
   flint-control.sig
+    < FLINT_CONTROL
+    >
   flint-control.sml
+    < FLINTControl
+    >
+      FLINT_CONTROL       (Admin/control/flint-control.sig) 
   codegen-control.sig
+    < CODEGEN_CONTROL
+    >
   codegen-control.sml
+    < CodeGenControl
+    >
+      CODEGEN_CONTROL     (Admin/control/codegen-control.sig) 
   toplevel-control.sig
+    < TOPLEVEL_CONTROL
+    >
   toplevel-control.sml
+    < TopLevelControl
+    >
+      TOPLEVEL_CONTROL    (Admin/control/toplevel-control.sig) 
   compiler-control.sig
+    < COMPILER_CONTROL
+    >
   compiler-control.sml
+    < CompilerControl
+    >
+      COMPILER_CONTROL    (Admin/control/compiler-control.sig) 
   control.sig
+    < CONTROL
+    >
   control.sml
+    < Control
+    >
+      CONTROL             (Admin/control/control.sig) 
 
 
 Admin/errormsg/
@@ -64,25 +115,25 @@ Admin/errormsg/
     < ERRORMSG
     > PrettyPrint*   prettyprint-lib.cm
 
-      Source         (Admin/source/source.sml)
+      Source           (Admin/source/source.sml)
 
   errormsg.sml
     < ErrorMsg
     > PrettyPrint*   prettyprint-lib.cm
 
-      ERRORMSG       (Admin/errormsg/errormsg.sig)
-      Source         (Admin/source/source.sml)
-      SourceMap      (Admin/source/sourcemap.sml)
-      PPSourceMap    (Admin/source/ppsourcemap.sml)
-      PrintControl   (Admin/control/print-control.sml)
-      CompilerControl (Admin/control/compiler-control.sml)
+      ERRORMSG         (Admin/errormsg/errormsg.sig)
+      Source           (Admin/source/source.sml)
+      SourceMap        (Admin/source/sourcemap.sml)
+      PPSourceMap      (Admin/source/ppsourcemap.sml)
+      PrintControl     (Admin/control/print-control.sml)
+      CompilerControl  (Admin/control/compiler-control.sml)
 
   pperrormsg.sml
     < PPErrorMsg
     > PrettyPrint*   prettyprint-lib.cm
 
-      Source         (Admin/source/source.sml)
-      SourceMap      (Admin/source/sourcemap.sml)
+      Source           (Admin/source/source.sml)
+      SourceMap        (Admin/source/sourcemap.sml)
 
 
 Admin/config/
@@ -162,4 +213,5 @@ Admin/stats/
 $smlnj/basis/basis.cm
 
 (* smlnj-lib libraries *)
-$smlnj/viscomp/prettyprint-lib.cm: PrettyPrint (errormsg/pperrormsg.sml, source/ppsourcemap.sml)
+$smlnj/viscomp/prettyprint-lib.cm: PrettyPrint
+  (used in: errormsg/pperrormsg.sml, source/ppsourcemap.sml)
