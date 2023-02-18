@@ -9,23 +9,23 @@
 
 Library
 
-structure PrintControl
-structure ElabDataControl
-structure ElaboratorControl
-structure FLINTControl
-structure CodeGenControl
-structure TopLevelControl
-structure CompilerControl
-structure Control
+  structure PrintControl
+  structure ElabDataControl
+  structure ElaboratorControl
+  structure FLINTControl
+  structure CodeGenControl
+  structure TopLevelControl
+  structure CompilerControl
+  structure Control  (* could just export Control to get them all *)
 
-structure ErrorMsg
-structure Source
-structure SourceMap
+  structure ErrorMsg
+  structure Source
+  structure SourceMap
 
-structure Endianess
-structure Target
+  structure Endianess
+  structure Target
 
-structure Stats
+  structure Stats
 
 is
 

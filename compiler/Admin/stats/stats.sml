@@ -75,8 +75,8 @@ structure Stats :> STATS =
     fun addStat(STAT{tot = (c :: _),...}) n = addCounter c n
       | addStat(STAT{tot = [], ... }) _ = ()
 
-    val say = Control_Print.say
-    val flush = Control_Print.flush
+    val say = PrintControl.say
+    val flush = PrintControl.flush
 
 (** NOTE: we should be able to rewrite this using the Timer structure **)
     type times = {usr:T.time, sys:T.time, gc:T.time}

@@ -1,4 +1,4 @@
-compiler/MAP-FL.txt
+compiler/FLINT/MAP-FL.txt
 
 Map of FLINT (as a "library")
 
@@ -9,7 +9,7 @@ Map of FLINT (as a "library")
   to be structures, unless they end in "Fn", in which case they are assumed to be functors.
   These defaults can be overridden by qualifiers, e.g. "CPS [str]".
 
-FLINT/ flint.cm -- the CPS Group/Library CDF
+FLINT/flint.cm -- the CPS Group/Library CDF
 
 (* ---------------------------- Exports ---------------------------- *)
 
@@ -110,7 +110,7 @@ FLINT/reps/
   typeoper.sml
   wrapping.sml
 
-(* ------------------------------- Imports ------------------------------- *)
+(* ---------------------------- Imports ---------------------------- *)
 
 (* Basis libaries *)
 $smlnj/basis/basis.cm

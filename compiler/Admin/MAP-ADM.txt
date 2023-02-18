@@ -1,0 +1,165 @@
+Admin/MAP-ADM.txt
+
+compiler/FLINT/MAP-FL.txt
+
+Map of Admin (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.]
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+Admin/admin.cm -- the CPS Group/Library CDF
+
+(* ---------------------------- Exports ---------------------------- *)
+
+  structure PrintControl
+  structure ElabDataControl
+  structure ElaboratorControl
+  structure FLINTControl
+  structure CodeGenControl
+  structure TopLevelControl
+  structure CompilerControl
+  structure Control  (* could just export Control *)
+
+  structure ErrorMsg
+  structure Source
+  structure SourceMap
+
+  structure Endianess
+  structure Target
+
+  structure Stats
+
+
+(* ---------------------------- Members ---------------------------- *)
+
+Admin/control/
+  print-control.sig
+  print-control.sml
+  parser-control.sig
+  parser-control.sml
+  elabdata-control.sig
+  elabdata-control.sml
+  elaborator-control.sig
+  elaborator-control.sml
+  matchcomp-control.sig
+  matchcomp-control.sml
+  flint-control.sig
+  flint-control.sml
+  codegen-control.sig
+  codegen-control.sml
+  toplevel-control.sig
+  toplevel-control.sml
+  compiler-control.sig
+  compiler-control.sml
+  control.sig
+  control.sml
+
+
+Admin/errormsg/
+  errormsg.sig
+    < ERRORMSG
+    > PrettyPrint*   prettyprint-lib.cm
+
+      Source         (Admin/source/source.sml)
+
+  errormsg.sml
+    < ErrorMsg
+    > PrettyPrint*   prettyprint-lib.cm
+
+      ERRORMSG       (Admin/errormsg/errormsg.sig)
+      Source         (Admin/source/source.sml)
+      SourceMap      (Admin/source/sourcemap.sml)
+      PPSourceMap    (Admin/source/ppsourcemap.sml)
+      PrintControl   (Admin/control/print-control.sml)
+      CompilerControl (Admin/control/compiler-control.sml)
+
+  pperrormsg.sml
+    < PPErrorMsg
+    > PrettyPrint*   prettyprint-lib.cm
+
+      Source         (Admin/source/source.sml)
+      SourceMap      (Admin/source/sourcemap.sml)
+
+
+Admin/config/
+  endianess-big.sml
+    < Endianess
+    >
+
+  endianess-little.sml
+    < Endianess
+    >
+
+  target.sig
+    < TARGET
+    >
+    
+  target32.sml
+    < Target
+    >
+
+      TARGET     (Admin/config/target.sig)
+      Endianess  (Admin/config/endianess-*.sml)
+
+  target64.sml
+    < Target
+    >
+
+      TARGET     (Admin/config/target.sig)
+      Endianess  (Admin/config/endianess-*.sml)
+
+ 
+Admin/source/
+  pathnames.sml  -- useless, not used
+    < Pathnames
+    >
+  source.sig
+    < SOURCE
+    > [TextIO: Basis]
+
+  source.sml
+    < Source
+    > [TextIO: Basis]
+
+      SOURCE
+
+  sourceutil.sml
+    < SourceUtil
+    >
+    
+  sourcemap.sig
+    < SOURCE_MAP
+    >
+
+      Source (Admin/source/source.sml)
+
+  sourcemap.sml
+    < SourceMap
+    >
+    
+      SOURCE_MAP  (Admin/source/sourcemap.sig)
+
+  ppsourcemap.sml
+    < PPSourceMap
+    > PrettyPrint*  prettyprint-lib.cm
+
+
+Admin/stats/
+  stats.sml
+    < STATS
+      Stats
+    > [Time, Timer, SMLofNJ: Basis]
+
+      PrintControl   (Admin/control/print-control.sml)
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib libraries *)
+$smlnj/viscomp/prettyprint-lib.cm: PrettyPrint (errormsg/pperrormsg.sml, source/ppsourcemap.sml)

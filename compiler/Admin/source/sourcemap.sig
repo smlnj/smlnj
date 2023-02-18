@@ -51,7 +51,7 @@ Change Log:
 
 2. [DBM, 2022.09] Revised, along with ErrorMsg:
   - convert to the new PrettyPrint library
-  - remove Ramsey's NoWeb(?) machinery supporting "#line" directives
+  - remove Ramsey's NoWeb machinery supporting "#line" directives
     and "resynchronization" with multiple input files.
     A source is associated with a single file, or with an interactive
     input stream like StdIn.
