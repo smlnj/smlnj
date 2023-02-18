@@ -37,9 +37,39 @@ FLINT/flint.cm -- the CPS Group/Library CDF
 FLINT/
 
 FLINT/main/
+
   flint-opt.sml
+    < FLINTOpt
+    > Stats*          basics.cm -> admin.cm (Admin/stats/stats.sml)
+      ErrorMsg*       basics.cm -> admin.cm (Admin/
+
+      FLINT           (FLINT/flint/flint.sml)
+      FLINT_Control   (FLINT/main/control.sml -> Admin/control/flint-control.sml)
+      PPFlint         (FLINT/flint/ppflint.sml)
+      LtyBasic        (FLINT/kernel/ltybasic.sml)
+      LtyExtern       (FLINT/kernel/ltyextern.sml)
+      Control         (TopLevel/main/control.sml -> Admin/control/control.sml)
+      LContract       (FLINT/opt/lcontract.sml)
+      FContract       (FLINT/opt/fcontract.sml)
+      Loopify         (FLINT/opt/loopify.sml)
+      FixFix	      (FLINT/opt/fixfix.sml)    
+      Lift	      (FLINT/opt/lift.sml)
+      Specialize      (FLINT/opt/specialize.sml)
+      Recover         (FLINT/opt/recover.sml) 
+      Wrapping        (FLINT/reps/wrapping.sml)
+      Reify           (FLINT/reps/reify.sml)
+      TvarCvt         (FLINT/flint/tvarcvt.sml)
+      ChkFlint        (FLINT/flint/chkflint.sml)
+      PPLty           (FLINT/flint/ppflint.sml)
+
+    Note: FLINT_Control.recover must be moved; it's not in FLINTControl.
+
   control.sig
+    <
+    >
   control.sml
+    < FLINT_Control   (-> FLINTControl: Admin/control/flint-control.sml)
+    >
 
 FLINT/plambda/
   chkplexp.sml
