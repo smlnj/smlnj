@@ -67,7 +67,7 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 
   (* generate the clusters a limit checks for a list of first-order CPS functions *)
     fun clusters funcs = let
-	  val clusters = Cluster.cluster (!Control.CG.useLLVM, funcs)
+	  val clusters = Cluster.cluster (true, funcs)
 	  in
 	  (* add heap-limit checks etc. *)
 	    allocChks clusters
