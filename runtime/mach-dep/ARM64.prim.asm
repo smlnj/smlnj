@@ -240,7 +240,7 @@ L_callc_nogc:
 
 /* saveregs:
  * Entry point for GC.  Control is transfered using a `call` instruction,
- * so the return address is on the top of the stack.
+ * so the return address is in the link register (`xpc`).
  */
 ALIGNED_LABEL(saveregs)
         mov     wreqId,IM(REQ_GC)               /* wreqId = REQ_GC */
