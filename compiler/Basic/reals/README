@@ -1,0 +1,8 @@
+Code to represent real literals in the compiler.  This code is adapted from
+the SML Compiler Utilities, which can be found at
+
+	https://github.com/JohnReppy/sml-compiler-utils
+
+The main change is that the "float" was changed to "real" in the naming scheme
+so as to match the SML surface-language type.
+

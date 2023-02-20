@@ -15,9 +15,6 @@ Group
 	structure Control_Print
 	structure PrintUtil
 
-	signature PRETTYPRINT
-	structure PrettyPrint
-
 	signature SYMBOL
 	signature FASTSYMBOL
 	signature FIXITY

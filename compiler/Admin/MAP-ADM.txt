@@ -1,17 +1,15 @@
-Admin/MAP-ADM.txt
-
-compiler/FLINT/MAP-FL.txt
+compiler/Admin/MAP-ADM.txt
 
 Map of Admin (as a "library")
 
 * Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
-* Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*)
-  [We assume import of basis.cm and smlnj-lib.cm.]
+* Imports from outside the Admin library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume imports from basis.cm and smlnj-lib.cm, generally without recording them here.]
 * All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
   to be structures, unless they end in "Fn", in which case they are assumed to be functors.
   These defaults can be overridden by qualifiers, e.g. "CPS [str]".
 
-Admin/admin.cm -- the CPS Group/Library CDF
+Admin/admin.cm -- the Admin Group/Library CDF
 
 (* ---------------------------- Exports ---------------------------- *)
 
@@ -214,4 +212,5 @@ $smlnj/basis/basis.cm
 
 (* smlnj-lib libraries *)
 $smlnj/viscomp/prettyprint-lib.cm: PrettyPrint
-  (used in: errormsg/pperrormsg.sml, source/ppsourcemap.sml)
+  (used in: errormsg/errormsg.sml, errormsg/pperrormsg.sml, source/ppsourcemap.sml)
+  ([Q] Should we be referencing prettyprint-lib.cm through viscomp? )

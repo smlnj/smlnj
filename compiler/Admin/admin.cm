@@ -9,6 +9,7 @@
 
 Library
 
+  (* control/ *)
   structure PrintControl
   structure ElabDataControl
   structure ElaboratorControl
@@ -18,13 +19,18 @@ Library
   structure CompilerControl
   structure Control  (* could just export Control to get them all *)
 
+  (* errormsg/ *)
   structure ErrorMsg
+
+  (* source/ *)
   structure Source
   structure SourceMap
 
+  (* config/ *)
   structure Endianess
   structure Target
 
+  (* stats/ *)
   structure Stats
 
 is
@@ -53,12 +59,12 @@ control/compiler-control.sml
 control/control.sig
 control/control.sml
 
-(* Admin/errormsg *)
+(* Admin/errormsg/ *)
 errormsg/errormsg.sig
 errormsg/errormsg.sml
 errormsg/pperrormsg.sml
 
-(* Admin/config *)
+(* Admin/config/ *)
 #if defined(TARGET_BIG_ENDIAN)
         config/endianess-big.sml
 #elif defined(TARGET_LITTLE_ENDIAN)
@@ -83,8 +89,8 @@ config/target.sig
 	config/target64.sml
 #endif
 
-(* Admin/source *)
-soure/pathnames.sml
+(* Admin/source/ *)
+source/pathnames.sml
 source/source.sig
 source/source.sml
 source/sourceutil.sml
@@ -92,7 +98,7 @@ source/sourcemap.sig
 source/sourcemap.sml
 source/ppsourcemap.sml
 
-(* Admin/stats *)
+(* Admin/stats/ *)
 stats/stats.sml
 
 (* ------------------------------- Imports ------------------------------- *)

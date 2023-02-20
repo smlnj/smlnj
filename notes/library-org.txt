@@ -97,7 +97,8 @@ up Basics + ElabData/basics into multiple libraries -- see below).
 
 ------------------------------------------------------------------------------------------
 
-compiler/Basics (or "Base"?): fundamental and/or "generic" types that are used in the compiler
+compiler/Basics (or "Base"?, or "Basic" (no s)):
+  fundamental and/or "generic" types (e.g. symbol) that are used in the compiler
   Top-level directory replacing ElabData/basics.
 
 symbol:
@@ -206,10 +207,22 @@ source/
 stats/
   stats.sml
 
-Note: Only Admin (admin.cm) might have to import
+Note: Admin (admin.cm) does not have to import
 
   $smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
 
-but we have revised the code for the control structures to use plain references that
-are not produced through the registry mechanismls of the Controls library. So Admin will
-not use smlnj-lib/Controls.
+because we have revised the code for the control structures to use plain references that
+are not produced through the registry mechanisms of the Controls library.
+
+
+For further details, see:
+
+  Admin/README.txt
+  Admin/admin.cm
+  Admin/MAP-ADM.txt
+
+  Basic/README.txt
+  Basic/basic.cm
+  Basic/MAP-BASIC.txt
+
+
