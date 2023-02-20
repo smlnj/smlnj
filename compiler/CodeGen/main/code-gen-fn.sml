@@ -31,7 +31,8 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
           val code = CodeObj.generate {
                   target = MachSpec.llvmTargetName,
                   src = source,
-                  pkl = pkl
+                  pkl = pkl,
+                  verifyLLVM = !Control.CG.verifyLLVM
                 }
 	  in
 	    {code = code, data = data}
