@@ -34,20 +34,20 @@ structure CodeObj :> CODE_OBJ =
   (* set the target architecture for the code generator *)
     val setTarget : string option -> bool = CI.c_function "CodeGen" "setTarget"
   (* interface to the LLVM code generator *)
-    val codegen : string * W8V.vector -> W8A.array * int = CI.c_function "CodeGen" "generate"
+    val codegen : string * W8V.vector * bool -> W8A.array * int = CI.c_function "CodeGen" "generate"
   (* allocate a code object in the heap (DEPRECATED) *)
     val allocCode : int -> W8A.array = CI.c_function "SMLNJ-RunT" "allocCode"
     val mkLiterals : W8V.vector -> object = CI.c_function "SMLNJ-RunT" "mkLiterals"
     val mkExec : W8A.array * int -> executable = CI.c_function "SMLNJ-RunT" "mkExec"
     end (* local *)
 
-    fun generate {target, src, pkl} =
+    fun generate {target, src, pkl, verifyLLVM} =
           if setTarget (SOME target)
             then raise Fail(concat[
                 "Internal error: ", target, " is not a supported codegen target"
               ])
             else let
-              val (code, offset) = codegen (src, pkl)
+              val (code, offset) = codegen (src, pkl, verifyLLVM)
               in
                 C{entrypoint = ref offset, obj = code}
               end
