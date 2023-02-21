@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-structure PrettyPrint :> PRETTY_PRINT =
+structure PrettyPrint : PRETTY_PRINT =
   struct
 
     structure M = Measure

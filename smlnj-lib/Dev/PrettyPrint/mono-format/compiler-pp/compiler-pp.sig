@@ -8,7 +8,7 @@
  *)
 
 signature COMPILER_PP =
-sig
+  sig
 
   (* types *)
 
@@ -20,13 +20,18 @@ sig
       | P  (* Packed alignment, with implicit softline separtors between format components *)
       | C  (* compact, no separators between block format elements, unbreakable *)
 
-    datatype break  (* used to separate doc elements of a block; conditional and unconditional line breaks *)
-      = HardLine         (* hard line break *)
-      | SoftLine of int  (* soft line break; rendered to n spaces when not triggered; n >= 0 *)
-      | Space of int     (* n spaces; n >= 0; Space 0 == NullBreak *)
-      | NullBreak        (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
-			  * This is essentially equivalent to Space 0, but included for logical "completeness",
-			  * and also eliminates the need for break option in some places (alignmentToBreak). *)
+    datatype break
+      = Newline         (* hard line break *)
+      | Break of int    (* soft line break; rendered to n spaces when not
+                         * triggered; n >= 0
+                         *)
+      | Space of int    (* non-breakable spaces; n >= 0; Space 0 == NullBreak *)
+      | NullBreak       (* A default break that does nothing, i.e., neither breaks
+                         * a line nor inserts spaces. `NullBreak` is essentially
+                         * equivalent to Space 0, but included for logical "completeness",
+			 * and also eliminates the need for a break option in some
+                         * places (alignmentToBreak).
+                         *)
 
     datatype element
       = BRK of break   (* breaks are atomic and do not contain content *)
@@ -202,4 +207,4 @@ sig
     val printFormatNL : format -> unit
 	(* like printFormat, but with newline appened *)
 
-end (* end COMPILER_PP *)
+  end (* end COMPILER_PP *)

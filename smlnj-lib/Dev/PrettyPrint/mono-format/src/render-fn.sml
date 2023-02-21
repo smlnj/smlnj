@@ -17,6 +17,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
             tokenMap : Atom.atom -> Dev.token option
           } -> PrettyPrint.format -> unit
 
+(** TODO
     (* compute the dimensions of the result of rendering a format *)
     val dimensions : PrettyPrint.format -> {
             nr : int,           (* number of rows (i.e., lines) in the render *)
@@ -27,11 +28,14 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                                  * indentation) in the render
                                  *)
           }
+**)
 
   end = struct
 
     structure F = Format
     structure M = Measure
+
+    type device = Dev.device
 
     fun error msg = raise Fail("Render Error: " ^ msg)
 
@@ -67,8 +71,6 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
           fun lineBreak n = (Dev.newline dev; Dev.indent(dev, n))
           (* get the current line width from the device *)
           val lw = Option.getOpt(Dev.lineWidth dev, maxInt)
-          (* get the current depth limit from the device *)
-          val depthLimit = Option.getOpt(Dev.maxDepth dev, maxInt)
           (* render0: format * int * int * bool -> int * bool
            * the main recursive rendering of the format
            * Inputs:
@@ -98,7 +100,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
            *               block's blm (outerBlm)
            * -- ASSERT: if newlinep is true, then cc = outerBlm
            *)
-          fun render0  (format, depth, outerBlm, cc, newlinep) = (case format
+          fun render0  (format, outerBlm, cc, newlinep) = (case format
                  of F.EMPTY =>
                       (* nothing printed, nothing changed; outerBlm not relevant *)
                       (cc, newlinep)
@@ -107,8 +109,8 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                      *)
                   | F.TEXT s => (Dev.string(dev, s); (cc + size s, false))
                     (* establishes a new local blm = cc; outerBlm not relevant *)
-                  | F.TOKEN(TOK{txt, sz}) => (case tokenMap txt
-                       of NONE => (Dev.string(dev, "<?token?>"); (cc + sz, false))
+                  | F.TOKEN(F.TOK{txt, sz}) => (case tokenMap txt
+                       of NONE => (Dev.string (dev, "<?token?>"); (cc + sz, false))
                         | SOME tok => (Dev.token (dev, tok); (cc + sz, false))
                       (* end case *))
                   | F.STYLE(sty, fmt) => (case (styleMap sty)
@@ -118,15 +120,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                               render0 (format, outerBlm, cc, newlinep) before
                               Dev.popStyle dev)
                         (* end case *))
-                  | F.BLOCK{content, ...} =>
-                      if (depth < depthLimit)
-                        then renderBLOCK (content, depth+1, cc, newlinep)
-                        else flatRender (dev, Dev.ellipses dev, 0)
+                  | F.BLOCK{content, ...} => renderBLOCK (content, cc, newlinep)
                     (* establishes a new local blm = cc; outerBlm not relevant *)
                   | F.ABLOCK{content, align, ...} =>
-                      if (depth < depthLimit)
-                        then renderABLOCK (content, depth+1, align, cc, newlinep)
-                        else flatRender (dev, Dev.ellipses dev, 0)
+                      renderABLOCK (content, align, cc, newlinep)
                     (* soft indented block; depends on outerBlm *)
                   | F.INDENT(n, fmt) => if newlinep
                       (* ASSERT: at outerBlm after newline+indent (i.e. cc = outerBlm) *)
@@ -138,7 +135,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                       else render0 (fmt, outerBlm, cc, false)
                     (* unconditionally render the format as flat; outerBlm not relevant *)
                   | F.FLAT format => (
-                      flatRender (dev, format, depth);
+                      flatRender format;
                       (cc + M.measure format, false))
                   | F.ALT(format1, format2) => if M.measure format1 <= lw - cc
                      then render0 (format1, outerBlm, cc, newlinep) (* format1 fits flat *)
@@ -147,28 +144,28 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
           (* renderBLOCK : element list * int * int * bool -> int * bool
            *  rendering the elements of an BLOCK
            *)
-          and renderBLOCK (elements, depth, cc, newlinep) = let
+          and renderBLOCK (elements, cc, newlinep) = let
                 val blm = cc (* the new block's blm is the entry cc *)
                 fun render (fmt, blm, cc, newlinep) =
-                      render0 (fmt, depth, blm, cc, newlinep)
+                      render0 (fmt, blm, cc, newlinep)
                 fun re (nil, cc, newlinep) = (cc, newlinep)
                   | re (element::rest, cc, newlinep) = (case element
-                       of FMT format => let
+                       of F.FMT format => let
                             val (cc', newlinep') = render (format, blm, cc, newlinep)
                             in
                               re (rest, cc', newlinep')
                             end
-                        | BRK break => ( (* rest should start with a FMT! *)
+                        | F.BRK break => ( (* rest should start with a FMT! *)
                             case break
-                             of NullBreak => re (rest, cc, false)
-                              | Newline => (lineBreak blm; re (rest, blm, true))
-                              | Space n => (sp n; re (rest, cc + n, newlinep))
-                              | Break n => (
+                             of F.NullBreak => re (rest, cc, false)
+                              | F.Newline => (lineBreak blm; re (rest, blm, true))
+                              | F.Space n => (sp n; re (rest, cc + n, newlinep))
+                              | F.Break n => (
                                   (* ASSERT: rest = FMT _ :: _; a BRK should be
                                    * followed by a FMT
                                    *)
                                   case rest
-                                   of FMT format' :: rest' =>
+                                   of F.FMT format' :: rest' =>
                                         if M.measure format' <= (lw - cc) - n  (* lw - (cc + n) *)
                                           then let
                                             val (cc', newlinep') = (
@@ -196,18 +193,18 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
            * Rendering the new block does not need to use the partent's blm,
            * so no blm argument is passed.
            *)
-          and renderABLOCK (nil, _, _, cc, newlinep) =
+          and renderABLOCK (nil, _, cc, newlinep) =
                 (* Special case of "empty" block, containing no formats, renders
                  * as the empty format, producing no output.  But this case should
                  * not occur, because (alignedBlock _ nil) should yield EMPTY,
                  * not an empty ABLOCK.
                  *)
                 (cc, newlinep)
-            | renderABLOCK (formats, depth, align, cc, newlinep) = let
+            | renderABLOCK (formats, align, cc, newlinep) = let
                 (* val _ = print ">>> renderABLOCK[not nil]\n" *)
                 val blm = cc  (* the blm of _this_ block is defined as the entry cc *)
                 fun render (fmt, blm, cc, newlinep) =
-                      render0 (fmt, depth, blm, cc, newlinep)
+                      render0 (fmt, blm, cc, newlinep)
                 (* renderFormats : format list * int * bool -> int * bool
                  * Arguments:
                  *  format :: rest  -- the formats constituting the body
@@ -220,10 +217,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                 fun renderFormats (format::rest, cc, newlinep) = let
                       (* renderBreak : [cc:]int * [m:]int -> [cc:]int * [newlinep:]bool *)
                       val renderBreak : (int * int) -> (int * bool) = (case align
-                             of C => (fn (cc, m) => (cc, false))
-                              | H => (fn (cc, m) => (sp 1; (cc+1, false)))
-                              | V => (fn (cc, m) => (lineBreak blm; (blm, true)))
-                              | P =>  (* virtual break is `Break 1` *)
+                             of F.C => (fn (cc, m) => (cc, false))
+                              | F.H => (fn (cc, m) => (sp 1; (cc+1, false)))
+                              | F.V => (fn (cc, m) => (lineBreak blm; (blm, true)))
+                              | F.P =>  (* virtual break is `Break 1` *)
                                   (fn (cc, m) => if m <= (lw - cc) - 1
                                       then (sp 1; (cc+1, false))
                                       else (lineBreak blm; (blm, true)))
@@ -253,62 +250,63 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
          * `Break` breaks. `flatRender` is called once when rendering a FLAT format
          * when the format fits.
          *)
-        and flatRender (format, depth) = let
+        and flatRender (format : F.format) = let
               (* flatRender0: format -> unit
                *   -- recurses over the format structure
                *)
-              fun flatRender0 (format : format, depth) = (case format
+              fun flatRender0 (format : F.format) = (case format
                      of F.EMPTY => ()
-                      | F.TEXT s => Dev.string s
-                      | F.TOKEN tok => Dev.token (dev, tok)
-                      | F.STYLE(sty, fmt) => (
-                          Dev.pushStyle (dev, sty);
-                          flatRender0 fmt;
-                          Dev.popStyle dev)
-                      | F.BLOCK{content, ...} =>
-                          if depth < maxDepth
-                            then flatRenderBLOCK (content, depth+1)
-                            else flatRender0(Dev.ellipses dev, 0)
-                      | F.ABLOCK{content, ...} =>
-                          if depth < maxDepth
-                            then flatRenderABLOCK (content, depth+1)
-                            else flatRender0(Dev.ellipses dev, 0)
+                      | F.TEXT s => Dev.string (dev, s)
+                      | F.TOKEN(F.TOK{txt, ...}) => (case tokenMap txt
+                           of NONE => Dev.string (dev, "<?token?>")
+                            | SOME tok => Dev.token (dev, tok)
+                          (* end case *))
+                      | F.STYLE(sty, fmt) => (case (styleMap sty)
+                             of NONE => flatRender0 format
+                              | SOME sty' => (
+                                  Dev.pushStyle (dev, sty');
+                                  flatRender0 format before
+                                  Dev.popStyle dev)
+                            (* end case *))
+                      | F.BLOCK{content, ...} => flatRenderBLOCK content
+                      | F.ABLOCK{content, ...} => flatRenderABLOCK content
                       | F.INDENT(_, fmt) => flatRender0 fmt
                       | F.FLAT fmt => flatRender0 fmt
-                      | F.ALT (fmt, _) => flatRender0 fmt   (* any format fits *)
+                      | F.ALT(fmt, _) => flatRender0 fmt   (* any format fits *)
                     (* end case *))
                 (* flatRenderBLOCK : element list -> unit *)
-                and flatRenderBLOCK ([], _) = sp 1
-                  | flatRenderBLOCK (elements, depth) = let
+                and flatRenderBLOCK [] = sp 1
+                  | flatRenderBLOCK elements = let
                       fun rend [] = ()
                         | rend (element::rest) = (case element
-                             of FMT format => (flatRender0 (format, depth); rend rest)
-                              | BRK break => (case break
-                                   of Newline => (sp 1; rend rest)
-                                    | Break n => (sp n; rend rest)
-                                    | Space n => (sp n; rend rest)
-                                    | NullBreak => rend rest
+                             of F.FMT format => (flatRender0 format; rend rest)
+                              | F.BRK break => (case break
+                                   of F.Newline => (sp 1; rend rest)
+                                    | F.Break n => (sp n; rend rest)
+                                    | F.Space n => (sp n; rend rest)
+                                    | F.NullBreak => rend rest
                                   (* end case *))
                             (* end case *))
                       in
                         rend elements
                       end
                 (* flatRenderABLOCK : format list -> unit *)
-                and flatRenderABLOCK ([], _) = sp 1
-                  | flatRenderABLOCK (formats, depth) = let (* formats not empty *)
+                and flatRenderABLOCK [] = sp 1
+                  | flatRenderABLOCK formats = let (* formats not empty *)
                       fun rf [] = ()
                         | rf [format] = flatRender0 format (* no break after last format *)
-                        | rf (format::rest) = (flatRender0 (format, depth); sp 1; rf rest)
+                        | rf (format::rest) = (flatRender0 format; sp 1; rf rest)
                       in
                         rf formats
                       end
                 in
-                  flatRender0 (format, depth)
+                  flatRender0 format
                 end (* fun flatRender *)
         in (* the initial "context" of a render is a vitrual newline + 0 indentation *)
-          ignore (render0 (format, 0, 0, 0, true))
+          ignore (render0 (format, 0, 0, true))
         end (* fun render *)
 
+(** TODO
     fun dimensions (fmt : F.format) = let
           val nLines = ref 1
           val maxCol = ref 0
@@ -402,5 +400,6 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
           in
             {nr = !nLines, nc = !maxCol, maxTextWid = !maxTextWid}
           end
+**)
 
   end (* functor RenderFn *)

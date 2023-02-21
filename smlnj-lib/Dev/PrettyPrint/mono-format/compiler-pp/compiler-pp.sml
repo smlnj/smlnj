@@ -10,11 +10,11 @@
 structure CompilerPP :> COMPILER_PP =
   struct
 
+    structure F = Format
     structure PP = PrettyPrint
     structure Dev = TextIODev
 
-    type style = unit
-    type format = style format
+    type format = PP.format
 
     datatype alignment = datatype PP.alignment
     datatype break = datatype PP.break
@@ -215,14 +215,9 @@ fun vHeaderFormats {header1: string, header2: string} (elems: format list) =
 
 (*** "indenting" formats ***)
 
-(* indent : int -> format -> format *)
 (* When applied to EMPTY, produces EMPTY
  * The resulting format soft-indents n spaces (iff following a line break) *)
-fun indent (n: int) (fmt: format) =
-    (case fmt
-       of EMPTY => EMPTY
-        | _ => INDENT (n, fmt))
-
+val indent : int -> format -> format = PP.indent
 
 (*** functions for setting and accessing the line width ***)
 
