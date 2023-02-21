@@ -10,12 +10,17 @@ TODO:
    Admin
    Basic
    ElabData
-   Elaborate  (Elaborator)
+   Elaborate  (<- Elaborator)
    FLINT
    CPS
-   CodeGen    (NewCodeGen)
+   CodeGen    (<- NewCodeGen)
    Execute
    TopLevel
+
+   CM 
+
+   Basis
+   smlnj-lib
 
    Which library imports what from what other libraries?
 
