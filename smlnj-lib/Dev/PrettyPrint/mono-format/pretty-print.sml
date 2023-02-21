@@ -9,6 +9,7 @@ structure PrettyPrint :> PRETTY_PRINT =
 
     structure M = Measure
 
+    type style = Format.style
     datatype token = datatype Format.token
 
     datatype alignment = datatype Format.alignment
@@ -16,24 +17,24 @@ structure PrettyPrint :> PRETTY_PRINT =
     datatype format = datatype Format.format
     datatype element = datatype Format.element
 
-    type 'sty elements = 'sty element list
-    type 'sty formats = 'sty format list
+    type elements = element list
+    type formats = format list
 
     (* eliminate EMPTY format elements *)
-    fun reduceFormats (formats : 'sty formats) : 'sty formats =
+    fun reduceFormats (formats : formats) : formats =
         let fun notEmpty EMPTY = false
               | notEmpty _ = true
          in List.filter notEmpty formats
         end
 
     (* eliminate EMPTY format elements *)
-    fun reduceElements (elements : 'sty elements) : 'sty elements =
+    fun reduceElements (elements : elements) : elements =
         let fun notEmpty (FMT EMPTY) = false
               | notEmpty _ = true
          in List.filter notEmpty elements
         end
 
-    fun block (elements : 'sty elements) : 'sty format = (
+    fun block (elements : elements) : format = (
         case reduceElements elements
          of [] => EMPTY
             (* blocks consisting of a single (FMT fmt) element reduce to fmt *)
@@ -41,7 +42,7 @@ structure PrettyPrint :> PRETTY_PRINT =
           | _ => BLOCK{content = elements, sz = M.measureElements elements}
         (* end case *))
 
-    fun alignedBlock (align : alignment, formats : 'sty formats) : 'sty format = let
+    fun alignedBlock (align : alignment, formats : formats) : format = let
           val breaksize = (case align of C => 0 | _ => 1)
           in
             case reduceFormats formats
@@ -72,12 +73,12 @@ structure PrettyPrint :> PRETTY_PRINT =
 
     (* "conditional" formats *)
 
-    fun tryFlat (fmt : 'sty format) : 'sty format = ALT(FLAT fmt, fmt)
+    fun tryFlat (fmt : format) : format = ALT(FLAT fmt, fmt)
 
     (* alt : format * format -> format *)
     val alt = ALT
 
-    fun hvBlock (fmts : 'sty formats) : 'sty format = tryFlat (vBlock fmts)
+    fun hvBlock (fmts : formats) : format = tryFlat (vBlock fmts)
 
     (*** format-building utility functions for some primitive types ***)
 
@@ -91,7 +92,7 @@ structure PrettyPrint :> PRETTY_PRINT =
     (*** wrapping or closing formats, e.g., parenthesizing a format ***)
 
     (* tight -- no space between left, right, and fmt *)
-    fun enclose {left : 'sty format, right : 'sty format} fmt =
+    fun enclose {left : format, right : format} fmt =
           alignedBlock (C, [left, fmt, right])
 
     (*** functions for formatting sequences of formats (format lists) ***)
@@ -106,7 +107,7 @@ structure PrettyPrint :> PRETTY_PRINT =
 
     (* sequence : alignement -> format -> format list -> format
      *  The second argument (sep: format) is normally a symbol (TEXT) such as comma or semicolon *)
-    fun sequence {align : alignment, sep : 'sty format} (formats : 'sty formats) =
+    fun sequence {align : alignment, sep : format} (formats : formats) =
         let val separate =
                 (case align
                    of C => (fn elems => FMT sep :: elems)  (* alignment = C *)
@@ -134,7 +135,7 @@ structure PrettyPrint :> PRETTY_PRINT =
     (*** functions for formatting sequences of values (of homogeneous types, i.e. 'a lists) ***)
 
     fun 'a sequenceWithMap {
-              align : alignment, sep : 'sty format, fmt: 'a -> 'sty format
+              align : alignment, sep : format, fmt: 'a -> format
             }
             (xs: 'a list) = let
           val separate = (case align
@@ -161,8 +162,8 @@ structure PrettyPrint :> PRETTY_PRINT =
 
     fun closedSequenceWithMap {
             align : alignment,
-            left : 'sty format, sep : 'sty format, right : 'sty format,
-            fmt: 'a -> 'sty format
+            left : format, sep : format, right : format,
+            fmt: 'a -> format
           }
           (xs: 'a list) =
             enclose {left=left, right=right}
@@ -174,7 +175,7 @@ structure PrettyPrint :> PRETTY_PRINT =
     (* indent : int -> format -> format *)
     (* When applied to EMPTY, produces EMPTY
      * The resulting format soft-indents n spaces (iff following a line break) *)
-    fun indent (n: int) (fmt : 'sty format) = (case fmt
+    fun indent (n: int) (fmt : format) = (case fmt
            of EMPTY => EMPTY
             | _ => INDENT(n, fmt)
           (* end case *))

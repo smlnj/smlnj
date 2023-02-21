@@ -16,6 +16,7 @@ Library
 is
 
   $/basis.cm
+  $/smlnj-lib.cm
 
   format.sml
   measure.sig

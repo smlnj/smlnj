@@ -9,13 +9,20 @@ signature PRETTY_PRINT =
 
   (* types *)
 
-    (* an abstract piece of text *)
-    type 'sty token
+    (* rendering styles are specified by application-specific atoms; these are
+     * mapped to the device-specific styles by a user-defined mapping.
+     *)
+    type style = Atom.atom
+
+    (* tokens are bits of text whose size is not determined by the length
+     * of the text (e.g., UTF-8 characters; images; etc.)
+     *)
+    datatype token = TOK of {txt : Atom.atom, sz : int}
 
     (* specifies a formated term; the type variable is an application-specific
      * `style`.
      *)
-    type 'sty format
+    type format
 
     (* the alignment property of "aligned" blocks *)
     datatype alignment
@@ -46,42 +53,42 @@ signature PRETTY_PRINT =
                          * places (alignmentToBreak).
                          *)
 
-    datatype 'sty element
+    datatype element
       = BRK of break   (* breaks are atomic and do not contain content *)
-      | FMT of 'sty format
+      | FMT of format
 
   (* Basic formats and format building operations: *)
 
     (* the empty format, which is the identity for composition *)
-    val empty : 'sty format
+    val empty : format
     (* format ASCII text *)
-    val text  : string -> 'sty format
+    val text  : string -> format
     (* format an abstract text item (e.g., UTF8 characters) *)
-    val token : 'sty token -> 'sty format
+    val token : token -> format
     (* format with style *)
-    val style : 'sty -> 'sty format -> 'sty format
+    val style : style -> format -> format
     (* lift a `toString` function to a function for formating values as `text`. *)
-    val lift : ('a -> string) -> 'a -> 'sty format
+    val lift : ('a -> string) -> 'a -> format
 
     (* block-building functions *)
 
     (* format a block of text formed from a list of elements *)
-    val block : 'sty element list -> 'sty format
+    val block : element list -> format
 
     (* a block of text with a specific alignment *)
-    val alignedBlock : alignment * 'sty format list -> 'sty format
+    val alignedBlock : alignment * format list -> format
 
     (* building blocks, basic and aligned; n-ary versions taking lists, empty format args are absorbed
      *   empty argument list produces empty format *)
 
-    val hBlock : 'sty format list -> 'sty format
-    val vBlock : 'sty format list -> 'sty format
-    val pBlock : 'sty format list -> 'sty format
-    val cBlock : 'sty format list -> 'sty format
+    val hBlock : format list -> format
+    val vBlock : format list -> format
+    val pBlock : format list -> format
+    val cBlock : format list -> format
 
   (* wrapping or enclosing formats, plus appending newlines and prepending labels *)
 
-    val enclose : {left: 'sty format, right: 'sty format} -> 'sty format -> 'sty format
+    val enclose : {left: format, right: format} -> format -> format
         (* concatenates front and back to the front, respecively back, of the format *)
 
   (* composing lists of formats *)
@@ -89,47 +96,47 @@ signature PRETTY_PRINT =
     (* `sequence a break fmts`
      * inserts `break` between constituent `fmts` and aligns by `a`
      *)
-    val sequence : {align : alignment, sep : 'sty format}
-          -> 'sty format list
-          -> 'sty format
+    val sequence : {align : alignment, sep : format}
+          -> format list
+          -> format
 
     (* aligned sequence formatters, first argument is sep format *)
-    val hSequence : 'sty format -> 'sty format list -> 'sty format  (* = sequence H *)
-    val vSequence : 'sty format -> 'sty format list -> 'sty format  (* = sequence V *)
-    val pSequence : 'sty format -> 'sty format list -> 'sty format  (* = sequence P *)
-    val cSequence : 'sty format -> 'sty format list -> 'sty format  (* = sequence C *)
+    val hSequence : format -> format list -> format  (* = sequence H *)
+    val vSequence : format -> format list -> format  (* = sequence V *)
+    val pSequence : format -> format list -> format  (* = sequence P *)
+    val cSequence : format -> format list -> format  (* = sequence C *)
 
   (* formating of lists of values of arbitrary type *)
 
     val sequenceWithMap : {
             align : alignment,
-            sep : 'sty format,
-            fmt : 'a -> 'sty format
-          } -> 'a list -> 'sty format
+            sep : format,
+            fmt : 'a -> format
+          } -> 'a list -> format
 
     val closedSequenceWithMap : {
             align : alignment,
-            left : 'sty format,
-            sep : 'sty format,
-            right : 'sty format,
-            fmt : 'a -> 'sty format
-          } -> 'a list -> 'sty format
+            left : format,
+            sep : format,
+            right : format,
+            fmt : 'a -> format
+          } -> 'a list -> format
 
   (* indenting formats *)
 
-    val indent : int -> 'sty format -> 'sty format
+    val indent : int -> format -> format
         (* indent n empty ==> empty; indent n fmt ==> INDENT (n, frmt) *)
 
   (* Conditional formats: *)
 
-    val tryFlat : 'sty format -> 'sty format
+    val tryFlat : format -> format
 	(* if the format fits flat, then render it flat, otherwise render it normally *)
 
-    val alt : 'sty format * 'sty format -> 'sty format
+    val alt : format * format -> format
 	(* if the first format fits flat, use it, otherwise render the second format,
 	   NOTE: the two argument formats may not have the same content! But usually they should! *)
 
-    val hvBlock : 'sty format list -> 'sty format
+    val hvBlock : format list -> format
 	(* acts as hblock if it fits, otherwise as vblock *)
 
   end (* end PRETTY_PRINT *)

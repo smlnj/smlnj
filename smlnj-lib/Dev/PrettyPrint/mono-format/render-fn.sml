@@ -6,7 +6,7 @@
  * TODO: text width (vs. line width)
  *)
 
-functor PPRender (Dev : PP_DEVICE) :> sig
+functor RenderFn (Dev : PP_DEVICE) :> sig
 
     type device = Dev.device
 
@@ -317,7 +317,7 @@ functor PPRender (Dev : PP_DEVICE) :> sig
                  of F.EMPTY => (cc, nlp)
                   | F.TEXT s => (cc + size s, false)
                   | F.TOKEN tok => raise Fail "FIXME"
-                  | F.STYLE(sty, fmt) => measure (format, outerBlm, cc, nlp);
+                  | F.STYLE(sty, fmt) => measure (format, outerBlm, cc, nlp)
                   | F.BLOCK{content, ...} => measureBLOCK (content, cc, nlp)
                   | F.ABLOCK{content, align, ...} =>
                       measureABLOCK (content, align, cc, nlp)
@@ -378,7 +378,7 @@ functor PPRender (Dev : PP_DEVICE) :> sig
                               | P =>  (* virtual break is `Break 1` *)
                                   (fn (cc, m) => if m <= (lw - cc) - 1
                                       then (cc+1, false)
-                                      else (lineBreak blm; (blm, true))
+                                      else (lineBreak blm; (blm, true)))
                             (* end case *))
                       fun renderRest (nil, cc, nlp) = (cc, nlp)
                         | renderRest (format :: rest, cc, nlp) = let
