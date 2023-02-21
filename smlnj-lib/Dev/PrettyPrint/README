@@ -1,0 +1,6 @@
+Experimenting with extending the PrettyPrint library with
+devices and tokens.  The poly-format directory has a version
+that adds type parameters to the "format" type for styles, etc.
+The `mono-format` directory contains a version that uses
+atoms to name styles.
+
