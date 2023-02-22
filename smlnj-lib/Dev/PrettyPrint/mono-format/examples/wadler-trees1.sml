@@ -11,6 +11,7 @@ fun formatTree (Node (s, trees)) =
 
 and formatTrees nil = PP.empty
   | formatTrees trees = PP.closedSequenceWithMap {
+        align = PP.V,
         left = PP.text "[",
         sep = PP.text ",",
         right = PP.text "]",

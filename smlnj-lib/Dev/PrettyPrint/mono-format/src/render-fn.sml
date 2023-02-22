@@ -310,7 +310,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                 end (* fun flatRender *)
         in
           (* the initial "context" of a render is a vitrual newline + 0 indentation *)
-          ignore (render0 (block [F.FMT format, F.BRK Newline], 0, 0, true))
+          ignore (render0 (PrettyPrint.block [F.FMT format, F.BRK F.Newline], 0, 0, true))
         end (* fun render *)
 
 (** TODO

@@ -21,9 +21,6 @@ How would you format expressions so that you could get the following renders?
 	let val x = ... in x end
 *)
 
-CM.make "../src/pretty-print-lib.cm";
-CM.make "../devices/sources.cm";
-
 local
   structure PP = PrettyPrint
   fun kw s = PP.style (Atom.atom "kw") (PP.text s)
@@ -74,27 +71,8 @@ end; (* local *)
 
 (* examples *)
 
-local
-  structure Dev = ANSITermDev
-  structure Render = RenderFn(Dev)
-  val styleMap : PrettyPrint.style -> ANSITermDev.style option = let
-	val tbl = AtomTable.mkTable(8, Fail "styleMap")
-	in
-	  List.app (fn (x, sty) => AtomTable.insert tbl (Atom.atom x, sty)) [
-	      ("kw", [ANSITerm.BF, ANSITerm.FG ANSITerm.Blue])
-	    ];
-	  AtomTable.find tbl
-	end
-  fun tokenMap _ = NONE
-  fun printFormatLW n = let
-        val dev = Dev.openDev{dst = TextIO.stdOut, wid = n}
-        in
-          Render.render {dev = dev, styleMap = styleMap, tokenMap = tokenMap}
-        end
-in
 val exp1 = Let ([Val ("x", Num 1), Val ("y", Num 2)], [Plus (Var "x", Num 3), Var "y"]);
 
 fun test fmt n = printFormatLW n fmt;
 
 val test1 = test (formatExp exp1);
-end;

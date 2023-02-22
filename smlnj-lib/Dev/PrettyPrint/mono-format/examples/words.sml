@@ -6,7 +6,7 @@ local
 
 in
 
-fun formatPara (s: string) : format =
+fun formatPara (s: string) : PP.format =
     let val tokens = String.tokens Char.isSpace s
      in PP.pBlock (List.map PP.text tokens)
     end

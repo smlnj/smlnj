@@ -17,8 +17,11 @@ and decl
 
 (* formatStr : (decl -> format) -> str -> format *)
 fun formatStr _ (SVAR name) = PP.text name
-  | formatStr fdecl (STRUCT decls) =
-      PP.vBlock [PP.text "struct", indent 2 (PP.vBlock (map fdecl decls)), PP.text "end"]
+  | formatStr fdecl (STRUCT decls) = PP.vBlock [
+        PP.text "struct",
+        PP.indent 2 (PP.vBlock (map fdecl decls)),
+        PP.text "end"
+      ]
 
 (* formatDecl1 : decl -> format *)
 and formatDecl1 decl = (case decl
@@ -32,8 +35,9 @@ and formatDecl1 decl = (case decl
             ]
 	| STRd (name, str) => PP.pBlock [
               PP.hBlock [PP.text "structure", PP.text name, PP.text "="],
-              PP.indent 2 (PP.tryFlat (formatStr formatDecl1 str)))
+              PP.indent 2 (PP.tryFlat (formatStr formatDecl1 str))
             ]
+      (* end case *))
 
 fun formatDecl2 (STRd (name, STRUCT decls)) = PP.vBlock [
         PP.hBlock [PP.text "structure", PP.text name, PP.text "=", PP.text "struct"],
@@ -59,7 +63,7 @@ val t12 = test (formatDecl1 strd2)
 val t21 = test (formatDecl2 strd1)
 val t22 = test (formatDecl2 strd2)
 
-end;
+end; (* local *)
 
 (* results:
 
