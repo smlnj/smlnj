@@ -9,6 +9,7 @@
 structure HTML3Dev : sig
 
     include PP_DEVICE
+      where type token = HTML.text
 
   (* combine two styles into one *)
     val combineStyle : (style * style) -> style
@@ -53,6 +54,8 @@ structure HTML3Dev : sig
       | A of {href : string option, name : string option}
       | STYS of style list
 
+    type token = HTML.text
+
     datatype device = DEV of {
 	lineWid : int option ref,
 	textWid : int option ref,
@@ -79,9 +82,6 @@ structure HTML3Dev : sig
 	  in
 	    f (!txt, [])
 	  end
-
-  (* are two styles the same? *)
-    fun sameStyle (s1 : style, s2) = (s1 = s2)
 
     fun wrapStyle (sty, [], tl') = tl'
       | wrapStyle (sty, tl, tl') = let
@@ -127,17 +127,6 @@ structure HTML3Dev : sig
    *)
     fun defaultStyle _ = NOEMPH
 
-  (* maximum printing depth (in terms of boxes) *)
-    fun maxDepth _ = NONE
-    fun setMaxDepth _ = ()
-(* DEPRECATED *)
-    val depth = maxDepth
-
-  (* the sized string to print in place of boxes when the maximum depth is reached. *)
-    fun ellipses _ = ("", 0)
-    fun setEllipses _ = ()
-    fun setEllipsesWithSz _ = ()
-
   (* the width of the device *)
     fun lineWidth (DEV{lineWid, ...}) = !lineWid
     fun setLineWidth (DEV{lineWid, ...}, w) = lineWid := w
@@ -161,9 +150,11 @@ structure HTML3Dev : sig
     fun newline (dev as DEV{txt, ...}) =
 	  txt := HTML.BR{clear=NONE} :: (concatTxt dev)
 
-  (* output a string/character in the current style to the device *)
+  (* output a string in the current style to the device *)
     val string = pcdata
-    fun char (dev, c) = pcdata(dev, str c)
+
+  (* output a token, which is just a HTML text element (e.g., <IMG>) *)
+    fun token (DEV{txt, ...}, t) = txt := t :: !txt
 
   (* flush is a nop for us *)
     fun flush _ = ()

@@ -78,15 +78,16 @@ signature PRETTY_PRINT =
     (* a block of text with a specific alignment *)
     val alignedBlock : alignment * format list -> format
 
-    (* building blocks, basic and aligned; n-ary versions taking lists, empty format args are absorbed
-     *   empty argument list produces empty format *)
+    (* building blocks, basic and aligned; empty format args are absorbed and
+     * empty argument list produces empty format
+     *)
 
     val hBlock : format list -> format
     val vBlock : format list -> format
     val pBlock : format list -> format
     val cBlock : format list -> format
 
-  (* wrapping or enclosing formats, plus appending newlines and prepending labels *)
+  (* wrapping or enclosing formatsxw *)
 
     val enclose : {left: format, right: format} -> format -> format
         (* concatenates front and back to the front, respecively back, of the format *)
@@ -124,19 +125,21 @@ signature PRETTY_PRINT =
 
   (* indenting formats *)
 
+    (* indent n empty ==> empty; indent n fmt ==> INDENT (n, frmt) *)
     val indent : int -> format -> format
-        (* indent n empty ==> empty; indent n fmt ==> INDENT (n, frmt) *)
 
   (* Conditional formats: *)
 
+    (* if the format fits flat, then render it flat, otherwise render it normally *)
     val tryFlat : format -> format
-	(* if the format fits flat, then render it flat, otherwise render it normally *)
 
+    (* if the first format fits flat, use it, otherwise render the second format,
+     * NOTE: the two argument formats may not have the same content! But
+     * usually they should!
+     *)
     val alt : format * format -> format
-	(* if the first format fits flat, use it, otherwise render the second format,
-	   NOTE: the two argument formats may not have the same content! But usually they should! *)
 
+    (* acts as hBlock if it fits, otherwise as vBlock *)
     val hvBlock : format list -> format
-	(* acts as hblock if it fits, otherwise as vblock *)
 
   end (* end PRETTY_PRINT *)

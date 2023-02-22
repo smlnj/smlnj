@@ -24,17 +24,16 @@ signature PP_DEVICE =
 
   (***** Style operations *****)
 
-    val pushStyle : (device * 'sty) -> unit
+    val pushStyle : (device * style) -> unit
     val popStyle  : device -> unit
 	(* push/pop a style from the devices style stack.  A pop on an
 	 * empty style stack is a nop.
 	 *)
 
-    val defaultStyle : device -> 'sty
+    val defaultStyle : device -> style
 	(* the default style for the device (this is the current style,
 	 * if the style stack is empty).
 	 *)
-
 
   (***** Device properties *****
    **
@@ -43,17 +42,6 @@ signature PP_DEVICE =
    ** streams.  Devices may also not support various features, in which
    ** case, the `set` functions are no-ops.
    **)
-
-  (* the maximum printing depth (in number of open boxes); `NONE` is
-   * interpreted as no limit.
-   *)
-    val maxDepth : device -> int option
-    val setMaxDepth : device * int option -> unit
-
-  (* the sized string to print in place of boxes when the maximum depth is reached. *)
-    val ellipses : device -> PrettyPrint.format
-    val setEllipses : device * string -> unit
-    val setEllipsesToken : device * PrettyPrint.token -> unit
 
   (* the width of the line for the device; `NONE` is infinite *)
     val lineWidth : device -> int option
@@ -83,8 +71,7 @@ signature PP_DEVICE =
 	(* output a new-line to the device *)
 
     val string : (device * string) -> unit
-    val char : (device * char) -> unit
-	(* output a string/character in the current style to the device *)
+	(* output a string in the current style to the device *)
 
     val token : device * token -> unit
 

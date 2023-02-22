@@ -24,14 +24,16 @@ structure CharBufferDev : sig
 	fun pushStyle _ = ()
 	fun popStyle _ = ()
 	fun defaultStyle _ = ()
+      (* trivial tokens *)
+        type token = string
       (* output some number of spaces to the device *)
         fun space (dst, n) = CharBuffer.addVec (dst, StringCvt.padLeft #" " n "")
 	val indent = space
       (* output a new-line to the device *)
 	fun newline dst = CharBuffer.add1 (dst, #"\n")
-      (* output a string/character in the current style to the device *)
+      (* output a string in the current style to the device *)
 	fun string (dst, s) = CharBuffer.addVec (dst, s)
-	fun char (dst, c) = CharBuffer.add1 (dst, c)
+	fun token (dst, t) = CharBuffer.addVec (dst, t)
       (* nothing to flush *)
 	fun flush dst = ()
       end

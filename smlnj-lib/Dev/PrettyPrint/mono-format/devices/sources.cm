@@ -10,18 +10,19 @@ Library
 
   structure ANSITermDev
   structure CharBufferDev
+  structure HTML3Dev
   structure SimpleTextIODev
-  structure StringToken
 
 is
 
   $/basis.cm
   $/smlnj-lib.cm
+  $/html-lib.cm
 
   ../src/pretty-print-lib.cm
 
   ansi-term-dev.sml
   char-buffer-dev.sml
   default-device-fn.sml
+  html3-dev.sml
   simple-textio-dev.sml
-  string-token.sml

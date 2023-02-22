@@ -83,8 +83,10 @@ structure PrettyPrint : PRETTY_PRINT =
     (*** format-building utility functions for some primitive types ***)
 
     val empty = EMPTY
-    val text = TEXT
-    fun style sty fmt = STYLE(sty, fmt)
+    fun text "" = EMPTY
+      | text s = TEXT s
+    fun style _ EMPTY = EMPTY
+      | style sty fmt = STYLE(sty, fmt)
     val token = TOKEN
     fun lift toString v = TEXT(toString v)
 

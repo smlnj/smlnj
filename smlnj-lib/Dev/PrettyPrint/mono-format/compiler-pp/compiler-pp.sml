@@ -44,7 +44,7 @@ structure CompilerPP :> COMPILER_PP =
     val alt : format * format -> format = PP.alt
     val hvblock : format list -> format = PP.hvBlock
 
-    (*** format-building utility functions for some primitive types ***)
+    (*** format-building utility functions for some primitive SML types ***)
     val empty   : format = PP.empty
     val text    : string -> format = PP.text
     val integer : int -> format = PP.lift Int.toString
@@ -153,24 +153,24 @@ structure CompilerPP :> COMPILER_PP =
               align=alignment, left=front, sep=sep, back=right, fmt=formatter
             }
 
-(* alignedList : alignment -> ('a -> format) -> 'a list -> format *)
-fun 'a alignedList alignment (formatter : 'a -> format) (xs: 'a list) =
-    formatClosedSeq
-      {alignment=alignment, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
-      xs
+    (* alignedList : alignment -> ('a -> format) -> 'a list -> format *)
+    fun 'a alignedList alignment (formatter : 'a -> format) (xs: 'a list) =
+        formatClosedSeq
+          {alignment=alignment, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
+          xs
 
-(* list : ('a -> format) -> 'a list -> format *)
-(* packed-style formatting of an 'a list *)
-fun 'a list (formatter : 'a -> format) (xs: 'a list) =
-    formatClosedSeq
-      {alignment=P, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
-      xs
+    (* list : ('a -> format) -> 'a list -> format *)
+    (* packed-style formatting of an 'a list *)
+    fun 'a list (formatter : 'a -> format) (xs: 'a list) =
+        formatClosedSeq
+          {alignment=P, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
+          xs
 
-(* option : ('a -> format) -> 'a option -> format *)
-fun 'a option (formatter: 'a -> format) (xOp: 'a option) =
-    case xOp
-      of NONE => text "NONE"
-       | SOME x => ccat (text "SOME", parens (formatter x))
+    (* option : ('a -> format) -> 'a option -> format *)
+    fun 'a option (formatter: 'a -> format) (xOp: 'a option) =
+        case xOp
+          of NONE => text "NONE"
+           | SOME x => ccat (text "SOME", parens (formatter x))
 
 
 (*** vertical formatting with headers ***)

@@ -14,7 +14,6 @@ signature DEVICE_OPS =
     type token
 
   (* style operations *)
-    val sameStyle    : (style * style) -> bool
     val pushStyle    : (t * style) -> unit
     val popStyle     : t -> unit
     val defaultStyle : t -> style
@@ -32,6 +31,8 @@ signature DEVICE_OPS =
 functor DefaultDeviceFn (D : DEVICE_OPS) : sig
 
     include PP_DEVICE
+      where type style = D.style
+      where type token = D.token
 
     structure DevOps : DEVICE_OPS
 
@@ -61,6 +62,7 @@ functor DefaultDeviceFn (D : DEVICE_OPS) : sig
       }
 
     type style = D.style
+    type token = D.token
 
     fun newWithProps {ops, lineW, textW, maxIndent} = Dev{
 	    ops = ops,
@@ -84,7 +86,6 @@ functor DefaultDeviceFn (D : DEVICE_OPS) : sig
 	  }
 
   (* style operations *)
-    val sameStyle = D.sameStyle
     fun pushStyle (Dev{ops, ...}, sty) = D.pushStyle (ops, sty)
     fun popStyle (Dev{ops, ...}) = D.popStyle ops
     fun defaultStyle (Dev{ops, ...}) = D.defaultStyle ops

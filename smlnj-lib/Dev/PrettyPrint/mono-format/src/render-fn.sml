@@ -10,6 +10,9 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
 
     type device = Dev.device
 
+    (* style/token map that always returns `NONE` *)
+    val nullMap : Atom.atom -> 'a option
+
     (* render a pretty-print format to the device *)
     val render : {
             dev : device,
@@ -36,6 +39,9 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
     structure M = Measure
 
     type device = Dev.device
+
+    (* style/token map that always returns `NONE` *)
+    fun nullMap (_ : Atom.atom) = NONE
 
     fun error msg = raise Fail("Render Error: " ^ msg)
 
@@ -114,10 +120,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                         | SOME tok => (Dev.token (dev, tok); (cc + sz, false))
                       (* end case *))
                   | F.STYLE(sty, fmt) => (case (styleMap sty)
-                         of NONE => render0 (format, outerBlm, cc, newlinep)
+                         of NONE => render0 (fmt, outerBlm, cc, newlinep)
                           | SOME sty' => (
                               Dev.pushStyle (dev, sty');
-                              render0 (format, outerBlm, cc, newlinep) before
+                              render0 (fmt, outerBlm, cc, newlinep) before
                               Dev.popStyle dev)
                         (* end case *))
                   | F.BLOCK{content, ...} => renderBLOCK (content, cc, newlinep)
@@ -262,10 +268,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                             | SOME tok => Dev.token (dev, tok)
                           (* end case *))
                       | F.STYLE(sty, fmt) => (case (styleMap sty)
-                             of NONE => flatRender0 format
+                             of NONE => flatRender0 fmt
                               | SOME sty' => (
                                   Dev.pushStyle (dev, sty');
-                                  flatRender0 format before
+                                  flatRender0 fmt before
                                   Dev.popStyle dev)
                             (* end case *))
                       | F.BLOCK{content, ...} => flatRenderBLOCK content
@@ -302,8 +308,9 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                 in
                   flatRender0 format
                 end (* fun flatRender *)
-        in (* the initial "context" of a render is a vitrual newline + 0 indentation *)
-          ignore (render0 (format, 0, 0, true))
+        in
+          (* the initial "context" of a render is a vitrual newline + 0 indentation *)
+          ignore (render0 (block [F.FMT format, F.BRK Newline], 0, 0, true))
         end (* fun render *)
 
 (** TODO

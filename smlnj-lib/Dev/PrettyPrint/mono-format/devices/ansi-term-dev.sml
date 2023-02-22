@@ -1,6 +1,6 @@
 (* ansi-term-dev.sml
  *
- * COPYRIGHT (c) 2020 John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2023 John Reppy (http://www.cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
  * A pretty-printing device for text output to ANSI terminals.  This device
@@ -103,6 +103,8 @@ structure ANSITermDev : sig
 
     type style = A.style list
 
+    type token = string
+
     datatype device = DEV of {
 	mode : bool ref,
 	dst : TextIO.outstream,
@@ -112,8 +114,6 @@ structure ANSITermDev : sig
 
     fun top [] = initState
       | top (st::r) = st
-
-    fun sameStyle (s1 : style, s2) = (s1 = s2)
 
     fun pushStyle (DEV{mode, dst, wid, stk}, sty) =
 	  if (! mode)
@@ -155,14 +155,6 @@ structure ANSITermDev : sig
 	    dst = dst, wid = ref(SOME wid), mode = ref(isTTY dst), stk = ref[]
 	  }
 
-  (* maximum printing depth (in terms of boxes) *)
-    fun maxDepth _ = NONE
-    fun setMaxDepth _ = ()
-
-    fun ellipses _ = ("", 0)
-    fun setEllipses _ = ()
-    fun setEllipsesWithSz _ = ()
-
   (* the width of the device *)
     fun lineWidth (DEV{wid, ...}) = !wid
     fun setLineWidth (DEV{wid, ...}, w) = wid := w
@@ -186,7 +178,9 @@ structure ANSITermDev : sig
 
   (* output a string/character in the current style to the device *)
     fun string (DEV{dst, ...}, s) = TextIO.output (dst, s)
-    fun char (DEV{dst, ...}, c) = TextIO.output1 (dst, c)
+
+  (* output a string/character in the current style to the device *)
+    fun token (DEV{dst, ...}, t) = TextIO.output (dst, t)
 
   (* if the device is buffered, then flush any buffered output *)
     fun flush (DEV{dst, ...}) = TextIO.flushOut dst
