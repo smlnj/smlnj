@@ -10,9 +10,7 @@
 structure CompilerPP :> COMPILER_PP =
   struct
 
-    structure F = Format
     structure PP = PrettyPrint
-    structure Dev = TextIODev
 
     type format = PP.format
 
@@ -24,7 +22,7 @@ structure CompilerPP :> COMPILER_PP =
 
     (*** the basic block building functions ***)
     val basicBlock = PP.block
-    val alignedBlock = PP.alignedBlock
+    fun alignedBlock align items = PP.alignedBlock(align, items)
 
     (*** block building functions for non-indenting blocks ***)
 
@@ -37,7 +35,7 @@ structure CompilerPP :> COMPILER_PP =
     val hblock = PP.hBlock
     val vblock = PP.vBlock
     val pblock = PP.pBlock
-    val cblock = pp.CBlock
+    val cblock = PP.cBlock
 
     (* "conditional" formats *)
     val tryFlat : format -> format = PP.tryFlat
@@ -52,7 +50,7 @@ structure CompilerPP :> COMPILER_PP =
           PP.lift (fn s => String.concat["\"", String.toString s, "\""])
     val char    : char -> format  =
           PP.lift (fn c => String.concat["#\"", Char.toString c, "\""])
-    val bool    : bool -> format = lift Bool.toString
+    val bool    : bool -> format = PP.lift Bool.toString
 
     (*** "punctuation" characters and related symbols ***)
     val comma : format     = text ","
@@ -102,7 +100,7 @@ structure CompilerPP :> COMPILER_PP =
     val braces = enclose {front = lbrace, back = rbrace}
 
     (* appendNewLine : format -> format *)
-    fun appendNewLine (fmt : format) = block [FMT fmt, BRK HardLine]
+    fun appendNewLine (fmt : format) = block [FMT fmt, BRK Newline]
 
     (* label : string -> format -> format *)
     (* labeled formats, i.e. formats preceded by a string label, a commonly occurring pattern *)
@@ -150,7 +148,7 @@ structure CompilerPP :> COMPILER_PP =
     fun 'a formatClosedSeq
            {alignment: alignment, front: format, sep: format, back: format, formatter: 'a -> format} =
           PP.closedSequenceWithMap {
-              align=alignment, left=front, sep=sep, back=right, fmt=formatter
+              align=alignment, left=front, sep=sep, right=back, fmt=formatter
             }
 
     (* alignedList : alignment -> ('a -> format) -> 'a list -> format *)
@@ -242,19 +240,19 @@ end
 (*** printing (i.e., rendering) formats ***)
 
 (* render : format * (string -> unit) * int -> unit *)
-val render = R.render
+val render = TextRenderer.render
 
 (* printFormatLW : int -> format -> unit *)
-fun printFormatLW lw format = R.render (appendNewLine format, print, lw)
+fun printFormatLW lw format = render (appendNewLine format, print, lw)
 
 (* printFormatLW' : format -> int -> unit *)
-fun printFormatLW' format lw = R.render (appendNewLine format, print, lw)
+fun printFormatLW' format lw = render (appendNewLine format, print, lw)
 
 (* printFormat : format -> unit *)
-fun printFormat format = R.render (format, print, getLineWidth ())
+fun printFormat format = render (format, print, getLineWidth ())
 
 (* printFormatNL : format -> unit *)
-fun printFormatNL format = R.render (appendNewLine format, print, getLineWidth ())
+fun printFormatNL format = render (appendNewLine format, print, getLineWidth ())
 
 end (* structure PrettyPrint *)
 
