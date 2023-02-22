@@ -1,12 +1,13 @@
-local open PrettyPrint
-in 
+local
+  structure PP = PrettyPrint
+in
 
-val fx = text "xxxx"
-val fy = text "yyy"
-val fz = text "zzzzz"
+val fx = PP.text "xxxx"
+val fy = PP.text "yyy"
+val fz = PP.text "zzzzz"
 
-val fvxy = vblock [fx, fy]
-val f0 = vblock [text "begin", indent 2 fvxy, text "end"]
+val fvxy = PP.vBlock [fx, fy]
+val f0 = PP.vBlock [PP.text "begin", PP.indent 2 fvxy, PP.text "end"]
 
 end (* local *)
 

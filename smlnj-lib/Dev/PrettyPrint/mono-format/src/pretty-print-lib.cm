@@ -13,15 +13,17 @@ Library
 
   functor RenderFn
 
+  structure TextRenderer
+
 is
 
   $/basis.cm
   $/smlnj-lib.cm
 
   format.sml
-  measure.sig
   measure.sml
-  render-fn.sml
   pp-device.sig
   pretty-print.sig
   pretty-print.sml
+  render-fn.sml
+  text-renderer.sml

@@ -1,11 +1,15 @@
-val f0 = indent 3 (hblock [text "aa", text "bbb"]);
+local
+  structure PP = PrettyPrint
+in
+val f0 = PP.indent 3 (PP.hBlock [PP.text "aa", PP.text "bbb"]);
 
-val f1 = indent 3 (text "aa");
+val f1 = PP.indent 3 (PP.text "aa");
 
-val f2 = hblock [text "xxxx", f1, text "yyy"];
+val f2 = PP.hBlock [PP.text "xxxx", f1, PP.text "yyy"];
 
-val f3 = vblock [text "xxxx", f1, text "yyy"];
+val f3 = PP.vBlock [PP.text "xxxx", f1, PP.text "yyy"];
 
-val f4 = indent 3 (vblock [text "aa", text "bbb"]);
+val f4 = PP.indent 3 (PP.vBlock [PP.text "aa", PP.text "bbb"]);
 
-val f3 = vblock [text "xxxx", f4, text "yyy"];
+val f3 = PP.vBlock [PP.text "xxxx", f4, PP.text "yyy"];
+end
