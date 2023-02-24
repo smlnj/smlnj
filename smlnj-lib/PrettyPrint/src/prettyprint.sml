@@ -30,6 +30,28 @@
  * Verion 8.3 [2023.1.6]
  *   -- Removed
  *      breakIndent
+ *
+ * Version 8.4 [2023.2.22]
+ *   -- renamed:
+ *      Hard -> Hard
+ *      Soft -> Soft
+ *      tupleFormat -> tuple
+ *      list -> listMap
+ *      formatSeq -> sequenceMap
+ *      formatClosedSeq -> closedSequenceMap
+ *      vHeaders -> vHeadersMap
+ *      vHeaderFormats -> vHeaders
+ *      hblock -> hcat
+ *      pblock -> pcat
+ *      vblock -> vcat
+ *      cblock -> ccat
+ *      hvblock -> hvcat
+ *   -- removed:
+ *      tuple [i.e. the function that should have been called tupleMap; tupleFormat becomes tuple]
+ *      hcat [recycled as the name of the former hblock]
+ *      pcat [recycled as the name of the former pblock]
+ *      vcat [recycled as the name of the former vblock]
+ *      ccat [recycled as the name of the former cblock]
  *)
 
 (* Defines:
@@ -51,6 +73,7 @@ open Format  (* import datatypes format, element, break; format exported as abst
 (*** the basic block building functions ***)
 
 (* reduceFormats : format list -> format list *)
+(*   filter out empty components formats *)
 fun reduceFormats (formats: format list) =
     let fun notEmpty EMPTY = false
 	  | notEmpty _ = true
@@ -58,32 +81,29 @@ fun reduceFormats (formats: format list) =
     end
 
 (* reduceElements : element list -> element list *)
-(* eliminate EMPTY format elements *)
+(*   filter out FMT EMPTY elements *)
 fun reduceElements (elements: element list) =
     let fun notEmpty (FMT EMPTY) = false
 	  | notEmpty _ = true
      in List.filter notEmpty elements
     end
 
-(* basicBlock : element list -> format
- *   Construct an BLOCK with explicit, possibly heterogeous, breaks.
+(* block : element list -> format
+ *   Construct a BLOCK with explicit, possibly heterogeous, breaks.
  *   Returns EMPTY if the element list is null. *)
-fun basicBlock elements =
+fun block elements =
     (case reduceElements elements
        of nil => EMPTY
 	| [FMT fmt] => fmt  (* special blocks consisting of a single (FMT fmt) element, reduce to fmt *)
         | _ => BLOCK {elements = elements, measure = M.measureElements elements})
 
-(* alignedBlock : alignment -> format list -> format *)
-(* A block with no element formats reduces to EMPTY, regardless of alignment or indentation. *)
-fun alignedBlock alignment formats =
+(* aBlock : alignment -> format list -> format *)
+(* An aligned block with no component formats reduces to EMPTY, regardless of alignment. *)
+fun aBlock alignment formats =
     let val breaksize = case alignment of C => 0 |  _ => 1
      in case reduceFormats formats
 	  of nil => EMPTY
-	   | [fmt] => fmt  (* watch out for this probably obsolete (since bindent is gone) bug:
-			    * BUG! this is wrong if block is indented, since this looses the ABLOCK
-			    * that should carry the indentation (in its bindent field)!
-			    * E.G. iblock (HI 3) [text "aa"] ==> text "aa", indentation lost! *)
+	   | [fmt] => fmt
 	   | formats' =>
 	       ABLOCK {formats = formats', alignment = alignment, measure = M.measureFormats (breaksize, formats')}
     end
@@ -91,16 +111,12 @@ fun alignedBlock alignment formats =
 
 (*** block building functions for non-indenting blocks ***)
 
-(* block : element list -> format *)
-(* construct a block with explicit, possibly heterogeous, breaks. A synonym for basicBlock *)
-val block = basicBlock
-
 (* constructing aligned blocks: common abbreviations *)
-(* xblock : format list -> format, for x = h, v, p, c *)
-val hblock = alignedBlock H
-val vblock = alignedBlock V
-val pblock = alignedBlock P
-val cblock = alignedBlock C
+(* xcat : format list -> format, for x = h, v, p, c *)
+val hcat = aBlock H
+val vcat = aBlock V
+val pcat = aBlock P
+val ccat = aBlock C
 
 (* "conditional" formats *)
 
@@ -111,7 +127,7 @@ fun tryFlat (fmt: format) = ALT (FLAT fmt, fmt)
 val alt = ALT
 
 (* hvblock : format list -> format *)
-fun hvblock fmts = tryFlat (vblock fmts)
+fun hvcat fmts = tryFlat (vcat fmts)
 
 
 (*** format-building utility functions for some primitive types ***)
@@ -149,25 +165,6 @@ val rbrace : format    = text "}"
 val equal  : format    = text "="
 
 
-(*** xcat: binary versions of xblock functions (x = p, h, v) ***)
-
-(* pcat : format * format -> format
- * separate r, l with soft line break *)
-fun pcat (leftFmt, rightFmt) = pblock [leftFmt, rightFmt]
-
-(* hcat : format * format -> format
- * separate r, l with a space *)
-fun hcat (leftFmt, rightFmt) = hblock [leftFmt, rightFmt]
-
-(* vcat : format * format -> format
- * separate r, l with a hard line break *)
-fun vcat (leftFmt, rightFmt) = vblock [leftFmt, rightFmt]
-
-(* ccat : format * format -> format
- * concatenate left and right formats with no separater *)
-fun ccat (left, right) = cblock [left, right]
-
-
 (*** wrapping or closing formats, e.g. parenthesizing a format ***)
 
 (* enclose : {front : format, back : format} -> format -> format *)
@@ -185,11 +182,11 @@ val brackets = enclose {front = lbracket, back = rbracket}
 val braces = enclose {front = lbrace, back = rbrace}
 
 (* appendNewLine : format -> format *)
-fun appendNewLine fmt = block [FMT fmt, BRK HardLine]
+fun appendNewLine fmt = block [FMT fmt, BRK Hard]
 
 (* label : string -> format -> format *)
 (* labeled formats, i.e. formats preceded by a string label, a commonly occurring pattern *)
-fun label (str:string) (fmt: format) = hcat (text str, fmt)
+fun label (str:string) (fmt: format) = hcat [text str, fmt]
 
 
 (*** functions for formatting sequences of formats (format lists) ***)
@@ -198,8 +195,8 @@ fun label (str:string) (fmt: format) = hcat (text str, fmt)
  * The virtual break associated with each alignment.
  * This is a utility function used in functions sequence and formatSeq *)
 fun alignmentToBreak H = Space 1
-  | alignmentToBreak V = HardLine
-  | alignmentToBreak P = SoftLine 1
+  | alignmentToBreak V = Hard
+  | alignmentToBreak P = Soft 1
   | alignmentToBreak C = NullBreak
 
 (* sequence : alignement -> format -> format list -> format
@@ -229,25 +226,24 @@ val psequence = sequence P
 val vsequence = sequence V
 val csequence = sequence C
 
-(* tupleFormats : format list -> format  -- parenthesized, comma separated, packed alignment sequence
+(* tuple : format list -> format  -- parenthesized, comma separated, packed alignment sequence
  *  not really restricted to actual "tuples", just "tuple-style" formatting. Constituent formats can represent
  *  values of heterogeneous types. *)
-fun tupleFormats formats = parens (psequence comma formats)
+fun tuple formats = parens (psequence comma formats)
 
-(* listFormats : format list -> format  -- packed alignment
+(* list : format list -> format  -- packed alignment
  *  typically used for lists, but the constituent formats can represent values of heterogeneous types. *)
-fun listFormats formats = brackets (psequence comma formats)
+fun list formats = brackets (psequence comma formats)
 
-fun optionFormat (formatOp: format option) =
+fun option (formatOp: format option) =
     case formatOp
       of NONE => text "NONE"
-       | SOME fmt => ccat (text "SOME", parens fmt)
-
+       | SOME fmt => ccat [text "SOME", parens fmt]
 
 (*** functions for formatting sequences of values (of homogeneous types, i.e. 'a lists) ***)
 
-(* formatSeq : {alignment: alignment, sep: format, formatter : 'a -> format} -> 'a list -> format *)
-fun 'a formatSeq {alignment: alignment, sep: format, formatter: 'a -> format} (xs: 'a list) =
+(* sequenceMap : {alignment: alignment, sep: format} -> ([formatter:] 'a -> format} -> 'a list -> format *)
+fun 'a sequenceMap {alignment: alignment, sep: format}  (formatter: 'a -> format) (xs: 'a list) =
     let val separate =
 	    (case alignment
 	       of C => (fn elems => FMT sep :: elems)  (* alignment = C *)
@@ -267,33 +263,31 @@ fun 'a formatSeq {alignment: alignment, sep: format, formatter: 'a -> format} (x
      in block (addBreaks formats)
     end
 
-(* formatClosedSeq :
-     {alignment: alignment, front: format, sep: format, back: format, formatter: 'a -> format}
+(* closedSequenceMap :
+     {alignment: alignment, front: format, sep: format, back: format} 
+     -> ([formatter:] 'a -> format}
      -> 'a list
      -> format *)
-fun 'a formatClosedSeq
-       {alignment: alignment, front: format, sep: format, back: format, formatter: 'a -> format}
-       (xs: 'a list) =
-    enclose {front=front, back=back} (formatSeq {alignment=alignment, sep=sep, formatter=formatter} xs)
+fun 'a closedSequenceMap
+       {alignment: alignment, front: format, sep: format, back: format} (formatter: 'a -> format) (xs: 'a list) =
+    enclose {front=front, back=back} (sequenceMap {alignment=alignment, sep=sep} formatter xs)
 
-(* alignedList : alignment -> ('a -> format) -> 'a list -> format *)
-fun 'a alignedList alignment (formatter : 'a -> format) (xs: 'a list) =
-    formatClosedSeq
-      {alignment=alignment, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
-      xs
+(* alignedListMap : alignment -> ('a -> format) -> 'a list -> format *)
+fun 'a alignedListMap alignment (formatter : 'a -> format) (xs: 'a list) =
+    closedSequenceMap
+      {alignment=alignment, front = lbracket, back = rbracket, sep = comma} formatter xs
 
-(* list : ('a -> format) -> 'a list -> format *)
-(* packed-style formatting of an 'a list *)
-fun 'a list (formatter : 'a -> format) (xs: 'a list) =
-    formatClosedSeq
-      {alignment=P, front = lbracket, back = rbracket, sep = comma, formatter = formatter}
-      xs
+(* listMap : ('a -> format) -> 'a list -> format *)
+(* packed-style formatting of an 'a list, given an 'a formatter function *)
+fun 'a listMap (formatter : 'a -> format) (xs: 'a list) =
+    closedSequenceMap
+      {alignment=P, front = lbracket, back = rbracket, sep = comma} formatter xs
 
-(* option : ('a -> format) -> 'a option -> format *)
-fun 'a option (formatter: 'a -> format) (xOp: 'a option) =
+(* optionMap : ('a -> format) -> 'a option -> format *)
+fun 'a optionMap (formatter: 'a -> format) (xOp: 'a option) =
     case xOp
       of NONE => text "NONE"
-       | SOME x => ccat (text "SOME", parens (formatter x))
+       | SOME x => ccat [text "SOME", parens (formatter x)]
 
 
 (*** vertical formatting with headers ***)
@@ -312,35 +306,35 @@ fun padHeaders (s1, s2) =
 	 StringCvt.padLeft #" " maxsize s2)
     end
 
-(* vHeaders : {header1 : string, header2 : string, formatter: 'a -> format} -> 'a list -> format *)
-fun vHeaders {header1: string, header2: string, formatter: 'a -> format}
-		    (elems: 'a list) =
+(* vHeadersMap : {header1 : string, header2 : string} -> ([formatter:] 'a -> format) -> 'a list -> format *)
+fun vHeadersMap {header1: string, header2: string} (formatter: 'a -> format) (elems: 'a list) =
     let val (header1, header2) = padHeaders (header1, header2)
      in case elems
 	  of nil => empty
 	   | elem :: rest =>
 	       vblock
-		 (hcat (text header1, formatter elem) ::
-		  map (fn e => hcat (text header2, formatter e)) rest)
+		 (hcat [text header1, formatter elem] ::
+		  map (fn e => hcat [text header2, formatter e]) rest)
     end
 
-(* vHeaderFormats : {header1 : string, header2 : string} -> format list -> format *)
-fun vHeaderFormats {header1: string, header2: string} (elems: format list) =
+(* vHeaders : {header1 : string, header2 : string} -> format list -> format *)
+fun vHeaders {header1: string, header2: string} (elems: format list) =
     let val (header1, header2) = padHeaders (header1, header2)
      in case elems
 	  of nil => empty
 	   | elem :: rest =>
 	       vblock
-		 (hcat (text header1, elem) ::
-		  map (fn fmt => hcat (text header2, fmt)) rest)
+		 (hcat [text header1, elem] ::
+		  map (fn fmt => hcat [text header2, fmt]) rest)
     end
 
 
 (*** "indenting" formats ***)
 
-(* indent : int -> format -> format *)
+(* indent : ([n:] int) -> format -> format *)
 (* When applied to EMPTY, produces EMPTY
- * The resulting format soft-indents n spaces (iff following a line break) *)
+ * The resulting format is soft-indented n _additional_ spaces,
+ *   i.e. indents an additional n spaces iff following a line break with its indentation. *)
 fun indent (n: int) (fmt: format) =
     (case fmt
        of EMPTY => EMPTY
@@ -400,5 +394,11 @@ end (* structure PrettyPrint *)
    basicBlock and alignedBlock revised so that a block with a single format member reduces to
    that format.  This prevents trivial nesting of blocks nesting of blocks, e.g. block(block(block(...))).
    [DBM: 2022.10.24]
+
+   basicBlock -> block, alignedBlock -> aBlock, xblock becomes xcat (x = h, p, v, c) with same type,
+   hvblock -> hvcat, other renamings: see Version 8.4 changes note at beginning of this file. Some of
+   these changes suggested by JHR. Thinking about separating the render and printing functions into a
+   separate structure and possilby parameterizing wrt a "device" record that would contain printing functions
+   for strings, spaces, and newlines, and possibly the lineWidth parameter.
 
 *)

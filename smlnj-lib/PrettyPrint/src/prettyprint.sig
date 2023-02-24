@@ -1,13 +1,6 @@
 (* smlnj-lib/PrettyPrint/src/prettyprint.sig *)
 
-(* Version 8.1 [2023.1.2]
- *  -- hardIndent replaced by breakIndent with a different behavior (uncondition line break preceeding indentation)
- *
- * Version 8.
- *  -- Eliminated bindent type, xiblock functions
- *  -- added HINDENT, SINDENT format constructors
- *
- * Version 7.
+(* Version 7.
  *  -- The main interface of the new Prettyprinter.
  *  -- New: memoized measure for blocks (does not alter NEW_PP signature)
  *
@@ -19,7 +12,7 @@
  *
  * Version 8.0
  *  -- added: new format (modifier) constructors HINDENT and SINDENT
- *  -- removed: bindent type and bindent fields in blocks
+ *  -- removed: bindent type and bindent fields in blocks, xiblock functions
  *
  * Version 8.1
  *  -- Removed: hardIndent (conditionally breaks line before indented format)
@@ -32,6 +25,32 @@
  * Verion 8.3 [2023.1.6]
  *   -- Removed
  *      breakIndent  (didn't work, resets blm)
+ *
+ * Version 8.4 [2023.2.22]
+ *   Some renaming and simplification, e.g. eliminating the xcat forms and using the xcat names for the
+ *   corresponding xblock functions that operate on lists of formats. Dropping the tuple(Map) function and
+ *   renaming tupleFormat to "tuple". Shortening the names of the HardLine and SoftLine break constructors
+ *   to "Hard" and "Soft".
+ *   -- renamed (with same type):
+ *      HardLine -> Hard
+ *      SoftLine -> Soft
+ *      tupleFormat -> tuple
+ *      list -> listMap
+ *      formatSeq -> sequenceMap
+ *      formatClosedSeq -> closedSequenceMap
+ *      vHeaders -> vHeadersMap
+ *      vHeaderFormats -> vHeaders
+ *      hblock -> hcat
+ *      pblock -> pcat
+ *      vblock -> vcat
+ *      cblock -> ccat
+ *      hvblock -> hvcat
+ *   -- removed:
+ *      tuple [i.e. the function that should have been called tupleMap; tupleFormat becomes tuple]
+ *      hcat [recycled as the name of the former hblock]
+ *      pcat [recycled as the name of the former pblock]
+ *      vcat [recycled as the name of the former vblock]
+ *      ccat [recycled as the name of the former cblock]
  *)
 
 (* Defines: signature PRETTYPRINT *)
@@ -43,19 +62,19 @@ sig
 
     type format  (* abstract, defined in Format structure *)
 
-    datatype alignment  (* the alignment property of "aligned" blocks *)
-      = H  (* Horizontal alignment, with implicit single space breaks between format components, unbreakable *)
-      | V  (* Vertical alignment, with implicit hardline separtors between format components *)
-      | P  (* Packed alignment, with implicit softline separtors between format components *)
-      | C  (* compact, no separators between block format elements, unbreakable *)
-
-    datatype break  (* used to separate doc elements of a block; conditional and unconditional line breaks *)
-      = HardLine         (* hard line break *)
-      | SoftLine of int  (* soft line break; rendered to n spaces when not triggered; n >= 0 *)
+    datatype break  (* used to separate format elements of a block; space, conditional, and unconditional line breaks *)
+      = Hard             (* _hard_ or unconditional line break *)
+      | Soft of int      (* _soft_ or conditional line break; rendered to n spaces when not triggered; n >= 0 *)
       | Space of int     (* n spaces; n >= 0; Space 0 == NullBreak *)
       | NullBreak        (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
 			  * This is essentially equivalent to Space 0, but included for logical "completeness",
-			  * and also eliminates the need for break option in some places (alignmentToBreak). *)
+			  * and it also eliminates the need for break option in some places (alignmentToBreak). *)
+
+    datatype alignment  (* the alignment property of "aligned" blocks *)
+      = H  (* Horizontal alignment, with implicit single space breaks (Space 1) between format components, unbreakable *)
+      | V  (* Vertical alignment, with implicit hard line breaks (Hard) between format components *)
+      | P  (* Packed alignment, with implicit soft line breaks (Soft 1) between format components *)
+      | C  (* compact, no breaks (or implicit NullBreak) between block format components, hence unbreakable *)
 
     datatype element
       = BRK of break   (* breaks are atomic and do not contain content *)
@@ -71,19 +90,35 @@ sig
     val bool    : bool -> format   (* true --> TEXT "true", false --> TEXT "false" *)
 
     (* block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
-    (* basicBlock -- the elements may include explicit separators *)
+    (* block -- the elements may include explicit breaks *)
 
-    val basicBlock : element list -> format
-    val alignedBlock : alignment -> format list -> format
+    val block  : element list -> format
 
-    (* building blocks, basic and aligned; n-ary versions taking lists, empty format args are absorbed
-     *   empty argument list produces empty format *)
+    (* ablock: building aligned blocks
+     *   The alignement parameter determines the implicit break that occurs between formats in the list:
+     *      H -> Space 1, P -> Soft 1, V -> Hard, C -> NullBreak 
+     *   empty argument list produces empty format,
+     *   and empty format elements are "dropped", so, for example ablock [emtpy, empty] ==> empty. *)
 
-    val block  : element list -> format  (* = basicBlock NI *)
-    val hblock : format list  -> format  (* = alignedBlock H NI *)
-    val vblock : format list  -> format  (* = alignedBlock V NI *)
-    val pblock : format list  -> format  (* = alignedBlock P NI *)
-    val cblock : format list  -> format  (* = alignedBlock C NI *)
+    val aBlock : alignment -> format list -> format
+
+    (* xcat: functions (for x = p, h, v, c) for building aligned blocks with a given alignment,
+     * the empty format acts like an identity element for all these format concatenation operators, in that
+     * it does not contribute anything to the result, and implicit associated breaks for empty formats are
+     * also dropped. Also, xcat [fmt] ==> fmt. *)
+
+    val hcat : format list  -> format  (* = aBlock H *)
+        (* combinds a list of formats in an H-aligned block, with an implicit single space
+         * (Space 1 break) between them *)
+    val pcat : format list  -> format  (* = aBlock P *)
+        (* combinds a list of formats into a P-aligned (packed) block, with an implicit soft line break
+         * (Soft 1) between them *)
+    val vcat : format list  -> format  (* = aBlock V *)
+        (* combinds a list of formats in an V-aligned block, with an implicit hard line break
+         * (Hard) between them *)
+    val ccat : format list -> formt    (* = aBlock C *)
+        (* combinds a list of formats in a C-aligned block, with no break (or, implicitly, NullBreak)
+         * between them *)
 
     (* a few "punctuation" characters as formats *)
 
@@ -98,27 +133,6 @@ sig
     val lbrace : format    (* text "{" *)
     val rbrace : format    (* text "}" *)
     val equal : format     (* text "=", an honorary punctuation mark *)
-
-
-  (* xcat: "binary versions" of the xblock functions (x = p, h, v, c), the empty format
-   *  acts like an identy element for all these binary concatenation operators *)
-
-    val pcat : format * format -> format
-        (* combinds two formats in a P (packed) block, with an implicit soft line break
-         * (SoftLine 1) between them *)
-
-    val hcat : format * format -> format
-        (* combinds two formats in an H block, with an implicit single space
-         * (Space 1 break) between them *)
-
-    val vcat : format * format -> format
-        (* combinds two formats in an V block, with an implicit hard line break
-         * (HardLine) between them *)
-
-    val ccat : format * format -> format
-        (* combinds two formats in a C block, with no separator (NullBreak) between them;
-         * a binary version of cblock *)
-
 
   (* wrapping or enclosing formats, plus appending newlines and prepending labels *)
 
@@ -151,40 +165,36 @@ sig
     val vsequence : format -> format list -> format  (* = sequence V *)
     val csequence : format -> format list -> format  (* = sequence C *)
 
-    val tupleFormats : format list -> format  (* default packed alignment *)
+    val tuple : format list -> format  (* default packed alignment *)
         (* formats as a tuple *)
 
-    val listFormats : format list -> format  (* default packed alignment *)
+    val list : format list -> format  (* default packed alignment *)
         (* formats as a list *)
 
-    val optionFormat : format option -> format
+    val option : format option -> format
         (* formats a format option by producing text "NONE" or wrapping "SOME(.)" around the format *)
 
 
   (* formating of lists (or options) of values of arbitrary type *)
 
-    val formatSeq :
-        {alignment: alignment, sep : format, formatter : 'a -> format}
-	-> 'a list
-	-> format
+    val sequenceMap :
+        {alignment: alignment, sep : format} -> ('a -> format) -> 'a list -> format
 
-    val formatClosedSeq :
-	{alignment: alignment, front: format, sep: format, back: format, formatter: 'a -> format}
-	-> 'a list
-	-> format
+    val closedSequenceMap :
+	{alignment: alignment, front: format, sep: format, back: format} -> ('a -> format) -> 'a list -> format
 
-    val list : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
+    val listMap : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
 
-    val alignedList : alignment -> ('a -> format) -> 'a list -> format
+    val alignedListMap : alignment -> ('a -> format) -> 'a list -> format
 
-    val option : ('a -> format) -> 'a option -> format
+    val optionMap : ('a -> format) -> 'a option -> format
 
 
   (* vertical alignment with header strings *)
 
-    val vHeaders : {header1: string, header2: string, formatter: 'a -> format} -> 'a list -> format
+    val vHeaders : {header1: string, header2: string} -> format list -> format
 
-    val vHeaderFormats : {header1: string, header2: string} -> format list -> format
+    val vHeadersMap : {header1: string, header2: string} -> ('a -> format) -> 'a list -> format
 
 
   (* indenting formats *)
@@ -202,11 +212,11 @@ sig
 	(* if the first format fits flat, use it, otherwise render the second format,
 	   NOTE: the two argument formats may not have the same content! But usually they should! *)
 
-    val hvblock : format list -> format
-	(* acts as hblock if it fits, otherwise as vblock *)
+    val hvcat : format list -> format
+	(* acts as hcat if it fits, otherwise as vcat *)
 
 
-  (* functions used to define and access the line width *)
+  (* functions used to define and access the line width [May include lineWidth with a "device" (Render) functor parameter ] *)
 
     val setLineWidthFun : (unit -> int) -> unit
 	(* defines the function that returns the current lineWidth value *)
@@ -223,7 +233,7 @@ sig
     val render : format * (string -> unit) * int -> unit
 
     val printFormatLW  : int -> format -> unit
-        (* printing to stdOut, with line width as first argument *)
+        (* printing to stdOut, with line width (LW) as first argument *)
 
     val printFormat : format -> unit
         (* print to stdOut with lineWidth = getLineWidth (), (typically = !Control.Print.lineWidth) *)
