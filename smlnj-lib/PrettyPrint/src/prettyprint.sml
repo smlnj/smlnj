@@ -395,9 +395,9 @@ end (* structure PrettyPrint *)
    that format.  This prevents trivial nesting of blocks nesting of blocks, e.g. block(block(block(...))).
    [DBM: 2022.10.24]
 
-   basicBlock -> block, alignedBlock -> aBlock, xblock becomes xcat (x = h, p, v, c) with same type,
-   hvblock -> hvcat, other renamings: see Version 8.4 changes note at beginning of this file. Some of
-   these changes suggested by JHR. Thinking about separating the render and printing functions into a
+   8.4: basicBlock -> block, alignedBlock -> aBlock, xblock becomes xcat (x = h, p, v, c) with same type,
+   hvblock -> hvcat, and other renamings: see Version 8.4 changes note at beginning of this file. Some of
+   these changes were suggested by JHR. Thinking about separating the render and printing functions into a
    separate structure and possilby parameterizing wrt a "device" record that would contain printing functions
    for strings, spaces, and newlines, and possibly the lineWidth parameter.
 
