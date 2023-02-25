@@ -185,7 +185,7 @@ val brackets = enclose {front = lbracket, back = rbracket}
 val braces = enclose {front = lbrace, back = rbrace}
 
 (* appendNewLine : format -> format *)
-fun appendNewLine fmt = block [FMT fmt, BRK HardLine]
+fun appendNewLine fmt = block [FMT fmt, BRK Hard]
 
 (* label : string -> format -> format *)
 (* labeled formats, i.e. formats preceded by a string label, a commonly occurring pattern *)
@@ -198,8 +198,8 @@ fun label (str:string) (fmt: format) = hcat (text str, fmt)
  * The virtual break associated with each alignment.
  * This is a utility function used in functions sequence and formatSeq *)
 fun alignmentToBreak H = Space 1
-  | alignmentToBreak V = HardLine
-  | alignmentToBreak P = SoftLine 1
+  | alignmentToBreak V = Hard
+  | alignmentToBreak P = Soft 1
   | alignmentToBreak C = NullBreak
 
 (* sequence : alignement -> format -> format list -> format
