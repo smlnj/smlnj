@@ -35,9 +35,7 @@ fun dbsay (msg: string) = if !debugging then saynl msg else ()
 (* debugPrint : string * (PP.stream -> 'a -> unit) * 'a -> unit *)
 fun debugPrint (msg: string, formatter: 'a -> unit, subject: 'a) =
     if !debugging
-    then PP.printFormatNL
-             (PP.vcat (PP.text msg,
-		       formatter subject))
+    then PP.printFormatNL (PP.vcat [PP.text msg, formatter subject])
     else ()
 
 (* fmtCon : AS.con -> PP.format *)
@@ -56,13 +54,12 @@ fun fmtOption formatter elemOp =
 fun fmtSign sign =
     (case sign
       of A.CSIG(n,m) =>
-	 (PP.hcat (PP.text "CSIG",
-		   PP.tupleFormat [PP.integer n, PP.integer m]))
+	   PP.hcat [PP.text "CSIG", PP.tuple [PP.integer n, PP.integer m]]
        | A.CNIL => PP.text "CNIL")
 
 (* fmtRuleset : RS.ruleset -> PP.format *)
 fun fmtRuleset (ruleset: RS.ruleset) =
-      PP.braces (PU.sequence {alignment=PP.P, sep=PP.comma} (map PP.integer (RS.listItems ruleset)
+      PP.braces (PU.psequence PP.comma (map PP.integer (RS.listItems ruleset)))
 
 (* fmtSubcase : ('a -> unit) -> 'a subcase -> PP.format *)
 fun fmtSubcase fmtCase subcase =
@@ -70,14 +67,13 @@ fun fmtSubcase fmtCase subcase =
       of CONST => PP.text "CONST"
        | DCARG thing => fmtCase thing
        | VELEMS elems => 
-	    PP.hcat (PP.text "VELEMS:",
-		     PP.formatTuple fmtCase elems))
+	    PP.hcat [PP.text "VELEMS:", PP.formatTuple fmtCase elems])
 
 (* fmtProtoAndor : MC.protoAndor -> PP.format *)
 (* formatter for protoAndor nodes *)
 fun fmtProtoAndor protoAndor =
     let fun fmtProtoVariant ((con, rules, subcase): MC.protoVariant) =
-	      PP.hblock
+	      PP.hcat
 	       [PP.text (AU.conToString con), 
 		fmtRuleset rules,
 		fmtSubcase fmtProtoAndor subcase]
@@ -92,12 +88,12 @@ fun fmtProtoAndor protoAndor =
 
     in (case protoAndor
 	 of (ANDp {varRules, children}) =>
-              PP.hblock [PP.text "ANDp", fmtRuleset varRules, fmtAndChildren children]
+              PP.hcat [PP.text "ANDp", fmtRuleset varRules, fmtAndChildren children]
 	  | (ORp {varRules, sign, cases}) =>
-	      PP.pcat (PP.hblock [PP.text "ORp", fmtRuleset varRules, ppSign sign],
-		       fmtProtoVariants cases)
+	      PP.pcat [PP.hcat [PP.text "ORp", fmtRuleset varRules, ppSign sign],
+		       fmtProtoVariants cases]
 	  | (VARp {varRules}) =>
-	      PP.hcat (PP.text "VARp", fmtRuleset varRules)
+	      PP.hcat [PP.text "VARp", fmtRuleset varRules]
 	  | WCp => PP.text "WCp")
     end
 
@@ -106,40 +102,38 @@ fun fmtProtoAndor protoAndor =
  *  could develop a "path" while printing the andor tree *)
 fun fmtAndor andor =
     let fun fmtVariant (con, rules, subcase) =
-	      PP.hcat (PP.text (AU.conToString con), fmtSubcase fmtAndor subcase)
+	      PP.hcat [PP.text (AU.conToString con), fmtSubcase fmtAndor subcase]
     in case andor
 	of (AND {id, children}) =>
-	      PP.vcat (PP.hcat (PP.text "AND", PP.integer id),
-		       PP.indent 2
-			 (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtNode children)))
+	      PP.vcat [PP.hcat (PP.text "AND", PP.integer id),
+		       PP.indent 2 (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtNode children))]
 	 | (OR {id, path, sign, defaults, cases}) =>
 	      PP.vcat
-		  (PP.hblock
+		  [PP.hcat
 		     [PP.text "OR", PP.integer id, fmtPath path, fmtRuleset defaults,
 		      fmtSign sign],
-		   PP.indent 2 
-                     (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtVariant cases)))
+		   PP.indent 2 (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtVariant cases))]
 	 | (VAR {id}) =>
-	      PP.hcat (PP.text "VAR", PP.integer id)
+	      PP.hcat [PP.text "VAR", PP.integer id]
 	 | WC = PP.text "WC"
     end (* fun ppAndor *)
 
 (* fmtDectree : decTree -> PP.format *)
 val fmtDectree decTree =
     let fun fmtCase (con, decTree) =
-	      PP.hcat (PP.text (AU.conToString con), fmtDectree decTree)
+	      PP.hcat [PP.text (AU.conToString con), fmtDectree decTree]
 	fun fmtSwitch (cases, defaultOp) =
               PP.vcat
-	       (PP.sequence {alignment=PP.V, sep=PP.empty} (map fmtCase cases),
-	        (case defaultOp
-	           of SOME dectree => PP.hcat (PP.text "*", fmtDectree dectree)
-		    | NONE => PP.empty))
+	        [PP.vsequence PP.empty (map fmtCase cases),
+	         (case defaultOp
+	            of SOME dectree => PP.hcat [PP.text "*", fmtDectree dectree]
+		     | NONE => PP.empty)]
 
     in case decTree
 	 of SWITCH {id, path, sign, cases, defaultOp, live} =>
-              PP.vcat (PP.hblock [PP.text "SWITCH", PP.integer id, fmtPath path, fmtSign sign],
+              PP.vcat (PP.hcat [PP.text "SWITCH", PP.integer id, fmtPath path, fmtSign sign],
 		       fmtSwitch(cases, defaultOp))
-	  | RHS ruleno => PP.hcat (PP.text "RHS", PP.integer ruleno)
+	  | RHS ruleno => PP.hcat [PP.text "RHS", PP.integer ruleno]
 	  | FAIL => PP.text "FAIL"
     end (* ppDectree *)
 
@@ -147,8 +141,8 @@ val fmtDectree decTree =
 (* format absyn rule *)
 fun ppRule(pat, exp) =
       PP.pcat
-        (PP.hcat (PPAbsyn.fmtPat StaticEnv.empty (pat, 100), PP.text "=>"),
-         PPAbsyn.fmtExp (StaticEnv.empty, NONE) (exp, 100))
+        [PP.hcat (PPAbsyn.fmtPat StaticEnv.empty (pat, 100), PP.text "=>"),
+         PPAbsyn.fmtExp (StaticEnv.empty, NONE) (exp, 100)]
 
 (* fmtMatch : (Absyn.pat * Absyn.exp) list -> PP.format *)
 fun fmtMatch match = PP.sequence {alignment=PP.V, sep=PP.text " |"} (map ppRule match)

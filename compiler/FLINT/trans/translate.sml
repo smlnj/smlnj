@@ -68,7 +68,7 @@ local
   type depth = int (* deBruijn context *)
   val top : depth = 0
 
-  fun viblock formats = PP.indent 3 (PP.vblock formats)
+  fun ivcat formats = PP.indent 3 (PP.vcat formats)
 
 in
 
@@ -656,7 +656,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
                 of SOME(_, tvs) =>
 		   (if !debugging then
                       complain EM.WARN "mkVE -> matchInstTypes -> pruneTyvar"
-                        (PP.vblock
+                        (PP.vcat
 			   (PP.label "var:" (PPVal.fmtVarDebug (env, e)) ::
 			    PP.label "tvs length:" (PP.integer (length tvs)) ::
                             (case tvs
@@ -670,7 +670,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
 		      (fn () =>
 			  (complain EM.COMPLAIN
 				    "mkVE:primop intrinsic type doesn't match occurrence type"
-                      (PP.vblock
+                      (PP.vcat
                          [PP.label "VALvar" (PPVal.fmtVar e),
 			  PP.label "occtypes" (fmtType occurenceTy),
                           PP.label "intrinsicType" (fmtType intrinsicType),
@@ -700,12 +700,12 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
     (* non primop variable *)
       (if !debugging
        then PP.printFormatNL
-	      (PP.vblock
+	      (PP.vcat
 	         [PP.label "### mkVE nonprimop:" (PPP.fmtSymPath path),
 		  PP.label "access:" (PP.text (A.accessToString access)),
 		  PP.label "typ:" (fmtType (!typ)),
 		  PP.label "|tys|:" (PP.integer (length tys)),
-		  PP.label "tys:" (PP.tupleFormats (map fmtType tys))])
+		  PP.label "tys:" (PP.tuple (map fmtType tys))])
        else ();
        case tys
         of [] => (dbsaysnl ["### mkVE[no poly]: ", V.toString var, " ", A.accessToString(V.varAccess var)];
@@ -1649,10 +1649,10 @@ val ltyerrors = if !FLINT_Control.checkPLambda
 val _ = if ltyerrors
         then (PP.printFormat
 		 (PP.vcat
-		   (PP.text "**** Translate: checkLty failed ****",
-		    viblock
-		      [PP.label "absyn" (PPA.fmtDec (env,NONE) (rootdec,1000)),
-                       PP.label "lexp" (PPLexp.fmtLexp 25 plexp)]));
+		    [PP.text "**** Translate: checkLty failed ****",
+		     ivcat
+		       [PP.label "absyn:" (PPA.fmtDec (env,NONE) (rootdec,1000)),
+                        PP.label "lexp:" (PPLexp.fmtLexp 25 plexp)]]);
               complain EM.WARN "checkLty" EM.nullErrorBody;
 	      bug "PLambda type check error!")
         else ()

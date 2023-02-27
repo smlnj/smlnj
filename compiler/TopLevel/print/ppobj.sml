@@ -178,7 +178,7 @@ fun resetSharing () = (counter := 0)
 fun formatWithSharing (object: object, formatter: object * sharingEnv -> PP.format, senv: sharingEnv) =
     if !Control.Print.printLoop then
        (case wasSeen (object, senv)  (* was this object seen before, on the way inward? *)
-	  of SOME id => PP.ccat (PP.text "%", PP.integer id)  (* format using the sharing "id number" *)
+	  of SOME id => PP.ccat [PP.text "%", PP.integer id]  (* format using the sharing "id number" *)
 	   | NONE =>  (* this object will now be formatted for the first time *)
 	       let val memo = ref NONE
 		   val key : unit ref = Unsafe.cast object
@@ -189,7 +189,7 @@ fun formatWithSharing (object: object, formatter: object * sharingEnv -> PP.form
 		         of NONE => objFmt
 			    (* memo was not set, so object not found shared within itself *)
 		          | SOME id => (* memo was set, defining an "id number" for this object,  *)
-			    PP.hblock [objFmt, PP.text "as", PP.ccat (PP.text "%", PP.integer id)]
+			    PP.hcat [objFmt, PP.text "as", PP.ccat [PP.text "%", PP.integer id]]
 		   end
 	       end)
     else formatter (object, senv)  (* in this case, senv is always ignored *)
@@ -406,18 +406,18 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 					     of [a, b] => (a, b)
 					      | _ => bug "fmtDcon [a, b]"
 				    in if Tuples.isTUPLEtyc domTyc
-				       then PP.pblock
+				       then PP.pcat
 					     [fmtObj'(leftArg, leftTy, tycontextOp, senv, depth-1, 0, leftPull),
 					      PP.text  dname,
 					      fmtObj'(rightArg, rightTy, tycontextOp, senv, depth-1, rightPull, 0)]
 				       else PP.pcat
-					      (PP.text dname,
+					      [PP.text dname,
 					       PP.indent 2 (fmtObj' (decon(obj,dcon), dom, tycontextOp, senv,
-									 depth-1, 0, 0)))
+									 depth-1, 0, 0))]
 				   end
 				 | _ =>
-				   PP.pcat (PP.text dname,
-					    fmtObj'(decon(obj,dcon), dom, tycontextOp, senv, depth-1, 0, 0))
+				   PP.pcat [PP.text dname,
+					    fmtObj'(decon(obj,dcon), dom, tycontextOp, senv, depth-1, 0, 0)]
 		       in case fixity
 			    of F.NONfix => prdcon ()
 			     | F.INfix (myleft, myright) => 
@@ -453,20 +453,20 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 		    else fmts
 		end
 
-	 in PP.listFormats elementsFormats
+	 in PP.list elementsFormats
 	end
 
     and fmtUrList (obj:object, ty:T.ty, tycontextOp, depth:int, length: int) =
 	PP.brackets (PP.text  "unrolled list")
 
     and fmtTuple (objs: object list, tys: T.ty list, tycontextOp, senv: sharingEnv, depth:int) : PP.format =
-	PP.tupleFormats (map (fn (obj, ty) => fmtClosed (obj, ty, tycontextOp, senv, depth - 1))
+	PP.tuple (map (fn (obj, ty) => fmtClosed (obj, ty, tycontextOp, senv, depth - 1))
 			(ListPair.zipEq (objs, tys)))
 
     and fmtRecord (objs: object list, labels: T.label list, tys: T.ty list,
 		   tycontextOp, senv: sharingEnv, depth: int) =
 	let fun fmtField (f,l,ty) =
-		  PP.hblock [PP.text (S.name l), PP.equal, fmtClosed (f, ty, tycontextOp, senv, depth-1)]
+		  PP.hcat [PP.text (S.name l), PP.equal, fmtClosed (f, ty, tycontextOp, senv, depth-1)]
 	 in PP.braces (PP.psequence PP.comma (map fmtField (List3.zip3Eq (objs, labels, tys))))
 	end
 

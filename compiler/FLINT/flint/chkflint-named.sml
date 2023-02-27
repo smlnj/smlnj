@@ -40,11 +40,11 @@ fun ppLexp d lexp = PP.printFormat (PPF.fmtLexp d lexp)
 fun prMsgLty (msg, lty) = (say msg; ppLexp 10 lexp)
 
 fun fmtList (s, ltys) = 
-    PP.vcat (PP.text s, PP.indent 2 (PP.formatSeq V (PPT.fmtLty 100) ltys))
+    PP.vcat [PP.text s, PP.indent 2 (PP.formatSeq V (PPT.fmtLty 100) ltys)]
 
 fun pp2Lists (s,s',ltys,ltys') =
     PP.printFormat
-      (PP.vcat (fmtList (s, ltys), fmtList (s', ltys'))
+      (PP.vcat [fmtList (s, ltys), fmtList (s', ltys')]
 
 
 (****************************************************************************
@@ -141,11 +141,11 @@ fun check (postReify: bool) (envs: envs) lexp =
 	      (le,
 	       fn () =>
 		  printFormatNL
-		    (vblock [text (s ^ ": Kind conflict"),
-		    	     text "** function Lty:",
-			     PPT.fmtLty 100 lt,
-			     text "** argument Tycs:",
-			     PP.formatList (PPT.fmtTyc 100) ts]),
+		    (vcat [text (s ^ ": Kind conflict"),
+		    	   text "** function Lty:",
+			   PPT.fmtLty 100 lt,
+			   text "** argument Tycs:",
+			   PP.formatList (PPT.fmtTyc 100) ts]),
 	       []))
 
         (* ltArrow : (lexp * string) -> (cconv * lty list * lty list) -> lty *)

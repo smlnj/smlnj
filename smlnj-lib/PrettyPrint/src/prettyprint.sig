@@ -34,7 +34,8 @@
  *   -- renamed (with same type):
  *      HardLine -> Hard
  *      SoftLine -> Soft
- *      tupleFormat -> tuple
+ *      listFormats -> list
+ *      tupleFormats -> tuple
  *      list -> listMap
  *      formatSeq -> sequenceMap
  *      formatClosedSeq -> closedSequenceMap
@@ -46,7 +47,7 @@
  *      cblock -> ccat
  *      hvblock -> hvcat
  *   -- removed:
- *      tuple [i.e. the function that should have been called tupleMap; tupleFormat becomes tuple]
+ *      tuple [i.e. the function that should have been called tupleMap; recycled as new name for tupleFormats]
  *      hcat [recycled as the name of the former hblock]
  *      pcat [recycled as the name of the former pblock]
  *      vcat [recycled as the name of the former vblock]
@@ -159,16 +160,16 @@ sig
     val sequence : alignment -> format -> format list -> format
         (* sequence a break fmts: inserts break between constituent fmts and aligns by a *)
 
-    (* aligned sequence formatters, first argument is sep format, e.g. comma *)
+    (* aligned sequence formatters, first argument is seperator format, e.g. (typically) comma *)
     val hsequence : format -> format list -> format  (* = sequence H *)
     val psequence : format -> format list -> format  (* = sequence P *)
     val vsequence : format -> format list -> format  (* = sequence V *)
     val csequence : format -> format list -> format  (* = sequence C *)
 
-    val tuple : format list -> format  (* default packed alignment *)
+    val tuple : format list -> format  (* default packed alignment, formerly tupleFormats *)
         (* formats as a tuple *)
 
-    val list : format list -> format  (* default packed alignment *)
+    val list : format list -> format  (* default packed alignment, formerly listFormats *)
         (* formats as a list *)
 
     val option : format option -> format
@@ -183,7 +184,7 @@ sig
     val closedSequenceMap :
 	{alignment: alignment, front: format, sep: format, back: format} -> ('a -> format) -> 'a list -> format
 
-    val listMap : ('a -> format) -> 'a list -> format  (* default packed alignment P *)
+    val listMap : ('a -> format) -> 'a list -> format  (* default packed alignment P, formerly "list" *)
 
     val alignedListMap : alignment -> ('a -> format) -> 'a list -> format
 

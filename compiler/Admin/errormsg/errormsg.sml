@@ -61,7 +61,7 @@ in
   (* impossibleWithBody : string -> PP.format -> 'a *)
   fun impossibleWithBody (msg: string) (body: PP.format) =
       (PP.printFormatNL
-         (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body));
+         (PP.vcat [PP.hcat [PP.text "Error: Compiler bug:", PP.text msg], body]);
        raise Error)
 
   (* warn : string -> unit *)
@@ -78,8 +78,8 @@ in
 	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
 	 | _ => PP.appendNewLine
                   (PP.vcat
-		     (PP.hblock [location, fmtSeverity severity, PP.text msg],
-		      PP.indent 2 body))
+		     [PP.hcat [location, fmtSeverity severity, PP.text msg],
+		      PP.indent 2 body])
 
   (* error : SR.source -> errorFn *)
   fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =

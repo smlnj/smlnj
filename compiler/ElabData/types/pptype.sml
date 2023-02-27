@@ -21,9 +21,6 @@ sig
                       -> StaticEnv.staticEnv
                       -> Types.ty
 		      -> PrettyPrint.format
-(* NOT USED!
-  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> PrettyPrint.format
- *)
 
   (* actual printing functions *)
   val ppTycon : StaticEnv.staticEnv -> Types.tycon -> unit
@@ -280,7 +277,7 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
                      end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat (PP.text "RECtyc ", PP.integer n)))
+		       (PP.hcat [PP.text "RECtyc ", PP.integer n)])
 
           | fmtTyc (FREEtyc n) =
               (case membersOp
@@ -291,7 +288,7 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
                     end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat (PP.text "FREEtyc ", PP.integer n)))
+		       (PP.hcat [PP.text "FREEtyc ", PP.integer n)])
 
  	  | fmtTyc (tyc as PATHtyc {arity, entPath, path}) =
 	      PP.text (SP.toString (ConvertPaths.stripPath path))
@@ -322,7 +319,7 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 		   end
 	       | CONty(tycon, args) =>
 		   let fun otherwise () =
-			     PP.pblock [fmtTypeArgs args, fmtTycon1 env membersOp tycon]
+			     PP.pcat [fmtTypeArgs args, fmtTycon1 env membersOp tycon]
 		    in case tycon
 		         of GENtyc { stamp, kind, ... } =>
 			      (case kind
@@ -332,11 +329,11 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 					    of [domain,range] =>
 					       let val domainFmt = fmtAtomTy (domain, 0)
 						   val rangeFmt = fmtTy range
-					       in PP.pcat (PP.hcat (domainFmt, arrow),
-							   PP.indent 2 rangeFmt)
+					       in PP.pcat [PP.hcat [domainFmt, arrow],
+							   PP.indent 2 rangeFmt]
 					       end
 					     | _ => bug "CONty:arity"
-				      else PP.hcat (fmtTypeArgs args, fmtTycon1 env membersOp tycon)
+				      else PP.hcat [fmtTypeArgs args, fmtTycon1 env membersOp tycon]
 				  | _ => otherwise ())
 			  | RECORDtyc labels =>
 			     if Tuples.isTUPLEtyc(tycon)
@@ -352,15 +349,15 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 
 	and fmtTypeArgs [] = PP.empty
 	  | fmtTypeArgs [ty] = fmtAtomTy (ty, 1)
-	  | fmtTypeArgs tys = PP.tupleFormats (map fmtTy tys)
+	  | fmtTypeArgs tys = PP.tuple (map fmtTy tys)
 
 	and fmtTUPLEty [] = unitFmt
 	  | fmtTUPLEty tys =
 	      let fun formatter ty = fmtAtomTy (ty, 1)
-	       in PP.formatSeq {alignment = PP.P, sep = PP.text " *", formatter = formatter} tys
+	       in PP.psequence (PP.text " *") (map formatter tys)
 	      end
 
-	and fmtField (lab,ty) = PP.hcat (PP.ccat (PPS.fmtSym lab, PP.colon), fmtTy ty)
+	and fmtField (lab,ty) = PP.hcat [PP.ccat [PPS.fmtSym lab, PP.colon], fmtTy ty]
 
 	and fmtRECORDty (nil, nil) = unitFmt
               (* this case should not occur *)
@@ -377,7 +374,7 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 				 of [] => PP.braces (PP.empty)
 				  | fields =>
 				      PP.braces
-				        (PP.pblock
+				        (PP.pcat
 					   [PP.psequence PP.comma (map fmtField fields),
 					    PP.semicolon,
 					    PP.text printname]))
@@ -399,10 +396,10 @@ fun fmtTycon env tycon = fmtTycon1 env NONE tycon
 
 fun fmtTyfun env (TYFUN{arity,body}) =
     PP.hcat
-       (PP.text "TYFUN",
+       [PP.text "TYFUN",
 	PP.braces (PP.hsequence PP.comma
-		     [PP.label "arity:" (PP.integer arity),
-		      PP.label "body:" (fmtType env body)]))
+		     [PP.label "arity" (PP.integer arity),
+		      PP.label "body" (fmtType env body)])]
 
 (* fmtFormals : int -> PP.format *)
 fun fmtFormals n =
@@ -410,7 +407,7 @@ fun fmtFormals n =
      in case formals
  	  of nil => PP.empty
 	   | [x] => x
-  	   | fmts => PP.tupleFormats fmts
+  	   | fmts => PP.tuple fmts
     end
 
 (* NOT USED!
@@ -420,13 +417,13 @@ fun fmtDataconsWithTypes env tycon =
        of GENtyc { kind = DATATYPE dt, ... } =>
 	  let val {index, freetycs, family = {members,...}, ...} = dt
 	      val {dcons, ...} = Vector.sub (members, index)
-	   in PP.vblock
+	   in PP.vcat
 	        (map (fn {name, domain, ...} =>
-			 PP.hcat (PP.ccat (PPS.fmtSym name, PP.colon),
+			 PP.hcat [PP.ccat [PPS.fmtSym name, PP.colon],
 				  case domain
 				    of SOME ty =>
 					 fmtType1 env (ty,[],SOME (members,freetycs))
-				     | NONE => PP.text "CONST"))
+				     | NONE => PP.text "CONST"])
 		     dcons)
 	  end
 	| _ = bug "ppDataconTypes")

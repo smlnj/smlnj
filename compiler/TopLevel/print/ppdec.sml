@@ -98,26 +98,26 @@ fun fmtDec ({static,dynamic}: Environment.environment)
              if isLazyBogus path then PP.empty else
 	       (dbsaysnl [">>> fmtVar", SP.toString path];
 		(PP.hcat
-	           (PP.hblock [PP.text "val", PPP.fmtSymPath path, PP.equal],
-		     (case access
-		        of A.LVAR lv =>  (* access is expected to be an LVAR *)
+	           [PP.hcat [PP.text "val", PPP.fmtSymPath path, PP.equal],
+		    (case access
+		       of A.LVAR lv =>  (* access is expected to be an LVAR *)
 			    (case StaticEnv.look (static, SP.last path)
 			      of Bindings.VALbind(V.VALvar{access = A.PATH (A.EXTERN pid, pos), ...}) =>
 				  if isExport lv  (* is it "exported"? *)
 				  then (case DynamicEnv.look dynamic pid
 					 of SOME objv =>
 					     let val obj = extract (objv, pos)
-					     in PP.hblock
+					     in PP.hcat
 						  [PPO.fmtObj static (obj, ty, !printDepth),
 						   PP.colon,
 						   PPT.fmtType static (trueValType (path,ty))]
 					     end
 					  | NONE => bug "fmtVar: objv")
-				   else PP.hblock [PP.text "<hidden>", PP.colon, PPT.fmtType static ty]
+				   else PP.hcat [PP.text "<hidden>", PP.colon, PPT.fmtType static ty]
 				| _ => PP.text "<hidden>"
 			     (* end case *))
 		        | _ => bug "fmtVar"
-		        (* end case *)))))
+		        (* end case *))]))
          | fmtVar _ = PP.empty
 
        (* fmtVb : AS.vb -> PP.format *)
@@ -125,11 +125,11 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	 let fun fmtBind(pat) =
 	           case pat
 		    of AS.VARpat v => fmtVar v
-		     | AS.RECORDpat{fields,...} => PP.hblock (map (fmtBind o #2) fields)
-		     | AS.VECTORpat(pats,_) => PP.hblock (map fmtBind pats)
+		     | AS.RECORDpat{fields,...} => PP.hcat (map (fmtBind o #2) fields)
+		     | AS.VECTORpat(pats,_) => PP.hcat (map fmtBind pats)
 		     | AS.APPpat(_,_,pat) => fmtBind pat
 		     | AS.CONSTRAINTpat(pat,_) => fmtBind pat
-		     | AS.LAYEREDpat(pat1,pat2) => PP.hblock [fmtBind pat1, fmtBind pat2]
+		     | AS.LAYEREDpat(pat1,pat2) => PP.hcat [fmtBind pat1, fmtBind pat2]
                      | AS.ORpat(p1, _) => fmtBind p1
 		     | _ => PP.empty
 	  in fmtBind pat
@@ -141,7 +141,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
        and fmtTb (T.DEFtyc dt) =
 	   let val {path, tyfun = T.TYFUN {arity,body},...} =
 		   getOpt (trueTycon (#path dt), dt)
-	    in PP.hblock
+	    in PP.hcat
 	         [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path, PP.equal,
 		  PPT.fmtType static body]
 	   end
@@ -150,9 +150,9 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	and fmtAbsTyc (T.GENtyc { path, arity, eq, kind, ... }) =
 	    (case kind
 	       of T.ABSTRACT _ =>
-		     PP.hblock [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path]
+		     PP.hcat [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path]
 		| _ =>  (* same! *)
-		     PP.hblock [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path])
+		     PP.hcat [PP.text "type", PPT.fmtFormals arity, PPP.fmtTycName path])
           | fmtAbsTyc _ = bug "fmtAbsTyc:tycKind"
 
         (* fmtDataTyc : T.tycon -> PP.format *)
@@ -165,17 +165,17 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 		  | fmtDcons dcons =
 		    let fun fmtDcon ({name,domain,rep}) =
 			    PP.hcat
-			      (PPS.fmtSym name,
+			      [PPS.fmtSym name,
 			       case domain
 			         of SOME dom =>
 			              PP.hcat
-					(PP.text "of",
-				         PPT.fmtDconDomain (members,freetycs) static dom)
-				  | NONE => PP.empty)
-		     in PP.hcat (PP.equal, PP.hsequence (PP.text " |") (map fmtDcon dcons))
+					[PP.text "of",
+				         PPT.fmtDconDomain (members,freetycs) static dom]
+				  | NONE => PP.empty]
+		     in PP.hcat [PP.equal, PP.hsequence (PP.text " |") (map fmtDcon dcons)]
 		    end
 		val {dcons, ...} = Vector.sub(members,index)
-	     in PP.hblock
+	     in PP.hcat
 		  [PP.text "datatype", PPT.fmtFormals arity, PPP.fmtTycName path,
 		   fmtDcons dcons]
 	    end
@@ -183,33 +183,33 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 
         (* fmtEb : AS.eb -> PP.format *)
 	and fmtEb(AS.EBgen{exn=T.DATACON{name,...},etype,...}) =
-	      PP.hblock
+	      PP.hcat
 	        [PP.text "exception", PPS.fmtSym name,
 		 case etype
 		   of NONE => PP.empty
-		    | SOME ty' => PP.hcat (PP.text " of", PPT.fmtType static ty')]
+		    | SOME ty' => PP.hcat [PP.text " of", PPT.fmtType static ty']]
 
 	  | fmtEb (AS.EBdef{exn=T.DATACON{name,...}, edef=T.DATACON{name=dname,...}}) =
-	      PP.hblock [PP.text "exception", PPS.fmtSym name, PP.equal, PPS.fmtSym dname]
+	      PP.hcat [PP.text "exception", PPS.fmtSym name, PP.equal, PPS.fmtSym dname]
 
 	and fmtStrb (AS.STRB{name, str, ...}) =
 	      PP.pcat
-		(PP.hblock [PP.text "structure", PPS.fmtSym name, PP.colon], 
-		 PP.indent 2 (PPModules.fmtStructure static (str, !signatures)))
+		[PP.hcat [PP.text "structure", PPS.fmtSym name, PP.colon], 
+		 PP.indent 2 (PPModules.fmtStructure static (str, !signatures))]
 
 	and fmtFctb (AS.FCTB{name, fct, ...}) =
-	    (PP.pcat
-	       (PP.hblock [PP.text "functor", PPS.fmtSym name, PP.colon],
-	        case fct
-		  of M.FCT { sign, ... } =>
-		       PP.indent 2 (PPModules.fmtFunsig static (sign, !signatures))
-		   | _ => PP.text "<sig>"))  (* blume: cannot (?) happen *)
+	      PP.pcat
+	        [PP.hcat [PP.text "functor", PPS.fmtSym name, PP.colon],
+	         case fct
+		   of M.FCT { sign, ... } =>
+		        PP.indent 2 (PPModules.fmtFunsig static (sign, !signatures))
+		    | _ => PP.text "<sig>"]  (* [Blume:] cannot (?) happen *)
 
         and fmtSigb sign =
 	    let val name = case sign
                              of M.SIG {name, ...} => getOpt (name, anonSigName)
                               | _ => anonSigName
-             in PP.hblock
+             in PP.hcat
 		  [PP.text "signature", PPS.fmtSym name, PP.equal,
 		   PPModules.fmtSignature static (sign, !signatures)]
             end
@@ -219,54 +219,54 @@ fun fmtDec ({static,dynamic}: Environment.environment)
                             of M.FSIG{kind=SOME s, ...} => s
                              | _ => anonFsigName
 
-	     in PP.hblock
+	     in PP.hcat
 	          [PP.text "funsig", PPS.fmtSym name, PP.equal,
 	           PPModules.fmtFunsig static (fsig, !signatures)]
             end
 
 	and fmtFixity {fixity,ops} =
-	      PP.hcat (PP.text (Fixity.fixityToString fixity),
-		       PP.hsequence PP.empty (map PPS.fmtSym ops))
+	      PP.hcat [PP.text (Fixity.fixityToString fixity),
+		       PP.hsequence PP.empty (map PPS.fmtSym ops)]
 
 	and fmtOpen(pathStrs) =
 	    if !printOpens
-	    then PP.vblock
+	    then PP.vcat
 		   (map (fn (path,str) =>
 			    PPModules.fmtOpen static (path, str, !signatures))
 			pathStrs)
 	    else PP.hcat 
-		   (PP.text "open",
-		    PP.psequence PP.empty (map (fn (path,_) => PPP.fmtSymPath path) pathStrs))
+		   [PP.text "open",
+		    PP.psequence PP.empty (map (fn (path,_) => PPP.fmtSymPath path) pathStrs)]
 
 	and fmtVARSEL (var1, var2, index) = fmtVar var1
 
 	and fmtDec0 dec =
 	    (PPT.resetPPType();
 	     case dec
-	      of AS.VALdec vbs => PP.vblock (map fmtVb vbs)
-	       | AS.VALRECdec rvbs => PP.vblock (map fmtRvb rvbs)
+	      of AS.VALdec vbs => PP.vcat (map fmtVb vbs)
+	       | AS.VALRECdec rvbs => PP.vcat (map fmtRvb rvbs)
 	       | AS.DOdec _ => PP.empty
-	       | AS.TYPEdec tbs => PP.vblock (map fmtTb tbs)
+	       | AS.TYPEdec tbs => PP.vcat (map fmtTb tbs)
 	       | AS.DATATYPEdec{datatycs,withtycs} =>
 		   PP.vcat
-		     (PP.vblock (map fmtDataTyc datatycs),
-		      PP.vblock (map fmtTb withtycs))
+		     [PP.vcat (map fmtDataTyc datatycs),
+		      PP.vcat (map fmtTb withtycs)]
 	       | AS.ABSTYPEdec {abstycs, withtycs, body} =>
-		   PP.vblock
-		     [PP.vblock (map fmtAbsTyc abstycs),
-		      PP.vblock (map fmtTb withtycs),
+		   PP.vcat
+		     [PP.vcat (map fmtAbsTyc abstycs),
+		      PP.vcat (map fmtTb withtycs),
 		      fmtDec0 body]
-	       | AS.EXCEPTIONdec ebs => PP.vblock (map fmtEb ebs)
-	       | AS.STRdec strbs => PP.vblock (map fmtStrb strbs)
-	       | AS.FCTdec fctbs => PP.vblock (map fmtFctb fctbs)
-	       | AS.SIGdec sigbs => PP.vblock (map fmtSigb sigbs)
-	       | AS.FSIGdec fsigbs => PP.vblock (map fmtFsigb fsigbs)
+	       | AS.EXCEPTIONdec ebs => PP.vcat (map fmtEb ebs)
+	       | AS.STRdec strbs => PP.vcat (map fmtStrb strbs)
+	       | AS.FCTdec fctbs => PP.vcat (map fmtFctb fctbs)
+	       | AS.SIGdec sigbs => PP.vcat (map fmtSigb sigbs)
+	       | AS.FSIGdec fsigbs => PP.vcat (map fmtFsigb fsigbs)
 	       | AS.LOCALdec(decIn,decOut) => fmtDec0 decOut
 	       | AS.SEQdec decs => (* DBM ??? *)
 		  (case decs
 		     of AS.OPENdec pathStrs :: rest =>
 			 fmtOpen pathStrs
-                      | _ => PP.vblock (map fmtDec0 decs))
+                      | _ => PP.vcat (map fmtDec0 decs))
 	       | AS.FIXdec fixd => fmtFixity fixd
 	       | AS.OVLDdec _ => (PP.text "overload")
 	       | AS.OPENdec pathStrs => fmtOpen pathStrs

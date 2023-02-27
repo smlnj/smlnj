@@ -159,23 +159,23 @@ fun tcc_app (fntyc, argtycs) =
 			    | _ =>
 			      (PP.printFormatNL
 				 (PP.vcat
-				    (PP.text "ERROR: checkParamArity - FIX",
-				     PPLty.fmtTyc (!printDepth) gen));
+				    [PP.text "ERROR: checkParamArity - FIX",
+				     PPLty.fmtTyc (!printDepth) gen]);
 			       bug "FIX without generator!"))
 		       | tycI => (PP.printFormatNL
 				    (PP.vcat 
-				       (PP.hcat (PP.text "getArity:", PP.text (PPLty.tycITag tycI)),
-					PPLty.fmtTyc (!printDepth) tc));
+				       [PP.hcat [PP.text "getArity:", PP.text (PPLty.tycITag tycI)],
+					PPLty.fmtTyc (!printDepth) tc]);
 			          0))  (* giving up! *)
 		val arity = getArity tc
 	    in
 		if arity = (length tcs) then ()
 		else PP.printFormatNL
-		        (PP.vblock
+		        (PP.vcat
 		          [PP.text "TC_APP arity mismatch",
-			   PP.hcat (PP.text "arity:", PP.integer arity),
-			   PP.hcat (PP.text "no. arguments:", PP.integer (length tcs)),
-			   PP.hcat (PP.text "operator:", PPLty.fmtTyc (!printDepth) tc)])
+			   PP.hcat [PP.text "arity:", PP.integer arity],
+			   PP.hcat [PP.text "no. arguments:", PP.integer (length tcs)],
+			   PP.hcat [PP.text "operator:", PPLty.fmtTyc (!printDepth) tc]])
 	    end
     in
 	((* checkParamArity(fntyc, argtycs); *)
@@ -301,7 +301,7 @@ and tc_lzrd(t: tyc) =
             let fun prop z = tcc_env(z, ol, nl, tenv)
 		             handle TCENV =>
                                (PP.printFormatNL
-                                    (PP.hcat (PP.text "tc_lzrd.prop:", PPLty.fmtTyc (!printDepth) z));
+                                    (PP.hcat [PP.text "tc_lzrd.prop:", PPLty.fmtTyc (!printDepth) z]);
                                 bug "tc_lzrd prop")
              in (case tc_out x
                   of TC_DVAR (n,k) =>
@@ -321,21 +321,21 @@ and tc_lzrd(t: tyc) =
                                             handle Subscript =>
                                             (* kind/arity error! *)
 					    (PP.printFormatNL
-					       (PP.vblock
+					       (PP.vcat
 						  [PP.text "***Debugging***",
-						   PP.hcat (PP.text "tc_lzrd arg:",
-							    PPLty.fmtTyc (!printDepth) t),
-						   PP.hblock [PP.text "n =", PP.integer n,
+						   PP.hcat [PP.text "tc_lzrd arg:",
+							    PPLty.fmtTyc (!printDepth) t],
+						   PP.hcat [PP.text "n =", PP.integer n,
 							      PP.text ", k =", PP.integer k],
-						   PP.hcat (PP.text "length(ts) = ",
-							    PP.integer (length ts)),
-						   PP.hcat (PP.text "ts elements: ",
-							    PP.tupleFormats (map (PPLty.fmtTyc (!printDepth)) ts))]);
+						   PP.hcat [PP.text "length(ts) = ",
+							    PP.integer (length ts)],
+						   PP.hcat [PP.text "ts elements: ",
+							    PP.tuple (map (PPLty.fmtTyc (!printDepth)) ts)]]);
 					     raise TeUnbound)
                                  in (* ASSERT: nl >= nl' *)
                                     if nl' > nl then
                                         (PP.printFormatNL
-					   (PP.hblock
+					   (PP.hcat
 					      [PP.text "ERROR: tc_lzrd (r6): nl =",
 					       PP.integer nl, PP.text ", nl' = ", PP.integer nl']);
                                          bug "tc_lzrd - nl' > nl")
@@ -690,11 +690,11 @@ and tc_eqv (x, y) =
     in res orelse
        (if !debugging
         then PP.printFormatNL
-	       (PP.vcat (PP.text "tc_eqv:",
+	       (PP.vcat [PP.text "tc_eqv:",
 			 PP.indent 2
-		           (PP.vblock
-			      [PP.hcat (PP.text "t1:", PPLty.fmtTyc 20 t1),
-			       PP.hcat (PP.text "t2:", PPLty.fmtTyc 20 t2)])))
+		           (PP.vcat
+			      [PP.hcat [PP.text "t1:", PPLty.fmtTyc 20 t1],
+			       PP.hcat [PP.text "t2:", PPLty.fmtTyc 20 t2]])])
 	else ();
         false)
     end (* tc_eqv *)

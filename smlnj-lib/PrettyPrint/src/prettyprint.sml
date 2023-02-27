@@ -35,7 +35,7 @@
  *   -- renamed:
  *      Hard -> Hard
  *      Soft -> Soft
- *      tupleFormat -> tuple
+ *      tupleFormats -> tuple
  *      list -> listMap
  *      formatSeq -> sequenceMap
  *      formatClosedSeq -> closedSequenceMap

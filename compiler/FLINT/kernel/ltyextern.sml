@@ -41,13 +41,13 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
         of (LT.LT_POLY(ks, b), ts) =>
              if length ks <> length ts
              then (PP.printFormatNL
-		     (PP.vblock
+		     (PP.vcat
 		       [PP.text "BUG LtyExtern.lt_inst: arity error",
-			PP.hcat (PP.text "|ks| =", PP.integer (length ks)),
-			PP.hcat (PP.text "|ts| =", PP.integer (length ts)),
-			PP.hcat (PP.text "lt:", PPLty.fmtLty 20 lt),
-			PP.hcat (PP.text "nt:", PPLty.fmtLty 20 nt),
-			PP.hcat (PP.text "ts:", PP.list (PPLty.fmtTyc 20) ts)]);
+			PP.label "|ks| =" (PP.integer (length ks)),
+			PP.label "|ts| =" (PP.integer (length ts)),
+			PP.label "lt:" (PPLty.fmtLty 20 lt),
+			PP.label "nt:" (PPLty.fmtLty 20 nt),
+			PP.label "ts:" (PP.list (map (PPLty.fmtTyc 20) ts))]);
                    bug "lt_inst - arity mismatch")
              else
              let val nenv = LT.teCons(LT.Beta(0,ts,ks), LT.teEmpty)
@@ -57,12 +57,11 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
          | (_, []) => [nt]   (* this requires further clarifications !!! *)
          | (lt,ts) =>
            (PP.printFormatNL
-	      (PP.vblock
+	      (PP.vcat
                  [PP.text "BUG LtyExtern.lt_inst: lt is not LT_POLY:",
-                  PP.hcat (PP.text "lt_inst lt arg:",
-                           PPLty.fmtLty 20 (LT.lt_inj lt)),
-                  PP.hcat (PP.text "ts length:", PP.integer (length ts)),
-                  PP.hcat (PP.text "ts head:", PPLty.fmtTyc 20 (hd ts))]);
+                  PP.label "lt_inst lt arg:" (PPLty.fmtLty 20 (LT.lt_inj lt)),
+                  PP.label "ts length:" (PP.integer (length ts)),
+                  PP.label "ts head:" (PPLty.fmtTyc 20 (hd ts))]);
             bug "incorrect lty instantiation in lt_inst")
   end
 
@@ -165,8 +164,8 @@ fun lt_select(lty: LT.lty, i: int, whereCalled) =
 				      Int.toString i, ", |tycs| = ",
 				      Int.toString(length tycs), " [", whereCalled, "]"]))
 	       | _ => (PP.printFormatNL
-			 (PP.vcat (PP.text "LtyExtern.tc_select: expected TC_TUPLE; tyc = ",
-			           PP.hcat (PP.text "tyc =", PPLty.fmtTyc 20 tyc)));
+			 (PP.vcat [PP.text "LtyExtern.tc_select: expected TC_TUPLE; tyc = ",
+			           PP.label "tyc =" (PPLty.fmtTyc 20 tyc)]);
 		       bug ("tc_select: bad tyc [" ^ whereCalled ^ "]")))
     in
       (case LK.lt_whnm_out lty

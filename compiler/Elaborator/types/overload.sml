@@ -105,10 +105,10 @@ in
 			     |  NONE =>
 				err EM.COMPLAIN "overloaded variable not defined at type"
 				    (PPType.resetPPType();
-				     PP.hblock
-				       [PP.hcat (PP.text "symbol:", PPS.fmtSym name),
-					PP.hcat (PP.text "type:",
-						 PPType.fmtType env (Ty.VARty context))]))
+				     PP.hcat
+				       [PP.hcat [PP.text "symbol:", PPS.fmtSym name],
+					PP.hcat [PP.text "type:",
+						 PPType.fmtType env (Ty.VARty context)]]))
 		    end (* fun resolveOVLDvar *)
 
 	        (* resolve overloaded literals *)

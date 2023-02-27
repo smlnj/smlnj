@@ -29,9 +29,9 @@ fun vHeaders {header1: string, header2: string, formatter: 'a -> PP.format}
      in case elems
 	  of nil => PP.empty
 	   | elem :: rest =>
-	       PP.vblock
-		 (PP.hcat (PP.text header1, formatter elem) ::
-		  map (fn e => PP.hcat (PP.text header2, formatter e)) rest)
+	       PP.vcat
+		 [PP.hcat [PP.text header1, formatter elem] ::
+		  map (fn e => PP.hcat [PP.text header2, formatter e]) rest]
     end
 
 (* vHeaderFormats : {header1 : string, header2 : string, formatter: 'a -> PP.format}
@@ -41,9 +41,9 @@ fun vHeaderFormats {header1: string, header2: string} (elems: PP.format list) =
      in case elems
 	  of nil => PP.empty
 	   | elem :: rest =>
-	       PP.vblock
-		 (PP.hcat (PP.text header1, elem) ::
-		  map (fn fmt => PP.hcat (PP.text header2, fmt)) rest)
+	       PP.vcat
+		 [PP.hcat [PP.text header1, elem] ::
+		  map (fn fmt => PP.hcat [PP.text header2, fmt]) rest]
     end
 
 end (* top local *)

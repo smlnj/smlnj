@@ -69,7 +69,7 @@ in
     fun fmtRKind rkind =
         (case rkind
 	  of (FR.RK_VECTOR tyc) => 
-	     ccat (text "VECTOR", brackets (PPT.fmtTyc 100 tyc))
+	     ccat [text "VECTOR", brackets (PPT.fmtTyc 100 tyc)]
 	  | FR.RK_STRUCT => text "STRUCT"
 	  | FR.RK_TUPLE => text "RECORD")
 
@@ -99,7 +99,7 @@ in
     fun fmtLvar lvar = text (LV.lvarName lvar)
 
     fun fmtTvTk (tv:LT.tvar, tk) =
-	cblock [text (LV.lvarName tv), text ":", PPT.fmtTKind 100 tk]
+	ccat [text (LV.lvarName tv), text ":", PPT.fmtTKind 100 tk]
 
     val fmtValList = list fmtValue
     val fmtLvarList = list fmtLvar
@@ -107,17 +107,16 @@ in
 
     (* fmtTagged : string * PP.format -> PP.format *)
     fun fmtTagged (tag: string, fmt: format) =
-	ccat (text tag, parens fmt)
-
+	ccat [text tag, parens fmt]
     (* fmtDecon : PL.con -> format *)
     fun fmtDecon (PL.DATAcon((_,Access.CONSTANT _,_),_,_)) = empty
         (* WARNING: a hack, but then what about constant exceptions ? *)
       | fmtDecon (PL.DATAcon((symbol,conrep,lty),tycs,lvar)) =
 	(* <lvar> = DECON(<symbol>,<conrep>,<lty>,[<tycs>]) *)
-	pblock
+	pcat
 	 [fmtLvar lvar, text "=",
 	  enclose {front = text "DECON(", back = rparen}
-	   (pblock
+	   (pcat
 	     [text (S.name symbol), comma,
 	      text (Access.conrepToString conrep), comma,
 	      PPT.fmtLty 100 lty, comma,
@@ -140,29 +139,26 @@ in
 	    (* fmtE : F.lexp * int -> format *)
 	    fun fmtE (F.RET values) =
 		(* RETURN [values] *)
-		hcat (text "RETURN", fmtValList values)
+		hcat [text "RETURN", fmtValList values]
 
 	      | fmtE (F.APP (f, args)) =
 		(* APP(f, [args]) *)
-		fmtTagged ("APP", 
-			   pblock [ccat (fmtValue f, comma), fmtValList args])
+		fmtTagged ("APP", pcat [ccat [fmtValue f, comma], fmtValList args])
 
 	      | fmtE (F.TAPP (tf, tycs)) =
 		(* TAPP(tf, [tycs]) *)
 		fmtTagged ("TAPP", 
-			   pblock [fmtValue tf, comma, PP.list fmtTyc' tycs])
+			   pcat [fmtValue tf, comma, PP.list fmtTyc' tycs])
 
 	      | fmtE (F.LET (vars, def, body)) =
 		(* [vars] = lexp   OR   [vars] =
 		 *   body                   lexp
 		 *                        body
 		 *)
-		let val header = hblock [text "LET", fmtLvarList vars, text "="]
+		let val header = hcat [text "LET", fmtLvarList vars, text "="]
 		    val defFmt = fmtLexp' def
 		    val bodyFmt = fmtLexp' body
-		 in vcat
-		      (pcat (header, indent 4 defFmt),
-		       indent 2 bodyFmt)
+		 in vcat [pcat [header, indent 4 defFmt], indent 2 bodyFmt]
 		end
 
 	      | fmtE (F.FIX (fundecs, body)) =
@@ -172,9 +168,8 @@ in
 		 *  IN <body>
 		 *)
 		vcat
-		  (hcat (text "FIX",
-			 (vblock (map fmtFundec' fundecs))),
-		   hcat (text " IN", fmtLexp' body))
+		  [hcat [text "FIX", vcat (map fmtFundec' fundecs)],
+		   hcat [text " IN", fmtLexp' body]]
 
 	      | fmtE (F.TFN ((tfk as {inline}, lvar, tv_tk_list, tfnbody), body)) =
 		(* v =
@@ -182,12 +177,12 @@ in
 		 *     <tfnbody>)
 		 * <body>
 		 *)
-		let val header = hblock [text "LET!", fmtLvar lvar, text "="]
+		let val header = hcat [text "LET!", fmtLvar lvar, text "="]
 		    val inlineFmt = text (inlineToString inline)
-		    val tfnFmt = pblock [ccat (text "TFN", inlineFmt),
+		    val tfnFmt = pcat [ccat [text "TFN", inlineFmt],
 					 fmtTvTkList tv_tk_list, text ".",
 					 indent 2 (fmtLexp' tfnbody)]
-		 in vblock
+		 in vcat
 		      [header,
 		       indent 4 tfnFmt,
 		       indent 2 (fmtLexp' body)]
@@ -202,17 +197,17 @@ in
 		 *       <lexp>
 		 *)
 		let fun fmtCase (con, lexp) =
-			vblock
-			  [hcat (fmtCon con, text "=>"),
-			   vcat (fmtDecon con, fmtLexp' lexp)]
+			vcat
+			  [hcat [fmtCon con, text "=>"],
+			   vcat [fmtDecon con, fmtLexp' lexp]]
 
-		in vblock
-		    ([hcat (text "SWITCH", fmtValue value),
-		      indent 2 (vblock (map fmtCase cases))]
+		in vcat
+		    ([hcat [text "SWITCH", fmtValue value],
+		      indent 2 (vcat (map fmtCase cases))]
 		     @ (case  lexpOp
 			  of NONE => nil
 			   | SOME default => (* default case *)
-			      [pblock
+			      [pcat
 				[text "_ =>",
 				 indent 4 (fmtLexp' default)]]))
 		end
@@ -221,11 +216,11 @@ in
 		 (* <lvar> = CON(<symbol>, <tycs>, <value>)
 		  * <body>
 		  *)
-		 vblock
-		   [hblock [fmtLvar lvar, text "=",
+		 vcat
+		   [hcat [fmtLvar lvar, text "=",
 			    fmtTagged ("CON",
 				       csf [text (S.name symbol), 
-					    tupleFormats (map fmtTyc' tycs),
+					    PP.tuple (map fmtTyc' tycs),
 					    fmtValue value])],
 		    fmtLexp' body]
 
@@ -233,8 +228,8 @@ in
 		 (* <lvar> = RECORD(<rkind>, <values>)
 		  * <body>
 		  *)
-		vblock
-		  [hblock [fmtLvar lvar, text "=",
+		vcat
+		  [hcat [fmtLvar lvar, text "=",
 			   fmtTagged ("RECORD",
 				      (csf [fmtRKind rkind,
 					    list fmtValue values]))],
@@ -244,25 +239,20 @@ in
 		 (* <lvar> = SELECT(<value>, <int>)
 		  * <body>
 		  *)
-		vblock
-		  [hblock [fmtLvar lvar, text "=",
-			   fmtTagged ("SELECT",
-				      (hcat (ccat (fmtValue value, comma), integer i)))],
+		vcat
+		  [hcat [fmtLvar lvar, text "=",
+			   fmtTagged ("SELECT", hcat [ccat [fmtValue value, comma], integer i])],
 		   fmtLexp' body]
 
 	      | fmtE (F.RAISE (value, ltys)) =
-		 (* RAISE(<value> : <ltys>) *)
-		 hblock [fmtTagged ("RAISE", fmtValue value),
-			 colon,
-			 PP.tupleFormats (map fmtLty' ltys)]
+		(* RAISE(<value> : <ltys>) *)
+		hcat [fmtTagged ("RAISE", fmtValue value), colon, PP.tuple (map fmtLty' ltys)]
 
 	      | fmtE (F.HANDLE (body, value)) =
 		 (* <body>
 		  * HANDLE(<value>)
 		  *)
-		vcat
-		  (fmtLexp' body,
-		   fmtTagged ("HANDLE", fmtValue value))
+		vcat [fmtLexp' body, fmtTagged ("HANDLE", fmtValue value)]
 
 	      | fmtE (F.BRANCH ((d, primop, lty, tycs), values, body1, body2)) =
 		 (* IF PRIMOP/GENOP (<primop>, <lty>, [<tycs>]) [<values>]
@@ -272,35 +262,35 @@ in
 		  *   <body2>
 		  *)
 		let val tag = case d of NONE => "PRIMOP" | _ => "GENOP"
-		 in vblock
-		     [hblock [text "IF",
+		 in vcat
+		     [hcat [text "IF",
 			      fmtTagged (tag,
 					 psequence comma
 					   [text (PrimopUtil.toString primop),
 					    fmtLty' lty,
 					    PP.list fmtTyc' tycs]),
 			      list fmtValue values],
-		      pcat (text "THEN", indent 2 (fmtLexp' body1)),
-		      pcat (text "ELSE", indent 2 (fmtLexp' body2))]
+		      pcat [text "THEN", indent 2 (fmtLexp' body1)],
+		      pcat [text "ELSE", indent 2 (fmtLexp' body2)]]
 		end
 
 	      | fmtE (F.PRIMOP (p as (_, PO.MKETAG, _, _), [value], lvar, body)) =
 		 (* <lvar> = ETAG(<value>[<tyc>])
 		  * <body>
 		  *)
-		vblock
-		  [hblock [fmtLvar lvar, text "=",
+		vcat
+		  [hcat [fmtLvar lvar, text "=",
 			   fmtTagged ("ETAG",
-				      (hcat (fmtValue value,
-					     brackets (fmtTyc' (FU.getEtagTyc p)))))],
+				      hcat [fmtValue value,
+					    brackets (fmtTyc' (FU.getEtagTyc p)]])]
 		   fmtLexp' body]
 
 	      | fmtE (F.PRIMOP (p as (_, PO.WRAP, _, _), [value], lvar, body)) =
 		 (* <lvar> = WRAP(<tyc>, <value>)
 		  * <body>
 		  *)
-		vblock
-		  [hblock [fmtLvar lvar, text "=",
+		vcat
+		  [hcat [fmtLvar lvar, text "=",
 			   fmtTagged ("WRAP",
 				      csf [fmtTyc' (FU.getWrapTyc p),
 					   fmtValue value])],
@@ -310,8 +300,8 @@ in
 		 (* <lvar> = UNWRAP(<tyc>, <value>)
 		  * <body>
 		  *)
-		vblock
-		  [hblock [fmtLvar lvar, text "=",
+		vcat
+		  [hcat [fmtLvar lvar, text "=",
 			   fmtTagged ("UNWRAP",
 				      csf [fmtTyc' (FU.getUnWrapTyc p),
 					   fmtValue value])],
@@ -322,8 +312,8 @@ in
 		  * <body>
 		  *)
 		let val tag = (case d of NONE => "PRIMOP" | _ => "GENOP" )
-		 in vblock
-		      [hblock [fmtLvar lvar, text "=",
+		 in vcat
+		      [hcat [fmtLvar lvar, text "=",
 			       fmtTagged (tag,
 					  csf [text (PrimopUtil.toString primop),
 					       fmtLty' lty,
@@ -342,18 +332,18 @@ in
 	 *      <body>)
 	 *)
 	let fun fmtarg (lvar, lty) =
-		hcat (ccat (fmtLvar lvar, colon),
+		hcat [ccat [fmtLvar lvar, colon],
 		      if !Control.FLINT.printFctTypes orelse cconv <> FR.CC_FCT
 		      then PPT.fmtLty (pd - 1) lty
 		      else text "<lty>")
          in vcat
-	     (hblock [ccat (fmtLvar lvar, colon),
-	              parens (fmtFKind fkind),
-		      text "="],
-	     (*** the result lty no longer available ---- fmtLty lty; **)
-	      fmtTagged ("FN",
-			 (pcat (brackets (vblock (map fmtarg lvar_lty_list)),
-			       indent 4 (fmtLexp (pd - 1) body)))))
+	      [hcat [ccat [fmtLvar lvar, colon],
+	               parens (fmtFKind fkind),
+		       text "="],
+	       (*** the result lty no longer available ---- fmtLty lty; ***)
+	       fmtTagged ("FN",
+			  pcat [brackets (vcat (map fmtarg lvar_lty_list)),
+			        indent 4 (fmtLexp (pd - 1) body)])]
 	end
 
     (* ppLexp : lexp -> unit *)

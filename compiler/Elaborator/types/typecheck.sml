@@ -47,7 +47,7 @@ local
  
   open Types TypesUtil Unify Absyn ErrorMsg
 
-  fun viblock formats = PP.indent 3 (PP.vblock formats)
+  fun ivcat formats = PP.indent 3 (PP.vcat formats)
 in
 
 (* debugging *)
@@ -106,7 +106,7 @@ fun ppDec dec = PP.printFormat (fmtDec dec)
 
 fun ppType' ty =
     PP.printFormat
-       (PP.hblock [PP.text ">>> ppType'", PPT.fmtType SE.empty ty, PP.text "<<< ppType'"])
+       (PP.hcat [PP.text ">>> ppType'", PPT.fmtType SE.empty ty, PP.text "<<< ppType'"])
 
 fun ppDec' dec =
     PP.printFormat (PPA.fmtDec (env, NONE) (dec, !printDepth))
@@ -126,20 +126,20 @@ fun fmtModeErrorMsg (mode: Unify.unifyFail) =
       (case mode
 	of TYC (tyc1, tyc2, reg1, reg2) =>
 	    PP.vcat
-	      (PP.text "Mode: tycon mismatch",
-	       viblock
-		 [PP.hcat (PP.text "tycon1:", fmtTycon tyc1),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
-		  PP.hcat (PP.text "tycon2:", fmtTycon tyc2),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg2)])
+	      [PP.text "Mode: tycon mismatch",
+	       ivcat
+		 [PP.label "tycon1:" (fmtTycon tyc1),
+		  PP.label "from:" (PPSM.fmtRegion reg1),
+		  PP.label "tycon2:" (fmtTycon tyc2),
+		  PP.label "from:" (PPSM.fmtRegion reg2)]]
 	 | TYP (ty1, ty2, reg1, reg2) =>
 	    PP.vcat
-	      (PP.text "Mode: type mismatch",
-	       viblock
-		 [PP.hcat (PP.text "type1:", fmtType ty1),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
-		  PP.hcat (PP.text "type2:", fmtType ty2),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg2)])
+	      [PP.text "Mode: type mismatch",
+	       ivcat
+		 [PP.label "type1:" (fmtType ty1),
+		  PP.label "from:" (PPSM.fmtRegion reg1),
+		  PP.label "type2:" (fmtType ty2),
+		  PP.label "from:" (PPSM.fmtRegion reg2)]]
 	 | _ => PP.empty)
     else PP.empty
 
@@ -196,23 +196,24 @@ fun unifyErr {ty1, name1, ty2, name2, message, region, kindName, kindFormat} =
 		  then String.concat [name1, " and ", name2, " do not agree"]
 		  else message   (* but name1 or name2 may be ""! Should check for this. *)
            in PP.vcat
-		(PP.text message',
-		 viblock
+		[PP.text message',
+		 ivcat
 		   (List.mapPartial (fn x => x)
 		       [if size name1 = 0
 			then NONE
-			else SOME (PP.hcat (PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
-					    fmtType ty1)),
+			else SOME (PP.hcat [PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
+					    fmtType ty1]),
 			if size name2 = 0
 			then NONE
-			else SOME (PP.hcat (PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
-					    fmtType ty2)),
+			else SOME (PP.hcat [PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
+					    fmtType ty2]),
 			if size kindName = 0
 			then NONE
-			else SOME (PP.hcat (PP.text (String.concat["in ", kindName, ":"]),
-					    kindFormat)),
-			SOME (fmtModeErrorMsg mode)]))
-	  end); false)
+			else SOME (PP.hcat [PP.text (String.concat["in ", kindName, ":"]),
+					    kindFormat]),
+			SOME (fmtModeErrorMsg mode)])]
+	  end);
+          false)
 
 val _ = dbsaynl (">>decType: toplev = " ^ Bool.toString toplev)
 val _ = ppDecDebug(">>decType: dec = ", dec)
@@ -289,7 +290,7 @@ fun generalizeTy(V.VALvar{typ,path,btvs,...}, userbound: tyvar list,
 			        "unresolved flex record (need to know the \
 			        \names of ALL the fields\n in this context)"
 			    	(PPT.resetPPType ();
-				 PP.hcat (PP.text "type:", fmtType ty));
+				 PP.hcat [PP.text "type:", fmtType ty]);
                             tv := INSTANTIATED WILDCARDty;
 			    WILDCARDty)
                          else ty
@@ -508,10 +509,10 @@ fun patType(pat: pat, depth, region: SM.region) : pat * ty =
 		(err region COMPLAIN
                   (mkMessage ("constructor and argument do not agree in pattern", mode))
 		  (PPT.resetPPType();
-		   PP.vblock
-		    [PP.hcat (PP.text "constructor:", fmtType typ),
-		     PP.hcat (PP.text "argument:", fmtType argTy),
-		     PP.hcat (PP.text "in pattern:", fmtPat pat)]);
+		   PP.vcat
+		    [PP.label "constructor:" (fmtType typ),
+		     PP.label "argument:" (fmtType argTy),
+		     PP.label "in pattern:" (fmtPat pat)]);
 		 (pat, WILDCARDty))
 	   end
        | CONSTRAINTpat (pat', constraintTy) =>
@@ -599,11 +600,11 @@ in
                handle Unify(mode) =>
                  (err region COMPLAIN
                     (mkMessage ("selecting a non-existing field from a record", mode))
-                    (PP.vblock
+                    (PP.vcat
 		       (PPT.resetPPType();
-			[PP.hcat (PP.text "the field name:", PPS.fmtSym label),
-			 PP.hcat (PP.text "the record type:", fmtType nty),
-			 PP.hcat (PP.text "in expression:", fmtExp exp)]));
+			[PP.label "field name:" (PPS.fmtSym label),
+			 PP.label "record type:" (fmtType nty),
+			 PP.label "expression:" (fmtExp exp)]));
                     (exp, WILDCARDty))
            end
        | VSELECTexp (exp, elemTy, index) => bug "expType:VSELECTexp"
@@ -646,17 +647,17 @@ in
 		   if BT.isArrowType(reducedRatorTy)
 		   then (err region COMPLAIN
 			  (mkMessage ("operator and operand do not agree", mode))
-			  (PP.vblock
-			     [PP.hcat (PP.text "operator domain:", fmtType (BT.domain reducedRatorTy)),
-			      PP.hcat (PP.text "operand:", fmtType randTy),
-			      PP.hcat (PP.text "in expression:", fmtExp exp),
+			  (PP.vcat
+			     [PP.label "operator domain:" (fmtType (BT.domain reducedRatorTy)),
+			      PP.label "operand:" (fmtType randTy),
+			      PP.label "in expression:" (fmtExp exp),
 			      fmtModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
 			  (mkMessage ("operator is not a function", mode))
-			  (PP.vblock
-			     [PP.hcat (PP.text "operator:", fmtType ratorTy),
-			      PP.hcat (PP.text "in expression:", fmtExp exp),
+			  (PP.vcat
+			     [PP.label "operator:" (fmtType ratorTy),
+			      PP.label "in expression:" (fmtExp exp),
 			      fmtModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 	       end

@@ -139,21 +139,21 @@ fun ltMatch le msg (t1, t2) =
   (if ltEquiv(t1,t2) then ()
    else (clickerror();
          PP.printFormat
-	   (PP.vblock
+	   (PP.vcat
 	     [PP.text ("ERROR(checkLty): ltEquiv fails in ltMatch: "^msg),
-	      PP.hcat (PP.text "le:", PPLexp.fmtLexp 6 le),
-	      PP.hcat (PP.text "t1:", PPLty.fmtLty 20 t1),
-	      PP.hcat (PP.text "t2:", PPLty.fmtLty 20 t2),
+	      PP.label "le:" (PPLexp.fmtLexp 6 le),
+	      PP.label "t1:" (PPLty.fmtLty 20 t1),
+	      PP.label "t2:" (PPLty.fmtLty 20 t2),
 	      PP.text "***************************************************"]);
 	 raise Fail "ltMatch"))
   handle LK.TeUnbound =>
     (clickerror();
      PP.printFormat
-       (PP.vblock
+       (PP.vcat
 	 [PP.text ("ERROR(checkLty): exception teUnbound2 in ltMatch"^msg),
-	  PP.hcat (PP.text "le:", PPLexp.fmtLexp 6 le),
-	  PP.hcat (PP.text "t1:", PPLty.fmtLty 10 t1),
-	  PP.hcat (PP.text "t2:", PPLty.fmtLty 10 t2),
+	  PP.label "le:" (PPLexp.fmtLexp 6 le),
+	  PP.label "t1:" (PPLty.fmtLty 10 t1),
+	  PP.label "t2:" (PPLty.fmtLty 10 t2),
 	  PP.text "***************************************************"]))
 
 fun ltFnApp le s (t1, t2) =

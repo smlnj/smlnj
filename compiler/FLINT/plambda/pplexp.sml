@@ -90,32 +90,28 @@ fun fmtLexp (pd:int) (l: lexp): format =
 
         (* fmtI : PLambda.lexp -> format *)
         fun fmtI (VAR v) = text (LV.lvarName v)
-	  | fmtI (INT{ival, ty=0}) = hcat (text "(II)", text (IntInf.toString ival))
+	  | fmtI (INT{ival, ty=0}) = hcat [text "(II)", text (IntInf.toString ival)]
 	  | fmtI (INT{ival, ty}) =
-	      text (String.concat ["(I", Int.toString ty, ")", IntInf.toString ival])
+	      ccat [parens (ccat [text "I", integer ty]), text (IntInf.toString ival)]
 	  | fmtI (WORD{ival, ty}) =
-	      text (String.concat ["(W", Int.toString ty, ")", IntInf.toString ival])
+	      ccat [parens (ccat [text "W", integer ty]), text (IntInf.toString ival)]
           | fmtI (REAL{rval, ty}) =
-	      text (String.concat ["(R", Int.toString ty, ")", RealLit.toString rval])
+	      ccat [parens (ccat [text "R", integer ty]), text (RealLit.toString rval)]
           | fmtI (STRING s) = string s
-          | fmtI (ETAG (lexp,_)) =
-              enclose {front = text "ETAG(", back = rparen} (fmtLexp' lexp)
+          | fmtI (ETAG (lexp,_)) = ccat [text "ETAG", parens (fmtLexp' lexp)]
 
-          | fmtI (RECORD lexps) =
-              ccat (text "REC", tupleFormats (map fmtLexp' lexps))
+          | fmtI (RECORD lexps) = ccat [text "REC", tuple (map fmtLexp' lexps)]
 
-          | fmtI (SRECORD lexps) =
-              ccat (text "SREC", tupleFormats (map fmtLexp' lexps))
+          | fmtI (SRECORD lexps) = ccat [text "SREC", tuple (map fmtLexp' lexps)]
 
-          | fmtI (VECTOR (lexps, _)) =
-              ccat (text "VEC", tupleFormats (map fmtLexp' lexps))
+          | fmtI (VECTOR (lexps, _)) = ccat [text "VEC", tuple (map fmtLexp' lexps)]
 
           | fmtI (PRIM(p,t,ts)) =
-              enclose {front = text "PRIM(", back = rparen}
-		 (pblock
-		   [ccat (text (PrimopUtil.toString p), comma),
-		    ccat (fmtLty' t, comma),
-		    tupleFormats (map fmtTyc' ts)])
+              ccat [text "PRIM",
+		    parens
+		      (pcat [ccat [text (PrimopUtil.toString p), comma],
+			       ccat [fmtLty' t, comma],
+			       tuple (map fmtTyc' ts)])]
 
           | fmtI (l as SELECT(i, _)) =
 	      let fun gather(SELECT(i,l)) =
@@ -124,100 +120,91 @@ fun fmtLexp (pd:int) (l: lexp): format =
 			end
 		    | gather l = (nil, l)
 		  val (path, root) = gather l
-	       in ccat (fmtLexp' root, list integer (rev path))
+	       in ccat [fmtLexp' root, list (map integer (rev path))]
 	      end
 
           | fmtI (FN(v,t,body)) =
-	      pcat (cblock [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
-		    indent 4 (fmtLexp' body))
+	      pcat [ccat [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
+		    indent 4 (fmtLexp' body)]
 
           | fmtI (CON ((s, c, lt), ts, l)) =
-	      pblock
+	      pcat
 		[text "CON",
-		 parens (pblock [hcat (ccat (text (S.name s), comma),
-				       ccat (text (DA.conrepToString c), comma)),
+		 parens (pcat [hcat [ccat [text (S.name s), comma],
+				       ccat [text (DA.conrepToString c), comma]],
 				 fmtLty' lt]),
 		comma,
-		list fmtTyc' ts,
+		list (map fmtTyc' ts),
 		comma,
 		indent 4 (fmtLexp' l),
 		rparen]
 
           | fmtI (APP (FN (lvar, _, body), r)) =
-            ccat
-              (text "APP-",
-               fmtLexp' (LET(lvar, r, body)))
+              ccat [text "APP-", fmtLexp' (LET(lvar, r, body))]
 
           | fmtI (LET(v, r, l)) =
-            vcat 
- 	      (pcat
-		 (hblock [text "LET", text (LV.lvarName v), text "="],
-		  indent 4 (fmtLexp' r)),
-               indent 1 (hcat (text "IN", fmtLexp' l)))
+              vcat 
+ 	        [pcat
+		   [hcat [text "LET", text (LV.lvarName v), text "="],
+		    indent 4 (fmtLexp' r)],
+		 indent 1 (hcat [text "IN", fmtLexp' l])]
 
           | fmtI (APP(l, r)) =
-	      enclose {front = text "APP(", back = rparen}
-                (tryFlat (vcat (ccat (fmtLexp' l, comma), fmtLexp' r)))
+	      ccat [text "APP",
+                    parens (tryFlat (vcat [ccat [fmtLexp' l, comma], fmtLexp' r]))]
 
           | fmtI (TFN(ks, b)) =
-              enclose {front = text "TFN(", back = rparen}
-		(pcat (tupleFormats (map fmtTKind' ks),
-		       indent 3 (fmtLexp' b)))
+	      ccat [text "TFN",
+		    parens (pcat [tuple (map fmtTKind' ks), indent 3 (fmtLexp' b)])]
 
           | fmtI (TAPP(l, ts)) =
-              enclose {front=text "TAPP(", back=rparen}
-	        (pcat (fmtLexp' l,
-		       tupleFormats (map fmtTyc' ts)))
+	      ccat [text "TAPP",
+		    parens (pcat [fmtLexp' l, tuple (map fmtTyc' ts)])]
 
           | fmtI (GENOP(dict, p, t, ts)) =
-              enclose {front=text "GEN(", back=rparen}
-                (pblock
-                   [ccat (text (PrimopUtil.toString p), comma),
-                    ccat (fmtLty' t, comma),
-                    tupleFormats (map fmtTyc' ts)])
+	      ccat [text "GENOP",
+		    parens (pcat
+			      [ccat [text (PrimopUtil.toString p), comma],
+			       ccat [fmtLty' t, comma],
+			       tuple (map fmtTyc' ts)])]
 
           | fmtI (SWITCH (l,_,llist,default)) =
             let fun switchCase (c,l) =
-                      pcat (hcat (text (conToString c), text " =>"), indent 4 (fmtLexp' l))
+                      pcat [hcat [text (conToString c), text "=>"], indent 4 (fmtLexp' l)]
 		val defaultCase =
 		    (case default
 		      of NONE => nil
-		       | SOME lexp => [pcat (text "_ =>", indent 4 (fmtLexp' lexp))])
+		       | SOME lexp => [pcat [text "_ =>", indent 4 (fmtLexp' lexp)]])
              in vcat
-		  (hcat (text "SWITCH ", fmtLexp' l),
-		   indent 2 (hcat (text "of", vblock (map switchCase llist @ defaultCase))))
+		  [hcat [text "SWITCH ", fmtLexp' l],
+		   indent 2 (hcat (text "of", vcat (map switchCase llist @ defaultCase)))]
             end
 
           | fmtI (FIX (varlist, ltylist, lexplist, body)) =
             let fun ffun (v, t, l) =
-                      vcat (hblock [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
-			    indent 2 (fmtLexp' l))
-             in vcat (hcat (text "FIX",
-		            vblock (map ffun (zipEq3 (varlist, ltylist, lexplist)))),
-		      hcat (text "IN",
-			    fmtLexp' body))
+                      vcat [hcat [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
+			    indent 2 (fmtLexp' l)]
+             in vcat [hcat [text "FIX",
+		            vcat (map ffun (zipEq3 (varlist, ltylist, lexplist)))],
+		      hcat [text "IN", fmtLexp' body]]
             end
 
           | fmtI (RAISE(l,t)) =
-	      enclose {front = text "RAISE(", back = rparen}
-                (pcat (ccat (fmtLty' t, comma), fmtLexp' l))
+	      ccat [text "RAISE", 
+		    parens (pcat [ccat [fmtLty' t, comma], fmtLexp' l])
 
           | fmtI (HANDLE (lexp, withlexp)) =
-            vblock
-              [hcat (text "HANDLE", fmtLexp' lexp),
-               hcat (text "WITH", fmtLexp' withlexp)]
+              vcat
+                [hcat [text "HANDLE", fmtLexp' lexp],
+		 hcat [text "WITH", fmtLexp' withlexp]]
 
           | fmtI (WRAP(t, _, l)) =
-              enclose {front = text "WRAP(", back = rparen}
-		(vcat
-                   (ccat (fmtTyc' t, comma),
-		    fmtLexp' l))
+	      ccat [text "WRAP",
+		    parens (vcat [ccat [fmtTyc' t, comma], fmtLexp' l])]
 
           | fmtI (UNWRAP(t, _, l)) =
-              enclose {front = text "UNWRAP(", back = rparen}
-		(vcat
-                   (ccat (fmtTyc' t, comma),
-		    fmtLexp' l))
+	      ccat [text "UNWRAP",
+		    parens (vcat [ccat [fmtTyc' t, comma], fmtLexp' l])]
 
    in fmtI l
   end

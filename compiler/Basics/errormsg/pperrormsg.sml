@@ -10,7 +10,7 @@ local (* top local *)
 in
 
 fun fmtRegion (REGION (lo,hi): SM.region) : PP.format =
-    PP.cblock [PP.integer lo, PP.text "-", PP.integer hi]
+    PP.ccat [PP.integer lo, PP.text "-", PP.integer hi]
 
 (* add fmtSourceloc, etc. *)
 
