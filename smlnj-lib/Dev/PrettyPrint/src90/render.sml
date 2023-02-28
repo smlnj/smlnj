@@ -36,7 +36,7 @@ fun spaces n = implode (List.tabulate (n, (fn _ => #" ")))
 
 (* flatRender : format * (string -> unit) -> unit
  *   render as though on an unbounded line (lw = "infinity"), thus "flat" (i.e. no line space pressure).
- *   _No_ newlines are triggered, not even Hard breaks and INDENT formats, which are
+ *   _No_ newlines are triggered, not even HardLine breaks and INDENT formats, which are
  *   rendered as single spaces, like Softline breaks.
  *   flatRender is called once when rendering a FLAT format when the format fits. *)
 fun flatRender (format, output) =
@@ -62,8 +62,8 @@ fun flatRender (format, output) =
 			 of FMT format => (render0 format; rend rest)
 			  | BRK break =>
 			     (case break
-			       of Hard   => (sp 1; rend rest)
-				| Soft n => (sp n; rend rest)
+			       of HardLine   => (sp 1; rend rest)
+				| SoftLine n => (sp n; rend rest)
 				| Space n    => (sp n; rend rest)
 				| NullBreak  => rend rest))
 	     in rend elements
@@ -168,9 +168,9 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 			  | BRK break =>  (* rest should start with a FMT! *)
 			      (case break
 				 of NullBreak  => re (rest, cc, false)
-				  | Hard   => (lineBreak blm; re (rest, blm, true))
+				  | HardLine   => (lineBreak blm; re (rest, blm, true))
 				  | Space n    => (sp n; re (rest, cc + n, newlinep))
-				  | Soft n =>
+				  | SoftLine n =>
 				      (case rest  (* ASSERT: rest = FMT _ :: _; a BRK should be followed by a FMT *)
 					 of FMT format' :: rest' =>
 					      if M.measure format' <= (lw - cc) - n  (* lw - (cc + n) *)
@@ -208,7 +208,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 				     of C => (fn (cc, m) => (cc, false))
 				      | H => (fn (cc, m) => (sp 1; (cc+1, false)))
 				      | V => (fn (cc, m) => (lineBreak blm; (blm, true)))
-				      | P =>  (* virtual break is Soft 1 *)
+				      | P =>  (* virtual break is SoftLine 1 *)
 					  (fn (cc, m) =>
 					      if m <= (lw - cc) - 1  (* conditional on m *)
 					      then (sp 1; (cc+1, false)) (* no line break, print 1 space *)
@@ -249,11 +249,11 @@ end (* structure Render *)
    a line break (newline+indent) and nothing else?
 
 4. [Q1] Does rendering a format ever end with a final newline+indent?
-   [Q2] Is BLOCK {elements = [BRK Hard], ...} a valid block? If so, it "ends with a newline".
-   [Q3] Is vblock [empty, BRK Hard, empty] (or similar BLOCK formats) treated as equavalent to a newline?
+   [Q2] Is BLOCK {elements = [BRK HardLine], ...} a valid block? If so, it "ends with a newline".
+   [Q3] Is vblock [empty, BRK HardLine, empty] (or similar BLOCK formats) treated as equavalent to a newline?
 
 A1: Yes?
-We only emit a newline+indent at a Hard or triggered Soft break,
+We only emit a newline+indent at a HardLine or triggered SoftLine break,
 but a normal block will not end with a (virtual) break so "normal" blocks do not end with a newline+indent.
 
 Another possibility is at an indented, but empty, block (e.g. INDENT (3, emtpy)), which could
@@ -264,7 +264,7 @@ appear on its own or as the last format in a block.  But we can have the reducti
 in which case an indented empty format turns into the empty format and the indentation is ignored
 (does not occur).
 
-Also, a basic block whose last element is a BRK (Hard) is possible. Such a block would end with
+Also, a basic block whose last element is a BRK (HardLine) is possible. Such a block would end with
 a newline+indent (to its blm?).
 
 Should this be disallowed?  Probably not, until we find that it is causing problems or confusion for users.

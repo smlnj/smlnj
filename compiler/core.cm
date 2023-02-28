@@ -70,27 +70,29 @@ Group
 	structure Unify
 	structure SigMatch
 
+(*
 	structure PickleSymPid
 	structure UnpickleSymPid
 	structure PickMod
 	structure UnpickMod
 	structure Rehash
-
-	structure PrimEnv
+*)
 
 	(* corresponding signatures *)
 	signature CONTROL
 	signature ENVIRONMENT
-	signature PRIM_ENV
 	signature ENVREF
 	signature MODULE_ID
 
+(*
 	signature PICKMOD
 	signature UNPICKMOD
+*)
 
+(*
 	signature PRIM_ENV
-
-	signature FLINT
+	structure PrimEnv
+*)
 
         (* ElabData *)
 	signature TYPES
@@ -107,6 +109,8 @@ Group
 	signature UNIFY
 
 	(* FLINT: export of structures required to use FLINT directly *)
+	signature FLINT
+
 	structure TransUtil
 	structure Translate
 	structure Lty
@@ -159,7 +163,7 @@ TopLevel/print/compilerpptable.sml
 TopLevel/print/printhooks.sml
 
 (* Semantic analysis (elaborator) specialized for SML/NJ. *)
-
+(*
 (* pickling and unpickling *)
 ElabData/pickle/pickle-sym-pid.sml
 ElabData/pickle/unpickle-sym-pid.sml
@@ -167,7 +171,9 @@ ElabData/pickle/pickmod.sml
 ElabData/pickle/unpickmod.sml
 ElabData/pickle/rehash.sml
 
+(* primops *)
 ElabData/prim/prim-env.sml
+*)
 
 (* The FLINT optimizer ("middle-end"). *)
 (* move to FLINT/flint.cm ? *)

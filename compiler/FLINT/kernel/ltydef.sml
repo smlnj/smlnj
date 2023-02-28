@@ -292,8 +292,8 @@ val ltd_poly   : LT.lty -> LT.tkind list * LT.lty list = fn lt =>
     (case LK.lt_whnm_out lt
       of LT.LT_POLY x => x
        | _ => (PP.printFormatNL
-		 (PP.vcat (PP.text "***ltd_poly***",
-			   PP.hcat (PP.text "arg:", PPLty.fmtLty (!dp) lt)));
+		 (PP.vcat [PP.text "***ltd_poly***",
+			   PP.hcat [PP.text "arg:", PPLty.fmtLty (!dp) lt]]);
 	       bug "unexpected lty in ltd_poly"))
 
 (** lty predicates *)

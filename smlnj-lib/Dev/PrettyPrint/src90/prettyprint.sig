@@ -108,16 +108,16 @@ sig
      * it does not contribute anything to the result, and implicit associated breaks for empty formats are
      * also dropped. Also, xcat [fmt] ==> fmt. *)
 
-    val hcat : format list -> format  (* = aBlock H *)
+    val hcat : format list  -> format  (* = aBlock H *)
         (* combinds a list of formats in an H-aligned block, with an implicit single space
          * (Space 1 break) between them *)
-    val pcat : format list -> format  (* = aBlock P *)
+    val pcat : format list  -> format  (* = aBlock P *)
         (* combinds a list of formats into a P-aligned (packed) block, with an implicit soft line break
          * (Soft 1) between them *)
-    val vcat : format list -> format  (* = aBlock V *)
+    val vcat : format list  -> format  (* = aBlock V *)
         (* combinds a list of formats in an V-aligned block, with an implicit hard line break
          * (Hard) between them *)
-    val ccat : format list -> format   (* = aBlock C *)
+    val ccat : format list -> formt    (* = aBlock C *)
         (* combinds a list of formats in a C-aligned block, with no break (or, implicitly, NullBreak)
          * between them *)
 
@@ -138,7 +138,7 @@ sig
   (* wrapping or enclosing formats, plus appending newlines and prepending labels *)
 
     val enclose : {front: format, back: format} -> format -> format
-        (* concatenates (ccat) front and back to the front, respecively back, of the format *)
+        (* concatenates front and back to the front, respecively back, of the format *)
 
     val parens : format -> format
         (* = enclose {front=lparen, back=rparen} format *)
@@ -175,41 +175,33 @@ sig
     val option : format option -> format
         (* formats a format option by producing text "NONE" or wrapping "SOME(.)" around the format *)
 
-(* ----- DEPRICATED and deleted! ------
-   all the xxxMap functions are mostly redundant -- the mapping can be moved to the argument of the
-   corresponding nonmapping function,
-   e.g. sequenceMap align sep formatter xs ==> sequence align sep (map formatter xs).
 
-  (* formating of lists and options of values of arbitrary type, given a formatter function for that type *)
+  (* formating of lists (or options) of values of arbitrary type *)
 
-    (* DEPRICATED! *)
-    val sequenceMap : alignment -> (* separator *) format -> (* formatter *) ('a -> format) -> 'a list -> format
+    val sequenceMap :
+        {alignment: alignment, sep : format} -> ('a -> format) -> 'a list -> format
 
-    (* DEPRICATED! *)
     val closedSequenceMap :
 	{alignment: alignment, front: format, sep: format, back: format} -> ('a -> format) -> 'a list -> format
 
     val listMap : ('a -> format) -> 'a list -> format  (* default packed alignment P, formerly "list" *)
 
-    (* DEPRICATED! *)
     val alignedListMap : alignment -> ('a -> format) -> 'a list -> format
 
     val optionMap : ('a -> format) -> 'a option -> format
-
-    (* DEPRICATED! *)
-    val vHeadersMap : {header1: string, header2: string} -> ('a -> format) -> 'a list -> format
-
- ------ *)
-
-  (* indenting formats *)
-
-    val indent : int -> format -> format
-        (* indent n EMPTY ==> EMPTY; indent n fmt ==> INDENT (n, frmt) *)
 
 
   (* vertical alignment with header strings *)
 
     val vHeaders : {header1: string, header2: string} -> format list -> format
+
+    val vHeadersMap : {header1: string, header2: string} -> ('a -> format) -> 'a list -> format
+
+
+  (* indenting formats *)
+
+    val indent : int -> format -> format
+        (* indent n EMPTY ==> EMPTY; indent n fmt ==> INDENT (n, frmt) *)
 
 
   (* Conditional formats: *)

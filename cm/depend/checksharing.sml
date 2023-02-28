@@ -25,7 +25,7 @@ in
 	    (StringSet.singleton x, Sharing.DONTSHARE)
 	  | check (Sharing.SHARED, x, s, err) =
 	    let val errorBody =
-		    PP.vblock
+		    PP.vcat
 		      (map PP.text
 			   ("because of dependence on non-shareable state in:" ::
 			    (StringSet.listItems s)))

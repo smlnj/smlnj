@@ -277,7 +277,7 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
                      end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat [PP.text "RECtyc ", PP.integer n)])
+		       (PP.hcat [PP.text "RECtyc ", PP.integer n]))
 
           | fmtTyc (FREEtyc n) =
               (case membersOp
@@ -288,7 +288,7 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
                     end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat [PP.text "FREEtyc ", PP.integer n)])
+		       (PP.hcat [PP.text "FREEtyc ", PP.integer n]))
 
  	  | fmtTyc (tyc as PATHtyc {arity, entPath, path}) =
 	      PP.text (SP.toString (ConvertPaths.stripPath path))
@@ -296,7 +296,6 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
 	  | fmtTyc ERRORtyc = PP.text "<ERRORtyc>"
      in fmtTyc
     end
-
 
 (* fmtType1 : SE.staticEnv
               -> (T.ty * T.polysign * (T.dtmember vector * T.tycon list) option

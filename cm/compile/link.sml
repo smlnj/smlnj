@@ -115,7 +115,7 @@ in
 
 	    fun exn_err (msg, error, descr, exn) = let
 		val errorBody =
-		     PP.vblock (map PP.text (General.exnMessage exn :: (SMLofNJ.exnHistory exn)))
+		     PP.vcat (map PP.text (General.exnMessage exn :: (SMLofNJ.exnHistory exn)))
 	    in
 		error (concat [msg, " ", descr]) errorBody;
 		raise Link exn

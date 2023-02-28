@@ -511,9 +511,8 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 	    then fmts @ [PP.text "..."]
 	    else fmts
 
-     in PP.formatClosedSeq {alignment = PP.P, front = PP.text "[|", back = PP.text "|]",
-			    sep = PP.comma, formatter = (fn x => x)}
-			   elementFormats
+     in PP.enclose {front = PP.text "[|", back = PP.text "|]"}
+		   (PP.psequence PP.comma elementFormats)
     end
 
     and fmtRealArray (arrayObj : Real64Array.array, length: int) =
@@ -523,7 +522,8 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 		let val minLength = Int.min (arrayLength, length)
 		    fun gather (index, elemFmts) =
 			if index < minLength
-			then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index))) :: elemFmts)
+			then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index)))
+					      :: elemFmts)
 			else (rev elemFmts)
 		in gather (0, nil)
 		end
@@ -533,9 +533,8 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 		then fmts @ [PP.text "..."]
 		else fmts
 
-	 in PP.formatClosedSeq {alignment = PP.P, front = PP.text "[|", back = PP.text "|]",
-				sep = PP.comma, formatter = (fn x => x)}
-			       elementFormats
+	 in PP.enclose {front = PP.text "[|", back = PP.text "|]"}
+		       (PP.psequence PP.comma elementFormats)
 	end
 
  in resetSharing ();

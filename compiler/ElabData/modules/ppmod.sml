@@ -272,7 +272,7 @@ and fmtSignature0 (sign, env, depth: int, entityEnvOp) =
 		(map 
 		  (fn paths =>
 		        PP.hcat
-			  [PP.hcat (PP.text "sharing ", variety),
+			  [PP.hcat [PP.text "sharing ", variety],
 			   PP.psequence (PP.text " =") (map PPP.fmtSymPath paths)])
 		  constraints)
 
@@ -378,7 +378,7 @@ and fmtTycBind (tyc, env) =
 			  of (T.POLYty{tyfun=T.TYFUN{body,...},...}) => body
 			   | _ => typ)
 		in if BT.isArrowType typ
-		   then PP.hcat (PP.text "of", PPT.fmtType env (BT.domain typ))
+		   then PP.hcat [PP.text "of", PPT.fmtType env (BT.domain typ)]
 		   else PP.empty
 	       end]
     in case tyc
@@ -400,7 +400,7 @@ and fmtTycBind (tyc, env) =
 				 | first :: rest =>
 				   PP.pcat
 				     (fmtDcon first ::
-				      (map (fn dcon => PP.hcat (PP.text " |", fmtDcon dcon)) rest
+				      (map (fn dcon => PP.hcat [PP.text " |", fmtDcon dcon]) rest
 				       @ [if incomplete then PP.text "..." else PP.empty]))]
 			end
 		    | _ =>
@@ -458,7 +458,7 @@ and fmtBinding (env: SE.staticEnv) (name: S.symbol, binding: B.binding, depth: i
 (* fmtOpen : SE.staticEnv -> (SP.path * M.Structure * int) -> PP.format *)
 fun fmtOpen env (path, str, depth) =
       PP.vcat
-	[PP.hcat (PP.text "opening ", PPP.fmtSymPath path),
+	[PP.hcat [PP.text "opening ", PPP.fmtSymPath path],
 	 if depth <= 0 then PP.empty
 	 else (case str
 		 of M.STR { sign, rlzn as {entities,...}, ... } =>

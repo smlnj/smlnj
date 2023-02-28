@@ -68,7 +68,7 @@ val lineprint = ElabDataControl.absynLineprint
 val internals = ElabDataControl.absynInternals
 
 fun fmtField (sym: S.symbol, fmt: PP.format) =
-    PP.pcat [PP.hcat (PPS.fmtSym sym, PP.equal), fmt]
+    PP.pcat [PP.hcat [PPS.fmtSym sym, PP.equal], fmt]
 
 (* fmtPos : Source.source * Source.charpos -> PP.format *)
 fun fmtPos({sourceMap, ...}: SR.source, charpos: SR.charpos) =
@@ -537,8 +537,7 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 	    PP.hcat [PP.text "overload ", PPV.fmtVar ovldvar]
 
         | fmtDec' (OPENdec strbs, _) =
-	   PP.hcat
-	     (PP.text "open" :: map (fn (sp,_) => PPP.fmtSymPath sp) strbs)
+	   PP.hcat (PP.text "open" :: (map (fn (sp,_) => PPP.fmtSymPath sp) strbs))
 
         | fmtDec' (MARKdec (dec, _), d) = fmtDec' (dec, d)
 (*

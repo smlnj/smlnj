@@ -178,10 +178,10 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 			      let fun loop (_, nil) = nil
 				    | loop (g0, (g, (s, p1, p2)) :: rest) =   (* s: source *)
 				      let val locFmt = PPSourceMap.fmtSourceRegion (s, SM.REGION (p1, p2))
-				       in PP.hblock [locFmt, PP.text ": importing", PP.text (SrcPath.descr g0)] ::
+				       in PP.hcat [locFmt, PP.text ": importing", PP.text (SrcPath.descr g0)] ::
 					  loop (g, rest)
 				      end
-			      in PP.vblock (loop (g, hist))
+			      in PP.vcat (loop (g, hist))
 			      end
 		       in EM.error s (SM.REGION (p1, p2)) EM.COMPLAIN
 			     ("group hierarchy forms a cycle with " ^ SrcPath.descr group)
@@ -207,7 +207,7 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 			      (pErrFlag := true;
 			       EM.errorNoSource SM.nullRegion EM.COMPLAIN
 				 ("stable libraries form a cycle with " ^ SrcPath.descr gpath)
-				 (PP.vblock (map (fn x => PP.text (SrcPath.descr x)) (rev cyc))))
+				 (PP.vcat (map (fn x => PP.text (SrcPath.descr x)) (rev cyc))))
 			fun load () =
 			    let val go = Stabilize.loadStable
 					     { getGroup = getStable (gpath :: stablestack),

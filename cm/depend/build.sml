@@ -159,7 +159,7 @@ structure BuildDepend :> BUILDDEPEND = struct
 					  else line :: recur (n', r)
 				      end
 			    in
-				PP.vblock (rev (recur (SrcPath.descr f, history)))
+				PP.vcat (rev (recur (SrcPath.descr f, history)))
 			    end
 		     in SmlInfo.error gp i
 		           EM.COMPLAIN "cyclic ML dependencies" errorBody;

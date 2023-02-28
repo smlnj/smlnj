@@ -52,14 +52,14 @@ local
   fun ppExp (exp, msg) =
       PP.printFormatNL
 	 (PP.vcat
-	    (PP.text msg,
-	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))))
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))])
 
   fun ppDec (dec, msg) =
       PP.printFormatNL
 	 (PP.vcat
-	    (PP.text msg,
-	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))])
 
   fun ppPat pat =
       PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))

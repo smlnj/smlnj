@@ -101,9 +101,9 @@ in
     fun fmtTvTk (tv:LT.tvar, tk) =
 	ccat [text (LV.lvarName tv), text ":", PPT.fmtTKind 100 tk]
 
-    val fmtValList = list fmtValue
-    val fmtLvarList = list fmtLvar
-    val fmtTvTkList = list fmtTvTk
+    fun fmtValList xs = PP.list (map fmtValue xs)
+    fun fmtLvarList xs = PP.list (map fmtLvar xs)
+    fun fmtTvTkList xs = PP.list (map fmtTvTk xs)
 
     (* fmtTagged : string * PP.format -> PP.format *)
     fun fmtTagged (tag: string, fmt: format) =
@@ -120,7 +120,7 @@ in
 	     [text (S.name symbol), comma,
 	      text (Access.conrepToString conrep), comma,
 	      PPT.fmtLty 100 lty, comma,
-	      PP.list (PPT.fmtTyc 100) tycs])]
+	      PP.list (map (PPT.fmtTyc 100) tycs)])]
       | fmtDecon _ = empty
 
     (** the definitions of the lambda expressions *)
@@ -148,7 +148,7 @@ in
 	      | fmtE (F.TAPP (tf, tycs)) =
 		(* TAPP(tf, [tycs]) *)
 		fmtTagged ("TAPP", 
-			   pcat [fmtValue tf, comma, PP.list fmtTyc' tycs])
+			   pcat [fmtValue tf, comma, PP.list (map fmtTyc' tycs)])
 
 	      | fmtE (F.LET (vars, def, body)) =
 		(* [vars] = lexp   OR   [vars] =
@@ -232,7 +232,7 @@ in
 		  [hcat [fmtLvar lvar, text "=",
 			   fmtTagged ("RECORD",
 				      (csf [fmtRKind rkind,
-					    list fmtValue values]))],
+					    PP.list (map fmtValue values)]))],
 		   fmtLexp' body]
 
 	      | fmtE (F.SELECT (value, i, lvar, body)) =
@@ -264,12 +264,12 @@ in
 		let val tag = case d of NONE => "PRIMOP" | _ => "GENOP"
 		 in vcat
 		     [hcat [text "IF",
-			      fmtTagged (tag,
-					 psequence comma
-					   [text (PrimopUtil.toString primop),
-					    fmtLty' lty,
-					    PP.list fmtTyc' tycs]),
-			      list fmtValue values],
+			    fmtTagged (tag,
+				       psequence comma
+					 [text (PrimopUtil.toString primop),
+					  fmtLty' lty,
+					  PP.list (map fmtTyc' tycs)]),
+			    PP.list (map fmtValue values)],
 		      pcat [text "THEN", indent 2 (fmtLexp' body1)],
 		      pcat [text "ELSE", indent 2 (fmtLexp' body2)]]
 		end
@@ -280,9 +280,9 @@ in
 		  *)
 		vcat
 		  [hcat [fmtLvar lvar, text "=",
-			   fmtTagged ("ETAG",
-				      hcat [fmtValue value,
-					    brackets (fmtTyc' (FU.getEtagTyc p)]])]
+			 fmtTagged ("ETAG",
+				    hcat [fmtValue value,
+					  brackets (fmtTyc' (FU.getEtagTyc p))])],
 		   fmtLexp' body]
 
 	      | fmtE (F.PRIMOP (p as (_, PO.WRAP, _, _), [value], lvar, body)) =
@@ -314,11 +314,11 @@ in
 		let val tag = (case d of NONE => "PRIMOP" | _ => "GENOP" )
 		 in vcat
 		      [hcat [fmtLvar lvar, text "=",
-			       fmtTagged (tag,
-					  csf [text (PrimopUtil.toString primop),
-					       fmtLty' lty,
-					       PP.list (PPT.fmtTyc (pd - 1)) tycs]),
-			       fmtValList values],
+			     fmtTagged (tag,
+					csf [text (PrimopUtil.toString primop),
+					     fmtLty' lty,
+					     PP.list (map (PPT.fmtTyc (pd - 1)) tycs)]),
+			     fmtValList values],
 		       fmtLexp' body]
 		end
 	 in fmtE lexp
@@ -335,7 +335,7 @@ in
 		hcat [ccat [fmtLvar lvar, colon],
 		      if !Control.FLINT.printFctTypes orelse cconv <> FR.CC_FCT
 		      then PPT.fmtLty (pd - 1) lty
-		      else text "<lty>")
+		      else text "<lty>"]
          in vcat
 	      [hcat [ccat [fmtLvar lvar, colon],
 	               parens (fmtFKind fkind),

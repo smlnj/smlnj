@@ -83,8 +83,8 @@ local
 
   fun ppExp (exp : AS.exp, msg: string) =
       PP.printFormatNL
-        (PP.vcat (PP.string msg,
-		  PPA.fmtExp (StaticEnv.empty, NONE) (exp, db_printDepth)))
+        (PP.vcat [PP.string msg,
+		  PPA.fmtExp (StaticEnv.empty, NONE) (exp, db_printDepth)])
 
 in
 

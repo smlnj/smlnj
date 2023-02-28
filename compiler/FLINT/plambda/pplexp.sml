@@ -177,7 +177,7 @@ fun fmtLexp (pd:int) (l: lexp): format =
 		       | SOME lexp => [pcat [text "_ =>", indent 4 (fmtLexp' lexp)]])
              in vcat
 		  [hcat [text "SWITCH ", fmtLexp' l],
-		   indent 2 (hcat (text "of", vcat (map switchCase llist @ defaultCase)))]
+		   indent 2 (hcat [text "of", vcat (map switchCase llist @ defaultCase)])]
             end
 
           | fmtI (FIX (varlist, ltylist, lexplist, body)) =
@@ -191,7 +191,7 @@ fun fmtLexp (pd:int) (l: lexp): format =
 
           | fmtI (RAISE(l,t)) =
 	      ccat [text "RAISE", 
-		    parens (pcat [ccat [fmtLty' t, comma], fmtLexp' l])
+		    parens (pcat [ccat [fmtLty' t, comma], fmtLexp' l])]
 
           | fmtI (HANDLE (lexp, withlexp)) =
               vcat

@@ -165,7 +165,7 @@ and fmtExp (sourceOp: SR.source option) (exp: exp, depth: int) =
 	     in PP.braces (PP.psequence PP.comma (map fmtField fields))
             end
 	| fmtExp' (ListExp exps, d) =
-	    PP.list (fn exp => fmtExp' (exp, d-1)) exps
+	    PP.list (map (fn exp => fmtExp' (exp, d-1)) exps)
 	| fmtExp' (TupleExp exps, d) =
 	    PP.tuple (map (fn exp => (fmtExp' (exp, d-1))) exps)
 	| fmtExp' (SelectorExp name, d) =
@@ -313,17 +313,14 @@ and fmtSigExp sourceOp =
 	       [fmtSigExp' (sign, d),
 		(case sign
 		   of VarSig s =>
-			PP.vHeadersMap {header1 = "where ", header2 = "and"}
-				       (fn r => fmtWhereSpec sourceOp (r,d-1))
-				       wherel
+			PP.vHeaders {header1 = "where ", header2 = "and"}
+				    (map (fn r => fmtWhereSpec sourceOp (r,d-1)) wherel)
 		    | MarkSig(VarSig s, r) =>
-			PP.vHeadersMap {header1 = "where", header2 = "and"}
-				       (fn r => fmtWhereSpec sourceOp (r,d-1))
-				       wherel
+			PP.vHeaders {header1 = "where", header2 = "and"}
+				    (map (fn r => fmtWhereSpec sourceOp (r,d-1)) wherel)
 		    | _ =>
-			PP.vHeadersMap {header1 = "where", header2 = "and"}
-				       (fn r => fmtWhereSpec sourceOp (r,d-1))
-				       wherel)]
+			PP.vHeaders {header1 = "where", header2 = "and"}
+				    (map (fn r => fmtWhereSpec sourceOp (r,d-1)) wherel))]
 	  | fmtSigExp'(BaseSig [],d) = PP.hcat [PP.text "sig", PP.text "end"]
 	  | fmtSigExp'(BaseSig specl,d) =
 	    let val specFmts = map (fn speci => fmtSpec sourceOp (speci,d)) specl
@@ -377,19 +374,19 @@ and fmtSpec sourceOp (spec, d) =
 			  of SOME ty => PP.hcat [front, PP.equal, fmtTy sourceOp (ty, d)]
 			   | NONE => front)
 		    end
-	     in PP.vHeaders {header1 = "text", header2 = "and", formatter = formatter} stto_list
+	     in PP.vHeaders {header1 = "text", header2 = "and"} (map formatter stto_list)
 	    end
 
 	| fmtSpec' (FctSpec sf_list, d) =
 	  let fun formatter (symbol, fsigexp) =
                     PP.hcat [PPS.fmtSym symbol, PP.colon, fmtFsigExp sourceOp (fsigexp, d-1)]
-	   in PP.vHeaders {header1 = "functor", header2 = "and", formatter = formatter} sf_list
+	   in PP.vHeaders {header1 = "functor", header2 = "and"} (map formatter sf_list)
 	  end
 
 	| fmtSpec' (ValSpec st_list, d) =
 	  let fun formatter (symbol, ty) =
                   PP.hcat [PPS.fmtSym symbol, PP.colon, fmtTy sourceOp (ty, d)]
-	   in PP.vHeaders {header1 = "val", header2 = "and", formatter = formatter} st_list
+	   in PP.vHeaders {header1 = "val", header2 = "and"} (map formatter st_list)
 	  end
 
         | fmtSpec' (DataReplSpec(name,path), d) =
@@ -399,15 +396,15 @@ and fmtSpec sourceOp (spec, d) =
 
 	| fmtSpec' (DataSpec{datatycs,withtycs=[]}, d) =
 	    let fun formatter dbing = fmtDb sourceOp (dbing, d)
-	     in PP.vHeaders {header1 = "datatype", header2 = "and", formatter = formatter} datatycs
+	     in PP.vHeaders {header1 = "datatype", header2 = "and"} (map formatter datatycs)
 	    end
 
 	| fmtSpec' (DataSpec {datatycs, withtycs}, d) =
 	    let fun fmtd dbing = (fmtDb sourceOp (dbing, d))
 		fun fmtw tbing = (fmtTb sourceOp (tbing, d))
 	     in PP.vcat
-		  [PP.vHeadersMap {header1 = "datatype", header2 = "and"} fmtd datatycs,
-		   PP.vHeadersMap {header1 = "withtype", header2 = "and"} fmtw withtycs]
+		  [PP.vHeaders {header1 = "datatype", header2 = "and"} (map fmtd datatycs),
+		   PP.vHeaders {header1 = "withtype", header2 = "and"} (map fmtw withtycs)]
 	    end
 
 	| fmtSpec' (ExceSpec sto_list, d) =
@@ -416,14 +413,14 @@ and fmtSpec sourceOp (spec, d) =
 		    of SOME ty =>
                          PP.hcat [PPS.fmtSym symbol, PP.colon, fmtTy sourceOp (ty, d)]
 		     | NONE =>  PPS.fmtSym symbol)
-	   in PP.vHeaders {header1 = "exception", header2 = "and", formatter = fmtr} sto_list
+	   in PP.vHeaders {header1 = "exception", header2 = "and"} (map fmtr sto_list)
 	  end
 
 	| fmtSpec' (ShareStrSpec paths, d) =
-            PP.vHeaders {header1 = "sharing", header2 = "=", formatter = fmtPath} paths
+            PP.vHeaders {header1 = "sharing", header2 = "="} (map fmtPath paths)
             
         | fmtSpec' (ShareTycSpec paths, d) =
-            PP.vHeaders {header1 = "sharing type", header2 = "=", formatter = fmtPath} paths
+            PP.vHeaders {header1 = "sharing type", header2 = "="} (map fmtPath paths)
 
 	| fmtSpec' (IncludeSpec sigexp, d) = fmtSigExp sourceOp (sigexp, d)
 
@@ -437,17 +434,17 @@ and fmtDec sourceOp (dec, depth) =
 	fun fmtTypeBind (tbing, d) = (fmtTb sourceOp (tbing, d))
 	fun fmtDec' (_, 0) = PP.text "<dec>"
 	  | fmtDec' (ValDec (vbs, tyvars), d) =
-	     PP.vHeaderFormats {header1 = "val", header2 = "and"}
+	     PP.vHeaders {header1 = "val", header2 = "and"}
 	       (map (fn vb => fmtVb sourceOp (vb, d-1)) vbs)
 
 	  | fmtDec' (ValrecDec (rvbs, tyvars), d) =
-	     PP.vHeaderFormats {header1 = "val rec", header2 = "and"}
+	     PP.vHeaders {header1 = "val rec", header2 = "and"}
 	       (map (fn rvb => fmtRvb sourceOp (rvb, d-1)) rvbs)
 
 	  | fmtDec' (DoDec exp, d) = PP.label "do" (fmtExp sourceOp (exp,d-1))
 
 	  | fmtDec' (FunDec (fbs,tyvars), d) =
-	     PP.vHeaderFormats {header1 = "fun", header2 = "and"}
+	     PP.vHeaders {header1 = "fun", header2 = "and"}
 	       (map (fn fb => fmtFb sourceOp (fb, d-1)) fbs)
 
 	  | fmtDec' (TypeDec tycs, d) =
@@ -485,11 +482,11 @@ and fmtDec sourceOp (dec, depth) =
 	      PP.pcat (map (fn eb => fmtEb sourceOp (eb,d-1)) ebs)
 
 	  | fmtDec' (StrDec strbs, d) =
-	      PP.vHeaderFormats {header1 = "structure", header2 = "and"}
+	      PP.vHeaders {header1 = "structure", header2 = "and"}
 		(map (fn strb => fmtStrb sourceOp (strb, d-1)) strbs)
 
 	  | fmtDec' (FctDec fctbs, d) =
-	      PP.vHeaderFormats {header1 = "functor", header2 = "and"}
+	      PP.vHeaders {header1 = "functor", header2 = "and"}
 		(map (fn fctb => fmtFctb sourceOp (fctb,d)) fctbs)
 
 	  | fmtDec' (SigDec sigbs, d) =
@@ -497,12 +494,12 @@ and fmtDec sourceOp (dec, depth) =
 		        PP.vcat [PP.hcat [PPS.fmtSym fname, PP.equal],
 				 PP.indent 4 (fmtSigExp sourceOp (def,d))]
 		    | fmt (MarkSigb(sigb,r)) = fmt sigb
-	       in PP.vHeadersMap {header1 = "signature", header2 = "and"} fmt sigbs
+	       in PP.vHeaders {header1 = "signature", header2 = "and"} (map fmt sigbs)
 	      end
 
 	  | fmtDec' (FsigDec fsigbs, d) =
-	      PP.vHeadersMap {header1 = "funsig", header2 = "and"}
-                (fn fsigb => fmtFsigb sourceOp (fsigb, d)) fsigbs
+	      PP.vHeaders {header1 = "funsig", header2 = "and"}
+                (map (fn fsigb => fmtFsigb sourceOp (fsigb, d)) fsigbs)
 
 	  | fmtDec' (LocalDec(inner,outer), d) =
 	      PP.vcat
@@ -568,8 +565,8 @@ and fmtFb sourceOp (fb, d) =
     if d <= 0 then PP.text "<FunBinding>" else
     (case fb
        of Fb (clauses, ops) =>
-              PP.vHeadersMap {header1 = "", header2 = "|"}
-	        (fn (cl: clause) => (fmtClause sourceOp (cl,d))) clauses
+              PP.vHeaders {header1 = "", header2 = "|"}
+	        (map (fn (cl: clause) => fmtClause sourceOp (cl,d)) clauses)
 	| MarkFb (fb, _) => fmtFb sourceOp (fb, d))
 
 and fmtClause sourceOp (Clause {pats, resultty, exp}, d) =
@@ -681,7 +678,7 @@ and fmtTy sourceOp (ty, d) =
 			     PP.pcat [PP.hcat [fmtTy' (dom, d-1), PP.text "->"], fmtTy' (ran, d-1)]
 			 | _ => bug "fmtTy: wrong args for -> type")
 		   else PP.hcat [fmtTypeArgs (args, d), PPS.fmtSym tyc]
-		| _ => PP.hcat [fmtTypeArgs (args, d), fmtPath tycon)])
+		| _ => PP.hcat [fmtTypeArgs (args, d), fmtPath tycon])
 	| fmtTy' (RecordTy fields, d) =
             PP.braces
 	      (PP.psequence PP.comma

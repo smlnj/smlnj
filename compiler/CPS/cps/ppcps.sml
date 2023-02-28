@@ -228,8 +228,9 @@ structure PPCps : PPCPS =
         in PP.vcat
 	     [PP.hcat
                 [PP.enclose {front=front, back=back}
-                   (PP.hcat [fmtRecord (rk, length vps), PP.listMap fmtVpath vps], fmtLvar lvar),
-		 fmtCexp cexp']]
+                   (PP.hcat [fmtRecord (rk, length vps), PP.list (map fmtVpath vps)]),
+		 fmtLvar lvar],
+	      fmtCexp cexp']
 	  end
       | fmtCexp (SELECT(i,v,w,t,e)) =
 	  PP.vcat [PP.hcat [PP.ccat [fmtValue v, PP.text ".", PP.integer i],
@@ -258,7 +259,7 @@ structure PPCps : PPCPS =
               fun folder (cexp, (i, fmts)) = (i+1, fmtCase (i, fmtCexp cexp) :: fmts)
               val caseFmts = rev (#2 (foldl folder (0, nil) cases))
 	   in PP.vcat
-                [PP.hcat [PP.text "case", PP.ccat fmtValue subject, PP.brackets (fmtLvar lvar)],
+                [PP.hcat [PP.text "case", PP.ccat [fmtValue subject, PP.brackets (fmtLvar lvar)]],
                  PP.hcat [PP.text "of", PP.vcat caseFmts]]
           end
       | fmtCexp (LOOKER (i,vl,w,t,e)) =
@@ -278,7 +279,7 @@ structure PPCps : PPCPS =
       | fmtCexp (PURE (i,vl,w,t,e)) =
 	   PP.vcat
 	     [PP.hcat
-		[PP.ccat (PP.text (pureToString i), PP.tuple (map fmtValue vl)),
+		[PP.ccat [PP.text (pureToString i), PP.tuple (map fmtValue vl)],
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e]
       | fmtCexp (SETTER (i,vl,e)) =

@@ -39,12 +39,12 @@ fun ppLexp d lexp = PP.printFormat (PPF.fmtLexp d lexp)
 
 fun prMsgLty (msg, lty) = (say msg; ppLexp 10 lexp)
 
-fun fmtList (s, ltys) = 
-    PP.vcat [PP.text s, PP.indent 2 (PP.formatSeq V (PPT.fmtLty 100) ltys)]
+fun fmtLtyList (label, ltys) = 
+    PP.vcat [PP.text label, PP.indent 2 (PP.vsequence PP.empty (map (PPT.fmtLty 100) ltys))]
 
-fun pp2Lists (s,s',ltys,ltys') =
+fun print2lists (label1, label2, ltys1, ltys2) =
     PP.printFormat
-      (PP.vcat [fmtList (s, ltys), fmtList (s', ltys')]
+      (PP.vcat [fmtLtyList (label1, ltys1), fmtLtyList (label2, ltys2)])
 
 
 (****************************************************************************
@@ -113,7 +113,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 	      let val len_ts = Int.toString (length ts)
 		  val len_ts' = Int.toString (length ts')
 		  fun errFn () =
-		      pp2Lists
+		      print2lists
 			(concat [s, ": type list mismatch (", len_ts,
 				 " vs ", len_ts', ")\n** expected types:"],
 			 "** actual types:",
@@ -157,7 +157,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 		     (fn () => LE.ltc_arrow (fflag, dom_ltys, ran_ltys))
 		     (le,
 		      fn () =>
-		      (pp2Lists
+		      (print2lists
 			(s ^ ": deeply polymorphic non-functor\n** parameter types:",
 			 "** result types:",
 			 dom_ltys, ran_ltys);

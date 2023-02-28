@@ -187,9 +187,7 @@ and fmtTyc pd (tyc : LT.tyc) =
 	  | fmtTycI (LT.TC_BOX tyc) =
 	      label "BOX:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_TUPLE tycs) =
-	      formatClosedSeq
-		{alignment = P, front = lbrace, sep = comma, back = rbrace, formatter = fmtTyc'}
-		tycs
+	      PP.braces (PP.psequence PP.comma (map fmtTyc' tycs))
 	  | fmtTycI (LT.TC_ARROW (fflag, argTycs, resTycs)) =  (* was "AR ..." *)
 	    (* fflag records the calling convention: either FF_FIXED or FF_VAR *)
 	      parens

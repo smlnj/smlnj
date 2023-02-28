@@ -30,7 +30,7 @@ fun debugMsg (debugging: bool ref) (msg: string) =
 
 fun debugPrint (debugging: bool ref) (msg: string, format: PP.format) =
     if (!debugging)
-    then PP.printFormatNL (PP.vcat (PP.text msg, format))
+    then PP.printFormatNL (PP.vcat [PP.text msg, format])
     else ()
 
 (* envBoundSymbols : SE.staticEnv -> S.symbol list *)

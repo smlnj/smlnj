@@ -684,7 +684,7 @@ struct
 			    let val relabs: string = if abs then "absolute" else "relative"
 				val gdesc = SrcPath.descr grouppath
 				val errorFmt =
-				    PP.pblock
+				    PP.pcat
 				      (map PP.text 
 					  ["The", "path", "specifying",
 					    what, descr, "is", relabs, ".", "\n",
@@ -1012,11 +1012,11 @@ struct
 					   case l of [_] => " is" | _ => "s are"
 				     val errorBody =
 					   PP.vcat
-					     (PP.text
+					     [PP.text
 						(concat ["because the following sub-group",
 							 grammar, " not stable:"]),
 					      PP.indent 2
-						(PP.vblock (map (fn (p, _, _) => PP.text (SrcPath.descr p)) l)))
+						(PP.vcat (map (fn (p, _, _) => PP.text (SrcPath.descr p)) l))]
 				     val gdescr = SrcPath.descr (#grouppath grec)
 				  in EM.errorNoSource SM.nullRegion EM.COMPLAIN
 					  (gdescr ^ " cannot be stabilized")

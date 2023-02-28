@@ -117,7 +117,7 @@ fun ppLexp (lexp: PL.lexp) =
     PP.printFormat (PPLexp.fmtLexp (!printDepth) lexp)
 
 fun ppTycArgs (tycs: Lty.tyc list) =
-    PP.printFormat (PP.list (PPLty.fmtTyc 50) tycs)
+    PP.printFormat (PP.list (map (PPLty.fmtTyc 50) tycs))
 
 	
 (****************************************************************************

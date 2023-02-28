@@ -186,7 +186,7 @@ fun check phase envs lexp = let
 		   PP.hcat [PP.text "** function Lty:",
 			    PPT.fmtLty 100 lt],
 		   PP.hcat [PP.text "** argument Tycs:",
-			    PP.list (PPT.fmtTyc 100) ts]]);
+			    PP.list (map (PPT.fmtTyc 100) ts)]]);
 	   nil)))
 
   fun ltArrow (le,s) (cconv,alts,rlts) =

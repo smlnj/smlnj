@@ -20,14 +20,14 @@ signature CPS_COMP =
  *)
 	    data : Word8Vector.vector		(* literal data *)
 	  }
-
+(*
   (* translate CPS to CFG *)
     val toCFG : {
             source : string,
             clusters : Cluster.cluster list,
             maxAlloc : CPS.lvar -> int
           } -> CFG.comp_unit
-
+*)
   end
 
 functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP =
@@ -39,8 +39,13 @@ struct
    structure Closure = Closure(MachSpec)
    structure Spill = SpillFn(MachSpec)
 
-(* omit code only used for debugging
-    structure CPStoCFG = CPStoCFGFn (MachSpec)
+(* Omit code involving toCFG, which is only used for debugging. Definition of toCFG has been 
+   moved to NewCodeGen/main/code-gen-fn.sml. The definition of structure CPStoCFG has been moved
+   to the body of CodeGeneratorFn in (New)CodeGen/main/code-gen-fn.sml. The commented-out debugging
+   code in the "compile" function below could possibly be moved there too.
+
+   (* CPStoCFGFn defined in NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml *)
+    structure CPStoCFG = CPStoCFGFn (MachSpec) 
 
     val toCFG = CPStoCFG.translate
 *)
@@ -97,7 +102,7 @@ struct
 	    val funcs = spill funcs
 (* TODO: move clustering and limit checks to here *)
 	(* optional CFG generation to a file for debugging purposes *)
-(* omit debugging code dependent on NewCodeGen ---
+(* ----- omit debugging code dependent on NewCodeGen (CPStoCFG.translate)
 	  val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
 		  then let  val clusters = Cluster.cluster (true, funcs)(* form clusters *)
 		            (* add heap-limit checks etc. *)
@@ -121,7 +126,7 @@ struct
 			   else ()
 		       end
 		  else ()
----- *)
+----- *)
 	(* redo the clusters for now, since we haven't integrated the LLVM code gen yet *)
 	  val (clusters, maxAlloc) = clusters funcs
 

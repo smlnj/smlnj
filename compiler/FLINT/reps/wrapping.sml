@@ -249,12 +249,12 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
                        val nts : LT.tyc list = map tycWrap ts
 		       val _ = if !debugging
 			       then PP.printFormatNL
-				       (PP.label "nts:", (PP.list (map (PPT.fmtTyc 100) nts)))
+				       (PP.label "nts:" (PP.list (map (PPT.fmtTyc 100) nts)))
 			       else ()
                        val nlts: LT.lty list = LE.lt_inst(ltyUnwrap olt, nts)
 		       val _ = if !debugging
 			       then PP.printFormatNL
-				      (PP.label "nlts:", (PP.list (map (PPT.fmtLty 100) nlts)))
+				      (PP.label "nlts:" (PP.list (map (PPT.fmtLty 100) nlts)))
 			       else ()
                        val olts: LT.lty list = map ltyUnwrap (LE.lt_inst(olt, ts))
 		       val _ = if !debugging

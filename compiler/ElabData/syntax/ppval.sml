@@ -136,7 +136,7 @@ fun fmtVarDebug (env: SE.staticEnv, var: V.var) =
 	         [fmtField ("access", fmtAccess access),
                   fmtField ("prim", fmtPrim prim),
 		  fmtField ("path", PPP.fmtSymPath path),
-		  fmtField ("typ", PPT.fmtType env (!typ))])])
+		  fmtField ("typ", PPT.fmtType env (!typ))])]
        | V.OVLDvar {name,variants} =>
 	 PP.hcat   
 	   [PP.text "OVLDvar",

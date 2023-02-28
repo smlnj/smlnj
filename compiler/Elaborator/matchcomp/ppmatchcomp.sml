@@ -76,7 +76,7 @@ fun fmtSubcase caseFormatter subcase =
        | DCARG thing => caseFormatter thing
        | VELEMS elems => 
 	   PP.vcat [PP.text "VELEMS:",
-		    PP.indent (vcat (map caseFormatter elems))]
+		    ivcat (map caseFormatter elems)])
 
 (* fmtProtoAndor : protoAndor -> PP.format
  * pretty printer for protoAndor nodes *)

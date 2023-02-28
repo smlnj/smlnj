@@ -36,12 +36,12 @@
  *      Hard -> Hard
  *      Soft -> Soft
  *      tupleFormats -> tuple
- *      list -> listMap (and removed)
- *      formatSeq -> sequenceMap  (and removed)
- *      formatClosedSeq -> closedSequenceMap (and removed)
- *      vHeaders -> vHeadersMap (and removed)
+ *      list -> listMap
+ *      formatSeq -> sequenceMap
+ *      formatClosedSeq -> closedSequenceMap
+ *      vHeaders -> vHeadersMap
  *      vHeaderFormats -> vHeaders
- *      hblock -> hcat (same type, still takes format list argument)
+ *      hblock -> hcat
  *      pblock -> pcat
  *      vblock -> vcat
  *      cblock -> ccat
@@ -52,13 +52,6 @@
  *      pcat [recycled as the name of the former pblock]
  *      vcat [recycled as the name of the former vblock]
  *      ccat [recycled as the name of the former cblock]
- *  
- *      The map versions of various functions: (these are not used anywhere in SML/NJ?)
- *      sequenceMap
- *      closedSequenceMap
- *      listMap
- *      alignedListMap
- *      optionMap
  *)
 
 (* Defines:
@@ -133,7 +126,7 @@ fun tryFlat (fmt: format) = ALT (FLAT fmt, fmt)
 (* alt : format * format -> format *)
 val alt = ALT
 
-(* hvcat : format list -> format *)
+(* hvblock : format list -> format *)
 fun hvcat fmts = tryFlat (vcat fmts)
 
 
@@ -151,7 +144,7 @@ fun integer (i: int) : format = text (Int.toString i)
 fun string (s: string) = text (String.concat ["\"", String.toString s, "\""])  (* was using PrintUtil.formatString *)
 
 (* char : char -> format *)
-fun char (c: char) = ccat [text "#", string (Char.toString c)]
+fun char (c: char) = cblock [text "#", string (Char.toString c)]
 
 (* bool : bool -> format *)
 fun bool (b: bool) = text (Bool.toString b)
@@ -177,7 +170,7 @@ val equal  : format    = text "="
 (* enclose : {front : format, back : format} -> format -> format *)
 (* tight -- no space between front, back, and fmt *)
 fun enclose {front: format, back: format} fmt =
-    ccat [front, fmt, back]
+    cblock [front, fmt, back]
 
 (* parens : format -> format *)
 val parens = enclose {front = lparen, back = rparen}
@@ -207,7 +200,6 @@ fun alignmentToBreak H = Space 1
   | alignmentToBreak C = NullBreak
 
 (* sequence : alignement -> format -> format list -> format
- *  Format a sequence of formats, specifying alignment and separator format used between elements.
  *  The second argument (sep: format) is normally a symbol (TEXT) such as comma or semicolon *)
 fun sequence (alignment: alignment) (sep: format) (formats: format list) =
     let val separate =
@@ -234,16 +226,14 @@ val psequence = sequence P
 val vsequence = sequence V
 val csequence = sequence C
 
-(* tuple : format list -> format
- *  parenthesized, comma-separated, packed alignment sequence
+(* tuple : format list -> format  -- parenthesized, comma separated, packed alignment sequence
  *  not really restricted to actual "tuples", just "tuple-style" formatting. Constituent formats can represent
  *  values of heterogeneous types. *)
-fun tuple (formats: format list) = parens (psequence comma formats)
+fun tuple formats = parens (psequence comma formats)
 
-(* list : format list -> format
- *  bracketed, comma-separated, packed alignment
+(* list : format list -> format  -- packed alignment
  *  typically used for lists, but the constituent formats can represent values of heterogeneous types. *)
-fun list (formats: format list) = brackets (psequence comma formats)
+fun list formats = brackets (psequence comma formats)
 
 fun option (formatOp: format option) =
     case formatOp
@@ -252,13 +242,27 @@ fun option (formatOp: format option) =
 
 (*** functions for formatting sequences of values (of homogeneous types, i.e. 'a lists) ***)
 
-(* ----- deleting depricated functions -----
-(* DEPRICATED!  - likely to go away *)
-(* sequenceMap : alignment -> ([sep:] format) -> ([formatter:] 'a -> format) -> 'a list -> format *)
-fun 'a sequenceMap alignment sep (formatter: 'a -> format) (xs: 'a list) =
-    sequence alignment sep (map formatter xs)
+(* sequenceMap : {alignment: alignment, sep: format} -> ([formatter:] 'a -> format} -> 'a list -> format *)
+fun 'a sequenceMap {alignment: alignment, sep: format}  (formatter: 'a -> format) (xs: 'a list) =
+    let val separate =
+	    (case alignment
+	       of C => (fn elems => FMT sep :: elems)  (* alignment = C *)
+	        | _ =>
+		  let val break = alignmentToBreak alignment
+		   in (fn elems => FMT sep :: BRK break :: elems)
+		  end)
+	val formats = map formatter xs
+	fun addBreaks nil = nil
+	  | addBreaks fmts =  (* fmts non-null *)
+	    let fun inter [fmt] = [FMT fmt]
+		  | inter (fmt :: rest) =  (* rest non-null *)
+		      FMT fmt :: (separate (inter rest))
+		  | inter nil = nil (* won't happen *)
+	     in inter fmts
+	    end
+     in block (addBreaks formats)
+    end
 
-(* DEPRICATED!  - likely to go away *)
 (* closedSequenceMap :
      {alignment: alignment, front: format, sep: format, back: format} 
      -> ([formatter:] 'a -> format}
@@ -266,27 +270,25 @@ fun 'a sequenceMap alignment sep (formatter: 'a -> format) (xs: 'a list) =
      -> format *)
 fun 'a closedSequenceMap
        {alignment: alignment, front: format, sep: format, back: format} (formatter: 'a -> format) (xs: 'a list) =
-    enclose {front=front, back=back} (sequence alignment sep (map formatter xs))
+    enclose {front=front, back=back} (sequenceMap {alignment=alignment, sep=sep} formatter xs)
 
-(* DEPRICATED!  - likely to go away *)
 (* alignedListMap : alignment -> ('a -> format) -> 'a list -> format *)
 fun 'a alignedListMap alignment (formatter : 'a -> format) (xs: 'a list) =
-    brackets (sequence alignment comma (map formatter xs))
+    closedSequenceMap
+      {alignment=alignment, front = lbracket, back = rbracket, sep = comma} formatter xs
 
-(* DEPRICATED!  - likely to go away *)
 (* listMap : ('a -> format) -> 'a list -> format *)
 (* packed-style formatting of an 'a list, given an 'a formatter function *)
 fun 'a listMap (formatter : 'a -> format) (xs: 'a list) =
-    brackets (psequence comma (map formatter xs))
+    closedSequenceMap
+      {alignment=P, front = lbracket, back = rbracket, sep = comma} formatter xs
 
-(* DEPRICATED!  - likely to go away *)
 (* optionMap : ('a -> format) -> 'a option -> format *)
 fun 'a optionMap (formatter: 'a -> format) (xOp: 'a option) =
     case xOp
       of NONE => text "NONE"
        | SOME x => ccat [text "SOME", parens (formatter x)]
 
- ----- end depricated functions ----- *)
 
 (*** vertical formatting with headers ***)
 
@@ -304,21 +306,27 @@ fun padHeaders (s1, s2) =
 	 StringCvt.padLeft #" " maxsize s2)
     end
 
+(* vHeadersMap : {header1 : string, header2 : string} -> ([formatter:] 'a -> format) -> 'a list -> format *)
+fun vHeadersMap {header1: string, header2: string} (formatter: 'a -> format) (elems: 'a list) =
+    let val (header1, header2) = padHeaders (header1, header2)
+     in case elems
+	  of nil => empty
+	   | elem :: rest =>
+	       vblock
+		 (hcat [text header1, formatter elem] ::
+		  map (fn e => hcat [text header2, formatter e]) rest)
+    end
+
 (* vHeaders : {header1 : string, header2 : string} -> format list -> format *)
 fun vHeaders {header1: string, header2: string} (elems: format list) =
     let val (header1, header2) = padHeaders (header1, header2)
      in case elems
 	  of nil => empty
 	   | elem :: rest =>
-	       vcat
+	       vblock
 		 (hcat [text header1, elem] ::
 		  map (fn fmt => hcat [text header2, fmt]) rest)
     end
-
-(* DEPRICATED! *)
-(* vHeadersMap : {header1 : string, header2 : string} -> ([formatter:] 'a -> format) -> 'a list -> format *)
-fun vHeadersMap (headers as {header1: string, header2: string}) (formatter: 'a -> format) (xs: 'a list) =
-    vHeaders headers (map formatter xs)
 
 
 (*** "indenting" formats ***)

@@ -6,100 +6,115 @@
  *)
 
 Group
+
+	(* ElabData/main *)
 	signature ELABDATA_CONTROL
-	signature ACCESS
-	signature DEB_INDEX
-	signature TYPES
-        signature OCCURRENCE
-	signature TYPESUTIL
-	signature TUPLES
-	signature ABSYN
-	signature SYMPATH
-	signature INVPATH
-	signature CONVERTPATHS
+	structure ElabDataControl
+	structure CompInfo
+
+	(* ElabData/basics *)
 	signature LAMBDA_VAR
 	signature STAMPS
-	signature ENT_PATH
-	signature VARIABLE
-	signature MODULES
-	signature MODULEUTIL
-	signature MODULE_ID
-	signature BINDINGS
-	signature STATICENV
-	signature BASICTYPES
-	signature ENTITY_ENV
-	signature PRIMOP_ID
-	signature PRIMOP
-	signature PPTYPE
-	signature PPABSYN
-	signature PPMOD
-	signature PPMOD_DB
-	signature PPVAL
-	signature EQTYPES
-	signature EXPAND_TYCON
-	signature CONREP
-	signature PRIM_ENV      (* prim/prim-env.sml *)
-	signature PICKMOD       (* pickle/pickmod.sml *)
-	signature UNPICKMOD     (* pickle/unpickmod.sml *)
-
-	structure ElabDataControl
+	signature ACCESS
 	structure Access
+	signature DEB_INDEX
 	structure DebIndex
-	structure Types
-	structure PPType
-        structure Occurrence
-	structure TypesUtil
-	structure Tuples
-	structure Absyn
-	structure PPAbsyn
-	structure AbsynUtil
+	signature SYMPATH
 	structure SymPath
+	signature INVPATH
 	structure InvPath
-        structure PathName
+	signature CONVERTPATHS
 	structure ConvertPaths
-	structure LambdaVar
-	structure Stamps
-	structure StampMap
-	structure EntPath
-	structure Variable
+        structure PathName
+        structure PPSymPaths
+	structure TKind
+	structure CoreSym
+	structure SigPropList
+
+	(* ElabData/types *)
+	signature CONREP
+	structure ConRep
+	signature TYPES
+	structure Types
+	signature PPTYPE
+	structure PPType
+        signature OCCURRENCE
+        structure Occurrence
+	signature TYPESUTIL
+	structure TypesUtil
+	signature TUPLES
+	structure Tuples
+	signature EQTYPES
+	signature BASICTYPES
+	structure BasicTypes
+
+	(* ElabData/modules *)
+	signature MODULES
 	structure Modules
+	signature MODULEUTIL
 	structure ModuleUtil
 	structure PPModules
 	structure PPModules_DB
+	signature MODULE_ID
 	structure ModuleId
+	signature ENT_PATH
+	signature ENTITY_ENV
 	structure EntityEnv
 	structure EntPathContext
+	signature PPMOD
+	signature PPMOD_DB
+	signature EXPAND_TYCON
+
+	(* ElabData/statenv *)
+	signature BINDINGS
+	signature STATICENV
 	structure Bindings
 	structure EqTypes
 	structure ExpandTycon
 	structure StaticEnv
 	structure Lookup
-	structure CompInfo
-	structure CoreSym
-	structure BasicTypes
 	structure GenModIdMap
 	structure CoreAccess
 	structure BrowseStatEnv
+
+	(* ElabData/syntax *)
+	signature ABSYN
+	structure Absyn
+	signature PPABSYN
+	structure PPAbsyn
+	structure AbsynUtil
+	structure LambdaVar
+	structure Stamps
+	structure StampMap
+	structure EntPath
+	signature VARIABLE
+	structure Variable
+	signature PPVAL
+	structure PPVal
+
+        (* ElabData/prim *)
+	signature PRIMOP
+	structure Primop
+	signature PRIMOP_ID
 	structure PrimopId
+	signature PRIM_ENV        (* prim-env.sml *)
+	structure PrimEnv
 	structure PPPrim
 	structure ArithOps
-	structure Primop
 	structure PrimopUtil
 	structure PrimopBind
 	structure PrimopBindings
 	structure CProto
 	structure CTypes
-	structure TKind
-	structure SigPropList
-	structure PPVal
-	structure ConRep
-        structure PPSymPaths
 
-	structure PickleSymPid    (* pickle/pickle-sym-pid.sml *)
-	structure UnpickleSymPid  (* pickle/unpickle-sym-pid.sml *)
-	structure PickMod         (* pickle/pickmod.sml *)
-	structure UnpickMod       (* pickle/unpickmod.sml *)
-	structure Rehash          (* pickle/rehash.sml *)
+	(* ElabData/pickle *)
+	structure PickleSymPid    (* pickle-sym-pid.sml *)
+	structure UnpickleSymPid  (* unpickle-sym-pid.sml *)
+	signature PICKMOD         (* pickmod.sml *)
+	structure PickMod         (* pickmod.sml *)
+	signature UNPICKMOD       (* unpickmod.sml *)
+	structure UnpickMod       (* unpickmod.sml *)
+	structure Rehash          (* rehash.sml *)
 
 is
 	main/edcontrol.sig
@@ -110,14 +125,14 @@ is
 	basics/debindex.sml
 	basics/lambdavar.sig
 	basics/lambdavar.sml
+	basics/access.sig
+	basics/access.sml
 	basics/env.sig
 	basics/env.sml
 	basics/stamps.sig
 	basics/stamps.sml
 	basics/stampmap.sml
 	basics/coresym.sml
-	basics/access.sig
-	basics/access.sml
 	basics/sympaths.sig
 	basics/sympaths.sml
         basics/pathname.sml

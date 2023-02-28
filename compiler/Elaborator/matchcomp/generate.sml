@@ -47,26 +47,26 @@ local
   fun ppAndor andor =
       PP.printFormatNL
 	 (PP.vcat
-	    (PP.text "andor:",
-	     PP.indent 3 (PPMC.fmtAndor andor)))
+	    [PP.text "andor:",
+	     PP.indent 3 (PPMC.fmtAndor andor)])
 
   fun ppDecisionTree dectree =
       PP.printFormatNL
 	 (PP.vcat
-	    (PP.text "andor:",
-	     PP.indent 3 (PPMC.fmtDectree dectree)))
+	    [PP.text "andor:",
+	     PP.indent 3 (PPMC.fmtDectree dectree)])
 
   fun ppExp (exp, msg) =
       PP.printFormatNL
 	 (PP.vcat
-	    (PP.text msg,
-	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))))
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))])
 
   fun ppDec (dec, msg) =
       PP.printFormatNL
 	 (PP.vcat
-	    (PP.text msg,
-	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))])
 
   fun ppPat pat =
       PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
@@ -75,7 +75,7 @@ local
       PP.printFormatNL (PPVal.fmtVar var)
 
   fun ppType msg ty =
-      PP.printFormatNL (PP.hcat (PP.text (msg^":"), PPT.fmtType SE.empty ty))
+      PP.printFormatNL (PP.hcat [PP.text (msg^":"), PPT.fmtType SE.empty ty])
 
   fun timeIt x = TimeIt.timeIt (!stats) x
 			       

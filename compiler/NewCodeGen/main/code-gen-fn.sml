@@ -18,13 +18,18 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
 
     fun phase x = Stats.doPhase (Stats.makePhase x)
 
+    (* The definition of CPStoCFG was moved here from cps-comp.sml, where it was causing a cyclic
+       dependency between CPS and NewCodeGen. CPStoCFGFn is defined in 
+       NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml. *)
+
+    structure CPStoCFG = CPStoCFGFn (MachSpec)
+
     fun compile {source, prog} = let
 	(* CPS compilation *)
 	  val {clusters, maxAlloc, data} = CPSGen.compile {source=source, prog=prog}
         (* convert to CFG IR *)
-          val cfg = CPSGen.toCFG {
-                  source = source, clusters = clusters, maxAlloc = maxAlloc
-                }
+          val cfg = CPStoCFG.translate {source = source, clusters = clusters, maxAlloc = maxAlloc}
+             (* formerly called CPSGen.toCFG, but toCFG is no longer defined there *)
         (* pickle the IR into a vector *)
           val pkl = CFGPickler.toBytes cfg
         (* invoke the LLVM code generator to generate machine code *)
@@ -37,4 +42,12 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
 	    {code = code, data = data}
 	  end
 
-  end
+end
+
+(* Imports:
+   CPSCompFn: CPS/main/cps-comp.sml  [cps.cm]
+   CPStoCFGFn: NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml [codegen.cm]
+   
+   Exports:
+   CodeGeneratorFn [codegen.cm]
+*) 
