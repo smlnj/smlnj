@@ -182,31 +182,6 @@ sig
     val option : format option -> format
         (* formats a format option by producing text "NONE" or wrapping "SOME(.)" around the format *)
 
-(* ----- DEPRICATED and deleted! ------
-   all the xxxMap functions are mostly redundant -- the mapping can be moved to the argument of the
-   corresponding nonmapping function,
-   e.g. sequenceMap align sep formatter xs ==> sequence align sep (map formatter xs).
-
-  (* formating of lists and options of values of arbitrary type, given a formatter function for that type *)
-
-    (* DEPRICATED! *)
-    val sequenceMap : alignment -> (* separator *) format -> (* formatter *) ('a -> format) -> 'a list -> format
-
-    (* DEPRICATED! *)
-    val closedSequenceMap :
-	{alignment: alignment, front: format, sep: format, back: format} -> ('a -> format) -> 'a list -> format
-
-    val listMap : ('a -> format) -> 'a list -> format  (* default packed alignment P, formerly "list" *)
-
-    (* DEPRICATED! *)
-    val alignedListMap : alignment -> ('a -> format) -> 'a list -> format
-
-    val optionMap : ('a -> format) -> 'a option -> format
-
-    (* DEPRICATED! *)
-    val vHeadersMap : {header1: string, header2: string} -> ('a -> format) -> 'a list -> format
-
- ------ *)
 
   (* indenting formats *)
 
