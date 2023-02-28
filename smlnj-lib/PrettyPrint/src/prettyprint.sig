@@ -36,10 +36,10 @@
  *      SoftLine -> Soft
  *      listFormats -> list
  *      tupleFormats -> tuple
- *      list -> listMap
- *      formatSeq -> sequenceMap
- *      formatClosedSeq -> closedSequenceMap
- *      vHeaders -> vHeadersMap
+ *      list -> listMap  (-> removed)
+ *      formatSeq -> sequenceMap (-> removed)
+ *      formatClosedSeq -> closedSequenceMap (-> removed)
+ *      vHeaders -> vHeadersMap (-> removed)
  *      vHeaderFormats -> vHeaders
  *      hblock -> hcat
  *      pblock -> pcat
@@ -52,6 +52,13 @@
  *      pcat [recycled as the name of the former pblock]
  *      vcat [recycled as the name of the former vblock]
  *      ccat [recycled as the name of the former cblock]
+ *  
+ *      The map versions of various functions: (these are not used anywhere in SML/NJ?)
+ *      sequenceMap
+ *      closedSequenceMap
+ *      listMap
+ *      alignedListMap
+ *      optionMap
  *)
 
 (* Defines: signature PRETTYPRINT *)
