@@ -250,44 +250,6 @@ fun option (formatOp: format option) =
       of NONE => text "NONE"
        | SOME fmt => ccat [text "SOME", parens fmt]
 
-(*** functions for formatting sequences of values (of homogeneous types, i.e. 'a lists) ***)
-
-(* ----- deleting depricated functions -----
-(* DEPRICATED!  - likely to go away *)
-(* sequenceMap : alignment -> ([sep:] format) -> ([formatter:] 'a -> format) -> 'a list -> format *)
-fun 'a sequenceMap alignment sep (formatter: 'a -> format) (xs: 'a list) =
-    sequence alignment sep (map formatter xs)
-
-(* DEPRICATED!  - likely to go away *)
-(* closedSequenceMap :
-     {alignment: alignment, front: format, sep: format, back: format} 
-     -> ([formatter:] 'a -> format}
-     -> 'a list
-     -> format *)
-fun 'a closedSequenceMap
-       {alignment: alignment, front: format, sep: format, back: format} (formatter: 'a -> format) (xs: 'a list) =
-    enclose {front=front, back=back} (sequence alignment sep (map formatter xs))
-
-(* DEPRICATED!  - likely to go away *)
-(* alignedListMap : alignment -> ('a -> format) -> 'a list -> format *)
-fun 'a alignedListMap alignment (formatter : 'a -> format) (xs: 'a list) =
-    brackets (sequence alignment comma (map formatter xs))
-
-(* DEPRICATED!  - likely to go away *)
-(* listMap : ('a -> format) -> 'a list -> format *)
-(* packed-style formatting of an 'a list, given an 'a formatter function *)
-fun 'a listMap (formatter : 'a -> format) (xs: 'a list) =
-    brackets (psequence comma (map formatter xs))
-
-(* DEPRICATED!  - likely to go away *)
-(* optionMap : ('a -> format) -> 'a option -> format *)
-fun 'a optionMap (formatter: 'a -> format) (xOp: 'a option) =
-    case xOp
-      of NONE => text "NONE"
-       | SOME x => ccat [text "SOME", parens (formatter x)]
-
- ----- end depricated functions ----- *)
-
 (*** vertical formatting with headers ***)
 
 (* header1 and header2 are header strings for the first item and subsequent items,
