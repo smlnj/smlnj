@@ -23,10 +23,13 @@
  *
  * Version 8.1 [2023.1.2]
  * -- HINDENT and SINDENT merged into single INDENT constructor that renders as SINDENT did.
+ * 
+ * Version 8.4 [2023.3.1]
+ * -- rename Break constructor names: HardLine -> Line, SoftLine -> Soft, NullBreak -> Null
  *)
 
 (* structure Format:
- *   no signature, exports only datatypes alignment, break, and format *)
+ *   no signature, exports only datatypes: alignment, break, element, and format *)
 
 structure Format =
 struct
@@ -46,7 +49,7 @@ datatype break
 		      * if the line break is triggered because the following format does not fit in remaining
                       * line space, renders as newline + indent to current block left margin (blm) *)
   | Space of int     (* spaces (n >= 0); rendered as n spaces; Space 1 is the break for H alignment *)
-  | NullBreak        (* The default break that does nothing, i.e. it neither breaks a line nor inserts spaces.
+  | Null             (* The default break that does nothing, i.e. it neither breaks a line nor inserts spaces.
 		      * This is essentially equivalent to Space 0, but included for logical "completeness";
 		      * It is the separator break for C alignment. *)
 

@@ -35,6 +35,7 @@
  *   -- renamed:
  *      Hard -> Hard
  *      Soft -> Soft
+ *      NullBreak -> Null
  *      tupleFormats -> tuple
  *      list -> listMap (and removed)
  *      formatSeq -> sequenceMap  (and removed)
@@ -204,7 +205,7 @@ fun label (str:string) (fmt: format) = hcat [text str, fmt]
 fun alignmentToBreak H = Space 1
   | alignmentToBreak V = Hard
   | alignmentToBreak P = Soft 1
-  | alignmentToBreak C = NullBreak
+  | alignmentToBreak C = Null
 
 (* sequence : alignement -> format -> format list -> format
  *  Format a sequence of formats, specifying alignment and separator format used between elements.

@@ -11,6 +11,8 @@
    -- separator --> break; SEP --> BRK; SBLOCK --> BLOCK
  * Version 8.1
    -- merge HINDENT, SINDENT into single INDENT constructor acting like SINDENT
+ * Version 8.4
+   -- simply names of Break constructors (Hard, Soft, Null)
  *)
 
 structure Measure : MEASURE =
@@ -55,7 +57,7 @@ fun measureElement (BRK break) =
     (case break
       of Hard => 1
        | (Soft n | Space n) => n  (* measured as n spaces, since flat rendered as n spaces *)
-       | NullBreak => 0)
+       | Null => 0)
   | measureElement (FMT format) = measure format
 
 fun measureElements elements =

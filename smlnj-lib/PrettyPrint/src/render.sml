@@ -9,6 +9,9 @@
  *
  * Version 8.1 [2023.1.1]
  *  -- HINDENT dropped, SINDENT --> INDENT
+ *
+ * Version 8.4 [2023.3.1]
+ *  -- simplify Break constructor names: HardLine -> Hard, SoftLine -> Soft, NullBreak -> Null
  *)
 
 structure Render : RENDER =
@@ -65,7 +68,7 @@ fun flatRender (format, output) =
 			       of Hard   => (sp 1; rend rest)
 				| Soft n => (sp n; rend rest)
 				| Space n    => (sp n; rend rest)
-				| NullBreak  => rend rest))
+				| Null  => rend rest))
 	     in rend elements
 	    end
 
@@ -167,7 +170,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 			      end
 			  | BRK break =>  (* rest should start with a FMT! *)
 			      (case break
-				 of NullBreak  => re (rest, cc, false)
+				 of Null  => re (rest, cc, false)
 				  | Hard   => (lineBreak blm; re (rest, blm, true))
 				  | Space n    => (sp n; re (rest, cc + n, newlinep))
 				  | Soft n =>

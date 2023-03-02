@@ -34,6 +34,7 @@
  *   -- renamed (with same type):
  *      HardLine -> Hard
  *      SoftLine -> Soft
+ *      NullBreak -> Null
  *      listFormats -> list
  *      tupleFormats -> tuple
  *      list -> listMap  (-> removed)
@@ -73,8 +74,8 @@ sig
     datatype break  (* used to separate format elements of a block; space, conditional, and unconditional line breaks *)
       = Hard             (* _hard_ or unconditional line break *)
       | Soft of int      (* _soft_ or conditional line break; rendered to n spaces when not triggered; n >= 0 *)
-      | Space of int     (* n spaces; n >= 0; Space 0 == NullBreak *)
-      | NullBreak        (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
+      | Space of int     (* n spaces; n >= 0; Space 0 == Null *)
+      | Null             (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
 			  * This is essentially equivalent to Space 0, but included for logical "completeness",
 			  * and it also eliminates the need for break option in some places (alignmentToBreak). *)
 
@@ -82,7 +83,7 @@ sig
       = H  (* Horizontal alignment, with implicit single space breaks (Space 1) between format components, unbreakable *)
       | V  (* Vertical alignment, with implicit hard line breaks (Hard) between format components *)
       | P  (* Packed alignment, with implicit soft line breaks (Soft 1) between format components *)
-      | C  (* compact, no breaks (or implicit NullBreak) between block format components, hence unbreakable *)
+      | C  (* compact, no breaks (or implicit Null) between block format components, hence unbreakable *)
 
     datatype element
       = BRK of break   (* breaks are atomic and do not contain content *)
@@ -104,7 +105,7 @@ sig
 
     (* ablock: building aligned blocks
      *   The alignement parameter determines the implicit break that occurs between formats in the list:
-     *      H -> Space 1, P -> Soft 1, V -> Hard, C -> NullBreak 
+     *      H -> Space 1, P -> Soft 1, V -> Hard, C -> Null 
      *   empty argument list produces empty format,
      *   and empty format elements are "dropped", so, for example ablock [emtpy, empty] ==> empty. *)
 
@@ -125,7 +126,7 @@ sig
         (* combinds a list of formats in an V-aligned block, with an implicit hard line break
          * (Hard) between them *)
     val ccat : format list -> format   (* = aBlock C *)
-        (* combinds a list of formats in a C-aligned block, with no break (or, implicitly, NullBreak)
+        (* combinds a list of formats in a C-aligned block, with no break (or, implicitly, Null)
          * between them *)
 
     (* a few "punctuation" characters as formats *)
