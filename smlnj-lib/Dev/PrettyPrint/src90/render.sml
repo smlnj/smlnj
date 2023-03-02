@@ -281,4 +281,8 @@ Should this be disallowed?  Probably not, until we find that it is causing probl
      "consumed" but not "produced".
    * The output function (and only the output function) is responsible for "interpretting" styles and producing the
      desired printed result.
+   * styles are "cumulative", where new styles encountered in STYLE (style, format) are added to the context stack
+     of styles until on gets down to TEXT formats, where they are passed to the output function for interpretation.
+   * The style context is just a list (stack) of styles. One might "merge" inner styles into the a single context style
+     instead, but this would require a more complex definition of styles and how they combine (cascading styles).
 *)
