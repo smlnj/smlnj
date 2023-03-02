@@ -4,6 +4,7 @@
  * All rights reserved.
  *
  * TODO: text width (vs. line width)
+ *       max indent
  *)
 
 functor RenderFn (Dev : PP_DEVICE) :> sig
