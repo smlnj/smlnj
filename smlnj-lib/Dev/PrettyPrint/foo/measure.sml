@@ -11,6 +11,8 @@
    -- separator --> break; SEP --> BRK; SBLOCK --> BLOCK
  * Version 8.1
    -- merge HINDENT, SINDENT into single INDENT constructor acting like SINDENT
+ * Version 8.4
+   -- simply names of Break constructors (Hard, Soft, Null)
  *)
 
 structure Measure : MEASURE =
@@ -29,7 +31,7 @@ in
  * no line breaks (we call this "flat measure").
  * Measuring a format takes place before rendering, so it must be a conservative estimate
  * of the line space required by a format. This estimate is the length of its rendering on a
- * single unbounded line, with HardLine separators being treated as a single space and
+ * single unbounded line, with Hard separators being treated as a single space and
  * indenting blocks treated as non-indenting for the sake of measurement.
  *)
 
@@ -53,9 +55,9 @@ fun measure (format: format) =
 
 fun measureElement (BRK break) =
     (case break
-      of HardLine => 1
-       | (SoftLine n | Space n) => n  (* measured as n spaces, since flat rendered as n spaces *)
-       | NullBreak => 0)
+      of Hard => 1
+       | (Soft n | Space n) => n  (* measured as n spaces, since flat rendered as n spaces *)
+       | Null => 0)
   | measureElement (FMT format) = measure format
 
 fun measureElements elements =

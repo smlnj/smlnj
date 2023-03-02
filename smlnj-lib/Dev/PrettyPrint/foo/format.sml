@@ -23,10 +23,13 @@
  *
  * Version 8.1 [2023.1.2]
  * -- HINDENT and SINDENT merged into single INDENT constructor that renders as SINDENT did.
+ * 
+ * Version 8.4 [2023.3.1]
+ * -- rename Break constructor names: HardLine -> Line, SoftLine -> Soft, NullBreak -> Null
  *)
 
 (* structure Format:
- *   no signature, exports only datatypes alignment, break, and format *)
+ *   no signature, exports only datatypes: alignment, break, element, and format *)
 
 structure Format =
 struct
@@ -34,19 +37,19 @@ struct
 (* datatype alignment: alignment modes for "aligned" blocks *)
 datatype alignment  (* the alignment property of "aligned" blocks *)
   = H  (* Horizontal alignment, with implicit single space (Space 1) breaks between format components *)
-  | V  (* Vertical alignment, with implicit hardline breaks (HardLine) between format components *)
-  | P  (* Packed alignment, with implicit softline (SoftLine 1) breaks between format components *)
+  | V  (* Vertical alignment, with implicit hardline breaks (Hard) between format components *)
+  | P  (* Packed alignment, with implicit softline (Soft 1) breaks between format components *)
   | C  (* Compact alignment, with implicit NullBreak between format components, hence also horizontal *)
 
 (* breaks: used to separate format elements of a special block and categorize alignment in aligned blocks
  *   breaks are concerned only with "formatting" and do not contribute any content *)
 datatype break
-  = HardLine         (* hard line break; rendered as a newline + indent to current block left margin (blm) *)
-  | SoftLine of int  (* soft line break (n >= 0); rendered as n spaces, if the line break is not triggered;
+  = Hard             (* hard line break; rendered as a newline + indent to current block left margin (blm) *)
+  | Soft of int      (* soft line break (n >= 0); rendered as n spaces, if the line break is not triggered;
 		      * if the line break is triggered because the following format does not fit in remaining
                       * line space, renders as newline + indent to current block left margin (blm) *)
   | Space of int     (* spaces (n >= 0); rendered as n spaces; Space 1 is the break for H alignment *)
-  | NullBreak        (* The default break that does nothing, i.e. it neither breaks a line nor inserts spaces.
+  | Null             (* The default break that does nothing, i.e. it neither breaks a line nor inserts spaces.
 		      * This is essentially equivalent to Space 0, but included for logical "completeness";
 		      * It is the separator break for C alignment. *)
 
