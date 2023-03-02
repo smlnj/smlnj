@@ -10,6 +10,7 @@ is
 
 $smlnj/basis/basis.cm
 
+style.sml
 format.sml
 measure.sig
 measure.sml

@@ -71,6 +71,7 @@ datatype format =
       (* soft indent the format n spaces, sinilar to Hughes's nest *)
   | FLAT of format
       (* render (and measure) the format as flat *)
+  | STYLE of Style.style * format
 
   (* conditional choice of formats *)
   | ALT of format * format

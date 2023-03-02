@@ -138,6 +138,11 @@ val alt = ALT
 fun hvcat fmts = tryFlat (vcat fmts)
 
 
+(* text styling *)
+
+fun style style format = STYLE (style, format)
+
+
 (*** format-building utility functions for some primitive types ***)
 
 val empty : format = EMPTY

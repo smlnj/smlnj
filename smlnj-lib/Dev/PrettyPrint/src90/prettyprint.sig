@@ -208,7 +208,13 @@ sig
 	(* acts as hcat if it fits, otherwise as vcat *)
 
 
-  (* functions used to define and access the line width [May include lineWidth with a "device" (Render) functor parameter ] *)
+  (* Text styling *)
+
+    val style : style -> format -> format
+
+
+  (* functions used to define and access the line width
+     [May include lineWidth with a "device" (Render) functor parameter ] *)
 
     val setLineWidthFun : (unit -> int) -> unit
 	(* defines the function that returns the current lineWidth value *)

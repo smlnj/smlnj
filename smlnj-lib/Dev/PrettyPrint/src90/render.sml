@@ -54,7 +54,9 @@ fun flatRender (format, output) =
 		 | ABLOCK {formats, ...} => renderABLOCK formats
 		 | INDENT (_, fmt) => render0 fmt
 		 | FLAT fmt => render0 fmt
-		 | ALT (fmt, _) => render0 fmt)   (* any format fits *)
+		 | ALT (fmt, _) => render0 fmt   (* any format fits *)
+		 | STYLE (style, format) =>  render0 format)  (* for now, ignore styles in flat rendering. FIX! *)
+	  | render0  = 
 
         (* renderElements : element list -> unit *)
         and renderElements nil = sp 1  (* render an empty BLOCK as a single space *)
@@ -106,11 +108,11 @@ fun flatRender (format, output) =
  * (state = (cc, newlinep)). cc represents the "print cursor", while newlinep indicates whether we are starting
  * immediately after a line break (a newline + indentation).
  *)
-fun render (format: format, output: string -> unit, lw: int) : unit =
-    let fun sp n = output (spaces n)
+fun render (format: format, output: string * style list -> unit, lw: int) : unit =
+    let fun sp n = output (spaces n. nil)
 
         (* lineBreak : int -> unit  -- perform a newline and indentation of n spaces *)
-	fun lineBreak n = (output newlineChar; sp n)
+	fun lineBreak n = (output (newlineChar, nil); sp n)
 
         (* render0: format * int * int * bool -> int * bool
 	 * the main recursive rendering of the format
@@ -129,25 +131,25 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	 *   -- INVARIANT: outerBlm <= cc
 	 *   -- INVARIANT: we will never print to the left of the outer block's blm (outerBlm)
 	 *   -- ASSERT: if newlinep is true, then cc = outerBlm *)
-	fun render0  (format: format, outerBlm: int, cc: int, newlinep: bool) =
+	fun render0  (format: format, styles: style list, outerBlm: int, cc: int, newlinep: bool) =
 	      (case format
 	         of EMPTY =>  (* nothing printed, nothing changed; outerBlm not relevant *)
 		      (cc, newlinep)
 
 		  | TEXT s =>  (* print the string unconditionally; move cc accordingly; outerBlm not relevant *)
-		      (output s; (cc + size s, false))
+		      (output (s, styles); (cc + size s, false))
 
  		  | BLOCK {elements, ...} => (* establishes a new local blm = cc; outerBlm not relevant *)
-		      renderBLOCK (elements, cc, newlinep)
+		      renderBLOCK (elements, styles, cc, newlinep)
 
 		  | ABLOCK {formats, alignment, ...} => (* establishes a new local blm = cc; outerBlm not relevant *)
-		      renderABLOCK (formats, alignment, cc, newlinep)
+		      renderABLOCK (formats, alignment, styles, cc, newlinep)
 
 		  | INDENT (n, fmt) => (* soft indented block; depends on outerBlm *)
 		      if newlinep  (* ASSERT: at outerBlm after newline+indent (i.e. cc = outerBlm) *)
 		      then (sp n;  (* increase outerBlm indentation to cc' = outerBlm + n *)
-			    render0 (fmt, outerBlm, outerBlm + n, true))
-		      else render0 (fmt, outerBlm, cc, false) (* not on new line, proceed at cc without line break *)
+			    render0 (fmt, styles, outerBlm, outerBlm + n, true))
+		      else render0 (fmt, styles, outerBlm, cc, false) (* not on new line, proceed at cc without line break *)
 
 		  | FLAT format =>  (* unconditionally render the format as flat; outerBlm not relevant *)
 		      (flatRender (format, output); (cc + M.measure format, false))
@@ -155,17 +157,18 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		  | ALT (format1, format2) =>
 		      if M.measure format1 <= lw - cc  (* format1 fits flat *)
 		      then render0 (format1, outerBlm, cc, newlinep)
-		      else render0 (format2, outerBlm, cc, newlinep))
-
-        (* renderBLOCK : element list * int * bool -> int * bool
+		      else render0 (format2, outerBlm, cc, newlinep)
+		  | STYLE (style, format) => render0 (format, style::styles, outerBlm, cc, newlinep))
+		  
+        (* renderBLOCK : element list * style list * int * bool -> int * bool
          *  rendering the elements of an BLOCK *)
-        and renderBLOCK (elements, cc, newlinep) =
+        and renderBLOCK (elements, styles, cc, newlinep) =
             let val blm = cc (* the new block's blm is the entry cc *)
 		fun re (nil, cc, newlinep) = (cc, newlinep)
 		  | re (element::rest, cc, newlinep) =
 		      (case element
 			 of FMT format =>
-			      let val (cc', newlinep') = render0 (format, blm, cc, newlinep)
+			      let val (cc', newlinep') = render0 (format, blm, cc, newlinep, styles)
 			       in re (rest, cc', newlinep')
 			      end
 			  | BRK break =>  (* rest should start with a FMT! *)
@@ -177,7 +180,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 				      (case rest  (* ASSERT: rest = FMT _ :: _; a BRK should be followed by a FMT *)
 					 of FMT format' :: rest' =>
 					      if M.measure format' <= (lw - cc) - n  (* lw - (cc + n) *)
-					      then let val (cc', newlinep') = (sp n; render0 (format', blm, cc + n, false))
+					      then let val (cc', newlinep') = (sp n; render0 (format', blm, cc + n, false, styles))
 						    in re (rest', cc', newlinep')
 						   end
 					      else (lineBreak blm; re (rest, blm, true))  (* trigger newline+indent *)
@@ -192,10 +195,10 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	 *   cc: int -- current column at block entry, which becomes the new block's blm unless it is indented,
          *   newlinep: bool -- flag indicating whether this block follows a newline+indent
 	 * Rendering the new block does not need to use the partent's blm, so no blm argument is passed. *)
-	and renderABLOCK (nil, _, cc, newlinep) = (cc, newlinep)
+	and renderABLOCK (nil, _, _, cc, newlinep) = (cc, newlinep)
 	      (* Special case of "empty" block, containing no formats, renders as the empty format, producing no output;
                * But this case should not occur, because (alignedBlock _ nil) should yield EMPTY, not an empty ABLOCK. *)
-          | renderABLOCK (formats, alignment, cc, newlinep) =
+          | renderABLOCK (formats, alignment, styles, cc, newlinep) =
 	      let (* val _ = print ">>> renderABLOCK[not nil]\n" *)
 		  val blm = cc  (* the blm of _this_ block is defined as the entrance cc *)
 		  (* renderFormats : format list * int * bool -> int * bool
@@ -220,7 +223,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 			    fun renderRest (nil, cc, newlinep) = (cc, newlinep) (* when we've rendered all the formats *)
 			      | renderRest (format :: rest, cc, newlinep) =  (* newlinep argument not used in this case! *)
 				  let val (cc0, newlinep0) = renderBreak (cc, M.measure format)
-				      val (cc1, newlinep1) = render0 (format, blm, cc0, newlinep0)  (* render the next format *)
+				      val (cc1, newlinep1) = render0 (format, styles, blm, cc0, newlinep0)  (* render the next format *)
 				   in renderRest (rest, cc1, newlinep1)  (* then render the rest *)
 				  end
 
@@ -234,7 +237,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	      end (* fun renderABLOCK *)
 
     in (* the initial "context" of a render is a virtual newline + 0 indentation *)
-       ignore (render0 (format, 0, 0, true))
+       ignore (render0 (format, nil, 0, 0, true))
    end (* fun render *)
 
 end (* top local *)
@@ -272,4 +275,10 @@ a newline+indent (to its blm?).
 
 Should this be disallowed?  Probably not, until we find that it is causing problems or confusion for users.
 
+4. Styles:
+   * styles are assumed not to affect measure (fixed-width fonts, even with styles).
+   * styles act as an "inherited" attribute during the recursive traversal of the format structure. Styles are
+     "consumed" but not "produced".
+   * The output function (and only the output function) is responsible for "interpretting" styles and producing the
+     desired printed result.
 *)

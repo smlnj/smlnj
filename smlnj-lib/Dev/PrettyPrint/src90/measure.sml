@@ -52,6 +52,7 @@ fun measure (format: format) =
        | ALT (format1, format2) => measure format1
          (* measure the first format, which will normally be the wider one,
 	  * alternatively, measure both arguments and return the max (min?) of the two measures. *)
+       | STYLE (_, format) => measure format (* style does not change measure -- fixed width fonts *)
 
 fun measureElement (BRK break) =
     (case break
