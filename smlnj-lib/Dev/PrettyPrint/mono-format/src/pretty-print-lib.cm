@@ -13,6 +13,9 @@ Library
 
   functor RenderFn
 
+  (* some simple renderers *)
+  structure CharBufferRenderer
+  structure TextIORenderer
   structure TextRenderer
 
 is
@@ -26,4 +29,7 @@ is
   pretty-print.sig
   pretty-print.sml
   render-fn.sml
+
+  char-buffer-renderer.sml
+  text-io-renderer.sml
   text-renderer.sml

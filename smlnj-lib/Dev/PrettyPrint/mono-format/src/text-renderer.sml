@@ -3,11 +3,16 @@
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * A generic renderer for pretty printing to simple text.
+ * A generic renderer for simple pretty printing to a simple text consumer.
  *)
 
 structure TextRenderer : sig
 
+    (* `render (fmt, consumer, lw)` renders the pretty-printer format `fmt`
+     * to simple text that is fed to the text `consumer`.  The `lw`
+     * parameter specifies the line width used to control line breaks
+     * when rendering `fmt`.
+     *)
     val render : PrettyPrint.format * (string -> unit) * int -> unit
 
   end = struct
