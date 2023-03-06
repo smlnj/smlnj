@@ -39,7 +39,7 @@ datatype alignment  (* the alignment property of "aligned" blocks *)
   = H  (* Horizontal alignment, with implicit single space (Space 1) breaks between format components *)
   | V  (* Vertical alignment, with implicit hardline breaks (Hard) between format components *)
   | P  (* Packed alignment, with implicit softline (Soft 1) breaks between format components *)
-  | C  (* Compact alignment, with implicit NullBreak between format components, hence also horizontal *)
+  | C  (* Compact alignment, with implicit Null between format components, hence also horizontal *)
 
 (* breaks: used to separate format elements of a special block and categorize alignment in aligned blocks
  *   breaks are concerned only with "formatting" and do not contribute any content *)
