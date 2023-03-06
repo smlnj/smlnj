@@ -58,7 +58,7 @@ datatype format =
 
   (* format builders *)
     EMPTY
-      (* empty format; rendering this produces no output, identity for format compositions *)
+      (* empty format; rendering this produces no output, an identity for format compositions in blocks *)
   | TEXT of string
       (* unique form of atomic doc with content*)
   | BLOCK of {elements: element list, measure: int}
@@ -74,8 +74,9 @@ datatype format =
 
   (* conditional choice of formats *)
   | ALT of format * format
-      (* render format1 if it fits, otherwise render format2. Note that formats not constrained to have same
-       * content! But normally they should, or at least content fmt2 << content fmt1. *)
+      (* to render ALT (format1, format2): render format1 if it fits, otherwise render format2.
+       * Note that the two formats not constrained to have same content! But normally they should,
+       * or at least content fmt2 should be an abbreviated or approximate version of content fmt1. *)
 
 and element  (* components of special blocks *)
   = BRK of break
