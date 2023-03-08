@@ -76,7 +76,7 @@ signature PRETTY_PRINT =
     val block : element list -> format
 
     (* a block of text with a specific alignment *)
-    val alignedBlock : alignment * format list -> format
+    val aBlock : alignment * format list -> format
 
     (* building blocks, basic and aligned; empty format args are absorbed and
      * empty argument list produces empty format

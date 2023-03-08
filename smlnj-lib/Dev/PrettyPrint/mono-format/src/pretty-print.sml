@@ -42,7 +42,7 @@ structure PrettyPrint : PRETTY_PRINT =
           | _ => BLOCK{content = elements, sz = M.measureElements elements}
         (* end case *))
 
-    fun alignedBlock (align : alignment, formats : formats) : format = let
+    fun aBlock (align : alignment, formats : formats) : format = let
           val breaksize = (case align of C => 0 | _ => 1)
           in
             case reduceFormats formats
@@ -66,10 +66,10 @@ structure PrettyPrint : PRETTY_PRINT =
 
     (* constructing aligned blocks: common abbreviations *)
     (* xblock : format list -> format, for x = h, v, p, c *)
-    fun hBlock fmts = alignedBlock (H, fmts)
-    fun vBlock fmts = alignedBlock (V, fmts)
-    fun pBlock fmts = alignedBlock (P, fmts)
-    fun cBlock fmts = alignedBlock (C, fmts)
+    fun hBlock fmts = aBlock (H, fmts)
+    fun vBlock fmts = aBlock (V, fmts)
+    fun pBlock fmts = aBlock (P, fmts)
+    fun cBlock fmts = aBlock (C, fmts)
 
     (* "conditional" formats *)
 
@@ -95,7 +95,7 @@ structure PrettyPrint : PRETTY_PRINT =
 
     (* tight -- no space between left, right, and fmt *)
     fun enclose {left : format, right : format} fmt =
-          alignedBlock (C, [left, fmt, right])
+          aBlock (C, [left, fmt, right])
 
     (*** functions for formatting sequences of formats (format lists) ***)
 
