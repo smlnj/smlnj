@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <installer-gui-script minSpecVersion="2">
     <title>SML/NJ Version VERSION</title>
-    <background file="background.jpg" mime-type="image/jpeg" scaling="tofit" alignment="center"/>
+    <background file="background.jpg" mime-type="image/jpg" scaling="tofit" alignment="center"/>
     <options customize="never" require-scripts="false"/>
     <welcome file="welcome.html" mime-type="text/html" />
     <readme file="readme.html" mime-type="text/html" />
