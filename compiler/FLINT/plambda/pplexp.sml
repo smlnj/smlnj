@@ -28,16 +28,11 @@ local
   structure S = Symbol
   structure PP = Formatting
   structure PF = PrintFormat
-
-  open PLambda
-
-  (* zipEq3: zipEq for 3 lists *)
-  fun zipEq3 (x::xs, y::ys, z::zs) =
-        (x, y, z) :: zipEq3 (xs, ys, zs)
-    | zipEq3 (nil,nil,nil) = nil
-    | zipEq3 _ = raise ListPair.UnequalLengths
+  structure SF = StringFormats
 
   fun bug s = ErrorMsg.impossible ("PPLexp: "^s)
+
+  open PLambda
 
 in
 
@@ -76,7 +71,7 @@ fun conToString (DATAcon((sym, _, _), _, lvar)) = ((S.name sym) ^ "." ^ (LV.lvar
       String.concat ["(I", Int.toString ty, ")", IntInf.toString ival]
   | conToString (WORDcon{ival, ty}) =
       String.concat ["(W", Int.toString ty, ")", IntInf.toString ival]
-  | conToString (STRINGcon s) = PrintUtil.formatString s
+  | conToString (STRINGcon s) = SF.formatString s
 
 
 (* fmtLexp : int -> lexp -> format
@@ -192,7 +187,7 @@ fun fmtLexp (pd:int) (l: lexp): PP.format =
                       PP.vblock [PP.hblock [PP.text (LV.lvarName v), PP.text ":", fmtLty' t, PP.text "=="],
 			    PP.indent 2 (fmtLexp' l)]
              in PP.vblock [PP.hblock [PP.text "FIX",
-		            PP.vblock (map ffun (zipEq3 (varlist, ltylist, lexplist)))],
+		            PP.vblock (map ffun (List3.zip3Eq (varlist, ltylist, lexplist)))],
 		      PP.hblock [PP.text "IN", fmtLexp' body]]
             end
 

@@ -35,6 +35,7 @@ struct
 local (* top local *)
 
   structure S = Symbol
+  structure SF = StringFormats  (* formerly PrintUtil *)
   structure NL = NumericLabel
   structure T = Types
   structure TU = TypesUtil
@@ -129,7 +130,7 @@ in
       | conToString (INTcon{ival, ty=0}) = "II" ^ IntInf.toString ival
       | conToString (INTcon{ival, ty}) = "I" ^ IntInf.toString ival
       | conToString (WORDcon{ival, ty}) = "W" ^ IntInf.toString ival
-      | conToString (STRINGcon s) = "S:" ^ PrintUtil.formatString s
+      | conToString (STRINGcon s) = "S:" ^ SF.formatString s
       | conToString (VLENcon (n,_)) = "L" ^ Int.toString n
 
     (* headStripExp : exp -> exp *)

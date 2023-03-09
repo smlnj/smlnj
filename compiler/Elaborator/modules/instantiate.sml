@@ -90,20 +90,16 @@ struct
 
 local
   structure A  = Access
-  (* structure DI = DebIndex *)
   structure ED = ElabDebug
   structure EE = EntityEnv
   structure EM = ErrorMsg
   structure EP = EntPath
   structure EU = ElabUtil
-  (* structure II = InlInfo *)
-  structure IP = InvPath
-  (* structure LT = PLambdaType *)
   structure M  = Modules
   structure MU = ModuleUtil
-  structure PU = PrintUtil
   structure S  = Symbol
   structure SP = SymPath
+  structure IP = InvPath
   structure ST = Stamps
   structure T  = Types
   structure TU = TypesUtil

@@ -18,22 +18,17 @@ struct
 local (* top *)
 
   structure PP = Formatting
+  structure SF = StringFormats
+
   structure S = Symbol
-  structure V = Vector
+  structure F = Fixity
   structure A = Access
+
   structure T = Types
   structure TU = TypesUtil
   structure BT = BasicTypes
-  structure F = Fixity
-  structure Obj = Unsafe.Object
 
-  (* debugging
-  NOT USED:
-  val say = Control.Print.say
-  val debugging = ref false
-  fun dbsaynl (msg: string) =
-      if !debugging then (say msg; say "\n") else ()
-  *)
+  structure Obj = Unsafe.Object
 
   fun bug msg = ErrorMsg.impossible ("PPObj: " ^ msg)
 
@@ -247,7 +242,7 @@ local
 	  (BT.intTycon,		Int.toString o Obj.toInt),
 	  (BT.int32Tycon,	Int32.toString o Obj.toInt32),
 	  (BT.int64Tycon,	Int64.toString o Obj.toInt64),
-	  (BT.intinfTycon,	PrintUtil.formatIntInf o Unsafe.cast),
+	  (BT.intinfTycon,	SF.formatIntInf o Unsafe.cast),
 	  (BT.wordTycon,	wordPrefx o Word.toString o Obj.toWord),
 	  (BT.word8Tycon,	wordPrefx o Word8.toString o Obj.toWord8),
 	  (BT.word32Tycon,	wordPrefx o Word32.toString o Obj.toWord32),
@@ -256,7 +251,7 @@ local
 	  (BT.realTycon,	Real64.toString o Obj.toReal64),
 	  (BT.exnTycon,		exn2str),
 	  (BT.pointerTycon,	fn _ => "cptr"),
-	  (BT.stringTycon,	PrintUtil.formatString o Obj.toString),
+	  (BT.stringTycon,	SF.formatString o Obj.toString),
 (* FIXME: actually print the values *)
 	  (BT.chararrayTycon,	fn _ => "-"),
 	  (BT.word8vectorTycon,	fn _ => "-"),

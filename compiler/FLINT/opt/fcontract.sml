@@ -215,7 +215,6 @@ end
 structure FContract :> FCONTRACT =
 struct
 
-    structure O  = Option
     structure A =  Access
     structure LV = LambdaVar
     structure M  = LV.Map
@@ -228,7 +227,6 @@ struct
     structure PL = PLambda
     structure F  = FLINT
     structure FU = FlintUtil
-    structure PU = PrintUtil
     structure PP = Formatting
     structure PF = PrintFormat
     structure PPF = PPFlint
@@ -319,7 +317,7 @@ struct
 	      | apd (F.TFN (tfdec, body)) = F.TFN(tfdec, apd body)
 	      | apd (F.SWITCH (v,ac,arms,def)) =
 		  let fun larm (con,arm_body) = (con, apd arm_body)
-		   in F.SWITCH(v, ac, map larm arms, O.map apd def)
+		   in F.SWITCH(v, ac, map larm arms, Option.map apd def)
 		  end
 	      | apd (F.CON (dc,tycs,v,lv,le)) = F.CON(dc, tycs, v, lv, apd le)
 	      | apd (F.RECORD (rk,vs,lv,le)) = F.RECORD(rk, vs, lv, apd le)
@@ -712,7 +710,7 @@ struct
 				    fds: F.fundec list) =
 			      let val fd_info = C.getInfo fd_lvar
 				  fun dropargs filter =
-				      let val (nfk,nfk') = OU.fk_wrap(fk, O.map #1 isrec)
+				      let val (nfk,nfk') = OU.fk_wrap(fk, Option.map #1 isrec)
 					  val args' = filter args
 					  val new_lvar = cplv fd_lvar
 					  val new_args = map (fn (lv, lty) => (cplv lv, lty)) args
@@ -942,11 +940,11 @@ struct
 				    if subject_rep = #2 (cdcon dc2)
 				    then (* subject DATAcon == arm DATAcon, so this arm is chosen *)
 				      (map killarm rest; (* kill the rest of the arms *)
-				       O.map killLexp defaultOp; (* and the default case *)
+				       Option.map killLexp defaultOp; (* and the default case *)
 				       loop ((substitute(m, lvar, svc, F.VAR lvc)), lexp, cont))
 				    else (* kill this arm and try the rest *)
 				      (kill (lvar, lexp); carm rest)
-				  | carm [] = loop (m, O.valOf defaultOp, cont)
+				  | carm [] = loop (m, Option.valOf defaultOp, cont)
 				  | carm _ = buglexp("unexpected arm in switch(con,...)", le)
 			     in click_switch(); carm arms
 			    end (* fcsCon *)
@@ -957,10 +955,10 @@ struct
 				fun carm ((con,lexp) :: rest) =
 				      if eqConValue (con, value)
 				      then (map (killLexp o #2) rest;
-					    O.map killLexp defaultOp;
+					    Option.map killLexp defaultOp;
 					    loop (m, lexp, cont))
 				      else (killLexp lexp; carm rest)
-				  | carm [] = loop (m, O.valOf defaultOp, cont)
+				  | carm [] = loop (m, Option.valOf defaultOp, cont)
 			     in click_switch(); carm arms
 			    end (* fcsVal *)
 

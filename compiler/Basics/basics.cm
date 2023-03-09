@@ -13,17 +13,17 @@ Group
 
 	signature PRINTCONTROL
 	structure Control_Print
-	structure PrintUtil
+	structure StringFormats
 
 	signature SYMBOL
-	signature FASTSYMBOL
-	signature FIXITY
-        signature NUMERIC_LABEL
 	structure Symbol
+	signature FASTSYMBOL
 	structure FastSymbol
+	signature FIXITY
 	structure Fixity
 	structure SymbolHashTable
 	structure SpecialSymbols
+        signature NUMERIC_LABEL
         structure NumericLabel
         structure PPSymbols
 
@@ -31,17 +31,17 @@ Group
 	structure PersStamps
 	structure PersMap
 
-	signature ERRORMSG
-	signature STATS
-
 	signature SOURCE
-	signature SOURCE_MAP
 	structure Source
+	signature SOURCE_MAP
 	structure SourceMap
         structure PPSourceMap
+
+	signature ERRORMSG
 	structure ErrorMsg
 	structure CompileExn
 
+	signature STATS
 	structure Stats
 	structure WordStringHashTable
 
@@ -92,8 +92,8 @@ is
 	stats/stats.sml
 
 	print/printcontrol.sml
-	print/printutil.sig
-	print/printutil.sml
+	print/stringformats.sig
+	print/stringformats.sml
 
 	util/wordstr-hashtable.sml
         util/list3.sml
