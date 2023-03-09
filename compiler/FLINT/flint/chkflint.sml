@@ -31,7 +31,8 @@ local
   structure LE = LtyExtern
   structure LV = LambdaVar
   structure DA = Access
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPLty
   structure PPF = PPFlint
   structure PO = Primop
@@ -136,12 +137,12 @@ fun check phase envs lexp = let
     in say s; loop t end
 
   fun fmtLtys (s, ltys) = 
-      PP.vcat [PP.text s,
+      PP.vblock [PP.text s,
 	       PP.indent 2 (PP.vsequence PP.comma (map (PPT.fmtLty 100) ltys))]
 
   fun print2Lists (s,s',ltys,ltys') =
-      PP.printFormat
-	(PP.vcat [fmtLtys (s, ltys), fmtLtys (s', ltys')])
+      PF.printFormat
+	(PP.vblock [fmtLtys (s, ltys), fmtLtys (s', ltys')])
 
   fun ltMatch (le,s) (t,t') =
     if ltEquiv (t,t') then ()
@@ -180,12 +181,12 @@ fun check phase envs lexp = let
       (fn () => ltTAppChk (lt,ts,kenv))
       (le,
        (fn () =>
-	  (PP.printFormatNL
-	     (PP.vcat
+	  (PF.printFormatNL
+	     (PP.vblock
 		  [PP.text (s ^ ": Kind conflict"),
-		   PP.hcat [PP.text "** function Lty:",
+		   PP.hblock [PP.text "** function Lty:",
 			    PPT.fmtLty 100 lt],
-		   PP.hcat [PP.text "** argument Tycs:",
+		   PP.hblock [PP.text "** argument Tycs:",
 			    PP.list (map (PPT.fmtTyc 100) ts)]]);
 	   nil)))
 

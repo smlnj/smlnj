@@ -12,7 +12,7 @@ local
     structure GG = GroupGraph
     structure DE = DynamicEnv
     structure EM = ErrorMsg
-    structure PP = PrettyPrint
+    structure PP = Formatting
 
     type env = DynamicEnv.env
     type posmap = env IntMap.map
@@ -115,7 +115,7 @@ in
 
 	    fun exn_err (msg, error, descr, exn) = let
 		val errorBody =
-		     PP.vcat (map PP.text (General.exnMessage exn :: (SMLofNJ.exnHistory exn)))
+		     PP.vblock (map PP.text (General.exnMessage exn :: (SMLofNJ.exnHistory exn)))
 	    in
 		error (concat [msg, " ", descr]) errorBody;
 		raise Link exn

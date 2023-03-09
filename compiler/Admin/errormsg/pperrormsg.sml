@@ -1,4 +1,4 @@
-(* Basics/errormsg/pperrormsg.sml *)
+(* Admin/errormsg/pperrormsg.sml *)
 
 structure PPErrorMsg =
 struct
@@ -6,7 +6,7 @@ struct
 local (* top local *)
   structure SR = Source
   structure SM = SourceMap
-  structure PP = PrettyPrint
+  structure PP = Formatting
 in
 
 fun fmtRegion (REGION (lo,hi): SM.region) : PP.format =

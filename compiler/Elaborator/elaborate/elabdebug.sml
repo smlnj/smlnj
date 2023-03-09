@@ -5,7 +5,7 @@ signature ELABDEBUG =
 sig
 
   val debugMsg : bool ref -> string -> unit
-  val debugPrint : bool ref -> (string * PrettyPrint.format) -> unit
+  val debugPrint : bool ref -> (string * Formatting.format) -> unit
   val envBoundSymbols : StaticEnv.staticEnv -> Symbol.symbol list
   val checkBound : StaticEnv.staticEnv * Symbol.symbol -> string
   val withInternals : (unit -> 'a) -> 'a
@@ -18,19 +18,20 @@ struct
 local
   structure S  = Symbol
   structure SE = StaticEnv
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure EM = ErrorMsg
 
 in
 
 fun debugMsg (debugging: bool ref) (msg: string) =
     if (!debugging)
-    then PP.printFormatNL (PP.text msg)
+    then PF.printFormatNL (PP.text msg)
     else ()
 
 fun debugPrint (debugging: bool ref) (msg: string, format: PP.format) =
     if (!debugging)
-    then PP.printFormatNL (PP.vcat [PP.text msg, format])
+    then PF.printFormatNL (PP.vblock [PP.text msg, format])
     else ()
 
 (* envBoundSymbols : SE.staticEnv -> S.symbol list *)

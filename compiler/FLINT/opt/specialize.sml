@@ -26,7 +26,6 @@ local
   structure PT = PrimTyc
   structure PF = PFlatten
   structure LVMap = LambdaVar.Map
-  structure PP = PrettyPrint
   structure PPT = PPLty
   structure PL = PLambda
   open FLINT
@@ -37,9 +36,8 @@ fun bug s = ErrorMsg.impossible ("Specialize: " ^ s)
 
 val say = Control_Print.say
 
-fun pp_fflag (fflag : LT.fflag) = say (PPT.fflagToString fflag)
-fun pp_lvar (lvar : LambdaVar.lvar) = say ("f = " ^ (LV.toString lvar))
-val pp_lty = PPT.ppLty 20
+fun print_fflag (fflag : LT.fflag) = say (PPT.fflagToString fflag)
+fun print_lvar (lvar : LambdaVar.lvar) = say ("f = " ^ (LV.toString lvar))
 
 fun mkv _ = LV.mkLvar()
 val ident = fn le : FLINT.lexp => le
@@ -494,9 +492,9 @@ fun transform (ienv, d, nmap, smap, did_flat) =
                (** just a sanity check; should turn it off later **)
                val _ =
 		   if !debugging
-		   then (pp_lvar f; print "fflag = "; pp_fflag fflag;
-			 print "fflag(f) = "; pp_fflag fflag_f;
-	                 print "lpfd: f_lty = "; PPT.ppLty 20 f_lty)
+		   then (print_lvar f; say "fflag = "; print_fflag fflag;
+			 say "fflag(f) = "; print_fflag fflag_f;
+	                 say "lpfd: f_lty = "; PPT.ppLty 20 f_lty)
 		   else ()
                val (b1,b2) =
                  (* if LE.ff_eqv (fflag, fflag_f) then *) LB.ffd_fspec fflag

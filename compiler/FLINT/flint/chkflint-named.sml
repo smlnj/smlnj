@@ -25,7 +25,8 @@ local structure LE = LtyExtern
       structure DA = Access
       structure PO = Primop
       structure S  = LV.Set
-      structure PP = PrettyPrint
+      structure PP = Formatting
+      structure PF = PrintFormat
       structure PPF = PPFlint
       open FLINT
 
@@ -35,16 +36,16 @@ val anyerror = ref false
 
 (* pretty printing functions *)
 
-fun ppLexp d lexp = PP.printFormat (PPF.fmtLexp d lexp)
+fun ppLexp d lexp = PF.printFormat (PPF.fmtLexp d lexp)
 
 fun prMsgLty (msg, lty) = (say msg; ppLexp 10 lexp)
 
 fun fmtLtyList (label, ltys) = 
-    PP.vcat [PP.text label, PP.indent 2 (PP.vsequence PP.empty (map (PPT.fmtLty 100) ltys))]
+    PP.vblock [PP.text label, PP.indent 2 (PP.vsequence PP.empty (map (PPT.fmtLty 100) ltys))]
 
 fun print2lists (label1, label2, ltys1, ltys2) =
-    PP.printFormat
-      (PP.vcat [fmtLtyList (label1, ltys1), fmtLtyList (label2, ltys2)])
+    PF.printFormat
+      (PP.vblock [fmtLtyList (label1, ltys1), fmtLtyList (label2, ltys2)])
 
 
 (****************************************************************************
@@ -141,7 +142,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 	      (le,
 	       fn () =>
 		  printFormatNL
-		    (vcat [text (s ^ ": Kind conflict"),
+		    (vblock [text (s ^ ": Kind conflict"),
 		    	   text "** function Lty:",
 			   PPT.fmtLty 100 lt,
 			   text "** argument Tycs:",

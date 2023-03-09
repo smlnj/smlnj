@@ -42,7 +42,7 @@ structure BuildDepend :> BUILDDEPEND = struct
     structure DE = DAEnv
     structure EM = ErrorMsg
     structure SP = SymPath
-    structure PP = PrettyPrint
+    structure PP = Formatting
 
     type impexp = DG.impexp
 
@@ -159,7 +159,7 @@ structure BuildDepend :> BUILDDEPEND = struct
 					  else line :: recur (n', r)
 				      end
 			    in
-				PP.vcat (rev (recur (SrcPath.descr f, history)))
+				PP.vblock (rev (recur (SrcPath.descr f, history)))
 			    end
 		     in SmlInfo.error gp i
 		           EM.COMPLAIN "cyclic ML dependencies" errorBody;

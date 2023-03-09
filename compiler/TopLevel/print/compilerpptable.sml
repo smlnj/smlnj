@@ -8,8 +8,7 @@
 structure CompilerPPTable =
 struct
 
-    val installFormatter : string list -> ('a -> PrettyPrint.format) -> unit =
+    val installFormatter : string list -> ('a -> Formatting.format) -> unit =
         Unsafe.cast PPTable.installFormatter
 
-end (* CompilerPP
-Table *)
+end (* structure CompilerPPTable *)

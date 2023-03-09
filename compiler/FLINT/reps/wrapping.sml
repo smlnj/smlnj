@@ -25,7 +25,8 @@ local
   structure LE = LtyExtern
   structure PL = PLambda
   structure F = FLINT
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPLty
   structure PPF = PPFlint
   open FLINT
@@ -238,27 +239,27 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 				     say (PPF.valueToString v); say "\n")
 			       else ()
 		       val _ = if !debugging
-			       then PP.printFormatNL
+			       then PF.printFormatNL
 				      (PP.label "ty:" (PP.list (map (PPT.fmtTyc 100) ts)))
 			       else ()
 		       val olt: LT.lty = getlty v
 		       val _ = if !debugging
-			       then PP.printFormatNL
+			       then PF.printFormatNL
 				      (PP.label "olt:" (PPT.fmtLty 100 olt))
 			       else ()
                        val nts : LT.tyc list = map tycWrap ts
 		       val _ = if !debugging
-			       then PP.printFormatNL
+			       then PF.printFormatNL
 				       (PP.label "nts:" (PP.list (map (PPT.fmtTyc 100) nts)))
 			       else ()
                        val nlts: LT.lty list = LE.lt_inst(ltyUnwrap olt, nts)
 		       val _ = if !debugging
-			       then PP.printFormatNL
+			       then PF.printFormatNL
 				      (PP.label "nlts:" (PP.list (map (PPT.fmtLty 100) nlts)))
 			       else ()
                        val olts: LT.lty list = map ltyUnwrap (LE.lt_inst(olt, ts))
 		       val _ = if !debugging
-			       then PP.printFormatNL
+			       then PF.printFormatNL
 				      (PP.label "olts:" (PP.list (map (PPT.fmtLty 100) olts)))
 			       else ()
                        val hdr = CO.unwrapOp (wenv, nlts, olts, d)
@@ -267,8 +268,8 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 			     let val _ = dbsay "loop#TAPP: hdr = NONE\n";
 				 val result = TAPP(v, nts)
 			     in if !debugging
-				then PP.printFormatNL
-				       (PP.vcat [PP.text "result:", PPF.fmtLexp 100 result,
+				then PF.printFormatNL
+				       (PP.vblock [PP.text "result:", PPF.fmtLexp 100 result,
 						 PP.text "<<< Wrapping.transform.loop#TAPP"])
 				else ();
 				result
@@ -278,8 +279,8 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 			         val nvs = mkLvars (length nlts)
 				 val result = LET(nvs, TAPP(v, nts), hhh(map VAR nvs))
                               in if !debugging
-				 then PP.printFormatNL
-					(PP.vcat [PP.text "result:", PPF.fmtLexp 100 result,
+				 then PF.printFormatNL
+					(PP.vblock [PP.text "result:", PPF.fmtLexp 100 result,
 				                  PP.text "<<< Wrapping.transform.loop#TAPP"])
 				 else ();
 				 result

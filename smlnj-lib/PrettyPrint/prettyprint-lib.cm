@@ -3,14 +3,14 @@
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * The sources file for the new PrettyPrint library.
+ * The CDF for the new PrettyPrint library.
  *)
 
 Library
 
-  signature PRETTYPRINT
-  structure PrettyPrint
+  structure Formatting
+  structure PrintFormat
 
 is
 
-  src/sources.cm
+  src/prettyprint.cm

@@ -1,4 +1,4 @@
-(* smlnj-lib/PrettyPrint/src/prettyprint.sig *)
+(* smlnj-lib/PrettyPrint/src/formatting.sig *)
 
 (* Version 7.
  *  -- The main interface of the new Prettyprinter.
@@ -27,10 +27,10 @@
  *      breakIndent  (didn't work, resets blm)
  *
  * Version 8.4 [2023.2.22]
- *   Some renaming and simplification, e.g. eliminating the xcat forms and using the xcat names for the
- *   corresponding xblock functions that operate on lists of formats. Dropping the tuple(Map) function and
- *   renaming tupleFormat to "tuple". Shortening the names of the HardLine and SoftLine break constructors
- *   to "Hard" and "Soft".
+ *   Some renaming and simplification, e.g. eliminating the xcat binary operations and replacing their
+ *   uses with calls of the corresponding xblock function with lists of two formats.
+ *   Dropping the tuple(Map) function and renaming tupleFormat to "tuple".
+ *   Shortening the names of the HardLine and SoftLine break constructors to "Hard" and "Soft".
  *   -- renamed (with same type):
  *      HardLine -> Hard
  *      SoftLine -> Soft
@@ -55,24 +55,30 @@
  *      listMap
  *      alignedListMap
  *      optionMap
+ *
+ * Version 8.5 [2023.3.7]
+ *   Renamed:
+ *     PRETTYPRINT -> FORMATTING
+ *     PrettyPrint -> Formatting
+ *     render and printing functions, and getLineWidth moved from Formatting (PrettyPrint) to printformat.sml
  *)
 
-(* Defines: signature PRETTYPRINT *)
+(* Defines: signature FORMATTING *)
 
-signature PRETTYPRINT =
+signature FORMATTING =
 sig
 
   (* types *)
 
-    type format  (* abstract, defined in Format structure *)
+    type format     (* abstract, defined in Format structure *)
 
     datatype break  (* used to separate format elements of a block; space, conditional, and unconditional line breaks *)
-      = Hard             (* _hard_ or unconditional line break *)
-      | Soft of int      (* _soft_ or conditional line break; rendered to n spaces when not triggered; n >= 0 *)
-      | Space of int     (* n spaces; n >= 0; Space 0 == Null *)
-      | Null             (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
-			  * This is essentially equivalent to Space 0, but included for logical "completeness",
-			  * and it also eliminates the need for break option in some places (alignmentToBreak). *)
+      = Hard          (* _hard_ or unconditional line break *)
+      | Soft of int   (* _soft_ or conditional line break; rendered to n spaces when not triggered; n >= 0 *)
+      | Space of int  (* n spaces; n >= 0; Space 0 == Null *)
+      | Null          (* A default break that does nothing, i.e. neither breaks a line nor inserts spaces.
+		       * This is essentially equivalent to Space 0, but included for logical "completeness",
+		       * and to eliminate the need for break option in some places (alignmentToBreak). *)
 
     datatype alignment  (* the alignment property of "aligned" blocks *)
       = H  (* Horizontal alignment, with implicit single space breaks (Space 1) between format components, unbreakable *)
@@ -83,6 +89,10 @@ sig
     datatype element
       = BRK of break   (* breaks are atomic and do not contain content *)
       | FMT of format
+
+    (* coercion of abstract format back to concrete version of format so we can pass
+     *  formats to the Render functions. *)
+    val formatRep : format -> Format.format
 
   (* Basic formats and format building operations: *)
 
@@ -106,21 +116,21 @@ sig
 
     val aBlock : alignment -> format list -> format
 
-    (* xcat: functions (for x = p, h, v, c) for building aligned blocks with a given alignment,
+    (* xblock: functions (for x = p, h, v, c) for building aligned blocks with a given alignment,
      * the empty format acts like an identity element for all these format concatenation operators, in that
-     * it does not contribute anything to the result, and implicit associated breaks for empty formats are
-     * also dropped. Also, xcat [fmt] ==> fmt. *)
+     * it does not contribute anything to the result, and the associated implicit breaks separating
+     * empty formats from other elements are also dropped. Also, xblock [fmt] ==> fmt. *)
 
-    val hcat : format list -> format  (* = aBlock H *)
+    val hblock : format list -> format  (* = aBlock H *)
         (* combinds a list of formats in an H-aligned block, with an implicit single space
          * (Space 1 break) between them *)
-    val pcat : format list -> format  (* = aBlock P *)
+    val pblock : format list -> format  (* = aBlock P *)
         (* combinds a list of formats into a P-aligned (packed) block, with an implicit soft line break
          * (Soft 1) between them *)
-    val vcat : format list -> format  (* = aBlock V *)
+    val vblock : format list -> format  (* = aBlock V *)
         (* combinds a list of formats in an V-aligned block, with an implicit hard line break
          * (Hard) between them *)
-    val ccat : format list -> format   (* = aBlock C *)
+    val cblock : format list -> format   (* = aBlock C *)
         (* combinds a list of formats in a C-aligned block, with no break (or, implicitly, Null)
          * between them *)
 
@@ -141,7 +151,7 @@ sig
   (* wrapping or enclosing formats, plus appending newlines and prepending labels *)
 
     val enclose : {front: format, back: format} -> format -> format
-        (* concatenates (ccat) front and back to the front, respecively back, of the format *)
+        (* concatenates (cblock) front and back to the front, respecively back, of the format *)
 
     val parens : format -> format
         (* = enclose {front=lparen, back=rparen} format *)
@@ -158,7 +168,7 @@ sig
     val label : string -> format -> format
 
 
-  (* composing lists of formats *)
+  (* composing lists of formats with separator format *)
 
     val sequence : alignment -> format -> format list -> format
         (* sequence a break fmts: inserts break between constituent fmts and aligns by a *)
@@ -178,16 +188,15 @@ sig
     val option : format option -> format
         (* formats a format option by producing text "NONE" or wrapping "SOME(.)" around the format *)
 
+  (* vertical alignment with header strings *)
+
+    val vHeaders : {header1: string, header2: string} -> format list -> format
+
 
   (* indenting formats *)
 
     val indent : int -> format -> format
         (* indent n EMPTY ==> EMPTY; indent n fmt ==> INDENT (n, frmt) *)
-
-
-  (* vertical alignment with header strings *)
-
-    val vHeaders : {header1: string, header2: string} -> format list -> format
 
 
   (* Conditional formats: *)
@@ -199,33 +208,7 @@ sig
 	(* if the first format fits flat, use it, otherwise render the second format,
 	   NOTE: the two argument formats may not have the same content! But usually they should! *)
 
-    val hvcat : format list -> format
-	(* acts as hcat if it fits, otherwise as vcat *)
+    val hvblock : format list -> format
+	(* acts as hblock if it fits, otherwise as vblock *)
 
-
-  (* functions used to define and access the line width [May include lineWidth with a "device" (Render) functor parameter ] *)
-
-    val setLineWidthFun : (unit -> int) -> unit
-	(* defines the function that returns the current lineWidth value *)
-
-    val resetLineWidthFun : unit -> unit
-	(* reset the lineWidthFun to the default lineWidthFun (which returns 90) *)
-
-    val getLineWidth : unit -> int
-	(* returns the current line width, the value returned by the current lineWidthFun *)
-
-
-  (* Printing formats *)
-
-    val render : format * (string -> unit) * int -> unit
-
-    val printFormatLW  : int -> format -> unit
-        (* printing to stdOut, with line width (LW) as first argument *)
-
-    val printFormat : format -> unit
-        (* print to stdOut with lineWidth = getLineWidth (), (typically = !Control.Print.lineWidth) *)
-
-    val printFormatNL : format -> unit
-	(* like printFormat, but with newline appened *)
-
-end (* end PRETTYPRINT *)
+end (* end FORMATTING *)

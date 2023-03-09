@@ -33,7 +33,8 @@ structure PPCps : PPCPS =
     structure LV = LambdaVar
     structure U = CPSUtil
     structure LT = Lty
-    structure PP = PrettyPrint
+    structure PP = Formatting
+    structure PF = PrintFormat
 
     open CPS
 
@@ -45,7 +46,7 @@ structure PPCps : PPCPS =
     (* printLvarLtyTable : lvarLtyTable -> unit *)
     fun printLvarLtyTable (table: lvarLtyTable) =
         let fun ppLvarLty (lvar, lty) =
-		  PP.printFormatNL (PP.hcat [fmtLvar lvar, colon, PPLty.fmtLty 20 lty])
+		  PF.printFormatNL (PP.hblock [fmtLvar lvar, colon, PPLty.fmtLty 20 lty])
 	 in (say "### lvar-lty table\n";
 	    say "************************************************\n";
 	    LV.Tbl.appi ppLvarLty m;
@@ -197,7 +198,7 @@ structure PPCps : PPCPS =
 
     (* fmtTypedLvar : lvar * cty -> format *)
     fun fmtTypedLvar (lvar, cty) =
-        PP.hcat [PP.ccat [fmtLvar lvar, PP.colon], fmtCty cty]
+        PP.hblock [PP.cblock [fmtLvar lvar, PP.colon], fmtCty cty]
 
     (* fmtValue : value -> PP.format *)
     fun fmtValue (v: value) : PP.format = PP.text (valueToString v)
@@ -209,12 +210,12 @@ structure PPCps : PPCPS =
     (* fmtRecord : record_kind * int -> PP.format *)
     fun fmtRecord (RK_RECORD, _) = PP.empty
       | fmtRecord (RK_VECTOR, _) = PP.empty
-      | fmtRecord (k, n) = PP.hcat [PP.text (rkToString k), PP.integer n]
+      | fmtRecord (k, n) = PP.hblock [PP.text (rkToString k), PP.integer n]
 
     (* fmtParams : lvar list * cty list -> P.format *)
     fun fmtParams (lvars, ctys) =
 	let fun fmtParam (lvar,cty) =
-                PP.hcat [PP.ccat [fmtLvar lvar, PP.colon], fmtCty cty]
+                PP.hblock [PP.cblock [fmtLvar lvar, PP.colon], fmtCty cty]
          in PP.tuple (map fmtParam (ListPair.zipEq (lvars, ctys)))
 	end
 
@@ -225,98 +226,98 @@ structure PPCps : PPCPS =
     fun fmtCexp (RECORD(rk, vps, lvar, cexp')) =
 	let val front = PP.text (case rk of RK_VECTOR => "#{" | _ => "{")
             val back = PP.text "} -> "
-        in PP.vcat
-	     [PP.hcat
+        in PP.vblock
+	     [PP.hblock
                 [PP.enclose {front=front, back=back}
-                   (PP.hcat [fmtRecord (rk, length vps), PP.list (map fmtVpath vps)]),
+                   (PP.hblock [fmtRecord (rk, length vps), PP.list (map fmtVpath vps)]),
 		 fmtLvar lvar],
 	      fmtCexp cexp']
 	  end
       | fmtCexp (SELECT(i,v,w,t,e)) =
-	  PP.vcat [PP.hcat [PP.ccat [fmtValue v, PP.text ".", PP.integer i],
+	  PP.vblock [PP.hblock [PP.cblock [fmtValue v, PP.text ".", PP.integer i],
 			    PP.text "->", fmtTypedLvar (w, t)],
 		   fmtCexp e]
       | fmtCexp (OFFSET(i,v,w,e)) =
-	  PP.vcat [PP.hcat [PP.ccat[fmtValue v, PP.text "+", PP.integer i],
+	  PP.vblock [PP.hblock [PP.cblock[fmtValue v, PP.text "+", PP.integer i],
 			    PP.text "->", fmtLvar w],
 		   fmtCexp e]
       | fmtCexp (APP(rator,argvals)) =
-	  PP.hcat [fmtValue rator, PP.tuple (map fmtValue argvals)]
+	  PP.hblock [fmtValue rator, PP.tuple (map fmtValue argvals)]
 
       | fmtCexp (FIX (functions, body)) =
 	  let fun fmtFunction (_,flvar,arglvars,argctys,body) =
-                  PP.vcat
-                    [PP.hcat [fmtLvar flvar,
+                  PP.vblock
+                    [PP.hblock [fmtLvar flvar,
                               fmtParams (arglvars, argctys),
                               PP.text "="],
                      PP.indent 3 (fmtCexp body)]
-	  in PP.vcat
-               [PP.hcat [PP.text "FIX", PP.vcat (map fmtFunction functions)],
-                PP.hcat [PP.text " IN", fmtCexp body]]
+	  in PP.vblock
+               [PP.hblock [PP.text "FIX", PP.vblock (map fmtFunction functions)],
+                PP.hblock [PP.text " IN", fmtCexp body]]
 	  end
       | fmtCexp (SWITCH (subject, lvar, cases)) =
-	  let fun fmtCase (i,rhs) = PP.vcat [PP.hcat [PP.integer i, PP.text "=>"], PP.indent 3 rhs]
+	  let fun fmtCase (i,rhs) = PP.vblock [PP.hblock [PP.integer i, PP.text "=>"], PP.indent 3 rhs]
               fun folder (cexp, (i, fmts)) = (i+1, fmtCase (i, fmtCexp cexp) :: fmts)
               val caseFmts = rev (#2 (foldl folder (0, nil) cases))
-	   in PP.vcat
-                [PP.hcat [PP.text "case", PP.ccat [fmtValue subject, PP.brackets (fmtLvar lvar)]],
-                 PP.hcat [PP.text "of", PP.vcat caseFmts]]
+	   in PP.vblock
+                [PP.hblock [PP.text "case", PP.cblock [fmtValue subject, PP.brackets (fmtLvar lvar)]],
+                 PP.hblock [PP.text "of", PP.vblock caseFmts]]
           end
       | fmtCexp (LOOKER (i,vl,w,t,e)) =
-	   PP.vcat
-	     [PP.hcat
+	   PP.vblock
+	     [PP.hblock
 		[PP.text (lookerToString i),
 		 PP.tuple (map fmtValue vl),
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e]
       | fmtCexp (ARITH (i,vl,w,t,e)) =
-	   PP.vcat
-	     [PP.hcat
+	   PP.vblock
+	     [PP.hblock
 		[PP.text (arithToString i),
 		 PP.tuple (map fmtValue vl),
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e]
       | fmtCexp (PURE (i,vl,w,t,e)) =
-	   PP.vcat
-	     [PP.hcat
-		[PP.ccat [PP.text (pureToString i), PP.tuple (map fmtValue vl)],
+	   PP.vblock
+	     [PP.hblock
+		[PP.cblock [PP.text (pureToString i), PP.tuple (map fmtValue vl)],
 		 PP.text "->", fmtTypedLvar (w, t)],
 	      fmtCexp e]
       | fmtCexp (SETTER (i,vl,e)) =
-	   PP.vcat
-	     [PP.ccat [PP.text (setterToString i), PP.tuple (map fmtValue vl)],
+	   PP.vblock
+	     [PP.cblock [PP.text (setterToString i), PP.tuple (map fmtValue vl)],
 	      fmtCexp e]
       | fmtCexp (BRANCH (i,vl,c,e1,e2)) =
-	  PP.vcat
-	    [PP.hcat
+	  PP.vblock
+	    [PP.hblock
 	       [PP.text "if",
-		PP.ccat [PP.text (branchToString i), PP.tuple (map fmtValue vl)],
+		PP.cblock [PP.text (branchToString i), PP.tuple (map fmtValue vl)],
 		PP.brackets (fmtLvar c)],
 	     PP.text "then",
 	     PP.indent 3 (fmtCexp e1),
 	     PP.text "else",
 	     PP.indent 3 (fmtCexp e2)]
       | fmtCexp (RCC (b, l, p, values, lvars_ctys, e)) =
-	  PP.vcat
-	    [PP.hcat
-	      [PP.ccat [if b then PP.text "reentrant " else PP.empty,
+	  PP.vblock
+	    [PP.hblock
+	      [PP.cblock [if b then PP.text "reentrant " else PP.empty,
 			if l = "" then PP.empty else PP.text l],
-	       PP.ccat [PP.text "rcc", PP.tuple (map fmtValue values)],
+	       PP.cblock [PP.text "rcc", PP.tuple (map fmtValue values)],
 	       PP.text "->",
 	       PP.tuple (map fmtTypedLvar lvars_ctys)],
 	     fmtCexp e]
 
     (* fmtFunction : function -> P.format *)
     fun fmtFunction (fk, f, vl, cl, body) =
-	  PP.vcat
-	    [PP.hcat [PP.text (funkindToString fk), fmtLvar f,
+	  PP.vblock
+	    [PP.hblock [PP.text (funkindToString fk), fmtLvar f,
 		      fmtParams (vl,cl), PP.equal],
 	     PP.indent 3 (fmtCexp body)]
 
     (* ppFunction : function -> unit  -- was printcps0 *)
-    fun ppFunction (f : function) = PP.printFormat (fmtFunction f)
+    fun ppFunction (f : function) = PF.printFormat (fmtFunction f)
 
     (* ppCps : cexp -> unit *)
-    fun ppCps (cexp : cexp) = PP.printFormat (fmtCexp cexp)
+    fun ppCps (cexp : cexp) = PF.printFormat (fmtCexp cexp)
 
   end (* structure PPCps *)

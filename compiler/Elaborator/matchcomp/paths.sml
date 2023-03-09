@@ -24,18 +24,6 @@ type rpath = link list  (* from node back to root *)
 val rootpath: path = nil
 val rootrpath: rpath = nil
 
-(* utility functions for printing (conversion to strings) *)
-
-(* linkToString : link -> string *)
-fun linkToString (PI n) = "PI:" ^ Int.toString n
-  | linkToString (VI (n,_)) = "VI:" ^ Int.toString n
-  | linkToString (DC (con as AS.VLENcon _)) = "VL[" ^ AU.conToString con ^ "]"
-  | linkToString (DC con) = "DC[" ^ AU.conToString con ^ "]"
-
-(* pathToString : path -> string *)
-fun pathToString (path: path) =
-    PrintUtil.listToString ("[", ",", "]") linkToString path
-
 (* pathToList : path -> link list *)
 fun pathToList (p: path) = p
 
@@ -49,20 +37,10 @@ fun rpathToPath (rp: rpath) : path = rev rp
 fun pathLength (p: path) = length p
 
 (* addLink : link * path -> path *)
-fun addLink (link: link, path: path) = 
-(*    let val result = path @ [link]
-    in print "addLink: "; print (pathToString result); print "\n";
-       result
-    end *)
-   path @ [link]
+fun addLink (link: link, path: path) = path @ [link]
 
 (* addLinkR : link * rpath -> rpath *)
-fun addLinkR (link: link, rpath: rpath) = 
-(*    let val result = link :: rpath
-    in print "addLinkR: "; print (pathToString (rpathToPath result)); print "\n";
-       result
-    end *)
-    link::rpath
+fun addLinkR (link: link, rpath: rpath) = link::rpath
 
 fun eqLink (PI n1, PI n2) = (n1 = n2)
   | eqLink (VI (n1,_), VI (n2,_)) = (n1 = n2)  (* types assumed to agree *)
@@ -91,7 +69,6 @@ fun suffix (path1: path, path2: path) =
 	      else NONE
     in strip (path1, path2)
     end				 
-
 
 end (* top local *)
 end (* structure Paths *)

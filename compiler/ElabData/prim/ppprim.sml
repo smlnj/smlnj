@@ -10,7 +10,7 @@ struct
 local
   structure PI = PrimopId
   structure PB = PrimopBind
-  structure PP = PrettyPrint
+  structure PP = Formatting
 in
 
 (* fmtPrim : PrimopId.prim_id -> PP.format *)

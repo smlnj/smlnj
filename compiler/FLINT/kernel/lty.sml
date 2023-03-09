@@ -262,9 +262,6 @@ local (* hashconsing impl *)
 
   fun vector2list v = Vector.foldr (op ::) [] v
 
-  fun revcat(a::rest,b) = revcat(rest,a::b)
-    | revcat(nil,b) = b
-
   fun combine [x] = itow x
     | combine (a::rest) =
         andb(itow a +(combine rest)*P, NNdec)
@@ -282,7 +279,7 @@ local (* hashconsing impl *)
               (case Weak.strong w
                 of SOME (r as ref(h',t',_)) =>
                     if (h=h') andalso (eq {new=t, old=t'})
-                    then (Array.update(table, i, revcat(l,z)); r)
+                    then (Array.update(table, i, List.revAppend(l,z)); r)
                     else g(w::l, rest)
                  | NONE => g(l, rest))
           | g(l, []) =

@@ -16,7 +16,8 @@ local structure A = Access
       structure B  = Bindings
       structure SE = StaticEnv
       structure DE = DynamicEnv
-      structure PP = PrettyPrint
+      structure PP = Formatting
+      structure PF = PrintFormat
 in
 
 type symbol = S.symbol
@@ -179,7 +180,7 @@ in
 end
 
 fun describe static (s: symbol) : unit =
-      PP.printFormatNL
+      PF.printFormatNL
          (PPModules.fmtBinding static (s, SE.look(static,s), !Control.Print.printDepth))
       handle SE.Unbound => print (S.name s ^ " not found\n")
 

@@ -23,7 +23,8 @@ local
   structure AU = AbsynUtil
   structure SE = StaticEnv
   structure EU = ElabUtil
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPA = PPAbsyn
   structure MU = MCUtil
   structure MC = MatchComp
@@ -50,19 +51,19 @@ local
   fun dbsays msgs = dbsay (concat msgs)
 
   fun ppExp (exp, msg) =
-      PP.printFormatNL
-	 (PP.vcat
+      PF.printFormatNL
+	 (PP.vblock
 	    [PP.text msg,
 	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))])
 
   fun ppDec (dec, msg) =
-      PP.printFormatNL
-	 (PP.vcat
+      PF.printFormatNL
+	 (PP.vblock
 	    [PP.text msg,
 	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))])
 
   fun ppPat pat =
-      PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
+      PF.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
 in
 

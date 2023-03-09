@@ -17,7 +17,8 @@ local
   structure LB = LtyBasic
   structure LKC = LtyKindChk
   structure PO = Primop     (* really should not refer to this *)
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
 
   val wrdebugging = FLINT_Control.wrdebugging
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
@@ -40,8 +41,8 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
    in case (LK.lt_whnm_out nt, ts)
         of (LT.LT_POLY(ks, b), ts) =>
              if length ks <> length ts
-             then (PP.printFormatNL
-		     (PP.vcat
+             then (PF.printFormatNL
+		     (PP.vblock
 		       [PP.text "BUG LtyExtern.lt_inst: arity error",
 			PP.label "|ks| =" (PP.integer (length ks)),
 			PP.label "|ts| =" (PP.integer (length ts)),
@@ -56,8 +57,8 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
              end
          | (_, []) => [nt]   (* this requires further clarifications !!! *)
          | (lt,ts) =>
-           (PP.printFormatNL
-	      (PP.vcat
+           (PF.printFormatNL
+	      (PP.vblock
                  [PP.text "BUG LtyExtern.lt_inst: lt is not LT_POLY:",
                   PP.label "lt_inst lt arg:" (PPLty.fmtLty 20 (LT.lt_inj lt)),
                   PP.label "ts length:" (PP.integer (length ts)),
@@ -163,9 +164,9 @@ fun lt_select(lty: LT.lty, i: int, whereCalled) =
 			 bug (concat ["tc_select: bad index into TC_TUPLE: i=",
 				      Int.toString i, ", |tycs| = ",
 				      Int.toString(length tycs), " [", whereCalled, "]"]))
-	       | _ => (PP.printFormatNL
-			 (PP.vcat [PP.text "LtyExtern.tc_select: expected TC_TUPLE; tyc = ",
-			           PP.label "tyc =" (PPLty.fmtTyc 20 tyc)]);
+	       | _ => (PF.printFormatNL
+			 (PP.vblock [PP.text "LtyExtern.tc_select: expected TC_TUPLE",
+			             PP.label "tyc =" (PPLty.fmtTyc 20 tyc)]);
 		       bug ("tc_select: bad tyc [" ^ whereCalled ^ "]")))
     in
       (case LK.lt_whnm_out lty

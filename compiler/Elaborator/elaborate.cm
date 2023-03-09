@@ -77,7 +77,7 @@ is
 	matchcomp/paths.sml
         matchcomp/mccommon.sml
 	matchcomp/mcutil.sml
-        matchcomp/mcprint.sml
+	matchcomp/ppmatchcomp.sml
         matchcomp/matchprint.sml
         matchcomp/protoandor.sml
         matchcomp/andor.sml
@@ -86,7 +86,6 @@ is
         matchcomp/preprocessing.sml
         matchcomp/matchcomp.sml
         matchcomp/matchtrans.sml
-	matchcomp/ppmatchcomp.sml
 
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/basics.cm

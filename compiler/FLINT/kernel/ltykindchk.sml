@@ -36,7 +36,8 @@ structure LtyKindChk : LTYKINDCHK =
 struct
 
 structure LD = LtyDef
-structure PP = PrettyPrint
+structure PP = Formatting
+structure PF = PrintFormat
 
 open Lty
 
@@ -145,8 +146,8 @@ let val dict = Memo.newDict()
              of TC_DVAR (i, j) =>
                 (tkLookup (kenv, i, j)
                  handle tkUnbound =>
-                  (PP.printFormatNL
-		     (PP.vcat
+                  (PF.printFormatNL
+		     (PP.vblock
 			 [PP.label "KindChk: unbound tv:" (PPLty.fmtTyc printDepth (tc_inj tycI)),
 			  PP.label "kenv:" (PPLty.fmtTkindEnv printDepth kenv)]);
                    raise KindChk "unbound tv"))

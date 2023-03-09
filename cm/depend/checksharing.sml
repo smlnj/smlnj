@@ -8,7 +8,7 @@
 local
     structure DG = DependencyGraph
     structure EM = ErrorMsg
-    structure PP = PrettyPrint
+    structure PP = Formatting
 in
   signature CHECKSHARING = sig
     val check : DG.impexp SymbolMap.map * GeneralParams.info -> unit
@@ -25,7 +25,7 @@ in
 	    (StringSet.singleton x, Sharing.DONTSHARE)
 	  | check (Sharing.SHARED, x, s, err) =
 	    let val errorBody =
-		    PP.vcat
+		    PP.vblock
 		      (map PP.text
 			   ("because of dependence on non-shareable state in:" ::
 			    (StringSet.listItems s)))

@@ -28,6 +28,10 @@ local
   structure LB = LtyBasic
   structure LE = LtyExtern  (* == PLambdaType *)
   structure LKC = LtyKindChk
+
+  structure PP = Formatting
+  structure PF = PrintFormat
+
   open PLambda
 in
 
@@ -42,7 +46,6 @@ val fname_ref : string ref = ref "yyy"
 fun bug s = ErrorMsg.impossible ("CheckLty: "^s)
 val say = Control.Print.say
 
-structure PP = PrettyPrint
 
 val printDepth = 20
 
@@ -72,7 +75,7 @@ fun tcPrint tc = PPLty.ppTyc printDepth tc
 
 fun ltPrint lt = PPLty.ppLty printDepth lt
 
-fun lePrint le = PP.printFormat (PPLexp.fmtLexp 5 le)
+fun lePrint le = PF.printFormat (PPLexp.fmtLexp 5 le)
 
 (*** a hack for type checking ***)
 fun laterPhase i = (i > 20)
@@ -138,8 +141,8 @@ fun ltTyApp le s (lt, ts, kenv) =
 fun ltMatch le msg (t1, t2) =
   (if ltEquiv(t1,t2) then ()
    else (clickerror();
-         PP.printFormat
-	   (PP.vcat
+         PF.printFormat
+	   (PP.vblock
 	     [PP.text ("ERROR(checkLty): ltEquiv fails in ltMatch: "^msg),
 	      PP.label "le:" (PPLexp.fmtLexp 6 le),
 	      PP.label "t1:" (PPLty.fmtLty 20 t1),
@@ -148,8 +151,8 @@ fun ltMatch le msg (t1, t2) =
 	 raise Fail "ltMatch"))
   handle LK.TeUnbound =>
     (clickerror();
-     PP.printFormat
-       (PP.vcat
+     PF.printFormat
+       (PP.vblock
 	 [PP.text ("ERROR(checkLty): exception teUnbound2 in ltMatch"^msg),
 	  PP.label "le:" (PPLexp.fmtLexp 6 le),
 	  PP.label "t1:" (PPLty.fmtLty 10 t1),
@@ -230,7 +233,7 @@ fun check (kenv, venv, d) =
 			       \ PLambda type check: ");
 			  say (msg);
 			  say ("***\n Term: ");
-			  PP.printFormat (PPLexp.fmtLexp 20 lexp);
+			  PF.printFormat (PPLexp.fmtLexp 20 lexp);
 			  say ("\n Kind check error: ");
 			  say kndchkmsg;
 			  say ("\n");

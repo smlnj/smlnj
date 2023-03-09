@@ -73,11 +73,15 @@ struct
 local
 
   structure M = Measure
-  structure R = Render
 
 in
 
-open Format  (* import datatypes format, element, break; format exported as abstract in NEW_PRETTYPRINT *)
+(* import datatypes format, element, break; format exported as abstract in FORMATTING *)
+open Format
+
+(* but we need a coercion back to Format.format so that we can pass abstract formats to
+ * functions like Render.render that need the concrete type. formatRep is the identity. *)
+fun formatRep (fmt : format) : Format.format = fmt
 
 (*** the basic block building functions ***)
 

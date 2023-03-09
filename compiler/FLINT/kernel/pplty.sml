@@ -11,10 +11,10 @@ signature PPLTY =
 sig
 
   val fflagToString : Lty.fflag -> string
-  val fmtTKind : int -> Lty.tkind -> PrettyPrint.format
-  val fmtTyc : int -> Lty.tyc -> PrettyPrint.format
-  val fmtLty : int -> Lty.lty -> PrettyPrint.format
-  val fmtTkindEnv : int -> Lty.tkindEnv -> PrettyPrint.format
+  val fmtTKind : int -> Lty.tkind -> Formatting.format
+  val fmtTyc : int -> Lty.tyc -> Formatting.format
+  val fmtLty : int -> Lty.lty -> Formatting.format
+  val fmtTkindEnv : int -> Lty.tkindEnv -> Formatting.format
 
   val ppTKind : int -> Lty.tkind -> unit
   val ppTyc : int -> Lty.tyc -> unit
@@ -32,9 +32,8 @@ struct
 local
   structure LT = Lty
   structure PT = PrimTyc
-  structure PP = PrettyPrint
-
-  open PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
 
   val lineWidth = Control.Print.lineWidth
   val say = Control.Print.say
@@ -98,22 +97,22 @@ fun ltyITag (LT.LT_TYC _)  = "<ltyI.LT_TYC>"
 
 (* fmtSeq : format list -> format *)
 (* packed, comma separated formatting of a format list -- no enclosing brackets or parentheses *)
-val fmtSeq = psequence comma
+val fmtSeq = PP.psequence PP.comma
 
 (* fmtTKind : int -> tkind -> format
  * Format a hashconsed representation of the kind *)
 fun fmtTKind pd (tk : LT.tkind) =
-    if pd < 1 then text (tkindITag (LT.tk_out tk)) else
+    if pd < 1 then PP.text (tkindITag (LT.tk_out tk)) else
     let val fmtTKind' = fmtTKind (pd-1)
-	fun fmtTKindI(LT.TK_MONO) = text "M"
-	  | fmtTKindI(LT.TK_BOX) = text "B"
+	fun fmtTKindI(LT.TK_MONO) = PP.text "M"
+	  | fmtTKindI(LT.TK_BOX) = PP.text "B"
 	  | fmtTKindI(LT.TK_FUN (argTkinds, resTkind)) =
 	      (* resTkind may be a TK_SEQ wrapping some tkinds
 	       * These are produced by Elaborate/modules/instantiate.sml
 	       *)
-	     parens (hcat [list (map fmtTKind' argTkinds), text "=>", fmtTKind' resTkind])
+	     PP.parens (PP.hblock [PP.list (map fmtTKind' argTkinds), PP.text "=>", fmtTKind' resTkind])
 	  | fmtTKindI(LT.TK_SEQ tkinds) =
-	     pcat [text "KSEQ", list (map (fmtTKind (pd-1)) tkinds)]
+	     PP.pblock [PP.text "KSEQ", PP.list (map (fmtTKind (pd-1)) tkinds)]
      in fmtTKindI (LT.tk_out tk)
     end (* fmtTKind *)
 
@@ -123,30 +122,30 @@ fun tycEnvFlatten tycenv =
         | SOME (elem, rest) => elem::tycEnvFlatten(rest))
 
 (* fmtKeFrame : int -> Lty.tkind list -> PP.format *)
-fun fmtKeFrame pd ks = list (map (fmtTKind pd) ks)
+fun fmtKeFrame pd ks = PP.list (map (fmtTKind pd) ks)
 
 (* fmtKindEnv : int -> Lty.tkindEnv -> PP.format
  * used (once) in FLINT/kernel/ltykindchk.sml *)
 fun fmtTkindEnv pd kenv =
     if pd < 1
-    then text "<tkenv>"
-    else list (map (fmtKeFrame (pd-1)) kenv)
+    then PP.text "<tkenv>"
+    else PP.list (map (fmtKeFrame (pd-1)) kenv)
 
 (* fmtTEBinder : int -> LT.teBinder -> format *)
 fun fmtTEBinder pd (binder: LT.teBinder) =
-    if pd < 1 then text (teBinderTag binder) else
+    if pd < 1 then PP.text (teBinderTag binder) else
     (case binder
       of LT.Lamb (level, ks) =>
-	 pcat [PP.ccat [text "L", integer level, colon], fmtKeFrame (pd-1)  ks]
+	 PP.pblock [PP.cblock [PP.text "L", PP.integer level, PP.colon], fmtKeFrame (pd-1)  ks]
        | LT.Beta (level, args, ks) =>
-	 pcat [PP.ccat [text "B", integer level],
-		 parens (fmtSeq [tuple (map (fmtTyc (pd-1)) args), fmtKeFrame (pd-1) ks])])
+	 PP.pblock [PP.cblock [PP.text "B", PP.integer level],
+		 PP.parens (fmtSeq [PP.tuple (map (fmtTyc (pd-1)) args), fmtKeFrame (pd-1) ks])])
      (* function fmtTEBinder *)
 
 (* fmtTyc : int -> LT.tyc -> format *)
 and fmtTyc pd (tyc : LT.tyc) =
     (* FLINT variables are represented using deBruijn indices *)
-    if pd < 1 then text (tycITag (LT.tc_out tyc)) else
+    if pd < 1 then PP.text (tycITag (LT.tc_out tyc)) else
     let (* partially applied versions of functions *)
 	val fmtTKind' = fmtTKind (pd-1)
 	val fmtTyc' = fmtTyc (pd-1)
@@ -156,108 +155,108 @@ and fmtTyc pd (tyc : LT.tyc) =
 	     * -- index is a deBruijn index set in elabmod.sml/instantiate.sml
 	     * -- cnt is computed in instantiate.sml sigToInst or
 	          alternatively may be the IBOUND index in a polytype body ??? *)
-	    label "DTV:" (fmtSeq [integer index, integer cnt])
+	    PP.label "DTV:" (fmtSeq [PP.integer index, PP.integer cnt])
 	  | fmtTycI (LT.TC_NVAR tvar) =
             (* Named type variable; tvar = lvar [= int] *)
-	    label "NTV:" (text (LambdaVar.prLvar tvar))
+	    PP.label "NTV:" (PP.text (LambdaVar.prLvar tvar))
 	  | fmtTycI (LT.TC_PRIM primtyc) =
-	    label "PRIM:" (text (PT.pt_print primtyc))
+	    PP.label "PRIM:" (PP.text (PT.pt_print primtyc))
 	  | fmtTycI (LT.TC_FN (argTkinds, resultTyc)) =
-	    label "TCFN:" (pcat [list (map fmtTKind' argTkinds), fmtTyc' resultTyc])
+	    PP.label "TCFN:" (PP.pblock [PP.list (map fmtTKind' argTkinds), fmtTyc' resultTyc])
 	  | fmtTycI (LT.TC_APP (contyc, tys)) =
-	    label "TCAP:" (tryFlat (fmtSeq [fmtTyc' contyc, list (map fmtTyc' tys)]))
+	    PP.label "TCAP:" (PP.tryFlat (fmtSeq [fmtTyc' contyc, PP.list (map fmtTyc' tys)]))
 	  | fmtTycI (LT.TC_SEQ tycs) =
-	    label "SEQ:" (psequence comma (map fmtTyc' tycs))
+	    PP.label "SEQ:" (PP.psequence PP.comma (map fmtTyc' tycs))
 	  | fmtTycI (LT.TC_PROJ (tyc', index)) =
-	    label "PROJ:" (fmtSeq [fmtTyc' tyc', integer index])
+	    PP.label "PROJ:" (PP.psequence PP.comma [fmtTyc' tyc', PP.integer index])
 	  | fmtTycI (LT.TC_SUM tycs) =
-	    label "SUM" (psequence comma (map fmtTyc' tycs))
+	    PP.label "SUM" (PP.psequence PP.comma (map fmtTyc' tycs))
 	    (* TC_FIX is a recursive datatype constructor
 	       from a (mutually-)recursive family *)
 	  | fmtTycI (LT.TC_FIX {family={size,names,gen,params},index}) =
             if !dtPrintNames
-	    then text (Vector.sub (names,index))
-            else label "FIX:"
-		   (hvcat
-		     [hvcat
-		       [label "size:" (integer size),
-			label "index:" (integer index),
-			label "gen:" (fmtTyc' gen)],
-		      label "prms:" (list (map fmtTyc' params))])
+	    then PP.text (Vector.sub (names,index))
+            else PP.label "FIX:"
+		   (PP.hvblock
+		     [PP.hvblock
+		       [PP.label "size:" (PP.integer size),
+			PP.label "index:" (PP.integer index),
+			PP.label "gen:" (fmtTyc' gen)],
+		      PP.label "prms:" (PP.list (map fmtTyc' params))])
 	  | fmtTycI (LT.TC_BOX tyc) =
-	      label "BOX:" (fmtTyc' tyc)
+	      PP.label "BOX:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_TUPLE tycs) =
 	      PP.braces (PP.psequence PP.comma (map fmtTyc' tycs))
 	  | fmtTycI (LT.TC_ARROW (fflag, argTycs, resTycs)) =  (* was "AR ..." *)
 	    (* fflag records the calling convention: either FF_FIXED or FF_VAR *)
-	      parens
-		(pcat
-		   [hcat [list (map fmtTyc' argTycs), text "->", text (fflagToString fflag)],
-		    indent 2 (list (map fmtTyc' resTycs))])
+	      PP.parens
+		(PP.pblock
+		   [PP.hblock [PP.list (map fmtTyc' argTycs), PP.text "->", PP.text (fflagToString fflag)],
+		    PP.indent 2 (PP.list (map fmtTyc' resTycs))])
 	    (* According to ltykernel.sml comment, this arrow tyc is not used *)
 	  | fmtTycI (LT.TC_PARROW (argTyc, resTyc)) =  (* was "PAR ..." *)
-	      parens
-		(pcat
-	           [hcat [lparen, (fmtTyc' argTyc), text "-->"],
-		    indent 2 (fmtTyc' resTyc)])
+	      PP.parens
+		(PP.pblock
+	           [PP.hblock [fmtTyc' argTyc, PP.text "-->"],
+		    PP.indent 2 (fmtTyc' resTyc)])
 	  | fmtTycI (LT.TC_WRAP tyc) =
-	      label "WRAP:" (fmtTyc' tyc)
+	      PP.label "WRAP:" (fmtTyc' tyc)
 	  | fmtTycI (LT.TC_CONT tycs) =
-	      label "CONT:" (tuple (map fmtTyc' tycs))
+	      PP.label "CONT:" (PP.tuple (map fmtTyc' tycs))
 	  | fmtTycI (LT.TC_IND (tyc, tycI)) =
               if !printIND
-              then label "IND" (pcat [fmtTyc' tyc, comma, fmtTycI tycI])
+              then PP.label "IND:" (PP.pblock [fmtTyc' tyc, PP.comma, fmtTycI tycI])
               else fmtTyc' tyc
 	  | fmtTycI (LT.TC_ENV (tyc, ol, nl, tenv)) =  (* (over) simplified Nadathur closure *)
-	      label "ENV:" (fmtTyc' tyc)
+	      PP.label "ENV:" (fmtTyc' tyc)
 
      in fmtTycI (LT.tc_out tyc)
     end (* fmtTyc *)
 
 
 fun fmtTycEnv pd (tycEnv : LT.tycEnv) =
-    if pd < 1 then text "<tycEnv>" else
-    label "TycEnv:" (list (map (fmtTEBinder (pd-1)) (tycEnvFlatten tycEnv)))
+    if pd < 1 then PP.text "<tycEnv>" else
+    PP.label "TycEnv:" (PP.list (map (fmtTEBinder (pd-1)) (tycEnvFlatten tycEnv)))
     (* fmtTycEnv *)
 
 
 fun fmtLty pd (lty: LT.lty) =
-    if pd < 1 then text (ltyITag (LT.lt_out lty)) else
+    if pd < 1 then PP.text (ltyITag (LT.lt_out lty)) else
     let val fmtTKind' = fmtTKind (pd-1)
 	val fmtLty' = fmtLty (pd-1)
 
         fun fmtLtyI (LT.LT_TYC tc) =
-              label "TYC:" (fmtTyc pd tc)
+              PP.label "TYC:" (fmtTyc pd tc)
           | fmtLtyI (LT.LT_STR ltys) =
-              label "STR:" (list (map fmtLty' ltys))
+              PP.label "STR:" (PP.list (map fmtLty' ltys))
           | fmtLtyI (LT.LT_FCT (args,res)) =
-	      label "FCT:" (fmtSeq [list (map fmtLty' args), list (map fmtLty' res)])
+	      PP.label "FCT:" (fmtSeq [PP.list (map fmtLty' args), PP.list (map fmtLty' res)])
           | fmtLtyI (LT.LT_POLY (ks,ltys)) =
-	      label "POL:" (fmtSeq [list (map fmtTKind' ks), list (map fmtLty' ltys)])
+	      PP.label "POL:" (fmtSeq [PP.list (map fmtTKind' ks), PP.list (map fmtLty' ltys)])
           | fmtLtyI (LT.LT_CONT ltys) =
-	      label "CONT:" (list (map fmtLty' ltys))
+	      PP.label "CONT:" (PP.list (map fmtLty' ltys))
           | fmtLtyI (LT.LT_IND(nt,ot)) =
               if !printIND
-	      then label "IND" (fmtSeq [fmtLty' nt, fmtLtyI ot])
+	      then PP.label "IND:" (fmtSeq [fmtLty' nt, fmtLtyI ot])
               else fmtLty pd nt
 	  | fmtLtyI (LT.LT_ENV (lty, ol, nl, tenv)) =
-	      label "LT_ENV:"
-	        (fmtSeq [ccat [text "ol=", integer ol],
-		         ccat [text "nl=", integer nl],
+	      PP.label "LT_ENV:"
+	        (fmtSeq [PP.cblock [PP.text "ol=", PP.integer ol],
+		         PP.cblock [PP.text "nl=", PP.integer nl],
 			 fmtLty' lty,
-			 list (map (fmtTEBinder (pd-1)) (tycEnvFlatten tenv))])
+			 PP.list (map (fmtTEBinder (pd-1)) (tycEnvFlatten tenv))])
 
      in fmtLtyI (LT.lt_out lty)
     end (* fmtLty *)
 
 fun ppTKind pdepth (tkind: Lty.tkind) =
-    render (fmtTKind pdepth tkind, say, !lineWidth)
+    PF.render (fmtTKind pdepth tkind, say, !lineWidth)
 
 fun ppTyc pdepth (tyc: Lty.tyc) =
-    render (fmtTyc pdepth tyc, say, !lineWidth)
+    PF.render (fmtTyc pdepth tyc, say, !lineWidth)
 
 fun ppLty pdepth (lty: Lty.lty) =
-    render (fmtLty pdepth lty, say, !lineWidth)
+    PF.render (fmtLty pdepth lty, say, !lineWidth)
 
 end (* top local *)
 end (* structure PPLty *)

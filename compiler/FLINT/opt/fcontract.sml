@@ -229,7 +229,8 @@ struct
     structure F  = FLINT
     structure FU = FlintUtil
     structure PU = PrintUtil
-    structure PP = PrettyPrint
+    structure PP = Formatting
+    structure PF = PrintFormat
     structure PPF = PPFlint
     structure OU = OptUtils
     structure PO = Primop
@@ -241,14 +242,14 @@ struct
     fun say s = (Control_Print.say s; Control_Print.flush())
     fun newline () = say "\n"
     fun saynl s = (Control_Print.say s; say "\n"; Control_Print.flush())
-    fun says (msgs: string list) = say (PU.interpws msgs)
-    fun saysnl (msgs: string list) = saynl (PU.interpws msgs)
+    fun says (msgs: string list) = say (String.concatWith " " msgs)
+    fun saysnl (msgs: string list) = saynl (String.concatWith " " msgs)
     fun dbsay msg = if !debugging then saynl msg else ()
     fun dbsays msgs = if !debugging then saysnl msgs else ()
 
-    fun bug (msgs: string list) = ErrorMsg.impossible (PU.interpws ("FContract:"::msgs))
-    fun buglexp (msg, lexp) = (newline(); PP.printFormatNL (PPF.fmtLexp 100 lexp); bug [msg]) 
-    fun bugval (msg, value) = (newline(); PP.printFormatNL (PPF.fmtValue value); bug [msg])
+    fun bug (msgs: string list) = ErrorMsg.impossible (String.concatWith " " ("FContract:"::msgs))
+    fun buglexp (msg, lexp) = (PF.printFormatNL (PPF.fmtLexp 100 lexp); bug [msg]) 
+    fun bugval (msg, value) = (PF.printFormatNL (PPF.fmtValue value); bug [msg])
 
     val cplv = LV.dupLvar
     val mklv = LV.mkLvar

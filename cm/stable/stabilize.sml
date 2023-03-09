@@ -13,7 +13,7 @@ local
     structure GG = GroupGraph
     structure EM = ErrorMsg
 
-    structure PP = PrettyPrint
+    structure PP = Formatting
     structure SM = SourceMap
     structure GP = GeneralParams
     structure Pid = PersStamps
@@ -684,7 +684,7 @@ struct
 			    let val relabs: string = if abs then "absolute" else "relative"
 				val gdesc = SrcPath.descr grouppath
 				val errorFmt =
-				    PP.pcat
+				    PP.pblock
 				      (map PP.text 
 					  ["The", "path", "specifying",
 					    what, descr, "is", relabs, ".", "\n",
@@ -1011,12 +1011,12 @@ struct
 				 let val grammar =
 					   case l of [_] => " is" | _ => "s are"
 				     val errorBody =
-					   PP.vcat
+					   PP.vblock
 					     [PP.text
 						(concat ["because the following sub-group",
 							 grammar, " not stable:"]),
 					      PP.indent 2
-						(PP.vcat (map (fn (p, _, _) => PP.text (SrcPath.descr p)) l))]
+						(PP.vblock (map (fn (p, _, _) => PP.text (SrcPath.descr p)) l))]
 				     val gdescr = SrcPath.descr (#grouppath grec)
 				  in EM.errorNoSource SM.nullRegion EM.COMPLAIN
 					  (gdescr ^ " cannot be stabilized")

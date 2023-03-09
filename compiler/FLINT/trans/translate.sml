@@ -39,11 +39,11 @@ local
   structure LT = Lty
   structure LD = LtyDef
   structure LB = LtyBasic
-  structure LE = LtyExtern  (* == PLambdaType *)
+  structure LE = LtyExtern  (* aka PLambdaType *)
   structure M  = Modules
   structure MC = MatchComp
   structure PO = Primop
-  structure PP = PrettyPrint
+  structure PP = Formatting
   structure PPA = PPAbsyn
   structure S  = Symbol
   structure SP = SymPath
@@ -54,7 +54,8 @@ local
   structure TU = TypesUtil
   structure EU = ElabUtil
   structure Tgt = Target
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPType
   structure PPA = PPAbsyn
   structure PPP = PPSymPaths
@@ -68,7 +69,7 @@ local
   type depth = int (* deBruijn context *)
   val top : depth = 0
 
-  fun ivcat formats = PP.indent 3 (PP.vcat formats)
+  fun ivblock formats = PP.indent 3 (PP.vblock formats)
 
 in
 
@@ -111,13 +112,13 @@ fun fmtDec dec = PPA.fmtDec (SE.empty, NONE) (dec, !printDepth)
 (* absyn and plambda printing functions *)
 
 fun ppPat (pat: AS.pat) = 
-    PP.printFormat (fmtPat pat)
+    PF.printFormat (fmtPat pat)
 
 fun ppLexp (lexp: PL.lexp) =
-    PP.printFormat (PPLexp.fmtLexp (!printDepth) lexp)
+    PF.printFormat (PPLexp.fmtLexp (!printDepth) lexp)
 
 fun ppTycArgs (tycs: Lty.tyc list) =
-    PP.printFormat (PP.list (map (PPLty.fmtTyc 50) tycs))
+    PF.printFormat (PP.list (map (PPLty.fmtTyc 50) tycs))
 
 	
 (****************************************************************************
@@ -319,8 +320,11 @@ fun buildHeader baseLvar =
    in foldr wrapHeader ident depLvars   (* ident = TransUtil.ident = identity fn *)
   end handle DEP_LVAR_TABLE => ident   (* if lvar not in dependentLvarsTable? *)
 
+fun tupleStrings (strs: string list) : string =
+    String.concat ["(", String.concatWith "," strs, ")"]
+
 fun apToString (accesspath: int list) =
-    PrintUtil.listToString ("(", ",", ")") Int.toString accesspath
+    tupleStrings (map Int.toString accesspath)
 
 fun nameOpToString (symbolOp: S.symbol option) : string =
     case symbolOp
@@ -656,7 +660,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
                 of SOME(_, tvs) =>
 		   (if !debugging then
                       complain EM.WARN "mkVE -> matchInstTypes -> pruneTyvar"
-                        (PP.vcat
+                        (PP.vblock
 			   (PP.label "var:" (PPVal.fmtVarDebug (env, e)) ::
 			    PP.label "tvs length:" (PP.integer (length tvs)) ::
                             (case tvs
@@ -670,7 +674,7 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
 		      (fn () =>
 			  (complain EM.COMPLAIN
 				    "mkVE:primop intrinsic type doesn't match occurrence type"
-                      (PP.vcat
+                      (PP.vblock
                          [PP.label "VALvar" (PPVal.fmtVar e),
 			  PP.label "occtypes" (fmtType occurenceTy),
                           PP.label "intrinsicType" (fmtType intrinsicType),
@@ -699,8 +703,8 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
   | mkVE (var as V.VALvar{typ, prim = PrimopId.NonPrim, path, access, ...}, tys, d) =
     (* non primop variable *)
       (if !debugging
-       then PP.printFormatNL
-	      (PP.vcat
+       then PF.printFormatNL
+	      (PP.vblock
 	         [PP.label "### mkVE nonprimop:" (PPP.fmtSymPath path),
 		  PP.label "access:" (PP.text (A.accessToString access)),
 		  PP.label "typ:" (fmtType (!typ)),
@@ -933,9 +937,9 @@ and transRVBs (nil, _) = bug "transRVBs - no rbv"
 	      (rev vars, rev lvars, rev typs, rev btvss, rev exps)
 	  | collect _ = bug "transRVB:collect -- bad RVB"
         val (vars, lvars, typs, btvss, exps) = collect (rvbs, nil, nil, nil, nil, nil)
-	val _ = dbsaysnl ["transRVBs:oldlvars = ", PrintUtil.listToString ("(", ",", ")") LV.toString lvars]
+	val _ = dbsaysnl ["transRVBs:oldlvars = ", tupleStrings (map LV.toString lvars)]
 	val (newLvars, _) = aconvertLvars (vars, exps)  (* not checking rhs occurrences of vars *)
-	val _ = dbsaysnl ["transRVBs:newlvars = ", PrintUtil.listToString ("(", ",", ")") LV.toString newLvars]
+	val _ = dbsaysnl ["transRVBs:newlvars = ", tupleStrings (map LV.toString newLvars)]
         val boundTvs = foldr listUnion [] btvss         (* ordered "union" of btvs lists (duplicates merged) *)
 	val numBoundTvs = length boundTvs
 	val isPoly = numBoundTvs > 0
@@ -1402,7 +1406,7 @@ and mkExp (exp, d) =
 		            of A.LVAR paramLvar =>
 			         FN (paramLvar, tLty argty, mkExp0 rhs)
 			     | _ => bug "mkExp0:FNexp:matchVar.access not LVAR")
-			| _ => (PP.printFormatNL (PP.label "bad pat" (fmtPat pat));
+			| _ => (PF.printFormatNL (PP.label "bad pat" (fmtPat pat));
 				bug "mkExp0:FNexp:non-variable pattern"))
 		 | r1::r2::_ => bug "mkExp0:FNexp:multiple rules"
 		 | _ => bug "mkExp0:FNexp:WTF")
@@ -1647,10 +1651,10 @@ val ltyerrors = if !FLINT_Control.checkPLambda
 		else false
 
 val _ = if ltyerrors
-        then (PP.printFormat
-		 (PP.vcat
+        then (PF.printFormat
+		 (PP.vblock
 		    [PP.text "**** Translate: checkLty failed ****",
-		     ivcat
+		     ivblock
 		       [PP.label "absyn:" (PPA.fmtDec (env,NONE) (rootdec,1000)),
                         PP.label "lexp:" (PPLexp.fmtLexp 25 plexp)]]);
               complain EM.WARN "checkLty" EM.nullErrorBody;

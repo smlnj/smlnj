@@ -34,7 +34,7 @@ local
   structure LE = LtyExtern
   structure PL = PLambda
   structure F  = FLINT
-  structure PP = PrettyPrint
+  structure PF = PrintFormat
   structure PPF = PPFlint
   structure OU = OptUtils
   structure CTRL = FLINT_Control
@@ -55,8 +55,8 @@ fun dbsay msg =
     else ()
 fun dbsays msgs = dbsay (concat msgs)
 
-fun buglexp (msg, lexp) = (newline(); PP.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
-fun bugval (msg, value) = (newline(); PP.printFormatNL (PPF.fmtValue value); bug msg)
+fun buglexp (msg, lexp) = (PF.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
+fun bugval (msg, value) = (PF.printFormatNL (PPF.fmtValue value); bug msg)
 fun bugsay s = saynl ("!*!*! Fixfix: " ^ s ^ " !*!*!")
 
 (* copyLvar : LV.lvar -> LV.lvar
@@ -436,9 +436,9 @@ fun fixfix ((fk, f, args, body): F.prog) =
         if S.isEmpty(fv)
 	then (fk, f, args, nbody)
 	else (saysnl ["@@@ fixfix:\n    freeLvars = ",
-		      PrintUtil.listToString ("[",",","]") LV.toString (S.toList freeLvars),
+		      String.concatWith "," (map LV.toString (S.toList freeLvars)),
 		      ",\n    argLvars = ",
-		      PrintUtil.listToString ("[",",","]") LV.toString argLvars];
+		      String.concatWith "," (map LV.toString argLvars)];
 	      bug "fixfix - excess free vars")
     end
 

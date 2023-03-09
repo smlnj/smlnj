@@ -98,7 +98,8 @@ local
   structure FU = FlintUtil
   structure LV = LambdaVar
   structure PU = PrintUtil
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPF = PPFlint
   structure PO = Primop
 
@@ -107,14 +108,14 @@ local
   fun say s = (Control_Print.say s; Control_Print.flush())
   fun newline () = say "\n"
   fun saynl s = (Control_Print.say s; say "\n"; Control_Print.flush())
-  fun says (msgs: string list) = say (PU.interpws msgs)
-  fun saysnl (msgs: string list) = saynl (PU.interpws msgs)
+  fun says (msgs: string list) = say (String.concatWith " " msgs)
+  fun saysnl (msgs: string list) = saynl (String.concatWith " " msgs)
   fun dbsay msg = if !debugging then saynl msg else ()
   fun dbsays msgs = if !debugging then saysnl msgs else ()
 
   fun bug msg = ErrorMsg.impossible ("Collect: "^msg)
 
-  fun buglexp (msg, lexp) = (newline(); PP.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
+  fun buglexp (msg, lexp) = (newline(); PF.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
   fun bugval (msg, value) = (newline(); say (PPF.valueToString value); newline (); bug msg)
 
 in

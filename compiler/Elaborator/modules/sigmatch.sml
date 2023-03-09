@@ -31,7 +31,8 @@ local
   structure TU = TypesUtil
   structure SM = SourceMap
   structure EM = ErrorMsg
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPType
   structure PPS = PPSymbols
 
@@ -155,10 +156,10 @@ let
         | NONE =>
           (err EM.COMPLAIN "value type in structure does not match signature spec"
                (PPT.resetPPType();
-		PP.vcat
-		  [PP.hcat [PP.text "name:", PP.text (S.name name)],
-		   PP.hcat [PP.text "spec:", PPT.fmtType statenv spec],
-		   PP.hcat [PP.text "actual:", PPT.fmtType statenv actual]]);
+		PP.vblock
+		  [PP.hblock [PP.text "name:", PP.text (S.name name)],
+		   PP.hblock [PP.text "spec:", PPT.fmtType statenv spec],
+		   PP.hblock [PP.text "actual:", PPT.fmtType statenv actual]]);
            NONE)
 
   fun complain s = err EM.COMPLAIN s EM.nullErrorBody
@@ -727,11 +728,11 @@ let
                            | SOME (btvs,ptvs) =>
                              let val _ =
 				   if !debugging
-                                   then PP.printFormatNL
-					  (PP.vcat
+                                   then PF.printFormatNL
+					  (PP.vblock
 					     [PP.label "###SM:" (PPS.fmtSym sym),
 					      PP.indent 2 
-					        (PP.vcat
+					        (PP.vblock
 						   [PP.label "spectype:" (PPT.fmtType statenv spectyp),
 						    PP.label "acttyp:" (PPT.fmtType statenv acttyp),
 						    PP.label "ptvs:" 

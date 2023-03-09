@@ -5,7 +5,7 @@ structure MatchPrint =
 struct
 
 local
-  structure PP = PrettyPrint
+  structure PP = Formatting
   structure PPA = PPAbsyn
   val printDepth = Control_Print.printDepth
 
@@ -31,18 +31,18 @@ fun formatMatch (env, rules, unused) =
 		    case n_vs_u
 		      of EQUAL => (unuprefix, us)   (* u matches n, unused rule *)
 		       | _ => (uprefix, u::us)      (* n_vs_u will only be LESS *)
-		val fmt = PP.hcat [prefix, PPA.fmtPat env (pat, !printDepth), postfix]
+		val fmt = PP.hblock [prefix, PPA.fmtPat env (pat, !printDepth), postfix]
 	    in ruleFmt (rest, n+1, remaining_unused, fmt::fmts)
 	    end
-     in PP.vcat (ruleFmts (rules, 0, unused))
+     in PP.vblock (ruleFmts (rules, 0, unused))
     end
 
 (* bindPrint : StaticEnv.staticEnv * (AS.pat * AS.exp) list -> PP.format
  * prints only the first rule pattern, which should be the only one for a binding *)
 fun formatBind (env, (pat, _) :: _) =
-      PP.hcat [PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
+      PP.hblock [PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
   | bindPrint _ = bug "bindPrint -- unexpected args"
 
-end (* local printutil *)
 
+end (* top local *)
 end (* structure MatchPrint *)

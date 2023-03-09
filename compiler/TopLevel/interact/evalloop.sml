@@ -11,7 +11,8 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
     structure EM = ErrorMsg
     structure S = Symbol
     structure E  = Environment
-    structure PP = PrettyPrint
+    structure PP = Formatting
+    structure PF = PrintFormat
     structure T = Time
     structure U = Unsafe
     structure PC = SMLofNJ.Internals.ProfControl
@@ -32,7 +33,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
     (* debugPrint : bool ref -> (string * PP.format) -> unit *)
     fun debugPrint flag (msg: string, format: PP.format) =
 	if !flag
-	then PP.printFormatNL (PP.vcat [PP.text msg, PP.indent 2 format])
+	then PF.printFormatNL (PP.vblock [PP.text msg, PP.indent 2 format])
 	else ()
 
     val lineWidth = Control.Print.lineWidth
@@ -178,7 +179,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
 			    val unitFmt = PP.appendNewLine (PPDec.fmtDec e1 (absyn, exportLvars))
 
-			 in PP.render (unitFmt, say, !lineWidth);
+			 in PF.render (unitFmt, say, !lineWidth);
 			    if !progressMsgs then say "<<< oneUnit\n" else ()
 			end)  (* oneUnit *)
 
