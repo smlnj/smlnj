@@ -21,7 +21,8 @@ How would you format expressions so that you could get the following renders?
 	let val x = ... in x end
 *)
 
-local open PrettyPrint
+local
+  structure PP = Formatting
 in
 
 datatype exp
@@ -33,24 +34,26 @@ datatype exp
 and dcl
   = Val of string * exp
 
-fun formatExp (Var s) = text s
-  | formatExp (Num n) = integer n
+fun formatExp (Var s) = PP.text s
+  | formatExp (Num n) = PP.integer n
   | formatExp (Plus (exp1, exp2)) =
-      pcat (hcat (formatExp exp1, text "+"),
-	    indent 2 (formatExp exp2))
+      PP.pblock
+	 [PP.hblock [formatExp exp1, text "+"],
+	  PP.indent 2 (formatExp exp2)]
   | formatExp (Let (dcls, exps)) =
-      tryFlat
-        (vblock
-	   [hcat (text "let", fmtDcls dcls),
-            indent 1 (hcat (text "in", formatExps exps)),
-            text "end"])
+      PP.tryFlat
+         (PP.vblock
+	     [PP.hblock [text "let", fmtDcls dcls],
+              PP.indent 1 (PP.hblock [PP.text "in", formatExps exps]),
+              PP.text "end"])
 
 and formatExps (exps: exp list) =
-    tryFlat (vsequence semicolon (map formatExp exps))
+    PP.tryFlat (PP.vsequence PP.semicolon (map formatExp exps))
 
 and fmtDcl (Val (name, exp)) =
-    pcat (hblock [text "val", text name, text "="],
-	  indent 4 (formatExp exp))
+    PP.pblock
+       [PP.hblock [text "val", text name, text "="],
+	indent 4 (formatExp exp)]
 
 and fmtDcls dcls = vblock (map fmtDcl dcls)
 

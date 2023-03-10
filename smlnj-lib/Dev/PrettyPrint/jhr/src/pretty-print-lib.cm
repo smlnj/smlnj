@@ -1,0 +1,29 @@
+(* pretty-print-lib.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  signature PRETTY_PRINT
+  structure PrettyPrint
+
+  signature PP_DEVICE
+
+  functor RenderFn
+
+  structure TextRenderer
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  format.sml
+  measure.sml
+  pp-device.sig
+  pretty-print.sig
+  pretty-print.sml
+  render-fn.sml
+  text-renderer.sml
