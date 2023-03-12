@@ -108,4 +108,26 @@ Note: All of this only applies to ANSI terminal output streams, like
 TextIO.stdOut. The property of being a terminal output stream is considered to
 be an intrinsic property of the stream, which is assumed and cannot be changed.
 
+==========================================================================================
+Version 2: ANSITerm device
+
+* Terminal mode state is represented by 7 refs instead of a ref to a "tmode" record:
+
+(* terminal mode state *)
+val fg : color ref = ref Black  (* foreground color, default black *)
+val bg : color ref = ref White  (* background color, default white *)
+val bf : bool ref = ref false   (* boldface? default false *)
+val ul : bool ref = ref false   (* underlining? default false *)
+val bl : bool ref = ref false   (* blinkiing? default false *)
+val dm : bool ref = ref false   (* dim? default false *)
+val iv : bool ref = ref false   (* invisible? default false *)
+
+* applyStyle : ANSITermStyle.style -> (unit -> unit) option
+
+For a given style argument
+
+    -- updates the corresponding terminal mode variable and sends string to terminal
+       if necessary, i.e. if there was a change
+    -- returns a (SOME) "revert" function that will revert the state and undo the
+       terminal mode change, if necessary (NONE if no change)
 

@@ -32,7 +32,7 @@ val iv : bool ref = ref false   (* invisible? default false *)
 fun setTermMode cmd =
     TextIO.output (outstream, T.toString [cmd])
 
-(* applyStyle : style -> reset option *)
+(* applyStyle : style -> (unit -> unit) option *)
 fun applyStyle (style: S.style)  : (unit -> unit) option =
     case style
       of S.FG new_fg =>
