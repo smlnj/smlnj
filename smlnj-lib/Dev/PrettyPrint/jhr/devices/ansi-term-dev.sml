@@ -43,42 +43,45 @@ structure ANSITermDev : sig
 	invis : bool
       }
 
-    val initState = {
-	  fg=NONE, bg=NONE,
-	  bold=false, blink=false, ul=false, rev=false, invis=false
-	}
+    val initState : state =
+	{fg=NONE, bg=NONE,
+	 bold=false, blink=false, ul=false, rev=false, invis=false}
 
-  (* compute the commands to transition from one state to another *)
-    fun transition (s1 : state, s2 : state) = let
-	(* compute the commands to set the foreground color *)
-	  val mv = (case (#fg s1, #fg s2)
-		 of (SOME c1, SOME c2) => if c1 = c2 then [] else [A.FG c2]
-		  | (_, SOME c) => [A.FG c]
-		  | (_, NONE) => [A.FG A.Default]
+    (* transition : state * state -> string *)
+    (* compute the commands to transition from state s1 to state s2 *)
+    fun transition (s1 : state, s2 : state) =
+	let (* compute the commands to set the foreground color *)
+	    val mv =
+		(case (#fg s1, #fg s2)
+		   of (SOME c1, SOME c2) => if c1 = c2 then [] else [A.FG c2]
+		    | (_, SOME c) => [A.FG c]
+		    | (_, NONE) => [A.FG A.Default]
 		(* end case *))
-	(* compute the commands to set the background color *)
-	  val mv = (case (#bg s1, #bg s2)
-		 of (SOME c1, SOME c2) => if c1 = c2 then mv else A.FG c2 :: mv
-		  | (_, SOME c) => A.BG c :: mv
-		  | (_, NONE) => A.FG A.Default :: mv
+	    (* compute the commands to set the background color *)
+  	    val mv =
+		(case (#bg s1, #bg s2)
+		   of (SOME c1, SOME c2) => if c1 = c2 then mv else A.FG c2 :: mv
+		    | (_, SOME c) => A.BG c :: mv
+  		    | (_, NONE) => A.FG A.Default :: mv
 		(* end case *))
-	(* compute the commands to set the other display attributes *)
-	  fun add (proj, cmd, off, mv) = (case (proj s1, proj s2)
-		 of (false, true) => cmd::mv
-		  | (true, false) => off::mv
-		  | _ => mv
+	    (* compute the commands to set the other display attributes *)
+	    fun add (proj, cmd, off, mv) =
+		(case (proj s1, proj s2)
+		   of (false, true) => cmd::mv
+		    | (true, false) => off::mv
+		    | _ => mv
 		(* end case *))
-	  val mv = add (#bold, A.BF, A.NORMAL, mv)
-	  val mv = add (#blink, A.BLINK, A.BLINK_OFF, mv)
-	  val mv = add (#ul, A.UL, A.UL_OFF, mv)
-	  val mv = add (#rev, A.REV, A.REV_OFF, mv)
-	  val mv = add (#invis, A.INVIS, A.INVIS_OFF, mv)
-	  in
-	    if null mv then "" else A.toString mv
-	  end
+	    val mv = add (#bold, A.BF, A.NORMAL, mv)
+	    val mv = add (#blink, A.BLINK, A.BLINK_OFF, mv)
+	    val mv = add (#ul, A.UL, A.UL_OFF, mv)
+	    val mv = add (#rev, A.REV, A.REV_OFF, mv)
+	    val mv = add (#invis, A.INVIS, A.INVIS_OFF, mv)
 
-  (* apply a command to a state *)
-    fun updateState1 (cmd, style as {fg, bg, bold, blink, ul, rev, invis}) = (
+	 in if null mv then "" else A.toString mv
+	end
+
+    (* apply a command to a state *)
+    fun updateState1 (cmd, state as {fg, bg, bold, blink, ul, rev, invis}) = (
 	  case cmd
 	   of A.FG c =>
 		{fg=SOME c,  bg=bg, bold=bold, blink=blink, ul=ul,   rev=rev,  invis=invis}
@@ -95,7 +98,7 @@ structure ANSITermDev : sig
 	    | A.INVIS =>
 		{fg=fg, bg=bg,      bold=bold, blink=blink, ul=ul,   rev=rev,  invis=true}
 (* TODO: add support for A.DIM *)
-	    | _ => style
+	    | _ => state
 	  (* end case *))
 
   (* apply a sequence of commands to a state *)
@@ -185,8 +188,13 @@ structure ANSITermDev : sig
   (* if the device is buffered, then flush any buffered output *)
     fun flush (DEV{dst, ...}) = TextIO.flushOut dst
 
-  (* enable styled output by passing true to this function.  It returns
-   * the previous state of the device.
+  (* styleMode : device * bool option -> bool *)
+  (* Enable styled output by passing (SOME true) as the second argument to this function.
+   * This "resets" the "mode" of the device and returns the previous mode of the device.
+   * Why should one expect to be able to change the mode of a device. It is determined
+   * (using isTTY) from the TextIO.outStream of the device that was provided when the device
+   * was created using openDev. If it wasn't originally an ANSI terminal device (outStream),
+   * resetting the mode field will not make it one.
    *)
     fun styleMode (DEV{stk = ref(_::_), ...}, _) =
 	  raise Fail "attempt to change mode inside scope of style"

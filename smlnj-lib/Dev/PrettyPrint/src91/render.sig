@@ -13,7 +13,7 @@
 signature RENDER =
 sig
 
-  val render : Format.format * (string -> unit) * int -> unit
+  val render : Format.format * int -> unit
   (* render (fmt, output, lineWidth): render fmt against lineWidth, using output to print a layout *)
 
 end (* signature RENDER *)
