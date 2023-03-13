@@ -135,7 +135,7 @@ applyStyle (style, format):
     -- if the style caused a change in terminal mode, returns a (SOME revert) where
        "revert" is a function that will revert the state and undo the
        terminal mode change. If the style did not change the terminal mode,
-       returns NONE (e.g. if style = BF and !bf = true).
+       returns NONE (e.g. if style = BF and !bf = true, so no reversion is necessary).
 
 It is assumed that the state variables are always kept in sync with the mode of the
 terminal outstream.
