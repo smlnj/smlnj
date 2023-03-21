@@ -1,5 +1,9 @@
 src91/term/term-notes.txt
 
+========================================================================================== 
+Version 1: tmode -- a terminal mode type
+==========================================================================================
+
 * Terminal mode
 
 Terminal mode is a record of modes that a ANSIterm may be in, according to the smlnj-lib ANSITerm structure.
@@ -108,8 +112,10 @@ Note: All of this only applies to ANSI terminal output streams, like
 TextIO.stdOut. The property of being a terminal output stream is considered to
 be an intrinsic property of the stream, which is assumed and cannot be changed.
 
-==========================================================================================
+
+========================================================================================== 
 Version 2: ANSITerm device
+==========================================================================================
 
 * Terminal mode state is represented by 7 refs instead of a ref to a "tmode" record:
 
@@ -145,3 +151,15 @@ resource, we would need to use some synchronization technique to guard against
 simultaneous attemps to change the terminal mode.  Here we assume we are in a
 single-threaded context.
 
+This is implemented in src91/term/device.sml.
+
+Note: This does not yet implement the "NOEMPH" style, which would
+presumably (within its "scope") reset the terminal to default mode for
+the format render and then restore the former mode.  This would mean
+capturing the former terminal mode as a record (of type tmode, as
+above), and the revert function would set the terminal mode to agree
+with saved tmode record.
+
+
+
+-------------------

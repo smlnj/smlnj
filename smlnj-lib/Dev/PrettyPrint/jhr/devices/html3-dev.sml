@@ -6,8 +6,8 @@
  * A pretty printing device that uses HTML (Version 3.2) markup to control layout.
  *)
 
-structure HTML3Dev : sig
-
+structure HTML3Dev
+: sig
     include PP_DEVICE
       where type token = HTML.text
 
@@ -43,7 +43,11 @@ structure HTML3Dev : sig
     val openDev : {wid : int, textWid : int option} -> device
     val done : device -> HTML.text
 
-  end = struct
+  end =
+
+struct
+
+  structure H = HTML (* smlnj-lib/HTML/html.sml -- HTML 3.2 *)
 
     datatype style
       = NOEMPH
@@ -54,13 +58,13 @@ structure HTML3Dev : sig
       | A of {href : string option, name : string option}
       | STYS of style list
 
-    type token = HTML.text
+    type token = H.text
 
     datatype device = DEV of {
 	lineWid : int option ref,
 	textWid : int option ref,
-	emphStk	: (HTML.text list * style) list ref,
-	txt : HTML.text list ref
+	emphStk	: (H.text list * style) list ref,
+	txt : H.text list ref
       }
 
   (* return the current emphasis *)
@@ -70,57 +74,74 @@ structure HTML3Dev : sig
 	  (* end case *))
 
   (* add PCDATA to the text list *)
-    fun pcdata (DEV{txt, ...}, s) = txt := HTML.PCDATA s :: !txt
+    fun pcdata (DEV{txt, ...}, s) = txt := H.PCDATA s :: !txt
 
-  (* replace the sequence of PCDATA elements at the head of the
-   * txt list with its concatenation.
-   *)
-    fun concatTxt (DEV{txt, ...}) = let
-	  fun f ([], []) = []
-	    | f (HTML.PCDATA s :: r, l) = f (r, s::l)
-	    | f (r, l) = HTML.PCDATA(String.concat l) :: r
-	  in
-	    f (!txt, [])
-	  end
+   (* concatTxt : device -> H.text list *)
+   (* replace the sequence of PCDATA elements at the head of the
+    * device's text list (!txt) with its concatenation.
+    *)
+    fun concatTxt (DEV{txt, ...}) =
+	let fun f ([], []) = []
+	      | f (H.PCDATA s :: r, l) = f (r, s::l)
+	      | f (r, l) = H.PCDATA(String.concat l) :: r
+	 in f (!txt, [])
+	end
 
+   (* concatTexts : H.text list -> H.text list *)
+   (* replace the sequence of PCDATA elements at the head of the
+    * device's text list (!txt) with its concatenation.
+    *)
+    fun concatTexts (texts: H.text list) =
+	let fun f ([]: H.text list, []: string list) = []
+	      | f (H.PCDATA s :: r, leads) = f (r, s::leads)
+	      | f (r, leads) =
+		(case leads
+		  of nil => r
+		   | _ => H.PCDATA (String.concat (rev leads)) :: r
+	 in f (texts, [])
+	end
+
+    (* wrapStyle : style * H.text list * H.text list -> H.text list *)
     fun wrapStyle (sty, [], tl') = tl'
-      | wrapStyle (sty, tl, tl') = let
-	  fun wrap (NOEMPH, t) = t
-	    | wrap (TT, t) = HTML.TT t
-	    | wrap (I, t) = HTML.I t
-	    | wrap (B, t) = HTML.B t
-	    | wrap (U, t) = HTML.U t
-	    | wrap (STRIKE, t) = HTML.STRIKE t
-	    | wrap (EM, t) = HTML.EM t
-	    | wrap (STRONG, t) = HTML.STRONG t
-	    | wrap (DFN, t) = HTML.DFN t
-	    | wrap (CODE, t) = HTML.CODE t
-	    | wrap (SAMP, t) = HTML.SAMP t
-	    | wrap (KBD, t) = HTML.KBD t
-	    | wrap (VAR, t) = HTML.VAR t
-	    | wrap (CITE, t) = HTML.CITE t
-	    | wrap (COLOR c, t) = HTML.FONT{color=SOME c, size=NONE, content=t}
-	    | wrap (A{name, href}, t) = HTML.A{
-		  name = name, href = href,
-		  rel = NONE, rev = NONE, title = NONE,
-		  content = t
-		}
-	    | wrap (STYS l, t) = List.foldr wrap t l
-	  val t = (case tl of [t] => t | _ => HTML.TextList(List.rev tl))
-	  in
-	    wrap(sty, t) :: tl'
+      | wrapStyle (sty, tl, tl') =
+	  let fun wrap (NOEMPH, t) = t
+		| wrap (TT, t) = H.TT t
+		| wrap (I, t) = H.I t
+		| wrap (B, t) = H.B t
+		| wrap (U, t) = H.U t
+		| wrap (STRIKE, t) = H.STRIKE t
+		| wrap (EM, t) = H.EM t
+		| wrap (STRONG, t) = H.STRONG t
+		| wrap (DFN, t) = H.DFN t
+		| wrap (CODE, t) = H.CODE t
+		| wrap (SAMP, t) = H.SAMP t
+		| wrap (KBD, t) = H.KBD t
+		| wrap (VAR, t) = H.VAR t
+		| wrap (CITE, t) = H.CITE t
+		| wrap (COLOR c, t) = H.FONT{color=SOME c, size=NONE, content=t}
+		| wrap (A{name, href}, t) =
+		    H.A {name = name, href = href,
+			 rel = NONE, rev = NONE, title = NONE,
+			 content = t}
+		| wrap (STYS l, t) = List.foldr wrap t l
+	      val t = (case tl of [t] => t | _ => H.TextList(List.rev tl))
+
+	   in wrap(sty, t) :: tl'
 	  end
 
-  (* push/pop a style from the devices style stack.  A pop on an
-   * empty style stack is a nop.
-   *)
-    fun pushStyle (dev as DEV{emphStk, txt, ...}, sty) = (
-	  emphStk := (concatTxt dev, sty) :: !emphStk;
-	  txt := [])
+    (* push/pop a style from the devices style stack.  A pop on an
+     * empty style stack is a nop. *)
+
+    (* pushStyle : device * style -> unit *)
+    fun pushStyle (dev as DEV{emphStk, txt, ...}, sty) =
+	(emphStk := (concatTexts (!txt), sty) :: !emphStk;
+	 txt := nil)
+
+    (* popStyle : device -> unit *)
     fun popStyle (DEV{emphStk as ref[], ...}) = ()
-      | popStyle (dev as DEV{emphStk as ref ((tl, sty) :: r), txt, ...}) = (
-	  txt := wrapStyle (sty, concatTxt dev, tl);
-	  emphStk := r)
+      | popStyle (dev as DEV{emphStk as ref ((tl, sty) :: rest), txt, ...}) =
+	(txt := wrapStyle (sty, concatTexts (!txt), tl);
+	 emphStk := rest)
 
   (* the default style for the device (this is the current style,
    * if the style stack is empty).
@@ -148,7 +169,7 @@ structure HTML3Dev : sig
 
   (* output a new-line to the device *)
     fun newline (dev as DEV{txt, ...}) =
-	  txt := HTML.BR{clear=NONE} :: (concatTxt dev)
+	  txt := H.BR{clear=NONE} :: (concatTxt dev)
 
   (* output a string in the current style to the device *)
     val string = pcdata
@@ -193,7 +214,7 @@ structure HTML3Dev : sig
 
     fun done (dev as DEV{emphStk = ref [], txt, ...}) = (case (concatTxt dev)
 	   of [t] => (txt := []; t)
-	    | l => (txt := []; HTML.TextList(List.rev l))
+	    | l => (txt := []; H.TextList(List.rev l))
 	  (* end case *))
       | done _ = raise Fail "device is not done yet"
 

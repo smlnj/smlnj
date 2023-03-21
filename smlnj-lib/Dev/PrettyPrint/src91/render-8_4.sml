@@ -14,6 +14,9 @@
  *  -- simplify Break constructor names: HardLine -> Hard, SoftLine -> Soft, NullBreak -> Null
  *)
 
+(* this is the old, non-functor version of the Render module. Replaced by the RenderFn module in 
+ * Version 9.1 *)
+
 structure Render : RENDER =
 struct
 
@@ -129,7 +132,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	 *   -- INVARIANT: outerBlm <= cc
 	 *   -- INVARIANT: we will never print to the left of the outer block's blm (outerBlm)
 	 *   -- ASSERT: if newlinep is true, then cc = outerBlm *)
-	fun render0  (format: format, outerBlm: int, cc: int, newlinep: bool) =
+	fun render0  (format: format, cc: int, newlinep: bool) =
 	      (case format
 	         of EMPTY =>  (* nothing printed, nothing changed; outerBlm not relevant *)
 		      (cc, newlinep)
@@ -144,18 +147,18 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		      renderABLOCK (formats, alignment, cc, newlinep)
 
 		  | INDENT (n, fmt) => (* soft indented block; depends on outerBlm *)
-		      if newlinep  (* ASSERT: at outerBlm after newline+indent (i.e. cc = outerBlm) *)
-		      then (sp n;  (* increase outerBlm indentation to cc' = outerBlm + n *)
-			    render0 (fmt, outerBlm, outerBlm + n, true))
-		      else render0 (fmt, outerBlm, cc, false) (* not on new line, proceed at cc without line break *)
+		      if newlinep  (* ASSERT: if newlinep then cc = blm of parent block *)
+		      then (sp n;  (* increase cc = cc + n (indenting n relative to blm of parent block *)
+			    render0 (fmt, cc + n, true))
+		      else render0 (fmt, cc, false) (* not on new line, proceed at cc without line break *)
 
 		  | FLAT format =>  (* unconditionally render the format as flat; outerBlm not relevant *)
 		      (flatRender (format, output); (cc + M.measure format, false))
 
 		  | ALT (format1, format2) =>
 		      if M.measure format1 <= lw - cc  (* format1 fits flat *)
-		      then render0 (format1, outerBlm, cc, newlinep)
-		      else render0 (format2, outerBlm, cc, newlinep))
+		      then render0 (format1, cc, newlinep)
+		      else render0 (format2, cc, newlinep))
 
         (* renderBLOCK : element list * int * bool -> int * bool
          *  rendering the elements of an BLOCK *)
@@ -165,19 +168,19 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 		  | re (element::rest, cc, newlinep) =
 		      (case element
 			 of FMT format =>
-			      let val (cc', newlinep') = render0 (format, blm, cc, newlinep)
+			      let val (cc', newlinep') = render0 (format, cc, newlinep)
 			       in re (rest, cc', newlinep')
 			      end
 			  | BRK break =>  (* rest should start with a FMT! *)
 			      (case break
-				 of Null  => re (rest, cc, false)
-				  | Hard   => (lineBreak blm; re (rest, blm, true))
-				  | Space n    => (sp n; re (rest, cc + n, newlinep))
-				  | Soft n =>
+				 of Null    => re (rest, cc, false)
+				  | Hard    => (lineBreak blm; re (rest, blm, true))
+				  | Space n => (sp n; re (rest, cc + n, false))
+				  | Soft n  =>
 				      (case rest  (* ASSERT: rest = FMT _ :: _; a BRK should be followed by a FMT *)
 					 of FMT format' :: rest' =>
 					      if M.measure format' <= (lw - cc) - n  (* lw - (cc + n) *)
-					      then let val (cc', newlinep') = (sp n; render0 (format', blm, cc + n, false))
+					      then let val (cc', newlinep') = (sp n; render0 (format', cc + n, false))
 						    in re (rest', cc', newlinep')
 						   end
 					      else (lineBreak blm; re (rest, blm, true))  (* trigger newline+indent *)
@@ -220,11 +223,11 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 			    fun renderRest (nil, cc, newlinep) = (cc, newlinep) (* when we've rendered all the formats *)
 			      | renderRest (format :: rest, cc, newlinep) =  (* newlinep argument not used in this case! *)
 				  let val (cc0, newlinep0) = renderBreak (cc, M.measure format)
-				      val (cc1, newlinep1) = render0 (format, blm, cc0, newlinep0)  (* render the next format *)
+				      val (cc1, newlinep1) = render0 (format, cc0, newlinep0)  (* render the next format *)
 				   in renderRest (rest, cc1, newlinep1)  (* then render the rest *)
 				  end
 
-			    val (cc', newlinep') = render0 (format, blm, cc, newlinep)  (* render the 1st format *)
+			    val (cc', newlinep') = render0 (format, cc, newlinep)  (* render the 1st format *)
 
 			 in renderRest (rest, cc', newlinep') (* then render the rest *)
 			end
@@ -234,7 +237,7 @@ fun render (format: format, output: string -> unit, lw: int) : unit =
 	      end (* fun renderABLOCK *)
 
     in (* the initial "context" of a render is a virtual newline + 0 indentation *)
-       ignore (render0 (format, 0, 0, true))
+       ignore (render0 (format, 0, true))
    end (* fun render *)
 
 end (* top local *)

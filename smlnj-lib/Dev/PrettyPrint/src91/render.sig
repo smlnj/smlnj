@@ -6,14 +6,17 @@
  *   -- no change
  * Version 6
  *   -- factored into separate Format, Render : RENDER, and NewPP : NEW_PP structures
+ * Version 9.1
+ *   -- RENDER is now the output signature of a RenderFn functor that takes a 
+ *      DEVICE structure as argument
+ *
  * Defines: signature RENDER *)
-
-(* In this version, the render function takes an (imperative) output function of type string -> unit. *)
 
 signature RENDER =
 sig
 
-  val render : Format.format * int -> unit
-  (* render (fmt, output, lineWidth): render fmt against lineWidth, using output to print a layout *)
+  val render : Format.format -> unit
+  (* render fmt: render fmt, using lineWidth and output functions
+   * provided by a device structure parameter. *)
 
 end (* signature RENDER *)
