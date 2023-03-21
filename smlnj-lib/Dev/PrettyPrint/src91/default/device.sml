@@ -1,17 +1,21 @@
 (* default-device.sml *)
 
-structure DefaultDevice : DEVICE where style = Style.style =
+structure DefaultDevice : DEVICE =
 struct
 
-  type style = Style.style
+local
+
+  structure S = Style
+
+in
 
   (* a single, fixed outstream defined for this device *)
   (* should the output stream be settable, or should it be a parameter? 
    * should the output functions all take an outstream as an extra argument? *)
   val outstream = TextIO.stdOut
 
-  val lineWidth : int ref = ref 90
-      (* is this used? *)
+  val lineWidth : int = 90
+      (* is this used? Not now. *)
 
   (* ====== the output functions ====== *)
 
@@ -25,11 +29,11 @@ struct
 
   (* newline : unit -> unit *)
   (* output a new-line to the device *)
-  fun newline () = TextIO.output1 (outStream, #"\n")
+  fun newline () = TextIO.output1 (outstream, #"\n")
 
   (* string : string -> unit *)
   (* output a string/character in the current style to the device *)
-  fun string (s: string) = TextIO.output (dst, s)
+  fun string (s: string) = TextIO.output (outstream, s)
 
   (* token : string -> unit *)
   (* output a string/character in the current style to the device *)
@@ -40,8 +44,9 @@ struct
   fun flush () = TextIO.flushOut outstream
 
 
-  (* renderStyled: style * (unit -> unit) -> unit *)
-  fun renderStyled (style: style, renderFormat: unit -> unit) : unit =
+  (* renderStyled: style * (unit -> 'a) -> 'a *)
+  fun 'a renderStyled (style: S.style, renderFormat: unit -> 'a) : 'a =
       renderFormat ()
 
+end (* top local *)
 end (* structure DefaultDevice : DEVICE *)

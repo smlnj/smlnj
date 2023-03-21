@@ -29,7 +29,10 @@
  *)
 
 (* structure Format:
- *   no signature, exports only datatypes: alignment, break, element, and format *)
+ *   no signature
+ *   exports datatypes: alignment, break, element, and format
+ *   imports Style
+ *)
 
 structure Format =
 struct
@@ -77,6 +80,7 @@ datatype format =
       (* to render ALT (format1, format2): render format1 if it fits, otherwise render format2.
        * Note that the two formats not constrained to have same content! But normally they should,
        * or at least content fmt2 should be an abbreviated or approximate version of content fmt1. *)
+  | STYLE of Style.style * format
 
 and element  (* components of special blocks *)
   = BRK of break

@@ -12,10 +12,11 @@ is
 
 $smlnj/basis/basis.cm
 
-default/style.sml    (* default style *)
+default/style.sml    (* Style: default style *)
 format.sml           (* Format *)
 measure.sig          (* MEASURE *)
 measure.sml          (* Measure *)
+device.sig           (* DEVICE *)
 render.sig           (* RENDER *)
 render-fct.sml       (* RenderFn *)
 default/device.sml   (* DefaultDevice *)

@@ -24,15 +24,16 @@
  *  by modifying the device (terminal) mode during the rendering of a styled format.
  *)
 
-structure RenderFn (D: DEVICE) : RENDER =
+functor RenderFn (D: DEVICE) : RENDER =
 struct
 
 local
-  open Format
+
+  structure F = Format
   structure M = Measure
   (* structure D is the functor parameter *)
 
-  fun error (msg: string) = (print ("NewPrettyPrint Error: " ^ msg); raise Fail "Render")
+  fun error (msg: string) = (print ("PrettyPrint Error: " ^ msg); raise Fail "Render")
 in
 
 (* --------------------------------------------------------------------------------
@@ -56,7 +57,7 @@ fun lineBreak n = (D.newline (); D.indent n)
  * (state = (cc, newlinep)). cc represents the "print cursor", while newlinep indicates whether we are starting
  * immediately after a line break (a newline + indentation).
  *)
-fun render (format: format, lineWidth: int) : unit =
+fun render (format: F.format, lineWidth: int) : unit =
     let (* lineBreak : int -> unit  -- output a newline followed by an indentation of n spaces *)
 
 	(* flatRender : format -> unit
@@ -67,35 +68,35 @@ fun render (format: format, lineWidth: int) : unit =
 	fun flatRender format =
 	    let (* render0: format -> unit
 		 *   -- recurses over the format structure *)
-		fun render0  (format: format) =
+		fun render0  (format: F.format): unit =
 		      (case format
-			of EMPTY => ()
-			 | TEXT s => D.string s
-			 | BLOCK {elements, ...} => renderBLOCK elements
-			 | ABLOCK {formats, ...} => renderABLOCK formats
-			 | INDENT (_, fmt) => render0 fmt
-			 | FLAT fmt => render0 fmt
-			 | ALT (fmt, _) => render0 fmt   (* any format fits, so choose first arg *)
-		         | STYLE (s, fmt) = D.renderStyled (s, fn () => render0 fmt)
+			of F.EMPTY => ()
+			 | F.TEXT s => D.string s
+			 | F.BLOCK {elements, ...} => renderBLOCK elements
+			 | F.ABLOCK {formats, ...} => renderABLOCK formats
+			 | F.INDENT (_, fmt) => render0 fmt
+			 | F.FLAT fmt => render0 fmt
+			 | F.ALT (fmt, _) => render0 fmt   (* any format fits, so choose first arg *)
+		         | F.STYLE (s, fmt) => D.renderStyled (s, fn () => render0 fmt))
 
 		(* renderBLOCK : element list -> unit *)
-		and renderBLOCK nil = sp 1  (* render an empty BLOCK as a single space *)
+		and renderBLOCK nil = () (* should not happen *)
 		  | renderBLOCK elements =
 		      let fun rend nil = ()
 			    | rend (element::rest) =
 				(case element
-				   of FMT format => (render0 format; rend rest)
-				    | BRK break =>
+				   of F.FMT format => (render0 format; rend rest)
+				    | F.BRK break =>
 				       (case break
-					 of Hard    => (D.space 1; rend rest)
-					  | Soft n  => (D.space n; rend rest)
-					  | Space n => (D.space n; rend rest)
-					  | Null    => rend rest))
+					 of F.Hard    => (D.space 1; rend rest)
+					  | F.Soft n  => (D.space n; rend rest)
+					  | F.Space n => (D.space n; rend rest)
+					  | F.Null    => rend rest))
 		       in rend elements
 		      end
 
 		(* renderABLOCK : format list -> unit *)
-		and renderABLOCK nil = D.space 1
+		and renderABLOCK nil = ()  (* should not happen *)
 		  | renderABLOCK formats =  (* ASSERT: not (nill formats) *)
 		      let fun rf nil = ()
 			    | rf [format] = render0 format (* no break after last format *)
@@ -121,35 +122,35 @@ fun render (format: format, lineWidth: int) : unit =
 	 *   -- INVARIANT: outerBlm <= cc
 	 *   -- INVARIANT: we will never print to the left of the outer block's blm (outerBlm)
 	 *   -- ASSERT: if newlinep is true, then cc = outerBlm *)
-	fun render1  (format: format, cc: int, newlinep: bool) =
+	fun render1  (format: F.format, cc: int, newlinep: bool) : int * bool =
 	      (case format
-	         of EMPTY =>  (* nothing printed, cc, newlinep passed through unchanged *)
+	         of F.EMPTY =>  (* nothing printed, cc, newlinep passed through unchanged *)
 		      (cc, newlinep)
 
-		  | TEXT s =>  (* print the string unconditionally; move cc accordingly *)
+		  | F.TEXT s =>  (* print the string unconditionally; move cc accordingly *)
 		      (D.string s; (cc + size s, false))
 
- 		  | BLOCK {elements, ...} => (* establishes a new local blm = cc for the BLOCK *)
+ 		  | F.BLOCK {elements, ...} => (* establishes a new local blm = cc for the BLOCK *)
 		      renderBLOCK (elements, cc, newlinep)
 
-		  | ABLOCK {formats, alignment, ...} => (* establishes a new local blm = cc for the ABLOCK *)
+		  | F.ABLOCK {formats, alignment, ...} => (* establishes a new local blm = cc for the ABLOCK *)
 		      renderABLOCK (formats, alignment, cc, newlinep)
 
-		  | INDENT (n, fmt) => (* soft indented block; depends on outerBlm *)
+		  | F.INDENT (n, fmt) => (* soft indented block; depends on outerBlm *)
 		      if newlinep  (* ASSERT: at outerBlm after newline+indent (i.e. cc = outerBlm) *)
 		      then (D.space n;  (* cc is parent block's blm, after a newline+indent *)
 			    render1 (fmt, cc + n, true))
 		      else render1 (fmt, cc, false) (* not on new line, proceed at cc without line break *)
 
-		  | FLAT format =>  (* unconditionally render the format as flat; outerBlm not relevant *)
+		  | F.FLAT format =>  (* unconditionally render the format as flat; outerBlm not relevant *)
 		      (flatRender format; (cc + M.measure format, false))
 
-		  | ALT (format1, format2) =>
+		  | F.ALT (format1, format2) =>
 		      if M.measure format1 <= lineWidth - cc  (* format1 fits flat *)
 		      then render1 (format1, cc, newlinep)
 		      else render1 (format2, cc, newlinep)
 
-		  | STYLE (s, fmt) => D.renderStyled (s, (fn () => render1 (fmt, cc, newlinep))))
+		  | F.STYLE (s, fmt) => D.renderStyled (s, (fn () => render1 (fmt, cc, newlinep))))
 
         (* renderBLOCK : element list * int * bool -> int * bool
          *  rendering the elements of an BLOCK
@@ -158,20 +159,20 @@ fun render (format: format, lineWidth: int) : unit =
             let fun renderElements (nil, cc, newlinep) = (cc, newlinep)
 		  | renderElements (element::rest, cc, newlinep) =
 		      (case element
-			 of FMT format =>
+			 of F.FMT format =>
 			      let val (cc', newlinep') = render1 (format, cc, newlinep)
 			       in renderElements (rest, cc', newlinep')
 			      end
-			  | BRK break =>  (* rest should start with a FMT! *)
+			  | F.BRK break =>  (* rest should start with a FMT! *)
 			      (case break
-				 of Null    => renderElements (rest, cc, false)
-				  | Hard    => (lineBreak blm; renderElements (rest, blm, true))
-				  | Space n => (sp n; renderElements (rest, cc + n, newlinep))
-				  | Soft n  =>
+				 of F.Null    => renderElements (rest, cc, false)
+				  | F.Hard    => (lineBreak blm; renderElements (rest, blm, true))
+				  | F.Space n => (D.space n; renderElements (rest, cc + n, newlinep))
+				  | F.Soft n  =>
 				      (case rest  (* ASSERT: rest = FMT _ :: _; a BRK should be followed by a FMT *)
-					 of FMT format' :: rest' =>
+					 of F.FMT format' :: rest' =>
 					      if M.measure format' <= (lineWidth - cc) - n  (* lineWidth - (cc + n) *)
-					      then let val (cc', newlinep') = (sp n; render1 (format', cc + n, false))
+					      then let val (cc', newlinep') = (D.space n; render1 (format', cc + n, false))
 						    in renderElements (rest', cc', newlinep')
 						   end
 					      else (lineBreak blm; renderElements (rest, blm, true))  (* trigger newline+indent *)
@@ -201,10 +202,10 @@ fun render (format: format, lineWidth: int) : unit =
 			let (* renderBreak : [cc]int * [m]int -> int * bool  -- m is the measure of following format *)
 			    val renderBreak : (int * int) -> (int * bool) =
 				  (case alignment
-				     of C => (fn (cc, m) => (cc, false))
-				      | H => (fn (cc, m) => (D.space 1; (cc+1, false)))
-				      | V => (fn (cc, m) => (lineBreak blm; (blm, true)))
-				      | P =>  (* virtual break is Soft 1 *)
+				     of F.C => (fn (cc, m) => (cc, false))
+				      | F.H => (fn (cc, m) => (D.space 1; (cc+1, false)))
+				      | F.V => (fn (cc, m) => (lineBreak blm; (blm, true)))
+				      | F.P =>  (* virtual break is Soft 1 *)
 					  (fn (cc, m) =>
 					      if m <= (lineWidth - cc) - 1  (* conditional on m *)
 					      then (D.space 1; (cc+1, false)) (* no line break, print 1 space *)

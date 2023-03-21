@@ -30,20 +30,20 @@ in
 end
 
 (* render : format * (string -> unit) * int -> unit *)
-fun render (fmt, outputFn, lineWidth) =
-    R.render (PP.formatRep fmt, outputFn, lineWidth)
+fun render (fmt, lineWidth) =
+    R.render (PP.formatRep fmt, lineWidth)
 
 (* printFormatLW : int -> format -> unit *)
-fun printFormatLW lw format = render (PP.appendNewLine format, print, lw)
+fun printFormatLW lw format = render (PP.appendNewLine format, lw)
 
 (* printFormatLW' : format -> int -> unit *)
-fun printFormatLW' format lw = render (PP.appendNewLine format, print, lw)
+fun printFormatLW' format lw = render (PP.appendNewLine format, lw)
 
 (* printFormat : format -> unit *)
-fun printFormat format = render (format, print, getLineWidth ())
+fun printFormat format = render (format, getLineWidth ())
 
 (* printFormatNL : format -> unit *)
-fun printFormatNL format = render (PP.appendNewLine format, print, getLineWidth ())
+fun printFormatNL format = render (PP.appendNewLine format, getLineWidth ())
 
 end (* top local *)
 end (* structure PrintFormat *)

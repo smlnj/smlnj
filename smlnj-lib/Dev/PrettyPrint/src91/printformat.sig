@@ -20,7 +20,7 @@ sig
 
   (* Printing formats *)
 
-    val render : Format.format * (string -> unit) * int -> unit
+    val render : Format.format * int -> unit
 
     val printFormatLW  : int -> format -> unit
         (* printing to stdOut, with line width (LW) as first argument *)

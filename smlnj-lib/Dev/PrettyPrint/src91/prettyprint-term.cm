@@ -10,15 +10,17 @@ Library
 
 is
 
-$smlnj/basis/basis.cm
+$/basis.cm
+$/smlnj-lib.cm
 
 term/style.sml    (* Style: styles for ANSI terminal *)
 format.sml
 measure.sig
 measure.sml
+device.sig
 render.sig
 render-fct.sml
-term/device.sml   (* ANSITERMdevice *)
+term/device.sml   (* ANSITermDevice *)
 term/render.sml   (* Render = RenderFn (ANSITERMdevice) *)
 formatting.sig
 formatting.sml

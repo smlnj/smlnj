@@ -1,3 +1,3 @@
 (* .../PrettyPrint/src91/term/render.sml *)
 
-structure Render = RenderFn (ANSITERMdevice)
+structure Render = RenderFn (ANSITermDevice)

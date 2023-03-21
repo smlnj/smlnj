@@ -5,9 +5,6 @@
 signature DEVICE =
 sig
 
-    type style
-
-
     val space  : int -> unit
     val indent : int -> unit
     val newline : unit -> unit
@@ -15,9 +12,9 @@ sig
     val token : string -> unit
     val flush : unit -> unit
 
-    val lineWidth : int ref
+    val lineWidth : int
 
-    val renderStyled : style -> unit
-      (* used to render styled formats in render.sml *)
+    val renderStyled : Style.style * (unit -> 'a) -> 'a
+      (* used to render styled formats in render-fct.sml *)
 
 end (* signature DEVICE *)
