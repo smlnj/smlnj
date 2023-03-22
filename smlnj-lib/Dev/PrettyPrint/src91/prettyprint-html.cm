@@ -10,13 +10,14 @@ Library
 
 is
 
-$smlnj/basis/basis.cm
+$/basis.cm
+$/html-lib.cm
 
 html/style.sml    (* Style: styles for HTML 3 *)
 format.sml
 measure.sig
 measure.sml
-render.sig
+html/render.sig
 html/render.sml   (* Render: HTML renderer *)
 formatting.sig
 formatting.sml

@@ -22,7 +22,7 @@ local
   structure H = HTML (* smlnj-lib/HTML/html.sml (HTML 3 abstract syntax) *)
   structure F = Format
   structure M = Measure
-  structure S = HTMLStyle (* html/html-style.sml *)
+  structure S = Style (* html/html-style.sml *)
 
   fun error (msg: string) = (print ("NewPrettyPrint Error: " ^ msg); raise Fail "Render")
 in
@@ -33,7 +33,7 @@ in
 val empty = H.TextList nil
 
 (* textCat : H.text * H.text -> H.text *)
-fun textCat (text1, text2) = H.TextList [t1, t2]
+fun textCat (text1, text2) = H.TextList [text1, text2]
 
 (* listToText : H.text list -> H.text *)
 fun listToText nil = empty
@@ -102,107 +102,91 @@ fun consolidate text =
        | H.A{name, href, rel, rev, title, content} =>
 	   H.A {name = name, href = href,
 		rel = rel, rev = rev, title = title,
-		content = consolidate content})
-       | H.PCDATA s = text
-       | H.TextList texts = H.TextList (flat (texts, nil, nil))
+		content = consolidate content}
+       | H.PCDATA s => text
+       | H.TextList texts => H.TextList (flat (texts, nil, nil)))
 
 (* flat : text list * string list * text list *)
 and flat (nil, nil, segs) = (rev segs)
-  | flat (nil, strings, segs) = PCDATA (concat (rev strings)) :: segs
+  | flat (nil, strings, segs) = H.PCDATA (concat (rev strings)) :: segs
   | flat (H.PCDATA s :: rest, strings, segs) = flat (rest, s::strings, segs)
-  | flat (TextList texts :: rest, strings, segs) = flat (texts @ rest, strings, segs)
+  | flat (H.TextList texts :: rest, strings, segs) = flat (texts @ rest, strings, segs)
   | flat (text :: rest, strings, segs) =
-      flat (rest, nil, (consolidate text) :: PCDATA (String.concat (rev strings)) :: segs)
+      flat (rest, nil, (consolidate text) :: H.PCDATA (String.concat (rev strings)) :: segs)
 
-(* There are two rendering functions: flatRender and render. *)
+(* lineBreak : int * H.text list -> H.text list *)
+fun lineBreak (ind: int, texts: H.text list) = space ind :: H.BR{clear=NONE} :: texts
 
-(* flatRender : format -> H.text
- *   render as though on an unbounded line (lw = "infinity"), thus "flat" (i.e. no line space pressure).
- *   _No_ newlines are triggered, not even Hard breaks and INDENT formats, which are
- *   rendered as single spaces, like Softline breaks. Thus we do not need to keep track of cc and 
- *   newlinep (post line break status).
- *   flatRender is called once when rendering a FLAT format when the format fits.
- *   NOTE: flat formatting is independent of order in blocks, so we can use foldr *)
-fun flatRender format =
-    let (* render0: format -> H.text
-         * -- recurses over the format structure, translating into HTML.text while suppressing all line breaks. *)
-	fun render0  (format: format) =
-	      (case format
-		of F.EMPTY => empty
-		 | F.TEXT s => H.PCDATA s
-		 | F.BLOCK {elements, ...} => renderBLOCK elements
-		 | F.ABLOCK {formats, ...} => renderABLOCK formats
-		 | F.INDENT (_, fmt) => render0 fmt  (* ignoring INDENT *)
-		 | F.FLAT fmt => render0 fmt         (* already flat, so FLAT does nothing *)
-		 | F.ALT (fmt, _) => render0 fmt     (* any format fits, so render first *)
-		 | F.STYLE (style, fmt) => wrapStyle (style, render0 fmt))
+(* There is one exported rendering function: render. *)
 
-        (* renderBLOCK : element list -> H.text *)
-        and renderBLOCK nil = empty  (* render an empty BLOCK as empty; should not happen! *)
-          | renderBLOCK elements =
-            let (* folder : (H.text list * element -> H.text list) -> H.text list *)
-		fun folder (texts, element) =
-		      (case element
-			 of F.FMT format => render0 format :: texts
-			  | F.BRK break =>
-			     (case break
-			       of F.Hard    => space 1 :: texts
-				| F.Soft n  => space n :: texts
-				| F.Space n => space n :: texts
-				| F.Null    => texts))
-	     in listToText (foldr folder nil elements)
-	    end
-
-        (* renderABLOCK : format list -> H.text *)
-        and renderABLOCK alignment formats = (* ASSERT: not (null formats) *)
-	    let val space1 = space 1  (* 1 nonbreakable space *)
-		val separator : text * text list -> text list =
-		    (case alignment
-		      of F.C => (op ::)
-		       | _ => (fn (text, texts) => (text :: space1 :: texts))
-		fun folder (texts, format) = 
-		    separator (texts, render0 format)
-	       in listToText (foldr folder nil formats)
-	      end
-
-    in render0 format
-   end (* fun flatRender *)
-
-(* Block Left Margin (blm: int)
- * The blm is the "left margin" of a block assigned to it by the renderer.  No non-blank character
- * in the block should be printed to the left of this margin.
- *
- * The blm of a nonindenting block is defined as the cc at the point where that block is rendered.
- * The blm of an indenting block is the parent block's blm + the specified incremental indentation.
- * The blm only changes when entering an indented block.
- * Note that if the blm is (column) 3, then the indentation is 3, because the column counts from zero.
- *)
-
-(* QUESTION: under what circumstances will a rendered format _end_ with a newline+indent?
- * If this doesn't, or can't, happen, then the returned newlinep value will always be false, and is
- * therefore redundant. 
- * Possible general principle: line breaks don't come at the end of a (rendered) format.
- * Are there arguments or examples that contradict this principle?
- *)
-
-(* render : format * int -> H.text
+(* render : format * [lw]int -> H.text
  *   format: format  -- the format to be rendered and printed
- *   output: string -> unit  -- the output function
  *   lw: int  -- the line width, assumed fixed during the rendering
  * The top-level render function decides where to conditionally break lines, and how much indentation
- * should follow
- * each line break, based on the line space available (the difference between the currend column and
- * the line width).
- * In this version (Version 8), the render function also prints the content and formatting, using the
- * output function passed as the second argument. So in this version, rendering and printing are
- * unified and there is no intermediate "layout" structure.
+ * should follow each line break, based on the line space available (the difference between the current
+ * column and the line width).
+ * In this version (Version 9.1 - HTML), the render function also prints the content and formatting,
+ * using the output function passed as the second argument. So in this version, rendering and printing
+ * are unified and there is no intermediate "layout" structure.
  * Internal rendering functions (render0, renderBLOCK, renderABLOCK) : state -> state,
  * where state = int * bool (state = (cc, newlinep)).
  * cc represents the "print cursor", while newlinep indicates whether we are starting
  * immediately after a line break (a newline + indentation).
  *)
-fun render (format: format, lineWidth: int) : unit =
-    let 
+fun render (format: F.format, lineWidth: int) : H.text =
+    let (* flatRender : format -> H.text
+	 *   render as though on an unbounded line (lw = "infinity"), thus "flat" (i.e. no line space pressure).
+	 *   _No_ newlines are triggered, not even Hard breaks and INDENT formats, which are
+	 *   rendered as single spaces, like Softline breaks. Thus we do not need to keep track of cc and 
+	 *   newlinep (post line break status).
+	 *   flatRender is called once when rendering a FLAT format when the format fits.
+	 *   NOTE: flat formatting is independent of order in blocks, so we can use foldr *)
+	fun flatRender format =
+	    let (* render1: format -> H.text
+		 * recurses over the format structure, translating into HTML.text while suppressing all
+		 * line breaks. *)
+		fun render1  (format: F.format) =
+		      (case format
+			of F.EMPTY => empty
+			 | F.TEXT s => H.PCDATA s
+			 | F.BLOCK {elements, ...} => renderBLOCK elements
+			 | F.ABLOCK {alignment, formats, ...} => renderABLOCK alignment formats
+			 | F.INDENT (_, fmt) => render1 fmt  (* ignoring INDENT *)
+			 | F.FLAT fmt => render1 fmt         (* already flat, so FLAT does nothing *)
+			 | F.ALT (fmt, _) => render1 fmt     (* any format fits, so render first *)
+			 | F.STYLE (style, fmt) => wrapStyle (style, render1 fmt))
+
+		(* renderBLOCK : element list -> H.text *)
+		and renderBLOCK nil = empty  (* render an empty BLOCK as empty; should not happen! *)
+		  | renderBLOCK elements =
+		    let (* folder : element * H.text list -> H.text list *)
+			fun folder (element, texts) =
+			      (case element
+				 of F.FMT format => render1 format :: texts
+				  | F.BRK break =>
+				     (case break
+				       of F.Hard    => space 1 :: texts
+					| F.Soft n  => space n :: texts
+					| F.Space n => space n :: texts
+					| F.Null    => texts))
+		     in listToText (foldr folder nil elements)
+		    end
+
+		(* renderABLOCK : format list -> H.text *)
+		and renderABLOCK alignment formats = (* ASSERT: not (null formats) *)
+		    let val space1 = space 1  (* 1 nonbreakable space *)
+			val separator : H.text * H.text list -> H.text list =
+			    (case alignment
+			      of F.C => (op ::)
+			       | _ => (fn (text, texts) => (text :: space1 :: texts)))
+			fun folder (format: F.format, texts: H.text list) = 
+			    separator (render1 format, texts)
+		       in listToText (foldr folder nil formats)
+		      end
+
+	    in render1 format
+	   end (* fun flatRender *)
+
         (* render1: format * int * bool -> text * int * bool
 	 * the main recursive rendering of the format
 	 * Inputs:
@@ -226,42 +210,42 @@ fun render (format: format, lineWidth: int) : unit =
 	 *   -- INVARIANT: outerBlm <= cc
 	 *   -- INVARIANT: we will never print to the left of the outer block's blm (outerBlm)
 	 *   -- ASSERT: if newlinep is true, then cc = outerBlm *)
-	fun render1  (format: format, cc: int, newlinep: bool) =
+	fun render1  (format: F.format, cc: int, newlinep: bool) =
 	      (case format
-	         of EMPTY =>  (* produces empty text, cc unchanged (no "progress"), no line break *)
+	         of F.EMPTY =>  (* produces empty text, cc unchanged (no "progress"), no line break *)
 		      (empty, cc, newlinep)
 
-		  | TEXT s =>  (* print the string unconditionally; move cc its size *)
+		  | F.TEXT s =>  (* print the string unconditionally; move cc its size *)
 		      (H.PCDATA s, cc + size s, false)
 
- 		  | BLOCK {elements, ...} => (* establishes a new local blm = cc for the BLOCK *)
+ 		  | F.BLOCK {elements, ...} => (* establishes a new local blm = cc for the BLOCK *)
 		      renderBLOCK (elements, cc, newlinep)
 
-		  | ABLOCK {formats, alignment, ...} =>
+		  | F.ABLOCK {formats, alignment, ...} =>
 		      (* establishes a new local blm = cc for the ABLOCK *)
 		      renderABLOCK (alignment, formats, cc, newlinep)
 
-		  | INDENT (n, format) =>
+		  | F.INDENT (n, format) =>
 		      (* soft indented block; depends on outerBlm *)
 		      if newlinep  (* ASSERT: cc = parent's blm after newline+indent *)
 		      then let val (text, cc', newlinep') = render1 (format, cc + n, true)
 			    in (textCat (space n, text), cc', newlinep')
 			   end
 		      else (* not following a line break (+ indent); proceed at cc *)
-			   render1 (fmt, cc, false)
+			   render1 (format, cc, false)
 
-		  | FLAT format =>
+		  | F.FLAT format =>
 		      (* unconditionally render the format as flat; outerBlm not relevant *)
 		      (flatRender format, cc + M.measure format, false)
 
-		  | ALT (format1, format2) =>
+		  | F.ALT (format1, format2) =>
 		      if M.measure format1 <= lineWidth - cc  (* format1 fits flat *)
 		      then render1 (format1, cc, newlinep)
 		      else render1 (format2, cc, newlinep)
 
-                  | STYLE (style, format) =>
-		      let val (text, cc', newlinep') = render1 (format, cc, newline)
-		       in (wrapStyle text, cc', newlinep')
+                  | F.STYLE (style, format) =>
+		      let val (text, cc', newlinep') = render1 (format, cc, newlinep)
+		       in (wrapStyle (style, text), cc', newlinep')
 		      end)
 
         (* How to deal with adjacent breaks in BLOCKs:
@@ -281,8 +265,6 @@ fun render (format: format, lineWidth: int) : unit =
          *   produce a blank line when rendered.
          *)
 
-        fun lineBreak (ind: int, texts: H.text list) = space ind :: H.BR{clear=NONE} :: texts
-
         (* renderBLOCK : element list * int * bool -> H.text * int * bool
          *  rendering the elements of an BLOCK *)
         and renderBLOCK (elements, cc, newlinep) =
@@ -293,23 +275,23 @@ fun render (format: format, lineWidth: int) : unit =
 		fun iter (nil, texts, cc, newlinep) = (texts, cc, newlinep)
 		  | iter (element :: rest, texts, cc, newlinep) =
 		    case element
-		      of FMT format =>
+		      of F.FMT format =>
 			   let val (text, cc', newlinep') = render1 (format, cc, newlinep)
 			    in (text::texts, cc', newlinep')
 			   end
-		       | BRK break =>  (* rest should start with a FMT! (or keep skipping breaks until this is true) *)
+		       | F.BRK break =>  (* rest should start with a FMT! (or keep skipping breaks until this is true) *)
 			   (case break
-			      of Null    => (texts, cc, false)
-			       | Hard    => (lineBreak (blm, texts), blm, true)
-			       | Space n => (space n :: texts, cc + n, false)
-			       | Soft n  =>  (* oops -- only have the current (head) element, don't have the "rest" *)
+			      of F.Null    => (texts, cc, false)
+			       | F.Hard    => (lineBreak (blm, texts), blm, true)
+			       | F.Space n => (space n :: texts, cc + n, false)
+			       | F.Soft n  =>  (* oops -- only have the current (head) element, don't have the "rest" *)
 				   (case rest  
-				      of FMT format' :: rest' =>  (* lookahead one format element *)12
+				      of F.FMT format' :: rest' =>  (* lookahead one format element *)
 					   if M.measure format' <= (lineWidth - cc) - n  (* format' fits *)
 					   then iter (rest, space n :: texts, cc+n, false) (* "emit" n spaces *)
 					   else iter (rest, lineBreak (blm, texts), blm, true)
 			                        (* trigger newline+indent *)
-				       | _ :: rest' => iter (rest', texts, cc, newlinep)
+				       | _ :: rest' => iter (rest', texts, cc, newlinep)))
 			                  (* skip a break that is followed by a break *)
 
 		val (texts, cc', newlinep') = iter (elements, nil, cc, newlinep)
@@ -332,12 +314,12 @@ fun render (format: format, lineWidth: int) : unit =
 	      let (* val _ = print ">>> renderABLOCK[not nil]\n" *)
 		  val blm = cc  (* this ABLOCK's blm is set to the entry cc, just like for BLOCK *)
 		  (* renderBreak : [cc:]int * [measure:]m -> [cc:]int * [newlinep:]bool *)
-		  val renderBreak : (text list * int * int) -> (text list * int * bool) =
+		  val renderBreak : (H.text list * int * int) -> (H.text list * int * bool) =
 		      (case alignment
-			of C => (fn (texts, cc, m) => (texts, cc, false))
-			 | H => (fn (texts, cc, m) => (space 1 :: texts, cc+1, false))
-			 | V => (fn (texts, cc, m) => (lineBreak (blm, texts), blm, true))
-			 | P =>  (* virtual break is Soft 1 *)
+			of F.C => (fn (texts, cc, m) => (texts, cc, false))
+			 | F.H => (fn (texts, cc, m) => (space 1 :: texts, cc+1, false))
+			 | F.V => (fn (texts, cc, m) => (lineBreak (blm, texts), blm, true))
+			 | F.P =>  (* virtual break is Soft 1 *)
 			     (fn (texts, cc, m) =>
 				 if m <= (lineWidth - cc) - 1  (* conditional on m *)
 				 then (space 1  :: texts, cc+1, false) (* fits -- no line break; "emit" a space *)
@@ -363,15 +345,14 @@ fun render (format: format, lineWidth: int) : unit =
 		   | [format] => render1 (format, cc, newlinep)
 		   | format1::rest => (* ASSERT not (null rest) *)
 		       let val (text1, cc1, newlinep1) = render1 (format1, cc, newlinep)
-		       in iter (rest, [text1], cc1, newlinep1)
+		        in iter (rest, [text1], cc1, newlinep1)
 		       end
-	       in iter (formats, nil, cc, newlinep)
 	      end
 
 	  (* the initial "context" of a render is a virtual newline + 0 indentation, hence cc=0 and newlinep=true *)
-	  val (texts, _, _) = render1 (format, 0, 0, true)
+	  val (text, _, _) = render1 (format, 0, true)
 
-    in consolidate (listToText texts)
+    in consolidate text
    end (* fun render *)
 
 end (* top local *)
@@ -379,14 +360,16 @@ end (* structure Render *)
 
 (* NOTES:
 
-1. All newlines are followed by the cumulative block indentation, which may be 0, produced by the lineBreak output function.
+1. All newlines are followed by the cumulative block indentation, which may be 0, produced by the lineBreak
+   output function.
 
 2. blm (block left margin) values represent the cummulative effect of the indentations of containing blocks.
    -- the blm of an "in-line" (or non-indented) block is set to the current column (cc) at the entry to the block
-   -- the blm of an indented block is set to the parent block's blm incremented by the block's indentation (if triggered)
+   -- the blm of an indented block is set to the parent block's blm incremented by the block's indentation
+      (if triggered)
 
-3. [Q: Edge case] Should INDENT (n, EMPTY) produce nothing (since the format has no content) or should it produce
-   a line break (newline+indent) and nothing else?
+3. [Q: Edge case] Should INDENT (n, EMPTY) produce nothing (since the format has no content) or should
+   it produce a line break (newline+indent) and nothing else?
 
 4. [Q1] Does rendering a format ever end with a final newline+indent?
    [Q2] Is BLOCK {elements = [BRK Hard], ...} a valid block? If so, it "ends with a newline".
@@ -408,5 +391,21 @@ Also, a basic block whose last element is a BRK (Hard) is possible. Such a block
 a newline+indent (to its blm?).
 
 Should this be disallowed?  Probably not, until we find that it is causing problems or confusion for users.
+
+
+5. Block Left Margin (blm: int)
+    The blm is the "left margin" of a block assigned to it by the renderer.  No non-blank character
+    in the block should be printed to the left of this margin.
+
+    The blm of a nonindenting block is defined as the cc at the point where that block is rendered.
+    The blm of an indenting block is the parent block's blm + the specified incremental indentation.
+    The blm only changes when entering an indented block.
+    Note that if the blm is (column) 3, then the indentation is 3, because the column counts from zero.
+
+QUESTION: under what circumstances will a rendered format _end_ with a newline+indent?
+    If this doesn't, or can't, happen, then the returned newlinep value will always be false, and is
+    therefore redundant. 
+    Possible general principle: line breaks don't come at the end of a (rendered) format.
+    Are there arguments or examples that contradict this principle?
 
 *)
