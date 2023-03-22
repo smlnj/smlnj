@@ -211,4 +211,6 @@ sig
     val hvblock : format list -> format
 	(* acts as hblock if it fits, otherwise as vblock *)
 
+    val styled : Style.style -> format -> format
+
 end (* end FORMATTING *)
