@@ -82,7 +82,11 @@ local
 
 in
 
+(* types from the Format structure *)
 type format = F.format
+datatype alignment = datatype F.alignment
+datatype element = datatype F.element
+datatype break = datatype F.break
 
 (* but we need a coercion back to Format.format so that we can pass abstract formats to
  * functions like Render.render that need the concrete type. formatRep is the identity. *)
@@ -100,7 +104,7 @@ fun reduceFormats (formats: format list) =
 
 (* reduceElements : element list -> element list *)
 (*   filter out FMT EMPTY elements *)
-fun reduceElements (elements: element list) =
+fun reduceElements (elements: F.element list) =
     let fun notEmpty (F.FMT F.EMPTY) = false
 	  | notEmpty _ = true
      in List.filter notEmpty elements
@@ -111,14 +115,14 @@ fun reduceElements (elements: element list) =
  *   Returns EMPTY if the element list is null. *)
 fun block elements =
     (case reduceElements elements
-       of nil => EMPTY
+       of nil => F.EMPTY
 	| [F.FMT fmt] => fmt  (* special blocks consisting of a single (FMT fmt) element, reduce to fmt *)
         | _ => F.BLOCK {elements = elements, measure = M.measureElements elements})
 
 (* aBlock : alignment -> format list -> format *)
 (* An aligned block with no component formats reduces to EMPTY, regardless of alignment. *)
 fun aBlock alignment formats =
-    let val breaksize = case alignment of C => 0 |  _ => 1
+    let val breaksize = case alignment of F.C => 0 |  _ => 1
      in case reduceFormats formats
 	  of nil => F.EMPTY
 	   | [fmt] => fmt
@@ -201,7 +205,7 @@ val brackets = enclose {front = lbracket, back = rbracket}
 val braces = enclose {front = lbrace, back = rbrace}
 
 (* appendNewLine : format -> format *)
-fun appendNewLine fmt = block [FMT fmt, BRK Hard]
+fun appendNewLine fmt = block [F.FMT fmt, F.BRK F.Hard]
 
 (* label : string -> format -> format *)
 (* labeled formats, i.e. formats preceded by a string label, a commonly occurring pattern *)
@@ -221,13 +225,13 @@ fun alignmentToBreak F.H = F.Space 1
 (* sequence : alignement -> format -> format list -> format
  *  Format a sequence of formats, specifying alignment and separator format used between elements.
  *  The second argument (sep: format) is normally a symbol (TEXT) such as comma or semicolon *)
-fun sequence (alignment: alignment) (sep: format) (formats: format list) =
+fun sequence (alignment: F.alignment) (sep: format) (formats: format list) =
     let val separate =
 	    (case alignment
 	       of C => (fn elems => F.FMT sep :: elems)  (* alignment = C *)
 	        | _ =>
 		  let val break = alignmentToBreak alignment
-		   in (fn elems => F.FMT sep :: BRK break :: elems)
+		   in (fn elems => F.FMT sep :: F.BRK break :: elems)
 		  end)
 	fun addBreaks nil = nil
 	  | addBreaks fmts =  (* fmts non-null *)
@@ -303,8 +307,8 @@ fun vHeadersMap (headers as {header1: string, header2: string}) (formatter: 'a -
  *   i.e. indents an additional n spaces iff following a line break with its indentation. *)
 fun indent (n: int) (fmt: format) =
     (case fmt
-       of EMPTY => EMPTY
-        | _ => INDENT (n, fmt))
+       of F.EMPTY => F.EMPTY
+        | _ => F.INDENT (n, fmt))
 
 (* styled : S.style * format -> format *)
 fun styled (style: S.style) (format: format) = F.STYLE (style, format)

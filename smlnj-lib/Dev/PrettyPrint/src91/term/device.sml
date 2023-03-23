@@ -17,8 +17,8 @@ in
 
 (* a single, fixed outstream for this device, used for both output and for setting
  * terminal modes *)
-val outstream = TextIO.stdOut
-val lineWidth : int = 90  (* not used *)
+val outstream = TextIO.stdOut  (* FIXED. Should this be a parameter somewhere? *)
+val lineWidth : int = 90  (* not used -- should this become "maximum line width for device"? *)
 
 
 (* ====== output functions ====== *)

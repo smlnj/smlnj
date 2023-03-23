@@ -12,7 +12,7 @@ sig
     val token : string -> unit
     val flush : unit -> unit
 
-    val lineWidth : int
+    val lineWidth : int (* not used? *)
 
     val renderStyled : Style.style * (unit -> 'a) -> 'a
       (* used to render styled formats in render-fct.sml *)
