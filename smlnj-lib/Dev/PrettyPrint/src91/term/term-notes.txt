@@ -1,5 +1,7 @@
 src91/term/term-notes.txt
 
+Notes on ANSI terminal "Device" implementation (for PrettyPrint Version 9.1)
+
 ========================================================================================== 
 Version 1: tmode -- a terminal mode type
 ==========================================================================================
@@ -114,10 +116,10 @@ be an intrinsic property of the stream, which is assumed and cannot be changed.
 
 
 ========================================================================================== 
-Version 2: ANSITerm device
+Version 2: ANSITerm device (with terminal mode "state" variables)
 ==========================================================================================
 
-* Terminal mode state is represented by 7 refs instead of a ref to a "tmode" record:
+* Terminal mode state is represented by 8 refs instead of a ref to a "tmode" record:
 
 (* terminal mode state *)
 val fg : color ref = ref Black  (* foreground color, default black *)
@@ -127,6 +129,7 @@ val ul : bool ref = ref false   (* underlining? default false *)
 val bl : bool ref = ref false   (* blinkiing? default false *)
 val dm : bool ref = ref false   (* dim? default false *)
 val iv : bool ref = ref false   (* invisible? default false *)
+val rv : bool ref = ref false   (* reverse fg/bg colors? default false *)
 
 * applyStyle : ANSITermStyle.style -> (unit -> unit) option
 
@@ -160,6 +163,14 @@ capturing the former terminal mode as a record (of type tmode, as
 above), and the revert function would set the terminal mode to agree
 with saved tmode record.
 
+FIXED: Support for the NOEMPH style constructor has now been implemented by
+adding capability to "reset" the terminal mode state (on entry to
+NOEMPH style scope) and to "revert" the terminal mode state (on exit
+from NOEMPH style scope). This was done be adding "backup" veriables
+for each terminal mode variable (e.g. bu_bf for bf) where the current
+value of the variable (bf) could be stored by resetTerm and restored
+by revertTerm.
 
 
--------------------
+==========================================================================================
+
