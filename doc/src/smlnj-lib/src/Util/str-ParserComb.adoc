@@ -199,9 +199,10 @@ We can then define parsers for the atomic expressions
 [source,sml]
 ------------
 fun numParser getc = P.wrap (Int.scan StringCvt.DEC, NUM) getc
-fun idParser getc = P.seqWith String.^ (
-      P.wrap (P.eatChar Char.isAlpha, str),
-      P.token Char.isAlphaNum) getc
+fun idParser getc =
+      P.seqWith (fn (a, SOME b) => a ^ b | (a, NONE) => a) (
+        P.wrap (P.eatChar Char.isAlpha, str),
+        P.option (P.token Char.isAlphaNum)) getc
 fun varParser getc = P.wrap(idParser, VAR) getc
 ------------
 
