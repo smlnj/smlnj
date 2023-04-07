@@ -10,17 +10,21 @@ _rendered_ to printed text (or sometimes, to a "layout" type, such as string).
 
 - _memoized_ block measures
 
-- _aligned_ and _basic_ blocks
+- _basic_ and _aligned_ blocks as compound formats
 
 - **FLAT** format constructor (replaces **TRYFLAT** constructor from earlier versions)
 
-- _indented_ and _nonindented_ blocks; indentation is associated with
-  blocks, not with line breaks; indentation affects the complete
-  content of a block -- an indented block always starts on a fresh
-  line (after possible indentation).
-  
-  
+- _indented_ formats
+  Indentation is a format modifier and is not associated with line breaks.
+  Indentation affects the complete content of a format.
+  Indentation is conditional: it is activated for an indented format if and only if the
+  format begins on a fresh line (immediately following that line's indentation).
+
+- styles for ANSI terminal output and for rendering to HTML 3 (smlnj-lib/HTML).
+
 ## Files
+
+The PrettyPrint library is found in smlnj-lib/PRETTYPRINT.
 
 - src/format.sml, the datatypes defining formats
 
@@ -28,27 +32,29 @@ _rendered_ to printed text (or sometimes, to a "layout" type, such as string).
 
 - src/render.{sig,sml}, rendering a format to printed characters
 
-- src/prettyprint.{sig,sml}, the interface used for writing formatter functions
-    Defines `PrettyPrint : PRETTYPRINT`
+- src/formatting.{sig,sml}, the interface used for writing formatter functions
+    Defines `Formatting : FORMATTING`
 
-- src/source.cm, the CM file for compiling the prettyprinter, 
+- src/printformats
 
-- prettyprint.cm, the CM file for compiling the prettyprinter, 
-  referring to src/sources.cm
+- src/source.cm, the CM file for compiling the prettyprinter,
 
-[Following files are located in compiler/Basics/prettyprint/doc:
-- doc/str-PrettyPrint.{adoc, html}, the interface documentation
+- prettyprint-lib.cm, the CM file for compiling the prettyprinter,
+  referring to src/prettyprint.cm.
 
-- doc/prettyprint-manual.{adoc, html}, the manual for the prettyprinter library
+## Documentation
 
-- doc/design-notes.txt, extensive notes on the design of PrettyPrint and
-  prettyprinter library design in general.
-  (now maintained in github/newpptr repo)
-]
+The following files are located in $SMLNJ/doc/src/smlnj-lib/src/PrettyPrint.
+[This documentation is currently not updated for Version 9.1.]
 
-This copy of the PrettyPrint library [and documentation] is found in
-smlnj-lib/PRETTYPRINT, and it should supercede the copy in compiler/Basics/prettyprint.
+- str-PrettyPrint.{adoc, html}, the interface documentation
 
+- prettyprint-manual.{adoc, html}, the manual for the prettyprinter library
+
+- design-notes.txt, extensive notes on the design of PrettyPrint and
+  prettyprinter library design in general (from the github/newpptr repo).
+
+---
 
 ## Change Log:
 
@@ -74,7 +80,7 @@ and listFormats, acting on format lists. alignedBlock, the general
 constructor for aligned block, takes curried alignment and bindent
 arguments.
 
-4. Added functions for managing the line width: setLineWidthFun, 
+4. Added functions for managing the line width: setLineWidthFun,
 resetLineWidthFun, getLineWidth. These are used to isolate the prettyprinter
 library from compiler internals like Control.Print.lineWidth.
 
@@ -119,7 +125,7 @@ spurious space character after the text "abc", because
     separator --> break
 	SEP --> BRK
 	SBLOCK --> BLOCK
-    
+
   newprettyprint.sml/sig
     specialBlock --> basicBlock
     sblock --> block
@@ -129,7 +135,7 @@ spurious space character after the text "abc", because
 
   format.sml (Format)
     NullBreak constructor of type break (was separator)
-  
+
   newprettyprint.sig/sml (NewPrettyPrint: NEW_PRETTYPRINT)
 	vHeaders, vHeaderFormats (from NewPPUtil)
 
@@ -174,12 +180,12 @@ spurious space character after the text "abc", because
 0. Merged HINDENT and SINDENT into a single format constructor INDENT
    that retains the behavior of SINDENT.  Function softIndent renamed
    to indent, and hardIndent replaced by breakIndent in NewPrettyPrint.
-   
+
 1. Renamed
 
    format.sml
      SINDENT --> INDENT  (* same semantics *)
-	 
+
    newprettyprint.sig,sml
      softIndent --> indent
 
@@ -187,23 +193,23 @@ spurious space character after the text "abc", because
 
    format.sml
      HINDENT
-	 
+
    newprettyprint.sig, sml
      hardIndent
-   
+
 3. Added
 
    newprettyprint.sig,sml
      breakIndent : int -> format -> format
 
-   
+
 ** Version 8.2**
 
   NewPrettyPrint renamed PrettyPrint, and the corresponding change is made to file names,
   signatures, etc, and all former references to NewPrettyPrint throughout the compiler are
   replaced by references to PrettyPrint. The old PrettyPrint structure that was defined in
   Basics/print/prettyprint.sml is no longer used (or even compiled).
-  
+
     NewPrettyPrint --> PrettyPrint
 	NEW_PRETTYPRINT --> PRETTYPRINT
     smlnj-lib/NEWPP --> smlnj-lib/PRETTYPRINT
@@ -222,36 +228,38 @@ spurious space character after the text "abc", because
 
 ** Version 8.4 [2023.2.22]**
 
-  -- renamed:
-     HardLine -> Hard
-     SoftLine -> Soft
-     NullBreak -> Null
-     tupleFormats -> tuple
-     list -> listMap (and removed)
-     formatSeq -> sequenceMap  (and removed)
-     formatClosedSeq -> closedSequenceMap (and removed)
-     vHeaders -> vHeadersMap (and removed)
-     vHeaderFormats -> vHeaders
-  -- removed:
-     tuple [i.e. the function that should have been "tupleMap"]
+Renamed:
+  HardLine -> Hard
+  SoftLine -> Soft
+  NullBreak -> Null
+  tupleFormats -> tuple
+  list -> listMap (and removed)
+  formatSeq -> sequenceMap  (and removed)
+  formatClosedSeq -> closedSequenceMap (and removed)
+  vHeaders -> vHeadersMap (and removed)
+  vHeaderFormats -> vHeaders
+Removed:
+  tuple [i.e. the function that should have been "tupleMap"]
 
-     _The binary xcat functions, replaced by calls of corresponding xblock but with lists of 2 formats:_
-     hcat [hcat (f1, f2) -> hblock [f1,f2]]
-     pcat [-> pblock]
-     vcat [-> vblock]
-     ccat [-> cblock]
+  _The binary xcat functions, replaced by calls of corresponding xblock but with lists of 2 formats:_
+  hcat [hcat (f1, f2) -> hblock [f1,f2]]
+  pcat [-> pblock]
+  vcat [-> vblock]
+  ccat [-> cblock]
 
-     _The map versions of various functions:_
-     sequenceMap
-     closedSequenceMap
-     listMap
-     alignedListMap
-     optionMap
+  _The map versions of various functions:_
+  sequenceMap
+  closedSequenceMap
+  listMap
+  alignedListMap
+  optionMap
+
 
 ** Version 8.5**
   - render and printFormat functions moved to new PrintFormat structure
   - signature PRETTYPRINT --> signature FORMATTING
   - structure PrettyPrint --> structure Formatting
+
 
 ** Version 9.1**
 
@@ -265,3 +273,7 @@ Introduced rendering with styled text for ANSI terminals and for rendering to HT
     DefaultDevice and ANSITermDevice, respectively.
 - Added html directory with files render.sig, render.sml, and style.sml which define a third
     Render structure that produces HTML 3 abstract syntax as defined in smlnj-lib/HTML/html.sml.
+- There are three cm description files:
+    prettyprint.cm: Render = RenderFn (DefaultDevice)
+    prettyprint-term.cm: Render = RenderFn (ANSITermDevice)
+	prettyprint-html.cm: Render defined in html/render.sml

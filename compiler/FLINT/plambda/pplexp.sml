@@ -23,7 +23,6 @@ struct
 
 local
   structure LV = LambdaVar
-  structure A = Absyn
   structure DA = Access
   structure S = Symbol
   structure PP = Formatting

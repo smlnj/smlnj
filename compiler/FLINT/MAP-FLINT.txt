@@ -66,10 +66,10 @@ FLINT/main/
 
   control.sig
     < FLINTCONTROL
-    > LambdaVar*      (ElabData/basis/lambdavar.sml)
+    > LambdaVar*        (ElabData/basis/lambdavar.sml)
 
   control.sml
-    < FLINT_Control    (-> FLINTControl: (Admin)/control/flint-control.sml?)
+    < FLINT_Control     (-> FLINTControl: (Admin)/control/flint-control.sml?)
     > Controls*         (smlnj-lib/Controls/controls.sml)
       ControlRegistry*  (smlnj-lib/Controls/control-registry.sml)
       BasicControl*     (Basics/control/basiccontrol.sml)
@@ -133,17 +133,49 @@ FLINT/plambda/
       FlintUtil	      (FLINT/flint/flintutil.sml)
 
   plambda.sig
-    <
-    >
+    < PLAMBDA
+    > Symbol*	      (Basics/symbol/symbol.sml)
+      Access*         (ElabData/basics/access.sml)
+      LambdaVar*      (ElabData/basis/lambdavar.sml) 
+      IntConst*	      (Basics/compiler/int-const.sml) 
+      RealConst*      (Basics/compiler/real-const.sml) 
+      Primop*	      (ElabData/prim/primop.sml) 
+
+      Lty	      (FLINT/kernel/lty.sml)
+
   plambda.sml
-    <
-    >
+    < PLambda
+    > Symbol*	      (Basics/symbol/symbol.sml) 
+      Access*         (ElabData/basics/access.sml) 
+      LambdaVar*      (ElabData/basis/lambdavar.sml) 
+      IntConst*	      (Basics/compiler/int-const.sml) 
+      RealConst*      (Basics/compiler/real-const.sml) 
+      Primop*	      (ElabData/prim/primop.sml) 
+
+      Lty	      (FLINT/kernel/lty.sml)
+
   pplexp.sml
-    <
-    >
-  reorder.sml
-    <
-    >
+    < PPLEXP
+      PPLexp
+    > Symbol*	      (Basics/symbol/symbol.sml) 
+      Access*         (ElabData/basics/access.sml) 
+      LambdaVar*      (ElabData/basis/lambdavar.sml) 
+      StringFormats*  (Basics/print/stringformats.sml) 
+
+      Formatting*     (smlnj-lib/PrettyPrint/src/formatting.sml) 
+      PrintFormat*    (smlnj-lib/PrettyPrint/src/printformat.sml) 
+
+      PLambda	      (FLINT/plambda/plambda.sml) 
+      PPLty	      (FLINT/kernel/pplty.sml)
+
+  reorder.sml	      [***Reorder body commented out***]
+    < REORDER
+      Reorder
+    > Access*         (ElabData/basics/access.sml) 
+      Primop*	      (ElabData/prim/primop.sml) 
+
+      PLambda	      (FLINT/plambda/plambda.sml) 
+
 
 FLINT/trans/
   module-plists.sml
@@ -170,6 +202,7 @@ FLINT/trans/
   literal-to-num.sml    (* uses CoreIntInf functionality *)
     <
     > CoreIntInf*    $smlnj/init/init.cmi : cm
+
 
 FLINT/flint/
   chkflint.sml

@@ -1,0 +1,2874 @@
+File: ~/sml/Dev/pp/new/paper/design-notes-1.txt
+
+Title: A New Prettyprinter Library for SML/NJ
+Author: David MacQueen (DBM)
+
+These are raw notes on the design of the New Prettyprint library.
+
+Here we are mainly describing the Pettyprinter Version 7, with some additional material about
+later potential versions (i.e. with multi-line measure, or with tabs, or with tables).
+
+==========================================================================================
+1. Basic Assumptions
+==========================================================================================
+
+  1. Fixed-width characters. This constraint could be relaxed to allow unicode characters
+     later, with a more complicated notion of the measure of a format, and modified notions
+     of "current column" and "indentation", say measuring in points rather than characters.
+  2. Unbounded number of lines allowed, i.e. unlimited "vertical" space.
+  3. Limited horizontal space (line width or right margin), which is fixed during the
+     rendering of a format.
+  4. By default, no implicit or automatic wrapping or truncation of lines at the right margin.
+     Thus, the right margin is a suggestion or target, not a hard limit, i.e.,
+     line overflow allowed. [Other possible policies can be considered later.]
+  5. Functional or "mostly functional" implementation in a strict language (SML).
+  6. No "ribbon" percentage constraint [Could be introduced in a later version.].
+
+  7. Implementation in a strict (mostly) functional language (e.g. SML), in a
+     (mostly) functional style.
+
+
+==========================================================================================
+2. Antecedents (a very brief survey, see Appendix A)
+==========================================================================================
+
+Here are abbreviations we use to refer to various previous prettyprinting libraries or
+systems.
+
+   O = Oppen (1980)
+         "explicit" formatting markup (block entry and exit tokens),
+	 blocks, inline algorithm w. bounded lookahead)
+
+   PS = Pugh-Sinofsky (1987): explicit formatting markup (using escape sequences) in strings
+
+   PPML = the pretty printing meta language used in the Centaur system
+        Box operators with "alignment" attributes (H, V, HV, Packed) 
+
+   ML = OCaml Format library (Weiss) and Reppy's similar smlnj-lib/PP library for SML.
+
+   WL = Hughes-Wadler-Leijen class of pretty printers (going back to Hughes 1995, Wadler 1997)
+        and including the current Hackage Prettyprinter package (version 1.7.1).
+	formatting via a "Document" data structure (instead of markup notation in text)
+
+   CL = Christopher Lindig's OCaml/SML implementation of a strict version of the
+        Wadler prettyprinter.
+
+   NM = Norman Ramsey's prettyprinters based on PS, using "dynamic programming" to
+        select the best line breaks to trigger
+
+Various formal program development/editing systems that used prettyprinting: Mentor/Metal
+(INRIA, late 1970s), Gandalf (Haberman, CMU, late 1970s), Cornell Program Synthesizer
+(early 80s?), Centaur (INRIA Sophia Antipolis, 1980s), Cedar/Mesa (Xerox PARK, 1980s -- an
+attempted InterLisp - Mesa - Smalltalk "unification"), as well as several Lisp programming
+environments (e.g. InterLisp, Lisp Machine Lisp).
+
+This design is mainly a synthesis of ideas from WL and PPML, with influences from the
+Oppen+PPML-based OCaml and SML/NJ libraries.
+
+
+==========================================================================================
+3. Objectives and Non-objectives
+==========================================================================================
+
+Why did I create a new Prettyprinter library? 
+
+  The existing SML/NJ prettyprinter library (smlnj-lib/PP) is hard to work with (in my
+  subjective experience).
+
+Why didn't I just port an existing library, e.g. the Wadler-Leijen library used in Haskell?
+
+  Starting from first principles, I felt that I could design a simpler and more natural
+  prettyprinting model as the basis for the library.
+
+==========================================================================================
+ 3.1: Objectives:
+==========================================================================================
+
+   A new pretty printer library for SML/NJ (to replace smlnj-lib/PP), written in SML.
+   [This document serves as "raw" and "deep" documentation of the new prettyprinter design.]
+
+ Desiderata:
+
+   1. Adequate expressiveness (e.g. pragmatically matching or improving on WL and
+     the existing ML prettyprinters, e.g. smlnj-lib/PP)
+
+   2. Simple, relatively predictable model and interface for writing "formatters".
+     (i.e. there should be a "transparent" operational model of how the prettyprinter behaves.)
+
+   3. Adequate performance (we can afford "off line" algorithms that, for instance,
+     might preprocess whole formats to "measure" them. Avoid "quadratic" behavior that might,
+     for instance, result from a naive translation from a lazy algorithm to a strinct version.
+
+   4. Eliminate "irregularities" (e.g., failure of orthogonality), such as an INDENT
+     operator that doesn't apply to all format structures, or "BREAK" as a second-class
+     kind of format that does not stand alone (i.e. does not make sense as an isolated,
+     complete format).
+
+But our ambitions are limited! Thus we have the following non-objectives:
+
+
+==========================================================================================
+3.2 NON-Objectives:
+==========================================================================================
+
+   1. Generating prettyprinters from grammars for a programming language or other formalism [dejonge:2001].
+
+   2. "incrementally" (re-)prettyprinting a structure after structural "edits" of a program
+      or piece of formalism. (as is supported in some structural programming environments)
+
+   3. Prettyprinting _incomplete_ or _partially_ developed code, as one typically needs to
+      do in a structural program editor (Mentor, Gandalf, Cornell Program Synthesizer,
+      etc.).
+
+   4. Generating "fancy" output formats (e.g. HTML, XML, LaTeX) [for now, see [29] below]
+      Or in general, providing functionality generally associated with text formatters,
+      including asciidoc, HTML, and LaTeX.
+
+   5. Generating "styled" text, using colors or type faces to highlight some words or
+      symbols. [for now, but see [28] below and the PrettyPrint Version 9.0 proposal].
+
+   6. "round-tripping", that is, producing as output a textual representation of
+      (typically) a program or program fragment that can be re-processed by a compiler to
+      produce an equivalent program/program fragment.
+
+        internal program representation
+	  [prettyprint] -->     textual layout
+          [parse/elaborate] --> (equivalent?) internal program representation
+
+      This not supported, but round-tripping might be relevant in some circumstances,
+      and if so, it is up to the writer of the formatters to achieve the desired  syntactically
+      and semantically faithful output. It is not a general design principle or feature
+      of our library.
+
+   7. Supporting Unicode character sets or variable-width character fonts. These
+      complicate the problem of measuring the size of formats. We might support these
+      character sets or fonts when support for wide characters is implemented for SML/NJ.
+      For the kind of prettyprinters we have in mind, restriction to a fixed-width font
+      should not be a limitation.
+
+   8. Since this is a general purpose prettyprinting library, not specialized to programs
+      as subject matter, there is no special support for "metadata" such as comments.
+      Whether these can be handled in a particular application depends on whether they are
+      supported in the program representation that would be prettyprinted, and in that
+      case how they are printed is up the the writer of the particular prettyprinter for
+      that represenation.
+
+   9. We do not provide generic, built-in support for "depth-limited" prettyprinting
+      (what was called "holophrastic" printing in the Mentor system). If depth-limitied
+      prettyprinting is desired, the writer of a particular prettyprinter is responsible
+      for implementing it.
+      
+
+==========================================================================================
+4. Concepts, Terminology, Design Issues
+==========================================================================================
+
+The concepts involved in prettyprinting and the terminology are intertwined. We need to
+introduced the terms used in order to discuss the concepts, but the terms need to be
+defined in terms of the concepts!  So the following subsections 4.1 and 4.2 should be
+read in parallel or iteratively.
+
+
+==========================================================================================
+4.1 Concepts
+==========================================================================================
+
+   * the purpose of prettyprinting is to produce a "faithful" and "readable" presentation
+     of some data as "formatted text" (presented on a terminal display or on a printed page,
+     using the facilities that the output medium supports, e.g. colors, type faces, fonts).
+
+        "... its purpose is to translate the abstract representation of documents into a
+	visual one" [PPML]
+
+   * the distinction between a prettyprinter for a specific language or data structure,
+     and a "meta-prettyprinter" or prettyprinter library that supports implementing
+     prettyprinters for specific "target" languages or data structures. [early examples:
+     GPINT (1983) for Lisp, PPML (1986) for the Centaur system].
+
+   * "context-sensitive" prettyprinting. The formatting depends on certain contextual
+     features, normally including the "line width" of the medium used for printing
+     (i.e. the width of a page, or the width of a terminal display window).
+
+   * formatting is a 1+ dimensional process, where the focus is on filling the current
+     line, with the possibility that we may need to break the line if we run out of space,
+     because our one-dimensional arena (the current line) is finite.
+     [2-dimensional formatting is a posibility]
+
+   * Unifying Idea: use of "intermediate" representation between the original data and the
+     rendering to layout (Oppen: a pair of queues, Waters: a queue of pp literals and
+     commands, HWL: a doc type, this: format).
+
+     This intermediate structure is used for "measuring" the space required for printing
+     an element, which is used to control conditional aspects of formatting.
+
+   * controllable or variable elements of formatting: (1) line breaks, (2) indentation,
+     (3) inter-atom spacing (where atoms are the atomic strings of the format).
+
+     Elements that cannot be controlled: the atomic strings (content) of the format.
+
+   * the format to layout mapping is one to many
+     A format can be "rendered" to different layouts under different constraints
+     (typically the line width). All the layouts that a format can be rendered to should
+     share the same "content".
+
+   * "Semantic Invariance": all layouts that can be generated from a format should have the same
+     "meaning" or "semantics", i.e. carry the same information, represented by the content.
+      This "meaning" should be faithful to the data from which the format is computed. Its
+      purpose is to present that data. [Note: format sensitive language syntax]
+
+   * "Locality" or "Continuity" or "Stability": things that are close to one another in the
+     format will map to things that are close together in any layout for the format. A
+     local change in a format should produce a similarly "local" change in the layout
+     produced when the format is rendered; conversely, changes in a "remote" part of the
+     format will not change the layout "locally".  [A desirable property, but perhaps difficult
+     to achieve, since adding an element to a format could cause "cascading" triggerings of
+     line breaks.]
+
+   * "the past is past": the present is the current line, and is what is in the process of
+     being constructed (i.e. its content and extent are being determined). The past is what
+     preceeds the last newline. The past cannot be altered.  (The past is "up page", the
+     present is the current line, the future is "down page".)
+
+   * composition of formatters: a data structure may consist of heterogenios parts (parts
+     of various types). formatting the datastructure will involve formatting those parts,
+     calling on "formatters" for the appropriate types. These formatters "compose" easily
+     because they are all producing the same type of format.
+
+   * "broken" layouts: layouts that extend over multiple lines, or "multi-line" layouts,
+     because they either contain unconditional line breaks or some conditional line break
+     is "triggered" during the construction of the layout.
+
+   * "lookahead": how much of the format do we need to look at to decide whether to break
+     a line. [More important notion in earlier on-line prettyprinters that needed to
+     conserve memory in the process of mapping input to a layout, using bounded buffers
+     to accumulate printing elements before printing occurs.]
+
+     We assume that we have adequate resources for "full lookahead", i.e. analysis of a
+     complete format before or during rendering.  But in practice, we are only going to look
+     ahead far enough to trigger the next conditional line break: at a line break, we look
+     ahead to find the measure of the next format element to be printed so we can compare
+     that measure with the space remaining on the current line.  Thus no "multi-line" lookahead.
+
+     Slogans:
+
+        "All the action is on the current line."
+
+        "Don't start rendering a block unless it is going to fit!"  [Also a "rule"]
+
+     Tabular or multi-column layouts are an example that would require more extensive
+     lookahead and analysis (e.g. to determine the maximum width of a column).
+
+
+==========================================================================================
+4.2 Terminology
+==========================================================================================
+
+% description
+
+   "format"
+       the intermediate structure generated by the pretty printer first phase
+       the format type is indepenent of any particular pretty printer
+       (this is called a "document" in the WL family of pretty printers)
+
+   "content"
+       list of all printable strings (TEXT strings) in a format (in depth-first,
+       right-to-left order, thus the "fringe" of the format tree)
+
+   "layout"
+       the prescription for how to print (including newlines and indentation)
+       produced by "rendering" a format relative to constraints like line width
+       in an "output medium" (e.g. a printed page or terminal window, a sequence
+       of primitive print commands, or possibly formated text such as Markdown,
+       HTML, or LaTeX). [also "presentation"]
+
+   "break"
+       the thing that separates formats in a compound block and which can
+       generated a line break or just spaces
+
+   "triggering a break"
+       the act of generating a newline (and associated indentation) where a
+       soft line break occurs (in a format) due to line space limitation
+
+   "soft break"
+       conditional line break; replaced by spaces if not "triggered'
+
+   "hard break"
+       unconditional line break (LINE in WL)
+
+   "indentation"
+       white space at the begining of a line, printed after any line break
+       amount of indentation is normally determined by the current block
+       left margin
+
+   "block"
+       a compound form of format containing subsidiary formats and separators (breaks)
+       (called a "box" in the OCaml-SML/NJ pretty printers). The concept is
+       implicit in the WL pretty printers (corresponding to the CAT/EMPTY monoid).
+
+   "block nesting level" (metavariable "bnl")
+       a block's nesting level is 1 more than its parents nesting level
+       the outermost block has block nesting level 0
+
+   "line width" (variable "lw" or "lineWidth")
+       the number of characters in a line, or page width -- controls triggering
+       of conditional breaks during rendering
+
+   "current column" (variable "cc")
+       the current column = number of characters printed or "scheduled to be printed"
+       since the last newline (this would include the line's indentation)
+
+   "line space available" (variable "lsa")
+       the horizontal space on the current line (in characters) at a given point during
+       rendering.  Should equal lw - cc. Used during rendering to control triggering of
+       conditional breaks.
+
+   "block left margin" (variable "blm")
+       the left margin, i.e. the indentation, of a block
+       equal to the current column when the block is "entered"
+
+   "origin" of a block
+       the column at which the first character of a block will be printed
+       - note that a block and its first component share the same origin, etc.
+       - "origin" is an alternate name for "block left margin"; they are the same.
+
+
+==========================================================================================
+4.3. Some Questions
+==========================================================================================
+
+* What is a "good" layout (or, equivalently, presentation) for some piece of data?
+  How do we measure the "goodness" of a layout?
+  Some possible "goodness" criteria:
+  - minimum number of lines (single line considered optimal?)
+  - fewest line breaks according to some merit/cost measure of line breaks
+    (e.g. higher-level (outer) line breaks preferred over lower-level
+    (inner) line breaks).
+  - optimal by some "aesthetic" criterion, e.g. ribbon percentage
+  - "structurally/logically faithful" - best reflects the "logical structure" of the
+     data being presented. This would be very hard to generalize over
+     various data types and formalisms being implemented using a pp
+     library. Thus this aspect of formatting probably has to be the responsibility
+     of the designer/implementer of a particular formatter for a set of types or a
+     formalism.
+
+* How to characterize the "output medium", and what characteristics
+  are relevant to prettyprinting?
+  - basically, the important characteristic is the line length (or page/display width).
+  - whether it supports forms of "styled" text (color, type face) may be of interest.
+
+* Can formats be created, altered or extended in the process of rendering a format?
+  If so, this opens up the possibility of constructing new formats that depend on
+  render-time values of variables like cc, ci, and then rendering them.
+  [This is supported in WL.]
+
+* At what level (of abstraction) are alternate layouts compared or analyzed?
+
+* Is the prettyprinting process deterministic?
+
+* How expensive can prettyprinting be?
+
+* How big will formats get in practice?
+
+* How "hard" is the right margin (the line width limit?).
+  - It is assumed that the _left_ margin is absolute (column 0) and cannot be breached.
+
+* What is the policy for managing line overflow?
+  - Possibilities:
+    (1) allow overlow beyond the right margin
+    (2) truncation of output at the right margin
+    (3) wrapping to the next line (possibly with hyphenation?)
+        wrapping could be done by the renderer or by the output device/medium
+    (4) revision of the indentation level to add space (overflow mitigation)
+
+* Where can newlines (line breaks) be introduced?  At explicitly designated points
+  (hard and soft break elements), or implicitly between any two adjacent "elements"
+  (atomic text elements or compound blocks).
+
+* Should indentation be considered a "primary" element of formatting, or a "secondary"
+  element associtated with one of the primary elements?
+
+* [if the latter:] What elements of formatting are "indentations" associated with?
+  - attached to individual line breaks?
+  - attached to (attribute of) blocks
+
+* Are negative indentations possible?
+  - alternatively, is there an independent notion of an "outdent"?
+
+
+==========================================================================================
+5. Introduction
+==========================================================================================
+[[should be moved to before 4, or rather 4 should be part of the Introduction]]
+
+Pretty printing, as presented here, involves a kind of markup "language" that enriches
+content with information that directs the "layout" of that content on a page or screen.
+
+In this sense it is related to markup languages like markup, HTML, and LaTeX, but whereas
+those languages embed markup notations into an underlying textual content, our pretty
+printing markup takes the form of a particular data structure (type format) into which
+the underlying content, typically a data structure of a given type, is translated.
+
+The content data structure is typically something like a type, a signature, a phrase in
+some abstract syntax type (expression, declaration), or a phrase in a compiler intermediate
+representain (IR). The process of "formatting" values of such a type involves translating
+the value into a "format" data structure that is a mixture of bits of text (e.g. variable
+or function or type names) and formatting structure that specifies, e.g., blocks,
+conditional line breaks, indentation.
+
+Some key ideas:
+
+* (unformated) content = ordered sequence of strings (where the strings represent, e.g.,
+  punctuation, names, operations).
+
+  This raw sequence should, in principle, be enough to convey the inherant syntactic
+  structure of the content, i.e. the formatting does not add to the meaning, and is not
+  essential to the parsing the content to reveal its inherent structure. This rules out,
+  e.g., languages that assign syntactic or semantic meaning to line breaks and indentation
+  (such as Python and Haskell). Syntactically significant formatting is here regarded as a
+  bad idea. The formatting is intended to make the structure or organization of the
+  content more easily discernable (or "readable").
+
+* grouping: some collections of contents belong together (blocks)
+
+* breaking the presentation into multiple lines when necessary or desired helps expose
+  structure (line breaks)
+
+* indenting parts of the content to represent hierarchy or subordination also helps
+  expose structure (indentation, margins)
+
+* the formatting of the content should be consistent with the inherant syntax of
+  the content, and should serve to make this structure easily discernable.
+
+
+==========================================================================================
+6. high-level strategy/architecture
+==========================================================================================
+
+   1.0. historically, many pretty printers were inspired by Oppen's algorithm [O, PS, ML],
+   	which is very stateful and impertive, with lots of state variables and stateful
+	data structures (buffers, stacks, queues).
+
+        When doing a more functional implementation, much of this state can be converted
+	into function parameters that are maintained by (sometimes) recursive function
+	calls. For instance, a stack of indentation values can be replaced by
+	an indentation parameter passed by a recursive function, being "saved" and
+	"restored" by the normal variable binding discipline.
+
+        Initially, for simplicity, we assume we are useing a fixed-width character set
+	and we measure things in characters (e.g. line length, string length, current
+	column).
+
+
+   1.1. given a structure (e.g. a type representation, signature representation,
+        piece of abstract syntax), say of type ty, we write a "formatter" for
+	data structures of type ty:
+
+	    formatter: ty -> format
+
+        There will be a formatter function for each type that we want to format, and
+	these can be composed, e.g. the type formatter is called from within the
+	signature formatter.
+
+	More completely
+
+	   ty ==> format   (formatter)
+	      ==> layout   (renderer (with respect to, e.g., line width constraint))
+	      ==> (output) (printLayout, a trivial print function)
+
+
+   1.2. Formats
+
+        A "format" is a data structure (type) consisting of
+
+	  (a) basic strings, which could be variable names, keywords, punctuation strings
+
+	  (b) formatting "instructions" or "commands" or "suggestions" (i.e. markup information):
+	      (1) nested "blocks" representing the hierarchical structure of the value to be
+	          prettyprinted
+	      (2) conditional line breaks, indicating where line-breaks could be generated when
+	      	  needed to prevent print-line overflow
+              (3) indentation specifications (normally applying to a block)
+
+        Blocks have two variants
+          (a) atomic blocks that consist of a single printable string ("atomic" formats)
+	  (b) compound blocks consist of a sequence of (sub)blocks and markup items
+	      (e.g. a list of blocks and (other) markup)
+
+        One could also include "spacing" atomic blocks:
+
+	  (c) atomic blocks consisting of a given number of spaces
+
+	Blocks can have formatting "attributes" (e.g. alignment, text style?).
+
+        The _content_ of a format is the list (in depth-first, left-to-right order) of
+	the strings contained in atomic text blocks within the format.
+
+        * Formats correspond with what Hughes and Wadler call "documents".
+	  I consider the word "format" to be more descriptive of what these
+	  structures are and what they are used for.
+
+	* Terminology:
+	    The "block" term was introduced by Oppen.
+	    In PPML and ML, blocks are called "boxes".
+	    Here we will use "block" instead of "box" for the basic structuring notion.
+	    The WL pretty printers do not have a concept of block, but instead use
+	    a CAT/EMPTY monoid for this purpose.
+
+        * Block Nesting Level (bnl/BNL)
+	  Since blocks can be nested, any block or subblock has an integer _block nesting level_
+	  which is the count of ancestor blocks (BLOCK constructors on the path to this block).
+	  This the outermost block has bln = 0, and the subformats of a block have bnl 1
+	  greater than the block itself.  bln is not an intrinsic property of the block
+	  itself, it is determined by the context of the block, but it is a "static",
+	  i.e. structural, property of the components of a compound format.
+
+	  Block nesting levels can be used to assign priorities to breaks (trigger the
+	  break with the lowest nesting level when there are multiple breaks "available"
+	  to deal with running out of line space [PS].  But this should happen _automatically_
+	  with the right measuring and look-ahead policies.
+
+       Formats have "static" properties that can be deduced solely from their structure,
+       and also dynamic behaviors that are manafested during the rendering of the format.
+
+
+       1.2.1. Format simplification rules
+
+          There is an EMPTY format that should act as an "identity" element when combining
+	  formats into compound formats.  The principle is that the EMPTY format contains
+	  no "content", and hence can produce nothing when rendered. We can also assume
+	  that the presence of EMPTY in a format should not affect the rendering of the
+	  other elements of the format.
+
+          Here are some simplication or "reduction" rules for formats:
+
+	  (1) EMPTY should be "absorbed" and thus eliminated when combinded with non-empty
+	      formats in a block:
+
+	       block [..., EMPTY, ...]  -->  block [..., ...]
+
+          (2) a block with no constituent elements should reduce to EMPTY:
+
+	       block []  -->  EMPTY
+
+	  (3) (idempotence) A block containing just one format reduces to that format:
+
+	       block [<format>]  -->  <format>
+
+          These rules can be extended naturally to other kinds of block constructions,
+	  like "indented blocks" or "intented formats".  E.g indentation of the EMPTY
+	  format reduces to EMPTY.
+
+
+   1.3 Layouts
+
+       A physical layout of the formatted text, represented as a list of physical "lines"
+       consisting of an indentation and a text (string).
+
+           type line = {indent: int, text: string}
+
+           type layout = line list
+
+       where the indent component gives the number of spaces in the indenation, and the text
+       component is the text occupying "rest of the line".  The text may itself contain spaces,
+       but not newlines. Tabs are not allowed: the indentation and white space within the text
+       should consist only of space characters.
+
+       It is absolutely standard and obvious how to print a layout. Printing a layout is
+       performed using the functions:
+
+           printLayout : layout -> unit     -- using stdout as the target for printing
+	   printLayoutToStream : layout * outstream -> unit
+
+       In some variants of layouts, the text part of a line may be a list of
+       strings (some of which are spaces), or a list of strings (or string "tokens")
+       and "spacing" tokens. This may be done in order to fully preserve the strings
+       (pieces of text) found in the format from which layouts are derived by rendering.
+       This makes it possible to say that the format and its renderings have the same
+       content. This would not be true if layouts combine text (and separator spaces)
+       in forming lines.  Here is an example of this more precise notion of layout:
+
+           datatype token
+	     = Text of string
+	     | Spacing of int
+
+	   type line = {indent: int, text: token list}
+
+	   type layout = line list
+
+        Here a "normalized" line might be one where the token list does not begin or end
+	with a Spacing. Of course, nothing prevents a Text string from containing, or
+	consisting entirely of, spaces. But normally the text token list contains at least
+	one string with non-whitespace characters.
+
+	Single-line vs multi-line layouts.
+
+	Layout combinations (not relevant, since rendering generates complete layouts from formats)
+	  horizontal concatentation  (WL CAT operation)
+	  vertical concatenation (= List append?)
+	  -- correspondence or relation with format constructions
+
+        For a given content: single-line layout is "longer" than any multi-line layout
+	  for that content. [This seems obvious.]
+
+
+   1.4 Format rendering
+
+       (1)  render : format * int -> layout
+
+       (2)  render : format * (string -> unit) * int -> unit
+
+       Here the format is the formatted content to be physically printed (or "layed out").
+       The int argument is the line width of the printing device (e.g. 80 characters, or
+       the character width of a text window). Additional size constraints, like a "ribbon
+       percentage", could be added later.
+
+       The rendering process is where constraints are used to control conditional factors
+       like optional line breaks.
+
+       * Semantics of a format as a set of layouts (WL)
+         Different layouts of the same format derive from different space constraints.
+         All these layouts, and the format from which they derive, share the same
+	 basic "content" (i.e. the strings).
+
+	 A format and all its possible layouts have a common "content", that is,
+	 the content of the format.
+
+       * spacially, "sub-layout" associated with a block element format.
+       	 composing layouts?
+	 can we compose the layout of a block in terms of layouts of subblocks?
+	     subblocks would need to be adjusted, or "relative" to line length constraint
+
+         In fact, the rendering of a format is not a composition of renderings of
+	 its component formats: rendering is not "compositional".
+
+       * the rendering process generally preserves the strings in the format
+       	   the strings may be combined (with spacing), e.g. to form the text part of a line
+	   the strings are never subdivided or broken up
+
+     1.4.1 Conditional rendering
+
+        Principle: _local_ conditional behaviour, looking at the flat measure of the next
+	  format and the space remaining on the current line only.
+	  (See multi-line formats [13], and Ramsey's prettyprinter [23] for some alternatives.)
+
+        There are (at least) 3 ways that rendering is conditional on line space
+	available.
+
+	(1) soft line breaks  (BREAK (SoftLine n))
+
+	(2) HV blocks (horizontal or vertical blocks)
+
+	(3) TRYFLAT formats: first try flat rendering if it fits, otherwise normal
+	    formatting.
+
+        The conditional rendering behavior is controlled by space available
+	just on the current line (local). It is also limited by a simple and
+	conservative approach to measuring formats, i.e. flat measure.
+
+	One could make the measure more nuanced by extending to multi-line
+	renders, for instance by taking the measure of the 1st line of a
+	multi-line render. But this is not easy to do, since whether a format
+	renders multi-line or not is already conditional not always inherent in
+	the format itself.
+
+
+   1.5 Spacial assumptions: the bounding space (or "rectangle") of a block
+
+       There is a current line (cl), and during the rendering process there is a
+       _current column_ in that line (cc). The current column has range 0 <= cc < lw,
+       where lw is the line width, also known as the right margin. We don't actually
+       need to keep a line count, so the cl is a virtual quantity.
+
+       The current column at the point that a block is entered becomes the block's
+       left margin (blm) (wrt that rendering -- this is not a fixed attribute of
+       a block).
+
+       * All the content (printable characters) of a block occur spacially within the
+       rectangle specified by the blm and the cl.  This rectangle is open-ended downward,
+       in the sense that there is no fixed limit on how many lines the block may contain.
+       Horizontally, the rectangle is bounded on the left by the blm, and on the right
+       by the lw (line width). This policy excludes "outdents" outside of the block
+       space (i.e. to the left of the blm).
+
+       The line width constraint is not absolute (*), because text may overflow the line
+       width in certain circumstances.
+
+         (a) if the next item in a compound block is a string that does not fit on the current
+	     line (i.e. within [cc, lw), then it may still be printed, resulting in printed
+	     characters overflowing to the right of the right margin. [This is one
+	     possible policy for handling strings that are too long, the "soft" or "flexible"
+	     line width constraint. Another policy would be to truncate the string to force
+	     it to fit. Another would be to "wrap" the string around to the "next"
+	     physical (but not logical?) line.
+
+       * Only the content (printable characters) of a block can appear within that block's
+       space. That content includes subblocks, but the content of "sibling" blocks is excluded.
+
+
+   1.6 "size/measure", look ahead, and the control of conditional breaks
+
+       NOTE: our conditionality is "local", depending on the interaction of the _next_
+       format and the space availabe on _this_ (current) line that we are in the process
+       of filling. A more "global" analysis is possible: see Item 23 on Ramsey's prettyprinter.
+
+       [We choose to use "measure" of a block, rather than "size" or
+       "width" of a block.]
+
+       measure applies to a block
+       measure in terms of single line render
+       measure in terms of multi-line render
+       	 e.g. size of "first line" of a multi-line render
+
+       hierarchy: measure of a block "subsumes" measures of its subblocks
+
+       measure is "flat measure", the space taken up when rendered on a single, unbounded
+       line (lw = "infinity", a very large number).
+
+       there could be other, contingent measures, such as first line measure,
+       where "first line" depends on lw constraint.
+
+       A possible additional "size constraint" could be "ribbon" percentage, where
+       the ribbon percentage is the maximum percentage of a line taken up by printed text.
+
+       One can measure a format by rendering the format (say flat rendering) and measuring
+       the resulting layout.  This can be extended to measure a layout relative to a las
+       figure, where the layout measure would be the "length" of the layout's first line.
+
+       NOTE: the "group" function of WL does nothing in the measured
+       format context if there are only conditional (not forced) line breaks!
+       In group f = Union (flatten f, f), if the flatten f choice fits, then
+       when rendering f (even in "normal" mode), it will be rendered flat.
+       In the case where f is inherently multi-line (contains forced
+       line breaks), then f _should be_ rendered multi-line, but it
+       could be rendered "semi-flat" by suppressing all conditional
+       line breaks but still executing unconditional (hard) line breaks.  The
+       flat measure of such a format would be the measure up to the
+       first hard line break. If the flat measure exceeds lsa, then we
+       do indeed need to render f normally, thus triggering, if possible,
+       an earlier conditional break.
+
+       So should the (flat-)measure of a format f containing a hard
+       line break be the measure "up to" that line break (treating
+       earlier conditional breaks as non-triggered?  In this case, we
+       are measuring the maximal _first line_ of the format.
+
+
+   1.7 alignment and indentation
+
+       High-Level Issues:
+
+       (1) Should "indentation" be a first-class element of a format, or
+       should it be "attached to" or "an attribute of" some more basic or essential
+       feature, such as a BREAK or a BLOCK. Since BLOCKS "coordinate" or "manage" line
+       breaks (alignment), it seems most natural to think of indentation as a property
+       (possibly null) of BLOCKS.  [We attach indentation to blocks.]
+
+       (2) Indenting a block/doc/format means indenting the whole thing! Not just indenting
+       after newlines _within_ the block. [Then lines within a block will align along
+       the block left margin.]
+
+       (3) Alignment involves the sizes of indentations and how "lines" are related
+       (parallel or subsidiary). Parallel items should be at the same indentation.
+       A subsidiary (child) format should be at greater indentation than the format
+       (e.g. block) that it belongs to.
+
+       * Indentation is not a _state_ variable that gets updated to increase and decrease
+       	 the indentation level of certain lines. It is a _parameter_ of a recursive
+	 rendering process. The current column (cc) should also be a parameter,
+	 not a state variable.
+
+       Some ideas originating in the Centaur PPML pretty printing specification language:
+
+	 * default single line rendering
+
+	 * multi-line rendering
+
+	 * horizontal (H)
+	     "packed" multi-line blocks (like paragraphs)
+
+	 * vertical (V)
+
+         * packed (or "paragraph") alignment (HOV)
+
+	 * conditional horizontal or vertical (HV)
+	   horizontal if it fits, otherwise aligned vertical stacking
+
+       General conditional rendering (WL Union and FlatAlt)
+
+         Choosing between multiple ways of rendering the same content.
+
+         * "flattening" [WL]
+
+         * "measuring" multi-line layouts
+	   e.g. length of text of first line?
+
+         * see the "group" and "FlatAlt"/"flatAlt" operations of Haskell Prettyprinter [WL]
+	   see also Union, which seems similar to "OR" (or "ALT").
+
+       Considering alignment issues as more appropriately connected with blocks, rather
+       than being
+
+       When do lines "line up" in multi-line renders?
+
+       Manual indent, outdent as in PH
+         indentation is a state variable: "device_left_margin"
+       	   specifying size of indent or outdent
+	 coordination of indents and outdents (cancellation of indents) is to be maintained
+	   by explicit indent (\t) and outdent (b) commands in the formated text
+	 indentation stack?
+	   in some pretty printers, indentations are maintained in a stack, where the
+	   current indentation is pushed onto the stack on entering a block, and popped
+	   off and restored on leaving the block
+
+       What happens to indentation of f2 when it is combined, horizontally
+       (or horizontally concatenated) with another format f1: BLOCK[H][f1,f2]?
+
+       Indentation is not an "inherent" attribute of a block, it is an "external"
+       property imposed by an operation on the block (as for INDENT in [WL]).
+
+       *********
+
+       [OBS] Since an indentation command has no effect unless it occurs immediately after a
+       newline, indentation could be attached to (and be the responsibility of) line
+       breaks (e.g., the "offset" attribute, which should be called "indent")).
+
+       Alternatively, indentations should be attached to a block (indented vs nonindented blocks).
+       The problem is that a line break is not the right construct to take responsibility
+       for managing indentation according to a policy (like vertical alignment) that might
+       involve multiple line breaks and perhaps other elements (texts or blocks).
+
+       If we have indented blocks, is indentation _always_ applied, or are the
+       contexts that "suppress" or "cancel" the indentation (e.g. if there is no
+       hard line break before the indented block.  Indentation in inherently something
+       that only takes place immediately following an actual line break!
+
+       What it an indentation relative to?
+
+       Simplest idea would be to have them relative to the "current" left margin, which
+       is actually the "block left margin" of the "current" (or parent) block.
+
+
+       The Argument: Why indent should not be a doc/format all by itself.
+
+         * Indent by itself is not "meaningful" as a format.
+
+         * It should be either a "modifier" of formats or a "attribute" of certain formats
+           (blocks).
+
+         * Indentation implies a newline. Indentation in the middle of a line makes no
+           sense.
+
+         * indentations need to be coordinated or managed, e.g. to achieve vertical
+       	   allignments.
+
+       Normal alignment of multiple lines in a block.
+         They all align on the block left margin (= the cc of the first character).
+
+       "Horizontal" concatentation of multi-line layouts.
+         Concatentation of first lines onto last lines.
+         Example: H-mode rendering of three multi-line blocks
+
+             xxxxx xxx xxx
+	     xxx xxxx yyy
+	              yyyy yy
+		      yyyyy zzzz zzz
+		            zzz zzzzz
+			    zzz
+
+           V-mode rendering of these same three multi-line blocks (aligned on the
+	   parent block's blm)
+
+             xxxxx xxx xxx
+	     xxx xxxx  <HardLine>
+             yyy
+	     yyyy yy
+	     yyyyy     <HardLine>
+             zzzz zzz
+	     zzz zzzzz
+	     zzz
+
+       The vertical mode is probably more desirable for grouping multi-line blocks.
+       Of course, when aligned vertically, there is less "right-margin" pressure,
+       so the x, y, and z blocks might be rendered with fewer or no line breaks.
+
+
+       Note: In Pugh-Sinofsky, there are commands that "set" (t) and "restore" (b)
+       indendentation, and these normally occure with block entry and exit symbols ("t{
+       ... }b"), so the indentation is normally set for the block (i.e. has the block as
+       its "scope"). The "t" symbol sets the indentation to the current column, which will
+       be the current column at the start of the block ("{"). The "b" symbol will
+       then restore the previous indentation, which will normally be the indentation
+       associated with the parent block.
+
+
+       Note: "Intra-block" indentation. Some features (e.g. WL "hang" operation), and
+       essentially the (Hughes?-) Wadler INDENT support or require extra indentation
+       after newlines within a block. This could be added by adding an "offset" field
+       to SoftLine (SoftLine of {spaces: int, offset: int}) and setting offset to a
+       positive number when it is used in P alignment, for instance. But this then
+       makes indentation connected with (conditional) line breaks instead of being
+       associated with the block, unless we introduce a special form of P blocks,
+       or perhaps have P take an offset argument (P of int), where the argument specifies
+       an extra indentation after each (internal) newline of the packed block.
+       Breaking a block at the end of the line is analagous to hyphenating a word at
+       the end of the line in text formatting.
+
+
+       Note: WL defines an "align" operator to support vertical alignment of elements.
+       This seems redundant if we have V aligned blocks, but is it?
+
+
+       Note: Soft and Hard indentation [Versions 8.0 - 8.3]
+       -----------------------------------------------------
+
+       Version 8.0 changed indentation from an attribute of blocks to format modifier
+       constructors (SINDENT, HINDENT).
+
+       Version 8.1 simplified that to one form of indentation (INDENT format constructor),
+       and that INDENT constructor is "soft", meaning that indentation takes effect only
+       following a "line break" [See Terminology note at the end of 1.8.]. The hard
+       indentation (HINDENT, hardIndent) introduced in 8.0 was unconditional. It worked by
+       supplying its own preceeding line break if _and only if_ necessary to trigger the
+       indentation. In other words, if a hardIndent did not follow a line break, a line
+       break (with indentation to the current blm) would be generated. But if it did
+       follow an existing line break, not new line break would be generated, thus avoiding
+       having a blank line for the hard indented format.
+
+       Version 8.1 eliminated the HINDENT constructor and the associated hardIndent
+       function, and attempted to replace them with a breakIndent function that forced
+       a line break before the (further) indented format:
+
+          fun breakLine n fmt = block [BRK HardLine, INDENT (n, FMT fmt)]
+
+       But this did not work, because the new block resets the blm with respect to which
+       indentation takes place. Thus the indentation would be relative to the blm of the
+       block created by breakLine, which would be the current column where this block is
+       rendered. In contrast, the hardIndent function did not reset the blm, so the
+       indentation would be with respect to the parent block's blm.
+
+       Example of layout of an error message formatted with breakIndent:
+
+          - 1: bool;
+          stdIn:3.1-3.8 Error: expression ... bad instantiation] 
+                                                                   expression does not match constraint
+
+                                                                      expression: 'Z[INT]
+                                                                      expression: bool
+                                                                      in expression: (1
+                                                                                      :
+                                                                                      bool)
+
+       So breakIndent was eliminated in version 8.3.
+
+       Thus the recommended way to ensure that an indentation will be triggered is to
+       place it in a context where it is sure to follow a line break. Thus, an indented
+       format as a subformat of a vblock will have its indentation triggered. We can also
+       achieve this context by placing the indented format in a basic block preceeded by a
+       hard line break (BRK HardLine). An indented format as a subformat of a pblock often
+       (usually?) occurs as the last subformat, or the second argument of pcat, since we
+       probably do not want it to be followed by horizontally concatenated formats.
+       
+
+   1.8 (line) breaks -- multi-line and single-line layouts
+
+       High Level Issue:
+       (1) Where are the (potential) line breaks? What represents them in the format structure?
+       (2) Should there be a "hard" (unconditional) line break? (yes)
+       (3) Should line breaks be subsidiary to some other element, like blocks? (No)
+
+       * Principle: we trigger a break (in the current block) even though the following
+         block (or rather its "first line") might fit if a conditional break is triggered
+         in that block. This is motivated by the goal of breaking fewer blocks [Pugh]: if we
+         break in the following block instead of at this break, we would be breaking both
+         the following block and, indirectly, the current block.
+
+       * Principle: the triggering decision for a soft break does _not_ depend on
+         performing rendering. In other words, we decide whether to trigger based on
+	 formats, not layouts.
+
+       Implicit (as in Oppen) or explicit.
+         * implicit separators between adjacent text strings (default, a single space)
+	 * explicit (LINE in WL, or BREAK)
+
+       Mandatory line breaks vs conditional line breaks.
+         LINE in WL considered to be the primitive form
+	    suppressed (replaced by spaces) by "flattening" (post processing)
+
+       "Triggering" of soft line breaks (when forced by space constraints)
+         i.e. the "measure" of the next (following) format element to be rendered
+
+       Attributes of conditional line breaks
+         (a) number of spaces to insert at break if _not_ triggered  ("spaces")
+	 (b) incremental indentation of next line if triggered  ("offset")
+	 (c) "alignment" attribute, as in PS
+
+       Indentation and blocks
+         Indentation as an _attribute_ on blocks
+	 Indentation as an _operation_ on blocks (NEST in [WL])
+
+       Break "priorities"
+       	 Prefer breaks at a lower bnl (block nesting level)  [PS]
+	 This can happen automatically based on look-ahead and measure policies?
+
+       Flattening: recursively blocking breaks from triggering at all bnl.
+         (1) Flattening by rewriting (e.g. replacing LINE with SPACE/TEXT).
+	 (2) Flattening by rendering in a "flattening mode".
+
+       A format can be intrinsically (i.e. unconditionally) multi-line if it
+       contains
+         (1) (unconditioned) hard line breaks, or
+         (2) indented blocks
+
+       Even such an intrinsically multi-line format can be rendered as a single-line
+       layout when rendering in "flattening" mode.
+
+       Triggering criteria:
+       We are at a soft break in a block, with a following format element. The decision
+       about whether this soft break should be triggered could be based on:
+
+          (1) flat layout of next format does not fit
+       	  (2) 1st-line of render of next format does not fit
+
+       Criterion (2) implies (1), but not the other way around.
+       If 1st line of next format fits, but the flat next format does not fit,
+       and we therefore don't trigger the current soft line break, then a break
+       will definitely occur within the next format, and that break will either
+       be soft or hard. If it is soft, then it is a triggered soft break at a
+       greater BNL (and hence lower "priority") than the one we are considering now.
+
+       "Block integrity" or keeping blocks together
+       If a block is going to be split over multiple lines (rendered multi-line),
+       we prefer to split a higher level (lower BNL) block rather than a lower-level
+       or inner block. This is consistent with the triggering preference for breaks
+       at lower BLN. This will normally happen automatically if we use the flat
+       measure of the following block as the line fit criterion. Effectively, we
+       are trying to prevent the breaking of the embedded block by breaking before it.
+
+       Note: Pugh-Sinofsky have a goal/constraint of choosing an optional linebreak that
+       "breaks" as few blocks as possible. Choosing a break at a minimal BNL has this
+       effect, because the number of blocks that are broken is just the BNL.  "The
+       prettyprinter chooses the optional line break that breaks the fewest existing
+       groups." [Optional Line Breaks, p. 4] and "If there are two optional breaks within
+       the same group, the rightmost one is taken."
+
+       Note: Pugh-Sinofsky's notion of "connected" breaks is somewhat analagous to
+       horizontal and vertical alignment of blocks. But it is messier because there may
+       be both connected breaks and "ordinary" optional breaks in a block, and in this
+       case the connected breaks (which all must be triggered together) take priority
+       over any ordinary breaks, which should be triggered only if necessary _after_
+       all the connected breaks in the smae block have been triggered. The _connection_
+       between the connected breaks in a block is based on their occurring in the
+       block (at top-level in the block).
+
+       Note: a block can begin with a newline (or immediately after a newline, since
+       the newline is not regarded as a part of the block) in the case where (1) the
+       1st format in the block is hard indented, or (2) the 1st format of the block is
+       soft indented and the block follows a newline. [There is also the possibility of
+       an sblock that begins with a HardLine separator (but this might be considered
+       an "illegal" or "ill-formed" sblock).]
+
+       Some edge cases:
+
+       (1) a block ends with a HardLine separator followed by an empty format (EMPTY or
+       TEXT ""). In this case, the next format is _not_ considered to (logically) follow a newline,
+       even though it will immediately follow a newline "physically" (or "textually"?).
+       This could be could occur with a vblock [..., empty], or an sblock.  There could
+       also be special cases in rendering that would detect this sort of situation and
+       propagate the "following newline" property past the empty format to agree with the
+       actual textual layout. On the other hand, it might be useful to have as an
+       invariant that no block _ends_ with a newline. This could be enforced by not
+       allowing any block (including an sblock) to end in a separator.
+
+       (2) What is the difference, in formatting behavior, between a HardLine separator
+       and a hard indented block containing no formats, or just a single empty format?
+
+
+       Terminology: use the term "line break" for a newline character
+       followed by the current (blm) indentation determined by the
+       current block. So the indentation is viewed as integral to the
+       line break.
+
+
+   1.9 Composing or cascading formatters
+
+       High Level Issue: It seems obvious that "formatters" need to be composed.
+
+       When we are formatting a compound structure, like an SML signature that includes
+       subsidiary structures like types, the formatter for the compound structure will
+       necessarily call formatters for constituent structures (e.g. the formatter for
+       signatures will call the formatter for types).  The formats for subsidiary structures
+       will be rendered as part of the rendering of the containing structure. For instance,
+       the types in a signature will be translated into formats that will be part of the
+       signature format, and they will not be rendered until the whole signature format
+       is rendered.  So composition takes place as the level of constructing formats, not
+       at the level of rendering or printing.
+
+       When rendering the subsidiary structure, the "global" line width (or the line
+       width for the parent structure), will be replaced by a local effective line width
+       determined by the LSA.
+
+
+   1.10 "contextual" formats
+
+       WL prettyprinters provide some basic constructs (COLUMN, NEST, ...) that support
+       computing formats that depend on "rendering-time" factors like the current column
+       (cc), the current indentation (ci), or the current "line space available"
+       (lsa). These take a function that maps from the contextual parameters (e.g. cc) to
+       a context-dependent format, which is then rendered at the point where the
+       contectual format occurs. We could provide a single such construct using a function
+       of all of the context numbers (cc, ci, lsa?).  lsa is probably redundant, since it
+       is a function of cc and the "fixed" linewidth (lw).
+
+           CONTEXT of int * int -> format
+
+       In WL, these are used to implement other "contextual"
+       formatting operations such as "align" and "hang".
+
+       The idea is that in the middle of a format we can construct and
+       then render a format that depends on the render-time context (where cc and ci are
+       available).
+
+       Another variant on contextual, or render-time formatting, are
+       conditional formats where the condition is expressed in terms of
+       render-time variables like cc and ci.
+
+       In the WL Prettyprinter library, operations like "align" and "hang"
+       use render-time conditions or expressions to control the "late" production
+       of formats, which then immediately need to be rendered (in the same
+       context, one presumes).
+
+       How does "contextual" formatting work?
+       A function that takes "rendering-time" variables like cc and ci as argument
+       is used to produce a new format, which is then rendered in place of the
+       CONTEXT format.
+
+       These could also be called "render-time computed formats".
+       The problem would be that it would not be possible to precompute their
+       measure (but maybe one could give an "estimated measure"?
+
+
+   1.11 Annotations or styles
+
+       These would address display issues like character sets (e.g. Unicode), fonts,
+       colors for text elements.
+
+       For the time being, this is left as a (mostly) orthogonal concern. They would,
+       however, be expected to affect rendering (e.g. calculating the length of a string).
+
+       Initially we assume a simple fixed-width character set, so measurements are in
+       units of characters (line width, current column). Styles that don't violate this
+       fixed-width character assumption, like color and type face (italic, bold) could be
+       accomodated without changing the way measurement is done.
+
+       Simple styles could be introduced via a STYLE or ANNOTATE format constructor:
+
+           datatype format = ... | STYLE of style
+
+       This introduces this issue of how styles behave with styles are nested within one
+       another.  The simplest rule would be that the innermost (most local) style
+       specification applies, but there could be a "cascading" effect, such as
+       combining "italic" and "bold" type face styles into "bold-italic".
+
+
+==========================================================================================
+7. Implementation Notes
+==========================================================================================
+
+Source files (early version):
+
+    layout.sml  -- defines tokens, lines, and layouts
+    format.sml  -- defines formats
+    render.sml  -- defines the render function
+    [pp-util.sml?]
+
+Some basic quantities (variables, parameters)
+
+     cl : int  -- current line, a global count of lines used? This
+                  does not play a role in the algorithm.
+
+     lw : int  -- line width, aka right margin (assumed fixed for a given render)
+                  Affects only rendering, and passed as an initial parameter to the
+		  render function.
+
+     cc : int  -- current collumn, "state" maintained during the rendering process
+                  as an argument.
+
+     ci : int  -- current indentation (the indentation (blm) of the current block)
+
+     lsa : int -- line space available, normally equal to lw - cc, determined at
+     	          entry to a new block (effectively becomes the local
+     	          "line width" within that block). Also lsa on the
+     	          current line will vary (be reduced) as text is added
+     	          to the current line
+
+     blm : int -- block left margin = the cc when the block is entered
+
+     The pair (cl, cc) could be considered the discrete, two-dimentional
+     "origin" or "root" of a block (where cl is the "current line number" when
+     the block starts or is entered).
+
+     ci is always equal to the blm of the current, innermost block, since
+     "indentation" is an attribute belonging to blocks. ci will
+     change (increase) when one enters a new (indented or not) block,
+     where a new blm is defined for that block. When exiting a block,
+     ci resets to the blm of the parent block. So ci is, in fact,
+     redundant -- it is the same as the current block blm.
+
+1. Flat rendering: rendering a format on a single line, without line breaks
+
+   One can "flatten" a fmt, replacing hard and soft line breaks with spaces
+   and removing the indenting property of indented blocks. Then the ordinary
+   rendering function will render the resulting flat format on a single line.
+
+      flatten : fmt -> fmt
+
+   Alternatively, we could
+
+     (a) recursively set block mode values to H throughout the format structure
+     (b) pass the rendering function a "flat-mode" boolean parameter that can suppress
+         triggering all breaks, or alternatively define a flat_render function that
+	 does this:
+
+	 flat_render : fmt -> layout
+
+   The measure function measures the "span" of a fmt as though it was rendered
+   flat.
+
+2. pre-measuring formats (memoizing block measure)
+
+   Translate from the basic format type to a "measured format" type that includes
+   a "size" for each block.
+
+   Assign the spaces field of a BREAK as the size of the break, which assumes that
+   breaks will not be triggered.
+
+   It is possible that the formatting function itself could produce measured formats,
+   avoiding the need for a "post-processing" translation from a base format to a
+   measured format.
+
+3. "first-line" measuring.
+
+   In the context of line available space, predict the length of just the first line of
+   the layout produced by rendering a (next) block. This would be the measure of the
+   whole block if the lsa allows it to be rendered flat, or the measure up to whichever
+   break is triggered by the lsa.  Does this mean we need to perform rendering to determine
+   where the first line break occurs?  Looks like it does. Hence (4).
+
+   The first-line measure of a format depends on the context constraints (lsa), and is not
+   an intrinsic property of the format.
+
+       flm : format * int -> int    -- "first-line measure of format wrt space
+
+       flm (f, s) = let val layout = render (f, s)
+                     in length (hd layout)
+		    end
+
+   There is a shortcut way of calculating flm: scan for breaks while maintaining the
+   measure "so far" up to each break, and stop when the partial measure exceeds(???)
+   the space s -- or really back up to the last break _before_ the space is exceeded!
+   But what happens if the space is exceeded before the first break is reached? This
+   would mean that even the first line is too big to fit, so we have line overflow.
+
+4. _predicting_ which break will be triggered in advance
+   Allows predicting the first line of a layout
+   Interaction with current indentation? Or using cc?
+
+5. premeasuring "fit"
+   We could say a render "fails", by running out of space and then backtrack to
+   render differently or render a different format.  But instead, we use measuring
+   and "look-ahead" (on element?) to predetermine whether a render will succeed.
+
+   We can always calculate the (flat) measure of a format, or we can memoize the
+   measure in the format data structure, yielding an "mformat" (measured format).
+
+6. fits predicate  -- this is trivial, since we can measure formats
+
+       fits: format * int -> bool
+
+       fits (f, s) = measure f <= s
+
+   By default we use "flat" measure, the length of the 1-line layout with no line
+   breaks allowed, but other more complicated ways of "statically" (pre-render)
+   measuring formats are possible (e.g. 1st-line measure for multi-line layouts).
+
+7. Conditional formatting
+
+   The idea of trying one format if it "works", and otherwise trying another.
+
+   * Simple variant: OR  (alternatively IFFITS?, ALT)
+
+         OR (f1, f2)
+
+     Rendering this OR format first tries to fit f1, and if that does not fit, it does
+     f2 (whether or not it fits?).
+
+     (1) it is assumed that f1 and f2 have the _same_ content
+	 so the same content will be rendered whether f1 or f2 is chosen =>
+ 	 the flat renders of f1 and f2 will be the "same" one-line layout
+
+     (2) it is assumed that f1 is "flatter" or "bigger" (has a larger measure) than f2,
+	 so that f2 has a better chance of fitting than f1
+
+	 But it may just be that we render f1 in "flatten" mode, while f2 is allowed
+	 to trigger line breaks.  f1 and f2 may be the same format!
+
+         Or f1 may be the "flattened" version of f2 (as in Wadler's group operator).
+
+   * FlatAlt operation from current Haskell Prettyprinter (WL variant) -- see below.
+
+   * ALT box operator in de Jonge [dejonge:2001]
+
+8. determinism of rendering
+
+   given the lw/lsa constraint, rendering should be deterministic: only one possible layout could
+   be returned as the result of rendering (f, lsa).
+
+9. Which parameters?  current column (cc) vs line space available (lsa)
+
+   The current column (cc) and line space available are defineable in terms of each other
+   using the fixed (per render) line width (lw):
+
+       lsa = lw - cc
+
+       cc = lw - lsa
+
+   Which is the most effective parameter, or does it matter?
+
+==========================================================================================
+Function of Union, FlatAlt, group in Haskell Prettyprinter (and variants)
+==========================================================================================
+
+This relates to the way WL family prettyprinters handle conditional rendering.
+
+* A main difference is that unconditional line breaks (LINE) are the default case.
+These then must be "selectively" suppressed by functions like "group" and by the
+use (in 1.7.1) of FlatAlt.
+
+    group f = Union (flatten f, f)    -- 1.2.1 and original Wadler version
+
+If flatten f fits, render it, otherwise render f (presumably with triggered line breaks)
+
+where a Union (f1, f2) format is rendered as f1 if it fits, and otherwise as f2. f1 and f2
+must have the same content, and it is "assumed" that f2 is "narrower" than f1, i.e.
+if f1 fits, the f2 would also fit.
+
+On problem with Union is that there is no way to enforce the implied requirement that
+f1 and f2 have the same content (presumably with different formatting of that content).
+This requirement must be satisfied by the format (document in WL) builder.
+
+In the WL Prettyprinter 1.7.1, a second "conditional" format constructor, FlatAlt is
+introduced that seems to "overlap" with Union, but in the case of FlatAlt (f1, f2),
+f1 is assumed to be the "narrower" format. Then the group function is defined in terms
+of a complicated interaction between FlatAlt, Union, and the flatten operation.
+
+
+==========================================================================================
+8. Interface
+==========================================================================================
+
+What should be exposed? Which types should be abstract?
+
+Note that we are primarily concerned with constructing formats, and it is not clear
+when we might need to "destruct" formats or "test" them, except that we do need to
+"measure" formats (but perhaps only internally).
+
+signature NEW_PP
+structure NewPP : NEW_PP
+
+Types:
+
+   format (abstract?)
+   mode (concrete; H, V, P, HV)  [dropped]
+   separator (concrete: SoftLine, HardLine, Spaces)
+   element (block elements; concrete; BREAK, FMT)
+   [block record? -- no, maintain abstraction wrt format representation]
+
+* basic format building operations
+
+  val text : string -> fmt
+
+  val mkBlock : mode * int option * element list -> fmt
+
+  val mkHBlock : fmt list -> fmt   (* Space 1 separators implicit *)
+  val mkVBlock : fmt list -> fmt   (* HardLine separators implicit *)
+  val mkPBlock : fmt list -> fmt   (* SoftLine 1 separators implicit *)
+
+  val separate : separator * fmt list -> fmt  (* or element list? *)
+      (* interleave the separator between fmt elements in order to build
+       * an elements list for a block. *)
+
+* conditional formats
+
+  val measure : fmt -> int  (* flat measure *)
+
+  val tryFlat : fmt -> fmt
+      (* if the fmt fits flat, then render it flat, otherwise normal render *)
+
+  (* val alt : fmt * fmt -> fmt    (* args have same content *) *)
+
+* rendering and printing
+
+  val render : int -> fmt -> layout (* int arg is line width *)
+
+  (* val flatRender : fmt -> layout]  (* render with no line breaks *) *)
+
+  val printFmt : fmt -> unit        (* printing to stdOut *)
+
+* some basic formats
+
+  val comma : fmt
+  val colon : fmt
+  val semicolon : fmt
+------------------------------------------------------------------------------------------
+
+signature NEW_PPUTIL
+structure NewPPUtil : NEW_PPUTIL
+
+==========================================================================================
+9. NewPP revision 2
+==========================================================================================
+[This section should be updated to Version 7.?]
+
+Files: pp/new/newpp2.{sig, sml}
+
+Changes:
+
+(1) drop the mode type and let separators control the different modes, along with
+    specialized block constructors. Thus mode is expressed through the choice of standard,
+    implicit subformat separators.
+
+      SBLOCK - special blocks with explicit separators between subformats
+      	       allowing for ad hoc use of possibly heterogeneous separators (type element)
+      HBLOCK - horizontal block with Space 1 separators
+      VBLOCK - with HardLine separators
+      PBLOCK - with SoftLine 1 separators
+      HVBLOCK - H mode or V mode depending on flat fit of the block
+
+(2) Indentation remains an orthogonal attribute of blocks
+
+(3) Implicit HardLine break at the beginning of an indented block is suppressed
+    if the block follows a newline+indent (in which case it is superfluous).
+
+--------------------------------------------------------------------------------
+(* newpp2.sig *)
+
+(* The signature for the new pretty printer, Version 2. *)
+
+signature NEW_PP =
+sig
+
+(* Types: *)
+
+   type fmt
+   type layout
+
+  (* separator: used to explicitly (SEP elements in SBLOCKs) or implicitly (the
+   * other styles of blocks) separate the fmt elements of a block and control where
+   * line breaks can occur. separators are _not_, and do not contain, content. *)
+
+  datatype separator
+
+    = HardLine  (* hard line break, rendered as newline + (default, blm) indentation *)
+    | SoftLine of int  (* soft line break; rendered to n >= 0 spaces (S n) when not triggered *)
+    | Space of int  (* rendered as n >= 0 spaces *)
+
+  (* element: elements of a compound block, consisting of "sub-formats" (FMT), usually
+   * interleaved with separators (SEP).
+   * In a "normal" block the separators would occur only _between_ the FMT elements, and only
+   * one separator would be used between any two FMT elements. *)
+
+  datatype element
+    = SEP of separator
+    | FMT of fmt
+
+(* Basic format building operations: *)
+
+  val text : string -> fmt
+
+  val mkSBlock : element list * int option -> fmt
+  val mkHBlock : fmt list * int option -> fmt   (* implicit Space 1 separators *)
+  val mkVBlock : fmt list * int option -> fmt   (* implicit HardLine separators *)
+  val mkPBlock : fmt list * int option -> fmt   (* implicit SoftLine 1 implicit *)
+
+(* Conditional formats: *)
+
+  val measure : fmt -> int  (* flat measure, by default *)
+
+  val tryFlat : fmt -> fmt
+      (* if the fmt fits flat, then render it flat, otherwise render it normally *)
+
+  val alt : fmt * fmt -> fmt    (* args may not have the same content! *)
+
+(* Rendering and printing:  *)
+
+  val render : fmt * int -> layout (* int arg is line width *)
+
+  val printFmt : int -> fmt -> unit   (* printing to stdOut *)
+  val printFmt' : fmt -> int -> unit
+
+(* Some basic formats: *)
+
+  val comma : fmt
+  val colon : fmt
+  val semicolon : fmt
+
+  val cat : fmt * fmt -> fmt
+  (* combinds formats in a P (packed) block *)
+
+end (* signature NEWPP *)
+--------------------------------------------------------------------------------
+
+Versions up through 8.0 revised the interface (ultimately embodied in
+signature NEW_PRETTYPRINT). See the latest version of the
+documentation files str-newprettyprint.adoc and manual.adoc.
+
+
+==========================================================================================
+10. Lindig: additional raw notes on the (revised) Lindig pretty printer
+==========================================================================================
+
+Old File:  (~/sml/Dev/pp/Ramsey/Wadler-Lindig/lindig0.sml)
+
+Paper:
+  Christian Lindig, "Strictly Pretty", unpublished, March, 2000
+  [includes partial OCaml source code]
+
+Lindig's strict variant of the Wadler prettyprinter (via Norman Ramsey):
+
+* What should indentation be attached to? What does it do?
+
+Indentation affects what happens at a break.  A break element
+of a block should, when triggered, cause a newline to be emitted
+and the associated indentation should be to the "block left margin"
+of the current block.
+
+How do we determine the BLM of a block?
+
+(1) by default, it is the cc where the block begins.
+(2) it can be increased by an amount specified <where?>. But how
+does this physically affect the (origin) position of the block?
+In particular, does a specified indentation bump (always positive)
+affect the 1st line of the block (if multi-line), or the
+position of the block if rendered on a single line. Or does it
+only affect triggered line breaks within the block?
+
+And what can we do if we want an entire block to be indented?
+Make sure that it is immediately preceded by a line break.
+
+So should the incremental indentation be an attribute of the block?
+Which would be applied at the block entrance following the immediately
+preceding line break?  E.g.
+
+    LO1:
+    ...xxxxxx<LB>
+       ..aaaa
+       ..bbb
+       ..ccccc
+
+where the enclosing block as BLM 3, and the block after the <LB>
+has indentation 2, and the new block has BLM 5
+
+If there wasn't any line break preceding the block it would layout
+as
+
+    LO2:
+    ...xxxxxxaaaa
+	     ..bbb
+	     ..cccccc
+
+where the block entry would a the first "a", and the block's BLM would
+be (3 (inherited BLM) + 6 (size "xxxxxx") + 2 (block indent)) = 11.
+The first character of the block would be at cc = 9, which is less
+than a BLM of 11.
+
+Another approach would be to say that if a block has a positive
+indentation, then there is an implicit <LB> introduced just
+before the break, producing layout LO1. This could be dependent
+of the block's break mode, e.g. may not make sense if break mode is H.
+
+Or perhaps there should be a rule that all blocks must be preceded
+by a (conditional) break. Or this just for "indented" blocks.
+
+* Principle: the BLM of an "indented" block includes its indentation
+(relative to its parent BLM (after a line break), or its initial cc.
+
+Indentation of block => a line break precedes the block?
+
+* Principle: indentation is a property of a block, not of any
+  particular line break, and not a separate specification operation
+  on any generic format element (i.e. something that could be
+  applied inappropriately to a TEXT item, or that could be applied
+  repeatedly, like INDENT(x, INDENT(y, d)) ).
+
+[There should always be a current block, even if supplied by default].
+
+
+* block "separators" (i.e. breaks separating doc elements)
+
+Commonly, the essential elements of a block are its subblocs (doc
+elements), which may be either atomic (TEXT) or compound (BLOCK).
+To support formatting, these doc elements are separated by breaks
+(hard or soft) that provide opportunities for rendering to produce
+multi-line layouts (if necessary, or desired). There could be another
+form of break or separator representing white space (a number of
+spaces) that could be used when newlines are not expected or wanted
+between the subblocks.
+
+There may be cases where we want multiple adjacent doc elements
+without separators (though multiple adjacent TEXT docs can be
+amalgamated into one). Similarly, there may be cases where we want
+multiple adjacent separators (e.g. to produce blank lines in a
+layout). Is is not clear why we would ever want multiple adjacent
+soft breaks, but in horizontal mode these would translate to spaces
+and could also be amalgamated into single ones.
+
+For H aligned blocks, the default semantics of the break separators
+is as spaces, while for V aligned blocks, the default semantics of
+separators (BREAKS) is as hard line breaks.
+
+We could therefore leave out the explicit separators for H and V
+aligned BLOCKS, and have them be "implied" between the DOC elements.
+Again, having them be explicit elements allows for producing blank
+layouts in the V mode.
+
+Q: What happens when a block has alignment mode H and also contains
+hard line break separators.
+
+* multi- and single-line layouts
+
+Single-line layouts may the the desired defaults for small layouts,
+but multi-line layouts may also be the preferred layout in many cases,
+so producing a multi-line layout is not a failure or suboptimal outcome.
+
+
+
+==========================================================================================
+11. NewPP, Version 7 (memoized block measures)
+==========================================================================================
+
+BLOCK and SBLOCK include a measure field that is calculated when the
+block is constructed.
+
+---------------
+datatype format (* aka "format" *)
+  = TEXT  of string
+      (* unique form of atomic doc *)
+  | SBLOCK of {elements: element list, bindent: bindent, measure: int}
+      (* "special" or "ad hoc" block with explicit separator (SEP) elements mixed with
+       * format (FMT) elements *)
+  | BLOCK of {formats: format list, separator: separator, bindent: bindent, measure: int}
+      (* "normal" blocks, where alignment (H, V, P) is determined by the choice of
+       * the separator *)
+  | TRYFLAT of format
+      (* conditional rendering as flat if the format "fits", otherwise render normally *)
+  | ALT of format * format
+      (* ALT (format1, format2): render format1 if it fits, otherwise format2. The two
+       * formats are not constrained to have the same content! But in general the should. *)
+---------------
+
+1. What should the measure of indented blocks be (since they follow or
+   start with a hard newline)?
+
+2. What should the measure of an SBLOCK be if it includes HardLine
+   separators? (i.e. if it is inherently multi-line). One option would be the
+   length of the longest "line" of the block -- the problem is that "line" is
+   a notion associated with layouts, not with formats.  We would need to define
+   the notion of the "lines" of an inherently multi-line block/format.
+
+3. What should be the measure of a vblock, with implicit HardLine separators?
+
+In all of these cases, we have two choices:
+
+1. Ignore the HardLine separators and calculate the measure (as usual)
+   on the flattened version of the format, where HardLine separators
+   are treated as (Space 1) separators.
+
+2. Calculate the measure based on the "first line" of the multi-line
+   format/layout (recursively).  This would mean that a SoftLine
+   separator preceding the format would not be triggered, since the
+   1st line of the following format may fit, even though the flattened
+   following format would not. This in turn would violate the "least
+   BNL" priority rule for SoftLines, unless we modify that rule to relate
+   only to SoftLine separators, and assume it does not apply when the
+   following separator is a HardLine.
+
+Another way of putting it is that in the presence of HardLine
+separators in SBLOCKs, and their implicit occurrences in vblocks and indented
+blocks, we could truncate the measurement of the following block at
+the end of its 1st line when it was (statically) known to be a
+multiline block.
+
+A renderer using this "stricter" measure of format span would be more
+"liberal" with line space, allowing it to be filled with 1st lines of
+explicitly (statically) multi-line formats.
+
+This policy might be implemented in an experimental Version 8. (8X)
+
+Examples illustrating utility are needed.
+
+
+==========================================================================================
+12. NewPP, Speculative Feature: Tabs
+==========================================================================================
+
+Tab stops and tabbing might provide some of the functionality that WL
+provides via render-time constructed documents (formats).
+
+1 First version: single tabs
+
+You could have two new format constructors:
+
+    SETTAB
+    TAB
+
+When the SETTAB is rendered, the cc becomes the current unique tab
+stop (variable ts). This tab stop value would be propagated forward through
+subsequent rendering. Subsequent SETTAB constructors would "override"
+any previous SETTABS (i.e. would reset the ts variable).
+
+When the TAB is rendered, (sp - cc) spaces would be emitted, but
+only if sp - cc > 0.
+
+SETTAB and TAB formats would be treated as pseudo-separators.
+
+Note that a tab could be "performed" only when the cc is left of (less
+than) the current ts.  We could only tab forward.
+
+The ts variable could be of type int option, where NONE means no tab
+stop has been set.
+
+Unlike cc which is reset after any newline (hard or soft), the ts
+variable would retain its value across newlines, since the only whay
+tabbing could have an effect is when GOTAB occurs on a line subsequent
+to the SETTAB.
+
+SETTAB would have no impact on format measuring, and GOTAB might be
+treated as (Space 1) for measuring, since GOTAB would always emit at
+least one space.
+
+NOTE: the tab setting, if any, is local to a block, and is not
+"accessible" to ancestor or descendent blocks (though they may have
+their own tab stop set.  So a TAB in a block will go to _the_ tab stop
+previously set by SETTAB in the same block.
+
+EXAMPLES: Need examples of the use of single tabbing in formats.
+
+
+2. Second version: multiple tabs?
+
+One could possibly have a "queue" of tab stops set by successive
+SETTABS, again within a given block and "private" to that block. Then
+successive TABs would go to successive _accessible_ tab stops kept in
+that tab stop "queue" (not really a queue, but a list/sequence with oldest
+first elements. [DEFN: A tab stop is "accessible" if it is to the right of
+the cc (a render-time property).] When rendering a TAB, to target tab
+stop would be the first one in this "queue" that was "accessible".
+
+Another possibility would be to allow multiple explicit tab settings,
+say a tab every 8 characters. These settings then would be static with
+respect to rendering, and a TAB would go to the next accessible tab
+stop in this fixed sequence. One problem with this, is that it might
+be difficult to tell which tab stop a given TAB will go to when
+rendered, since that would depend on the value of cc when the TAB is
+rendered.
+
+EXAMPLES: need examples for these features as well.
+
+
+==========================================================================================
+13. Multi-line formats, layouts, and measure.
+==========================================================================================
+
+Defn: A format is _single-line_ if it would be rendered without line
+breaks on an infinite line (i.e. with lineWidth (lw) = infinity).
+
+A format that contains only SoftLine separators or softIndents (and
+hence no vblocks) at any level of nesting will be a single-line
+format.
+
+Defn: A format that would be rendered on multiple lines (or rendered
+to a multi-line layout) even on an infinite line, is a (static)
+_multi-line_ format.
+
+A format that contains a HardLine separator (including nontrivial vblocks) or a hard
+indented block (bindent = HI) will be a multi-line format.
+
+Note that a single-line format (that contains at least one SoftLine
+separator) can sometimes be rendered to a multi-line layout because of
+line-space pressure (limited line space, or lw - cc).
+
+A flattened format is one where HardLine and SoftLine separators are
+rendered unconditionally as single spaces, and newlines for indented blocks
+are also ignored (all blocks are treated as though they had bindent = NI).
+This flattening can be achieved either as
+
+   (1) a transformation of the format data structure that replaces
+   HardLine and SoftLine separators and sets bindent = NI in all
+   blocks, or
+
+   (2) a flat rendering mode, where the effect of flattening is
+   implemented on the fly during rendering (a flatRender function,
+   as in NewPP).
+
+NOTE: for indented blocks, flat measure does not allow for associated newlines,
+but it might nevertheless take the associated indentation (n for SI n, HI n) into
+account, but perhaps only for hard indented blocks.
+
+Our basic measure function treats a format as though it has been
+flattened and returns its span when rendered on one infinite line,
+suppressing all line breaks. This is called flat measure.
+
+
+* Multi-line measure
+
+A "Static" property of a format is one that can be determined without
+rendering the format, and hence based simply on the format data structure.
+
+If a format is statically multi-line, and hence contains HardLine
+separators and/or hard-indented blocks, we can statically break down
+the format into "static" lines, where such a line starts after each
+HardLine separator or at the beginning of each hard-indented block.
+
+These static lines can each be measured using the usual flat measure.
+A static single-line format would consist of only one static line,
+whose measure would be the same as the flat measure of the format.
+
+The number of static lines in a static multi-line format is fixed
+and is a static property.
+
+Defn: The (static) multi-line measure of a format is the _maximum_ of
+the measures of its static lines.
+
+Question: How does this effect the result of rendering formats?
+
+  (1) The line-space pressure will be lowered, leading to:
+
+  (2) In general, fewer SoftLine separators (and hence
+      soft-indentations) may be triggered.
+
+  (3) In general, layout lines may be longer.
+
+These effects might be countered by introducing a ribbon percentage
+constraint that would have the effect of limiting the length of lines.
+
+When calculating the "measure" of a static line (delineated by
+HardLine separators or hard indented blocks (at the end)), we count
+an indented block at the beginning of a line as its measure plus its
+(incremental) indentation. In other words, the measure of a static
+line includes any indentation associated with its initial format, if
+that initial format is an indented block.
+
+A multi-line measure must be "context-insensitive", for instance independent
+of whether a format follows a newline (which can affect soft indentation).
+This is because formats may be defined in relative isolation and later
+combined into larger formats that determine their "context". But if we
+want to memoize the measure when the format is constructed, we do not
+have access to later contexts, and there may also be multiple contexts into
+which a format is inserted. So the context (e.g. preceding newline) is not
+intrinsic to the format, but the measure should be. Similarly, we don't have
+access to render-time values like the line space available, so we can't
+make any assumption about whether soft line breaks will be triggered. The
+safe policy is therefore to assume during measurement that soft line breaks are
+not triggered. [see new8/multimeasure.sml]
+
+
+* Horizontal concatenation of multi-line formats (echelon formation)
+
+  When multi-line formats are horizontally concatentated, each successive
+  layout starts at the end of the last line of the previous layout (with possible
+  spacing).
+
+  Example: 4 multi-line format layouts (la, lb, lc, ld). We assume here that they are statically
+    multi-line and do not involve any triggered soft line breaks.
+
+     la: aaaaaa aaa
+	 aaaaa
+	 aaaaaaa aaaa aaaa
+
+     lb: bbb bbbbb
+	 bbbb bbb bbbbb bb
+	 bb bbb
+
+     lc: ccccc ccccc ccccc cc
+	 ccc ccccc cc
+	 cccccccccccc ccc cc
+
+     ld: dddd
+	 ddd ddd ddd
+	 dddd dd d
+	 ddd ddd
+
+
+     Combining these formats in an _echelon_ formation produces:
+
+	 aaaaaa aaa
+	 aaaaa
+	 aaaaaaa aaaa aaaa
+	                   bbb bbbbb
+			   bbbb bbb bbbbb bb
+			   bb bbb
+                                             ccccc ccccc ccccc cc
+					     ccc ccccc cc
+					     cccccccccccc ccc cc
+                                                                  dddd
+								  ddd ddd ddd
+								  dddd dd d
+								  ddd ddd
+
+     Here each of the component layouts is indented on its own line so that it lays fully
+     to the right of the previous layout (with 1 space or column separating them).
+
+     Horizontally concatenating these layouts, hblock style, with 1 space between layouts,
+     yields a kind of "tight" echelon, or "staggered" combined layout:
+
+	 aaaaaa aaa
+	 aaaaa
+	 aaaaaaa aaaa aaaa bbb bbbbb
+			   bbbb bbb bbbbb bb
+			   bb bbb ccccc ccccc ccccc cc
+				  ccc ccccc cc
+				  cccccccccccc ccc cc dddd
+						      ddd ddd ddd
+						      dddd dd d
+						      ddd ddd
+
+     This staggered, step-like layout is a consequence of the fact that once a newline has
+     occurred, we cannot get back to the previous line(s) to continue printing on them.
+     The first line of the next layout starts (with spacing) at the end of the last line
+     of the previous layout, even if it is not the longest line of the layout.
+
+     Another possible formation would be the following "non-overlapping" echelon layout, where
+     the last line of one layout and the first line of the following layout are on the
+     same line, but the component layouts do not overlap vertically.
+
+	 aaaaaa aaa
+	 aaaaa
+	 aaaaaaa aaaa aaaa bbb bbbbb
+			   bbbb bbb bbbbb bb
+			   bb bbb            ccccc ccccc ccccc cc
+					     ccc ccccc cc
+					     cccccccccccc ccc cc  dddd
+								  ddd ddd ddd
+								  dddd dd d
+								  ddd ddd
+
+     Here the starting position of the next layout is determined by the _longest_ line of
+     the previous layouts rather than the last lines of those layouts. To produce this we
+     would have to keep track of a layouts "maximum width" (column of right-most printed
+     character) or the length of its longest line, presumably with both soft and hard line
+     breaks. This looks like "indenting" successive layouts, but to a position on the
+     current line, without inserting a new line.
+
+     The multi-line measure function actually gives the width of this layout (or the
+     echelon layout above) as the width estimate (measure) of the hblock concatenation.
+     Note that this estimate is conservative, in that it will always exceed the actual
+     width of the (hblock-style) combined layout.
+
+     A flattened (or non-echelon) concatenated layout like the following does not seem
+     feasible without some form of global analysis of the format, and would probably not
+     be desirable anyway. This would be similar to "tabular" layout of
+     a format, which would probably require a special format form (constructor).
+
+	 aaaaaa aaa        bbb bbbbb         ccccc ccccc ccccc cc dddd
+	 aaaaa             bbbb bbb bbbbb bb ccc ccccc cc         ddd ddd ddd
+	 aaaaaaa aaaa aaaa bb bbb            cccccccccccc ccc cc  dddd dd d
+								  ddd ddd
+
+     But in general, it seems that horizontal concatenation of multi-line layouts is
+     something to be avoided. The rendered length of lines in a multi-line layout is
+     another quantity that would only be available at render time. It is not a static
+     attribute of a format.
+
+
+==========================================================================================
+14. Functorization of Render and NewPP wrt measure?
+==========================================================================================
+
+We can pass the desired measure as a parameter structure to functorized versions of Render
+(RenderFn) and NewPP (NewPPFn). This makes it easier to experiment with alternative
+format measures, like multi-line measure.
+
+But there is a problem. Some constructs, like FLAT, need to use the flat measure, even
+if we are using multi-line measure as the default. To solve this problem, (1) we could
+also provide the flat measure as a "resource" feature available where needed, or (2) we
+could change the semantics of FLAT (e.g. "try whatever is the default measure").  We
+run into problems if we want to use memoization to speed up the computation of a format's
+measure.  Do we need to memoize _both_ the flat measure and the "default" measure, which
+might be different or might be the same as the flat measure. It looks like we do.
+
+There is also a problem when more than one measure are used together, such as flat measure
+and multi-line measure, and we want to memoize the measures (as we must do for
+efficiency). We could memoize both flat measure and a second measure, which would be
+either flat measure again, or a different measure like multi-line measure. This would
+be a bit cumbersome. Flat measure seems must be available to support the FLAT format
+constructor and the tryFlat function that is based on it.
+
+
+
+==========================================================================================
+15. Edge cases in the design, and related issues
+==========================================================================================
+
+1. FLAT is idempotent: FLAT (FLAT fmt) == fmt.
+
+2. What happens when we nest indentations, as in
+
+     hardIndent 2 (hardIndent 3 fmt)
+
+   This should be quasi-idempotent, in the sense that the newlines
+   coalesce and the indentation (deltas) accumulate. So this should be
+   the same as
+
+     hardIndent (5, fmt)
+
+   Thus
+
+     hardIndent m (hardIndent n fmt) = hardIndent (m+n) fmt
+
+   But what about various combinations of hard and soft indentations?
+
+     hardIndent 2 (softIndent 3 fmt) =?= hardIndent 5 fmt
+
+     softIndent 2 (hardIndent 3 fmt) =?= softIndent 5 fmt
+
+     softIndent 2 (softIndent 3 fmt) =?= softIndent 5 fmt
+
+3, alt (fmt, fmt) = fmt
+
+4. The various xcat binary combinators are all associative.
+
+5. Indentation is not "algebraic", but softIndent is "conditional".
+
+
+==========================================================================================
+16. Older design notes
+==========================================================================================
+
+Old file: ~/Dropbox/smlnj/pp/design.txt
+
+Notes on Prettyprinter design
+
+* The purpose of a (this new) prettyprinter is to print (or serialize) a datastructure, such as
+  a type or an abstract syntax phrase, with _formatting_, i.e. use of newlines and indentation
+  so that the printed layout reflects the structure of the data, making its print representation
+  more readable.
+
+* The pretty printer should be as "declarative" as possible, given that formats have to be
+  _designed_ in general.  There is no canonical homomorphism from given data structures to "formats".
+  (This is the goal of a prettyprinting "algebra").
+
+* actual layout (the end product) is determined by the interaction of a format specification with
+  constraints, such as line width, and possibly a ribbon percentage.
+
+* prettyprinting (in this case) is performed in two/three steps:
+
+  (1) translate the datastructure to be prettyprinted into a prettyprint "format" structure (WL "document").
+  (2) render the document into a "layout" under constraints (e.g. line width, "ribbon" width)
+  (3) print (output) the layout on a character-base output "device" (e.g stdout)
+
+  Defn: a _layout_ is a concrete specification of a formated text in terms of separate lines,
+  	where a line consists of indentation followed by text items (e.g. strings) with separators
+	(e.g. white space, "punctuation").
+
+    data structure  ==>    (prettyprinting, or "formatting")
+       pp document  ==>    (rendering)
+          layout    ==>    (printing, analagous to "layoutToString" in wadler4.sml)
+	     formatted text  (or simply a string that contains the formatting characters)
+
+* Formatting consists of
+
+  (1) line breaks (newline characters) to break up the layout when it does not fit on a line
+      - line breaks can be conditional. They can be "triggered" by space constraints imposed by
+        a finite line width (right margin).
+      - a conditional line break that is not needed (not triggered by space constraint) can be
+      	rendered as a number of spaces, typically used as separators between pieces of printed text.
+      - conditional line breaks may also carry a "local" indentation specifcation that is applied
+      	as additional indentation on the following line if and only if the break is triggered.
+      - unconditional ("forced") line breaks may also be included. But how do these "disrupt" to
+        behaviour of the more conditional formatting?
+
+  (2) indentation occurs at the beginning of "new" lines.
+      - indentation has no meaning or effect within a given line, i.e. _between_ items that are
+        printed on the same line.
+      - indentations can be specifed as an attribute of
+      - "structural" indentation rather than "ad hoc" indentation, say by modifying an indentation state
+        variable. (example: WL INDENT term constructor).
+
+  (3) alignment
+      - by default, structures are formatted on a single line, with items "concatenated" horizontally
+      - when line breaks must occur, formatting of items requiring multiple lines may be in
+        one of two modes:
+          -- "packed" (inconsistent breaks), or
+          -- (vertically) "aligned" (consistent breaks).
+      - the choice between horizontal layout and vertical may be conditioned on (horizontal)
+        space available.
+
+  (4) alternative treatment of indentation as part of a "print device" state that can be manipulated,
+      e.g. by assignment (Pugh-Sinofsky).
+
+  (5) two approaches to new breaks
+      - hard line breaks that can be "suppressed" by a flatten operaion (WL)
+      - soft line breaks that are only triggered by lack of (horizontal) space (Oppen, etc.)
+      - in either case, when line breaks are suppressed or not triggered, they are normally
+        replaced by spaces (0, 1 or more) (could also be replaced by text, e.g. ", ")
+        If a block does not fit, one of _its_ line breaks is triggered, not a line break
+	belonging to one of its subblocks [block look ahead]
+
+
+* Space constraints
+
+  (1) horizontal space available is limited by the maximum width of a line (line width)
+  (2) vertical space, i.e. the number of separate lines used, is considered unlimited
+  (3) policy needed for cases where line width is not adequate to print a structure and
+      there are no explicit line break opportunities
+      (a) truncate printing at end of line
+      (b) allow unlimited or limited (e.g. by percentage) line overflow beyound the "right margin"
+      (c) allow unspecified line breaks to be inserted
+      (d) reduce indentation(s)
+      (e) allow lines to "wrap"
+
+* Blocks or "algebraic" prettyprinting structures
+
+  - hierarchical "block" structure is natural and convenient (with text and "separators" as atomic blocks)
+  - blocks are useful entities for carrying certain attributes, such as indentation and alignment
+    (PPML and successors)
+  - hierarchically nested blocks also provide a way to "prioritize" line breaks (e.g. higher-level breaks
+    over lower level)
+
+* look-ahead and measuring techniques and policies
+
+  - older algorithms are "online", meaning look ahead is very limited and in terms of a shallow
+    look ahead at arriving characters or "tokens" (roughly lexical units)
+  - new algorithms can "measure" the entire prettyprint structure (format or document)
+  - can maintain a "current column" (cc) in the current print line that we are trying to fill in
+  - maintaining a current column parameter makes it easy to compute the remaining space on
+    the current line: space = lineWidth - cc.
+  - "granularity" of measuring: character, token, block, ...
+  - more look ahead makes it possible to make earlier decisions about break triggering
+
+  - "altFlat" lookahead in Haskell Prettyprinter (a refinement of WL flatten and group operations)
+
+  - Oppen uses lookahead to the end of the "following block" at a potential break (i.e. a block-separating
+    space). The following block may be quite large, but we can get away with limiting look-ahead to
+    a range of printable items that will exceed the current line's space available (i.e. at most
+    a line-width of stuff) -- the point at which we have "seen enough" to learn that it won't fit.
+
+  - in Oppen and Pugh-Sinofsky, the stuff seen during look-ahead are saved in a "queue" or buffer.
+    Some of that stuff will be printed before a triggered break, while the rest will become part of
+    the look-ahead for the next line. Question: is the triggered break the last break incountered, or
+    possibly an earlier break (previously buffered).
+
+* line breaks
+  - if alignment (connected/unconnected, consistent/inconsistent) is an attribute of individual breaks
+    we have the problem of having heterogenious breaks within a block, i.e. a mixture of
+    consistent and inconsistent breaks. How do they interact?  E.g. in Pugh-Sinofsky, consistent
+    breaks have priority and "suppress" inconsistent breaks.
+
+  - if conditional breaks have a "spaces" attribute that determines how many spaces replace the
+    break if it is not triggered, we can achieve the effect of an unconditional line break by
+    setting the spaces attribute to "infinity".  So there might as well be an unconditional
+    break primitive (like LINE in the WL algebra).
+
+* strong or weak (vertical) alignment specifications
+
+  - weak: align if any breaks are triggered (in which case, all breaks are triggered)
+  - strong: align and trigger all block breaks (assuming only one kind of break)
+  - do we want indentations to be consistent in weak and string vertically aligned blocks
+    If so, what to do then about inconsistent "offsets" assigned to breaks.
+
+  - perhaps breaks should not be involved in determining indentation? That is, there should
+    not be a per-break "offset" specification that determines an extra, local, indentation
+    occurring just after a break has been triggered.
+
+
+* How far is it possible to make the translation from structure to format be "structure-driven".
+  A "natural" formatting algorithm would map substructure to subformat in kind of "homomorphic"
+  style.
+
+  Formatting (translationg from structure to pp "document") involves deciding how various
+  components of a structure will be "set out" and separated from or related to one another.
+  Formatting deals with grouping and hierarchy. Which parts are subsidiary to other parts.
+  Which parts form natural, related groups that should be spacially kept together.
+
+
+* Need for "conditional formatting"
+
+  - OR or IFFITS (or TRY) formatting constructors
+    OR(f1,f2) : use format f1 _if it fits_, otherwise use f2
+
+  - analogous to WL group and altFlat operators
+
+  - problem: how to extend measurement to conditional formats?
+    measure = the max of alternative formats?
+
+  - the property of "fits" is of course relative to space available (room on the line), or
+    width - cc.
+
+  - the expectation is that in OR (f1, f2), f1 will be (or will render) "wider" or "flatter" than f2
+    generally f1 will be (render) flat, while f2 will typically be (render) multiline
+
+  - the "measure" of a format is its maximum or "flat" width
+    (assuming no conditional breaks triggered)
+
+
+* "Semantics" of formats: a format "denotes" a set of layouts (a la WL)
+
+  - the semantics of a format consists of the set of all layouts it can be rendered to with
+    all possible lineWidth constraints -- assuming this is well-defined!
+
+      Defn: layout \in [[ format ]] iff for some w, render w format = layout
+
+* is there an analog of the WL flatten function
+
+    [[foo format]] contains a single, single-line (flat) layout
+
+
+============================================================================================
+17. Derived prettyprinting constructs
+============================================================================================
+
+- list, tuple, option
+
+- labeled
+
+============================================================================================
+18. Further enhancements for Version 7.3
+============================================================================================
+
+- Add EMPTY as a first-class block constructor (to support reduction)
+
+- Add C for "compact" to the alignment constructors
+  -- redefine ccat in terms of alignedblock C
+  -- concat --> cblock
+  -- add cblock and ciblock block-building functions
+
+- Add
+
+    printFormat without lineWidth (implicitly uses Control.Print.lineWidth)
+    printFormat --> printFormatLW (renaming)
+
+    appendNewline : format -> format
+
+    labeled : string * format -> format
+
+    optionFormat : format option -> format
+    formatOption : ('a -> format) -> 'a option -> format
+
+    Rename:
+    listFormat -> list
+    tupleFormat -> tuple
+    optionFormat -> option
+
+    closedSequence : {alignment:alignment, front: format, back: format, sep: format}
+                     -> format list -> format
+
+    aligned sequence functions:
+      Xsequence: (sep:format) -> format list -> format
+      for X in {c, h, p, v}
+
+- formatTuple treatment of null list argument; PP.tuple nil ==> text "()"
+
+
+============================================================================================
+19. block reduction or simplification (Version 7.3)
+============================================================================================
+
+A bit of "algebraic" influence.
+
+The basic idea for reducing/simplifying blocks is to treat empty/EMPTY as an identity that
+gets absorbed in block construction.
+
+  - block nil ==> EMPTY
+
+  - aligned blocks containing only EMPTY formats reduce to EMPTY (ignoring separators)
+
+  - EMPTY gets "absorbed" in block element lists, including separators between EMPTY and
+    other elements
+
+  - EMPTY/empty is an identity for binary format concatenation operations. E.g.
+
+      hcat (fmt, empty) = hcat (empty, fmt) = fmt
+
+Thus
+
+    hblock [text "abc", empty, text "def"] ==> hblock [text "abc", text "def"]
+
+(only one space rather than two between "abc" and "def").
+
+Reduction should be "bottom-up", so when constructing a block the element blocks should be
+reduced.  This will happen if all block constructor functions reduce their argument lists.
+
+Q: Does this apply to (manually constructed) special blocks, where separator/format
+interleaving is not enforced?  Could still eliminate EMPTY elements while leaving
+separators alone.
+
+Enclose, parens, brackets, braces: applied to EMPTY, should produce "()", "[]", "{}", etc.
+
+Also see Section "15. Edge cases ..." above, where composition of
+indentations is discussed, along with idempotence of "alt".
+
+
+============================================================================================
+20. hanging indentation, outdents, negative indentation
+============================================================================================
+
+Do we need to support the WL "align", "hang", "indent" operators?
+
+E.g. Formattign the strings xxxxx, yyy, zzzz, aa, bbb, ccc, dddd, ee, fffff
+in a single block so that they fold, with limited lsa, as
+
+1. hanging paragraph:
+
+	xxxxx yyy zzzz
+	  aa bbb ccc
+	  dddd ee fffff
+
+2. indented paragraph:
+
+	  xxxxx yyy zzzz
+	aa bbb ccc
+	dddd ee fffff
+
+(2) could fairly easily be achieved by adding a SPACE separator at the beginning
+of a block, with SOFTLINE separators between the strings.
+
+(1) is not so easy to achieve, since we have to modify each of the conditionally triggered
+newlines _within_ the block to effect increased "internal" indentation beyond the blocks
+own indentation (blm). This could be achieved by a new kind of block or a new block
+attribute.
+
+============================================================================================
+21. scope of conditional newline optimization
+============================================================================================
+
+(1) line by line (line local)
+    conditional newline triggering based on space on the current line only
+
+(2) total format (global)
+    * consider a whole format when determining where to "optimally" trigger line breaks
+      (Is this what Ramsey's algorithm is doing?)
+    * could (minimizing) the number of lines in the rendered format be involved?
+
+============================================================================================
+23. Ramsey's "global" optimization of conditional breaks
+============================================================================================
+
+Ramsey's prettyprinter (ppzephyr).
+
+Uses a "dynamic programming" algorithm to annalize the complete format and choose the
+"optimal" set of conditional breaks to trigger, based on a cost model on breaks.
+
+The dynamic programming algorithm acts on partially rendered _layouts_. (i.e. takes place
+at "render time").
+
+
+============================================================================================
+24. Mikelsons on "boxes" [mikelsons:1981]
+============================================================================================
+
+"The purpose of each box is to summarize the formatting information
+necessary to display that particular part of the program. The purpose
+of the box structure is to represent the nesting structure of the
+components of a program. There are atomic boxes that describe
+individual symbols in a program, and composite boxes that describe
+groups of symbols and boxes.  Each box also contains a number of flags
+and parameters that define the desired format for that box. A key
+feature of the box structure is that it defines at each point in the
+program a collection of possible displays that consume increasing
+amounts of display area. In all cases the parameter represent
+intentions, and not exact specifications."
+
+" ... The program string is made readable by breaking it up into
+symbols and groups of symbols and by separating these groups on
+differeent lines of a page. Membership in a higher grouping is shown
+by vertical alignment while depth of nesting is shown by the degree of
+indentation.
+
+"Composite boxes define the components of a composite object in a
+program. The primary attribute of a composite box is a list of
+component boxes. In addition, composite boxes contain attributes that
+define how the components should be formatted relative to each other.
+
+Terminology:
+
+  box = block
+  cut point = line break
+  high priority cut point = unconditional (hard) line break?
+  low priority cut point = conditional (soft) line break?
+  cut point "allocated" = break triggered
+  conditional cut point = ?
+  expansion process = rendering
+
+Two-dimensional display filling strategy, taking into account both horizontal and
+vertical space in a window.
+
+Rendering depends on a notion of focus and associated "priority" of boxes, and rendering
+can "elide" subboxes automatically.
+
+
+============================================================================================
+25. NewPrettyPrinter Version 7.4
+============================================================================================
+
+* rename SBLOCK to BLOCK, and call it a "basic" block rather than a "special" block. This
+  form of block provides the greatest flexibility and degree of control when formatting.
+
+* The type name "separator" was changed to "break",  and correspondingly the element
+   constructor SEP was changed to BRK.
+
+* drop the tuple format-building function, since its name is misleading -- it does not
+  deal with general heterogeous tuples, only the special case of "homogeneous" tuples
+  where all elements have the same type (analagous to list formatting). Use tupleFormats
+  in conjunction with map i
+
+* Add the two "heading..." functions from the newpputil.sml file. These are generally useful
+  as a simple special case of "tabular" formatting.
+
+* Revise interface documentation and manual accordingly.
+
+
+============================================================================================
+26. NewPrettyPrinter Version 8.0  -- change in indentation
+============================================================================================
+
+Revised the whole treatment of indentation.  Indentation is now managed by two new format
+constructors:
+
+     datatype format =
+       ...
+       | HINDENT of int * format
+       | SINDENT of int * format
+       ...
+
+and the type bindent, and the bindent fields of BLOCK and ABLOCK have been eliminated.
+
+The xiblock constructor functions for "indented blocks" have also been eliminated.
+
+Any format can be indented by applying either the HINDENT (for hard indentation) or the
+SINDENT constructor (for soft indentation).  We now speak of "indented formats" rather
+than "indented blocks", since indentation is no longer associated with blocks.
+
+This simplifies rendering, since the treatment of indentation was repeated in two places,
+for basic blocks and aligned blocks, and how it is done once in the main render0 function.
+The "NI" cases no longer exist, since the default is that there is no indentation.
+
+Note that HINDENT and SINDENT are not exported by NEW_PRETTYPRINT.
+Indentation is represented in the prettyprinter interface (NEW_PRETTYPRINT) by the
+existing functions hardIndent and softIndent, with the unchanged types.  So the only changes
+required to client code in SML/NJ was to eliminate calls to viblock, replacing them by nested
+calls of hardIndent and vblock. E.g. local definitions of a replacement function viblock
+
+    fun viblock fmts = PP.hardIndent 2 (vblock fmts)  (* where 2 is a default indentation *)
+
+This change of design and interface was considered significant enough to warrant a bump
+in the version number to 8.0.
+
+
+============================================================================================
+27. Notes formerly in format.sml (V 8.0)
+============================================================================================
+The following notes were derived from (former) comments in the format.sml file. They now
+exist here instead of in the format.sml source file.
+
+Abbreviations:
+
+  WL = Hughes-Walder-Leijen pretty printer, e.g. Prettyprinter 1.7.1 in the Haskell Hackage library *)
+
+
+## BLOCKS, elements, breaks
+
+** Type break:
+
+Breaks are used in two ways:
+
+ (1) as explicit separators (turned into "elements" by the BRK constructor) in basic blocks
+     (BLOCK constructor);
+ (2) as implicit separators used to effect the "alignment" (horizontal, vertical, or packed)
+     of _aligned_ blocks (ABLOCK constructor).
+
+There are four forms of breaks:
+
+ (1) SoftLine n: soft line breaks that translate to n spaces if not triggered,
+ (2) HardLine: hard line breaks that are unconditional and are followed by indentation
+     to the current blm,
+ (3) Space n: translates to n spaces, without producing a newline+indent,
+ (4) NullBreak: has no effect (no spaces, no newline+indent).
+
+In a "typical" basic block the breaks would occur only _between_ the FMT elements, and
+only one break would be occur between any two FMT elements. If two FMT elements are adjacent,
+the "do nothing" break NullBreak, in principle, be inserted between them.
+For the "aligned" block constructor ABLOCK, only the format elements are specified,
+while the alignment attribute determines an implicit break successive formats.
+The NullBreak is not essential, since we can create a basic block containing no breaks
+between format elements, but it is convenient since it can be used as the implicit break 
+between formats in compact (alignment = C) aligned blocks (see cblock, ccat in NewPrettyPrint).
+
+** Type format:
+   the type representing "formats" (named doc (short for "documents") in Hughes-Wadler-Leijen.
+
+There is an atomic "EMPTY" format. This carries no content, and when rendered produces no
+output.  It is an identity format for the BLOCK compositions, meaning that it will be absorbed
+(i.e. dropped).  Also BLOCK [] and BLOCK [EMPTY] reduce to EMPTY during construction.
+
+There are three basic forms of formats that carry the "contents" of a format:
+
+  -- TEXT: atomic formats containing a string;
+  -- ABLOCK: _aligned_ compound blocks of formats, with implicit breaks separating the formats.
+  -- BLOCK: _basic_ compound blocks of formats, possibly with explicit breaks among the formats.
+
+TEXT formats can be thought of as atomic blocks.
+There are also two kinds of _compound_ blocks:
+
+  -- BLOCK: basic blocks, with arbitrary break elements interleaved with format elements.
+     These are essentually "manually constructed" blocks that allow use of heterogeneous breaks.
+
+  -- ABLOCK: _aligned_ blocks with an alignment attribute. The alignment can be
+       H: horizontal (Space break),
+       V: vertical (HardLine),
+       P: packed (SoftLine),
+       C: compact (NullBreak).
+
+Formats can be "indented" or not, with indented blocks constructed using the HINDENT or
+SINDENT format constructors.
+
+  -- A "hard" indented format is formed by applying HINDENT (HINDENT (n, fmt)). It always
+     starts on a new line (newline+indent), generating its own newline+indent if it does
+     not immediately follow a newline+indent.  The context block's blm is incremented by n
+     to define the indentation of the format.
+
+  -- A "soft" indented format is formed by applying SINDENT (SINDENT (n, fmt)). The
+     argument format is indented only if it follows a newline+indent that "enables" it. If
+     it does not follow a newline+indent, it is rendered as an ordinary, non-indented
+     format starting, as usual, at the current column.
+
+  -- An "indented format" is a format constructed with HINDENT or SINDENT.
+
+  -- A non-indented format is rendered beginning at the current column (which defines its
+     blm if it is a compound block) without introducing a newline+indent (though it may
+     immediately follow a newline+indent).
+
+  -- Format indentations (HINDENT or SINDENT) are the only things that change indentation,
+     and they change indentation through indenting a whole format (establishing a new blm
+     for formats that are blocks).
+
+  -- HINT: If we want a format to start with a (hard) newline but no additional
+     indentation (i.e. indented to the current blm), we can make it a "hard" indented
+     format with 0 indentation, e.g., HINDENT (0, fmt) or hardIndent 0 fmt.
+
+  -- In "flat" rendering mode (function Render.flatRender), newlines and indentations are
+     cancelled for indented formats.
+
+  -- Blocks  have an implicit blm (block left margin) which is determined during rendering;
+     it is defined as the cc (current column) at the point where the block is "entered".
+
+There is also a FLAT format constructor. This is used to specify that a format should be
+rendered (and measured) _flat_, without newlines (as though rendered on an infinite line
+with hard line breaks rendered as spaces.
+
+Finally, there is a "conditional" format constructor, ALT (format1, format2). This renders
+as format1 if it fits, and otherwise renders format2.
+
+  Note: See the definition of the "tryFlat" function (in NewPrettyPrint) to see an example
+  of how FLAT and ALT can be used together.
+
+  Note: ALT and FLAT are related to Wadler's Union documents and the FlatAlt constructor
+  in recent Wadler-Leijen prettyprinters. In a format of the form ALT(format1, format2) it
+  will usually be the case that the alternative formats format1 and format2 have the same
+  content (text strings), but this is not enforced, and in some cases it may be desired
+  that format2 is an abbreviated version of format1.
+
+Normalization of formats [not implemented]:
+
+  (1) The list of elements or formats of an BLOCK or ABLOCK could be "normalized" by
+  merging adjacent TEXT elements and inserting an "empty" TEXT element between adjacent
+  BRKs and inserting null breaks of the form BRK (NullBreak) between adjacent FMTs, so
+  that the list contains alternating FMT and SEP elements with single SEPs occurring as
+  breaks between the FMT elements. Such a normalization would also have a policy for
+  "merging" adjacent BRK elements in BLOCKs. This normalization is probably not needed.
+
+  (2) A BLOCK consisting of one format element could be replaced by that element's format
+  without changing anything:
+
+      BLOCK {elements = [FMT format]}  ==>  format
+
+  Such reduction rules could also be used in the "normalization" of formats.
+
+  (3) We normalize ABLOCK {formats = nil, ...} to EMPTY.
+
+  (4) By convention, we also normalize HINDENT(n, EMPTY) and SINDENT(n, EMPTY) to EMPTY.
+      (Although it might make sense not simplify these and let HINDENT (n, EMPTY) be rendered
+      as a newline+indent.)
+
+  We assume that in a BLOCK with a single element, that element ought to be a FMT, not a
+  BRK, although there are conceivable uses for BLOCKs containing only breaks, like two
+  HardLines to produce a blank line in the layout (e.g. BLOCK {formats = [BRK HardLine,
+  BRK HardLine],...}).
+
+Memoized block measures:
+  
+  When blocks are constructed, their "flat" measure is memoized in an internal measure:
+  int field.  This avoids possible repeated calculation of a block's measure. The measure
+  field is defined during the block construction, since its child blocks will have been
+  measured. The measure of a TEXT block is just the size of the string, and the measure of
+  a FLAT or ALT format is the measure of its (first) argument. The calculation of the
+  measure of a format is "static", in the sense that it is based only on the structure of
+  the format. [Does this constitute a form of "dynamic programming"?]
+
+** Type element:
+
+  The type of elements of a basic block (BLOCK), supports heterogeneous breaks interleaved
+  in any way with formats. A BLOCK contains a list of "elements" instead of just a list of
+  sub-formats to allow for the explicit specification of break elements, which normally
+  will appear between the sub-formats in the block's elements list. But we allow the cases
+  where all the elements to are formats or all the elements are breaks.
+
+The formats of an ABLOCK will be reduced, meaning that any EMPTY formats are
+eliminated.
+
+NOTES:
+
+(1) CONTEXT or CONTEXTUAL formats of WL -- not implemented
+
+  WL has additional "document" constructors (Column, Next) supporting "render-time" conditional
+  formatting, using functions over render-time variables like cc and blm (aka "current
+  indentation level") to produce a specialized format to be rendered at this point, thus generating
+  formats (documents) on the fly during rendering.
+
+  The problem with these is that it not clear how to "statically" measure the a format
+  whose layout is produced using render-time information, like the current column (cc),
+  that is not available when measuring the format "statically" (i.e. it is not
+  "structural" information intrinsic to the format itself).
+
+(2) Why don't we merge format and element into one type?
+
+    -- Breaks do not carry "content", whereas formats generally do (except for EMPTY).
+
+    -- On general principles, we want to use the type system to express differences
+       (in usage, properties, ...) whenever possible. Here we want to express the fact that
+       breaks are subsidiary to formats. They are elements that are used to construct formats,
+       but they do not acts as formats on their own. Nevertheless, it is easy to _coerce_
+       a break to a format: break => BLOCK [BRK break], since we allow basic blocks that
+       contain only formats.
+
+
+============================================================================================
+28. "Styled" text in formats/layouts
+============================================================================================
+This refers to "styled" strings in the ouput (e.g. boldface keywords, green identifiers).
+Styles could specify type face (bold, italics), color, or font.
+
+This could be done at the individual string level (e.g. TEXT of styled_string), or at the
+format level, (e.g. format = ... STYLED of style * format ...).
+
+At the format level, this raises the possibility (or need) for some sort of
+"cascading" styles (similar to CSS for HTML).
+
+In their most challenging form, styling could complicate measurement of strings and
+therefore formats (e.g. non-fixed-width fonts). Supporting unicode characters would also
+lead to similar complications.
+
+New: There is now a tentative Version 9.0 [2023.3.3] of the PrettyPrint library that
+partially supports "styles".  This needs to be completed, tested, and applied to realistic
+examples. It is not clear how close this comes to the functionality of the "styles" supported
+by Reppy's PP library (smlnj-lib/PP).
+
+
+============================================================================================
+29. Fancy output mediums
+============================================================================================
+
+This refers to having renderers produce output in some formatted text form, such as HTML
+or LaTeX. Such fancy output would need to be produced by new renderers.
+
+
+============================================================================================
+30. "Devices" (e.g. rendering to HTML)
+============================================================================================
+
+To address the possibility of producing output in other "formatted" languages, such as
+HTML, we need to split the rendering phase. Here is a suggestion about how to do that.
+
+1. Define a "layout" type:
+
+   datatype layoutElement
+     = STRING of string (* or styledString *)
+     | SPACE of int
+     | NEWLINE
+
+   type layout = layoutElement list
+
+2. Add another stage of processing:
+
+     data -formatter-> format -renderer-> layout -device-> ?
+
+   Here the device is a function responsible for producing the final "output", which may
+   be displayed or printed text, or it could be an HTML file.
+
+     val device0 : layout -> unit
+
+     val deviceHTML: layout -> (<string> | <file>)
+   
+   The definition of device0 would be:
+
+      fun device0 (layout: layout) =
+          let fun output (STRING s) = print s (* or printStyled s if s: styledString *)
+	        | output (SPACE n) = print (spaces n)
+		| output (NEWLINE) = print "\n"
+	   in map output layout
+	  end
+
+   The deviceHTML function would map a layout to HTML marked up text, either as a string
+   or a text file.
+
+3. The use of individual styled strings at the atomic format level is one approach. But
+what if we want to apply a style to a whole "subexpression", such as printing all types
+in green. Then we might add a STYLED constructor to the format type
+
+   datatype format = ... | STYLED (style, format)
+
+This leads to a need for "cascading" styles (like in CSS). We would need to define how an
+"inherited" style and a local style combine.
+
+   val combineStyles : style * style -> style
+
+   fun combineStyles (inherited: style, local: style) = ...
+
+
+============================================================================================
+31. output/result/target paradigms
+============================================================================================
+
+There are two separate classes of "targets" for rendering formats:
+  (a) character-oriented output devices (character consumers)
+  (b) text formatting formalisms (e.g. HTML, 
+
+1. simple "character-oriented" output.
+   -- rendering formats to "plain text" output devices (a terminal, a file, a "display/window")
+   -- Output "structuring" capabilities are assumed to be limited to:
+      (a) printing strings (unbreakable, or atomic),
+      (b) line breaks, and
+      (c) indentations
+      (d) (possibly) inter-format spacing (printing n spaces)
+
+2. translation of formats into "formatted and styled" text, that is, into a formatting language
+   such as HTML, MathML, XML, JSON, LaTeX, asciidoc, etc., or even a language for specifying
+   graphs or diagrams (e.g. DOT, Graphviz?).
+      -- the issue is coordination between format "block structure" and blocks with attributes or
+      "environments" (a la LaTeX) in the target formatting formalism
+
+3. our basic notion of format was predicated on simple text output
+   -- If we want to translate pp formats into another formatting language (other formatting
+   structures), then we may need to adapt the notion of pp format to be compatible or
+   coordinated (e.g. with respect to attributes).
+   -- Simply adding a STYLE form to formats may not be enough.
+   -- Example. A style that translates most naturally to a "styled block" in, say, HTML.
+      E.g. <emph> ... </emph>
+
+4. These two possible targets are sufficiently different that a minor change or addition
+   to the pp format may not be sufficient.  We may need significant changes to "measure"
+   and "render" parts of the library as well.  So covering both kinds of targets with a
+   single library may not be feasible or may not be the right design.
+
+
+============================================================================================
+32. formatting input
+============================================================================================
+
+The input to the formatting/prettyprinting process is traditionally an (internal or
+textual) language or formalism (e.g. logic or specification language).
+
+More generally, the input, or object of formatting is a type or family of types. These
+types may represent an abstract syntax, but are certainly not limited to such cases.
+
+
+============================================================================================
+33. separating print functions in Version 8.5 [2023.3.7]
+============================================================================================
+Introduce a second structure
+
+    structure PrintFormat (: PRINT_FORMAT)
+
+that contains the render and print functions formerly in structure PrettyPrint.
+
+Also renamed PrettyPrint -> Formatting and PRETTYPRINT -> FORMATTING.
+The formatting structure is only concerned with building formats, while the PrintFormat
+structure gives access to the renderer for printing.
+
+
+============================================================================================
+34. formatting with ANSITerm target (styling via terminal mode)
+============================================================================================
+
+There are two approaches to formatting with styles.
+
+(1) Rendering by outputing to a "text" or character-oriented device (e.g. stdOut, or a
+"terminal" (tty) device that supports text styles that provide emphasis (italics or
+boldface) or distinctions (e.g. colors).  Here the style is expressed as a mode or state
+of the device (such as an ANSI standard terminal), and we can alter this mode (e.g. by
+sending certain code sequences to the terminal) to implement a style for a certain element
+of the format.
+
+(2) Rendering to a text formatting formalism such as HTML which itself supports styles.
+Here we are translating from one style-supporting formalism, formats, to another. In this
+case the renderer can act as a "homomorphism", at least with respect to styles. But it
+still needs to control layouts through line breaks and indentations. Also, specified
+spacing (the Space break) needs to be rendered accurately. There is also the problem that
+the target formatting system (e.g. HTML) can decide to render its output with additional
+line breaks (between HTML elements) that do not correspond to line breaks in the layout
+the format would render to (if rendered directly). It does not seem to be possible to
+completely eliminate such "extra" line breaks, at least for HTML.
+
+
+============================================================================================
+34.1 formatting with ANSITerm target (styling via terminal mode)
+============================================================================================
+
+Version 9.1.
+
+For ANSI terminal "styled" output, we functorize Render over a "device" structure that
+provides
+   -- lineWidth 
+   -- basic output functions: space, newline, string, flush
+   -- renderStyle: takes a style and a format render thunk and causes the
+       style to be "activated" during the execution of the rendering thunk
+
+   The outstream associated with the ANSI terminal is defaulted to TextIO.stdOut. If
+   we want to accomodate variable output streams, we probably will need to add a
+   reference to the output stream to the device signature. The alternative would be to
+   make the Device structure be a functor parameterized over the output stream, but that
+   would force Render and thus PrintFormat to also depend on an outstream parameter.
+   We don't want to parameterize each function in Device (including styledRender) by
+   the outstream, since all the functions should use the same outstream when called from
+   RenderFn.
+
+See smlnj-lib/Dev/Prettyprint/src91 (format.sml, render.sml, term/*), particularly the
+file term/term-notes.txt.
+
+Note that the underlying output stream, the lineWidth property (int ref), and the output
+functions (space, newline, string, ...) do not change between the DefaultDevice and
+the ANSITermDevice instances.  The only thing that changes is the renderStyle function.
+
+
+============================================================================================
+34.2 formatting with HTML3 representation type as target (styling via HTML3)
+============================================================================================
+
+Instead of a device being responsible for "styling", we process styling through
+the rendering process, mapping a format data structure to an HTML3 structure.
+This is almost a kind of homomorphism between the format type and the HTML3 type.
+
+This approach does not quite work if the target is HTML 5, where we will probably have
+to generate some CSS to go along with the HTML structure, at least for implementing
+color styles (since FONT in no longer supported as an HTML 5 element).
+
+Probably all popular browsers will continue backward compatibility with HTML 3 for some
+time to come, but it would be good to modernize to HTML 5 at some point.  Same goes for
+the smlnj-lib HTML libraries.
+
+
+============================================================================================
+99. dangling threads
+============================================================================================
+
+ (1) Understanding Ramsey's "dynamic programming" algorithm for optimizing line breaks.
+    [DONE: see sml/Dev/pp/Ramsey/ramsey-notes.txt]
