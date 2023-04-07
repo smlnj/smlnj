@@ -1,0 +1,176 @@
+src91/term/term-notes.txt
+
+Notes on ANSI terminal "Device" implementation (for PrettyPrint Version 9.1)
+
+========================================================================================== 
+Version 1: tmode -- a terminal mode type
+==========================================================================================
+
+* Terminal mode
+
+Terminal mode is a record of modes that a ANSIterm may be in, according to the smlnj-lib ANSITerm structure.
+The individual modes are:
+
+fg : color  -- foreground color: default Black
+bg : color  -- background color: default White
+bf : bool   -- boldface
+ul : bool   -- underlining
+bl : bool   -- blinkiing
+in : bool   -- invisible
+dm : bool   -- dim
+
+So the terminal mode is represented by the type
+
+type tmode = {fg : color,  (* foreground color, default black *)
+              bg : color,  (* background color, default white *)
+	      bf : bool,   (* boldface? default false *)
+	      ul : bool,   (* underlining? default false *)
+	      bl : bool,   (* blinkiing? default false *)
+	      dm : bool,   (* dim? default false *)
+	      iv : bool}   (* invisible? default false *)
+
+The mode components are assumed to be orthogonal, so that altering one component
+of the mode does not affect the others. This does not quite work for invisible,
+which (visibly) cancels the effect of, e.g., boldface. But if iv is changed from
+true to false when bf is true, bf will remain true.
+
+The default (and initial) terminal mode is
+
+val default: tmode = {fg = Black, bg = White,
+    	     	      bf = false, ul = false, bl = false, dm = false, iv = false}
+
+The "device" corresponding to the output stream has a state variable
+
+    val tmode : tmode ref
+
+At any point in time, the value !tmode should accurately reflect the actual mode of the
+terminal output stream.
+
+To maintain consistency between the device tmode and the state of the terminal
+outstream, when the device mode is changed, the state of the terminal output
+stream should be changed correspondingly using the ANSITerm.setStyle, or
+producing a "command string" using ANSITerm.toString and outputting that command
+string to the terminal outstream.
+
+* Style
+
+A style value specifies that one component of the mode record should have a given value.
+
+datatype style
+  = FG of color   (* set foreground color *)
+  | BG of color   (* set background color *)
+  | BF (* boldface on *)
+  | UL (* underline on *)
+  | BL (* blinking on *)
+  | DM (* dim on *)
+  | IV (* invisible on *)
+
+A style is associated with a particular format by the STYLE constructor:
+
+  STYLE (style, format)
+
+Here, the format is called the "scope" (or "scope format") of that style specification.
+
+When rendered, the style is "applied" to the terminal, possibly changing its
+tmode, but only while the format is being rendered (within the scope), after
+which the affected component of the tmode reverts to is previous value.
+
+Application of a style is "idempotent". That is, if a style specifies that a
+mode component to set to the value that it already has, applying the style does
+nothing, and reverting the mode at the end of rendering the corresponding format
+(i.e. when leaving its "scope") also does nothing.
+
+Styles are inherited or "cascading", in the sense that the current tmode is the
+result of the tmode settings specified by all the enclosing STYLE formats, i.e.
+the style settings that are "in scope".
+
+Entering a SYLE format changes at most one component of the tmode record.
+
+
+* Managing the "scope" of a style specification.
+
+When rendering a format of the form STYLE (style, format), we do the following:
+
+(1) create two functions, apply and revert, that when executed will "set" the
+appropriate mode of the terminal stream, and also update the device tmode
+reference.
+
+(2) Execute apply () to (possibly) change the tmode (entering scope).
+
+(3) Execute a rendering thunk for format.
+
+(4) Execute revert () to restore the tmode state (of the terminal stream, and
+the device) on leaving the scope of the style specification (style format).
+
+
+(* mkApplyRevert (* style: *) style * (* tmode: *) tmode -> 
+fun mkApplyRevert (style, tmode) = 
+
+
+Note: The style datatype of ANSITerm defines a set of "commands" that are used
+to change the tmode of the terminal output stream.
+
+Note: All of this only applies to ANSI terminal output streams, like
+TextIO.stdOut. The property of being a terminal output stream is considered to
+be an intrinsic property of the stream, which is assumed and cannot be changed.
+
+
+========================================================================================== 
+Version 2: ANSITerm device (with terminal mode "state" variables)
+==========================================================================================
+
+* Terminal mode state is represented by 8 refs instead of a ref to a "tmode" record:
+
+(* terminal mode state *)
+val fg : color ref = ref Black  (* foreground color, default black *)
+val bg : color ref = ref White  (* background color, default white *)
+val bf : bool ref = ref false   (* boldface? default false *)
+val ul : bool ref = ref false   (* underlining? default false *)
+val bl : bool ref = ref false   (* blinkiing? default false *)
+val dm : bool ref = ref false   (* dim? default false *)
+val iv : bool ref = ref false   (* invisible? default false *)
+val rv : bool ref = ref false   (* reverse fg/bg colors? default false *)
+
+* applyStyle : ANSITermStyle.style -> (unit -> unit) option
+
+applyStyle (style, format):
+
+    -- updates the corresponding terminal mode variable and sends the
+       appropriate command string to terminal to change its mode accordingly,
+       _if_ the style causes a change in terminal mode (e.g. if style = BF
+       and !bf = false, in which case !bf is changed to true and the terminal
+       BF mode is turned on by sending the string generated by ANSITerm.FG).
+
+    -- if the style caused a change in terminal mode, returns a (SOME revert) where
+       "revert" is a function that will revert the state and undo the
+       terminal mode change. If the style did not change the terminal mode,
+       returns NONE (e.g. if style = BF and !bf = true, so no reversion is necessary).
+
+It is assumed that the state variables are always kept in sync with the mode of the
+terminal outstream.
+
+Note: If we were in a multithreaded context where outstream was a shared
+resource, we would need to use some synchronization technique to guard against
+simultaneous attemps to change the terminal mode.  Here we assume we are in a
+single-threaded context.
+
+This is implemented in src91/term/device.sml.
+
+Note: This does not yet implement the "NOEMPH" style, which would
+presumably (within its "scope") reset the terminal to default mode for
+the format render and then restore the former mode.  This would mean
+capturing the former terminal mode as a record (of type tmode, as
+above), and the revert function would set the terminal mode to agree
+with saved tmode record.
+
+FIXED: Support for the NOEMPH style constructor has now been implemented by
+adding capability to "reset" the terminal mode state (on entry to
+NOEMPH style scope) and to "revert" the terminal mode state (on exit
+from NOEMPH style scope). This was done be adding "backup" veriables
+for each terminal mode variable (e.g. bu_bf for bf) where the current
+value of the variable (bf) could be stored by resetTerm and restored
+by revertTerm.
+
+
+==========================================================================================
+

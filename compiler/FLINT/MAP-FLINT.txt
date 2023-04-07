@@ -65,80 +65,236 @@ FLINT/main/
     Note: FLINT_Control.recover must be moved; it's not in FLINTControl.
 
   control.sig
-    <
-    >
+    < FLINTCONTROL
+    > LambdaVar*      (ElabData/basis/lambdavar.sml)
+
   control.sml
-    < FLINT_Control   (-> FLINTControl: Admin/control/flint-control.sml)
-    >
+    < FLINT_Control    (-> FLINTControl: (Admin)/control/flint-control.sml?)
+    > Controls*         (smlnj-lib/Controls/controls.sml)
+      ControlRegistry*  (smlnj-lib/Controls/control-registry.sml)
+      BasicControl*     (Basics/control/basiccontrol.sml)
+      ControlUtil*      (smlnj-lib/Controls/control-unit.sml)
+      LambdaVar*        (ElabData/basis/lambdavar.sml)
+
 
 FLINT/plambda/
   chkplexp.sml
+    < CHKPLEXP
+      ChkPlexp
+    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+      Formatting*     (smlnj-lib/PrettyPrint/src/formatting.sml)
+      PrintFormat*    (smlnj-lib/PrettyPrint/src/printformat.sml)
+
+      Lty	      (FLINT/kernel/lty.sml)
+      LtyDef	      (FLINT/kernel/ltydef.sml)
+      LtyBasic	      (FLINT/kernel/ltybasic.sml)
+      LtyKernel       (FLINT/kernel/ltykernel.sml)
+      LtyExtern       (FLINT/kernel/ltyextern.sml)
+      LtyKindChk      (FLINT/kernel/ltykindchk.sml)
+      PPLty	      (FLINT/kernel/pplty.sml)
+      PLambda         (FLINT/plambda/plambda.sml) 
+      PPLexp          (FLINT/plambda/pplexp.sml)
+
   flintnm.sml
+    < FLINTNM
+      FlintNM
+    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+      BasicTypes*     (ElabData/types/basictypes.sml)
+      Primop*         (ElabData/prim/primop.sml) 
+
+      Lty	      (FLINT/kernel/lty.sml)
+      LtyDef	      (FLINT/kernel/ltydef.sml)
+      LtyBasic	      (FLINT/kernel/ltybasic.sml)
+      LtyKernel       (FLINT/kernel/ltykernel.sml)
+      LtyExtern       (FLINT/kernel/ltyextern.sml)
+      FunRecMeta      (FLINT/kernel/funrecmeta.sml)
+      PLambda         (FLINT/plambda/plambda.sml) 
+      PFlatten	      (FLINT/plambda/pflatten.sml) 
+      FLINT	      (FLINT/flint/flint.sml)
+      FlintUtil	      (FLINT/flint/flintutil.sml)
+
   pflatten.sig
+    < PFLATTEN
+    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+ 
+      FLINT [str]     (FLINT/flint/flint.sml)
+      Lty             (FLINT/kernel/lty.sml)
+
   pflatten.sml
+    < PFlatten
+    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+      Control*        (TopLevel/main/control.sml)
+      ErrorMsg*	      (Basics/errormsg/errormsg.sml)
+
+      Lty	      (FLINT/kernel/lty.sml)
+      LtyDef	      (FLINT/kernel/ltydef.sml)
+      LtyKernel       (FLINT/kernel/ltykernel.sml)
+      FLINT	      (FLINT/flint/flint.sml)
+      FlintUtil	      (FLINT/flint/flintutil.sml)
+
   plambda.sig
+    <
+    >
   plambda.sml
+    <
+    >
   pplexp.sml
+    <
+    >
   reorder.sml
+    <
+    >
 
 FLINT/trans/
   module-plists.sml
+    <
+    >
   transtkind.sml
+    <
+    >
   pequal.sml
+    <
+    >
   transutil.sml
+    <
+    >
   translate.sml
+    <
+    >
   transprim.sml
+    <
+    >
   transtypes.sml
+    <
+    >
   literal-to-num.sml    (* uses CoreIntInf functionality *)
     <
     > CoreIntInf*    $smlnj/init/init.cmi : cm
 
 FLINT/flint/
   chkflint.sml
+    <
+    >
   flint.sig
+    <
+    >
   flint.sml
+    <
+    >
   flintutil.sml
+    <
+    >
   ppflint.sig
+    <
+    >
   ppflint.sml
+    <
+    >
   tvarcvt.sml
+    <
+    >
 
 FLINT/kernel/
   lty.sig
+    <
+    >
   lty.sml
+    <
+    >
   ltykernel.sig
+    <
+    >
   ltykernel.sml
+    <
+    >
   ltydef.sig
+    <
+    >
   ltydef.sml
+    <
+    >
   funrecmeta.sig
+    <
+    >
   funrecmeta.sml
+    <
+    >
   ltybasic.sig
+    <
+    >
   ltybasic.sml
+    <
+    >
   ltyextern.sig
+    <
+    >
   ltyextern.sml
+    <
+    >
   ltydict.sml
+    <
+    >
   primtyc.sig
+    <
+    >
   primtyc.sml
+    <
+    >
   ltykindchk.sml
+    <
+    >
   pplty.sml
+    <
+    >
 
 FLINT/opt/
   fixfix.sml
+    <
+    >
   collect.sml
+    <
+    >
   fcontract.sml
+    <
+    >
   optutils.sml
+    <
+    >
   lcontract.sml
+    <
+    >
   recover.sml
+    <
+    >
   specialize.sml
+    <
+    >
   loopify.sml
+    <
+    >
   lift.sml
+    <
+    >
 
 FLINT/reps/
   coerce.sml
+    <
+    >
   equal.sml
+    <
+    >
   reify.sml
+    <
+    >
   rttype.sml
+    <
+    >
   typeoper.sml
+    <
+    >
   wrapping.sml
+    <
+    >
 
 (* ---------------------------- Imports ---------------------------- *)
 

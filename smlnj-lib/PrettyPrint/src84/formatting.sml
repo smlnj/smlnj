@@ -61,10 +61,6 @@
  *   render and printFormat functions moved to new PrintFormat structure
  *   signature PRETTYPRINT --> signature FORMATTING
  *   structure PrettyPrint --> structure Formatting
- * 
- * Version 9.1
- *   -- Added
- *      styled
  *)
 
 (* Defines:
@@ -76,36 +72,31 @@ struct
 
 local
 
-  structure S = Style
-  structure F = Format
   structure M = Measure
 
 in
 
-(* types from the Format structure *)
-type format = F.format
-datatype alignment = datatype F.alignment
-datatype element = datatype F.element
-datatype break = datatype F.break
+(* import datatypes format, element, break; format exported as abstract in FORMATTING *)
+open Format
 
 (* but we need a coercion back to Format.format so that we can pass abstract formats to
  * functions like Render.render that need the concrete type. formatRep is the identity. *)
-fun formatRep (fmt : F.format) : F.format = fmt
+fun formatRep (fmt : format) : Format.format = fmt
 
 (*** the basic block building functions ***)
 
 (* reduceFormats : format list -> format list *)
 (*   filter out empty components formats *)
 fun reduceFormats (formats: format list) =
-    let fun notEmpty F.EMPTY = false
+    let fun notEmpty EMPTY = false
 	  | notEmpty _ = true
      in List.filter notEmpty formats
     end
 
 (* reduceElements : element list -> element list *)
 (*   filter out FMT EMPTY elements *)
-fun reduceElements (elements: F.element list) =
-    let fun notEmpty (F.FMT F.EMPTY) = false
+fun reduceElements (elements: element list) =
+    let fun notEmpty (FMT EMPTY) = false
 	  | notEmpty _ = true
      in List.filter notEmpty elements
     end
@@ -115,19 +106,19 @@ fun reduceElements (elements: F.element list) =
  *   Returns EMPTY if the element list is null. *)
 fun block elements =
     (case reduceElements elements
-       of nil => F.EMPTY
-	| [F.FMT fmt] => fmt  (* special blocks consisting of a single (FMT fmt) element, reduce to fmt *)
-        | _ => F.BLOCK {elements = elements, measure = M.measureElements elements})
+       of nil => EMPTY
+	| [FMT fmt] => fmt  (* special blocks consisting of a single (FMT fmt) element, reduce to fmt *)
+        | _ => BLOCK {elements = elements, measure = M.measureElements elements})
 
 (* aBlock : alignment -> format list -> format *)
 (* An aligned block with no component formats reduces to EMPTY, regardless of alignment. *)
 fun aBlock alignment formats =
-    let val breaksize = case alignment of F.C => 0 |  _ => 1
+    let val breaksize = case alignment of C => 0 |  _ => 1
      in case reduceFormats formats
-	  of nil => F.EMPTY
+	  of nil => EMPTY
 	   | [fmt] => fmt
 	   | formats' =>
-	       F.ABLOCK {formats = formats', alignment = alignment, measure = M.measureFormats (breaksize, formats')}
+	       ABLOCK {formats = formats', alignment = alignment, measure = M.measureFormats (breaksize, formats')}
     end
 
 
@@ -135,18 +126,18 @@ fun aBlock alignment formats =
 
 (* constructing aligned blocks: common abbreviations *)
 (* xblock : format list -> format, for x = h, v, p, c *)
-val hblock = aBlock F.H
-val vblock = aBlock F.V
-val pblock = aBlock F.P
-val cblock = aBlock F.C
+val hblock = aBlock H
+val vblock = aBlock V
+val pblock = aBlock P
+val cblock = aBlock C
 
 (* "conditional" formats *)
 
 (* tryFlat : format -> format *)
-fun tryFlat (fmt: format) = F.ALT (F.FLAT fmt, fmt)
+fun tryFlat (fmt: format) = ALT (FLAT fmt, fmt)
 
 (* alt : format * format -> format *)
-val alt = F.ALT
+val alt = ALT
 
 (* hvblock : format list -> format *)
 fun hvblock fmts = tryFlat (vblock fmts)
@@ -154,17 +145,16 @@ fun hvblock fmts = tryFlat (vblock fmts)
 
 (*** format-building utility functions for some primitive types ***)
 
-val empty : format = F.EMPTY
+val empty : format = EMPTY
 
 (* text : string -> format *)
-val text : string -> F.format = F.TEXT
+val text : string -> format = TEXT
 
 (* integer : int -> format *)
 fun integer (i: int) : format = text (Int.toString i)
 
 (* string : string -> format *)
-fun string (s: string) : format =
-    text (String.concat ["\"", String.toString s, "\""])  (* was using PrintUtil.formatString *)
+fun string (s: string) = text (String.concat ["\"", String.toString s, "\""])  (* was using PrintUtil.formatString *)
 
 (* char : char -> format *)
 fun char (c: char) = cblock [text "#", string (Char.toString c)]
@@ -205,7 +195,7 @@ val brackets = enclose {front = lbracket, back = rbracket}
 val braces = enclose {front = lbrace, back = rbrace}
 
 (* appendNewLine : format -> format *)
-fun appendNewLine fmt = block [F.FMT fmt, F.BRK F.Hard]
+fun appendNewLine fmt = block [FMT fmt, BRK Hard]
 
 (* label : string -> format -> format *)
 (* labeled formats, i.e. formats preceded by a string label, a commonly occurring pattern *)
@@ -217,27 +207,27 @@ fun label (str:string) (fmt: format) = hblock [text str, fmt]
 (* alignmentToBreak : alignment -> break
  * The virtual break associated with each alignment.
  * This is a utility function used in functions sequence and formatSeq *)
-fun alignmentToBreak F.H = F.Space 1
-  | alignmentToBreak F.V = F.Hard
-  | alignmentToBreak F.P = F.Soft 1
-  | alignmentToBreak F.C = F.Null
+fun alignmentToBreak H = Space 1
+  | alignmentToBreak V = Hard
+  | alignmentToBreak P = Soft 1
+  | alignmentToBreak C = Null
 
 (* sequence : alignement -> format -> format list -> format
  *  Format a sequence of formats, specifying alignment and separator format used between elements.
  *  The second argument (sep: format) is normally a symbol (TEXT) such as comma or semicolon *)
-fun sequence (alignment: F.alignment) (sep: format) (formats: format list) =
+fun sequence (alignment: alignment) (sep: format) (formats: format list) =
     let val separate =
 	    (case alignment
-	       of C => (fn elems => F.FMT sep :: elems)  (* alignment = C *)
+	       of C => (fn elems => FMT sep :: elems)  (* alignment = C *)
 	        | _ =>
 		  let val break = alignmentToBreak alignment
-		   in (fn elems => F.FMT sep :: F.BRK break :: elems)
+		   in (fn elems => FMT sep :: BRK break :: elems)
 		  end)
 	fun addBreaks nil = nil
 	  | addBreaks fmts =  (* fmts non-null *)
-	      let fun inter [fmt] = [F.FMT fmt]
+	      let fun inter [fmt] = [FMT fmt]
 		    | inter (fmt :: rest) =  (* rest non-null *)
-			F.FMT fmt :: (separate (inter rest))
+			FMT fmt :: (separate (inter rest))
 		    | inter nil = nil (* won't happen *)
 	       in inter fmts
 	      end
@@ -245,10 +235,10 @@ fun sequence (alignment: F.alignment) (sep: format) (formats: format list) =
      end
 
 (* xsequence : [sep:]format -> format list -> format, x = h, v, p, c *)
-val hsequence = sequence F.H
-val psequence = sequence F.P
-val vsequence = sequence F.V
-val csequence = sequence F.C
+val hsequence = sequence H
+val psequence = sequence P
+val vsequence = sequence V
+val csequence = sequence C
 
 (* tuple : format list -> format
  *  parenthesized, comma-separated, packed alignment sequence
@@ -307,11 +297,8 @@ fun vHeadersMap (headers as {header1: string, header2: string}) (formatter: 'a -
  *   i.e. indents an additional n spaces iff following a line break with its indentation. *)
 fun indent (n: int) (fmt: format) =
     (case fmt
-       of F.EMPTY => F.EMPTY
-        | _ => F.INDENT (n, fmt))
-
-(* styled : S.style * format -> format *)
-fun styled (style: S.style) (format: format) = F.STYLE (style, format)
+       of EMPTY => EMPTY
+        | _ => INDENT (n, fmt))
 
 end (* top local *)
 end (* structure Formatting *)

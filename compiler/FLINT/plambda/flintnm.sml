@@ -15,7 +15,6 @@ structure FlintNM : FLINTNM =
 struct
 
 local
-  structure DA = Access
   structure BT = BasicTypes
   structure LV = LambdaVar
   structure LT = Lty
@@ -24,13 +23,11 @@ local
   structure LB = LtyBasic
   structure LE = LtyExtern
   structure FR = FunRecMeta
-  structure PT = PrimTyc
   structure PO = Primop
   structure PL = PLambda
   structure F  = FLINT
   structure FU = FlintUtil
   structure FL = PFlatten		(* argument flattening *)
-  structure PPF = PPFlint
 in
 
 (* FIX: move to Basic/util/list3.sml *)

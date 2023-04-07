@@ -19,7 +19,7 @@ structure Measure : MEASURE =
 struct
 
 local
-  structure F = Format
+  open Format
 in
 
 (* --------------------------------------------------------------------------------
@@ -38,28 +38,27 @@ in
 (* measure : format -> int
  *   the flat measure of a format (length of line span if rendered on a single, unbounded line),
  *   using memoization of the measure in the block measure fields. *)
-fun measure (format: F.format) =
+fun measure (format: format) =
     case format
-      of F.EMPTY => 0
-       | F.TEXT s => size s
+      of EMPTY => 0
+       | TEXT s => size s
          (* atomic formats *)
-       | F.BLOCK {measure, ...} => measure
+       | BLOCK {measure, ...} => measure
          (* basic blocks *)
-       | F.ABLOCK {measure, ...} => measure
+       | ABLOCK {measure, ...} => measure
 	 (* aligned blocks *)
-       | F.INDENT (_, fmt) => measure fmt
-       | F.FLAT format => measure format
-       | F.ALT (format1, format2) => measure format1
+       | INDENT (_, fmt) => measure fmt
+       | FLAT format => measure format
+       | ALT (format1, format2) => measure format1
          (* measure the first format, which will normally be the wider one,
 	  * alternatively, measure both arguments and return the max (min?) of the two measures. *)
-       | F.STYLE (_, format) => measure format
 
-fun measureElement (F.BRK break) =
+fun measureElement (BRK break) =
     (case break
-      of F.Hard => 1
-       | (F.Soft n | F.Space n) => n  (* measured as n spaces, since flat rendered as n spaces *)
-       | F.Null => 0)
-  | measureElement (F.FMT format) = measure format
+      of Hard => 1
+       | (Soft n | Space n) => n  (* measured as n spaces, since flat rendered as n spaces *)
+       | Null => 0)
+  | measureElement (FMT format) = measure format
 
 fun measureElements elements =
     let fun mElements (nil, n) = n
@@ -69,7 +68,7 @@ fun measureElements elements =
     end
 
 (* measureFormats : (int * format list) -> int *)
-fun measureFormats (breaksize: int, formats: F.format list) =
+fun measureFormats (breaksize: int, formats: format list) =
     let fun mFormats (nil, acc) = acc
           | mFormats ([format], acc) = measure format + acc
           | mFormats (format :: rest, acc) =  (* rest not null *)

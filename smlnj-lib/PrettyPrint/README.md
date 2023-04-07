@@ -218,3 +218,50 @@ spurious space character after the text "abc", because
   the blm relative to which the indentation is taken.
 
   The smlnj-lib/PRETTYPRINT directory is renamed smlnj-lib/PrettyPrint.
+
+
+** Version 8.4 [2023.2.22]**
+
+  -- renamed:
+     HardLine -> Hard
+     SoftLine -> Soft
+     NullBreak -> Null
+     tupleFormats -> tuple
+     list -> listMap (and removed)
+     formatSeq -> sequenceMap  (and removed)
+     formatClosedSeq -> closedSequenceMap (and removed)
+     vHeaders -> vHeadersMap (and removed)
+     vHeaderFormats -> vHeaders
+  -- removed:
+     tuple [i.e. the function that should have been "tupleMap"]
+
+     _The binary xcat functions, replaced by calls of corresponding xblock but with lists of 2 formats:_
+     hcat [hcat (f1, f2) -> hblock [f1,f2]]
+     pcat [-> pblock]
+     vcat [-> vblock]
+     ccat [-> cblock]
+
+     _The map versions of various functions:_
+     sequenceMap
+     closedSequenceMap
+     listMap
+     alignedListMap
+     optionMap
+
+** Version 8.5**
+  - render and printFormat functions moved to new PrintFormat structure
+  - signature PRETTYPRINT --> signature FORMATTING
+  - structure PrettyPrint --> structure Formatting
+
+** Version 9.1**
+
+Introduced rendering with styled text for ANSI terminals and for rendering to HTML 3.
+
+- Added a functor RenderFn over a DEVICE structure (render-fct.sml).
+- Added DefaultDevice (default/device.sml) and ANSITermDevice (term/device.sml) structures
+    to serve as arguments to RenderFn. These Device structures are associated their
+    own Style structures, defined in default/style.sml and term/style.sml, respectively.
+- default/render.sml and term/render.sml define two Render structures by applying RenderFn to
+    DefaultDevice and ANSITermDevice, respectively.
+- Added html directory with files render.sig, render.sml, and style.sml which define a third
+    Render structure that produces HTML 3 abstract syntax as defined in smlnj-lib/HTML/html.sml.

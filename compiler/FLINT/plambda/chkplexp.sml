@@ -21,7 +21,6 @@ struct
 
 local
   structure LV = LambdaVar
-  structure DA = Access
   structure LT = Lty
   structure LK = LtyKernel
   structure LD = LtyDef
