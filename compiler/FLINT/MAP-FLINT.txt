@@ -28,7 +28,7 @@ FLINT/flint.cm -- the CPS Group/Library CDF
   structure LambdaVar
   structure ChkFlint
   structure FLINTOpt
-  signature FLINT 
+  signature FLINT
   structure FLINT
 
 
@@ -52,10 +52,10 @@ FLINT/main/
       LContract       (FLINT/opt/lcontract.sml)
       FContract       (FLINT/opt/fcontract.sml)
       Loopify         (FLINT/opt/loopify.sml)
-      FixFix	      (FLINT/opt/fixfix.sml)    
+      FixFix	      (FLINT/opt/fixfix.sml)
       Lift	      (FLINT/opt/lift.sml)
       Specialize      (FLINT/opt/specialize.sml)
-      Recover         (FLINT/opt/recover.sml) 
+      Recover         (FLINT/opt/recover.sml)
       Wrapping        (FLINT/reps/wrapping.sml)
       Reify           (FLINT/reps/reify.sml)
       TvarCvt         (FLINT/flint/tvarcvt.sml)
@@ -66,7 +66,7 @@ FLINT/main/
 
   control.sig
     < FLINTCONTROL
-    > LambdaVar*        (ElabData/basis/lambdavar.sml)
+    > LambdaVar*        (ElabData/basics/lambdavar.sml)
 
   control.sml
     < FLINT_Control     (-> FLINTControl: (Admin)/control/flint-control.sml?)
@@ -74,14 +74,14 @@ FLINT/main/
       ControlRegistry*  (smlnj-lib/Controls/control-registry.sml)
       BasicControl*     (Basics/control/basiccontrol.sml)
       ControlUtil*      (smlnj-lib/Controls/control-unit.sml)
-      LambdaVar*        (ElabData/basis/lambdavar.sml)
+      LambdaVar*        (ElabData/basics/lambdavar.sml)
 
 
 FLINT/plambda/
   chkplexp.sml
     < CHKPLEXP
       ChkPlexp
-    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+    > LambdaVar*      (ElabData/basics/lambdavar.sml)
       Formatting*     (smlnj-lib/PrettyPrint/src/formatting.sml)
       PrintFormat*    (smlnj-lib/PrettyPrint/src/printformat.sml)
 
@@ -92,15 +92,15 @@ FLINT/plambda/
       LtyExtern       (FLINT/kernel/ltyextern.sml)
       LtyKindChk      (FLINT/kernel/ltykindchk.sml)
       PPLty	      (FLINT/kernel/pplty.sml)
-      PLambda         (FLINT/plambda/plambda.sml) 
+      PLambda         (FLINT/plambda/plambda.sml)
       PPLexp          (FLINT/plambda/pplexp.sml)
 
   flintnm.sml
     < FLINTNM
       FlintNM
-    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+    > LambdaVar*      (ElabData/basics/lambdavar.sml)
       BasicTypes*     (ElabData/types/basictypes.sml)
-      Primop*         (ElabData/prim/primop.sml) 
+      Primop*         (ElabData/prim/primop.sml)
 
       Lty	      (FLINT/kernel/lty.sml)
       LtyDef	      (FLINT/kernel/ltydef.sml)
@@ -108,21 +108,21 @@ FLINT/plambda/
       LtyKernel       (FLINT/kernel/ltykernel.sml)
       LtyExtern       (FLINT/kernel/ltyextern.sml)
       FunRecMeta      (FLINT/kernel/funrecmeta.sml)
-      PLambda         (FLINT/plambda/plambda.sml) 
-      PFlatten	      (FLINT/plambda/pflatten.sml) 
+      PLambda         (FLINT/plambda/plambda.sml)
+      PFlatten	      (FLINT/plambda/pflatten.sml)
       FLINT	      (FLINT/flint/flint.sml)
       FlintUtil	      (FLINT/flint/flintutil.sml)
 
   pflatten.sig
     < PFLATTEN
-    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
- 
+    > LambdaVar*      (ElabData/basics/lambdavar.sml)
+
       FLINT [str]     (FLINT/flint/flint.sml)
       Lty             (FLINT/kernel/lty.sml)
 
   pflatten.sml
     < PFlatten
-    > LambdaVar*      (ElabData/basis/lambdavar.sml) 
+    > LambdaVar*      (ElabData/basics/lambdavar.sml)
       Control*        (TopLevel/main/control.sml)
       ErrorMsg*	      (Basics/errormsg/errormsg.sml)
 
@@ -136,71 +136,174 @@ FLINT/plambda/
     < PLAMBDA
     > Symbol*	      (Basics/symbol/symbol.sml)
       Access*         (ElabData/basics/access.sml)
-      LambdaVar*      (ElabData/basis/lambdavar.sml) 
-      IntConst*	      (Basics/compiler/int-const.sml) 
-      RealConst*      (Basics/compiler/real-const.sml) 
-      Primop*	      (ElabData/prim/primop.sml) 
+      LambdaVar*      (ElabData/basics/lambdavar.sml)
+      IntConst*	      (Basics/compiler/int-const.sml)
+      RealConst*      (Basics/compiler/real-const.sml)
+      Primop*	      (ElabData/prim/primop.sml)
 
       Lty	      (FLINT/kernel/lty.sml)
 
   plambda.sml
     < PLambda
-    > Symbol*	      (Basics/symbol/symbol.sml) 
-      Access*         (ElabData/basics/access.sml) 
-      LambdaVar*      (ElabData/basis/lambdavar.sml) 
-      IntConst*	      (Basics/compiler/int-const.sml) 
-      RealConst*      (Basics/compiler/real-const.sml) 
-      Primop*	      (ElabData/prim/primop.sml) 
+    > Symbol*	      (Basics/symbol/symbol.sml)
+      Access*         (ElabData/basics/access.sml)
+      LambdaVar*      (ElabData/basics/lambdavar.sml)
+      IntConst*	      (Basics/compiler/int-const.sml)
+      RealConst*      (Basics/compiler/real-const.sml)
+      Primop*	      (ElabData/prim/primop.sml)
 
       Lty	      (FLINT/kernel/lty.sml)
 
   pplexp.sml
     < PPLEXP
       PPLexp
-    > Symbol*	      (Basics/symbol/symbol.sml) 
-      Access*         (ElabData/basics/access.sml) 
-      LambdaVar*      (ElabData/basis/lambdavar.sml) 
-      StringFormats*  (Basics/print/stringformats.sml) 
+    > Symbol*	      (Basics/symbol/symbol.sml)
+      Access*         (ElabData/basics/access.sml)
+      LambdaVar*      (ElabData/basics/lambdavar.sml)
+      StringFormats*  (Basics/print/stringformats.sml)
 
-      Formatting*     (smlnj-lib/PrettyPrint/src/formatting.sml) 
-      PrintFormat*    (smlnj-lib/PrettyPrint/src/printformat.sml) 
+      Formatting*     (smlnj-lib/PrettyPrint/src/formatting.sml)
+      PrintFormat*    (smlnj-lib/PrettyPrint/src/printformat.sml)
 
-      PLambda	      (FLINT/plambda/plambda.sml) 
+      PLambda	      (FLINT/plambda/plambda.sml)
       PPLty	      (FLINT/kernel/pplty.sml)
 
   reorder.sml	      [***Reorder body commented out***]
     < REORDER
       Reorder
-    > Access*         (ElabData/basics/access.sml) 
-      Primop*	      (ElabData/prim/primop.sml) 
+    > Access*         (ElabData/basics/access.sml)
+      Primop*	      (ElabData/prim/primop.sml)
 
-      PLambda	      (FLINT/plambda/plambda.sml) 
+      PLambda	      (FLINT/plambda/plambda.sml)
 
 
 FLINT/trans/
   module-plists.sml
-    <
-    >
+    < ModulePropLists
+    > Modules*	      (ElabData/modules/modules.sml)
+      Types*	      (ElabData/types/types.sml)
+
+      PropList*       (smlnj-lib/Util/plists.sml)
+
+
   transtkind.sml
-    <
-    >
+    < TransTKind
+    > TKind*	      (ElabData/basics/tkind.sml)
+
+      LtyDef	      (FLINE/kernel/ltydef.sml)
+
   pequal.sml
-    <
-    >
+    < PEQUAL
+      PEqual
+    > Access*         (ElabData/basics/access.sml)
+      Types*	      (ElabData/types/types.sml)
+      TypesUtil*      (ElabData/types/typesutil.sml)
+
   transutil.sml
-    <
-    >
+    < TransUtil
+    > LambdaVar*      (ElabData/basics/lambdavar.sml)
+      Access*         (ElabData/basics/access.sml)
+      Variable*	      (ElabData/syntax/variable.sml)
+      TypesUtil*      (ElabData/types/typesutil.sml)
+      BasicTypes*     (ElabData/types/basictypes.sml)
+      StaticEnv*      (ElabData/statenv/statenv.sml)
+      Primop*	      (ElabData/prim/primop.sml)
+      PrimopUtil*     (ElabData/prim/primop-util.sml)
+      ElabDebug*      (Elaborator/elaborate/elabdebug.sml)
+
+      PLambda	      (FLINT/plambda/plambda.sml)
+      Lty	      (FLINT/kernel/lty.sml)
+      LtyDef	      (FLINT/kernel/ltydef.sml)
+      LtyBasic	      (FLINT/kernel/ltybasic.sml)
+
   translate.sml
-    <
-    >
+    < TRANSLATE
+      Translate
+    > Bindings*
+      BasicTypes*
+      Access*
+      ErrorMsg*
+      LambdaVar*
+      Variable*
+      SourceMap*
+      Absyn*
+      AbsynUtil*
+      ElabDebug*
+      StaticEnv*
+      Modules*
+      MatchComp*
+      Primop*
+      Symbol*
+      SymPath*
+      LiteralToNum*
+      Types*
+      TypesUtil*
+      ElabUtil*
+      Target*
+      PPAbsyn*
+      PPType*
+      PPAbsyn*
+      PPSymPaths*
+
+      Formatting
+      PrintFormat
+      RedBlackMapFn
+
+      PLambda
+      Lty
+      LtyDef
+      LtyBasic
+      LtyExtern
+      TransTypes
+      TransUtil
+
   transprim.sml
-    <
-    >
+    < TransPrim
+    > Primop*
+      Types*
+      BasicTypes*
+      Target*
+      ErrorMsg*
+      Control.Print*
+
+      PLambda
+      Lty
+      LtyDef
+      LtyBasic
+
+      Formatting*
+      PrintFormat*
+
   transtypes.sml
-    <
-    >
+    < TRANSTYPES
+      TransTypes
+    > Types*
+      Modules*
+      BasicTypes*
+      Access*
+      ElabDebug*
+      EntityEnv*
+      ErrorMsg*
+      EntPathContext*
+      EvalEntity*
+      Instantiate*
+      InvPath*
+      ElabDebug*
+      ModuleUtil*
+      StaticEnv*
+      TypesUtil*
+
+      Lty
+      LtyKernel
+      LtyDef
+      LtyBasic
+      LtyExtern
+      PrimTyc
+      FLINT_Control
+
   literal-to-num.sml    (* uses CoreIntInf functionality *)
-    <
+    < LITERAL_TO_NUM
+      LiteralToNum
     > CoreIntInf*    $smlnj/init/init.cmi : cm
 
 
@@ -208,21 +311,27 @@ FLINT/flint/
   chkflint.sml
     <
     >
+
   flint.sig
     <
     >
+
   flint.sml
     <
     >
+
   flintutil.sml
     <
     >
+
   ppflint.sig
     <
     >
+
   ppflint.sml
     <
     >
+
   tvarcvt.sml
     <
     >
@@ -231,51 +340,67 @@ FLINT/kernel/
   lty.sig
     <
     >
+
   lty.sml
     <
     >
+
   ltykernel.sig
     <
     >
+
   ltykernel.sml
     <
     >
+
   ltydef.sig
     <
     >
+
   ltydef.sml
     <
     >
+
   funrecmeta.sig
     <
     >
+
   funrecmeta.sml
     <
     >
+
   ltybasic.sig
     <
     >
+
   ltybasic.sml
     <
     >
+
   ltyextern.sig
     <
     >
+
   ltyextern.sml
     <
     >
+
   ltydict.sml
     <
     >
+
   primtyc.sig
     <
     >
+
   primtyc.sml
     <
     >
+
   ltykindchk.sml
     <
     >
+
   pplty.sml
     <
     >
@@ -284,27 +409,35 @@ FLINT/opt/
   fixfix.sml
     <
     >
+
   collect.sml
     <
     >
+
   fcontract.sml
     <
     >
+
   optutils.sml
     <
     >
+
   lcontract.sml
     <
     >
+
   recover.sml
     <
     >
+
   specialize.sml
     <
     >
+
   loopify.sml
     <
     >
+
   lift.sml
     <
     >
@@ -313,21 +446,27 @@ FLINT/reps/
   coerce.sml
     <
     >
+
   equal.sml
     <
     >
+
   reify.sml
     <
     >
+
   rttype.sml
     <
     >
+
   typeoper.sml
     <
     >
+
   wrapping.sml
     <
     >
+
 
 (* ---------------------------- Imports ---------------------------- *)
 
