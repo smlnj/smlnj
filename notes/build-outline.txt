@@ -54,3 +54,28 @@ TODO:
    and robust.
 
    
+==========================================================================================
+TopLevel needs to be reorganized and split into two directories:
+
+(1) Implementation of the interactive top-level (the REPL).
+
+(2) The interface to compiler functionality used by CM.
+
+Persumably these both rely on CodeGen (NewCodeGen), but in different ways. They both need
+to perform:
+  * lexing,
+  * parsing,
+  * elaboration,
+  * FLINT translation and optimization,
+  * CPS translation and optimization,
+  * CFG translation and optimization,
+  * code generation.
+
+What are the appropriate interfaces (signatures) for the REPL and CM as clients?
+
+CodeGen itself should probably be split with a new CFG directory for the
+control-flow-graph stuff, leaving a "top-level" interface to compiling and code generation
+for the CodeGen directory.
+
+
+
