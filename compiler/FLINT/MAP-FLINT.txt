@@ -25,14 +25,126 @@ FLINT/flint.cm -- the CPS Group/Library CDF
   structure PPFlint
   structure LContract
   structure Specialize
-  structure LambdaVar
+  structure LambdaVar [re-exporting import!]
   structure ChkFlint
   structure FLINTOpt
   signature FLINT
   structure FLINT
 
 
-(* ---------------------------- Members ---------------------------- *)
+(* ---------------------------- Module Index ---------------------------- *) 
+
+LOCAL:  ["*" for exported]
+
+FLINTOpt*       main/flint-opt.sml
+FLINTCONTROL    main/control.sig [Admin/...]
+FLINT_Control   main/control.sml [Admin/control/flint-control.sml]
+
+FLINT* [sig]    flint/flint.sig
+FLINT* [str]    flint/flint.sml
+ChkFlint*       flint/chkflint.sml   
+PPFlint*        flint/ppflint.sml 
+FlintUtil       flint/flintutil.sml
+CHKFLINT        flint/chkflint.sml   
+TvarCvt         flint/tvarcvt.sml 
+
+PLAMBDA	        plambda/plambda.sig
+PLambda         plambda/plambda.sml
+PFLATTEN        plambda/pflatten.sig
+PFlatten        plambda/pflatten.sml
+CHKPLEXP        plambda/chkplexp.sml  
+ChkPlexp        plambda/chkplexp.sml  
+FLINTNM	        plambda/flintnm.sml
+FlintNM	        plambda/flintnm.sml
+PPLEXP	        plambda/pplexp.sml
+PPLexp	        plambda/pplexp.sml
+REORDER	        plambda/reorder.sml !
+Reorder	        plambda/reorder.sml !
+
+Lty*	        kernel/lty.sml
+LtyDef*	        kernel/ltydef.sml
+LtyBasic*       kernel/ltybasic.sml
+LtyKerne*       kernel/ltykernel.sml
+LtyExtern*      kernel/ltyextern.sml
+PrimTyc*        kernel/primtyc
+PPLty*	        kernel/pplty.sml
+FunRecMeta      kernel/funrecmeta.sml
+LtyKindChk      kernel/ltykindchk.sml
+
+Translate*      trans/translate.sml   
+TransUtil*      trans/transutil.sml
+TransKind       trans/transtkind.sml
+TransPrim       trans/transprim.sml
+TRANSTYPES      trans/transtypes.sml
+TransTypes      trans/transtypes.sml
+PEQUAL	        trans/pequal.sml
+PEqual	        trans/pequal.sml
+ModulePropLists trans/module-plists.sml
+LITERAL_TO_NUM	trans/literal-to-num.sml
+LiteralToNum    trans/literal-to-num.sml
+
+LContract*      opt/lcontract.sml
+Specialize*     opt/specialize.sml
+FContract       opt/fcontract.sml
+Loopify         opt/loopify.sml
+FixFix	        opt/fixfix.sml
+Lift	        opt/lift.sml
+Recover         opt/recover.sml
+
+Wrapping        reps/wrapping.sml
+Reify           reps/reify.sml
+
+
+IMPORTED:
+
+Control         TopLevel/main/control.sml [Admin]
+
+Contro_Print	Basics/print/printcontrol.sml
+ErrorMsg        Basics/errormsg/errormsg.sml  
+Stats           Basics/stats/stats.sml
+Target          Basics/compiler/target[32,64].sml  
+Symbol	        Basics/symbol/symbol.sml
+IntConst        Basics/compiler/int-const.sml
+RealConst       Basics/compiler/real-const.sml
+StringFormats   Basics/print/stringformats.sml 
+BasicControl    Basics/control/basiccontrol.sml 
+
+SymPath	        ElabData/basics/sympaths.sml
+PPSymPaths      ElabData/basics/ppsympaths.sml
+Access          ElabData/basics/access.sml  
+LambdaVar       ElabData/basics/lambdavar.sml
+Variable        ElabData/syntax/variable.sml   
+Absyn	        ElabData/syntax/absyn.sml
+AbsynUtil       ElabData/syntax/absynutil.sml
+PPAbsyn         ElabData/syntax/ppabsyn.sml
+Bindings        ElabData/statenv/bindings.sml   
+StaticEnv       ElabData/statenv/statenv.sml
+Types	        ElabData/types/types.sml
+TypesUtil       ElabData/types/typesutil.sml 
+BasicTypes      ElabData/types/basictypes.sml
+PPType          ElabData/types/pptype.sml  
+Modules	        ElabData/modules/modules.sml 
+EntityEnv       ElabData/modules/entityenv.sml
+EntPathContext  ElabData/modules/epcontext.sml
+Primop	        ElabData/prim/primop.sml
+PrimopUtil      ElabData/prim/primop-util.sml 
+
+ElabDebug       Elaborator/elaborate/elabdebug.sml
+ElabUtil        Elaborator/elaborate/elabutil.sml
+MatchComp       Elaborator/matchcomp/matchcomp.sml
+EvalEntity      Elaborator/modules/evalenv.sml 
+Instantiate     Elaborator/modules/instantiate.sml
+
+Formatting      smlnj-lib/PrettyPrint[/src/formatting.sml]
+PrintFormat     smlnj-lib/PrettyPrint[/src/printformt.sml]
+PropList        smlnj-lib/Util
+RedBlackMapFn	smlnj-lib/Util
+Controls        smlnj-lib/Controls[/controls.sml]
+ControlRegistry smlnj-lib/Controls[/control-registry.sml]
+ControlUtil     smlnj-lib/Controls[/control-unit.sml]
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
 
 FLINT/
 
@@ -42,13 +154,14 @@ FLINT/main/
     < FLINTOpt
     > Stats*          Basics/stats/stats.sml
       ErrorMsg*       Basics/errormsg/errormsg.sml
+      Control*        TopLevel/main/control.sml [Admin/control/control.sml]
 
       FLINT           FLINT/flint/flint.sml
       FLINT_Control   FLINT/main/control.sml [Admin/control/flint-control.sml]
       PPFlint         FLINT/flint/ppflint.sml
       LtyBasic        FLINT/kernel/ltybasic.sml
       LtyExtern       FLINT/kernel/ltyextern.sml
-      Control         TopLevel/main/control.sml [Admin/control/control.sml]
+      PPLty           FLINT/kernel/pplty.sml 
       LContract       FLINT/opt/lcontract.sml
       FContract       FLINT/opt/fcontract.sml
       Loopify         FLINT/opt/loopify.sml
@@ -60,7 +173,6 @@ FLINT/main/
       Reify           FLINT/reps/reify.sml
       TvarCvt         FLINT/flint/tvarcvt.sml
       ChkFlint        FLINT/flint/chkflint.sml
-      PPLty           FLINT/flint/ppflint.sml
 
     Note: FLINT_Control.recover must be moved; it's not in FLINTControl.
 
@@ -70,7 +182,7 @@ FLINT/main/
 
   control.sml
     < FLINT_Control     [-> Admin/control/flint-control.sml?]
-    > BasicControl*     Basics/control/basiccontrol.sml
+    > BasicControl*     Basics/control/basiccontrol.sml 
       LambdaVar*        ElabData/basics/lambdavar.sml
 
       Controls*         [smlnj-lib/]Controls/controls.sml
@@ -161,7 +273,7 @@ FLINT/plambda/
     > Symbol*	      Basics/symbol/symbol.sml
       Access*         ElabData/basics/access.sml
       LambdaVar*      ElabData/basics/lambdavar.sml
-      StringFormats*  Basics/print/stringformats.sml
+      StringFormats*  Basics/print/stringformats.sml 
 
       Formatting*     smlnj-lib/PrettyPrint/src/formatting.sml
       PrintFormat*    smlnj-lib/PrettyPrint/src/printformat.sml
@@ -204,12 +316,12 @@ FLINT/trans/
     < TransUtil
     > LambdaVar*      ElabData/basics/lambdavar.sml
       Access*         ElabData/basics/access.sml
-      Variable*	      ElabData/syntax/variable.sml
+      Variable*	      ElabData/syntax/variable.sml 
       TypesUtil*      ElabData/types/typesutil.sml
       BasicTypes*     ElabData/types/basictypes.sml
       StaticEnv*      ElabData/statenv/statenv.sml
       Primop*	      ElabData/prim/primop.sml
-      PrimopUtil*     ElabData/prim/primop-util.sml
+      PrimopUtil*     ElabData/prim/primop-util.sml 
       ElabDebug*      Elaborator/elaborate/elabdebug.sml
 
       PLambda	      FLINT/plambda/plambda.sml
@@ -238,7 +350,7 @@ FLINT/trans/
       Types*	      ElabData/types/types.sml
       BasicTypes*     ElabData/types/basictypes.sml
       Modules*	      ElabData/modules/modules.sml
-      TypesUtil*      ElabData/types/typesutil.sml
+      TypesUtil*      ElabData/types/typesutil.sml 
       PPType*	      ElabData/types/pptype.sml
 
       ElabDebug*      Elaborator/elaborate/elabdebug.sml
@@ -263,7 +375,7 @@ FLINT/trans/
     > Primop*         ElabData/prim/primop.sml
       Types*	      ElabData/types/types.sml
       BasicTypes*     ElabData/types/basictypes.sml
-      Target*	      Basics/compiler/target[32,64].sml
+      Target*	      Basics/compiler/target[32,64].sml 
       ErrorMsg*	      Basics/errormsg/errormsg.sml
       Control.Print*  TopLevel/main/control.sml
 
@@ -290,7 +402,7 @@ FLINT/trans/
       ModuleUtil*     ElabData/modules/moduleutil.sml
       StaticEnv*      ElabData/statenv/statenv.sml
       ElabDebug*      Elaborator/elaborate/elabdebug.sml
-      EvalEntity*     Elaborator/modules/evalenv.sml
+      EvalEntity*     Elaborator/modules/evalenv.sml 
       Instantiate*    Elaborator/modules/instantiate.sml
 
       Lty	      FLINT/kernel/lty.sml
@@ -321,24 +433,24 @@ FLINT/flint/
       PLambda	      FLINT/plambda/plambda.sml
       FLINT	      FLINT/flint/flint.sml
       PPFlint	      FLINT/flint/ppflint.sml
-      Lty
-      LtyKernel
-      LtyDef
-      LtyBasic
-      LtyExtern
-      FunRecMeta 
-      PPLty
+      PPLty	      FLINT/kernel/pplty.sml
+      Lty	      FLINT/kernel/lty.sml
+      LtyDef	      FLINT/kernel/ltydef.sml
+      LtyBasic	      FLINT/kernel/ltybasic.sml
+      LtyKernel	      FLINT/kernel/ltykernel.sml
+      LtyExtern	      FLINT/kernel/ltyextern.sml
+      FunRecMeta      FLINT/kernel/funrecmeta.sml 
 
-      Formatting
-      PrintFormat
+      Formatting      [smlnj-lib/]PrettyPrint/formatting.sml
+      PrintFormat     [smlnj-lib/]PrettyPrint/printformat.sml
 
   flint.sig
     < FLINT [sig]
     > Access*
-      LambdaVar*
-      Primop*
-      IntConst*
-      RealConst*
+      LambdaVar*      ElabData/basics/lambdavar.sml 
+      Primop*	      ElabData/prim/primop.sml
+      IntConst*	      Basics/compiler/int-const.sml
+      RealConst*      Basics/compiler/real-const.sml
 
       PLambda
       Lty
@@ -346,43 +458,43 @@ FLINT/flint/
 
   flint.sml
     < FLINT [str]
-    > Access*
-      LambdaVar*
-      Primop*
-      IntConst*
-      RealConst*
+    > Access*         ElabData/basics/access.sml
+      LambdaVar*      ElabData/basics/lambdavar.sml
+      Primop*	      ElabData/prim/primop.sml
+      IntConst*	      Basics/compiler/int-const.sml
+      RealConst*      Basics/compiler/real-const.sml
 
-      PLambda
-      Lty
-      FunRecMeta
+      PLambda	      FLINT/plambda/plambda.sml
+      Lty	      FLINT/kernel/lty.sml
+      FunRecMeta      FLINT/kernel/funrecmeta.sml
 
   flintutil.sml
     < FLINTUTIL
       FlintUtil
-    > ErrorMsg*
-      LambdaVar*
-      Access*
-      Primop*
+    > ErrorMsg*	      Basics/errormsg/errormsg.sml
+      Access*         ElabData/basics/access.sml 
+      LambdaVar*      ElabData/basics/lambdavar.sml
+      Primop*	      ElabData/prim/primop.sml
 
-      PLambda
-      FLINT
-      Lty
-      LtyDef
-      LtyBasic
-      LtyKernel 
-      LtyExtern
-      FunRecMeta 
+      PLambda	      FLINT/plambda/plambda.sml
+      Lty	      FLINT/kernel/lty.sml
+      FunRecMeta      FLINT/kernel/funrecmeta.sml
+      LtyDef	      FLINT/kernel/ltydef.sml
+      LtyBasic	      FLINT/kernel/ltybasic.sml
+      LtyKernel       FLINT/kernel/ltykernel.sml
+      LtyExtern	      FLINT/kernel/ltyextern.sml
+      FunRecMeta      FLINT/kernel/funrecmeta.sml
 
 
   ppflint.sig
     < PPFLINT
     >
 
-      PLambda
-      FLINT
-      FunRecMeta
+      PLambda	      FLINT/plambda/plambda.sml
+      FLINT [str]     FLINT/flint/flint.sml
+      FunRecMeta      FLINT/kernel/funrecmeta.sml
 
-      Formatting
+      Formatting      [smlnj-lib/]PrettyPrint/src/formatting.sml
 
   ppflint.sml
     < PPFlint
