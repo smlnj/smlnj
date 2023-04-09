@@ -37,15 +37,15 @@ FLINT/flint.cm -- the CPS Group/Library CDF
 LOCAL:  ["*" for exported]
 
 FLINTOpt*       main/flint-opt.sml
-FLINTCONTROL    main/control.sig [Admin/...]
+FLINTCONTROL    main/control.sig [Admin/control/flint-control.sig]
 FLINT_Control   main/control.sml [Admin/control/flint-control.sml]
 
 FLINT* [sig]    flint/flint.sig
 FLINT* [str]    flint/flint.sml
+CHKFLINT        flint/chkflint.sml    
 ChkFlint*       flint/chkflint.sml   
 PPFlint*        flint/ppflint.sml 
 FlintUtil       flint/flintutil.sml
-CHKFLINT        flint/chkflint.sml   
 TvarCvt         flint/tvarcvt.sml 
 
 PLAMBDA	        plambda/plambda.sig
@@ -91,15 +91,24 @@ FixFix	        opt/fixfix.sml
 Lift	        opt/lift.sml
 Recover         opt/recover.sml
 
+COERCE		reps/coerce.sml 
+Coerce		reps/coerce.sml 
+EQUAL		reps/equal.sml  
+Equal		reps/equal.sml  
+REIFY		reps/reify.sml
+Reify		reps/reify.sml
+RTTYPE		reps/rttype.sml  
+RuntimeType	reps/rttype.sml  
+TYPEOPER	reps/typeoper.sml 
+TypeOper	reps/typeoper.sml 
+WRAPPING        reps/wrapping.sml
 Wrapping        reps/wrapping.sml
-Reify           reps/reify.sml
-
 
 IMPORTED:
 
 Control         TopLevel/main/control.sml [Admin]
 
-Contro_Print	Basics/print/printcontrol.sml
+Control_Print	Basics/print/printcontrol.sml
 ErrorMsg        Basics/errormsg/errormsg.sml  
 Stats           Basics/stats/stats.sml
 Target          Basics/compiler/target[32,64].sml  
@@ -135,14 +144,19 @@ MatchComp       Elaborator/matchcomp/matchcomp.sml
 EvalEntity      Elaborator/modules/evalenv.sml 
 Instantiate     Elaborator/modules/instantiate.sml
 
-Formatting      smlnj-lib/PrettyPrint[/src/formatting.sml]
-PrintFormat     smlnj-lib/PrettyPrint[/src/printformt.sml]
-PropList        smlnj-lib/Util
-RedBlackMapFn	smlnj-lib/Util
+Formatting      smlnj-lib/PrettyPrint [/src/formatting.sml]
+PrintFormat     smlnj-lib/PrettyPrint [/src/printformt.sml]
+
+PropList        smlnj-lib/Util [/plist.sml]
+RedBlackMapFn	smlnj-lib/Util [/redblack-map-fn.sml]
+IntRedBlackMap  smlnj-lib/Util [/int-redblack-map.sml]
+ListMergeSort	smlnj-lib/Util
+
 Controls        smlnj-lib/Controls[/controls.sml]
 ControlRegistry smlnj-lib/Controls[/control-registry.sml]
 ControlUtil     smlnj-lib/Controls[/control-unit.sml]
 
+SMLofNJ		system/...
 
 (* ---------------------------- Members [files] ---------------------------- *) 
 
@@ -152,9 +166,9 @@ FLINT/main/
 
   flint-opt.sml
     < FLINTOpt
-    > Stats*          Basics/stats/stats.sml
-      ErrorMsg*       Basics/errormsg/errormsg.sml
-      Control*        TopLevel/main/control.sml [Admin/control/control.sml]
+    > Stats*
+      ErrorMsg*
+      Control*
 
       FLINT           FLINT/flint/flint.sml
       FLINT_Control   FLINT/main/control.sml [Admin/control/flint-control.sml]
@@ -222,7 +236,7 @@ FLINT/plambda/
       LtyExtern       FLINT/kernel/ltyextern.sml
       FunRecMeta      FLINT/kernel/funrecmeta.sml
       PLambda         FLINT/plambda/plambda.sml
-      PFlatten	      FLINT/plambda/pflatten.sml
+      PFlatten	      FLINT/plambda/pflatten.sml 
       FLINT	      FLINT/flint/flint.sml
       FlintUtil	      FLINT/flint/flintutil.sml
 
@@ -413,7 +427,7 @@ FLINT/trans/
       PrimTyc	      FLINT/kernel/primtyc.sml
       FLINT_Control   FLINT/main/control.sml
 
-  literal-to-num.sml    * uses CoreIntInf functionality *
+  literal-to-num.sml  [uses CoreIntInf]
     < LITERAL_TO_NUM
       LiteralToNum
     > CoreIntInf*     $smlnj/init/init.cmi : cm
@@ -441,8 +455,8 @@ FLINT/flint/
       LtyExtern	      FLINT/kernel/ltyextern.sml
       FunRecMeta      FLINT/kernel/funrecmeta.sml 
 
-      Formatting      [smlnj-lib/]PrettyPrint/formatting.sml
-      PrintFormat     [smlnj-lib/]PrettyPrint/printformat.sml
+      Formatting*     [smlnj-lib/]PrettyPrint/formatting.sml
+      PrintFormat*    [smlnj-lib/]PrettyPrint/printformat.sml
 
   flint.sig
     < FLINT [sig]
@@ -464,6 +478,7 @@ FLINT/flint/
       IntConst*	      Basics/compiler/int-const.sml
       RealConst*      Basics/compiler/real-const.sml
 
+      FLINT [sig]
       PLambda	      FLINT/plambda/plambda.sml
       Lty	      FLINT/kernel/lty.sml
       FunRecMeta      FLINT/kernel/funrecmeta.sml
@@ -484,7 +499,6 @@ FLINT/flint/
       LtyKernel       FLINT/kernel/ltykernel.sml
       LtyExtern	      FLINT/kernel/ltyextern.sml
       FunRecMeta      FLINT/kernel/funrecmeta.sml
-
 
   ppflint.sig
     < PPFLINT
@@ -532,81 +546,193 @@ FLINT/flint/
 
 FLINT/kernel/
   lty.sig
-    <
-    >
+    < LTY
+    > LambdaVar*
+
+      PrimTyc
 
   lty.sml
-    <
-    >
+    < Lty
+    > ErrorMsg*
+      LambdaVar*
+      SMLofNJ* [.Weak]
+
+      LTY
+      PrimTyc
 
   ltykernel.sig
-    <
+    < LTYKERNEL
     >
+      Lty
 
   ltykernel.sml
-    <
-    >
+    < LtyKernel
+    > ErrorMsg*
+      Control_Print
+
+      LTYKERNEL
+      FLINT_Control
+      Lty
+      PrimTyc
+
+      Formatting*
+      PrintFormat*
 
   ltydef.sig
-    <
+    < LTYDEF
     >
+      Lty
+      PrimTyc
 
   ltydef.sml
-    <
-    >
+    < LtyDef
+    > ErrorMsg*
+      Control_Print*
 
+      LTYDEF 
+      Lty
+      LtyKernel
+      PrimTyc
+
+      Formatting*
+      PrintFormat*
+      
   funrecmeta.sig
-    <
+    < FUN_REC_META
     >
+      Lty
 
   funrecmeta.sml
-    <
-    >
+    < RunRecMeta
+    > 
+      FUN_REC_META
+      Lty
 
   ltybasic.sig
-    <
-    >
+    < LTYBASIC
+    > LambdaVar*
+
+      Lty
 
   ltybasic.sml
-    <
-    >
+    < LtyBasic
+    > ErrorMsg*
+      Control*
+      LambdaVar*
+
+      Lty
+      LtyDef
+      LtyKernel
+      PrimTyc
 
   ltyextern.sig
-    <
+    < LTYEXTERN
     >
+      Lty
+      FunRecMeta
 
   ltyextern.sml
-    <
-    >
+    < LtyExtern
+    > ErrorMsg*
+      LambdaVar*
+      Primop*
+      Control*
+
+      LTYEXTERN
+      Lty
+      LtyKernel
+      LtyDef
+      LtyBasic
+      FunRecMeta
+      LtyKindChk
+
+      Formatting*
+      PrintFormat*
+      RedBlackMapFn*
+      ListMergeSort*
 
   ltydict.sml
-    <
+    < LTYDICT
+      LtyDict
     >
+
+      Lty
+
+      RedBlackMapFn*
 
   primtyc.sig
-    <
-    >
+    < PRIM_TYC
+    > Types*
 
   primtyc.sml
-    <
-    >
+    < PrimTyc
+    > ErrorMsg*
+      BasicTypes*
+      Target*
+
+      PRIM_TYC
 
   ltykindchk.sml
-    <
-    >
+    < LTYKINDCHK
+      LtyKindChk
+    > ErrorMsg*
+
+      Lty
+      LtyDef
+      PPLty
+
+      Formatting*
+      PrintFormat*
+      RedBlackMapFn*
 
   pplty.sml
-    <
-    >
+    < PPLTY
+      PPLty
+    > Control*
+
+      FLINT_Control
+      Lty
+      PrimTyc
+
+      Formatting*
+      PrintFormat*
+
 
 FLINT/opt/
   fixfix.sml
-    <
-    >
+    < FIXFIX
+      FixFix
+    > ErrorMsg*
+      Control_Print*
+      LambdaVar*
+
+      PLambda
+      FLINT
+      PPFlint
+      FLINT_Control 
+      OptUtils
+      LtyDef
+      FunRecMeta 
+      LtyExtern
+
+      PrintFormat*
 
   collect.sml
-    <
-    >
+    < COLLECT
+      Collect
+    > LambdaVar*
+      Primop*
+      Access*
+      Control_Print*
+
+      FLINT_Control
+      FLINT [str]
+      PLambda
+      FlintUtil
+      PPFlint 
+
+      Formatting*
+      PrintFormat*
 
   fcontract.sml
     <
@@ -638,29 +764,124 @@ FLINT/opt/
 
 FLINT/reps/
   coerce.sml
-    <
-    >
+    < COERCE
+      Coerce
+    > LambdaVar*
+      Control*
+
+      PFlatten
+      FLINT [str]
+      FlintUtil
+      Lty 
+      LtyDef
+      LtyBasic
+      LtyKernel 
+      LtyExtern
+      FunRecMeta 
+      PPLty
+
+      IntRedBlackMap
 
   equal.sml
-    <
-    >
+    < EQUAL
+      Equal
+    > Primop*
+      Types*
+      BasicTypes*
+
+      PLambda 
+      FLINT [str]
+      FlintUtil 
+      Lty
+      FunRecMeta
+      LtyDef 
+      LtyBasic 
+      LtyKernel
+      LtyExtern
+      PrimTyc
 
   reify.sml
-    <
-    >
+    < REIFY
+      Reify
+    > LambdaVar*
+      Access*
+      Primop*
+      PrimopUtil*
+
+      PLambda
+      FLINT [str]
+      FlintUtil 
+      PPFlint
+      Lty 
+      LtyDef
+      LtyBasic
+      LtyKernel 
+      LtyExtern
+      FunRecMeta 
+      TypeOper 
 
   rttype.sml
-    <
-    >
+    < RTTYPE
+      RuntimeType
+    > LambdaVar*
+      Primop*
+      ErrorMsg*
+
+      FLINT 
+      FLINT_Control
+      Lty
+      LtyDef
+      LtyBasic
+      LtyKernel 
+      LtyExtern
+      PrimTyc
+      FunRecMeta
 
   typeoper.sml
-    <
-    >
+    < TYPEOPER
+      TypeOper
+    > LambdaVar*
+      Primop*
+      Types*
+      BasicTypes*
+      Target*
+
+      FLINT 
+      FlintUtil
+      Lty
+      LtyDef
+      LtyBasic
+      LtyKernel 
+      LtyExtern
+      FunRecMeta 
+      PrimTyc
+      FLINT
+      RuntimeType
 
   wrapping.sml
-    <
-    >
+    < WRAPPING
+      Wrapping
+    > ErrorMsg*
+      Primop*
+      LambdaVar*
+      Access*
+      Control_Print*
 
+      PLambda 
+      FLINT 
+      FLINT_Control
+      Coerce
+      Lty
+      LtyDef
+      LtyBasic
+      LtyKernel 
+      LtyExtern
+      FunRecMeta 
+      PPLty
+      PPFlint
+
+      Formatting*
+      PrintFormat*
 
 * ---------------------------- Imports ---------------------------- *
 

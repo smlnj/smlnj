@@ -13,7 +13,6 @@ local
   structure LK = LtyKernel
   structure LD = LtyDef
   structure FR = FunRecMeta  (* fkind, rkind, CC_*, RK_*, LT_*, etc., formally defined here *)
-  structure LK = LtyKernel
   structure LB = LtyBasic
   structure LKC = LtyKindChk
   structure PO = Primop     (* really should not refer to this *)
