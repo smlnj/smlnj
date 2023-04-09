@@ -158,6 +158,7 @@ ControlUtil     smlnj-lib/Controls[/control-unit.sml]
 
 SMLofNJ		system/...
 
+
 (* ---------------------------- Members [files] ---------------------------- *) 
 
 FLINT/
@@ -508,7 +509,7 @@ FLINT/flint/
       FLINT [str]     FLINT/flint/flint.sml
       FunRecMeta      FLINT/kernel/funrecmeta.sml
 
-      Formatting      [smlnj-lib/]PrettyPrint/src/formatting.sml
+      Formatting*     [smlnj-lib/]PrettyPrint/src/formatting.sml
 
   ppflint.sml
     < PPFlint
@@ -655,7 +656,6 @@ FLINT/kernel/
     < LTYDICT
       LtyDict
     >
-
       Lty
 
       RedBlackMapFn*
@@ -735,32 +735,124 @@ FLINT/opt/
       PrintFormat*
 
   fcontract.sml
-    <
-    >
+    < FCONTRACT
+      FContract
+    > ErrorMsg*
+      Access*
+      LambdaVar*
+      Control_Print*
+      Primop*
+
+      PLambda
+      FLINT [str]
+      FlintUtil
+      FLINT_Control
+      PPFlint
+      Lty
+      FunRecMeta
+      LtyKernel 
+      LtyDef
+      LtyExtern
+      OptUtils
+      Collect
+
+      Formatting*
+      PrintFormat*
 
   optutils.sml
-    <
-    >
+    < OPT_UTILS
+      OptUtils
+    > ErrorMsg*
+
+      FLINT [str]
+      Lty
+      RunRecMeta
+      LtyKernel
 
   lcontract.sml
-    <
-    >
+    < LCONTRACT	
+      LContract
+    > ErrorMsg*
+      Access*
+      LambdaVar*
+      Primop*
+
+      PLambda
+      FLINT [str]
+      FlintUtil
+      Lty
+      FunRecMeta
+      LtyKernel
+      LtyDef
+      LtyBasic
+      LtyExtern
 
   recover.sml
-    <
-    >
+    < RECOVER
+      Recover
+    > ErrorMsg*
+      LambdaVar*
 
+      PLambda
+      FLINT [str]
+      PPFLINT
+      Lty
+      LtyDef
+      LtyBasic
+      LtyExtern
+      
   specialize.sml
-    <
-    >
+    < SPECIALIZE
+      Specialize
+    > ErrorMsg*
+      Contro_Print*
+      LambdaVar*
+
+      PLambda
+      FLINT [str]
+      PrimTyc 
+      Lty
+      FunRecMeta
+      LtyKernel
+      LtyDef
+      LtyBasic
+      LtyExtern
+      PPLty 
+      PFlatten
 
   loopify.sml
-    <
-    >
+    < LOOPIFY
+      Loopify
+    > ErrorMsg*
+      LambdaVar*
+      Control_Print*
+
+      FLINT
+      FlintUtil
+      FLINT_Control
+      Lty
+      FunRecMeta
+      LtyKernel
+      OptUtils
 
   lift.sml
-    <
-    >
+    < LIFT
+      Lift
+    > ErrorMsg*
+      LambdaVar*
+      Access*
+
+      PLambda
+      FLINT [str]
+      FLINT_Control
+      PrimTyc
+      Lty
+      FunRedMeta
+      LtyKernel 
+      LtyDef 
+      LtyBasic
+      LtyExtern
+
 
 FLINT/reps/
   coerce.sml
