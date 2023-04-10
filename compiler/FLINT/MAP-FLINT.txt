@@ -2,9 +2,7 @@ compiler/FLINT/MAP-FL.txt
 
 Map of FLINT (as a "library")
 
-* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
-* Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*)
-  [We assume import of basis.cm and smlnj-lib.cm.]
+* Excluding uses (mentions) of modules from Basis (basis.cm).
 * All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
   to be structures, unless they end in "Fn", in which case they are assumed to be functors.
   These defaults can be overridden by qualifiers, e.g. "CPS [str]".
@@ -160,6 +158,8 @@ SMLofNJ		system/...
 
 
 (* ---------------------------- Members [files] ---------------------------- *) 
+Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm.]
 
 FLINT/
 
@@ -975,7 +975,7 @@ FLINT/reps/
       Formatting*
       PrintFormat*
 
-* ---------------------------- Imports ---------------------------- *
+(* ---------------------------- Imports ---------------------------- *) 
 
 (* Basis libaries *)
 $smlnj/basis/basis.cm
