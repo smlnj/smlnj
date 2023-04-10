@@ -26,7 +26,96 @@ cps.cm  -- the CPS Group/Library CDF
          dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
 
 
-(* ---------------------------- Members ---------------------------- *) 
+(* ---------------------------- Module Index ---------------------------- *) 
+
+LOCAL:
+
+CPS [sig]	   cps/cps.sig
+CPS* [str]         cps/cps.sml
+CPSUtil*	   cps/cps-util.sml
+PPCps*		   cps/ppcps.sml
+CPSUtil		   cps/cps-util.sml
+
+MACH_SPEC* [sig]   main/mach-spec.sig (?)
+CPS_COMP [sig]	   main/cps-comp.sml
+CPSCompFn* [fct]   main/cps-comp.sml
+NormalizeCluster   main/normalize-cluster.sml
+Feedback	   main/feedback.sml
+Limit		   main/limit.sml
+LITERALS	   main/literals.sml 
+Literals	   main/literals.sml 
+NewLiterals	   main/new-literals.sml
+SPILL		   main/spill-fn.sml
+SpillFn		   main/spill-fn.sml
+OBJECT_DESC	   main/object-desc.sig
+ObjectDesc	   main/object-desc.sml
+
+GLOBALFIX	   clos/globalfix.sml
+GlobalFix	   clos/globalfix.sml
+CLOSURE		   clos/closure.sml
+Closure [fct]	   clos/closure.sml
+FREECLOSE	   clos/freeclose.sml
+FreeClose	   clos/freeclose.sml
+STATICPROF	   clos/staticprof.sml
+StaticProf [fct]   clos/staticprof.sml
+UNREBIND   	   clos/unrebind.sml
+UnRebind	   clos/unrebind.sml
+
+CONVERT		   convert/convert.sml
+Convert [fct]	   convert/convert.sml
+CPStrans [fct]	   convert/cpstrans.sml
+Switch	 	   convert/switch.sml
+
+CONTRACT	   opt/contract.sml
+Contract	   opt/contract.sml
+ContractPrim	   opt/contract-prim.sml
+CPSOPT [sig]	   opt/cpsopt.sml
+CPSopt [fct[	   opt/cpsopt.sml
+DivCnv 		   opt/divcnv.sml
+ETA		   opt/eta.sml
+Eta		   opt/eta.sml
+ETASPLIT	   opt/etasplit.sml
+EtaSplit	   opt/etasplit.sml
+EXPAND		   opt/expand.sml
+Expand		   opt/expand.sml
+FLATTEN		   opt/flatten.sml
+Flatten [fct]	   opt/flatten.sml
+IntInfCnv	   opt/infcnv.sml
+LowerCPS	   opt/lower.sml
+Num64Cnv	   opt/num64cnv.sml
+StrEqlCnv	   opt/streqlcnv.sml
+TestCnv		   opt/testcnv.sml
+Uncurry [fct]	   opt/uncurry.sml
+
+IMPORTED:
+
+ErrorMsg           Basics/errormsg/errormsg.sml
+Target		   Basics/compiler/target[32,64].sml
+IntConst	   Basics/compiler/int-const.sml
+RealConst	   Basics/compiler/real-const.sml
+
+LambdaVar	   ElabData/basics/lambdavar.sml
+Access		   ElabData/basics/access.sml
+Primop		   ElabData/prim/primop.sml
+
+PLambda		   FLINT/plambda/plambda.sml
+FLINT [str]	   FLINT/flint/flint.sml
+FlintUtil	   FLINT/flint/flintutil.sml
+PrimTyc	   	   FLINT/kernel/primtyc.sml  
+Lty	   	   FLINT/kernel/lty.sml  
+LtyKernel   	   FLINT/kernel/ltykernel.sml  
+LtyDef	   	   FLINT/kernel/ltydef.sml  
+LtyBasic   	   FLINT/kernel/ltybasic.sml   
+LtyExtern   	   FLINT/kernel/ltyextern.sml   
+FunRecMeta  	   FLINT/kernel/funrecmeta.sml  
+
+Control		   TopLevel/main/control.sml
+Control_CG	   TopLevel/main/control.sml
+
+ConstArith	   Library/const-arith/const-arith.sml
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
 
 CPS/main/
   cluster.sml    (* move to NewCodeGen/main? [DBM: No! used in cps-comp.sml) *)
@@ -34,9 +123,9 @@ CPS/main/
     > LambdaVar*  elabdata.cm
       Control*    toplevel.cm 
 
-      CPS            (CPS/cps/cps.sml)
-      PPCps          (CPS/cps/ppcps.sml) 
-      NormalizeCluster (CPS/main/normalize-cluster.sml)
+      CPS         CPS/cps/cps.sml
+      PPCps       CPS/cps/ppcps.sml
+      NormalizeCluster   CPS/main/normalize-cluster.sml
 
   cps-comp.sml
     < CPS_COMP
@@ -89,7 +178,7 @@ CPS/main/
       Control*   toplevel.cm 
 
   new-literals.sml
-    < NewLIterals
+    < NewLiterals
     > LambdaVar* elabdata.cm
       Control*   toplevel.cm 
       Target*    basics.cm 
@@ -187,21 +276,21 @@ CPS/convert/
     < CONVERT
       Convert [fct]
     > Access*, LambdaVar* elabdata.cm
-      Lty*, LtyDef*, LtyBasic*, LtyExtern*, FunRecMeta*, FLINT*, FlintUtil* flint.cm
-      PLambda*   flint.cm
-      Primop*    elabdata.cm (ElabData/prim/primop.sml)
+      Lty*, LtyDef*, LtyBasic*, LtyExtern*, FunRecMeta*, FLINT*, FlintUtil*   flint.cm
+      PLambda*    flint.cm
+      Primop*     elabdata.cm (ElabData/prim/primop.sml)
 
-      CPS [str]    (CPS/cps/cps.sml) 
-      CPSUtil      (CPS/cps/cps-util.sml)
-      MACH_SPEC    (CPS/main/mach-spec.sig) 
+      CPS [str]   CPS/cps/cps.sml
+      CPSUtil     CPS/cps/cps-util.sml
+      MACH_SPEC   CPS/main/mach-spec.sig
 
   cpstrans.sml
     < CPStrans [fct]
     > LambdaVar*  elabdata.cm 
       ErrorMsg*   basics.cm 
 
-      CPS [str]      (CPS/cps/cps.sml) 
-      MACH_SPEC      (CPS/main/mach-spec.sig) 
+      CPS [str]   CPS/cps/cps.sml
+      MACH_SPEC   CPS/main/mach-spec.sig
 
   switch.sml
     < Switch
@@ -210,28 +299,28 @@ CPS/convert/
       Access*     elabdata.cm
       FLINT*      flint.cm
 
-      CPS [str]      (CPS/cps/cps.sml) 
+      CPS [str]   CPS/cps/cps.sml
 
 CPS/cps
   cps.sig
     < CPS [sig]
-    > RealConst* basics.cm
-      IntConst*  basics.cm
+    > RealConst*  basics.cm
+      IntConst*   basics.cm
 
   cps.sml
     < CPS [str]
-    > RealConst* basics.cm
-      IntConst*  basics.cm
+    > RealConst*  basics.cm
+      IntConst*   basics.cm
 
   ppcps.sml
     < PPCPS
       PPCps
     > LambdaVar*    elabdata.cm 
       Lty*          flint.cm  (not used)
-      PrettyPrint*  prettyprint-lib.cm
+      Formatting*   prettyprint-lib.cm
 
-      CPS [str]    (CPS/cps/cps.sml) 
-      CPSUtil      (CPS/cps/cps-util.sml)
+      CPS [str]     CPS/cps/cps.sml
+      CPSUtil       CPS/cps/cps-util.sml
 
   cps-util.sml
     < CPSUtil
@@ -239,10 +328,10 @@ CPS/cps
       ErrorMsg*   basics.cm 
       Target*     basics.cm 
 
-      CPS [str]      (CPS/cps/cps.sml) 
+      CPS [str]      CPS/cps/cps.sml
  
 
-CPS/opt/  [to be completed]
+CPS/opt/
 
   contract.sml
     < CONTRACT
