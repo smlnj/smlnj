@@ -139,7 +139,7 @@ Formatting	  smlnj-lib/PrettyPrint
 
 (* ---------------------------- Members [files] ---------------------------- *) 
 Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
-[We assume import of basis.cm.]
+[We assume import of basis.cm, so Basis modules are not mentioned.]
 
 Basis/
 
