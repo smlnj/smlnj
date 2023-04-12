@@ -1,0 +1,240 @@
+compiler/ElabData/MAP-ElabData.txt
+
+Map of ElabData (directory and CM goup/library)
+  The data definitions supporting elaboration.
+
+* Excluding uses (mentions) of modules from Basis (basis.cm).
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+ElabData/elabdata.cm -- the ElabData Group/Library CDF
+
+
+(* ---------------------------- Exports ---------------------------- *)
+
+(* ElabData/main *)
+signature ELABDATA_CONTROL
+structure ElabDataControl
+structure CompInfo
+
+(* ElabData/basics *)
+signature LAMBDA_VAR
+signature STAMPS
+signature ACCESS
+structure Access
+signature DEB_INDEX
+structure DebIndex
+signature SYMPATH
+structure SymPath
+signature INVPATH
+structure InvPath
+signature CONVERTPATHS
+structure ConvertPaths
+structure PathName
+structure PPSymPaths
+structure TKind
+structure CoreSym
+structure SigPropList
+
+(* ElabData/types *)
+signature CONREP
+structure ConRep
+signature TYPES
+structure Types
+signature PPTYPE
+structure PPType
+signature OCCURRENCE
+structure Occurrence
+signature TYPESUTIL
+structure TypesUtil
+signature TUPLES
+structure Tuples
+signature EQTYPES
+signature BASICTYPES
+structure BasicTypes
+
+(* ElabData/modules *)
+signature MODULES
+structure Modules
+signature MODULEUTIL
+structure ModuleUtil
+structure PPModules
+structure PPModules_DB
+signature MODULE_ID
+structure ModuleId
+signature ENT_PATH
+signature ENTITY_ENV
+structure EntityEnv
+structure EntPathContext
+signature PPMOD
+signature PPMOD_DB
+signature EXPAND_TYCON
+
+(* ElabData/statenv *)
+signature BINDINGS
+signature STATICENV
+structure Bindings
+structure EqTypes
+structure ExpandTycon
+structure StaticEnv
+structure Lookup
+structure GenModIdMap
+structure CoreAccess
+structure BrowseStatEnv
+
+(* ElabData/syntax *)
+signature ABSYN
+structure Absyn
+signature PPABSYN
+structure PPAbsyn
+structure AbsynUtil
+structure LambdaVar
+structure Stamps
+structure StampMap
+structure EntPath
+signature VARIABLE
+structure Variable
+signature PPVAL
+structure PPVal
+
+(* ElabData/prim *)
+signature PRIMOP
+structure Primop
+signature PRIMOP_ID
+structure PrimopId
+signature PRIM_ENV        (* prim-env.sml *)
+structure PrimEnv
+structure PPPrim
+structure ArithOps
+structure PrimopUtil
+structure PrimopBind
+structure PrimopBindings
+structure CProto
+structure CTypes
+
+(* ElabData/pickle *)
+structure PickleSymPid    (* pickle-sym-pid.sml *)
+structure UnpickleSymPid  (* unpickle-sym-pid.sml *)
+signature PICKMOD         (* pickmod.sml *)
+structure PickMod         (* pickmod.sml *)
+signature UNPICKMOD       (* unpickmod.sml *)
+structure UnpickMod       (* unpickmod.sml *)
+structure Rehash          (* rehash.sml *)
+
+
+(* ---------------------------- Module Index ---------------------------- *)
+
+LOCAL:
+
+
+IMPORTS:
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
+Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+main/edcontrol.sig
+main/edcontrol.sml
+main/compinfo.sml
+
+basics/debindex.sig
+basics/debindex.sml
+basics/lambdavar.sig
+basics/lambdavar.sml
+basics/access.sig
+basics/access.sml
+basics/env.sig
+basics/env.sml
+basics/stamps.sig
+basics/stamps.sml
+basics/stampmap.sml
+basics/coresym.sml
+basics/sympaths.sig
+basics/sympaths.sml
+basics/pathname.sml
+basics/ppsympaths.sml
+basics/tkind.sml
+basics/sig-plist.sml
+
+syntax/absyn.sig
+syntax/absyn.sml
+syntax/ppabsyn.sml
+syntax/variable.sig
+syntax/variable.sml
+syntax/absynutil.sml
+syntax/ppval.sml
+
+types/types.sig
+types/types.sml
+types/pptype.sml
+types/tuples.sml
+types/basictypes.sig
+types/basictypes.sml
+types/occ.sig
+types/occ.sml
+types/typesutil.sig
+types/typesutil.sml
+types/conrep.sml
+
+modules/modules.sig
+modules/modules.sml
+modules/ppmod.sml
+modules/ppmod-db.sml
+modules/entpath.sml
+modules/epcontext.sml
+modules/moduleutil.sig
+modules/moduleutil.sml
+modules/moduleid.sml
+modules/entityenv.sig
+modules/entityenv.sml
+modules/eqtypes.sml
+modules/expandtycon.sml
+
+statenv/bindings.sig
+statenv/bindings.sml
+statenv/statenv.sig
+statenv/statenv.sml
+statenv/lookup.sig
+statenv/lookup.sml
+statenv/genmap.sml
+statenv/coreacc.sml
+statenv/browse.sml
+
+prim/arithops.sml
+prim/primop.sig
+prim/primop.sml
+prim/primop-bind.sml
+prim/primop-id.sig
+prim/primop-id.sml
+prim/primop-util.sml
+prim/ppprim.sml
+prim/cproto.sml
+prim/c-types.sml
+prim/primop-bindings.sml
+prim/prim-env.sml
+
+(* pickling and unpickling *)
+pickle/pickle-sym-pid.sml
+pickle/unpickle-sym-pid.sml
+pickle/pickmod.sml
+pickle/unpickmod.sml
+pickle/rehash.sml
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+(* Basis *)
+$smlnj/basis/basis.cm  (* Basis library *)
+
+(* smlnj-lib libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+ 
+(* viscomp libraries *)
+$smlnj/viscomp/basics.cm  (* from $compiler/Basics/basics.cm *)
+$smlnj/viscomp/parser.cm  (* from $compiler/Parse/parser.cm *)
+
+(* Pickle Library: compiler/Library/pickle *)
+$/pickle-lib.cm        (* pickle library, for pickle code *) 
