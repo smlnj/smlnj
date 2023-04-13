@@ -36,6 +36,9 @@ structure PPSymPaths
 structure TKind
 structure CoreSym
 structure SigPropList
+structure LambdaVar
+structure Stamps
+structure StampMap
 
 (* ElabData/types *)
 signature CONREP
@@ -84,17 +87,14 @@ structure CoreAccess
 structure BrowseStatEnv
 
 (* ElabData/syntax *)
+signature VARIABLE
+structure Variable
 signature ABSYN
 structure Absyn
 signature PPABSYN
 structure PPAbsyn
 structure AbsynUtil
-structure LambdaVar
-structure Stamps
-structure StampMap
 structure EntPath
-signature VARIABLE
-structure Variable
 signature PPVAL
 structure PPVal
 
@@ -125,102 +125,379 @@ structure Rehash          (* rehash.sml *)
 
 (* ---------------------------- Module Index ---------------------------- *)
 
-LOCAL:
+LOCAL: ("*" marks exported modules)
 
+(* ElabData/main *)
+ELABDATA_CONTROL*         main/edcontrol.sig
+ElabDataControl*	  main/edcontrol.sml
+CompInfo*		  main/compinfo.sml
+
+(* ElabData/basics *)
+LAMBDA_VAR*		  basics/lambdavar.sig
+LambdaVar*		  basics/lambdavar.sml
+STAMPS*			  basics/stamps.sig
+Stamps*			  basics/stamps.sml  
+StampMap*		  basics/stampmap.sml  
+ACCESS*			  basics/access.sig
+Access*			  basics/access.sml
+DEB_INDEX*		  basics/debindex.sig
+DebIndex*		  basics/debindex.sml
+SYMPATH*		  basics/sympaths.sig
+SymPath*		  basics/sympaths.sml
+INVPATH*		  basics/sympaths.sig
+InvPath*		  basics/sympaths.sml
+CONVERTPATHS*		  basics/sympaths.sig
+ConvertPaths*		  basics/sympaths.sml
+PathName*		  basics/pathname.sml (-> sympaths.sml)
+PPSymPaths*		  basics/ppsympaths.sml
+TKind*			  basics/tkind.sml
+CoreSym*		  basics/coresym.sml
+SigPropList*		  basics/sig-plist.sml
+ENV			  basics/env.sig
+Env			  basics/env.sml
+INTSTRMAPV		  basics/env.sml
 
 IMPORTS:
+
+Control_Print		  basics/print/printcontrol.sml
+Symbol			  basics/symbol/symbol.sml
 
 
 (* ---------------------------- Members [files] ---------------------------- *) 
 Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
 [We assume import of basis.cm, so Basis modules are not mentioned.]
 
-main/edcontrol.sig
-main/edcontrol.sml
-main/compinfo.sml
+main/
+edcontrol.sig
+  >
+  <
 
-basics/debindex.sig
-basics/debindex.sml
-basics/lambdavar.sig
-basics/lambdavar.sml
-basics/access.sig
-basics/access.sml
+edcontrol.sml
+  >
+  <
+
+compinfo.sml
+  >
+  <
+
+
+basics/
+debindex.sig
+  >
+  <
+
+debindex.sml
+  >
+  <
+
+lambdavar.sig
+  >
+  <
+
+lambdavar.sml
+  >
+  <
+
+access.sig
+  >
+  <
+
+access.sml
+  <
+  >
+
 basics/env.sig
+  < ENV
+  > Symbol*
+
 basics/env.sml
-basics/stamps.sig
-basics/stamps.sml
-basics/stampmap.sml
-basics/coresym.sml
-basics/sympaths.sig
-basics/sympaths.sml
-basics/pathname.sml
-basics/ppsympaths.sml
-basics/tkind.sml
-basics/sig-plist.sml
+  < INTSTRMAPV
+    Env
+  > ElabDataControl
+    Control_Print*
+    Symbol*
+    
+stamps.sig
+  >
+  <
 
-syntax/absyn.sig
-syntax/absyn.sml
-syntax/ppabsyn.sml
-syntax/variable.sig
-syntax/variable.sml
-syntax/absynutil.sml
-syntax/ppval.sml
+stamps.sml
+  >
+  <
 
-types/types.sig
-types/types.sml
-types/pptype.sml
-types/tuples.sml
-types/basictypes.sig
-types/basictypes.sml
-types/occ.sig
-types/occ.sml
-types/typesutil.sig
-types/typesutil.sml
-types/conrep.sml
+stampmap.sml
+  >
+  <
 
-modules/modules.sig
-modules/modules.sml
-modules/ppmod.sml
-modules/ppmod-db.sml
-modules/entpath.sml
-modules/epcontext.sml
-modules/moduleutil.sig
-modules/moduleutil.sml
-modules/moduleid.sml
-modules/entityenv.sig
-modules/entityenv.sml
-modules/eqtypes.sml
-modules/expandtycon.sml
+coresym.sml
+  >
+  <
 
-statenv/bindings.sig
-statenv/bindings.sml
-statenv/statenv.sig
-statenv/statenv.sml
-statenv/lookup.sig
-statenv/lookup.sml
-statenv/genmap.sml
-statenv/coreacc.sml
-statenv/browse.sml
+sympaths.sig
+  >
+  <
 
-prim/arithops.sml
-prim/primop.sig
-prim/primop.sml
-prim/primop-bind.sml
-prim/primop-id.sig
-prim/primop-id.sml
-prim/primop-util.sml
-prim/ppprim.sml
-prim/cproto.sml
-prim/c-types.sml
-prim/primop-bindings.sml
-prim/prim-env.sml
+sympaths.sml
+  >
+  <
+
+pathname.sml
+  >
+  <
+
+ppsympaths.sml
+  >
+  <
+
+tkind.sml
+  >
+  <
+
+sig-plist.sml
+  >
+  <
+
+
+syntax/
+absyn.sig
+  >
+  <
+
+absyn.sml
+  >
+  <
+
+ppabsyn.sml
+  >
+  <
+
+variable.sig
+  >
+  <
+
+variable.sml
+  >
+  <
+
+absynutil.sml
+  >
+  <
+
+ppval.sml
+  >
+  <
+
+
+types/
+types.sig
+  >
+  <
+
+types.sml
+  >
+  <
+
+pptype.sml
+  >
+  <
+
+tuples.sml
+  >
+  <
+
+basictypes.sig
+  >
+  <
+
+basictypes.sml
+  >
+  <
+
+occ.sig
+  >
+  <
+
+occ.sml
+  >
+  <
+
+typesutil.sig
+  >
+  <
+
+typesutil.sml
+  >
+  <
+
+conrep.sml
+  >
+  <
+
+
+modules/l
+modules.sig
+  >
+  <
+
+modules.sml
+  >
+  <
+
+ppmod.sml
+  >
+  <
+
+ppmod-db.sml
+  >
+  <
+
+entpath.sml
+  >
+  <
+
+epcontext.sml
+  >
+  <
+
+moduleutil.sig
+  >
+  <
+
+moduleutil.sml
+  >
+  <
+
+moduleid.sml
+  >
+  <
+
+entityenv.sig
+  >
+  <
+
+entityenv.sml
+  >
+  <
+
+eqtypes.sml
+  >
+  <
+
+expandtycon.sml
+  >
+  <
+
+
+statenv/
+bindings.sig
+  >
+  <
+
+bindings.sml
+  >
+  <
+
+statenv.sig
+  >
+  <
+
+statenv.sml
+  >
+  <
+
+lookup.sig
+  >
+  <
+
+lookup.sml
+  >
+  <
+
+genmap.sml
+  >
+  <
+
+coreacc.sml
+  >
+  <
+
+browse.sml
+  >
+  <
+
+
+prim/
+arithops.sml
+  >
+  <
+
+primop.sig
+  >
+  <
+
+primop.sml
+  >
+  <
+
+primop-bind.sml
+  >
+  <
+
+primop-id.sig
+  >
+  <
+
+primop-id.sml
+  >
+  <
+
+primop-util.sml
+  >
+  <
+
+ppprim.sml
+  >
+  <
+
+cproto.sml
+  >
+  <
+
+c-types.sml
+  >
+  <
+
+primop-bindings.sml
+  >
+  <
+
+prim-env.sml
+  >
+  <
+
 
 (* pickling and unpickling *)
-pickle/pickle-sym-pid.sml
-pickle/unpickle-sym-pid.sml
-pickle/pickmod.sml
-pickle/unpickmod.sml
-pickle/rehash.sml
+pickle/
+pickle-sym-pid.sml
+  >
+  <
+
+unpickle-sym-pid.sml
+  >
+  <
+
+pickmod.sml
+  >
+  <
+
+unpickmod.sml
+  >
+  <
+
+rehash.sml
+  >
+  <
+
 
 (* ---------------------------- Imports ---------------------------- *) 
 

@@ -1,0 +1,245 @@
+compiler/Elaborator/MAP-Elaborator.txt
+
+Map of Elaborator (directory and CM goup/library)
+  Elaboration (type checking, static semantics, etc.)
+
+* Excluding uses (mentions) of modules from Basis (basis.cm).
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+Elaborator/elaborate.cm -- the Elaborator Group/Library CDF
+
+
+(* ---------------------------- Exports ---------------------------- *)
+
+signature ELAB_CONTROL
+structure ElabControl
+signature MC_CONTROL
+structure MCControl
+
+signature BASICTYPES
+signature INSTANTIATE
+signature EVALENTITY
+signature ELABTOP
+signature UNIFY
+signature TYPECHECK
+signature SIGMATCH
+
+structure Instantiate
+structure EvalEntity
+structure SigMatch
+structure ElabMod
+structure ElabTop
+
+structure MCCommon
+structure Andor
+structure DecisionTree
+structure MCUtil
+structure MatchComp
+structure PPMatchComp
+
+structure BasicTypes
+structure ElabUtil
+structure ElabDebug
+structure Unify
+structure Typecheck
+
+(* ---------------------------- Module Index ---------------------------- *)
+
+LOCAL: ("*" marks exported modules)
+
+IMPORTS:
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
+Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+
+control/
+elabcontrol.sig
+  <
+  >
+
+
+elabcontrol.sml
+  <
+  >
+
+mccontrol.sig
+  <
+  >
+
+mccontrol.sml
+  <
+  >
+
+timeit.sml
+  <
+  >
+
+
+types/
+unify.sml
+  <
+  >
+
+overloadclasses.sml
+  <
+  >
+
+overloadvar.sml
+  <
+  >
+
+overload.sml
+  <
+  >
+
+typecheck.sml
+  <
+  >
+
+
+modules/
+sigmatch.sig
+  <
+  >
+
+sigmatch.sml
+  <
+  >
+
+instantiate.sml
+  <
+  >
+
+evalent.sml
+  <
+  >
+
+
+elaborate/
+tyvarset.sml
+  <
+  >
+
+elabutil.sig
+  <
+  >
+
+elabutil.sml
+  <
+  >
+
+elabtype.sig
+  <
+  >
+
+elabtype.sml
+  <
+  >
+
+precedence.sml
+  <
+  >
+
+elabcore.sml
+  <
+  >
+
+include.sml
+  <
+  >
+
+elabsig.sml
+  <
+  >
+
+elabdebug.sml
+  <
+  >
+
+elabmod.sml
+  <
+  >
+
+elabtop.sml
+  <
+  >
+
+check-unused.sml
+  <
+  >
+
+
+matchcomp/
+mcstats.sml
+  <
+  >
+
+paths.sml
+  <
+  >
+
+mccommon.sml
+  <
+  >
+
+mcutil.sml
+  <
+  >
+
+ppmatchcomp.sml
+  <
+  >
+
+matchprint.sml
+  <
+  >
+
+protoandor.sml
+  <
+  >
+
+andor.sml
+  <
+  >
+
+decisiontree.sml
+  <
+  >
+
+generate.sml
+  <
+  >
+
+preprocessing.sml
+  <
+  >
+
+matchcomp.sml
+  <
+  >
+
+matchtrans.sml
+  <
+  >
+
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+(* Basis *)
+$smlnj/basis/basis.cm  
+
+(* smlnj-lib *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* viscomp - other "compiler component libraries" *)
+$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/parser.cm
+
