@@ -18,228 +18,807 @@ structure ElabControl
 signature MC_CONTROL
 structure MCControl
 
-signature BASICTYPES
-signature INSTANTIATE
-signature EVALENTITY
-signature ELABTOP
-signature UNIFY
-signature TYPECHECK
-signature SIGMATCH
+structure Instantiate  -- FLINT/trans/transtypes.sml
+structure EvalEntity   -- FLINT/trans/transtypes.sml
+structure ElabTop      -- TopLevel/main/compile.sml
 
-structure Instantiate
-structure EvalEntity
-structure SigMatch
-structure ElabMod
-structure ElabTop
+structure ElabDebug    -- FLINT/trans/...; TopLevel/interact/evalloop.sml
 
-structure MCCommon
-structure Andor
-structure DecisionTree
-structure MCUtil
-structure MatchComp
-structure PPMatchComp
-
-structure BasicTypes
-structure ElabUtil
-structure ElabDebug
-structure Unify
-structure Typecheck
 
 (* ---------------------------- Module Index ---------------------------- *)
 
-LOCAL: ("*" marks exported modules)
+LOCAL: (54 modules; "*" marks exported modules)
+
+ELAB_CONTROL*	       control/elabcontrol.sig
+ElabControl*	       control/elabcontrol.sml
+MC_CONTROL*	       control/mccontrol.sig
+MCControl*	       control/mccontrol.sml
+TimeIt		       control/timeit.sml
+
+UNIFY		       types/unify.sml
+Unify		       types/unify.sml
+OverloadClasses	       types/overloadclasses.sml
+OVERLOADVAR	       types/overloadvar.sml
+OverloadVar	       types/overloadvar.sml
+OVERLOAD	       types/overload.sml
+Overload	       types/overload.sml
+TYPECHECK	       types/typecheck.sml
+Typecheck	       types/typecheck.sml
+
+SIGMATCH	       modules/sigmatch.sig
+SigMatch	       modules/sigmatch.sml
+INSTANTIATE	       modules/instantiate.sml
+Instantiate*	       modules/instantiate.sml
+EVALENTITY	       modules/evalent.sml
+EvalEntity*	       modules/evalent.sml
+
+TYVARSET	       elaborate/tyvarset.sml
+TyvarSet	       elaborate/tyvarset.sml
+ELABUTIL	       elaborate/elabutil.sig
+ElabUtil	       elaborate/elabutil.sml (previously exported)
+ELABTYPE	       elaborate/elabtype.sig
+ElabType	       elaborate/elabtype.sml
+Precedence	       elaborate/precedence.sml
+PRECEDENCE	       elaborate/precedence.sml
+ELABCORE	       elaborate/elabcored.sml
+ElabCore	       elaborate/elabcored.sml
+INCLUDE		       elaborate/include.sml
+Include		       elaborate/include.sml
+ELABSIG		       elaborate/elabsig.sml
+ElabSig		       elaborate/elabsig.sml
+ELABDEBUG	       elaborate/elabdebug.sml
+ElabDebug*	       elaborate/elabdebug.sml
+ELABMOD		       elaborate/elabmod.sml
+ElabMod		       elaborate/elabmod.sml
+ELABTOP		       elaborate/elabtop.sml
+ElabTop*	       elaborate/elabtop.sml
+CheckUnused	       elaborate/check-unused.sml
+
+MCStats		       matchcomp/mcstats.sml
+Paths		       matchcomp/paths.sml
+MCCommon	       matchcomp/mccommon.sml
+MCUtil		       matchcomp/mcutil.sml
+PPMatchComp	       matchcomp/ppmatchcomp.sml
+MatchPrint	       matchcomp/matchprint.sml
+ProtoAndor	       matchcomp/protoandor.sml
+Andor		       matchcomp/andor.sml
+DecisionTree	       matchcomp/decisiontree.sml
+Generate	       matchcomp/generate.sml
+Preprocessing	       matchcomp/preprocessing.sml
+MatchComp	       matchcomp/matchcomp.sml
+MatchTrans	       matchcomp/matchtrans.sml
+
 
 IMPORTS:
 
+BasicControl		Basics/control/basiccontrol.sml
+Control_Print		Basics/print/printcontrol.sml
+ErrorMsg		Basics/errormsg/errormsg.sml
+Symbol			Basics/symbol/symbol.sml
+SpecialSymbols		Basics/symbol/specialsyms.sml
+PPSymbols		Basics/synbol/ppsymbols.sml
+SourceMap		Basics/source/sourcemap.sml
 
-(* ---------------------------- Members [files] ---------------------------- *) 
+DebIndex		ElabData/basics/debindex.sml
+SymPath			ElabData/basics/sympaths.sml
+InvPath			ElabData/basics/sympaths.sml
+Variable		ElabData/syntax/variable.sml
+Absyn			ElabData/syntax/absyn.sml
+AbsynUtil		ElabData/syntax/absynutil.sml
+PPAbsyn			ElabData/syntax/ppabsyn.sml
+Bindings		ElabData/statenv/bindings.sml
+StaticEnv		ElabData/statenv/statenv.sml
+Lookup			ElabData/statenv/lookup.sml
+Types			ElabData/types/types.sml
+TypesUtil 		ElabData/types/typesutil.sml
+BasicTypes		ElabData/types/basictypes.sml
+PPType			ElabData/types/pptype.sml
+Modules			ElabData/modules/modules.sml
+ModuleUtil		ElabData/modules/moduleutil.sml
+ModuleId		ElabData/modules/moduleid.sml
+PPModules		ElabData/modules/ppmod.sml
+PPModules_DB		ElabData/modules/ppmod-db.sml
+EqTypes			ElabData/modules/eqtypes.sml
+EntPath			ElabData/modules/entpath.sml
+EntityEnv		ElabData/modules/entityenv.sml
+EntPathContext		ElabData/modules/epcontext.sml
+ExpandTycon		ElabData/modules/expandtycon.sml
+
+Controls		smlnj-lib/Controls
+ControlUtil		smlnj-lib/Controls
+ControlRegistry		smlnj-lib/Controls
+
+Formatting		smlnj-lib/PrettyPrint
+PrintFormat		smlnj-lib/PrettyPrint
+
+
+(* ---------------------------- Members [files] ---------------------------- *)
 Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
 [We assume import of basis.cm, so Basis modules are not mentioned.]
 
 
 control/
 elabcontrol.sig
-  <
+  < ELAB_CONTROL
   >
-
 
 elabcontrol.sml
-  <
-  >
+  < ElabControl
+  > ELAB_CONTROL
+    ------------
+    BasicControl*
+    Controls*
+    ControlUtil*
+    ControlRegistry*
 
 mccontrol.sig
-  <
+  < MC_CONTROL
   >
 
 mccontrol.sml
-  <
-  >
+  < MCControl
+  > MC_CONTROL
+    ----------
+    BasicControl*
+    Control*
+    ControlUtil*
+    ControlRegistry*
 
 timeit.sml
-  <
-  >
-
+  < TimeIt
+  > Control_Print*
+    Time*
+    Timer*
 
 types/
 unify.sml
-  <
-  >
+  < UNIFY
+    Unify
+  > ElabControl
+    ElabDebug
+    OverloadClasses
+    ---------------
+    Types*
+    TypesUtil*
+    PPTypes*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
+    PrintFormat*
 
 overloadclasses.sml
-  <
-  >
+  < OverloadClasses
+  > Types*
+    TypesUtil*
+    BasicTypes*
 
 overloadvar.sml
-  <
-  >
+  < OVERLOADVAR
+    OverloadVar
+  > OverloadClasses
+    ---------------
+    Symbol*
+    Types*
+    BasicTypes*
+    TypesUtil*
+    Variable*
+    ErrorMsg*
 
 overload.sml
-  <
-  >
+  < OVERLOAD
+    Overload
+  > ElabDebug
+    OverloadVar
+    -----------
+    Variable*
+    SourceMap*
+    Types*
+    BasicTypes*
+    PPType*
+    PPSymbols*
+    StaticEnv*
+    Formatting*
+    PrintFormat*
+    ErrorMsg*
 
 typecheck.sml
-  <
-  >
-
+  < TYPECHECK
+    Typecheck
+  > MatchComp
+    ElabControl
+    -----------
+    StaticEnv*
+    Absyn*
+    SourceMap*
+    DebIndex*
+    Access*
+    Types*
+    BasicTypes*
+    TypesUtil*
+    Unify*
+    Occurrence*
+    Variable*
+    ElabUtil*
+    ElabDebug*
+    PPSourceMap*
+    PPSymbols*
+    PPType*
+    PPAbsyn*
+    ErrorMsg*
+    Control_Print*
 
 modules/
 sigmatch.sig
-  <
-  >
+  < SIGMATCH
+  > ElabUtil
+    --------
+    DebIndex*
+    InvPath*
+    Absyn*
+    Modules*
+    EntPath*
+    EntPathContext*
+    StaticEnv*
+    SourceMap*
 
 sigmatch.sml
-  <
-  >
+  < SigMatch
+  > SIGMATCH
+    ElabUtil
+    ElabDebug
+    EntPath
+    EntPathContext
+    EvalEntity
+    Instantiate
+    ElabControl
+    -----------
+    DebIndex*
+    Types*
+    TypesUtil*
+    Modules*
+    ModuleUtil*
+    EntityEnv*
+    Variable*
+    Absyn*
+    Bindings*
+    StaticEnv*
+    InvPath*
+    PPSymbols*
+    PPType*
+    PPModules*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
+    PrintFormat*
 
 instantiate.sml
-  <
-  >
+  < INSTANTIATE
+    Instantiate
+  > EntPath
+    ElabUtil
+    ElabDebug
+    ElabControl
+    -----------
+    DebIndex*
+    Stamps*
+    Symbol*
+    SymPath*
+    InvPath*
+    Access*
+    Modules*
+    ModuleUtil*
+    EntityEnv*
+    Types*
+    TypesUtil*
+    SigPropList*
+    StaticEnv*
+    Control_Print*
+    SourceMap*
+    ErrorMsg*
 
 evalent.sml
-  <
-  >
+  < EVALENTITY
+    EvalEntity
+  > EntPath
+    EntPathContext
+    Instantiate
+    ElabUtil
+    ElabDebug
+    ---------
+    DebIndex*
+    Symbol*
+    SpecialSymbols*
+    InvPath*
+    Modules*
+    ModuleUtil*
+    EntityEnv*
+    Control_Print*
+    SourceMap*
+    ErrorMsg*
 
 
 elaborate/
 tyvarset.sml
-  <
-  >
+  < TYVARSET
+    TyvarSet
+  > Symbol*
+    Types*
+    ErrorMsg*
 
 elabutil.sig
-  <
-  >
+  < ELABUTIL
+  > TyvarSet
+    --------
+    CompInfo*
+    Symbol*
+    SymPath*
+    Types*
+    Variable*
+    Absyn*
+    StaticEnv*
+    SourceMap*
+    ErrorMsg*
 
 elabutil.sml
-  <
-  >
+  < ElabUtil
+  > ELABUTIL
+    TyvarSet
+    --------
+    DebIndex*
+    Stamps*
+    Access*
+    Symbol*
+    SpecialSymbols*
+    SymPath*
+    Types*
+    TypesUtil*
+    BasicTypes*
+    Ast*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    Bindings*
+    StaticEnv*
+    Lookup*
+    EntityEnv*
+    EqTypes*
+    CoreAccess*
+    CompInfo*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
+    ListMergeSort*
 
 elabtype.sig
-  <
-  >
+  < ELABTYPE
+  > TyvarSet
+    ElabUtil
+    --------
+    Ast*
+    StaticEnv*
+    InvPath*
+    Types*
+    EntityEnv*
+    ExpandTycon*
+    SourceMap*
+    ErrorMsg*
 
 elabtype.sml
-  <
-  >
+  < ElabType
+  > ELABTYPE
+    ElabUtil
+    ElabControl
+    -----------
+    Symbol*
+    SymPath*
+    InvPath*
+    PathName*
+    Bindings*
+    StaticEnv*
+    Lookup*
+    Ast*
+    Variable*
+    Absyn*
+    Types*
+    TypesUtil*
+    BasicTypes*
+    ElabUtil*
+    TyvarSet*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
 
 precedence.sml
-  <
-  >
+  < PRECEDENCE
+    Precedence
+  > Ast*
+    Symbol*
+    Fixity*
+    StaticEnv*
+    Lookup*
+    SourceMap*
+    ErrorMsg*
 
 elabcore.sml
-  <
-  >
+  < ELABCORE
+    ElabCore
+  > ElabUtil
+    ElabDebug
+    ElabType
+    TyvarSet
+    ElabControl
+    -----------
+    Ast*
+    Symbol*
+    Access*
+    Absyn*
+    SymPath*
+    InvPath*
+    Bindings*
+    StaticEnv*
+    Lookup*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    Types*
+    TypesUtil*
+    BasicTypes*
+    Modules*
+    ModuleUtil*
+    EntityEnv*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
+    SymbolHashTable*
 
 include.sml
-  <
-  >
+  < INCLUDE
+    Include
+  > ElabUtil
+    --------
+    Symbol*
+    Access*
+    Variable*
+    TypesUtil*
+    Modules*
+    ModuleUtil*
+    EntPath*
+    Bindings*
+    StaticEnv*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
 
 elabsig.sml
-  <
-  >
+  < ELABSIG
+    ElabSig
+  > ElabUtil
+    ElabType
+    ElabControl
+    -----------
+    Ast*
+    Symbol*
+    SpecialSymbols*
+    Access*
+    Modules*
+    ModuleUtil*
+    EntPath*
+    EntPathContext*
+    EntityEnv*
+    ExpandTycon*
+    Bindings*
+    SymPath*
+    InvPath*
+    Lookup*
+    StaticEnv*
+    Types*
+    TypesUtil*
+    BasicTypes*
+    Stamps*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
+    ListMergeSort*
 
 elabdebug.sml
-  <
-  >
+  < ELABDEBUG
+    ElabDebug
+  > Symbol*
+    StaticEnv*
+    ElabDataControl*  (?!)
+    Formatting*
+    PrintFormat*
 
 elabmod.sml
-  <
-  >
+  < ELABMOD
+    ElabMod
+  > ElabUtil
+    ElabType
+    ElabCore
+    ElabSig
+    ElabDebug
+    ElabControl
+    TypeCheck
+    ---------
+    DebIndex*
+    Access*
+    Symbol*
+    SpecialSymbols*
+    PPSymbols*
+    InvPath*
+    SymPath*
+    PathName*
+    Ast*
+    PPAst*
+    Variable*
+    Absyn*
+    PPAbsyn*
+    MatchTrans*
+    Types*
+    TypesUtil*
+    Modules*
+    ModuleUtil*
+    PPModules*
+    PPModules_DB*
+    ModuleId*
+    EntPath*
+    EntPathContext*
+    EntityEnv*
+    SigMatch*
+    Instantiate*
+    Bindings*
+    StaticEnv*
+    Lookup*
+    Control_Print*
+    ErrorMsg*
+    Formatting*
+    RedBlackSetFn*
 
 elabtop.sml
-  <
-  >
+  < ELABTOP
+    ElabTop
+  > CheckUnused
+    ElabUtil
+    ElabMod
+    ElabDebug
+    ElabControl
+    -----------
+    Ast*
+    Variable*
+    Absyn*
+    PPAbsyn*
+    Symbol*
+    SymPath*
+    InvPath*
+    PPSymPaths*
+    Access*
+    Types*
+    Modules*
+    ModuleUtil*
+    EntityEnv*
+    EntPath*
+    EntPathContext*
+    Bindings*
+    StaticEnv*
+    Lookup*
+    ErrorMsg*
+    Formatting*
 
 check-unused.sml
-  <
-  >
-
+  < CheckUnused
+  > ElabControl
+    -----------
+    LambdaVar*
+    Variable*
+    Absyn*
+    SourceMap*
+    ErrorMsg*
+    Control_Print*
 
 matchcomp/
 mcstats.sml
-  <
-  >
+  < MCStats
+  > MCCommon
+    MCControl
+    ---------
+    LambdaVar*
+    Control_Print*
+    IntRedBlackMap*
 
 paths.sml
-  <
-  >
+  < Paths
+  > Absyn*
+    AbsynUtil*
+    Types*
+    TypesUtil*
 
 mccommon.sml
-  <
-  >
+  < MCCommon
+  > Paths
+    -----
+    Access*
+    Types*
+    Absyn*
+    IntListSet*
 
 mcutil.sml
-  <
-  >
+  < MCUtil
+  > MCCommon
+    Paths
+    -----
+    LambdaVar*
+    Variable*
+    Absyn*
+    TypesUtil*
+    ErrorMsg*
+    Control_Print*
 
 ppmatchcomp.sml
-  <
-  >
+  < PPMatchComp
+  > MCUtil
+    MCCommon
+    Paths
+    -----
+    LambdaVar*
+    Access*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    PPAbsyn*
+    StaticEnv*
+    Control_Print*
+    ErrorMsg*
+    Formatting*
+    PrintFormat*
 
 matchprint.sml
-  <
-  >
+  < MatchPrint
+  > PPAbsyn*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
 
 protoandor.sml
-  <
-  >
+  < ProtoAndor
+  > MCCommon
+    Paths
+    PPMatchComp
+    -----------
+    Access*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    PPAbsyn*
+    TypesUtil*
+    BasicTypes*
+    Contro_Print*
+    ErrorMsg*
+    Formatting*
+    PrintFormat*
 
 andor.sml
-  <
-  >
+  < Andor
+  > MCCommon
+    Paths
+    PPMatchComp
+    MCControl
+    ---------
+    Types*
+    PPType*
+    Absyn*
+    AbsynUtil*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
+    PrintFormat*
 
 decisiontree.sml
-  <
-  >
+  < DecisionTree
+  > MCCommon
+    Andor
+    MCControl
+    ---------
+    Access*
+    ErrorMsg*
+    Control_Print*
 
 generate.sml
-  <
-  >
+  < Generate
+  > MCCommon
+    Paths
+    MCUtil
+    PPMatchComp
+    MCControl
+    ElabUtil
+    --------
+    Types*
+    PPType*
+    BasicTypes*
+    LambdaVar*
+    Access*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    PPAbsyn*
+    StaticEnv*
+    Primop*
+    Control_Print*
+    ErrorMsg*
+    Formatting*
+    PrintFormat*
 
 preprocessing.sml
-  <
-  >
+  < Preprocessing
+  > MCCommon
+    Paths
+    MCUtil
+    ------
+    Types*
+    TypesUtil*
+    BasicTypes*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    ErrorMsg*
 
 matchcomp.sml
-  <
-  >
+  < MATCH_COMP
+    MatchComp
+  > MCCommon
+    DecisionTree
+    PPMatchComp
+    MCControl
+    MCStats
+    ElabUtil
+    --------
+    Types*
+    BasicTypes*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    PPAbsyn*
+    LambdaVar*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
+    PrintFormat*
 
 matchtrans.sml
-  <
-  >
+  < MatchTrans
+  > MCUtil
+    MatchComp
+    ElabUtil
+    MCControl
+    ---------
+    Symbol*
+    SymPath*
+    Variable*
+    Absyn*
+    AbsynUtil*
+    StaticEnv*
+    Types*
+    TypesUtil*
+    BasicTypes*
+    ErrorMsg*
+    Control_Print*
+    Formatting*
+    PrintFormat*
 
 
-(* ---------------------------- Imports ---------------------------- *) 
+(* ---------------------------- Imports ---------------------------- *)
 
 (* Basis *)
-$smlnj/basis/basis.cm  
+$smlnj/basis/basis.cm
 
 (* smlnj-lib *)
 $smlnj/smlnj-lib/smlnj-lib.cm
-$smlnj/smlnj-lib/controls-lib.cm
-$smlnj/smlnj-lib/prettyprint-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm  (* Controls, ControlUtil, ControlRegistry *)
+$smlnj/smlnj-lib/prettyprint-lib.cm (* Formatting, PrintFormat *)
 
 (* viscomp - other "compiler component libraries" *)
-$smlnj/viscomp/elabdata.cm
 $smlnj/viscomp/basics.cm
 $smlnj/viscomp/parser.cm
-
+$smlnj/viscomp/elabdata.cm

@@ -398,27 +398,28 @@ FLINT/trans/
   transtypes.sml
     < TRANSTYPES
       TransTypes
-    > ErrorMsg*
-      InvPath*
-      Access*
-      Types*
-      BasicTypes*
-      TypesUtil*
-      Modules*
-      EntityEnv*
-      EntPathContext*
-      ModuleUtil*
-      StaticEnv*
-      ElabDebug*
-      EvalEntity*
-      Instantiate*
+    > FLINT_Control  
       Lty
       LtyDef
       LtyBasic
       LtyKernel
       LtyExtern
       PrimTyc
-      FLINT_Control
+      ErrorMsg*
+      InvPath*
+      Access*
+      Types*
+      BasicTypes*
+      TypesUtil*
+      Modules*
+      ModuleUtil*
+      EntityEnv*
+      EvalEntity*
+      EntPathContext*
+      Instantiate*
+      StaticEnv*
+      ElabDebug*
+      CompInfo*
 
   literal-to-num.sml
     < LITERAL_TO_NUM

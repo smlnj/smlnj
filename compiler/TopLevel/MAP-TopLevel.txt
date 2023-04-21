@@ -1,0 +1,446 @@
+compiler/MAP-TL.txt
+
+Map of compiler/TopLevel (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the CPS library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume import of basis.cm and smlnj-lib.cm.] 
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+TopLevel/
+
+toplevel.cm  -- CDF for TopLevel Group/Library
+  [see also $smlnj/viscomp/toplevel.cm (alias and conversion from Group to Library)]
+
+(* ---------------------------- Exports ---------------------------- *) 
+ 
+  signature CONTROL         (* main/control.sig *) 
+  structure Control         (* main/control.sml *)
+
+  signature ENVIRONMENT     (* environ/environ.sig *) 
+  structure Environment     (* environ/environ.sml *)
+
+  signature ENVREF          (* interact/envref.sml *) 
+  structure EnvRef          (* interact/envref.sml *)
+
+  structure CompilerPPTable (* print/compilerpptable.sml *)
+  structure PrintHooks      (* print/printhooks.sml *)
+
+  signature BACKEND         (* backend/backend.sig *)
+  functor BackendFn         (* backend/backend-fn.sml *)
+
+
+(* ---------------------------- Module Index ---------------------------- *) 
+
+LOCAL:
+
+ENVIRONMENT	   environ/environ.sig
+Environment	   environ/environ.sml
+
+ENVREF		   interact/envref.sml 
+EnvRef		   interact/envref.sml 
+EVALLOOP	   interact/evalloop.sig
+EvalLoopF [fct]	   interact/evalloop.sml
+INTERACT  	   interact/interact.sig
+Interact [fct]	   interact/interact.sml
+
+BACKEND	 	   backend/backend.sig
+BackendFn [fct]	   backend/backend.sml
+
+CGCONTROL 	   main/control.sig
+CONTROL		   main/control.sig
+Control_CG	   main/control.sml
+Control		   main/control.sml
+
+CCONFIG		   main/cconfig.sig
+CODE_GENERATOR	   main/code-generator.sig
+COMPILE		   main/compile.sig
+COMPILE0	   main/compile.sig
+TOP_COMPILE	   main/compile.sig
+CompileF [fct]	   main/compile.sml
+
+PPDEC	 	   print/ppdec.sml
+PPDec		   print/ppdec.sml
+PPOBJ		   print/ppobj.sml
+PPObj		   print/ppobj.sml
+PPTABLE		   print/pptable.sml
+PPTable		   print/pptable.sml
+CompilerPPTable	   print/compilerpptable.sml
+PrintHooks	   print/printhooks.sml
+
+
+IMPORTS:
+
+Basics/basics.cm
+ErrorMsg	   Basics/errormsg/erromsg.sml
+Symbol		   Basics/symbol/symbol.sml
+SpecialSymbols	   Basis/symbol/specialsyms.sml
+PPSymbols	   Basics/symbol/ppsymbols.sml  
+Fixity		   Basics/symbol/fixity.sml  
+Source		   Basics/source/source.sml
+SourceMap	   Basics/source/sourcemap.sml
+CompileExn         Basics/compiler/compileexn.sml  
+PersStamps	   Basics/pid/persstamps.sml 
+PersMap		   Basics/pid/persmap.sml
+PRINTCONTROL	   Basics/print/printcontrol.sml 
+Control_Print	   Basics/print/printcontrol.sml
+BASIC_CONTROL	   Basics/control/basiccontrol.sml 
+BasicControl	   Basics/control/basiccontrol.sml
+Stats              Basics/stats/stats.sml 
+
+Parse/parser.cm
+Ast		   Parse/ast/ast.sml
+PPAst		   Parse/ast/ppast.sml
+SmlFile            Parse/main/smlfile.sml
+PARSER_CONTROL	   Parse/main/parsercontrol.sml
+ 
+ElabData/elabdata.cm
+LambdaVar	   ElabData/basics/lambdavar.sml
+Access		   ElabData/basics/access.sml  
+SymPath		   ElabData/basics/sympath.sml
+InvPath		   ElabData/basics/sympath.sml
+PPSymPaths	   ElabData/basics/ppsympaths.sml  
+Stamps		   ElabData/basics/stamps.sml  
+Variable	   ElabData/syntax/variable.sml
+Absyn		   ElabData/syntax/absyn.sml
+PPAbsyn		   ElabData/syntax/ppabsyn.sml 
+Bindings	   ElabData/statenv/bindings.sml   
+StaticEnv	   ElabData/statenv/statenv.sml  
+Lookup		   ElabData/statenv/lookup.sml)  
+GenModIdMap	   ElabData/statenv/genmap.sml   
+Types		   ElabData/types/types.sml  
+TypesUtil	   ElabData/types/typesutil.sml  
+BasicTypes	   ElabData/types/basictypes.sml  
+Modules		   ElabData/modules/modules.sml
+ModuleUtil	   ElabData/modules/moduleutil.sml
+PickMod		   ElabData/pickle/pickmod.sml 
+UnpickMod	   ElabData/pickle/unpickmod.sml 
+Rehash		   ElabData/pickle/rehash.sml 
+ELABDATA_CONTROL   ElabData/main/edcontrol.sig 
+CompInfo	   ElabData/main/compinfo.sml 
+
+Elaborator/elaborate.cm
+ElabDebug	   Elaborator/elaborate/elabdebug.sml
+ElabTop            Elaborator/elaborate/elabtop.sml 
+ELAB_CONTROL	   Elaborator/control/elabcontrol.sig
+ElabControl	   Elaborator/control/elabcontrol.sml
+MC_CONTROL         Elaborator/control/mccontrol.sig
+MCControl          Elaborator/control/mccontrol.sml
+
+FLINT/flint.cm
+FLINTCONTROL	   FLINT/main/control.sig
+FLINT_Control	   FLINT/main/control.sml
+FLINT [str]        FLINT/flint/flint.sml
+translate          FLINT/trans/translate.sml
+FLINTOpt*          FLINT/main/flint-opt.sml
+
+Execution/execute.cm
+CodeObj            Execution/codeobj/code-obj.sml   
+DynamicEnv	   Execution/dynenv/dynenv.sml  
+ImportTree         Execution/main/importtree.sml  
+Isolate		   Execution/main/isolate.sml
+Execute		   Execution/main/execute.sml
+
+DebugProf/debugprof.cm
+PROFILE		   DebugProf/profile/profile.sig   
+SProf              DebugProf/profile/sprof.sml
+TProf              DebugProf/profile/tprof.sml
+TDPInstrument      DebugProf/profile/tdp-instrument.sml 
+
+smlnj-lib/...
+Formatting	   smlnj-lib/PrettyPrint/formatting.sml
+PrintFormat	   smlnj-lib/PrettyPrint/printformat.sml
+PropList	   smlnj-lib/Util/plist.sml 
+Controls	   smlnj-lib/Controls/...
+ControlUtil	   smlnj-lib/Controls/...
+ControlRegistry	   smlnj-lib/Controls/...
+
+SMLofNJ
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
+
+TopLevel/
+
+environ/
+
+  environ.sig
+    < ENVIRONMENT
+    > 
+
+  environ.sml
+    < Environment
+    > Control 
+      ErrorMsg*
+      Access*
+      Symbol*
+      Modules*
+      ModuleUtil*
+      Variable*
+      Types*
+      Bindings*
+      StaticEnv*
+      DynamicEnv*
+      PersMap*
+      Formatting*
+      PrintFormat*
+
+interact/
+
+  envref.sml
+    < ENVREF
+      EnvRef
+    > Symbol*
+      StaticEnv*
+      PropList*
+
+      Environment (TopLevel/environ/environ.sml)
+
+  evalloop.sig
+    < EVALLOOP
+    > EnvRef
+      Symbol*
+      Ast*
+      Control_Print*
+
+  evalloop.sml
+    < EvalLoopF [fct]
+    > Symbol*
+      ErrorMsg*
+      CompileExn*
+      Source*
+      Ast*
+      PPAst*
+      SmlFile*
+      PPAbsyn*
+      StaticEnv*
+      ElabDebug*
+      Isolate*
+      Execute*
+      Formatting*
+      PrintFormat*
+
+      Environment
+      Control
+      TOP_COMPILE
+
+  interact.sig
+    < INTERACT
+    > Ast*
+      Symbol*
+      [SMLofNJ     basis.cm]
+
+      Environment
+      EnvRef
+
+  interact.sml
+    < Interact [fct]
+    > ErrorMsg*
+      [SMLofNJ, OS     basis.cm]
+
+      INTERACT
+      EVALLOOP
+      Environment
+      EnvRef
+      Control
+
+
+TopLevel/backend/
+
+  backend.sig
+    < BACKEND
+    > PROFILE*
+
+      COMPILE
+      INTERACT
+
+  backend-fn.sml
+    < BackendFn
+    > PersStamps*
+      Stamps*
+      PickMod*
+      UnpickMod*
+      GenModIdMap*
+      Rehash*
+      
+      BACKEND
+      CODE_GENERATOR
+      CCONFIG
+      Environment
+
+TopLevel/main/
+
+  control.sig
+    < CGCONTROL
+      CONTROL
+    > PRINTCONTROL*
+      ELABDATA_CONTROL*
+      ELAB_CONTROL*
+      FLINTCONTROL*
+      BASIC_CONTROL*
+      PARSER_CONTROL*
+
+  control.sml
+    < Control_CG
+      Control
+    > BasicControl*
+      ControlRegistry*
+      ControlUtil*
+      Controls*
+      PRINTCONTROL*
+      Control_Print*
+      ELABDATA_CONTROL*
+      ElabDataControl*
+      ELAB_CONTROL*
+      ElabControl*
+      FLINT_Control*
+      MC_CONTROL*
+      MCControl*
+      TDPInstrument*
+
+      CGCONTROL
+      CONTROL
+
+  cconfig.sig
+    < CCONFIG
+    > PersStamps*
+      LambdaVar*
+      Stamps*
+      StaticEnv*
+
+  code-generator.sig
+    < CODE_GENERATOR
+    > FLINT* [str]
+      CodeObj*
+
+  compile.sig
+    < COMPILE0
+      COMPILE
+      TOP_COMPILE
+    > PersStamps*
+      Source*
+      StaticEnv*
+      LambdaVar*
+      CompInfo*
+      Ast*
+      Absyn*
+      CodeObj*
+      ImportTree*
+
+  compile.sml
+    < CompileF [fct]
+    > LambdaVar*
+      StaticEnv*
+      Symbol*
+      Ast*
+      Absyn*
+      CompInfo*
+      Stats*
+      ElabTop*
+      SpecialSymbols*
+      SProf*
+      TProf*
+      TDPInstrument*
+      Translate*
+      FLINTOpt*
+      CodeObj*
+
+      CODE_GENERATOR
+      CCONFIG
+      COMPILE0
+      Control
+
+TopLevel/print/
+
+  ppdec.sml
+    < PPDEC
+      PPDec
+    > Symbol*
+      SymPath*
+      InvPath*
+      Access*
+      Variable*
+      Absyn*
+      LambdaVar*
+      Types*
+      Modules*
+      PPTypes*
+      PPSymbols*
+      PPSymPaths*
+      Lookup*
+      Bindings*
+      ErrorMsg*
+      Formatting*  [smlnj/PrettyPrint]
+      
+      Environment
+      PPObj
+      Control
+      
+  ppobj.sml
+    < PPOBJ
+      PPObj
+    > Symbol*
+      Access*
+      Types*
+      TypesUtil*
+      BasicTypes*
+      Fixity*
+      ErrorMsg*
+      Formatting*
+      [Unsafe           basis.cm]
+
+  pptable.sml
+    < PPTABLE
+      PPTable
+    > ErrorMsg*
+      SourceMap*
+      Symbol*
+      Stamps*
+      SymPath*
+      Types*
+      Formatting* 	[smlnj-lib/PrettyPrint]
+    
+  compilerpptable.sml
+    < CompilerPPTable
+    > PPTable 
+      Formatting*       [smlnj-lib/PrettyPrint]
+     
+      
+    
+  printhooks.sml
+    < PrintHooks
+    > StaticEnv*
+      Absyn*
+      PPAbsyn*
+
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* basics.cm: ErrorMsg, Symbol, SourceMap, PersStamps, ...
+   elabdata.cm: PickMod, UnpickMod, Stamps, SymPath, InvPath,
+                LambdaVar, Ast, Absyn, PPAbsyn, Types, Modules, GenModId, ...
+   elaborate.cm: ElabDebug, ElabControl, MCControl, ...
+   prettyprint-lib.cm: Formatting
+   execute.cm: CodeObj, DynamicEnv, ImportTree, Isolate, Execute
+   basis.cm: Time, SMLofNJ, Unsafe, General, OS 
+   smlnj-lib.cm (smlnj-lib/Util): PropList, ...
+*)
+
+(* Basis *)
+$smlnj/basis/basis.cm  (* Time, SMLofNJ, Unsafe, General  *)
+
+(* smlnj-lib "incorporated" libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* viscomp *)
+$smlnj/viscomp/basics.cm     (or, $compiler/Basics/basics.cm)
+$smlnj/viscomp/elabdata.cm   (or, $compiler/ElabData/elabdata.cm)
+$smlnj/viscomp/parser.cm     (or, $compiler/Parse/parser.cm)  
+$smlnj/viscomp/elaborate.cm  (or, $compiler/Elaborator/elaborate.cm)  
+$smlnj/viscomp/flint.cm      (or, $compiler/FLINT/flint.cm)  
+$smlnj/viscomp/execute.cm    (or, $compiler/Execution/execute.cm) 
+$smlnj/viscomp/debugprof.cm  (or, $compiler/DebugProf/debugprof.cm) 

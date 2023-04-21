@@ -15,7 +15,7 @@ in
 
 datatype link
   = PI of int  (* indexed record/tuple selection *)
-  | VI of int * Types.ty (* indexed vector selection, with vector element type *)
+  | VI of int * T.ty (* indexed vector selection, with vector element type *)
   | DC of AS.con  (* datacon/constant/vector-length discriminator *)
 
 type path = link list   (* from root down to node *)

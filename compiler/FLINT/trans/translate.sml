@@ -41,7 +41,6 @@ local
   structure LB = LtyBasic
   structure LE = LtyExtern  (* aka PLambdaType *)
   structure M  = Modules
-  structure MC = MatchComp
   structure PO = Primop
   structure PP = Formatting
   structure PPA = PPAbsyn
@@ -52,7 +51,6 @@ local
   structure TRU = TransUtil
   structure T = Types
   structure TU = TypesUtil
-  structure EU = ElabUtil
   structure Tgt = Target
   structure PP = Formatting
   structure PF = PrintFormat

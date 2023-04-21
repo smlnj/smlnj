@@ -13,32 +13,11 @@ Group
         signature MC_CONTROL
         structure MCControl
 
-	signature BASICTYPES
-	signature INSTANTIATE
-	signature EVALENTITY
-	signature ELABTOP
-	signature UNIFY
-	signature TYPECHECK
-	signature SIGMATCH
-
 	structure Instantiate
 	structure EvalEntity
-	structure SigMatch
-	structure ElabMod
 	structure ElabTop
 
-	structure MCCommon
-	structure Andor
-	structure DecisionTree
-        structure MCUtil
-	structure MatchComp
-        structure PPMatchComp
-
-	structure BasicTypes
-	structure ElabUtil
 	structure ElabDebug
-	structure Unify
-	structure Typecheck
 
 is
 
@@ -86,6 +65,7 @@ is
         matchcomp/preprocessing.sml
         matchcomp/matchcomp.sml
         matchcomp/matchtrans.sml
+
 
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/basics.cm

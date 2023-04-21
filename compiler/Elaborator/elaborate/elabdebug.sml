@@ -16,11 +16,11 @@ structure ElabDebug : ELABDEBUG =
 struct
 
 local
+
   structure S  = Symbol
   structure SE = StaticEnv
   structure PP = Formatting
   structure PF = PrintFormat
-  structure EM = ErrorMsg
 
 in
 

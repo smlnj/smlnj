@@ -11,8 +11,8 @@ sig
                         tpsTyc : int -> Types.tycpath -> Lty.tyc,
                         toTyc  : int -> Types.ty -> Lty.tyc,
                         toLty  : int -> Types.ty -> Lty.lty,
-                        strLty : Modules.Structure * int * ElabUtil.compInfo -> Lty.lty,
-                        fctLty : Modules.Functor * int * ElabUtil.compInfo -> Lty.lty}
+                        strLty : Modules.Structure * int * CompInfo.compInfo -> Lty.lty,
+                        fctLty : Modules.Functor * int * CompInfo.compInfo -> Lty.lty}
      (* int = deBruijn context *)
 
 end (* signature TRANSTYPES *)
@@ -22,7 +22,6 @@ structure TransTypes : TRANSTYPES =
 
     structure BT = BasicTypes
     structure DA = Access
-    structure ED = ElabDebug
     structure EE = EntityEnv
     structure EM = ErrorMsg
     structure EPC = EntPathContext
@@ -34,7 +33,7 @@ structure TransTypes : TRANSTYPES =
     structure LK = LtyKernel
     structure LD = LtyDef
     structure LB = LtyBasic
-    structure LE = LtyExtern (* == PLambdaType *)
+    structure LE = LtyExtern
     structure PT = PrimTyc
     structure MU = ModuleUtil
     structure SE = StaticEnv

@@ -7,7 +7,7 @@
  * redirected as Library in $smlnj/viscomp/toplevel.cm
  *)
 
-Group
+Group  (* Library? *)
 
   (* Exports: re-exported by new-core.cm; more exports needed? *)
 
@@ -62,16 +62,21 @@ TopLevel/print/printhooks.sml
    basis.cm: Time, SMLofNJ, Unsafe, ...
 *)
 
-(* viscomp *)
-$smlnj/viscomp/basics.cm    (* PersStamps, Symbol, ErrorMsg *)
-$smlnj/viscomp/elabdata.cm  (* Stamps, PickMod, UnpickMod, GenModIdMap *)
-$smlnj/viscomp/elaborate.cm (* ElabDebug *)
-
 (* Basis *)
 $smlnj/basis/basis.cm  (* Time, SMLofNJ, Unsafe, etc. *)
 
-(* smlnj-lib "incorporated" libraries *)
+(* smlnj-lib *)
 $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* compiler components accessed via viscomp *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/parser.cm
+$smlnj/viscomp/elaborate.cm
+$smlnj/viscomp/flint.cm
+$smlnj/viscomp/execute.cm
+$smlnj/viscomp/debugprof.cm
+
 
