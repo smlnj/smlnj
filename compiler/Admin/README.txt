@@ -35,6 +35,17 @@ stats/
 CM description file: Admin/admin.cm
 
 
+Need to consider alternative names (JHR objects to Admin). Possibilities: 
+
+  Infrastructure (No -- too long)
+  Config (No -- not quite appropriate)
+  General
+  Common
+  Support
+
+But want to keep this stuff separate from what we want to put into "Basic", which are
+facilities that actually are used in compilation, per se. Thus 
+
 ------------------------------------------------------------------------------------------
 Changes:
 
