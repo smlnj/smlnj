@@ -44,7 +44,7 @@ Need to consider alternative names (JHR objects to Admin). Possibilities:
   Support
 
 But want to keep this stuff separate from what we want to put into "Basic", which are
-facilities that actually are used in compilation, per se. Thus 
+facilities that actually are used in compilation, per se, such as Symbols. 
 
 ------------------------------------------------------------------------------------------
 Changes:
