@@ -1,4 +1,4 @@
-compiler/MAP-CPS.txt
+compiler/CPS/MAP-CPS.txt
 
 Map of CPS (as a "library")
 
@@ -36,8 +36,8 @@ CPSUtil*	   cps/cps-util.sml
 PPCps*		   cps/ppcps.sml
 CPSUtil		   cps/cps-util.sml
 
-MACH_SPEC* [sig]   main/mach-spec.sig (?)
-CPS_COMP [sig]	   main/cps-comp.sml
+MACH_SPEC*         main/mach-spec.sig (?)
+CPS_COMP	   main/cps-comp.sml
 CPSCompFn* [fct]   main/cps-comp.sml
 Cluster	   	   main/cluster.sml
 NormalizeCluster   main/normalize-cluster.sml
@@ -118,111 +118,116 @@ ConstArith	   Library/const-arith/const-arith.sml
 
 (* ---------------------------- Members [files] ---------------------------- *) 
 
-CPS/main/
-  cluster.sml    (* move to NewCodeGen/main? [DBM: No! used in cps-comp.sml) *)
-    < Cluster
-    > LambdaVar*  elabdata.cm
-      Control*    toplevel.cm 
+CPS/
 
-      CPS         CPS/cps/cps.sml
-      PPCps       CPS/cps/ppcps.sml
+main/
+
+  cluster.sml    ["competes" in core.cm with NCG/cps-to-cfg/cluster.sml!])
+    < Cluster
+    > LambdaVar*    elabdata.cm
+      Control*      toplevel.cm 
+
+      CPS           CPS/cps/cps.sml
+      PPCps         CPS/cps/ppcps.sml
       NormalizeCluster   CPS/main/normalize-cluster.sml
 
   cps-comp.sml
     < CPS_COMP
-      CPSCompFn [fct]
-    > FLINT*      flint.cm
-      Control*    toplevel.cm 
-      LambdaVar*  elabdata.cm
+      CPSCompFn
+    > CPS [str]
+      PPCps
+      MACH_SPEC
+      Cluster        ["competes" with NCG/cps-to-cfg/cluster.sml!])
+      Spill [fct]
+      Literals
+      NewLiterals
+      Limit
+      Convert [fct]
+      CPStrans [fct]
+      CPSopt [fct]
+      Closure [fct]
+      GlobalFix
+      ---------
+      FLINT* [str]
+      Control*
+      LambdaVar*
 
-      [CPStoCFGFn* [fct] newcodegen.cm (NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml)  
-       PPCfg*      newcodegen.cm (NewCodeGen/cfg/ppcfg.sml)
-       CFGPickler* newcodegen.cm (NewCodeGen/cfg-pickle/cfg-pickler.sml)
-       -- in debugging code that is commented out]
-
-      CPS [str]      (CPS/cps/cps.sml) 
-      PPCps          (CPS/cps/ppcps.sml) 
-      MACH_SPEC      (CPS/main/mach-spec.sig) 
-      Cluster        (CPS/main/cluster.sml; [not the same as NewCodeGen/cps-to-cfg/cluster.sml!])
-      Spill [fct]    (CPS/main/spill-fn.sml) 
-      Literals       (CPS/main/literals.sml) 
-      NewLiterals    (CPS/main/new-literals.sml) 
-      Limit          (CPS/main/limit.sml) 
-      Convert [fct]  (CPS/convert/convert.sml)
-      CPStrans [fct] (CPS/convert/cpstrans.sml)
-      CPSopt [fct]   (CPS/opt/cpsopt.sml)
-      Closure [fct]  (CPS/clos/closure.sml)
-      GlobalFix      (CPS/clos/globalfix.sml)
+      [former dependencies on modules defined in NCG (CodeGen):
+       CPStoCFGFn* [fct]    NCG/cps-to-cfg/cps-to-cfg-fn.sml
+       PPCfg*               NCG/cfg/ppcfg.sml
+       CFGPickler*          NCG/cfg-pickle/cfg-pickler.sml
+       -- these appeared in debugging code that is now commented out]
 
   feedback.sml
     < Feedback
-    > LambdaVar*  elabdata.cm
-      ErrorMsg*   basics.cm
+    > LambdaVar*
+      ErrorMsg*
 
   limit.sml
     < Limit
-    > LambdaVar* elabdata.cm
-      Control*   toplevel.cm 
-      ErrorMsg*  basics.cm 
-      Target*    basics.cm 
-      RealLit*   basics.cm (Basics/reals/real-lit.sml)
-
-      CPS [str]      (CPS/cps/cps.sml)
-      Cluster        (CPS/main/cluster.sml)
-      Feedback       (CPS/main/feedback.sml)
+    > CPS [str]
+      Cluster
+      Feedback
+      ----------
+      LambdaVar*
+      Control*
+      ErrorMsg*
+      Target*
+      RealLit*
 
   literals.sml
     < LITERALS
       Literals
-    > LambdaVar* elabdata.cm
-      ErrorMsg*  basics.cm
-      Control*   toplevel.cm 
+    > ----------
+      LambdaVar*
+      ErrorMsg*
+      Control*
 
   new-literals.sml
     < NewLiterals
-    > LambdaVar* elabdata.cm
-      Control*   toplevel.cm 
-      Target*    basics.cm 
-      ErrorMsg*  basics.cm 
-      RealConst* basics.cm
-      IntConst*  basics.cm
-
-      CPS [str]      (CPS/cps/cps.sml) 
-      PPCps          (CPS/cps/ppcps.sml) 
-      LITERALS       (CPS/main/literals.sml)
+    > CPS [str]
+      PPCps
+      LITERALS
+      ---------
+      LambdaVar*
+      Control*
+      Target*
+      ErrorMsg*
+      RealConst*
+      IntConst*
 
   normalize-cluster.sml
     < NormalizeCluster
-    > LambdaVar* elabdata.cm
-      ErrorMsg*  basics.cm 
-
-      CPS [str]      (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      ErrorMsg*
 
   spill-fn.sml
     < SPILL
       SpillFn
-    > LambdaVar*  elabdata.cm 
-      Control*    toplevel.cm 
-      Control_GC* toplevel.cm 
-      ErrorMsg*   basics.cm 
-      Target*     basics.cm 
-
-      CPS [str]      (CPS/cps/cps.sml) 
-      CPSUtil        (CPS/cps/cps-util.sml) 
-      MACH_SPEC      (CPS/main/mach-spec.sig) 
-
+    > CPS [str]
+      CPSUtil
+      MACH_SPEC
+      ----------
+      LambdaVar*
+      Control*
+      Control_GC*
+      ErrorMsg*
+      Target*
+      
   object-desc.sig
     < OBJECT_DESC
     >
 
   object-desc.sml
     < ObjectDesc
-    > Target*     basics.cm
+    > -------
+      Target*
 
   mach-spec.sig
     < MACH_SPEC
-    > 
-      OBJECT_DESC (CPS/main/object-desc.sig)
+    > OBJECT_DESC
 
 
 CPS/clos/
@@ -230,258 +235,262 @@ CPS/clos/
   globalfix.sml
     < GLOBALFIX
       GlobalFix
-    > CPS [str]      (CPS/cps/cps.sml) 
+    > CPS [str]
 
   closure.sml
     < CLOSURE
       Closure [fct]
-    > LambdaVar*  elabdata.cm 
-      Control*    toplevel.cm 
-      Target*     basics.cm 
-
-      CPS [str]        (CPS/cps/cps.sml) 
-      CPSUtil          (CPS/cps/cps-util.sml) 
-      StaticProf [fct] (CPS/clos/staticprof.sml)
-      MACH_SPEC        (CPS/main/mach-spec.sig)
+    > CPS [str]
+      MACH_SPEC 
+      CPSUtil
+      StaticProf [fct]
+      ----------
+      LambdaVar*
+      Control*
+      Target*
 
   freeclose.sml
     < FREECLOSE
       FreeClose
-    > LambdaVar*  elabdata.cm 
-      Access*     elabdata.cm
-      Control*    toplevel.cm 
-
-      CPS [str]      (CPS/cps/cps.sml) 
-      CPSUtil        (CPS/cps/cps-util.sml) 
+    > CPS [str]
+      CPSUtil
+      ----------
+      LambdaVar*
+      Access*
+      Control*
 
   staticprof.sml
     < STATICPROF
       StaticProf [fct]
-    > Control*    toplevel.cm 
-
-      CPS [str]      (CPS/cps/cps.sml) 
-      MACH_SPEC      (CPS/main/mach-spec.sig)
+    > CPS [str]
+      MACH_SPEC
+      --------
+      Control*
 
   unrebind.sml
     < UNREBIND
       UnRebind
-    > LambdaVar*  elabdata.cm 
-      ErrorMsg*   basics.cm 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      ErrorMsg*
 
-      CPS [str]      (CPS/cps/cps.sml) 
-
-
-CPS/convert/
+      
+convert/
 
   convert.sml
     < CONVERT
       Convert [fct]
-    > Access*, LambdaVar* elabdata.cm
-      Lty*, LtyDef*, LtyBasic*, LtyExtern*, FunRecMeta*, FLINT*, FlintUtil*   flint.cm
-      PLambda*    flint.cm
-      Primop*     elabdata.cm (ElabData/prim/primop.sml)
-
-      CPS [str]   CPS/cps/cps.sml
-      CPSUtil     CPS/cps/cps-util.sml
-      MACH_SPEC   CPS/main/mach-spec.sig
+    > CPS [str]
+      CPSUtil
+      MACH_SPEC
+      -------
+      Access*
+      LambdaVar*
+      Lty*, LtyDef*, LtyBasic*, LtyExtern*, FunRecMeta*, FLINT*, FlintUtil*
+      PLambda*
+      Primop*
 
   cpstrans.sml
     < CPStrans [fct]
-    > LambdaVar*  elabdata.cm 
-      ErrorMsg*   basics.cm 
-
-      CPS [str]   CPS/cps/cps.sml
-      MACH_SPEC   CPS/main/mach-spec.sig
+    > CPS [str]
+      MACH_SPEC
+      ----------
+      LambdaVar*
+      ErrorMsg*
 
   switch.sml
     < Switch
-    > LambdaVar*  elabdata.cm 
-      ErrorMsg*   basics.cm 
-      Access*     elabdata.cm
-      FLINT*      flint.cm
+    > CPS [str]
+      ----------
+      LambdaVar*
+      ErrorMsg*
+      Access*
+      FLINT*
 
-      CPS [str]   CPS/cps/cps.sml
 
-CPS/cps
+cps/
+
   cps.sig
     < CPS [sig]
-    > RealConst*  basics.cm
-      IntConst*   basics.cm
+    > RealConst*
+      IntConst*
 
   cps.sml
     < CPS [str]
-    > RealConst*  basics.cm
-      IntConst*   basics.cm
+    > RealConst*
+      IntConst*
 
   ppcps.sml
     < PPCPS
       PPCps
-    > LambdaVar*    elabdata.cm 
-      Lty*          flint.cm  (not used)
-      Formatting*   prettyprint-lib.cm
-
-      CPS [str]     CPS/cps/cps.sml
-      CPSUtil       CPS/cps/cps-util.sml
+    > CPS [str]
+      CPSUtil
+      ----------
+      LambdaVar*
+      Lty*
+      Formatting*
 
   cps-util.sml
     < CPSUtil
-    > Lty*, LtyDef*, LtyBasic*, LtyKernel*, PrimTyc*  flint.cm
-      ErrorMsg*   basics.cm 
-      Target*     basics.cm 
+    > CPS [str]
+      ---------
+      Lty*, LtyDef*, LtyBasic*, LtyKernel*, PrimTyc*
+      ErrorMsg*
+      Target*
 
-      CPS [str]      CPS/cps/cps.sml
- 
 
 CPS/opt/
 
   contract.sml
     < CONTRACT
       Contract
-    > LambdaVar*   elabdata.cm
-      LtyBasic*    flint.cm
-      ConstArith*  Library/const-arith/sources.cm [core.cm]
-      Control*     toplevel.cm 
-      ErrorMsg*    basics.cm 
-      Target*      basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
-      CPSUtil      (CPS/cps/cps-util.sml) 
-      PPCps	   (CPS/cps/ppcps.sml 
+    > CPS [str]
+      CPSUtil
+      PPCps
+      ----------
+      LambdaVar*
+      LtyBasic*
+      ConstArith*
+      Control*
+      ErrorMsg*
+      Target*
 
   contract-prim.sml
     < ContractPrim
-    > ConstArith*  [Library/const-arith/sources.cm]
-      ErrorMsg*    basics.cm 
-      Target*      basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
-      CPSUtil      (CPS/cps/cps-util.sml) 
-      PPCps	   (CPS/cps/ppcps.sml 
+    > CPS [str]
+      CPSUtil
+      PPCps
+      -----------
+      ConstArith*
+      ErrorMsg*
+      Target*
 
   cpsopt.sml 
     < CPSOPT
       CPSopt [fct]
-    > Control*     toplevel.cm 
-
-      CPS [str]     (CPS/cps/cps.sml) 
-      Contract      (CPS/opt/contract.sml)
-      Flatten [fct] (CPS/opt/flatten.sml)
-      Uncurry [fct] (CPS/opt/uncurry.sml)
-      Expand        (CPS/opt/expand.sml)  [CK]
-      Eta           (CPS/opt/eta.sml)
-      EtaSplit      (CPS/opt/etasplit.sml)
-      PPCps	    (CPS/cps/ppcps.sml 
-      MACH_SPEC     (CPS/main/mach-spec.sig) 
+    > CPS [str]
+      Contract
+      Flatten [fct]
+      Uncurry [fct]
+      Expand
+      Eta
+      EtaSplit
+      PPCps
+      MACH_SPEC
+      ---------
+      Control*
 
   divcnv.sml
     < DivCnv
-    > LambdaVar*   elabdata.cm
-      ErrorMsg*    basics.cm 
-      Target*      basics.cm 
-
-      CPS [str]     (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      ErrorMsg*
+      Target*
 
   eta.sml
     < ETA
       Eta
-    > LambdaVar*   elabdata.cm 
-      Control*     toplevel.cm 
-
-      CPS [str]     (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      Control*
 
   etasplit.sml
     < ETASPLIT
       EtaSplit
-    > LambdaVar*   elabdata.cm 
-      Control*     toplevel.cm 
-
-      CPS [str]     (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      Control*
 
   expand.sml
     < EXPAND
       Expand
-    > LambdaVar*   elabdata.cm 
-      Control*     toplevel.cm 
-      ErrorMsg*    basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
-      MACH_SPEC    (CPS/main/mach-spec.sig) 
+    > CPS [str]
+      MACH_SPEC
+      ----------
+      LambdaVar*
+      Control*
+      ErrorMsg*
 
   flatten.sml
     < FLATTEN
       Flatten [fct]
-    > LambdaVar*   elabdata.cm 
-      Control*     toplevel.cm 
-      ErrorMsg*    basics.cm 
-      LtyExtern*   flint.cm
-
-      CPS [str]    (CPS/cps/cps.sml) 
-      MACH_SPEC    (CPS/main/mach-spec.sig) 
+    > CPS [str]
+      MACH_SPEC
+      ----------
+      LambdaVar*
+      Control*
+      ErrorMsg*
+      LtyExtern*
 
   infcnv.sml
     < IntInfCnv
-
-      CPS [str]     (CPS/cps/cps.sml) 
-      TestCnv       (CPS/opt/testcnv.sml 
+    > CPS [str]
+      TestCnv
 
   lower.sml
     < LowerCPS
-    > LambdaVar*   elabdata.cm 
-      Target*      basics.cm 
-      ErrorMsg*    basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
-      Num64Cnv     (CPS/opt/num64cnv.sml)
-      StrEqlCnv    (CPS/opt/streqlcnv.sml)
-      IntInfCnv    (CPS/opt/infcnv.sml)
-      TestCnv      (CPS/opt/testcnv.sml 
+    > CPS [str]
+      Num64Cnv
+      StrEqlCnv
+      IntInfCnv
+      TestCnv
+      ----------
+      LambdaVar*
+      Target*
+      ErrorMsg*
 
   num64cnv.sml
     < Num64Cnv
-    > LambdaVar*   elabdata.cm 
-      Target*      basics.cm 
-      ErrorMsg*    basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      Target*
+      ErrorMsg*
 
   streqlcnv.sml
     < StrEqlCnv
-    > LambdaVar*   elabdata.cm 
-      Target*      basics.cm 
-      ErrorMsg*    basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      Target*
+      ErrorMsg*
     
   testcnv.sml
     < TestCnv
-    > LambdaVar*   elabdata.cm 
-      Target*      basics.cm 
-      ErrorMsg*    basics.cm 
-
-      CPS [str]    (CPS/cps/cps.sml) 
+    > CPS [str]
+      ----------
+      LambdaVar*
+      Target*
+      ErrorMsg*
 
   uncurry.sml
     < Uncurry [fct]
-    > LambdaVar*   elabdata.cm 
-      ErrorMsg*    basics.cm 
-      Control*     toplevel.cm 
-      LtyDef       flint.cm
-      LtyBasic	   flint.cm
+    > CPS [str]
+      ETASPLIT
+      MACH_SPEC
+      ----------
+      LambdaVar*
+      ErrorMsg*
+      Control*
+      LtyDef*
+      LtyBasic*
 
-      CPS [str]    (CPS/cps/cps.sml) 
-      ETASPLIT     (CPS/opt/etasplit.sml)
-      MACH_SPEC    (CPS/main/mach-spec.sig)
+      
 
 (* ---------------------------- Imports ---------------------------- *) 
 
   basics.cm:    Target, ErrorMsg, RealConst, IntConst
   elabdata.cm:  LambdaVar, Primop, Access
   flint.cm:     Lty, LtyDef, LtyBasic, LtyKernel, PrimTyc, FunRecMeta,
-                PLambda, FLINT, FlintUtil
+                PLambda, FLINT [str], FlintUtil
   toplevel.cm:  Control, Control_CG
   prettyprint-lib.cm: PrettyPrint
   Library/const-arith/sources.cm [core.cm]: ConstArith
 
-  -- eliminated (circular) dependence on newcodegen.cm:
+  -- eliminated (circular) dependence on codegen.cm:
      (1) moved MACH_SPEC, OBJECT_DESC, ObjectDesc from NewCodeGen/main to CPS/main
      (2) edited CPS/main/cps-comp to comment out debugging code dependent on CFG
