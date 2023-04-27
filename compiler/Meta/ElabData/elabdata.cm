@@ -1,0 +1,184 @@
+(* compiler/ElabData/elabdata.cm
+ *
+ * (C) 2001 Lucent Technologies, Bell Labs
+ *
+ * A group(!) defining data structures used by the SML/NJ elaborator.
+ *)
+
+Group
+
+	(* ElabData/main *)
+	signature ELABDATA_CONTROL
+	structure ElabDataControl
+	structure CompInfo
+
+	(* ElabData/basics *)
+	structure Access
+	structure DebIndex
+	structure SymPath
+	structure InvPath
+	structure ConvertPaths
+        structure PathName
+        structure PPSymPaths
+	structure TKind
+	structure CoreSym
+	structure SigPropList
+	structure LambdaVar
+	structure Stamps
+	structure StampMap
+
+	(* ElabData/types *)
+	structure ConRep
+	structure Types
+	structure PPType
+        structure Occurrence
+	structure TypesUtil
+	structure Tuples
+	structure BasicTypes
+
+	(* ElabData/modules *)
+	structure Modules
+	structure ModuleUtil
+	structure PPModules
+	structure PPModules_DB
+	structure ModuleId
+	structure EntPath
+	structure EntityEnv
+	structure EntPathContext
+	structure ExpandTycon
+	structure EqTypes
+
+	(* ElabData/statenv *)
+	structure Bindings
+	structure StaticEnv
+	structure Lookup
+	structure GenModIdMap
+	structure CoreAccess
+	structure BrowseStatEnv
+
+	(* ElabData/syntax *)
+	structure Absyn
+	structure PPAbsyn
+	structure AbsynUtil
+	structure Variable
+	structure PPVal
+
+        (* ElabData/prim *)
+	structure Primop
+	structure PrimopId
+	structure PrimEnv
+	structure PPPrim
+	structure ArithOps
+	structure PrimopUtil
+	structure PrimopBind
+	structure CProto
+	structure CTypes
+
+	(* ElabData/pickle *)
+	structure PickMod
+	structure UnpickMod
+	structure Rehash
+	structure PickleSymPid   (* used CM/smlfile/skel-io.sml *)
+	structure UnpickleSymPid (* used CM/smlfile/skel-io.sml *)
+is
+	main/edcontrol.sig
+	main/edcontrol.sml
+	main/compinfo.sml
+
+	basics/debindex.sig
+	basics/debindex.sml
+	basics/lambdavar.sig
+	basics/lambdavar.sml
+	basics/access.sig
+	basics/access.sml
+	basics/env.sig
+	basics/env.sml
+	basics/stamps.sig
+	basics/stamps.sml
+	basics/stampmap.sml
+	basics/coresym.sml
+	basics/sympaths.sig
+	basics/sympaths.sml
+        basics/pathname.sml
+        basics/ppsympaths.sml
+	basics/tkind.sml
+	basics/sig-plist.sml
+
+	syntax/absyn.sig
+	syntax/absyn.sml
+	syntax/ppabsyn.sml
+	syntax/variable.sig
+	syntax/variable.sml
+	syntax/absynutil.sml
+	syntax/ppval.sml
+
+	types/types.sig
+	types/types.sml
+	types/pptype.sml
+	types/tuples.sml
+	types/basictypes.sig
+	types/basictypes.sml
+	types/occ.sig
+	types/occ.sml
+	types/typesutil.sig
+	types/typesutil.sml
+	types/conrep.sml
+
+	modules/modules.sig
+	modules/modules.sml
+	modules/ppmod.sml
+	modules/ppmod-db.sml
+	modules/entpath.sml
+	modules/epcontext.sml
+	modules/moduleutil.sig
+	modules/moduleutil.sml
+	modules/moduleid.sml
+	modules/entityenv.sig
+	modules/entityenv.sml
+	modules/eqtypes.sml
+	modules/expandtycon.sml
+
+	statenv/bindings.sig
+	statenv/bindings.sml
+	statenv/statenv.sig
+	statenv/statenv.sml
+	statenv/lookup.sig
+	statenv/lookup.sml
+	statenv/genmap.sml
+	statenv/coreacc.sml
+	statenv/browse.sml
+
+	prim/arithops.sml
+	prim/primop.sig
+	prim/primop.sml
+	prim/primop-bind.sml
+	prim/primop-id.sig
+	prim/primop-id.sml
+	prim/primop-util.sml
+	prim/ppprim.sml
+	prim/cproto.sml
+	prim/c-types.sml
+	prim/primop-bindings.sml
+	prim/prim-env.sml
+
+        (* pickling and unpickling *)
+	pickle/pickle-sym-pid.sml
+        pickle/unpickle-sym-pid.sml
+        pickle/pickmod.sml
+        pickle/unpickmod.sml
+        pickle/rehash.sml
+
+        (* ---------------------- Imports --------------------- *)
+
+        (* "imported" libraries *)
+	$smlnj/basis/basis.cm  (* Basis library *)
+        $/pickle-lib.cm        (* pickle library, for pickle code *)
+
+        (* viscomp libraries *)
+	$smlnj/viscomp/basics.cm  (* from $compiler/Basics/basics.cm *)
+	$smlnj/viscomp/parser.cm  (* from $compiler/Parse/parser.cm *)
+
+        (* "incorporated" smlnj-lib libraries *)
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm
+	$smlnj/smlnj-lib/prettyprint-lib.cm

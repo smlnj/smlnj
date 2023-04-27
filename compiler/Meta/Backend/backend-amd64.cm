@@ -1,0 +1,27 @@
+(* backend-amd64.cm
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * This is the AMD64-specific (aka x86-64) part (backend) of the compiler.
+ *
+ * The present file is a group which gets referred to by the actual library
+ * file in system/smlnj/viscomp/amd64.cm.
+ *)
+
+Group
+  structure AMD64StdCallBackend
+  structure AMD64CCallBackend
+is
+
+  TopLevel/backend/amd64-stdcall.sml (* AMD64StdCallBackend *)
+  TopLevel/backend/amd64-ccall.sml   (* AMD64CCallBackend *)
+
+  NewCodeGen/targets/amd64-spec.sml
+
+  (* Basis *)
+  $smlnj/basis/basis.cm
+
+  (* viscomp *)
+  $smlnj/viscomp/toplevel.cm (* BackendFn *)
+  $smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)

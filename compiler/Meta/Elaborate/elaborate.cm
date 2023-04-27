@@ -1,0 +1,78 @@
+(* elaborate.cm
+ *
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ * 
+ * Elaboration modules
+ * Redirected as Library in $smlnj/viscomp/elaborate.cm
+ *)
+
+Group
+        signature ELAB_CONTROL
+	structure ElabControl
+        signature MC_CONTROL
+        structure MCControl
+
+	structure Instantiate
+	structure EvalEntity
+	structure ElabTop
+
+	structure ElabDebug
+
+is
+
+	control/elabcontrol.sig
+	control/elabcontrol.sml
+	control/mccontrol.sig
+	control/mccontrol.sml
+        control/timeit.sml
+
+	types/unify.sml
+	types/overloadclasses.sml
+	types/overloadvar.sml
+	types/overload.sml
+	types/typecheck.sml
+
+        modules/sigmatch.sig
+	modules/sigmatch.sml
+	modules/instantiate.sml
+	modules/evalent.sml
+
+	elaborate/tyvarset.sml
+	elaborate/elabutil.sig
+	elaborate/elabutil.sml
+	elaborate/elabtype.sig
+	elaborate/elabtype.sml
+	elaborate/precedence.sml
+	elaborate/elabcore.sml
+	elaborate/include.sml
+	elaborate/elabsig.sml
+	elaborate/elabdebug.sml
+	elaborate/elabmod.sml
+	elaborate/elabtop.sml
+	elaborate/check-unused.sml
+
+	matchcomp/mcstats.sml
+	matchcomp/paths.sml
+        matchcomp/mccommon.sml
+	matchcomp/mcutil.sml
+	matchcomp/ppmatchcomp.sml
+        matchcomp/matchprint.sml
+        matchcomp/protoandor.sml
+        matchcomp/andor.sml
+        matchcomp/decisiontree.sml
+        matchcomp/generate.sml
+        matchcomp/preprocessing.sml
+        matchcomp/matchcomp.sml
+        matchcomp/matchtrans.sml
+
+
+	$smlnj/viscomp/elabdata.cm
+	$smlnj/viscomp/basics.cm
+	$smlnj/viscomp/parser.cm
+
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm
+        $smlnj/smlnj-lib/prettyprint-lib.cm
+
+	$smlnj/basis/basis.cm
