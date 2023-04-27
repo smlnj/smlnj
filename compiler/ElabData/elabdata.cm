@@ -78,7 +78,8 @@ Group
 	structure PickMod
 	structure UnpickMod
 	structure Rehash
-
+	structure PickleSymPid   (* used CM/smlfile/skel-io.sml *)
+	structure UnpickleSymPid (* used CM/smlfile/skel-io.sml *)
 is
 	main/edcontrol.sig
 	main/edcontrol.sml

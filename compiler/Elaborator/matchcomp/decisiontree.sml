@@ -1,4 +1,4 @@
-(* FLINT/trans/decisiontree.sml *)
+(* Elaborator/matchcomp/decisiontree.sml *)
 (* revised "old" match compiler *)
 
 (* building decision trees *)

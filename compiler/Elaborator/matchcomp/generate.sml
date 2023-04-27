@@ -1,4 +1,4 @@
-(* FLINT/trans/generate.sml *)
+(* Elaborator/matchcomp/generate.sml *)
 (* based on revised "old" match compiler *)
 
 (* generation of "code" (in the form of PLambda.lexp) from decision trees (type dectree) *)

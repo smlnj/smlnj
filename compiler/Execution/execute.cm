@@ -34,5 +34,6 @@ is
 	binfile/binfile.sig
 	binfile/binfile.sml
 
-	$smlnj/viscomp/basics.cm
+
 	$smlnj/basis/basis.cm
+	$smlnj/viscomp/basics.cm

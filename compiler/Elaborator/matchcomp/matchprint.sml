@@ -1,4 +1,4 @@
-(* FLINT/trans/matchprint.sml *)
+(* Elaborator/matchcomp/matchprint.sml *)
 (* pattern printing (using PPAbsyn.ppPat) *)
 
 structure MatchPrint =

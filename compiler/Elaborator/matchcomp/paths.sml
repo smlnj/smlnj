@@ -1,4 +1,4 @@
-(* FLINT/match/paths.sml *)
+(* Elaborator/matchcomp/paths.sml *)
 
 structure Paths =
 struct

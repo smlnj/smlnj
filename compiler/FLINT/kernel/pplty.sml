@@ -250,13 +250,13 @@ fun fmtLty pd (lty: LT.lty) =
     end (* fmtLty *)
 
 fun ppTKind pdepth (tkind: Lty.tkind) =
-    PF.render (fmtTKind pdepth tkind, say, !lineWidth)
+    PF.render (fmtTKind pdepth tkind, !lineWidth)
 
 fun ppTyc pdepth (tyc: Lty.tyc) =
-    PF.render (fmtTyc pdepth tyc, say, !lineWidth)
+    PF.render (fmtTyc pdepth tyc, !lineWidth)
 
 fun ppLty pdepth (lty: Lty.lty) =
-    PF.render (fmtLty pdepth lty, say, !lineWidth)
+    PF.render (fmtLty pdepth lty, !lineWidth)
 
 end (* top local *)
 end (* structure PPLty *)

@@ -4,8 +4,8 @@
  * All rights reserved.
  *)
 
-functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
-  struct
+functor EvalLoopFn (Compile: TOP_COMPILE) : EVALLOOP =
+struct
 
     structure C  = Compile
     structure EM = ErrorMsg
@@ -179,7 +179,7 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 
 			    val unitFmt = PP.appendNewLine (PPDec.fmtDec e1 (absyn, exportLvars))
 
-			 in PF.render (unitFmt, say, !lineWidth);
+			 in PF.render (unitFmt, !lineWidth);
 			    if !progressMsgs then say "<<< oneUnit\n" else ()
 			end)  (* oneUnit *)
 
@@ -301,4 +301,4 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		  (* end case *))
 	  end
 
-  end (* functor EvalLoopF *)
+end (* functor EvalLoopFn *)

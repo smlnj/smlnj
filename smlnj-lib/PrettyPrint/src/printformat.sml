@@ -29,7 +29,7 @@ in
   fun getLineWidth () : int = !lineWidthRef
 end
 
-(* render : format * (string -> unit) * int -> unit *)
+(* render : format * int -> unit *)
 fun render (fmt, lineWidth) =
     R.render (PP.formatRep fmt, lineWidth)
 

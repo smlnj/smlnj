@@ -352,22 +352,19 @@ in
 
     (* ppLexp : lexp -> unit *)
     fun ppLexp (lexp: F.lexp) =
-	PF.render (fmtLexp (!Control.Print.printDepth) lexp,
-		Control.Print.say, !Control.Print.lineWidth)
+	PF.render (fmtLexp (!Control.Print.printDepth) lexp, !Control.Print.lineWidth)
 
     (* ppLexpLimited : int -> lexp -> unit *)
     fun ppLexpLimited (printDepth: int) (lexp: F.lexp) =
-	PF.render (fmtLexp printDepth lexp,
-		Control.Print.say, !Control.Print.lineWidth)
+	PF.render (fmtLexp printDepth lexp, !Control.Print.lineWidth)
 
     (* ppProg : prog -> unit *)
     fun ppProg (prog: F.prog) =
-	PF.render (fmtFundec (!Control.Print.printDepth) prog,
-		Control.Print.say, !Control.Print.lineWidth)
+	PF.render (fmtFundec (!Control.Print.printDepth) prog, !Control.Print.lineWidth)
 
     (* ppProgLimited : int -> prog -> unit *)
     fun ppProgLimited (printDepth: int) (prog: F.prog) =
-	PF.render (fmtFundec printDepth prog, Control.Print.say, !Control.Print.lineWidth)
+	PF.render (fmtFundec printDepth prog, !Control.Print.lineWidth)
 
 end (* top local *)
 end (* structure PPFlint *)

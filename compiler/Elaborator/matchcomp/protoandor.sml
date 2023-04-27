@@ -1,4 +1,4 @@
-(* FLINT/trans/protoandor.sml *)
+(* Elaborator/matchcomp/protoandor.sml *)
 (* revised "old" match compiler *)
 
 (* build a simple "proto"-AndOr tree (type protoAndor), by layering the pattern info for 

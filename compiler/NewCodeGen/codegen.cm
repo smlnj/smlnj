@@ -1,36 +1,41 @@
-(* compiler/NewCodeGen/newcodegen.cm
+(* compiler/NewCodeGen/codegen.cm
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * The interactive top-level (REPL)
- * redirected as Library in $smlnj/viscomp/toplevel.cm
+ * CFG - Control Flow Graph IR (cfg/)
+ * translation from CPS to CFG (cps-to-cfg)
+ * CFG pickling (for transmission to runtime system and LLVM code generator?)
+ * Code generation (CodeGeneratorFn)
  *)
 
 Group
 
-  (* Exports: re-exported by new-core.cm *)
+  (* Exports: re-exported by new-core.cm? Why? *)
 
-  structure CFG   (* NewCodeGen/cfg/cfg.sml *)
-  structure PPCfg (* NewCodeGen/cfg/ppcfg.sml *)
+  structure CFG             (* cfg/cfg.sml *)
+  structure PPCfg           (* cfg/ppcfg.sml *)
+  functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
+  functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
 
 is
 
 NewCodeGen/cfg/cfg.sml
 NewCodeGen/cfg/ppcfg.sml
 NewCodeGen/cfg/cfg-util.sml
+
 NewCodeGen/cfg-pickle/cfg-pickle.sig
 NewCodeGen/cfg-pickle/cfg-pickler.sml
 NewCodeGen/cfg-pickle/cfg-file-pickle.sml
 NewCodeGen/cfg-pickle/cfg-memory-pickle.sml
 NewCodeGen/cfg-pickle/lambda-var-pickle.sml
-(*
-NewCodeGen/cps-to-cfg/cluster.sml
-*)
+
 NewCodeGen/cps-to-cfg/cps-info.sml
 NewCodeGen/cps-to-cfg/invoke-gc.sml
 NewCodeGen/cps-to-cfg/cps-to-cfg-fn.sml
 NewCodeGen/cps-to-cfg/tagged-arith.sml
+(* NewCodeGen/cps-to-cfg/cluster.sml *)
+
 NewCodeGen/main/code-gen-fn.sml
 NewCodeGen/main/mach-spec.sig
 NewCodeGen/main/default-machspec-fn.sml

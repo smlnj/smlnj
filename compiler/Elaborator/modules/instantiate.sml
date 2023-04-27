@@ -81,10 +81,6 @@ sig
 
 end (* signature INSTANTIATE *)
 
-(* no longer functorized
-(* functorized to factor out dependencies on FLINT... *)
-functor InstantiateFn (Param: INSTANTIATE_PARAM) : INSTANTIATE =
-	*)
 structure Instantiate : INSTANTIATE =
 struct
 

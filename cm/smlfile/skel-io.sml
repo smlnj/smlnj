@@ -17,7 +17,8 @@ structure SkelIO :> SKELIO = struct
     structure S = Symbol
     structure SP = SymPath
     structure PU = PickleUtil
-    structure PSymPid = PickleSymPid
+    structure PSP = PickleSymPid
+    structure USP = UnpickleSymPid
     structure UU = UnpickleUtil
 
     infix 3 $
@@ -46,7 +47,7 @@ structure SkelIO :> SKELIO = struct
     fun write_decl (s, d) = let
 
 	val (P, D, M) = (1, 2, 3)
-	val symbol = PSymPid.w_symbol
+	val symbol = PSP.w_symbol
 	val list = PU.w_list
 
 	val op $ = PU.$ P
@@ -87,7 +88,7 @@ structure SkelIO :> SKELIO = struct
 	val session = UU.mkSession (UU.stringGetter (b2s (BinIO.inputAll s)))
 
 	val string = UU.r_string session
-	val symbol = UnpickleSymPid.r_symbol (session, string)
+	val symbol = USP.r_symbol (session, string)
 	fun list m r = UU.r_list session m r
 	fun share m f = UU.share session m f
 

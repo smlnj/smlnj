@@ -39,6 +39,7 @@ CPSUtil		   cps/cps-util.sml
 MACH_SPEC* [sig]   main/mach-spec.sig (?)
 CPS_COMP [sig]	   main/cps-comp.sml
 CPSCompFn* [fct]   main/cps-comp.sml
+Cluster	   	   main/cluster.sml
 NormalizeCluster   main/normalize-cluster.sml
 Feedback	   main/feedback.sml
 Limit		   main/limit.sml

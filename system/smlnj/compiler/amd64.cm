@@ -10,6 +10,7 @@
 
 Library
 	(* signatures *)
+(*
 	signature STATS
 	signature CONTROL
 	signature SOURCE
@@ -43,7 +44,7 @@ Library
 	signature PPTYPE
 	signature ACCESS
 	signature UNIFY
-
+*)
 	(* frontend stuff *)
 	structure Stats
 	structure Control
@@ -88,7 +89,7 @@ Library
         structure BasicTypes
         structure PPType
         structure Access
-        structure Unify
+(*        structure Unify *)
 
 	(* the amd64 backend(s) *)
 	structure AMD64StdCallBackend
@@ -99,5 +100,5 @@ is
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/elaborate.cm
 	$smlnj/viscomp/execute.cm
-	$smlnj/viscomp/core.cm
 	$smlnj/viscomp/amd64.cm
+(*	$smlnj/viscomp/core.cm *)

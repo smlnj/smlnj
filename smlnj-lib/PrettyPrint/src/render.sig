@@ -16,7 +16,7 @@ signature RENDER =
 sig
 
   val render : Format.format * int -> unit
-  (* render fmt: render fmt, using lineWidth and output functions
-   * provided by a device structure parameter. *)
+  (* render fmt: render fmt, using lineWidth, and (implicitly) the output function
+   * provided by a DEVICE structure as a functor parameter to RenderFn. *)
 
 end (* signature RENDER *)

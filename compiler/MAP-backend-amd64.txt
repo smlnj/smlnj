@@ -1,0 +1,78 @@
+compiler/MAP-backend-amd64.txt
+
+Map of compiler/backend-amd64.cm
+
+compiler/
+
+CDF: compiler/backend-amd64.cm
+  Derived: system/smlnj/viscomp/amd64.cm
+
+(* ---------------------------- Exports ---------------------------- *)
+
+structure AMD64StdCallBackend (* TopLevel/backend/amd64-stdcall.sml *)
+structure AMD64CCallBackend   (* TopLevel/backend/amd64-ccall.sml *)
+
+(* ---------------------------- Module Catalogue ---------------------------- *)
+
+LOCAL:
+
+AMD64StdCallBackend	TopLevel/backend/amd64-stdcall.sml
+AMD64CCallBackend	TopLevel/backend/amd64-ccall.sml
+
+AMD64Spec		NewCodeGen/targets/amd64-spec.sml
+
+
+IMPORTS:
+
+BackendFn	      	TopLevel/backend/backend-fn.sml
+
+CodeGeneratorFn		NewCodeGen/main/code-gen-fn.sml
+DefaultMachSpecFn	NewCodeGen/main/default-machspec-fn.sml
+
+
+(* ---------------------------- Members [files] ---------------------------- *)
+
+TopLevel/
+backend/
+
+  amd64-stdcall.sml
+    < AMD64StdCallBackend
+    > AMD64Spec
+      ----------
+      BackEndFn*
+      CodeGeneratorFn*
+
+
+  amd64-ccall.sml
+    < AMD64CCallBackend
+    > AMD64Spec
+      ----------
+      BackendFn*
+      CodeGeneratorFn*
+
+NewCodeGen/
+targets/
+
+  amd64-spec.sml
+    < AMD64Spec
+    > ----------
+      MACH_SPEC*
+      DefaultMachSpecFn*
+
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+(* viscomp *)
+$smlnj/viscomp/toplevel.cm (* BackendFn *)
+$smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)
+
+
+(* ---------------------------- Notes ---------------------------- *)
+
+TopLeve/backend could be moved into CodeGen (NewCodeGen). Then this
+CDF would depend only on codegen.cm (or viscomp/codegen.cm?). There is no need
+to pass these modules (functors) through core.cm.  Then the imports would
+covered by codegen.cm alone.

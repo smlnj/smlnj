@@ -86,7 +86,7 @@ in
   fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =
       let val errorFmt = fmtMessage (PPS.fmtSourceRegion (source, region), severity, msg, body)
        in recordError (severity, #anyErrors source);
-	  PF.render (errorFmt, defaultOutput (), !lineWidth)
+	  PF.render (errorFmt, !lineWidth)
       end
 
   (* errorNoSource : errorFn
