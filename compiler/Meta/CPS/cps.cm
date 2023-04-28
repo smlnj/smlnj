@@ -7,20 +7,19 @@
  * redirected as Library in $smlnj/viscomp/cps.cm
  *)
 
-Group
+Library
 
-  (* What modules need to be exported?
-   * What other CM groups or libraries import from cps.cm? (What are the clients of cps.cm?) *)
+(* ------------------------------- Exports ------------------------------- *)
 
-  signature MACH_SPEC  (* main/mach-spec.sig *)
-  signature OBJECT_DESC
-  structure ObjectDesc
+  structure CPS         (* cps/cps.sml *)
+  structure CPSUtil     (* cps/cps-util.sml *)
+  structure PPCps       (* cps/ppcps.sml *)
 
-  structure CPS        (* cps/cps.sml *)
-  structure CPSUtil    (* cps/cps-util.sml *)
-  structure PPCps      (* cps/ppcps.sml *)
-
-  functor CPSCompFn    (* CPS/main/cps-comp.sml -- fixed so it does not depend on NewCodeGen *)
+  signature OBJECT_DESC (* main/object-desc.sig *)
+  structure ObjectDesc  (* main/object-desc.sml *) 
+  signature MACH_SPEC   (* main/mach-spec.sig *)
+  structure Cluster     (* main/cluster.sml *)
+  functor CPSCompFn     (* main/cps-comp.sml -- fixed so it does not depend on NewCodeGen *)
 
 (*
    CPSCompFn was called in [New]CodeGen/main/code-gen-fn.sml, but it depends on several things
@@ -32,6 +31,7 @@ Group
 *)
 
 is
+(* ------------------------------- Member files ------------------------------- *)
 
 CPS/cps/cps.sig
 CPS/cps/cps.sml
@@ -77,13 +77,6 @@ CPS/opt/uncurry.sml
 
 
 (* ------------------------------- Imports ------------------------------- *)
-
-(* 
-   basics.cm: ...
-   elabdata.cm: Access, LambdaVar, ...
-   toplevel.cm:  Control
-   flint.cm: FLINT, ...
- *)
 
 (* viscomp Libraries *)
 $smlnj/viscomp/basics.cm

@@ -8,10 +8,10 @@
  * CFG pickling (for transmission to runtime system and LLVM code generator?)
  * Code generation (CodeGeneratorFn)
  *
- * This was NewCodeGen/codegen.cm.
+ * This was NewCodeGen/codegen.cm, and will become CodeGen/codegen.cm.
  *)
 
-Group
+Library
 
   (* Exports: re-exported by new-core.cm? Why? *)
 
@@ -36,10 +36,12 @@ NCG/cps-to-cfg/cps-info.sml
 NCG/cps-to-cfg/invoke-gc.sml
 NCG/cps-to-cfg/cps-to-cfg-fn.sml
 NCG/cps-to-cfg/tagged-arith.sml
-NCG/cps-to-cfg/cluster.sml  (* variant of CPS/main/cluster.sml *)
 
 NCG/main/code-gen-fn.sml
 NCG/main/mach-spec.sig
 NCG/main/default-machspec-fn.sml
 NCG/main/object-desc.sig
 NCG/main/object-desc.sml
+
+(* NOTE: NCG/cps-to-cfg/cluster.sml is an unfinished replacement for CPS/main/cluster.sml
+ * and therefore should not be compiled or exported from this Library. *)

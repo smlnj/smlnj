@@ -19,16 +19,19 @@ cps.cm  -- the CPS Group/Library CDF
   structure CPS        (cps/cps.sml)
   structure CPSUtil    (cps/cps-util.sml)
   structure PPCps      (cps/ppcps.sml)
-  signature MACH_SPEC  (main/mach-spec.sig)
+
+  structure ObjectDesc (main/object-desc.sml)
+  structure Cluster    (main/cluster.sml, for CodeGen) 
+  signature MACH_SPEC  (main/mach-spec.sig, for CodeGen)
   functor CPSCompFn    (main/cps-comp.sml)
 
-  + ??? (What else needs to exported for what clients, after cyclical
-         dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
+  What else needs to exported for what clients, after cyclical
+  dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
 
 
 (* ---------------------------- Module Index ---------------------------- *) 
 
-LOCAL:
+LOCAL:  ["*" marks exported modules/signatures]
 
 CPS [sig]	   cps/cps.sig
 CPS* [str]         cps/cps.sml
@@ -39,7 +42,7 @@ CPSUtil		   cps/cps-util.sml
 MACH_SPEC*         main/mach-spec.sig (?)
 CPS_COMP	   main/cps-comp.sml
 CPSCompFn* [fct]   main/cps-comp.sml
-Cluster	   	   main/cluster.sml
+Cluster*   	   main/cluster.sml
 NormalizeCluster   main/normalize-cluster.sml
 Feedback	   main/feedback.sml
 Limit		   main/limit.sml
@@ -49,7 +52,7 @@ NewLiterals	   main/new-literals.sml
 SPILL		   main/spill-fn.sml
 SpillFn		   main/spill-fn.sml
 OBJECT_DESC	   main/object-desc.sig
-ObjectDesc	   main/object-desc.sml
+ObjectDesc*	   main/object-desc.sml
 
 GLOBALFIX	   clos/globalfix.sml
 GlobalFix	   clos/globalfix.sml
@@ -122,14 +125,14 @@ CPS/
 
 main/
 
-  cluster.sml    ["competes" in core.cm with NCG/cps-to-cfg/cluster.sml!])
+  cluster.sml    [to be replaced (here) by improved version NCG/cps-to-cfg/cluster.sml when finished])
     < Cluster
-    > LambdaVar*    elabdata.cm
-      Control*      toplevel.cm 
-
-      CPS           CPS/cps/cps.sml
-      PPCps         CPS/cps/ppcps.sml
-      NormalizeCluster   CPS/main/normalize-cluster.sml
+    > CPS
+      PPCps
+      NormalizeCluster
+      ----------------
+      LambdaVar*
+      Control*
 
   cps-comp.sml
     < CPS_COMP
@@ -137,7 +140,7 @@ main/
     > CPS [str]
       PPCps
       MACH_SPEC
-      Cluster        ["competes" with NCG/cps-to-cfg/cluster.sml!])
+      Cluster
       Spill [fct]
       Literals
       NewLiterals

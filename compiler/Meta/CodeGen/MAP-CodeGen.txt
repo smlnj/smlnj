@@ -61,7 +61,7 @@ CPSInfo		       cps-to-cfg/cps-info.sml
 InvokeGC	       cps-to-cfg/invoke-gc.sml
 CPStoCFGFn	       cps-to-cfg/cps-to-cfg-fn.sml
 TaggedArith	       cps-to-cfg/tagged-arith.sml
-Cluster		       cps-to-cfg/cluster.sml  (competes with CPS/main/cluster.sml)
+[Cluster	       cps-to-cfg/cluster.sml  -- unfinished new version CPS/main/cluster.sml]
 
 CodeGeneratorFn	       main/code-gen-fn.sml
 DefaultMachSpecFn      main/default-machspec-fn.sml
