@@ -15,7 +15,6 @@ Library
   structure CPSUtil     (* cps/cps-util.sml *)
   structure PPCps       (* cps/ppcps.sml *)
 
-  signature OBJECT_DESC (* main/object-desc.sig *)
   structure ObjectDesc  (* main/object-desc.sml *) 
   signature MACH_SPEC   (* main/mach-spec.sig *)
   structure Cluster     (* main/cluster.sml *)
@@ -38,7 +37,7 @@ CPS/cps/cps.sml
 CPS/cps/ppcps.sml
 CPS/cps/cps-util.sml
 
-CPS/main/cluster.sml    (* defines structure Cluster; may be merged with NCG/main/cluster.sml? *)
+CPS/main/cluster.sml    (* structure Cluster; may be replaced by NCG/main/cluster.sml *)
 CPS/main/cps-comp.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml

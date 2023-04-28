@@ -2,11 +2,11 @@
  *
  * (C) 2023 The Fellowship of SML/NJ (www.smlnj.org)
  *
- * CPS optimization stages
+ * CPS; translation from FLINT; CPS optimization
  *)
 
 Library
-	group($compiler/CPS/cps.cm)
+	library ($compiler/CPS/cps.cm)
 is
-	(* reference to our only group... *)
+	(* reference to our only library... *)
 	$compiler/CPS/cps.cm

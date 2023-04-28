@@ -19,25 +19,31 @@ CDF: NCG/codegen.cm  -- the NCG Group/Library CDF
 
 (* ---------------------------- Exports ---------------------------- *) 
 
--- these two are re-exported by core.cm (and new-core.cm) 
+-- these two are re-exported by core.cm (and new-core.cm)? 
 
-structure CFG             (* NCG/cfg/cfg.sml *)
-structure PPCfg           (* NCG/cfg/ppcfg.sml *)
-functor CodeGeneratorFn   (* NCG/main/code-gen-fn.sml,
+structure CFG             (* cfg/cfg.sml *)
+structure PPCfg           (* cfg/ppcfg.sml *)
+
+functor CodeGeneratorFn   (* main/code-gen-fn.sml,
                              * uses TopLevel/backend/amd64-*.sml, *-backend.sml *)
-functor DefaultMachSpecFn			   
+functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)		   
 
 [functor BackendFn]	    (* if moved here from TopLevel? *)
 
 
 (* ---------------------------- Module Catalogue ---------------------------- *) 
  
-LOCAL: [paths relative to $SMLNJ/compiler/[New]CodeGen]
+LOCAL: [paths relative to $SMLNJ/compiler/NCG[CodeGen]
 
-CFG [str]	       cfg/cfg.sml
+CFG* [str] 	       cfg/cfg.sml
 CFG_Prim	       cfg/cfg.sml
-PPCfg		       cfg/ppcfg.sml
+PPCfg*		       cfg/ppcfg.sml
 CFGUtil		       cfg/cfg-util.sml
+
+CPSInfo		       cps-to-cfg/cps-info.sml
+InvokeGC	       cps-to-cfg/invoke-gc.sml
+CPStoCFGFn	       cps-to-cfg/cps-to-cfg-fn.sml
+TaggedArith	       cps-to-cfg/tagged-arith.sml
 
 LAMBDA_VAR_PICKLE      cfg-pickle/cfg-pickle.sig
 CTYPES_PICKLE	       cfg-pickle/cfg-pickle.sig
@@ -57,14 +63,12 @@ CFGMemoryPickle        cfg-pickle/cfg-memory-pickle.sml
 CFGPickler	       cfg-pickle/cfg-pickler.sml
 LambdaVarPickle	       cfg-pickle/lambda-var-pickle.sml
 
-CPSInfo		       cps-to-cfg/cps-info.sml
-InvokeGC	       cps-to-cfg/invoke-gc.sml
-CPStoCFGFn	       cps-to-cfg/cps-to-cfg-fn.sml
-TaggedArith	       cps-to-cfg/tagged-arith.sml
-[Cluster	       cps-to-cfg/cluster.sml  -- unfinished new version CPS/main/cluster.sml]
+CodeGeneratorFn*       main/code-gen-fn.sml
+DefaultMachSpecFn*     main/default-machspec-fn.sml
 
-CodeGeneratorFn	       main/code-gen-fn.sml
-DefaultMachSpecFn      main/default-machspec-fn.sml
+[Cluster	       cps-to-cfg/cluster.sml
+		       -- unfinished new version CPS/main/cluster.sml
+		       -- when finished belongs in CPS/main]
 
 ------------------
 IMPORTS: [paths relative to $SMLNJ/compiler]
@@ -81,10 +85,11 @@ elabdata.cm:
 cps.cm:
   CPS [str]	       CPS/cps/cps.sml
   CPSUtil 	       CPS/cps/cps-util.sml
-  PPCps*	       CPS/cps/ppcps.sml 
+  PPCps		       CPS/cps/ppcps.sml 
+  Cluster	       CPS/main/cluster.sml
   MACH_SPEC            CPS/main/mach-spec.sig        
-  ObjectDesc	       CPS/main/object-desc.sml  
   CPSCompFn	       CPS/main/cps-comp.sml
+  ObjectDesc	       CPS/main/object-desc.sml 
 
 execute.cm:
   CodeObj	       Execution/codeobj/code-obj.sml
@@ -109,8 +114,8 @@ cfg/
     < CFG_Prim
       CFG
     > ----------
-      LambdaVar*  (elabdata.cm)
-      CTypes*     (elabdata.cm)  (ElabData/prim/c-types.sml) 
+      LambdaVar*
+      CTypes*
       CPS* [str] cps.cm
 
   ppcfg.sml
@@ -118,10 +123,10 @@ cfg/
     > CFG [str]
       CFG_Prim
       ----------
-      LambdaVar* elabdata.cm 
-      ArithOps*  elabdata.cm
-      PPCps*     cps.cm
-      Control*   toplevel.cm 
+      LambdaVar*
+      ArithOps*
+      PPCps*
+      Control*
 
   cfg-util.sml
     < CFGUtil
@@ -129,30 +134,24 @@ cfg/
 
 cfg-pickle/
 
-   NOTE: Why does the file NCG/cfg-pickle/cfg.sml exist? It duplicates the definition
-   of CFG_Prim from NCG/cgf/cfg.sml and the definition of CTypes from
-   ElabData/prim/c-types.sml. But cfg-pickle/cfg.sml is not included in the members for
-   NCG (original core.cm or new NCG/newcodegen.cm), so presumably it is
-   not being compiled or used. It should be deleted, if only to avoid confusion.
-
   cfg-pickle.sig
     < LAMBDA_VAR_PICKLE
       CTYPES_PICKLE
       CFG_PRIM_PICKLE
       CFGPICKLE
-    > CFG        cfg/cfg.sml
-      CFG_Prim   cfg/cfg.sml
+    > CFG
+      CFG_Prim
       ----------
-      LambdaVar* elabdata.cm 
-      CTypes*    elabdata.cm  (ElabData/prim/c-types.sml) 
+      LambdaVar*
+      CTypes*
 
   cfg-file-pickle.sml
     < LambdaVarFilePickle
       CTypesFilePickle
       CFG_PrimFilePickle 
       CFGFilePickle
-    > CFG         cfg/cfg.sml
-      CFG_Prim    cfg/cfg.sml
+    > CFG
+      CFG_Prim
       ---------------
       ASDLFilePickle*
       CTypes*
@@ -162,8 +161,8 @@ cfg-pickle/
       CTypesMemoryPickle
       CFG_PrimMemoryPickle 
       CFGMemoryPickle
-    > CFG         cfg/cfg.sml
-      CFG_Prim    cfg/cfg.sml 
+    > CFG
+      CFG_Prim
       -----------------
       ASDLMemoryPickle*
       CTypes*
@@ -179,15 +178,15 @@ cfg-pickle/
   lambda-var-pickle.sml
     < LambdaVarPickle
     > ----------
-      LambdaVar* elabdata.cm
+      LambdaVar*
 
 
 cps-to-cfg/  -- translation from CPS to CFG
 
   cps-info.sml  (can't move to CPS because uses InvokeGC?)
     < CPSInfo
-    > CFG         cfg/cfg.sml
-      InvokeGC    cps-to-cfg/invoke-gc.sml
+    > CFG
+      InvokeGC
       ----------
       LambdaVar*
       Target*
@@ -196,30 +195,30 @@ cps-to-cfg/  -- translation from CPS to CFG
 
   invoke-gc.sml
     < InvokeGC
-    > CFG         (cfg/cfg.sml) 
-      CFG_Prim    (cfg/cfg.sml) 
+    > CFG
+      CFG_Prim
       ----------
       LambdaVar*
       ObjectDesc*
 
   cps-to-cfg-fn.sml
     < CPStoCFGFn
-    > CFG          (cfg/cfg.sml) 
-      CFG_Prim     (cfg/cfg.sml) 
-      CPSInfo 	   (cps-to-cfg/cps-info.sml)
-      Cluster?     [local or CPS/main/cluster.sml from cps.cm?]
+    > CFG
+      CFG_Prim
+      CPSInfo
       ----------
-      LambdaVar*   elabdata.cm 
-      CPS* [str]   cps.cm
-      CPSUtil*     cps.cm
-      PPCps*       cps.cm
-      Control*     toplevel.cm
-      MACH_SPEC*   cps.cm (CPS/main/mach-spec.sig) 
+      LambdaVar*
+      CPS* [str]
+      CPSUtil*
+      Cluster*
+      PPCps*
+      MACH_SPEC*
+      Control*
 
   tagged-arith.sml
     < TaggedArith
-    > CFG          (cfg/cfg.sml) 
-      CFG_Prim     (cfg/cfg.sml)  
+    > CFG
+      CFG_Prim
       ----------
       LambdaVar*
       CPS*
@@ -229,18 +228,18 @@ main/
 
   code-gen-fn.sml
     < CodeGeneratorFn
-    > CFGPickler       (cfg-pickle/cfg-pickler.sml)
+    > CFGPickler
       ---------------
-      CODE_GENERATOR*  toplevel.cm (TopLevel/main/code-generator.sig)  
-      MACH_SPEC*       cps.cm (CPS/main/mach-spec.sig) 
-      CPSCompFn*        cps.cm
-      Stats*	       basics.cm
-      CodeObj*	       execute.cm (Execution/codeobj/code-obj.sml)
+      CODE_GENERATOR*
+      MACH_SPEC*
+      CPSCompFn*
+      Stats*
+      CodeObj*
 
   default-machspec-fn.sml
     < DefaultMachSpecFn
     > ----------
-      MACH_SPEC*   (CPS/main/mach-spec.sig, cps.cm) 
+      MACH_SPEC*
 
 
 
@@ -253,8 +252,10 @@ $smlnj/asdl/asdl-lib.cm      ($SMLNJ-ASDL-LIB/asdl-lib.cm)
 $smlnj/viscomp/basics.cm     ($compiler/Basics/basics.cm)
 $smlnj/viscomp/elabdata.cm   ($compiler/ElabData/elabdata.cm)
 $smlnj/viscomp/execute.cm    ($compiler/Execution/execute.cm)
-$smlnj/viscomp/toplevel.cm   ($compiler/TopLevel/toplevel.cm) [Control}
+$smlnj/viscomp/toplevel.cm   ($compiler/TopLevel/toplevel.cm)
+   [Control, CODE_GENERATOR]
 $smlnj/viscomp/cps.cm        ($compiler/CPS/cps.cm)
+   [CPS[str], CPSUtil, Cluster, MACH_SPEC, ObjectDesc, CPSCompFn]
  
 
 (* ---------------------------- Notes ---------------------------- *) 
@@ -263,3 +264,8 @@ $smlnj/viscomp/cps.cm        ($compiler/CPS/cps.cm)
 CPS/main/cluster.sml defines a similar structure, which is not
 exported by cps.cm.
 
+2. Why does the file NCG/cfg-pickle/cfg.sml exist? It duplicates the definition
+of CFG_Prim from NCG/cgf/cfg.sml and the definition of CTypes from
+ElabData/prim/c-types.sml. But cfg-pickle/cfg.sml is not included in the members for
+NCG (original core.cm or new NCG/newcodegen.cm), so presumably it is
+not being compiled or used. It should be deleted, if only to avoid confusion.

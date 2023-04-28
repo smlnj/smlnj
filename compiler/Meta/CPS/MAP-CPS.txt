@@ -20,10 +20,10 @@ cps.cm  -- the CPS Group/Library CDF
   structure CPSUtil    (cps/cps-util.sml)
   structure PPCps      (cps/ppcps.sml)
 
-  structure ObjectDesc (main/object-desc.sml)
-  structure Cluster    (main/cluster.sml, for CodeGen) 
-  signature MACH_SPEC  (main/mach-spec.sig, for CodeGen)
-  functor CPSCompFn    (main/cps-comp.sml)
+  structure Cluster    (main/cluster.sml; CodeGen) 
+  structure ObjectDesc (main/object-desc.sml; CodeGen)
+  signature MACH_SPEC  (main/mach-spec.sig; CodeGen)
+  functor CPSCompFn    (main/cps-comp.sml; CodeGen)
 
   What else needs to exported for what clients, after cyclical
   dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
@@ -125,7 +125,7 @@ CPS/
 
 main/
 
-  cluster.sml    [to be replaced (here) by improved version NCG/cps-to-cfg/cluster.sml when finished])
+  cluster.sml    -- to be replaced by improved version NCG/cps-to-cfg/cluster.sml
     < Cluster
     > CPS
       PPCps
@@ -220,7 +220,7 @@ main/
       Target*
       
   object-desc.sig
-    < OBJECT_DESC
+    < OBJECT_DESC  -- used in MACH_SPEC
     >
 
   object-desc.sml
@@ -494,6 +494,10 @@ CPS/opt/
   prettyprint-lib.cm: PrettyPrint
   Library/const-arith/sources.cm [core.cm]: ConstArith
 
-  -- eliminated (circular) dependence on codegen.cm:
-     (1) moved MACH_SPEC, OBJECT_DESC, ObjectDesc from NewCodeGen/main to CPS/main
-     (2) edited CPS/main/cps-comp to comment out debugging code dependent on CFG
+
+
+(* ---------------------------- Notes ---------------------------- *) 
+
+1. Eliminated (circular) dependence on codegen.cm:
+   (1) moved MACH_SPEC from NewCodeGen/main to CPS/main
+   (2) edited CPS/main/cps-comp to comment out debugging code dependent on CFG
