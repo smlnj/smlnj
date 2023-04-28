@@ -17,7 +17,7 @@ is
   TopLevel/backend/amd64-stdcall.sml (* AMD64StdCallBackend *)
   TopLevel/backend/amd64-ccall.sml   (* AMD64CCallBackend *)
 
-  NewCodeGen/targets/amd64-spec.sml
+  CodeGen/targets/amd64-spec.sml
 
   (* Basis *)
   $smlnj/basis/basis.cm

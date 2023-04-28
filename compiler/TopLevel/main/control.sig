@@ -50,7 +50,7 @@ signature CGCONTROL =
     val printClusters : bool ref
     val printCFG : bool ref
     val dumpCFG : bool ref
-    val useLLVM : bool ref
+    val verifyLLVM : bool ref
     val debugSpill : bool ref
     val debugSpillInfo : bool ref
   end (* signature CGCONTROL *)

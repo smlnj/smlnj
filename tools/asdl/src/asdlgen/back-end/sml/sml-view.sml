@@ -63,7 +63,7 @@ structure SMLView : sig
 		  | _ => raise Fail("unexpected multiple values for "^Atom.toString prop)
 		(* end case *))
 	in
-        val getPickleSigName = getModName (PN.pickler_name, "Pickle")
+        val getPickleSigName = getModName (PN.pickler_name, "PICKLE")
 	val getPickleName = getModName (PN.memory_pickler_name, "MemoryPickle")
 	val getIOName = getModName (PN.file_pickler_name, "FilePickle")
 	val getSExpName = getModName (PN.sexp_pickle_name, "SExpPickle")
