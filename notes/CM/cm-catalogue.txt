@@ -1,0 +1,69 @@
+smlnj[newpp]/notes/CM/cm-catalogue.txt
+
+An attempt to catalogue all the CM files involved in building SML/NJ, and where possible,
+explain what they do.
+
+
+compiler/
+
+  core.cm
+
+    Core seems to be unnecessary, if FLINT, CPS, CodeGen, and TOPLEVEL
+    have their own CM files, since everything core.cm (except possibly
+    ConstArith) is available from one of the components, and ConstArith
+    can be incorporated into a component like Basics (or Basic).
+
+  backend-amd64.cm
+  backend-arm64.cm
+
+    These two cm files are outside of any component. Should there be a new
+    component that they are _both_ members of?  Probably not, since either
+    one or the other should be used exclusively depending on the ARCH.  But
+    the might be two ARCH dependent top-level components: BachendAMD64 and
+    BackendArm64 that could each contain one of these two cm files.
+    What "members" might be contained in each of these components, if they
+    existed?
+
+    Note that there are corresponding MAP-backend-amd64.txt and MAP-backend-arm64.txt
+    map files.
+
+
+compiler/<Component>
+
+  Basics/basics.cm [Basics + ElabData/basics --> Basic + Support + Configure]
+  Parse/parser.cm [CM file should be renamed "parse.cm"]
+  ElabData/elabdata.cm
+  Elaborator/elaborate.cm [component should be renamed "Elaborate"?]
+  DebugProf/debugprof.cm 
+  FLINT/flint.cm [component should be renamed "Flint"?]
+  CPS/cps.cm
+  Execution/execute.cm [component should be renamed "Execute"]
+  CodeGen/codegen.cm
+  TopLevel/toplevel.cm
+
+    1. As noted, the contents of Basics + ElabData/basics should be redistributed into
+       three new components, call them (tentatively) Basic, Support, and Configure,
+       where Basic contains modules that are actually involved in compilation (like Symbol),
+       and Support contains "administrative" support facilities (like ErrorMsg, Source).
+       Configure would contain ENDIAN and TARGET information (and in general, configuration
+       information dependent on the hardware architecture).
+
+    2. It seems like the hard-core compilation modules in Execution, CodeGen, and TopLevel
+       should be re-organized. The Backend stuff seems a bit misplaced, and as noted above,
+       the AMD64 and Arm64 versions of Backend are currently "homeless".
+
+    3. The CFG (control-flow graph) stuff seems analagous to CPS, and perhaps should be put
+       into their own component, called "CFG".  Then there would be just a couple of functors
+       left in CodeGen/main, and these might be joined by the BackendFn related stuff from
+       TopLevel.
+
+system/
+
+system/smlnj/
+
+  compiler/
+
+  viscomp/
+
+  internal/
+
