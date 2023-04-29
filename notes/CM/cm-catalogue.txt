@@ -9,9 +9,9 @@ compiler/
   core.cm
 
     Core seems to be unnecessary, if FLINT, CPS, CodeGen, and TOPLEVEL
-    have their own CM files, since everything core.cm (except possibly
-    ConstArith) is available from one of the components, and ConstArith
-    can be incorporated into a component like Basics (or Basic).
+    have their own CM files, since everything exported by core.cm would be available
+    from one of the components, except (currently) ConstArith, which can be incorporated
+    into a component like Basics (or the proposed Basic).
 
   backend-amd64.cm
   backend-arm64.cm
@@ -59,13 +59,13 @@ compiler/<Component>
 
 system/
 
-system/smlnj/
+  smlnj/
 
-  compiler/
+    compiler/
 
-  viscomp/
+    viscomp/
 
-  internal/
+    internal/
 
 
 smlnj-lib/
