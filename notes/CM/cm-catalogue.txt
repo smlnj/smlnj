@@ -50,7 +50,8 @@ compiler/<Component>
 
     2. It seems like the hard-core compilation modules in Execution, CodeGen, and TopLevel
        should be re-organized. The Backend stuff seems a bit misplaced, and as noted above,
-       the AMD64 and Arm64 versions of Backend are currently "homeless".
+       the AMD64 and Arm64 versions of Backend are currently "homeless". It ought to be possible
+       to isolate the compiler interfaces used by CM and by the interactive system (REPL).
 
     3. The CFG (control-flow graph) stuff seems analagous to CPS, and perhaps should be put
        into their own component, called "CFG".  Then there would be just a couple of functors
