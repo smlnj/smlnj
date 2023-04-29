@@ -26,7 +26,7 @@ cps.cm  -- the CPS Group/Library CDF
   functor CPSCompFn    (main/cps-comp.sml; CodeGen)
 
   What else needs to exported for what clients, after cyclical
-  dependency between CPS and NewCodeGen (CPSCompFn) is fixed?)
+  dependency between CPS and NewCodeGen (CPSCompFn) is fixed?
 
 
 (* ---------------------------- Module Index ---------------------------- *) 
@@ -127,7 +127,7 @@ main/
 
   cluster.sml    -- to be replaced by improved version NCG/cps-to-cfg/cluster.sml
     < Cluster
-    > CPS
+    > CPS [str]
       PPCps
       NormalizeCluster
       ----------------
@@ -233,7 +233,7 @@ main/
     > OBJECT_DESC
 
 
-CPS/clos/
+clos/
 
   globalfix.sml
     < GLOBALFIX
@@ -343,7 +343,7 @@ cps/
       Target*
 
 
-CPS/opt/
+opt/
 
   contract.sml
     < CONTRACT
