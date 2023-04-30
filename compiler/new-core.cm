@@ -18,7 +18,7 @@
  *   Elaborator/elaborate.cm  -- elaboration (type checking, modules, etc.)
  *   FLINT/flint.cm           -- FLINT IR and optimizations
  *   CPS/cps.cm               -- CPS IR and optimizations
- *   NewCodeGen/newcodegen.cm -- Flow graph IR, optimization, and generating LLVM input
+ *   CodeGen/codegen.cm       -- CFG (Control Flow graph) IR, optimization, and generating LLVM input
  *   TopLevel/toplevel.cm     -- interactive system, ...
  *
  * No modules are re-exported from parser.cm, so it is not imported.
@@ -38,121 +38,6 @@ Group
 
         (* <- $smlnj/internal/smlnj-version.cm *)
 	structure SMLNJVersion    (* system/smlnj/internal/version.sml *)
-
-
-        (* TopLevel <- $smlnj/viscomp/toplevel.cm *)
-	structure Control         (* main/control.sml *)
-	signature CONTROL         (* main/control.sig *)
-
-	structure Environment     (* environ/environ.sml *)
-	signature ENVIRONMENT     (* environ/environ.sig *)
-
-	structure EnvRef          (* interact/envref.sml *)
-	signature ENVREF          (* interact/envref.sml *)
-
-	structure CompilerPPTable (* print/compilerpptable.sml *)
-	structure PrintHooks      (* print/compilerpptable.sml *)
-
-	signature BACKEND         (* backend/backend.sig *)
-        functor BackendFn         (* backend/backend-fn.sml *)
-
-
-        (* NewCodeGen <- $smlnj/viscomp/newcodegen.cm *)
-	signature MACH_SPEC       (* main/mach-spec.sig *)
-        functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
-	functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
-
-	structure CFG             (* cfg/cfg.sml *)
-	structure PPCfg           (* cfg/ppcfg.sml *)
-
-
-        (* CPS -- anything to re-export from $smlnj/viscomp/cps.cm ? *)
-
-
-        (* FLINT <- $smlnj/viscomp/flint.cm *)
-	structure FLINTOpt        (* main/flint-opt.sml *)
-
-	structure FLINT           (* flint/flint.sml *)
-	signature FLINT           (* flint/flint.sig *)
-	structure ChkFlint        (* flint/chkflint.sml *)
-	structure PPFlint         (* flint/ppflint.sml *)
-
-	structure TransUtil       (* trans/transutil.sml *)
-	structure Translate       (* trans/translate.sml *)
-
-	structure Lty             (* kernel/lty.sml *)
-	structure LtyKindChk      (* kernel/ltykindchk.sml *)
-	structure LtyKernel       (* kernel/ltykernel.sml *)
-	structure LtyDef          (* kernel/ltydef.sml *)
-	structure LtyExtern       (* kernel/ltyextern.sml *)
-	structure PrimTyc         (* kernel/primtyc.sml *)
-	structure PPLty           (* kernel/pplty.sml *)
-
-	structure LContract       (* opt/lcontract.sml *)
-	structure Specialize      (* opt/specialize.sml *)
-
-
-        (* ElabData <- $smlnj/viscomp/elabdata.cm *)
-        structure Stamps          (* basics/stamps.sml *)
-	signature STAMPS          (* basics/stamps.sig *)
-        structure Access          (* basics/access.sml *)
-	signature ACCESS          (* basics/access.sig *)
-	structure CoreSym         (* basics/coresym.sml *)
-	structure LambdaVar       (* basics/lambdavar.sml *)
-	structure DebIndex        (* basics/debindex.sml -- probably don't need *)
-
-        structure Types           (* types/types.sml *)
-	signature TYPES           (* types/types.sig *)
-        structure TypesUtil       (* types/typesutil.sml *)
-	signature TYPESUTIL       (* types/typesutil.sig *)
-        structure BasicTypes      (* types/basictypes.sml *)
-	signature BASICTYPES      (* types/basictypes.sig *)
-        structure PPType          (* types/pptype.sml *)
-	signature PPTYPE          (* types/pptype.sig *)
-
-        structure EntityEnv       (* modules/entityenv.sml *)
-	signature ENTITY_ENV      (* modules/entityenv.sig *)
-        structure Modules         (* modules/modlules.sml *)
-	signature MODULES         (* modules/modlules.sig *)
-        structure ModuleUtil      (* modules/moduleutil.sml *)
-	signature MODULEUTIL      (* modules/moduleutil.sig *)
-	structure ModuleId        (* modules/moduleid.sml *)
-	signature MODULE_ID       (* modules/moduleid.sml *)
-
-        structure Variable        (* syntax/variable.sml *)
-	signature VARIABLE        (* syntax/variable.sig *)
-
-	structure ArithOps        (* prim/arithops.sml *)
-	structure PrimopId        (* prim/primop-id.sml *)
-	structure Primop          (* prim/primop.sml *)
-	structure PrimopBind      (* prim/primop-bind.sml *)
-	structure PrimopBindings  (* prim/primop-bindings.sml *)
-	structure PrimEnv         (* prim/prim-env.sml *)
-	signature PRIM_ENV        (* prim/prim-env.sml *)
-
-        structure Bindings        (* statenv/bindings.sml *)
-	signature BINDINGS        (* statenv/bindings.sig *)
-	structure GenModIdMap     (* statenv/genmap.sml *)
-
-	structure PickleSymPid    (* pickle/pickle-sym-pid.sml *)
-	structure UnpickleSymPid  (* pickle/unpickle-sym-pid.sml *)
-	structure PickMod         (* pickle/pickmod.sml *)
-	signature PICKMOD         (* pickle/pickmod.sml *)
-	structure UnpickMod       (* pickle/unpickmod.sml *)
-	signature UNPICKMOD       (* pickle/unpickmod.sml *)
-	structure Rehash          (* pickle/rehash.sml *)
-
-
-        (* Elaborator <- $smlnj/viscomp/elaborate.cm *)
-	structure Unify           (* types/unify.sml *)
-	signature UNIFY           (* types/unify.sml *)
-	structure SigMatch        (* modules/sigmatch.sml *)
-
-
-        (* Basics <- $smlnj/viscomp/basics.cm *)
-	signature TARGET          (* compiler/target.sig *)
-	structure Target          (* compiler/target32.sml or target64.sml *)
-
 is
 
 (* ------------------------------- Members ------------------------------- *)
@@ -160,19 +45,6 @@ is
 (* A (miscellaneous) utility. Why is this here? It's the only thing compiled by core.cm.
  * Its exported structure ConstArith, is not re-exported from core.cm. *)
 Library/const-arith/sources.cm
-
-(* Moved:
-   ElabData/pickle/*.sml, ElabData/prim/prim-env.sml --> elabdata.cm
-   TopLevel/* --> TopLevel/toplevel.cm
-   FLINT/* --> FLINT/flint.cm
-   CPS/* --> CPS/cps.cm
-   NewCodeGen/* --> NewCodeGen/newcodegen.cm
-
-NOTE: There is a cyclical dependency between CPS and NewCodeGen (as Groups) must be fixed.
-  As files (in core.cm), there is no cycle. So some files need to be moved, or possibly
-  the distribution of files in CPS, NewCodeGen, and (possibly) TopLevel needs to be rethought.
-*)
-
 
 (* ------------------------------- Imports ------------------------------- *)
 

@@ -3,6 +3,7 @@ smlnj[newpp]/notes/CM/cm-catalogue.txt
 An attempt to catalogue all the CM files involved in building SML/NJ, and where possible,
 explain what they do.
 
+[Paths rooted at $SMLNJ, the smlnj clone directory.]
 
 compiler/
 
@@ -58,19 +59,154 @@ compiler/<Component>
        left in CodeGen/main, and these might be joined by the BackendFn related stuff from
        TopLevel.
 
+compiler/Library/
+
+  pickle/
+
+    pickle-lib.cm
+
+  const-arith/
+
+    sources.cm
+
 system/
+
+  root.cm (InteractiveSystem <- $smlnj/internal/intsys.cm) ["This used to be an alias, ..."]
 
   smlnj/
 
+    cm.cm
+    cmb.cm
+    compiler.cm
+    installer.cm
+    library-install.cm
+
     compiler/
 
-    viscomp/
+      amd64.cm (amd64.sml)
+      arm64.cm (arm64.sml)
+      all.cm 
+      current.cm
+      compiler.cm (compiler.sml) 
+      minimal.cm (minimal-compiler.sml)
+      minimal-only.cm
+
+    viscomp/ ["aliases"?]
+
+      amd64.cm     (compiler/backend-amd64.cm)
+      arm64.cm     (compiler/backend-arm64.cm)
+      core.cm      (compiler/core.cm; obsolete?)
+      basics.cm    (compiler/Basics/basics.cm)
+      parser.cm	   (compiler/Parse/parser.cm)
+      elabdata.cm  (compiler/ElabData/elabdata.cm)
+      elaborate.cm (compiler/Elaborator/elaborate.cm)
+      execute.cm   (compiler/Execution/execute.cm)
+      debugprof.cm (compiler/DebugProf/debugprof.cm)
+      ---- new ----
+      flint.cm     (compiler/FLINT/flint.cm)
+      cps.cm       (compiler/CPS/cps.cm)
+      codegen.cm   (compiler/CodeGen/codegen.cm)
+      toplevel.cm  (compiler/TopLevel/toplevel.cm)
 
     internal/
 
+      cm-lib.cm        ($SMLNJ/cm/cm-lib.cm)
+      cm-sig-lib.cm    (cm.sig, cmb.sig)
+      cm0.cm	       (link-cm.sml)
+      initsys.cm       (int-sys.sml, boot-env.sml, boot-env-fn.sml)
+      smlnj-version.cm (version.sml, versiontool.cm, version.template)
+      versiontool.cm   (versiontool.sml)
+      srcpath-lib.cm   (CM/paths/srcpath-lib.cm)
 
-smlnj-lib/
+    installer/
+
+      util.cm          (InstallerUtil: installer-util.sml)
+
+    smlnj-lib/
+
+      controls-lib.cm    ($SMLNJ/smlnj-lib/Controls/controls-lib.cm)      
+      pp-lib.cm	         ($SMLNJ/smlnj-lib/PP/pp-lib.cm)
+      prettyprint-lib.cm ($SMLNJ/smlnj-lib/PrettyPrint/prettyprint-lib.cm)
+      smlnj-lib.cm	 ($SMLNJ/smlnj-lib/Util/smlnj-lib.cm)
+
+
+smlnj-lib/  (excluding smlnj-lib/Dev)
+
+    Controls/controls-lib.cm
+    HTML/html-lib.cm
+    HTML4/html4-lib.cm
+	 /html4-test.cm
+	 /html4-lex-text.cm
+	 /tests/smldec-to-html.cm
+    HashCons/hash-cons-lib.cm
+    INet/inet-lib.cm
+    JSON/json-lib.cm
+    PP/pp-lib.cm
+      /pp-extras-lib.cm
+      /src/sources.cm
+      /devices/sources.cm
+      /tests/sources.cm
+    PrettyPrint/prettyprint-lib.cm
+               /src/prettyprint.cm
+	           /prettyprint-term.cm
+		   /prettyprint-html.cm
+    Reactive/reactive-lib.cm
+    RegExp/regexp-lib.cm
+          /Tests/sources.cm
+    SExp/sexp-lib.cm
+        /sexp-tests.cm
+    UUID/uuid-lib.cm
+    Unix/unix-lib.cm
+    XML/xml-lib.cm
 
 
 tools/
+
+    asdl/tool/asdlgen-tool.cm
+             /asdl-ext.cm
+    heap2asm/heap2asm.cm
+    ml-burg/ml-burg.cm
+	   /tool/mlburg-tool.cm
+	        /burg-ext.cm
+    ml-lpt/common/lpt-common.cm		
+          /lib/ml-lpt-lib.cm
+	  /ml-antlr/sources.cm
+          /ml-ulex/sources.cm
+    ml-yacc/lib/ml-yacc-lib.cm
+           /lib/sources.cm
+           /src/ml-yacc.cm
+	   /tool/mlyacc-tool.cm
+	        /grm-ext.cm
+    nlffi/lib/c.cm
+         /gen/ml-nlffigen.cm
+	 
+cm/ [exluding cm/Tests]	  
+
+   cm-lib.cm
+   concur/sources.cm
+   paths/srcpath-lib.cm
+   tools/dir/dir-tool.cm
+        /make/make-tool.cm
+	/noweb/noweb-tool.cm
+	      /nw-ext.cm
+	/shell/shell-tool.cm
+   util/sources.cm
+
+
+==========================================================================================
+Notes, Questions & Comments
+---------------------------
+
+[DBM]
+What are all the cm files in system/smlnj for?
+Do we really need all of them?
+Does the proliferation of cm files represent an attempt at "flexibility" that hasn't been used
+for the last 20+ years?
+
+What do the pseudo-alias cm files in system/smlnj/viscomp do for us?
+What would break if we just used the original cm files that are bind "aliased"?
+
+Where is there a strong case for using Group rather than Library?
+Why are the Group files turned into Libraries in the viscomp "alias" files?
+
 
