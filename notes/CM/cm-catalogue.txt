@@ -202,6 +202,7 @@ What are all the cm files in system/smlnj for?
 Do we really need all of them?
 Does the proliferation of cm files represent an attempt at "flexibility" that hasn't been used
 for the last 20+ years?
+How does one go about discovering which cm files are essential, and which are "optional"?
 
 What do the pseudo-alias cm files in system/smlnj/viscomp do for us?
 What would break if we just used the original cm files that are bind "aliased"?
