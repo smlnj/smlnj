@@ -6,7 +6,7 @@
 
 signature PPDEC =
 sig
-  val fmtDec : Environment.environment -> (Absyn.dec * LambdaVar.lvar list) -> NewPrettyPrint.format
+  val fmtDec : Environment.environment -> (Absyn.dec * LambdaVar.lvar list) -> Formatting.format
 end (* signature PPDEC *)
 
 structure PPDec : PPDEC =
@@ -22,7 +22,7 @@ local
   structure AS = Absyn
   structure T = Types
   structure M = Modules
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
   structure PPT = PPType
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
@@ -38,6 +38,10 @@ local
 
   fun bug msg = ErrorMsg.impossible ("PPDec: "^msg)
 in
+
+(* BUG WORKAROUND: This declaration to force smlnj-lib/PP library to be built into the compiler
+ * so that tools like ml-ulex that use PP will build. *)
+(* val xxx = TextIOPP.openOut *)
 
 type object = Unsafe.Object.object
 
@@ -93,10 +97,10 @@ fun fmtDec ({static,dynamic}: Environment.environment)
        fun fmtVar (V.VALvar{path, access, typ=ref ty, prim, ...}) =
              if isLazyBogus path then PP.empty else
 	       (dbsaysnl [">>> fmtVar", SP.toString path];
-		(PP.hcat
-	           (PP.hblock [PP.text "val", PPP.fmtSymPath path, PP.equal],
-		     (case access
-		        of A.LVAR lv =>  (* access is expected to be an LVAR *)
+		(PP.hblock
+	           [PP.hblock [PP.text "val", PPP.fmtSymPath path, PP.equal],
+		    (case access
+		       of A.LVAR lv =>  (* access is expected to be an LVAR *)
 			    (case StaticEnv.look (static, SP.last path)
 			      of Bindings.VALbind(V.VALvar{access = A.PATH (A.EXTERN pid, pos), ...}) =>
 				  if isExport lv  (* is it "exported"? *)
@@ -113,7 +117,7 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 				| _ => PP.text "<hidden>"
 			     (* end case *))
 		        | _ => bug "fmtVar"
-		        (* end case *)))))
+		        (* end case *))]))
          | fmtVar _ = PP.empty
 
        (* fmtVb : AS.vb -> PP.format *)
@@ -160,15 +164,15 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	    let fun fmtDcons nil = PP.empty
 		  | fmtDcons dcons =
 		    let fun fmtDcon ({name,domain,rep}) =
-			    PP.hcat
-			      (PPS.fmtSym name,
+			    PP.hblock
+			      [PPS.fmtSym name,
 			       case domain
 			         of SOME dom =>
-			              PP.hcat
-					(PP.text "of",
-				         PPT.fmtDconDomain (members,freetycs) static dom)
-				  | NONE => PP.empty)
-		     in PP.hcat (PP.equal, PP.hsequence (PP.text " |") (map fmtDcon dcons))
+			              PP.hblock
+					[PP.text "of",
+				         PPT.fmtDconDomain (members,freetycs) static dom]
+				  | NONE => PP.empty]
+		     in PP.hblock [PP.equal, PP.hsequence (PP.text " |") (map fmtDcon dcons)]
 		    end
 		val {dcons, ...} = Vector.sub(members,index)
 	     in PP.hblock
@@ -183,23 +187,23 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	        [PP.text "exception", PPS.fmtSym name,
 		 case etype
 		   of NONE => PP.empty
-		    | SOME ty' => PP.hcat (PP.text " of", PPT.fmtType static ty')]
+		    | SOME ty' => PP.hblock [PP.text " of", PPT.fmtType static ty']]
 
 	  | fmtEb (AS.EBdef{exn=T.DATACON{name,...}, edef=T.DATACON{name=dname,...}}) =
 	      PP.hblock [PP.text "exception", PPS.fmtSym name, PP.equal, PPS.fmtSym dname]
 
 	and fmtStrb (AS.STRB{name, str, ...}) =
-	      PP.pcat
-		(PP.hblock [PP.text "structure", PPS.fmtSym name, PP.colon], 
-		 PP.softIndent 2 (PPModules.fmtStructure static (str, !signatures)))
+	      PP.pblock
+		[PP.hblock [PP.text "structure", PPS.fmtSym name, PP.colon], 
+		 PP.indent 2 (PPModules.fmtStructure static (str, !signatures))]
 
 	and fmtFctb (AS.FCTB{name, fct, ...}) =
-	    (PP.pcat
-	       (PP.hblock [PP.text "functor", PPS.fmtSym name, PP.colon],
-	        case fct
-		  of M.FCT { sign, ... } =>
-		       PP.softIndent 2 (PPModules.fmtFunsig static (sign, !signatures))
-		   | _ => PP.text "<sig>"))  (* blume: cannot (?) happen *)
+	      PP.pblock
+	        [PP.hblock [PP.text "functor", PPS.fmtSym name, PP.colon],
+	         case fct
+		   of M.FCT { sign, ... } =>
+		        PP.indent 2 (PPModules.fmtFunsig static (sign, !signatures))
+		    | _ => PP.text "<sig>"]  (* [Blume:] cannot (?) happen *)
 
         and fmtSigb sign =
 	    let val name = case sign
@@ -221,8 +225,8 @@ fun fmtDec ({static,dynamic}: Environment.environment)
             end
 
 	and fmtFixity {fixity,ops} =
-	      PP.hcat (PP.text (Fixity.fixityToString fixity),
-		       PP.hsequence PP.empty (map PPS.fmtSym ops))
+	      PP.hblock [PP.text (Fixity.fixityToString fixity),
+		       PP.hsequence PP.empty (map PPS.fmtSym ops)]
 
 	and fmtOpen(pathStrs) =
 	    if !printOpens
@@ -230,9 +234,9 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 		   (map (fn (path,str) =>
 			    PPModules.fmtOpen static (path, str, !signatures))
 			pathStrs)
-	    else PP.hcat 
-		   (PP.text "open",
-		    PP.psequence PP.empty (map (fn (path,_) => PPP.fmtSymPath path) pathStrs))
+	    else PP.hblock 
+		   [PP.text "open",
+		    PP.psequence PP.empty (map (fn (path,_) => PPP.fmtSymPath path) pathStrs)]
 
 	and fmtVARSEL (var1, var2, index) = fmtVar var1
 
@@ -244,9 +248,9 @@ fun fmtDec ({static,dynamic}: Environment.environment)
 	       | AS.DOdec _ => PP.empty
 	       | AS.TYPEdec tbs => PP.vblock (map fmtTb tbs)
 	       | AS.DATATYPEdec{datatycs,withtycs} =>
-		   PP.vcat
-		     (PP.vblock (map fmtDataTyc datatycs),
-		      PP.vblock (map fmtTb withtycs))
+		   PP.vblock
+		     [PP.vblock (map fmtDataTyc datatycs),
+		      PP.vblock (map fmtTb withtycs)]
 	       | AS.ABSTYPEdec {abstycs, withtycs, body} =>
 		   PP.vblock
 		     [PP.vblock (map fmtAbsTyc abstycs),

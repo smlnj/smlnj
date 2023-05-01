@@ -51,7 +51,7 @@ structure UnpickMod : UNPICKMOD = struct
 		   ModuleId.tmap * (unit -> string)
 
     structure A = Access
-    structure LT = Lty
+(*    structure LT = Lty *)
     structure T = Types
     structure SP = SymPath
     structure IP = InvPath

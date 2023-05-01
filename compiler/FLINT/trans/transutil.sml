@@ -104,7 +104,7 @@ fun aconvertPat (pat, {mkLvar=mkv, ...} : compInfo)
                            repetition in OR patterns *)
                     | find (_::rest) = bug "aconvertPat: bad varmap key"
 		    | find nil =
-		        let val (newtyp,_) = TypesUtil.instantiatePoly oldtyp
+		        let val (newtyp,_) = TU.instantiatePoly oldtyp
 			    val newvar =
                                 V.VALvar{access=DA.dupAcc(oldlvar,mkv), prim=prim,
 					  typ=ref newtyp, path=path, btvs = btvs}

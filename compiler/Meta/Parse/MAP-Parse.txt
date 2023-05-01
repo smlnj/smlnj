@@ -1,0 +1,264 @@
+compiler/Parse/MAP-Parse.txt
+
+Map of Parse (directory and CM goup/library)
+  The part of the SML/NJ frontend that is concerned with lexing and parsing SML programs. 
+
+* Excluding uses (mentions) of modules from Basis (basis.cm).
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+Parse/parser.cm -- the Parse Group/Library CDF
+
+
+(* ---------------------------- Exports ---------------------------- *)
+
+signature PARSER_CONTROL
+structure ParserControl
+
+signature AST
+signature ASTUTIL
+signature SMLFILE
+signature PPAST
+
+structure Ast
+structure AstUtil
+structure SmlFile
+structure PPAst 
+
+
+(* ---------------------------- Module Index ---------------------------- *)
+
+LOCAL:
+
+AST		  ast/ast.sig
+Ast		  ast/ast.sml
+ASTUTIL		  ast/astutil.sig
+AstUtil		  ast/astutil.sml
+PPAST		  ast/ppast.sig
+PPAst		  ast/ppast.sml
+
+SMLNJ_TOKENS	  lex/tokentable.sml
+TokenTable [fct]  lex/tokentable.sml 	  
+UserDeclarations  lex/user.sml
+MLLexFun	  lex/ml.lex (=> ml.lex.sml)
+SMLLexFun	  lex/sml.lex (=> sml.lex.sml)
+
+ML_TOKENS	  parse/ml.grm (=> ml.grm.sig)
+ML_LRVALS	  parse/ml.grm (=> ml.grm.sig)
+SML_TOKENS	  parse/sml.grm (=> sml.grm.sig)
+SML_LRVALS	  parse/sml.grm (=> sml.grm.sig)
+MLLrValsFun  	  parse/ml.grm (=> ml.grm.sml)
+SMLLrValsFun  	  parse/sml.grm (=> sml.grm.sml)
+
+PARSER_CONTROL	  main/parsercontrol.sml
+ParserControl	  main/parsercontrol.sml
+ParseResult	  main/parse-result.sml
+SMLNJ_PARSER	  main/parser.sig
+MLParser	  main/ml-parser.sml
+SMLParser	  main/sml-parser.sml
+SMLFILE		  main/smlfile.sml
+SmlFile		  main/smlfile.sml
+
+
+IMPORTS:
+
+BasicControl	  Basics/control/basiccontrol.sml
+RealLit		  Basics/reals/real-lit.sml
+Symbol		  Basics/symbol/symbol.sml
+FastSymbol	  Basics/symbol/fastsymbol.sml  
+Fixity		  Basics/symbol/fixity.sml  
+Source		  Basics/source/source.sml
+SourceMap	  Basics/source/sourcemap.sml
+WordStringHashTable  Basics/util/wordstr-hashtable.sml
+
+HashString	  smlnj-lib/Util
+
+Controls	  smlnj-lib/Controls
+ControlUtil	  smlnj-lib/Controls
+ControlRegistry	  smlnj-lib/Controls
+
+JoinWithArg	  ml-yacc/lib/join.sml
+LrParser	  ml-yacc/lib/parser2.sml
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
+Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+Parse/
+
+ast/  -- concrete syntax trees (cst?)
+ast.sig
+  < AST
+  > Symbol*
+    SourceMap*
+    Fixity*
+    RealLit*
+
+ast.sml
+  < Ast
+  > AST
+    Symbol*
+    SourceMap*
+    Fixity*
+    RealLit*
+
+astutil.sig
+  < ASTUTIL
+  > Ast
+    Symbol*
+    ErrorMsg*
+
+astutil.sml
+  < AstUtil
+  > ASTUTIL
+    Ast
+    Symbol*
+    ErrorMsg*
+
+ppast.sig
+  < PPAST
+  > Ast
+    Source*
+    Formatting*
+
+ppast.sml
+  < PPAst
+  > Ast
+    PPAST
+    ParserControl
+    Symbol*
+    Fixity*
+    Source*
+    SourceMap*
+    PPSymbols*
+    PPSourceMap*
+    Formatting*
+    
+lex/
+tokentable.sml
+  < SMLNJ_TOKENS
+    TokenTable [fct]
+  > WordStringHashTable*
+    FastSymbol*
+    HashString*
+
+user.sml
+  < UserDeclarations
+  > Source*
+    SourceMap*
+    ErrorMsg*
+
+ml.lex : MLLex  => ml.lex.sml
+  < MLLexFun [fct]
+  > UserDeclarations
+    ML_TOKENS (parse/ml.grm.sig)
+    ErrorMsg*
+
+sml.lex : MLLex => sml.lex.sml
+  < SMLLexFun [fct]
+  > UserDeclarations
+    SML_TOKENS (parse/sml.grm.sig)
+
+parse/
+ml.grm : MLYacc => ml.grm.{sig,sml}
+  < ML_TOKENS   ml.grm.sig
+    ML_LRVALS   ml.grm.sig
+    MLLrValsFun [fct]  ml.grm.sml
+  > Ast
+    AstUtil
+    PARSER_DATA* (ml-yacc-lib/base.sig) 
+    ErrorMsg*
+    FastSymbol*
+    Symbol*
+    Fixity*
+    SourceMap*
+
+sml.grm : MLYacc => sml.grm.{sig,sml}
+  < SML_TOKENS (sml.grm.sig)
+    SML_LRVALS (sml.grm.sig)
+    SMLLrValsFun (sml.grm.sml)
+  > SML_TOKENS
+    Ast
+    AstUtil
+    PARSER_DATA* (ml-yacc-lib/base.sig) 
+    ErrorMsg*
+    FastSymbol*
+    Symbol*
+    Fixity*
+    SourceMap*
+
+main/
+parsercontrol.sml
+  < PARSER_CONTROL
+    ParserControl
+  > BasicControl*
+    Controls*
+    ControlUtil*
+    ControlRegistry*
+
+parse-result.sml
+  < ParseResult
+  > Ast
+
+parser.sig
+  < SMLNJ_PARSER
+  > ParseResult
+    Source*
+
+ml-parser.sml
+  < MLParser
+  > SMLNJ_PARSER  
+    MLLrValsFun
+    MLLexFun
+    ParseResult 
+    ParserControl
+    JoinWithArg*
+    LrParser*
+    ErrorMsg*
+    Source*
+    SourceMap*
+    Control_Print*
+
+sml-parser.sml
+  < SMLParser
+  > SMLNJ_PARSER  
+    SMLLrValsFun
+    SMLLexFun
+    ParseResult 
+    ParserControl
+    JoinWithArg*
+    LrParser*
+    ErrorMsg*
+    Source*
+    SourceMap*
+    Control_Print*
+
+smlfile.sml
+  < SMLFILE
+    SmlFile
+  > Ast
+    ParseResult
+    MLParser
+    SMLParser
+    ParserControl
+    Source*
+    Stats*
+    
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+
+(* Basis *)
+$smlnj/basis/basis.cm 
+
+(* smlnj-lib *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* compiler libraries -- why via $smlnj/viscomp *)
+$smlnj/viscomp/basics.cm
+
+$smlnj/ml-yacc/ml-yacc-lib.cm

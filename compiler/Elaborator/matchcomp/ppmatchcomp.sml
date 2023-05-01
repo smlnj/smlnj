@@ -11,7 +11,8 @@ struct
 
 local (* top local *)
 
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure LV = LambdaVar
   structure A = Access
   structure V = Variable
@@ -28,11 +29,12 @@ local (* top local *)
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
 
-  fun bug msg = ErrorMsg.impossible ("MCPrint: " ^ msg)
+  fun bug msg = ErrorMsg.impossible ("PPMatchComp: " ^ msg)
 
   val printDepth = Control_Print.printDepth
 
-  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
+  (* ivblock : PP.format list -> PP.format *)
+  fun ivblock formats = PP.indent 3 (PP.vblock formats)
 
 in
 
@@ -43,14 +45,24 @@ fun debugMsg flag (msg: string) =
 (* debugPrint : bool ref -> string * PP.format -> unit *)
 fun debugPrint flag (msg: string, format: PP.format) =
     if !flag
-    then PP.printFormatNL (PP.vcat (PP.text msg, PP.hardIndent 2 format))
+    then PF.printFormatNL (PP.vblock [PP.text msg, PP.indent 2 format])
     else ()
+
 
 (* fmtCon : AS.con -> PP.format *)
 fun fmtCon (con : AS.con) : PP.format = PP.text (AU.conToString con)
 
+(* fmtLink : P.link -> PP.format *)
+fun fmtLink (P.PI n) = PP.cblock [PP.text "PI:", PP.integer n]
+  | fmtLink (P.VI (n,_)) = PP.cblock [PP.text "VI:",PP.integer n]
+  | fmtLink (P.DC (con as AS.VLENcon _)) =
+      PP.cblock [PP.text "VL", PP.brackets (fmtCon con)]
+  | fmtLink (P.DC con) =
+      PP.cblock [PP.text "DC", PP.brackets (fmtCon con)]
+
 (* fmtPath : P.path -> PP.format *)
-fun fmtPath (path: P.path) = PP.text (P.pathToString path)
+fun fmtPath (path: P.path) =
+    PP.list (map fmtLink path)
 
 (* fmtOption : ('a -> PP.format) -> 'a option -> PP.format *)
 (* local variant, superceding PP.option *)
@@ -61,7 +73,7 @@ fun fmtOption formatter elemOp =
 
 (* fmtConsig : A.consig -> PP.format *)
 fun fmtConsig (A.CSIG(n,m)) = 
-      PP.ccat (PP.text "CSIG", PP.parens (PP.cblock [PP.integer n, PP.comma, PP.integer m]))
+      PP.cblock [PP.text "CSIG", PP.parens (PP.cblock [PP.integer n, PP.comma, PP.integer m])]
   | fmtConsig A.CNIL = PP.text "NIL"
 
 (* fmtRuleset : ruleset -> PP.format *)
@@ -74,20 +86,20 @@ fun fmtSubcase caseFormatter subcase =
       of CONST => PP.text "CONST"
        | DCARG thing => caseFormatter thing
        | VELEMS elems => 
-	   PP.vcat (PP.text "VELEMS:",
-		    viblock (map caseFormatter elems)))
+	   PP.vblock [PP.text "VELEMS:",
+		    ivblock (map caseFormatter elems)])
 
 (* fmtProtoAndor : protoAndor -> PP.format
  * pretty printer for protoAndor nodes *)
 val fmtProtoAndor =
     let fun fmtNode (ANDp {varRules, children}) =
-	      PP.vcat (PP.hcat (PP.text "ANDp", fmtRuleset varRules),
-		       PP.hardIndent 3 (fmtAndChildren children))
+	      PP.vblock [PP.hblock [PP.text "ANDp", fmtRuleset varRules],
+		       PP.indent 3 (fmtAndChildren children)]
 	  | fmtNode (ORp {varRules, sign, cases}) =
-	      PP.vcat
-	        (PP.hblock [PP.text "OR", fmtRuleset varRules, fmtConsig sign],
-		 PP.hardIndent 3 (fmtVariants cases))
-	  | fmtNode (VARp {varRules}) = PP.hcat (PP.text "VAR", fmtRuleset varRules)
+	      PP.vblock
+	        [PP.hblock [PP.text "OR", fmtRuleset varRules, fmtConsig sign],
+		 PP.indent 3 (fmtVariants cases)]
+	  | fmtNode (VARp {varRules}) = PP.hblock [PP.text "VAR", fmtRuleset varRules]
 	  | fmtNode WCp = PP.string "WCp"
 
 	and fmtAndChildren nodes = PP.vblock (map fmtNode nodes)
@@ -95,9 +107,9 @@ val fmtProtoAndor =
 	and fmtVariants variants = PP.vblock (map fmtVariant variants)
 
 	and fmtVariant (con, rules, subcase) =
-	      PP.hcat
-	        (PP.hcat (PP.text (AU.conToString con), fmtRuleset rules),
-		 fmtSubcase fmtNode subcase)
+	      PP.hblock
+	        [PP.hblock [PP.text (AU.conToString con), fmtRuleset rules],
+		 fmtSubcase fmtNode subcase]
 
     in fmtNode 
     end  (* fmtProtoAndor *)
@@ -106,24 +118,22 @@ val fmtProtoAndor =
  *  pretty print formatter for AND-OR nodes *)
 val fmtAndor =
     let fun fmtNode (AND {id, children}) =
-	      PP.vcat (PP.hcat (PP.string "AND", PP.integer id),
-		       fmtAndChildren children)
+	      PP.vblock [PP.hblock [PP.string "AND", PP.integer id],
+		       fmtAndChildren children]
 	  | fmtNode (OR {id, path, sign, defaults, cases}) =
-	      PP.vcat
-	        (PP.hblock [PP.text "OR", PP.integer id, fmtPath path, fmtRuleset defaults, fmtConsig sign],
-		 fmtVariants cases)
+	      PP.vblock
+	        [PP.hblock [PP.text "OR", PP.integer id, fmtPath path, fmtRuleset defaults, fmtConsig sign],
+		 fmtVariants cases]
 	  | fmtNode (VAR {id}) =
-	      PP.hcat (PP.text "VAR", PP.integer id)
+	      PP.hblock [PP.text "VAR", PP.integer id]
 	  | fmtNode WC = PP.string "WC"
 
-	and fmtAndChildren nodes = viblock (map fmtNode nodes)
+	and fmtAndChildren nodes = ivblock (map fmtNode nodes)
 
-	and fmtVariants variants = viblock (map fmtVariant variants)
+	and fmtVariants variants = ivblock (map fmtVariant variants)
 
 	and fmtVariant (con, rules, subcase) =
-	      PP.hcat
-	        (PP.text (AU.conToString con),
-		 fmtSubcase fmtNode subcase)
+	      PP.hblock [PP.text (AU.conToString con), fmtSubcase fmtNode subcase]
 
      in fmtNode
     end (* fmtAndor *)
@@ -131,26 +141,26 @@ val fmtAndor =
 (* fmtDectree : decTree -> PP.format *)
 val fmtDectree =
     let fun fmtDec (SWITCH {id, path, sign, cases, defaultOp, live}) =
-              PP.vcat
-                (PP.hblock [PP.text "SWITCH", PP.integer id, fmtPath path, fmtConsig sign],
-	         fmtSwitch (cases, defaultOp))
+              PP.vblock
+                [PP.hblock [PP.text "SWITCH", PP.integer id, fmtPath path, fmtConsig sign],
+	         fmtSwitch (cases, defaultOp)]
 	  | fmtDec (RHS ruleno) =
-	      PP.hcat (PP.text "RHS", PP.integer ruleno)
+	      PP.hblock [PP.text "RHS", PP.integer ruleno]
 	  | fmtDec (FAIL) =
 	      PP.text "FAIL"
 
 	and fmtSwitch (cases,defaultOp) =
-              viblock
+              ivblock
 	        (map fmtCase cases @
 		 (case defaultOp
 	            of SOME dectree =>
-          	         [PP.pcat (PP.text "*", fmtDec dectree)]
+          	         [PP.pblock [PP.text "*", fmtDec dectree]]
 		     | NONE => nil))
 
 	and fmtCase (con, decTree) =
-	      PP.pcat
-	        (PP.text (AU.conToString con),
-		 PP.softIndent 3 (fmtDec decTree))
+	      PP.pblock
+	        [PP.text (AU.conToString con),
+		 PP.indent 3 (fmtDec decTree)]
      in fmtDec
     end (* fmtDectree *)
 
@@ -160,7 +170,7 @@ fun fmtRule (pat, exp) =
       PP.pblock
         [PPA.fmtPat StaticEnv.empty (pat, 100),
 	 PP.text "=>",
-         PP.softIndent 3 (PPA.fmtExp (StaticEnv.empty, NONE) (exp, 100))]
+         PP.indent 3 (PPA.fmtExp (StaticEnv.empty, NONE) (exp, 100))]
 
 fun fmtMatch match = PP.vblock (map fmtRule match)
 

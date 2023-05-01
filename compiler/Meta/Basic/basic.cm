@@ -1,0 +1,143 @@
+(* compiler/Basic/basic.cm  -- not Basics! *)  
+
+Lirary
+
+  (* symbol/ *)
+  signature SYMBOL
+  signature FASTSYMBOL
+  signature FIXITY
+  signature NUMERIC_LABEL
+  structure Symbol
+  structure FastSymbol
+  structure Fixity  (* -> ? *)
+  structure SymbolHashTable
+  structure SpecialSymbols
+  structure NumericLabel
+  structure PPSymbols
+
+  (* sympath/ *)
+  signature SYMPATH
+  signature INVPATH
+  signature CONVERTPATHS
+  structure SymPath
+  structure InvPath
+  structure ConvertPaths
+
+  (* access/ *)
+  signature ACCESS
+  structure Access
+
+  (* env/ *)
+  signature ENV
+  structure Env
+
+  (* var/ *)
+  ???
+
+  (* stamp/ *)
+  structure Stamps
+  structure StampMap
+  signature PERSSTAMPS
+  structure PersStamps
+  structure PersMap
+  signature PIDENV
+  functor PidEnvFn
+
+  (* numbers/ *)
+  structure IntConst
+  structure RealConst
+
+  (* reals/ *)
+  signature REAL_TO_BITS
+  structure Real64ToBits
+  structure RealLit
+
+  (* util/ *)
+  structure List3
+  structure WordStringHashTable
+
+  Library (pickle/pickle-lib.cm)
+  Library (const-arith/const-arith-lib.cm)
+
+is
+
+(* ------------------------------- Members ------------------------------- *)
+
+(* Basic/access/ *)
+access/access.sig
+access/access.sml
+
+(* Basic/env/ *)
+env/env.sig
+env/env.sml
+
+(* Basic/numbers/ *)
+numbers/int-const.sml
+numbers/real-const.sml
+
+(* Basic/reals/ *)
+reals/real-lit.sml
+reals/real-to-bits-fn.sml
+reals/real-to-bits.sig
+reals/real64-to-bits.sml
+
+(* Basic/stamp/ *)
+stamp/persmap.sml
+stamp/persstamps.sig
+stamp/persstamps.sml
+stamp/pidenv.sig
+stamp/pidenv.sml
+stamp/stamps.sig
+stamp/stamps.sml
+
+(* Basic/symbol/ *)
+symbol/fastsymbol.sig
+symbol/fastsymbol.sml
+symbol/fixity.sml    (* should move to Parse or ElabData/statenv? *)
+symbol/numericlabel.sig
+symbol/numericlabel.sml
+symbol/ppsymbols.sml
+symbol/specialsyms.sml
+symbol/symbol-hashtable.sml
+symbol/symbol.sig
+symbol/symbol.sml
+
+(* Basic/sympath/ *)
+sympath/sympaths.sig
+sympath/sympaths.sml
+
+(* Basic/var/ *)
+var/lambdavar.sig
+var/lambdavar.sml
+
+(* Basic/util/ *)
+util/list3.sml
+util/wordstr-hashtable.sml
+
+(* Basic/const-arith -- formerly Library/const-arith *)
+(* -> const-arith/const-arith-lib.cm:
+const-arith/bitwise-const-arith-sig.sml
+const-arith/bitwise-const-arith.sml
+const-arith/const-arith-glue-fn.sml
+const-arith/const-arith-sig.sml
+const-arith/const-arith.sml
+const-arith/signed-const-arith-sig.sml
+const-arith/signed-trapping-arith.sml
+const-arith/unsigned-const-arith-sig.sml
+const-arith/unsigned-wrapping-arith.sml
+*)
+const-arith/const-arith-lib.cm
+
+(* Basic/pickle -- formerly Library/pickle *)
+(* -> pickle-lib.cm:
+pickle/crc.sml
+pickle/pickle-util.sml
+pickle/unpickle-util.sml
+*)
+pickle/pickle-lib.cm
+
+(* ------------------------------- Imports ------------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+

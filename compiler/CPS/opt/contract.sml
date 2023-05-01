@@ -51,7 +51,6 @@ struct
 open CPS
 structure LB = LtyBasic
 structure LV = LambdaVar
-structure CA = ConstArith
 
 structure CG = Control.CG
 

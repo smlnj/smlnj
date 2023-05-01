@@ -1,0 +1,228 @@
+smlnj/notes/library-org.txt
+
+Notes on the compiler "component" CM libraries
+
+[Desired] Dependency graph (skeleton, missing some import edges):
+
+    TopLevel
+       |
+    CodeGen (CFG)
+       |        \
+      CPS     Execution
+       |
+     FLINT   Elaborate
+       \      /
+        \    /
+       ElabData	   Parse
+          |
+        Basics
+
+May possibly want a finer-grain library structure (E.g. break
+up Basics + ElabData/basics into multiple libraries -- see below).
+
+* Most of the libraries depend on toplevel.cm for Control. So TopLevel
+  is also a common import!
+
+* Should Control, ErrorMsg, Target be included in a new "low-level"
+  library, maybe called Admin?  This would contain functionality that
+  is not properly part of the compilation process.
+  
+  Admin/
+    control/
+      < Control: CONTROL
+        Control_Print  (or PrintControl? : PRINTCONTROL)
+        [what about ElabDataControl, etc.?]
+        The "component" control structures will have "compiler-specific" control flags.
+
+    errormsg/
+      < ErrorMsg ...
+      
+    compiler/  ?
+      < Target
+
+    stats/
+
+    source/ ?
+
+  TopLevel should not be at the bottom of the dependency graph
+  (because of Control)!  Moving Control into Admin would accomplish this.
+
+  More detail below.
+
+* Basics/print should go away -- PrettyPrint should be used instead of
+  "fancy" print formatting routines.
+  -- prettyprint.sml, pputil.sig,sml are subsummed by PrettyPrint
+  -- printutil.{sig,sml}: the other sequence printing and "string formatting" functions can
+     also be replaced by PrettyPrint.
+     [used mainly in obsolete printing code like printflint.sml]
+  -- printcontrol.sml can be moved to Admin/control?
+  
+
+* TopLevel should be renamed. To what?
+  It should be responsible for the interactive system, the so called
+  REPL. This needs access to the whole chain: lexer, parser, elaborator,
+  FLINT, CPS, NCG (IR optimization, code generation).
+
+  Interact, REPL
+
+* NewCodeGen should be renamed CodeGen (Or something else?)
+
+* Basics/symbol should be moved to ElabData/basics (or whatever that
+  is called).
+
+* Basics/pid should also be moved to ElabData/basics.  (PersStamps, etc.)
+
+* Basics/real -> ElabData/basics?
+
+* "Basics" -> "Foundations" or "Common" or "Library"
+
+* "LambdaVar" -> generic "Var"
+   variables represented as integers, possibly "named"
+   used for bound value variables in expressions, and another variety used for
+   expression-level type variables, and another variety for module-level typcon variables
+
+* ElabData/basics/debindex.* -> *  [delete]
+   plan to eliminate the use of DeBruijn variables to types/type constructors in front end
+   and FLINT.  In the meantime, use the concrete integers, etc.
+
+* ElabData/basics/tkind.sml -> ? [FLINT]
+   could temporarily move to ElabData/types.
+
+* ElabData/basics/coresym.sml -> ? [a single special structure symbol "_Core"]
+   probably belongs somewhere else, not a "generic" and "fundamental" compiler type
+
+* ElabData/basics/sig-plist.sml (SigPropList)
+   a property list used in the translation of modules (see FLINT/trans/module-plists.sml)
+   Not generic or fundamental. Move (back) to FLINT/trans?
+
+------------------------------------------------------------------------------------------
+
+compiler/Basics (or "Base"?, or "Basic" (no s)):
+  fundamental and/or "generic" types (e.g. symbol) that are used in the compiler
+  Top-level directory replacing ElabData/basics.
+
+symbol:
+  symbol.{sig,sml} moved from Basics/symbol
+  ...
+
+paths:
+  sympaths.{sig,sml}
+  ppsympaths.sml
+  pathname.sml -> * (should be integrated into sympaths)
+  
+pids:
+  PersStamps
+  pid
+
+"dynamic access"
+  var.{sig,sml} (<- LambdaVar)  [VarFn functor, used to create stateful instances]
+    A "generic" version of variables represented by ints/words. LambdaVar is then
+    a special "instance" of generic variables, which has other instances, e.g. type variables.
+  access.{sig,sml}
+
+environments (generic environments over symbols)
+  env.{sig,sml}
+
+numbers/  (ints and reals)
+  real-const.sml (from Basics/compiler)
+  int-const.sml (from Basics/compiler)
+  const-arith/ (from Library)  
+  bignums/ (from Library)
+
+compinfo.sml? (<- ElabData/main/compinfo.sml)
+
+extras that don't belong here
+  debindex.{sig,sml}  -->  * (delete -- replaced by "Var" type/tycon/module variables)
+  pathname.sml --> sympath.sml  (integrate into sympath)
+  sig-plist.sml --> FLINT/trans?
+  tkind.sml --> ElabData/modules? (eventually a front-end version of kinds in ElabData/modules)
+  prettyprint --> *  (delete, except for prettyprint/doc -> ?)
+    replaced by smlnj-lib/PrettyPrint (except for prettyprint/doc)
+
+
+------------------------------------------------------------------------------------------ 
+Library
+  from Basics/util + Library/* ? 
+  The following subdirectories could be moved to "Base" (or Basics) library, followed by elimination
+  of the then empty Library.
+
+pickle/ (current Library/pickle)
+  The whole pickling scheme should eventually be replaced, probably by ASDL pickling.
+  But now it seems to be a basic pickle library used by ElabData/pickle, and it perhaps
+  belongs in smlnj-lib. The README suggests that Library/pickle should be replaced
+  by a new Pickle library in smlnj-lib.
+  
+util/
+  list3.sml
+    ListPair for triples (zip3). used: Elaborator/elaborate/elacore.sml, TopLevel/print/ppobjs.ml
+  wordstr-hashtable.sml
+    used: ElabData/types/tuples.sml, Parse/lex/tokentable.sml
+  print-util.sml? -> string-util.sml?
+    minimized version of Basics/print/printutil.sml; no longer prints, so -> string-util.sml
+    -- may be minimized to nothing (except trimmed?) or just a small string utility module
+       defining trimmed and quoated.
+
+
+------------------------------------------------------------------------------------------
+Admin/ (or whatever we decide to call it)
+
+compiler/ (or "features" or "options")
+  target.sig
+  target32.sml
+  target64.sml
+  endianess-big.sml
+  endianess-little.sml
+
+    compileexn.sml --> ? (somewhere in Basics?)
+
+control/
+  compiler-control.s??   (<- Basics/control/basiccontrol.sml (BasicControl: BASIC_CONTROL)	
+                          plus a few items from old Control (TopLevel/main/control.s??))
+  print-control.s??      (<- Control_Print (Basics/print/printcontrol.sml))
+  parser-control.s??     (<- Parse/main/parsercontrol.sml)
+  elabdata-control.s??   (<- (ElabData/main/edcontrol.{sig,sml})
+  matchcomp-control.s??  (<- MCControl (Elaborator/control/mccontrol.s??
+  elaborator-control.s?? (<- ElabControl (Elaborator/control/elabcontrol.s??
+  flint-control.s??      (<- FLINT_Control
+  codegen-control.s??    (<- Control_CG (TopLevel/main/control.s??))
+  toplevel-control.s??   (TopLevelControl [new]: <- select items from old Control (TopLevel/main/control.s??))
+  control.s??            -- bundles all the "component" control modules listed above, for
+                          convenient access in the interactive REPL
+   
+  Note: These new control structures in Admin/control are simplified by using plain ref values
+    for controls without depending on smlnj-lib/Controls with its "registries", "priorities",
+    "obscurities", etc. We didn't really use those facilities in any essential way in the old
+    control structures. As far as I know, we were just working around these extra, and irrelevant,
+    complexities.
+
+  Note: There is no control structure for CPS. This is because the control flags for CPS seem to be
+    found in CodeGenControl (codegen-control.s??).
+
+errormsg/
+  (old versions of files eliminated)
+
+source/
+  (old versions of files eliminated)
+
+stats/
+  stats.sml
+
+Note: Admin (admin.cm) does not have to import
+
+  $smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
+
+because we have revised the code for the control structures to use plain references that
+are not produced through the registry mechanisms of the Controls library.
+
+
+For further details, see:
+
+  Admin/README.txt
+  Admin/admin.cm
+  Admin/MAP-ADM.txt
+
+  Basic/README.txt
+  Basic/basic.cm
+  Basic/MAP-BASIC.txt
+
+

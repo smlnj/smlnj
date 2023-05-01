@@ -1,0 +1,26 @@
+(* smlnj-libl/Dev/PrettyPrint/src91/prettyprint.cm *)
+(* CM Description File for the PrettyPrinter Library
+ * Default version *)
+
+Library
+
+  structure Style
+  structure Formatting
+  structure PrintFormat    
+
+is
+
+$smlnj/basis/basis.cm
+
+default/style.sml    (* Style: default style *)
+format.sml           (* Format *)
+measure.sig          (* MEASURE *)
+measure.sml          (* Measure *)
+device.sig           (* DEVICE *)
+render.sig           (* RENDER *)
+render-fct.sml       (* RenderFn *)
+default/device.sml   (* DefaultDevice *)
+default/render.sml   (* Render = RenderFn (DefaultDevice) *)
+formatting.sig       (* FORMATTING (was PRETTY_PRINT) *)
+formatting.sml       (* Formatting (was PrettyPrint) *)
+printformat.sml      (* PrintFormat *)

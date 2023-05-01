@@ -52,7 +52,7 @@ install:	$(BUILD_DIRS)
 	  (cd $$dir && $(MAKE) install) || exit $$?; \
 	done
 
-build:		$(BUILD_DIRS) examples doc
+build:		$(BUILD_DIRS) examples
 	(cd src && $(MAKE) build) || exit $$?
 
 doc:

@@ -9,7 +9,8 @@ struct
 
 local
 
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPS = PPSourceMap  (* fmtRegion, fmtSourceRegion *)
   structure SR = Source
   structure SM = SourceMap
@@ -60,8 +61,8 @@ in
 
   (* impossibleWithBody : string -> PP.format -> 'a *)
   fun impossibleWithBody (msg: string) (body: PP.format) =
-      (PP.printFormatNL
-         (PP.vcat (PP.hcat (PP.text "Error: Compiler bug:", PP.text msg), body));
+      (PF.printFormatNL
+         (PP.vblock [PP.hblock [PP.text "Error: Compiler bug:", PP.text msg], body]);
        raise Error)
 
   (* warn : string -> unit *)
@@ -72,22 +73,20 @@ in
   fun fmtSeverity WARN = PP.text "Warning:"
     | fmtSeverity COMPLAIN = PP.text "Error:"
 
-  (* fmtMessage : output * PP.format * severity * string * PP.format -> unit *)
+  (* fmtMessage : PP.format * severity * string * PP.format -> unit *)
   fun fmtMessage (location: PP.format, severity: severity, msg: string, body: PP.format) =
       case (!BasicControl.printWarnings, severity)
 	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
 	 | _ => PP.appendNewLine
-		  (PP.hblock
-		     [location,
-		      fmtSeverity severity,
-		      PP.text msg,
-		      PP.hardIndent 2 body])
+                  (PP.vblock
+		     [PP.hblock [location, fmtSeverity severity, PP.text msg],
+		      PP.indent 2 body])
 
   (* error : SR.source -> errorFn *)
   fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =
       let val errorFmt = fmtMessage (PPS.fmtSourceRegion (source, region), severity, msg, body)
        in recordError (severity, #anyErrors source);
-	  PP.render (errorFmt, defaultOutput (), !lineWidth)
+	  PF.render (errorFmt, !lineWidth)
       end
 
   (* errorNoSource : errorFn

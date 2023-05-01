@@ -1,0 +1,1346 @@
+~/sml/Dev/github/smlnj/notes/install.txt  [newpp branch of smlnj]
+
+Notes on SML/NJ build/install process
+-------------------------------------
+DBM, 2023.1
+
+Trying to understand the build/install process in order to trouble-shoot the problem of
+adding smlnj-lib/prettyprint without breaking the build process.
+
+A couple of hypotheses:
+
+1. I screwed up somewhere in adding smlnj-lib/PrettyPrint while trying not to remove or
+"disable" the existing smlnj-lib/PP library. Possibly I deleted or edited some CM description
+file improperly. [Was adding a pp-lib.cm line to config/actions part of the problem?]
+
+2. There is a bug in the CM functionality around BOOT_LIST files (and associated
+"rebuilding" of heap files. This bug may cause CM not to properly take account of the fact
+that pp-lib.cm is a member of the ml-ulex/sources.cm file, leading to pp-lib.cm
+(or smlnj-lib/PP) not being included in the ml-ulex specific BOOT_FILE that is generated
+by the $SML command in ml-build.
+
+3. Possibly both of (1) and (2) are true.
+
+----------------
+Abbreviations:
+   CDF = "CM Description File", i.e. a file with the .cm extension
+	
+==========================================================================================
+Solution Found! [2023.1.24]
+
+Dummy use of smlnj-lib/PP inserted in the compiler in such a way that it didn't get
+"pruned", so the BOOTLIST created by system/cmb-make includes "SMLNJ-LIB/PP" specs.
+
+i. create file compiler/Basics/print/pp-dummy.sml that uses the PP library.
+   This file defines signature PPDUMMY and structure PPDummy : PPDUMMY.
+
+ii. (a) In compiler/Basics/basics.cm, add
+
+           signature PPDUMMY
+           structure PPDummy
+
+         to the exported symbol list.
+     (b) Add line
+
+           $smlnj/smlnj-lib/pp-lib.cm
+
+iii. Add a line
+
+        val xxx = PPDummy.foo
+
+     to the file compiler/TopLevel/print/ppdec.sml. This reference was apparently
+     "essential enough" so that the use of PPDummy, and hence smlnj-lib/PP "stuck".
+
+iv. Compiled with system/cmb-make, using the main branch version of sml (on my system,
+    this was ~/sml/Dev/github/smlnj1/bin/sml). Then ran
+
+       ./makeml
+       ./installml -clean
+       cd ..   -- to $SMLNJ = ~/sml/Dev/github/smlnj (on the newpp branch that has
+       	          the new smlnj-lib/PrettyPrint library in addition to smlnj-lib/PP.
+
+       ./build.sh  -- success! all tools, including ml-ulex build successfully
+
+Postmortem:
+  * lines starting with "SMLNJ-LIB/PP" reappeared in sml.boot.amd64-unix/BOOTLIST:
+
+hoy$ pwd
+/Users/dbm/sml/Dev/github/smlnj/system/sml.boot.amd64-unix
+hoy$ grep PP BOOTLIST
+SMLNJ-LIB/PP/.cm/amd64-unix/pp-lib.cm@21077:$SMLNJ-LIB/PP/pp-lib.cm@21077(pp-stream-sig.sml)
+SMLNJ-LIB/PP/.cm/amd64-unix/pp-lib.cm@20141:$SMLNJ-LIB/PP/pp-lib.cm@20141(pp-device-sig.sml)
+SMLNJ-LIB/PP/.cm/amd64-unix/pp-lib.cm@20836:$SMLNJ-LIB/PP/pp-lib.cm@20836(pp-token-sig.sml)
+SMLNJ-LIB/PP/.cm/amd64-unix/pp-lib.cm@21319:$SMLNJ-LIB/PP/pp-lib.cm@21319(pp-stream-fn.sml)
+SMLNJ-LIB/PP/.cm/amd64-unix/pp-lib.cm@20383:$SMLNJ-LIB/PP/pp-lib.cm@20383(string-token.sml)
+
+   * but the MLBUILD_BOOTLIST that was built by ml-build for ml-ulex, only had "pp-lib":
+
+hoy$ pwd
+/Users/dbm/sml/Dev/github/smlnj/tools/ml-lpt/ml-ulex
+hoy$ grep PP MLBUILD_BOOTLIST 
+hoy$ grep "pp-lib" MLBUILD_BOOTLIST
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@20141:$/pp-lib.cm@20141(pp-device-sig.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@17159:$/pp-lib.cm@17159(default-device-fn.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@15259:$/pp-lib.cm@15259(simple-textio-dev.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@20836:$/pp-lib.cm@20836(pp-token-sig.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@20383:$/pp-lib.cm@20383(string-token.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@21077:$/pp-lib.cm@21077(pp-stream-sig.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@21319:$/pp-lib.cm@21319(pp-stream-fn.sml)
+/Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm@13712:$/pp-lib.cm@13712(textio-pp.sml)
+
+What happened?
+
+My speculation is that in order for the use of pp-lib.cm to work in the building of
+ml-ulex, the PP library had to be built into the compiler.  If the compiler did not "use"
+the PP library, then "sml @CMbuild" as called in bin/ml-build would produce a (temp)
+BOOTLIST that would not include the PP library in the way that was necessary to build
+an ml-ulex heap image from the BOOTLIST in .link-sml.
+
+If this is not the expected behavior (with respect to building a tool like ml-ulex using the PP
+library), then I think there is a bug, probably associated with the @CMbuild functionality.
+
+Simplified Fix: Just add the line
+
+     val xxx = TextIOPP.openOut
+
+  to compiler/TopLevel/print/ppdec.sml, and add the line:
+
+     $smlnj/smlnj-lib/pp-lib.cm
+
+  to compiler/core.cm.
+
+  Then we don't need the dummy file compiler/Basics/print/pp-dummy.sml, and references to
+  that file, the structure PPDummy, and the path $smlnj/smlnj-lib/pp-lib.cm can be removed
+  from basics.cm.
+
+Note: more thoughts.
+  In ml-ulex/sources.cm, pp-lib.cm is referenced by the path
+
+     $/pp-lib.cm
+
+  What does this expand to?  If pp-lib.cm is as defined in config/extrapathconfig, then
+  pp-lib.cm "translates" to "smlnj/smlnj-lib". (Is there in implicit anchor in this path?
+  I'm not sure. What is the corresponding "expanded" CM path?)
+
+  Is it possible there is a confusion about external vs internal instances of the
+  pp-lib.cm library. I.e. the version of the library used internally in the compiler and
+  the version used by other programs, possibly stand-alone programs like ml-ulex?
+
+  As a stand-alone program, the ml-ulex tool does not have access to stuff internal to the
+  compiler, like the compilers "incorporated" copy of the PP library. So it would have to
+  "link" with a separate, _external_ copy of that library.
+
+  I don't understand how the compiler can have an _incorporated_ copy of a library and
+  make it possible to share that _incorporated_ copy with sml code _loaded into the
+  interactive system. But when building a stand-alone application, which exists outside of
+  and independently of the compiler, the appliction would have to link with its own copy
+  of a _incorporated_ library.
+
+  Defn: An _incorporated_ library is one that is linked into the compiler. The compiler
+  may be using the library, but whether it is or not, an _incorporated_ library may/can
+  be available for use by SML code that is loaded into the interactive system, say by
+  CM.make (loading by "use" seems more problematical).  How would new code link to to
+  an incorporated library?  Would it be able to use a CM path in a CM description file
+  that is defined with respect to the compiler's internal anchor environment.
+
+  When building an external program (like a stand-alone tool, like ml-ulex), what
+  CM anchor environment would be used when linking, e.g., smlnj-lib libraries with the
+  program?  Presumably we should not use the internal anchor environment of the compiler.
+  So there must be an implicit or explicit anchor environment with respect to which
+  the program can access libraries.  How is this anchor environment set up and how is
+  it accessed?
+
+  Is it possible that the problem with the ml-ulex build was that it was trying to access
+  the compiler's internal version of the PP library, when instead is should be linking
+  with its own copy of that library.
+
+  I know just enough about these issues to speculate. Is there documentation that
+  addresses this issue of "internal" or incorporated libraries vs "external" libraries,
+  existing independently of the compiler that can be linked into stand-alone programs.
+  
+  [John advocates a policy that requires programs to link with their own copies of
+  libraries even when the library is incorporated and the program is loaded into the
+  interactive system.  The theory of such things should probably be developed
+  independently of any special magic associated with the interactive system and its
+  notion of a pervasive environment.]
+  
+  
+
+==========================================================================================
+
+
+Partial Analysis of the build process
+-------------------------------------
+* need to complete analysis of $SMLNJ/build.sh
+* need to analyze cm/main/cm-boot.sml (fun ml-build, etc.)
+
+------------------------------------------------------------------------------------------
+1. Catalog of files involved in building compiler (+cm), libraries, and tools:
+------------------------------------------------------------------------------------------
+
+Note: all filenames/paths are relative to the SML/NJ ROOT directory
+      (e.g. ~/sml/Dev/github/smlnj in my case, which is a GitHub clone of the newpp branch
+       of the smlnj/smlnj repository)
+
+build.sh [:shell]
+  - the main (top-level) build script
+
+config/ [:dir]
+  actions [:txt/config]
+  dependencies [:txt/config]
+  extrapathconfig [:txt/config]
+  targets [:txt/config]
+  releasedate [:txt/config]
+    - contents is release date (a string), e.g "August 25, 2022\n"
+
+system/ [:dir]
+  README [:txt/doc] ("Compiler Hacker's Guide to new CM...")
+
+  cmb-make  [:shell]
+  makeml    [:shell]
+  installml [:shell]
+  cmb-cross [:shell]
+  all-cross [:shell]
+  iter-make [:shell]
+  testml    [:shell]  
+
+  pathconfig [:txt/config]  (CM path definitions)
+  preloads.bare [:txt/config] (autoload declarations?)
+  preloads.standard [:txt/config] (autoload declarations?)
+  root.cm [:CM desc]
+
+  batchcomp.sml [:sml]
+  serv.sml  [:sml]
+  rserv.sml [:sml]
+  tserv.sml [:sml]
+
+  sml.bin.amd64-unix/ [:dir]
+  sml.boot.amd64-unix/ [:dir] (compiled code]
+
+system/smlnj/ [:dir]
+
+  smlnj-lib/ [:dir]
+     controls-lib.cm [:CM desc]
+     pp-lib.cm [:CM desc]          -- old prettyprint library (smlnj-lib/PP)
+     prettyprint-lib.cm [:CM desc] -- new prettyprint library (smlnj-lib/PrettyPrint)
+     smlnj-lib.cm [:CM desc]       -- smlnj-lib/Util
+     [Q] Why are only these few libraries treated in this directory? What about all
+         the other libraries in smlnj-lib?  Are these the only ones used internally by
+	 the compiler (+cm)?
+	 Hypothesis: the "alias" .cm files in this directory are there so that
+	   the compiler and user programs can use the same library binaries, without
+	   duplication. But how does this work, exactly?
+
+  cm.cm [:CM desc]
+  cm/ [:dir]
+    cm.cm [:CM desc]
+      - something wierd related to pickling and sequencing
+    tools.cm [:CM desc]
+
+    tools.sml [:sml]
+    fetch-cm.sml [:sml]
+    [Q] Why do we need an "external" cm.cm and also an "internal" cm.cm?
+
+  cmb.cm [:CM desc]
+  cmb/ [:dir]
+    current.cm [:CM desc]
+    amd64-unix.cm [:CM desc]
+    arm64-unix.cm [:CM desc]
+
+    amd64-unix.sml
+    arm64-unix.sml
+    select-amd64-unix.sml
+    select-arm64-unix.sml
+
+  installer.cm [:CM desc]
+  library-install.cm 
+  installer/ [:dir]
+    util.cm [:CM desc]
+    installer-util.sml [:sml}
+      - defines "fail" function, which prints "FAILURE:" messages
+    patch-file.sml [:sml}
+    generic-install.sml [:sml}
+      - generates error messages like
+          "FAILURE: Built ml-ulex; ml-ulex.amd64-darwin still missing"
+      - generates messages like
+          "Library <libname> already existed in <file path>"
+    library-install.sml [:sml}
+    nix-install.sml [:sml}
+    win-install.sml [:sml}
+    [Q] Why is util.cm inside (internal to) installer/ but installer.cm and
+        library-install.cm are outside (external to) the installer/ directory?
+
+  internal/ [:dir]
+    cm0.cm
+      - appears in ../cm/cm.cm 
+    cm-lib.cm [:CM desc]
+    cm-sig-lib.cm [:CM desc]
+      - appears in ../cm/cm.cm (the "internal" cm.cm file)
+    versiontool.cm
+    smlnj-version.cm
+    srcpath-lib.cm
+    intsys.cm
+
+    version.sml [:sml] (defines buildData, releaseDate, version, banner)
+    version.template [:sml]  (template instantiated to create version.sml)
+    versiontool.sml [:sml]
+    int-sys.sml
+
+  compiler.cm [:CM desc]
+  compiler/ [:dir]
+    all.cm [:CM desc]
+    amd64.cm  [:CM desc]
+    arm64.cm  [:CM desc]
+    compiler.cm [:CM desc]
+    current.cm [:CM desc]
+    minimal.cm [:CM desc]
+    minimal-only.cm [:CM desc]
+    
+    amd64.sml [:sml]
+    arm64.sml [:sml]
+    compiler.sml [:sml]
+    minimal-compiler.sml [:sml]
+
+    [Q] Why so many different .cm files here? What are their purposes?
+
+  viscomp/ [:dir]
+    amd64.cm [:CM desc]
+    arm64.cm [:CM desc]
+    core.cm [:CM desc] 
+    basics.cm [:CM desc]
+    parser.cm [:CM desc]
+    elabdata.cm [:CM desc]
+    elaborate.cm [:CM desc]
+    execute.cm [:CM desc]
+    debugprof.cm [:CM desc]
+
+    [Q] What is the effect of this viscomp setup? How does it work?
+        What is the potential for supporting a LSP library?
+        We seem to be missing some cm files for major components (e.g. FLINT, CPS)
+	which are by default included in core.cm.
+
+  basis/ [:dir]
+    basis.cm [:CM desc]
+
+  init/ [:dir]
+    init.cmi [:CM cmi]
+    [+ 24 sml files related to initialization of (pervasiv environment?), ml-nlffi]
+
+  asdl/ [:dir]
+    asdl-lib.cm [:CM desc]
+
+system/Basis/ [:dir]
+  basis.cm [:CM desc]
+  basis-common.cm  [:CM desc]
+
+  Exports/ [:dir]
+  TypesOnly/ [:dir]
+  Implementation/ [:dir]
+    - Basis source code
+
+lib/ [:dir]
+  pathconfig [:txt/config]
+    - how derived? Relation to system/pathconfig and config/extrapathconfig?
+    - why repeated lines?
+  pp-lib.cm/ [:dir] (e.g.)
+    .cm/ [:dir]
+      amd64-unix/ [:dir]
+        pp-lib.cm [:binary?, 69089 bytes] 
+  SMLNJ-ASDL-LIB/ [:dir]
+  SMLNJ-BASIS/ [:dir]
+  SMLNJ-LIB/ [:dir]
+  SMLNJ-ML-YACC-LIB/ [:dir]
+  cml/ [:dir]
+  cml-lib/ [:dir]
+  compiler/ [:dir]
+  *.cm/ [:dirs]  [dir-tool, grm-ext, hash-cons-lib, html-lib, etc.]
+  [Why no prettyprint-lib.cm for smlnj-lib/PrettyPrint or system/smlnj/smlnj-lib/prettyprint-lib.cm?]
+
+bin/ [:dir]
+  .arch-n-opsys [:shell]
+  .run-sml [:shell]
+  .link-sml [:shell]
+  .heap/ [:dir]
+    sml.amd64-darwin [:heap image]
+    ml-yacc.amd64-darwin [:heap image]
+    ml-burg.amd64-darwin [:heap image]
+    ...
+  .run/ [:dir]
+    run.amd64-darwin [:x86-64 executable]
+
+  ml-build [:shell]  
+    - script for building stand-alone programs (e.g. ml-yacc), (using SMLofNJ.exportFn)
+    - documented in CM Manual, Section 15
+  ml-makedepend [:shell]  
+  heap2exec [:shell]  
+
+  sml [:symlink] ( -> .run-sml) 
+  ml-yacc [:symlink] ( -> .run-sml) 
+  ml-burg [:symlink] ( -> .run-sml) 
+  ...
+
+config/ [:dir]
+  actions
+  dependencies
+  extrapathconfig
+
+[Q] Why is .link-sml hidden and ml-build not hidden?
+    Is .link-sml ever used independently of ml-build?
+    Does ml-build ever use other values of $LINK?
+
+
+------------------------------------------------------------------------------------------ 
+2. Where do the compiled binary files live?
+------------------------------------------------------------------------------------------
+
+First, what are the varieties of binary files?
+
+* bin files produced by compiling individual source files. These bin files typically have
+the same name as the source file, and are found in hidden .cm/amd64-unix directories within
+source directories.
+
+* bin files containing stabilized CM libraries. These library bin files typically have
+  names like "sources.cm", i.e. they are named after the CM description files for the library?
+  
+Here are some places where bin files are found:
+
+(1) system/sml.boot.amd64-unix (or in $SMLNJ, unnpacked boot.amd64-unix.tgz)
+    (binary files for the compiler itself?)
+    [description of contents?
+     Hypothesis: sml.boot.amd contains only stable library bin files.]
+    sml.boot.amd64-unix contains all the bin files necessary to build the compiler
+    (i.e. the bin/.heap/sml.amd64-darwin heap image file). It also contains BOOT_FILES
+    and PIDMAP files that are used by system/makeml to build the heap image file.
+
+(2) system/sml.bin.amd64-unix
+    [description of contents?
+     Hypothesis: sml.bin.amd64-unix contains (only?) per-source file binary files.]
+
+    sml.bin.amd65-unix and sml.boot.amd64-unix are constructed by running system/cmb-make
+    in $SMLNJ/system. 
+
+(3) in .cm directories in source directories
+    [for libraries and tools, but not compiler and cm?]
+    These .cm directories contain three subdirectories:
+      - GUID/
+          (per source file, re-using source file name) GUIDs
+      - SKEL/
+          (per source file, re-using source file name) 
+          skeletal description for calculating dependencies
+      - amd64-unix/
+          (per source file, re-using source file name) 
+          binary files (code+static)
+
+    E.g. smlnj/smlnj-lib/PP/src/.cm
+    E.g. smlnj/tools/ml-lpt/ml-ulex/.cm 
+    E.g. smlnj/tools/ml-lpt/ml-ulex/BackEnds/.cm 
+
+    Note that code in amd64-unix and GUID info in GUID will be updated
+    whenever the source is recompiled, but not necessarily the SKEL
+    info, which may remain unchanged (?).
+
+    Note that source directories in the compiler and cm (e.g. compiler/Basics/print)
+    also contain .cm directories, but these .cm directories contain only GUID and SKEL
+    subdirectories, but no sml64-unix subdirectories containing binary code.
+    So the missing binary files for these sources are found where? sml.bin.amd64-unix?
+
+(4) lib
+    E.g. lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm (looks like a bin file?)
+
+    Note that in $SMLNJ/build.sh, the lib directory is (initially) populated by
+    recreating the directory structure under sml.boot.amd64-unix (unpacked from
+    a boot tarball named boot.amd64-unix.tgz), and moving the leaf bin files
+    from sml.boot.amd64-unix into the corresponding places in lib.
+
+
+[Q] Why are binary code files found in so many places?
+    Which is the canonical place (for any particular source file) ?
+    Why is there no prettyprint-lib.cm directory in lib?
+
+[Q] Why do we need both sml.bin and sml.boot?
+    What goes in which?
+
+[Q] Is sml.bin just used to build sml.boot and is thereafter redundant?
+    Note that only a tarball of an sml.boot directory is needed by the
+    root build.sh script.
+
+[Q] Where is the format of binary files documented?
+
+
+------------------------------------------------------------------------------------------ 
+NOTE: For the following, I assume shell variable SMLNJ refers to the root directory of my
+SML/NJ source tree:
+
+    SMLNJ = ~/sml/Dev/github/smlnj
+
+which is a clone of the smlnj/smlnj GitHub repository (currently on branch newpp).
+
+We also define, e.g.
+
+    ml-ulex = $SMLNJ/tools/ml-lpt/ml-ulex
+
+the source directory for the ml-ulex tool. In some other respects the descriptions
+have been particularized to my (file) system setup (BIN_DIR, LIB_DIR, RUN_DIR, SML).
+------------------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------------------    
+3. $SMLNJ/build.sh  (shell script) [author: jhr]
+------------------------------------------------------------------------------------------    
+What happens in $SMLNJ/build.sh? (the main, or top-level build script)
+
+1. The initial call of build.sh assumes that it is running in $SMLNJ, which contains the
+source directory tree (probably a clone of the GitHub smlnj/smlnj repo), and that there is
+boot tarball available:
+
+     $SMLNJ/boot.amd64-unix.tgz
+
+[Later it is intended that this tarball will be fetched if necessary, as used to happen
+with config/install.sh.]
+
+Then (as a first approximation)
+
+  a. the runtime system must be compiled (which takes a long time with the llvm runtime)
+     The result is the file bin/.run/run.amd64-darwin is created.
+  b. the boot tarball is unpacked, producing a $SMLNJ/boot.amd64-unix directory (?)
+  c. the sml.amd64-darwin heap image is built and placed in bin/.heap
+     At this point we can run the bin/sml command.
+  d. 
+
+2. The other typical situation where build.sh is called is when
+
+   ./cmb-make
+   ./makeml
+   ./installml -clean
+   cd ..
+
+   have been executed in $SMLNJ/system, leaving a newly build sml heap file in bin/.heap.
+
+3. Local shell variables (assuming running build.sh in $SMLNJ)
+
+   cmd = $0  (= "build.sh", typically)
+   here = $(pwd) (= $SMLNJ = !/sml/Dev/github/smlnj)
+   NOLIB = no (redefined by -nolib CL option)
+   QUIET = yes (redefined as "no" by -verbose, -debug options)
+   INSTALL_DEBUG = no (redefined as "yes" by -debug option)
+   INSTALL_DEV = no (redefined as "yes" by -dev option)
+   MAKE_DOC = no (redefined as "yes" by -doc option)
+   BUILD_LLVM_FLAGS = "" (redefined by -dev, -debug-llvm options)
+
+   CM_VERBOSE [exported] = false if $QUIET = yes | true if $QUIET <> yes
+   SHELL = /bin/sh
+
+   SML_ROOT [exported] = $(pwd) in (dirname $cmd) = $SMLNJ
+   INSTALL_DIR [exported]= $SMLNJ
+   CONFIGDIR [exported] = $SMLNJ_ROOT/config 
+   RUNTIMEDIR = $SMLNJ_ROOT/runtime
+   LLVMDIR = $SMLNJ_ROOT/llvm
+   BINDIR [exported] = $INSTALLDIR/bin = $SMLNJ/bin
+   HEAPDIR = $BINDIR/.heap = $SMLNJ/bin/.heap
+   RUNDIR = $BINDIR/.run = $SMLNJ/bin/.run
+   LIBDIR = $INSTALLDIR/lib = $SMLNJ/lib
+
+   CM_PATHCONFIG [exported] = $LIBDIR/pathconfig = $SMLNJ/lib/pathconfig
+   VERSION = `cat config/version` (SMLNJ version: 2022.1)
+
+   ARCH_N_OPSYS (defined as output of bin/.arch-n-opsys)
+   ARCH = amd64
+   OPSYS = darwin
+   ALLOC = 1M
+   RT_MAKEFILE = mk.amd64-darwin
+
+   BOOT_ARCHIVE = boot.amd64-unix.tgz  -- boot files tarball
+   BOOT_FILES = sml.boot.amd64-unix    -- directory produced by unpacking $BOOT_ARCHIVE
+
+   ORIG_CM_DIR_ARC (defined by call of fish function)
+   CM_DIR_ARC [exported] (defined at l. 378)
+
+   -- unused old variables
+   SRCARCHIVEURL = (URL for remote source archive, where one would get boot tarball; not used)
+   ROOT [exported] = $SMLNJ_ROOT = $SMLNJ
+     (old version of SMLNJ_ROOT, for compatibility, not used locally)
+
+ 4. Utility functions (l. 159)
+
+   installdriver
+      - "instantiate" template shell scripts in config:
+         _arch-n-opsys, _run-sml, _ml-makedepend, _heap2exec, _link.sml, _ml-build,
+         placing the instantiated version in $BINDIR.
+   
+   fish
+      - Fish out the CM metadata directory name from library files
+        and store it in ORIG_CM_DIR_ARC.
+	The single argument is the name of the directory containing
+	a single subdirectory which is a CM metadata directory:
+        [called twice while booting the "base SML system", at l. 375, 402:
+
+	   fish "$LIBDIR"/smlnj/basis == fish $SMLNJ_ROOT/lib/smlnj/basis
+	     where $SMLNJ_ROOT/lib/smlnj/basis contains one directory named ".cm"
+
+	   fish "$SMLNJ_ROOT"/"$BOOT_FILES"/smlnj/basis
+	     == fish $SMLNJ_ROOT/sml.boot.amd64-unix/lib/smlnj/basis
+	     where $SMLNJ_ROOT/sml.boot.amd64-unix/smlnj/basis contains one directory named ".cm"
+
+	 So in both calls of fish, the result should be to define ORIG_CM_DIR_ARC to be ".cm".]
+
+   move
+      - A function to move all stable library files to a parallel directory hierarchy.
+        The first argument must be a simple path (no / inside), and the second argument
+	must be an absolute path.
+        Called once, l. 433: in a loop over all directories in $BOOT_FILES = sml.boot.amd64-unix:
+
+	   move $anchor "$LIBDIR"/$anchor
+
+        The effect is to "copy" the directory structure, recursively down to bin files (?)
+	from sml.boot.amd64-unix to $SMLNJ/lib, but removing the "leaf" (bin/data) files from
+	sml.boot.amd64-unix.
+
+   dirarcs
+      - Traverse the directory tree rooted at $3 (must be single arc!).
+        Find all directories named $1, rename them into $2 and make
+	and establish $1 as a symbolic link to $2:
+        Called once, l. 411:
+
+	    dirarcs "$ORIG_CM_DIR_ARC" "$CM_DIR_ARC" "$BOOT_FILES" ]
+
+5. building the runtime system (not detailed)
+
+6. boot the base SML system (starting l. 376)
+   Check if the sml.amd64-darwin heap image exists in bin/.heap ($HEAPDIR).
+   If it exists:
+      a. Use fish to determine the CM directory names (arc), which is always (and by
+         default) ".cm". Assign this as the value of exported variable CM_DIR_ARC.
+
+      b. "recreate a (customized) heap image"
+
+             bin/sml @CMredump "$SMLNJ_ROOT"/sml
+
+          If successful, this leaves a new (improved?) heap image at "$SMLNJ_ROOT"/sml.amd65-darwin
+	  which is then moved to bin/.heap.
+
+      [Q] What does @CMredump do? Is it like (re)building a heap image from a BOOTLIST?
+
+   If the bin/.heap/sml.amd64-darwin heap image does not exist, it must be created and
+   moved there.
+      a. If there is no sml.boot.amd64-unix ($BOOTFILES) directory then create it by
+      	 unpacking the boot archive boot.amd64-unix.tgz.
+      b. Check if the name of the CM directories has changed using fish (it will still be ".cm")
+      c. If the .cm name has changed (it won't), fix it by calling dirarcs.
+      d. cd to sml.boot.amd64-unix
+      e. build the sml heap image:
+
+         bin/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLallow=$ALLOC
+
+         This, if successful, builds an sml.amd64-darwin heap image and puts it in
+         $SMLNJ_ROOT.
+      f. cd to $SMLNJ_ROOT
+      g. if it exists, move the sml.amd64-darwin heap image into bin/.heap
+      h. move all stable libraries from sml.boot.amd64-unix to lib, and as we do this
+         add corresponding "$anchor $anchor" line to lib/pathconfig ($CM_PATHCONFIG) for
+	 each stable library name "anchor".
+      i. complain if something didn't work
+
+7. finish using the "precompiled installer" (build tools, etc.)
+      a. set CM_TOLERATE_TOOL_FAILURES=true
+      b. build the tools (and other stuff?) by running
+
+           bin/sml -m \$smlnj/installer.cm
+
+         This presumably builds the tools by calling their respective build.sh scripts
+	 and then moves the resulting heap images to bin/.heap.
+         Not sure what else $smlnj/installer.cm does.
+	 Have to look at
+ 
+	   system/smlnj/installer/installer-util.sml 
+	   system/smlnj/installer/genericinstall.sml 
+	   system/smlnj/installer/nix-install.sml    (Unix installer)
+
+8. generate documentation and manual pages (if $MAKE_DOC=yes)
+
+   
+---------------------
+Comments, bugs, fixes
+
+* Redundancy between complain and arguments of complain. Both printing "$cmd !!!", so
+error messages start with, e.g. "./build.sh !!! ./build.sh !!! ...".
+[Fixed]
+
+
+------------------------------------------------------------------------------------------    
+4. bin/ml-build  (shell script)
+------------------------------------------------------------------------------------------    
+What happens in ml-build?
+
+Note: ml-build is "instantiated" (by build.sh) with fixed file paths for
+BIN_DIR and LIB_DIR that are used if the environment variable $SMLNJ_HOME is empty or not
+defined. The instantiated template is config/_ml-build. Similarly for bin/.link-sml, and
+other shell scripts in build. See template files in config.
+
+Note: ml-build is intended to be "general pupose" and is used in other places, not only
+in the build.sh scripts for tools like ml-yacc, etc.  It has a man page describing
+its command-line options/arguments.
+
+1. If shell variable SMLNJ_HOME is undefined or is the empty string,
+   
+     BIN_DIR = $SMLNJ/bin  (using the local file path of $SMLNJ that was inserted into ml-build)
+     LIB_DIR = $SMLNJ/lib
+
+   otherwise, these are defined in terms of the value of $SMLNJ_HOME.
+
+2. If shell variable CM_PATHCONFIG is undefined or empty it is defined by
+
+      CM_PATHCONFIG = $LIB_DIR/pathconfig = $SMLNJ/lib/pathconfig
+   
+   and is exported to the shell environment.
+
+3. defines variables
+
+     SML = $BIN_DIR/sml = $SMLNJ/bin/sml (symbolic link to bin/.run-sml)
+     LINK = $BIN_DIR/.link-sml = $SMLNJ/bin/.link-sml
+     thisscript = $0 = ml-build
+     
+4. defines several "temporary" file names in terms of the (current) process id (pid)
+
+     pid = $$  (process id for this invocation of ml-build (actually named "xx"))
+     smlfile = $pid-export.sml
+     cmfile = $pid-export.cm
+     listfile = $pid-BOOTLIST
+     linkargsfile = $pid-LINKARGS
+
+   These files are "temporary" and will be deleted in the cleanup triggered by the
+   trap set up in the next step (e).
+
+   Alternatively, give them distinctive fixed names, as in:
+
+     smlfile=MLBUILD_export.sml
+     cmfile=MLBUILD_export.cm
+     listfile=MLBUILD_BOOTLIST
+     linkargsfile=MLBUILD_LINKARGS
+
+   These would be extremely unlikely to overwrite existing files, except for a previous
+   run of ml-build that did not clean up after itself.
+
+
+5. sets up a trap for signals 0 1 2 3 15  (what are these signals?)
+   with a command to delete smlfile, etc, and generated binary files for $smlfile
+   This will clean up "at the conclusion" of the script. [It does so even when there
+   is a segmentation fault while running ml-build.]
+
+6. The variable "setup" is initialized to be empty, but can be set either by an "-S" command
+   line option (and its argument), or by the first arg in the 2nd phase of command line
+   argument processing (step h), if there are (at least?) 4 remaining arguments.
+   Such a -S setup argument is passed separately from the other sml arguments
+   (-D*, -U*, -C* arguments). Why?
+
+7. command line options processing to capture -D*, -U*, -C* options to be passed to sml
+   via the "dulist" variable, and also the -S option, if any, to possibly define the setup
+   variable in terms of the following (required) argument.
+
+8. further command line options are processed to define variables (successively)
+
+     setup  (only if there was no -S option in the previous phase of options processing)
+     root   -- the cm sources file
+     main   -- the name (SML qualified identifier) of the function to be exported via
+               exportFn, e.g. Main.main for the ml-ulex/build.sh call of ml-build 
+     heap   -- name of the heap file generated by exportFn (and passed to exportFn as its
+               2nd argument
+
+   depending on how many additional arguments are passed. There should be at least 1 arg,
+   used to define root. The variables main and heap are assigned default values if there
+   were not enough arguments.  The setup variable (if empty) is defined as the first
+   additional argument, but only if there are (at least) 4 arguments remaining.
+
+9. Define a dummy structure name "XYZ_XXX_0123", and use this structure name in the text
+   generated for the temporary files $smlfile and $cmfile:
+
+   contents of $smlfile = $pid-export.sml:
+
+      structure XYZ_XXX_0123 = struct val _ = SMLofNJ.exportFn ("${heap}", ${main}) end
+      structure XYZ_XXX_0123 = struct val _ = SMLofNJ.exportFn ("ml-lex", Main.main) end 
+
+   contents of $cmfile = $pid-export.cm:
+
+      Group structure XXY_XXX_0123 is \$/basis.cm ${root} ${smlfile}
+      Group tructure XYZ_XXX_0123 is $/basis.cm sources.cm {$pid-export.sml}
+
+   When executed by CM, this will produce a heap image file named "ml-ulex.amd64-darwin".
+
+10. invoke $SML with arguements
+
+   What sml command is run here? It is the "local" one, defined by
+
+      SML = $BIN_DIR/sml = $SMLNJ/bin/sml = $SMLNJ/bin/.run-sml
+
+   This is linked to bin/.run-sml.
+
+   The arguments are:
+
+      $dulist     -- the -D*, -U*, -C* arguments passed to ml-build
+      @CMbuild    -- the magic word to activate the desired CM (CMB?) compilation
+      $setup      -- (empty when invoked from ml-ulex/build.sh)
+      "$root"     -- the name of the cm description file for the CM compilation (i.e. ml-ulex/sources.cm)
+      "$cmfile"   -- the name of the additional temporary CM file ($pid-export.cm) causing the compilation
+                     and execution of the $smlfile ($pid-export.sml), that calls exportFn
+      "$heap"     -- the basename of the heap file generated by calling exportFn (its 1st argument)
+      "$listfile" -- the name of a BOOTLIST file to be output (by CM?)
+      "$linkargsfile" -- the name of a "link arguments" file to be (possibly?) output
+                         whose contents are to be passed to bin/.link-sml as arguments
+			 after the successful execution of the $SML command.
+
+   Why are both $root (sources.cm) and $cmfile ($pid-export.cm) passed to $SML, when the
+   $pid-export.cm file includes sources.cm (as ${root} in its description. $cmfile
+   should be sufficient.
+
+11. After $SML is run to compile the temporary file $smlfile using $cmfile, we check
+   for whether $linkargsfile (= $pid-LINKARGS) is "readable" (does that imply it exists,
+   or is non-empty? If it is "readable", then we invoke bin/.link-sml with its contents as
+   command-line arguments. Otherwise we return the exit status of the $SML command.
+
+l2. At the end, the previously defined trap command is run (why exactly?, in response to
+   which signal?), which causes the deletion of the temporary files $smlfile, $cmfile,
+   $listfile, $linkargsfile, and also the deletion of files matching ".cm/*/$smlfile".
+   But if the $SML command was "successful", there should remain the file $heap.
+   
+
+13. We should be able to preserve the temporary files and compilation result simply by
+   commenting out the "trap" command in ml-build. Try this for debugging.
+
+14. SUGGESTION: Why not include the export.sml file permanently in ml-ulex, and add
+   export.sml to the ml-ulex sources.cm description, with its (dummy) structure exported.
+   The permanent export structure could be named "ML_Ulex" or "Export" or "ExportULEX" and
+   would replace Main in the export list of ml-ulex/sources.cm. Then the temporary cm file
+   $pid-cmfile would not be needed.
+
+
+------------------------------------------------------------------------------------------ 
+5. bin/sml (shell) [= bin/.run-sml]  -- the script that "runs" sml
+------------------------------------------------------------------------------------------ 
+What does the $SML command do?
+
+Note: sml has a man page describing user-oriented (but not all) comman-line options.
+
+1. $BIN_DIR/sml ($SMLNJ/bin/sml) is a symbolic link to $BIN_DIR/.run-sml ($SMLNJ/bin/.run-sml).
+
+   So this description really describes bin/.run-sml.
+
+2. In ml-build,
+
+   SML = $BIN_DIR/sml = $SMLNJ/bin/sml
+
+3. .run-sml is "instantiated" to define the default BIN_DIR to be $SMLNJ/bin.
+
+4. shell environment variables referenced
+
+   SMLNJ_HOME
+   SMLNJ_CYGWIN_RUNTIME
+     -- SMLNJ_HOME redefined if $SMLNJ_HOME and $SMLNJ_CYGWIN_RUNTIME are both defined
+
+   CM_PATHCONFIG (default $SMLNJ_HOME/lib/pathconfig = $SMLNJ/lib/pathconfig)
+     -- defined and exported if not previously defined
+
+5. other variables defined
+ 
+   CMD = basename $0, which would normally be "sml" (or "ml-yacc", etc.)
+
+   BIN_DIR (default $SMLNJ/bin = "/Users/dbm/sml/Dev/github/smlnj/bin")
+     -- checked that it exists and is a directory
+
+   RUN_DIR = $BIN_DIR/.run = $SMLNJ/bin/.run (runtime executable: .run-amd64-darwin)
+   
+   HEAP_DIR = $BIN_DIR/.heap = $SMLNJ/bin/.heap
+
+   -- from bin/.arch-n-opsys:
+
+   ARCH = amd64
+
+   OPSYS = darwin
+
+   HEAP_SUFFIX = amd64-darwin
+
+6. .run-sml argument processing: case on next arg = ($1)
+
+   @SMLrun=<filename> =>
+      RUN = <filename>
+
+   @SMLload=<filename> =>
+      HEAP = $arg
+
+   @SMLsuffix =>
+     REPORT_SUFFIX = yes
+
+   @SMLappl arg' =>
+     APPL = arg'  (arg' is following argument; $1 after a shift. Two args consumed)
+
+   @SMLalloc arg' =>
+     ALLOC = arg' (two arguments consumed)
+     
+   -- reporting only: one argument consumed, no variables defined
+
+   @SMLversion =>
+     report SML version: "sml 2022.1"
+
+   @SMLwordsize =>
+     report SML word size: "64"
+   
+   until these @ arguments are all processed.
+   Then passes the remaining arguments ($@) to the call of $RUN in the last line.
+
+   If they are not defined by a corresponding @SML argument, the following variables are
+   defined by default:
+
+     APPL = $CMD (e.g. "sml")
+
+     HEAP = "@SMLload=$HEAP_DIR/$APPL" = "@SMLload=$SMLNJ/bin/.heap/sml"
+       -- note that there is no heap-suffix in this file path (e.g. no .amd64-darwin)
+
+     RUN = $SMLNJ/bin/.run/run-amd64-darwin  (ignoring $ALT_OPSYS exceptional case) 
+
+
+7. What do the (remaining) arguments do/mean when passed in the $RUN command?
+
+   dulist  (-D*, -U*, -C* arguments originally passed to ml-build in ml-ulex/build.sh)
+
+   @CMbuild
+
+   root (ml-ulex sources.cm file)
+
+   $cmfile ($pid-export.cm)  -- cm file to compile and execution $pid-export.sml
+
+   $heap -- the heap file produced when SMLofNJ.exportFn is called in $pid-export.sml
+
+   $listfile ($pid-listfile) -- file to which bootlist should be written
+   
+   $linksargfile ($pid-LINKARGS) -- file where args to bin/.link-sml are written
+
+
+------------------------------------------------------------------------------------------    
+6. bin/.link-sml (shell script)
+------------------------------------------------------------------------------------------    
+What happens in .link-sml?  [and why isn't it just bin/link-sml? or bin/ml-link?]
+
+1. Why does it need to be a separate script from bin/ml-build? Could bin/ml-build and
+   bin/.link-sml be merged into a single script?
+
+2. bin/.link-sml (aka $LINK in ml-build) is run is [-r $linkargsfile] is true, with its
+   arguments comming from the contents of the $linkargsfile.
+
+3. Is .link-sml used to move the heap file generated by exportFn in ml-build invoked from
+   (say) ml-ulex/build.sh to $SMLNJ/bin/.heap?
+
+4. Note: .link-sml is "instantiated" with a fixed file path for BIN_DIR that is used 
+   if $SMLNJ_HOME is not defined (or is the empty string).
+
+5. .link-sml: runs bin/.run/run.amd64-darwin to execute the ml-ulex.amd64-darwin heap image
+   that was created by the $SML command in ml-build. This image executes the body of the
+   dummy/temp XYZ_XXX_0123 structure in the file $smlfile (= $pid-export.sml). The body of
+   this structure executes a call of SMLofNJ.exportFn to create a heap image (named
+   ml-ulex.amd64-darwin?) for the Main.main function defined in $ml-ulex/main.sml.
+
+6. This heap image, $ml-ulex/ml-ulex.amd64-darwin, then needs to be "moved to" the 
+   $SMLNJ/bin/.heap directory.  (Where is this done?)
+
+7. Command-line Arguments: some combination of:
+
+  @SMLrun=<runfile>  (default $RUN_DIR/run.amd64-darwin = bin/.run/run.amd64-darwin)
+     => RUN = <runfile>
+
+  SMLboot=<bootfile> (default = ?, or required arg?)
+     => BOOT = <bootfile>
+
+  SMLheap=<heapfile> (default = ?, or required?)
+     => HEAP = <heapfile>
+
+  @SMLversion => prints "$CMD 2022.1" = ".link-sml 2022.1"?
+
+8. Where called:
+
+  ml-build, called with arguments from the $linkargsfile = $pid-LINKARGS
+    where $linkargsfile is output when runnning $SML
+
+
+------------------------------------------------------------------------------------------    
+7. tools/ml-lpt/ml-ulex/build.sh (shell script)  -- local build script for ml-ulex
+------------------------------------------------------------------------------------------    
+What happens in ml-ulex/build.sh?
+
+This build.sh script is typical of the tool-building procedure for other tools.
+
+This script is (assumed to be) executed with current directory:
+
+    cwd = $SMLNJ/tools/ml-lpt/ml-ulex
+
+a. defines variables
+
+     CMD = $0 -- the command name, or "build.sh", used only in an error message
+
+     ROOT = ml-ulex  -- name of current directory, used as default value of HEAP_IMAGE
+     SMLNJROOT = $SMLNJ   (path ../../.. relative to current directory)
+     BIN = $SMLNJROOT/bin
+     LIB = $SMLNJROOT/lib
+
+     BUILD = $BIN/ml-build -- the normal ml-build shell script
+     
+     (also defines SML = $BIN/sml, but this variable is not referenced)
+
+   If the shell variable INSTALLDIR is defined in the shell environment, this can change
+   where bin and lib are found and thus how $BIN and $LIB are defined.
+
+   !!! Do we need or use this flexibility to redefine the $BIN and $LIN directories? !!!
+
+b. processes command-line args to see if HEAP_IMAGE is specified (by option "-o")
+   if not, defines
+
+     HEAP_IMAGE = $ROOT = ml-ulex, the ml-ulex source directory
+                  (or as defined by a "-o" command-line option)
+
+c. Runs ml-build with arguments:
+
+   -DNO_ML_ANTLR
+   -DNO_ML_LEX
+   -DNO_ML_YACC
+   sources.cm
+   Main.main
+   $HEAP_IMAGE
+
+   The first three arguments are passed on to sml by ml-build (collected as "dulist").
+   ml-build binds the 3 remaining args to variables root, main, and heap, respectively.
+
+   When ml-build is run with these arguments, it runs $SML (the "current", "local" version)
+   with the following arguments:
+
+   "-DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC"  -- the -D options concatenated into $dulist
+   @CMbuild        -- a magic argument causing CM (CMB?) to be invoked
+   ""              -- empty $setup arg (can therefore be omited?)
+   sources.cm      -- value of $root in ml-build
+   $pid-export.cm  -- generated cm description file ($cmfile) for compiling the XYZ_XXX_0123
+                       structure defined in the $smlfile temporary source file.
+   Main.main       -- name of function to be exported by exportFn (its 2nd argument in $smlfile)
+   $HEAP_IMAGE     -- name of heap file generated by exportFn (its 1st argument in $smlfile)
+   $pid-BOOTLIST   -- filename used by CM (this file will be written by (sml ... @CMbuild ...))
+   $pid-LINKARGS   -- name of file where CM _may_ write info to be passed as the arguments to
+   		      bin/.link-sml.
+
+d. Where (by whom) and with what arguments is this ml-ulex/build.sh script run?
+   (Possibly by $SMLNJ/build.sh?) (similarly for the other tools)
+
+
+------------------------------------------------------------------------------------------    
+8. tools/ml-lpt/ml-ulex/build.sh (shell script)  -- local build script for ml-ulex
+------------------------------------------------------------------------------------------    
+
+Note that this directly invokes sml as "sml", so it will get the current "installed"
+version of sml (i.e. the one found by the command "which sml"). This could cause a problem
+if that sml is "broken" or otherwise inappropriate.
+
+
+------------------------------------------------------------------------------------------
+scripts involved in building/installing ml-ulex
+------------------------------------------------------------------------------------------
+
+let ulex = $SMLNJ/tools/ml-lpt/ml-ulex
+
+1. bin/build.sh ?
+
+2. $ulex/build.sh
+
+3. bin/ml-build
+
+4. bin/sml
+
+5. bin/.link-sml
+
+Not clear where the tool build process is "launched", i.e. who calls ml-ulex/build.sh,
+and with what CL options/arguments (assume none).
+
+
+------------------------------------------------------------------------------------------
+Attempt(s) to simplify and coalesce the tool build scripts
+------------------------------------------------------------------------------------------
+
+Information flow from $ml-ulex/build.sh to bin.ml-build to bin/.link-sml:
+
+   $ulex/build.sh <no CL args> -> 
+
+   bin/ml-build.sh [CM -D options] souces.cm Main.main "ml-ulex"
+     CM options + 3 positional CL arguments
+       (named: root, main, heap in ml-build; project, wrapper, target in cm-boot.sml)
+
+     writes $smlfile, $cmfile (which together will perform SMLofNJ.exportFn ("ml-ulex", Main.main))
+       where $smlfile = $pid-export.sml, $cmfile = $pid-export.cm.
+
+     sml [CM options] @CMbuild (setup="") ("$root" = "sources.cm") $cmfile,
+                               ("$heap" = "ml-ulex") ("$listfile"=$pid-BOOTLIST)
+			       ("$linkargsfile" = $pid-LINKARGS)
+
+       CM options + "@CMbuild" + 6 positional arguments (processed by LinkCM.mlbuild, passed to fun doit)
+       where the @CMbuild option causes LinkCM.mlbuild to be called with the positional
+       argument strings.
+
+       sml @CMbuild (using LinkCM.mlbuild) will write the $pid-BOOTLIST and $pid-LINKARGS files,
+       which are passed to the bin/.link-sml command.
+       The content of the $pid-LINKARGS file is: "@SMLboot=$pid-BOOTLIST"
+
+     ->
+
+   bin/.link-sml "@SMLboot=$pid-BOOTLIST"
+     
+     CL arguments = contents of $pid-LINKARGS file written by LinkCM.mlbuild = "@SMLboot=$pid-BOOTLIST"
+       
+     determines ARCH=amd64 and OPSYS=darwin by executing bin/.arch-n-opsys
+
+     execs
+       bin/.run/run.amd64-darwin @SMLboot=$pid-BOOTLIST @SMLheap="sml"
+
+Where is/was ml-build called? (with what args?):
+
+  tools/ml-yacc/build.sh args:    (2 * -D) + 3  (ml-yacc.cm, ExportParseGen.parseGen, "ml-yacc")
+  tools/ml-burg/build.sh args:    (2 * -D) + 3  (ml-burg.cm, Main.main, "ml-burg")
+  tools/ml-lpt/ml-ulex/build.sh:  (3 * -D) + 3  (sources.cm, Main.main, "ml-ulex")
+  tools/ml-lpt/ml-antlr/build.sh: (2 * -D) + 3  (sources.cm, Main.main, "ml-antlr")
+  tools/heap2asm/build.sh:        (0 * -D) + 3  (heap2asm.cm, Main.main, "heap2asm")
+  tools/nlffi/gen/build.sh        (0 * -D) + 3  (ml-nlffigen.cm, Main.main, "ml-nlffigen")
+  [tools/asdl/build.sh            -- ml-build is not called here]
+
+  Extra Args (after leading -D,-U,-D args):
+    1. toolCMfile = tool CM desc file (e.g. ml-yacc.cm, ml-burg.cm, sources.cm, ...)
+    2. the name of "main" function of the tool, which is to be exported as a stand-alone heap image by exportFn
+    2. toolname = name of the tool, used as the base name of heap image file for the tool
+       (e.g. "ml-yacc", "ml-burg", "ml-ulex", etc.).
+
+  All calls pass the 3 extra arguments (after the CM options); these are called "root/project", "cmfile/wrapper",
+  "heap/target" in the mlbuild function in cm-boot.sml.
+  There are no calls of mlbuild with -S option (thus setup is never defined). Thus setup is never defined
+  by a -S CL option nor as the 1st of _4_ extra positional arguments.
+
+  Note: tool ml-nlffigen is not currently being built.
+
+Simplification attempt 1:
+
+  * have fixed names for $pid-export.sml, say "export.sml", with structure name "Export_ml_ulex"
+  * eliminate $pid-export.cm, and instead include export.sml in ml-ulex/sources.cm, with
+    library export list listing Export_ml_ulex (instead of, or in additon to Main.main?)
+  * have $ml-ulex/build.sh "touch" export.sml to cause CM to recompile and execute it.
+  * instead of ml-build, call simplified tool-build script
+  * tool-build script passes a shortened list of CL positional arguments to sml
+    @CMbuild (e.g. drop setup, and combine $root and $cmfile CDF arguments into one).
+  * Problem: sml @CMbuild expects either 6 or 5 command line arguments (depending on
+    whether $setup is nonempty). Also, @CMbuild requires 2 CDF arguments ($root and $cmfile,
+    or "project" and "wrapper" in cm-boot.sml. So we would need to modify mlbuild in
+    cm-boot.sml to change number and nature of the required arguments, which would require
+    a non-trivial revision of CM/main/cm-boot.sml.
+  * So we can limit the simplification to continue supplying the same arguments to sml
+    @CMbuild, while using "permanant" export.sml and export.cm ($cmfile) files.
+    We still need a separate CDF for export.sml ($cmfile = export.cm) and can't include
+    export.sml in sources.cm ($root).
+    
+    The content of $linargsfile is known, so we don't need this "return" result and
+    can safely ignore it. We do need the $listfile output to pass to run.amd64-darwin in
+    .link-sml.
+  
+
+Simplification attempt 2:
+
+  * integrate the essentials of ml-build and .link-sml into $ml-ulex/build.sh, thus having
+    one shell script instead of three. The avoids multiple argument processing phases
+    in each script.
+  * call $SML and then immediately after call $RUN. very simple and direct arguments
+    communicate by $SML @CMbuild creating BOOTLIST file which is passed to $RUN as
+    "@SMLboot=BOOTLIST".
+  * The new-build.sh file (e.g. ml-ulex/new-build.sh):
+  
+------------------------------------------------------------------------------------------
+#!/bin/sh
+#
+# Copyright (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
+#
+# tool build script for: ml-ulex
+#
+# location: $SMLNJ/tools/ml-lpt/ml-ulex/build.sh
+# options: None
+
+CMD=$0
+
+# cleanup trap -- disabled while testing and debugging
+# trap 'rm -rf BOOTLIST XXXX .cm/*/export.sml' 0 1 2 3 15
+
+
+SMLNJROOT=`pwd`/../../..  # $SMLNJ (e.g. = ~/sml/Dev/github/smlnj in my case)
+BIN_DIR=$SMLNJROOT/bin
+SML=$BIN_DIR/sml
+
+# define ARCH and OPSYS using bin/.arch-n-opsys
+ARCH_N_OPSYS=`"$BIN_DIR/.arch-n-opsys"`
+if [ "$?" != "0" ]; then
+  echo "$CMD: unable to determine architecture/operating system"
+  exit 1
+fi
+eval $ARCH_N_OPSYS
+
+RUN=$BIN_DIR/.run/run.$ARCH-$OPSYS
+
+# ml-ulex/build.sh does not take command line options, so no option processing is done.
+
+# update the modification time for export.sml so that it will get compiled
+# and executed by export.cm (invoked through the $SML @CMbuild command
+touch export.sml
+
+# Build the tool as a standalone program, step 1:
+# The 5 positional arguments (no setup) after @CMbuild are: project, wrapper, target, listfile, linkargsfile
+# in the terminology of mlbuild in CM/main/cm-boot.sml. mlbuild expects its first two positional 
+# arguments to be CM files, namely "root/project" and "cmfile/wrapper".
+$SML -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC @CMbuild "sources.cm" "export.cm" "ml-ulex" BOOTLIST XXXX
+
+# Build the tool, step 2: call $RUN with the BOOTLIST produced by the previous command.
+exec $RUN @SMLboot=BOOTLIST @SMLheap=sml
+------------------------------------------------------------------------------------------
+
+  * Surprisingly, using this new, simplified version of ml-ulex/build.sh, we no longer
+    need the bug workaround (adding a reference to TextIOPP to TopLevel/print/ppdec.sml)
+    to successfully build ml-ulex. The new ml-ulex/build.sh builds ml-ulex even without that
+    earlier fix. So that dummy declaration in ppdec.sml can be (and was) removed.
+
+  * We can use variants of this new ml-ulex build.sh for ml-burg, ml-yacc, ml-antlr, heap2asm,
+    [and nlffi/gen, which is not currently being built], with corresponding added export.sml
+    and export.cm files for each of these tools.
+    For each version of export.sml we appropriately modify the tool name and main (exported) function
+    name in the call of SMLofNJ.exportFn in export.sml. For each version of export.cm, we modifiy 
+    the line for the tools cm file (e.g. ml-yacc/src/export.cm refers to ml-yacc.cm).
+
+  * Since the build.sh scripts for the various tools differ only in
+
+     (1) The tools CM description file (e.g. ml-yacc/src/ml-yacc.cm, ml-burg/ml-burg.cm, etc.)
+     (2) The name of the "main" function to be exported by SMLofNJ.exportFn
+
+    These could be 2 (positional) command line arguments of a unified build script, which
+    we call bin/tool-build.
+
+    We would still need individual build.sh scripts for each tool that would determine
+    the $BIN_DIR value and call
+  
+      $BIN_DIR/build <toolname> <tool CM file>
+
+    with the appropriate tool-specific values of <toolname> and <tool CM file>.
+
+  * A potential further simplication of the tool build process: since the simplified
+    build.sh essentially just calls sml twice (first as a call to sml (bin/sml), and then
+    as a call to the runtime system (bin/.run/run.amd64-darwin, perhaps these two calls
+    could be merged into one, where sml first does the @CMbuild (mlbuild) processing to produce
+    a BOOTLIST "file" (list?), and then invokes the runtime directly and "internally"
+    to do the @SMLboot stuff. Would this be possible?
+ 
+    If it is not currently possible, why not? Could additional functionality be added to make
+    this possible? The base functionality is clearly already there, but does it have to be
+    invoked "externally", from the shell?
+
+
+========================================================================================== 
+Summary: The ml-ulex build process
+
+ml-ulex/build.sh + bin/ml-build together amount to defining a bunch of arguments to pass
+to sml (invoking CM/CMB). They provide an (unused?) opportunity to affect some parameters
+(e.g. the heap file name) through command-line arguments, or shell environment variables
+(CM_PATHCONFIG).  The parameters are all strings, some of which are (native) file names.
+
+One can imagine a simpler, more direct, one step process of defining these $SML
+parameters (perhaps in ml-ulex/build.sh, or in a combined shell script).  The build.sh
+files for the different tools are almost identical, differing only in 
+
+  (1) The name of the tool's CM discription file (source.cm for ml-ulex, ml-burg.cm for ml-burg) 
+      This becomes the $root parameter passed to $SML in ml-build.
+
+  (2) The name of the function to be exported by exportFn (Main.main for ml-ulex and
+      ml-burg, ExportParseGen.parseGen for ml-yacc), which becomes the second argument
+      of SMLofNJ.exportFn in the generated source file ($smlfile) in ml-build.
+
+and in the definition of the ROOT variable (the directory containing the build.sh
+script: ml-ulex, ml-burg, ml-yacc, etc.).
+
+The "outputs" of the $SML command run in (e.g.) the ml-ulex directory
+
+  - a heap file: ./$HEAP_IMAGE.amd64-darwin = ./ml-ulex.amd64-darwin
+
+  - a $linkargsfile: $pid-LINKARGS, where $pid is the process id of the ml-build process.
+
+The $linkargsfile contains command-line arguments to be passed to bin/.link-sml.
+
+
+==========================================================================================
+Summary: the build process in general
+
+0. The build process is too complex, too hard understand and debug when something "goes wrong".
+   Also too hard to modify, extend, or re-architect. [i.e. complexity makes it "fragile"]
+
+1. too many files and directories;
+   too many .cm description files
+   too many shell scripts
+   shell scripts could be simplified by being more specific, less "flexible"
+
+2. The tangled web of .cm files needs to be simplified and documented.
+   .cm file dependency graph
+
+3. There is a confusing multiplicity of places where generated binaries (and other info) are stored
+
+4. This needs to be done before one could redesign the "architecture" of the system,
+   e.g. the interactive system as a library; batch compiler as a library
+   (also, a redesign of pickling based on asdl will touch a lot of stuff)
+
+5. The formats of various ad hoc "configuration" files need to be documented
+   (and how and where they are used):
+     system/pathconfig, config/extrapathconfig, actions, dependencies, preloads,
+     BOOTFILE, PIDMAP
+     config/targets is relatively well self-documented
+
+6. The content of, and construction of BOOTFILE files needs to be fully documented
+
+7. Where in compiler+cm is the functionality found for dealing with:
+      - pathconfigs
+      - BOOTFILES, PIDMAP
+   Differences/relations between predefined configuration files and "generated" configuration files.
+
+8. Explain differences in the build processes for:
+      - compiler (+cm?)
+      - libraries
+      - tools
+
+9. Can CM be treated as a library/tool?
+   How intimately is CM connected to the core compiler functionality?
+   What compiler "hooks" or interface does it require (use)?
+   The fact that CM is set up for autoloading in preloads seems to indicate that this
+   may already be done.
+
+10. To what extent can the whole build process (and all its files) be rationalized
+    and streamlined?
+
+11. What is special about the asdl tool? It seems to have several special "configuration"
+    files.  Does it need special treatment, or is this just an historical artifact?
+
+12. CM is fairly well documented for users, but we need more complete and detailed
+    documentation for "maintainers" (compiler hackers). [See also my "errata" note on the CM manual.]
+
+13. The build process is a collaboration (kind of coroutine-like) between shell scripts
+    and SML code. What is the rationale for what belongs on the shell side, and what
+    belongs on the SML side?  It looks to me like the shell scripts might be simplified.
+    What functionality is missing on the SML side that forces the use of shell scripts?
+    [In other words, what is lacking in sml as a shell? I would prefer more SML and
+    less shell, myself.]
+
+14. What do the "heap building/rebuilding" steps ("@CMredump" for an existing sml heap image and
+    calls of .link-sml when building a new sml heap image or heap images for tools) do?
+    Presumably these produce smaller images than exportML or exportFn would, otherwise why
+    not use exportML and exportFn?
+
+15. What is the role of the config/ files actions, dependencies, preloads, and extrapathconfig?
+    According to JHR, actions specifies things that need to be compiled after the compiler
+    itself is bootstrapped.  Whatever they are used for, why is it beyound the scope of
+    what CM could handle?
+
+    The actions, dependencies, extrapathconfig files are loaded (and their contents processed) by
+    system/smlnj/installer/generic-install.sml. Not sure where preloads is processed.
+    Could these files be replaced by appropriate cm files?  If not, why not?
+    [JHR proposes to replace them by Cmake files. But why, given that these are dealing
+    with sml source code?]
+
+------------------------------------------------------------------------------------------
+
+Nevertheless, CM is a great system that is enormously useful for SML/NJ programmers, and
+has served us vary well, as is, for over 20 years!

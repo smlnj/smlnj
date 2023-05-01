@@ -1,4 +1,4 @@
-(* FLINT/match/mcutil.sml; revmc *)
+(* Elaborator/matchcomp/mcutil.sml *)
 
 structure MCUtil = (* needs signature *)
 struct

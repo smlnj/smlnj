@@ -61,7 +61,7 @@ structure ElabControl : ELAB_CONTROL =
     val unidebugging = onew ("uni-debugging", "Unify debugging", false)
         (* Unify *)
     val ovlddebugging = onew ("ovld-debugging", "Overload debugging", false)
-        (* Unify *)
+        (* Overload *)
     val instantiateSigs = onew ("instantiate-sigs", "instantiate all sigs", true)
         (* ElabMod, Control_MC *)
     val etopdebugging = onew ("etop-debugging", "ElabTop debugging", false)

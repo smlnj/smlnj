@@ -1,0 +1,20 @@
+(* smlnj-lib/PrettyPrint/src/prettyprint.cm *)
+(* CM Description File for the PrettyPrinter Library *)
+
+Library
+
+  structure Formatting
+  structure PrintFormat    
+
+is
+
+$smlnj/basis/basis.cm
+
+format.sml
+measure.sig
+measure.sml
+render.sig
+render.sml
+formatting.sig
+formatting.sml
+printformat.sml

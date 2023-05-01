@@ -1,0 +1,24 @@
+(* smlnj-lib/Dev/PrettyPrint/src91/prettyprint.cm *)
+(* CM Description File for the PrettyPrinter Library
+ * HTML 3 rendering version *)
+
+Library
+
+  structure Style
+  structure Formatting
+  structure PrintFormat    
+
+is
+
+$/basis.cm
+$/html-lib.cm
+
+html/style.sml    (* Style: styles for HTML 3 *)
+format.sml
+measure.sig
+measure.sml
+html/render.sig
+html/render.sml   (* Render: HTML renderer *)
+formatting.sig
+formatting.sml
+printformat.sml

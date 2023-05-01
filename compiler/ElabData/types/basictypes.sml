@@ -14,7 +14,6 @@ structure BasicTypes : BASICTYPES =
     structure EM = ErrorMsg
     structure IP = InvPath
     structure T = Types
-    structure IP = InvPath
 
     fun bug msg = ErrorMsg.impossible("BasicTypes: "^msg)
 

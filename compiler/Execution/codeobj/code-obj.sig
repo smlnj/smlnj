@@ -27,7 +27,8 @@ signature CODE_OBJ =
     val generate : {
             target : string,
             src : string,
-            pkl : Word8Vector.vector
+            pkl : Word8Vector.vector,
+            verifyLLVM : bool
           } -> code_object
 
   (* Allocate an unintialized code object of the given number of bytes. *)

@@ -4,8 +4,8 @@
  * All rights reserved.
  *)
 
-functor Interact(EvalLoop : EVALLOOP) : INTERACT =
-  struct
+functor InteractFn (EvalLoop : EVALLOOP) : INTERACT =
+struct
     exception Interrupt = EvalLoop.Interrupt
 
     type envref = EnvRef.envref
@@ -111,4 +111,4 @@ functor Interact(EvalLoop : EVALLOOP) : INTERACT =
 				    raise Fail "redump_heap_cont init")))
     end
 
-  end (* functor Interact *)
+end (* functor InteractFn *)

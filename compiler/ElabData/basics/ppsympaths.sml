@@ -7,7 +7,7 @@ local
   structure S = Symbol
   structure SP = SymPath
   structure IP = InvPath
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
   structure PPS = PPSymbols
 in
 

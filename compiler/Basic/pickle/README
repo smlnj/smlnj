@@ -1,0 +1,30 @@
+Basic/pickle is a copy of Library/pickle.
+
+TEMPORARY?
+"These files should be replaced with equivalent versions from smlnj-lib or moved to smlnj-lib/Util."
+
+[DBM: 2023.4.30]
+Currently there is no "pickle" library in smlnj-lib.  Should these be turned into
+a smlnj-lib library?
+
+Also, what is the relation between these pickle-util.sml and unpickle-util.sml and the
+pickler defined in ElabData/pickle?  Is there some redundancy?
+
+The plan for the future is to replace the existig pickler code with pickling done through
+ASDL, after which these files should become redundant.  This makes it doubtful that this
+belongs in smlnj-lib, except perhaps that crc.sml might be put into smlnj-lib/Util.
+
+structure CRC [Basic/pickle/crc.sml] is used in
+
+    ElabData/pickle/pickmod.sml
+    ElabData/pickle/rehash.sml
+
+structure PickleUtil used in
+
+    Elabdata/pickle/pickle-sym-pid.sml
+    Elabdata/pickle/pickmod.sml
+
+structure PickleUtil used in
+
+    Elabdata/pickle/unpickle-sym-pid.sml
+    Elabdata/pickle/unpickmod.sml

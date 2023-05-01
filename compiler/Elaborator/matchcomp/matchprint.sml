@@ -1,11 +1,11 @@
-(* FLINT/trans/matchprint.sml *)
+(* Elaborator/matchcomp/matchprint.sml *)
 (* pattern printing (using PPAbsyn.ppPat) *)
 
 structure MatchPrint =
 struct
 
 local
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
   structure PPA = PPAbsyn
   val printDepth = Control_Print.printDepth
 
@@ -43,6 +43,6 @@ fun formatBind (env, (pat, _) :: _) =
       PP.hblock [PP.text "        ", PPAbsyn.fmtPat env (pat, !printDepth), PP.text "= ..."]
   | bindPrint _ = bug "bindPrint -- unexpected args"
 
-end (* local printutil *)
 
+end (* top local *)
 end (* structure MatchPrint *)

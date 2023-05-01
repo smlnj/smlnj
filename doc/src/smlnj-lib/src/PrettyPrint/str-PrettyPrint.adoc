@@ -1,0 +1,257 @@
+= The `PrettyPrint` structure
+:Author: David MacQueen
+:Date: 2022.12.21
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: 8.0
+
+The `PrettyPrint` structure is the user-facing module of the new prettyprinter library.
+It is based on mapping data structures to "formats", which are then rendered using
+a provided string output function to print them.
+
+== Synopsis
+
+[source,sml]
+------------
+signature PRETTYPRINT
+structure PrettyPrint :> PRETTYPRINT
+------------
+
+[source,sml]
+------------
+type format  (* abstract *)
+
+datatype alignment  (* alignment property of "aligned" blocks *)
+  = H  (* Horizontal alignment, with implicit single space separtors between format components *)
+  | V  (* Vertical alignment, with implicit hardline separtors between format components *)
+  | P  (* Packed alignment, with implicit softline separtors between format components *)
+  | C  (* compact, no breaks between block format elements *)
+
+datatype break       (* separate format elements in a basic block, allowing line breaks *)
+  = Hard         (* hard line break *)
+  | Soft of int  (* soft line break; rendered to n spaces when not triggered, where n >= 0 *)
+  | Space of int     (* n spaces, where n >= 0 *)
+  | Null
+
+datatype element
+  = BRK of break  (* breaks are _not_, and do not contain, content *)
+  | FMT of format
+
+val empty : format            (* == EMPTY, renders as empty string, composition identity *)
+val text : string -> format   (* == the TEXT format constructor *)
+val integer : int -> format   (* integer n renders as Int.toString n *)
+val string : string -> format (* adds double quotes *)
+val char : char -> format     (* c --> #"c" *)
+val bool : bool -> format     (* true --> TEXT "true", false --> TEXT "false" *)
+
+val block : element list -> format  (* basic block construction *)
+val ablock : alignment -> format list -> format  (* aligned block construction *)
+
+val hcat : format list -> format   (* = ablock H *)
+val vcat : format list -> format   (* = ablock V *)
+val pcat : format list -> format   (* = ablock P *)
+val ccat : format list -> format   (* = ablock C *)
+
+val comma : format     (* text "," *)
+val colon : format     (* text ":" *)
+val semicolon : format (* text ";" *)
+val period : format    (* text "." *)
+val lparen : format    (* text "(" *)
+val rparen : format    (* text ")" *)
+val lbracket : format  (* text "[" *)
+val rbracket : format  (* text "]" *)
+val lbrace : format    (* text "{" *)
+val rbrace : format    (* text "}" *)
+val equal : format     (* text "=", an honorary punctuation mark *)
+
+val enclose : {front: format, back: format} -> format -> format
+val parens : format -> format
+val brackets : format -> format
+val braces : format -> format
+
+val appendNewLine : format -> format
+val label : string -> format -> format
+
+val sequence : alignment -> format -> format list -> format
+val hsequence : format -> format list -> format
+val psequence : format -> format list -> format
+val vsequence : format -> format list -> format
+val csequence : format -> format list -> format
+
+val tuple  : format list -> format
+val list   : format list -> format
+val option : format option -> format
+
+val vHeaders : {header1: string, header2: string} -> format list -> format
+
+val indent : int -> format -> format
+
+val tryFlat : format -> format
+val alt : format * format -> format
+val hvcat : format list -> format
+
+val setLineWidthFun : (unit -> int) -> unit
+val resetLineWidthFun : unit -> unit
+val getLineWidth : unit -> int
+
+val render : format * (string -> unit) * int -> unit
+val printFormatLW  : int -> format -> unit 
+val printFormat : format -> unit
+val printFormatNL : format -> unit
+------------
+
+== Description
+
+`[.kw]#type# format`::
+  The type constructor for formats (abstract).
+
+`[.kw]#datatype# break = Hard | Soft of int | Space of int | Null`::
+  The type of breaks in basic blocks.
+
+`[.kw]#datatype# element = FMT of format | BRK of break`::
+  The type of elements making up a basic block.
+
+`[.kw]#datatype# alignment = H | P | V | C`::
+  The type of alignments in aligned blocks: horizontal, packed, vertical, and compact.
+
+`[.kw]#val# empty : format`::
+  The empty format that prints nothing when rendered, equivalent to (`text ""`). Empty formats are
+  absorbed by adjacent nonempty formats, so that no "separation" whitespace will be printed between and
+  empty format and adjacent nonempty formats. Empty serves as an identity element for binary
+  format concatenation operators. For instance, `hcat (fmt, empty) == fmt`.
+
+`[.kw]#val# text : string \-> format`::
+  Create an atomic "text" block consisting of a string, which renders as that string.
+  Note that the string may contain, indeed may consist only of, white space.  As a mater
+  of style, however, whitespace should usually be produced by formatting rather than being
+  built into text strings.
+ 
+`[.kw]#val# block : element list \-> format`::
+  Build a block with _ad hoc_ alignment determined by explicit breaks among the elements.
+
+`[.kw]#val# ablock : alignment \-> format list \-> format`::
+  Build an aligned block with the specified alignment and format components.
+
+`[.kw]#val# hcat : format list \-> format`::
+  `hcat fmts` : Create a horizontally aligned block (with implicit (Space 1) breaks) with
+  fmts as components.
+
+`[.kw]#val# vcat : format list \-> format`::
+  `vcat fmts` : Create a vertically aligned block (with implicit Hard breaks) with
+  fmts as components.
+
+`[.kw]#val# pcat : format list \-> format`::
+  pcat fmts : Create a "packed" aligned block (with implicit (Soft 1) breaks) with fmts
+  as components.
+
+`[.kw]#val# ccat : format list \-> format`::
+  `ccat fmts` : Create a "compact" aligned block with fmts as components, with no breaks
+  between components.
+
+`[.kw]#val# flat : format \-> format`::
+  `flat fmt` : Returns a version of the argument fmt that will be rendered as flat
+  (on a single line) and will have the same flat measure.
+
+`[.kw]#val# alt : format * format \-> format`::
+  `alt (fmt1, fmt2)` : The resulting format renders as fmt1 if fmt1 fits, otherwise it renders as fmt2.
+
+`[.kw]#val# tryFlat : format \-> format`::
+  `tryFlat fmt` : The result format renders as (flat fmt) if that fits, and otherwise renders as fmt.
+
+`[.kw]#val# hvcat : format list \-> format`::
+  `hvcat fmts` : Renders as (hcat fmts) if that fits, and otherwise renders as (vcat fmts).
+
+`[.kw]#val# indent : int \-> format \-> format`::
+  `indent n fmt` : Indent `fmt` `n` additional spaces (relative to parent block's blm)
+  but only if following a line break. Otherwise render `fmt` normally, without indentation.
+
+`[.kw]#val# comma, colon, semicolon, period, lparen, rparen, lbracket, rbracket, lbrace, rbrace, equal : format`::
+  Punctuation characters as formats (plus the equal symbol, an honorary punctuation symbol).
+
+`[.kw]#val# integer : int \-> format`::
+  `integer n` : Returns the string representation of n (`Int.toString n`) as a text format.
+
+`[.kw]#val# string : string \-> format`::
+  `string s` : Formats the string s enclosed in double quotation marks.
+
+`[.kw]#val# char : char \-> format`::
+   `char c` : Formats c as `# ^ (string (Char.toString c))`.
+
+`[.kw]#val# bool : bool \-> format`::
+  `bool b` : Formats the boolean b as `true` or `folse`.
+
+`[.kw]#val# enclose : {front: format, back: format} \-> format \-> format`::
+  `enclose {front, back} fmt` : Concatenate (`cblock`) front, fmt, and back.
+
+`[.kw]#val# parens: format \-> format`::
+  `parens fmt = enclose {front=lparen, back=rparen} fmt` : Enclose fmt with left and right parentheses.
+
+`[.kw]#val# brackets: format \-> format`::
+  `brackets fmt = enclose {front=lbracket, back=rbracket} fmt` : Enclose fmt with left and right square brackets. 
+
+`[.kw]#val# braces: format \-> format`::
+  `braces fmt = enclose {front=lbrace, back=rbrace} fmt` : Enclose fmt with left and right curly braces. 
+
+`[.kw]#val# label : string \-> format \-> format`::
+  `label str fmt = hcat (ccat (text str, colon), fmt)`
+
+`[.kw]#val# appendNewLine : format \-> format`::
+  Append a hard newline after the format.
+
+`[.kw]#val# sequence : alignment \-> format \-> format list \-> format`::
+  `sequence a sep fmts`: Inserts `sep` between constituent formats in `fmts` and aligns according to `a`.
+
+`[.kw]#val# hsequence : format \-> format list \-> format`::
+  `hsequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `H` alignment.
+
+`[.kw]#val# psequence : format \-> format list \-> format`::
+  `psequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `P` alignment.
+
+`[.kw]#val# vsequence : alignment \-> format \-> format list \-> format`::
+  `vsequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `V` alignment.
+
+`[.kw]#val# csequence : alignment \-> format \-> format list \-> format`::
+  `csequence sep fmts`: Inserts `sep` between constituent formats in `fmts` with `C` alignment.
+
+`[.kw]#val# tuple : format list \-> format`::
+  Formats the members of the format list as a tuple (parenthesized, with elements
+  separated by commas) with default packed (P) alignment of the element formats.
+
+`[.kw]#val# list : format list \-> format`::
+  Formats the members of the format list as a list (bracketed, with elements
+  separated by commas) with default packed (P) alignment of the element formats.
+
+`[.kw]#val# option : format option \-> format`::
+  Formats a format option, producing `text "NONE"` or `"SOME(.)"`.
+
+`[.kw]#val# vHeaders : {header1: string, header2: string} \-> format list \-> format`::
+  Vertically align the formats with header1 as header for the first format and header2 as header
+  for subsequent format. If header1 and header2 are of unequal sizes, the shorter one is padded
+  with spaces on the left to make its size equal to the longer.
+
+`[.kw]#val# setLineWidthFun : (unit \-> int) \-> unit`::
+  Defines the function that returns the current lineWidth value.
+
+`[.kw]#val# resetLineWidthFun : unit \-> unit`::
+  Reset the lineWidthFun to the default lineWidthFun (the constant function returning 90).
+
+`[.kw]#val# getLineWidth : unit \-> int`::
+  Returns the current line width, obtained by calling the current lineWidthFun function.
+
+`[.kw]#val# render : format * (string \-> unit) * int \-> unit`::
+  Render (fmt, output, lineWidth): render fmt to output given lineWidth as the right margin.
+  This prints directly using output without building a "layout" data structure.
+
+`[.kw]#val# printFormatLW : int \-> format \-> unit`::
+  Printing with an explicit lineWidth argument:
+  `printFormat lineWidth fmt = render (fmt, print, lineWidth)`
+ 
+`[.kw]#val# printFormat : format \-> unit`::
+  `printFormat fmt = printFormatLW (getLineWidth ()) fmt`
+
+`[.kw]#val# printFormatNL : format \-> unit`::
+  `printFormatNL fmt = printFormatLW (getLineWidth ()) (appendNewLine fmt)`
+
+== See Also
+
+xref:prettyprint-manual.adoc

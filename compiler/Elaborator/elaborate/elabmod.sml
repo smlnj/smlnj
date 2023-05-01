@@ -1,5 +1,5 @@
-(* Copyright 1996 by AT&T Bell Laboratories *)
-(* elabmod.sml *)
+(* Elaborator/elaborate/elabmod.sml
+ * Copyright 2023 by The Fellowship of SML/NJ (www.smlnj.org) *)
 
 signature ELABMOD =
 sig
@@ -20,9 +20,6 @@ sig
 
 end (* signature ELABMOD *)
 
-
-(* functorized to factor out dependencies on FLINT... *)
-(* functor ElabModFn (structure SM : SIGMATCH) : ELABMOD = *)
 structure ElabMod : ELABMOD =
 struct
 
@@ -57,7 +54,7 @@ local
   structure ED = ElabDebug
   structure ST = RedBlackSetFn(type ord_key = S.symbol
 			       val compare = S.compare)
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
   structure PPS = PPSymbols
 
   open Ast Modules

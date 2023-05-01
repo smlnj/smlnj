@@ -15,7 +15,6 @@ structure FlintNM : FLINTNM =
 struct
 
 local
-  structure DA = Access
   structure BT = BasicTypes
   structure LV = LambdaVar
   structure LT = Lty
@@ -24,16 +23,14 @@ local
   structure LB = LtyBasic
   structure LE = LtyExtern
   structure FR = FunRecMeta
-  structure PT = PrimTyc
   structure PO = Primop
   structure PL = PLambda
   structure F  = FLINT
   structure FU = FlintUtil
   structure FL = PFlatten		(* argument flattening *)
-  structure PP = NewPrettyPrint
-  structure PPF = PPFlint
 in
 
+(* FIX: move to Basic/util/list3.sml *)
 fun map3 _ (nil, nil, nil) = nil
   | map3 f (x :: xs, y :: ys, z :: zs) =
       f (x, y, z) :: map3 f (xs, ys, zs)
@@ -49,17 +46,6 @@ fun debugmsg (msg : string) =
     if !debugging then (say msg; say "\n") else ()
 
 val printDepth = 20  (* local debugging print depth *)
-
-(* NOT USED: (except in commented debugging code)
-fun ppTycEnv (tenv: Lty.tycEnv) =
-    let val fmt = PP.endNL (PPLty.fmtTycEnv pd tenv)
-     in render (fmt, say, !lineWidth)
-    end
-
-val ppTycEnv = PPLty.ppTycEnv dp
-
-val ppTyc = PPLty.ppTyc dp
-*)
 
 fun debugLty (lty: Lty.lty) =
     if !debugging then PPLty.ppLty printDepth lty else ()
@@ -414,16 +400,6 @@ and lexps2values (venv: LB.ltyEnv, d: depth, lexps: PL.lexp list,cont) =
 			 debugPLlexp lexp;
 			 debugmsg "lty:"; debugLty lty *)
 		        f lexps (v::vals, lty::ltys))))
-	    (* handle LtyKernel.tcUnbound (tenv,tyc) =>
-		   (with_pp (fn s =>
-                      (PU.pps s "*** lexps2values ***; PP.newline s;
-                       lexp: \n";
-		       PPLexp.printLexp lexp;
-		       print "\ntype: \n";
-		       ppTyc 20 s tyc; PP.newline s;
-		       PU.pps s "tenv:"; PP.newline s;
-		       ppTycEnv 20 s tenv;
-                       raise LtyKernel.tcUnbound (tenv,tyc)))) *)
 	val v = f lexps ([], [])
 	val _ = debugmsg "<<lexp2values"
     in

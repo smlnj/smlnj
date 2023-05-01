@@ -38,7 +38,8 @@ local
   structure EU = ElabUtil
   structure ED = ElabDebug
   structure SM = SourceMap
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPSM = PPSourceMap
   structure PPS = PPSymbols
   structure PPT = PPType
@@ -47,7 +48,7 @@ local
  
   open Types TypesUtil Unify Absyn ErrorMsg
 
-  fun viblock formats = PP.hardIndent 3 (PP.vblock formats)
+  fun ivblock formats = PP.indent 3 (PP.vblock formats)
 in
 
 (* debugging *)
@@ -88,28 +89,28 @@ val { pushv = olv_push, pushl = oll_push, resolve = ol_resolve } = Overload.new 
 (* formatting/prettyprinting functions for type errors *)
 
 fun fmtType ty = PPT.fmtType env ty
-fun ppType ty = PP.printFormat (fmtType ty)
+fun ppType ty = PF.printFormat (fmtType ty)
 fun fmtTycon tycon = PPT.fmtTycon env tycon
-fun ppTycon tycon = PP.printFormat (fmtTycon tycon)
+fun ppTycon tycon = PF.printFormat (fmtTycon tycon)
 fun fmtPat pat = PPA.fmtPat env (pat, !printDepth)
-fun ppPat pat = PP.printFormat (fmtPat pat)
+fun ppPat pat = PF.printFormat (fmtPat pat)
 fun fmtExp exp = PPA.fmtExp (env, NONE) (exp, !printDepth)
-fun ppExp exp = PP.printFormat (fmtExp exp)
+fun ppExp exp = PF.printFormat (fmtExp exp)
 fun fmtRule rule = PPA.fmtRule (env,NONE) (rule, !printDepth)
-fun ppRule rule = PP.printFormat (fmtRule rule)
+fun ppRule rule = PF.printFormat (fmtRule rule)
 fun fmtVB vb = PPA.fmtVB (env,NONE) (vb, !printDepth)
-fun ppVB vb = PP.printFormat (fmtVB vb)
+fun ppVB vb = PF.printFormat (fmtVB vb)
 fun fmtRVB rvb = PPA.fmtRVB (env,NONE) (rvb, !printDepth)
-fun ppRVB rvb = PP.printFormat (fmtRVB rvb)
+fun ppRVB rvb = PF.printFormat (fmtRVB rvb)
 fun fmtDec dec = PPA.fmtDec (env, NONE) (dec, !printDepth)
-fun ppDec dec = PP.printFormat (fmtDec dec)
+fun ppDec dec = PF.printFormat (fmtDec dec)
 
 fun ppType' ty =
-    PP.printFormat
+    PF.printFormat
        (PP.hblock [PP.text ">>> ppType'", PPT.fmtType SE.empty ty, PP.text "<<< ppType'"])
 
 fun ppDec' dec =
-    PP.printFormat (PPA.fmtDec (env, NONE) (dec, !printDepth))
+    PF.printFormat (PPA.fmtDec (env, NONE) (dec, !printDepth))
 
 fun ppDecDebug (msg, dec) =
     ED.withInternals (fn () => ED.debugPrint debugging (msg, fmtDec dec))
@@ -125,21 +126,21 @@ fun fmtModeErrorMsg (mode: Unify.unifyFail) =
     if !showCulprits then
       (case mode
 	of TYC (tyc1, tyc2, reg1, reg2) =>
-	    PP.vcat
-	      (PP.text "Mode: tycon mismatch",
-	       viblock
-		 [PP.hcat (PP.text "tycon1:", fmtTycon tyc1),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
-		  PP.hcat (PP.text "tycon2:", fmtTycon tyc2),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg2)])
+	    PP.vblock
+	      [PP.text "Mode: tycon mismatch",
+	       ivblock
+		 [PP.label "tycon1:" (fmtTycon tyc1),
+		  PP.label "from:" (PPSM.fmtRegion reg1),
+		  PP.label "tycon2:" (fmtTycon tyc2),
+		  PP.label "from:" (PPSM.fmtRegion reg2)]]
 	 | TYP (ty1, ty2, reg1, reg2) =>
-	    PP.vcat
-	      (PP.text "Mode: type mismatch",
-	       viblock
-		 [PP.hcat (PP.text "type1:", fmtType ty1),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg1),
-		  PP.hcat (PP.text "type2:", fmtType ty2),
-		  PP.hcat (PP.text "from:", PPSM.fmtRegion reg2)])
+	    PP.vblock
+	      [PP.text "Mode: type mismatch",
+	       ivblock
+		 [PP.label "type1:" (fmtType ty1),
+		  PP.label "from:" (PPSM.fmtRegion reg1),
+		  PP.label "type2:" (fmtType ty2),
+		  PP.label "from:" (PPSM.fmtRegion reg2)]]
 	 | _ => PP.empty)
     else PP.empty
 
@@ -195,24 +196,25 @@ fun unifyErr {ty1, name1, ty2, name2, message, region, kindName, kindFormat} =
 		  if size message = 0
 		  then String.concat [name1, " and ", name2, " do not agree"]
 		  else message   (* but name1 or name2 may be ""! Should check for this. *)
-           in PP.vcat
-		(PP.text message',
-		 viblock
+           in PP.vblock
+		[PP.text message',
+		 ivblock
 		   (List.mapPartial (fn x => x)
 		       [if size name1 = 0
 			then NONE
-			else SOME (PP.hcat (PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
-					    fmtType ty1)),
+			else SOME (PP.hblock [PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
+					    fmtType ty1]),
 			if size name2 = 0
 			then NONE
-			else SOME (PP.hcat (PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
-					    fmtType ty2)),
+			else SOME (PP.hblock [PP.text (StringCvt.padRight spaceChar maxNameLength (name1 ^ ":")),
+					    fmtType ty2]),
 			if size kindName = 0
 			then NONE
-			else SOME (PP.hcat (PP.text (String.concat["in ", kindName, ":"]),
-					    kindFormat)),
-			SOME (fmtModeErrorMsg mode)]))
-	  end); false)
+			else SOME (PP.hblock [PP.text (String.concat["in ", kindName, ":"]),
+					    kindFormat]),
+			SOME (fmtModeErrorMsg mode)])]
+	  end);
+          false)
 
 val _ = dbsaynl (">>decType: toplev = " ^ Bool.toString toplev)
 val _ = ppDecDebug(">>decType: dec = ", dec)
@@ -289,7 +291,7 @@ fun generalizeTy(V.VALvar{typ,path,btvs,...}, userbound: tyvar list,
 			        "unresolved flex record (need to know the \
 			        \names of ALL the fields\n in this context)"
 			    	(PPT.resetPPType ();
-				 PP.hcat (PP.text "type:", fmtType ty));
+				 PP.hblock [PP.text "type:", fmtType ty]);
                             tv := INSTANTIATED WILDCARDty;
 			    WILDCARDty)
                          else ty
@@ -508,10 +510,10 @@ fun patType(pat: pat, depth, region: SM.region) : pat * ty =
 		(err region COMPLAIN
                   (mkMessage ("constructor and argument do not agree in pattern", mode))
 		  (PPT.resetPPType();
-		   viblock
-		     [PP.hcat (PP.text "constructor:", fmtType typ),
-		      PP.hcat (PP.text "argument:", fmtType argTy),
-		      PP.hcat (PP.text "in pattern:", fmtPat pat)]);
+		   PP.vblock
+		    [PP.label "constructor:" (fmtType typ),
+		     PP.label "argument:" (fmtType argTy),
+		     PP.label "in pattern:" (fmtPat pat)]);
 		 (pat, WILDCARDty))
 	   end
        | CONSTRAINTpat (pat', constraintTy) =>
@@ -599,11 +601,11 @@ in
                handle Unify(mode) =>
                  (err region COMPLAIN
                     (mkMessage ("selecting a non-existing field from a record", mode))
-                    (viblock
+                    (PP.vblock
 		       (PPT.resetPPType();
-			[PP.hcat (PP.text "the field name:", PPS.fmtSym label),
-			 PP.hcat (PP.text "the record type:", fmtType nty),
-			 PP.hcat (PP.text "in expression:", fmtExp exp)]));
+			[PP.label "field name:" (PPS.fmtSym label),
+			 PP.label "record type:" (fmtType nty),
+			 PP.label "expression:" (fmtExp exp)]));
                     (exp, WILDCARDty))
            end
        | VSELECTexp (exp, elemTy, index) => bug "expType:VSELECTexp"
@@ -645,18 +647,18 @@ in
 		in PPT.resetPPType();
 		   if BT.isArrowType(reducedRatorTy)
 		   then (err region COMPLAIN
-			  (mkMessage ("operator and operand do not agree",mode))
-			  (viblock
-			     [PP.hcat (PP.text "operator domain:", fmtType (BT.domain reducedRatorTy)),
-			      PP.hcat (PP.text "operand:", fmtType randTy),
-			      PP.hcat (PP.text "in expression:", fmtExp exp),
+			  (mkMessage ("operator and operand do not agree", mode))
+			  (PP.vblock
+			     [PP.label "operator domain:" (fmtType (BT.domain reducedRatorTy)),
+			      PP.label "operand:" (fmtType randTy),
+			      PP.label "in expression:" (fmtExp exp),
 			      fmtModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
-			  (mkMessage ("operator is not a function",mode))
-			  (viblock
-			     [PP.hcat (PP.text "operator:", fmtType ratorTy),
-			      PP.hcat (PP.text "in expression:", fmtExp exp),
+			  (mkMessage ("operator is not a function", mode))
+			  (PP.vblock
+			     [PP.label "operator:" (fmtType ratorTy),
+			      PP.label "in expression:" (fmtExp exp),
 			      fmtModeErrorMsg mode]);
 			 (exp,WILDCARDty))
 	       end

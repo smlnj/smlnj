@@ -26,6 +26,7 @@ local
   structure EE = EntityEnv
   structure EPC = EntPathContext
   structure EU = ElabUtil
+  structure M = Modules
   structure MI = ModuleId
   structure MU = ModuleUtil
   structure I = Instantiate

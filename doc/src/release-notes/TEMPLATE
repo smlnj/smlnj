@@ -5,6 +5,7 @@
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues/
+:legacy-issue-base: https://github.com/smlnj/legacy/issues/
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
@@ -88,8 +89,10 @@ Here is a list of tracked bugs fixed (or closed) with this release, please see t
 https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
 for more details.
 
-[.buglist,cols="^1,<15"]
+[.buglist,cols="^1,<15",strips="none",options="header"]
 |=======
+| Issue
+| Description
 // | [.bugid]#@ID#
 // | @DESCRIPTION@
 |=======

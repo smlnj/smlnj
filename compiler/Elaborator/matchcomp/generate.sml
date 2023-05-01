@@ -1,4 +1,4 @@
-(* FLINT/trans/generate.sml *)
+(* Elaborator/matchcomp/generate.sml *)
 (* based on revised "old" match compiler *)
 
 (* generation of "code" (in the form of PLambda.lexp) from decision trees (type dectree) *)
@@ -21,7 +21,8 @@ local
   structure MC = MCCommon
   structure MU = MCUtil
   structure PPMC = PPMatchComp
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPType
   structure PPA = PPAbsyn
 
@@ -45,37 +46,37 @@ local
   fun bug msg = ErrorMsg.impossible ("Generate: " ^ msg)
 
   fun ppAndor andor =
-      PP.printFormatNL
-	 (PP.vcat
-	    (PP.text "andor:",
-	     PP.hardIndent 3 (PPMC.fmtAndor andor)))
+      PF.printFormatNL
+	 (PP.vblock
+	    [PP.text "andor:",
+	     PP.indent 3 (PPMC.fmtAndor andor)])
 
   fun ppDecisionTree dectree =
-      PP.printFormatNL
-	 (PP.vcat
-	    (PP.text "andor:",
-	     PP.hardIndent 3 (PPMC.fmtDectree dectree)))
+      PF.printFormatNL
+	 (PP.vblock
+	    [PP.text "andor:",
+	     PP.indent 3 (PPMC.fmtDectree dectree)])
 
   fun ppExp (exp, msg) =
-      PP.printFormatNL
-	 (PP.vcat
-	    (PP.text msg,
-	     PP.hardIndent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))))
+      PF.printFormatNL
+	 (PP.vblock
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))])
 
   fun ppDec (dec, msg) =
-      PP.printFormatNL
-	 (PP.vcat
-	    (PP.text msg,
-	     PP.hardIndent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))))
+      PF.printFormatNL
+	 (PP.vblock
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))])
 
   fun ppPat pat =
-      PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
+      PF.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
   fun ppVar var =
-      PP.printFormatNL (PPVal.fmtVar var)
+      PF.printFormatNL (PPVal.fmtVar var)
 
   fun ppType msg ty =
-      PP.printFormatNL (PP.hcat (PP.text (msg^":"), PPT.fmtType SE.empty ty))
+      PF.printFormatNL (PP.hblock [PP.text (msg^":"), PPT.fmtType SE.empty ty])
 
   fun timeIt x = TimeIt.timeIt (!stats) x
 			       
@@ -114,12 +115,13 @@ fun generate (decTree: MC.dectree, ruleMap: Preprocessing.ruleMap, allRules: rul
 	      | wrapSuffix (P.VI (n, elemTy)::rest, exp) =
 		  wrapSuffix (rest, AS.VSELECTexp (exp, elemTy, n))  (* exp : elemTy vector *)
 	      | wrapSuffix (suffix, exp) =
-		(saynl ("relativeExp:wrapSuffix suffix: " ^ P.pathToString suffix);
+		(PF.printFormatNL
+		   (PP.label "BUG: generate..relativeExp..wrapSuffix:" (PPMC.fmtPath suffix));
 		 bug "wrapSuffix")
 	    val suffix' = 
 		case suffix
-		 of P.DC(AS.VLENcon _):: _ => tl suffix
-		  | _ => suffix
+		  of P.DC(AS.VLENcon _):: _ => tl suffix
+		   | _ => suffix
 	in wrapSuffix (suffix', EU.varToExp var)
 	end
 

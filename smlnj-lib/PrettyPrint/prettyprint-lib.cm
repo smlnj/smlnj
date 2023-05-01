@@ -1,0 +1,16 @@
+(* prettyprint-lib.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The CDF for the new PrettyPrint library.
+ *)
+
+Library
+
+  structure Formatting
+  structure PrintFormat
+
+is
+
+  src/prettyprint.cm

@@ -83,6 +83,9 @@ structure LibBase
 structure ListFormat
 structure ListMergeSort
 structure ListXProd
+structure Random
+structure NativeInt
+structure NativeWord
 structure ParserComb
 structure PathUtil
 structure PrimeSizes
@@ -123,7 +126,7 @@ functor SplaySetFn
 
 is
 
-  $/basis.cm
+$/basis.cm
 
 ansi-term.sml
 array-qsort-fn.sml
@@ -210,18 +213,12 @@ path-util-sig.sml
 path-util.sml
 plist-sig.sml
 plist.sml
-#if defined(SIZE_32)
-  target32-prime-sizes.sml
-#else
-  target64-prime-sizes.sml
-#endif
 priority-sig.sml
 queue-sig.sml
 queue.sml
 rand-sig.sml
 rand.sml
 random-sig.sml
-random.sml
 real-format.sml
 redblack-map-fn.sml
 redblack-set-fn.sml
@@ -243,3 +240,12 @@ univariate-stats.sml
 utf8-sig.sml
 utf8.sml
 
+#if defined(SIZE_32)
+  Target32Bit/native.sml
+  Target32Bit/random.sml
+  Target32Bit/prime-sizes.sml
+#else
+  Target64Bit/native.sml
+  Target64Bit/random.sml
+  Target64Bit/prime-sizes.sml
+#endif

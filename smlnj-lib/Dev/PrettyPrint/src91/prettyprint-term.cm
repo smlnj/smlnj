@@ -1,0 +1,27 @@
+(* smlnj-lib/Dev/PrettyPrint/src91/prettyprint-term.cm *)
+(* CM Description File for the PrettyPrinter Library
+ * ANSI terminal version *)
+
+Library
+
+  structure Style
+  structure Formatting
+  structure PrintFormat    
+
+is
+
+$/basis.cm
+$/smlnj-lib.cm
+
+term/style.sml    (* Style: styles for ANSI terminal *)
+format.sml
+measure.sig
+measure.sml
+device.sig
+render.sig
+render-fct.sml
+term/device.sml   (* ANSITermDevice *)
+term/render.sml   (* Render = RenderFn (ANSITermDevice) *)
+formatting.sig
+formatting.sml
+printformat.sml

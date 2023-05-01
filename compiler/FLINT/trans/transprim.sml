@@ -35,7 +35,8 @@ local
   structure LD = LtyDef
   structure LB = LtyBasic
   structure Tgt = Target
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
 
   fun bug msg = ErrorMsg.impossible("TransPrim: " ^ msg)
 
@@ -507,7 +508,7 @@ in
 	(* useful error message *)
 	  fun unexpectedTy () = 
 	      (say "unexpected type: lt = "; PPLty.ppLty dbpd lt; say "; ";
-	       PP.printFormatNL (PP.list (PPLty.fmtTyc dbpd) ts);
+	       PF.printFormatNL (PP.list (map (PPLty.fmtTyc dbpd) ts));
 	       say "for: "; say (PrimopUtil.toString prim);
 	       bug "unexpected type")
 

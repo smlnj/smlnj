@@ -6,6 +6,7 @@
  *
  * Author: Matthias Blume (blume@tti-c.org)
  *)
+
 structure Coverage : sig
 
     type kind
@@ -18,20 +19,15 @@ structure Coverage : sig
     val hot_spots : kind list -> int -> unit
 
     val install : unit -> unit
-end =
 
-struct
+  end = struct
 
-local (* top local *)
+    structure M = IntRedBlackMap
+    structure F = FormatComb
 
-  structure M = IntRedBlackMap
-  structure F = FormatComb
-  structure TDP = SMLofNJ.Internals.TDP
-
-in
+    structure TDP = SMLofNJ.Internals.TDP
 
     type kind = int
-
     val functions = TDP.idk_entry_point
     val tail_calls = TDP.idk_tail_call
     val non_tail_calls = TDP.idk_non_tail_call
@@ -84,7 +80,6 @@ in
 	    addto TDP.active_plugins plugin
 	end
 
-
     fun not_covered kinds =
 	let fun zerocnt (idx, r: record) =
 		count idx = 0 andalso List.exists (fn k => k = #kind r) kinds
@@ -113,5 +108,4 @@ in
 	    loop (sortedcountlist, n)
 	end
 
-end (* top local *)
-end (* structure Coverage *)
+  end

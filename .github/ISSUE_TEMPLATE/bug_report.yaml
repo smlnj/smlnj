@@ -32,6 +32,7 @@ body:
       label: Version
       description: What version of SML/NJ are you using?
       options:
+        - "2022.1 (latest)"
         - "2021.1"
     validations:
       required: true

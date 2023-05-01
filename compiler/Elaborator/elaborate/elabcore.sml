@@ -431,6 +431,7 @@ let
        | AppPat {constr, argument} =>
 	   let fun getPath (MarkPat(pat,region'), _) = getPath (pat, SOME region')
 		 | getPath (VarPat path, regionOp) = (path, regionOp)
+                 | getPath _ = bug "getPath: unexpected constructor pattern for AppPat"
 	       val (path, regionOp) = getPath (constr, NONE)
 	       val region = getOpt (regionOp, SM.nullRegion)
 	    in case LU.lookIdPath (env, SP.SPATH path, error region)

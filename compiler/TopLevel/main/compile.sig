@@ -10,43 +10,43 @@
  *)
 
 signature COMPILE0 =
-sig
+  sig
 
-  type pickle				(* pickled format *)
-  type hash				(* environment hash id *)
-  type pid = PersStamps.persstamp
-  type guid
+    type pickle				(* pickled format *)
+    type hash				(* environment hash id *)
+    type pid = PersStamps.persstamp
+    type guid
 
-  val mkCompInfo : Source.source -> CompInfo.compInfo
+    val mkCompInfo : Source.source -> CompInfo.compInfo
 
-  (** take ast, do semantic checks,
-   ** then output the new env, absyn and pickles *)
-  val elaborate :
-	{ast: Ast.dec,
-	 statenv: StaticEnv.staticEnv,
-	 compInfo: CompInfo.compInfo}
-     -> Absyn.dec * StaticEnv.staticEnv
+    (** take ast, do semantic checks,
+     ** then output the new env, absyn and pickles *)
+    val elaborate : {
+            ast: Ast.dec,
+            statenv: StaticEnv.staticEnv,
+            compInfo: CompInfo.compInfo
+          } -> Absyn.dec * StaticEnv.staticEnv
 
-  (** elaborate as above, then keep on to compile into the binary code *)
-  val compile : {
-	  source: Source.source,
-	  ast: Ast.dec,
-	  statenv: StaticEnv.staticEnv,
-	  compInfo: CompInfo.compInfo,
-	  guid: guid,
-	  checkErr: string -> unit
-	} -> {
-	  csegments: CodeObj.csegments,
-	  newstatenv: StaticEnv.staticEnv,
-	  absyn: Absyn.dec (* for pretty printing only *),
-	  exportPid: pid option,
-	  exportLvars: LambdaVar.lvar list,
-	  staticPid: hash,
-	  pickle: pickle,
-	  imports: ImportTree.import list
-	}
+    (** elaborate as above, then keep on to compile into the binary code *)
+    val compile : {
+            source: Source.source,
+            ast: Ast.dec,
+            statenv: StaticEnv.staticEnv,
+            compInfo: CompInfo.compInfo,
+            guid: guid,
+            checkErr: string -> unit
+          } -> {
+            csegments: CodeObj.csegments,
+            newstatenv: StaticEnv.staticEnv,
+            absyn: Absyn.dec (* for pretty printing only *),
+            exportPid: pid option,
+            exportLvars: LambdaVar.lvar list,
+            staticPid: hash,
+            pickle: pickle,
+            imports: ImportTree.import list
+          }
 
-end (* signature COMPILE0 *)
+  end (* signature COMPILE0 *)
 
 signature COMPILE = COMPILE0 where type pickle = Word8Vector.vector
                                and type hash = PersStamps.persstamp

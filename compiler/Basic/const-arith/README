@@ -1,0 +1,6 @@
+This directory contains code that implements constant arithmetic on
+SML integer and word constants.  The code is adapted from the SML
+Compiler Utilities.  The original source code is available at
+
+	https://github.com/JohnReppy/sml-compiler-utils
+

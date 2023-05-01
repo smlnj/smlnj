@@ -1,0 +1,436 @@
+% smlnj/notes/smlnj-lib.txt [newpp branch]
+
+Background
+----------
+
+PrettyPrint is a new prettyprinter library that is designed to be a
+component of the smlnj-lib library and to replace the old
+prettyprinter library (smlnj-lib/PP) in the compiler (and eventually
+its tools and libraries). The eight prettyprinters in the compiler
+(ppabsy, pptype, pplexp (plambda), pplexp (FLINT), ppcps, etc.) and
+the various error messages using a prettyprinter have all been
+converted to use the new PrettyPrint library instead of the old PP
+library.
+
+Develpment of the prettyprint library was done in a branch named "newpp"
+of the smlnj/smlnj github repository. It should be possible to
+checkout smlnj/smlnj and then switch to 
+
+
+During development, the new PrettyPrint sources were initally in the compiler
+in directory compiler/Basics/prettyprint, and the source files were listed in
+compiler/Basics/basics.cm. basics.cm initially continued to export the PrettyPrint
+structure, which previously referred to the structure defined in Basics/print/prettyprint.sml,
+which defined a revised interace to the PP library.
+
+Various tools still use the old prettyprinter. For instance, ml-ulex
+(tools/ml-lpt/ml-ulex) uses the old  prettyprinter in three
+files:
+
+   tools/ml-lpt/ml-ulex/BackEnds/SML/ml.sml
+                                    /sml-fun-output.sml
+				    /sml-tbl-output.sml
+
+So the ml-ulex/sources.cm file contains the specification
+
+   $/pp-lib.cm
+ 
+
+What I tried:
+-------------
+
+The PrettyPrint library is meant to live in smlnj-lib instead of in
+compiler/Basics, so its sources were copied to
+smlnj-lib/PrettyPrint/src, and a PrettyPrint/prettyprint-lib.cm file
+was created:
+---------------
+
+(* smlnj-lib/PrettyPrint/prettyprint-lib.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The sources file for the new PrettyPrint library.
+ *)
+
+Library
+
+	signature PRETTYPRINT
+	structure PrettyPrint
+
+is
+
+src/sources.cm
+
+---------------
+
+[Eventually the copy in Basics/prettyprint will be removed.]
+
+The next problem was how to edit various CM specification files and files in config
+(actions?, dependencies?) so that PrettyPrint would be "built" and the compiler and other code
+(libraries, tools, user code) could access the new PrettyPrint as an ordinary smlnj-lib
+library.
+
+The plan is that PP and PrettyPrint show co-exist in smlnj-lib, and for the time being
+tools and libraries that depend on the old PP library will continue to function as usual.
+
+So here are the steps that have been taken so far.
+
+1. Added the file system/smlnj/smlnj-lib/prettyprint-lib.cm, a modified version of
+   pp-lib.cm in the same directory, which refers to smlnj-lib/PrettyPrint instead
+   of smlnj-lib/PP and PrettyPrint/prettyprint-lib.cm instead of PP/pp-lib.cm.
+   [Q: why do we need (all) the bind: specifications in this cm description
+   file?]
+
+2. a. system/pathconfig: looks like this does not need to be changed.
+
+   b. config/extrapathconfig: added a line
+
+      prettyprint-lib.cm smlnj/smlnj-lib
+
+      [I believe this causes the path $/prettyprint-lib.cm to be defined so that it can
+       be used as an shorter alternative to $smlnj/smlnj-lib/prettyprint-lib.cm.]
+
+3. Removed Basics/prettyprint/* entries from Basics/basics.cm; we don't want to
+   have duplicate sources compiled from Basics/basics.cm (Basics/prettyprint) and
+   system/smlnj/smlnj-lib/prettyprint-lib.cm (smlnj-lib/PrettyPrint/src).  Also deleted
+   PrettyPrint from the export list of basics.cm.
+
+4. compiler/Basics/basics.cm
+     $smlnj/smlnj-lib/pp-lib.cm  ->  (replaced by)
+     $smlnj/smlnj-lib/prettyprint-lib.cm
+   because the prettyprinter is used in Basics/errormsg, Basics/source, Basics/symbol.
+   The files print/pputil.sml and print/prettyprinter.sml (and their export specs) are
+   deleted since their functionality is superceded by the new PrettyPrint.
+
+4. Remove PrettyPrint from the export lists of various compiler .cm files in system/smlnj/compiler.
+   This originally referred to the Basics/print/prettyprint.sml structure,
+   making it visible at top level. The new PrettyPrint structure is not supposed to be
+   visible in the top-level environment
+
+5. Added the line
+
+     $smlnj/smlnj-lib/prettyprint-lib.cm
+
+   to the cm description files Basics/basics.cm, ElabData/elabdata.cm,
+   Elaborate/elaborate.cm, Parse/parser.cm. where the PrettyPrint structure is referred to
+   (e.g. in file ElabData/modules/ppmod.sml). Also added this to core.cm so that files in TopLevel
+   FLINT and CPS that use PrettyPrint will have access to it.
+
+   Here is a list of compiler source files referring to PrettyPrint:
+
+     Basics/basics.cm
+       errormsg/errormsg.sml
+       errormsg/pperrormsg.sml
+       source/ppsourcemap.sml
+       symbol/ppsymbols.sml
+
+     CPS: core.cm (no cps.cm?)
+       cps/ppcps.sml
+
+     ElabData/elabdata.cm
+       basics/ppsympaths.sml
+       modules/ppmod.sml
+       modules/ppmod-db.sml
+       prim/ppprim.sml
+       syntax/ppabsyn.sml
+       syntax/ppval.sml
+       types/pptype.sml
+
+     Elaborator/elaborate.cm
+       elaborate/elabdebug.sml
+       elaborate/elabmod.sml
+       elaborate/elabtop.sml
+       elaborate/elabutil.sml
+       matchcomp/mcprint.sml
+       matchcomp/ppmatchcomp.sml
+       matchcomp/generate.sml
+       matchcomp/mcpp.sml
+       matchcomp/protoandor.sml
+       types/overload.sml
+       types/typecheck.sml
+       types/unify.sml
+
+     FLINT: core.cm (no flint.cm?)
+       flint/chkflint.sml
+       flint/chkflint-named.sml
+       flint/ppflint.sml
+       kernel/ltydef.sml
+       kernel/ltyextern.sml
+       kernel/ltykernel.sml
+       kernel/ltykindchk.sml
+       kernel/pplty
+       opt/collect.sml
+       opt/fcontract.sml
+       opt/fixfix.sml
+       opt/specialize.sml
+       plambda/chkplexp.sml
+       plambda/flintnm.sml
+       plambda/pplexp.sml
+       reps/wrapping.sml
+       trans/pequal.sml
+       trans/translate.sml
+
+     Parse/parser.cm
+       ast/ppast.sml
+
+     TopLevel: core.cm (no toplevel.cm?)
+       environ/environ.sml
+       interact/evalloop.sml
+       print/compilerpptable.sml
+       print/ppdec.sml
+       print/ppobj.sml
+       print/pptable.sml
+       print/printhooks.sml
+       
+   Also there are a few files in cm that use PrettyPrint:
+
+     cm/cm-lib.cm
+       compile/compile.sml
+       compile/link.sml
+       depend/build.sml
+       depend/checksharing.sml
+       main/general-params.sml
+       parse/parse.sml
+       stable/stabilize.sml
+
+   [Question: Why do TopLevel, FLINT, and CPS not have their own cm description files?
+    Their files are specified in core.cm instead, along with a bunch of ElabData files that
+    might belong in ElabData/elabdata.cm.]
+    
+6. Comment out the prettyprint/* files in compiler/Basics/basics.cm. 
+     This means that files in Basics/prettyprint will not be compiled and are
+     therefore redundant (and that directory should be removed after finding
+     new homes for the doc files).
+     ++ Done
+
+7. Comment out the
+
+        structure PrettyPrint = PrettyPrint
+
+   declaration in system/smlnj/compiler/compiler.sml, because PrettyPrint is not intended
+   to be exported via Compiler.
+
+8. After all these edits, in system we did
+
+       ./cmb-make ../../smlnj1/bin/sml
+
+   where smlnj1 is a second clone of the _main_ branch of the smlnj/smlnj github repo.
+   This compilation was successful and was followed by (in system):
+
+       ./makeml
+       ./installml -clean
+
+9. The next step was to perform
+
+       .cd ..
+       ./build.sh
+
+    This fails!  Here is the transcript:
+------------------------------------------------------------------------------------------
+./build.sh
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Generating heap image...
+This is...
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+$Execute: required privileges are:
+  cm-init
+Scheduling library $basis-2004.cm/basis-2004.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/basis-2004.cm/.cm/amd64-unix/basis-2004.cm
+Scheduling library $ml-lpt-lib.cm/ml-lpt-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-lpt-lib.cm/.cm/amd64-unix/ml-lpt-lib.cm
+Scheduling library $unix-lib.cm/unix-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/unix-lib.cm/.cm/amd64-unix/unix-lib.cm
+Scheduling library $hash-cons-lib.cm/hash-cons-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/hash-cons-lib.cm/.cm/amd64-unix/hash-cons-lib.cm
+Scheduling library $html-lib.cm/html-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/html-lib.cm/.cm/amd64-unix/html-lib.cm
+Scheduling library $html4-lib.cm/html4-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/html4-lib.cm/.cm/amd64-unix/html4-lib.cm
+Scheduling library $inet-lib.cm/inet-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/inet-lib.cm/.cm/amd64-unix/inet-lib.cm
+Scheduling library $json-lib.cm/json-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/json-lib.cm/.cm/amd64-unix/json-lib.cm
+Scheduling library $pp-lib.cm/pp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/pp-lib.cm/.cm/amd64-unix/pp-lib.cm
+Scheduling library $pp-extras-lib.cm/pp-extras-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/pp-extras-lib.cm/.cm/amd64-unix/pp-extras-lib.cm
+Scheduling library $regexp-lib.cm/regexp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/regexp-lib.cm/.cm/amd64-unix/regexp-lib.cm
+Scheduling library $reactive-lib.cm/reactive-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/reactive-lib.cm/.cm/amd64-unix/reactive-lib.cm
+Scheduling library $sexp-lib.cm/sexp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/sexp-lib.cm/.cm/amd64-unix/sexp-lib.cm
+Scheduling library $uuid-lib.cm/uuid-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/uuid-lib.cm/.cm/amd64-unix/uuid-lib.cm
+Scheduling library $xml-lib.cm/xml-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/xml-lib.cm/.cm/amd64-unix/xml-lib.cm
+Scheduling library $ml-ulex-tool.cm/ml-ulex-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-ulex-tool.cm/.cm/amd64-unix/ml-ulex-tool.cm
+Scheduling library $mllex-tool.cm/mllex-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mllex-tool.cm/.cm/amd64-unix/mllex-tool.cm
+Scheduling library $lex-ext.cm/lex-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/lex-ext.cm/.cm/amd64-unix/lex-ext.cm
+Building ml-yacc.
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+grammar.sml:46.45-46.49 Warning: calling polyEqual
+grammar.sml:42.48-42.52 Warning: calling polyEqual
+grammar.sml:39.39-39.43 Warning: calling polyEqual
+mklrtable.sml:333.38-333.39 Warning: calling polyEqual
+mklrtable.sml:325.38-325.39 Warning: calling polyEqual
+shrink.sml:171.18-171.19 Warning: calling polyEqual
+shrink.sml:177.13-177.14 Warning: calling polyEqual
+shrink.sml:183.28-183.29 Warning: calling polyEqual
+shrink.sml:181.6-181.7 Warning: calling polyEqual
+yacc.sml:351.34-351.35 Warning: calling polyEqual
+yacc.sml:253.56-253.57 Warning: calling polyEqual
+Scheduling library $mlyacc-tool.cm/mlyacc-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mlyacc-tool.cm/.cm/amd64-unix/mlyacc-tool.cm
+Scheduling library $grm-ext.cm/grm-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/grm-ext.cm/.cm/amd64-unix/grm-ext.cm
+Scheduling library $ml-antlr-tool.cm/ml-antlr-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-antlr-tool.cm/.cm/amd64-unix/ml-antlr-tool.cm
+Configuring asdl.
+checking build system type... x86_64-apple-darwin22.2.0
+checking host system type... x86_64-apple-darwin22.2.0
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to enable C11 features... none needed
+checking how to run the C preprocessor... gcc -E
+checking whether the compiler supports GNU C... (cached) yes
+checking whether gcc accepts -g... (cached) yes
+checking for gcc option to enable C11 features... (cached) none needed
+checking for clang++... clang++
+checking whether the compiler supports GNU C++... yes
+checking whether clang++ accepts -g... yes
+checking for clang++ option to enable C++11 features... none needed
+checking whether clang++ supports C++14 features by default... no
+checking whether clang++ supports C++14 features with -std=gnu++14... yes
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether make sets $(MAKE)... yes
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking size of int... 4
+checking size of long... 8
+checking size of float... 4
+checking size of double... 8
+checking version of SML/NJ... 2022.1
+checking heap suffix of SML/NJ... amd64-darwin
+checking for ml-makedepend... /Users/dbm/sml/Dev/github/smlnj/bin/ml-makedepend
+checking for ml-build... /Users/dbm/sml/Dev/github/smlnj/bin/ml-build
+checking for ld... /opt/local/bin/ld
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating doc/Makefile
+config.status: creating doc/manual-2.0/Makefile
+config.status: creating doc/manual-3.0/Makefile
+config.status: creating examples/Makefile
+config.status: creating src/Makefile
+config.status: creating src/asdlgen/Makefile
+config.status: creating src/lib/Makefile
+config.status: creating src/lib/cxx/Makefile
+config.status: creating src/tests/Makefile
+config.status: creating src/tests/basics/Makefile
+config.status: creating src/tests/options/Makefile
+config.status: creating src/tests/primitives/Makefile
+config.status: creating src/tests/sequences/Makefile
+config.status: creating src/asdlgen/common/config.sml
+config.status: creating bin/install-sml-wrapper.sh
+config.status: creating src/gen/fragments/mkfrags.sh
+config.status: creating src/gen/fragments/mkmk.sh
+config.status: creating src/lib/cxx/include/asdl/config.h
+config.status: src/lib/cxx/include/asdl/config.h is unchanged
+Scheduling library $asdlgen-tool.cm/asdlgen-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/asdlgen-tool.cm/.cm/amd64-unix/asdlgen-tool.cm
+Scheduling library $asdl-ext.cm/asdl-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/asdl-ext.cm/.cm/amd64-unix/asdl-ext.cm
+Scheduling library $asdl-lib.cm/asdl-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/asdl-lib.cm/.cm/amd64-unix/asdl-lib.cm
+Scheduling library $smlnj-tdp/plugins.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/plugins.cm
+Scheduling library $smlnj-tdp/back-trace.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/back-trace.cm
+Scheduling library $smlnj-tdp/coverage.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-tdp/.cm/amd64-unix/coverage.cm
+Scheduling library $cml/core-cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/core-cml.cm
+Scheduling library $cml/cml-internal.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml-internal.cm
+Scheduling library $cml/cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml.cm
+Scheduling library $cml/basis.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/basis.cm
+Scheduling library $cml-lib/trace-cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml-lib/.cm/amd64-unix/trace-cml.cm
+Scheduling library $cml-lib/smlnj-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml-lib/.cm/amd64-unix/smlnj-lib.cm
+Scheduling library $cml/trace-cml.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/trace-cml.cm
+Scheduling library $cml/smlnj-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/smlnj-lib.cm
+Scheduling library $cml/inet-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/inet-lib.cm
+Scheduling library $cml/unix-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/unix-lib.cm
+Scheduling library $cml/cml-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/cml/.cm/amd64-unix/cml-lib.cm
+Scheduling library $ckit-lib.cm/ckit-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ckit-lib.cm/.cm/amd64-unix/ckit-lib.cm
+Building ml-burg.
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Scheduling library $mlburg-tool.cm/mlburg-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/mlburg-tool.cm/.cm/amd64-unix/mlburg-tool.cm
+Scheduling library $burg-ext.cm/burg-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/burg-ext.cm/.cm/amd64-unix/burg-ext.cm
+Building ml-ulex.
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+/Users/dbm/sml/Dev/github/smlnj/bin/ml-build: line 112: 15736 Segmentation fault: 11  "$LINK" `cat "$linkargsfile"`
+FAILURE: Built ml-ulex; ml-ulex.amd64-darwin still missing.
+./build.sh: !!! ./build.sh: !!! Installation of libraries and programs failed.
+------------------------------------------------------------------------------------------
+
+   This failure seems to be in the shell script ml-build, or in the bin/.link-sml shell script that
+   it calls (as "$LINK").
+
+   What caused this failure, and where is the "FAILURE: ..." message printed?
+
+   John speculated that the build of ml-ulex failed because the PP library is no longer being used
+   by the compiler, and so it did not get built before compiling ml-ulex [as mentioned above,
+   ml-ulex/sources.cm specifies $/pp-lib.cm].
+
+   Note that after this failed execution of build.sh, we have:
+
+   hoy$ pwd
+   /Users/dbm/sml/Dev/github/smlnj/lib/smlnj-lib
+   hoy$ ls
+   Controls/	PP/		PrettyPrint/	Util/
+
+   hoy$ ls -l PP/.cm/amd64-unix
+   total 136
+   -rw-r--r--  2 dbm  staff  69291 Jan 10 14:26 pp-lib.cm
+
+   hoy$ ls -l PrettyPrint/.cm/amd64-unix/
+   total 8
+   -rw-r--r--  2 dbm  staff  153 Jan 10 14:26 prettyprint-lib.cm
+
+   So is the failure because PP did not get built?
+
+   John suggested that a fix might involve altering the files
+
+    * config/actions
+
+       To add the line
+
+          smlnj-lib  lib pp-lib.cm        pp-lib.cm        smlnj-lib/PP
+
+       just before the existing line
+
+          smlnj-lib  lib pp-extras-lib.cm pp-extras-lib.cm smlnj-lib/PP
+
+       This did not have any visible effect.
+
+    * config/dependencies
+
+       Try adding pp-lib to the ml-ulex dependencies, as in the edited line
+
+          ml-ulex smlnj-lib pp-lib ml-lpt-lib
+
+       This had the effect of causing a different error message:
+
+------------------------------------------------------------------------------------------
+hoy$ ./build.sh
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Generating heap image...
+This is...
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+$Execute: required privileges are:
+  cm-init
+Scheduling library $basis-2004.cm/basis-2004.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/basis-2004.cm/.cm/amd64-unix/basis-2004.cm
+Scheduling library $ml-lpt-lib.cm/ml-lpt-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj/lib/ml-lpt-lib.cm/.cm/amd64-unix/ml-lpt-lib.cm
+FAILURE: unknown module: pp-lib
+./build.sh: !!! ./build.sh: !!! Installation of libraries and programs failed.
+------------------------------------------------------------------------------------------
+
+
+Questions
+---------
+
+* How many of the bind: declarations in (for instance)
+system/smlnj/smlnj-lib/prettyprint-lib.cm are necessary? Why?
+Are they needed, or are they there pro-forma?
+
+

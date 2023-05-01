@@ -36,7 +36,8 @@ local
   structure T = Types
   structure TU = TypesUtil
   structure OLC = OverloadClasses
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPType
   structure ED = ElabDebug
   open Types
@@ -55,7 +56,7 @@ local
       ED.debugPrint debugging (msg, PPT.fmtType StaticEnv.empty ty)
 
   (* ppType : T.ty -> unit *)
-  fun ppType ty = PP.printFormat (PPT.fmtType StaticEnv.empty ty)
+  fun ppType ty = PF.printFormat (PPT.fmtType StaticEnv.empty ty)
 
 in
 

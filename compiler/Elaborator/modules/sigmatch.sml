@@ -31,7 +31,8 @@ local
   structure TU = TypesUtil
   structure SM = SourceMap
   structure EM = ErrorMsg
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPType
   structure PPS = PPSymbols
 
@@ -156,9 +157,9 @@ let
           (err EM.COMPLAIN "value type in structure does not match signature spec"
                (PPT.resetPPType();
 		PP.vblock
-		  [PP.hcat (PP.text "name:", PP.text (S.name name)),
-		   PP.hcat (PP.text "spec:", PPT.fmtType statenv spec),
-		   PP.hcat (PP.text "actual:", PPT.fmtType statenv actual)]);
+		  [PP.hblock [PP.text "name:", PP.text (S.name name)],
+		   PP.hblock [PP.text "spec:", PPT.fmtType statenv spec],
+		   PP.hblock [PP.text "actual:", PPT.fmtType statenv actual]]);
            NONE)
 
   fun complain s = err EM.COMPLAIN s EM.nullErrorBody
@@ -727,17 +728,17 @@ let
                            | SOME (btvs,ptvs) =>
                              let val _ =
 				   if !debugging
-                                   then PP.printFormatNL
-					  (PP.vcat
-					     (PP.label "###SM:" (PPS.fmtSym sym),
-					      PP.hardIndent 2 
+                                   then PF.printFormatNL
+					  (PP.vblock
+					     [PP.label "###SM:" (PPS.fmtSym sym),
+					      PP.indent 2 
 					        (PP.vblock
 						   [PP.label "spectype:" (PPT.fmtType statenv spectyp),
 						    PP.label "acttyp:" (PPT.fmtType statenv acttyp),
 						    PP.label "ptvs:" 
-						      (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs)),
+						      (PP.tuple (map (fn tv => PPT.fmtType statenv (T.VARty tv)) ptvs)),
 						    PP.label "btvs:"
-						      (PP.tupleFormats (map (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs))])))
+						      (PP.tuple (map (fn tv => PPT.fmtType statenv (T.VARty tv)) btvs))])])
 				   else ()
 
                                  val spath = SP.SPATH[sym]

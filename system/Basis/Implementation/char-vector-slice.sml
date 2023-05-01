@@ -135,9 +135,9 @@ structure CharVectorSlice :> MONO_VECTOR_SLICE
     fun all pred vs = let
 	  val (base, start, len) = SS.base vs
 	  val stop = start ++ len
-	  fun ex i = (i < stop) andalso (pred (usub (base, i)) orelse ex (i ++ 1))
+	  fun al i = (i >= stop) orelse (pred (usub (base, i)) andalso al (i ++ 1))
 	  in
-	    ex start
+	    al start
 	  end
 
   (* added for Basis Library proposal 2018-002 *)

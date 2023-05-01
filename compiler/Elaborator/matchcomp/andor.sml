@@ -20,7 +20,8 @@ local
   structure AU = AbsynUtil
   structure P = Paths
   structure T = Types
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPT = PPType
   structure PPMC = PPMatchComp
 
@@ -41,7 +42,7 @@ local
 
   (* ppRules : ruleset -> unit *)
   fun ppRules (rules: ruleset) =
-      PP.printFormatNL (PPMC.fmtRuleset rules)
+      PF.printFormatNL (PPMC.fmtRuleset rules)
 
 in
 

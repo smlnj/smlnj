@@ -31,7 +31,8 @@ local
     structure TU = TypesUtil
     structure SE = StaticEnv
     structure ED = ElabDebug
-    structure PP = NewPrettyPrint
+    structure PP = Formatting
+    structure PF = PrintFormat
     structure PPS = PPSymbols
     structure PPT = PPType
     structure Ty = Types
@@ -44,7 +45,7 @@ local
 
     fun debugMsg (msg: string) = ED.debugMsg debugging msg
 
-    fun ppType (ty: T.ty) = PP.printFormat (PPT.fmtType SE.empty ty)
+    fun ppType (ty: T.ty) = PF.printFormat (PPT.fmtType SE.empty ty)
     fun debugPPType (msg, ty) = ED.debugPrint debugging (msg, (PPT.fmtType SE.empty ty))
 
 in 
@@ -106,9 +107,9 @@ in
 				err EM.COMPLAIN "overloaded variable not defined at type"
 				    (PPType.resetPPType();
 				     PP.hblock
-				       [PP.hcat (PP.text "symbol:", PPS.fmtSym name),
-					PP.hcat (PP.text "type:",
-						 PPType.fmtType env (Ty.VARty context))]))
+				       [PP.hblock [PP.text "symbol:", PPS.fmtSym name],
+					PP.hblock [PP.text "type:",
+						 PPType.fmtType env (Ty.VARty context)]]))
 		    end (* fun resolveOVLDvar *)
 
 	        (* resolve overloaded literals *)

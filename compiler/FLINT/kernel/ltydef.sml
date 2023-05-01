@@ -8,7 +8,8 @@ local
   structure PT = PrimTyc
   structure LT = Lty
   structure LK = LtyKernel
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
 
   (* debugging *)
   structure EM = ErrorMsg
@@ -291,9 +292,9 @@ val ltd_fct    : LT.lty -> LT.lty list * LT.lty list = fn lt =>
 val ltd_poly   : LT.lty -> LT.tkind list * LT.lty list = fn lt =>
     (case LK.lt_whnm_out lt
       of LT.LT_POLY x => x
-       | _ => (PP.printFormatNL
-		 (PP.vcat (PP.text "***ltd_poly***",
-			   PP.hcat (PP.text "arg:", PPLty.fmtLty (!dp) lt)));
+       | _ => (PF.printFormatNL
+		 (PP.vblock [PP.text "***ltd_poly***",
+			   PP.hblock [PP.text "arg:", PPLty.fmtLty (!dp) lt]]);
 	       bug "unexpected lty in ltd_poly"))
 
 (** lty predicates *)

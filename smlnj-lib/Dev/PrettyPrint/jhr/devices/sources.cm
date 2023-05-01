@@ -1,0 +1,28 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Pretty printing devices
+ *)
+
+Library
+
+  structure ANSITermDev
+  structure CharBufferDev
+  structure HTML3Dev
+  structure SimpleTextIODev
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/html-lib.cm
+
+  ../src/pretty-print-lib.cm
+
+  ansi-term-dev.sml
+  char-buffer-dev.sml
+  default-device-fn.sml
+  html3-dev.sml
+  simple-textio-dev.sml

@@ -1,4 +1,4 @@
-(* build.sml
+(* cm/depend/build.sml
  *
  * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -42,7 +42,7 @@ structure BuildDepend :> BUILDDEPEND = struct
     structure DE = DAEnv
     structure EM = ErrorMsg
     structure SP = SymPath
-    structure PP = NewPrettyPrint
+    structure PP = Formatting
 
     type impexp = DG.impexp
 

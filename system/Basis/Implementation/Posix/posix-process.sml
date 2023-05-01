@@ -19,7 +19,7 @@ structure POSIX_Process =
     structure Sig = POSIX_Signal
 
     type s_word = SysWord.word
-    type s_int = SysInt.int
+    type s_int = SysInt.int	(* == Int.int *)
 
     type signal = Sig.signal
     datatype pid = PID of s_int

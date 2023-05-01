@@ -26,20 +26,16 @@ struct
 local 
 
     structure DA = Access
-    structure EM = ErrorMsg
     structure T  = Types
     structure BT = BasicTypes
     structure ED = ElabDebug
     structure LT = Lty
-    structure LK = LtyKernel
     structure LD = LtyDef
     structure LB = LtyBasic
-    structure LE = LtyExtern
     structure TU = TypesUtil
-    structure SE = StaticEnv
     structure PO = Primop
     structure PU = PrimopUtil
-    structure PP = NewPrettyPrint
+    (* Other: ErrorMsg *)
 
     open Types PLambda
     (* mentions Target *)
@@ -63,7 +59,7 @@ local
    * with the mkv in "compInfo" ? (ZHONG)
    * DBM: is it worth cleaning up, what harm might come from using a single
    * global generator -- resetting the generator between compilations _might_
-   * be advisable, just in case.  In fact, compInfo just uses the same gloval
+   * be advisable, just in case.  In fact, compInfo just uses the same global
    * lvar generator, so using the mkLvar of compInfo would not do anything
    * unless different compInfo values were used.
    *)

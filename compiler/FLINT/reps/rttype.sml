@@ -32,7 +32,7 @@ local
   structure PT = PrimTyc
   structure LV = LambdaVar
   structure FR = FunRecMeta
-  open FLINT (* Lty LtyKernel *)
+  open FLINT
 in
 
   type tcode = int

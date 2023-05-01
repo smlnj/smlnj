@@ -1,0 +1,81 @@
+~/sml/Dev/github/smlnj/notes/build-outline.txt  [newpp branch]
+
+This is intended to develop into a full description of the architecture of the compiler and how the
+compiler is built (bootstrapped).
+
+TODO:
+
+1. Describe how the compiler is constructed out of libraries. In particular, the library/directories:
+
+   Admin
+   Basic
+   ElabData
+   Elaborate  (<- Elaborator)
+   FLINT
+   CPS
+   CodeGen    (<- NewCodeGen)
+   Execute
+   TopLevel
+
+   CM 
+
+   Basis
+   smlnj-lib
+
+   Which library imports what from what other libraries?
+
+2. Catalog all the .cm (CDFs, CM Description Files) used in the build process, and describe what
+   part they play in the build process.
+
+3. Describe where the binaries go for each component (library) involved in the build.
+
+4. Describe how the compiler + cm are built, how the libraries are built (Basis and smlnj-lib),
+   and how the stand-alone tools (e.g. ml-yacc) are built.
+
+5. Describe where the code "driving" the various parts of the build can be found, in:
+     a. shell scripts like $SMLNJ/build.sh, bin/ml-build, tool build.sh scripts
+     b. ML code in, for instance, system/smlnj/installml/
+     c. Inside CM, e.g. ml-boot.sml
+
+6. Document bootstrapping "tricks" or "devices" (e.g. involving cmi files).
+
+7. Document the roles of the various "pathconfig" files.
+
+8. Document the use (and necessity?) of config/actions and config/dependencies.
+
+9. Document the "viscomp" machinery. What is it, and how does it work, and how can it be used
+   by compiler hackers and non-compiler hackers?
+
+10. Revise and clarify the existing CM documentation, and add more documentation of the
+   CM internals and algorithms (to support deep compiler hacking and CM maintenance).
+
+11. Discover and remove unnecessary complexities and dependencies, and otherwise improve the
+   bootstrapping machinery of the compiler.  Make the build process and machinery both transparent
+   and robust.
+
+   
+==========================================================================================
+TopLevel needs to be reorganized and split into two directories:
+
+(1) Implementation of the interactive top-level (the REPL).
+
+(2) The interface to compiler functionality used by CM.
+
+Persumably these both rely on CodeGen (NewCodeGen), but in different ways. They both need
+to perform:
+  * lexing,
+  * parsing,
+  * elaboration,
+  * FLINT translation and optimization,
+  * CPS translation and optimization,
+  * CFG translation and optimization,
+  * code generation.
+
+What are the appropriate interfaces (signatures) for the REPL and CM as clients?
+
+CodeGen itself should probably be split with a new CFG directory for the
+control-flow-graph stuff, leaving a "top-level" interface to compiling and code generation
+for the CodeGen directory.
+
+
+

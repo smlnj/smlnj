@@ -7,20 +7,20 @@
 signature PPABSYN =
 sig
 
-  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> NewPrettyPrint.format
+  val fmtPat  : StaticEnv.staticEnv -> Absyn.pat * int -> Formatting.format
   val fmtExp  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.exp * int -> NewPrettyPrint.format
+                -> Absyn.exp * int -> Formatting.format
   val fmtRule : StaticEnv.staticEnv * Source.source option
-                -> Absyn.rule * int -> NewPrettyPrint.format
+                -> Absyn.rule * int -> Formatting.format
   val fmtVB   : StaticEnv.staticEnv * Source.source option
-                -> Absyn.vb * int -> NewPrettyPrint.format
+                -> Absyn.vb * int -> Formatting.format
   val fmtRVB  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.rvb * int -> NewPrettyPrint.format
+                -> Absyn.rvb * int -> Formatting.format
   val fmtDec  : StaticEnv.staticEnv * Source.source option
-                -> Absyn.dec * int -> NewPrettyPrint.format
+                -> Absyn.dec * int -> Formatting.format
 
   val fmtStrexp : StaticEnv.staticEnv * Source.source option
-                 -> Absyn.strexp * int -> NewPrettyPrint.format
+                 -> Absyn.strexp * int -> Formatting.format
 
 end (* signature PPABSYN *)
 
@@ -44,7 +44,7 @@ local
   structure SE = StaticEnv
   structure SR = Source
   structure SM = SourceMap
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType
@@ -68,7 +68,7 @@ val lineprint = ElabDataControl.absynLineprint
 val internals = ElabDataControl.absynInternals
 
 fun fmtField (sym: S.symbol, fmt: PP.format) =
-    PP.pcat (PP.hcat (PPS.fmtSym sym, PP.equal), fmt)
+    PP.pblock [PP.hblock [PPS.fmtSym sym, PP.equal], fmt]
 
 (* fmtPos : Source.source * Source.charpos -> PP.format *)
 fun fmtPos({sourceMap, ...}: SR.source, charpos: SR.charpos) =
@@ -109,9 +109,7 @@ fun decTag dec = "<dec>"
 fun fmtStr str =
     (case str
       of M.STR{access,rlzn={rpath,...},...} =>
-	 PP.ccat
-	   (PPP.fmtInvPath rpath,
-	    PP.brackets (PPV.fmtAccess access))
+  	   PP.cblock [PPP.fmtInvPath rpath, PP.brackets (PPV.fmtAccess access)]
        | M.STRSIG _ => PP.text "SIGSTR"
        | M.ERRORstr => PP.text "ERRORstr")
 
@@ -119,7 +117,7 @@ fun fmtStr str =
 fun fmtFct fct =
     (case fct
       of M.FCT{access,rlzn={rpath,...},...} =>
-	   PP.ccat (PPP.fmtInvPath rpath, PP.brackets (PPV.fmtAccess access))
+	   PP.cblock [PPP.fmtInvPath rpath, PP.brackets (PPV.fmtAccess access)]
        | M.ERRORfct => PP.text "ERRORfct")
 
 (* fmtPat : SE.staticEnv -> AS.pat * int -> PP.format *)
@@ -152,7 +150,7 @@ fun fmtPat env (pat, depth) =
 		     let fun fmtPatField (sym, pat) = fmtField (sym, fmtPat' (pat, 0, 0, d-1))
 		      in (case AU.destTuplePat r
 			    of SOME pats => (* tuple special case  -- implies not flex *)
-			         PP.tupleFormats (map (fn pat => fmtPat' (pat, 0, 0, d-1)) pats)
+			         PP.tuple (map (fn pat => fmtPat' (pat, 0, 0, d-1)) pats)
 			     | NONE =>
 			         PP.braces (* record *)
 				   (PP.psequence PP.comma
@@ -160,9 +158,9 @@ fun fmtPat env (pat, depth) =
 		     end)
 	  | fmtPat' (VECTORpat (pats, _), _, _, d) =
 	      let fun fmtElem pat = fmtPat'(pat, 0, 0, d-1)
-	       in PP.ccat
-		    (PP.text "#",
-		     PP.brackets (PP.psequence PP.comma (map fmtElem pats)))
+	       in PP.cblock
+		    [PP.text "#",
+		     PP.brackets (PP.psequence PP.comma (map fmtElem pats))]
 	      end
 	  | fmtPat' (pat as (ORpat _), _, _, d) =
 	      let fun flattenORs (ORpat (p1, p2)) = p1 :: flattenORs p2
@@ -195,9 +193,9 @@ fun fmtPat env (pat, depth) =
 			      end
 			  | SOME _ => bug "AU.destTuplePat returned bad result"
 			  | NONE =>  (* argPat is not a tuple pat or does not have two elements *)
-			      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
+			      PP.hblock [PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)])
 		  | F.NONfix =>
-		      PP.hcat (PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)))
+		      PP.hblock [PPS.fmtSym name, fmtPat' (argPat, 1000, rpull, d-1)])
 	  | fmtPat' (CONSTRAINTpat (pat,t), lpull, rpull, d) =
 	      let val patFmt = fmtPat' (pat, 0, 0, d-1)
 		  val typFmt = PPT.fmtType env t
@@ -220,11 +218,11 @@ fun fmtCon (DATAcon (dcon, _)) = PPV.fmtDatacon dcon
   | fmtCon (INTcon ({ival, ...})) = PP.text (IntInf.toString ival)
   | fmtCon (WORDcon ({ival, ...})) = PP.text (IntInf.toString ival)
   | fmtCon (STRINGcon s) = PP.string s
-  | fmtCon (VLENcon (n, _)) = PP.ccat (PP.text "VL", PP.integer n)
+  | fmtCon (VLENcon (n, _)) = PP.cblock [PP.text "VL", PP.integer n]
 
 (* ruleFmt : PP.format * PP.format -> PP.format *)
 fun ruleFmt (patFmt: PP.format, expFmt: PP.format) =
-    PP.pcat (PP.hcat (patFmt, ruleArrow), PP.softIndent 2 expFmt)
+    PP.pblock [PP.hblock [patFmt, ruleArrow], PP.indent 2 expFmt]
 
 (* fmtExp : context -> AS.exp * int -> PP.format *)
 fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
@@ -234,7 +232,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 
 	and fmtMatch (lead: string, rules: rule list, d: int) : PP.format =
 	    if d <= 0 then PP.text "<match>" else
-	    PP.vHeaderFormats {header1 = lead, header2 = "|"}
+	    PP.vHeaders {header1 = lead, header2 = "|"}
 			       (map (fn rule => fmtRule (rule, d-1)) rules)
 
 	and fmtSRule (SRULE (con, _, exp) : srule, d: int) : PP.format =
@@ -244,7 +242,7 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	and fmtSMatch (srules : srule list, defaultOp: exp option, d: int) : PP.format =
 	    if d <= 0 then PP.text "<smatch>" else
 	    let val d' = d - 1
-	     in PP.vHeaderFormats {header1 = "of", header2 = " |"}
+	     in PP.vHeaders {header1 = "of", header2 = " |"}
                    ((map (fn srule => fmtSRule (srule, d')) srules) @
 		    (case defaultOp
 		       of NONE => nil
@@ -264,25 +262,25 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	      let fun fmtExpField (LABEL {name, ...}, exp) = fmtField (name, fmtExp' (exp, 0, 0, d-1))
 	       in case AU.destTupleExp r  (* is the record actually a tuple? *)
 		    of SOME exps =>  (* tuple special case (implies not flex) *)
-		         PP.tupleFormats (map (fn exp => fmtExp' (exp, 0, 0, d-1)) exps)
+		         PP.tuple (map (fn exp => fmtExp' (exp, 0, 0, d-1)) exps)
 		     | NONE => PP.braces (PP.psequence PP.comma (map fmtExpField fields))
 	      end
 	  | fmtExp' (RSELECTexp (exp, index), _, rpull, d) =
 	      let val expFmt0 = fmtExp' (exp, 0, 0, d-1)
 		  val expFmt = if rpull > 0 then PP.parens expFmt0 else expFmt0  (* ??? *)
-		  val selector = PP.ccat (PP.text "#", PP.integer index)
-	       in PP.hcat (selector, expFmt)
+		  val selector = PP.cblock [PP.text "#", PP.integer index]
+	       in PP.hblock [selector, expFmt]
 	      end
 	  | fmtExp' (VSELECTexp (exp, _, index), _, rpull, d) =
 	      let val vexpFmt0 = fmtExp' (exp, 0, 0, d-1)
 		  val vexpFmt = if rpull > 0 then PP.parens vexpFmt0 else vexpFmt0
-		  val selector = PP.ccat (PP.text "##", PP.integer index)  (* new "##" 'syntax' *)
-	       in PP.hcat (selector, vexpFmt)
+		  val selector = PP.cblock [PP.text "##", PP.integer index]  (* new "##" 'syntax' *)
+	       in PP.hblock [selector, vexpFmt]
 	      end
 	  | fmtExp' (VECTORexp(exps,_), _, _, d) =
 	      let fun fmtElem exp = fmtExp' (exp, 0, 0, d-1)
-	       in PP.ccat
-		    (PP.text "#", (PP.brackets (PP.psequence PP.comma (map fmtElem exps))))
+	       in PP.cblock [PP.text "#",
+			   (PP.brackets (PP.psequence PP.comma (map fmtElem exps)))]
 	      end
 	  | fmtExp' (SEQexp exps, _, _, d) =
 	      let fun fmtElem exp = fmtExp' (exp, 0, 0, d-1)
@@ -305,8 +303,8 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 		            | _ => F.NONfix
 	       in case fixity
 		    of F.NONfix =>
-			 PP.hcat (fmtExp' (rator, lpull, 1000, d-1),
-				  fmtExp' (rand, 1000, rpull, d-1))
+			 PP.hblock [fmtExp' (rator, lpull, 1000, d-1),
+				  fmtExp' (rand, 1000, rpull, d-1)]
 		     | F.INfix (left, right) => 
 			 let val SOME [name] = pathOp
 			  in case AU.destTupleExp (AU.headStripExp rand)
@@ -329,8 +327,8 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 				  end
 				| SOME _ => bug "AU.destTupleExp returned bad arg for binary app"
 				| NONE =>  (* rand is not a pair *)
-				    PP.hcat (fmtExp' (rator, lpull, 1000, d-1),
-					     fmtExp' (rand, 1000, rpull, d-1))
+				    PP.hblock [fmtExp' (rator, lpull, 1000, d-1),
+					     fmtExp' (rand, 1000, rpull, d-1)]
 			 end
 	      end
 
@@ -340,32 +338,32 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 	      PP.parens
 	        (PP.vblock
 	           [fmtExp' (exp, 0, 0, d-1),
-		    PP.hardIndent 2 (fmtMatch ("handle", rules, d))])
+		    PP.indent 2 (fmtMatch ("handle", rules, d))])
 	  | fmtExp' (RAISEexp (exp,_), lpull, rpull, d) =
 	      mkAtomic (lpull, rpull,
-			PP.hcat (PP.text "raise", fmtExp' (exp, 0, 0, d-1)))
+			PP.hblock [PP.text "raise", fmtExp' (exp, 0, 0, d-1)])
 	  | fmtExp' (LETexp(dec, exp), _, _, d) =
 	      PP.vblock
-		[PP.hcat (PP.text "let", fmtDec context (dec, d-1)),
-		 PP.hcat (PP.text " in", fmtExp' (exp, 0, 0, d-1)),
+		[PP.hblock [PP.text "let", fmtDec context (dec, d-1)],
+		 PP.hblock [PP.text " in", fmtExp' (exp, 0, 0, d-1)],
 		 PP.text "end"]
 	  | fmtExp' (LETVexp(var, defexp, bodyexp), _, _, d) =
 	      PP.hvblock
-		[PP.pcat (PP.hblock [PP.text "letv", PPV.fmtVar var, PP.equal],
-			  PP.softIndent 2 (fmtExp' (defexp, 0, 0, d-1))),
-		 PP.hcat (PP.text " in", fmtExp' (bodyexp, 0, 0, d-1)),
+		[PP.pblock [PP.hblock [PP.text "letv", PPV.fmtVar var, PP.equal],
+			  PP.indent 2 (fmtExp' (defexp, 0, 0, d-1))],
+		 PP.hblock [PP.text " in", fmtExp' (bodyexp, 0, 0, d-1)],
 		 PP.text "end"]
 	  | fmtExp' (CASEexp(exp, (rules,_,_)), _, _, d) =
 	      PP.parens
 	        (PP.vblock
-	           [PP.hcat (PP.text "case", fmtExp' (exp, 0, 0, d-1)),
-		    PP.hardIndent 2 (fmtMatch ("of", rules, d))])
+	           [PP.hblock [PP.text "case", fmtExp' (exp, 0, 0, d-1)],
+		    PP.indent 2 (fmtMatch ("of", rules, d))])
 	  | fmtExp' (IFexp { test, thenCase, elseCase }, lpull, rpull, d) =
 	      mkAtomic (lpull, rpull, 
 		PP.hvblock
-		  [PP.hcat (PP.text "if", fmtExp' (test, 0, 0, d-1)),
-		   PP.hcat (PP.text "then", fmtExp' (thenCase, 0, 0, d-1)),
-		   PP.hcat (PP.text "else", fmtExp' (elseCase, 0, 0, d-1))])
+		  [PP.hblock [PP.text "if", fmtExp' (test, 0, 0, d-1)],
+		   PP.hblock [PP.text "then", fmtExp' (thenCase, 0, 0, d-1)],
+		   PP.hblock [PP.text "else", fmtExp' (elseCase, 0, 0, d-1)]])
 	  | fmtExp' (ANDALSOexp (e1, e2), lpull, rpull, d) =
 	      let val operator = PP.text "andalso"
 	       in if lpull > 4 orelse rpull > 5
@@ -381,9 +379,9 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 		  else (PP.pblock [fmtExp' (e1, lpull, 2, d-1), operator, fmtExp' (e2, 3, rpull, d-1)])
 	      end
 	  | fmtExp' (WHILEexp { test, expr }, lpull, rpull, d) =
-              PP.pcat
-	        (PP.hcat (PP.text "while", fmtExp'(test, 0, 0, d-1)),
-	         PP.hcat (PP.text "do", fmtExp' (expr, 0, rpull, d-1)))
+              PP.pblock
+	        [PP.hblock [PP.text "while", fmtExp'(test, 0, 0, d-1)],
+	         PP.hblock [PP.text "do", fmtExp' (expr, 0, rpull, d-1)]]
 	  | fmtExp' (FNexp (rules, _, _), _, _, d) =
 	      PP.parens (fmtMatch ("fn", rules, d))
 	  | fmtExp' (MARKexp (exp, region), lpull, rpull, d) =
@@ -399,13 +397,13 @@ fun fmtExp (context as (env, sourceOp)) (exp : AS.exp, depth : int) =
 		     else fmtExp'(exp, lpull, rpull, d)
 	         | NONE => fmtExp'(exp, lpull, rpull, d))
 	  | fmtExp' (SWITCHexp (exp, srules, defaultOp), _, _, d) =
-	      PP.vcat
-	        (PP.hcat (PP.text "SWITCH", fmtExp' (exp, 0, 0, d-1)),
-	         PP.hardIndent 2 (fmtSMatch (srules, defaultOp, d-1)))
+	      PP.vblock
+	        [PP.hblock [PP.text "SWITCH", fmtExp' (exp, 0, 0, d-1)],
+	         PP.indent 2 (fmtSMatch (srules, defaultOp, d-1))]
 	  | fmtExp' (VSWITCHexp (exp, _, srules, default), _, _, d) =
-	      PP.vcat
-	        (PP.hcat (PP.text "VSWITCH", fmtExp' (exp, 0, 0, d-1)),
-	         PP.hardIndent 2 (fmtSMatch (srules, SOME default, d-1)))
+	      PP.vblock
+	        [PP.hblock [PP.text "VSWITCH", fmtExp' (exp, 0, 0, d-1)],
+	         PP.indent 2 (fmtSMatch (srules, SOME default, d-1))]
           (* end fmtExp' *)
 
      in fmtExp' (exp, 0, 0, depth)
@@ -426,19 +424,19 @@ and fmtVARSEL (var1, var2, index) =
 and fmtDec (context as (env,sourceOp)) (dec, depth) =
     let fun fmtDec' (dec, 0) = PP.text (decTag dec)  (* "<dec>" *)
           | fmtDec' (VALdec vbs, d) =
-	      PP.vHeaderFormats {header1 = "val", header2 = "and"}
+	      PP.vHeaders {header1 = "val", header2 = "and"}
 	        (map (fn vb => fmtVB context (vb,d-1)) vbs)
           | fmtDec' (VALRECdec rvbs, d) =
-	      PP.vHeaderFormats {header1 = "val rec", header2 = "and"}
+	      PP.vHeaders {header1 = "val rec", header2 = "and"}
 	        (map (fn rvb => fmtRVB context (rvb,d-1)) rvbs)
 	  | fmtDec' (DOdec exp, d) =
-	      PP.hcat (PP.text "do", fmtExp context (exp,d-1))
+	      PP.hblock [PP.text "do", fmtExp context (exp,d-1)]
           | fmtDec' (TYPEdec tycs, d) =
 	    let fun fmtDEFtyc (T.DEFtyc{path, tyfun=T.TYFUN{arity,body},...}) =
 		    PP.hblock [PPT.fmtFormals arity, PPP.fmtTycName path,
 			       PP.equal, PPT.fmtType env body]
 		  | fmtDEFtyc _ = bug "fmtDEFtyc"
-	     in PP.vHeaderFormats {header1 = "type", header2 = "and"}
+	     in PP.vHeaders {header1 = "type", header2 = "and"}
  	          (map fmtDEFtyc tycs)
 	    end
           | fmtDec' (DATATYPEdec{datatycs,withtycs}, d) =
@@ -462,85 +460,84 @@ and fmtDec (context as (env,sourceOp)) (dec, depth) =
 		       PP.equal, PPT.fmtType env body]
 		  | fmtWITHTYPE _ = bug "fmtDec'(DATATYPEdec) 3"
 	     in (* could call PPDec.fmtDec here *)
-	        PP.vcat
-		  (PP.vHeaderFormats {header1 = "datatype", header2 = "and"}
+	        PP.vblock
+		  [PP.vHeaders {header1 = "datatype", header2 = "and"}
                      (map fmtDATATYPE datatycs),
-	           PP.vHeaderFormats {header1 = "withtype", header2 = "and"}
-                     (map fmtWITHTYPE withtycs))
+	           PP.vHeaders {header1 = "withtype", header2 = "and"}
+                     (map fmtWITHTYPE withtycs)]
 	    end
         | fmtDec' (ABSTYPEdec _, _) = PP.text "<ABSTYPEdec>"
         | fmtDec' (EXCEPTIONdec ebs, d) =
 	    let fun fmtEB (EBgen{exn=T.DATACON{name,...}, etype}) =
-		      PP.hcat
-			(PPS.fmtSym name,
+		      PP.hblock
+			[PPS.fmtSym name,
 			 case etype
 			  of NONE => PP.empty
-			   | SOME ty' => PP.hcat (PP.text "of", PPT.fmtType env ty'))
+			   | SOME ty' => PP.hblock [PP.text "of", PPT.fmtType env ty']]
 		  | fmtEB (EBdef{exn=T.DATACON{name,...}, edef=T.DATACON{name=dname,...}}) =
 		      PP.hblock [PPS.fmtSym name, PP.equal, PPS.fmtSym dname]
-	     in PP.vHeaderFormats {header1 = "exception", header2 = "and"} (map fmtEB ebs)
+	     in PP.vHeaders {header1 = "exception", header2 = "and"} (map fmtEB ebs)
 	    end
         | fmtDec' (STRdec sbs,d) =
 	    let fun fmtSTRB (STRB {name, str=M.STR { access, ... }, def}) =
-		    PP.pcat (PP.hblock [PPS.fmtSym name, PPV.fmtAccess access, PP.equal],
-			     fmtStrexp context (def, d-1))
+		    PP.pblock [PP.hblock [PPS.fmtSym name, PPV.fmtAccess access, PP.equal],
+			     fmtStrexp context (def, d-1)]
 		  | fmtSTRB (STRB {name, str = M.ERRORstr, ...}) =
 		    PP.hblock [PPS.fmtSym name, PP.equal, PP.text "<unbound>"]
 		  | fmtSTRB _ = bug "fmtDec:STRdec:STRB"
-	     in PP.vHeaderFormats {header1 = "structure", header2 = "and"} (map fmtSTRB sbs)
+	     in PP.vHeaders {header1 = "structure", header2 = "and"} (map fmtSTRB sbs)
 	    end
         | fmtDec' (FCTdec fbs,d) =
 	    let fun fmtFCTB (FCTB{name=fname, fct=M.FCT { access, ... }, def}) =
-                      PP.pcat (PP.hblock [PPS.fmtSym fname, PPV.fmtAccess access, PP.equal],
-			       fmtFctexp context (def,d-1))
+                      PP.pblock [PP.hblock [PPS.fmtSym fname, PPV.fmtAccess access, PP.equal],
+			       fmtFctexp context (def,d-1)]
 		  | fmtFCTB _ = bug "fmtDec':FCTdec"
-	     in PP.vHeaderFormats {header1 = "functor", header2 = "and"} (map fmtFCTB fbs)
+	     in PP.vHeaders {header1 = "functor", header2 = "and"} (map fmtFCTB fbs)
 	    end
         | fmtDec' (SIGdec sigvars, d) =
 	    let fun fmtSIG (M.SIG { name, ... }) =
-		    PP.hcat
-		      (PP.text "signature",
+		    PP.hblock
+		      [PP.text "signature",
 		       case name
 			 of SOME s => PPS.fmtSym s
-			  | NONE => PP.text "ANONYMOUS")
+			  | NONE => PP.text "ANONYMOUS"]
 		  | fmtSIG _ = bug "fmtDec':SIGdec"
 	     in PP.vblock (map fmtSIG sigvars)
 	    end
         | fmtDec' (FSIGdec sigvars, d) =
 	    let fun fmtFSIG (M.FSIG{kind, ...}) =
-		    PP.hcat
-		      (PP.text "funsig",
+		    PP.hblock
+		      [PP.text "funsig",
                        case kind
 			 of SOME s => PPS.fmtSym s
-                          | NONE => PP.text "ANONYMOUS")
+                          | NONE => PP.text "ANONYMOUS"]
 		  | fmtFSIG _ = bug "fmtDec':FSIGdec"
 	     in PP.vblock (map fmtFSIG sigvars)
 	    end
         | fmtDec' (LOCALdec(inner,outer), d) =
 	    PP.vblock
 	      [PP.text "local",
-	       PP.hardIndent 2 (fmtDec' (inner, d-1)),
+	       PP.indent 2 (fmtDec' (inner, d-1)),
 	       PP.text "in",
-	       PP.hardIndent 2 (fmtDec' (outer, d-1)),
+	       PP.indent 2 (fmtDec' (outer, d-1)),
 	       PP.text "end"]
         | fmtDec' (SEQdec decs, d) =
 	    PP.vblock (map (fn dec => fmtDec' (dec, d)) decs)
         | fmtDec' (FIXdec {fixity,ops},d) =
-	    PP.hcat
-	      (case fixity
+	    PP.hblock
+	      [case fixity
 	         of F.NONfix => PP.text "nonfix"
 	          | F.INfix (i,_) =>
-		      PP.hcat
-			(PP.text (if i mod 2 = 0 then "infix" else "infixr"),
-			 if i div 2 > 0 then (PP.integer (i div 2)) else PP.empty),
-	       PP.hblock (map PPS.fmtSym ops))
+		      PP.hblock
+			[PP.text (if i mod 2 = 0 then "infix" else "infixr"),
+			 if i div 2 > 0 then (PP.integer (i div 2)) else PP.empty],
+	       PP.hblock (map PPS.fmtSym ops)]
 
         | fmtDec' (OVLDdec ovldvar, _) =
-	    PP.hcat (PP.text "overload ", PPV.fmtVar ovldvar)
+	    PP.hblock [PP.text "overload ", PPV.fmtVar ovldvar]
 
         | fmtDec' (OPENdec strbs, _) =
-	   PP.hblock
-	     (PP.text "open" :: map (fn (sp,_) => PPP.fmtSymPath sp) strbs)
+	   PP.hblock (PP.text "open" :: (map (fn (sp,_) => PPP.fmtSymPath sp) strbs))
 
         | fmtDec' (MARKdec (dec, _), d) = fmtDec' (dec, d)
 (*
@@ -566,12 +563,12 @@ and fmtStrexp (context as (statenv,sourceOp)) =
 	  | fmtStrexp' (VARstr str, _) = fmtStr str
 
 	  | fmtStrexp' (APPstr{oper, arg, ...}, _) =
-	      PP.hcat (fmtFct oper, PP.parens (fmtStr arg))
+	      PP.hblock [fmtFct oper, PP.parens (fmtStr arg)]
 
           | fmtStrexp' (STRstr bindings, d) =
               PP.vblock
 	        [PP.text "struct",
-	         PP.hardIndent 2
+	         PP.indent 2
 	           (PP.vblock
 		     (map (fn binding =>
 		            PPModules.fmtBinding statenv
@@ -581,8 +578,8 @@ and fmtStrexp (context as (statenv,sourceOp)) =
 		
 	   | fmtStrexp' (LETstr(dec,body),d) =
 	       PP.vblock
-	         [PP.hcat (PP.text "let ", fmtDec context (dec,d-1)),
-	          PP.hcat (PP.text "in",  fmtStrexp'(body,d-1)),
+	         [PP.hblock [PP.text "let ", fmtDec context (dec,d-1)],
+	          PP.hblock [PP.text "in",  fmtStrexp'(body,d-1)],
 		  PP.text "end"]
 
            | fmtStrexp' (MARKstr (body, _), d) = fmtStrexp' (body, d)  (* ignore region *)
@@ -591,8 +588,8 @@ and fmtStrexp (context as (statenv,sourceOp)) =
 		of SOME source =>
 		     PP.hblock
 	               [PP.text "MARKstr",
-			PP.ccat (fmtStrexp' (body, d), PP.comma),
-			PP.ccat (fmtPos (source,s), PP.comma),
+			PP.cblock [fmtStrexp' (body, d), PP.comma],
+			PP.cblock [fmtPos (source,s), PP.comma],
 			fmtPos (source,e)]
 	         | NONE => fmtStrexp' (body,d))
 *)
@@ -605,17 +602,17 @@ and fmtFctexp (context as (_,sourceOp)) =
 	  | fmtFctexp' (VARfct fct, d) = fmtFct fct
 
 	  | fmtFctexp' (FCTfct {param, def, ...}, d) =
-	      PP.vcat
-		(PP.hblock
+	      PP.vblock
+		[PP.hblock
 		   [PP.text "FCT",
 		    PP.parens (fmtStr param),
 		    PP.text "=>"],
-		 fmtStrexp context (def, d-1))
+		 fmtStrexp context (def, d-1)]
 
 	  | fmtFctexp' (LETfct(dec,body),d) =
 	      PP.vblock
-		[PP.hcat (PP.text "let", fmtDec context (dec, d-1)),
-		 PP.hcat (PP.text "in", fmtFctexp' (body, d-1)),
+		[PP.hblock [PP.text "let", fmtDec context (dec, d-1)],
+		 PP.hblock [PP.text "in", fmtFctexp' (body, d-1)],
 		 PP.text "end"]
 
 	  | fmtFctexp' (MARKfct (body,_), d) = fmtFctexp' (body, d)

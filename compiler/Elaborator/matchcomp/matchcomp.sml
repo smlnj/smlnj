@@ -1,4 +1,4 @@
-(* FLINT/trans/matchcomp.sml
+(* Elaborator/matchcomp/matchcomp.sml
  *
  * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -51,7 +51,8 @@ local
   structure DT = DecisionTree
   structure ST = MCStats
   structure MCC = MCControl (* match compiler control flags *)
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPA = PPAbsyn
   structure PPMC = PPMatchComp
  
@@ -75,16 +76,15 @@ local
   fun dbsays msgs = if !mcdebugging then says msgs else ()
   fun dbsaynl msg = if !mcdebugging then saynl msg else ()
 
-
   val db_printDepth = 100
 
   fun ppDectree dectree =
-      PP.printFormatNL (PPMC.fmtDectree dectree)
+      PF.printFormatNL (PPMC.fmtDectree dectree)
 
   fun ppExp (exp : AS.exp, msg: string) =
-      PP.printFormatNL
-        (PP.vcat (PP.string msg,
-		  PPA.fmtExp (StaticEnv.empty, NONE) (exp, db_printDepth)))
+      PF.printFormatNL
+        (PP.vblock [PP.string msg,
+		  PPA.fmtExp (StaticEnv.empty, NONE) (exp, db_printDepth)])
 
 in
 

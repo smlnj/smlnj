@@ -92,30 +92,31 @@ signature COLLECT =
 structure Collect :> COLLECT =
 struct
 local
+
+  structure T  = LambdaVar.Tbl  (* lvar hashtable *)
   structure PL = PLambda
   structure F  = FLINT
-  structure T  = LambdaVar.Tbl  (* lvar hashtable *)
   structure FU = FlintUtil
-  structure LV = LambdaVar
-  structure PU = PrintUtil
-  structure PP = NewPrettyPrint
-  structure PPF = PPFlint
   structure PO = Primop
+  structure LV = LambdaVar
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure PPF = PPFlint
 
   val debugging = FLINT_Control.fcdebugging
 
   fun say s = (Control_Print.say s; Control_Print.flush())
   fun newline () = say "\n"
   fun saynl s = (Control_Print.say s; say "\n"; Control_Print.flush())
-  fun says (msgs: string list) = say (PU.interpws msgs)
-  fun saysnl (msgs: string list) = saynl (PU.interpws msgs)
+  fun says (msgs: string list) = say (String.concatWith " " msgs)
+  fun saysnl (msgs: string list) = saynl (String.concatWith " " msgs)
   fun dbsay msg = if !debugging then saynl msg else ()
   fun dbsays msgs = if !debugging then saysnl msgs else ()
 
   fun bug msg = ErrorMsg.impossible ("Collect: "^msg)
 
-  fun buglexp (msg, lexp) = (newline(); PP.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
-  fun bugval (msg, value) = (newline(); say (PPF.valueToString value); newline (); bug msg)
+  fun buglexp (msg, lexp) = (PF.printFormatNL (PPF.fmtLexp 100 lexp); bug msg)
+  fun bugval (msg, value) = (say (PPF.valueToString value); newline (); bug msg)
 
 in
 

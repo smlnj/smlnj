@@ -25,7 +25,8 @@ local structure LE = LtyExtern
       structure DA = Access
       structure PO = Primop
       structure S  = LV.Set
-      structure PP = NewPrettyPrint
+      structure PP = Formatting
+      structure PF = PrintFormat
       structure PPF = PPFlint
       open FLINT
 
@@ -35,16 +36,16 @@ val anyerror = ref false
 
 (* pretty printing functions *)
 
-fun ppLexp d lexp = PP.printFormat (PPF.fmtLexp d lexp)
+fun ppLexp d lexp = PF.printFormat (PPF.fmtLexp d lexp)
 
 fun prMsgLty (msg, lty) = (say msg; ppLexp 10 lexp)
 
-fun fmtList (s, ltys) = 
-    PP.vcat (PP.text s, hardIndent (2, PP.formatSeq V (PPT.fmtLty 100) ltys))
+fun fmtLtyList (label, ltys) = 
+    PP.vblock [PP.text label, PP.indent 2 (PP.vsequence PP.empty (map (PPT.fmtLty 100) ltys))]
 
-fun pp2Lists (s,s',ltys,ltys') =
-    PP.printFormat
-      (PP.vcat (fmtList (s, ltys), fmtList (s', ltys'))
+fun print2lists (label1, label2, ltys1, ltys2) =
+    PF.printFormat
+      (PP.vblock [fmtLtyList (label1, ltys1), fmtLtyList (label2, ltys2)])
 
 
 (****************************************************************************
@@ -113,7 +114,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 	      let val len_ts = Int.toString (length ts)
 		  val len_ts' = Int.toString (length ts')
 		  fun errFn () =
-		      pp2Lists
+		      print2lists
 			(concat [s, ": type list mismatch (", len_ts,
 				 " vs ", len_ts', ")\n** expected types:"],
 			 "** actual types:",
@@ -142,10 +143,10 @@ fun check (postReify: bool) (envs: envs) lexp =
 	       fn () =>
 		  printFormatNL
 		    (vblock [text (s ^ ": Kind conflict"),
-		    	     text "** function Lty:",
-			     PPT.fmtLty 100 lt,
-			     text "** argument Tycs:",
-			     PP.formatList (PPT.fmtTyc 100) ts]),
+		    	   text "** function Lty:",
+			   PPT.fmtLty 100 lt,
+			   text "** argument Tycs:",
+			   PP.formatList (PPT.fmtTyc 100) ts]),
 	       []))
 
         (* ltArrow : (lexp * string) -> (cconv * lty list * lty list) -> lty *)
@@ -157,7 +158,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 		     (fn () => LE.ltc_arrow (fflag, dom_ltys, ran_ltys))
 		     (le,
 		      fn () =>
-		      (pp2Lists
+		      (print2lists
 			(s ^ ": deeply polymorphic non-functor\n** parameter types:",
 			 "** result types:",
 			 dom_ltys, ran_ltys);

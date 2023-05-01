@@ -76,7 +76,7 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
 
 	    fun loop (m, pos) =
 		case lineIn pos of
-		    NONE => (error (SM.REGION (pos, pos+1)) "unexpected end of file"; NONE)
+		    NONE => (error(SM.REGION (pos, pos)) "unexpected end of file"; NONE)
 		  | SOME (line, newpos) => let
 		        val newRegion = SM.REGION (pos, newpos)
 			val error = error newRegion  (* pos < newpos? *)

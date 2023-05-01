@@ -1,0 +1,12 @@
+(* smlnj/viscomp/flint.cm
+ *
+ * FLINT middle end.
+ *
+ * (C) 2023 The Fellowship of SML/NJ (www.smlnj.org)
+ *)
+
+Library
+	group($compiler/FLINT/flint.cm)
+is
+	(* reference to our only group... *)
+	$compiler/FLINT/flint.cm

@@ -6,7 +6,7 @@ struct
 local (* top local *)
   structure SR = Source
   structure SM = SourceMap
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
 in
 
 fun fmtRegion (REGION (lo,hi): SM.region) : PP.format =

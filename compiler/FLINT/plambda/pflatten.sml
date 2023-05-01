@@ -8,7 +8,6 @@ local
   structure LT = Lty
   structure LD = LtyDef
   structure LK = LtyKernel
-  structure LV = LambdaVar
   structure F = FLINT
   structure FU = FlintUtil
 in

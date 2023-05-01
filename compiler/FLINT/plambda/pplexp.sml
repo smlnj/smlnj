@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-(* Pretty printing of plambda lexps, using the NewPrettyPrint prettyprinter. *)
+(* Pretty printing of plambda lexps, using the new PrettyPrint library. *)
 
 signature PPLEXP =
 sig
@@ -12,7 +12,7 @@ sig
   val conToString : PLambda.con -> string
   val lexpTag : PLambda.lexp -> string
 
-  val fmtLexp: int -> PLambda.lexp -> NewPrettyPrint.format
+  val fmtLexp: int -> PLambda.lexp -> Formatting.format
   val ppLexp: int -> PLambda.lexp -> unit
 
 end (* signature PPLEXP *)
@@ -23,20 +23,15 @@ struct
 
 local
   structure LV = LambdaVar
-  structure A = Absyn
   structure DA = Access
   structure S = Symbol
-  structure PP = NewPrettyPrint
-
-  open PLambda NewPrettyPrint
-
-  (* zipEq3: zipEq for 3 lists *)
-  fun zipEq3 (x::xs, y::ys, z::zs) =
-        (x, y, z) :: zipEq3 (xs, ys, zs)
-    | zipEq3 (nil,nil,nil) = nil
-    | zipEq3 _ = raise ListPair.UnequalLengths
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure SF = StringFormats
 
   fun bug s = ErrorMsg.impossible ("PPLexp: "^s)
+
+  open PLambda
 
 in
 
@@ -75,13 +70,13 @@ fun conToString (DATAcon((sym, _, _), _, lvar)) = ((S.name sym) ^ "." ^ (LV.lvar
       String.concat ["(I", Int.toString ty, ")", IntInf.toString ival]
   | conToString (WORDcon{ival, ty}) =
       String.concat ["(W", Int.toString ty, ")", IntInf.toString ival]
-  | conToString (STRINGcon s) = PrintUtil.formatString s
+  | conToString (STRINGcon s) = SF.formatString s
 
 
 (* fmtLexp : int -> lexp -> format
  * holophrastic PLambda.lexp formatter, with depth limited by pd argument *)
-fun fmtLexp (pd:int) (l: lexp): format =
-    if pd < 1 then text (lexpTag l) else
+fun fmtLexp (pd:int) (l: lexp): PP.format =
+    if pd < 1 then PP.text (lexpTag l) else
     let 
         val fmtLexp' = fmtLexp (pd-1)
         val fmtLty' = PPLty.fmtLty (pd-1)
@@ -89,33 +84,31 @@ fun fmtLexp (pd:int) (l: lexp): format =
         val fmtTKind' = PPLty.fmtTKind (pd-1)
 
         (* fmtI : PLambda.lexp -> format *)
-        fun fmtI (VAR v) = text (LV.lvarName v)
-	  | fmtI (INT{ival, ty=0}) = hcat (text "(II)", text (IntInf.toString ival))
+        fun fmtI (VAR v) = PP.text (LV.lvarName v)
+	  | fmtI (INT{ival, ty=0}) = PP.hblock [PP.text "(II)", PP.text (IntInf.toString ival)]
 	  | fmtI (INT{ival, ty}) =
-	      text (String.concat ["(I", Int.toString ty, ")", IntInf.toString ival])
+	      PP.cblock [PP.parens (PP.cblock [PP.text "I", PP.integer ty]), PP.text (IntInf.toString ival)]
 	  | fmtI (WORD{ival, ty}) =
-	      text (String.concat ["(W", Int.toString ty, ")", IntInf.toString ival])
+	      PP.cblock [PP.parens (PP.cblock [PP.text "W", PP.integer ty]), PP.text (IntInf.toString ival)]
           | fmtI (REAL{rval, ty}) =
-	      text (String.concat ["(R", Int.toString ty, ")", RealLit.toString rval])
-          | fmtI (STRING s) = string s
-          | fmtI (ETAG (lexp,_)) =
-              enclose {front = text "ETAG(", back = rparen} (fmtLexp' lexp)
+	      PP.cblock [PP.parens (PP.cblock [PP.text "R", PP.integer ty]), PP.text (RealLit.toString rval)]
+          | fmtI (STRING s) = PP.string s
+          | fmtI (ETAG (lexp,_)) = PP.cblock [PP.text "ETAG", PP.parens (fmtLexp' lexp)]
 
-          | fmtI (RECORD lexps) =
-              ccat (text "REC", tupleFormats (map fmtLexp' lexps))
+          | fmtI (RECORD lexps) = PP.cblock [PP.text "REC", PP.tuple (map fmtLexp' lexps)]
 
-          | fmtI (SRECORD lexps) =
-              ccat (text "SREC", tupleFormats (map fmtLexp' lexps))
+          | fmtI (SRECORD lexps) = PP.cblock [PP.text "SREC", PP.tuple (map fmtLexp' lexps)]
 
-          | fmtI (VECTOR (lexps, _)) =
-              ccat (text "VEC", tupleFormats (map fmtLexp' lexps))
+          | fmtI (VECTOR (lexps, _)) = PP.cblock [PP.text "VEC", PP.tuple (map fmtLexp' lexps)]
 
           | fmtI (PRIM(p,t,ts)) =
-              enclose {front = text "PRIM(", back = rparen}
-		 (pblock
-		   [ccat (text (PrimopUtil.toString p), comma),
-		    ccat (fmtLty' t, comma),
-		    tupleFormats (map fmtTyc' ts)])
+              PP.cblock
+		[PP.text "PRIM",
+		   PP.parens
+		     (PP.pblock
+			[PP.cblock [PP.text (PrimopUtil.toString p), PP.comma],
+			 PP.cblock [fmtLty' t, PP.comma],
+			 PP.tuple (map fmtTyc' ts)])]
 
           | fmtI (l as SELECT(i, _)) =
 	      let fun gather(SELECT(i,l)) =
@@ -124,106 +117,101 @@ fun fmtLexp (pd:int) (l: lexp): format =
 			end
 		    | gather l = (nil, l)
 		  val (path, root) = gather l
-	       in ccat (fmtLexp' root, list integer (rev path))
+	       in PP.cblock [fmtLexp' root, PP.list (map PP.integer (rev path))]
 	      end
 
           | fmtI (FN(v,t,body)) =
-	      pcat (cblock [text "FN(", text (LV.lvarName v), colon, fmtLty' t, text ") => "],
-		    softIndent 4 (fmtLexp' body))
+	      PP.pblock [PP.cblock [PP.text "FN(", PP.text (LV.lvarName v), PP.colon, fmtLty' t, PP.text ") => "],
+		    PP.indent 4 (fmtLexp' body)]
 
           | fmtI (CON ((s, c, lt), ts, l)) =
-	      pblock
-		[text "CON",
-		 parens (pblock [hcat (ccat (text (S.name s), comma),
-				       ccat (text (DA.conrepToString c), comma)),
-				 fmtLty' lt]),
-		comma,
-		list fmtTyc' ts,
-		comma,
-		softIndent 4 (fmtLexp' l),
-		rparen]
+	      PP.pblock
+		[PP.text "CON",
+		 PP.parens
+		   (PP.pblock
+		     [PP.parens
+			(PP.pblock
+			   [PP.hblock
+			      [PP.cblock [PP.text (S.name s), PP.comma],
+			       PP.cblock [PP.text (DA.conrepToString c), PP.comma]],
+			    fmtLty' lt,
+			    PP.comma]),
+		      PP.cblock [PP.list (map fmtTyc' ts), PP.comma],
+		      PP.indent 4 (fmtLexp' l)])]
 
           | fmtI (APP (FN (lvar, _, body), r)) =
-            ccat
-              (text "APP-",
-               fmtLexp' (LET(lvar, r, body)))
+              PP.cblock [PP.text "APP-", fmtLexp' (LET(lvar, r, body))]
 
           | fmtI (LET(v, r, l)) =
-            vcat 
- 	      (pcat
-		 (hblock [text "LET", text (LV.lvarName v), text "="],
-		  softIndent 4 (fmtLexp' r)),
-               hardIndent 1 (hcat (text "IN", fmtLexp' l)))
+              PP.vblock 
+ 	        [PP.pblock
+		   [PP.hblock [PP.text "LET", PP.text (LV.lvarName v), PP.text "="],
+		    PP.indent 4 (fmtLexp' r)],
+		 PP.indent 1 (PP.hblock [PP.text "IN", fmtLexp' l])]
 
           | fmtI (APP(l, r)) =
-	      enclose {front = text "APP(", back = rparen}
-                (tryFlat (vcat (ccat (fmtLexp' l, comma), fmtLexp' r)))
+	      PP.cblock [PP.text "APP",
+                    PP.parens (PP.tryFlat (PP.vblock [PP.cblock [fmtLexp' l, PP.comma], fmtLexp' r]))]
 
           | fmtI (TFN(ks, b)) =
-              enclose {front = text "TFN(", back = rparen}
-		(pcat (tupleFormats (map fmtTKind' ks),
-		       softIndent 3 (fmtLexp' b)))
+	      PP.cblock [PP.text "TFN",
+		    PP.parens (PP.pblock [PP.tuple (map fmtTKind' ks), PP.indent 3 (fmtLexp' b)])]
 
           | fmtI (TAPP(l, ts)) =
-              enclose {front=text "TAPP(", back=rparen}
-	        (pcat (fmtLexp' l,
-		       tupleFormats (map fmtTyc' ts)))
+	      PP.cblock [PP.text "TAPP",
+		    PP.parens (PP.pblock [fmtLexp' l, PP.tuple (map fmtTyc' ts)])]
 
           | fmtI (GENOP(dict, p, t, ts)) =
-              enclose {front=text "GEN(", back=rparen}
-                (pblock
-                   [ccat (text (PrimopUtil.toString p), comma),
-                    ccat (fmtLty' t, comma),
-                    tupleFormats (map fmtTyc' ts)])
+	      PP.cblock
+		[PP.text "GENOP",
+		 PP.parens (PP.pblock
+			      [PP.cblock [PP.text (PrimopUtil.toString p), PP.comma],
+			       PP.cblock [fmtLty' t, PP.comma],
+			       PP.tuple (map fmtTyc' ts)])]
 
           | fmtI (SWITCH (l,_,llist,default)) =
             let fun switchCase (c,l) =
-                      pcat (hcat (text (conToString c), text " =>"), softIndent 4 (fmtLexp' l))
+                      PP.pblock [PP.hblock [PP.text (conToString c), PP.text "=>"], PP.indent 4 (fmtLexp' l)]
 		val defaultCase =
 		    (case default
 		      of NONE => nil
-		       | SOME lexp => [pcat (text "_ =>", softIndent 4 (fmtLexp' lexp))])
-             in vblock
-		  [hcat (text "SWITCH ", fmtLexp' l),
-		   hardIndent 2 (hcat (text "of", vblock (map switchCase llist @ defaultCase)))]
+		       | SOME lexp => [PP.pblock [PP.text "_ =>", PP.indent 4 (fmtLexp' lexp)]])
+             in PP.vblock
+		  [PP.hblock [PP.text "SWITCH ", fmtLexp' l],
+		   PP.indent 2 (PP.hblock [PP.text "of", PP.vblock (map switchCase llist @ defaultCase)])]
             end
 
           | fmtI (FIX (varlist, ltylist, lexplist, body)) =
             let fun ffun (v, t, l) =
-                      ccat (hblock [text (LV.lvarName v), text ":", fmtLty' t, text "=="],
-			    hardIndent 2 (fmtLexp' l))
-             in vcat (hcat (text "FIX",
-		            vblock (map ffun (zipEq3 (varlist, ltylist, lexplist)))),
-		      hcat (text "IN",
-			    fmtLexp' body))
+                      PP.vblock [PP.hblock [PP.text (LV.lvarName v), PP.text ":", fmtLty' t, PP.text "=="],
+			    PP.indent 2 (fmtLexp' l)]
+             in PP.vblock [PP.hblock [PP.text "FIX",
+		            PP.vblock (map ffun (List3.zip3Eq (varlist, ltylist, lexplist)))],
+		      PP.hblock [PP.text "IN", fmtLexp' body]]
             end
 
           | fmtI (RAISE(l,t)) =
-	      enclose {front = text "RAISE(", back = rparen}
-                (pcat (ccat (fmtLty' t, comma), fmtLexp' l))
+	      PP.cblock [PP.text "RAISE", 
+		    PP.parens (PP.pblock [PP.cblock [fmtLty' t, PP.comma], fmtLexp' l])]
 
           | fmtI (HANDLE (lexp, withlexp)) =
-            vblock
-              [hcat (text "HANDLE", fmtLexp' lexp),
-               hcat (text "WITH", fmtLexp' withlexp)]
+              PP.vblock
+                [PP.hblock [PP.text "HANDLE", fmtLexp' lexp],
+		 PP.hblock [PP.text "WITH", fmtLexp' withlexp]]
 
           | fmtI (WRAP(t, _, l)) =
-              enclose {front = text "WRAP(", back = rparen}
-		(vcat
-                   (ccat (fmtTyc' t, comma),
-		    fmtLexp' l))
+	      PP.cblock [PP.text "WRAP",
+		    PP.parens (PP.vblock [PP.cblock [fmtTyc' t, PP.comma], fmtLexp' l])]
 
           | fmtI (UNWRAP(t, _, l)) =
-              enclose {front = text "UNWRAP(", back = rparen}
-		(vcat
-                   (ccat (fmtTyc' t, comma),
-		    fmtLexp' l))
+	      PP.cblock [PP.text "UNWRAP",
+		    PP.parens (PP.vblock [PP.cblock [fmtTyc' t, PP.comma], fmtLexp' l])]
 
    in fmtI l
   end
 
 fun ppLexp (pd: int) (lexp : PLambda.lexp) =
-    printFormat (fmtLexp pd lexp)			 
+    PF.printFormat (fmtLexp pd lexp)			 
 
 end (* toplevel local *)
 end (* structure PPLexp *)

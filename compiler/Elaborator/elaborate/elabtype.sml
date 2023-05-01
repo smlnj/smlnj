@@ -13,13 +13,17 @@ local
   structure SE = StaticEnv
   structure L  = Lookup
   structure B  = Bindings
+  structure V =  Variable
+  structure AS = Absyn
   structure T  = Types
   structure TU = TypesUtil
   structure BT = BasicTypes
   structure EU = ElabUtil
   structure TS = TyvarSet
   structure SM = SourceMap
-  open Symbol Absyn Ast PrintUtil Types TypesUtil Variable
+
+  open Ast Types
+
   type region = SM.region
 in
 
@@ -37,7 +41,7 @@ infix -->
 
 fun elabTyv(tyv:Ast.tyvar, error: EM.errorFn, region: region)  =
     case tyv
-     of Tyv vt => mkTyvar(mkUBOUND(vt))
+     of Tyv vt => mkTyvar (TU.mkUBOUND vt)
       | MarkTyv(tyv,region) => elabTyv(tyv,error,region)  (* ignore MarkTy *)
 
 fun elabTyvList (tyvars, error: EM.errorFn, region: region) =
@@ -48,8 +52,8 @@ fun elabTyvList (tyvars, error: EM.errorFn, region: region) =
 	tvs
     end
 
-fun elabType(ast:Ast.ty, env:SE.staticEnv, error: EM.errorFn, region: region)
-            : (Types.ty * TS.tyvarset) =
+fun elabType (ast: Ast.ty, env: SE.staticEnv, error: EM.errorFn, region: region)
+            : (T.ty * TS.tyvarset) =
      case ast
       of VarTy vt =>
 	   let val tyv = elabTyv (vt, error, region)
@@ -144,7 +148,7 @@ fun elabDB((tyc, args, name, def, region: region, lazyp), env, rpath: IP.path, e
 	      let val _ = TU.compressTy typ
 		  val typ =
 		      if arity > 0
-		      then POLYty {sign=mkPolySign arity,
+		      then POLYty {sign=TU.mkPolySign arity,
 				   tyfun=TYFUN{arity=arity,body=typ}}
 		      else typ
 	       in DATACON{name=sym, const=const, rep=rep,
@@ -180,7 +184,7 @@ fun elabTBlist(tbl:Ast.tb list, notwith:bool, env0, rpath, region: region,
 	       {mkStamp,source,...}: EU.compInfo)
       : T.tycon list * S.symbol list * SE.staticEnv =
     let val error : EM.errorFn = EM.error source
-	fun elabTB(tb: Ast.tb, env, region: region): (T.tycon * symbol) =
+	fun elabTB(tb: Ast.tb, env, region: region): (T.tycon * S.symbol) =
 	    case tb
 	      of Tb{tyc=name,def,tyvars} =>
 		   let val tvs = elabTyvList(tyvars, error, region)
@@ -216,7 +220,7 @@ fun elabTYPEdec(tbl: Ast.tb list, env, rpath, region: region,
 	val _ = debugmsg "--elabTYPEdec: elabTBlist done"
      in EU.checkUniq(EM.error source region, "duplicate type definition", names);
 	debugmsg "<<elabTYPEdec";
-        (TYPEdec tycs, env')
+        (AS.TYPEdec tycs, env')
     end
 
 fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
@@ -295,7 +299,7 @@ fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
         fun regFree tyc =
           let val (ss, n) = !freeTycsRef
               fun h (x::rest, i) =
-                   if eqTycon(tyc, x) then FREEtyc (i-1)
+                   if TU.eqTycon(tyc, x) then FREEtyc (i-1)
                    else h(rest, i-1)
                 | h ([], _) =
                    let val _ = (freeTycsRef := (tyc::ss, n+1))
@@ -306,7 +310,7 @@ fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
 
 	fun transTyc (tyc as GENtyc { kind = TEMP, ... }) =
 	    let fun g(tyc,i,x::rest) =
-		    if eqTycon(tyc,x) then RECtyc i
+		    if TU.eqTycon(tyc,x) then RECtyc i
                     else g(tyc,i+1,rest)
 		  | g(tyc,_,nil) = tyc
 	    in g(tyc,0,prelimDtycs)
@@ -408,7 +412,7 @@ fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
             let fun sameTyc(GENtyc g1, GENtyc g2) =
 		    Stamps.eq(#stamp g1, #stamp g2)
                   | sameTyc(tyc1 as DEFtyc _, tyc2 as DEFtyc _) =
-		      equalTycon(tyc1, tyc2)
+		      TU.equalTycon(tyc1, tyc2)
                   | sameTyc _ = false
 
                 fun f(CONty(tyc, args)) =

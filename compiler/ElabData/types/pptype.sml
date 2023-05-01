@@ -13,17 +13,14 @@ sig
   val tyvarToString : Types.tyvar -> string
 
   (* formatting functions *)
-  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> NewPrettyPrint.format
-  val fmtType  : StaticEnv.staticEnv -> Types.ty -> NewPrettyPrint.format
-  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> NewPrettyPrint.format
-  val fmtFormals : int -> NewPrettyPrint.format
+  val fmtTycon : StaticEnv.staticEnv -> Types.tycon -> Formatting.format
+  val fmtType  : StaticEnv.staticEnv -> Types.ty -> Formatting.format
+  val fmtTyfun : StaticEnv.staticEnv -> Types.tyfun -> Formatting.format
+  val fmtFormals : int -> Formatting.format
   val fmtDconDomain : (Types.dtmember vector * Types.tycon list)
                       -> StaticEnv.staticEnv
                       -> Types.ty
-		      -> NewPrettyPrint.format
-(* NOT USED!
-  val fmtDataconTypes : StaticEnv.staticEnv -> Types.tycon -> NewPrettyPrint.format
- *)
+		      -> Formatting.format
 
   (* actual printing functions *)
   val ppTycon : StaticEnv.staticEnv -> Types.tycon -> unit
@@ -50,7 +47,8 @@ local
   structure T = Types
   structure TU = TypesUtil
   structure SE = StaticEnv
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPS = PPSymbols
   open Types
 in
@@ -179,7 +177,7 @@ fun fmtTyckind tyckind =
 
 (* ppkind : T.tyckind -> unit *)
 fun ppkind tyckind =
-    PP.printFormat (fmtTyckind tyckind)
+    PF.printFormat (fmtTyckind tyckind)
 
 (* effectivePath : IP.path * T.tycon * SE.statenv -> string *)
 fun effectivePath(path: IP.path, tyc: T.tycon, env: SE.staticEnv) : string =
@@ -280,7 +278,7 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
                      end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat (PP.text "RECtyc ", PP.integer n)))
+		       (PP.hblock [PP.text "RECtyc ", PP.integer n]))
 
           | fmtTyc (FREEtyc n) =
               (case membersOp
@@ -291,7 +289,7 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
                     end
                  | NONE =>
 		     PP.enclose {front = langle, back = rangle}
-		       (PP.hcat (PP.text "FREEtyc ", PP.integer n)))
+		       (PP.hblock [PP.text "FREEtyc ", PP.integer n]))
 
  	  | fmtTyc (tyc as PATHtyc {arity, entPath, path}) =
 	      PP.text (SP.toString (ConvertPaths.stripPath path))
@@ -299,7 +297,6 @@ fun fmtTycon1 env (membersOp: (T.dtmember vector * T.tycon list) option) =
 	  | fmtTyc ERRORtyc = PP.text "<ERRORtyc>"
      in fmtTyc
     end
-
 
 (* fmtType1 : SE.staticEnv
               -> (T.ty * T.polysign * (T.dtmember vector * T.tycon list) option
@@ -332,11 +329,11 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 					    of [domain,range] =>
 					       let val domainFmt = fmtAtomTy (domain, 0)
 						   val rangeFmt = fmtTy range
-					       in PP.pblock [PP.hcat (domainFmt, arrow),
-							     PP.softIndent 2 rangeFmt]
+					       in PP.pblock [PP.hblock [domainFmt, arrow],
+							   PP.indent 2 rangeFmt]
 					       end
 					     | _ => bug "CONty:arity"
-				      else PP.hcat (fmtTypeArgs args, fmtTycon1 env membersOp tycon)
+				      else PP.hblock [fmtTypeArgs args, fmtTycon1 env membersOp tycon]
 				  | _ => otherwise ())
 			  | RECORDtyc labels =>
 			     if Tuples.isTUPLEtyc(tycon)
@@ -352,15 +349,15 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 
 	and fmtTypeArgs [] = PP.empty
 	  | fmtTypeArgs [ty] = fmtAtomTy (ty, 1)
-	  | fmtTypeArgs tys = PP.tupleFormats (map fmtTy tys)
+	  | fmtTypeArgs tys = PP.tuple (map fmtTy tys)
 
 	and fmtTUPLEty [] = unitFmt
 	  | fmtTUPLEty tys =
 	      let fun formatter ty = fmtAtomTy (ty, 1)
-	       in PP.formatSeq {alignment = PP.P, sep = PP.text " *", formatter = formatter} tys
+	       in PP.psequence (PP.text " *") (map formatter tys)
 	      end
 
-	and fmtField (lab,ty) = PP.hcat (PP.ccat (PPS.fmtSym lab, PP.colon), fmtTy ty)
+	and fmtField (lab,ty) = PP.hblock [PP.cblock [PPS.fmtSym lab, PP.colon], fmtTy ty]
 
 	and fmtRECORDty (nil, nil) = unitFmt
               (* this case should not occur *)
@@ -391,18 +388,18 @@ fun fmtType1 env (ty: ty, sign: T.polysign,
 and fmtType (env: SE.staticEnv) (ty: T.ty) : PP.format =
     fmtType1 env (ty, [], NONE)
 
-(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> NewPrettyPrint.format *)
+(* fmtDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> Formatting.format *)
 fun fmtDconDomain members (env: SE.staticEnv) (ty:T.ty) : PP.format =
     fmtType1 env (ty, [], SOME members)
 
 fun fmtTycon env tycon = fmtTycon1 env NONE tycon
 
 fun fmtTyfun env (TYFUN{arity,body}) =
-    PP.hcat
-       (PP.text "TYFUN",
+    PP.hblock
+       [PP.text "TYFUN",
 	PP.braces (PP.hsequence PP.comma
-		     [PP.label "arity:" (PP.integer arity),
-		      PP.label "body:" (fmtType env body)]))
+		     [PP.label "arity" (PP.integer arity),
+		      PP.label "body" (fmtType env body)])]
 
 (* fmtFormals : int -> PP.format *)
 fun fmtFormals n =
@@ -410,7 +407,7 @@ fun fmtFormals n =
      in case formals
  	  of nil => PP.empty
 	   | [x] => x
-  	   | fmts => PP.tupleFormats fmts
+  	   | fmts => PP.tuple fmts
     end
 
 (* NOT USED!
@@ -422,28 +419,28 @@ fun fmtDataconsWithTypes env tycon =
 	      val {dcons, ...} = Vector.sub (members, index)
 	   in PP.vblock
 	        (map (fn {name, domain, ...} =>
-			 PP.hcat (PP.ccat (PPS.fmtSym name, PP.colon),
+			 PP.hblock [PP.cblock [PPS.fmtSym name, PP.colon],
 				  case domain
 				    of SOME ty =>
 					 fmtType1 env (ty,[],SOME (members,freetycs))
-				     | NONE => PP.text "CONST"))
+				     | NONE => PP.text "CONST"])
 		     dcons)
 	  end
 	| _ = bug "ppDataconTypes")
 *)
 
 (* ppTycon : SE.staticEnv -> T.tycon -> unit *)
-fun ppTycon (env: SE.staticEnv) (tycon: T.tycon) = PP.printFormat (fmtTycon env tycon)
+fun ppTycon (env: SE.staticEnv) (tycon: T.tycon) = PF.printFormat (fmtTycon env tycon)
 
 (* ppType : SE.staticEnv -> T.ty -> unit *)
-fun ppType (env: SE.staticEnv) (ty: T.ty) = PP.printFormat (fmtType env ty)
+fun ppType (env: SE.staticEnv) (ty: T.ty) = PF.printFormat (fmtType env ty)
 
 (* ppTyfun : SE.staticEnv -> T.tyfun -> unit *)
-fun ppTyfun (env: SE.staticEnv) (tyfun : T.tyfun) = PP.printFormat (fmtTyfun env tyfun)
+fun ppTyfun (env: SE.staticEnv) (tyfun : T.tyfun) = PF.printFormat (fmtTyfun env tyfun)
 
 (* ppDconDomain : (Types.dtmember vector * Types.tycon list) -> StaticEnv.staticEnv -> Types.ty -> unit *)
 fun ppDconDomain members (env: SE.staticEnv) (ty:T.ty) : unit =
-    PP.printFormat (fmtDconDomain members env ty)
+    PF.printFormat (fmtDconDomain members env ty)
 
 end (* toplevel local *)
 end (* structure PPType *)

@@ -1,0 +1,49 @@
+$smlnj[newpp]/notes/CM/maps.txt
+
+Subject: implementing component "micro-Maps" (e.g. ElabData/MAP-ElabData.txt)
+
+The idea is to define types for representing the information collected in the MAP files.
+Once that is done:
+
+  * a library of functions for accessing the MAP info
+  * translating (manually or automatically) MAP text files into corresponding data structure values.
+
+------------------------------------------------------------------------------------------
+
+Here is a quick first pass at translating the information format of the MAP-* files into
+SML types.  [Trying not to re-use the Unix file system terminology and concepts.]
+
+-----------------
+map.sml (potential source file)
+_________________
+
+datatype anchor = ANCHOR of string  (* e.g. $SMLNJ (source root), or $SMLNJ/compiler *)
+
+datatype link = LINK of string
+
+type path = {anchor: anchor, links: list list}
+
+(* a member module (mmodule) corresponds to module defined in member source file a
+ * source file where "module" means structure, functor, or signature (not distinguishing
+ * between structure and functor signatures *)
+datatype mmodule
+  = Structure of string
+  | Functor of string
+  | Signature of string
+
+type member =
+  {path: path,  (* the source file *)
+   exports: mmodule list,
+   imports: {local : mmodule list, external: mmodule list}
+
+datatype componentKind = Group | Library
+
+type componentId = string (* E.g. "ElabData"? *)
+
+type component =
+  {name: componentID,
+   exports: mmodule list,
+   members: member list,
+   imports: path list}
+  
+_________________

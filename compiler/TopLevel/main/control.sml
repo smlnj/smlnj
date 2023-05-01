@@ -90,7 +90,7 @@ structure Control_CG : CGCONTROL =
     val printClusters = new (b, "print-clusters", "whether to print clusters prior to codegen", false)
     val printCFG = new (b, "print-cfg", "whether to convert to CFG and print it", false)
     val dumpCFG = new (b, "dump-cfg", "whether to convert to CFG and pickle it", false)
-    val useLLVM = new (b, "llvm", "whether to use the LLVM code generator", true)
+    val verifyLLVM = new (b, "verify-llvm", "enable verification of generated LLVM code", false)
     val debugSpill = new (b, "debug-cps-spill", "enable CPS spill debugging", false)
     val debugSpillInfo = new (b, "debug_cps_spill_info", "enable CPS spill info", false)
   end (* structure Control_CG *)
@@ -147,7 +147,7 @@ structure Control : CONTROL =
     (* elaborator controls *)
     structure Elab : ELAB_CONTROL = ElabControl (* Elaborator/control/elabcontrol.{sml,sig} *)
 
-    (* MatchComp (match compiler) controls *)
+    (* Match compiler controls (used in Elatorator/matchcomp) *)
     structure MC : MC_CONTROL = MCControl (* Elaborator/control/mccontrol.{sml,sig} *)
 
     (* FLINT controls *)

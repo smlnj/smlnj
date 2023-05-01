@@ -1,4 +1,4 @@
-(* FLINT/trans/protoandor.sml *)
+(* Elaborator/matchcomp/protoandor.sml *)
 (* revised "old" match compiler *)
 
 (* build a simple "proto"-AndOr tree (type protoAndor), by layering the pattern info for 
@@ -17,7 +17,8 @@ local
   structure BT = BasicTypes
   structure P = Paths
   structure MC = MCCommon	     
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure PPA = PPAbsyn
   structure PPMC = PPMatchComp
 
@@ -29,12 +30,6 @@ local
   fun saynl msg = (say msg; newline())
   fun says strings = say (concat strings)
   fun saysnl strings = saynl (concat strings)
-
-  fun ppProtoAndor pandor =
-      PP.printFormatNL (PPMC.fmtProtoAndor pandor)
-
-  fun ppPat pat =
-      PP.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
 in
 
@@ -168,9 +163,14 @@ let (* genAndor : pat * ruleno -> andor *)
 	  ORp {varRules=varRules, sign=sign,
 	       cases=addACase(DATAcon(k,t), [pat], rule, cases)}
       | mergeAndor (pat, pandor, rule) =
-	(saynl "mergeAndor:\n   pat = "; ppPat pat;
-	 saynl "   pandor = "; ppProtoAndor pandor;
-	 bug "mergeAndor - incompatible args")
+	  (PF.printFormatNL
+	     (PP.vblock
+	       [PP.text "BUG: mergeAndor, incompatible args",
+		PP.indent 3
+		  (PP.vblock
+		     [PP.label "pat = " (PPA.fmtPat SE.empty (pat, 100)),
+		      PP.label "pandor = " (PPMC.fmtProtoAndor pandor)])]);
+	   bug "mergeAndor - incompatible args")
 
     (* addACase : con * pat list * ruleno * protoVariant list -> protoVariant list *)
     (* if con is constant, pats is nil;

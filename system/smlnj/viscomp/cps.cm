@@ -1,0 +1,12 @@
+(* smlnj/viscomp/cps.cm
+ *
+ * (C) 2023 The Fellowship of SML/NJ (www.smlnj.org)
+ *
+ * CPS; translation from FLINT; CPS optimization
+ *)
+
+Library
+	library ($compiler/CPS/cps.cm)
+is
+	(* reference to our only library... *)
+	$compiler/CPS/cps.cm

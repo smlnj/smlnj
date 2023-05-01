@@ -9,7 +9,7 @@ sig
   type object
   val fmtObj : StaticEnv.staticEnv
               -> object * Types.ty * int
-              -> NewPrettyPrint.format
+              -> Formatting.format
 end
 
 structure PPObj : PPOBJ =
@@ -17,23 +17,18 @@ struct
 
 local (* top *)
 
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
+  structure SF = StringFormats
+
   structure S = Symbol
-  structure V = Vector
+  structure F = Fixity
   structure A = Access
+
   structure T = Types
   structure TU = TypesUtil
   structure BT = BasicTypes
-  structure F = Fixity
-  structure Obj = Unsafe.Object
 
-  (* debugging
-  NOT USED:
-  val say = Control.Print.say
-  val debugging = ref false
-  fun dbsaynl (msg: string) =
-      if !debugging then (say msg; say "\n") else ()
-  *)
+  structure Obj = Unsafe.Object
 
   fun bug msg = ErrorMsg.impossible ("PPObj: " ^ msg)
 
@@ -178,7 +173,7 @@ fun resetSharing () = (counter := 0)
 fun formatWithSharing (object: object, formatter: object * sharingEnv -> PP.format, senv: sharingEnv) =
     if !Control.Print.printLoop then
        (case wasSeen (object, senv)  (* was this object seen before, on the way inward? *)
-	  of SOME id => PP.ccat (PP.text "%", PP.integer id)  (* format using the sharing "id number" *)
+	  of SOME id => PP.cblock [PP.text "%", PP.integer id]  (* format using the sharing "id number" *)
 	   | NONE =>  (* this object will now be formatted for the first time *)
 	       let val memo = ref NONE
 		   val key : unit ref = Unsafe.cast object
@@ -189,7 +184,7 @@ fun formatWithSharing (object: object, formatter: object * sharingEnv -> PP.form
 		         of NONE => objFmt
 			    (* memo was not set, so object not found shared within itself *)
 		          | SOME id => (* memo was set, defining an "id number" for this object,  *)
-			    PP.hblock [objFmt, PP.text "as", PP.ccat (PP.text "%", PP.integer id)]
+			    PP.hblock [objFmt, PP.text "as", PP.cblock [PP.text "%", PP.integer id]]
 		   end
 	       end)
     else formatter (object, senv)  (* in this case, senv is always ignored *)
@@ -247,7 +242,7 @@ local
 	  (BT.intTycon,		Int.toString o Obj.toInt),
 	  (BT.int32Tycon,	Int32.toString o Obj.toInt32),
 	  (BT.int64Tycon,	Int64.toString o Obj.toInt64),
-	  (BT.intinfTycon,	PrintUtil.formatIntInf o Unsafe.cast),
+	  (BT.intinfTycon,	SF.formatIntInf o Unsafe.cast),
 	  (BT.wordTycon,	wordPrefx o Word.toString o Obj.toWord),
 	  (BT.word8Tycon,	wordPrefx o Word8.toString o Obj.toWord8),
 	  (BT.word32Tycon,	wordPrefx o Word32.toString o Obj.toWord32),
@@ -256,7 +251,7 @@ local
 	  (BT.realTycon,	Real64.toString o Obj.toReal64),
 	  (BT.exnTycon,		exn2str),
 	  (BT.pointerTycon,	fn _ => "cptr"),
-	  (BT.stringTycon,	PrintUtil.formatString o Obj.toString),
+	  (BT.stringTycon,	SF.formatString o Obj.toString),
 (* FIXME: actually print the values *)
 	  (BT.chararrayTycon,	fn _ => "-"),
 	  (BT.word8vectorTycon,	fn _ => "-"),
@@ -410,14 +405,14 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 					     [fmtObj'(leftArg, leftTy, tycontextOp, senv, depth-1, 0, leftPull),
 					      PP.text  dname,
 					      fmtObj'(rightArg, rightTy, tycontextOp, senv, depth-1, rightPull, 0)]
-				       else PP.pcat
-					      (PP.text dname,
-					       PP.softIndent 2 (fmtObj' (decon(obj,dcon), dom, tycontextOp, senv,
-									 depth-1, 0, 0)))
+				       else PP.pblock
+					      [PP.text dname,
+					       PP.indent 2 (fmtObj' (decon(obj,dcon), dom, tycontextOp, senv,
+									 depth-1, 0, 0))]
 				   end
 				 | _ =>
-				   PP.pcat (PP.text dname,
-					    fmtObj'(decon(obj,dcon), dom, tycontextOp, senv, depth-1, 0, 0))
+				   PP.pblock [PP.text dname,
+					    fmtObj'(decon(obj,dcon), dom, tycontextOp, senv, depth-1, 0, 0)]
 		       in case fixity
 			    of F.NONfix => prdcon ()
 			     | F.INfix (myleft, myright) => 
@@ -453,14 +448,14 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 		    else fmts
 		end
 
-	 in PP.listFormats elementsFormats
+	 in PP.list elementsFormats
 	end
 
     and fmtUrList (obj:object, ty:T.ty, tycontextOp, depth:int, length: int) =
 	PP.brackets (PP.text  "unrolled list")
 
     and fmtTuple (objs: object list, tys: T.ty list, tycontextOp, senv: sharingEnv, depth:int) : PP.format =
-	PP.tupleFormats (map (fn (obj, ty) => fmtClosed (obj, ty, tycontextOp, senv, depth - 1))
+	PP.tuple (map (fn (obj, ty) => fmtClosed (obj, ty, tycontextOp, senv, depth - 1))
 			(ListPair.zipEq (objs, tys)))
 
     and fmtRecord (objs: object list, labels: T.label list, tys: T.ty list,
@@ -511,9 +506,8 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 	    then fmts @ [PP.text "..."]
 	    else fmts
 
-     in PP.formatClosedSeq {alignment = PP.P, front = PP.text "[|", back = PP.text "|]",
-			    sep = PP.comma, formatter = (fn x => x)}
-			   elementFormats
+     in PP.enclose {front = PP.text "[|", back = PP.text "|]"}
+		   (PP.psequence PP.comma elementFormats)
     end
 
     and fmtRealArray (arrayObj : Real64Array.array, length: int) =
@@ -523,7 +517,8 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 		let val minLength = Int.min (arrayLength, length)
 		    fun gather (index, elemFmts) =
 			if index < minLength
-			then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index))) :: elemFmts)
+			then gather (index+1, PP.text (Real.toString (Real64Array.sub (arrayObj, index)))
+					      :: elemFmts)
 			else (rev elemFmts)
 		in gather (0, nil)
 		end
@@ -533,9 +528,8 @@ let fun fmtClosed (obj:object, ty:T.ty, tycontextOp: tycContext option, senv: sh
 		then fmts @ [PP.text "..."]
 		else fmts
 
-	 in PP.formatClosedSeq {alignment = PP.P, front = PP.text "[|", back = PP.text "|]",
-				sep = PP.comma, formatter = (fn x => x)}
-			       elementFormats
+	 in PP.enclose {front = PP.text "[|", back = PP.text "|]"}
+		       (PP.psequence PP.comma elementFormats)
 	end
 
  in resetSharing ();

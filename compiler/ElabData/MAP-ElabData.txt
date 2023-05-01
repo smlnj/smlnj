@@ -1,0 +1,1021 @@
+compiler/ElabData/MAP-ElabData.txt
+
+Map of ElabData (directory and CM goup/library)
+  The data definitions supporting elaboration.
+
+* Excluding uses (mentions) of modules from Basis (basis.cm).
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+ElabData/elabdata.cm -- the ElabData Group/Library CDF
+
+
+(* ---------------------------- Exports ---------------------------- *)
+
+(* ElabData/main *)
+signature ELABDATA_CONTROL
+structure ElabDataControl
+structure CompInfo
+
+(* ElabData/basics *)
+structure Access
+structure DebIndex
+structure SymPath
+structure InvPath
+structure ConvertPaths
+structure PathName
+structure PPSymPaths
+structure TKind
+structure CoreSym
+structure SigPropList
+structure LambdaVar
+structure Stamps
+structure StampMap
+
+(* ElabData/types *)
+structure ConRep
+structure Types
+structure PPType
+structure Occurrence
+structure TypesUtil
+structure Tuples
+structure BasicTypes
+
+(* ElabData/modules *)
+structure Modules
+structure ModuleUtil
+structure PPModules
+structure PPModules_DB
+structure ModuleId
+structure EntPath
+structure EntityEnv
+structure EntPathContext
+structure ExpandTycon
+structure EqTypes
+
+(* ElabData/statenv *)
+structure Bindings
+structure StaticEnv
+structure Lookup
+structure GenModIdMap
+structure CoreAccess
+structure BrowseStatEnv
+
+(* ElabData/syntax *)
+structure Variable
+structure Absyn
+structure AbsynUtil
+structure PPAbsyn
+structure PPVal
+
+(* ElabData/prim *)
+structure Primop
+structure PrimopId
+structure PrimEnv
+structure PPPrim
+structure ArithOps
+structure PrimopUtil
+structure PrimopBind
+structure CProto
+structure CTypes
+
+(* ElabData/pickle *)
+structure PickMod
+structure UnpickMod
+structure Rehash
+
+
+(* ---------------------------- Module Index ---------------------------- *)
+
+LOCAL: ("*" marks exported modules)
+
+(* ElabData/main *)
+ELABDATA_CONTROL*         main/edcontrol.sig
+ElabDataControl*	  main/edcontrol.sml
+CompInfo*		  main/compinfo.sml
+
+(* ElabData/basics *)
+LAMBDA_VAR		  basics/lambdavar.sig
+LambdaVar*		  basics/lambdavar.sml
+STAMPS			  basics/stamps.sig
+Stamps*			  basics/stamps.sml
+StampMap*		  basics/stampmap.sml
+ACCESS			  basics/access.sig
+Access*			  basics/access.sml
+DEB_INDEX		  basics/debindex.sig
+DebIndex*		  basics/debindex.sml
+SYMPATH			  basics/sympaths.sig
+SymPath*		  basics/sympaths.sml
+INVPATH			  basics/sympaths.sig
+InvPath*		  basics/sympaths.sml
+CONVERTPATHS		  basics/sympaths.sig
+ConvertPaths*		  basics/sympaths.sml
+PathName*		  basics/pathname.sml (-> sympaths.sml)
+PPSymPaths*		  basics/ppsympaths.sml
+TKind*			  basics/tkind.sml
+CoreSym*		  basics/coresym.sml
+SigPropList*		  basics/sig-plist.sml
+ENV			  basics/env.sig
+Env			  basics/env.sml
+INTSTRMAPV		  basics/env.sml
+
+ABSYN			  syntax/absyn.sig
+Absyn*			  syntax/absyn.sml
+AbsynUtil*		  syntax/absynutil.sml
+VARIABLE		  syntax/variable.sig
+Variable*		  syntax/variable.sml
+PPABSYN			  syntax/ppabsyn.sml
+PPAbsyn*		  syntax/ppabsyn.sml
+PPVAL			  syntax/ppval.sml
+PPVal*			  syntax/ppval.sml
+
+STATICENV		  statenv/statenv.sig
+StaticEnv*		  statenv/statenv.sml
+BINDINGS		  statenv/bindings.sig
+Bindings*		  statenv/bindings.sml
+LOOKUP			  statenv/lookup.sig
+Lookup*			  statenv/lookup.sml
+GenModIdMap*		  statenv/genmap.sml
+CoreAccess*		  statenv/coreacc.sml
+BrowseStatEnv*		  statenv/browse.sml
+
+TYPES			  types/types.sig
+Types*			  types/types.sml
+BASICTYPES		  types/basictypes.sig
+BasicTypes*		  types/basictypes.sml
+TYPESUTIL		  types/typesutil.sig
+TypesUtil*		  types/typesutil.sml
+TUPLES			  types/tuples.sml
+Tuples*			  types/tuples.sml
+PPTYPE			  types/pptype.sml
+PPType*			  types/pptype.sml
+OCCURRENCE		  types/occ.sig
+Occurrence*		  types/occ.sml
+CONREP			  types/conrep.sml
+ConRep*			  types/conrep.sml
+
+MODULES 		  modules/modules.sig
+Modules*		  modules/modules.sml
+PPMOD			  modules/ppmod.sml
+PPModules*		  modules/ppmod.sml
+PPMOD_DB		  modules/ppmod_db.sml
+PPModules_DB*		  modules/ppmod_db.sml
+ENT_PATH		  modules/entpath.sml
+EntPath*		  modules/entpath.sml
+ENT_PATH_CONTEXT	  modules/epcontext.sml
+EntPathContext*		  modules/epcontext.sml
+MODULEUTIL		  modules/moduleutil.sig
+ModuleUtil*		  modules/moduleutil.sml
+MODULE_ID 		  modules/moduleid.sml
+ModuleId* 		  modules/moduleid.sml
+ENTITY_ENV		  modules/entityenv.sig
+EntityEnv*		  modules/entityenv.sml
+EQTYPES			  modules/eqtypes.sml
+EqTypes*		  modules/eqtypes.sml
+EXPAND_TYCON		  modules/expandtycon.sml
+ExpandTycon*		  modules/expandtycon.sml
+
+PickleSymPid		  pickle/pickle-sym-pid.sml
+UnpickleSymPid		  pickle/unpickle-sym-pid.sml
+PICKMOD			  pickle/pickmod.sml
+PickMod*		  pickle/pickmod.sml
+UNPICKMOD		  pickle/unpickmod.sml
+UnpickMod*		  pickle/unpickmod.sml
+Rehash*			  pickle/rehash.sml
+
+ArithOps*		  prim/arithops.sml
+PRIMOP			  prim/primop.sig
+Primop*			  prim/primop.sml
+PrimopUtil*		  prim/primop-util.sml
+PrimopBind*		  prim/primop-bind.sml
+PRIMOP_ID		  prim/primop-id.sig
+PrimopId*		  prim/primop-id.sml
+PPPrim*			  prim/ppprim.sml
+CProto*			  prim/cproto.sml
+CTypes*			  prim/CTypes
+PrimopBindings		  prim/primop-bindings.sml
+PRIM_ENV		  prim/prim-env.sml
+PrimEnv*		  prim/prim-env.sml
+
+
+IMPORTS:
+
+ErrorMsg		  Basics/errormsg/errormsg.sml
+Control_Print		  Basics/print/printcontrol.sml
+StringFormats		  Basics/print/stringformats.sml
+BasicControl		  Basics/control/basiccontrol.sml
+Symbol			  Basics/symbol/symbol.sml
+Fixity			  Basics/symbol/fixity.sml
+NumericLabel		  Basics/symbol/numericlabel.sml
+PPSymbols		  Basics/symbol/ppsymbols.sml
+Source			  Basics/source/source.sml
+SourceMap		  Basics/source/sourcemap.sml
+PPSourceMap		  Basics/source/ppsourcemap.sml
+IntConst		  Basics/compiler/int-const.sml
+RealConst		  Basics/compiler/real-const.sml
+Target			  Basics/compiler/target{32,64}.sml
+WordStringHashTable	  Basics/util/wordstr-hashtable.sml
+PersStamps		  Basics/pid/persstamps.sml
+
+PickleUtil		  Library/pickle/pickle-util.sml
+UnpickleUtil		  Library/pickle/unpickle-util.sml
+CRC			  Library/pickle/crc.sml
+
+Controls		  smlnj-lib/Controls
+ControlRegistry		  smlnj-lib/Controls
+ControlUtil		  smlnj-lib/Controls
+
+ORD_MAP			  smlnj-lib/Util/ord-map-sig.sml
+ORD_SET			  smlnj-lib/Util/ord-set-sit.sml
+MONO_HASH_TABLE		  smlnj-lib/Util/mono-hash-table-sig.sml
+IntRedBlackMap	  	  smlnj-lib/Util/int-redblack-map.sml
+IntRedBlackSet		  smlnj-lib/Util/int-redblack-set.sml
+IntHashTable		  smlnj-lib/Util/int-hash-table.sml
+RedBlackMapFn		  smlnj-lib/Util/redblock-map-fn.sml
+PropList		  smlnj-lib/Util/plist.sml
+DynamicArrayFn		  smlnj-lib/Util/dynamic-array-fn.sml
+ListMergeSort		  smlnj-lib/Util/
+Formatting		  smlnj-lib/PrettyPrint/src/formatting.sml
+PrintFormat		  smlnj-lib/PrettyPrint/src/printformat.sml
+
+
+(* ---------------------------- Members [files] ---------------------------- *)
+Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+main/
+edcontrol.sig
+  > ELABDATA_CONTROL
+  <
+
+edcontrol.sml
+  > ElabDataControl
+  < ELABDATA_CONTROL
+    BasicControl*
+    Controls*
+    ControlRegistry*
+    ControlUtil
+
+compinfo.sml
+  > CompInfo
+  < Symbol*
+    Stamps*
+    Source*
+    LambdaVar*
+
+
+basics/
+debindex.sig  ** DEPRICATED **
+  > DEB_INDEX
+  <
+
+debindex.sml  ** DEPRICATED **
+  > DebIndex
+  < DEB_INDEX
+    ErrorMsg
+
+lambdavar.sig [substructure SortedList depricated, use smlnj-lib/Util instead?]
+  > LAMBDA_VAR
+  < Symbol*
+    ORD_MAP*
+    ORD_SET*
+    MONO_HASH_TABLE
+
+lambdavar.sml
+  > LambdaVar
+  < LAMBDA_VAR
+    ElabDataControl
+    Symbol*
+    IntRedBlackMap*
+    IntRedBlackSet*
+    IntHashTable*
+
+access.sig
+  > ACCESS
+  < LambdaVar
+    Symbol*
+    PersStamps*
+
+access.sml
+  < Access
+  > ACCESS
+    LambdaVar
+    ErrorMsg*
+    Symbol*
+    PersStamps*
+
+env.sig
+  < ENV
+  > Symbol*
+
+env.sml
+  < INTSTRMAPV
+    Env
+  > ElabDataControl
+    Control_Print*
+    Symbol*
+
+stamps.sig
+  > STAMPS
+  < PersStamps*
+
+stamps.sml
+  > Stamps
+  < STAMPS
+    PersStamps*
+    IntRedBlackMap*
+
+stampmap.sml
+  > StampMap
+  < Stamps
+    RedBlackMapFn*
+
+coresym.sml
+  > CoreSym
+  < Symbol*
+
+sympaths.sig
+  > SYMPATH
+    INVPATH
+  < Symbol*
+
+sympaths.sml
+  > SymPath
+    InvPath
+    CONVERTPATHS  (move to sympaths.sig)
+    ConvertPaths
+  < SYMPATH
+    ElabDataControl
+    ErrorMsg*
+    Control_Print*
+    Symbol*
+
+pathname.sml (integrate into sympaths.sml)
+  > PathName
+  < SymPath
+    InvPath
+    Symbol*
+
+ppsympaths.sml
+  > PPSymPaths
+  < SymPath
+    InvPath
+    Symbol*
+    Formatting*
+    PPSymbols*
+
+tkind.sml
+  > TKind
+  <
+
+sig-plist.sml
+  > SigPropList
+  < Modules
+    EntPath
+    TKind
+    PropList*
+
+syntax/
+absyn.sig
+  > ABSYN
+  < Variable
+    Types
+    Modules
+    SymPath
+    SourceMap*
+    Symbol*
+    Fixity*
+    Bindings*
+    IntConst*
+    RealConst*
+
+absyn.sml
+  > Absyn
+  < ABSYN
+    SymPath
+    Variable
+    Types
+    Modules
+    Symbol*
+    Fixity*
+    Bindings*
+    SourceMap*
+    IntConst*
+    RealConst*
+
+ppabsyn.sml
+  > PPABSYN
+    PPAbsyn
+  < Absyn
+    AbsynUtil
+    InvPath
+    LambdaVar
+    Access
+    Variable
+    Types
+    Modules
+    PPSymPaths
+    PPType
+    PPVal
+    ElabDataControl
+    Control_Print*
+    ErrorMsg*
+    PPSymbols*
+    Source*
+    SourceMap*
+    PPSourceMap*
+    Symbol*
+    Fixity*
+    StaticEnv*
+    Bindings*
+    Formatting*
+
+variable.sig
+  > VARIABLE
+  < SymPath
+    LambdaVar
+    Types
+    Access*
+    Symbol*
+
+variable.sml
+  > Variable
+  < VARIABLE
+    LambdaVar
+    SymPath
+    Types
+    PrimopId
+    ErrorMsg*
+    Access*
+    Symbol*
+
+absynutil.sml
+  > AbsynUtil
+  < Absyn
+    Access
+    LambdaVar
+    Variable
+    Types
+    BasicTypes
+    TypesUtil
+    Symbol*
+    StringFormats*
+
+ppval.sml
+  > PPVAL
+    PPVal
+  < Access
+    Types
+    StaticEnv
+    Lookup
+    Variable
+    InvPath
+    LambdaVar
+    PPSymPaths
+    PPType
+    ElabDataControl
+    PPSymbols*
+    Formatting*
+
+types/
+types.sig
+  > TYPES
+  < TKind
+    InvPath
+    Symbol*
+    Access*
+    SourceMap*
+    PersStamps*
+
+types.sml
+  > Types
+  < TYPES
+    InvPath
+    EntPath
+    Stamps
+    DebIndex
+    TKind
+    Symbol*
+    Access*
+    PersStamps*
+    SourceMap*
+    PropList*
+
+pptype.sml
+  > PPTYPE
+    PPType
+  < StaticEnv
+    Types
+    BasicTypes
+    TypesUtil
+    SymPath
+    StaticEnv
+    Symbol*
+    PPSymbols*
+    Formatting*
+    PrintFormat*
+
+tuples.sml
+  > TUPLES
+    Tuples
+  < Types
+    Symbol*
+    NumericLabel*
+    WordStringHashTable*
+    DynamicArrayFn*
+
+basictypes.sig
+  > BASICTYPES
+  < Types
+    Stamps
+
+basictypes.sml
+  > BasicTypes
+  < BASICTYPES
+    Types
+    InvPath
+    ErrorMsg*
+    Symbol*
+    Access*
+
+occ.sig
+  > OCCURRENCE
+  <
+
+occ.sml
+  > Occurrence
+  < OCCURRENCE
+
+typesutil.sig
+  > TYPESUTIL
+  < Types
+    Stamps
+    InvPath
+    Absyn
+    Variable
+    Symbol*
+    Access*
+
+typesutil.sml
+  > TypesUtil
+  < TYPESUTIL
+    Types
+    BasicTypes
+    SymPath
+    InvPath
+    PathName
+    Access
+    Stamps
+    EntPath
+    Variable
+    ElabDataControl
+    Control_Print*
+    ErrorMsg*
+    Symbol*
+
+conrep.sml
+  > CONREP
+    ConRep
+  < Types
+    Access
+    ElabDataControl
+    ErrorMsg*
+    Symbol*
+
+modules/
+modules.sig
+  > MODULES
+  < Types
+    SymPath
+    InvPath
+    EntPath
+    Access
+    Stamps
+    PrimopId
+    Symbol*
+    PersStamps*
+    PropList*
+
+modules.sml
+  > Modules
+  < MODULES
+    Types
+    Access
+    Env
+    SymPath
+    InvPath
+    EntPath
+    Stamps
+    PrimopId
+    Symbol*
+    PersStamps*
+    PropList*
+
+ppmod.sml
+  > PPMOD
+    PPModules
+  < Modules
+    ModuleUtil
+    EntPath
+    StaticEnv
+    Lookup
+    SymPath
+    InvPath
+    Access
+    Types
+    TypesUtil
+    BasicTypes
+    Variable
+    Absyn
+    Bindings
+    EntityEnv
+    PPSymPaths
+    PPType
+    PPVal
+    Symbol*
+    PPSymbols*
+    Formatting*
+
+ppmod-db.sml
+  > PPMOD_DB
+    PPModules_DB
+  < Modules
+    ModuleUtil
+    EntPath
+    StaticEnv
+    Lookup
+    SymPath
+    InvPath
+    Access
+    Types
+    TypesUtil
+    BasicTypes
+    Variable
+    Absyn
+    Bindings
+    EntityEnv
+    PPSymPaths
+    PPType
+    PPVal
+    Symbol*
+    PPSymbols*
+    Formatting*
+
+entpath.sml
+  > ENT_PATH
+    EntPath
+  < Stamps
+    RedBlackMapFn*
+
+epcontext.sml
+  > ENT_PATH_CONTEXT
+    EntPathContext
+  < Stamps
+    EntPath
+    ModuleId
+
+moduleutil.sig
+  > MODULEUTIL
+  < Modules
+    Types
+    Stamps
+    Access
+    SymPath
+    InvPath
+    PrimopId
+    ModuleId
+    StaticEnv
+    EntPath
+    EntPathContext
+    Absyn
+    Symbol*
+
+moduleutil.sml
+  > ModuleUtil
+  < MODULEUTIL
+    Modules
+    Types
+    Stamps
+    Access
+    SymPath
+    InvPath
+    ConvertPaths
+    PrimopId
+    ModuleId
+    StaticEnv
+    EntPath
+    EntPathContext
+    Absyn
+    StaticEnv
+    Bindings
+    EntityEnv
+    ElabDataControl
+    Symbol*
+    Control_Print*
+
+moduleid.sml
+  > MODULE_ID
+    ModuleId
+  < Modules
+    Types
+    Access
+    Stamps
+    ErrorMsg*
+    RedBlackMapFn*
+
+entityenv.sig
+  > ENTITY_ENV
+  < Modules
+    EntPath
+
+entityenv.sml
+  > EntityEnv
+  < ENTITY_ENV
+    Types
+    Modules
+    Stamps
+    EntPath
+    ElabDataControl
+    Contro_Print*
+
+eqtypes.sml
+  > EQTYPES
+    EqTypes
+  < Modules
+    ModuleUtil
+    Types
+    TypesUtil
+    Stamps
+    PathName !! (depricated)
+    EntityEnv
+    ExpandTycon
+    ErrorMsg*
+
+expandtycon.sml
+  > EXPAND_TYCON
+    ExpandTycon
+  < Modules
+    ModulesUtil
+    Types
+    TypesUtil
+    EntPath
+    EntityEnv
+    ErrorMsg*
+    Contro_Print*
+
+statenv/
+bindings.sig
+  > BINDINGS
+  < Types
+    Modules
+    Variable
+    Symbol*
+    Fixity*
+
+bindings.sml
+  > Bindings
+  < BINDINGS
+    Types
+    Modules
+    Variable
+    PathName
+    Symbol*
+    Fixity*
+
+statenv.sig
+  > STATICENV
+  < Modules
+    Bindings
+    Symbol*
+
+statenv.sml
+  > StaticEnv
+  < STATICENV
+    Modules
+    Bindings
+    Env
+    Symbol*
+    ListMergeSort*
+
+lookup.sig
+  > LOOKUP
+  < StaticEnv
+    SymPath
+    Types
+    Modules
+    Absyn
+    Symbol*
+    Fixity*
+    ErrorMsg*
+
+lookup.sml
+  > Lookup
+  < LOOKUP
+    SymPath
+    ConvertPaths
+    Modules
+    ModuleUtil
+    Types
+    TypesUtil
+    Variable
+    Absyn
+    AbsynUtil
+    StaticEnv
+    Bindings
+    Symbol*
+    Fixity*
+    ErrorMsg*
+
+genmap.sml
+  > GenModIdMap
+  < Modules
+    ModuleId
+    StaticEnv
+    ErrorMsg*
+    Stats*
+
+coreacc.sml
+  > CoreAccess
+  < StaticEnv
+    Lookup
+    Types
+    Variables
+    SymPath
+    Absyn
+    AbsynUtil
+    Symbol*
+    ErrorMsg*
+
+browse.sml
+  > BrowseStatEnv
+  < Modules
+    ModuleUtil
+    StaticEnv
+    Bindings
+    Symbol*
+    ErrorMsg*
+
+
+prim/
+arithops.sml
+  > ArithOps
+  <
+
+primop.sig
+  > PRIMOP
+  < CTypes
+
+primop.sml
+  > Primop
+  < PRIMOP
+    CTypes
+    ArithOps
+
+primop-bind.sml
+  > PrimopBind
+  < Types
+    Primop
+
+primop-id.sig
+  > PRIMOP_ID
+  < PrimopBind
+
+primop-id.sml
+  > PrimopId
+  < PRIMOP_ID
+    PrimopBind
+
+primop-util.sml
+  > PrimopUtil
+  < Primop
+    Target*
+
+ppprim.sml
+  > PPPrim
+  < PrimopId
+    PrimopBind
+    Formatting*
+
+cproto.sml
+  > CProto
+  < Types
+    TypesUtil
+    BasicTypes
+    CTypes
+    Primop
+
+c-types.sml
+  > CTypes
+  <
+
+primop-bindings.sml
+  > PrimopBindings
+  < Types
+    BasicTypes
+    Primop
+    Target*
+
+prim-env.sml
+  > PRIM_ENV
+    PrimEnv
+  < Access
+    Stamps
+    Variables
+    Types
+    TypesUtil
+    BasicTypes
+    Modules
+    ModuleUtil
+    Bindings
+    SymPath
+    InvPath
+    StaticEnv
+    EntityEnv
+    PickMod
+    UnPickMod
+    Symbol*
+
+(* pickling and unpickling *)
+pickle/
+pickle-sym-pid.sml
+  > PickleSymPid
+  < PersStamps
+    PikleUtil*
+    Symbol*
+
+unpickle-sym-pid.sml
+  > UnpickleSymPid
+  < UnpickleUtil*
+    PersStamps*
+    Symbol*
+
+pickmod.sml
+  > PICKMOD
+    PickMod
+  > SymPath
+    InvPath
+    Access
+    Variable
+    Types
+    Modules
+    ModuleId
+    EntPath
+    Bindings
+    StaticEnv
+    PrimopId
+    LambdaVar
+    Primop
+    PickleUtil*
+    PersStamps*
+    Symbol*
+    Stats*
+    ErrorMsg*
+
+unpickmod.sml
+  > UNPICKMOD
+    UnpickMod
+  > SymPath
+    InvPath
+    Access
+    Variable
+    Types
+    Modules
+    ModuleId
+    EntPath
+    Bindings
+    StaticEnv
+    PrimopId
+    LambdaVar
+    PrimopId
+    Primop
+    UnpickleUtil*
+    PersStamps*
+    Symbol*
+    Stats*
+    ErrorMsg*
+
+rehash.sml
+  > Rehash
+  < StaticEnv
+    PickMod
+    PersStamps*
+    CRC*
+
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm  (* Basis library *)
+
+(* smlnj-lib libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* viscomp libraries *)
+$smlnj/viscomp/basics.cm  (* from $compiler/Basics/basics.cm *)
+$smlnj/viscomp/parser.cm  (* from $compiler/Parse/parser.cm *)
+
+(* Pickle Library: $compiler/Library/pickle *)
+$/pickle-lib.cm           (* pickle library, for PickleUtil *)

@@ -4,26 +4,26 @@
  * All rights reserved.
  *)
 
-(* modified to use SML/NJ Lib PP. [dbm, 7/30/03]) *)
+(* modified to use smlnj-lib/PrettyPrint. [DBM, 2023.3.8]) *)
 
 signature PPVAL =
 sig
-  val fmtAccess :       Access.access -> NewPrettyPrint.format
-  val fmtConrep :       Access.conrep -> NewPrettyPrint.format
-  val fmtDatacon :      Types.datacon -> NewPrettyPrint.format
-  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> NewPrettyPrint.format
-  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> NewPrettyPrint.format
-  val fmtConBinding :   StaticEnv.staticEnv * Types.datacon -> NewPrettyPrint.format
-  val fmtVar :          Variable.var -> NewPrettyPrint.format
-  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> NewPrettyPrint.format
-  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> NewPrettyPrint.format
+  val fmtAccess :       Access.access -> Formatting.format
+  val fmtConrep :       Access.conrep -> Formatting.format
+  val fmtDatacon :      Types.datacon -> Formatting.format
+  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> Formatting.format
+  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> Formatting.format
+  val fmtConBinding :   StaticEnv.staticEnv * Types.datacon -> Formatting.format
+  val fmtVar :          Variable.var -> Formatting.format
+  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> Formatting.format
+  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> Formatting.format
 end (* signature PPVAL *)
 
 structure PPVal : PPVAL =
 struct
 
 local
-  structure PP = NewPrettyPrint
+  structure PP = Formatting
   structure PPS = PPSymbols
   structure PPP = PPSymPaths
   structure PPT = PPType
@@ -53,17 +53,17 @@ fun fmtField (field : string, value : PP.format) =
 fun fmtPrim prim = PP.text "<prim>"
 
 fun fmtDatacon (T.DATACON {name, rep, ...} : T.datacon) =
-    PP.ccat (PPS.fmtSym name,
+    PP.cblock [PPS.fmtSym name,
 	     case rep
 	       of A.EXN acc => if !internals then fmtAccess acc else PP.empty
-		| _ => PP.empty)
+		| _ => PP.empty]
 
 fun fmtDataconTyped (env: SE.staticEnv, T.DATACON{name, typ, ...}) =
     PP.pblock [PPS.fmtSym name, PP.colon, PPT.fmtType env typ]
 
 fun fmtDataconDebug (env: SE.staticEnv, T.DATACON {name, rep, const, typ, sign, lazyp}) =
-    PP.hcat
-      (PP.text "DATACON",
+    PP.hblock
+      [PP.text "DATACON",
 	(PP.braces
 	   (PP.vblock
 	      [fmtField ("name", PPS.fmtSym name),
@@ -71,7 +71,7 @@ fun fmtDataconDebug (env: SE.staticEnv, T.DATACON {name, rep, const, typ, sign, 
 	       fmtField ("typ", PPT.fmtType env typ),
 	       fmtField ("lazyp", PP.bool lazyp),
 	       fmtField ("conrep", fmtConrep rep),
-	       fmtField ("sign", PP.brackets (fmtConsig sign))])))
+	       fmtField ("sign", PP.brackets (fmtConsig sign))]))]
 
 (* fmtConBinding : SE.staticEnv * T.datacon -> PP.format
  * used in PPModule *)
@@ -82,7 +82,7 @@ fun fmtConBinding (env : SE.staticEnv, dcon: T.datacon) =
 	     [PP.text "exception",
 	      PPS.fmtSym name,
 	      if BasicTypes.isArrowType typ
-              then PP.hcat (PP.text "of", PPT.fmtType env (BasicTypes.domain typ))
+              then PP.hblock [PP.text "of", PPT.fmtType env (BasicTypes.domain typ)]
               else PP.empty]
 	| con =>      (* ordinary datacon case *)
 	    let exception Hidden
@@ -101,17 +101,17 @@ fun fmtConBinding (env : SE.staticEnv, dcon: T.datacon) =
 			  handle Hidden => false
 		      end
 	     in if visible orelse !internals
-	        then PP.hcat (PP.text "con", fmtDatacon con)
+	        then PP.hblock [PP.text "con", fmtDatacon con]
 	        else PP.empty
 	    end)
 
 fun fmtVar (V.VALvar {access,path,...}) =
-       PP.ccat (PPP.fmtSymPath path,
+       PP.cblock [PPP.fmtSymPath path,
 		if !internals
 		then (case access
-		       of A.LVAR lvar => PP.ccat (PP.period, PP.text (LV.toString lvar))
+		       of A.LVAR lvar => PP.cblock [PP.period, PP.text (LV.toString lvar)]
 			| _ => fmtAccess access)
-		else PP.empty)
+		else PP.empty]
   | fmtVar (V.OVLDvar {name,...}) = PPS.fmtSym name
   | fmtVar (V.ERRORvar) = PP.text "<errorvar>"
 
@@ -129,18 +129,18 @@ fun fmtVarTyped (env : SE.staticEnv, variable : V.var) =
 fun fmtVarDebug (env: SE.staticEnv, var: V.var) =
     (case var
       of V.VALvar {access,path, btvs, typ,prim} =>
-	 PP.hcat
-	   (PP.text "VALvar",
-	      (PP.braces
-		 (PP.vblock
-	            [fmtField ("access", fmtAccess access),
-                     fmtField ("prim", fmtPrim prim),
-		     fmtField ("path", PPP.fmtSymPath path),
-		     fmtField ("typ", PPT.fmtType env (!typ))])))
+	 PP.hblock
+	   [PP.text "VALvar",
+	    PP.braces
+	      (PP.vblock
+	         [fmtField ("access", fmtAccess access),
+                  fmtField ("prim", fmtPrim prim),
+		  fmtField ("path", PPP.fmtSymPath path),
+		  fmtField ("typ", PPT.fmtType env (!typ))])]
        | V.OVLDvar {name,variants} =>
-	 PP.hcat   
-	   (PP.text "OVLDvar",
-	    (PP.braces (fmtField ("name", PPS.fmtSym (name)))))
+	 PP.hblock   
+	   [PP.text "OVLDvar",
+	    PP.braces (fmtField ("name", PPS.fmtSym (name)))]
        | V.ERRORvar => PP.text "<ERRORvar>")
 
 end (* local *)

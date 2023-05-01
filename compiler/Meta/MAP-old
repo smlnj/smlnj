@@ -1,0 +1,794 @@
+
+Front End Map
+-------------
+
+A color-coded map of the directory structure is available as
+a pdf file, or Omnigraffle source file.
+
+1. Lexing and Parsing
+----------------------
+
+  * syntax trees (AST) produced by parser
+  * lexical analysis (via ML-Lex spec)
+  * parsing (via ML-Yacc spec)
+
+Parse/
+  lexing and parsing, producing ast (concrete syntax trees)
+  parser.cm
+
+  Parse/ast/
+    "syntax trees" (really concrete, in contrast to absyn, which is the true abstract syntax)
+    ast.sig/sml
+      the syntax tree types
+      defs: AST, Ast: AST
+    astutil.sig/sml
+      some utility functions
+      defs: ASTUTIL, AstUtil: ASTUTIL
+    ppast.sig/sml
+      pretty printing Ast
+      defs: PPAst: PPAST
+
+  Parse/lex/
+  lexical analysis (via ML-Lex)
+    ml.lex
+      the lexer spec (ML-Lex source)
+    tokentable.sml
+      hash table for token recognition
+      defs: TokenTable
+
+  Parse/parse/
+  parsing (via ML-Yacc)
+    ml.grm
+      grammar spec (ML-Yacc source)
+
+  Parse/main/
+  control flags and parser driver functions.
+  lexer/parser combination translates input stream into ast trees
+    parser.sig/sml
+      parser modules initialization, driver function
+      defs: MLPARSER, MLParser: MLPARSER
+    parsercontrol.sml
+      flags controlling various syntax features
+      defs: PARSER_CONTROL, ParserControl
+    smlfile.sml
+      top level parsing functions
+      defs: SMLFILE, SmlFile
+
+
+2. Elaboration
+--------------
+
+  * abstract syntax (absyn)
+  * static environments
+  * translation from ast to abstract syntax and static environment (elaboration)
+  * core type checking and inference, overloading resolution
+  * modules and signatures, signature matching, functor application
+  * code found in directories ElabData, Elaborator
+
+Basics/
+  basics.cm
+
+  Basics/symbol/
+    Symbol types involved in absyn and statenv and elaboration process
+    symbol.sig/sml
+      symbols (should be in ElabData/basics)
+      defs: Symbol: SYMBOL
+    fastsymbol.sig/sml
+      fast symbols (should be in ElabData/basics)
+      defs: FastSymbol: FASTSYMBOL
+    fixity.sml
+      fixity properties (should be in ElabData/syntax?)
+      defs: Fixity: FIXITY
+    symbol-hashtable.sml
+      Hashtables with symbol as key (should be in ElabData/basics w. symbol* )
+      defs: SymbolHashTable
+    specialsyms.sml
+      definition of special symbols for internal use during elaboration
+      defs: SpecialSymbols  (should be in ElabData/? )
+
+  Basics/pid
+    persistent stamps and persistent identifiers (pids)
+    persstamps.sig/sml
+      persistant stamps, or globally unique identifiers (16 byte vectors),
+      aka "pids"
+      defs: PERSSTAMPS, PersStamps : PERSSTAMPS
+    persmap.sml
+      finite maps over pids (persistent stamps)
+      defs: PersMap
+    pidenv.sig/sml
+      environments using pids (persistant stamps) as keys
+      defs: PIDENV, PidEnvFn
+
+  Basics/compiler
+    compileexn.sml
+      Compile exception (where used?)
+      defs: CompileExn
+    endianness-big.sml
+      Defines bigEndian flag (true)
+      defs: Endianess
+    endianness-little.sml
+      Defines bigEndian flag (false)
+      defs: Endianess
+    target.sig
+      Defines target attributes (e.g. sizes)
+      defs: TARGET
+    target32.sml
+      Defines 32-bit target attributes
+      defs: Target: TARGET
+    target64.sml
+      Defines 64-bit target attributes
+      defs: Target: TARGET
+    int-const.sml
+      A common representation of typed integer literals to use in
+      intermediate representations (from Absyn to CPS).
+      defs: IntConst
+    real-const.sml
+      A common representation of typed real literals to use in
+      intermediate representations (from Absyn to CPS).
+      defs: RealConst
+
+  Basics/util/
+    wordstr-hashtable.sml
+      word * string hash table
+      [may be redundant with IntStrMapV defined in
+       Env (ElabData/basics/env.sml)]
+      defs: WordSringHashTable
+      used: ElabData/types/tuples.sml, Parse/lex/tokentable.sml
+      see: ElabData/basics/env.sml
+
+  Basics/errormsg/
+  error message machinery (depends oun Basics/source)
+    errormsg.sig/sml
+      error messages
+      defs: ErrorMsg: ERRORMSG
+
+  Basics/source/
+  managing ML source files or streams
+    pathnames.sig/sml
+      file path names
+      defs: Pathnames: PATHNAMES
+    source.sig/sml
+      input source datastructure
+      defs: Source: SOURCE
+    sourcemap.sig/sml
+      map character positions in source to line no/column supporting #line "declaration"
+      defs: SourceMap: SOURCE_MAP
+
+  Basics/newpp
+  New prettyprinter library (should move to smlnj-lib)
+    format.sml
+      basic datastructures
+    measure.sig/sml
+      flat (no line breaks) measure of formats
+    render.sig/sml
+      rendering (printing) formats (relative to lineWidth limit)
+    newpp.sig/sml
+      user interface of the prettyprinter library
+      defs: NEW_PP, NewPP: NEW_PP   (abbrev: PP = NewPP)
+    /doc/str-NewPP.adoc
+      smlnj-lib style documentation of the NEW_PP signature
+    /doc/manual.adoc
+
+  Basics/print/
+  utilities for prettyprinting
+    prettyprint.sml (obsolete -- the old prettyprinter library derived from OCaml Format)
+      extend smlnj-lib/PP prettyprinter interface to match old one
+      defs: PrettyPrint: PRETTYPRINT
+    pputil.sig/sml (obsolete)
+      prettyprint utilities (generic)
+      defs: PPUtil: PPUTIL
+    printutil.sig/sml
+      some simple, non-pretty-printing print/formatting utility functions
+      defs: PrintUtil: PRINTUTIL
+      uses: Symbol, SYMBOL
+      see: Elaborator/print/pputil.{sig,sml} for pretty printing versions
+    printcontrol.sml
+      print control flags, out, say
+      defs: PRINTCONTROL, Control_Print
+    newpputil.sig/sml
+      additional utility functions for NewPP
+      defs: NEW_PP_UTIL, NewPPUtil: NEW_PP_UTIL
+
+  Basics/stats/
+    stats.sml
+      facilities for defining timed phases
+      defs: STATS, Stats
+
+  Basics/main/  (* rename: name -> control *)
+    basiccontrol.sml
+      printWarning control flag, topregistry
+      uses: ControlRegistry, Controls
+      defs: BASIC_CONTROL, BasicControl
+
+
+ElabData/
+  Basic datastructures used in elaboration (including type checking)
+  elabdata.cm
+
+  ElabData/basics/
+  basic representation types used in elaboration, plus coresym
+    lambdavar.sig/sml
+      lambda variables, the abstract representation of variables, used
+      as roots of dynamic access chains
+      defs: LAMBDA_VAR, LambdaVar
+    access.sig/sml
+      dynamic access paths
+      defs: ACCESS, Access : ACCESS
+    debindex.sig/sml [FLINT, moved from Elaborator/basics]
+      FLINT book-keeping (move back to FLINT)
+      defs: DEB_INDEX, DebIndex : DEB_INDEX
+    env.sig/sml
+      generic environments, mapping symbols to unspecified binding type
+      defs: ENV, Env: ENV, INTSTRMAPV
+    stamps.sig/sml
+      static identifiers, used for nominal type equivalence
+      defs: STAMPS, Stamps:> STAMPS
+    stampmap.sml
+      generic finite mappings over stamps
+      defs: StampMap
+    sympaths.sig/sml
+      SymPath and InvPath: direct and inverse symbolic paths (selecting
+      module components)
+      defs: SYMPATH, INVPATH, CONVERTPATHS, SymPath, InvPath, ConvertPaths
+    coresym.sml
+      defines the special structure symbol "_Core" used to access certain
+      special bindings (e.g Match and Bind exceptions)
+      defs: CoreSym
+    tkind.sml
+      TKind.tkind -- front-end version of PlambdaType tkinds (FLINT) 
+      defs: TKind
+
+  ElabData/syntax/
+  (typed) abstract syntax
+    absyn.sig/sml
+      the abstract syntax types
+      defs: ABSYN, Absyn: ABSYN
+    variable.sig/sml
+      variable representations
+      defs: VARIABLE, Variable: VARIABLE
+    absynutil.sml
+      utility functions for building tuple patterns and expressions
+      defs: AbsynUtil
+    ppabsyn.sml
+      prettyprint absyn
+      uses: PPUtil(pputil.s??), PPVal(ppval.sml), PPType(pptype.sml))
+      defs: PPAbsyn : PPABSYN
+    ppval.sml
+      prettyprinting (formatting) vars, datacons, access, conrep, consig
+      defs : PPVal : PPVAL
+
+  ElabData/types/
+  representing, constructing and manipulating types
+    types.sig/sml
+      the representation of SML types
+      defs: Types: TYPES
+    typesutil.sig/sml
+      large collection of utility functions for working with types
+      defs: TypesUtil: TYPESUTIL
+    tuples.sml
+      fns for constructing tuple and record types
+      defs: Tuples: TUPLES
+    basictypes.sig/sml
+      building the primitive types and associated values
+      defs: BasicTypes: BASICTYPES
+    conrep.sml
+      inferring conreps for data constructors
+      defs: ConRep: CONREP
+    pptype.sml
+      prettyprint (formatting) types
+      defs: PPType: PPTYPE
+
+  ElabData/statenv/
+  static environments
+    bindings.sig/sml
+      the basic binding forms (values, types, signatures, etc.)
+      defs: BINDINGS, Bindings: BINDINGS
+    statenv.sig/sml
+      instantiate generic environments with ML bindings
+      defs: STATICENV, StaticEnv: STATICENV
+    lookup.sig/sml
+      accessing symbols in environments
+      defs: LOOKUP, Lookup : LOOKUP
+    genmap.sml
+      rapid modmap generation based on modtrees
+      defs: GenModIdMap
+    coreacc.sml
+      access components of the _Core structure
+      defs: CoreAccess
+    browse.sml
+      "browsing" the static environment (not used???)
+      defs: BrowseStatEnv
+
+  ElabData/modules/
+  representation of modules
+    modules.sig/sml
+      representation of modules and signatures
+      defs: MODULES, Modules: MODULES
+    moduleutil.sig/sml
+      lots of utility functions for modules
+      defs: MODULEUTIL, ModuleUtil: MODULEUTIL
+    moduleid.sml
+      module identities used in Modmaps ???
+      defs: MODULE_ID, ModuleId: MODULE_ID
+    entpath.sml
+      access paths for navigating entities
+      defs: ENT_PATH, EntPath:> ENT_PATH
+    entityenv.sig/sml
+      enity environments mapping entity variables
+      defs: ENTITY_ENV, EntityEnv : ENTITY_ENV
+    epcontext.sml
+      hairy context info used during module elaboration,
+      related to nesting of modules (ep stands for
+      "entity path"?)
+      defs: ENT_PATH_CONTEXT, EntPathContext :> ENT_PATH_CONTEXT
+    expandtycon.sml
+      interpret PATHtycs in entity environments
+      defs: EXPAND_TYCON, ExpandTycon : EXPAND_TYCON
+    eqtypes.sml
+      equivalence of types
+      (located here because of dependence on modules)
+      defs: EQTYPES, EqTypes: EQTYPES
+    ppmod.sml
+      prettyprint modules and signatures
+      defs: PPMod: PPMOD
+
+  ElabData/prim/
+  primop representation and machinery
+    cproto.sml
+      An ad-hoc encoding of PrimCTypes.c_proto in ML types.
+      defs: CProto
+    arithops.sml
+      defs: ArithOps (no sig)
+    prim-c-types.sml
+      A representation of C Types for specifying the arguments and results
+      of C function calls.
+      defs: PrimCtypes
+    primop-bind.sml
+      Representation of primop bindings that define the Inline structure.
+      defs: PrimopBind
+    primop-id.sig/sml
+      Front-end representation of information identifying primops in variables
+      and structures
+      defs: PRIMOP_ID, PrimopId
+    primop.sig/sml
+      datatype Primop, defining various primitive operations
+      defs: PRIMOP, Primop
+    primop-bindings.sml
+      defining the primops and their types
+      defs: PrimopBindings (inline sig)
+    prim-env.sml
+      packaging the primos in a static environment
+      defs: PRIM_ENV, PrimEnv: PRIM_ENV
+
+  ElabData/pickle/
+  pickling (serialization) and unpickling static environments
+  [see MiscUtil/{pickle=lib.cm, pickle-util.sml, unpickle-util.sml}]
+    pickle-sym-pid.sml
+      pickling symbols and pids (persistant stamps)
+      uses: PickleUtil
+      defs: PickleSymPid (inline sig)
+    unpickle-sym-pid.sml
+      unpickling symbols and pids (persistant stamps)
+      defs: UnpickleSymPid (inline sig)
+    pickmod.sml
+      pickling functions for each type involved in staticEnv
+      defs: PICKMOD, PickMod :> PICKMOD
+    unpickmod.sml
+      unpickling functions for each type involved in staticEnv
+      defs: UNPICKMOD, UnpickMod : UNPICKMOD
+    rehash.sml
+      recompute hash of an environment resulting from filtering
+      a larger invironment
+      defs: Rehash (inline sig)
+
+  ElabData/main/  (* should become ElabData/control after compinfo.sml is moved *)
+    compinfo.sml  (* SHOULD MOVE to basics? *)
+      elaboration context parameter
+      defs: CompInfo
+    edcontrol.sig/sml
+      control flags for ElabData
+      defs: ELABDATA_CONTROL, ElabDataControl : ELABDATA_CONTROL
+
+
+Elaborator/
+  The main elaborator code, plus some representation stuff in basics/,
+  plus printing modules in print/.
+  elaborate.cm
+
+  Elaborator/control/
+  some control flags
+    elabcontrol.sig/sml
+      Elaborator control flags
+      defs: ELAB_CONTROL, ElabControl
+
+  Elaborator/types/
+  type checking, including resolving overloaded operators and literals
+    unify.sml
+      type unification
+      defs: UNIFY, Unify: UNIFY
+    overloadclasses.sml
+      overloading classes (lists of type constants like intTy)
+      defs: OverloadClasses (no signature)
+    overloadvar.sml
+      machinery for resolving overloading of variables (like +, *)
+      defs: OVERLOADVAR, OverloadVar: OVERLOADVAR
+    overload.sml
+      overloading resolution for variables and literals
+      defs: OVERLOAD, Overload
+    typecheck.sml [FLINT dirt]
+      defines typechecking _functor_ TypecheckFn, taking some FLINT-related
+      inlining info as parameters [should make into a structure]
+      defs: TYPECHECK, TypecheckFn: _ => TYPECHECK
+
+  Elaborator/modules/
+  support modules for elaborating modules
+    evalent.sml
+      evaluate "entities" (module and type realizations).
+      defs: signature EVALENTITY,
+            structure EvalEntity : EVALENTITY
+    instantiate.sml
+      free instantiation of signatures.
+      defs: signature INSTANTIATE,
+            structure Instantiate: INSTANTIATE
+    sigmatch.sig
+    sigmatch.sml
+      signature matching
+      defs: signature SIGMATCH,
+            structure SigMatch: SIGMATCH
+
+  Elaborator/elaborate/
+  main elaboration modules, plus some supporting modules
+    tyvarset.sml
+      type var sets for keeping track of implicit scopes of user type vars
+      defs: TYVARSET, TyvarSet :> TYVARSET
+    elabutil.sig/sml
+      general utilities for elaboration
+      defs: ELABUTIL, ElabUtil : ELABUTIL
+    elabdebug.sml
+      debugging facilities for elaboration
+      defs: ELABDEBUG, ElabDebug : ELABDEBUG
+    precedence.sml
+      precedence parser for core expressions, dealing with infix operators
+      defs: PRECEDENCE, Precedence : PRECEDENCE
+    elabtype.sig/sml
+      elaboration of type expressions and declarations
+      defs: ELABTYPE, ElabType : ELABTYPE
+    elabcore.sml
+      elaborating core ML (expressions, declarations)
+      defs: ELABCORE, ElabCore: ELABCORE
+    elabmod.sml
+      main module elaboration. defines ElabModFn, which is called to
+      define ElabMod structure in Semant/elaborate/elabmod.sml
+      see: Semant/elaborate/elabmod.sml
+      defs: ELABMOD, ElabModFn: SIGMATCH # TYPECHECK => ELABMOD
+    include.sml
+      elaborate include specs in signatures (supports elabsig)
+      defs: INCLUDE, Include: INCLUDE
+    elabsig.sml
+      elaborate signatures
+      defs: ELABSIG, ElabSig : ELABSIG
+    elabtop.sml
+      top-level elaboration driver. defines ElabTopFn, which is called
+      to define ElabTop structure in Semant/elaborate/elabtop.sml
+      see: Semant/elaborate/elabtop.sml
+      defs: ELABTOP, ElabTopFn : ELABMOD => ELABTOP
+
+  Elaborator/matchcomp
+  New match compiler, compiling to absyn.
+    rules.{sig,sml}
+    mctypes.sml
+    andor.sml
+    or-queues.sml
+    dec-tree.sml
+    varmap.sml
+    mc-code.sml
+    lib/svar.{sig,sml}
+      virtual simplified variables
+
+3. Miscellaneous (library) utilities
+
+Library/   (was MiscUtil)
+  Contains various kinds of utility programs
+
+  bignums/   -- could be renamed real-literals?
+  supporting real constants (using bignums?, IntInf?)
+    ieeereal.sml
+      Support for IEEE floating-point constants. calls RealConst functor
+      see: MiscUtil/bignums/realconst.sml
+      defs: IEEERealConst
+    realconst.sml
+      generate ML real (i.e. ieee floating point?) constants
+      defs: PRIMREAL, REALCONST, RealConst: PRIMREAL => REALCONST
+
+  const-arith/
+  Implements constant arithmetic on SML integer and word constants.
+  (adapted from the SML Compiler Utilities)
+    bitwise-const-arith-sig.sml
+      defs: BITWISE_CONST_ARITH
+    bitwise-const-arith.sml
+      defs: BitwiseConstArith : BITWISE_CONST_ARITH
+    const-arith-glue-fn.sml
+      defs: functor ConstArithGlueFn
+    const-arith-sig.sml
+      defs: CONST_ARITH
+    const-arith.sml
+      defs: ConstArith
+    signed-const-arith-sig.sml
+      defs: SIGNED_CONST_ARITH
+    signed-trapping-arith.sml
+      defs: SignedTrappingArith : SIGNED_CONST_ARITH
+    unsigned-const-arith-sig.sml
+      defs: UNSIGNED_CONST_ARITH
+    unsigned-wrapping-arith.sml
+      defs: UnsignedWrappingArith : UNSIGNED_CONST_ARITH
+    sources.cm
+
+  pickle/
+  Utility modules that are candidates for eventual
+  promotion to general libraries (crc and pickling)
+  [if this is our choice for a general purpose pickling technology!]
+    pickle-lib.cm
+      CM description for smlnj-lib pickling/unpickling library
+    crc.sml
+      crc codes
+      defs: CRC, CRC :> CRC
+    pickle-util.sml
+      supporting pickling
+      defs: PICKLE_UTIL, PickleUtil :> PICKLE_UTIL
+    unpickle-util.sml
+      supporting unpickling
+      defs: UNPICKLE_UTIL, UnpickleUtil :> UNPICKLE_UTIL
+
+
+3. Middle End
+-------------
+
+FLINT/
+intermediate representation (a form of typed lambda calculus)
+
+  [see FLINT/MAP -- UNFINISHED]
+
+
+4. Back End -- OBSOLETE
+-----------
+
+CodeGen/
+  alpha32/
+  alpha32x/
+  amd64/
+  cpscompile/
+    ...
+    feedback.sml  (moved from MiscUtil/util)
+      Compute minimum feedback vertex set of a given directed graph.
+      defs: Feedback (inline opaque sig)
+  hppa/
+  main/
+  optimizer/
+  ppc/
+  sparc/
+  x86/
+
+MLRISC/  -- INACTIVE/OBSOLETE
+MLRISC based code generators
+
+
+5. Execution Model  -- OBSOLETE
+-----------------
+
+Execution/
+
+  dynenv/
+    dynenv.sig,sml
+      dynamic environments, and instance of PidEnvFn
+      see: Basics/mlcomp/pidenv.sml
+      defs: DYNAMICENV, DynamicEnv : DYNAMICENV
+  codeobj/
+    code-obj.sig,sml
+      an interface for manipulating code objects
+      defs: CODE_OBJ, CodeObj :> CODE_OBJ
+  binfile/
+    binfile.sig,sml
+      file format for bin files (machine-independent)
+      defs: BINFILE, Binfile :> BINFILE
+  main/
+    importtree.sml
+      defs: ImportTree
+    isolate.sml
+      isolate the continuation context to the top-level (a prompt?)
+      defs: Isolate
+    execute.sml
+      execution of top-level executables in a dynamic environment
+      defs: Execute
+
+
+6. Interactive Top Level
+------------------------
+
+TopLevel/
+
+  environ/
+  combined static and dynamic environments
+    environ.sig,sml
+      defs: ENVIRONMENT, Environment: ENVIRONMENT
+
+  backend/
+    backend.sig
+      defs: BACKEND
+    backend-fn.sml
+      defs: BackendFn : CODEGENERATOR # {val cproto_conv : string} => BACKEND
+    alpha32.sml
+      defs: Alpha32Backend
+    hppa.sml
+      defs: HppaBackend
+    ppc.sml
+      defs: PPCBackend
+    sparc.sml
+      defs: SparcBackend
+    x86-ccall.sml
+      defs: X86CCallBackend
+    x86-stdcall.sml
+      defs: X86StdCallBackend
+
+  interact/
+    envref.sml
+      supports top-level environment management
+      defs: ENVREF, EnvRef : ENVREF
+    evalloop.sig,sml
+      top-level read-eval-print loop
+      defs: EVALLOOP, EvalLoopF: TOP_COMPILE => EVALLOOP
+    interact.sig,sml
+      creating top-level loops
+      defs: INTERACT, Interact: EVALLOOP => INTERACT
+
+  print/
+  Pretty printing for absyn declarations, values
+    ppdec.sml
+      printing results of top-level declarations, including values and types
+      defs: PPDEC, PPDec : PPDEC
+    ppobj.sml
+      print top-level values
+      defs: PPOBJ, PPObj : PPOBJ
+    pptable.sml
+      register for user-defined prettyprinters for datatypes
+      defs: PPTABLE, PPTable : PPTABLE
+    pptable.sml
+      defs: CompilerPPTable
+    printhooks.sml
+      defs: PrintHooks
+
+  main/
+    control.sig
+      defs: MCCONTROL, FLINTCONTROL, CGCONTROL, CONTROL
+    control.sml
+      defs: Control_MC, Control_CG, Control
+    version.sml
+      records the compiler version and version date
+      defs: CompilerVersion
+    code-generator.sig
+      defs: CODEGENERATOR
+    compile.sig
+      defs: COMPILE0, COMPILE, TOP_COMPILE
+    compile.sml
+      defs: CompileF: CODEGENERATOR # CCONFIG # {cproto_conv : string} => COMPILE0
+
+
+
+============================================================================
+
+Catalog of basic structures (Front End)
+---------------------------------------
+
+symbols
+  Symbol         (Basics/mlcomp/symbol.sig,sml)
+  FastSymbol     (Basics/mlcomp/fastsymbol.sig,sml)
+
+symbolic paths
+  SymPath        (ElabData/basics/sympaths.sml)
+  InvPath        (ElabData/basics/sympaths.sml)
+  ConvertPaths   (ElabData/basics/sympaths.sml)
+
+ast (syntax trees)
+  Ast            (Parse/ast/ast.sig,sml)
+  AstUtil        (Parse/ast/astutil.sig,sml)
+
+absyn (abstract syntax)
+  Absyn          (ElabData/syntax/absyn.sig,sml)
+    abstract syntax datatypes for expressions, declarations, etc.
+  VarCon         (ElabData/syntax/varcon.sig,sml)
+    variables and constructors
+  AbsynUtil      (ElabData/syntax/absynutil.sml)
+    utility module for working with absyn
+  PPAbsyn        (Elaborator/print/ppabsyn.sml)
+    prettyprinting absyn
+
+types (internal representation of types)
+ -- representations
+   Types          (ElabData/types/types.sig,sml)
+   ConRep         (Elaborator/basics/conrep.sml)
+   TKind          (ElabData/basics/tkind.sml) FLINT!
+
+ -- utilities, manipulating and comparing types
+   TypesUtil      (ElabData/types/typesutil.sig,sml)
+   Tuples         (ElabData/types/tuples.sml)
+   EqTypes        (Elaborator/types/eqtypes.sml)
+   Unify          (Elaborator/types/unify.sml)
+
+ -- primitive types
+   BasicTypes     (ElabData/types/basictypes.sig,sml)
+   PrimEnv        (Semant/statenv/prim.sml)
+
+ -- printing types
+   PPType         (Elaborator/print/pptype.sml)
+
+dynamic access
+  LambdaVar        (ElabData/basics/lambdavar.sig,sml)
+    lambda variables (dynamic access roots for variables)
+  Access           (ElabData/basics/access.sml)
+    dynamic access modes
+
+environment  (generic environment: 'b env)
+  Env              (ElabData/basics/env.sml)
+
+static environment
+  Bindings         (ElabData/statenv/bindings.sig,sml)
+  StaticEnv        (ElabData/statenv/statenv.sml)
+  Lookup           (ElabData/statenv/lookup.sml)
+  BrowseStatEnv    (ElabData/statenv/browse.sml)
+
+modules (signatures, structures, functors)
+  Modules          (ElabData/modules/modules.sig,sml)
+  ModuleUtil       (ElabData/modules/moduleutil.sig,sml)
+  ModuleId         (ElabData/modules/moduleid.sml)
+  EntPath          (ElabData/modules/entpath.sml)
+  EntityEnv        (ElabData/modules/entityenv.sml)
+  ModulePropLists  (Semant/modules/module-plists.sml) [FLINT] -- obsolete?
+
+primop
+  PrimOp           (ElabData/prim/primop.sml)
+  PrimOpBindings   (ElabData/prim/primop-bindings.sml)
+  PrimOpId	   (ElabData/prim/primopid.sml)
+  PrimEnv          (ElabData/prim/prim-env.sml)
+  PrimopUtil       (ElabData/prim/primop-util.sml)
+  PrimopBind       (ElabData/prim/primop-bind.sml)
+
+control
+  BasicControl     (Basics/main/basiccontrol.sml)
+  ParserControl    (Parse/main/parsercontrol.sml)
+  ElabDataControl  (ElabData/main/edcontrol.sml)
+  ElabControl      (Elaborator/basics/elabcontrol.sml)
+  Control_Print    (Basics/print/printcontrol.sml)
+
+  Control          (TopLevel/main/control.sml)
+    main consolodated control structure
+  Control_CG       (TopLevel/main/control.sml)
+    controls for code generation, substructure of Control
+  Control_MC       (TopLevel/main/control.sml)
+    controls for match compiler, substructure of Control
+
+outsiders
+  Time
+  Unsafe
+  SMLofNJ
+
+==========================================================================
+
+Notes
+=====
+
+1. CoreBasicTypes/BasicTypes and CorePrimTycNum/PrimTycNum splits are
+part of an attempt to have a subset of the front end modules that
+can be used as a generic, implementation-independent SML front-end.  That
+is, CoreBasicTypes defines only those types that must be provided in
+any SML implementation.  BasicTypes adds those types that are specific
+to SML/NJ.
+
+2. We have Basics/*, ElabData/basics, and Elaborator/basics.
+What is the rationale telling us what goes in each of these places?
+
+This complex organization seems to be partially motivated by the goal
+of separating out any features that are SML/NJ-specific from the generic
+SML stuff.
+
+3. MiscUtil was renamed Library, and has been simplified.  It now contains
+only three subdirectories, which can possibly be thought of as somewhat
+general purpose libraries.
