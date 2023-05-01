@@ -81,6 +81,18 @@ system/
     installer.cm
     library-install.cm
 
+    cm/
+
+      cm.cm (fetch-cm.sml)
+      tools.cm (tools.sml)
+
+    cmb/
+
+      amd64-unix.cm (amd64-unix.sml)
+      arm64-unix.cm (arm64-unix.sml)
+      current.cm (select-amd64-unix.sml, select-arm64-unix.sml)
+        [exports CMB; current.cm is "starting point" for CMB.make?]
+      
     compiler/
 
       amd64.cm (amd64.sml)
