@@ -32,10 +32,6 @@
 
 Group
 
-	(* [old comment] To be able to separate machine-dependent parts of viscomp-lib.cm
-	 * from machine-independent parts, we must also export the
-	 * the following things.... *)
-
         (* <- $smlnj/internal/smlnj-version.cm *)
 	structure SMLNJVersion    (* system/smlnj/internal/version.sml *)
 is
