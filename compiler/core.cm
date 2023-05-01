@@ -261,7 +261,7 @@ CPS/opt/num64cnv.sml
 CPS/opt/streqlcnv.sml
 CPS/opt/testcnv.sml
 CPS/opt/uncurry.sml
-CPS/main/cluster.sml    (* move to CodeGen/main? *)
+CPS/main/cluster.sml    (* to be replaced by CodeGen/csp-to-cfg/cluster.sml *)
 CPS/main/cps-comp.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml
@@ -279,7 +279,7 @@ CodeGen/cfg-pickle/cfg-file-pickle.sml
 CodeGen/cfg-pickle/cfg-memory-pickle.sml
 CodeGen/cfg-pickle/lambda-var-pickle.sml
 (*
-CodeGen/cps-to-cfg/cluster.sml
+CodeGen/cps-to-cfg/cluster.sml  -- unfinished replacement for CPS/main/cluster.sml
 *)
 CodeGen/cps-to-cfg/cps-info.sml
 CodeGen/cps-to-cfg/invoke-gc.sml
