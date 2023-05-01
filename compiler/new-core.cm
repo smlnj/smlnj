@@ -45,6 +45,7 @@ Library/const-arith/sources.cm
 (* ------------------------------- Imports ------------------------------- *)
 
 (* viscomp Libraries -- used for re-exports *)
+(*
 $smlnj/viscomp/basics.cm
 $smlnj/viscomp/elabdata.cm  (* now including ElabData/pickle and ElabData/prim/prim-env.sml *)
 $smlnj/viscomp/elaborate.cm
@@ -53,19 +54,20 @@ $smlnj/viscomp/flint.cm
 $smlnj/viscomp/cps.cm  (* ?? what exports? what exports need to be re-exported here? *)
 $smlnj/viscomp/toplevel.cm
 $smlnj/viscomp/newcodegen.cm
-
+*)
 (* Other libaries. *)
 $smlnj/basis/basis.cm
 
 (* smlnj-lib "incorporated" libraries *)
 $smlnj/smlnj-lib/smlnj-lib.cm
+(*
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
 
 $smlnj/asdl/asdl-lib.cm  (* what needs this? *)
 
 $smlnj/internal/smlnj-version.cm  (* SMLNJVersion *)
-
+*)
 (* Moved:
    $/pickle-lib.cm                         -- moved to elabdata.cm imports
    $smlnj/init/init.cmi : cm  (CoreIntInf) -- moved to flint.cm imports
