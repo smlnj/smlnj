@@ -24,29 +24,54 @@ LOCAL:
 
   GroupGraph             depend/ggraph.sml
   DependencyGraph	 depend/graph.sml
+  DAEnv			 depend/da-env.sml
+  CheckSharing		 depend/checksharing.sml
+
   CMLrValsFun 		 parse/cm.grm.sml
   CMLexFun		 parse/cm.lex.sml
 
   SrcPath		 paths/srcpath.sml
+  SrcPathSet		 paths/srcpathset.sml
   SrcPathMap		 paths/srcpathmap.sml
 
   CMSemant		 semant/semant.sml
   GroupReg		 semant/group-reg.sml
+  IInfo			 semant/iinfo.sml
+  VERSION		 semant/version.sml 
+  Version		 semant/version.sml 
+  Sharing		 semant/sharing.sml
+  GROUPREG		 semant/group-reg.sml 
+  GroupReg		 semant/group-reg.sml 
+  MEMBERCOLLECTION	 semant/members.sml 
+  MemberCollection	 semant/members.sml 
+  CM_SEMANT		 semant/semant.sml 
+  CMSemant		 semant/semant.sml 
 
   SmlInfo		 smlfile/smlinfo.sml
+  SmlInfoSet		 smlfile/smlinfoset.sml 
+  SmlInfoMap		 smlfile/smlinfomap.sml 
+  Skeleton		 smlfile/skeleton.sml
 
   STABILIZE		 stable/stabilize.sml
   STAB_MODMAP		 stable/stabmm.sml
   VerStabFn		 stable/verify.sml
+  BinInfo		 stable/bininfo.sml
+  StableSet		 stable/stableset.sml
 
   GeneralParams	 	 main/general-params.sml
+  PervAccess		 main/perv-access.sml
+  FilenamePolicy	 main/filename-policy.sml
 
   SafeIO		 util/safeio.sml
+  StringSet		 util/stringset.sml
+  SymbolSet		 util/symbolset.sml
 
   PARSE			 parse/parse.sml
   ParseFn		 parse/parse.sml
   CM_TOKENS		 parse/cm.grm.sig
   CM_LRVALS		 parse/cm.grm.sig
+
+  PrivateTools		 tools/main/private-tools.sml
 
 IMPORTS:
 
@@ -54,9 +79,12 @@ IMPORTS:
   JoinWithArg		mlyacc-lib.cm
   PARSER_DATA		mlyacc-lib.cm ?
 
-  Source		Basics/source/source.sml (basics.cm)
-  SourceMap		Basics/source/sourcemap.sml (basics.cm)
-  PPSourceMap		Basics/source/ppsourcemap.sml (basics.cm)
+  Source		compiler/Basics/source/source.sml (basics.cm)
+  SourceMap		compiler/Basics/source/sourcemap.sml (basics.cm)
+  PPSourceMap		compiler/Basics/source/ppsourcemap.sml (basics.cm)
+
+  StaticEnv		compiler/ElabData/statenv/statenv.sml
+  BrowseStatEnv		compiler/ElabData/statenv/browse.sml
 
   LibBase		?
 
@@ -118,65 +146,193 @@ parse/
 
 semant/
   sharing.sml
-    <
+    < Sharing
     >
 
   iinfo.sml
-    <
-    >
+    < IInfo
+    > ---------
+      StaticEnv
+      PersStamps
 
   group-reg.sml
-    <
-    >
+    < GROUPREG
+      GroupReg
+    > SrcPath
+      SrcPathMap
+      -------
+      Source
+      SourceMap
+      ErrorMsg
 
   (* semantic actions for description file parser *)
   version.sml
-    <
-    >
+    < VERSION
+      Version
+    > 
 
   members.sml
-    <
-    >
+    < MEMBERCOLLECTION
+      MemberCollection
+    > SmlInfo
+      SrcPath
+      SrcPathMap
+      GeneralParams
+      DependencyGraph
+      GroupGraph
+      PrivateTools
+      SymbolSet
+      SymbolMap
+      Version
+      -------
+      Symbol
+      SourceMap
+      ErrorMsg
 
   semant.sml
-    <
-    >
+    < CM_SEMANT
+      CMSemant
+    > SrcPath
+      Version
+      SymbolSet
+      SymbolMap
+      GroupGraph
+      GeneralParams
+      MemberCollection
+      PrivateTools
+      PervAccess
+      -------
+      Symbol
+      SourceMap
+      ErrorMsg
 
 (* dependency graphs *)
 depend/
   graph.sml
-    <
-    >
+    < DependencyGraph
+    > SymbolSet
+      SmlInfo 
+      BinInfo
+      IInfo
+      DAEnv
+      -----
+
   build.sml
-    <
-    >
+    < BUILDDEPEND
+      BuildDepend
+    > SymbolMap
+      SymbolSet
+      SrcPath
+      SmlInfo
+      SmlInfoMap
+      DAEnv
+      CheckSharing
+      Skeleton
+      GroupGraph
+      DependencyGraph 
+      GeneralParams
+      -------------
+      Symbol
+      SymPath
+      ErrorMsg
+      Formatting
+
   da-env.sml
-    <
-    >
+    < DAEnv
+    > SymbolSet
+      ---------
+      Symbol
+
   se2dae.sml
-    <
-    >
+    < STATENV2DAENV
+      Statenv2DAEnv
+    > SymbolSet
+      DAEnv
+      ------
+      Symbol
+      StaticEnv
+      BrowseStatEnv
+
   ggraph.sml
-    <
-    >
+    < GroupGraph
+    > StringSet
+      SrcPath
+      SrcPathMap
+      Version
+      DependencyGraph
+
   reachable.sml
-    <
-    >
+    < REACHABLE
+      Reachable
+    > GroupGraph
+      DependencyGraph
+      SmlInfoSet
+      SrcPathSet
+      SrcPathMap
+      StableSet
+      BinInfo
+
   checksharing.sml
-    <
-    >
+    < CHECKSHARING
+      CheckSharing
+    > DependencyGraph
+      SymbolMap
+      SmlInfo
+      SmlInfoMap
+      StringSet
+      GeneralParams
+      Sharing
+      --------
+      ErrorMsg
+      Formatting
+
   mklist.sml
-    <
-    >
+    < MkList
+    > SymbolMap
+      BinInfo
+      SmlInfo
+      SmlInfoSet 
+      StableSet
+      GroupGraph
+      DependencyGraph
+
   indegree.sml
-    <
-    >
+    < INDEGREE
+      Indegree
+    > GroupGraph
+      DependencyGraph
+      SmlInfoMap
+      SymbolMap
+
   index.sml
-    <
-    >
+    < INDEX
+      Index
+    > GeneralParams
+      SmlInfo
+      SymbolMap
+      GroupGraph
+      DependencyGraph
+      SrcPath
+      FilenamePolicy
+      --------------
+      Symbol
+      ErrorMsg
+
   to-portable.sml
-    <
-    >
+    < ToPortable
+    > GroupGraph
+      DependencyGraph
+      PortableGraph
+      GeneralParams
+      SrcPath
+      SrcPathMap
+      SymbolSet
+      SmlInfo
+      SmlInfoMap
+      StableMap
+      SymbolMap
+      ---------
+      Symbol
 
 (* handling SML source code *)
 smlfile/
