@@ -237,13 +237,11 @@ bootstrap/
 
 (* ---------------------------- Imports ---------------------------- *) 
 
-(* concurrent/parallel/distributed make *)
-concur/sources.cm
+
 
 (* CM-internal libraries *)
 util/sources.cm
-
-(* pathname abstraction *)
+concur/sources.cm  (concurrent/parallel/distributed make)
 $smlnj/internal/srcpath-lib.cm (paths/srcpath-lib.cm)
 
 (* Basis *)
