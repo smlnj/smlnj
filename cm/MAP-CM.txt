@@ -1,0 +1,271 @@
+$SMLNJ/cm/MAP-CM.txt
+
+Toplevel description file for new (2000) implementation of CM
+
+CDF: CM/cm-lib.cm
+
+(* ---------------------------- Exports ---------------------------- *)
+
+	functor LinkCM
+	functor BootstrapCompileFn
+
+	signature VERSION
+	structure Version
+	structure Sharing
+	signature TOOLS
+	structure Subst
+
+	structure StdConfig
+
+
+(* ---------------------------- Module Index ---------------------------- *)
+
+LOCAL:
+
+
+IMPORTS:
+
+
+(* ---------------------------- Members [files] ---------------------------- *)
+Imports from outside this library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+
+CM/
+
+(* the CM description file parser *)
+parse/
+  parse.sml
+    <
+    >
+  cm.grm : MLYacc
+  cm.lex : MLLex
+
+semant/
+  sharing.sml
+    <
+    >
+  iinfo.sml
+    <
+    >
+  group-reg.sml
+    <
+    >
+
+  (* semantic actions for description file parser *)
+  version.sml
+    <
+    >
+  members.sml
+    <
+    >
+  semant.sml
+    <
+    >
+
+(* dependency graphs *)
+depend/
+  graph.sml
+    <
+    >
+  build.sml
+    <
+    >
+  da-env.sml
+    <
+    >
+  se2dae.sml
+    <
+    >
+  ggraph.sml
+    <
+    >
+  reachable.sml
+    <
+    >
+  checksharing.sml
+    <
+    >
+  mklist.sml
+    <
+    >
+  indegree.sml
+    <
+    >
+  index.sml
+    <
+    >
+  to-portable.sml
+    <
+    >
+
+(* handling SML source code *)
+smlfile/
+  smlinfo.sml
+    <
+    >
+  smlinfoset.sml
+    <
+    >
+  smlinfomap.sml
+    <
+    >
+  skeleton.sml
+    <
+    >
+  skel-cvt.sml
+    <
+    >
+  skel-io.sml
+    <
+    >
+  skel-exports.sml
+    <
+    >
+
+(* handling stable groups *)
+stable/
+  bininfo.sml
+    <
+    >
+  stabmm.sml
+    <
+    >
+  stablemap.sml
+    <
+    >
+  stableset.sml
+    <
+    >
+  stabilize.sml
+    <
+    >
+  verify.sml
+    <
+    >
+
+(* tools for handling other source types *)
+tools/main/
+  lsplit-arg.sml
+    <
+    >
+  core-tools.sig
+    <
+    >
+  private-tools.sig
+    <
+    >
+  public-tools.sig
+    <
+    >
+  private-tools.sml
+    <
+    >
+  tools-fn.sml
+    <
+    >
+
+
+(* doing actual compilation work *)
+compile/
+  compile.sml
+    <
+    >
+  corehack.sml
+    <
+    >
+  link.sml
+    <
+    >
+  bfc.sml
+    <
+    >
+
+(* overall control of CM *)
+main/
+  general-params.sml
+    <
+    >
+  filename-policy.sml
+    <
+    >
+  symval.sml
+    <
+    >
+  specific-symval-fn.sml
+    <
+    >
+  autoload.sml
+    <
+    >
+  cleanup.sml
+    <
+    >
+  slave.sml
+    <
+    >
+  preload.sml
+    <
+    >
+  cm-boot.sml
+    <
+    >
+  perv-access.sml
+    <
+    >
+
+(* bootstrap compiler (formerly known as "batch") *)
+bootstrap/
+  names.sml
+    <
+    >
+  build-initdg.sml
+    <
+    >
+  btcompile.sml
+    <
+    >
+  mkbootlist.sml
+    <
+    >
+  cmb-slave-stub.sml
+    <
+    >
+  cmb-slave-hook.sml
+    <
+    >
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+(* concurrent/parallel/distributed make *)
+concur/sources.cm
+
+(* CM-internal libraries *)
+util/sources.cm
+
+(* pathname abstraction *)
+$smlnj/internal/srcpath-lib.cm (paths/srcpath-lib.cm)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* viscomp *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/parser.cm
+$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/execute.cm
+$smlnj/viscomp/core.cm
+
+$/pickle-lib.cm ($compiler/Library/pickle/pickle-lib.cm)
+
+(* auxiliary libraries *)
+$smlnj/ml-yacc/ml-yacc-lib.cm
+$/pgraph.cm ($SMLNJ/libraries/pgraph/pgraph.cm)
+
+
+(* ---------------------------- Notes ---------------------------- *) 
