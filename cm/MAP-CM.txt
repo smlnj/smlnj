@@ -79,6 +79,7 @@ IMPORTS:
   JoinWithArg		mlyacc-lib.cm
   PARSER_DATA		mlyacc-lib.cm ?
 
+  Symbol		compiler/Basics/symbol/symbol.sml
   Source		compiler/Basics/source/source.sml (basics.cm)
   SourceMap		compiler/Basics/source/sourcemap.sml (basics.cm)
   PPSourceMap		compiler/Basics/source/ppsourcemap.sml (basics.cm)
