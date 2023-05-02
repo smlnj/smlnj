@@ -9,10 +9,10 @@ CDF: CM/cm-lib.cm
 	functor LinkCM
 	functor BootstrapCompileFn
 
-	signature VERSION
+	signature VERSION ?
 	structure Version
 	structure Sharing
-	signature TOOLS
+	signature TOOLS ?
 	structure Subst
 
 	structure StdConfig
@@ -22,8 +22,43 @@ CDF: CM/cm-lib.cm
 
 LOCAL:
 
+  GroupGraph             depend/ggraph.sml
+  DependencyGraph	 depend/graph.sml
+  CMLrValsFun 		 parse/cm.grm.sml
+  CMLexFun		 parse/cm.lex.sml
+
+  SrcPath		 paths/srcpath.sml
+  SrcPathMap		 paths/srcpathmap.sml
+
+  CMSemant		 semant/semant.sml
+  GroupReg		 semant/group-reg.sml
+
+  SmlInfo		 smlfile/smlinfo.sml
+
+  STABILIZE		 stable/stabilize.sml
+  STAB_MODMAP		 stable/stabmm.sml
+  VerStabFn		 stable/verify.sml
+
+  GeneralParams	 	 main/general-params.sml
+
+  SafeIO		 util/safeio.sml
+
+  PARSE			 parse/parse.sml
+  ParseFn		 parse/parse.sml
+  CM_TOKENS		 parse/cm.grm.sig
+  CM_LRVALS		 parse/cm.grm.sig
 
 IMPORTS:
+
+  LrParser		mlyacc-lib.cm
+  JoinWithArg		mlyacc-lib.cm
+  PARSER_DATA		mlyacc-lib.cm ?
+
+  Source		Basics/source/source.sml (basics.cm)
+  SourceMap		Basics/source/sourcemap.sml (basics.cm)
+  PPSourceMap		Basics/source/ppsourcemap.sml (basics.cm)
+
+  LibBase		?
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
@@ -35,19 +70,61 @@ CM/
 
 (* the CM description file parser *)
 parse/
+
   parse.sml
-    <
-    >
-  cm.grm : MLYacc
-  cm.lex : MLLex
+    < PARSE
+      ParseFn
+    > GroupGraph
+      DependencyGraph
+      CMLrValsFun
+      CMLexFun
+      SrcPath
+      SrcPathMap
+      CMSemant
+      GroupReg 
+      SmlInfo
+      STAB_MODMAP
+      STABILIZE
+      GeneralParams
+      SafeIO
+      ---------------
+      LibBase ?
+      LrParser
+      Source
+      SourceMap
+      PPSourceMap
+      ErrorMsg
+      Formatting
+
+  % cm.grm : MLYacc -->
+  cm.grm.sig
+    < CM_TOKENS
+      CM_LRVALS
+    > CMSemant
+      --------
+      PARSER_DATA
+
+  cm.grm.sml
+    < CMLrValsFun
+    > CMSemant
+      CM_TOKENS
+      --------
+      SourceMap
+
+  % cm.lex : MLLex -->
+  cm.lex.sml
+    < CMLexFun
+    > CM_TOKENS
 
 semant/
   sharing.sml
     <
     >
+
   iinfo.sml
     <
     >
+
   group-reg.sml
     <
     >
@@ -56,9 +133,11 @@ semant/
   version.sml
     <
     >
+
   members.sml
     <
     >
+
   semant.sml
     <
     >
