@@ -33,7 +33,6 @@ local
   structure PT = PrimTyc
   structure PO = Primop
   structure PL = PLambda
-  structure PP = PrettyPrint
   structure FU = FlintUtil
   open FLINT
 in

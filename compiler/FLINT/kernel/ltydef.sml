@@ -6,21 +6,22 @@ struct
 
 local
   structure PT = PrimTyc
-  structure DI = DebIndex
   structure LT = Lty
   structure LK = LtyKernel
-
+  structure PP = Formatting
+  structure PF = PrintFormat
 
   (* debugging *)
-  structure PP = PrettyPrint
-  structure PU = PPUtil
   structure EM = ErrorMsg
 
   fun bug msg = ErrorMsg.impossible("LtyDef: "^msg)
 
-  val with_pp = PP.with_default_pp
   val debugging : bool ref = ref false
   val dp : int ref = Control_Print.printDepth
+
+  (* deBruijn indexes (TC_DVAR) *)
+  type depth = int  (* type variable "binding context" (no. of type abstractions), >= 0 *)
+  type index = int  (* deBruijn index, >= 1 *)
 
 in
 
@@ -107,7 +108,7 @@ fun tkIsMono k = tkSubkind (k, tkc_mono)
  * FLINT tyc is roughly equivalent to the following ML datatype
  *
  *    datatype tyc
- *      = TC_VAR of index * int  (* DeBruijn style (DB depth, position in tuple) *)
+ *      = TC_DVAR of index * int  (* DeBruijn style (DB depth, position in tuple) *)
  *      | TC_NVAR of tvar        (* "explicit" type variables with TFN bindings, debnames *)
  *      | TC_PRIM of primtyc
  *      | TC_FN of tkind list * tyc
@@ -130,7 +131,7 @@ fun tkIsMono k = tkSubkind (k, tkc_mono)
  *)
 
 (** tyc constructors *)
-val tcc_var    : DI.index * int -> LT.tyc = LT.tc_inj o LT.TC_VAR
+val tcc_dvar    : index * int -> LT.tyc = LT.tc_inj o LT.TC_DVAR
 val tcc_nvar   : Lty.tvar -> LT.tyc = LT.tc_inj o LT.TC_NVAR
 val tcc_prim   : PT.primtyc -> LT.tyc = LT.tc_inj o LT.TC_PRIM
 val tcc_fn     : LT.tkind list * LT.tyc -> LT.tyc = LT.tc_inj o LT.TC_FN
@@ -146,9 +147,9 @@ val tcc_box    : LT.tyc -> LT.tyc = LT.tc_inj o LT.TC_BOX
 val tcc_tuple  : LT.tyc list -> LT.tyc = fn ts => LT.tc_inj (LT.TC_TUPLE ts)
 
 (** tyc deconstructors *)
-val tcd_var    : LT.tyc -> DI.index * int = fn tc =>
-      (case LK.tc_whnm_out tc of LT.TC_VAR x => x
-                       | _ => bug "unexpected tyc in tcd_var")
+val tcd_dvar    : LT.tyc -> index * int = fn tc =>
+      (case LK.tc_whnm_out tc of LT.TC_DVAR x => x
+                       | _ => bug "unexpected tyc in tcd_dvar")
 val tcd_nvar   : LT.tyc -> Lty.tvar = fn tc =>
       (case LK.tc_whnm_out tc of LT.TC_NVAR x => x
                        | _ => bug "unexpected tyc in tcd_nvar")
@@ -189,8 +190,8 @@ val tcd_arrow  : LT.tyc -> LT.fflag * LT.tyc list * LT.tyc list = fn tc =>
                        | _ => bug "unexpected tyc in tcd_arrow")
 
 (** LT.tyc predicates *)
-val tcp_var    : LT.tyc -> bool = fn tc =>
-      (case LK.tc_whnm_out tc of LT.TC_VAR _ => true | _ => false)
+val tcp_dvar    : LT.tyc -> bool = fn tc =>
+      (case LK.tc_whnm_out tc of LT.TC_DVAR _ => true | _ => false)
 val tcp_nvar   : LT.tyc -> bool = fn tc =>
       (case LK.tc_whnm_out tc of LT.TC_NVAR _ => true | _ => false)
 val tcp_prim   : LT.tyc -> bool = fn tc =>
@@ -217,8 +218,8 @@ val tcp_arrow  : LT.tyc -> bool = fn tc =>
       (case LK.tc_whnm_out tc of LT.TC_ARROW _ => true | _ => false)
 
 (** tyc one-arm switches *)
-fun tcw_var (tc, f, g) =
-      (case LK.tc_whnm_out tc of LT.TC_VAR x => f x | _ => g tc)
+fun tcw_dvar (tc, f, g) =
+      (case LK.tc_whnm_out tc of LT.TC_DVAR x => f x | _ => g tc)
 fun tcw_nvar (tc, f, g) =
       (case LK.tc_whnm_out tc of LT.TC_NVAR x => f x | _ => g tc)
 fun tcw_prim (tc, f, g) =
@@ -277,9 +278,8 @@ val ltd_tyc    : LT.lty -> LT.tyc = fn lt =>
 		       | LT.LT_ENV _ => bug "unexpected lty in ltd_tyc (i.e. LT_ENV)"
 		       | LT.LT_STR _ => bug "unexpected LT_STR"
 		       | LT.LT_FCT _ => bug "unexpected LT_FCT"
-		       | LT.LT_POLY _ => (PrettyPrint.with_default_pp(fn s => PPLty.ppLty 10 s lt);
-					  raise DeconExn;
-					  bug "unexpected LT_POLY")
+		       | LT.LT_POLY _ => (PPLty.ppLty 10 lt; raise DeconExn;
+					  bug "unexpected LT_POLY")  (* can't be reached!!! *)
 		       | LT.LT_CONT _ => bug "unexpected LT_CONT"
 		       | LT.LT_IND _ => bug "unexpected LT_IND"
                        (*| _ => bug "unexpected lty in ltd_tyc" *))
@@ -292,15 +292,9 @@ val ltd_fct    : LT.lty -> LT.lty list * LT.lty list = fn lt =>
 val ltd_poly   : LT.lty -> LT.tkind list * LT.lty list = fn lt =>
     (case LK.lt_whnm_out lt
       of LT.LT_POLY x => x
-       | _ => (with_pp(fn s =>
-			  let val {break,newline,openHVBox,openHOVBox,openVBox,
-				   closeBox, pps, ppi} = PU.en_pp s
-			  in openHVBox 0;
-                          pps "***ltd_poly***"; break{nsp=1,offset=0};
-                          pps "arg:"; newline();
-                          PPLty.ppLty (!dp) s lt; break{nsp=1,offset=0};
-                          closeBox ()
-			  end);
+       | _ => (PF.printFormatNL
+		 (PP.vblock [PP.text "***ltd_poly***",
+			   PP.hblock [PP.text "arg:", PPLty.fmtLty (!dp) lt]]);
 	       bug "unexpected lty in ltd_poly"))
 
 (** lty predicates *)
@@ -331,7 +325,7 @@ fun ltw_poly (lt, f, g) =
  *)
 
 (** tyc-lty constructors *)
-val ltc_var    : DI.index * int -> LT.lty = ltc_tyc o tcc_var
+val ltc_dvar    : index * int -> LT.lty = ltc_tyc o tcc_dvar
 val ltc_prim   : PT.primtyc -> LT.lty = ltc_tyc o tcc_prim
 val ltc_tuple  : LT.lty list -> LT.lty =
     ltc_tyc o
@@ -344,8 +338,8 @@ val ltc_arrow  : LT.fflag * LT.lty list * LT.lty list -> LT.lty =
        end handle DeconExn => bug "ltc_arrow"
 
 (** tyc-lty deconstructors *)
-val ltd_var    : LT.lty -> DI.index * int =
-    tcd_var o (fn x => ltd_tyc x handle DeconExn => bug "ltd_var")
+val ltd_dvar    : LT.lty -> index * int =
+    tcd_dvar o (fn x => ltd_tyc x handle DeconExn => bug "ltd_dvar")
 val ltd_prim   : LT.lty -> PT.primtyc =
     tcd_prim o (fn x => ltd_tyc x handle DeconExn => bug "ltd_prim")
 val ltd_tuple  : LT.lty -> LT.lty list =
@@ -357,8 +351,8 @@ val ltd_arrow  : LT.lty -> LT.fflag * LT.lty list * LT.lty list =
        end (* handle DeconExn => bug "ltd_arrow" *)
 
 (** tyc-lty predicates *)
-val ltp_var    : LT.lty -> bool = fn t =>
-  (case LK.lt_whnm_out t of LT.LT_TYC x => tcp_var x | _ => false)
+val ltp_dvar    : LT.lty -> bool = fn t =>
+  (case LK.lt_whnm_out t of LT.LT_TYC x => tcp_dvar x | _ => false)
 val ltp_prim   : LT.lty -> bool = fn t =>
   (case LK.lt_whnm_out t of LT.LT_TYC x => tcp_prim x | _ => false)
 val ltp_tuple  : LT.lty -> bool = fn t =>
@@ -367,10 +361,10 @@ val ltp_arrow  : LT.lty -> bool = fn t =>
   (case LK.lt_whnm_out t of LT.LT_TYC x => tcp_arrow x | _ => false)
 
 (** tyc-lty one-arm switches *)
-fun ltw_var (lt, f, g) =
+fun ltw_dvar (lt, f, g) =
   (case LK.lt_whnm_out lt
     of LT.LT_TYC tc =>
-         (case LK.tc_whnm_out tc of LT.TC_VAR x => f x | _ => g lt)
+         (case LK.tc_whnm_out tc of LT.TC_DVAR x => f x | _ => g lt)
      | _ => g lt)
 
 fun ltw_prim (lt, f, g) =

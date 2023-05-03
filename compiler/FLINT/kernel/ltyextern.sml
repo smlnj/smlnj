@@ -8,34 +8,28 @@ structure LtyExtern : LTYEXTERN =
 struct
 
 local
-  structure DI = DebIndex
   structure PT = PrimTyc
   structure LT = Lty
   structure LK = LtyKernel
   structure LD = LtyDef
   structure FR = FunRecMeta  (* fkind, rkind, CC_*, RK_*, LT_*, etc., formally defined here *)
-  structure LK = LtyKernel
   structure LB = LtyBasic
   structure LKC = LtyKindChk
   structure PO = Primop     (* really should not refer to this *)
-  structure PP = PrettyPrint
-  structure PU = PPUtil
+  structure PP = Formatting
+  structure PF = PrintFormat
 
-  val with_pp = PP.with_default_pp
-  val say = Control.Print.say
-
-  fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
   val wrdebugging = FLINT_Control.wrdebugging
+  fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
+
+  val say = Control.Print.say
   fun dbsay msg = if !wrdebugging then say msg else ()
 
 in
 
 (* open LtyBasic  (* FIXME -- don't include LtyBasic *) *)
 
-(* FIXME -- don't reexport these Lty values *)
-
-fun ppTyc tyc =
-    with_pp (fn ppstm => (PPLty.ppTyc 20 ppstm tyc))
+val ppTyc = PPLty.ppTyc 20
 
 val ltKindChk = LtyKindChk.ltKindCheckGen ()
 val (tcKindChk,tcKindVer,teKindChk) = LtyKindChk.tcteKindCheckGen ()
@@ -46,26 +40,14 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
    in case (LK.lt_whnm_out nt, ts)
         of (LT.LT_POLY(ks, b), ts) =>
              if length ks <> length ts
-             then (with_pp (fn ppstm =>
-                     (PU.pps ppstm "### arity error in lt_inst:\n|ks| = ";
-                      PU.ppi ppstm (length ks);
-                      PU.pps ppstm ", |ts| = "; PU.ppi ppstm (length ts);
-                      PP.newline ppstm;
-                      PU.pps ppstm "lt: ";
-                      PP.openHOVBox ppstm (PP.Rel 0);
-                      PPLty.ppLty 20 ppstm lt;
-                      PP.closeBox ppstm;
-                      PP.newline ppstm;
-                      PU.pps ppstm "nt: ";
-                      PP.openHOVBox ppstm (PP.Rel 0);
-                      PPLty.ppLty 20 ppstm nt;
-                      PP.closeBox ppstm;
-                      PP.newline ppstm;
-                      PU.pps ppstm "ts: ";
-                      PPLty.ppList ppstm
-                        {sep = ",",pp=PPLty.ppTyc 20}
-                        ts;
-                      PP.newline ppstm));
+             then (PF.printFormatNL
+		     (PP.vblock
+		       [PP.text "BUG LtyExtern.lt_inst: arity error",
+			PP.label "|ks| =" (PP.integer (length ks)),
+			PP.label "|ts| =" (PP.integer (length ts)),
+			PP.label "lt:" (PPLty.fmtLty 20 lt),
+			PP.label "nt:" (PPLty.fmtLty 20 nt),
+			PP.label "ts:" (PP.list (map (PPLty.fmtTyc 20) ts))]);
                    bug "lt_inst - arity mismatch")
              else
              let val nenv = LT.teCons(LT.Beta(0,ts,ks), LT.teEmpty)
@@ -74,18 +56,17 @@ fun lt_inst (lt : LT.lty, ts : LT.tyc list) =
              end
          | (_, []) => [nt]   (* this requires further clarifications !!! *)
          | (lt,ts) =>
-           (with_pp (fn ppstm =>
-              (PU.pps ppstm "lt_inst arg:"; PP.newline ppstm;
-               PPLty.ppLty 20 ppstm (LT.lt_inj lt); PP.newline ppstm;
-               PU.pps ppstm "ts length: ";
-               PU.ppi ppstm (length ts); PP.newline ppstm;
-               PU.pps ppstm "ts head: ";
-               PPLty.ppTyc 20 ppstm (hd ts); PP.newline ppstm));
+           (PF.printFormatNL
+	      (PP.vblock
+                 [PP.text "BUG LtyExtern.lt_inst: lt is not LT_POLY:",
+                  PP.label "lt_inst lt arg:" (PPLty.fmtLty 20 (LT.lt_inj lt)),
+                  PP.label "ts length:" (PP.integer (length ts)),
+                  PP.label "ts head:" (PPLty.fmtTyc 20 (hd ts))]);
             bug "incorrect lty instantiation in lt_inst")
   end
 
 fun lt_pinst (lt : LT.lty, ts : LT.tyc list) =
-  (case lt_inst (lt, ts) of [y] => y | _ => bug "unexpected lt_pinst")
+    (case lt_inst (lt, ts) of [y] => y | _ => bug "unexpected lt_pinst")
 
 exception LtyAppChk
 
@@ -182,10 +163,9 @@ fun lt_select(lty: LT.lty, i: int, whereCalled) =
 			 bug (concat ["tc_select: bad index into TC_TUPLE: i=",
 				      Int.toString i, ", |tycs| = ",
 				      Int.toString(length tycs), " [", whereCalled, "]"]))
-	       | _ => (with_pp
-			 (fn ppstm =>
-			     (PU.pps ppstm "LtyExtern.tc_select: expected TC_TUPLE; tyc = ";
-			      PPLty.ppTyc 20 ppstm tyc; PP.newline ppstm));
+	       | _ => (PF.printFormatNL
+			 (PP.vblock [PP.text "LtyExtern.tc_select: expected TC_TUPLE",
+			             PP.label "tyc =" (PPLty.fmtTyc 20 tyc)]);
 		       bug ("tc_select: bad tyc [" ^ whereCalled ^ "]")))
     in
       (case LK.lt_whnm_out lty
@@ -332,7 +312,7 @@ fun typeWrapGen () =
 	      | NONE =>
 		let val newtyc =
 		    (case (LK.tc_whnm_out tyc)
-		       of (LT.TC_VAR _ | LT.TC_NVAR _) => tyc
+		       of (LT.TC_DVAR _ | LT.TC_NVAR _) => tyc
 			| LT.TC_PRIM pt => if PT.unboxed pt then LD.tcc_wrap tyc else tyc
 			| LT.TC_FN (ks, tyc') => LD.tcc_fn (ks, tycWrap tyc') (* impossible case *)
 			| LT.TC_APP (tyc', tycs) => LD.tcc_app (tycWrap tyc', map tycWrap tycs)
@@ -366,7 +346,7 @@ fun typeWrapGen () =
 	     | NONE =>
 	       let val newtyc =
 		   (case (LK.tc_whnm_out tyc)
-		      of (LT.TC_VAR _ | LT.TC_NVAR _ | LT.TC_PRIM _) => tyc
+		      of (LT.TC_DVAR _ | LT.TC_NVAR _ | LT.TC_PRIM _) => tyc
 		       | LT.TC_FN (ks, tyc') => LD.tcc_fn(ks, tycUnwrap tyc') (* impossible case *)
 		       | LT.TC_APP (tyc', tycs) => LD.tcc_app(tycUnwrap tyc', map tycWrap tycs)
 		       | LT.TC_SEQ tycs => LD.tcc_seq(map tycUnwrap tycs)
@@ -446,7 +426,7 @@ fun tc_nvar_elim_gen () =
 			    else ();
 			    newtyc
 			 end
-                      | LT.TC_VAR _ => tyc   (* deBruijn type variable *)
+                      | LT.TC_DVAR _ => tyc   (* deBruijn type variable *)
                       | LT.TC_PRIM _ => tyc
                       | LT.TC_FN (tks, tyc') =>
                             LD.tcc_fn (tks, tc_nvar_elim find (depth+1) tyc')
@@ -486,9 +466,9 @@ in
 end
 
 (* lt_nvar_elim_gen : unit
-                      -> (tvar * DebIndex.depth -> tyc option)   (* find *)
-                      -> DebIndex.depth                          (* depth *)
-		      -> lty -> lty *)                           (* conversion *)
+                      -> (tvar * depth -> tyc option)  (* find *)
+                      -> int                           (* depth, deBruijn context *)
+		      -> lty -> lty *)                 (* conversion *)
 fun lt_nvar_elim_gen () =
 let val dict = ref (LtDict.empty)
     val tc_nvar_elim = tc_nvar_elim_gen()
@@ -574,7 +554,7 @@ fun tc_nvar_subst_gen () = let
                                  SOME t => t
                                | NONE => tyc
                                  )
-                      | LT.TC_VAR _ => tyc
+                      | LT.TC_DVAR _ => tyc
                       | LT.TC_PRIM _ => tyc
                       | LT.TC_FN (tks, t) =>
                             LD.tcc_fn (tks, loop t)
@@ -696,12 +676,12 @@ let val dict = ref (TcDict.empty)
 				case LK.tc_whnm_out tyc
 				  of LT.TC_NVAR tvar =>
 					(case searchSubst(tvar,tvoffs) of
-					     SOME i => LD.tcc_var (d, i)
+					     SOME i => LD.tcc_dvar (d, i)
 					   | NONE => tyc)
-				   | LT.TC_VAR _ => tyc
+				   | LT.TC_DVAR _ => tyc
 				   | LT.TC_PRIM _ => tyc
 				   | LT.TC_FN (tks, t) =>
-				       LD.tcc_fn (tks, tc_nvar_cvt tvoffs (DI.next d) t)
+				       LD.tcc_fn (tks, tc_nvar_cvt tvoffs (d + 1) t)
 				   | LT.TC_APP (t, ts) =>
 				       LD.tcc_app (r t, rs ts)
 				   | LT.TC_SEQ ts =>
@@ -766,7 +746,7 @@ fun lt_nvar_cvt_gen() = let
                             LD.ltc_fct (rs ts, rs ts')
                       | LT.LT_POLY (tks, ts) =>
                             LD.ltc_poly (tks,
-                                      map (lt_nvar_cvt tvoffs (DI.next d)) ts)
+                                      map (lt_nvar_cvt tvoffs (d + 1)) ts)
                       | LT.LT_CONT ts =>
                             LD.ltc_cont (rs ts)
                       | LT.LT_IND _ =>
@@ -795,7 +775,7 @@ fun lt_nvpoly(tvks, lt) =
 	val tvoffs = ListMergeSort.sort gt tvoffs
 
 	(* temporarily gen() *)
-	val ltSubst = lt_nvar_cvt_gen() tvoffs (DI.next DI.top) (* = 1 *)
+	val ltSubst = lt_nvar_cvt_gen() tvoffs 1   (* deBruijn context is 1 *)
     in LD.ltc_poly(ks, map ltSubst lt)
     end
 

@@ -15,7 +15,7 @@ signature SMLINFO = sig
     type complainer = ErrorMsg.complainer
     type ast = Ast.dec
     type region = SourceMap.region
-    type source = Source.inputSource
+    type source = Source.source
 
     type attribs =
 	{ is_rts: bool,
@@ -102,14 +102,16 @@ end
 
 structure SmlInfo :> SMLINFO = struct
 
-    structure Source = Source
+    structure SR = Source
+    structure SM = SourceMap
+    structure PPSM = PPSourceMap
     structure SF = SmlFile
     structure EM = ErrorMsg
     structure FNP = FilenamePolicy
 
-    type source = Source.inputSource
+    type source = SR.source
     type ast = Ast.dec
-    type region = SourceMap.region
+    type region = SM.region
 
     type complainer = EM.complainer
 
@@ -358,8 +360,7 @@ structure SmlInfo :> SMLINFO = struct
 			    else Say.vsay ["[parsing ",
 					   SrcPath.descr sourcepath, "]\n"]
 		    val source =
-			Source.newSource (SrcPath.osstring' sourcepath,
-					  stream, false, #errcons gp)
+			SR.newSource (SrcPath.osstring' sourcepath, stream, false)
 		in app (fn c => #set c ()) controllers;
 		   (SF.parse source, source)
 		   before app (fn r => r ()) orig_settings
@@ -426,11 +427,14 @@ structure SmlInfo :> SMLINFO = struct
 
     fun descr (INFO { sourcepath, ... }) = SrcPath.descr sourcepath
 
-    fun errorLocation (gp: GeneralParams.info) (INFO i) = let
-	val { persinfo = PERS { group = (group, reg), ... }, ... } = i
-    in
-	EM.matchErrorString (GroupReg.lookup (#groupreg gp) group) reg
-    end
+    (* errorLocation : GeneralParams.info -> info -> string *)
+    fun errorLocation (gp: GeneralParams.info) (INFO i) =
+	let val { persinfo = PERS { group = (group, region), ... }, ... } = i
+	    val source : SR.source = GroupReg.lookup (#groupreg gp) group
+	 in case SM.sourceRegion (source, region)
+	      of SOME sourceRegion => SM.sourceRegionToString sourceRegion
+	       | NONE => #fileOpened source
+	end
 
     fun guid (INFO { persinfo = PERS { guid = g, ... }, ... }) = g ()
 

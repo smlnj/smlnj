@@ -7,23 +7,27 @@
 structure ElabUtil : ELABUTIL =
 struct
 
-local structure SP = SymPath
-      structure LU = Lookup
-      structure A = Access
-      structure AS = Absyn
-      structure AU = AbsynUtil
-      structure B  = Bindings
-      structure SE = StaticEnv
-      structure EE = EntityEnv
-      structure T = Types
-      structure TU = TypesUtil
-      structure TS = TyvarSet
-      structure S = Symbol
-      structure V = Variable
-      structure BT = BasicTypes
+local (* top local *)
 
-      open Symbol Absyn Ast ErrorMsg PrintUtil AstUtil Types BasicTypes
-           EqTypes ModuleUtil TypesUtil Variable
+  structure SP = SymPath
+  structure LU = Lookup
+  structure A = Access
+  structure AS = Absyn
+  structure AU = AbsynUtil
+  structure B  = Bindings
+  structure SE = StaticEnv
+  structure EE = EntityEnv
+  structure T = Types
+  structure TU = TypesUtil
+  structure TS = TyvarSet
+  structure ET = EqTypes
+  structure S = Symbol
+  structure V = Variable
+  structure BT = BasicTypes
+  structure EM = ErrorMsg
+  structure PP = Formatting
+
+  open Absyn Ast
 
 in
 
@@ -50,7 +54,7 @@ datatype context
              (* within functor body *)
   | INSIG    (* within a signature body *)
 
-type compInfo = Absyn.dec CompInfo.compInfo
+type compInfo = CompInfo.compInfo
 
 fun mkVALvar(s, mkv) = V.mkVALvar(s, A.namedAcc(s, mkv))
 
@@ -116,18 +120,18 @@ val anonParamName = S.strSymbol "<AnonParam>"
 val bogusID = S.varSymbol "*bogus*"
 val bogusExnID = S.varSymbol "*Bogus*"
 
-val TRUEpat = CONpat(trueDcon,[])
-val TRUEexp = CONexp(trueDcon,[])
-val FALSEpat = CONpat(falseDcon,[])
-val FALSEexp = CONexp(falseDcon,[])
+val TRUEpat = CONpat (BT.trueDcon, nil)
+val TRUEexp = CONexp (BT.trueDcon, nil)
+val FALSEpat = CONpat (BT.falseDcon, nil)
+val FALSEexp = CONexp (BT.falseDcon, nil)
 
-val NILpat = CONpat(nilDcon,[])
-val NILexp = CONexp(nilDcon,[])
-val CONSpat = fn pat => APPpat(consDcon,[],pat)
-val CONSexp = CONexp(consDcon,[])
+val NILpat = CONpat (BT.nilDcon, nil)
+val NILexp = CONexp (BT.nilDcon, nil)
+val CONSpat = fn pat => APPpat (BT.consDcon, nil, pat)
+val CONSexp = CONexp (BT.consDcon, nil)
 
-val unitExp = AbsynUtil.unitExp
-val unitPat = RECORDpat{fields = nil, flex = false, typ = ref UNDEFty}
+val unitExp = AU.unitExp
+val unitPat = RECORDpat{fields = nil, flex = false, typ = ref T.UNDEFty}
 val bogusExp = VARexp(ref(V.mkVALvar(bogusID, A.nullAcc)), [])
 
 (* Verifies that all the elements of a list are unique *)
@@ -135,7 +139,7 @@ fun checkUniq (err,message,names) =
     let val names' = ListMergeSort.sort S.symbolGt names
 	fun check (x::y::rest) =
 	     (if S.eq(x,y)
-	      then err COMPLAIN (message ^ ": " ^ S.name x) nullErrorBody
+	      then err EM.COMPLAIN (message ^ ": " ^ S.name x) EM.nullErrorBody
 	      else ();
 	      check (y::rest))
 	  | check _ = ()
@@ -157,11 +161,11 @@ fun checkForbiddenCons symbol =
  * be merged with this.
  *)
 fun bindVARp (patlist,err) =
-    let val vl = ref (nil: symbol list)
+    let val vl = ref (nil: S.symbol list)
 	val env = ref(SE.empty: SE.staticEnv)
-	fun f (VARpat(v as VALvar{path=SP.SPATH[name],...})) =
+	fun f (VARpat(v as V.VALvar{path=SP.SPATH[name],...})) =
 	       (if S.eq(name, EQUALsym)
-		then err WARN "rebinding \"=\" is not allowed" nullErrorBody
+		then err EM.WARN "rebinding \"=\" is not allowed" EM.nullErrorBody
 		else ();
 		env := SE.bind(name,B.VALbind v,!env);
 		vl := name :: !vl)
@@ -199,10 +203,6 @@ fun makeRECORDexp(fields,err) =
      in assign(0, sortRecord(fields',err)); RECORDexp(f(0,fields'))
     end
 
-val TUPLEexp = AbsynUtil.TUPLEexp
-
-val TUPLEpat = AbsynUtil.TUPLEpat
-
 fun varToExp var = VARexp (ref var, [])
 
 (* FUNdec : {var : V.var,  -- name of the (recursive) function
@@ -219,16 +219,16 @@ fun FUNdec (fundecs, compInfo as {mkLvar=mkv, ...}: compInfo) =
 		fun not1(f,[a]) = a
 		  | not1(f,l) = f l
 		fun clauseToRule {pats,exp,resultty=NONE} =
-			      RULE(not1(TUPLEpat,pats), exp)
+			      RULE (not1 (AU.mkTuplePat, pats), exp)
 		  | clauseToRule {pats,exp,resultty=SOME ty} =
-			      RULE(not1(TUPLEpat,pats),CONSTRAINTexp(exp,ty))
+			      RULE (not1 (AU.mkTuplePat, pats), CONSTRAINTexp(exp,ty))
 
 		fun buildFnExp [var] =
-                      FNexp (map clauseToRule clauses, UNDEFty, UNDEFty)
+                      FNexp (map clauseToRule clauses, T.UNDEFty, T.UNDEFty)
 		  | buildFnExp vars =
-                      foldr (fn (w,e) => FNexp([RULE(VARpat w, e)], UNDEFty, UNDEFty))
-			    (CASEexp(TUPLEexp (map varToExp vars),
-				     (map clauseToRule clauses, UNDEFty, UNDEFty)))
+                      foldr (fn (w,e) => FNexp([RULE(VARpat w, e)], T.UNDEFty, T.UNDEFty))
+			    (CASEexp (AU.mkTupleExp (map varToExp vars),
+				      (map clauseToRule clauses, T.UNDEFty, T.UNDEFty)))
 			    vars
 		val exp0 = buildFnExp argVars
 		val exp = if !ElabControl.markabsyn then MARKexp (exp0, region) else exp0
@@ -252,20 +252,20 @@ fun pat_id (spath, env, err, compInfo as {mkLvar=mkv, ...}: compInfo) =
 		* a data constructor *)
 	   (case LU.lookIdPath (env, spath, err)
 	      of AS.CON dcon => SOME (CONpat (dcon,[]))  (* producing a constant datacon pattern *)
-	       | _ => (err COMPLAIN
+	       | _ => (err EM.COMPLAIN
 			 ("undefined constructor path in pattern: " ^ SymPath.toString spath)
-			 nullErrorBody;
+			 EM.nullErrorBody;
 		       NONE))
 
 fun makeRECORDpat(l,flex,err) =
-    RECORDpat{fields=sortRecord(l,err), flex=flex, typ=ref UNDEFty}
+    RECORDpat{fields=sortRecord(l,err), flex=flex, typ=ref T.UNDEFty}
 
-fun clean_pat err (CONpat(DATACON{const=false,name,...},_)) =
-      (err COMPLAIN ("data constructor "^S.name name^
-		     " used without argument in pattern")
-         nullErrorBody;
+fun clean_pat err (CONpat (T.DATACON{const=false,name,...},_)) =
+      (err EM.COMPLAIN
+	   ("data constructor " ^ S.name name ^ " used without argument in pattern")
+           EM.nullErrorBody;
        WILDpat)
-  | clean_pat err (p as CONpat(DATACON{lazyp=true,...},_)) =
+  | clean_pat err (p as CONpat (T.DATACON{lazyp=true,...},_)) =
       APPpat(BT.dollarDcon,[],p) (* LAZY *) (* second argument = nil OK? *)
   | clean_pat err (MARKpat(p,region)) = MARKpat(clean_pat err p, region)
   | clean_pat err p = p
@@ -273,8 +273,8 @@ fun clean_pat err (CONpat(DATACON{const=false,name,...},_)) =
 (* patToString : pat -> string
  *   -- not exported, used once in makeAppPat error message *)
 fun patToString WILDpat = "_"
-  | patToString (VARpat(VALvar{path,...})) = SP.toString path
-  | patToString (CONpat(DATACON{name,...},_)) = S.name name
+  | patToString (VARpat (V.VALvar{path,...})) = SP.toString path
+  | patToString (CONpat (T.DATACON{name,...},_)) = S.name name
   | patToString (NUMpat(src, _)) = src
   | patToString (STRINGpat s) = concat["\"", String.toString s, "\""]
   | patToString (CHARpat c) = concat["#\"", Char.toString c, "\""]
@@ -295,17 +295,17 @@ fun makeAPPpat err (CONpat(d as DATACON{const=false,lazyp,...},tvs),p) =
           else p1
       end
   | makeAPPpat err (CONpat(d as DATACON{name,...},_),_) =
-      (err COMPLAIN
+      (err EMCOMPLAIN
         ("constant constructor applied to argument in pattern:"
 	 ^ S.name name)
-         nullErrorBody;
+         EM.nullErrorBody;
        WILDpat)
   | makeAPPpat err (MARKpat(rator,region),p) =
       MARKpat(makeAPPpat err (rator,p), region)
   | makeAPPpat err (rator,_) =
-      (err COMPLAIN (concat["non-constructor applied to argument in pattern: ",
+      (err EM.COMPLAIN (concat["non-constructor applied to argument in pattern: ",
 			     patToString rator])
-         nullErrorBody;
+           EM.nullErrorBody;
        WILDpat)
 *)
 
@@ -316,7 +316,7 @@ fun makeLAYEREDpat ((x as VARpat _), y, _) = LAYEREDpat(x,y)
   | makeLAYEREDpat (MARKpat(CONSTRAINTpat(x,t),reg), y, err) =
       makeLAYEREDpat(MARKpat(x,reg), CONSTRAINTpat(y,t), err)
   | makeLAYEREDpat (x,y,err) =
-      (err COMPLAIN "pattern to left of \"as\" must be variable" nullErrorBody;
+      (err EM.COMPLAIN "pattern to left of \"as\" must be variable" EM.nullErrorBody;
        y)
 
 (* fillPat : AS.pat -> AS.pat *)
@@ -373,7 +373,7 @@ fun aconvertPat (pat: AS.pat) : Absyn.pat * V.var list * V.var list =
 	fun mappat (VARpat var) =
               let val lvar = V.varToLvar var
 		  fun find ((oldvar, newvar)::rest) =
-                        if varToLvar oldvar = lvar then newvar else find rest
+                        if V.varToLvar oldvar = lvar then newvar else find rest
 		    | find nil =
 		        let val (newvar, _) = V.replaceLvar var
 			 in varmap := (var, newvar) :: !varmap;
@@ -402,15 +402,13 @@ fun aconvertPat (pat: AS.pat) : Absyn.pat * V.var list * V.var list =
 
 (* checkBoundTyvars: check whether the tyvars appearing in a type (used) are
    bound (as parameters in a type declaration) *)
-fun checkBoundTyvars(used,bound,err) =
+fun checkBoundTyvars (used, bound, err) =
     let val boundset =
-              foldr (fn (v,s) => TS.union(TS.singleton v,s,err))
-	        TS.empty bound
-	fun nasty(ref(INSTANTIATED(VARty v))) = nasty v
-	  | nasty(ubound as ref(UBOUND _)) =
-	     err COMPLAIN ("unbound type variable in type declaration: " ^
-			   (PPType.tyvarPrintname ubound))
-		 nullErrorBody
+              foldr (fn (v,s) => TS.union(TS.singleton v,s,err)) TS.empty bound
+	fun nasty (ref (T.INSTANTIATED (T.VARty v))) = nasty v
+	  | nasty (ubound as ref(T.UBOUND _)) =
+	      err EM.COMPLAIN "unbound type variable in type declaration: "
+		  (PP.text (PPType.tyvarToString ubound))
 	  | nasty _ = bug "checkBoundTyvars"
      in app nasty (TS.elements(TS.diff(used, boundset, err)))
     end
@@ -424,13 +422,13 @@ exception IsRec
  * This is used in elabMod when elaborating LOCALdec as a cheap
  * approximate check of whether a declaration contains any functor
  * declarations. *)
-fun hasModules(StrDec _) = true
-  | hasModules(FctDec _) = true
-  | hasModules(LocalDec(dec_in,dec_out)) =
+fun hasModules (StrDec _) = true
+  | hasModules (FctDec _) = true
+  | hasModules (LocalDec(dec_in,dec_out)) =
       hasModules dec_in orelse hasModules dec_out
-  | hasModules(SeqDec decs) =
+  | hasModules (SeqDec decs) =
       List.exists hasModules decs
-  | hasModules(MarkDec(dec,_)) = hasModules dec
+  | hasModules (MarkDec(dec,_)) = hasModules dec
   | hasModules _ = false
 
 end (* top-level local *)

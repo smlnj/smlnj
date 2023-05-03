@@ -17,7 +17,6 @@ local
   structure A  = Access
   structure LV = LambdaVar
   structure LE = LtyExtern
-  structure DI = DebIndex
   structure PT = PrimTyc
   structure LT = Lty
   structure FR = FunRecMeta
@@ -381,7 +380,7 @@ fun lift (e, env, td, d, ad, rename) =
 	   (case d of
 	       0 =>
 		   let
-		       val (e1', nt', fv', hd') = lift(e1, env, DI.next td, d, ad, true)
+		       val (e1', nt', fv', hd') = lift(e1, env, (td + 1), d, ad, true)
 		       val ks = map (fn (t,k) => k) tvs
 		       val nt = LD.ltc_poly(ks, nt')
 
@@ -396,7 +395,7 @@ fun lift (e, env, td, d, ad, rename) =
 	     | _ =>
 		   let
 		       val env' = pushFenv(env)
-		       val (e1', nt', fvs, hd) = lift(e1, env', DI.next td, d, DI.next ad, true)
+		       val (e1', nt', fvs, hd) = lift(e1, env', (td + 1), d, (ad + 1), true)
 		       val freevars = getFreeVar(fvs, env')
 		       val ks = map (fn (t,k) => k) tvs
 		       val nt = LD.ltc_poly(ks, nt')
@@ -512,7 +511,7 @@ fun lift (e, env, td, d, ad, rename) =
 		       else
 			   ()
 	       val _ = addEnv(env, vs, ts, nil, td, 0, NOABS)
-	       val (e', nt', fvs', hd') = loope(e1, env, 0, DI.next ad)
+	       val (e', nt', fvs', hd') = loope(e1, env, 0, (ad + 1))
 	       val nt = LE.ltc_fkfun(fkfct, ts, nt')
 	       val _ = addEnv(env, [v], [nt], fvs', td, 0, NOABS)
 	       val (e'', nt'', fvs'', hd'') = loope(e2, env, d, ad)
@@ -525,8 +524,8 @@ fun lift (e, env, td, d, ad, rename) =
 	       let
 		   val vs = map #1 lvs
 		   val ts = map #2 lvs
-		   val _ = addEnv(env, vs, ts, nil, td, DI.next d, ABS)
-		   val (e', nt', fvs', hd') = loope(e1, env, DI.next d, DI.next ad)
+		   val _ = addEnv(env, vs, ts, nil, td, (d + 1), ABS)
+		   val (e', nt', fvs', hd') = loope(e1, env, (d + 1), (ad + 1))
 		   val nt = LE.ltc_fkfun(fk, ts, nt')
 		   val abs = if d > 0 then true else false
 		   val _ = addEnv(env, [v], [nt], fvs', td, d, ABS)
@@ -542,14 +541,14 @@ fun lift (e, env, td, d, ad, rename) =
 		   val vs = map (#1) lvs
 		   val ts = map (#2) lvs
 		   val _ = addEnv(env, [v], [LE.ltc_fkfun(fk, ts, rts)], nil,
-td, DI.next d, ABS)
-		   val _ = addEnv(env, vs, ts, nil, td, DI.next d, ABS)
-		   val (e', nt', fvs', hd') = loope(e1, env, DI.next d, DI.next ad)
+				  td, (d + 1), ABS)
+		   val _ = addEnv(env, vs, ts, nil, td, (d + 1), ABS)
+		   val (e', nt', fvs', hd') = loope(e1, env, (d + 1), (ad + 1))
 
 		   (* Check to see that the new value is inserted *)
 
 		   val _ = addEnv(env, [v], [LE.ltc_fkfun(fk, ts, rts)], nil,
-td, d, ABS)
+				  td, d, ABS)
 		   (* The depth is changed for correct behaviour *)
 
 		   val (e'', nt'', fvs'', hd'') = loope(e2, env, d, ad)
@@ -567,12 +566,12 @@ td, d, ABS)
 		 | h d fk = bug "unexpected non-recursive fkind in loop"
 	       fun g((fk, f, lvs, e):fundec) =
 		   let
-		       val _ = addEnv(env, map #1 lvs, map #2 lvs, nil, td, DI.next d, ABS)
-		       val (e', nt', fvs', hd') = loope(e, env, DI.next d, DI.next ad)
+		       val _ = addEnv(env, map #1 lvs, map #2 lvs, nil, td, (d + 1), ABS)
+		       val (e', nt', fvs', hd') = loope(e, env, (d + 1), (ad + 1))
 		   in
 		       ( (fk, f, lvs, e'), [LE.ltc_fkfun(fk, map #2 lvs, nt')], fvs', hd')
 		   end
-	       val _ = map (h (DI.next d)) fds
+	       val _ = map (h (d + 1)) fds
 	       val rets = map g fds
 	       val (fds, nts, fvs, hds) = foldr comb (nil,nil,nil,nil) rets
 
@@ -597,9 +596,9 @@ fun typeLift fdec:fundec =
 	    (fk as {cconv = FR.CC_FCT, ...}, v, vts, e) =>
 		let
 		    val env = initInfoEnv()
-		    val d = 0 (* DI.top ?? *)
-		    val td = 0 (* DI.top ?? *)
-		    val ad = 0 (* DI.top ?? *)
+		    val d =  0 (* deBruijn context *)
+		    val td = 0 (* ditto *)
+		    val ad = 0 (* ditto *)
 		    val rename = false
 		    val vs = map #1 vts
 		    val ts = map #2 vts

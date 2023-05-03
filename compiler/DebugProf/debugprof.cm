@@ -4,6 +4,7 @@
  * All rights reserved.
  *
  * Debugging and profiling instrumentation phases.
+ * Redirected as Library in $smlnj/viscomp/debugprof.cm
  *)
 
 Group

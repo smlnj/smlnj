@@ -3,8 +3,10 @@
 
 signature SPROF =
 sig
-  val instrumDec : StaticEnv.staticEnv * Absyn.dec CompInfo.compInfo ->
-                     Source.inputSource -> Absyn.dec -> Absyn.dec
+  val instrumDec : StaticEnv.staticEnv * CompInfo.compInfo
+		   -> Source.source
+		   -> Absyn.dec
+		   -> Absyn.dec
 
 end (* signature SPROF *)
 
@@ -13,12 +15,12 @@ structure SProf :> SPROF = struct
 
 (*
  * WARNING: THE MAIN CODE IS CURRENTLY TURNED OFF;
- *     we will merge in Chesakov's SProf in the future (ZHONG).
+ *     we will merge in Chesakov's SProf in the future (ZHONG).  -- not likely! (DBM).
  *)
 
-fun instrumDec (env,
-		compInfo as {mkLvar, ...} : Absyn.dec CompInfo.compInfo)
-	       source absyn = absyn
+fun instrumDec (env: StaticEnv.staticEnv, compInfo : CompInfo.compInfo) 
+               (source: Source.source) (absyn: Absyn.dec) =
+    absyn
 
 end
 

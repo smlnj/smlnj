@@ -31,8 +31,10 @@ local
   structure LE = LtyExtern
   structure LV = LambdaVar
   structure DA = Access
-  structure DI = DebIndex
-  structure PF = PrintFlint
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure PPT = PPLty
+  structure PPF = PPFlint
   structure PO = Primop
   structure S  = LV.Set
   structure PL = PLambda
@@ -40,7 +42,13 @@ local
 
 fun bug s = ErrorMsg.impossible ("ChkFlint: "^s)
 val say = Control_Print.say
+val printDepth = Control_Print.printDepth
+
 val anyerror = ref false
+
+(* deBruijn index of TC_DVAR *)
+type depth = int
+val top : depth = 0
 
 (****************************************************************************
  *                         BASIC UTILITY FUNCTIONS                          *
@@ -75,22 +83,15 @@ fun simplify (le,0) = RET [STRING "<...>"]
             | _ => le
       end (* end of simplify *)
 
-(** utility functions for printing *)
-val tkPrint = say o LB.tk_print
-val tcPrint = say o LB.tc_print
-val ltPrint = say o LB.lt_print
-fun lePrint le = PF.printLexp (simplify (le, 3))
-val svPrint = PF.printValue
-
-(* error : lexp * (unit -> 'a) -> 'a *)
+(* error : FLINT.lexp * (unit -> 'a) -> 'a *)
 fun error (le, errfn) =
     (anyerror := true;
      say "\n************************************************************\
          \\n**** FLINT type checking failed: ";
-     errfn () before (say "\n** term:\n"; lePrint le))
+     errfn () before (say "\n** term:\n"; PPF.ppLexpLimited 3 le))
 
-(* errMsg : lexp * string * 'a -> 'a *)
-fun errMsg (le,s,r) = error (le, fn () => (say s; r))
+(* errMsg : FLINT.lexp * string * 'a -> 'a *)
+fun errMsg (le, s, r) = error (le, fn () => (say s; r))
 
 fun catchExn f (le,g) =
   f () handle ex => error
@@ -126,7 +127,7 @@ fun check phase envs lexp = let
       (LB.ltc_string, LB.ltc_exn, LB.ltc_etag, LD.ltc_tyc o LB.tcc_vector,
        LD.ltc_tyc o LD.tcc_box, LB.ltc_bool)
 
-  fun prMsgLt (s,lt) = (say s; ltPrint lt)
+  fun prMsgLty (s,lt) = (say s; PPT.ppLty (!printDepth) lt)
 
   fun prList f s t = let
     val rec loop =
@@ -135,21 +136,27 @@ fun check phase envs lexp = let
       | x::xs => (f x; say "\n* and\n"; loop xs)
     in say s; loop t end
 
-  fun print2Lts (s,s',lt,lt') = (prList ltPrint s lt; prList ltPrint s' lt')
+  fun fmtLtys (s, ltys) = 
+      PP.vblock [PP.text s,
+	       PP.indent 2 (PP.vsequence PP.comma (map (PPT.fmtLty 100) ltys))]
+
+  fun print2Lists (s,s',ltys,ltys') =
+      PF.printFormat
+	(PP.vblock [fmtLtys (s, ltys), fmtLtys (s', ltys')])
 
   fun ltMatch (le,s) (t,t') =
     if ltEquiv (t,t') then ()
     else error
       (le, fn () =>
-	      (prMsgLt (s ^ ": Lty conflict\n** types:\n", t);
-	       prMsgLt ("\n** and\n", t')))
+	      (prMsgLty (s ^ ": Lty conflict\n** types:\n", t);
+	       prMsgLty ("\n** and\n", t')))
 
   fun ltsMatch (le,s) (ts,ts') =
     foldl2 (fn (t,t',_) => ltMatch (le,s) (t,t'),
 	    (), ts, ts',
 	    fn (_,_,n,n') => error
 	       (le,
-		fn () => print2Lts
+		fn () => print2Lists
 	          (concat [s, ": type list mismatch (", Int.toString n, " vs ",
 			   Int.toString n', ")\n** expected types:\n"],
 		   "** actual types:\n",
@@ -161,7 +168,7 @@ fun check phase envs lexp = let
         (fn () => let val (xs,ys) = opr (LE.ltd_fkfun t)
                    in ltsMatch (le,s) (xs,ts); ys
                   end)
-	(le, fn () => (prMsgLt (s ^ msg ^ "\n** type:\n", t); []))
+	(le, fn () => (prMsgLty (s ^ msg ^ "\n** type:\n", t); []))
   in
   fun ltFnApp (le,s) =
       ltFnAppGen (fn x => x) (le,s,": Applying term of non-arrow type")
@@ -169,14 +176,19 @@ fun check phase envs lexp = let
       ltFnAppGen (fn (x,y) => (y,x)) (le,s,": Rev-app term of non-arrow type")
   end
 
-  fun ltTyApp (le,s) (lt,ts,kenv) =
+  fun ltTyApp (le, s) (lt, ts, kenv) =
     catchExn
       (fn () => ltTAppChk (lt,ts,kenv))
       (le,
-       fn () =>
-	  (prMsgLt (s ^ ": Kind conflict\n** function Lty:\n", lt);
-	   prList tcPrint "\n** argument Tycs:\n" ts;
-	   []))
+       (fn () =>
+	  (PF.printFormatNL
+	     (PP.vblock
+		  [PP.text (s ^ ": Kind conflict"),
+		   PP.hblock [PP.text "** function Lty:",
+			    PPT.fmtLty 100 lt],
+		   PP.hblock [PP.text "** argument Tycs:",
+			    PP.list (map (PPT.fmtTyc 100) ts)]]);
+	   nil)))
 
   fun ltArrow (le,s) (cconv,alts,rlts) =
     (case cconv
@@ -186,13 +198,13 @@ fun check phase envs lexp = let
              (fn () => LD.ltc_arrow (raw,alts,rlts))
              (le,
               fn () =>
-              (print2Lts
+              (print2Lists
    	        (s ^ ": deeply polymorphic non-functor\n** parameter types:\n",
   	         "** result types:\n",
 	         alts, rlts);
 	      LB.ltc_void))))
 
-  (* typeInEnv : LD.tkindEnv * LB.ltyEnv * DI.depth -> lexp -> lty list *)
+  (* typeInEnv : LD.tkindEnv * LB.ltyEnv * depth -> lexp -> lty list *)
   fun typeInEnv (kenv,venv,d) = let
     fun extEnv (lv,lt,ve) = LB.ltInsert (ve,lv,lt,d)
     fun bogusBind (lv,ve) = extEnv (lv,LB.ltc_void,ve)
@@ -325,7 +337,7 @@ fun check phase envs lexp = let
 	| TFN ((tfk,lv,tks,e), e') => let
             fun getkind (tv,tk) = (lvarDef le tv; tk)
 	    val ks = map getkind tks
-	    val lts = typeInEnv (LT.tkInsert (kenv,ks), venv, DI.next d) e
+	    val lts = typeInEnv (LT.tkInsert (kenv,ks), venv, d + 1) e
 	    in
                 lvarDef le lv;
                 typeWith (lv, LD.ltc_poly (ks,lts)) e'
@@ -382,7 +394,7 @@ fun check phase envs lexp = let
 			in
 			  if LD.ltp_fct t orelse LD.ltp_poly t then
 			    error (le, fn () =>
-			        prMsgLt
+			        prMsgLty
 				  ("RECORD: poly type in mono record:\n",t))
 			  else ();
 			  t
@@ -449,17 +461,6 @@ fun check phase envs lexp = let
               lvarDef le lv;
               typeWithBindingToSingleRsltOfInstAndApp ("PRIMOP",lt,ts,vs,lv) e
           end
-(*
-	| GENOP (dict, (_,lt,ts), vs, lv, e) =>
-	  (* verify dict ? *)
-	  typeWithBindingToSingleRsltOfInstAndApp ("GENOP",lt,ts,vs,lv) e
-	| ETAG (t,v,lv,e) =>
-	  matchAndTypeWith ("ETAG", v, ltString, ltEtag (LD.ltc_tyc t), lv, e)
-	| WRAP (t,v,lv,e) =>
-	  matchAndTypeWith ("WRAP", v, LD.ltc_tyc t, ltWrap t, lv, e)
-	| UNWRAP (t,v,lv,e) =>
-	  matchAndTypeWith ("UNWRAP", v, ltWrap t, LD.ltc_tyc t, lv, e)
-*)
       end
     in typeof end
 
@@ -475,8 +476,8 @@ in (* loplevel local *)
  *  MAIN FUNCTION --- val checkTop : FLINT.fundec * typsys -> bool          *
  ****************************************************************************)
 fun checkTop ((fkind, v, args, lexp) : fundec, phase: typsys) = let
-  val ve = foldl (fn ((v,t), ve) => LB.ltInsert (ve,v,t,DI.top)) LB.initLtyEnv args
-  val err = check phase (LT.initTkEnv, ve, DI.top) lexp
+  val ve = foldl (fn ((v,t), ve) => LB.ltInsert (ve,v,t,top)) LB.initLtyEnv args
+  val err = check phase (LT.initTkEnv, ve, top) lexp
   val err = case fkind
      of {cconv=FR.CC_FCT,...} => err
       | _ => (say "**** Not a functor at top level\n"; true)
@@ -489,7 +490,7 @@ val checkTop =
  *  MAIN FUNCTION --- val checkExp : FLINT.lexp * typsys -> bool            *
  *  (currently unused?)                                                     *
  ****************************************************************************)
-fun checkExp (le,phase) = check phase (LT.initTkEnv, LB.initLtyEnv, DI.top) le
+fun checkExp (le,phase) = check phase (LT.initTkEnv, LB.initLtyEnv, top) le
 
 end (* toplevel local *)
 end (* structure ChkFlint *)

@@ -1,5 +1,4 @@
-(* FLINT/trans/andor.sml *)
-(* revmc: revised "old" match compiler *)
+(* Elaborator/matchcomp/andor.sml *)
 
 (* Translate proto-andor trees (protoAndor) to full andor trees. This involves
  *  (1) adding an id field with an unique nodeId number that identifies the node.
@@ -18,8 +17,14 @@ struct
 
 local
   structure AS = Absyn
+  structure AU = AbsynUtil
   structure P = Paths
-  structure PP = PrettyPrint
+  structure T = Types
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure PPT = PPType
+  structure PPMC = PPMatchComp
+
   open MCCommon
 
   val debugging = MCControl.mcdebugging
@@ -31,11 +36,13 @@ local
   fun saynl msg = (say msg; newline())
   fun says strings = saynl (concat strings)
 
-  fun ppCon con =
-      PP.with_default_pp (fn ppstrm => MCPrint.ppCon ppstrm con)
+  (* ppCon : AS.con -> unit *)
+  fun ppCon (con: AS.con) =
+      say (AU.conToString con)
 
-  fun ppRules rules =
-      PP.with_default_pp (fn ppstrm => MCPrint.ppRuleset ppstrm rules)
+  (* ppRules : ruleset -> unit *)
+  fun ppRules (rules: ruleset) =
+      PF.printFormatNL (PPMC.fmtRuleset rules)
 
 in
 
@@ -93,8 +100,7 @@ let
 	       let val id = newId ()
 		   fun folder (n, pandor, andors) =
 		         translateAndor (live, P.addLinkR(P.PI n, rpath)) pandor :: andors
-		in AND {id = id,
-			children = List.foldli folder nil children}
+		in AND {id = id, children = List.foldli folder nil children}
 	       end
 	   | ORp {varRules, cases, sign} =>
 	       let val id = newId ()

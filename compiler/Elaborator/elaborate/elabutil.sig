@@ -12,7 +12,7 @@ sig
              (* predicate recognizing flexible stamps *)
     | INSIG  (* within a signature body *)
 
-  type compInfo = Absyn.dec CompInfo.compInfo
+  type compInfo = CompInfo.compInfo
 
   val debugging : bool ref
   val for : 'a list -> ('a -> unit) -> unit
@@ -37,8 +37,6 @@ sig
   val NILpat : Absyn.pat
   val TRUEexp : Absyn.exp
   val TRUEpat : Absyn.pat
-  val TUPLEexp : Absyn.exp list -> Absyn.exp
-  val TUPLEpat : Absyn.pat list -> Absyn.pat
   val unitExp : Absyn.exp
   val unitPat : Absyn.pat
   val bogusExp: Absyn.exp
@@ -82,7 +80,7 @@ sig
                   resultty: Types.ty option,
                   exp: Absyn.exp} list,
         tyvars: Types.tyvar list ref,
-	region: Ast.region } list
+	region: SourceMap.region } list
        * compInfo -> Absyn.dec (* * StaticEnv.staticEnv *)
 
   val labsym : Absyn.numberedLabel -> Symbol.symbol

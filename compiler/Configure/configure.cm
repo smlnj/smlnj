@@ -1,0 +1,40 @@
+(* compiler/Configure/configure.cm *)
+
+Library
+
+(* ------------------------------- Exports ------------------------------- *)
+
+structure Endianess
+signature TARGET
+structure Target
+
+is
+(* ------------------------------- Members ------------------------------- *)
+
+#if defined(TARGET_BIG_ENDIAN)
+        compiler/endianess-big.sml
+#elif defined(TARGET_LITTLE_ENDIAN)
+        compiler/endianess-little.sml
+        (* falling back on host-specific endianness spec *)
+#elif defined(BIG_ENDIAN)
+	compiler/endianess-big.sml
+#else
+	compiler/endianess-little.sml
+#endif
+
+#if defined(TARGET_SIZE_32)
+        compiler/target32.sml
+#elif defined(TARGET_SIZE_64)
+        compiler/target64.sml
+        (* falling back on host-specific size spec *)
+#elif defined(SIZE_32)
+	compiler/target32.sml
+#else
+	compiler/target64.sml
+#endif
+
+
+(* ------------------------------- Imports ------------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm

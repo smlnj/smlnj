@@ -55,17 +55,17 @@ structure CheckUnused : sig
 	    "}\n"
 	  ])
 
-    fun check err = let
-	  fun warning (region, V.VALvar{path, access, ...}) =
+    fun check err =
+	let fun warning (region, V.VALvar{path, access, ...}) =
 		err region ErrorMsg.WARN (concat [
 		    "variable ", Symbol.name (SymPath.first path),
 		    " is defined but not used"
 		  ]) ErrorMsg.nullErrorBody
-	    | warning _ = () (* should never happen *)
-	(* compute the local variables used by an expression and also check any
-	 * nested declarations.
-	 *)
-	  fun chkExp (region, e, used) = (case e
+	      | warning _ = () (* should never happen *)
+	   (* compute the local variables used by an expression and also check any
+	    * nested declarations. *)
+	    fun chkExp (region, e, used) =
+		(case e
 		 of A.VARexp(ref x, _) => VSet.add(used, x)
 		  | A.CONexp _ => used
 		  | A.NUMexp _ => used

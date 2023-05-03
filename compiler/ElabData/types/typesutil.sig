@@ -182,6 +182,9 @@ sig
   (* given an instance, ty, of the range of a dcon, returns corresponding
    * instance of the domain of the dcon *)
 
+  val isRecordTy : Types.ty -> bool
+  (* determines whether ty is a record type *)
+
   val destructRecordTy : Types.ty -> Types.ty list
   (* returns the field types (in canonical order) of a record type (-> void in FLINT) *)
 

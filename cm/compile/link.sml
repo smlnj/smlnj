@@ -1,10 +1,10 @@
-(*
+(* cm/compile/link.sml
  * Link traversals.
  *   - manages shared state
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure GP = GeneralParams
@@ -12,7 +12,7 @@ local
     structure GG = GroupGraph
     structure DE = DynamicEnv
     structure EM = ErrorMsg
-    structure PP = PrettyPrint
+    structure PP = Formatting
 
     type env = DynamicEnv.env
     type posmap = env IntMap.map
@@ -114,14 +114,10 @@ in
 	    val { exports, grouppath, ... } = grec
 
 	    fun exn_err (msg, error, descr, exn) = let
-		fun ppb pps =
-		    (PP.newline pps;
-		     PP.string pps (General.exnMessage exn);
-		     app (fn s => PP.string pps (s ^ "\n"))
-			 (SMLofNJ.exnHistory exn);
-		     PP.newline pps)
+		val errorBody =
+		     PP.vblock (map PP.text (General.exnMessage exn :: (SMLofNJ.exnHistory exn)))
 	    in
-		error (concat [msg, " ", descr]) ppb;
+		error (concat [msg, " ", descr]) errorBody;
 		raise Link exn
 	    end
 

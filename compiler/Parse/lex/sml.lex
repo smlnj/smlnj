@@ -31,8 +31,11 @@
  * ml-lex's parser is broken.
  *)
 
-open ErrorMsg;
-open UserDeclarations;
+structure EM = ErrorMsg;
+structure UD = UserDeclarations;
+
+type arg = UD.arg
+type pos = UD.pos
 
 structure TokTable = TokenTable(Tokens);
 
@@ -65,17 +68,6 @@ end (* local *)
 (* strip "_" out of real literal *)
 fun stripReal s = String.translate (fn #"_" => "" | c => str c) s
 
-fun mysynch (srcmap, initpos, pos, args) =
-    let fun cvt digits = getOpt(Int.fromString digits, 0)
-	val resynch = SourceMap.resynch srcmap
-     in case args
-          of [col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, NONE)
-           | [file, col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, SOME file)
-           | _ => impossible "ill-formed args in (*#line...*)"
-    end
-
 fun has_quote s =
     let fun loop i = ((String.sub(s,i) = #"`") orelse loop (i+1))
 	             handle _ => false
@@ -90,7 +82,7 @@ fun dec (ri as ref i) = (ri := i-1)
 %header (functor SMLLexFun (structure Tokens : SML_TOKENS));
 %arg ({
   comLevel,
-  sourceMap,
+  source,
   err,
   charlist,
   stringstart,
@@ -119,7 +111,7 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
 %%
 
 <INITIAL>{ws}	=> (continue());
-<INITIAL>{eol}	=> (SourceMap.newline sourceMap yypos; continue());
+<INITIAL>{eol}	=> (Source.newline (source, yypos); continue());
 <INITIAL>"_overload" => (if !ParserControl.overloadKW then
                              Tokens.OVERLOAD(yypos,yypos+1)
                          else REJECT());
@@ -159,8 +151,8 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
                                   charlist := [];
                                   Tokens.BEGINQ(yypos,yypos+1))
                             else (err(yypos, yypos+1)
-                                     COMPLAIN "quotation implementation error"
-				     nullErrorBody;
+                                     EM.COMPLAIN "quotation implementation error"
+				     EM.nullErrorBody;
                                   Tokens.BEGINQ(yypos,yypos+1)));
 
 <INITIAL>{real}
@@ -193,124 +185,122 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
 <INITIAL>"(*#line"{nrws}  =>
                    (YYBEGIN L; stringstart := yypos; comLevel := 1; continue());
 <INITIAL>"(*)"	=> (YYBEGIN LCOM; continue());
-<LCOM>{eol}	=> (SourceMap.newline sourceMap yypos; YYBEGIN INITIAL; continue());
+<LCOM>{eol}	=> (Source.newline (source, yypos); YYBEGIN INITIAL; continue());
 <LCOM>.		=> (continue());
 <INITIAL>"(*"	=> (YYBEGIN A; stringstart := yypos; comLevel := 1; continue());
-<INITIAL>\h	=> (err (yypos,yypos) COMPLAIN
+<INITIAL>\h	=> (err (yypos,yypos) EM.COMPLAIN
 		      (concat[
 			  "non-Ascii character (ord ",
 			  Int.toString(Char.ord(String.sub(yytext, 0))), ")"
-			]) nullErrorBody;
+			]) EM.nullErrorBody;
 		    continue());
-<INITIAL>.	=> (err (yypos,yypos) COMPLAIN "illegal token" nullErrorBody;
+<INITIAL>.	=> (err (yypos,yypos) EM.COMPLAIN "illegal token" EM.nullErrorBody;
 		    continue());
 <L>[0-9]+                 => (YYBEGIN LL; charlist := [yytext]; continue());
 <LL>\.                    => ((* cheat: take n > 0 dots *) continue());
-<LL>[0-9]+                => (YYBEGIN LLC; addString(charlist, yytext); continue());
-<LL>0*               	  => (YYBEGIN LLC; addString(charlist, "1");    continue()
+<LL>[0-9]+                => (YYBEGIN LLC; UD.addString(charlist, yytext); continue());
+<LL>0*               	  => (YYBEGIN LLC; UD.addString(charlist, "1");    continue()
 		(* note hack, since ml-lex chokes on the empty string for 0* *));
-<LLC>"*)"                 => (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+2, !charlist);
-		              comLevel := 0; charlist := []; continue());
+<LLC>"*)"                 => (YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());
 <LLC>{ws}\"		  => (YYBEGIN LLCQ; continue());
-<LLCQ>[^\"]*              => (addString(charlist, yytext); continue());
-<LLCQ>\""*)"              => (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+3, !charlist);
-		              comLevel := 0; charlist := []; continue());
-<L,LLC,LLCQ>"*)" => (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
+<LLCQ>[^\"]*              => (UD.addString(charlist, yytext); continue());
+<LLCQ>\""*)"              => (YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());
+<L,LLC,LLCQ>"*)" => (err (!stringstart, yypos+1) EM.WARN
+                       "ill-formed (*#line...*) taken as comment" EM.nullErrorBody;
                      YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());
-<L,LLC,LLCQ>.    => (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
+<L,LLC,LLCQ>.    => (err (!stringstart, yypos+1) EM.WARN
+                       "ill-formed (*#line...*) taken as comment" EM.nullErrorBody;
                      YYBEGIN A; continue());
 <A>"(*)"	=> (YYBEGIN ALC; continue());
-<ALC>{eol}	=> (SourceMap.newline sourceMap yypos; YYBEGIN A; continue());
+<ALC>{eol}	=> (Source.newline (source, yypos); YYBEGIN A; continue());
 <ALC>.		=> (continue());
 <A>"(*"		=> (inc comLevel; continue());
-<A>{eol}	=> (SourceMap.newline sourceMap yypos; continue());
+<A>{eol}	=> (Source.newline (source, yypos); continue());
 <A>"*)" 	=> (dec comLevel; if !comLevel=0 then YYBEGIN INITIAL else (); continue());
 <A>.		=> (continue());
-<S>\"	        => (let val s = makeString charlist
+<S>\"	        => (let val s = UD.makeString charlist
                         val s = if size s <> 1 andalso not(!stringtype)
-                                 then (err(!stringstart,yypos) COMPLAIN
+                                 then (err(!stringstart,yypos) EM.COMPLAIN
                                       "character constant not length 1"
-                                       nullErrorBody;
+                                       EM.nullErrorBody;
                                        substring(s^"x",0,1))
                                  else s
                         val t = (s,!stringstart,yypos+1)
                     in YYBEGIN INITIAL;
                        if !stringtype then Tokens.STRING t else Tokens.CHAR t
                     end);
-<S>{eol}	=> (err (!stringstart,yypos) COMPLAIN "unclosed string"
-		        nullErrorBody;
-		    SourceMap.newline sourceMap yypos;
-		    YYBEGIN INITIAL; Tokens.STRING(makeString charlist,!stringstart,yypos));
-<S>\\{eol}     	=> (SourceMap.newline sourceMap (yypos+1);
+<S>{eol}	=> (err (!stringstart,yypos) EM.COMPLAIN "unclosed string"
+		        EM.nullErrorBody;
+		    Source.newline (source, yypos);
+		    YYBEGIN INITIAL; Tokens.STRING(UD.makeString charlist,!stringstart,yypos));
+<S>\\{eol}     	=> (Source.newline (source, yypos+1);
 		    YYBEGIN F; continue());
 <S>\\{ws}   	=> (YYBEGIN F; continue());
-<S>\\a		=> (addString(charlist, "\007"); continue());
-<S>\\b		=> (addString(charlist, "\008"); continue());
-<S>\\f		=> (addString(charlist, "\012"); continue());
-<S>\\n		=> (addString(charlist, "\010"); continue());
-<S>\\r		=> (addString(charlist, "\013"); continue());
-<S>\\t		=> (addString(charlist, "\009"); continue());
-<S>\\v		=> (addString(charlist, "\011"); continue());
-<S>\\\\		=> (addString(charlist, "\\"); continue());
-<S>\\\"		=> (addString(charlist, "\""); continue());
-<S>\\\^[@-_]	=> (addChar(charlist,
+<S>\\a		=> (UD.addString(charlist, "\007"); continue());
+<S>\\b		=> (UD.addString(charlist, "\008"); continue());
+<S>\\f		=> (UD.addString(charlist, "\012"); continue());
+<S>\\n		=> (UD.addString(charlist, "\010"); continue());
+<S>\\r		=> (UD.addString(charlist, "\013"); continue());
+<S>\\t		=> (UD.addString(charlist, "\009"); continue());
+<S>\\v		=> (UD.addString(charlist, "\011"); continue());
+<S>\\\\		=> (UD.addString(charlist, "\\"); continue());
+<S>\\\"		=> (UD.addString(charlist, "\""); continue());
+<S>\\\^[@-_]	=> (UD.addChar(charlist,
 			Char.chr(Char.ord(String.sub(yytext,2))-Char.ord #"@"));
 		    continue());
 <S>\\\^.	=>
-	(err(yypos,yypos+2) COMPLAIN "illegal control escape; must be one of \
-	  \@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" nullErrorBody;
+	(err(yypos,yypos+2) EM.COMPLAIN "illegal control escape; must be one of \
+	  \@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" EM.nullErrorBody;
 	 continue());
 <S>\\u{xdigit}{4}
 		=> (let
                     val x = Word.toIntX (valOf (Word.fromString (String.substring(yytext, 2, 4))))
                     in
 		      if x>255
-			then err (yypos,yypos+4) COMPLAIN (concat[
+			then err (yypos,yypos+4) EM.COMPLAIN (concat[
                             "illegal string escape '", yytext, "' is too large"
-                          ]) nullErrorBody
-			else addChar(charlist, Char.chr x);
+                          ]) EM.nullErrorBody
+			else UD.addChar(charlist, Char.chr x);
 		      continue()
 		    end);
 <S>\\[0-9]{3}	=> (let val SOME x = Int.fromString (String.substring(yytext, 1, 3))
 		    in
 		      if x>255
-			then err (yypos,yypos+4) COMPLAIN (concat[
+			then err (yypos,yypos+4) EM.COMPLAIN (concat[
                             "illegal string escape '", yytext, "' is too large"
-                          ]) nullErrorBody
-			else addChar(charlist, Char.chr x);
+                          ]) EM.nullErrorBody
+			else UD.addChar(charlist, Char.chr x);
 		      continue()
 		    end);
-<S>{bad_escape}	=> (err (yypos,yypos+1) COMPLAIN "illegal string escape" nullErrorBody;
+<S>{bad_escape}	=> (err (yypos,yypos+1) EM.COMPLAIN "illegal string escape" EM.nullErrorBody;
 		    continue());
 
-<S>[\000-\031]  => (err (yypos,yypos+1) COMPLAIN "illegal non-printing character in string" nullErrorBody;
+<S>[\000-\031]  => (err (yypos,yypos+1) EM.COMPLAIN "illegal non-printing character in string" EM.nullErrorBody;
                     continue());
-<S>({idchars}|{some_sym}|\[|\]|\(|\)|{quote}|[,.;^{}])+|.  => (addString(charlist,yytext); continue());
-<F>{eol}	=> (SourceMap.newline sourceMap yypos; continue());
+<S>({idchars}|{some_sym}|\[|\]|\(|\)|{quote}|[,.;^{}])+|.  => (UD.addString(charlist,yytext); continue());
+<F>{eol}	=> (Source.newline (source, yypos); continue());
 <F>{ws}		=> (continue());
 <F>\\		=> (YYBEGIN S; stringstart := yypos; continue());
-<F>.		=> (err (!stringstart,yypos) COMPLAIN "unclosed string"
-		        nullErrorBody;
-		    YYBEGIN INITIAL; Tokens.STRING(makeString charlist,!stringstart,yypos+1));
-<Q>"^`"	=> (addString(charlist, "`"); continue());
-<Q>"^^"	=> (addString(charlist, "^"); continue());
+<F>.		=> (err (!stringstart,yypos) EM.COMPLAIN "unclosed string"
+		        EM.nullErrorBody;
+		    YYBEGIN INITIAL; Tokens.STRING(UD.makeString charlist,!stringstart,yypos+1));
+<Q>"^`"	=> (UD.addString(charlist, "`"); continue());
+<Q>"^^"	=> (UD.addString(charlist, "^"); continue());
 <Q>"^"          => (YYBEGIN AQ;
-                    let val x = makeString charlist
+                    let val x = UD.makeString charlist
                     in
                     Tokens.OBJL(x,yypos,yypos+(size x))
                     end);
 <Q>"`"          => ((* a closing quote *)
                     YYBEGIN INITIAL;
-                    let val x = makeString charlist
+                    let val x = UD.makeString charlist
                     in
                     Tokens.ENDQ(x,yypos,yypos+(size x))
                     end);
-<Q>{eol}        => (SourceMap.newline sourceMap yypos; addString(charlist,"\n"); continue());
-<Q>.            => (addString(charlist,yytext); continue());
+<Q>{eol}        => (Source.newline (source, yypos); UD.addString(charlist,"\n"); continue());
+<Q>.            => (UD.addString(charlist,yytext); continue());
 
-<AQ>{eol}       => (SourceMap.newline sourceMap yypos; continue());
+<AQ>{eol}       => (Source.newline (source, yypos); continue());
 <AQ>{ws}        => (continue());
 <AQ>{id}        => (YYBEGIN Q;
                     let val hash = HashString.hashString yytext
@@ -327,7 +317,7 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
 <AQ>"("         => (YYBEGIN INITIAL;
                     brack_stack := ((ref 1)::(!brack_stack));
                     Tokens.LPAREN(yypos,yypos+1));
-<AQ>.           => (err (yypos,yypos+1) COMPLAIN
+<AQ>.           => (err (yypos,yypos+1) EM.COMPLAIN
 		       ("ml lexer: bad character after antiquote "^yytext)
-		       nullErrorBody;
+		       EM.nullErrorBody;
                     Tokens.AQID(FastSymbol.rawSymbol(0w0,""),yypos,yypos));

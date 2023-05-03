@@ -30,7 +30,7 @@ signature SKELCVT =
 
     val convert : {
 	    tree: Ast.dec,
-	    err: ErrorMsg.severity -> Ast.region -> string -> unit
+	    err: ErrorMsg.severity -> SourceMap.region -> string -> unit
 	  } -> {
 	    skeleton : Skeleton.decl,
 	    complain : unit -> unit
@@ -438,7 +438,7 @@ structure SkelCvt :> SKELCVT =
 	    end
 
 	fun warn0 () = ()
-	val complain = complainCM (0, 0) (tree, warn0)
+	val complain = complainCM SourceMap.NULLregion (tree, warn0)
 	in
 	  { complain = complain, skeleton = c_dec tree }
 	end

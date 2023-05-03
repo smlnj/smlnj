@@ -1,144 +1,131 @@
-(* errormsg.sml
+(* Basics/errormsg/errormsg.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
 structure ErrorMsg : ERRORMSG =
 struct
 
-  structure PP = PrettyPrint
-  open PP SourceMap
+local
 
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure PPS = PPSourceMap  (* fmtRegion, fmtSourceRegion *)
+  structure SR = Source
+  structure SM = SourceMap
+
+in
  (* error reporting *)
 
-  exception Error  (* was Syntax, changed to Error in 0.92 *)
+  exception Error
+
+  type output = string -> unit
 
   datatype severity = WARN | COMPLAIN
 
-  type complainer = severity -> string -> (PP.stream -> unit) -> unit
+  type complainer = severity -> string -> PP.format -> unit
 
-  type errorFn = region -> complainer
+  type errorFn = SM.region -> complainer
+  (* the four arguments of errorFn are: region, severity, string, format *)
 
-  type errors = {error: region->complainer,
-                 errorMatch: region->string,
-                 anyErrors: bool ref}
+  type errors = {error: errorFn,
+                 anyErrors: bool ref,
+                 fmtRegion: SM.region -> PP.format}
 
-  fun defaultConsumer () = PP.defaultDevice
+  val say = Control_Print.say  (* == (fn s => TextIO.output (TextIO.stdOut, s)) *)
 
-  val nullErrorBody = (fn (ppstrm: PP.stream) => ())
+  (* Default output is currently fixed (= Control.Print.say), but we could make default
+   * output "settable" with a function "setOutput: (string -> unit) -> unit".
+   * The error reporting functions use defaultOutput for printing/rendering.
+   * Could, for instance, use TextIO.stdErr instead of TextIO.stdOut for printing error messages. *)
 
-  fun ppmsg(errConsumer: PP.device, location, severity, msg, body) =
-      case (!BasicControl.printWarnings, severity)
-	of (false,WARN) => ()
-	 | _ =>
-	    with_pp errConsumer (fn ppstrm =>
-	      (openHVBox ppstrm (PP.Rel 0);
-	       openHVBox ppstrm (PP.Rel 2);
-	       PP.string ppstrm location;
-	       PP.string ppstrm  (* print error label *)
-		  (case severity
-		     of WARN => " Warning: "
-		      | COMPLAIN => " Error: ");
-	       PP.string ppstrm msg;
-	       body ppstrm;
-	       closeBox ppstrm;
-	       PP.newline ppstrm;
-	       closeBox ppstrm))
+  (* defaultOutput : unit -> (string -> unit) *)
+  fun defaultOutput () = say
 
-  fun record(COMPLAIN,anyErrors) = anyErrors := true
-    | record(WARN,_) = ()
+  (* nullErrorBody : PP.format
+   * default body format *)
+  val nullErrorBody = PP.empty
 
-  fun impossible msg =
-      (app Control_Print.say ["Error: Compiler bug: ",msg,"\n"];
+  val lineWidth : int ref = Control_Print.lineWidth
+
+  (* recordError : severity * bool ref -> unit *)
+  fun recordError (COMPLAIN, anyErrors) = anyErrors := true
+    | recordError (WARN,_) = ()
+
+  (* impossible : string -> 'a *)
+  fun impossible (msg: string) =
+      (app say ["Error: Compiler bug: ", msg, "\n"];
        Control_Print.flush();
        raise Error)
 
-  fun warn msg =
-      (app Control_Print.say ["Warning: ",msg,"\n"];
-       Control_Print.flush())
-
-(* [Ramsey] With the advent of source-map resynchronization (a.k.a
- * ( *#line...* ) comments), a contiguous region as seen by the compiler
- * can correspond to one or more contiguous segments in source code, with
- * different segments possibly lying in different source files.
- * We can imagine myriad ways of displaying such information, but we
- * confine ourselves to two:
- *  * When there's just one source region, we have what we had in the old
- *    compiler, and we display it the same way:
- *
- *      name:line.col or
- *      name:line1.col1-line2.col2
- *
- *  * When the region spans two or more source segments, we use an ellipsis instead
- *    of a dash, and if not all regions are from the same file, we provide
- *    the file names of both endpoints (even if the endpoints are the same
- *    file).
- *)
-(* [DBM] hasn't been supported for along while. get rid of the complication *)
-
-  fun location_string ({sourceMap,fileOpened,...}:Source.inputSource)
-                      ((p1,p2): SourceMap.region) : string =
-      let fun shortpoint ({line, column,...}:sourceloc, l) =
-             Int.toString line :: "." :: Int.toString column :: l
-          fun showpoint (p as {fileName,...}:sourceloc, l) =
-             Pathnames.trim fileName :: ":" :: shortpoint (p, l)
-          fun allfiles(f, (src:sourceloc, _)::l) =
-                f = #fileName src andalso allfiles(f, l)
-            | allfiles(f, []) = true
-          fun lastpos [(_, hi)] = hi
-            | lastpos (h::t) = lastpos t
-            | lastpos [] = impossible "lastpos botch in ErrorMsg.location_string"
-      in  concat (
-            case fileregion sourceMap (p1, p2)
-              of [(lo, hi)] =>
-                    if p1+1 >= p2 then showpoint (lo, [])
-                    else showpoint(lo, "-" :: shortpoint(hi, []))
-               | (lo, _) :: rest =>
-                    if allfiles(#fileName lo, rest) then
-                      showpoint(lo, "..." :: shortpoint(lastpos rest, []))
-                    else
-                      showpoint(lo, "..." :: showpoint (lastpos rest, []))
-               | [] => [Pathnames.trim fileOpened, ":<nullRegion>"]
-          )
-      end
-
-  fun error (source as {anyErrors, errConsumer,...}: Source.inputSource)
-            ((p1,p2): SourceMap.region) (severity:severity)
-            (msg: string) (body : PP.stream -> unit) =
-      (ppmsg(errConsumer,(location_string source (p1,p2)),severity,msg,body);
-       record(severity,anyErrors))
-
-  fun errorNoSource (cons, anyE) locs sev msg body =
-      (ppmsg (cons, locs, sev, msg, body); record (sev, anyE))
-
-  fun errorNoFile (errConsumer,anyErrors) ((p1,p2): region) severity msg body =
-      (ppmsg(errConsumer,
-             if p2>0 then concat[Int.toString p1, "-", Int.toString p2]
-                     else "",
-             severity, msg, body);
-       record(severity,anyErrors))
-
-  fun impossibleWithBody msg body =
-      (with_pp (defaultConsumer()) (fn ppstrm =>
-        (PP.string ppstrm "Error: Compiler bug: ";
-         PP.string ppstrm msg;
-         body ppstrm;
-         PP.newline ppstrm));
+  (* impossibleWithBody : string -> PP.format -> 'a *)
+  fun impossibleWithBody (msg: string) (body: PP.format) =
+      (PF.printFormatNL
+         (PP.vblock [PP.hblock [PP.text "Error: Compiler bug:", PP.text msg], body]);
        raise Error)
 
-  val matchErrorString = location_string
+  (* warn : string -> unit *)
+  fun warn (msg: string) =
+      (app Control_Print.say ["Warning: ", msg, "\n"];
+       Control_Print.flush())
 
-  fun errors source =
+  fun fmtSeverity WARN = PP.text "Warning:"
+    | fmtSeverity COMPLAIN = PP.text "Error:"
+
+  (* fmtMessage : PP.format * severity * string * PP.format -> unit *)
+  fun fmtMessage (location: PP.format, severity: severity, msg: string, body: PP.format) =
+      case (!BasicControl.printWarnings, severity)
+	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
+	 | _ => PP.appendNewLine
+                  (PP.vblock
+		     [PP.hblock [location, fmtSeverity severity, PP.text msg],
+		      PP.indent 2 body])
+
+  (* error : SR.source -> errorFn *)
+  fun error (source: SR.source) (region: SM.region) (severity: severity) (msg: string) (body : PP.format) =
+      let val errorFmt = fmtMessage (PPS.fmtSourceRegion (source, region), severity, msg, body)
+       in recordError (severity, #anyErrors source);
+	  PF.render (errorFmt, !lineWidth)
+      end
+
+  (* errorNoSource : errorFn
+   *   2 Uses: compiler: TopLevel/print/pptable.sml, cm: cm/stable/stabilize.sml *)
+  val errorNoSource =
+      let val dummySource = SR.newSource ("dummy", TextIO.stdIn, false)
+          (* dummySource is not "relevant", only field referenced is anyErrors, which
+	     may be set to true, but is not accessed elsewhere so it has no effect. *)
+       in error dummySource
+      end
+
+  (* errors : SR.source -> errors *)
+  fun errors (source: SR.source) : errors =
       {error = error source,
-       errorMatch = matchErrorString source,
-       anyErrors = #anyErrors source}
+       anyErrors = #anyErrors source,
+       fmtRegion = (fn region => PPS.fmtSourceRegion (source, region))}
 
-  fun anyErrors{anyErrors,error,errorMatch} = !anyErrors
+  (* anyErrors : errors -> bool *)
+  fun anyErrors ({anyErrors, ...}: errors) = !anyErrors
 
-  fun errorsNoFile (consumer,any) =
-      {error = errorNoFile (consumer,any),
-       errorMatch = fn _ => "Match",
-       anyErrors = any}
+end (* top local *)
+end (* structure ErrorMsg *)
 
-end  (* structure ErrorMsg *)
+(* [DBM, 2022.09]
+    (0) Using formats rather than strings in composing error messages (complainer type).
+        This will lead to lots of revised error messages!
+    (1) Ramsey's NoWeb hasn't been supported for a long while, so we have
+        removed the associated complications!
+    (2) The ERRORMSG interface is still a mess, and needs to be revised.
+        -- the output (errConsumer) function no longer comes from SR.source
+        -- anyErrors (bool ref) still comes from SR.source. Why?
+           Where do the anyErrors values come from when calling errorNoFile, errorNoSource,
+           etc?
+    (3) Is there any problem with having a default output (defaultOutput = say)?
+
+  [DBM: 2022.10.10]
+    (1) Revised Source and SourceMap and PPSourceMap.
+    (2) Changed field name errorMatch to fmtRegion in errors type record.
+    (3) errorNoFile was removed because it was the same as errorNoSource. Two uses of errorNoFile
+        in TopLevel/print/pptable.sml were replaced.
+    (4) Renamed errorsNoFile to errorsNoSource.
+*)

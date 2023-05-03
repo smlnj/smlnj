@@ -6,6 +6,6 @@
 
 signature SMLNJ_PARSER = sig
 
-    val parse : Source.inputSource -> unit -> ParseResult.parseResult
+    val parse : Source.source -> unit -> ParseResult.parseResult
 
   end

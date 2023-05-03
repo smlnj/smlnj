@@ -2,16 +2,17 @@
  *
  * (C) 2001 Lucent Technologies, Bell Labs
  *)
+
+(* NOT USED *)
+
 structure PrintHooks :
   sig
     (* all output goes to Control.Print.out *)
-    val prAbsyn : StaticEnv.staticEnv -> Absyn.dec -> unit
+    val fmtAbsyn : StaticEnv.staticEnv -> Absyn.dec -> Formatting.format
   end = 
 
 struct
 
-   fun prAbsyn env d  = 
-	PrettyPrint.with_default_pp
-          (fn ppstrm => PPAbsyn.ppDec(env,NONE) ppstrm (d,200))
+   fun fmtAbsyn env dec  = PPAbsyn.fmtDec (env,NONE) (dec,200)
 
 end (* structure PrintHooks *)

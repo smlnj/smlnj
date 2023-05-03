@@ -3,81 +3,52 @@
 
 signature ELABDEBUG =
 sig
+
   val debugMsg : bool ref -> string -> unit
-  val debugPrint : bool ref
-                   -> (string *
-		       (PrettyPrint.stream -> 'a -> unit) *
-		       'a)
-                   -> unit
-  val ppSymList : PrettyPrint.stream -> Symbol.symbol list -> unit
-  val envSymbols : StaticEnv.staticEnv -> Symbol.symbol list
-  val checkEnv : StaticEnv.staticEnv * Symbol.symbol -> string
+  val debugPrint : bool ref -> (string * Formatting.format) -> unit
+  val envBoundSymbols : StaticEnv.staticEnv -> Symbol.symbol list
+  val checkBound : StaticEnv.staticEnv * Symbol.symbol -> string
   val withInternals : (unit -> 'a) -> 'a
 
 end (* signature ELABDEBUG *)
-
 
 structure ElabDebug : ELABDEBUG =
 struct
 
 local
+
   structure S  = Symbol
   structure SE = StaticEnv
-  structure PP = PrettyPrint
-  structure PU = PPUtil
-  structure EM = ErrorMsg
-
-  open PP
+  structure PP = Formatting
+  structure PF = PrintFormat
 
 in
 
 fun debugMsg (debugging: bool ref) (msg: string) =
     if (!debugging)
-    then with_default_pp
-	  (fn ppstrm =>
-	    (openHVBox ppstrm (PP.Rel 0);
-	     PP.string ppstrm msg;
-	     closeBox ppstrm;
-	     newline ppstrm;
-	     PP.flushStream ppstrm))
+    then PF.printFormatNL (PP.text msg)
     else ()
 
-fun debugPrint (debugging: bool ref)
-               (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
+fun debugPrint (debugging: bool ref) (msg: string, format: PP.format) =
     if (!debugging)
-    then with_default_pp
-	  (fn ppstrm =>
-	    (openHVBox ppstrm (PP.Abs 2);
-	     PP.string ppstrm msg;
-	     PP.nbSpace ppstrm 1;
-	     printfn ppstrm arg;
-	     closeBox ppstrm;
-	     newline ppstrm;
-	     PP.flushStream ppstrm))
+    then PF.printFormatNL (PP.vblock [PP.text msg, format])
     else ()
 
-fun ppSymList ppstrm (syms: S.symbol list) =
-     PU.ppClosedSequence ppstrm
-     {front=(fn ppstrm => PP.string ppstrm "["),
-      sep=(fn ppstrm => (PP.string ppstrm ",")),
-      back=(fn ppstrm => PP.string ppstrm "]"),
-      style=PU.INCONSISTENT,
-      pr=PU.ppSym}
-     syms
-
-
-(* more debugging *)
-fun envSymbols (env: SE.staticEnv) =
+(* envBoundSymbols : SE.staticEnv -> S.symbol list *)
+fun envBoundSymbols (env: SE.staticEnv) =
       SE.fold (fn ((s,_),sl) => s::sl) nil env
 
-fun checkEnv (env: SE.staticEnv, sym: S.symbol) =
+(* checkBound : SE.staticEnv * S.symbol -> bool *)
+fun checkBound (env: SE.staticEnv, sym: S.symbol) =
       (SE.look(env,sym); "YES") handle SE.Unbound => "NO"
 
+(* withInternals : (unit -> 'a) -> 'a
+ *  execute a thunk with internals flags on, restoring the flags afterward *)
 fun withInternals (f: unit -> 'a) =
     let val savedInternals = ElabDataControl.setInternals ()
      in (f() before ElabDataControl.resetInternals savedInternals)
         handle exn => (ElabDataControl.resetInternals savedInternals; raise exn)
     end
 
-end (* local *)
+end (* top local *)
 end (* structure ElabDebug *)

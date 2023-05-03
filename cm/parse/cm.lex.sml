@@ -114,6 +114,7 @@ MC | PM | PC | SS | PMC | C | M | P | S | INITIAL
  *)
 
 structure S = CMSemant
+structure SM = SourceMap
 
 type svalue = Tokens.svalue
 type pos = int
@@ -131,8 +132,8 @@ type lexarg = {
 	       getS: pos * (string * pos * pos -> lexresult) -> lexresult,
 	       handleEof: unit -> pos,
 	       newline: pos -> unit,
-	       obsolete: pos * pos -> unit,
-	       error: pos * pos -> string -> unit,
+	       obsolete: SourceMap.region -> unit,
+	       error: SourceMap.region -> string -> unit,
 	       sync: pos * string -> unit,
 	       in_section2: bool ref
 	      }
@@ -308,8 +309,8 @@ fun yyAction9 (strm, lastMatch : yymatch) = (yystrm := strm;
       (newline yypos; continue ()))
 fun yyAction10 (strm, lastMatch : yymatch) = (yystrm := strm; (continue ()))
 fun yyAction11 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (error (yypos, yypos+2)
-			      "unmatched comment delimiter";
+      (error (SM.REGION (yypos, yypos+2))
+				  "unmatched comment delimiter";
 			    continue ()))
 fun yyAction12 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN S; newS yypos; continue ()))
@@ -366,7 +367,7 @@ fun yyAction33 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (error (yypos, yypos+2)
+        (error (SM.REGION (yypos, yypos+2))
 			     ("illegal escape character in string " ^ yytext);
 			    continue ())
       end
@@ -377,7 +378,7 @@ fun yyAction35 (strm, lastMatch : yymatch) = let
       in
         yystrm := strm;
         (newline yypos;
-			    error (yypos, yypos + size yytext)
+			    error (SM.REGION (yypos, yypos + size yytext))
 			      "illegal linebreak in string";
 			    continue ())
       end
@@ -395,7 +396,7 @@ fun yyAction40 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (error (yypos, yypos+1)
+        (error (SM.REGION (yypos, yypos+1))
 			     ("illegal character in stringskip " ^ yytext);
 			    continue ())
       end
@@ -414,7 +415,7 @@ fun yyAction46 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction47 (strm, lastMatch : yymatch) = (yystrm := strm;
       (Tokens.EQSYM (S.NE, yypos, yypos + 2)))
 fun yyAction48 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 2);
+      (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.EQSYM (S.NE, yypos, yypos+2)))
 fun yyAction49 (strm, lastMatch : yymatch) = (yystrm := strm;
       (Tokens.INEQSYM (S.LE, yypos, yypos + 2)))
@@ -425,7 +426,7 @@ fun yyAction51 (strm, lastMatch : yymatch) = (yystrm := strm;
 fun yyAction52 (strm, lastMatch : yymatch) = (yystrm := strm;
       (Tokens.INEQSYM (S.GT, yypos, yypos + 1)))
 fun yyAction53 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 2);
+      (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.EQSYM (S.EQ, yypos, yypos + 2)))
 fun yyAction54 (strm, lastMatch : yymatch) = (yystrm := strm;
       (Tokens.EQSYM (S.EQ, yypos, yypos + 1)))
@@ -438,7 +439,7 @@ fun yyAction56 (strm, lastMatch : yymatch) = let
         (Tokens.NUMBER
 			     (valOf (Int.fromString yytext)
 			      handle _ =>
-				  (error (yypos, yypos + size yytext)
+				  (error (SM.REGION (yypos, yypos + size yytext))
 				     "number too large";
 				   0),
 			      yypos, yypos + size yytext))
@@ -451,19 +452,19 @@ fun yyAction57 (strm, lastMatch : yymatch) = let
 				     fn () => YYBEGIN PM, in_section2))
       end
 fun yyAction58 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 1);
+      (obsolete (SM.REGION (yypos, yypos + 1));
 			    Tokens.MULSYM (S.DIV, yypos, yypos + 1)))
 fun yyAction59 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 1);
+      (obsolete (SM.REGION (yypos, yypos + 1));
 			    Tokens.MULSYM (S.MOD, yypos, yypos + 1)))
 fun yyAction60 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 2);
+      (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.ANDALSO (yypos, yypos + 2)))
 fun yyAction61 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 2);
+      (obsolete (SM.REGION (yypos, yypos + 2));
 			    Tokens.ORELSE (yypos, yypos + 2)))
 fun yyAction62 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (obsolete (yypos, yypos + 1);
+      (obsolete (SM.REGION (yypos, yypos + 1));
 			    Tokens.NOT (yypos, yypos + 1)))
 fun yyAction63 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -527,7 +528,7 @@ fun yyAction73 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (error (yypos, yypos+1)
+        (error (SM.REGION (yypos, yypos+1))
 			    ("illegal character at start of ML symbol: " ^
 			     yytext);
 			    continue ())
@@ -545,7 +546,7 @@ fun yyAction75 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-        (error (yypos, yypos+1)
+        (error (SM.REGION (yypos, yypos+1))
 			    ("illegal character: " ^ yytext);
 			    continue ())
       end

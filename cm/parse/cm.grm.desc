@@ -1,0 +1,2044 @@
+
+state 0:
+
+	description : . group 
+
+	FILE_STANDARD	shift 8
+	GROUP	shift 7
+	LIBRARY	shift 6
+	LPAREN	shift 5
+
+	description	goto 157
+	group	goto 4
+	gprivspec	goto 3
+	lprivspec	goto 2
+	word	goto 1
+
+	.	error
+
+
+state 1:
+
+	gprivspec : word . gprivspec 
+	lprivspec : word . lprivspec 
+
+	FILE_STANDARD	shift 8
+	GROUP	shift 7
+	LIBRARY	shift 6
+	LPAREN	shift 5
+
+	gprivspec	goto 10
+	lprivspec	goto 9
+	word	goto 1
+
+	.	error
+
+
+state 2:
+
+	group : lprivspec . LPAREN version RPAREN mand_exports IS members 
+	group : lprivspec . mand_exports IS members 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 23
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	mand_exports	goto 15
+	export	goto 14
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 3:
+
+	group : gprivspec . LPAREN srcfile RPAREN opt_exports IS members 
+	group : gprivspec . opt_exports IS members 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 28
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	mand_exports	goto 27
+	opt_exports	goto 26
+	export	goto 14
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	reduce by rule 15
+
+
+state 4:
+
+	description : group .  (reduce by rule 0)
+
+
+
+	.	reduce by rule 0
+
+
+state 5:
+
+	lprivspec : LPAREN . wrapspec RPAREN lprivspec 
+
+
+	wrapspec	goto 29
+
+	.	reduce by rule 6
+
+
+state 6:
+
+	lprivspec : LIBRARY .  (reduce by rule 10)
+
+
+
+	.	reduce by rule 10
+
+
+state 7:
+
+	gprivspec : GROUP .  (reduce by rule 8)
+
+
+
+	.	reduce by rule 8
+
+
+state 8:
+
+	word : FILE_STANDARD .  (reduce by rule 53)
+
+
+
+	.	reduce by rule 53
+
+
+state 9:
+
+	lprivspec : word lprivspec .  (reduce by rule 11)
+
+
+
+	.	reduce by rule 11
+
+
+state 10:
+
+	gprivspec : word gprivspec .  (reduce by rule 9)
+
+
+
+	.	reduce by rule 9
+
+
+state 11:
+
+	ml_symbolset : filecat . LPAREN srcfiles RPAREN 
+
+	LPAREN	shift 30
+
+
+	.	error
+
+
+state 12:
+
+	export : ml_symbolset .  (reduce by rule 19)
+	ml_symbolset : ml_symbolset . STAR ml_symbolset 
+	ml_symbolset : ml_symbolset . DASH ml_symbolset 
+
+	STAR	shift 32
+	DASH	shift 31
+
+
+	.	reduce by rule 19
+
+
+state 13:
+
+	ml_symbolset : ml_symbol .  (reduce by rule 24)
+
+
+
+	.	reduce by rule 24
+
+
+state 14:
+
+	mand_exports : export .  (reduce by rule 13)
+
+
+
+	.	reduce by rule 13
+
+
+state 15:
+
+	group : lprivspec mand_exports . IS members 
+	mand_exports : mand_exports . export 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	IS	shift 35
+	LPAREN	shift 34
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	export	goto 33
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 16:
+
+	filecat : SOURCE .  (reduce by rule 23)
+
+
+
+	.	reduce by rule 23
+
+
+state 17:
+
+	ml_symbol : FUNSIG . ML_ID 
+
+	ML_ID	shift 36
+
+
+	.	error
+
+
+state 18:
+
+	ml_symbol : FUNCTOR . ML_ID 
+
+	ML_ID	shift 37
+
+
+	.	error
+
+
+state 19:
+
+	ml_symbol : SIGNATURE . ML_ID 
+
+	ML_ID	shift 38
+
+
+	.	error
+
+
+state 20:
+
+	ml_symbol : STRUCTURE . ML_ID 
+
+	ML_ID	shift 39
+
+
+	.	error
+
+
+state 21:
+
+	export : ERROR .  (reduce by rule 21)
+
+
+
+	.	reduce by rule 21
+
+
+state 22:
+
+	export : IF . exp guarded_exports 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 42
+	exp	goto 41
+	sym	goto 40
+
+	.	error
+
+
+state 23:
+
+	group : lprivspec LPAREN . version RPAREN mand_exports IS members 
+	ml_symbolset : LPAREN . exports RPAREN 
+
+	FILE_STANDARD	shift 55
+
+	version	goto 54
+	exports	goto 53
+
+	.	reduce by rule 17
+
+
+state 24:
+
+	ml_symbolset : LIBRARY . LPAREN pathname opttoolopts RPAREN 
+
+	LPAREN	shift 56
+
+
+	.	error
+
+
+state 25:
+
+	filecat : GROUP .  (reduce by rule 22)
+
+
+
+	.	reduce by rule 22
+
+
+state 26:
+
+	group : gprivspec opt_exports . IS members 
+
+	IS	shift 57
+
+
+	.	error
+
+
+state 27:
+
+	mand_exports : mand_exports . export 
+	opt_exports : mand_exports .  (reduce by rule 16)
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	export	goto 33
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	reduce by rule 16
+
+
+state 28:
+
+	group : gprivspec LPAREN . srcfile RPAREN opt_exports IS members 
+	ml_symbolset : LPAREN . exports RPAREN 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+
+	exports	goto 53
+	pathname	goto 59
+	srcfile	goto 58
+
+	.	reduce by rule 17
+
+
+state 29:
+
+	lprivspec : LPAREN wrapspec . RPAREN lprivspec 
+	wrapspec : wrapspec . word 
+
+	FILE_STANDARD	shift 8
+	RPAREN	shift 63
+
+	word	goto 62
+
+	.	error
+
+
+state 30:
+
+	ml_symbolset : filecat LPAREN . srcfiles RPAREN 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	DASH	shift 66
+
+	pathname	goto 59
+	srcfile	goto 65
+	srcfiles	goto 64
+
+	.	error
+
+
+state 31:
+
+	ml_symbolset : ml_symbolset DASH . ml_symbolset 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	ml_symbol	goto 13
+	ml_symbolset	goto 67
+	filecat	goto 11
+
+	.	error
+
+
+state 32:
+
+	ml_symbolset : ml_symbolset STAR . ml_symbolset 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	ml_symbol	goto 13
+	ml_symbolset	goto 68
+	filecat	goto 11
+
+	.	error
+
+
+state 33:
+
+	mand_exports : mand_exports export .  (reduce by rule 14)
+
+
+
+	.	reduce by rule 14
+
+
+state 34:
+
+	ml_symbolset : LPAREN . exports RPAREN 
+
+
+	exports	goto 53
+
+	.	reduce by rule 17
+
+
+state 35:
+
+	group : lprivspec mand_exports IS . members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 71
+	member	goto 70
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 36:
+
+	ml_symbol : FUNSIG ML_ID .  (reduce by rule 77)
+
+
+
+	.	reduce by rule 77
+
+
+state 37:
+
+	ml_symbol : FUNCTOR ML_ID .  (reduce by rule 76)
+
+
+
+	.	reduce by rule 76
+
+
+state 38:
+
+	ml_symbol : SIGNATURE ML_ID .  (reduce by rule 75)
+
+
+
+	.	reduce by rule 75
+
+
+state 39:
+
+	ml_symbol : STRUCTURE ML_ID .  (reduce by rule 74)
+
+
+
+	.	reduce by rule 74
+
+
+state 40:
+
+	aexp : sym .  (reduce by rule 57)
+
+
+
+	.	reduce by rule 57
+
+
+state 41:
+
+	export : IF exp . guarded_exports 
+
+
+	exports	goto 75
+	guarded_exports	goto 74
+
+	.	reduce by rule 17
+
+
+state 42:
+
+	boolexp : boolexp . ANDALSO boolexp 
+	boolexp : boolexp . ORELSE boolexp 
+	boolexp : boolexp . EQSYM boolexp 
+	exp : boolexp .  (reduce by rule 55)
+
+	EQSYM	shift 78
+	ANDALSO	shift 77
+	ORELSE	shift 76
+
+
+	.	reduce by rule 55
+
+
+state 43:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	boolexp : aexp . INEQSYM aexp 
+	boolexp : aexp . EQSYM aexp 
+
+	ADDSYM	shift 82
+	MULSYM	shift 81
+	EQSYM	shift 80
+	INEQSYM	shift 79
+
+
+	.	error
+
+
+state 44:
+
+	boolexp : FALSE .  (reduce by rule 73)
+
+
+
+	.	reduce by rule 73
+
+
+state 45:
+
+	boolexp : TRUE .  (reduce by rule 72)
+
+
+
+	.	reduce by rule 72
+
+
+state 46:
+
+	boolexp : NOT . boolexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 83
+	sym	goto 40
+
+	.	error
+
+
+state 47:
+
+	aexp : TILDE . aexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 84
+	sym	goto 40
+
+	.	error
+
+
+state 48:
+
+	aexp : ADDSYM . aexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 86
+	sym	goto 40
+
+	.	error
+
+
+state 49:
+
+	boolexp : DEFINED . LPAREN ml_symbol RPAREN 
+	boolexp : DEFINED . LPAREN sym RPAREN 
+
+	LPAREN	shift 87
+
+
+	.	error
+
+
+state 50:
+
+	aexp : LPAREN . aexp RPAREN 
+	boolexp : LPAREN . boolexp RPAREN 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 89
+	boolexp	goto 88
+	sym	goto 40
+
+	.	error
+
+
+state 51:
+
+	aexp : NUMBER .  (reduce by rule 56)
+
+
+
+	.	reduce by rule 56
+
+
+state 52:
+
+	sym : CM_ID .  (reduce by rule 54)
+
+
+
+	.	reduce by rule 54
+
+
+state 53:
+
+	exports : exports . export 
+	ml_symbolset : LPAREN exports . RPAREN 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	RPAREN	shift 91
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	export	goto 90
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 54:
+
+	group : lprivspec LPAREN version . RPAREN mand_exports IS members 
+
+	RPAREN	shift 92
+
+
+	.	error
+
+
+state 55:
+
+	version : FILE_STANDARD .  (reduce by rule 5)
+
+
+
+	.	reduce by rule 5
+
+
+state 56:
+
+	ml_symbolset : LIBRARY LPAREN . pathname opttoolopts RPAREN 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+
+	pathname	goto 93
+
+	.	error
+
+
+state 57:
+
+	group : gprivspec opt_exports IS . members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 94
+	member	goto 70
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 58:
+
+	group : gprivspec LPAREN srcfile . RPAREN opt_exports IS members 
+
+	RPAREN	shift 95
+
+
+	.	error
+
+
+state 59:
+
+	srcfile : pathname .  (reduce by rule 80)
+
+
+
+	.	reduce by rule 80
+
+
+state 60:
+
+	pathname : FILE_NATIVE .  (reduce by rule 79)
+
+
+
+	.	reduce by rule 79
+
+
+state 61:
+
+	pathname : FILE_STANDARD .  (reduce by rule 78)
+
+
+
+	.	reduce by rule 78
+
+
+state 62:
+
+	wrapspec : wrapspec word .  (reduce by rule 7)
+
+
+
+	.	reduce by rule 7
+
+
+state 63:
+
+	lprivspec : LPAREN wrapspec RPAREN . lprivspec 
+
+	FILE_STANDARD	shift 8
+	LIBRARY	shift 6
+	LPAREN	shift 5
+
+	lprivspec	goto 97
+	word	goto 96
+
+	.	error
+
+
+state 64:
+
+	ml_symbolset : filecat LPAREN srcfiles . RPAREN 
+
+	RPAREN	shift 98
+
+
+	.	error
+
+
+state 65:
+
+	srcfiles : srcfile .  (reduce by rule 81)
+
+
+
+	.	reduce by rule 81
+
+
+state 66:
+
+	srcfiles : DASH .  (reduce by rule 82)
+
+
+
+	.	reduce by rule 82
+
+
+state 67:
+
+	ml_symbolset : ml_symbolset . STAR ml_symbolset 
+	ml_symbolset : ml_symbolset . DASH ml_symbolset 
+	ml_symbolset : ml_symbolset DASH ml_symbolset .  (reduce by rule 27)
+
+	STAR	shift 32
+
+
+	.	reduce by rule 27
+
+
+state 68:
+
+	ml_symbolset : ml_symbolset . STAR ml_symbolset 
+	ml_symbolset : ml_symbolset STAR ml_symbolset .  (reduce by rule 26)
+	ml_symbolset : ml_symbolset . DASH ml_symbolset 
+
+
+
+	.	reduce by rule 26
+
+
+state 69:
+
+	member : pathname . optclass opttoolopts 
+
+	COLON	shift 100
+
+	optclass	goto 99
+
+	.	reduce by rule 43
+
+
+state 70:
+
+	members : member . members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 101
+	member	goto 70
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 71:
+
+	group : lprivspec mand_exports IS members .  (reduce by rule 4)
+
+
+
+	.	reduce by rule 4
+
+
+state 72:
+
+	member : ERROR .  (reduce by rule 47)
+
+
+
+	.	reduce by rule 47
+
+
+state 73:
+
+	member : IF . exp guarded_members 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 42
+	exp	goto 102
+	sym	goto 40
+
+	.	error
+
+
+state 74:
+
+	export : IF exp guarded_exports .  (reduce by rule 20)
+
+
+
+	.	reduce by rule 20
+
+
+state 75:
+
+	exports : exports . export 
+	guarded_exports : exports . else_exports 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	IF	shift 22
+	ELIF	shift 106
+	ELSE	shift 105
+	ENDIF	shift 104
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	export	goto 90
+	else_exports	goto 103
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 76:
+
+	boolexp : boolexp ORELSE . boolexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 107
+	sym	goto 40
+
+	.	error
+
+
+state 77:
+
+	boolexp : boolexp ANDALSO . boolexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 108
+	sym	goto 40
+
+	.	error
+
+
+state 78:
+
+	boolexp : boolexp EQSYM . boolexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 109
+	sym	goto 40
+
+	.	error
+
+
+state 79:
+
+	boolexp : aexp INEQSYM . aexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 110
+	sym	goto 40
+
+	.	error
+
+
+state 80:
+
+	boolexp : aexp EQSYM . aexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 111
+	sym	goto 40
+
+	.	error
+
+
+state 81:
+
+	aexp : aexp MULSYM . aexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 112
+	sym	goto 40
+
+	.	error
+
+
+state 82:
+
+	aexp : aexp ADDSYM . aexp 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 113
+	sym	goto 40
+
+	.	error
+
+
+state 83:
+
+	boolexp : boolexp . ANDALSO boolexp 
+	boolexp : boolexp . ORELSE boolexp 
+	boolexp : boolexp . EQSYM boolexp 
+	boolexp : NOT boolexp .  (reduce by rule 69)
+
+
+
+	.	reduce by rule 69
+
+
+state 84:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	aexp : TILDE aexp .  (reduce by rule 61)
+
+
+
+	.	reduce by rule 61
+
+
+state 85:
+
+	aexp : LPAREN . aexp RPAREN 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 85
+	ADDSYM	shift 48
+	TILDE	shift 47
+
+	aexp	goto 114
+	sym	goto 40
+
+	.	error
+
+
+state 86:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	aexp : ADDSYM aexp .  (reduce by rule 62)
+
+
+
+	.	reduce by rule 62
+
+
+state 87:
+
+	boolexp : DEFINED LPAREN . ml_symbol RPAREN 
+	boolexp : DEFINED LPAREN . sym RPAREN 
+
+	CM_ID	shift 52
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+
+	ml_symbol	goto 116
+	sym	goto 115
+
+	.	error
+
+
+state 88:
+
+	boolexp : LPAREN boolexp . RPAREN 
+	boolexp : boolexp . ANDALSO boolexp 
+	boolexp : boolexp . ORELSE boolexp 
+	boolexp : boolexp . EQSYM boolexp 
+
+	RPAREN	shift 117
+	EQSYM	shift 78
+	ANDALSO	shift 77
+	ORELSE	shift 76
+
+
+	.	error
+
+
+state 89:
+
+	aexp : LPAREN aexp . RPAREN 
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	boolexp : aexp . INEQSYM aexp 
+	boolexp : aexp . EQSYM aexp 
+
+	RPAREN	shift 118
+	ADDSYM	shift 82
+	MULSYM	shift 81
+	EQSYM	shift 80
+	INEQSYM	shift 79
+
+
+	.	error
+
+
+state 90:
+
+	exports : exports export .  (reduce by rule 18)
+
+
+
+	.	reduce by rule 18
+
+
+state 91:
+
+	ml_symbolset : LPAREN exports RPAREN .  (reduce by rule 25)
+
+
+
+	.	reduce by rule 25
+
+
+state 92:
+
+	group : lprivspec LPAREN version RPAREN . mand_exports IS members 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	mand_exports	goto 119
+	export	goto 14
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 93:
+
+	ml_symbolset : LIBRARY LPAREN pathname . opttoolopts RPAREN 
+
+	LPAREN	shift 122
+
+	ptoolopts	goto 121
+	opttoolopts	goto 120
+
+	.	reduce by rule 41
+
+
+state 94:
+
+	group : gprivspec opt_exports IS members .  (reduce by rule 2)
+
+
+
+	.	reduce by rule 2
+
+
+state 95:
+
+	group : gprivspec LPAREN srcfile RPAREN . opt_exports IS members 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	mand_exports	goto 27
+	opt_exports	goto 123
+	export	goto 14
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	reduce by rule 15
+
+
+state 96:
+
+	lprivspec : word . lprivspec 
+
+	FILE_STANDARD	shift 8
+	LIBRARY	shift 6
+	LPAREN	shift 5
+
+	lprivspec	goto 9
+	word	goto 96
+
+	.	error
+
+
+state 97:
+
+	lprivspec : LPAREN wrapspec RPAREN lprivspec .  (reduce by rule 12)
+
+
+
+	.	reduce by rule 12
+
+
+state 98:
+
+	ml_symbolset : filecat LPAREN srcfiles RPAREN .  (reduce by rule 28)
+
+
+
+	.	reduce by rule 28
+
+
+state 99:
+
+	member : pathname optclass . opttoolopts 
+
+	LPAREN	shift 122
+
+	ptoolopts	goto 121
+	opttoolopts	goto 124
+
+	.	reduce by rule 41
+
+
+state 100:
+
+	optclass : COLON . class 
+
+	FILE_STANDARD	shift 8
+
+	word	goto 126
+	class	goto 125
+
+	.	error
+
+
+state 101:
+
+	members : member members .  (reduce by rule 35)
+
+
+
+	.	reduce by rule 35
+
+
+state 102:
+
+	member : IF exp . guarded_members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 128
+	member	goto 70
+	guarded_members	goto 127
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 103:
+
+	guarded_exports : exports else_exports .  (reduce by rule 30)
+
+
+
+	.	reduce by rule 30
+
+
+state 104:
+
+	else_exports : ENDIF .  (reduce by rule 31)
+
+
+
+	.	reduce by rule 31
+
+
+state 105:
+
+	else_exports : ELSE . exports ENDIF 
+
+
+	exports	goto 129
+
+	.	reduce by rule 17
+
+
+state 106:
+
+	else_exports : ELIF . exp guarded_exports 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 42
+	exp	goto 130
+	sym	goto 40
+
+	.	error
+
+
+state 107:
+
+	boolexp : boolexp . ANDALSO boolexp 
+	boolexp : boolexp . ORELSE boolexp 
+	boolexp : boolexp ORELSE boolexp .  (reduce by rule 67)
+	boolexp : boolexp . EQSYM boolexp 
+
+	EQSYM	shift 78
+	ANDALSO	shift 77
+
+
+	.	reduce by rule 67
+
+
+state 108:
+
+	boolexp : boolexp . ANDALSO boolexp 
+	boolexp : boolexp ANDALSO boolexp .  (reduce by rule 66)
+	boolexp : boolexp . ORELSE boolexp 
+	boolexp : boolexp . EQSYM boolexp 
+
+	EQSYM	shift 78
+
+
+	.	reduce by rule 66
+
+
+state 109:
+
+	boolexp : boolexp . ANDALSO boolexp 
+	boolexp : boolexp . ORELSE boolexp 
+	boolexp : boolexp . EQSYM boolexp 
+	boolexp : boolexp EQSYM boolexp .  (reduce by rule 68)
+
+	FILE_STANDARD	reduce by rule 68
+	FILE_NATIVE	reduce by rule 68
+	GROUP	reduce by rule 68
+	LIBRARY	reduce by rule 68
+	LPAREN	reduce by rule 68
+	RPAREN	reduce by rule 68
+	IF	reduce by rule 68
+	ELIF	reduce by rule 68
+	ELSE	reduce by rule 68
+	ENDIF	reduce by rule 68
+	ERROR	reduce by rule 68
+	STRUCTURE	reduce by rule 68
+	SIGNATURE	reduce by rule 68
+	FUNCTOR	reduce by rule 68
+	FUNSIG	reduce by rule 68
+	ANDALSO	reduce by rule 68
+	ORELSE	reduce by rule 68
+	SOURCE	reduce by rule 68
+
+
+	.	error
+
+
+state 110:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	boolexp : aexp INEQSYM aexp .  (reduce by rule 70)
+
+	ADDSYM	shift 82
+	MULSYM	shift 81
+
+
+	.	reduce by rule 70
+
+
+state 111:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	boolexp : aexp EQSYM aexp .  (reduce by rule 71)
+
+	ADDSYM	shift 82
+	MULSYM	shift 81
+
+
+	.	reduce by rule 71
+
+
+state 112:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+	aexp : aexp MULSYM aexp .  (reduce by rule 60)
+
+
+
+	.	reduce by rule 60
+
+
+state 113:
+
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp ADDSYM aexp .  (reduce by rule 59)
+	aexp : aexp . MULSYM aexp 
+
+	MULSYM	shift 81
+
+
+	.	reduce by rule 59
+
+
+state 114:
+
+	aexp : LPAREN aexp . RPAREN 
+	aexp : aexp . ADDSYM aexp 
+	aexp : aexp . MULSYM aexp 
+
+	RPAREN	shift 118
+	ADDSYM	shift 82
+	MULSYM	shift 81
+
+
+	.	error
+
+
+state 115:
+
+	boolexp : DEFINED LPAREN sym . RPAREN 
+
+	RPAREN	shift 131
+
+
+	.	error
+
+
+state 116:
+
+	boolexp : DEFINED LPAREN ml_symbol . RPAREN 
+
+	RPAREN	shift 132
+
+
+	.	error
+
+
+state 117:
+
+	boolexp : LPAREN boolexp RPAREN .  (reduce by rule 65)
+
+
+
+	.	reduce by rule 65
+
+
+state 118:
+
+	aexp : LPAREN aexp RPAREN .  (reduce by rule 58)
+
+
+
+	.	reduce by rule 58
+
+
+state 119:
+
+	group : lprivspec LPAREN version RPAREN mand_exports . IS members 
+	mand_exports : mand_exports . export 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	IS	shift 133
+	LPAREN	shift 34
+	IF	shift 22
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	export	goto 33
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 120:
+
+	ml_symbolset : LIBRARY LPAREN pathname opttoolopts . RPAREN 
+
+	RPAREN	shift 134
+
+
+	.	error
+
+
+state 121:
+
+	opttoolopts : ptoolopts .  (reduce by rule 42)
+
+
+
+	.	reduce by rule 42
+
+
+state 122:
+
+	ptoolopts : LPAREN . toolopts RPAREN 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+
+	pathname	goto 136
+	toolopts	goto 135
+
+	.	reduce by rule 36
+
+
+state 123:
+
+	group : gprivspec LPAREN srcfile RPAREN opt_exports . IS members 
+
+	IS	shift 137
+
+
+	.	error
+
+
+state 124:
+
+	member : pathname optclass opttoolopts .  (reduce by rule 45)
+
+
+
+	.	reduce by rule 45
+
+
+state 125:
+
+	optclass : COLON class .  (reduce by rule 44)
+
+
+
+	.	reduce by rule 44
+
+
+state 126:
+
+	class : word .  (reduce by rule 48)
+
+
+
+	.	reduce by rule 48
+
+
+state 127:
+
+	member : IF exp guarded_members .  (reduce by rule 46)
+
+
+
+	.	reduce by rule 46
+
+
+state 128:
+
+	guarded_members : members . else_members 
+
+	ELIF	shift 141
+	ELSE	shift 140
+	ENDIF	shift 139
+
+	else_members	goto 138
+
+	.	error
+
+
+state 129:
+
+	exports : exports . export 
+	else_exports : ELSE exports . ENDIF 
+
+	GROUP	shift 25
+	LIBRARY	shift 24
+	LPAREN	shift 34
+	IF	shift 22
+	ENDIF	shift 142
+	ERROR	shift 21
+	STRUCTURE	shift 20
+	SIGNATURE	shift 19
+	FUNCTOR	shift 18
+	FUNSIG	shift 17
+	SOURCE	shift 16
+
+	export	goto 90
+	ml_symbol	goto 13
+	ml_symbolset	goto 12
+	filecat	goto 11
+
+	.	error
+
+
+state 130:
+
+	else_exports : ELIF exp . guarded_exports 
+
+
+	exports	goto 75
+	guarded_exports	goto 143
+
+	.	reduce by rule 17
+
+
+state 131:
+
+	boolexp : DEFINED LPAREN sym RPAREN .  (reduce by rule 64)
+
+
+
+	.	reduce by rule 64
+
+
+state 132:
+
+	boolexp : DEFINED LPAREN ml_symbol RPAREN .  (reduce by rule 63)
+
+
+
+	.	reduce by rule 63
+
+
+state 133:
+
+	group : lprivspec LPAREN version RPAREN mand_exports IS . members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 144
+	member	goto 70
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 134:
+
+	ml_symbolset : LIBRARY LPAREN pathname opttoolopts RPAREN .  (reduce by rule 29)
+
+
+
+	.	reduce by rule 29
+
+
+state 135:
+
+	ptoolopts : LPAREN toolopts . RPAREN 
+
+	RPAREN	shift 145
+
+
+	.	error
+
+
+state 136:
+
+	toolopts : pathname . toolopts 
+	toolopts : pathname . COLON ptoolopts toolopts 
+	toolopts : pathname . COLON pathname toolopts 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	COLON	shift 147
+
+	pathname	goto 136
+	toolopts	goto 146
+
+	.	reduce by rule 36
+
+
+state 137:
+
+	group : gprivspec LPAREN srcfile RPAREN opt_exports IS . members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 148
+	member	goto 70
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 138:
+
+	guarded_members : members else_members .  (reduce by rule 49)
+
+
+
+	.	reduce by rule 49
+
+
+state 139:
+
+	else_members : ENDIF .  (reduce by rule 50)
+
+
+
+	.	reduce by rule 50
+
+
+state 140:
+
+	else_members : ELSE . members ENDIF 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 149
+	member	goto 70
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 141:
+
+	else_members : ELIF . exp guarded_members 
+
+	CM_ID	shift 52
+	NUMBER	shift 51
+	LPAREN	shift 50
+	DEFINED	shift 49
+	ADDSYM	shift 48
+	TILDE	shift 47
+	NOT	shift 46
+	TRUE	shift 45
+	FALSE	shift 44
+
+	aexp	goto 43
+	boolexp	goto 42
+	exp	goto 150
+	sym	goto 40
+
+	.	error
+
+
+state 142:
+
+	else_exports : ELSE exports ENDIF .  (reduce by rule 32)
+
+
+
+	.	reduce by rule 32
+
+
+state 143:
+
+	else_exports : ELIF exp guarded_exports .  (reduce by rule 33)
+
+
+
+	.	reduce by rule 33
+
+
+state 144:
+
+	group : lprivspec LPAREN version RPAREN mand_exports IS members .  (reduce by rule 3)
+
+
+
+	.	reduce by rule 3
+
+
+state 145:
+
+	ptoolopts : LPAREN toolopts RPAREN .  (reduce by rule 40)
+
+
+
+	.	reduce by rule 40
+
+
+state 146:
+
+	toolopts : pathname toolopts .  (reduce by rule 37)
+
+
+
+	.	reduce by rule 37
+
+
+state 147:
+
+	toolopts : pathname COLON . ptoolopts toolopts 
+	toolopts : pathname COLON . pathname toolopts 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	LPAREN	shift 122
+
+	pathname	goto 152
+	ptoolopts	goto 151
+
+	.	error
+
+
+state 148:
+
+	group : gprivspec LPAREN srcfile RPAREN opt_exports IS members .  (reduce by rule 1)
+
+
+
+	.	reduce by rule 1
+
+
+state 149:
+
+	else_members : ELSE members . ENDIF 
+
+	ENDIF	shift 153
+
+
+	.	error
+
+
+state 150:
+
+	else_members : ELIF exp . guarded_members 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+	IF	shift 73
+	ERROR	shift 72
+
+	members	goto 128
+	member	goto 70
+	guarded_members	goto 154
+	pathname	goto 69
+
+	.	reduce by rule 34
+
+
+state 151:
+
+	toolopts : pathname COLON ptoolopts . toolopts 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+
+	pathname	goto 136
+	toolopts	goto 155
+
+	.	reduce by rule 36
+
+
+state 152:
+
+	toolopts : pathname COLON pathname . toolopts 
+
+	FILE_STANDARD	shift 61
+	FILE_NATIVE	shift 60
+
+	pathname	goto 136
+	toolopts	goto 156
+
+	.	reduce by rule 36
+
+
+state 153:
+
+	else_members : ELSE members ENDIF .  (reduce by rule 51)
+
+
+
+	.	reduce by rule 51
+
+
+state 154:
+
+	else_members : ELIF exp guarded_members .  (reduce by rule 52)
+
+
+
+	.	reduce by rule 52
+
+
+state 155:
+
+	toolopts : pathname COLON ptoolopts toolopts .  (reduce by rule 38)
+
+
+
+	.	reduce by rule 38
+
+
+state 156:
+
+	toolopts : pathname COLON pathname toolopts .  (reduce by rule 39)
+
+
+
+	.	reduce by rule 39
+
+
+state 157:
+
+
+	EOF	accept
+
+
+	.	error
+
+235 of 543 action table entries left after compaction
+173 goto table entries

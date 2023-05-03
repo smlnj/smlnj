@@ -1,0 +1,22 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * Sources for the compiler's pretty printer.
+ *)
+
+Library
+
+  signature COMPILER_PP
+  structure CompilerPP
+
+is
+
+  $/basis.cm
+
+  ../src/pretty-print-lib.cm
+  ../devices/sources.cm
+
+  compiler-pp.sig
+  compiler-pp.sml

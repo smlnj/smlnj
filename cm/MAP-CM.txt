@@ -1,0 +1,505 @@
+$SMLNJ/cm/MAP-CM.txt
+
+Toplevel description file for new (2000) implementation of CM
+
+CDF: CM/cm-lib.cm
+
+(* ---------------------------- Exports ---------------------------- *)
+
+	functor LinkCM
+	functor BootstrapCompileFn
+
+	signature VERSION ?
+	structure Version
+	structure Sharing
+	signature TOOLS ?
+	structure Subst
+
+	structure StdConfig
+
+
+(* ---------------------------- Module Index ---------------------------- *)
+
+LOCAL:
+
+  GroupGraph             depend/ggraph.sml
+  DependencyGraph	 depend/graph.sml
+  DAEnv			 depend/da-env.sml
+  CheckSharing		 depend/checksharing.sml
+
+  CMLrValsFun 		 parse/cm.grm.sml
+  CMLexFun		 parse/cm.lex.sml
+
+  SrcPath		 paths/srcpath.sml
+  SrcPathSet		 paths/srcpathset.sml
+  SrcPathMap		 paths/srcpathmap.sml
+
+  CMSemant		 semant/semant.sml
+  GroupReg		 semant/group-reg.sml
+  IInfo			 semant/iinfo.sml
+  VERSION		 semant/version.sml 
+  Version		 semant/version.sml 
+  Sharing		 semant/sharing.sml
+  GROUPREG		 semant/group-reg.sml 
+  GroupReg		 semant/group-reg.sml 
+  MEMBERCOLLECTION	 semant/members.sml 
+  MemberCollection	 semant/members.sml 
+  CM_SEMANT		 semant/semant.sml 
+  CMSemant		 semant/semant.sml 
+
+  SmlInfo		 smlfile/smlinfo.sml
+  SmlInfoSet		 smlfile/smlinfoset.sml 
+  SmlInfoMap		 smlfile/smlinfomap.sml 
+  Skeleton		 smlfile/skeleton.sml
+
+  STABILIZE		 stable/stabilize.sml
+  STAB_MODMAP		 stable/stabmm.sml
+  VerStabFn		 stable/verify.sml
+  BinInfo		 stable/bininfo.sml
+  StableSet		 stable/stableset.sml
+
+  GeneralParams	 	 main/general-params.sml
+  PervAccess		 main/perv-access.sml
+  FilenamePolicy	 main/filename-policy.sml
+
+  SafeIO		 util/safeio.sml
+  StringSet		 util/stringset.sml
+  SymbolSet		 util/symbolset.sml
+
+  PARSE			 parse/parse.sml
+  ParseFn		 parse/parse.sml
+  CM_TOKENS		 parse/cm.grm.sig
+  CM_LRVALS		 parse/cm.grm.sig
+
+  PrivateTools		 tools/main/private-tools.sml
+
+IMPORTS:
+
+  LrParser		mlyacc-lib.cm
+  JoinWithArg		mlyacc-lib.cm
+  PARSER_DATA		mlyacc-lib.cm ?
+
+  Symbol		compiler/Basics/symbol/symbol.sml
+  Source		compiler/Basics/source/source.sml (basics.cm)
+  SourceMap		compiler/Basics/source/sourcemap.sml (basics.cm)
+  PPSourceMap		compiler/Basics/source/ppsourcemap.sml (basics.cm)
+
+  StaticEnv		compiler/ElabData/statenv/statenv.sml
+  BrowseStatEnv		compiler/ElabData/statenv/browse.sml
+
+  LibBase		?
+
+
+(* ---------------------------- Members [files] ---------------------------- *)
+Imports from outside this library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+
+CM/
+
+(* the CM description file parser *)
+parse/
+
+  parse.sml
+    < PARSE
+      ParseFn
+    > GroupGraph
+      DependencyGraph
+      CMLrValsFun
+      CMLexFun
+      SrcPath
+      SrcPathMap
+      CMSemant
+      GroupReg 
+      SmlInfo
+      STAB_MODMAP
+      STABILIZE
+      GeneralParams
+      SafeIO
+      ---------------
+      LibBase ?
+      LrParser
+      Source
+      SourceMap
+      PPSourceMap
+      ErrorMsg
+      Formatting
+
+  % cm.grm : MLYacc -->
+  cm.grm.sig
+    < CM_TOKENS
+      CM_LRVALS
+    > CMSemant
+      --------
+      PARSER_DATA
+
+  cm.grm.sml
+    < CMLrValsFun
+    > CMSemant
+      CM_TOKENS
+      --------
+      SourceMap
+
+  % cm.lex : MLLex -->
+  cm.lex.sml
+    < CMLexFun
+    > CM_TOKENS
+
+semant/
+  sharing.sml
+    < Sharing
+    >
+
+  iinfo.sml
+    < IInfo
+    > ---------
+      StaticEnv
+      PersStamps
+
+  group-reg.sml
+    < GROUPREG
+      GroupReg
+    > SrcPath
+      SrcPathMap
+      -------
+      Source
+      SourceMap
+      ErrorMsg
+
+  (* semantic actions for description file parser *)
+  version.sml
+    < VERSION
+      Version
+    > 
+
+  members.sml
+    < MEMBERCOLLECTION
+      MemberCollection
+    > SmlInfo
+      SrcPath
+      SrcPathMap
+      GeneralParams
+      DependencyGraph
+      GroupGraph
+      PrivateTools
+      SymbolSet
+      SymbolMap
+      Version
+      -------
+      Symbol
+      SourceMap
+      ErrorMsg
+
+  semant.sml
+    < CM_SEMANT
+      CMSemant
+    > SrcPath
+      Version
+      SymbolSet
+      SymbolMap
+      GroupGraph
+      GeneralParams
+      MemberCollection
+      PrivateTools
+      PervAccess
+      -------
+      Symbol
+      SourceMap
+      ErrorMsg
+
+(* dependency graphs *)
+depend/
+  graph.sml
+    < DependencyGraph
+    > SymbolSet
+      SmlInfo 
+      BinInfo
+      IInfo
+      DAEnv
+      -----
+
+  build.sml
+    < BUILDDEPEND
+      BuildDepend
+    > SymbolMap
+      SymbolSet
+      SrcPath
+      SmlInfo
+      SmlInfoMap
+      DAEnv
+      CheckSharing
+      Skeleton
+      GroupGraph
+      DependencyGraph 
+      GeneralParams
+      -------------
+      Symbol
+      SymPath
+      ErrorMsg
+      Formatting
+
+  da-env.sml
+    < DAEnv
+    > SymbolSet
+      ---------
+      Symbol
+
+  se2dae.sml
+    < STATENV2DAENV
+      Statenv2DAEnv
+    > SymbolSet
+      DAEnv
+      ------
+      Symbol
+      StaticEnv
+      BrowseStatEnv
+
+  ggraph.sml
+    < GroupGraph
+    > StringSet
+      SrcPath
+      SrcPathMap
+      Version
+      DependencyGraph
+
+  reachable.sml
+    < REACHABLE
+      Reachable
+    > GroupGraph
+      DependencyGraph
+      SmlInfoSet
+      SrcPathSet
+      SrcPathMap
+      StableSet
+      BinInfo
+
+  checksharing.sml
+    < CHECKSHARING
+      CheckSharing
+    > DependencyGraph
+      SymbolMap
+      SmlInfo
+      SmlInfoMap
+      StringSet
+      GeneralParams
+      Sharing
+      --------
+      ErrorMsg
+      Formatting
+
+  mklist.sml
+    < MkList
+    > SymbolMap
+      BinInfo
+      SmlInfo
+      SmlInfoSet 
+      StableSet
+      GroupGraph
+      DependencyGraph
+
+  indegree.sml
+    < INDEGREE
+      Indegree
+    > GroupGraph
+      DependencyGraph
+      SmlInfoMap
+      SymbolMap
+
+  index.sml
+    < INDEX
+      Index
+    > GeneralParams
+      SmlInfo
+      SymbolMap
+      GroupGraph
+      DependencyGraph
+      SrcPath
+      FilenamePolicy
+      --------------
+      Symbol
+      ErrorMsg
+
+  to-portable.sml
+    < ToPortable
+    > GroupGraph
+      DependencyGraph
+      PortableGraph
+      GeneralParams
+      SrcPath
+      SrcPathMap
+      SymbolSet
+      SmlInfo
+      SmlInfoMap
+      StableMap
+      SymbolMap
+      ---------
+      Symbol
+
+(* handling SML source code *)
+smlfile/
+  smlinfo.sml
+    <
+    >
+  smlinfoset.sml
+    <
+    >
+  smlinfomap.sml
+    <
+    >
+  skeleton.sml
+    <
+    >
+  skel-cvt.sml
+    <
+    >
+  skel-io.sml
+    <
+    >
+  skel-exports.sml
+    <
+    >
+
+(* handling stable groups *)
+stable/
+  bininfo.sml
+    <
+    >
+  stabmm.sml
+    <
+    >
+  stablemap.sml
+    <
+    >
+  stableset.sml
+    <
+    >
+  stabilize.sml
+    <
+    >
+  verify.sml
+    <
+    >
+
+(* tools for handling other source types *)
+tools/main/
+  lsplit-arg.sml
+    <
+    >
+  core-tools.sig
+    <
+    >
+  private-tools.sig
+    <
+    >
+  public-tools.sig
+    <
+    >
+  private-tools.sml
+    <
+    >
+  tools-fn.sml
+    <
+    >
+
+
+(* doing actual compilation work *)
+compile/
+  compile.sml
+    <
+    >
+  corehack.sml
+    <
+    >
+  link.sml
+    <
+    >
+  bfc.sml
+    <
+    >
+
+(* overall control of CM *)
+main/
+  general-params.sml
+    <
+    >
+  filename-policy.sml
+    <
+    >
+  symval.sml
+    <
+    >
+  specific-symval-fn.sml
+    <
+    >
+  autoload.sml
+    <
+    >
+  cleanup.sml
+    <
+    >
+  slave.sml
+    <
+    >
+  preload.sml
+    <
+    >
+  cm-boot.sml
+    <
+    >
+  perv-access.sml
+    <
+    >
+
+(* bootstrap compiler (formerly known as "batch") *)
+bootstrap/
+  names.sml
+    <
+    >
+  build-initdg.sml
+    <
+    >
+  btcompile.sml
+    <
+    >
+  mkbootlist.sml
+    <
+    >
+  cmb-slave-stub.sml
+    <
+    >
+  cmb-slave-hook.sml
+    <
+    >
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+
+
+(* CM-internal libraries *)
+util/sources.cm
+concur/sources.cm  (concurrent/parallel/distributed make)
+$smlnj/internal/srcpath-lib.cm (paths/srcpath-lib.cm)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* viscomp *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/parser.cm
+$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/execute.cm
+$smlnj/viscomp/core.cm
+
+$/pickle-lib.cm ($compiler/Library/pickle/pickle-lib.cm)
+
+(* auxiliary libraries *)
+$smlnj/ml-yacc/ml-yacc-lib.cm
+$/pgraph.cm ($SMLNJ/libraries/pgraph/pgraph.cm)
+
+
+(* ---------------------------- Notes ---------------------------- *) 

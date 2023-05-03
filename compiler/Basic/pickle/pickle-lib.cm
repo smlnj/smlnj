@@ -1,0 +1,24 @@
+(*
+ * Utility routines for pickling.
+ *
+ *   Copyright (c) 2000 by Lucent Bell Laboratories
+ *
+ * latest modifications (conversion from $/comp-lib.cm to $/pickle-lib.cm)
+ $ by Matthias Blume (11/2000)
+ *)
+Library
+	signature CRC
+	signature PICKLE_UTIL
+	signature UNPICKLE_UTIL
+
+	structure CRC
+	structure UnpickleUtil
+	structure PickleUtil
+is
+
+crc.sml
+pickle-util.sml
+unpickle-util.sml
+
+$smlnj/basis/basis.cm
+$smlnj/smlnj-lib/smlnj-lib.cm

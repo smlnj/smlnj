@@ -15,15 +15,69 @@ struct
  *)
 
 open Ast ErrorMsg Symbol FastSymbol AstUtil Fixity
+structure SM = SourceMap
 
 type raw_symbol = FastSymbol.raw_symbol
 
-fun markexp (e as MarkExp _, _, _) = e
-  | markexp(e,a,b) = MarkExp(e,(a,b))
-fun markpat (p as MarkPat _, _, _) = p
-  | markpat(p,a,b) = MarkPat(p,(a,b))
-fun markdec(d as MarkDec _, _,_) = d
-  | markdec(d,a,b) = MarkDec(d,(a,b))
+fun markexp (exp as MarkExp _, _, _) = exp
+  | markexp (exp,a,b) = MarkExp (exp, SM.REGION(a,b))
+
+fun markpat (pat as MarkPat _, _, _) = pat
+  | markpat (pat,a,b) = MarkPat(pat, SM.REGION(a,b))
+
+fun markdec (dec as MarkDec _, _, _) = dec
+  | markdec (dec,a,b) = MarkDec(dec, SM.REGION (a,b))
+
+fun markspec (spec as MarkSpec _, _, _) = spec
+  | markspec (spec,a,b) = MarkSpec(spec, SM.REGION (a,b))
+
+fun marksig (sigexp as MarkSig _, _, _) = sigexp
+  | marksig (sigexp,a,b) = MarkSig(sigexp, SM.REGION (a,b))
+
+fun markfsig (fsigexp as MarkFsig _, _, _) = fsigexp
+  | markfsig (fsigexp,a,b) = MarkFsig(fsigexp, SM.REGION (a,b))
+
+fun markstr (strexp as MarkStr _, _, _) = strexp
+  | markstr (strexp,a,b) = MarkStr (strexp, SM.REGION (a,b))
+
+fun markfct (fctexp as MarkFct _, _, _) = fctexp
+  | markfct (fctexp,a,b) = MarkFct (fctexp, SM.REGION (a,b))
+
+fun markvb (vb as MarkVb _, _, _) = vb
+  | markvb (vb,a,b) = MarkVb(vb, SM.REGION (a,b))
+
+fun markrvb (rvb as MarkRvb _, _, _) = rvb
+  | markrvb (rvb,a,b) = MarkRvb(rvb, SM.REGION (a,b))
+
+fun markfb (fb as MarkFb _, _, _) = fb
+  | markfb (fb,a,b) = MarkFb(fb, SM.REGION (a,b))
+
+fun marktb (tb as MarkTb _, _, _) = tb
+  | marktb (tb,a,b) = MarkTb(tb, SM.REGION (a,b))
+
+fun markdb (db as MarkDb _, _, _) = db
+  | markdb (db,a,b) = MarkDb(db, SM.REGION (a,b))
+
+fun markeb (eb as MarkEb _, _, _) = eb
+  | markeb (eb,a,b) = MarkEb(eb, SM.REGION (a,b))
+
+fun markstrb (strb as MarkStrb _, _, _) = strb
+  | markstrb (strb,a,b) = MarkStrb (strb, SM.REGION (a,b))
+
+fun markfctb (fctb as MarkFctb _, _, _) = fctb
+  | markfctb (fctb,a,b) = MarkFctb (fctb, SM.REGION (a,b))
+
+fun marksigb (sigb as MarkSigb _, _, _) = sigb
+  | marksigb (sigb,a,b) = MarkSigb (sigb, SM.REGION (a,b))
+
+fun markfsigb (fsigb as MarkFsigb _, _, _) = fsigb
+  | markfsigb (fsigb,a,b) = MarkFsigb (fsigb, SM.REGION (a,b))
+
+fun markty (ty as MarkTy _, _, _) = ty
+  | markty (ty,a,b) = MarkTy (ty, SM.REGION (a,b))
+
+fun marktyv (tyv as MarkTyv _, _, _) = tyv
+  | marktyv (tyv,a,b) = MarkTyv (tyv, SM.REGION (a,b))
 
 val asteriskHash = HashString.hashString "*"
 val asteriskString = "*"
@@ -1876,9 +1930,7 @@ end
 |  ( 24, ( ( _, ( MlyValue.TYVAR TYVAR1, (TYVARleft as TYVAR1left), (
 TYVARright as TYVAR1right))) :: rest671)) => let val  result = 
 MlyValue.ty' (fn _ => let val  (TYVAR as TYVAR1) = TYVAR1 ()
- in (MarkTy (VarTy(Tyv(tyvSymbol TYVAR)),
-				 (TYVARleft,TYVARright))
-)
+ in (markty (VarTy(Tyv(tyvSymbol TYVAR)), TYVARleft, TYVARright))
 end)
  in ( LrTable.NT 11, ( result, TYVAR1left, TYVAR1right), rest671)
 end
@@ -1886,7 +1938,7 @@ end
 MlyValue.tlabels tlabels1, _, _)) :: ( _, ( _, (LBRACEleft as 
 LBRACE1left), _)) :: rest671)) => let val  result = MlyValue.ty' (fn _
  => let val  (tlabels as tlabels1) = tlabels1 ()
- in (MarkTy(RecordTy tlabels,(LBRACEleft,RBRACEright)))
+ in (markty (RecordTy tlabels, LBRACEleft, RBRACEright))
 end)
  in ( LrTable.NT 11, ( result, LBRACE1left, RBRACE1right), rest671)
 
@@ -1902,7 +1954,7 @@ tycon1right))) :: _ :: ( _, ( MlyValue.ty0_pc ty0_pc1, _, _)) :: ( _,
 ( _, LPAREN1left, _)) :: rest671)) => let val  result = MlyValue.ty'
  (fn _ => let val  (ty0_pc as ty0_pc1) = ty0_pc1 ()
  val  (tycon as tycon1) = tycon1 ()
- in (MarkTy(ConTy(tycon,ty0_pc),(tyconleft,tyconright)))
+ in (markty (ConTy(tycon,ty0_pc), tyconleft,tyconright))
 end)
  in ( LrTable.NT 11, ( result, LPAREN1left, tycon1right), rest671)
 end
@@ -1919,14 +1971,14 @@ tycon1right))) :: ( _, ( MlyValue.ty' ty'1, ty'1left, _)) :: rest671))
  => let val  result = MlyValue.ty' (fn _ => let val  (ty' as ty'1) = 
 ty'1 ()
  val  (tycon as tycon1) = tycon1 ()
- in (MarkTy(ConTy(tycon,[ty']),(tyconleft,tyconright)))
+ in (markty (ConTy(tycon,[ty']), tyconleft, tyconright))
 end)
  in ( LrTable.NT 11, ( result, ty'1left, tycon1right), rest671)
 end
 |  ( 30, ( ( _, ( MlyValue.tycon tycon1, (tyconleft as tycon1left), (
 tyconright as tycon1right))) :: rest671)) => let val  result = 
 MlyValue.ty' (fn _ => let val  (tycon as tycon1) = tycon1 ()
- in (MarkTy(ConTy(tycon,[]),(tyconleft,tyconright)))
+ in (markty (ConTy(tycon,[]), tyconleft, tyconright))
 end)
  in ( LrTable.NT 11, ( result, tycon1left, tycon1right), rest671)
 end
@@ -2158,7 +2210,7 @@ aexpright as aexp1right))) :: rest671)) => let val  result =
 MlyValue.app_exp (fn _ => let val  (aexp as aexp1) = aexp1 ()
  in (
 [{item=markexp(aexp,aexpleft,aexpright),
-			   region=(aexpleft,aexpright), fixity=NONE}]
+			   region = SM.REGION (aexpleft,aexpright), fixity=NONE}]
 )
 end)
  in ( LrTable.NT 21, ( result, aexp1left, aexp1right), rest671)
@@ -2169,7 +2221,7 @@ MlyValue.app_exp (fn _ => let val  (ident as ident1) = ident1 ()
  in (
 [let val (v,f) = var'n'fix ident
 			    in {item=markexp(VarExp [v],identleft,identright),
-				region=(identleft,identright),
+				region = SM.REGION (identleft,identright),
 				fixity=SOME f}
 			    end]
 )
@@ -2183,7 +2235,7 @@ aexp as aexp1) = aexp1 ()
  val  (app_exp as app_exp1) = app_exp1 ()
  in (
 {item=markexp(aexp,aexpleft,aexpright),
-			  region=(aexpleft,aexpright), fixity=NONE}
+			  region = SM.REGION (aexpleft,aexpright), fixity=NONE}
                             :: app_exp
 )
 end)
@@ -2197,7 +2249,7 @@ ident as ident1) = ident1 ()
  in (
 let val (v,f) = var'n'fix ident
 			  in {item=markexp(VarExp [v],identleft,identright),
-			      region=(identleft,identright),
+			      region = SM.REGION (identleft,identright),
 				fixity=SOME f} :: app_exp
 			 end
 )
@@ -2474,7 +2526,7 @@ apat'right as apat'1right))) :: rest671)) => let val  result =
 MlyValue.apat (fn _ => let val  (apat' as apat'1) = apat'1 ()
  in (
 {item=markpat(apat',apat'left,apat'right),
-				  region=(apat'left,apat'right),
+				  region = SM.REGION (apat'left,apat'right),
 			          fixity=NONE}
 )
 end)
@@ -2486,9 +2538,9 @@ MlyValue.pat pat1, _, _)) :: ( _, ( _, (LPARENleft as LPAREN1left), _)
 pat as pat1) = pat1 ()
  in (
 {item=pat,
-				  region=(LPARENleft,RPARENright),
-				  fixity=NONE})
-
+				  region = SM.REGION (LPARENleft,RPARENright),
+				  fixity=NONE}
+)
 end)
  in ( LrTable.NT 28, ( result, LPAREN1left, RPAREN1right), rest671)
 
@@ -2499,7 +2551,7 @@ id1right))) :: rest671)) => let val  result = MlyValue.apat (fn _ =>
  in (
 let val (v,f) = var'n'fix id
 				 in {item=markpat(VarPat [v],idleft,idright),
-				     region=(idleft,idright),
+				     region = SM.REGION (idleft,idright),
 				     fixity=SOME f} end
 )
 end)
@@ -2509,7 +2561,7 @@ end
 LPARENleft as LPAREN1left), _)) :: rest671)) => let val  result = 
 MlyValue.apat (fn _ => (
 {item=markpat(unitPat,LPARENleft,RPARENright),
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE}
 ))
  in ( LrTable.NT 28, ( result, LPAREN1left, RPAREN1right), rest671)
@@ -2523,7 +2575,7 @@ pat1 ()
  val  (pat_list as pat_list1) = pat_list1 ()
  in (
 {item=markpat(TuplePat(pat :: pat_list),LPARENleft,RPARENright),
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE}
 )
 end)
@@ -2538,7 +2590,7 @@ pat1, _, _)) :: ( _, ( _, (LPARENleft as LPAREN1left), _)) :: rest671)
  val  (or_pat_list as or_pat_list1) = or_pat_list1 ()
  in (
 {item=markpat(OrPat(pat :: or_pat_list),LPARENleft,RPARENright),
-				  region=(LPARENleft,RPARENright),
+				  region = SM.REGION (LPARENleft,RPARENright),
 				  fixity=NONE}
 )
 end)
@@ -2775,10 +2827,8 @@ end
 )) :: rest671)) => let val  result = MlyValue.vb (fn _ => let val  (
 pat as pat1) = pat1 ()
  val  (exp as exp1) = exp1 ()
- in (
-[MarkVb(Vb{exp=exp, pat=pat, lazyp=true},
-	                                 (patleft,expright))]
-)
+ in ([markvb (Vb{exp=exp, pat=pat, lazyp=true}, patleft, expright)])
+
 end)
  in ( LrTable.NT 35, ( result, LAZY1left, exp1right), rest671)
 end
@@ -2787,10 +2837,8 @@ end
 ) => let val  result = MlyValue.vb (fn _ => let val  (pat as pat1) = 
 pat1 ()
  val  (exp as exp1) = exp1 ()
- in (
-[MarkVb(Vb{exp=exp, pat=pat, lazyp=false},
-	                                 (patleft,expright))]
-)
+ in ([markvb (Vb{exp=exp, pat=pat, lazyp=false}, patleft, expright)])
+
 end)
  in ( LrTable.NT 35, ( result, pat1left, exp1right), rest671)
 end
@@ -2818,7 +2866,7 @@ end
 rest671)) => let val  result = MlyValue.rvb (fn _ => let val  (rpat
  as rpat1) = rpat1 ()
  val  (exp as exp1) = exp1 ()
- in ([MarkRvb(rpat (false, exp), (rpatleft, expright))])
+ in ([markrvb (rpat (false, exp), rpatleft, expright)])
 end)
  in ( LrTable.NT 37, ( result, rpat1left, exp1right), rest671)
 end
@@ -2827,7 +2875,7 @@ end
 LAZY1left), _)) :: rest671)) => let val  result = MlyValue.rvb (fn _
  => let val  (rpat as rpat1) = rpat1 ()
  val  (exp as exp1) = exp1 ()
- in ([MarkRvb(rpat (true, exp), (LAZYleft, expright))])
+ in ([markrvb (rpat (true, exp), LAZYleft, expright)])
 end)
  in ( LrTable.NT 37, ( result, LAZY1left, exp1right), rest671)
 end
@@ -2849,7 +2897,7 @@ fn (lazy, exp) => let
 				  val (v,f) = var'n'fix id
 	                	  in
 				    Rvb{
-				        var = v, fixity = SOME(f, (idleft, idright)),
+				        var = v, fixity = SOME (f, SM.REGION (idleft, idright)),
 				        resultty = constraint,
 				        exp = exp, lazyp = lazy
 				      }
@@ -2895,14 +2943,14 @@ end
 |  ( 137, ( ( _, ( MlyValue.fb' fb'1, (fb'left as fb'1left), (fb'right
  as fb'1right))) :: rest671)) => let val  result = MlyValue.fb (fn _
  => let val  (fb' as fb'1) = fb'1 ()
- in ([MarkFb(Fb(fb',false), (fb'left,fb'right))])
+ in ([markfb (Fb(fb',false), fb'left, fb'right)])
 end)
  in ( LrTable.NT 40, ( result, fb'1left, fb'1right), rest671)
 end
 |  ( 138, ( ( _, ( MlyValue.fb' fb'1, fb'left, (fb'right as fb'1right)
 )) :: ( _, ( _, LAZY1left, _)) :: rest671)) => let val  result = 
 MlyValue.fb (fn _ => let val  (fb' as fb'1) = fb'1 ()
- in ([MarkFb(Fb(fb',true), (fb'left,fb'right))])
+ in ([markfb (Fb(fb',true), fb'left, fb'right)])
 end)
  in ( LrTable.NT 40, ( result, LAZY1left, fb'1right), rest671)
 end
@@ -2911,7 +2959,7 @@ MlyValue.fb' fb'1, (fb'left as fb'1left), fb'right)) :: rest671)) =>
  let val  result = MlyValue.fb (fn _ => let val  (fb' as fb'1) = fb'1
  ()
  val  (fb as fb1) = fb1 ()
- in (MarkFb(Fb(fb',false), (fb'left,fb'right)) :: fb)
+ in (markfb (Fb(fb',false), fb'left, fb'right) :: fb)
 end)
  in ( LrTable.NT 40, ( result, fb'1left, fb1right), rest671)
 end
@@ -2920,7 +2968,7 @@ MlyValue.fb' fb'1, fb'left, fb'right)) :: ( _, ( _, LAZY1left, _)) ::
 rest671)) => let val  result = MlyValue.fb (fn _ => let val  (fb' as 
 fb'1) = fb'1 ()
  val  (fb as fb1) = fb1 ()
- in (MarkFb(Fb(fb',true), (fb'left,fb'right)) :: fb)
+ in (markfb (Fb(fb',true), fb'left, fb'right) :: fb)
 end)
  in ( LrTable.NT 40, ( result, LAZY1left, fb1right), rest671)
 end
@@ -2961,9 +3009,8 @@ result = MlyValue.tb (fn _ => let val  (tyvars as tyvars1) = tyvars1
  val  (idtyc as idtyc1) = idtyc1 ()
  val  (ty as ty1) = ty1 ()
  in (
-[MarkTb(
-				   Tb{tyvars=tyvars,tyc=tycSymbol idtyc,def=ty},
-				   (tyvarsleft,tyright))]
+[marktb (Tb{tyvars=tyvars,tyc=tycSymbol idtyc,def=ty},
+				    tyvarsleft, tyright)]
 )
 end)
  in ( LrTable.NT 43, ( result, tyvars1left, ty1right), rest671)
@@ -2979,9 +3026,7 @@ end
 |  ( 146, ( ( _, ( MlyValue.TYVAR TYVAR1, (TYVARleft as TYVAR1left), (
 TYVARright as TYVAR1right))) :: rest671)) => let val  result = 
 MlyValue.tyvars (fn _ => let val  (TYVAR as TYVAR1) = TYVAR1 ()
- in ([MarkTyv(Tyv(tyvSymbol TYVAR),
-					 (TYVARleft,TYVARright))])
-
+ in ([marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)])
 end)
  in ( LrTable.NT 44, ( result, TYVAR1left, TYVAR1right), rest671)
 end
@@ -3001,9 +3046,7 @@ end
 |  ( 149, ( ( _, ( MlyValue.TYVAR TYVAR1, (TYVARleft as TYVAR1left), (
 TYVARright as TYVAR1right))) :: rest671)) => let val  result = 
 MlyValue.tyvarseq (fn _ => let val  (TYVAR as TYVAR1) = TYVAR1 ()
- in ([MarkTyv(Tyv(tyvSymbol TYVAR),
-					 (TYVARleft,TYVARright))])
-
+ in ([marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)])
 end)
  in ( LrTable.NT 45, ( result, TYVAR1left, TYVAR1right), rest671)
 end
@@ -3019,7 +3062,7 @@ end
 |  ( 151, ( ( _, ( MlyValue.TYVAR TYVAR1, (TYVARleft as TYVAR1left), (
 TYVARright as TYVAR1right))) :: rest671)) => let val  result = 
 MlyValue.tyvar_pc (fn _ => let val  (TYVAR as TYVAR1) = TYVAR1 ()
- in ([MarkTyv(Tyv(tyvSymbol TYVAR), (TYVARleft,TYVARright))])
+ in ([marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)])
 end)
  in ( LrTable.NT 46, ( result, TYVAR1left, TYVAR1right), rest671)
 end
@@ -3029,9 +3072,9 @@ TYVARright)) :: rest671)) => let val  result = MlyValue.tyvar_pc (fn _
  => let val  (TYVAR as TYVAR1) = TYVAR1 ()
  val  (tyvar_pc as tyvar_pc1) = tyvar_pc1 ()
  in (
-MarkTyv(Tyv(tyvSymbol TYVAR),(TYVARleft,TYVARright))
-				 :: tyvar_pc)
-
+marktyv (Tyv(tyvSymbol TYVAR), TYVARleft, TYVARright)
+				 :: tyvar_pc
+)
 end)
  in ( LrTable.NT 46, ( result, TYVAR1left, tyvar_pc1right), rest671)
 
@@ -3192,25 +3235,27 @@ end)
  in ( LrTable.NT 53, ( result, qid1left, qid_p1right), rest671)
 end
 |  ( 169, ( ( _, ( _, INFIX1left, INFIX1right)) :: rest671)) => let
- val  result = MlyValue.fixity (fn _ => (infixleft 0))
+ val  result = MlyValue.fixity (fn _ => (Fixity.infixleft 0))
  in ( LrTable.NT 54, ( result, INFIX1left, INFIX1right), rest671)
 end
 |  ( 170, ( ( _, ( MlyValue.int int1, intleft, (intright as int1right)
 )) :: ( _, ( _, INFIX1left, _)) :: rest671)) => let val  result = 
 MlyValue.fixity (fn _ => let val  (int as int1) = int1 ()
- in (infixleft (checkFix(#2 int, error(intleft, intright))))
+ in (Fixity.infixleft (checkFix(#2 int, error(intleft, intright))))
+
 end)
  in ( LrTable.NT 54, ( result, INFIX1left, int1right), rest671)
 end
 |  ( 171, ( ( _, ( _, INFIXR1left, INFIXR1right)) :: rest671)) => let
- val  result = MlyValue.fixity (fn _ => (infixright 0))
+ val  result = MlyValue.fixity (fn _ => (Fixity.infixright 0))
  in ( LrTable.NT 54, ( result, INFIXR1left, INFIXR1right), rest671)
 
 end
 |  ( 172, ( ( _, ( MlyValue.int int1, intleft, (intright as int1right)
 )) :: ( _, ( _, INFIXR1left, _)) :: rest671)) => let val  result = 
 MlyValue.fixity (fn _ => let val  (int as int1) = int1 ()
- in (infixright (checkFix(#2 int, error(intleft, intright))))
+ in (Fixity.infixright (checkFix(#2 int, error(intleft, intright))))
+
 end)
  in ( LrTable.NT 54, ( result, INFIXR1left, int1right), rest671)
 end
@@ -3702,8 +3747,8 @@ patheqnright as patheqn1right))) :: ( _, ( _, TYPE1left, _)) ::
 rest671)) => let val  result = MlyValue.sharespec (fn _ => let val  (
 patheqn as patheqn1) = patheqn1 ()
  in (
-[MarkSpec (ShareTycSpec(patheqn tycSymbol),
-				    (patheqnleft,patheqnright))]
+[markspec (ShareTycSpec(patheqn tycSymbol),
+				    patheqnleft, patheqnright)]
 )
 end)
  in ( LrTable.NT 67, ( result, TYPE1left, patheqn1right), rest671)
@@ -3713,8 +3758,8 @@ patheqn1left), (patheqnright as patheqn1right))) :: rest671)) => let
  val  result = MlyValue.sharespec (fn _ => let val  (patheqn as 
 patheqn1) = patheqn1 ()
  in (
-[MarkSpec (ShareStrSpec (patheqn strSymbol),
-				    (patheqnleft,patheqnright))]
+[markspec (ShareStrSpec (patheqn strSymbol),
+				    patheqnleft, patheqnright)]
 )
 end)
  in ( LrTable.NT 67, ( result, patheqn1left, patheqn1right), rest671)
@@ -3766,9 +3811,7 @@ end
 |  ( 237, ( ( _, ( MlyValue.IDA IDA1, (IDAleft as IDA1left), (IDAright
  as IDA1right))) :: rest671)) => let val  result = MlyValue.sign (fn _
  => let val  (IDA as IDA1) = IDA1 ()
- in (MarkSig(VarSig (sigSymbol IDA),
-				         (IDAleft,IDAright)))
-
+ in (marksig (VarSig (sigSymbol IDA), IDAleft, IDAright))
 end)
  in ( LrTable.NT 70, ( result, IDA1left, IDA1right), rest671)
 end
@@ -3776,7 +3819,7 @@ end
 , spec_sleft, spec_sright)) :: ( _, ( _, SIG1left, _)) :: rest671)) =>
  let val  result = MlyValue.sign (fn _ => let val  (spec_s as spec_s1)
  = spec_s1 ()
- in (MarkSig(BaseSig(spec_s),(spec_sleft,spec_sright)))
+ in (marksig (BaseSig(spec_s), spec_sleft, spec_sright))
 end)
  in ( LrTable.NT 70, ( result, SIG1left, END1right), rest671)
 end
@@ -3785,7 +3828,7 @@ whspec1right))) :: _ :: ( _, ( MlyValue.sign sign1, (signleft as
 sign1left), _)) :: rest671)) => let val  result = MlyValue.sign (fn _
  => let val  (sign as sign1) = sign1 ()
  val  (whspec as whspec1) = whspec1 ()
- in (MarkSig(AugSig(sign,whspec),(signleft,whspecright)))
+ in (marksig (AugSig(sign,whspec), signleft, whspecright))
 end)
  in ( LrTable.NT 70, ( result, sign1left, whspec1right), rest671)
 end
@@ -3882,7 +3925,7 @@ end
 |  ( 252, ( ( _, ( MlyValue.qid qid1, (qidleft as qid1left), (qidright
  as qid1right))) :: rest671)) => let val  result = MlyValue.str (fn _
  => let val  (qid as qid1) = qid1 ()
- in ((MarkStr(VarStr(qid strSymbol),(qidleft,qidright))))
+ in (markstr (VarStr(qid strSymbol), qidleft, qidright))
 end)
  in ( LrTable.NT 76, ( result, qid1left, qid1right), rest671)
 end
@@ -3890,7 +3933,7 @@ end
 MlyValue.strdecs strdecs1, _, _)) :: ( _, ( _, (STRUCTleft as 
 STRUCT1left), _)) :: rest671)) => let val  result = MlyValue.str (fn _
  => let val  (strdecs as strdecs1) = strdecs1 ()
- in (MarkStr(BaseStr strdecs,(STRUCTleft,ENDright)))
+ in (markstr (BaseStr strdecs, STRUCTleft,ENDright))
 end)
  in ( LrTable.NT 76, ( result, STRUCT1left, END1right), rest671)
 end
@@ -3899,9 +3942,7 @@ arg_fct1right))) :: ( _, ( MlyValue.qid qid1, (qidleft as qid1left), _
 )) :: rest671)) => let val  result = MlyValue.str (fn _ => let val  (
 qid as qid1) = qid1 ()
  val  (arg_fct as arg_fct1) = arg_fct1 ()
- in (
-MarkStr(AppStr(qid fctSymbol,arg_fct),
-			 (qidleft,arg_fctright)))
+ in (markstr (AppStr(qid fctSymbol,arg_fct), qidleft, arg_fctright))
 
 end)
  in ( LrTable.NT 76, ( result, qid1left, arg_fct1right), rest671)
@@ -3912,7 +3953,7 @@ MlyValue.str str1, _, _)) :: _ :: ( _, ( MlyValue.strdecs strdecs1, _,
 result = MlyValue.str (fn _ => let val  (strdecs as strdecs1) = 
 strdecs1 ()
  val  (str as str1) = str1 ()
- in (MarkStr(LetStr(strdecs, str), (LETleft,ENDright)))
+ in (markstr (LetStr(strdecs, str), LETleft, ENDright))
 end)
  in ( LrTable.NT 76, ( result, LET1left, END1right), rest671)
 end
@@ -3922,9 +3963,8 @@ rest671)) => let val  result = MlyValue.str (fn _ => let val  (str as
 str1) = str1 ()
  val  (sign as sign1) = sign1 ()
  in (
-MarkStr(ConstrainedStr(str,Transparent sign),
-		         (strleft,signright))
-)
+markstr (ConstrainedStr(str,Transparent sign), strleft, signright))
+
 end)
  in ( LrTable.NT 76, ( result, str1left, sign1right), rest671)
 end
@@ -3933,10 +3973,8 @@ end
 rest671)) => let val  result = MlyValue.str (fn _ => let val  (str as 
 str1) = str1 ()
  val  (sign as sign1) = sign1 ()
- in (
-MarkStr(ConstrainedStr(str,Opaque sign),
-		         (strleft,signright))
-)
+ in (markstr (ConstrainedStr(str,Opaque sign), strleft, signright))
+
 end)
  in ( LrTable.NT 76, ( result, str1left, sign1right), rest671)
 end
@@ -3946,8 +3984,7 @@ end
 MlyValue.arg_fct (fn _ => let val  (strdecs as strdecs1) = strdecs1 ()
  val  (arg_fct as arg_fct1) = arg_fct1 ()
  in (
-(MarkStr(BaseStr strdecs,
-						  (strdecsleft,strdecsright)),
+(markstr (BaseStr strdecs, strdecsleft, strdecsright),
 					  false) :: arg_fct
 )
 end)
@@ -3977,8 +4014,7 @@ strdecs1, strdecsleft, strdecsright)) :: ( _, ( _, LPAREN1left, _)) ::
  rest671)) => let val  result = MlyValue.arg_fct (fn _ => let val  (
 strdecs as strdecs1) = strdecs1 ()
  in (
-[(MarkStr(BaseStr strdecs,
-						   (strdecsleft,strdecsright)),
+[(markstr (BaseStr strdecs, strdecsleft, strdecsright),
 					   false)]
 )
 end)
@@ -3991,7 +4027,7 @@ strdecright)) :: rest671)) => let val  result = MlyValue.strdecs (fn _
  => let val  (strdec as strdec1) = strdec1 ()
  val  (strdecs as strdecs1) = strdecs1 ()
  in (
-makeSEQdec (markdec(strdec,strdecleft,strdecright),
+makeSEQdec (markdec (strdec,strdecleft,strdecright),
 					     strdecs)
 )
 end)
@@ -4015,9 +4051,9 @@ MlyValue.sdec sdec1, (sdecleft as sdec1left), sdecright)) :: rest671))
  => let val  result = MlyValue.sdecs (fn _ => let val  (sdec as sdec1)
  = sdec1 ()
  val  (sdecs as sdecs1) = sdecs1 ()
- in (makeSEQdec (markdec(sdec,sdecleft,sdecright),
-					     sdecs))
-
+ in (makeSEQdec (markdec (sdec, sdecleft, sdecright),
+					     sdecs)
+)
 end)
  in ( LrTable.NT 81, ( result, sdec1left, sdecs1right), rest671)
 end
@@ -4038,7 +4074,8 @@ end
 )) => let val  result = MlyValue.sdecs' (fn _ => let val  (sdec as 
 sdec1) = sdec1 ()
  val  (sdecs' as sdecs'1) = sdecs'1 ()
- in (makeSEQdec (markdec(sdec,sdecleft,sdecright),
+ in (
+makeSEQdec (markdec (sdec, sdecleft, sdecright),
 					     sdecs'))
 
 end)
@@ -4047,7 +4084,7 @@ end
 |  ( 269, ( ( _, ( MlyValue.sdec sdec1, (sdecleft as sdec1left), (
 sdecright as sdec1right))) :: rest671)) => let val  result = 
 MlyValue.sdecs' (fn _ => let val  (sdec as sdec1) = sdec1 ()
- in (markdec(sdec, sdecleft,sdecright))
+ in (markdec (sdec, sdecleft, sdecright))
 end)
  in ( LrTable.NT 82, ( result, sdec1left, sdec1right), rest671)
 end
@@ -4073,9 +4110,8 @@ LOCAL1left, _)) :: rest671)) => let val  result = MlyValue.strdec (fn
  _ => let val  strdecs1 = strdecs1 ()
  val  strdecs2 = strdecs2 ()
  in (
-LocalDec(markdec(strdecs1,
-						  strdecs1left,strdecs1right),
-  					  markdec(strdecs2,strdecs2left,strdecs2right))
+LocalDec(markdec(strdecs1, strdecs1left, strdecs1right),
+  					  markdec (strdecs2, strdecs2left, strdecs2right))
 )
 end)
  in ( LrTable.NT 78, ( result, LOCAL1left, END1right), rest671)
@@ -4083,7 +4119,7 @@ end
 |  ( 273, ( ( _, ( MlyValue.ldec ldec1, (ldecleft as ldec1left), (
 ldecright as ldec1right))) :: rest671)) => let val  result = 
 MlyValue.strdec (fn _ => let val  (ldec as ldec1) = ldec1 ()
- in (markdec(ldec,ldecleft,ldecright))
+ in (markdec (ldec, ldecleft, ldecright))
 end)
  in ( LrTable.NT 78, ( result, ldec1left, ldec1right), rest671)
 end
@@ -4145,9 +4181,9 @@ IDA1 ()
  val  (sigconstraint_op as sigconstraint_op1) = sigconstraint_op1 ()
  val  (str as str1) = str1 ()
  in (
-[MarkStrb(Strb{name = strSymbol IDA, def = str,
+[markstrb (Strb{name = strSymbol IDA, def = str,
 						constraint=sigconstraint_op},
-					   (IDAleft,strright))]
+					    IDAleft,strright)]
 )
 end)
  in ( LrTable.NT 83, ( result, IDA1left, str1right), rest671)
@@ -4164,17 +4200,14 @@ end
  MlyValue.IDA IDA1, IDA1left, _)) :: rest671)) => let val  result = 
 MlyValue.fparam (fn _ => let val  (IDA as IDA1) = IDA1 ()
  val  (sign as sign1) = sign1 ()
- in ((SOME(strSymbol IDA),sign))
+ in ((SOME(strSymbol IDA), sign))
 end)
  in ( LrTable.NT 84, ( result, IDA1left, sign1right), rest671)
 end
 |  ( 283, ( ( _, ( MlyValue.spec_s spec_s1, (spec_sleft as spec_s1left
 ), (spec_sright as spec_s1right))) :: rest671)) => let val  result = 
 MlyValue.fparam (fn _ => let val  (spec_s as spec_s1) = spec_s1 ()
- in (
-(NONE,MarkSig(BaseSig(spec_s),
-					       (spec_sleft,spec_sright))))
-
+ in ((NONE, marksig (BaseSig(spec_s), spec_sleft, spec_sright)))
 end)
  in ( LrTable.NT 84, ( result, spec_s1left, spec_s1right), rest671)
 
@@ -4207,10 +4240,10 @@ MlyValue.fctb (fn _ => let val  (IDA as IDA1) = IDA1 ()
  val  (sigconstraint_op as sigconstraint_op1) = sigconstraint_op1 ()
  val  (str as str1) = str1 ()
  in (
-[MarkFctb(Fctb {name = fctSymbol IDA,
-                                 def = BaseFct{params=fparamList, body=str,
-				              constraint=sigconstraint_op}},
-			   (IDAleft,strright))]
+[markfctb (Fctb {name = fctSymbol IDA,
+                                  def = BaseFct{params=fparamList, body=str,
+						constraint=sigconstraint_op}},
+			    IDAleft,strright)]
 )
 end)
  in ( LrTable.NT 86, ( result, IDA1left, str1right), rest671)
@@ -4224,9 +4257,9 @@ IDA1left), _)) :: rest671)) => let val  result = MlyValue.fctb (fn _
  ()
  val  (fct_exp as fct_exp1) = fct_exp1 ()
  in (
-[MarkFctb(Fctb {name=fctSymbol IDA,
-				 def=fct_exp (fsigconstraint_op)},
-			   (IDAleft,fct_expright))]
+[markfctb (Fctb {name=fctSymbol IDA,
+				  def=fct_exp (fsigconstraint_op)},
+			    IDAleft,fct_expright)]
 )
 end)
  in ( LrTable.NT 86, ( result, IDA1left, fct_exp1right), rest671)
@@ -4253,8 +4286,7 @@ arg_fct1right))) :: ( _, ( MlyValue.qid qid1, (qidleft as qid1left), _
  val  (arg_fct as arg_fct1) = arg_fct1 ()
  in (
 fn constraint =>
-		    MarkFct(AppFct(qid fctSymbol,arg_fct,constraint),
-			    (qidleft,arg_fctright))
+		    markfct (AppFct(qid fctSymbol,arg_fct,constraint), qidleft, arg_fctright)
 )
 end)
  in ( LrTable.NT 87, ( result, qid1left, arg_fct1right), rest671)
@@ -4267,8 +4299,7 @@ strdecs1) = strdecs1 ()
  val  (fct_exp as fct_exp1) = fct_exp1 ()
  in (
 fn constraint =>
-		   MarkFct(LetFct(strdecs, fct_exp constraint),
-		   (LETleft,ENDright))
+		   markfct (LetFct(strdecs, fct_exp constraint), LETleft, ENDright)
 )
 end)
  in ( LrTable.NT 87, ( result, LET1left, END1right), rest671)

@@ -215,8 +215,6 @@ end
 structure FContract :> FCONTRACT =
 struct
 
-    structure O  = Option
-    structure DI = DebIndex
     structure A =  Access
     structure LV = LambdaVar
     structure M  = LV.Map
@@ -229,8 +227,9 @@ struct
     structure PL = PLambda
     structure F  = FLINT
     structure FU = FlintUtil
-    structure PU = PrintUtil
-    structure PF = PrintFlint
+    structure PP = Formatting
+    structure PF = PrintFormat
+    structure PPF = PPFlint
     structure OU = OptUtils
     structure PO = Primop
     structure C  = Collect
@@ -241,13 +240,14 @@ struct
     fun say s = (Control_Print.say s; Control_Print.flush())
     fun newline () = say "\n"
     fun saynl s = (Control_Print.say s; say "\n"; Control_Print.flush())
-    fun says (msgs: string list) = say (PU.interpws msgs)
-    fun saysnl (msgs: string list) = saynl (PU.interpws msgs)
+    fun says (msgs: string list) = say (String.concatWith " " msgs)
+    fun saysnl (msgs: string list) = saynl (String.concatWith " " msgs)
     fun dbsay msg = if !debugging then saynl msg else ()
     fun dbsays msgs = if !debugging then saysnl msgs else ()
-    fun bug (strings: string list) = ErrorMsg.impossible (PU.interpws ("FContract:"::strings))
-    fun buglexp (msg,lexp) = (say "\n"; PF.printLexp lexp; bug [msg])
-    fun bugval (msg,value) = (say "\n"; PF.printValue value; bug [msg])
+
+    fun bug (msgs: string list) = ErrorMsg.impossible (String.concatWith " " ("FContract:"::msgs))
+    fun buglexp (msg, lexp) = (PF.printFormatNL (PPF.fmtLexp 100 lexp); bug [msg]) 
+    fun bugval (msg, value) = (PF.printFormatNL (PPF.fmtValue value); bug [msg])
 
     val cplv = LV.dupLvar
     val mklv = LV.mkLvar
@@ -317,7 +317,7 @@ struct
 	      | apd (F.TFN (tfdec, body)) = F.TFN(tfdec, apd body)
 	      | apd (F.SWITCH (v,ac,arms,def)) =
 		  let fun larm (con,arm_body) = (con, apd arm_body)
-		   in F.SWITCH(v, ac, map larm arms, O.map apd def)
+		   in F.SWITCH(v, ac, map larm arms, Option.map apd def)
 		  end
 	      | apd (F.CON (dc,tycs,v,lv,le)) = F.CON(dc, tycs, v, lv, apd le)
 	      | apd (F.RECORD (rk,vs,lv,le)) = F.RECORD(rk, vs, lv, apd le)
@@ -503,7 +503,7 @@ struct
 	       unuseValue m v;
 	       addbind(m, lv1, sv)) (* handle x =>
 		   (say ("while substituting " ^ (C.lvarToString lv1) ^ " -> ");
-		    PF.printValue (sval2val sv);
+		    say (PPF.valueToString (sval2val sv));
 		    raise x) *)
 
           (* cpo : bindings -> F.primop -> F.primop
@@ -710,7 +710,7 @@ struct
 				    fds: F.fundec list) =
 			      let val fd_info = C.getInfo fd_lvar
 				  fun dropargs filter =
-				      let val (nfk,nfk') = OU.fk_wrap(fk, O.map #1 isrec)
+				      let val (nfk,nfk') = OU.fk_wrap(fk, Option.map #1 isrec)
 					  val args' = filter args
 					  val new_lvar = cplv fd_lvar
 					  val new_args = map (fn (lv, lty) => (cplv lv, lty)) args
@@ -940,11 +940,11 @@ struct
 				    if subject_rep = #2 (cdcon dc2)
 				    then (* subject DATAcon == arm DATAcon, so this arm is chosen *)
 				      (map killarm rest; (* kill the rest of the arms *)
-				       O.map killLexp defaultOp; (* and the default case *)
+				       Option.map killLexp defaultOp; (* and the default case *)
 				       loop ((substitute(m, lvar, svc, F.VAR lvc)), lexp, cont))
 				    else (* kill this arm and try the rest *)
 				      (kill (lvar, lexp); carm rest)
-				  | carm [] = loop (m, O.valOf defaultOp, cont)
+				  | carm [] = loop (m, Option.valOf defaultOp, cont)
 				  | carm _ = buglexp("unexpected arm in switch(con,...)", le)
 			     in click_switch(); carm arms
 			    end (* fcsCon *)
@@ -955,10 +955,10 @@ struct
 				fun carm ((con,lexp) :: rest) =
 				      if eqConValue (con, value)
 				      then (map (killLexp o #2) rest;
-					    O.map killLexp defaultOp;
+					    Option.map killLexp defaultOp;
 					    loop (m, lexp, cont))
 				      else (killLexp lexp; carm rest)
-				  | carm [] = loop (m, O.valOf defaultOp, cont)
+				  | carm [] = loop (m, Option.valOf defaultOp, cont)
 			     in click_switch(); carm arms
 			    end (* fcsVal *)
 

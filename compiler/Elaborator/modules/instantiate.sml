@@ -1,8 +1,8 @@
-(* Copyright 1996 by AT&T Bell Laboratories *)
-(* instantiate.sml *)
+(* Elaborator/modules/instantiate.sml *)
+(* Copyright 2022 by The Fellowship of SML/NJ *)
 
 (*
- * This? function constructs a dummy structure which satisfies all sharing
+ * These functions construct a dummy structure which satisfies all sharing
  * constraints (explicit or induced) of a given signature.  The resulting
  * structure is used as the dummy parameter of a functor while elaborating
  * and abstracting the functor body.
@@ -81,33 +81,29 @@ sig
 
 end (* signature INSTANTIATE *)
 
-(* no longer functorized
-(* functorized to factor out dependencies on FLINT... *)
-functor InstantiateFn (Param: INSTANTIATE_PARAM) : INSTANTIATE =
-	*)
 structure Instantiate : INSTANTIATE =
 struct
 
-local structure A  = Access
-      (* structure DI = DebIndex *)
-      structure ED = ElabDebug
-      structure EE = EntityEnv
-      structure EM = ErrorMsg
-      structure EP = EntPath
-      structure EU = ElabUtil
-      (* structure II = InlInfo *)
-      structure IP = InvPath
-      (* structure LT = PLambdaType *)
-      structure M  = Modules
-      structure MU = ModuleUtil
-      structure PU = PrintUtil
-      structure S  = Symbol
-      structure SP = SymPath
-      structure ST = Stamps
-      structure T  = Types
-      structure TU = TypesUtil
-      structure SPL = SigPropList
-      open Modules Types
+local
+  structure A  = Access
+  structure ED = ElabDebug
+  structure EE = EntityEnv
+  structure EM = ErrorMsg
+  structure EP = EntPath
+  structure EU = ElabUtil
+  structure M  = Modules
+  structure MU = ModuleUtil
+  structure S  = Symbol
+  structure SP = SymPath
+  structure IP = InvPath
+  structure ST = Stamps
+  structure T  = Types
+  structure TU = TypesUtil
+  structure SPL = SigPropList
+  structure SE = StaticEnv
+
+  open Modules Types
+
 in
 
 (* structure Param = Param *)
@@ -124,11 +120,9 @@ fun wrap fname f arg =
     (debugmsg (">>> [INS]" ^ fname);
      f arg before (debugmsg ("<<< [INS]" ^ fname)))
 
-fun debugType(msg: string, tyc: T.tycon) =
-    ED.withInternals(fn () =>
-     ED.debugPrint debugging
-      (msg, PPType.ppTycon StaticEnv.empty, tyc))
-
+fun debugType (msg: string, tyc: T.tycon) =
+    ED.withInternals
+      (fn () => ED.debugPrint debugging (msg, PPType.fmtTycon SE.empty tyc))
 
 (* error state *)
 val error_found = ref false
@@ -1620,15 +1614,12 @@ let fun instToStr' (instance as (FinalStr{sign as SIG {closed, elements,... },
 						 ", failCount = ",
 						 Int.toString failCount])
 
-	      in if failCount = 0
-		 then finalEnt := CONST_ENT strEnt
-		 else ();
-		 ED.withInternals(fn () =>
-		   ED.debugPrint debugging
-		    (("<<instToStr':" ^ IP.toString rpath^":"),
-		     (fn ppstrm => fn ent =>
-		        PPModules_DB.ppEntity ppstrm StaticEnv.empty (ent, 20)),
-		     M.STRent strEnt));
+	      in if failCount = 0 then finalEnt := CONST_ENT strEnt else ();
+		 ED.withInternals
+		   (fn () =>
+		       ED.debugPrint debugging
+			("<<instToStr':" ^ IP.toString rpath^":",
+			 PPModules_DB.fmtEntity StaticEnv.empty (M.STRent strEnt, 20)));
 		 (strEnt, failCount)
 	     end)
       | instToStr'(ErrorStr, _, _, failuresSoFar) =
@@ -1706,10 +1697,13 @@ and getTkFct{sign as M.FSIG{paramvar, paramsig, bodysig, ...}, entEnv,
 
 (*** the generic instantiation function ***)
 and instGeneric{sign, entEnv, instKind, rpath, region,
-                compInfo as {mkStamp,error,...} : EU.compInfo} =
+                compInfo as {mkStamp,source,...} : EU.compInfo} =
   let val _ = debugmsg (">>> [INS]instGeneric: " ^ signName sign)
+
       val _ = error_found := false
+      val error = EM.error source     
       fun err sev msg = (error_found := true; error region sev msg)
+
       val baseStamp = mkStamp()
 
       val (inst, abstycs, tyceps, cnt) =
@@ -1785,8 +1779,10 @@ fun instParam{sign, entEnv, tdepth, rpath, region, compInfo} =
 
 (*** fetching the list of tycpaths for a particular structure ***)
 fun getTycPaths{sign as M.SIG sr, rlzn : M.strEntity, entEnv,
-	        compInfo as {error,...}: EU.compInfo} =
-      let val { entities, ... } = rlzn
+	        compInfo as {source,...}: EU.compInfo} =
+      let val error = EM.error source
+	  val { entities, ... } = rlzn
+				      
 	  val epslist =
            case SPL.sigBoundeps sr
              of SOME x => x
@@ -1834,9 +1830,9 @@ val getTycPaths =
   Stats.doPhase (Stats.makePhase "Compiler 032 4-getTycPaths") getTycPaths
 *)
 
-end (* local *)
+end (* top local *)
 end (* structure Instantiate *)
 
-(* [dbm, 6/16/06] Eliminated ii2ty from INSTANTIATE_PARAM. Eventually want
-   to eliminate the parameterization completely. *)
+(* [DBM, 2006.06.16] Eliminated ii2ty from INSTANTIATE_PARAM. Eventually want
+   to eliminate the parameterization completely. [DBM: Done a while ago] *)
 

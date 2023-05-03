@@ -31,13 +31,14 @@ end (* signature UNIFY *)
 structure Unify: UNIFY =
 struct
 
-
 local
   structure S = Symbol
   structure T = Types
   structure TU = TypesUtil
   structure OLC = OverloadClasses
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure PPT = PPType
   structure ED = ElabDebug
   open Types
 
@@ -51,12 +52,11 @@ local
   fun dbsaynl (msg: string) =
       if !debugging then saynl msg else ()
 
-  val ppType0 = PPType.ppType StaticEnv.empty
-  fun debugPPType (msg,ty) =
-      ED.debugPrint debugging (msg, ppType0, ty)
+  fun debugPPType (msg, ty) =
+      ED.debugPrint debugging (msg, PPT.fmtType StaticEnv.empty ty)
 
-  fun ppType ty =
-      PP.with_default_pp (fn ppstrm => ppType0 ppstrm ty)
+  (* ppType : T.ty -> unit *)
+  fun ppType ty = PF.printFormat (PPT.fmtType StaticEnv.empty ty)
 
 in
 

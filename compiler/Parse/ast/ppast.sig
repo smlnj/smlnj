@@ -1,50 +1,31 @@
-(* Copyright 2003 by University of Chicago *)
-(* src/Elaborator/print/ppast.sig *)
-(* Jing Cao and Lukasz Ziarek *)
+(* compiler/Parse/ast/ppast.sig *)
+(* Copyright 2003 by the Fellowship of SML/NJ *)
+(* Jing Cao and Lukasz Ziarek, 2003; DBM 2022 *)
 
 signature PPAST =
 
 sig
-	val ppExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.exp * int -> unit 
-	val ppPat	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.pat * int -> unit
-	val ppStrExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.strexp * int -> unit
-	val ppFctExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.fctexp * int -> unit
-	val ppWhereSpec :Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.wherespec * int -> unit
-	val ppSigExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.sigexp * int -> unit
-	val ppFsigExp	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.fsigexp * int -> unit
-	val ppSpec	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.spec * int -> unit 
-	val ppDec	:Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.dec * int -> unit
-	val ppVb   	: Source.inputSource option 
-                         -> PrettyPrint.stream -> Ast.vb * int -> unit
-  	val ppRvb  	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.rvb * int -> unit
-	val ppFb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> string -> Ast.fb * int -> unit
-	val ppClause	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.clause * int -> unit
-	val ppTb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.tb * int -> unit
-	val ppDb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.db * int -> unit  
-	val ppDbrhs	: Source.inputSource option
-               		 -> PrettyPrint.stream -> (Symbol.symbol * Ast.ty option) list * int -> unit
-	val ppEb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.eb * int -> unit
-	val ppStrb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.strb * int -> unit
-	val ppFctb	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.fctb * int -> unit
-	val ppTyvar	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.tyvar * int -> unit
-	val ppTy	: Source.inputSource option
-               		 -> PrettyPrint.stream -> Ast.ty * int -> unit 
-end
+
+   val fmtExp	    : Source.source option -> Ast.exp * int       -> Formatting.format 
+   val fmtPat	    : Source.source option -> Ast.pat * int       -> Formatting.format
+   val fmtStrExp    : Source.source option -> Ast.strexp * int    -> Formatting.format
+   val fmtFctExp    : Source.source option -> Ast.fctexp * int    -> Formatting.format
+   val fmtWhereSpec : Source.source option -> Ast.wherespec * int -> Formatting.format
+   val fmtSigExp    : Source.source option -> Ast.sigexp * int    -> Formatting.format
+   val fmtFsigExp   : Source.source option -> Ast.fsigexp * int   -> Formatting.format
+   val fmtSpec	    : Source.source option -> Ast.spec * int      -> Formatting.format 
+   val fmtDec	    : Source.source option -> Ast.dec * int       -> Formatting.format
+   val fmtVb   	    : Source.source option -> Ast.vb * int        -> Formatting.format
+   val fmtRvb  	    : Source.source option -> Ast.rvb * int       -> Formatting.format
+   val fmtFb	    : Source.source option -> Ast.fb * int        -> Formatting.format
+   val fmtClause    : Source.source option -> Ast.clause * int    -> Formatting.format
+   val fmtTb	    : Source.source option -> Ast.tb * int        -> Formatting.format
+   val fmtDb	    : Source.source option -> Ast.db * int        -> Formatting.format  
+   val fmtDbrhs	    : Source.source option -> (Symbol.symbol * Ast.ty option) list * int -> Formatting.format
+   val fmtEb	    : Source.source option -> Ast.eb * int        -> Formatting.format
+   val fmtStrb	    : Source.source option -> Ast.strb * int      -> Formatting.format
+   val fmtFctb	    : Source.source option -> Ast.fctb * int      -> Formatting.format
+   val fmtTyvar	    : Ast.tyvar                                   -> Formatting.format
+   val fmtTy	    : Source.source option -> Ast.ty * int        -> Formatting.format 
+
+end (* signature PPAST *)

@@ -18,36 +18,41 @@ signature OVERLOAD =
 	    resolve : StaticEnv.staticEnv -> unit
 	  }
 
-    val debugging : bool ref (* = ElabControl.debugging = Control.Elab.debugging *)
-
   end  (* signature OVERLOAD *)
 
 structure Overload : OVERLOAD =
-  struct
+struct
 
-    val debugging = ElabControl.ovlddebugging
+local
 
     structure EM = ErrorMsg
+    structure T = Types
     structure BT = BasicTypes
     structure TU = TypesUtil
+    structure SE = StaticEnv
     structure ED = ElabDebug
-    structure PP = PrettyPrint
-    structure PU = PPUtil
+    structure PP = Formatting
+    structure PF = PrintFormat
+    structure PPS = PPSymbols
+    structure PPT = PPType
     structure Ty = Types
     structure V = Variable
     structure OLV = OverloadVar
 
-    fun bug msg = ErrorMsg.impossible("Overload: "^msg)
+    val debugging = ElabControl.ovlddebugging
+
+    fun bug msg = EM.impossible("Overload: "^msg)
 
     fun debugMsg (msg: string) = ED.debugMsg debugging msg
 
-    val ppType = PPType.ppType StaticEnv.empty
-    fun debugPPType (msg, ty) = ED.debugPrint debugging (msg, ppType, ty)
+    fun ppType (ty: T.ty) = PF.printFormat (PPT.fmtType SE.empty ty)
+    fun debugPPType (msg, ty) = ED.debugPrint debugging (msg, (PPT.fmtType SE.empty ty))
 
+in 
   (* information about overloaded literals; once the type has been resolved, we use this
    * information to check that the literal value is within range for its type.
    *)
-    type num_info = IntInf.int * string * Ty.ty * ErrorMsg.complainer
+    type num_info = IntInf.int * string * Ty.ty * EM.complainer
 
   (* overloaded functions *)
     fun new () =
@@ -100,14 +105,11 @@ structure Overload : OVERLOAD =
 			     of SOME var => varref := var
 			     |  NONE =>
 				err EM.COMPLAIN "overloaded variable not defined at type"
-				    (fn ppstrm =>
-					(PPType.resetPPType();
-					 PP.newline ppstrm;
-					 PP.string ppstrm "symbol: ";
-					 PU.ppSym ppstrm name;
-					 PP.newline ppstrm;
-					 PP.string ppstrm "type: ";
-					 PPType.ppType env ppstrm (Ty.VARty context))))
+				    (PPType.resetPPType();
+				     PP.hblock
+				       [PP.hblock [PP.text "symbol:", PPS.fmtSym name],
+					PP.hblock [PP.text "type:",
+						 PPType.fmtType env (Ty.VARty context)]]))
 		    end (* fun resolveOVLDvar *)
 
 	        (* resolve overloaded literals *)
@@ -129,8 +131,8 @@ structure Overload : OVERLOAD =
 		    if TU.numInRange(value, ty)
 		    then ()
 		    else err EM.COMPLAIN
-			     (concat["literal '", src, "' is too large for type "])
-			     (fn ppstrm => PPType.ppType env ppstrm ty)
+			     (String.concat ["literal '", src, "' is too large for type "])
+			     (PPType.fmtType env ty)
 
 	        val overloadedLits = rev (!overloadedlits)
 		val overloadedVars = rev (!overloadedvars)
@@ -143,4 +145,5 @@ structure Overload : OVERLOAD =
 	    {pushv = pushvar, pushl = pushlit, resolve = resolve}
 	 end (* new *)
 
-  end (* structure Overload *)
+end (* top local *)
+end (* structure Overload *)

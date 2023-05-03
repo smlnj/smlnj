@@ -25,7 +25,7 @@ signature TDP_INSTRUMENT = sig
     val enabled : bool ref
     val instrument :
 	(Symbol.symbol -> bool) ->	(* isSpecial *)
-	SE.staticEnv * A.dec CompInfo.compInfo -> A.dec -> A.dec
+	SE.staticEnv * CompInfo.compInfo -> A.dec -> A.dec
 end
 
 structure TDPInstrument :> TDP_INSTRUMENT = struct
@@ -67,11 +67,9 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
     val iiis_u_Ty =
 	BT.tupleTy [BT.intTy, BT.intTy, BT.intTy, BT.unitTy] --> BT.unitTy
 
-    fun instrument0 isSpecial (senv, cinfo: A.dec CompInfo.compInfo) d = let
+    fun instrument0 isSpecial (senv, {mkLvar,...}: CompInfo.compInfo) d = let
 
-	val matchstring = #errorMatch cinfo
-
-	val mkv = #mkLvar cinfo
+	val mkv = mkLvar
 
 	fun tmpvar (n, t) = let
 	    val sy = Symbol.varSymbol n
@@ -132,7 +130,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 
 	fun mkmodidexp fctvar id =
 	    A.APPexp (VARexp fctvar,
-		      AU.TUPLEexp [VARexp tdp_module_var, INTexp id])
+		      AU.mkTupleExp [VARexp tdp_module_var, INTexp id])
 
 	val mkenterexp = mkmodidexp tdp_enter_var
 	val mkpushexp = mkmodidexp tdp_push_var
@@ -140,7 +138,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 
 	fun mkregexp (k, id, s) =
 	    A.APPexp (VARexp tdp_register_var,
-		      AU.TUPLEexp [VARexp tdp_module_var,
+		      AU.mkTupleExp [VARexp tdp_module_var,
 				   INTexp k, INTexp id, A.STRINGexp s])
 
 	val regexps = ref []
@@ -196,7 +194,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 		fun dot ([z], a) = name (z, a)
 		  | dot (h :: t, a) = dot (t, "." :: name (h, a))
 		  | dot ([], a) = impossible (what ^ ": no path")
-		val ms = matchstring r
+		val ms = SourceMap.regionToString r
 	    in
 		concat (ms :: ": " :: dot (n, []))
 	    end
@@ -355,7 +353,7 @@ structure TDPInstrument :> TDP_INSTRUMENT = struct
 	      A.MARKfct (i_fctexp (n, r) f, r)
 	  | i_fctexp _ f = f
 
-	val d' = i_dec ([], (0, 0)) d
+	val d' = i_dec ([], SourceMap.REGION (0, 0)) d
     in
 	A.LOCALdec (A.SEQdec [VALdec (tdp_reserve_var, VARexp tdp_reserve),
 			      VALdec (tdp_module_var,

@@ -5,9 +5,8 @@ structure LtyKernel :> LTYKERNEL =
 struct
 
 local
-  structure DI = DebIndex
-  structure PP = PrettyPrint
-  structure PU = PPUtil
+  structure PP = Formatting
+  structure PF = PrintFormat
   structure EM = ErrorMsg
   structure PT = PrimTyc
   structure LT = Lty
@@ -15,43 +14,20 @@ local
   open Lty
 
   val debugging : bool ref = FLINT_Control.lkdebugging
-  val dp : int ref = Control_Print.printDepth
+  val printDepth : int ref = Control_Print.printDepth
 
   val say = Control_Print.say
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
   fun says strings = saynl (concat strings)
 
-  fun dbsay msg =
+  fun dbsay (msg: string) =
       if !debugging
       then (say msg; newline())
       else ()
-  fun dbsays msgs = dbsay (concat msgs)
+  fun dbsays (msgs: string list) = dbsay (concat msgs)
 
   fun bug s = ErrorMsg.impossible ("LtyKernel:" ^ s)
-
-  val with_pp = PP.with_default_pp
-
-  fun dbPrint (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
-      if (!debugging)
-      then with_pp
-	    (fn ppstrm =>
-	      (PP.openHVBox ppstrm (PP.Rel 0);
-	       PP.string ppstrm msg;
-	       PP.newline ppstrm;
-	       PP.nbSpace ppstrm 2;
-	       PP.openHVBox ppstrm (PP.Rel 0);
-	       printfn ppstrm arg;
-	       PP.closeBox ppstrm;
-	       PP.closeBox ppstrm))
-      else ()
-
-  fun ppTyc0 (tyc: tyc) =
-      with_pp (fn ppstrm => PPLty.ppTyc 100 ppstrm tyc)
-
-  fun ppTycs (tycs: tyc list) =
-      with_pp (fn ppstrm =>
-		  PU.ppBracketedSequence ("[", "]", PPLty.ppTyc 100) ppstrm tycs)
 
 in
 
@@ -91,7 +67,7 @@ local
                         | SOME(Beta(nl',ts,_)) =>
                              (let val y = List.nth(ts, k)  (what is y???)
                                in (case tc_out y
-                                    of TC_VAR(ni, nj) =>
+                                    of TC_DVAR(ni, nj) =>
                                         ((nj <> k) orelse ((ni+nl-nl') <> n))
                                      | _ => true)
                               end) *)
@@ -103,25 +79,25 @@ in
 fun tcc_env(x, ol, nl, tenv) =
     let fun checkTCVAR (tyc,ol,nl,tenv) =  (* GK -- debugging *)
             case (tc_out tyc)
-              of TC_VAR(d,k) =>
+              of TC_DVAR(d,k) =>
                  (case teLookup(tenv,d)
 		   of SOME(Beta(_,ts,ks)) =>
                         if k >= length ts
-			then (print "tcc_env TC_VAR [Beta]: ";
+			then (print "tcc_env TC_DVAR [Beta]: ";
 			      print (Int.toString k);
 			      print ", ts length = ";
 			      print (Int.toString (length ts));
                               print "\n";
-			      bug "Bad TC_ENV TC_VAR [Beta]")
+			      bug "Bad TC_ENV TC_DVAR [Beta]")
 			else ()
                     | SOME(Lamb(_,ks)) =>
                         if k >= length ks
-			then (print "tcc_env TC_VAR [Lamb]: ";
+			then (print "tcc_env TC_DVAR [Lamb]: ";
 			      print (Int.toString k);
 			      print ", ks length = ";
 			      print (Int.toString (length ks));
                               print "\n";
-			      bug "Bad TC_ENV TC_VAR [Lamb]")
+			      bug "Bad TC_ENV TC_DVAR [Lamb]")
 			else ()
 		    | NONE => ())
                | TC_ENV(tc, ol', nl', tenv')  => checkTCVAR(tc,ol',nl',tenv')
@@ -158,7 +134,7 @@ end (* local -- utility functions for lt_env and tc_env *)
  ***************************************************************************)
 
 (** a list of constructor functions *)
-val tcc_var = tc_inj o TC_VAR
+val tcc_dvar = tc_inj o TC_DVAR
 val tcc_fn = tc_inj o TC_FN
 
 fun tcc_app (fntyc, argtycs) =
@@ -182,28 +158,25 @@ fun tcc_app (fntyc, argtycs) =
 				 | TC_FN (args, _) => length args
 				 | _ => bug "Malformed generator range")
 			    | _ =>
-			      (with_pp (fn s =>
-				 (PU.pps s "ERROR: checkParamArity - FIX";
-				  PP.newline s;
-				  PPLty.ppTyc (!dp) s gen;
-				  PP.newline s));
-			       bug "FIX without generator!" ))
-		       | _ => (with_pp (fn s =>
-				 (PU.pps s "getArity?:";
-				  PP.newline s;
-				  PPLty.ppTyc (!dp) s tc;
-				  PP.newline s));
-			       0))  (* giving up! *)
+			      (PF.printFormatNL
+				 (PP.vblock
+				    [PP.text "ERROR: checkParamArity - FIX",
+				     PPLty.fmtTyc (!printDepth) gen]);
+			       bug "FIX without generator!"))
+		       | tycI => (PF.printFormatNL
+				    (PP.vblock 
+				       [PP.hblock [PP.text "getArity:", PP.text (PPLty.tycITag tycI)],
+					PPLty.fmtTyc (!printDepth) tc]);
+			          0))  (* giving up! *)
 		val arity = getArity tc
 	    in
 		if arity = (length tcs) then ()
-		else with_pp(fn s =>
-		       (PU.pps s "TC_APP arity mismatch"; PP.newline s;
-			PU.pps s "arity: "; PU.ppi s arity; PP.newline s;
-			PU.pps s "no. arguments: "; PU.ppi s (length tcs);
-			PP.newline s;
-			PU.pps s "operator:"; PP.newline s;
-			PPLty.ppTyc (!dp) s tc; PP.newline s) )
+		else PF.printFormatNL
+		        (PP.vblock
+		          [PP.text "TC_APP arity mismatch",
+			   PP.hblock [PP.text "arity:", PP.integer arity],
+			   PP.hblock [PP.text "no. arguments:", PP.integer (length tcs)],
+			   PP.hblock [PP.text "operator:", PPLty.fmtTyc (!printDepth) tc]])
 	    end
     in
 	((* checkParamArity(fntyc, argtycs); *)
@@ -224,7 +197,7 @@ val ltc_fct  = lt_inj o LT_FCT
 val ltc_poly = lt_inj o LT_POLY
 val tcc_fix =
     fn ((size:int, names: string vector, gen: tyc, params: tyc list), index:int) =>
-       tc_inj(TC_FIX{family={size=size,names=names,gen=gen,params=params},index=index})
+       tc_inj (TC_FIX{family={size=size,names=names,gen=gen,params=params},index=index})
 
 (* The following functions decide on how to flatten the arguments
  * and results of an arbitrary FLINT function. The current threshold
@@ -328,12 +301,11 @@ and tc_lzrd(t: tyc) =
         | h (x, ol, nl, tenv) =
             let fun prop z = tcc_env(z, ol, nl, tenv)
 		             handle TCENV =>
-                               (with_pp(fn s =>
-                                 (PU.pps s "tc_lzrd.prop:"; PP.newline s;
-                                  PPLty.ppTyc (!dp) s z; PP.newline s));
+                               (PF.printFormatNL
+                                    (PP.hblock [PP.text "tc_lzrd.prop:", PPLty.fmtTyc (!printDepth) z]);
                                 bug "tc_lzrd prop")
              in (case tc_out x
-                  of TC_VAR (n,k) =>
+                  of TC_DVAR (n,k) =>
                        if (n <= ol) then  (* n is bound in tenv *)
                          (case teLookup(tenv, n)
                            of NONE => bug "tc_lzrd: short tenv"
@@ -344,38 +316,33 @@ and tc_lzrd(t: tyc) =
                                           Int.toString nl ^ ", nl' = " ^
                                           Int.toString nl' ^ "\n");
                                    bug "tc_lzrd - nl' > nl")
-                                else tcc_var(nl - nl', k)
+                                else tcc_dvar(nl - nl', k)
                             | SOME(Beta(nl',ts,ks)) =>  (* rule r6 *)
                                 let val y = List.nth(ts, k)
                                             handle Subscript =>
                                             (* kind/arity error! *)
-                    (with_pp(fn s =>
-                       let val {break,newline,openHVBox,openHOVBox,openVBox,
-				closeBox, pps, ppi} = PU.en_pp s
-                       in openHVBox 0;
-                          pps "***Debugging***"; break{nsp=1,offset=0};
-                          pps "tc_lzrd arg:"; newline();
-                          PPLty.ppTyc (!dp) s t; break{nsp=1,offset=0};
-		          pps "n = "; ppi n; pps ", k = "; ppi k;
-			  newline();
-                          pps "length(ts) = : "; ppi (length ts);
-			  newline();
-                          pps "ts elements: "; break{nsp=2,offset=2};
-                          openHOVBox 2;
-                          PPLty.ppList s {sep=",",pp=PPLty.ppTyc (!dp)} ts;
-                          closeBox ();
-                          closeBox ()
-			end);
-			raise TeUnbound)
+					    (PF.printFormatNL
+					       (PP.vblock
+						  [PP.text "***Debugging***",
+						   PP.hblock [PP.text "tc_lzrd arg:",
+							    PPLty.fmtTyc (!printDepth) t],
+						   PP.hblock [PP.text "n =", PP.integer n,
+							      PP.text ", k =", PP.integer k],
+						   PP.hblock [PP.text "length(ts) = ",
+							    PP.integer (length ts)],
+						   PP.hblock [PP.text "ts elements: ",
+							    PP.tuple (map (PPLty.fmtTyc (!printDepth)) ts)]]);
+					     raise TeUnbound)
                                  in (* ASSERT: nl >= nl' *)
                                     if nl' > nl then
-                                        (print ("ERROR: tc_lzrd (r6): nl ="^
-                                               Int.toString nl ^ ", nl' = " ^
-                                               Int.toString nl' ^ "\n");
+                                        (PF.printFormatNL
+					   (PP.hblock
+					      [PP.text "ERROR: tc_lzrd (r6): nl =",
+					       PP.integer nl, PP.text ", nl' = ", PP.integer nl']);
                                          bug "tc_lzrd - nl' > nl")
                                     else h(y, 0, nl - nl', teEmpty)  (* rule r6 *)
                                  end)
-                       else tcc_var(n-ol+nl, k) (* rule r4 *)
+                       else tcc_dvar(n-ol+nl, k) (* rule r4 *)
                    | TC_NVAR _ => x
                    | TC_PRIM _ => x    (* rule r7 *)
                    | TC_FN (ks, tc) =>
@@ -712,11 +679,7 @@ and tc_eqv_gen (t1, t2) =
         eqlist tc_eqv (ts1, ts2)
       | (TC_PRIM ptyc1, TC_PRIM ptyc2) =>
         PT.pt_eq(ptyc1,ptyc2)
-      | _ => (if !debugging
-	      then with_pp(fn s =>
-			      (PU.pps s "%%%tc_eqv_gen DEFAULT";
-			       PP.newline s))
-	      else ();
+      | _ => (dbsay "%%%tc_eqv_gen DEFAULT";
               false)
 
 (** general equality for tycs *)
@@ -726,12 +689,14 @@ and tc_eqv (x, y) =
         val res = if tcp_norm t1 andalso tcp_norm t2 then tc_eq (t1, t2)
                   else tc_eqv_gen (t1, t2)
     in res orelse
-       (dbPrint ("tc_eqv: ",
-         (fn s => fn (t1,t2) =>
-             (PU.pps s "t1:"; PP.newline s; PPLty.ppTyc 10 s t1; PP.newline s;
-              PU.pps s "t2:"; PP.newline s; PPLty.ppTyc 10 s t2; PP.newline s;
-              PU.pps s "***************************************************";
-              PP.newline s)), (t1,t2));
+       (if !debugging
+        then PF.printFormatNL
+	       (PP.vblock [PP.text "tc_eqv:",
+			 PP.indent 2
+		           (PP.vblock
+			      [PP.label"t1:" (PPLty.fmtTyc 20 t1),
+			       PP.label "t2:" (PPLty.fmtTyc 20 t2)])])
+	else ();
         false)
     end (* tc_eqv *)
 
@@ -761,9 +726,9 @@ fun lt_eqv_gen (t1 : lty, t2: lty) =
          (eqlist lt_eqv (as1, as2)) andalso (eqlist lt_eqv (bs1, bs2))
        | (LT_STR s1, LT_STR s2) => eqlist lt_eqv (s1, s2)
        | (LT_CONT s1, LT_CONT s2) => eqlist lt_eqv (s1, s2)
-       | _ => (dbPrint("LT_CONT",
-		       (fn s => fn () => PU.pps s "%%%lt_eqv_gen DEFAULT\n"),
-		       ());
+       | _ => (if !debugging
+	       then saynl "LT_CONT: lt_eqv_gen DEFAULT"
+	       else ();
 	       false))
     (* function lt_eqv_gen *)
 
@@ -798,10 +763,10 @@ fun tc_depth (x, d) =
        * before we can talk about its list of free type variables. *)
     (case tc_vs (tc_norm x)
        of NONE => bug "unexpected case in tc_depth"
-        | SOME [] => DI.top
+        | SOME [] => 0  (* deBruijn context = 0 *)
         | SOME (a::_) => d + 1 - (#1(tvDecode a)))
 
-fun tcs_depth ([], d) = DI.top
+fun tcs_depth ([], d) = 0 (* deBruijn context = 0 *)
   | tcs_depth (x::r, d) = Int.max(tc_depth(x, d), tcs_depth(r, d))
 
 (* these return the list of free NAMED tyvars, after nomalization *)

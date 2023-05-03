@@ -1,0 +1,164 @@
+compiler/Basic/MAP-BASIC.txt
+
+Map of Basic (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the Basic library are indicated by an asterisk.
+  [We assume imports from basis.cm and smlnj-lib.cm, generally without recording them here.]
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+Basic/basic.cm -- the Basic Group/Library CDF
+
+(* ---------------------------- Exports ---------------------------- *)
+
+  (* symbol/ *)
+  signature SYMBOL
+  signature FASTSYMBOL
+  signature FIXITY
+  signature NUMERIC_LABEL
+  structure Symbol
+  structure FastSymbol
+  structure Fixity  (* -> ? *)
+  structure SymbolHashTable
+  structure SpecialSymbols
+  structure NumericLabel
+  structure PPSymbols
+
+  (* sympath/ *)
+  signature SYMPATH
+  signature INVPATH
+  signature CONVERTPATHS
+  structure SymPath
+  structure InvPath
+  structure ConvertPaths
+
+  (* access/ *)
+  signature ACCESS
+  structure Access
+
+  (* env/ *)
+  signature ENV
+  structure Env
+
+  (* var/ *)
+  ???
+
+  (* stamp/ *)
+  structure Stamps
+  structure StampMap
+  signature PERSSTAMPS
+  structure PersStamps
+  structure PersMap
+  signature PIDENV
+  functor PidEnvFn
+
+  (* numbers/ *)
+  structure IntConst
+  structure RealConst
+
+  (* reals/ *)
+  signature REAL_TO_BITS
+  structure Real64ToBits
+  structure RealLit
+
+  (* util/ *)
+  structure List3
+  structure WordStringHashTable
+
+  Library (pickle/pickle-lib.cm)
+    signature CRC
+    structure CRC
+    signature PICKLE_UTIL
+    structure PickleUtil
+    signature UNPICKLE_UTIL
+    structure UnpickleUtil
+
+  Library (const-arith/const-arith-lib.cm)
+    structure ConstArith
+
+(* ---------------------------- Modules ---------------------------- *) 
+
+LOCAL:
+
+IMPORTS:
+
+(* ---------------------------- Member files ---------------------------- *) 
+
+Basic/
+
+access/
+  access.sig
+  access.sml
+
+env/
+  env.sig
+  env.sml
+
+numbers/
+  int-const.sml
+  real-const.sml
+
+reals/
+  real-lit.sml
+  real-to-bits-fn.sml
+  real-to-bits.sig
+  real64-to-bits.sml
+
+stamp/
+  persmap.sml
+  persstamps.sig
+  persstamps.sml
+  pidenv.sig
+  pidenv.sml
+  stamps.sig
+  stamps.sml
+
+symbol/
+  fastsymbol.sig
+  fastsymbol.sml
+  fixity.sml    (* should move to Parse or ElabData/statenv? *)
+  numericlabel.sig
+  numericlabel.sml
+  ppsymbols.sml
+  specialsyms.sml
+  symbol-hashtable.sml
+  symbol.sig
+  symbol.sml
+
+sympath/
+  sympaths.sig
+  sympaths.sml
+
+var/
+  lambdavar.sig
+  lambdavar.sml
+
+util/
+  list3.sml
+  wordstr-hashtable.sml
+
+const-arith/   -- formerly Library/const-arith
+-> const-arith/const-arith-lib.cm:
+  bitwise-const-arith-sig.sml
+  bitwise-const-arith.sml
+  const-arith-glue-fn.sml
+  const-arith-sig.sml
+  const-arith.sml
+  signed-const-arith-sig.sml
+  signed-trapping-arith.sml
+  unsigned-const-arith-sig.sml
+  unsigned-wrapping-arith.sml
+
+Basic/pickle/   -- formerly Library/pickle
+-> pickle-lib.cm:
+  crc.sml
+  pickle-util.sml
+  unpickle-util.sml
+
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm

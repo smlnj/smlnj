@@ -1,0 +1,20 @@
+(* smlnj-lib/PrettyPrint/src/sources.cm *)
+(* The New PrettyPrinter Library *)
+
+Library
+
+	signature PRETTYPRINT
+	structure PrettyPrint
+
+is
+
+$smlnj/basis/basis.cm
+
+style.sml
+format.sml
+measure.sig
+measure.sml
+render.sig
+render.sml
+prettyprint.sig
+prettyprint.sml

@@ -13,12 +13,12 @@ signature BUILD_INIT_DG = sig
     val build : GeneralParams.info -> SrcPath.file ->
 	{ pervasive: DependencyGraph.sbnode,
 	  others: DependencyGraph.sbnode list,
-	  src: Source.inputSource } option
+	  src: Source.source } option
 end
 
 structure BuildInitDG :> BUILD_INIT_DG = struct
 
-    structure S = Source
+    structure SR = Source
     structure EM = ErrorMsg
     structure SM = SourceMap
     structure DG = DependencyGraph
@@ -41,9 +41,7 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
 	fun defined symbol = isSome (#get (#symval (#param gp) symbol) ())
 
 	fun work stream = let
-	    val source = S.newSource (SrcPath.osstring specgroup,
-				      stream, false, errcons)
-	    val sourceMap = #sourceMap source
+	    val source = SR.newSource (SrcPath.osstring specgroup, stream, false)
 
 	    val _ = GroupReg.register groupreg (specgroup, source)
 
@@ -64,7 +62,7 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
 			    sub (line, len -1 ) = #"\n" andalso
 			    sub (line, len - 2) = #"\\"
 		    in
-			SourceMap.newline sourceMap newpos;
+			SR.newline (source, newpos);
 			if iscont then
 			    loop (newpos, TextIO.inputLine stream,
 				  substring (line, 0, len - 2) :: lines)
@@ -78,9 +76,10 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
 
 	    fun loop (m, pos) =
 		case lineIn pos of
-		    NONE => (error (pos, pos) "unexpected end of file"; NONE)
+		    NONE => (error(SM.REGION (pos, pos)) "unexpected end of file"; NONE)
 		  | SOME (line, newpos) => let
-			val error = error (pos, newpos)
+		        val newRegion = SM.REGION (pos, newpos)
+			val error = error newRegion  (* pos < newpos? *)
 			fun sml (spec, xe, rts, ecs) = let
 			    val p = SrcPath.file
 				     (SrcPath.standard
@@ -91,7 +90,7 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
 				  explicit_core_sym = ecs, noguid = false }
 			in SmlInfo.info' attribs gp
 					 { sourcepath = p,
-					   group = (specgroup, (pos, newpos)),
+					   group = (specgroup, newRegion),
 					   sh_spec = Sharing.DONTCARE,
 					   setup = (NONE, NONE),
 					   locl = false,

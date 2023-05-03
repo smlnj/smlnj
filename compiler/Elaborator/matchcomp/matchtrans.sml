@@ -21,10 +21,14 @@ local
   structure V = Variable
   structure AS = Absyn
   structure AU = AbsynUtil
+  structure SE = StaticEnv
   structure EU = ElabUtil
-  structure PP = PrettyPrint
+  structure PP = Formatting
+  structure PF = PrintFormat
+  structure PPA = PPAbsyn
   structure MU = MCUtil
   structure MC = MatchComp
+
   open Absyn
 
   fun bug msg = ErrorMsg.impossible ("MatchTrans: " ^ msg)
@@ -47,21 +51,19 @@ local
   fun dbsays msgs = dbsay (concat msgs)
 
   fun ppExp (exp, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppExp (StaticEnv.empty, NONE) ppstrm (exp, 20);
-	       PP.newline ppstrm))
+      PF.printFormatNL
+	 (PP.vblock
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtExp (SE.empty, NONE) (exp, 100))])
 
   fun ppDec (dec, msg) =
-      PP.with_default_pp
-          (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppDec (StaticEnv.empty, NONE) ppstrm (dec, 20);
-	       PP.newline ppstrm))
+      PF.printFormatNL
+	 (PP.vblock
+	    [PP.text msg,
+	     PP.indent 3 (PPA.fmtDec (SE.empty, NONE) (dec, 100))])
 
   fun ppPat pat =
-      PP.with_default_pp(fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, 20))
+      PF.printFormatNL (PPA.fmtPat SE.empty (pat, 100))
 
 in
 
@@ -207,7 +209,7 @@ and transDec (region: SourceMap.region) (dec: AS.dec): AS.dec =
 			  end
 			| _ =>  (* "multiple" pattern variables (1 or more) *)
 			  let val pvarsTy = BT.tupleTy (map TU.dePolyVar oldpvars)  (* was map V.varType oldpvars *)
-			      val newPvarTuple = EU.TUPLEexp(map EU.varToExp newpvars)
+			      val newPvarTuple = AU.mkTupleExp(map EU.varToExp newpvars)
 			      val bindRules = [(newpat, newPvarTuple)]  (* single rule match, with new pvars *)
 			      val (matchExp, rootVar) =
 				  MC.bindCompile (bindRules, typ, pvarsTy, errorFn, region, env)

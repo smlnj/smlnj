@@ -179,7 +179,7 @@ structure Limit : sig
 		in
 		  (f, edges body) :: nds
 		end
-	(* construct the CFG for the whole compilation unit *)
+	(* construct the CFG [DBM: CFG? -- no CFG here in CPS] for the whole compilation unit *)
 	  val nodes = List.foldr
 		(fn (cluster, nds) => List.foldr mkNode nds cluster)
 		  [] clusters

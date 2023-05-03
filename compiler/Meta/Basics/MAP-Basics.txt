@@ -1,0 +1,370 @@
+compiler/Basics/MAP-Basics.txt
+
+Map of Basics (directory and CM goup/library)
+
+* Excluding uses (mentions) of modules from Basis (basis.cm).
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+Basics/basis.cm -- the Basics Group/Library CDF
+
+
+(* ---------------------------- Exports ---------------------------- *)
+
+signature BASIC_CONTROL
+structure BasicControl
+
+signature PRINTCONTROL
+structure Control_Print
+structure StringFormats
+
+signature SYMBOL
+structure Symbol
+signature FASTSYMBOL
+structure FastSymbol
+signature FIXITY
+structure Fixity
+structure SymbolHashTable
+structure SpecialSymbols
+signature NUMERIC_LABEL
+structure NumericLabel
+structure PPSymbols
+
+signature PERSSTAMPS
+structure PersStamps
+structure PersMap
+
+signature SOURCE
+structure Source
+signature SOURCE_MAP
+structure SourceMap
+structure PPSourceMap
+
+signature ERRORMSG
+structure ErrorMsg
+structure CompileExn
+
+signature STATS
+structure Stats
+structure WordStringHashTable
+
+signature PIDENV
+functor PidEnvFn
+
+structure IntConst
+
+signature REAL_TO_BITS
+structure Real64ToBits
+structure RealLit
+structure RealConst
+
+signature TARGET
+structure Target
+
+structure List3
+
+(* ---------------------------- Module Index ---------------------------- *) 
+
+LOCAL:
+
+BASIC_CONTROL     control/basiccontrol.sml
+BasicControl	  control/basiccontrol.sml
+
+SYMBOL		  symbol/symbol.sig
+Symbol		  symbol/symbol.sml
+FASTSYMBOL	  symbol/fastsymbol.sig
+FastSymbol	  symbol/fastsymbol.sml
+NUMERIC_LABEL	  symbol/numericlabel.sig
+NumericLabel	  symbol/numericlabel.sml
+SymbolHashTable	  symbol/symbol-hashtable.sml
+FIXITY		  symbol/fixity.sig
+Fixity		  symbol/fixity.sml
+SpecialSymbols	  symbol/specialsymbols.sml
+PPSymbols	  symbol/ppsymbols.sml
+
+PERSSTAMPS	  pid/persstamps.sig
+PersStamps	  pid/persstamps.sml
+PersMap		  pid/persmap.sml
+PIDENV		  pid/pidenv.sig
+PidEnvFn	  pid/pidenv.sml
+
+SOURCE		  source/source.sig
+Source		  source/source.sml
+SOURCE_MAP	  source/sourcemap.sig
+SourceMap	  source/sourcemap.sml
+PPSourceMap	  source/ppsourcemap.sml
+Pathnames	  source/pathnames.sml
+
+ERRORMSG	  errormsg/errormsg.sig
+ErrorMsg	  errormsg/errormsg.sml 
+
+STATS		  stats/stats.sml 
+Stats		  stats/stats.sml 
+
+PRINTCONTROL	  print/printcontrol.sml
+Control_Print	  print/printcontrol.sml 
+STRING_FORMATS	  print/stringformats.sig
+StringFormats	  print/stringformats.sml
+
+WordStringHashTable  util/wordstr-hashtable.sml
+List3		  util/list3.sml
+
+RealLit		  reals/real-lit.sml
+REAL_TO_BITS	  reals/real-to-bits.sig 
+RealToBitsFn	  reals/real-to-bits-fn.sml 
+IEEE_FLOAD_PARAMS reals/real-to-bits-fn.sml
+IEEEFload64Params reals/real-to-bits-fn.sml
+Real64ToBits	  reals/real64-to-bits.sml
+
+IntConst	  compiler/int-const.sml
+RealConst	  compiler/real-const.sml
+CompileExn	  compiler/compileexn.sml
+Endianess	  compiler/endianess-big.sml, compiler/endianess-little.sml
+TARGET		  compiler/target.sig
+Target		  compiler/target32.sml, compiler/target64.sml
+
+
+IMPORTS:
+
+Controls	  smlnj-lib/Controls
+ControlRegistry   smlnj-lib/Controls
+ControlUtil       smlnj-lib/Controls
+HashString        smlnj-lib/Util
+HashTableFn       smlnj-lib/Util
+ORD_MAP		  smlnj-lib/Util
+RedBlackMapFn	  smlnj-lib/Util
+Formatting	  smlnj-lib/PrettyPrint
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
+Imports from outside the FLINT library are indicated by an asterisk (e.g. LambdaVar*).
+[We assume import of basis.cm, so Basis modules are not mentioned.]
+
+Basis/
+
+control/
+basiccontrol.sml
+  < BASIC_CONTROL
+    BasicControl
+  > ControlRegistry
+
+symbol/
+symbol.sig
+  < SYMBOL
+  >
+
+symbol.sml
+  < Symbol
+  > HashString*
+
+fastsymbol.sig
+  < FASTSYMBOL
+  >
+
+fastsymbol.sml
+  < FastSymbol
+  > HashString*
+
+numericlabel.sig
+  < NUMERIC_LABEL
+  > Symbol
+
+numericlabel.sml
+  < NumericLabel
+  > Symbol
+    NUMERIC_LABEL
+    
+    DynamicArrayFn*
+    
+symbol-hashtable.sml
+  < SymbolHashTable
+  > HashTableFn*
+
+fixity.sml
+  < FIXITY
+    Fixity
+  > 
+
+specialsyms.sml
+  < SpecialSymbols
+  > Symbol
+
+ppsymbols.sml
+  < PPSymbols
+  > Symbol 
+    Formatting*
+
+pid/
+persstamps.sig
+  < PERSSTAMPS
+  >
+
+persstamps.sml
+  < PersStamps
+  > PERSSTAMPS 
+    ErrorMsg*
+
+persmap.sml
+  < PersMap
+  > ORD_MAP*
+    RedBlackMapFn*
+
+pidenv.sig
+  < PIDENV
+  > PersStamps
+
+pidenv.sml
+  < PedEnvFn
+  > PIDENV
+    PersMap
+
+
+source/
+source.sig
+  < SOURCE
+  >
+
+source.sml
+  < Source
+  > SOURCE
+
+sourcemap.sig
+  < SOURCE_MAP
+  > Source
+
+sourcemap.sml
+  < SourceMap
+  > SOURCE_MAP
+    Source
+
+ppsourcemap.sml
+  < PPSourceMap
+  > Source
+    SourceMap
+    Formatting*
+
+pathnames.sml  (should integrate into SymPaths)
+  < Pathnames
+  >
+
+
+errormsg/
+errormsg.sig
+  < ERRORMSG
+  > Source
+    SourceMap
+    Formatting*
+
+errormsg.sml
+  < ErrorMsg
+  > ERRORMSG
+    Source
+    SourceMap
+    PPSourceMap
+    Formatting*
+    PrintFormat*
+
+
+stats/
+stats.sml
+  < STATS
+    Stats
+  > Control_Print (say, flush)
+    SMLofNJ (.Internals.Cleanup)
+
+print/
+printcontrol.sml
+  < PRINTCONTROL
+    Control_Print
+  > Controls*
+    ControlRegistry*
+    ControlUtil*
+
+stringformats.sig
+  < STRING_FORMATS
+  >
+
+stringformats.sml
+  < StringFormats
+  > STRING_FORMATS
+    Control_Print*
+
+
+util/
+wordstr-hashtable.sml
+  < WordStringHashTable
+  > HashTableFn*
+
+list3.sml
+  < List3  (zip3, zip3Eq)
+  >
+
+
+reals/
+real-lit.sml
+  < RealLit
+  >
+
+real-to-bits.sig
+  < REAL_TO_BITS
+  >
+
+real-to-bits-fn.sml
+  < IEEE_FLOAT_PARAMS
+    IEEEFloat64Params
+    RealToBitsFn
+  > REAL_TO_BITS
+
+real64-to-bits.sml
+  < Real64ToBits
+  > RealToBitsFn
+    IEEEFloat64Params
+
+
+compiler/
+int-const.sml
+  < IntConst
+  > 
+
+real-const.sml
+  < RealConst
+  > RealLit
+
+compileexn.sml
+  < CompileExn (Compile exn)
+  >
+
+endianess-big.sml 
+  < Endianess
+  >
+
+endianess-little.sml
+  < Endianess
+  >
+
+target.sig
+  < TARGET
+  >
+
+target32.sml
+  < Target
+  > TARGET
+    Endianness
+
+target64.sml
+  < Target
+  > TARGET
+    Endianess
+ 
+
+(* ---------------------------- Imports ---------------------------- *) 
+
+(* Basis libraries *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm        (* smlnj-lib/Util *)
+$smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
+$smlnj/smlnj-lib/prettyprint-lib.cm  (* smlnj-lib/PrettyPrint *)
+

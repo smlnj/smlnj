@@ -533,7 +533,7 @@ structure Literals : LITERALS =
 	    if !debugFlg
 	      then (
 		say (concat["\n[After Literals.split ...]\n"]);
-		PPCps.printcps0 nfn;
+		PPCps.ppFunction nfn;
 	        say "==========\n";
 		printLits lit;
 		say "\n")

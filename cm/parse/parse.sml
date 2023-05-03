@@ -1,10 +1,11 @@
-(*
+(* cm/parse/parse.sml
  * Parser for CM description files.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
+
 signature PARSE = sig
     val parse : { load_plugin: SrcPath.dir -> string -> bool,
 		  gr: GroupReg.groupreg,
@@ -29,8 +30,8 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 
     val lookAhead = 30
 
-    structure PP = PrettyPrint
-    structure S = Source
+    structure PP = Formatting
+    structure SR = Source
     structure EM = ErrorMsg
     structure SM = SourceMap
     structure GG = GroupGraph
@@ -105,9 +106,9 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 	 sgc := #1 (SrcPathMap.remove (!sgc, l)))
 	handle LibBase.NotFound => ()
 
-    fun parse args = let
+    fun parse args =
 
-	val _ = SrcPath.sync ()
+    let val _ = SrcPath.sync ()
 
 	val { load_plugin, gr, param, stabflag, group,
 	      init_group, paranoid } = args
@@ -122,7 +123,7 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 	val staball = stabflag = SOME true
 
 	val groupreg = gr
-	val errcons = EM.defaultConsumer ()
+	val errcons : string -> unit = EM.defaultOutput ()
 	val youngest = ref TStamp.ancient
 	val ginfo0 = { param = param, groupreg = groupreg,
 		       errcons = errcons, youngest = youngest }
@@ -165,89 +166,67 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 	      majorGC ())
 	     handle LibBase.NotFound => ())
 
-	fun hasCycle (group, groupstack) = let
-	    (* checking for cycles among groups and printing them nicely *)
-	    fun findCycle ([], _) = []
-	      | findCycle ((h as (g, (s, p1, p2))) :: t, cyc) =
-		if SrcPath.compare (g, group) = EQUAL then rev (h :: cyc)
-		else findCycle (t, h :: cyc)
-	    fun report ((g, (s, p1, p2)), hist) = let
-		fun pphist pps = let
-		    fun loop (_, []) = ()
-		      | loop (g0, (g, (s, p1, p2)) :: t) = let
-			    val s = EM.matchErrorString s (p1, p2)
-			in
-			    PP.newline pps;
-			    PP.string pps s;
-			    PP.string pps ": importing ";
-			    PP.string pps (SrcPath.descr g0);
-			    loop (g, t)
-			end
-		in
-		    loop (g, hist)
-		end
-	    in
-		EM.error s (p1, p2) EM.COMPLAIN
-		           ("group hierarchy forms a cycle with " ^
-			    SrcPath.descr group)
-			   pphist
+	fun hasCycle (group, groupstack) =
+	    let (* checking for cycles among groups and printing them nicely *)
+		fun findCycle (nil, _) = nil
+		  | findCycle ((h as (g, (s, p1, p2))) :: t, cyc) =
+		      (case SrcPath.compare (g, group)
+			of EQUAL => rev (h :: cyc)
+		         | _ => findCycle (t, h :: cyc))
+		fun report ((g, (s, p1, p2)), hist) =
+		      let val errorBody =
+			      let fun loop (_, nil) = nil
+				    | loop (g0, (g, (s, p1, p2)) :: rest) =   (* s: source *)
+				      let val locFmt = PPSourceMap.fmtSourceRegion (s, SM.REGION (p1, p2))
+				       in PP.hblock [locFmt, PP.text ": importing", PP.text (SrcPath.descr g0)] ::
+					  loop (g, rest)
+				      end
+			      in PP.vblock (loop (g, hist))
+			      end
+		       in EM.error s (SM.REGION (p1, p2)) EM.COMPLAIN
+			     ("group hierarchy forms a cycle with " ^ SrcPath.descr group)
+			     errorBody
+		      end
+	     in case findCycle (groupstack, [])
+		  of h :: t => (report (h, t); true)
+		   | [] => false
 	    end
-	in
-	    case findCycle (groupstack, []) of
-		h :: t => (report (h, t); true)
-	      | [] => false
-	end
 
-	fun mparse args = let
-	    val (group, vers, groupstack, pErrFlag, stabthis, curlib,
-		 ginfo, rb, error) = args
-	    fun getStable stablestack (ginfo, gpath, vers, rb) = let
-		(* This is a separate "findCycle" routine that detects
-		 * cycles among stable libraries.  These cycles should
-		 * never occur unless someone purposefully renames
-		 * stable library files in a bad way. *)
-		fun findCycle ([], _) = NONE
-		  | findCycle (h :: t, cyc) =
-		    if SrcPath.compare (h, gpath) = EQUAL then SOME (h :: cyc)
-		    else findCycle (t, h :: cyc)
-		fun report cyc = let
-		    fun pphist pps = let
-			fun loop [] = ()
-			  | loop (h :: t) =
-			    (PP.newline pps;
-			     PP.string pps (SrcPath.descr h);
-			     loop t)
-		    in
-			loop (rev cyc)
-		    end
-		in
-		    EM.errorNoFile (errcons, pErrFlag) SM.nullRegion
-		      EM.COMPLAIN
-		      ("stable libraries form a cycle with " ^
-		       SrcPath.descr gpath)
-		      pphist
-		end
-		fun load () = let
-		    val go = Stabilize.loadStable
-			{ getGroup = getStable (gpath :: stablestack),
-			  anyerrors = pErrFlag }
-			(ginfo, gpath, vers, rb)
-		in
-		    case go of
-			NONE => NONE
-		      | SOME g => 
-			    (registerNewStable (gpath, g);
-			     Say.vsay ["[library ", SrcPath.descr gpath,
-				       " is stable]\n"];
-			     SOME g)
-		end
-	    in
-		case findCycle (stablestack, []) of
-		    NONE => (case cachedStable (gpath, init_group) of
-				 SOME g => SOME g
-			       | NONE => load ())
-		  | SOME cyc => (report cyc; NONE)
-	    end
+	fun mparse args =
+	    let val (group, vers, groupstack, pErrFlag, stabthis, curlib, ginfo, rb, error) = args
+		fun getStable stablestack (ginfo, gpath, vers, rb) =
+		    (* This is a separate "findCycle" routine that detects
+		     * cycles among stable libraries.  These cycles should
+		     * never occur unless someone purposefully renames
+		     * stable library files in a bad way. *)
+		    let fun findCycle ([], _) = NONE
+			  | findCycle (h :: t, cyc) =
+			      if SrcPath.compare (h, gpath) = EQUAL then SOME (h :: cyc)
+			      else findCycle (t, h :: cyc)
+			fun report cyc =
+			      (pErrFlag := true;
+			       EM.errorNoSource SM.nullRegion EM.COMPLAIN
+				 ("stable libraries form a cycle with " ^ SrcPath.descr gpath)
+				 (PP.vblock (map (fn x => PP.text (SrcPath.descr x)) (rev cyc))))
+			fun load () =
+			    let val go = Stabilize.loadStable
+					     { getGroup = getStable (gpath :: stablestack),
+					       anyerrors = pErrFlag }
+					     (ginfo, gpath, vers, rb)
+			    in case go
+				of NONE => NONE
+				 | SOME g => 
+				     (registerNewStable (gpath, g);
+				      Say.vsay ["[library ", SrcPath.descr gpath,
+						" is stable]\n"];
+				      SOME g)
+			    end
+		    in case findCycle (stablestack, [])
+			 of NONE => (case cachedStable (gpath, init_group)
+				       of SOME g => SOME g
+					| NONE => load ())
+			  | SOME cyc => (report cyc; NONE)
+		    end (* getStable *)
 
 	    fun stabilize (NONE, _) = NONE
 	      | stabilize (SOME g, rb) =
@@ -336,19 +315,20 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 		val local_registry = CMSemant.newToolRegistry ()
 
 		fun work stream = let
-		    val source =
-			S.newSource (SrcPath.osstring group,
-				     stream, false, errcons)
+		    val source = SR.newSource (SrcPath.osstring group, stream, false)
 		    val sourceMap = #sourceMap source
 		    val _ = GroupReg.register groupreg (group, source)
 
-		    (* We can hard-wire the source into this
+	            (* error : SM.region -> string -> unit
+		     * "local" (to function "work") specialization of EM.error
+		     * We can hard-wire the source into this
 		     * error function because the function is only for
 		     * immediate use and doesn't get stored into persistent
 		     * data structures. *)
-		    fun error r m =
-			EM.error source r EM.COMPLAIN m EM.nullErrorBody
-		    fun obsolete r =
+		    fun error (region: SM.region) (msg: string) =
+			EM.error source region EM.COMPLAIN msg EM.nullErrorBody
+
+		    fun obsolete (r: SM.region) =
 			if #get StdConfig.warn_obsolete () then
 			    EM.error source r EM.WARN
 			      "old-style feature (obsolete)" EM.nullErrorBody
@@ -368,12 +348,12 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 			 * this group. *)
 			if !mef andalso not keep_going then GG.ERRORGROUP
 			else case mparse (p, v, gs', mef, staball,
-					  curlib, ginfo, rb, error (p1, p2)) of
-				 NONE => (mef := true; GG.ERRORGROUP)
-			       | SOME res => res
+					  curlib, ginfo, rb, error (SM.REGION (p1, p2)))
+			       of NONE => (mef := true; GG.ERRORGROUP)
+			        | SOME res => res
 		    end
 	            handle exn as IO.Io _ =>
-			(error (p1, p2) (General.exnMessage exn);
+			(error (SM.REGION (p1, p2)) (General.exnMessage exn);
 			 GG.ERRORGROUP)
 
 		    fun doMember ({ name, mkpath }, p1, p2, c, oto) =
@@ -382,100 +362,87 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 					  load_plugin = load_plugin }
 					{ name = name, mkpath = mkpath,
 					  class = c, tooloptions = oto,
-					  group = (group, (p1, p2)),
+					  group = (group, (SM.REGION (p1, p2))),
 					  local_registry = local_registry,
 					  context = context }
 
 		    (* Build the argument for the lexer; the lexer's local
 		     * state is encapsulated here to make sure the parser
 		     * is re-entrant. *)
-		    val lexarg = let
-			(* local state *)
-			val depth = ref 0
-			val curstring = ref []
-			val startpos = ref 0
-			val instring = ref false
-			(* handling comments *)
-			fun enterC () = depth := !depth + 1
-			fun leaveC () = let
-			    val d = !depth - 1
-			in
-			    depth := d;
-			    d = 0
-			end
-			(* handling strings *)
-			fun newS pos =
-			    (instring := true;
-			     curstring := [];
-			     startpos := pos)
-			fun addS c = curstring := c :: !curstring
-			fun addSC (s, offs) =
-			    addS (chr (ord (String.sub (s, 2)) - offs))
-			fun addSN (s, pos) = let
-			    val ns = substring (s, 1, 3)
-			    val n = Int.fromString ns
-			in
-			    addS (chr (valOf n))
-			    handle _ =>
-				error (pos, pos + size s)
-				         ("illegal decimal char spec: " ^ ns)
-			end
-			fun getS (pos, tok) =
-			    (instring := false;
-			     tok (implode (rev (!curstring)), !startpos, pos))
-			(* handling EOF *)
-			fun handleEof () = let
-			    val pos = SM.lastLinePos sourceMap
-			in
-			    if !depth > 0 then
-				error (pos, pos)
-				       "unexpected end of input in comment"
-			    else if !instring then
-				error (pos, pos)
-				       "unexpected end of input in string"
-			    else ();
-			    pos
-			end
-			(* handling line breaks *)
-			fun newline pos = SM.newline sourceMap pos
-			(* handling #line directives *)
-			fun sync (initpos, t) = let
-			    val endpos = initpos + size t
-			    fun sep c = c = #"#" orelse Char.isSpace c
-			    fun cvt s = getOpt (Int.fromString s, 0)
-			    fun r (line, col, file) =
-				SM.resynch sourceMap (initpos, endpos, line, col, file)
-			in
-			    case String.tokens sep t of
-				[_, line] =>
-				    r (cvt line, 0, NONE)
-			      | [_, line, file] =>
-				    r (cvt line, 0, SOME file)
-			      | [_, line, col, file] =>
-				    r (cvt line, cvt col, SOME file)
-			      | _ => error (initpos, endpos)
-				    "illegal #line directive"
-			end
-		    in
-			{ enterC = enterC,
-			  leaveC = leaveC,
-			  newS = newS,
-			  addS = addS,
-			  addSC = addSC,
-			  addSN = addSN,
-			  getS = getS,
-			  handleEof = handleEof,
-			  newline = newline,
-			  obsolete = obsolete,
-			  error = error,
-			  sync = sync,
-			  in_section2 = ref false }
-		    end
+		    val lexarg =
+			let (* local state *)
+			    val depth = ref 0
+			    val curstring = ref []
+			    val startpos = ref 0
+			    val instring = ref false
+
+			    (* handling comments *)
+			    fun enterC () = depth := !depth + 1
+			    fun leaveC () =
+				let val d = !depth - 1
+				 in depth := d;
+				    d = 0
+				end
+
+			    (* handling strings *)
+			    fun newS pos =
+				(instring := true;
+				 curstring := [];
+				 startpos := pos)
+			    fun addS c = curstring := c :: !curstring
+			    fun addSC (s, offs) =
+				addS (chr (ord (String.sub (s, 2)) - offs))
+			    fun addSN (s, pos) =
+				let val ns = substring (s, 1, 3)
+				    val n = Int.fromString ns
+				in addS (chr (valOf n))
+				   handle _ =>
+					  error (SM.REGION (pos, pos + size s))
+						("illegal decimal char spec: " ^ ns)
+				end
+
+			    fun getS (pos, tok) =
+				(instring := false;
+				 tok (implode (rev (!curstring)), !startpos, pos))
+
+			    (* handling EOF *)
+			    fun handleEof () =
+				let val pos = SM.lastLineStartPos (!sourceMap)
+				 in if !depth > 0
+				    then error (SM.REGION (pos, pos+1))
+					       "unexpected end of input in comment"
+				    else if !instring
+				    then error (SM.REGION (pos, pos+1))
+					       "unexpected end of input in string"
+				    else ();
+				    pos
+				end
+
+			    (* handling line breaks *)
+			    fun newline pos = SR.newline (source, pos)
+
+			    (* handling #line directives -- OBSOLETE, does nothing *)
+			    fun sync (initpos, t) = ()
+
+			in { enterC = enterC,
+			     leaveC = leaveC,
+			     newS = newS,
+			     addS = addS,
+			     addSC = addSC,
+			     addSN = addSN,
+			     getS = getS,
+			     handleEof = handleEof,
+			     newline = newline,
+			     obsolete = obsolete,
+			     error = error,
+			     sync = sync,
+			     in_section2 = ref false }
+			end  (* val lexarg *)
 
 		    fun inputc k = TextIO.input stream
 
 		    val tokenStream = CMParse.makeLexer inputc lexarg
-		    val parsearg =
+		    val parsearg : CMParse.arg =
 			{ grouppath = group,
 			  context = context,
 			  obsolete = obsolete,
@@ -486,7 +453,7 @@ functor ParseFn (val pending : unit -> DependencyGraph.impexp SymbolMap.map
 			  ig = init_group }
 		    val (parseResult, _) =
 			CMParse.parse (lookAhead, tokenStream,
-				       fn (s,p1,p2) => error (p1, p2) s,
+				       (fn (s,p1,p2) => error (SM.REGION (p1, p2)) s),
 				       parsearg)
 		in
 		    if !(#anyErrors source) then NONE

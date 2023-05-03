@@ -10,7 +10,7 @@
  *)
 
 structure S = CMSemant
-
+structure SM = SourceMap
 %%
 
 %term EOF
@@ -72,8 +72,8 @@ structure S = CMSemant
 %arg ({ grouppath, context, obsolete, error, doMember, curlib, gp, ig }) :
     { grouppath: SrcPath.file,
       context: S.context,
-      obsolete: pos * pos -> unit,
-      error: pos * pos -> string -> unit,
+      obsolete: SourceMap.region -> unit,
+      error: SourceMap.region -> string -> unit,
       doMember : { name: string, mkpath: unit -> SrcPath.prefile } *
 		 pos * pos * S.cm_class option * S.toolopt list option
 		 -> S.members,
@@ -107,8 +107,7 @@ structure S = CMSemant
 description : group				(group)
 
 group : gprivspec LPAREN srcfile RPAREN opt_exports IS members
-                                                (obsolete (LPARENleft,
-							   RPARENright);
+                                                (obsolete (SM.REGION (LPARENleft, RPARENright));
 						 S.group
 						 { path = grouppath,
 						   privileges = gprivspec,
@@ -146,25 +145,21 @@ group : gprivspec LPAREN srcfile RPAREN opt_exports IS members
 						   initgroup = ig })
 
 version : FILE_STANDARD                        (S.cm_version
-						(FILE_STANDARD,
-						 error (FILE_STANDARDleft,
-							FILE_STANDARDright)))
+						    (FILE_STANDARD,
+						     error (SM.REGION (FILE_STANDARDleft,FILE_STANDARDright))))
 
 wrapspec : (* empty *)                         (fn p => p)
           | wrapspec word                      (fn p =>
 						 S.wrap (wrapspec p, word,
-							  error (wordleft,
-								 wordright)))
+							  error (SM.REGION (wordleft, wordright))))
 
 gprivspec : GROUP                               (S.initialPrivilegeSpec)
           | word gprivspec                      (S.require (gprivspec, word,
-							    error (wordleft,
-								   wordright)))
+							    error (SM.REGION (wordleft, wordright))))
 
 lprivspec : LIBRARY                             (S.initialPrivilegeSpec)
           | word lprivspec                      (S.require (lprivspec, word,
-							    error (wordleft,
-								   wordright)))
+							    error (SM.REGION (wordleft, wordright))))
           | LPAREN wrapspec RPAREN lprivspec    (wrapspec lprivspec)
 
 mand_exports : export				(export)
@@ -179,10 +174,10 @@ exports : (* empty *)                           (S.emptyExports)
 export : ml_symbolset				(ml_symbolset)
        | IF exp guarded_exports			(S.guarded_exports
 						  (exp, guarded_exports,
-						   error (expleft, expright)))
+						   error (SM.REGION (expleft, expright))))
        | ERROR                                  (S.error_export
 						 (fn () =>
-						  error (ERRORleft, ERRORright)
+						  error (SM.REGION (ERRORleft, ERRORright))
 						        ERROR))
 
 filecat : GROUP                                 (S.exportgroup)
@@ -191,8 +186,7 @@ filecat : GROUP                                 (S.exportgroup)
 
 ml_symbolset : ml_symbol                        (S.export
 						     (ml_symbol,
-						      error (ml_symbolleft,
-							     ml_symbolright)))
+						      error (SM.REGION (ml_symbolleft, ml_symbolright))))
              | LPAREN exports RPAREN            (exports)
              | ml_symbolset STAR ml_symbolset   (S.intersection
 						     (ml_symbolset1,
@@ -202,14 +196,12 @@ ml_symbolset : ml_symbol                        (S.export
 						      ml_symbolset2))
 	     | filecat LPAREN srcfiles RPAREN   (filecat
 						     (srcfiles,
-						      error (srcfilesleft,
-							     srcfilesright)))
+						      error (SM.REGION (srcfilesleft, srcfilesright))))
              | LIBRARY LPAREN pathname opttoolopts RPAREN
                                                 (S.exportlibrary
 						     (fn () => SrcPath.file
 							 (#mkpath pathname ()),
-						      error (pathnameleft,
-							     pathnameright),
+						          error (SM.REGION (pathnameleft, pathnameright)),
 						      { hasoptions =
 							   isSome opttoolopts,
 							elab = fn () =>
@@ -227,7 +219,7 @@ else_exports : ENDIF				(S.emptyExports)
 	     | ELSE exports ENDIF		(exports)
              | ELIF exp guarded_exports		(S.guarded_exports
 						 (exp, guarded_exports,
-						  error (expleft, expright)))
+						  error (SM.REGION (expleft, expright))))
 
 members : (* empty *)				(S.emptyMembers)
 	| member members			(S.members (member, members))
@@ -259,10 +251,10 @@ member : pathname optclass opttoolopts		(doMember (pathname,
 							   opttoolopts))
        | IF exp guarded_members			(S.guarded_members
 						 (exp, guarded_members,
-						  error (expleft, expright)))
+						  error (SM.REGION (expleft, expright))))
        | ERROR                                  (S.error_member
 						 (fn () =>
-						  error (ERRORleft, ERRORright)
+						  error (SM.REGION (ERRORleft, ERRORright))
 						        ERROR))
 
 class : word                                    (S.class word)
@@ -273,7 +265,7 @@ else_members : ENDIF				(S.emptyMembers)
 	     | ELSE members ENDIF		(members)
 	     | ELIF exp guarded_members		(S.guarded_members
 						 (exp, guarded_members,
-						  error (expleft, expright)))
+						  error (SM.REGION (expleft, expright))))
 
 word : FILE_STANDARD                            (S.cm_symbol FILE_STANDARD)
 
@@ -287,8 +279,7 @@ aexp : NUMBER				        (S.number NUMBER)
      | aexp ADDSYM aexp                         (S.add (aexp1, ADDSYM, aexp2))
      | aexp MULSYM aexp                         (S.mul (aexp1, MULSYM, aexp2))
      | TILDE aexp		                (S.negate aexp)
-     | ADDSYM aexp %prec TILDE                  (obsolete (ADDSYMleft,
-							   ADDSYMright);
+     | ADDSYM aexp %prec TILDE                  (obsolete (SM.REGION (ADDSYMleft, ADDSYMright));
 						 S.sign (ADDSYM, aexp))
 
 boolexp : DEFINED LPAREN ml_symbol RPAREN	(S.ml_defined ml_symbol)
@@ -314,16 +305,14 @@ pathname : FILE_STANDARD			({ name = FILE_STANDARD,
 						   mkpath = fn () =>
 						     S.file_standard gp
 						      (FILE_STANDARD,
-						       context, error
-						       (FILE_STANDARDleft,
-							FILE_STANDARDright)) })
+						       context,
+						       error (SM.REGION (FILE_STANDARDleft, FILE_STANDARDright))) })
 	 | FILE_NATIVE				({ name = FILE_NATIVE,
 						   mkpath = fn () =>
 						     S.file_native
 						       (FILE_NATIVE,
-							context, error
-							(FILE_NATIVEleft,
-							 FILE_NATIVEright)) })
+							context,
+							error (SM.REGION (FILE_NATIVEleft, FILE_NATIVEright))) })
 
 srcfile : pathname                              (fn () => SrcPath.file
 							 (#mkpath pathname ()))

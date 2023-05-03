@@ -4,166 +4,144 @@
  * All rights reserved.
  *)
 
-(* modified to use SML/NJ Lib PP. [dbm, 7/30/03]) *)
+(* modified to use smlnj-lib/PrettyPrint. [DBM, 2023.3.8]) *)
 
 signature PPVAL =
 sig
-  val ppAccess: PrettyPrint.stream -> Access.access -> unit
-  val ppRep: PrettyPrint.stream -> Access.conrep -> unit
-  val ppDcon: PrettyPrint.stream -> Types.datacon -> unit
-  val ppVar: PrettyPrint.stream -> Variable.var -> unit
-  val ppDebugDcon : PrettyPrint.stream
-		    -> StaticEnv.staticEnv -> Types.datacon -> unit
-  val ppDebugVar: (PrimopId.prim_id -> string) ->
-		  PrettyPrint.stream
-		  -> StaticEnv.staticEnv -> Variable.var -> unit
+  val fmtAccess :       Access.access -> Formatting.format
+  val fmtConrep :       Access.conrep -> Formatting.format
+  val fmtDatacon :      Types.datacon -> Formatting.format
+  val fmtDataconTyped : StaticEnv.staticEnv * Types.datacon -> Formatting.format
+  val fmtDataconDebug : StaticEnv.staticEnv * Types.datacon -> Formatting.format
+  val fmtConBinding :   StaticEnv.staticEnv * Types.datacon -> Formatting.format
+  val fmtVar :          Variable.var -> Formatting.format
+  val fmtVarTyped :     StaticEnv.staticEnv * Variable.var -> Formatting.format
+  val fmtVarDebug :     StaticEnv.staticEnv * Variable.var -> Formatting.format
 end (* signature PPVAL *)
 
 structure PPVal : PPVAL =
 struct
 
 local
-  structure PP = PrettyPrint
-  structure PU = PPUtil
+  structure PP = Formatting
+  structure PPS = PPSymbols
+  structure PPP = PPSymPaths
+  structure PPT = PPType
+  structure IP = InvPath
   structure TU = TypesUtil
   structure LU = Lookup
   structure A = Access
   structure LV = LambdaVar
-  open PrettyPrint PPUtil Variable Types
-
+  structure V = Variable
+  structure T = Types
+  structure SE = StaticEnv
 in
 
 val internals = ElabDataControl.varconInternals
 
-fun C f x y = f y x
+exception PPVAL of string
 
-val pps = PP.string
-val ppType = PPType.ppType
-val ppTycon = PPType.ppTycon
-val ppTyfun = PPType.ppTyfun
+fun fmtAccess a = PP.brackets (PP.text (A.accessToString a))
 
-fun ppAccess ppstrm a = pps ppstrm ("["^(A.prAcc a)^"]")
+fun fmtConrep rep = PP.text (A.conrepToString rep)
 
-fun ppInfo ii2string ppstrm a = pps ppstrm (" ["^(ii2string a)^"]")
+fun fmtConsig csig = PP.text (A.consigToString csig)
 
-fun ppRep ppstrm rep = PP.string ppstrm (A.prRep rep)
+fun fmtField (field : string, value : PP.format) =
+    PP.hblock [PP.text field, PP.text "=", value]
 
-fun ppCsig ppstrm csig = PP.string ppstrm (A.prCsig csig)
+fun fmtPrim prim = PP.text "<prim>"
 
-fun ppDcon ppstrm =
-    let fun ppD(DATACON{name, rep=A.EXN acc, ...}) =
-	       (ppSym ppstrm name;
-		if !internals then ppAccess ppstrm acc else ())
-	  | ppD(DATACON{name,...}) = ppSym ppstrm name
-     in ppD
-    end
+fun fmtDatacon (T.DATACON {name, rep, ...} : T.datacon) =
+    PP.cblock [PPS.fmtSym name,
+	     case rep
+	       of A.EXN acc => if !internals then fmtAccess acc else PP.empty
+		| _ => PP.empty]
 
-fun ppDebugDcon ppstrm env (DATACON{name,rep,const,typ,sign,lazyp}) =
-    let val {openHVBox, openHOVBox, closeBox, pps, break,...} = en_pp ppstrm
-	val ppSym = ppSym ppstrm
-     in openHVBox 3;
-        pps "DATACON";
-	break{nsp=0,offset=0};
-	pps "{name = "; ppSym name; ppcomma_nl ppstrm;
-	pps "const = "; pps (Bool.toString const); ppcomma_nl ppstrm;
-	pps "typ = "; ppType env ppstrm typ; ppcomma_nl ppstrm;
-	pps "lazyp = "; pps (Bool.toString lazyp); ppcomma_nl ppstrm;
-	pps "conrep ="; ppRep ppstrm rep; ppcomma_nl ppstrm;
-        pps "sign = ["; ppCsig ppstrm sign; pps "]}";
-        closeBox()
-    end
+fun fmtDataconTyped (env: SE.staticEnv, T.DATACON{name, typ, ...}) =
+    PP.pblock [PPS.fmtSym name, PP.colon, PPT.fmtType env typ]
 
-fun ppDatacon (env:StaticEnv.staticEnv,DATACON{name,typ,...}) ppstrm =
-    let val {openHVBox, openHOVBox,closeBox,pps,...} = en_pp ppstrm
-     in openHOVBox 0;
-	ppSym ppstrm name; pps " : "; ppType env ppstrm typ;
-	closeBox()
-    end
+fun fmtDataconDebug (env: SE.staticEnv, T.DATACON {name, rep, const, typ, sign, lazyp}) =
+    PP.hblock
+      [PP.text "DATACON",
+	(PP.braces
+	   (PP.vblock
+	      [fmtField ("name", PPS.fmtSym name),
+	       fmtField ("const", PP.bool const),
+	       fmtField ("typ", PPT.fmtType env typ),
+	       fmtField ("lazyp", PP.bool lazyp),
+	       fmtField ("conrep", fmtConrep rep),
+	       fmtField ("sign", PP.brackets (fmtConsig sign))]))]
 
-fun ppConBinding ppstrm =
-    let val {openHVBox, openHOVBox,closeBox,pps,...} = en_pp ppstrm
-	fun ppCon (DATACON{name, typ, rep=A.EXN _, ...}, env) =
-		(openHVBox 0;
-		 pps "exception "; ppSym ppstrm name;
-                 if BasicTypes.isArrowType typ then
-                   (pps " of ";
-   		    ppType env ppstrm (BasicTypes.domain typ))
-                 else ();
-		 closeBox())
-	  | ppCon (con,env) =
-	      let exception Hidden
-		  val visibleDconTyc =
+(* fmtConBinding : SE.staticEnv * T.datacon -> PP.format
+ * used in PPModule *)
+fun fmtConBinding (env : SE.staticEnv, dcon: T.datacon) =
+    (case dcon
+       of T.DATACON{name, typ, rep=A.EXN _, ...} =>  (* exception constructor case *)
+	    PP.pblock
+	     [PP.text "exception",
+	      PPS.fmtSym name,
+	      if BasicTypes.isArrowType typ
+              then PP.hblock [PP.text "of", PPT.fmtType env (BasicTypes.domain typ)]
+              else PP.empty]
+	| con =>      (* ordinary datacon case *)
+	    let exception Hidden
+		val visible =
 		      let val tyc = TU.dataconTyc con
-		       in
-			  (TypesUtil.equalTycon
-			      (LU.lookTyc
-			         (env,SymPath.SPATH
-				       [InvPath.last(valOf(TypesUtil.tycPath tyc))],
-				  fn _ => raise Hidden),
-			       tyc)
-			     handle Hidden => false)
+		       in (case TU.tycPath tyc
+		             of NONE => raise (PPVAL "fmtConBinding: is hidden?")
+			      | SOME (IP.IPATH syms) =>
+				  (case syms
+				     of nil => raise (PPVAL "fmtConBinding: null rpath")
+				      | tycName :: _ => 
+					  (TypesUtil.equalTycon
+					     (LU.lookTyc (env, SymPath.SPATH [tycName],
+							  fn _ => raise Hidden),
+					      tyc))))
+			  handle Hidden => false
 		      end
-	       in if !internals orelse not visibleDconTyc
-	          then (openHVBox 0;
-			pps "con ";
-			ppDatacon(env,con) ppstrm;
-		        closeBox())
-	          else ()
-	      end
-     in ppCon
-    end
+	     in if visible orelse !internals
+	        then PP.hblock [PP.text "con", fmtDatacon con]
+	        else PP.empty
+	    end)
 
-fun ppVar ppstrm (VALvar {access,path,...}) =
-      (pps ppstrm (SymPath.toString path);
-       if !internals
-       then (case access
-	       of A.LVAR lvar => pps ppstrm ("." ^ LV.toString lvar)
-	        | _ => ppAccess ppstrm access)
-       else ())
-  | ppVar ppstrm (OVLDvar {name,...}) = ppSym ppstrm (name)
-  | ppVar ppstrm (ERRORvar) = PP.string ppstrm "<errorvar>"
+fun fmtVar (V.VALvar {access,path,...}) =
+       PP.cblock [PPP.fmtSymPath path,
+		if !internals
+		then (case access
+		       of A.LVAR lvar => PP.cblock [PP.period, PP.text (LV.toString lvar)]
+			| _ => fmtAccess access)
+		else PP.empty]
+  | fmtVar (V.OVLDvar {name,...}) = PPS.fmtSym name
+  | fmtVar (V.ERRORvar) = PP.text "<errorvar>"
 
-fun ppDebugVar ii2string ppstrm env  =
-    let val {openHVBox, openHOVBox,closeBox,pps,...} = en_pp ppstrm
-	val ppAccess = ppAccess ppstrm
-        val ppInfo = ppInfo ii2string ppstrm
-	fun ppDV(VALvar {access,path, btvs, typ,prim}) =
-	     (openHVBox 0;
-	      pps "VALvar";
-	      openHVBox 3;
-	      pps "({access="; ppAccess access; ppcomma_nl ppstrm;
-              pps "prim="; ppInfo prim; ppcomma_nl ppstrm;
-	      pps "path="; pps (SymPath.toString path); ppcomma_nl ppstrm;
-	      pps "typ=ref "; ppType env ppstrm (!typ);
-	      pps "})";
-	      closeBox(); closeBox())
-	  | ppDV (OVLDvar {name,variants}) =
-	     (openHVBox 0;
-	      pps "OVLDvar";
-	      openHVBox 3;
-	      pps "({name="; ppSym ppstrm (name); ppcomma_nl ppstrm;
-	      ppcomma_nl ppstrm; pps "})";
-	      closeBox();
-	      closeBox())
-	  | ppDV (ERRORvar) = pps "<ERRORvar>"
-     in ppDV
-    end
+fun fmtVarTyped (env : SE.staticEnv, variable : V.var) =
+    (case variable
+       of V.VALvar {btvs, path, access, typ, prim} =>
+	    PP.pblock
+	      [PPP.fmtSymPath path,
+	       if !internals then fmtAccess access else PP.empty,
+	       PP.colon,
+	       PPT.fmtType env (!typ)]
+	| V.OVLDvar {name, ...} => PPS.fmtSym name
+	| V.ERRORvar => PP.text "<ERRORvar>")
 
-fun ppVariable ppstrm  =
-    let val {openHVBox, openHOVBox,closeBox,pps,...} = en_pp ppstrm
-	fun ppV(env:StaticEnv.staticEnv,VALvar{btvs,path,access,typ,prim}) =
-	      (openHVBox 0;
-	       pps(SymPath.toString path);
-	       if !internals then ppAccess ppstrm access else ();
-	       pps " : "; ppType env ppstrm (!typ);
-	       closeBox())
-	  | ppV (env,OVLDvar {name,variants}) =
-	      (openHVBox 0;
-	       ppSym ppstrm (name);
-	       closeBox())
-	  | ppV(_,ERRORvar) = pps "<ERRORvar>"
-     in ppV
-    end
+fun fmtVarDebug (env: SE.staticEnv, var: V.var) =
+    (case var
+      of V.VALvar {access,path, btvs, typ,prim} =>
+	 PP.hblock
+	   [PP.text "VALvar",
+	    PP.braces
+	      (PP.vblock
+	         [fmtField ("access", fmtAccess access),
+                  fmtField ("prim", fmtPrim prim),
+		  fmtField ("path", PPP.fmtSymPath path),
+		  fmtField ("typ", PPT.fmtType env (!typ))])]
+       | V.OVLDvar {name,variants} =>
+	 PP.hblock   
+	   [PP.text "OVLDvar",
+	    PP.braces (fmtField ("name", PPS.fmtSym (name)))]
+       | V.ERRORvar => PP.text "<ERRORvar>")
 
 end (* local *)
 end (* structure PPVal *)

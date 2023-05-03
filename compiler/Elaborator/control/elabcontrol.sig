@@ -39,6 +39,7 @@ signature ELAB_CONTROL =
 	(* ConRep *)
 
     val printAbsyn : bool ref
+    val printAst : bool ref
 
   (***** Controls for warning messages *****)
 

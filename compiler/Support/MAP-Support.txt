@@ -1,0 +1,267 @@
+compiler/Admin/MAP-Admin.txt
+
+Map of Admin (as a "library")
+
+* Excluding use of modules from Basis (basis.cm) and smlnj-lib/Util (smlnj-lib.cm)
+* Imports from outside the Admin library are indicated by an asterisk (e.g. LambdaVar*)
+  [We assume imports from basis.cm and smlnj-lib.cm, generally without recording them here.]
+* All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
+  to be structures, unless they end in "Fn", in which case they are assumed to be functors.
+  These defaults can be overridden by qualifiers, e.g. "CPS [str]".
+
+"Admin" is a temporary "working" name, and may change.
+
+Admin/admin.cm -- the Admin Group/Library CDF
+
+(* ---------------------------- Exports ---------------------------- *)
+
+  structure PrintControl
+  structure ElabDataControl
+  structure ElaboratorControl
+  structure FLINTControl
+  structure CodeGenControl
+  structure TopLevelControl
+  structure CompilerControl
+  structure Control  (* could just export Control *)
+
+  structure ErrorMsg
+  structure Source
+  structure SourceMap
+
+  structure Endianess
+  structure Target
+
+  structure Stats
+
+  [We don't need to export any signatures]
+
+(* ---------------------------- Module Catalogue ---------------------------- *) 
+
+LOCAL: ["*" marks exported modules]
+
+PRINT_CONTROL		control/print-control.sig
+PrintControl*		control/print-control.sml
+PARSER_CONTROL		control/parser-control.sig
+ParserControl*		control/parser-control.sml
+ELABDATA_CONTROL	control/elabdata-control.sig
+ElabDataControl*	control/elabdata-control.sml
+ELABORATOR_CONTROL  	control/elaborator-control.sig
+ElaboratorControl*	control/elaborator-control.sml
+MATCHCOMP_CONTROL	control/matchcomp-control.sig
+MatchCompControl*	control/matchcomp-control.sml
+FLINT_CONTROL		control/flint-control.sig
+FLINTControl*		control/flint-control.sml
+CODEGEN_CONTROL		control/codegen-control.sig
+CodeGenControl*		control/codegen-control.sml
+TOPLEVEL_CONTROL	control/toplevel-control.sig
+TopLevelControl*	control/toplevel-control.sml
+COMPILER_CONTROL	control/compiler-control.sig
+CompilerControl*	control/compiler-control.sml
+CONTROL			control/control.sig
+Control*		control/control.sml
+
+ERRORMSG		errormsg/errormsg.sig
+Errormsg*		errormsg/errormsg.sml
+PPErrorMsg		errormsg/pperrormsg.sml
+
+Endianness*		config/endianess-big.sml, config/endianess-little.sml
+TARGET			config/target.sig
+Target*			config/target32.sml, config/target64.sml
+
+Pathnames		source/pathnames.sml [not used]
+SOURCE			source/source.sig
+Source*           	source/source.sml
+SOURCE_MAP		source/sourcemap.sig
+SourceMap*        	source/sourcemap.sml
+PPSourceMap      	source/ppsourcemap.sml
+
+STATS			stats/stats.sml 
+Stats*			stats/stats.sml 
+
+IMPORTS:
+
+Formatting		smlnj-lib/PrettyPrint
+
+
+(* ---------------------------- Members [files] ---------------------------- *) 
+
+Admin/
+
+control/
+  print-control.sig
+    < PRINT_CONTROL
+    >
+
+  print-control.sml
+    < PrintControl
+    > PRINT_CONTROL
+
+  parser-control.sig
+    < PARSER_CONTROL
+    >
+
+  parser-control.sml
+    < ParserControl
+    > PARSER_CONTROL
+
+  elabdata-control.sig
+    < ELABDATA_CONTROL
+    >
+
+  elabdata-control.sml
+    < ElabDataControl
+    > ELABDATA_CONTROL
+
+  elaborator-control.sig
+    < ELABORATOR_CONTROL
+    >
+
+  elaborator-control.sml
+    < ElaboratorControl
+    > ELABORATOR_CONTROL
+
+  matchcomp-control.sig
+    < MATCHCOMP_CONTROL
+    >
+
+  matchcomp-control.sml
+    < MatchCompControl
+    > MATCHCOMP_CONTROL
+
+  flint-control.sig
+    < FLINT_CONTROL
+    >
+
+  flint-control.sml
+    < FLINTControl
+    > FLINT_CONTROL
+
+  codegen-control.sig
+    < CODEGEN_CONTROL
+    >
+
+  codegen-control.sml
+    < CodeGenControl
+    > CODEGEN_CONTROL
+
+  toplevel-control.sig
+    < TOPLEVEL_CONTROL
+    >
+
+  toplevel-control.sml
+    < TopLevelControl
+    > TOPLEVEL_CONTROL
+
+  compiler-control.sig
+    < COMPILER_CONTROL
+    >
+
+  compiler-control.sml
+    < CompilerControl
+    > COMPILER_CONTROL
+
+  control.sig
+    < CONTROL
+    >
+
+  control.sml
+    < Control
+    > CONTROL
+
+
+errormsg/
+
+  errormsg.sig
+    < ERRORMSG
+    > Source
+      Formatting*
+
+  errormsg.sml
+    < ErrorMsg
+    > ERRORMSG
+      Source
+      SourceMap
+      PPSourceMap
+      PrintControl
+      CompilerControl
+      ---------------
+      Formatting*
+
+  pperrormsg.sml
+    < PPErrorMsg
+    > Source
+      SourceMap
+      -----------
+      Formatting*
+
+config/
+
+  endianess-big.sml
+    < Endianess
+    >
+
+  endianess-little.sml
+    < Endianess
+    >
+
+  target.sig
+    < TARGET
+    >
+    
+  target32.sml
+    < Target
+    > TARGET
+      Endianess
+
+  target64.sml
+    < Target
+    > TARGET
+      Endianess
+
+ 
+source/
+
+  pathnames.sml  -- useless, not used
+    < Pathnames
+    >
+  source.sig
+    < SOURCE
+    > [TextIO: Basis]
+
+  source.sml
+    < Source
+    > SOURCE
+
+  sourceutil.sml
+    < SourceUtil
+    >
+    
+  sourcemap.sig
+    < SOURCE_MAP
+    > Source
+
+  sourcemap.sml
+    < SourceMap
+    > SOURCE_MAP
+
+  ppsourcemap.sml
+    < PPSourceMap
+    > Formatting*
+
+
+Admin/stats/
+  stats.sml
+    < STATS
+      Stats
+    > PrintControl
+      
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib libraries *)
+$smlnj-lib/prettyprint-lib.cm
+  (* USED: errormsg/errormsg.sml, errormsg/pperrormsg.sml, source/ppsourcemap.sml *) 
+

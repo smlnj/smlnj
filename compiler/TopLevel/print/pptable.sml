@@ -6,64 +6,70 @@
 
 signature PPTABLE =
 sig
-  exception PP_NOT_INSTALLED
-  val pp_object : PrettyPrint.stream -> Stamps.stamp -> Unsafe.Object.object
-                  -> unit
-  val install_pp : string list ->
-                   (PrettyPrint.stream -> Unsafe.Object.object -> unit) -> unit
+  exception NO_FORMATTER
+  val formatObject : Stamps.stamp -> Unsafe.Object.object -> Formatting.format
+  val installFormatter : string list -> (Unsafe.Object.object -> Formatting.format) -> unit
 end
 
 structure PPTable : PPTABLE =
 struct
 
-(* The following code implements automatic prettyprinting of values. *)
-(* The user defines a datatype d, then defines a prettyprinter       *)
-(*                                                                   *)
-(*     dp : ppstream -> d -> unit                                    *)
-(*                                                                   *)
-(* over d, perhaps using the Oppen primitives. Then dp is installed  *)
-(* in the "pp table" via install_pp. Subsequently, when a value of   *)
-(* type d comes to be printed out, we look in the table, find dp and *)
-(* apply it to the value. If it is not found, we print the value in  *)
-(* the default manner.                                               *)
+(* The following code implements automatic prettyprinting of values.
+ * The user defines a datatype d, then defines a prettyprint formatter
+ *
+ *     formatter : d -> PP.format
+ *
+ * for d, defined using the new Formatting interface. Then formatter is        
+ * installed in the "pp table" via install_pp. Subsequently, when a value of
+ * type d comes to be printed out, we look in the table, find formatter and
+ * apply it to the value. If it is not found, we print the value in
+ * the default manner as "-"
+ *)
+
+local
+  structure EM = ErrorMsg
+  structure S = Symbol
+  structure SM = StampMap
+  structure SRM = SourceMap
+  structure PP = Formatting
 
   type object = Unsafe.Object.object
 
-  exception PP_NOT_INSTALLED
+  val global_formatter_table = ref (SM.empty: (object -> PP.format) SM.map)
 
-  fun error msg =
-        (ErrorMsg.errorNoFile (ErrorMsg.defaultConsumer(),ref false) (0,0)
-			      ErrorMsg.COMPLAIN
-			      msg
-			      ErrorMsg.nullErrorBody;
-	 raise ErrorMsg.Error)
+  val nullRegion = SourceMap.nullRegion
 
-  local
-      val global_pp_table = ref StampMap.empty
-  in
+  (* error : string -> 'a *)
+  fun error (msg: string) =
+       (EM.errorNoSource SRM.nullRegion EM.COMPLAIN msg EM.nullErrorBody;
+	raise EM.Error)
 
-  fun make_path([s],p) = SymPath.SPATH(rev(Symbol.tycSymbol(s)::p))
-    | make_path(s::r,p) = make_path(r,Symbol.strSymbol(s)::p)
-    | make_path _ = error "install_pp: empty path"
+  (* makePath : string list * S.symbol list *)
+  fun makePath ([s], p) = SymPath.SPATH (rev (S.tycSymbol(s) :: p))
+    | makePath (s::r, p) = makePath (r, S.strSymbol(s)::p)
+    | makePath _ = error "PPTabel..makePath: empty path"
 
-  fun install_pp (path_names: string list)
-                 (p: PrettyPrint.stream -> object -> unit) =
-      let val sym_path = make_path(path_names,[])
-	  val tycon = Lookup.lookTyc ((#static(EnvRef.combined())),
-		sym_path,
-		ErrorMsg.errorNoFile(ErrorMsg.defaultConsumer(),ref false) (0,0))
+in
+
+  exception NO_FORMATTER
+
+  (* installFormatter : string list -> (Unsafe.Object.object -> PP.format) -> unit *)
+  fun installFormatter (path_names: string list) (formatter: object -> PP.format) =
+      let val sym_path = makePath (path_names, [])
+	  val err = (fn severity => (fn msg => (fn body => (error msg))))
+	  val tycon = Lookup.lookTyc (#static(EnvRef.combined()), sym_path, err)
        in case tycon
-	    of Types.GENtyc { stamp, ... } =>
-	       global_pp_table := StampMap.insert (!global_pp_table, stamp, p)
-	     | _ => error "install_pp: nongenerative type constructor"
+	    of Types.GENtyc {stamp, ...} =>
+	         global_formatter_table :=
+		   SM.insert (!global_formatter_table, stamp, formatter)
+	     | _ => error "install_formatter: non-GENtyc type constructor"
       end
 
-  fun pp_object ppstrm (s: Stamps.stamp) (obj:object) =
-      case StampMap.find (!global_pp_table, s) of
-	  SOME p => p ppstrm obj
-	| NONE => raise PP_NOT_INSTALLED
+  (* formatObject : Stamps.stamp -> Unsafe.Object.object -> PP.format *)
+  fun formatObject (s: Stamps.stamp) (obj:object) =
+      case SM.find (!global_formatter_table, s)
+        of SOME formatter => formatter obj
+	 | NONE => raise NO_FORMATTER
 
-  end
-
+end (* top local *)
 end (* structure PPTABLE *)
-

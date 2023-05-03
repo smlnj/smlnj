@@ -20,7 +20,7 @@ struct
  *)
 
 structure S = CMSemant
-
+structure SM = SourceMap
 
 end
 structure LrTable = Token.LrTable
@@ -456,7 +456,7 @@ end
 end
 local open Header in
 type pos = int
-type arg = { grouppath:SrcPath.file,context:S.context,obsolete:pos*pos -> unit,error:pos*pos -> string -> unit,doMember:{ name:string,mkpath:unit -> SrcPath.prefile } *pos*pos*S.cm_class option*S.toolopt list option -> S.members,curlib:SrcPath.file option,gp:GeneralParams.info,ig:S.group } 
+type arg = { grouppath:SrcPath.file,context:S.context,obsolete:SourceMap.region -> unit,error:SourceMap.region -> string -> unit,doMember:{ name:string,mkpath:unit -> SrcPath.prefile } *pos*pos*S.cm_class option*S.toolopt list option -> S.members,curlib:SrcPath.file option,gp:GeneralParams.info,ig:S.group } 
 structure MlyValue = 
 struct
 datatype svalue = VOID | ntVOID of unit ->  unit
@@ -584,8 +584,7 @@ gprivspec1left, _)) :: rest671)) => let val  result = MlyValue.group
  val  (opt_exports as opt_exports1) = opt_exports1 ()
  val  (members as members1) = members1 ()
  in (
-obsolete (LPARENleft,
-							   RPARENright);
+obsolete (SM.REGION (LPARENleft, RPARENright));
 						 S.group
 						 { path = grouppath,
 						   privileges = gprivspec,
@@ -671,9 +670,8 @@ MlyValue.version (fn _ => let val  (FILE_STANDARD as FILE_STANDARD1) =
  FILE_STANDARD1 ()
  in (
 S.cm_version
-						(FILE_STANDARD,
-						 error (FILE_STANDARDleft,
-							FILE_STANDARDright))
+						    (FILE_STANDARD,
+						     error (SM.REGION (FILE_STANDARDleft,FILE_STANDARDright)))
 )
 end)
  in ( LrTable.NT 4, ( result, FILE_STANDARD1left, FILE_STANDARD1right)
@@ -691,8 +689,7 @@ word1right))) :: ( _, ( MlyValue.wrapspec wrapspec1, wrapspec1left, _)
  in (
 fn p =>
 						 S.wrap (wrapspec p, word,
-							  error (wordleft,
-								 wordright))
+							  error (SM.REGION (wordleft, wordright)))
 )
 end)
  in ( LrTable.NT 5, ( result, wrapspec1left, word1right), rest671)
@@ -708,8 +705,7 @@ end
  val  (gprivspec as gprivspec1) = gprivspec1 ()
  in (
 S.require (gprivspec, word,
-							    error (wordleft,
-								   wordright))
+							    error (SM.REGION (wordleft, wordright)))
 )
 end)
  in ( LrTable.NT 2, ( result, word1left, gprivspec1right), rest671)
@@ -727,8 +723,7 @@ end
  val  (lprivspec as lprivspec1) = lprivspec1 ()
  in (
 S.require (lprivspec, word,
-							    error (wordleft,
-								   wordright))
+							    error (SM.REGION (wordleft, wordright)))
 )
 end)
  in ( LrTable.NT 3, ( result, word1left, lprivspec1right), rest671)
@@ -805,7 +800,7 @@ MlyValue.export (fn _ => let val  (exp as exp1) = exp1 ()
  in (
 S.guarded_exports
 						  (exp, guarded_exports,
-						   error (expleft, expright))
+						   error (SM.REGION (expleft, expright)))
 )
 end)
  in ( LrTable.NT 9, ( result, IF1left, guarded_exports1right), rest671
@@ -817,7 +812,7 @@ MlyValue.export (fn _ => let val  (ERROR as ERROR1) = ERROR1 ()
  in (
 S.error_export
 						 (fn () =>
-						  error (ERRORleft, ERRORright)
+						  error (SM.REGION (ERRORleft, ERRORright))
 						        ERROR)
 )
 end)
@@ -839,8 +834,7 @@ ml_symbol1left), (ml_symbolright as ml_symbol1right))) :: rest671)) =>
  in (
 S.export
 						     (ml_symbol,
-						      error (ml_symbolleft,
-							     ml_symbolright))
+						      error (SM.REGION (ml_symbolleft, ml_symbolright)))
 )
 end)
  in ( LrTable.NT 20, ( result, ml_symbol1left, ml_symbol1right), 
@@ -894,8 +888,7 @@ result = MlyValue.ml_symbolset (fn _ => let val  (filecat as filecat1)
  in (
 filecat
 						     (srcfiles,
-						      error (srcfilesleft,
-							     srcfilesright))
+						      error (SM.REGION (srcfilesleft, srcfilesright)))
 )
 end)
  in ( LrTable.NT 20, ( result, filecat1left, RPAREN1right), rest671)
@@ -911,8 +904,7 @@ rest671)) => let val  result = MlyValue.ml_symbolset (fn _ => let val
 S.exportlibrary
 						     (fn () => SrcPath.file
 							 (#mkpath pathname ()),
-						      error (pathnameleft,
-							     pathnameright),
+						          error (SM.REGION (pathnameleft, pathnameright)),
 						      { hasoptions =
 							   isSome opttoolopts,
 							elab = fn () =>
@@ -958,7 +950,7 @@ MlyValue.else_exports (fn _ => let val  (exp as exp1) = exp1 ()
  in (
 S.guarded_exports
 						 (exp, guarded_exports,
-						  error (expleft, expright))
+						  error (SM.REGION (expleft, expright)))
 )
 end)
  in ( LrTable.NT 11, ( result, ELIF1left, guarded_exports1right), 
@@ -1086,7 +1078,7 @@ MlyValue.member (fn _ => let val  (exp as exp1) = exp1 ()
  in (
 S.guarded_members
 						 (exp, guarded_members,
-						  error (expleft, expright))
+						  error (SM.REGION (expleft, expright)))
 )
 end)
  in ( LrTable.NT 13, ( result, IF1left, guarded_members1right), 
@@ -1098,7 +1090,7 @@ MlyValue.member (fn _ => let val  (ERROR as ERROR1) = ERROR1 ()
  in (
 S.error_member
 						 (fn () =>
-						  error (ERRORleft, ERRORright)
+						  error (SM.REGION (ERRORleft, ERRORright))
 						        ERROR)
 )
 end)
@@ -1141,7 +1133,7 @@ MlyValue.else_members (fn _ => let val  (exp as exp1) = exp1 ()
  in (
 S.guarded_members
 						 (exp, guarded_members,
-						  error (expleft, expright))
+						  error (SM.REGION (expleft, expright)))
 )
 end)
  in ( LrTable.NT 15, ( result, ELIF1left, guarded_members1right), 
@@ -1227,8 +1219,7 @@ MlyValue.ADDSYM ADDSYM1, (ADDSYMleft as ADDSYM1left), ADDSYMright)) ::
 ADDSYM as ADDSYM1) = ADDSYM1 ()
  val  (aexp as aexp1) = aexp1 ()
  in (
-obsolete (ADDSYMleft,
-							   ADDSYMright);
+obsolete (SM.REGION (ADDSYMleft, ADDSYMright));
 						 S.sign (ADDSYM, aexp)
 )
 end)
@@ -1369,9 +1360,8 @@ MlyValue.pathname (fn _ => let val  (FILE_STANDARD as FILE_STANDARD1)
 						   mkpath = fn () =>
 						     S.file_standard gp
 						      (FILE_STANDARD,
-						       context, error
-						       (FILE_STANDARDleft,
-							FILE_STANDARDright)) }
+						       context,
+						       error (SM.REGION (FILE_STANDARDleft, FILE_STANDARDright))) }
 )
 end)
  in ( LrTable.NT 21, ( result, FILE_STANDARD1left, FILE_STANDARD1right
@@ -1386,9 +1376,8 @@ FILE_NATIVE as FILE_NATIVE1) = FILE_NATIVE1 ()
 						   mkpath = fn () =>
 						     S.file_native
 						       (FILE_NATIVE,
-							context, error
-							(FILE_NATIVEleft,
-							 FILE_NATIVEright)) }
+							context,
+							error (SM.REGION (FILE_NATIVEleft, FILE_NATIVEright))) }
 )
 end)
  in ( LrTable.NT 21, ( result, FILE_NATIVE1left, FILE_NATIVE1right), 

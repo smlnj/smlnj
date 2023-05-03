@@ -113,8 +113,8 @@ structure Variable : VARIABLE =
 
     (* toString : var -> string *)
     fun toString (VALvar{path, access, ...}) =
-	  concat [S.name(SymPath.last path), "[", A.prAcc access, "]"]
-      | toString (OVLDvar _) = "OVLD"
-      | toString ERRORvar = "ERROR"
+	  String.concat [S.name (SymPath.last path), "[", A.accessToString access, "]"]
+      | toString (OVLDvar _) = "<OVLDvar>"
+      | toString ERRORvar = "<ERRORvar>"
 
   end (* structure Variable *)

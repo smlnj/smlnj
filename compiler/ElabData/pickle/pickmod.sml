@@ -1030,7 +1030,7 @@ in
 		      k :: lvars)
 		   | _ => bug (concat[
 			"dontPickle 1: sym = '", Symbol.symbolToString sym,
-			"', access = ", A.prAcc access
+			"', access = ", A.accessToString access
 		      ])
 		  (* end case *))
 	      | B.STRbind (M.STR { sign = s, rlzn = r, access = a, prim =z }) =>
@@ -1044,7 +1044,7 @@ in
 						       prim = z }),
 				env),
 		      k :: lvars)
-		   | _ => bug ("dontPickle 2" ^ A.prAcc a))
+		   | _ => bug ("dontPickle 2" ^ A.accessToString a))
 	      | B.FCTbind (M.FCT { sign = s, rlzn = r, access = a, prim = z }) =>
 		(case a of
 		     A.LVAR k =>
@@ -1056,7 +1056,7 @@ in
 						       prim = z }),
 				      env),
 		      k :: lvars)
-		   | _ => bug ("dontPickle 3" ^ A.prAcc a))
+		   | _ => bug ("dontPickle 3" ^ A.accessToString a))
 	      | B.CONbind (T.DATACON { name = n, const = c, typ = t, sign = s,
 				       lazyp= false, rep as (A.EXN a) }) => let
 		    val newrep = A.EXN (newAccess i)
@@ -1073,7 +1073,7 @@ in
 							  sign = s }),
 				   env),
 			 k :: lvars)
-		      | _ => bug ("dontPickle 4" ^ A.prAcc a)
+		      | _ => bug ("dontPickle 4" ^ A.accessToString a)
 		end
 	      | binding => (i, StaticEnv.bind (sym, binding, env), lvars)
 	    (* end case *))

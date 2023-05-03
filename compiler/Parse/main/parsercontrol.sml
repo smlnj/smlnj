@@ -19,6 +19,9 @@ signature PARSER_CONTROL =
   (* controls backquote quotation *)
     val quotation : bool ref
 
+  (* controls printing of Ast location info *)
+    val astLineprint : bool ref			 
+
   (* controls printing of internal Ast info *)
     val astInternals : bool ref			 
 
@@ -90,6 +93,9 @@ structure ParserControl : sig
 
     val quotation =
 	  new (flag_cvt, "quotations", "whether (anti-)quotations are recognized", false)
+
+    val astLineprint =
+	  new (flag_cvt, "astLineprint", "printing of ast location info", false)
 
     val astInternals =
 	  new (flag_cvt, "astInternals", "printing of ast internal info", false)

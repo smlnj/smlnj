@@ -23,7 +23,6 @@ structure TvarCvt :> TVARCVT =
   struct
 
     (* local abbreviations *)
-    structure DI = DebIndex
     structure LV = LambdaVar
     structure LT = Lty
     structure FR = FunRecMeta
@@ -32,14 +31,9 @@ structure TvarCvt :> TVARCVT =
     structure LE = LtyExtern
     structure PL = PLambda
     structure F  = FLINT
-    structure PP = PrettyPrint
 
-    val with_pp  = PP.with_default_pp
-
-    fun ppTyc tyc =
-      with_pp (fn ppstm => (PPLty.ppTyc 20 ppstm tyc))
-    fun ppLty lty =
-      with_pp (fn ppstm => (PPLty.ppLty 20 ppstm lty))
+    val ppTyc = PPLty.ppTyc 20
+    val ppLty = PPLty.ppLty 20
 
     val wrdebugging = FLINT_Control.wrdebugging
 
@@ -47,7 +41,9 @@ structure TvarCvt :> TVARCVT =
     fun dbsay msg = if !wrdebugging then say msg else ()
     fun bug msg = ErrorMsg.impossible("TvarCvt: " ^ msg)
 
-    type depth = DebIndex.depth  (* (rep) = int; >= 0 *)
+    (* deBruijn index of TC_DVAR *)
+    type depth = int
+    val top : depth = 0
 
     (* debIndex2names : F.prog -> F.prog *)
     (* debIndex2names converts all (exprssion-level) type variables bound
@@ -147,7 +143,7 @@ structure TvarCvt :> TVARCVT =
 		 in (cvtFkind fkind, lvar, map cvtLvLt lvlts, cvtExp (env, depth, e))
 		end (* cvtFundec *)
 
-	in cvtFundec Lty.teEmpty DI.top
+	in cvtFundec Lty.teEmpty top
 	end
 
 (* ================================================================================ *)
@@ -192,13 +188,11 @@ structure TvarCvt :> TVARCVT =
 	      of NONE => (dbsay ("findDTvar: not found: " ^ LV.prLvar tvar ^ "\n"); NONE)
 	       | SOME (binderDepth, i) =>
 		  (dbsay ("findDTvar: found: " ^ LV.prLvar tvar ^ "\n");
-	           SOME (LD.tcc_var (relativeDepth (currDepth, binderDepth), i)))
+	           SOME (LD.tcc_dvar (relativeDepth (currDepth, binderDepth), i)))
            (*esac*))
 
-        (* tc_nvar_elim: (tvar * DebIndex.depth -> tyc option)
-                         -> DebIndex.depth -> tyc -> tyc
-           lt_nvar_elim: (tvar * DebIndex.depth -> tyc option)
-                         -> DebIndex.depth -> lty -> lty *)
+        (* tc_nvar_elim: (tvar * depth -> tyc option) -> depth -> tyc -> tyc
+           lt_nvar_elim: (tvar * depth -> tyc option) -> depth -> lty -> lty *)
         val tc_nvar_elim = LE.tc_nvar_elim_gen ()
         val lt_nvar_elim = LE.lt_nvar_elim_gen ()
 
@@ -308,7 +302,7 @@ structure TvarCvt :> TVARCVT =
 
      (* An env (table) is generated on each invocation, ie, once per compilation unit. *)
 
-     in cvtFundec (LV.Map.empty, DI.top) prog
+     in cvtFundec (LV.Map.empty, top) prog
     end (* names2debIndex *)
 
   end (* structure TvarCvt *)

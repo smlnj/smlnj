@@ -12,12 +12,13 @@ functor BackendFn (
 
   ) : BACKEND = struct
 
-    structure Interact = Interact (
-        EvalLoopF (
-          CompileF (
+    structure Interact = InteractFn (
+        EvalLoopFn (
+          CompileFn (
 	    val cproto_conv = cproto_conv
             structure M = M
-            structure CC : CCONFIG = struct
+            structure CC : CCONFIG =
+	    struct
                 (* configuration for interactive toplevel:
                  * no real pickling/unpickling, pids are assigned randomly
                  *)
@@ -28,52 +29,50 @@ functor BackendFn (
                 local
                   val topCount = ref 0
                 in
-                fun pickUnpick { context, env = newenv, guid } = let
-                      val _ = topCount := !topCount + 1
-                      val { newenv = newenv', hash, exportLvars, hasExports } =
-                            PickMod.dontPickle { env = newenv, count = !topCount }
-                      in {
-                        pid = (),
-                        pickle = (),
-                        exportLvars = exportLvars,
-                        exportPid = if hasExports then SOME hash else NONE,
-                        newenv = newenv'
-                      } end
+		  fun pickUnpick { context, env = newenv, guid } =
+		      let val _ = topCount := !topCount + 1
+			  val { newenv = newenv', hash, exportLvars, hasExports } =
+				PickMod.dontPickle { env = newenv, count = !topCount }
+		       in {pid = (),
+			   pickle = (),
+			   exportLvars = exportLvars,
+			   exportPid = if hasExports then SOME hash else NONE,
+			   newenv = newenv'}
+		      end
                 end (* local *)
                 local
                   val stampGen = Stamps.newGenerator ()
                 in
-                fun mkMkStamp () = stampGen (* always the same *)
+                  fun mkMkStamp () = stampGen (* always the same *)
                 end (* local *)
-            end)))
+            end (* structure CC *))))
 
-    structure Compile = CompileF (
+    structure Compile = CompileFn (
         val cproto_conv = cproto_conv
         structure M = M
-        structure CC : CCONFIG = struct
-            (* compiler configuration for batch compilation
-             * (under control of CM); real pickling, unpickling, and
-             * pid-generation
-             *)
+        (* compiler configuration for batch compilation
+         * (under control of CM); real pickling, unpickling, and
+         * pid-generation *)
+        structure CC : CCONFIG =
+	struct
             type pickle = Word8Vector.vector
             type hash = PersStamps.persstamp
             type pid = hash
             type guid = string
 
-            fun pickUnpick { context, env = newenv, guid } = let
-                val m = GenModIdMap.mkMap context
-                fun up_context _ = (m, fn () => "batch context")
-                val { hash, pickle, exportLvars, hasExports } =
-                      PickMod.pickleEnv (PickMod.INITIAL m) newenv
-                val pid = Rehash.addGUID { hash = hash, guid = guid }
-                val newenv' = UnpickMod.unpickleEnv up_context (pid, pickle)
-                in {
-                  pid = pid,
-                  pickle = pickle,
-                  exportLvars = exportLvars,
-                  exportPid = if hasExports then SOME pid else NONE,
-                  newenv = newenv'
-                } end
+            fun pickUnpick { context, env = newenv, guid } =
+		let val m = GenModIdMap.mkMap context
+                    fun up_context _ = (m, fn () => "batch context")
+                    val { hash, pickle, exportLvars, hasExports } =
+			PickMod.pickleEnv (PickMod.INITIAL m) newenv
+                    val pid = Rehash.addGUID { hash = hash, guid = guid }
+                    val newenv' = UnpickMod.unpickleEnv up_context (pid, pickle)
+                 in {pid = pid,
+                     pickle = pickle,
+                     exportLvars = exportLvars,
+                     exportPid = if hasExports then SOME pid else NONE,
+                     newenv = newenv'}
+		end
 
             val mkMkStamp = Stamps.newGenerator
         end)

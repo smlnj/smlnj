@@ -17,7 +17,9 @@ is
 
   CodeGen/targets/arm64-spec.sml
 
+  (* Basis *)
   $smlnj/basis/basis.cm
-  $smlnj/smlnj-lib/smlnj-lib.cm
-  $smlnj/viscomp/basics.cm
-  $smlnj/viscomp/core.cm
+
+  (* viscomp *)
+  $smlnj/viscomp/toplevel.cm (* BackendFn *)
+  $smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)

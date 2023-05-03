@@ -171,7 +171,7 @@ C.NUMt{sz=sz}
 	  fun typeOfVal (VAR x) = typeOf x
 	    | typeOfVal (LABEL lab) = typeOf lab
 	    | typeOfVal (NUM{ty, ...}) = CPS.NUMt ty
-	    | typeOfVal v = error ["gen.typeOfVal: unexpected ", PPCps.value2str v]
+	    | typeOfVal v = error ["gen.typeOfVal: unexpected ", PPCps.valueToString v]
 	  val exps = LTbl.mkTable (CPSInfo.numVars info, Fail "exps")
 (*
 	  val binding = LTbl.lookup exps
@@ -186,7 +186,7 @@ C.NUMt{sz=sz}
 	    | genV (LABEL lab) = label lab
 	    | genV (NUM{ty={tag=true, ...}, ival}) = mlInt' ival
 	    | genV (NUM{ty={sz, ...}, ival}) = szNum sz ival
-	    | genV v = error ["gen.genV: unexepected ", PPCps.value2str v]
+	    | genV v = error ["gen.genV: unexepected ", PPCps.valueToString v]
 	  val genPureTagged = TaggedArith.pure genV
 	  val genTagged = TaggedArith.trapping genV
 	  fun genCont (cfgExp, x, ty, k) = (case modeOf x

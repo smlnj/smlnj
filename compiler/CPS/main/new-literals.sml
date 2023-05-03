@@ -831,7 +831,7 @@ structure NewLiterals : LITERALS =
 		      end
 		  | _ => k u
 		(* end case *))
-handle ex => (say(concat["rewriteValue (", PPCps.value2str u, ", -): error\n"]); raise ex)
+handle ex => (say(concat["rewriteValue (", PPCps.valueToString u, ", -): error\n"]); raise ex)
 	(* rewrite a list of values *)
 	  fun rewriteValues (ul, k : C.value list -> C.cexp) = let
 		fun rewrite ([], ul') = k(List.rev ul')
@@ -899,7 +899,7 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 	  val _ = if !debugFlg
 		then (
 		  say (concat["\n==== Before Literals.liftLiterals\n"]);
-		  PPCps.printcps0 func)
+		  PPCps.ppFunction func)
 		else ()
 	  val env = identifyLiterals body
 	  val (nbody, code) = if LitEnv.isEmpty env
@@ -924,7 +924,7 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 	    if !debugFlg
 	      then (
 		say (concat["==== After Literals.liftLiterals\n"]);
-		PPCps.printcps0 nfunc)
+		PPCps.ppFunction nfunc)
 	      else ();
 	    (nfunc, code)
 	  end

@@ -19,8 +19,7 @@ structure LContract : LCONTRACT =
 struct
 
 local  (* local definitions *)
-  structure DI = DebIndex
-  structure DA = Access
+  structure A = Access
   structure LV = LambdaVar
   structure M  = LambdaVar.Tbl
   structure LT = Lty
@@ -48,6 +47,10 @@ local  (* local definitions *)
   fun dbsays msgs = if !debugging then saysnl msgs else ()
   fun bug s = ErrorMsg.impossible ("LContract: "^s)
 
+  (* deBruijn indexes for TC_VAR *)
+  type depth = int
+  val top = 0
+
 in
 
 fun isDiffs (vs, us) =
@@ -74,7 +77,7 @@ exception LContPass1
 
 (* pass1 : F.fundec -> (LV.lvar -> bool) * (unit -> unit) *)
 fun pass1 fdec =
-    let val tbl : (DI.depth option) M.hash_table = M.mkTable(32, LContPass1)
+    let val tbl : (depth option) M.hash_table = M.mkTable(32, LContPass1)
 	val add = M.insert tbl
 	val get = M.lookup tbl
 	fun rmv i = ignore (M.remove tbl i) handle LContPass1 => ()
@@ -92,11 +95,11 @@ fun pass1 fdec =
         (* candidate : LV.lvar -> bool *)
 	fun candidate x = (get x; true) handle LContPass1 => false
 
-        (* lpfd : DI.depth -> F.fundec -> unit *)
+        (* lpfd : depth -> F.fundec -> unit *)
 	fun lpfd d (({isrec=SOME _,...}, _, _, e) : F.fundec) = lple d e
 	  | lpfd d (_, v, _, e) = (enter(v, d); lple d e)
 
-        (* lple : DI.depth -> F.lexp -> unit *)
+        (* lple : depth -> F.lexp -> unit *)
 	and lple d e =
 	    let fun psv (VAR x) = kill x
 		  | psv _ = ()
@@ -106,7 +109,7 @@ fun pass1 fdec =
 		  | pse (FIX(fdecs, e)) = (app (lpfd d) fdecs; pse e)
 		  | pse (APP(VAR x, vs)) = (mark x; app psv vs)
 		  | pse (APP(v, vs)) = (psv v; app psv vs)
-		  | pse (TFN((_, _, _, e1): F.tfundec, e2)) = (lple (DI.next d) e1; pse e2)
+		  | pse (TFN((_, _, _, e1): F.tfundec, e2)) = (lple (d + 1) e1; pse e2)
 		  | pse (TAPP(v, _)) = psv v
 		  | pse (RECORD(_,vs,_,e)) = (app psv vs; pse e)
 		  | pse (SELECT(u,_,_,e)) = (psv u; pse e)
@@ -122,7 +125,7 @@ fun pass1 fdec =
 	     in pse e
 	    end
 
-     in lpfd DI.top fdec;
+     in lpfd top fdec;
         (candidate, fn () => M.clear tbl)
     end (* pass1 *)
 
@@ -205,7 +208,7 @@ fun swiInfo (VAR v, arms, defaultOp) =
          of (_, SimpVal u) => swiInfo(u, arms, defaultOp)
           | (_, ConExp ((_,rep,_), _, value)) =>  (* subject is a Constr exp *)
 	    (case rep
-	       of DA.EXN _ => NONE
+	       of A.EXN _ => NONE
 	        | _ => 
 		  let fun check ((PL.DATAcon((_,nrep,_), _, lvar), e) :: rest) =
 			    if nrep = rep then SOME(LET([lvar], RET [value], e)) else check rest
@@ -236,21 +239,21 @@ fun isBoolLty lt =
      | _ => false)
 
 fun isBool true (RECORD(RK_TUPLE, [], x,
-                  CON((_,DA.CONSTANT 1,lt), [], VAR x', v, RET [VAR v']))) =
+                  CON((_,A.CONSTANT 1,lt), [], VAR x', v, RET [VAR v']))) =
       (x = x') andalso (v = v') andalso (isBoolLty lt)
   | isBool false (RECORD(RK_TUPLE, [], x,
-                  CON((_,DA.CONSTANT 0,lt), [], VAR x', v, RET [VAR v']))) =
+                  CON((_,A.CONSTANT 0,lt), [], VAR x', v, RET [VAR v']))) =
       (x = x') andalso (v = v') andalso (isBoolLty lt)
   | isBool _ _ = false
 
 (* functions that do the branch optimizations *)
-fun boolDcon((PL.DATAcon((_,DA.CONSTANT 1,lt1),[],v1), e1),
-             (PL.DATAcon((_,DA.CONSTANT 0,lt2),[],v2), e2)) =
+fun boolDcon((PL.DATAcon((_,A.CONSTANT 1,lt1),[],v1), e1),
+             (PL.DATAcon((_,A.CONSTANT 0,lt2),[],v2), e2)) =
       if (isBoolLty lt1) andalso (isBoolLty lt2) then
         SOME(RECORD(FU.rk_tuple,[],v1,e1), RECORD(FU.rk_tuple,[],v2,e2))
       else NONE
-  | boolDcon(ce1 as (PL.DATAcon((_,DA.CONSTANT 0,_),[],_), _),
-             ce2 as (PL.DATAcon((_,DA.CONSTANT 1,_),[],_), _)) =
+  | boolDcon(ce1 as (PL.DATAcon((_,A.CONSTANT 0,_),[],_), _),
+             ce2 as (PL.DATAcon((_,A.CONSTANT 1,_),[],_), _)) =
       boolDcon (ce2, ce1)
   | boolDcon _ = NONE
 
@@ -278,17 +281,17 @@ end (* branchopt local *)
 
 (** the main transformation function *)
 
-     (* lpacc : DA.access -> DA.access *)
+     (* lpacc : A.access -> A.access *)
      (* expects an LVAR and returns an LVAR *)
-     fun lpacc (DA.LVAR v) =
+     fun lpacc (A.LVAR v) =
          (case lpsv (VAR v)
-	    of VAR w => DA.LVAR w
+	    of VAR w => A.LVAR w
              | _ => bug "unexpected in lpacc")
-       | lpacc da = (print "LContract.lpacc: "; print (DA.prAcc da);
+       | lpacc da = (print "LContract.lpacc: "; print (A.accessToString da);
 		     print "\n";
 		     bug "unexpected path in lpacc")
 
-     and lpdc (s, DA.EXN acc, t) = (s, DA.EXN(lpacc acc), t)
+     and lpdc (s, A.EXN acc, t) = (s, A.EXN(lpacc acc), t)
        | lpdc (s, rep, t) = (s, rep, t)
 
      and lpcon (PL.DATAcon (dc, ts, v)) = PL.DATAcon(lpdc dc, ts, v)
@@ -439,7 +442,6 @@ end (* branchopt local *)
                                      map lpsv vs, v, z)),
                      false (* PO.purePrimop p *), v, StdExp, e))
 
-val d = DI.top
 val (fk, f, vts, e) = fdec
 
 in (fk, f, vts, #1 (loop e))

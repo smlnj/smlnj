@@ -1,9 +1,9 @@
-(*
+(* cm/compile/compile.sml
  * Compilation traversals.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure GP = GeneralParams
@@ -11,7 +11,7 @@ local
     structure GG = GroupGraph
     structure SE = StaticEnv
     structure Pid = PersStamps
-    structure PP = PrettyPrint
+    structure PP = Formatting
     structure EM = ErrorMsg
     structure SF = SmlFile
 
@@ -273,15 +273,12 @@ in
 					  work = writer,
 					  cleanup = cleanup }
 			 before TStamp.setTime (binname, SmlInfo.lastseen i))
-			handle exn => let
-			    fun ppb pps =
-				(PP.newline pps;
-				 PP.string pps (General.exnMessage exn))
-			in
-			    SmlInfo.error gp i EM.WARN
-					  ("failed to write " ^ binname) ppb;
-			    { code = 0, env = 0, data = 0 }
-			end
+			handle exn =>
+			    (SmlInfo.error gp i
+				EM.WARN ("failed to write " ^ binname)
+				(PP.text (General.exnMessage exn));
+			     { code = 0, env = 0, data = 0 })
+
 		    end (* save *)
 		in
 		    case SmlInfo.parsetree gp i of
@@ -317,8 +314,7 @@ in
 					raise CompileExn.Compile
 						  (phase ^ " failed")
 				    else ()
-				val cinfo = C.mkCompInfo { source = source,
-							   transform = fn x => x }
+				val cinfo = C.mkCompInfo source
 				val guid = SmlInfo.guid i
 				val { csegments, newstatenv, exportPid,
 				      staticPid, imports, pickle = senvP,

@@ -14,7 +14,7 @@ structure Absyn : ABSYN =
     structure T = Types
     structure V = Variable
 
-    type region = Ast.region  (* = int * int *)
+    type region = SourceMap.region  (* not "int * int" ! *)
 
     (* "value" -- "denotation" of a core language "value" identifier,
      *  which denotes either a variable or data constructor;
@@ -65,7 +65,7 @@ structure Absyn : ABSYN =
       | SWITCHexp of exp * srule list * exp option
       | VSWITCHexp of exp * T.ty * srule list * exp
           (* SWITCHexp, VSWITCHexp created only by match compiler,
-           * VSWITCHexp for vector length, where default is required(?) *)
+           * VSWITCHexp for vector length, where default is mandatory *)
       | RAISEexp of exp * T.ty
       | IFexp of { test: exp, thenCase: exp, elseCase: exp }
       | ANDALSOexp of exp * exp
@@ -82,7 +82,7 @@ structure Absyn : ABSYN =
     and srule = SRULE of con * V.var option * exp  (* in SWITCHexp, VSWITCHexp *)
        (* INVARIANT: var option will be SOME iff con is DATAcon(datacon,_) where datacon
 	* is not a constant. The var, when present, will be bound to the decon[con] of the
-        * subject value (where?) *)
+        * subject value in scope exp *)
 
     and pat
       = WILDpat
@@ -91,7 +91,7 @@ structure Absyn : ABSYN =
       | STRINGpat of string
       | CHARpat of char
       | CONpat of T.datacon * T.tyvar list (* See comment for VARexp *)
-      | RECORDpat of {fields: (T.label * pat) list, flex: bool, typ: T.ty ref}
+      | RECORDpat of {fields: (S.symbol * pat) list, flex: bool, typ: T.ty ref}
       | APPpat of T.datacon * T.tyvar list * pat
       | CONSTRAINTpat of pat * T.ty
       | LAYEREDpat of pat * pat

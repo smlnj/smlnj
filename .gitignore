@@ -143,3 +143,13 @@ doc/src/man/*.7
 doc/src/**/*.html
 package/macos/*.pkg
 
+# generated html files
+*.html
+
+# lex and yacc generated source files
+*.grm.sml
+*.lex.sml
+
+# files in boot directories
+BOOTLIST
+PIDMAP

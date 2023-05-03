@@ -1,14 +1,14 @@
-(*
+(* cm/depend/checksharing.sml
  * Check for consistency of "private" and "shared" annotations.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2022 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure DG = DependencyGraph
     structure EM = ErrorMsg
-    structure PP = PrettyPrint
+    structure PP = Formatting
 in
   signature CHECKSHARING = sig
     val check : DG.impexp SymbolMap.map * GeneralParams.info -> unit
@@ -23,23 +23,15 @@ in
 		else Sharing.DONTSHARE)
 	  | check (Sharing.PRIVATE, x, _, _) =
 	    (StringSet.singleton x, Sharing.DONTSHARE)
-	  | check (Sharing.SHARED, x, s, err) = let
-		fun ppb pps = let
-		    fun loop [] = ()
-		      | loop (h :: t) =
-			(PP.string pps h;
-			 PP.newline pps;
-			 loop t)
-		in
-		    PP.newline pps;
-		    PP.string pps
-		       "because of dependence on non-shareable state in:";
-		    PP.newline pps;
-		    loop (StringSet.listItems s)
-		end
-	    in
-		if StringSet.isEmpty s then (s, Sharing.SHARE true)
-		else (err EM.COMPLAIN ("cannot share state of " ^ x) ppb;
+	  | check (Sharing.SHARED, x, s, err) =
+	    let val errorBody =
+		    PP.vblock
+		      (map PP.text
+			   ("because of dependence on non-shareable state in:" ::
+			    (StringSet.listItems s)))
+	     in if StringSet.isEmpty s
+	        then (s, Sharing.SHARE true)
+	        else (err EM.COMPLAIN ("cannot share state of " ^ x) errorBody;
 		      (s, Sharing.DONTSHARE))
 	    end
 

@@ -4,36 +4,49 @@
  *
  * More stuff from ElabUtil should be moved here eventually.
  *)
-structure AbsynUtil : sig
-
+structure AbsynUtil :
+sig
     val bogusCON : Types.datacon
     val bogusEXN : Types.datacon
+
     val unitExp : Absyn.exp
     val unitPat : Absyn.pat
-(*  val isWild : Absyn.pat -> bool *)
-    val TUPLEexp : Absyn.exp list -> Absyn.exp
-    val TUPLEpat : Absyn.pat list -> Absyn.pat
+
+    val mkTupleExp : Absyn.exp list -> Absyn.exp
+    val mkTuplePat : Absyn.pat list -> Absyn.pat
+    val destTuplePat : Absyn.pat -> Absyn.pat list option
+    val destTupleExp : Absyn.exp -> Absyn.exp list option
+
     val eqCon : Absyn.con * Absyn.con -> bool
     val constantCon : Absyn.con -> bool
     val conToSign : Absyn.con -> Access.consig
     val conToString : Absyn.con -> string
+
     val headStripExp : Absyn.exp -> Absyn.exp
     val headStripPat : Absyn.pat -> Absyn.pat
     val stripPatMarks : Absyn.pat -> Absyn.pat
+
     val patternVars : Absyn.pat -> Variable.var list
     val noVarsInPat : Absyn.pat -> bool
+end =
 
-  end = struct
+struct
 
-    structure S = Symbol
-    structure T = Types
-    structure TU = TypesUtil
-    structure BT = BasicTypes
-    structure LV = LambdaVar
-    structure A = Access
-    structure V = Variable
-    structure AS = Absyn
-    open Absyn
+local (* top local *)
+
+  structure S = Symbol
+  structure SF = StringFormats  (* formerly PrintUtil *)
+  structure NL = NumericLabel
+  structure T = Types
+  structure TU = TypesUtil
+  structure BT = BasicTypes
+  structure LV = LambdaVar
+  structure A = Access
+  structure V = Variable
+  structure AS = Absyn
+  open Absyn
+
+in
 
   (* "special" datacons -- moved from VarCon (now Variable - ElabData/syntax/variable.s??) *)
 
@@ -56,24 +69,45 @@ structure AbsynUtil : sig
     val unitExp = RECORDexp []
     val unitPat = RECORDpat {fields=nil, flex=false, typ=ref(BasicTypes.unitTy)}
 
-  (* isWild : pat -> bool *)
-    fun isWild WILDpat = true
-      | isWild _ = false
-
-    fun TUPLEexp l =
-        let fun build (_, []) = []
-              | build (i, e :: es) =
-                (LABEL { number = i-1, name = Tuples.numlabel i }, e)
-                :: build (i+1, es)
-         in RECORDexp (build (1, l))
-        end
-
-    fun TUPLEpat l =
-        let fun build (_, []) = []
-              | build (i, e :: es) = (Tuples.numlabel i, e) :: build (i+1, es)
-         in RECORDpat { fields = build (1, l), flex = false,
+    fun mkTuplePat pats =
+        let fun mkFields (_, []) = []
+              | mkFields (i, e :: es) = (NL.numericLabel i, e) :: mkFields (i+1, es)
+         in RECORDpat { fields = mkFields (1, pats), flex = false,
                         typ = ref Types.UNDEFty }
         end
+
+    fun mkTupleExp exps =
+        let fun mkFields (_, []) = []
+              | mkFields (i, e :: es) =
+                (LABEL { number = i-1, name = NL.numericLabel i }, e)
+                :: mkFields (i+1, es)
+         in RECORDexp (mkFields (1, exps))
+        end
+
+    (* destTuplePat : AS.pat -> pat list option *)
+    fun destTuplePat pat =
+	  (case pat
+	    of RECORDpat {fields=[_], ...} => NONE  (* single field record is not a tuple *)
+	     | RECORDpat {flex=false, fields, ...} =>
+	         let val (labels, pats) = ListPair.unzip fields
+		  in if NL.checkTupleLabels labels then SOME pats else NONE
+		 end
+	     | MARKpat (p,_) => destTuplePat p
+	     | CONSTRAINTpat (p,_) => destTuplePat p
+	     | _ => NONE)
+
+    (* destTupleExp : AS.exp -> exp list option *)
+    fun destTupleExp exp =
+	  (case exp
+	    of RECORDexp [_] => NONE
+	     | RECORDexp fields =>
+	         let val (labels, exps) = ListPair.unzip fields
+		     val labelSymbols = map (fn LABEL{name,...} => name) labels
+		  in if NL.checkTupleLabels labelSymbols then SOME exps else NONE
+		 end
+	     | MARKexp (e,_) => destTupleExp e
+	     | CONSTRAINTexp (e,_) => destTupleExp e
+	     | _ => NONE)
 
     (* eqCon : con * con -> bool *)
     fun eqCon (DATAcon (d1, _), DATAcon (d2, _)) = TU.eqDatacon (d1, d2)
@@ -96,24 +130,31 @@ structure AbsynUtil : sig
       | conToString (INTcon{ival, ty=0}) = "II" ^ IntInf.toString ival
       | conToString (INTcon{ival, ty}) = "I" ^ IntInf.toString ival
       | conToString (WORDcon{ival, ty}) = "W" ^ IntInf.toString ival
-      | conToString (STRINGcon s) = "S:" ^ PrintUtil.formatString s
+      | conToString (STRINGcon s) = "S:" ^ SF.formatString s
       | conToString (VLENcon (n,_)) = "L" ^ Int.toString n
 
     (* headStripExp : exp -> exp *)
     (* strip MARKexp and CONSTRAINTexp head constructors. Used to access the RECORDexp (pair)
-     * argument of an infix constructor in an APPexp (see PPAbsyn.ppAppExp) *)
-    fun headStripExp (MARKexp(exp,_)) = headStripExp exp
-      | headStripExp (CONSTRAINTexp(exp,_)) = headStripExp exp
+     * argument of an infix constructor in an APPexp (see PPAbsyn..fmtExp'[APPexp]) *)
+    fun headStripExp (MARKexp (exp, _)) = headStripExp exp
+      | headStripExp (CONSTRAINTexp (exp, _)) = headStripExp exp
       | headStripExp exp = exp
+
+    (* REDUNDANT, use headStripExp -- came from ppabsyn.sml
+    (* headStripMarkExp : AS.exp -> AS.exp  -- belongs in AbsynUtil *)
+    fun headStripMarkExp (MARKexp (exp, _)) = headStripMarkExp exp
+      | headStripMarkExp exp = exp
+    *)
 
     (* headStripPat : pat -> pat *)
     (* strip MARKpat and CONSTRAINTpat head constructors. Used to access the RECORDpat (pair)
-     * argument of an infix constructor in an APPpat (see PPAbsyn.ppDconPat) *)
-    fun headStripPat (MARKpat (p,_)) = headStripPat p
-      | headStripPat (CONSTRAINTpat (p, ty)) = headStripPat p
+     * argument of an infix constructor in an APPpat (see PPAbsyn..fmtPat'[APPpat]) *)
+    fun headStripPat (MARKpat (pat, _)) = headStripPat pat
+      | headStripPat (CONSTRAINTpat (pat, ty)) = headStripPat pat
       | headStripPat pat = pat
 
-    (* stripPatMarks : AS.pat -> AS.pat *)
+    (* stripPatMarks : AS.pat -> AS.pat
+     * strip MARKpat constructors recursively through the pat structure *)
     fun stripPatMarks pat =
         case pat
           of (MARKpat(p,_)) => stripPatMarks p
@@ -178,4 +219,5 @@ structure AbsynUtil : sig
            in not(hasVar pat)
           end
 
-  end (* structure AbsynUtil *)
+end (* top local *)
+end (* structure AbsynUtil *)

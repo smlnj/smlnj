@@ -20,15 +20,17 @@ structure ChkPlexp : CHKPLEXP =
 struct
 
 local
-  structure DI = DebIndex
   structure LV = LambdaVar
-  structure DA = Access
   structure LT = Lty
   structure LK = LtyKernel
   structure LD = LtyDef
   structure LB = LtyBasic
   structure LE = LtyExtern  (* == PLambdaType *)
   structure LKC = LtyKindChk
+
+  structure PP = Formatting
+  structure PF = PrintFormat
+
   open PLambda
 in
 
@@ -43,13 +45,15 @@ val fname_ref : string ref = ref "yyy"
 fun bug s = ErrorMsg.impossible ("CheckLty: "^s)
 val say = Control.Print.say
 
-structure PP = PrettyPrint
-structure PU = PPUtil
-val with_pp = PP.with_default_pp
-val pd = ref 20
+
+val printDepth = 20
 
 val anyerror = ref false
 val clickerror = fn () => (anyerror := true)
+
+(* deBruijn indexes for TC_DVAR *)
+type depth = int  (* deBruijn _context_ *)
+val top : depth = 0
 
 (****************************************************************************
  *                         BASIC UTILITY FUNCTIONS                          *
@@ -63,50 +67,14 @@ fun app2(f, [], []) = ()
   | app2(f, a::r, b::z) = (f(a, b); app2(f, r, z))
   | app2(f, _, _) = bug "unexpected list arguments in function app2"
 
-fun simplify(le,0) = STRING "<dummy>"
-  | simplify(le,n) =
-      let fun h le = simplify(le, n-1)
-       in case le
-           of FN(v, t, e) => FN(v, t, h e)
-            | APP(e1, e2) => APP(h e1, h e2)
-            | LET(v, e1, e2) => LET(v, h e1, h e2)
-            | TFN(ks, e) => TFN(ks, h e)
-            | TAPP(e, ts) => TAPP(h e, ts)
-            | CON(l, x, e) => CON(l, x, h e)
-            | FIX(lv, lt, le, b) => FIX(lv, lt, map h le, h b)
-            | SWITCH(e, l, dc, opp) =>
-               (let fun g(c, x) = (c, h x)
-                    fun f x = case x of SOME y => SOME(h y) | NONE => NONE
-                 in SWITCH(h e, l, map g dc, f opp)
-                end)
-            | RECORD e => RECORD (map h e)
-            | SRECORD e => SRECORD (map h e)
-            | VECTOR(e, x) => VECTOR (map h e, x)
-            | SELECT(i, e) => SELECT(i, h e)
-            | HANDLE(e1, e2) => HANDLE(h e1, h e2)
-            | WRAP(t, b, e) => WRAP(t, b, h e)
-            | UNWRAP(t, b, e) => UNWRAP(t, b, h e)
-            | _ => le
-      end (* end of simplify *)
-
 (** utility functions for printing *)
-fun tkPrint tk =
-    with_pp (fn stm =>
-     (PPLty.ppTKind (!pd) stm tk;
-      PP.newline stm))
+fun tkPrint tk = PPLty.ppTKind printDepth tk
 
-fun tcPrint tc =
-    with_pp (fn stm =>
-     (PPLty.ppTyc (!pd) stm tc;
-      PP.newline stm))
+fun tcPrint tc = PPLty.ppTyc printDepth tc
 
-fun ltPrint lt =
-    with_pp (fn stm =>
-     (PPLty.ppLty (!pd) stm lt;
-      PP.newline stm))
+fun ltPrint lt = PPLty.ppLty printDepth lt
 
-fun lePrint le =
-    with_pp(fn ppstrm => PPLexp.ppLexp 20 ppstrm (simplify(le, 3)))
+fun lePrint le = PF.printFormat (PPLexp.fmtLexp 5 le)
 
 (*** a hack for type checking ***)
 fun laterPhase i = (i > 20)
@@ -172,22 +140,23 @@ fun ltTyApp le s (lt, ts, kenv) =
 fun ltMatch le msg (t1, t2) =
   (if ltEquiv(t1,t2) then ()
    else (clickerror();
-         with_pp(fn s =>
-           (PU.pps s ("ERROR(checkLty): ltEquiv fails in ltMatch: "^msg); PP.newline s;
-            PU.pps s "le:"; PP.newline s; PPLexp.ppLexp 6 s le;
-            PU.pps s "t1:"; PP.newline s; PPLty.ppLty 20 s t1; PP.newline s;
-            PU.pps s "t2:"; PP.newline s; PPLty.ppLty 20 s t2; PP.newline s;
-            PU.pps s"***************************************************";
-            PP.newline s)); raise Fail "ltMatch"))
+         PF.printFormat
+	   (PP.vblock
+	     [PP.text ("ERROR(checkLty): ltEquiv fails in ltMatch: "^msg),
+	      PP.label "le:" (PPLexp.fmtLexp 6 le),
+	      PP.label "t1:" (PPLty.fmtLty 20 t1),
+	      PP.label "t2:" (PPLty.fmtLty 20 t2),
+	      PP.text "***************************************************"]);
+	 raise Fail "ltMatch"))
   handle LK.TeUnbound =>
-  (clickerror();
-   with_pp(fn s =>
-     (PU.pps s ("ERROR(checkLty): exception teUnbound2 in ltMatch"^msg); PP.newline s;
-      PU.pps s "le:"; PP.newline s; PPLexp.ppLexp 6 s le;
-      PU.pps s "t1:"; PP.newline s; PPLty.ppLty 10 s t1; PP.newline s;
-      PU.pps s "t2:"; PP.newline s; PPLty.ppLty 10 s t2; PP.newline s;
-      PU.pps s"***************************************************";
-      PP.newline s)))
+    (clickerror();
+     PF.printFormat
+       (PP.vblock
+	 [PP.text ("ERROR(checkLty): exception teUnbound2 in ltMatch"^msg),
+	  PP.label "le:" (PPLexp.fmtLexp 6 le),
+	  PP.label "t1:" (PPLty.fmtLty 10 t1),
+	  PP.label "t2:" (PPLty.fmtLty 10 t2),
+	  PP.text "***************************************************"]))
 
 fun ltFnApp le s (t1, t2) =
   let val (a1, b1) =
@@ -254,7 +223,7 @@ fun ltConChk le s (DATAcon ((_,rep,lt), ts, v), root, kenv, venv, d) =
 	((ltMatch le s (nt, root)) handle Fail _ => say "ConChk ltEquiv\n"); venv
       end
 
-(** check : tkindEnv * LB.ltyEnv * DI.depth -> lexp -> lty *)
+(** check : tkindEnv * LB.ltyEnv * depth -> lexp -> lty *)
 fun check (kenv, venv, d) =
   let fun ltyChkMsg msg lexp kenv lty =
 		  ltyChk kenv lty
@@ -263,7 +232,7 @@ fun check (kenv, venv, d) =
 			       \ PLambda type check: ");
 			  say (msg);
 			  say ("***\n Term: ");
-			  with_pp(fn s => PPLexp.ppLexp 20 s lexp);
+			  PF.printFormat (PPLexp.fmtLexp 20 lexp);
 			  say ("\n Kind check error: ");
 			  say kndchkmsg;
 			  say ("\n");
@@ -344,7 +313,7 @@ fun check (kenv, venv, d) =
 
 		 | TFN(ks, e) =>
 		   let val kenv' = LT.tkInsert(kenv, ks)
-                       val lt = check (kenv', venv, DI.next d) e
+                       val lt = check (kenv', venv, (d + 1)) e
                        val _ = ltyChkMsgLexp "TFN body" (ks::kenv) lt
 		       val _ = debugmsg "TFN"
 		   in LD.ltc_poly(ks, [lt])
@@ -472,7 +441,7 @@ fun check (kenv, venv, d) =
 
 in
   anyerror := false;
-  check (LT.initTkEnv, venv, DI.top) lexp;
+  check (LT.initTkEnv, venv, top) lexp;
   !anyerror
 end (* end of function checkLty *)
 

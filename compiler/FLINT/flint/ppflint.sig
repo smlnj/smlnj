@@ -1,32 +1,35 @@
-(* ppflint.sig
+(* FLINT/flint/ppflint.sig
  *
  * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Signature of new pretty printer (PPFlint) for FLINT IR.
+ * Signature PPFLINT of pretty printer for FLINT IR, using the Formatting library.
  *)
 
+(* This PPFLINT replaces th old PRINT_FLINT and the previous PPFLINT.
+ * The implementation in PPFlint (FLINT/flint/ppflint.sml) uses the NewPP prettyprinter *)
+
 signature PPFLINT =
-  sig
+sig
 
-    (* pretty printing functions *)
-    val ppFKind : PrettyPrint.stream -> FunRecMeta.fkind  -> unit
-    val ppRKind : PrettyPrint.stream -> FunRecMeta.rkind  -> unit
-    val ppCon   : PrettyPrint.stream -> PLambda.con    -> unit
-    val ppValue : PrettyPrint.stream -> FLINT.value  -> unit  (* was printSval *)
-    val ppFundec: int -> PrettyPrint.stream -> FLINT.fundec -> unit  (* also takes FLINT.prog *)
-    val ppLexp : PrettyPrint.stream -> (FLINT.lexp * int) -> unit
+  (* formatter functions for FLINT types *)
+  val fmtFKind : FunRecMeta.fkind -> Formatting.format
+  val fmtRKind : FunRecMeta.rkind -> Formatting.format
+  val fmtCon   : PLambda.con -> Formatting.format
+  val fmtValue : FLINT.value -> Formatting.format         (* was printSval *)
+  val fmtFundec: int -> FLINT.fundec -> Formatting.format  (* also applies to FLINT.prog *)
+  val fmtLexp  : int -> FLINT.lexp -> Formatting.format
 
-    (* "top-level" printing functions *)
-    val printLexp : FLINT.lexp -> unit
-      (* controlled by Control.FLINT.printDepth and Control.FLINT.lineWidth *)
-    val printLexpLimited : FLINT.lexp * int -> unit
-      (* controlled by Control.FLINT.lineWidth *)
-    val printProg : FLINT.prog -> unit
-      (* controlled by Control.FLINT.printDepth and Control.FLINT.lineWidth *)
-    val printProgLimited : FLINT.prog * int -> unit
-      (* controlled by Control.FLINT.lineWidth *)
+  (* "top-level" printing functions *)
+  val ppLexp : FLINT.lexp -> unit
+    (* controlled by Control.FLINT.printDepth and Control.FLINT.lineWidth *)
+  val ppLexpLimited : int -> FLINT.lexp -> unit
+    (* controlled by Control.FLINT.lineWidth *)
+  val ppProg : FLINT.prog -> unit
+    (* controlled by Control.FLINT.printDepth and Control.FLINT.lineWidth *)
+  val ppProgLimited : int -> FLINT.prog -> unit
+    (* controlled by Control.FLINT.lineWidth *)
 
-    val valueToString : FLINT.value -> string
+  val valueToString : FLINT.value -> string
 
-  end (* signature PPFLINT *)
+end (* signature PPFLINT *)

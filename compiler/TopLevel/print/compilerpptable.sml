@@ -2,8 +2,13 @@
  *
  * (C) 2001 Lucent Technologies, Bell Labs
  *)
-structure CompilerPPTable = struct
-    val install_pp 
-        : string list -> (PrettyPrint.stream -> 'a -> unit) -> unit
-      = Unsafe.cast PPTable.install_pp
-end (* PPTable *)
+
+(* NOT USED! *)
+
+structure CompilerPPTable =
+struct
+
+    val installFormatter : string list -> ('a -> Formatting.format) -> unit =
+        Unsafe.cast PPTable.installFormatter
+
+end (* structure CompilerPPTable *)

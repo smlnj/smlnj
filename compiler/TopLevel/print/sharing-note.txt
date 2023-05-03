@@ -1,0 +1,20 @@
+Example of "sharing" value printing
+
+With !Control.Print.printLoop = true (the default):
+
+  - datatype s = S of s option ref;
+
+  - val y = S (ref NONE) : s
+
+  - let val S z = y in z := SOME y end;
+
+  - y;
+  val it = S (ref (SOME (S %0))) as %0 : s
+
+
+  - Control.Print.printLoop := false;
+  - y;
+  val it = S (ref (SOME (S (ref (SOME (S (ref (SOME (S #))))))))) : s
+
+
+With printLoop false, recursion is cut off by printDepth.

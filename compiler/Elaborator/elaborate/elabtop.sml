@@ -17,8 +17,12 @@ signature ELABTOP =
 structure ElabTop : ELABTOP =
   struct
 
-    structure PP = PrettyPrint
-    structure PU = PPUtil
+    structure EM = ErrorMsg
+
+    structure PP = Formatting
+    structure PSP = PPSymPaths
+    structure PPA = PPAbsyn
+
     structure S = Symbol
     structure SP = SymPath
     structure IP = InvPath
@@ -32,6 +36,7 @@ structure ElabTop : ELABTOP =
     structure SE = StaticEnv
     structure L = Lookup
     structure EU = ElabUtil
+    structure ED = ElabDebug
     structure EE = EntityEnv
     structure EP = EntPath
     structure EPC = EntPathContext
@@ -42,15 +47,13 @@ structure ElabTop : ELABTOP =
     val debugging = ElabControl.etopdebugging (* default false *)
     fun debugmsg (msg: string) =
           if !debugging then (say msg; say "\n") else ()
-    val debugPrint = (fn x => ElabDebug.debugPrint debugging x)
 
-    fun ppAbsynDec ppstrm (dec,env) =
-	PPAbsyn.ppDec (env, NONE) ppstrm (dec, !Control_Print.printDepth)
+    val debugPrint = ED.debugPrint debugging
 
   (* localStrName: used in makeOpenDec to build redeclaration of components *)
     val localStrName = S.strSymbol "<a funny structure>"
 
-    fun bug msg = ErrorMsg.impossible("ElabTop: "^msg)
+    fun bug msg = EM.impossible("ElabTop: "^msg)
 
   (*
    * makeOpenDecls is a hack; it is written to make sure that the backend
@@ -109,14 +112,15 @@ structure ElabTop : ELABTOP =
    *)
     (* elabTop : Ast.dec * SE.staticEnv * EU.compInfo
 	         -> AS.dec * SE.staticEnv *)
-    fun elabTop(dec, env, compInfo as {error,...}: EU.compInfo) =
+    fun elabTop(dec, env, compInfo as {source,...}: EU.compInfo) =
 	let val _ = debugmsg ">>elabTop";
+	    val error = EM.error source
 
-	  val _ = EU.initializeMatchBind env
+	    val _ = EU.initializeMatchBind env
                 (* initialize the definitions of the Match and Bind exceptions *)
 
 	 (* elab : Ast.dec * SE.staticEnv * bool * region -> AS.dec * SE.staticEnv *)
-	  fun elab(SeqDec decs, env0, top, region) =
+	  fun elab (SeqDec decs, env0, top, region) =
 		let fun elabOne (dec, (abdecls, env)) =
 		      let val (abdecl, env') = elab (dec, SE.atop(env,env0), top, region)
 		       in (abdecl::abdecls, SE.atop(env', env))
@@ -125,7 +129,7 @@ structure ElabTop : ELABTOP =
 		 in (AS.SEQdec(rev abdecls), env')
 		end
 
-	    | elab(LocalDec(decl_in, decl_out), env0, top, region) =
+	    | elab (LocalDec (decl_in, decl_out), env0, top, region) =
 		let val top_in = EU.hasModules decl_in orelse EU.hasModules decl_out
 		    val (adec_in, env1) = elab (decl_in, env0, top_in, region)
 		    val (adec_out, env2) =
@@ -133,87 +137,81 @@ structure ElabTop : ELABTOP =
 		 in (AS.LOCALdec(adec_in, adec_out), env2)
 		end
 
-	    | elab(MarkDec(dec,region'), env, top, region) =
-		let val (dec', env') = elab (dec,env,top,region')
+	    | elab (MarkDec (dec,region'), env, top, region) =
+		let val (dec', env') = elab (dec, env, top, region')
 		in (if !ElabControl.markabsyn then AS.MARKdec (dec', region') else dec',
 		    env')
 		end
 
-	    | elab(OpenDec paths, env, top, region) =
-		let val _ = debugPrint("top level open: ",
-			      (fn pps => fn paths =>
-				 PU.ppSequence pps
-				   {sep=(fn pps => PP.string pps ","),
-				    pr=(fn ppstrm => (fn sympath =>
-					  PP.string ppstrm (SymPath.toString sympath))),
-				    style=PU.INCONSISTENT}
-				 (List.map SymPath.SPATH paths)), paths)
+	    | elab (OpenDec paths, env, top, region) =
+		let val _ = debugPrint ("top level open: ",
+				  PP.psequence PP.comma (map PSP.fmtSymPath (map SP.SPATH paths)))
 
 		    val err = error region
 
 		    (* look up the structure variables *)
-		    val strs = map (fn p => L.lookStr(env,SP.SPATH p,err)) paths
+		    val strs = map (fn path => L.lookStr (env, SP.SPATH path, err)) paths
 
 		    (* open their environments to add datatypes, etc. *)
-		    fun h(M.ERRORstr, env) = env
-		      | h(str, env) = MU.openStructure(env, str)
-		    val openEnv = foldl h SE.empty strs
 
-		    fun g((M.ERRORstr,spath), decs) = decs
-		      | g((str,spath), decs) =
-			let val ndec = makeOpenDecls(str, spath)
-			 in ndec::decs
-			end
+		    (* openStr : M.str * SE.staticEnv -> SE.staticEnv *)
+		    fun openStr (M.ERRORstr, env) = env
+		      | openStr (str, env) = MU.openStructure (env, str)
 
+		    val openEnv = foldl openStr SE.empty strs
 
-		    val newDecs = foldr g [] (ListPair.zip(strs, paths))
+		    fun openDecs ((M.ERRORstr, spath), decs) = decs
+		      | openDecs ((str, spath), decs) =
+			  let val ndec = makeOpenDecls (str, spath)
+			   in ndec::decs
+			  end
+
+		    val newDecs = foldr openDecs nil (ListPair.zip (strs, paths))
 
 		    (* hack to fix bugs 788, 847.
 		     * narrow the static environment used to elaborate newDecs
 		     * to one only binding the initial symbols of the paths.
 		     * Doesn't hurt if more than one path has same head symbol. *)
 
-		    val minEnv = foldl (fn (p,e) =>
-					 let val h = (case p
-					      of x::_ => x
-					       | []  => bug "unexpected case OpenDec")
-					     fun err' _ _ _ = ()
-					       (* to suppress duplicate error messages *)
-					     val str = L.lookStr(env,SP.SPATH [h],err')
-					  in SE.bind(h,Bindings.STRbind str,e)
-					 end)
-				       SE.empty
-				       paths
+		    val minEnv =
+			  let fun headBind (head::_ : S.symbol list, env': SE.staticEnv) =
+				    let fun err' _ _ _ = () (* to suppress duplicate error messages *)
+					val str = L.lookStr (env, SP.SPATH [head], err') (* could fail? *)
+				     in SE.bind(head, Bindings.STRbind str, env')
+				    end
+				| headBind (nil, _) = bug "unexpected case OpenDec"
+			  in foldl headBind SE.empty paths
+			  end
 
 		    val {absyn=ds, statenv=env'} =
 			  ElabMod.elabDecl{ast=(SeqDec newDecs), statenv=minEnv,
 					   entEnv=EE.empty, context=EU.TOP,
-					   level=top, tdepth=DebIndex.top,
+					   level=top, tdepth=0, (* top *)
 					   epContext=EPC.initContext,
 					   path=IP.IPATH[], region=region,
 					   compInfo=compInfo}
 
-		    val nenv = SE.consolidate(SE.atop(env',openEnv))
+		    val nenv = SE.consolidate (SE.atop (env',openEnv))
 
-		    val strs' = ListPair.zip(map SP.SPATH paths,strs)
+		    val strs' = ListPair.zip (map SP.SPATH paths, strs)
 
 		 in (AS.SEQdec [AS.OPENdec strs', ds], nenv)
 		end
 
-	    | elab(dec, env, top, region) =
+	    | elab (dec, env, top, region) =
 		let val _ = debugmsg "--elabTop.elab[dec]: calling ElabMod.elabDecl"
 		    val {absyn=d, statenv=env'} =
 		      ElabMod.elabDecl{ast=dec, statenv=env, entEnv=EE.empty,
-				       context=EU.TOP, level=top, tdepth=DebIndex.top,
+				       context=EU.TOP, level=top, tdepth=0,  (* top *)
 				       epContext=EPC.initContext, path=IP.IPATH[],
-				       region=region,compInfo=compInfo}
+				       region=region, compInfo=compInfo}
 		 in (d, env')
 		end
 
 	  val (dec, env) = elab(dec,env,true,SourceMap.nullRegion)
     in
         debugmsg "<<elabTop";
-	ElabDebug.debugPrint ElabControl.printAbsyn ("ABSYN::", ppAbsynDec, (dec,env));
+	ED.debugPrint ElabControl.printAbsyn ("ABSYN::", PPA.fmtDec (env, SOME source) (dec,100));
 	CheckUnused.check error dec;
 	(dec, env)
     end (* fun elabTop *)

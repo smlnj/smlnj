@@ -55,7 +55,6 @@ local
   structure LB = LtyBasic
   structure LE = LtyExtern
   structure PO = Primop
-  structure DA = Access
   structure M  = LambdaVar.Map
   structure A  = Access
   structure O  = Option

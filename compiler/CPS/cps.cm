@@ -1,0 +1,91 @@
+(* compiler/CPS/cps.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The CPS stages
+ * redirected as Library in $smlnj/viscomp/cps.cm
+ *)
+
+Library
+
+(* ------------------------------- Exports ------------------------------- *)
+
+  structure CPS         (* cps/cps.sml *)
+  structure CPSUtil     (* cps/cps-util.sml *)
+  structure PPCps       (* cps/ppcps.sml *)
+
+  structure ObjectDesc  (* main/object-desc.sml *) 
+  signature MACH_SPEC   (* main/mach-spec.sig *)
+  structure Cluster     (* main/cluster.sml *)
+  functor CPSCompFn     (* main/cps-comp.sml -- fixed so it does not depend on NewCodeGen *)
+
+(*
+   CPSCompFn was called in [New]CodeGen/main/code-gen-fn.sml, but it depends on several things
+   defined in [New]CodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
+   to [New]CodeGen or its functionality should be split between a function in CSP that does not
+   depend on NewCodeGen, and a function in NewCodeGen that deals with the cfg part.  If we move it
+   to [New]CodeGen, we would have to export 9 CSP modules that it depends on.  See the specs for
+   CPS/main/cps-comp.sml in MAP-CPS.txt.
+*)
+
+is
+(* ------------------------------- Member files ------------------------------- *)
+
+CPS/cps/cps.sig
+CPS/cps/cps.sml
+CPS/cps/ppcps.sml
+CPS/cps/cps-util.sml
+
+CPS/main/cluster.sml    (* structure Cluster; may be replaced by NCG/main/cluster.sml *)
+CPS/main/cps-comp.sml
+CPS/main/feedback.sml
+CPS/main/limit.sml
+CPS/main/literals.sml
+CPS/main/new-literals.sml
+CPS/main/normalize-cluster.sml
+CPS/main/spill-fn.sml
+CPS/main/mach-spec.sig   (* these 3 moved (copied) from NCG/main -- they belong in CPS *)
+CPS/main/object-desc.sig
+CPS/main/object-desc.sml
+
+CPS/convert/convert.sml
+CPS/convert/cpstrans.sml
+CPS/convert/switch.sml
+
+CPS/clos/globalfix.sml
+CPS/clos/closure.sml
+CPS/clos/freeclose.sml
+CPS/clos/staticprof.sml
+CPS/clos/unrebind.sml
+
+CPS/opt/contract.sml
+CPS/opt/contract-prim.sml
+CPS/opt/cpsopt.sml
+CPS/opt/divcnv.sml
+CPS/opt/eta.sml
+CPS/opt/etasplit.sml
+CPS/opt/expand.sml
+CPS/opt/flatten.sml
+CPS/opt/infcnv.sml
+CPS/opt/lower.sml
+CPS/opt/num64cnv.sml
+CPS/opt/streqlcnv.sml
+CPS/opt/testcnv.sml
+CPS/opt/uncurry.sml
+
+
+(* ------------------------------- Imports ------------------------------- *)
+
+(* viscomp Libraries *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/elabdata.cm (* Access, LambdaVar *)
+$smlnj/viscomp/flint.cm    (* FLINT *)
+$smlnj/viscomp/toplevel.cm (* Control *)
+
+(* Other libaries. *)
+$smlnj/basis/basis.cm
+
+(* smlnj-lib "incorporated" libraries *)
+$smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm

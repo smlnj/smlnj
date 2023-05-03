@@ -20,6 +20,7 @@ is
 	$smlnj/basis/basis.cm
 	$smlnj/smlnj-lib/smlnj-lib.cm
 	$smlnj/smlnj-lib/controls-lib.cm
+        $smlnj/smlnj-lib/prettyprint-lib.cm
 
 	(* the CM description file parser *)
 	parse/parse.sml
@@ -121,7 +122,7 @@ is
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/execute.cm
 	$smlnj/viscomp/core.cm
-	
+
 	$/pickle-lib.cm
 
 	(* auxiliary libraries *)

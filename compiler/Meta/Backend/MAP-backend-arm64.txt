@@ -1,0 +1,73 @@
+compiler/MAP-backend-amd64.txt
+
+Map of compiler/backend-amd64.cm
+
+compiler/
+
+CDF: compiler/backend-amd64.cm
+  Derived: system/smlnj/viscomp/amd64.cm
+
+(* ---------------------------- Exports ---------------------------- *)
+
+structure Arm64Backend
+
+(* ---------------------------- Module Catalogue ---------------------------- *)
+
+LOCAL:
+
+Arm64Backend		TopLevel/backend/arm64-backend.sml
+
+Arm64Spec		NewCodeGen/targets/arm64-spec.sml
+
+
+IMPORTS:
+
+BackendFn	      	TopLevel/backend/backend-fn.sml
+
+CodeGeneratorFn		NewCodeGen/main/code-gen-fn.sml
+DefaultMachSpecFn	NewCodeGen/main/default-machspec-fn.sml
+
+
+(* ---------------------------- Members [files] ---------------------------- *)
+
+TopLevel/
+backend/
+
+  arm64-backend.sml
+    < ARM64Backend
+    > Arm64Spec
+      ----------
+      BackEndFn*
+      CodeGeneratorFn*
+
+
+NewCodeGen/
+targets/
+
+  arm64-spec.sml
+    < Arm64Spec
+    > ----------
+      MACH_SPEC*
+      DefaultMachSpecFn*
+
+
+(* ---------------------------- Imports ---------------------------- *)
+
+(* Basis *)
+$smlnj/basis/basis.cm
+
+$smlnj/viscomp/toplevel.cm (* BackendFn *)
+$smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)
+
+
+(* ---------------------------- Notes ---------------------------- *)
+
+TopLeve/backend could be moved into CodeGen (NewCodeGen). Then this
+CDF would depend only on codegen.cm (or viscomp/codegen.cm?). There is no need
+to pass these modules (functors) through core.cm.  Then the imports would
+covered by codegen.cm alone.
+
+Alternatively, we could create a new top-level component, "Backend",
+with its own CDF backend.cm, (or backend-amd64.cm and backend-arm64.cm).
+Or two top-level components (?) Arm64Backend and AMD64Backend, with
+respective CDFs backend-arm64.cm and backend-amd64.cm.

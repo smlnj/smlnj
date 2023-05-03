@@ -147,7 +147,7 @@ structure Control : CONTROL =
     (* elaborator controls *)
     structure Elab : ELAB_CONTROL = ElabControl (* Elaborator/control/elabcontrol.{sml,sig} *)
 
-    (* MatchComp (match compiler) controls *)
+    (* Match compiler controls (used in Elatorator/matchcomp) *)
     structure MC : MC_CONTROL = MCControl (* Elaborator/control/mccontrol.{sml,sig} *)
 
     (* FLINT controls *)

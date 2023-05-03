@@ -1,11 +1,11 @@
-(* stabilize.sml
+(* cm/stable/stabilize.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Reading, generating, and writing stable libraries.
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 
 local
@@ -13,7 +13,7 @@ local
     structure GG = GroupGraph
     structure EM = ErrorMsg
 
-    structure PP = PrettyPrint
+    structure PP = Formatting
     structure SM = SourceMap
     structure GP = GeneralParams
     structure Pid = PersStamps
@@ -244,9 +244,8 @@ struct
 	val errcons = #errcons (gp: GeneralParams.info)
 	val grpSrcInfo = (errcons, anyerrors)
 	val gdescr = SrcPath.descr group
-	fun error l = EM.errorNoFile (errcons, anyerrors) SM.nullRegion
-              EM.COMPLAIN (concat ("(stable) " :: gdescr :: ": " :: l))
-                EM.nullErrorBody
+	fun error l = EM.errorNoSource SM.nullRegion EM.COMPLAIN
+			(concat ("(stable) " :: gdescr :: ": " :: l)) EM.nullErrorBody
 	exception Format = UU.Format
 
 	val penv = #penv (#param gp)
@@ -417,7 +416,7 @@ struct
 				val offset = int () + offset_adjustment
 				val rts_pid = pidoption ()
 				val sh_mode = shm ()
-				val error = EM.errorNoSource grpSrcInfo locs
+				val error = EM.errorNoSource SM.nullRegion
 			    in
 				BinInfo.new { group = group,
 					      mkStablename = mksname,
@@ -680,45 +679,30 @@ struct
 		    (reg, get)
 		end
 
-		fun prepath2list what p = let
-		    fun warn_relabs (abs, descr) = let
-			val relabs = if abs then "absolute" else "relative"
-			val gdesc = SrcPath.descr grouppath
-			fun ppb pps = let
-			    fun space () = PP.break pps {nsp=1,offset=0}
-			    fun string s = PP.string pps s
-			    fun ss s = (string s; space ())
-			    fun nl () = PP.newline pps
-			in
-			    nl ();
-			    PP.openHOVBox pps (PP.Rel 0);
-			    app ss ["The", "path", "specifying"];
-			    app ss [what, descr, "is"];
-			    string relabs; string "."; nl ();
-			    app ss ["(This", "means", "that", "in", "order",
-				    "to", "be", "able", "to", "use", "the",
-				    "stabilized", "library"];
-			    string gdesc; ss ",";
-			    app ss ["it", "will", "be", "necessary", "to",
-				    "keep", "all", "imported", "libraries",
-				    "with", "names", "derived", "from", "or",
-				    "equal", "to"];
-			    ss descr;
-			    app ss ["in", "the", "same"];
-			    ss relabs;
-			    app ss ["location", "as", "they", "are"];
-			    string "now.)";
-			    PP.closeBox pps
-			end
-		    in
-			EM.errorNoFile
-			    (#errcons gp, anyerrors) SM.nullRegion EM.WARN
-			    (gdesc ^ ": uses non-anchored path") ppb
+		fun prepath2list (what: string) file =
+		    let fun warn_relabs (abs: bool, descr: string) =
+			    let val relabs: string = if abs then "absolute" else "relative"
+				val gdesc = SrcPath.descr grouppath
+				val errorFmt =
+				    PP.pblock
+				      (map PP.text 
+					  ["The", "path", "specifying",
+					    what, descr, "is", relabs, ".", "\n",
+					    "(This", "means", "that", "in", "order",
+					    "to", "be", "able", "to", "use", "the",
+					    "stabilized", "library",
+					    gdesc, ",", "it", "will", "be", "necessary", "to",
+					    "keep", "all", "imported", "libraries",
+					    "with", "names", "derived", "from", "or",
+					    "equal", "to", descr, "in", "the", "same",
+					    relabs, "location", "as", "they", "are", "now.)"])
+			     in EM.errorNoSource SM.nullRegion EM.WARN
+				  (gdesc ^ ": uses non-anchored path")
+				  errorFmt
+			    end
+		     in SrcPath.pickle { warn = warn_relabs }
+				       { file = file, relativeTo = grouppath }
 		    end
-		in
-		    SrcPath.pickle { warn = warn_relabs }
-				   { file = p, relativeTo = grouppath }
-		end
 
 		(* Collect all BNODEs that we see and build
 		 * a context suitable for P.envPickler. *)
@@ -1002,8 +986,7 @@ struct
 						handle _ => ()) };
 		 refetchStableGroup ())
 		handle exn =>
-		       (EM.errorNoFile (#errcons gp, anyerrors) SM.nullRegion
-			   EM.COMPLAIN
+		       (EM.errorNoSource SM.nullRegion EM.COMPLAIN
 			   (concat ["Exception raised while stabilizing ",
 				    SrcPath.descr grouppath])
 			   EM.nullErrorBody;
@@ -1014,47 +997,33 @@ struct
 		GG.LIB { kind = GG.STABLE _, ... } => SOME g
 	      | GG.NOLIB _ => EM.impossible "stabilize: no library"
 	      | GG.LIB { kind = GG.DEVELOPED { wrapped, ... }, version } =>
-		(case recomp gp g of
-		     NONE => (anyerrors := true; NONE)
-		   | SOME bfc_acc => let
-			 fun notStable (_, gth, _) =
-			     case gth () of
-				 GG.GROUP { kind =
-					    GG.LIB { kind = GG.STABLE _,
-						     ... }, ... } =>
-				 false
-			       | _ => true
-		     in
-			 case List.filter notStable (#sublibs grec) of
-			     [] => doit (wrapped, bfc_acc, version)
-			   | l => let
-				 val grammar =
-				     case l of [_] => " is" | _ => "s are"
-				 fun ppb pps = let
-				     fun loop [] = ()
-				       | loop ((p, _, _) :: t) =
-					 (PP.string pps (SrcPath.descr p);
-					  PP.newline pps;
-					  loop t)
-				 in
-				     PP.newline pps;
-				     PP.string pps
-				    (concat ["because the following sub-group",
-					     grammar, " not stable:"]);
-				     PP.newline pps;
-				     loop l
+		(case recomp gp g
+		   of NONE => (anyerrors := true; NONE)
+		    | SOME bfc_acc =>
+		       let fun notStable (_, gth, _) =
+			       case gth ()
+				 of GG.GROUP { kind = GG.LIB { kind = GG.STABLE _, ... }, ... } =>
+				    false
+				  | _ => true
+		        in case List.filter notStable (#sublibs grec)
+			     of nil => doit (wrapped, bfc_acc, version)
+			      | l =>
+				 let val grammar =
+					   case l of [_] => " is" | _ => "s are"
+				     val errorBody =
+					   PP.vblock
+					     [PP.text
+						(concat ["because the following sub-group",
+							 grammar, " not stable:"]),
+					      PP.indent 2
+						(PP.vblock (map (fn (p, _, _) => PP.text (SrcPath.descr p)) l))]
+				     val gdescr = SrcPath.descr (#grouppath grec)
+				  in EM.errorNoSource SM.nullRegion EM.COMPLAIN
+					  (gdescr ^ " cannot be stabilized")
+					  errorBody;
+				     NONE
 				 end
-				 val errcons = #errcons gp
-				 val gdescr = SrcPath.descr (#grouppath grec)
-			     in
-				 EM.errorNoFile (errcons, anyerrors)
-					SM.nullRegion
-					EM.COMPLAIN
-					(gdescr ^ " cannot be stabilized")
-					ppb;
-				 NONE
-			     end
-		     end)
+		       end)
 	end
 end (* functor Stabilize *)
 

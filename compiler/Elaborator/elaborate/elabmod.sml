@@ -1,5 +1,5 @@
-(* Copyright 1996 by AT&T Bell Laboratories *)
-(* elabmod.sml *)
+(* Elaborator/elaborate/elabmod.sml
+ * Copyright 2023 by The Fellowship of SML/NJ (www.smlnj.org) *)
 
 signature ELABMOD =
 sig
@@ -18,49 +18,47 @@ sig
           compInfo  : ElabUtil.compInfo} -> {absyn     : Absyn.dec,
                                              statenv   : StaticEnv.staticEnv}
 
-  val debugging : bool ref
-
 end (* signature ELABMOD *)
 
-
-(* functorized to factor out dependencies on FLINT... *)
-(* functor ElabModFn (structure SM : SIGMATCH) : ELABMOD = *)
 structure ElabMod : ELABMOD =
 struct
 
-local structure S  = Symbol
-      structure IP = InvPath
-      structure SP = SymPath
-      structure EP = EntPath
-      structure EPC = EntPathContext
-      structure EE = EntityEnv
-      structure T  = Types
-      structure TU = TypesUtil
-      structure V  = Variable
-      structure M  = Modules
-      structure MU = ModuleUtil
-      structure MI = ModuleId
-      structure L = Lookup
-      structure EU = ElabUtil
-      structure ET = ElabType
-      structure EC = ElabCore
-      structure ES = ElabSig
-      structure B  = Bindings
-      structure LU = Lookup
-      structure SM = SigMatch
-      structure INS = Instantiate
-      structure SE = StaticEnv
-      structure EM = ErrorMsg
-      structure PP = PrettyPrint
-      structure A  = Absyn
-      structure DA = Access
-      structure DI = DebIndex
-      structure PPU = PPUtil
-      structure ED = ElabDebug
-      structure ST = RedBlackSetFn(type ord_key = S.symbol
-                                   val compare = S.compare)
-      open Ast Modules
-      open SpecialSymbols (* special symbols *)
+local
+  structure S  = Symbol
+  structure IP = InvPath
+  structure SP = SymPath
+  structure PN = PathName
+  structure EP = EntPath
+  structure EPC = EntPathContext
+  structure EE = EntityEnv
+  structure T  = Types
+  structure TU = TypesUtil
+  structure V  = Variable
+  structure M  = Modules
+  structure MU = ModuleUtil
+  structure MI = ModuleId
+  structure L = Lookup
+  structure EU = ElabUtil
+  structure ET = ElabType
+  structure EC = ElabCore
+  structure ES = ElabSig
+  structure B  = Bindings
+  structure LU = Lookup
+  structure SM = SigMatch
+  structure INS = Instantiate
+  structure SE = StaticEnv
+  structure EM = ErrorMsg
+  structure A  = Absyn
+  structure DA = Access
+  structure DI = DebIndex
+  structure ED = ElabDebug
+  structure ST = RedBlackSetFn(type ord_key = S.symbol
+			       val compare = S.compare)
+  structure PP = Formatting
+  structure PPS = PPSymbols
+
+  open Ast Modules
+  open SpecialSymbols (* special symbols *)
 in
 
 (* debugging *)
@@ -70,47 +68,33 @@ fun newline () = say "\n"
 fun saynl str = (say str; newline())
 fun saysnl strs = (says strs; newline())
 
-val debugging = ElabControl.emdebugging (* ref false; == Control.Elab.emdebugging *)
+val debugging = ElabControl.emdebugging
+
 fun dbsay msg = if !debugging then say msg else ()
 fun dbsaynl msg = if !debugging then saynl msg else ()
-
-val debugmsg = dbsaynl
+val debugPrint : string * PP.format -> unit = ED.debugPrint debugging
 
 fun bug msg = ErrorMsg.impossible("ElabMod: "^msg)
 
-val debugPrint = (fn x => ED.debugPrint debugging x)
+fun showStr (msg: string, str: M.Structure, env: SE.staticEnv) =
+    ED.withInternals
+      (fn () => debugPrint (msg, PPModules.fmtStructure env (str, 100)))
 
-fun showStr(msg,str,env) =
-    ED.withInternals(fn () =>
-      debugPrint(msg,
-		 (fn pps => fn str =>
-		    PPModules.ppStructure pps env (str, 100)),
-		 str))
-
-fun showFct(msg,fct,env) =
-    ED.withInternals(fn () =>
-      debugPrint(msg,
-		 (fn pps => fn fct' =>
-		    PPModules_DB.ppFunctor pps env (fct', 100)),
-		 fct))
+fun showFct (msg: string, fct: M.Functor, env: SE.staticEnv) =
+    ED.withInternals
+      (fn () => debugPrint (msg, PPModules_DB.fmtFunctor env (fct, 100)))
 
 fun showDec (msg, dec, env) =
-    let fun ppDec ppstrm d =
-	    PPAbsyn.ppDec (env, NONE) ppstrm (d, !Control_Print.printDepth)
-     in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppDec, dec)
-    end
+    ED.debugPrint ElabControl.printAbsyn
+      (msg, PPAbsyn.fmtDec (env, NONE) (dec, !Control_Print.printDepth))
 
 fun showStrexp (msg, strexp: A.strexp, env) =
-    let fun ppStrexp ppstrm sexp =
-	    PPAbsyn.ppStrexp (env, NONE) ppstrm (sexp, !Control_Print.printDepth)
-     in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppStrexp, strexp)
-    end
+    ED.debugPrint ElabControl.printAbsyn
+      (msg, PPAbsyn.fmtStrexp (env, NONE) (strexp, !Control_Print.printDepth))
 
-fun showStrExpAst (msg, strexp: Ast.strexp, env) =
-    let fun ppStrexp ppstrm sexp =
-	    PPAst.ppStrExp NONE ppstrm (sexp, !Control_Print.printDepth)
-     in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppStrexp, strexp)
-    end
+fun showStrExpAst (msg: string, strexp: Ast.strexp, env: SE.staticEnv) =
+    ED.debugPrint ElabControl.printAst
+      (msg, PPAst.fmtStrExp NONE (strexp, !Control_Print.printDepth))
 
 (*
  * Check if an entity declaration is empty in order to avoid the unnecessary
@@ -240,7 +224,7 @@ fun bindReplTyc(EU.INFCT _, epctxt, mkStamp, dtyc) =
          val tyc_id = MU.tycId dtyc
          val texp =
 	     case EPC.lookPath(epContext,tyc_id)
-	       of NONE => (debugmsg "tyc not mapped 1"; M.CONSTtyc tyc)
+	       of NONE => (dbsaynl "tyc not mapped 1"; M.CONSTtyc tyc)
 		| SOME entPath => M.VARtyc entPath
       in EPC.bindPath(epctxt, tyc_id, ev);
 	 M.TYCdec(ev,texp)
@@ -254,15 +238,18 @@ fun bindReplTyc(EU.INFCT _, epctxt, mkStamp, dtyc) =
  *         DEFtyc refers to tycons occurring after itself.
  *)
 fun bindNewTycs(EU.INFCT _, epctxt, mkStamp, dtycs, wtycs, rpath, err) =
-      let fun stripPath path =
-	    let val namePath = IP.IPATH[IP.last path]
-	        val prefix = IP.lastPrefix path
-	        val _ = if IP.equal(rpath,prefix) then ()
-		        else err EM.WARN
-			     "Harmless compiler bug: bad type path prefix"
-			     EM.nullErrorBody
-	     in namePath
-	    end
+      let fun stripPath (IP.IPATH syms: IP.path) =
+	      case syms
+	        of nil => bug "bindNewTycs: stripPath"
+	         | name :: rest => 
+		     let val namePath = IP.IPATH [name]
+			 val prefix = IP.IPATH rest
+			 val _ = if IP.equal(rpath,prefix) then ()
+		                 else err EM.WARN
+					  "Harmless compiler bug: bad type path prefix"
+					  EM.nullErrorBody
+		     in namePath
+		     end
 
 	  val vizty = (fn ty => #1(MU.relativizeType epctxt ty))
 	  val viztc = (fn tc => #1(MU.relativizeTyc epctxt tc))
@@ -533,9 +520,9 @@ fun extractSig (env, epContext, context,
 		| procdatatycs(T.GENtyc{kind=T.DATATYPE dt, path, ...}::rest) =
 		    let val {index,family as {members,...},...} = dt
 			val {tycname,dcons,...} = Vector.sub(members,index)
-			val pathname = InvPath.last path
-		    in (map (fn ({name,...}) => name) dcons)@
-		       (pathname::procdatatycs rest)
+			val name = PN.getTycNameIP path
+		    in (map (fn ({name,...}) => name) dcons) @
+		       (name::procdatatycs rest)
 		    end
 		| procdatatycs(_) = bug "elabmod: extractSig -- bad datatycs"
 	      fun procebs([]) = []
@@ -632,7 +619,7 @@ fun extractSig (env, epContext, context,
  ****************************************************************************)
 fun constrStr(transp, sign, str, strDec, strExp, evOp, tdepth, entEnv, rpath,
               env, region, compInfo) : A.dec * M.Structure * M.strExp =
-  let val _ = debugmsg ">>> constrStr"
+  let val _ = dbsaynl ">>> constrStr"
       val {resDec=matchedDec, resStr=matchedStr, resExp=matchedExp} =
           SM.matchStr{sign=sign, str=str, strExp=strExp, evOp=evOp,
                       tdepth=tdepth, entEnv=entEnv, statenv=env, rpath=rpath,
@@ -645,7 +632,7 @@ fun constrStr(transp, sign, str, strDec, strExp, evOp, tdepth, entEnv, rpath,
 		   INS.instAbstr {sign=sign, entEnv=entEnv, rlzn=matchedRlzn,
 				  rpath=rpath, region=region, compInfo=compInfo}
 	       val abstractStr = STR {sign=sign, rlzn=abstractRlzn, access=access, prim=prim}
-	       val _ = debugmsg "<<< constrStr[transp=false]"
+	       val _ = dbsaynl "<<< constrStr[transp=false]"
             in (A.SEQdec[strDec, matchedDec], abstractStr, matchedExp)
 	   end
   end (* fun constrStr *)
@@ -672,9 +659,11 @@ fun elabStr
        entsv: EP.entVar option,
        rpath: IP.path,
        region: SourceMap.region,
-       compInfo as {mkLvar=mkv, mkStamp, error, ...}: EU.compInfo)
+       compInfo as {mkLvar=mkv, mkStamp, source}: EU.compInfo)
       : A.dec * M.Structure * M.strExp * EE.entityEnv =
 let
+
+val error = ErrorMsg.error source
 
 val sname : string =
     (case name
@@ -700,11 +689,11 @@ fun elab (BaseStr decl, env, entEnv, region) =
           val (absDecl, entDecl, env', entEnv') =
                  elabDecl0(decl, env, entEnv, inStr context, true, tdepth,
                            epContext', rpath, region, compInfo)
-          val _ = debugmsg "--elab[BaseStr]: elabDecl0 done"
+          val _ = dbsaynl "--elab[BaseStr]: elabDecl0 done"
 
           val (elements, entEnv'', entDecls, locations, fctflag) =
                 extractSig(env', epContext', context, compInfo, absDecl)
-          val _ = debugmsg "--elab[BaseStr]: extractSig done"
+          val _ = dbsaynl "--elab[BaseStr]: extractSig done"
 
           val (entEnvLocal, entDecLocal) =
               case context
@@ -738,15 +727,15 @@ fun elab (BaseStr decl, env, entEnv, region) =
 			 prim=prim}
 	      end
 
-          val _ = debugPrint("BaseStr after resStr  - symbols: ", ED.ppSymList,
-                             ED.envSymbols env')
+          val _ = debugPrint ("BaseStr after resStr  - symbols: ", PPS.fmtSymList (ED.envBoundSymbols env'))
+
           (* absyn *)
           val resDec =
             let val body = A.LETstr(absDecl, A.STRstr(locations))
              in A.STRdec [A.STRB {name=tempStrId, str=resStr, def=body}]
             end
 
-          val _ = debugmsg "<<elab[BaseStr]"
+          val _ = dbsaynl "<<elab[BaseStr]"
 
        in (resDec, resStr, strExp, EE.empty)
       end
@@ -759,11 +748,11 @@ fun elab (BaseStr decl, env, entEnv, region) =
       end
 
   | elab (AppStrI(spath,[(arg,b)]), env, entEnv, region) =
-      let val _ = debugmsg ">>elab[AppStr-one]"
+      let val _ = dbsaynl ">>elab[AppStr-one]"
 
           val fct = LU.lookFct(env, SP.SPATH spath, error region)
 
-          val _ = debugmsg "--elab[AppStr-one]: functor lookup done"
+          val _ = dbsaynl "--elab[AppStr-one]: functor lookup done"
           val _ = showFct("--elab[AppStr]: functor ",fct,env)
 
           val entv = mkStamp()   (* ev for the uncoerced argument *)
@@ -771,15 +760,15 @@ fun elab (BaseStr decl, env, entEnv, region) =
 	      elabStr(arg, NONE, env, entEnv, context, tdepth, epContext,
 		      SOME entv, IP.IPATH[], region, compInfo)
 
-          val _ = debugmsg "--elab[AppStr-one]: elab arg done"
+          val _ = dbsaynl "--elab[AppStr-one]: elab arg done"
           val _ = showStr ("--elab[AppStr-one]: arg str: ", argStr, env)
 
        in case (fct,argStr)
 	    of (M.ERRORfct, _) =>
-		(debugmsg "<<<elab[AppStr-one]: error functor";
+		(dbsaynl "<<<elab[AppStr-one]: error functor";
 		 (A.SEQdec[], M.ERRORstr, M.CONSTstr(M.bogusStrEntity), EE.empty))
 	     | (_, M.ERRORstr) =>
-		(debugmsg "<<<elab[AppStr-one]: error arg structure";
+		(dbsaynl "<<<elab[AppStr-one]: error arg structure";
 		 (A.SEQdec[], M.ERRORstr, M.CONSTstr(M.bogusStrEntity), EE.empty))
 	     | (M.FCT { rlzn = fctEnt, ... }, M.STR { rlzn = argEnt, ... }) =>
 	       let val resDee =
@@ -795,16 +784,16 @@ fun elab (BaseStr decl, env, entEnv, region) =
 				    epc=EPC.enterOpen(epContext,entsv),
 				    statenv=env, rpath=rpath, region=region,
 				    compInfo=compInfo}
-		    val _ = debugmsg "--elab[AppStr-one]: applyFct done"
+		    val _ = dbsaynl "--elab[AppStr-one]: applyFct done"
 		    val _ = showStr("--elab[AppStr-one]: result: ",resStr,env)
-		    val _ = debugmsg "<<elab[AppStr-one]"
+		    val _ = dbsaynl "<<elab[AppStr-one]"
 		 in (A.SEQdec [argDec, resDec], resStr, resExp, resDee)
 		end
 	     | _ => bug "AppStrI:one arg"
       end (* AppStrI - one arg *)
 
   | elab (AppStrI(spath,arg :: larg), env, entEnv, region) =
-      let val _ = debugmsg ">>elab:[AppStr-many]"
+      let val _ = dbsaynl ">>elab:[AppStr-many]"
           val strexp' = LetStr(StrDec[Strb{name=hiddenId,constraint=NoSig,
                                            def=AppStrI(spath,[arg])}],
                                AppStrI([hiddenId,functorId],larg))
@@ -815,7 +804,7 @@ fun elab (BaseStr decl, env, entEnv, region) =
       bug "elabStr.AppStrI -- empty arg list"
 
   | elab (v as VarStr path, env, entEnv, region) =
-      let val _ = debugmsg ">>elab[VarStr]"
+      let val _ = dbsaynl ">>elab[VarStr]"
           val str = LU.lookStr(env,SP.SPATH path,error region)
 
           val _ = showStr("--elab[VarStr]: str: ",str,env)
@@ -827,18 +816,18 @@ fun elab (BaseStr decl, env, entEnv, region) =
           val resExp =
 	        case str
 		  of STR _ =>
-		      ((* debugmsg "--elab[VarStr]: resExp/STR"; *)
+		      ((* dbsaynl "--elab[VarStr]: resExp/STR"; *)
 		       case EPC.lookStrPath(epContext,MU.strId str)
 			 of NONE => M.CONSTstr strRlzn
 			  | SOME ep => M.VARstr ep)
 		   | _ => M.CONSTstr M.bogusStrEntity (* error recovery *)
 
-       in debugmsg "<<<elab[VarStr]";
+       in dbsaynl "<<<elab[VarStr]";
 	  (A.SEQdec [], str, resExp, EE.empty)
       end
 
   | elab (LetStr(decl,str), env, entEnv, region) =
-      let val _ = debugmsg ">>elab[LetStr]"
+      let val _ = dbsaynl ">>elab[LetStr]"
           val (localDecAbsyn, localEntDecl, env', entEnv') =
             elabDecl0(decl, env, entEnv, context, true, tdepth,
                       epContext, rpath, region, compInfo)
@@ -855,13 +844,13 @@ fun elab (BaseStr decl, env, entEnv, region) =
                  * and the fact that local entities can't be referred
                  * to from outside.
                  *)
-          val _ = debugmsg "--elab[LetStr]: local elabDecl0 done"
+          val _ = dbsaynl "--elab[LetStr]: local elabDecl0 done"
           val (bodyDecAbsyn, bodyStr, bodyExp, bodyDee) =
             elab(str, SE.atop(env',env), EE.atop(entEnv',entEnv), region)
 
           val resDec = A.SEQdec [localDecAbsyn, bodyDecAbsyn]
           val resExp = M.LETstr (localEntDecl, bodyExp)
-          val _ = debugmsg "<<<elab[LetStr]: elab body str done"
+          val _ = dbsaynl "<<<elab[LetStr]: elab body str done"
 
        in (resDec, bodyStr, resExp, EE.mark(mkStamp,EE.atopSp(bodyDee,entEnv')))
       end
@@ -949,14 +938,16 @@ and elabFct
        epContext: EPC.context,
        rpath: IP.path,
        region: SourceMap.region,
-       compInfo as {mkLvar=mkv, mkStamp, error, ...}: EU.compInfo)
+       compInfo as {mkLvar=mkv, mkStamp, source, ...}: EU.compInfo)
       : A.dec * M.Functor * M.fctExp * EE.entityEnv =
 
 let
 
+val error = EM.error source
+
 val depth = (case context of EU.INFCT{depth=d,...} => d
                            | _ => DI.top)
-val _ = debugmsg (">>elabFct: " ^ (S.name name))
+val _ = dbsaynl (">>elabFct: " ^ (S.name name))
 
 in
 
@@ -1000,13 +991,13 @@ case fctexp
       end
 
   | LetFct(decl,fct) =>
-      let val _ = debugmsg ">>elab[LetFct]"
+      let val _ = dbsaynl ">>elab[LetFct]"
           val (localDecAbsyn, localEntDecl, env', entEnv') =
             elabDecl0(decl, env, entEnv, context, true, tdepth,
 	              epContext, rpath, region, compInfo)
            (* top = true: don't allow nongeneralized type variables
               in local decls because of bug 905/952 [dbm] *)
-          val _ = debugmsg "--elab[LetFct]: local elabDecl0 done"
+          val _ = dbsaynl "--elab[LetFct]: local elabDecl0 done"
           val (bodyDecAbsyn, bodyFct, bodyExp, bodyDee) =
             elabFct(fct, false, name, SE.atop(env',env), EE.atop(entEnv',entEnv),
                     context, tdepth, epContext, rpath, region, compInfo)
@@ -1028,7 +1019,7 @@ case fctexp
       end
 
   | BaseFct{params=[(paramNameOp,paramSigExp)],body,constraint} =>
-      let val _ = debugmsg ">>elabFct[BaseFct]"
+      let val _ = dbsaynl ">>elabFct[BaseFct]"
 	  val body = if curried then body
 		     else BaseStr(StrDec[Strb{name=resultId, def=body,
 					      constraint=constraint}])
@@ -1048,14 +1039,14 @@ case fctexp
 
           val paramEntVar = mkStamp()
 
-	  val _ = debugmsg (">>elabFct[BaseFct]: paramEntVar = "^
+	  val _ = dbsaynl (">>elabFct[BaseFct]: paramEntVar = "^
 			    EP.entVarToString paramEntVar)
 
           val paramSig =
               ES.elabSig {sigexp=paramSigExp, nameOp=NONE, env=env,
                           entEnv=entEnv, epContext=epContext,
                           region=region, compInfo=compInfo}
-          val _ = debugmsg "--elabFct[BaseFct]: paramSig defined"
+          val _ = dbsaynl "--elabFct[BaseFct]: paramSig defined"
 
 	  val _ = case paramSig
 		    of ERRORsig => raise EM.Error
@@ -1079,26 +1070,26 @@ case fctexp
                         access=paramDacc, prim=[]}
               end
 
-          val _ = debugmsg "--elabFct[BaseFct]: param instantiated"
+          val _ = dbsaynl "--elabFct[BaseFct]: param instantiated"
           val _ = showStr("--elabFct[BaseFct]: paramStr: ",paramStr,env)
 
           val entEnv' =
                EE.mark(mkStamp,EE.bind(paramEntVar,M.STRent paramRlzn,entEnv))
-          val _ = debugmsg "--elabFct[BaseFct]: param EE.bind"
+          val _ = dbsaynl "--elabFct[BaseFct]: param EE.bind"
 
-	  val _ = debugmsg "elabmod before env'\n"
+	  val _ = dbsaynl "elabmod before env'\n"
           val env' =
               case paramNameOp
                 of NONE => MU.openStructure(env,paramStr)
                  | SOME _ => SE.bind(paramName, B.STRbind paramStr, env)
-          val _ = debugmsg "--elabFct[BaseFct]: param bound/opened"
+          val _ = dbsaynl "--elabFct[BaseFct]: param bound/opened"
 
           val epContext' = EPC.enterClosed epContext
 
           (* fill in pathEnv with paths for elements of paramStr *)
           val _ = mapPaths(EPC.enterOpen(epContext', SOME paramEntVar),paramStr,flex)
           val _ = EPC.bindStrPath(epContext',MU.strId paramStr,paramEntVar)
-          val _ = debugmsg "--elabFct[BaseFct]: epContext initialized"
+          val _ = dbsaynl "--elabFct[BaseFct]: epContext initialized"
 
           (* must elaborate result signature before the body is elaborated
 	     so that epContext' is not changed *)
@@ -1113,7 +1104,7 @@ case fctexp
 		    | Opaque x =>      (SOME(mkStamp()), SOME (doSig x), false)
 	      end
 
-          val _ = debugmsg "--elabFct[BaseFct]: result signature elaborated"
+          val _ = dbsaynl "--elabFct[BaseFct]: result signature elaborated"
 
           (* adjust the EU.context value; the depth refers to the number
              of enclosing functor abstractions. (ZHONG) *)
@@ -1125,7 +1116,7 @@ case fctexp
           val (bodyDecAbsyn, bodyStr, bodyExp, bodyDee) =
               elabStr(body, NONE, env', entEnv', context', tdepth, epContext', entsv,
                       IP.IPATH [], region, compInfo)
-          val _ = debugmsg "--elabFct[BaseFct]: body elaborated"
+          val _ = dbsaynl "--elabFct[BaseFct]: body elaborated"
           val _ = showStr("--elabFct[BaseFct]: bodyStr: ",bodyStr,env)
 
           (* constrain by result signature, either transparent or opaque *)
@@ -1137,7 +1128,7 @@ case fctexp
 			     entsv, depth', entEnv', IP.IPATH[], env',
 			     region, compInfo)
 
-          val _ = debugmsg "--elabFct[BaseFct]: body constrained"
+          val _ = dbsaynl "--elabFct[BaseFct]: body constrained"
 
           val fctExp = M.LAMBDA{param=paramEntVar,body=bodyExp'}
 
@@ -1166,7 +1157,7 @@ case fctexp
 		   end
 		 | STRSIG _ => bug "elabFct"
 
-          val _ = debugmsg "--elabFct[BaseFct]: resFct defined"
+          val _ = dbsaynl "--elabFct[BaseFct]: resFct defined"
 
           val resDec =
             let val x = A.FCTfct{param=paramStr, argtycs=paramTps,
@@ -1174,7 +1165,7 @@ case fctexp
              in A.FCTdec [A.FCTB {name=name, fct=resFct, def=x}]
             end
 
-          val _ = debugmsg "<<elabFct[BaseFct]"
+          val _ = dbsaynl "<<elabFct[BaseFct]"
           val _ = showStr("--elabFct[BaseFct]: paramStr: ",paramStr,env)
 
        in (resDec, resFct, fctExp, EE.empty)
@@ -1212,18 +1203,20 @@ and elabStrbs(strbs: Ast.strb list,
               epContext: EPC.context,
               rpath: IP.path,
               region: SourceMap.region,
-              compInfo as {mkStamp,mkLvar=mkv,error,...}: EU.compInfo)
+              compInfo as {mkStamp, mkLvar=mkv, source}: EU.compInfo)
             : A.dec * M.entityDec * SE.staticEnv * entityEnv =
 let
+
+val error = EM.error source
 
 val depth = (case context
 	      of EU.INFCT{depth=d, ...} => d
                | _ => DI.top)
 
-val _ = debugmsg ">>elabStrbs"
+val _ = dbsaynl ">>elabStrbs"
 
 fun loop([], decls, entDecls, env, entEnv) =
-      let val _ = debugmsg "<<elabStrbs"
+      let val _ = dbsaynl "<<elabStrbs"
           val resDec = A.STRdec (rev decls)
           val entDec = case entDecls of [] => M.EMPTYdec
                                       | _ => seqEntDec(rev entDecls)
@@ -1231,12 +1224,12 @@ fun loop([], decls, entDecls, env, entEnv) =
       end
 
   | loop(strb::rest, decls, entDecls, env, entEnv) =
-      let val _ = debugmsg ">>elabStrbs"
+      let val _ = dbsaynl ">>elabStrbs"
           val (name, constraint, def, region') =
               case stripMarkStrb(strb,region)
                 of (Strb{name=n,constraint=c,def=d},r) => (n, c, d, r)
                  | _ => bug "non structure bindings in elabStrbs"
-          val _ = debugmsg("--elabStrbs: structure "^S.name name)
+          val _ = dbsaynl("--elabStrbs: structure "^S.name name)
 
           val baseEntVar = mkStamp ()
           (* make up an entity variable for the current str declaration
@@ -1294,13 +1287,13 @@ fun loop([], decls, entDecls, env, entEnv) =
                                          | _ => false))
                        then str
                        else (error region' EM.COMPLAIN
-                             ("structure " ^ S.name(IP.last rpath) ^
+                             ("structure " ^ S.name (PN.getStrNameIP rpath) ^
                               " defined by partially applied functor")
                              EM.nullErrorBody;
                              ERRORstr)
 		    else str
 
-          val _ = debugmsg "--elabStrbs: elabStr done"
+          val _ = dbsaynl "--elabStrbs: elabStr done"
 (*
 	  val _ = showStr("unconstrained structure: ",str,env)
 *)
@@ -1332,7 +1325,7 @@ fun loop([], decls, entDecls, env, entEnv) =
                           EE.bind(ev, M.STRent M.bogusStrEntity, deltaEntEnv))
                 | _ => bug "unexpected case in elabStrbs: deltaEntEnv"
 
-          val _ = debugmsg "--elabStrbs: constrain done"
+          val _ = dbsaynl "--elabStrbs: constrain done"
 
           val _ = showStr ("--elabStrbs: resStr: ", resStr, env)
           (*
@@ -1364,7 +1357,7 @@ fun loop([], decls, entDecls, env, entEnv) =
 			  val entEnv2 = EE.bind(baseEntVar, strEnt, entEnv1)
 			  val entEnv3 = EE.mark(mkStamp, entEnv2)
 
-			  val _ = debugmsg "--elabStrbs: about to mapPaths bindStr"
+			  val _ = dbsaynl "--elabStrbs: about to mapPaths bindStr"
 			  (*
 			   * We are remapping entPaths for elements of
 			   * the new structure unconditionally, even if
@@ -1373,7 +1366,7 @@ fun loop([], decls, entDecls, env, entEnv) =
 			   *)
 			  val _ = mapPaths(EPC.enterOpen(epContext, SOME baseEntVar),
 					   bindStr, flex)
-			  val _ = debugmsg "--elabStrbs: mapPaths bindStr done"
+			  val _ = dbsaynl "--elabStrbs: mapPaths bindStr done"
 			  val _ = (case bindStr
 				    of STR { sign, rlzn, ... } =>
 				       EPC.bindStrPath(epContext,
@@ -1388,9 +1381,9 @@ fun loop([], decls, entDecls, env, entEnv) =
        in loop(rest, decls', entDecls', env', entEnv')
       end   (* function loop (strb::rest) *)
 
- in loop(strbs, [], [], SE.empty, EE.empty)
-      handle EE.Unbound =>
-	     (debugmsg "$elabStrbs0(StrDec): EE.Unbound";
+ in loop(strbs, nil, nil, SE.empty, EE.empty)
+    handle EE.Unbound =>
+	     (dbsaynl "$elabStrbs0(StrDec): EE.Unbound";
               raise EE.Unbound)
 
 end (* function elabStrbs *)
@@ -1407,10 +1400,12 @@ and elabDecl0
        epContext: EPC.context,
        rpath: IP.path,
        region: SourceMap.region,
-       compInfo as {mkStamp,mkLvar=mkv,error,anyErrors,transform,...}
-         : EU.compInfo)
+       compInfo as {mkStamp, mkLvar=mkv, source} : EU.compInfo)
       : A.dec * entityDec * SE.staticEnv * entityEnv =
 
+let val error = EM.error source
+    val {anyErrors, ...} = EM.errors source
+in			   
 (case decl
   of StrDec strbs =>
        elabStrbs(strbs, true, env0, entEnv0, context, tdepth, epContext,
@@ -1428,13 +1423,13 @@ and elabDecl0
        end
 
    | FctDec fctbs =>
-       let val _ = debugmsg ">>elabFctbs"
+       let val _ = dbsaynl ">>elabFctbs"
 
            fun loop([], decls, entDecls, env, entEnv) =
                  let val resDec = A.FCTdec (rev decls)
                      val entDec = case entDecls of [] => M.EMPTYdec
                                                  | _ => seqEntDec(rev entDecls)
-                     val _ = debugmsg "<<elabFctbs"
+                     val _ = dbsaynl "<<elabFctbs"
                   in (resDec, entDec, env, entEnv)
                  end
 
@@ -1443,7 +1438,7 @@ and elabDecl0
                        case stripMarkFctb(fctb,region)
                         of (Fctb{name=n, def=d}, r) => (n, d, r)
                          | _ => bug "non functor bindings for FctDec fctbs"
-                     val _ = debugmsg("--elabDecl0: functor "^S.name name)
+                     val _ = dbsaynl("--elabDecl0: functor "^S.name name)
 
                      (* dynamic access is already assigned in elabFct *)
                      val (fctDecAbsyn, fct, fctExp, deltaEntEnv) =
@@ -1492,15 +1487,15 @@ and elabDecl0
                  end
 
         in loop(fctbs, nil, nil, SE.empty, EE.empty)
-           handle EE.Unbound => (debugmsg("$elabDecl0: FctDec");
+           handle EE.Unbound => (dbsaynl("$elabDecl0: FctDec");
                                 raise EE.Unbound)
        end
 
    | SigDec sigbs =>
-       let val _ = debugmsg ">>elabSigbs"
+       let val _ = dbsaynl ">>elabSigbs"
 
            fun loop([], sigs, env) =
-                 let val _ = debugmsg "<<elabSigbs"
+                 let val _ = dbsaynl "<<elabSigbs"
                   in (A.SIGdec (rev sigs), M.EMPTYdec, env, EE.empty)
                  end
 
@@ -1509,7 +1504,7 @@ and elabDecl0
                        case stripMarkSigb(sigb,region)
                         of (Sigb{name=n,def=d},r) => (n, d, r)
                          | _ => bug "non signature bindings for SigDec sigbs"
-                     val _ = debugmsg("--elabDecl0: signature "^S.name name)
+                     val _ = dbsaynl("--elabDecl0: signature "^S.name name)
 
                      val s =
                        ES.elabSig {sigexp=def, nameOp=SOME name, env=env0,
@@ -1517,11 +1512,10 @@ and elabDecl0
                                    region=region', compInfo=compInfo}
 		     val _ = (* instantiate to check well-formedness,
                               * but only if there have been no earlier errors *)
-			if !ElabControl.instantiateSigs
-                           andalso not(!(#anyErrors compInfo))
+			if !ElabControl.instantiateSigs andalso not (!anyErrors)
 			then (INS.instParam
 			        {sign=s,entEnv=EE.empty,tdepth=DI.top,
-				 rpath=InvPath.empty,region=region',
+				 rpath=IP.empty,region=region',
 				 compInfo=compInfo};
 			      ())
 			else ()
@@ -1529,15 +1523,15 @@ and elabDecl0
                  end
 
         in loop(sigbs, nil, SE.empty)
-           handle EE.Unbound => (debugmsg("$elabDecl0: SigDec");
+           handle EE.Unbound => (dbsaynl("$elabDecl0: SigDec");
                                 raise EE.Unbound)
        end
 
    | FsigDec fsigbs =>
-       let val _ = debugmsg ">>elabFSigbs"
+       let val _ = dbsaynl ">>elabFSigbs"
 
            fun loop([], fsigs, env) =
-                 let val _ = debugmsg "<<elabFSigbs"
+                 let val _ = dbsaynl "<<elabFSigbs"
                   in (A.FSIGdec(rev fsigs), M.EMPTYdec, env, EE.empty)
                  end
 
@@ -1546,7 +1540,7 @@ and elabDecl0
                        case stripMarkFsigb(fsigb,region)
                          of (Fsigb{name=n,def=d},r) => (n, d, r)
                           | _ => bug "non fctSig bindings for FsigDec fsigbs"
-                     val _ = debugmsg("--elabDecl0: fctsig "^S.name name)
+                     val _ = dbsaynl("--elabDecl0: fctsig "^S.name name)
 
                      val s =
                        ES.elabFctSig {fsigexp=def, nameOp=SOME name, env=env0,
@@ -1556,7 +1550,7 @@ and elabDecl0
                  end
 
         in loop(fsigbs, nil, SE.empty)
-           handle EE.Unbound => (debugmsg("$elabDecl0: FsigDec");
+           handle EE.Unbound => (dbsaynl("$elabDecl0: FsigDec");
                                  raise EE.Unbound)
        end
 
@@ -1593,7 +1587,7 @@ and elabDecl0
        end
 
    | SeqDec decls =>
-       let val _ = debugmsg ">>elabSeqDec"
+       let val _ = dbsaynl ">>elabSeqDec"
 
            fun loop([], asdecls, entdecls, env, entEnv) =
                  let val resAbsyn = A.SEQdec(rev asdecls)
@@ -1603,9 +1597,8 @@ and elabDecl0
                                (seqEntDec(rev entdecls), entEnv)
 			    | _ => (M.EMPTYdec, EE.empty)
 
-                     val _ = debugPrint("elabseq - symbols: ", ED.ppSymList,
-                                        ED.envSymbols env)
-                     val _ = debugmsg "<<elabSeqDec"
+                     val _ = debugPrint ("elabseq - symbols:", PPS.fmtSymList (ED.envBoundSymbols env))
+                     val _ = dbsaynl "<<elabSeqDec"
 
                   in (resAbsyn, entDec', env, entEnv')
                  end
@@ -1626,7 +1619,7 @@ and elabDecl0
 
         in loop(decls, nil, nil, SE.empty, EE.empty)
            handle EE.Unbound =>
-	     (debugmsg("$elabDecl0: SeqDec");
+	     (dbsaynl("$elabDecl0: SeqDec");
 	      raise EE.Unbound)
        end
 
@@ -1643,7 +1636,7 @@ and elabDecl0
          in (dec, entDec, env, entEnv)
         end
         handle EE.Unbound =>
-	  (debugmsg("$elabDecl0: TypeDec");
+	  (dbsaynl("$elabDecl0: TypeDec");
 	   raise EE.Unbound))
 
    | DatatypeDec (x as {datatycs,withtycs}) =>
@@ -1698,7 +1691,7 @@ and elabDecl0
 			   end
 			 | _ => (M.EMPTYdec,EE.empty)
 		   val tyc' = T.GENtyc{stamp=stamp, arity=arity,
-				       eq=eq, path=InvPath.extend(InvPath.empty,name),
+				       eq=eq, path=IP.extend(IP.empty,name),
 				       stub=stub, kind=dt}
 		   val resDec = A.DATATYPEdec{datatycs=[tyc' (* tyc *)],
 					      withtycs=[]}
@@ -1731,19 +1724,17 @@ and elabDecl0
              *)
 
             fun chkError () = !anyErrors
-            (* note that transform is applied to decl before type checking *)
-            val env1 = SE.atop(env', env0)
-            val decl0 = Typecheck.decType(env1, transform decl,
-                                          top, error, chkError, region)
+            val env1 = SE.atop (env', env0)
+            val decl0 = Typecheck.decType (env1, decl, top, error, chkError, region)
 	    val decl1 = if !anyErrors then decl0
 			else MatchTrans.transMatchDec (decl0, env1, error, region)
             val (entEnv, entDec) =
-                bindNewTycs(context, epContext, mkStamp, abstycs, withtycs,
-			    rpath, error region)
+                bindNewTycs (context, epContext, mkStamp, abstycs, withtycs,
+			     rpath, error region)
          in (decl1, entDec, env', entEnv)
         end
         handle EE.Unbound =>
-	  (debugmsg("$elabDecl0: AbstypeDec");
+	  (dbsaynl("$elabDecl0: AbstypeDec");
 	   raise EE.Unbound))
 
    | MarkDec(decl',region') =>
@@ -1763,25 +1754,25 @@ and elabDecl0
             val (decl0, env') = EC.elabDec(dec, env0, isFree,
                                            rpath, region, compInfo)
                                 handle EE.Unbound =>
-				  (debugmsg("$EC.elabDec"); raise EE.Unbound)
-            val _ = debugmsg (">>elabDecl0.dec[after EC.elabDec: top="
+				  (dbsaynl("$EC.elabDec"); raise EE.Unbound)
+            val _ = dbsaynl (">>elabDecl0.dec[after EC.elabDec: top="
                               ^ (Bool.toString top))
-            val decl1 = transform decl0
-            val _ = debugmsg ">>elabDecl0.dec [after transform]"
+            val decl1 = decl0
+            val _ = dbsaynl ">>elabDecl0.dec [after transform]"
             fun chkError () = !anyErrors
 	    val env1 = SE.atop(env',env0)
             val decl2 = Typecheck.decType(env1, decl1,
                                           top, error, chkError, region)
-                         handle EE.Unbound => (debugmsg("$decType");
+                         handle EE.Unbound => (dbsaynl("$decType");
                                                raise EE.Unbound)
 	    val decl3 = if !anyErrors then decl2
 			else MatchTrans.transMatchDec (decl2, env1, error, region)
-            val _ = debugmsg ">>elabDecl0.dec[after decType]"
+            val _ = dbsaynl ">>elabDecl0.dec[after decType]"
          in (decl3, M.EMPTYdec, env', EE.empty)
         end handle EE.Unbound =>
-		   (debugmsg("$elabDecl0: CoreDec"); raise EE.Unbound))
+		   (dbsaynl("$elabDecl0: CoreDec"); raise EE.Unbound))
     (* end case *))
-    (* end elabDecl0 *)
+end (* elabDecl0 *)
 
 (*** the top-level wrapper for the elabDecl0 function ***)
 fun elabDecl {ast, statenv, entEnv, context, level, tdepth,

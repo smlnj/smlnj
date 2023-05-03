@@ -23,11 +23,10 @@ struct
 local structure LE = LtyExtern
       structure LV = LambdaVar
       structure DA = Access
-      structure DI = DebIndex
       structure PO = Primop
       structure S  = LV.Set
-      structure PF = PrintFlint
-      structure PP = PrettyPrint
+      structure PP = Formatting
+      structure PF = PrintFormat
       structure PPF = PPFlint
       open FLINT
 
@@ -35,33 +34,18 @@ fun bug s = ErrorMsg.impossible ("ChkFlint: "^s)
 val say = Control_Print.say
 val anyerror = ref false
 
-(* pretty printing functions (linewidth?, newlines?) *)
+(* pretty printing functions *)
 
-val with_pp_nl  = PP.with_default_pp  (* always appends newline *)
+fun ppLexp d lexp = PF.printFormat (PPF.fmtLexp d lexp)
 
-val with_pp  = PP.with_default_pp_sans  (* omits final newline *)
+fun prMsgLty (msg, lty) = (say msg; ppLexp 10 lexp)
 
-fun ppTKind tkind =
-      with_pp (fn ppstrm => PPLty.ppTKind 100 ppstrm tkind)
-fun ppTyc tyc =
-      with_pp (fn ppstrm => (PPLty.ppTyc 100 ppstrm tyc))
-fun ppLty lty =
-      with_pp (fn ppstrm => (PPLty.ppLty 100 ppstrm lty))
-fun ppLexp (d: int) lexp =
-      with_pp (fn ppstrm => (PPF.ppLexp d ppstrm lexp))
-fun ppValue value =
-      with_pp (fn ppstrm => (PP.string ppstrm (PF.valueToString value)))
-fun prMsgLty (msg, lty) =
-      with_pp (fn ppstrm => (PP.string ppstrm msg; PPF.ppLexp d ppstrm lexp))
+fun fmtLtyList (label, ltys) = 
+    PP.vblock [PP.text label, PP.indent 2 (PP.vsequence PP.empty (map (PPT.fmtLty 100) ltys))]
 
-fun prList (prfun: 'a -> unit) (s: string) (ts: 'a list) =
-    let fun loop [] = say "<empty list>\n"
-	  | loop [x] = (prfun x; say "\n")
-	  | loop (x::xs) = (prfun x; say "\n* and\n"; loop xs)
-     in say s; loop ts
-    end
-
-fun print2Lts (s,s',lt,lt') = (prList ppLty s lt; prList ppLty s' lt')
+fun print2lists (label1, label2, ltys1, ltys2) =
+    PF.printFormat
+      (PP.vblock [fmtLtyList (label1, ltys1), fmtLtyList (label2, ltys2)])
 
 
 (****************************************************************************
@@ -76,7 +60,7 @@ fun error (lexp, errfn) =
     (anyerror := true;
      say "\n************************************************************\
          \\n**** FLINT type checking failed: ";
-     errfn () before (say "\n** term:\n"; ppLexp  3 lexp))
+     errfn () before (say "\n** term:\n"; ppLexp 3 lexp))
 
 (* errMsg : lexp * string * 'a -> 'a *)
 fun errMsg (lexp, msg, result) = error (lexp, fn () => (say msg; result))
@@ -85,11 +69,14 @@ fun catchExn f (le, g) =
     f () handle ex =>
 	   error (le, fn () => g () before say ("\n** exception " ^ exnName ex ^ " raised"))
 
-type depth = DebIndex.depth   (* rep = int *)
 type kindenv = LE.tkindEnv    (* = tkind list list -- lty.sml *)
-type varenv = LE.ltyEnv       (* = (lty * DI.depth) LambdaVar.Map.map -- ltybasic.sml *)
+type varenv = LE.ltyEnv       (* = (lty * depth) LambdaVar.Map.map -- ltybasic.sml *)
 type envs = kindenv * varenv * depth
 		   
+(* deBruijn context, used to calculate deBruijn index for TC_DVAR *)
+type depth =  int
+val top : depth = 0
+
 fun check (postReify: bool) (envs: envs) lexp =
     let val definedLvars = ref S.empty
         (* imperative table -- keeps track of already bound variables,
@@ -127,10 +114,10 @@ fun check (postReify: bool) (envs: envs) lexp =
 	      let val len_ts = Int.toString (length ts)
 		  val len_ts' = Int.toString (length ts')
 		  fun errFn () =
-		      print2Lts
+		      print2lists
 			(concat [s, ": type list mismatch (", len_ts,
-				 " vs ", len_ts', ")\n** expected types:\n"],
-			 "** actual types:\n",
+				 " vs ", len_ts', ")\n** expected types:"],
+			 "** actual types:",
 			 ts, ts')
 	       in error (le, errFn)
 	      end
@@ -154,9 +141,13 @@ fun check (postReify: bool) (envs: envs) lexp =
 	      (fn () => ltTAppChk (lt, ts, kenv))
 	      (le,
 	       fn () =>
-		  (prMsgLty (s ^ ": Kind conflict\n** function Lty:\n", lt);
-		   prList ppTyc "\n** argument Tycs:\n" ts;
-		   []))
+		  printFormatNL
+		    (vblock [text (s ^ ": Kind conflict"),
+		    	   text "** function Lty:",
+			   PPT.fmtLty 100 lt,
+			   text "** argument Tycs:",
+			   PP.formatList (PPT.fmtTyc 100) ts]),
+	       []))
 
         (* ltArrow : (lexp * string) -> (cconv * lty list * lty list) -> lty *)
 	fun ltArrow (le,s) (cconv, dom_ltys, rlts) =
@@ -167,13 +158,13 @@ fun check (postReify: bool) (envs: envs) lexp =
 		     (fn () => LE.ltc_arrow (fflag, dom_ltys, ran_ltys))
 		     (le,
 		      fn () =>
-		      (print2Lts
-			(s ^ ": deeply polymorphic non-functor\n** parameter types:\n",
-			 "** result types:\n",
+		      (print2lists
+			(s ^ ": deeply polymorphic non-functor\n** parameter types:",
+			 "** result types:",
 			 dom_ltys, ran_ltys);
 		      LE.ltc_void))))
 
-	(* typeInEnv : LE.tkindEnv * LE.ltyEnv * DI.depth -> lexp -> lty list *)
+	(* typeInEnv : LE.tkindEnv * LE.ltyEnv * depth -> lexp -> lty list *)
 	fun typeInEnv (kenv: LE.tkindEnv, venv: LE.ltyEnv, d: int) =
 	let fun extEnv (lv,lt,ve) = LE.ltInsert (ve,lv,lt,d)
 	    fun bogusBind (lv,ve) = extEnv (lv, LE.ltc_void, ve)
@@ -299,7 +290,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 		       | TFN ((tfk,lv,tks,e), e') =>
 			   let fun getkind (tv,tk) = (defineLvar le tv; tk)
 			       val ks = map getkind tks
-			       val lts = typeInEnv (LE.tkInsert (kenv,ks), venv, DI.next d) e
+			       val lts = typeInEnv (LE.tkInsert (kenv,ks), venv, d+1) e
 			    in defineLvar le lv;
 			       typeWith (lv, LE.ltc_poly (ks,lts)) e'
 			   end
@@ -449,8 +440,8 @@ in (* toplevel local *)
  *  MAIN FUNCTION --- val checkTop : FLINT.fundec * typsys -> bool          *
  ****************************************************************************)
 fun checkTop ((fkind, lvar, args, lexp) : fundec, postReify: bool) =
-    let val ve = foldl (fn ((v,lty), ve) => LE.ltInsert (ve, v, lty, DI.top)) LE.initLtyEnv args
-	val err = check postReify (LE.initTkEnv, ve, DI.top) lexp
+    let val ve = foldl (fn ((v,lty), ve) => LE.ltInsert (ve, v, lty, top)) LE.initLtyEnv args
+	val err = check postReify (LE.initTkEnv, ve, top) lexp
 	val err = case fkind
 		    of {cconv=CC_FCT,...} => err
 		     | _ => (say "**** Not a functor at top level\n"; true)
@@ -464,7 +455,7 @@ val checkTop =
  *  MAIN FUNCTION --- val checkExp : FLINT.lexp * typsys -> bool            *
  *  (currently unused?)                                                     *
  ****************************************************************************)
-fun checkExp (le,phase) = check phase (LE.initTkEnv, LE.initLtyEnv, DI.top) le
+fun checkExp (le,phase) = check phase (LE.initTkEnv, LE.initLtyEnv, top) le
 
 end (* toplevel local *)
 end (* structure ChkFlint *)

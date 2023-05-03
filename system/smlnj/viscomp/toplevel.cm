@@ -1,0 +1,12 @@
+(* smlnj/viscomp/toplevel.cm
+ *
+ * Top level, interactive system
+ *
+ * (C) 2023 The Fellowship of SML/NJ (www.smlnj.org)
+ *)
+
+Library
+	group($compiler/TopLevel/toplevel.cm)
+is
+	(* reference to our only group... *)
+	$compiler/TopLevel/toplevel.cm

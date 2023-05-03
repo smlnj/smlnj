@@ -4,11 +4,13 @@
  * All rights reserved.
  *)
 
-(* Lty: definition of "raw" (or internal) types ltyI and tycI and their
- * hash-consed version lty and tyc -- the basic types and "contstructors"
- * for PLambda/FLINT types. 
- * Hash-consing machinery for lty and tyc.
- * Nadathur closure machinery for type functions.
+(* Lty:
+ * 1. definition of "raw" (or internal) types ltyI and tycI and their
+ *    hash-consed version lty and tyc -- the basic "types" (lty) and "constructors" (tyc)
+ *    for PLambda/FLINT types. 
+ * 2. Hash-consing machinery for lty and tyc and coercions between "raw" ltyI and tycI
+ *    representations and the hash-cons versions lty and tyc.
+ * 3. Nadathur closure machinery for type functions.
  * [DBM, 2021.10] *)
 
 structure Lty : LTY =
@@ -28,30 +30,36 @@ local (* hashconsing *)
   val BVAL = MVAL * 2  (* bound on encoded tvars of innermost binder *)
 in
 
-(* enc_tvar: encoded type variables = deBruijn indexes * binder arity indexes,
- * encoded as a single int *)
+(* enc_tvar: encoded type variables are integers representing 
+ * deBruijn indexes * binder index pairs (d,k). *)
 (* Type lambda bindings (TC_FN) bind several variables at a time,
  * i.e. they are n-ary for some n, with each type variable given a kind.
+ *
  * A type variable is represented by a pair (d,k), where d is a
  * 1-based deBruijn index designating a lambda binder by its lambda
  * nesting level, counting inside out, and k is a 0-based index
- * into the list of the type variables bound by that binder.
+ * into the list of the type variables bound by that binder
+ * (k < "arity" of binder).
+ *
  * These (d,k) pairs are encoded into a single integer by tvEncode,
  * and the pair can be recovered from its encoding by tvDecode.
  * ASSUMPTION: k < MVAL = 10000. *)
 
 type enc_tvar = int  (* tv : enc_tvar => tv >= MVAL *)
-fun tvEncode (d, k) = d * MVAL + k   (* d >= 1, k >= 0, k < MVAL *)
+fun tvEncode (d, k) = d * MVAL + k   (* d >= 1, 0 <= k < MVAL *)
 fun tvDecode x = ((x div MVAL), (x mod MVAL))
 
-(* enc_tvars < BVAL are bound by the innermost TC_FN binder.
+(* enc_tvars < BVAL are bound by the innermost TC_FN binder, because d = 1
+ * for such enc_tvars.
  * exitLevel takes a list of enc_tvars and eliminates those bound
  * by the innermost binder, and decrements the d-level of the remainder,
  * thus effectively popping out of the innermost binding context.
  *)
 fun exitLevel (xs: enc_tvar list) : enc_tvar list =
     let fun h ([], x) = rev x
-          | h (a::r, x) = if a < BVAL then h(r, x) else h(r, (a-MVAL)::x)
+          | h (a::r, x) = if a < BVAL
+			  then h(r, x)   (* d = 1, eliminated *)
+			  else h(r, (a-MVAL)::x)  (* d > 1:  d decremented, k unchanged *)
     in h(xs, [])
     end
 
@@ -137,7 +145,7 @@ datatype fflag                                 (* function "calling conventions"
 
 (** definitions of concrete plambda type "constructors" *)
 datatype tycI
-  = TC_VAR of DebIndex.index * int             (* deBruijn tyc variables [why not enc_tvar?] *)
+  = TC_DVAR of int * int             (* deBruijn index * binding index *)
   | TC_NVAR of tvar                            (* "named" tyc variables; tvar = lvar = int (for now) *)
   | TC_PRIM of PrimTyc.primtyc                 (* primitive tyc *)
 
@@ -197,7 +205,7 @@ withtype lty = ltyI hash_cell                  (* hash-consed lty cell *)
  *  notice that there is no normalization *)
 fun unknown (tc: tyc) =
   (case #2(!tc)
-    of (TC_VAR _ | TC_NVAR _) => true
+    of (TC_DVAR _ | TC_NVAR _) => true
      | (TC_APP(tc, _)) => unknown tc
      | (TC_PROJ(tc, _)) => unknown tc
      | _ => false)
@@ -237,7 +245,6 @@ fun wrap_is_whnm (tc: tyc) =
 local (* hashconsing impl *)
   structure Weak = SMLofNJ.Weak
   structure PT = PrimTyc
-  structure DI = DebIndex
 
   fun bug msg = ErrorMsg.impossible("LtyKernel: "^msg)
 
@@ -254,9 +261,6 @@ local (* hashconsing impl *)
   val lt_table : lty Weak.weak list Array.array = Array.array(N,nil)
 
   fun vector2list v = Vector.foldr (op ::) [] v
-
-  fun revcat(a::rest,b) = revcat(rest,a::b)
-    | revcat(nil,b) = b
 
   fun combine [x] = itow x
     | combine (a::rest) =
@@ -275,7 +279,7 @@ local (* hashconsing impl *)
               (case Weak.strong w
                 of SOME (r as ref(h',t',_)) =>
                     if (h=h') andalso (eq {new=t, old=t'})
-                    then (Array.update(table, i, revcat(l,z)); r)
+                    then (Array.update(table, i, List.revAppend(l,z)); r)
                     else g(w::l, rest)
                  | NONE => g(l, rest))
           | g(l, []) =
@@ -317,7 +321,7 @@ local (* hashconsing impl *)
 
   fun tc_hash tc =
     case tc
-     of (TC_VAR(d, i)) => combine [1, (DI.di_key d)*10, i]
+     of (TC_DVAR(d, i)) => combine [1, d * 10, i]
       | (TC_NVAR v) => combine[15, LambdaVar.toId v]
       | (TC_PRIM pt) => combine [2, PT.pt_toint pt]
       | (TC_FN(ks, t)) => combine (3::(getnum t)::(map getnum ks))
@@ -390,7 +394,7 @@ local (* hashconsing impl *)
 
   fun tc_aux tc =
       case tc
-       of (TC_VAR(d, i)) => AX_REG(true, [tvEncode(d, i)], [])
+       of (TC_DVAR(d, i)) => AX_REG(true, [tvEncode(d, i)], [])
         | (TC_NVAR v) => AX_REG(true, [], [v])
         | (TC_PRIM pt) => baseAux
         | (TC_APP(ref(_, TC_FN _, AX_NO), _)) => AX_NO
