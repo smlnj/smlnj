@@ -1,4 +1,4 @@
-(* compiler/NCG/codegen.cm
+(* compiler/Codegen/codegen.cm
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -7,13 +7,9 @@
  * translation from CPS to CFG (cps-to-cfg)
  * CFG pickling (for transmission to runtime system and LLVM code generator?)
  * Code generation (CodeGeneratorFn)
- *
- * This was NewCodeGen/codegen.cm, and will become CodeGen/codegen.cm.
  *)
 
 Library
-
-  (* Exports: re-exported by new-core.cm? Why? *)
 
   structure CFG             (* cfg/cfg.sml *)
   structure PPCfg           (* cfg/ppcfg.sml *)
@@ -22,26 +18,44 @@ Library
 
 is
 
-NCG/cfg/cfg.sml
-NCG/cfg/ppcfg.sml
-NCG/cfg/cfg-util.sml
+(* members *)
 
-NCG/cfg-pickle/cfg-pickle.sig
-NCG/cfg-pickle/cfg-pickler.sml
-NCG/cfg-pickle/cfg-file-pickle.sml
-NCG/cfg-pickle/cfg-memory-pickle.sml
-NCG/cfg-pickle/lambda-var-pickle.sml
+CodeGen/cfg/cfg.sml
+CodeGen/cfg/ppcfg.sml
+CodeGen/cfg/cfg-util.sml
 
-NCG/cps-to-cfg/cps-info.sml
-NCG/cps-to-cfg/invoke-gc.sml
-NCG/cps-to-cfg/cps-to-cfg-fn.sml
-NCG/cps-to-cfg/tagged-arith.sml
+CodeGen/cps-to-cfg/cps-info.sml
+CodeGen/cps-to-cfg/invoke-gc.sml
+CodeGen/cps-to-cfg/cps-to-cfg-fn.sml
+CodeGen/cps-to-cfg/tagged-arith.sml
 
-NCG/main/code-gen-fn.sml
-NCG/main/mach-spec.sig
-NCG/main/default-machspec-fn.sml
-NCG/main/object-desc.sig
-NCG/main/object-desc.sml
+CodeGen/cfg-pickle/cfg-pickle.sig
+CodeGen/cfg-pickle/cfg-pickler.sml
+CodeGen/cfg-pickle/cfg-file-pickle.sml
+CodeGen/cfg-pickle/cfg-memory-pickle.sml
+CodeGen/cfg-pickle/lambda-var-pickle.sml
 
-(* NOTE: NCG/cps-to-cfg/cluster.sml is an unfinished replacement for CPS/main/cluster.sml
+CodeGen/main/code-gen-fn.sml
+CodeGen/main/mach-spec.sig
+CodeGen/main/default-machspec-fn.sml
+CodeGen/main/object-desc.sig
+CodeGen/main/object-desc.sml
+
+(* imports *)
+
+(* basis *)
+$smlnj/basis/basis.cm
+
+(* viscomp *)
+$smlnj/viscomp/basics.cm   (* proxy for $compiler/Basics/basics.cm *)
+$smlnj/viscomp/elabdata.cm (* proxy for $compiler/ElabData/elabdata.cm *)
+$smlnj/viscomp/execute.cm  (* proxy for: $compiler/Execution/execute.cm *)
+$smlnj/viscomp/toplevel.cm (* proxy for: $compiler/TopLevel/toplevel.cm *)
+$smlnj/viscomp/cps.cm      (* proxy for: $compiler/CPS/cps.cm *)
+
+(* other *)
+$smlnj/asdl/asdl-lib.cm    (* proxy for: $SMLNJ-ASDL-LIB/asdl-lib.cm *)
+$compiler/Library/const-arith/const-arith-lib.cm
+
+(* NOTE: CodeGen/cps-to-cfg/cluster.sml is an unfinished replacement for CPS/main/cluster.sml
  * and therefore should not be compiled or exported from this Library. *)

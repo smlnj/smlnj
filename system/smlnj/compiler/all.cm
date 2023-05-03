@@ -74,6 +74,9 @@ Library
 *)
         structure Arm64UnixCMB
 is
+(* members -- none *)
+
+(* imports *)
 	$smlnj/compiler/amd64.cm
 	$smlnj/compiler/arm64.cm
 

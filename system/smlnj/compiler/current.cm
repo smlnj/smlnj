@@ -10,6 +10,7 @@
 
 (cm-init)
 Library
+(*
 	(* signatures *)
 	signature STATS
 	signature CONTROL
@@ -44,7 +45,7 @@ Library
 	signature PPTYPE
 	signature ACCESS
 	signature UNIFY
-
+*)
 	(* frontend stuff *)
 	structure Stats
 	structure Control
@@ -95,12 +96,14 @@ Library
 	structure Backend
 
 is
+(* members/imports *)
+
 # if defined(ARCH_AMD64)
+       amd64.sml (* Backend *)
        $smlnj/compiler/amd64.cm
-       amd64.sml
 # elif defined(ARCH_ARM64)
+       arm64.sml (* Backend *)
        $smlnj/compiler/arm64.cm
-       arm64.sml
 # else
 #   error Strange architecture!
 # endif

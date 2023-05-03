@@ -9,6 +9,7 @@
  *)
 
 Library
+(*
 	(* signatures *)
 	signature STATS
 	signature CONTROL
@@ -43,7 +44,7 @@ Library
 	signature PPTYPE
 	signature ACCESS
 	signature UNIFY
-
+*)
 	(* frontend stuff *)
 	structure Stats
 	structure Control
@@ -93,10 +94,14 @@ Library
 	(* the arm64 backend(s) *)
 	structure Arm64Backend
 is
+(* members -- none *)
+
+(* imports *)
 	$smlnj/viscomp/basics.cm
 	$smlnj/viscomp/parser.cm
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/elaborate.cm
 	$smlnj/viscomp/execute.cm
-	$smlnj/viscomp/core.cm
+	$smlnj/internal/smlnj-version.cm
 	$smlnj/viscomp/arm64.cm
+	

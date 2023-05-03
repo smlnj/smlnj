@@ -28,11 +28,19 @@ Library
 	structure AMD64UnixCMB
 # endif
 is
+(* members *)
+	(* build boot environments *)
+	boot-env-fn.sml
+	boot-env.sml
+
+	(* glue code (build the interactive system) *)
+	int-sys.sml
+
+(* imports *)
 	$smlnj/init/init.cmi : cm
 
 	$smlnj/basis/basis.cm
 	$smlnj/viscomp/basics.cm
-	$smlnj/viscomp/core.cm
 
 	(* need access to CM's "init" function *)
 	$smlnj/internal/cm0.cm
@@ -69,13 +77,6 @@ is
 # if not defined(LIGHT)
 	$smlnj/compiler/all.cm
 # endif
-
-	(* build boot environments *)
-	boot-env-fn.sml
-	boot-env.sml
-
-	(* glue code (build the interactive system) *)
-	int-sys.sml
 
 	(* need access to the Controls module initialization *)
 	$smlnj/smlnj-lib/controls-lib.cm

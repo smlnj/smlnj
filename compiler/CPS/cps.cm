@@ -21,11 +21,11 @@ Library
   functor CPSCompFn     (* main/cps-comp.sml -- fixed so it does not depend on NewCodeGen *)
 
 (*
-   CPSCompFn was called in [New]CodeGen/main/code-gen-fn.sml, but it depends on several things
-   defined in [New]CodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
-   to [New]CodeGen or its functionality should be split between a function in CSP that does not
+   CPSCompFn was called in CodeGen/main/code-gen-fn.sml, but it depends on several things
+   defined in CodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
+   to CodeGen or its functionality should be split between a function in CSP that does not
    depend on NewCodeGen, and a function in NewCodeGen that deals with the cfg part.  If we move it
-   to [New]CodeGen, we would have to export 9 CSP modules that it depends on.  See the specs for
+   to CodeGen, we would have to export 9 CSP modules that it depends on.  See the specs for
    CPS/main/cps-comp.sml in MAP-CPS.txt.
 *)
 
@@ -46,8 +46,8 @@ CPS/main/new-literals.sml
 CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 CPS/main/mach-spec.sig   (* these 3 moved (copied) from NCG/main -- they belong in CPS *)
-CPS/main/object-desc.sig
-CPS/main/object-desc.sml
+CPS/main/object-desc.sig (* OBJECT_DESC, used in mach-spec.sig *)
+CPS/main/object-desc.sml (* ObjectDesc, used only in CodeGen *)
 
 CPS/convert/convert.sml
 CPS/convert/cpstrans.sml
@@ -60,7 +60,7 @@ CPS/clos/staticprof.sml
 CPS/clos/unrebind.sml
 
 CPS/opt/contract.sml
-CPS/opt/contract-prim.sml
+CPS/opt/contract-prim.sml (* uses ConstArith *)
 CPS/opt/cpsopt.sml
 CPS/opt/divcnv.sml
 CPS/opt/eta.sml
@@ -89,3 +89,6 @@ $smlnj/basis/basis.cm
 (* smlnj-lib "incorporated" libraries *)
 $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
+
+(* other *)
+$compiler/Library/const-arith/const-arith-lib.cm   (* structure ConstArith *)

@@ -483,21 +483,26 @@ opt/
       LtyBasic*
 
       
-
 (* ---------------------------- Imports ---------------------------- *) 
 
-  basics.cm:    Target, ErrorMsg, RealConst, IntConst
-  elabdata.cm:  LambdaVar, Primop, Access
-  flint.cm:     Lty, LtyDef, LtyBasic, LtyKernel, PrimTyc, FunRecMeta,
-                PLambda, FLINT [str], FlintUtil
-  toplevel.cm:  Control, Control_CG
-  prettyprint-lib.cm: PrettyPrint
-  Library/const-arith/sources.cm [core.cm]: ConstArith
-
+  $compiler/Basics/basics.cm, (proxy: $smlnj/viscomp/basics.cm):
+     Target, ErrorMsg, RealConst, IntConst
+  $compiler/ElabData/elabdata.cm (proxy: $smlnj/viscomp/elabdata.cm)
+     LambdaVar, Primop, Access
+  $compiler/FLINT/flint.cm (proxy: $smlnj/viscomp/flint.cm)
+     Lty, LtyDef, LtyBasic, LtyKernel, PrimTyc, FunRecMeta,
+     PLambda, FLINT [str], FlintUtil
+  $compiler/TopLevel/toplevel.cm (proxy: $smlnj/viscomp/toplevel.cm)
+     Control, Control_CG
+  $smlnj-lib/PrettyPrint/prettyprint-lib.cm (proxy: $smlnj/smlnj-lib/prettyprint-lib.cm)
+     Formatting
+  $compiler/Library/const-arith/const-arith-lib.cm (no proxy)
+     ConstArith
 
 
 (* ---------------------------- Notes ---------------------------- *) 
 
 1. Eliminated (circular) dependence on codegen.cm:
-   (1) moved MACH_SPEC from NewCodeGen/main to CPS/main
+   (1) moved MACH_SPEC from CodeGen/main to CPS/main,
    (2) edited CPS/main/cps-comp to comment out debugging code dependent on CFG
+       (that debugging code needs to be restored elsewhere, in CodeGen).

@@ -9,8 +9,8 @@
  *)
 
 Library
-	(* signatures *)
 (*
+	(* signatures *)
 	signature STATS
 	signature CONTROL
 	signature SOURCE
@@ -89,16 +89,19 @@ Library
         structure BasicTypes
         structure PPType
         structure Access
-(*        structure Unify *)
+        structure Unify
 
 	(* the amd64 backend(s) *)
 	structure AMD64StdCallBackend
 	structure AMD64CCallBackend
 is
+(* members -- none *)
+
+(* imports *)
 	$smlnj/viscomp/basics.cm
 	$smlnj/viscomp/parser.cm
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/elaborate.cm
 	$smlnj/viscomp/execute.cm
 	$smlnj/viscomp/amd64.cm
-(*	$smlnj/viscomp/core.cm *)
+	$smlnj/internal/smlnj-version.cm
