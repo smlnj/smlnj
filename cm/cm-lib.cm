@@ -1,130 +1,141 @@
-(*
- * Toplevel description file for new implementation of CM
+(* $SMLNJ/cm/cm-lib.cm
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * Top level description file for CM
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * (C) 2023 The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (mattias.blume@gmail.com)
  *)
+
 Group
-	functor LinkCM
-	functor BootstrapCompileFn
 
-	signature VERSION
-	structure Version
-	structure Sharing
-	signature TOOLS
-	structure Subst
+(* ------------------------------ Exports ------------------------------ *)
 
-	structure StdConfig
+  signature TOOLS
+  signature VERSION
+
+  functor LinkCM
+  functor BootstrapCompileFn
+
+  structure Version
+  structure Sharing
+  structure Subst
+  structure StdConfig
+
 is
-	$smlnj/basis/basis.cm
-	$smlnj/smlnj-lib/smlnj-lib.cm
-	$smlnj/smlnj-lib/controls-lib.cm
-        $smlnj/smlnj-lib/prettyprint-lib.cm
 
-	(* the CM description file parser *)
-	parse/parse.sml
+(* ------------------------------ Members ------------------------------ *)
+
+  (* the CM description file parser *)
+  parse/parse.sml
 #if defined (NO_PLUGINS)
-        parse/cm.grm.sig
-        parse/cm.grm.sml
-	parse/cm.lex.sml
+  parse/cm.grm.sig
+  parse/cm.grm.sml
+  parse/cm.lex.sml
 #else
-	parse/cm.grm : MLYacc
-	parse/cm.lex : MLLex
+  parse/cm.grm : MLYacc
+  parse/cm.lex : MLLex
 #endif
 
-	semant/sharing.sml
-	semant/iinfo.sml
-	semant/group-reg.sml
+  semant/sharing.sml
+  semant/iinfo.sml
+  semant/group-reg.sml
 
-	(* semantic actions for description file parser *)
-	semant/version.sml
-	semant/members.sml
-	semant/semant.sml
+  (* semantic actions for description file parser *)
+  semant/version.sml
+  semant/members.sml
+  semant/semant.sml
 
-	(* dependency graphs *)
-	depend/graph.sml
-	depend/build.sml
-	depend/da-env.sml
-	depend/se2dae.sml
-	depend/ggraph.sml
-	depend/reachable.sml
-	depend/checksharing.sml
-	depend/mklist.sml
-	depend/indegree.sml
-	depend/index.sml
+  (* dependency graphs *)
+  depend/graph.sml
+  depend/build.sml
+  depend/da-env.sml
+  depend/se2dae.sml
+  depend/ggraph.sml
+  depend/reachable.sml
+  depend/checksharing.sml
+  depend/mklist.sml
+  depend/indegree.sml
+  depend/index.sml
 
-	depend/to-portable.sml
+  depend/to-portable.sml
 
-	(* handling SML source code *)
-	smlfile/smlinfo.sml
-	smlfile/smlinfoset.sml
-	smlfile/smlinfomap.sml
-	smlfile/skeleton.sml
-	smlfile/skel-cvt.sml
-	smlfile/skel-io.sml
-	smlfile/skel-exports.sml
+  (* handling SML source code *)
+  smlfile/smlinfo.sml
+  smlfile/smlinfoset.sml
+  smlfile/smlinfomap.sml
+  smlfile/skeleton.sml
+  smlfile/skel-cvt.sml
+  smlfile/skel-io.sml
+  smlfile/skel-exports.sml
 
-	(* handling stable groups *)
-	stable/bininfo.sml
-	stable/stabmm.sml
-	stable/stablemap.sml
-	stable/stableset.sml
-	stable/stabilize.sml
-	stable/verify.sml
+  (* handling stable groups *)
+  stable/bininfo.sml
+  stable/stabmm.sml
+  stable/stablemap.sml
+  stable/stableset.sml
+  stable/stabilize.sml
+  stable/verify.sml
 
-	(* tools for handling other source types *)
-	tools/main/lsplit-arg.sml
-	tools/main/core-tools.sig
-	tools/main/private-tools.sig
-	tools/main/public-tools.sig
-	tools/main/private-tools.sml
-	tools/main/tools-fn.sml
+  (* tools for handling other source types *)
+  tools/main/lsplit-arg.sml
+  tools/main/core-tools.sig
+  tools/main/private-tools.sig
+  tools/main/public-tools.sig
+  tools/main/private-tools.sml
+  tools/main/tools-fn.sml
 
-	(* concurrent/parallel/distributed make *)
-	concur/sources.cm
+  (* concurrent/parallel/distributed make *)
+  concur/sources.cm
 
-	(* doing actual compilation work *)
-	compile/compile.sml
-	compile/corehack.sml
-	compile/link.sml
-	compile/bfc.sml
+  (* doing actual compilation work *)
+  compile/compile.sml
+  compile/corehack.sml
+  compile/link.sml
+  compile/bfc.sml
 
-	(* overall control of CM *)
-	main/general-params.sml
-	main/filename-policy.sml
-	main/symval.sml
-	main/specific-symval-fn.sml
-	main/autoload.sml
-	main/cleanup.sml
-	main/slave.sml
-	main/preload.sml
-	main/cm-boot.sml
-	main/perv-access.sml
+  (* overall control of CM *)
+  main/general-params.sml
+  main/filename-policy.sml
+  main/symval.sml
+  main/specific-symval-fn.sml
+  main/autoload.sml
+  main/cleanup.sml
+  main/slave.sml
+  main/preload.sml
+  main/cm-boot.sml
+  main/perv-access.sml
 
-	(* pathname abstraction *)
-	$smlnj/internal/srcpath-lib.cm
+  (* bootstrap compiler (formerly known as "batch") *)
+  bootstrap/names.sml
+  bootstrap/build-initdg.sml
+  bootstrap/btcompile.sml
+  bootstrap/mkbootlist.sml
+  bootstrap/cmb-slave-stub.sml
+  bootstrap/cmb-slave-hook.sml
 
-	(* bootstrap compiler (formerly known as "batch") *)
-	bootstrap/names.sml
-	bootstrap/build-initdg.sml
-	bootstrap/btcompile.sml
-	bootstrap/mkbootlist.sml
-	bootstrap/cmb-slave-stub.sml
-	bootstrap/cmb-slave-hook.sml
+  (* CM local libraries *)
+  util/sources.cm
+  paths/srcpath-lib.cm
 
-	(* CM-internal libraries *)
-	util/sources.cm
+(* ------------------------------ Imports ------------------------------ *)
 
-	(* compiler libraries *)
-	$smlnj/viscomp/basics.cm
-	$smlnj/viscomp/parser.cm
-	$smlnj/viscomp/elabdata.cm
-	$smlnj/viscomp/execute.cm
-	$smlnj/viscomp/core.cm
+  (* Basis *)
+  $smlnj/basis/basis.cm
 
-	$/pickle-lib.cm
+  (* smlnj-lib *)
+  $smlnj/smlnj-lib/smlnj-lib.cm
+  $smlnj/smlnj-lib/controls-lib.cm
+  $smlnj/smlnj-lib/prettyprint-lib.cm
 
-	(* auxiliary libraries *)
-	$smlnj/ml-yacc/ml-yacc-lib.cm
-	$/pgraph.cm
+  (* viscomp proxies *)
+  $smlnj/viscomp/basics.cm
+  $smlnj/viscomp/parser.cm
+  $smlnj/viscomp/elabdata.cm
+  $smlnj/viscomp/execute.cm
+  $smlnj/viscomp/toplevel.cm
+
+  (* others *)
+  $/pickle-lib.cm
+  $/pgraph.cm
+  $smlnj/ml-yacc/ml-yacc-lib.cm

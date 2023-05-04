@@ -40,13 +40,13 @@ local
 
   fun bug msg = ErrorMsg.impossible("TransPrim: " ^ msg)
 
-  val say = Control.Print.say
+  val say = Control_Print.say
   fun newline () = say "\n"
   fun saynl msg = (say msg, newline ())
 
   fun warn msg = saynl ("*** WARNING: " ^ msg)
 
-  val printDepth = Control.Print.printDepth  (* local printDepth *)
+  val printDepth = Control_Print.printDepth  (* local printDepth *)
   val dbpd = 20 (* local debugging printDepth *)
 
 in

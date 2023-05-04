@@ -1,21 +1,28 @@
-(*
+(* $SMLNJ/cm/concur/sources.cm
+ *
  * Simple concurrency for CM.
  *  - local threads (very primitive)
  *  - remote compile servers (Unix only; communication via
  *    pipes and shared file system)
  *
- * Copyright (c) 2004 by The Fellowship of SML/NJ
+ * Copyright (c) 2023 by The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@tti-c.org)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
+
 Group is
-	concur.sml
-	servers.sig
+
+  concur.sml
+  servers.sig
 # if defined (OPSYS_UNIX)
-	unix-servers.sml
+  unix-servers.sml
 # else
-	dummy-servers.sml
+  dummy-servers.sml
 # endif
-	../util/sources.cm
-	$smlnj/basis/basis.cm
-	$smlnj/internal/srcpath-lib.cm
+
+  ../util/sources.cm
+  ../paths/srcpath-lib.cm
+
+  $smlnj/basis/basis.cm
+
+(*	$smlnj/internal/srcpath-lib.cm *)

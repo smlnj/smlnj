@@ -177,11 +177,14 @@ structure Control : CONTROL =
 
     val progressMsgs =
 	new ("progressMsgs", "whether to print a message after each phase is completed", false)
+
+(* trackExn and polyEqWarn moved to FLINT_Control, because used in FLINT/trans/translate.sml
     val trackExn =
 	new ("track-exn", "whether to generate code that tracks exceptions", true)
     (* warning message when call of polyEqual compiled: *)
     val polyEqWarn =
 	new ("poly-eq-warn", "whether to warn about calls of polyEqual", true)
+*)
 
     val preserveLvarNames = new ("preserve-names", "?", false)
     (* these are really all the same ref cell: *)

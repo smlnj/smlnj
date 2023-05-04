@@ -49,6 +49,9 @@ sig
   val checkKinds	: bool ref    (* check kinds *)
   val checkPLambda      : bool ref    (* type check plambda after translate *)
 
+  val trackExn          : bool ref    (* generate code to track exceptions *)
+  val polyEqWarn        : bool ref    (* warn about calls of polyEqual *)
+
   (* for use in FLINT/main/flintcomp.sml *)
   val recover : (LambdaVar.lvar -> unit) ref
 

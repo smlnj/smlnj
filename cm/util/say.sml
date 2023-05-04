@@ -23,7 +23,7 @@ signature SAY = sig
 
 structure Say :> SAY = struct
 
-    structure Print = Control.Print
+    structure Print = Control_Print
 
     fun say l = (Print.say (concat l); Print.flush ())
 

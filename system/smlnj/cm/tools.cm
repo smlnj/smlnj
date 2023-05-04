@@ -7,16 +7,21 @@
  *)
 (cm-init)
 Library
-	structure Sharing
-	signature VERSION
-	structure Version
-	signature TOOLS
-	structure Tools
-	structure Subst
-is
-	$smlnj/basis/basis.cm
-	$smlnj/internal/srcpath-lib.cm
-	$smlnj/internal/cm-lib.cm
-	$smlnj/internal/cm0.cm
-	tools.sml
 
+  structure Sharing
+  signature VERSION
+  structure Version
+  signature TOOLS
+  structure Tools
+  structure Subst
+
+is
+
+  tools.sml
+
+  $smlnj/basis/basis.cm
+
+  $smlnj/internal/cm-lib.cm
+  $smlnj/internal/cm0.cm
+
+  $cm/paths/srcpath-lib.cm

@@ -35,8 +35,8 @@ local
   structure PP = Formatting
   structure PF = PrintFormat
 
-  val lineWidth = Control.Print.lineWidth
-  val say = Control.Print.say
+  val lineWidth = Control_Print.lineWidth
+  val say = Control_Print.say
 in
 
 (* These should be defined via Control.FLINT *)

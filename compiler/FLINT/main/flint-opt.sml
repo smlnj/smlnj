@@ -93,11 +93,11 @@ end = struct
     (** writing out a term into a error output file named <filename>.FLINT<phase> *)
     fun dumpProg (fileName, prog) =
 	let val outS = TextIO.openAppend fileName  (* appends to file if called repeatedly *)
-	    val savedOut = !Control.Print.out
+	    val savedOut = !Control_Print.out
             val tempOut = {say = fn s => TextIO.output(outS,s),
 			   flush = fn () => TextIO.flushOut outS}
-	    fun finish () = (TextIO.closeOut outS; Control.Print.out := savedOut)
-         in Control.Print.out := tempOut;
+	    fun finish () = (TextIO.closeOut outS; Control_Print.out := savedOut)
+         in Control_Print.out := tempOut;
 	    PPF.ppProg prog
 	      handle x => (finish () handle _ => (); raise x);
 	    finish ()

@@ -46,7 +46,7 @@ local
 in
 
 fun bug s = ErrorMsg.impossible ("TypeOper: " ^ s)
-fun say (s : string) = Control.Print.say s
+fun say (s : string) = Control_Print.say s
 fun mkv _ = LV.mkLvar()
 val ident = fn le => le
 

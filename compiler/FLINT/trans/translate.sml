@@ -79,7 +79,7 @@ val debugging = FLINT_Control.trdebugging
 fun bug msg = EM.impossible("Translate: " ^ msg)
 fun warn msg = EM.warn("Translate: " ^ msg)
 
-val say = Control.Print.say
+val say = Control_Print.say
 fun says strs = say (concat strs)
 fun newline () = say "\n"
 fun saynl str = (say str; newline())
@@ -94,7 +94,7 @@ fun dbsaysnl (msgs : string list) =
 
 val debugPrint = ED.debugPrint debugging
 
-val printDepth = Control.Print.printDepth
+val printDepth = Control_Print.printDepth
 
 (* simplified type and absyn formatting functions *)
 
@@ -261,7 +261,7 @@ fun 'a withRegion (loc: SM.region) (thunk : unit -> 'a) =
   end
 
 fun mkRaise(x, lt) =
-  let val e = if !Control.trackExn
+  let val e = if !FLINT_Control.trackExn
               then APP(markexn, RECORD[x, STRING(SourceMap.regionToString(!region))])
               else x
    in RAISE(e, lt)
@@ -271,7 +271,7 @@ fun complain msg = error (!region) msg
 fun repErr msg = complain EM.COMPLAIN msg EM.nullErrorBody
 fun repWarn msg = complain EM.WARN msg EM.nullErrorBody
 fun repPolyEq () =
-    if !Control.polyEqWarn then complain EM.WARN "calling polyEqual" EM.nullErrorBody
+    if !FLINT_Control.polyEqWarn then complain EM.WARN "calling polyEqual" EM.nullErrorBody
     else ()
 
 end (* markexn-local *)
@@ -1661,7 +1661,7 @@ val _ = if ltyerrors
 
 (* print plambda IR if enabled by Control.FLINT flags printAll or
  * printLambda *)
-val _ = if !Control.FLINT.printAllIR orelse !Control.FLINT.printPlambda
+val _ = if !FLINT_Control.printAllIR orelse !FLINT_Control.printPlambda
 	then (say ("\n\n[After Translate" ^ " ...]\n\n"); ppLexp plexp)
 	else ()
 
@@ -1671,9 +1671,9 @@ val flint = let val _ = dbsaynl ">> FlintNM.norm"
 		val _ = dbsaynl "<< FlintNM.norm"
 	    in n end
 
-(* print flint IR if enabled by Control.FLINT flags printAll or
+(* print flint IR if enabled by FLINT_Control flags printAll or
  * printFlint *)
-val _ = if !Control.FLINT.printAllIR orelse !Control.FLINT.printFlint
+val _ = if !FLINT_Control.printAllIR orelse !FLINT_Control.printFlint
 	then (say "\n[After FlintNM.norm ...]\n\n";
 	      PPFlint.ppProg flint;
 	      say "\n")

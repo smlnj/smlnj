@@ -89,9 +89,10 @@ signature CONTROL =
 
     val saveLambda : bool ref
     val preserveLvarNames : bool ref
+(*  trackExn and polyEqWarn moved to FLINT_Control -- used in trans/translate.sml
     val trackExn : bool ref
     val polyEqWarn : bool ref
-
+*)
     val saveit : bool ref
     val saveAbsyn : bool ref
     val saveConvert : bool ref

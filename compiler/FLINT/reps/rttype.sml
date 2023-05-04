@@ -41,7 +41,7 @@ in
 val debugging = FLINT_Control.rtdebugging
 
 fun bug s = ErrorMsg.impossible ("RuntimeType: " ^ s)
-fun say (s : string) = Control.Print.say s
+fun say (s : string) = Control_Print.say s
 
 fun debugmsg msg =
     if !debugging then (say msg; say "\n") else ()

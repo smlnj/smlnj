@@ -37,7 +37,7 @@ in
  ****************************************************************************)
 
 fun bug s = ErrorMsg.impossible ("Coerce: " ^ s)
-fun say (s : string) = Control.Print.say s
+fun say (s : string) = Control_Print.say s
 
 fun mkv _ = LV.mkLvar ()
 val ident = fn le => le
@@ -362,14 +362,14 @@ end (* function wrapperGen *)
 fun unwrapOp (wenv, nts, ots, d) =
   let val nts' = map lt_norm nts
       val ots' = map lt_norm ots
-      val sflag = !Control.FLINT.sharewrap
+      val sflag = !FLINT_Control.sharewrap
    in wrapperGen (false, sflag) (wenv, nts', ots', d)
   end (* function unwrapOp *)
 
 fun wrapOp (wenv, nts, ots, d) =
   let val nts' = map lt_norm nts
       val ots' = map lt_norm ots
-      val sflag = !Control.FLINT.sharewrap
+      val sflag = !FLINT_Control.sharewrap
    in wrapperGen (true, sflag) (wenv, nts', ots', d)
   end (* function wrapOp *)
 

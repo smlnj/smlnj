@@ -42,7 +42,7 @@ local
 
     val debugging = ref false   (* should be a debugging flag in Control.FLINT *)
     fun bug msg = ErrorMsg.impossible("PEqual: "^msg)
-    val say = Control.Print.say
+    val say = Control_Print.say
 
     val debugPrint = ED.debugPrint debugging
 

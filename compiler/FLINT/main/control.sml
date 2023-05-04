@@ -129,6 +129,13 @@ struct
     val checkKinds = new (flag_cvt, "check-kinds",
 			  "check kinding information", true)
 
+    (* trackExn and polyEqWarn moved here from Control (TopLevel/main/control.{sig,sml} *)
+    val trackExn =
+	new (flag_cvt, "track-exn", "whether to generate code that tracks exceptions", true)
+    (* warning message when call of polyEqual compiled: *)
+    val polyEqWarn =
+	new (flag_cvt, "poly-eq-warn", "whether to warn about calls of polyEqual", true)
+   
     (* exported for use in FLINT/main/flintcomp.sml *)
     val recover : (LambdaVar.lvar -> unit) ref = ref(fn x => ())
 

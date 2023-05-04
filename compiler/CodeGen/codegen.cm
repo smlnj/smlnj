@@ -11,6 +11,8 @@
 
 Library
 
+(* ------------------------------- Exports ------------------------------- *)
+
   structure CFG             (* cfg/cfg.sml *)
   structure PPCfg           (* cfg/ppcfg.sml *)
   functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
@@ -18,30 +20,30 @@ Library
 
 is
 
-(* members *)
+(* ------------------------------- Members ------------------------------- *)
 
-CodeGen/cfg/cfg.sml
-CodeGen/cfg/ppcfg.sml
-CodeGen/cfg/cfg-util.sml
+  cfg/cfg.sml
+  cfg/ppcfg.sml
+  cfg/cfg-util.sml
 
-CodeGen/cps-to-cfg/cps-info.sml
-CodeGen/cps-to-cfg/invoke-gc.sml
-CodeGen/cps-to-cfg/cps-to-cfg-fn.sml
-CodeGen/cps-to-cfg/tagged-arith.sml
+  cps-to-cfg/cps-info.sml
+  cps-to-cfg/invoke-gc.sml
+  cps-to-cfg/cps-to-cfg-fn.sml
+  cps-to-cfg/tagged-arith.sml
 
-CodeGen/cfg-pickle/cfg-pickle.sig
-CodeGen/cfg-pickle/cfg-pickler.sml
-CodeGen/cfg-pickle/cfg-file-pickle.sml
-CodeGen/cfg-pickle/cfg-memory-pickle.sml
-CodeGen/cfg-pickle/lambda-var-pickle.sml
+  cfg-pickle/cfg-pickle.sig
+  cfg-pickle/cfg-pickler.sml
+  cfg-pickle/cfg-file-pickle.sml
+  cfg-pickle/cfg-memory-pickle.sml
+  cfg-pickle/lambda-var-pickle.sml
 
-CodeGen/main/code-gen-fn.sml
-CodeGen/main/mach-spec.sig
-CodeGen/main/default-machspec-fn.sml
-CodeGen/main/object-desc.sig
-CodeGen/main/object-desc.sml
+  main/code-gen-fn.sml
+  main/mach-spec.sig
+  main/default-machspec-fn.sml
+  main/object-desc.sig
+  main/object-desc.sml
 
-(* imports *)
+(* ------------------------------- Imports ------------------------------- *)
 
 (* basis *)
 $smlnj/basis/basis.cm

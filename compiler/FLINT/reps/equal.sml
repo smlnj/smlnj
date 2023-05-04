@@ -39,7 +39,7 @@ in
 
 val debugging = ref false
 fun bug msg = ErrorMsg.impossible("Equal: "^msg)
-val say = Control.Print.say
+val say = Control_Print.say
 val mkv = LambdaVar.mkLvar
 val ident = fn x => x
 

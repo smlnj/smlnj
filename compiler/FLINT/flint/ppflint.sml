@@ -337,7 +337,7 @@ in
 	 *)
 	let fun fmtarg (lvar, lty) =
 		PP.hblock [PP.cblock [fmtLvar lvar, PP.colon],
-		      if !Control.FLINT.printFctTypes orelse cconv <> FR.CC_FCT
+		      if !FLINT_Control.printFctTypes orelse cconv <> FR.CC_FCT
 		      then PPT.fmtLty (pd - 1) lty
 		      else PP.text "<lty>"]
          in PP.vblock
@@ -352,19 +352,19 @@ in
 
     (* ppLexp : lexp -> unit *)
     fun ppLexp (lexp: F.lexp) =
-	PF.render (fmtLexp (!Control.Print.printDepth) lexp, !Control.Print.lineWidth)
+	PF.render (fmtLexp (!Control_Print.printDepth) lexp, !Control_Print.lineWidth)
 
     (* ppLexpLimited : int -> lexp -> unit *)
     fun ppLexpLimited (printDepth: int) (lexp: F.lexp) =
-	PF.render (fmtLexp printDepth lexp, !Control.Print.lineWidth)
+	PF.render (fmtLexp printDepth lexp, !Control_Print.lineWidth)
 
     (* ppProg : prog -> unit *)
     fun ppProg (prog: F.prog) =
-	PF.render (fmtFundec (!Control.Print.printDepth) prog, !Control.Print.lineWidth)
+	PF.render (fmtFundec (!Control_Print.printDepth) prog, !Control_Print.lineWidth)
 
     (* ppProgLimited : int -> prog -> unit *)
     fun ppProgLimited (printDepth: int) (prog: F.prog) =
-	PF.render (fmtFundec printDepth prog, !Control.Print.lineWidth)
+	PF.render (fmtFundec printDepth prog, !Control_Print.lineWidth)
 
 end (* top local *)
 end (* structure PPFlint *)

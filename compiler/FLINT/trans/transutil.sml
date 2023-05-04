@@ -20,7 +20,7 @@ in
 
 val debugging = FLINT_Control.trdebugging
 fun bug msg = ErrorMsg.impossible("TransUtil: " ^ msg)
-val say = Control.Print.say
+val say = Control_Print.say
 fun says strs = say (concat strs)
 fun newline () = say "\n"
 fun saynl str = (say str; newline())

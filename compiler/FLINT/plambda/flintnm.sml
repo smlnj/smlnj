@@ -38,7 +38,7 @@ fun map3 _ (nil, nil, nil) = nil
 
 (* debugging *)
 val say = Control_Print.say
-val lineWidth = Control.Print.lineWidth
+val lineWidth = Control_Print.lineWidth
 
 val debugging = FLINT_Control.nmdebugging
 

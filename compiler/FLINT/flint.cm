@@ -21,7 +21,7 @@ Group
   structure PPFlint
   structure LContract
   structure Specialize
-  structure LambdaVar
+(*  structure LambdaVar *)
   structure ChkFlint
   structure FLINTOpt
   structure FLINT
@@ -30,70 +30,70 @@ Group
 
 is
 
-FLINT/main/flint-opt.sml
-FLINT/main/control.sig
-FLINT/main/control.sml
+  main/flint-opt.sml
+  main/control.sig
+  main/control.sml
 
-FLINT/plambda/chkplexp.sml
-FLINT/plambda/flintnm.sml
-FLINT/plambda/pflatten.sig
-FLINT/plambda/pflatten.sml
-FLINT/plambda/plambda.sig
-FLINT/plambda/plambda.sml
-FLINT/plambda/pplexp.sml
-FLINT/plambda/reorder.sml
+  plambda/chkplexp.sml
+  plambda/flintnm.sml
+  plambda/pflatten.sig
+  plambda/pflatten.sml
+  plambda/plambda.sig
+  plambda/plambda.sml
+  plambda/pplexp.sml
+  plambda/reorder.sml
 
-FLINT/trans/module-plists.sml
-FLINT/trans/transtkind.sml
-FLINT/trans/pequal.sml
-FLINT/trans/transutil.sml
-FLINT/trans/translate.sml
-FLINT/trans/transprim.sml
-FLINT/trans/transtypes.sml
-FLINT/trans/literal-to-num.sml    (* uses CoreIntInf functionality *)
+  trans/module-plists.sml
+  trans/transtkind.sml
+  trans/pequal.sml
+  trans/transutil.sml
+  trans/translate.sml
+  trans/transprim.sml
+  trans/transtypes.sml
+  trans/literal-to-num.sml    (* uses CoreIntInf functionality *)
 
-FLINT/flint/chkflint.sml
-FLINT/flint/flint.sig
-FLINT/flint/flint.sml
-FLINT/flint/flintutil.sml
-FLINT/flint/ppflint.sig
-FLINT/flint/ppflint.sml
-FLINT/flint/tvarcvt.sml
+  flint/chkflint.sml
+  flint/flint.sig
+  flint/flint.sml
+  flint/flintutil.sml
+  flint/ppflint.sig
+  flint/ppflint.sml
+  flint/tvarcvt.sml
 
-FLINT/kernel/lty.sig
-FLINT/kernel/lty.sml
-FLINT/kernel/ltykernel.sig
-FLINT/kernel/ltykernel.sml
-FLINT/kernel/ltydef.sig
-FLINT/kernel/ltydef.sml
-FLINT/kernel/funrecmeta.sig
-FLINT/kernel/funrecmeta.sml
-FLINT/kernel/ltybasic.sig
-FLINT/kernel/ltybasic.sml
-FLINT/kernel/ltyextern.sig
-FLINT/kernel/ltyextern.sml
-FLINT/kernel/ltydict.sml
-FLINT/kernel/primtyc.sig
-FLINT/kernel/primtyc.sml
-FLINT/kernel/ltykindchk.sml
-FLINT/kernel/pplty.sml
+  kernel/lty.sig
+  kernel/lty.sml
+  kernel/ltykernel.sig
+  kernel/ltykernel.sml
+  kernel/ltydef.sig
+  kernel/ltydef.sml
+  kernel/funrecmeta.sig
+  kernel/funrecmeta.sml
+  kernel/ltybasic.sig
+  kernel/ltybasic.sml
+  kernel/ltyextern.sig
+  kernel/ltyextern.sml
+  kernel/ltydict.sml
+  kernel/primtyc.sig
+  kernel/primtyc.sml
+  kernel/ltykindchk.sml
+  kernel/pplty.sml
 
-FLINT/opt/fixfix.sml
-FLINT/opt/collect.sml
-FLINT/opt/fcontract.sml
-FLINT/opt/optutils.sml
-FLINT/opt/lcontract.sml
-FLINT/opt/recover.sml
-FLINT/opt/specialize.sml
-FLINT/opt/loopify.sml
-FLINT/opt/lift.sml
+  opt/fixfix.sml
+  opt/collect.sml
+  opt/fcontract.sml
+  opt/optutils.sml
+  opt/lcontract.sml
+  opt/recover.sml
+  opt/specialize.sml
+  opt/loopify.sml
+  opt/lift.sml
 
-FLINT/reps/coerce.sml
-FLINT/reps/equal.sml
-FLINT/reps/reify.sml
-FLINT/reps/rttype.sml
-FLINT/reps/typeoper.sml
-FLINT/reps/wrapping.sml
+  reps/coerce.sml
+  reps/equal.sml
+  reps/reify.sml
+  reps/rttype.sml
+  reps/typeoper.sml
+  reps/wrapping.sml
 
 (* ------------------------------- Imports ------------------------------- *)
 
@@ -105,4 +105,11 @@ $smlnj/smlnj-lib/smlnj-lib.cm        (* smlnj-lib/Util *)
 $smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
 $smlnj/smlnj-lib/prettyprint-lib.cm  (* smlnj-lib/PrettyPrint *)
 
-$smlnj/init/init.cmi : cm          (* CoreIntInf *)
+(* viscomp *)
+$smlnj/viscomp/basics.cm
+$smlnj/viscomp/elabdata.cm
+$smlnj/viscomp/elaborate.cm
+$smlnj/viscomp/execute.cm
+
+(* init.cmi *)
+$smlnj/init/init.cmi : cm            (* CoreIntInf *)

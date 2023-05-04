@@ -37,7 +37,7 @@ structure TvarCvt :> TVARCVT =
 
     val wrdebugging = FLINT_Control.wrdebugging
 
-    val say = Control.Print.say
+    val say = Control_Print.say
     fun dbsay msg = if !wrdebugging then say msg else ()
     fun bug msg = ErrorMsg.impossible("TvarCvt: " ^ msg)
 
