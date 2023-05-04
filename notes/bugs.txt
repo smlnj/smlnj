@@ -1,0 +1,5 @@
+../compiler/TopLevel/main/control.sig:61.5-104.3 Error: unbound signature: FLINTCONTROL
+Error: Compiler bug: PPModules: sigToEnv
+val it = false : bool
+-
+
