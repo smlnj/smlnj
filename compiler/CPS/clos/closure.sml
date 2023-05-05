@@ -28,10 +28,10 @@ local
   structure U = CPSUtil
   structure LV = LambdaVar
   structure SL = LV.SortedList
-  structure CGoptions = Control.CG
+  structure CTL = CPSControl
   structure SProf = StaticProf(MachSpec)
 
-  val saveLvarNames = Control.ElabData.saveLvarNames
+  val saveLvarNames = ElabDataControl.saveLvarNames
   val dupLvar = LV.dupLvar
   val mkLvar = LV.mkLvar
 
@@ -39,11 +39,11 @@ local
 
   val dumcs = NONE              (* dummy callee-save reg contents *)
   val zip = ListPair.zip
-  val say = Control.Print.say
+  val say = PrintControl.say
   fun inc (ri as ref i) = ri := i+1
 
 (* static profiling *)
-  fun profL n = if !CGoptions.staticprof andalso (n > 0) then SProf.incln n else ()
+  fun profL n = if !CTL.staticprof andalso (n > 0) then SProf.incln n else ()
 
 (* tagged int value *)
 fun tagInt i = NUM{ival = IntInf.fromInt i, ty = {sz = Target.defaultIntSz, tag = true}}
@@ -280,7 +280,7 @@ fun boxedKind (CONT | KNOWN_CONT) = RK_CONT
   | boxedKind KNOWN = RK_KNOWN
   | boxedKind _ = RK_ESCAPE
 
-fun COMMENT f = if !CGoptions.comment then (f(); ()) else ()
+fun COMMENT f = if !CTL.comment then (f(); ()) else ()
 
 (****************************************************************************
  *                    CLOSURE REPRESENTATIONS                               *
@@ -794,7 +794,7 @@ and recordEl(rk, l, w, env) =
                      (let val n = U.lenp path
                           val () = profL n
                           val (u,env,nhdr) =
-                            if (!CGoptions.sharepath)
+                            if (!CTL.sharepath)
                             then pfollow(np, env, hdr)
                             else ((VAR start,path), env, hdr)
                        in (u,n,nhdr,env)
@@ -878,7 +878,7 @@ fun fixArgs(args,env) =
 
 (* produce the CPS header and modify the environment for the new closure *)
 fun mkClosure(cname,contents,cr,rkind,fkind,env) =
-  let val _ = if !CGoptions.staticprof
+  let val _ = if !CTL.staticprof
               then SProf.incfk(fkind,length contents) else ()
       val l = map (fn v => (v, OFFp0)) contents
       val (hdr, env) = recordEl(rkind, l, cname, env)
@@ -1064,7 +1064,7 @@ fun layer(env,cfree,rk,fk,ccl) =
    in (cls,vls,hdr o nh,env,fvs,cvs,nfr@frames)
   end (* function layer *)
 
-(* build a general closure, CGoptions.closureStrategy matters:
+(* build a general closure, CTL.closureStrategy matters:
  *
  *	1 = flat without aliasing
  *	2 = flat with aliasing
@@ -1074,7 +1074,7 @@ fun layer(env,cfree,rk,fk,ccl) =
 fun closureBoxed(cn, fns, free, fk, ccl, env) =
   let val rk = boxedKind(fk)
       val (cls, vls, hdr, env, fvs, cvs, frames) =
-        case !CGoptions.closureStrategy
+        case !CTL.closureStrategy
          of (4|3) => link(env, map #1 free, rk, fk)
           | (2|1) => flat(env, map #1 free, rk, fk)
           | _ => layer(env, free, rk, fk, ccl)
@@ -1175,7 +1175,7 @@ fun thinAll([],_,_) = []
  ****************************************************************************)
 
 fun sameClosureOpt(free,env) =
- case !CGoptions.closureStrategy
+ case !CTL.closureStrategy
   of 1 => free (* flat without aliasing *)
    | 3 => free (* linked without aliasing *)
    | _ => (* all others have aliasing *)
@@ -1808,8 +1808,8 @@ val knownFrags : frags =
             val env = foldr augvar env fpfree
             val (ngpfree,env) =
               case (callc,closureName)
-               of (false,_) => (inc CGoptions.knownGen; (gpfree,env))
-                | (true,SOME cn) => (inc CGoptions.knownClGen;
+               of (false,_) => (inc CTL.knownGen; (gpfree,env))
+                | (true,SOME cn) => (inc CTL.knownClGen;
                                      (SL.enter(cn,gpfree),augvar(cn,env)))
                 | (true,NONE) => bug "unexpected 23324 in closure"
 
@@ -1850,7 +1850,7 @@ val escapeFrags : frags =
                   val _ = COMMENT(fn () => (say "\nEnvironment in escaping ";
                               vp v; say ":\n";printEnv env))
 <***)
-               in inc CGoptions.escapeGen;  (* nret must not be NONE *)
+               in inc CTL.escapeGen;  (* nret must not be NONE *)
                   case nret
                    of NONE => bug "no cont in escapefun in closure.sml"
                     | SOME _ => (kind,l,nargs,ncl,body,env,sn,ncsg,ncsf,nret)
@@ -1904,7 +1904,7 @@ val (nenv, calleeFrags : frags) =
                             (say "\nEnvironment in callee-save continuation ";
                              vp v; say ":\n"; printEnv env))
 <***)
-               in inc CGoptions.calleeGen;
+               in inc CTL.calleeGen;
                   (nk,l,nargs,ncl,body,env,sn,csg,csf,bret)::z
               end
          in (nenv,foldr g [] calleeB)
@@ -2030,7 +2030,7 @@ and close(ce,env,sn,csg,csf,ret) =
  * Calling the "close" on the CPS expression with proper initializations   *
  ***************************************************************************)
 val nfe =
-  let val _ = if !CGoptions.staticprof then SProf.initfk() else ()
+  let val _ = if !CTL.staticprof then SProf.initfk() else ()
       val (nvl,ncl,csg,csf,ret,env) = adjustArgs(vl,cl,baseEnv)
       val env = augValue(f,U.BOGt,env)
       val nce = close(ce,env,snum f,csg,csf,ret)
@@ -2039,7 +2039,7 @@ val nfe =
 
 (* temporary hack: measuring static allocation sizes of closures *)
 (* previous calls to incfk and initfk are also part of this hack *)
-val _ = if !CGoptions.staticprof then SProf.reportfk() else ()
+val _ = if !CTL.staticprof then SProf.reportfk() else ()
 
 in  (* body of closeCPS *)
     UnRebind.unrebind nfe

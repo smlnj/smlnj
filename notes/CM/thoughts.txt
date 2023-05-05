@@ -1,0 +1,41 @@
+A mini-essay for Zulip:Successor ML
+DBM, 2023.5.5
+
+Some quick thoughts on large-scale organization and building: when a system or
+application scales to hundreds (or even dozens) of files, we need an extra level
+of language or tools to cope with managing the organization of the system and
+the process of building the system (or "bootstrapping" it in the case of a
+compiler). For pragmatic reasons, it seems necessary to break a large program
+into multiple source code files, which means we probably can't avoid the fact
+that we have to deal with the OS file system's naming scheme (e.g. Unix file
+paths), or some abstraction of that scheme. So if we want to provide a language
+or tool for working with systems consisting of many source files, we have to
+have some interface to the file system naming scheme. But on the other hand, we
+want to have an elegant and well-behaved (e.g. with respect to scoping of names,
+maybe alpha-conversion) internal naming system. This internal naming system
+should be robust with respect to the physical location of files, i.e. if we move
+the source files to another location in the file system we should not have to
+make lots of changes to the "system configuration" description. The way CM works
+is a compromise where internal names of components (called Groups and Libraries)
+are similar to file system paths, but the addition of "anchors" allows for some
+abstraction from the physical location of files. But then there is a somewhat
+inelegant external specification of the mapping between anchors and file system
+paths. The way things are connected is another big issue, which is related to
+the issue of "information flow". In SML, we have "import by mention" and we have
+import by functor application. In either case, the dependency graph implied by
+imports is acyclic (let's not go into recursive modules). The notation used by
+CM in its CM description files (.cm files) is a bit unclear. The "members" of a
+Group/Library consist of file paths of source files and "anchor paths" of other
+CM components, where the modules defined in the source files can mention
+(import) modules defined in the components, and the specified exported modules
+can come from either the source files or imported CM components. This could be
+improved; the flow of "modules" internally and externally is too implicit.
+
+So a language/tool for large scale configuration and build has to provide a way
+of relating its internal naming scheme with the OS's file system, it needs to
+express and control the flow of information (modules) among components, and it
+needs to provide for conditional compilation/build. It also must support some
+form of smart or cut-off compilation to shorten the compile/build time after
+changes.
+
+

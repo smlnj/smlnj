@@ -24,8 +24,8 @@ structure Limit : sig
     structure LV = LambdaVar
     structure Tbl = LV.Tbl
 
-    val debug = Control.CG.printit
-    val say = Control.Print.say
+    val debug = CPSControl.printit
+    val say = PrintControl.say
     val error = ErrorMsg.impossible
 
   (* maximum number of words to allocate per check, which is one less than the slop *)
@@ -185,11 +185,11 @@ structure Limit : sig
 		  [] clusters
 	  in
 	    if !debug
-	      then (say "Starting feedback..."; Control.Print.flush())
+	      then (say "Starting feedback..."; PrintControl.flush())
 	      else ();
 	    List.app addCheck (Feedback.feedback nodes);
 	    if !debug
-	      then (say "Finished\n"; Control.Print.flush())
+	      then (say "Finished\n"; PrintControl.flush())
 	      else ();
 	    kindOf
 	  end

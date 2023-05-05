@@ -42,7 +42,7 @@ structure NormalizeCluster : sig
     type cluster = C.function list
 
 (*+DEBUG*
-val say = Control.Print.say
+val say = PrintControl.say
 fun prCluster (fn1::fns) = (
       say "***** CLUSTER START *****\n";
       PPCps.ppFunction fn1;

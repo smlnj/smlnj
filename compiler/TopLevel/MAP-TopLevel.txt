@@ -151,15 +151,15 @@ TProf              DebugProf/profile/tprof.sml
 TDPInstrument      DebugProf/profile/tdp-instrument.sml
 ProfileFn	   DebugProf/profile/profile-fn.sml (used: BackendFn)
 
-smlnj-lib/...
-Formatting	   smlnj-lib/PrettyPrint/src/formatting.sml
-PrintFormat	   smlnj-lib/PrettyPrint/src/printformat.sml
+smlnj-lib/[Controls, Util, PrettyPrint]
 PropList	   smlnj-lib/Util/plist.sml
 Controls	   smlnj-lib/Controls/...
 ControlUtil	   smlnj-lib/Controls/...
 ControlRegistry	   smlnj-lib/Controls/...
+Formatting	   smlnj-lib/PrettyPrint/src/formatting.sml
+PrintFormat	   smlnj-lib/PrettyPrint/src/printformat.sml
 
-SMLofNJ
+SMLofNJ		   Basis
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
@@ -242,7 +242,7 @@ interact/
       [SMLofNJ]
 
   interact.sml
-    < InteractFn [fct]
+    < InteractFn
     > INTERACT
       EVALLOOP
       Environment
@@ -252,34 +252,6 @@ interact/
       ErrorMsg*
       PropList*
       [SMLofNJ, OS     basis.cm]
-
-
-backend/
-
-  backend.sig
-    < BACKEND
-    > COMPILE
-      INTERACT
-      --------
-      PROFILE*
-
-  backend-fn.sml
-    < BackendFn
-    > BACKEND
-      CODE_GENERATOR
-      CCONFIG
-      Environment
-      CompileFn
-      InteractFn
-      EvalLoopFn
-      -----------
-      PersStamps*
-      Stamps*
-      PickMod*
-      UnpickMod*
-      GenModIdMap*
-      Rehash*
-      ProfileFn*
 
 
 main/
@@ -316,7 +288,6 @@ main/
       MCControl*
       TDPInstrument*
 
-
   cconfig.sig
     < CCONFIG
     > -----------
@@ -332,8 +303,8 @@ main/
       CodeObj*
 
   compile.sig
-    < COMPILE0
-      COMPILE
+    < COMPILE
+      COMPILE0
       TOP_COMPILE
     > -----------
       PersStamps*
@@ -347,7 +318,7 @@ main/
       ImportTree*
 
   compile.sml
-    < CompileFn [fct]
+    < CompileFn
     > CODE_GENERATOR
       CCONFIG
       COMPILE0
@@ -368,6 +339,34 @@ main/
       Translate*
       FLINTOpt*
       CodeObj*
+
+
+backend/
+
+  backend.sig
+    < BACKEND
+    > COMPILE
+      INTERACT
+      --------
+      PROFILE*
+
+  backend-fn.sml
+    < BackendFn
+    > BACKEND
+      CODE_GENERATOR
+      CCONFIG
+      Environment
+      CompileFn
+      InteractFn
+      EvalLoopFn
+      -----------
+      PersStamps*
+      Stamps*
+      PickMod*
+      UnpickMod*
+      GenModIdMap*
+      Rehash*
+      ProfileFn*
 
 
 print/

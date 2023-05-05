@@ -63,7 +63,8 @@ signature CONTROL =
     structure Elab : ELAB_CONTROL  (* Elaborator controls *)
     structure MC : MC_CONTROL  (* match compiler controls *)
     structure FLINT : FLINTCONTROL
-    structure CG : CGCONTROL
+    structure CSP : CSPCONTROL			  
+    structure CodeGen : CODEGENCONTROL
     val debugging : bool ref
     val eldebugging : bool ref (* EvalLoopF debugging *)
     val pddebugging : bool ref (* PPDec debugging *)

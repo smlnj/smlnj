@@ -78,4 +78,6 @@ $smlnj/viscomp/parser.cm
 $smlnj/viscomp/elaborate.cm
 $smlnj/viscomp/flint.cm
 $smlnj/viscomp/execute.cm
+$smlnj/viscomp/cps.cm
+$smlnj/viscomp/codegen.cm
 $smlnj/viscomp/debugprof.cm

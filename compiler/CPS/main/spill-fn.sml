@@ -114,15 +114,15 @@ struct
   structure LV  = LambdaVar
   structure H   = LV.Tbl     (* For mapping from lvar *)
 
-  val debug_cps_spill = Control_CG.debugSpill
-  val debug_cps_spill_info = Control_CG.debugSpillInfo
+  val debug_cps_spill = CPSControl.debugSpill
+  val debug_cps_spill_info = CPSControl.debugSpillInfo
 
   infix 6 \/
   infix 7 /\
   infix 5 --
 
   val error = ErrorMsg.impossible
-  val pr    = Control.Print.say
+  val pr    = PrintControl.say
   val i2s   = Int.toString
 
   val maxgpfree =

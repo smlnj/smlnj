@@ -23,6 +23,9 @@ functor CodeGeneratorFn   (* main/code-gen-fn.sml,
                              * uses TopLevel/backend/amd64-*.sml, *-backend.sml *)
 functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
 
+signature CODEGENCONTROL  (* main/control.sig *)
+structure CodeGenControl  (* main/control.sml *)
+
 [functor BackendFn]	  (* if moved here from TopLevel? *)
 
 
@@ -60,6 +63,8 @@ LambdaVarPickle	       cfg-pickle/lambda-var-pickle.sml
 
 CodeGeneratorFn*       main/code-gen-fn.sml
 DefaultMachSpecFn*     main/default-machspec-fn.sml
+CODEGENCONTROL	       main/control.sig
+CodeGenControl	       main/control.sml
 
 [Cluster	       cps-to-cfg/cluster.sml
 		       -- unfinished new version CPS/main/cluster.sml
@@ -71,6 +76,7 @@ IMPORTS: [paths relative to $SMLNJ/compiler]
 basics.cm:
   Target	       Basics/compiler/target{32,64}.sml
   Stats		       Basics/stats/stats.sml
+  BasicControl	       Basics/control/basiccontrol.sml 
 
 elabdata.cm:
   LambdaVar	       ElabData/basics/lambdavar.sml
@@ -90,13 +96,17 @@ execute.cm:
   CodeObj	       Execution/codeobj/code-obj.sml
 
 toplevel.cm:
-  Control      	       TopLevel/main/control.sml
   CODE_GENERATOR       TopLevel/main/code-generator.sig
 
 asdl-lib.cm:
   ASDLFilePickle       $SMLNJ-ASDL-LIB/asdl-file-pickle.sml
   ASDLMemoryPickle     $SMLNJ-ASDL-LIB/asdl-memory-pickle.sml
                         where $SMLNJ-ASDL-LIB = ../tools/asdl/src/lib/sml/
+
+$smlnj/smlnj-lib/controls.cm
+  Controls
+  ControlUtil
+  ControlRegistry
 
 
 (* ---------------------------- Member Files ---------------------------- *)
@@ -236,6 +246,17 @@ main/
     > ----------
       MACH_SPEC*
 
+  control.sig
+    < CODEGENCONTROL
+
+  control.sml
+    < CodeGenControl
+    > CODEGENCONTROL
+      --------------
+      Controls
+      ControlUtil
+      ControlRegistry
+      BasicControl
 
 
 (* ---------------------------- Imports ---------------------------- *)
@@ -251,10 +272,11 @@ $smlnj/viscomp/elabdata.cm   (proxy for: $compiler/ElabData/elabdata.cm)
 $smlnj/viscomp/execute.cm    (proxy for: $compiler/Execution/execute.cm)
    CodeObj
 $smlnj/viscomp/toplevel.cm   (proxy for: $compiler/TopLevel/toplevel.cm)
-   Control, CODE_GENERATOR
+   CODE_GENERATOR
 $smlnj/viscomp/cps.cm        (proxy for: $compiler/CPS/cps.cm)
    CPS[str], CPSUtil, PPCPS, Cluster, MACH_SPEC, ObjectDesc, CPSCompFn
-
+$smlnj/smlnj-lib/controls.cm
+   Controls, ControlUtil, ControlRegistry
 
 (* ---------------------------- Notes ---------------------------- *)
 

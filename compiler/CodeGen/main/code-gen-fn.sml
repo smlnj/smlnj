@@ -37,7 +37,7 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
                   target = MachSpec.llvmTargetName,
                   src = source,
                   pkl = pkl,
-                  verifyLLVM = !Control.CG.verifyLLVM
+                  verifyLLVM = !CodeGenControl.verifyLLVM
                 }
 	  in
 	    {code = code, data = data}

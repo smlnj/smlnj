@@ -14,10 +14,9 @@ end
 functor StaticProf (MachSpec : MACH_SPEC) : STATICPROF = struct
 
 local open CPS
-      structure CGoptions = Control.CG
 in
 
-val pr = Control.Print.say
+val pr = PrintControl.say
 val lenlimit = 40
 val esize = Array.array(lenlimit+1,0)
 val ksize = Array.array(lenlimit+1,0)

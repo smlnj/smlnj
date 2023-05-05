@@ -1,8 +1,10 @@
-(* printcontrol.sml
+(* compiler/Basics/print/printcontrol.sml
  *
- * (C) 2001 Lucent Technologies, Bell Labs
+ * (C) 2023 The Fellowship of SML/NJ
  *)
-signature PRINTCONTROL = sig
+signature PRINTCONTROL =
+sig
+
     val printDepth  : int ref
     val printLength : int ref
     val stringDepth : int ref
@@ -14,9 +16,12 @@ signature PRINTCONTROL = sig
     val out : {say : string -> unit, flush : unit -> unit} ref
     val say : string -> unit
     val flush : unit -> unit
-end
 
-structure Control_Print : PRINTCONTROL = struct
+end (* signature PRINTCONTROL *)
+
+
+structure PrintControl : PRINTCONTROL =
+struct
 
     val priority = [10, 10, 2]
     val obscurity = 2
@@ -67,4 +72,8 @@ structure Control_Print : PRINTCONTROL = struct
 		  }
     fun say s = #say (!out) s
     fun flush() = #flush (!out) ()
-end
+
+end (* structure PrintControl *)
+
+(* alias for PrintControl -- should eventually disappear *)
+structure Control_Print = PrintControl    

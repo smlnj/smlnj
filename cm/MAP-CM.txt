@@ -87,6 +87,8 @@ IMPORTS:
   StaticEnv		compiler/ElabData/statenv/statenv.sml
   BrowseStatEnv		compiler/ElabData/statenv/browse.sml
 
+  SMLNJVersion		system/smlnj/internal/version.sml (smlnj-version.cm)
+
   LibBase		?
 
 
@@ -406,74 +408,93 @@ tools/main/
 compile/
   compile.sml
     <
-    >
+    > ------------
+      SMLNJVersion
+
   corehack.sml
     <
     >
+
   link.sml
     <
     >
+
   bfc.sml
     <
-    >
+    > ------------
+      SMLNJVersion
 
 (* overall control of CM *)
 main/
   general-params.sml
     <
     >
+
   filename-policy.sml
     <
     >
+
   symval.sml
     <
     >
+
   specific-symval-fn.sml
     <
-    >
+    > ------------
+      SMLNJVersion
+
   autoload.sml
     <
     >
+
   cleanup.sml
     <
     >
+
   slave.sml
     <
     >
+
   preload.sml
     <
     >
+
   cm-boot.sml
     <
     >
+
   perv-access.sml
     <
     >
 
 (* bootstrap compiler (formerly known as "batch") *)
 bootstrap/
+
   names.sml
     <
     >
+
   build-initdg.sml
     <
     >
+
   btcompile.sml
     <
     >
+
   mkbootlist.sml
     <
     >
+
   cmb-slave-stub.sml
     <
     >
+
   cmb-slave-hook.sml
     <
     >
 
 (* ---------------------------- Imports ---------------------------- *) 
-
-
 
 (* CM-internal libraries *)
 util/sources.cm
@@ -493,13 +514,12 @@ $smlnj/viscomp/basics.cm
 $smlnj/viscomp/parser.cm
 $smlnj/viscomp/elabdata.cm
 $smlnj/viscomp/execute.cm
-$smlnj/viscomp/core.cm
 
 $/pickle-lib.cm ($compiler/Library/pickle/pickle-lib.cm)
 
 (* auxiliary libraries *)
 $smlnj/ml-yacc/ml-yacc-lib.cm
 $/pgraph.cm ($SMLNJ/libraries/pgraph/pgraph.cm)
-
+$smlnj/internal/smlnj-version.cm
 
 (* ---------------------------- Notes ---------------------------- *) 

@@ -18,13 +18,18 @@ Library
   functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
   functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
 
+  signature CODE_GENERATOR  (* main/code-generator.sig *)
+
+  signature CODEGENCONTROL  (* main/control.sig *)
+  structure CodeGenControl  (* main/control.sml *)
+
 is
 
 (* ------------------------------- Members ------------------------------- *)
 
   cfg/cfg.sml
-  cfg/ppcfg.sml
   cfg/cfg-util.sml
+  cfg/ppcfg.sml
 
   cps-to-cfg/cps-info.sml
   cps-to-cfg/invoke-gc.sml
@@ -37,22 +42,27 @@ is
   cfg-pickle/cfg-memory-pickle.sml
   cfg-pickle/lambda-var-pickle.sml
 
+  main/code-generator.sig
   main/code-gen-fn.sml
-  main/mach-spec.sig
   main/default-machspec-fn.sml
-  main/object-desc.sig
-  main/object-desc.sml
+  main/control.sig
+  main/control.sml
 
 (* ------------------------------- Imports ------------------------------- *)
 
 (* basis *)
 $smlnj/basis/basis.cm
 
+(* smlnj-lib *)
+$smlnj/smlnj-lib/smlnj-lib.cm  (* smlnj-lib/Util *)
+$smlnj/smlnj-lib/controls-lib.cm
+$smlnj/smlnj-lib/prettyprint-lib.cm
+
 (* viscomp *)
 $smlnj/viscomp/basics.cm   (* proxy for $compiler/Basics/basics.cm *)
 $smlnj/viscomp/elabdata.cm (* proxy for $compiler/ElabData/elabdata.cm *)
 $smlnj/viscomp/execute.cm  (* proxy for: $compiler/Execution/execute.cm *)
-$smlnj/viscomp/toplevel.cm (* proxy for: $compiler/TopLevel/toplevel.cm *)
+$smlnj/viscomp/flint.cm    (* proxy for: $compiler/FLINT/flint.cm *)
 $smlnj/viscomp/cps.cm      (* proxy for: $compiler/CPS/cps.cm *)
 
 (* other *)

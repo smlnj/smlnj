@@ -15,13 +15,11 @@ structure OldLimit : sig
 
   end = struct
 
-    structure CGoptions = Control.CG
-
     structure LV = LambdaVar
     structure Tbl = LV.Tbl
     open CPS
 
-    val say = Control.Print.say
+    val say = PrintControl.say
     val error = ErrorMsg.impossible
 
     val MAX_ALLOC = 1023  (* maximum number of words to allocate per check *)
@@ -185,17 +183,17 @@ structure OldLimit : sig
 		  (f, edges body)
 		end
 	  in
-	    if !CGoptions.printit
-	      then (say "Starting feedback..."; Control.Print.flush())
+	    if !CSPControl.printit
+	      then (say "Starting feedback..."; PrintControl.flush())
 	      else ();
 	    List.app check (Feedback.feedback (map makenode fl));
-	    if !CGoptions.printit
-	      then (say "Finished\n"; Control.Print.flush())
+	    if !CSPControl.printit
+	      then (say "Finished\n"; PrintControl.flush())
 	      else ();
 	    path escapes fl
 	  end
 
-    val nolimit = fn fl => if !CGoptions.printit
+    val nolimit = fn fl => if !CSPControl.printit
 	  then let
 	    val info as (newfl, limits) = nolimit fl
 	    fun showinfo (k,f,_,_,_) = let

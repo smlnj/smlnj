@@ -8,134 +8,140 @@
 
 Group
 
-	signature BASIC_CONTROL
-	structure BasicControl
+(* ------------------------------ Exports ------------------------------ *)
 
-	signature PRINTCONTROL
-	structure Control_Print
-	structure StringFormats
+  signature BASIC_CONTROL
+  structure BasicControl
 
-	signature SYMBOL
-	structure Symbol
-	signature FASTSYMBOL
-	structure FastSymbol
-	signature FIXITY
-	structure Fixity
-	structure SymbolHashTable
-	structure SpecialSymbols
-        signature NUMERIC_LABEL
-        structure NumericLabel
-        structure PPSymbols
+  signature PRINTCONTROL
+  structure PrintControl
+  structure Control_Print  (* a temporary alias for PrintControl (old name) *)
+  structure StringFormats
 
-	signature PERSSTAMPS
-	structure PersStamps
-	structure PersMap
+  signature SYMBOL
+  structure Symbol
+  signature FASTSYMBOL
+  structure FastSymbol
+  signature FIXITY
+  structure Fixity
+  structure SymbolHashTable
+  structure SpecialSymbols
+  signature NUMERIC_LABEL
+  structure NumericLabel
+  structure PPSymbols
 
-	signature SOURCE
-	structure Source
-	signature SOURCE_MAP
-	structure SourceMap
-        structure PPSourceMap
+  signature PERSSTAMPS
+  structure PersStamps
+  structure PersMap
 
-	signature ERRORMSG
-	structure ErrorMsg
-	structure CompileExn
+  signature SOURCE
+  structure Source
+  signature SOURCE_MAP
+  structure SourceMap
+  structure PPSourceMap
 
-	signature STATS
-	structure Stats
-	structure WordStringHashTable
+  signature ERRORMSG
+  structure ErrorMsg
+  structure CompileExn
 
-	signature PIDENV
-	functor PidEnvFn
+  signature STATS
+  structure Stats
+  structure WordStringHashTable
 
-	structure IntConst
+  signature PIDENV
+  functor PidEnvFn
 
-	signature REAL_TO_BITS
-	structure Real64ToBits
-	structure RealLit
-	structure RealConst
+  structure IntConst
 
-	signature TARGET
-	structure Target
+  signature REAL_TO_BITS
+  structure Real64ToBits
+  structure RealLit
+  structure RealConst
 
-        structure List3
+  signature TARGET
+  structure Target
+
+  structure List3
 
 is
-	control/basiccontrol.sml
 
-	symbol/symbol.sig
-	symbol/symbol.sml
-	symbol/fastsymbol.sig
-        symbol/numericlabel.sig
-        symbol/numericlabel.sml
-	symbol/fastsymbol.sml
-	symbol/symbol-hashtable.sml
-	symbol/fixity.sml
-	symbol/specialsyms.sml
-        symbol/ppsymbols.sml
+(* ------------------------------ Members ------------------------------ *)
 
-	pid/persstamps.sig
-	pid/persstamps.sml
-	pid/persmap.sml
-	pid/pidenv.sig
-	pid/pidenv.sml
+  control/basiccontrol.sml
 
-	source/source.sig
-	source/source.sml
-	source/sourcemap.sig
-	source/sourcemap.sml
-        source/ppsourcemap.sml
-	source/pathnames.sml
+  symbol/symbol.sig
+  symbol/symbol.sml
+  symbol/fastsymbol.sig
+  symbol/numericlabel.sig
+  symbol/numericlabel.sml
+  symbol/fastsymbol.sml
+  symbol/symbol-hashtable.sml
+  symbol/fixity.sml
+  symbol/specialsyms.sml
+  symbol/ppsymbols.sml
 
-	errormsg/errormsg.sig
-	errormsg/errormsg.sml
-	stats/stats.sml
+  pid/persstamps.sig
+  pid/persstamps.sml
+  pid/persmap.sml
+  pid/pidenv.sig
+  pid/pidenv.sml
 
-	print/printcontrol.sml
-	print/stringformats.sig
-	print/stringformats.sml
+  source/source.sig
+  source/source.sml
+  source/sourcemap.sig
+  source/sourcemap.sml
+  source/ppsourcemap.sml
+  source/pathnames.sml
 
-	util/wordstr-hashtable.sml
-        util/list3.sml
+  errormsg/errormsg.sig
+  errormsg/errormsg.sml
+  stats/stats.sml
 
-	reals/real-lit.sml
-	reals/real-to-bits.sig
-	reals/real-to-bits-fn.sml
-	reals/real64-to-bits.sml
+  print/printcontrol.sml
+  print/stringformats.sig
+  print/stringformats.sml
 
-        compiler/int-const.sml
-        compiler/real-const.sml
-	compiler/compileexn.sml
-	compiler/target.sig
+  util/wordstr-hashtable.sml
+  util/list3.sml
+
+  reals/real-lit.sml
+  reals/real-to-bits.sig
+  reals/real-to-bits-fn.sml
+  reals/real64-to-bits.sml
+
+  compiler/int-const.sml
+  compiler/real-const.sml
+  compiler/compileexn.sml
+  compiler/target.sig
 
 #if defined(TARGET_BIG_ENDIAN)
-        compiler/endianess-big.sml
+  compiler/endianess-big.sml
 #elif defined(TARGET_LITTLE_ENDIAN)
-        compiler/endianess-little.sml
+  compiler/endianess-little.sml
         (* falling back on host-specific endianness spec *)
 #elif defined(BIG_ENDIAN)
-	compiler/endianess-big.sml
+  compiler/endianess-big.sml
 #else
-	compiler/endianess-little.sml
+  compiler/endianess-little.sml
 #endif
 
 #if defined(TARGET_SIZE_32)
-        compiler/target32.sml
+  compiler/target32.sml
 #elif defined(TARGET_SIZE_64)
-        compiler/target64.sml
-        (* falling back on host-specific size spec *)
+  compiler/target64.sml
+  (* falling back on host-specific size spec *)
 #elif defined(SIZE_32)
-	compiler/target32.sml
+  compiler/target32.sml
 #else
-	compiler/target64.sml
+  compiler/target64.sml
 #endif
 
 (* ------------------------------- Imports ------------------------------- *)
 
-(* Basis *)
-$smlnj/basis/basis.cm
+  (* Basis *)
+  $smlnj/basis/basis.cm
 
-(* smlnj-lib *)
-$smlnj/smlnj-lib/smlnj-lib.cm
-$smlnj/smlnj-lib/controls-lib.cm
-$smlnj/smlnj-lib/prettyprint-lib.cm
+  (* smlnj-lib *)
+  $smlnj/smlnj-lib/smlnj-lib.cm
+  $smlnj/smlnj-lib/controls-lib.cm
+  $smlnj/smlnj-lib/prettyprint-lib.cm

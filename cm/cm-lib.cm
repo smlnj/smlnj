@@ -139,3 +139,4 @@ is
   $/pickle-lib.cm
   $/pgraph.cm
   $smlnj/ml-yacc/ml-yacc-lib.cm
+  $smlnj/internal/smlnj-version.cm

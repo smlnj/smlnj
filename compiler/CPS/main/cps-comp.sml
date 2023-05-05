@@ -51,7 +51,7 @@ struct
 *)
 
    fun bug s = ErrorMsg.impossible ("CPSComp:" ^ s)
-   val say = Control.Print.say
+   val say = PrintControl.say
 
    fun phase x = Stats.doPhase (Stats.makePhase x)
 
@@ -67,7 +67,7 @@ struct
 
   (** pretty printing for the CPS code *)
    fun prC s e =
-       if !Control.CG.printit
+       if !CPSControl.printit
        then (say (concat["\n[After ", s, " ...]\n\n"]);
 	     PPCps.ppFunction e;
 	     say "\n"; e)
@@ -91,7 +91,7 @@ struct
 	    (* split out heap-allocated literals; litProg is the bytecode *)
 (* TODO: switch to newLiterals for all targets *)
 	    val (function, data) =
-		if !Control.CG.newLiterals orelse Target.is64
+		if !CPSControl.newLiterals orelse Target.is64
 		then newlitsplit function
 		else litsplit function
 	    val _ = prC "lit-split" function
@@ -103,8 +103,8 @@ struct
 	    val funcs = spill funcs
 (* TODO: move clustering and limit checks to here *)
 	(* optional CFG generation to a file for debugging purposes *)
-(* ----- omit debugging code dependent on NewCodeGen (CPStoCFG.translate)
-	  val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
+(* ----- omit debugging code dependent on CodeGen (CPStoCFG.translate)
+	  val _ = if !CodeGenControl.dumpCFG orelse !CodeGenControl.printCFG
 		  then let  val clusters = Cluster.cluster (true, funcs)(* form clusters *)
 		            (* add heap-limit checks etc. *)
 			    val (clusters, maxAlloc) = allocChks clusters
@@ -116,12 +116,12 @@ struct
 						       OS.Path.joinBaseExt {base=base, ext=SOME "pkl"}
 						       | _ => source ^ ".pkl"
 						(* end case *))
-			in if !Control.CG.printCFG
+			in if !CodeGenControl.printCFG
 		           then (say "***** CFG *****\n";
 			         PPCfg.prCompUnit cfg;
 				 say "***** END CFG *****\n")
 			   else ();
-			   if !Control.CG.dumpCFG
+			   if !CodeGenControl.dumpCFG
 			   then (say (concat["## dump CFG pickle to ", pklFile, "\n"]);
 			         CFGPickler.toFile (pklFile, cfg))
 			   else ()

@@ -50,8 +50,8 @@ structure Literals : LITERALS =
     fun bug msg = ErrorMsg.impossible ("Literals: "^msg)
     fun mkv _ = LV.mkLvar()
 
-    val debugFlg = Control.CG.debugLits
-    val say = Control.Print.say
+    val debugFlg = CPSControl.debugLits
+    val say = PrintControl.say
 
   (****************************************************************************
    *                         A MINI-LITERAL LANGUAGE                          *

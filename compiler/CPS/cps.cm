@@ -20,6 +20,9 @@ Library
   structure Cluster     (* main/cluster.sml *)
   functor CPSCompFn     (* main/cps-comp.sml -- fixed so it does not depend on NewCodeGen *)
 
+  signature CPSCONTROL  (* main/control.sig *)
+  structure CPSControl  (* main/control.sml *)
+
 (*
    CPSCompFn was called in CodeGen/main/code-gen-fn.sml, but it depends on several things
    defined in CodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
@@ -48,6 +51,8 @@ is
   main/mach-spec.sig   (* these 3 moved (copied) from NCG/main -- they belong in CPS *)
   main/object-desc.sig (* OBJECT_DESC, used in mach-spec.sig *)
   main/object-desc.sml (* ObjectDesc, used only in CodeGen *)
+  main/control.sig     (* CPSCONTROL *)
+  main/control.sml     (* CPSControl *)
 
   convert/convert.sml
   convert/cpstrans.sml
@@ -81,13 +86,13 @@ $smlnj/basis/basis.cm
 
 (* smlnj-lib *)
 $smlnj/smlnj-lib/smlnj-lib.cm
+$smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
 
 (* viscomp Libraries *)
 $smlnj/viscomp/basics.cm
 $smlnj/viscomp/elabdata.cm (* Access, LambdaVar *)
 $smlnj/viscomp/flint.cm    (* FLINT *)
-$smlnj/viscomp/toplevel.cm (* Control *)
 
 (* other *)
 $compiler/Library/const-arith/const-arith-lib.cm   (* structure ConstArith *)

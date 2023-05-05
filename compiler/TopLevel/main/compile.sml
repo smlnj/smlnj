@@ -4,13 +4,13 @@
  * All rights reserved.
  *)
 
-functor CompileF (
+functor CompileFn
+  (structure M  : CODE_GENERATOR
+   structure CC : CCONFIG
+   val cproto_conv : string)
+  : COMPILE0 =
 
-    structure M  : CODE_GENERATOR
-    structure CC : CCONFIG
-    val cproto_conv : string
-
-  ) : COMPILE0 = struct
+struct
 
     structure SE = StaticEnv
     structure LV = LambdaVar
@@ -196,4 +196,4 @@ functor CompileF (
             pickle = pickle             (* produced by pickUnpick *)
 	  } end (* function compile *)
 
-  end (* functor CompileF *)
+end (* functor CompileFn *)

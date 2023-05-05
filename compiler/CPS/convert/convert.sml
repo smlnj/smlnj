@@ -38,7 +38,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
     open CPS
 
     fun bug s = ErrorMsg.impossible ("Convert: " ^ s)
-    val say = Control.Print.say
+    val say = PrintControl.say
     val mkv = fn _ => LV.mkLvar()
     val cplv = LV.dupLvar
     fun mkfn f = let val v = mkv() in f v end

@@ -34,7 +34,7 @@ val print : cluster list -> cluster list
 
   (* print clusters if requested *)
     fun print clusters = let
-	  val say = Control.Print.say
+	  val say = PrintControl.say
 	  fun prCluster (fn1::fns) = (
 		say "***** CLUSTER START *****\n";
 		PPCps.ppFunction fn1;
@@ -157,7 +157,7 @@ val print : cluster list -> cluster list
 	  val extract = fn () => if singleEntry
 		then let (* check the results of normalization *)
 		  val clusters = extract ()
-		  val say = Control.Print.say
+		  val say = PrintControl.say
 		  in
 		    case List.find checkCluster clusters
 		     of SOME cluster => (
@@ -175,7 +175,7 @@ val print : cluster list -> cluster list
 *-DEBUG*)
 	  in
 	    build funcs;
-	    if !Control.CG.printClusters
+	    if !CPSControl.printClusters
 	      then print (extract())
 	      else extract()
 	  end (* cluster *)

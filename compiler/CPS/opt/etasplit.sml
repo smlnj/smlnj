@@ -40,9 +40,9 @@ structure EtaSplit : ETASPLIT =
     val copyLvar = LV.dupLvar
 
     fun etasplit {function=(fkind,fvar,fargs,ctyl,cexp), click} = let
-	  val debug = !Control.CG.debugcps (* false *)
-	  fun debugprint s = if debug then Control.Print.say s else ()
-	  fun debugflush() = if debug then Control.Print.flush() else ()
+	  val debug = !CPSControl.debugcps (* false *)
+ 	  fun debugprint s = if debug then PrintControl.say s else ()
+	  fun debugflush() = if debug then PrintControl.flush() else ()
 
 	  local
 	    exception SPLIT2

@@ -13,7 +13,6 @@ struct
 
 local open CPS
 
-structure CGoptions = Control.CG
 structure P = CPS.P (* to avoid confusing SourceGroup *)
 val mkLvar = LambdaVar.mkLvar
 

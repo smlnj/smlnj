@@ -1,12 +1,12 @@
 (* smlnj/viscomp/codegen.cm
  *
- * New (LLVM) code generator
+ * New (LLVM) code generator, including CFG IR
  *
  * (C) 2023 The Fellowship of SML/NJ (www.smlnj.org)
  *)
 
 Library
-	library ($compiler/NewCodeGen/newcodegen.cm)
+	library ($compiler/CodeGen/newcodegen.cm)
 is
 	(* reference to our only group... *)
-	$compiler/NCG/codegen.cm
+	$compiler/CodeGen/codegen.cm

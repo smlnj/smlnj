@@ -840,10 +840,10 @@ C.NUMt{sz=sz}
 	    entry = entry,
 	    fns = rest @ gcClusters
 	  } end
-handle ex => (
-Control.Print.say "#### translate:\n";
-ignore (Cluster.print clusters);
-Control.Print.say "####\n";
-raise ex)
+handle ex =>
+  (PrintControl.say "#### translate:\n";
+   ignore (Cluster.print clusters);
+   PrintControl.say "####\n";
+   raise ex)
 
-  end
+end (* functor CPStoCFGFn *)

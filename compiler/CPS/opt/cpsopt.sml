@@ -14,19 +14,19 @@ signature CPSOPT =
 functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
   struct
 
-    structure CG = Control.CG
+    structure CTL = CPSControl
     structure Flatten = Flatten(MachSpec)
     structure Uncurry = Uncurry(MachSpec)
 
-    fun say msg = Control.Print.say(String.concat msg)
+    fun say msg = PrintControl.say(String.concat msg)
 
   (** the main optimization function *)
 (* NOTE: The third argument to reduce is currently ignored.
    It used to be used for reopening closures. *)
     fun reduce (function, _, afterClosure) = let
-	  val debug = !CG.debugcps (* false *)
+	  val debug = !CTL.debugcps (* false *)
 	  fun debugprint s = if debug then say s else ()
-	  fun debugflush() = if debug then Control.Print.flush() else ()
+	  fun debugflush() = if debug then PrintControl.flush() else ()
 	  val clicked = ref 0
 	  fun click (s:string) = (debugprint[s]; clicked := !clicked+1)
 
@@ -37,7 +37,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		      then (say["\n\n[After ", s, " ...]\n\n"]; printE e; e)
 		      else e
 		in
-		  prGen (Control.CG.printit, PPCps.ppFunction)
+		  prGen (CTL.printit, PPCps.ppFunction)
 		end
 
 	  fun contract last f = let
@@ -56,9 +56,9 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 
 	(* dropargs are turned off in first_contract to ban unsafe eta reduction *)
 	  fun first_contract f = let
-		val dpargs = !CG.dropargs
+		val dpargs = !CTL.dropargs
 		val f' = (
-		      clicked := 0; CG.dropargs := false;
+		      clicked := 0; CTL.dropargs := false;
 		      Contract.contract {
 			  function=f, click=click, last=false, size=cpssize
 			})
@@ -67,7 +67,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		      "First contract stats: CPS Size = ", Int.toString (!cpssize),
 		      " , clicks = ", Int.toString (!clicked), "\n"
 		    ];
-		  CG.dropargs := dpargs;
+		  CTL.dropargs := dpargs;
 		  f'
 		end
 
@@ -88,7 +88,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 
 	  fun expand (f, n, unroll) = (
 		clicked := 0;
-		if not(!CG.betaexpand)
+		if not(!CTL.betaexpand)
 		  then f
 		  else let
 		    val f' = Expand.expand{
@@ -115,7 +115,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 
 	  fun flatten f = (
 		clicked := 0;
-		if not(!CG.flattenargs)
+		if not(!CTL.flattenargs)
 		  then f
 		  else let
 		    val f' = Flatten.flatten{function=f, click=click}
@@ -143,7 +143,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 
 	  fun eta f = (
 		clicked := 0;
-		if not(!CG.eta)
+		if not(!CTL.eta)
 		  then f
 		  else let
 		    val f' = Eta.eta{function=f, click=click}
@@ -156,7 +156,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		then f
 		else (
 		  clicked := 0;
-		  if not(!CG.uncurry)
+		  if not(!CTL.uncurry)
 		    then f
 		    else let
 		      val f' = Uncurry.etasplit{function=f, click=click}
@@ -167,7 +167,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 
 	  fun etasplit f = (
 		clicked := 0;
-		if not(!CG.etasplit)
+		if not(!CTL.etasplit)
 		  then f
 		  else let
 		    val f' = EtaSplit.etasplit{function=f, click=click}
@@ -177,11 +177,11 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		    end)
 
 	  fun lambdaprop x = x
-              (* if !CG.lambdaprop then (debugprint "\nLambdaprop:"; CfUse.hoist x) else x *)
+              (* if !CTL.lambdaprop then (debugprint "\nLambdaprop:"; CfUse.hoist x) else x *)
 
-	  val bodysize = !CG.bodysize
-	  val rounds = !CG.rounds
-	  val reducemore = !CG.reducemore
+	  val bodysize = !CTL.bodysize
+	  val rounds = !CTL.rounds
+	  val reducemore = !CTL.reducemore
 
 	(* Note the parameter k starts at rounds..0 *)
 	  fun linear_decrease k = (bodysize * k) div rounds
@@ -196,7 +196,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 	    | cycle (0, false, func) = unroll func
 	    | cycle (k, unrolled, func) = let
 		val func = lambdaprop func
-		val (c, func) = if !CG.betaexpand orelse !CG.flattenargs
+		val (c, func) = if !CTL.betaexpand orelse !CTL.flattenargs
 		      then expand_flatten_contract(func, linear_decrease k)
 		      else (0, func)
 		(* val _ = prC "cycle_contract" func *)
@@ -217,7 +217,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 	    | apply ("uncurry",f)	 = uncurry f
 	    | apply ("etasplit",f)       = etasplit f
 	    | apply ("last_contract",f)  = last_contract f
-	    | apply ("cycle_expand",f)   = cycle(rounds, not(!CG.unroll), f)
+	    | apply ("cycle_expand",f)   = cycle(rounds, not(!CTL.unroll), f)
 	    | apply ("contract",f)       = contract false f
 	    | apply ("flatten",f)        = flatten f
 	    | apply ("zeroexpand",f)     = zeroexpand f
@@ -228,12 +228,12 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 	    (if rounds < 0
 	      then function
 	      else let
-		val optimized = foldl apply function (!CG.cpsopt)
+		val optimized = foldl apply function (!CTL.cpsopt)
 (*              val function1 = first_contract function *)
 (*              val function2 = eta function1 *)
 (*              val function3 = uncurry function2 *)
 (*              val function4 = etasplit function3 *)
-(*              val function5 = cycle(rounds, not(!CG.unroll), function4) *)
+(*              val function5 = cycle(rounds, not(!CTL.unroll), function4) *)
 (*              val function6 = eta function5 (* ZSH added this new phase *) *)
 (*              val function7 = last_contract function6 *)
 (*              val optimized function7 *)
@@ -241,7 +241,7 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		(* expand out the 64-bit and IntInf operations and then do one last
 		 * contraction pass.
 		 *)
-		  if !CG.printit
+		  if !CTL.printit
 		    then (
 		      say ["\n\n[Before lowering]\n\n"];
 		      PPCps.ppFunction optimized)

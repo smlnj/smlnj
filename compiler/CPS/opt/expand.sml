@@ -21,7 +21,7 @@ structure Expand : EXPAND =
 struct
 
 local open CPS
-      structure CG = Control.CG
+      structure CTL = CPSControl
       structure LV = LambdaVar
 in
 
@@ -50,10 +50,10 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
   let
    val clicked_any = ref false
    val click = fn z => (click z; clicked_any := true)
-   val debug = !CG.debugcps (* false *)
-   val debugprint = if debug then Control.Print.say else fn _ => ()
-   val debugflush = if debug then Control.Print.flush else fn _ => ()
-   val CGinvariant = !CG.invariant
+   val debug = !CTL.debugcps (* false *)
+   val debugprint = if debug then PrintControl.say else fn _ => ()
+   val debugflush = if debug then PrintControl.flush else fn _ => ()
+   val CGinvariant = !CTL.invariant
    fun label v = if afterClosure then LABEL v else VAR v
    datatype info = Fun of {escape: int ref, call: int ref, size: int ref,
 			   args: lvar list, body: cexp,
@@ -392,7 +392,7 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
 		    we are within the definition of the function;
 		    andalso it looks like things won't grow too much.
 		  *)
-		   (!CG.unroll_recur orelse level >= lev)
+		   (!CTL.unroll_recur orelse level >= lev)
 		   andalso within andalso predicted <= bodysize
 	     | NO_UNROLL =>
 		   !unroll_call = 0 andalso
@@ -564,7 +564,7 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
       notearg fvar;
       app notearg fargs;
 (***>
-      if !CG.printit then PPCps.ppCps cexp
+      if !CTL.printit then PPCps.ppCps cexp
 	  else ();
 <***)
       debugprint("Expand: pass1: ");
@@ -585,7 +585,7 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
 			 (fkind,fvar,fargs,ctyl,pass2_beta(ALL,cexp)) *)
 			(fkind,fvar,fargs,ctyl,e'))
 	      end
-      else if !CG.unroll
+      else if !CTL.unroll
 	 then let val _ = (debugprint(" (headers)\n"); debugflush())
 		  val e' = if do_headers then gamma cexp else cexp
 	      in  if !clicked_any

@@ -17,11 +17,11 @@ struct
 local open CPS
       structure LT = LtyExtern
       structure LV = LambdaVar
-      structure CG = Control.CG
+      structure CTL = CPSControl
 
 in
 
-val say = Control.Print.say
+val say = PrintControl.say
 fun bug s = ErrorMsg.impossible ("Flatten: " ^ s)
 
 datatype arity = BOT
@@ -44,9 +44,9 @@ let
 val clicks = ref 0
 
 val maxfree = MachSpec.numRegs
-val debug = !Control.CG.debugcps (* false *)
-fun debugprint s = if debug then Control.Print.say(s) else ()
-fun debugflush() = if debug then Control.Print.flush() else ()
+val debug = !CTL.debugcps (* false *)
+fun debugprint s = if debug then PrintControl.say(s) else ()
+fun debugflush() = if debug then PrintControl.flush() else ()
 
 (* Note that maxfree has already been reduced by 1 (in CPScomp)
    on most machines to allow for an arithtemp *)
@@ -76,7 +76,7 @@ fun escape(VAR v) = (case get v
 fun field(v, SELp(i,_)) = select(v,i)
   | field(v, _) = escape v
 
-val botlist = if !CG.flattenargs then map (fn _ => BOT)
+val botlist = if !CTL.flattenargs then map (fn _ => BOT)
 				 else map (fn _ => TOP)
 
 fun enterFN (_,f,vl,_,cexp) =
@@ -117,7 +117,7 @@ fun checkFlatten(_,f,vl,_,body) =
 		        andalso headroom-(c-1) >= 0
 		        andalso
 			(not (some_non_record_actual orelse !escape)
-			 orelse !CG.extraflatten
+			 orelse !CTL.extraflatten
 			        andalso j=c-1 andalso findFetch(v,j) body)
 		     then a::loop(vl,al,headroom-(c-1))
 		     else TOP::loop(vl,al,headroom)

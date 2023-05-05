@@ -11,23 +11,30 @@ FLINT/flint.cm -- the CPS Group/Library CDF
 
 (* ---------------------------- Exports ---------------------------- *)
 
+  signature FLINT 
+  signature FLINTCONTROL
+
   structure TransUtil
   structure Translate
-  structure Lty
-  structure LtyKindChk
-  structure LtyKernel
-  structure LtyDef
-  structure LtyExtern
+  structure Lty        (CSP)
+  structure LtyDef     (CSP)
+  structure LtyKernel  (CSP)
+  structure LtyBasic   (CSP)
+  structure LtyExtern  (CSP)
+  structure FunRecMeta (CSP)
+  structure LtyKindChk 
   structure PrimTyc
   structure PPLty
+  structure PLambda    (CSP)
+  structure FLINT
+  structure FlintUtil  (CSP)
+  structure ChkFlint 
   structure PPFlint
   structure LContract
   structure Specialize
-  structure LambdaVar [re-exporting import!]
-  structure ChkFlint
+  structure Recover    (CPS)
   structure FLINTOpt
-  signature FLINT
-  structure FLINT
+  structure FLINT_Control
 
 
 (* ---------------------------- Module Index ---------------------------- *) 

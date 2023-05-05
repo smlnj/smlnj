@@ -7,7 +7,7 @@
 (*
 Transformations performed by the contracter:
 
-TRANSFORMATION:                       Click:   Compiler.Control.CG flag:
+TRANSFORMATION:                       Click:   Compiler.CPSControl flag:
 ------------------------------------------------------------------------
 Inlining functions that are used once   e      betacontract
 Cascaded inlining of functions          q
@@ -52,9 +52,9 @@ open CPS
 structure LB = LtyBasic
 structure LV = LambdaVar
 
-structure CG = Control.CG
+structure CTL = CPSControl
 
-val say = Control.Print.say
+val say = PrintControl.say
 fun bug s = ErrorMsg.impossible ("Contract: " ^ s)
 
 fun inc (ri as ref i) = (ri := i+1)
@@ -193,11 +193,11 @@ datatype result = datatype ContractPrim.result
 fun contract {function=(fkind,fvar,fargs,ctyl,cexp), click, last, size=cpssize} =
 let
 
-val deadup = !Control.CG.deadup
-val CGbetacontract = !Control.CG.betacontract
-val debug = !Control.CG.debugcps (* false *)
-fun debugprint s = if debug then Control.Print.say(s) else ()
-fun debugflush() = if debug then Control.Print.flush() else ()
+val deadup = !CTL.deadup
+val CGbetacontract = !CTL.betacontract
+val debug = !CTL.debugcps (* false *)
+fun debugprint s = if debug then PrintControl.say(s) else ()
+fun debugflush() = if debug then PrintControl.flush() else ()
 
 local exception UsageMap
 in  val m : {info: info, used : int ref, called : int ref}
@@ -273,13 +273,13 @@ fun checkFunction(_,f,vl,_,_) =
     of {called=ref 2,used=ref 2,
 	info=FNinfo{specialuse=ref(SOME(ref 1)),
 		    body as ref(SOME(BRANCH(_,_,c,a,b))),...},...} =>
-	   if not (!CG.ifidiom) then body:=NONE
+	   if not (!CTL.ifidiom) then body:=NONE
 	   else (* NOTE: remapping f *)
 	        enter(f,{info=IFIDIOMinfo{body=ref(SOME(c,a,b))},
 			 called=ref 2, used=ref 2})
      | {called=ref c,used=ref u,info=FNinfo{liveargs,...}} =>
 	   if u<>c (* escaping function *)
-	       orelse not(!CG.dropargs) then ()
+	       orelse not(!CTL.dropargs) then ()
 	   else liveargs := SOME(map used vl)
      | _  => ())
 
@@ -446,7 +446,7 @@ and g hdlr = let
 		  val {used,...} = get w
 		  val vl' = map (map1 ren) vl
 		  in
-		    if !used=0 andalso !CG.deadvars
+		    if !used=0 andalso !CTL.deadvars
 		      then (click "b"; app (use_less o #1) vl'; g' e)
 		      else let
 		      (* Check to see if this record is recreating an existing record.
@@ -501,13 +501,13 @@ and g hdlr = let
 		  val {used,...} = get w
 		  val v' = ren v
 		  in
-		    if !used=0 andalso !CG.deadvars
+		    if !used=0 andalso !CTL.deadvars
 		      then (
 			click "c"; (* could rmv w here *)
 			use_less v';
 			g' e)
 		      else let
-			val z = if !CG.selectopt
+			val z = if !CTL.selectopt
 			      then (case v'
 				 of VAR v'' => (case get v''
 				       of {info=RECinfo(_, vl),...} => (let
@@ -657,7 +657,7 @@ and g hdlr = let
 		      | l5 => FIX(map #1 l5, e')
 		  end
 	      | SWITCH(v, c, el) => (case ren v
-		   of v' as NUM{ival, ty={tag=true, ...}} => if !CG.switchopt
+		   of v' as NUM{ival, ty={tag=true, ...}} => if !CTL.switchopt
 		       then let
 			 val i = IntInf.toInt ival
 			 fun f (e::el, j) = (if i=j then () else drop_body e; f(el, j+1))
@@ -671,7 +671,7 @@ and g hdlr = let
 		       else SWITCH(v', c, map g' el)
 		    | v' => SWITCH(v',c, map g' el)
 		  (* end case *))
-	      | LOOKER(P.GETHDLR, _, w, t, e) => if !CG.handlerfold
+	      | LOOKER(P.GETHDLR, _, w, t, e) => if !CTL.handlerfold
 		  then (case hdlr
 		     of NONE => if used w
 			  then LOOKER(P.GETHDLR,[],w,t,g (SOME(VAR w)) e)
@@ -685,7 +685,7 @@ and g hdlr = let
 		  fun sameVar (VAR x, VAR y) = x = y
 		    | sameVar _ = false
 		  in
-		    if !CG.handlerfold
+		    if !CTL.handlerfold
 		      then (case hdlr
 			 of SOME v'' => if sameVar (v', v'')
 			      then (click "k"; use_less v''; e')
@@ -703,7 +703,7 @@ and g hdlr = let
 		  val vl' = map ren vl
 		  val {used,...} = get w
 		  in
-		    if !used=0 andalso !CG.deadvars
+		    if !used=0 andalso !CTL.deadvars
 		      then (click "m"; app use_less vl'; g' e)
 		      else let
 			val e' = g' e
@@ -971,7 +971,7 @@ and g hdlr = let
 	    (***** BRANCH *****)
 	      | BRANCH(rator, vl, c, e1, e2) => let
 		  val vl' = List.map ren vl
-		  fun skip () = if !CG.branchfold andalso equalUptoAlpha(e1, e2)
+		  fun skip () = if !CTL.branchfold andalso equalUptoAlpha(e1, e2)
 			  then (
 			    click "z";
 			    app use_less vl';
@@ -987,7 +987,7 @@ and g hdlr = let
 			  | _ => NONE
 			(* end case *))
 		(* first we try to contract the condition *)
-		  val cond = if !CG.comparefold then branch (rator, vl') else NONE
+		  val cond = if !CTL.comparefold then branch (rator, vl') else NONE
 		  in
 		    case cond
 		     of NONE => (case (e1, e2)
@@ -1015,7 +1015,7 @@ and g hdlr = let
       and doArith (rator, vl, w, t, e) = let
 	    val vl' = List.map ren vl
 	    in
-	      if !CG.arithopt
+	      if !CTL.arithopt
 		then (case arith(rator, vl')
 		   of Val v => (
 			List.app use_less vl';
@@ -1045,9 +1045,9 @@ and g hdlr = let
 		      else PURE(rator, vl', w, t, e')
 		  end
 	    in
-	      if !used=0 andalso !CG.deadvars
+	      if !used=0 andalso !CTL.deadvars
 		then (click "m"; List.app use_less vl'; g' e)
-	      else if !CG.arithopt
+	      else if !CTL.arithopt
 		then (case pure(rator, vl')
 		   of Val v => (
 			List.app use_less vl';

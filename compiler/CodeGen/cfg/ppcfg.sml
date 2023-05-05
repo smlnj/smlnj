@@ -1,11 +1,10 @@
 (* ppcfg.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  * 
  * Formatting cfg using the new PrettyPrint library.
  *)
-
 
 signature PP_CFG =
 sig
@@ -21,7 +20,7 @@ sig
     val paramToString : CFG.param -> string
 
     (* formatting for various CFG_Prim types *)
-    val fmtAlloc : CFG_Prim.alloc -> Formatting.formt
+    val fmtAlloc : CFG_Prim.alloc -> Formatting.format
     val fmtArithop : CFG_Prim.arithop -> Formatting.format
     val fmtPureop : CFG_Prim.pureop -> Formatting.format
     val fmtCmpop : CFG_Prim.cmpop -> Formatting.format
@@ -247,11 +246,11 @@ struct
 		  | C.THROW(f, args, tys) =>
 		      PP.hblock [PP.text "throw ", fmtExp f, fmtArgs (args, tys)]
 		  | C.GOTO(lab, args) =>
-		      fmtApp (PP.cblock [PP.text "goto L_", fmtLvar lab), args]
+		      fmtApp (PP.cblock [PP.text "goto L_", fmtLvar lab], args)
 		  | C.SWITCH(arg, cases) =>
 		      let fun fmtCase (i, e) =
-			      PP.vblock [PP.hblock (PP.text "case", PP.integer i),
-				       PP.indent 2 (fmtStm e)]
+			      PP.vblock [PP.hblock [PP.text "case", PP.integer i],
+				         PP.indent 2 (fmtStm e)]
 		      in PP.vblock
 			   [PP.hblock [PP.text "switch", PP.parens (fmtExp arg), PP.lbrace],
 			    indent 2 (PP.vblock (List.mapi fmtCase cases)),
@@ -331,8 +330,8 @@ struct
     fun fmtCompUnit {srcFile, entry, fns} =
 	  PP.vblock
 	    [PP.hblock [PP.text "##########", PP.text srcFile],
-	     fmtCluster entry;
-	     PP.vblock (map (fn f => (PP.vblock [PP.text "#####", fmtCluster f)]) fns);
+	     fmtCluster entry,
+	     PP.vblock (map (fn f => (PP.vblock [PP.text "#####", fmtCluster f])) fns),
 	     PP.text "##########"]
 
   end

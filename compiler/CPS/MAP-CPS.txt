@@ -25,8 +25,8 @@ cps.cm  -- the CPS Group/Library CDF
   signature MACH_SPEC  (main/mach-spec.sig; CodeGen)
   functor CPSCompFn    (main/cps-comp.sml; CodeGen)
 
-  What else needs to exported for what clients, after cyclical
-  dependency between CPS and NewCodeGen (CPSCompFn) is fixed?
+  signature CPSCONTROL (main/control.sig)
+  structure CPSControl (main/control.sml)
 
 
 (* ---------------------------- Module Index ---------------------------- *) 
@@ -53,6 +53,8 @@ SPILL		   main/spill-fn.sml
 SpillFn		   main/spill-fn.sml
 OBJECT_DESC	   main/object-desc.sig
 ObjectDesc*	   main/object-desc.sml
+CPSCONTROL	   main/control.sig
+CPSControl	   main/control.sml
 
 GLOBALFIX	   clos/globalfix.sml
 GlobalFix	   clos/globalfix.sml
@@ -97,6 +99,7 @@ ErrorMsg           Basics/errormsg/errormsg.sml
 Target		   Basics/compiler/target[32,64].sml
 IntConst	   Basics/compiler/int-const.sml
 RealConst	   Basics/compiler/real-const.sml
+BasicControl	   Basics/control/basiccontrol.sml 
 
 LambdaVar	   ElabData/basics/lambdavar.sml
 Access		   ElabData/basics/access.sml
@@ -113,8 +116,9 @@ LtyBasic   	   FLINT/kernel/ltybasic.sml
 LtyExtern   	   FLINT/kernel/ltyextern.sml   
 FunRecMeta  	   FLINT/kernel/funrecmeta.sml  
 
-Control		   TopLevel/main/control.sml
-Control_CG	   TopLevel/main/control.sml
+Controls	   $smlnj/smlnj-lib/controls.cm
+ControlUtil	   $smlnj/smlnj-lib/controls.cm
+ControlRegistry	   $smlnj/smlnj-lib/controls.cm
 
 ConstArith	   Library/const-arith/const-arith.sml
 
@@ -231,6 +235,18 @@ main/
   mach-spec.sig
     < MACH_SPEC
     > OBJECT_DESC
+
+  control.sig
+    < CPSCONTROL
+
+  control.sml
+    < CPSControl
+    > CPSCONTROL
+      ----------
+      Controls
+      ControlUtil
+      ControlRegistry
+      BasicControl
 
 
 clos/

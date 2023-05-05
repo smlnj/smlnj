@@ -4,6 +4,10 @@
  * All rights reserved.
  *)
 
+(* [DBM] This is an improved but incomplete version of Cluster that is meant to 
+ * eventually replace CPS/main/cluster.sml. This file should then move to
+ * CPS/main -- it belongs in the CPS component. *)
+
 structure Cluster : sig
 
   (* `cluster (singleEntry, fns)` groups the functions `fns` of a compilation
@@ -175,7 +179,7 @@ structure Cluster : sig
 
   (* print clusters if requested *)
     fun print clusters = let
-	  val say = Control.Print.say
+	  val say = PrintControl.say
 	  fun prCluster (fn1::fns) = (
 		say "***** CLUSTER START *****\n";
 		PPCps.ppFunction fn1;
@@ -198,7 +202,7 @@ structure Cluster : sig
 		    [] clusters
 		else clusters
 	  in
-	    if !Control.CG.printClusters then print clusters else ();
+	    if !CPSControl.printClusters then print clusters else ();
 	    clusters
 	  end
 

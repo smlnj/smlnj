@@ -40,8 +40,8 @@ structure NewLiterals : LITERALS =
 
     fun bug msg = ErrorMsg.impossible ("Literals: "^msg)
 
-    val debugFlg = Control.CG.debugLits
-    val say = Control.Print.say
+    val debugFlg = CPSControl.debugLits
+    val say = PrintControl.say
 
   (* number of bytes per ML value *)
     val valueSzb = Target.mlValueSz div 8

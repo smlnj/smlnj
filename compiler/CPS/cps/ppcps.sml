@@ -38,7 +38,7 @@ structure PPCps : PPCPS =
 
     open CPS
 
-    val say = Control.Print.say
+    val say = PrintControl.say
 
 (* NOT USED!
     type lvarLtyTable = LT.lty LV.Tbl.hash_table

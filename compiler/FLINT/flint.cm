@@ -9,26 +9,36 @@
 
 Group
 
+(* ------------------------------ Exports ------------------------------ *)
+
+  signature FLINT
+  signature FLINTCONTROL
+
   structure TransUtil
   structure Translate
   structure Lty
-  structure LtyKindChk
-  structure LtyKernel
   structure LtyDef
+  structure LtyKernel
+  structure LtyBasic
   structure LtyExtern
+  structure FunRecMeta
+  structure LtyKindChk
   structure PrimTyc
   structure PPLty
+  structure PLambda
+  structure FLINT
+  structure FlintUtil
+  structure ChkFlint
   structure PPFlint
   structure LContract
   structure Specialize
-(*  structure LambdaVar *)
-  structure ChkFlint
+  structure Recover
   structure FLINTOpt
-  structure FLINT
-
-  signature FLINT
+  structure FLINT_Control
 
 is
+
+(* ------------------------------ Members ------------------------------ *)
 
   main/flint-opt.sml
   main/control.sig

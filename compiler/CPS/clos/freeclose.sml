@@ -49,7 +49,7 @@ structure FreeClose : FREECLOSE = struct
     (***************************************************************************
      *  Misc and utility functions                                             *
      ***************************************************************************)
-    val say = Control.Print.say
+    val say = PrintControl.say
     fun vp v = say(LV.lvarName(v))
 
     fun addvL(v,NONE) = NONE

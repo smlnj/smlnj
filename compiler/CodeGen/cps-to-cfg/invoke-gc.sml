@@ -91,7 +91,7 @@ and root2s Unit = "()"
       in
 	concat ["<|", String.concatWith "," flds, "|>"]
       end
-fun prRoots roots = Control.Print.say (concat["Roots = ", roots2s roots, "\n"])
+fun prRoots roots = PrintControl.say (concat["Roots = ", roots2s roots, "\n"])
 *)
 
   (* GC root order: std-link, std-clos, std-cont, callee-saves, std-arg *)
