@@ -4,57 +4,6 @@
  * All rights reserved.
  *)
 
-(* general code-generation controls *)
-signature CGCONTROL =
-  sig
-    val closureStrategy : int ref
-    val cpsopt : string list ref		(* list of cpsopt phases *)
-    val rounds : int ref
-    val betacontract : bool ref
-    val eta : bool ref
-    val selectopt : bool ref
-    val dropargs : bool ref
-    val deadvars : bool ref
-    val flattenargs : bool ref
-    val extraflatten : bool ref
-    val switchopt : bool ref
-    val handlerfold : bool ref
-    val branchfold : bool ref
-    val arithopt : bool ref
-    val betaexpand : bool ref
-    val unroll : bool ref
-    val invariant: bool ref
-    val lambdaprop: bool ref
-    val boxedconstconreps : bool ref
-    val sharepath : bool ref
-    val staticprof : bool ref
-    val unroll_recur : bool ref
-    val debugcps : bool ref
-    val bodysize : int ref
-    val reducemore : int ref
-    val comment : bool ref	(* used in CPS/clos/closure.sml to control debug messages *)
-    val knownGen : int ref
-    val knownClGen : int ref
-    val escapeGen : int ref
-    val calleeGen : int ref
-    val spillGen : int ref
-    val etasplit : bool ref
-    val uncurry : bool ref
-    val ifidiom : bool ref
-    val comparefold : bool ref
-    val debugLits : bool ref
-    val newLiterals : bool ref
-    val debugRep : bool ref
-    val deadup : bool ref
-    val printit : bool ref
-    val printClusters : bool ref
-    val printCFG : bool ref
-    val dumpCFG : bool ref
-    val verifyLLVM : bool ref
-    val debugSpill : bool ref
-    val debugSpillInfo : bool ref
-  end (* signature CGCONTROL *)
-
 (* main Control structure *)
 signature CONTROL =
   sig
@@ -63,7 +12,7 @@ signature CONTROL =
     structure Elab : ELAB_CONTROL  (* Elaborator controls *)
     structure MC : MC_CONTROL  (* match compiler controls *)
     structure FLINT : FLINTCONTROL
-    structure CSP : CSPCONTROL			  
+    structure CPS : CPSCONTROL			  
     structure CodeGen : CODEGENCONTROL
     val debugging : bool ref
     val eldebugging : bool ref (* EvalLoopF debugging *)
@@ -90,10 +39,7 @@ signature CONTROL =
 
     val saveLambda : bool ref
     val preserveLvarNames : bool ref
-(*  trackExn and polyEqWarn moved to FLINT_Control -- used in trans/translate.sml
-    val trackExn : bool ref
-    val polyEqWarn : bool ref
-*)
+
     val saveit : bool ref
     val saveAbsyn : bool ref
     val saveConvert : bool ref
@@ -103,3 +49,6 @@ signature CONTROL =
     val tdp_instrument : bool ref
 
   end (* signature CONTROL *)
+
+(* NOTES: trackExn and polyEqWarn moved to FLINT_Control -- used in trans/translate.sml *)
+      

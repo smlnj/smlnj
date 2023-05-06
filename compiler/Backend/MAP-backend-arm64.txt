@@ -1,10 +1,10 @@
-compiler/MAP-backend-amd64.txt
+compiler/Backend/MAP-backend-amd64.txt
 
 Map of compiler/backend-amd64.cm
 
-compiler/
+compiler/Backend
 
-CDF: compiler/backend-amd64.cm
+CDF: compiler/Backend/backend-amd64.cm
   Derived: system/smlnj/viscomp/amd64.cm
 
 (* ---------------------------- Exports ---------------------------- *)
@@ -15,40 +15,30 @@ structure Arm64Backend
 
 LOCAL:
 
-Arm64Backend		TopLevel/backend/arm64-backend.sml
-
-Arm64Spec		NewCodeGen/targets/arm64-spec.sml
+Arm64Backend		Backbackend/arm64-backend.sml
 
 
 IMPORTS:
 
 BackendFn	      	TopLevel/backend/backend-fn.sml
 
-CodeGeneratorFn		NewCodeGen/main/code-gen-fn.sml
-DefaultMachSpecFn	NewCodeGen/main/default-machspec-fn.sml
+CodeGeneratorFn		CodeGen/main/code-gen-fn.sml
+DefaultMachSpecFn	CodeGen/main/default-machspec-fn.sml
+
+Arm64Spec		CodeGen/targets/arm64-spec.sml 
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
 
-TopLevel/
+Backend/
 backend/
 
   arm64-backend.sml
     < ARM64Backend
-    > Arm64Spec
-      ----------
-      BackEndFn*
-      CodeGeneratorFn*
-
-
-NewCodeGen/
-targets/
-
-  arm64-spec.sml
-    < Arm64Spec
     > ----------
-      MACH_SPEC*
-      DefaultMachSpecFn*
+      BackEndFn
+      CodeGeneratorFn
+      Arm64Spec
 
 
 (* ---------------------------- Imports ---------------------------- *)
@@ -57,7 +47,7 @@ targets/
 $smlnj/basis/basis.cm
 
 $smlnj/viscomp/toplevel.cm (* BackendFn *)
-$smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)
+$smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn, Arm64Spec *)
 
 
 (* ---------------------------- Notes ---------------------------- *)
@@ -71,3 +61,8 @@ Alternatively, we could create a new top-level component, "Backend",
 with its own CDF backend.cm, (or backend-amd64.cm and backend-arm64.cm).
 Or two top-level components (?) Arm64Backend and AMD64Backend, with
 respective CDFs backend-arm64.cm and backend-amd64.cm.
+
+Might be best to split BackendFn into three, one each for Compile, Interact,
+and Profile. Especially if we can isolate the compile functionality for CM
+from the interactive system functionality (Interact).
+

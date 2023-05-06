@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Toplevel description file for new implementation of CM
+ * Proxy for $cm/cm-lib.cm, the Toplevel CDF for CM. 
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)

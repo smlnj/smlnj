@@ -1,16 +1,16 @@
 (* amd64.cm
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Library exporting "visible" compilers for AMD64.
  *
- * author: Matthias Blume (blume@research.bell-labs.com)
+ * author: Matthias Blume (matthias.blume@gmail.com)
  *)
 
 Library
 (*
-	(* signatures *)
+	(* signatures -- not usually useful, so don't export *)
 	signature STATS
 	signature CONTROL
 	signature SOURCE
@@ -45,63 +45,90 @@ Library
 	signature ACCESS
 	signature UNIFY
 *)
-	(* frontend stuff *)
+       (* re-exported structures, or "pass-throughs"
+        * DBM: Are these for the "visible compiler"? Seem a bit random. *)
+
+	(* Support stuff *)
 	structure Stats
-	structure Control
 	structure Source
 	structure SourceMap
 	structure ErrorMsg
-	structure Symbol
-	structure SymPath
-	structure PersStamps
-	structure StaticEnv
-	structure DynamicEnv
-	structure Environment
-	structure EnvRef
-	structure ModuleId
-	structure GenModIdMap
-	structure PickMod
-	structure UnpickMod
-	structure Rehash
-	structure PickleSymPid
-	structure UnpickleSymPid
-	structure CompilerPPTable
-	structure Ast
-	structure Absyn
-	structure SmlFile
-	structure Binfile
-	structure PrintHooks
-	structure SMLNJVersion
-	structure CompInfo
-	structure CompileExn
-	structure CoreSym
-	structure FLINT
+	structure CompileExn (* Basics/compiler/compileexn.sml *)
 
-        structure Types
-        structure EntityEnv
-        structure Modules
-        structure Stamps
+	(* Basic = Basics + ElabData/basics *)
+	structure Symbol     (* Basics/symbol *)
+	structure SymPath    (* ElabData/basics *)
+        structure Stamps     (* ElabData/basics *)
+	structure PersStamps (* Basics/pid/ *)
+        structure Access     (* ElabData/basics *)
+	structure CoreSym    (* ElabData/basics *)
+
+	(* ElabData/main *)
+	structure CompInfo
+
+	(* ElabData/statenv *)
         structure Bindings
-        structure TypesUtil
-        structure Variable
-        structure ModuleUtil
+	structure StaticEnv
+	structure GenModIdMap
+
+        (* ElabData/prim *)
         structure PrimopId
+
+	(* syntax -- from Parse & ElabData *)
+	structure Ast      (* Parse/ast *)
+	structure Absyn    (* ElabData/syntax *)
+        structure Variable (* ElabData/syntax *)
+
+        (* Parse *)
+	structure SmlFile
+
+	(* ElabData/types, /modules *)
+        structure Types
+        structure TypesUtil
         structure BasicTypes
         structure PPType
-        structure Access
-        structure Unify
+        structure EntityEnv
+        structure Modules
+        structure ModuleUtil
+	structure ModuleId
 
-	(* the amd64 backend(s) *)
+	(* pickling *)
+	structure PickleSymPid
+	structure UnpickleSymPid
+	structure Rehash
+	structure PickMod
+	structure UnpickMod
+
+	(* Execution (execute.cm) *)
+	structure Binfile    (* binfile/ *)
+	structure DynamicEnv (* dynenv/ *)
+
+	(* FLINT *)
+	structure FLINT
+
+        (* TopLevel *)
+	structure Control
+	structure CompilerPPTable
+	structure PrintHooks
+	structure Environment
+	structure EnvRef
+
+        (* smlnj-version.cm *)
+	structure SMLNJVersion
+
+	(* amd64 backends *)
 	structure AMD64StdCallBackend
 	structure AMD64CCallBackend
 is
-(* members -- none *)
+(* members [SML source files] -- none *)
 
 (* imports *)
 	$smlnj/viscomp/basics.cm
 	$smlnj/viscomp/parser.cm
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/elaborate.cm
+	$smlnj/viscomp/flint.cm
 	$smlnj/viscomp/execute.cm
+	$smlnj/viscomp/toplevel.cm
 	$smlnj/viscomp/amd64.cm
 	$smlnj/internal/smlnj-version.cm

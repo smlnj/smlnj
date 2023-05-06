@@ -17,8 +17,6 @@ sig
 
     val fmtNumkind : CFG_Prim.numkind * int -> Formatting.format
 
-    val paramToString : CFG.param -> string
-
     (* formatting for various CFG_Prim types *)
     val fmtAlloc : CFG_Prim.alloc -> Formatting.format
     val fmtArithop : CFG_Prim.arithop -> Formatting.format
@@ -41,27 +39,29 @@ struct
     structure P = CFG_Prim
     structure PP = Formatting
 
-    fun numkind2s (P.INT, bits) = ["i", i2s bits]
-      | numkind2s (P.FLT, bits) = ["f", i2s bits]
+    val say = PrintControl.say
 
-    fun fmtNumKind (P.INT, bits) = PP.cblock [PP.text "i", PP.integer bits]
-    fun fmtNumKind (P.FLT, bits) = PP.cblock [PP.text "f", PP.integer bits]
+    fun numkind2s (P.INT, bits) = ["i", Int.toString bits]
+      | numkind2s (P.FLT, bits) = ["f", Int.toString bits]
+
+    fun fmtNumkind (P.INT, bits) = PP.cblock [PP.text "i", PP.integer bits]
+    fun fmtNumkind (P.FLT, bits) = PP.cblock [PP.text "f", PP.integer bits]
   
     val fmtCmpop = PP.text o PPCps.cmpopToString
     val fmtFcmpop = PP.text o PPCps.fcmpopToString
 
-    fun arithopToString oper = (case oper
-	   of P.IADD => "IADD"
-	    | P.ISUB => "ISUB"
-	    | P.IMUL => "IMUL"
-	    | P.IDIV => "IDIV"
-	    | P.IREM => "IREM"
-	  (* end case *))
-
-    fun fmtArithop (oper: P.arithop) = PP.text o arithopToString
+    (* fmtArithop: P.arithop -> string *)
+    fun fmtArithop (oper: P.arithop) =
+	PP.text
+	  (case oper
+	     of P.IADD => "IADD"
+	      | P.ISUB => "ISUB"
+	      | P.IMUL => "IMUL"
+	      | P.IDIV => "IDIV"
+	      | P.IREM => "IREM")
 
     (* fmtBranch : P.branch -> PP.format *)
-    fun branchToString oper =
+    fun fmtBranch oper =
 	(case oper
 	   of P.CMP{oper, signed, sz} =>
 	        PP.cblock [fmtCmpop oper,
@@ -79,21 +79,21 @@ struct
 
     (* fmtIntInf : IntInf.int -> PP.format *)
     fun fmtIntInf (i: IntInf.int) : PP.format =
-	PP.cblock [PP.text "0x", PP.text (IntInf.fmt StringCvt.HEX desc)]
+	PP.cblock [PP.text "0x", PP.text (IntInf.fmt StringCvt.HEX i)]
 
     (* fmtAlloc : P.alloc -> PP.format *)
     fun fmtAlloc (P.RECORD{desc, mut=false}) =
-	  cblock [PP.text "record", PP.brackets (fmtIntInf desc)]
-      | fmAlloc (P.RECORD{desc, mut=true}) =
-	  cblock [PP.text "mut_record", PP.brackets (fmtIntInf desc)]
-      | fmAlloc (P.RAW_RECORD{desc, ...}) =
-	  cblock [PP.text "raw_record", PP.brackets (fmtIntInf desc)]
-      | fmAlloc (P.RAW_ALLOC{desc, align, len}) =
+	  PP.cblock [PP.text "record", PP.brackets (fmtIntInf desc)]
+      | fmtAlloc (P.RECORD{desc, mut=true}) =
+	  PP.cblock [PP.text "mut_record", PP.brackets (fmtIntInf desc)]
+      | fmtAlloc (P.RAW_RECORD{desc, ...}) =
+	  PP.cblock [PP.text "raw_record", PP.brackets (fmtIntInf desc)]
+      | fmtAlloc (P.RAW_ALLOC{desc, align, len}) =
 	  PP.cblock
 	    [PP.cblock [PP.text "raw_", PP.integer align, PP.text "_alloc"],
 	     PP.brackets
 	       (PP.cblock [case desc
-			   of SOME d => PP.cblock (fmtIntInf d, PP.semicolon)
+			   of SOME d => PP.cblock [fmtIntInf d, PP.semicolon]
 			    | NONE => PP.empty,
 			 PP.integer len])]
 
@@ -124,7 +124,7 @@ struct
 	  PP.cblock [PP.text prefix, PP.text "_", PP.integer from,
 		     PP.text "_to_", PP.integer to]
 
-     fun fmtArith (P.ARITH {oper, sz}) = PP.cblock [fmtArithop oper, PP.integer sz]
+    fun fmtArith (P.ARITH {oper, sz}) = PP.cblock [fmtArithop oper, PP.integer sz]
       | fmtArith (P.FLOAT_TO_INT {mode, from, to}) = 
 	  let fun toS (prefix: string) =
 		    PP.cblock [PP.text prefix, PP.integer from,
@@ -188,7 +188,7 @@ struct
     fun space n = CharVector.tabulate (n, fn _ => #" ")
 
     (* fmtLvar : LV.lvar -> PP.format *)
-    fun fmtLvar (v: LV.lvar) = PP.text (LV.lvarName name) 
+    fun fmtLvar (v: LV.lvar) = PP.text (LV.lvarName v) 
 
     (* fmtExp C.exp -> PP.format *)
     fun fmtExp e =
@@ -205,7 +205,7 @@ struct
 	  (* end case *))
 
     (* fmtApp : PP.format * C.exp list -> PP.format *)
-    and fmtApp (prefix, es) = 
+    and fmtApp (prefix, exps) = 
 	PP.cblock [prefix, PP.tuple (map fmtExp exps)]
 
     fun sayList sayItem [] = say "()"
@@ -224,7 +224,7 @@ struct
     fun fmtArg (e, ty) = PP.cblock [fmtExp e, PP.colon, fmtTy ty]
 
     (* fmtArgs : C.exp list * C.ty list -> PP.format *)
-    fun fmtArgs (args, tys) = PP.tuple (ListPair.mapEq fmtArg args tys)
+    fun fmtArgs (args, tys) = PP.tuple (ListPair.mapEq fmtArg (args,tys))
 
     (* fmtStm : C.stm -> PP.format *)
     local fun fmtBr (P.LIMIT 0w0, []) = PP.text "needsGC"
@@ -232,57 +232,57 @@ struct
 	    | fmtBr (oper, args) = fmtApp (fmtBranch oper, args)
        in fun fmtStm stm =
 		case stm
-		 of C.LET(e, x, stm) =>
-		      PP.pblock [PP.hblock [fmtExp e, PP.text "->" fmtParam x],
+		 of C.LET (e, x, stm) =>
+		      PP.pblock [PP.hblock [fmtExp e, PP.text "->", fmtParam x],
 			       PP.indent 2 (fmtStm stm)]
-		  | C.ALLOC(p as P.RAW_ALLOC _, [], x, stm) =>
+		  | C.ALLOC (p as P.RAW_ALLOC _, [], x, stm) =>
 		      PP.pblock [PP.hblock [fmtAlloc p, PP.text "->", fmtLvar x],
 			       PP.indent 2 (fmtStm stm)]
-		  | C.ALLOC(p, args, x, stm) => 
+		  | C.ALLOC (p, args, x, stm) => 
 		      PP.pblock [PP.hblock [fmtApp (fmtAlloc p, args), PP.text " -> ", fmtLvar x],
 		               PP.indent 2 (fmtStm stm)]
-		  | C.APPLY(f, args, tys) => 
+		  | C.APPLY (f, args, tys) => 
 		      PP.hblock [PP.text "apply", fmtExp f, fmtArgs (args, tys)]
-		  | C.THROW(f, args, tys) =>
+		  | C.THROW (f, args, tys) =>
 		      PP.hblock [PP.text "throw ", fmtExp f, fmtArgs (args, tys)]
-		  | C.GOTO(lab, args) =>
+		  | C.GOTO (lab, args) =>
 		      fmtApp (PP.cblock [PP.text "goto L_", fmtLvar lab], args)
-		  | C.SWITCH(arg, cases) =>
+		  | C.SWITCH (arg, cases) =>
 		      let fun fmtCase (i, e) =
 			      PP.vblock [PP.hblock [PP.text "case", PP.integer i],
 				         PP.indent 2 (fmtStm e)]
 		      in PP.vblock
 			   [PP.hblock [PP.text "switch", PP.parens (fmtExp arg), PP.lbrace],
-			    indent 2 (PP.vblock (List.mapi fmtCase cases)),
+			    PP.indent 2 (PP.vblock (List.mapi fmtCase cases)),
 			    PP.rbrace]
 		      end
-		  | C.BRANCH(p, args, 0, stm1, stm2) =>
+		  | C.BRANCH (p, args, 0, stm1, stm2) =>
 		      PP.vblock
 			[PP.hblock [PP.text "if", fmtBr (p, args), PP.lbrace],
 		         PP.indent 2 (fmtStm stm1),
-			 PP.hblock [PP.lbrace, PP.text "else" PP.rbrace],
+			 PP.cblock [PP.rbrace, PP.text "else", PP.lbrace],
 			 PP.indent 2 (fmtStm stm2),
 			 PP.rbrace]
-		  | C.BRANCH(p, args, prob, stm1, stm2) =>
+		  | C.BRANCH (p, args, prob, stm1, stm2) =>
   		      PP.vblock
 			[PP.hblock
 			   [PP.text "if ", fmtBr (p, args),
 			    PP.lbrace, PP.brackets (PP.cblock [PP.integer prob, PP.text "/1000"])],
 			 PP.indent 2 (fmtStm stm1),
-			 PP.hblock [PP.lbrace, PP.text "else" PP.rbrace,
+			 PP.hblock [PP.rbrace, PP.text "else", PP.lbrace,
 				    PP.brackets (PP.cblock [PP.integer (100-prob), PP.text "/1000"])],
 			 PP.indent 2 (fmtStm stm2),
 			 PP.rbrace]
-		  | C.ARITH(p, args, x, stm) =>
+		  | C.ARITH (p, args, x, stm) =>
 		      PP.vblock
 			[PP.hblock [fmtApp (fmtArith p, args), PP.text "->", fmtParam x],
 		         PP.indent 2 (fmtStm stm)]
-		  | C.SETTER(p, args, stm) =>
+		  | C.SETTER (p, args, stm) =>
 		      PP.vblock [fmtApp (fmtSetter p, args),
 			       PP.indent 2 (fmtStm stm)]
-		  | C.CALLGC(roots, newRoots, stm) =>
+		  | C.CALLGC (roots, newRoots, stm) =>
 		      PP.vblock
-			[PP.hblock [fmtApp ("callgc", roots), PP.text "->", 
+			[PP.hblock [fmtApp (PP.text "callgc", roots), PP.text "->", 
 				    PP.tuple (map fmtLvar newRoots)],
 			 PP.indent 2 (fmtStm stm)]
 		  | C.RCC{reentrant, linkage, proto, args, results, live, k} => (
@@ -293,8 +293,8 @@ struct
 			    PP.hsequence PP.comma (map fmtExp args),
 			    PP.text "->",
 			    PP.tuple (map fmtParam results)],
-			 PP.label "live" (PP.listMap fmtParam live),
-			 PP.indent 2 fmtStm k]
+			 PP.label "live" (PP.list (map fmtParam live)),
+			 PP.indent 2 (fmtStm k)]
 		  (* end case *))
     end (* local *)
 
@@ -322,7 +322,7 @@ struct
 	       [PP.hblock [PP.text "# CLUSTER; align", PP.integer (#alignHP attrs)],
 		if (#needsBasePtr attrs) then PP.hblock [PP.semicolon, PP.text "base-ptr"] else PP.empty,
  	        if (#hasTrapArith attrs) then PP.hblock [PP.semicolon, PP.text "overflow"] else PP.empty,
-		if (#hasRCC attrs) then PP.hblock [PP.semicolon, PP.text "raw-cc"] else PP.empty]
+		if (#hasRCC attrs) then PP.hblock [PP.semicolon, PP.text "raw-cc"] else PP.empty],
 	     PP.lbrace,
 	     PP.indent 2 (PP.vblock (List.map fmtFrag frags)),
 	     PP.rbrace]

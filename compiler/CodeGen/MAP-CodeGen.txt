@@ -26,6 +26,9 @@ functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
 signature CODEGENCONTROL  (* main/control.sig *)
 structure CodeGenControl  (* main/control.sml *)
 
+structure AMD64Spec	  (* targets/amd64-spec.sml *)
+structure Arm64Spec	  (* targets/arm64-spec.sml *)
+
 [functor BackendFn]	  (* if moved here from TopLevel? *)
 
 
@@ -61,22 +64,26 @@ CFGMemoryPickle        cfg-pickle/cfg-memory-pickle.sml
 CFGPickler	       cfg-pickle/cfg-pickler.sml
 LambdaVarPickle	       cfg-pickle/lambda-var-pickle.sml
 
+CODE_GENERATOR	       main/code-generator.sig
 CodeGeneratorFn*       main/code-gen-fn.sml
 DefaultMachSpecFn*     main/default-machspec-fn.sml
-CODEGENCONTROL	       main/control.sig
-CodeGenControl	       main/control.sml
+CODEGENCONTROL*	       main/control.sig
+CodeGenControl*	       main/control.sml
+
+AMD64Spec*	       targets/amd64-spec.sml
+Arm64Spec*	       targets/arm64-spec.sml
 
 [Cluster	       cps-to-cfg/cluster.sml
 		       -- unfinished new version CPS/main/cluster.sml
-		       -- when finished belongs in CPS/main]
+		       -- when finished should move to CPS/main/cluster.sml]
 
 ------------------
-IMPORTS: [paths relative to $SMLNJ/compiler]
+IMPORTS: [paths relative to $SMLNJ/compiler ($compiler)]
 
 basics.cm:
-  Target	       Basics/compiler/target{32,64}.sml
+  Target	       Basics/compiler/target{32,64}.sml [-> Configure/ ]
   Stats		       Basics/stats/stats.sml
-  BasicControl	       Basics/control/basiccontrol.sml 
+  BasicControl	       Basics/control/basiccontrol.sml [?]
 
 elabdata.cm:
   LambdaVar	       ElabData/basics/lambdavar.sml
@@ -103,7 +110,7 @@ asdl-lib.cm:
   ASDLMemoryPickle     $SMLNJ-ASDL-LIB/asdl-memory-pickle.sml
                         where $SMLNJ-ASDL-LIB = ../tools/asdl/src/lib/sml/
 
-$smlnj/smlnj-lib/controls.cm
+$smlnj/smlnj-lib/controls.cm (for CodeGenControl)
   Controls
   ControlUtil
   ControlRegistry
@@ -119,19 +126,19 @@ cfg/
     < CFG_Prim
       CFG
     > ----------
-      LambdaVar*
-      CTypes*
-      CPS* [str] cps.cm
+      LambdaVar
+      CTypes
+      CPS [str] cps.cm
 
   ppcfg.sml
     < PPCfg
     > CFG [str]
       CFG_Prim
       ----------
-      LambdaVar*
-      ArithOps*
-      PPCps*
-      Control*
+      LambdaVar
+      ArithOps
+      PPCps
+      Control
 
   cfg-util.sml
     < CFGUtil
@@ -147,8 +154,8 @@ cfg-pickle/
     > CFG
       CFG_Prim
       ----------
-      LambdaVar*
-      CTypes*
+      LambdaVar
+      CTypes
 
   cfg-file-pickle.sml
     < LambdaVarFilePickle
@@ -158,8 +165,8 @@ cfg-pickle/
     > CFG
       CFG_Prim
       ---------------
-      ASDLFilePickle*
-      CTypes*
+      ASDLFilePickle
+      CTypes
 
   cfg-memory-pickle.sml
     < LambdaVarMemoryPickle
@@ -169,21 +176,21 @@ cfg-pickle/
     > CFG
       CFG_Prim
       -----------------
-      ASDLMemoryPickle*
-      CTypes*
+      ASDLMemoryPickle
+      CTypes
 
   cfg-pickler.sml
     < CFGPickler
     > CFGFilePickle
       CFGMemoryPickle
       ---------------
-      ASDLFilePickle*
-      ASDLMemoryPickle*
+      ASDLFilePickle
+      ASDLMemoryPickle
 
   lambda-var-pickle.sml
     < LambdaVarPickle
     > ----------
-      LambdaVar*
+      LambdaVar
 
 
 cps-to-cfg/  -- translation from CPS to CFG
@@ -193,18 +200,18 @@ cps-to-cfg/  -- translation from CPS to CFG
     > CFG
       InvokeGC
       ----------
-      LambdaVar*
-      Target*
-      CPS*
-      CPSUtil*
+      LambdaVar
+      Target
+      CPS
+      CPSUtil
 
   invoke-gc.sml
     < InvokeGC
     > CFG
       CFG_Prim
       ----------
-      LambdaVar*
-      ObjectDesc*
+      LambdaVar
+      ObjectDesc
 
   cps-to-cfg-fn.sml
     < CPStoCFGFn
@@ -212,39 +219,45 @@ cps-to-cfg/  -- translation from CPS to CFG
       CFG_Prim
       CPSInfo
       ----------
-      LambdaVar*
-      CPS* [str]
-      CPSUtil*
-      Cluster*
-      PPCps*
-      MACH_SPEC*
-      Control*
+      LambdaVar
+      CPS [str]
+      CPSUtil
+      Cluster
+      PPCps
+      MACH_SPEC
+      Control
 
   tagged-arith.sml
     < TaggedArith
     > CFG
       CFG_Prim
       ----------
-      LambdaVar*
-      CPS*
-      PPCps*
+      LambdaVar
+      CPS
+      PPCps
 
 main/
 
+  code-generator.sig
+    < CODE_GENERATOR   (moved from TopLevel)
+    > -----------
+      FLINT
+      CodeObj
+
   code-gen-fn.sml
     < CodeGeneratorFn
-    > CFGPickler
+    > CODE_GENERATOR
+      CFGPickler
       ---------------
-      CODE_GENERATOR*
-      MACH_SPEC*
-      CPSCompFn*
-      Stats*
-      CodeObj*
+      MACH_SPEC
+      CPSCompFn
+      Stats
+      CodeObj
 
   default-machspec-fn.sml
     < DefaultMachSpecFn
     > ----------
-      MACH_SPEC*
+      MACH_SPEC
 
   control.sig
     < CODEGENCONTROL
@@ -257,6 +270,20 @@ main/
       ControlUtil
       ControlRegistry
       BasicControl
+
+targets/
+
+  amd64-spec.sml
+    < AMD64Spec
+    > DefaultMachSpecFn
+      -----------------
+      MACH-SPEC
+
+  arm64-spec.sml
+    < Arm64Spec
+    > DefaultMachSpecFn
+      -----------------
+      MACH-SPEC
 
 
 (* ---------------------------- Imports ---------------------------- *)

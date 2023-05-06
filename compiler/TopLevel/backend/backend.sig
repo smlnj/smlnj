@@ -5,7 +5,8 @@
  *)
 
 signature BACKEND =
-  sig
+sig
+
     structure Profile : PROFILE
     structure Compile : COMPILE
     structure Interact : INTERACT
@@ -14,4 +15,4 @@ signature BACKEND =
     val architecture : string
     val abi_variant : string option
 
-  end
+end (* signature BACKEND *)

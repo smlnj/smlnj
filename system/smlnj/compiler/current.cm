@@ -90,7 +90,6 @@ Library
         structure BasicTypes
         structure PPType
         structure Access
-        structure Unify
 
 	(* the current backend *)
 	structure Backend

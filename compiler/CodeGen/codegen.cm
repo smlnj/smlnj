@@ -1,5 +1,4 @@
 (* compiler/Codegen/codegen.cm
- *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
@@ -15,13 +14,15 @@ Library
 
   structure CFG             (* cfg/cfg.sml *)
   structure PPCfg           (* cfg/ppcfg.sml *)
-  functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
-  functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
 
   signature CODE_GENERATOR  (* main/code-generator.sig *)
-
+  functor CodeGeneratorFn   (* main/code-gen-fn.sml *)
+  functor DefaultMachSpecFn (* main/default-machspec-fn.sml *)
   signature CODEGENCONTROL  (* main/control.sig *)
   structure CodeGenControl  (* main/control.sml *)
+
+  structure AMD64Spec	    (* targets/amd64-spec.sml *)
+  structure Arm64Spec	    (* targets/arm64-spec.sml *)
 
 is
 
@@ -48,26 +49,29 @@ is
   main/control.sig
   main/control.sml
 
+  targets/amd64-spec.sml
+  targets/arm64-spec.sml
+
 (* ------------------------------- Imports ------------------------------- *)
 
-(* basis *)
-$smlnj/basis/basis.cm
+  (* basis *)
+  $smlnj/basis/basis.cm
 
-(* smlnj-lib *)
-$smlnj/smlnj-lib/smlnj-lib.cm  (* smlnj-lib/Util *)
-$smlnj/smlnj-lib/controls-lib.cm
-$smlnj/smlnj-lib/prettyprint-lib.cm
+  (* smlnj-lib *)
+  $smlnj/smlnj-lib/smlnj-lib.cm  (* smlnj-lib/Util *)
+  $smlnj/smlnj-lib/controls-lib.cm
+  $smlnj/smlnj-lib/prettyprint-lib.cm
 
-(* viscomp *)
-$smlnj/viscomp/basics.cm   (* proxy for $compiler/Basics/basics.cm *)
-$smlnj/viscomp/elabdata.cm (* proxy for $compiler/ElabData/elabdata.cm *)
-$smlnj/viscomp/execute.cm  (* proxy for: $compiler/Execution/execute.cm *)
-$smlnj/viscomp/flint.cm    (* proxy for: $compiler/FLINT/flint.cm *)
-$smlnj/viscomp/cps.cm      (* proxy for: $compiler/CPS/cps.cm *)
+  (* viscomp *)
+  $smlnj/viscomp/basics.cm   (* proxy for: $compiler/Basics/basics.cm *)
+  $smlnj/viscomp/elabdata.cm (* proxy for: $compiler/ElabData/elabdata.cm *)
+  $smlnj/viscomp/execute.cm  (* proxy for: $compiler/Execution/execute.cm *)
+  $smlnj/viscomp/flint.cm    (* proxy for: $compiler/FLINT/flint.cm *)
+  $smlnj/viscomp/cps.cm      (* proxy for: $compiler/CPS/cps.cm *)
 
-(* other *)
-$smlnj/asdl/asdl-lib.cm    (* proxy for: $SMLNJ-ASDL-LIB/asdl-lib.cm *)
-$compiler/Library/const-arith/const-arith-lib.cm
+  (* other *)
+  $smlnj/asdl/asdl-lib.cm    (* proxy for: $SMLNJ-ASDL-LIB/asdl-lib.cm *)
+  $compiler/Library/const-arith/const-arith-lib.cm
 
 (* NOTE: CodeGen/cps-to-cfg/cluster.sml is an unfinished replacement for CPS/main/cluster.sml
  * and therefore should not be compiled or exported from this Library. *)
