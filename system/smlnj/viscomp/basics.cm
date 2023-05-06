@@ -5,7 +5,7 @@
  * (C) 2001 Lucent Technologies, Bell Labs
  *)
 Library
-	group($compiler/Basics/basics.cm)
+	Lirary ($compiler/Basics/basics.cm)
 is
-	(* reference to our only group... *)
+	(* reference to our only Library... *)
 	$compiler/Basics/basics.cm

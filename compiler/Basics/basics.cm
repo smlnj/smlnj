@@ -6,7 +6,7 @@
  * Basic definitions and utilities used within the SML/NJ compiler.
  *)
 
-Group
+Library
 
 (* ------------------------------ Exports ------------------------------ *)
 
@@ -15,7 +15,7 @@ Group
 
   signature PRINTCONTROL
   structure PrintControl
-  structure Control_Print  (* a temporary alias for PrintControl (old name) *)
+  structure Control_Print  (* a temporary alias (the old name) for PrintControl *)
   structure StringFormats
 
   signature SYMBOL
@@ -145,3 +145,9 @@ is
   $smlnj/smlnj-lib/smlnj-lib.cm
   $smlnj/smlnj-lib/controls-lib.cm
   $smlnj/smlnj-lib/prettyprint-lib.cm
+  $smlnj/smlnj-lib/pp-lib.cm
+
+  (* last import is to ensure that pp-lib.cm is compiled and its bin file is
+   * added to lib/smlnj/smlnj-lib/.cm/xxx64-unix
+   *)
+   

@@ -45,7 +45,6 @@ is
   main/control.sig
   main/control.sml
   main/cconfig.sig
-  main/code-generator.sig
   main/compile.sig
   main/compile.sml
 

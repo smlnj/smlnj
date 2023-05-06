@@ -48,7 +48,7 @@ Library
        (* re-exported structures, or "pass-throughs"
         * DBM: Are these for the "visible compiler"? Seem a bit random. *)
 
-	(* Support stuff (currently from Basics) *)
+	(* Support (currently from Basics) *)
 	structure Stats
 	structure Source
 	structure SourceMap
