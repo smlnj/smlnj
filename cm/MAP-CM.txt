@@ -20,12 +20,14 @@ CDF: CM/cm-lib.cm
 
 (* ---------------------------- Module Index ---------------------------- *)
 
-LOCAL:
+LOCAL: [paths relative to $SMLNJ/cm]
 
   GroupGraph             depend/ggraph.sml
   DependencyGraph	 depend/graph.sml
-  DAEnv			 depend/da-env.sml
   CheckSharing		 depend/checksharing.sml
+  Reachable		 depend/reachable.sml
+  DAEnv			 depend/da-env.sml 
+  Statenv2DAEnv		 depend/se2dae.sml
 
   CMLrValsFun 		 parse/cm.grm.sml
   CMLexFun		 parse/cm.lex.sml
@@ -33,6 +35,7 @@ LOCAL:
   SrcPath		 paths/srcpath.sml
   SrcPathSet		 paths/srcpathset.sml
   SrcPathMap		 paths/srcpathmap.sml
+  TStamp		 paths/tstamp.sml
 
   CMSemant		 semant/semant.sml
   GroupReg		 semant/group-reg.sml
@@ -51,6 +54,9 @@ LOCAL:
   SmlInfoSet		 smlfile/smlinfoset.sml 
   SmlInfoMap		 smlfile/smlinfomap.sml 
   Skeleton		 smlfile/skeleton.sml
+  SkelIO		 smlfile/skel-io.sml
+  SkelCvt		 smlfile/skel-cvt.sml
+  SkelExports		 smlfile/skel-exports.sml
 
   STABILIZE		 stable/stabilize.sml
   STAB_MODMAP		 stable/stabmm.sml
@@ -65,6 +71,10 @@ LOCAL:
   SafeIO		 util/safeio.sml
   StringSet		 util/stringset.sml
   SymbolSet		 util/symbolset.sml
+  SetFn			 util/set-fn.sml
+  MapFn			 util/map-fn.sml
+  AutoDir		 util/autodir.sml
+  Memoize		 util/memoize.sml <<<BUG?
 
   PARSE			 parse/parse.sml
   ParseFn		 parse/parse.sml
@@ -73,7 +83,7 @@ LOCAL:
 
   PrivateTools		 tools/main/private-tools.sml
 
-IMPORTS:
+IMPORTS: [paths relative to $SMLNJ]
 
   LrParser		mlyacc-lib.cm
   JoinWithArg		mlyacc-lib.cm
@@ -84,8 +94,15 @@ IMPORTS:
   SourceMap		compiler/Basics/source/sourcemap.sml (basics.cm)
   PPSourceMap		compiler/Basics/source/ppsourcemap.sml (basics.cm)
 
+  PickleUtil		compiler/Library/pickle/pickle-util.sml
+  UnpickleUtil		compiler/Library/unpickle-util.sml
+
   StaticEnv		compiler/ElabData/statenv/statenv.sml
   BrowseStatEnv		compiler/ElabData/statenv/browse.sml
+  PickleSymPid		compiler/ElabData/pickle/pickle-sym-pid.sml 
+  UnpickleSymPid	compiler/ElabData/pickle/unpickle-sym-pid.sml
+
+  Binfile		compiler/Execution/binfile/binfile.sml
 
   SMLNJVersion		system/smlnj/internal/version.sml (smlnj-version.cm)
 
@@ -340,47 +357,171 @@ depend/
 (* handling SML source code *)
 smlfile/
   smlinfo.sml
-    <
-    >
+    < SMLINFO
+      SmlInfo
+    > SrcPath
+      SrcPathMap
+      GeneralParams
+      Skeleton
+      SkelIO
+      SkelCvt
+      SymbolSet
+      Sharing
+      TStamp
+      FileNamePolicy
+      GroupReg
+      AutoDir
+      -------
+      Symbol
+      Ast
+      StaticEnv
+      Source
+      SourceMap
+      PPSourceMap
+      SmlFile 
+      ErrorMsg
+      
   smlinfoset.sml
-    <
-    >
+    < SmlInfoSet
+    > SmlInfo
+      SetFn 
+      -----
+
   smlinfomap.sml
-    <
-    >
+    < SmlInfoMap
+    > SmlInfo
+      MapFn
+      -----
+      
   skeleton.sml
-    <
-    >
+    < Skeleton
+    > SymbolSet
+      ---------
+      Symbol
+      SymPath
+      
   skel-cvt.sml
-    <
-    >
+    < SKELCVT
+      SkelCvt
+    > Skeleton
+      SymbolSet
+      --------
+      Symbol
+      SymPath
+      Ast
+      SourceMap
+      ErrorMsg
+
   skel-io.sml
-    <
-    >
+    < SKELIO
+      SkelIO
+    > Skeleton
+      SymbolSet
+      TStamp
+      SafeIO
+      ------
+      Symbol
+      SymPath
+      PickleUtil
+      UnpickleUtil
+      PickleSymPid
+      UnpickleSymPid
+
   skel-exports.sml
-    <
-    >
+    < SKELEXPORTS
+      SkelExports
+    > Skeleton
+      SymbolSet
+      ---------
+
 
 (* handling stable groups *)
 stable/
   bininfo.sml
-    <
-    >
+    < BININFO
+      BinInfo
+    > SrcPath
+      Sharing
+      -------
+      PersStamps
+      SourceMap 
+      ErrorMsg
+
   stabmm.sml
-    <
-    >
+    < STAB_MODMAP
+      StabModmapFn
+    > ---------
+      StaticEnv
+      ModuleId
+      GenModIdMap
+      
   stablemap.sml
-    <
-    >
+    < StableMap
+    > MapFn
+      BinInfo
+      -------
+
   stableset.sml
-    <
-    >
+    < StableSet
+    > SetFn
+      BinInfo
+      -------
+
   stabilize.sml
-    <
-    >
+    < STABILIZE
+      StabilizeFn
+    > GroupGraph
+      DependencyGraph
+      GeneralParams
+      Sharing
+      StableMap
+      Memoize
+      StringSet
+      SymbolSet 
+      SymbolMap
+      SrcPath
+      SrcPathMap
+      STAB_MODMAP
+      SmlInfo
+      BinInfo
+      SmlInfoMap
+      SafeIO
+      FileNamePolicy
+      DAEnv
+      Statenv2DAEnv 
+      -------------
+      PersStamps 
+      ModuleId 
+      PickleUtil
+      UnpickleUtil
+      PickleSymPid 
+      UnpickleSymPid 
+      PickMod
+      UnpickMod
+      BinFile 
+      Formatting 
+      SourceMap 
+      ErrorMsg
+
   verify.sml
-    <
-    >
+    < VERIFY_STABLE
+      VerStabFn
+    > STABILIZE
+      GroupGraph
+      DependencyGraph
+      GeneralParams
+      SymbolMap
+      TStamp
+      SrcPath
+      SrcPathSet
+      Version
+      SmlInfo
+      SmlInfoSet
+      StableMap
+      FileNamePolicy
+      Reachable
+      ---------
+      
 
 (* tools for handling other source types *)
 tools/main/

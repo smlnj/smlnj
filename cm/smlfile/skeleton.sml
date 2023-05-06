@@ -1,7 +1,7 @@
-(*
+(* cm/smlfile/skeleton.sml
  * SML source skeletons.
  *
- *   Copyright (c) 1999 by Bell Laboratories, Lucent Technologies
+ *   Copyright (c) 2023 by The Fellowship of SML/NJ
  *
  *   The idea of skeletons is taken from the original SC (where they were
  *   called "decl"s after one of the datatypes involved).

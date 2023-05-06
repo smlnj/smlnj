@@ -1,13 +1,13 @@
 compiler/Basics/MAP-Basics.txt
 
-Map of Basics (directory and CM goup/library)
+Map of Basics (directory and CM Library)
 
 * Excluding uses (mentions) of modules from Basis (basis.cm).
 * All-caps identifiers are assumed to be signatures. Initial caps identifiers are assumed
   to be structures, unless they end in "Fn", in which case they are assumed to be functors.
   These defaults can be overridden by qualifiers, e.g. "CPS [str]".
 
-Basics/basis.cm -- the Basics Group/Library CDF
+Basics/basis.cm -- the Basics Library CDF
 
 
 (* ---------------------------- Exports ---------------------------- *)
