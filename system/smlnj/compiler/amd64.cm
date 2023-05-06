@@ -48,7 +48,7 @@ Library
        (* re-exported structures, or "pass-throughs"
         * DBM: Are these for the "visible compiler"? Seem a bit random. *)
 
-	(* Support stuff *)
+	(* Support stuff (currently from Basics) *)
 	structure Stats
 	structure Source
 	structure SourceMap
@@ -82,7 +82,7 @@ Library
         (* Parse *)
 	structure SmlFile
 
-	(* ElabData/types, /modules *)
+	(* ElabData/types, ElabData/modules *)
         structure Types
         structure TypesUtil
         structure BasicTypes
@@ -92,7 +92,7 @@ Library
         structure ModuleUtil
 	structure ModuleId
 
-	(* pickling *)
+	(* ElabData/pickle  *)
 	structure PickleSymPid
 	structure UnpickleSymPid
 	structure Rehash
@@ -116,7 +116,7 @@ Library
         (* smlnj-version.cm *)
 	structure SMLNJVersion
 
-	(* amd64 backends *)
+	(* Backend/backend-amd64.cm *)
 	structure AMD64StdCallBackend
 	structure AMD64CCallBackend
 is

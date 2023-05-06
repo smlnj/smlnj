@@ -9,6 +9,9 @@
  *)
 
 Library
+
+  (* signatures not very usefule, so let's not export them
+     -- they are not being exported from, e.g., $smlnj/compiler/amd64.cm.
 	(* signatures *)
 	signature STATS
 	signature CONTROL
@@ -29,54 +32,96 @@ Library
 	signature SMLFILE
 	signature BINFILE
 	signature FLINT
+*)
+       (* re-exported structures, or "pass-throughs"
+        * DBM: Are these for the "visible compiler"? Seem a bit random. *)
 
-	(* frontend stuff *)
+	(* Support stuff (currently from Basics) *)
 	structure Stats
-	structure Control
 	structure Source
 	structure SourceMap
 	structure ErrorMsg
-	structure Symbol
-	structure SymPath
-	structure PersStamps
+	structure CompileExn (* Basics/compiler/compileexn.sml *)
+
+	(* Basic = Basics + ElabData/basics *)
+	structure Symbol     (* Basics/symbol *)
+	structure SymPath    (* ElabData/basics *)
+        structure Stamps     (* ElabData/basics *)
+	structure PersStamps (* Basics/pid/ *)
+        structure Access     (* ElabData/basics *)
+	structure CoreSym    (* ElabData/basics *)
+
+	(* ElabData/main *)
+	structure CompInfo
+
+	(* ElabData/statenv *)
+        structure Bindings
 	structure StaticEnv
-	structure DynamicEnv
-	structure Environment
-	structure EnvRef
-	structure ModuleId
 	structure GenModIdMap
-	structure PickMod
-	structure UnpickMod
-	structure Rehash
+
+        (* ElabData/prim *)
+        structure PrimopId
+
+	(* syntax -- from Parse & ElabData *)
+	structure Ast      (* Parse/ast *)
+	structure Absyn    (* ElabData/syntax *)
+        structure Variable (* ElabData/syntax *)
+
+        (* Parse *)
+	structure SmlFile
+
+	(* ElabData/types, ElabData/modules *)
+        structure Types
+        structure TypesUtil
+        structure BasicTypes
+        structure PPType
+        structure EntityEnv
+        structure Modules
+        structure ModuleUtil
+	structure ModuleId
+
+	(* ElabData/pickle *)
 	structure PickleSymPid
 	structure UnpickleSymPid
-	structure CompilerPPTable
-	structure Ast
-	structure Absyn
-	structure SmlFile
-	structure Binfile
-	structure PrintHooks
-	structure SMLNJVersion
-	structure CompInfo
-	structure CompileExn
-	structure CoreSym
+	structure Rehash
+	structure PickMod
+	structure UnpickMod
+
+	(* Execution (execute.cm) *)
+	structure Binfile    (* binfile/ *)
+	structure DynamicEnv (* dynenv/ *)
+
+	(* FLINT *)
 	structure FLINT
 
-	(* backends *)
+        (* TopLevel *)
+	structure Control
+	structure CompilerPPTable
+	structure PrintHooks
+	structure Environment
+	structure EnvRef
+
+        (* smlnj-version.cm *)
+	structure SMLNJVersion
+
+	(* Backend, backend-amd64.cm, backend-arm64.cm *)
 	structure AMD64StdCallBackend
 	structure AMD64CCallBackend
         structure Arm64Backend
 
 	(* bootstrap (cross-)compilers *)
+        structure Arm64UnixCMB
 	structure AMD64UnixCMB
+
 (* TODO:
         structure AMD64WindowsCMB
 *)
-        structure Arm64UnixCMB
 is
+
 (* members -- none *)
 
 (* imports *)
+
 	$smlnj/compiler/amd64.cm
 	$smlnj/compiler/arm64.cm
 
