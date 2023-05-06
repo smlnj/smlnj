@@ -5,6 +5,6 @@
  *)
 
 Library
-	group($compiler/backend-arm64.cm)
+	group($compiler/Backend/backend-arm64.cm)
 is
-	$compiler/backend-arm64.cm
+	$compiler/Backend/backend-arm64.cm

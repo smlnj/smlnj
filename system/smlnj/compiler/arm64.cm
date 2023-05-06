@@ -89,9 +89,8 @@ Library
         structure BasicTypes
         structure PPType
         structure Access
-        structure Unify
 
-	(* the arm64 backend(s) *)
+	(* the arm64 backend *)
 	structure Arm64Backend
 is
 (* members -- none *)
@@ -101,7 +100,9 @@ is
 	$smlnj/viscomp/parser.cm
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/elaborate.cm
+	$smlnj/viscomp/flint.cm
 	$smlnj/viscomp/execute.cm
-	$smlnj/internal/smlnj-version.cm
+	$smlnj/viscomp/toplevel.cm
 	$smlnj/viscomp/arm64.cm
+	$smlnj/internal/smlnj-version.cm
 	

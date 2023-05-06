@@ -5,9 +5,13 @@
  * Copyright (c) 2023 by The Fellowship of SML/NJ
  *
  * Author: Matthias Blume (matthias.blume@gmail.com)
+ * 
+ * Was Group, generated complaint about importing srcpath group into
+ * $smlnj/cm/cm.cm and $smlnj/internal/cm-lib.cm.  Trying Library instead
+ * of Group to see if it fixes this problem.
  *)
 
-Group
+Library
 
   signature SRCPATH
   structure SrcPath
