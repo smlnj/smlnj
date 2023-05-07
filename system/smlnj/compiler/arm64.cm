@@ -1,4 +1,4 @@
-(* arm64.cm
+(* $smlnj/compiler/arm64.cm
  *
  * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -9,6 +9,10 @@
  *)
 
 Library
+
+  (* Name: Arm64_Viscomp *)
+  (* signatures are not usually useful, so we don't export them *)
+  (* DBM: This collection of $compiler modules seems a bit arbitrary. *)
 
   (* Support (currently from Basics) *)
   structure Stats

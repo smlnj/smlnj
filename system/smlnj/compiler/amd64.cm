@@ -1,18 +1,18 @@
-(* amd64.cm
+(* $smlnj/compiler/amd64.cm
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Library exporting "visible compiler" structures for AMD64.
+ * Library exporting "visible compiler" structures for AMD64 architecture.
  *
  * author: Matthias Blume (matthias.blume@gmail.com)
  *)
 
 Library
 
+  (* Name: AMD64_Viscomp *)
   (* signatures are not usually useful, so we don't export them *)
-
-  (* DBM: Are these exports for the "visible compiler"? Seem a bit random. *)
+  (* DBM: This collection of $compiler modules seems a bit arbitrary. *)
 
   (* Support (currently from Basics) *)
   structure Stats

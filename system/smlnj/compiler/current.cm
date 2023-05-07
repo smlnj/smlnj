@@ -1,124 +1,92 @@
-(* current.cm
+(* $smlnj/compiler/current.cm
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Library exporting "visible" compiler.
+ * Library exporting "visible compiler" structures
+ * and Backend (for the current architecture).
+ * No local members (source files) other than $smlnj/compiler/amd64.sml or arm64.sml.
  *
- * author: Matthias Blume (blume@research.bell-labs.com)
+ * [DBM: why this particular selection of compiler Modules? What can one do with them?]
+ *
+ * author: Matthias Blume (matthias.blume@gmail.com)
  *)
 
 (cm-init)
 Library
-(*
-	(* signatures -- not useful *)
-	signature STATS
-	signature CONTROL
-	signature SOURCE
-	signature SOURCE_MAP
-	signature ERRORMSG
-	signature SYMBOL
-	signature SYMPATH
-	signature PERSSTAMPS
-	signature STATICENV
-	signature DYNAMICENV
-	signature ENVIRONMENT
-	signature ENVREF
-	signature MODULE_ID
-	signature PICKMOD
-	signature UNPICKMOD
-	signature AST
-	signature ABSYN
-	signature SMLFILE
-	signature BINFILE
-	signature FLINT
 
-	signature TYPES
-	signature ENTITY_ENV
-	signature MODULES
-	signature STAMPS
-	signature BINDINGS
-	signature TYPESUTIL
-	signature VARIABLE
-	signature MODULEUTIL
-	signature BASICTYPES
-	signature PPTYPE
-	signature ACCESS
-	signature UNIFY
-*)
-       (* re-exported structures, or "pass-throughs"
-        * DBM: Are these for the "visible compiler"? Seem a bit random. *)
+  (* re-exporting modules, or "pass-throughs" from $smlnj/compiler/amd64.cm or arm64.cm *)
 
-	(* Support stuff (currently from Basics) *)
-	structure Stats
-	structure Source
-	structure SourceMap
-	structure ErrorMsg
-	structure CompileExn (* Basics/compiler/compileexn.sml *)
+  (* Support stuff (currently from Basics) *)
+  structure Stats
+  structure Source
+  structure SourceMap
+  structure ErrorMsg
+  structure CompileExn (* Basics/compiler/compileexn.sml *)
 
-	(* Basic = Basics + ElabData/basics *)
-	structure Symbol     (* Basics/symbol *)
-	structure SymPath    (* ElabData/basics *)
-        structure Stamps     (* ElabData/basics *)
-	structure PersStamps (* Basics/pid/ *)
-        structure Access     (* ElabData/basics *)
-	structure CoreSym    (* ElabData/basics *)
+  (* Basic = Basics + ElabData/basics *)
+  structure Symbol     (* Basics/symbol *)
+  structure SymPath    (* ElabData/basics *)
+  structure Stamps     (* ElabData/basics *)
+  structure PersStamps (* Basics/pid/ *)
+  structure Access     (* ElabData/basics *)
+  structure CoreSym    (* ElabData/basics *)
 
-	(* ElabData/main *)
-	structure CompInfo
+  (* ElabData/main *)
+  structure CompInfo
 
-	(* ElabData/statenv *)
-        structure Bindings
-	structure StaticEnv
-	structure GenModIdMap
+  (* ElabData/statenv *)
+  structure Bindings
+  structure StaticEnv
+  structure GenModIdMap
 
-        (* ElabData/prim *)
-        structure PrimopId
+  (* ElabData/prim *)
+  structure PrimopId
 
-	(* syntax -- from Parse & ElabData *)
-	structure Ast      (* Parse/ast *)
-	structure Absyn    (* ElabData/syntax *)
-        structure Variable (* ElabData/syntax *)
+  (* syntax -- from Parse & ElabData *)
+  structure Ast      (* Parse/ast *)
+  structure Absyn    (* ElabData/syntax *)
+  structure Variable (* ElabData/syntax *)
 
-        (* Parse *)
-	structure SmlFile
+  (* Parse *)
+  structure SmlFile
 
-	(* ElabData/types, ElabData/modules *)
-        structure Types
-        structure TypesUtil
-        structure BasicTypes
-        structure PPType
-        structure EntityEnv
-        structure Modules
-        structure ModuleUtil
-	structure ModuleId
+  (* ElabData/types, ElabData/modules *)
+  structure Types
+  structure TypesUtil
+  structure BasicTypes
+  structure PPType
+  structure EntityEnv
+  structure Modules
+  structure ModuleUtil
+  structure ModuleId
 
-	(* ElabData/pickle  *)
-	structure PickleSymPid
-	structure UnpickleSymPid
-	structure Rehash
-	structure PickMod
-	structure UnpickMod
+  (* ElabData/pickle  *)
+  structure PickleSymPid
+  structure UnpickleSymPid
+  structure Rehash
+  structure PickMod
+  structure UnpickMod
 
-	(* Execution (execute.cm) *)
-	structure Binfile    (* binfile/ *)
-	structure DynamicEnv (* dynenv/ *)
+  (* Execution (execute.cm) *)
+  structure Binfile    (* binfile/ *)
+  structure DynamicEnv (* dynenv/ *)
 
-	(* FLINT *)
-	structure FLINT
+  (* FLINT *)
+  structure FLINT
 
-        (* TopLevel *)
-	structure Control
-	structure CompilerPPTable
-	structure PrintHooks
-	structure Environment
-	structure EnvRef
+  (* TopLevel *)
+  structure Control
+  structure CompilerPPTable
+  structure PrintHooks
+  structure Environment
+  structure EnvRef
 
-        (* smlnj-version.cm *)
-	structure SMLNJVersion
+  (* smlnj-version.cm *)
+  structure SMLNJVersion
 
-	(* the current backend *)
-	structure Backend
+  (* the current backend *)
+  structure Backend
 
 is
 (* members/imports *)
