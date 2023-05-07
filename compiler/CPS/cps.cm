@@ -3,8 +3,9 @@
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * The CPS stages
- * redirected as Library in $smlnj/viscomp/cps.cm
+ * The CPS representation, translation to CPS from FLINT, and CPS optimization stages.
+ *
+ * Imported into component libraries CodeGen/codegen.cm and TopLevel/toplevel.cm.
  *)
 
 Library
@@ -22,15 +23,6 @@ Library
 
   signature CPSCONTROL  (* main/control.sig *)
   structure CPSControl  (* main/control.sml *)
-
-(*
-   CPSCompFn was called in CodeGen/main/code-gen-fn.sml, but it depends on several things
-   defined in CodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
-   to CodeGen or its functionality should be split between a function in CSP that does not
-   depend on NewCodeGen, and a function in NewCodeGen that deals with the cfg part.  If we move it
-   to CodeGen, we would have to export 9 CSP modules that it depends on.  See the specs for
-   CPS/main/cps-comp.sml in MAP-CPS.txt.
-*)
 
 is
 (* ------------------------------- Member files ------------------------------- *)
@@ -89,10 +81,23 @@ $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
 
-(* viscomp Libraries *)
-$smlnj/viscomp/basics.cm
-$smlnj/viscomp/elabdata.cm (* Access, LambdaVar *)
-$smlnj/viscomp/flint.cm    (* FLINT *)
+(* compiler *)
+$compiler/Basics/basics.cm
+$compiler/ElabData/elabdata.cm (* Access, LambdaVar *)
+$compiler/FLINT/flint.cm       (* FLINT *)
 
 (* other *)
 $compiler/Library/const-arith/const-arith-lib.cm   (* structure ConstArith *)
+
+
+(* NOTES:
+
+   CPSCompFn was called in CodeGen/main/code-gen-fn.sml, but it depends on several things
+   defined in CodeGen: MACH_SPEC, CPStoCFGFn, CFGPickler, PPCfg. It should either be moved
+   to CodeGen or its functionality should be split between a function in CSP that does not
+   depend on CodeGen, and a function in CodeGen that deals with the cfg part.  If we move it
+   to CodeGen, we would have to export 9 CSP modules that it depends on.  See the specs for
+   CPS/main/cps-comp.sml in MAP-CPS.txt.
+
+*)
+

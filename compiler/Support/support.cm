@@ -1,9 +1,9 @@
-(* Admin/admin.cm
+(* Support/support.cm
  *
  * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Admin library: Some basic compiler support modules not involving the compiler
+ * Support library: Some basic compiler support modules not involving the compiler
  *    internal structures.
  *)
 
@@ -37,7 +37,7 @@ is
 
 (* ------------------------------- Members ------------------------------- *)
 
-(* Admin/control/ *)
+(* Support/control/ *)
 control/print-control.sig
 control/print-control.sml
 control/parser-control.sig
@@ -59,12 +59,12 @@ control/compiler-control.sml
 control/control.sig
 control/control.sml
 
-(* Admin/errormsg/ *)
+(* Support/errormsg/ *)
 errormsg/errormsg.sig
 errormsg/errormsg.sml
 errormsg/pperrormsg.sml
 
-(* Admin/config/ *)
+(* Support/config/ *)
 #if defined(TARGET_BIG_ENDIAN)
         config/endianess-big.sml
 #elif defined(TARGET_LITTLE_ENDIAN)
@@ -89,7 +89,7 @@ config/target.sig
 	config/target64.sml
 #endif
 
-(* Admin/source/ *)
+(* Support/source/ *)
 source/pathnames.sml
 source/source.sig
 source/source.sml
@@ -98,7 +98,7 @@ source/sourcemap.sig
 source/sourcemap.sml
 source/ppsourcemap.sml
 
-(* Admin/stats/ *)
+(* Support/stats/ *)
 stats/stats.sml
 
 (* ------------------------------- Imports ------------------------------- *)
@@ -106,8 +106,6 @@ stats/stats.sml
 (* Basis *)
 $smlnj/basis/basis.cm
 
-(* smlnj-lib libraries (via *)
-
-$smlnj/viscomp/prettyprint-lib.cm
-  (* PrettyPrint, used in errormsg/pperrormsg.sml, source/ppsourcemap.sml, ... *)
-  (* alternatively, $compiler/smlnj-lib/PrettyPrint/prettyprint-lib.cm *)
+(* smlnj-lib *)
+$smlnj/smlnj-lib/prettyprint-lib.cm
+  (* Formatting, PrintFormat: used in errormsg/pperrormsg.sml, source/ppsourcemap.sml, ... *)

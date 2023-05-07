@@ -5,7 +5,9 @@
  * (C) 2001 Lucent Technologies, Bell Labs
  *)
 Library
-	Lirary ($compiler/Basics/basics.cm)
+
+	library ($compiler/Basics/basics.cm)
+
 is
 	(* reference to our only Library... *)
 	$compiler/Basics/basics.cm

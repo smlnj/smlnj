@@ -66,6 +66,6 @@ is
   $smlnj/smlnj-lib/smlnj-lib.cm
   $smlnj/smlnj-lib/controls-lib.cm
 
-  (* viscomp proxies *)
-  $smlnj/viscomp/basics.cm  (* proxy for: $compiler/Basics/basics.cm *)
+  (* compiler *)
+  $compiler/Basics/basics.cm
 

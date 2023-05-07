@@ -6,7 +6,7 @@
  * All rights reserved.
  *)
 
-Group
+Library
 
 (* exports *)
   signature PARSER_CONTROL
@@ -65,6 +65,6 @@ is
   $smlnj/smlnj-lib/controls-lib.cm
   $smlnj/smlnj-lib/prettyprint-lib.cm
 
-  $smlnj/viscomp/basics.cm
+  $compiler/Basics/basics.cm
 
   $smlnj/ml-yacc/ml-yacc-lib.cm

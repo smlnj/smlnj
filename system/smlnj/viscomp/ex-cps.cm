@@ -8,5 +8,5 @@
 Library
 	library ($compiler/CPS/cps.cm)
 is
-	(* reference to our only library... *)
+	(* reference to our only library ... *)
 	$compiler/CPS/cps.cm

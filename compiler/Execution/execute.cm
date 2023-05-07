@@ -5,10 +5,9 @@
  *
  * Group containing code related to code objects, binfile contents, and
  * execution (aka "linking").
- * Redirected as Library in $smlnj/viscomp/execute.cm
  *)
 
-Group
+Library
 
 (* ------------------------------ Exports ------------------------------ *)
 
@@ -46,5 +45,5 @@ is
   (* Basis *)
   $smlnj/basis/basis.cm
 
-  (* viscomp proxies *)
-  $smlnj/viscomp/basics.cm  (* proxy for: $compiler/Basics/basics.cm *)
+  (* compiler *)
+  $compiler/Basics/basics.cm

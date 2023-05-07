@@ -5,7 +5,9 @@
  * The SML/NJ elaborator.
  *)
 Library
-	group($compiler/Elaborator/elaborate.cm)
+
+	library ($compiler/Elaborator/elaborate.cm)
+
 is
 	(* reference to our only group... *)
 	$compiler/Elaborator/elaborate.cm

@@ -122,13 +122,17 @@ Library
 is
 (* members [SML source files] -- none *)
 
-(* imports *)
-	$smlnj/viscomp/basics.cm
-	$smlnj/viscomp/parser.cm
-	$smlnj/viscomp/elabdata.cm
-	$smlnj/viscomp/elaborate.cm
-	$smlnj/viscomp/flint.cm
-	$smlnj/viscomp/execute.cm
-	$smlnj/viscomp/toplevel.cm
-	$smlnj/viscomp/amd64.cm
-	$smlnj/internal/smlnj-version.cm
+(* --------------------------------------- imports --------------------------------------- *)
+
+  (* compiler *)
+  $compiler/Basics/basics.cm
+  $compiler/Parse/parser.cm
+  $compiler/ElabData/elabdata.cm
+  $compiler/Elaborator/elaborate.cm
+  $compiler/FLINT/flint.cm
+  $compiler/Execution/execute.cm
+  $compiler/TopLevel/toplevel.cm
+  $compiler/Backend/backend-amd64.cm
+
+  (* internal *)
+  $smlnj/internal/smlnj-version.cm

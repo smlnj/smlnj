@@ -6,7 +6,7 @@
  *)
 
 Library
-	group($compiler/TopLevel/toplevel.cm)
+	library ($compiler/TopLevel/toplevel.cm)
 is
 	(* reference to our only group... *)
 	$compiler/TopLevel/toplevel.cm

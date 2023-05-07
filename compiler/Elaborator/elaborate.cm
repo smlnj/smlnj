@@ -1,13 +1,12 @@
-(* elaborate.cm
+(* compiler/Elaborator/elaborate.cm
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Elaboration modules
- * Redirected as Library in $smlnj/viscomp/elaborate.cm
  *)
 
-Group
+Library
 
 (* ------------------------------ exports ------------------------------ *)
 
@@ -81,7 +80,7 @@ is
   $smlnj/smlnj-lib/controls-lib.cm
   $smlnj/smlnj-lib/prettyprint-lib.cm
 
-  (* viscomp proxies *)
-  $smlnj/viscomp/elabdata.cm
-  $smlnj/viscomp/basics.cm
-  $smlnj/viscomp/parser.cm
+  (* compiler *)
+  $compiler/ElabData/elabdata.cm
+  $compiler/Basics/basics.cm
+  $compiler/Parse/parser.cm

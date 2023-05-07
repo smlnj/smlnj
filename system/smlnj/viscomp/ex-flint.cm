@@ -6,7 +6,9 @@
  *)
 
 Library
-	group($compiler/FLINT/flint.cm)
+
+	library ($compiler/FLINT/flint.cm)
+
 is
 	(* reference to our only group... *)
 	$compiler/FLINT/flint.cm

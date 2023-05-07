@@ -62,12 +62,12 @@ is
   $smlnj/smlnj-lib/controls-lib.cm
   $smlnj/smlnj-lib/prettyprint-lib.cm
 
-  (* viscomp *)
-  $smlnj/viscomp/basics.cm   (* proxy for: $compiler/Basics/basics.cm *)
-  $smlnj/viscomp/elabdata.cm (* proxy for: $compiler/ElabData/elabdata.cm *)
-  $smlnj/viscomp/execute.cm  (* proxy for: $compiler/Execution/execute.cm *)
-  $smlnj/viscomp/flint.cm    (* proxy for: $compiler/FLINT/flint.cm *)
-  $smlnj/viscomp/cps.cm      (* proxy for: $compiler/CPS/cps.cm *)
+  (* compiler *)
+  $compiler/Basics/basics.cm
+  $compiler/ElabData/elabdata.cm
+  $compiler/Execution/execute.cm
+  $compiler/FLINT/flint.cm
+  $compiler/CPS/cps.cm
 
   (* other *)
   $smlnj/asdl/asdl-lib.cm    (* proxy for: $SMLNJ-ASDL-LIB/asdl-lib.cm *)

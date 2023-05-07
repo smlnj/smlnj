@@ -3,11 +3,11 @@
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * The interactive top-level (REPL)
- * redirected as Library in $smlnj/viscomp/toplevel.cm
+ * -- The interactive top-level (REPL)
+ * -- The BackendFn functor
  *)
 
-Group  (* Library? *)
+Library
 
 (* ------------------------------ Exports ------------------------------ *)
 
@@ -70,13 +70,13 @@ $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
 
-(* viscomp proxies *)
-$smlnj/viscomp/basics.cm
-$smlnj/viscomp/elabdata.cm
-$smlnj/viscomp/parser.cm
-$smlnj/viscomp/elaborate.cm
-$smlnj/viscomp/flint.cm
-$smlnj/viscomp/execute.cm
-$smlnj/viscomp/cps.cm
-$smlnj/viscomp/codegen.cm
-$smlnj/viscomp/debugprof.cm
+(* compiler *)
+$compiler/Basics/basics.cm
+$compiler/ElabData/elabdata.cm
+$compiler/Parse/parser.cm
+$compiler/Elaborator/elaborate.cm
+$compiler/FLINT/flint.cm
+$compiler/Execution/execute.cm
+$compiler/CPS/cps.cm
+$compiler/CodeGen/codegen.cm
+$compiler/DebugProf/debugprof.cm

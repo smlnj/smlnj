@@ -4,10 +4,9 @@
  * All rights reserved.
  *
  * Debugging and profiling instrumentation phases.
- * Redirected as Library in $smlnj/viscomp/debugprof.cm
  *)
 
-Group
+Library
 
 (* ------------------------------ Exports ------------------------------ *)
 
@@ -45,9 +44,9 @@ is
   $smlnj/smlnj-lib/smlnj-lib.cm
   $smlnj/smlnj-lib/controls-lib.cm
 
-  (* viscomp proxies *)
-  $smlnj/viscomp/basics.cm
-  $smlnj/viscomp/elabdata.cm
+  (* compiler *)
+  $compiler/Basics/basics.cm
+  $compiler/ElabData/elabdata.cm
 
   (* other *)
   $smlnj/init/init.cmi : cm

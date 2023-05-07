@@ -128,15 +128,16 @@ is
   $smlnj/smlnj-lib/controls-lib.cm
   $smlnj/smlnj-lib/prettyprint-lib.cm
 
-  (* viscomp proxies *)
-  $smlnj/viscomp/basics.cm
-  $smlnj/viscomp/parser.cm
-  $smlnj/viscomp/elabdata.cm
-  $smlnj/viscomp/execute.cm
-  $smlnj/viscomp/toplevel.cm
+  (* compiler *)
+  $compiler/Basics/basics.cm
+  $compiler/Parse/parser.cm
+  $compiler/ElabData/elabdata.cm
+  $compiler/Execution/execute.cm
+  $compiler/TopLevel/toplevel.cm
 
   (* others *)
   $/pickle-lib.cm
   $/pgraph.cm
   $smlnj/ml-yacc/ml-yacc-lib.cm
   $smlnj/internal/smlnj-version.cm
+  

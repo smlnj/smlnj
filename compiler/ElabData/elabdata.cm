@@ -5,7 +5,7 @@
  * A group(!) defining data structures used by the SML/NJ elaborator.
  *)
 
-Group
+Library
 
 (* ------------------------------ Exports ------------------------------ *)
 
@@ -185,9 +185,9 @@ is
   $smlnj/smlnj-lib/controls-lib.cm
   $smlnj/smlnj-lib/prettyprint-lib.cm
 
-  (* viscomp *)
-  $compiler/Basics/basics.cm  (* instead of proxy: $smlnj/viscomp/basics.cm *)
-  $smlnj/viscomp/parser.cm  (* proxy for: $compiler/Parse/parser.cm *)
+  (* compiler *)
+  $compiler/Basics/basics.cm
+  $compiler/Parse/parser.cm
 
   (* "imported" libraries *)
   $/pickle-lib.cm        (* alias for: compiler/Library/pickle/pickle-lib.cm *)

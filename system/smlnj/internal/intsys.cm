@@ -37,10 +37,11 @@ is
 	int-sys.sml
 
 (* imports *)
+
 	$smlnj/init/init.cmi : cm
 
 	$smlnj/basis/basis.cm
-	$smlnj/viscomp/basics.cm
+	$compiler/Basics/basics.cm
 
 	(* need access to CM's "init" function *)
 	$smlnj/internal/cm0.cm
