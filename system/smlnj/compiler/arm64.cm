@@ -3,106 +3,99 @@
  * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Library exporting "visible" compilers for Arm64.
+ * Library exporting "visible compiler" structures for Arm64.
  *
  * author: Matthias Blume (blume@research.bell-labs.com)
  *)
 
 Library
-(*
-	(* signatures *)
-	signature STATS
-	signature CONTROL
-	signature SOURCE
-	signature SOURCE_MAP
-	signature ERRORMSG
-	signature SYMBOL
-	signature SYMPATH
-	signature PERSSTAMPS
-	signature STATICENV
-	signature DYNAMICENV
-	signature ENVIRONMENT
-	signature ENVREF
-	signature MODULE_ID
-	signature PICKMOD
-	signature UNPICKMOD
-	signature AST
-	signature ABSYN
-	signature SMLFILE
-	signature BINFILE
-	signature FLINT
 
-	signature TYPES
-	signature ENTITY_ENV
-	signature MODULES
-	signature STAMPS
-	signature BINDINGS
-	signature TYPESUTIL
-	signature VARIABLE
-	signature MODULEUTIL
-	signature BASICTYPES
-	signature PPTYPE
-	signature ACCESS
-	signature UNIFY
-*)
-	(* frontend stuff *)
-	structure Stats
-	structure Control
-	structure Source
-	structure SourceMap
-	structure ErrorMsg
-	structure Symbol
-	structure SymPath
-	structure PersStamps
-	structure StaticEnv
-	structure DynamicEnv
-	structure Environment
-	structure EnvRef
-	structure ModuleId
-	structure GenModIdMap
-	structure PickMod
-	structure UnpickMod
-	structure Rehash
-	structure PickleSymPid
-	structure UnpickleSymPid
-	structure CompilerPPTable
-	structure Ast
-	structure Absyn
-	structure SmlFile
-	structure Binfile
-	structure PrintHooks
-	structure SMLNJVersion
-	structure CompInfo
-	structure CompileExn
-	structure CoreSym
-	structure FLINT
+  (* Support (currently from Basics) *)
+  structure Stats
+  structure Source
+  structure SourceMap
+  structure ErrorMsg
+  structure CompileExn (* Basics/compiler/compileexn.sml *)
 
-        structure Types
-        structure EntityEnv
-        structure Modules
-        structure Stamps
-        structure Bindings
-        structure TypesUtil
-        structure Variable
-        structure ModuleUtil
-        structure PrimopId
-        structure BasicTypes
-        structure PPType
-        structure Access
+  (* Basic = Basics + ElabData/basics *)
+  structure Symbol     (* Basics/symbol *)
+  structure SymPath    (* ElabData/basics *)
+  structure Stamps     (* ElabData/basics *)
+  structure PersStamps (* Basics/pid/ *)
+  structure Access     (* ElabData/basics *)
+  structure CoreSym    (* ElabData/basics *)
 
-	(* the arm64 backend *)
-	structure Arm64Backend
+  (* ElabData/main *)
+  structure CompInfo
+
+  (* ElabData/statenv *)
+  structure Bindings
+  structure StaticEnv
+  structure GenModIdMap
+
+  (* ElabData/prim *)
+  structure PrimopId
+
+  (* syntax -- from Parse & ElabData *)
+  structure Ast      (* Parse/ast *)
+  structure Absyn    (* ElabData/syntax *)
+  structure Variable (* ElabData/syntax *)
+
+  (* Parse *)
+  structure SmlFile
+
+  (* ElabData/types, ElabData/modules *)
+  structure Types
+  structure TypesUtil
+  structure BasicTypes
+  structure PPType
+  structure EntityEnv
+  structure Modules
+  structure ModuleUtil
+  structure ModuleId
+
+  (* ElabData/pickle  *)
+  structure PickleSymPid
+  structure UnpickleSymPid
+  structure Rehash
+  structure PickMod
+  structure UnpickMod
+
+  (* Execution (execute.cm) *)
+  structure Binfile    (* binfile/ *)
+  structure DynamicEnv (* dynenv/ *)
+
+  (* FLINT *)
+  structure FLINT
+
+  (* TopLevel *)
+  structure Control
+  structure CompilerPPTable
+  structure PrintHooks
+  structure Environment
+  structure EnvRef
+
+  (* smlnj-version.cm *)
+  structure SMLNJVersion
+
+  (* the arm64 backend *)
+  structure Arm64Backend
+
 is
-(* members -- none *)
 
-(* imports *)
-	$compiler/Basics/basics.cm
-	$compiler/Parse/parser.cm
-	$compiler/ElabData/elabdata.cm
-	$compiler/Elaborator/elaborate.cm
-	$compiler/FLINT/flint.cm
-	$compiler/Execution/execute.cm
-	$compiler/TopLevel/toplevel.cm
-	$compiler/Backend/backend-arm64.cm
-	$smlnj/internal/smlnj-version.cm
-	
+(* members [SML source files] -- none *)
+
+(* ---------------------------- imports ---------------------------- *)
+
+  (* compiler *)
+  $compiler/Basics/basics.cm
+  $compiler/Parse/parser.cm
+  $compiler/ElabData/elabdata.cm
+  $compiler/Elaborator/elaborate.cm
+  $compiler/FLINT/flint.cm
+  $compiler/Execution/execute.cm
+  $compiler/TopLevel/toplevel.cm
+  $compiler/Backend/backend-arm64.cm
+
+  (* internal *)
+  $smlnj/internal/smlnj-version.cm
