@@ -1,4 +1,4 @@
-(* backend-amd64.cm
+(* compiler/Backend/backend-amd64.cm
  *
  * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -14,14 +14,12 @@ Group
   structure AMD64CCallBackend
 is
 
-  TopLevel/backend/amd64-stdcall.sml (* AMD64StdCallBackend *)
-  TopLevel/backend/amd64-ccall.sml   (* AMD64CCallBackend *)
-
-  NewCodeGen/targets/amd64-spec.sml
+  backend/amd64-stdcall.sml (* AMD64StdCallBackend *)
+  backend/amd64-ccall.sml   (* AMD64CCallBackend *)
 
   (* Basis *)
   $smlnj/basis/basis.cm
 
   (* viscomp *)
   $smlnj/viscomp/toplevel.cm (* BackendFn *)
-  $smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)
+  $smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn, AMD64Spec *)

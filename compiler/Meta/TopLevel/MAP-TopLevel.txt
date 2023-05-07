@@ -12,32 +12,32 @@ Map of compiler/TopLevel (as a "library")
 compiler/TopLevel/
 
 CDF: toplevel.cm  -- CDF for TopLevel Group/Library
-  Derived: $smlnj/viscomp/toplevel.cm (alias and conversion from Group to Library)]
+  Proxy: $smlnj/viscomp/toplevel.cm (converts from Group to Library)]
 
 (* ---------------------------- Exports ---------------------------- *)
 
-  [signature CONTROL         (* main/control.sig *)]
+  [signature CONTROL        (* main/control.sig *)]
   structure Control         (* main/control.sml *)
 
-  [signature ENVIRONMENT     (* environ/environ.sig *)]
+  [signature ENVIRONMENT    (* environ/environ.sig *)]
   structure Environment     (* environ/environ.sml *)
 
-  [signature ENVREF          (* interact/envref.sml *)]
+  [signature ENVREF         (* interact/envref.sml *)]
   structure EnvRef          (* interact/envref.sml *)
 
   structure CompilerPPTable (* print/compilerpptable.sml *)
   structure PrintHooks      (* print/printhooks.sml *)
 
-  [signature BACKEND         (* backend/backend.sig --> CodeGen/main? *)]
+  [signature BACKEND        (* backend/backend.sig --> CodeGen/main? *)]
   functor BackendFn         (* backend/backend-fn.sml --> CodeGen/main? *)
 
 
-(* ---------------------------- Module Catalogue ---------------------------- *)
+(* ---------------------------- Module Index ---------------------------- *)
 
 LOCAL:
 
 ENVIRONMENT	   environ/environ.sig
-Environment	   environ/environ.sml
+Environment*	   environ/environ.sml
 
 ENVREF		   interact/envref.sml
 EnvRef		   interact/envref.sml
@@ -47,7 +47,7 @@ INTERACT  	   interact/interact.sig
 InteractFn         interact/interact.sml
 
 BACKEND	 	   backend/backend.sig
-BackendFn [fct]	   backend/backend.sml
+BackendFn	   backend/backend.sml
 
 CGCONTROL 	   main/control.sig
 CONTROL		   main/control.sig
@@ -67,8 +67,8 @@ PPOBJ		   print/ppobj.sml
 PPObj		   print/ppobj.sml
 PPTABLE		   print/pptable.sml
 PPTable		   print/pptable.sml
-CompilerPPTable	   print/compilerpptable.sml
-PrintHooks	   print/printhooks.sml
+CompilerPPTable*   print/compilerpptable.sml
+PrintHooks*	   print/printhooks.sml
 
 
 IMPORTS:
@@ -151,15 +151,15 @@ TProf              DebugProf/profile/tprof.sml
 TDPInstrument      DebugProf/profile/tdp-instrument.sml
 ProfileFn	   DebugProf/profile/profile-fn.sml (used: BackendFn)
 
-smlnj-lib/...
-Formatting	   smlnj-lib/PrettyPrint/src/formatting.sml
-PrintFormat	   smlnj-lib/PrettyPrint/src/printformat.sml
+smlnj-lib/[Controls, Util, PrettyPrint]
 PropList	   smlnj-lib/Util/plist.sml
 Controls	   smlnj-lib/Controls/...
 ControlUtil	   smlnj-lib/Controls/...
 ControlRegistry	   smlnj-lib/Controls/...
+Formatting	   smlnj-lib/PrettyPrint/src/formatting.sml
+PrintFormat	   smlnj-lib/PrettyPrint/src/printformat.sml
 
-SMLofNJ
+SMLofNJ		   Basis
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
@@ -242,7 +242,7 @@ interact/
       [SMLofNJ]
 
   interact.sml
-    < InteractFn [fct]
+    < InteractFn
     > INTERACT
       EVALLOOP
       Environment
@@ -252,34 +252,6 @@ interact/
       ErrorMsg*
       PropList*
       [SMLofNJ, OS     basis.cm]
-
-
-backend/
-
-  backend.sig
-    < BACKEND
-    > COMPILE
-      INTERACT
-      --------
-      PROFILE*
-
-  backend-fn.sml
-    < BackendFn
-    > BACKEND
-      CODE_GENERATOR
-      CCONFIG
-      Environment
-      CompileFn
-      InteractFn
-      EvalLoopFn
-      -----------
-      PersStamps*
-      Stamps*
-      PickMod*
-      UnpickMod*
-      GenModIdMap*
-      Rehash*
-      ProfileFn*
 
 
 main/
@@ -316,7 +288,6 @@ main/
       MCControl*
       TDPInstrument*
 
-
   cconfig.sig
     < CCONFIG
     > -----------
@@ -332,8 +303,8 @@ main/
       CodeObj*
 
   compile.sig
-    < COMPILE0
-      COMPILE
+    < COMPILE
+      COMPILE0
       TOP_COMPILE
     > -----------
       PersStamps*
@@ -347,7 +318,7 @@ main/
       ImportTree*
 
   compile.sml
-    < CompileFn [fct]
+    < CompileFn
     > CODE_GENERATOR
       CCONFIG
       COMPILE0
@@ -368,6 +339,34 @@ main/
       Translate*
       FLINTOpt*
       CodeObj*
+
+
+backend/
+
+  backend.sig
+    < BACKEND
+    > COMPILE
+      INTERACT
+      --------
+      PROFILE*
+
+  backend-fn.sml
+    < BackendFn
+    > BACKEND
+      CODE_GENERATOR
+      CCONFIG
+      Environment
+      CompileFn
+      InteractFn
+      EvalLoopFn
+      -----------
+      PersStamps*
+      Stamps*
+      PickMod*
+      UnpickMod*
+      GenModIdMap*
+      Rehash*
+      ProfileFn*
 
 
 print/

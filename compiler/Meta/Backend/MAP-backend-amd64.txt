@@ -4,8 +4,8 @@ Map of compiler/backend-amd64.cm
 
 compiler/
 
-CDF: compiler/backend-amd64.cm
-  Derived: system/smlnj/viscomp/amd64.cm
+CDF: backend-amd64.cm
+  Proxy: system/smlnj/viscomp/amd64.cm
 
 (* ---------------------------- Exports ---------------------------- *)
 
@@ -19,15 +19,14 @@ LOCAL:
 AMD64StdCallBackend	TopLevel/backend/amd64-stdcall.sml
 AMD64CCallBackend	TopLevel/backend/amd64-ccall.sml
 
-AMD64Spec		NewCodeGen/targets/amd64-spec.sml
-
-
 IMPORTS:
 
 BackendFn	      	TopLevel/backend/backend-fn.sml
 
-CodeGeneratorFn		NewCodeGen/main/code-gen-fn.sml
-DefaultMachSpecFn	NewCodeGen/main/default-machspec-fn.sml
+CodeGeneratorFn		CodeGen/main/code-gen-fn.sml
+DefaultMachSpecFn	CodeGen/main/default-machspec-fn.sml
+
+AMD64Spec		CodeGen/targets/amd64-spec.sml
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
@@ -37,27 +36,17 @@ backend/
 
   amd64-stdcall.sml
     < AMD64StdCallBackend
-    > AMD64Spec
-      ----------
-      BackEndFn*
-      CodeGeneratorFn*
-
+    > ----------
+      AMD64Spec
+      BackEndFn
+      CodeGeneratorFn
 
   amd64-ccall.sml
     < AMD64CCallBackend
-    > AMD64Spec
-      ----------
-      BackendFn*
-      CodeGeneratorFn*
-
-NewCodeGen/
-targets/
-
-  amd64-spec.sml
-    < AMD64Spec
     > ----------
-      MACH_SPEC*
-      DefaultMachSpecFn*
+      AMD64Spec
+      BackendFn
+      CodeGeneratorFn
 
 
 (* ---------------------------- Imports ---------------------------- *)
@@ -67,7 +56,7 @@ $smlnj/basis/basis.cm
 
 (* viscomp *)
 $smlnj/viscomp/toplevel.cm (* BackendFn *)
-$smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)
+$smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn, AMD64Spec *)
 
 
 (* ---------------------------- Notes ---------------------------- *)

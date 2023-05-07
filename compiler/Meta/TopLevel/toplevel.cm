@@ -9,7 +9,7 @@
 
 Group  (* Library? *)
 
-  (* Exports: re-exported by new-core.cm; more exports needed? *)
+(* ------------------------------ Exports ------------------------------ *)
 
   signature CONTROL         (* main/control.sig *)
   structure Control         (* main/control.sml *)
@@ -28,31 +28,31 @@ Group  (* Library? *)
 
 is
 
-(* TopLevel files *)
-TopLevel/environ/environ.sig
-TopLevel/environ/environ.sml
+(* ------------------------------ Members ------------------------------ *)
 
-TopLevel/interact/envref.sml
-TopLevel/interact/evalloop.sig
-TopLevel/interact/evalloop.sml
-TopLevel/interact/interact.sig
-TopLevel/interact/interact.sml
+  environ/environ.sig
+  environ/environ.sml
 
-TopLevel/backend/backend.sig
-TopLevel/backend/backend-fn.sml
+  interact/envref.sml
+  interact/evalloop.sig
+  interact/evalloop.sml
+  interact/interact.sig
+  interact/interact.sml
 
-TopLevel/main/control.sig
-TopLevel/main/control.sml
-TopLevel/main/cconfig.sig
-TopLevel/main/code-generator.sig
-TopLevel/main/compile.sig
-TopLevel/main/compile.sml
+  backend/backend.sig
+  backend/backend-fn.sml
 
-TopLevel/print/ppdec.sml
-TopLevel/print/ppobj.sml
-TopLevel/print/pptable.sml
-TopLevel/print/compilerpptable.sml
-TopLevel/print/printhooks.sml
+  main/control.sig
+  main/control.sml
+  main/cconfig.sig
+  main/compile.sig
+  main/compile.sml
+
+  print/ppdec.sml
+  print/ppobj.sml
+  print/pptable.sml
+  print/compilerpptable.sml
+  print/printhooks.sml
 
 (* ---------------------------- Imports ---------------------------- *)
 
@@ -70,13 +70,13 @@ $smlnj/smlnj-lib/smlnj-lib.cm
 $smlnj/smlnj-lib/controls-lib.cm
 $smlnj/smlnj-lib/prettyprint-lib.cm
 
-(* compiler components accessed via viscomp *)
+(* viscomp proxies *)
 $smlnj/viscomp/basics.cm
 $smlnj/viscomp/elabdata.cm
 $smlnj/viscomp/parser.cm
 $smlnj/viscomp/elaborate.cm
 $smlnj/viscomp/flint.cm
 $smlnj/viscomp/execute.cm
+$smlnj/viscomp/cps.cm
+$smlnj/viscomp/codegen.cm
 $smlnj/viscomp/debugprof.cm
-
-

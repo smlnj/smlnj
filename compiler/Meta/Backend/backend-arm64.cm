@@ -10,16 +10,16 @@
  *)
 
 Group
+
   structure Arm64Backend
+
 is
 
-  TopLevel/backend/arm64-backend.sml
-
-  NewCodeGen/targets/arm64-spec.sml
+  backend/arm64-backend.sml
 
   (* Basis *)
   $smlnj/basis/basis.cm
 
   (* viscomp *)
   $smlnj/viscomp/toplevel.cm (* BackendFn *)
-  $smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn *)
+  $smlnj/viscomp/codegen.cm  (* CodeGeneratorFn, DefaultMachSpecFn, Arm64Spec *)

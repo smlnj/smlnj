@@ -9,31 +9,42 @@
  *)
 
 Group
-	signature CODE_OBJ
-	signature DYNAMICENV
-	signature BINFILE
 
-	structure CodeObj
-	structure DynamicEnv
-	structure Binfile
+(* ------------------------------ Exports ------------------------------ *)
 
-	structure ImportTree
-	structure Execute
-	structure Isolate
+  signature CODE_OBJ
+  signature DYNAMICENV
+  signature BINFILE
+
+  structure CodeObj
+  structure DynamicEnv
+  structure Binfile
+
+  structure ImportTree
+  structure Execute
+  structure Isolate
+
 is
-	main/importtree.sml
-	main/isolate.sml
-	main/execute.sml
 
-	codeobj/code-obj.sig
-	codeobj/code-obj.sml
+(* ------------------------------ Members ------------------------------ *)
 
-	dynenv/dynenv.sig
-	dynenv/dynenv.sml
+  main/importtree.sml
+  main/isolate.sml
+  main/execute.sml
 
-	binfile/binfile.sig
-	binfile/binfile.sml
+  codeobj/code-obj.sig
+  codeobj/code-obj.sml
 
+  dynenv/dynenv.sig
+  dynenv/dynenv.sml
 
-	$smlnj/basis/basis.cm
-	$smlnj/viscomp/basics.cm
+  binfile/binfile.sig
+  binfile/binfile.sml
+
+(* ------------------------------ Imports ------------------------------ *)
+
+  (* Basis *)
+  $smlnj/basis/basis.cm
+
+  (* viscomp proxies *)
+  $smlnj/viscomp/basics.cm  (* proxy for: $compiler/Basics/basics.cm *)
