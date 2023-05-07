@@ -186,7 +186,7 @@ is
   $smlnj/smlnj-lib/prettyprint-lib.cm
 
   (* viscomp *)
-  $smlnj/viscomp/basics.cm  (* proxy for: $compiler/Basics/basics.cm *)
+  $compiler/Basics/basics.cm  (* instead of proxy: $smlnj/viscomp/basics.cm *)
   $smlnj/viscomp/parser.cm  (* proxy for: $compiler/Parse/parser.cm *)
 
   (* "imported" libraries *)
