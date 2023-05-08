@@ -16,7 +16,7 @@ local
 
   fun bug msg = ErrorMsg.impossible ("DecisionTree: " ^ msg)
 
-  val say = Control_Print.say
+  val say = PrintControl.say
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
   fun says strings = saynl (concat strings)

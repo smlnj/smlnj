@@ -18,7 +18,7 @@ type lvar = LambdaVar.lvar
 
 fun bug s = ErrorMsg.impossible ("Pflatten:" ^ s)
 val mkv = LambdaVar.mkLvar
-val say = Control_Print.say
+val say = PrintControl.say
 
 (*****************************************************************************
  *                 FUNCTIONS USED BY PLAMBDA TO FLINT NORMALIZATION          *

@@ -43,7 +43,7 @@ in
 val debugging = CTRL.ffdebugging
 fun bug msg = ErrorMsg.impossible ("FixFix: "^msg)
 
-val say = Control_Print.say
+val say = PrintControl.say
 fun newline () = say "\n"
 fun saynl msg = (say msg; newline())
 fun says strings = say (concat strings)

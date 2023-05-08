@@ -57,7 +57,7 @@ in
 (* debugging *)
 val debugging = ElabDataControl.ppabsyndebugging
 
-val say = Control_Print.say
+val say = PrintControl.say
 fun dbsaynl (msg: string) =
     if !debugging then (say msg; say "\n") else ()
 

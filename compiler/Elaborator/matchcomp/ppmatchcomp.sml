@@ -25,13 +25,13 @@ local (* top local *)
 
   open MCCommon  (* includes RS = RuleSet *)
 
-  val say = Control_Print.say
+  val say = PrintControl.say
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
 
   fun bug msg = ErrorMsg.impossible ("PPMatchComp: " ^ msg)
 
-  val printDepth = Control_Print.printDepth
+  val printDepth = PrintControl.printDepth
 
   (* ivblock : PP.format list -> PP.format *)
   fun ivblock formats = PP.indent 3 (PP.vblock formats)

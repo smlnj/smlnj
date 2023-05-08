@@ -43,7 +43,7 @@ val newlam_ref : PLambda.lexp ref = ref (RECORD[])
 val fname_ref : string ref = ref "yyy"
 
 fun bug s = ErrorMsg.impossible ("CheckLty: "^s)
-val say = Control_Print.say
+val say = PrintControl.say
 
 
 val printDepth = 20

@@ -60,7 +60,7 @@ fun cMARKpat (p, r) = if !ElabControl.markabsyn then MARKpat (p, r) else p
 fun cMARKexp (e, r) = if !ElabControl.markabsyn then MARKexp (e, r) else e
 fun cMARKdec (d, r) = if !ElabControl.markabsyn then MARKdec (d, r) else d
 
-val say = Control_Print.say
+val say = PrintControl.say
 val debugging = ElabControl.ecdebugging
 fun debugmsg (msg: string) = if !debugging then (say msg; say "\n") else ()
 fun bug msg = ErrorMsg.impossible("ElabCore: "^msg)

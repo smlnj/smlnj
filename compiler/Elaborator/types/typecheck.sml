@@ -53,7 +53,7 @@ in
 
 (* debugging *)
 val debugging = ElabControl.tcdebugging
-val say = Control_Print.say
+val say = PrintControl.say
 fun newline () = say "\n"
 fun dbsay (msg: string) = if !debugging then say msg else ()
 fun dbsaynl (msg: string) = if !debugging then (say msg; newline()) else ()
@@ -66,7 +66,7 @@ infix 9 sub
 val --> = BT.-->
 infix -->
 
-val printDepth = Control_Print.printDepth
+val printDepth = PrintControl.printDepth
 val showCulprits = ElabControl.showTypeErrorCulprits
 
 fun refNewDcon(DATACON{name, const, rep, typ, sign, lazyp}) =

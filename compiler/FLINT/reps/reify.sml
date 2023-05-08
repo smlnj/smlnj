@@ -32,7 +32,7 @@ val debugging = FLINT_Control.redebugging
 
 
 fun bug s = ErrorMsg.impossible ("Reify: " ^ s)
-val say = Control_Print.say
+val say = PrintControl.say
 fun debugmsg(m) = if !debugging then say (m^"\n") else ()
 
 val mkv = LambdaVar.mkLvar

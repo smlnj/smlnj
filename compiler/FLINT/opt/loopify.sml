@@ -25,7 +25,7 @@ local
     structure CTRL = FLINT_Control
 in
 
-val say = Control_Print.say
+val say = PrintControl.say
 fun bug msg = ErrorMsg.impossible ("Loopify: "^msg)
 val cplv = LambdaVar.dupLvar
 

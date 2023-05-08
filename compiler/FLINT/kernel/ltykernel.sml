@@ -14,9 +14,9 @@ local
   open Lty
 
   val debugging : bool ref = FLINT_Control.lkdebugging
-  val printDepth : int ref = Control_Print.printDepth
+  val printDepth : int ref = PrintControl.printDepth
 
-  val say = Control_Print.say
+  val say = PrintControl.say
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
   fun says strings = saynl (concat strings)

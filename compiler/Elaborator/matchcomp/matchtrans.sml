@@ -39,7 +39,7 @@ local
   val debugging = MCControl.mcdebugging
   val stats = MCControl.mcstats
 
-  val say = Control_Print.say
+  val say = PrintControl.say
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
   fun says strings = saynl (concat strings)

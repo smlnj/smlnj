@@ -7,111 +7,77 @@
  *)
 
 structure ElabControl : ELAB_CONTROL =
-  struct
+struct
 
-    local
-      val priority = [10, 10, 7]
-      val clear = 2
-      val obscure = 6
-      val prefix = "elab"
+  val {newBool = new, ...} = MakeControls.make {name = "Elaborate", priority = [1]}
 
-      val registry = ControlRegistry.new { help = "elaborator flags" }
-
-      val _ = BasicControl.nest (prefix, registry, priority)
-
-      val nextpri = ref 0
-
-      fun new ob (n, h, d) = let
-	    val r = ref d
-	    val p = !nextpri
-	    val ctl = Controls.control {
-		    name = n,
-		    pri = [p],
-		    obscurity = ob,
-		    help = h,
-		    ctl = r
-		  }
-	    in
-	      nextpri := p + 1;
-	      ControlRegistry.register registry {
-		  ctl = Controls.stringControl ControlUtil.Cvt.bool ctl,
-		  envName = SOME (ControlUtil.EnvName.toUpper "ELAB_" n)
-		};
-	      r
-	    end
-
-      val cnew = new clear
-      val onew = new obscure
-    in
-
-    val etdebugging = onew ("et-debugging", "ElabType debugging", false)
-        (* ElabType *)
-    val esdebugging = onew ("es-debugging", "ElabSig debugging", false)
-        (* ElabSig *)
-    val insdebugging = onew ("ins-debugging", "Instantiate debugging", false)
-        (* Instantiate *)
-    val smdebugging = onew ("sm-debugging", "Sigmatch debugging", false)
-        (* Sigmatch *)
-    val ecdebugging = onew ("ec-debugging", "ElabCore debugging", false)
-        (* ElabCore *)
-    val emdebugging = onew ("em-debugging", "ElabMod debugging", false)
-        (* ElabMod *)
-    val tcdebugging = onew ("tc-debugging", "TypeCheck debugging", false)
-        (* Typecheck *)
-    val unidebugging = onew ("uni-debugging", "Unify debugging", false)
-        (* Unify *)
-    val ovlddebugging = onew ("ovld-debugging", "Overload debugging", false)
-        (* Overload *)
-    val instantiateSigs = onew ("instantiate-sigs", "instantiate all sigs", true)
-        (* ElabMod, Control_MC *)
-    val etopdebugging = onew ("etop-debugging", "ElabTop debugging", false)
-        (* ElabTop *)
-
-    val markabsyn = onew ("markabsyn", "mark abstract syntax", true)
-        (* ElabCore, ElabTop, ElabUtil, Control_MC *)
-
-    val printAbsyn = onew ("printAbsyn", "absyn print mode", false)
-    val printAst = onew ("printAst", "ast print mode", false)
-    val stats = onew ("stats", "match compiler timings and stats", false)
+  val etdebugging = new ("et-debugging", "ElabType debugging", false)
+      (* ElabType *)
+  val esdebugging = new ("es-debugging", "ElabSig debugging", false)
+      (* ElabSig *)
+  val insdebugging = new ("ins-debugging", "Instantiate debugging", false)
+      (* Instantiate *)
+  val smdebugging = new ("sm-debugging", "Sigmatch debugging", false)
+      (* Sigmatch *)
+  val ecdebugging = new ("ec-debugging", "ElabCore debugging", false)
+      (* ElabCore *)
+  val emdebugging = new ("em-debugging", "ElabMod debugging", false)
+      (* ElabMod *)
+  val tcdebugging = new ("tc-debugging", "TypeCheck debugging", false)
+      (* Typecheck *)
+  val unidebugging = new ("uni-debugging", "Unify debugging", false)
+      (* Unify *)
+  val ovlddebugging = new ("ovld-debugging", "Overload debugging", false)
+      (* Overload *)
+  val instantiateSigs = new ("instantiate-sigs", "instantiate all sigs", true)
+      (* ElabMod, Control_MC *)
+  val etopdebugging = new ("etop-debugging", "ElabTop debugging", false)
+      (* ElabTop *)
 
 
-  (***** Controls for warning messages *****)
+  val markabsyn = new ("markabsyn", "mark abstract syntax", true)
+      (* ElabCore, ElabTop, ElabUtil, Control_MC *)
 
-(* NOTE: we currently disable this unusedWarn check because of false positives for
- * mutually recursive functions.  The false positives are caused by a
- * transformation done during type checking, which should be removed
- * at some point.  CHECK if problem solved. *)
-    val unusedWarn = cnew (
-	  "unused-warn",
-	  "warn when variables are defined but not used",
-	  false)
+  val printAbsyn = new ("printAbsyn", "absyn print mode", false)
+  val printAst = new ("printAst", "ast print mode", false)
+  val stats = new ("stats", "match compiler timings and stats", false)
 
-    val multDefWarn = cnew (
-	  "mult-def-warn",
-	  "warn on multiple defs",
-	  false)
-        (* Instantiate, Control_MC (TopLevel/main/control.sml) *)
 
-    val shareDefError = cnew (
-	  "share-def-error",
-	  "check share defs",
-	  true)
-        (* Instantiate, Control_MC *)
+(***** Controls for warning messages *****)
 
-    val valueRestrictionLocalWarn = cnew (
-	  "value-restriction-local-warn",
-	  "warn on value restriction for local defs",
-	  false)
+  (* NOTE: we currently disable this unusedWarn check because of false positives for
+   * mutually recursive functions.  The false positives are caused by a
+   * transformation done during type checking, which should be removed
+   * at some point.  CHECK if problem solved. *)
+  val unusedWarn = new (
+	"unused-warn",
+	"warn when variables are defined but not used",
+	false)
 
-    val valueRestrictionTopWarn = cnew (
-	  "value-restriction-top-warn",
-	  "warn on value restriction at top level", true)
+  val multDefWarn = new (
+	"mult-def-warn",
+	"warn on multiple defs",
+	false)
+      (* Instantiate, Control_MC (TopLevel/main/control.sml) *)
 
-    val showTypeErrorCulprits = cnew (
-	  "show-type-error-culprits",
-	  "show culprits in type error messages",
-	  false)
+  val shareDefError = new (
+	"share-def-error",
+	"check share defs",
+	true)
+      (* Instantiate, Control_MC *)
 
-    end (* local *)
+  val valueRestrictionLocalWarn = new (
+	"value-restriction-local-warn",
+	"warn on value restriction for local defs",
+	false)
 
-  end (* structure ElabControl *)
+  val valueRestrictionTopWarn = new (
+	"value-restriction-top-warn",
+	"warn on value restriction at top level", true)
+
+  val showTypeErrorCulprits = new (
+	"show-type-error-culprits",
+	"show culprits in type error messages",
+	false)
+
+end (* structure ElabControl *)

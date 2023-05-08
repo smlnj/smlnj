@@ -21,7 +21,7 @@ local (* imported structures *)
 in
 
 (* debugging hooks *)
-val say = Control_Print.say
+val say = PrintControl.say
 val debugging = ref false
 fun debugmsg (msg: string) =
       if !debugging then (say msg; say "\n") else ()

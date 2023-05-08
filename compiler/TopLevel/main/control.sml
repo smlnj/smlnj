@@ -7,109 +7,59 @@
 structure Control : CONTROL =
 struct
 
-  local
-      val priority = [10, 10, 9]
-      val obscurity = 4
-      val prefix = "control"
+  val {newBool, newInt, newString, newStrings} = MakeControls.make {name = "CPS", priority = [1]}
 
-      val registry = ControlRegistry.new
-                         { help = "miscellaneous control settings" }
+  structure Print : PRINTCONTROL = PrintControl (* Basics/print/printcontrol.sml *)
 
-      val _ = BasicControl.nest (prefix, registry, priority)
+  (* ElabData controls *)
+  structure ElabData : ELABDATA_CONTROL = ElabDataControl (* ElabData/main/edcontrol.{sml,sig} *)
 
-      val bool_cvt = ControlUtil.Cvt.bool
-      val string_cvt = ControlUtil.Cvt.string
+  (* elaborator controls *)
+  structure Elab : ELAB_CONTROL = ElabControl (* Elaborator/control/elabcontrol.{sml,sig} *)
 
-      val nextpri = ref 0
+  (* Match compiler controls (used in Elatorator/matchcomp) *)
+  structure MC : MC_CONTROL = MCControl (* Elaborator/control/mccontrol.{sml,sig} *)
 
-      fun register (cvtFn, name, help, defaultRef) = let
-	    val p = !nextpri
-	    val ctl = Controls.control {
-		    name = name,
-		    pri = [p],
-		    obscurity = obscurity,
-		    help = help,
-		    ctl = defaultRef
-		  }
-	    in
-	      nextpri := p + 1;
-              ControlRegistry.register registry {
-		  ctl = Controls.stringControl cvtFn ctl,
-		  envName = SOME (ControlUtil.EnvName.toUpper "CONTROL_" name)
-		};
-	      defaultRef
-	    end
+  (* FLINT controls *)
+  structure FLINT = FLINT_Control (* FLINT/main/control.{sml,sig} *)
 
-    (* `new (n, h, d)` defines new control reference with default value `d`
-     * and registers it with name `n` and help message `h`.
-     *)
-      fun new (n, h, d) = register (bool_cvt, n, h, ref d)
+  (* CPS controls *)
+  structure CPS : CPSCONTROL = CPSControl (* CPS/main/control.{sml,sig} *)
 
-  in
+  (* CodeGen controls *)
+  structure CodeGen : CODEGENCONTROL = CodeGenControl (* CodeGen/main/control.{sml,sig} *)
 
-    structure Print : PRINTCONTROL = PrintControl (* Basics/print/printcontrol.sml *)
+  structure Basics = BasicsControl
+  (* provides: val printWarnings = ref true *)
 
-    (* ElabData controls *)
-    structure ElabData : ELABDATA_CONTROL = ElabDataControl (* ElabData/main/edcontrol.{sml,sig} *)
+  structure Parser = ParserControl
+  (* provides: val primaryPrompt = ref "- "
+	       val secondaryPrompt = ref "= "
+	       val overloadKW = ref false
+	       val lazysml = ref false
+	       val quotation = ref false
+	       val setSuccML : bool -> unit
+   *)
 
-    (* elaborator controls *)
-    structure Elab : ELAB_CONTROL = ElabControl (* Elaborator/control/elabcontrol.{sml,sig} *)
+  val debugging = newBool ("debugging", "general debugging flag", false)
+  val eldebugging = newBool ("eldebugging", "evalloop debugging", false)
+  val pddebugging = newBool ("pddebugging", "PPDec debugging", false)
+  val printAst = newBool ("printAst", "whether to print Ast representation", false)
+  val interp = newBool ("interp", "?", false)
 
-    (* Match compiler controls (used in Elatorator/matchcomp) *)
-    structure MC : MC_CONTROL = MCControl (* Elaborator/control/mccontrol.{sml,sig} *)
+  val progressMsgs =
+      newBool ("progressMsgs", "whether to print a message after each phase is completed", false)
 
-    (* FLINT controls *)
-    structure FLINT = FLINT_Control (* FLINT/main/control.{sml,sig} *)
+  val preserveLvarNames = newBool ("preserve-names", "?", false)
 
-    (* CPS controls *)
-    structure CPS : CPSCONTROL = CPSControl (* CPS/main/control.{sml,sig} *)
+  (* these are really all the same ref cell: *)
+  val saveit : bool ref = ElabData.saveLvarNames
+  val saveAbsyn : bool ref = saveit
+  val saveLambda : bool ref = saveit
+  val saveConvert : bool ref = saveit
+  val saveCPSopt : bool ref = saveit
+  val saveClosure : bool ref = saveit
 
-    (* CodeGen controls *)
-    structure CodeGen : CODEGENCONTROL = CodeGenControl (* CodeGen/main/control.{sml,sig} *)
-
-    open BasicControl
-    (* provides: val printWarnings = ref true *)
-
-    open ParserControl
-    (* provides: val primaryPrompt = ref "- "
-		 val secondaryPrompt = ref "= "
-		 val overloadKW = ref false
-		 val lazysml = ref false
-		 val quotation = ref false
-                 val setSuccML : bool -> unit
-     *)
-
-    val debugging = new ("debugging", "?", false)
-    val eldebugging = new ("eldebugging", "evalloop debugging", false)
-    val pddebugging = new ("pddebugging", "PPDec debugging", false)
-    val printAst = new ("printAst", "whether to print Ast representation", false)
-    val printAbsyn = ElabControl.printAbsyn
-
-    val interp = new ("interp", "?", false)
-
-    val progressMsgs =
-	new ("progressMsgs", "whether to print a message after each phase is completed", false)
-
-(* trackExn and polyEqWarn moved to FLINT_Control, because used in FLINT/trans/translate.sml
-    val trackExn =
-	new ("track-exn", "whether to generate code that tracks exceptions", true)
-    (* warning message when call of polyEqual compiled: *)
-    val polyEqWarn =
-	new ("poly-eq-warn", "whether to warn about calls of polyEqual", true)
-*)
-
-    val preserveLvarNames = new ("preserve-names", "?", false)
-
-    (* these are really all the same ref cell: *)
-    val saveit : bool ref = ElabData.saveLvarNames
-    val saveAbsyn : bool ref = saveit
-    val saveLambda : bool ref = saveit
-    val saveConvert : bool ref = saveit
-    val saveCPSopt : bool ref = saveit
-    val saveClosure : bool ref = saveit
-
-    val tdp_instrument = TDPInstrument.enabled
-
-  end (* local *)
+  val tdp_instrument = TDPInstrument.enabled
 
 end (* structure Control *)

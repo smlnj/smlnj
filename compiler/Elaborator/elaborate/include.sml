@@ -36,7 +36,7 @@ in
 
 fun bug msg = EM.impossible ("Include: " ^ msg)
 val debugging = ref false
-val say = Control_Print.say
+val say = PrintControl.say
 fun debugmsg (msg: string) = if (!debugging) then (say msg; say "\n") else ()
 
 fun addElement (elem,elements) = elem::elements

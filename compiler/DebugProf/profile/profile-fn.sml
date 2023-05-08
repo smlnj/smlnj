@@ -26,7 +26,7 @@ functor ProfileFn (structure ProfEnv: PROF_ENV
 	  if !pervDone then ()
           else (
 	    pervDone := true;
-	    Control_Print.say
+	    PrintControl.say
 		"Creating profiled version of standard library\n";
 	    ProfEnv.replace pervasive)
     end

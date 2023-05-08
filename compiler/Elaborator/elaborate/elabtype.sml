@@ -28,7 +28,7 @@ local
 in
 
 val debugging = ElabControl.etdebugging (* ref false *)
-val say = Control_Print.say
+val say = PrintControl.say
 fun debugmsg (msg: string) =
     if !debugging then (say msg; say "\n") else ()
 

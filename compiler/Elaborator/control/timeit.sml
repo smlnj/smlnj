@@ -11,7 +11,7 @@ struct
 
 local
 
-    fun say msg = (Control_Print.say msg; Control_Print.flush ())
+    fun say msg = (PrintControl.say msg; PrintControl.flush ())
     open Time Timer
 in
 

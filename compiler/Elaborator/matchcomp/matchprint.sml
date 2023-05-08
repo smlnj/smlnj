@@ -7,7 +7,7 @@ struct
 local
   structure PP = Formatting
   structure PPA = PPAbsyn
-  val printDepth = Control_Print.printDepth
+  val printDepth = PrintControl.printDepth
 
   fun bug msg = ErrorMsg.impossible ("MatchPrint: "^ msg)
 in

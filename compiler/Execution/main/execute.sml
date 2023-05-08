@@ -37,7 +37,7 @@ structure Execute : sig
     structure Obj = Unsafe.Object
     type object = Obj.object
 
-    val say = Control_Print.say
+    val say = PrintControl.say
     fun bug s = ErrorMsg.impossible ("Execute: " ^ s)
 
     fun mkExec { cs = {code, data}, exnWrapper } = let

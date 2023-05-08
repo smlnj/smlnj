@@ -16,7 +16,7 @@ local
 
       (** common utility functions *)
 		   
-  val say = Control_Print.say
+  val say = PrintControl.say
 
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
 

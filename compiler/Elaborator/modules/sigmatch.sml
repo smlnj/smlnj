@@ -43,7 +43,7 @@ in
 exception BadBinding
 
 val debugging = ElabControl.smdebugging
-val say = Control_Print.say
+val say = PrintControl.say
 fun dbsaynl (msg: string) =
       if !debugging then (say msg; say "\n") else ()
 

@@ -70,7 +70,7 @@ structure Binfile :> BINFILE =
     val guidOf = #guid o unBF
 
     fun error msg = (
-	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
+	  PrintControl.say (concat ["binfile format error: ", msg, "\n"]);
 	  raise FormatError)
 
     val fromInt = Word32.fromInt
@@ -286,11 +286,11 @@ structure Binfile :> BINFILE =
                 val v = trimWS(hdr, 24, 16)
                 in
 (*
-Control_Print.say (concat [
+PrintControl.say (concat [
 "readVersionInfo NEW [", String.toString hdr ^ "]\n"
 ]);
-Control_Print.say (concat["  a = \"", String.toString a, "\"\n"]);
-Control_Print.say (concat["  v = \"", String.toString v, "\"\n"]);
+PrintControl.say (concat["  a = \"", String.toString a, "\"\n"]);
+PrintControl.say (concat["  v = \"", String.toString v, "\"\n"]);
 *)
                   {bfVersion = bfV, arch = a, smlnjVersion = v}
                 end
@@ -299,7 +299,7 @@ Control_Print.say (concat["  v = \"", String.toString v, "\"\n"]);
                 val (a, v) = SS.splitl (fn #"-" => false | _ => true) magic
                 in
 (*
-Control_Print.say (concat [
+PrintControl.say (concat [
 "readVersionInfo OLD [", String.toString(SS.string magic) ^ "]\n"
 ]);
 *)

@@ -8,7 +8,7 @@
  *   a push-restore sequence (tdp_push) at each non-tail call site of
  *   a non-primitive function, and a save-restore sequence to each HANDLEexp.
  *
- * Author: Matthias Blume (blume@tti-c.org)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
 local
     structure A = Absyn
@@ -28,31 +28,12 @@ signature TDP_INSTRUMENT = sig
 	SE.staticEnv * CompInfo.compInfo -> A.dec -> A.dec
 end
 
-structure TDPInstrument :> TDP_INSTRUMENT = struct
-
-    val priority = [10, 1]
-    val obscurity = 1
-    val prefix = "tdp"
-
-    val registry = ControlRegistry.new { help = "tracing/debugging/profiling" }
-
-    val _ = BasicControl.nest (prefix, registry, priority)
-
-    val bool_cvt = ControlUtil.Cvt.bool
+structure TDPInstrument :> TDP_INSTRUMENT =
+struct
 
     val enabled = SMLofNJ.Internals.TDP.mode
-
-    val p = 0
-    val ctl = Controls.control { name = "instrument",
-				 pri = [p],
-				 obscurity = obscurity,
-				 help = "trace-, debug-, and profiling \
-					\instrumentation mode",
-				 ctl = enabled }
-    val _ = ControlRegistry.register
-		registry
-		{ ctl = Controls.stringControl bool_cvt ctl,
-		  envName = SOME "TDP_INSTRUMENT" }
+    		     
+    val _ = MakeControls.registerControl ("TDP", "trace, debug, profiling mode", enabled)
 
     fun impossible s = EM.impossible ("TDPInstrument: " ^ s)
 

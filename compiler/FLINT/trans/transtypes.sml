@@ -42,8 +42,8 @@ structure TransTypes : TRANSTYPES =
     open Types Modules
 
     fun bug msg = ErrorMsg.impossible ("TransTypes: " ^ msg)
-    fun say msg = (Control_Print.say msg; Control_Print.flush ())
-    fun saynl msg = (Control_Print.say msg; Control_Print.say "\n"; Control_Print.flush ())
+    fun say msg = (PrintControl.say msg; PrintControl.flush ())
+    fun saynl msg = (PrintControl.say msg; PrintControl.say "\n"; PrintControl.flush ())
     fun saysnl msgs = saynl (concat msgs)
 
     val debugging = FLINT_Control.tmdebugging

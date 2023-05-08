@@ -17,7 +17,7 @@ local
   fun bug msg = ErrorMsg.impossible("LtyDef: "^msg)
 
   val debugging : bool ref = ref false
-  val dp : int ref = Control_Print.printDepth
+  val dp : int ref = PrintControl.printDepth
 
   (* deBruijn indexes (TC_DVAR) *)
   type depth = int  (* type variable "binding context" (no. of type abstractions), >= 0 *)

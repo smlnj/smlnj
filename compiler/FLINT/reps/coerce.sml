@@ -37,7 +37,7 @@ in
  ****************************************************************************)
 
 fun bug s = ErrorMsg.impossible ("Coerce: " ^ s)
-fun say (s : string) = Control_Print.say s
+fun say (s : string) = PrintControl.say s
 
 fun mkv _ = LV.mkLvar ()
 val ident = fn le => le

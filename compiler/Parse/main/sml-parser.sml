@@ -48,9 +48,9 @@ structure SMLParser : SMLNJ_PARSER =
 		  then (
 		    if !anyErrors then raise AbortLex else ();
 		    if !(#comLevel lexarg) > 0 orelse !(#charlist lexarg) <> nil
-		      then Control_Print.say (!ParserControl.secondaryPrompt)
-		      else Control_Print.say (!prompt);
-		    Control_Print.flush();
+		      then PrintControl.say (!ParserControl.secondaryPrompt)
+		      else PrintControl.say (!prompt);
+		    PrintControl.flush();
 		    doprompt := false)
 		  else ();
 		let val s = inputc_sourceStream k

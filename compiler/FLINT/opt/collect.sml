@@ -105,9 +105,9 @@ local
 
   val debugging = FLINT_Control.fcdebugging
 
-  fun say s = (Control_Print.say s; Control_Print.flush())
+  fun say s = (PrintControl.say s; PrintControl.flush())
   fun newline () = say "\n"
-  fun saynl s = (Control_Print.say s; say "\n"; Control_Print.flush())
+  fun saynl s = (PrintControl.say s; say "\n"; PrintControl.flush())
   fun says (msgs: string list) = say (String.concatWith " " msgs)
   fun saysnl (msgs: string list) = saynl (String.concatWith " " msgs)
   fun dbsay msg = if !debugging then saynl msg else ()

@@ -33,7 +33,7 @@ in
                  anyErrors: bool ref,
                  fmtRegion: SM.region -> PP.format}
 
-  val say = Control_Print.say  (* == (fn s => TextIO.output (TextIO.stdOut, s)) *)
+  val say = PrintControl.say  (* == (fn s => TextIO.output (TextIO.stdOut, s)) *)
 
   (* Default output is currently fixed (= Control.Print.say), but we could make default
    * output "settable" with a function "setOutput: (string -> unit) -> unit".
@@ -47,7 +47,7 @@ in
    * default body format *)
   val nullErrorBody = PP.empty
 
-  val lineWidth : int ref = Control_Print.lineWidth
+  val lineWidth : int ref = PrintControl.lineWidth
 
   (* recordError : severity * bool ref -> unit *)
   fun recordError (COMPLAIN, anyErrors) = anyErrors := true
@@ -56,7 +56,7 @@ in
   (* impossible : string -> 'a *)
   fun impossible (msg: string) =
       (app say ["Error: Compiler bug: ", msg, "\n"];
-       Control_Print.flush();
+       PrintControl.flush();
        raise Error)
 
   (* impossibleWithBody : string -> PP.format -> 'a *)
@@ -67,15 +67,15 @@ in
 
   (* warn : string -> unit *)
   fun warn (msg: string) =
-      (app Control_Print.say ["Warning: ", msg, "\n"];
-       Control_Print.flush())
+      (app PrintControl.say ["Warning: ", msg, "\n"];
+       PrintControl.flush())
 
   fun fmtSeverity WARN = PP.text "Warning:"
     | fmtSeverity COMPLAIN = PP.text "Error:"
 
   (* fmtMessage : PP.format * severity * string * PP.format -> unit *)
   fun fmtMessage (location: PP.format, severity: severity, msg: string, body: PP.format) =
-      case (!BasicControl.printWarnings, severity)
+      case (!BasicsControl.printWarnings, severity)
 	of (false, WARN) => PP.empty  (* no Warning messages if suppressed *)
 	 | _ => PP.appendNewLine
                   (PP.vblock

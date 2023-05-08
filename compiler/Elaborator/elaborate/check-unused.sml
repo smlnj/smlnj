@@ -20,7 +20,7 @@ structure CheckUnused : sig
     structure A = Absyn
 
   (* debugging *)
-    val say = Control_Print.say
+    val say = PrintControl.say
     val debugging = ElabControl.etopdebugging (* default false *)
     fun debugmsg (msg: string) =
           if !debugging then (say msg; say "\n") else ()

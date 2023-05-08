@@ -58,8 +58,8 @@ val unalias = ElabDataControl.typeUnalias
 
 fun bug s = ErrorMsg.impossible ("PPType: " ^ s)
 
-fun say msg = (Control_Print.say msg; Control_Print.flush ())
-fun saynl msg = (Control_Print.say (msg ^ "\n"); Control_Print.flush ())
+fun say msg = (PrintControl.say msg; PrintControl.flush ())
+fun saynl msg = (PrintControl.say (msg ^ "\n"); PrintControl.flush ())
 fun saysnl msgs = saynl (concat msgs)
 fun dbsaynl msg = if !debugging then saynl msg else ()
 fun dbsaysnl msgs = if !debugging then saysnl msgs else ()

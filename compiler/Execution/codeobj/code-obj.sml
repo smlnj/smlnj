@@ -68,7 +68,7 @@ structure CodeObj :> CODE_OBJ =
 	  in
 	    if (W8V.length data < sz)
 	      then (
-		Control_Print.say(concat[
+		PrintControl.say(concat[
 		    "Bin file format error: expected ", Int.toString sz,
 		    " bytes, but only found ", Int.toString(W8V.length data)
 		  ]);

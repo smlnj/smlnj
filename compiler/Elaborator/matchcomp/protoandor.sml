@@ -25,7 +25,7 @@ local
   open Absyn Paths MCCommon
 
   fun bug msg = ErrorMsg.impossible ("ProtoAndor: "^msg)
-  val say = Control_Print.say
+  val say = PrintControl.say
   fun newline () = say "\n"
   fun saynl msg = (say msg; newline())
   fun says strings = say (concat strings)

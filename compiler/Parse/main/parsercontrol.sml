@@ -5,7 +5,7 @@
  *)
 
 signature PARSER_CONTROL =
-  sig
+sig
 
     val primaryPrompt : string ref
     val secondaryPrompt : string ref
@@ -28,7 +28,7 @@ signature PARSER_CONTROL =
   (* set/clear Successor ML mode *)
     val setSuccML : bool -> unit
 
-  end
+end (* signature PARSER_CONTROL *)
 
 structure ParserControl : sig
 
@@ -44,71 +44,42 @@ structure ParserControl : sig
   (* raised to force a parser switch (e.g., from SML'97 to Succ ML) *)
     exception RESET_PARSER
 
-  end = struct
+  end =
 
-    val priority = [10, 10, 3]
-    val obscurity = 3
-    val prefix = "parser"
+struct
 
-    val registry = ControlRegistry.new { help = "parser settings" }
+  val {newBool, newInt, newString, newStrings} = MakeControls.make {name = "Parser", priority = [1]}
 
-    val _ = BasicControl.nest (prefix, registry, priority)
+  val primaryPrompt =
+	newString ("primary-prompt", "primary prompt", "- ")
 
-    val string_cvt = ControlUtil.Cvt.string
-    val flag_cvt = ControlUtil.Cvt.bool
+  val secondaryPrompt =
+	newString ("secondary-prompt", "secondary prompt","= ")
 
-    val nextpri = ref 0
+  val lazysml =
+	newBool ("lazy-keyword", "whether `lazy' is considered a keyword", false)
 
-    fun new (c, n, h, d) = let
-	  val r = ref d
-	  val p = !nextpri
-	  val ctl = Controls.control {
-		  name = n,
-		  pri = [p],
-		  obscurity = obscurity,
-		  help = h,
-		  ctl = r
-		}
-	  in
-	    nextpri := p + 1;
-	    ControlRegistry.register registry {
-		ctl = Controls.stringControl c ctl,
-		envName = SOME (ControlUtil.EnvName.toUpper "PARSER_" n)
-	      };
-	    r
-	  end
+  val overloadKW =
+	newBool ("overload", "whether (_)overload keyword is enabled", false)
 
+  val quotation =
+	newBool ("quotations", "whether (anti-)quotations are recognized", false)
 
-    val primaryPrompt =
-	  new (string_cvt, "primary-prompt", "primary prompt", "- ")
+  val astLineprint =
+	newBool ("astLineprint", "printing of ast location info", false)
 
-    val secondaryPrompt =
-	  new (string_cvt, "secondary-prompt", "secondary prompt","= ")
+  val astInternals =
+	newBool ("astInternals", "printing of ast internal info", false)
 
-    val lazysml =
-	  new (flag_cvt, "lazy-keyword", "whether `lazy' is considered a keyword", false)
+  val succML =
+	newBool ("succ-ml", "whether Successor-ML extensions are recognized", false)
 
-    val overloadKW =
-	  new (flag_cvt, "overload", "whether (_)overload keyword is enabled", false)
-
-    val quotation =
-	  new (flag_cvt, "quotations", "whether (anti-)quotations are recognized", false)
-
-    val astLineprint =
-	  new (flag_cvt, "astLineprint", "printing of ast location info", false)
-
-    val astInternals =
-	  new (flag_cvt, "astInternals", "printing of ast internal info", false)
-
-    val succML =
-	  new (flag_cvt, "succ-ml", "whether Successor-ML extensions are recognized", false)
-
-    exception RESET_PARSER
+  exception RESET_PARSER
 
   (* set/clear Successor ML mode *)
-    fun setSuccML flg =
-	  if (!succML <> flg)
-	    then (succML := flg; raise RESET_PARSER)
-	    else ()
+  fun setSuccML flg =
+	if (!succML <> flg)
+	  then (succML := flg; raise RESET_PARSER)
+	  else ()
 
-  end
+end (* structure ParserControl *)

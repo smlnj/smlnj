@@ -62,7 +62,7 @@ local
 in
 
 (* debugging *)
-val say = Control_Print.say
+val say = PrintControl.say
 fun says strs = say (concat strs)
 fun newline () = say "\n"
 fun saynl str = (say str; newline())
@@ -86,15 +86,15 @@ fun showFct (msg: string, fct: M.Functor, env: SE.staticEnv) =
 
 fun showDec (msg, dec, env) =
     ED.debugPrint ElabControl.printAbsyn
-      (msg, PPAbsyn.fmtDec (env, NONE) (dec, !Control_Print.printDepth))
+      (msg, PPAbsyn.fmtDec (env, NONE) (dec, !PrintControl.printDepth))
 
 fun showStrexp (msg, strexp: A.strexp, env) =
     ED.debugPrint ElabControl.printAbsyn
-      (msg, PPAbsyn.fmtStrexp (env, NONE) (strexp, !Control_Print.printDepth))
+      (msg, PPAbsyn.fmtStrexp (env, NONE) (strexp, !PrintControl.printDepth))
 
 fun showStrExpAst (msg: string, strexp: Ast.strexp, env: SE.staticEnv) =
     ED.debugPrint ElabControl.printAst
-      (msg, PPAst.fmtStrExp NONE (strexp, !Control_Print.printDepth))
+      (msg, PPAst.fmtStrExp NONE (strexp, !PrintControl.printDepth))
 
 (*
  * Check if an entity declaration is empty in order to avoid the unnecessary

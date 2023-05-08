@@ -20,7 +20,7 @@ end (* signature INTSTRMAP *)
 structure Env : ENV = struct
 
 (* debugging *)
-val say = Control_Print.say
+val say = PrintControl.say
 val debugging = ElabDataControl.envdebugging
 fun debugmsg (msg: string) =
       if !debugging then (say msg; say "\n") else ()

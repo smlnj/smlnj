@@ -10,12 +10,12 @@ Library
 
 (* ------------------------------ Exports ------------------------------ *)
 
-  signature BASIC_CONTROL
-  structure BasicControl
+  structure MakeControls
+  signature BASICS_CONTROL
+  structure BasicsControl
 
   signature PRINTCONTROL
   structure PrintControl
-  structure Control_Print  (* a temporary alias (the old name) for PrintControl *)
   structure StringFormats
 
   signature SYMBOL
@@ -67,7 +67,8 @@ is
 
 (* ------------------------------ Members ------------------------------ *)
 
-  control/basiccontrol.sml
+  control/basicscontrol.sml
+  control/make-control.sml
 
   symbol/symbol.sig
   symbol/symbol.sml
@@ -143,11 +144,11 @@ is
 
   (* smlnj-lib *)
   $smlnj/smlnj-lib/smlnj-lib.cm
-  $smlnj/smlnj-lib/controls-lib.cm
+  $smlnj/smlnj-lib/controls-lib.cm (* Basics/control/make-control.sml *)
   $smlnj/smlnj-lib/prettyprint-lib.cm
-  $smlnj/smlnj-lib/pp-lib.cm
+  $smlnj/smlnj-lib/pp-lib.cm  (* not used. Included to force its compilation *)
 
   (* last import is to ensure that pp-lib.cm is compiled and its bin file is
-   * added to lib/smlnj/smlnj-lib/.cm/xxx64-unix
+   * added to lib/smlnj/smlnj-lib/.cm/xxx64-unix (or wherever).
    *)
    

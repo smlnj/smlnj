@@ -34,7 +34,7 @@ in
 val debugging = FLINT_Control.spdebugging
 fun bug s = ErrorMsg.impossible ("Specialize: " ^ s)
 
-val say = Control_Print.say
+val say = PrintControl.say
 
 fun print_fflag (fflag : LT.fflag) = say (PPT.fflagToString fflag)
 fun print_lvar (lvar : LambdaVar.lvar) = say ("f = " ^ (LV.toString lvar))

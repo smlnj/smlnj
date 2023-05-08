@@ -31,7 +31,7 @@ local structure LE = LtyExtern
       open FLINT
 
 fun bug s = ErrorMsg.impossible ("ChkFlint: "^s)
-val say = Control_Print.say
+val say = PrintControl.say
 val anyerror = ref false
 
 (* pretty printing functions *)

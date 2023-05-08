@@ -28,7 +28,7 @@ struct
     fun dbsaynl msg =
 	if !debugging then saynl msg else ()
 		    (* diagnostic printing of Ast and Absyn *)
-		      val printDepth = Control_Print.printDepth
+    val printDepth = PrintControl.printDepth
 
     (* debugPrint : bool ref -> (string * PP.format) -> unit *)
     fun debugPrint flag (msg: string, format: PP.format) =

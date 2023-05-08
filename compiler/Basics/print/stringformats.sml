@@ -12,9 +12,9 @@ struct
 
   fun quoteString s = concat ["\"", String.toString s, "\""]
 
-  fun formatString s = quoteString (trimmed (s, !Control_Print.stringDepth))
+  fun formatString s = quoteString (trimmed (s, !PrintControl.stringDepth))
 
-  fun formatIntInf i = trimmed (IntInf.toString i, !Control_Print.intinfDepth)
+  fun formatIntInf i = trimmed (IntInf.toString i, !PrintControl.intinfDepth)
 
 end (* structure StringFormats *)
 

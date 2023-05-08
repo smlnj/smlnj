@@ -79,7 +79,7 @@ val debugging = FLINT_Control.trdebugging
 fun bug msg = EM.impossible("Translate: " ^ msg)
 fun warn msg = EM.warn("Translate: " ^ msg)
 
-val say = Control_Print.say
+val say = PrintControl.say
 fun says strs = say (concat strs)
 fun newline () = say "\n"
 fun saynl str = (say str; newline())
@@ -94,7 +94,7 @@ fun dbsaysnl (msgs : string list) =
 
 val debugPrint = ED.debugPrint debugging
 
-val printDepth = Control_Print.printDepth
+val printDepth = PrintControl.printDepth
 
 (* simplified type and absyn formatting functions *)
 

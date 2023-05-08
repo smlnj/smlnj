@@ -57,7 +57,7 @@ in
 (* debugging *)
 fun bug msg = ErrorMsg.impossible ("ElabSig: " ^ msg)
 
-val say = Control_Print.say
+val say = PrintControl.say
 val debugging = ElabControl.esdebugging (* ref false *)
 fun debugmsg (msg: string) = if (!debugging) then (say msg; say "\n") else ()
 fun debugPrint x = ElabDebug.debugPrint debugging x

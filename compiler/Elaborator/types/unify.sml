@@ -46,9 +46,9 @@ local
 
   (* debugging *)
   val debugging = ElabControl.unidebugging
-  fun say msg = (Control_Print.say msg; Control_Print.flush ())
+  fun say msg = (PrintControl.say msg; PrintControl.flush ())
   fun newline () = say "\n"
-  fun saynl msg = (Control_Print.say msg; Control_Print.say "\n"; Control_Print.flush ())
+  fun saynl msg = (PrintControl.say msg; PrintControl.say "\n"; PrintControl.flush ())
   fun dbsaynl (msg: string) =
       if !debugging then saynl msg else ()
 

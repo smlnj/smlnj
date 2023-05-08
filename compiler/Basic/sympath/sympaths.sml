@@ -122,7 +122,7 @@ struct
 
   val debugging = ElabDataControl.tpdebugging
 
-  fun saynl msg = (Control_Print.say msg; Control_Print.say "\n"; Control_Print.flush ())
+  fun saynl msg = (PrintControl.say msg; PrintControl.say "\n"; PrintControl.flush ())
   fun saysnl msgs = saynl (concat msgs)
   fun dbsaynl msg = if !debugging then saynl msg else ()
   fun dbsaysnl msgs = if !debugging then saysnl msgs else ()

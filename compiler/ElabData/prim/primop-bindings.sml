@@ -575,23 +575,23 @@ fun prBind bind = let
       val ty = PrimopBind.typeOf bind
       val p = PrimopBind.defnOf bind
       in
-	Control_Print.say(concat[
+	PrintControl.say(concat[
 	    StringCvt.padLeft #" " 30 n, " = ",
 	    PrimopUtil.toString p, "\n"
 	  ])
       end
 
 val _ = (
-	Control_Print.say "********************* Primop Bindings ********************\n";
-	Control_Print.say (concat[
+	PrintControl.say "********************* Primop Bindings ********************\n";
+	PrintControl.say (concat[
 	    "* int size = ", Int.toString intSz,
 	    "; real size = ", Int.toString realSz,
 	    "; large word size = ", Int.toString largeWSz,
 	    "\n"
 	  ]);
-	Control_Print.say "********************\n";
+	PrintControl.say "********************\n";
 	List.app prBind prims;
-	Control_Print.say "********************\n")
+	PrintControl.say "********************\n")
 (* *)
 
   end

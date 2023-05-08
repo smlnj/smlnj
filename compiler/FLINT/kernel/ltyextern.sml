@@ -22,7 +22,7 @@ local
   val wrdebugging = FLINT_Control.wrdebugging
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
 
-  val say = Control_Print.say
+  val say = PrintControl.say
   fun dbsay msg = if !wrdebugging then say msg else ()
 
 in

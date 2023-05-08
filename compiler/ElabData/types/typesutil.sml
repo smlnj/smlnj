@@ -30,7 +30,7 @@ structure TypesUtil : TYPESUTIL =
     val --> = BT.-->
     infix -->
 
-    val say = Control_Print.say
+    val say = PrintControl.say
     val debugging = ElabDataControl.tudebugging
     fun debugmsg msg = if !debugging then say ("TypesUtil: " ^ msg ^ "\n") else ()
     fun bug msg = EM.impossible("TypesUtil: "^msg)

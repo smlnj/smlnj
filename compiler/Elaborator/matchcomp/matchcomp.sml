@@ -66,7 +66,7 @@ local
   val printDectree = MCC.printDecisionTree
 		       
   fun bug s = EM.impossible ("MatchComp: " ^ s)
-  fun say msg = (Control_Print.say msg; Control_Print.flush ())
+  fun say msg = (PrintControl.say msg; PrintControl.flush ())
   fun says msgs = say (concat msgs)
   fun saynl msg = (say (msg^"\n"))
   fun saysnl msgs = (saynl (concat msgs))

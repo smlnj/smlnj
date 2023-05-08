@@ -111,7 +111,6 @@ $smlnj/basis/basis.cm
 
 (* smlnj-lib libraries *)
 $smlnj/smlnj-lib/smlnj-lib.cm        (* smlnj-lib/Util *)
-$smlnj/smlnj-lib/controls-lib.cm     (* smlnj-lib/Controls *)
 $smlnj/smlnj-lib/prettyprint-lib.cm  (* smlnj-lib/PrettyPrint *)
 
 (* compiler *)

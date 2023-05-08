@@ -13,7 +13,7 @@ local
   open MCCommon
 
   fun bug s = ErrorMsg.impossible ("MCUtil: " ^ s)
-  fun say msg = (Control_Print.say msg; Control_Print.flush ())
+  fun say msg = (PrintControl.say msg; PrintControl.flush ())
   fun says msgs = say (concat msgs)
   fun saynl msg = (say (msg^"\n"))
   fun saysnl msgs = (saynl (concat msgs))

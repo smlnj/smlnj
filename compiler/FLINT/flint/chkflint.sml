@@ -41,8 +41,8 @@ local
   open FLINT
 
 fun bug s = ErrorMsg.impossible ("ChkFlint: "^s)
-val say = Control_Print.say
-val printDepth = Control_Print.printDepth
+val say = PrintControl.say
+val printDepth = PrintControl.printDepth
 
 val anyerror = ref false
 

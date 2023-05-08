@@ -37,8 +37,8 @@ fun map3 _ (nil, nil, nil) = nil
   | map3 _ _ = raise ListPair.UnequalLengths
 
 (* debugging *)
-val say = Control_Print.say
-val lineWidth = Control_Print.lineWidth
+val say = PrintControl.say
+val lineWidth = PrintControl.lineWidth
 
 val debugging = FLINT_Control.nmdebugging
 
