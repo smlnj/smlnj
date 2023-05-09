@@ -1,0 +1,9 @@
+Library
+
+	structure A
+
+is
+
+  a.sml
+
+  $/basis.cm

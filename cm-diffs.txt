@@ -1,0 +1,37 @@
+Only in cm: MAP-CM.txt
+- cm/bootstrap/btcompile.sml
+- cm/bootstrap/build-initdg.sml
+? cm/cm-lib.cm
+PP: cm/compile/compile.sml
+PP: cm/compile/link.sml
+SP: cm/concur/sources.cm
+SP,PP: cm/depend/build.sml
+PP: cm/depend/checksharing.sml
+ER: cm/main/cm-boot.sml
+ER: cm/main/general-params.sml
+SM: cm/parse/cm.grm
+- : cm/parse/cm.grm.sml (derived from cm.grm)
+SM: cm/parse/cm.lex
+- : cm/parse/cm.lex.sml (derived from cm.lex)
+? : cm/parse/parse.sml
+N1: cm/paths/srcpath-lib.cm
+ER: cm/semant/group-reg.sml
+ER: cm/smlfile/skel-cvt.sml
+- : cm/smlfile/skel-io.sml
+CM: cm/smlfile/skeleton.sml
+ER: cm/smlfile/smlinfo.sml
+LO,?: cm/stable/stabilize.sml
+CP: cm/util/say.sml
+PX: cm/util/sources.cm  (& no core.cm)
+
+CM : comments
+LO : layout (source code formatting, e.g. "let"s)
+PP : prettyprinter
+ER : error handling;
+CP : Control.Print -> Control_Print -> PrintControl
+SP : srcpath-lib.cm moved (proxy eliminated)
+PX : other, compiler proxies eliminated ($smlnj/viscomp -> $compiler/?)
+SM : SourceMap, regions (need REGION constructor)
+
+N1 : srcpath-lib.cm defines library instead of groups (because
+     multiple imports into libraries)

@@ -758,7 +758,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                                         List.foldr (fn (s, r) => s :: "." :: r) [getarg ci] path)
                                   val value = getval ci
                                   val sz = size value
-                                  val lw = !Control_Print.lineWidth
+                                  val lw = !PrintControl_FOOBAR.lineWidth
                                   val padsz = lw - 6 - size arg - indent
                                   in
                                     if padsz < sz

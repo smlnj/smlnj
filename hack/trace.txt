@@ -1,0 +1,89 @@
+hoy$ git status
+On branch newpp
+Your branch is up to date with 'origin/newpp'.
+
+nothing to commit, working tree clean
+hoy$ pwd
+/Users/dbm/sml/Dev/github/smlnj/system
+hoy$ ./cmb-make ../bin/sml
+: adding '/Users/dbm/sml/Dev/github/smlnj/bin' to PATH
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+- *** WARNING: no access to Div exception
+*** WARNING: no access to Div exception
+*** WARNING: no access to Div exception
+*** WARNING: no access to Div exception
+*** WARNING: no access to Div exception
+*** WARNING: no access to Div exception
+*** WARNING: no access to Div exception
+smlnj/init/target64-inline.sml:47.5-47.47 Warning: rebinding "=" is not allowed
+smlnj/init/target64-inline.sml:140.9-140.57 Warning: rebinding "=" is not allowed
+smlnj/init/target64-inline.sml:191.9-191.65 Warning: rebinding "=" is not allowed
+smlnj/init/target64-inline.sml:219.9-219.65 Warning: rebinding "=" is not allowed
+smlnj/init/target64-inline.sml:48.39-48.48 Warning: calling polyEqual
+smlnj/init/target64-inline.sml:47.39-47.47 Warning: calling polyEqual
+smlnj/init/pre-perv.sml:27.5-27.55 Warning: rebinding "=" is not allowed
+smlnj/init/pre-perv.sml:28.47-28.57 Warning: calling polyEqual
+smlnj/init/pre-perv.sml:27.46-27.55 Warning: calling polyEqual
+smlnj/init/substring.sig:8.5-8.22 Warning: rebinding "=" is not allowed
+smlnj/init/substring.sig:8.5-8.22 Warning: calling polyEqual
+smlnj/init/substring.sig:8.5-8.22 Warning: calling polyEqual
+smlnj/init/pervasive.sml:143.1-143.18 Warning: rebinding "=" is not allowed
+smlnj/init/pervasive.sml:143.1-143.18 Warning: calling polyEqual
+smlnj/init/pervasive.sml:143.1-143.18 Warning: calling polyEqual
+Basis/Implementation/IO/text-io-fn.sml:787.23-787.24 Warning: calling polyEqual
+Basis/Implementation/Sockets/socket.sml:169.43-169.44 Warning: calling polyEqual
+Basis/Implementation/Unix/unix.sml:137.14-137.15 Warning: calling polyEqual
+Basis/Implementation/Unix/unix.sml:140.15-140.16 Warning: calling polyEqual
+Basis/Implementation/fn.sml:63.27-63.29 Warning: calling polyEqual
+Basis/Implementation/fn.sml:61.24-61.25 Warning: calling polyEqual
+$Stabilize: wrapping the following privileges:
+  primitive
+dummy:<<>> Warning: $SMLNJ-BASIS/basis.cm: uses non-anchored path
+  The path specifying library $SMLNJ-BASIS/basis.cm:basis-common.cm is relative
+  . 
+ (This means that in order to be able to use the stabilized library
+  $SMLNJ-BASIS/basis.cm , it will be necessary to keep all imported libraries
+  with names derived from or equal to $SMLNJ-BASIS/basis.cm:basis-common.cm in
+  the same relative location as they are now.)
+../smlnj-lib/Util/int-redblack-map.sml:87.8-87.33 Warning: binding not exhaustive
+           T (_, a, yk, y, b) = ...
+../smlnj-lib/Util/int-redblack-map.sml:130.8-130.33 Warning: binding not exhaustive
+           T (_, a, yk, y, b) = ...
+../smlnj-lib/Util/redblack-set-fn.sml:96.8-96.29 Warning: binding not exhaustive
+           T (_, a, y, b) = ...
+../smlnj-lib/Util/Target64Bit/random.sml:117.17-117.91 Warning: binding not exhaustive
+           SOME (magic', rest) = ...
+../smlnj-lib/Util/Target64Bit/random.sml:121.26-121.28 Warning: calling polyEqual
+../smlnj-lib/Util/int-redblack-set.sml:105.8-105.29 Warning: binding not exhaustive
+           T (_, a, y, b) = ...
+../smlnj-lib/Util/redblack-map-fn.sml:82.8-82.33 Warning: binding not exhaustive
+           T (_, a, yk, y, b) = ...
+../smlnj-lib/Util/redblack-map-fn.sml:134.8-134.33 Warning: binding not exhaustive
+           T (_, a, yk, y, b) = ...
+../smlnj-lib/Util/word-redblack-map.sml:87.8-87.33 Warning: binding not exhaustive
+           T (_, a, yk, y, b) = ...
+../smlnj-lib/Util/word-redblack-map.sml:130.8-130.33 Warning: binding not exhaustive
+           T (_, a, yk, y, b) = ...
+../smlnj-lib/Util/int-list-map.sml:127.21-127.22 Warning: calling polyEqual
+../smlnj-lib/Util/word-redblack-set.sml:105.8-105.29 Warning: binding not exhaustive
+           T (_, a, y, b) = ...
+/Users/dbm/sml/Dev/github/smlnj/smlnj-lib/Controls/controls-lib.cm:35.3-35.13 Error: anchor $basis.cm not defined
+
+uncaught exception BadAnchor
+  raised at: 12675-12684
+             17433-17711
+             1078-1079
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             1078-1079
+             4819-12411
+- 

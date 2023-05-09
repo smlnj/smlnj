@@ -22,13 +22,6 @@ Library
 
 is
 
-#if defined(NEW_CM)
-  $/basis.cm
-  $/smlnj-lib.cm
-#else
-  ../Util/smlnj-lib.cm
-#endif
-
   control-reps.sml
   controls-sig.sml
   controls.sml
@@ -38,3 +31,6 @@ is
   control-set.sml
   control-util-sig.sml
   control-util.sml
+
+  $/basis.cm
+  $/smlnj-lib.cm
