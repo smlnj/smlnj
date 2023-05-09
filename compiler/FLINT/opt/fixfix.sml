@@ -37,7 +37,7 @@ local
   structure PF = PrintFormat
   structure PPF = PPFlint
   structure OU = OptUtils
-  structure CTRL = FLINT_Control
+  structure CTRL = FlintControl
 in
 
 val debugging = CTRL.ffdebugging

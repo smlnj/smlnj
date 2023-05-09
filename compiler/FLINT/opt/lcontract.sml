@@ -42,7 +42,7 @@ local  (* local definitions *)
   fun says strings = say (concat strings)
   fun saysnl strings = saynl (concat strings)
 
-  val debugging = FLINT_Control.lcdebugging
+  val debugging = FlintControl.lcdebugging
   fun dbsay msg = if !debugging then saynl msg else ()
   fun dbsays msgs = if !debugging then saysnl msgs else ()
   fun bug s = ErrorMsg.impossible ("LContract: "^s)

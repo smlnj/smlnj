@@ -13,7 +13,7 @@ local
 
   open Lty
 
-  val debugging : bool ref = FLINT_Control.lkdebugging
+  val debugging : bool ref = FlintControl.lkdebugging
   val printDepth : int ref = PrintControl.printDepth
 
   val say = PrintControl.say

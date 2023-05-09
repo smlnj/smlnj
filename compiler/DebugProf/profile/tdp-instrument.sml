@@ -33,7 +33,8 @@ struct
 
     val enabled = SMLofNJ.Internals.TDP.mode
     		     
-    val _ = MakeControls.registerControl ("TDP", "trace, debug, profiling mode", enabled)
+    (* register enabled as a control in a new "TDP" registry *)
+    val _ = MakeControls.register (enabled, "TDP", "trace, debug, profiling mode")
 
     fun impossible s = EM.impossible ("TDPInstrument: " ^ s)
 

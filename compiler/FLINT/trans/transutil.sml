@@ -18,7 +18,7 @@ local  (* don't need all these structures *)
   open Absyn
 in
 
-val debugging = FLINT_Control.trdebugging
+val debugging = FlintControl.trdebugging
 fun bug msg = ErrorMsg.impossible("TransUtil: " ^ msg)
 val say = PrintControl.say
 fun says strs = say (concat strs)

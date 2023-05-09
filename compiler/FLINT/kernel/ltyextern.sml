@@ -19,7 +19,7 @@ local
   structure PP = Formatting
   structure PF = PrintFormat
 
-  val wrdebugging = FLINT_Control.wrdebugging
+  val wrdebugging = FlintControl.wrdebugging
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
 
   val say = PrintControl.say

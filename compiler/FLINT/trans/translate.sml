@@ -75,7 +75,7 @@ in
  *                   DEBUGGING AND PRETTYPRINTING                           *
  ****************************************************************************)
 
-val debugging = FLINT_Control.trdebugging
+val debugging = FlintControl.trdebugging
 fun bug msg = EM.impossible("Translate: " ^ msg)
 fun warn msg = EM.warn("Translate: " ^ msg)
 
@@ -261,7 +261,7 @@ fun 'a withRegion (loc: SM.region) (thunk : unit -> 'a) =
   end
 
 fun mkRaise(x, lt) =
-  let val e = if !FLINT_Control.trackExn
+  let val e = if !FlintControl.trackExn
               then APP(markexn, RECORD[x, STRING(SourceMap.regionToString(!region))])
               else x
    in RAISE(e, lt)
@@ -271,7 +271,7 @@ fun complain msg = error (!region) msg
 fun repErr msg = complain EM.COMPLAIN msg EM.nullErrorBody
 fun repWarn msg = complain EM.WARN msg EM.nullErrorBody
 fun repPolyEq () =
-    if !FLINT_Control.polyEqWarn then complain EM.WARN "calling polyEqual" EM.nullErrorBody
+    if !FlintControl.polyEqWarn then complain EM.WARN "calling polyEqual" EM.nullErrorBody
     else ()
 
 end (* markexn-local *)
@@ -1644,7 +1644,7 @@ val body = wrapII body
 val (plexp, imports) = wrapPidInfo (body, PersMap.listItemsi (!persmap))
 
 (** type check body (including kind check) **)
-val ltyerrors = if !FLINT_Control.checkPLambda
+val ltyerrors = if !FlintControl.checkPLambda
 		then ChkPlexp.checkLtyTop(plexp,0)
 		else false
 
@@ -1661,7 +1661,7 @@ val _ = if ltyerrors
 
 (* print plambda IR if enabled by Control.FLINT flags printAll or
  * printLambda *)
-val _ = if !FLINT_Control.printAllIR orelse !FLINT_Control.printPlambda
+val _ = if !FlintControl.printAllIR orelse !FlintControl.printPlambda
 	then (say ("\n\n[After Translate" ^ " ...]\n\n"); ppLexp plexp)
 	else ()
 
@@ -1671,9 +1671,9 @@ val flint = let val _ = dbsaynl ">> FlintNM.norm"
 		val _ = dbsaynl "<< FlintNM.norm"
 	    in n end
 
-(* print flint IR if enabled by FLINT_Control flags printAll or
+(* print flint IR if enabled by FlintControl flags printAll or
  * printFlint *)
-val _ = if !FLINT_Control.printAllIR orelse !FLINT_Control.printFlint
+val _ = if !FlintControl.printAllIR orelse !FlintControl.printFlint
 	then (say "\n[After FlintNM.norm ...]\n\n";
 	      PPFlint.ppProg flint;
 	      say "\n")

@@ -21,7 +21,7 @@ struct
   structure MC : MC_CONTROL = MCControl (* Elaborator/control/mccontrol.{sml,sig} *)
 
   (* FLINT controls *)
-  structure FLINT = FLINT_Control (* FLINT/main/control.{sml,sig} *)
+  structure FLINT = FlintControl (* FLINT/main/control.{sml,sig} *)
 
   (* CPS controls *)
   structure CPS : CPSCONTROL = CPSControl (* CPS/main/control.{sml,sig} *)
@@ -44,8 +44,9 @@ struct
   val debugging = newBool ("debugging", "general debugging flag", false)
   val eldebugging = newBool ("eldebugging", "evalloop debugging", false)
   val pddebugging = newBool ("pddebugging", "PPDec debugging", false)
-  val printAst = newBool ("printAst", "whether to print Ast representation", false)
   val interp = newBool ("interp", "?", false)
+
+(*  val printAst = newBool ("printAst", "whether to print Ast representation", false) -- in Elab *)
 
   val progressMsgs =
       newBool ("progressMsgs", "whether to print a message after each phase is completed", false)

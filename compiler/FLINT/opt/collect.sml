@@ -103,7 +103,7 @@ local
   structure PF = PrintFormat
   structure PPF = PPFlint
 
-  val debugging = FLINT_Control.fcdebugging
+  val debugging = FlintControl.fcdebugging
 
   fun say s = (PrintControl.say s; PrintControl.flush())
   fun newline () = say "\n"

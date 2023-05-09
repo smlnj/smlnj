@@ -6,7 +6,7 @@
 
 (* main Control structure *)
 signature CONTROL =
-  sig
+sig
     structure Print : PRINTCONTROL
     structure ElabData : ELABDATA_CONTROL  (* ElabData controls *)
     structure Elab : ELAB_CONTROL  (* Elaborator controls *)
@@ -17,19 +17,24 @@ signature CONTROL =
     val debugging : bool ref
     val eldebugging : bool ref (* EvalLoopF debugging *)
     val pddebugging : bool ref (* PPDec debugging *)
-    val printAst : bool ref
-    val printAbsyn : bool ref
+(*
+    val printAst : bool ref -- in Elab = ElabControl
+    val printAbsyn : bool ref -- in Elab = ElabControl
+*)
 
-    include BASIC_CONTROL
-    (* provides: val printWarnings : bool ref
-     *)
-    include PARSER_CONTROL
-    (* provides: val primaryPrompt : string ref
-		 val secondaryPrompt : string ref
-		 val overloadKW : bool ref
-		 val lazysml : bool ref
-		 val quotation : bool ref
-     *)
+    structure Basics : BASICS_CONTROL
+    (* provides: val printWarnings : bool ref *)
+
+    structure Parser: PARSER_CONTROL
+    (* provides:
+         val primaryPrompt : string ref
+	 val secondaryPrompt : string ref
+	 val overloadKW : bool ref
+	 val lazysml : bool ref
+	 val quotation : bool ref *)
+
+
+    (* additional TopLevel control flags *)
 
     val interp : bool ref
        (* turn on interpreter -- defunct *)
@@ -48,7 +53,7 @@ signature CONTROL =
 
     val tdp_instrument : bool ref
 
-  end (* signature CONTROL *)
+end (* signature CONTROL *)
 
-(* NOTES: trackExn and polyEqWarn moved to FLINT_Control -- used in trans/translate.sml *)
+(* NOTES: trackExn and polyEqWarn moved to FlintControl; they are used in trans/translate.sml *)
       

@@ -38,7 +38,7 @@ in
   type tcode = int
   type rtype = FLINT.lexp
 
-val debugging = FLINT_Control.rtdebugging
+val debugging = FlintControl.rtdebugging
 
 fun bug s = ErrorMsg.impossible ("RuntimeType: " ^ s)
 fun say (s : string) = PrintControl.say s

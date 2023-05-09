@@ -40,8 +40,8 @@ local
 in
 
 (* These should be defined via Control.FLINT *)
-val dtPrintNames : bool ref = FLINT_Control.printDTNames  (* default true *)
-val printIND : bool ref = FLINT_Control.printINDltys (* default false *)
+val dtPrintNames : bool ref = FlintControl.printDTNames  (* default true *)
+val printIND : bool ref = FlintControl.printINDltys (* default false *)
 
 (* fflagToString : LT.fflag -> string *)
 fun fflagToString fflag =

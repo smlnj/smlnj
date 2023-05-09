@@ -31,7 +31,7 @@ local
   open FLINT
 in
 
-val debugging = FLINT_Control.spdebugging
+val debugging = FlintControl.spdebugging
 fun bug s = ErrorMsg.impossible ("Specialize: " ^ s)
 
 val say = PrintControl.say

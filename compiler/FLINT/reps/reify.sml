@@ -28,7 +28,7 @@ local
   open FLINT
 in
 
-val debugging = FLINT_Control.redebugging
+val debugging = FlintControl.redebugging
 
 
 fun bug s = ErrorMsg.impossible ("Reify: " ^ s)

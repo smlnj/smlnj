@@ -13,7 +13,7 @@ structure FLINTOpt : sig
 
 end = struct
 
-    structure CTRL = FLINT_Control  (* == Control.FLINT *)
+    structure CTRL = FlintControl  (* == Control.FLINT *)
     structure PPF = PPFlint
     structure LB = LtyBasic
     structure LE = LtyExtern
@@ -141,7 +141,7 @@ end = struct
 	  * l: string          name of the (previous) phase that produced f
 	  *)
 	  fun runphase (phase: string, pdata as (f, fk, l): phaseData) : phaseData =
-	      (FLINT_Control.currentPhase := phase;
+	      (FlintControl.currentPhase := phase;
 	       case (phase, fk)
 		 of (("fcontract" | "lcontract"), FK_DEBRUIJN) =>
 		      (say ("\n!! " ^ phase ^ " cannot be applied to the DeBruijn form !!\n");

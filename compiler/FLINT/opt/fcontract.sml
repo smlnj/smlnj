@@ -234,8 +234,8 @@ struct
     structure PO = Primop
     structure C  = Collect
 
-    val debugging = FLINT_Control.fcdebugging
-    val counters = FLINT_Control.fccounters
+    val debugging = FlintControl.fcdebugging
+    val counters = FlintControl.fccounters
 
     fun say s = (PrintControl.say s; PrintControl.flush())
     fun newline () = say "\n"

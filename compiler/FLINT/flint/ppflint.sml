@@ -337,7 +337,7 @@ in
 	 *)
 	let fun fmtarg (lvar, lty) =
 		PP.hblock [PP.cblock [fmtLvar lvar, PP.colon],
-		      if !FLINT_Control.printFctTypes orelse cconv <> FR.CC_FCT
+		      if !FlintControl.printFctTypes orelse cconv <> FR.CC_FCT
 		      then PPT.fmtLty (pd - 1) lty
 		      else PP.text "<lty>"]
          in PP.vblock

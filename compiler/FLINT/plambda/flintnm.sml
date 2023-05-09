@@ -40,7 +40,7 @@ fun map3 _ (nil, nil, nil) = nil
 val say = PrintControl.say
 val lineWidth = PrintControl.lineWidth
 
-val debugging = FLINT_Control.nmdebugging
+val debugging = FlintControl.nmdebugging
 
 fun debugmsg (msg : string) =
     if !debugging then (say msg; say "\n") else ()

@@ -32,7 +32,7 @@ local
   open FLINT
 in
 
-val debugging = FLINT_Control.wrdebugging
+val debugging = FlintControl.wrdebugging
 val say = PrintControl.say
 fun dbsay msg = if !debugging then say msg else ()
 fun bug msg = ErrorMsg.impossible ("Wrapping: " ^ msg)

@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-structure FLINTControl :> FLINTCONTROL =
+structure FlintControl :> FLINTCONTROL =
 struct
 
   val {newBool, newInt, newString, newStrings} = MakeControls.make {name = "FLINT", priority = [1]}
@@ -44,8 +44,7 @@ struct
    * `split' should probably be called just after `fixfix' since
    * fcontract might eliminate some uncurry wrappers which are
    * locally unused but could be cross-module inlined. *)
-  val phases =
-      newStrings "phases", "FLINT optimizer phases",
+  val phaseNames : string list =
 	   ["deb2names",       (* 0 *)
 	    "lcontract",       (* 1 *) (* Cruder but quicker than fcontract *)
 	    "fixfix",          (* 2 *)
@@ -59,7 +58,9 @@ struct
 	    "reify",           (* 10 *)
 	    "fcontract",       (* 11 *)
 	    "fixfix",          (* 12 *)
-	    "fcontract+eta"])  (* 13 *)
+	    "fcontract+eta"]  (* 13 *)
+
+  val phases = newStrings ("phases", "FLINT optimizer phases", phaseNames)
 
   val currentPhase = newString ("currentPhase", "current FlintOpt phase", "nophase")
 
@@ -108,4 +109,4 @@ struct
   (* exported for use in FLINT/main/flintcomp.sml *)
   val recover : (LambdaVar.lvar -> unit) ref = ref(fn x => ())
 
-end (* structure FLINTControl *)
+end (* structure FlintControl *)

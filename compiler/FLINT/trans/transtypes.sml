@@ -46,7 +46,7 @@ structure TransTypes : TRANSTYPES =
     fun saynl msg = (PrintControl.say msg; PrintControl.say "\n"; PrintControl.flush ())
     fun saysnl msgs = saynl (concat msgs)
 
-    val debugging = FLINT_Control.tmdebugging
+    val debugging = FlintControl.tmdebugging
     fun dbsaynl (msg: string) =
 	if !debugging then saynl msg else ()
     fun dbsaysnl (msgs: string list) =

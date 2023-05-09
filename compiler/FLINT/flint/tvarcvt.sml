@@ -35,7 +35,7 @@ structure TvarCvt :> TVARCVT =
     val ppTyc = PPLty.ppTyc 20
     val ppLty = PPLty.ppLty 20
 
-    val wrdebugging = FLINT_Control.wrdebugging
+    val wrdebugging = FlintControl.wrdebugging
 
     val say = PrintControl.say
     fun dbsay msg = if !wrdebugging then say msg else ()

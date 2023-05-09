@@ -79,4 +79,46 @@ uncaught exception Bind [nonexhaustive binding failure]
              10231-15155
              1078-1079
              4819-12411
-- 
+
+------------------------------------------------------------------------------------------
+
+../compiler/TopLevel/main/control.sig:23.13-23.26 Error: unbound signature: BASIC_CONTROL
+
+uncaught exception Bind [nonexhaustive binding failure]
+  raised at: 43108-43226
+             59709-59849
+             5635-5636
+             1078-1079
+             8325-11051
+             16104-16407
+             11441-12047
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             11441-12047
+             1078-1079
+             10231-15155
+             1078-1079
+             4819-12411
+
+------------------------------------------------------------------------------------------
+Error: Compiler bug: ElabCore: getPath: unexpected constructor pattern for AppPat
+
+	structure Control =
+	struct
+	  val keep_going : bool ref = StdConfig.keep_going
+	  val verbose : bool ref = StdConfig.verbose
+	  val parse_caching : int ref = StdConfig.parse_caching
+	  val warn_obsolete : bool ref = StdConfig.warn_obsolete
+	  val debug : bool ref = StdConfig.debug
+	  val conserve_memory bool ref = StdConfig.conserve_memory   <-- missing colon before "bool"
+	  val generate_index : bool ref = StdConfig.generate_index
+	end (* structure Control *)

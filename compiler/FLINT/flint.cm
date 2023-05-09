@@ -33,7 +33,7 @@ Library
   structure Specialize
   structure Recover
   structure FLINTOpt
-  structure FLINT_Control
+  structure FlintControl
 
 is
 

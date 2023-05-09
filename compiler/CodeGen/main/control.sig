@@ -6,7 +6,7 @@ signature CODEGENCONTROL =
 sig
 
     val boxedconstconreps : bool ref
-    val spillGen : int ref
+(*    val spillGen : int ref ?  not used *)
     val debugRep : bool ref
     val printCFG : bool ref
     val dumpCFG : bool ref

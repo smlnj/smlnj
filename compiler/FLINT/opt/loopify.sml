@@ -22,7 +22,7 @@ local
     structure FR = FunRecMeta
     structure LK = LtyKernel
     structure F  = FLINT
-    structure CTRL = FLINT_Control
+    structure CTRL = FlintControl
 in
 
 val say = PrintControl.say

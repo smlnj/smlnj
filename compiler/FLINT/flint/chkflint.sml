@@ -115,7 +115,7 @@ fun check phase envs lexp = let
 
   val ltEquiv = LK.lt_eqv
   val ltTAppChk =
-    if !FLINT_Control.checkKinds then LE.lt_inst_chk_gen()
+    if !FlintControl.checkKinds then LE.lt_inst_chk_gen()
     else fn (lt,ts,_) => LE.lt_inst(lt,ts)
 
   fun constVoid _ = LB.ltc_void

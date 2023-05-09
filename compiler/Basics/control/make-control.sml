@@ -11,7 +11,7 @@ sig
 	      newString : string * string * string -> string ref,
 	      newStrings : string * string * string list -> string list ref}
 
-  val registerControl : string * string * bool ref -> unit
+  val register : bool ref * string * string -> unit
 
 end (* signature CONTROLMAKERS *)		 
 
@@ -36,7 +36,7 @@ struct
 		      obscurity = 1,
 		      reg = newRegistry}
 
-	   fun 'a new (convert: 'a -> string)
+	   fun 'a new (convert: 'a Controls.value_cvt)
 		      (ctlName: string, ctlHelp: string, default: 'a) =
 	       let val ctlRef = ref default
 		   val ctl = Controls.control
@@ -45,7 +45,7 @@ struct
 				ctl = ctlRef}
 	        in ControlRegistry.register newRegistry
 	            {ctl = Controls.stringControl convert ctl,
-		     envName = SOME (ControlUtil.EnvName.toUpper name)};
+		     envName = SOME name};
 	           ctlRef
 	       end
 
@@ -56,15 +56,15 @@ struct
        end
 
    (* registerControl only used in TDPInstrument (DebugProf/profile/tdp-instrument) *)
-   fun registerControl (name: string, help: string, ctlRef : bool ref) : unit =
-       	let val registry = ControlRegistry.new {help = name}
+   fun register (ctlRef : bool ref, name: string, help: string) : unit =
+       	let val newRegistry = ControlRegistry.new {help = name}
 	    val ctl = Controls.control {name = name, pri = [0], obscurity = 1,
 					help = help, ctl = ctlRef}
 	 in ControlRegistry.nest topregistry
 	      {prefix = SOME name, pri = priority, obscurity = 1, reg = newRegistry};
-	    ControlRegistry.register registry
+	    ControlRegistry.register newRegistry
 	      {ctl = Controls.stringControl ControlUtil.Cvt.bool ctl,
-	       envName = SOME (name ^ "_env")}
+	       envName = SOME name}
 	end
 
 end (* structure Controls *)

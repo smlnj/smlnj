@@ -144,7 +144,7 @@ is
 
   (* smlnj-lib *)
   $smlnj/smlnj-lib/smlnj-lib.cm
-  $smlnj/smlnj-lib/controls-lib.cm (* Basics/control/make-control.sml *)
+  $SMLNJ-LIB/Controls/controls-lib.cm (* for Basics/control/make-control.sml *)
   $smlnj/smlnj-lib/prettyprint-lib.cm
   $smlnj/smlnj-lib/pp-lib.cm  (* not used. Included to force its compilation *)
 

@@ -24,7 +24,7 @@ local
   structure LD = LtyDef
   structure LK = LtyKernel
   structure PL = PLambda
-  structure CTRL = FLINT_Control
+  structure CTRL = FlintControl
   open FLINT
 in
 

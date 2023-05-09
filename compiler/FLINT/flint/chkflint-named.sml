@@ -91,7 +91,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 	    else definedLvars := S.add(!definedLvars, lvar)
 
 	val ltTAppChk =
-	  if !FLINT_Control.checkKinds then LE.lt_inst_chk_gen()
+	    if !FlintControl.checkKinds then LE.lt_inst_chk_gen()
 	  else fn (lt,ts,_) => LE.lt_inst(lt,ts)
 
 	val (ltString, ltExn, ltEtag, ltVector, ltWrap, ltBool) =
