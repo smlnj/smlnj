@@ -87,6 +87,7 @@ LOCAL: [paths relative to $SMLNJ/cm]
   PidSet		 util/pidset.sml
   IntMap		 util/int-map.sml
   Seek			 util/seek.sml
+  Say			 util/say.sml
 
   PARSE			 parse/parse.sml
   ParseFn		 parse/parse.sml
@@ -947,6 +948,79 @@ paths/  -- Library
       FileId
     > -------
       [OS.FileSys, OS.Path]
+
+
+util/  -- Library
+
+  CDF: sources.cm
+
+  autodir.sml
+    < AutoDir
+    >
+    
+  int-map.sml
+    < IntMap
+    >
+
+  int-set.sml
+    < IntSet
+    >
+
+  set-fn.sml 
+    < SetFn
+    >
+
+  map-fn.sml
+    < MapFn
+    >
+
+  memoize.sml
+    < Memoize
+    >
+
+  pidset
+    < PidSet
+    >
+
+  safeio.sml
+    < SafeIO
+    >
+
+  say.sml
+    < Say
+    >
+
+  seek.sml
+    < Seek
+    >
+
+  stdcfg.sml
+    < StdConfig
+    >
+
+  stringmap.sml
+    < StringMap
+    >
+
+  stringset.sml
+    < StringSet
+    >
+
+  subst.sml
+    <
+    >
+
+  symbolordkey.sml 
+    <
+    >
+
+  symbolset.sml
+    <
+    >
+
+  symbolmap.sml
+    <
+    >
 
 
 (* ---------------------------- Imports ---------------------------- *) 
