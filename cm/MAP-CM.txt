@@ -34,10 +34,13 @@ LOCAL: [paths relative to $SMLNJ/cm]
   CMLrValsFun 		 parse/cm.grm.sml (<- cm.grm)
   CMLexFun		 parse/cm.lex.sml (<= cm.lex)
 
-  SrcPath		 paths/srcpath.sml
+  SRCPATH		 paths/srcpath.sml 
+  SrcPath		 paths/srcpath.sml 
   SrcPathSet		 paths/srcpathset.sml
   SrcPathMap		 paths/srcpathmap.sml
   TStamp		 paths/tstamp.sml
+  FILEID		 paths/fileid.sml 
+  FileId		 paths/fileid.sml 
 
   CMSemant		 semant/semant.sml
   GroupReg		 semant/group-reg.sml
@@ -110,9 +113,6 @@ LOCAL: [paths relative to $SMLNJ/cm]
   SymVal		 main/symval.sml
   PervAccess		 main/perv-access.sml
   
-  Concur		 concur/concur.sml
-  Servers		 concur/dummy-servers.sml,unix-servers.sml
-
   BtNames		 bootstrap/names.sml
   MkBootList		 bootstrap/mkbootlist.sml
   CMBSlaveHook		 bootstrap/cmb-slave-hook
@@ -121,6 +121,10 @@ LOCAL: [paths relative to $SMLNJ/cm]
   BuildInitDG 		 bootstrap/build-initdg.sml
   CMBSlave		 bootstrap/cmb-slave-stub.sml
   CMBSlaveHook		 bootstrap/cmb-slave-hook.sml
+
+  Concur		 concur/concur.sml
+  Servers		 concur/dummy-servers.sml,unix-servers.sml
+
 
 IMPORTS: [paths relative to $SMLNJ]
 
@@ -144,14 +148,17 @@ IMPORTS: [paths relative to $SMLNJ]
 
   Binfile		compiler/Execution/binfile/binfile.sml
 
-  SMLNJVersion		system/smlnj/internal/version.sml (smlnj-version.cm)
-
   Controls		$smlnj-lib/controls-lib.cm
-  ControlUtil		"
-  ControlRegistry	"
+  ControlUtil		$smlnj-lib/controls-lib.cm
+  ControlRegistry	$smlnj-lib/controls-lib.cm
 
-  FormatComb		?
-  LibBase		?
+  LibBase		smlnj-lib.cm (smlnj-lib/Util)
+  FormatComb		smlnj-lib.cm
+  RedBlackSetFn         smlnj-lib.cm 
+  RedBlackMapFn         smlnj-lib.cm 
+  
+  SMLNJVersion		system/smlnj/internal/version.sml (smlnj-version.cm) 
+
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
@@ -907,6 +914,39 @@ bootstrap/
       SrcPath
       StringMap
       ---------
+
+paths/  -- Library
+
+  srcpath-lib.cm
+
+  srcpath.sml
+    < SRCPATH
+      SrcPath
+    > FileId
+      ------
+      RedBlackMapFn [-> StringMap]
+
+  srcpathset.sml
+    < SrcPathSet
+      ---------
+      RedBlackSetFn
+
+  srcpathmap.sml
+    < SrcPathMap
+    > SrcPath
+      ----------
+      RedBlackMapFn
+
+  tstamp.sml
+    < TStamp
+    > ------
+      [Time, OS.FileSys]
+
+  fileid
+    < FILEID
+      FileId
+    > -------
+      [OS.FileSys, OS.Path]
 
 
 (* ---------------------------- Imports ---------------------------- *) 
