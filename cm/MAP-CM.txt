@@ -28,9 +28,11 @@ LOCAL: [paths relative to $SMLNJ/cm]
   Reachable		 depend/reachable.sml
   DAEnv			 depend/da-env.sml 
   Statenv2DAEnv		 depend/se2dae.sml
+  BuildDepend		 depend/build.sml
+  MkList		 depend/mklist.sml
 
-  CMLrValsFun 		 parse/cm.grm.sml
-  CMLexFun		 parse/cm.lex.sml
+  CMLrValsFun 		 parse/cm.grm.sml (<- cm.grm)
+  CMLexFun		 parse/cm.lex.sml (<= cm.lex)
 
   SrcPath		 paths/srcpath.sml
   SrcPathSet		 paths/srcpathset.sml
@@ -63,25 +65,62 @@ LOCAL: [paths relative to $SMLNJ/cm]
   VerStabFn		 stable/verify.sml
   BinInfo		 stable/bininfo.sml
   StableSet		 stable/stableset.sml
+  StableMap		 stable/stablemap.sml
 
   GeneralParams	 	 main/general-params.sml
   PervAccess		 main/perv-access.sml
+  FILENAMEPOLICY	 main/filename-policy.sml
+  FilenamePolicyFN	 main/filename-policy.sml
   FilenamePolicy	 main/filename-policy.sml
 
   SafeIO		 util/safeio.sml
   StringSet		 util/stringset.sml
   SymbolSet		 util/symbolset.sml
+  SymbolMap		 util/symbolmap.sml
   SetFn			 util/set-fn.sml
   MapFn			 util/map-fn.sml
   AutoDir		 util/autodir.sml
   Memoize		 util/memoize.sml <<<BUG?
+  PidSet		 util/pidset.sml
+  IntMap		 util/int-map.sml
+  Seek			 util/seek.sml
 
   PARSE			 parse/parse.sml
   ParseFn		 parse/parse.sml
   CM_TOKENS		 parse/cm.grm.sig
   CM_LRVALS		 parse/cm.grm.sig
 
+  PRIVATETOOLS		 tools/main/private-tools.sig 
   PrivateTools		 tools/main/private-tools.sml
+  LSplitArg		 tools/main/lsplit-arg.sml (?)
+  CORETOOLS		 tools/main/core-tools.sig
+  TOOLS			 tools/main/public-tools.sig
+  ToolsFn		 tools/main/tools-fn.sml
+
+  COMPILE		 compile/compile.sml
+  CompileFn		 compile/compile.sml
+  CoreHack		 compile/corehack.sml
+  BFC			 compile/bfc.sml
+  BfcFn			 compile/bfc.sml
+
+  GeneralParams		 main/general-params.sml
+  FILENAMEPOLICY	 main/filename-policy.sml
+  FilenamePolicyFn	 main/filename-policy.sml
+  SYMVAL		 main/symval.sml
+  SymVal		 main/symval.sml
+  PervAccess		 main/perv-access.sml
+  
+  Concur		 concur/concur.sml
+  Servers		 concur/dummy-servers.sml,unix-servers.sml
+
+  BtNames		 bootstrap/names.sml
+  MkBootList		 bootstrap/mkbootlist.sml
+  CMBSlaveHook		 bootstrap/cmb-slave-hook
+  BootstrapCompileFn	 bootstrap/btcompile.sml
+  BUILD_INIT_DG 	 bootstrap/build-initdg.sml
+  BuildInitDG 		 bootstrap/build-initdg.sml
+  CMBSlave		 bootstrap/cmb-slave-stub.sml
+  CMBSlaveHook		 bootstrap/cmb-slave-hook.sml
 
 IMPORTS: [paths relative to $SMLNJ]
 
@@ -93,6 +132,7 @@ IMPORTS: [paths relative to $SMLNJ]
   Source		compiler/Basics/source/source.sml (basics.cm)
   SourceMap		compiler/Basics/source/sourcemap.sml (basics.cm)
   PPSourceMap		compiler/Basics/source/ppsourcemap.sml (basics.cm)
+  BasicControl		compiler/Basics/control/basiccontrol.sml
 
   PickleUtil		compiler/Library/pickle/pickle-util.sml
   UnpickleUtil		compiler/Library/unpickle-util.sml
@@ -106,6 +146,11 @@ IMPORTS: [paths relative to $SMLNJ]
 
   SMLNJVersion		system/smlnj/internal/version.sml (smlnj-version.cm)
 
+  Controls		$smlnj-lib/controls-lib.cm
+  ControlUtil		"
+  ControlRegistry	"
+
+  FormatComb		?
   LibBase		?
 
 
@@ -525,115 +570,344 @@ stable/
 
 (* tools for handling other source types *)
 tools/main/
-  lsplit-arg.sml
-    <
-    >
+  lsplit-arg.sml (obsolete?)
+    < LSplitArg
+    > -------
+
   core-tools.sig
-    <
-    >
-  private-tools.sig
-    <
-    >
+    < CORETOOLS
+    > Sharing
+      Version
+      -------
+      
   public-tools.sig
-    <
-    >
+    < TOOLS
+    > CORETOOLS
+
+  private-tools.sig
+    < PRIVATETOOLS
+    > CORETOOLS
+      SrcPath
+      -------
+
   private-tools.sml
-    <
-    >
+    < PrivateTools
+    > PRIVATETOOLS
+      SrcPath
+      Sharing
+      Version
+      StringMap ?
+      SrcPathMap
+      AutoDir
+      SafeIO
+      -------
+      Controls
+      ControlRegistry
+      BasicControl
+      
   tools-fn.sml
-    <
-    >
+    < ToolsFn
+    > TOOLS
+      SrcPath
+      PrivateTools
+      Say
+      StdConfig
+      Subst
+      -----------
+      ControlUtil
 
 
 (* doing actual compilation work *)
 compile/
   compile.sml
-    <
-    > ------------
+    < COMPILE
+      CompileFn
+    > GeneralParams
+      DependencyGraph
+      GroupGraph
+      SymbolSet
+      SymbolMap
+      PidSet
+      SrcPath
+      SrcPathSet
+      SmlFile      
+      SmlInfo
+      SmlInfoMap
+      BinFile
+      IInfo
+      Memoize
+      StabModmap
+      STAB_MODMAP
+      Concur
+      Servers
+      AutoDir
+      SafeIO
+      TStamp
+      CoreHack
+      ------------
+      StaticEnv
+      BrowseStatEnv
+      PersStamps
+      Pid
+      Rehash
+      UnpickMod
+      CompileExn
+      EnvRef
+      BACKEND
+      Backend
+      ErrorMsg
+      Formatting 
       SMLNJVersion
 
   corehack.sml
-    <
-    >
+    < CoreHack
+    > ---
+      Symbol
+      Ast
+      CoreSym
 
   link.sml
-    <
-    >
+    < LINK
+      LinkFn
+    > GeneralParams
+      DependencyGraph
+      GroupGraph
+      SymbolMap 
+      SrcPath
+      SrcPathSet
+      SrcPathMap
+      SmlInfo
+      SmlInfoMap
+      BinInfo
+      BinFile
+      IntMap 
+      Sharing
+      StableMap
+      BFC
+      Memoize
+      ----------
+      StaticEnv
+      DynamicEnv
+      Execute 
+      ErrorMsg
+      Formatting
 
   bfc.sml
-    <
-    > ------------
+    < BFC
+      BfcFn
+    > SmlInfo
+      SmlInfoMap
+      BinFile
+      SafeIO
+      Seek
+      ------------
       SMLNJVersion
 
 (* overall control of CM *)
 main/
   general-params.sml
-    <
-    >
+    < GeneralParams
+    > SrcPath
+      FileNamePolicy
+      GroupReg
+      TStamp
+      ------
 
   filename-policy.sml
-    <
-    >
+    < FILENAMEPOLICY
+      FilenamePolicyFn
+    > SrcPath
+      Version
+      -------
+      [SMLofNJ.SysInfo]
 
   symval.sml
-    <
-    >
+    < SYMVAL
+      SymVal
+    > StringMap
+      ---------
+      LibBase
+      [SMLofNJ.SysInfo]
 
   specific-symval-fn.sml
-    <
-    > ------------
+    < SpecificSymValFn
+    > SymVal
+      ------------
+      ErrorMsg
       SMLNJVersion
+      [SMLofNJ.SysInfo]
 
   autoload.sml
-    <
-    >
+    < AUTOLOAD
+      AutoLoadFn
+    > Say
+      BFC
+      COMPILE
+      GeneralParams
+      DependencyGraph
+      GroupGraph
+      SymbolSet
+      SymbolMap
+      StdConfig
+      Statenv2DAEnv
+      BuildDepend
+      -----------
+      BrowseStatEnv
+      Symbol
+      Ast
+      Environment 
+      EnvRef
+      ErrorMsg
 
   cleanup.sml
-    <
-    >
+    < Cleanup
+    > ----------
+      ControlRegistry
+      BasicControl
 
   slave.sml
-    <
-    >
+    < Slave
+    > DependencyGraph
+      BtNames
+      Say
+      SrcPath
+      SrcPathMap
+      ----------
+      [Signals, OS.Process]
 
   preload.sml
-    <
-    >
+    < Preload
+    > SafeIO
+      ------
 
   cm-boot.sml
-    <
-    >
+    < LinkCM [fct]
+    > Say
+      StringSet
+      DependencyGraph
+      GroupGraph
+      SrcPath
+      SrcPathMap
+      IntMap
+      SpecificSymValFn
+      StabModmapFn
+      FilenamePolicy
+      ParseFn
+      CompileFn
+      LinkFn
+      BfcFn 
+      AutoLoadFn
+      ToolsFn
+      StabilizeFn
+      Servers
+      StdConfig
+      SafeIO
+      GroupReg					
+      Cleanup
+      MkBootList
+      ------------
+      Symbol
+      BACKEND
+      StaticEnv 
+      DynamicEnv
+      Environment 
+      EnvRef
+      PrintControl
+      FormatComb (?)
+      ErrorMsg
+      [SMLofNJ.SysInfo, OS.Path, OS.FileSys]
 
   perv-access.sml
-    <
-    >
+    < PervAccess
+    > ------
+      Symbol
 
 (* bootstrap compiler (formerly known as "batch") *)
 bootstrap/
 
   names.sml
-    <
-    >
+    < BtNames
+    > -------
 
   build-initdg.sml
-    <
-    >
+    < BUILD_INIT_DG
+      BuildInitDG
+    > DependencyGraph
+      GeneralParams
+      Say
+      StringMap 
+      SrcPath
+      SmlInfo
+      Sharing
+      GroupReg
+      SafeIO
+      ------
+      Source
+      SourceMap
+      ErrorMsg
+      Control
 
   btcompile.sml
-    <
-    >
+    < BootstrapComileFn
+    > GroupGraph
+      DependencyGraph
+      BuildInitDG
+      SrcPath
+      SrcPathMap
+      SpecificSymValFn
+      Binfile
+      BinInfo
+      FilenamePolicy
+      StableSet
+      StableMap
+      Reachable
+      StabModmapFn
+      CompileFn
+      StabilizeFn
+      VerStabFn
+      ParseFn
+      MkBootList
+      Servers
+      Concur
+      GroupReg
+      AutoDir
+      IInfo
+      BtNames
+      StdConfig
+      SafeIO
+      CMBSlaveHook
+      ----------
+      PersStamps
+      StaticEnv
+      DynamicEnv
+      BACKEND
+      Control (TopLevel)
+      ErrorMsg
+      
 
   mkbootlist.sml
-    <
-    >
+    < MkBootList
+    > BinInfo
+      SmlInfo
+      StableSet
+      MkList
+      ------
+      PersStamps
 
   cmb-slave-stub.sml
-    <
-    >
+    < CMBSlave
+    > StringSet
+      CMBSlaveHook
+      ------------
 
   cmb-slave-hook.sml
-    <
-    >
+    < CMBSlaveHook
+    > GroupGraph
+      DependencyGraph
+      SrcPath
+      StringMap
+      ---------
+
 
 (* ---------------------------- Imports ---------------------------- *) 
 

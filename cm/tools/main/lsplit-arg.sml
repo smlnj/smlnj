@@ -1,5 +1,5 @@
 (* lsplit-arg.sml
- *   Convert string representation of a lambda-plitting specification
+ *   Convert string representation of a lambda-splitting specification
  *   into something matching Control.LambdaSplitting.localsetting.
  *   (That type is simply int option option, so we do all this without
  *   actually referring to that structure in order to avoid additional
@@ -8,7 +8,10 @@
  * (C) 2002 Lucent Technologies, Bell Laboratories
  *
  * Author: Matthias Blume (blume@research.bell-lab.com)
+ *
+ * DBM: probably obsolete, since LambdaSplitting does not exist.
  *)
+
 structure LSplitArg : sig
     val arg : string -> int option option option
 end = struct
