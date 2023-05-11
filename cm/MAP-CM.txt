@@ -22,61 +22,9 @@ CDF: CM/cm-lib.cm
 
 LOCAL: [paths relative to $SMLNJ/cm]
 
-  GroupGraph             depend/ggraph.sml
-  DependencyGraph	 depend/graph.sml
-  CheckSharing		 depend/checksharing.sml
-  Reachable		 depend/reachable.sml
-  DAEnv			 depend/da-env.sml 
-  Statenv2DAEnv		 depend/se2dae.sml
-  BuildDepend		 depend/build.sml
-  MkList		 depend/mklist.sml
-
-  CMLrValsFun 		 parse/cm.grm.sml (<- cm.grm)
-  CMLexFun		 parse/cm.lex.sml (<= cm.lex)
-
-  SRCPATH		 paths/srcpath.sml 
-  SrcPath		 paths/srcpath.sml 
-  SrcPathSet		 paths/srcpathset.sml
-  SrcPathMap		 paths/srcpathmap.sml
-  TStamp		 paths/tstamp.sml
-  FILEID		 paths/fileid.sml 
-  FileId		 paths/fileid.sml 
-
-  CMSemant		 semant/semant.sml
-  GroupReg		 semant/group-reg.sml
-  IInfo			 semant/iinfo.sml
-  VERSION		 semant/version.sml 
-  Version		 semant/version.sml 
-  Sharing		 semant/sharing.sml
-  GROUPREG		 semant/group-reg.sml 
-  GroupReg		 semant/group-reg.sml 
-  MEMBERCOLLECTION	 semant/members.sml 
-  MemberCollection	 semant/members.sml 
-  CM_SEMANT		 semant/semant.sml 
-  CMSemant		 semant/semant.sml 
-
-  SmlInfo		 smlfile/smlinfo.sml
-  SmlInfoSet		 smlfile/smlinfoset.sml 
-  SmlInfoMap		 smlfile/smlinfomap.sml 
-  Skeleton		 smlfile/skeleton.sml
-  SkelIO		 smlfile/skel-io.sml
-  SkelCvt		 smlfile/skel-cvt.sml
-  SkelExports		 smlfile/skel-exports.sml
-
-  STABILIZE		 stable/stabilize.sml
-  STAB_MODMAP		 stable/stabmm.sml
-  VerStabFn		 stable/verify.sml
-  BinInfo		 stable/bininfo.sml
-  StableSet		 stable/stableset.sml
-  StableMap		 stable/stablemap.sml
-
-  GeneralParams	 	 main/general-params.sml
-  PervAccess		 main/perv-access.sml
-  FILENAMEPOLICY	 main/filename-policy.sml
-  FilenamePolicyFN	 main/filename-policy.sml
-  FilenamePolicy	 main/filename-policy.sml
-
+  [cm/util/ Library, util/sources.cm]
   SafeIO		 util/safeio.sml
+  StringMap		 util/stringmap.sml
   StringSet		 util/stringset.sml
   SymbolSet		 util/symbolset.sml
   SymbolMap		 util/symbolmap.sml
@@ -88,6 +36,84 @@ LOCAL: [paths relative to $SMLNJ/cm]
   IntMap		 util/int-map.sml
   Seek			 util/seek.sml
   Say			 util/say.sml
+
+  [cm/paths/, Library, paths/srcpath-lib.cm]
+  SRCPATH		 paths/srcpath.sml 
+  SrcPath		 paths/srcpath.sml 
+  SrcPathSet		 paths/srcpathset.sml
+  SrcPathMap		 paths/srcpathmap.sml
+  TStamp		 paths/tstamp.sml
+  FILEID		 paths/fileid.sml 
+  FileId		 paths/fileid.sml 
+
+  [cm/concur/ Library, concur/sources.cm]
+  Concur		 concur/concur.sml
+  SERVERS		 concur/servers.sig
+  Servers		 concur/dummy-servers.sml,unix-servers.sml
+
+  GroupGraph             depend/ggraph.sml
+  DependencyGraph	 depend/graph.sml
+  CHECKSHARING		 depend/checksharing.sml 
+  CheckSharing		 depend/checksharing.sml 
+  REACHABLE		 depend/reachable.sml 
+  Reachable		 depend/reachable.sml 
+  DAEnv			 depend/da-env.sml 
+  STATENV2DAENV		 depend/se2dae.sml 
+  Statenv2DAEnv		 depend/se2dae.sml 
+  BUILDDEPEND		 depend/build.sml 
+  BuildDepend		 depend/build.sml 
+  MkList		 depend/mklist.sml
+  INDEGREE		 depend/indegree.sml 
+  Indegree		 depend/indegree.sml 
+  INDEX			 depend/index.sml 
+  Index			 depend/index.sml 
+  ToPortable		 depend/to-portable.sml
+
+  CM_TOKENS		 parse/cm.grm.sig (<= cm.grm)
+  CM_LRVALS		 parse/cm.grm.sig (<= cm.grm)
+  CMLrValsFun 		 parse/cm.grm.sml (<= cm.grm)
+  CMLexFun		 parse/cm.lex.sml (<= cm.lex)
+
+  CM_SEMANT		 semant/semant.sml 
+  CMSemant		 semant/semant.sml 
+  GroupReg		 semant/group-reg.sml
+  IInfo			 semant/iinfo.sml
+  VERSION		 semant/version.sml 
+  Version		 semant/version.sml 
+  Sharing		 semant/sharing.sml
+  GROUPREG		 semant/group-reg.sml 
+  GroupReg		 semant/group-reg.sml 
+  MEMBERCOLLECTION	 semant/members.sml 
+  MemberCollection	 semant/members.sml 
+
+  SMLINFO		 smlfile/smlinfo.sml 
+  SmlInfo		 smlfile/smlinfo.sml 
+  SmlInfoSet		 smlfile/smlinfoset.sml 
+  SmlInfoMap		 smlfile/smlinfomap.sml 
+  Skeleton		 smlfile/skeleton.sml
+  SKELIO		 smlfile/skel-io.sml 
+  SkelIO		 smlfile/skel-io.sml 
+  SKELCVT		 smlfile/skel-cvt.sml 
+  SkelCvt		 smlfile/skel-cvt.sml 
+  SKELEXPORTS		 smlfile/skel-exports.sml 
+  SkelExports		 smlfile/skel-exports.sml 
+
+  STABILIZE		 stable/stabilize.sml
+  StabilizeFn		 stable/stabilize.sml
+  STAB_MODMAP		 stable/stabmm.sml
+  StabModmapFn		 stable/stabmm.sml
+  VERIFY_STABLE		 stable/verify.sml
+  VerStabFn		 stable/verify.sml
+  BININFO		 stable/bininfo.sml 
+  BinInfo		 stable/bininfo.sml 
+  StableSet		 stable/stableset.sml
+  StableMap		 stable/stablemap.sml
+
+  GeneralParams	 	 main/general-params.sml
+  PervAccess		 main/perv-access.sml
+  FILENAMEPOLICY	 main/filename-policy.sml
+  FilenamePolicyFN	 main/filename-policy.sml
+  FilenamePolicy	 main/filename-policy.sml
 
   PARSE			 parse/parse.sml
   ParseFn		 parse/parse.sml
@@ -109,11 +135,19 @@ LOCAL: [paths relative to $SMLNJ/cm]
 
   GeneralParams		 main/general-params.sml
   FILENAMEPOLICY	 main/filename-policy.sml
-  FilenamePolicyFn	 main/filename-policy.sml
+  FilenamePolicyFn	 main/filename-policy.sml 
+  FilenamePolicy	 main/filename-policy.sml 
   SYMVAL		 main/symval.sml
   SymVal		 main/symval.sml
   PervAccess		 main/perv-access.sml
-  
+  SpecificSymValFn	 main/specifig-symval-fn.sml
+  AUTOLOAD		 main/autoload.sml
+  AutoLoadFn		 main/autoload.sml  
+  Cleanup		 main/cleanup.sml
+  Slave			 main/slave.sml
+  Preload		 main/preload.sml
+  LinkCM [fct]		 main/cm-boot.sml
+
   BtNames		 bootstrap/names.sml
   MkBootList		 bootstrap/mkbootlist.sml
   CMBSlaveHook		 bootstrap/cmb-slave-hook
@@ -122,9 +156,6 @@ LOCAL: [paths relative to $SMLNJ/cm]
   BuildInitDG 		 bootstrap/build-initdg.sml
   CMBSlave		 bootstrap/cmb-slave-stub.sml
   CMBSlaveHook		 bootstrap/cmb-slave-hook.sml
-
-  Concur		 concur/concur.sml
-  Servers		 concur/dummy-servers.sml,unix-servers.sml
 
 
 IMPORTS: [paths relative to $SMLNJ]
@@ -159,7 +190,6 @@ IMPORTS: [paths relative to $SMLNJ]
   RedBlackMapFn         smlnj-lib.cm 
   
   SMLNJVersion		system/smlnj/internal/version.sml (smlnj-version.cm) 
-
 
 
 (* ---------------------------- Members [files] ---------------------------- *)
@@ -956,71 +986,96 @@ util/  -- Library
 
   autodir.sml
     < AutoDir
-    >
+    > -------
+      [OS.Path, OS.FileSys, BinIO, TextIO]
     
   int-map.sml
     < IntMap
-    >
+    > ------
+      IntRedBlackMap
 
   int-set.sml
     < IntSet
-    >
+    > ------
+      IntRedBlackSet
 
   set-fn.sml 
     < SetFn
-    >
+    > -----
+      RedBlackSetFn
 
   map-fn.sml
     < MapFn
-    >
+    > RedBlackMapFn
 
-  memoize.sml
+  memoize.sml  (bogus?)
     < Memoize
-    >
+    > -------
 
   pidset
     < PidSet
-    >
+    > SetFn
+      -----
+      PersStamps
 
   safeio.sml
-    < SafeIO
-    >
+    < SAFEIO
+      SafeIO
+    > ------
+      [Signals]
 
   say.sml
-    < Say
-    >
+    < SAY
+      Say
+    > StdConfig
+      ---------
+      PrintControl*
 
   seek.sml
-    < Seek
-    >
+    < SEEK
+      Seek
+    > ----
+      [BinIO, BinPrimIO]
 
   stdcfg.sml
     < StdConfig
-    >
+    > ---------
+      BasicControl
+      Controls
+      ControlUtil 
+      ControlRegistry
+      [OS.Path, OS.Process]
 
   stringmap.sml
     < StringMap
-    >
+    > MapFn
+      -----
 
   stringset.sml
     < StringSet
-    >
+    > SetFn
+      -----
 
   subst.sml
-    <
-    >
+    < Subst
+    > -----
 
   symbolordkey.sml 
-    <
-    >
+    < SymbolOrdKey
+    > ------
+      Symbol
 
   symbolset.sml
-    <
-    >
+    < SymbolSet
+    > SetFn
+      SymbolOrdKey
+      ------------
 
   symbolmap.sml
-    <
-    >
+    < SymbolMap
+    > MapFn
+      SymbolOrdKey
+      ------------
 
 
 (* ---------------------------- Imports ---------------------------- *) 
