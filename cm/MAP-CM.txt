@@ -151,7 +151,7 @@ LOCAL: [paths relative to $SMLNJ/cm]
   BtNames		 bootstrap/names.sml
   MkBootList		 bootstrap/mkbootlist.sml
   CMBSlaveHook		 bootstrap/cmb-slave-hook
-  BootstrapCompileFn	 bootstrap/btcompile.sml
+  BootstrapCompileFn*	 bootstrap/btcompile.sml
   BUILD_INIT_DG 	 bootstrap/build-initdg.sml
   BuildInitDG 		 bootstrap/build-initdg.sml
   CMBSlave		 bootstrap/cmb-slave-stub.sml
@@ -886,7 +886,7 @@ bootstrap/
       Control
 
   btcompile.sml
-    < BootstrapComileFn
+    < BootstrapCompileFn
     > GroupGraph
       DependencyGraph
       BuildInitDG
@@ -921,7 +921,6 @@ bootstrap/
       BACKEND
       Control (TopLevel)
       ErrorMsg
-      
 
   mkbootlist.sml
     < MkBootList
@@ -948,7 +947,7 @@ bootstrap/
 
 paths/  -- Library
 
-  srcpath-lib.cm
+  CDF: paths/srcpath-lib.cm
 
   srcpath.sml
     < SRCPATH
@@ -982,7 +981,7 @@ paths/  -- Library
 
 util/  -- Library
 
-  CDF: sources.cm
+  CDF: util/sources.cm
 
   autodir.sml
     < AutoDir
@@ -1078,12 +1077,48 @@ util/  -- Library
       ------------
 
 
+concur/  -- Library
+
+  CDF: concur/sources.cm
+
+  concur.sml
+    < CONCUR
+      Concur
+    > ------
+      [SMLofNJ.Cont, OS.IO, TextPrimIO, TextIO]
+
+  servers.sig
+    < SERVERS
+    > -------
+
+  dummy-servers.sml
+    < Servers
+    > SERVERS
+      SafeIO
+      Concur
+      -------
+
+  unix-servers.sml
+    < Servers
+    > SERVERS
+      IntMap
+      Concur
+      SrcPath
+      SafeIO
+      Say
+      ------
+      UnixSignals ?
+      Signals ?
+      [Unix. TextIO, OS.Process]
+      
+
 (* ---------------------------- Imports ---------------------------- *) 
 
 (* CM-internal libraries *)
 util/sources.cm
 concur/sources.cm  (concurrent/parallel/distributed make)
-$smlnj/internal/srcpath-lib.cm (paths/srcpath-lib.cm)
+paths/srcpath-lib.cm
+  [formerly $smlnj/internal/srcpath-lib.cm (paths/srcpath-lib.cm)]
 
 (* Basis *)
 $smlnj/basis/basis.cm

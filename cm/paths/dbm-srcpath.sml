@@ -17,20 +17,13 @@ local
 
   structure P = OS.Path     (* Basis *)
   structure F = OS.FileSys  (* Basis *)
-  structure I = FileId  (* where is FileId comming from? *)
+  structure I = FileId      (* srcpath-lib.cm *)
+  structure SM = StringMap  (* ../util/sources.cm *)
 
 in
 
-
     exception Format
     exception BadAnchor
-
-
-    structure StringMap =
-      RedBlackMapFn (struct
-		       type ord_key = string
-		       val compare = String.compare
-		      end)
 
     fun impossible msg = EM.impossible ("SrcPath: " ^ msg)
 
@@ -38,7 +31,7 @@ in
 
     type stableid = int
 
-    (* A pre-path is similar to the result of P.fromString except that
+    (* A pre-path is similar to the result of OS.Path.fromString except that
      * we keep the list of arcs in reversed order.  This makes adding
      * and removing arcs at the end easier. *)
     type prepath = { revarcs: string list, vol: string, isAbs: bool }
@@ -73,7 +66,7 @@ in
 	   set_free: anchor * prepath option -> unit,
 	   is_set: anchor -> bool,
 	   reset: unit -> unit,
-	   bound: anchorval StringMap.map }
+	   bound: anchorval SM.map }
 
     type ord_key = file
 
@@ -160,7 +153,7 @@ in
     end
 
     fun mk_anchor (e: env, a, err) =
-	case StringMap.find (#bound e, a) of
+	case SM.find (#bound e, a) of
 	    SOME (elaborate, encode) =>
 	      { name = a , look = elaborate, encode = SOME o encode }
 	  | NONE =>
@@ -308,9 +301,9 @@ in
     end
 
     fun newEnv () = let
-	val freeMap = ref StringMap.empty
+	val freeMap = ref SM.empty
 	fun fetch a =
-	    case StringMap.find (!freeMap, a) of
+	    case SM.find (!freeMap, a) of
 		SOME (pp, validity) => (SOME pp, validity)
 	      | NONE => (NONE, ref false)
 		(*
@@ -320,7 +313,7 @@ in
 			       vol = "", isAbs = false }
 		    val x = (pp, validity)
 		in
-		    freeMap := StringMap.insert (!freeMap, a, x);
+		    freeMap := SM.insert (!freeMap, a, x);
 		    x
 		end
 		 *)
@@ -339,19 +332,19 @@ in
 	    validity := false;		(* invalidate earlier elabs *)
 	    freeMap :=
 	    (case ppo of
-		 NONE => #1 (StringMap.remove (!freeMap, a))
-	       | SOME pp => StringMap.insert (!freeMap, a, (pp, ref true)))
+		 NONE => #1 (SM.remove (!freeMap, a))
+	       | SOME pp => SM.insert (!freeMap, a, (pp, ref true)))
 	end
-	fun is_set a = StringMap.inDomain (!freeMap, a)
+	fun is_set a = SM.inDomain (!freeMap, a)
 	fun reset () = let
 	    fun invalidate (_, validity) = validity := false
 	in
-	    StringMap.app invalidate (!freeMap);
-	    freeMap := StringMap.empty
+	    SM.app invalidate (!freeMap);
+	    freeMap := SM.empty
 	end
     in
 	{ get_free = get_free, set_free = set_free, is_set = is_set,
-	  reset = reset, bound = StringMap.empty } : env
+	  reset = reset, bound = SM.empty } : env
     end
 
     fun get_anchor (e: env, a) =
@@ -458,7 +451,7 @@ in
 
     fun bind (env: env) l = let
 	fun b ({ anchor, value = pf as { arcs, context, err } }, m) =
-	    StringMap.insert (m, anchor,
+	    SM.insert (m, anchor,
 			      (fn () => augElab arcs (elab_dir context),
 			       fn brack => encode0 brack pf))
 
@@ -603,4 +596,5 @@ in
 	(case String.sub (s, 0) of (#"/" | #"%") => true | _ => false)
 	handle _ => false
 
+end (* top local *)
 end (* structure StrPath *)

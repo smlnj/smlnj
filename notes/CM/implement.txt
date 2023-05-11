@@ -5,3 +5,8 @@ Notes on the CM implementation
 
 * split srcpath.sml into dbm-srcpath.sml and dbm-srcpath.sig (i.e. put the signature in a separate source file).
 
+* CMB ($smlnj/cmb.cm --> $smlnj/cmb/current.cm)
+  = AMD64UnixCMB, defined in 
+  $smlnj/cmb/amd64-unix.sml ($smlnj/cmb/current.cm), calling 
+  BootstrpCompileFn, source: cm/bootstrap/btcompile.sml.
+  
