@@ -758,7 +758,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                                         List.foldr (fn (s, r) => s :: "." :: r) [getarg ci] path)
                                   val value = getval ci
                                   val sz = size value
-                                  val lw = !PrintControl_FOOBAR.lineWidth
+                                  val lw = !PrintControl.lineWidth
                                   val padsz = lw - 6 - size arg - indent
                                   in
                                     if padsz < sz
@@ -787,7 +787,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                       in
                         walk 2
                           (ControlRegistry.controls
-                            (BasicControl.topregistry, Option.map inc level))
+                            (MakeControls.topregistry, Option.map inc level))
                       end (* show_controls *)
 
                 fun help level = (
@@ -832,7 +832,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                         else if is_config
                           then let
                             val names = String.fields (fn c => c = #".") name
-                            val look = ControlRegistry.control BasicControl.topregistry
+                            val look = ControlRegistry.control MakeControls.topregistry
                             in
                               case look names
                                of NONE => Say.say ["!* no such control: ", name, "\n"]

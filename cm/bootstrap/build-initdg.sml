@@ -24,7 +24,7 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
     structure DG = DependencyGraph
 
     fun build (gp: GeneralParams.info) specgroup = let
-	val ovldR = Control.overloadKW
+	val ovldR = Control.Parser.overloadKW
 	val ovldC = { save'restore =
 		        fn () => let val orig = !ovldR in
 				  fn () => ovldR := orig

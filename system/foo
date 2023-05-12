@@ -1,0 +1,10 @@
+#!/bin/sh
+
+this=$0
+echo this: $this
+cmddir=`dirname $0`
+echo cmdir1: $cmddir
+cmddir=`cd "$cmddir"; pwd`
+echo cmdir2: $cmddir
+bindir=`cd "$cmddir/../bin"; pwd`
+echo bindir: $bindir

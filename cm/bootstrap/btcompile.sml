@@ -174,7 +174,7 @@ struct
 	    val { pervasive = perv_n, others, src } = arg
 
 	    fun recompInitGroup () = let
-		val ovldR = Control.overloadKW
+		val ovldR = Control.Parser.overloadKW
 		val savedOvld = !ovldR
 		val _ = ovldR := true
 		val sbnode = Compile.newSbnodeTraversal ()

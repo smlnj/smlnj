@@ -324,7 +324,7 @@ structure PrivateTools : PRIVATETOOLS = struct
 	val kw_lazy = "lazy"
 	val kw_succML = "succ-ml"
 	val Suggest = SOME
-	val lazy_controller = flagController Control.lazysml
+	val lazy_controller = flagController Control.Parser.lazysml
 	val succML_controller = flagController ParserControl.succML
 	val (srq, setup, noguid, locl, controllers) =
 	    case oto of
@@ -409,7 +409,7 @@ structure PrivateTools : PRIVATETOOLS = struct
 							 #tyName vse])
 				fun mk (n, v) =
 				    case ControlRegistry.control
-					     BasicControl.topregistry
+					     MakeControls.topregistry
 					     (fields #"." n)
 				     of NONE =>
 					  err ("no such control: " ^ n)

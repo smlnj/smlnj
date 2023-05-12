@@ -14,7 +14,13 @@ structure StdConfig = struct
 	val registry = ControlRegistry.new
 			   { help = "Compilation Manager (CM)" }
 
-	val _ = BasicControl.nest (prefix, registry, priority)
+	val _ = ControlRegistry.nest registry
+		  {prefix = SOME prefix,
+		   pri = priority,
+		   obscurity = 2,
+		   reg = registry}
+
+(*	val _ = BasicControl.nest (prefix, registry, priority) *)
 
 	val bool_cvt = ControlUtil.Cvt.bool
 	val int_cvt = ControlUtil.Cvt.int

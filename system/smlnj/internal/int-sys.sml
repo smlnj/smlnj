@@ -71,7 +71,7 @@ structure InteractiveSystem : sig end =
     end (* local *)
 
     (* initialize control *)
-    val _ = ControlRegistry.init BasicControl.topregistry
+    val _ = ControlRegistry.init MakeControls.topregistry
 
     (* launch interactive loop *)
     val _ = let
