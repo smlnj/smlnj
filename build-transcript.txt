@@ -1,0 +1,1252 @@
+hoy$ pwd
+/Users/dbm/sml/Dev/github/smlnj1
+hoy$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+hoy$ rm -rf bin lib
+hoy$ curl -O https://smlnj.org/dist/working/2022.1/boot.amd64-unix.tgz
+hoy$   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 3419k  100 3419k    0     0  2393k      0  0:00:01  0:00:01 --:--:-- 2399k
+hoy$ ls -lt
+total 8368
+-rw-r--r--   1 dbm  staff  3501873 May 11 19:36 boot.amd64-unix.tgz
+drwxr-xr-x  22 dbm  staff      704 May 11 19:33 system/
+drwxr-xr-x  26 dbm  staff      832 Apr 28 12:09 compiler/
+-rwxr-xr-x   1 dbm  staff    12528 Feb 22 12:30 build.sh*
+drwxr-xr-x  22 dbm  staff      704 Jan 10 13:36 smlnj-lib/
+drwxr-xr-x  12 dbm  staff      384 Oct 13  2022 runtime/
+drwxr-xr-x   5 dbm  staff      160 Oct 13  2022 llvm/
+drwxr-xr-x   8 dbm  staff      256 Oct 13  2022 tools/
+drwxr-xr-x   3 dbm  staff       96 Oct 13  2022 package/
+drwxr-xr-x   8 dbm  staff      256 Oct 13  2022 libraries/
+drwxr-xr-x   9 dbm  staff      288 Oct 13  2022 doc/
+drwxr-xr-x  17 dbm  staff      544 Oct 13  2022 config/
+drwxr-xr-x  19 dbm  staff      608 Oct 13  2022 cm/
+-rw-r--r--   1 dbm  staff     2212 Oct 13  2022 README.md
+-rw-r--r--   1 dbm  staff     1556 Oct 13  2022 LICENSE
+hoy$ ./build.sh
+(make RUNTIME="run.amd64-darwin" VERSION="v-amd64-darwin" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" CXX="c++ --std=c++14" CXX_FLAGS="-g -O2" CPP="cc -x assembler-with-cpp -E -P -std=c99" AS="/usr/bin/as -arch x86_64" TARGET=AMD64 TARGET_ARCHS=all DEFS="  -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" XOBJS="" XLIBS="../c-libs/dl/libunix-dynload.a ../c-libs/codegen/libcodegen.a" LD_LIBS="" run.amd64-darwin)
+(make MAKE="make" clean)
+rm -f v-* run.* interactive-run \
+		gen-sizes gen-offsets gen-bc-instr-def \
+		gen-unix-signals gen-unix-sigtbl \
+		ml-sizes.h mlstate-offsets.h bc-instr-def.h \
+		system-signals.h unix-sigtbl.c \
+		*.o prim.s primops.s
+rm -r -f *.dSYM
+(cd ../memory; make MAKE="make" clean)
+rm -f v-* *.o libmem.a
+(cd ../c-libs; make MAKE="make" clean)
+for dir in posix-os smlnj-runtime smlnj-signals smlnj-sockets smlnj-prof smlnj-time smlnj-date smlnj-math posix-error posix-filesys posix-io posix-procenv posix-process posix-signal posix-sysdb posix-tty smlnj-ccalls dl codegen; do \
+	  (cd $dir; echo "cleaning $dir"; make MAKE="make" clean) ; \
+	done
+cleaning posix-os
+rm -f v-* *.o libposix-os.a
+cleaning smlnj-runtime
+rm -f v-* *.o libsmlnj-runt.a
+cleaning smlnj-signals
+rm -f v-* *.o libsmlnj-sig.a
+cleaning smlnj-sockets
+rm -f v-* *.o libsmlnj-sock.a
+cleaning smlnj-prof
+rm -f v-* *.o libsmlnj-prof.a
+cleaning smlnj-time
+rm -f v-* *.o libsmlnj-time.a
+cleaning smlnj-date
+rm -f v-* *.o libsmlnj-date.a
+cleaning smlnj-math
+rm -f v-* *.o libsmlnj-math.a
+cleaning posix-error
+rm -f v-* *.o libposix-error.a
+cleaning posix-filesys
+rm -f v-* *.o ml_pathconf.h libposix-filesys.a
+cleaning posix-io
+rm -f v-* *.o libposix-io.a
+cleaning posix-procenv
+rm -f v-* *.o ml_sysconf.h libposix-procenv.a
+cleaning posix-process
+rm -f v-* *.o libposix-process.a
+cleaning posix-signal
+rm -f v-* *.o libposix-signal.a
+cleaning posix-sysdb
+rm -f v-* *.o libposix-sysdb.a
+cleaning posix-tty
+rm -f v-* *.o libposix-tty.a
+cleaning smlnj-ccalls
+rm -f v-* *.o *.s libsmlnj-ccalls.a
+cleaning dl
+rm -f v-* *.o libunix-dynload.a
+cleaning codegen
+rm -f v-* *.o libcodegen.a
+rm -f v-* *.o
+(cd ../gc; make MAKE="make" clean)
+rm -f v-* *.o libgc.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -I../config -I../objs -I../include ../config/gen-common.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../config -I../objs -I../include -o gen-sizes ../config/gen-sizes.c gen-common.o
+./gen-sizes
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/main.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../c-libs ../c-libs/c-libraries.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -I../config -I../objs -I../include -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC ../config/unix-signals.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -I../config -I../objs -I../include -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -o gen-unix-signals ../config/gen-unix-signals.c unix-signals.o gen-common.o
+./gen-unix-signals
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../c-libs/unix-raise-syserr.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/ml-options.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/boot.c
+../kernel/boot.c:532:1: warning: non-void function does not return a value in all control paths
+      [-Wreturn-type]
+} /* end of LookupPerID */
+^
+1 warning generated.
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/load-ml.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/run-ml.c
+../kernel/run-ml.c:198:25: warning: passing arguments to a function without a prototype is
+      deprecated in all versions of C and is not supported in C2x [-Wdeprecated-non-prototype]
+                    msp->ml_arg = (*f)(msp, arg);
+                                      ^
+1 warning generated.
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/globals.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/ml-state.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/error.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/timers.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/unix-timers.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/qualify-name.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../kernel/swap-bytes.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../mach-dep/unix-fault.c
+In file included from ../mach-dep/unix-fault.c:18:
+In file included from ../mach-dep/signal-sysdep.h:60:
+../include/ml-base.h:201:13: warning: a function declaration without a prototype is deprecated in
+      all versions of C and is not supported in C2x [-Wdeprecated-non-prototype]
+extern void InitFaultHandlers ();
+            ^
+                               void
+../mach-dep/unix-fault.c:45:6: warning: a function declaration without a prototype is deprecated
+      in all versions of C and is not supported in C2x [-Wdeprecated-non-prototype]
+void InitFaultHandlers (ml_state_t *msp)
+     ^
+2 warnings generated.
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../mach-dep/signal-util.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -I../config -I../objs -I../include -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -o gen-unix-sigtbl ../config/gen-unix-sigtbl.c unix-signals.o gen-common.o
+./gen-unix-sigtbl
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../mach-dep/unix-signal.c
+../mach-dep/unix-signal.c:117:1: warning: non-void function does not return a value in all
+      control paths [-Wreturn-type]
+} /* end of GetSignalState. */
+^
+1 warning generated.
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../mach-dep/unix-prof.c
+../mach-dep/unix-prof.c:45:5: warning: incompatible function pointer types assigning to 'void
+      (*)(int, struct __siginfo *, void *)' from 'void (*)(int)'
+      [-Wincompatible-function-pointer-types]
+    SIG_SetHandler (SIGVTALRM, SIG_DFL);
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../mach-dep/signal-sysdep.h:95:26: note: expanded from macro 'SIG_SetHandler'
+            __svec.sa_sigaction = (h);                          \
+                                ^ ~~~
+1 warning generated.
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../config -I../objs -I../include -o gen-offsets ../config/gen-offsets.c gen-common.o
+./gen-offsets
+cc -x assembler-with-cpp -E -P -std=c99 -D_ASM_ -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include ../mach-dep/AMD64.prim.asm > prim.s
+/usr/bin/as -arch x86_64 -o prim.o prim.s
+(cd ../c-libs/posix-os; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-os.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-os.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-os-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c poll.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tmpname.c
+rm -rf libposix-os.a
+ar rcv libposix-os.a posix-os-lib.o poll.o tmpname.o
+a - posix-os-lib.o
+a - poll.o
+a - tmpname.o
+ranlib libposix-os.a
+(cd ../c-libs/smlnj-runtime; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-runt.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-runt.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c smlnj-runt-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c alloc-code.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c argv.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c raw-argv.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c shift-argv.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c cmd-name.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c blast-in.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c blast-out.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c debug.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c dummy.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c export-heap.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c export-fun.c
+export-fun.c:49:1: warning: non-void function does not return a value in all control paths
+      [-Wreturn-type]
+} /* end of _ml_RunT_export_fun */
+^
+1 warning generated.
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c gc-ctl.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c itick.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c mkexec.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c mkliterals.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c record1.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c record-concat.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c sysinfo.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c setitimer.c
+rm -rf libsmlnj-runt.a
+ar rcv libsmlnj-runt.a smlnj-runt-lib.o alloc-code.o argv.o raw-argv.o shift-argv.o cmd-name.o blast-in.o blast-out.o debug.o dummy.o export-heap.o export-fun.o gc-ctl.o itick.o mkexec.o mkliterals.o record1.o record-concat.o sysinfo.o setitimer.o
+a - smlnj-runt-lib.o
+a - alloc-code.o
+a - argv.o
+a - raw-argv.o
+a - shift-argv.o
+a - cmd-name.o
+a - blast-in.o
+a - blast-out.o
+a - debug.o
+a - dummy.o
+a - export-heap.o
+a - export-fun.o
+a - gc-ctl.o
+a - itick.o
+a - mkexec.o
+a - mkliterals.o
+a - record1.o
+a - record-concat.o
+a - sysinfo.o
+a - setitimer.o
+ranlib libsmlnj-runt.a
+(cd ../c-libs/smlnj-signals; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-sig.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-sig.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c smlnj-sig-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getsigmask.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getsigstate.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c listsignals.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c pause.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setsigmask.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setsigstate.c
+rm -rf libsmlnj-sig.a
+ar rcv libsmlnj-sig.a smlnj-sig-lib.o getsigmask.o getsigstate.o listsignals.o pause.o setsigmask.o setsigstate.o
+a - smlnj-sig-lib.o
+a - getsigmask.o
+a - getsigstate.o
+a - listsignals.o
+a - pause.o
+a - setsigmask.o
+a - setsigstate.o
+ranlib libsmlnj-sig.a
+(cd ../c-libs/smlnj-prof; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-prof.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-prof.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c smlnj-prof-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c getpquantum.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c setpref.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -I../../gc -c setptimer.c
+rm -rf libsmlnj-prof.a
+ar rcv libsmlnj-prof.a smlnj-prof-lib.o getpquantum.o setpref.o setptimer.o
+a - smlnj-prof-lib.o
+a - getpquantum.o
+a - setpref.o
+a - setptimer.o
+ranlib libsmlnj-prof.a
+(cd ../c-libs/smlnj-sockets; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-sock.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-sock.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c smlnj-sock-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c gethostname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getnetbyname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getnetbyaddr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c gethostbyname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c gethostbyaddr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getprotbyname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getprotbynum.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getservbyname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getservbyport.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlBROADCAST.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlDEBUG.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlDONTROUTE.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlKEEPALIVE.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlLINGER.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlNODELAY.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlOOBINLINE.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlRCVBUF.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlREUSEADDR.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlSNDBUF.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getERROR.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getTYPE.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setNBIO.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getNREAD.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getATMARK.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getpeername.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getsockname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c accept.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c bind.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c close.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c connect.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c listen.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c socket.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c shutdown.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c list-addr-families.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c list-sock-types.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getaddrfamily.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c inetany.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c from-inetaddr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c to-inetaddr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c recv.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c recvbuf.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c recvfrom.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c recvbuffrom.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c sendbuf.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c sendbufto.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c from-unixaddr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c to-unixaddr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c socketpair.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c util-mkhostent.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c util-mknetent.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c util-mkservent.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c util-sockopt.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tbl-addr-family.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tbl-sock-type.c
+rm -rf libsmlnj-sock.a
+ar rcv libsmlnj-sock.a smlnj-sock-lib.o gethostname.o getnetbyname.o getnetbyaddr.o gethostbyname.o gethostbyaddr.o getprotbyname.o getprotbynum.o getservbyname.o getservbyport.o ctlBROADCAST.o ctlDEBUG.o ctlDONTROUTE.o ctlKEEPALIVE.o ctlLINGER.o ctlNODELAY.o ctlOOBINLINE.o ctlRCVBUF.o ctlREUSEADDR.o ctlSNDBUF.o getERROR.o getTYPE.o setNBIO.o getNREAD.o getATMARK.o getpeername.o getsockname.o accept.o bind.o close.o connect.o listen.o socket.o shutdown.o list-addr-families.o list-sock-types.o getaddrfamily.o inetany.o from-inetaddr.o to-inetaddr.o recv.o recvbuf.o recvfrom.o recvbuffrom.o sendbuf.o sendbufto.o from-unixaddr.o to-unixaddr.o socketpair.o util-mkhostent.o util-mknetent.o util-mkservent.o util-sockopt.o tbl-addr-family.o tbl-sock-type.o
+a - smlnj-sock-lib.o
+a - gethostname.o
+a - getnetbyname.o
+a - getnetbyaddr.o
+a - gethostbyname.o
+a - gethostbyaddr.o
+a - getprotbyname.o
+a - getprotbynum.o
+a - getservbyname.o
+a - getservbyport.o
+a - ctlBROADCAST.o
+a - ctlDEBUG.o
+a - ctlDONTROUTE.o
+a - ctlKEEPALIVE.o
+a - ctlLINGER.o
+a - ctlNODELAY.o
+a - ctlOOBINLINE.o
+a - ctlRCVBUF.o
+a - ctlREUSEADDR.o
+a - ctlSNDBUF.o
+a - getERROR.o
+a - getTYPE.o
+a - setNBIO.o
+a - getNREAD.o
+a - getATMARK.o
+a - getpeername.o
+a - getsockname.o
+a - accept.o
+a - bind.o
+a - close.o
+a - connect.o
+a - listen.o
+a - socket.o
+a - shutdown.o
+a - list-addr-families.o
+a - list-sock-types.o
+a - getaddrfamily.o
+a - inetany.o
+a - from-inetaddr.o
+a - to-inetaddr.o
+a - recv.o
+a - recvbuf.o
+a - recvfrom.o
+a - recvbuffrom.o
+a - sendbuf.o
+a - sendbufto.o
+a - from-unixaddr.o
+a - to-unixaddr.o
+a - socketpair.o
+a - util-mkhostent.o
+a - util-mknetent.o
+a - util-mkservent.o
+a - util-sockopt.o
+a - tbl-addr-family.o
+a - tbl-sock-type.o
+ranlib libsmlnj-sock.a
+(cd ../c-libs/smlnj-time; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-time.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-time.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c smlnj-time-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c gettime.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c timeofday.c
+rm -rf libsmlnj-time.a
+ar rcv libsmlnj-time.a smlnj-time-lib.o gettime.o timeofday.o
+a - smlnj-time-lib.o
+a - gettime.o
+a - timeofday.o
+ranlib libsmlnj-time.a
+(cd ../c-libs/smlnj-date; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-date.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-date.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c smlnj-date-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c gmtime.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c localoffset.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c localtime.c
+localtime.c:34:1: warning: non-void function does not return a value in all control paths
+      [-Wreturn-type]
+} /* end of _ml_Date_localtime */
+^
+1 warning generated.
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c mktime.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c strftime.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c unix-date.c
+rm -rf libsmlnj-date.a
+ar rcv libsmlnj-date.a smlnj-date-lib.o gmtime.o localoffset.o localtime.o mktime.o strftime.o unix-date.o
+a - smlnj-date-lib.o
+a - gmtime.o
+a - localoffset.o
+a - localtime.o
+a - mktime.o
+a - strftime.o
+a - unix-date.o
+ranlib libsmlnj-date.a
+(cd ../c-libs/smlnj-math; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libsmlnj-math.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libsmlnj-math.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c smlnj-math-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctlrndmode.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c atan64.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c cos64.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c exp64.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c log64.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c sin64.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c sqrt64.c
+rm -rf libsmlnj-math.a
+ar rcv libsmlnj-math.a smlnj-math-lib.o ctlrndmode.o atan64.o cos64.o exp64.o log64.o sin64.o sqrt64.o
+a - smlnj-math-lib.o
+a - ctlrndmode.o
+a - atan64.o
+a - cos64.o
+a - exp64.o
+a - log64.o
+a - sin64.o
+a - sqrt64.o
+ranlib libsmlnj-math.a
+(cd ../c-libs/posix-process; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-process.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-process.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-process-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c osval.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fork.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c exec.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c execp.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c exece.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c waitpid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c exit.c
+exit.c:23:1: warning: non-void function does not return a value [-Wreturn-type]
+} /* end of _ml_P_Process_exit */
+^
+1 warning generated.
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c kill.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c alarm.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c pause.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c sleep.c
+rm -rf libposix-process.a
+ar rcv libposix-process.a posix-process-lib.o osval.o fork.o exec.o execp.o exece.o waitpid.o exit.o kill.o alarm.o pause.o sleep.o
+a - posix-process-lib.o
+a - osval.o
+a - fork.o
+a - exec.o
+a - execp.o
+a - exece.o
+a - waitpid.o
+a - exit.o
+a - kill.o
+a - alarm.o
+a - pause.o
+a - sleep.o
+ranlib libposix-process.a
+(cd ../c-libs/posix-procenv; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-procenv.a)
+(make MAKE="make" clean)
+rm -f v-* *.o ml_sysconf.h libposix-procenv.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-procenv-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getpid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getppid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getuid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c geteuid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getgid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getegid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setuid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setgid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getgroups.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getlogin.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getpgrp.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setsid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c setpgid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c uname.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c time.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c times.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getenv.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c environ.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ctermid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ttyname.c
+VERSION=v-amd64-darwin CPP="cc -x assembler-with-cpp -E -P -std=c99" ../../config/gen-posix-names.sh _SC_ ml_sysconf.h
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c sysconf.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c isatty.c
+rm -rf libposix-procenv.a
+ar rcv libposix-procenv.a posix-procenv-lib.o getpid.o getppid.o getuid.o geteuid.o getgid.o getegid.o setuid.o setgid.o getgroups.o getlogin.o getpgrp.o setsid.o setpgid.o uname.o time.o times.o getenv.o environ.o ctermid.o ttyname.o sysconf.o isatty.o
+a - posix-procenv-lib.o
+a - getpid.o
+a - getppid.o
+a - getuid.o
+a - geteuid.o
+a - getgid.o
+a - getegid.o
+a - setuid.o
+a - setgid.o
+a - getgroups.o
+a - getlogin.o
+a - getpgrp.o
+a - setsid.o
+a - setpgid.o
+a - uname.o
+a - time.o
+a - times.o
+a - getenv.o
+a - environ.o
+a - ctermid.o
+a - ttyname.o
+a - sysconf.o
+a - isatty.o
+ranlib libposix-procenv.a
+(cd ../c-libs/posix-filesys; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-filesys.a)
+(make MAKE="make" clean)
+rm -f v-* *.o ml_pathconf.h libposix-filesys.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-filesys-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c osval.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c chdir.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getcwd.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c openf.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c umask.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c link.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c rename.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c symlink.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c mkdir.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c mkfifo.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c unlink.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c rmdir.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c readlink.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c stat.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c access.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c chmod.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fchmod.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c chown.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fchown.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c ftruncate.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c utime.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c opendir.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c readdir.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c rewinddir.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c closedir.c
+VERSION=v-amd64-darwin CPP="cc -x assembler-with-cpp -E -P -std=c99" ../../config/gen-posix-names.sh _PC_ ml_pathconf.h
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c pathconf.c
+rm -rf libposix-filesys.a
+ar rcv libposix-filesys.a posix-filesys-lib.o osval.o chdir.o getcwd.o openf.o umask.o link.o rename.o symlink.o mkdir.o mkfifo.o unlink.o rmdir.o readlink.o stat.o access.o chmod.o fchmod.o chown.o fchown.o ftruncate.o utime.o opendir.o readdir.o rewinddir.o closedir.o pathconf.o
+a - posix-filesys-lib.o
+a - osval.o
+a - chdir.o
+a - getcwd.o
+a - openf.o
+a - umask.o
+a - link.o
+a - rename.o
+a - symlink.o
+a - mkdir.o
+a - mkfifo.o
+a - unlink.o
+a - rmdir.o
+a - readlink.o
+a - stat.o
+a - access.o
+a - chmod.o
+a - fchmod.o
+a - chown.o
+a - fchown.o
+a - ftruncate.o
+a - utime.o
+a - opendir.o
+a - readdir.o
+a - rewinddir.o
+a - closedir.o
+a - pathconf.o
+ranlib libposix-filesys.a
+(cd ../c-libs/posix-io; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-io.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-io.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-io-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c osval.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c pipe.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c dup.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c dup2.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c close.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c read.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c readbuf.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c write.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c writebuf.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fcntl_d.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fcntl_gfd.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fcntl_sfd.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fcntl_gfl.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fcntl_sfl.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fcntl_l.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c lseek.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c fsync.c
+rm -rf libposix-io.a
+ar rcv libposix-io.a posix-io-lib.o osval.o pipe.o dup.o dup2.o close.o read.o readbuf.o write.o writebuf.o fcntl_d.o fcntl_gfd.o fcntl_sfd.o fcntl_gfl.o fcntl_sfl.o fcntl_l.o lseek.o fsync.o
+a - posix-io-lib.o
+a - osval.o
+a - pipe.o
+a - dup.o
+a - dup2.o
+a - close.o
+a - read.o
+a - readbuf.o
+a - write.o
+a - writebuf.o
+a - fcntl_d.o
+a - fcntl_gfd.o
+a - fcntl_sfd.o
+a - fcntl_gfl.o
+a - fcntl_sfl.o
+a - fcntl_l.o
+a - lseek.o
+a - fsync.o
+ranlib libposix-io.a
+(cd ../c-libs/posix-sysdb; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-sysdb.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-sysdb.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-sysdb-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getgrgid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getgrnam.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getpwuid.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getpwnam.c
+rm -rf libposix-sysdb.a
+ar rcv libposix-sysdb.a posix-sysdb-lib.o getgrgid.o getgrnam.o getpwuid.o getpwnam.o
+a - posix-sysdb-lib.o
+a - getgrgid.o
+a - getgrnam.o
+a - getpwuid.o
+a - getpwnam.o
+ranlib libposix-sysdb.a
+(cd ../c-libs/posix-signal; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-signal.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-signal.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-signal-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c osval.c
+rm -rf libposix-signal.a
+ar rcv libposix-signal.a posix-signal-lib.o osval.o
+a - posix-signal-lib.o
+a - osval.o
+ranlib libposix-signal.a
+(cd ../c-libs/posix-tty; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-tty.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-tty.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-tty-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c osval.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcdrain.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcflow.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcflush.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcgetattr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcgetpgrp.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcsendbreak.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcsetattr.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tcsetpgrp.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c getwinsz.c
+rm -rf libposix-tty.a
+ar rcv libposix-tty.a posix-tty-lib.o osval.o tcdrain.o tcflow.o tcflush.o tcgetattr.o tcgetpgrp.o tcsendbreak.o tcsetattr.o tcsetpgrp.o getwinsz.o
+a - posix-tty-lib.o
+a - osval.o
+a - tcdrain.o
+a - tcflow.o
+a - tcflush.o
+a - tcgetattr.o
+a - tcgetpgrp.o
+a - tcsendbreak.o
+a - tcsetattr.o
+a - tcsetpgrp.o
+a - getwinsz.o
+ranlib libposix-tty.a
+(cd ../c-libs/posix-error; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libposix-error.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libposix-error.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-error-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c posix-name-val.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c errmsg.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c geterror.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c listerrors.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c tbl-errno.c
+rm -rf libposix-error.a
+ar rcv libposix-error.a posix-error-lib.o posix-name-val.o errmsg.o geterror.o listerrors.o tbl-errno.o
+a - posix-error-lib.o
+a - posix-name-val.o
+a - errmsg.o
+a - geterror.o
+a - listerrors.o
+a - tbl-errno.o
+ranlib libposix-error.a
+(cd ../c-libs/codegen; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." LLVM_DIR=".." libcodegen.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libcodegen.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -Iinclude -c codegen-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -Iinclude -c generate.c
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/asdl-integer.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/asdl.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/cfg-codegen.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/cfg-init.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/cfg-prim-codegen.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/cfg.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/code-buffer.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/code-object.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/codegen.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/lambda-var.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/mc-gen.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/overflow.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/sml-registers.cxx
+c++ --std=c++14 -c -g -O2 -I/Users/dbm/sml/Dev/github/smlnj1/runtime/include -std=c++14   -fno-exceptions -fno-rtti -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNDEBUG -Iinclude -I../../objs -I../../include -I.. -DENABLE_X86 -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC src/target-info.cxx
+rm -rf libcodegen.a
+ar rcv libcodegen.a codegen-lib.o generate.o asdl-integer.o asdl.o cfg-codegen.o cfg-init.o cfg-prim-codegen.o cfg.o code-buffer.o code-object.o codegen.o lambda-var.o mc-gen.o overflow.o sml-registers.o target-info.o
+a - codegen-lib.o
+a - generate.o
+a - asdl-integer.o
+a - asdl.o
+a - cfg-codegen.o
+a - cfg-init.o
+a - cfg-prim-codegen.o
+a - cfg.o
+a - code-buffer.o
+a - code-object.o
+a - codegen.o
+a - lambda-var.o
+a - mc-gen.o
+a - overflow.o
+a - sml-registers.o
+a - target-info.o
+ranlib libcodegen.a
+(cd ../gc; make CHECK_HEAP="" VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../objs -I../include -I../gc" libgc.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libgc.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc init-gc.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc call-gc.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc minor-gc.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc major-gc.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc flip.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc gc-util.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc big-objects.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc ml-objects.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc obj-info.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc build-literals.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc old-literals.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc record-ops.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc import-heap.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc export-heap.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc blast-in.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc blast-out.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc blast-gc.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc heap-in-util.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc heap-out-util.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc writer.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc mem-writer.c
+mem-writer.c:105:1: warning: non-void function does not return a value [-Wreturn-type]
+} /* end of Tell */
+^
+1 warning generated.
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc addr-hash.c
+cc -m64 -std=c99 -c -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc c-globals-tbl.c
+rm -rf libgc.a
+ar rcv libgc.a init-gc.o call-gc.o minor-gc.o major-gc.o flip.o gc-util.o big-objects.o ml-objects.o obj-info.o build-literals.o old-literals.o record-ops.o  import-heap.o export-heap.o blast-in.o blast-out.o blast-gc.o heap-in-util.o heap-out-util.o writer.o mem-writer.o addr-hash.o c-globals-tbl.o
+a - init-gc.o
+a - call-gc.o
+a - minor-gc.o
+a - major-gc.o
+a - flip.o
+a - gc-util.o
+a - big-objects.o
+a - ml-objects.o
+a - obj-info.o
+a - build-literals.o
+a - old-literals.o
+a - record-ops.o
+a - import-heap.o
+a - export-heap.o
+a - blast-in.o
+a - blast-out.o
+a - blast-gc.o
+a - heap-in-util.o
+a - heap-out-util.o
+a - writer.o
+a - mem-writer.o
+a - addr-hash.o
+a - c-globals-tbl.o
+ranlib libgc.a
+(cd ../memory; make 'OBJS=$(MMAP_OBJS)' VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../objs -I../include -I../gc" libmem.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libmem.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../objs -I../include -I../gc -c mem-mmap.c
+ar rcv libmem.a mem-mmap.o
+a - mem-mmap.o
+ranlib libmem.a
+(cd ../c-libs/dl; make VERSION="v-amd64-darwin" MAKE="make" CC="cc -m64 -std=c99" CFLAGS="-g -O2 -D_DARWIN_C_SOURCE" DEFS="-DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC" AR="ar" ARFLAGS="rcv" RANLIB="ranlib" INCLUDES="-I../../objs -I../../include -I.." libunix-dynload.a)
+(make MAKE="make" clean)
+rm -f v-* *.o libunix-dynload.a
+echo "v-amd64-darwin" > v-amd64-darwin
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c unix-dynload-lib.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c dlopen.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c dlclose.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c dlsym.c
+cc -m64 -std=c99 -g -O2 -D_DARWIN_C_SOURCE -DARCH_AMD64 -DSIZE_64 -DOPSYS_UNIX -DOPSYS_DARWIN -DGNU_ASSEMBLER -DDLOPEN -DINDIRECT_CFUNC -I../../objs -I../../include -I.. -c dlerror.c
+rm -rf libunix-dynload.a
+ar rcv libunix-dynload.a unix-dynload-lib.o dlopen.o dlclose.o dlsym.o dlerror.o
+a - unix-dynload-lib.o
+a - dlopen.o
+a - dlclose.o
+a - dlsym.o
+a - dlerror.o
+ranlib libunix-dynload.a
+c++ --std=c++14 -o run.amd64-darwin -g -O2  -L/Users/dbm/sml/Dev/github/smlnj1/runtime/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names main.o c-libraries.o unix-raise-syserr.o ml-options.o boot.o load-ml.o run-ml.o globals.o ml-state.o error.o timers.o unix-timers.o qualify-name.o swap-bytes.o unix-fault.o signal-util.o unix-signal.o unix-prof.o prim.o   ../c-libs/posix-os/libposix-os.a ../c-libs/smlnj-runtime/libsmlnj-runt.a ../c-libs/smlnj-signals/libsmlnj-sig.a ../c-libs/smlnj-prof/libsmlnj-prof.a ../c-libs/smlnj-sockets/libsmlnj-sock.a ../c-libs/smlnj-time/libsmlnj-time.a ../c-libs/smlnj-date/libsmlnj-date.a ../c-libs/smlnj-math/libsmlnj-math.a ../c-libs/posix-process/libposix-process.a ../c-libs/posix-procenv/libposix-procenv.a ../c-libs/posix-filesys/libposix-filesys.a ../c-libs/posix-io/libposix-io.a ../c-libs/posix-sysdb/libposix-sysdb.a ../c-libs/posix-signal/libposix-signal.a ../c-libs/posix-tty/libposix-tty.a ../c-libs/posix-error/libposix-error.a ../c-libs/codegen/libcodegen.a ../gc/libgc.a ../memory/libmem.a ../c-libs/dl/libunix-dynload.a ../c-libs/codegen/libcodegen.a  -lLLVMX86Disassembler -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMCFGuard -lLLVMGlobalISel -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMDebugInfoDWARF -lLLVMCodeGen -lLLVMTarget -lLLVMScalarOpts -lLLVMInstCombine -lLLVMAggressiveInstCombine -lLLVMTransformUtils -lLLVMBitWriter -lLLVMAnalysis -lLLVMProfileData -lLLVMX86Desc -lLLVMObject -lLLVMTextAPI -lLLVMMCParser -lLLVMBitReader -lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMMCDisassembler -lLLVMMC -lLLVMDebugInfoCodeView -lLLVMDebugInfoMSF -lLLVMBinaryFormat -lLLVMX86Utils -lLLVMX86Info -lLLVMSupport -lLLVMDemangle -lz -lcurses -lm
+rm -f v-* run.* interactive-run \
+		gen-sizes gen-offsets gen-bc-instr-def \
+		gen-unix-signals gen-unix-sigtbl \
+		ml-sizes.h mlstate-offsets.h bc-instr-def.h \
+		system-signals.h unix-sigtbl.c \
+		*.o prim.s primops.s
+rm -r -f *.dSYM
+(cd ../memory; make MAKE="make" clean)
+rm -f v-* *.o libmem.a
+(cd ../c-libs; make MAKE="make" clean)
+for dir in posix-os smlnj-runtime smlnj-signals smlnj-sockets smlnj-prof smlnj-time smlnj-date smlnj-math posix-error posix-filesys posix-io posix-procenv posix-process posix-signal posix-sysdb posix-tty smlnj-ccalls dl codegen; do \
+	  (cd $dir; echo "cleaning $dir"; make MAKE="make" clean) ; \
+	done
+cleaning posix-os
+rm -f v-* *.o libposix-os.a
+cleaning smlnj-runtime
+rm -f v-* *.o libsmlnj-runt.a
+cleaning smlnj-signals
+rm -f v-* *.o libsmlnj-sig.a
+cleaning smlnj-sockets
+rm -f v-* *.o libsmlnj-sock.a
+cleaning smlnj-prof
+rm -f v-* *.o libsmlnj-prof.a
+cleaning smlnj-time
+rm -f v-* *.o libsmlnj-time.a
+cleaning smlnj-date
+rm -f v-* *.o libsmlnj-date.a
+cleaning smlnj-math
+rm -f v-* *.o libsmlnj-math.a
+cleaning posix-error
+rm -f v-* *.o libposix-error.a
+cleaning posix-filesys
+rm -f v-* *.o ml_pathconf.h libposix-filesys.a
+cleaning posix-io
+rm -f v-* *.o libposix-io.a
+cleaning posix-procenv
+rm -f v-* *.o ml_sysconf.h libposix-procenv.a
+cleaning posix-process
+rm -f v-* *.o libposix-process.a
+cleaning posix-signal
+rm -f v-* *.o libposix-signal.a
+cleaning posix-sysdb
+rm -f v-* *.o libposix-sysdb.a
+cleaning posix-tty
+rm -f v-* *.o libposix-tty.a
+cleaning smlnj-ccalls
+rm -f v-* *.o *.s libsmlnj-ccalls.a
+cleaning dl
+rm -f v-* *.o libunix-dynload.a
+cleaning codegen
+rm -f v-* *.o libcodegen.a
+rm -f v-* *.o
+(cd ../gc; make MAKE="make" clean)
+rm -f v-* *.o libgc.a
+********************* Primop Bindings ********************
+* int size = 63; real size = 64; large word size = 64
+********************
+            raw_update_float64 = raw_store(f64)
+            raw_update_float32 = raw_store(f32)
+              raw_update_int32 = raw_store(i32)
+             raw_update_word32 = raw_store(u32)
+              raw_update_int16 = raw_store(i16)
+             raw_update_word16 = raw_store(u16)
+               raw_update_int8 = raw_store(i8)
+              raw_update_word8 = raw_store(u8)
+               raw_sub_float64 = raw_load(f64)
+               raw_sub_float32 = raw_load(f32)
+                 raw_sub_int32 = raw_load(i32)
+                raw_sub_word32 = raw_load(u32)
+                 raw_sub_int16 = raw_load(i16)
+                raw_sub_word16 = raw_load(u16)
+                  raw_sub_int8 = raw_load(i8)
+                 raw_sub_word8 = raw_load(u8)
+             raw_store_float64 = raw_store(f64)
+             raw_store_float32 = raw_store(f32)
+               raw_store_int32 = raw_store(i32)
+              raw_store_word32 = raw_store(u32)
+               raw_store_int16 = raw_store(i16)
+              raw_store_word16 = raw_store(u16)
+                raw_store_int8 = raw_store(i8)
+               raw_store_word8 = raw_store(u8)
+              raw_load_float64 = raw_load(f64)
+              raw_load_float32 = raw_load(f32)
+                raw_load_int32 = raw_load(i32)
+               raw_load_word32 = raw_load(u32)
+                raw_load_int16 = raw_load(i16)
+               raw_load_word16 = raw_load(u16)
+                 raw_load_int8 = raw_load(i8)
+                raw_load_word8 = raw_load(u8)
+                  raw_record64 = raw64_record
+                    raw_record = raw_record
+                     raw_ccall = raw_ccall
+                word64_to_cptr = word_to_cptr
+                cptr_to_word64 = cptr_to_word
+                      char_neq = <>u63
+                      char_eql = =u63
+                       char_ge = >=u63
+                       char_gt = >u63
+                       char_le = <=u63
+                       char_lt = <u63
+               int64_to_real64 = int64_to_real64
+                 int_to_real64 = int63_to_real64
+           round_real64_to_int = round_real64_to_int63
+           floor_real64_to_int = floor_real64_to_int63
+          copy_word64_to_int64 = copy_64_64
+            copy_word_to_int64 = copy_63_64
+          copy_int64_to_word64 = copy_64_64
+           trunc_word64_to_int = trunc_64_63
+           trunc_int64_to_word = trunc_64_63
+               intinf_to_word8 = trunc_inf_8
+        signed_word8_to_intinf = extend_8_inf
+      unsigned_word8_to_intinf = copy_8_inf
+           signed_word8_to_int = extend_8_63
+         unsigned_word8_to_int = copy_8_63
+                  int_to_word8 = trunc_63_8
+        signed_word8_to_word64 = extend_8_64
+      unsigned_word8_to_word64 = copy_8_64
+               word64_to_word8 = trunc_64_8
+              intinf_to_word64 = trunc_inf_64
+       signed_word64_to_intinf = extend_64_inf
+     unsigned_word64_to_intinf = copy_64_inf
+          signed_word64_to_int = test_64_63
+        unsigned_word64_to_int = testu_64_63
+                 int_to_word64 = extend_63_64
+               intinf_to_int64 = test_inf_64
+               int64_to_intinf = extend_64_inf
+                word_to_word64 = copy_63_64
+                  int_to_int64 = extend_63_64
+                word64_to_word = trunc_64_63
+                  int64_to_int = test_64_63
+              intinf_to_word32 = trunc_inf_32
+       signed_word32_to_intinf = extend_32_inf
+     unsigned_word32_to_intinf = copy_32_inf
+          signed_word32_to_int = extend_32_63
+        unsigned_word32_to_int = copy_32_63
+                 int_to_word32 = trunc_63_32
+               intinf_to_int32 = test_inf_32
+               int32_to_intinf = extend_32_inf
+       signed_word32_to_word64 = extend_32_64
+     unsigned_word32_to_word64 = copy_32_64
+              word64_to_word32 = trunc_64_32
+                word_to_word32 = trunc_63_32
+                  int_to_int32 = test_63_32
+                word32_to_word = copy_32_63
+                  int32_to_int = extend_32_63
+                intinf_to_word = trunc_inf_63
+         signed_word_to_intinf = extend_63_inf
+       unsigned_word_to_intinf = copy_63_inf
+            signed_word_to_int = copy_63_63
+          unsigned_word_to_int = testu_63_63
+                   int_to_word = copy_63_63
+                 intinf_to_int = test_inf_63
+                 int_to_intinf = extend_63_inf
+         signed_word_to_word64 = extend_63_64
+       unsigned_word_to_word64 = copy_63_64
+                word64_to_word = trunc_64_63
+                real64_to_bits = real_to_bits_64
+                   real64_sqrt = fsqrt_f64
+                    real64_abs = fabs_f64
+                    real64_max = inlmax_f64
+                    real64_min = inlmin_f64
+                    real64_sgn = fsgn_64
+                    real64_neq = <>f64
+                    real64_eql = =f64
+                     real64_ge = >=f64
+                     real64_gt = >f64
+                     real64_le = <=f64
+                     real64_lt = <f64
+                    real64_neg = neg_f64
+                    real64_div = fdiv_f64
+                    real64_mul = mul_f64
+                    real64_sub = sub_f64
+                    real64_add = add_f64
+                    word64_max = inlmax_u64
+                    word64_min = inlmin_u64
+                    word64_neq = <>u64
+                    word64_eql = =u64
+                     word64_ge = >=u64
+                     word64_gt = >u64
+                     word64_le = <=u64
+                     word64_lt = <u64
+                   word64_notb = notb_u64
+             word64_raw_lshift = lshift_u64
+            word64_raw_rshiftl = rshiftl_u64
+             word64_raw_rshift = rshift_u64
+                 word64_lshift = inllshift_u64
+                word64_rshiftl = inlrshiftl_u64
+                 word64_rshift = inlrshift_u64
+                   word64_andb = andb_u64
+                   word64_xorb = xorb_u64
+                    word64_orb = orb_u64
+                    word64_neg = neg_u64
+                    word64_mod = inlrem_u64
+                    word64_div = inlquot_u64
+                    word64_mul = mul_u64
+                    word64_sub = sub_u64
+                    word64_add = add_u64
+                     int64_abs = inlabs_i64
+                     int64_max = inlmax_i64
+                     int64_min = inlmin_i64
+                     int64_neq = <>i64
+                     int64_eql = =i64
+                      int64_ge = >=i64
+                      int64_gt = >i64
+                      int64_le = <=i64
+                      int64_lt = <i64
+                     int64_neg = ineg_64
+                     int64_rem = inlrem_i64
+                    int64_quot = inlquot_i64
+                     int64_mod = inlmod_i64
+                     int64_div = inldiv_i64
+                     int64_mul = imul_64
+                     int64_sub = isub_64
+                     int64_add = iadd_64
+                    word32_max = inlmax_u32
+                    word32_min = inlmin_u32
+                    word32_neq = <>u32
+                    word32_eql = =u32
+                     word32_ge = >=u32
+                     word32_gt = >u32
+                     word32_le = <=u32
+                     word32_lt = <u32
+                   word32_notb = notb_u32
+             word32_raw_lshift = lshift_u32
+            word32_raw_rshiftl = rshiftl_u32
+             word32_raw_rshift = rshift_u32
+                 word32_lshift = inllshift_u32
+                word32_rshiftl = inlrshiftl_u32
+                 word32_rshift = inlrshift_u32
+                   word32_andb = andb_u32
+                   word32_xorb = xorb_u32
+                    word32_orb = orb_u32
+                    word32_neg = neg_u32
+                    word32_mod = inlrem_u32
+                    word32_div = inlquot_u32
+                    word32_mul = mul_u32
+                    word32_sub = sub_u32
+                    word32_add = add_u32
+                     word8_max = inlmax_u8
+                     word8_min = inlmin_u8
+                     word8_neq = <>u8
+                     word8_eql = =u8
+                      word8_ge = >=u8
+                      word8_gt = >u8
+                      word8_le = <=u8
+                      word8_lt = <u8
+                    word8_notb = notb_u8
+              word8_raw_lshift = lshift_u8
+             word8_raw_rshiftl = rshiftl_u8
+              word8_raw_rshift = rshift_u8
+                  word8_lshift = inllshift_u8
+                 word8_rshiftl = inlrshiftl_u8
+                  word8_rshift = inlrshift_u8
+                    word8_andb = andb_u8
+                    word8_xorb = xorb_u8
+                     word8_orb = orb_u8
+                     word8_neg = neg_u8
+                     word8_mod = inlrem_u8
+                     word8_div = inlquot_u8
+                     word8_mul = mul_u8
+                     word8_sub = sub_u8
+                     word8_add = add_u8
+                     int32_abs = inlabs_i32
+                     int32_max = inlmax_i32
+                     int32_min = inlmin_i32
+                     int32_neq = <>i32
+                     int32_eql = =i32
+                      int32_ge = >=i32
+                      int32_gt = >i32
+                      int32_le = <=i32
+                      int32_lt = <i32
+                     int32_neg = ineg_32
+                     int32_rem = inlrem_i32
+                    int32_quot = inlquot_i32
+                     int32_mod = inlmod_i32
+                     int32_div = inldiv_i32
+                     int32_mul = imul_32
+                     int32_sub = isub_32
+                     int32_add = iadd_32
+                      word_max = inlmax_u63
+                      word_min = inlmin_u63
+                      word_neq = <>u63
+                      word_eql = =u63
+                       word_ge = >=u63
+                       word_gt = >u63
+                       word_le = <=u63
+                       word_lt = <u63
+                     word_notb = notb_u63
+               word_raw_lshift = lshift_u63
+              word_raw_rshiftl = rshiftl_u63
+               word_raw_rshift = rshift_u63
+                   word_lshift = inllshift_u63
+                  word_rshiftl = inlrshiftl_u63
+                   word_rshift = inlrshift_u63
+                     word_andb = andb_u63
+                     word_xorb = xorb_u63
+                      word_orb = orb_u63
+                      word_neg = neg_u63
+                      word_mod = inlrem_u63
+                      word_div = inlquot_u63
+                      word_mul = mul_u63
+                      word_sub = sub_u63
+                      word_add = add_u63
+                       int_geu = >=u63
+                       int_ltu = <u63
+                      int_notb = notb_u63
+                int_raw_lshift = lshift_u63
+                int_raw_rshift = rshift_u63
+                      int_andb = andb_u63
+                      int_xorb = xorb_u63
+                       int_orb = orb_u63
+                int_unsafe_sub = sub_u63
+                int_unsafe_add = add_u63
+                       int_abs = inlabs_i63
+                       int_max = inlmax_i63
+                       int_min = inlmin_i63
+                       int_neq = <>i63
+                       int_eql = =i63
+                        int_ge = >=i63
+                        int_gt = >i63
+                        int_le = <=i63
+                        int_lt = <i63
+                       int_neg = ineg_63
+                       int_rem = inlrem_i63
+                      int_quot = inlquot_i63
+                       int_mod = inlmod_i63
+                       int_div = inldiv_i63
+                       int_mul = imul_63
+                       int_sub = isub_63
+                       int_add = iadd_63
+      real64_arr_unsafe_update = numupdate_f64
+         real64_arr_unsafe_sub = numsubscript_f64
+             real64_arr_update = inlnumupdate_f64
+                real64_arr_sub = inlnumsubscript_f64
+        char_arr_unsafe_update = numupdate_u8
+           char_arr_unsafe_sub = numsubscript_u8
+               char_arr_update = inlnumupdate_u8
+                  char_arr_sub = inlnumsubscript_u8
+        char_vec_unsafe_update = numupdate_u8
+           char_vec_unsafe_sub = numsubscriptv_u8
+                  char_vec_sub = inlnumsubscriptv_u8
+       word8_arr_unsafe_update = numupdate_u8
+          word8_arr_unsafe_sub = numsubscript_u8
+              word8_arr_update = inlnumupdate_u8
+                 word8_arr_sub = inlnumsubscript_u8
+       word8_vec_unsafe_update = numupdate_u8
+          word8_vec_unsafe_sub = numsubscriptv_u8
+                 word8_vec_sub = inlnumsubscriptv_u8
+                     recordSub = subscriptrec
+                      raw64Sub = subscriptraw64
+                      seq_data = getseqdata
+                    seq_length = length
+                     newArray0 = newarray0
+            arr_unboxed_update = unboxedupdate
+                    arr_update = inlupdate
+             arr_unsafe_update = update
+                       vec_sub = inlsubscriptv
+                vec_unsafe_sub = subscriptv
+                       arr_sub = inlsubscript
+                arr_unsafe_sub = subscript
+                       mkarray = inlmkarray
+                       inl_ord = cast
+                       inl_chr = inlchr
+                       inl_not = inlnot
+                  inl_identity = inlidentity
+                    inl_ignore = inlignore
+                    inl_before = inlbefore
+                   inl_compose = inlcompose
+                     objlength = objlength
+                        gettag = gettag
+                       sethdlr = sethdlr
+                       gethdlr = gethdlr
+                    setspecial = setspecial
+                    getspecial = getspecial
+                     mkspecial = mkspecial
+                        setvar = setvar
+                        getvar = getvar
+                       ptr_neq = ptrneq
+                       ptr_eql = ptreql
+                            <> = polyneq
+                             = = polyeql
+                          cast = cast
+                       unboxed = unboxed
+                         boxed = boxed
+                       makeref = makeref
+                            := = :=
+                             ! = !
+                        cthrow = throw
+                       isolate = isolate
+                       capture = capture
+                         throw = throw
+                        callcc = callcc
+********************
+[library $smlnj/basis/basis.cm is stable]
+[library $smlnj/cm.cm is stable]
+[library $smlnj/smlnj-lib/smlnj-lib.cm is stable]
+[library $smlnj/compiler.cm is stable]
+[library $smlnj/compiler/minimal.cm is stable]
+Generating heap image...
+This is...
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+$Execute: required privileges are:
+  cm-init
+Scheduling library $basis-2004.cm/basis-2004.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/basis-2004.cm/.cm/amd64-unix/basis-2004.cm
+Scheduling library $ml-lpt-lib.cm/ml-lpt-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/ml-lpt-lib.cm/.cm/amd64-unix/ml-lpt-lib.cm
+Scheduling library $unix-lib.cm/unix-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/unix-lib.cm/.cm/amd64-unix/unix-lib.cm
+Scheduling library $hash-cons-lib.cm/hash-cons-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/hash-cons-lib.cm/.cm/amd64-unix/hash-cons-lib.cm
+Scheduling library $html-lib.cm/html-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/html-lib.cm/.cm/amd64-unix/html-lib.cm
+Scheduling library $html4-lib.cm/html4-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/html4-lib.cm/.cm/amd64-unix/html4-lib.cm
+Scheduling library $inet-lib.cm/inet-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/inet-lib.cm/.cm/amd64-unix/inet-lib.cm
+Scheduling library $json-lib.cm/json-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/json-lib.cm/.cm/amd64-unix/json-lib.cm
+Scheduling library $pp-extras-lib.cm/pp-extras-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/pp-extras-lib.cm/.cm/amd64-unix/pp-extras-lib.cm
+Scheduling library $regexp-lib.cm/regexp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/regexp-lib.cm/.cm/amd64-unix/regexp-lib.cm
+Scheduling library $reactive-lib.cm/reactive-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/reactive-lib.cm/.cm/amd64-unix/reactive-lib.cm
+Scheduling library $sexp-lib.cm/sexp-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/sexp-lib.cm/.cm/amd64-unix/sexp-lib.cm
+Scheduling library $uuid-lib.cm/uuid-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/uuid-lib.cm/.cm/amd64-unix/uuid-lib.cm
+Scheduling library $xml-lib.cm/xml-lib.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/xml-lib.cm/.cm/amd64-unix/xml-lib.cm
+Scheduling library $ml-ulex-tool.cm/ml-ulex-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/ml-ulex-tool.cm/.cm/amd64-unix/ml-ulex-tool.cm
+Scheduling library $mllex-tool.cm/mllex-tool.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/mllex-tool.cm/.cm/amd64-unix/mllex-tool.cm
+Scheduling library $lex-ext.cm/lex-ext.cm to be built as /Users/dbm/sml/Dev/github/smlnj1/lib/lex-ext.cm/.cm/amd64-unix/lex-ext.cm
+Building ml-yacc.
+Standard ML of New Jersey [Version 2022.1; 64-bit; August 25, 2022]
+/Users/dbm/sml/Dev/github/smlnj1/bin/ml-build: line 112: 43746 Segmentation fault: 11  "$LINK" `cat "$linkargsfile"`
+FAILURE: Built ml-yacc; src/ml-yacc.amd64-darwin still missing.
+./build.sh: !!! Installation of libraries and programs failed.
+hoy$ 
