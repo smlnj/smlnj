@@ -10,3 +10,47 @@ Notes on the CM implementation
   $smlnj/cmb/amd64-unix.sml ($smlnj/cmb/current.cm), calling 
   BootstrpCompileFn, source: cm/bootstrap/btcompile.sml.
   
+* cm/bootstrap:
+
+  -- names.sml defines
+
+     val penvspec = "pathconfig"
+
+     We don't know (from this) what directory the "pathconfig" file lives in.  Could be
+     system/pathconfig, or could be lib/pathconfig, or could be some other pathconfig file
+     in some other directory.
+
+  -- btcompile.sml
+
+     In function mk_compile (l. 111) we have
+
+     val penvspec = BtNames.penvspec
+
+     val penv = SrcPath.newEnv ()   -- a new "path environment"
+
+     then SafeIO is used to read the contents of the penvspec file (in current directory?, which
+     is what?) and process it using SrcPath.processSpecFile, which (presumably) parses the contents
+     of the penvspec file (?/pathconfig), producing its results where? In the (altered state of the) penv?
+
+     The function mk_compile is only called internally in BootstrapCompileFn (btcompile.sml),
+     twice, near the end of the file, in function "compile" and in the slave function that is
+     passed to CMBSlaveHook.init.
+
+     Though BootstrapCompileFn has no result signature, so mk_compile is exported and could concievably
+     be bound to another name and called via that name (unlikely).
+
+     NOTE: need to define a result signature for BootstrapCompileFn and use it.
+
+* system/smlnj/install/generic-install.sml (structure GenericInstall)
+
+  -- mentions "extrapathconfig" (l. 308) and defines variable extrapathconfig
+
+  -- defines cm_pathconfig (. 304) (by concatenating (P.concat) libdir, "pathconfig")
+     presumably this is the lib/pathconfig file
+
+  -- calls "augment_anchor_mapping" on extrapathconfig (discarding "result")
+     which writes lines (using write_cm_pathconfig) into cm_pathconfig.  This is only call
+     of augment_anchor_mapping.
+     
+* still a mystery where system/pathconfig is read and processed.
+
