@@ -5,17 +5,6 @@
  *      ACM SIGPLAN Workshop on ML, pp. 77–86, September 1998
  *)
 
-signature INT_MAP =
-  sig
-    type 'a t
-
-    val empty : 'a t
-    val find : 'a t * word -> 'a option
-    val insert : 'a t * word * 'a -> 'a t
-    val unionWith : ('a * 'a -> 'a) -> 'a t * 'a t -> 'a t
-
-   end
-
 (* little-endian implementation *)
 structure IntMapLE :> INT_MAP =
   struct
@@ -46,7 +35,7 @@ structure IntMapLE :> INT_MAP =
                   then find' (W.<<(bit, 0w1), l)
                   else find' (W.<<(bit, 0w1), r)
           in
-            find' (tr, key)
+            find' (0w1, tr, key)
           end
 
     fun insert ((n, tr), key, v) = let
