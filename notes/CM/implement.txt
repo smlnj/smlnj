@@ -52,5 +52,5 @@ Notes on the CM implementation
      which writes lines (using write_cm_pathconfig) into cm_pathconfig.  This is only call
      of augment_anchor_mapping.
      
-* still a mystery where system/pathconfig is read and processed.
+* Still a mystery is where the system/pathconfig file is read and processed.  Does anyone know?
 
