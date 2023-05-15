@@ -120,35 +120,27 @@ in
     infixr 5 ::/::
 
     (* ::/:: : string * string list -> string list *)
+    (* inserts "/" after the head string if there is more than one *)
     fun arc ::/:: [] = [arc]
       | arc ::/:: a = arc :: "/" :: a
 
+    (* needesc : char -> bool *)
+    (* identifies characters that need to be translated to "\ddd" codes;
+     * call these characters "coded characters" *)
+
     (* encode0 : [bracket:]bool -> prefile -> string *)
     fun encode0 (bracket: bool) (pf: prefile) =
-	let fun needesc c = not (Char.isPrint c) orelse Char.contains "/:\\$%()" c
-	    fun esc c =
-		"\\" ^ StringCvt.padLeft #"0" 3 (Int.toString (Char.ord c))
-	    fun tc c = if needesc c then esc c else String.str c
-							       
-	    (* ta : string -> string *)
-	    val ta = String.translate tc
-
-	    (* ta' : string -> string *)
-            val ta' = String.translate esc
-
-	    val dot : string = ta' "."
-	    val dotdot : string = ta' ".."
-
-	    (* arc : string -> string *)
+	let (* arc : string -> string *)
 	    fun arc (a: string) =
 		if a = P.currentArc then "."
 		else if a = P.parentArc then ".."
-		else if a = "." then dot
-		else if a = ".." then dotdot
-		else ta a
+		else if a = "." then allToCodes "."  (* "\\046" *)
+		else if a = ".." then allToCodes ".." (* "\\046\\046" *)
+		else stringToCodes a
 
-	    (* e_ac : string list * dir * bool * string list *)
-	    fun e_ac ([], context, _, a) = e_c (context, a, NONE)
+	    (* e_ac : string list * dir * bool * string list -> string *)
+	    fun e_ac ([] string list, context: dir, b: bool, arcs: string list) =
+		  e_c (context, arcs, NONE)
 	      | e_ac (arcs, context, ctxt, a) =
 		  let val l = map arc arcs
 		      val a0 = List.hd l
@@ -162,26 +154,28 @@ in
 		  end
 
 	    (* e_c : dir * string list * string option -> string *)
-	    and e_c (ROOT "", a, _) = concat ("/" :: a)
-	      | e_c (ROOT vol, a, _) = concat ("%" :: ta vol ::/:: a)
-	      | e_c (CWD _, a, _) = concat a
-	      | e_c (ANCHOR x, a, a1opt) =
-		  (case (#encode x bracket, a1opt)
+	    and e_c (ROOT "", arcs, _) = concat ("/" :: arcs)
+	      | e_c (ROOT vol, arcs, _) = concat ("%" :: stringToCodes vol ::/:: arcs)
+	      | e_c (CWD _, arcs, _) = concat arcs
+	      | e_c (ANCHOR x, arcs, strOp) =
+		  (case (#encode x bracket, strOp)
 		     of (SOME ad, _) =>
-			 if not bracket then concat (ad ::/:: a)
-			 else concat ("$" :: ta (#name x) :: "(=" :: ad :: ")/" :: a)
+			 if not bracket then concat (ad ::/:: arcs)
+			 else concat ("$" :: stringToCodes (#name x) :: "(=" :: ad :: ")/" :: arcs)
 		     | (NONE, NONE) =>
-			 concat ("$" :: ta (#name x) ::/:: a)
-		     | (NONE, SOME a1) =>
-			 let val a0 = ta (#name x)
-			  in concat (if bracket andalso a0 = a1 then "$/" :: a
-				     else "$" :: a0 ::/:: a)
+			 concat ("$" :: stringToCodes (#name x) ::/:: arcs)
+		     | (NONE, SOME str) =>
+			 let val a0 = stringToCodes (#name x)
+			  in concat (if bracket andalso a0 = a1 then "$/" :: arcs
+				     else "$" :: str ::/:: arcs)
 			 end)
-	      | e_c (DIR (PATH { arcs, context, ... }), a, _) =
-		  e_ac (arcs, context, true, ":" :: a)
+	      | e_c (DIR (PATH { arcs, context, ... }), arcs', _) =
+		  e_ac (arcs, context, true, ":" :: arcs')
 
 	 in e_ac (#arcs pf, #context pf, false, [])
 	end (* fun encode0 *)
+
+    (* type <
 
     (* mk_anchor : env * anchor * (string -> unit) -> <ANCHOR arg> *)
     fun mk_anchor (e: env, a, err) =
