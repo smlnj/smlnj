@@ -1,4 +1,4 @@
-(* srcpath.sml
+(* dbm-srcpath.sml
  *
  * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -6,6 +6,7 @@
  * Operations over abstract names for CM source files.
  *
  * Author: Matthias Blume
+ * Edited by: DBM
  *)
 
 structure SrcPath :> SRCPATH =
@@ -27,7 +28,7 @@ in
 
     fun impossible msg = EM.impossible ("SrcPath: " ^ msg)
 
-    type anchor = string
+    type anchor = string  (* the "name" of an anchor, e.g. "smlnj" for $smlnj? *)
 
     type stableid = int
 
@@ -36,17 +37,22 @@ in
      * and removing arcs at the end easier. *)
     type prepath = { revarcs: string list, vol: string, isAbs: bool }
 
+    (* DBM: What is an elab? What makes it valid? Is validity dependent on the
+     * state of the underlying file system? *)
     type elab = { pp: prepath,
-		  valid: unit -> bool,
+		  valid: unit -> bool,   (* why not just bool? *)
 		  reanchor: (anchor -> string) -> prepath option }
 
+    (* DBM: What is this? *)
     type anchorval = (unit -> elab) * (bool -> string)
 
-    datatype dir =
-	CWD of { name: string, pp: prepath }
-      | ANCHOR of { name: anchor, look: unit -> elab,
+    (* dir: related to file system directories? *)
+    datatype dir
+      = CWD of { name: string, pp: prepath }
+      | ANCHOR of { name: anchor,
+		    look: unit -> elab,
 		    encode : bool -> string option }
-      | ROOT of string
+      | ROOT of string  (* what could the string be? *)
       | DIR of file0
 
     and file0 =
@@ -57,10 +63,14 @@ in
 
     type file = file0 * stableid
 
-    type prefile = { context: dir, arcs: string list, err: string -> unit }
+    type prefile = { context: dir,
+		     arcs: string list,
+		     err: string -> unit }
 
+    (* rebindings: a finite map from anchors to prefiles *)
     type rebindings = { anchor: anchor, value: prefile } list
 
+    (* env: a kind of "object-like", stateful environment *)
     type env =
 	 { get_free: anchor * (string -> unit) -> elab,
 	   set_free: anchor * prepath option -> unit,
@@ -70,93 +80,115 @@ in
 
     type ord_key = file
 
-    (* stable comparison *)
+    (* stable comparison -- compare the stableids of the files *)
     fun compare (f1: file, f2: file) = Int.compare (#2 f1, #2 f2)
 
     val null_pp : prepath = { revarcs = [], vol = "", isAbs = false }
     val bogus_elab =
 	{ pp = null_pp, valid = fn _ => false, reanchor = fn _ => NONE }
 
-    fun string2pp n = let
-	val { arcs, vol, isAbs } = P.fromString n
-    in
-	{ revarcs = rev arcs, vol = vol, isAbs = isAbs }
-    end
+    (* string2pp : string -> prepath *)
+    fun string2pp n =
+	let val { arcs, vol, isAbs } = P.fromString n
+         in { revarcs = rev arcs, vol = vol, isAbs = isAbs }
+	end
 
+    (* cwd_info : {name : string, pp: prepath} -- i.e. value for a CWD *)
     val cwd_info =
 	let val n = F.getDir ()
 	in ref { name = n, pp = string2pp n }
 	end
+
+    (* cwd_notify : bool ref -- a simple control flag? *)
     val cwd_notify = ref true
 
+    (* absElab : string list * string -> elab *)			 
     fun absElab (arcs, vol) =
 	{ pp = { revarcs = rev arcs, vol = vol, isAbs = true },
 	  valid = fn () => true, reanchor = fn _ => NONE }
 
+    (* unintern : file -> file0 *)
     fun unintern (f: file) = #1 f
 
+    (* pre0 : file0 -> prefile *)
     fun pre0 (PATH { arcs, context, ... }) =
 	{ arcs = arcs, context = context, err = fn (_: string) => () }
+
+    (* pre : file -> prefile *)
     val pre = pre0 o unintern
 
-    fun encode0 bracket (pf: prefile) = let
-	fun needesc c = not (Char.isPrint c) orelse Char.contains "/:\\$%()" c
-	fun esc c =
-	    "\\" ^ StringCvt.padLeft #"0" 3 (Int.toString (Char.ord c))
-	fun tc c = if needesc c then esc c else String.str c
-	val ta = String.translate tc
-	val (dot, dotdot) = let
-	    val ta' = String.translate esc
-	in
-	    (ta' ".", ta' "..")
-	end
-	infixr 5 ::/::
-	fun arc ::/:: [] = [arc]
-	  | arc ::/:: a = arc :: "/" :: a
-	fun arc a =
-	    if a = P.currentArc then "."
-	    else if a = P.parentArc then ".."
-	    else if a = "." then dot
-	    else if a = ".." then dotdot
-	    else ta a
-	fun e_ac ([], context, _, a) = e_c (context, a, NONE)
-	  | e_ac (arcs, context, ctxt, a) =
-	    let val l = map arc arcs
-		val a0 = List.hd l
-		val l' = map arc (rev l)
-		val l'' = if ctxt andalso bracket then
-			      concat ["(", List.hd l', ")"] :: List.tl l'
-			else l'
-		val a' = foldl (fn (x, l) => x ::/:: l)
-			      (List.hd l'' :: a) (List.tl l'')
-	    in e_c (context, a', SOME a0)
-	    end
-	and e_c (ROOT "", a, _) = concat ("/" :: a)
-	  | e_c (ROOT vol, a, _) = concat ("%" :: ta vol ::/:: a)
-	  | e_c (CWD _, a, _) = concat a
-	  | e_c (ANCHOR x, a, a1opt) =
-	    (case (#encode x bracket, a1opt) of
-		 (SOME ad, _) =>
-		 if not bracket then concat (ad ::/:: a)
-		 else concat ("$" :: ta (#name x) :: "(=" :: ad :: ")/" :: a)
-	       | (NONE, NONE) => concat ("$" :: ta (#name x) ::/:: a)
-	       | (NONE, SOME a1) => let
-		     val a0 = ta (#name x)
-		 in
-		     concat (if bracket andalso a0 = a1 then "$/" :: a
-			     else "$" :: a0 ::/:: a)
-		 end)
-	  | e_c (DIR (PATH { arcs, context, ... }), a, _) =
-	    e_ac (arcs, context, true, ":" :: a)
-    in
-	e_ac (#arcs pf, #context pf, false, [])
-    end
+    infixr 5 ::/::
 
+    (* ::/:: : string * string list -> string list *)
+    fun arc ::/:: [] = [arc]
+      | arc ::/:: a = arc :: "/" :: a
+
+    (* encode0 : [bracket:]bool -> prefile -> string *)
+    fun encode0 (bracket: bool) (pf: prefile) =
+	let fun needesc c = not (Char.isPrint c) orelse Char.contains "/:\\$%()" c
+	    fun esc c =
+		"\\" ^ StringCvt.padLeft #"0" 3 (Int.toString (Char.ord c))
+	    fun tc c = if needesc c then esc c else String.str c
+							       
+	    (* ta : string -> string *)
+	    val ta = String.translate tc
+
+	    (* ta' : string -> string *)
+            val ta' = String.translate esc
+
+	    val dot : string = ta' "."
+	    val dotdot : string = ta' ".."
+
+	    (* arc : string -> string *)
+	    fun arc (a: string) =
+		if a = P.currentArc then "."
+		else if a = P.parentArc then ".."
+		else if a = "." then dot
+		else if a = ".." then dotdot
+		else ta a
+
+	    (* e_ac : string list * dir * bool * string list *)
+	    fun e_ac ([], context, _, a) = e_c (context, a, NONE)
+	      | e_ac (arcs, context, ctxt, a) =
+		  let val l = map arc arcs
+		      val a0 = List.hd l
+		      val l' = map arc (rev l)
+		      val l'' = if ctxt andalso bracket
+				then concat ["(", List.hd l', ")"] :: List.tl l'
+				else l'
+		      val a' = foldl (fn (x, l) => x ::/:: l)
+				    (List.hd l'' :: a) (List.tl l'')
+		   in e_c (context, a', SOME a0)
+		  end
+
+	    (* e_c : dir * string list * string option -> string *)
+	    and e_c (ROOT "", a, _) = concat ("/" :: a)
+	      | e_c (ROOT vol, a, _) = concat ("%" :: ta vol ::/:: a)
+	      | e_c (CWD _, a, _) = concat a
+	      | e_c (ANCHOR x, a, a1opt) =
+		  (case (#encode x bracket, a1opt)
+		     of (SOME ad, _) =>
+			 if not bracket then concat (ad ::/:: a)
+			 else concat ("$" :: ta (#name x) :: "(=" :: ad :: ")/" :: a)
+		     | (NONE, NONE) =>
+			 concat ("$" :: ta (#name x) ::/:: a)
+		     | (NONE, SOME a1) =>
+			 let val a0 = ta (#name x)
+			  in concat (if bracket andalso a0 = a1 then "$/" :: a
+				     else "$" :: a0 ::/:: a)
+			 end)
+	      | e_c (DIR (PATH { arcs, context, ... }), a, _) =
+		  e_ac (arcs, context, true, ":" :: a)
+
+	 in e_ac (#arcs pf, #context pf, false, [])
+	end (* fun encode0 *)
+
+    (* mk_anchor : env * anchor * (string -> unit) -> <ANCHOR arg> *)
     fun mk_anchor (e: env, a, err) =
-	case SM.find (#bound e, a) of
-	    SOME (elaborate, encode) =>
+	case SM.find (#bound e, a)
+	  of SOME (elaborate, encode) =>
 	      { name = a , look = elaborate, encode = SOME o encode }
-	  | NONE =>
+	   | NONE =>
 	      { name = a, look = fn () => #get_free e (a, err),
 		encode = fn _ => NONE }
 
@@ -164,41 +196,48 @@ in
     val encode = encode_prefile o pre
 
     val clients = ref ([] : (string -> unit) list)
+
+    (* addClientToBeNotified : (string -> unit) -> unit *)
     fun addClientToBeNotified c = clients := c :: !clients
 
-    fun revalidateCwd () = let
-	val { name = n, pp } = !cwd_info
-	val n' = F.getDir ()
-	val pp' = string2pp n'
-    in
-	if n = n' then ()
-	else (cwd_info := { name = n', pp = pp' };
-	      cwd_notify := true);
-	if !cwd_notify then
-	    let val pf = { arcs = rev (#revarcs pp),
-			   context = ROOT (#vol pp),
-			   err = fn (_: string) => () }
-		val ep = encode_prefile pf
-	    in
-		app (fn c => c ep) (!clients);
-		cwd_notify := false
-	    end
-	else ()
-    end
+    (* revalidateCwd : unit -> unit *)
+    fun revalidateCwd () =
+	let val { name = n, pp } = !cwd_info
+	    val n' = F.getDir ()
+	    val pp' = string2pp n'
+	 in if n = n'
+	    then ()
+	    else (cwd_info := { name = n', pp = pp' };
+	          cwd_notify := true);
+	    if !cwd_notify
+	    then let val pf = { arcs = rev (#revarcs pp),
+				context = ROOT (#vol pp),
+				err = fn (_: string) => () }
+		     val ep = encode_prefile pf
+		  in app (fn c => c ep) (!clients);
+		     cwd_notify := false
+		 end
+	    else ()
+	end
 
+    (* scheduleNotification : unit -> unit *)
     fun scheduleNotification () = cwd_notify := true
 
+    (* dirPP : prepath -> prepath *)
     fun dirPP { revarcs = _ :: revarcs, vol, isAbs } =
-	{ revarcs = revarcs, vol = vol, isAbs = isAbs }
+	  { revarcs = revarcs, vol = vol, isAbs = isAbs }
       | dirPP _ = impossible "dirPP"
 
+    (* dirElab : elab -> elab *)
     fun dirElab { pp, valid, reanchor } =
 	{ pp = dirPP pp, valid = valid,
 	  reanchor = Option.map dirPP o reanchor }
 
+    (* augPP : string list -> prepath -> prepath *)
     fun augPP arcs { revarcs, vol, isAbs } =
 	{ revarcs = List.revAppend (arcs, revarcs), vol = vol, isAbs = isAbs }
 
+%%%%%%%
     fun augElab arcs { pp, valid, reanchor } =
 	{ pp = augPP arcs pp, valid = valid,
 	  reanchor = Option.map (augPP arcs) o reanchor }
