@@ -37,49 +37,70 @@ in
      * and removing arcs at the end easier. *)
     type prepath = { revarcs: string list, vol: string, isAbs: bool }
 
-    (* DBM: What is an elab? What makes it valid? Is validity dependent on the
-     * state of the underlying file system? What could change the validity?
+    (* DBM: What is an elab?  -- looks like a sort of "object"
+     * What is its purpose?
      * What is the type name "elab" supposed to suggest? What would be a better
-     * name for the elab type? *)
+     *   name for the elab type?
+     * What does the valid function do?
+     * When is an elab valid? Is its validity dependent on the state of the file system?
+     * What could change the validity of an elab?
+     * What does the reanchor function do?
+     *)
     type elab = { pp: prepath,
-		  valid: unit -> bool,   (* why not just bool? *)
+		  valid: unit -> bool,
 		  reanchor: (anchor -> string) -> prepath option }
 
     (* DBM: What is this? Some kind of anchor "thunk"? *)
     type anchorval = (unit -> elab) * (bool -> string)
 
-    type ANCHOR_arg =
-         {name: anchor,
-	 look: unit -> elab,
-	 encode : bool -> string option}
+    (* anchorInfo: information associated with an ANCHOR dir (directory?).
+     * What does look do?
+     * What does encode do?  What is the bool argument for?
+     *)
+    type anchorInfo =
+         {name: anchor,  (* i.e. string *)
+	  look: unit -> elab,
+	  encode : bool -> string option}
 
-    type CWD_arg = { name: string, pp: prepath }
+    (* type cwdInfo: information associated with a CWD directory (normally the current
+     * working directory?). pp prepath is derived from the name, which comes from F.getDir.
+     *)
+    type cwdInfo =
+	   { name: string,  (* the raw filepath of the current working directory *)
+	     pp: prepath }
 
     (* dir: supposed to denote file system directories? *)
     datatype dir
-      = CWD of CWD_arg              (* a current working directory? *)
-      | ANCHOR of ANCHOR_arg
-      | ROOT of string  (* what could the string denote? *)
+      = CWD of cwdInfo              (* a current working directory? *)
+      | ANCHOR of anchorInfo
+      | ROOT of string  (* what does the string denote? *)
       | DIR of file0
 
-    (* file0: representation of a file? How are <context, arcs> (arcs relative to a 
-     * directory?) related to the prepath component of the elab? *)
+    (* file0: representation of a (semantic?) file?
+     * How are (dir, arcs) related to the prepath component of the elab component?
+     * Should they be consistent? If so, is this enforced?
+     * When will the elab component be changed?  (* elab_file, ... *)
+     * When will the id component be changed?
+     * Could have used "withtype" instead of introducing the PATH constructor. *)
     and file0 =
-	PATH of { context: dir,
-		  arcs: string list,	(* at least one arc! *)
+	FILE of { dir: dir,             (* formerly "context" *)
+		  arcs: string list,	(* INVARIANT: length arc >= 1 *)
 		  elab: elab ref,
 		  id: I.id option ref }
 
     type file = file0 * stableid
 
-    type prefile = { context: dir,
+    (* prefile: a record that designates a file that may not exist in the file system.
+     * Are the arcs in normal (file system) order, or are they reversed as in prepaths?
+     * When is the err function called? *)
+    type prefile = { dir: dir,
 		     arcs: string list,
 		     err: string -> unit }
 
-    (* rebindings: a finite map from anchors to prefiles *)
+    (* rebindings: a finite map from anchors (strings) to prefiles *)
     type rebindings = { anchor: anchor, value: prefile } list
 
-    (* env: a kind of "object-like", stateful environment *)
+    (* env: a kind of "object-like", stateful environment? *)
     type env =
 	 { get_free: anchor * (string -> unit) -> elab,
 	   set_free: anchor * prepath option -> unit,
@@ -97,16 +118,20 @@ in
     val bogus_elab : elab =
 	{ pp = null_pp, valid = fn _ => false, reanchor = fn _ => NONE }
 
-    (* string2pp : string -> prepath *)
-    fun string2pp n =
-	let val { arcs, vol, isAbs } = P.fromString n
+    (* filepathToPrepath : string -> prepath *)
+    (* use OS.Path to parse the filename, then convert result to a prepath *)
+    fun filepathToPrepath (filepath: string) =
+	let val { arcs, vol, isAbs } = P.fromString filepath
          in { revarcs = rev arcs, vol = vol, isAbs = isAbs }
 	end
 
-    (* cwd_info : {name : string, pp: prepath} -- i.e. value for a CWD *)
+    (* cwd_info : cwdInfo ref *)
+    (* a ref initialized with the name and prepath of the current working directory;
+     * this should be updated if the currend working directory is changed? *)
     val cwd_info =
-	let val n = F.getDir ()
-	in ref { name = n, pp = string2pp n }
+	let val filepath : string = F.getDir ()  (* full, absolute, filepath of c.w.d. *)
+	    val cwdPrepath = filepathToPrepath filepath  (* absolute prepath *)
+	 in ref { name = filepath, pp = cwdPrepath }
 	end
 
     (* cwd_notify : bool ref -- a simple control flag? *)
@@ -118,11 +143,11 @@ in
 	  valid = fn () => true, reanchor = fn _ => NONE }
 
     (* unintern : file -> file0 *)
-    fun unintern (f: file) = #1 f
+    fun unintern (f: file) : file0 = #1 f
 
     (* pre0 : file0 -> prefile *)
-    fun pre0 (PATH { arcs, context, ... }) =
-	{ arcs = arcs, context = context, err = fn (_: string) => () }
+    fun pre0 (FILE { dir, arcs, ... }) =
+	{ arcs = arcs, dir = dir, err = fn (_: string) => () }
 
     (* pre : file -> prefile *)
     val pre = pre0 o unintern
@@ -139,75 +164,88 @@ in
     fun specialChar c = not (Char.isPrint c) orelse Char.contains "/:\\$%()" c
 
     (* charCode : char -> string *)							      
-    (* maps any char to its "\ddd" code representation *)
+    (* maps any char to its "\ddd" escape code representation *)
     fun charToCode c = "\\" ^ StringCvt.padLeft #"0" 3 (Int.toString (Char.ord c))
 
     (* specialToCode : char -> string *)					 
     fun specialToCode c = if specialChar c then charToCode c else String.str c
 							       
-    (* stringToCodes : string -> string (was ta) *)
-    (* replace only special characters in the string with their \ddd codes *)
+    (* stringToCodes : string -> string [was ta] *)
+    (* translate only special characters in the string to their \ddd codes.
+     * Thus the result string does not contain any of the special characters. *)
     val transSpecial = String.translate specialToCode
 
-    (* transAll : string -> string (was ta') *)
+    (* transAll : string -> string [was ta'] *)
     (* replace all characters in the string with their \ddd codes *)
     val transAll = String.translate charToCode
 
-    (* encode0 : [bracket:]bool -> prefile -> string *)
-    fun encode0 (bracket: bool) (pf: prefile) =
-	let (* arcEncode : string -> string *)
-	    fun arcEncode (a: string) =
-		if a = P.currentArc then "."
-		else if a = P.parentArc then ".."
-		else if a = "." then transAll "."  (* "\\046" DBM? *)
-		else if a = ".." then transAll ".." (* "\\046\\046" DBM?*)
-		else transSpecial a
+    (* transArc : string -> string *)
+    (* translate an arc string to "encoded" form? (special characters translated to 
+     *   \ddd codes). Special case translations for "." and ".." in the obscure and
+     *   very cases where they are not the same as P.currentArc and P.parentArc
+     *   (i.e. some OS that is not macOS, Windows, or Linux/Unix). This ensures that
+     *   the actual currentArc and the actual parentArc are internally represented
+     *   by the strings "." and "..", regardless of the OS. *)
+    fun transArc (a: string) =
+	if a = P.currentArc then "."        (* i.e. a *)
+	else if a = P.parentArc then ".."   (* i.e. a *)
+	else if a = "." then transAll "."   (* "\\046" -- very unlikely case *)
+	else if a = ".." then transAll ".." (* "\\046\\046" -- very unlikely case *)
+	else transSpecial a  (* the general, or "ordinary" case *)
 
-	    (* e_ac : string list * dir * bool * string list -> string *)
-	    fun e_ac ([] string list, context: dir, b: bool, arcs: string list) =
-		  e_c (context, arcs, NONE)
-	      | e_ac (arcs, context, ctxt, a) =
-		  let val l = map arcEncode arcs
-		      val a0 = List.hd l
-		      val l' = map arcEncode (rev l)
-		      val l'' = if ctxt andalso bracket
-				then concat ["(", List.hd l', ")"] :: List.tl l'
-				else l'
-		      val a' = foldl (fn (x, l) => x ::/:: l)
-				    (List.hd l'' :: a) (List.tl l'')
-		   in e_c (context, a', SOME a0)
+    (* encode0 : [bracket:]bool -> prefile -> string *)
+    fun encode0 (bracket: bool) ({dir = pf_dir, arcs = pf_arcs, ...}: prefile) =
+	let 
+	    (* e_ac : dir * string list * bool * string list -> string *)
+	    fun e_ac (dir: dir, []: string list, b: bool, arcs: string list) =
+		  e_c (dir, arcs, NONE)
+	      | e_ac (dir, arcs, ctxt, arcs') =
+		  let val arcs' as (arc0 :: _) = map transArc arcs (* get rid of special characters *)
+		      val arcs'' as (first :: rest) = rev arcs' (* don't need to map transArc again! *)
+		      val first' :: rest' =
+			    if ctxt andalso bracket
+			    then concat ["(", first, ")"] :: rest
+			    else arcs''
+		      val a' = foldl (fn (x, l) => x :: "/" :: l)
+				    (first' :: arcs') rest'
+		   in e_c (dir, a', SOME arc0)
 		  end
 
 	    (* e_c : dir * string list * string option -> string *)
 	    and e_c (ROOT "", arcs, _) = concat ("/" :: arcs)
-	      | e_c (ROOT vol, arcs, _) = concat ("%" :: stringToCodes vol ::/:: arcs)
+	      | e_c (ROOT vol, arcs, _) = concat ("%" :: (transSpecial vol ::/:: arcs))
 	      | e_c (CWD _, arcs, _) = concat arcs
-	      | e_c (ANCHOR x, arcs, strOp) =
-		  (case (#encode x bracket, strOp)
-		     of (SOME ad, _) =>
-			 if not bracket then concat (ad ::/:: arcs)
-			 else concat ("$" :: stringToCodes (#name x) :: "(=" :: ad :: ")/" :: arcs)
-		     | (NONE, NONE) =>
-			 concat ("$" :: stringToCodes (#name x) ::/:: arcs)
-		     | (NONE, SOME str) =>
-			 let val a0 = stringToCodes (#name x)
-			  in concat (if bracket andalso a0 = a1 then "$/" :: arcs
-				     else "$" :: str ::/:: arcs)
-			 end)
-	      | e_c (DIR (PATH { arcs, context, ... }), arcs', _) =
-		  e_ac (arcs, context, true, ":" :: arcs')
+	      | e_c (ANCHOR {name, encode, ...}, arcs, stringOp2) =
+		  let val name' = transSpecial name
+		      val strings = 
+			    (case encode bracket
+			       of SOME str1 =>
+				   if bracket
+				   then "$" :: name' :: "(=" :: str1 :: ")/" :: arcs
+				   else str1 :: "/" :: arcs
+				| NONE => 
+		                  (case stringOp2
+				     of SOME str2 =>
+					if bracket andalso str2 = name'
+					then "$/" :: arcs
+					else "$" :: str2 :: "/" :: arcs
+				      | NONE => "$" :: name' :: "/" :: arcs))
+		   in concat strings
+		  end
+	      | e_c (DIR (FILE { dir, arcs, ... }), arcs', _) =
+		  e_ac (dir, arcs, true, ":" :: arcs')
 
-	 in e_ac (#arcs pf, #context pf, false, [])
+	 in e_ac (pf_dir, pr_arcs, false, [])
 	end (* fun encode0 *)
 
 
-    (* mk_anchor : env * anchor * (string -> unit) -> ANCHOR_arg *)
-    fun mk_anchor (e: env, a, err) =
-	case SM.find (#bound e, a)
+    (* mk_anchor : env * anchor * (string -> unit) -> anchorInfo *)
+    fun mk_anchor ({bound, get_free, ...} : env, a, err) =
+	case SM.find (bound, a)
 	  of SOME (elaborate, encode) =>
 	      { name = a , look = elaborate, encode = SOME o encode }
 	   | NONE =>
-	      { name = a, look = fn () => #get_free e (a, err),
+	      { name = a, look = fn () => get_free (a, err),
 		encode = fn _ => NONE }
 
     val encode_prefile = encode0 false
@@ -222,7 +260,7 @@ in
     fun revalidateCwd () =
 	let val { name = n, pp } = !cwd_info
 	    val n' = F.getDir ()
-	    val pp' = string2pp n'
+	    val pp' = filepathToPrepath n'
 	 in if n = n'
 	    then ()
 	    else (cwd_info := { name = n', pp = pp' };
@@ -273,25 +311,27 @@ in
       | elab_dir (ROOT vol) = absElab ([], vol)
       | elab_dir (DIR p) = dirElab (elab_file p)
 
-    and elab_file (PATH { context, arcs, elab, id }) =
+    (* elab_file : file0 -> elab *)
+    and elab_file (FILE { dir, arcs, elab, id }) =
 	let val e as { pp, valid, reanchor } = !elab
-	in
-	    if valid () then e
-	    else let val e' = extendElab arcs (elab_dir context)
-		 in elab := e'; id := NONE; e'
+	 in if valid ()
+	    then e
+	    else let val e' = extendElab arcs (elab_dir dir)
+		  in elab := e'; id := NONE; e'
 		 end
 	end
 
-    fun pp2name { revarcs, vol, isAbs } =
+    (* prepathToFilepath : prepath -> string *)
+    fun prepathToFilepath { revarcs, vol, isAbs } =
 	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
 
-    fun idOf (p as PATH { id, ... }) =
+    fun idOf (p as FILE { id, ... }) =
 	let val { pp, ... } = elab_file p
 	in
 	    case !id of
 		SOME i => i
 	      | NONE => let
-		    val i = I.fileId (pp2name pp)
+		    val i = I.fileId (prepathToFilepath pp)
 		in
 		    id := SOME i; i
 		end
@@ -321,7 +361,7 @@ in
 
 	fun sync () = let
 	    val km = !known
-	    fun inval (PATH { id, ... }, _) = id := NONE
+	    fun inval (FILE { id, ... }, _) = id := NONE
 	    fun reinsert (k, v, m) = F0M.insert (m, k, v)
 	in
 	    F0M.appi inval km;
@@ -334,15 +374,15 @@ in
 
     fun cwd () = (revalidateCwd (); CWD (!cwd_info))
 
-    val osstring = I.canonical o pp2name o #pp o elab_file o unintern
+    val osstring = I.canonical o prepathToFilepath o #pp o elab_file o unintern
 
     fun osstring_prefile { context, arcs, err } =
-	I.canonical (pp2name (#pp (extendElab arcs (elab_dir context))))
+	I.canonical (prepathToFilepath (#pp (extendElab arcs (elab_dir context))))
 
     val descr = encode0 true o pre
 
     fun osstring_dir d =
-	case pp2name (#pp (elab_dir d)) of
+	case prepathToFilepath (#pp (elab_dir d)) of
 	    "" => P.currentArc
 	  | s => I.canonical s
 
@@ -378,7 +418,7 @@ in
 	fun get_free (a, err) =
 	    case fetch a of
 		(SOME pp, validity) =>
-		  let fun reanchor cvt = SOME (string2pp (cvt a))
+		  let fun reanchor cvt = SOME (filepathToPrepath (cvt a))
 		  in { pp = pp, valid = fn () => !validity,
 		       reanchor = reanchor }
 		end
@@ -406,11 +446,11 @@ in
     end
 
     fun get_anchor (e: env, a) =
-	if #is_set e a then SOME (pp2name (#pp (#get_free e (a, fn _ => ()))))
+	if #is_set e a then SOME (prepathToFilepath (#pp (#get_free e (a, fn _ => ()))))
 	else NONE
 
     fun set0 mkAbsolute (e: env, a, so) = let
-	fun name2pp s = string2pp (if P.isAbsolute s then s else mkAbsolute s)
+	fun name2pp s = filepathToPrepath (if P.isAbsolute s then s else mkAbsolute s)
     in
 	#set_free e (a, Option.map name2pp so)
     end
@@ -519,15 +559,17 @@ in
 	  bound = foldl b (#bound env) l }
     end
 
-    fun file0 ({ context, arcs, err }: prefile) =
-	PATH { context = context, elab = ref bogus_elab, id = ref NONE,
+    (* file0 : prefile -> file0 *)
+    fun file0 ({ dir, arcs, err }: prefile) =
+	FILE { dir = dir, elab = ref bogus_elab, id = ref NONE,
 	       arcs = (case arcs of
 			   [] => (err (concat
 				  ["path needs at least one arc relative to `",
-				   pp2name (#pp (elab_dir context)), "'"]);
+				   prepathToFilepath (#pp (elab_dir context)), "'"]);
 				  ["<bogus>"])
 			 | _ => arcs) }
 
+	     
     val file = intern o file0
 
     fun prefile (c, l, e) = { context = c, arcs = l, err = e }
@@ -556,7 +598,7 @@ in
 	{ context = context, arcs = arcs @ morearcs, err = err }
 
     fun osstring_reanchored cvt f =
-	Option.map (I.canonical o pp2name)
+	Option.map (I.canonical o prepathToFilepath)
 		   (#reanchor (elab_file (unintern f)) cvt)
 
     fun osstring_prefile_relative (p as { arcs, context, ... }) =
