@@ -13,7 +13,6 @@
 
 Library
 
-  signature SRCPATH
   structure SrcPath
   structure SrcPathMap
   structure SrcPathSet
@@ -27,5 +26,6 @@ is
   srcpathset.sml
   tstamp.sml
 
+  ../util/sources.cm
   $smlnj/basis/basis.cm
   $smlnj/smlnj-lib/smlnj-lib.cm
