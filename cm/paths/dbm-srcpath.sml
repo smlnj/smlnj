@@ -67,7 +67,7 @@ in
      *)
     type anchorInfo =
          {name: anchor,  (* i.e. string *)
-	  elab: elab option ref,  (* replacement for:  look: unit -> elab, *)
+	  elab: elab,  (* replacement for:  look: unit -> elab, *)
 	  encode : bool -> string option}  (* possibly an alternate name, or abbreviation? *)
 
     (* dir: supposed to denote file system directories? *)
