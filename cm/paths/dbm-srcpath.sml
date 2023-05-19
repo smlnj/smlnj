@@ -62,13 +62,14 @@ in
 		  reanchor: (anchor -> string) -> prepath option }  (* ??? *)
 
     (* anchorInfo: information associated with an ANCHOR dir (directory).
-     * What does look do?  We try using elab option ref instead.
+     * What does look do?  We try using a simple elab field instead (looking at how the 
+     * mk_anchor function behaves).
      * What does encode do?  What is its bool argument for? A non-trivial example?
      *)
     type anchorInfo =
          {name: anchor,  (* i.e. string *)
 	  elab: elab,  (* replacement for:  look: unit -> elab, *)
-	  encode : bool -> string option}  (* possibly an alternate name, or abbreviation? *)
+	  encode : bool -> string option}  (* anchor expansion? replacing an anchor with a filepath? *)
 
     (* dir: supposed to denote file system directories? *)
     datatype dir
@@ -241,13 +242,15 @@ in
 
 
     (* encodePrefile : [bracket:]bool -> prefile -> string *)
-    (* encodePrefile appears to translate a prefile into a string using filepath notation enhanced
-     * somehow with the anchor notation, and if bracket is true, sometimes an "expansion" of an
-     * anchor is included? e.g. foo(=bar) when the encode component of n ANCHOR returns
-     * SOME "bar". If bracket is true, enables the "$/" abbreviation when first arc matches the
+    (* encodePrefile appears to translate a prefile into a string that uses filepath notation
+     * conditionally enhanced with some special anchor notations, controlled by the bracket argument.
+     * If bracket is true, sometimes an "expansion" of an anchor is included? e.g. "foo(=bar)" can
+     * be produced when the encode component of an ANCHOR dir returns SOME "bar".
+     * Also, if bracket is true, the "$/" abbreviation is used when the first arc matches the
      * anchor name.
-     * The internal function names, e_ac and e_c, are not informative and need
-     * to be changed. *)
+     * Arc strings are "canonicalized" by applying transArc, which replaces "special" characters
+     * in the arc string with their escape codes (of the form "\ddd").
+     * The internal function names, e_ac and e_c, are not informative and could be improved. *)
     fun encodePrefile (bracket: bool) ({dir = prefile_dir, arcs = prefile_arcs}: prefile) =
 	let 
 	    (* e_ac : dir * string list * bool * string list -> string *)
@@ -309,7 +312,7 @@ in
 		encode = (fn bracket => SOME (encodePrefile b prefile))}
 	   | NONE =>
 	      { name = anchor,
-		elab = get anchor,  (* get anchor could fail *)
+		elab = get anchor,  (* get anchor could fail! *)
 		encode = fn _ => NONE }
 
     (* encodePrefilePlain : prefile -> string *)
@@ -590,11 +593,11 @@ in
 
     (* bind : env -> {anchor: anchor, pf: prefile} list -> env *)
     (* redefines only the "bound" field of the env, i.e. produces a new env record
-     * with (only) the bound field modified
-     * (Possibly?) called only in main/general-params.sml *)
+     * with (only) the bound field modified.  Anchors are bound to corresponding 
+     * prefiles, with these bindings being added to the existing "bound" mapping.
+     * (Perhaps?) called only in main/general-params.sml *)
     fun bind ({get, defined, set, reset, defined, bound}: env) l =
-	let fun folder ({ anchor, value = pf }, m) =
-	        SM.insert (m, anchor, pf)
+	let fun folder ({ anchor, value = pf }, m) = SM.insert (m, anchor, pf)
 	 in { get = get, set = set, reset = reset, defined = defined,
 	      bound = foldl folder bound l }
 	end
