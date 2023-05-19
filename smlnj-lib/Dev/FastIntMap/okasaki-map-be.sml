@@ -1,40 +1,72 @@
-(* okasaki-le.sml
+(* okasaki-be.sml
  *
  * COPYRIGHT (c) 2023 John Reppy (http://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
- * This is the "little-endian" Patricia-tree implementation
+ * This is the "big-endian" Patricia-tree implementation
  * from the "Fast Mergeable Integer Maps" paper by Chris Okasaki
  * and Andrew Gill.
  *)
 
-structure OkasakiLittle :> INT_MAP =
+structure OkasakiMapBig :> INT_MAP =
   struct
 
     datatype 'a tree
+        (** The empty tree; this constructor never appears in a non-empty tree *)
       = Empty
+        (** `Lf(key, v)` is a leaf of the tree, where the key maps to the value v. *)
       | Lf of word * 'a
+        (** `Br(prefix, mask, t0, t1)` is a branching node of the tree, where
+         ** `mask` is a power of 2 (i.e., `mask = (1 << n)`), `prefix` is the
+         ** high-order bits of the keys in the subtree rooted at this node,
+         ** and `t0` is the non-empty tree containing keys where the nth bit
+         ** is 0 and t1 is non-empty tree containing keys where the nth bit
+         ** is 1.
+         **)
       | Br of word * word * 'a tree * 'a tree
 
     (* Utility functions *)
-    fun mask (k, m) = Word.andb(k, m-0w1)
+
+    (* given the key `k` and mask bit `m = (1 << n)`, this `mask(k, m)` clears
+     * returns a word w that has the same bits as k above the n'th bit, the n'th
+     * bit set to zero, and the bits below the n'th bit set to one.
+     *)
+    fun mask (k, m) = Word.andb(Word.orb(k, m-0w1), Word.notb m)
+
     fun matchPrefix (k, p, m) = (mask (k, m) = p)
+
     fun zeroBit (k, m) = (Word.andb(k, m) = 0w0)
 
-    (* return the k = (1 << i), where bit i of w is set, but bits
-     * 0..i-1 are zero.
+    (* given a word `w`, returns a number `m = (1 << n)`, such that `m & w = m`
+     * and no higher bit in `w` is set.
      *)
-    fun leastBit w = Word.andb(w, Word.~ w)
+    fun highestBit w = let
+          (* each step doubles the number of high bits set;
+           * e.g., 0b1000 ==> 0b1100 ==> 0b1111.
+           *)
+          val w = Word.orb(w, Word.>>(w, 0w1))
+          val w = Word.orb(w, Word.>>(w, 0w2))
+          val w = Word.orb(w, Word.>>(w, 0w4))
+          val w = Word.orb(w, Word.>>(w, 0w8))
+          val w = Word.orb(w, Word.>>(w, 0w16))
+          val w = Word.orb(w, Word.>>(w, 0w32))
+          in
+            (* `w` is all ones from the highest bit down, so we mask out
+             * the low bits by a shift and xor.
+             *)
+            Word.xorb(w, Word.>>(w, 0w1))
+          end
 
     (* return the "branching bit" for two prefixes; this is a number
-     * k = (1 << i), where i is the least bit where the two prefixes
+     * k = (1 << i), where i is the highest bit where the two prefixes
      * disagree.
      *)
-    fun branchingBit (p0, p1) = leastBit (Word.xorb(p0, p1))
+    fun branchingBit (p0, p1) = highestBit (Word.xorb(p0, p1))
 
     fun join (p0, t0, p1, t1) = let
           val m = branchingBit (p0, p1)
           in
+(* QUESTION: can we replace this test with a comparison? *)
             if zeroBit(p0, m)
               then Br(mask(p0, m), m, t0, t1)
               else Br(mask(p0, m), m, t1, t0)
@@ -52,10 +84,7 @@ structure OkasakiLittle :> INT_MAP =
     fun find (MAP(_, t), key) = let
           fun find' Empty = NONE
             | find' (Lf(k, x)) = if (key = k) then SOME x else NONE
-            | find' (Br(p, m, t0, t1)) =
-                if not(matchPrefix(key, p, m)) then NONE
-                else if zeroBit(key, m) then find' t0
-                  else find' t1
+            | find' (Br(p, m, t0, t1)) = if (key <= p) then find' t0 else find' t1
           in
             find' t
           end
@@ -127,6 +156,29 @@ structure OkasakiLittle :> INT_MAP =
           val t' = union (t0, t1)
           in
             MAP(n0 + n1 - !n, t')
+          end
+
+    fun dump fmt (outS, MAP(_, Empty)) = TextIO.output(outS, "Empty\n")
+      | dump fmt (outS, MAP(n, t)) = let
+          fun bits2s w = StringCvt.padLeft #"0" 20 (Word.fmt StringCvt.BIN w)
+          fun pr s = TextIO.output(outS, s)
+          fun prl s = TextIO.output(outS, String.concat s)
+          fun indent 0 = ()
+            | indent 1 = pr "+->"
+            | indent n = (pr "|  "; indent(n-1))
+          fun prNd (i, nd) = (
+                indent i;
+                case nd
+                 of Empty => raise Fail "impossible"
+                  | Lf(key, v) => prl["Lf(", bits2s key, ") => ", fmt v, "\n"]
+                  | Br(p, m, t0, t1) => (
+                      prl["Br(", bits2s p, ",", bits2s m, "):\n"];
+                      prNd(i+1, t0);
+                      prNd(i+1, t1))
+                (* end case *))
+          in
+            prl [Word.fmt StringCvt.DEC n, " items:\n"];
+            prNd (0, t)
           end
 
   end

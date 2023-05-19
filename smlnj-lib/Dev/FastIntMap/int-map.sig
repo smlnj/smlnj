@@ -18,4 +18,7 @@ signature INT_MAP =
     val listItems : 'a t -> 'a list
     val unionWith : ('a * 'a -> 'a) -> 'a t * 'a t -> 'a t
 
+    (* for debugging *)
+    val dump : ('a -> string) -> TextIO.outstream * 'a t -> unit
+
    end

@@ -1,0 +1,21 @@
+(* int-map.cm
+ *
+ * COPYRIGHT (c) 2023 John Reppy (http://cs.uchicago.edu/~jhr)
+ * All rights reserved.
+ *)
+
+Library
+
+  signature INT_MAP
+
+  structure OkasakiMapBig
+  structure OkasakiMapLittle
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  int-map.sig
+  okasaki-map-le.sml
+  okasaki-map-be.sml
