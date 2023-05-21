@@ -32,13 +32,20 @@ functor FilenamePolicyFn (val cmdir : string
 			  val versiondir: Version.t -> string
 			  val skeldir : string
 			  val guiddir : string
-			  val indexdir : string) :> FILENAMEPOLICY = struct
+			  val indexdir : string) :> FILENAMEPOLICY =
+struct
 
-    type policy = { bin: SrcPath.file -> string,
-		    skel: SrcPath.file -> string,
-		    guid: SrcPath.file -> string,
-		    stable: SrcPath.file * Version.t option -> string,
-		    index: SrcPath.file -> string }
+local
+
+  structure SP = SrcPath
+
+in		       
+
+    type policy = { bin: SP.file -> string,
+		    skel: SP.file -> string,
+		    guid: SP.file -> string,
+		    stable: SP.file * Version.t option -> string,
+		    index: SP.file -> string }
 
     type policyMaker = { arch: string, os: SMLofNJ.SysInfo.os_kind } -> policy
 
@@ -68,31 +75,30 @@ functor FilenamePolicyFn (val cmdir : string
 			 if exists then try else stable0 s
 		     end)
     in
-	{ skel = cmname [skeldir] o SrcPath.osstring,
-	  guid = cmname [guiddir] o SrcPath.osstring,
+	{ skel = cmname [skeldir] o SP.osstring,
+	  guid = cmname [guiddir] o SP.osstring,
 	  bin = cmname [archos] o shiftbin,
 	  stable = stable,
-	  index = cmname [indexdir] o SrcPath.osstring }
+	  index = cmname [indexdir] o SP.osstring }
     end
 
     fun ungeneric g { arch, os } = g { arch = arch, os = kind2name os }
 
     val colocate_generic =
-	mkPolicy (SrcPath.osstring, SrcPath.osstring, false)
+	mkPolicy (SP.osstring, SP.osstring, false)
 
-    fun separate_generic { bindir, bootdir } = let
-	fun shiftname root p = let
-	    fun anchor a = OS.Path.concat (root, a)
-	in
-	    case SrcPath.osstring_reanchored anchor p of
-		SOME s => s
-	      | NONE => (Say.say ["Failure: ", SrcPath.descr p,
-				  " is not an anchored path!\n"];
-			 raise Fail "bad path")
+    (* separate_generic : {bindir: string, bootdir: string} -> policy *)
+    fun separate_generic { bindir: string, bootdir: string } =
+	let fun shiftname (root: string) (p: SP.file) =
+		let fun anchor_cvt (a: string) = OS.Path.concat (root, a)
+		 in case SP.osstring_reanchored anchor_cvt p
+		      of SOME s => s
+		       | NONE => (Say.say ["Failure: ", SP.descr p,
+					   " is not an anchored path!\n"];
+				  raise Fail "bad path")
+		end
+	 in mkPolicy (shiftname bindir, shiftname bootdir, true)
 	end
-    in
-	mkPolicy (shiftname bindir, shiftname bootdir, true)
-    end
 
     val colocate = ungeneric colocate_generic
     val separate = ungeneric o separate_generic
@@ -104,7 +110,9 @@ functor FilenamePolicyFn (val cmdir : string
     fun mkIndexName (p: policy) s = #index p s
 
     val cm_dir_arc = cmdir
-end
+
+end (* top local *)
+end (* functor FilenamePolicyFn *)
 
 structure FilenamePolicy =
     FilenamePolicyFn (val cmdir = Option.getOpt

@@ -5,32 +5,19 @@ sig
 
     exception Format
 
-    (* When faced with an undefined anchor, pressing on does not
-     * make much sense. Therefore, we raise an exception in this
-     * case after reporting the error. *)
-    exception BadAnchor
+    type anchor = string
+    type filepath = string
 
     type file
     type dir
     type env
-    type anchor = string
     type prefile
-
-    type rebindings = { anchor: anchor, value: prefile } list
-
-    type ord_key = file
-
-    (* path comparison *)
-    val compare : file * file -> order
 
     (* re-establish stability of ordering *)
     val sync : unit -> unit
 
     (* forget all known path names *)
     val clear : unit -> unit
-
-    (* re-validate current working directory *)
-    val revalidateCwd : unit -> unit
 
     (* register a "client" module that wishes to be notified when
      * the CWD changes *)
@@ -50,20 +37,15 @@ sig
 
     (* process a specification file; must sync afterwards!
      * The function argument is used for issuing warnings. *)
-    val processSpecFile :
-	{ env : env, specfile : string, say : string list -> unit }
-	-> TextIO.instream -> unit
+    val processSpecFile : env * filepath -> TextIO.instream -> unit
 
     (* non-destructive bindings for anchors (for anchor scoping) *)
-    val bind: env -> rebindings -> env
+    val bind: env -> (anchor * prefile) list -> env
 
     (* make abstract paths *)
-    val raw : { err: string -> unit } ->
-              { context: dir, spec: string } -> prefile
-    val native : { err: string -> unit, env: env } ->
-		 { context: dir, spec: string } -> prefile
-    val standard : { err: string -> unit, env: env } ->
-		   { context: dir, spec: string } -> prefile
+    val raw : dir * filepath -> prefile
+    val native : env -> dir * filepath -> prefile
+    val standard : env -> dir * filepath -> prefile
 
     (* augment a prefile (naming a directory) with a list of arcs... *)
     val extend : prefile -> string list -> prefile
@@ -72,35 +54,35 @@ sig
     val file : prefile -> file
 
     (* To be able to pickle a file, turn it into a prefile first... *)
-    val pre : file -> prefile
+    val fileToPrefile : file -> prefile
 
     (* directory paths (contexts) *)
     val cwd : unit -> dir
-    val dir : file -> dir
+    val fileToDir : file -> dir
 
     (* get info out of abstract paths *)
     val osstring : file -> string
     val osstring' : file -> string	(* use relative path if shorter *)
 
     (* expand root anchors using given function *)
-    val osstring_reanchored : (anchor -> string) -> file -> string option
+    val osstring_reanchored : (anchor -> string) -> file -> filepath option
 
     (* get path relative to the file's context; this will produce an
      * absolute path if the original spec was not relative (i.e., if
      * it was anchored or absolute) *)
-    val osstring_relative : file -> string
-
-    (* same for prefile *)
-    val osstring_prefile_relative : prefile -> string
-
-    (* get name of dir *)
-    val osstring_dir : dir -> string
+    val osstring_relative : file -> filepath
 
     (* get name of prefile *)
     val osstring_prefile : prefile -> string
 
+    (* same for prefile *)
+    val osstring_prefile_relative : prefile -> filepath
+
+    (* get name of dir *)
+    val osstring_dir : dir -> string
+
     (* get a human-readable (well, sort of) description *)
-    val descr : file -> string
+    val fileToFilepath : file -> string
 
     (* get a time stamp *)
     val tstamp : file -> TStamp.t
@@ -113,7 +95,7 @@ sig
      * (i.e., not anchored and not relative) *)
     val encodingIsAbsolute : string -> bool
 
-    val pickle : { warn: bool * string -> unit } ->
+    val pickle : (bool * string -> unit) ->
 		 { file: prefile, relativeTo: file } -> string list list
 
     val unpickle : env ->
