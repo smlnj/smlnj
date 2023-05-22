@@ -61,11 +61,8 @@ sig
     val fileToDir : file -> dir
 
     (* get info out of abstract paths *)
-    val osstring : file -> string
-    val osstring' : file -> string	(* use relative path if shorter *)
-
-    (* expand root anchors using given function *)
-    val osstring_reanchored : (anchor -> string) -> file -> filepath option
+    val osstring : file -> filepath
+    val osstring' : file -> filepath	(* use relative path if shorter *)
 
     (* get path relative to the file's context; this will produce an
      * absolute path if the original spec was not relative (i.e., if
@@ -81,6 +78,9 @@ sig
     (* get name of dir *)
     val osstring_dir : dir -> string
 
+    (* expand root anchors using given function *)
+    val osstring_reanchored : (anchor -> string) -> file -> filepath option
+
     (* get a human-readable (well, sort of) description *)
     val fileToFilepath : file -> string
 
@@ -88,15 +88,15 @@ sig
     val tstamp : file -> TStamp.t
 
     (* portable encodings that avoid whitespace *)
-    val encode : file -> string
-    val decode : env -> string -> file
+    val encodeFile : file -> filepath
+    val decodeFilepath : env -> filepath -> file
 
     (* check whether encoding (result of "encode") is absolute
-     * (i.e., not anchored and not relative) *)
-    val encodingIsAbsolute : string -> bool
+     * (i.e., not anchored, nor relative) *)
+    val absoluteFilepath : filepath -> bool
 
     val pickle : (bool * string -> unit) ->
-		 { file: prefile, relativeTo: file } -> string list list
+		 { prefile: prefile, relativeTo: file } -> string list list
 
     val unpickle : env ->
 		   { pickled: string list list, relativeTo: file } -> prefile
