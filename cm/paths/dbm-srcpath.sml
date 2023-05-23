@@ -74,6 +74,7 @@ in
      *   that none of the functions returning elabs (e.g. elabDir, elabFileInfo, elabFile) are
          exported. And its name is not known to, or relevant to, the rest of CM.
      *)
+
     type elab = { pp: prepath,      (* the "location" of the file, as a prepath *)
 		  reanchor: reanchor option }
 
@@ -84,7 +85,9 @@ in
      * Encode produces a corresponding filepath, with "annotations" if the boolean argument is true. *)
     type anchorInfo =
          {name: anchor,  (* i.e. string *)
-	  elab: elab,    (* replaces:  look: unit -> elab, -- Do we need to thunkify it? *)
+	  pp : prepath,
+	  reanchor : reanchor,
+(*	  elab: elab,    (* replaces:  look: unit -> elab, -- Do we need to thunkify it? *) *)
 	  encode : bool -> string option}
              (* encode maps the anchor to an (optionally "anchor-annotated") filepath *)
 
@@ -382,6 +385,19 @@ in
 	    elab  
 	end
 
+    (* dirToPrepath : dir -> prepath *)
+    fun dirToPrepath CWD =
+	  let val cwd_filepath = cwd ()     (* use cwd to get the CWD filepath *)
+	   in filepathToPrepath cwd_filepath  (* derive a prepath from it *)
+	  end
+      | dirToPrepath (ANCHOR { prepath, ... }) = prepath
+      | dirToPrepath (ROOT vol) = rootPrepath vol
+      | dirToPrepath (DIR fi) = parentPrepath (fileInfoToPrepath fi) (* why parent??? *)
+
+    (* fileInfoToPrepath : fileInfo -> prepath *)
+    and fileInfoToPrepath ({ dir, arcs, id }: fileInfo) =
+	extendPrepath arcs (dirToPrepath dir)  
+
     (* prefileToElab : prefile -> elab *)
     fun prefileToElab ({dir, arcs} : prefile) = 
 	extendElab arcs (dirToElab dir)
@@ -394,11 +410,15 @@ in
 	case SM.find (bound, anchor)
 	  of SOME prefile =>  (* anchor is in the domain of the bound map *)
 	      { name = anchor,
-		elab = prefileToElab prefile, (* create the elab for the anchor from the prefile *)
+		prepath = prefileToPrepath prefile, (* prefileToPrepath ? *)
+		reanchor = Anchor anchor
+(* elab = prefileToElab prefile, (* create the elab for the anchor from the prefile *) *)
 		encode = (fn show_anchors => SOME (encodePrefile show_anchors prefile))}
 	   | NONE => (* anchor is not in the domain of bound; try get to define the elab *)
 	      { name = anchor,
-		elab = get anchor,  (* get will fail if not (defined anchor) *)
+(*		elab = get anchor, *)
+		prepath = get anchor,  (* get will fail if not (defined anchor) *)
+		reanchor = Anchor anchor,
 		encode = fn _ => NONE }
 
     (* prepathToFilepath : prepath -> string *)
@@ -511,7 +531,7 @@ in
 	     * an anchor that is known to be defined. *)
 	    fun get anchor =
 		case find anchor
-		  of SOME pp => { pp = pp, reanchor = Anchor anchor}
+		  of SOME pp => pp
 		   | NONE => impossible ["get -- undefined anchor: $", anchor]
 
 	    (* set : anchor * prepath option -> unit *) 
@@ -519,16 +539,16 @@ in
              * If prepathOp is NONE, unbinds anchor in !anchorMapRef. *)
 	    fun set (anchor, prepathOp) =
 		case find anchor
-		  of SOME pp =>
+		  of SOME _ =>
 		       anchorMapRef :=
 		         (case prepathOp
-		            of SOME pp => SM.insert (!anchorMapRef, anchor, pp)
-			     | NONE => #1 (SM.remove (!anchorMapRef, anchor))))
-		               (* this won't raise NotFound because find returned SOME *)
+		            of SOME pp => SM.insert (!anchorMapRef, anchor, pp) (* rebind *)
+			     | NONE => #1 (SM.remove (!anchorMapRef, anchor)))) (* remove *)
+		               (* this can't raise NotFound because find returned SOME *)
 		   | NONE =>
 		       (case prepathOp
-			  of SOME pp => anchorMapRef := SM.insert (!anchorMapRef, anchor, pp))
-			   | NONE => ())
+			  of SOME pp => anchorMapRef := SM.insert (!anchorMapRef, anchor, pp)) (* bind *)
+			   | NONE => ()) (* do nothing *)
 		    
 	    (* reset : unit -> unit *)
 	    (* set validity flags of all entries in !anchorMapRef to false and assign SM.empty
@@ -536,7 +556,7 @@ in
 	     * previously created elabs, and so remain relevant. *)
 	    fun reset () = anchorMapRef := SM.empty  (* reset anchorMapRef to the empty map *)
 
-	    val bound : prefile SM.map = SM.empthy
+	    val bound : prefile SM.map = SM.empthy (* this gets bindings from bind function *)
 
 	 in { get = get, set = set, defined = defined, reset = reset, bound = bound }
 	end
@@ -1099,6 +1119,7 @@ dirPP		parentPrepath
 dirElab		parentElab
 extend		extendPrefile
 pre		fileToPrefile
+idOf		getFileId
 
 null_pp		.  -- removed, only used once and replaced with its defn
 revalidateCwd	.  -- removed, functionality merged into fun cwd
