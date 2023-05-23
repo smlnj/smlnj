@@ -42,8 +42,8 @@ sig
     (* non-destructive bindings for anchors (for anchor scoping) *)
     val bind: env -> (anchor * prefile) list -> env
 
-    (* make abstract paths *)
-    val raw : dir * filepath -> prefile
+    (* make abstract paths (prefiles) *)
+    val mkPrefile : dir * filepath -> prefile
     val native : env -> dir * filepath -> prefile
     val standard : env -> dir * filepath -> prefile
 
