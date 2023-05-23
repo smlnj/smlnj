@@ -139,14 +139,6 @@ in
     fun compare (f1: file, f2: file) = Int.compare (#2 f1, #2 f2)
 *)
 
-    (* env: a kind of "object-like", stateful environment? *)
-    type env =
-	 { get: anchor -> elab,
-	   set: anchor * prepath option -> unit,
-	   defined: anchor -> bool,
-	   reset: unit -> unit,
-	   bound: prefile SM.map }
-
     val null_pp : prepath = 
 
     val bogus_elab : elab =
@@ -212,11 +204,8 @@ in
 	end
 
 
-    (* unintern : file -> fileInfo *)
-    (* returns the fileInfo component (#1) of a file *)
-    fun unintern (f: file) : fileInfo = #1 f
-
     (* fileInfoToPrefile [pre0] : fileInfo -> prefile *)
+    (* this is just a projection of the dir and arcs fields to obtain a prefile *)
     fun fileInfoToPrefile ({ dir, arcs, ... }: fileInfo) : prefile =
 	{ dir = dir, arcs = arcs }
 
@@ -224,8 +213,10 @@ in
     fun fileToPrefile (f: file) = fileInfoToPrefile (unintern f)
 
 
-    (* translating "special characters" to \ddd codes *)
+   (* *********************************************************************************** *)
+   (* encoding prefiles as (possibly anchor annotated) filepath strings *)
 
+    (* translating "special characters" to \ddd codes *)
     (* specialChar : char -> bool *)
     (* identifies "special" characters (nonprinting characters or members of the string
      * "/:\\$%()") that should be translated to "\ddd" codes *)
@@ -238,7 +229,7 @@ in
     (* specialToCode : char -> string *)					 
     fun specialToCode c = if specialChar c then charToCode c else String.str c
 							       
-    (* stringToCodes : string -> string [was ta] *)
+    (* transSpecial : string -> string [was ta] *)
     (* translate only special characters in the string to their \ddd codes.
      * Thus the result string does not contain any of the special characters. *)
     val transSpecial = String.translate specialToCode
@@ -332,6 +323,23 @@ in
     val encodeFile = (encodePrefile false) o fileToPrefile
 
 
+   (* *********************************************************************************** *)
+   (* translating between representations *)
+
+    (* unintern : file -> fileInfo *)
+    (* returns the fileInfo component (#1) of a file *)
+    fun unintern (f: file) : fileInfo = #1 f
+
+    (* fileToFilepath [desc] : file -> string *)
+    val fileToFilepath = encodePrefile true o fileToPrefile
+
+    (* fileToDir : file -> dir *)
+    fun fileToDir (f: file) = DIR (unintern f)
+
+
+   (* *********************************************************************************** *)
+   (* elab and prepath functions: stuff related to "reanchor" *)
+
     (* parentPrepath [dirPP] : prepath -> prepath *)
     (* returns the prepath of the parent directory *)
     fun parentPrepath ({ revarcs = _ :: revarcs, vol, isAbs }: prepath) : prepath =
@@ -398,7 +406,8 @@ in
 	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
 
 
-   (* interning files: getting file_ids and and generating stableids *********************** *)
+   (* *********************************************************************************** *)
+   (* interning files: getting file_ids and and generating stableids *)
 
     (* getFileId [idOf] : fileInfo -> FI.id *)
     (* returns the fileId associated with the file, defining it if necessary *)
@@ -421,7 +430,7 @@ in
                      val compare = compareFileInfo)
 
     local
-	(* known: a finite mapping from fileInfo
+	(* known: a finite mapping from fileInfo to stableid *)
 	val known : int FileInfoMap.map ref = ref FileInfoMap.empty
 	val next = ref 0
     in
@@ -458,11 +467,19 @@ in
 	    end
     end
 
-    (* fileToDir : file -> dir *)
-    fun fileToDir (f: file) = DIR (unintern f)
 
-    (* fileToFilepath [desc] : file -> string *)
-    val fileToFilepath = encodePrefile true o fileToPrefile
+    (* *********************************************************************************** *)
+    (* environments: env objects, "bound" functional environments *)
+
+    (* the "state" of an env object implements a stateful mapping from anchors to "elabs" *)
+
+    (* env: a kind of "object-like", stateful environment? *)
+    type env =
+	 { get: anchor -> elab,
+	   set: anchor * prepath option -> unit,
+	   defined: anchor -> bool,
+	   reset: unit -> unit,
+	   bound: prefile SM.map }
 
     (* newEnv : unit -> env *)
     (* creates a new anchor environment "object"
@@ -494,9 +511,7 @@ in
 	     * an anchor that is known to be defined. *)
 	    fun get anchor =
 		case find anchor
-		  of SOME pp =>
-		       { pp = pp,
-			 reanchor = (fn cvt => SOME (filepathToPrepath (cvt anchor))) }
+		  of SOME pp => { pp = pp, reanchor = Anchor anchor}
 		   | NONE => impossible ["get -- undefined anchor: $", anchor]
 
 	    (* set : anchor * prepath option -> unit *) 
@@ -509,7 +524,7 @@ in
 		         (case prepathOp
 		            of SOME pp => SM.insert (!anchorMapRef, anchor, pp)
 			     | NONE => #1 (SM.remove (!anchorMapRef, anchor))))
-		               (* this won't raise NotFound because SM.find returned SOME *)
+		               (* this won't raise NotFound because find returned SOME *)
 		   | NONE =>
 		       (case prepathOp
 			  of SOME pp => anchorMapRef := SM.insert (!anchorMapRef, anchor, pp))
@@ -651,8 +666,8 @@ in
     fun prefileToFileInfo ({ dir, arcs }: prefile) : fileInfo =
 	{ dir = dir,
 	  arcs = (case arcs
-		    of nil => (error ["path needs at least one arc relative to `",
-				      prepathToFilepath (#pp (dirToElab context)), "'"];
+		    of nil => (error ["prefile needs at least one arc relative to `",
+				      prepathToFilepath (#pp (dirToElab dir)), "'"];
 			       ["<bogus>"])   (* DBM: Is a fileInfo with no arcs bogus? *)
 		     | _ => arcs),
 	  elab = ref bogus_elab, (* why bogus? why not create an "elab" here? *)
@@ -662,6 +677,8 @@ in
     val prefileToFile = intern o prefileToFileInfo
 
     (* raw : dir * filepath -> prefile *)
+    (* it is assumed that the filepath is either absolute (hence unrelated to dir) or
+     * relative to dir *)
     fun raw (dir, filepath) =
         let val {arcs, vol, isAbs} = P.fromString filepath
 	    val dir = if isAbs then ROOT vol else dir
