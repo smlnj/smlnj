@@ -8,15 +8,13 @@ sig
     type anchor = string
     type filepath = string
 
-    type prepath
     type prefile
     type file
     type dir
 
-    type prepathEnv  (* anchor --> prepath, stateful *)
-    type prefileEnv  (* anchor --> prefile, functional *)
+    type env
 
-    (*  "re-establish stability of ordering", DBM: ??? *)
+    (* re-establish stability of ordering DBM: ??? *)
     val sync : unit -> unit
 
     (* forget all known path names *)
@@ -30,19 +28,19 @@ sig
      * "next validation" ? *)
     val scheduleNotification : unit -> unit
 
-    (* new "empty" prepathEnv *)
-    val newEnv : unit -> prepathEnv
+    (* new "empty" env *)
+    val newEnv : unit -> env
 
     (* destructive updates to anchor settings (for configuration) *)
-    val set_anchor : prepathEnv * anchor * string option -> unit (* native syntax! *)
-    val get_anchor : prepathEnv * anchor -> string option
-    val reset_anchors : prepathEnv -> unit
+    val set_anchor : env * anchor * string option -> unit (* native syntax! *)
+    val get_anchor : env * anchor -> string option
+    val reset_anchors : env -> unit
 
     (* process a specification file; must sync afterwards! *)
     val processSpecFile : env * filepath -> TextIO.instream -> unit
 
     (* non-destructive bindings for anchors (for anchor scoping) *)
-    val bind: prefileEnv -> (anchor * prefile) list -> prefileEnv
+    val bind: env -> (anchor * prefile) list -> env
 
     (* make abstract paths (prefiles) *)
     val mkPrefile : dir * filepath -> prefile
