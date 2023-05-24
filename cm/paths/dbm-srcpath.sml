@@ -26,7 +26,7 @@ in
     exception Format
      (* This is raised only in the exported function unpickle.
         Why not use the existing UnpickleUtil.Format exception, as is done in other places
-	like stable/stabilize.sml dnd smlfile/skel-io.sml? 
+	like stable/stabilize.sml dnd smlfile/skel-io.sml?
         [This would require importing "$pickl-lib.cm" in srcpath-lib.cm, as is done in
         cm-lib.cm.]
 	There is one specific "handle SrcPath.Format, occuring in the file stable/stabilize.sml
@@ -48,45 +48,53 @@ in
     type prepath = { revarcs: string list, vol: string, isAbs: bool }
 
     (* reanchor: info that can be used reconstruct a path relative to an anchor given a
-       new "anchor point" (filepath) for that anchor *)
+     * new "anchor point" (filepath) for that anchor. It is a sort of "delta" between
+     * some given filepath/prepath and the anchor that that path is relative to. If a prepath
+     * is not relative to an anchor, then there is no reanchor for that prepath.*)
     datatype reanchor
       = Anchor of anchor
       | Parent of reanchor  (* this is only used in one place to deal with dirs ???? *)
       | Extend of string list (*arcs*) * reanchor
 
-    (* DBM: What is an elab?  -- looks like a sort of "object"
-     *   -- an "elaborated" file, internal or "semantic" representation of a file
-     * What is its purpose?
-     * What is the type name "elab" supposed to suggest? What would be a better
-     *   name for the elab type?
-     * What does the valid function do?
-     *   -- confirms that the prepath still specifies a correct path for this file?
-     * When is an elab valid? Is its validity dependent on the state of the file system?
-     *   -- if a file is renamed its "elab" may have an out-of-date prepath?
-     *      or the elab itself may be "invalid" if its file has been deleted?
-     * What could change the validity of an elab?
-     *   -- renaming (moving) the file, or deleting the file? Or otherwise "invalidating"
-     *      the file's prepath (its internal idea of its location).
-     * Would "valid : bool ref" serve instead of making the valid field a function?
-     * !! Don't think that the valid function does anything essential! Hence dropped it.
-     * What does the reanchor function do? What should be passed as its argument?
-     * What is an example of a "non-trivial" reanchor function, and where is such a function
-     *   defined? E.g. an example of a reanchor function that does not return NONE?
-     * NOTE: elab is not exported, so it is only used internally in SrcPath. This also means
-     *   that none of the functions returning elabs (e.g. elabDir, elabFileInfo, elabFile) are
-         exported. And its name is not known to, or relevant to, the rest of CM.
+    (* DBM: The elab type, which is not exported, and so is not mentioned in the signature, was:
+
+          type elab = { pp: prepath,
+	                valid: unit -> bool,
+			reanchor: (anchor -> string) -> prepath option }
+
+     * elab was another internal representation of a file, or perhaps more properly, of an
+     * anchor. It has been simplified out of existence, replaced by two attributes:
+     *
+     *   (1) a prepath, associated with an attribute via an env environment (the implicit
+     *       anchor --> prepath mapping). The prepath associated with an anchor through
+     *       the env defines the "anchor-point" of the anchor (absolute or relative to ?),
+     *       that is, the location in the file system that the anchor "points to".
+     *
+     *   (2) a "reanchor", which is a description of the "path" from an anchor to a file
+     *       (filepath, prepath) that is defined relative to that anchor, and only exists
+     *       for files whose prepath is relative to an anchor point (the location in the
+     *       file system that an anchor "names").  So a reanchor option is an attribute of
+     *       file, not directly of an anchor (or anchor point) directly. It represents the
+     *       relationship, or path-delta between an anchor's anchor point and the location of
+     *       a file. The reanchor of a file (prepath, prefile) is computed from the file
+     *       (respectively prepath, prefile) based on its being defined by a path (list of
+     *       arcs) relative to an anchor (it could probably be represented simply by a path
+     *       (of type string list).
+     *
+     * The "valid: unit -> bool" attribute of an "elab" seems to be related to the question
+     * of whether the "pp: prepath" attribute is still accurate. The way the valid attribute
+     * is defined and used seems is seems to indicate that "validity" is equivalent to whether
+     * the env binding of the anchor is still in place. If an anchor is deleted from the env
+     * mapping, then the elab that it was mapped to is no longer valid. The current hypothesis
+     * is that the "valid" attribute of an elab, and hence indirectly of an anchor. is not really
+     * necessary.  The "is_set" (now defined) env function can tell us whether an anchor is still
+     * "current".
      *)
 
-(*
-    type elab = { pp: prepath,      (* the "location" of the file, as a prepath *)
-		  reanchor: reanchor option }
-*)
-
     (* anchorInfo: information associated with an ANCHOR dir (directory).
-     * [What does look do? -- replaced by an elab field]
-     * We try using a simple elab field instead (given that it can easily
-     *  be computed in the mk_anchor function. Any other places where anchorInfo records are created?
-     * Encode produces a corresponding filepath, with "annotations" if the boolean argument is true. *)
+     *  [The former "look" field has been deleted. It provided an associated elab value.]
+     * Encode (if present) produces a corresponding filepath, with "anchor annotations" if
+     * its boolean argument is true. *)
     type anchorInfo =
          {name: anchor,       (* i.e. the name of the anchor, a string *)
 	  prepath : prepath,  (* original "anchor point"; should it be absolute? *)
@@ -98,17 +106,14 @@ in
 				 be obtained either from the cwd_filepath ref, or as returned
 				 by a call of F.getDir (), normally through the cwd function *)
       | ANCHOR of anchorInfo  (* anchors always "denote" directories, not ordinary files *)
-      | ROOT of string        (* Unix: "", Windows: a volume name *)
+      | ROOT of string        (* the string is: for Unix: ""; for Windows: a volume name *)
       | DIR of fileInfo       (* a representation of a file-system directory? *)
 
     (* prefile: represents a file in terms of a directory and a list of arcs relative to that
      * directory. As usual, a corresponding file may not exist in the file system.
      * The arcs are in normal (file system) order, outermost first (unlike for prepaths).
      * The arc list can be empty (?), in which case the prefile designates the "directory".
-     * [Why does prefile need an err function field?  Ans: We have deleted this field.
-     *   Where is a non-trivial err function defined for a prefile?
-     *   When is the err function called?
-     *   Let's try dropping the err component and see what breaks.] *)
+     * [The err attribute was unnecessary, and so has been deleted.] *)
     with prefile = { dir: dir, arcs: string list }
 
     (* fileInfo: representation of a (semantic?) file?
@@ -124,26 +129,26 @@ in
       { dir: dir,               (* formerly "context" *)
 	arcs: string list,      (* filepath relative to dir: INVARIANT: length arcs >= 1 *)
 	id: FI.id option ref }  (* updatable, optional file id *)
+
+    (* or, alternatively: a fileInfo could be a prefile plus an id field:
     and fileInfo = (* PATH constructor unnecessary (using "withthpe"), so deleted *)
       { prefile: prefile,
 	id: FI.id option ref }  (* updatable, optional file id *)
-
+    *)
 
     (* file: a file is a fileInfo record with a stableid (int) attached.
      * The stableid numbers are generated by the intern function, which also fills in the
      * id field of the fileInfo part. The interned files are "recorded" in a finite map of
-     * type FileIdSidMap.map *)		       
+     * type FileIdSidMap.map.
+     * Possible INVARIANT: id field of fileInfo is defined (is SOME) *)
     type file = fileInfo * stableid
 
-(*
-    (* ord_key and compare can be used for defining sets and mappings over files,
-     * using their stableids for comparison.
-     * But where do we use these?  They don't seem to used locally or elsewhere in CM.
-     * We don't seem to have any maps or sets over file the file type. *)
-
+(* DELETED --
+    (* ord_key and compare could be used for defining sets and mappings over interned
+     * files, using their stableids for comparison, but such sets and maps  are not defined
+     * or used in SrcPath, nor elsewhere in CM as far as I can see. Therefore they are 
+     * dropped. *)
     type ord_key = file
-
-    (* stable comparison -- compare the stableids of the files *)
     fun compare (f1: file, f2: file) = Int.compare (#2 f1, #2 f2)
 *)
 
@@ -155,8 +160,12 @@ in
          in { revarcs = rev arcs, vol = vol, isAbs = isAbs }
 	end
 
+    (* prepathToFilepath : prepath -> string *)
+    fun prepathToFilepath ({ revarcs, vol, isAbs }: prepath) =
+	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
 
-  (* current working directory (CDW) *)
+   (* *********************************************************************************** *)
+   (* current working directory (CDW) *)
 
     (* cwd_filepath : filepath ref *)
     (* a ref initialized with the raw filepath of the current working directory (CWD);
@@ -193,7 +202,7 @@ in
      * be a problem because of the "asynchronous" way of notifying clients! If there was a change
      * of CWD this time, cwd_notify will become false, so next time cwd is called clients won't
      * be notified if there is a following CWD change, unless someone set cwd_notify to true *)
-    fun cwd () = 
+    fun cwd () =
 	let val newCwdFilepath = F.getDir ()  (* get the current CWD filepath *)
 	 in (* check whether CWD has changed since last time cwd_filepath was set *)
 	    if newCwdFilepath = !cwd_filepath
@@ -218,19 +227,24 @@ in
    (* *********************************************************************************** *)
    (* encoding prefiles as (possibly anchor annotated) filepath strings *)
 
+    (* isChar : char -> char -> bool *)
+    (* curried character equality; a utility function used in decodeFilepath *)
+    fun isChar (c1: char) c2 = c1 = c2
+
     (* translating "special characters" to \ddd codes *)
     (* specialChar : char -> bool *)
     (* identifies "special" characters (nonprinting characters or members of the string
      * "/:\\$%()") that should be translated to "\ddd" codes *)
     fun specialChar c = not (Char.isPrint c) orelse Char.contains "/:\\$%()" c
 
-    (* charCode : char -> string *)							      
+    (* charCode : char -> string *)
     (* maps any char to its "\ddd" escape code representation *)
     fun charToCode c = "\\" ^ StringCvt.padLeft #"0" 3 (Int.toString (Char.ord c))
 
-    (* specialToCode : char -> string *)					 
+
+    (* specialToCode : char -> string *)
     fun specialToCode c = if specialChar c then charToCode c else String.str c
-							       
+
     (* transSpecial : string -> string [was ta] *)
     (* translate only special characters in the string to their \ddd codes.
      * Thus the result string does not contain any of the special characters. *)
@@ -254,7 +268,7 @@ in
 	end
 
     (* transArc : string -> string *)
-    (* translate an arc string to "encoded" form? (special characters translated to 
+    (* translate an arc string to "encoded" form? (special characters translated to
      *   \ddd codes). Special case translations for "." and ".." in the obscure and
      *   very cases where they are not the same as P.currentArc and P.parentArc
      *   (i.e. some OS that is not macOS, Windows, or Linux/Unix). This ensures that
@@ -263,13 +277,12 @@ in
      * Being compatible with Unix and Windows seems like enough. No need to accomodate
      * some unknown OS with potentially different conventions.
      *)
-    fun transArc (a: string) =
-	if a = P.currentArc then "."        (* i.e. a *)
-	else if a = P.parentArc then ".."   (* i.e. a *)
-	else if a = "." then transAll "."   (* "\\046" -- very unlikely case *)
-	else if a = ".." then transAll ".." (* "\\046\\046" -- very unlikely case *)
-	else transSpecial a  (* the general, or "ordinary" case *)
-
+    fun transArc (arc: string) =
+	if arc = P.currentArc then "."        (* i.e. arc, since P.currentArc = "." *)
+	else if arc = P.parentArc then ".."   (* i.e. arc, since P.parentArc = ".." *)
+	else if arc = "." then "\\046"        (* unlikely case: "." <> P.currentArc *)
+	else if arc = ".." then "\\046\\046"  (* unlikely case: "." <> P.parentArc *)
+	else transSpecial arc  (* the general, or "ordinary" case *)
 
     (* encodePrefile : [show_anchors:]bool -> prefile -> string *)
     (* encodePrefile appears to translate a prefile into a string that uses filepath notation
@@ -283,9 +296,9 @@ in
      * The internal function names, e_ac and e_c, are not informative and could be improved.
      * The parameter name "show_anchors" could be changed to something more descriptive. *)
     fun encodePrefile (show_anchors: bool) ({dir, arcs}: prefile): string =
-	let 
+	let
  	    (* arcs_path : dir * [arcs:]string list * [ctxt:]bool * [path:]string list -> string *)
-	    (* the dir argument is just passed through without change to calls of dir_path 
+	    (* the dir argument is just passed through without change to calls of dir_path
 	     * the ctxt argument enables the show_anchors anchor notation option *)
 	    fun arcs_path (dir: dir, []: string list, _: bool, path: string list) =
 		  dir_path (dir, path, NONE)
@@ -312,14 +325,14 @@ in
 	      | dir_path (ANCHOR {name, encode, ...}, path, firstArcOp) =
 		  let val name' = transSpecial name (* get rid of special chars in anchor name *)
 		      val path : string list =
-			    (* path is a list of path component strings consisting of arcs, 
+			    (* path is a list of path component strings consisting of arcs,
 			       "$", "/", ":" and other anchor-related notations? *)
 			    (case encode show_anchors (* try "expanding" the anchor to a filepath *)
 			       of SOME fp => (* anchor "expands to" fp? *)
 				    if show_anchors
 				    then "$" :: name' :: "(=" :: fp :: ")/" :: path
 				    else fp :: "/" :: path
-				| NONE => 
+				| NONE =>
 				    (case firstArcOp
 				       of SOME firstArc =>
 					    if show_anchors andalso firstArc = name'
@@ -351,9 +364,24 @@ in
     (* fileToDir : file -> dir *)
     fun fileToDir (f: file) = DIR (unintern f)
 
+    (* prefileToFileInfo : prefile -> fileInfo *)
+    fun prefileToFileInfo ({ dir, arcs }: prefile) : fileInfo =
+	{ dir = dir,
+	  arcs = (case arcs
+		    of nil => (error ["prefile needs at least one arc relative to `",
+				      prepathToFilepath (#pp (dirToElab dir)), "'"];
+			       ["<bogus>"])   (* DBM: Is a fileInfo with no arcs bogus? *)
+		     | _ => arcs),
+	  id = ref NONE }  (* why not generate a new fileid here based on the prefile? *)
+
+    (* prefileToFile : prefile -> file *)
+    val prefileToFile = intern o prefileToFileInfo
+
 
    (* *********************************************************************************** *)
-   (* prepath and reanchor functions (formerly elab) *)
+   (* prepath and reanchor functions (formerly involving elab) *)
+
+  (* prepath *)
 
     (* rootPrepath : prepath *)
     fun rootPrepath (vol : string) : prepath =
@@ -364,12 +392,6 @@ in
     fun parentPrepath ({ revarcs = _ :: revarcs, vol, isAbs }: prepath) : prepath =
 	  { revarcs = revarcs, vol = vol, isAbs = isAbs }
       | parentPrepath _ = impossible "parentPrepath"
-
-    (* parentElab [dirElab] : elab -> elab *)
-    (* only called in dirToElab, but not sure why *)
-    fun parentElab ({ pp, reanchor }: elab) : elab  =
-	{ pp = parentPrepath pp,
-	  reanchor = Option.map Parent reanchor }
 
     (* parentReanchor : reanchor -> reanchor *)
     (* we don't need a parentReanchor function, since the reanchor Parent constructor
@@ -386,28 +408,9 @@ in
     fun extendReanchor (arcs: string list) (reanchor : reanchor) : reanchor  =
 	Extend (arcs, reanchor)
 
-    (* extendElab : string list -> elab -> elab *)
-    fun extendElab arcs { pp, reanchor } =
-	{ pp = extendPrepath arcs pp,
-	  reanchor = Option.map (fn ra => Extend (arcs, ra)) reanchor) }
-
-    (* dirToElab : dir -> elab *)
-    fun dirToElab CWD =
-	  let val cwd_filepath = cwd ()     (* use cwd to get the CWD filepath *)
-	   in { pp = filepathToPrepath cwd_filepath,  (* derive a prepath from it *)
-		reanchor = NONE }
-	  end
-      | dirToElab (ANCHOR { name, pp, reanchor, encode }) = {pp = pp, reanchor=reanchor}
-      | dirToElab (ROOT vol) = { pp = rootPrepath vol, reanchor = NONE }
-      | dirToElab (DIR fi) = parentElab (fileInfoToElab fi)
-
-    (* fileInfoToElab : fileInfo -> elab *)
-    and fileInfoToElab ({ dir, arcs, id }: fileInfo) =
-	(* generate an elab from dir, arcs *)
-	let val elab = extendElab arcs (dirToElab dir)  
-	 in id := NONE; (* DBM: why set id to NONE? *)
-	    elab  
-	end
+    (* extendPrefile: prefile -> string list -> prefile *)
+    fun extendPrefile ({ dir, arcs }: prefile) (morearcs: string list) =
+	{ dir = dir, arcs = arcs @ morearcs }
 
     (* dirToPrepath : dir -> prepath *)
     fun dirToPrepath CWD =
@@ -420,28 +423,32 @@ in
 
     (* fileInfoToPrepath : fileInfo -> prepath *)
     and fileInfoToPrepath ({ dir, arcs, id }: fileInfo) =
-	extendPrepath arcs (dirToPrepath dir)  
+	extendPrepath arcs (dirToPrepath dir)
 
-    (* prefileToElab : prefile -> elab *)
-    fun prefileToElab ({dir, arcs} : prefile) = 
-	extendElab arcs (dirToElab dir)
+    (* fileToPrepath : file -> prepath *)
+    val fileToReanchor = fileInfoToPrepath o unintern
+
+
+  (* reanchor *)
 
     (* dirToReanchor : dir -> reanchor option *)
     fun dirToReanchor CWD = NONE
-      | dirToReanchor (ANCHOR { name, ... }) = SOME (Anchor name)
       | dirToReanchor (ROOT vol) = NONE
-      | dirToReanchor (DIR fi) = Parent (fileInfoToReanchor fi) (* why Parent? *)
+      | dirToReanchor (ANCHOR { name, ... }) = SOME (Anchor name)
+      | dirToReanchor (DIR fi) =
+	 Option.map Parent (fileInfoToReanchor fi) (* why Parent? *)
 
-    (* prefileToPrepath : prefile -> prepath *)
-    and prefileToPrepath ({ dir, arcs, id }: fileInfo) =
-	extendPrepath arcs (dirToPrepath dir)  
+    (* fileInfoToReanchor : fileInfo -> reanchor option *)
+    and fileInfoToPrepath ({ dir, arcs, id }: fileInfo) =
+	Option.map (fn reanchor => Extend (arcs, reanchor)) (dirToPrepath dir)
 
-    (* prefileToReanchor : prefile -> reanchor *)
-    fun prefileToReanchor ({dir, arcs} : prefile) = 
+    (* prefileToReanchor : prefile -> reanchor option*)
+    fun prefileToReanchor ({dir, arcs} : prefile) =
 	Option.map (fn reanchor => Extend (arcs, reanchor)) (dirToReanchor dir)
 
-    (* fileToElab : file -> elab *)
-    fun fileToElab (file: file) = fileInfoToElab (unintern file)
+    (* fileToReanchor : file -> reanchor option *)
+    val fileToReanchor = fileInfoToReanchor o unintern
+
 
     (* mk_anchor : env * anchor -> dir *)
     (* make an anchor directory: not exported.
@@ -452,30 +459,27 @@ in
 	      ANCHOR { name = anchor,
 		       prepath = prefileToPrepath prefile, (* prefileToPrepath ? *)
 		       encode = SOME (fn (show_anchors: bool) => encodePrefile show_anchors prefile) }
-	   | NONE => (* anchor is not in the domain of bound; try get to define the elab *)
+	   | NONE => (* anchor is not in the domain of bound; try get to define the anchor prepath *)
 	      ANCHOR { name = anchor,
 		       prepath = get anchor,  (* get will fail if not (defined anchor) *)
-		       reanchor = Anchor anchor,
 		       encode = NONE }
 
-    (* prepathToFilepath : prepath -> string *)
-    fun prepathToFilepath ({ revarcs, vol, isAbs }: prepath) =
-	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
 
 
    (* *********************************************************************************** *)
    (* interning files: getting file_ids and and generating stableids *)
-   
-   (* based on known: an internal reference to a finite map over fileInfo to stableids (int)
-    * with new bindings created by the intern function. The type of the mapping is
-    * FileInfoMap
+
+   (* known: an internal reference to a finite map (type int FileInfoMap.map) from
+    * fileInfos to stableids (int).
+    * New bindings created by the intern function.
     * intern uses uses FileInfoMap.insert, which uses getFileId, which uses FileId.fileId
-    * and updates the id field of the fileInfo record to a FileId.id computed using OS.FileSys.fileId.
-    
+    * and updates the id field of the fileInfo record to a FileId.id computed by
+    * OS.FileSys.fileId. *)
+
     (* getFileId [idOf] : fileInfo -> FI.id *)
     (* returns the fileId associated with the file, defining it if necessary *)
     fun getFileId (fi as { id, ... }: fileInfo) =
-	let val pp = fileInfoToPrepath fi (* compute the prepath for the fileInfo fi *)
+	let val pp = fileInfoToPrepath fi (* compute the prepath of the fileInfo *)
 	 in case !id
 	      of SOME i => i
 	       | NONE =>
@@ -486,7 +490,7 @@ in
 
     (* compareFileInfo : fileInfo * fileInfo -> order *)
     (* compare fileInfo values by comparing their id fields as accessed/computed by getFileId *)
-    fun compareFileInfo (f1, f2) = FI.compare (getFileId f1, getFileId f2)
+    fun compareFileInfo (f1: fileInfo, f2) = FI.compare (getFileId f1, getFileId f2)
 
     structure FileInfoMap =
       RedBlackMapFn (type ord_key = fileInfo
@@ -503,7 +507,7 @@ in
 	(* intern : fileInfo -> file *)
 	(* generate a stableid (sequentially) to add to a fileInfo to make a file. If the fileInfo
 	 * has already been interned before, just return the associated stableid. If it is new
-	 * generate the next stableid and also (through the getFileId function called by insert) 
+	 * generate the next stableid and also (through the getFileId function called by insert)
 	 * define the id field of the fileInfo. *)
 	fun intern (fi: fileInfo) : file =
 	    case FileInfoMap.find (!known, fi)
@@ -515,7 +519,7 @@ in
 		         (* record the (fi, stableid) in known *)
 		       (fi, stableid)  (* return the interned file *)
 		   end
-        
+
 	(* sync : unit -> unit *)
 	(* sync causes the file ids of all the interned files to be reset to the actual
 	   file system file ids (obtained from OS.FileSys.fileId) *)
@@ -532,13 +536,15 @@ in
 
 
     (* *********************************************************************************** *)
-    (* environments: env objects, "bound" functional environments *)
+    (* environments: env "objects", "bound" functional environments *)
 
-    (* the "state" of an env object implements a stateful mapping from anchors to "elabs" *)
+    (* the "state" of an env object implements a stateful mapping from anchors to prepaths,
+     * which designate the "anchor point" of the anchor (presumably that directory that the
+     * anchor designates). *)
 
     (* env: a kind of "object-like", stateful environment? *)
     type env =
-	 { get: anchor -> elab,
+	 { get: anchor -> prepath,
 	   set: anchor * prepath option -> unit,
 	   defined: anchor -> bool,
 	   reset: unit -> unit,
@@ -551,11 +557,10 @@ in
      *   (2) bound: anchor -->  prefile
      * The environment mapping (SM.map) is stored in the anchorMapRef reference.
      * This mapping maps anchors to (prepath * bool ref), where the bool ref is the "validity" flag.
-     * So an anchor can be mapped in !anchorMapRef, but still be "invalid" if the validity flag
-     * is false. Conversely, an anchor binding may be removed from !anchorMapRef, yet its validity
-     * flag may have been incorporated into existing elabs.
+     * So an anchor can be mapped in !anchorMapRef. If it is not mapped, the anchor can be considered
+     * "invalid".
      * get [get_free] and set [set_free] and defined [is_set] are not called outside this file.
-     *   while (some version of?) reset is called in many files in cm.
+     *   while (some other version of?) reset is called in many files in cm.
      * get [get_free] is only called in get_anchor and mk_anchor.
      * set [set_free] is only called in set0 [set0]
      * DEFN: An anchor is "valid" if it is in the domain of the !anchorMapRef map. *)
@@ -564,12 +569,12 @@ in
 
 	    (* find : anchor -> prepath option *)
 	    fun find anchor = SM.find (!anchorMapRef, anchor *)
-		
+
 	    (* defined : anchor -> bool *)
 	    (* Is anchor bound in !anchorMapRef? *)
 	    fun defined anchor = SM.inDomain (!anchorMapRef, anchor)
 
-	    (* get : anchor -> elab *) 
+	    (* get : anchor -> elab *)
 	    (* look up anchor in !anchorMapRef. If found, return a new elab for the anchor
 	     * containing the same prepath and validity as the existing binding. If not
 	     * found (anchor is not in the domain of !anchorMapRef), produces an undefined
@@ -580,8 +585,8 @@ in
 		  of SOME pp => pp
 		   | NONE => impossible ["get -- undefined anchor: $", anchor]
 
-	    (* set : anchor * prepath option -> unit *) 
-            (* If prepathOp is SOME prepath, binds or rebinds anchor to prepath. 
+	    (* set : anchor * prepath option -> unit *)
+            (* If prepathOp is SOME prepath, binds or rebinds anchor to prepath.
              * If prepathOp is NONE, unbinds anchor in !anchorMapRef. *)
 	    fun set (anchor, prepathOp) =
 		case find anchor
@@ -595,7 +600,7 @@ in
 		       (case prepathOp
 			  of SOME pp => anchorMapRef := SM.insert (!anchorMapRef, anchor, pp)) (* bind *)
 			   | NONE => ()) (* do nothing *)
-		    
+
 	    (* reset : unit -> unit *)
 	    (* set validity flags of all entries in !anchorMapRef to false and assign SM.empty
 	     * to the anchorMapRef ref. The validity flags may have been incorporated into
@@ -614,7 +619,7 @@ in
     (* setRelative [set0]: env * anchor * filepath option * filepath-> unit *)
     fun setRelative ({set, ...}: env, anchor: anchor, filepathOp: filepath option,
 		     relativeTo: filepath) =
-	let fun fp_pp (filepath: filepath) =
+	let fun fp_pp (filepath: filepath) : prepath =
 		let val fp1 = P.mkAbsolute {path = filepath, relativeTo = relativeTo}
 		    val fp2 = if P.isAbsolute filepath then filepath else fp1
 		 in filepathToPrepath fp2
@@ -623,11 +628,31 @@ in
 	end
 
     (* set_anchor : env * anchor * filepath option * filepath -> unit *)
+    (* When filepathOp is SOME, binds a corresponding prepath to the anchor in env;
+     * when filepathOp is NONE, delets anchor and its binding from env.
+     * Exported and called externally (3 times) in main/cm-boot.sml *)
     fun set_anchor (env, anchor, filepathOp) =
 	setRelative (env, anchor, filepathOp, F.getDir ()) before sync ()
 
     (* reset_anchors : env -> unit *)
+    (* exported and called once externally, in main/cm-boot.sml (defn of resetPathConfig) *)
     fun reset_anchors ({reset, ...}: env) = (reset (); sync ())
+
+    (* bind : env -> (anchor * prefile) list -> env *)
+    (* produces a new env record with only the "bound" field altered.
+     * Anchors are bound to corresponding prefiles, with these bindings being
+     * added to the existing "bound" mapping.
+     * (Perhaps?) called only in main/general-params.sml *)
+    fun bind ({defined, get, set, reset, bound}: env) (alist: (anchor * prefile) list) =
+	let fun folder ((anchor, prefile), m) = SM.insert (m, anchor, prefile)
+	 in { defined = defined, get = get, set = set, reset = reset,
+	      bound = foldl folder bound alist }
+	end
+
+
+    (* ******************************************************************************** *)
+    (* processing "spec files" ? *)
+    (* What are "spec files"?  What does this produce? *)
 
     (* processSpecFile : env * filepath -> TextIO.instream -> unit *)
     fun processSpecFile (e, filepath) =
@@ -646,7 +671,7 @@ in
 		  end
 
 	    (* work: TextIO.instream -> ? *)
-	    fun work (s: TextIO.instream) = 
+	    fun work (s: TextIO.instream) =
 		let fun loop isnative =
 			case TextIO.inputLine s
 			  of NONE => ()
@@ -668,6 +693,10 @@ in
 
 	 in work
 	end (* fun processSpecFile *)
+
+
+    (* ******************************************************************************** *)
+    (* parsing filepaths *)
 
     datatype stdspec
       = RELATIVE of string list
@@ -717,32 +746,8 @@ in
 		   else ANCHORED (String.extract (arc1, 1, NONE), arcn)
 	end (* fun parseFilepathStandard *)
 
-    (* bind : env -> (anchor * prefile) list -> env *)
-    (* produces a new env record with only the "bound" field altered.
-     * Anchors are bound to corresponding prefiles, with these bindings being
-     * added to the existing "bound" mapping.
-     * (Perhaps?) called only in main/general-params.sml *)
-    fun bind ({defined, get, set, reset, bound}: env) (alist: (anchor * prefile) list) =
-	let fun folder ((anchor, prefile), m) = SM.insert (m, anchor, prefile)
-	 in { defined = defined, get = get, set = set, reset = reset,
-	      bound = foldl folder bound alist }
-	end
-
-    (* prefileToFileInfo : prefile -> fileInfo *)
-    fun prefileToFileInfo ({ dir, arcs }: prefile) : fileInfo =
-	{ dir = dir,
-	  arcs = (case arcs
-		    of nil => (error ["prefile needs at least one arc relative to `",
-				      prepathToFilepath (#pp (dirToElab dir)), "'"];
-			       ["<bogus>"])   (* DBM: Is a fileInfo with no arcs bogus? *)
-		     | _ => arcs),
-	  id = ref NONE }  (* why not generate a new fileid here based on the prefile? *)
-	     
-    (* prefileToFile : prefile -> file *)
-    val prefileToFile = intern o prefileToFileInfo
-
     (* mkPrefile [raw] : dir * filepath -> prefile *)
-    (* it is assumed that the filepath is either absolute, and hence independent of dir, in 
+    (* it is assumed that the filepath is either absolute, and hence independent of dir, in
      * which case we ignore the dir argument and replace it with ROOT vol),
      * or, if the filepath is relative, we assume it is relative to dir. In that case vol is
      * irrelevant. *)
@@ -767,10 +772,6 @@ in
 	    | ABSOLUTE arcs => {dir = ROOT "", arcs = arcs}
 	    | ANCHORED (anchor, arcs) => {dir = mk_anchor (env, anchor), arcs = arcs}
         (* end case *))
-
-    (* extendPrefile: prefile -> string list -> prefile *)
-    fun extendPrefile ({ dir, arcs }: prefile) (morearcs: string list) =
-	{ dir = dir, arcs = arcs @ morearcs }
 
     (* osstring : file -> string *)
     val osstring = FI.canonical o prepathToFilepath o #pp o fileInfoToElab o unintern
@@ -803,17 +804,16 @@ in
 	   | Parent of reanchor => parentPrepath (do_reanchor cvt reanchor)
 	   | Extent of (arcs, reanchor) => extendPrepath arcs (do_reanchor cvt reanchor)
 
-    (* do_reanchorOp : (string -> filepath) -> reanchor option -> prepath option *)
-    fun do_reanchorOp (cvt: string -> filepath) reanchorOp =
-        case reanchorOp
-	  of NONE => NONE
-	   | SOME reanchor => SOME (do_reanchor cvt reanchor)
-
     (* osstring_reanchored : (string -> string) -> file -> filepath option *)
     (* used once in main/filename-policy.sml (FilenamePolicyFn) *)
     fun osstring_reanchored cvt file =
-	let val {reanchor, ...} = fileToElab file
-	 in Option.map (FI.canonical o prepathToFilepath) (do_reanchorOp cvt reanchor)
+	let val reanchorOp = fileToReanchor file
+	 in case reanchorOp
+	    of NONE => NONE
+	     | SOME reanchor => 
+	         let val prepath = do_reanchor cvt reanchor
+		  in SOME (FI.canonical (prepathToFilepath prepath))
+		 end
 	end
 
     (* osstring_prefile_relative : prefile -> filepath *)
@@ -824,7 +824,7 @@ in
 
     (* osstring_relative : file -> filepath *)
     val osstring_relative = osstring_prefile_relative o fileToPrefile
-    
+
     (* tstamp : file -> TSamp.t *)
     fun tstamp f = TStamp.fmodTime (osstring f)
 
@@ -869,37 +869,37 @@ in
 	end
 
     (* decodeFile [decode] : env -> filepath -> file *)
-    (* what are "segments"? *)
+    (* what are "segments"? why are segments used? *)
     fun decodeFilepath env filepath =
-	let fun isChar (c1: char) c2 = c1 = c2
-
-	    (* arc: string -> string *)
-	    (* what does arc protect against? *)
-	    fun arc "." = P.currentArc  (* = "." *)
-	      | arc ".." = P.parentArc  (* = ".." *)
-	      | arc a = transCode a
+	let
+	    (* transArc: string -> string *)
+	    (* what does transArc protect against? *)
+	    fun transArc "." = P.currentArc  (* = "." *)
+	      | transArc ".." = P.parentArc  (* = ".." *)
+	      | transArc a = transCode a
 
 	    (* addseg : string * fileInfo -> fileInfo *)
 	    fun addseg (seg, fi) =
-		prefileToFileInfo (DIR fi, map arc (String.fields (isChar #"/") seg))
+		prefileToFileInfo {dir = DIR fi,
+				   arcs = map transArc (String.fields (isChar #"/") seg)}
 
 	    (* firstSet : string -> fileInfo *)
 	    fun firstSeg s =
-		(case String.fields (isChar #"/") s
+		(case map transArc (String.fields (isChar #"/") s)
 		   of nil => impossible "decodeFilepath: no fields in segment 0"
 		    | arc0 :: arcs =>
-		       let val arcs = map arc arcs
-			   val arc0' = transCode (String.extract (arc0, 1, NONE))
-			in if arc0 = ""
-			   then prefileToFileInfo (ROOT "", arcs)
-			   else (case String.sub (arc0, 0)
-				   of #"%" => prefileToFileInfo (ROOT (xtr ()), arcs)
-				    | #"$" =>
-					let val n = xtr ()
-					 in prefileToFileInfo (ANCHOR (mk_anchor (env, n)), arcs)
-					end
-				    | _ => prefileToFileInfo (CWD, arc arc0 :: arcs))
-		       end)
+		      if arc0 = ""
+		      then prefileToFileInfo (ROOT "", arcs)
+		      else let val arc0' = String.extract (arc0, 1, NONE)
+			       val char0 = String.sub (arc0, 0)
+			    in case char0 
+				 of #"%" => prefileToFileInfo (ROOT (xtr ()), arcs)
+				  | #"$" =>
+				      let val n = xtr ()
+				       in prefileToFileInfo {dir = mk_anchor (env, n)), arcs = arcs}
+	                              end
+	                          | _ => prefileToFileInfo (CWD, transArc arc0 :: arcs)
+	                   end
 
 	 in case String.fields (isChar #":") filepath
 	      of nil => impossible "decodeFilepath: no segments"
@@ -954,7 +954,7 @@ end (* structure StrPath *)
 
    6. "elab": a prepath plus a validity flag and a "reanchor" function (whatever that does).
       elabs can be generated from other representations (e.g. prefile) with initial valid value true.
-      They can be "invalidated" if their associated env binding is 
+      They can be "invalidated" if their associated env binding is
 
 There is a lot of redundancy among these six ways of representing files, and several of them
 are translatable into each other. The fileInfo, file, and elab types could be considered a bit more
@@ -978,8 +978,14 @@ There is a couple progressions:
 
 Where do prefiles come from?  Where is the link between prepaths and prefiles?
 
+Prefiles are created (directly) by the function decodeFilepath, which (with the help of the
+env) translates filepaths directly to (interned) files.  There is no direct translation from
+the syntactic filepath/prepath representations to the prefile representation, or in particular,
+to the dir type.  It is also not clear whether the id field of a fileInfo record is relevant
+for working with DIR values.
 
-6. There are two mappings over anchors, both associated with the env type:
+
+6. There are two mappings over anchors, both incorporated into the env type:
 
    1. The implicit string map (anchorMapRef) of an env is operated on by the get, set,
       defined, and reset components of the env record. This maps anchors (strings) to
@@ -993,7 +999,7 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
       the old binding by setting its validity flag to false.
 
       The get function, if applied to a mapped anchor (i.e. an anchor in the domain of !anchorMapRef)
-      will return an elab generated from the (prepath, validity) that the anchor maps to. 
+      will return an elab generated from the (prepath, validity) that the anchor maps to.
       When get is applied to an anchor that is not mapped, it causes a fatal error.
 
       So the "validity" flag associated with an anchor (in the !anchorMapRef map) will be set
@@ -1028,7 +1034,7 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
 
       intern: generates a new (sequenctial) stableid integer value and binds it in the map
         and combines it with its fileInfo argument to return an "interned" file. If it is a
-	new fileInfo key (presumably with id = ref NONE), its binding will be inserted into the map 
+	new fileInfo key (presumably with id = ref NONE), its binding will be inserted into the map
 	using fileInfoSidMap.insert, which will call getFileId, which will redefine the id field using
 	the actual OS.FileSys file_id (actually PRESENT (file_id) or ABSENT filepath depending on
         whether the the file actually exists in the file system (?)).
@@ -1036,7 +1042,7 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
       sync: resets the id field of all currently mapped fileInfo's to NONE (thus invalidating them?)
         and rebuilds a new fileInfoSidMap with the same (now invalidated!) fileInfos as keys.
 	This "works" because the map insert function uses getFileId on the fileInfo keys, and this
-	will generate new id values for the invalidated keys. Thus syn replaces the original	
+	will generate new id values for the invalidated keys. Thus syn replaces the original
 	file id (fileInfo.id) with actual file system file ids produced by OS.FileSys.fileId.
 
 	The file_ids used in the reconstructed mapping will normally be the same as the file_ids
@@ -1051,7 +1057,7 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
    Takes a conversion function mapping an anchor to a string (normally a filepath?) and returns a
    prepath option.  In most cases this is initialized to a trivial (fn _ => NONE): for instance:
 
-     bogus_elab, 
+     bogus_elab,
      absoluteElab
 
    Where is the reanchor component of an elab actually applied?
@@ -1083,7 +1089,7 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
 
          (fn () => NONE)   -- trivial default
 
-       env.get initialization:       
+       env.get initialization:
 
          (fn (cvt: string -> filepath) => SOME (filepathToPrepath (cvt anchor))
 
@@ -1115,7 +1121,6 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
         = Anchor of anchor
         | Parent of reanchor
         | Extend of string list (*arcs*) * reanchor
-	| NoAnchor  (* corresponding to the NONE cases *)
 
       (* do_reanchor : (string -> filepath) -> reanchor -> prepath
       fun do_reanchor (cvt: string -> filepath) reanchor =
@@ -1126,8 +1131,31 @@ Where do prefiles come from?  Where is the link between prepaths and prefiles?
 
       Actually, parentPrepath and extendPrepath operate only on the revarcs component of a
       prepath, leaving the vol and isAbs fields alone, so possibly the Parent case could
-      just do a tl and the Excend case could just do a revappend on the revarcs ("on the way
-      out" after having recursed down to the Anchor node).
+      just do a tl and the Excend case could just do a revappend on the revarcs of the 
+      relevant prepaths ("on the way out" after having recursed down to the anchor in
+      the final Anchor node (Anchor a) to which the cvt : string -> filepath is applied
+      to give the new "anchor point".
+
+      The reanchor encodes a kind of "file system delta" down the path from an anchor
+      point to a file that is located relative to that anchor (i.e. relative to an ANCHOR
+      dir). We "apply" the reanchor to translate an anchor-relative path to a new (full)
+      path relative to a shifted location of the anchor point given by the cvt function.
+      
+      The Parent constructor for reanchor is used in only one place, to trim the arcs for
+      a DIR directory given by its fileInfo.  This may because of the way the DIR is introduced
+      in the decodeFilepath [decode] function, where DIRs seem to serve to link "segments".
+      [Have to understand what is going on in decodeFilepath better. Don't yet understand
+       segments and the need to adjust arcs using a Parent reanchor in dirToReanchor.
+
+   What I still don't understand about reanchors and DIRs.
+
+      * Why do we use the Parent reanchor to trim the last (innermost) arc when computing
+        the (potential) reanchor for a DIR?
+
+      * What are segments and why do they exist?  [in fun processFilepath]
+        How are DIRs used to "link" segments together?
+	Examples?
+
 
 --------------------------------------------------------------------------------
 Name changes and new names:
@@ -1138,6 +1166,7 @@ encode		encodeFile
 encodingIsAbsolute  absoluteFilepath
 file0 [type]	fileInfo  -- now a simple record type, not a datatype (defined using "withtype")
 file0 [fun]	prefileToFileInfo
+file  		prefileToFile
 context 	dir   -- fileInfo[file0] field and various argument names
 look		elab  -- anchorInfo field (argument type for ANCHOR dir constructor); changed type
 get_free	get (env field label)

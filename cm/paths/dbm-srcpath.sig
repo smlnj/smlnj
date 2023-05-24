@@ -8,23 +8,24 @@ sig
     type anchor = string
     type filepath = string
 
+    type prefile
     type file
     type dir
-    type env
-    type prefile
 
-    (* re-establish stability of ordering *)
+    type env
+
+    (* re-establish stability of ordering DBM: ??? *)
     val sync : unit -> unit
 
     (* forget all known path names *)
     val clear : unit -> unit
 
     (* register a "client" module that wishes to be notified when
-     * the CWD changes *)
+     * the CWD changes.  DBM: what sort of things are clients? *)
     val addClientToBeNotified : (string -> unit) -> unit
 
     (* make sure all such clients get notified about the a CWD during
-     * next validation *)
+     * "next validation" ? *)
     val scheduleNotification : unit -> unit
 
     (* new "empty" env *)
@@ -35,8 +36,7 @@ sig
     val get_anchor : env * anchor -> string option
     val reset_anchors : env -> unit
 
-    (* process a specification file; must sync afterwards!
-     * The function argument is used for issuing warnings. *)
+    (* process a specification file; must sync afterwards! *)
     val processSpecFile : env * filepath -> TextIO.instream -> unit
 
     (* non-destructive bindings for anchors (for anchor scoping) *)
