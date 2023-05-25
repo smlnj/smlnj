@@ -17,17 +17,13 @@ sig
     type prefileEnv  (* anchor --> prefile, functional *)
 
     (*  "re-establish stability of ordering", DBM: ??? *)
-    (* reconstructs the internal mapping from files to stable ids, while
-     * recomputing their associated file_ids (FileId.id). *)
     val sync : unit -> unit
 
     (* forget all known path names *)
-    (* clears (resets to empth) the internal mapping from files to their stable ids. *)
     val clear : unit -> unit
 
-    (* register a "client module" that wishes to be notified when CWD changes.
-     * Such notifications will be initiated by calls of the cwd function.
-     * DBM: what sort of things are clients? *)
+    (* register a "client" module that wishes to be notified when
+     * the CWD changes.  DBM: what sort of things are clients? *)
     val addClientToBeNotified : (string -> unit) -> unit
 
     (* make sure all such clients get notified about the a CWD during

@@ -7,8 +7,6 @@
  *
  * Author: Matthias Blume
  * Edited by: DBM
- * 
- * Revision, pass 3: prepath env as stateful structure instead of a value.
  *)
 
 structure SrcPath :> SRCPATH =
@@ -144,6 +142,15 @@ in
      * type FileIdSidMap.map.
      * Possible INVARIANT: id field of fileInfo is defined (is SOME) *)
     type file = fileInfo * stableid
+
+(* DELETED --
+    (* ord_key and compare could be used for defining sets and mappings over interned
+     * files, using their stableids for comparison, but such sets and maps  are not defined
+     * or used in SrcPath, nor elsewhere in CM as far as I can see. Therefore they are 
+     * dropped. *)
+    type ord_key = file
+    fun compare (f1: file, f2: file) = Int.compare (#2 f1, #2 f2)
+*)
 
     (* filepathToPrepath : filepath -> prepath *)
     (* use OS.Path.fromString to parse the filepath, then convert result to a prepath
@@ -481,12 +488,12 @@ in
     val fileToReanchor = fileInfoToReanchor o unintern
 
 
-    (* mk_anchor : prefileEnv * anchor -> dir *)
+    (* mk_anchor : prepathEnv * prefileEnv * anchor -> dir *)
     (* make an anchor directory: not exported.
      * Other sorts of directories are made using the directory constructors CWD, ROOR, DIR
      * not exported
      * local: native, standard, unipickle, decodeFilepath *)
-    fun mk_anchor (prefileEnv, anchor: anchor) : dir =
+    fun mk_anchor ({get, ...} : prepathEnv, prefileEnv, anchor: anchor) : dir =
 	case SM.find (prefileEnv, anchor)
 	  of SOME prefile =>  (* anchor is in the domain of the prefileEnv *)
 	      ANCHOR { name = anchor,
@@ -494,7 +501,7 @@ in
 		       encode = SOME (fn (show_anchors: bool) => encodePrefile show_anchors prefile) }
 	   | NONE => (* anchor is not in the domain of prefileEnv; try get to define the anchor prepath *)
 	      ANCHOR { name = anchor,
-		       prepath = PrepathEnv.get anchor,  (* get will fail if not (defined anchor) *)
+		       prepath = get anchor,  (* get will fail if not (defined anchor) *)
 		       encode = NONE }
 
 
@@ -574,142 +581,128 @@ in
     (* *********************************************************************************** *)
     (* environments: anchor-prepath env, anchor-prefile functional env (formerly "bound") *)
 
-    (* The prepath environment (mapping anchors to prepaths) is global, and is now implemented as
-     * a structure PrepathEnv.  It maintains a mapping from anchors to prepaths (prepath SM.map)
-     * as its state, and opertions get, set, defined, and reset operate on this internal state.
-     * The prepath that is associated with an anchor by this environment is assumed to designate
-     * the "anchor point" of the anchor (presumably a directory), i.e. the directory "named" by
-     * the anchor.
-     *
-     * structure : PrepathEnv
-     * Embodies an anchor to prepath environment as an "object" structure with state.
-     * The mapping from anchors to prepaths is stored in the local reference variable anchorMapRef.
+    (* the "state" of an prepathEnv object implements a stateful mapping from anchors to prepaths,
+     * which designate the "anchor point" of the anchor (presumably that directory that the
+     * anchor designates). *)
+
+    (* env: a kind of "object-like", stateful environment? *)
+    type prepathEnv =
+	 { get: anchor -> prepath,
+	   set: anchor * prepath option -> unit,
+	   defined: anchor -> bool,
+	   reset: unit -> unit}
+
+    type anchorPrefileEnv = prefile SM.map
+
+    val prefileEnv: anchorPrefileEnv = SM.empty
+
+    (* newEnv : unit -> prepathEnv *)
+    (* creates a new anchor environment "object".
+     * A prepath environment contains a mapping from anchors to prepaths (prepath SM.map).
+     * stored in the local reference variable  anchorMapRef.
+     * This maps anchors to prepaths,
      * An anchor that is not in the domain of !anchorMapRef can be considered "invalid".
-     * The operations get and set and defined [is_set] are not called outside this file.
+     * get [get_free] and set [set_free] and defined [is_set] are not called outside this file.
      *   while (some other version of?) reset is called in many files in cm.
      * get [get_free] is only called in get_anchor and mk_anchor.
      * set [set_free] is only called in setRelative [set0]
      * exported
      * local: none
      * external: main/cm-boot.sml, bootstrap/btcompile.sml
-
-     * previously, the anchor to prepath environment(s) were created by a function newEnv
-     * that was called just once in the files main/cm-boot.sml and bootstrap/btcompile.sml.
-     * I conjecture that there was never more than one (global) instance of this environment,
-     * and hence it is safe to replace any reference to the environments created by newEnv
-     * with references to the global PrepathEnv structure defined inwith SrcPath.
-
-     * There is still a separate "functional" environment, of type prefileEnv, that maps 
-     * anchors to prefiles.  These prefile environment are passed as parameters to a number
-     * exported SrcPath functions.  The gloval prepath environment is represented by PrefileEnv
-     * and such environments are no longer passed as parameters.
      *)
+    fun newEnv () : prepathEnv =
+	let val anchorMapRef : prepath SM.map ref = ref SM.empty
 
-    structure PrepathEnv
-      : sig	      
-	  get: anchor -> prepath,
-	  set: anchor * prepath option -> unit,
-	  defined: anchor -> bool,
-	  reset: unit -> unit
-        end =
-    struct
+	    (* find : anchor -> prepath option *)
+	    fun find anchor = SM.find (!anchorMapRef, anchor *)
 
-      val anchorMapRef : prepath SM.map ref = ref SM.empty
+	    (* defined : anchor -> bool *)
+	    (* Is anchor bound in !anchorMapRef? *)
+	    fun defined anchor = SM.inDomain (!anchorMapRef, anchor)
 
-      (* find : anchor -> prepath option *)
-      fun find anchor = SM.find (!anchorMapRef, anchor)
+	    (* get : anchor -> elab *)
+	    (* look up anchor in !anchorMapRef. If found, return a new elab for the anchor
+	     * containing the same prepath and validity as the existing binding. If not
+	     * found (anchor is not in the domain of !anchorMapRef), produces an undefined
+	     * anchor fatal error (impossible, compiler bug. So get should only be called with
+	     * an anchor that is known to be defined. *)
+	    fun get anchor =
+		case find anchor
+		  of SOME pp => pp
+		   | NONE => impossible ["get -- undefined anchor: $", anchor]
 
-      (* defined : anchor -> bool *)
-      (* Is anchor bound in !anchorMapRef? *)
-      fun defined anchor = SM.inDomain (!anchorMapRef, anchor)
+	    (* set : anchor * prepath option -> unit *)
+            (* If prepathOp is SOME prepath, binds or rebinds anchor to prepath.
+             * If prepathOp is NONE, unbinds anchor in !anchorMapRef. *)
+	    fun set (anchor, prepathOp) =
+		case find anchor
+		  of SOME _ =>
+		       anchorMapRef :=
+		         (case prepathOp
+		            of SOME pp => SM.insert (!anchorMapRef, anchor, pp) (* rebind *)
+			     | NONE => #1 (SM.remove (!anchorMapRef, anchor)))) (* remove *)
+		               (* this can't raise NotFound because find returned SOME *)
+		   | NONE =>
+		       (case prepathOp
+			  of SOME pp => anchorMapRef := SM.insert (!anchorMapRef, anchor, pp)) (* bind *)
+			   | NONE => ()) (* do nothing *)
 
-      (* get : anchor -> elab *)
-      (* look up anchor in !anchorMapRef. If found, return a new elab for the anchor
-       * containing the same prepath and validity as the existing binding. If not
-       * found (anchor is not in the domain of !anchorMapRef), produces an undefined
-       * anchor fatal error (impossible, compiler bug. So get should only be called with
-       * an anchor that is known to be defined. *)
-      fun get anchor =
-	  case find anchor
-	    of SOME pp => pp
-	     | NONE => impossible ["get -- undefined anchor: $", anchor]
+	    (* reset : unit -> unit *)
+	    (* set validity flags of all entries in !anchorMapRef to false and assign SM.empty
+	     * to the anchorMapRef ref. The validity flags may have been incorporated into
+	     * previously created elabs, and so remain relevant. *)
+	    fun reset () = anchorMapRef := SM.empty  (* reset anchorMapRef to the empty map *)
 
-      (* set : anchor * prepath option -> unit *)
-      (* If prepathOp is SOME prepath, binds or rebinds anchor to prepath.
-       * If prepathOp is NONE, unbinds anchor in !anchorMapRef. *)
-      fun set (anchor, prepathOp) : unit =
-	  case find anchor
-	    of SOME _ =>
-		 anchorMapRef :=
-		   (case prepathOp
-		      of SOME pp => SM.insert (!anchorMapRef, anchor, pp) (* rebind *)
-		       | NONE => #1 (SM.remove (!anchorMapRef, anchor)))) (* remove *)
-			 (* this can't raise NotFound because find returned SOME *)
-	     | NONE =>
-		 (case prepathOp
-		    of SOME pp => anchorMapRef := SM.insert (!anchorMapRef, anchor, pp)) (* bind *)
-		     | NONE => ()) (* do nothing *)
+	 in { get = get, set = set, defined = defined, reset = reset }
+	end
 
-      (* reset : unit -> unit *)
-      (* set validity flags of all entries in !anchorMapRef to false and assign SM.empty
-       * to the anchorMapRef ref. The validity flags may have been incorporated into
-       * previously created elabs, and so remain relevant. *)
-      fun reset () = anchorMapRef := SM.empty  (* reset anchorMapRef to the empty map *)
+    (* get_anchor : prepathEnv * anchor -> filepath option *)
+    fun get_anchor ({get, ...}: prepathEnv, anchor) =
+	Option.map prepathToFilepath (get anchor)
 
-    end (* structure PrepathEnv *)
-
-    (* get_anchor : anchor -> filepath option
-     * maps an anchor to the filepath of its "anchor point" *)
-    fun get_anchor (anchor: anchor) =
-	Option.map prepathToFilepath (PrepathEnv.get anchor)
-
-    (* setRelative [set0]: anchor * filepath option * filepath-> unit *)
-    fun setRelative (anchor: anchor, filepathOp: filepath option,
+    (* setRelative [set0]: env * anchor * filepath option * filepath-> unit *)
+    fun setRelative ({set, ...}: prepathEnv, anchor: anchor, filepathOp: filepath option,
 		     relativeTo: filepath) =
 	let fun fp_pp (filepath: filepath) : prepath =
 		let val fp1 = P.mkAbsolute {path = filepath, relativeTo = relativeTo}
 		    val fp2 = if P.isAbsolute filepath then filepath else fp1
 		 in filepathToPrepath fp2
 		end
-	 in PrepathEnv.set (anchor, Option.map fp_pp filepathOp)
+	 in set (anchor, Option.map fp_pp filepathOp)
 	end
 
     (* set_anchor : prepathEnv * anchor * filepath option * filepath -> unit *)
     (* When filepathOp is SOME, binds a corresponding prepath to the anchor in env;
      * when filepathOp is NONE, delets anchor and its binding from env.
      * Exported and called externally (3 times) in main/cm-boot.sml *)
-    fun set_anchor (anchor, filepathOp) =
-	setRelative (anchor, filepathOp, F.getDir ()) before sync ()
+    fun set_anchor (env: prepathEnv, anchor, filepathOp) =
+	setRelative (env, anchor, filepathOp, F.getDir ()) before sync ()
 
-    (* reset_anchors : unit -> unit *)
+    (* reset_anchors : prepathEnv -> unit *)
     (* exported and called once externally, in main/cm-boot.sml (defn of resetPathConfig) *)
-    fun reset_anchors () = (PrepathEnv.reset (); sync ())
+    fun reset_anchors ({reset, ...}: env) = (reset (); sync ())
 
-    type prefileEnv = prefile SM.map
-
-    val emptyPrefileEnv : prefileEnv = SM.empty			      
-
-    (* bindPrefiles : prefileEnv -> (anchor * prefile) list -> prefileEnv *)
+    (* bind : prefileEnv -> (anchor * prefile) list -> prefileEnv *)
     (* produces a new env record with only the "bound" field altered.
      * Anchors are bound to corresponding prefiles, with these bindings being
      * added to the existing "bound" mapping.
      * (Perhaps?) called only in main/general-params.sml *)
-    fun bindPrefiles (pfenv: prefileEnv) (alist: (anchor * prefile) list) : prefileEnv =
-	let fun folder ((anchor, prefile), env) = SM.insert (env, anchor, prefile)
+    fun bind (pfenv: prefileEnv) (alist: (anchor * prefile) list) : prefileEnv =
+	let fun folder ((anchor, prefile), m) = SM.insert (m, anchor, prefile)
 	 in foldl folder pfenv alist
 	end
 
 
     (* ******************************************************************************** *)
     (* processing "spec files" ? *)
-    (* What are "spec files"? -- .cm files (CDFs)? Aren't those handled by parser?
+    (* What are "spec files"? -- .cm files (CDFs)?
      * What does this produce? How? *)
 
-    (* processSpecFile : filepath -> TextIO.instream -> unit *)
-    fun processSpecFile (filepath: filepath) =
+    (* processSpecFile : env * filepath -> TextIO.instream -> unit *)
+    fun processSpecFile (e as {reset, ...}: env, filepath: filepath) =
 	let val local_dir = P.dir (F.fullPath filepath)
-	    fun set (anchor, filepathOp) =
-		setRelative (anchor, filepathOp, local_dir)
+	    fun set (env, anchor, filepathOp) =
+		setRelative (env, anchor, filepathOp, local_dir)
 
 	    (* mknative : bool -> string -> string *)
 	    fun mknative true fp = fp
@@ -732,10 +725,10 @@ in
 					["!standard"] => loop false
 				      | ["!native"] => loop true
 				      | [a, d] =>
-					  (set (a, SOME (mknative isnative d));
+					  (set (e, a, SOME (mknative isnative d));
 					   loop isnative)
-				      | ["-"] => (PrepathEnv.reset (); loop isnative)
-				      | [a] => (set (a, NONE); loop isnative)
+				      | ["-"] => (reset (); loop isnative)
+				      | [a] => (set (e, a, NONE); loop isnative)
 				      | [] => loop isnative
 				      | _ => (error [f, ": malformed line (ignored)"];
 					      loop isnative)
@@ -811,40 +804,41 @@ in
 	 in {dir = dir, arcs = arcs}
 	end
 
-    (* native : prefileEnv -> dir * filepath -> prefile *)
-    fun native pfenv (dir, filepath) =
+    (* native : prepathEnv * prefileEnv -> dir * filepath -> prefile *)
+    fun native (ppenv, pfenv) (dir, filepath) =
           (case parseFilepathNative filepath
              of RELATIVE arcs => {dir = dir, arcs = arcs}
               | ABSOLUTE arcs => {dir = ROOT "", arcs = arcs}
-              | ANCHORED (anchor, arcs) => {dir = mk_anchor (pfenv, anchor), arcs = arcs}
+              | ANCHORED (anchor, arcs) => {dir = mk_anchor (ppenv, pfnv, anchor), arcs = arcs}
           (* end case *))
 
-    (* standard : prefileEnv -> dir * filepath -> prefile *)
-    fun standard pfenv (dir, filepath) =
+    (* standard : prepathEnv * pfenv -> dir * filepath -> prefile *)
+    fun standard (ppenv, pfenv) (dir, filepath) =
 	(case parseFilepathStandard filepath
 	   of RELATIVE arcs => {dir = dir, arcs = arcs}
 	    | ABSOLUTE arcs => {dir = ROOT "", arcs = arcs}
-	    | ANCHORED (anchor, arcs) => {dir = mk_anchor (pfenv, anchor), arcs = arcs}
+	    | ANCHORED (anchor, arcs) => {dir = mk_anchor (ppenv, pfenv, anchor), arcs = arcs}
         (* end case *))
 
     (* osstring : file -> string *)
     val osstring = FI.canonical o prepathToFilepath o #pp o fileInfoToElab o unintern
 
     (* osstring_prefile : prefile -> string *)
-    fun osstring_prefile ({ dir, arcs }: prefile) : filepath =
-	FI.canonical (prepathToFilepath (extendPrepath arcs (dirToPrepath dir))))
+    fun osstring_prefile { dir, arcs } =
+	FI.canonical (prepathToFilepath (#pp (extendElab arcs (dirToElab dir))))
 
     (* osstring_dir : dir -> string *)
-    fun osstring_dir dir =
-	case prepathToFilepath (dirToPrepath dir)
-	  of "" => P.currentArc  (* = "." *)
+    fun osstring_dir d =
+	case prepathToFilepath (#pp (dirToElab d))
+	  of "" => P.currentArc
 	   | s => FI.canonical s
 
     (* osstring' : file -> string *)
     fun osstring' f =
 	let val oss = osstring f
 	 in if P.isAbsolute oss
-	    then let val ross = P.mkRelative { path = oss, relativeTo = (!cwd_filepath) }
+	    then let val ross =
+			 P.mkRelative { path = oss, relativeTo = #name (!cwd_info) }
 		  in if size ross < size oss then ross else oss
 		 end
 	    else oss
@@ -907,7 +901,7 @@ in
 	end
 
     (* unpickle : prepathEnv * prefileEnv -> {pickled: string list list, relativeTo: file} -> prefile *)
-    fun unpickle (pfenv: prefileEnv) { pickled: string list list, relativeTo: file } =
+    fun unpickle (ppenv: prepathEnv, pfenv: prefileEnv) { pickled: string list list, relativeTo: file } =
 	let fun u_pf (arcs :: l) = {dir = u_d l, arcs = arcs}
 	      | u_pf _ = raise Format
 
@@ -915,7 +909,7 @@ in
 
 	    and u_d [[vol, "r"]] = ROOT vol
 	      | u_d [["c"]] = fileToDir relativeTo
-	      | u_d [[n, "a"]] = mk_anchor (pfenv, n)
+	      | u_d [[n, "a"]] = mk_anchor (ppenv, pfenv, n)
 	      | u_d l = DIR (u_p l)
 
 	 in u_pf pickled
@@ -923,7 +917,7 @@ in
 
     (* decodeFile [decode] : prepathEnv -> filepath -> file *)
     (* what are "segments"? why are segments used? *)
-    fun decodeFilepath (pfenv: prefileEnv) (filepath: filepath) =
+    fun decodeFilepath (ppenv: prepathEnv, pfenv: prefileEnv) (filepath: filepath) =
 	let
 	    (* transArc: string -> string *)
 	    (* what does transArc protect against? *)
@@ -949,7 +943,7 @@ in
 				 of #"%" => prefileToFileInfo (ROOT (xtr ()), arcs)
 				  | #"$" =>
 				      let val n = xtr ()
-				       in prefileToFileInfo {dir = mk_anchor (pfenv, n)), arcs = arcs}
+				       in prefileToFileInfo {dir = mk_anchor (ppenv, pfenv, n)), arcs = arcs}
 	                              end
 	                          | _ => prefileToFileInfo (CWD, transArc arc0 :: arcs)
 	                   end
