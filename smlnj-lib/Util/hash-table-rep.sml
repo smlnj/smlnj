@@ -71,14 +71,11 @@ structure HashTableRep : sig
    *)
     val minSize = 32
     val maxSize = let
-	  fun f i = let
-		  val i' = i+i
-		  in
-		    if i' < Array.maxLen then f i' else i
-		  end
-	  in
-	    f 0x10000
-	  end
+          fun lp (0w0, k) = Word.toIntX(Word.<<(0w1, k-0w1))
+            | lp (w, k) = lp (Word.>>(w, 0w1), k+0w1)
+          in
+            lp (Word.fromInt Array.maxLen, 0w0)
+          end
 
   (* round up `n` to the next hash-table size *)
     fun roundUp n = if (n >= maxSize)

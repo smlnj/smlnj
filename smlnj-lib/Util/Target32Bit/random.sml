@@ -70,7 +70,7 @@ structure Random :> RANDOM =
     val kUMask : W32.word = 0wx80000000         (* most significant w-r bits *)
     val kLMask : W32.word = 0wx7FFFFFFF         (* least significant r bits *)
 
-    datatype t = RandState of {
+    datatype rand = RandState of {
         mt : W32A.array,
         mti : int ref
       }
@@ -79,11 +79,14 @@ structure Random :> RANDOM =
 
     val bytesPerWord = 4
     val magic = Byte.stringToBytes "MT32"
-    val bufLen = 4 + 2 + kNN * bytesPerWord (* magic + mti + words *)
+    val bufLen = 4 + 2 + kN * bytesPerWord (* magic + mti + words *)
+
+    fun w32ToByte w = Word8.fromLarge(W32.toLarge w)
+    fun byteToW32 b = W32.fromLarge(Word8.toLarge b)
 
     fun toBytes (RandState{mti, mt}) = let
           val buf = Word8Buffer.new bufLen
-          fun w32ToByte w = Word8.fromLarge w
+          fun w32ToByte w = Word8.fromLarge(W32.toLarge w)
           val mti' = W32.fromInt(!mti)
           (* add a 32-bit word to the buffer in little-endian order *)
           fun addW32 w = let
@@ -111,25 +114,25 @@ structure Random :> RANDOM =
           then error ("fromBytes", "wrong number of bytes")
           else let
             val SOME(magic', rest) = Word8VectorSlice.getVec(Word8VectorSlice.full vec, 4)
-            fun get i = Word8.toLarge(Word8VectorSlice.sub(rest, i))
-            val arr = W32A.array(kNN, 0w0)
+            fun get i = byteToW32(Word8VectorSlice.sub(rest, i))
+            val arr = W32A.array(kN, 0w0)
             in
               if (magic' <> magic)
                 then error ("fromBytes", "invalid tag")
                 else let
                   val mti = W32.toInt(get 0 || (get 1 << 0w8))
-                  fun getLp (i, bi) = if (i < kNN)
+                  fun getLp (i, bi) = if (i < kN)
                         then let
                           fun getW32 (j, w) = if (0 <= j)
                                 then getW32 (j-1, (w << 0w8) || get (bi + j))
                                 else w
                           in
                             W32A.update (arr, i, getW32(bytesPerWord-1, 0w0));
-                            getLp (i+1, bi+8)
+                            getLp (i+1, bi+4)
                           end
                         else ()
                   in
-                    if (mti <= kNN)
+                    if (mti <= kN)
                       then (
                         getLp (0, 2);
                         RandState{mti = ref mti, mt = arr})
@@ -240,6 +243,8 @@ structure Random :> RANDOM =
             y
           end
 
+    fun rand (a, b) = fromList [W32.fromInt a, W32.fromInt b]
+
     fun randNativeInt rs = Int32.fromLarge(W32.toLargeIntX(W32.>>(randNativeWord rs, 0w1)))
 
   (***** old Random functions *****)
@@ -259,7 +264,7 @@ structure Random :> RANDOM =
     fun randWord rs = let
           val w = randNativeWord rs
           in
-            Word.fromLargeWord(W32.>>(w, 0w1))
+            Word.fromLarge(W32.toLarge(W32.>>(w, 0w1)))
           end
 
     fun randReal rs = let
