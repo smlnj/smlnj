@@ -461,13 +461,7 @@ in
       | dirToReanchor (ROOT vol) = NONE
       | dirToReanchor (ANCHOR { name, ... }) = SOME (Anchor name)
       | dirToReanchor (DIR fi) =
-	 Option.map Parent (fileInfoToReanchor fi) (* why Parent? *)
-
-    (* prefileToReanchor : prefile -> reanchor option
-     * not exported
-     * local: none *)
-    fun prefileToReanchor ({dir, arcs} : prefile) =
-	Option.map (fn reanchor => Extend (arcs, reanchor)) (dirToReanchor dir)
+	 Option.map Parent (fileInfoToReanchor fi) (* why do we need Parent? *)
 
     (* fileInfoToReanchor : fileInfo -> reanchor option
      * not exported
@@ -475,9 +469,15 @@ in
     and fileInfoToReanchor ({ dir, arcs, id }: fileInfo) =
 	Option.map (fn reanchor => Extend (arcs, reanchor)) (dirToReanchor dir)
 
+    (* prefileToReanchor : prefile -> reanchor option
+     * not exported
+     * local: none *)
+    fun prefileToReanchor ({dir, arcs} : prefile) =
+	Option.map (fn reanchor => Extend (arcs, reanchor)) (dirToReanchor dir)
+
     (* fileToReanchor : file -> reanchor option
      * not exported
-     * local: osstring_reanchored *)
+     * local: osstring_reanchored* *)
     val fileToReanchor = fileInfoToReanchor o unintern
 
 
@@ -512,7 +512,7 @@ in
 	*   OS.FileSys.fileId. *)
 
 	(* getFileId [idOf] : fileInfo -> FI.id *)
-	(* returns the fileId associated with the file, defining it if necessary *)
+	(* returns the fileId associated with the file, updating the id field if it was NONE *)
 	fun getFileId (fi as { id, ... }: fileInfo) =
 	    let val pp = fileInfoToPrepath fi (* compute the prepath of the fileInfo *)
 	     in case !id
@@ -583,30 +583,55 @@ in
      * the anchor.
      *
      * structure : PrepathEnv
-     * Embodies an anchor to prepath environment as an "object" structure with state.
+     * This stateful module embodies an anchor to prepath environment as an "object" structure.
      * The mapping from anchors to prepaths is stored in the local reference variable anchorMapRef.
-     * An anchor that is not in the domain of !anchorMapRef can be considered "invalid".
-     * The operations get and set and defined [is_set] are not called outside this file.
+     * 
+     * get a: lookup the anchor a and return the associated prepath, if a is bound in the current
+     *   map (!anchorMapRef).  Causes a fatal error (Compiler Bug) if a is not in the domain
+     *   of the map.
+     * 
+     * set (a, SOME pp) : bind (or rebind) the anchor a to prepath pp, modifying the map
+     * set (a, NONE) : remove a from the domain of the map if it is currently bound, otherwise
+     *   do nothing.
+     *
+     * defined a : is the anchor a in the domain of the current map?
+     * 
+     * reset () : replace the current map with the empty SM.map, thus reseting the prepath
+     *   anchor environment to be the empty environment.
+     *
+     * An anchor that is not in the domain of the current prepath map (!anchorMapRef) can be
+     * considered to be "invalid".
+     * The operations get and set and defined are not called outside this file.
      *   while (some other version of?) reset is called in many files in cm.
-     * get [get_free] is only called in get_anchor and mk_anchor.
-     * set [set_free] is only called in setRelative [set0]
-     * exported
-     * local: none
+     * get is only called in get_anchor and mk_anchor.
+     * set is only called in setRelative.
+     * PrepathEnv is not exported (is not in the signature of SrcPath)
+     * local: get_anchor, setRelative, set_anchor, reset_anchors, mk_anchor, processSpecFile
      * external: main/cm-boot.sml, bootstrap/btcompile.sml
-
-     * previously, the anchor to prepath environment(s) were created by a function newEnv
+     *
+     * Previously, the anchor to prepath environment(s) were created by a function newEnv
      * that was called just once in the files main/cm-boot.sml and bootstrap/btcompile.sml.
      * I conjecture that there was never more than one (global) instance of this environment,
      * and hence it is safe to replace any reference to the environments created by newEnv
      * with references to the global PrepathEnv structure defined inwith SrcPath.
-
-     * There is still a separate "functional" environment, of type prefileEnv, that maps 
-     * anchors to prefiles.  These prefile environment are passed as parameters to a number
-     * exported SrcPath functions.  The gloval prepath environment is represented by PrefileEnv
-     * and such environments are no longer passed as parameters.
      *
-     * The justification for having two anchor environments, the global, stateful one in
-     * PrepathEnv and the functional verion (prefileEnv) is unclear.
+     * There is still a separate "functional" environment, of type prefileEnv, that maps 
+     * anchors to prefiles.  These prefile environment are passed as parameters to the
+     * exported SrcPath functions bind, decodeFilepath, and unpickle.
+     *
+     * The global prepath environment is represented by the structure PrepathEnv and prepath
+     * anchor environments are no longer passed as parameters.
+     *
+     * QUESTION: Why do we need two anchor environments, the global, stateful one in
+     *   PrepathEnv and the functional version (type prefileEnv)?
+     *
+     * QUESTION: does PrepathEnv embody the "root anchor environment" mentioned in Sec 3.4
+     *   of the CM manual?  Or does "root anchor environment" refer to the dual prepath
+     *   and prefile anchor environments?
+     * 
+     * QUESTION: how (where) do the pathconfig files system/pathconfig, config/extrapathconfig,
+     *   and $SMLNJ/lib/pathconfig contribute to initializing the anchor environments (and which
+     *   environments are initialized)?
      *)
 
     structure PrepathEnv
@@ -616,15 +641,18 @@ in
 	  defined: anchor -> bool,
 	  reset: unit -> unit
         end =
+
     struct
 
       val anchorMapRef : prepath SM.map ref = ref SM.empty
 
       (* find : anchor -> prepath option *)
+      (* locally used "look up" function for accessing the current state of the prepath
+       * environment *)
       fun find anchor = SM.find (!anchorMapRef, anchor)
 
       (* defined : anchor -> bool *)
-      (* Is anchor bound in !anchorMapRef? *)
+      (* Is anchor bound in !anchorMapRef?, i.e. in the prepath anchor environment? *)
       fun defined anchor = SM.inDomain (!anchorMapRef, anchor)
 
       (* get : anchor -> elab *)

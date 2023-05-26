@@ -32,7 +32,7 @@ sig
      * "next validation" ? *)
     val scheduleNotification : unit -> unit
 
-    (* destructive updates to anchor settings (for configuration) *)
+    (* destructive updates to the global anchor prepath environment (for configuration) *)
     val get_anchor : anchor -> string option
     val set_anchor : anchor * string option -> unit (* native syntax! *)
     val reset_anchors : unit -> unit
