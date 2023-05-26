@@ -1330,7 +1330,8 @@ for working with DIR values.
     ["PrettyPrint", "src", "prettyprint.cm"]
 
   So it looks like whatever is generating the PIDMAP file can produce such "segmented"
-  filepaths.
+  file paths.  Is this is the only source of segmented file paths?
+
 
 --------------------------------------------------------------------------------
 Name changes and new names:
