@@ -1367,7 +1367,6 @@ pre*		fileToPrefile
 Removed:
 
 null_pp		.  -- removed, only used once and replaced with its defn
-bosug_elab	.  -- removed
 revalidateCwd*	.  -- removed, functionality merged into fun cwd
 absElab		.
 ord_key*	.  -- file (not needed)
@@ -1376,6 +1375,7 @@ elab_file	.  -- no more elabs
 elab_dir	.  -- "
 augElab		.  -- "
 dirElab		.  -- "
+bosug_elab	.  -- "
 
 Added:
 
