@@ -14,6 +14,8 @@ sig
 
     type prefileEnv  (* a "functional" environment: anchor --> prefile, a StringMap.map *)
 
+    val compareFile : file * file -> order
+
     (*  "re-establish stability of ordering", DBM: ??? *)
     (* reconstructs the internal mapping from files to stable ids, while
      * recomputing their associated file_ids (FileId.id). *)

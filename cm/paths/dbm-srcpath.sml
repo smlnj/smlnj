@@ -99,7 +99,7 @@ in
      * its boolean argument is true. *)
     type anchorInfo =
          {name: anchor,       (* i.e. the name of the anchor, a string *)
-	  prepath : prepath,  (* original "anchor point"; should it be absolute? *)
+	  prepath : prepath,  (* original "anchor point"; should it always be absolute? *)
 	  encode : (bool -> string) option}
 
     (* dir: supposed to denote file system directories? *)
@@ -144,6 +144,11 @@ in
      * type FileIdSidMap.map.
      * Possible INVARIANT: id field of fileInfo is defined (is SOME) *)
     type file = fileInfo * stableid
+
+    (* compareFile : file * file -> order *)
+    (* This is used in paths/srcpathmap.sml to define maps over files, with ord_key = file *)
+    fun compareFile ((_,stableid1): file, ((_,stableid2) : file) =
+	Int.compare (stableid1, stableid2)
 
     (* filepathToPrepath : filepath -> prepath *)
     (* use OS.Path.fromString to parse the filepath, then convert result to a prepath
@@ -1300,6 +1305,10 @@ for working with DIR values.
   to the need for a Parent constructor for the reanchor type, whose role is unclear
   to me. It would simplify reanchoring if this constructor could be eliminated.
 
+  Conjecture: the fileInfos created in decodeFilepath designate CDFs. Then the Parent
+  delta in the associated reanchors gives the relative path to the directory containing
+  the CDF, and then the further reanchoring will be applied relative to that directory
+  containing the CDF, not to the relative path of the CDF.
 
 --------------------------------------------------------------------------------
 Name changes and new names:
