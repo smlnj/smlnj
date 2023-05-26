@@ -8,13 +8,11 @@ sig
     type anchor = string
     type filepath = string
 
-    type prepath
     type prefile
     type file
     type dir
 
-    type prepathEnv  (* anchor --> prepath, stateful *)
-    type prefileEnv  (* anchor --> prefile, functional *)
+    type prefileEnv  (* a "functional" environment: anchor --> prefile, a StringMap.map *)
 
     (*  "re-establish stability of ordering", DBM: ??? *)
     (* reconstructs the internal mapping from files to stable ids, while
@@ -34,13 +32,10 @@ sig
      * "next validation" ? *)
     val scheduleNotification : unit -> unit
 
-    (* new "empty" prepathEnv *)
-    val newEnv : unit -> prepathEnv
-
     (* destructive updates to anchor settings (for configuration) *)
-    val set_anchor : prepathEnv * anchor * string option -> unit (* native syntax! *)
-    val get_anchor : prepathEnv * anchor -> string option
-    val reset_anchors : prepathEnv -> unit
+    val get_anchor : anchor -> string option
+    val set_anchor : anchor * string option -> unit (* native syntax! *)
+    val reset_anchors : unit -> unit
 
     (* process a specification file; must sync afterwards! *)
     val processSpecFile : env * filepath -> TextIO.instream -> unit
@@ -95,7 +90,7 @@ sig
 
     (* portable encodings that avoid whitespace *)
     val encodeFile : file -> filepath
-    val decodeFilepath : env -> filepath -> file
+    val decodeFilepath : prefileEnv -> filepath -> file
 
     (* check whether encoding (result of "encode") is absolute
      * (i.e., not anchored, nor relative) *)
@@ -104,7 +99,7 @@ sig
     val pickle : (bool * string -> unit) ->
 		 { prefile: prefile, relativeTo: file } -> string list list
 
-    val unpickle : env ->
+    val unpickle : prefileEnv ->
 		   { pickled: string list list, relativeTo: file } -> prefile
 
 end (* signature SRCPATH *)

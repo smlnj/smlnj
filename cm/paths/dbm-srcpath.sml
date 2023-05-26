@@ -492,14 +492,15 @@ in
 	      ANCHOR { name = anchor,
 		       prepath = prefileToPrepath prefile, (* prefileToPrepath ? *)
 		       encode = SOME (fn (show_anchors: bool) => encodePrefile show_anchors prefile) }
-	   | NONE => (* anchor is not in the domain of prefileEnv; try get to define the anchor prepath *)
+	   | NONE => (* anchor is not in the domain of prefileEnv;
+			as an alternative, see if it is defined in PrepathEnv *)
 	      ANCHOR { name = anchor,
 		       prepath = PrepathEnv.get anchor,  (* get will fail if not (defined anchor) *)
 		       encode = NONE }
 
 
    (* *********************************************************************************** *)
-   (* interning files: getting file_ids and and generating stableids *)
+   (* "interning files": assigning file_ids and generating stableids for fileInfos *)
 
     local
 
@@ -507,7 +508,7 @@ in
 	    (known: int FileInfoMap.map ref).
 	* New bindings are created by the intern function.
 	* intern uses uses FileInfoMap.insert, which uses getFileId, which uses FileId.fileId
-	*   and updates the id field of the fileInfo record to a FileId.id computed by
+	*   to update the id field of the fileInfo record to a FileId.id computed by
 	*   OS.FileSys.fileId. *)
 
 	(* getFileId [idOf] : fileInfo -> FI.id *)
@@ -546,9 +547,9 @@ in
 	 * define the id field of the fileInfo. *)
 	fun intern (fi: fileInfo) : file =
 	    case FileInfoMap.find (!known, fi)
-	      of SOME stableid => (fi, stableid)
+	      of SOME stableid => (fi, stableid)  (* fi was previously interned *)
 	       | NONE =>
-		   let val stableid = !next
+		   let val stableid = !next  (* generate a new stableid *)
 		    in next := stableid + 1;
 		       known := FileInfoMap.insert (!known, fi, stableid);
 		         (* record the (fi, stableid) in known *)
@@ -603,6 +604,9 @@ in
      * anchors to prefiles.  These prefile environment are passed as parameters to a number
      * exported SrcPath functions.  The gloval prepath environment is represented by PrefileEnv
      * and such environments are no longer passed as parameters.
+     *
+     * The justification for having two anchor environments, the global, stateful one in
+     * PrepathEnv and the functional verion (prefileEnv) is unclear.
      *)
 
     structure PrepathEnv
@@ -651,9 +655,7 @@ in
 		     | NONE => ()) (* do nothing *)
 
       (* reset : unit -> unit *)
-      (* set validity flags of all entries in !anchorMapRef to false and assign SM.empty
-       * to the anchorMapRef ref. The validity flags may have been incorporated into
-       * previously created elabs, and so remain relevant. *)
+      (* wipe out the contents of the prepath environment by setting anchorMapRef to SM.empty *)
       fun reset () = anchorMapRef := SM.empty  (* reset anchorMapRef to the empty map *)
 
     end (* structure PrepathEnv *)
@@ -674,16 +676,20 @@ in
 	 in PrepathEnv.set (anchor, Option.map fp_pp filepathOp)
 	end
 
-    (* set_anchor : prepathEnv * anchor * filepath option * filepath -> unit *)
+    (* set_anchor : anchor * filepath option -> unit *)
     (* When filepathOp is SOME, binds a corresponding prepath to the anchor in env;
-     * when filepathOp is NONE, delets anchor and its binding from env.
+     * when filepathOp is NONE, deletes the anchor and its binding from env.
      * Exported and called externally (3 times) in main/cm-boot.sml *)
     fun set_anchor (anchor, filepathOp) =
 	setRelative (anchor, filepathOp, F.getDir ()) before sync ()
 
     (* reset_anchors : unit -> unit *)
-    (* exported and called once externally, in main/cm-boot.sml (defn of resetPathConfig) *)
+    (* exported
+     * external: main/cm-boot.sml (in resetPathConfig) *)
     fun reset_anchors () = (PrepathEnv.reset (); sync ())
+
+
+    (* prefile environments *)    
 
     type prefileEnv = prefile SM.map
 
@@ -693,7 +699,8 @@ in
     (* produces a new env record with only the "bound" field altered.
      * Anchors are bound to corresponding prefiles, with these bindings being
      * added to the existing "bound" mapping.
-     * (Perhaps?) called only in main/general-params.sml *)
+     * exported
+     * external: main/general-params.sml, elsewhere? *)
     fun bindPrefiles (pfenv: prefileEnv) (alist: (anchor * prefile) list) : prefileEnv =
 	let fun folder ((anchor, prefile), env) = SM.insert (env, anchor, prefile)
 	 in foldl folder pfenv alist
@@ -755,7 +762,7 @@ in
       | ANCHORED of anchor * string list
 
     (* parseFilepathNative [parseNativeSpec]: filepath -> stdspec *)
-    fun parseFilepathNative filepath =
+    fun parseFilepathNative (filepath: filepath) =
 	let val {isAbs, arcs, vol} = OS.Path.fromString filepath
          in case arcs
 	      of [""] => impossible "parseFilepathNative -- zero-length arc name"
@@ -765,7 +772,7 @@ in
 		    RELATIVE arcs)
 	       | "$" :: (arcs' as (arc1 :: _)) => (* "$/arc1/..." *)
 		   if isAbs
-		   then RELATIVE arcs  (* e.g. "/$/a/b" ? *)
+		   then RELATIVE arcs          (* e.g. "/$/a/b" ? *)
 		   else ANCHORED(arc1, arcs')  (* e.g. "$/a/b" ? *)
 	       | arc1 :: arcn =>
 		   if String.sub(arc1, 0) = #"$"
@@ -777,7 +784,7 @@ in
         end
 
     (* parseFilepathStandard [parseStdspec]: (string -> unit ) -> filepath -> stdspec *)
-    fun parseFilepathStandard filepath =
+    fun parseFilepathStandard (filepath: filepath) =
 	let fun delim #"/" = true
 	      | delim #"\\" = true
 	      | delim _ = false
@@ -827,6 +834,13 @@ in
 	    | ANCHORED (anchor, arcs) => {dir = mk_anchor (pfenv, anchor), arcs = arcs}
         (* end case *))
 
+
+    (* *********************************************************************************** *)
+    (* the "osstring" family of functions
+     *  these translate files, prefiles, dirs to strings and allow for the "reanchoring"
+     *  of "anchored" paths.
+     *)
+
     (* osstring : file -> string *)
     val osstring = FI.canonical o prepathToFilepath o #pp o fileInfoToElab o unintern
 
@@ -850,12 +864,15 @@ in
 	    else oss
 	end
 
-    (* do_reanchor : (string -> filepath) -> reanchor -> prepath *)
+    (* do_reanchor : (string -> filepath) -> reanchor -> prepath? *)
+    (* recurses down to the anchor root, maps that to a filepath using cvt, converts
+       that filepath to a prepath (filepathToPrepath) then recursively applies the transforms
+       of the reanchor layers to yield a modified prepath. *)
     fun do_reanchor (cvt: string -> filepath) reanchor =
 	case reanchor
 	  of Anchor of anchor => filepathToPrepath (cvt anchor)
 	   | Parent of reanchor => parentPrepath (do_reanchor cvt reanchor)
-	   | Extent of (arcs, reanchor) => extendPrepath arcs (do_reanchor cvt reanchor)
+	   | Extend of (arcs, reanchor) => extendPrepath arcs (do_reanchor cvt reanchor)
 
     (* osstring_reanchored : (string -> string) -> file -> filepath option *)
     (* used once in main/filename-policy.sml (FilenamePolicyFn) *)
@@ -864,9 +881,7 @@ in
 	 in case reanchorOp
 	    of NONE => NONE
 	     | SOME reanchor => 
-	         let val prepath = do_reanchor cvt reanchor
-		  in SOME (FI.canonical (prepathToFilepath prepath))
-		 end
+		 SOME (FI.canonical (prepathToFilepath (do_reanchor cvt reanchor)))
 	end
 
     (* osstring_prefile_relative : prefile -> filepath *)
@@ -880,6 +895,10 @@ in
 
     (* tstamp : file -> TSamp.t *)
     fun tstamp f = TStamp.fmodTime (osstring f)
+
+
+    (* *********************************************************************************** *)
+    (* pickling and unpickling prefiles *)				   
 
     (* pickle : (bool * string -> unit) -> {prefile: prefile, relativeTo : file}
                 -> string list list *)
@@ -906,7 +925,7 @@ in
 	 in p_pf prefile
 	end
 
-    (* unpickle : prepathEnv * prefileEnv -> {pickled: string list list, relativeTo: file} -> prefile *)
+    (* unpickle : prefileEnv -> {pickled: string list list, relativeTo: file} -> prefile *)
     fun unpickle (pfenv: prefileEnv) { pickled: string list list, relativeTo: file } =
 	let fun u_pf (arcs :: l) = {dir = u_d l, arcs = arcs}
 	      | u_pf _ = raise Format
@@ -921,20 +940,22 @@ in
 	 in u_pf pickled
 	end
 
-    (* decodeFile [decode] : prepathEnv -> filepath -> file *)
-    (* what are "segments"? why are segments used? *)
+
+    (* *********************************************************************************** *)
+    (* decoding "filepaths" to files (relative to a given prefileEnv) *)
+
+    (* decodeFile [decode] : prefileEnv -> filepath -> file *)
+    (* What are "segments"? (Where are they documented?)
+       What is the purpose of segments?
+       Where are they introduced? *)
     fun decodeFilepath (pfenv: prefileEnv) (filepath: filepath) =
 	let
 	    (* transArc: string -> string *)
-	    (* what does transArc protect against? *)
+	    (* what does transArc protect against?
+	     * Is it reversing the effect of transSpecial performed earlier? *)
 	    fun transArc "." = P.currentArc  (* = "." *)
 	      | transArc ".." = P.parentArc  (* = ".." *)
 	      | transArc a = transCode a
-
-	    (* addseg : string * fileInfo -> fileInfo *)
-	    fun addseg (seg, fi) =
-		prefileToFileInfo {dir = DIR fi,
-				   arcs = map transArc (String.fields (isChar #"/") seg)}
 
 	    (* firstSet : string -> fileInfo *)
 	    fun firstSeg s =
@@ -946,13 +967,17 @@ in
 		      else let val arc0' = String.extract (arc0, 1, NONE)
 			       val char0 = String.sub (arc0, 0)
 			    in case char0 
-				 of #"%" => prefileToFileInfo (ROOT (xtr ()), arcs)
-				  | #"$" =>
-				      let val n = xtr ()
-				       in prefileToFileInfo {dir = mk_anchor (pfenv, n)), arcs = arcs}
-	                              end
+				 of #"%" => (* arc0' is a volume name *)
+				      prefileToFileInfo (ROOT arc0', arcs)
+				  | #"$" => (* arc0' is an anchor *)
+				      prefileToFileInfo {dir = mk_anchor (pfenv, arc0')), arcs = arcs}
 	                          | _ => prefileToFileInfo (CWD, transArc arc0 :: arcs)
 	                   end
+
+	    (* addseg : string * fileInfo -> fileInfo *)
+	    fun addseg (seg, fi) =
+		prefileToFileInfo {dir = DIR fi,
+				   arcs = map transArc (String.fields (isChar #"/") seg)}
 
 	 in case String.fields (isChar #":") filepath
 	      of nil => impossible "decodeFilepath: no segments"
@@ -1200,7 +1225,7 @@ for working with DIR values.
       [Have to understand what is going on in decodeFilepath better. Don't yet understand
        segments and the need to adjust arcs using a Parent reanchor in dirToReanchor.
 
-   What I still don't understand about reanchors and DIRs.
+   A couple things I still don't understand about reanchors and DIRs:
 
       * Why do we use the Parent reanchor to trim the last (innermost) arc when computing
         the (potential) reanchor for a DIR?
@@ -1208,6 +1233,44 @@ for working with DIR values.
       * What are segments and why do they exist?  [in fun processFilepath]
         How are DIRs used to "link" segments together?
 	Examples?
+
+
+9. Phase 3 simplification
+
+  The main change is to separate the two anchor environments embodied in the env type,
+  namely the anchor --> prepath environment (a "stateful" mapping), and the
+  anchor --> prefile environment (the "bound" component of an env).
+
+  Since newEnv is called in only two places to create new "env" environments
+  (once in main/cm-boot.sml and once in bootstrap/btcompile.sml), and since these
+  environments do not "co-exist" in a given CM process, it seems likely that the
+  anchor --> prepath environment can be implemented as a "global" stateful resource
+  embodied in a structure PrepathEnv inside SrcPath and used only locally.
+  Most functions in the SrcPath signature that took an env parameter can instead
+  internally access the prepath environment through the PrepathEnv structure and 
+  no longer need an env parameter. [The exceptions are mk_anchor and bind, which
+  still need to access the prefile environment.]
+
+  The anchor --> prefile environment (the "bound" component of an env record),
+  on the other hand, is treated functionally and can be given its own type with
+  operations "bind" to add bindings and "mk_anchor" to access the environment to
+  produce ANCHOR directories for a given anchor.
+
+  There remains the question of whether we actually need two different anchor 
+  environments.
+
+  Note that prepaths and prefiles could both be considered representations of locations
+  in the file system (like filepaths, which are the "raw" form of file system locations).
+  But prefiles contain dir components as the root of a arc list path, and the dir
+  type expresses some of the "semantics" relevant to CM (i.e. paths relative to
+  the root (ROOT), or the current working directory (CWD), or an anchor (ANCHOR) or
+  relative to a directory (DIR) (?).
+
+  A remaining mystery to be cleared up is the notion of "segments" in a filepath
+  (separated by the #":" character) and how these are process to create dir values
+  and prefiles in the decodeFilepath (formerly "decode") function. This gives rise
+  to the need for a Parent constructor for the reanchor type, whose role is unclear
+  to me. It would simplify reanchoring if this constructor could be eliminated.
 
 
 --------------------------------------------------------------------------------
@@ -1224,26 +1287,21 @@ file0 [fun]	prefileToFileInfo
 file*  		prefileToFile
 context 	dir   -- fileInfo[file0] field and various argument names
 look		elab  -- anchorInfo field (argument type for ANCHOR dir constructor); changed type
-get_free	get (env field label)
-set_free	set (env field label)
+get_free	PrepathEnv.get
+set_free	PrepathEnv.set
 set0		setRelative
-elab_file	fileInfoToElab
-elab_dir	dirToElab
 pp2name		prepathToFilepath
-F0M		FileInfoMap [structure]
+F0M		FileInfoMap [structure, used in intern, clear, sync]
 dir*		fileToDir
 desc*		fileToFilepath
 extend*		extendPrefile
 augPP		extendPrepath
-augElab		extendElab
 dirPP		parentPrepath
-dirElab		parentElab
 pre*		fileToPrefile
 idOf		getFileId
 raw*		mkPrefile
-decode*		decodeFilepath (segmented?)
+decode*		decodeFilepath (segmented filepaths?)
 pre0		fileInfoToPrefile
-
 pre*		fileToPrefile
 
 Removed:
@@ -1254,6 +1312,10 @@ revalidateCwd*	.  -- removed, functionality merged into fun cwd
 absElab		.
 ord_key*	.  -- file (not needed)
 compare*	.  -- compare for files based on stableid (not needed)
+elab_file	.  -- no more elabs
+elab_dir	.  -- "
+augElab		.  -- "
+dirElab		.  -- "
 
 Added:
 
@@ -1264,6 +1326,16 @@ Added:
 .		fileInfoToReanchor
 .		prefileToReanchor
 .		fileToReanchor
+
+* Some of the former "elab" functions are replaced by "reanchor" functions.
+
+* In some cases, an env parameter that provided access to the anchor -> prepath
+  environment is removed, and instead the global prepath environment in PrepathEnv
+  is accessed directly. In other cases (like bind and mk_anchor) where the env 
+  parameter provided access to the "bound" prefile environment, the env parameter
+  is replaced by a prefileEnv parameter.
+
 --------------------------------------------------------------------------------
-Exports, external uses:
+
+
 
