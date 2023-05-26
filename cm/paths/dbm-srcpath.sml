@@ -162,6 +162,7 @@ in
     fun prepathToFilepath ({ revarcs, vol, isAbs }: prepath) =
 	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
 
+
    (* *********************************************************************************** *)
    (* current working directory (CDW) *)
 
@@ -1309,6 +1310,27 @@ for working with DIR values.
   delta in the associated reanchors gives the relative path to the directory containing
   the CDF, and then the further reanchoring will be applied relative to that directory
   containing the CDF, not to the relative path of the CDF.
+
+  An example: one place where decode[Filepath] is called is in cm-boot.sml, where it
+  is applied to "filepaths" that are found at the beginning of lines in the PIDMAP
+  file.  Here is an example of a "segmented" filepath found in PIDMAP:
+
+    $SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm
+
+  Note that the path for prettyprint.cm should be something like
+
+    $SMLNJ-LIB/PrettyPrint/src/prettyprint.cm
+
+  So if in decodeFilepath, the first segment is a DIR with arcs
+
+    ["PrettyPrint", "prettyprint-lib.cm"]
+
+  then this can be "Parent'ed" to ["PrettyPrint"] before being Extend'ed to
+
+    ["PrettyPrint", "src", "prettyprint.cm"]
+
+  So it looks like whatever is generating the PIDMAP file can produce such "segmented"
+  filepaths.
 
 --------------------------------------------------------------------------------
 Name changes and new names:
