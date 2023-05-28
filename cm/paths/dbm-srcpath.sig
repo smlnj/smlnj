@@ -6,13 +6,13 @@ sig
     exception Format
 
     type anchor = string
-    type filepath = string
+    type fpath = string   (* file path *)
 
-    type prefile
+    type dpath  (* "directory"-based path *)
     type file
     type dir
 
-    type prefileEnv  (* a "functional" environment: anchor --> prefile, a StringMap.map *)
+    type dpathEnv  (* a "functional" environment: anchor --> dpath, a StringMap.map *)
 
     val compareFile : file * file -> order
 
@@ -40,68 +40,68 @@ sig
     val reset_anchors : unit -> unit
 
     (* process a specification file; must sync afterwards! *)
-    val processSpecFile : env * filepath -> TextIO.instream -> unit
+    val processSpecFile : env * fpath -> TextIO.instream -> unit
 
     (* non-destructive bindings for anchors (for anchor scoping) *)
-    val bind: prefileEnv -> (anchor * prefile) list -> prefileEnv
+    val bind: dpathEnv -> (anchor * dpath) list -> dpathEnv
 
-    (* make abstract paths (prefiles) *)
-    val mkPrefile : dir * filepath -> prefile
-    val native : env -> dir * filepath -> prefile
-    val standard : env -> dir * filepath -> prefile
+    (* make abstract paths (dpaths) *)
+    val mkDpath : dir * fpath -> dpath
+    val native : env -> dir * fpath -> dpath
+    val standard : env -> dir * fpath -> dpath
 
-    (* extend a prefile's arcs (naming relative to a directory) with a list of new arcs *)
-    val extendPrefile : prefile -> string list -> prefile
+    (* extend a dpath's arcs (naming relative to a directory) with a list of new arcs *)
+    val extendDpath : dpath -> string list -> dpath
 
-    (* check that there is at least one arc in after the path's context *)
-    val file : prefile -> file
+    (* check that there is at least one arc in the path of the dpath *)
+    val dpathToFile : dpath -> file
 
-    (* To be able to pickle a file, turn it into a prefile first... *)
-    val fileToPrefile : file -> prefile
+    (* To be able to pickle a file, turn it into a dpath first... *)
+    val fileToDpath : file -> dpath
 
-    (* directory paths (contexts) *)
+    (* "directory" paths [contexts] *)
     val cwd : unit -> dir
     val fileToDir : file -> dir
 
     (* get info out of abstract paths *)
-    val osstring : file -> filepath
-    val osstring' : file -> filepath	(* use relative path if shorter *)
+    val osstring : file -> fpath
+    val osstring' : file -> fpath	(* use relative path if shorter *)
 
     (* get path relative to the file's context; this will produce an
      * absolute path if the original spec was not relative (i.e., if
      * it was anchored or absolute) *)
-    val osstring_relative : file -> filepath
+    val osstring_relative : file -> fpath
 
-    (* get name of prefile *)
-    val osstring_prefile : prefile -> string
+    (* get name of dpath *)
+    val osstring_dpath : dpath -> string
 
-    (* same for prefile *)
-    val osstring_prefile_relative : prefile -> filepath
+    (* same for dpath *)
+    val osstring_dpath_relative : dpath -> fpath
 
     (* get name of dir *)
     val osstring_dir : dir -> string
 
     (* expand root anchors using given function *)
-    val osstring_reanchored : (anchor -> string) -> file -> filepath option
+    val osstring_reanchored : (anchor -> string) -> file -> fpath option
 
     (* get a human-readable (well, sort of) description *)
-    val fileToFilepath : file -> string
+    val fileToFpath : file -> string
 
     (* get a time stamp *)
     val tstamp : file -> TStamp.t
 
     (* portable encodings that avoid whitespace *)
-    val encodeFile : file -> filepath
-    val decodeFilepath : prefileEnv -> filepath -> file
+    val encodeFile : file -> fpath
+    val decodeFpath : dpathEnv -> fpath -> file
 
     (* check whether encoding (result of "encode") is absolute
-     * (i.e., not anchored, nor relative) *)
-    val absoluteFilepath : filepath -> bool
+     * (i.e., neither anchored, nor relative) *)
+    val absoluteFpath : fpath -> bool
 
     val pickle : (bool * string -> unit) ->
-		 { prefile: prefile, relativeTo: file } -> string list list
+		 { dpath: dpath, relativeTo: file } -> string list list
 
-    val unpickle : prefileEnv ->
-		   { pickled: string list list, relativeTo: file } -> prefile
+    val unpickle : dpathEnv ->
+		   { pickled: string list list, relativeTo: file } -> dpath
 
 end (* signature SRCPATH *)

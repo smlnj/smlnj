@@ -40,24 +40,26 @@ in
     (* anchor: the name of an anchor, e.g. "smlnj" for the anchor $smlnj *)
     type anchor = string
 
-    (* filepath: a file path in some format
+    (* fpath: a file path in some format
      * by default, we assume the format that OS.Path uses
      * but sometimes the format will be OS native (Unix and Windows OSs only) *)
-    type filepath = string 
+    type fpath = string 
 
     (* stableid: integers used as "stable" ids of files(?) *)
     type stableid = int
 
+    type path = string list  (* list of arc names *)
+    type rpath = string list (* reversed list of arc names *)
     (* A apath is similar to the result of OS.Path.fromString except that
      * we keep the list of arcs in reversed order.  This makes adding
      * and removing arcs at the end easier.
-     * A apath is essentially an "abstract syntax" for ordinary filepaths. *)
-    type apath = { revarcs: string list, vol: string, isAbs: bool }
+     * A apath is essentially an "abstract syntax" for ordinary fpaths. *)
+    type apath = { revarcs: rpath, vol: string, isAbs: bool }
 
     (* reanchor: relative location spec that can be used reconstruct a path relative to
-     * an "anchor point" (specified by a filepath) for the anchor that occurs at the end
+     * an "anchor point" (specified by a fpath) for the anchor that occurs at the end
      * of the reanchor chain (Anchor a).
-     * A reanchor is a sort of "delta path" from some given filepath/apath and the anchor
+     * A reanchor is a sort of "delta path" from some given fpath/apath and the anchor
      * that that path is relative to.
      * If a apath is not relative to an anchor, then there is no reanchor for that apath;
      * i.e., apathToReanchor will return NONE. *)
@@ -81,7 +83,7 @@ in
      *       that is, the location in the file system that the anchor "points to".
      *
      *   (2) a "reanchor", which is a description of the "path" from an anchor to a file
-     *       (filepath, apath) that is defined relative to that anchor, and only exists
+     *       (fpath, apath) that is defined relative to that anchor, and only exists
      *       for files whose apath is relative to an anchor point (the location in the
      *       file system that an anchor "names").  So a reanchor option is an attribute of
      *       file, not directly of an anchor (or anchor point) directly. It represents the
@@ -102,88 +104,89 @@ in
      *)
 
     (* dir: supposed to denote file system directories? *)
+    (* The DIR form is produced in the decodeFpath function (anywhere else?).
+     * The associated dpath that is produced there seems to point to a "member" CDF of an
+     * actual directory, so the actual directory path is the rtail of the DIR path, where
+     * rtail is the operation of dropping the last element of a list.
+     * The dir constructors are not exported from SrcPath, so no DIR values can be created
+     * elsewhere. *)
+				    
     datatype dir
       = CWD                   (* the current working directory, the filepath for which can
-				 be obtained either from the cwd_filepath ref, or as returned
+				 be obtained either from the cwd_fpath ref, or as returned
 				 by a call of F.getDir (), normally through the cwd function *)
       | ANCHOR of anchorInfo  (* anchors always "denote" directories, not ordinary files *)
       | ROOT of string        (* the string is: for Unix: ""; for Windows: a volume name *)
-      | DIR of dpath          (* betting we don't need the fileInfo id for this *)
+      | DIR of dpath          (* betting we don't need the old fileInfo id for this *)
 
-    (* dpath: represents a file in terms of a directory and a list of arcs relative to that
+    (* dpath: represents a file in terms of a "directory" and a list of arcs relative to that
      * directory. As usual, a corresponding file may not exist in the file system.
      * The arcs are in normal (file system) order, outermost first (unlike for apaths).
      * The arc list can be empty (?), in which case the dpath designates the "directory". *)
-    withtype dpath = { dir: dir, arcs: string list }
 
-    (* anchorInfo: information associated with an ANCHOR dir (directory).
-     * Encode (if present) produces a corresponding filepath, with "anchor annotations" if
+    withtype dpath = { dir: dir, arcs: path }
+
+    (* anchorInfo: information associated with an ANCHOR dir (directory), i.e the type of the
+       argument of the ANCHOR constructor.
+     * Encode (if present) produces a corresponding fpath, with "anchor annotations" if
      * its boolean argument is true. *)
+
     and anchorInfo =
       {name  : anchor,    (* i.e. the name of the anchor, a string *)
-       apath : apath,     (* original "anchor point"?
-			   * should it always be absolute?
-			   * should it be stored in the ANCHOR dir, or should be look it up? *)
+       apath : apath,     (* original "anchor point" that the anchor points to (?)
+			   * Should it always be absolute?
+			   * Should it be stored in the ANCHOR dir, or should be look it up
+			   *   in the apathEnv? *)
        dpath : dpath option}  (* SOME if dpathEnv is defined for name -- stored when ANCHOR is created
 			       * in the function mk_anchor *)
 
-(*
-     fileInfo: representation of a (semantic?) file?
-     * How are (dir, arcs) related to the apath component of the elab component?
-     * Should they be consistent? If so, is this enforced?
-     * When will the elab component be changed?  (elabFileInfo, ...)
-     * When will the id component be changed? -- set by intern, and reset by sync
-     * Here we have used "withtype" instead of introducing the not usefule PATH constructor.
-     * !!! elab component deleted. An elab can be computed when necessary by fileInfoToElab.
-     * Now a fileInfo is just a dpath with an added id field, which will be set to a FileId.id
-     * by intern (or reset by sync)
-    and fileInfo = (* PATH constructor unnecessary (using "withthpe"), so deleted *)
-      { dir: dir,               (* formerly "context" *)
-	arcs: string list,      (* filepath relative to dir: INVARIANT: length arcs >= 1 *)
-	id: FI.id option ref }  (* updatable, optional file id *)
- *)
-
-    (* or, alternatively: a fileInfo could be a dpath plus an id field:
-    and fileInfo = (* PATH constructor unnecessary (using "withthpe"), so deleted *)
-      { dpath: dpath,
-	id: FI.id option ref }  (* updatable, optional file id *)
-    *)
-
-    (* file: a file is a fileInfo record with a stableid (int) attached.
-     * The stableid numbers are generated by the intern function, which also fills in the
-     * id field of the fileInfo part. The interned files are "recorded" in a finite map of
-     * type FileIdSidMap.map.
-     * Possible INVARIANT: id field of fileInfo is defined (is SOME) *)
+    (* QUESTIONS:
+     *   What is the relation between apaths and dpaths?
+     *   Can we compute a dpath from and apath, and vice versa?
+           We have a dpathToApath function, but no apathToDpath.
+	   Why? Possibly because dir values are only computed by decodeFpath?
+     *   Is there an isomorphism between apaths and dpaths?
+     *)
+	  
+    (* file: a file is a record with a dpath, the locaction of the file, an fid, which
+     * is a ref to a FI.fileId option, and an sid, which is a stableid (an int).
+     * The stableid numbers are generated by the intern function, which also defines the
+     * id field. The interned files are "recorded" in a finite set of type FileSet.set
+     * QUESTION: What is the reason that a file has a dpath for its location rather than an apath?
+     *)
     type file = {dpath : dpath, fid: FI.id option ref, sid: stableid option}
 
     (* compareFile : file * file -> order *)
     (* This is used in paths/srcpathmap.sml to define maps over files, with ord_key = file *)
     fun compareFile ({_,sid=i1, ...}: file, {sid=i2, ...} : file) = Int.compare (id1, id2)
 
-    (* filepathToApath : filepath -> apath *)
-    (* use OS.Path.fromString to parse the filepath, then convert result to a apath
+
+    (* converting: fpath <--> apath *)
+
+    (* fpathToApath : fpath -> apath *)
+    (* use OS.Path.fromString to parse the fpath, then convert result to a apath
      * by reversing the arcs *)
-    fun filepathToApath (filepath: string) =
-	let val { arcs, vol, isAbs } = P.fromString filepath
+    fun fpathToApath (fpath: string) =
+	let val { arcs, vol, isAbs } = P.fromString fpath
          in { revarcs = rev arcs, vol = vol, isAbs = isAbs }
 	end
 
-    (* apathToFilepath : apath -> string *)
-    fun apathToFilepath ({ revarcs, vol, isAbs }: apath) =
+    (* apathToFpath : apath -> string *)
+    fun apathToFpath ({ revarcs, vol, isAbs }: apath) =
 	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
 
 
    (* *********************************************************************************** *)
    (* current working directory (CDW) *)
 
-    (* cwd_filepath : filepath ref *)
-    (* a ref initialized with the raw filepath of the current working directory (CWD);
+    (* cwd_fpath : fpath ref *)
+    (* a ref initialized with the raw fpath of the current working directory (CWD);
      * If the CWD changes, this record will be updated if and when the cwd function is called
      * subsequently.
      * Why store this value anyway?  Why not just call F.getDir whenever one needs to know
-     * the current working directory (as a filepath or apath). The reason, apparently, is that
+     * the current working directory (as a fpath or apath). The reason, apparently, is that
      * if the cwd function is called after a change in CWD, "clients" can be notified. *)
-    val cwd_filepath = ref (F.getDir ())
+    val cwd_fpath = ref (F.getDir ())
 
     (* cwd_notify : bool ref *)
     (* a control flag that, if true, will cause "clients" to be notified if CWD changes
@@ -203,8 +206,8 @@ in
     (* used to add client notification functions to clients list *)
     fun addClientToBeNotified c = clients := c :: !clients
 
-    (* cwd : unit -> filepath *)
-    (* returns the filepath of the current working directory, making sure that cwd_info is
+    (* cwd : unit -> fpath *)
+    (* returns the fpath of the current working directory, making sure that cwd_info is
      * up-to-date. If the CWD has changed since the last call of cwd, and !cwd_notify is true,
      * then "clients" are notified of the change. But what if the CWD is changes but we don't
      * call cwd afterwards. Then the clients won't be notified of the change. There seems to
@@ -212,15 +215,15 @@ in
      * of CWD this time, cwd_notify will become false, so next time cwd is called clients won't
      * be notified if there is a following CWD change, unless someone set cwd_notify to true *)
     fun cwd () =
-	let val newCwdFilepath = F.getDir ()  (* get the current CWD filepath *)
-	 in (* check whether CWD has changed since last time cwd_filepath was set *)
-	    if newCwdFilepath = !cwd_filepath (* check for change of CWD since last call *)
-	    then newCwdFilepath (* no change; cwd_filepath is validated, return newCwdFilepath *)
+	let val newCwdFpath = F.getDir ()  (* get the current CWD fpath *)
+	 in (* check whether CWD has changed since last time cwd_fpath was set *)
+	    if newCwdFpath = !cwd_fpath (* check for change of CWD since last call *)
+	    then newCwdFpath (* no change; cwd_fpath is validated, return newCwdFpath *)
 	    else (* if not, CWD must have changed since the previous call of cwd *)
-	      (cwd_filepath := newCwdFilepath;
+	      (cwd_fpath := newCwdFpath;
 	       if !cwd_notify then app (fn c => c ()) (!clients) else ();
 	       cwd_notify := false; (* why turn notifications off? *)
-	       newCwdFilepath)
+	       newCwdFpath)
 	end
 
 
@@ -235,16 +238,16 @@ in
 *)
     (* fileToDpath [pre] : file -> dpath
      * exported
-     * local: encodeFile*, fileToFilepath, osstring_relative*
+     * local: encodeFile*, fileToFpath, osstring_relative*
      * external: stable/stabilize.sml *)
     fun fileToDpath ({dpath,...}: file) : dpath = dpath
 
 
    (* *********************************************************************************** *)
-   (* encoding dpaths as (possibly anchor annotated) filepath strings *)
+   (* encoding dpaths as (possibly anchor annotated) fpath strings *)
 
     (* isChar : char -> char -> bool *)
-    (* curried character equality; a utility function used in decodeFilepath *)
+    (* curried character equality; a utility function used in decodeFpath *)
     fun isChar (c1: char) c2 = c1 = c2
 
     (* translating "special characters" to \ddd codes *)
@@ -301,7 +304,7 @@ in
 	else transSpecial arc  (* the general, or "ordinary" case *)
 
     (* dpathToString : dpath -> [show_anchors:]bool -> string *)
-    (* dpathToString translates a dpath into a string that uses filepath notation
+    (* dpathToString translates a dpath into a string that uses fpath notation
      * conditionally (on show_anchors) enhanced with some special anchor notations.
      * If show_anchors is true, sometimes an "expansion" of an anchor is included? e.g. "foo(=bar)" can
      * be produced when the encode component of an ANCHOR dir returns SOME "bar".
@@ -337,14 +340,14 @@ in
                    (* make path absolute by adding "/" at front *)
 	      | dir_path (ROOT vol, path, _) = concat ("%" :: transSpecial vol :: "/" :: path)
 		   (* make path "volume-rooted" by adding "%<volume>" at front *)
-	      | dir_path (CWD, path, _) = concat path  (* make filepath relative to CWD *)
+	      | dir_path (CWD, path, _) = concat path  (* make fpath relative to CWD *)
 	      | dir_path (ANCHOR {name, dpathOp, ...}, path, firstArcOp) =
 		  let val name' = transSpecial name (* get rid of special chars in anchor name *)
 		      val path : string list =
 			    (* path is a list of path component strings consisting of arcs,
 			       "$", "/", ":" and other anchor-related notations? *)
 			    (case dpathOp
-			      of SOME dpath => (* try "expanding" the anchor to a filepath *)
+			      of SOME dpath => (* try "expanding" the anchor to a fpath *)
 				   let val fp = dpathToString dpath
 				    in if show_anchors
 				       then "$" :: name' :: "(=" :: fp :: ")/" :: path
@@ -372,39 +375,26 @@ in
    (* *********************************************************************************** *)
    (* translating between representations *)
 
-    (* unintern : file -> dpath *)
-    (* alternative name: fileToDpath *)
-    (* returns the fileInfo component (#1) of a file *)
+    (* fileToDpath [~ unintern] : file -> dpath *)
+    (* returns the dpath component of a file *)
     fun fileToDpath ({dpath, ...}: file) : dpath = dpath
 
-(*
-    (* fileToFilepath [desc] : file -> string
+    (* fileToFpath [desc] : file -> string
      * exported
      * local: none
      * external: 10 files *)
-    val fileToFilepath = dpathToString true o fileToDpath
-*)
+    val fileToFpath = dpathToString true o fileToDpath
+
     (* fileToDir [dir]: file -> dir
      * exported
      * local: unpickle
      * external: parse/parse.sml, bootstrap/build-initdg.sml *)
     fun fileToDir (f: file) = DIR (fileToDpath f)
 
-(* -- unnecessary 
-    (* dpathToFileInfo : dpath -> fileInfo *)
-    fun dpathToFileInfo ({ dir, arcs }: dpath) : fileInfo =
-	{ dir = dir,
-	  arcs = (case arcs
-		    of nil => (error ["dpath needs at least one arc relative to `",
-				      apathToFilepath (#pp (dirToElab dir)), "'"];
-			       ["<bogus>"])   (* DBM: Is a fileInfo with no arcs bogus? *)
-		     | _ => arcs),
-	  id = ref NONE }  (* why not generate a new fileid here based on the dpath? *)
-*)
-
+(*
     (* dpathToFile : dpath -> file *)
     val dpathToFile = intern
-
+*)
 
    (* *********************************************************************************** *)
    (* apath and reanchor functions (formerly involving elab) *)
@@ -439,23 +429,16 @@ in
     (* dirToApath : dir -> apath
      * not exported
      * local: fileInfoToApath *)
-    fun dirToApath CWD = filepathToApath (cwd ())  (* fetch CWD and parse it to derive a apath *)
+    fun dirToApath CWD = fpathToApath (cwd ())  (* fetch CWD and parse it to derive a apath *)
       | dirToApath (ANCHOR { apath, ... }) = apath (* original anchor point *)
       | dirToApath (ROOT vol) = rootApath vol
       | dirToApath (DIR dpath) = parentApath (dpathToApath dpath) (* why parentApath? *)
 
-    (* dpathToApath : fileInfo -> apath
+    (* dpathToApath [~  fileInfoToPrepath]: fileInfo -> apath
      * not exported
      * local: dirToApath, getFileId *)
     and dpathToApath ({ dir, arcs }: dpath) =
 	extendApath arcs (dirToApath dir)
-(*
-    (* fileInfoToApath : fileInfo -> apath
-     * not exported
-     * local: dirToApath, getFileId *)
-    and fileInfoToApath ({ dir, arcs, id }: fileInfo) =
-	extendApath arcs (dirToApath dir)
-*)
 
     (* fileToApath : file -> apath
      * not exported
@@ -490,7 +473,7 @@ in
     (* make an anchor directory: not exported.
      * Other sorts of directories are made using the directory constructors CWD, ROOR, DIR
      * not exported
-     * local: native, standard, unipickle, decodeFilepath *)
+     * local: native, standard, unipickle, decodeFpath *)
     fun mk_anchor (dpathEnv, anchor: anchor) : dir =
 	case SM.find (dpathEnv, anchor)
 	  of SOME dpath =>  (* anchor is in the domain of the dpathEnv *)
@@ -518,12 +501,12 @@ in
 
 	(* getFileId [idOf] : fileInfo -> FI.id *)
 	(* returns the fileId associated with the file, updating the id field if it was NONE *)
-	fun getFileId (file as { dpath, id, ... }: file) =
+	fun getFileId (file as { dpath, id, ... }: file) : FI.id =
 	    let val apath = dpathToApath dpath (* compute the apath of the fileInfo *)
 	     in case !id
 		  of SOME i => i
 		   | NONE =>
-		       let val i = FI.fileId (apathToFilepath apath)
+		       let val i = FI.fileId (apathToFpath apath)
 			in id := SOME i; i
 		       end
 	    end
@@ -551,28 +534,32 @@ in
 	 * has already been interned before, just return the associated stableid. If it is new
 	 * generate the next stableid and also (through the getFileId function called by insert)
 	 * define the id field of the fileInfo. *)
-	fun intern (file as {sid, ...}: file) : file =
+	fun intern (file as {dpath, sid, fid}: file) : file =
+	    if FileSet.member (!known, file)
+	    then file
+	    else let val stableid = !next  (* generate a new stableid *)
+		     val file' = {dpath = dpath, sid = stableid, fid = fid}
+		  in next := stableid + 1;
+		     known := FileMap.add (!known, file')
+		       (* record the new file with stableid in known *)
+		     file'  (* return the interned file *)
+		 end
+
 	    case FileMap.find (!known, file)
 	      of SOME stableid => (fi, stableid)  (* fi was previously interned *)
 	       | NONE =>
-		   let val stableid = !next  (* generate a new stableid *)
-		    in next := stableid + 1;
-		       known := FileMap.insert (!known, fi, stableid);
-		         (* record the (fi, stableid) in known *)
-		       (fi, stableid)  (* return the interned file *)
-		   end
 
 	(* sync : unit -> unit *)
 	(* sync causes the file ids of all the interned files to be reset to the actual
 	   file system file ids (obtained from OS.FileSys.fileId) *)
 	fun sync () =
-	    let val fset = !known
-		fun invalidateId ({ id, ... }: file) = id := NONE
-		fun reinsert (k, i, m) = FileMap.insert (m, k, i)
-	     in FileSet.app invalidateId fset;
+	    let val files = !known
+		fun killId ({ id, ... }: file) = id := NONE
+		fun reinsert (f, s) = FileSet.add (s, f)
+	     in FileSet.app killId files;
 		(* This will cause the id fields to be reassigned using the file systems file ids
 		 * when they are accessed via getFileId for the insert operation. *)
-		known := FileSet.foldl reinsert FileSet.empty fset  (* DBM: why? *)
+		known := FileSet.foldl reinsert FileSet.empty files  (* DBM: why? *)
 	    end
 
     end (* local -- interning files *)
@@ -623,7 +610,7 @@ in
      *
      * There is still a separate "functional" environment, of type dpathEnv, that maps 
      * anchors to dpaths.  These dpath environment are passed as parameters to the
-     * exported SrcPath functions bind, decodeFilepath, and unpickle.
+     * exported SrcPath functions bind, decodeFpath, and unpickle.
      *
      * The global apath environment is represented by the structure ApathEnv and apath
      * anchor environments are no longer passed as parameters.
@@ -694,28 +681,28 @@ in
 
     end (* structure ApathEnv *)
 
-    (* get_anchor : anchor -> filepath option
-     * maps an anchor to the filepath of its "anchor point" *)
+    (* get_anchor : anchor -> fpath option
+     * maps an anchor to the fpath of its "anchor point" *)
     fun get_anchor (anchor: anchor) =
-	Option.map apathToFilepath (ApathEnv.get anchor)
+	Option.map apathToFpath (ApathEnv.get anchor)
 
-    (* setRelative [set0]: anchor * filepath option * filepath-> unit *)
-    fun setRelative (anchor: anchor, filepathOp: filepath option,
-		     relativeTo: filepath) =
-	let fun fp_pp (filepath: filepath) : apath =
-		let val fp1 = P.mkAbsolute {path = filepath, relativeTo = relativeTo}
-		    val fp2 = if P.isAbsolute filepath then filepath else fp1
-		 in filepathToApath fp2
+    (* setRelative [set0]: anchor * fpath option * fpath-> unit *)
+    fun setRelative (anchor: anchor, fpathOp: fpath option,
+		     relativeTo: fpath) =
+	let fun fp_pp (fpath: fpath) : apath =
+		let val fp1 = P.mkAbsolute {path = fpath, relativeTo = relativeTo}
+		    val fp2 = if P.isAbsolute fpath then fpath else fp1
+		 in fpathToApath fp2
 		end
-	 in ApathEnv.set (anchor, Option.map fp_pp filepathOp)
+	 in ApathEnv.set (anchor, Option.map fp_pp fpathOp)
 	end
 
-    (* set_anchor : anchor * filepath option -> unit *)
-    (* When filepathOp is SOME, binds a corresponding apath to the anchor in env;
-     * when filepathOp is NONE, deletes the anchor and its binding from env.
+    (* set_anchor : anchor * fpath option -> unit *)
+    (* When fpathOp is SOME, binds a corresponding apath to the anchor in env;
+     * when fpathOp is NONE, deletes the anchor and its binding from env.
      * Exported and called externally (3 times) in main/cm-boot.sml *)
-    fun set_anchor (anchor, filepathOp) =
-	setRelative (anchor, filepathOp, F.getDir ()) before sync ()
+    fun set_anchor (anchor, fpathOp) =
+	setRelative (anchor, fpathOp, F.getDir ()) before sync ()
 
     (* reset_anchors : unit -> unit *)
     (* exported
@@ -746,11 +733,11 @@ in
     (* What are "spec files"? -- .cm files (CDFs)? Aren't those handled by parser?
      * What does this produce? How? *)
 
-    (* processSpecFile : filepath -> TextIO.instream -> unit *)
-    fun processSpecFile (filepath: filepath) =
-	let val local_dir = P.dir (F.fullPath filepath)
-	    fun set (anchor, filepathOp) =
-		setRelative (anchor, filepathOp, local_dir)
+    (* processSpecFile : fpath -> TextIO.instream -> unit *)
+    fun processSpecFile (fpath: fpath) =
+	let val local_dir = P.dir (F.fullPath fpath)
+	    fun set (anchor, fpathOp) =
+		setRelative (anchor, fpathOp, local_dir)
 
 	    (* mknative : bool -> string -> string *)
 	    fun mknative true fp = fp
@@ -788,21 +775,21 @@ in
 
 
     (* ******************************************************************************** *)
-    (* parsing filepaths *)
+    (* parsing fpaths *)
 
     datatype stdspec
       = RELATIVE of string list
       | ABSOLUTE of string list
       | ANCHORED of anchor * string list
 
-    (* parseFilepathNative [parseNativeSpec]: filepath -> stdspec *)
-    fun parseFilepathNative (filepath: filepath) =
-	let val {isAbs, arcs, vol} = OS.Path.fromString filepath
+    (* parseFpathNative [parseNativeSpec]: fpath -> stdspec *)
+    fun parseFpathNative (fpath: fpath) =
+	let val {isAbs, arcs, vol} = OS.Path.fromString fpath
          in case arcs
-	      of [""] => impossible "parseFilepathNative -- zero-length arc name"
-	       | [] => impossible "parseFilepathNative -- no fields"
+	      of [""] => impossible "parseFpathNative -- zero-length arc name"
+	       | [] => impossible "parseFpathNative -- no fields"
 	       | (["$"] | "$"::""::_) =>
-		   (error ["invalid zero-length anchor name in: ", filepath]);
+		   (error ["invalid zero-length anchor name in: ", fpath]);
 		    RELATIVE arcs)
 	       | "$" :: (arcs' as (arc1 :: _)) => (* "$/arc1/..." *)
 		   if isAbs
@@ -817,8 +804,8 @@ in
 	     (* end case *)
         end
 
-    (* parseFilepathStandard [parseStdspec]: (string -> unit ) -> filepath -> stdspec *)
-    fun parseFilepathStandard (filepath: filepath) =
+    (* parseFpathStandard [parseStdspec]: (string -> unit ) -> fpath -> stdspec *)
+    fun parseFpathStandard (fpath: fpath) =
 	let fun delim #"/" = true
 	      | delim #"\\" = true
 	      | delim _ = false
@@ -826,43 +813,43 @@ in
 	      | transl "." = P.currentArc
 	      | transl arc = arc
 	 in case map transl (String.fields delim s)
-	      of [""] => impossible ("parseFilepathStandard -- zero-length name: " ^ filepath)
-	       | [] => impossible ("parseFilePathStandard -- no fields" ^ filepath)
+	      of [""] => impossible ("parseFpathStandard -- zero-length name: " ^ fpath)
+	       | [] => impossible ("parseFpathStandard -- no fields" ^ fpath)
 	       | "" :: arcs => ABSOLUTE arcs
 	       | arcs as (["$"] | "$" :: "" :: _) =>
-		   (error ["invalid zero-length anchor name in: ", filepath];
+		   (error ["invalid zero-length anchor name in: ", fpath];
 		    RELATIVE arcs)
 	       | "$" :: (arcs as (arc1 :: _)) => ANCHORED (arc1, arcs)
 	       | arcs as (arc1 :: arcn) =>
 		   if String.sub (arc1, 0) <> #"$" then RELATIVE arcs
 		   else ANCHORED (String.extract (arc1, 1, NONE), arcn)
-	end (* fun parseFilepathStandard *)
+	end (* fun parseFpathStandard *)
 
-    (* mkDpath [raw] : dir * filepath -> dpath *)
-    (* it is assumed that the filepath is either absolute, and hence independent of dir, in
+    (* mkDpath [raw] : dir * fpath -> dpath *)
+    (* it is assumed that the fpath is either absolute, and hence independent of dir, in
      * which case we ignore the dir argument and replace it with ROOT vol),
-     * or, if the filepath is relative, we assume it is relative to dir. In that case vol is
+     * or, if the fpath is relative, we assume it is relative to dir. In that case vol is
      * irrelevant.
      * exported
      * local: none
      * external: semant/semant.sml, tools/main/private-tools.sml *)
-    fun mkDpath (dir: dir, filepath: filepath) : dpath =
-        let val {arcs, vol, isAbs} = P.fromString filepath
+    fun mkDpath (dir: dir, fpath: fpath) : dpath =
+        let val {arcs, vol, isAbs} = P.fromString fpath
 	    val dir = if isAbs then ROOT vol else dir
 	 in {dir = dir, arcs = arcs}
 	end
 
-    (* native : dpathEnv -> dir * filepath -> dpath *)
-    fun native pfenv (dir, filepath) =
-          (case parseFilepathNative filepath
+    (* native : dpathEnv -> dir * fpath -> dpath *)
+    fun native pfenv (dir, fpath) =
+          (case parseFpathNative fpath
              of RELATIVE arcs => {dir = dir, arcs = arcs}
               | ABSOLUTE arcs => {dir = ROOT "", arcs = arcs}
               | ANCHORED (anchor, arcs) => {dir = mk_anchor (pfenv, anchor), arcs = arcs}
           (* end case *))
 
-    (* standard : dpathEnv -> dir * filepath -> dpath *)
-    fun standard pfenv (dir, filepath) =
-	(case parseFilepathStandard filepath
+    (* standard : dpathEnv -> dir * fpath -> dpath *)
+    fun standard pfenv (dir, fpath) =
+	(case parseFpathStandard fpath
 	   of RELATIVE arcs => {dir = dir, arcs = arcs}
 	    | ABSOLUTE arcs => {dir = ROOT "", arcs = arcs}
 	    | ANCHORED (anchor, arcs) => {dir = mk_anchor (pfenv, anchor), arcs = arcs}
@@ -876,15 +863,15 @@ in
      *)
 
     (* osstring : file -> string *)
-    val osstring = FI.canonical o apathToFilepath o dpathToApath o fileToDpath
+    val osstring = FI.canonical o apathToFpath o dpathToApath o fileToDpath
 
     (* osstring_dpath : dpath -> string *)
-    fun osstring_dpath ({ dir, arcs }: dpath) : filepath =
-	FI.canonical (apathToFilepath (extendApath arcs (dirToApath dir))))
+    fun osstring_dpath ({ dir, arcs }: dpath) : fpath =
+	FI.canonical (apathToFpath (extendApath arcs (dirToApath dir))))
 
     (* osstring_dir : dir -> string *)
     fun osstring_dir dir =
-	case apathToFilepath (dirToApath dir)
+	case apathToFpath (dirToApath dir)
 	  of "" => P.currentArc  (* = "." *)
 	   | s => FI.canonical s
 
@@ -892,39 +879,39 @@ in
     fun osstring' f =
 	let val oss = osstring f
 	 in if P.isAbsolute oss
-	    then let val ross = P.mkRelative { path = oss, relativeTo = (!cwd_filepath) }
+	    then let val ross = P.mkRelative { path = oss, relativeTo = (!cwd_fpath) }
 		  in if size ross < size oss then ross else oss
 		 end
 	    else oss
 	end
 
-    (* do_reanchor : (string -> filepath) -> reanchor -> apath? *)
-    (* recurses down to the anchor root, maps that to a filepath using cvt, converts
-       that filepath to a apath (filepathToApath) then recursively applies the transforms
+    (* do_reanchor : (string -> fpath) -> reanchor -> apath? *)
+    (* recurses down to the anchor root, maps that to a fpath using cvt, converts
+       that fpath to a apath (fpathToApath) then recursively applies the transforms
        of the reanchor layers to yield a modified apath. *)
-    fun do_reanchor (cvt: string -> filepath) reanchor =
+    fun do_reanchor (cvt: string -> fpath) reanchor =
 	case reanchor
-	  of Anchor of anchor => filepathToApath (cvt anchor)
+	  of Anchor of anchor => fpathToApath (cvt anchor)
 	   | Parent of reanchor => parentApath (do_reanchor cvt reanchor)
 	   | Extend of (arcs, reanchor) => extendApath arcs (do_reanchor cvt reanchor)
 
-    (* osstring_reanchored : (string -> string) -> file -> filepath option *)
+    (* osstring_reanchored : (string -> string) -> file -> fpath option *)
     (* used once in main/filename-policy.sml (FilenamePolicyFn) *)
     fun osstring_reanchored cvt file =
 	let val reanchorOp = fileToReanchor file
 	 in case reanchorOp
 	    of NONE => NONE
 	     | SOME reanchor => 
-		 SOME (FI.canonical (apathToFilepath (do_reanchor cvt reanchor)))
+		 SOME (FI.canonical (apathToFpath (do_reanchor cvt reanchor)))
 	end
 
-    (* osstring_dpath_relative : dpath -> filepath *)
+    (* osstring_dpath_relative : dpath -> fpath *)
     fun osstring_dpath_relative (pf as { dir, arcs }: dpath) =
 	case dir
 	  of DIR _ => FI.canonical (P.toString { arcs = arcs, vol = "", isAbs = false })
 	   | _ => osstring_dpath pf
 
-    (* osstring_relative : file -> filepath *)
+    (* osstring_relative : file -> fpath *)
     val osstring_relative = osstring_dpath_relative o fileToDpath
 
     (* tstamp : file -> TSamp.t *)
@@ -976,13 +963,13 @@ in
 
 
     (* *********************************************************************************** *)
-    (* decoding "filepaths" to files (relative to a given dpathEnv) *)
+    (* decoding "fpaths" to files (relative to a given dpathEnv) *)
 
-    (* decodeFile [decode] : dpathEnv -> filepath -> file *)
+    (* decodeFile [decode] : dpathEnv -> fpath -> file *)
     (* What are "segments"? (Where are they documented?)
        What is the purpose of segments?
        Where are they introduced? *)
-    fun decodeFilepath (pfenv: dpathEnv) (filepath: filepath) =
+    fun decodeFpath (pfenv: dpathEnv) (fpath: fpath) =
 	let
 	    (* transArc: string -> string *)
 	    (* what does transArc protect against?
@@ -994,7 +981,7 @@ in
 	    (* firstSet : string -> fileInfo *)
 	    fun firstSeg s =
 		(case map transArc (String.fields (isChar #"/") s)
-		   of nil => impossible "decodeFilepath: no fields in segment 0"
+		   of nil => impossible "decodeFpath: no fields in segment 0"
 		    | arc0 :: arcs =>
 		      if arc0 = ""
 		      then dpathToFileInfo (ROOT "", arcs)
@@ -1013,14 +1000,14 @@ in
 		dpathToFileInfo {dir = DIR fi,
 				   arcs = map transArc (String.fields (isChar #"/") seg)}
 
-	 in case String.fields (isChar #":") filepath
-	      of nil => impossible "decodeFilepath: no segments"
+	 in case String.fields (isChar #":") fpath
+	      of nil => impossible "decodeFpath: no segments"
 	       | seg0 :: segs => intern (foldl addseg (firstSeg seg0) segs)
 	end (* fun decodeFile *)
 
-    (* absoluteFilepath : filepath -> bool *)
-    (* does filepath start with $"/" or #"%"? *)
-    fun absoluteFilepath s =
+    (* absoluteFpath : fpath -> bool *)
+    (* does fpath start with $"/" or #"%"? *)
+    fun absoluteFpath s =
 	(case String.sub (s, 0) of (#"/" | #"%") => true | _ => false)
 	handle _ => false
 
@@ -1049,7 +1036,7 @@ end (* structure StrPath *)
 
 5. There are six "representations" for files:
 
-   1. filepath strings (using the "OS-indepent" notation used in OS.FileSys and OS.Path),
+   1. fpath strings (using the "OS-indepent" notation used in OS.FileSys and OS.Path),
 
    2. apath: a structure similar to the record that OS.Path.fromString produces, but with arcs
       in reverse order (deepest arc first),
@@ -1083,16 +1070,16 @@ Thus fileInfo, elab, and apath are only used internally in SrcPath.
 
 There is a couple progressions:
 
-     filepath (string) --[P.fromString]--> apath --[apathToFilepath]--> filepath
+     fpath (string) --[P.fromString]--> apath --[apathToFpath]--> fpath
 
      dpath --[intern?]--> fileInfo (adding undefined file-id)
              --[intern?]--> file (adding stableid and defining file-id)
 
 Where do dpaths come from?  Where is the link between apaths and dpaths?
 
-Dpaths are created (directly) by the function decodeFilepath, which (with the help of the
-env) translates filepaths directly to (interned) files.  There is no direct translation from
-the syntactic filepath/apath representations to the dpath representation, or in particular,
+Dpaths are created (directly) by the function decodeFpath, which (with the help of the
+env) translates fpaths directly to (interned) files.  There is no direct translation from
+the syntactic fpath/apath representations to the dpath representation, or in particular,
 to the dir type.  It is also not clear whether the id field of a fileInfo record is relevant
 for working with DIR values.
 
@@ -1148,7 +1135,7 @@ for working with DIR values.
         and combines it with its fileInfo argument to return an "interned" file. If it is a
 	new fileInfo key (presumably with id = ref NONE), its binding will be inserted into the map
 	using fileInfoSidMap.insert, which will call getFileId, which will redefine the id field using
-	the actual OS.FileSys file_id (actually PRESENT (file_id) or ABSENT filepath depending on
+	the actual OS.FileSys file_id (actually PRESENT (file_id) or ABSENT fpath depending on
         whether the the file actually exists in the file system (?)).
 
       sync: resets the id field of all currently mapped fileInfo's to NONE (thus invalidating them?)
@@ -1166,7 +1153,7 @@ for working with DIR values.
 
       val reanchor: (anchor -> string) -> apath option
 
-   Takes a conversion function mapping an anchor to a string (normally a filepath?) and returns a
+   Takes a conversion function mapping an anchor to a string (normally a fpath?) and returns a
    apath option.  In most cases this is initialized to a trivial (fn _ => NONE): for instance:
 
      bogus_elab,
@@ -1178,7 +1165,7 @@ for working with DIR values.
 
     fun osstring_reanchored cvt file =
 	let val {reanchor, ...} = fileToElab file
-	 in Option.map (FI.canonical o apathToFilepath) (reanchor cvt)
+	 in Option.map (FI.canonical o apathToFpath) (reanchor cvt)
 	end
 
    osstring_reanchored is exported from SrcPath and used only once, in main/filename-policy:
@@ -1203,7 +1190,7 @@ for working with DIR values.
 
        env.get initialization:
 
-         (fn (cvt: string -> filepath) => SOME (filepathToApath (cvt anchor))
+         (fn (cvt: string -> fpath) => SOME (fpathToApath (cvt anchor))
 
      Anchor "tranforms":
 
@@ -1211,7 +1198,7 @@ for working with DIR values.
 
 	 fun osstring_reanchored cvt file =
 	     let val {reanchor, ...} = fileToElab file
-	      in Option.map (FI.canonical o apathToFilepath) (reanchor cvt)
+	      in Option.map (FI.canonical o apathToFpath) (reanchor cvt)
 	     end
 
        parentElab:
@@ -1234,10 +1221,10 @@ for working with DIR values.
         | Parent of reanchor
         | Extend of string list (*arcs*) * reanchor
 
-      (* do_reanchor : (string -> filepath) -> reanchor -> apath
-      fun do_reanchor (cvt: string -> filepath) reanchor =
+      (* do_reanchor : (string -> fpath) -> reanchor -> apath
+      fun do_reanchor (cvt: string -> fpath) reanchor =
         case reanchor
-	  of Anchor of anchor => filepathToApath (cvt anchor)
+	  of Anchor of anchor => fpathToApath (cvt anchor)
            | Parent of reanchor => parentApath (do_reanchor cvt reanchor)
            | Extent of (arcs, reanchor) => extendApath arcs (do_reanchor cvt reanchor)
 
@@ -1245,7 +1232,7 @@ for working with DIR values.
       apath, leaving the vol and isAbs fields alone, so possibly the Parent case could
       just do a tl and the Excend case could just do a revappend on the revarcs of the 
       relevant apaths ("on the way out" after having recursed down to the anchor in
-      the final Anchor node (Anchor a) to which the cvt : string -> filepath is applied
+      the final Anchor node (Anchor a) to which the cvt : string -> fpath is applied
       to give the new "anchor point".
 
       The reanchor encodes a kind of "file system delta" down the path from an anchor
@@ -1255,8 +1242,8 @@ for working with DIR values.
       
       The Parent constructor for reanchor is used in only one place, to trim the arcs for
       a DIR directory given by its fileInfo.  This may because of the way the DIR is introduced
-      in the decodeFilepath [decode] function, where DIRs seem to serve to link "segments".
-      [Have to understand what is going on in decodeFilepath better. Don't yet understand
+      in the decodeFpath [decode] function, where DIRs seem to serve to link "segments".
+      [Have to understand what is going on in decodeFpath better. Don't yet understand
        segments and the need to adjust arcs using a Parent reanchor in dirToReanchor.
 
    A couple things I still don't understand about reanchors and DIRs:
@@ -1264,7 +1251,7 @@ for working with DIR values.
       * Why do we use the Parent reanchor to trim the last (innermost) arc when computing
         the (potential) reanchor for a DIR?
 
-      * What are segments and why do they exist?  [in fun processFilepath]
+      * What are segments and why do they exist?  [in fun processFpath]
         How are DIRs used to "link" segments together?
 	Examples?
 
@@ -1294,26 +1281,26 @@ for working with DIR values.
   environments.
 
   Note that apaths and dpaths could both be considered representations of locations
-  in the file system (like filepaths, which are the "raw" form of file system locations).
+  in the file system (like fpaths, which are the "raw" form of file system locations).
   But dpaths contain dir components as the root of a arc list path, and the dir
   type expresses some of the "semantics" relevant to CM (i.e. paths relative to
   the root (ROOT), or the current working directory (CWD), or an anchor (ANCHOR) or
   relative to a directory (DIR) (?).
 
-  A remaining mystery to be cleared up is the notion of "segments" in a filepath
+  A remaining mystery to be cleared up is the notion of "segments" in a fpath
   (separated by the #":" character) and how these are process to create dir values
-  and dpaths in the decodeFilepath (formerly "decode") function. This gives rise
+  and dpaths in the decodeFpath (formerly "decode") function. This gives rise
   to the need for a Parent constructor for the reanchor type, whose role is unclear
   to me. It would simplify reanchoring if this constructor could be eliminated.
 
-  Conjecture: the fileInfos created in decodeFilepath designate CDFs. Then the Parent
+  Conjecture: the fileInfos created in decodeFpath designate CDFs. Then the Parent
   delta in the associated reanchors gives the relative path to the directory containing
   the CDF, and then the further reanchoring will be applied relative to that directory
   containing the CDF, not to the relative path of the CDF.
 
-  An example: one place where decode[Filepath] is called is in cm-boot.sml, where it
-  is applied to "filepaths" that are found at the beginning of lines in the PIDMAP
-  file.  Here is an example of a "segmented" filepath found in PIDMAP:
+  An example: one place where decode[Fpath] is called is in cm-boot.sml, where it
+  is applied to "fpaths" that are found at the beginning of lines in the PIDMAP
+  file.  Here is an example of a "segmented" fpath found in PIDMAP:
 
     $SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm
 
@@ -1321,7 +1308,7 @@ for working with DIR values.
 
     $SMLNJ-LIB/PrettyPrint/src/prettyprint.cm
 
-  So if in decodeFilepath, the first segment is a DIR with arcs
+  So if in decodeFpath, the first segment is a DIR with arcs
 
     ["PrettyPrint", "prettyprint-lib.cm"]
 
@@ -1341,7 +1328,7 @@ Renamed:
 encode0		dpathToString (type changed)
 bracket		show_anchors  -- parameter of encodeDpath (was encode0)
 encode*		encodeFile
-encodingIsAbsolute*  absoluteFilepath
+encodingIsAbsolute*  absoluteFpath
 file0 [type]	fileInfo  -- now a simple record type, not a datatype (defined using "withtype")
 file0 [fun]	dpathToFileInfo
 file*  		dpathToFile
@@ -1350,21 +1337,21 @@ look		elab  -- anchorInfo field (argument type for ANCHOR dir constructor); chan
 get_free	ApathEnv.get
 set_free	ApathEnv.set
 set0		setRelative
-pp2name		apathToFilepath
+pp2name		apathToFpath
 F0M		FileInfoMap [structure, used in intern, clear, sync]
 dir*		fileToDir
-desc*		fileToFilepath
+desc*		fileToFpath
 extend*		extendDpath
 augPP		extendApath
 dirPP		parentApath
 pre*		fileToDpath
 idOf		getFileId
 raw*		mkDpath
-decode*		decodeFilepath (segmented filepaths?)
+decode*		decodeFpath (segmented fpaths?)
 pre0		fileInfoToDpath
 pre*		fileToDpath
 prepath	[type]	apath
-prefile	[type]	dpath
+prefile* [type]	dpath
 
 Removed:
 
