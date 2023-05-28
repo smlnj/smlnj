@@ -1364,7 +1364,7 @@ elab_file	.  -- no more elabs
 elab_dir	.  -- "
 augElab		.  -- "
 dirElab		.  -- "
-bosug_elab	.  -- "
+bogus_elab	.  -- "
 
 Added:
 
@@ -1385,6 +1385,3 @@ Added:
   is replaced by a dpathEnv parameter.
 
 --------------------------------------------------------------------------------
-
-
-
