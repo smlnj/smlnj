@@ -521,7 +521,7 @@ in
         (* clear : unit -> unit *)
         fun clear () = known := FileMap.empty
 
-	(* intern : fileInfo -> file *)
+	(* intern : file -> file *)
 	(* generate a stableid (sequentially) to add to a fileInfo to make a file. If the fileInfo
 	 * has already been interned before, just return the associated stableid. If it is new
 	 * generate the next stableid and also (through the getFileId function called by insert)
