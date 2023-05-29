@@ -73,7 +73,7 @@ sig
     val osstring_relative : file -> fpath
 
     (* get name of dpath *)
-    val osstring_dpath : dpath -> string
+    val osstring_dpath : dpath -> fpath
 
     (* same for dpath *)
     val osstring_dpath_relative : dpath -> fpath
