@@ -1365,6 +1365,15 @@ for working with DIR values.
                   apath = </User/dbm/sml/Dev/github/smlnj/smlnj-lib>,
 		  dpathOp = NONE(?)}
 
+  Note: DIR seems like a slightly misleading constructor name, since DIR constructs 
+  may not, or generally do not, correspond with directories. The usual situation is that
+  they are "links" of a sort to extend the previous dir at (or near) the end of a previous
+  dpath (down a path from a "parent" dir).
+
+  There is another conceptual mismatch, since an ANCHOR would seem to designate a directory
+  that is the anchor point of its anchor (found at its apath).  But DIR seems to designate
+  a file (generally/always a CDF).  Of course CWD and ROOT dirs obviously are associated
+  with directories.
 
 ** "anchor points", anchor environments
 
