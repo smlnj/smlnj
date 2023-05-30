@@ -1378,7 +1378,7 @@ for working with DIR values.
 ** "anchor points", anchor environments
 
   I will call the FS location designated by an anchor the "anchor point" for that anchor,
-  and it can be described by an fpath, apath, or a dpath.
+  and it can be described by an fpath, an apath, or a dpath.
 
   There is a global, "base" environment mapping anchor strings to the corresponding
   anchor point represented by an apath. This global environment is implemented by the
@@ -1446,7 +1446,24 @@ for working with DIR values.
   dpaths of files).  They are used map to new apaths/fpaths given a new anchor to 
   apath/fpath association.
 
+* What has been discarded
 
+  - elab
+
+  - fileInfo
+
+  - reanchor as an elab component (functional representation)
+      (now a computed attribute of a file or dpath)
+
+  - the "combined" env, now split into ApathEnv environment (state) and the dpathEnv
+    type.  dpathEnv environments behave "functionally" (based on StringMap).
+
+  - prepath, prefile renamed to apath, dpath
+
+  - We are down to 3 ways of specifying FS locations: fpath, apath, dpath.  It is still
+    unclear to me why we need both apath and dpath.
+
+  
 --------------------------------------------------------------------------------
 Name changes and new names:
 
