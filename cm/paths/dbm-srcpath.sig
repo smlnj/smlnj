@@ -28,7 +28,7 @@ sig
     (* register a "client module" that wishes to be notified when CWD changes.
      * Such notifications will be initiated by calls of the cwd function.
      * DBM: what sort of things are clients? *)
-    val addClientToBeNotified : (string -> unit) -> unit
+    val addClientToBeNotified : (unit -> unit) -> unit
 
     (* make sure all such clients get notified about the a CWD during
      * "next validation" ? *)
@@ -40,15 +40,15 @@ sig
     val reset_anchors : unit -> unit
 
     (* process a specification file; must sync afterwards! *)
-    val processSpecFile : env * fpath -> TextIO.instream -> unit
+    val processSpecFile : fpath -> TextIO.instream -> unit
 
     (* non-destructive bindings for anchors (for anchor scoping) *)
-    val bind: dpathEnv -> (anchor * dpath) list -> dpathEnv
+    val bindDpaths: dpathEnv -> (anchor * dpath) list -> dpathEnv
 
     (* make abstract paths (dpaths) *)
     val mkDpath : dir * fpath -> dpath
-    val native : env -> dir * fpath -> dpath
-    val standard : env -> dir * fpath -> dpath
+    val native : dpathEnv -> dir * fpath -> dpath
+    val standard : dpathEnv -> dir * fpath -> dpath
 
     (* extend a dpath's arcs (naming relative to a directory) with a list of new arcs *)
     val extendDpath : dpath -> string list -> dpath
