@@ -1533,4 +1533,3 @@ Added:
 
 END NOTES
 *)
-$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm
