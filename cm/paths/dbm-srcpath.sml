@@ -1463,6 +1463,8 @@ for working with DIR values.
   - We are down to 3 ways of specifying FS locations: fpath, apath, dpath.  It is still
     unclear to me why we need both apath and dpath.
 
+* Has any essential functionality been lost?
+
   
 --------------------------------------------------------------------------------
 Name changes and new names:
