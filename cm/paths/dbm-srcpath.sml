@@ -1398,7 +1398,7 @@ for working with DIR values.
 * Has any essential functionality been lost?
 
 
-11. Eliminating dpaths [prefiles] and the dir datatype.
+11. Phase 5 Simplification: Eliminating dpaths [prefiles] and the dir datatype.
 
 This version is an attempt [partially completed] to use only fpaths and apaths, and not
 dpaths [formerly prefiles] to represent FS locations.
