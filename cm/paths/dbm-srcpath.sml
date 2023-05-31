@@ -721,7 +721,7 @@ in
 	      | ABSOLUTE arcs => {isAbs = true, vol = "", revarcs = rev arcs}
 	      | ANCHORED (anchor, arcs) => {dir = lookAnchor (pfenv, anchor), arcs = arcs}
 		  (case lookAnchor apathEnv
-		     of NONE => impossible ["native"]
+		     of NONE => impossible ["standard"]
 		      | SOME apath => extendApath arcs)
 	  (* end case *))
 
