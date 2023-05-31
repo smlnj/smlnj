@@ -93,7 +93,7 @@ sig
 
     (* portable encodings that avoid whitespace *)
     val encodeFile : file -> fpath
-    val decodeFpath : apathEnv -> fpath -> file
+    val decodeFile : apathEnv -> fpath -> file
 
     (* check whether encoding (result of "encode") is absolute
      * (i.e., neither anchored, nor relative) *)
