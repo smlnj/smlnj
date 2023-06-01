@@ -15,10 +15,14 @@ signature INT_SET =
     val member : t * word -> bool
     val add : t * word -> t
     val numItems : t -> int
-    val listItems : t -> word list
+    val fromList : word list -> t
+    val toList : t -> word list
+
     val union : t * t -> t
+    val intersection : t * t -> t
+    val difference : t * t -> t
 
     (* for debugging *)
-    val dump ('a -> string) -> TextIO.outstream * 'a t -> unit
+    val dump : TextIO.outstream * 'a t -> unit
 
    end
