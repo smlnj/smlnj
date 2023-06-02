@@ -157,7 +157,7 @@ in
     (* translating to apath *)
 
     (* fileToApath [pre] : file -> apath
-     * (equivalent to #dpath applied to a file record)
+     * (equivalent to #apath applied to a file record)
      * exported
      * local: encodeFile*, fileToFpath, osstring_relative*
      * external: stable/stabilize.sml *)
@@ -224,90 +224,30 @@ in
 	else if arc = ".." then "\\046\\046"  (* unlikely case where ".." <> P.parentArc *)
 	else transSpecial arc  (* the general, or "ordinary" case *)
 
-    (* ???? *)
-    (* dpathToString : dpath -> [show_anchors:]bool -> string *)
-    (* dpathToString translates a dpath into a string that uses fpath notation
-     * conditionally (on show_anchors) enhanced with some special anchor notations.
-     * If show_anchors is true, sometimes an "expansion" of an anchor is included? e.g. "foo(=bar)" can
-     * be produced when the encode component of an ANCHOR dir returns SOME "bar".
-     * Also, if show_anchors is true, the "$/" abbreviation is used when the first arc matches the
-     * anchor name.
-     * Arc strings are "canonicalized" by applying transArc, which replaces "special" characters
-     * in the arc string with their escape codes (of the form "\ddd").
-     * The internal function names, e_ac and e_c, are not informative and could be improved.
-     * The parameter name "show_anchors" could be changed to something more descriptive. *)
-    fun dpathToString ({dir, arcs}: dpath) (show_anchors: bool) : string =
-	let
- 	    (* arcs_path : dir * [arcs:]path * [ctxt:]bool * [path:]path -> string *)
-	    (* the dir argument is just passed through without change to calls of dir_path
-	     * the ctxt argument enables the show_anchors anchor notation option *)
-	    fun arcs_path (dir: dir, nil: path, _: bool, path: string list) : string =
-		  dir_path (dir, path, NONE)
-	      | arcs_path (dir, arcs, ctxt, path) =
-		  let val arcs' as (arc0 :: _) =  (* arc0 is bound to the outermost arc? *)
-			  map transArc arcs       (* get rid of any special characters in arc strings *)
-		      val arcs'' as (first :: rest) = rev arcs' (* don't need to map transArc again! *)
-		      val first' :: rest' =
-			  (* arcs'', rest are reversed arc lists, first is "innermost" arc *)
-			    if ctxt andalso show_anchors
-			    then concat ["(", first, ")"] :: rest  (* first' = (first) *)
-			    else arcs''
-		      val path : string list =  (* reversed again by foldl to restore order *)
-			    foldl (fn (arc, path) => arc :: "/" :: path) (first' :: path) rest'
-		   in dir_path (dir, path, SOME arc0)
-		  end
+    (* dpathToString [encode0] no longer needed ????, or do we need a fancier version of
+     * apathToFpath that could conditionally add the anchor annotations/abbreviations of
+     * (dpathToString true)? Note*)
 
-	    (* dir_path : dir * path * string option -> string *)
-	    and dir_path (ROOT "", path, _) : string =
-		  concat ("/" :: path)
-                  (* make path absolute by adding "/" at front *)
-	      | dir_path (ROOT vol, path, _) =
-		  concat ("%" :: transSpecial vol :: "/" :: path)
-		  (* make path "volume-rooted" by adding "%<vol>" at front *)
-	      | dir_path (CWD, path, _) =
-		  concat path  (* make fpath relative to CWD *)
-	      | dir_path (ANCHOR {name, dpathOp, ...}, path, firstArcOp) =
-		  let val name' = transSpecial name (* get rid of special chars in anchor name *)
-		      val path : path =
-			    (* path is a list of path component strings consisting of arcs,
-			       "$", "/", ":" and other anchor-related notations? *)
-			    (case dpathOp
-			      of SOME dpath => (* try "expanding" the anchor to a fpath *)
-				   let val fp = dpathToString dpath show_anchors
-				    in if show_anchors
-				       then "$" :: name' :: "(=" :: fp :: ")/" :: path
-				       else fp :: "/" :: path
-				   end
-				| NONE =>
-				    (case firstArcOp
-				       of SOME firstArc =>
-					    if show_anchors andalso firstArc = name'
-					    then "$/" :: path
-					    else "$" :: firstArc :: "/" :: path
-					| NONE => "$" :: name' :: "/" :: path))
-		   in concat path
-		  end
-	      | dir_path (DIR { dir, arcs }, path, _) =
-		  arcs_path (dir, arcs, true, ":" :: path)  (* introduce the "segment divider", ":" *)
-
-	 in arcs_path (dir, arcs, false, nil)
-	end (* fun dpathToString *)
-
-    (* encodeFile : file -> string *)
-    fun encodeFile file = dpathToString (fileToApath file) false
+    (* encodeFile : file -> string
+     *   This function does _not_ include anchor annotations/abbreviations. *)
+    fun encodeFile file = apathToFpath (fileToApath file)
 
 
    (* *********************************************************************************** *)
    (* translating between representations *)
 
     (* fileToFpath [desc] : file -> string
+     * This is where anchor notation/abbreviation could be added (like dpathToString x true).
+     * There is also the question of whether the apath component of the file should be a segmented
+     * path [e.g. a list of apaths?]?
      * exported
      * local: none
      * external: 10 files *)
-    fun fileToFpath file = dpathToString (fileToApath file) true
+    fun fileToFpath file = apathToString (fileToApath file)
 
     (* dpathToFile : dpath -> file *)
-    (* sid = 0 is not a valid, allocated stable id because it is less than 1.
+    (* This actually produces what could be called a "prefile", an incomplete file record.
+     *   sid = 0 is not a valid, allocated stable id because it is less than 1.
      * Could have sid be an int option instead. *)
     fun apathToFile (apath: apath) = {apath = apath, fid = ref NONE, sid = 0}
 
@@ -768,7 +708,7 @@ in
 		 SOME (FI.canonical (apathToFpath (applyReanchor cvt reanchor)))
 	end
 
-  (* ????
+  (* ???? check what is required from these functions by clients
     (* osstring_dpath_relative : dpath -> fpath *)
     fun osstring_dpath_relative (pf as { dir, arcs }: dpath) =
 	case dir
@@ -784,58 +724,29 @@ in
 
 
     (* *********************************************************************************** *)
-    (* pickling and unpickling dpaths *)				   
+    (* "pickling" and "unpickling" apaths
+	These operations are now trivial.
+        QUESTIONS:
+          What do we really need to pickle/unpickle?
+	  Do we need to pickle/unpickle relative to a file as the original version did?
+        SrcPath.pickle is called twice in stable/stabilize.sml.
+     *)
 
     (* apathToFileId : apath -> FI.fileId *)
-    fun apathToFileId (apath: apath) =
-	FI.fileId (apathToFpath apath)
+    fun apathToFileId (apath: apath) = FI.fileId (apathToFpath apath)
 
     (* fileToFileIdOp : file -> FI.fileId option *)
     fun fileToFileId ({fid,...}: file) = !fid
 
-    (* ???? *)
-    (* pickle : (bool * string -> unit) -> {dpath: dpath, relativeTo : file}
-                -> string list list *)
-    (* ASSERT: relativeTo is an interned file 
-     * nontrivial warn is passed to pickle in function apath2list in stabilize.sml *)
-    fun pickle warn { dpath as {dir,arcs}: dpath, relativeTo = file } =
-	let fun warn' (abs_or_rel: bool) =
-		warn (abs_or_rel, dpathToString { dir = dir, arcs = arcs } false)
-		     (* HACK! We are cheating here, turning the dpath into a file
-		      * even if there are no arcs.  This is ok because of the false
-		      * arg for dpathToString. *)
+    (* pickle : apath -> string list *)
+    fun pickleApath ({ isAbs, vol, revarcs } : apath) = Bool.toString isAbs :: vol :: revarcs
 
-	    fun p_dpath ({ dir, arcs } : dpath) = arcs :: p_dir dir
-
-	    and p_dir (ROOT vol) = (warn' true; [[vol, "r"]])
-	      | p_dir CWD = impossible ["pickle: CWD"]
-	      | p_dir (ANCHOR { name, ... }) = [[name, "a"]]
-	      | p_dir (DIR dpath) =
-		  let val apath_fid = apathToFileId apath
-		   in (case fileToFileIdOp file
-			 of NONE => impossible ["pickle: ", "file not interned"]
-			  | SOME file_fid => 
-		              (case FI.compare (apath_fid, file_fid)
-				 of EQUAL => (warn' false; [["c"]])
-				  | _ => p_dpath dpath))
-		  end
-
-	 in p_dpath dpath
-	end
-
-    (* ???? *)
-    (* unpickle : dpathEnv -> {pickled: string list list, relativeTo: file} -> dpath *)
-    fun unpickle (pfenv: dpathEnv) { pickled: string list list, relativeTo: file } =
-	let fun u_dpath (arcs :: l) = {dir = u_dir l, arcs = arcs}
-	      | u_dpath _ = raise Format
-
-	    and u_dir [[vol, "r"]] = ROOT vol
-	      | u_dir [["c"]] = fileToDir relativeTo
-	      | u_dir [[n, "a"]] = lookAnchor (pfenv, n)
-	      | u_dir l = DIR (u_dpath l)
-
-	 in u_dpath pickled
-	end
+    (* unpickle :  string list -> apath *)
+    fun unpickle (isAbs :: vol :: revarcs) =
+  	  (case Bool.fromString isAbs
+	     of SOME b => {revarcs = revarcs, isAbs = b, vol = vol}
+  	      | NONE => raise Format)
+      | unpickle _ = raise Format
 
 
     (* *********************************************************************************** *)
@@ -1154,6 +1065,7 @@ for working with DIR values.
 	Examples?
 
 
+------------------------------------------------------------------------------------------
 9. Phase 3 simplification
 
   The main change is to separate the two anchor environments embodied in the env type,
@@ -1218,6 +1130,7 @@ for working with DIR values.
   file paths.  Is this is the only source of segmented file paths?
 
 
+------------------------------------------------------------------------------------------
 10. Phase 4 simplification
 
 * Rename "file location" types:
@@ -1398,16 +1311,20 @@ for working with DIR values.
 * Has any essential functionality been lost?
 
 
+------------------------------------------------------------------------------------------
 11. Phase 5 Simplification: Eliminating dpaths [prefiles] and the dir datatype.
 
-This version is an attempt [partially completed] to use only fpaths and apaths, and not
-dpaths [formerly prefiles] to represent FS locations.
+This version is an attempt to simplify the file "location paths" down to only fpaths and apaths,
+eliminating dpaths [formerly prefiles].
 
 This is a significant simplification suggested by the fact that using both apaths [prepaths]
 and dpaths [prefiles] seems to be redundant.
 
-Most of the functions mapping from and to dpaths can be deleted. So far there are a few
-functions that involve dir and dpaths that haven't been converted, including:
+Eliminating dpaths [prefiles] implies that we can also eliminate the dir datatype.
+
+Most of the functions mapping from and to dpaths can be deleted. There are several
+functions that involve dir and dpaths that can either be deleted or become fairly trivial,
+including:
 
     dpathToString
     pickle
@@ -1421,15 +1338,34 @@ a concatentation of fpath segments separated by the colon character.  So far, I 
 such segmented paths used in the PIDMAP file, but there may be other uses.
 
 The decodeFpath function deals with these segmented paths internally, and produces a file,
-which formerly could have a dpath involving DIR segmentation. The the segment structure is
-really essentially, I believe it could be "simulated" by using a list of apaths, with one
-apath for each segement.
+which formerly could have a "segmented" dpath involving DIR segmentation. If "segmented paths"
+are really essential, I believe they might be "simulated" by using a list of apaths, with one
+apath for each segement, and where all but the first segment would be relative.
 
 Again the question is whether functionality that is essential for SrcPath clients is
-lost in this simplification. My conjecture is that any essential functionality could
-be recovered without needing to reintroduce the dir type and the dpath type.
-
+lost in this simplification (i.e. did the simplification "overshoot" it goal?).
+My conjecture is that any essential functionality could be recovered without needing to
+reintroduce the dir type and the dpath [prefile] type. If we really need "segmented" paths,
+it might be enough to model them as lists of apaths, where all but the last apath in the
+list must be relative.
   
+It is clear how to translate a dpath of the form {dir = ROOT vol, arcs} into an apath:
+
+    {dir = ROOT vol, arcs}  -->  {isAbs = true, vol = vol, arcs = arcs}
+
+But what about the {dir = CWD, arcs} and the {dir = ANCHOR _, arcs} forms?
+
+    {dir = CWD, arcs}  -->  {isAbs = false, vol = "", arcs = arcs}
+
+If we can assume (in general) that relative paths are always relative the the CWD.
+For the anchor variant of dpath, how about
+
+    {dir = ANCHOR{name, ...}, arcs}  --> {isAbs = false, vol = "", ("$"^name) :: arcs}
+
+or can there be absolute anchored paths? Example?  ["/$anchor/..." doesn't seem to make
+sense as an anchored path.]
+
+
 --------------------------------------------------------------------------------
 Name changes and new names:
 
