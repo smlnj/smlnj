@@ -1371,7 +1371,7 @@ Conversely, should apath of the forms:
 
    {isAbs = _, vol, revarcs = [..., $name, ..., arc]}
 
-be considered ill-formed and illegal?
+be considered ill-formed and illegal?  That is, can only the last element of revarcs by an anchor?
 
 
 --------------------------------------------------------------------------------
