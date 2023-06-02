@@ -1360,10 +1360,18 @@ But what about the {dir = CWD, arcs} and the {dir = ANCHOR _, arcs} forms?
 If we can assume (in general) that relative paths are always relative the the CWD.
 For the anchor variant of dpath, how about
 
-    {dir = ANCHOR{name, ...}, arcs}  --> {isAbs = false, vol = "", ("$"^name) :: arcs}
+    {dir = ANCHOR{name, ...}, arcs}  --> {isAbs = false, vol = "", revarcs = rev ("$"^name :: rev revarcs)}
 
 or can there be absolute anchored paths? Example?  ["/$anchor/..." doesn't seem to make
 sense as an anchored path.]
+
+Conversely, should apath of the forms:
+
+   {isAbs = true, vol, revarcs = [ ... , $name]}
+
+   {isAbs = _, vol, revarcs = [..., $name, ..., arc]}
+
+be considered ill-formed and illegal?
 
 
 --------------------------------------------------------------------------------
