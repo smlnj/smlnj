@@ -119,6 +119,10 @@ in
 	    then (ABS (if vol = "" then U else W vol), rev arcs)
 	    else (case arcs
 		    of nil => (REL 0, nil)
+		     | "$" :: rest => 
+			  (case rest
+			     of nil => impossible ["fpathToPath: bad initial $ arc"]
+			      | arc0 :: rest' => (ANC arc0, rest))
 		     | arc0::rest =>
 		         (case (parseAnchor arc0)
 			    of SOME name => (ANC name, rev rest)
@@ -635,11 +639,17 @@ in
 
     (* What are the specifications that define "standard" and "native" file paths? *)
 
-    (* do we still need this "stdspec" type? *)
+(*
+    (* datatype stdspec is made redundant by path *)
     datatype stdspec
       = RELATIVE of string list
       | ABSOLUTE of string list
       | ANCHORED of anchor * string list
+*)
+(*
+   parseFpathNative seems to be more-or-less equivalent to fpathToPath above, except
+   -- it seems happy with fpaths like "/$/a/b", "$/a/b" (what do they mean?) 
+   -- "$" is ok as an initial arc
 
     (* parseFpathNative [parseNativeSpec]: fpath -> stdspec *)
     (* ASSERT: fpath is not the empty string *)
@@ -663,52 +673,48 @@ in
 		        else RELATIVE arcs
 	     (* end case *)
         end
+*)
 
-    (* parseFpathStandard [parseStdspec]: (string -> unit ) -> fpath -> stdspec *)
-    (* ASSERT: fpath is not the empty string *)
-    fun parseFpathStandard (fpath: fpath) =
+(* parseFpathStandard [parseStdspec]: (string -> unit ) -> fpath -> stdspec *)
+(* ASSERT: fpath is not the empty string *)
+(*    fun parseFpathStandard (fpath: fpath) = *)
+
+    (* fpathToPathStandard : fpath -> path *)
+    fun fpathToPathStandard (fpath: fpath) =
 	let fun delim #"/" = true
 	      | delim #"\\" = true
 	      | delim _ = false
-	    fun transl ".." = P.parentArc
-	      | transl "." = P.currentArc
-	      | transl arc = arc
-	 in case map transl (String.fields delim fpath)
-	      of [""] => impossible ["parseFpathStandard -- zero-length name: ", fpath]
-	       | [] => impossible ["parseFpathStandard -- no fields", fpath]
-	       | "" :: arcs => ABSOLUTE arcs
+	 in case (String.fields delim fpath)
+	      of nil => impossible ["parseFpathStandard -- no fields"]
+	       | [""] => impossible ["parseFpathStandard -- zero-length name: ", fpath]
 	       | arcs as (["$"] | "$" :: "" :: _) =>
-		   (error ["invalid zero-length anchor name in: ", fpath];
-		    RELATIVE arcs)
-	       | "$" :: (arcs as (arc1 :: _)) => ANCHORED (arc1, arcs)
-	       | arcs as (arc1 :: arcn) =>
-		   if String.sub (arc1, 0) <> #"$" then RELATIVE arcs
-		   else ANCHORED (String.extract (arc1, 1, NONE), arcn)
-	end (* fun parseFpathStandard *)
+		   impossible ["invalid zero-length anchor name in: ", fpath]
+	       | "" :: arcs => (ABS U, rev arcs)
+	       | "$" :: (arcs as (arc1 :: _)) => (ANC arc1, rev arcs)
+	       | arcs as (arc1 :: rest) =>
+		   if String.sub (arc1, 0) <> #"$" then (REL 0, rev arcs)
+		   else (ANC (String.extract (arc1, 1, NONE), rest)
+	end (* fun fpathToPathStandard *)
 
-    (* ???? *)
     (* native : pathEnv -> fpath -> path *)
     fun native pathEnv fpath =
-          (case parseFpathNative fpath
-             of RELATIVE arcs => {isAbs = false, vol = "", revarcs = rev arcs}  (* dir? *)
-              | ABSOLUTE arcs => {isAbs = true, vol = "", revarcs = rev arcs}
-              | ANCHORED (anchor, arcs) =>
+          (case fpathToPath fpath
+             of path as ((REL _ | ABS _), _) => path
+              | (ANC anchor, arcs) =>
 		  (case lookAnchor pathEnv
 		     of NONE => impossible ["native"]
-		      | SOME path => extendPath arcs)
+		      | SOME path => extendPath arcs path)
           (* end case *))
 
-    (* ???? *)
     (* standard : pathEnv -> fpath -> path *)
     fun standard pathEnv fpath =
-	  (case parseFpathStandard fpath
-	     of RELATIVE arcs => {isAbs = false, vol = "", revarcs = rev arcs} (* dir? *)
-	      | ABSOLUTE arcs => {isAbs = true, vol = "", revarcs = rev arcs}
-	      | ANCHORED (anchor, arcs) => {dir = lookAnchor (pfenv, anchor), arcs = arcs}
+          (case fpathToPathStandard fpath
+             of path as ((REL _ | ABS _), _) => path
+              | (ANC anchor, arcs) =>
 		  (case lookAnchor pathEnv
 		     of NONE => impossible ["standard"]
-		      | SOME path => extendPath arcs)
-	  (* end case *))
+		      | SOME path => extendPath arcs path)
+          (* end case *))
 
 
     (* *********************************************************************************** *)
@@ -795,14 +801,12 @@ in
 
 
     (* *********************************************************************************** *)
-    (* decoding "fpaths" to files (relative to a given dpathEnv) *)
+    (* decoding "fpaths" to files (relative to a given pathEnv) *)
 
     (* transArc: string -> string *)
     (* What does transArc protect against?
      * Is it roughly reversing the effect of a transSpecial performed earlier? *)
-    fun transArc "." = P.currentArc  (* = "." *)
-      | transArc ".." = P.parentArc  (* = ".." *)
-      | transArc a = transCode a  (* replace numberic escape codes *)
+    fun transArc a = transCode a  (* replace numberic escape codes *)
 
     (* The fpath argument is a "segmented fpath" (sequence of fpaths separated by ":").
      * What are "segments"? (Where are they documented? Where are they introduced?)
@@ -821,32 +825,30 @@ in
 		   of nil => impossible ["decodeFpath: no fields in segment 0"]
 		    | arc0 :: arcs =>
 		      if arc0 = ""  (* fpath starts with #"/" *)
-		      then {isAbs = true, vol = "", revarcs = rev arcs}
+		      then (ABS U, rev arcs)
 		      else let val char0 = String.sub (arc0, 0) (* 1st char of arc0 *)
 			       val arc0' = String.extract (arc0, 1, NONE)
 			    in case char0
 				 of #"%" => (* arc0' is a volume name *)
-				      {isAbs = true, vol = arc0', revarcs = rev arcs}
+				      (ABS arc0', rev arcs)
 				  | #"$" => (* arc0' is an anchor *)
-				      let val {isAbs, vol, revarcs} = lookAnchor (pathenv, arc0')
-				       in {isAbs = isAbs, vol = vol,
-					   revarcs = revappend (arcs, revarcs)}
+				      let val (head, arcs') = lookAnchor (pathenv, arc0')
+				       in (head,  = revappend (arcs, arcs'))
 				      end
-	                          | _ => {isAbs = false, vol = "", revarcs = rev (arc0 :: arcs)}
+	                          | _ => (REL 0, rev (arc0 :: arcs))
 	                   end)
 
 	    (* segToPath: string -> path *)
             fun segToPath (seg: string) =
-		{isAbs = false, vol = "",
-		 revarcs = rev (map transArc (String.fields (isChar #"/") seg))}
+		(REL 0, rev (map transArc (String.fields (isChar #"/") seg)))
 
 	    fun combinePaths nil = impossible ["combinePaths"]
 	      | combinePaths [path] = path
-	      | combinePaths (paths as {isAbs, vol, revarcs} :: rest) =
-		  let val rarcss = map #revarcs paths
+	      | combinePaths (paths as (head, arcs) :: rest) =
+		  let val rarcss = map #2 paths
 		      fun combine [rarcs] = rarcs
 			| combine (rarcs::rest) = revappend (tl rarcs, combind rest)
-		  in {isAbs = isAbs, vol = vol, revarcs = combine rarcss}
+		   in (head, combine rarcss)
 		  end
 
 	 in case String.fields (isChar #":") fpath
@@ -854,7 +856,7 @@ in
 	       | seg0 :: segs =>
 		   let val segPaths = fistset seg0 :: map segToPath segs
 		       val fullPath = combinePaths segPaths
-		   in intern (pathToFile fullPath)
+		    in intern (pathToFile fullPath)
 		   end
 
 	end (* fun decodeFile *)
@@ -1611,6 +1613,8 @@ pre0		fileInfoToDpath
 pre*		fileToPath
 prepath	[type]	path
 prefile* [type]	dpath
+parseFpathStandard  fpathToPathStandard
+
 
 Removed:
 
@@ -1625,14 +1629,15 @@ augElab		.  -- "
 dirElab		.  -- "
 bogus_elab	.  -- "
 look		.  -- ANCHOR argument field
+stdspec [ty]    .  -- superceded by path and head
 
 Added:
 
-.		dpathToFileInfo
-.		dpathToFile
-.		dirToReanchor
-.		fileInfoToReanchor
-.		dpathToReanchor
+.		dpathToFileInfo [X]
+.		dpathToFile     -> pathToFile
+.		dirToReanchor   [X]
+.		fileInfoToReanchor [X]
+.		dpathToReanchor -> pathToReanchor
 .		fileToReanchor
 
 * Some of the former "elab" functions are replaced by "reanchor" functions.
@@ -1640,8 +1645,8 @@ Added:
 * In some cases, an env parameter that provided access to the anchor -> path
   environment is removed, and instead the global path environment in PathEnv
   is accessed directly. In other cases (like bind and lookAnchor) where the env
-  parameter provided access to the "bound" dpath environment, the env parameter
-  is replaced by a dpathEnv parameter.
+  parameter provided access to the "bound" dpath/path environment, the env parameter
+  is replaced by a dpathEnv/pathEnv parameter.
 
 --------------------------------------------------------------------------------
 
