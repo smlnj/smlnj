@@ -112,7 +112,8 @@ in
     (* fpathToPath : fpath -> path *)
     (* Use OS.Path.fromString to provide an initial fpath, then convert result to a path.
      * We will assume that fpath is "canonical".
-     * We will assume that isAbs = true, vol = "" indicates a Unix root. *)
+     * We will assume that isAbs = true, vol = "" indicates a Unix root.
+     * This translation deals with the "$/a" abbreviation notation. *)
     fun fpathToPath (fpath: string) =
 	let val { arcs, vol, isAbs } = P.fromString fpath
 	 in if isAbs
@@ -817,6 +818,7 @@ in
 	 Known example is "$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm".
        The pathEnv argument is a "local" overlay over the global PathEnv anchor environment. *)
 
+    (* QUESTIONABLE ???? segments are unclear *)
     (* decodeFile [decode] : pathEnv -> fpath -> file *)
     fun decodeFpath (pathenv: pathEnv) (fpath: fpath) : file =
 	let (* firstseg : string -> path *)
@@ -833,7 +835,7 @@ in
 				      (ABS arc0', rev arcs)
 				  | #"$" => (* arc0' is an anchor *)
 				      let val (head, arcs') = lookAnchor (pathenv, arc0')
-				       in (head,  = revappend (arcs, arcs'))
+				       in (head, revappend (arcs, arcs'))
 				      end
 	                          | _ => (REL 0, rev (arc0 :: arcs))
 	                   end)
