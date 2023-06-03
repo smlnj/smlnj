@@ -1375,6 +1375,117 @@ be considered ill-formed and illegal?  That is, can only the last element of rev
 
 
 --------------------------------------------------------------------------------
+12. Classifying paths, translating paths to and from strings
+
+Let's start by assuming there are just 3 kinds of paths, which are intended to denote file
+locations in Unix/Windows file systems:
+
+(a) Absolute paths, rooted at "/" (Unix) or "%volume" (Windows).
+
+(b) Relative paths, with a unique, well-defined, but implicit root, say CWD.
+
+(c) Anchor-rooted paths, with an anchor as root "$name/...". The anchor represents a
+    definite but possibly variable FS location (defined by an absolute path) via
+    an anchor enviornments that maps anchors (anchor names) to (absolute?) paths
+
+This classification gives rise to the following datatypes, where
+
+  type anchor = string  -- non-empty
+
+  type arc = string     -- non-empty, alphanumberic with initial letter, disallowing ".", and ".."
+
+  type arcs = string list  -- possibly empty
+
+  datatype root
+    = U            -- unique Unix FS root directory
+    | W of string  -- per-volume Windows roots (where the _non-empty_ string is the volume name)
+
+  datatype path
+    = ABS of root * arcs
+    | REL of arcs  -- implicit root, defaulting to CWD, possibly empty arcs 
+    | ANC of anchor * arcs
+
+Call the values of this path type, "CM paths".
+
+Now there is the problem of defining string path formats that can be unambiguously 
+parsed into these paths, and an unparse function that produces cannonical strings from
+paths,
+
+  val parse : string -> path
+  val unparse : path -> string
+
+such that
+
+  parse (unparse p) = p  for all paths p
+
+The idea here is to define a simpler, unambiguous string notation for paths, avoiding "overloading"
+of symbols like "/", and avoiding problems related to special arcs like ".", ".." and empty arc
+strings.
+
+Note that the string notation for paths does not have to coincide with the native file path
+notation of any OS. So let's feel free to invent a new file path notation just for the purposes
+of CM description files.
+
+  val slash = "/"
+  val slash2 = "//"
+  val amp = "&"
+  val percent = "%"
+  val at = "@"
+  val dollar = "$"
+
+  up_arcs [a1, a2, a3] = concat [a1, slash, a2, slash, a3]
+  up_arcs arcs = interleave slash arcs
+  up_arcs [] = ""
+
+  up_root U = amp
+  up_root (W vol) = concat [percent, vol]
+
+  up_path (ABS (root, arcs) = concat [up_root root, slash2, up_arcs arcs]
+  up_path (REL arcs) = concat [at, slash2, up_arcs arcs]
+  up_path (ANC (anchor, arcs) = concat [dollar, anchor, slash2, up_arcs arcs]
+  
+The valid path strings would be exactly the range/image of up_path over the domain of all
+paths (all possible values of type path). This would elimate having to deal with
+"noncanonical" path strings containg special arcs like "." and "..". Avoiding these
+problematical arc names could be achieved by restricting arcs to alphanumberic strings
+starting with a letter (like SML identifiers).
+
+The definitions are also meant to avoid difficulties arising from empty path names, disallowing
+paths like "a//b".
+
+Call these the valid path strings.
+
+Examples and nonexamples:
+
+  "&//"        Unix root directory, empty arcs list ["/"]
+  "&//a/b"     file at path a/b relative to the Unix root ["/a/b"]
+  "%A//a/b/c"  file at path a/b/c relative to Windows volume "A"  ["A:a/b/c"]
+  "@//a/b"     file at path a/b relative to CWD
+  "$a//b/c"    file at path b/c relative to anchor_env("a")
+  "a/b/c", "/a/b"  Invalid: paths must start with "&", "@", or "$"
+  "@/a//c"     Invalid: arcs cannot be the empty string
+  "%A/a/b"     Involid: root must be followed by "//"
+
+QUESTION: Could one interpret a REL path with respect to a "directory" (path)
+  other than the implicit CWD?  How would a different implicit root for relative paths be
+  designated or specified?  It seems that, like CWD, it would have to be part of the "state"
+  of the program's file-system interface.
+
+Claim: paths and valid path strings can be translated unambiguously to Unix or Windows file paths
+Claim: [cannonical?] Unix/Windows file paths can be translated to these CM paths
+
+Discussion:
+
+There may be persuasive arguments not to use a specialized string format like this in CM
+description files, but to stick with conventional (OS based) file path notation, with the
+addition of anchor names (of the form "$<name>") that are only permitted in certain places,
+such as the first arc of a (relative) file path.  But the "externally allowed" file path notation
+is only relevant to the initial parsing of CDFs and the reporting of errors.  Internally, we would
+only need to use the path, etc. types.  I propose using these types (in place of apath) in a
+Phase 6 revision of srcpath.*.
+
+
+--------------------------------------------------------------------------------
 Name changes and new names:
 
 Renamed:
