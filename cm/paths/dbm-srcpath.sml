@@ -8,10 +8,9 @@
  * Author: Matthias Blume
  * Edited by: DBM
  * 
- * Revision, phase 5: Can we delete dpath and use only apath (and fpath) for locations?
- *   The key function seems to be decodeFpath, but there remains the question of whether the
- *   "segmented paths" represented using DIR in dpaths are essential for clients of SrcPath.
- *   See Note 11 at the end of this file.
+ * Revision, phase 6: 
+ *   A new, truly "native" internal representation of paths (replacing apaths).
+ *   See Note 12 at the end.
  *)
 
 structure SrcPath :> SRCPATH =
@@ -39,65 +38,116 @@ in
 	There is one specific "handle SrcPath.Format", occuring in the file stable/stabilize.sml
         where the handler just raises UnpickleUtil.Format in place of this Format exception. *)
 
-    (* anchor: the name of an anchor, e.g. "smlnj" for the anchor $smlnj *)
+
+    (* fpath: a file path in _standard_ format
+     * Standard format: the format that OS.Path uses
+     * but possibly starting with an anchorn (initial arc begins with #"$").
+     * Any ambiguity about the format of an fpath should be cleared up! *)
+    type fpath = string 
+
+    (* a file path string in "native" format (Unix or Windows) *)
+    type nfpath = string
+
+    (* anchor: the name of an anchor, e.g. "smlnj" for the anchor $smlnj, non-empty *)
     type anchor = string
+
+    type arc = string  (* non-empty, alphanumberic with initial letter, disallowing ".", and ".." *)
+
+    type arcs = arc list  (* possibly empty, maintained in outside-in (reverse) order *)
+
+    (* path root, differentiated by OS FS. Could unify by using the volume = "" convention for
+       the Unix root. *)
+
+    datatype root
+      = U            -- unique Unix FS root directory
+      | W of string  -- per-volume Windows roots (where the _non-empty_ string is the volume name)
+
+    datatype head
+      = ABS of root
+      | REL of word  -- implicit root, defaulting to CWD, possibly empty arcs,
+		     -- int is up-levels (i.e. the number of leading ".." arcs in standard path strings)
+      | ANC of anchor
+
+    type path = head * arcs
 
     (* stableid: integers used as "stable" ids of files(?) *)
     type stableid = int
 
-    (* fpath: a file path in some format
-     * by default, we assume the format that OS.Path uses
-     * but sometimes the format will be OS native (Unix and Windows OSs only), and
-     * sometimes it may contain (start with) an achor (starting with "$"). 
-     * This ambiguity about the format of an fpath should be cleared up! *)
-    type fpath = string 
-
-    type path = string list  (* list of arc names *)
-    type rpath = string list (* reversed list of arc names *)
-
-    (* A apath is similar to the result of OS.Path.fromString except that
-     * we keep the list of arcs in reversed order.  This makes adding
-     * and removing arcs at the end easier.
-     * A apath is essentially an "abstract syntax" for ordinary fpaths. *)
-    type apath = { revarcs: rpath, vol: string, isAbs: bool }
-
     (* reanchor: relative location spec that can be used reconstruct a path relative to
      * an "anchor point" (specified by a fpath) for the anchor that occurs at the end
-     * of the reanchor chain (Anchor a).
+     * of the reanchor chain (the anchor part).
      * A reanchor is a sort of "delta path" from some given fpath/apath and the anchor
      * that that path is relative to.
      * If a apath is not relative to an anchor, then there is no reanchor for that apath;
      * i.e., apathToReanchor will return NONE. *)
-    datatype reanchor
-      = Anchor of anchor
-      | Extend of path * reanchor
+    type reanchor = anchor * arcs list
 
-    (* dir datatype eliminated, not relevant if dpath is eliminated? *)
-				    
-    (* file: a file is a record with an apath, the locaction of the file, an fid, which
+    (* file: a file is a record with an path, the locaction of the file, an fid, which
      * is a ref to a FI.fileId option, and an sid, which is a stableid (an int).
      * The stableid numbers are generated in the intern function, which also defines the
      * id field. The interned files are "recorded" in a finite set of type FileSet.set *)
-    type file = {apath : apath, fid: FI.id option ref, sid: stableid}
+    type file = {path : path, fid: FI.id option ref, sid: stableid}
 
     (* compareFile : file * file -> order *)
-    (* This is used in paths/srcpathmap.sml to define maps over files, with ord_key = file *)
+    (* This is used in paths/srcpathmap.sml to define maps over files, with ord_key = file
+     * Comparison is in terms of the files' stableids.  *)
     fun compareFile ({sid=i1, ...}: file, {sid=i2, ...} : file) = Int.compare (i1, i2)
 
 
-    (* converting: fpath <--> apath *)
+    (* converting: fpath <--> path *)
 
-    (* fpathToApath : fpath -> apath *)
-    (* use OS.Path.fromString to parse the fpath, then convert result to a apath
-     * by reversing the arcs *)
-    fun fpathToApath (fpath: string) =
+    (* parseAnchor : string -> string option *)
+    fun parseAnchor (arc : string) =
+          (case Char.compare (String.sub (arc, 0), #"$")
+	     of EQUAL => SOME (String.extract (arc, 1, NONE))
+	      | _=> NONE)
+
+    (* countParentLinks : string list -> int * string list *)
+    fun countParentLinks (".." :: rest) =
+	  let val (n, rest') = countParentLinks rest
+	   in (n+1, rest')
+	  end
+      | countParentLinks arcs = (0, arcs)
+
+    (* fpathToPath : fpath -> path *)
+    (* Use OS.Path.fromString to provide an initial fpath, then convert result to a path.
+     * We will assume that fpath is "canonical".
+     * We will assume that isAbs = true, vol = "" indicates a Unix root. *)
+    fun fpathToPath (fpath: string) =
 	let val { arcs, vol, isAbs } = P.fromString fpath
-         in { revarcs = rev arcs, vol = vol, isAbs = isAbs }
+	 in if isAbs
+	    then (ABS (if vol = "" then U else W vol), rev arcs)
+	    else (case arcs
+		    of nil => (REL 0, nil)
+		     | arc0::rest =>
+		         (case (parseAnchor arc0)
+			    of SOME name => (ANC name, rev rest)
+			     | NONE =>
+ 				 let val (nparents, arcs') = countParentLinks arcs
+				  in (REL nparents, rev arcs')
+				 end))
 	end
 
-    (* apathToFpath : apath -> string *)
-    fun apathToFpath ({ revarcs, vol, isAbs }: apath) =
-	P.toString { arcs = rev revarcs, vol = vol, isAbs = isAbs }
+
+    (* interleave : string * string list -> string list *)
+    fun interleave (s, nil) = nil
+      | interleave (s, [x]) = [x]
+      | interleave (s, y::ys) = y :: s :: interleave (s, ys)
+
+    (* arcsToString :  string list -> string *)
+    fun arcsToString arcs = concat (interleave "/" (rev arcs))
+
+    (* addParentLinks : word * string list -> string list *)
+    fun addParentLinks (0, ss) = ss
+      | addParentLinks (n, ss) = ".." :: addParentLinks (n-1, s) 
+
+    (* pathToFpath : path -> string *)
+    fun pathToFpath ((head, arcs): path) =
+	(case head
+	   of ABS U => "/" ^ arcsToString arcs
+	    | ABS (W vol) => concat ["%", vol, arcsToString arcs]
+	    | REL parentlinks => arcsToString (addParentLinks (parentlinks, arcs))
+	    | ANC name => concat ["$" ^ name, "/", arcsToString arcs])
 
 
    (* *********************************************************************************** *)
@@ -108,7 +158,7 @@ in
      * If the CWD changes, this record will be updated if and when the cwd function is called
      * subsequently.
      * Why store this value anyway?  Why not just call F.getDir whenever one needs to know
-     * the current working directory (as a fpath or apath). The reason, apparently, is that
+     * the current working directory (as a fpath or path). The reason, apparently, is that
      * if the cwd function is called after a change in CWD, "clients" can be notified. *)
     val cwd_fpath = ref (F.getDir ())
 
@@ -154,14 +204,14 @@ in
     fun cwd () = getCWD ()
 
 
-    (* translating to apath *)
+    (* translating to path *)
 
-    (* fileToApath [pre] : file -> apath
-     * (equivalent to #apath applied to a file record)
+    (* fileToPath [pre] : file -> path
+     * (equivalent to #path applied to a file record)
      * exported
      * local: encodeFile*, fileToFpath, osstring_relative*
      * external: stable/stabilize.sml *)
-    fun fileToApath ({apath,...}: file) : apath = apath
+    fun fileToPath ({path,...}: file) : path = path
 
 
    (* *********************************************************************************** *)
@@ -225,12 +275,12 @@ in
 	else transSpecial arc  (* the general, or "ordinary" case *)
 
     (* dpathToString [encode0] no longer needed ????, or do we need a fancier version of
-     * apathToFpath that could conditionally add the anchor annotations/abbreviations of
+     * pathToFpath that could conditionally add the anchor annotations/abbreviations of
      * (dpathToString true)? Note*)
 
     (* encodeFile : file -> string
      *   This function does _not_ include anchor annotations/abbreviations. *)
-    fun encodeFile file = apathToFpath (fileToApath file)
+    fun encodeFile file = pathToFpath (fileToPath file)
 
 
    (* *********************************************************************************** *)
@@ -238,51 +288,51 @@ in
 
     (* fileToFpath [desc] : file -> string
      * This is where anchor notation/abbreviation could be added (like dpathToString x true).
-     * There is also the question of whether the apath component of the file should be a segmented
-     * path [e.g. a list of apaths?]?
+     * There is also the question of whether the path component of the file should be a segmented
+     * path [e.g. a list of paths?]?
      * exported
      * local: none
      * external: 10 files *)
-    fun fileToFpath file = apathToString (fileToApath file)
+    fun fileToFpath file = pathToString (fileToPath file)
 
     (* dpathToFile : dpath -> file *)
     (* This actually produces what could be called a "prefile", an incomplete file record.
      *   sid = 0 is not a valid, allocated stable id because it is less than 1.
      * Could have sid be an int option instead. *)
-    fun apathToFile (apath: apath) = {apath = apath, fid = ref NONE, sid = 0}
+    fun pathToFile (path: path) = {path = path, fid = ref NONE, sid = 0}
 
 
    (* *********************************************************************************** *)
-   (* apath and reanchor functions (formerly involving elab) *)
+   (* path and reanchor functions (formerly involving elab) *)
 
-  (* apath *)
+  (* path *)
 
-    (* rootApath : apath *)
-    fun rootApath (vol : string) : apath =
+    (* rootPath : path *)
+    fun rootPath (vol : string) : path =
 	{ revarcs = nil, vol = vol, isAbs = true }
 
-    (* parentApath [dirPP] : apath -> apath *)
-    (* returns the apath of the parent directory
+    (* parentPath [dirPP] : path -> path *)
+    (* returns the path of the parent directory
      * not exported.
-     * local uses: dirToApath, applyReanchor *)
-    fun parentApath ({ revarcs = _ :: revarcs, vol, isAbs }: apath) : apath =
+     * local uses: dirToPath, applyReanchor *)
+    fun parentPath ({ revarcs = _ :: revarcs, vol, isAbs }: path) : path =
 	  { revarcs = revarcs, vol = vol, isAbs = isAbs }
-      | parentApath _ = impossible ["parentApath"]
+      | parentPath _ = impossible ["parentPath"]
 
-    (* extendApath : rpath -> apath -> apath
+    (* extendPath : rpath -> path -> path
      * not exported
-     * local uses: dpathToApath, applyReanchor *)
-    fun extendApath (rarcs: string list) ({ revarcs, vol, isAbs }: apath) : apath  =
+     * local uses: dpathToPath, applyReanchor *)
+    fun extendPath (rarcs: string list) ({ revarcs, vol, isAbs }: path) : path  =
 	{ revarcs = append (rarcs, revarcs), vol = vol, isAbs = isAbs }
 
   (* reanchor *)
 
-    fun apathToReanchor ({revarcs, ...}: apath) = extendApath revarcs
+    fun pathToReanchor ({revarcs, ...}: path) = extendPath revarcs
 
     (* fileToReanchor : file -> reanchor option
      * not exported
      * local: osstring_reanchored* *)
-    val fileToReanchor = apathToReanchor o fileToApath
+    val fileToReanchor = pathToReanchor o fileToPath
 
 
    (* *********************************************************************************** *)
@@ -299,11 +349,11 @@ in
 
 	(* getFileId [idOf] : fileInfo -> FI.id *)
 	(* returns the fileId associated with the file, updating the id field if it was NONE *)
-	fun getFileId (file as { apath, fid, ... }: file) : FI.id =
+	fun getFileId (file as { path, fid, ... }: file) : FI.id =
 	      (case !fid
 		 of SOME id => id
 		  | NONE =>
-		      let val id = FI.fileId (apathToFpath apath)
+		      let val id = FI.fileId (pathToFpath path)
 		       in fid := SOME id; id
 		      end)
 
@@ -330,11 +380,11 @@ in
 	 * has already been interned before, just return the associated stableid. If it is new
 	 * generate the next stableid and also (through the getFileId function called by insert)
 	 * define the id field of the fileInfo. *)
-	fun intern (file as {apath, sid, fid}: file) : file =
+	fun intern (file as {path, sid, fid}: file) : file =
 	    if FileSet.member (!known, file)
 	    then file
 	    else let val stableid = !nextStableId  (* generate a new stableid *)
-		     val file' = {apath = apath, sid = stableid, fid = fid}
+		     val file' = {path = path, sid = stableid, fid = fid}
 		  in nextStableId := stableid + 1;
 		     known := FileSet.add (!known, file');
 		       (* add the new file with stableid to known *)
@@ -360,136 +410,136 @@ in
 
 
     (* *********************************************************************************** *)
-    (* environments: anchor-apath env, anchor-dpath functional env (formerly "bound") *)
+    (* environments: anchor-path env, anchor-dpath functional env (formerly "bound") *)
 
-    (* The apath environment (mapping anchors to apaths) is global, and is now implemented as
-     * a structure ApathEnv.  It maintains a mapping from anchors to apaths (apath SM.map)
+    (* The path environment (mapping anchors to paths) is global, and is now implemented as
+     * a structure PathEnv.  It maintains a mapping from anchors to paths (path SM.map)
      * as its state, and opertions get, set, defined, and reset operate on this internal state.
-     * The apath that is associated with an anchor by this environment is assumed to designate
+     * The path that is associated with an anchor by this environment is assumed to designate
      * the "anchor point" of the anchor (presumably a directory), i.e. the directory "named" by
      * the anchor.
      *
-     * structure : ApathEnv
-     * This stateful module embodies an anchor to apath environment as an "object" structure.
-     * The mapping from anchors to apaths is stored in the local reference variable anchorMapRef.
+     * structure : PathEnv
+     * This stateful module embodies an anchor to path environment as an "object" structure.
+     * The mapping from anchors to paths is stored in the local reference variable anchorMapRef.
      * 
-     * get a: lookup the anchor a and return the associated apath, if a is bound in the current
+     * get a: lookup the anchor a and return the associated path, if a is bound in the current
      *   map (!anchorMapRef).  Causes a fatal error (Compiler Bug) if a is not in the domain
      *   of the map.
      * 
-     * set (a, SOME pp) : bind (or rebind) the anchor a to apath pp, modifying the map
+     * set (a, SOME pp) : bind (or rebind) the anchor a to path pp, modifying the map
      * set (a, NONE) : remove a from the domain of the map if it is currently bound, otherwise
      *   do nothing.
      *
      * defined a : is the anchor a in the domain of the current map?
      * 
-     * reset () : replace the current map with the empty SM.map, thus reseting the apath
+     * reset () : replace the current map with the empty SM.map, thus reseting the path
      *   anchor environment to be the empty environment.
      *
-     * An anchor that is not in the domain of the current apath map (!anchorMapRef) can be
+     * An anchor that is not in the domain of the current path map (!anchorMapRef) can be
      * considered to be "invalid".
      * The operations get and set and defined are not called outside this file.
      *   while (some other version of?) reset is called in many files in cm.
      * get is only called in get_anchor and mk_anchor.
      * set is only called in setRelative.
-     * ApathEnv is not exported (is not in the signature of SrcPath)
+     * PathEnv is not exported (is not in the signature of SrcPath)
      * local: get_anchor, setRelative, set_anchor, reset_anchors, mk_anchor, processSpecFile
      * external: main/cm-boot.sml, bootstrap/btcompile.sml
      *
-     * Previously, the anchor to apath environment(s) were created by a function newEnv
+     * Previously, the anchor to path environment(s) were created by a function newEnv
      * that was called just once in the files main/cm-boot.sml and bootstrap/btcompile.sml.
      * I conjecture that there was never more than one (global) instance of this environment,
      * and hence it is safe to replace any reference to the environments created by newEnv
-     * with references to the global ApathEnv structure defined inwith SrcPath.
+     * with references to the global PathEnv structure defined inwith SrcPath.
      *
      * There is still a separate "functional" environment, of type dpathEnv, that maps 
      * anchors to dpaths.  These dpath environment are passed as parameters to the
      * exported SrcPath functions bind, decodeFpath, and unpickle.
      *
-     * The global apath environment is represented by the structure ApathEnv and apath
+     * The global path environment is represented by the structure PathEnv and path
      * anchor environments are no longer passed as parameters.
      *
      * QUESTION: Why do we need two anchor environments, the global, stateful one in
-     *   ApathEnv and the functional version (type dpathEnv)?
+     *   PathEnv and the functional version (type dpathEnv)?
      *
-     * QUESTION: does ApathEnv embody the "root anchor environment" mentioned in Sec 3.4
-     *   of the CM manual?  Or does "root anchor environment" refer to the dual apath
+     * QUESTION: does PathEnv embody the "root anchor environment" mentioned in Sec 3.4
+     *   of the CM manual?  Or does "root anchor environment" refer to the dual path
      *   and dpath anchor environments?
      * 
-     * QUESTION: how (where) do the pathconfig files system/pathconfig, config/extrapathconfig,
+     * QUESTION: how (where) do the pathconfig files system/pathconfig, config/extrpathconfig,
      *   and $SMLNJ/lib/pathconfig contribute to initializing the anchor environments (and which
      *   environments are initialized)?
      *)
 
-    structure ApathEnv
+    structure PathEnv
       : sig	      
-	  val get : anchor -> apath option
-	  val set : anchor * apath option -> unit
+	  val get : anchor -> path option
+	  val set : anchor * path option -> unit
 	  val defined : anchor -> bool
 	  val reset : unit -> unit
         end =
 
     struct
 
-      val anchorMapRef : apath SM.map ref = ref SM.empty
+      val anchorMapRef : path SM.map ref = ref SM.empty
 
-      (* find : anchor -> apath option *)
-      (* locally used "look up" function for accessing the current state of the apath
+      (* find : anchor -> path option *)
+      (* locally used "look up" function for accessing the current state of the path
        * environment *)
       fun find anchor = SM.find (!anchorMapRef, anchor)
 
       (* defined : anchor -> bool *)
-      (* Is anchor bound in !anchorMapRef?, i.e. in the apath anchor environment? *)
+      (* Is anchor bound in !anchorMapRef?, i.e. in the path anchor environment? *)
       fun defined anchor = SM.inDomain (!anchorMapRef, anchor)
 
-      (* get : anchor -> apath option *)
+      (* get : anchor -> path option *)
       (* look up anchor in !anchorMapRef. If found, return a new elab for the anchor
-       * containing the same apath and validity as the existing binding. If not
+       * containing the same path and validity as the existing binding. If not
        * found (anchor is not in the domain of !anchorMapRef), produces an undefined
        * anchor fatal error (impossible, compiler bug. So get should only be called with
        * an anchor that is known to be defined. *)
       fun get anchor = find anchor
 
-      (* set : anchor * apath option -> unit *)
-      (* If apathOp is SOME apath, binds or rebinds anchor to apath.
-       * If apathOp is NONE, unbinds anchor in !anchorMapRef. *)
-      fun set (anchor, apathOp) : unit =
+      (* set : anchor * path option -> unit *)
+      (* If pathOp is SOME path, binds or rebinds anchor to path.
+       * If pathOp is NONE, unbinds anchor in !anchorMapRef. *)
+      fun set (anchor, pathOp) : unit =
 	  case find anchor
 	    of SOME _ =>
 		 anchorMapRef :=
-		   (case apathOp
+		   (case pathOp
 		      of SOME pp => SM.insert (!anchorMapRef, anchor, pp) (* rebind *)
 		       | NONE => #1 (SM.remove (!anchorMapRef, anchor))) (* remove *)
 			 (* this can't raise NotFound because find returned SOME *)
 	     | NONE =>
-		 (case apathOp
-		    of SOME apath => anchorMapRef := SM.insert (!anchorMapRef, anchor, apath) (* bind *)
+		 (case pathOp
+		    of SOME path => anchorMapRef := SM.insert (!anchorMapRef, anchor, path) (* bind *)
 		     | NONE => ()) (* do nothing *)
 
       (* reset : unit -> unit *)
-      (* wipe out the contents of the apath environment by setting anchorMapRef to SM.empty *)
+      (* wipe out the contents of the path environment by setting anchorMapRef to SM.empty *)
       fun reset () = anchorMapRef := SM.empty  (* reset anchorMapRef to the empty map *)
 
-    end (* structure ApathEnv *)
+    end (* structure PathEnv *)
 
     (* get_anchor : anchor -> fpath option
      * maps an anchor to the fpath of its "anchor point", if it is defined *)
     fun get_anchor (anchor: anchor) =
-	Option.map apathToFpath (ApathEnv.get anchor)
+	Option.map pathToFpath (PathEnv.get anchor)
 
     (* setRelative [set0]: anchor * fpath option * fpath-> unit *)
     fun setRelative (anchor: anchor, fpathOp: fpath option,
 		     relativeTo: fpath) =
-	let fun fp_pp (fpath: fpath) : apath =
+	let fun fp_pp (fpath: fpath) : path =
 		let val fp1 = P.mkAbsolute {path = fpath, relativeTo = relativeTo}
 		    val fp2 = if P.isAbsolute fpath then fpath else fp1
-		 in fpathToApath fp2
+		 in fpathToPath fp2
 		end
-	 in ApathEnv.set (anchor, Option.map fp_pp fpathOp)
+	 in PathEnv.set (anchor, Option.map fp_pp fpathOp)
 	end
 
     (* set_anchor : anchor * fpath option -> unit *)
-    (* When fpathOp is SOME, binds a corresponding apath to the anchor in env;
+    (* When fpathOp is SOME, binds a corresponding path to the anchor in env;
      * when fpathOp is NONE, deletes the anchor and its binding from env.
      * Exported and called externally (3 times) in main/cm-boot.sml *)
     fun set_anchor (anchor, fpathOp) =
@@ -498,14 +548,14 @@ in
     (* reset_anchors : unit -> unit *)
     (* exported
      * external: main/cm-boot.sml (in resetPathConfig) *)
-    fun reset_anchors () = (ApathEnv.reset (); sync ())
+    fun reset_anchors () = (PathEnv.reset (); sync ())
 
 
     (* dpath environments *)    
 
-    type apathEnv = apath SM.map
+    type pathEnv = path SM.map
 
-    val emptyApathEnv : apathEnv = SM.empty 
+    val emptyPathEnv : pathEnv = SM.empty 
     (* bindAnchors : dpathEnv -> (anchor * dpath) list -> dpathEnv *)
     (* produces a new env record with only the "bound" field altered.
      * Anchors are bound to corresponding dpaths, with these bindings being
@@ -518,15 +568,15 @@ in
 	end
 
 
-    (* lookAnchor : apathEnv * anchor -> apath option *)
+    (* lookAnchor : pathEnv * anchor -> path option *)
     (* make an anchor directory: not exported.
      * Other sorts of directories are made using the directory constructors CWD, ROOR, DIR
      * not exported
      * local: native, standard, unipickle, decodeFpath *)
-    fun lookAnchor (apathEnv, anchor: anchor) : apath option =
-	case SM.find (apathEnv, anchor)
-	  of NONE => ApathEnv.get anchor (* anchor is not in apathEnv, try ApathEnv *)
-	   | apathOp => apathOp
+    fun lookAnchor (pathEnv, anchor: anchor) : path option =
+	case SM.find (pathEnv, anchor)
+	  of NONE => PathEnv.get anchor (* anchor is not in pathEnv, try PathEnv *)
+	   | pathOp => pathOp
 
 
 
@@ -540,10 +590,10 @@ in
      *   "#" ... -- a comment line, ignored
      *   !standard -- switch to "standard" treatment of fpaths (isnative becomes false)
      *   !native -- switch to "native" treatment of fpaths (no parsing) (isnative becomes true)
-     *   anchor fpath  -- add a --> fpathToApath fpath to ApathEnv (relative to the directory
+     *   anchor fpath  -- add a --> fpathToPath fpath to PathEnv (relative to the directory
      *     part of baseFpath)
-     *   anchor -- delete anchor from the ApathEnv environment
-     *   -  -- reset ApathEnv to the empty environment *)
+     *   anchor -- delete anchor from the PathEnv environment
+     *   -  -- reset PathEnv to the empty environment *)
     fun processSpecFile (baseFpath: fpath) =
 	let val local_dir : fpath = P.dir (F.fullPath baseFpath)
 
@@ -574,7 +624,7 @@ in
 				       | [a, d] =>
 					   (set (a, SOME (mknative isnative d));
 					    loop isnative)
-				       | ["-"] => (ApathEnv.reset (); loop isnative)
+				       | ["-"] => (PathEnv.reset (); loop isnative)
 				       | [a] => (set (a, NONE); loop isnative)
 				       | [] => loop isnative
 				       | _ => (error [fpath, ": malformed line (ignored)"];
@@ -642,27 +692,27 @@ in
 	end (* fun parseFpathStandard *)
 
     (* ???? *)
-    (* native : apathEnv -> fpath -> apath *)
-    fun native apathEnv fpath =
+    (* native : pathEnv -> fpath -> path *)
+    fun native pathEnv fpath =
           (case parseFpathNative fpath
              of RELATIVE arcs => {isAbs = false, vol = "", revarcs = rev arcs}  (* dir? *)
               | ABSOLUTE arcs => {isAbs = true, vol = "", revarcs = rev arcs}
               | ANCHORED (anchor, arcs) =>
-		  (case lookAnchor apathEnv
+		  (case lookAnchor pathEnv
 		     of NONE => impossible ["native"]
-		      | SOME apath => extendApath arcs)
+		      | SOME path => extendPath arcs)
           (* end case *))
 
     (* ???? *)
-    (* standard : apathEnv -> fpath -> apath *)
-    fun standard apathEnv fpath =
+    (* standard : pathEnv -> fpath -> path *)
+    fun standard pathEnv fpath =
 	  (case parseFpathStandard fpath
 	     of RELATIVE arcs => {isAbs = false, vol = "", revarcs = rev arcs} (* dir? *)
 	      | ABSOLUTE arcs => {isAbs = true, vol = "", revarcs = rev arcs}
 	      | ANCHORED (anchor, arcs) => {dir = lookAnchor (pfenv, anchor), arcs = arcs}
-		  (case lookAnchor apathEnv
+		  (case lookAnchor pathEnv
 		     of NONE => impossible ["standard"]
-		      | SOME apath => extendApath arcs)
+		      | SOME path => extendPath arcs)
 	  (* end case *))
 
 
@@ -673,11 +723,11 @@ in
      *)
 
     (* osstring : file -> string *)
-    val osstring = FI.canonical o apathToFpath o fileToApath
+    val osstring = FI.canonical o pathToFpath o fileToPath
 
-    (* osstring_apath : apath -> string *)
-    fun osstring_apath (apath) : fpath =
-	FI.canonical (apathToFpath (extendApath arcs apath)
+    (* osstring_path : path -> string *)
+    fun osstring_path (path) : fpath =
+	FI.canonical (pathToFpath (extendPath arcs path)
 
     (* osstring' : file -> string *)
     fun osstring' f =
@@ -689,14 +739,14 @@ in
 	    else oss
 	end
 
-    (* applyReanchor : (string -> fpath) -> reanchor -> apath? *)
+    (* applyReanchor : (string -> fpath) -> reanchor -> path? *)
     (* recurses down to the anchor root, maps that to a fpath using cvt, converts
-       that fpath to a apath (fpathToApath) then recursively applies the transforms
-       of the reanchor layers to yield a modified apath. *)
+       that fpath to a path (fpathToPath) then recursively applies the transforms
+       of the reanchor layers to yield a modified path. *)
     fun applyReanchor (cvt: string -> fpath) reanchor =
 	case reanchor
-	  of Anchor anchor => fpathToApath (cvt anchor)
-	   | Extend (arcs, reanchor) => extendApath arcs (applyReanchor cvt reanchor)
+	  of Anchor anchor => fpathToPath (cvt anchor)
+	   | Extend (arcs, reanchor) => extendPath arcs (applyReanchor cvt reanchor)
 
     (* osstring_reanchored : (string -> string) -> file -> fpath option *)
     (* used once in main/filename-policy.sml (FilenamePolicyFn) *)
@@ -705,7 +755,7 @@ in
 	 in case reanchorOp
 	    of NONE => NONE
 	     | SOME reanchor => 
-		 SOME (FI.canonical (apathToFpath (applyReanchor cvt reanchor)))
+		 SOME (FI.canonical (pathToFpath (applyReanchor cvt reanchor)))
 	end
 
   (* ???? check what is required from these functions by clients
@@ -716,7 +766,7 @@ in
 	   | _ => osstring_dpath pf
 
     (* osstring_relative : file -> fpath *)
-    val osstring_relative = osstring_dpath_relative o fileToApath
+    val osstring_relative = osstring_dpath_relative o fileToPath
   *)
 
     (* tstamp : file -> TSamp.t *)
@@ -724,7 +774,7 @@ in
 
 
     (* *********************************************************************************** *)
-    (* "pickling" and "unpickling" apaths
+    (* "pickling" and "unpickling" paths
 	These operations are now trivial.
         QUESTIONS:
           What do we really need to pickle/unpickle?
@@ -732,16 +782,16 @@ in
         SrcPath.pickle is called twice in stable/stabilize.sml.
      *)
 
-    (* apathToFileId : apath -> FI.fileId *)
-    fun apathToFileId (apath: apath) = FI.fileId (apathToFpath apath)
+    (* pathToFileId : path -> FI.fileId *)
+    fun pathToFileId (path: path) = FI.fileId (pathToFpath path)
 
     (* fileToFileIdOp : file -> FI.fileId option *)
     fun fileToFileId ({fid,...}: file) = !fid
 
-    (* pickle : apath -> string list *)
-    fun pickleApath ({ isAbs, vol, revarcs } : apath) = Bool.toString isAbs :: vol :: revarcs
+    (* pickle : path -> string list *)
+    fun picklePath ({ isAbs, vol, revarcs } : path) = Bool.toString isAbs :: vol :: revarcs
 
-    (* unpickle :  string list -> apath *)
+    (* unpickle :  string list -> path *)
     fun unpickle (isAbs :: vol :: revarcs) =
   	  (case Bool.fromString isAbs
 	     of SOME b => {revarcs = revarcs, isAbs = b, vol = vol}
@@ -766,11 +816,11 @@ in
        What is the purpose of segments?
          Chaining where one CDF serves as a proxy for another local CDF?
 	 Known example is "$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm".
-       The apathEnv argument is a "local" overlay over the global ApathEnv anchor environment. *)
+       The pathEnv argument is a "local" overlay over the global PathEnv anchor environment. *)
 
-    (* decodeFile [decode] : apathEnv -> fpath -> file *)
-    fun decodeFpath (apathenv: apathEnv) (fpath: fpath) : apath list =
-	let (* firstseg : string -> apath *)
+    (* decodeFile [decode] : pathEnv -> fpath -> file *)
+    fun decodeFpath (pathenv: pathEnv) (fpath: fpath) : file =
+	let (* firstseg : string -> path *)
 	    fun firstseg (seg : string) =
 		(case map transArc (String.fields (isChar #"/") seg)
 		   of nil => impossible ["decodeFpath: no fields in segment 0"]
@@ -783,22 +833,22 @@ in
 				 of #"%" => (* arc0' is a volume name *)
 				      {isAbs = true, vol = arc0', revarcs = rev arcs}
 				  | #"$" => (* arc0' is an anchor *)
-				      let val {isAbs, vol, revarcs} = lookAnchor (apathenv, arc0')
+				      let val {isAbs, vol, revarcs} = lookAnchor (pathenv, arc0')
 				       in {isAbs = isAbs, vol = vol,
 					   revarcs = revappend (arcs, revarcs)}
 				      end
 	                          | _ => {isAbs = false, vol = "", revarcs = rev (arc0 :: arcs)}
 	                   end)
 
-	    (* segToApath: string -> apath *)
-            fun segToApath (seg: string) =
+	    (* segToPath: string -> path *)
+            fun segToPath (seg: string) =
 		{isAbs = false, vol = "",
 		 revarcs = rev (map transArc (String.fields (isChar #"/") seg))}
 
-	    fun combineApaths nil = impossible ["combineApaths"]
-	      | combineApaths [apath] = apath
-	      | combineApaths (apaths as {isAbs, vol, revarcs} :: rest) = 
-		  let val rarcss = map #revarcs apaths
+	    fun combinePaths nil = impossible ["combinePaths"]
+	      | combinePaths [path] = path
+	      | combinePaths (paths as {isAbs, vol, revarcs} :: rest) = 
+		  let val rarcss = map #revarcs paths
 		      fun combine [rarcs] = rarcs
 			| combine (rarcs::rest) = revappend (tl rarcs, combind rest)
 		  in {isAbs = isAbs, vol = vol, revarcs = combine rarcss}
@@ -807,9 +857,9 @@ in
 	 in case String.fields (isChar #":") fpath
 	      of nil => impossible ["decodeFpath: no segments"]
 	       | seg0 :: segs =>
-		   let val segApaths = fistset seg0 :: map segToApath segs
-		       val fullApath = combineApaths segApaths
-		   in intern (apathToFile fullApath)
+		   let val segPaths = fistset seg0 :: map segToPath segs
+		       val fullPath = combinePaths segPaths
+		   in intern (pathToFile fullPath)
 		   end
 
 	end (* fun decodeFile *)
@@ -847,7 +897,7 @@ end (* structure StrPath *)
 
    1. fpath strings (using the "OS-indepent" notation used in OS.FileSys and OS.Path),
 
-   2. apath: a structure similar to the record that OS.Path.fromString produces, but with arcs
+   2. path: a structure similar to the record that OS.Path.fromString produces, but with arcs
       in reverse order (deepest arc first),
 
    3. dpath: a base directory (type dir), originally called the "context", plus a relative path
@@ -860,7 +910,7 @@ end (* structure StrPath *)
 
    5. file: fileInfo plus a "stableid" integer (an "interned" fileInfo),
 
-   6. "elab": a apath plus a validity flag and a "reanchor" function (whatever that does).
+   6. "elab": a path plus a validity flag and a "reanchor" function (whatever that does).
       elabs can be generated from other representations (e.g. dpath) with initial valid value true.
       They can be "invalidated" if their associated env binding is
 
@@ -875,20 +925,20 @@ can indirectly involve a file.
 Could this multiplicity of file representations be simplified?  How many different represenations do
 we really need? Note that dpath, file, and dir are the only ones exported by the SRCPATH signature,
 and the only representations present in the exported val types are string, dpath, file, and dir.
-Thus fileInfo, elab, and apath are only used internally in SrcPath.
+Thus fileInfo, elab, and path are only used internally in SrcPath.
 
 There is a couple progressions:
 
-     fpath (string) --[P.fromString]--> apath --[apathToFpath]--> fpath
+     fpath (string) --[P.fromString]--> path --[pathToFpath]--> fpath
 
      dpath --[intern?]--> fileInfo (adding undefined file-id)
              --[intern?]--> file (adding stableid and defining file-id)
 
-Where do dpaths come from?  Where is the link between apaths and dpaths?
+Where do dpaths come from?  Where is the link between paths and dpaths?
 
 Dpaths are created (directly) by the function decodeFpath, which (with the help of the
 env) translates fpaths directly to (interned) files.  There is no direct translation from
-the syntactic fpath/apath representations to the dpath representation, or in particular,
+the syntactic fpath/path representations to the dpath representation, or in particular,
 to the dir type.  It is also not clear whether the id field of a fileInfo record is relevant
 for working with DIR values.
 
@@ -907,7 +957,7 @@ for working with DIR values.
       the old binding by setting its validity flag to false.
 
       The get function, if applied to a mapped anchor (i.e. an anchor in the domain of !anchorMapRef)
-      will return an elab generated from the (apath, validity) that the anchor maps to.
+      will return an elab generated from the (path, validity) that the anchor maps to.
       When get is applied to an anchor that is not mapped, it causes a fatal error.
 
       So the "validity" flag associated with an anchor (in the !anchorMapRef map) will be set
@@ -960,10 +1010,10 @@ for working with DIR values.
 
 8. reanchor -- one of the compononets of an "elab"
 
-      val reanchor: (anchor -> string) -> apath option
+      val reanchor: (anchor -> string) -> path option
 
    Takes a conversion function mapping an anchor to a string (normally a fpath?) and returns a
-   apath option.  In most cases this is initialized to a trivial (fn _ => NONE): for instance:
+   path option.  In most cases this is initialized to a trivial (fn _ => NONE): for instance:
 
      bogus_elab,
      absoluteElab
@@ -974,7 +1024,7 @@ for working with DIR values.
 
     fun osstring_reanchored cvt file =
 	let val {reanchor, ...} = fileToElab file
-	 in Option.map (FI.canonical o apathToFpath) (reanchor cvt)
+	 in Option.map (FI.canonical o pathToFpath) (reanchor cvt)
 	end
 
    osstring_reanchored is exported from SrcPath and used only once, in main/filename-policy:
@@ -999,7 +1049,7 @@ for working with DIR values.
 
        env.get initialization:
 
-         (fn (cvt: string -> fpath) => SOME (fpathToApath (cvt anchor))
+         (fn (cvt: string -> fpath) => SOME (fpathToPath (cvt anchor))
 
      Anchor "tranforms":
 
@@ -1007,20 +1057,20 @@ for working with DIR values.
 
 	 fun osstring_reanchored cvt file =
 	     let val {reanchor, ...} = fileToElab file
-	      in Option.map (FI.canonical o apathToFpath) (reanchor cvt)
+	      in Option.map (FI.canonical o pathToFpath) (reanchor cvt)
 	     end
 
        parentElab:
 
          fun parentElab ({ pp, reanchor }: elab) : elab  =
-	     { pp = parentApath pp,
-	       reanchor = Option.map parentApath o reanchor }
+	     { pp = parentPath pp,
+	       reanchor = Option.map parentPath o reanchor }
 
       extendElab:
 
 	 fun extendElab arcs { pp, reanchor } =
-	     { pp = extendApath arcs pp,
-	       reanchor = Option.map (extendApath arcs) o reanchor }
+	     { pp = extendPath arcs pp,
+	       reanchor = Option.map (extendPath arcs) o reanchor }
 
 
    A datatype to encode the reanchor construction
@@ -1030,17 +1080,17 @@ for working with DIR values.
         | Parent of reanchor
         | Extend of string list (*arcs*) * reanchor
 
-      (* applyReanchor : (string -> fpath) -> reanchor -> apath *)
+      (* applyReanchor : (string -> fpath) -> reanchor -> path *)
       fun applyReanchor (cvt: string -> fpath) reanchor =
         case reanchor
-	  of Anchor of anchor => fpathToApath (cvt anchor)
-           | Parent of reanchor => parentApath (applyReanchor cvt reanchor)
-           | Extent of (arcs, reanchor) => extendApath arcs (applyReanchor cvt reanchor)
+	  of Anchor of anchor => fpathToPath (cvt anchor)
+           | Parent of reanchor => parentPath (applyReanchor cvt reanchor)
+           | Extent of (arcs, reanchor) => extendPath arcs (applyReanchor cvt reanchor)
 
-      Actually, parentApath and extendApath operate only on the revarcs component of a
-      apath, leaving the vol and isAbs fields alone, so possibly the Parent case could
+      Actually, parentPath and extendPath operate only on the revarcs component of a
+      path, leaving the vol and isAbs fields alone, so possibly the Parent case could
       just do a tl and the Excend case could just do a revappend on the revarcs of the 
-      relevant apaths ("on the way out" after having recursed down to the anchor in
+      relevant paths ("on the way out" after having recursed down to the anchor in
       the final Anchor node (Anchor a) to which the cvt : string -> fpath is applied
       to give the new "anchor point".
 
@@ -1069,16 +1119,16 @@ for working with DIR values.
 9. Phase 3 simplification
 
   The main change is to separate the two anchor environments embodied in the env type,
-  namely the anchor --> apath environment (a "stateful" mapping), and the
+  namely the anchor --> path environment (a "stateful" mapping), and the
   anchor --> dpath environment (the "bound" component of an env).
 
   Since newEnv is called in only two places to create new "env" environments
   (once in main/cm-boot.sml and once in bootstrap/btcompile.sml), and since these
   environments do not "co-exist" in a given CM process, it seems likely that the
-  anchor --> apath environment can be implemented as a "global" stateful resource
-  embodied in a structure ApathEnv inside SrcPath and used only locally.
+  anchor --> path environment can be implemented as a "global" stateful resource
+  embodied in a structure PathEnv inside SrcPath and used only locally.
   Most functions in the SrcPath signature that took an env parameter can instead
-  internally access the apath environment through the ApathEnv structure and 
+  internally access the path environment through the PathEnv structure and 
   no longer need an env parameter. [The exceptions are lookAnchor and bind, which
   still need to access the dpath environment.]
 
@@ -1090,7 +1140,7 @@ for working with DIR values.
   There remains the question of whether we actually need two different anchor 
   environments.
 
-  Note that apaths and dpaths could both be considered representations of locations
+  Note that paths and dpaths could both be considered representations of locations
   in the file system (like fpaths, which are the "raw" form of file system locations).
   But dpaths contain dir components as the root of a arc list path, and the dir
   type expresses some of the "semantics" relevant to CM (i.e. paths relative to
@@ -1139,7 +1189,7 @@ for working with DIR values.
     rpath = string list (reverse arc list, with arcs ordered from inner to outer)
     fpath = string (file paths in some "standard" format)
 
-    prepath -> apath (for "abstract path")
+    prepath -> path (for "abstract path")
     prefile -> dpath (for "directory-based" path)
 
 ** fpath (assume OS = unix for discussion, FS = OS file system)
@@ -1160,15 +1210,15 @@ for working with DIR values.
   It is assumed that in an fpath, parsed into arcs, all but the last arc will "designate"
   a directory, with respect to which the following arc will be interpreted.
 
-** apath (aka prepath).
+** path (aka prepath).
  
   This is a sort of "abstract" file path. The property of being absolute or relative is
   given by the "isAbs" field, and if absolute it is rooted as the volume designated by the
   "vol" field. If the last (innermost) arc is an anchor (starts with "$"), then we assume
-  that the apath is relative (what would "/$a" mean?).  Only the innermost arc (last element
+  that the path is relative (what would "/$a" mean?).  Only the innermost arc (last element
   of revarcs) should be an anchor arc (what would $a/b/$c mean?).
 
-  Note that it is trivial to map back and forth between fpaths and apaths.  Given canonicalization
+  Note that it is trivial to map back and forth between fpaths and paths.  Given canonicalization
   of paths, these location representations are isomorphic.
 
 ** dpath ("directory-based" path, aka prefile)
@@ -1207,7 +1257,7 @@ for working with DIR values.
   where 
 
      A0 = ANCHOR {name = "SMLNJ-LIB",
-                  apath = </User/dbm/sml/Dev/github/smlnj/smlnj-lib>,
+                  path = </User/dbm/sml/Dev/github/smlnj/smlnj-lib>,
 		  dpathOp = NONE(?)}
 
   Note: DIR seems like a slightly misleading constructor name, since DIR constructs 
@@ -1216,25 +1266,25 @@ for working with DIR values.
   dpath (down a path from a "parent" dir).
 
   There is another conceptual mismatch, since an ANCHOR would seem to designate a directory
-  that is the anchor point of its anchor (found at its apath).  But DIR seems to designate
+  that is the anchor point of its anchor (found at its path).  But DIR seems to designate
   a file (generally/always a CDF).  Of course CWD and ROOT dirs obviously are associated
   with directories.
 
 ** "anchor points", anchor environments
 
   I will call the FS location designated by an anchor the "anchor point" for that anchor,
-  and it can be described by an fpath, an apath, or a dpath.
+  and it can be described by an fpath, an path, or a dpath.
 
   There is a global, "base" environment mapping anchor strings to the corresponding
-  anchor point represented by an apath. This global environment is implemented by the
-  ApathEnv structure, whose interface consists of the functions
+  anchor point represented by an path. This global environment is implemented by the
+  PathEnv structure, whose interface consists of the functions
 
-     get : anchor -> apath option         -- NONE if not bound
-     set : anchor * apath option -> unit  -- bind, rebind, or remove an anchor from the environment
+     get : anchor -> path option         -- NONE if not bound
+     set : anchor * path option -> unit  -- bind, rebind, or remove an anchor from the environment
      defined : anchor -> bool	          -- is the anchor bound in the evironment
      reset : unit -> unit		  -- reset the global environment to the empty environment
 
-  This environment obviously uses apaths to designature the anchor point of an anchor.
+  This environment obviously uses paths to designature the anchor point of an anchor.
 
   The second form of anchor environment is given by the type dpathEnv, which the the type
   of "functional" environments that map anchors to dpaths.
@@ -1242,23 +1292,23 @@ for working with DIR values.
   My conjecture is that the dpathEnv environments are used to implement "temporary" or 
   "dynamic" bindings associated with "bind" declarations in CFDs. Both environments are
   accessed in the lookAnchor function, where the dpathEnv parameter has precedence over the
-  global ApathEnv environment.
+  global PathEnv environment.
 
-  An obvious question is why the global environment maps to apaths and the "dynamic" or
+  An obvious question is why the global environment maps to paths and the "dynamic" or
   local environments map to dpaths? Why couldn't they both map to the same kind of 
   file-locator type?
 
-  Note that it is fairly easy to map from dpaths to apaths (see the dpathToApath function).
-  But no inverse function that maps apaths to dpaths is defined, though one could use a variant
-  of the decodeFpath function to map from apaths to dpaths with the helpe of a dpathEnv,
-  which is "needed" to create ANCHOR dirs for anchor arcs (& anchored apaths).
-  It is obvious that anchor environments are relevant to translating anchored apaths (or fpaths)
+  Note that it is fairly easy to map from dpaths to paths (see the dpathToPath function).
+  But no inverse function that maps paths to dpaths is defined, though one could use a variant
+  of the decodeFpath function to map from paths to dpaths with the helpe of a dpathEnv,
+  which is "needed" to create ANCHOR dirs for anchor arcs (& anchored paths).
+  It is obvious that anchor environments are relevant to translating anchored paths (or fpaths)
   to dpaths, which have to include dir components. So a translation function mapping dpaths to
-  apaths probably must require a dpathEnv argument.
+  paths probably must require a dpathEnv argument.
 
-  A related question is: Why do the ANCHOR dir values need both an apath and a dpath (optional)?
+  A related question is: Why do the ANCHOR dir values need both an path and a dpath (optional)?
   This appears to be simply because the anchor point of an ANCHOR dir may come from either
-  the global ApathEnv environment, or a local dpathEnv environment.
+  the global PathEnv environment, or a local dpathEnv environment.
 
 
 * Interning, creating files
@@ -1268,7 +1318,7 @@ for working with DIR values.
   In this version of clarified SrcPath, we dispense with fileInfo and build "incomplete"
   or preliminary files.  A file is a record contining 3 fields
 
-     dpath: dpath -- the location of the file (would apath work as well?)
+     dpath: dpath -- the location of the file (would path work as well?)
      fid: FileId.id option ref -- a place to put the actual FS file_id if it exists
           (via FileId)
      sid: stableid -- the integer stable it, generated for the file in the intern function
@@ -1288,8 +1338,8 @@ for working with DIR values.
 * Reanchors and reanchoring
 
   See comments in the code.  Reanchors are built primarily from files (actually the
-  dpaths of files).  They are used map to new apaths/fpaths given a new anchor to 
-  apath/fpath association.
+  dpaths of files).  They are used map to new paths/fpaths given a new anchor to 
+  path/fpath association.
 
 * What has been discarded
 
@@ -1300,13 +1350,13 @@ for working with DIR values.
   - reanchor as an elab component (functional representation)
       (now a computed attribute of a file or dpath)
 
-  - the "combined" env, now split into ApathEnv environment (state) and the dpathEnv
+  - the "combined" env, now split into PathEnv environment (state) and the dpathEnv
     type.  dpathEnv environments behave "functionally" (based on StringMap).
 
-  - prepath, prefile renamed to apath, dpath
+  - prepath, prefile renamed to path, dpath
 
-  - We are down to 3 ways of specifying FS locations: fpath, apath, dpath.  It is still
-    unclear to me why we need both apath and dpath.
+  - We are down to 3 ways of specifying FS locations: fpath, path, dpath.  It is still
+    unclear to me why we need both path and dpath.
 
 * Has any essential functionality been lost?
 
@@ -1314,10 +1364,10 @@ for working with DIR values.
 ------------------------------------------------------------------------------------------
 11. Phase 5 Simplification: Eliminating dpaths [prefiles] and the dir datatype.
 
-This version is an attempt to simplify the file "location paths" down to only fpaths and apaths,
+This version is an attempt to simplify the file "location paths" down to only fpaths and paths,
 eliminating dpaths [formerly prefiles].
 
-This is a significant simplification suggested by the fact that using both apaths [prepaths]
+This is a significant simplification suggested by the fact that using both paths [prepaths]
 and dpaths [prefiles] seems to be redundant.
 
 Eliminating dpaths [prefiles] implies that we can also eliminate the dir datatype.
@@ -1339,17 +1389,17 @@ such segmented paths used in the PIDMAP file, but there may be other uses.
 
 The decodeFpath function deals with these segmented paths internally, and produces a file,
 which formerly could have a "segmented" dpath involving DIR segmentation. If "segmented paths"
-are really essential, I believe they might be "simulated" by using a list of apaths, with one
-apath for each segement, and where all but the first segment would be relative.
+are really essential, I believe they might be "simulated" by using a list of paths, with one
+path for each segement, and where all but the first segment would be relative.
 
 Again the question is whether functionality that is essential for SrcPath clients is
 lost in this simplification (i.e. did the simplification "overshoot" it goal?).
 My conjecture is that any essential functionality could be recovered without needing to
 reintroduce the dir type and the dpath [prefile] type. If we really need "segmented" paths,
-it might be enough to model them as lists of apaths, where all but the last apath in the
+it might be enough to model them as lists of paths, where all but the last path in the
 list must be relative.
   
-It is clear how to translate a dpath of the form {dir = ROOT vol, arcs} into an apath:
+It is clear how to translate a dpath of the form {dir = ROOT vol, arcs} into an path:
 
     {dir = ROOT vol, arcs}  -->  {isAbs = true, vol = vol, arcs = arcs}
 
@@ -1365,7 +1415,7 @@ For the anchor variant of dpath, how about
 or can there be absolute anchored paths? Example?  ["/$anchor/..." doesn't seem to make
 sense as an anchored path.]
 
-Conversely, should apath of the forms:
+Conversely, should path of the forms:
 
    {isAbs = true, vol, revarcs = [ ... , $name]}
 
@@ -1424,8 +1474,15 @@ a kind of pun to treat parent links as arcs (leading to things like /a/b/c/../d/
 "current" arcs ("."). [The "current arc" as a path becomes "@0//" in the concrete syntax proposed
 below]. Path values will thus not need to be "canonicalized".
 
+We make the following assumptions:
+
+  * parent links ("..") only occur as an initial prefix of the arcs list, but there can be
+    multiple such,
+  * for absolute and anchored arcs lists, there are no parent links (only downward arcs),
+  * there are no "current" links (there is no such thing in the representation).
+
 Informally, we can call the values of this path type, "CM paths".  But type name can
-simply be "path", replacing "apath", since there is only one internal kind of path.
+simply be "path", replacing "path", since there is only one internal kind of path.
 
 Now there is the problem of defining string path formats that can be unambiguously 
 parsed into these paths, and an unparse function that produces cannonical strings from
@@ -1521,7 +1578,7 @@ description files, but to stick with conventional (OS based) file path notation,
 addition of anchor names (of the form "$<name>") that are only permitted in certain places,
 such as the first arc of a (relative) file path.  But the "externally allowed" file path notation
 is only relevant to the initial parsing of CDFs and the reporting of errors.  Internally, we would
-only need to use the path, etc. types.  I propose using these types (in place of apath) in a
+only need to use the path, etc. types.  I propose using these types (in place of path) in a
 Phase 6 revision of srcpath.*.
 
 There may be a need for an additional type of "segmented" paths, corresponding to the ":" 
@@ -1541,23 +1598,23 @@ file0 [type]	fileInfo  -- now a simple record type, not a datatype (defined usin
 file0 [fun]	dpathToFileInfo
 file*  		dpathToFile
 context 	dir   -- fileInfo[file0] field and various argument names
-get_free	ApathEnv.get
-set_free	ApathEnv.set
+get_free	PathEnv.get
+set_free	PathEnv.set
 set0		setRelative
-pp2name		apathToFpath
+pp2name		pathToFpath
 F0M		FileInfoMap [structure, used in intern, clear, sync]
 dir*		fileToDir
 desc*		fileToFpath
 extend*		extendDpath
-augPP		extendApath
-dirPP		parentApath
-pre*		fileToApath
+augPP		extendPath
+dirPP		parentPath
+pre*		fileToPath
 idOf		getFileId
 raw*		mkDpath
 decode*		decodeFpath (segmented fpaths?)
 pre0		fileInfoToDpath
-pre*		fileToApath
-prepath	[type]	apath
+pre*		fileToPath
+prepath	[type]	path
 prefile* [type]	dpath
 
 Removed:
@@ -1585,8 +1642,8 @@ Added:
 
 * Some of the former "elab" functions are replaced by "reanchor" functions.
 
-* In some cases, an env parameter that provided access to the anchor -> apath
-  environment is removed, and instead the global apath environment in ApathEnv
+* In some cases, an env parameter that provided access to the anchor -> path
+  environment is removed, and instead the global path environment in PathEnv
   is accessed directly. In other cases (like bind and lookAnchor) where the env 
   parameter provided access to the "bound" dpath environment, the env parameter
   is replaced by a dpathEnv parameter.
