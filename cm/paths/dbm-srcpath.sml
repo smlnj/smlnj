@@ -25,7 +25,8 @@ local
   structure FI = FileId     (* srcpath-lib.cm: ./fileid.sml *)
   structure SM = StringMap  (* ../util/sources.cm: cm/util/stringmap.sml *)
 
-  fun impossible (msgs: string list) = EM.impossible (concat ("SrcPath: " :: msgs))
+(*  fun impossible (msgs: string list) = EM.impossible (concat ("SrcPath: " :: msgs)) *)
+  fun impossible (msgs: string list) = raise Fail (concat ("SrcPath: " :: msgs))
   fun error (msgs: string list) = (Say.say msgs; Say.say ["\n"])
 
 in
@@ -59,28 +60,19 @@ in
        the Unix root. *)
 
     datatype root
-      = U            -- unique Unix FS root directory
-      | W of string  -- per-volume Windows roots (where the _non-empty_ string is the volume name)
+      = U            (* Unique Unix FS root directory *)
+      | W of string  (* per-volume Windows roots (where the _non-empty_ string is the volume name) *)
 
     datatype head
       = ABS of root
-      | REL of word  -- implicit root, defaulting to CWD, possibly empty arcs,
-		     -- int is up-levels (i.e. the number of leading ".." arcs in standard path strings)
+      | REL of int   (* implicit root, defaulting to CWD, possibly empty arcs,
+		      * int is up-levels (i.e. the number of leading ".." arcs in standard path strings) *)
       | ANC of anchor
 
     type path = head * arcs
 
     (* stableid: integers used as "stable" ids of files(?) *)
     type stableid = int
-
-    (* reanchor: relative location spec that can be used reconstruct a path relative to
-     * an "anchor point" (specified by a fpath) for the anchor that occurs at the end
-     * of the reanchor chain (the anchor part).
-     * A reanchor is a sort of "delta path" from some given fpath/apath and the anchor
-     * that that path is relative to.
-     * If a apath is not relative to an anchor, then there is no reanchor for that apath;
-     * i.e., apathToReanchor will return NONE. *)
-    type reanchor = anchor * arcs list
 
     (* file: a file is a record with an path, the locaction of the file, an fid, which
      * is a ref to a FI.fileId option, and an sid, which is a stableid (an int).
@@ -140,11 +132,11 @@ in
       | interleave (s, y::ys) = y :: s :: interleave (s, ys)
 
     (* arcsToString :  string list -> string *)
-    fun arcsToString arcs = concat (interleave "/" (rev arcs))
+    fun arcsToString arcs = concat (interleave ("/", (rev arcs)))
 
     (* addParentLinks : word * string list -> string list *)
     fun addParentLinks (0, ss) = ss
-      | addParentLinks (n, ss) = ".." :: addParentLinks (n-1, s)
+      | addParentLinks (n, ss) = ".." :: "/" :: addParentLinks (n-1, ss)
 
     (* pathToFpath : path -> string *)
     fun pathToFpath ((head, arcs): path) =
@@ -220,7 +212,7 @@ in
 
 
    (* *********************************************************************************** *)
-   (* encoding dpaths as (possibly anchor annotated) fpath strings *)
+   (* encoding paths as (possibly anchor annotated) fpath strings RETHINK! *)
 
     (* isChar : char -> char -> bool *)
     (* curried character equality; a utility function used in decodeFpath *)
@@ -275,60 +267,37 @@ in
    (* translating between representations *)
 
     (* fileToFpath [desc] : file -> fpath
+     * This is the same os encodeFile now. Choose which to keep.
      * This is where anchor notation/abbreviation could be added (like dpathToString x true).
      * There is also the question of whether the path component of the file should be a segmented
-     * path [e.g. a list of paths?]?
+     * path [e.g. a path head with a list of arc lists].
      * exported
      * local: none
      * external: 10 files *)
     fun fileToFpath file = pathToFpath (fileToPath file)
 
-    (* dpathToFile : dpath -> file *)
+    (* pathToFile : path -> file *)
     (* This actually produces what could be called a "prefile", an incomplete file record.
      *   sid = 0 is not a valid, allocated stable id because it is less than 1.
-     * [Could have sid be an int option instead.] *)
+     * [Could have sid be an int option instead.]
+     * A check that there is at least one arc in the path should probably be added, since
+     * these files are meant to represent source files, not directories. *)
     fun pathToFile (path: path) = {path = path, fid = ref NONE, sid = 0}
 
 
    (* *********************************************************************************** *)
-   (* path and reanchor functions (formerly involving elab) *)
+   (* path functions (formerly involving elab) *)
 
   (* path *)
 
     (* rootPath : path *)
     fun rootPath (root : root) : path = (ABS root, nil)
 
-    (* parentPath [dirPP] : path -> path *)
-    (* returns the path of the parent directory
-     * not exported.
-     * local uses: dirToPath, applyReanchor *)
-    fun parentPath (head, arcs) : path =
-	(case arcs
-	   of nil =>
-	        (case head
-		   of REL n => REL (n+1)  (* we can "add" a parent link to a REL path *)
-		    | ABS _ => impossible ["parentPath: ABS"]
-		    | ANC _ => impossible ["parentPath: ANC"])
-	    | _ :: rest => rest)
-
-
-      | parentPath _ = impossible ["parentPath"]
-
-    (* extendPath : arcs -> path -> path   (* arcs in reverse order, outer to inner *)
+    (* extendArcs : arcs -> path -> path   (* arcs in reverse order, outer to inner *)
      * not exported
-     * local uses: dpathToPath, applyReanchor *)
-    fun extendPath (rarcs: arc list) ((head, arcs): path) : path  =
-	(head, append (rarcs, arcs))
-
-  (* reanchor ???? rethink *)
-
-    (* pathToReanchor : path -> reanchor *)
-    fun pathToReanchor ((_, arcs): path) = extendPath arcs
-
-    (* fileToReanchor : file -> reanchor option
-     * not exported
-     * local: osstring_reanchored* *)
-    val fileToReanchor = pathToReanchor o fileToPath
+     * local uses: native, standard *)
+    fun extendArcs (rarcs: arc list) ((head, arcs): path) : path  =
+	(head, (rarcs @ arcs))
 
 
    (* *********************************************************************************** *)
@@ -484,16 +453,6 @@ in
 	 in foldl folder pathenv alist
 	end
 
-    (* lookAnchor : pathEnv * anchor -> path option *)
-    (* make an anchor directory: not exported.
-     * Other sorts of directories are made using the directory constructors CWD, ROOR, DIR
-     * not exported
-     * local: native, standard, unipickle, decodeFpath *)
-    fun lookAnchor (pathEnv, anchor: anchor) : path option =
-	case SM.find (pathEnv, anchor)
-	  of NONE => PathEnv.get anchor (* anchor is not in pathEnv, try PathEnv *)
-	   | pathOp => pathOp
-
     structure PathEnv
       : sig
 	  val get : anchor -> path option
@@ -546,9 +505,17 @@ in
 
     end (* structure PathEnv *)
 
+    (* lookAnchor : pathEnv * anchor -> path option
+     * not exported
+     * local: native, standard, unipickle, decodeFpath *)
+    fun lookAnchor (pathEnv: pathEnv, anchor: anchor) : path option =
+	case SM.find (pathEnv, anchor)
+	  of NONE => PathEnv.get anchor (* anchor is not in pathEnv, try PathEnv *)
+	   | pathOp => pathOp
+
     (* get_anchor : anchor -> fpath option
-     * maps an anchor to the fpath of its "anchor point", if it is defined *)
-    fun get_anchor (anchor: anchor) fpath =
+     * maps an anchor to the fpath of its "anchor point", if it is defined in PathEnv *)
+    fun get_anchor (anchor: anchor) =
 	Option.map pathToFpath (PathEnv.get anchor)
 
     (* setRelative [set0]: anchor * fpath option * fpath-> unit *)
@@ -574,7 +541,6 @@ in
     (* exported
      * external: main/cm-boot.sml (in resetPathConfig) *)
     fun reset_anchors () = (PathEnv.reset (); sync ())
-
 
 
     (* ******************************************************************************** *)
@@ -626,7 +592,7 @@ in
 				       | ["-"] => (PathEnv.reset (); loop isnative)
 				       | [a] => (set (a, NONE); loop isnative)
 				       | [] => loop isnative
-				       | _ => (error [fpath, ": malformed line (ignored)"];
+				       | _ => (error [baseFpath, ": malformed line (ignored)"];
 					       loop isnative)
 		 in loop true
 		end
@@ -694,7 +660,7 @@ in
 	       | "$" :: (arcs as (arc1 :: _)) => (ANC arc1, rev arcs)
 	       | arcs as (arc1 :: rest) =>
 		   if String.sub (arc1, 0) <> #"$" then (REL 0, rev arcs)
-		   else (ANC (String.extract (arc1, 1, NONE), rest)
+		   else (ANC (String.extract (arc1, 1, NONE)), rest)
 	end (* fun fpathToPathStandard *)
 
     (* native : pathEnv -> fpath -> path *)
@@ -702,9 +668,9 @@ in
           (case fpathToPath fpath
              of path as ((REL _ | ABS _), _) => path
               | (ANC anchor, arcs) =>
-		  (case lookAnchor pathEnv
-		     of NONE => impossible ["native"]
-		      | SOME path => extendPath arcs path)
+		  (case lookAnchor (pathEnv, anchor)
+		     of NONE => impossible ["native: undefined anchor"]
+		      | SOME path => extendArcs arcs path)
           (* end case *))
 
     (* standard : pathEnv -> fpath -> path *)
@@ -712,26 +678,26 @@ in
           (case fpathToPathStandard fpath
              of path as ((REL _ | ABS _), _) => path
               | (ANC anchor, arcs) =>
-		  (case lookAnchor pathEnv
-		     of NONE => impossible ["standard"]
-		      | SOME path => extendPath arcs path)
+		  (case lookAnchor (pathEnv, anchor)
+		     of NONE => impossible ["standard: undefined anchor"]
+		      | SOME path => extendArcs arcs path)
           (* end case *))
 
 
     (* *********************************************************************************** *)
     (* the "osstring" family of functions
-     *  these translate files, dpaths, dirs to strings and allow for the "reanchoring"
+     *  these functions translate files and paths to fpath strings and allow for the "reanchoring"
      *  of "anchored" paths.
      *)
 
     (* osstring : file -> string *)
     val osstring = FI.canonical o pathToFpath o fileToPath
 
-    (* osstring_path : path -> string *)
+    (* osstring_path : path -> fpath *)
     fun osstring_path (path) : fpath =
-	FI.canonical (pathToFpath (extendPath arcs path)
+	FI.canonical (pathToFpath path)
 
-    (* osstring' : file -> string *)
+    (* osstring' : file -> fpath *)
     fun osstring' f =
 	let val oss = osstring f
 	 in if P.isAbsolute oss
@@ -741,26 +707,20 @@ in
 	    else oss
 	end
 
-    (* applyReanchor : (string -> fpath) -> reanchor -> path? *)
-    (* recurses down to the anchor root, maps that to a fpath using cvt, converts
-       that fpath to a path (fpathToPath) then recursively applies the transforms
-       of the reanchor layers to yield a modified path. *)
-    fun applyReanchor (cvt: string -> fpath) reanchor =
-	case reanchor
-	  of Anchor anchor => fpathToPath (cvt anchor)
-	   | Extend (arcs, reanchor) => extendPath arcs (applyReanchor cvt reanchor)
-
-    (* osstring_reanchored : (string -> string) -> file -> fpath option *)
+    (* osstring_reanchored : (anchor -> fpath) -> file -> fpath option *)
     (* used once in main/filename-policy.sml (FilenamePolicyFn) *)
-    fun osstring_reanchored cvt file =
-	let val reanchorOp = fileToReanchor file
-	 in case reanchorOp
-	    of NONE => NONE
-	     | SOME reanchor =>
-		 SOME (FI.canonical (pathToFpath (applyReanchor cvt reanchor)))
-	end
+    fun osstring_reanchored cvt ({path = (head, arcs),...} : file) =
+	  (case head
+	     of ANC anchor =>
+		  let val fpath' = cvt anchor
+		      val (head', arcs') = fpathToPath fpath'
+		   in SOME (FI.canonical (pathToFpath (head', arcs @ arcs')))
+		  end
+	      | _ => NONE)
 
-  (* ???? check what is required from these functions by clients
+  (* RETHINK! Check what is required from these functions by clients. They may not be needed
+     or may need to replaced by functions with different types.
+
     (* osstring_dpath_relative : dpath -> fpath *)
     fun osstring_dpath_relative (pf as { dir, arcs }: dpath) =
 	case dir
@@ -777,7 +737,7 @@ in
 
     (* *********************************************************************************** *)
     (* "pickling" and "unpickling" paths
-	These operations are now trivial.
+	These operations are now trivial.  Are they still needed?
         QUESTIONS:
           What do we really need to pickle/unpickle?
 	  Do we need to pickle/unpickle relative to a file as the original version did?
@@ -790,15 +750,25 @@ in
     (* fileToFileIdOp : file -> FI.fileId option *)
     fun fileToFileId ({fid,...}: file) = !fid
 
-    (* pickle : path -> string list *)
-    fun picklePath ({ isAbs, vol, revarcs } : path) = Bool.toString isAbs :: vol :: revarcs
+    (* picklePath : path -> string list list *)
+    fun picklePath ((head, arcs): path) = 
+	  let fun pickleHead (ABS U) = [ "hu" ]
+		| pickleHead (ABS (W vol)) = [ vol, "hw"]
+		| pickleHead (REL n) = [ Int.toString n, "hr" ]
+		| pickleHead (ANC a) = [ a, "ha" ]
+	   in [ pickleHead head, arcs ]
+	  end
 
-    (* unpickle :  string list -> path *)
-    fun unpickle (isAbs :: vol :: revarcs) =
-  	  (case Bool.fromString isAbs
-	     of SOME b => {revarcs = revarcs, isAbs = b, vol = vol}
-  	      | NONE => raise Format)
-      | unpickle _ = raise Format
+    (* unpicklePath : string list list -> path *)
+    fun unpicklePath [hlist, arcs] =
+	  let fun unpickleHead [ "hu" ] = ABS U
+		| unpickleHead [ vol, "hw" ] = ABS (W vol)
+		| unpickleHead [ intstring, "hr" ]  = REL (valOf (Int.fromString intstring))
+		| unpickleHead [ anchor, "ha" ] = ANC anchor
+		| unpickleHead _ = raise Format
+	   in (unpickleHead hlist, arcs)
+	  end
+      | unpicklePath _ = raise Format
 
 
     (* *********************************************************************************** *)
@@ -832,10 +802,15 @@ in
 			       val arc0' = String.extract (arc0, 1, NONE)
 			    in case char0
 				 of #"%" => (* arc0' is a volume name *)
-				      (ABS arc0', rev arcs)
+				      (ABS (W arc0'), rev arcs)
 				  | #"$" => (* arc0' is an anchor *)
-				      let val (head, arcs') = lookAnchor (pathenv, arc0')
-				       in (head, revappend (arcs, arcs'))
+				      (case (lookAnchor (pathenv, arc0'))
+					 of SOME (head, arcs') =>
+					      (head, revAppend (arcs, arcs'))
+					  | NONE => impossible ["decodeFpath: ", arc0'])
+	                          | #"." =>
+				      let val (n, arcs') = countParentLinks (arc0::arcs)
+				       in (REL n, rev arcs')
 				      end
 	                          | _ => (REL 0, rev (arc0 :: arcs))
 	                   end)
@@ -849,14 +824,14 @@ in
 	      | combinePaths (paths as (head, arcs) :: rest) =
 		  let val rarcss = map #2 paths
 		      fun combine [rarcs] = rarcs
-			| combine (rarcs::rest) = revappend (tl rarcs, combind rest)
+			| combine (rarcs::rest) = revAppend (tl rarcs, combine rest)
 		   in (head, combine rarcss)
 		  end
 
 	 in case String.fields (isChar #":") fpath
 	      of nil => impossible ["decodeFpath: no segments"]
-	       | seg0 :: segs =>
-		   let val segPaths = fistset seg0 :: map segToPath segs
+	       | seg :: segs =>
+		   let val segPaths = firstseg seg :: map segToPath segs
 		       val fullPath = combinePaths segPaths
 		    in intern (pathToFile fullPath)
 		   end
@@ -1086,12 +1061,12 @@ for working with DIR values.
            | Parent of reanchor => parentPath (applyReanchor cvt reanchor)
            | Extent of (arcs, reanchor) => extendPath arcs (applyReanchor cvt reanchor)
 
-      Actually, parentPath and extendPath operate only on the revarcs component of a
-      path, leaving the vol and isAbs fields alone, so possibly the Parent case could
-      just do a tl and the Excend case could just do a revappend on the revarcs of the
-      relevant paths ("on the way out" after having recursed down to the anchor in
-      the final Anchor node (Anchor a) to which the cvt : string -> fpath is applied
-      to give the new "anchor point".
+      Actually, parentPath and extendPath operate only on the revarcs component of a path,
+      leaving the vol and isAbs fields alone, so possibly the Parent case could just do a
+      tl and the Excend case could just do an append (or revAppend) on the revarcs of the
+      relevant paths ("on the way out" after having recursed down to the anchor in the
+      final Anchor node (Anchor a) to which the cvt : string -> fpath is applied to give
+      the new "anchor point".
 
       The reanchor encodes a kind of "file system delta" down the path from an anchor
       point to a file that is located relative to that anchor (i.e. relative to an ANCHOR
@@ -1604,9 +1579,8 @@ pp2name		pathToFpath
 F0M		FileInfoMap [structure, used in intern, clear, sync]
 dir*		fileToDir
 desc*		fileToFpath
-extend*		extendDpath
+extend*		extendArcs
 augPP		extendPath
-dirPP		parentPath
 pre*		fileToPath
 idOf		getFileId
 raw*		mkDpath
@@ -1616,7 +1590,8 @@ pre*		fileToPath
 prepath	[type]	path
 prefile* [type]	dpath
 parseFpathStandard  fpathToPathStandard
-
+pickle		picklePath
+unpickle	unpicklePath
 
 Removed:
 
@@ -1632,15 +1607,12 @@ dirElab		.  -- "
 bogus_elab	.  -- "
 look		.  -- ANCHOR argument field
 stdspec [ty]    .  -- superceded by path and head
+dirPP		.  -- [renamed parentPath]
+
 
 Added:
 
-.		dpathToFileInfo [X]
-.		dpathToFile     -> pathToFile
-.		dirToReanchor   [X]
-.		fileInfoToReanchor [X]
-.		dpathToReanchor -> pathToReanchor
-.		fileToReanchor
+.		dpathToFile -> pathToFile
 
 * Some of the former "elab" functions are replaced by "reanchor" functions.
 

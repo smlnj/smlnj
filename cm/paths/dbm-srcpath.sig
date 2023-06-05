@@ -8,10 +8,10 @@ sig
     type anchor = string
     type fpath = string   (* file path *)
 
-    type apath  (* "abstract" file paths *)
+    type path  (* "abstract" file paths *)
     type file
 
-    type apathEnv  (* a "functional" environment: anchor --> apath, a StringMap.map *)
+    type pathEnv  (* a "functional" environment: anchor --> path, a StringMap.map *)
 
     val compareFile : file * file -> order
 
@@ -34,43 +34,44 @@ sig
     val scheduleNotification : unit -> unit
 
     (* destructive updates to the global anchor prepath environment (for configuration) *)
-    val get_anchor : anchor -> string option
-    val set_anchor : anchor * string option -> unit (* native syntax! *)
+    val get_anchor : anchor -> fpath option
+    val set_anchor : anchor * fpath option -> unit (* native syntax! *)
     val reset_anchors : unit -> unit
 
     (* process a specification file; must sync afterwards! *)
     val processSpecFile : fpath -> TextIO.instream -> unit
 
     (* non-destructive bindings for anchors (for anchor scoping) *)
-    val bindAnchors: dpathEnv -> (anchor * apath) list -> apathEnv
+    val bindAnchors: pathEnv -> (anchor * path) list -> pathEnv
 
-    (* make abstract paths (apaths) ???? *)
-    val native : apathEnv -> fpath -> apath
-    val standard : apathEnv -> fpath -> apath
+    (* parse fpaths into paths, while "expanding" anchors to their associated poths *)
+    val native : pathEnv -> fpath -> path
+    val standard : pathEnv -> fpath -> path
 
-    (* extend a dpath's arcs (naming relative to a directory) with a list of new arcs *)
-    val extendApath : apath -> string list -> apath
+    (* translate path to fpath (unparse path) *)
+    val pathToFpath : path -> fpath
 
-    (* check that there is at least one arc in the path of the dpath *)
-    val apathToFile : apath -> file
+    (* should check that there is at least one arc in the path? *)
+    val pathToFile : path -> file
 
-    (* To be able to pickle a file, turn it into a apath first... ???? *)
-    val fileToApath : file -> apath
+    (* return the path component of a file *)
+    val fileToPath : file -> path
 
     (* current working directory *)
     val cwd : unit -> fpath
-    val fileToApath : file -> apath
 
     (* get info out of abstract paths *)
     val osstring : file -> fpath
     val osstring' : file -> fpath	(* use relative path if shorter *)
+
+  (* ???? RETHINK! Do these need to be replaced, or can they be deleted?
+     Since dpaths and dirs no longer exist!
 
     (* get path relative to the file's context; this will produce an
      * absolute path if the original spec was not relative (i.e., if
      * it was anchored or absolute) *)
     val osstring_relative : file -> fpath
 
-  (* ???? needed? replaceable?
 
     (* get name of dpath *)
     val osstring_dpath : dpath -> fpath
@@ -85,25 +86,20 @@ sig
     (* expand root anchors using given function *)
     val osstring_reanchored : (anchor -> string) -> file -> fpath option
 
-    (* get a human-readable (well, sort of) description *)
-    val fileToFpath : file -> fpath
-
     (* get a time stamp *)
     val tstamp : file -> TStamp.t
 
     (* portable encodings that avoid whitespace *)
     val encodeFile : file -> fpath
-    val decodeFile : apathEnv -> fpath -> file
+    val decodeFpath : pathEnv -> fpath -> file
 
     (* check whether encoding (result of "encode") is absolute
      * (i.e., neither anchored, nor relative) *)
     val absoluteFpath : fpath -> bool
 
-    (* ???? need to be converted to work with apaths *)
-    val pickle : (bool * string -> unit) ->
-		 { dpath: dpath, relativeTo: file } -> string list list
+    (* ???? need to be converted to work with paths *)
+    val picklePath : path -> string list list
 
-    val unpickle : dpathEnv ->
-		   { pickled: string list list, relativeTo: file } -> dpath
+    val unpicklePath : string list list -> path
 
 end (* signature SRCPATH *)
