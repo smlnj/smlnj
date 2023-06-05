@@ -258,7 +258,7 @@ in
      * pathToFpath that could conditionally add the anchor annotations/abbreviations of
      * (dpathToString true)? *)
 
-    (* encodeFile : file -> string
+    (* encodeFile : file -> fpath
      *   This function does _not_ include anchor annotations/abbreviations. *)
     fun encodeFile file = pathToFpath (fileToPath file)
 
@@ -707,14 +707,13 @@ in
 	    else oss
 	end
 
-    (* osstring_reanchored : (anchor -> fpath) -> file -> fpath option *)
+    (* pathReanchored : (anchor -> path) -> path -> path option *)
     (* used once in main/filename-policy.sml (FilenamePolicyFn) *)
-    fun osstring_reanchored cvt ({path = (head, arcs),...} : file) =
+    fun pathReanchored (cvt: anchor -> path) ((head, arcs) : path) =
 	  (case head
 	     of ANC anchor =>
-		  let val fpath' = cvt anchor
-		      val (head', arcs') = fpathToPath fpath'
-		   in SOME (FI.canonical (pathToFpath (head', arcs @ arcs')))
+		  let val (head', arcs') = cvt anchor
+		   in SOME (head', arcs @ arcs')
 		  end
 	      | _ => NONE)
 
@@ -788,13 +787,13 @@ in
 	 Known example is "$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm".
        The pathEnv argument is a "local" overlay over the global PathEnv anchor environment. *)
 
-    (* QUESTIONABLE ???? segments are unclear *)
-    (* decodeFile [decode] : pathEnv -> fpath -> file *)
-    fun decodeFpath (pathenv: pathEnv) (fpath: fpath) : file =
+    (* QUESTIONABLE ???? status of segments is unclear *)
+    (* parseFpath [decode, parseFpath] : pathEnv -> fpath -> path *)
+    fun parseFpath (pathenv: pathEnv) (fpath: fpath) : path =
 	let (* firstseg : string -> path *)
 	    fun firstseg (seg : string) =
 		(case map transArc (String.fields (isChar #"/") seg)
-		   of nil => impossible ["decodeFpath: no fields in segment 0"]
+		   of nil => impossible ["parseFpath: no fields in segment 0"]
 		    | arc0 :: arcs =>
 		      if arc0 = ""  (* fpath starts with #"/" *)
 		      then (ABS U, rev arcs)
@@ -807,7 +806,7 @@ in
 				      (case (lookAnchor (pathenv, arc0'))
 					 of SOME (head, arcs') =>
 					      (head, revAppend (arcs, arcs'))
-					  | NONE => impossible ["decodeFpath: ", arc0'])
+					  | NONE => impossible ["parseFpath: ", arc0'])
 	                          | #"." =>
 				      let val (n, arcs') = countParentLinks (arc0::arcs)
 				       in (REL n, rev arcs')
@@ -825,18 +824,15 @@ in
 		  let val rarcss = map #2 paths
 		      fun combine [rarcs] = rarcs
 			| combine (rarcs::rest) = revAppend (tl rarcs, combine rest)
+			| combine nil = impossible ["combinePaths:combine"]
 		   in (head, combine rarcss)
 		  end
 
 	 in case String.fields (isChar #":") fpath
-	      of nil => impossible ["decodeFpath: no segments"]
-	       | seg :: segs =>
-		   let val segPaths = firstseg seg :: map segToPath segs
-		       val fullPath = combinePaths segPaths
-		    in intern (pathToFile fullPath)
-		   end
+	      of nil => impossible ["parseFpath: no segments"]
+	       | seg :: segs => combinePaths (firstseg seg :: map segToPath segs)
 
-	end (* fun decodeFile *)
+	end (* fun parseFpath *)
 
     (* absoluteFpath : fpath -> bool *)
     (* does fpath start with $"/" or #"%"? Then it is absolute. *)
@@ -910,11 +906,11 @@ There is a couple progressions:
 
 Where do dpaths come from?  Where is the link between paths and dpaths?
 
-Dpaths are created (directly) by the function decodeFpath, which (with the help of the
-env) translates fpaths directly to (interned) files.  There is no direct translation from
-the syntactic fpath/path representations to the dpath representation, or in particular,
-to the dir type.  It is also not clear whether the id field of a fileInfo record is relevant
-for working with DIR values.
+Dpaths are created (directly) by the function decodeFpath [-> parseFpath], which (with the
+help of the env) translates fpaths directly to (interned) files.  There is no direct
+translation from the syntactic fpath/path representations to the dpath representation, or
+in particular, to the dir type.  It is also not clear whether the id field of a fileInfo
+record is relevant for working with DIR values.
 
 
 6. There are two mappings over anchors, both incorporated into the env type:
@@ -1399,7 +1395,7 @@ be considered ill-formed and illegal?  That is, can only the last element of rev
 
 
 --------------------------------------------------------------------------------
-12. Classifying paths, translating paths to and from strings
+12. Phase 6: Classifying paths, translating paths to and from strings (fpaths)
 
 Let's start by assuming there are just 3 kinds of paths, which are intended to denote file
 locations in Unix/Windows file systems:
@@ -1412,7 +1408,7 @@ locations in Unix/Windows file systems:
     definite but possibly variable FS location (defined by an absolute path) via
     an anchor enviornments that maps anchors (anchor names) to (absolute?) paths
 
-Let's try to fully disentangle the type structure of paths from their representation as
+We can fully abstract and separate the type structure of paths from their representation as
 strings, using the following types:
 
   type anchor = string  -- non-empty
@@ -1448,37 +1444,87 @@ a kind of pun to treat parent links as arcs (leading to things like /a/b/c/../d/
 "current" arcs ("."). [The "current arc" as a path becomes "@0//" in the concrete syntax proposed
 below]. Path values will thus not need to be "canonicalized".
 
-We make the following assumptions:
+We make the following assumptions about the file paths (canonical fpaths):
 
-  * parent links ("..") only occur as an initial prefix of the arcs list, but there can be
+  * parent links ("..") only occur as an initial prefix of a file path's arcs, but there can be
     multiple such,
   * for absolute and anchored arcs lists, there are no parent links (only downward arcs),
   * there are no "current" links (there is no such thing in the representation).
 
 Informally, we can call the values of this path type, "CM paths".  But type name can
-simply be "path", replacing "path", since there is only one internal kind of path.
+simply be "path", replacing "apath" [formerly "prepath/prefile"], since there is only one
+internal kind of path. Note that this definition of path replaces _both_ prepath, which was
+a variant of the record representation produced by OS.Path.fromString, and prefile. The
+_head_ type is analagous to the previous _dir_ type, with the exception of the dropped DIR
+constructor, which was concerned with representing "segmented" paths. 
+
+At this point, it is unclear whether "segmented" paths have to be handled in a first-class way.
+They are now handled internally in the parseFpath [decode] function.  Only after looking at
+the way client modules depend on SrcPath can we determine whether segmented paths have to be
+"visible" outside SrcPath.
+
+
+* "Concrete" syntaxes of file paths (parsing fpaths and unparsing paths)
 
 Now there is the problem of defining string path formats that can be unambiguously
 parsed into these paths, and an unparse function that produces cannonical strings from
-paths,
+paths.  Ideally, it would be nice to have functions
 
   val parse : string -> path
   val unparse : path -> string
 
-such that
+that were inverses, such that
 
   parse (unparse p) = p  for all paths p
 
-The idea here is to define a simpler, unambiguous string notation for paths, avoiding "overloading"
-of symbols like "/", and avoiding problems related to special arcs like ".", ".." and empty arc
-strings.
+  unparse (parse fp) = fp  for all (valid, canonical) file paths fp 
 
-* A "Concrete syntax" of paths (unparsing paths to stringstou)
+We assume that the normal or usual file path notations are extended to included anchored paths and
+the "$/a" abbreviation convention. We also can assume that anchored paths should always denote
+files (CDFs) rather than FS directories.
+
+There appear to be two different, but similar file path notations that are called "native"
+and "standard" (presumably parsed by [native] and [standard] parsing functions.  It
+appears that the "native" notation is (roughly) the notation produced by the
+OS.Path.toString function (the OS.Path unparsing function). The "standard" notation seems
+to allow OS variants like using "A:/a/b" and "a\b\c" in Windows as well as the Unix
+conventions, and it appears to be able to "deal with" nonstandard notations for the parent
+and current arcs. So the "standard" syntax could be viewed as a union of Unix and Windows
+file path syntaxes (and it seems to support hybrid paths like "a/b\c").
+
+To make things even more confusing, the parseFpath [decode] function parses the additional
+syntactic feature of "%vol" for (Windows) volume names at the head of a file path.
+
+QUESTION: What exactly is the file path concrete syntax that is to be used in CDFs?  Is it
+  the "native", or "standard" or the syntax handled by the parseFpath [decode] function?
+
+Now the type fpath is a bit ambiguous or underdefined, since it may refer to a string using
+one of two or three different syntaxes for file paths.  Can we make it unambiguous?
+
+QUESTION: There is also the question of whether file path parsing functions should
+"expand" or "interpred" anchor arcs, replacing them with the file path (or path) bound to
+the anchor in the current anchor environments (base or "dynamic"). The original "native",
+"standard" and [decode] functions lazily looked up the anchor in the look functions that
+were part of the ANCHOR dir that they produced, and which would be invoked in the elab_dir 
+function. But in our more direct representation there is the question of when to "expand"
+anchor references, and then whether the expansion might itself be an anchored path requiring
+iterated expansion (through environment lookups).
+
+Currently these functions (native, standard, and parseFpath) perform a single expansion (or 
+anchor replacement) on anchored paths.
+
+QUESTION: Can anchor environments map an anchor to an anchored path? [In which case,
+  anchor expansion may be or should be iterative, until a non-anchored path is produced.]
+
+* An alternate concrete syntax for file paths
+
+We could also consider defining a simpler, unambiguous string notation for paths, avoiding
+"overloading" of symbols like "/", avoiding problems related to special arcs like ".", ".."
+and empty arc strings.
 
 The string notation for paths does not have to coincide with the native file path notation
-of any OS. So let's feel free to invent a new file path "concrete syntax" notation that might
-be used to denote paths in CM description files as an alternative to "native" or "standard"
-notation.
+of any OS. So here is a new file path "concrete syntax" notation that might be used to
+denote paths in CDFs an alternative to "native" or "standard" notation.
 
   val slash = "/"
   val slash2 = "//"  -- separator between a path's head and the path's arcs
@@ -1529,7 +1575,7 @@ Examples and nonexamples:
   "%A/a/b"     Involid: root must be followed by "//"
 
 We could another separator like "#" instead of "//" to separate the "head" of a path from
-its arcs.
+its arcs. A single character separator would make parsing slightly simpler.
 
 QUESTION: Could one interpret a REL path with respect to a "directory" (path)
   other than the implicit CWD?  How would a different implicit root for relative paths be
@@ -1542,13 +1588,13 @@ translated unambiguously to Unix or Windows file paths
 
 * Parsing path strings
 
-CLAIM: [cannonical] Unix/Windows file paths can be parsed to these CM paths.
+CLAIM: [cannonical] Unix/Windows file paths can be parsed unambiguously to these CM paths.
 
 
 Discussion:
 
-There may be persuasive arguments not to use a specialized string format like this in CM
-description files, but to stick with conventional (OS based) file path notation, with the
+There may be persuasive arguments not to use a new string format like the one proposed above
+in CM description files, but to stick with conventional (OS based) file path notation, with the
 addition of anchor names (of the form "$<name>") that are only permitted in certain places,
 such as the first arc of a (relative) file path.  But the "externally allowed" file path notation
 is only relevant to the initial parsing of CDFs and the reporting of errors.  Internally, we would
@@ -1558,6 +1604,15 @@ Phase 6 revision of srcpath.*.
 There may be a need for an additional type of "segmented" paths, corresponding to the ":"
 segmented path notation found in PIDMAP files (and possibly elsewhere?).
 
+In general, we should be working whenever possible with the internal representation (the
+abstract syntax) of paths (the type path), rather than file path strings.  Translating
+paths from and to strings should only be done "at the edges", e.g. when parsing CDFs or
+generating error messages.  Too many exported functions of SrcPath consume or produce
+fpaths (string representations of file paths).  We should only need two: parsing and unparsing.
+
+A 7th phase of simplification could git rid of redundant functions operating on fpaths.
+For example, osstring_reanchored, which worked in terms of fpaths, has been replaced by
+pathReanchored, which works with paths instead.
 
 --------------------------------------------------------------------------------
 Name changes and new names:
@@ -1592,6 +1647,7 @@ prefile* [type]	dpath
 parseFpathStandard  fpathToPathStandard
 pickle		picklePath
 unpickle	unpicklePath
+osstring_reanchored   pathReanchored (new type)
 
 Removed:
 
@@ -1608,7 +1664,6 @@ bogus_elab	.  -- "
 look		.  -- ANCHOR argument field
 stdspec [ty]    .  -- superceded by path and head
 dirPP		.  -- [renamed parentPath]
-
 
 Added:
 

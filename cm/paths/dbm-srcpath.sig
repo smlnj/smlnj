@@ -83,21 +83,21 @@ sig
     val osstring_dir : dir -> string
   *)
 
-    (* expand root anchors using given function *)
-    val osstring_reanchored : (anchor -> string) -> file -> fpath option
+    (* expand root anchors using a given anchor expansion function *)
+    val pathReanchored : (anchor -> path) -> path -> path option
 
     (* get a time stamp *)
     val tstamp : file -> TStamp.t
 
     (* portable encodings that avoid whitespace *)
     val encodeFile : file -> fpath
-    val decodeFpath : pathEnv -> fpath -> file
+    val parseFpath : pathEnv -> fpath -> path
 
     (* check whether encoding (result of "encode") is absolute
      * (i.e., neither anchored, nor relative) *)
     val absoluteFpath : fpath -> bool
 
-    (* ???? need to be converted to work with paths *)
+    (* converted to work with paths, but don't do much *)
     val picklePath : path -> string list list
 
     val unpicklePath : string list list -> path
