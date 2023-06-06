@@ -1626,7 +1626,10 @@ There remain a few of questions (and see also the questions above in None 12):
 * When should anchors be "expanded" when parsing file paths?
 * Is is ok for anchors to map to anchored paths in the anchor environments?
 * In general, when do anchors need to be "expanded"?
-
+* Do segmented paths (as found sometimes in PIDMAP, and as parsed now in parseSegmentedFpath)
+  need to be represented internally, as they were to some extent formerly with the prefile
+  path?
+ 
 
 --------------------------------------------------------------------------------
 Name changes and new names:
