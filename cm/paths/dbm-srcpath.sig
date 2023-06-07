@@ -1,6 +1,6 @@
 (* cm/paths/dbm-srcpath.sig *)
 
-(* Revision 7 -- minimize internal use of file path strings (fpaths) *)
+(* Revision 8 -- adding Path functions + ? *)
 
 signature SRCPATH =
 sig
@@ -29,6 +29,12 @@ sig
 
     (* get a time stamp *)
     val tstamp : file -> TStamp.t
+
+    val splitPath : path -> (arc * path) option
+
+    val addArc : arc * path -> path
+
+    val addArcs : arc list * path -> path
 
     (* is the argument path absolute? *)
     val absolutePath : path -> bool

@@ -11,28 +11,24 @@ signature FILENAMEPOLICY =
 sig
 
     type policy
-    type policyMaker = { arch: string, os: SMLofNJ.SysInfo.os_kind } -> policy
+    type policyMaker = { arch: string, os: string} -> policy
 
-    val colocate : policyMaker
-    val separate : { bindir: string, bootdir: string } -> policyMaker
+    val colocate : { arch: string, os: string } -> policy
+    val separate : { bindir: ScrPath.path, bootdir: SrcPath.path }
+		   -> { arch: string, os: string } -> policy
 
-    val colocate_generic : { arch: string, os: string } -> policy
-    val separate_generic : { bindir: string, bootdir: string } ->
-			   { arch: string, os: string } -> policy
-
-    val mkBinName : policy -> SrcPath.file -> string
-    val mkSkelName : policy -> SrcPath.file -> string
-    val mkGUidName : policy -> SrcPath.file -> string
-    val mkStableName : policy -> SrcPath.file * Version.t option -> string
-    val mkIndexName : policy -> SrcPath.file -> string
-
-    val kind2name : SMLofNJ.SysInfo.os_kind -> string
+    val mkBinName : policy -> SrcPath.path -> SrcPath.path
+    val mkSkelName : policy -> SrcPath.path -> SrcPath.path
+    val mkGUidName : policy -> SrcPath.path -> SrcPath.path
+    val mkStableName : policy -> SrcPath.path * Version.t option -> SrcPath.path
+    val mkIndexName : policy -> SrcPath.path -> SrcPath.path
 
     val cm_dir_arc : string
+
 end (* signature FILENAMEPOLICY *)
 
 
-(* Imports: SrcPath, Version *)
+(* Imports: SrcPath ($srcpath-lib.cm), Version *)
 
 functor FilenamePolicyFn (val cmdir : string
 			  val versiondir: Version.t -> string
@@ -47,73 +43,76 @@ local
 
 in		       
 
-    type policy = { bin: SP.file -> string,
-		    skel: SP.file -> string,
-		    guid: SP.file -> string,
-		    stable: SP.file * Version.t option -> string,
-		    index: SP.file -> string }
+    type policy = { bin: SP.path -> SP.path,
+		    skel: SP.path -> SP.path
+		    guid: SP.path -> SP.path,
+		    stable: SP.path * Version.t option -> SP.path,
+		    index: SP.path -> SP.path }
 
-    type policyMaker = { arch: string, os: SMLofNJ.SysInfo.os_kind } -> policy
+    type policyMaker = { arch: string, os: string } -> policy
 
-    fun kind2name SMLofNJ.SysInfo.UNIX = "unix"
-      | kind2name SMLofNJ.SysInfo.WIN32 = "win32"
+(* move this elsewhere -- no longer used here, since os is string
+    (* os_kindToString : SMLofNJ.SysInfo.os_kind -> string *)
+    fun os_kindToString SMLofNJ.SysInfo.UNIX = "unix"
+      | os_kindToString SMLofNJ.SysInfo.WIN32 = "win"  (* "win", "win32", "win64"? *)
+*)
 
-    fun mkPolicy (shiftbin, shiftstable, ignoreversion) { arch, os } = let
-        fun subDir (sd, d) = OS.Path.joinDirFile { dir = d, file = sd }
-	fun cmname dl s = let
-	    val { dir = d0, file = f } = OS.Path.splitDirFile s
-	    val d1 = OS.Path.joinDirFile { dir = d0, file = cmdir }
-	    val d2 = foldl subDir d1 dl
-	in
-	    OS.Path.joinDirFile { dir = d2, file = f }
+    (* mkPolicy : ([shiftbin:] path -> path) * ([shiftstable:] path -> path) * ([ignoreversion:] bool)
+                  -> { arch: string, os: string } -> policy *)
+    fun mkPolicy (shiftbin, shiftstable, ignoreversion) { arch: string, os: string } =
+	let fun splitPath (head, arc::arcs) = (arc, (head, arcs))
+	    fun addArc (arc: SP.arc, (head, arcs): SP.path) = (head, arc::arcs)
+	    fun addArcs (newarcs: SP.arc list, (head, arcs): SP.path) =
+		(head, List.revAppend (newarcs, arcs))
+
+	    (* cmname : SP.arc list -> SP.path -> SP.path *)
+	    fun cmname arcs path =
+		(case (SP.splitPath path)
+		  of SOME (fname, path0) =>
+			 SP.addArc (fname, SP.addArcs (arcs, SP.addArc (cmdir, path0)))
+		   | NONE => raise Fail "mkPolicy.cmname: no arcs")
+
+	    val archos = concat [arch, "-", os]
+
+	    val stable0: SP.path -> SP.path = cmname [archos] o shiftstable
+
+	    (* stable : SP.path * Version.t option -> path *)
+	    val stable =
+	        if ignoreversion
+		then stable0 o #1
+		else (fn (path, NONE) => stable0 path
+		       | (path, SOME v) =>
+			   let val try = cmname [versiondir v, archos] (shiftstable path)
+			       val exists = OS.FileSys.access (SP.pathToFpath try, [])
+					    handle _ => false
+			    in if exists then try else stable0 path
+			   end)
+
+	 in { skel = cmname [skeldir],
+	      guid = cmname [guiddir],
+	      bin = cmname [archos] o shiftbin,
+	      stable = stable,
+	      index = cmname [indexdir] o SP.osstring }
 	end
-	val archos = concat [arch, "-", os]
-	val stable0 = cmname [archos] o shiftstable
-	val stable =
-	    if ignoreversion then stable0 o #1
-	    else (fn (s, NONE) => stable0 s
-		   | (s, SOME v) => let
-			 val try =
-			     cmname [versiondir v, archos] (shiftstable s)
-			 val exists =
-			     OS.FileSys.access (try, []) handle _ => false
-		     in
-			 if exists then try else stable0 s
-		     end)
-    in
-	{ skel = cmname [skeldir] o SP.osstring,
-	  guid = cmname [guiddir] o SP.osstring,
-	  bin = cmname [archos] o shiftbin,
-	  stable = stable,
-	  index = cmname [indexdir] o SP.osstring }
-    end
 
-    fun ungeneric g { arch, os } = g { arch = arch, os = kind2name os }
+    fun ident (path: SP.path) = path
 
-    val colocate_generic =
-	mkPolicy (SP.osstring, SP.osstring, false)
+    val colocate = mkPolicy (ident, ident, false)
 
-    (* separate_generic : {bindir: string, bootdir: string} -> policy *)
-    fun separate_generic { bindir: string, bootdir: string } =
-	let fun shiftname (root: string) (p: SP.file) =
-		let fun anchor_cvt (a: string) = OS.Path.concat (root, a)
-		 in case SP.osstring_reanchored anchor_cvt p
-		      of SOME s => s
-		       | NONE => (Say.say ["Failure: ", SP.descr p,
-					   " is not an anchored path!\n"];
-				  raise Fail "bad path")
+    (* separate : {bindir: path, bootdir: path} -> policy *)
+    fun separate { bindir: path, bootdir: path } =
+	let fun shiftname (root: SP.path) (p: SP.path) =
+		let fun anchor_cvt (a: string) = addArc (a, root)
+		 in SP.reanchorPath anchor_cvt p
 		end
 	 in mkPolicy (shiftname bindir, shiftname bootdir, true)
 	end
 
-    val colocate = ungeneric colocate_generic
-    val separate = ungeneric o separate_generic
-
-    fun mkBinName (p: policy) s = #bin p s
-    fun mkSkelName (p: policy) s = #skel p s
-    fun mkGUidName (p: policy) s = #guid p s
-    fun mkStableName (p: policy) (s, v) = #stable p (s, v)
-    fun mkIndexName (p: policy) s = #index p s
+    fun mkBinName (policy: policy) (path: SP.path) = #bin policy path
+    fun mkSkelName (policy: policy) (path: SP.path) = #skel policy path
+    fun mkGUidName (policy: policy) (path: SP.path = #guid policy path
+    fun mkStableName (policy: policy) (path: SP.path, v) = #stable policy (s, v)
+    fun mkIndexName (policy: policy) s = #index policy s
 
     val cm_dir_arc = cmdir
 
@@ -121,9 +120,9 @@ end (* top local *)
 end (* functor FilenamePolicyFn *)
 
 structure FilenamePolicy =
-    FilenamePolicyFn (val cmdir = Option.getOpt
-				      (OS.Process.getEnv "CM_DIR_ARC", ".cm")
-		      val skeldir = "SKEL"
-		      val guiddir = "GUID"
-		      val indexdir = "INDEX"
-		      val versiondir = Version.toString)
+    FilenamePolicyFn
+      (val cmdir = Option.getOpt (OS.Process.getEnv "CM_DIR_ARC", ".cm")
+       val skeldir = "SKEL"
+       val guiddir = "GUID"
+       val indexdir = "INDEX"
+       val versiondir = Version.toString)

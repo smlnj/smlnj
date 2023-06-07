@@ -8,15 +8,9 @@
  * Author: Matthias Blume
  * Edited by: DBM
  *
- * Revision, phase 7:
- *   Minimize the use of fpaths in the signature.
- *   See Note 13 at the end of this file.
- *
- * Code sizes:
- *   srcpath.sml 543
- *   dbm-srcpath.sml 351
- *   dbm-srcpath.sig  39 
- *   decrease: 153 lines
+ * Revision, phase 8:
+ *   Adding some path interface functions (splitPath, addArc, addArcs) used in dbm-filename-policy.sml
+ *   The path functionality should probably be spun off in its own Path structure.
  *)
 
 structure SrcPath :> SRCPATH =
@@ -141,6 +135,22 @@ in
 	in equalHeads (head1, head2) andalso
 	   ListPair.allEq (fn (s1: string, s2) => (s1 = s2)) (arcs1, arcs2)
 	end
+
+    (* splitPath : path -> (arc * path) option  *)
+    (* if there are arcs, split off the innermost, returning that arc and the trimmed path *)
+    fun splitPath (head, arc::arcs) =
+	(case arcs
+	   of nil => NONE
+	    | arc :: arcs' => (arc, (head, arcs')))
+
+    (* addArc : arc * path -> path *)
+    (* add a single arc to the acs component of a path *)
+    fun addArc (arc: SP.arc, (head, arcs): SP.path) = (head, arc::arcs)
+
+    (* addArcs : arc list * path -> path *)
+    (* similar to extendArcs, but arc list is not in reverse order *)
+    fun addArcs (newarcs: SP.arc list, (head, arcs): SP.path) =
+	  (head, List.revAppend (newarcs, arcs))
 
     (* arcsDiff : arc list * arc list -> arc list option *)
     (* assume both arc lists are in inner-to-outer order (i.e. reversed),
