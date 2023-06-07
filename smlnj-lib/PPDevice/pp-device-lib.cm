@@ -1,0 +1,31 @@
+(* pp-device-lib.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * The main sources file for the PP Device library.
+ *)
+
+Library
+
+  signature PP_DEVICE
+  signature PP_DEVICE_OPS
+
+  functor MakePPDeviceFn
+
+  (* some simple devices *)
+  structure ANSITermDev
+  structure CharBufferDev
+  structure SimpleTextIODev
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  src/ansi-term-dev.sml
+  src/char-buffer-dev.sml
+  src/make-pp-device-fn.sml
+  src/pp-device.sig
+  src/pp-device-ops.sig
+  src/simple-textio-dev.sml

@@ -1,0 +1,30 @@
+(* pp-extra-devices-lib.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *
+ * CM file for the PP Device Library with the extra devices.
+ *)
+
+Library
+
+  signature PP_DEVICE
+  signature PP_DEVICE_OPS
+
+  functor DefaultPPDeviceFn
+
+  (* devices *)
+  structure ANSITermDev
+  structure CharBufferDev
+  structure SimpleTextIODev
+
+  (* extras *)
+  structure HTML3Dev
+
+is
+
+  $/basis.cm
+  $/html-lib.cm
+  $/pp-device-lib.cm
+
+  extras/html3-dev.sml
