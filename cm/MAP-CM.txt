@@ -180,6 +180,8 @@ IMPORTS: [paths relative to $SMLNJ]
 
   Binfile		compiler/Execution/binfile/binfile.sml
 
+  SmlFile		compiler/Parse/main/smlfile.sml
+
   Controls		$smlnj-lib/controls-lib.cm
   ControlUtil		$smlnj-lib/controls-lib.cm
   ControlRegistry	$smlnj-lib/controls-lib.cm
@@ -268,7 +270,6 @@ semant/
       SourceMap
       ErrorMsg
 
-  (* semantic actions for description file parser *)
   version.sml
     < VERSION
       Version
@@ -292,7 +293,7 @@ semant/
       SourceMap
       ErrorMsg
 
-  semant.sml
+  semant.sml   (* semantic actions for description file parser *) 
     < CM_SEMANT
       CMSemant
     > SrcPath
@@ -451,7 +452,7 @@ smlfile/
       SymbolSet
       Sharing
       TStamp
-      FileNamePolicy
+      FilenamePolicy
       GroupReg
       AutoDir
       -------
