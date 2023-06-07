@@ -11,6 +11,12 @@
  * Revision, phase 7:
  *   Minimize the use of fpaths in the signature.
  *   See Note 13 at the end of this file.
+ *
+ * Code sizes:
+ *   srcpath.sml 543
+ *   dbm-srcpath.sml 351
+ *   dbm-srcpath.sig  39 
+ *   decrease: 153 lines
  *)
 
 structure SrcPath :> SRCPATH =

@@ -949,7 +949,7 @@ paths/  -- Library
 
   CDF: paths/srcpath-lib.cm
 
-  srcpath.sml
+  srcpath.sml (dbm-srcpath.sig, dbm-srcpath.sml [351loc])
     < SRCPATH
       SrcPath
     > FileId
@@ -958,13 +958,14 @@ paths/  -- Library
 
   srcpathset.sml
     < SrcPathSet
-      ---------
+    > SrcPath
+      -------
       RedBlackSetFn
 
   srcpathmap.sml
     < SrcPathMap
     > SrcPath
-      ----------
+      -------
       RedBlackMapFn
 
   tstamp.sml
