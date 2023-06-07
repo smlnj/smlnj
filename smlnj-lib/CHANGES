@@ -5,6 +5,11 @@ correspond to SML/NJ releases.
 SML/NJ 2023.1
 -------------------
 
+[2023-06-07]
+	Created the PPDevice Library, which holds a common implementation of
+	pretty-printing devices that can be used by both the PP and PrettyPrint
+	libraries.
+
 [2023-01-01]
         Reimplementation of the `Random` structure to use the Mersenne Twister
         algorithm.  There are both 32-bit and 64-bit versions of the generator
