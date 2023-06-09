@@ -51,15 +51,15 @@ in
 
     type policyMaker = { arch: string, os: string } -> policy
 
-(* move this elsewhere -- no longer used here, since os is string
+(* move os_kindToString elsewhere -- no longer used here, since os is assumed to be a string
     (* os_kindToString : SMLofNJ.SysInfo.os_kind -> string *)
     fun os_kindToString SMLofNJ.SysInfo.UNIX = "unix"
       | os_kindToString SMLofNJ.SysInfo.WIN32 = "win"  (* "win", "win32", "win64"? *)
 *)
 
-    (* mkPolicy : ([shiftbin:] path -> path) * ([shiftstable:] path -> path) * ([ignoreversion:] bool)
+    (* mkPolicy : ([shiftbin:] path -> path) * ([shiftboot:] path -> path) * ([ignoreversion:] bool)
                   -> { arch: string, os: string } -> policy *)
-    fun mkPolicy (shiftbin, shiftstable, ignoreversion) { arch: string, os: string } =
+    fun mkPolicy (shiftbin, shiftboot, ignoreversion) { arch: string, os: string } =
 	let fun splitPath (head, arc::arcs) = (arc, (head, arcs))
 	    fun addArc (arc: SP.arc, (head, arcs): SP.path) = (head, arc::arcs)
 	    fun addArcs (newarcs: SP.arc list, (head, arcs): SP.path) =
@@ -74,29 +74,33 @@ in
 
 	    val archos = concat [arch, "-", os]
 
-	    val stable0: SP.path -> SP.path = cmname [archos] o shiftstable
+	    val stable0: SP.path -> SP.path = cmname [archos] o shiftboot
 
 	    (* stable : SP.path * Version.t option -> path *)
-	    val stable =
+	    fun stable (path, versionOp) =
 	        if ignoreversion
-		then stable0 o #1
-		else (fn (path, NONE) => stable0 path
-		       | (path, SOME v) =>
-			   let val try = cmname [versiondir v, archos] (shiftstable path)
-			       val exists = OS.FileSys.access (SP.pathToFpath try, [])
-					    handle _ => false
-			    in if exists then try else stable0 path
-			   end)
+		then stable0 path
+		else (case versionOp
+			of NONE => stable0 path
+			 | SOME v =>
+			     let val try = cmname [versiondir v, archos] (shiftboot path)
+				 val exists = OS.FileSys.access (SP.pathToFpath try, [])
+					      handle _ => false
+			      in if exists then try else stable0 path
+			     end)
 
 	 in { skel = cmname [skeldir],
 	      guid = cmname [guiddir],
 	      bin = cmname [archos] o shiftbin,
 	      stable = stable,
-	      index = cmname [indexdir] o SP.osstring }
+	      index = cmname [indexdir] }
 	end
 
+    (* ident : path -> path  -- path identity function *)
     fun ident (path: SP.path) = path
 
+				    
+    (* colocate : { arch: string, os: string } -> policy *)
     val colocate = mkPolicy (ident, ident, false)
 
     (* separate : {bindir: path, bootdir: path} -> policy *)
