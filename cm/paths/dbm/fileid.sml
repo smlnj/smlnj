@@ -3,69 +3,74 @@
  *   - IDs for files regardless whether they exist or not.
  *   - For existing files equivalent to OS.FileSys.file_id.
  *
- * Copyright (c) 2000 by Lucent Technologies, Bell Laboratories
+ * Copyright (c) 2023 The Fellowship of SML/NJ
  *
- * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
-signature FILEID = sig
 
-    type id
-    type ord_key = id			(* to be able to match ORD_KEY *)
+signature FILEID =
+sig
 
-    val compare : id * id -> order
+  type id
 
-    val fileId : string -> id
+  val compare : id * id -> order
+  val fileId : string -> id
+  val canonical : string -> string
 
-    val canonical : string -> string
-end
+end (* signature FILEID *)
 
-structure FileId :> FILEID = struct
 
-    structure F = OS.FileSys
-    structure P = OS.Path
+structure FileId :> FILEID =
+struct
 
-    datatype id =
-	PRESENT of F.file_id
-      | ABSENT of string
+local
+    
+  structure FS = OS.FileSys
+  structure OSP = OS.Path
+  structure P = Path    
 
-    type ord_key = id
+in
 
-    fun compare (PRESENT fid, PRESENT fid') = F.compare (fid, fid')
-      | compare (ABSENT _, PRESENT _) = LESS
-      | compare (PRESENT _, ABSENT _) = GREATER
-      | compare (ABSENT s, ABSENT s') = String.compare (s, s')
+  datatype id
+    = PRESENT of FS.file_id
+    | ABSENT of string
 
-    fun fileId f = let
-	(* To maximize our chances of recognizing equivalent path names to
-	 * non-existing files, we use F.fullPath to expand the largest
-	 * possible prefix of the path. *)
-	fun expandPath f = let
-	    fun loop { dir, file } = P.concat (F.fullPath dir, file)
-		handle _ => let
-		    val { dir = dir', file = file' } = P.splitDirFile dir
-		in
-		    loop { dir = dir', file = P.concat (file', file) }
-		end
-	in
-	    (* An initial call to splitDirFile is ok because we already know
-	     * that the complete path does not refer to an existing file. *)
-	    loop (P.splitDirFile f)
-	end
-    in
-	PRESENT (F.fileId f) handle _ => ABSENT (expandPath f)
-    end
+  fun compare (PRESENT fid, PRESENT fid') = FS.compare (fid, fid')
+    | compare (ABSENT _, PRESENT _) = LESS
+    | compare (PRESENT _, ABSENT _) = GREATER
+    | compare (ABSENT s, ABSENT s') = String.compare (s, s')
 
-    fun canonical "" = ""
-      | canonical f =
-	if (F.access (f, []) handle _ => false) then
-	    let val f' = P.mkCanonical f
-	    in
-		if F.compare (F.fileId f, F.fileId f') = EQUAL then f'
-		else f
-	    end
-	else
-	    let val { dir, file } = P.splitDirFile f
-	    in
-		P.joinDirFile { dir = canonical dir, file = file }
-	    end
-end
+  (* To maximize our chances of recognizing the equivalence of path names to non-existing
+   * files, we use FS.fullPath to expand the largest possible prefix of the path. *)
+  (* fileId : P.fpath -> id *)
+  fun fileId (f: P.fpath) =
+      let fun expandPath f =
+	      let fun loop { dir, file } =
+		      OSP.concat (FS.fullPath dir, file)
+		      handle _ =>
+			let val { dir = dir', file = file' } = OSP.splitDirFile dir
+			 in loop { dir = dir', file = OSP.concat (file', file) }
+			end
+	       in (* An initial call to splitDirFile is ok because we already know
+		   * that the complete path does not refer to an existing file. *)
+		  loop (OSP.splitDirFile f)
+	      end
+
+       in PRESENT (FS.fileId f) handle _ => ABSENT (expandPath f)
+      end
+
+  (* canonical: P.fpath -> P.fpath *)
+  fun canonical ("": P.fpath) = ""
+    | canonical f =
+      if (FS.access (f, []) handle _ => false)
+      then let val f' = OSP.mkCanonical f
+	    in case FS.compare (FS.fileId f, FS.fileId f')
+		 of EQUAL => f'
+		  | _ =>  f
+	   end
+      else let val { dir, file } = OSP.splitDirFile f
+	    in OSP.joinDirFile { dir = canonical dir, file = file }
+	   end
+
+end (* top local *)
+end (* structure FileId *)
