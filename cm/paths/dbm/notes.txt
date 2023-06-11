@@ -1,888 +1,6 @@
-(* dbm-srcpath.sml
- *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
- * All rights reserved.
- *
- * (1) Abstract paths used to designate CM description files and SML source files.
- * (2) Translation to and from file path string formats.
- * (3) Files, and interning files; stable ids.
- * (4) Anchor environments: global and local/dynamic.
- *
- * Author: Matthias Blume
- * Edited by: DBM
- *
- * Revision, phase 8:
- *   Adding some path interface functions (splitPath, addArc, addArcs) used in dbm-filename-policy.sml
- *   This phase prepares for splitting the core path functionality into a separate Path structure.
- *   The core file functionality might also be split off into a File structure that would include
- *   intern, sync, and clear (maintaining the set of interned files).
- *
- *   The Path structure would not depend of FileId, but the File structure would depend on Path
- *   and FileId.
- *
- *   The Path structure would probably include the path parsing and unparsing functionality.
- *
- *   The SrcPath structure would remain responsible for anchor environments, CWD management, and
- *   processing pathconfig files (processSpecFile). The global anchor environment would not need
- *   to be packaged as an internal structure (i.e. PathEnv is not exported and could easily
- *   be eliminated).
- *)
+-- cm/dbm/notes.txt --
 
-structure SrcPath :> SRCPATH =
-struct
-
-local
-
-(*  structure EM = ErrorMsg *)
-
-  structure P = OS.Path     (* Basis *)
-  structure F = OS.FileSys  (* Basis *)
-  structure FI = FileId     (* srcpath-lib.cm: ./fileid.sml *)
-  structure SM = StringMap  (* ../util/sources.cm: cm/util/stringmap.sml *)
-
-(*  fun impossible (msgs: string list) = EM.impossible (concat ("SrcPath: " :: msgs)) *)
-  fun impossible (msgs: string list) = raise Fail (concat ("SrcPath: " :: msgs))
-  fun error (msgs: string list) = (Say.say msgs; Say.say ["\n"])
-
-in
-
-    (* fpath: a file path in _standard_ format
-     * Standard format: the format that OS.Path uses
-     * but possibly starting with an anchorn (initial arc begins with #"$").
-     * Any ambiguity about the format of an fpath should be cleared up! *)
-    type fpath = string
-
-    (* a file path string in "native" format (Unix or Windows) *)
-    type nfpath = string
-
-    (* anchor: the name of an anchor, e.g. "smlnj" for the anchor $smlnj, non-empty *)
-    type anchor = string
-
-    type arc = string  (* non-empty, alphanumberic with initial letter, disallowing ".", and ".." *)
-
-    type arcs = arc list  (* possibly empty, maintained in outside-in (reverse) order *)
-
-    (* path root, differentiated by OS FS. Could unify by using the volume = "" convention for
-       the Unix root. *)
-
-    datatype root
-      = U            (* Unique Unix FS root directory *)
-      | W of string  (* per-volume Windows roots (where the _non-empty_ string is the volume name) *)
-
-    (* the head of a path specifies the starting point of the path *)
-    datatype head
-      = ABS of root
-      | REL of int   (* relative path with implicit root, defaulting to CWD, possibly empty arcs,
-		      * int is up-levels (i.e. the number of leading ".." arcs in standard path strings) *)
-      | ANC of anchor
-
-    (* type path
-     * The convention is that the arcs are ordered from inner to outer (reverse of top to bottom).
-     * However, it is unclear whether this has significant efficiency advantages over the more usual
-     * top to bottom, or outer to inner, ordering, since it does require reversing the arc list for
-     * some functions.  So this arc order convention might change. *)
-    type path = head * arcs
-
-    (* QUESTION: Are paths used to designate only regular files, e.g. CDFs, or do they sometimes denote
-     * directories in the file system?  This relates to the question of whether empty arc lists are
-     * allowed.  For instance, the Unix FS root directory would be denoted by (ABS U, nil).
-     * Another question is when and whether anchor path heads (ANC anchor-name) directly designate
-     * CDFs, in which case we will normally need to discover the parent directory of the CDF so
-     * designated. The question also relates to that of whether a file is always a non-directory
-     * file, and whether the path of a file can have an empty arc list. One assumes that if files
-     * are always non-directory (e.g. CDFs), then their paths will always have at least one arc.*)
-
-
-   (* *********************************************************************************** *)
-   (* path functions *)
-
-    (* rootPath : path *)
-    fun rootPath (root : root) : path = (ABS root, nil)
-
-    (* absolutePath : path -> bool *)
-    (* is the argument path absolute? *)
-    fun absolutePath (ABS _, _) = true
-      | absolutePath _ = false 
-
-    (* equalPaths : path * path -> bool *)
-    (* (structural) equality of Paths *)
-    fun equalPaths ((head1, arcs1), (head2, arcs2)) =
-	let fun equalHeads (ABS U, ABS U) = true
-	      | equalHeads (ABS (W vol1), ABS (W vol2)) = (vol1 = vol2)
-	      | equalHeads (REL n1, REL n2) = (n1 = n2)
-	      | equalHeads (ANC a1, ANC a2) = (a1 = a2)
-	      | equalHeads _ = false
-	in equalHeads (head1, head2) andalso
-	   ListPair.allEq (fn (s1: string, s2) => (s1 = s2)) (arcs1, arcs2)
-	end
-
-    (* splitPath : path -> (arc * path) option  *)
-    (* if there are arcs, split off the innermost, returning that arc and the trimmed path *)
-    fun splitPath (head, arc::arcs) = SOME (arc, (head, arcs))
-      | splitPath (_, nil) = NONE
-
-    (* addArc : arc * path -> path *)
-    (* add a single arc to the acs component of a path *)
-    fun addArc (arc: arc, (head, arcs): path) = (head, arc::arcs)
-
-    (* addArcs : arc list * path -> path *)
-    (* similar to extendArcs, but arc list is not in reverse order *)
-    fun addArcs (newarcs: arc list, (head, arcs): path) =
-	  (head, List.revAppend (newarcs, arcs))
-
-    (* arcsDiff : arc list * arc list -> arc list option *)
-    (* assume both arc lists are in inner-to-outer order (i.e. reversed),
-     * Returns SOME arcs if arcs1 is a prefix of arcs2, with arcs = arcs2 "-" arcs1  *)
-    fun arcsDiff (arcs1: arc list, arcs2: arc list) =
-	let fun diff (nil : arc list, ys) = SOME ys  (* ys = nil => arcs1 = arcs2 *)
-	      | diff (x::xs, y::ys) = if x = y then diff (xs, ys) else NONE
-	      | diff (_, nil) = NONE  (* ys ran out first *)
-	 in Option.map rev (diff (rev arcs1, rev arcs2))
-	end
-
-    (* relativePath : [path1:]path * [path2:]path -> path *)
-    (* path2 is required to be absolute (it will normally be the absolute CWD).
-     * If path1 is absolute and is an extension of path2, return the relative path
-     * for path1 relative to path2, otherwise return path1. *)
-    fun relativePath (path1 as (head1, arcs1), (head2 as ABS root2, arcs2)) =
-	(* ASSUME: head2 = ABS _ *)
-	(case head1
-	   of ABS root1 =>
-	      if root1 = root2 (* both absolute with same root *)
-	      then (case (arcsDiff (arcs2, arcs1))
-		      of NONE => path1     (* path1 does not extend path2 *)
-		       | SOME nil => path1 (* path1 = path2 *)
-		       | SOME arcs => (REL 0, arcs))  (* path1 extends path2 by arcs *)
-	      else path1  (* different roots, so path1 cannot extend path2 *)
-	    | _ => path1)  (* path1 is not absolute *)
-      | relativePath _ = impossible ["relativePath"]
-
-    (* extendArcs : arcs -> path -> path
-     * rarcs in reverse order, outer to inner, like the arcs in the path
-     * not exported
-     * local uses: native, standard *)
-    fun extendArcs (rarcs: arc list) ((head, arcs): path) : path  =
-	(head, (rarcs @ arcs))
-
-    (* substAnchor : [anchorPath:]path -> [anchoredPath:]path -> path *)
-    (* add anchoredPath's arcs onto anchorPath, effectively replacing anchoredPath's
-     * anchor head with anchorPath *)
-    fun substAnchor ((head, arcs) : path, (ANC _, arcs') : path) =
-	  (head, arcs' @ arcs)
-      | substAnchor _ = impossible ["substAnchor"]
-
-    (* reanchorPath : (anchor -> path) -> path -> path *)
-    (* used once in main/filename-policy.sml (FilenamePolicyFn)? *)
-    fun reanchorPath (cvt: anchor -> path) (path as (head, arcs) : path) =
-	  (case head
-	     of ANC anchor => substAnchor (cvt anchor, path)
-	      | _ => path)  (* path is not anchored, return it unchanged *)
-
-
-   (* *********************************************************************************** *)
-   (* pickling and unpickling paths
-      These operations are now rather trivial.  Are they still needed?
-        QUESTIONS:
-          What do we really need to pickle/unpickle?
-	  Do we need to pickle/unpickle relative to a file as the original version did?
-      SrcPath.pickle is called twice in stable/stabilize.sml. *)
-
-    exception Format
-     (* This is raised only in the exported function unpickle.
-        We could instead use the existing UnpickleUtil.Format exception, as is done in other
-	source files like stable/stabilize.sml and smlfile/skel-io.sml. This would require importing
-	"$pickle-lib.cm" in srcpath-lib.cm, as is done in cm-lib.cm.
-	There is one specific "handle SrcPath.Format", occuring in the file stable/stabilize.sml
-        where the handler just raises UnpickleUtil.Format in place of this Format exception. *)
-
-    (* picklePath : path -> string list *)
-    fun picklePath ((head, arcs): path) = 
-	(case head
-	   of (ABS U) => "%u" :: arcs
-	    | (ABS (W vol)) => "%w" :: arcs
-	    | (REL n) => "%r" :: Int.toString n :: arcs
-	    | (ANC a) => "%a" :: a :: arcs)
-
-    (* unpicklePath : string list -> path;
-     *   raises Format *)
-    fun unpicklePath ("%u" :: arcs) = (ABS U, arcs)
-      | unpicklePath ("%w" :: vol :: arcs) = (ABS (W vol), arcs)
-      | unpicklePath ("%r" :: nparents :: arcs) =
-	  (case Int.fromString nparents
-	     of SOME n => (REL n, arcs)
-	      | NONE => raise Format)
-      | unpicklePath ("%a" :: anchor :: arcs) = (ANC anchor, arcs)
-      | unpicklePath _ = raise Format
-
-
-   (* *********************************************************************************** *)
-   (* Character coding and uncoding
-      functions supporting unparsing paths to (possibly anchor annotated) fpath strings.
-      Translating "special" characters to and from their numeric escape codes *)
-
-    (* isChar : char -> char -> bool *)
-    (* curried character equality; a utility function used in decodeFpath *)
-    fun isChar (c1: char) c2 = c1 = c2
-
-    (* translating "special characters" to \ddd codes *)
-    (* specialChar : char -> bool *)
-    (* identifies "special" characters (nonprinting characters or members of the string
-     * "/:\\$%()") that should be translated to "\ddd" codes *)
-    fun specialChar c = not (Char.isPrint c) orelse Char.contains "/:\\$%()" c
-
-    (* charCode : char -> string *)
-    (* translates any char to its "\ddd" escape code representation *)
-    fun charToCode c = "\\" ^ StringCvt.padLeft #"0" 3 (Int.toString (Char.ord c))
-
-    (* specialToCode : char -> string *)
-    fun specialToCode c = if specialChar c then charToCode c else String.str c
-
-    (* transSpecial : string -> string [was ta] *)
-    (* translate only special characters in the string to their \ddd codes.
-     * Thus the result string does not contain any of the special characters. *)
-    val transSpecial = String.translate specialToCode
-
-    (* transAll : string -> string [was ta'] *)
-    (* replace all characters in the string with their \ddd escape codes *)
-    val transAll = String.translate charToCode
-
-    (* transCode: string -> string *)
-    (* converting \ddd codes in a string back into "special" characters,
-     * i.e. roughly the inverse of transSpecial *)
-    fun transCode (s: string) : string =
-	let val dc = Char.chr o valOf o Int.fromString o implode
-	    fun scan ([], r) = String.implode (rev r)
-	      | scan (#"\\" :: d0 :: d1 :: d2 :: l, r) =
-		  (scan (l, dc [d0, d1, d2] :: r)
-		  handle _ => scan (l, d2 :: d1 :: d0 :: #"\\" :: r))
-	      | scan (c :: l, r) = scan (l, c :: r)
-	 in scan (String.explode s, [])
-	end
-
-
-   (* *********************************************************************************** *)
-   (* Path parsing I:  
-    *   parsing and unparsing fpaths/paths: fpath <--> path
-    *   This version does not anchor expansion and so is independent of anchor environments. *)
-
-    (* parseAnchor : string -> string option *)
-    fun parseAnchor (arc : string) =
-          (case Char.compare (String.sub (arc, 0), #"$")
-	     of EQUAL => SOME (String.extract (arc, 1, NONE))
-	      | _=> NONE)
-
-    (* countParentLinks : string list -> int * string list *)
-    fun countParentLinks (".." :: rest) =
-	  let val (n, rest') = countParentLinks rest
-	   in (n+1, rest')
-	  end
-      | countParentLinks arcs = (0, arcs)
-
-    (* parseFpath : fpath -> path *)
-    (* OS.Path.fromString provides the initial fpath parse, which we convert to a path.
-     * Thus we delegate the primary "parsing" of the file path string to OS.Path.fromString.
-     * Can we assume that this is the "standard" parse?
-     * Can we assume that fpath is "canonical"? Should we call F.canonicalize to make sure?
-     * We will assume that isAbs = true, vol = "" implies the Unix root.
-     * This translation translates (expands) the "$/a" anchor abbreviation. *)
-    fun parseFpath (fpath: fpath) =
-	let val { arcs, vol, isAbs } = P.fromString fpath
-	 in if isAbs
-	    then (ABS (if vol = "" then U else W vol), rev arcs)
-	    else (case arcs
-		    of nil => (REL 0, nil)
-		     | "$" :: rest => 
-			  (case rest
-			     of nil => impossible ["parseFpath: bad initial $ arc"]
-			      | arc0 :: rest' => (ANC arc0, rest))
-		     | arc0::rest =>
-		         (case (parseAnchor arc0)
-			    of SOME name => (ANC name, rev rest)
-			     | NONE =>
- 				 let val (nparents, arcs') = countParentLinks arcs
-				  in (REL nparents, rev arcs')
-				 end))
-	end
-
-
-    (* interleave : string * string list -> string list *)
-    fun interleave (s, nil) = nil
-      | interleave (s, [x]) = [x]
-      | interleave (s, y::ys) = y :: s :: interleave (s, ys)
-
-    (* arcsToString :  string list -> string *)
-    fun arcsToString arcs = concat (interleave ("/", (rev arcs)))
-
-    (* addParentLinks : int * string list -> string list *)
-    fun addParentLinks (0, ss) = ss
-      | addParentLinks (n, ss) = ".." :: "/" :: addParentLinks (n-1, ss)
-
-    (* pathToFpath : path -> string *)
-    fun pathToFpath ((head, arcs): path) =
-	(case head
-	   of ABS U => "/" ^ arcsToString arcs
-	    | ABS (W vol) => concat ["%", vol, arcsToString arcs]
-	    | REL parentlinks => arcsToString (addParentLinks (parentlinks, arcs))
-	    | ANC name => concat ["$" ^ name, "/", arcsToString arcs])
-
-
-   (* *********************************************************************************** *)
-   (* files and stable ids *)
-
-    (* stableid: integers used as "stable" ids of files(?) *)
-    type stableid = int
-
-    (* file: a file is a record with an path, the locaction of the file, an fid, which
-     * is a ref to a FI.fileId option, and an sid, which is a stableid (an int).
-     * The stableid numbers are generated in the intern function, which also defines the
-     * id field. The interned files are "recorded" in a finite set of type FileSet.set *)
-    type file = {path : path, fid: FI.id option ref, sid: stableid}
-
-    (* compareFile : file * file -> order *)
-    (* This is used in paths/srcpathmap.sml to define maps over files, with ord_key = file
-     * Comparison is in terms of the files' stableids.  *)
-    fun compareFile ({sid=i1, ...}: file, {sid=i2, ...} : file) = Int.compare (i1, i2)
-
-    (* accessing a file's path *)
-
-    (* fileToPath [pre] : file -> path
-     * (equivalent to #path applied to the file record)
-     * exported
-     * local: ?
-     * external: stable/stabilize.sml *)
-    fun fileToPath ({path,...}: file) : path = path
-
-    (* pathToFile : path -> file *)
-    (* This actually produces what could be called a "prefile", an incomplete file record.
-     *   sid = 0 is not a valid, allocated stable id because it is less than 1.
-     * [Could have sid be an int option instead.]
-     * A check that there is at least one arc in the path should probably be added, since
-     * files are meant to represent source files, not directories? *)
-    fun pathToFile (path: path) = {path = path, fid = ref NONE, sid = 0}
-
-    (* pathToFileId : path -> FI.fileId *)
-    fun pathToFileId (path: path) = FI.fileId (pathToFpath path)
-
-    (* fileToFileIdOp : file -> FI.fileId option *)
-    fun fileToFileId ({fid,...}: file) = !fid
-
-    (* tstamp : file -> TSamp.t *)
-    fun tstamp ({path, ...} : file) = TStamp.fmodTime (pathToFpath path)
-
-
-   (* *********************************************************************************** *)
-   (* "interning files": fetching file_ids from FS and generating stableids for files *)
-
-    local (* interning files *)
-
-       (* known: an internal reference to a finite set of files
-	    (known: FileSet.set ref).
-	* New bindings are created by the intern function.
-	* intern uses uses FileInfoMap.insert, which uses getFileId, which uses FileId.fileId
-	*   to update the id field of the fileInfo record to a FileId.id computed by
-	*   OS.FileSys.fileId. *)
-
-	(* getFileId [idOf] : fileInfo -> FI.id *)
-	(* returns the fileId associated with the file, updating the id field if it was NONE *)
-	fun getFileId (file as { path, fid, ... }: file) : FI.id =
-	      (case !fid
-		 of SOME id => id
-		  | NONE =>
-		      let val id = FI.fileId (pathToFpath path)
-		       in fid := SOME id; id
-		      end)
-
-	(* compareFile : file * file -> order *)
-	(* compare files by comparing their id fields as accessed/computed by getFileId *)
-	fun compareFile (f1: file, f2: file) =
-	    FI.compare (getFileId f1, getFileId f2)
-
-	structure FileSet =
-	  RedBlackSetFn (type ord_key = file
-			 val compare = compareFile)
-
-	(* known: (a reference to) a finite set of files that have been interned *)
-	val known : FileSet.set ref = ref FileSet.empty
-	val nextStableId = ref 1  (* "allocated" stable ids are >= 1 *)
-
-    in
-
-        (* clear : unit -> unit *)
-        fun clear () = known := FileSet.empty
-
-	(* intern : file -> file *)
-	(* generate a stableid (sequentially) to add to a fileInfo to make a file. If the fileInfo
-	 * has already been interned before, just return the associated stableid. If it is new
-	 * generate the next stableid and also (through the getFileId function called by insert)
-	 * define the id field of the fileInfo. *)
-	fun intern (file as {path, sid, fid}: file) : file =
-	    if FileSet.member (!known, file)
-	    then file
-	    else let val stableid = !nextStableId  (* generate a new stableid *)
-		     val file' = {path = path, sid = stableid, fid = fid}
-		  in nextStableId := stableid + 1;
-		     known := FileSet.add (!known, file');
-		       (* add the new file with stableid to known *)
-		     file'  (* return the interned file *)
-		 end
-
-	(* sync : unit -> unit *)
-	(* sync causes the file ids of all the interned files to be reset to the actual
-	 *   file system file ids (obtained from OS.FileSys.fileId)
-	 * What is sync expected to do to the stable ids of the files in !known?
-         * Should new stable ids be generated by sync? *)
-	fun sync () =
-	    let val files = !known
-		fun killId ({ fid, ... }: file) = fid := NONE
-		fun reinsert (f, s) = FileSet.add (s, f)
-	     in FileSet.app killId files;
-		(* This will cause the id fields to be reassigned using the file systems file ids
-		 * when they are accessed via getFileId for the insert operation. *)
-		known := FileSet.foldl reinsert FileSet.empty files  (* DBM: why? *)
-	    end
-
-    end (* interning files *)
-
-
-   (* *********************************************************************************** *)
-   (* current working directory (CDW) *)
-
-    (* getCwdPath : unit -> path *)
-    (* returns an absolute path for CWD *)
-    fun getCwdPath () = parseFpath (F.getDir ())
-
-    (* cwd_path : path ref *)
-    (* a ref initialized from the absolute path of the current working directory (CWD);
-     * If the CWD changes, this record will be updated if and when the cwd function is called
-     * subsequently.
-     * Why store this value anyway?  Why not just call F.getDir whenever one needs to know
-     * the current working directory (as a fpath or path). The reason, apparently, is that
-     * if the cwd function is called after a change in CWD, "clients" can be notified. *)
-    val cwd_path = ref (getCwdPath ())
-
-    (* cwd_notify : bool ref *)
-    (* a control flag that, if true, will cause "clients" to be notified if CWD changes
-     * between calls of the "cwd" function *)
-    val cwd_notify = ref true
-
-    (* scheduleNotification : unit -> unit *)
-    fun scheduleNotification () = cwd_notify := true
-
-    (* clients : (unit -> unit) list ref *)
-    (* ref of a list of "registered" notification functions, which, when called, should notify
-     * their associated "client" processes that a change in the CWD has been detected by a call
-     * of the cwd function. *)
-    val clients = ref ([] : (unit -> unit) list)
-
-    (* addClientToBeNotified : (unit -> unit) -> unit *)
-    (* used to add client notification functions to clients list *)
-    fun addClientToBeNotified c = clients := c :: !clients
-
-    (* refreshCWD : unit -> fpath *)
-    fun refreshCWD () =
-	let val cwdPath0 = getCwdPath ()  (* get the current CWD fpath *)
-	 in (* check whether CWD has changed since last time cwd_fpath was set *)
-	    if equalPaths (cwdPath0, !cwd_path) (* check for change of CWD since last call *)
-	    then () (* no change; cwd_path is validated, return newCwdFpath *)
-	    else (* if not, CWD must have changed since the previous call of cwd *)
-	      (cwd_path := cwdPath0;
-	       if !cwd_notify
-	       then app (fn c => c ()) (!clients)  (* notify registered "clients" *)
-	       else ();
-	       cwd_notify := false); (* why turn notifications off? *)
-	    cwdPath0
-	end
-
-    (* cwd : unit -> path *)
-    (* returns the fpath of the current working directory, making sure that cwd_info is
-     * up-to-date. If the CWD has changed since the last call of cwd, and !cwd_notify is true,
-     * then "clients" are notified of the change. But what if the CWD is changes but we don't
-     * call cwd afterwards. Then the clients won't be notified of the change. There seems to
-     * be a problem because of the "asynchronous" way of notifying clients! If there was a change
-     * of CWD this time, cwd_notify will become false, so next time cwd is called clients won't
-     * be notified if there is a following CWD change, unless someone set cwd_notify to true *)
-    fun cwdPath (): path = refreshCWD ()
-
-
-    (* *********************************************************************************** *)
-    (* environments: anchor-path env, anchor-dpath functional env (formerly "bound") *)
-
-    (* The path environment (mapping anchors to paths) is global, and is now implemented as
-     * a structure PathEnv.  It maintains a mapping from anchors to paths (path SM.map)
-     * as its state, and opertions get, set, defined, and reset operate on this internal state.
-     * The path that is associated with an anchor by this environment is assumed to designate
-     * the "anchor point" of the anchor (presumably a directory), i.e. the directory "named" by
-     * the anchor.
-     *
-     * structure : PathEnv
-     * This stateful module embodies an anchor to path environment as an "object" structure.
-     * The mapping from anchors to paths is stored in the local reference variable anchorMapRef.
-     *
-     * get a: lookup the anchor a and return the associated path, if a is bound in the current
-     *   map (!anchorMapRef).  Causes a fatal error (Compiler Bug) if a is not in the domain
-     *   of the map.
-     *
-     * set (a, SOME pp) : bind (or rebind) the anchor a to path pp, modifying the map
-     * set (a, NONE) : remove a from the domain of the map if it is currently bound, otherwise
-     *   do nothing.
-     *
-     * defined a : is the anchor a in the domain of the current map?
-     *
-     * reset () : replace the current map with the empty SM.map, thus reseting the path
-     *   anchor environment to be the empty environment.
-     *
-     * An anchor that is not in the domain of the current path map (!anchorMapRef) can be
-     * considered to be "invalid".
-     * The operations get and set and defined are not called outside this file.
-     *   while (some other version of?) reset is called in many files in cm.
-     * get is only called in get_anchor and mk_anchor.
-     * set is only called in setRelative.
-     * PathEnv is not exported (is not in the signature of SrcPath)
-     * local: get_anchor, setRelative, set_anchor, reset_anchors, mk_anchor, processSpecFile
-     * external: main/cm-boot.sml, bootstrap/btcompile.sml
-     *
-     * Previously, the anchor to path environment(s) were created by a function newEnv
-     * that was called just once in the files main/cm-boot.sml and bootstrap/btcompile.sml.
-     * I conjecture that there was never more than one (global) instance of this environment,
-     * and hence it is safe to replace any reference to the environments created by newEnv
-     * with references to the global PathEnv structure defined inwith SrcPath.
-     *
-     * There is still a separate "functional" environment, of type dpathEnv, that maps
-     * anchors to dpaths.  These dpath environment are passed as parameters to the
-     * exported SrcPath functions bind, decodeFpath, and unpickle.
-     *
-     * The global path environment is represented by the structure PathEnv and path
-     * anchor environments are no longer passed as parameters.
-     *
-     * QUESTION: Why do we need two anchor environments, the global, stateful one in
-     *   PathEnv and the functional version (type dpathEnv)?
-     *
-     * QUESTION: does PathEnv embody the "root anchor environment" mentioned in Sec 3.4
-     *   of the CM manual?  Or does "root anchor environment" refer to the dual path
-     *   and dpath anchor environments?
-     *
-     * QUESTION: how (where) do the pathconfig files system/pathconfig, config/extrpathconfig,
-     *   and $SMLNJ/lib/pathconfig contribute to initializing the anchor environments (and which
-     *   environments are initialized)?
-     *)
-
-    (* dpath environments *)
-
-    type pathEnv = path SM.map
-
-    val emptyPathEnv : pathEnv = SM.empty
-
-    (* bindAnchors : dpathEnv -> (anchor * dpath) list -> dpathEnv *)
-    (* produces a new env record with only the "bound" field altered.
-     * Anchors are bound to corresponding dpaths, with these bindings being
-     * added to the existing "bound" mapping.
-     * exported
-     * external: main/general-params.sml, elsewhere? *)
-    fun bindAnchors (pathenv: pathEnv) (alist: (anchor * path) list) : pathEnv =
-	let fun folder ((anchor, dpath), env) = SM.insert (env, anchor, dpath)
-	 in foldl folder pathenv alist
-	end
-
-    local (* global anchor -> path environment *)
-
-      val anchorMapRef : pathEnv ref = ref emptyPathEnv
-
-      (* find : anchor -> path option *)
-      (* locally used "look up" function for accessing the current state of the path
-       * environment *)
-      fun find anchor = SM.find (!anchorMapRef, anchor)
-
-    in 
-
-      (* definedAnchor : anchor -> bool *)
-      (* Is anchor bound in !anchorMapRef?, i.e. in the global path anchor environment? *)
-      fun definedAnchor anchor = SM.inDomain (!anchorMapRef, anchor)
-
-      (* getAnchor : anchor -> path option *)
-      (* look up anchor in !anchorMapRef. If found, return a new elab for the anchor
-       * containing the same path and validity as the existing binding. If not
-       * found (anchor is not in the domain of !anchorMapRef), produces an undefined
-       * anchor fatal error (impossible, compiler bug. So get should only be called with
-       * an anchor that is known to be defined. *)
-      fun getAnchor anchor = find anchor
-
-      (* setAnchor : anchor * path option -> unit *)
-      (* If pathOp is SOME path, binds or rebinds anchor to path.
-       * If pathOp is NONE, unbinds anchor in !anchorMapRef. *)
-      fun setAnchor (anchor, pathOp) : unit =
-	  case find anchor
-	    of SOME _ =>
-		 anchorMapRef :=
-		   (case pathOp
-		      of SOME path => SM.insert (!anchorMapRef, anchor, path) (* rebind *)
-		       | NONE => #1 (SM.remove (!anchorMapRef, anchor))) (* remove *)
-			 (* this can't raise NotFound because find returned SOME *)
-	     | NONE =>
-		 (case pathOp
-		    of SOME path => anchorMapRef := SM.insert (!anchorMapRef, anchor, path)
-		         (* bind the anchor to the path *)
-		     | NONE => ()) (* do nothing *)
-
-      (* resetAnchors : unit -> unit *)
-      (* wipe out the contents of the path environment by setting anchorMapRef to SM.empty *)
-      fun resetAnchors () = anchorMapRef := SM.empty  (* reset anchorMapRef to the empty map *)
-
-    end (* local -- global anchor env *)
-
-    (* lookAnchor : pathEnv * anchor -> path option
-     * looks up anchor in "local" pathEnv, and if that fails, tries the global anchor env
-     * not exported
-     * local: native, standard *)
-    fun lookAnchor (pathEnv: pathEnv, anchor: anchor) : path option =
-	case SM.find (pathEnv, anchor)
-	  of NONE => getAnchor anchor (* anchor is not in pathEnv, try global anchor env *)
-	   | pathOp => pathOp
-
-    (* get_anchor : anchor -> path option
-     * maps an anchor to the fpath of its "anchor point", if it is defined in the global anchor env *)
-    val get_anchor = getAnchor
-
-    (* mkAbsolute : [relativeTo:]path -> path -> path *)
-    (* ASSERT: relativeTo is absolute, typically CWD
-     * returns 2nd argument if it is not relative *)
-    fun mkAbsolute ((head2 as (ABS _), arcs2): path) (path: path) =
-	  (case path
-	     of (REL n, arcs) => (head2, arcs @ List.drop (arcs2, n))
-		(* what if n = length arcs? what if n > length arcs? Error? *)
-	      | _ => path)
-      | mkAbsolute _ _ = impossible ["mkAbsolute"]
-
-    (* setRelative [set0]: anchor * path option * path -> unit *)
-    (* not exported
-     * local: set_anchor *)
-    fun setRelative (anchor: anchor, pathOp: path option, relativeTo: path) =
-	setAnchor (anchor, Option.map (mkAbsolute relativeTo) pathOp)
-
-    (* set_anchor : anchor * path option -> unit *)
-    (* When fpathOp is SOME, binds a corresponding path to the anchor in env;
-     * when fpathOp is NONE, deletes the anchor and its binding from env.
-     * Exported and called externally (3 times) in main/cm-boot.sml *)
-    fun set_anchor (anchor, pathOp) =
-	setRelative (anchor, pathOp, getCwdPath ()) before sync ()
-
-    (* reset_anchors : unit -> unit *)
-    (* exported
-     * external: main/cm-boot.sml (in resetPathConfig) *)
-    fun reset_anchors () = (resetAnchors (); sync ())
-
-    (* *********************************************************************************** *)
-    (* paths relative to CWD
-     * (Formerly related to osstring functions.) *)
-
-    (* cwdRelativePath [osstring']: path -> path *)
-    (* try shortening a path to a CWD-relative one, if the path is absolute and extends CWD *)
-    fun cwdRelativePath (path : path) : path =
-	  (case path
-	     of ((ABS _), _) =>  (* file's path is absolute *)
-	          relativePath (path, !cwd_path)
-	      | _ => path)
-
-
-    (* ******************************************************************************** *)
-    (* Path Parsing II: Native and Standard Parsing (using pathEnv)
-     * Additional, possibly redundant versions for "standard" and "native" file path formats.
-     *
-     * The "native" file path parser is to be used on group/library member path strings that
-     * are quoted. Otherwise, the "standard" file path parser is used.
-
-     * Need precise specifications of the "standard" and "native" file paths. 
-     * Given parseFpath, do we really need these additional versions?
-     *
-     * Why do parseNative and parseStandard need to expand anchors of anchored paths? *)
-
-    (* parseNative0 : fpath -> path *)
-    (* parse a quoted fpath in "native" format -- we delegate to parseFpath, which calls
-     * OS.Path.fromString to do the original parsing.
-     * This may work ok when the native OS is Unix. What about Windows?
-     * Do we need to write complete "native" file path parsers? For both Unix and Windows? *)
-    val parseNative0 = parseFpath
-
-    (* parseStandard0 : fpath -> path *)
-    (* accepts both "/" and "\" arc delimiters -- even mixed!
-     * This duplicates some of the file path parsing that is done by OS.Path.fromString *)
-    fun parseStandard0 (fpath: fpath) =
-	let fun delim #"/" = true
-	      | delim #"\\" = true
-	      | delim _ = false
-	 in case (String.fields delim fpath)
-	      of nil => impossible ["parseStandard -- no fields"]
-	       | [""] => impossible ["parseStandard -- zero-length arc ", fpath]
-	       | arcs as (["$"] | "$" :: "" :: _) =>  (* reject "$", "$/" "$//..." *)
-		   impossible ["parseStandard -- invalid zero-length anchor name in: ", fpath]
-	       | "" :: arcs => (ABS U, rev arcs)
-	       | "$" :: (arcs as (arc1 :: _)) => (ANC arc1, rev arcs)
-	       | arcs as (arc1 :: rest) =>
-		   if String.sub (arc1, 0) <> #"$" then (REL 0, rev arcs)
-		   else (ANC (String.extract (arc1, 1, NONE)), rest)
-	end (* fun parseStandard *)
-
-    (* parseNative : pathEnv -> fpath -> path *)
-    (* parse a file path string into a path, assuming "native" file path notation
-     * "expand" an anchor head (which could result in another anchor headed path).*)
-    fun parseNative pathEnv fpath =
-          (case parseNative0 fpath
-             of path as ((REL _ | ABS _), _) => path
-              | (ANC anchor, arcs) => (* "expand" the anchor & extend with arcs *)
-		  (case lookAnchor (pathEnv, anchor)
-		     of NONE => impossible ["native: undefined anchor"]
-		      | SOME path => extendArcs arcs path)
-          (* end case *))
-
-    (* parseStandard : pathEnv -> fpath -> path *)
-    (* parse a file path string into a path, assuming "standard" file path notation,
-     * "expand" an anchor head (which could result in another anchor headed path).*)
-    fun parseStandard pathEnv fpath =
-          (case parseStandard0 fpath
-             of path as ((REL _ | ABS _), _) => path
-              | (ANC anchor, arcs) => (* "expand" the anchor & extend with arcs *)
-		  (case lookAnchor (pathEnv, anchor)
-		     of NONE => impossible ["standard: undefined anchor"]
-		      | SOME path => extendArcs arcs path)
-          (* end case *))
-
-
-    (* *********************************************************************************** *)
-    (* Path Parsing III: Parsing Segmented File Paths (using pathEnv) *)
-    (* Conjecture: used in processing PIDMAP file. *)
-
-    (* parseSegmented : pathEnv -> fpath -> path
-     * The fpath argument is a "segmented fpath" (sequence of fpaths separated by ":").
-     * The pathEnv argument is a "local" overlay over the global PathEnv anchor environment.
-     * What are "segments"?
-     * Where are they documented?
-     * Where are they introduced?
-         One place where "segmented" paths occur is in the PIDMAP file. Any others?
-     * What is the purpose of segments?
-         Chaining where one CDF serves as a proxy for another local CDF?
-	 Known example is "$SMLNJ-LIB/PrettyPrint/prettyprint-lib.cm:src/prettyprint.cm".
-     * Do segmented file paths need to be represented explicitly in the path type?
-         Like in the old dir datatype? Currently segmented paths are collapsed to a path.
-     * Why does parseSegmented need to expand the anchor of an initial anchored segment? *)
-
-    (* parseSegmented [decode] : pathEnv -> fpath -> path *)
-    (* Called (externally) in 3 places:
-	main/cm-boot.sml -- readpidmap
-	bootstrap/btcompile.sml  -- parsing "root"  argument of mk_compile
-	main/slave.sml -- not obvious what it is applied to? *)
-    fun parseSegmented (pathenv: pathEnv) (fpath: fpath) : path =
-	let (* firstseg : string -> path *)
-	    fun firstseg (seg : string) =
-		(case map transCode (String.fields (isChar #"/") seg)
-		   of nil => impossible ["parseFpath: no fields in segment 0"]
-		    | arc0 :: arcs =>
-		      if arc0 = ""  (* fpath starts with #"/" *)
-		      then (ABS U, rev arcs)
-		      else let val char0 = String.sub (arc0, 0) (* 1st char of arc0 *)
-			       val arc0' = String.extract (arc0, 1, NONE)
-			    in case char0
-				 of #"%" => (* arc0' is a volume name *)
-				      (ABS (W arc0'), rev arcs)
-				  | #"$" => (* arc0' is an anchor *)
-				      (case (lookAnchor (pathenv, arc0'))
-					 of SOME (head, arcs') =>
-					      (head, revAppend (arcs, arcs'))
-					  | NONE => impossible ["parseFpath: ", arc0'])
-	                          | #"." =>
-				      let val (n, arcs') = countParentLinks (arc0::arcs)
-				       in (REL n, rev arcs')
-				      end
-	                          | _ => (REL 0, rev (arc0 :: arcs))
-	                   end)
-
-	    (* segToPath: string -> path *)
-            fun segToPath (seg: string) =
-		(REL 0, rev (map transCode (String.fields (isChar #"/") seg)))
-
-            (* flattenPaths : path list -> path *)
-	    (* flattens a list of segment paths into a single path, with same head *)
-	    fun flattenPaths nil = impossible ["flattenPaths"]
-	      | flattenPaths [path] = path
-	      | flattenPaths (paths as (head, arcs) :: rest) =
-		  let val rarcss = map #2 paths
-		      fun combine [rarcs] = rarcs
-			| combine (rarcs::rest) = revAppend (tl rarcs, combine rest)
-			| combine nil = impossible ["flattenPaths:combine"]
-		   in (head, combine rarcss)
-		  end
-
-	 in case String.fields (isChar #":") fpath
-	      of nil => impossible ["parseFpath: no segments"]
-	       | seg :: segs => flattenPaths (firstseg seg :: map segToPath segs)
-
-	end (* fun parseFpath *)
-
-
-    (* ******************************************************************************** *)
-    (* Processing a "spec file" (as an instream) "relative to a given base fpath". *)
-
-    (* processSpecFile seems to be used to read and process pathconfig files.
-     * It processes an instream line by line ("relative" to the baseFpath parameter),
-     * interpretting each line as a comment, a blank line, or a "command".
-     * The "commands" are:
-     *   "#" ... -- a comment line, ignored
-     *   !standard -- switch to "standard" treatment of fpaths (isnative becomes false)
-     *   !native -- switch to "native" treatment of fpaths (no parsing) (isnative becomes true)
-     *   anchor fpath  -- add a |-> parseFpath (fpath) binding to the global anchor environment
-     *     (relative to the directory part of baseFpath)
-     *   anchor -- delete anchor from the global anchor environment
-     *   -  -- reset the global anchor environment to empty (removing all bindings)
-     * This determines the expected content of pathconfig files. *)
-
-    (* processSpecFile : fpath -> TextIO.instream -> unit *)
-    fun processSpecFile (baseFpath: fpath) =
-	let val local_dir : path = parseFpath (P.dir (F.fullPath baseFpath))
-
-	    fun set (anchor, pathOp) =
-		setRelative (anchor, pathOp, local_dir)
-
-	    (* mknative : bool -> string -> string *)
-	    fun mknative true path = path
-	      | mknative false fpath =
-		  let fun mkFpath (abs, arcs) =
-			  P.toString { vol = "", isAbs = abs, arcs = arcs }
-		   in case String.fields (fn c => c = #"/") fpath
-		        of "" :: arcs => mkFpath (true, arcs)
-		         | arcs => mkFpath (false, arcs)
-		  end
-
-	    (* processLines: TextIO.instream -> ? *)
-	    fun processLines (stream: TextIO.instream) =
-		(* loop processes each and every line of the instream *)
-		let fun loop isnative =
-			case TextIO.inputLine stream
-			  of NONE => ()
-			   | SOME line =>
-			       if String.sub (line, 0) = #"#" then loop isnative
-			       else case String.tokens Char.isSpace line
-				      of ["!standard"] => loop false
-				       | ["!native"] => loop true
-				       | [anchor, fpath] =>
-					   (set (anchor, SOME (parseFpath fpath));
-					    loop isnative)
-				       | ["-"] => (resetAnchors (); loop isnative)
-				       | [anchor] => (set (anchor, NONE); loop isnative)
-				       | [] => loop isnative
-				       | _ => (error [baseFpath, ": malformed line (ignored)"];
-					       loop isnative)
-		 in loop true
-		end
-
-	 in processLines
-	end (* fun processSpecFile *)
-
-
-end (* top local *)
-end (* structure StrPath *)
-
-
-(* ================================================================================ *)
-
-(* NOTES:
+SrcPath Notes:
 
 1. The design seems to be meant to accomodate possible changes in the underlying file system
    (e.g. maybe renaming and deleting files, directories, changing the current working
@@ -939,7 +57,7 @@ Thus fileInfo, elab, and path are only used internally in SrcPath.
 
 There is a couple progressions:
 
-     fpath (string) --[P.fromString]--> path --[pathToFpath]--> fpath
+     fpath (string) --[OSP.fromString]--> path --[pathToFpath]--> fpath
 
      dpath --[intern?]--> fileInfo (adding undefined file-id)
              --[intern?]--> file (adding stableid and defining file-id)
@@ -1499,7 +617,7 @@ simply be "path", replacing "apath" [formerly "prepath/prefile"], since there is
 internal kind of path. Note that this definition of path replaces _both_ prepath, which was
 a variant of the record representation produced by OS.Path.fromString, and prefile. The
 _head_ type is analagous to the previous _dir_ type, with the exception of the dropped DIR
-constructor, which was concerned with representing "segmented" paths. 
+constructor, which was concerned with representing "segmented" paths.
 
 At this point, it is unclear whether "segmented" paths have to be handled in a first-class way.
 They are now handled internally in the parseFpath [decode] function.  Only after looking at
@@ -1520,7 +638,7 @@ that were inverses, such that
 
   parse (unparse p) = p  for all paths p
 
-  unparse (parse fp) = fp  for all (valid, canonical) file paths fp 
+  unparse (parse fp) = fp  for all (valid, canonical) file paths fp
 
 We assume that the normal or usual file path notations are extended to included anchored paths and
 the "$/a" abbreviation convention. We also can assume that anchored paths should always denote
@@ -1548,12 +666,12 @@ QUESTION: There is also the question of whether file path parsing functions shou
 "expand" or "interpred" anchor arcs, replacing them with the file path (or path) bound to
 the anchor in the current anchor environments (base or "dynamic"). The original "native",
 "standard" and [decode] functions lazily looked up the anchor in the look functions that
-were part of the ANCHOR dir that they produced, and which would be invoked in the elab_dir 
+were part of the ANCHOR dir that they produced, and which would be invoked in the elab_dir
 function. But in our more direct representation there is the question of when to "expand"
 anchor references, and then whether the expansion might itself be an anchored path requiring
 iterated expansion (through environment lookups).
 
-Currently these functions (native, standard, and parseFpath) perform a single expansion (or 
+Currently these functions (native, standard, and parseFpath) perform a single expansion (or
 anchor replacement) on anchored paths.
 
 QUESTION: Can anchor environments map an anchor to an anchored path? [In which case,
@@ -1687,7 +805,7 @@ There remain a few of questions (and see also the questions above in None 12):
 * Do segmented paths (as found sometimes in PIDMAP, and as parsed now in parseSegmentedFpath)
   need to be represented internally, as they were to some extent formerly with the prefile
   path?
- 
+
 --------------------------------------------------------------------------------
 13. Phase 8: reorganizing SrcPath
 
@@ -1699,6 +817,57 @@ Still unclear about what _really_ needs to be done about _native_ file path pars
 
 Still unclear about why parseNative, parseStandard and parseSegmented file path parsing
 functions need to take a pathEnv argument and use it to "expand" an anchor head.
+
+
+-------------------------------------------------------------------------------- 
+14. Phase 9: separating srcpath.sml into multiple structures: Path, File, SrcPath
+
+  The SrcPath structure has beed broken into the following set of
+  structures:
+
+     Path: PATH  (cm/paths/dbm/path.s??)
+     File: FILE  (cm/paths/dbm/file.s??)
+     AnchorEnv: ANCHORENV  (cm/paths/dbm/anchorenv.s??)
+     CharCode    (cm/paths/dbm/charcode.sml)  -- special characters <-> escape codes in strings
+     FileMap     (cm/paths/dbm/filemap.sml)  -- was srcpathmap.sml (SrcPathMap)
+     FileSet     (cm/paths/dbm/fileset.sml)  -- was srcpathset.sml (SrcPathSet)
+
+  The residual SrcPath structure only deals with CWD maintenance and pathconfig file
+  processing. These two functionalities could be made into separate structures.
+  
+  This notes file is now found at cm/paths/dbm/notes.txt (moved from the end of
+  srcpath.sml).
+
+
+-------------------------------------------------------------------------------- 
+15. Some useful notation and path operations/relations
+
+Assumption: a path can designate either a directory or a (source) file (including CDFs)
+
+* Path extension
+
+    path1 >> path2  -- path1 "extends" path2 (we can get path1 by adding arcs to path2)
+
+    path1 = (head, arcs1), path2 = (head, arcs2), Exists rarcs. arcs1 = rarcs @ arcs2
+            Say rarcs = arcs1 - arcs2.
+
+    path1 >> path2 => path1 and path2 have the same head.
+      If both are REL, then they are relative to the same base (typically CWD)
+      Is the common base always a directory?
+
+* Path "factoring"
+
+    path1/path2  ==  If path1 >> path2, (path1 = (head, arcs1), path2 = (head, arcs2).
+    		     then path1/path2 = (REL 0, arcs1 - arcs2);
+		     otherwise, path1/path2 = path1 ?
+
+* (Innermost) Directory of a path
+
+    Dir (path) :  Dir (head, nil) = (head, nil)
+    	          Dir (head, _::arcs) = (head, arcs)
+
+  If a path p designates a CDF file, then the relative paths of members of the CDF file
+  are relative to Dir p.
 
 
 --------------------------------------------------------------------------------
@@ -1771,4 +940,3 @@ Added:
 --------------------------------------------------------------------------------
 
 END NOTES
-*)
