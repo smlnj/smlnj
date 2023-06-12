@@ -61,10 +61,8 @@ val range : (int * int) -> rand -> int
   numbers.
 
 `[.kw]#val# mkRandom : rand \-> unit \-> rand`::
-  something
-      (* Given seed, return function generating a sequence of
-       * random numbers randMin <= v <= randMax
-       *)
+  `mkRandom seed` returns a function that generates a fresh random number
+  in the range `[randMin .. randMax]`.
 
 `[.kw]#val# norm : rand \-> real`::
   `norm rand` maps the random number in the range `[randMin .. randMax]`

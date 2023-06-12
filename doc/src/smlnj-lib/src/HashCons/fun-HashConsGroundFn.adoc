@@ -38,13 +38,13 @@ val mk : hash_key -> obj
 == Description
 
 `[.kw]#type# hash_key = T.hash_key`::
-  something
+  the ground type.
 
 `[.kw]#type# obj = hash_key HashCons.obj`::
-  something
+  the hash-consed ground type.
 
 `[.kw]#val# mk : hash_key \-> obj`::
-  something
+  map a ground type value to a hash-consed value.
 
 == Example
 
