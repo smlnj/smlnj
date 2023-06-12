@@ -2,11 +2,47 @@
 
 SrcPath Notes:
 
+0. Some terminology:
+
+   CDF = CM Description File, a text file that "defines" a CM library
+         or group.
+
+   FS = the host file system, which we can assume is either the Unix
+        file system or the Windows file system
+
+   files, directories: we distinguish logically between directories
+     and other files. The non-directory files are text or binary files:
+
+       * SML source files
+       * CM description files
+       * configuration files (pathconfig files, PIDMAP files, * BOOTFILES, etc.)
+           (plain text files, with various "formats")
+       * binfiles (produced by compilation and managed by CM)
+
+   file path = a string that gives the location of a file or directory in the FS
+     The concrete syntax or "format" of file paths can be:
+
+     	* native (the format of file paths in the host OS/FS)
+	* standard (a "neutral" format that is meant to be independent
+	    of the host OF/FS)
+
+      Futhermore, there is a notation for "anchored" paths that is outside the native
+      notation of the host OS/FS. Think of this as extending the native/standard formats
+      with "anchored paths" (anchors are assumed to occur only at the head of a path).
+
+      File paths have two functions in CM: (1) they provide the location of files, and (2)
+      they are used as the "name" of CM libraries and groups.
+
+   paths (abstract paths, or the abstract syntax of FS file paths)
+     There are three flavors of paths: absolute, relative, and anchored. 
+
+
+-------------------------------------------------------------------------------- 
 1. The design seems to be meant to accomodate possible changes in the underlying file system
    (e.g. maybe renaming and deleting files, directories, changing the current working
     directory) while maintaining "validity" of the internal CM representations (of files).
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------- 
 2. Lots of values, datastructure components are "suspended" or represented by thunks.
    Was this for "efficiency", or to try to insulate from changes occuring in the file system?
 
@@ -831,18 +867,37 @@ functions need to take a pathEnv argument and use it to "expand" an anchor head.
      CharCode    (cm/paths/dbm/charcode.sml)  -- special characters <-> escape codes in strings
      FileMap     (cm/paths/dbm/filemap.sml)  -- was srcpathmap.sml (SrcPathMap)
      FileSet     (cm/paths/dbm/fileset.sml)  -- was srcpathset.sml (SrcPathSet)
+     PathConfigProcessing (cm/paths/dbm/pathconfig.sml)  -- function processPathConfig
+     FileId      (cm/paths/dbm/fileid.sml)
 
-  The residual SrcPath structure only deals with CWD maintenance and pathconfig file
-  processing. These two functionalities could be made into separate structures.
+  The residual SrcPath structure only deals with CWD maintenance.
+  It should probably be renamed "Cwd".
   
   This notes file is now found at cm/paths/dbm/notes.txt (moved from the end of
-  srcpath.sml).
+  dbm-srcpath.sml in earlier phases, e.g. dbm-srcpath-8.sml).
 
 
 -------------------------------------------------------------------------------- 
 15. Some useful notation and path operations/relations
 
-Assumption: a path can designate either a directory or a (source) file (including CDFs)
+ASSUMPTION: A path can designate either a directory or a (SML source or CM description) file
+  (including CDFs themselves and also the parent directories of CDFs).
+
+ASSUMPTION: All relative paths are relative to the current working directory (CWD).
+  While processing a CDF, (a) the current working directory should be
+  set to the parent directory of the CDF, or (b) there could be a
+  notion of the "CM working directory", which could be set to be the
+  parent directory of the CDF file that is being "processed" -- call
+  this the CMWD. It does not seem logically necessary that the CWD and
+  the CMWD coincide.  When "processing" a CDF, the focus (the CMWD?)
+  may need to move to member (imported) CDFs.
+
+  We need to be aware of, and keep track of, the relationship between
+  a CDF (a text file), its file path, its internal path, and the "parent directory"
+  in which the CDF file is found. There seems to be another missing
+  notion -- the "name" of a CDF  (or rather the Library or Group) that
+  it defines.
+  
 
 * Path extension
 
@@ -902,34 +957,41 @@ prepath	[type]	path
 prefile* [type]	path
 pickle		picklePath
 unpickle	unpicklePath
-osstring_reanchored   pathReanchored (new type)
-osstring_relative     relativePath (new type)
+osstring_reanchored   Path.reanchorPath (new type)
+osstring_relative     Path.relativePath (new type)
+processSpecFile processPathConfig
 
 Removed:
 
-elab [ty]	.  -- removed
-null_pp		.  -- removed, only used once and replaced with its defn
-revalidateCwd*	.  -- removed, functionality merged into fun cwd
-absElab		.
-ord_key*	.  -- file (not needed)
-compare*	.  -- compare for files based on stableid (not needed)
-elab_file	.  -- no more elabs
-elab_dir	.  -- "
-augElab		.  -- "
-dirElab		.  -- "
-bogus_elab	.  -- "
-look		.  -- ANCHOR argument field
-stdspec [ty]    .  -- superceded by path and head
-dirPP		.  -- [renamed parentPath]
+elab [ty]	-- removed
+null_pp		-- removed, only used once and replaced with its defn
+revalidateCwd*	-- removed, functionality merged into fun cwd
+absElab		
+ord_key*	-- file (not needed)
+compare*	-- compare for files based on stableid (not needed)
+elab_file	-- no more elabs
+elab_dir	-- "
+augElab		-- "
+dirElab		-- "
+bogus_elab	-- "
+look		-- ANCHOR argument field
+dir [ty]	-- along with constructors ANCHOR, ABS, DIR
+fileInfo [ty]   -- replaced by type file
+stdspec [ty]    -- superceded by path and head
+dirPP		-- [renamed parentPath]
 encodeFile [encode] .
+pre0
 
 Added:
 
-.		dpathToFile -> pathToFile (create a partially defined file -- a "prefile")
+.		pathToFile (create a fully interned file)
+
 
 * Some of the former "elab" functions are replaced by "reanchor" functions.
+  But all the anchor functions are gone, except for reanchorPath
 
-* reanchor (as a type) is gone, the related "functionality" is in reanchorPath.
+* reanchor (as a type) is gone, the related "functionality" is
+  incorporated into the reanchorPath function
 
 * In some cases, an env parameter that provided access to the anchor -> path
   environment is removed, and instead the global path environment in PathEnv

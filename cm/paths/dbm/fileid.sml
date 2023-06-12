@@ -14,8 +14,8 @@ sig
   type id
 
   val compare : id * id -> order
-  val fileId : string -> id
-  val canonical : string -> string
+  val fileId : Path.path -> id
+  val canonical : P.fpath -> P.fpath
 
 end (* signature FILEID *)
 
@@ -27,7 +27,9 @@ local
     
   structure FS = OS.FileSys
   structure OSP = OS.Path
+
   structure P = Path    
+  structure SP = SrcPath  (* or, just Cwd? *)
 
 in
 
@@ -43,28 +45,20 @@ in
   (* To maximize our chances of recognizing the equivalence of path names to non-existing
    * files, we use FS.fullPath to expand the largest possible prefix of the path. *)
   (* fileId : P.fpath -> id *)
-  fun fileId (f: P.fpath) =
-      let fun expandPath f =
-	      let fun loop { dir, file } =
-		      OSP.concat (FS.fullPath dir, file)
-		      handle _ =>
-			let val { dir = dir', file = file' } = OSP.splitDirFile dir
-			 in loop { dir = dir', file = OSP.concat (file', file) }
-			end
-	       in (* An initial call to splitDirFile is ok because we already know
-		   * that the complete path does not refer to an existing file. *)
-		  loop (OSP.splitDirFile f)
-	      end
-
-       in PRESENT (FS.fileId f) handle _ => ABSENT (expandPath f)
+  fun fileId (path: P.path) =
+      let val fpath = P.pathToFpath (SP.fullPath path)
+       in PRESENT (FS.fileId fpath) handle _ => ABSENT fpath
       end
+
+  (* This "canoncial" function belongs somewhere else where string representations of 
+   * file paths are managed. Maybe a structure named "FilePaths"? *)
 
   (* canonical: P.fpath -> P.fpath *)
   fun canonical ("": P.fpath) = ""
     | canonical f =
       if (FS.access (f, []) handle _ => false)
       then let val f' = OSP.mkCanonical f
-	    in case FS.compare (FS.fileId f, FS.fileId f')
+	    in case FS.compare (FS.fileId f, FS.fileId f')  (* how can these be different? *)
 		 of EQUAL => f'
 		  | _ =>  f
 	   end

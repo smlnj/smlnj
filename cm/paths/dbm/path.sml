@@ -118,8 +118,9 @@ struct
       | relativePath _ = impossible ["relativePath"]
 
     (* mkAbsolute : path -> path -> path *)
-    (* ASSERT: path1 is absolute (typically/always? it will be CWD)
-     * returns path2 if it is not relative *)
+    (* if path1 is absolute and path2 is relative, the paths are "concatenated",
+     *   otherwise, path2 is returned unchanged.
+     * ASSERT: path1 is absolute (typically/always? it will be CWD) *)
     fun mkAbsolute ((head1 as (ABS _), arcs1): path) (path2: path) =
   	  (case path2
 	     of (REL n, arcs2) => (head1, arcs2 @ List.drop (arcs1, n))
@@ -151,7 +152,7 @@ struct
 
    (* *********************************************************************************** *)
    (* pickling and unpickling paths
-      These operations are now rather trivial.  Are they still needed?
+      These operations are now rather trivial. Are they still needed?
         QUESTIONS:
           What do we really need to pickle/unpickle?
 	  Do we need to pickle/unpickle relative to a file as the original version did?

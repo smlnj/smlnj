@@ -35,15 +35,15 @@ local
 
 (*  structure EM = ErrorMsg *)
 
-  structure OSP = OS.Path     (* Basis *)
   structure FS  = OS.FileSys  (* Basis *)
 
   structure P  = Path
-  structure FI = FileId     (* srcpath-lib.cm: ./fileid.sml *)
   structure SM = StringMap  (* ../util/sources.cm: cm/util/stringmap.sml *)
 
 (*  fun impossible (msgs: string list) = EM.impossible (concat ("SrcPath: " :: msgs)) *)
   fun impossible (msgs: string list) = raise Fail (concat ("SrcPath: " :: msgs))
+
+  (* non-fatal CM errors? *)
   fun error (msgs: string list) = (Say.say msgs; Say.say ["\n"])
 
 in
@@ -110,71 +110,16 @@ in
 
     (* *********************************************************************************** *)
     (* paths relative to CWD
-     * (Formerly related to osstring functions.) *)
+     * (Formerly handled through osstring functions?) *)
 
     (* cwdRelativePath [osstring']: path -> path *)
     (* try shortening a path to a CWD-relative one, if the path is absolute and extends CWD *)
     fun cwdRelativePath (path : path) : path = P.relativePath path (!cwd_path)
 
-
-    (* ******************************************************************************** *)
-    (* Processing a "spec file" (as an instream) "relative to a given base fpath". *)
-
-    (* processSpecFile seems to be used to read and process pathconfig files.
-     * It processes an instream line by line ("relative" to the baseFpath parameter),
-     * interpretting each line as a comment, a blank line, or a "command".
-     * The "commands" are:
-     *   "#" ... -- a comment line, ignored
-     *   !standard -- switch to "standard" treatment of fpaths (isnative becomes false)
-     *   !native -- switch to "native" treatment of fpaths (no parsing) (isnative becomes true)
-     *   anchor fpath  -- add a |-> parseFpath (fpath) binding to the global anchor environment
-     *     (relative to the directory part of baseFpath)
-     *   anchor -- delete anchor from the global anchor environment
-     *   -  -- reset the global anchor environment to empty (removing all bindings)
-     * This determines the expected content of pathconfig files. *)
-
-    (* processSpecFile : fpath -> TextIO.instream -> unit *)
-    fun processSpecFile (baseFpath: fpath) =
-	let val local_dir : path = parseFpath (OSP.dir (FS.fullPath baseFpath))
-
-	    fun set (anchor, pathOp) =
-		setRelative (anchor, pathOp, local_dir)
-
-	    (* mknative : bool -> string -> string *)
-	    fun mknative true path = path
-	      | mknative false fpath =
-		  let fun mkFpath (abs, arcs) =
-			  OSP.toString { vol = "", isAbs = abs, arcs = arcs }
-		   in case String.fields (fn c => c = #"/") fpath
-		        of "" :: arcs => mkFpath (true, arcs)
-		         | arcs => mkFpath (false, arcs)
-		  end
-
-	    (* processLines: TextIO.instream -> ? *)
-	    fun processLines (stream: TextIO.instream) =
-		(* loop processes each and every line of the instream *)
-		let fun loop isnative =
-			case TextIO.inputLine stream
-			  of NONE => ()
-			   | SOME line =>
-			       if String.sub (line, 0) = #"#" then loop isnative
-			       else case String.tokens Char.isSpace line
-				      of ["!standard"] => loop false
-				       | ["!native"] => loop true
-				       | [anchor, fpath] =>
-					   (set (anchor, SOME (parseFpath fpath));
-					    loop isnative)
-				       | ["-"] => (resetAnchors (); loop isnative)
-				       | [anchor] => (set (anchor, NONE); loop isnative)
-				       | [] => loop isnative
-				       | _ => (error [baseFpath, ": malformed line (ignored)"];
-					       loop isnative)
-		 in loop true
-		end
-
-	 in processLines
-	end (* fun processSpecFile *)
-
+    (* fullPath : path -> path *)
+    (* fullPath path : if path is relative, it is concatenated onto the CWD path;
+     *   otherwise (path is absolute or anchored), path is returned unchanged *)
+    fun fullPath (path : path) = P.mkAbsolute (!cwd_path, path)
 
 end (* top local *)
 end (* structure StrPath *)

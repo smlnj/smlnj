@@ -1,6 +1,8 @@
 (* cm/paths/dbm/srcpath.sig *)
 
-(* Revision 8 -- adding and reorganizing Path functions + ? *)
+(* Revision 9 -- breaking out separate structures PATH, FILE, AnchorEnv, PathConfigProcessing
+     All that is left in SRCPATH is CWD management functions.
+ *)
 
 signature SRCPATH =
 sig
@@ -22,11 +24,9 @@ sig
   (* maps an absolute path that extends CWD to a path relative to CWD, otherwise returns arg unchanged *)
   val cwdRelativePath : Path.path -> Path.path  (* replaces osstring' *)
 
-
-(* parsing pathconfig ("spec") files  *)
-
-  (* process a pathconfig specification file (the instream) in the context of the given fpath;
-   * does a sync afterwards! *)
-  val processSpecFile : Path.fpath -> TextIO.instream -> unit
+  (* fullPath path : if path is relative, it is concatenated onto the CWD path,
+   * producing an absolute path;
+   *   otherwise (path is absolute or anchored), path is returned unchanged *)
+  val fullPath : path -> path
 
 end (* signature SRCPATH *)
