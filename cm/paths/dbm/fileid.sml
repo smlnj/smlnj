@@ -51,7 +51,8 @@ in
       end
 
   (* This "canoncial" function belongs somewhere else where string representations of 
-   * file paths are managed. Maybe a structure named "FilePaths"? *)
+   * file paths are managed. Maybe a structure named "FilePaths"? Such a structure would
+   * provide a CM-specific interface to the generic functionality provided by OS.Path.*)
 
   (* canonical: P.fpath -> P.fpath *)
   fun canonical ("": P.fpath) = ""

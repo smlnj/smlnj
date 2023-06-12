@@ -12,7 +12,10 @@
  * Edited by: DBM
  *
  * Revision, phase 8:
- *   Adding some path interface functions (splitPath, addArc, addArcs) used in dbm-filename-policy.sml
+ *   Adding some path interface functions (splitPath, addArc, addArcs) used in
+ *   dbm-filename-policy.sml.  Gradually we are replacing functionality provided for
+ *   managing file paths in OS.Path with analagous functionality for Path.path.
+ *
  *   This phase prepares for splitting the core path functionality into a separate Path structure.
  *   The core file functionality might also be split off into a File structure that would include
  *   intern, sync, and clear (maintaining the set of interned files).
@@ -26,6 +29,18 @@
  *   processing pathconfig files (processSpecFile). The global anchor environment would not need
  *   to be packaged as an internal structure (i.e. PathEnv is not exported and could easily
  *   be eliminated).
+ *
+ * Revision 9:
+ *   Most of the functionality previously in SrcPath has been broken out into several other
+ *   structures: Path, File, AnchorEnv, PathConfigProcessing, (using FileId; used in the 
+ *   definitions of FileSet, FileMap).
+ *   
+ *   The structure name "SrcPath" has become obsolete. Since all that is left in SrcPath is
+ *   "cwd management", perhaps a better name would be "Cwd" or "CurrentDirectory".
+ * 
+ *   There should also be a common CMError module defining (for instance) fatal and non-fatal
+ *   errors detected in the CM machinery.  ErrorMsg.impossible should continue to be
+ *   restricted to errors that should be consider compiler/CM bugs, not user errors.
  *)
 
 structure SrcPath :> SRCPATH =

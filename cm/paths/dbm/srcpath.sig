@@ -4,7 +4,7 @@
      All that is left in SRCPATH is CWD management functions.
  *)
 
-signature SRCPATH =
+signature SRCPATH =  (* or CURRENT_DIRECTORY *)
 sig
 
 (* CWD management *)
