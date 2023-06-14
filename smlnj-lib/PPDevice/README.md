@@ -34,7 +34,7 @@ do not support any styling of the output.
 Tokens are also a device-specific abstraction.  They provide support for
 rendering glyphs, such as UTF-8 encoded characters) and small images.
 
-=## Application-Specific Pretty Printing
+## Application-Specific Pretty Printing
 
 Using styles and tokens in a pretty-printer is application specific (e.g., one
 might want to define a style for comments or use a token to represent the
