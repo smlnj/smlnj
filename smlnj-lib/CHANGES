@@ -5,6 +5,13 @@ correspond to SML/NJ releases.
 SML/NJ 2023.1
 -------------------
 
+[2023-06-14]
+	Reworked the code for determining the maximum hash-table size (used
+	in the `HashSetFn` and `HashTableRep` modules) so that it does not
+	depend on `Int.int` and `Word.word` being the same size (an issue
+	for MLton).  Also split that code out into the internal `MaxHashTableSize`
+	module.  These changes fix legacy issue #279  (https://github.com/smlnj/legacy/issues/279).
+
 [2023-06-07]
 	Created the PPDevice Library, which holds a common implementation of
 	pretty-printing devices that can be used by both the PP and PrettyPrint
@@ -22,7 +29,7 @@ SML/NJ 2023.1
         This change fixes legacy issue #256 (https://github.com/smlnj/legacy/issues/256).
 
 [2022-12-19]
-        Added the `NativeInt` and `NativeWord` structure aliases to provice
+        Added the `NativeInt` and `NativeWord` structure aliases to provide
         a portable way to refer to the native numeric types in signatures.
         While these are not necessary for the development branch (which only
         supports 64-bit platforms), we include them to minimize differences

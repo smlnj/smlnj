@@ -197,6 +197,7 @@ list-set-fn.sml
 list-xprod-sig.sml
 list-xprod.sml
 listsort-sig.sml
+max-hash-table-size.sml         (* internal *)
 mono-array-fn.sml
 mono-array-sort-sig.sml
 mono-dynamic-array-sig.sml
