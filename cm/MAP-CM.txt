@@ -199,7 +199,9 @@ Imports from outside this library are indicated by an asterisk (e.g. LambdaVar*)
 [We assume import of basis.cm, so Basis modules are not mentioned.]
 
 
-CM/
+cm/
+
+CDF: cm/cm-lib.cm
 
 (* the CM description file parser *)
 parse/
@@ -360,6 +362,7 @@ depend/
   ggraph.sml
     < GroupGraph
     > StringSet
+      SymbolMap
       SrcPath
       SrcPathMap
       Version
@@ -422,11 +425,11 @@ depend/
       Symbol
       ErrorMsg
 
-  to-portable.sml
+  to-portable.sml   -- UNFINISHED, depends on undefined PortableGraph
     < ToPortable
     > GroupGraph
       DependencyGraph
-      PortableGraph
+      PortableGraph  -- not defined!
       GeneralParams
       SrcPath
       SrcPathMap
@@ -437,6 +440,14 @@ depend/
       SymbolMap
       ---------
       Symbol
+
+  from-portable.sml  -- UNFINISHED, depends on undefined PortableGraph
+    < FromPortable
+    > PortableGraph  -- not defined!
+      GroupGraph
+      DependencyGraph
+      ---------------
+      
 
 (* handling SML source code *)
 smlfile/

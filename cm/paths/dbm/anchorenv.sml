@@ -70,15 +70,17 @@ in
 
   type pathEnv = P.path SM.map
 
+  type anchorPathAlist = (P.anchor * P.path) list
+
   val emptyPathEnv : pathEnv = SM.empty
 
-  (* bindAnchors : dpathEnv -> (anchor * dpath) list -> dpathEnv *)
+  (* bindAnchors : pathEnv -> anchorPathAlist -> pathEnv *)
   (* produces a new env record with only the "bound" field altered.
    * Anchors are bound to corresponding dpaths, with these bindings being
    * added to the existing "bound" mapping.
    * exported
    * external: main/general-params.sml, elsewhere? *)
-  fun bindAnchors (pathenv: pathEnv) (alist: (P.anchor * P.path) list) : pathEnv =
+  fun bindAnchors (pathenv: pathEnv) (alist: anchorPathAlist) : pathEnv =
       let fun folder ((anchor, dpath), env) = SM.insert (env, anchor, dpath)
        in foldl folder pathenv alist
       end

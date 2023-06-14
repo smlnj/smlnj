@@ -1,0 +1,147 @@
+cm/dbm/outline.txt
+
+This is a combination of an "outline" of the CM files, and also random notes.
+
+[See cm/Overview]
+
+Outline of CM (and its functionality)
+
+paths 
+
+  internal representation of file paths (Path.path),
+    parsing file path strings (in 2? formats),
+    unparsing paths to file paths
+    path operations
+  files
+    locations (path)
+    file_ids (from FS)
+    stable ids
+  anchor environments
+    global and "local" or "dynamic"
+    binding anchors,
+    lookup
+    expansion of anchors in anchored paths
+  pathconfig file processing
+    mainly produces global anchor bindings
+
+parse
+
+  parse and "interpret" CDFs
+
+
+depend
+
+  determine and represent module dependencies
+
+  BNODES for BinInfo.info  (binary files)
+  SNODE for SmlInfo.info   (source files)
+  ["PNODE" mentioned in Overview does not exist.]
+
+  far nodes (farsbnode, farbnode) ["external" nodes in other groups/libraries]
+
+  impexps
+
+  complications caused by open declarations in SML source?
+
+  "PortableGraph" is not defined. But it is referenced in to-portable.sml and
+  from-portable.sml, which are both therefore incomplete and not used or useable.
+
+  da-env.sml [structure DAEnv]
+    The value type decl is extraneous (replace value with env in the declaration
+    of datatype env.
+    All we need is env. Thus probably drop the value type in DAEnv.
+    Not sure whether DAEnv.value is ever used.
+
+  se2dae.sml
+    cvtMemo does not need to take a thunk argument. Thus the function is probably
+    misnamed.
+
+    Dependence of DAEnv on BrowseStatEnv (compiler/ElabData/statenv/browse.sml)
+    may introduce some interesting issues later. Ast for modules is a hack that
+    needs to be redone, which will affect browse.sml, and may have consequences
+    somewhere in CM.
+    
+
+semant
+
+  (mainly?) semantic actions for the CDF parser
+  driver for dependency analysis, compilation
+
+  version.sml -- supports having multiple different versions of binfiles
+    But do we ever use this?  (nextMajor is called just once, in semant/members.sml)
+    Version seems to be designed to support multiple "versions" of binfiles
+    coexisting. We almost certainly do not need (or want) this.
+    There are already a number of places where SMLNJVersion.version is referred
+    to, and this versioning should suffice.
+
+  iinfo.sml
+    Why is the statenv field a thunk?
+    A field like this should only be thunkified if computing the actual static
+    environment is optional, meaning that its construction may be avoided in some cases
+    and its "forcing" or construction will have significant cost. If you have
+    already computed a value, e.g. a static environment, there is no point in
+    thunkifying it -- you have already paid the computational cost to compute the
+    value.
+
+    The problem is that it can be quite hard to determine, with several layers
+    of complex code (e.g. stabilization, unpickleutil, etc.), whether or where the
+    thunkified value is actually computed, and whether its computation can be avoided.
+
+    A second issue is whether the forcing of a thunk may involve state that has
+    changed "underneath" since the thunk itself was constructed. What kind of
+    state changes might alter the outcome of forcing the thunk?  Dependence of a
+    thunk on some underlying state that might change over time is again hard to
+    analyze. And there is the design choice of whether to cope with such change
+    by delaying computation until after any relevant state changes have occurred,
+    or to detect changes that affect a computation "after the fact" and thus 
+    "invalidate" computations (and their values) that have already been completed.
+
+
+smlfile
+
+  representation of static information about SML source files (module declarations)
+
+  SmlInfo (smlinfo.sml)
+
+
+stable
+
+  combining compiled libraries (& their subgroups) into stable, amalgamated
+  binary files
+
+  BinInfo.info - info pertaining ot members of stabilized libraries
+  BinInfo.info is to stabilized binary code (binfiles) as SmlInfo.info is to
+    SML source code
+
+
+compile
+
+  "traversals" (compile/generic.sml)
+     recompilation
+     execution (link)
+
+  compilation type (compile/compile-type.sml)
+
+  instantiations:
+     compile/recomp.sml  -- recompilation traversal
+     compile/exec.sml	 -- execution/link traversal
+
+  persistant state
+     recomp  (uses recomp state)
+     full (extends (inherits from) recomp) used when executing as well as compiling
+
+
+bootstrap
+   
+  special case of compile, where source code is compiled to produce bin files
+  but not executed. (execution will be performed under control of the runtime boot loader)
+
+util
+
+tools
+
+--------------------------------------------------------------------------------
+
+Privileges
+  these have never been "enforced", therefore expendable
+  privileges are not part of the needed functionality of CM

@@ -12,13 +12,15 @@ sig
   (* accessing and destructively updating the global anchor-path environment *)
   val get_anchor : Path.anchor -> Path.path option
   val set_anchor : Path.anchor * Path.path option -> unit
-  val reset_anchors : unit -> unit
+  val reset_anchors : unit -> unit  (* reset the global anchor env to empty *)
 
   (* pathEnv : "functional" anchor environments mapping anchors to paths *)
   type pathEnv
 
-  (* non-destructive bindings for anchors (for "scoped" anchor bindings) *)
-  val bindAnchors: pathEnv -> (Path.anchor * Path.path) list -> pathEnv
+  type anchorPathAlist = (P.anchor * P.path) list
+
+  (* non-destructive bindings for anchors (for "scoped" or "local" anchor bindings) *)
+  val bindAnchors: pathEnv -> anchorPathAlist -> pathEnv
 
   (* look for anchor first in pathEnv, then in the global anchor env if not found *)
   val lookAnchor : pathEnv -> Path.anchor -> Path.path option
