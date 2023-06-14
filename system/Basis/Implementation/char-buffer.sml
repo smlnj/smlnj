@@ -1,6 +1,6 @@
 (* char-buffer.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -165,7 +165,8 @@ structure CharBuffer :> MONO_BUFFER
 
     fun addSlice (BUF{content, len as ref n, ...}, slice) = let
 	  val (src, si, srcLen) = CharVectorSlice.base slice
-	  fun cpy (dst, di, si) = if (si < srcLen)
+          val stop = si ++ srcLen
+	  fun cpy (dst, di, si) = if (si < stop)
 		then (A.update(dst, di, V.sub(src, si)); cpy (dst, di ++ 1, si ++ 1))
 		else ()
 	  in
@@ -173,7 +174,7 @@ structure CharBuffer :> MONO_BUFFER
 	      then raise Subscript
 	      else (
 		ensureCapacity(content, n, srcLen);
-		cpy (!content, n, 0);
+		cpy (!content, n, si);
 		len := n ++ srcLen)
 	  end
 
@@ -193,7 +194,8 @@ structure CharBuffer :> MONO_BUFFER
 
     fun addArrSlice (BUF{content, len as ref n, ...}, slice) = let
 	  val (src, si, srcLen) = CharArraySlice.base slice
-	  fun cpy (dst, di, si) = if (si < srcLen)
+          val stop = si ++ srcLen
+	  fun cpy (dst, di, si) = if (si < stop)
 		then (A.update(dst, di, A.sub(src, si)); cpy (dst, di ++ 1, si ++ 1))
 		else ()
 	  in
@@ -201,7 +203,7 @@ structure CharBuffer :> MONO_BUFFER
 	      then raise Subscript
 	      else (
 		ensureCapacity(content, n, srcLen);
-		cpy (!content, n, 0);
+		cpy (!content, n, si);
 		len := n ++ srcLen)
 	  end
 

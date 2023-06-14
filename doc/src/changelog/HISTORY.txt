@@ -108,6 +108,15 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 == Recent updates
 
 //--------------------------------------------------------------------
+[2023/06/14]::
++
+Port fix for legacy bug
+https://github.com/smlnj/legacy/issues/278[#278 (`CharBuffer.addSlice`
+does not properly handle starting offsets)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2022/12/19]::
 +
 Port fixes for Slice `all` combinators from legacy branch (see
