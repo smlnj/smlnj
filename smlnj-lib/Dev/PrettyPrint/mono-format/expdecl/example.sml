@@ -6,6 +6,12 @@
  * This example demonstrates that one can use a single pretty-printer
  * specification to output to multiple devices (plain text, ansii
  * terminal, and html) from the same code.
+ *
+ * To test in the REPL, try commands like
+ *
+ *      ChoosePPDev.render (ChoosePPDev.Text, TextIO.stdOut, 20) Example.exp1;
+ *      ChoosePPDev.render (ChoosePPDev.Term, TextIO.stdOut, 20) Example.exp1;
+ *      ChoosePPDev.render (ChoosePPDev.HTML, TextIO.stdOut, 20) Example.exp3;
  *)
 
 structure AST =
