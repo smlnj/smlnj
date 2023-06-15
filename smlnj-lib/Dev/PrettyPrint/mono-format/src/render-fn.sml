@@ -48,6 +48,8 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
 
     val maxInt = (case Int.maxInt of SOME n => n | NONE => 1000000)
 
+    fun withStyle (dev, sty, f) = (Dev.pushStyle (dev, sty); f(); Dev.popStyle dev)
+
     (* Block Left Margin (blm: int)
      * The blm is the "left margin" of a block assigned to it by the renderer.
      * No non-blank character in the block should be printed to the left of this
@@ -122,10 +124,9 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                       (* end case *))
                   | F.STYLE(sty, fmt) => (case (styleMap sty)
                          of NONE => render0 (fmt, outerBlm, cc, newlinep)
-                          | SOME sty' => (
-                              Dev.pushStyle (dev, sty');
-                              render0 (fmt, outerBlm, cc, newlinep) before
-                              Dev.popStyle dev)
+                          | SOME sty' => withStyle (
+                              dev, sty',
+                              fn () => render0 (fmt, outerBlm, cc, newlinep))
                         (* end case *))
                   | F.BLOCK{content, ...} => renderBLOCK (content, cc, newlinep)
                     (* establishes a new local blm = cc; outerBlm not relevant *)
@@ -270,10 +271,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                           (* end case *))
                       | F.STYLE(sty, fmt) => (case (styleMap sty)
                              of NONE => flatRender0 fmt
-                              | SOME sty' => (
-                                  Dev.pushStyle (dev, sty');
-                                  flatRender0 fmt before
-                                  Dev.popStyle dev)
+                              | SOME sty' => withStyle (dev, sty', fn () => flatRender0 fmt)
                             (* end case *))
                       | F.BLOCK{content, ...} => flatRenderBLOCK content
                       | F.ABLOCK{content, ...} => flatRenderABLOCK content
