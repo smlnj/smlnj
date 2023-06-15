@@ -37,6 +37,8 @@
 structure Format =
 struct
 
+(* IMPORTS: Style *)
+
 (* datatype alignment: alignment modes for "aligned" blocks *)
 datatype alignment  (* the alignment property of "aligned" blocks *)
   = H  (* Horizontal alignment, with implicit single space (Space 1) breaks between format components *)
@@ -74,13 +76,13 @@ datatype format =
       (* soft indent the format n spaces, sinilar to Hughes's nest *)
   | FLAT of format
       (* render (and measure) the format as flat *)
+  | STYLE of Style.style * format
 
   (* conditional choice of formats *)
   | ALT of format * format
       (* to render ALT (format1, format2): render format1 if it fits, otherwise render format2.
-       * Note that the two formats not constrained to have same content! But normally they should,
+       * Note that the two formats are not constrained to have same content! But normally they should,
        * or at least content fmt2 should be an abbreviated or approximate version of content fmt1. *)
-  | STYLE of Style.style * format
 
 and element  (* components of special blocks *)
   = BRK of break

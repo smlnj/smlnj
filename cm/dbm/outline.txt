@@ -50,7 +50,7 @@ depend
     The value type decl is extraneous (replace value with env in the declaration
     of datatype env.
     All we need is env. Thus probably drop the value type in DAEnv.
-    Not sure whether DAEnv.value is ever used.
+    Not sure whether DAEnv.value is ever used; it is equivalent to DAEnv.env.
 
   se2dae.sml
     cvtMemo does not need to take a thunk argument. Thus the function is probably

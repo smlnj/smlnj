@@ -10,6 +10,8 @@
 structure GroupGraph =
 struct
 
+(* IMPORTS: DependencyGraph, SymbolMap, File, FileMap, AnchorEnv *)
+
   datatype libkind
     = STABLE of unit -> unit		(* pickle dropper *)
     | DEVELOPED of subgroup list
@@ -26,15 +28,18 @@ struct
 		 sublibs: subgroup list }
     | ERRORGROUP
 
-  (* File.file or Path.path? *)
+  (* DBM: (1) File.file or Path.path?
+   * (2) 2nd component of subgroup unnecesarily thunked? *)
   withtype subgroup = File.file * (unit -> group) * AnchorEnv.anchorPathAlist
 
-  (* Note: "sublibs" consists of items where the File.file component
+  (* Note:
+   * [Blume] "sublibs" consists of items where the File.file component
    * is equivalent -- but not necessarily identical -- to the "grouppath"
    * component of (the suspended) group.  The group might have
    * been known before -- in which case "grouppath" would carry the
    * path that was used back *then* to refer to the group.  But for
    * the purpose of stabilization we must know the abstract path
-   * that was used *this* time. *)
+   * that was used *this* time.
+   * [DBM] ??? *)
 
 end (* structure GroupGraph *)
