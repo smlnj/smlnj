@@ -59,10 +59,10 @@ structure Measure : sig
         (* end case *))
 
     fun measureElement (F.BRK break) = (case break
-           of F.Newline => 1
-            | (F.Break n | F.Space n) => n
+           of F.Hard => 1
+            | (F.Soft n | F.Space n) => n
                   (* measured as n spaces, since flat rendered as n spaces *)
-            | F.NullBreak => 0
+            | F.Null => 0
           (* end case *))
       | measureElement (F.FMT format) = measure format
 

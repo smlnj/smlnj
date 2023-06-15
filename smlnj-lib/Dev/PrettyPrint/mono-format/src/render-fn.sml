@@ -48,7 +48,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
 
     val maxInt = (case Int.maxInt of SOME n => n | NONE => 1000000)
 
-    fun withStyle (dev, sty, f) = (Dev.pushStyle (dev, sty); f(); Dev.popStyle dev)
+    fun withStyle (dev, sty, f) = (Dev.pushStyle (dev, sty); f() before Dev.popStyle dev)
 
     (* Block Left Margin (blm: int)
      * The blm is the "left margin" of a block assigned to it by the renderer.
@@ -165,10 +165,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                             end
                         | F.BRK break => ( (* rest should start with a FMT! *)
                             case break
-                             of F.NullBreak => re (rest, cc, false)
-                              | F.Newline => (lineBreak blm; re (rest, blm, true))
+                             of F.Null => re (rest, cc, false)
+                              | F.Hard => (lineBreak blm; re (rest, blm, true))
                               | F.Space n => (sp n; re (rest, cc + n, newlinep))
-                              | F.Break n => (
+                              | F.Soft n => (
                                   (* ASSERT: rest = FMT _ :: _; a BRK should be
                                    * followed by a FMT
                                    *)
@@ -228,7 +228,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                              of F.C => (fn (cc, m) => (cc, false))
                               | F.H => (fn (cc, m) => (sp 1; (cc+1, false)))
                               | F.V => (fn (cc, m) => (lineBreak blm; (blm, true)))
-                              | F.P =>  (* virtual break is `Break 1` *)
+                              | F.P =>  (* virtual break is `Soft 1` *)
                                   (fn (cc, m) => if m <= (lw - cc) - 1
                                       then (sp 1; (cc+1, false))
                                       else (lineBreak blm; (blm, true)))
@@ -253,9 +253,9 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                   renderFormats (formats, cc, newlinep)
                 end (* fun renderABLOCK *)
         (* Render as though on an unbounded line (lw = "infinity"), thus "flat" (i.e.,
-         * no line space pressure).  _No_ newlines are triggered, not even `Newline`
+         * no line space pressure).  _No_ newlines are triggered, not even `Hard`
          * breaks and `INDENT` formats, which are rendered as single spaces, like
-         * `Break` breaks. `flatRender` is called once when rendering a FLAT format
+         * `Soft` breaks. `flatRender` is called once when rendering a FLAT format
          * when the format fits.
          *)
         and flatRender (format : F.format) = let
@@ -286,10 +286,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                         | rend (element::rest) = (case element
                              of F.FMT format => (flatRender0 format; rend rest)
                               | F.BRK break => (case break
-                                   of F.Newline => (sp 1; rend rest)
-                                    | F.Break n => (sp n; rend rest)
+                                   of F.Hard => (sp 1; rend rest)
+                                    | F.Soft n => (sp n; rend rest)
                                     | F.Space n => (sp n; rend rest)
-                                    | F.NullBreak => rend rest
+                                    | F.Null => rend rest
                                   (* end case *))
                             (* end case *))
                       in
@@ -309,7 +309,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                 end (* fun flatRender *)
         in
           (* the initial "context" of a render is a vitrual newline + 0 indentation *)
-          ignore (render0 (PrettyPrint.block [F.FMT format, F.BRK F.Newline], 0, 0, true))
+          ignore (render0 (PrettyPrint.block [F.FMT format, F.BRK F.Hard], 0, 0, true))
         end (* fun render *)
 
 (** TODO
@@ -344,10 +344,10 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                             end
                         | BRK break => ( (* rest should start with a FMT! *)
                             case break
-                             of NullBreak => re (rest, cc, false)
-                              | Newline => (lineBreak blm; re (rest, blm, true))
+                             of Null => re (rest, cc, false)
+                              | Hard => (lineBreak blm; re (rest, blm, true))
                               | Space n => re (rest, cc + n, nlp)
-                              | Break n => (
+                              | Soft n => (
                                   (* ASSERT: rest = FMT _ :: _; a BRK should be
                                    * followed by a FMT
                                    *)
@@ -379,7 +379,7 @@ functor RenderFn (Dev : PP_DEVICE) :> sig
                              of C => (fn (cc, m) => (cc, false))
                               | H => (fn (cc, m) => (cc+1, false))
                               | V => (fn (cc, m) => (lineBreak blm; (blm, true)))
-                              | P =>  (* virtual break is `Break 1` *)
+                              | P =>  (* virtual break is `Soft 1` *)
                                   (fn (cc, m) => if m <= (lw - cc) - 1
                                       then (cc+1, false)
                                       else (lineBreak blm; (blm, true)))
