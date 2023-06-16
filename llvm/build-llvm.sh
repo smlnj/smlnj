@@ -15,11 +15,15 @@
 #       --debug                 -- build a debug release of LLVM (WARNING: debug releases take
 #                                  much longer to build and are signficantly slower than the
 #                                  default release builds)
+#       --docs                  -- build LLVM API documentation
+#       --config                -- only configure the build
 #
 
 BUILD_TYPE=Release
 USE_GOLD_LD=no
 NPROCS=2
+BUILD_DOCS=no
+CONFIG_ONLY=no
 
 # the install location should be specified as an environment variable RUNTIMEDIR
 #
@@ -72,6 +76,12 @@ while [ "$#" != "0" ] ; do
     --debug)
       BUILD_TYPE=Debug
       ;;
+    --docs)
+      BUILD_DOCS=yes
+      ;;
+    --config)
+      CONFIG_ONLY=yes
+      ;;
     *)
       echo "build-llvm.sh: invalid option '$arg'"
       exit 1
@@ -104,6 +114,10 @@ if [ x"$USE_GOLD_LD" = xyes ] ; then
   CMAKE_DEFS="$CMAKE_DEFS -DLLVM_USE_LINKER=gold"
 fi
 
+if [ x"$BUILD_DOCS" = xyes ] ; then
+  CMAKE_DEFS="$CMAKE_DEFS -DLLVM_BUILD_DOCS=ON -DLLVM_INCLUDE_DOCS=ON -DLLVM_ENABLE_DOXYGEN=ON"
+fi
+
 # remove the build directory if it exists
 #
 if [ -d build ] ; then
@@ -119,6 +133,8 @@ echo "build-llvm.sh: configuring build"
 echo "  cmake --preset=$PRESET $CMAKE_DEFS ../src"
 cmake --preset=$PRESET $CMAKE_DEFS ../src || exit 1
 
-echo "build-llvm.sh: building on $NPROCS cores"
-echo "  make -j $NPROCS install"
-time make -j $NPROCS install
+if [ x"$CONFIG_ONLY" = xno ] ; then
+  echo "build-llvm.sh: building on $NPROCS cores"
+  echo "  make -j $NPROCS install"
+  time make -j $NPROCS install
+fi
