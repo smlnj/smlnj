@@ -340,10 +340,12 @@ else
   if [ x"$INSTALL_DEV" = xyes ] ; then
     vsay $cmd: Building LLVM for all targets
     cd "$LLVMDIR"
+    dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
     vsay $cmd: Building LLVM
     cd "$LLVMDIR"
+    dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   fi
   cd "$RUNTIMEDIR/objs"
