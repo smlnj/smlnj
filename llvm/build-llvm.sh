@@ -30,7 +30,7 @@ CONFIG_ONLY=no
 if [ x"$SMLNJ_ROOT" != x ] ; then
   INSTALL_PREFIX="$SMLNJ_ROOT/runtime"
 else
-  INSTALL_PREFIX=..
+  INSTALL_PREFIX=../runtime
 fi
 
 # system specific defaults

@@ -56,6 +56,8 @@ class AArch64CodeObject : public CodeObject {
     ) : CodeObject(target, std::move(objFile))
     { }
 
+    ~AArch64CodeObject () { }
+
   protected:
     bool _includeDataSect (llvm::object::SectionRef &sect);
     void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code);
@@ -234,6 +236,8 @@ class AMD64CodeObject : public CodeObject {
     ) : CodeObject(target, std::move(objFile))
     { }
 
+    ~AMD64CodeObject () { }
+
   protected:
     bool _includeDataSect (llvm::object::SectionRef &sect);
     void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code);
@@ -361,9 +365,9 @@ void CodeObject::dump (bool bits)
 	auto addr = sect.getAddress();
 	auto sz = sect.getSize();
 	if (name) {
-	    llvm::dbgs() << "  " << *name;
+	    llvm::dbgs() << sect.getIndex() << ":  <" << *name << ">";
 	} else {
-	    llvm::dbgs() << "  <section>";
+	    llvm::dbgs() << sect.getIndex() << ":  <section>";
 	}
 	if (sect.isText()) {
 	    if (! foundTextSect) {

@@ -13,6 +13,7 @@
             "binaryDir" : "${sourceParentDir}/build",
             "cacheVariables": {
 		"CMAKE_INSTALL_PREFIX" : "${sourceParentDir}",
+                "CMAKE_OSX_DEPLOYMENT_TARGET" : "10.14",
 		"LLVM_ENABLE_LIBXML2" : "OFF",
 		"LLVM_ENABLE_OCAMLDOC" : "OFF",
 		"LLVM_INCLUDE_BENCHMARKS" : "OFF",

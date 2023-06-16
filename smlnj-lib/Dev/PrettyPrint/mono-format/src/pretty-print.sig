@@ -41,13 +41,13 @@ signature PRETTY_PRINT =
      * unconditional line breaks
      *)
     datatype break
-      = Newline         (* hard line break *)
-      | Break of int    (* soft line break; rendered to n spaces when not
+      = Hard            (* hard line break *)
+      | Soft of int     (* soft line break; rendered to n spaces when not
                          * triggered; n >= 0
                          *)
-      | Space of int    (* non-breakable spaces; n >= 0; Space 0 == NullBreak *)
-      | NullBreak       (* A default break that does nothing, i.e., neither breaks
-                         * a line nor inserts spaces. `NullBreak` is essentially
+      | Space of int    (* non-breakable spaces; n >= 0; Space 0 == Null *)
+      | Null            (* A default break that does nothing, i.e., neither breaks
+                         * a line nor inserts spaces. `Null` is essentially
                          * equivalent to Space 0, but included for logical "completeness",
 			 * and also eliminates the need for a break option in some
                          * places (alignmentToBreak).
@@ -87,7 +87,7 @@ signature PRETTY_PRINT =
     val pBlock : format list -> format
     val cBlock : format list -> format
 
-  (* wrapping or enclosing formatsxw *)
+  (* wrapping or enclosing formats *)
 
     val enclose : {left: format, right: format} -> format -> format
         (* concatenates front and back to the front, respecively back, of the format *)
@@ -109,12 +109,18 @@ signature PRETTY_PRINT =
 
   (* formating of lists of values of arbitrary type *)
 
+    (* `sequenceWithMap {align=algn, sep=sep, fmt=fmt} xs` is equivalent to
+     * `sequence {align=algn, sep=sep} (map fmt xs)`
+     *)
     val sequenceWithMap : {
             align : alignment,
             sep : format,
             fmt : 'a -> format
           } -> 'a list -> format
 
+    (* `closedSequenceWithMap {align=algn, left=l, sep=sep, right=r, fmt=fmt} xs`
+     * is equivalent to `enclose {left=l, right=r} (sequence {align=algn, sep=sep} (map fmt xs))`
+     *)
     val closedSequenceWithMap : {
             align : alignment,
             left : format,
@@ -122,6 +128,25 @@ signature PRETTY_PRINT =
             right : format,
             fmt : 'a -> format
           } -> 'a list -> format
+
+  (** vertical lists with labels **)
+
+    (* produces a vertical list where each line has a label prepended.  The string
+     * `first` is used as the label for the first line and `rest` is used as the
+     * label for subsequent lines.  If the labels have unequal sizes, then the shorter
+     * label is padded on the left so that the labels right edge is aligned.
+     *)
+    val vLabeledList : {first : string, rest : string} -> format list -> format
+
+    (* like `vLabeledList` except that if the labels have unequal sizes, then the shorter
+     * label is padded on the right so that the labels are aligned on the left.
+     *)
+    val vLabeledListLAlign : {first : string, rest : string} -> format list -> format
+
+    (* like `vLabeledList` except that if the labels have unequal sizes, then the shorter
+     * label is padded on the left so that the labels are aligned on the right.
+     *)
+    val vLabeledListRAlign : {first : string, rest : string} -> format list -> format
 
   (* indenting formats *)
 

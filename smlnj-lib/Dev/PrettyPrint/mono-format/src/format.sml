@@ -25,12 +25,12 @@ structure Format =
       | C  (* Compact alignment, with implicit NullBreak between format components, hence also horizontal *)
 
     datatype break
-      = Newline         (* hard line break *)
-      | Break of int    (* soft line break; rendered to n spaces when not
+      = Hard           (* hard line break *)
+      | Soft of int    (* soft line break; rendered to n spaces when not
                          * triggered; n >= 0
                          *)
       | Space of int    (* non-breakable spaces; n >= 0; Space 0 == NullBreak *)
-      | NullBreak       (* A default break that does nothing, i.e., neither breaks
+      | Null            (* A default break that does nothing, i.e., neither breaks
                          * a line nor inserts spaces. `NullBreak` is essentially
                          * equivalent to Space 0, but included for logical "completeness",
 			 * and also eliminates the need for a break option in some

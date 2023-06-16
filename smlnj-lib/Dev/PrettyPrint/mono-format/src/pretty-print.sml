@@ -21,18 +21,20 @@ structure PrettyPrint : PRETTY_PRINT =
     type formats = format list
 
     (* eliminate EMPTY format elements *)
-    fun reduceFormats (formats : formats) : formats =
-        let fun notEmpty EMPTY = false
-              | notEmpty _ = true
-         in List.filter notEmpty formats
-        end
+    fun reduceFormats (formats : formats) : formats = let
+          fun notEmpty EMPTY = false
+            | notEmpty _ = true
+          in
+            List.filter notEmpty formats
+          end
 
     (* eliminate EMPTY format elements *)
-    fun reduceElements (elements : elements) : elements =
-        let fun notEmpty (FMT EMPTY) = false
-              | notEmpty _ = true
-         in List.filter notEmpty elements
-        end
+    fun reduceElements (elements : elements) : elements = let
+          fun notEmpty (FMT EMPTY) = false
+            | notEmpty _ = true
+          in
+            List.filter notEmpty elements
+          end
 
     fun block (elements : elements) : format = (
         case reduceElements elements
@@ -103,9 +105,9 @@ structure PrettyPrint : PRETTY_PRINT =
      * The virtual break associated with each alignment.
      * This is a utility function used in functions sequence and sequenceWithMap *)
     fun alignmentToBreak H = Space 1
-      | alignmentToBreak V = Newline
-      | alignmentToBreak P = Break 1
-      | alignmentToBreak C = NullBreak
+      | alignmentToBreak V = Hard
+      | alignmentToBreak P = Soft 1
+      | alignmentToBreak C = Null
 
     (* sequence : alignement -> format -> format list -> format
      *  The second argument (sep: format) is normally a symbol (TEXT) such as comma or semicolon *)
@@ -171,6 +173,44 @@ structure PrettyPrint : PRETTY_PRINT =
             enclose {left=left, right=right}
               (sequenceWithMap {align=align, sep=sep, fmt=fmt} xs)
 
+    (*** labeled lists *)
+
+    fun fmtLabeledList (_, _, []) = empty
+      | fmtLabeledList (first, rest, x::xs) =
+          vBlock (hBlock [first, x] :: map (fn x => hBlock [rest, x]) xs)
+
+    fun vLabeledList {first : string, rest : string} = let
+          val first = text first
+          val rest = text rest
+          in
+            fn xs => fmtLabeledList (first, rest, xs)
+          end
+
+    fun vLabeledListLAlign {first : string, rest : string} = let
+          val n1 = size first and n2 = size rest
+          val lab1 = text first and lab2 = text rest
+          fun padRight (n, txt) = block[FMT txt, BRK(Space n)]
+          val (first, rest) = (case Int.compare(n1, n2)
+                 of LESS => (padRight(n2 - n1, lab1), lab2)
+                  | EQUAL => (lab1, lab2)
+                  | GREATER => (lab1, padRight (n1 - n2, lab2))
+                (* end case *))
+          in
+            fn xs => fmtLabeledList (first, rest, xs)
+          end
+
+    fun vLabeledListRAlign {first : string, rest : string} = let
+          val n1 = size first and n2 = size rest
+          val lab1 = text first and lab2 = text rest
+          fun padLeft (n, txt) = block[BRK(Space n), FMT txt]
+          val (first, rest) = (case Int.compare(n1, n2)
+                 of LESS => (padLeft(n2 - n1, lab1), lab2)
+                  | EQUAL => (lab1, lab2)
+                  | GREATER => (lab1, padLeft (n1 - n2, lab2))
+                (* end case *))
+          in
+            fn xs => fmtLabeledList (first, rest, xs)
+          end
 
     (*** "indenting" formats ***)
 

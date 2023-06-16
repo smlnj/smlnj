@@ -2,9 +2,12 @@
 #
 # COPYRIGHT (c) 2021 The SML/NJ Fellowship
 #
-# Makefile for macOS 10.14+ (High Sierra or later) on 64-bit Intel processors
+# Makefile for macOS 10.14+ (Mojave or later) on 64-bit Intel processors
 #
 
+# WARNING: the following should agree with the value of CMAKE_OSX_DEPLOYMENT_TARGET
+# that is set in the LLVM CMakePresets.json file
+#
 SDK =		-mmacosx-version-min=10.14
 
 SHELL =		/bin/sh
