@@ -14,7 +14,9 @@
 #include <iostream>
 #include "target-info.hxx"
 #include "code-object.hxx"
+#include "code-buffer.hxx"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/MemoryBuffer.h"
 
 // SML/NJ runtime function for printing an error message and exiting
 extern "C" {
@@ -293,14 +295,45 @@ void AMD64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t *c
 
 //==============================================================================
 
-// creation function for code objects
+// This class is a reimplementation of LLVM's SmallVectorMemoryBuffer.  The difference
+// is that we do not include the small vector in the memory buffer, so the vector
+// does not get destructed when the memory buffer is destructed.
 //
-std::unique_ptr<CodeObject> CodeObject::create (
-    target_info const *target,
-    llvm::MemoryBufferRef objBuf)
+class MyMemoryBuffer : public llvm::MemoryBuffer {
+public:
+    MyMemoryBuffer (llvm::SmallVectorImpl<char> &vec)
+      : _bufferName("<in-memory object>")
+    {
+        this->init (vec.begin(), vec.end(), false);
+    }
+
+    ~MyMemoryBuffer () override;
+
+    llvm::StringRef getBufferIdentifier() const override
+    {
+        return this->_bufferName;
+    }
+
+    llvm::MemoryBuffer::BufferKind getBufferKind() const override
+    {
+        return llvm::MemoryBuffer::MemoryBuffer_Malloc;
+    }
+
+private:
+    std::string _bufferName;
+};
+
+MyMemoryBuffer::~MyMemoryBuffer () { }
+
+// creation function for code objects; we assume that the code has already
+// been generated into the code buffer's backing store (see mc_gen::compile).
+//
+std::unique_ptr<CodeObject> CodeObject::create (code_buffer *codeBuf)
 {
-  // first we create the LLVM object file from the memory buffer
-    auto objFile = llvm::object::ObjectFile::createObjectFile (objBuf);
+  // create the LLVM object file from the small vector
+    auto objBuf = std::make_unique<MyMemoryBuffer>(codeBuf->objectFileData());
+    auto objFile =
+        llvm::object::ObjectFile::createObjectFile (objBuf->getMemBufferRef());
     if (objFile.takeError()) {
 /* FIXME: error message */
 	return std::unique_ptr<CodeObject>(nullptr);
@@ -308,6 +341,7 @@ std::unique_ptr<CodeObject> CodeObject::create (
 
   // then wrap it in a target-specific subclass object
     std::unique_ptr<CodeObject> p;
+    target_info const *target = codeBuf->targetInfo();
     switch (target->arch) {
 #ifdef ENABLE_ARM64
     case llvm::Triple::aarch64:
@@ -335,22 +369,22 @@ CodeObject::~CodeObject () { }
 void CodeObject::getCode (uint8_t *code)
 {
     for (auto sect : this->_sects) {
-	auto contents = sect.getContents();
-	if (contents.takeError()) {
-	    std::cerr << "unable to get contents of section\n";
-	    assert (0);
-	}
-	else {
-	    auto szb = contents->size();
-	    assert (sect.getSize() == szb && "inconsistent sizes");
-	  /* copy the code into the object */
-	    uint8_t *base = code + sect.getAddress();
-	    memcpy (base, contents->data(), szb);
-	  /* if the section is a text section, then resolve relocations */
-	    if (sect.isText()) {
-		this->_resolveRelocs (sect, base);
-	    }
-	}
+        auto contents = sect.getContents();
+        if (contents.takeError()) {
+            std::cerr << "unable to get contents of section\n";
+            assert (0);
+        }
+        else {
+            auto szb = contents->size();
+            assert (sect.getSize() == szb && "inconsistent sizes");
+          /* copy the code into the object */
+            uint8_t *base = code + sect.getAddress();
+            memcpy (base, contents->data(), szb);
+          /* if the section is a text section, then resolve relocations */
+            if (sect.isText()) {
+                this->_resolveRelocs (sect, base);
+            }
+        }
     }
 }
 
@@ -398,7 +432,7 @@ void CodeObject::dump (bool bits)
     }
 
   // conditionally dump the code bits
-    if (bits && foundTextSect) {
+    if (bits && foundTextSect && (this->_sects.size() > 0)) {
       // first we create a scratch object to hold the relocated code
         size_t codeSzB = this->size();
         uint8_t *bytes = new uint8_t [codeSzB];

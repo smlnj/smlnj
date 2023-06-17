@@ -10,6 +10,7 @@
 
 #include "target-info.hxx"
 #include "mc-gen.hxx"
+#include "code-buffer.hxx"
 
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -17,7 +18,8 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Support/FileSystem.h"
-#include "llvm/Support/SmallVectorMemoryBuffer.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassManager.h"
 
 //#include "llvm/Support/Host.h" /* for getHostCPUName */
 
@@ -120,25 +122,22 @@ void mc_gen::optimize (llvm::Module *module)
 
 }
 
-// adopted from SimpleCompiler::operator() (CompileUtils.cpp)
+// compile the code into the code buffer's object-file backing store.
 //
-std::unique_ptr<CodeObject> mc_gen::compile (llvm::Module *module)
+// adopted from SimpleCompiler::operator() (lib/ExecutionEngine/Orc/CompileUtils.cpp)
+//
+void mc_gen::compile (code_buffer *codeBuf)
 {
-    llvm::SmallVector<char, 0> objBufferSV;
     {
-	llvm::raw_svector_ostream objStrm(objBufferSV);
+        codeBuf->objectFileData().clear();
+	llvm::raw_svector_ostream objStrm(codeBuf->objectFileData());
 	llvm::legacy::PassManager pass;
 	llvm::MCContext *ctx; /* result parameter */
 	if (this->_tgtMachine->addPassesToEmitMC(pass, ctx, objStrm)) {
 	    llvm::report_fatal_error ("unable to add pass to generate code", true);
 	}
-	pass.run (*module);
+	pass.run (*codeBuf->module());
     }
-
-    auto objBuffer = std::make_unique<llvm::SmallVectorMemoryBuffer>(
-	std::move(objBufferSV), module->getModuleIdentifier() + "-objectbuffer");
-
-    return CodeObject::create (this->_tgtInfo, objBuffer->getMemBufferRef());
 
 }
 

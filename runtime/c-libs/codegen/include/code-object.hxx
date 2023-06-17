@@ -33,19 +33,17 @@ class CodeObject {
 
     virtual ~CodeObject ();
 
-  //! create a code object.
-    static std::unique_ptr<CodeObject> create (
-	target_info const *target,
-	llvm::MemoryBufferRef memBuf);
+    //! create a code object.
+    static std::unique_ptr<CodeObject> create (class code_buffer *codeBuf);
 
-  //! return the size of the code in bytes
+    //! return the size of the code in bytes
     size_t size() const { return this->_szb; }
 
-  //! copy the code into the specified memory, which is assumed to be this->size()
-  //! bytes
+    //! copy the code into the specified memory, which is assumed to be this->size()
+    //! bytes
     void getCode (unsigned char *code);
 
-  // dump information about the code block to the LLVM debug stream.
+    //! dump information about the code object to the LLVM debug stream.
     void dump (bool bits);
 
   protected:

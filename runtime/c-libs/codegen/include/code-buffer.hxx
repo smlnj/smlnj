@@ -23,6 +23,7 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Object/ObjectFile.h"
+#include "llvm/ADT/SmallVector.h"
 
 /*DEBUG*/#include "llvm/Support/raw_os_ostream.h"
 /*DEBUG*/#include "llvm/Support/Debug.h"
@@ -59,9 +60,9 @@ using lvar_map_t = std::unordered_map<LambdaVar::lvar, T *>;
 //
 using frag_kind = CFG::frag_kind;
 
-// The code_buffer class encapsulates the current state of code generation, as well
-// as information about the target architecture.  It is passed as an argument to
-// all of the `codegen` methods in the CFG representation.
+//! The code_buffer class encapsulates the current state of code generation, as well
+//! as information about the target architecture.  It is passed as an argument to
+//! all of the `codegen` methods in the CFG representation.
 //
 class code_buffer {
   public:
@@ -80,6 +81,10 @@ class code_buffer {
 
   // delete the module after code generation
     void endModule ();
+
+    //! return the current module
+    llvm::Module const *module () const { return this->_module; }
+    llvm::Module *module () { return this->_module; }
 
   // set the current cluster (during preperation for code generation)
     void setCluster (CFG::cluster *cluster) { this->_curCluster = cluster; }
@@ -727,16 +732,19 @@ class code_buffer {
 
   /***** Code generation *****/
 
-  // compile to an in-memory code object
-    std::unique_ptr<CodeObject> compile () const;
+    //! access to the backing storage for generating in-memory object files
+    llvm::SmallVector<char, 0> & objectFileData () { return this->_objFileData; }
 
-  // dump assembly code to stdout
+    //! compile to an in-memory code object
+    std::unique_ptr<CodeObject> compile ();
+
+    //! dump assembly code to stdout
     void dumpAsm () const;
 
-  // dump assembly code to a file
+    //! dump assembly code to a file
     void dumpAsm (std::string const &stem) const;
 
-  // dump machine code to an object file
+    //! dump machine code to an object file
     void dumpObj (std::string const &stem) const;
 
   /***** Debugging support *****/
@@ -826,19 +834,22 @@ class code_buffer {
 
     };
 
-  // get information about JWA arguments for a fragment in the current cluster
+    //! get information about JWA arguments for a fragment in the current cluster
     arg_info _getArgInfo (frag_kind kind) const;
 
-  // add the types for the "extra" parameters (plus optional base pointer) to
-  // a vector of types.
+    //! add the types for the "extra" parameters (plus optional base pointer) to
+    //! a vector of types.
     void _addExtraParamTys (std::vector<Type *> &tys, arg_info const &info) const;
 
-  // add the "extra" arguments (plus optional base pointer) to an argument vector
+    //! add the "extra" arguments (plus optional base pointer) to an argument vector
     void _addExtraArgs (Args_t &args, arg_info const &info) const;
 
-  // private constructor
+    //! private constructor
     code_buffer (struct target_info const *target);
 
+    //! backing storage for the generated object file.  We put this object it the
+    //! code buffer so that we do not have to worry about its lifetime.
+    llvm::SmallVector<char, 0> _objFileData;
 };
 
 #endif // !__CODE_BUFFER_HXX__

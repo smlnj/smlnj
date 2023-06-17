@@ -17,6 +17,9 @@
 
 #include "llvm/Support/TargetSelect.h"
 
+//! points to a dynamically allocated code buffer; this pointer gets
+//! reset if we change the target architecture.
+//
 static code_buffer *CodeBuf = nullptr;
 
 // Some global flags for controlling the code generator.
@@ -153,6 +156,9 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
     delete cu;
 
     if (obj != nullptr) {
+#ifdef DUMP_LLVM_INFO
+        obj->dump (false);
+#endif // DUMP_LLVM_INFO
       // copy the sections to a heap-allocated code object.  At the very end, we add the
       // name of ths source file.  The name string is word-aligned, nul-terminated,
       // and padded to a multiple of the word size.  It is followed by a byte

@@ -1,6 +1,6 @@
-/// \file codegen.cxx
+/// \file code-buffer.cxx
 ///
-/// \copyright 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+/// \copyright 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
 /// All rights reserved.
 ///
 /// \brief This file implements the methods for the `code_buffer` class
@@ -635,9 +635,12 @@ llvm::Function *code_buffer::_getIntrinsic (llvm::Intrinsic::ID id, Type *ty) co
 	this->_module, id, llvm::ArrayRef<Type *>(ty));
 }
 
-std::unique_ptr<CodeObject> code_buffer::compile () const
+std::unique_ptr<CodeObject> code_buffer::compile ()
 {
-    return this->_gen->compile (this->_module);
+    /* generate code into the object-file backing store */
+    this->_gen->compile (this);
+    /* create the code object from the backing store */
+    return CodeObject::create (this);
 }
 
 void code_buffer::dumpAsm () const
