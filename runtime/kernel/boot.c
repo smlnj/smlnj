@@ -333,6 +333,17 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     char            *atptr, *colonptr;
     char            *objname = fname;
 
+    /* an entry in the boot-file list should have the following syntax:
+     *
+     *  <filename> [ '@' <offset> [ ':' <objname> ] ]
+     *
+     * where <filename> is the name of the binfile, <offset> is an optional offset
+     * into the binfile (for stable libraries), and <objname> is the optional name
+     * of the object being loaded.  The <offset> defaults to 0 and the <objname>
+     * defaults to the <filename>.  Note that the <objname> typically includes both
+     * the filename and the offset, as well as the name of the source file being
+     * loaded.
+     */
     if ((atptr = strchr (fname, '@')) == NULL) {
 	archiveOffset = 0;
     }
@@ -470,6 +481,10 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 	DISABLE_CODE_WRITE
 
 	FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+
+        if (!SilentLoad) {
+            Say ("  [addr: %p, size: %d]\n", PTR_MLtoC(char, codeObj), thisSzB);
+        }
 
       /* create closure (taking entry point into account) */
 	REC_ALLOC1 (msp, closure,
