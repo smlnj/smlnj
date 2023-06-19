@@ -17,7 +17,8 @@ struct
   datatype bnode =
       BNODE of { bininfo: BinInfo.info,
 		 localimports: bnode list,
-		 globalimports: (unit -> farbnode) list }
+		 globalimports: farbnode list }  (* unthunkified globalimports *)
+(*		 globalimports: (unit -> farbnode) list }  -- thunkified globalimports *)
 
   withtype farbnode = filter * bnode * int option
 
@@ -34,7 +35,8 @@ struct
 
   withtype farsbnode = filter * sbnode
 
-  type impexp = (unit -> farsbnode) * DAEnv.env * SymbolSet.set
+(*  type impexp = (unit -> farsbnode) * DAEnv.env * SymbolSet.set *)
+  type impexp = farsbnode * DAEnv.env * SymbolSet.set  (* unthunkified farsbnode *)
 
   (* describeSBN : sbnode -> string *)
   fun describeSBN (SB_BNODE (BNODE { bininfo = i, ... }, _, _)) =

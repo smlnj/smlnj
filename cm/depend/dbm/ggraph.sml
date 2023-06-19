@@ -23,14 +23,17 @@ struct
   and group =
       GROUP of { exports: DependencyGraph.impexp SymbolMap.map,
 		 kind: kind,
-		 grouppath: File.file,  (* or Path.path? *)
+		 grouppath: File.file,  (* File.file or Path.path? *)
 		 sources: { class: string, derived: bool } FileMap.map,
 		 sublibs: subgroup list }
     | ERRORGROUP
 
-  (* DBM: (1) File.file or Path.path?
-   * (2) 2nd component of subgroup unnecesarily thunked? *)
-  withtype subgroup = File.file * (unit -> group) * AnchorEnv.anchorPathAlist
+  (* DBM:
+   * (1) File.file or Path.path for group component "grouppath"?
+   * (2) 2nd component of subgroup unnecesarily thunkified? Let's try the dethunkified version. *)
+
+(*  withtype subgroup = File.file * (unit -> group) * AnchorEnv.anchorPathAlist *)
+  withtype subgroup = File.file * group * AnchorEnv.anchorPathAlist
 
   (* Note:
    * [Blume] "sublibs" consists of items where the File.file component
