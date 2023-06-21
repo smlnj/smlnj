@@ -75,6 +75,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif // C++
+
 #ifdef OPSYS_WIN32
 typedef long off_t;	/* Windows does not define a file offset type */
 #endif
@@ -94,8 +98,10 @@ typedef Int32_t bool_t;
 #endif
 
 typedef Int32_t status_t;
-#define SUCCESS 1
-#define FAILURE 0
+enum {
+    FAILURE = 0,
+    SUCCESS = 1
+};
 
 /* nil pointers */
 #define NIL(ty)		((ty)0)
@@ -216,6 +222,10 @@ extern bool_t	UnlimitedHeap;
 /* The table of virtual processor ML states */
 extern vproc_state_t	*VProc[];
 extern int		NumVProcs;
+
+#ifdef __cplusplus
+}
+#endif // C++
 
 #endif /* !_ASM_ */
 
