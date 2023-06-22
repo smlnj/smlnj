@@ -14,5 +14,5 @@ structure SmlInfoSet =
 RedBlackSetFn
   (struct
      type ord_key = SmlInfo.info
-     val compare = SmlInfo.compare
+     val compare = SmlInfo.compare  (* File.compare on file components *)
    end)

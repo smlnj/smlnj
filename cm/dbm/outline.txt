@@ -4,44 +4,99 @@ This is a combination of an "outline" of the CM files, and also random notes.
 
 [See cm/Overview]
 
-Outline of CM (and its functionality)
+Outline of CM with notes on functionality, changes, etc.
 
-paths 
 
-  internal representation of file paths (Path.path),
-    parsing file path strings (in 2? formats),
-    unparsing paths to file paths
-    path operations
+================================================================================== 
+Goals of CM revamping project
+==================================================================================
+ 
+Overall goals:
+
+ * determine and document the "architecture" and "semantics" of CM 
+ * exploit the vastly increased computational resources available since 
+     2000 to simplify algorithms and representations 
+ * looking for _major_ design simplifications,
+     e.g. dropping "groups" and using only Libraries
+
+Design goals:
+
+ * considering adding "names" for libraries (in place of naming
+   by file paths of CDFs, or by the generated "stable id" of CDFs)
+   [need for some form of additional "unique id" for libraries?]
+ * dropping concurrency for the time being?
+     Is concurrency an orthogonal concern that could be added back later? 
+
+Implementation improvements/simplifications
+
+ * dropping "privileges" (a minor simplification)
+ * dethunkizing fields/compenents by default, while looking for
+     instances of thunkification that actually still matter. 
+ * determine the role of and need for skeletons (do they need to be cached?) 
+ * rethinking pickling (possibly moving to ASDL-based pickles)
+ * interaction with compiler (compile and bootstrap directories)
+     CM/compiler interface needs to be refined, documented
+     CM/REPL interactions, dependencies? (identify and/or eliminate)
+       "autoload"?
+     CM becoming a compiler "component"?
+ * interaction with compiler syntax representations (ast and absyn)
+     and with the compiler's SML parser(s) [planned revision of ast and absyn]
+
+
+================================================================================== 
+Top level CM Directories:
+==================================================================================
+
+paths/ 
+
+  internal representation of file paths -- "abstract syntax of paths) (Path.path),
+    - parsing file path strings (OS native formats, "standard" format?)
+    - unparsing abstract paths to strings (file paths in standard? format)
+    - path operations
+    - "segmented paths" (in PIDMAP, ?), role, semantics, need for
+        internal representation (e.g. in the path type)?
+    - interaction with anchors and anchor environments (anchor expansion)
+        iterative anchor expansion, cycle detection?
+
   files
     locations (path)
     file_ids (from FS)
-    stable ids
+    stable ids, and "interning" files
+
   anchor environments
     global and "local" or "dynamic"
-    binding anchors,
-    lookup
-    expansion of anchors in anchored paths
-  pathconfig file processing
+    binding anchors, (local and global)
+    lookup  (global, then local)
+    expansion of anchors in anchored paths (dropped)
+
+  pathconfig file processing (dbm/pathconfig.sml)
     mainly produces global anchor bindings
 
-parse
+  SrcPathMap -> FileMap (files ordered by stable ids) (dbm/filemap.sml)
+  SrcPathSet -> FileSet (files ordered by stable ids) (dbm/fileset.sml)
+
+
+parse/
 
   parse and "interpret" CDFs
 
 
-depend
+depend/
 
-  determine and represent module dependencies
+  determine and represent module dependencies 
+  complications caused by open declarations in SML source? 
 
-  BNODES for BinInfo.info  (binary files)
-  SNODE for SmlInfo.info   (source files)
-  ["PNODE" mentioned in Overview does not exist.]
+  graph.sml  -- GroupGraph, "group" dependence graphs  (type ggroup)
+  ggraph.sml -- DependencyGraph -- dependence graphs
+                (types snode, bnode, sbnode, impexp)
 
-  far nodes (farsbnode, farbnode) ["external" nodes in other groups/libraries]
+    BNODES for BinInfo.info  (binary files)
+    SNODE for SmlInfo.info   (source files)
+    ["PNODE" mentioned in the Overview file does not exist.]
 
-  impexps
+    far nodes (farsbnode, farbnode) ["external" nodes in other groups/libraries]
 
-  complications caused by open declarations in SML source?
+    impexp -- ?
 
   "PortableGraph" is not defined. But it is referenced in to-portable.sml and
   from-portable.sml, which are both therefore incomplete and not used or useable.
@@ -59,10 +114,22 @@ depend
     Dependence of DAEnv on BrowseStatEnv (compiler/ElabData/statenv/browse.sml)
     may introduce some interesting issues later. Ast for modules is a hack that
     needs to be redone, which will affect browse.sml, and may have consequences
-    somewhere in CM.
+    somewhere in CM, in particular in dependency analysis
     
+  mklist.sml (MkList) -> mkbootlist.sml (MkBootList)
+    support module for MkBootList (bootstrap/mkbootlist.sml). Those two files
+    have been merged (depend/dbm/mllist.sml) and so there is only the structure
+    MkBootList. Odd variant of foldl has been replaced by List.foldl. Some
+    dethinkification (in graph.sml and ggraph.sml).
 
-semant
+  reachable.sml
+    ?
+
+  build.sml
+    - flattened arguments of build function
+
+
+semant/
 
   (mainly?) semantic actions for the CDF parser
   driver for dependency analysis, compilation
@@ -97,14 +164,14 @@ semant
     "invalidate" computations (and their values) that have already been completed.
 
 
-smlfile
+smlfile/
 
   representation of static information about SML source files (module declarations)
 
   SmlInfo (smlinfo.sml)
 
 
-stable
+stable/
 
   combining compiled libraries (& their subgroups) into stable, amalgamated
   binary files
@@ -114,7 +181,7 @@ stable
     SML source code
 
 
-compile
+compile/
 
   "traversals" (compile/generic.sml)
      recompilation
@@ -131,14 +198,18 @@ compile
      full (extends (inherits from) recomp) used when executing as well as compiling
 
 
-bootstrap
+bootstrap/
    
   special case of compile, where source code is compiled to produce bin files
   but not executed. (execution will be performed under control of the runtime boot loader)
 
-util
+util/
 
-tools
+  * drop SetFn (set-fn.sml) and MapFn (map-fn.sml); use RedBlackSetFn
+    and RedBlackMapFn directly instead.
+    
+
+tools/main/
 
 --------------------------------------------------------------------------------
 

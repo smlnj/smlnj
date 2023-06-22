@@ -18,13 +18,14 @@ in
 
     (* file: a file is a record with an path, the locaction of the file, an fid, which
      * is a ref to a FI.fileId option, and an sid, which is a stableid (an int).
-     * The stableid numbers are generated in the intern function, which also defines the
-     * id field. The interned files are "recorded" in a finite set of type FileSet.set *)
+     * The stableid numbers are generated in the intern function, which also defines
+     * (or rather "fills in") the id field. The interned files are "recorded" in a finite set
+     * of type FileSet.set *)
     type file = {path : Path.path, fid: FI.id option ref, sid: stableid}
 
     (* compare : file * file -> order *)
-    (* This is used in paths/srcpathmap.sml to define maps over files, with ord_key = file
-     * Comparison is in terms of the files' stableids.  *)
+    (* This is used in paths/dbm/filemap.sml and paths/dbm/fileset.sml to define maps over files,
+     * with ord_key = file and compare defined in terms of the files' stableids.  *)
     fun compare ({sid=i1, ...}: file, {sid=i2, ...} : file) = Int.compare (i1, i2)
 
     (* accessing a file's path *)
@@ -49,15 +50,21 @@ in
    (* *********************************************************************************** *)
    (* "interning files": fetching file_ids from FS and generating stableids for files *)
 
-   (* known: an internal reference to a finite set of files
-	(known: FileSet.set ref).
-    * New bindings are created by the intern function.
-    * intern uses uses FileInfoMap.insert, which uses getFileId, which uses FileId.fileId
-    *   to update the id field of the fileInfo record to a FileId.id computed by
+   (* known: an internal reference to a finite set of files (known: InternedFileSet.set ref).
+    * This file set (of type InternedFileSet.set) is ordered by compareFileFid, a comparison
+    *   based on the contents of the fid field (not the stable id sid field).  So it is different
+    *   from the file sets defined by FileSet (paths/dbm/fileset.sml), where files are ordered
+    *   by their sid field.
+    * New members are added to known by the intern function.
+    * intern uses uses InternedFileSet.add, which uses getFileId, which uses FileId.fileId
+    *   to update the fid field of the fileInfo record to (SOME of) a FileId.id computed by
     *   OS.FileSys.fileId. *)
 
     (* getFileId [idOf] : fileInfo -> FI.id *)
-    (* returns the fileId associated with the file, updating the id field if it was NONE *)
+    (* returns the file id (FileId.id) associated with the file, updating the id field to
+     * SOME id, where id : FileId.id, if it was NONE.
+     * Note that getFileId returns a FileId.id value even if the file does not exist or had
+     * a NONE in the fid field ref. *)
     fun getFileId ({ path, fid, ... }: file) : FI.id =
 	  (case !fid
 	     of SOME id => id
@@ -67,20 +74,22 @@ in
 		  end)
 
     (* compareFileFid : file * file -> order *)
-    (* compare files by comparing their id fields as accessed/computed by getFileId *)
+    (* compare files by comparing their id fields as accessed/computed by getFileId.
+     * Note that this will "set" the fid fields even if they originally contained NONE. *)
     fun compareFileFid (f1: file, f2: file) =
 	FI.compare (getFileId f1, getFileId f2)
 
-    structure FileSet =
+    (* binary tree repesentation of sets of files ordered by their fid field (FileId.id) *)
+    structure InternedFileSet =
       RedBlackSetFn (type ord_key = file
 		     val compare = compareFileFid)
 
     (* known: (a reference to) a finite set of files that have been interned *)
-    val known : FileSet.set ref = ref FileSet.empty
+    val known : InternedFileSet.set ref = ref InternedFileSet.empty
     val nextStableId = ref 1  (* "allocated" stable ids are >= 1 *)
 
     (* clear : unit -> unit *)
-    fun clear () = known := FileSet.empty
+    fun clear () = known := InternedFileSet.empty
 
     (* intern : file -> file *)
     (* generate a stableid (sequentially) to add to a fileInfo to make a file. If the fileInfo
@@ -88,12 +97,12 @@ in
      * generate the next stableid and also (through the getFileId function called by insert)
      * define the id field of the fileInfo. *)
     fun intern (file as {path, sid, fid}: file) : file =
-	if FileSet.member (!known, file)
+	if InternedFileSet.member (!known, file)
 	then file
 	else let val stableid = !nextStableId  (* generate a new stableid *)
 		 val file' = {path = path, sid = stableid, fid = fid}
 	      in nextStableId := stableid + 1;
-		 known := FileSet.add (!known, file');
+		 known := InternedFileSet.add (!known, file');
 		   (* add the new file with stableid to known *)
 		 file'  (* return the interned file *)
 	     end
@@ -106,11 +115,11 @@ in
     fun sync () =
 	let val files = !known
 	    fun killId ({ fid, ... }: file) = fid := NONE
-	    fun reinsert (f, s) = FileSet.add (s, f)
-	 in FileSet.app killId files;
+	    fun reinsert (f, s) = InternedFileSet.add (s, f)
+	 in InternedFileSet.app killId files;
 	    (* This will cause the id fields to be reassigned using the file systems file ids
 	     * when they are accessed via getFileId for the insert operation. *)
-	    known := FileSet.foldl reinsert FileSet.empty files  (* DBM: refetch file_ids? *)
+	    known := InternedFileSet.foldl reinsert InternedFileSet.empty files  (* DBM: refetch file_ids? *)
 	end
 
     (* pathToFile : path -> file *)

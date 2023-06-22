@@ -1,0 +1,41 @@
+(* $SMLNJ/cm/paths/srcpath-lib.cm
+ *
+ * Pathname handling for CM.
+ *
+ * Copyright (c) 2023 by The Fellowship of SML/NJ
+ *
+ * Author: Matthias Blume (matthias.blume@gmail.com)
+ * 
+ * Was a Group, generated complaint about importing srcpath group into
+ * $smlnj/cm/cm.cm and $smlnj/internal/cm-lib.cm. Trying Library instead
+ * of Group to see if it fixes this problem. [A Group could not be imported
+ * into multiple Libraries.]
+ *)
+
+Library  (* name: SrcPath *)
+
+  structure Path
+  structure File
+  structure AnchorEnv
+  structure FileMap
+  structure FileSet
+  structure FileId
+  structure PathConfigProcessing
+
+is
+
+  path.sig
+  path.sml
+  anchorenv.sig
+  anchorenv.sml
+  fileid.sml
+  file.sig
+  file.sml
+  filemap.sml
+  fileset.sml
+  charcode.sml
+  pathconfig.sml
+
+  ../util/sources.cm
+  $smlnj/basis/basis.cm
+  $smlnj/smlnj-lib/smlnj-lib.cm

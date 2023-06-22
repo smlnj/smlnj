@@ -6,30 +6,29 @@ CDF: CM/cm-lib.cm
 
 (* ---------------------------- Exports ---------------------------- *)
 
-	functor LinkCM
-	functor BootstrapCompileFn
+  functor LinkCM              -- main/cm-boot.sml
+  functor BootstrapCompileFn  -- bootstrap/btcompile.sml  (compiler bootstrap support)
 
-	signature VERSION ?
-	structure Version
-	structure Sharing
-	signature TOOLS ?
-	structure Subst
+  structure Version	      -- semant/version.sml
+  structure Sharing	      -- semant/sharing.sml
+  structure Subst	      -- util/subst.sml
 
-	structure StdConfig
+  structure StdConfig	      -- util/stdcfg.sml  (CM controls)
 
+  (Q: where is the CM structure (providing, e.g. CM.make) defined? *)
 
 (* ---------------------------- Module Index ---------------------------- *)
 
 LOCAL: [paths relative to $SMLNJ/cm]
 
-  [cm/util/ Library, util/sources.cm]
+  [cm/util/, Library: util/sources.cm]
   SafeIO		 util/safeio.sml
   StringMap		 util/stringmap.sml
   StringSet		 util/stringset.sml
   SymbolSet		 util/symbolset.sml
   SymbolMap		 util/symbolmap.sml
-  SetFn			 util/set-fn.sml
-  MapFn			 util/map-fn.sml
+  SetFn			 util/set-fn.sml     -- not needed (alias for RedBlackSetFn)
+  MapFn			 util/map-fn.sml     -- not needed (alias for RedBlackMapFn)
   AutoDir		 util/autodir.sml
   Memoize		 util/memoize.sml <<<BUG?
   PidSet		 util/pidset.sml
@@ -37,16 +36,27 @@ LOCAL: [paths relative to $SMLNJ/cm]
   Seek			 util/seek.sml
   Say			 util/say.sml
 
-  [cm/paths/, Library, paths/srcpath-lib.cm]
-  SRCPATH		 paths/srcpath.sml 
-  SrcPath		 paths/srcpath.sml 
-  SrcPathSet		 paths/srcpathset.sml
-  SrcPathMap		 paths/srcpathmap.sml
-  TStamp		 paths/tstamp.sml
-  FILEID		 paths/fileid.sml 
-  FileId		 paths/fileid.sml 
+  [cm/paths/, Library: paths/srcpath-lib.cm, paths/dbm/srcpath-lib.cm]
+  SRCPATH		 paths/srcpath.sml    (-> dbm/path.sig)
+  SrcPath		 paths/srcpath.sml    (-> dbm/path.sml)
+  SrcPathSet		 paths/srcpathset.sml (-> dbm/fileset.sml)
+  SrcPathMap		 paths/srcpathmap.sml (-> dbm/filemap.sml)
+  TStamp		 paths/tstamp.sml     (-> dbm/file.sml: File.tstamp)
+  FILEID		 paths/fileid.sml     (-> dbm/fileid.sml)
+  FileId		 paths/fileid.sml     (-> dbm/fileid.sml)
+ (PATH			 dbm/path.sig) 
+ (Path			 dbm/path.sml) 
+ (FILE			 dbm/file.sig) 
+ (File			 dbm/file.sml) 
+ (FileSet		 dbm/fileset.sml) 
+ (FileMap		 dbm/filemap.sml) 
+ (ANCHORENV		 dbm/anchorenv.sig) 
+ (AnchorEnv		 dbm/anchorenv.sml) 
+ (PATHCONFIG_PROCESSING	 dbm/pathconfig.sml) 
+ (PathConfigProcessing	 dbm/pathconfig.sml)  (parsing and processing pathconfig files)
+ (CharCode		 dbm/charcode.sml)    (translating to/from numeric escape codes)
 
-  [cm/concur/ Library, concur/sources.cm]
+  [cm/concur/, Library: concur/sources.cm]
   Concur		 concur/concur.sml
   SERVERS		 concur/servers.sig
   Servers		 concur/dummy-servers.sml,unix-servers.sml

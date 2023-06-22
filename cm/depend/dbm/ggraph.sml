@@ -6,14 +6,16 @@
  * (C) 2023 The Fellowship of SML/NJ
  *
  * Author: Matthias Blume (matthias.blume@gmail.com)
+ * Edited: DBM 2023.6
  *)
+
 structure GroupGraph =
 struct
 
 (* IMPORTS: DependencyGraph, SymbolMap, File, FileMap, AnchorEnv *)
 
   datatype libkind
-    = STABLE of unit -> unit		(* pickle dropper *)
+    = STABLE of unit -> unit       (* argument: pickle dropper function *)
     | DEVELOPED of subgroup list
 
   and kind
@@ -23,7 +25,7 @@ struct
   and group =
       GROUP of { exports: DependencyGraph.impexp SymbolMap.map,
 		 kind: kind,
-		 grouppath: File.file,  (* File.file or Path.path? *)
+		 file: File.file,  (* File.file or Path.path? *)
 		 sources: { class: string, derived: bool } FileMap.map,
 		 sublibs: subgroup list }
     | ERRORGROUP
@@ -33,7 +35,7 @@ struct
    * (2) 2nd component of subgroup unnecesarily thunkified? Let's try the dethunkified version. *)
 
 (*  withtype subgroup = File.file * (unit -> group) * AnchorEnv.anchorPathAlist *)
-  withtype subgroup = File.file * group * AnchorEnv.anchorPathAlist
+  withtype subgroup = File.file * group * AnchorEnv.anchorPathAlist  (* group component dethunkified *)
 
   (* Note:
    * [Blume] "sublibs" consists of items where the File.file component
