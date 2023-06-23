@@ -11,7 +11,7 @@
 structure DependencyGraph =
 struct
 
-  type filter = SymbolSet.set option
+  type filter = SymbolSet.set
 
   (* binary nodes *)
   datatype bnode =
@@ -33,9 +33,9 @@ struct
       SB_BNODE of bnode * IInfo.info * int option
     | SB_SNODE of snode
 
-  withtype farsbnode = filter * sbnode
+  withtype farsbnode = filter option * sbnode
 
-(*  type impexp = (unit -> farsbnode) * DAEnv.env * SymbolSet.set *)
+(*  type impexp = (unit -> farsbnode) * DAEnv.env * SymbolSet.set -- thunkified farsbnode *)
   type impexp = farsbnode * DAEnv.env * SymbolSet.set  (* unthunkified farsbnode *)
 
   (* describeSBN : sbnode -> string *)
@@ -47,16 +47,18 @@ struct
   (* describeFarSBNode : farsbnode -> string *)
   fun describeFarSBNode ((_, sbnode): farsbnode) = describeSBN sbnode
 
-  (* beq: bnode -> bool *)
+  (* beq: bnode * bnode -> bool *)
   (* comparing various nodes for equality *)
   fun beq (BNODE { bininfo = i, ... }, BNODE { bininfo = i', ... }) =
-      BinInfo.compare (i, i') = EQUAL
+      case BinInfo.compare (i, i')
+        of EQUAL => true
+	 | _ => false
 
-  (* seq : snode -> bool *)
+  (* seq : snode * snode -> bool *)
   fun seq (SNODE { smlinfo = i, ... }, SNODE { smlinfo = i', ... }) =
       SmlInfo.eq (i, i')
 
-  (* sbeq : sbnode -> bool *)
+  (* sbeq : sbnode * sbnode -> bool *)
   fun sbeq (SB_SNODE n, SB_SNODE n') = seq (n, n')
     | sbeq (SB_BNODE (n, _, _), SB_BNODE (n', _, _)) = beq (n, n')
     | sbeq _ = false
