@@ -179,23 +179,23 @@ in
 	    (* add_imported_sym : S.symbol -> unit *)
 	    fun add_imported_sym s = imported_syms := SS.add (!imported_syms, s)
 
+	    (* getResult : [info:]SI.info * historyTy -> snode_env *)
 	    (* get the result from the blackboard if it is there, otherwise trigger analysis
 	     * -- detect cycles using locking
 	     * -- maintain root set *)
-	    (* getResult : [info:]SI.info * historyTy -> snode_env *)
-	    fun getResult (smlinfo: SI.info, history: (S.symbol * SI.info) list) =
+	    fun getResult (smlinfo: SI.info, history: historyTy) =
 		case fetch smlinfo
 		  of NONE => (lock info; release (smlinfo, analyze (smlinfo, history)))
-		   | SOME (SOME r) => r
+		   | SOME (SOME snode_env) => snode_env
 		   | SOME NONE =>	(* file is locked => cycle found => error message *)
 		       let val file = SI.file smlinfo
 			   val filepath = Path.pathToFpath (File.fileToPath file)
 			   val errorBody : PP.format =
-			       let fun recur (_: string, nil: (S.symbol * SI.info) list) = nil
+			       let fun lines (_: string, nil: (S.symbol * SI.info) list) = nil
 					 (* shouldn't happen because i should = i'
 					  * for some (s, i') in history *)
-				     | recur (prevpath, (sym, smlinfo') :: rest) =
-					 let val file' = SmlInfo.file smlinfo'
+				     | lines (prevpath, (sym, smlinfo') :: rest) =
+					 let val file' = SI.file smlinfo'
 					     val filepath' = Path.pathToFpath (File.fileToPath file')
 					     val line : PP.format = 
 						 PP.hblock
@@ -206,22 +206,22 @@ in
 						    PP.text prevpath]   (* library name *)
 					  in if SI.eq (smlinfo, smlinfo')
 					     then [line]
-					     else line :: recur (n', rest)
+					     else line :: lines (n', rest)
 					 end
-			       in
-				   PP.vblock (rev (recur (filepath, history)))
+			        in PP.vblock (rev (lines (filepath, history)))
 			       end
-			in SmlInfo.error gp i
+
+			in SI.error gp smlinfo
 			      EM.COMPLAIN "cyclic ML dependencies" errorBody;
-			   (* carry on? with bogus release ? or just for type checking? *)
-			   release (info,
-				    (DG.SNODE {smlinfo = info, localimports = nil, globalimports = nil},
+			   (* carry on? with bogus release ? or is this return value just for type checking? *)
+			   release (smlinfo,
+				    (DG.SNODE {smlinfo = smlinfo, localimports = nil, globalimports = nil},
 				     DE.EMPTY))
 		       end
 
-	    (* do the actual analysis of an ML source and generate the
-	     * corresponding node *)
 	    (* analyze : (SI.info * historyTy) -> snode_env *)
+	    (* do the actual analysis of an ML source and generate the
+	     * corresponding snode and DE.env *)
 	    and analyze (smlinfo: SI.info, history: historyTy) =
 		let
 		    val localImports  : DG.snode list ref = ref nil
@@ -261,7 +261,7 @@ in
 			end (* fun addGlobalImport *)
 
 		    val thisFile: File.file = SI.file smlinfo
-		    fun isSelf (smlinfo': SI.smlInfo) : bool = SI.eq (smlinfo, smlinfo')
+		    fun isSelf (smlinfo': SI.info) : bool = SI.eq (smlinfo, smlinfo')
 
 		    (* lookimport : S.symbol -> DE.env *)
 		    (* lookup function for things not defined in the same ML file.
@@ -291,7 +291,7 @@ in
 			end
 
 		    val env: DE.env =
-			case SmlInfo.skeleton gp thisFile
+			case SI.skeleton gp thisFile
 			  of SOME sk => evalOneSkeleton lookimport sk
 			   | NONE => DE.EMPTY
 
