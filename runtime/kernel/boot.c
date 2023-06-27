@@ -92,8 +92,9 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
 	strcpy(fname, STR_MLtoC(LIST_hd(BinFileList)));
 	BinFileList = LIST_tl(BinFileList);
 	if (fname[0] == '#') {
-	    if (rts_init)
+	    if (rts_init) {
 		Die ("runtime system registered more than once\n");
+	    }
 	    else {
 	      /* register the runtime system under the given pers id */
 		pers_id_t pid;
@@ -106,8 +107,9 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
 			pid.bytes[i] = (HEX(c1) << 4) + HEX(c2);
 		    }
 		}
-		if (!SilentLoad)
+		if (!SilentLoad) {
 		    Say ("[Registering runtime system as %s]\n", fname+1);
+		}
 		EnterPerID (msp, &pid, RunTimeCompUnit);
 		rts_init = 1;	/* make sure we do this only once */
 	    }
@@ -267,7 +269,7 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
       /* check version number */
         info->version = BIGENDIAN_TO_HOST32(p->version);
         if (info->version != BINFILE_VERSION) {
-	    Die ("invalid binfile version %0x for  \"%s\"", info->version, fname);
+	    Die ("invalid binfile version %0x for \"%s\"", info->version, fname);
         }
         info->hdrSzB    = sizeof(new_binfile_hdr_t);
         info->importCnt	= BIGENDIAN_TO_HOST32(p->importCnt);
