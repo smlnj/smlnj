@@ -88,7 +88,7 @@ structure BuildInitDG :> BUILD_INIT_DG = struct
 			    val attribs =
 				{ is_rts = rts, extra_compenv = xe,
 				  explicit_core_sym = ecs, noguid = false }
-			in SmlInfo.info' attribs gp
+			in SmlInfo.xinfo' attribs gp
 					 { sourcepath = p,
 					   group = (specgroup, newRegion),
 					   sh_spec = Sharing.DONTCARE,

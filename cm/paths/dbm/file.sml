@@ -23,10 +23,10 @@ in
      * of type FileSet.set *)
     type file = {path : Path.path, fid: FI.id option ref, sid: stableid}
 
-    (* compare : file * file -> order *)
+    (* compareFile : file * file -> order *)
     (* This is used in paths/dbm/filemap.sml and paths/dbm/fileset.sml to define maps over files,
      * with ord_key = file and compare defined in terms of the files' stableids.  *)
-    fun compare ({sid=i1, ...}: file, {sid=i2, ...} : file) = Int.compare (i1, i2)
+    fun compareFile ({sid=i1, ...}: file, {sid=i2, ...} : file) = Int.compare (i1, i2)
 
     (* accessing a file's path *)
 

@@ -15,5 +15,5 @@
 structure FileMap =
   RedBlackMapFn (struct
 		   type ord_key = File.file
-		   val compare = File.compare (* by stable ids *)
+		   val compare = File.compareFile (* by stable ids *)
 		 end)

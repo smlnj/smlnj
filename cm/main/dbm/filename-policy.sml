@@ -36,7 +36,9 @@ sig
 end (* signature FILENAMEPOLICY *)
 
 
-(* Imports: Path ($srcpath-lib.cm) *)
+(* Imports:
+   Path ($srcpath-lib.cm)
+ *)
 
 structure FilenamePolicy :> FILENAMEPOLICY =
 struct
@@ -45,7 +47,7 @@ local
 
   structure P = Path
 
-  (* the cm directory name is ".cm" by default, unless otherwise specified by the
+  (* the cm directory name (arc) is ".cm" by default, unless otherwise specified by the
    * shell environment variable CM_DIR_ARC. *)
   val cmdir : string = Option.getOpt (OS.Process.getEnv "CM_DIR_ARC", ".cm")
 

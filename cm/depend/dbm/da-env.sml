@@ -5,6 +5,7 @@
  * (C) 2023 The Fellowship of SML/NJ
  *
  * Author: Matthias Blume (matthias.blume@gmail.com)
+ * Edited: DBM, 2023.6
  *)
 
 structure DAEnv =
@@ -16,8 +17,8 @@ struct
       | BINDING of Symbol.symbol * env
       | LAYER of env * env
       | FILTER of SymbolSet.set * env
-      | SUSPEND of unit -> env
+      | SUSPEND of unit -> env    (* do we really need suspended envs? *)
 
-(*    type value = env  (* why do we need this synonym? *) *)
+(*    type value = env  (* why do we need this synonym? -- assume we don't *) *)
 
 end (* structure DAEnv *)

@@ -16,8 +16,6 @@ sig
 	imports: DependencyGraph.impexp SymbolMap.map *
 	smlfiles: (SmlInfo.info * SymbolSet.set) list *
 	localdefs: SmlInfo.info SymbolMap.map *
-	subgroups: 'a *
-	sources: 'b *
 	SymbolSet.set *			(* filter *)
 	GeneralParams.info *
 	DependencyGraph.farsbnode	(* pervasive env *)
@@ -50,23 +48,26 @@ local
   structure GP = GeneralParams
   structure SI = SmlInfo
   structure SIM = SmlInfoMap
+  structure CS = CheckSharing  (* CS.check called once near the end *)
 
 in
 
     type looker = S.symbol -> DE.env
 
     (* look : (S.symbol -> DE.env) -> DE.env -> S.symbol -> DE.env *)
-    fun look otherwise DE.EMPTY s = otherwise s
-      | look otherwise (DE.BINDING (s', v)) s =
-	  if S.eq (s, s') then v else otherwise s
-      | look otherwise (DE.LAYER (e, e')) s = look (look otherwise e') e s
-      | look otherwise (DE.FCTENV looker) s =
-	  (case looker s of NONE => otherwise s | SOME v => v)
-      | look otherwise (DE.FILTER (ss, e)) s =
-	  if SS.member (ss, s)
-	  then look otherwise e s
-	  else otherwise s
-      | look otherwise (DE.SUSPEND eth) s = look otherwise (eth ()) s
+    fun look otherwise DE.EMPTY sym = otherwise sym
+      | look otherwise (DE.BINDING (sym', v)) sym =
+	  if S.eq (sym, sym') then v else otherwise sym
+      | look otherwise (DE.LAYER (env, env')) sym = look (look otherwise env') env sym
+      | look otherwise (DE.FCTENV looker) sym =
+	  (case looker sym
+	     of NONE => otherwise sym
+	      | SOME v => v)
+      | look otherwise (DE.FILTER (ss, env)) sym =
+	  if SS.member (ss, sym)
+	  then look otherwise env sym
+	  else otherwise sym
+      | look otherwise (DE.SUSPEND eth) sym = look otherwise (eth ()) sym
 
     (* evalOneSkeleton : (S.symbol -> DE.env) -> SK.decl -> DE.env *)		 
     fun evalOneSkeleton (lookimport: S.symbol -> DE.env) =
@@ -135,18 +136,18 @@ in
     fun formatSymbol (s: S.symbol) =
 	PP.hblock [PP.text (S.nameSpaceToString (S.nameSpace s)), PP.text (S.name s)]
 
-    (* blackboard (in build) is an snode_env option SIM.map; analyze returns snode_env *)
+    (* blackboard (in build) is an snode_env option SIM.map; entries are created by
+     * analyze, which returns snode_env *)
     type snode_env = DG.snode * DAEnv.env
+    (* history is an alist mapping symbols to SI.info (can there be multiple entries for a symbol?) *)
     type historyTy = (S.symbol * SI.info) list
 
     (* build : -- see BUILDDEPEND.build *)
-    fun build (imports: DG.impexp SymbolMap.map,
+    fun build (imports: DG.impexp SM.map,
 	       smlfiles: (SI.info * SS.set) list,
-	       localdefs: SI.info SymbolMap.map,
-	       subgroups: 'a,
-	       sources: 'b,
-	       filter: SS.set,
-	       gp: GP.info,
+	       localdefs: SI.info SM.map,
+	       filter: SS.set,  (* option? *)
+	       gp: GP.info,   (* used 3 times, once for gp.error *)
 	       perv_fsbnode: DG.farsbnode) (* pervasive env *)
       = let
 	    (* per_file_exports : SS.set SIM.map *)
@@ -155,31 +156,34 @@ in
 		      SIM.empty smlfiles
 
 
+	    (* bb: snode_env option SIM.map ref -- the "blackboard" *)
 	    (* the "blackboard" where analysis results are announced *)
 	    (* (also used for cycle detection) *)
-	    (* bb: snode_env option SIM.map ref -- the "blackboard" *)
 	    val bb : snode_env option SIM.map ref = ref SIM.empty
 
 	    (* lock : SI.info -> unit *)
+	    (* the entry for a SI.info key is _locked_ if it is mapped to NONE *)
 	    fun lock (info: SI.info) = bb := SIM.insert (!bb, info, NONE)
 
-	    (* release : SI.info * snode_env -> unit *)  (* snode_env is return type of "analyze" *)
-	    fun release (info: SI.info, r) =
+	    (* release : SI.info * snode_env -> snode_env *)
+	    (* release an SI.info key by setting it to SOME r (thus adding a binding to the
+             * blackboard) *)
+	    fun release (info: SI.info, r: snode_env) =
 		  (bb := SIM.insert (!bb, info, SOME r); r)
 
 	    (* fetch : SI.info -> snode_env option option *)
-	    fun fetch i = SIM.find (!bb, i)
+	    fun fetch smlinfo = SIM.find (!bb, smlinfo)
 
 
-	    (* We collect all imported symbols so that we can then narrow
-	     * the list of libraries. *)
+	    (* We collect all imported symbols so that we can then: 
+	     * "narrow the list of libraries." *)
 	    (* imported_syms : SS.set ref *)
 	    val imported_syms : SS.set ref = ref SS.empty
         
 	    (* add_imported_sym : S.symbol -> unit *)
 	    fun add_imported_sym s = imported_syms := SS.add (!imported_syms, s)
 
-	    (* getResult : [info:]SI.info * historyTy -> snode_env *)
+	    (* getResult : [smlinfo:]SI.info * historyTy -> snode_env *)
 	    (* get the result from the blackboard if it is there, otherwise trigger analysis
 	     * -- detect cycles using locking
 	     * -- maintain root set *)
@@ -213,7 +217,7 @@ in
 
 			in SI.error gp smlinfo
 			      EM.COMPLAIN "cyclic ML dependencies" errorBody;
-			   (* carry on? with bogus release ? or is this return value just for type checking? *)
+			   (* carry on with bogus release (for type checking?) *)
 			   release (smlinfo,
 				    (DG.SNODE {smlinfo = smlinfo, localimports = nil, globalimports = nil},
 				     DE.EMPTY))
@@ -224,7 +228,7 @@ in
 	     * corresponding snode and DE.env *)
 	    and analyze (smlinfo: SI.info, history: historyTy) =
 		let
-		    val localImports  : DG.snode list ref = ref nil
+		    val localImports  : DG.snode list ref = ref nil (* collect local imports *)
 		    val globalImports : DG.farsbnode list ref = ref [perv_fsbnode]
 
 		    (* addLocalImport : DG.snode -> unit *)
@@ -237,7 +241,8 @@ in
 		    (* addGlobalImport : S.symbol * DG.farsbnode -> unit *)
 		    (* register a global import, maintain filter sets *)
 		    fun addGlobalImport (sym: S.symbol, ((filterOp, sbnode): DG.farsbnode) =
-			let fun sameNode ((_, sbnode'): DG.farsbnode) : bool = DG.sbeq (sbnode, sbnode')
+			let fun sameNode ((_, sbnode'): DG.farsbnode) : bool =
+				DG.sbeq (sbnode, sbnode')
 			 in add_imported_sym sym;
 			    case List.find sameNode (!globalImports)
 			      of NONE => globalImports := (f, n) :: !globalImports (* new farsbnode *)
@@ -250,7 +255,8 @@ in
 				    *  filterOp is NONE, thus discarding filter'. *)
 				   let fun replace (filterOp: DG.filter option) : unit =
 					    globalImports :=
-					      (filterOp, sbnode) :: List.filter (not o sameNode) (!globalImports)
+					      (filterOp, sbnode)
+					      :: List.filter (not o sameNode) (!globalImports)
 				    in case filterOp
 					 of NONE => replace NONE  (* discarding the old filter'! *)
 					  | SOME filter =>
@@ -311,12 +317,12 @@ in
 
 	(* Invert the "localdefs" map so that each smlinfo is mapped to the
 	 * corresponding _set_ of symbols: *)
-	val ilocaldefs : SymbolSet.set SIM.map = 
+	val ilocaldefs : SS.set SIM.map = 
   	    let fun folder (symbol, info, m) =
-		    (case SIM.find (m, info)
-		       of NONE => SIM.insert (m, info, SS.singleton symbol)
-		        | SOME ss => SIM.insert (m, info, SS.add (ss, symbol)))
-	     in SymbolMap.foldli folder SIM.empty localdefs
+		    (case SIM.find (m, smlinfo)
+		       of NONE => SIM.insert (m, smlinfo, SS.singleton symbol)
+		        | SOME ss => SIM.insert (m, smlinfo, SS.add (ss, symbol)))
+	     in SM.foldli folder SIM.empty localdefs
 	    end
 
 	fun addDummyFilter i =
@@ -336,7 +342,7 @@ in
 	 * filter *)
 	val localmap = SM.map addDummyFilter localdefs
 
-	val exports : DG.impexp SymbolMap.map =
+	val exports : DG.impexp SM.map =
 	    let (* Strengthening a local export is directly described by filter. *)
 		val local_filter = filter
 
@@ -344,7 +350,7 @@ in
 		 * account local definitions: anything defined locally
 		 * must be removed from re-exports. *)
 		val reexport_filter =
-		    SS.subtractList (filter, SymbolMap.listKeys localdefs)
+		    SS.subtractList (filter, SM.listKeys localdefs)
 
 		(* We now always have a filter.
 		 * We export only the things in the filter.
@@ -379,9 +385,15 @@ in
 	     in SS.foldl addNodeFor SM.empty filter
 	    end (* val exports *)
 
-     in CheckSharing.check (exports, gp);
+     in CS.check (exports, gp);
 	(exports, !imported_syms)
     end (* end build ? *)
 
 end (* top local *)
 end (* structure BuildDepend *)
+
+(* NOTES
+
+1. "flattened" the arguments to the build function -- one big tuple.
+
+*)

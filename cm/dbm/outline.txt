@@ -141,6 +141,10 @@ semant/
     There are already a number of places where SMLNJVersion.version is referred
     to, and this versioning should suffice.
 
+    JHR says that there are other clients for the Version structure (compiler, tools?).
+    Since Version seems to be quite generic, perhaps it belongs in compiler/Basics
+    or compiler/Support (aka compiler/Admin).
+
   iinfo.sml
     Why is the statenv field a thunk?
     A field like this should only be thunkified if computing the actual static
@@ -163,12 +167,33 @@ semant/
     or to detect changes that affect a computation "after the fact" and thus 
     "invalidate" computations (and their values) that have already been completed.
 
+  sharing.sml
+    Does this have something to do with prohibiting the "sharing" of groups by
+    multiple libraries?
+
+    sharing "declarations" in CDFs? (Check CM manual.) semantics?
+
+    Sharing.request seems to be a "per source file" attribute (field in SmlInfo.info).
+    same for Sharing.mode, which is a persinfo field.
+
+  group-reg.sml
+    keeping track of groups that exist in a FileMap.map (a "group environment" mapping
+    them (the group CDF file) to the corresponding Source.source.
+    (register = "bind", lookup = lookup).
+
+    The "error" function uses groupreg mapping to provide CDF source (along with the region
+    of a group member specification within the group CDF) for calls of ErrorMsg.error
+    to identify the member specification where an error occurred.
+
 
 smlfile/
 
-  representation of static information about SML source files (module declarations)
+  representation of (static) information about SML source files (module declarations)
 
   SmlInfo (smlinfo.sml)
+
+  Q: Why is the guid (now getguid) field of persinfo a thunk, and when
+  is it supposed to be forced to generate the actual guid?  The 
 
 
 stable/
@@ -206,13 +231,63 @@ bootstrap/
 util/
 
   * drop SetFn (set-fn.sml) and MapFn (map-fn.sml); use RedBlackSetFn
-    and RedBlackMapFn directly instead.
+    and RedBlackMapFn directly in their place instead.
     
 
 tools/main/
 
---------------------------------------------------------------------------------
 
-Privileges
-  these have never been "enforced", therefore expendable
-  privileges are not part of the needed functionality of CM
+
+
+================================================================================== 
+General Comments/Proposals -- CM 3.0 design ideas
+==================================================================================
+
+* Privileges
+  - these have never been "enforced", therefore expendable --
+    privileges are not part of the necessary (i.e. existing) functionality of CM.
+  - deleting all entities (record fields, functions, etc.) relating
+    solely to privileges.
+
+* Unification of "Groups" and "Libraries"
+  - All groups become libraries.
+  - Eliminates the problem of what groups belong to what libraries.
+  - Does this cause the loss of any "name space management" features of groups?
+  - Introduce group/library _names_ distinct from CDF file paths.
+    Do group names supercede "anchors"?
+
+* 1st class "Groups"
+  - group/library representation datastructures (a GroupInfo structure
+    analagous to SmlInfo, perhaps)
+    -- group _name_ : a string or symbol, distinct from the file path
+       of a group CDF 
+    -- exports (module symbols)
+    -- members (sml source files)
+    -- imports (group/libraries) dependencies
+  - group dependency graph, distinct from source file dependency graph
+  - specify group imports using group names, rather than (anchored) file paths
+  - group name -> file path environment
+    file paths should be purely "semantic" things, not used in group/library definitions
+  - anchors become bound group variables
+  - conditional compilation as "group/library expressions"
+
+* files (classification, contents)
+  - bin files (compiled code + interface SE (pickle))
+  - source files (text files)
+    -- SML source files (members of groups)
+    -- CDF files (group/library definitions)
+    -- CM .cmi files ("CM scripts"?)
+    -- configuration files: pathconfig, depends, ... (system/*)
+    -- skel and guid files (maybe eliminate skel?)
+       (CM data caching)
+  - format of config files (JSON?, SEXP?)
+  - an SML source file should appear at most once as a member of a group/library
+  - a group/library can be imported by multiple group/libraries
+
+* anchor binding and environments
+  - need for the "bind" keyword notation in CDFs (should be a form of "let")
+    (complile-time "dynamic" binding of anchors)
+  - could anchors become some form of CM "group/library" variable?
+  - relation with concrete file paths should be secondary
+  
+    

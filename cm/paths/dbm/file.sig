@@ -7,7 +7,7 @@ sig
 
   type file
 
-  val compare : file * file -> order
+  val compareFile : file * file -> order
 
   (* return the path component of a file *)
   val fileToPath : file -> path

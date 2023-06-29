@@ -10,5 +10,5 @@ structure SmlInfoMap =
 RedBlackMapFn
   (struct
      type ord_key = SmlInfo.info
-     val compare = SmlInfo.compare  (* File.compare on file components *)
+     val compare = SmlInfo.compareInfo  (* File.compareFile on file components *)
    end)
