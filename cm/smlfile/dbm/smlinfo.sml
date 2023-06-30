@@ -56,7 +56,7 @@ sig
      * now which means that the file used to be in another group). *)
     val newGeneration : unit -> unit
 
-(* remove export to see if there are any external calls 
+(* do not export "mkinfo" to see if there are any external calls 
     (* may not be called externally at all (no external calls found so far) *)
     val mkinfo : bool -> GeneralParams.info -> info_args -> info
 *)
@@ -70,12 +70,14 @@ sig
     val skelpath : info -> Path.path
     val binpath : info -> Path.path
     val sh_spec : info -> Sharing.request
-    val sh_mode : info -> Sharing.mode
     val attribs : info -> attribs
-    val lastseen : info -> TStamp.t
     val setup : info -> string option * string option
-    val controllers : info -> controller list
     val is_local : info -> bool
+    val controllers : info -> controller list
+
+    (* accessing fields in the persinfo field of INFO *)
+    val lastseen : info -> TStamp.t
+    val sh_mode : info -> Sharing.mode
 
     (* setting and getting the guid string *)
     val setguid : info * string -> unit
@@ -83,14 +85,14 @@ sig
 
     val set_sh_mode : info * Sharing.mode -> unit
 
-    val parsetree : GeneralParams.info -> info -> (Ast.dec * SR.source) option
+    val getSyntax : GeneralParams.info -> info -> (Ast.dec * SR.source) option
     val exports : GeneralParams.info -> info  -> SymbolSet.set option
     val skeleton : GeneralParams.info -> info -> Skeleton.decl option
 
     val error : GeneralParams.info -> info -> ErrorMsg.complainer
 
-    (* forget a parse tree if/when we are done with it *)
-    val forgetParsetree : info -> unit
+    (* forget a parse tree (Ast.dec) if/when we are done with it *)
+    val forgetAst : info -> unit
 
     (* Evict all elements that belong to a given group but which are not of the current
      * generation. "cleanGroup" should be called right after parsing the group file.
@@ -150,10 +152,13 @@ in (* top local *)
 		     controllers: controller list }
 
   type generation = unit ref
+  type syntax = Ast.dec * SR.source
 
   (* [DBM] How do the persinfo attributes of an info differ from the direct info attributes (fields)?
-   * are they more ephemeral, changeable? They are all ref values, except for setguid and getguid, which
-   * deal with the "changeable" guid attribute.
+   * are they more ephemeral, changeable? Also, these seem to be "post-computed" attributes that are
+   * computed based on the contents or other attributes (modification time) of the file.
+   * The fields are all ref values, except for setguid and getguid, which deal with the "changeable",
+   * internally chached guid attribute.
    * This would not appear to apply to the "group" to which the file belongs, so group has been
    * moved from persinfo to info. *)
   (* [BLUME] sh_mode is an elaboration of sh_spec;  it must be persistent
@@ -161,7 +166,7 @@ in (* top local *)
   datatype persinfo =
       PERS of { generation: generation ref,
 		lastseen: TStamp.t ref,
-		parsetree: (Ast.dec * source) option ref,
+		syntax: syntax option ref,
 		skeleton: Skeleton.decl option ref,
 		sh_mode: SH.mode ref,
 		setguid: string -> unit,
@@ -256,16 +261,16 @@ in (* top local *)
   fun isKnown (INFO { file, ... }) =
       isSome (FileMap.find (!knownInfo, file))
 
-  (* countParseTrees : unit -> int *)
-  fun countParseTrees () =
-      let fun inc (PERS { parsetree = ref (SOME _), ... }, i) = i + 1
+  (* countSyntaxes : unit -> int *)
+  fun countSyntaxes () =
+      let fun inc (PERS { syntax = ref (SOME _), ... }, i) = i + 1
 	    | inc (_, i) = i
        in FileMap.foldl inc 0 (!knownInfo)
       end
 
-  (* forgetParsetree : info -> unit *)
-  fun forgetParsetree (INFO { persinfo = PERS { parsetree, ... }, ... }) =
-      parsetree := NONE
+  (* forgetSyntax : info -> unit *)
+  fun forgetAst (INFO { persinfo = PERS { syntax, ... }, ... }) =
+      syntax := NONE
 
   (* cleanGroup : bool -> F.file -> unit *)
   fun cleanGroup (nowStable: bool) (file: F.file) =
@@ -286,20 +291,22 @@ in (* top local *)
   (* validate : F.file * persinfo -> unit *)
   (* check timestamp and throw away any invalid cache *)
   fun validate (file: F.file,
-		PERS { lastseen, generation, parsetree, skeleton, ...})
+		PERS { lastseen, generation, syntax, skeleton, ...})
       let val ts = !lastseen
 	  val nts = F.tstamp file
        in if TStamp.needsUpdate { source = nts, target = ts }
 	  then (lastseen := nts;
 	        generation := now ();
-	        parsetree := NONE;
+	        syntax := NONE;
 	        skeleton := NONE)
 	  else ()
       end
 
-  (* info' : GP.info -> attribs -> info_args -> info *)
-  (* called once externally in bootstrap/build-initdg.sml *)
-  fun info' (gp: GP.info)
+  (* mkinfo' : GP.info -> attribs -> info_args -> info *)
+  (* construct an info value, given all the args (gp, attribs, info_args).
+   * internal: called once in mkinfo.
+   * external: called once in bootstrap/build-initdg.sml (function "sml") *)
+  fun mkinfo' (gp: GP.info)
 	    (attribs: attribs)
 	    ({file, group = gr as (group, region), sh_spec, setup, locl, controllers} : info_args) =
       let val policy = #fnpolicy (#param gp)
@@ -413,7 +420,9 @@ in (* top local *)
 	    controllers = controllers}
   end (* fun info' *)
 
-  (* info : bool -> GP.info -> info_args -> info *)
+  (* mkinfo : bool -> GP.info -> info_args -> info *)
+  (* internal: no calls;
+   * external: no known calls *)
   fun info (gp: GP.info) (noguid: bool) =
       info' gp 
 	    ({extra_compenv = NONE,
@@ -421,15 +430,17 @@ in (* top local *)
 	      noguid = noguid,
 	      explicit_core_sym = NONE} : attribs)
 
+  (* getSyntax : GP.info -> info -> bool -> (Ast.dec * SR.source) option *)
   (* the following functions are only concerned with getting the data,
    * not with checking time stamps *)
-  fun getParseTree gp (i as INFO {file, persinfo = PERS { parsetree, ... },
-				  controllers, ... },
-		       quiet) =
+  fun getSyntax gp (i as INFO {file,
+			       persinfo = PERS { syntax, ... },
+			       controllers, ... },
+		    quiet) =
       let fun err msg = error gp i EM.COMPLAIN msg EM.nullErrorBody
 	  val file_path = P.pathToFpath (path i)
-       in case !parsetree
-	    of SOME pt => SOME pt
+       in case !syntax
+	    of (synOp as SOME _) => synOp
 	     | NONE => 
 		 let val orig_settings =
 			 map (fn c => #save'restore c ()) controllers
@@ -450,30 +461,32 @@ in (* top local *)
 						      closeIt = TextIO.closeIn,
 						      work = work,
 						      cleanup = cleanup })
-	      (* Counting the trees explicitly may be a bit slow,
-	       * but maintaining an accurate count is difficult, so
-	       * this method should be robust.  (I don't think that
-	       * the overhead of counting will make a noticeable
-	       * difference.) *)
-		     val ntrees = countParseTrees ()
+	             (* [Blume] Counting the trees explicitly may be a bit slow,
+		      * but maintaining an accurate count is difficult, so
+		      * this method should be robust.  (I don't think that
+		      * the overhead of counting will make a noticeable
+		      * difference.) *)
+		     val ntrees = countSyntaxes ()
 		     val treelimit = #get StdConfig.parse_caching ()
 		  in if ntrees < treelimit
-		     then parsetree := pto
+		     then syntax := pto
 		     else ();
 		     pto
 		 end
 		 handle exn as IO.Io _ => (err (General.exnMessage exn); NONE)
 		      | CompileExn.Compile msg => (err msg; NONE)
-      end (* fun getParseTree *)
+      end (* fun getSyntax *)
 
-  fun skeleton gp (i as INFO { file, skelname, persinfo = PERS { skeleton, lastseen, ... }, ... }) =
+  (* skeleton : GP.info -> info -> SK.skeleton option *)
+  fun skeleton gp (i as INFO { file, skelname,
+			       persinfo = PERS { skeleton, lastseen, ... }, ... }) =
 	(case !skeleton
-	   of SOME sk => SOME sk
+	   of (skelOp as SOME _) => skelOp
 	    | NONE =>
-		(case SkelIO.read (skelname, !lastseen)
+		(case SkelIO.read (skelpath, !lastseen)
 		   of SOME sk => (skeleton := SOME sk; SOME sk)
 		    | NONE =>
-			(case getParseTree gp (i, false)
+			(case getSyntax gp (i, false)
 			   of SOME (tree, source) =>
 				   let fun err sv region s =
 					   EM.error source region sv s EM.nullErrorBody
@@ -483,29 +496,32 @@ in (* top local *)
 				       if EM.anyErrors (EM.errors source)
 				       then error gp i EM.COMPLAIN "error(s) in ML source file"
 						  EM.nullErrorBody
-				       else (SkelIO.write (skelname, sk, !lastseen);
+				       else (SkelIO.write (skelpath, sk, !lastseen);
 					     skeleton := SOME sk);
 				       SOME sk
 				   end
 			    | NONE => NONE))
 
 
+  (* exports : GP.info -> info -> ? *)
   (* we only complain at the time of getting the exports *)
-  fun exports gp i = Option.map SkelExports.exports (skeleton gp i)
+  fun exports gp info = Option.map SkelExports.exports (skeleton gp info)
 
-  fun parsetree gp i = getParseTree gp (i, true)
+  (* syntax : GP.info -> info -> syntax *)
+  fun syntax gp i = getSyntax gp (i, true)
 
   (* errorLocation : GP.info -> info -> string *)
-  fun errorLocation (gp: GP.info) (INFO i) =
-      let val { persinfo = PERS { group = (group, region), ... }, ... } = i
-	  val source : SR.source = GroupReg.lookup (#groupreg gp) group
-       in case SM.sourceRegion (source, region)
-	    of SOME sourceRegion => SM.sourceRegionToString sourceRegion
-	     | NONE => #fileOpened source
-      end
+  fun errorLocation (gp: GP.info) (INFO { persinfo = PERS { group = (group, region), ... }, ... }) =
+	let val source : SR.source = GroupReg.lookup (#groupreg gp) group
+	 in case SM.sourceRegion (source, region)
+	      of SOME sourceRegion => SM.sourceRegionToString sourceRegion
+	       | NONE => #fileOpened source
+	end
 
-  fun guid (INFO { persinfo = PERS { guid, ... }, ... }) = guid ()
+  (* getguid : info -> string *)
+  fun getguid (INFO { persinfo = PERS { getguid, ... }, ... }) = getguid ()
 
+  (* setguid : info * string -> unit *)
   fun setguid (INFO { persinfo = PERS { setguid, ... }, ... }, g) = setguid g
 
 end (* top local *)
