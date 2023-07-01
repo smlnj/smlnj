@@ -1,0 +1,138 @@
+$smlnj/cm/dbm/cm3.txt
+
+Title: A preliminary design of CM 3.0
+Author: DBM
+
+This is a preliminary sketch of the design of CM 3.0 (a new generation of CM, the compilation manager).
+
+The goal is to replace all "essential" functionality of CM 2 in a simpler, smaller system.  Fewer,
+simpler concepts, with much simpler implementation.
+
+Salient points:
+
+* Group = Library
+There is no division into groups and libraries. Essentially only libraries are used, but we
+will continue to use the historical term "group" for the unified concept, partly because it continues
+to be the central concept in the current (CM 2) implementation.  (I.e. groups are libraries, and
+libraries are now called groups). We choose to use "group" as the primary term because it is a
+bit more "neutral" than the term "library", which has various meanings and connotations in the
+context of programming.
+
+* Groups names
+
+  Groups will be defined with a name (string or atom). Group names serve a purpose similar to "anchors"
+  and there will be environments mapping group names to groups.
+
+* Group "interfaces"
+  A group interface specifies:
+
+    1. imported groups
+    2. exported module symbols (names of structures, functors, signatures)
+
+  Thus imports are specified as a set of groups, while exports as a set of module identifiers.
+
+* A group consists of the following:
+
+  1. a name
+  2. an export interface (set of module-language names: structures, functors, and their signatures)
+  3. a set of member source files (the content)
+  4. a set of imported groups (the implicit import interface)
+  
+* Groups, files, and the file system
+
+  A group is associated with two directories:
+
+  1. A "base" directory: all relative file paths for member source files are relative to this
+     directory.
+  2. The directory in which the CM source file definiting the group is found.
+
+  These are ("conventionally") the same directory in CM2, and we would expect them to
+  normally coincide in CM 3, but they do not need to be the same.
+
+  But how does a CM source file containing a group definition know what directory it is
+  placed in?  (This is the file path of the "CDF" or CM Definition File.)
+
+  Should there be a way of _declaring_ the base directory?  Is there a default way of
+  defining the base directory, perhaps in terms of the location of a CM file (a CDF).
+
+  Note that in SML and other programming languages, the file system path of a source file
+  does not affect its semantics. A running instance of an SML program is able to use the
+  OS/FS interface to determine and change the current working directory.
+
+* The group dependency graph is determined simply by the "import" relationship (when does
+  a group import another. Groups should form a directed, acyclic graph (DAG).
+
+* Within a group, we need to analyze the source files to determine their dependency graph.
+  A topological sort of the source dependency graph will then determine their order of
+  compilation.
+
+  Source file analysis determines (based on the ast representation of the syntax) the sets
+  of imported and exported module identifiers for each source file (represented as two sets
+  of identifiers -- rather simpler than the "skeletons" of CM 2. The source dependency graph
+  within a group should be acyclic.
+
+  Is this export/import analysys fast enough that we do not need to cache this interface
+  for each source file (as is done with the SKEL files)?
+
+* GUIDs?
+
+  Do we need GUIDs? What role do they play in CM 2?
+
+* Sharing?
+
+  All groups (which are analagous to CM 2 libraries) can be "shared", that is, they can be
+  imported into multiple other groups.
+
+  Is there anything else to worry about regarding sharing?  Does anything need to be "declared"?
+  
+
+* Conditional compilation
+
+  Boolean valued CM "variables".
+  Conditional "member" (SML source) specifications (if ... then ... else ...)
+  
+
+* How and where are group environments created?
+
+  No longer depending solely on the file system directory tree, and associated file paths,
+  supplemented by "anchors".
+
+  Need replacement for pathconfig files and the associated mechanism. Maybe pathconfig
+  files will be replaced by CM source files containing "declarations" of groups, associating
+  them with (file paths?).
+
+  "Group declarations"
+
+     Bind a group name (group variable) to a group, expressed how?
+       - could bind group names to (absolute/relative?) file paths for a group definition
+         file (CM source file).
+
+    "local bindings" (line the "bind:" construct of CM 2)
+       (compile-time) dynamic binding of group names
+
+    scoping rules for group variable bindings
+
+  "Group expressions"
+     e.g. "FILE (file_path)"
+     any other sorts of group expression?
+
+  "Group evaluation"
+     causes (cutoff) (re-)compilation and "loading" of some set of SML source files, in some
+     derived order
+
+  cmi files (like system/smlnj/init/inti.cmi)
+     imply additional CM 3 language constructs
+
+  abstraction over group variables (group functions)?
+     e.g. abstraction over imported groups (group functors?)
+
+  typing groups? (expressing import/export interfaces)
+
+  etc. ...
+
+
+* What is left out?
+
+  priviledges (never fully implmented in CM 2)
+  anchors (replaced by group names)
+  slaves (what is this about?)
