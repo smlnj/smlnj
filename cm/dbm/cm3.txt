@@ -23,6 +23,10 @@ context of programming.
   Groups will be defined with a name (string or atom). Group names serve a purpose similar to "anchors"
   and there will be environments mapping group names to groups.
 
+  Lexical specification of group names/variables
+    E.g. Alpha-numeric with initial letter, no white space
+    (independent of file path formats, "native" or otherwise)
+
 * Group "interfaces"
   A group interface specifies:
 
@@ -59,8 +63,13 @@ context of programming.
   does not affect its semantics. A running instance of an SML program is able to use the
   OS/FS interface to determine and change the current working directory.
 
+  Groups as "semantic" entities, apart from CM source files containing group "definitions"
+    The "internal" representation of groups used in CM processes.
+
+
 * The group dependency graph is determined simply by the "import" relationship (when does
   a group import another. Groups should form a directed, acyclic graph (DAG).
+
 
 * Within a group, we need to analyze the source files to determine their dependency graph.
   A topological sort of the source dependency graph will then determine their order of
@@ -74,9 +83,26 @@ context of programming.
   Is this export/import analysys fast enough that we do not need to cache this interface
   for each source file (as is done with the SKEL files)?
 
+
+* "Name Space management"
+
+  export clashes (a module identifier being exported from multiple groups)
+    import name clash resolution rules (needed?)
+
+  Renaming exports of a group (name mapping)
+
+  Filtering exports of a group
+
+  Combining (unioning) exports from multiple import groups
+
+  In principle, imported groups of a group are not ordered.
+
+
 * GUIDs?
 
   Do we need GUIDs? What role do they play in CM 2?
+  They are not "visible" to the CM user (not mentioned in the CM manual).
+
 
 * Sharing?
 
@@ -88,7 +114,7 @@ context of programming.
 
 * Conditional compilation
 
-  Boolean valued CM "variables".
+  Boolean valued CM "variables".  (Boolean values in the CM "language".)
   Conditional "member" (SML source) specifications (if ... then ... else ...)
   
 
@@ -129,6 +155,42 @@ context of programming.
   typing groups? (expressing import/export interfaces)
 
   etc. ...
+
+
+* cut-off recompilation
+
+  source and binary file time stamps
+
+  group time stamps?
+
+
+* pickling?
+
+
+* caching?
+
+
+* binfile format (any changes?)
+
+
+* CM initialization
+
+  "root" group?
+
+
+* integration with
+  
+  - compiler bootstrapping
+
+  - interactive system (REPL)
+      pervasive environment
+      autoloading
+
+  - (future) batch compilation of stand-alone programs
+
+
+* Role of (need for) shell environment variables?
+    Minimize the use, dependence on, shell environment variables (like CM_PATHCONFIG).
 
 
 * What is left out?
