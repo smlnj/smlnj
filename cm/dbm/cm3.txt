@@ -208,6 +208,6 @@ context of programming.
   (almost) all thunkifications (suspended computations)
 
 * What additional functionality might be added later?
-  (assuming a convincing argument about utility of safety).
+  (assuming a convincing argument about utility or safety).
 
   private/shared (controlling access to instances with dynamic state)
