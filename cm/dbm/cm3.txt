@@ -157,6 +157,11 @@ context of programming.
   etc. ...
 
 
+* tools
+
+  limited, simplified scheme for tool support?
+
+
 * cut-off recompilation
 
   source and binary file time stamps
@@ -195,6 +200,14 @@ context of programming.
 
 * What is left out?
 
-  priviledges (never fully implmented in CM 2)
+  access control (privileges) (never fully implmented in CM 2)
   anchors (replaced by group names)
-  slaves (what is this about?)
+  concurrent and distributed compilation (and the related slave stuff, e.g., main/slave.sml)
+  private and shared status of member files (at least initially, assume only shared status)
+  CM library version numbers (and versioned binfiles, etc.)
+  (almost) all thunkifications (suspended computations)
+
+* What additional functionality might be added later?
+  (assuming a convincing argument about utility of safety).
+
+  private/shared (controlling access to instances with dynamic state)
