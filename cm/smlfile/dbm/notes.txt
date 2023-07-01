@@ -1,0 +1,75 @@
+Scanning ast to define import/export symbol lists:
+
+
+* Dependency Analysis Problem:
+
+Hypothetical imported structure A:
+
+---------------------
+fileA.sml
+---------------------
+   structure A =
+   struct
+     structure AA = struct val x = 3 end
+   end
+---------------------
+exports: S:A, S:A.AA
+imports: nil
+
+
+Structure/file being scanned:
+
+---------------------
+fileB.sml
+---------------------
+  structure B =
+  struct
+    open A           <- signalling the import of A (if this is the "first" open),
+                        introducing AA as "local" (secondary import)
+    val y = AA.x     (a path in an expression starting with AA)
+    ... open AA ...  (an open declaration mentioning AA)
+  end
+---------------------
+exports: S:B
+imports: S:A  [satisfied by fileA.sml]
+
+[for an import like A, need to know what substructures it contained (AA, which becomes
+"local" after A is opened). And we need to know what substructures AA contains, in case
+it is opened, and so on.]
+
+"A" is an imported structure symbol for B (fileB.sml)
+
+Is "AA" an imported symbol?  No!  (It could be called a "secondary" import.)
+
+After opening A, we don't know whether a structure symbol AA is an independent import
+or whether it was introduced into the environment by "open A".
+
+How do we detect this while scanning B in isolation?
+
+Do we need a signature for structure A?
+
+What if we are scanning B before we scan A? And before dependency analysis
+shows that fileA.sml needs to be compiled before fileB.sml.
+
+What if we conservatively record AA as an imported structure. And assume that
+AA will not appear in any member's export list.  Does the extra, spurious AA
+in the import list of fileB.sml cause a problem?
+
+But there might be a problem (such as a false cyclical dependency) if in fact
+AA were exported by some other file, say fileC.sml. We might falsely conclude
+that fileB.sml depends on fileC.sml (when, in fact, fileC.sml depends on fileB.sml).
+
+
+----------------------
+Attempted solution: try 2-pass approach.
+
+1. calculate module exports, assuming no top-level open in SML source members
+2. calculate imports, knowing the ???
+
+Requirements:
+
+1. need to be able to calculate the dependency relation, possibly in
+multiple passes, but independently of the initial order in which source files are
+scanned for I/E information.
+
+2. use only "concrete" syntax representation (ast)
