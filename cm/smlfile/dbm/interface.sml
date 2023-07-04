@@ -41,15 +41,22 @@ local
   structure S = Symbol
   structure SP = SymPath
   structure SS = SymbolSet
+  structure A = Ast
+  structure SK = Skeleton
   structure EM = ErrorMsg
 
-  type symbol = Symbol.symbol
+  type symbol = S.symbol  (* = SS.item *)
   type path = symbol list
-  type symset = SS.item
+  type symset = SS.set
+  type mexp = SK.exp
+  type decls = SK.decl list
+  type bind = symbol * mexp
+  type ssexp = symset * mexp
 
-  open Ast Skeleton (* should avoid open! *)
+  open A (* should avoid open! *)
 
 in
+
 
     (* The main idea is to collect lists of decl ("dl"s).
      * Normally, a dl will eventually become an argument to seq or par.
@@ -57,6 +64,7 @@ in
      * at the front (but we don't try too hard and only do it where
      * it is reasonably convenient). *)
 
+    (* o' : (('b * 'c) -> 'd) * ('a -> 'b) -> ('a * 'c) -> 'd) *)
     (* function composition suitable for fold[lr]-arguments *)
     infix o'
     fun (f o' g) (x, y) = f (g x, y)
@@ -69,21 +77,21 @@ in
     (* s_addMP : path * symset -> symset *)
     (* same as s_addP except we ignore paths of length 1 because they
      * do not involve module access. *)
-    fun s_addMP ([], set) = set		(* can this happen at all? *)
+    fun s_addMP ([], set) = set		(* can this happen at all? (null path?) *)
       | s_addMP ([only], set) = set	(* singleton path -- no module name here *)
-      | s_addMP (head :: _, set) = SS.add (set, head)
+      | s_addMP (head :: _, set) = SS.add (set, head)  (* add head of path, a structure name *)
 
-    (* dl_addSym : symbol * decl list -> decl *)
+    (* dl_addSym : symbol * decls -> decls *)
     (* add a reference to a symbol to a dl *)
-    fun dl_addSym (sym, Ref syms :: dl) = Ref (SS.add (syms, sym)) :: dl
-      | dl_addSym (sym, dl) = Ref (SS.singleton sym) :: dl
+    fun dl_addSym (sym, SK.Ref syms :: dl) = SK.Ref (SS.add (syms, sym)) :: dl
+      | dl_addSym (sym, dl) = SK.Ref (SS.singleton sym) :: dl
 
-    (* dl_addP : path * decl list -> decl list *)
+    (* dl_addP : path * decls -> decls *)
     (* add the first element of a path to a dl *)
     fun dl_addP ([], dl) = dl
       | dl_addP (head :: _, dl) = dl_addSym (head, dl)
 
-    (* dl_addMP : path * decl list -> decl list *)
+    (* dl_addMP : path * decls -> decls *)
     (* add the first element of a path to a dl -- except if that element is
      * the only one on the path *)
     fun dl_addMP ([], dl) = dl
@@ -92,76 +100,91 @@ in
 
     (* dl_addS : symset * decl list -> decl list *)
     (* given a set of module references, add it to a decl list *)
-    fun dl_addS (s, dl) =
-	if SS.isEmpty s then dl
+    fun dl_addS (ss: symset, dl: decls) =
+	if SS.isEmpty ss then dl
 	else (case dl
-	        of [] => [Ref s]
-		 | Ref s' :: dl' => Ref (SS.union (s, s')) :: dl'
-		 | _ => Ref s :: dl)
+	        of [] => [SK.Ref ss]
+		 | SK.Ref ss' :: dl' => SK.Ref (SS.union (ss, ss')) :: dl'
+		 | _ => SK.Ref ss :: dl)
 
     (* seq : decl list -> decl *)
     (* make a Seq node when necessary *)
-    fun seq [] = Ref SS.empty
+    fun seq [] = SK.Ref SS.empty
       | seq [only] = only
-      | seq dl = Seq dl
+      | seq dl = SK.Seq dl
 
+    (* parcons : decl list * decl list -> decl list *)
     (* make a Par node when necessary and stick it in front of a given dl *)
     fun parcons ([], d) = d
       | parcons ([only], d) = only :: d
       | parcons (l, d) = Par l :: d
 
+    (* parbindcons : bind list * decl list -> decl list *)
     (* Given a "bind list", stick a parallel Bind in front of a given dl.
      * While doing so, if a Ref occured at the front of the dl, move it
      * past the bind list (shrinking it appropriately). *)
-    fun parbindcons (bl, Ref s :: d) =
+    fun parbindcons (bl, SK.Ref s :: d) =
 	  let val bs = SS.addList (SS.empty, map #1 bl)
-           in dl_addS (SS.difference (s, bs), parcons (map Bind bl, d))
+           in dl_addS (SS.difference (s, bs), parcons (map SK.Bind bl, d))
           end
-      | parbindcons (bl, d) = parcons (map Bind bl, d)
+      | parbindcons (bl, d) = parcons (map SK.Bind bl, d)
 
-    (* split initial ref set from a decl list *)
+    (* split_dl : decl list -> symset * decl list *)
+    (* split initial ref set from a decl list, if decl list starts with a Ref *)
     fun split_dl [] = (SS.empty, [])
-      | split_dl (Ref s :: d) = (s, d)
+      | split_dl (SK.Ref s :: d) = (s, d)
       | split_dl d = (SS.empty, d)
 
+    (* join_dl : decl list * decl list -> decl list *)
     (* join two definition sequences *)
     fun join_dl ([], d) = d
-      | join_dl ([Ref s], d) = dl_addS (s, d)
+      | join_dl ([SK.Ref s], d) = dl_addS (s, d)
       | join_dl (h :: t, d) = h :: join_dl (t, d)
 
+    (* local_dl : decl list * decl list * decl list -> decl list *)
     (* local definitions *)
     fun local_dl ([], b, d) = join_dl (b, d)
-      | local_dl (Ref s :: t, b, d) = dl_addS (s, local_dl (t, b, d))
-      | local_dl (l, b, d) = Local (seq l, seq b) :: d
+      | local_dl (SK.Ref s :: t, b, d) = dl_addS (s, local_dl (t, b, d))
+      | local_dl (l, b, d) = SK.Local (seq l, seq b) :: d
 
+    (* letexp : decl list * (symset * mexp) -> symset * mexp *)
     (* build a let expression *)
-    fun letexp (dl, (s, e)) =
+    fun letexp (dl, (ss, exp)) =
 	  (case split_dl dl
-	     of (s', []) => (SS.union (s', s), e)
-	      | (s', dl') =>
+	     of (ss', []) => (SS.union (ss', ss), exp)
+	      | (ss', dl') =>
 		  let val dl'' =
-			  if SS.isEmpty s
+			  if SS.isEmpty ss
 			  then dl'
-			  else rev (dl_addS (s, rev dl'))
-		   in (s', Let (dl'', e))
+			  else rev (dl_addS (ss, rev dl'))
+		   in (ss', Let (dl'', exp))
 		  end
 
-    (* ign : (symset * modExp) * (symset * modExp) option -> symset * modExp *)
-    (* making an Ign1 where necessary ... *)
-    fun ign (p1, NONE) = p1
-      | ign ((s1, e1), SOME (s2, e2)) = (SS.union (s1, s2), Ign1 (e1, e2))
+    (* pair : ssexp * ssexp -> ssexp *)
+    (* making a Pair *)
+    fun pair ((ss1, exp1), (ss2, exp2)) = (SS.union (ss1, ss2), Pair (exp1, exp2))
 
-    (* Open cancels Decl *)
+    (* pairOp : ssexp * ssexp option -> ssexp *)
+    (* making an Pair where necessary ... *)
+    fun pairOp (ssexp, NONE) = ssexp
+      | pairOp ((ssexp1, SOME ssexp2) = pair (ssexp1, ssexp2)
+
+    (* open' : mexp * decls -> decls *)
+    (* Open "cancels" the exp Decl constructor *)
     fun open' (Decl dl, dl') = join_dl (dl, dl')
-      | open' (e, dl) = Open e :: dl
+      | open' (e, dl) = SK.Open e :: dl
 
-    (* parbind : f? -> l? -> d? -> ? *)
+    (* parbind : [collect:](decl * (symset * bind list) -> (symset * bind list))
+                 -> [dl1:] decls
+		 -> [dl2:] decls
+		 -> decls *)
     (* generate a set of "parallel" bindings *)
-    fun parbind f l d =
-	let val (s, bl) = foldl f (SS.empty, []) l
-	 in dl_addS (s, parbindcons (bl, d))
+    fun parbind collect (dl1: decls) (dl2: decls) =
+	let val (ss: symset, bl: bind list) = foldl collect (SS.empty, nil : bind list) dl1
+	 in dl_addS (ss, parbindcons (bl, dl2))
 	end
 
+    (* ty_s : Ast.ty * symset -> symset *)
     (* get the ref set from a type *)
     fun ty_s (VarTy _, set) = set
       | ty_s (ConTy (cn, l), set) = s_addMP (cn, foldl ty_s set l)
@@ -169,10 +192,12 @@ in
       | ty_s (TupleTy l, set) = foldl ty_s set l
       | ty_s (MarkTy (arg, _), set) = ty_s (arg, set)
 
+    (* tyopt_s : Ast.ty option * symset -> symset *)
     (* ... from a type option *)
     fun tyopt_s (NONE, set) = set
       | tyopt_s (SOME t, set) = ty_s (t, set)
 
+    (* pat_s : Ast.pat * symset -> symset *)
     (* ... from a pattern *)
     fun pat_s (VarPat p, set) = s_addMP (p, set)
       | pat_s (RecordPat { def, ... }, set) = foldl (pat_s o' #2) set def
@@ -188,6 +213,7 @@ in
       | pat_s (MarkPat (arg, _), set) = pat_s (arg, set)
       | pat_s ((WildPat|IntPat _|WordPat _|StringPat _|CharPat _), set) = set
 
+    (* eb_s : Ast.eb * symset -> symset *)
     (* ... from an exception binding *)
     fun eb_s (EbGen { exn, etype }, set) = tyopt_s (etype, set)
       | eb_s (EbDef { exn, edef }, set) = s_addMP (edef, set)
@@ -195,238 +221,262 @@ in
 
     (* ... *)
 
+    (* db_s : Ast.db * symset -> symset *)
+    (* ... from datatype bindings *)
     fun db_s (Db { tyc, tyvars, rhs, lazyp }, set) = foldl (tyopt_s o' #2) set rhs
       | db_s (MarkDb (arg, _), set) = db_s (arg, set)
 
+    (* tb_s : Ast.tb * symset -> symset *)
+    (* ... from type bindings *)
     fun tb_s (Tb { tyc, def, tyvars }, set) = ty_s (def, set)
       | tb_s (MarkTb (arg, _), set) = tb_s (arg, set)
 
+    (* exp_dl : Ast.exp * decls -> decls *)
     (* get a dl from an expression... *)
-    fun exp_dl (VarExp p, d) = dl_addMP (p, d)
-      | exp_dl (FnExp rl, d) = foldr rule_dl d rl
-      | exp_dl (FlatAppExp l, d) = foldr (exp_dl o' #item) d l
-      | exp_dl (AppExp { function, argument }, d) =
-	exp_dl (function, exp_dl (argument, d))
-      | exp_dl (CaseExp { expr, rules }, d) =
-	exp_dl (expr, foldr rule_dl d rules)
-      | exp_dl (LetExp { dec, expr }, d) =
-	  local_dl (dec_dl (dec, []), exp_dl (expr, []), d)
-      | exp_dl ((SeqExp l | ListExp l | TupleExp l | VectorExp l), d) =
-	  foldl exp_dl d l
-      | exp_dl (RecordExp l, d) = foldl (exp_dl o' #2) d l
-      | exp_dl (SelectorExp _, d) = d
-      | exp_dl (ConstraintExp { expr, constraint }, d) =
-	  dl_addS (ty_s (constraint, SS.empty), exp_dl (expr, d))
-      | exp_dl (HandleExp { expr, rules }, d) =
-	  exp_dl (expr, foldl rule_dl d rules)
-      | exp_dl (RaiseExp e, d) = exp_dl (e, d)
-      | exp_dl (IfExp { test, thenCase, elseCase }, d) =
-	  exp_dl (test, exp_dl (thenCase, exp_dl (elseCase, d)))
-      | exp_dl ((AndalsoExp (e1, e2) | OrelseExp (e1, e2)), d) =
-	  exp_dl (e1, exp_dl (e2, d))
-      | exp_dl (WhileExp { test, expr }, d) = exp_dl (test, exp_dl (expr, d))
-      | exp_dl (MarkExp (arg, _), d) = exp_dl (arg, d)
-      | exp_dl ((IntExp _|WordExp _|RealExp _|StringExp _|CharExp _), d) = d
+    fun exp_dl (VarExp p, dl) = dl_addMP (p, dl)
+      | exp_dl (FnExp rl, dl) = foldr rule_dl dl rl
+      | exp_dl (FlatAppExp l, dl) = foldr (exp_dl o' #item) dl l
+      | exp_dl (AppExp { function, argument }, dl) =
+	  exp_dl (function, exp_dl (argument, dl))
+      | exp_dl (CaseExp { expr, rules }, dl) =
+	exp_dl (expr, foldr rule_dl dl rules)
+      | exp_dl (LetExp { dec, expr }, dl) =
+	  local_dl (dec_dl (dec, nil), exp_dl (expr, nil), dl)
+      | exp_dl ((SeqExp l | ListExp l | TupleExp l | VectorExp l), dl) =
+	  foldl exp_dl dl l
+      | exp_dl (RecordExp l, dl) = foldl (exp_dl o' #2) dl l
+      | exp_dl (SelectorExp _, dl) = dl
+      | exp_dl (ConstraintExp { expr, constraint }, dl) =
+	  dl_addS (ty_s (constraint, SS.empty), exp_dl (expr, dl))
+      | exp_dl (HandleExp { expr, rules }, dl) =
+	  exp_dl (expr, foldl rule_dl dl rules)
+      | exp_dl (RaiseExp e, dl) = exp_dl (e, dl)
+      | exp_dl (IfExp { test, thenCase, elseCase }, dl) =
+	  exp_dl (test, exp_dl (thenCase, exp_dl (elseCase, dl)))
+      | exp_dl ((AndalsoExp (e1, e2) | OrelseExp (e1, e2)), dl) =
+	  exp_dl (e1, exp_dl (e2, dl))
+      | exp_dl (WhileExp { test, expr }, dl) = exp_dl (test, exp_dl (expr, dl))
+      | exp_dl (MarkExp (arg, _), dl) = exp_dl (arg, dl)
+      | exp_dl ((IntExp _|WordExp _|RealExp _|StringExp _|CharExp _), dl) = dl
 
-    and rule_dl (Rule { pat, exp }, d) =
-	dl_addS (pat_s (pat, SS.empty), exp_dl (exp, d))
+    (* rule_dl : Ast.rule * decls -> decls *)
+    and rule_dl (Rule { pat, exp }, decls) =
+	dl_addS (pat_s (pat, SS.empty), exp_dl (exp, decls))
 
-    and clause_dl (Clause { pats = p, resultty = t, exp = e }, d) =
+    (* clause_dl : Ast.clause * decls -> decls *)
+    and clause_dl (Clause { pats = p, resultty = t, exp = e }, decls) =
 	dl_addS (foldl (pat_s o' #item) (tyopt_s (t, SS.empty)) p,
-		 exp_dl (e, d))
+		 exp_dl (e, decls))
 
-    and fb_dl (Fb (l, _), d) = foldr clause_dl d l
-      | fb_dl (MarkFb (arg, _), d) = fb_dl (arg, d)
+    (* fb_dl : Ast.fb * decls -> decls *)
+    and fb_dl (Fb (l, _), decls) = foldr clause_dl decls l
+      | fb_dl (MarkFb (arg, _), decls) = fb_dl (arg, decls)
 
-    and vb_dl (Vb { pat, exp, lazyp }, d) =
-	  dl_addS (pat_s (pat, SS.empty), exp_dl (exp, d))
-      | vb_dl (MarkVb (arg, _), d) = vb_dl (arg, d)
+    (* vb_dl¯ : Ast.vb * decls -> decls *)
+    and vb_dl (Vb { pat, exp, lazyp }, decls) =
+	  dl_addS (pat_s (pat, SS.empty), exp_dl (exp, decls))
+      | vb_dl (MarkVb (arg, _), decls) = vb_dl (arg, decls)
 
-    and rvb_dl (Rvb { var, exp, resultty, ... }, d) =
-	  dl_addS (tyopt_s (resultty, SS.empty), exp_dl (exp, d))
-      | rvb_dl (MarkRvb (arg, _), d) = rvb_dl (arg, d)
+    (* rvb_dl : Ast.rvb * decls -> decls *)
+    and rvb_dl (Rvb { var, exp, resultty, ... }, decls) =
+	  dl_addS (tyopt_s (resultty, SS.empty), exp_dl (exp, decls))
+      | rvb_dl (MarkRvb (arg, _), decls) = rvb_dl (arg, decls)
 
-    and spec_dl (MarkSpec (arg, _), d) = spec_dl (arg, d)
-      | spec_dl (StrSpec l, d) =
+    (* spec_dl : Ast.spec * decls -> decls *)
+    and spec_dl (MarkSpec (arg, _), decls) = spec_dl (arg, decls)
+      | spec_dl (StrSpec l, decls) =
 	  let (* strange case - optional: structure, mandatory: signature *)
 	      fun one ((n, g, c), (s, bl)) =
 		    let val (s', e) = sigexp_p g
 			val s'' = SS.union (s, s')
 		     in case c
 			  of NONE => (s'', (n, e) :: bl)
-			   | SOME p => (s'', (n, Ign1 (Var (SP.SPATH p), e)) :: bl)
+			   | SOME p => (s'', (n, Pair (SK.Var (SP.SPATH p), e)) :: bl)
 		    end
 	      val (s, bl) = foldr one (SS.empty, []) l
-           in dl_addS (s, parbindcons (bl, d))
+           in dl_addS (s, parbindcons (bl, decls))
           end
-      | spec_dl (TycSpec (l, _), d) =
+      | spec_dl (TycSpec (l, _), decls) =
 	  let fun one_s ((_, _, SOME t), s) = ty_s (t, s)
 		| one_s (_, s) = s
-	   in dl_addS (foldl one_s SS.empty l, d)
+	   in dl_addS (foldl one_s SS.empty l, decls)
 	  end
-      | spec_dl (FctSpec l, d) =
+      | spec_dl (FctSpec l, decls) =
 	  let fun one ((n, g), (s, bl)) =
 		    let val (s', e) = fsigexp_p g
 		     in (SS.union (s, s'), (n, e) :: bl)
 		    end
 	      val (s, bl) = foldr one (SS.empty, []) l
-	   in dl_addS (s, parbindcons (bl, d))
+	   in dl_addS (s, parbindcons (bl, decls))
 	  end
-      | spec_dl (ValSpec l, d) = dl_addS (foldl (ty_s o' #2) SS.empty l, d)
-      | spec_dl (DataSpec { datatycs, withtycs }, d) =
-	dl_addS (foldl db_s (foldl tb_s SS.empty withtycs) datatycs, d)
-      | spec_dl (DataReplSpec(_,cn), d) =
-	dl_addS (s_addMP (cn, SS.empty), d)
-      | spec_dl (ExceSpec l, d) = dl_addS (foldl (tyopt_s o' #2) SS.empty l, d)
-      | spec_dl (ShareStrSpec l, d) = foldl dl_addP d l
-      | spec_dl (ShareTycSpec l, d) = dl_addS (foldl s_addMP SS.empty l, d)
-      | spec_dl (IncludeSpec g, d) =
+      | spec_dl (ValSpec l, decls) = dl_addS (foldl (ty_s o' #2) SS.empty l, decls)
+      | spec_dl (DataSpec { datatycs, withtycs }, decls) =
+	dl_addS (foldl db_s (foldl tb_s SS.empty withtycs) datatycs, decls)
+      | spec_dl (DataReplSpec(_,cn), decls) =
+	dl_addS (s_addMP (cn, SS.empty), decls)
+      | spec_dl (ExceSpec l, decls) = dl_addS (foldl (tyopt_s o' #2) SS.empty l, decls)
+      | spec_dl (ShareStrSpec l, decls) = foldl dl_addP decls l
+      | spec_dl (ShareTycSpec l, decls) = dl_addS (foldl s_addMP SS.empty l, decls)
+      | spec_dl (IncludeSpec g, decls) =
 	  let val (s, e) = sigexp_p g
-	   in dl_addS (s, open' (e, d))
+	   in dl_addS (s, open' (e, decls))
 	  end
 
-    and sigexp_p (VarSig s) = (SS.empty, Var (SP.SPATH [s]))
+    (* sigexp_p : Ast.sigexp -> ssexp *)
+    and sigexp_p (VarSig s) = (SS.empty, SK.Var [s])
       | sigexp_p (AugSig (g, whspecs)) =
 	  let fun one_s (WhType (_, _, ty), s) = ty_s (ty, s)
 		| one_s (WhStruct (_, p), s) = s_addP (p, s)
-	      val (s, e) = sigexp_p g
-	   in (foldl one_s s whspecs, e)
+	      val (ss, e) = sigexp_p g
+	   in (foldl one_s ss whspecs, e)
 	  end
       | sigexp_p (BaseSig l) =
-	  let val (s, d) = split_dl (foldr spec_dl [] l)
-	   in (s, Decl d)
+	  let val (s, decls) = split_dl (foldr spec_dl [] l)
+	   in (s, SK.Decl decls)
 	  end
       | sigexp_p (MarkSig (arg, _)) = sigexp_p arg
 
-    and fsigexp_p (VarFsig s) = (SS.empty, Var (SP.SPATH [s]))
+    (* fsigexp_p : Ast.fsigexp -> ssexp *)
+    and fsigexp_p (VarFsig s) = (SS.empty, SK.Var [s])
       | fsigexp_p (BaseFsig { param, result }) =
 	  letexp (foldr fparam_d [] param, sigexp_p result)
       | fsigexp_p (MarkFsig (arg, _)) = fsigexp_p arg
 
-    and fparam_d ((nopt, g), d) =
-	  let val (s, e) = sigexp_p g
-	   in case nopt
-	        of NONE => dl_addS (s, open' (e, d))
-		 | SOME n => dl_addS (s, Bind (n, e) :: d)
+    (* fparam_d : (sym op * Ast.sigexp) * decls -> decls *)
+    and fparam_d ((symOp, sigexp), decls) =
+	  let val (ss, exp) = sigexp_p sigexp
+	   in case symOp
+	        of NONE => dl_addS (ss, open' (exp, decls))
+		 | SOME sym => dl_addS (ss, SK.Bind (sym, exp) :: decls)
 	  end
 
+    (* sigexpc_p : Ast.sigexp Ast.sigConst -> ssexp option *)
     and sigexpc_p NoSig = NONE
-      | sigexpc_p (Transparent g | Opaque g) = SOME (sigexp_p g)
+      | sigexpc_p (Transparent sigexp | Opaque sigexp) = SOME (sigexp_p sigexp)
 
+    (* sigexpc_p : Ast.fsigexp Ast.sigConst -> ssexp option *)
     and fsigexpc_p NoSig = NONE
-      | fsigexpc_p (Transparent fg | Opaque fg) = SOME (fsigexp_p fg)
+      | fsigexpc_p (Transparent fsigexp | Opaque fsigexp) = SOME (fsigexp_p fsigexp)
 
+    (* fctexp_p : Ast.fctexp -> ssexp *)
     and fctexp_p (VarFct (p, c)) =
-	  ign ((SS.empty, Var (SP.SPATH p)), fsigexpc_p c)
+	  pairOp ((SS.empty, SK.Var p), fsigexpc_p c)
       | fctexp_p (BaseFct { params, body, constraint }) =
 	  letexp (foldr fparam_d [] params,
-		  ign (strexp_p body, sigexpc_p constraint))
+		  pairOp (strexp_p body, sigexpc_p constraint))
       | fctexp_p (AppFct (p, l, c)) =
 	  let fun one ((str, _), (s, el)) =
 		    let val (s', e) = strexp_p str
 		     in (SS.union (s, s'), e :: el)
 		    end
 	      val (s, el) = foldl one (SS.empty, []) l
-	      val (s', e) = ign ((SS.empty, Var (SP.SPATH p)), fsigexpc_p c)
-	   in (SS.union (s, s'), foldl Ign1 e el)
+	      val (s', e) = pairOp ((SS.empty, SK.Var p), fsigexpc_p c)
+	   in (SS.union (s, s'), foldl Pair e el)
 	  end
       | fctexp_p (LetFct (bdg, b)) = letexp (dec_dl (bdg, []), fctexp_p b)
       | fctexp_p (MarkFct (arg, _)) = fctexp_p arg
 
-    and strexp_p (VarStr p) = (SS.empty, Var (SP.SPATH p))
+    (* strexp_p : Ast.strexp -> ssexp *)
+    and strexp_p (VarStr p) = (SS.empty, SK.Var p)
       | strexp_p (BaseStr dec) =
 	  let val (s, dl) = split_dl (dec_dl (dec, []))
 	   in (s, Decl dl)
 	  end
-      | strexp_p (ConstrainedStr (s, c)) = ign (strexp_p s, sigexpc_p c)
+      | strexp_p (ConstrainedStr (s, c)) = pairOp (strexp_p s, sigexpc_p c)
       | strexp_p (AppStr (p, l) | AppStrI (p, l)) =
 	  let fun one ((str, _), (s, el)) =
 		    let val (s', e) = strexp_p str
 		     in (SS.union (s, s'), e :: el)
 		    end
 	      val (s, el) = foldl one (SS.empty, []) l
-	   in (s, foldl Ign1 (Var (SP.SPATH p)) el)
+	   in (s, foldl Pair (SK.Var p) el)
 	  end
       | strexp_p (LetStr (bdg, b)) = letexp (dec_dl (bdg, []), strexp_p b)
       | strexp_p (MarkStr (s, _)) = strexp_p s
 
-    and dec_dl (ValDec (l, _), d) = foldl vb_dl d l
-      | dec_dl (ValrecDec (l, _), d) = foldl rvb_dl d l
-      | dec_dl (DoDec exp, d) = exp_dl (exp, d)
-      | dec_dl (FunDec (l, _), d) = foldl fb_dl d l
-      | dec_dl (TypeDec l, d) = dl_addS (foldl tb_s SS.empty l, d)
-      | dec_dl (DatatypeDec { datatycs, withtycs }, d) =
-	  dl_addS (foldl db_s (foldl tb_s SS.empty withtycs) datatycs, d)
-      | dec_dl (DataReplDec (_,cn), d) =
-	  dl_addS (s_addMP (cn, SS.empty), d)
-      | dec_dl (AbstypeDec { abstycs, withtycs, body }, d) =
+    (* dec_dl : Ast.dec * decls -> decls *)
+    and dec_dl (ValDec (vbs, _), decls) = foldl vb_dl decls vbs¯
+      | dec_dl (ValrecDec (rvbs, _), decls) = foldl rvb_dl decls rvbs
+      | dec_dl (DoDec exp, decls) = exp_dl (exp, decls)
+      | dec_dl (FunDec (l, _), decls) = foldl fb_dl decls l
+      | dec_dl (TypeDec l, decls) = dl_addS (foldl tb_s SS.empty l, decls)
+      | dec_dl (DatatypeDec { datatycs, withtycs }, decls) =
+	  dl_addS (foldl db_s (foldl tb_s SS.empty withtycs) datatycs, decls)
+      | dec_dl (DataReplDec (_,cn), decls) =
+	  dl_addS (s_addMP (cn, SS.empty), decls)
+      | dec_dl (AbstypeDec { abstycs, withtycs, body }, decls) =
 	  dl_addS (foldl db_s (foldl tb_s SS.empty withtycs) abstycs,
-		   dec_dl (body, d))
-      | dec_dl (ExceptionDec l, d) = dl_addS (foldl eb_s SS.empty l, d)
-      | dec_dl ((StrDec l), d) =
+		   dec_dl (body, decls))
+      | dec_dl (ExceptionDec l, decls) = dl_addS (foldl eb_s SS.empty l, decls)
+      | dec_dl ((StrDec l), decls) =
 	  let fun one (MarkStrb (arg, _), x) = one (arg, x)
 		| one (Strb { name, def, constraint }, (s, bl)) =
-		    let val (s', e) = ign (strexp_p def, sigexpc_p constraint)
+		    let val (s', e) = pairOp (strexp_p def, sigexpc_p constraint)
 		     in (SS.union (s, s'), (name, e) :: bl)
 		    end
-	   in parbind one l d
+	   in parbind one l decls
 	  end
-      | dec_dl (FctDec l, d) =
+      | dec_dl (FctDec l, decls) =
 	  let fun one (MarkFctb (arg, _), x) = one (arg, x)
 		| one (Fctb { name, def }, (s, bl)) =
 		    let val (s', e) = fctexp_p def
 		     in (SS.union (s, s'), (name, e) :: bl)
 		    end
-	   in parbind one l d
+	   in parbind one l decls
 	  end
-      | dec_dl (SigDec l, d) =
+      | dec_dl (SigDec l, decls) =
 	  let fun one (MarkSigb (arg, _), x) = one (arg, x)
 		| one (Sigb { name, def }, (s, bl)) =
 		    let val (s', e) = sigexp_p def
 		     in (SS.union (s, s'), (name, e) :: bl)
 		    end
-	   in parbind one l d
+	   in parbind one l decls
 	  end
-      | dec_dl (FsigDec l, d) =
+      | dec_dl (FsigDec l, decls) =
 	  let fun one (MarkFsigb (arg, _), x) = one (arg, x)
 		| one (Fsigb { name, def }, (s, bl)) =
 		    let val (s', e) = fsigexp_p def
 		     in (SS.union (s, s'), (name, e) :: bl)
 		    end
-	   in parbind one l d
+	   in parbind one l decls
 	  end
-      | dec_dl (LocalDec (bdg, body), d) =
-	  local_dl (dec_dl (bdg, []), dec_dl (body, []), d)
-      | dec_dl (SeqDec l, d) = foldr dec_dl d l
-      | dec_dl (OpenDec l, d) = parcons (map (Open o Var o SP.SPATH) l, d)
-      | dec_dl (OvldDec (_, l), d) = foldl exp_dl d l
-      | dec_dl (FixDec _, d) = d
-      | dec_dl (MarkDec (arg, _), d) = dec_dl (arg, d)
+      | dec_dl (LocalDec (bdg, body), decls) =
+	  local_dl (dec_dl (bdg, []), dec_dl (body, []), decls)
+      | dec_dl (SeqDec l, decls) = foldr dec_dl decls l
+      | dec_dl (OpenDec l, decls) = parcons (map (Open o SK.Var) l, decls)
+      | dec_dl (OvldDec (_, l), decls) = foldl exp_dl decls l
+      | dec_dl (FixDec _, decls) = decls
+      | dec_dl (MarkDec (arg, _), decls) = dec_dl (arg, decls)
 
-    fun c_dec d = seq (dec_dl (d, []))
+    (* c_dec : Ast.dec -> decl *)
+    fun c_dec (dec: Ast.dec) = seq (dec_dl (dec, []))
 
-    fun convert { tree, err } =
-        let
-	    (* build a function that will complain (once you call it)
-	     * about any existing restriction violations *)
-	    fun complainCM reg =
-	        let fun sameReg (LocalDec (_, body), k) = sameReg (body, k)
-		      | sameReg (SeqDec l, k) = foldl sameReg k l
-		      | sameReg (OpenDec _, k) =
-		          (fn () => (k (); err EM.COMPLAIN reg "toplevel open"))
-		      | sameReg (MarkDec (arg, reg), k) = complainCM reg (arg, k)
-		      | sameReg ((StrDec _ | FctDec _ | SigDec _ | FsigDec _), k) = k
-		      | sameReg (_, k) =
-		         (fn () => (k (); err EM.WARN reg "definition not tracked by CM"))
+    (* checkDec : SM.region -> Ast.dec -> (unit -> unit)? *)
+    (* complain about any top-level non-module declarations *)
+    fun checkDec reg =
+	let fun sameReg (LocalDec (_, body), k) = sameReg (body, k)
+	      | sameReg (SeqDec l, k) = foldl sameReg k l
+	      | sameReg (MarkDec (arg, reg), k) = checkDec reg (arg, k) (* reset region *)
+	      | sameReg ((StrDec _ | FctDec _ | SigDec _ | FsigDec _), k) = k
+	      | sameReg (OpenDec _, k) =
+		  (fn () => (k (); err EM.COMPLAIN reg "toplevel open"))
+	      | sameReg (_, k) =
+		 (fn () => (k (); err EM.WARN reg "definition not tracked by CM"))
 
-		 in sameReg
-		end
-
-	    fun warn0 () = ()
-
-	    val complain = complainCM SourceMap.NULLregion (tree, warn0)
-
-	 in { complain = complain, skeleton = c_dec tree }
+	 in sameReg
 	end
 
+    (* convert : Ast.dec -> decl *)
+    val convert : Ast.dec -> decl = c_dec
+
 end (* structure SkelCvt *)
+
+(* NOTES
+
+1. deal with error detection and error messages later (e.g. for the top-level convert
+function. checkDec is a version of the former "complainCM" check and error message 
+generator.
+
+
+
+*)

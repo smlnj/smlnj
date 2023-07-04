@@ -11,8 +11,9 @@
  *   smarter -- resulting in smaller skeletons.
  *
  * Author: Matthias Blume (matthias.blume@gmail.com)
+ * Edited: DBM, 2023.7
  *
- * The copyright notices of the earlier versions are:
+ * The copyright notices for earlier versions are:
  *   Copyright (c) 1995 by AT&T Bell Laboratories
  *   Copyright (c) 1993 by Carnegie Mellon University,
  *                         School of Computer Science
@@ -22,22 +23,31 @@
 structure Skeleton =
 struct
 
-    type symbol = Symbol.symbol
-    type sympath = SymPath.path
+local
+
+  structure S = Symbol
+  structure SP = SymPath
+  structure SS = SymbolSet
+
+in
 
     datatype decl
-      = Bind of symbol * modExp
+      = Bind of S.symbol * exp
       | Local of decl * decl
       | Par of decl list
       | Seq of decl list
-      | Open of modExp
-      | Ref of SymbolSet.set
+      | Open of exp
+      | Ref of SS.set           (* set not empty *)
 
-    and modExp
-      = Var of sympath
-      | Decl of decl list		(* implicit Seq *)
-      | Let of decl list * modExp	(* implicit Seq *)
-      | Ign1 of modExp * modExp         (* Ign1 ? *)
+    and exp
+      = Var of symbol list      (* symbol list (sympath) not null *)
+      | Decl of decl list	(* implicit Seq, decl list not null? *)
+      | Let of decl list * exp  (* implicit Seq, decl list not null? *)
+      | Pair of exp * exp
 
+(* clearly some redundancy in these declarations of decl and exp types:
+ * decl list in both decl and exp *)
+
+end (* top local *)
 end (* structure Skeleton *)
 

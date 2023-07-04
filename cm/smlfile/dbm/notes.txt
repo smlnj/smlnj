@@ -1,7 +1,22 @@
 Scanning ast to define import/export symbol lists:
-
+(for determining dependencies between source files)
 
 * Dependency Analysis Problem:
+
+The problem is to determine, based on a simple concrete parse of the source files (the Ast representation) whether one source file depends on another.
+
+In the absence of the "open" declaration, this seems to be fairly straightforward. We need to determine which
+module symbols are locally defined, which are "exported", and which represent implicit imports from other
+files (or compilation units).  But in the presence of open declarations, things become much more complicated.
+
+The current solution involves:
+
+(1) the "Skeleton" representation (smlfile/dbm/skeleton.sml) with types decl and exp, and
+(2) the translation from the Ast representation to skeleton representation (smlfile/dbm/interface.sml), and
+(3) the use of the skeleton representation to determine dependency (where?).
+
+
+Example: the impact of open
 
 Hypothetical imported structure A:
 
@@ -15,6 +30,9 @@ fileA.sml
 ---------------------
 exports: S:A, S:A.AA
 imports: nil
+
+fileA.sml may be a member of the same group (as fileB.sml below), or it may be a member of an imported
+group.
 
 
 Structure/file being scanned:
@@ -36,6 +54,10 @@ imports: S:A  [satisfied by fileA.sml]
 [for an import like A, need to know what substructures it contained (AA, which becomes
 "local" after A is opened). And we need to know what substructures AA contains, in case
 it is opened, and so on.]
+
+[A could be defined in, and exported from, an imported group of the group containing fileB.sml
+as a member. So dependency may be with respect to either a local member of an export of an
+imported group.]
 
 "A" is an imported structure symbol for B (fileB.sml)
 
@@ -60,8 +82,8 @@ AA were exported by some other file, say fileC.sml. We might falsely conclude
 that fileB.sml depends on fileC.sml (when, in fact, fileC.sml depends on fileB.sml).
 
 
-----------------------
-Attempted solution: try 2-pass approach.
+---------------------------------------------------------------------------------------- 
+Attempted (naive) solution: try 2-pass approach.
 
 1. calculate module exports, assuming no top-level open in SML source members
 2. calculate imports, knowing the ???
@@ -73,3 +95,7 @@ multiple passes, but independently of the initial order in which source files ar
 scanned for I/E information.
 
 2. use only "concrete" syntax representation (ast)
+
+
+----------------------------------------------------------------------------------------
+Skeletons
