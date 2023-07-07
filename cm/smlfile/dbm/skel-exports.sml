@@ -1,27 +1,35 @@
-(*
+(* cm/smlfile/dbm/skel-exports.sml
+ *
  * Get the toplevel exports from a skeleton.
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * (C) 2023, The Fellowship of SML/NJ
  *
- * contact: Matthias Blume (blume@cs.princeton.edu)
+ * Author: Matthias Blume (matthias.blume@gmail.com)
  *)
-signature SKELEXPORTS = sig
+
+signature SKELEXPORTS =
+sig
     val exports : Skeleton.decl -> SymbolSet.set
-end
+end (* signature SKELEXPORTS *)
 
-structure SkelExports :> SKELEXPORTS = struct
+structure SkelExports :> SKELEXPORTS =
+struct
 
-    structure SK = Skeleton
-    structure SS = SymbolSet
+local
+  structure SK = Skeleton
+  structure SS = SymbolSet
+in
 
-    fun exports d = let
-	fun e (SK.Bind (s, _), a) = SS.add (a, s)
-	  | e (SK.Local (l, b), a) = e (b, a)
-	  | e (SK.Par l, a) = foldl e a l
-	  | e (SK.Seq l, a) = foldl e a l
-	  | e (SK.Open _, a) = a	(* cannot happen *)
-	  | e (SK.Ref _, a) = a
-    in
-	e (d, SS.empty)
-    end
-end
+  (* exports : SK.decl -> SS.set *)
+  fun exports d =
+      let fun e (SK.Bind (s, _), a) = SS.add (a, s)
+	    | e (SK.Local (l, b), a) = e (b, a)
+	    | e (SK.Par l, a) = foldl e a l
+	    | e (SK.Seq l, a) = foldl e a l
+	    | e (SK.Open _, a) = a	(* cannot happen *)
+	    | e (SK.Ref _, a) = a
+       in e (d, SS.empty)
+      end
+
+end (* top local *)
+end (* structure SkelExports *)

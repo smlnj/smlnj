@@ -45,7 +45,7 @@ fileB.sml
     open A           <- signalling the import of A (if this is the "first" open),
                         introducing AA as "local" (secondary import)
     val y = AA.x     (a path in an expression starting with AA)
-    ... open AA ...  (an open declaration mentioning AA)
+    (* ... open AA ... *)  (alternatively, AA could be mentioned in an open declaration *)
   end
 ---------------------
 exports: S:B
@@ -98,4 +98,178 @@ scanned for I/E information.
 
 
 ----------------------------------------------------------------------------------------
-Skeletons
+Skeletons, a worked example (for the above example: fileA.sml, fileB.sml):
+
+  structure A =
+  struct
+    structure AA = struct val x = 3 end
+  end
+
+1. val x = 3
+   <dec_x> = ValDec [vb_x]
+   <vb_x> = Vb {pat=VarPat ["x"], exp=IntExp "3", lazyp=_}   --  omitting lazy flag 
+   pat_s (VarPat ["x"], ss_empty)
+     = s_addMP (["x"], ss_empty)
+     = ss_empty
+   exp_dl (IntExp "3", nil) = nil
+   vb_dl (<dec_x>, nil)
+     = dl_addS (ss_empty, nil)
+     = nil
+   dec_dl (<dec_x>, nil)
+     = foldl vd_dl nil [vb_x]
+     = vd_dl (<vb_x>, nil)
+     = nil
+
+2. struct val x = 3 end  (: Ast.strexp)
+   <strexp_AA> = 
+     = BaseStr (SeqDec [<dec_x>])
+   dec_dl (SeqDec [<dec_x>], nil)
+     = foldr dec_dl nil [<dec_x>]
+     = dec_dl (<dec_x>, nil)
+     = nil
+   strexp_p (<strexp_AA>)
+     = (ss, Decl decls)
+       where (ss, decls) = split_dl (nil) = (ss_empty, nil)
+     = (ss_empty, Decl nil)
+
+3. structure AA = struct val x = 3 end (: Ast.dec)
+   <dec_AA> = StrDec [<strb_AA>]
+   <strb_AA> = Strb {name = "AA", def = <strexp_AA>, constraint = NoSig}
+       strexp_p <strexp_AA> = (ss_empty, Decl nil) [2]
+       sigexpc_p NoSig = NONE
+       pairOp (strexp_p def, sigexpc_p constraint)
+       = strexp_p def
+       = (ss_empty, Decl nil)
+   (ss, binds) = foldl ss_binds (ss_empty, nil) [<strb_AA>] nil
+     = (ss_empty, Decl nil)
+   dec_dl (<dec_AA>, nil)
+     = parbind ss_binds [<strb_AA>] nil  
+     = dl_addS (ss_empty, parbindcons ([("AA", Decl nil)], nil)
+     = parbindcons ([("AA", Decl nil)], nil)
+     = [Bind ("AA", Decl nil)] : decls
+
+Note that there is no Ref decl in the result. Thus <dec_AA> contains no free
+(imported) module symbols.
+
+The (locally) defined, or exported symbols consist of ["AA"].
+
+4. struct structure AA = ... end  (<strexp_A>: Ast.strexp)
+   <strexp_A> : Ast.strexp = BaseStr (SeqDec [<dec_AA>])
+   <dec_AA> : Ast.dec = StrDec [strb_AA]  [3]
+   strexp_p <strexp_A>
+     = strexp_p (BaseStr (SeqDec [<dec_AA>]))
+       decls_A =
+         dec_dl (SeqDec [<dec_AA>], nil)
+	 = foldr dec_dl nil [<dec_AA>]
+	 = dec_dl (<dec_AA>, nil)
+	 = [Par [Bind ("AA", Decl nil)]].
+       (ss, decls) = split_dl decls_A = (ss_empty, decls_A)
+     = (ss_empty, Decl [Par [Bind ("AA", Decl nil)]])
+
+5. structure A = <strexp_A>
+   dec_A = StrDec [<strb_A>]
+   <strb_A>= Strb {name = "A", def = <strexp_A>, constraint = NoSig}
+   dec_dl (<dec_A>, nil) 
+     = parbind ss_binds [<strb_A>] nil
+     = dl_addS (ss, decl0)
+       where 
+         (ss, binds) = foldl ss_binds (ss_empty, nil) [<strb_A>] 
+                     = ss_binds (<strb_A>, (ss_empty, nil))              
+		     = (SS.union (ss_empty, ss'), [("A", mexp)])
+		       where
+		         (ss', mexp) = strexp_p <strexp_A>
+			             = (ss_empty, Decl [Par [Bind ("AA, Decl nil)]])
+		     = (ss_empty, [("A", Decl [Par [Bind ("AA, Decl nil)]])])
+       where decl0 = parbindcons (binds, nil)) 
+                   = parcons ([Bind ("A", Decl [Par [Bind ("AA, Decl nil)]])], nil))
+		   = [Bind ("A", Decl [Bind ("AA, Decl nil)])]
+     = dl_addS (ss_empty, [Bind ("A", Decl [Bind ("AA, Decl nil)])])
+     = [Bind ("A", Decl [Bind ("AA", Decl nil)])] : decls  -- skeleton for fileA.sml
+
+   No Ref(s), no imports?
+   Exports: {"A"}   (i.e. structure symbol "A")
+
+
+------------------------------------------------------------------------------------------
+ structure B =
+ struct
+   open A
+   val y = AA.x
+ end
+
+<openA> = OpenDec [["A"]]
+<vb_y> = Vb {pat = VarPat ["y"], exp = VarExp ["AA", "x"], lazyp = false}
+<dec_y> = ValDec [<vb_y>]
+<body_B> = SeqDec [<openA>, <dec_y>]
+<strexp_B> = BaseStr <body_B>
+<strb_B> = Strb {name = "B", def = <strexp_B>, constraint = NoSig}
+<dec_B> = StrDec [<strb_B>]
+
+dec_dl (dec_B, nil)
+= dec_dl (StrDec [<strb_B>], nil)
+= parbind ss_binds [<strb_B>] nil
+= dl_addS (ss, parconbinds (binds, nil))
+  (ss, binds)
+     = foldl ss_binds (ss_empty, nil) [<strb_B>]
+     = ss_binds (<strb_B>), (ss_empty, nil)
+     = (SS.union (ss_empty, ss'), (name, mexp) :: nil)
+	  (ss', mexp)
+	     = strexp_p def
+	     = strexp_p <strexp_B>
+	     = (ss'', Decl decls)
+		  (ss'', decls)
+                     = split_dl decls
+			 decls
+			   = dec_dl (<body_B>, nil)
+			   = dec_dl (SeqDec [<openA>, dec_y], nil)
+			   = foldr dec_dl nil [<openA>, dec_y] 
+			   = dec_dl (<openA>, dec_dl (<dec_y>, nil))
+			   = dec_dl (<openA>, vb_dl (<dec_y>, nil))
+			   = dec_dl (<openA>, [Ref {"AA"}]) 
+			   = [Open [["A"]], Ref {"AA"}]
+		     = (ss_empty, [Open [["A"]], Ref {"AA"}])
+            = (ss_empty,  Decl [Open [["A"]], Ref {"AA"}])
+    = (ss_empty, [("B", Decl [Open [["A"]], Ref {"AA"}])])
+= dl_addS (ss_empty, parbindcons (binds, nil))
+= parbindcons (binds, nil)
+= [Bind ("B", Decl [Open [["A"]], Ref {"AA"}])]
+
+Note that the Ref "AA" is buried beneath the Open [["A"]].
+- How will the dependency of B on A be detected?
+- How will the fact that "AA" is a spurious "import" be detected?
+   (i.e. that "AA" is locally bound by "open A")
+- How do we know that the reference to "AA" is in the scope of the "open A"?
+  -- we need to know (from A's skeleton, presumably), that AA is defined as a structure
+     component of A.
+     
+------------------------------------------------------------------------------------------
+fileA.sml:
+[Bind ("A", Decl [Bind ("AA", Decl nil)])] : decls
+
+fileB.sml:
+[Ref {"AA"}, Bind ("B", Decl [Open (Var "A")])] : decls
+
+How would this change for (fileC.sml)?
+
+ structure B =
+ struct
+   val y = AA.x
+   open A 
+ end
+
+Would the Ref {"AA"} be in a different place? That would be recognized as outside
+the scope of "open A"?
+
+------------------------------------------------------------------------------------------
+
+
+Possible Simplification Rules:
+
+    Par nil => nil      -- not quite right: lhs is decl, rhs is list
+    Seq nil => nil      -- not quite right: lhs is decl, rhs is list
+    [Par nil] => nil      -- can this happen?  (not quite: lhs is decl, rhs is list)
+    [Seq nil] => nil      -- can this happen?  (not quite: lhs is decl, rhs is list)
+    Par nil :: decls => decls ?
+    Seq nil :: decls => decls ?
+    Par [decl] = decl   -- parcons does this & all Par nodes are constructed through parcon
+    Seq [decl] = decl   -- seq function does this & all Seq nodes are constructed by seq

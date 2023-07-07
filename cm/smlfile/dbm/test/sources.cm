@@ -1,0 +1,22 @@
+(* smlfile/dbm/test/sources.cm *)
+
+Group
+
+is
+
+symbol.sml
+symbolset.sml
+ast.sml
+ppskeleton.sml
+test.sml
+
+../skeleton.sml
+../convert.sml
+../skel-exports.sml
+
+
+../../../../smlnj-lib/PrettyPrint/prettyprint-lib.cm
+
+$/basis.cm
+$/smlnj-lib.cm
+
