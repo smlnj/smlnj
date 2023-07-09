@@ -386,3 +386,4 @@ Question: does the DAEnv representation contain the same information as the
 
    -- what is the right way to "tentatively" keep track of set of free paths (path heads)?
 
+9. Next goal: to try to simultaneously unify and simplify the skeleton+DAEnv representations.
