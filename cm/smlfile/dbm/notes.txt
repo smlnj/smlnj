@@ -313,6 +313,9 @@ Question: does the DAEnv representation contain the same information as the
 	 the substructure tree of A (the substructures of A, their substructures, and so on).
 	 This information is presumably derivable from the DAEnv representation of A.
   
+      d. Note that free paths in a structure declaration can refer to structures, functors,
+         structure signatures and functor signatures (because of higher-order functors).
+
    B. For top-level structure signature declarations, one must be able to determine
 
       a. the name of the signature, which is an exported symbol of the compilation unit (file)
@@ -352,6 +355,9 @@ Question: does the DAEnv representation contain the same information as the
 	 These are calculated as for signature expressions in signature declarations and
 	 structure and functor declarations.
 
+   E. Note that free paths for signatures and functor signatures will be singleton paths,
+      but free paths for structures and functors can have nontrivial tails.
+
 5. If a compilation unit (source file) contains a sequence of declarations, their
    export and import symbols have to be combined to give the exports and imports of
    of the complete compilation unit.
@@ -368,4 +374,15 @@ Question: does the DAEnv representation contain the same information as the
    construct is in the scope of an outer open declaration. We also need to know whether
    any structure path head is in the scope of an outer declaration of that structure
    symbol.
+
+8. [Quesions]
+   -- Is it possible to merge and simplify the skeleton and DAEnv representations
+      into a single representation?
+   -- Can the two pass construction
+
+        Ast.dec -> Skeleton.decl -> DAEnv.env
+
+      be replaced with a one-pass translation.
+
+   -- what is the right way to "tentatively" keep track of set of free paths (path heads)?
 
