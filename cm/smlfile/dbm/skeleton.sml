@@ -30,19 +30,19 @@ local
 
 in
 
-    datatype decl
-      = Bind of S.symbol * exp
-      | Local of decl * decl
-      | Par of decl list
-      | Seq of decl list
-      | Open of exp
-      | Ref of SS.set           (* set not empty *)
+  datatype decl
+    = Bind of S.symbol * exp
+    | Local of decl * decl
+    | Par of decl list
+    | Seq of decl list
+    | Open of exp
+    | Ref of SS.set           (* set not empty *)
 
-    and exp
-      = Var of S.symbol list      (* symbol list (sympath) not null *)
-      | Decl of decl list	(* implicit Seq, decl list not null? *)
-      | Let of decl list * exp  (* implicit Seq, decl list not null? *)
-      | Pair of exp * exp
+  and exp
+    = Var of S.symbol list      (* symbol list (sympath) not null *)
+    | Decl of decl list	(* implicit Seq, decl list not null? *)
+    | Let of decl list * exp  (* implicit Seq, decl list not null? *)
+    | Pair of exp * exp
 
 end (* top local *)
 end (* structure Skeleton *)

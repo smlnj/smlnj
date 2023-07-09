@@ -338,14 +338,14 @@ in
     (* sigexp_p : Ast.sigexp -> ssexp *)
     and sigexp_p (VarSig s) = (SS.empty, SK.Var [s])
       | sigexp_p (AugSig (sigexp, whspecs)) =
-	  let fun one_s (WhType (_, _, ty), ss) = ty_s (ty, ss)
-		| one_s (WhStruct (_, p), ss) = s_addP (p, ss)
+	  let fun folder (WhType (_, _, ty), ss) = ty_s (ty, ss)
+		| folder (WhStruct (_, p), ss) = s_addP (p, ss)
 	      val (ss, e) = sigexp_p sigexp
-	   in (foldl one_s ss whspecs, e)
+	   in (foldl folder ss whspecs, e)
 	  end
       | sigexp_p (BaseSig specs) =
-	  let val (s, decls) = split_dl (foldr spec_dl [] specs)
-	   in (s, SK.Decl decls)
+	  let val (ss, decls) = split_dl (foldr spec_dl [] specs)
+	   in (ss, SK.Decl decls)
 	  end
       | sigexp_p (MarkSig (arg, _)) = sigexp_p arg
 
@@ -396,13 +396,14 @@ in
 	   in (ss, SK.Decl decls)
 	  end
       | strexp_p (ConstrainedStr (s, c)) = pairOp (strexp_p s, sigexpc_p c)
-      | strexp_p (AppStr (p, l) | AppStrI (p, l)) =
-	  let fun one ((str, _), (s, el)) =
-		    let val (s', e) = strexp_p str
-		     in (SS.union (s, s'), e :: el)
+      | strexp_p (AppStr (fctpath, args) | AppStrI (fctpath, args)) =
+	  (* reverses order of args in building Pair "list", but no matter *)
+	  let fun folder ((strexp, _), (ss, mexps)) =
+		    let val (ss', mexp) = strexp_p strexp
+		     in (SS.union (ss, ss'), mexp :: mexps)
 		    end
-	      val (s, el) = foldl one (SS.empty, []) l
-	   in (s, foldl SK.Pair (SK.Var p) el)
+	      val (ss, exps) = foldl folder (SS.empty, nil) args
+	   in (ss, foldl SK.Pair (SK.Var fctpath) exps)
 	  end
       | strexp_p (LetStr (bdg, b)) = letexp (dec_dl (bdg, []), strexp_p b)
       | strexp_p (MarkStr (s, _)) = strexp_p s

@@ -273,3 +273,99 @@ Possible Simplification Rules:
     Seq nil :: decls => decls ?
     Par [decl] = decl   -- parcons does this & all Par nodes are constructed through parcon
     Seq [decl] = decl   -- seq function does this & all Seq nodes are constructed by seq
+
+
+==========================================================================================
+Summary
+==========================================================================================
+
+1. Start with Ast rep of declaration in a source file: Ast.dec.
+
+2. Translate Ast.dec (convert.sml/SkelCvt.sml) into a Skeleton.decl.
+
+3. Translate Skeleton.decl (Build.declExports in dbm/build.sml) into a DAEnv.env
+   (dependency analysis) environment.
+
+Question: does the DAEnv representation contain the same information as the
+   skeleton it is derived from?  One assumes so. Verify?
+
+4. From the DAEnv.env environment it should be possilbe to:
+
+   A. For top-level structure declarations, one must be able to determine:
+
+      a. what is directly exported by the declaration, namely the exported structure
+         symbol (a single symbol, the name of the structure)
+
+      b. substructure components, heirarchically
+      	 in order to handle open decls for that structure in other module declarations
+	 -- possibly "nested", i.e. you open structure A, then within the scope
+	    of that open, you open a component of A, and so on (e.g. open B.C
+	    where B is a substructure of A)
+
+      c. what are the "imports" of the structure declarations, i.e. roughly the
+         _free_ module references. This is made non-obvious because a structure (path head)
+	 that is mentioned in the scope of an open declaration will not be free if
+	 it is (recursively) a stucture bound by the open declaration.  So bound symbols
+	 introduced via "open" have to be filtered out, but only within the scope of the
+	 open dec.
+
+         This means that if you mention a structure A in an open, you will need to know
+	 the substructure tree of A (the substructures of A, their substructures, and so on).
+	 This information is presumably derivable from the DAEnv representation of A.
+  
+   B. For top-level structure signature declarations, one must be able to determine
+
+      a. the name of the signature, which is an exported symbol of the compilation unit (file)
+
+      b. symbols for structures (path heads) that occur _free_ in the signature specs or
+      	 where clauses.
+
+      c. cope with include specifications, which are like open declarations for structures,
+         but simpler (no hierarchy, because no signature declarations within signatures).
+         The signature names of include statements should be added to the _free_ module
+	 references.
+
+      d. The single export is the signature name
+
+      e. the imports are names of signatures (both structure and functor signatures)
+         and structures that appear in the sigexp.  But there will not be any
+	 free functor names (functor symbol imports).
+      
+
+   C. For top-level functor declarations, one must be able to determine
+
+      a. the name of the functor, which is the sole export
+
+      b. The imports, which are the free structure paths of the parameter and result
+         signature expressions (sigexps)
+
+      c. Imports for the functor body strexp, which can be calculated in the same
+      	 way as they are for the strexp of a structure declaration.
+
+
+   D. For top-level functor signature declarations, one must be able to determine
+
+      a. the name of the functor signature, which is the sole export
+
+      b. the imports of the parameter and result signatures
+         (including the curried case if we add 1st-class curried functor signatures to Ast)
+	 These are calculated as for signature expressions in signature declarations and
+	 structure and functor declarations.
+
+5. If a compilation unit (source file) contains a sequence of declarations, their
+   export and import symbols have to be combined to give the exports and imports of
+   of the complete compilation unit.
+
+6. We have to produce the preliminary representations (skeletons and/or DAEnvs) of all
+   the compilation units in a group before we can determine the dependency graph for
+   the compilation units.
+
+   Exports are easy to determine, but imports (of structure symbols in path heads) require
+   that we know the substructure hierarchy of the imported structure to cope with the
+   effects of open declarations.
+
+7. So we need a tree representation that allows us to determine whether a given
+   construct is in the scope of an outer open declaration. We also need to know whether
+   any structure path head is in the scope of an outer declaration of that structure
+   symbol.
+

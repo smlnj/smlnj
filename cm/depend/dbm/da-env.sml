@@ -1,6 +1,6 @@
 (* cm/depend/dbm/da-env.sml
  *
- * Environments used during dependency analysis.
+ * Environments used during dependency analysis. ("da" stands for dependency analysis)
  *
  * (C) 2023 The Fellowship of SML/NJ
  *
@@ -11,14 +11,11 @@
 structure DAEnv =
 struct
 
-    datatype env
-      = EMPTY
-      | FCTENV of Symbol.symbol -> env option
-      | BINDING of Symbol.symbol * env
-      | LAYER of env * env
-      | FILTER of SymbolSet.set * env
-      | SUSPEND of unit -> env    (* do we really need suspended envs? *)
-
-(*    type value = env  (* why do we need this synonym? -- assume we don't *) *)
+  datatype env
+    = EMPTY
+    | FUNENV of Symbol.symbol -> env option (* env as partial function *)
+    | BINDING of Symbol.symbol * env
+    | LAYER of env * env
+    | FILTER of SymbolSet.set * env
 
 end (* structure DAEnv *)
