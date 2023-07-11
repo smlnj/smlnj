@@ -291,3 +291,102 @@ General Comments/Proposals -- CM 3.0 design ideas
   - relation with concrete file paths should be secondary
   
     
+================================================================================== 
+Ast-based dependency analysis
+==================================================================================
+
+* Relevant source files:
+
+  dbm/depend/
+    graph.sml
+    ggraph.sml
+    da-env.sml  
+    se2dae.sml
+    build.sml
+
+  dbm/smlfile
+    skeleton.sml
+    convert.sml (skel-cvt.sml)
+    skel-exports.sml
+
+* terminology
+
+  Defn:
+    _module_ symbols are symbols in the structure, functor, signature, and
+      functor signature name spaces, or equivalently a symbol that is bound to
+      a structure, functor, etc.
+    _strfct_ symbols are the subset of structure and functor symbols
+
+    a _short_ path consists of a single module symbol
+    a _long_ path is a path of length > 1, and it must start with a
+      structure symbol (only structures can be projected from)
+    a single symbol "path" that is not a module symbol is _trivial_
+      and represents a core language element (variable, tycon, exncon, etc.)
+    a _path head_ is the first symbol of a short or long path; for a long path
+      the path head is always a structure symbol
+
+    [We don't track trivial paths -- they can be neither exports nor imports,
+     nor can they "mask" exports and imports.]
+
+    A _structure path_ is a short or long path whose last symbol is a structure
+    symbol. I.e. a path that names a structure.
+
+    A _functor path_ is a path whose last symbol is a functor symbol.
+
+* structures vs functors
+
+  -- structure symbols/paths can be selected from
+     - A structure symbol can occur as the head of a long path; a structure path
+       can be extended with further projections.
+  -- structure paths can be "opened" (occur in open declarations)
+  -- functor symbols cannot be the head of a long path (cannot be selected from)
+  -- functor symbols/paths cannot be "opened"
+  -- functor symbols can designate the functor in a functor application, and can
+     occur as the definiens (rhs fctexp) in a functor declaration. (and in rhs of
+     where clauses? No!)
+
+* structures: what do we need to know (about a structure declaration)
+
+  -- name (a structure symbol)
+  -- 1st order (direct) module components (both structures and functors, or just
+     functors?)
+  -- context
+     (a) (local) module names that are in scope
+     (b) opened paths in scope -- their component structures can be added to (a)
+         - opened paths can be local or "free". If local we can already know their
+	   substructure names. If "free", we have to wait until a 2nd pass to determine
+	   their substructures.
+         - If the head of an opened path is "local" (defined _previously_ in the current
+	   structure expression StrBase), we know its substructure tree, and thus what
+	   module symbols the open decl binds.
+  -- "free" module names occurring within component declarations -- potential imports
+     - but if in the scope of any opens of "free" structure paths, freeness of the module
+       names will have to be determined later, when we can learn the component symbols of
+       the "free" path that was opened.
+
+* Two path algorithm to determine "imported" symbols
+
+  (1) construct component tree decorated with "potential" imports, qualified by the
+      opened paths that are in scope for each components. Exports are just the top-level
+      declared module symbols.
+
+  (2) analysis of opens across source files (compilation units) to determine which "free"
+      module symbols are actual imports.
+       
+
+====================================================================================== 
+Interface functions
+======================================================================================
+
+<structure tree>
+
+<structure symbol> -> <structure tree>   (~~ structure tree environment)
+
+<structure tree> * <path> -> <structure tree> option
+
+<opened paths> * <symbol set>  -- potentially imported symbols
+
+<opened paths> : path list  (scope relative)
+
+<structure tree> * <structure tree env> -> <symbol set> (imports)
+
