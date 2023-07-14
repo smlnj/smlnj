@@ -80,7 +80,7 @@ in
     (* PATTERN *)
     and pat
       = WildPat					(* empty pattern *)
-      | VarPat of path				(* variable/const-dcon pattern *)
+      | VarPat of S.symbol		        (* variable/const-dcon pattern [CHANGE: path] *)
       | IntPat of literal			(* integer *)
       | WordPat of literal			(* word literal *)
       | StringPat of string			(* string *)
@@ -90,10 +90,10 @@ in
       | ListPat of pat list			(* [list,in,square,brackets] *)
       | TuplePat of pat list			(* tuple *)
       | FlatAppPat of pat fixitem list		(* patterns before fixity parsing *)
-      | AppPat of {constr:pat,argument:pat}	(* constructor application *)
+      | AppPat of {constr: path, argument:pat}  (* constructor application [CHANGE: constr: pat] *)
       | ConstraintPat of {pattern:pat,constraint:ty}
 						(* constraint *)
-      | LayeredPat of {varPat:pat,expPat:pat} (* as patterns *)
+      | LayeredPat of {varPat: S.symbol, expPat:pat} (* as patterns [CHANGE: varPat: pat]*)
       | MarkPat of pat * region			(* mark a pattern *)
       | VectorPat of pat list			(* vector pattern *)
       | OrPat of pat list			(* or-pattern *)
@@ -147,7 +147,7 @@ in
 	     | IncludeSpec of sigexp			        (* include specif *)
 	     | MarkSpec of spec * region		        (* mark a spec *)
 
-    (* DECLARATIONS (let and structure) *)
+    (* DECLARATIONS (mixed core and module level) *)
     and dec = ValDec of (vb list * tyvar list)		(* values *)
 	    | ValrecDec of (rvb list * tyvar list)	(* recursive values *)
 	    | DoDec of exp				(* 'do' exp *)

@@ -333,6 +333,14 @@ Ast-based dependency analysis
 
     A _functor path_ is a path whose last symbol is a functor symbol.
 
+    A c-unit is a "compilation unit", normally an SML source file (member of
+    a group).
+
+    An occurrence of a symbol is _covered_ by an open declaration if
+       (1) the occurrence is within the scope of the open declaration, and
+       (2) the symbol is not the name of any 1st-order component of the
+           structure designated by the path.
+
 * structures vs functors
 
   -- structure symbols/paths can be selected from
@@ -373,6 +381,18 @@ Ast-based dependency analysis
   (2) analysis of opens across source files (compilation units) to determine which "free"
       module symbols are actual imports.
        
+Principle: imports cannot affect exports in a structure/functor declaration.
+  Thus we can calculate the exports of a c-unit before we know its true imports.
+  [Because only the top name of a module declaration is exported. Because no
+   top-level opens are allowed in a c-unit.]
+
+Observation:
+For each "potential" import (overtly free symbol occurrence), it can be
+disqualified as an import by any "open path" in whose scope that occurrence lies.
+[A given "free" symbol may have multiple "free" occurrences. And these occurrences
+may be governed by different sets of open declarations. So occurrences are qualified
+by sets of "in-scope" or "visible" open declarations.] A free symbol is an import
+if _some_ occurrence of that symbol is not "covered" by an open declaration.
 
 ====================================================================================== 
 Interface functions
@@ -389,4 +409,142 @@ Interface functions
 <opened paths> : path list  (scope relative)
 
 <structure tree> * <structure tree env> -> <symbol set> (imports)
+                   (locally bound substrs)
 
+Each node of a structure tree has an associated set of potential import symbols
+(free symbols). These potential import symbols may be covered by an in-scope open.
+
+For a locally bound path, we may be able to determine its substructure set and
+use that to immediately "resolve" an open of that path, translating the open into
+additional locally bound structure names, which may bind structure symbol occurrences
+so that they are not added to the "free" set.
+
+====================================================================================== 
+Determining components of opened paths
+======================================================================================
+
+Example 1.
+
+structure A =
+struct
+  structure AA = struct ... end
+  structure AB = struct ... end
+end
+
+structure B =
+struct
+  open A
+end
+
+structure C =
+struct
+  local
+    open B
+  in
+    val x = AB.y
+  end
+end
+
+Is "AB" an import of the C-declaration?
+Is "AB" a component of B?
+Is "AB" a compoent of A?
+
+Is "AB" an import of C? =>
+Is "AB" a substructure of B? ("AB" "covered" by open B) =>
+Is "AB" a substructure of A? => yes
+
+The components (substructures) of B are determined by the substructures of A, which
+is an import of B.
+
+So we have to chain back through structures until we can resolve any open decls and
+get a definite set of substructures. This process must terminate unless there is a
+dependency cycle, which needs to be detected (by recording which structures (symbols)
+have been examined.
+
+Example 2.
+
+Core declarations in core expressions/declarations.
+Consider the following schematic let expression (LetExp).
+
+let
+  <decs1>
+  open <paths1>
+  <decs2>
+  open <paths2>
+  <decs3>
+in
+  <body>
+end
+
+Assumptions:
+
+(1) <decs1>, <decs2>, and <decs3> produce no module bindings (only core bindings,
+    values, exception contructores and (maybe) types).
+
+(2) str bindings introduced by the open decs can introduce structure bindings and
+    these structure bindings can "cover" path heads of "free" paths in the following
+    core declarations and in the body exp.
+
+We are _segmenting_ the let declaractions, where segments of core decs are separated
+by open decs.
+
+Nested scoping of the let declarations
+
+--------------------------------------------------------------------------------------
+                            |  bnd-ph      |   free-ph  |  "imports"
+  |-----------------------------------------------------------------------------------
+1 | decs1                   |    {}        |    fphs1   |  fphs1/context
+  |   |-------------------------------------------------------------------------------
+2 |   |open paths1          | U cmp$paths1 |  hd$paths1 |  bnd-ph(2)/context
+  |   |-------------------------------------------------------------------------------
+3 |   |   |decs2            |    {}        |    fphs2   |  fphs2/context/paths1  
+  |   |   |   |----------------------------------------------------------------------
+4 |   |   |   |open paths2  | U cmp$paths2 |  hd$paths2 |  bnd_ph(4)/context/paths1
+  |   |   |   |   |-------------------------------------------------------------------
+5 |   |   |   |   |decs3    |    {}        |    fphs3   |  fphs3/context/paths1/paths2
+  |   |   |   |   |   |---------------------------------------------------------------
+6 |   |   |   |   |   |body |    {}        |    fphsb   |  fphsb/context/paths1/paths2  
+--------------------------------------------------------------------------------------
+6 letexp                    |    {}        |    fphsb   |  U {imports(i), i = 1..6}
+
+where cmp$paths1 = map cmp paths1, and cmp str = set of substructures of str
+where U = union operator on sets of sets of (str) symbols
+where context is the set of opened path sets in scope at this let exp.
+
+====================================================================================== 
+Elaboration of module declarations
+======================================================================================
+
+Environment of elaboration:
+
+  binding module names to their representations
+
+Required:
+
+  * mapping from structure symbols to a structure representation that include
+    the substructure heirarchy.
+
+  * opened path context (path set list)
+
+Notes:
+* In a module-level declaration sequence, a structure declaration may shadow a
+  structure binding introduced by an open declaration, and vice versa.
+
+  (* structure binding shadowed by a following open *) 
+  structure A = <strexp>
+  open p   (* where p is bound to a structure with an A substructure *)
+  (* A is not an import, though hd p may be *)
+
+  (* binding from open shadowed by a following structure dec *) 
+  open p   (* where p is bound to a structure with an A substructure *)
+  structure A = <strexp>
+  (* A is local, not an import *)
+
+
+1. structure declarations (StrDec strbs).
+
+2. functor declarations
+
+3. signature declarations
+
+4. functor signature declarations
