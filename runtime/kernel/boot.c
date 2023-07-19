@@ -406,8 +406,9 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 	exportSzB = sizeof(pers_id_t);
 	ReadBinFile (file, &exportPerID, exportSzB, fname);
     }
-    else if (hdr.exportCnt != 0)
+    else if (hdr.exportCnt != 0) {
 	Die ("# of export pids is %d (should be 0 or 1)", (int)hdr.exportCnt);
+    }
 
   /* seek to code section */
     {
@@ -419,8 +420,9 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 			+ hdr.guidSzB
 	                + hdr.pad;
 
-	if (fseek(file, off, SEEK_SET) == -1)
+	if (fseek(file, off, SEEK_SET) == -1) {
 	    Die ("cannot seek on bin file \"%s\"", fname);
+        }
     }
 
   /* Read code objects and run them.  The first code object will be the
@@ -432,8 +434,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the size and the dummy entry point for the data object */
     ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
     thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-    ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
-    /* thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint); */
+    ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname); /* ignored */
 
     remainingCode -= thisSzB + 2 * sizeof(Int32_t);
     if (remainingCode < 0) {
