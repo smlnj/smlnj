@@ -164,7 +164,7 @@ in
 	    | LocalDec of dec * dec			(* local dec *)
 	    | SeqDec of dec list			(* sequence of dec *)
 	    | OpenDec of path list			(* open structures *)
-	    | OvldDec of S.symbol * exp list     	        (* overloading (internal; restricted) *)
+	    | OvldDec of S.symbol * exp list     	(* overloading (internal; restricted) *)
 	    | FixDec of {fixity: F.fixity, ops: S.symbol list}  (* fixity *)
 	    | MarkDec of dec * region		        (* mark a dec *)
 
@@ -190,7 +190,8 @@ in
 
     (* DATATYPE BINDING *)
     and db = Db of {tyc : S.symbol, tyvars : tyvar list,
-		    rhs : (S.symbol * ty option) list, lazyp : bool}
+		    rhs : (S.symbol * ty option) list,
+		    lazyp : bool}
 	   | MarkDb of db * region
 
     (* EXCEPTION BINDING *)

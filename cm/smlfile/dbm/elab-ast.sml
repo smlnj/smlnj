@@ -1,23 +1,23 @@
-(* cm/smlfile/dbm/convert.sml
+(* cm/smlfile/dbm/elab-ast.sml
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
-structure Convert =
+structure CM_Elaborate =
 struct
 
 local
 
   structure S = Symbol
-(*  structure SP = SymPath *)
+(*  structure SP = SymPath ? *)
   structure SS = SymbolSet
   structure A = Ast
   structure SK = Skeleton
 (*  structure EM = ErrorMsg *)
 
   type symbol = S.symbol  (* = SS.item *)
-  type path = symbol list
+  type path = symbol list  (* ASSERT: non-null *)
   type symset = SS.set
   type mexp = SK.exp
   type decls = SK.decl list
@@ -43,20 +43,28 @@ in
     infix o'
     fun (f o' g) (x, y) = f (g x, y)
 
-    (* s_addP : path * symset -> symset *)
-    (* add the head of a symbol path to a given symset, unconditionally *)
-    fun s_addP ([], set) = set
-      | s_addP (head :: _, set) = SS.add (set, head)
+    (* symsetUnion : symset list -> symset *)
+    fun symsetUnion (symsets: symset list) = foldl SS.union SS.empty symsets
 
-    (* addPathHead [s_addMP] : path * symset -> symset *)
-    (* same as s_addP except we ignore paths of length 1 because they
-     * do not involve module access. *)
-    fun addPathHead ([], set) = set		(* can this happen at all? (null path?) *)
-      | addPathHead ([only], set) = set	(* singleton path -- no module name here *)
-      | addPathHead (head :: _, set) = SS.add (set, head)  (* add head of path, a structure name *)
+    (* addPathHead [s_addP] : path * symset -> symset *)
+    (* add the head of a symbol path to a given symset, unconditionally.
+     * This is used for paths occurring in structure (/signature) expressions,
+     * where a singleton path can denote a structure (/signature). *)
+    fun addPathHead ([], set) = set  (* impossible? error? *)
+      | addPathHead (head :: _, set) = SS.add (set, head)
+
+    (* addStrPathHead [s_addMP] : path * symset -> symset *)
+    (* same as addPathHead except we ignore paths of length 1 because they
+     * do not involve module access(?).
+     * This is used for paths that occur in core exps, types, etc., where a
+     * singleton path is just a (local) variable. *)
+    fun addStrPathHead ([], set) = set 	(* impossible? error? *)
+      | addStrPathHead ([only], set) = set (* ignore singleton path: assumed core symbol *)
+      | addStrPathHead (head :: _, set) =
+	  SS.add (set, head)  (* add head of path, a structure name *)
 
     (* dl_addSym : symbol * decls -> decls *)
-    (* add a reference to a symbol to decls *)
+    (* add a free reference to a symbol to a new or old Ref at head of decls *)
     fun dl_addSym (sym, SK.Ref syms :: decls) = SK.Ref (SS.add (syms, sym)) :: decls
       | dl_addSym (sym, decls) = SK.Ref (SS.singleton sym) :: decls
 
@@ -73,7 +81,8 @@ in
       | dl_addMP (head :: _, dl) = dl_addSym (head, dl)
 
     (* dl_addS : symset * decl list -> decl list *)
-    (* given a set of module references, add it to a decl list *)
+    (* given a symset (a set of free path heads) and a decl list, 
+       add the symset onto the decl list, amalgamating it with any leading Ref decl *)
     fun dl_addS (ss: symset, dl: decls) =
 	if SS.isEmpty ss then dl
 	else (case dl
@@ -127,7 +136,7 @@ in
     fun pair ((ss1, exp1), (ss2, exp2)) = (SS.union (ss1, ss2), SK.Pair (exp1, exp2))
 
     (* pairOp : ssexp * ssexp option -> ssexp *)
-    (* making an Pair where necessary ... *)
+    (* making an Pair, conditionally on the second argument *)
     fun pairOp (ssexp, NONE) = ssexp
       | pairOp (ssexp1, SOME ssexp2) = pair (ssexp1, ssexp2)
 
@@ -166,51 +175,56 @@ in
 	 in dl_addS (ss, parbindcons (binds, decls))
 	end
 
-    (* tyFree : Ast.ty * symset -> symset *)
-    (* (free) path heads of a type expression *)
-    fun tyFree (VarTy _, set) = set
-      | tyFree (ConTy (cn, l), set) = addPathHead (cn, foldl tyFree set l)
-      | tyFree (RecordTy l, set) = foldl (tyFree o' #2) set l
-      | tyFree (TupleTy l, set) = foldl tyFree set l
-      | tyFree (MarkTy (arg, _), set) = tyFree (arg, set)
+    (* tyFree : Ast.ty -> symset *)
+    fun tyFree (ty : Ast.ty) =
+	let (* free : Ast.ty * symset -> symset *)
+	    (* (free) path heads of a type expression *)
+	    fun free (VarTy _, set) = set
+	      | free (ConTy (cn, l), set) = addStrPathHead (cn, foldl free set l)
+	      | free (RecordTy l, set) = foldl (free o' #2) set l
+	      | free (TupleTy l, set) = foldl free set l
+	      | free (MarkTy (arg, _), set) = free (arg, set)
+	 in free (ty, SS.empty)
+	end
 
-    (* tyOpFree : Ast.ty option * symset -> symset *)
-    (* (free) path heads of a type option *)
-    fun tyOpFree (NONE, set) = set
-      | tyOpFree (SOME t, set) = tyFree (t, set)
+    (* tyOpFree : Ast.ty option -> symset *)
+    (* (free) path heads of a type option (empty for NONE) *)
+    fun tyOpFree NONE = SS.empty
+      | tyOpFree (SOME ty) = tyFree ty
 
-    (* patFree : Ast.pat * symset -> symset *)
+    (* patFree : Ast.pat -> symset *)
     (* (free) path heads of a pattern *)
-    fun patFree (VarPat _, symset) = symset  (* arg of VarPat is a val symbol *)
-      | patFree (RecordPat { def, ... }, symset) = foldl (patFree o' #2) symset def
-      | patFree ((ListPat pats | TuplePat pats | VectorPat pats | OrPat pats), symset) =
-	  foldl patFree symset pats
-      | patFree (FlatAppPat pats, symset) = foldl patFree symset pats
-      | patFree (AppPat { constr, argument }, symset) =
-	  addPathHead (constr, patFree (argument, symset))
-      | patFree (ConstraintPat { pattern, constraint }, symset) =
-	  patFree (pattern, tyFree (constraint, symset))
-      | patFree (LayeredPat { varPat, expPat }, symset) =
-	  patFree (expPat, symset)
-      | patFree (MarkPat (arg, _), symset) = patFree (arg, symset)
-      | patFree ((WildPat | IntPat _| WordPat _ | StringPat _ | CharPat _), symset) =
-	  symset
+    fun patFree (VarPat _) = SS.empty  (* arg is val symbol, not path *)
+      | patFree (RecordPat { def, ... }) =
+	  symsetUnion (map (fn (_, p) => patFree p) def)
+      | patFree (ListPat pats | TuplePat pats | VectorPat pats | OrPat pats) =
+	  symsetUnion (map patFree pats)
+      | patFree (FlatAppPat pats) =
+	  symsetUnion (map patFree pats)
+      | patFree (AppPat { constr, argument }) =
+	  addStrPathHead (constr, patFree argument)
+      | patFree (ConstraintPat { pattern, constraint }) =
+	  SS.union (patFree pattern, tyPatFree constraint)
+      | patFree (LayeredPat { varPat, expPat }) = patFree expPat
+      | patFree (MarkPat (arg, _)) = patFree arg
+      | patFree (WildPat | IntPat _| WordPat _ | StringPat _ | CharPat _) = SS.empty
 
-    (* ebFree : Ast.eb * symset -> symset *)
+    (* ebFree : Ast.eb -> symset *)
     (* (free) path heads of an exception binding *)
-    fun ebFree (EbGen { exn, etype }, set) = tyOpFree (etype, set)
-      | ebFree (EbDef { exn, edef }, set) = s_addMP (edef, set)
-      | ebFree (MarkEb (arg, _), set) = ebFree (arg, set)
+    fun ebFree (EbGen { exn, etype }) = tyOpFree etype
+      | ebFree (EbDef { exn, edef }) = s_addMP (edef, SS.empty)
+      | ebFree (MarkEb (arg, _)) = ebFree arg
 
-    (* dbFree : Ast.db * symset -> symset *)
+    (* dbFree : Ast.db -> symset *)
     (* (free) path heads of a datatype binding *)
-    fun dbFree (Db { rhs, ... }, set) = foldl (tyOpFree o' #2) set rhs
-      | dbFree (MarkDb (arg, _), set) = dbFree (arg, set)
+    fun dbFree (Db { rhs, ... }) =
+	  symsetUnion (map (fn (_, tyOp) => tyOpFree tyOp) rhs)
+      | dbFree (MarkDb (db, _)) = dbFree db
 
-    (* tbFree : Ast.tb * symset -> symset *)
+    (* tbFree : Ast.tb -> symset *)
     (* (free) path heads of a type binding *)
-    fun tbFree (Tb { def, ... }, set) = tyFree (def, set)
-      | tbFree (MarkTb (arg, _), set) = tbFree (arg, set)
+    fun tbFree (Tb { def, ... }) = tyFree def
+      | tbFree (MarkTb (tb, _)) = tbFree tb
 
     (* elabExp : env -> Ast.exp -> imports? *)
     (* imports for an expression
@@ -228,7 +242,7 @@ in
 	    (* elabExp1 : Ast.exp * imports -> imports ? *)
 	    fun elabExp1 (exp, imports) = elabExp0 exp @ imports
 	 in case exp
-	      of VarExp path => addPathHead' (path, env)
+	      of VarExp path => addStrPathHead (path, env)
 	       | FnExp rules => foldr (elabRule env) nil rules
 	       | FlatAppExp exps => foldr elabExp1 nil exps
 	       | AppExp { function, argument } =>
@@ -242,7 +256,7 @@ in
 	       | RecordExp fields => foldl (elabExp1 o' #2) nil fields
 	       | SelectorExp _ => nil
 	       | ConstraintExp { expr, constraint } =>
-		   dl_addS (tyFree (constraint, SS.empty), elabExp (expr, dl))
+		   dl_addS (tyFree constraint, elabExp (expr, dl))
 	       | HandleExp { expr, rules } =>
 		   elabExp (expr, foldr ElabRule nil rules)
 	       | RaiseExp exp => elabExp0 exp
@@ -272,7 +286,7 @@ in
       | exp_dl (RecordExp l, dl) = foldl (exp_dl o' #2) dl l
       | exp_dl (SelectorExp _, dl) = dl
       | exp_dl (ConstraintExp { expr, constraint }, dl) =
-	  dl_addS (tyFree (constraint, SS.empty), exp_dl (expr, dl))
+	  dl_addS (tyFree constraint, exp_dl (expr, dl))
       | exp_dl (HandleExp { expr, rules }, dl) =
 	  exp_dl (expr, foldl rule_dl dl rules)
       | exp_dl (RaiseExp e, dl) = exp_dl (e, dl)
@@ -286,11 +300,11 @@ in
 
     (* rule_dl : Ast.rule * decls -> decls *)
     and rule_dl (Rule { pat, exp }, decls) =
-	dl_addS (patFree (pat, SS.empty), exp_dl (exp, decls))
+	dl_addS (patFree pat, exp_dl (exp, decls))
 
     (* clause_dl : Ast.clause * decls -> decls *)
     and clause_dl (Clause {pats, resultty, exp}, decls) =
-	dl_addS (foldl patFree (tyOpFree (resultty, SS.empty)) pats,
+	dl_addS (symsetUnion (tyOpFree resultty :: map patFree pats),
 		 exp_dl (exp, decls))
 
     (* fb_dl : Ast.fb * decls -> decls *)
@@ -299,19 +313,19 @@ in
 
     (* vb_dl : Ast.vb * decls -> decls *)
     and vb_dl (Vb {pat, exp, ...}, decls) =
-	  dl_addS (patFree (pat, SS.empty), exp_dl (exp, decls))
+	  dl_addS (patFree pat, exp_dl (exp, decls))
       | vb_dl (MarkVb (arg, _), decls) = vb_dl (arg, decls)
 
     (* rvb_dl : Ast.rvb * decls -> decls *)
     and rvb_dl (Rvb {var, exp, resultty, ...}, decls) =
-	  dl_addS (tyOpFree (resultty, SS.empty), exp_dl (exp, decls))
+	  dl_addS (tyOpFree resultty, exp_dl (exp, decls))
       | rvb_dl (MarkRvb (arg, _), decls) = rvb_dl (arg, decls)
 
     (* spec_dl : Ast.spec * decls -> decls *)
     and spec_dl (MarkSpec (arg, _), decls) = spec_dl (arg, decls)
       | spec_dl (StrSpec strs, decls) =
 	  let (* strange case -- structure optional, signature mandatory *)
-	      fun one ((name, sigexp, pathOp), (ss, binds)) =
+	      fun folder ((name, sigexp, pathOp), (ss, binds)) =
 		    let val (ss', mexp) = sigexp_p sigexp
 			val ss'' = SS.union (ss, ss')
 			val bind =
@@ -320,30 +334,38 @@ in
 			        | SOME path => (name, SK.Pair (SK.Var path, mexp)))
 		     in (ss'', bind :: binds)
 		    end
-	      val (ss, binds) = foldr one (SS.empty, []) strs
+	      val (ss, binds) = foldr folder (SS.empty, []) strs
            in dl_addS (ss, parbindcons (binds, decls))
           end
       | spec_dl (TycSpec (l, _), decls) =
-	  let fun one_s ((_, _, SOME t), s) = tyFree (t, s)
-		| one_s (_, s) = s
-	   in dl_addS (foldl one_s SS.empty l, decls)
+	  let fun mapper (_, _, SOME ty) = tyFree ty
+		| mapper _ = SS.empty
+	   in dl_addS (symsetUnion (map mapper l), decls)
 	  end
       | spec_dl (FctSpec l, decls) =
-	  let fun one ((n, g), (s, bl)) =
-		    let val (s', e) = fsigexp_p g
-		     in (SS.union (s, s'), (n, e) :: bl)
+	  let fun folder ((n, g), (ss, bl)) =
+		    let val (ss', e) = fsigexp_p g
+		     in (SS.union (ss, ss'), (n, e) :: bl)
 		    end
-	      val (s, bl) = foldr one (SS.empty, []) l
-	   in dl_addS (s, parbindcons (bl, decls))
+	      val (ss, bl) = foldr folder (SS.empty, []) l
+	   in dl_addS (ss, parbindcons (bl, decls))
 	  end
-      | spec_dl (ValSpec l, decls) = dl_addS (foldl (tyFree o' #2) SS.empty l, decls)
+      | spec_dl (ValSpec l, decls) =
+	  dl_addS (symsetUnion (map (fn (_,ty) =>  tyFree ty) l), decls)
       | spec_dl (DataSpec { datatycs, withtycs }, decls) =
-	dl_addS (foldl dbFree (foldl tbFree SS.empty withtycs) datatycs, decls)
+	  let val wfree = symsetUnion (map tbFree withtycs)
+	      val dfree = symsetUnion (map dbFree datatycs)
+	      val free = SS.union (wfree, dfree)
+	   in dl_addS (free, decls)
+	  end
       | spec_dl (DataReplSpec(_,cn), decls) =
-	dl_addS (s_addMP (cn, SS.empty), decls)
-      | spec_dl (ExceSpec l, decls) = dl_addS (foldl (tyOpFree o' #2) SS.empty l, decls)
-      | spec_dl (ShareStrSpec l, decls) = foldl dl_addP decls l
-      | spec_dl (ShareTycSpec l, decls) = dl_addS (foldl s_addMP SS.empty l, decls)
+	  dl_addS (s_addMP (cn, SS.empty), decls)
+      | spec_dl (ExceSpec exnspecs, decls) =
+	  dl_addS (symsetUnion (map (fn (_, tyOp) => tyOpFree tyOp) exnspecs), decls)
+      | spec_dl (ShareStrSpec paths, decls) = (* all paths are str paths *)
+	  foldl dl_addP decls paths
+      | spec_dl (ShareTycSpec paths, decls) =
+	  dl_addS (foldl s_addMP SS.empty paths, decls)
       | spec_dl (IncludeSpec g, decls) =
 	  let val (ss, e) = sigexp_p g
 	   in dl_addS (ss, open' (e, decls))
@@ -352,10 +374,10 @@ in
     (* sigexp_p : Ast.sigexp -> ssexp *)
     and sigexp_p (VarSig s) = (SS.empty, SK.Var [s])
       | sigexp_p (AugSig (sigexp, whspecs)) =
-	  let fun folder (WhType (_, _, ty), ss) = tyFree (ty, ss)
-		| folder (WhStruct (_, p), ss) = s_addP (p, ss)
-	      val (ss, e) = sigexp_p sigexp
-	   in (foldl folder ss whspecs, e)
+	  let fun whspecFree (WhType (_, _, ty)) = tyFree ty
+		| whspecFree (WhStruct (_, path)_ = SS.singleton (hd path)
+	      val (ss, mexp) = sigexp_p sigexp
+	   in (symsetUnion (ss :: map whspecFree whspecs), mexp)
 	  end
       | sigexp_p (BaseSig specs) =
 	  let val (ss, decls) = split_dl (foldr spec_dl [] specs)
@@ -386,17 +408,17 @@ in
       | fsigexpc_p (Transparent fsigexp | Opaque fsigexp) = SOME (fsigexp_p fsigexp)
 
     (* fctexp_p : Ast.fctexp -> ssexp *)
-    and fctexp_p (VarFct (p, c)) =
-	  pairOp ((SS.empty, SK.Var p), fsigexpc_p c)
+    and fctexp_p (VarFct (path, constraint)) =
+	  pairOp ((SS.empty, SK.Var path), fsigexpc_p constraint)
       | fctexp_p (BaseFct { params, body, constraint }) =
 	  letexp (foldr fparam_d [] params,
 		  pairOp (strexp_p body, sigexpc_p constraint))
       | fctexp_p (AppFct (p, l, c)) =
-	  let fun one ((str, _), (s, el)) =
+	  let fun folder ((str, _), (s, el)) =
 		    let val (s', e) = strexp_p str
 		     in (SS.union (s, s'), e :: el)
 		    end
-	      val (s, el) = foldl one (SS.empty, nil) l
+	      val (s, el) = foldl folder (SS.empty, nil) l
 	      val (s', e) = pairOp ((SS.empty, SK.Var p), fsigexpc_p c)
 	   in (SS.union (s, s'), foldl SK.Pair e el)
 	  end
@@ -404,12 +426,13 @@ in
       | fctexp_p (MarkFct (arg, _)) = fctexp_p arg
 
     (* strexp_p : Ast.strexp -> ssexp *)
-    and strexp_p (VarStr p) = (SS.empty, SK.Var p)
+    and strexp_p (VarStr path) = (SS.empty, SK.Var path)
       | strexp_p (BaseStr dec) =
 	  let val (ss, decls) = split_dl (dec_dl (dec, nil))
 	   in (ss, SK.Decl decls)
 	  end
-      | strexp_p (ConstrainedStr (s, c)) = pairOp (strexp_p s, sigexpc_p c)
+      | strexp_p (ConstrainedStr (strexp, constraint)) =
+	  pairOp (strexp_p strexp, sigexpc_p constraint)
       | strexp_p (AppStr (fctpath, args) | AppStrI (fctpath, args)) =
 	  (* reverses order of args in building Pair "list", but no matter *)
 	  let fun folder ((strexp, _), (ss, mexps)) =
@@ -503,12 +526,23 @@ in
     val convert : Ast.dec -> SK.decl = c_dec
 
 end (* top local *)
-end (* structure SkelCvt *)
+end (* structure CM_Elaborate *)
 
 (* NOTES
 
 1. deal with error detection and error messages later (e.g. for the top-level convert
 function. checkDec is a version of the former "complainCM" check and error message 
 generator.
+
+2. elaboration produces two products:
+   a. provisional imports (imports qualified by structure paths in scope)
+   b. a structural representation of (module) declarations (CM top-level decs)
+
+3. "opened paths" appear both
+   a. as qualifiers in the (provisional) imports, and
+   b. in the structure (binding) representation, where they are needed to
+      determine the str component names of a structure, in case _it_ is opened
+      downstream in its declaration scope.
+  
 
 *)

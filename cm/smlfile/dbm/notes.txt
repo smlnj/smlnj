@@ -387,3 +387,54 @@ Question: does the DAEnv representation contain the same information as the
    -- what is the right way to "tentatively" keep track of set of free paths (path heads)?
 
 9. Next goal: to try to simultaneously unify and simplify the skeleton+DAEnv representations.
+
+
+======================================================================================
+Big Example
+======================================================================================
+
+DEFN: "c-unit" is short for compilation unit, which is a CM group
+source file member, which will contain only module-level bindings, and
+in particular, no top-level open declarations.
+
+c-unit context (env)  binds: A3, A8
+-----------------------------------
+
+structure S =
+struct
+  type t = A1.s list       pimport A1 
+  val x = (3, A2.y)   	   pimport A2
+  structure S1 = A3        pimport A3
+  open A4                  pimport A4  (could bind S2, or rebind A3, A8, S1)
+  val y = A5.z		   pimport A5/[A4]  (A5 an import, or a comp substructure of A4)
+  val d = S1.e		   pimport? S1/[A4] (S1 cannot be presumed known after "open A4")
+  open S2 		   pimport S2/[A4]  (S2 cannot be presumed known after "open A4")
+
+  structure S2 =
+    struct
+      type t = A6.u        pimport A6/[A4, S2]     (won't check if A6.u defined)
+      open A7              pimport A7/[A4, S2]
+      val z = A8.v	   pimport A8/[A4, S2, A7]  (won't check if A8.v defined)
+    end
+
+  val h = S2.z		   ~pimport S2!   (S2 bound locally, and in scope) 
+  open A9.B	           pimport A9/[A4]
+  val h = S2.z		   pimport S2/[A4,?] or S2 local
+  val a = A10.b		   pimport A10/[A4,A9.B]
+
+  ...
+end
+
+* When we detect a potential import path (e.g. A.B.c, where A is a strsym), we never check
+  whether B.c is a valid internal path for A, even after A is resolved with a binding.
+
+Q: Do we attempt to detect during elaboration whether a path head is "locally bound",
+  i.e. bound earlier in the current c-unit? If so, do we assume knowledge of the components
+  (recursively), so that we can determine the component bindings introduced by an opening of
+  that path?
+
+  The problem is that after opening a free path (a path whose head is not known to be bound, a
+  pimport path), all existing knowledge of bound structures has to be cancelled, since such an
+  open dec may shaddow any previously known structure binding. This means that any inherited
+  module environment is cancelled when opening a free path.
+  
