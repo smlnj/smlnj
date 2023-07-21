@@ -31,10 +31,9 @@ local
 
 in
 
-
-    (* The main idea is to collect lists of decl ("dl"s).
-     * Normally, a dl will eventually become an argument to seq or par.
-     * As an important optimization, we always try to keep any "Ref s"
+    (* [Blume] The main idea is to collect lists of decls.
+     * Normally, a decl list will eventually become an argument to seq or par.
+     * As an important optimization, we always try to keep any "Ref's"
      * at the front (but we don't try too hard and only do it where
      * it is reasonably convenient). *)
 
@@ -50,18 +49,18 @@ in
     (* add the head of a symbol path to a given symset, unconditionally.
      * This is used for paths occurring in structure (/signature) expressions,
      * where a singleton path can denote a structure (/signature). *)
-    fun addPathHead ([], set) = set  (* impossible? error? *)
-      | addPathHead (head :: _, set) = SS.add (set, head)
+    fun addPathHead (head :: _, symset) = SS.add (symset, head)
+      | addPathHead _ = error "addPathHead" (* empty path *)
 
     (* addStrPathHead [s_addMP] : path * symset -> symset *)
     (* same as addPathHead except we ignore paths of length 1 because they
      * do not involve module access(?).
      * This is used for paths that occur in core exps, types, etc., where a
      * singleton path is just a (local) variable. *)
-    fun addStrPathHead ([], set) = set 	(* impossible? error? *)
-      | addStrPathHead ([only], set) = set (* ignore singleton path: assumed core symbol *)
-      | addStrPathHead (head :: _, set) =
-	  SS.add (set, head)  (* add head of path, a structure name *)
+    fun addStrPathHead ([_], symset) = symset (* ignore singleton path: assumed core symbol *)
+      | addStrPathHead (head :: _, symset) =
+	  SS.add (symset, head)  (* add head of path, a structure name *)
+      | addStrPathHead _ = error "addStrPathHead"  (* empty path *)
 
     (* dl_addSym : symbol * decls -> decls *)
     (* add a free reference to a symbol to a new or old Ref at head of decls *)
@@ -70,30 +69,36 @@ in
 
     (* dl_addP : path * decls -> decls *)
     (* add the first element of a path to a dl *)
-    fun dl_addP ([], dl) = dl
-      | dl_addP (head :: _, dl) = dl_addSym (head, dl)
+    fun dl_addP ([], decls) = decls
+      | dl_addP (head :: _, decls) = dl_addSym (head, decls)
 
     (* dl_addMP : path * decls -> decls *)
     (* add the first element of a path to a dl -- except if that element is
      * the only one on the path, in which case is should not be a structure symbol *)
-    fun dl_addMP ([], dl) = dl
-      | dl_addMP ([only], dl) = dl
-      | dl_addMP (head :: _, dl) = dl_addSym (head, dl)
+    fun dl_addMP ([], decls) = decls
+      | dl_addMP ([only], decls) = decls
+      | dl_addMP (head :: _, decls) = dl_addSym (head, decls)
 
     (* dl_addS : symset * decl list -> decl list *)
     (* given a symset (a set of free path heads) and a decl list, 
        add the symset onto the decl list, amalgamating it with any leading Ref decl *)
-    fun dl_addS (ss: symset, dl: decls) =
-	if SS.isEmpty ss then dl
-	else (case dl
-	        of SK.Ref ss' :: dl' => SK.Ref (SS.union (ss, ss')) :: dl'
-		 | _ => SK.Ref ss :: dl)
+    fun dl_addS (ss: symset, decls: decls) =
+	if SS.isEmpty ss then decls
+	else (case decls
+	        of SK.Ref ss' :: decls' => SK.Ref (SS.union (ss, ss')) :: decls'
+		 | _ => SK.Ref ss :: decls)
 
     (* seq : decl list -> decl *)
     (* make a Seq node when necessary -- only appearance of SK.Seq *)
-    fun seq [] = SK.Ref SS.empty
-      | seq [only] = only
-      | seq dl = SK.Seq dl
+    fun seq [] = SK.Ref SS.empty  (* a "degenerate" Ref == a "null decl" *)
+      | seq [decl] = decl
+      | seq decls = SK.Seq decls
+
+    (* par_join : decls * decls -> decls *)
+    (* treat (nontrivial) decls1 as a Par decl and add to decls2 *)
+    fun par_join ([], decls) = decls
+      | par_join ([only], decls) = only :: decls
+      | par_join (decls1, decls2) = SK.Par decls1 :: decls2
 
     (* split_dl : decl list -> symset * decl list *)
     (* split initial ref symset from a decl list, if it starts with a Ref.
@@ -105,7 +110,7 @@ in
     (* join two decl lists.
      * This can result in a Ref decl in the middle of the decl list returned. *)
     fun join_dl ([], decls) = decls
-      | join_dl ([SK.Ref s], decls) = dl_addS (s, decls)
+      | join_dl ([SK.Ref symset], decls) = dl_addS (symset, decls)
       | join_dl (h :: t, d) = h :: join_dl (t, d)
 
     (* local_dl : decl list * decl list * decl list -> decl list *)
@@ -145,12 +150,6 @@ in
     fun open' (SK.Decl decls, decls') = join_dl (decls, decls')
       | open' (e, dl) = SK.Open e :: dl
 
-    (* par : decls * decls -> decls *)
-    (* treat (nontrivial) decls1 as a Par decl and add to decls2 *)
-    fun par ([], decls) = decls
-      | par ([only], decls) = only :: decls
-      | par (decls1, decls2) = SK.Par decls1 :: decls2
-
     (* parbindcons : bindings * decls -> decls *)
     (* Given a "bindings", stick a parallel Bind in front of decl, the given decl list.
      * While doing so, if a Ref occured at the front of the dl, move it to the front
@@ -160,9 +159,9 @@ in
     fun parbindcons (bindings: bindings, SK.Ref ss :: decls) =
 	  let val bs = SS.addList (SS.empty, map #1 bindings)
 		      (* the set of "bound symbols" *)
-           in dl_addS (SS.difference (ss, bs), par (map SK.Bind bindings, decls))
+           in dl_addS (SS.difference (ss, bs), par_join (map SK.Bind bindings, decls))
           end
-      | parbindcons (binds, decls) = par (map SK.Bind binds, decls)
+      | parbindcons (binds, decls) = par_join (map SK.Bind binds, decls)
 
     (* parbind : [collector:]('x * (symset * bindings) -> (symset * bindings))
                  -> [xs:] 'x list
@@ -366,8 +365,8 @@ in
 	  foldl dl_addP decls paths
       | spec_dl (ShareTycSpec paths, decls) =
 	  dl_addS (foldl s_addMP SS.empty paths, decls)
-      | spec_dl (IncludeSpec g, decls) =
-	  let val (ss, e) = sigexp_p g
+      | spec_dl (IncludeSpec sigexp, decls) =
+	  let val (ss, e) = sigexp_p sigexp
 	   in dl_addS (ss, open' (e, decls))
 	  end
 
@@ -495,7 +494,7 @@ in
       | dec_dl (LocalDec (bdg, body), decls) =
 	  local_dl (dec_dl (bdg, []), dec_dl (body, []), decls)
       | dec_dl (SeqDec decs, decls) = foldr dec_dl decls decs
-      | dec_dl (OpenDec paths, decls) = par (map (SK.Open o SK.Var) paths, decls)
+      | dec_dl (OpenDec paths, decls) = par_join (map SK.Open paths, decls)
       | dec_dl (OvldDec (_, l), decls) = foldl exp_dl decls l
 (*      | dec_dl (FixDec _, decls) = decls *)
       | dec_dl (MarkDec (dec, _), decls) = dec_dl (dec, decls)

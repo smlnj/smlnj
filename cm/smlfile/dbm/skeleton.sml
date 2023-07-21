@@ -35,7 +35,7 @@ in
     | Local of decl * decl
     | Par of decl list
     | Seq of decl list
-    | Open of exp
+    | Open of S.symbol list   (* open a single path *)
     | Ref of SS.set           (* set not empty? *)
 
   and exp

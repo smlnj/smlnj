@@ -21,14 +21,15 @@ local
 in
 
   (* exports : SK.decl -> SS.set *)
-  fun exports d =
-      let fun e (SK.Bind (s, _), a) = SS.add (a, s)
-	    | e (SK.Local (l, b), a) = e (b, a)
-	    | e (SK.Par l, a) = foldl e a l
-	    | e (SK.Seq l, a) = foldl e a l
-	    | e (SK.Open _, a) = a	(* cannot happen *)
-	    | e (SK.Ref _, a) = a
-       in e (d, SS.empty)
+  fun exports (decl: SK.decl) : SS.set =
+      let (* export0 : SK.decl * SS.set -> SS.set *)
+	  fun export0 (SK.Bind (sym, _), symset) = SS.add (symset, sym)
+	    | export0 (SK.Local (local, body), symset) = export0 (body, symset)
+	    | export0 (SK.Par decls, symset) = foldl export0 symset decls
+	    | export0 (SK.Seq decls, symset) = foldl export0 symset decls
+	    | export0 (SK.Open _, symset) = symset  (* cannot happen !? (why?) *)
+	    | export0 (SK.Ref _, symset) = symset
+       in export0 (decl, SS.empty)
       end
 
 end (* top local *)
