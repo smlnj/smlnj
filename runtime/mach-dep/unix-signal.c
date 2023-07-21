@@ -53,6 +53,7 @@ ml_val_t ListSignals (ml_state_t *msp)
  */
 void PauseUntilSignal (vproc_state_t *vsp)
 {
+/* FIXME: should use sigsuspend */
     pause ();
 
 } /* end of PauseUntilSignal */

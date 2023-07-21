@@ -44,6 +44,7 @@ C_SRCS =	codegen-lib.c \
 		generate.c
 
 CXX_SRCS =	$(wildcard src/*.cxx)
+CXX_INCS =	$(wildcard include/*hxx src/*hxx)
 
 OBJS =		$(C_SRCS:%.c=%.o) $(CXX_SRCS:src/%.cxx=%.o)
 
@@ -61,7 +62,7 @@ $(VERSION) :
 	$(CLIB_DIR)/ml-c.h cfun-proto-list.h cfun-list.h
 	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) -Iinclude -c $<
 
-%.o: src/%.cxx $(INCLS)
+%.o: src/%.cxx $(CXX_INCS)
 	$(CXX) -c $(CXX_FLAGS) $(LLVM_CXX_FLAGS) $(LLVM_CPP_FLAGS) $(DEFS) $<
 
 clean :
