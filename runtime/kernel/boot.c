@@ -92,8 +92,9 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
 	strcpy(fname, STR_MLtoC(LIST_hd(BinFileList)));
 	BinFileList = LIST_tl(BinFileList);
 	if (fname[0] == '#') {
-	    if (rts_init)
+	    if (rts_init) {
 		Die ("runtime system registered more than once\n");
+	    }
 	    else {
 	      /* register the runtime system under the given pers id */
 		pers_id_t pid;
@@ -106,8 +107,9 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
 			pid.bytes[i] = (HEX(c1) << 4) + HEX(c2);
 		    }
 		}
-		if (!SilentLoad)
+		if (!SilentLoad) {
 		    Say ("[Registering runtime system as %s]\n", fname+1);
+		}
 		EnterPerID (msp, &pid, RunTimeCompUnit);
 		rts_init = 1;	/* make sure we do this only once */
 	    }
@@ -267,7 +269,7 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
       /* check version number */
         info->version = BIGENDIAN_TO_HOST32(p->version);
         if (info->version != BINFILE_VERSION) {
-	    Die ("invalid binfile version %0x for  \"%s\"", info->version, fname);
+	    Die ("invalid binfile version %0x for \"%s\"", info->version, fname);
         }
         info->hdrSzB    = sizeof(new_binfile_hdr_t);
         info->importCnt	= BIGENDIAN_TO_HOST32(p->importCnt);
@@ -333,6 +335,17 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     char            *atptr, *colonptr;
     char            *objname = fname;
 
+    /* an entry in the boot-file list should have the following syntax:
+     *
+     *  <filename> [ '@' <offset> [ ':' <objname> ] ]
+     *
+     * where <filename> is the name of the binfile, <offset> is an optional offset
+     * into the binfile (for stable libraries), and <objname> is the optional name
+     * of the object being loaded.  The <offset> defaults to 0 and the <objname>
+     * defaults to the <filename>.  Note that the <objname> typically includes both
+     * the filename and the offset, as well as the name of the source file being
+     * loaded.
+     */
     if ((atptr = strchr (fname, '@')) == NULL) {
 	archiveOffset = 0;
     }
@@ -393,8 +406,9 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 	exportSzB = sizeof(pers_id_t);
 	ReadBinFile (file, &exportPerID, exportSzB, fname);
     }
-    else if (hdr.exportCnt != 0)
+    else if (hdr.exportCnt != 0) {
 	Die ("# of export pids is %d (should be 0 or 1)", (int)hdr.exportCnt);
+    }
 
   /* seek to code section */
     {
@@ -406,8 +420,9 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 			+ hdr.guidSzB
 	                + hdr.pad;
 
-	if (fseek(file, off, SEEK_SET) == -1)
+	if (fseek(file, off, SEEK_SET) == -1) {
 	    Die ("cannot seek on bin file \"%s\"", fname);
+        }
     }
 
   /* Read code objects and run them.  The first code object will be the
@@ -419,8 +434,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the size and the dummy entry point for the data object */
     ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
     thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-    ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
-    /* thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint); */
+    ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname); /* ignored */
 
     remainingCode -= thisSzB + 2 * sizeof(Int32_t);
     if (remainingCode < 0) {
@@ -470,6 +484,10 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 	DISABLE_CODE_WRITE
 
 	FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+
+        if (!SilentLoad) {
+            Say ("  [addr: %p, size: %d]\n", PTR_MLtoC(char, codeObj), thisSzB);
+        }
 
       /* create closure (taking entry point into account) */
 	REC_ALLOC1 (msp, closure,
