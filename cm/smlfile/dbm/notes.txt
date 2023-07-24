@@ -498,8 +498,13 @@ Q: Do we attempt to detect during elaboration whether a path head is "locally bo
   FPH set for the scope of that binding construct, to be supplanted following the "next"
   strsym binding construct.
 
+  Functor declarations do not bind strsyms, and therefore do not introduce FPH scopes. 
+
   A strexp on the rhs of a structure or functor dec or as a functor call argument
   does not introduce a str binding scope, so does not require a new FPH set.
+
+  Similarly, a sigexp does not bind strsyms, but may contain str specs or include
+  specs that do bind strsyms, and hence by introduce local FPH scopes.
 
   We could use the term "FPH scope" for the "structural region" introduced by a
   strsym binding construct.  Each FPH scope then requires its own FPH set, which
@@ -518,3 +523,7 @@ Q: Do we attempt to detect during elaboration whether a path head is "locally bo
 
 * Where do we put the FPH sets associated with FPH scopes in the elaborated representation?
   Do we "linearize" the structure (analagous to skeleton decl)?
+
+* Procedure:
+  -- traverse Ast structure, collecting FPHs in the "current" FPH set.
+  -- until a strsym binding construct is encountered, then "freeze" current FPH set
