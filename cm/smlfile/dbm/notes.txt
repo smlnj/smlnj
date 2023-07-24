@@ -438,3 +438,83 @@ Q: Do we attempt to detect during elaboration whether a path head is "locally bo
   open dec may shaddow any previously known structure binding. This means that any inherited
   module environment is cancelled when opening a free path.
   
+* Abbreviation: FPH = "free path head" (str symbols)
+
+* Representation of "elaborated Ast declarations"
+
+  We need 2 things:
+
+  (1) the set of free path heads
+
+  (2) the heirarchical module structure (particularly for structures and their substructures,
+      recursively.
+
+  The question is how these should be related. Or where should we attach the free path head
+  sets to the nested structure trees?  We also have to partition the see of FPHs
+
+  The basic problem is that declarations and the classification of "free" path heads interact,
+  both in the case of open declarations and structure declarations, which can bind path heads
+  (structure symbols).
+
+  Because the structure (exported substructures, etc) of free structure symbols is unknown,
+  we take a conservative approach of not trying to track which structure names (path heads)
+  are bound in the current context, treating them all as unknown, even those that are locally
+  declared.  Filtering out the bound structure symbols will take place in a second, post
+  elaboration, pass.
+
+  So in the first pass, _all_ path heads are treated as potentially, or provisionally, free.
+  But we need to collect a free path head set for each "scope", i.e. for the scope of each
+  structure/substructure declaration.  Since we are not trying to determine whether structure
+  symbols are bound, we will include all structure declarations, even those that are not in
+  the scope of a previous structure declaration.  This means we do not need to pass an
+  environment of bound structure (or module) names, and we do not keep track of previous
+  module declarations that may have occurred earlier in the current c-unit/source file.
+
+  Initial core declarations, or consecutive sequences of core declarations occurring before
+  any structure binding declaratioins, can have their FPHs collected for the current structure.
+  
+
+  For each structure declaration, we can collect the FPH set for all top-level,
+  non-module (core) declarations that occure in the body of that structure (in the BasicStr
+  case) before the first substructure or open declaration, i.e. before any new strsym
+  bindings are (potentially) introduced.
+  
+  For functor declarations (in a strexp):
+
+     functor F (P: <paramsig) = <strexp>
+
+  we collect the FPHs of <paramsig>, which are in the structure scope. The FPHs of 
+  <strexp> might be locally shadowed
+
+  For (leading, i.e. "initial") component structure declarations of the form
+
+     structure S : <signame> = <strpath>
+
+  we could collect the <signame> and <strpath> as FPHs of the parent structure
+  (not in danger of being locally shadowed). Note that <strpath> may be a singleton
+  path (bound to a structure).
+
+  Essentially, any strsym binding construct (str decl or open) requires introducing a new
+  FPH set for the scope of that binding construct, to be supplanted following the "next"
+  strsym binding construct.
+
+  A strexp on the rhs of a structure or functor dec or as a functor call argument
+  does not introduce a str binding scope, so does not require a new FPH set.
+
+  We could use the term "FPH scope" for the "structural region" introduced by a
+  strsym binding construct.  Each FPH scope then requires its own FPH set, which
+  will be filtered by bound strsyms in the second pass, whose purpose is to keep
+  track of such bound strsyms (including ones introduced by opening an "imported"
+  path head).
+
+  To summarize,
+
+  -- core declarations do not introduce a FPH scope, and so use the "current" FPH set.
+  -- strexps do not introduce a FPH scope (nor do sigexps)
+  -- strdecs and opens within a basic strexp do introduce new FPH scopes, and thus
+     require new FPH sets for that scope
+  -- strspecs and includes in a basics sigexp can bind strsyms and therefore also
+     introduce new FPH scopes and FPH sets.
+
+* Where do we put the FPH sets associated with FPH scopes in the elaborated representation?
+  Do we "linearize" the structure (analagous to skeleton decl)?
