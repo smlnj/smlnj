@@ -5,6 +5,14 @@ correspond to SML/NJ releases.
 SML/NJ 2023.1
 -------------------
 
+[2023-07-27]
+	Fixed a bug in the Thompson engine and also added support for "$"
+	(end-of-line assertions) and full interval support in the RegExp
+	library.
+
+        Also fixed legacy issue #258 (https://github.com/smlnj/legacy/issues/258)
+        in the Thompson engine.
+
 [2023-06-14]
 	Reworked the code for determining the maximum hash-table size (used
 	in the `HashSetFn` and `HashTableRep` modules) so that it does not

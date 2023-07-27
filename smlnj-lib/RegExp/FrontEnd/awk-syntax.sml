@@ -39,8 +39,8 @@
  *	A*	matches zero or more As
  *	A+	matches one or more As
  *	A{n}	matches n copies of A
- *	A{n,}	matches n copies of A
- *	A{n,m}	matches n copies of A
+ *	A{n,}	matches n or more copies of A
+ *	A{n,m}	matches from n to m copies of A
  *	(A)	matches A
  *)
 
