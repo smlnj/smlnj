@@ -46,7 +46,7 @@ local
   structure PP = Formatting
 
   structure GP = GeneralParams
-  structure SI = SmlInfo
+  structure SI = SmlInfo       (* cm/smlfile/smlinfo.sml *)
   structure SIM = SmlInfoMap
   structure CS = CheckSharing  (* CS.check called once near the end *)
 
@@ -58,7 +58,7 @@ in
 
     (* look : looker -> DE.env -> S.symbol -> DE.env *)
     (* DE.env lookup with a default looker, "otherwise" *)
-    fun look otherwise DE.EMPTY sym = otherwise sym
+    fun look (otherwise: looker) DE.EMPTY (sym: S.symbol) = otherwise sym
       | look otherwise (DE.BINDING (sym', env')) sym =
 	  if S.eq (sym, sym') then env' else otherwise sym
       | look otherwise (DE.LAYER (env1, env2)) sym = look (look otherwise env2) env1 sym
@@ -78,7 +78,7 @@ in
 	    (* build the lookup function for DG.env *)
 	    val lookup = look lookimport
 
-	    (* lookPath : DE.env -> SP.path -> DE.env *)
+	    (* lookPath : DE.env -> path -> DE.env *)
 	    fun lookPath env nil = DE.EMPTY (* is this possible? *)
 	      | lookPath env (h :: t) =
 		    (* again, if we don't find it here we just ignore
@@ -90,25 +90,25 @@ in
 		   in loop (lookup env h, t)
 		  end
 
-	    (* "eval" -- compute the export environment of a skeleton *)
-	    (* eval: SK.decl -> DE.env *)
-            (* eval -> declExports *)
-	    fun declExports (sk: SK.decl) =
+            (* layered : DE.env list -> DE.env *)
+	    (* combine a list of envs into an env using LAYER *)
+	    fun layered nil = DE.EMPTY
+	      | layered [env] = env
+	      | layered decls = foldr1 DE.LAYER envs  (* UNDEFINED: foldr1 *)
+
+	    (* "declExports" -- compute the export environment of a skeleton *)
+	    (* declExports [eval]: SK.decl -> DE.env *)
+            (* renaming: eval -> declExports *)
+	    fun declExports (decl: SK.decl) =
 		let
 		    (* edecl : DE.env -> SK.decl -> DE.env *)
+		    (* re-elaborate an SK.decl *)
 		    fun edecl env (SK.Bind (name, exp)) =
 			  DE.BINDING (name, eexp env exp)
 		      | edecl env (SK.Local (decls1, decls2)) =
 			  edecl (DE.LAYER (edecl env decls1, e)) decls2
-		      | edecl env (SK.Seq decls) =
-			  edecls env decls
-		      | edecl env (SK.Par []) =  (* should not happen? *)
-			  DE.EMPTY
-		      | edecl env (SK.Par (head_decl :: tail_decls)) =
-			  let fun folder (decl, env') = DE.LAYER (edecl env decl, env')
-			      val base_env = edecl env head_decl
-			   in foldl folder base_env tail_decls
-			  end
+		      | edecl env (SK.Seq decls) = edecls env decls
+		      | edecl env (SK.Par decls)) = layered (map (edecl env) decls)
 		      | edecl env (SK.Open exp) =  (* exp will normally be a Var module expression? *)
 			  eexp env exp
 		      | edecl env (SK.Ref ss) =  (* ss is "free (thus imported?) module identifiers" *)
@@ -118,24 +118,26 @@ in
 			   * (i.e. the symbol is not bound in env) *)
 
 		    (* edecls : DE.env -> SK.decl list -> DE.env *)
-		    and edecls env [] = DE.EMPTY
-		      | edecls env (h :: t) =
-			  let fun folder (d, env') =
+		    and edecls _ [] = DE.EMPTY
+		      | edecls env (head :: rest) =
+			  let fun folder (decl, env') =
 				  DE.LAYER (edecl (DE.LAYER (env', env)) decl, env')
-			   in foldl folder (edecl env h) t
+			      val base_env = edecl env head
+			   in foldl folder base_env rest
 			  end
 
-		    (* eexp : DE.env -> SK.exp -> DE.env *)
-		    (* eexp -> expExports *)
+		    (* eexp [evalModExp]: DE.env -> SK.exp -> DE.env *)
+		    (* re-elaborate an SK.exp *)
 		    and eexp env (SK.Var path) = lookPath env path
 		      | eexp env (SK.Decl decls) = edecls env decls
 		      | eexp env (SK.Let (decls, mexp)) =
 			  eexp (DE.LAYER (edecls env decls, env)) mexp
 		      | eexp env (SK.Pair (mexp1, mexp2)) =
-			  (eexp env mexp1; eexp env mexp2)  (* "eexp env mexp1" has an effect? *)
+			  (eexp env mexp1; eexp env mexp2)
+			  (* "eexp env mexp1" has an effect via lookimport? *)
 
-		 in edecl DE.EMPTY sk
-		end
+	     in edecl DE.EMPTY decl
+	    end (* declExports *)
 
 	 in declExports
 	end (* fun skeletonExports *)
@@ -343,8 +345,8 @@ in
 	    let val (sn, e) = valOf (valOf (fetch i))
 		val sbn = DG.SB_SNODE sn
 		val fsbn = (SIM.find (per_file_exports, i), sbn)
-	     in (* We also thunkify the fsbn so that the result is an DG.impexp. *)
-		(fn () => fsbn, e, valOf (SIM.find (ilocaldefs, i)))
+	     in (* fsbn unthunkified! *)
+		(fsbn, e, valOf (SIM.find (ilocaldefs, i)))
 	    end
 
 	(* First we make a map of all locally defined symbols to

@@ -42,8 +42,8 @@ in
     infix o'
     fun (f o' g) (x, y) = f (g x, y)
 
-    (* ssUnion : symset list -> symset *)
-    fun ssUnion (symsets: symset list) = foldl SS.union SS.empty symsets
+    (* symsetUnion : symset list -> symset *)
+    fun symsetUnion (symsets: symset list) = foldl SS.union SS.empty symsets
 
     (* addPathHead [s_addP] : path * symset -> symset *)
     (* add the head of a symbol path to a given symset, unconditionally.
@@ -52,11 +52,6 @@ in
     fun addPathHead (head :: _, symset) = SS.add (symset, head)
       | addPathHead _ = error "addPathHead" (* empty path *)
 
-    (* pathToSymset : path -> symset *)
-    fun pathToSymset [_] = SS.empty
-      | pathToSymset (head :: _) = SS.singleton head
-      | pathToSymset nil = error "pathToSymset: empty path"
-					       
     (* addStrPathHead [s_addMP] : path * symset -> symset *)
     (* same as addPathHead except we ignore paths of length 1 because they
      * do not involve module access(?).
@@ -100,13 +95,13 @@ in
       | seq decls = SK.Seq decls
 
     (* par_join : decls * decls -> decls *)
-    (* combine (nontrivial) decls1 into a Par decl and add it to decls2 *)
+    (* treat (nontrivial) decls1 as a Par decl and add to decls2 *)
     fun par_join ([], decls) = decls
       | par_join ([only], decls) = only :: decls
       | par_join (decls1, decls2) = SK.Par decls1 :: decls2
 
     (* split_dl : decl list -> symset * decl list *)
-    (* split initial ref symset from a decl list, if its head is a Ref.
+    (* split initial ref symset from a decl list, if it starts with a Ref.
      * What happens if a Ref exists further down the decl list? Nothing. *)
     fun split_dl (SK.Ref ss :: decls) = (ss, decls)
       | split_dl decls = (SS.empty, decls)  (* no initial Ref to split off *)
@@ -130,15 +125,15 @@ in
     (* letexp : decl list * (symset * mexp) -> symset * mexp *)
     (* build a let expression for letStr, letFct
      * looks like a folder function, but not used as one. *)
-    fun letexp (decls, (ss, exp)) =
-	  (case split_dl decls
+    fun letexp (dl, (ss, exp)) =
+	  (case split_dl dl
 	     of (ss', []) => (SS.union (ss', ss), exp)
-	      | (ss', decls') =>
-		  let val decls'' =
+	      | (ss', dl') =>
+		  let val dl'' =
 			  if SS.isEmpty ss
-			  then decls'
-			  else rev (dl_addS (ss, rev decls')) (* put ss at end *)
-		   in (ss', SK.Let (decls'', exp))
+			  then dl'
+			  else rev (dl_addS (ss, rev dl'))
+		   in (ss', SK.Let (dl'', exp))
 		  end)
 
     (* pair : ssexp * ssexp -> ssexp *)
@@ -179,58 +174,55 @@ in
 	 in dl_addS (ss, parbindcons (binds, decls))
 	end
 
-    (* elabTy : Ast.ty -> symset *)
-    (* returns the set of free path heads in the type arg *)
-    fun elabTy (ty : Ast.ty) =
+    (* tyFree : Ast.ty -> symset *)
+    fun tyFree (ty : Ast.ty) =
 	let (* free : Ast.ty * symset -> symset *)
 	    (* (free) path heads of a type expression *)
-	    fun free (VarTy _, symset) = symset
-	      | free (ConTy (path, argtys), symset) =
-		  addStrPathHead (path, foldl free symset argtys)
-	      | free (RecordTy fields, symset) = foldl (free o' #2) symset fields
-	      | free (TupleTy tys, symset) = foldl free symset tys
-	      | free (MarkTy (arg, _), symset) = free (arg, symset)
+	    fun free (VarTy _, set) = set
+	      | free (ConTy (cn, l), set) = addStrPathHead (cn, foldl free set l)
+	      | free (RecordTy l, set) = foldl (free o' #2) set l
+	      | free (TupleTy l, set) = foldl free set l
+	      | free (MarkTy (arg, _), set) = free (arg, set)
 	 in free (ty, SS.empty)
 	end
 
-    (* elabTyOp : Ast.ty option -> symset *)
-    (* returns set of free path heads in ty for SOME ty, or empty for NONE *)
-    fun elabTyOp NONE = SS.empty
-      | elabTyOp (SOME ty) = elabTy ty
+    (* tyOpFree : Ast.ty option -> symset *)
+    (* (free) path heads of a type option (empty for NONE) *)
+    fun tyOpFree NONE = SS.empty
+      | tyOpFree (SOME ty) = tyFree ty
 
-    (* elabPat : Ast.pat -> symset *)
-    (* set of free path heads occurring in a pattern; 
-     * no possiblility of shadowing in a pattern *)
-    fun elabPat (VarPat _) = SS.empty  (* arg is val symbol, not path *)
-      | elabPat (RecordPat { def, ... }) =
-	  ssUnion (map (fn (_, p) => elabPat p) def)
-      | elabPat (ListPat pats | TuplePat pats | VectorPat pats | OrPat pats) =
-	  ssUnion (map elabPat pats)
-      | elabPat (FlatAppPat pats) =
-	  ssUnion (map elabPat pats)
-      | elabPat (AppPat { constr, argument }) =
-	  addStrPathHead (constr, elabPat argument)
-      | elabPat (ConstraintPat { pattern, constraint }) =
-	  ssUnion (elabPat pattern, tyPatFree constraint)
-      | elabPat (LayeredPat { varPat, expPat }) = elabPat expPat
-      | elabPat (MarkPat (arg, _)) = elabPat arg
-      | elabPat (WildPat | IntPat _| WordPat _ | StringPat _ | CharPat _) = SS.empty
+    (* patFree : Ast.pat -> symset *)
+    (* (free) path heads of a pattern *)
+    fun patFree (VarPat _) = SS.empty  (* arg is val symbol, not path *)
+      | patFree (RecordPat { def, ... }) =
+	  symsetUnion (map (fn (_, p) => patFree p) def)
+      | patFree (ListPat pats | TuplePat pats | VectorPat pats | OrPat pats) =
+	  symsetUnion (map patFree pats)
+      | patFree (FlatAppPat pats) =
+	  symsetUnion (map patFree pats)
+      | patFree (AppPat { constr, argument }) =
+	  addStrPathHead (constr, patFree argument)
+      | patFree (ConstraintPat { pattern, constraint }) =
+	  SS.union (patFree pattern, tyPatFree constraint)
+      | patFree (LayeredPat { varPat, expPat }) = patFree expPat
+      | patFree (MarkPat (arg, _)) = patFree arg
+      | patFree (WildPat | IntPat _| WordPat _ | StringPat _ | CharPat _) = SS.empty
 
-    (* elabEb : Ast.eb -> symset *)
-    (* set of free path heads occurring in an exception binding (Ast.eb) *)
-    fun elabEb (EbGen { exn, etype }) = elabTyOp etype
-      | elabEb (EbDef { exn, edef }) = pathToSymset edef
-      | elabEb (MarkEb (eb, _)) = elabEb eb
+    (* ebFree : Ast.eb -> symset *)
+    (* (free) path heads of an exception binding *)
+    fun ebFree (EbGen { exn, etype }) = tyOpFree etype
+      | ebFree (EbDef { exn, edef }) = s_addMP (edef, SS.empty)
+      | ebFree (MarkEb (arg, _)) = ebFree arg
 
     (* dbFree : Ast.db -> symset *)
     (* (free) path heads of a datatype binding *)
     fun dbFree (Db { rhs, ... }) =
-	  ssUnion (map (fn (_, tyOp) => elabTyOp tyOp) rhs)
+	  symsetUnion (map (fn (_, tyOp) => tyOpFree tyOp) rhs)
       | dbFree (MarkDb (db, _)) = dbFree db
 
     (* tbFree : Ast.tb -> symset *)
     (* (free) path heads of a type binding *)
-    fun tbFree (Tb { def, ... }) = elabTy def
+    fun tbFree (Tb { def, ... }) = tyFree def
       | tbFree (MarkTb (tb, _)) = tbFree tb
 
     (* elabExp : env -> Ast.exp -> imports? *)
@@ -263,7 +255,7 @@ in
 	       | RecordExp fields => foldl (elabExp1 o' #2) nil fields
 	       | SelectorExp _ => nil
 	       | ConstraintExp { expr, constraint } =>
-		   dl_addS (elabTy constraint, elabExp (expr, dl))
+		   dl_addS (tyFree constraint, elabExp (expr, dl))
 	       | HandleExp { expr, rules } =>
 		   elabExp (expr, foldr ElabRule nil rules)
 	       | RaiseExp exp => elabExp0 exp
@@ -277,61 +269,56 @@ in
 	       | (IntExp _|WordExp _|RealExp _|StringExp _|CharExp _), env) => nil
         end (* fun elabExp *)
 
-    (* elabExp [exp_dl] : Ast.exp -> SK.exp list -- not symset, because of let *)
-    (* get the FPHs of an expression -- compilcated by let case *)
-    fun elabExp (VarExp p) = [SK.FPHe (pathToSymset p)]
-      | elabExp (FnExp rules) = SK.FPHe (ssUnion (map elabRule rules))
-      | elabExp (FlatAppExp exps) = ssUnion (map elabExp exps)
-      | elabExp (AppExp { function, argument }) =
-	  elabExp function @ elabExp argument
-      | elabExp (CaseExp { expr, rules }) =
-	  SS.union (elabExp expr, ssUnion (map elabRule rules))
-(* %%%%%  -- open decs allowed in let exps!!! (but not strdecs), so strsym shadowing possible
-      | elabExp (LetExp { dec, expr }) =
-          let val x? = elab_dec dec
-	   in ??? 
-	   SK.Let (x?, elabExp expr)
-   %%%%%
-*)
-      | elabExp (SeqExp exps | ListExp exps | TupleExp exps | VectorExp exps) =
-	  ssUnion (map elabExp exps)
-      | elabExp (RecordExp fields) = List.concat (* ssUnion *) (map (elabExp o' #2) fields)
-      | elabExp (SelectorExp _) = SS.empty
-      | elabExp (ConstraintExp { expr, constraint }) =
-	  SS.union (elab_ty constraint, elabExp expr)
-      | elabExp (HandleExp { expr, rules }) =
-	  SS.union (elabExp expr, ssUnion (map elabRule rules))
-      | elabExp (RaiseExp exp) = elabExp exp
-      | elabExp (IfExp { test, thenCase, elseCase }) =
-	  elabExp test @ elabExp thenCase @ elabExp elseCase
-      | elabExp ((AndalsoExp (e1, e2) | OrelseExp (e1, e2))) =
-	  elabExp e1 @ elabExp e2
-      | elabExp (WhileExp { test, expr }) =
-	  elabExp test @ elabExp expr
-      | elabExp (MarkExp (exp, _)) = elabExp exp
-      | elabExp ((IntExp _|WordExp _|RealExp _|StringExp _|CharExp _)) = nil (* ? *)
+    (* exp_dl : Ast.exp * decls -> decls *)
+    (* get a dl from an expression... *)
+    fun exp_dl (VarExp p, dl) = dl_addMP (p, dl)
+      | exp_dl (FnExp rl, dl) = foldr rule_dl dl rl
+      | exp_dl (FlatAppExp exps, dl) = foldr (exp_dl) dl exps
+      | exp_dl (AppExp { function, argument }, dl) =
+	  exp_dl (function, exp_dl (argument, dl))
+      | exp_dl (CaseExp { expr, rules }, dl) =
+	exp_dl (expr, foldr rule_dl dl rules)
+      | exp_dl (LetExp { dec, expr }, dl) =
+	  local_dl (dec_dl (dec, nil), exp_dl (expr, nil), dl)
+      | exp_dl ((SeqExp exos | ListExp exps | TupleExp exps | VectorExp exps), dl) =
+	  foldl exp_dl dl exps
+      | exp_dl (RecordExp l, dl) = foldl (exp_dl o' #2) dl l
+      | exp_dl (SelectorExp _, dl) = dl
+      | exp_dl (ConstraintExp { expr, constraint }, dl) =
+	  dl_addS (tyFree constraint, exp_dl (expr, dl))
+      | exp_dl (HandleExp { expr, rules }, dl) =
+	  exp_dl (expr, foldl rule_dl dl rules)
+      | exp_dl (RaiseExp e, dl) = exp_dl (e, dl)
+      | exp_dl (IfExp { test, thenCase, elseCase }, dl) =
+	  exp_dl (test, exp_dl (thenCase, exp_dl (elseCase, dl)))
+      | exp_dl ((AndalsoExp (e1, e2) | OrelseExp (e1, e2)), dl) =
+	  exp_dl (e1, exp_dl (e2, dl))
+      | exp_dl (WhileExp { test, expr }, dl) = exp_dl (test, exp_dl (expr, dl))
+      | exp_dl (MarkExp (arg, _), dl) = exp_dl (arg, dl)
+      | exp_dl ((IntExp _|WordExp _|RealExp _|StringExp _|CharExp _), dl) = dl
 
-    (* elabRule [rule_dl] : Ast.rule -> SK.exp list *)
-    and elabRule (Rule { pat, exp }) =
-	SK.FPHS elabPat pat :: elabExp exp
+    (* rule_dl : Ast.rule * decls -> decls *)
+    and rule_dl (Rule { pat, exp }, decls) =
+	dl_addS (patFree pat, exp_dl (exp, decls))
 
-    (* elabClause [clause_dl] : Ast.clause -> SK.exp list *)
-    and elabClause (Clause {pats, resultty, exp}) =
-	SK.FPHS (ssUnion (elabTyOp resultty :: map elabPat pats)) :: elabExp exp
+    (* clause_dl : Ast.clause * decls -> decls *)
+    and clause_dl (Clause {pats, resultty, exp}, decls) =
+	dl_addS (symsetUnion (tyOpFree resultty :: map patFree pats),
+		 exp_dl (exp, decls))
 
-    (* elabFb [fb_dl] : Ast.fb -> SK.exp list *)
-    and elabFb (Fb (clauses, _)) = List.concat (map elabClause clauses)
-      | elabFb (MarkFb (fb, _)) = elabFb fb
+    (* fb_dl : Ast.fb * decls -> decls *)
+    and fb_dl (Fb (clauses, _), decls) = foldr clause_dl decls clauses
+      | fb_dl (MarkFb (arg, _), decls) = fb_dl (arg, decls)
 
-    (* elabVb [vb_dl] : Ast.vb -> ? *)
-    and elabVb (Vb {pat, exp, ...}) =
-	  SS.union (elabPat pat, elabExp exp)
-      | elabVb (MarkVb (vb, _)) = elabVb vb
+    (* vb_dl : Ast.vb * decls -> decls *)
+    and vb_dl (Vb {pat, exp, ...}, decls) =
+	  dl_addS (patFree pat, exp_dl (exp, decls))
+      | vb_dl (MarkVb (arg, _), decls) = vb_dl (arg, decls)
 
-    (* elabRvb [rvb_dl] : Ast.rvb -> ? *)
-    and elabRvb (Rvb {var, exp, resultty, ...}) =
-	  SS.union (elabTyOp resultty, elabExp exp)
-      | elabRvb (MarkRvb (rvb, _)) = elabRvb rvb
+    (* rvb_dl : Ast.rvb * decls -> decls *)
+    and rvb_dl (Rvb {var, exp, resultty, ...}, decls) =
+	  dl_addS (tyOpFree resultty, exp_dl (exp, decls))
+      | rvb_dl (MarkRvb (arg, _), decls) = rvb_dl (arg, decls)
 
     (* spec_dl : Ast.spec * decls -> decls *)
     and spec_dl (MarkSpec (arg, _), decls) = spec_dl (arg, decls)
@@ -350,9 +337,9 @@ in
            in dl_addS (ss, parbindcons (binds, decls))
           end
       | spec_dl (TycSpec (l, _), decls) =
-	  let fun mapper (_, _, SOME ty) = elabTy ty
+	  let fun mapper (_, _, SOME ty) = tyFree ty
 		| mapper _ = SS.empty
-	   in dl_addS (ssUnion (map mapper l), decls)
+	   in dl_addS (symsetUnion (map mapper l), decls)
 	  end
       | spec_dl (FctSpec l, decls) =
 	  let fun folder ((n, g), (ss, bl)) =
@@ -363,17 +350,17 @@ in
 	   in dl_addS (ss, parbindcons (bl, decls))
 	  end
       | spec_dl (ValSpec l, decls) =
-	  dl_addS (ssUnion (map (fn (_,ty) =>  elabTy ty) l), decls)
+	  dl_addS (symsetUnion (map (fn (_,ty) =>  tyFree ty) l), decls)
       | spec_dl (DataSpec { datatycs, withtycs }, decls) =
-	  let val wfree = ssUnion (map tbFree withtycs)
-	      val dfree = ssUnion (map dbFree datatycs)
+	  let val wfree = symsetUnion (map tbFree withtycs)
+	      val dfree = symsetUnion (map dbFree datatycs)
 	      val free = SS.union (wfree, dfree)
 	   in dl_addS (free, decls)
 	  end
       | spec_dl (DataReplSpec(_,cn), decls) =
 	  dl_addS (s_addMP (cn, SS.empty), decls)
       | spec_dl (ExceSpec exnspecs, decls) =
-	  dl_addS (ssUnion (map (fn (_, tyOp) => elabTyOp tyOp) exnspecs), decls)
+	  dl_addS (symsetUnion (map (fn (_, tyOp) => tyOpFree tyOp) exnspecs), decls)
       | spec_dl (ShareStrSpec paths, decls) = (* all paths are str paths *)
 	  foldl dl_addP decls paths
       | spec_dl (ShareTycSpec paths, decls) =
@@ -386,10 +373,10 @@ in
     (* sigexp_p : Ast.sigexp -> ssexp *)
     and sigexp_p (VarSig s) = (SS.empty, SK.Var [s])
       | sigexp_p (AugSig (sigexp, whspecs)) =
-	  let fun whspecFree (WhType (_, _, ty)) = elabTy ty
+	  let fun whspecFree (WhType (_, _, ty)) = tyFree ty
 		| whspecFree (WhStruct (_, path)_ = SS.singleton (hd path)
 	      val (ss, mexp) = sigexp_p sigexp
-	   in (ssUnion (ss :: map whspecFree whspecs), mexp)
+	   in (symsetUnion (ss :: map whspecFree whspecs), mexp)
 	  end
       | sigexp_p (BaseSig specs) =
 	  let val (ss, decls) = split_dl (foldr spec_dl [] specs)
@@ -426,22 +413,22 @@ in
 	  letexp (foldr fparam_d [] params,
 		  pairOp (strexp_p body, sigexpc_p constraint))
       | fctexp_p (AppFct (p, l, c)) =
-	  let fun folder ((str, _), (ss, el)) =
-		    let val (ss', e) = strexp_p str
-		     in (SS.union (ss, ss'), e :: el)
+	  let fun folder ((str, _), (s, el)) =
+		    let val (s', e) = strexp_p str
+		     in (SS.union (s, s'), e :: el)
 		    end
-	      val (ss, el) = foldl folder (SS.empty, nil) l
-	      val (ss', e) = pairOp ((SS.empty, SK.Var p), fsigexpc_p c)
-	   in (SS.union (ss, ss'), foldl SK.Pair e el)
+	      val (s, el) = foldl folder (SS.empty, nil) l
+	      val (s', e) = pairOp ((SS.empty, SK.Var p), fsigexpc_p c)
+	   in (SS.union (s, s'), foldl SK.Pair e el)
 	  end
       | fctexp_p (LetFct (bdg, b)) = letexp (dec_dl (bdg, nil), fctexp_p b)
       | fctexp_p (MarkFct (arg, _)) = fctexp_p arg
 
     (* strexp_p : Ast.strexp -> ssexp *)
-    and strexp_p (VarStr path) = (SS.singleton (hd path), SK.Null)
+    and strexp_p (VarStr path) = (SS.empty, SK.Var path)
       | strexp_p (BaseStr dec) =
-	  let val (ss, decls) = dec_dl (dec, nil)
-	   in SK.Str (FPH ss :: decls)
+	  let val (ss, decls) = split_dl (dec_dl (dec, nil))
+	   in (ss, SK.Decl decls)
 	  end
       | strexp_p (ConstrainedStr (strexp, constraint)) =
 	  pairOp (strexp_p strexp, sigexpc_p constraint)
@@ -457,13 +444,13 @@ in
       | strexp_p (LetStr (bdg, b)) = letexp (dec_dl (bdg, []), strexp_p b)
       | strexp_p (MarkStr (s, _)) = strexp_p s
 
-    (* elab_dec [dec_dl] : Ast.dec -> decls *)
-    and dec_dl dec =
+    (* dec_dl : Ast.dec * decls -> decls *)
+    and dec_dl (dec, decls) =
 	(case dec
-	   of ValDec (vbs, _) => SK.FPHS (SS.union (map elabVb vbs))
-	    | ValrecDec (rvbs, _) => SK.FPHS (SS.union (map elabRvb rvbs))
-	    | DoDec exp => SK.FPHS (elabExp exp)
-	    | FunDec (fbs, _) => SK.FPHS (SS.union (map elabFb fbs))
+	   of ValDec (vbs, _) => foldl vb_dl decls vbs
+	    | ValrecDec (rvbs, _) => foldl rvb_dl decls rvbs
+	    | DoDec exp => exp_dl (exp, decls)
+	    | FunDec (fbs, _) => foldl fb_dl decls fbs
 	    | TypeDec tbs => dl_addS (foldl tbFree SS.empty tbs, decls)
 	    | DatatypeDec { datatycs, withtycs } =>
 	        dl_addS (foldl dbFree (foldl tbFree SS.empty withtycs) datatycs, decls)
@@ -471,7 +458,7 @@ in
 	    | AbstypeDec { abstycs, withtycs, body } =>
 	        dl_addS (foldl dbFree (foldl tbFree SS.empty withtycs) abstycs,
 			 dec_dl (body, decls))
-	    | ExceptionDec ebs => dl_addS (foldl elabEb SS.empty ebs, decls)
+	    | ExceptionDec ebs => dl_addS (foldl ebFree SS.empty ebs, decls)
 	    | StrDec strbs =>
 		let (* collector : Ast.strb * (symset * bindings) -> (symset * bindings) *)
 		    fun collector (MarkStrb (arg, _), x) = collector (arg, x)
@@ -502,9 +489,9 @@ in
 	    | FsigDec fsigbs =
 		let (* collector : Ast.fsigb * (symset * bindings) -> (symset * bindings) *)
 		    fun collector (MarkFsigb (arg, _), x) = collector (arg, x)
-		      | collector (Fsigb { name, def }, (ss, binds)) =
-			  let val (ss', mexp) = fsigexp_p def
-			   in (SS.union (ss, ss'), (name, mexp) :: binds)
+		      | collector (Fsigb { name, def }, (s, bl)) =
+			  let val (s', e) = fsigexp_p def
+			   in (SS.union (s, s'), (name, e) :: bl)
 			  end
 		 in parbind collector fsigbs decls
 		end
@@ -512,7 +499,7 @@ in
 	        local_dl (dec_dl (bdg, []), dec_dl (body, []), decls)
 	    | SeqDec decs => foldr dec_dl decls decs
 	    | OpenDec paths => par_join (map SK.Open paths, decls)
-	    | OvldDec (_, l) => foldl elabExp decls l
+	    | OvldDec (_, l) => foldl exp_dl decls l
 	    (* | FixDec _ => decls *)
 	    | MarkDec (dec, _) => dec_dl (dec, decls))
 

@@ -527,3 +527,12 @@ Q: Do we attempt to detect during elaboration whether a path head is "locally bo
 * Procedure:
   -- traverse Ast structure, collecting FPHs in the "current" FPH set.
   -- until a strsym binding construct is encountered, then "freeze" current FPH set
+     which becomes an auxiliary value  _associated with that binding construct (declaration)_.
+
+  (1) process a strsym binding dec
+      - initialize a new FPH set and pass it as a parameter as we traverse following
+        bindings, if any, where it can grow (e.g. while processing succeeding
+	core decs).
+      - when following bindings are "finished", meaning we run out of decs or we run
+        into the next (potential) strsym binding dec, "issue" the final FPH set,
+	associating it with the initial binding that introduced a new FPH scope

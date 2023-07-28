@@ -15,7 +15,7 @@ struct
     = EMPTY
     | FUNENV of Symbol.symbol -> env option (* env as partial function *)
     | BINDING of Symbol.symbol * env
-    | LAYER of env * env
+    | LAYER of env * env    (* or LAYERED of env list ? *)
     | FILTER of SymbolSet.set * env
 
 end (* structure DAEnv *)
