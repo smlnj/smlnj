@@ -228,8 +228,8 @@ SML/NJ 110.97
 	(this interfaces was originally designed before the SML Basis Library,
 	so it did not follow the conventions).
 	The changes are to have the `fromString` function return `NONE`,
-	instead of raising an exception on bad input, and to use deprecate
-	the `lshift` and `rshift` operations in favor of `>>` and `<<` (which
+	instead of raising an exception on bad input, and to deprecate the
+	`lshift` and `rshift` operations in favor of `>>` and `<<` (which
 	use `word` for the shift amount).
 
 [2020-04-13]
