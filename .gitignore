@@ -142,4 +142,5 @@ doc/src/man/*.1
 doc/src/man/*.7
 doc/src/**/*.html
 package/macos/*.pkg
+*.pkl
 
