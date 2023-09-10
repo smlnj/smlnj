@@ -15,6 +15,7 @@ is
   $/asdl-lib.cm
 
   cfg-file-pickle.sml
+  lambda-var-pickle.sml
   cfg-memory-pickle.sml
   cfg-pickle.sig
   cfg.sml
@@ -23,3 +24,4 @@ is
   lambda-var.sml
 
   main.sml
+  normalize.sml

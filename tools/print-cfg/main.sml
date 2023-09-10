@@ -301,7 +301,7 @@ structure Main : sig
 	  List.app (fn f => (say "#####\n"; prCluster f)) fns;
 	  say "##########\n")
 
-    fun main (_, [file]) = if OS.FileSys.access(file, [OS.FileSys.A_READ])
+    fun doFile (file, norm) = if OS.FileSys.access(file, [OS.FileSys.A_READ])
 	  then let
 	    val cu = ASDLFilePickle.fromFile CFGFilePickle.read_comp_unit file
 		  handle exn => (
@@ -309,6 +309,7 @@ structure Main : sig
 			file, ": uncaught exception ", exnMessage exn, "\n"
 		      ]);
 		    OS.Process.exit OS.Process.failure)
+            val cu = if norm then Normalize.normalize cu else cu
 	    in
 	      prCompUnit cu;
 	      OS.Process.success
@@ -318,8 +319,11 @@ structure Main : sig
 		"pickle file \"", file, "\" not found\n"
 	      ]);
 	    OS.Process.failure)
+
+    fun main (_, ["-n", file]) = doFile (file, true)
+      | main (_, [file]) = doFile (file, false)
       | main _ = (
-	  TextIO.output(TextIO.stdErr, "usage: print-pkl <file>\n");
+	  TextIO.output(TextIO.stdErr, "usage: print-pkl [ -n ] <file>\n");
 	  OS.Process.failure)
 
   end
