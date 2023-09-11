@@ -12,7 +12,7 @@
 
 this=$0
 here=`pwd`
-cd ../..
+cd ..
 twoup=`pwd`
 cd $here
 
