@@ -1,27 +1,26 @@
-= The `HashConsAtom` structure
+= The `HashConsWord` structure
 :Author: John Reppy
 :Date: {release-date}
 :stem: latexmath
 :source-highlighter: pygments
 :VERSION: {smlnj-version}
 
-The `HashConsAtom` structure embeds the xref:../Util/str-Atom.adoc#type:atom[`Atom.atom`]
-type as a hash-consed object.
-It is implemented using the xref:fun-HashConsGroundFn.adoc[`HashConsGroundFn`]
-functor.
+The `HashConsWord` structure embeds the `word` type as a hash-consed object.
+It is implemented by directly using the value as the tag and hash key
+(_i.e._, no hash table).
 
 == Synopsis
 
 [source,sml]
 ------------
-structure HashConsAtom
+structure HashConsWord
 ------------
 
 == Interface
 
 [source,sml]
 ------------
-type hash_key = Atom.atom
+type hash_key = word
 type obj = hash_key HashCons.obj
 
 val mk : hash_key -> obj
@@ -29,17 +28,16 @@ val mk : hash_key -> obj
 
 == Description
 
-`[.kw]#type# hash_key = Atom.atom`::
+`[.kw]#type# hash_key = word`::
   The ground type being hashed.
 
 `[.kw]#type# obj = hash_key HashCons.obj`::
-  The type of hash-consed atoms.
+  The type of hash-consed words.
 
 `[.kw]#val# mk : hash_key \-> obj`::
-  `mk a` converts the atom `a` to a hash-consed object.
+  `mk w` converts the word `w` to a hash-consed object.
 
 == See Also
 
-xref:../Util/str-Atom.adoc[`Atom`],
 xref:str-HashCons.adoc[`HashCons`],
 xref:hash-cons-lib.adoc[__The HashCons Library__]

@@ -1,9 +1,9 @@
 (* hash-cons-ground-fn.sml
  *
+ * Functor for defining hashed-cons representation of ground terms.
+ *
  * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
- *
- * Functor for defining hashed-cons representation of ground terms.
  *)
 
 functor HashConsGroundFn (T : HASH_KEY) : sig

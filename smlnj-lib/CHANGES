@@ -2,6 +2,14 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases.
 
 --------------------------------------------------------------------------------
+Next Release
+-------------------
+
+[2023-09-19]
+	Added modules for the representation of booleans, integers, and words
+	as hash-consed values to the HashCons library.
+
+--------------------------------------------------------------------------------
 SML/NJ 2023.1
 -------------------
 
