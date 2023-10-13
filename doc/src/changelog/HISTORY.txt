@@ -108,6 +108,15 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 == Recent updates
 
 //--------------------------------------------------------------------
+[2023/10/13]::
++
+Add contraction rule for when two calls to `SETHDLR` appear in
+sequence.  This situation arises when the body of a handler is
+optimized away.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2023/06/14]::
 +
 Port fix for legacy bug
