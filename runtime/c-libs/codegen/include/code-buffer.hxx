@@ -31,6 +31,7 @@
 #include "lambda-var.hxx"
 #include "sml-registers.hxx"
 #include "code-object.hxx"
+#include "objfile-pwrite-stream.hxx"
 
 using Value = llvm::Value;
 using Type = llvm::Type;
@@ -747,7 +748,7 @@ class code_buffer {
   /***** Code generation *****/
 
     //! access to the backing storage for generating in-memory object files
-    llvm::SmallVector<char, 0> & objectFileData () { return this->_objFileData; }
+    ObjfilePWriteStream & objectFileOS () { return this->_objFileOS; }
 
     //! compile to an in-memory code object
     std::unique_ptr<CodeObject> compile ();
@@ -863,7 +864,7 @@ class code_buffer {
 
     //! backing storage for the generated object file.  We put this object it the
     //! code buffer so that we do not have to worry about its lifetime.
-    llvm::SmallVector<char, 0> _objFileData;
+    ObjfilePWriteStream _objFileOS;
 };
 
 #endif // !__CODE_BUFFER_HXX__

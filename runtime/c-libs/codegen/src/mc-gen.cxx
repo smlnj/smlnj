@@ -129,11 +129,10 @@ void mc_gen::optimize (llvm::Module *module)
 void mc_gen::compile (code_buffer *codeBuf)
 {
     {
-        codeBuf->objectFileData().clear();
-	llvm::raw_svector_ostream objStrm(codeBuf->objectFileData());
+        codeBuf->objectFileOS().clear();
 	llvm::legacy::PassManager pass;
 	llvm::MCContext *ctx; /* result parameter */
-	if (this->_tgtMachine->addPassesToEmitMC(pass, ctx, objStrm)) {
+	if (this->_tgtMachine->addPassesToEmitMC(pass, ctx, codeBuf->objectFileOS())) {
 	    llvm::report_fatal_error ("unable to add pass to generate code", true);
 	}
 	pass.run (*codeBuf->module());

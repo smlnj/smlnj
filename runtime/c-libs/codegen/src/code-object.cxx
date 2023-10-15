@@ -295,45 +295,15 @@ void AMD64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t *c
 
 //==============================================================================
 
-// This class is a reimplementation of LLVM's SmallVectorMemoryBuffer.  The difference
-// is that we do not include the small vector in the memory buffer, so the vector
-// does not get destructed when the memory buffer is destructed.
-//
-class MyMemoryBuffer : public llvm::MemoryBuffer {
-public:
-    MyMemoryBuffer (llvm::SmallVectorImpl<char> &vec)
-      : _bufferName("<in-memory object>")
-    {
-        this->init (vec.begin(), vec.end(), false);
-    }
-
-    ~MyMemoryBuffer () override;
-
-    llvm::StringRef getBufferIdentifier() const override
-    {
-        return this->_bufferName;
-    }
-
-    llvm::MemoryBuffer::BufferKind getBufferKind() const override
-    {
-        return llvm::MemoryBuffer::MemoryBuffer_Malloc;
-    }
-
-private:
-    std::string _bufferName;
-};
-
-MyMemoryBuffer::~MyMemoryBuffer () { }
-
 // creation function for code objects; we assume that the code has already
 // been generated into the code buffer's backing store (see mc_gen::compile).
 //
 std::unique_ptr<CodeObject> CodeObject::create (code_buffer *codeBuf)
 {
-  // create the LLVM object file from the small vector
-    auto objBuf = std::make_unique<MyMemoryBuffer>(codeBuf->objectFileData());
-    auto objFile =
-        llvm::object::ObjectFile::createObjectFile (objBuf->getMemBufferRef());
+    // create the LLVM object file
+    auto memBuf =
+        llvm::MemoryBufferRef(codeBuf->objectFileOS().str(), "<in-memory object>");
+    auto objFile = llvm::object::ObjectFile::createObjectFile (memBuf);
     if (objFile.takeError()) {
 /* FIXME: error message */
 	return std::unique_ptr<CodeObject>(nullptr);
@@ -359,6 +329,7 @@ std::unique_ptr<CodeObject> CodeObject::create (code_buffer *codeBuf)
     }
 
     p->_computeSize();
+
     return p;
 }
 
@@ -387,6 +358,7 @@ void CodeObject::getCode (uint8_t *code)
             }
         }
     }
+
 }
 
 void CodeObject::dump (bool bits)
@@ -404,6 +376,8 @@ void CodeObject::dump (bool bits)
 	} else {
 	    llvm::dbgs() << sect.getIndex() << ":  <section>";
 	}
+        llvm::dbgs() << " @" << (void *)(sect.getObject())
+            << "[" << sect.getRawDataRefImpl().p << "]";
 	if (sect.isText()) {
 	    if (! foundTextSect) {
 		textSect = sect;
