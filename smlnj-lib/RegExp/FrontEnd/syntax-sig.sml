@@ -21,6 +21,10 @@ signature REGEXP_SYNTAX =
       | Alt of syntax list
       | Concat of syntax list
       | Interval of (syntax * int * int option)
+                                (* iteration closure:  the first integer is the minimum
+                                 * number of matches and the second is the maximum, with
+                                 * `NONE` meaning infinity.
+                                 *)
       | MatchSet of CharSet.set
       | NonmatchSet of CharSet.set
       | Char of char

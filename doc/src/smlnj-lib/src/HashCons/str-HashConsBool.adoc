@@ -1,45 +1,50 @@
-= The `HashConsAtom` structure
+= The `HashConsBool` structure
 :Author: John Reppy
 :Date: {release-date}
 :stem: latexmath
 :source-highlighter: pygments
 :VERSION: {smlnj-version}
 
-The `HashConsAtom` structure embeds the xref:../Util/str-Atom.adoc#type:atom[`Atom.atom`]
-type as a hash-consed object.
-It is implemented using the xref:fun-HashConsGroundFn.adoc[`HashConsGroundFn`]
-functor.
+The `HashConsBool` structure embeds the `bool` type as a hash-consed object.
 
 == Synopsis
 
 [source,sml]
 ------------
-structure HashConsAtom
+structure HashConsBool
 ------------
 
 == Interface
 
 [source,sml]
 ------------
-type hash_key = Atom.atom
+type hash_key = bool
 type obj = hash_key HashCons.obj
 
 val mk : hash_key -> obj
+
+val hcFalse : obj
+val hcTrue : obj
 ------------
 
 == Description
 
-`[.kw]#type# hash_key = Atom.atom`::
+`[.kw]#type# hash_key = bool`::
   The ground type being hashed.
 
 `[.kw]#type# obj = hash_key HashCons.obj`::
-  The type of hash-consed atoms.
+  The type of hash-consed booleans.
 
 `[.kw]#val# mk : hash_key \-> obj`::
-  `mk a` converts the atom `a` to a hash-consed object.
+  `mk b` converts the boolean `b` to a hash-consed object.
+
+`[.kw]#val# hcFalse : obj`::
+  the hash-consed representation of `false`.
+
+`[.kw]#val# hcTrue : obj`::
+  the hash-consed representation of `true`.
 
 == See Also
 
-xref:../Util/str-Atom.adoc[`Atom`],
 xref:str-HashCons.adoc[`HashCons`],
 xref:hash-cons-lib.adoc[__The HashCons Library__]

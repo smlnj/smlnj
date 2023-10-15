@@ -4,19 +4,24 @@
 structure ElabType : ELABTYPE =
 struct
 
-local structure EM = ErrorMsg
-      structure S  = Symbol
-      structure SP = SymPath
-      structure IP = InvPath
-      structure SE = StaticEnv
-      structure L  = Lookup
-      structure B  = Bindings
-      structure T  = Types
-      structure TU = TypesUtil
-      structure BT = BasicTypes
-      structure EU = ElabUtil
-      structure TS = TyvarSet
-      open Symbol Absyn Ast PrintUtil Types TypesUtil Variable
+local
+
+  structure EM = ErrorMsg
+  structure S  = Symbol
+  structure SS = SpecialSymbols
+  structure SP = SymPath
+  structure IP = InvPath
+  structure SE = StaticEnv
+  structure L  = Lookup
+  structure B  = Bindings
+  structure T  = Types
+  structure TU = TypesUtil
+  structure BT = BasicTypes
+  structure EU = ElabUtil
+  structure TS = TyvarSet
+
+  open Symbol Absyn Ast PrintUtil Types TypesUtil Variable
+
 in
 
 val debugging = ElabControl.etdebugging (* ref false *)
@@ -186,7 +191,7 @@ fun elabTBlist(tbl:Ast.tb list,notwith:bool,env0,rpath,region,
 		       val _ = TU.compressTy ty
 		       val tycon =
 			   DEFtyc{stamp=mkStamp(),
-				  path=InvPath.extend(rpath,name),
+				  path=IP.extend(rpath,name),
 				  strict=TU.calcStrictness(arity,ty),
 				  tyfun=TYFUN{arity=arity, body=ty}}
 		    in (tycon,name)
@@ -420,7 +425,7 @@ fun elabDATATYPEdec({datatycs,withtycs}, env0, sigContext,
 
         fun augTycmap (tyc as DEFtyc{tyfun=TYFUN{arity,body},stamp,
                                      strict,path}, tycmap) =
-            {old=tyc,name=IP.last path,
+            {old=tyc,name=IP.last (path, SS.errorTycId),
 	     new=DEFtyc{tyfun=TYFUN{arity=arity,body=applyMap tycmap body},
 			strict=strict,stamp=stamp,path=path}}
 	    :: tycmap

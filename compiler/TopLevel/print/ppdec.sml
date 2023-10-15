@@ -15,6 +15,7 @@ struct
 
 local
   structure S = Symbol
+  structure SS = SpecialSymbols
   structure SP = SymPath
   structure IP = InvPath
   structure LV = LambdaVar
@@ -166,7 +167,7 @@ fun ppDec ({static,dynamic}: Environment.environment)
 	       PP.string ppstrm "type";
 	       PT.ppFormals ppstrm arity;
 	       PP.break ppstrm {nsp=1,offset=0};
-	       PU.ppSym ppstrm (InvPath.last path);
+	       PU.ppSym ppstrm (IP.last (path, SS.errorTycId));
 	       PP.string ppstrm " =";
 	       PP.break ppstrm {nsp=1,offset=0};
 	       PT.ppType static ppstrm body;
@@ -184,7 +185,7 @@ fun ppDec ({static,dynamic}: Environment.environment)
 		     PP.string ppstrm "type";
 		     PT.ppFormals ppstrm arity;
 		     PP.break ppstrm {nsp=1,offset=0};
-		     PU.ppSym ppstrm (InvPath.last path);
+		     PU.ppSym ppstrm (IP.last (path, SS.errorTycId));
 		     PP.closeBox ppstrm;
 		     PP.newline ppstrm;
 		     PP.closeBox ppstrm)
@@ -194,7 +195,7 @@ fun ppDec ({static,dynamic}: Environment.environment)
 		     PP.string ppstrm "type";
 		     PT.ppFormals ppstrm arity;
 		     PP.break ppstrm {nsp=1,offset=0};
-		     PU.ppSym ppstrm (InvPath.last path);
+		     PU.ppSym ppstrm (IP.last (path, SS.errorTycId));
 		     PP.closeBox ppstrm;
 		     PP.newline ppstrm;
 		     PP.closeBox ppstrm))
@@ -227,7 +228,7 @@ fun ppDec ({static,dynamic}: Environment.environment)
 		PP.string ppstrm "datatype";
 		PT.ppFormals ppstrm arity;
 		PP.string ppstrm " ";
-		PU.ppSym ppstrm (InvPath.last path);
+		PU.ppSym ppstrm (IP.last (path, SS.errorTycId));
 		PP.break ppstrm {nsp=1,offset=2};
 		PP.openHVBox ppstrm (PP.Rel 0);
 		ppDcons dcons;

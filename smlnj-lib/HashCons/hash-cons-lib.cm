@@ -1,8 +1,9 @@
 (* hash-cons-lib.cm
  *
- * COPYRIGHT (c) 2001 Bell Labs, Lucent Technologies
+ * This library supports the implementation of hash-consed of data structures.
  *
- * This library supports the implementation of hash-consed of data structures. 
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *)
 
 Library
@@ -12,10 +13,15 @@ Library
   signature HASH_CONS_SET
 
   structure HashCons
-  structure HashConsAtom
   structure HashConsMap
-  structure HashConsString
   structure HashConsSet
+
+  (* standard base types *)
+  structure HashConsAtom
+  structure HashConsBool
+  structure HashConsInt
+  structure HashConsString
+  structure HashConsWord
 
   functor HashConsGroundFn
 
@@ -29,7 +35,9 @@ is
 #endif
 
   hash-cons-atom.sml
+  hash-cons-bool.sml
   hash-cons-ground-fn.sml
+  hash-cons-int.sml
   hash-cons-map-sig.sml
   hash-cons-map.sml
   hash-cons-sig.sml
@@ -37,3 +45,4 @@ is
   hash-cons-set-sig.sml
   hash-cons-set.sml
   hash-cons-string.sml
+  hash-cons-word.sml

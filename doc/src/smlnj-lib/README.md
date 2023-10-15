@@ -1,6 +1,6 @@
 This directory tree contains documentation for the
 various libraries that comprise the **Standard ML of
-Ney Jersey Library**.  The documentation is written
+New Jersey Library**.  The documentation is written
 using [AscciDoctor](https://asciidoctor.org).
 
 ## Naming conventions

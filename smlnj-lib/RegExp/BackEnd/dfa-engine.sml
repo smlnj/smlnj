@@ -21,47 +21,42 @@ structure DfaEngine : REGEXP_ENGINE =
     fun compile r = D.build r handle _ => raise RegExpSyntax.CannotCompile
 
     (* scan looks at a stream and attempts to match the dfa.
-     * it returns NONE if it fails
-     * it returns SOME (pattern#,Match,rest of stream) upon success
+     * it returns `NONE` if it fails
+     * it returns `SOME(pattern#, Match, rest of stream)` upon success
      *)
-    fun scan (regexp,getc,p,stream) =
-	let val move = D.move regexp
-	    val accepting = D.accepting regexp
-	    val canStart = D.canStart regexp
-	    fun loop (state, p, inits, lastAccepting) = (
-		 case (getc (inits))
-		   of NONE => lastAccepting
-		    | SOME (c,s') => (
-			case move (state,c)
-			  of NONE => lastAccepting
-			   | SOME (new) => (
-			      case (accepting new)
-				of SOME n => loop (new, p+1, s', SOME(p+1,s',n))
-				 | NONE => loop (new, p+1, s', lastAccepting)
-			      (* end case *))
-			(* end case *))
-		(* end case *))
-	    fun try0 stream = (
-		  case (accepting 0)
-		   of (SOME n) =>
-			SOME(n, M.Match({pos=stream,len=0},[]), stream)
-		    | NONE => NONE
-		  (* end case *))
-	in
-	    case (getc (stream))
-	      of NONE => try0 stream
-	       | SOME (c,s') => (
-		  case loop (0, p, stream, NONE)
-		   of NONE => try0 stream
-		    | SOME(last, cs, n) =>
-			SOME(n, M.Match({pos=stream,len=last-p},[]), cs)
-		  (* end case *))
+    fun scan (regexp, getc, p, stream) = let
+          val move = D.move regexp
+          val accepting = D.accepting regexp
+          fun loop (state, p, inits, lastAccepting) = (case getc inits
+                 of NONE => lastAccepting
+                  | SOME(c, s') => (case move (state, c)
+                       of NONE => lastAccepting
+                        | SOME new => (case accepting new
+                             of SOME n => loop (new, p+1, s', SOME(p+1,s',n))
+                              | NONE => loop (new, p+1, s', lastAccepting)
+                            (* end case *))
+                      (* end case *))
+              (* end case *))
+          fun try0 stream = (case (accepting 0)
+                 of (SOME n) => SOME(n, M.Match({pos=stream,len=0},[]), stream)
+                  | NONE => NONE
+                (* end case *))
+          in
+	    case getc stream
+             of NONE => try0 stream
+              | SOME(c, s') => (case loop (0, p, stream, NONE)
+                   of NONE => try0 stream
+                    | SOME(last, cs, n) =>
+                        SOME(n, M.Match({pos=stream,len=last-p},[]), cs)
+                  (* end case *))
 	    (* end case *)
-	end
+          end
 
-    fun prefix regexp getc stream = case (scan (regexp,getc,0,stream))
-				      of NONE => NONE
-				       | SOME (n,m,cs) => SOME (m,cs)
+    fun prefix regexp getc stream = (
+          case scan (regexp,getc,0,stream)
+           of NONE => NONE
+            | SOME (n,m,cs) => SOME (m,cs)
+          (* end case *))
 
     fun find regexp getc stream =
 	let fun loop (p,s) = (case (scan (regexp,getc,p,s))

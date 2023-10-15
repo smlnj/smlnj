@@ -2,8 +2,24 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases.
 
 --------------------------------------------------------------------------------
+Next Release
+-------------------
+
+[2023-09-19]
+	Added modules for the representation of booleans, integers, and words
+	as hash-consed values to the HashCons library.
+
+--------------------------------------------------------------------------------
 SML/NJ 2023.1
 -------------------
+
+[2023-07-27]
+	Fixed a bug in the Thompson engine and also added support for "$"
+	(end-of-line assertions) and full interval support in the RegExp
+	library.
+
+        Also fixed legacy issue #258 (https://github.com/smlnj/legacy/issues/258)
+        in the Thompson engine.
 
 [2023-06-14]
 	Reworked the code for determining the maximum hash-table size (used
@@ -220,8 +236,8 @@ SML/NJ 110.97
 	(this interfaces was originally designed before the SML Basis Library,
 	so it did not follow the conventions).
 	The changes are to have the `fromString` function return `NONE`,
-	instead of raising an exception on bad input, and to use deprecate
-	the `lshift` and `rshift` operations in favor of `>>` and `<<` (which
+	instead of raising an exception on bad input, and to deprecate the
+	`lshift` and `rshift` operations in favor of `>>` and `<<` (which
 	use `word` for the shift amount).
 
 [2020-04-13]

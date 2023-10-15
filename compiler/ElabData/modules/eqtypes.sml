@@ -28,12 +28,15 @@ structure EqTypes : EQTYPES =
 struct
 
 (* functions to determine and check equality types *)
-local structure EM = ErrorMsg
-      structure IP = InvPath
-      structure TU = TypesUtil
-      structure M = Modules
-      structure MU = ModuleUtil
-      open Types Stamps TypesUtil
+local
+  structure EM = ErrorMsg
+  structure IP = InvPath
+  structure TU = TypesUtil
+  structure M = Modules
+  structure MU = ModuleUtil
+  structure SS = SpecialSymbols
+
+  open Types Stamps TypesUtil
 
 in
 
@@ -332,24 +335,24 @@ let val names = map TU.tycName datatycs
      fun checkTyc (tyc0 as GENtyc { eq, kind, path, ... }) =
 	 (case (!eq, kind) of
 	      (DATA, DATATYPE { index, ... }) =>
-	      let val _ = debugmsg (">>checkTyc: "^
-				    Symbol.name(IP.last path)^" "^
+	      let val _ = debugmsg (">>checkTyc: " ^
+				    Symbol.name (IP.last (path, SS.errorTycId)) ^ " " ^
 				    Int.toString index)
 		  fun eqtyc (GENtyc { eq = e', kind = k', path, ... }) =
 		      (case (!e', k')
 			of (DATA,DATATYPE{index,...}) =>
 			   (debugmsg ("eqtyc[GENtyc(DATA)]: " ^
-				      Symbol.name(IP.last path) ^
+				      Symbol.name (IP.last (path, SS.errorTycId)) ^
 				      " " ^ Int.toString index);
 			   (* ASSERT: argument tycon is a member of datatycs *)
 			    checkDomains index)
 			 | (UNDEF,_) =>
 			   (debugmsg ("eqtyc[GENtyc(UNDEF)]: " ^
-				      Symbol.name(IP.last path));
+				      Symbol.name(IP.last (path, SS.errorTycId)));
 			    IND)
 			 | (eqp,_) =>
 			   (debugmsg ("eqtyc[GENtyc(_)]: " ^
-				      Symbol.name(IP.last path) ^
+				      Symbol.name(IP.last (path, SS.errorTycId)) ^
 				      " " ^ TU.eqpropToString eqp);
 			    eqp))
 		    | eqtyc(RECtyc i) =
@@ -461,9 +464,9 @@ let val names = map TU.tycName datatycs
 		  case !eq
 		   of (YES | NO | IND) => ()
 		    | DATA =>
-		      bug ("checkTyc[=>DATA]: "^Symbol.name(IP.last path))
+		      bug ("checkTyc[=>DATA]: " ^ Symbol.name(IP.last (path, SS.errorTycId)))
 		    | _ =>
-		      bug ("checkTyc[=>other]: "^Symbol.name(IP.last path))
+		      bug ("checkTyc[=>other]: "^Symbol.name(IP.last (path, SS.errorTycId)))
 	      end
 	    | _ => ())
        | checkTyc _ = ()

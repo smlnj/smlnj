@@ -1,11 +1,11 @@
 (* hash-cons-set.sml
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
- * All rights reserved.
- *
  * This is an implementation of the HASH_CONS_SET signature that uses Red-Black
  * trees.  Eventually, it should be replaced by an implmementation that uses
  * Patricia trees.
+ *
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *)
 
 structure HashConsSet : HASH_CONS_SET =

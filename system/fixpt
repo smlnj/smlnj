@@ -12,13 +12,12 @@
 
 this=$0
 here=`pwd`
-cd ../..
+cd ..
 twoup=`pwd`
 cd $here
 
 SML=$twoup/bin/sml
 ARCH=amd64
-SIZE_OPT="-64"
 ARGS=""
 
 #
@@ -27,8 +26,6 @@ ARGS=""
 while [ "$#" != 0 ] ; do
     arg=$1; shift
     case $arg in
-    -32) SIZE_OPT="-32" ;;
-    -64) SIZE_OPT="-64" ;;
     -iter)
 	if [ "$#" = 0 ] ; then
 	    echo "$this: missing argument for \"-iter\" option"
@@ -63,7 +60,7 @@ done
 # use the arch-n-opsys script to determine the ARCH/OS if possible
 #
 if [ -f $twoup/bin/.arch-n-opsys ]; then
-    ARCH_N_OPSYS=`$twoup/bin/.arch-n-opsys $SIZE_OPT`
+    ARCH_N_OPSYS=`$twoup/bin/.arch-n-opsys`
     if [ "$?" = "0" ]; then
 	eval $ARCH_N_OPSYS
 	echo Architecture: $ARCH
@@ -83,7 +80,7 @@ SAVE=false		# should we save intermediate boot and bin directories?
 # (The funky ML comment is there to un-confuse emacs fontlock mode. :)
 #
 initcompile() {
-$SML $SIZE_OPT $ARGS '$smlnj/cmb.cm' <<EOF
+$SML $ARGS '$smlnj/cmb.cm' <<EOF
 local open OS.Process CMB in
    $SETLIGHT
    val _ = exit (if make' (SOME "$BASE") then success else failure) (* ' *)
@@ -100,7 +97,7 @@ if initcompile ; then
 	prevbase=$iterbase
 	iter=`expr $iter + 1`
 	iterbase=$BASE$iter
-	if ./makeml $SIZE_OPT $ARGS -boot $prevbase$BOOT $REBUILD $iterbase ; then
+	if ./makeml $ARGS -boot $prevbase$BOOT $REBUILD $iterbase ; then
 	    if diff -r $prevbase$BIN $iterbase$BIN >/dev/null 2>&1 ; then
 		echo "$this: fixpoint reached in round $iter"
 		if $SAVE ; then

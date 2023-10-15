@@ -150,17 +150,31 @@ class code_buffer {
     void restoreSMLRegState (reg_state const & cache) { this->_regState.copyFrom (cache); }
 
   // target parameters
+
+    //! the size of a target machine word in bytes
     int wordSzInBytes () const { return this->_wordSzB; }
+
+    //! round a size (in bytes) up to the nearest multiple of the word size.
     size_t roundToWordSzInBytes (size_t nb) const
     {
         return (nb + (this->_wordSzB - 1)) & ~(this->_wordSzB - 1);
     }
+
+    //! round a size in bytes up to the number of words
+    size_t roundToWordSz (size_t nb) const
+    {
+        return ((nb + (this->_wordSzB - 1)) & ~(this->_wordSzB - 1)) / this->_wordSzB;
+    }
+
+    //! is the target a 64-bit machine?
     bool is64Bit () const { return (this->_wordSzB == 8); }
+
+    //! return a ponter to the target information struct
     target_info const *targetInfo () const { return this->_target; }
 
-  // align the allocation pointer for 64 bits on 32-bit machines.  The resulting
-  // alloc pointer points to the location of the object descriptor, so adding
-  // wordSzInBytes() should produce an 8-byte aligned address
+    //! align the allocation pointer for 64 bits on 32-bit machines.  The resulting
+    //! alloc pointer points to the location of the object descriptor, so adding
+    //! wordSzInBytes() should produce an 8-byte aligned address
     Value *alignedAllocPtr ()
     {
 	if (this->is64Bit()) {

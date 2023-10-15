@@ -1,0 +1,27 @@
+(* print-cfg.cm
+ *
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Main
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/asdl-lib.cm
+
+  cfg-file-pickle.sml
+  lambda-var-pickle.sml
+  cfg-memory-pickle.sml
+  cfg-pickle.sig
+  cfg.sml
+
+(* extra files added by hand *)
+  lambda-var.sml
+
+  main.sml
+  normalize.sml

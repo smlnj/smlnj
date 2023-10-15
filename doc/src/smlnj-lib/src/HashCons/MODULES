@@ -1,6 +1,9 @@
 structure HashCons
 structure HashConsAtom
+structure HashConsBool
+structure HashConsInt
 structure HashConsMap
 structure HashConsString
 structure HashConsSet
+structure HashConsWord
 functor HashConsGroundFn

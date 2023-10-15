@@ -83,13 +83,13 @@ val token : (char -> bool) -> (string, 'strm) parser
   `wrap parser f` composes the function `f` with `parser`
 
 `[.kw]#val# seq : (('a, 'strm) parser * ('b, 'strm) parser) \-> (('a * 'b), 'strm) parser`::
-  `seq (parser1, parser2)` returns a parser is the sequential combination of the
+  `seq (parser1, parser2)` is the sequential combination of the
   two parsers; _i.e._, a parser that will first parse a value `v1`
   from the input using `parser1` and then parse a value `v2` using `parser2`
   yielding the pair `(v1, v2)`.
 
 `[.kw]#val# seqWith : (('a * 'b) \-> 'c) \-> (('a, 'strm) parser * ('b, 'strm) parser) \-> ('c, 'strm) parser`::
-  `seq f (parser1, parser2)` is the sequential combination of the two parsers composed
+  `seqWith f (parser1, parser2)` is the sequential combination of the two parsers composed
   with the function `f`;  _i.e._, a parser that will first parse a value `v1`
   from the input using `parser1` and then parse a value `v2` using `parser2`
   yielding the result of `f(v1, v2)`.  This expression is equivalent to
@@ -199,9 +199,11 @@ We can then define parsers for the atomic expressions
 [source,sml]
 ------------
 fun numParser getc = P.wrap (Int.scan StringCvt.DEC, NUM) getc
-fun idParser getc = P.seqWith String.^ (
-      P.wrap (P.eatChar Char.isAlpha, str),
-      P.token Char.isAlphaNum) getc
+fun idParser getc = P.seqWith
+      (fn (a, SOME b) => a ^ b | (a, NONE) => a)
+      (P.wrap (P.eatChar Char.isAlpha, str),
+       P.option (P.token Char.isAlphaNum))
+      getc
 fun varParser getc = P.wrap(idParser, VAR) getc
 ------------
 

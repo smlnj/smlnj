@@ -501,5 +501,4 @@ structure Dfa : DFA =
 
 	fun buildPattern rs = build' (N.buildPattern rs)
 
-
     end

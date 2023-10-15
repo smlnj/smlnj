@@ -80,6 +80,12 @@ xref:str-HashConsAtom.adoc[`[.kw]#structure# HashConsAtom`]::
   Code to package the xref:../Util/str-Atom.adoc#type:atom[`Atom.atom`] type
   as a hash-consed object.
 
+xref:str-HashConsBool.adoc[`[.kw]#structure# HashConsBool`]::
+  Code to package the `bool` type as a hash-consed object.
+
+xref:str-HashConsInt.adoc[`[.kw]#structure# HashConsInt`]::
+  Code to package the `int` type as a hash-consed object.
+
 xref:str-HashConsMap.adoc[`[.kw]#structure# HashConsMap`]::
   Implements finite maps keyed by hash-consed objects.
 
@@ -88,6 +94,9 @@ xref:str-HashConsString.adoc[`[.kw]#structure# HashConsString`]::
 
 xref:str-HashConsSet.adoc[`[.kw]#structure# HashConsSet`]::
   Implements finite sets of hash-consed objects.
+
+xref:str-HashConsWord.adoc[`[.kw]#structure# HashConsWord`]::
+  Code to package the `word` type as a hash-consed object.
 
 xref:fun-HashConsGroundFn.adoc[`[.kw]#functor# HashConsGroundFn`]::
   A functor for implementing new leaf types as hash-consed objects.
@@ -109,11 +118,17 @@ include::str-HashCons.adoc[]
 
 include::str-HashConsAtom.adoc[]
 
+include::str-HashConsBool.adoc[]
+
+include::str-HashConsInt.adoc[]
+
 include::str-HashConsMap.adoc[]
 
 include::str-HashConsString.adoc[]
 
 include::str-HashConsSet.adoc[]
+
+include::str-HashConsWord.adoc[]
 
 include::fun-HashConsGroundFn.adoc[]
 

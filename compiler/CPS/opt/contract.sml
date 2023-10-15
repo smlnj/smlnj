@@ -680,6 +680,9 @@ and g hdlr = let
 		      | SOME w' => (click "j"; newname(w,w'); g' e)
 		    (* end case *))
 		  else LOOKER(P.GETHDLR,[],w,t,g (SOME(VAR w)) e)
+	      | SETTER(P.SETHDLR,[v],e as SETTER(P.SETHDLR,_,_)) => (
+                  (* the second set overwrites the first one *)
+                  click "J"; use_less (ren v); g' e)
 	      | SETTER(P.SETHDLR,[v],e) => let
 		  val v' = ren v
 		  val e' = g (SOME v') e

@@ -368,6 +368,7 @@ CodeObject::~CodeObject () { }
 //
 void CodeObject::getCode (uint8_t *code)
 {
+    // iterate over the included sections (see _computeSize below)
     for (auto sect : this->_sects) {
         auto contents = sect.getContents();
         if (contents.takeError()) {

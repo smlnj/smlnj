@@ -13,16 +13,33 @@ functor TestFn (
 
     fun getc s i = if (i < String.size s) then SOME(String.sub(s, i), i+1) else NONE
 
+    datatype result
+      = NoMatch
+      | Error of exn
+      | Match of {pos : int, len : int, next : int}
+
+    fun find (re, strm) = ((
+          case (RE.find re strm 0)
+           of NONE => NoMatch
+            | SOME(M.Match({pos, len}, _), n) =>
+                if (pos + len <> n)
+                  then raise Fail "invalid next position"
+                  else Match{pos=pos, len=len, next=n}
+          (* end case *))
+            handle ex => Error ex)
+
     fun test (name, re, data) = let
 	  val _ = print(concat["  ", name, ": "])
 	  val re = RE.compileString re handle ex => (print "compile failed\n"; raise ex)
 	  in
-	    case ((RE.find re (getc data) 0) handle ex => NONE)
-	     of NONE => print "match failed\n"
-	      | SOME(M.Match({pos, len}, _), _) =>
+	    case find (re, getc data)
+	     of NoMatch => print "match failed\n"
+              | Error exn => print(concat["Error: ", General.exnMessage exn, "\n"])
+              | Match{pos, len, next} =>
 		  print(concat[
 		      "match at ", Int.toString pos, " = \"",
-		      String.toString(String.substring(data, pos, len)), "\"\n"
+		      String.toString(String.substring(data, pos, len)), "\"; next = ",
+                      Int.toString next, "\n"
 		    ])
 	    (* end case *)
 	  end
@@ -45,6 +62,7 @@ functor TestFn (
 	  test ("13", "(abc){2,4}$", "abcabc");
 	  test ("14", "(abc){2,4}$", "abcabcabc");
 	  test ("15", "(abc){2,4}$", "abcabcabcabc");
-	  print "** tests done\n")
+          test ("16", "[true]+", "truexxx");
+          test ("17", "true", "truexxx"))
 
   end
