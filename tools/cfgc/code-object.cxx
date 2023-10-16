@@ -427,11 +427,21 @@ void CodeObject::dump (bool bits)
 
 }
 
+static std::string _symTypeNames[6] = {
+        "Unknown",
+        "Other",
+        "Data",
+        "Debug",
+        "File",
+        "Function"
+    };
+
 void CodeObject::_dumpRelocs (llvm::object::SectionRef &sect)
 {
     auto sectName = sect.getName();
 
     llvm::dbgs () << "RELOCATION INFO FOR "
+        << (this->_includeSect(sect) ? "INCLUDED " : "")
         << (sectName ? *sectName : "<unknown section>") << "\n";
 
     for (auto reloc : sect.relocations()) {
@@ -449,11 +459,11 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef &sect)
 #endif
                     << "; offset = " << llvm::format_hex(offset, 10)
 // TODO: get the name associated with the type
-                    << "; type = " << reloc.getType() << "\n";
+                    << "; type = " << _symTypeNames[reloc.getType()] << "\n";
             } else {
                 llvm::dbgs () << "  <unknown>: offset = "
                     << llvm::format_hex(offset, 10)
-                    << "; type = " << reloc.getType() << "\n";
+                    << "; type = " << _symTypeNames[reloc.getType()] << "\n";
             }
         }
     }
