@@ -31,6 +31,7 @@
 #include "lambda-var.hxx"
 #include "sml-registers.hxx"
 #include "code-object.hxx"
+#include "objfile-pwrite-stream.hxx"
 
 using Value = llvm::Value;
 using Type = llvm::Type;
@@ -150,17 +151,31 @@ class code_buffer {
     void restoreSMLRegState (reg_state const & cache) { this->_regState.copyFrom (cache); }
 
   // target parameters
+
+    //! the size of a target machine word in bytes
     int wordSzInBytes () const { return this->_wordSzB; }
+
+    //! round a size (in bytes) up to the nearest multiple of the word size.
     size_t roundToWordSzInBytes (size_t nb) const
     {
         return (nb + (this->_wordSzB - 1)) & ~(this->_wordSzB - 1);
     }
+
+    //! round a size in bytes up to the number of words
+    size_t roundToWordSz (size_t nb) const
+    {
+        return ((nb + (this->_wordSzB - 1)) & ~(this->_wordSzB - 1)) / this->_wordSzB;
+    }
+
+    //! is the target a 64-bit machine?
     bool is64Bit () const { return (this->_wordSzB == 8); }
+
+    //! return a ponter to the target information struct
     target_info const *targetInfo () const { return this->_target; }
 
-  // align the allocation pointer for 64 bits on 32-bit machines.  The resulting
-  // alloc pointer points to the location of the object descriptor, so adding
-  // wordSzInBytes() should produce an 8-byte aligned address
+    //! align the allocation pointer for 64 bits on 32-bit machines.  The resulting
+    //! alloc pointer points to the location of the object descriptor, so adding
+    //! wordSzInBytes() should produce an 8-byte aligned address
     Value *alignedAllocPtr ()
     {
 	if (this->is64Bit()) {
@@ -733,7 +748,7 @@ class code_buffer {
   /***** Code generation *****/
 
     //! access to the backing storage for generating in-memory object files
-    llvm::SmallVector<char, 0> & objectFileData () { return this->_objFileData; }
+    ObjfilePWriteStream & objectFileOS () { return this->_objFileOS; }
 
     //! compile to an in-memory code object
     std::unique_ptr<CodeObject> compile ();
@@ -849,7 +864,7 @@ class code_buffer {
 
     //! backing storage for the generated object file.  We put this object it the
     //! code buffer so that we do not have to worry about its lifetime.
-    llvm::SmallVector<char, 0> _objFileData;
+    ObjfilePWriteStream _objFileOS;
 };
 
 #endif // !__CODE_BUFFER_HXX__

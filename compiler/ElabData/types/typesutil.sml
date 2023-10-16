@@ -18,6 +18,7 @@ structure TypesUtil : TYPESUTIL =
     structure ST = Stamps
     structure A = Access
     structure V = Variable
+    structure SSS = SpecialSymbols
 
     open Types
 
@@ -125,10 +126,10 @@ structure TypesUtil : TYPESUTIL =
 
   (*************** primitive operations on tycons ***************)
     fun bugTyc (s: string, tyc) = (case tyc
-	   of GENtyc { path, ... } => bug (s ^ " GENtyc " ^ S.name (IP.last path))
-	    | DEFtyc {path,...} => bug (s ^ " DEFtyc " ^ S.name(IP.last path))
+	   of GENtyc { path, ... } => bug (s ^ " GENtyc " ^ S.name (IP.last (path, SSS.errorTycId)))
+	    | DEFtyc {path,...} => bug (s ^ " DEFtyc " ^ S.name(IP.last (path, SSS.errorTycId)))
 	    | RECORDtyc _ => bug (s ^ " RECORDtyc")
-	    | PATHtyc{path,...} => bug (s ^ " PATHtyc " ^ S.name(IP.last path))
+	    | PATHtyc{path,...} => bug (s ^ " PATHtyc " ^ S.name(IP.last (path, SSS.errorTycId)))
 	    | RECtyc _ => bug (s ^ " RECtyc")
 	    | FREEtyc _ => bug (s ^ " FREEtyc")
 	    | ERRORtyc => bug (s ^ " ERRORtyc")
@@ -136,7 +137,7 @@ structure TypesUtil : TYPESUTIL =
 
   (* short (single symbol) name of tycon *)
     fun tycName (GENtyc { path, ... } | DEFtyc{path,...} | PATHtyc{path,...}) =
-	  IP.last path
+	  IP.last (path, SSS.errorTycId)
       | tycName (RECORDtyc _) = S.tycSymbol "<RECORDtyc>"
       | tycName (RECtyc _) = S.tycSymbol "<RECtyc>"
       | tycName (FREEtyc _) = S.tycSymbol "<FREEtyc>"
@@ -146,7 +147,7 @@ structure TypesUtil : TYPESUTIL =
     fun tycStamp (GENtyc { stamp, ... } | DEFtyc { stamp, ... }) = stamp
       | tycStamp tycon = bugTyc("tycStamp",tycon)
 
-    (* tycPath : T.tycon -> InvPath.path option
+    (* tycPath : T.tycon -> IP.path option
      *  full (inv-)path name of tycon *)
     fun tycPath (GENtyc{path,...} | DEFtyc{path,...} | PATHtyc{path,...}) = SOME path
       | tycPath ERRORtyc = SOME (IP.IPATH[S.tycSymbol "error"])

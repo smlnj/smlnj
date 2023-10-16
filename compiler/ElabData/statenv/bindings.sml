@@ -8,6 +8,8 @@ structure Bindings : BINDINGS =
   struct
 
     structure S  = Symbol
+    structure SS = SpecialSymbols
+    structure IP = InvPath
     structure T  = Types
     structure V  = Variable
     structure M =  Modules
@@ -54,9 +56,9 @@ structure Bindings : BINDINGS =
       | bindingSymbol (CONbind(T.DATACON{name,...})) = name
       | bindingSymbol (TYCbind(tyc)) =
 	(case tyc
-	  of T.GENtyc{path,...} => InvPath.last path
-	   | T.DEFtyc{path,...} => InvPath.last path
-	   | T.PATHtyc{path,...} => InvPath.last path
+	  of T.GENtyc{path,...} => IP.last (path, SS.errorTycId)
+	   | T.DEFtyc{path,...} => IP.last (path, SS.errorTycId)
+	   | T.PATHtyc{path,...} => IP.last (path, SS.errorTycId)
 	   | T.ERRORtyc => S.tycSymbol "<ERRORtyc>"
 	   | _ => S.tycSymbol "anonTyc")
       | bindingSymbol (SIGbind sg) =
@@ -68,7 +70,7 @@ structure Bindings : BINDINGS =
 	   | M.ERRORsig => S.sigSymbol "<ERRORsig>")
       | bindingSymbol (STRbind str) =
 	(case str
-	  of M.STR{rlzn={rpath,...},...} => InvPath.last rpath
+	  of M.STR{rlzn={rpath,...},...} => IP.last (rpath, SS.errorId)
 	   | M.STRSIG _ => S.strSymbol "<STRSIG>"
 	   | M.ERRORstr => S.strSymbol "<ERRORstr>")
       | bindingSymbol (FSGbind fsig) =
@@ -78,9 +80,9 @@ structure Bindings : BINDINGS =
 	   | M.ERRORfsig => S.fsigSymbol "<ERRORfsig>")
       | bindingSymbol (FCTbind fct) =
 	(case fct
-	  of M.FCT{rlzn={rpath,...},...} => InvPath.last rpath
+	  of M.FCT{rlzn={rpath,...},...} => IP.last (rpath, SS.errorFctId)
 	   | M.ERRORfct => S.fctSymbol "<ERRORfct>")
       | bindingSymbol (FIXbind _) = S.fixSymbol "<FIXITY>"
         (* the name bound is not recoverable from the binding *)
-
+				     
   end (* structure Bindings *)

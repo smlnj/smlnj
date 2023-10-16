@@ -24,7 +24,7 @@ sig
   val null : path -> bool
   val extend: path * Symbol.symbol -> path
   val append: path * path -> path
-  val last: path -> Symbol.symbol
+  val last: path * Symbol.symbol -> Symbol.symbol
   val lastPrefix: path -> path
   val equal : path * path -> bool
   val toString : path -> string

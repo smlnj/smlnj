@@ -28,39 +28,44 @@ end (* signature ELABMOD *)
 structure ElabMod : ELABMOD =
 struct
 
-local structure S  = Symbol
-      structure IP = InvPath
-      structure SP = SymPath
-      structure EP = EntPath
-      structure EPC = EntPathContext
-      structure EE = EntityEnv
-      structure T  = Types
-      structure TU = TypesUtil
-      structure V  = Variable
-      structure M  = Modules
-      structure MU = ModuleUtil
-      structure MI = ModuleId
-      structure L = Lookup
-      structure EU = ElabUtil
-      structure ET = ElabType
-      structure EC = ElabCore
-      structure ES = ElabSig
-      structure B  = Bindings
-      structure LU = Lookup
-      structure SM = SigMatch
-      structure INS = Instantiate
-      structure SE = StaticEnv
-      structure EM = ErrorMsg
-      structure PP = PrettyPrint
-      structure A  = Absyn
-      structure DA = Access
-      structure DI = DebIndex
-      structure PPU = PPUtil
-      structure ED = ElabDebug
-      structure ST = RedBlackSetFn(type ord_key = S.symbol
-                                   val compare = S.compare)
-      open Ast Modules
-      open SpecialSymbols (* special symbols *)
+local
+  structure S  = Symbol
+  structure SS = SpecialSymbols
+  structure IP = InvPath
+  structure SP = SymPath
+  structure EP = EntPath
+  structure EPC = EntPathContext
+  structure EE = EntityEnv
+  structure T  = Types
+  structure TU = TypesUtil
+  structure V  = Variable
+  structure M  = Modules
+  structure MU = ModuleUtil
+  structure MI = ModuleId
+  structure L = Lookup
+  structure EU = ElabUtil
+  structure ET = ElabType
+  structure EC = ElabCore
+  structure ES = ElabSig
+  structure B  = Bindings
+  structure LU = Lookup
+  structure SM = SigMatch
+  structure INS = Instantiate
+  structure SE = StaticEnv
+  structure EM = ErrorMsg
+  structure PP = PrettyPrint
+  structure A  = Absyn
+  structure DA = Access
+  structure DI = DebIndex
+  structure PPU = PPUtil
+  structure ED = ElabDebug
+
+  structure ST = RedBlackSetFn(type ord_key = S.symbol
+			       val compare = S.compare)
+
+  open Ast Modules
+  open SpecialSymbols (* special symbols *)
+
 in
 
 (* debugging *)
@@ -255,7 +260,7 @@ fun bindReplTyc(EU.INFCT _, epctxt, mkStamp, dtyc) =
  *)
 fun bindNewTycs(EU.INFCT _, epctxt, mkStamp, dtycs, wtycs, rpath, err) =
       let fun stripPath path =
-	    let val namePath = IP.IPATH[IP.last path]
+	    let val namePath = IP.IPATH[IP.last (path, SS.errorTycId)]
 	        val prefix = IP.lastPrefix path
 	        val _ = if IP.equal(rpath,prefix) then ()
 		        else err EM.WARN
@@ -533,7 +538,7 @@ fun extractSig (env, epContext, context,
 		| procdatatycs(T.GENtyc{kind=T.DATATYPE dt, path, ...}::rest) =
 		    let val {index,family as {members,...},...} = dt
 			val {tycname,dcons,...} = Vector.sub(members,index)
-			val pathname = InvPath.last path
+			val pathname = IP.last (path, SS.errorTycId)
 		    in (map (fn ({name,...}) => name) dcons)@
 		       (pathname::procdatatycs rest)
 		    end
@@ -1294,7 +1299,7 @@ fun loop([], decls, entDecls, env, entEnv) =
                                          | _ => false))
                        then str
                        else (error region' EM.COMPLAIN
-                             ("structure " ^ S.name(IP.last rpath) ^
+                             ("structure " ^ S.name (IP.last (rpath, SS.errorId)) ^
                               " defined by partially applied functor")
                              EM.nullErrorBody;
                              ERRORstr)
@@ -1521,7 +1526,7 @@ and elabDecl0
                            andalso not(!(#anyErrors compInfo))
 			then (INS.instParam
 			        {sign=s,entEnv=EE.empty,tdepth=DI.top,
-				 rpath=InvPath.empty,region=region',
+				 rpath=IP.empty,region=region',
 				 compInfo=compInfo};
 			      ())
 			else ()
@@ -1698,7 +1703,7 @@ and elabDecl0
 			   end
 			 | _ => (M.EMPTYdec,EE.empty)
 		   val tyc' = T.GENtyc{stamp=stamp, arity=arity,
-				       eq=eq, path=InvPath.extend(InvPath.empty,name),
+				       eq=eq, path=IP.extend(IP.empty,name),
 				       stub=stub, kind=dt}
 		   val resDec = A.DATATYPEdec{datatycs=[tyc' (* tyc *)],
 					      withtycs=[]}

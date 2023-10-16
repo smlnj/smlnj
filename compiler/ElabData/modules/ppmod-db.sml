@@ -53,6 +53,7 @@ struct
 
 local
   structure S = Symbol
+  structure SS = SpecialSymbols
   structure SP = SymPath
   structure IP = InvPath
   structure A = Access
@@ -116,7 +117,7 @@ fun sigToEnv(M.SIG {elements,...}) =
                 let val tyc =
                         T.GENtyc{stamp=Stamps.special "x", arity=arity,
                                  eq=ref(T.UNDEF), kind=T.FORMAL, stub=NONE,
-                                 path=InvPath.extend(InvPath.empty,name)}
+                                 path=IP.extend(IP.empty,name)}
                 in SE.bind(sym,B.TYCbind tyc,env)
                 end
 	     | M.STRspec{sign,slot,def,entVar=ev} =>
@@ -140,7 +141,7 @@ fun is_ppable_ConBinding (T.DATACON{rep=A.EXN _, ...}, _) = true
 		      (LU.lookTyc
 			 (env,
 			  (case TU.tycPath tyc
-			     of SOME ipath => SP.SPATH[IP.last ipath]
+			     of SOME ipath => SP.SPATH[IP.last (ipath, SS.errorTycId)]
 			      | NONE => bug "is_ppable_ConBinding"),
 			  fn _ => raise Hidden),
 		       tyc)
@@ -584,7 +585,7 @@ and ppReplBind ppstrm =
 	      replication tycs are GENtycs after elaboration *)
 	   (openHOVBox 2;
             pps "datatype"; break{nsp=1,offset=0};
-            ppSym ppstrm (IP.last path);
+            ppSym ppstrm (IP.last (path, SS.errorTycId));
             pps " ="; break{nsp=1,offset=0};
             pps "datatype"; break{nsp=1,offset=0};
             ppTycon env ppstrm rightTyc;
@@ -592,7 +593,7 @@ and ppReplBind ppstrm =
 	 | (tyc as T.GENtyc{stamp, arity, eq, kind, path, stub}, env) =>
 	   (openHOVBox 2;
 	    pps "datatype"; break{nsp=1,offset=0};
-	    ppSym ppstrm (IP.last path);
+	    ppSym ppstrm (IP.last (path, SS.errorTycId));
 	    pps " ="; break{nsp=1,offset=0};
 	    ppTycBind ppstrm (tyc, env);
 	    closeBox())
@@ -662,7 +663,7 @@ and ppStrExp ppstrm (strExp,depth) =
            ppEntPath ppstrm ep)
        | M.CONSTstr { stamp, rpath, ... } =>
 	 (PP.string ppstrm "SE.C:"; PP.break ppstrm {nsp=1,offset=1};
-	  PP.string ppstrm (InvPath.toString rpath))
+	  PP.string ppstrm (IP.toString rpath))
        | M.STRUCTURE{stamp,entDec} =>
 	  (PP.string ppstrm "SE.S:"; PP.break ppstrm {nsp=1,offset=1};
 	   ppEntDec ppstrm (entDec,depth-1))
@@ -713,7 +714,7 @@ and ppFctExp ppstrm (fctExp,depth) =
 	  (PP.string ppstrm "FE.V:"; ppEntPath ppstrm ep)
        | M.CONSTfct { rpath, ... } =>
 	 (PP.string ppstrm "FE.C:";
-	  PP.string ppstrm (InvPath.toString rpath))
+	  PP.string ppstrm (IP.toString rpath))
        | M.LAMBDA_TP {param, body, ...} =>
 	  (PP.openHVBox ppstrm (PP.Rel 0);
 	    PP.string ppstrm "FE.LP:"; PP.break ppstrm {nsp=1,offset=1};

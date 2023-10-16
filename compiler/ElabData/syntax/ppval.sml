@@ -28,6 +28,8 @@ local
   structure TU = TypesUtil
   structure LU = Lookup
   structure A = Access
+  structure IP = InvPath
+  structure SS = SpecialSymbols
   structure LV = LambdaVar
   open PrettyPrint PPUtil Variable Types
 
@@ -97,8 +99,10 @@ fun ppConBinding ppstrm =
 		       in
 			  (TypesUtil.equalTycon
 			      (LU.lookTyc
-			         (env,SymPath.SPATH
-				       [InvPath.last(valOf(TypesUtil.tycPath tyc))],
+			         (env,
+				  SymPath.SPATH
+				    [IP.last(valOf(TypesUtil.tycPath tyc),
+					     SS.errorTycId)],
 				  fn _ => raise Hidden),
 			       tyc)
 			     handle Hidden => false)

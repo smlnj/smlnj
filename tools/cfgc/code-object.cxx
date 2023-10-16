@@ -10,18 +10,14 @@
  * All rights reserved.
  */
 
-#include "ml-sizes.h"  /* for endianess */
+#define BYTE_ORDER_LITTLE
+
 #include <iostream>
 #include "target-info.hxx"
 #include "code-object.hxx"
 #include "code-buffer.hxx"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/MemoryBuffer.h"
-
-// SML/NJ runtime function for printing an error message and exiting
-extern "C" {
-extern void Die (const char *, ...);
-}
 
 /* determine the object-file format that we use on this platform */
 #if defined(OPSYS_DARWIN)
@@ -174,6 +170,7 @@ private:
 //
 void AArch64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code)
 {
+llvm::dbgs() << "## RELOCATIONS\n";
     for (auto reloc : sect.relocations()) {
       // the patch value; we ignore the relocation record if the symbol is not defined
         auto symb = reloc.getSymbol();
@@ -190,6 +187,8 @@ void AArch64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t 
 #endif
           // get the instruction to be patched
             AArch64InsnWord instr(*(uint32_t *)(code + offset));
+llvm::dbgs() << "### " << llvm::format_hex_no_prefix(offset, 4) << ": "
+<< "value = " << value << "; " << llvm::format_hex(instr.value(), 10) << " ==> ";
             switch (reloc.getType()) {
 #if defined(OBJFF_MACHO)
             case llvm::MachO::ARM64_RELOC_PAGE21:
@@ -197,6 +196,7 @@ void AArch64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t 
             case llvm::ELF::R_AARCH64_ADR_PREL_PG_HI21:
 #endif
                 instr.patchHi21 (value);
+llvm::dbgs() << llvm::format_hex(instr.value(), 10) << " [PAGE21]\n";
                 break;
 #if defined(OBJFF_MACHO)
             case llvm::MachO::ARM64_RELOC_PAGEOFF12:
@@ -204,6 +204,7 @@ void AArch64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t 
             case llvm::ELF::R_AARCH64_ADD_ABS_LO12_NC:
 #endif
                 instr.patchLo12 (value);
+llvm::dbgs() << llvm::format_hex(instr.value(), 10) << " [PAGEOFF12]\n";
                 break;
 #if defined(OBJFF_MACHO)
             case llvm::MachO::ARM64_RELOC_BRANCH26:
@@ -211,16 +212,17 @@ void AArch64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t 
             case llvm::ELF::R_AARCH64_JUMP26:
 #endif
                 instr.patchB26 (value);
+llvm::dbgs() << llvm::format_hex(instr.value(), 10) << " [BRANCH26]\n";
                 break;
             default:
-                Die ("Unknown relocation-record type %d at %p\n",
-                    reloc.getType(), (void*)offset);
+                assert (false && "unknown relocation-record type");
                 break;
             }
           // update the instruction with the patched version
             *(uint32_t *)(code + offset) = instr.value();
         }
     }
+llvm::dbgs() << "## END RELOCATIONS\n";
 
 }
 #endif // ENABLE_ARM64
