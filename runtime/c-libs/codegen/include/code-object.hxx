@@ -19,11 +19,11 @@
 
 struct target_info;
 
-//! a code-object is container for the parts of an object file that are needed to
-//! create the SML code object in the heap.  Its purpose is to abstract from
-//! target architecture and object-file format dependencies.  This class is
-//! an abstract base class; the actual implementation is specialized to the
-//! target.
+/// a code-object is container for the parts of an object file that are needed to
+/// create the SML code object in the heap.  Its purpose is to abstract from
+/// target architecture and object-file format dependencies.  This class is
+/// an abstract base class; the actual implementation is specialized to the
+/// target.
 //
 class CodeObject {
   public:
@@ -33,24 +33,33 @@ class CodeObject {
 
     virtual ~CodeObject ();
 
-    //! create a code object.
+    /// create a code object.
     static std::unique_ptr<CodeObject> create (class code_buffer *codeBuf);
 
-    //! return the size of the code in bytes
+    /// return the size of the code in bytes
     size_t size() const { return this->_szb; }
 
-    //! copy the code into the specified memory, which is assumed to be this->size()
-    //! bytes
+    /// copy the code into the specified memory, which is assumed to be this->size()
+    /// bytes
     void getCode (unsigned char *code);
 
-    //! dump information about the code object to the LLVM debug stream.
+    /// dump information about the code object to the LLVM debug stream.
     void dump (bool bits);
 
   protected:
     const target_info *_tgt;
     std::unique_ptr<llvm::object::ObjectFile> _obj;
+
+    /// the size of the heap-allocated code object in bytes
     size_t _szb;
+
+    /// a vector of the sections that are to be included in the heap-allocated code
+    /// object.
     std::vector<llvm::object::SectionRef> _sects;
+
+    /// for some object-file formats, relocation information is in separate sections;
+    /// this vector is a list of those sections
+    std::vector<llvm::object::SectionRef> _relocSects;
 
     CodeObject (
 	target_info const *target,
@@ -58,34 +67,44 @@ class CodeObject {
     ) : _tgt(target), _obj(std::move(objFile)), _szb(0)
     { }
 
-  //! helper function that determines which sections to include and computes
-  //! the total size of the SML code object
-  // NOTE: because this function invokes the target-specific virtual method
-  // `_includeDataSect`, it must be called *after* the object has been
-  // constructed.
-  //
+    /// helper function that determines which sections to include and computes
+    /// the total size of the SML code object
+    // NOTE: because this function invokes the target-specific virtual method
+    // `_includeDataSect`, it must be called *after* the object has been
+    // constructed.
+    //
     void _computeSize ();
 
-  //! should a section be included in the SML data object?
-  //
+    /// should a section be included in the SML data object?
+    //
     bool _includeSect (llvm::object::SectionRef &sect)
     {
 	return sect.isText() || (sect.isData() && this->_includeDataSect(sect));
     }
 
-  //! should a data section be included in the code object?  This method
-  //! is target specific.
-  //
+    /// does a section contain relocation info for an included section?
+    //
+    bool _relocationSect (llvm::object::SectionRef &sect)
+    {
+        auto reloc = sect.getRelocatedSection();
+        return (reloc
+            && (*reloc != this->_obj->section_end())
+            && this->_includeSect(**reloc));
+    }
+
+    /// should a data section be included in the code object?  This method
+    /// is target specific.
+    //
     virtual bool _includeDataSect (llvm::object::SectionRef &sect) = 0;
 
-  //! helper function for resolving relocation records
-  //
+    /// helper function for resolving relocation records
+    //
     virtual void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) = 0;
 
-  /// dump the relocation info for a section
-  //
+    /// dump the relocation info for a section
+    //
     void _dumpRelocs (llvm::object::SectionRef &sect);
 
 }; // CodeObject
 
-#endif //! _CODE_OBJECT_HXX_
+#endif /// _CODE_OBJECT_HXX_

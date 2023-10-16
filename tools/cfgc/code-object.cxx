@@ -396,14 +396,16 @@ void CodeObject::dump (bool bits)
             llvm::dbgs() << " [DATA] ";
         }
         llvm::dbgs() << " " << (void *)addr << ".." << (void *)(addr+sz) << "\n";
-        auto reloc = sect.getRelocatedSection();
-        if (reloc && (*reloc != this->_obj->section_end())) {
-            llvm::dbgs() << "      * relocated section = ";
-            auto relocName = (*reloc)->getName();
-            if (relocName) {
-                llvm::dbgs() << *relocName << "\n";
-            } else {
-                llvm::dbgs() << "<unknown>\n";
+        if (this->_relocationSect(sect)) {
+            auto reloc = sect.getRelocatedSection();
+            if (reloc) {
+                llvm::dbgs() << "      * relocated section = ";
+                auto relocName = (*reloc)->getName();
+                if (relocName) {
+                    llvm::dbgs() << *relocName << "\n";
+                } else {
+                    llvm::dbgs() << "<unknown>\n";
+                }
             }
         }
     }
