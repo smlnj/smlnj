@@ -57,7 +57,7 @@ class AArch64CodeObject : public CodeObject {
     ~AArch64CodeObject () { }
 
   protected:
-    bool _includeDataSect (llvm::object::SectionRef &sect) override;
+    bool _includeDataSect (llvm::object::SectionRef const &sect) override;
     void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) override;
 };
 
@@ -243,7 +243,7 @@ class AMD64CodeObject : public CodeObject {
     ~AMD64CodeObject () { }
 
   protected:
-    bool _includeDataSect (llvm::object::SectionRef &sect) override;
+    bool _includeDataSect (llvm::object::SectionRef const &sect) override;
     void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) override;
 };
 
