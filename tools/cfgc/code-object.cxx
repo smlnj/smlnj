@@ -397,9 +397,9 @@ void CodeObject::dump (bool bits)
         }
         llvm::dbgs() << " " << (void *)addr << ".." << (void *)(addr+sz) << "\n";
         auto reloc = sect.getRelocatedSection();
-        if (reloc) {
+        if (reloc && (*reloc != this->_obj->section_end())) {
             llvm::dbgs() << "      * relocated section = ";
-            auto relocName = reloc->getName();
+            auto relocName = (*reloc)->getName();
             if (relocName) {
                 llvm::dbgs() << *relocName << "\n";
             } else {
