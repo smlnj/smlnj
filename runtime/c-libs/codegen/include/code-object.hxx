@@ -77,14 +77,14 @@ class CodeObject {
 
     /// should a section be included in the SML data object?
     //
-    bool _includeSect (llvm::object::SectionRef &sect)
+    bool _includeSect (llvm::object::SectionRef const &sect)
     {
 	return sect.isText() || (sect.isData() && this->_includeDataSect(sect));
     }
 
     /// does a section contain relocation info for an included section?
     //
-    bool _relocationSect (llvm::object::SectionRef &sect)
+    bool _relocationSect (llvm::object::SectionRef const &sect)
     {
         auto reloc = sect.getRelocatedSection();
         return (reloc
@@ -95,7 +95,7 @@ class CodeObject {
     /// should a data section be included in the code object?  This method
     /// is target specific.
     //
-    virtual bool _includeDataSect (llvm::object::SectionRef &sect) = 0;
+    virtual bool _includeDataSect (llvm::object::SectionRef const &sect) = 0;
 
     /// helper function for resolving relocation records
     //

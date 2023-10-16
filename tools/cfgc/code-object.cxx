@@ -57,11 +57,11 @@ class AArch64CodeObject : public CodeObject {
     ~AArch64CodeObject () { }
 
   protected:
-    bool _includeDataSect (llvm::object::SectionRef &sect);
-    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code);
+    bool _includeDataSect (llvm::object::SectionRef &sect) override;
+    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) override;
 };
 
-bool AArch64CodeObject::_includeDataSect (llvm::object::SectionRef &sect)
+bool AArch64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 {
     assert (sect.isData() && "expected data section");
 
@@ -243,11 +243,11 @@ class AMD64CodeObject : public CodeObject {
     ~AMD64CodeObject () { }
 
   protected:
-    bool _includeDataSect (llvm::object::SectionRef &sect);
-    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code);
+    bool _includeDataSect (llvm::object::SectionRef &sect) override;
+    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) override;
 };
 
-bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef &sect)
+bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 {
     assert (sect.isData() && "expected data section");
 
