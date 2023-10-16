@@ -252,15 +252,20 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef &sect)
     assert (sect.isData() && "expected data section");
 
     auto name = sect.getName();
+    if (! name) {
+        return false;
+    }
 #if defined(OBJFF_MACHO)
   // the "__literal16" section has literals referenced by the code for
   // floating-point negation and absolute value, and the "__const" section
   // has the literals created for the Overflow exception packet
-    return (name && (name->equals("__literal16") || name->equals("__const")));
+    return name->equals("__literal16")
+        || name->equals("__const");
 #else
   // the section ".rodata.cst16" has literals referenced by the code for
   // floating-point negation and absolute value
-    return (name && name->equals(".rodata.cst16"));
+    return name->equals(".rodata")
+        || name->equals(".rodata.cst16");
 #endif
 }
 
@@ -391,6 +396,16 @@ void CodeObject::dump (bool bits)
             llvm::dbgs() << " [DATA] ";
         }
         llvm::dbgs() << " " << (void *)addr << ".." << (void *)(addr+sz) << "\n";
+        auto reloc = sect.getRelocatedSection();
+        if (reloc) {
+            llvm::dbgs << "      * relocated section = ";
+            auto relocName = reloc.getName();
+            if (relocName) {
+                llvm::dbgs << relocName << "\n";
+            } else {
+                llvm::dbgs << "<unknown>\n";
+            }
+        }
     }
 
   // print the symbols
