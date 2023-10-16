@@ -40,8 +40,10 @@ LLVM_BUILD_MODE := $(shell $(LLVM_CONFIG) --build-mode)
 HOST_OS := $(shell uname -s)
 ifeq ($(HOST_OS),Darwin)
 TARGET_FLAGS += -DOPSYS_DARWIN
+SYS_LIBS = -lz -lcurses
 else ifeq ($(HOST_OS),Linux)
 TARGET_FLAGS += -DOPSYS_LINUX
+SYS_LIBS = -lz -lrt -ldl -ltinfo -lpthread -lm
 endif
 
 # determine the supported targets
@@ -54,10 +56,10 @@ TARGET_FLAGS +=	-DENABLE_X86 -DARCH_AMD64
 endif
 
 CODEGEN_INCL =	$(SMLNJ_ROOT)/runtime/c-libs/codegen/include
-CXX =		clang++ --std=c++14
+CXX =		clang++ 
 CPP_FLAGS =	-I$(LLVM_DIR)/src/include -I$(CODEGEN_INCL)
 CXX_FLAGS =	-g $(LLVM_CXX_FLAGS)
-LD_FLAGS =	$(LLVM_LD_FLAGS) -lm -lz -lcurses
+LD_FLAGS =	$(LLVM_LD_FLAGS) $(SYS_LIBS)
 
 INCLUDES =	$(wildcard $(CODEGEN_INCL)/*hxx) $(wildcard $(CODEGEN_INCL)/asdl/*hxx)
 SRCS =		$(wildcard *.cxx)
