@@ -137,7 +137,7 @@ structure JSONRPCUtil : sig
 
     fun request method id = mkRPCObj [("method", STRING method), mkId id]
 
-    fun notifyWithParams method params=  mkRPCObj [
+    fun notifyWithParams method params = mkRPCObj [
 	    ("method", STRING method),
 	    ("params", ARRAY params)
 	  ]
