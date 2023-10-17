@@ -61,11 +61,11 @@ class AArch64CodeObject : public CodeObject {
     ~AArch64CodeObject () { }
 
   protected:
-    bool _includeDataSect (llvm::object::SectionRef &sect);
-    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code);
+    bool _includeDataSect (llvm::object::SectionRef const &sect) override;
+    void _resolveRelocs (CodeObject::Section &sect, uint8_t *code) override;
 };
 
-bool AArch64CodeObject::_includeDataSect (llvm::object::SectionRef &sect)
+bool AArch64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 {
     assert (sect.isData() && "expected data section");
 
@@ -172,9 +172,13 @@ private:
 // in the instruction encoding and and the patching depends on the relocation
 // type.
 //
-void AArch64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code)
+void AArch64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
-    for (auto reloc : sect.relocations()) {
+    if (sect.reloc == llvm::object::SectionRef()) {
+        // no relocations for this section
+        return;
+    }
+    for (auto reloc : sect.reloc.relocations()) {
       // the patch value; we ignore the relocation record if the symbol is not defined
         auto symb = reloc.getSymbol();
         if (sect.getObject()->symbols().end() != symb) {
@@ -241,33 +245,41 @@ class AMD64CodeObject : public CodeObject {
     ~AMD64CodeObject () { }
 
   protected:
-    bool _includeDataSect (llvm::object::SectionRef &sect);
-    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code);
+    bool _includeDataSect (llvm::object::SectionRef const &sect) override;
+    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) override;
 };
 
-bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef &sect)
+bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 {
     assert (sect.isData() && "expected data section");
 
-    auto name = sect.getName();
+    if (! name) {
+        return false;
+    }
 #if defined(OBJFF_MACHO)
   // the "__literal16" section has literals referenced by the code for
   // floating-point negation and absolute value, and the "__const" section
   // has the literals created for the Overflow exception packet
-    return (name && (name->equals("__literal16") || name->equals("__const")));
+    return name->equals("__literal16")
+        || name->equals("__const");
 #else
   // the section ".rodata.cst16" has literals referenced by the code for
   // floating-point negation and absolute value
-    return (name && name->equals(".rodata.cst16"));
+    return name->equals(".rodata")
+        || name->equals(".rodata.cst16");
 #endif
 }
 
 // for the x86-64, patching the code is fairly easy, because the offset
 // bytes are not embedded in the opcode part of the instruction.
 //
-void AMD64CodeObject::_resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code)
+void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
-    for (auto reloc : sect.relocations()) {
+    if (sect.reloc == nullptr) {
+        // no relocations for this section
+        return;
+    }
+    for (auto reloc : sect.reloc->relocations()) {
       // the patch value; we ignore the relocation record if the symbol is not defined
         auto symb = reloc.getSymbol();
         if (sect.getObject()->symbols().end() != symb) {
@@ -352,13 +364,51 @@ void CodeObject::getCode (uint8_t *code)
           /* copy the code into the object */
             uint8_t *base = code + sect.getAddress();
             memcpy (base, contents->data(), szb);
-          /* if the section is a text section, then resolve relocations */
-            if (sect.isText()) {
-                this->_resolveRelocs (sect, base);
+          /* resolve relocations */
+            this->_resolveRelocs (sect, base);
+        }
+    }
+
+}
+
+//! internal helper function for computing the amount of memory required
+//! for the code object.
+//
+void CodeObject::_computeSize ()
+{
+  // iterate over the sections in the object file and identify which ones
+  // we should include in the result.  We also compute the size of the
+  // concatenation of the sections.
+  //
+    size_t codeSzb = 0;
+    for (auto sect : this->_obj->sections()) {
+        if (this->_includeSect (sect)) {
+            this->_sects.push_back (Section(sect));
+            uint64_t addr = sect.getAddress();
+            uint64_t szb = sect.getSize();
+#ifndef OBJFF_ELF
+            assert (codeSzb <= addr && "overlapping sections");
+#endif
+            codeSzb = addr + szb;
+        }
+        else {
+            auto it = this->_relocationSect(sect);
+            if (it != this->_obj->section_end()) {
+                // `sect` contains relocation info for some other section
+                auto targetSect = *it;
+                for (auto s : this->_sects) {
+                    if (s.sect == targetSect) {
+                        s.setReloc(targetSect);
+                    }
+                }
             }
         }
     }
 
+  // check that we actual got something
+    assert (codeSzb > 0 && "no useful sections in object file");
+
+    this->_szb = codeSzb;
 }
 
 void CodeObject::dump (bool bits)
@@ -425,7 +475,7 @@ void CodeObject::dump (bool bits)
 
 }
 
-void CodeObject::_dumpRelocs (llvm::object::SectionRef &sect)
+void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
 {
     auto sectName = sect.getName();
 
@@ -456,32 +506,4 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef &sect)
         }
     }
 
-}
-
-//! internal helper function for computing the amount of memory required
-//! for the code object.
-//
-void CodeObject::_computeSize ()
-{
-  // iterate over the sections in the object file and identify which ones
-  // we should include in the result.  We also compute the size of the
-  // concatenation of the sections.
-  //
-    size_t codeSzb = 0;
-    for (auto sect : this->_obj->sections()) {
-        if (this->_includeSect (sect)) {
-            this->_sects.push_back (sect);
-            uint64_t addr = sect.getAddress();
-            uint64_t szb = sect.getSize();
-#ifndef OBJFF_ELF
-            assert (codeSzb <= addr && "overlapping sections");
-#endif
-            codeSzb = addr + szb;
-        }
-    }
-
-  // check that we actual got something
-    assert (codeSzb > 0 && "no useful sections in object file");
-
-    this->_szb = codeSzb;
 }

@@ -53,14 +53,54 @@ class CodeObject {
     /// the size of the heap-allocated code object in bytes
     size_t _szb;
 
+    /// information about a section to be included in the heap-allocated code object
+    //
+    struct Section {
+        llvm::object::SectionRef sect;          ///< the included section
+        llvm::object::SectionRef reloc;         ///< a section containing the relocation
+                                                ///  information for `sect`
+
+        llvm::Expected<llvm::StringRef> getName () const
+        {
+            return this->sect.getName ();
+        }
+        uint64_t getAddress () const { return this->sect.getAddress (); }
+        uint64_t getIndex () const { return this->sect.getIndex (); }
+        uint64_t getSize () const { return this->sect.getSize (); }
+        llvm::Expected<llvm::StringRef> getContents () const
+        {
+            return this->sect.getContents ();
+        }
+
+        llvm::iterator_range<llvm::object::relocation_iterator> relocations () const
+        {
+            return this->reloc.relocations ();
+        }
+        const llvm::object::ObjectFile *getObject () const
+        {
+            return this->sect.getObject ();
+        }
+
+        Section (llvm::object::SectionRef &s) : sect(s)
+        {
+            if (s.relocation_begin() != s.relocation_end()) {
+                this->reloc = s;
+            }
+        }
+
+        void setReloc (llvm::object::SectionRef const &r)
+        {
+            assert (this->reloc == llvm::object::SectionRef()
+                && "section already has a relocation section");
+            this->reloc = r;
+        }
+    };
+
     /// a vector of the sections that are to be included in the heap-allocated code
     /// object.
-    std::vector<llvm::object::SectionRef> _sects;
+    std::vector<Section> _sects;
 
-    /// for some object-file formats, relocation information is in separate sections;
-    /// this vector is a list of those sections
-    std::vector<llvm::object::SectionRef> _relocSects;
-
+    /// constuctor
     CodeObject (
 	target_info const *target,
 	std::unique_ptr<llvm::object::ObjectFile> objFile
@@ -82,14 +122,22 @@ class CodeObject {
 	return sect.isText() || (sect.isData() && this->_includeDataSect(sect));
     }
 
-    /// does a section contain relocation info for an included section?
+    /// check if a section contains relocation info for an included section?
+    /// \param sect  the section being checked
+    /// \return an iterator that references the section or `section_end()` for
+    ///         the object file
     //
-    bool _relocationSect (llvm::object::SectionRef const &sect)
+    llvm::object::section_iterator _relocationSect (llvm::object::SectionRef const &sect)
     {
         auto reloc = sect.getRelocatedSection();
-        return (reloc
-            && (*reloc != this->_obj->section_end())
-            && this->_includeSect(**reloc));
+        if (reloc
+        && (*reloc == this->_obj->section_end())
+        && this->_includeSect(**reloc)) {
+            return *reloc;
+        }
+        else {
+            return this->_obj->section_end();
+        }
     }
 
     /// should a data section be included in the code object?  This method
@@ -99,11 +147,11 @@ class CodeObject {
 
     /// helper function for resolving relocation records
     //
-    virtual void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) = 0;
+    virtual void _resolveRelocs (Section &sect, uint8_t *code) = 0;
 
     /// dump the relocation info for a section
     //
-    void _dumpRelocs (llvm::object::SectionRef &sect);
+    void _dumpRelocs (llvm::object::SectionRef const &sect);
 
 }; // CodeObject
 
