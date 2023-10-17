@@ -49,7 +49,7 @@ endif
 # determine the supported targets
 #
 ifneq (,$(findstring AArch64,$(LLVM_TARGETS)))
-TARGET_FLAGS +=	-DENABLE_ARM64 -ARCH_ARM64
+TARGET_FLAGS +=	-DENABLE_ARM64 -DARCH_ARM64
 endif
 ifneq (,$(findstring X86,$(LLVM_TARGETS)))
 TARGET_FLAGS +=	-DENABLE_X86 -DARCH_AMD64
