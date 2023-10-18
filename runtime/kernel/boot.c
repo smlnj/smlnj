@@ -67,6 +67,7 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char	*fname;
     int         rts_init = 0;
 
+/*DEBUG*/SilentLoad=TRUE;
     msp = AllocMLState (TRUE, heapParams);
 
 #ifdef HEAP_MONITOR
@@ -77,7 +78,7 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     InitFaultHandlers ();
     AllocGlobals (msp);
 
-  /* construct the list of files to be loaded */
+    /* construct the list of files to be loaded */
     BinFileList = BuildFileList (msp, bootlist, &max_boot_path_len);
 
   /* this space is ultimately wasted */

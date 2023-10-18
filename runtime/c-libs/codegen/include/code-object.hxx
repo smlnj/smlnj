@@ -67,6 +67,10 @@ class CodeObject {
         Section (llvm::object::SectionRef &s) : sect(s), separateRelocSec(false)
         { }
 
+        Section (llvm::object::SectionRef &s, llvm::object::SectionRef &r)
+	: sect(s), separateRelocSec(true), reloc(r)
+        { }
+
         llvm::Expected<llvm::StringRef> getName () const
         {
             return this->sect.getName ();
@@ -92,16 +96,7 @@ class CodeObject {
             return this->sect.getObject ();
         }
 
-        void setReloc (llvm::object::SectionRef const &r)
-        {
-            assert ((this->sect.relocation_begin() == this->sect.relocation_end())
-                && "section has relocation info");
-            assert ((! this->separateRelocSec)
-                && "section already has a relocation section");
-            this->separateRelocSec = true;
-            this->reloc = r;
-        }
-    };
+    }; // struct Section
 
     /// a vector of the sections that are to be included in the heap-allocated code
     /// object.

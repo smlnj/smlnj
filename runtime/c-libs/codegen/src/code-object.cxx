@@ -23,12 +23,16 @@ extern "C" {
 extern void Die (const char *, ...);
 }
 
-/* determine the object-file format that we use on this platform */
+/* determine the object-file format that we use on this platform and
+ * include the correct header file for relocation-record definitions
+ */
 #if defined(OPSYS_DARWIN)
 /* macOS uses MachO as it object-file format */
 #define OBJFF_MACHO
+#include "llvm/BinaryFormat/MachO.h"
 #elif defined(OPSYS_LINUX)
 #define OBJFF_ELF
+#include "llvm/BinaryFormat/ELF.h"
 #else
 #  error unknown operating system
 #endif
@@ -38,15 +42,6 @@ static llvm::ExitOnError exitOnErr;
 //==============================================================================
 
 #ifdef ENABLE_ARM64
-
-/* include the correct header file for relocation-record definitions */
-#if defined(OBJFF_MACHO)
-#include "llvm/BinaryFormat/MachO.h"
-#elif defined(OBJFF_ELF)
-#include "llvm/BinaryFormat/ELF.h"
-#else
-#  error unknown object-file format
-#endif
 
 //! specialized CodeObject class for AMD64 target
 //
@@ -285,11 +280,23 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 #else
             int32_t value = (int32_t)symb->getValue() - ((int32_t)offset + 4);
 #endif
-          // update the offset one byte at a time (since it is not guaranteed to
-          // be 32-bit aligned)
-            for (int i = 0;  i < 4;  i++) {
-                code[offset++] = value & 0xff;
-                value >>= 8;
+            switch (reloc.getType()) {
+#if defined(OBJFF_MACHO)
+	    case llvm::MACHO::X86_64_RELOC_BRANCH:
+#elif defined(OBJFF_ELF)
+            case llvm::ELF::R_X86_64_PC32:
+#endif
+                // update the offset one byte at a time (since it is not
+                // guaranteed to be 32-bit aligned)
+                for (int i = 0;  i < 4;  i++) {
+                    code[offset++] = value & 0xff;
+                    value >>= 8;
+                }
+                break;
+            default:
+                Die ("Unknown relocation-record type %d at %p\n",
+                    reloc.getType(), (void*)offset);
+                break;
             }
         }
     }
@@ -389,11 +396,12 @@ void CodeObject::_computeSize ()
             if (it != this->_obj->section_end()) {
                 // `sect` contains relocation info for some other section
                 auto targetSect = *it;
-                for (auto s : this->_sects) {
-                    if (s.sect == targetSect) {
-                        s.setReloc(targetSect);
-                    }
-                }
+		for (int i = 0;  i < this->_sects.size();  ++i) {
+		    if (this->_sects[i].sect == targetSect) {
+			this->_sects[i] = Section(targetSect, sect);
+			break;
+		    }
+		}
             }
         }
     }
