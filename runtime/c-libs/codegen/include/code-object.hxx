@@ -57,8 +57,15 @@ class CodeObject {
     //
     struct Section {
         llvm::object::SectionRef sect;          ///< the included section
-        llvm::object::SectionRef reloc;         ///< a section containing the relocation
-                                                ///  information for `sect`
+/* FIXME: once we switch to C++17, we can use a std::optional<SectionRef> */
+        bool separateRelocSec;                  ///< true if the relocation info for
+                                                ///  `sect` is in a separate section
+        llvm::object::SectionRef reloc;         ///< a separate section containing the
+                                                ///  relocation info for `sect`
+
+        /// constructor
+        Section (llvm::object::SectionRef &s) : sect(s), separateRelocSec(false)
+        { }
 
         llvm::Expected<llvm::StringRef> getName () const
         {
@@ -74,24 +81,24 @@ class CodeObject {
 
         llvm::iterator_range<llvm::object::relocation_iterator> relocations () const
         {
-            return this->reloc.relocations ();
+            if (this->separateRelocSec) {
+                return this->reloc.relocations ();
+            } else {
+                return this->sect.relocations ();
+            }
         }
         const llvm::object::ObjectFile *getObject () const
         {
             return this->sect.getObject ();
         }
 
-        Section (llvm::object::SectionRef &s) : sect(s)
-        {
-            if (s.relocation_begin() != s.relocation_end()) {
-                this->reloc = s;
-            }
-        }
-
         void setReloc (llvm::object::SectionRef const &r)
         {
-            assert (this->reloc == llvm::object::SectionRef()
+            assert ((this->sect.relocation_begin() == this->sect.relocation_end())
+                && "section has relocation info");
+            assert ((! this->separateRelocSec)
                 && "section already has a relocation section");
+            this->separateRelocSec = true;
             this->reloc = r;
         }
     };

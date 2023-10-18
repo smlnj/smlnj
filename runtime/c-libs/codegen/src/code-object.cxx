@@ -174,11 +174,7 @@ private:
 //
 void AArch64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
-    if (sect.reloc == llvm::object::SectionRef()) {
-        // no relocations for this section
-        return;
-    }
-    for (auto reloc : sect.reloc.relocations()) {
+    for (auto reloc : sect.relocations()) {
       // the patch value; we ignore the relocation record if the symbol is not defined
         auto symb = reloc.getSymbol();
         if (sect.getObject()->symbols().end() != symb) {
@@ -276,11 +272,7 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 //
 void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
-    if (sect.reloc == llvm::object::SectionRef()) {
-        // no relocations for this section
-        return;
-    }
-    for (auto reloc : sect.reloc.relocations()) {
+    for (auto reloc : sect.relocations()) {
       // the patch value; we ignore the relocation record if the symbol is not defined
         auto symb = reloc.getSymbol();
         if (sect.getObject()->symbols().end() != symb) {
