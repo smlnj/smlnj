@@ -246,13 +246,14 @@ class AMD64CodeObject : public CodeObject {
 
   protected:
     bool _includeDataSect (llvm::object::SectionRef const &sect) override;
-    void _resolveRelocs (llvm::object::SectionRef &sect, uint8_t *code) override;
+    void _resolveRelocs (CodeObject::Section &sect, uint8_t *code) override;
 };
 
 bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 {
     assert (sect.isData() && "expected data section");
 
+    auto name = sect.getName();
     if (! name) {
         return false;
     }
@@ -275,11 +276,11 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 //
 void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
-    if (sect.reloc == nullptr) {
+    if (sect.reloc == llvm::object::SectionRef()) {
         // no relocations for this section
         return;
     }
-    for (auto reloc : sect.reloc->relocations()) {
+    for (auto reloc : sect.reloc.relocations()) {
       // the patch value; we ignore the relocation record if the symbol is not defined
         auto symb = reloc.getSymbol();
         if (sect.getObject()->symbols().end() != symb) {
