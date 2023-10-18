@@ -282,7 +282,8 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 #endif
             switch (reloc.getType()) {
 #if defined(OBJFF_MACHO)
-	    case llvm::MACHO::X86_64_RELOC_BRANCH:
+	    case llvm::MachO::X86_64_RELOC_SIGNED:
+	    case llvm::MachO::X86_64_RELOC_BRANCH:
 #elif defined(OBJFF_ELF)
             case llvm::ELF::R_X86_64_PC32:
 #endif
