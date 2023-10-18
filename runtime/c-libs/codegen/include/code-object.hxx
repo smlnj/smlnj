@@ -138,7 +138,7 @@ class CodeObject {
     {
         auto reloc = sect.getRelocatedSection();
         if (reloc
-        && (*reloc == this->_obj->section_end())
+        && (*reloc != this->_obj->section_end())
         && this->_includeSect(**reloc)) {
             return *reloc;
         }
