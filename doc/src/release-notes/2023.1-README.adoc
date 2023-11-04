@@ -2,8 +2,9 @@
 :date: @DATE@
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
-:issue-base: https://github.com/smlnj/smlnj/issues/
-:legacy-issue-base: https://github.com/smlnj/legacy/issues/
+:issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
@@ -83,19 +84,18 @@ and resume the build.
 
 == Bugs
 
-Here is a list of tracked bugs fixed (or closed) with this release, please see the
-https://smlnj-gforge.cs.uchicago.edu/projects/smlnj-bugs[bug tracker]
-for more details.
+Here is a list of the issues that are fixed (or closed) with this release.
 
 [.buglist,cols="^1,<15",strips="none",options="header"]
 |=======
 | Issue
 | Description
-// | [.bugid]#@ID#
+| [.bugid]#276#
+| {issue-base}/276[`UTF8.getu` should validate that it's input is UTF-8]
+// | [.bugid]#@ID@#
 // | @DESCRIPTION@
 |=======
 
-// ***** include a list of unnumbered bugs here *****
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
