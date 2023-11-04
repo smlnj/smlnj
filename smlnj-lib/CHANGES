@@ -5,6 +5,14 @@ correspond to SML/NJ releases.
 Next Release
 -------------------
 
+[2023-11-04]
+        Reworked the `UTF8` structure to impose stricter validation of the
+        encodings.  Added the `Invalid` exception for when an invalid encoding
+        is encountered and replaced uses of the `Domain` exception with `Invalid`.
+        Also added the `size'` function for getting the number of UTF-8
+        characters in a substring.  These changes address GitHub issue 276
+        (`UTF8.getu` should validate that it's input is UTF-8).
+
 [2023-09-19]
 	Added modules for the representation of booleans, integers, and words
 	as hash-consed values to the HashCons library.
