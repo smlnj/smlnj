@@ -97,6 +97,7 @@ structure IntInfImp :> INT_INF = struct
           | digits => abstract (BI { negative = sign, digits = digits })
     end
 
+    (* split a shift amount into the number of digits and bits *)
     fun shiftAmount w =
 	{ bytes = WordImp.div (w, CoreIntInf.baseBits),
 	  bits = WordImp.mod (w, CoreIntInf.baseBits) }

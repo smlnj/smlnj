@@ -178,7 +178,7 @@ structure NewLiterals : LITERALS =
 
 (* 64BIT: workaround for compiler bug *)
     val minInt32 = Word64.toLargeIntX 0wxFFFFFFFF80000000
-    val maxInt32 = Word64.toLargeInt 0wx80000000
+    val maxInt32 = Word64.toLargeInt 0wx7FFFFFFF
 
   (* encode tagged integers *)
     fun encINT (buf, n) = if (0 <= n) andalso (n <= 10)

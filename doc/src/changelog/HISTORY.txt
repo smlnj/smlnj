@@ -7,6 +7,7 @@ The Fellowship of SML/NJ
 :tabsize: 8
 :note-caption: UPDATE
 :issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
 
 This file documents changes to the *Standard ML of New Jersey* system
 since January of 2014 (Versions after 110.78).  Earlier changes are
@@ -106,6 +107,17 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 
 //====================================================================
 == Recent updates
+
+//--------------------------------------------------------------------
+[2023/11/21]::
++
+Fix bug in `new-literals.sml`, where the integer value 2^31^ was being
+stored as a 32-bit signed integer in the literal table, instead of as
+a 64-bit signed integer.  This change fixes {legacy-issue-base}/287[Legacy
+Issue #287 (The word literal `0wx80000000` is incorrectly converted to
+`0wx7FFFFFFF80000000`)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2023/10/13]::

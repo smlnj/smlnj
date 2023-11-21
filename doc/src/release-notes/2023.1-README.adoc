@@ -105,6 +105,7 @@ repository):
 * {legacy-issue-base}/258[Thompson NFA regex engine doesn’t advance stream position when matching]
 * {legacy-issue-base}/278[`CharBuffer.addSlice` does not properly handle starting offsets]
 * {legacy-issue-base}/279[`HashSetFn`'s calculation of `maxSize` can cause `Overflow` during functor instantiation]
+* {legacy-issue-base}/287[The word literal `0wx80000000` is incorrectly converted to `0wx7FFFFFFF80000000`]
 --
 
 == Supported systems
