@@ -155,6 +155,9 @@ class CodeObject {
     //
     void _dumpRelocs (llvm::object::SectionRef const &sect);
 
+    /// convert relocation types to strings
+    virtual std::string _relocTypeToString (uint64_t ty) = 0;
+
 }; // CodeObject
 
 #endif /// _CODE_OBJECT_HXX_
