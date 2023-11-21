@@ -209,8 +209,9 @@ void AArch64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code
                 instr.patchB26 (value);
                 break;
             default:
-                Die ("Unknown relocation-record type %d at %p\n",
-                    reloc.getType(), (void*)offset);
+                Die ("Unsupported relocation-record type %s at %p\n",
+                    this->_relocTypeToString(reloc.getType()).c_str(),
+                    (void*)offset);
                 break;
             }
           // update the instruction with the patched version
@@ -455,7 +456,7 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
                 break;
             default:
                 Die ("Unsupported relocation-record type %s at %p\n",
-                    this->_relocTypeName(reloc.getType()).c_str(),
+                    this->_relocTypeToString(reloc.getType()).c_str(),
                     (void*)offset);
                 break;
             }
@@ -508,7 +509,6 @@ std::string AMD64CodeObject::_relocTypeToString (uint64_t ty)
     case llvm::ELF::R_X86_64_IRELATIVE: return "R_IRELATIVE (37)";
     case llvm::ELF::R_X86_64_GOTPCRELX: return "R_GOTPCRELX (41)";
     case llvm::ELF::R_X86_64_REX_GOTPCRELX: return "R_REX_GOTPCRELX (42)";
-    }
 #elif defined(OBJFF_MACHO)
     case llvm::MachO::X86_64_RELOC_UNSIGNED: return "RELOC_UNSIGNED (0)";
     case llvm::MachO::X86_64_RELOC_SIGNED: return "RELOC_SIGNED (1)";
@@ -522,6 +522,7 @@ std::string AMD64CodeObject::_relocTypeToString (uint64_t ty)
     case llvm::MachO::X86_64_RELOC_TLV: return "RELOC_TLV (9)";
 #endif
     default: return std::to_string(ty);
+    }
 }
 
 #endif // ENABLE_X86
