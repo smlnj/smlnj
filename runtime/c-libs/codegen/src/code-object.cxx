@@ -721,6 +721,7 @@ static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
         case llvm::object::SymbolRef::ST_File: return "File";
         case llvm::object::SymbolRef::ST_Function: return "Function";
         case llvm::object::SymbolRef::ST_Other: return "Other";
+        default: return "<unknown type>";
         }
     } else {
         return "<unknown type>";

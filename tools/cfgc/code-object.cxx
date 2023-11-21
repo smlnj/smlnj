@@ -211,7 +211,9 @@ llvm::dbgs() << llvm::format_hex(instr.value(), 10) << " [PAGEOFF12]\n";
 llvm::dbgs() << llvm::format_hex(instr.value(), 10) << " [BRANCH26]\n";
                 break;
             default:
-                assert (false && "unknown relocation-record type");
+                llvm::dbgs() << "!!! Unsupported relocation-record type "
+                    << this->_relocTypeToString(reloc.getType())
+                    << "at " << (void*)offset << "\n";
                 break;
             }
           // update the instruction with the patched version
@@ -457,7 +459,7 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
                 break;
             default:
                 llvm::dbgs() << "!!! Unsupported relocation-record type "
-                    << this->_relocTypeName(reloc.getType())
+                    << this->_relocTypeToString(reloc.getType())
                     << "at " << (void*)offset << "\n";
                 break;
             }
@@ -722,6 +724,7 @@ static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
         case llvm::object::SymbolRef::ST_File: return "File";
         case llvm::object::SymbolRef::ST_Function: return "Function";
         case llvm::object::SymbolRef::ST_Other: return "Other";
+        default: return "<unknown type>";
         }
     } else {
         return "<unknown type>";
