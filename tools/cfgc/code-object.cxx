@@ -29,6 +29,7 @@
 #elif defined(OPSYS_LINUX)
 #define OBJFF_ELF
 #include "llvm/BinaryFormat/ELF.h"
+#include "llvm/Object/ELFObjectFile.h"
 #else
 #  error unknown operating system
 #endif
@@ -54,6 +55,44 @@ static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
         return "<unknown type>";
     }
 }
+
+//==============================================================================
+
+/// relocation info
+struct Relocation {
+/* TODO: define factory
+    std::option<Relocation> create (CodeObject::Section &sect, llvm::object::RelocationRef &rr);
+ * that returns NONE when the symbol is not defined.
+ */
+
+    Relocation (llvm::object::SectionRef const &sect, llvm::object::RelocationRef const &rr)
+    : type(rr.getType()), addr(rr.getOffset())
+    {
+#if defined(OBJFF_ELF)
+        // for ELF files, the relocation value is stored as an "addend"
+        auto elfReloc = llvm::object::ELFRelocationRef(reloc);
+        this->value = exitOnErr(elfReloc.getAddend());
+        // adjust the offset to be object-file relative
+        this->addr += sect.getAddress();
+#else
+        auto symbIt = rr.getSymbol();
+        if (symbIt != rr.getObject()->symbols().end()) {
+#if (LLVM_VERSION_MAJOR > 10) /* getValue returns an Expected<> value as of LLVM 11.x */
+            this->value = (int64_t)exitOnErr(symbIt->getValue());
+#else
+            this->value = (int64_t)(symbIt->getValue());
+#endif
+        }
+#endif
+    }
+
+    uint64_t type;      //!< the type of relocation record
+    uint64_t addr;      //!< the address of the relocation relative to the start of the
+                        //!  object file
+    int64_t value;      //!< the value of the relocation
+
+}; // struct Relocation
+
 
 //==============================================================================
 
@@ -187,25 +226,19 @@ private:
 void AArch64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
 llvm::dbgs() << "## RELOCATIONS\n";
-    for (auto reloc : sect.relocations()) {
-      // the patch value; we ignore the relocation record if the symbol is not defined
-        auto symb = reloc.getSymbol();
-        if (sect.getObject()->symbols().end() != symb) {
-          // the address to be patched (relative to the beginning of the object file)
-            auto offset = reloc.getOffset();
-          // the patch value.  PC relative addressing on the ARM is compute w.r.t. the
-          // instruction (*not* the following one).
-          //
-#if (LLVM_VERSION_MAJOR > 10) /* getValue returns an Expected<> value as of LLVM 11.x */
-            int32_t value = (int32_t)exitOnErr(symb->getValue()) - (int32_t)offset;
-#else
-            int32_t value = (int32_t)symb->getValue() - (int32_t)offset;
-#endif
-          // get the instruction to be patched
-            AArch64InsnWord instr(*(uint32_t *)(code + offset));
-llvm::dbgs() << "### " << llvm::format_hex_no_prefix(offset, 4) << ": "
+    for (auto rr : sect.relocations()) {
+        Relocation reloc(sect.sect, rr);
+        // the patch value; we ignore the relocation record if the symbol is not defined
+        if (sect.getObject()->symbols().end() != rr.getSymbol()) {
+            // the patch value.  PC relative addressing on the ARM is compute w.r.t. the
+            // address of the instruction (*not* the following one).
+            //
+            int32_t value = (int32_t)reloc.value - (int32_t)reloc.addr;
+            // get the instruction to be patched
+            AArch64InsnWord instr(*(uint32_t *)(code + reloc.addr));
+llvm::dbgs() << "### " << llvm::format_hex_no_prefix(reloc.addr, 4) << ": "
 << "value = " << value << "; " << llvm::format_hex(instr.value(), 10) << " ==> ";
-            switch (reloc.getType()) {
+            switch (reloc.type) {
 #if defined(OBJFF_MACHO)
             case llvm::MachO::ARM64_RELOC_PAGE21:
 #elif defined(OBJFF_ELF)
@@ -232,12 +265,12 @@ llvm::dbgs() << llvm::format_hex(instr.value(), 10) << " [BRANCH26]\n";
                 break;
             default:
                 llvm::dbgs() << "!!! Unsupported relocation-record type "
-                    << this->_relocTypeToString(reloc.getType())
-                    << "at " << (void*)offset << "\n";
+                    << this->_relocTypeToString(reloc.type)
+                    << "at " << (void*)reloc.addr << "\n";
                 break;
             }
           // update the instruction with the patched version
-            *(uint32_t *)(code + offset) = instr.value();
+            *(uint32_t *)(code + reloc.addr) = instr.value();
         }
     }
 llvm::dbgs() << "## END RELOCATIONS\n";
@@ -450,20 +483,14 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 //
 void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
-    for (auto reloc : sect.relocations()) {
-      // the patch value; we ignore the relocation record if the symbol is not defined
-        auto symb = reloc.getSymbol();
-        if (sect.getObject()->symbols().end() != symb) {
-          // the address to be patched (relative to the beginning of the file)
-            auto offset = reloc.getOffset();
-          // the patch value; we compute the offset relative to the address of
-          // byte following the patched location.
-#if (LLVM_VERSION_MAJOR > 10) /* getValue returns an Expected<> value as of LLVM 11.x */
-            int32_t value = (int32_t)exitOnErr(symb->getValue()) - ((int32_t)offset + 4);
-#else
-            int32_t value = (int32_t)symb->getValue() - ((int32_t)offset + 4);
-#endif
-            switch (reloc.getType()) {
+    for (auto rr : sect.relocations()) {
+        Relocation reloc(sect, rr);
+        // the patch value; we ignore the relocation record if the symbol is not defined
+        if (sect.getObject()->symbols().end() != rr.getSymbol()) {
+            // the patch value; we compute the offset relative to the address of
+            // byte following the patched location.
+            int32_t value = (int32_t)reloc.value - (int32_t)reloc.addr + 4;
+            switch (reloc.type) {
 #if defined(OBJFF_MACHO)
 	    case llvm::MachO::X86_64_RELOC_SIGNED:
 	    case llvm::MachO::X86_64_RELOC_BRANCH:
@@ -752,27 +779,22 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
         << (this->_includeSect(sect) ? "INCLUDED " : "")
         << (sectName ? *sectName : "<unknown section>") << "\n";
 
-    for (auto reloc : sect.relocations()) {
-        auto offset = reloc.getOffset();
-        auto symbIt = reloc.getSymbol();
+    for (auto r : sect.relocations()) {
+        Relocation reloc(sect, r);
+        auto symbIt = r.getSymbol();
         if (symbIt != this->_obj->symbols().end()) {
             auto symb = *symbIt;
             llvm::dbgs() << "  " << _symbolTypeName(symb) << " ";
             auto name = symb.getName();
             if (! name.takeError()) {
                 llvm::dbgs() << *name
-                    << ": addr = " << llvm::format_hex(exitOnErr(symb.getAddress()), 10)
-#if (LLVM_VERSION_MAJOR > 10) /* getValue returns an Expected<> value as of LLVM 11.x */
-                    << "; value = "  << llvm::format_hex(exitOnErr(symb.getValue()), 10)
-#else
-                    << "; value = "  << llvm::format_hex(symb.getValue(), 10)
-#endif
-                    << "; offset = " << llvm::format_hex(offset, 10)
-                    << "; type = " << this->_relocTypeToString(reloc.getType()) << "\n";
+                    << ": value = "  << llvm::format_hex(reloc.value, 10)
+                    << "; addr = " << llvm::format_hex(reloc.addr, 10)
+                    << "; type = " << this->_relocTypeToString(reloc.type) << "\n";
             } else {
-                llvm::dbgs() << "<unknown symbol>: offset = "
-                    << llvm::format_hex(offset, 10)
-                    << "; type = " << this->_relocTypeToString(reloc.getType()) << "\n";
+                llvm::dbgs() << "<unknown symbol>: addr = "
+                    << llvm::format_hex(reloc.addr, 10)
+                    << "; type = " << this->_relocTypeToString(reloc.type) << "\n";
             }
         }
     }
