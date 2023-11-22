@@ -70,7 +70,7 @@ struct Relocation {
     {
 #if defined(OBJFF_ELF)
         // for ELF files, the relocation value is stored as an "addend"
-        auto elfReloc = llvm::object::ELFRelocationRef(reloc);
+        auto elfReloc = llvm::object::ELFRelocationRef(rr);
         this->value = exitOnErr(elfReloc.getAddend());
         // adjust the offset to be object-file relative
         this->addr += sect.getAddress();
@@ -484,7 +484,7 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 {
     for (auto rr : sect.relocations()) {
-        Relocation reloc(sect, rr);
+        Relocation reloc(sect.sect, rr);
         // the patch value; we ignore the relocation record if the symbol is not defined
         if (sect.getObject()->symbols().end() != rr.getSymbol()) {
             // the patch value; we compute the offset relative to the address of
@@ -499,6 +499,7 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 #endif
                 // update the offset one byte at a time (since it is not
                 // guaranteed to be 32-bit aligned)
+                auto offset = reloc.addr;
                 for (int i = 0;  i < 4;  i++) {
                     code[offset++] = value & 0xff;
                     value >>= 8;
@@ -506,8 +507,8 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
                 break;
             default:
                 llvm::dbgs() << "!!! Unsupported relocation-record type "
-                    << this->_relocTypeToString(reloc.getType())
-                    << "at " << (void*)offset << "\n";
+                    << this->_relocTypeToString(reloc.type)
+                    << "at " << (void*)reloc.addr << "\n";
                 break;
             }
         }
