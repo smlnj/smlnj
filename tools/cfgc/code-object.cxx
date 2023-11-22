@@ -625,7 +625,7 @@ void CodeObject::_computeSize ()
   // we should include in the result.  We also compute the size of the
   // concatenation of the sections.
   //
-    uint64_t codeSzb = 0;
+    uint64_t codeSzB = 0;
     for (auto sect : this->_obj->sections()) {
         if (this->_includeSect (sect)) {
             uint64_t align = sect.getAlignment();
@@ -633,16 +633,16 @@ void CodeObject::_computeSize ()
 #ifdef OBJFF_ELF
             // ELF object files always have zero as the section address
             assert (sect.getAddress() == 0 && "section address on zero");
-            // align the codeSzb (we assume `align` is a power of 2)
-            codeSzb = (codeSzB + align - 1) & ~(align - 1);
+            // align the codeSzB (we assume `align` is a power of 2)
+            codeSzB = (codeSzB + align - 1) & ~(align - 1);
 #else
             // align the section address (we assume `align` is a power of 2)
             uint64_t addr = (sect.getAddress() + align-1) & ~(align-1);
-            assert (codeSzb <= addr && "overlapping sections");
-            codeSzb = addr;
+            assert (codeSzB <= addr && "overlapping sections");
+            codeSzB = addr;
 #endif
-            this->_sects.push_back (Section(sect, codeSzb));
-            codeSzb += szb;
+            this->_sects.push_back (Section(sect, codeSzB));
+            codeSzB += szb;
         }
         else {
             // check to see if the section is a relocation section
@@ -662,9 +662,9 @@ void CodeObject::_computeSize ()
     }
 
   // check that we actual got something
-    assert (codeSzb > 0 && "no useful sections in object file");
+    assert (codeSzB > 0 && "no useful sections in object file");
 
-    this->_szb = codeSzb;
+    this->_szb = codeSzB;
 }
 
 void CodeObject::dump (bool bits)
