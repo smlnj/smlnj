@@ -39,6 +39,26 @@ extern void Die (const char *, ...);
 
 static llvm::ExitOnError exitOnErr;
 
+// helper to get the type of a symbol ref as a string
+//
+static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
+{
+    auto ty = symb.getType();
+    if (! ty.takeError()) {
+        switch (*ty) {
+        case llvm::object::SymbolRef::ST_Unknown: return "Unknown";
+        case llvm::object::SymbolRef::ST_Data: return "Data";
+        case llvm::object::SymbolRef::ST_Debug: return "Debug";
+        case llvm::object::SymbolRef::ST_File: return "File";
+        case llvm::object::SymbolRef::ST_Function: return "Function";
+        case llvm::object::SymbolRef::ST_Other: return "Other";
+        default: return "<unknown type>";
+        }
+    } else {
+        return "<unknown type>";
+    }
+}
+
 //==============================================================================
 
 #ifdef ENABLE_ARM64
@@ -583,10 +603,10 @@ void CodeObject::getCode (uint8_t *code)
         else {
             auto szb = contents->size();
             assert (sect.getSize() == szb && "inconsistent sizes");
-          /* copy the code into the object */
-            uint8_t *base = code + sect.getAddress();
+            /* copy the code into the object */
+            uint8_t *base = code + sect.offset;
             memcpy (base, contents->data(), szb);
-          /* resolve relocations */
+            /* resolve relocations */
             this->_resolveRelocs (sect, base);
         }
     }
@@ -602,25 +622,35 @@ void CodeObject::_computeSize ()
   // we should include in the result.  We also compute the size of the
   // concatenation of the sections.
   //
-    size_t codeSzb = 0;
+    uint64_t codeSzb = 0;
     for (auto sect : this->_obj->sections()) {
         if (this->_includeSect (sect)) {
-            this->_sects.push_back (Section(sect));
-            uint64_t addr = sect.getAddress();
+            uint64_t align = sect.getAlignment();
             uint64_t szb = sect.getSize();
-#ifndef OBJFF_ELF
+#ifdef OBJFF_ELF
+            // ELF object files always have zero as the section address
+            assert (sect.getAddress() == 0 && "section address on zero");
+            // align the codeSzb (we assume `align` is a power of 2)
+            codeSzb = (codeSzB + align - 1) & ~(align - 1);
+#else
+            // align the section address (we assume `align` is a power of 2)
+            uint64_t addr = (sect.getAddress() + align-1) & ~(align-1);
             assert (codeSzb <= addr && "overlapping sections");
+            codeSzb = addr;
 #endif
-            codeSzb = addr + szb;
+            this->_sects.push_back (Section(sect, codeSzb));
+            codeSzb += szb;
         }
         else {
+            // check to see if the section is a relocation section
             auto it = this->_relocationSect(sect);
             if (it != this->_obj->section_end()) {
                 // `sect` contains relocation info for some other section
                 auto targetSect = *it;
 		for (int i = 0;  i < this->_sects.size();  ++i) {
 		    if (this->_sects[i].sect == targetSect) {
-			this->_sects[i] = Section(targetSect, sect);
+			this->_sects[i] =
+                            Section(targetSect, this->_sects[i].offset, sect);
 			break;
 		    }
 		}
@@ -682,7 +712,8 @@ void CodeObject::dump (bool bits)
         auto name = sym.getName();
         auto addr = sym.getAddress();
         if (name && addr) {
-            llvm::dbgs() << "  " << *name << " @ " << (void *)*addr << "\n";
+            llvm::dbgs() << "  " << _symbolTypeName(sym) << " "
+                << *name << " @ " << (void *)*addr << "\n";
         }
     }
 
@@ -710,24 +741,6 @@ void CodeObject::dump (bool bits)
 
 }
 
-static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
-{
-    auto ty = symb.getType();
-    if (! ty.takeError()) {
-        switch (*ty) {
-        case llvm::object::SymbolRef::ST_Unknown: return "Unknown";
-        case llvm::object::SymbolRef::ST_Data: return "Data";
-        case llvm::object::SymbolRef::ST_Debug: return "Debug";
-        case llvm::object::SymbolRef::ST_File: return "File";
-        case llvm::object::SymbolRef::ST_Function: return "Function";
-        case llvm::object::SymbolRef::ST_Other: return "Other";
-        default: return "<unknown type>";
-        }
-    } else {
-        return "<unknown type>";
-    }
-}
-
 void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
 {
     auto sectName = sect.getName();
@@ -738,8 +751,9 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
 
     for (auto reloc : sect.relocations()) {
         auto offset = reloc.getOffset();
-        if (reloc.getSymbol() != this->_obj->symbols().end()) {
-            auto symb = *(reloc.getSymbol());
+        auto symbIt = reloc.getSymbol();
+        if (symbIt != this->_obj->symbols().end()) {
+            auto symb = *symbIt;
             llvm::dbgs() << "  " << _symbolTypeName(symb) << " ";
             auto name = symb.getName();
             if (! name.takeError()) {

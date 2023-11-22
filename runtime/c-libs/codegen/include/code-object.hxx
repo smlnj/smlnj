@@ -53,22 +53,26 @@ class CodeObject {
     /// the size of the heap-allocated code object in bytes
     size_t _szb;
 
-    /// information about a section to be included in the heap-allocated code object
+    /// information about a section to be included in the heap-allocated
+    /// code object
     //
     struct Section {
-        llvm::object::SectionRef sect;          ///< the included section
+        llvm::object::SectionRef sect;  ///< the included section
 /* FIXME: once we switch to C++17, we can use a std::optional<SectionRef> */
-        bool separateRelocSec;                  ///< true if the relocation info for
-                                                ///  `sect` is in a separate section
-        llvm::object::SectionRef reloc;         ///< a separate section containing the
-                                                ///  relocation info for `sect`
+        bool separateRelocSec;          ///< true if the relocation info for
+                                        ///  `sect` is in a separate section
+        llvm::object::SectionRef reloc; ///< a separate section containing the
+                                        ///  relocation info for `sect`
+        uint64_t offset;                ///< offset of this section in the
+                                        ///  code object (set by _computeSizes)
 
         /// constructor
-        Section (llvm::object::SectionRef &s) : sect(s), separateRelocSec(false)
+        Section (llvm::object::SectionRef &s, uint64_t off)
+        : sect(s), separateRelocSec(false), offset(off)
         { }
 
-        Section (llvm::object::SectionRef &s, llvm::object::SectionRef &r)
-	: sect(s), separateRelocSec(true), reloc(r)
+        Section (llvm::object::SectionRef &s, uint64_t off, llvm::object::SectionRef &r)
+	: sect(s), separateRelocSec(true), reloc(r), offset(off)
         { }
 
         llvm::Expected<llvm::StringRef> getName () const
@@ -76,6 +80,7 @@ class CodeObject {
             return this->sect.getName ();
         }
         uint64_t getAddress () const { return this->sect.getAddress (); }
+        uint64_t getAlignment () const { return this->sect.getAlignment (); }
         uint64_t getIndex () const { return this->sect.getIndex (); }
         uint64_t getSize () const { return this->sect.getSize (); }
         llvm::Expected<llvm::StringRef> getContents () const

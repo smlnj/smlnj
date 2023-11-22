@@ -9,6 +9,7 @@
 ///
 
 #include <string>
+#include <vector>
 #include <iostream>
 #include <cstdlib>
 
@@ -21,7 +22,7 @@ extern "C" {
 void Die (const char *, ...) { }
 } // extern "C"
 
-void usage ()
+[[noreturn]] void usage ()
 {
     std::cerr << "usage: cfgc [ -o | -S | -c ] [ --emit-llvm ] [ --bits ] [ --target <target> ] <pkl-file>\n";
     exit (1);
@@ -35,27 +36,28 @@ int main (int argc, char **argv)
     std::string src = "";
     std::string targetArch = HOST_ARCH;
 
-    if (argc < 2) {
+    std::vector<std::string> args(argv+1, argv+argc);
+
+    if (args.empty()) {
 	usage();
     }
 
-    for (int i = 1;  i < argc;  i++) {
-	if (argv[i][0] == '-') {
-	    std::string flag(argv[i]);
-	    if (flag == "-o") {
+    for (int i = 0;  i < args.size();  i++) {
+	if (args[i][0] == '-') {
+	    if (args[i] == "-o") {
 		out = output::ObjFile;
-	    } else if (flag == "-S") {
+	    } else if (args[i] == "-S") {
 		out = output::AsmFile;
-	    } else if (flag == "-c") {
+	    } else if (args[i] == "-c") {
 		out = output::Memory;
-	    } else if (flag == "--emit-llvm") {
+	    } else if (args[i] == "--emit-llvm") {
 		emitLLVM = true;
-	    } else if (flag == "--bits") {
+	    } else if (args[i] == "--bits") {
 		dumpBits = true;
-	    } else if (flag == "--target") {
+	    } else if (args[i] == "--target") {
 		i++;
-		if (i < argc) {
-		    targetArch = argv[i];
+		if (i < args.size()) {
+		    targetArch = args[i];
 		} else {
 		    usage();
 		}
@@ -63,13 +65,15 @@ int main (int argc, char **argv)
 		usage();
 	    }
 	}
-	else if ((i < argc-1) || (src != "")) {
-	    std::cerr << "usage: codegen [ -o | -S | -c ] [ --emit-llvm ] [ --bits ] <pkl-file>\n";
-	    exit (1);
+	else if (i < args.size()-1) {
+            usage();
 	}
-	else {
-	    src = argv[i];
+	else { // last argument
+	    src = args[i];
 	}
+    }
+    if (src.empty()) {
+        usage();
     }
 
     llvm::InitializeAllTargetInfos();
