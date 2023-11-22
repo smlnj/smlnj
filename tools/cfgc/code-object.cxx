@@ -499,9 +499,8 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 #endif
                 // update the offset one byte at a time (since it is not
                 // guaranteed to be 32-bit aligned)
-                auto offset = reloc.addr;
                 for (int i = 0;  i < 4;  i++) {
-                    code[offset++] = value & 0xff;
+                    code[reloc.addr+i] = value & 0xff;
                     value >>= 8;
                 }
                 break;
