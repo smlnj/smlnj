@@ -517,8 +517,8 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
 
 std::string AMD64CodeObject::_relocTypeToString (uint64_t ty)
 {
-#if defined(OBJFF_ELF)
     switch (ty) {
+#if defined(OBJFF_ELF)
     case llvm::ELF::R_X86_64_NONE: return "R_NONE (0)";
     case llvm::ELF::R_X86_64_64: return "R_64 (1)";
     case llvm::ELF::R_X86_64_PC32: return "R_PC32 (2)";
