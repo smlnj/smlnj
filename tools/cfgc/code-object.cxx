@@ -491,11 +491,11 @@ void AMD64CodeObject::_resolveRelocs (CodeObject::Section &sect, uint8_t *code)
             // byte following the patched location.
             int32_t value = (int32_t)reloc.value - (int32_t)reloc.addr + 4;
             switch (reloc.type) {
-#if defined(OBJFF_MACHO)
+#if defined(OBJFF_ELF)
+            case llvm::ELF::R_X86_64_PC32:
+#elif defined(OBJFF_MACHO)
 	    case llvm::MachO::X86_64_RELOC_SIGNED:
 	    case llvm::MachO::X86_64_RELOC_BRANCH:
-#elif defined(OBJFF_ELF)
-            case llvm::ELF::R_X86_64_PC32:
 #endif
                 // update the offset one byte at a time (since it is not
                 // guaranteed to be 32-bit aligned)
