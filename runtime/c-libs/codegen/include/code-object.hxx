@@ -101,7 +101,7 @@ public:
         }
     }
 
-    const CodeObject *codeObject () const { return this->_objFile; }
+    CodeObject *codeObject () const { return this->_objFile; }
 
     uint64_t offset () const { return this->_offset; }
 
