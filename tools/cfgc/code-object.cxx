@@ -199,7 +199,7 @@ void CodeObject::getCode (uint8_t *code)
             uint8_t *base = code + sect.offset();
             memcpy (base, contents->data(), szb);
             /* resolve relocations */
-            this->_resolveRelocsForSection (sect, base);
+            this->_resolveRelocsForSection (sect, code);
         }
     }
 

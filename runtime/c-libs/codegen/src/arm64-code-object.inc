@@ -23,7 +23,7 @@ class AArch64CodeObject : public CodeObject {
 
   protected:
     bool _includeDataSect (llvm::object::SectionRef const &sect) override;
-    void _resolveRelocs (Section const &sect, uint8_t *code) override;
+    void _resolveRelocsForSection (Section const &sect, uint8_t *code) override;
     std::string _relocTypeToString (uint64_t ty) override;
 };
 
@@ -134,7 +134,7 @@ private:
 // in the instruction encoding and and the patching depends on the relocation
 // type.
 //
-void AArch64CodeObject::_resolveRelocs (Section const &sect, uint8_t *code)
+void AArch64CodeObject::_resolveRelocsForSection (Section const &sect, uint8_t *code)
 {
     for (auto rr : sect.relocations()) {
         Relocation reloc(sect, rr);
