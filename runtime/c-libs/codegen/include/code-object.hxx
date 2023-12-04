@@ -145,8 +145,10 @@ public:
     /// return the size of the code in bytes
     size_t size() const { return this->_szb; }
 
-    /// copy the code into the specified memory, which is assumed to be this->size()
-    /// bytes
+    /// \brief copy the code into the given memory buffer while applying the
+    ///        relocation patches.
+    /// \param code  points to the destination address for the code; this memory
+    ///              is assumed to be at least this->size() bytes.
     void getCode (unsigned char *code);
 
     /// dump information about the code object to the LLVM debug stream.
@@ -235,7 +237,7 @@ public:
 
     /// helper function for resolving relocation records
     //
-    virtual void _resolveRelocs (Section const &sect, uint8_t *code) = 0;
+    virtual void _resolveRelocsForSection (Section const &sect, uint8_t *code) = 0;
 
     /// dump the relocation info for a section
     //
