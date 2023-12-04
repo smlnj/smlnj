@@ -56,7 +56,7 @@ TARGET_FLAGS +=	-DENABLE_X86 -DARCH_AMD64
 endif
 
 CODEGEN_INCL =	$(SMLNJ_ROOT)/runtime/c-libs/codegen/include
-CXX =		clang++ 
+CXX =		clang++
 CPP_FLAGS =	-I$(LLVM_DIR)/src/include -I$(CODEGEN_INCL)
 CXX_FLAGS =	-g $(LLVM_CXX_FLAGS)
 LD_FLAGS =	$(LLVM_LD_FLAGS) $(SYS_LIBS)
@@ -69,6 +69,11 @@ $(TARGET):	$(OBJS)
 	clang++ -o $(TARGET) $(LD_FLAGS) $(OBJS) $(LLVM_LIBS)
 
 %.o: %.cxx $(INCLUDES)
+	$(CXX) -c -DHOST_ARCH="\"$(HOST_ARCH)\"" $(CPP_FLAGS) $(CXX_FLAGS) $(TARGET_FLAGS) $<
+
+code-object.o:  code-object.cxx \
+                amd64-code-object.inc arm64-code-object.inc \
+                $(INCLUDES)
 	$(CXX) -c -DHOST_ARCH="\"$(HOST_ARCH)\"" $(CPP_FLAGS) $(CXX_FLAGS) $(TARGET_FLAGS) $<
 
 .PHONY:		install

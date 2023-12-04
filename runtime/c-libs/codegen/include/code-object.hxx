@@ -19,6 +19,112 @@
 
 struct target_info;
 
+//==============================================================================
+
+/// \brief A representation of a relocation record, where we have normalized
+/// the information based on the conventions for the object-file format
+/// being used.
+///
+/// When patching the generated object code, we need to take both the object-file
+/// format (OFF) and architecture into account.  This type is used to abstract over
+/// the OFF into account.  The architecture-specific stuff is in the `CodeObject`
+/// subclasses.
+//
+struct Relocation {
+/* TODO: replace constructor with factory
+    std::option<Relocation> create (Section &sect, llvm::object::RelocationRef &rr);
+ * that returns NONE when the symbol is not defined.
+ */
+
+    /// \brief constructor
+    /// \param sect  information about the section that the record applies to
+    /// \param rr    the LLVM relocation-record reference
+    Relocation (struct Section const &sect, llvm::object::RelocationRef const &rr);
+
+    uint64_t type;      ///< the type of relocation record (OFF and architecture
+                        ///  specific)
+    uint64_t addr;      ///< the address of the relocation relative to the start
+                        ///  of the object file.  This offset accounts for the
+                        ///  start of the section w.r.t. the start of the code
+                        ///  object.
+    int64_t value;      ///< the unadjusted value of the relocation
+
+}; // struct Relocation
+
+//==============================================================================
+
+/// information about a section to be included in the heap-allocated
+/// code object
+//
+class Section {
+public:
+    /// constructor
+    Section (class CodeObject *objF, llvm::object::SectionRef &s, uint64_t off)
+    : _objFile(objF), _sect(s), _separateRelocSec(false), _offset(off)
+    { }
+
+    void setRelocationSection (llvm::object::SectionRef &r)
+    {
+        assert (! this->_separateRelocSec && "multiple relocation sections");
+        this->_separateRelocSec = true;
+        this->_reloc = r;
+    }
+
+    const llvm::object::SectionRef &sectionRef () const { return this->_sect; }
+
+    llvm::StringRef getName () const
+    {
+        auto name = this->_sect.getName ();
+        if (name.takeError()) {
+            return "<unknown section>";
+        } else {
+            return *name;
+        }
+    }
+    bool isText () const { return this->_sect.isText(); }
+    bool isData () const { return this->_sect.isData(); }
+    uint64_t getAddress () const { return this->_sect.getAddress (); }
+    uint64_t getAlignment () const { return this->_sect.getAlignment (); }
+    uint64_t getIndex () const { return this->_sect.getIndex (); }
+    uint64_t getSize () const { return this->_sect.getSize (); }
+    llvm::Expected<llvm::StringRef> getContents () const
+    {
+        return this->_sect.getContents ();
+    }
+
+    llvm::iterator_range<llvm::object::relocation_iterator> relocations () const
+    {
+        if (this->_separateRelocSec) {
+            return this->_reloc.relocations ();
+        } else {
+            return this->_sect.relocations ();
+        }
+    }
+
+    const CodeObject *getObject () const { return this->_objFile; }
+
+    uint64_t offset () const { return this->_offset; }
+
+    bool isSection (llvm::object::SectionRef const &other)
+    {
+        return this->_sect == other;
+    }
+
+private:
+    class CodeObject *_objFile;     ///< the owning object file
+    llvm::object::SectionRef _sect; ///< the included section
+/* FIXME: once we switch to C++17, we can use a std::optional<SectionRef> */
+    bool _separateRelocSec;         ///< true if the relocation info for
+                                    ///  `sect` is in a separate section
+    llvm::object::SectionRef _reloc;///< a separate section containing the
+                                    ///  relocation info for `sect`
+    uint64_t _offset;               ///< offset of this section in the
+                                    ///  code object (set by _computeSizes)
+
+}; // struct Section
+
+//==============================================================================
+
 /// a code-object is container for the parts of an object file that are needed to
 /// create the SML code object in the heap.  Its purpose is to abstract from
 /// target architecture and object-file format dependencies.  This class is
@@ -46,6 +152,30 @@ class CodeObject {
     /// dump information about the code object to the LLVM debug stream.
     void dump (bool bits);
 
+    /// find a section by name
+    /// \param name  the name of the section that we are searching for
+    /// \return a pointer to the Section object or nullptr
+    Section *findSection (llvm::StringRef name)
+    {
+        if ((this->_last != nullptr) && (this->_last->getName().equals(name))) {
+            return this->_last;
+        } else {
+            for (int i = 0;  i < this->_sects.size();  ++i) {
+                if (this->_sects[i].getName().equals(name)) {
+                    this->_last = this->_sects.data() + i;
+                    return this->_last;
+                }
+            }
+            return nullptr;
+        }
+    }
+
+    /// iterator over the symbols in the object file
+    llvm::object::ObjectFile::symbol_iterator_range symbols () const
+    {
+        return this->_obj->symbols();
+    }
+
   protected:
     const target_info *_tgt;
     std::unique_ptr<llvm::object::ObjectFile> _obj;
@@ -53,59 +183,10 @@ class CodeObject {
     /// the size of the heap-allocated code object in bytes
     size_t _szb;
 
-    /// information about a section to be included in the heap-allocated
-    /// code object
-    //
-    struct Section {
-        llvm::object::SectionRef sect;  ///< the included section
-/* FIXME: once we switch to C++17, we can use a std::optional<SectionRef> */
-        bool separateRelocSec;          ///< true if the relocation info for
-                                        ///  `sect` is in a separate section
-        llvm::object::SectionRef reloc; ///< a separate section containing the
-                                        ///  relocation info for `sect`
-        uint64_t offset;                ///< offset of this section in the
-                                        ///  code object (set by _computeSizes)
-
-        /// constructor
-        Section (llvm::object::SectionRef &s, uint64_t off)
-        : sect(s), separateRelocSec(false), offset(off)
-        { }
-
-        Section (llvm::object::SectionRef &s, uint64_t off, llvm::object::SectionRef &r)
-	: sect(s), separateRelocSec(true), reloc(r), offset(off)
-        { }
-
-        llvm::Expected<llvm::StringRef> getName () const
-        {
-            return this->sect.getName ();
-        }
-        uint64_t getAddress () const { return this->sect.getAddress (); }
-        uint64_t getAlignment () const { return this->sect.getAlignment (); }
-        uint64_t getIndex () const { return this->sect.getIndex (); }
-        uint64_t getSize () const { return this->sect.getSize (); }
-        llvm::Expected<llvm::StringRef> getContents () const
-        {
-            return this->sect.getContents ();
-        }
-
-        llvm::iterator_range<llvm::object::relocation_iterator> relocations () const
-        {
-            if (this->separateRelocSec) {
-                return this->reloc.relocations ();
-            } else {
-                return this->sect.relocations ();
-            }
-        }
-        const llvm::object::ObjectFile *getObject () const
-        {
-            return this->sect.getObject ();
-        }
-
-    }; // struct Section
-
     /// a vector of the sections that are to be included in the heap-allocated code
     /// object.
     std::vector<Section> _sects;
+    Section *_last;
 
     /// constuctor
     CodeObject (
@@ -154,7 +235,7 @@ class CodeObject {
 
     /// helper function for resolving relocation records
     //
-    virtual void _resolveRelocs (Section &sect, uint8_t *code) = 0;
+    virtual void _resolveRelocs (Section const &sect, uint8_t *code) = 0;
 
     /// dump the relocation info for a section
     //
