@@ -61,7 +61,7 @@ llvm::dbgs() << "# PATCH SECTION " << sect.getName() << " @ " << llvm::format_he
         if (sect.codeObject()->symbols().end() != rr.getSymbol()) {
             // the patch value; we compute the offset relative to the address of
             // byte following the patched location.
-            int32_t value = (int32_t)(reloc.value - reloc.addr + 4);
+            int32_t value = (int32_t)(reloc.value - reloc.addr - 4);
 llvm::dbgs() << "## PATCH " << llvm::format_hex(reloc.addr,10) << "; value = " << value << "\n";
             switch (reloc.type) {
 #if defined(OBJFF_MACHO)
