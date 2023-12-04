@@ -55,9 +55,9 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 void AMD64CodeObject::_resolveRelocs (Section const &sect, uint8_t *code)
 {
     for (auto rr : sect.relocations()) {
-        Relocation reloc(sect.sect, rr);
+        Relocation reloc(sect, rr);
         // the patch value; we ignore the relocation record if the symbol is not defined
-        if (sect.getObject()->symbols().end() != rr.getSymbol()) {
+        if (sect.codeObject()->symbols().end() != rr.getSymbol()) {
             // the patch value; we compute the offset relative to the address of
             // byte following the patched location.
             int32_t value = (int32_t)(reloc.value - reloc.addr + 4);

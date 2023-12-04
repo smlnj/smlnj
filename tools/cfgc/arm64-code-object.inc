@@ -139,7 +139,7 @@ void AArch64CodeObject::_resolveRelocs (Section const &sect, uint8_t *code)
     for (auto rr : sect.relocations()) {
         Relocation reloc(sect, rr);
         // the patch value; we ignore the relocation record if the symbol is not defined
-        if (sect.getObject()->symbols().end() != rr.getSymbol()) {
+        if (sect.codeObject()->symbols().end() != rr.getSymbol()) {
             // the patch value.  PC relative addressing on the ARM is computed w.r.t.
             // the address of the instruction (*not* the following one).
             //

@@ -101,7 +101,7 @@ public:
         }
     }
 
-    const CodeObject *getObject () const { return this->_objFile; }
+    const CodeObject *codeObject () const { return this->_objFile; }
 
     uint64_t offset () const { return this->_offset; }
 
@@ -132,7 +132,7 @@ private:
 /// target.
 //
 class CodeObject {
-  public:
+public:
 
     CodeObject () = delete;
     CodeObject (CodeObject &) = delete;

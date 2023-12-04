@@ -101,7 +101,7 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
 
 inline
 Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &rr)
-: type(rr.getType()), addr(rr.getOffset() + sect.offset)
+: type(rr.getType()), addr(rr.getOffset() + sect.offset())
 {
     // for ELF, the relocation records are stored in a separate relocation section.
     // For a given relocation record, the symbol refers to a section (possibly
@@ -111,11 +111,11 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
     auto symbIt = rr.getSymbol();
     if (symbIt != rr.getObject()->symbols().end()) {
         // find the section named by the relocation symbol
-        Section *namedSect = sect.objFile->findSection(getName(*symbIt));
+        Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
         assert (namedSect != nullptr && "bogus relocation symbol");
         // get the "addend"
         auto elfReloc = llvm::object::ELFRelocationRef(rr);
-        this->value = namedSect->offset + exitOnErr(elfReloc.getAddend());
+        this->value = namedSect->offset() + exitOnErr(elfReloc.getAddend());
     }
 }
 
