@@ -356,7 +356,13 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
                     << "; symb = [name = " << symbName
                     << "; addr = " << llvm::format_hex(symbAddr, 10)
                     << "; value = " << llvm::format_hex(symb.getValue(), 10)
+#if defined(OBJFF_ELF)
+                    << "]; addend = "
+                    << exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend())
+                    << "\n";
+#else
                     << "]\n";
+#endif
         }
     }
 
