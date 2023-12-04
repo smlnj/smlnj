@@ -40,6 +40,31 @@ extern void Die (const char *, ...);
 
 static llvm::ExitOnError exitOnErr;
 
+//==============================================================================
+
+/// get the name of a symbol
+//
+inline llvm::StringRef getName (llvm::object::SymbolRef const &sym)
+{
+    auto name = sym.getName ();
+    if (name.takeError()) {
+        return "<unknown symbol>";
+    } else {
+        return *name;
+    }
+}
+
+/// get the value of a symbol
+//
+inline int64_t getValue (llvm::object::SymbolRef const &sym)
+{
+#if (LLVM_VERSION_MAJOR > 10) /* getValue returns an Expected<> value as of LLVM 11.x */
+    return (int64_t)exitOnErr(sym.getValue());
+#else
+    return (int64_t)(sym.getValue());
+#endif
+}
+
 // helper to get the type of a symbol ref as a string
 //
 static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
@@ -62,52 +87,60 @@ static std::string _symbolTypeName (llvm::object::SymbolRef &symb)
 
 //==============================================================================
 
-/// relocation info
-struct Relocation {
-/* TODO: define factory
-    std::option<Relocation> create (CodeObject::Section &sect, llvm::object::RelocationRef &rr);
- * that returns NONE when the symbol is not defined.
- */
+#if defined(OBJFF_MACHO)
 
-    Relocation (llvm::object::SectionRef const &sect, llvm::object::RelocationRef const &rr)
-    : type(rr.getType()), addr(rr.getOffset())
-    {
-#if defined(OBJFF_ELF)
-        // for ELF files, the relocation value is stored as an "addend"
-        auto elfReloc = llvm::object::ELFRelocationRef(rr);
-        this->value = exitOnErr(elfReloc.getAddend());
-        // adjust the offset to be object-file relative
-        this->addr += sect.getAddress();
-#else
-        auto symbIt = rr.getSymbol();
-        if (symbIt != rr.getObject()->symbols().end()) {
-#if (LLVM_VERSION_MAJOR > 10) /* getValue returns an Expected<> value as of LLVM 11.x */
-            this->value = (int64_t)exitOnErr(symbIt->getValue());
-#else
-            this->value = (int64_t)(symbIt->getValue());
-#endif
-        }
-#endif
+inline
+Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &rr)
+: type(rr.getType()), addr(rr.getOffset() + sect.getAddress())
+{
+    // for MACHO, the value of the relocation is the value of the symbol referenced
+    // by the relocation record
+    auto symbIt = rr.getSymbol();
+    if (symbIt != rr.getObject()->symbols().end()) {
+        this->value = getValue(*symbIt);
     }
+}
 
-    uint64_t type;      //!< the type of relocation record
-    uint64_t addr;      //!< the address of the relocation relative to the start of the
-                        //!  object file
-    int64_t value;      //!< the value of the relocation
+#elif defined(OBJFF_ELF)
 
-}; // struct Relocation
+inline
+Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &rr)
+: type(rr.getType()), addr(rr.getOffset() + sect.offset())
+{
+    // for ELF, the relocation records are stored in a separate relocation section.
+    // For a given relocation record, the symbol refers to a section (possibly
+    // different from the section being patched).  The value is computed by taking
+    // the start address of the section and adding the "addend", which is an
+    // ELF-specific relocation-record value.
+    auto symbIt = rr.getSymbol();
+    if (symbIt != rr.getObject()->symbols().end()) {
+        // find the section named by the relocation symbol
+        Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
+        assert (namedSect != nullptr && "bogus relocation symbol");
+        // get the "addend"
+        auto elfReloc = llvm::object::ELFRelocationRef(rr);
+        this->value = namedSect->offset() + exitOnErr(elfReloc.getAddend());
+    }
+}
 
+#endif
 
 //==============================================================================
 
 #ifdef ENABLE_ARM64
-#include "arm64-code-object.cxx"
+
+// definition of AArch64CodeObject subclass
+#include "arm64-code-object.inc"
+
 #endif // ENABLE_ARM64
 
 //==============================================================================
 
 #ifdef ENABLE_X86
-#include "amd64-code-object.cxx"
+
+// definition of AMD64CodeObject subclass
+#include "amd64-code-object.inc"
+
 #endif // ENABLE_X86
 
 //==============================================================================
@@ -167,7 +200,7 @@ void CodeObject::getCode (uint8_t *code)
             auto szb = contents->size();
             assert (sect.getSize() == szb && "inconsistent sizes");
             /* copy the code into the object */
-            uint8_t *base = code + sect.offset;
+            uint8_t *base = code + sect.offset();
             memcpy (base, contents->data(), szb);
             /* resolve relocations */
             this->_resolveRelocs (sect, base);
@@ -176,15 +209,16 @@ void CodeObject::getCode (uint8_t *code)
 
 }
 
-//! internal helper function for computing the amount of memory required
-//! for the code object.
+/// internal helper function for computing the amount of memory required
+/// for the code object.  This function also initializes the vector of
+/// sections that we are going to include in the code object
 //
 void CodeObject::_computeSize ()
 {
-  // iterate over the sections in the object file and identify which ones
-  // we should include in the result.  We also compute the size of the
-  // concatenation of the sections.
-  //
+    // iterate over the sections in the object file and identify which ones
+    // we should include in the result.  We also compute the size of the
+    // concatenation of the sections.
+    //
     uint64_t codeSzB = 0;
     for (auto sect : this->_obj->sections()) {
         if (this->_includeSect (sect)) {
@@ -201,7 +235,7 @@ void CodeObject::_computeSize ()
             assert (codeSzB <= addr && "overlapping sections");
             codeSzB = addr;
 #endif
-            this->_sects.push_back (Section(sect, codeSzB));
+            this->_sects.push_back (Section(this, sect, codeSzB));
             codeSzB += szb;
         }
         else {
@@ -210,10 +244,11 @@ void CodeObject::_computeSize ()
             if (it != this->_obj->section_end()) {
                 // `sect` contains relocation info for some other section
                 auto targetSect = *it;
-		for (int i = 0;  i < this->_sects.size();  ++i) {
-		    if (this->_sects[i].sect == targetSect) {
-			this->_sects[i] =
-                            Section(targetSect, this->_sects[i].offset, sect);
+                // find the index of the target section; we search backwards, since
+                // the target is usually (always?) the immediately preceding section.
+		for (int i = this->_sects.size()-1;  i >= 0;  --i) {
+		    if (this->_sects[i].isSection(targetSect)) {
+			this->_sects[i].setRelocationSection(sect);
 			break;
 		    }
 		}
@@ -313,22 +348,25 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
         << (sectName ? *sectName : "<unknown section>") << "\n";
 
     for (auto r : sect.relocations()) {
-        Relocation reloc(sect, r);
         auto symbIt = r.getSymbol();
         if (symbIt != this->_obj->symbols().end()) {
             auto symb = *symbIt;
-            llvm::dbgs() << "  " << _symbolTypeName(symb) << " ";
             auto name = symb.getName();
-            if (! name.takeError()) {
-                llvm::dbgs() << *name
-                    << ": value = "  << llvm::format_hex(reloc.value, 10)
-                    << "; addr = " << llvm::format_hex(reloc.addr, 10)
-                    << "; type = " << this->_relocTypeToString(reloc.type) << "\n";
-            } else {
-                llvm::dbgs() << "<unknown symbol>: addr = "
-                    << llvm::format_hex(reloc.addr, 10)
-                    << "; type = " << this->_relocTypeToString(reloc.type) << "\n";
-            }
+            std::string symbName = (name.takeError() ? "<unknown symbol>" : *name);
+            auto addr = symb.getAddress();
+            uint64_t symbAddr = (addr.takeError() ? 0xdeadbeef : *addr);
+            llvm::dbgs() << "  " << this->_relocTypeToString(r.getType())
+                    << ": offset = " << llvm::format_hex(r.getOffset(), 10)
+                    << "; symb = [name = " << symbName
+                    << "; addr = " << llvm::format_hex(symbAddr, 10)
+                    << "; value = " << llvm::format_hex(symb.getValue(), 10)
+#if defined(OBJFF_ELF)
+                    << "]; addend = "
+                    << exitOnErr(llvm::object::ELFRelocationRef(r).getAddend())
+                    << "\n";
+#else
+                    << "]\n";
+#endif
         }
     }
 

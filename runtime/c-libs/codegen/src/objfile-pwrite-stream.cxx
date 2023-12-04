@@ -32,7 +32,7 @@ void ObjfilePWriteStream::write_impl (const char *ptr, size_t size)
 void ObjfilePWriteStream::pwrite_impl (const char *ptr, size_t size, uint64_t offset)
 {
     // see llvm/Support/raw_ostream.h
-    assert (this->offset + size <= this->_nBytes
+    assert (offset + size <= this->_nBytes
         && "We don't support extending the stream");
 
     ::memcpy(this->_data + offset, ptr, size);
