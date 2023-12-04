@@ -57,7 +57,7 @@ endif
 
 CODEGEN_INCL =	$(SMLNJ_ROOT)/runtime/c-libs/codegen/include
 CXX =		clang++
-CPP_FLAGS =	-I$(LLVM_DIR)/src/include -I$(CODEGEN_INCL)
+CPP_FLAGS =	-DCFGC_TOOL -I$(LLVM_DIR)/src/include -I$(CODEGEN_INCL)
 CXX_FLAGS =	-g $(LLVM_CXX_FLAGS)
 LD_FLAGS =	$(LLVM_LD_FLAGS) $(SYS_LIBS)
 
