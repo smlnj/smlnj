@@ -358,7 +358,7 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
                     << "; value = " << llvm::format_hex(symb.getValue(), 10)
 #if defined(OBJFF_ELF)
                     << "]; addend = "
-                    << exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend())
+                    << exitOnErr(llvm::object::ELFRelocationRef(r).getAddend())
                     << "\n";
 #else
                     << "]\n";
