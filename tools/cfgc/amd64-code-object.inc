@@ -54,6 +54,7 @@ bool AMD64CodeObject::_includeDataSect (llvm::object::SectionRef const &sect)
 //
 void AMD64CodeObject::_resolveRelocsForSection (Section const &sect, uint8_t *code)
 {
+llvm::dbgs() << "# PATCH SECTION " << sect.getName() << " @ " << llvm::format_hex(sect.offset(), 10) << "\n";
     for (auto rr : sect.relocations()) {
         Relocation reloc(sect, rr);
         // the patch value; we ignore the relocation record if the symbol is not defined
@@ -61,6 +62,7 @@ void AMD64CodeObject::_resolveRelocsForSection (Section const &sect, uint8_t *co
             // the patch value; we compute the offset relative to the address of
             // byte following the patched location.
             int32_t value = (int32_t)(reloc.value - reloc.addr + 4);
+llvm::dbgs() << "## PATCH " << llvm::format_hex(reloc.addr,10) << "; value = " << value << "\n";
             switch (reloc.type) {
 #if defined(OBJFF_MACHO)
 	    case llvm::MachO::X86_64_RELOC_SIGNED:
