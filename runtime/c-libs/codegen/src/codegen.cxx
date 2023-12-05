@@ -228,7 +228,7 @@ llvm::dbgs() << "\"" << src << "\"," << pklSzb << "," << codeSzb << ","
  */
 ml_val_t llvm_listTargets (ml_state_t *msp)
 {
-    auto targets = target_info::targetNames();
+    auto targets = TargetInfo::targetNames();
 
   // construct a list of the target names
     ml_val_t lst = LIST_nil;
@@ -246,13 +246,13 @@ ml_val_t llvm_listTargets (ml_state_t *msp)
  */
 ml_val_t llvm_setTarget (const char *targetName)
 {
-    target_info const *target;
+    const TargetInfo *target;
 
     if (targetName == nullptr) {
-        target = target_info::native;
+        target = TargetInfo::native;
     }
     else {
-        target = target_info::infoForTarget (targetName);
+        target = TargetInfo::infoForTarget (targetName);
     }
 
     if (target == nullptr) {

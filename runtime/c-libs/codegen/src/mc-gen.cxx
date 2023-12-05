@@ -26,7 +26,7 @@
 #include <iostream>
 
 
-mc_gen::mc_gen (llvm::LLVMContext &context, target_info const *info)
+mc_gen::mc_gen (llvm::LLVMContext &context, const TargetInfo *info)
   : _tgtInfo(info)
 {
   // get the LLVM target triple

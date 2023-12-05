@@ -19,7 +19,7 @@
 
 #include "sml-registers.hxx"
 
-struct target_info {
+struct TargetInfo {
     std::string name;			// the target's name; this should agree with LLVM's
 					// naming conventions (see lib/Support/Triple.cpp).
     std::string dataLayout;		// LLVM data layout string
@@ -48,7 +48,7 @@ struct target_info {
     init_fn_t initAsmParser;
     init_fn_t initAsmPrinter;
 
-    static target_info const *infoForTarget (std::string const &name);
+    static TargetInfo const *infoForTarget (std::string const &name);
 
     static std::vector<std::string> targetNames ();
 
@@ -65,7 +65,7 @@ struct target_info {
     }
 
     /// the target info for the native (host) architecture
-    static target_info const *native;
+    static TargetInfo const *native;
 
   // GC roots are std-link, std-clos, std-cont, callee saves, std-arg
     int numGCRoots () const { return this->numCalleeSaves + 4; }

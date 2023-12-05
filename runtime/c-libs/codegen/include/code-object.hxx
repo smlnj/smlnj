@@ -17,7 +17,7 @@
 #include <vector>
 #include "llvm/Object/ObjectFile.h"
 
-struct target_info;
+struct TargetInfo;
 
 //==============================================================================
 
@@ -47,7 +47,7 @@ struct Relocation {
                         ///  of the object file.  This offset accounts for the
                         ///  start of the section w.r.t. the start of the code
                         ///  object.
-    int64_t value;      ///< the unadjusted value of the relocation
+    int64_t value;      ///< the computed value of the relocation
 
 }; // struct Relocation
 
@@ -178,8 +178,10 @@ public:
         return this->_obj->symbols();
     }
 
+    const TargetInfo *target () const { return this->_tgt; }
+
   protected:
-    const target_info *_tgt;
+    const TargetInfo *_tgt;
     std::unique_ptr<llvm::object::ObjectFile> _obj;
 
     /// the size of the heap-allocated code object in bytes
@@ -192,7 +194,7 @@ public:
 
     /// constuctor
     CodeObject (
-	target_info const *target,
+	const TargetInfo *target,
 	std::unique_ptr<llvm::object::ObjectFile> objFile
     ) : _tgt(target), _obj(std::move(objFile)), _szb(0)
     { }

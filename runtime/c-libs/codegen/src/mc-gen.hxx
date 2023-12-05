@@ -20,7 +20,7 @@
 class mc_gen {
   public:
 
-    mc_gen (llvm::LLVMContext &context, target_info const *target);
+    mc_gen (llvm::LLVMContext &context, const TargetInfo *target);
 
     // per-module initialization and finalization
     void beginModule (llvm::Module *module);
@@ -36,7 +36,7 @@ class mc_gen {
     void compile (class code_buffer *codeBuf);
 
   private:
-    target_info const *_tgtInfo;
+    const TargetInfo *_tgtInfo;
     std::unique_ptr<llvm::TargetMachine> _tgtMachine;
     std::unique_ptr<llvm::legacy::FunctionPassManager> _passMngr;
 

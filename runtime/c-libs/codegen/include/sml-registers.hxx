@@ -81,7 +81,7 @@ class sml_registers {
 
   // setup the register information for the specified target architecture
   //
-    sml_registers (struct target_info const *target);
+    sml_registers (const struct TargetInfo *target);
 
   // does the target require the base address register?
     bool usesBasePtr () const { return this->_usesBasePtr; }

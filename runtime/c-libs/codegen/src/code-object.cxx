@@ -161,7 +161,7 @@ std::unique_ptr<CodeObject> CodeObject::create (code_buffer *codeBuf)
 
   // then wrap it in a target-specific subclass object
     std::unique_ptr<CodeObject> p;
-    target_info const *target = codeBuf->targetInfo();
+    const TargetInfo *target = codeBuf->targetInfo();
     switch (target->arch) {
 #ifdef ENABLE_ARM64
     case llvm::Triple::aarch64:

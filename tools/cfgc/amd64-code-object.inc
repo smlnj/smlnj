@@ -14,7 +14,7 @@
 class AMD64CodeObject : public CodeObject {
   public:
     AMD64CodeObject (
-        target_info const *target,
+        const TargetInfo *target,
         std::unique_ptr<llvm::object::ObjectFile> objFile
     ) : CodeObject(target, std::move(objFile))
     { }
@@ -59,9 +59,8 @@ llvm::dbgs() << "# PATCH SECTION " << sect.getName() << " @ " << llvm::format_he
         Relocation reloc(sect, rr);
         // the patch value; we ignore the relocation record if the symbol is not defined
         if (sect.codeObject()->symbols().end() != rr.getSymbol()) {
-            // the patch value; we compute the offset relative to the address of
-            // byte following the patched location.
-            int32_t value = (int32_t)(reloc.value - reloc.addr - 4);
+            // the patch value
+            int32_t value = (int32_t)reloc.value;
 llvm::dbgs() << "## PATCH " << llvm::format_hex(reloc.addr,10) << "; value = " << value << "\n";
             switch (reloc.type) {
 #if defined(OBJFF_MACHO)

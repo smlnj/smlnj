@@ -52,6 +52,8 @@ namespace CFG {
     enum class frag_kind;
 }
 
+struct TargetInfo;
+
 // map from lvars to values of type T*
 template <typename T>
 using lvar_map_t = std::unordered_map<LambdaVar::lvar, T *>;
@@ -69,7 +71,7 @@ class code_buffer {
   public:
 
   // create the code buffer for the given target
-    static code_buffer *create (target_info const * target);
+    static code_buffer *create (const TargetInfo * target);
     static code_buffer *create (std::string const & target);
 
     void optimize ();
@@ -171,7 +173,7 @@ class code_buffer {
     bool is64Bit () const { return (this->_wordSzB == 8); }
 
     //! return a ponter to the target information struct
-    target_info const *targetInfo () const { return this->_target; }
+    const TargetInfo *targetInfo () const { return this->_target; }
 
     //! align the allocation pointer for 64 bits on 32-bit machines.  The resulting
     //! alloc pointer points to the location of the object descriptor, so adding
@@ -771,7 +773,7 @@ class code_buffer {
     bool verify () const;
 
   private:
-    struct target_info const	*_target;
+    const TargetInfo		*_target;
     llvm::LLVMContext		_context;
     llvm::IRBuilder<>		_builder;
     class mc_gen		*_gen;
@@ -860,7 +862,7 @@ class code_buffer {
     void _addExtraArgs (Args_t &args, arg_info const &info) const;
 
     //! private constructor
-    code_buffer (struct target_info const *target);
+    code_buffer (const TargetInfo *target);
 
     //! backing storage for the generated object file.  We put this object it the
     //! code buffer so that we do not have to worry about its lifetime.

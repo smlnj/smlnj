@@ -27,7 +27,7 @@ reg_info::reg_info (sml_reg_id id, int idx, int off)
 
 /***** sml_registers methods *****/
 
-sml_registers::sml_registers (struct target_info const *target)
+sml_registers::sml_registers (const struct TargetInfo *target)
 {
     if (target == nullptr) {
 	this->_nHWRegs = 0;

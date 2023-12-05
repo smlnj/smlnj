@@ -29,7 +29,7 @@
 
 /***** class code_buffer member functions *****/
 
-code_buffer *code_buffer::create (target_info const * tgtInfo)
+code_buffer *code_buffer::create (const TargetInfo *tgtInfo)
 {
     code_buffer *buf = new code_buffer (tgtInfo);
 
@@ -38,7 +38,7 @@ code_buffer *code_buffer::create (target_info const * tgtInfo)
 
 code_buffer *code_buffer::create (std::string const & target)
 {
-    auto tgtInfo = target_info::infoForTarget (target);
+    auto tgtInfo = TargetInfo::infoForTarget (target);
     if (tgtInfo == nullptr) {
 	return nullptr;
     }
@@ -48,7 +48,7 @@ code_buffer *code_buffer::create (std::string const & target)
     return buf;
 }
 
-code_buffer::code_buffer (target_info const *target)
+code_buffer::code_buffer (const TargetInfo *target)
   : _target(target),
     _context(), _builder(this->_context),
     _gen(nullptr),
