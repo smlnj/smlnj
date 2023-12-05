@@ -29,7 +29,7 @@
 
 /***** class code_buffer member functions *****/
 
-code_buffer *code_buffer::create (const TargetInfo * tgtInfo)
+code_buffer *code_buffer::create (const TargetInfo *tgtInfo)
 {
     code_buffer *buf = new code_buffer (tgtInfo);
 

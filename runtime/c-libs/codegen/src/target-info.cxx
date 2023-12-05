@@ -99,7 +99,7 @@ static TargetInfo X86_64Info = {
     };
 #endif
 
-static TargetInfo const *Targets[] = {
+static const TargetInfo *Targets[] = {
 #if defined(ENABLE_X86)
 	&X86_64Info,
 #endif
@@ -110,9 +110,9 @@ static TargetInfo const *Targets[] = {
 
 // the target info for the native (host) architecture
 #if defined(ARCH_AMD64)
-TargetInfo const *TargetInfo::native = &X86_64Info;
+const TargetInfo *TargetInfo::native = &X86_64Info;
 #elif defined(ARCH_ARM64)
-TargetInfo const *TargetInfo::native = &Arm64Info;
+const TargetInfo *TargetInfo::native = &Arm64Info;
 #else
 #  error unknown native architecture
 #endif
@@ -129,7 +129,7 @@ std::vector<std::string> TargetInfo::targetNames ()
     return targetNames;
 }
 
-TargetInfo const *TargetInfo::infoForTarget (std::string const &name)
+const TargetInfo *TargetInfo::infoForTarget (std::string const &name)
 {
     for (int i = 0;  i < kNumTargets;  i++) {
 	if (Targets[i]->name == name) {

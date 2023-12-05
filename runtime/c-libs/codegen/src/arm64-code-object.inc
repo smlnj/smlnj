@@ -14,7 +14,7 @@
 class AArch64CodeObject : public CodeObject {
   public:
     AArch64CodeObject (
-        target_info const *target,
+        const TargetInfo *target,
         std::unique_ptr<llvm::object::ObjectFile> objFile
     ) : CodeObject(target, std::move(objFile))
     { }
@@ -140,10 +140,8 @@ void AArch64CodeObject::_resolveRelocsForSection (Section const &sect, uint8_t *
         Relocation reloc(sect, rr);
         // the patch value; we ignore the relocation record if the symbol is not defined
         if (sect.codeObject()->symbols().end() != rr.getSymbol()) {
-            // the patch value.  PC relative addressing on the ARM is computed w.r.t.
-            // the address of the instruction (*not* the following one).
-            //
-            int32_t value = (int32_t)(reloc.value - reloc.addr);
+            // the patch value
+            int32_t value = (int32_t)reloc.value;
             // get the instruction to be patched
             AArch64InsnWord instr(*(uint32_t *)(code + reloc.addr));
             switch (reloc.type) {

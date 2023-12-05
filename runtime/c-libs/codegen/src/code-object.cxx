@@ -97,7 +97,17 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
     // by the relocation record
     auto symbIt = rr.getSymbol();
     if (symbIt != rr.getObject()->symbols().end()) {
-        this->value = getValue(*symbIt);
+        this->value = getValue(*symbIt) - (int64_t)this->addr;
+#if defined(ENABLE_X86)
+/* FIXME: if the X86 is the only enabled architecture, then we do not need this
+ * conditional test.
+ */
+        if (sect.codeObject()->target()->arch == llvm::Triple::x86_64) {
+            // for the AMD64, the value should be relative to the address of the
+            // instruction following the patch location.
+            this->value -= 4;
+        }
+#endif
     }
 }
 
@@ -109,17 +119,26 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
 {
     // for ELF, the relocation records are stored in a separate relocation section.
     // For a given relocation record, the symbol refers to a section (possibly
-    // different from the section being patched).  The value is computed by taking
-    // the start address of the section and adding the "addend", which is an
-    // ELF-specific relocation-record value.
+    // different from the section being patched).  For PC-relative addressing
+    // the ELF relocation value is
+    //
+    //          S + A - P
+    //
+    // where
+    //
+    //          S       == the value of the symbol (i.e., the address of the section
+    //                     named by the symbol)
+    //          A       == the addend (an ELF-specific relocation-record value)
+    //          P       == the patch address
+    //
     auto symbIt = rr.getSymbol();
     if (symbIt != rr.getObject()->symbols().end()) {
         // find the section named by the relocation symbol
         Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
         assert (namedSect != nullptr && "bogus relocation symbol");
         // get the "addend"
-        auto elfReloc = llvm::object::ELFRelocationRef(rr);
-        this->value = namedSect->offset() + exitOnErr(elfReloc.getAddend());
+        int64_t addend = exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend());
+        this->value = (int64_t)namedSect->offset() + addend - (int64_t)addr;
     }
 }
 

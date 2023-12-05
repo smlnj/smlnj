@@ -113,9 +113,6 @@ inline
 Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &rr)
 : type(rr.getType()), addr(rr.getOffset() + sect.offset())
 {
-#if defined(ENABLE_AMD64)
-    assert (type == llvm::ELF::R_X86_64_PC32 && "unsupported type");
-#endif
     // for ELF, the relocation records are stored in a separate relocation section.
     // For a given relocation record, the symbol refers to a section (possibly
     // different from the section being patched).  For PC-relative addressing
