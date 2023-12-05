@@ -159,13 +159,14 @@ public:
     /// \return a pointer to the Section object or nullptr
     Section *findSection (llvm::StringRef name)
     {
-        if ((this->_last != nullptr) && (this->_last->getName().equals(name))) {
-            return this->_last;
+        if ((this->_last < this->_sects.size())
+        && this->_sects[this->_last].getName().equals(name)) {
+            return this->_sects.data() + this->_last;
         } else {
             for (int i = 0;  i < this->_sects.size();  ++i) {
                 if (this->_sects[i].getName().equals(name)) {
-                    this->_last = this->_sects.data() + i;
-                    return this->_last;
+                    this->_last = i;
+                    return this->_sects.data() + i;
                 }
             }
             return nullptr;
@@ -190,13 +191,14 @@ public:
     /// a vector of the sections that are to be included in the heap-allocated code
     /// object.
     std::vector<Section> _sects;
-    Section *_last;
+    int _last;                          ///< index into _sects of last section returned
+                                        ///  by `findSection`
 
     /// constuctor
     CodeObject (
 	const TargetInfo *target,
 	std::unique_ptr<llvm::object::ObjectFile> objFile
-    ) : _tgt(target), _obj(std::move(objFile)), _szb(0)
+    ) : _tgt(target), _obj(std::move(objFile)), _szb(0), _last(0)
     { }
 
     /// helper function that determines which sections to include and computes
