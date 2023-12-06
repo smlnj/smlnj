@@ -129,12 +129,17 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
     //
     auto symbIt = rr.getSymbol();
     if (symbIt != rr.getObject()->symbols().end()) {
-        // find the section named by the relocation symbol
-        Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
-        assert (namedSect != nullptr && "bogus relocation symbol");
         // get the "addend"
         int64_t addend = exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend());
-        this->value = (int64_t)namedSect->offset() + addend - (int64_t)addr;
+        // compute the relocation value
+        llvm::object::ELFSymbolRef symb(*symbIt);
+        if (symb.getELFType() == llvm::object::ELF::STT_SECTION) {
+            // find the section named by the relocation symbol
+            Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
+            assert (namedSect != nullptr && "bogus relocation symbol");
+            this->value = (int64_t)namedSect->offset() + addend - (int64_t)addr;
+        } else {
+        }
     }
 }
 
@@ -368,6 +373,19 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
             auto symb = *symbIt;
             auto name = symb.getName();
             std::string symbName = (name.takeError() ? "<unknown symbol>" : *name);
+            auto exSymbSect = symb.getSection();
+            std::string symbSectName;
+            if (exSymbSect.takeError()) {
+                symbSectName = "<error>";
+            } else {
+                auto symbSectIt = *exSymbSect;
+                if (symbSectIt == this->_obj->sections().end()) {
+                    symbSectName = "<no section>";
+                } else {
+                    auto name = symbSectIt->getName();
+                    symbSectName = (name.takeError() ? "<unknown section>" : *name);
+                }
+            }
             auto addr = symb.getAddress();
             uint64_t symbAddr = (addr.takeError() ? 0xdeadbeef : *addr);
 #if defined(OBJFF_ELF)
@@ -376,6 +394,7 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
             llvm::dbgs() << "  " << this->_relocTypeToString(r.getType())
                     << ": offset = " << llvm::format_hex(r.getOffset(), 10)
                     << "; symb = [name = " << symbName
+                    << "; sect = " << symbSectName
                     << "; addr = " << llvm::format_hex(symbAddr, 10)
                     << "; value = " << llvm::format_hex(symb.getValue(), 10)
 #if defined(OBJFF_ELF)
