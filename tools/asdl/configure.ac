@@ -223,8 +223,8 @@ CXXFLAG_fPIC=""
 case "$host_os" in
   darwin*)
     DSLEXT="dylib"
-    LD_STATIC=$LD
-    LD_DYNAMIC="$CXX -dynamiclib"
+    LD_STATIC="$LD -static"
+    LD_DYNAMIC="$CXX -dynamiclib -r"
   ;;
   linux*)
   # On Linux we include the -rpath option to pick up dynamically-loaded libraries
@@ -232,7 +232,7 @@ case "$host_os" in
     CXXFLAG_fPIC="-fPIC"
     DSLEXT="so"
     LD_STATIC=$LD
-    LD_DYNAMIC="$CXX -shared"
+    LD_DYNAMIC="$LD -r"
   ;;
 esac
 

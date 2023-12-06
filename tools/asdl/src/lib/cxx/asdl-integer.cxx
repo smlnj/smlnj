@@ -50,7 +50,7 @@ namespace asdl {
       : _sign(n < 0)
     {
 	if (n != 0) {
-	    uint64_t ui = static_cast<uint64_t>(abs(n));
+	    uint64_t ui = static_cast<uint64_t>(std::abs(n));
 	    if (ui < 0x100000000) {
 		this->_digits.push_back(uint32_t(ui));
 	    }

@@ -43,7 +43,7 @@ INCLS =			$(wildcard asdl/*.hxx)
 build:		$(TARGETS)
 
 libasdl.@DSLEXT@:	$(OBJS)
-	$(LD_DYNAMIC) -r -o $@ $(OBJS)
+	$(LD_DYNAMIC) -o $@ $(OBJS)
 
 %.o : %.cxx $(INCLS)
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
