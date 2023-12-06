@@ -183,5 +183,5 @@ tested some of them:
 | AMD64 | |
 | | macOS 11 (Big Sur) | Tested
 | | macOS 12 (Monterey) | Tested
-| | macOS 13 (Vecntura) |
+| | macOS 13 (Ventura) |
 |=======

@@ -109,6 +109,25 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 == Recent updates
 
 //--------------------------------------------------------------------
+[2023/12/06]::
++
+For various reasons, the LLVM backend has to resolve relocation symbols
+as part of the process of generating the final object code to the heap.
+While LLVM provides a generic API for working with object files, patching
+relocation information is necessarily dependent on both the architecture
+and object-file format.  For the
+https://en.wikipedia.org/wiki/Executable_and_Linkable_Format[**ELF**]
+format, there were several complications that the original implementation
+did not handle (_e.g._, relocation information is stored in a separate
+section from the section that it is applied to).  The handling of
+object-files, sections, and relocation records has been rewritten to
+handle the **ELF** file format.  These changes fix issues #233
+({issue-base}/233[Installation of SML/NJ 2021.1 fails on Ubuntu 20.04])
+and #272 ({issue-base}/272[Unable to build LLVM when running `build.sh`]).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2023/11/21]::
 +
 Fix bug in `new-literals.sml`, where the integer value 2^31^ was being
