@@ -42,6 +42,20 @@ static llvm::ExitOnError exitOnErr;
 
 //==============================================================================
 
+/// get the name of a section
+//
+inline llvm::StringRef getName (llvm::object::SectionRef const &sect)
+{
+    auto name = sect.getName ();
+    if (name.takeError()) {
+        return "<unknown section>";
+    } else {
+        return *name;
+    }
+}
+
+//==============================================================================
+
 /// get the name of a symbol
 //
 inline llvm::StringRef getName (llvm::object::SymbolRef const &sym)
@@ -133,12 +147,28 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
     //
     auto symbIt = rr.getSymbol();
     if (symbIt != rr.getObject()->symbols().end()) {
-        // find the section named by the relocation symbol
-        Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
-        assert (namedSect != nullptr && "bogus relocation symbol");
         // get the "addend"
         int64_t addend = exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend());
-        this->value = (int64_t)namedSect->offset() + addend - (int64_t)addr;
+        // compute the relocation value
+        llvm::object::ELFSymbolRef symb(*symbIt);
+        // the section for the symbol
+        auto symbSectIt  = exitOnErr(symb.getSection());
+        if (symbSectIt != rr.getObject()->sections().end()) {
+            // find the section by name
+            Section *namedSect = sect.codeObject()->findSection(getName(*symbSectIt));
+            assert (namedSect != nullptr && "null section");
+            // compute the relocation value
+            if (symb.getELFType() == llvm::ELF::STT_SECTION) {
+                this->value = (int64_t)namedSect->offset() + addend - (int64_t)this->addr;
+            } else {
+                // if the symbol is not a section name, then we need to adjust the
+                // the offset by the symbol's address relative to `namedSect`
+                int64_t offset = namedSect->offset() + exitOnErr(symb.getAddress());
+                this->value = offset +  addend - (int64_t)this->addr;
+            }
+        } else {
+            Die("missing section for symbol");
+        }
     }
 }
 
@@ -372,14 +402,31 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
             auto symb = *symbIt;
             auto name = symb.getName();
             std::string symbName = (name.takeError() ? "<unknown symbol>" : *name);
+            auto exSymbSect = symb.getSection();
+            std::string symbSectName;
+            if (exSymbSect.takeError()) {
+                symbSectName = "<error>";
+            } else {
+                auto symbSectIt = *exSymbSect;
+                if (symbSectIt == this->_obj->sections().end()) {
+                    symbSectName = "<no section>";
+                } else {
+                    symbSectName = getName(*symbSectIt);
+                }
+            }
             auto addr = symb.getAddress();
             uint64_t symbAddr = (addr.takeError() ? 0xdeadbeef : *addr);
+#if defined(OBJFF_ELF)
+            llvm::object::ELFSymbolRef elfSymb(symb);
+#endif
             llvm::dbgs() << "  " << this->_relocTypeToString(r.getType())
                     << ": offset = " << llvm::format_hex(r.getOffset(), 10)
                     << "; symb = [name = " << symbName
+                    << "; sect = " << symbSectName
                     << "; addr = " << llvm::format_hex(symbAddr, 10)
                     << "; value = " << llvm::format_hex(symb.getValue(), 10)
 #if defined(OBJFF_ELF)
+                    << "; type = \"" << elfSymb.getELFTypeName()
                     << "]; addend = "
                     << exitOnErr(llvm::object::ELFRelocationRef(r).getAddend())
                     << "\n";
