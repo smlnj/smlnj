@@ -133,7 +133,7 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
         int64_t addend = exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend());
         // compute the relocation value
         llvm::object::ELFSymbolRef symb(*symbIt);
-        if (symb.getELFType() == llvm::object::ELF::STT_SECTION) {
+        if (symb.getELFType() == llvm::ELF::STT_SECTION) {
             // find the section named by the relocation symbol
             Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
             assert (namedSect != nullptr && "bogus relocation symbol");
