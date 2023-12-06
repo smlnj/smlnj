@@ -38,6 +38,20 @@ static llvm::ExitOnError exitOnErr;
 
 //==============================================================================
 
+/// get the name of a section
+//
+inline llvm::StringRef getName (llvm::object::SectionRef const &sect)
+{
+    auto name = sect.getName ();
+    if (name.takeError()) {
+        return "<unknown section>";
+    } else {
+        return *name;
+    }
+}
+
+//==============================================================================
+
 /// get the name of a symbol
 //
 inline llvm::StringRef getName (llvm::object::SymbolRef const &sym)
@@ -133,12 +147,24 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
         int64_t addend = exitOnErr(llvm::object::ELFRelocationRef(rr).getAddend());
         // compute the relocation value
         llvm::object::ELFSymbolRef symb(*symbIt);
-        if (symb.getELFType() == llvm::ELF::STT_SECTION) {
-            // find the section named by the relocation symbol
-            Section *namedSect = sect.codeObject()->findSection(getName(*symbIt));
-            assert (namedSect != nullptr && "bogus relocation symbol");
-            this->value = (int64_t)namedSect->offset() + addend - (int64_t)addr;
+        // the section for the symbol
+        auto symbSectIt  = exitOnErr(symb.getSection());
+        if (symbSectIt != rr.getObject()->sections().end()) {
+            // find the section by name
+            Section *namedSect = sect.codeObject()->findSection(getName(*symbSectIt));
+            assert (namedSect != nullptr && "null section");
+            // compute the relocation value
+            if (symb.getELFType() == llvm::ELF::STT_SECTION) {
+                this->value = (int64_t)namedSect->offset() + addend - (int64_t)this->addr;
+            } else {
+                // if the symbol is not a section name, then we need to adjust the
+                // the offset by the symbol's address relative to `namedSect`
+                int64_t offset = namedSect->offset() + exitOnErr(symb.getAddress());
+                this->value = offset +  addend - (int64_t)this->addr;
+            }
         } else {
+            /* error */
+            this->value = 0xdeadbeef;
         }
     }
 }
@@ -382,8 +408,7 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
                 if (symbSectIt == this->_obj->sections().end()) {
                     symbSectName = "<no section>";
                 } else {
-                    auto name = symbSectIt->getName();
-                    symbSectName = (name.takeError() ? "<unknown section>" : *name);
+                    symbSectName = getName(*symbSectIt);
                 }
             }
             auto addr = symb.getAddress();

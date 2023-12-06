@@ -275,7 +275,7 @@ void CodeObject::_computeSize ()
         }
     }
 
-  // check that we actual got something
+  // check that we actually got something
     assert (codeSzB > 0 && "no useful sections in object file");
 
     this->_szb = codeSzB;
