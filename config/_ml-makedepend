@@ -1,32 +1,39 @@
 #!@SHELL@
+#
+# COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# usage: ml-makedepend [-f makefile] [-n] [-a arch] [-o os]' project.cm target
+#
 
 if [ x${SMLNJ_HOME} = x ] ; then
-    BIN_DIR="@BINDIR@"
+  BIN_DIR="@BINDIR@"
 else
-    if [ x${CM_PATHCONFIG} = x ] ; then
-	CM_PATHCONFIG=${SMLNJ_HOME}/lib/pathconfig
-	export CM_PATHCONFIG
-    fi
-    BIN_DIR=${SMLNJ_HOME}/bin
+  if [ x${CM_PATHCONFIG} = x ] ; then
+    CM_PATHCONFIG=${SMLNJ_HOME}/lib/pathconfig
+    export CM_PATHCONFIG
+  fi
+  BIN_DIR=${SMLNJ_HOME}/bin
 fi
 SML=$BIN_DIR/sml
 
 mf=""
 xx=$$
-tmpmf=$xx-makefile
-mlscript=$xx-mlscript.sml
+depends=$xx-depends     # temp file for generated dependencies
+tmpmf=$xx-makefile      # temp file for makefile with old dependencies removed
+mlscript=$xx-mlscript.sml # temp file for the SML script
 thisscript=$0
 archos=substitute
 archstring='$(ARCH)'
 osstring='$(OS)'
 dulist=''
 
-trap 'rm -f $tmpmf $mlscript' 0 1 2 3 15
+trap 'rm -f $tmpmf $depends $mlscript' 0 1 2 3 15
 
 usage() {
-    echo $thisscript: $*
-    echo Usage: $thisscript '[-f makefile] [-n] [-a arch] [-o os]' project.cm target
-    exit 1
+  echo $thisscript: $*
+  echo Usage: $thisscript '[-f makefile] [-n] [-a arch] [-o os]' project.cm target
+  exit 1
 }
 
 #
@@ -118,17 +125,6 @@ delims="# START: ml-makedepend (${cmfile}:${target}); DO NOT DELETE!"
 delime="# END  : ml-makedepend (${cmfile}:${target}); DO NOT DELETE!"
 
 #
-# remove previous result of ml-makedepend
-#  (other cmfile/target combinations are unaffected)
-#
-awk "BEGIN { c = 1; s = \"${delims}\"; e = \"${delime}\"; }
-(\$0 == s) { c = 0; next; }
-(\$0 == e) { c = 1; next; }
-(c == 1) { print }" <$mf >$tmpmf
-cp $tmpmf $mf
-rm $tmpmf
-
-#
 # construct the ML script
 #
 cat >$mlscript <<stop
@@ -138,7 +134,7 @@ in
     case lopt of
         NONE => ignore (OS.Process.exit OS.Process.failure)
       | SOME l => let
-            val s = TextIO.openOut "$tmpmf"
+            val s = TextIO.openOut "$depends"
             fun pr { derived = true, file, class } = ()
               | pr { file, ... } = TextIO.output (s, " \\\\\\n    " ^ file)
         in
@@ -151,8 +147,17 @@ in
 end
 stop
 
-if $SML '$smlnj/cm.cm' $dulist $mlscript ; then
-    cat $tmpmf >>$mf
+if $SML $SIZE_OPT '$smlnj/cm.cm' $dulist $mlscript ; then
+  #
+  # remove previous result of ml-makedepend
+  #  (other cmfile/target combinations are unaffected)
+  #
+  awk "BEGIN { c = 1; s = \"${delims}\"; e = \"${delime}\"; }
+    (\$0 == s) { c = 0; next; }
+    (\$0 == e) { c = 1; next; }
+    (c == 1) { print }" <$mf >$tmpmf
+  cat $tmpmf $depends >$mf
+  rm $tmpmf $depends
 else
     echo $thisscript: CM dependency analysis failed
     exit 1
