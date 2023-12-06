@@ -370,12 +370,16 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
             std::string symbName = (name.takeError() ? "<unknown symbol>" : *name);
             auto addr = symb.getAddress();
             uint64_t symbAddr = (addr.takeError() ? 0xdeadbeef : *addr);
+#if defined(OBJFF_ELF)
+            llvm::object::ELFSymbolRef elfSymb(symb);
+#endif
             llvm::dbgs() << "  " << this->_relocTypeToString(r.getType())
                     << ": offset = " << llvm::format_hex(r.getOffset(), 10)
                     << "; symb = [name = " << symbName
                     << "; addr = " << llvm::format_hex(symbAddr, 10)
                     << "; value = " << llvm::format_hex(symb.getValue(), 10)
 #if defined(OBJFF_ELF)
+                    << "; type = \"" << elfSymb.getELFTypeName()
                     << "]; addend = "
                     << exitOnErr(llvm::object::ELFRelocationRef(r).getAddend())
                     << "\n";
