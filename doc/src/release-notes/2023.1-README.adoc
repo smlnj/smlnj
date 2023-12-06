@@ -40,51 +40,37 @@ https://smlnj.org/dist/working/110.99.4/index.html[110.99.4].
 
 == Details
 
-// **** details: include those sections that are relevant
-
 === Compiler
 
-=== CM
-
-=== MLRISC
-
-=== Runtime System
-
-=== Basis Library
+Reworked the handling of relocation patching to resolve issues with
+the **ELF** object-file format on **Linux** systems.
 
 === SML/NJ Library
 
-=== Successor ML
+--
+* Added the `NativeInt` and `NativeWord` structure aliases to provide
+  a portable way to refer to the native numeric types in signatures.
 
-=== ML-LPT
+* Reimplementation of the `Random` structure to use the Mersenne Twister
+  algorithm.  There are both 32-bit and 64-bit versions of the generator
+  (which one is included depends on the target platform).
 
-=== Documentation
+* Reworked the code for determining the maximum hash-table size (used
+  in the `HashSetFn` and `HashTableRep` modules) so that it does not
+  depend on `Int.int` and `Word.word` being the same size (an issue
+  for MLton).  Also split that code out into the internal `MaxHashTableSize`
+  module.
+
+* Added support for the end-of-line assertion ("$") and full support for
+  intervals to the Thompson engine in the RegExp library.
+
+* Added modules for the representation of booleans, integers, and words
+  as hash-consed values to the HashCons library.
+--
 
 === Installation
 
-=== 32-bit macOS issues
-
-While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
-for {version} works on **macOs** 10.14 Mojave, building from source
-requires some extra steps because the version of **Xcode**
-distributed for Mojave does not include a 32-bit SDK.
-
-Another issue that you may encounter
-when building on **macOs** 10.14 Mojave is an error message for a shell
-script of the form
-
-.....
-  /bin/sh: bad interpreter: Operation not permitted
-.....
-
-This error arises because the `com.apple.quarantine` attribute is set on the
-shell script.  To fix the problem, remove the attribute using the command
-
-[source,shell]
------
-  xattr -d com.apple.quarantine shell-script
------
-and resume the build.
+Added *macOS* 14 (Sonoma) as a recognized system.
 
 == Bugs
 
@@ -129,7 +115,7 @@ tested some of them:
 |=======
 | Architecture | Operating System | Status
 | AMD64 | |
-| | macOS 11 (Big Sur) | Tested
+| | macOS 11 (Big Sur) |
 | | macOS 12 (Monterey) | Tested
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
