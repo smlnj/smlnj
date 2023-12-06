@@ -98,13 +98,15 @@ autom4te.cache
 # project-specific files
 sml.boot.*
 sml.bin.*
-bin/
-lib/
+/bin/
+/lib/
 llvm/build/
+llvm/.cache
 runtime/bin/
 runtime/include/llvm-c/
 runtime/include/llvm/
 runtime/lib/
+runtime/share/
 system/sml.amd64-*
 system/sml.arm64-*
 tools/asdl/**/Makefile
@@ -138,9 +140,9 @@ doc/src/release-notes/110.99.1-README.html
 doc/src/release-notes/110.99.2-README.html
 doc/src/release-notes/2021.1-README.html
 doc/src/release-notes/2022.1-README.html
+doc/src/release-notes/2023.1-README.html
 doc/src/man/*.1
 doc/src/man/*.7
 doc/src/**/*.html
 package/macos/*.pkg
 *.pkl
-
