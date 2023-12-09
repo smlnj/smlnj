@@ -1,6 +1,6 @@
 # Pretty-Printing Device Library
 
-This library is is an "internal" library that is meant to be shared by
+This library is an "internal" library that is meant to be shared by
 the two pretty-printer libraries (pp-lib.cm and prettyprint.cm).
 
 ## The `PP_DEVICE` Signature

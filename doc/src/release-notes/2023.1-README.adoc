@@ -1,5 +1,5 @@
 :version: 2023.1
-:date: @DATE@
+:date: December 10, 2023
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -117,7 +117,7 @@ tested some of them:
 | AMD64 | |
 | | macOS 11 (Big Sur) |
 | | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) |
+| | macOS 13 (Ventura) | Tested
 | | macOS 14 (Sonoma) |
 | | Ubuntu 20.04.6 LTS | Tested
 | | Ubuntu 22.04.2 LTS | Tested
