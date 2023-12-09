@@ -82,6 +82,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | Description
 | [.bugid]#233#
 | {issue-base}/233[Installation of SML/NJ 2021.1 fails on Ubuntu 20.04]
+| [.bugid]#261#
+| {issue-base}/261[2022.1 distro bombs]
 | [.bugid]#272#
 | {issue-base}/272[Unable to build LLVM when running `build.sh`]
 | [.bugid]#276#
