@@ -5,7 +5,8 @@ currently reworking many components of the system, so it is not
 very stable.  For most uses, we recommend the
 [legacy version](https://github.com/smlnj/legacy) of the system.
 
-Currently, only Intel-based Macs are known to work.
+As of the 2023.1 release, this version is known to work on AMD64
+(a.k.a. x86-64) hardware running **Linux** or **macOS**.
 
 ---
 
@@ -31,7 +32,7 @@ changed.
     cd smlnj
     curl -O https://smlnj.org/dist/working/$VERSION/boot.amd64-unix.tgz
     ```
-    where `$VERSION` is the version that you are building (*e.g.*, `2022.1`).
+    where `$VERSION` is the version that you are building (*e.g.*, `2023.1`).
 
     We plan to incorporate this step into the [`build.sh`](build.sh) script in the near future.
 
@@ -80,4 +81,3 @@ to before.
     cd ..
     ./build.sh
     ```
-
