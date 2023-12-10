@@ -66,6 +66,13 @@ the **ELF** object-file format on **Linux** systems.
 
 * Added modules for the representation of booleans, integers, and words
   as hash-consed values to the HashCons library.
+
+* Reworked the `UTF8` structure to impose stricter validation of the
+  encodings ({issue-base}/276[Issue 276]).
+
+* Modified the `JSON.json` datatype to include the `INTLIT of string`
+  constructor (this change is to support future improvements to the JSON
+  parsers).
 --
 
 === Installation

@@ -2,7 +2,7 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases.
 
 --------------------------------------------------------------------------------
-Next Release
+SML/NJ 2023.1
 -------------------
 
 [2023-12-10]
@@ -24,10 +24,6 @@ Next Release
 	Added modules for the representation of booleans, integers, and words
 	as hash-consed values to the HashCons library.
 
---------------------------------------------------------------------------------
-SML/NJ 2023.1
--------------------
-
 [2023-07-27]
 	Fixed a bug in the Thompson engine and also added support for "$"
 	(end-of-line assertions) and full interval support in the RegExp
@@ -42,11 +38,6 @@ SML/NJ 2023.1
 	depend on `Int.int` and `Word.word` being the same size (an issue
 	for MLton).  Also split that code out into the internal `MaxHashTableSize`
 	module.  These changes fix legacy issue #279  (https://github.com/smlnj/legacy/issues/279).
-
-[2023-06-07]
-	Created the PPDevice Library, which holds a common implementation of
-	pretty-printing devices that can be used by both the PP and PrettyPrint
-	libraries.
 
 [2023-01-01]
         Reimplementation of the `Random` structure to use the Mersenne Twister
