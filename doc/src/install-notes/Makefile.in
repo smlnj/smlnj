@@ -23,9 +23,9 @@ ATTRS =         -a version=$(SMLNJ_VERSION) \
 
 CONF =
 
-TXT_FILES =	$(wildcard *.txt)
+ADOC_FILES =	$(wildcard *.adoc)
 
-HTML_FILES =	$(TXT_FILES:.txt=.html)
+HTML_FILES =	$(ADOC_FILES:.adoc=.html)
 
 # build rule for generating the distribution documentation
 #
@@ -37,7 +37,7 @@ doc:		html
 .PHONY:	html
 html:		$(HTML_FILES)
 
-%.html : %.txt
+%.html : %.adoc
 	$(ASCIIDOCTOR) $(ATTRS) $(CONF) -b html5 $<
 
 #################### Cleanup ####################

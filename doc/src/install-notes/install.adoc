@@ -1,0 +1,43 @@
+= Installing SML/NJ on Unix
+:revnumber: {version}
+:revdate: {release-date}
+:source-highlighter: pygments
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:release-notes: {dist-dir}{version}-README.html
+:stem: latexmath
+:source-highlighter: pygments
+
+These instructions are for installing the development version
+of **Standard ML of New Jersey** (**SML/NJ**) on **Unix** and
+Unix-like operating systems (including **Linux** and **macOS**).
+
+--
+1. clone the repository
+----
+   git clone git@github.com:smlnj/smlnj.git
+----
+
+2. `cd` to the cloned repository and fetch the boot files using
+`curl` or `wget`.
++
+[subs="+attributes"]
+----
+   cd smlnj
+   curl -O {dist-dir}boot.amd64-unix.tgz
+----
+We plan to incorporate this step into the [`build.sh`](build.sh)
+script in the future.
+
+3. build the installation
+----
+   ./build.sh
+----
+Use `build.sh -h` to see the list of options accepted by the build script.
++
+As before, you can modify the [`config/targets`](config/targets) file
+to add/remove components from the build.
+--
+
+After successful running of the [`build.sh`](build.sh) script, `bin/sml` will be the interactive
+system.

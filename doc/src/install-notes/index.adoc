@@ -1,0 +1,15 @@
+= SML/NJ {version} Distribution
+:revnumber: {version}
+:revdate: {release-date}
+:source-highlighter: pygments
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:release-notes: {dist-dir}{version}-README.html
+:stem: latexmath
+:source-highlighter: pygments
+
+* {release-notes}[Release Notes]
+
+* {history}[Change Log]
+
+* {dist-dir}/install.html[Installation Instructions]
