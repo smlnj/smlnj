@@ -5,6 +5,13 @@ correspond to SML/NJ releases.
 Next Release
 -------------------
 
+[2023-12-10]
+	Modified the `JSON.json` datatype to include the `INTLIT of string`
+	constructor.  This constructor will be used as a fall-back for when
+	integer constants in a JSON file have a large number of digits.
+	Currently, the parser does not use this mechanism, but the `FastJSONParser`
+	implementation that is under development does so.
+
 [2023-11-04]
         Reworked the `UTF8` structure to impose stricter validation of the
         encodings.  Added the `Invalid` exception for when an invalid encoding

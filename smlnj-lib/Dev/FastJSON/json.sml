@@ -16,7 +16,7 @@ structure JSON =
       | NULL
       | BOOL of bool
       | INT of IntInf.int
-      | INTLIT of string	(* integer literals with a large number of digits *)
+      | INTLIT of string	(* integer literals with > 1000 digits *)
       | FLOAT of real
       | STRING of string	(* note that string is assumed to be UTF-8 *)
 

@@ -182,6 +182,7 @@ structure JSONUtil : sig
 	    | v2s (J.BOOL true) = "'true'"
 	    | v2s (J.FLOAT _) = "number"
 	    | v2s (J.INT _) = "number"
+	    | v2s (J.INTLIT _) = "number"
 	    | v2s J.NULL = "'null'"
 	    | v2s (J.OBJECT _) = "object"
 	    | v2s (J.STRING _) = "string"
