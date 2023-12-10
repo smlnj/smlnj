@@ -22,6 +22,7 @@ datatype value
   | NULL
   | BOOL of bool
   | INT of IntInf.int
+  | INTLIT of string
   | FLOAT of real
   | STRING of string
 ------------
@@ -49,6 +50,9 @@ datatype value
 
     `INT [.kw]#of# IntInf.int`::
       represents *JSON* integer numbers.
+
+    `INTLIT [.kw]#of# string`::
+      represents *JSON* integer numbers that have a large number of digits.
 
     `FLOAT [.kw]#of# real`::
       represents *JSON* floating-point numbers.
