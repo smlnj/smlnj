@@ -114,7 +114,6 @@ functor JSONStreamOutputFn (Out : TEXT_OUTPUT_STREAM) : JSON_STREAM_OUTPUT
 			val c = (case UTF8.toAscii wchr
 			       of #"\"" => "\\\""
 				| #"\\" => "\\\\"
-				| #"/" => "\\/"
 				| #"\b" => "\\b"
 				| #"\f" => "\\f"
 				| #"\n" => "\\n"
@@ -203,6 +202,7 @@ functor JSONStreamOutputFn (Out : TEXT_OUTPUT_STREAM) : JSON_STREAM_OUTPUT
 	    | pr JSON.NULL = null printer
 	    | pr (JSON.BOOL b) = boolean (printer, b)
 	    | pr (JSON.INT n) = integer (printer, n)
+	    | pr (JSON.INTLIT n) = prVal (printer, n)
 	    | pr (JSON.FLOAT f) = float (printer, f)
 	    | pr (JSON.STRING s) = string (printer, s)
 	  in
