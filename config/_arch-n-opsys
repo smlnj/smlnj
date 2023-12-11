@@ -22,21 +22,6 @@ case `uname -s` in
       arm) ARCH=arm64 ;;
       *) exit 1 ;;
     esac
-    # check that we support this version of the OS
-    case `uname -r` in
-      16*) ;; # macOS 10.12 Sierra
-      17*) ;; # macOS 10.13 High Sierra
-      18*) ;; # macOS 10.14 Mojave
-      19*) ;; # macOS 10.15 Catalina
-      20*) ;; # macOS 11 Big Sur
-      21*) ;; # macOS 12 Monterey
-      22*) ;; # macOS 13 Ventura
-      23*) ;; # macOS 14 Sonoma
-      24*) ;; # macOS 15 Tahoe
-      25*) ;; # macOS 16 Shasta
-      26*) ;; # macOS 17 Fresno
-      *) exit 1 ;;
-    esac
     ;;
   Linux)
     OPSYS=linux
