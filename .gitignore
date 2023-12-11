@@ -110,6 +110,7 @@ runtime/share/
 system/sml.amd64-*
 system/sml.arm64-*
 tools/asdl/**/Makefile
+tools/asdl/bin/
 tools/asdl/config/config_h.in
 tools/asdl/src/asdlgen/back-end/sml/fragments.gmk
 tools/asdl/src/asdlgen/back-end/sml/fragments.sml
@@ -117,6 +118,7 @@ tools/asdl/src/asdlgen/common/config.sml
 tools/asdl/src/gen/fragments/mkfrags.sh
 tools/asdl/src/gen/fragments/mkmk.sh
 tools/asdl/src/lib/cxx/include/asdl/config.h
+tools/cfgc/cfgc
 doc/**/Makefile
 doc/doc
 doc/mk/doc-rules.gmk
