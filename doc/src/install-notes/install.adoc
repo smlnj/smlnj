@@ -15,7 +15,7 @@ Unix-like operating systems (including **Linux** and **macOS**).
 --
 1. clone the repository
 ----
-   git clone git@github.com:smlnj/smlnj.git
+   git clone https://github.com/smlnj/smlnj.git
 ----
 
 2. `cd` to the cloned repository and fetch the boot files using
