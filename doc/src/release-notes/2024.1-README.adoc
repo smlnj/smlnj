@@ -100,8 +100,9 @@ Here is a list of the issues that are fixed (or closed) with this release.
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
-
-// ***** include a list of unnumbered/legacy bugs here *****
+--
+* {legacy-issue-base}/286[Get "fgrep is obsolescent" when run *sml* on Fedora]
+--
 
 == Supported systems
 
