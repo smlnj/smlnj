@@ -130,7 +130,7 @@ tested some of them:
 | | macOS 11 (Big Sur) |
 | | macOS 12 (Monterey) | Tested
 | | macOS 13 (Ventura) | Tested
-| | macOS 14 (Sonoma) |
+| | macOS 14 (Sonoma) | Tested
 | | Ubuntu 20.04.6 LTS | Tested
 | | Ubuntu 22.04.2 LTS | Tested
 | {nbsp} | |
