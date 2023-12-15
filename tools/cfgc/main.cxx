@@ -12,6 +12,8 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
+#include <cstdio>
+#include <cstdarg>
 
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/IR/Value.h"
@@ -19,7 +21,18 @@
 #include "codegen.hxx"
 
 extern "C" {
-void Die (const char *, ...) { }
+void Die (const char *fmt, ...)
+{
+    va_list	ap;
+
+    va_start (ap, fmt);
+    fprintf (stderr, "cfgc: Fatal error -- ");
+    vfprintf (stderr, fmt, ap);
+    fprintf (stderr, "\n");
+    va_end(ap);
+
+    ::exit (1);
+}
 } // extern "C"
 
 [[noreturn]] void usage ()
