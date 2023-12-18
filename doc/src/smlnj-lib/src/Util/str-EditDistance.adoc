@@ -6,7 +6,7 @@
 :VERSION: {smlnj-version}
 
 The `EditDistance` structure computes the "optimal string alignment"
-(or  Levenshtein) distance between two strings.
+(or Levenshtein) distance between two strings.
 
 == Synopsis
 
