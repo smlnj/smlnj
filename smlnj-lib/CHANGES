@@ -1,6 +1,10 @@
 This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases.
 
+--------------------------------------------------------------------------------
+SML/NJ 2024.1
+-------------------
+
 [2023-12-18]
         Add `EditDistance` module to utility library.
 
