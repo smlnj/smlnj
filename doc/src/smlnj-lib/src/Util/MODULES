@@ -16,6 +16,7 @@ structure BitArray
 structure BitVector
 structure CharMap
 structure DynamicArray
+structure EditDistance
 structure Fifo
 structure FNVHash
 structure Format

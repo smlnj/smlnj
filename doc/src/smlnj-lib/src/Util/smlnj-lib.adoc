@@ -60,6 +60,9 @@ xref:str-DynamicArray.adoc[`[.kw]#structure# DynamicArray`]::
 xref:fun-DynamicArrayFn.adoc[`[.kw]#functor# DynamicArrayFn`]::
   Provides dynamically sized monomorphic arrays.
 
+xref:str-EditDistance.adoc[`[.kw]#structure# EditDistance`]::
+  Provides a function for computing Levenshtein between distance between strings.
+
 xref:str-Fifo.adoc[`[.kw]#structure# Fifo`]::
   Provides a functional queue data structure.
 
@@ -84,11 +87,11 @@ xref:fun-GraphSCCFn.adoc[`[.kw]#functor# GraphSCCFn`]::
 xref:fun-Hash2TableFn.adoc[`[.kw]#functor# Hash2TableFn`]::
   Provides hash tables that are keyed by two different key types.
 
+// 20
+
 xref:sig-HASH_KEY.adoc[`[.kw]#signature# HASH_KEY`]::
   Defines an interface to a monomorphic type with an equality
   test and hashing function.
-
-// 20
 
 xref:fun-HashSetFn.adoc[`[.kw]#functor# HashSetFn`]::
   Provides a hash-table-based implementation of imperative sets
@@ -124,11 +127,11 @@ xref:fun-LeftPriorityQFn.adoc[`[.kw]#functor# LeftPriorityQFn`]::
   Provides a functional implementation of priority
   queues using leaftist heaps.
 
+// 30
+
 xref:str-LibBase.adoc[`[.kw]#structure# LibBase`]::
   Provides some common definitions that are
   shared across the *SML/NJ Lbrary*.
-
-// 30
 
 xref:str-ListFormat.adoc[`[.kw]#structure# ListFormat`]::
   Provides some utility functions for converting
@@ -161,6 +164,8 @@ xref:str-Native.adoc[`[.kw]#structure# NativeInt`]::
 xref:str-Native.adoc[`[.kw]#structure# NativeWord`]::
   An alias to the native-sized word structure (_e.g._, `Word64`).
 
+// 40
+
 xref:sig-ORD_KEY.adoc[`[.kw]#signature# ORD_KEY`]::
   Defines an interface to an abstract type
   of keys with a comparison function.
@@ -170,8 +175,6 @@ xref:sig-ORD_MAP.adoc[`[.kw]#signature# ORD_MAP`]::
 
 xref:sig-ORD_SET.adoc[`[.kw]#signature# ORD_SET`]::
   Defines an interface to finite sets of ordered elements.
-
-// 40
 
 xref:str-ParserComb.adoc[`[.kw]#structure# ParserComb`]::
   Provides parser combinators over character readers.
@@ -198,6 +201,8 @@ xref:str-Random.adoc[`[.kw]#structure# Random`]::
 xref:str-RealOrderStats.adoc[`[.kw]#structure# RealOrderStats`]::
   **To be written**
 
+// 50
+
 xref:fun-RedBlackMapFn.adoc[`[.kw]#functor# RedBlackMapFn`]::
   Provides a red-black-tree implementation of the
   xref:sig-ORD_MAP.adoc[`ORD_MAP`] signature parameterized over the key type.
@@ -208,8 +213,6 @@ xref:fun-RedBlackSetFn.adoc[`[.kw]#functor# RedBlackSetFn`]::
 
 xref:str-Scan.adoc[`[.kw]#structure# Scan`]::
   **To be written**
-
-// 50
 
 xref:fun-SplayMapFn.adoc[`[.kw]#functor# SplayMapFn`]::
   Provides a splay-tree implementation of the
@@ -233,7 +236,7 @@ xref:str-UTF8.adoc[`[.kw]#structure# UTF8`]::
   Provides support for working with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
   encoded strings.
 
-// 56
+// 59
 
 == Usage
 
@@ -277,6 +280,8 @@ include::str-DynamicArray.adoc[]
 
 include::fun-DynamicArrayFn.adoc[]
 
+include::str-EditDistance.adoc[]
+
 include::str-Fifo.adoc[]
 
 include::str-FNVHash.adoc[]
@@ -291,9 +296,9 @@ include::fun-GraphSCCFn.adoc[]
 
 include::fun-Hash2TableFn.adoc[]
 
-include::sig-HASH_KEY.adoc[]
-
 // 20
+
+include::sig-HASH_KEY.adoc[]
 
 include::fun-HashSetFn.adoc[]
 
@@ -313,9 +318,9 @@ include::fun-KeywordFn.adoc[]
 
 include::fun-LeftPriorityQFn.adoc[]
 
-include::str-LibBase.adoc[]
-
 // 30
+
+include::str-LibBase.adoc[]
 
 include::str-ListFormat.adoc[]
 
@@ -331,13 +336,15 @@ include::fun-MonoArrayFn.adoc[]
 
 include::sig-MONO_HASH_TABLE.adoc[]
 
+include::str-Native.adoc[]
+
 include::sig-ORD_KEY.adoc[]
+
+// 40
 
 include::sig-ORD_MAP.adoc[]
 
 include::sig-ORD_SET.adoc[]
-
-// 40
 
 include::str-ParserComb.adoc[]
 
@@ -355,11 +362,11 @@ include::str-RealOrderStats.adoc[]
 
 include::fun-RedBlackMapFn.adoc[]
 
+// 50
+
 include::fun-RedBlackSetFn.adoc[]
 
 include::str-Scan.adoc[]
-
-// 50
 
 include::fun-SplayMapFn.adoc[]
 
@@ -373,7 +380,8 @@ include::str-URef.adoc[]
 
 include::str-UTF8.adoc[]
 
-// 56
+// 58 -- note that `str-Native.adoc` is referenced twice by the HTML,
+// but only once by the PDF
 
 // Return to normal title levels.
 :leveloffset: 0

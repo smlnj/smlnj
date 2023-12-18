@@ -64,6 +64,7 @@ structure Base64
 structure BitArray
 structure CharMap
 structure DynamicArray
+structure EditDistance
 structure Fifo
 structure FNVHash
 structure Format
@@ -153,6 +154,7 @@ char-map.sml
 dynamic-array-sig.sml
 dynamic-array.sml
 dynamic-array-fn.sml
+edit-distance.sml
 fifo-sig.sml
 fifo.sml
 fmt-fields.sml

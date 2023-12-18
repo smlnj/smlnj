@@ -1,0 +1,37 @@
+= The `EditDistance` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `EditDistance` structure computes the "optimal string alignment"
+(or  Levenshtein) distance between two strings.
+
+== Synopsis
+
+[source,sml]
+------------
+structure EditDistance
+------------
+
+== Interface
+
+[source,sml]
+------------
+val distance : string * string -> int
+------------
+
+== Description
+
+`[.kw]#val# distance : string * string \-> int`::
+  `distance (s1, s2)` returns the number of edit operations required to make the
+  two strings equal.  Edit operations include deleting a character, inserting a
+  character, replacing a character with another, and swapping two adjacent
+  characters.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__],
+https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance[Wikipedia article on
+Damerau-Levenshtein distance]
