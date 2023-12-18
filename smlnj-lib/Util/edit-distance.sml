@@ -14,7 +14,7 @@
 
 structure EditDistance : sig
 
-    val editDistance : string * string -> int
+    val distance : string * string -> int
 
   end = struct
 
@@ -32,9 +32,9 @@ structure EditDistance : sig
           then if (a <= c) then a else c
           else if (b <= c) then b else c
 
-    fun editDistance ("", b) = size b
-      | editDistance (a, "") = size a
-      | editDistance (a, b) = let
+    fun distance ("", b) = size b
+      | distance (a, "") = size a
+      | distance (a, b) = let
           val na = size a
           val nb = size b
           (* [0..na]x[0..nb] array of costs *)
