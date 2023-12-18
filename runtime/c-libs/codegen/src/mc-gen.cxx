@@ -21,8 +21,6 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
 
-//#include "llvm/Support/Host.h" /* for getHostCPUName */
-
 #include <iostream>
 
 
@@ -41,8 +39,6 @@ mc_gen::mc_gen (llvm::LLVMContext &context, const TargetInfo *info)
 	std::cerr << "    [" << errMsg << "]\n";
         assert(false);
     }
-
-//llvm::dbgs() << "host CPU = " << llvm::sys::getHostCPUName() << "\n";
 
     llvm::TargetOptions tgtOptions;
 

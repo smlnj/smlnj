@@ -157,11 +157,11 @@ if [ "$ALLOC" = "" ] ; then
     if [ -f /proc/cpuinfo ] ; then
 	# "head" is called to make sure we consider only one matching line.
 	# (On linux SMP systems there is more than one such line.)
-	cache=`fgrep 'cache size' </proc/cpuinfo | head -1`
+	cache=`grep -F 'cache size' </proc/cpuinfo | head -1`
 	if [ "x$cache" = "x" ] ; then
 	    # No cache info in /proc/cputype.  No we are checking the CPU
 	    # type....
-	    cpu=`fgrep 'cpu	' </proc/cpuinfo | head -1`
+	    cpu=`grep -F 'cpu	' </proc/cpuinfo | head -1`
 	    cputype=`echo $cpu | sed -e 's/^.*:[ \t]*\(.*\)$/\1/'`
 	    case $cputype in
 		586)
