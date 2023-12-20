@@ -5,6 +5,12 @@ correspond to SML/NJ releases.
 SML/NJ 2024.1
 -------------------
 
+[2023-12-20]
+        Fixes to the `subArray` and `truncate` functions in the dynamic array
+        implementation (both structure `DynamicArray` and functor `DynamicArrayFn`).
+        Thes changes address GitHub pull request #280 (`DynamicArray.subArray`
+        creates array with length bound+1).
+
 [2023-12-18]
         Add `EditDistance` module to utility library.
 
@@ -44,7 +50,7 @@ SML/NJ 2023.1
 	in the `HashSetFn` and `HashTableRep` modules) so that it does not
 	depend on `Int.int` and `Word.word` being the same size (an issue
 	for MLton).  Also split that code out into the internal `MaxHashTableSize`
-	module.  These changes fix legacy issue #279  (https://github.com/smlnj/legacy/issues/279).
+	module.  These changes fix legacy issue #279 (https://github.com/smlnj/legacy/issues/279).
 
 [2023-01-01]
         Reimplementation of the `Random` structure to use the Mersenne Twister
