@@ -62,9 +62,9 @@ structure DynamicArray :> DYNAMIC_ARRAY =
           fun copy i = A.sub(arrval, i+lo)
           in
             if hi <= bnd
-              then BLOCK(ref(A.tabulate(hi-lo, copy)), dflt, ref(hi-lo))
+              then BLOCK(ref(A.tabulate(hi-lo+1, copy)), dflt, ref(hi-lo))
             else if lo <= bnd
-              then BLOCK(ref(A.tabulate(bnd-lo, copy)), dflt, ref(bnd-lo))
+              then BLOCK(ref(A.tabulate(bnd-lo+1, copy)), dflt, ref(bnd-lo))
             else
               array(0, dflt)
           end
@@ -108,7 +108,7 @@ structure DynamicArray :> DYNAMIC_ARRAY =
               in
                 (bndref := !bnd'; arr := !arr')
               end
-            else fillDflt(bnd, newbnd)
+            else (bndref := newbnd; fillDflt(bnd, newbnd))
           end
 
   (* get the array slice that covers the defined portion of the array *)
