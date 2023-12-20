@@ -1,0 +1,22 @@
+name: "Cross Reference to Legacy-repository Bug"
+description: "Create an issue cross-reference to an issue in the legacy repository"
+title: "Copy bug title"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        # Instructions
+
+        Please use this form to create issues that have already been reported
+        in the legacy version (*e.g.*, 110.99.4) issue tracker.
+  - type: input
+    id: url
+    attributes:
+      label: Issue URL
+      description: >
+        Replace `N` with the development-repository issue number below.
+      value: >
+        [issue N](https://github.com/smlnj/legacy/issues/N)
+    validations:
+      required: true
