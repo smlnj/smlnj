@@ -19,6 +19,11 @@
 #include "llvm/Support/Error.h"
 #include "llvm/Support/MemoryBuffer.h"
 
+// SML/NJ runtime function for printing an error message and exiting
+extern "C" {
+extern void Die (const char *, ...);
+}
+
 /* determine the object-file format that we use on this platform and
  * include the correct header file for relocation-record definitions
  */
@@ -163,8 +168,7 @@ Relocation::Relocation (Section const &sect, llvm::object::RelocationRef const &
                 this->value = offset +  addend - (int64_t)this->addr;
             }
         } else {
-            /* error */
-            this->value = 0xdeadbeef;
+            Die("missing section for symbol");
         }
     }
 }
@@ -430,6 +434,24 @@ void CodeObject::_dumpRelocs (llvm::object::SectionRef const &sect)
 #else
                     << "]\n";
 #endif
+        } else {
+#if defined(OBJFF_MACHO)
+            llvm::object::DataRefImpl DRI = r.getRawDataRefImpl();
+            struct any_relocation_info {
+                    uint32_t r_word0, r_word1;
+                };
+#endif
+
+            llvm::dbgs() << "  " << this->_relocTypeToString(r.getType())
+                    << ": offset = " << llvm::format_hex(r.getOffset(), 10)
+#if defined(OBJFF_ELF)
+                    << "; addend = "
+                    << exitOnErr(llvm::object::ELFRelocationRef(r).getAddend())
+#elif defined(OBJFF_MACHO)
+                    << "; dataRefImpl = " << llvm::format_hex(DRI.d.a, 10)
+                    << ":" << llvm::format_hex(DRI.d.b, 10)
+#endif
+                    << "\n";
         }
     }
 
