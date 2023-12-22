@@ -84,7 +84,7 @@ val truncate : array * int -> unit
   as `arr`, and whose values in the range `[0, hi-lo]` are equal to
   the values in `arr` in the range `[lo, hi]`.  This function raises
   the {sml-basis-url}/general.html#SIG:GENERAL.Size:EXN:SPEC[`Size`]
-  exception if `lo > hi`.
+  exception if `lo < 0` or `hi < lo-1`.
 
 `[.kw]#val# fromList : elem list * elem \-> array`::
   `fromList (lst, dflt)` returns a new array created from the elements

@@ -5,10 +5,14 @@ correspond to SML/NJ releases.
 SML/NJ 2024.1
 -------------------
 
+[2023-12-22]
+	Fixed the error checking and documentation for the `subArray` function
+	in the `DynamicArray` structure and `DynamicArrayFn` functor.
+
 [2023-12-20]
         Fixes to the `subArray` and `truncate` functions in the dynamic array
         implementation (both structure `DynamicArray` and functor `DynamicArrayFn`).
-        Thes changes address GitHub pull request #280 (`DynamicArray.subArray`
+        These changes address GitHub pull request #280 (`DynamicArray.subArray`
         creates array with length bound+1).
 
 [2023-12-18]

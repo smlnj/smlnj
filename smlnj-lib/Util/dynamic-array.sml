@@ -1,6 +1,6 @@
 (* dynamic-array.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Polymorhic arrays of unbounded length
@@ -11,11 +11,12 @@ structure DynamicArray :> DYNAMIC_ARRAY =
 
     structure A = Array
 
-  (* BLOCK(arr, dflt, bnd):
-   *	arr	- current data store; is at least !bnd+1 elements
-   *	dflt	- default value
-   *	bnd	- values at indices above !bnd are default for reading
-   *)
+    (* BLOCK(arr, dflt, bnd):
+     *	arr	- current data store; is at least !bnd+1 elements with arr[0..bnd]
+     *              being the range of "defined" entries.
+     *	dflt	- default value
+     *	bnd	- values at indices above !bnd are default for reading
+     *)
     datatype 'a array = BLOCK of ('a A.array ref * 'a * int ref)
 
     exception Subscript = General.Subscript
@@ -23,9 +24,9 @@ structure DynamicArray :> DYNAMIC_ARRAY =
 
     fun array (sz, dflt) = BLOCK(ref(A.array(sz, dflt)), dflt, ref(~1))
 
-  (* fromList (l, v) creates an array using the list of values l
-   * plus the default value v.
-   *)
+    (* fromList (l, v) creates an array using the list of values l
+     * plus the default value v.
+     *)
     fun fromList (initList, dflt) = let
 	  val arr = A.fromList initList
 	  in
@@ -35,7 +36,7 @@ structure DynamicArray :> DYNAMIC_ARRAY =
     fun toList (BLOCK(ref arr, _, bnd)) = let
 	  val len = !bnd + 1
 	  in
-	    List.tabulate (len, fn i => Array.sub(arr, i))
+	    List.tabulate (len, fn i => A.sub(arr, i))
 	  end
 
     fun fromVector (vec, dflt) = let
@@ -50,24 +51,41 @@ structure DynamicArray :> DYNAMIC_ARRAY =
 	    ArraySlice.vector (ArraySlice.slice(arr, 0, SOME len))
 	  end
 
-  (* tabulate (sz,fill,dflt) acts like Array.tabulate, plus
-   * stores default value dflt.  Raises Size if sz < 0.
-   *)
+    (* tabulate (sz, fill, dflt) acts like Array.tabulate, plus
+     * stores default value dflt.  Raises Size if sz < 0.
+     *)
     fun tabulate (sz, fillFn, dflt) =
 	  BLOCK(ref(A.tabulate(sz, fillFn)), dflt, ref(sz-1))
 
-    fun subArray (BLOCK(arr, dflt, bnd), lo, hi) = let
+    (* create a new dynamic array with the elements from arr[lo..hi] *)
+    fun subArray' (BLOCK(arr, dflt, bnd), lo, hi) = let
           val arrval = !arr
           val bnd = !bnd
-          fun copy i = A.sub(arrval, i+lo)
+          (* copy the [lo..top] elements from the source array, where top is
+           * the minimum of `bnd` and `hi`.
+           *)
+          fun make top = BLOCK(
+                ref(A.tabulate(top-lo+1, fn i => A.sub(arrval, i+lo))),
+                dflt,
+                ref(top-lo))
           in
             if hi <= bnd
-              then BLOCK(ref(A.tabulate(hi-lo+1, copy)), dflt, ref(hi-lo))
-            else if lo <= bnd
-              then BLOCK(ref(A.tabulate(bnd-lo+1, copy)), dflt, ref(bnd-lo))
-            else
-              array(0, dflt)
+              (* the new array is a slice of the defined range *)
+              then make hi
+            else if (lo <= bnd)
+              (* the new array includes both the "defined" and default ranges *)
+              then make bnd
+              (* the new array only includes the default range *)
+              else array(0, dflt)
           end
+
+    (* check that the specified bounds are valid and then call subArray' to do
+     * the actual work.
+     *)
+    fun subArray (da, lo, hi) =
+          if (lo < 0) orelse (hi < lo-1)
+            then raise Size
+            else subArray' (da, lo, hi)
 
     fun default (BLOCK(_, dflt, _)) = dflt
 
@@ -76,7 +94,7 @@ structure DynamicArray :> DYNAMIC_ARRAY =
 
     fun bound (BLOCK(_, _, bnd)) = (!bnd)
 
-    fun expand(arr, oldlen, newlen, dflt) = let
+    fun expand (arr, oldlen, newlen, dflt) = let
           fun fillfn i = if i < oldlen then A.sub(arr,i) else dflt
           in
             A.tabulate(newlen, fillfn)
@@ -86,9 +104,9 @@ structure DynamicArray :> DYNAMIC_ARRAY =
           val len = A.length (!arr)
           in
             if idx >= len
-              then arr := expand(!arr, len, Int.max(len+len,idx+1), dflt)
+              then arr := expand(!arr, len, Int.max(len+len, idx+1), dflt)
               else ();
-            A.update(!arr,idx,v);
+            A.update(!arr, idx, v);
             if idx > !bnd then bnd := idx else ()
           end
 
@@ -97,14 +115,14 @@ structure DynamicArray :> DYNAMIC_ARRAY =
           val newbnd = sz - 1
           val arr_val = !arr
           val array_sz = A.length arr_val
-          fun fillDflt (i,stop) =
+          fun fillDflt (i, stop) =
                 if i = stop then ()
-                else (A.update(arr_val,i,dflt); fillDflt(i-1, stop))
+                else (A.update(arr_val, i, dflt); fillDflt(i-1, stop))
           in
-            if newbnd < 0 then (bndref := ~1;arr := A.array(0, dflt))
+            if newbnd < 0 then (bndref := ~1; arr := A.array(0, dflt))
             else if newbnd >= bnd then ()
             else if 3 * sz < array_sz then let
-              val BLOCK(arr',_,bnd') = subArray(a, 0, newbnd)
+              val BLOCK(arr', _, bnd') = subArray'(a, 0, newbnd)
               in
                 (bndref := !bnd'; arr := !arr')
               end
@@ -137,4 +155,3 @@ structure DynamicArray :> DYNAMIC_ARRAY =
 *)
 
   end (* DynamicArrayFn *)
-

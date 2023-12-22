@@ -1,6 +1,6 @@
 (* dynamic-array-sig.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Signature for unbounded polymorphic arrays.
@@ -18,10 +18,10 @@ signature DYNAMIC_ARRAY =
        *)
 
     val subArray : ('a array * int * int) -> 'a array
-      (* `subArray (a,lo,hi)` creates a new array with the same default
+      (* `subArray (a, lo, hi)` creates a new array with the same default
        * as `a`, and whose values in the range [0,hi-lo] are equal to
        * the values in `a` in the range [lo, hi].
-       * Raises Size if lo > hi
+       * Raises Size if lo < 0 or hi < lo-1.
        *)
 
     val fromList : 'a list * 'a -> 'a array
@@ -41,7 +41,7 @@ signature DYNAMIC_ARRAY =
       (* return the array's contents as a vector *)
 
     val tabulate: (int * (int -> 'a) * 'a) -> 'a array
-      (* tabulate (sz,fill,dflt) acts like Array.tabulate, plus
+      (* tabulate (sz, fill, dflt) acts like Array.tabulate, plus
        * stores default value dflt.  Raises Size if sz < 0.
        *)
 
