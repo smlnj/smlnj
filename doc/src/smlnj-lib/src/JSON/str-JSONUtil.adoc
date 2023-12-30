@@ -5,7 +5,10 @@
 :source-highlighter: pygments
 :VERSION: {smlnj-version}
 
-some overview
+The `JSONUtil` module defines a collection of utility functions for
+working with *JSON* values.  These include operations for testing
+if a value is of a given type and navigating the structure of a
+*JSON* value.
 
 == Synopsis
 
