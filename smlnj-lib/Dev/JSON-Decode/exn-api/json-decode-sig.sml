@@ -7,8 +7,6 @@
 signature JSON_DECODE =
   sig
 
-    datatype 'a result = Err of exn | Ok of 'a
-
     (* exceptions used as errors; note that most of these come from the
      * JSONUtil module.
      *)
@@ -24,8 +22,9 @@ signature JSON_DECODE =
 
     type 'a decoder
 
-    val decode : 'a decoder -> JSON.value -> 'a result
-    val decodeString : 'a decoder -> string -> 'a result
+    val decode : 'a decoder -> JSON.value -> 'a
+    val decodeString : 'a decoder -> string -> 'a
+    val decodeFile : 'a decoder -> string -> 'a
 
     val bool : bool decoder
     val int : int decoder
@@ -37,18 +36,26 @@ signature JSON_DECODE =
     (* returns the raw JSON value without further decoding *)
     val raw : JSON.value decoder
 
-    (* returns a decoder that maps the JSON `null` value to `Ok NONE` and otherwise
-     * decodes the value using the supplied decoder.
+    (* returns a decoder that maps the JSON `null` value to `NONE` and otherwise
+     * returns `SOME v`, where `v` is the result of decoding the value using
+     * the supplied decoder.
      *)
     val nullable : 'a decoder -> 'a option decoder
 
     (* decodes a JSON ARRAY into a list of values *)
     val list : 'a decoder -> 'a list decoder
 
-    (* returns a decoder that attempts to decode a value and returns `Ok NONE`
+    (* returns a decoder that attempts to decode a value and returns `NONE`
      * on failure (instead of an error result).
      *)
     val try : 'a decoder -> 'a option decoder
+
+    (* sequence decoders using "continuation-passing" style; for example
+     *
+     *  seq (field "x" number)
+     *      (succeed (fn x => x*x))
+     *)
+    val seq : 'a decoder -> ('a -> 'b) decoder -> 'b decoder
 
     (* `field key d` returns a decoder that decodes the specified object field
      * using the decoder `d`.
@@ -74,7 +81,7 @@ signature JSON_DECODE =
      *)
     val at : JSONUtil.path -> 'a decoder -> 'a decoder
 
-    (* `succeed v` returns a decoder that always yields `Ok v` for any JSON input *)
+    (* `succeed v` returns a decoder that always yields `v` for any JSON input *)
     val succeed : 'a -> 'a decoder
 
     (* `fail msg` returns a decoder that returns `Err(Failure(msg, jv))` for
@@ -96,11 +103,20 @@ signature JSON_DECODE =
     val choose : 'a decoder list -> 'a decoder
 
     val map : ('a -> 'b) -> 'a decoder -> 'b decoder
-    val map2 : ('a * 'b -> 'c)
+    val map2 : ('a * 'b -> 'res)
           -> ('a decoder * 'b decoder)
-          -> 'c decoder
-    val map3 : ('a * 'b * 'c -> 'd)
+          -> 'res decoder
+    val map3 : ('a * 'b * 'c -> 'res)
           -> ('a decoder * 'b decoder * 'c decoder)
-          -> 'd decoder
+          -> 'res decoder
+    val map4 : ('a * 'b * 'c * 'd -> 'res)
+          -> ('a decoder * 'b decoder * 'c decoder * 'd decoder)
+          -> 'res decoder
+
+    (* versions of the map combinators that just apply the identity to the tuple *)
+    val tuple2 : ('a decoder * 'b decoder) -> ('a * 'b) decoder
+    val tuple3 : ('a decoder * 'b decoder * 'c decoder) -> ('a * 'b * 'c) decoder
+    val tuple4 : ('a decoder * 'b decoder * 'c decoder * 'd decoder)
+          -> ('a * 'b * 'c * 'd) decoder
 
   end
