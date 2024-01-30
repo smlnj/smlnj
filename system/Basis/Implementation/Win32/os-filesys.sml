@@ -39,11 +39,11 @@ structure OS_FileSys : OS_FILE_SYS =
     fun openDir s = let
 	  fun rse' s = rse "openDir" s
 	  val _ = not (isDir s) andalso rse' "invalid directory"
-	  fun mkValidDir s = if (S.sub(s,S.size s - 1) <> W32G.arcSepChar)
-		then s^(S.str W32G.arcSepChar)
-		else s
+	  fun mkValidDir s = if W32G.isArcSepChar(S.sub(s, S.size s - 1))
+		then s
+                else s ^ W32G.arcSep
 	  val p = (mkValidDir s)^"*"
-	  val (h,firstName) = W32FS.findFirstFile p
+	  val (h, firstName) = W32FS.findFirstFile p
 	  in
 	    if not (Handle.isValid h)
 	      then rse' "cannot find first file"

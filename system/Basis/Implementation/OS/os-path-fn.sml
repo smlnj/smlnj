@@ -27,12 +27,17 @@ functor OS_PathFn (OSPathBase : sig
     val splitVolPath : string -> (bool * Substring.substring * Substring.substring)
 	(* Split a string into the volume part and arcs part and note whether it
 	 * is absolute.
-	 * Note: it is guaranteed that this is never called with "".
+	 * Note: it is guaranteed that this function is never called with "".
 	 *)
     val joinVolPath : (bool * string * string) -> string
 	(* join a volume and path; raise Path on invalid volumes *)
-    val arcSepChar : char
-	(* the character used to separate arcs (e.g., #"/" on UNIX) *)
+    val arcSep : string
+	(* the arc separator (e.g., "/" on UNIX) *)
+    val isArcSepChar : char -> bool
+        (* a predicate to test if a character is an arc separator; by using a predicate
+         * for this purpose, we allow for multiple separator characters (e.g., both
+         * forward and backward slashs are valid on Windows.
+         *)
     val sameVol : string * string -> bool
 
   end) : OS_PATH = struct
@@ -45,8 +50,6 @@ functor OS_PathFn (OSPathBase : sig
 
   (* check an arc to see if it is valid and raise InvalidArc if not *)
     fun checkArc arc = if P.validArc arc then arc else raise InvalidArc
-
-    val arcSepStr = String.str P.arcSepChar
 
     val parentArc = P.parentArc
     val currentArc = P.currentArc
@@ -62,7 +65,7 @@ functor OS_PathFn (OSPathBase : sig
 
     fun fromString "" = {isAbs = false, vol = "", arcs = []}
       | fromString p = let
-	  val fields = SS.fields (fn c => (c = P.arcSepChar))
+	  val fields = SS.fields P.isArcSepChar
 	  val (isAbs, vol, rest) = P.splitVolPath p
 	  in
 	    { isAbs = isAbs,
@@ -75,7 +78,7 @@ functor OS_PathFn (OSPathBase : sig
       | toString {isAbs, vol, arcs} = let
 	  fun f [] = [""]
 	    | f [a] = [checkArc a]
-	    | f (a :: al) = (checkArc a) :: arcSepStr :: (f al)
+	    | f (a :: al) = (checkArc a) :: P.arcSep :: (f al)
 	  in
 	    if validVolume{isAbs=isAbs, vol=vol}
 	      then String.concat(P.joinVolPath(isAbs, vol, "") :: f arcs)
@@ -127,7 +130,7 @@ functor OS_PathFn (OSPathBase : sig
 	  end
     fun dir p = #dir(splitDirFile p)
     fun file p = #file(splitDirFile p)
-    
+
     fun splitBaseExt p = let
 	  val {dir, file} = splitDirFile p
 	  val (file', ext') = SS.splitr (fn c => c <> #".") (SS.full file)
@@ -161,7 +164,7 @@ functor OS_PathFn (OSPathBase : sig
 		      of (P.Arc _ :: r) => scanArcs(r, al)
 		       | _ => scanArcs(P.Parent::l, al)
 		     (* end case *))
-		  | a' => scanArcs(a' :: l, al) 
+		  | a' => scanArcs(a' :: l, al)
 		(* end case *))
 	  fun scanPath relPath = scanArcs([], relPath)
 	  fun mkArc (P.Arc a) = a

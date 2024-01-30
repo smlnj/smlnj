@@ -35,29 +35,28 @@ structure OS_Path = OS_PathFn (
 
       val volSepChar = #":"
 
-      val arcSepChar = W32G.arcSepChar
-      val arcSep = S.str arcSepChar
+      val arcSep = W32G.arcSep
+      val isArcSepChar = W32G.isArcSepChar
 
-      fun volPresent vol = 
+      fun volPresent vol =
           (String.size vol >= 2) andalso
 	  (C.isAlpha(S.sub(vol,0)) andalso (S.sub(vol,1) = volSepChar))
 
-      fun validVolume (_,vol) = 
+      fun validVolume (_,vol) =
 	  (SS.isEmpty vol) orelse volPresent(SS.string vol)
 
       val emptySS    = SS.full ""
 
-      fun splitPath (vol, s) = 
-	  if (SS.size s >= 1) andalso (SS.sub(s, 0) = arcSepChar) then
-	       (true, vol, SS.triml 1 s)
-	  else (false, vol, s)
+      fun splitPath (vol, s) = if (SS.size s > 0) andalso isArcSepChar(SS.sub(s, 0))
+            then (true, vol, SS.triml 1 s)
+	    else (false, vol, s)
 
       fun splitVolPath "" = (false, emptySS, emptySS)
-	| splitVolPath s = 
-	  if volPresent s then splitPath (SS.splitAt (SS.full s, 2))
-	  else splitPath (emptySS, SS.full s)
+	| splitVolPath s = if volPresent s
+            then splitPath (SS.splitAt (SS.full s, 2))
+	    else splitPath (emptySS, SS.full s)
 
-      fun joinVolPath arg = 
+      fun joinVolPath arg =
 	  let fun checkVol vol = if (volPresent vol) then vol else raise Path
 	      fun aux (true,"","") = arcSep
 		| aux (true,"",s) = arcSep^s

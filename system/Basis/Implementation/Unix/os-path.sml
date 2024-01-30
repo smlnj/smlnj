@@ -47,7 +47,9 @@ structure OS_Path = OS_PathFn (
       | joinVolPath (false, "", s) = s
       | joinVolPath _ = raise Path (* invalid volume *)
 
-    val arcSepChar = #"/"
+    val arcSep = "/"
+
+    fun isArcSepChar #"/" = true | isArcSepChar _ = false
 
     fun sameVol (v1, v2: string) = v1 = v2
 

@@ -15,7 +15,8 @@ signature WIN32_GENERAL =
 
     val isValidHandle : hndl -> bool
 
-    val arcSepChar : char
+    val arcSep : string
+    val isArcSepChar : char -> bool
 
     val cfun : string -> string -> 'a -> 'b
     val getConst : string -> string -> word
