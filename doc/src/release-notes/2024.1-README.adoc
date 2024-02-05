@@ -104,6 +104,9 @@ associated with them (or were bug fixes ported from the legacy
 repository):
 --
 * {legacy-issue-base}/286[Get "fgrep is obsolescent" when run *sml* on Fedora]
+
+* The implementations of `PackWord64Little.update` and `PackWord64Big.update`
+  were swapped on 64-bit platforms.
 --
 
 == Supported systems

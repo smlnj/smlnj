@@ -108,6 +108,15 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 //====================================================================
 //== Recent updates
 
+//--------------------------------------------------------------------
+[2024/02/05]::
++
+The implementations of `PackWord64Little.update` and `PackWord64Big.update`
+were swapped on 64-bit platforms (resulting in byte-order reversal).  These
+have been fixed.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //====================================================================
 == Version 2023.1; 2023/12/10
 
