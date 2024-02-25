@@ -11,6 +11,8 @@
 # the path to the SML compiler to use for the build.
 #
 
+HERE=`pwd`
+
 usage() {
   echo "usage: cmb-make [ options ] [ <sml-cmd> ]"
   echo "  options:"
@@ -34,7 +36,7 @@ while [ "$#" != "0" ] ; do
     -h) usage ;;
     -verbose) CM_VERBOSE=true ;;
     -32)
-	echo "$this: 32-bits not supported anymore"
+	echo "cmb-make: 32-bits not supported anymore"
 	usage
 	;;
     -64) ;;
@@ -59,12 +61,14 @@ case $SMLBIN in
   *) if [ -d $SMLBIN ] ; then
       SMLBIN=$(cd $SMLBIN; pwd)
     else
-      echo "$this: directory '$SMLBIN' does not exist"
+      echo "cmb-make: directory '$SMLBIN' does not exist"
       exit 1
     fi ;;
 esac
 if [ $SMLBIN != "." ] ; then
-  echo "$this: adding '$SMLBIN' to PATH"
+  if [ x"$CM_VERBOSE" = xtrue ] ; then
+    echo "cmb-make: adding '$SMLBIN' to PATH"
+  fi
   PATH=$PATH:$SMLBIN
 fi
 

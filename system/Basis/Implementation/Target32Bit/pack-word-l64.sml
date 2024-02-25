@@ -77,15 +77,15 @@ structure PackWord64Little : PACK_WORD =
 	  val k = scale i
 	  val (hi, lo) = W64.extern w
 	  in
-	    W8A.update (arr, k,   w32ToW8 lo);
-	    W8A.update (arr, k+1, w32ToW8(W32.rshiftl(lo,  0w8)));
-	    W8A.update (arr, k+2, w32ToW8(W32.rshiftl(lo, 0w16)));
-	    W8A.update (arr, k+3, w32ToW8(W32.rshiftl(lo, 0w24)));
-	    W8A.update (arr, k,   w32ToW8 hi);
-	    W8A.update (arr, k+1, w32ToW8(W32.rshiftl(hi,  0w8)));
-	    W8A.update (arr, k+2, w32ToW8(W32.rshiftl(hi, 0w16)));
-	    W8A.update (arr, k+3, w32ToW8(W32.rshiftl(hi, 0w24)))
+	    W8A.update (arr, k,    w32ToW8 lo); (* LSB first *)
+	    W8A.update (arr, k++1, w32ToW8(W32.rshiftl(lo,  0w8)));
+	    W8A.update (arr, k++2, w32ToW8(W32.rshiftl(lo, 0w16)));
+	    W8A.update (arr, k++3, w32ToW8(W32.rshiftl(lo, 0w24)));
+	    W8A.update (arr, k,    w32ToW8 hi);
+	    W8A.update (arr, k++1, w32ToW8(W32.rshiftl(hi,  0w8)));
+	    W8A.update (arr, k++2, w32ToW8(W32.rshiftl(hi, 0w16)));
+	    W8A.update (arr, k++3, w32ToW8(W32.rshiftl(hi, 0w24))) (* MSB last *)
 	  end
 
-  end
+  end (* structure PackWord64Little *)
 end (* local *)

@@ -315,7 +315,7 @@ fun ppExp (context as (env,source_opt)) ppstrm =
 	  | ppExp' (SEQexp exps,_,d) =
 	      PU.ppClosedSequence ppstrm
 	        {front=(C PP.string "("),
-		 sep=PU.sepWithSpc ",",
+		 sep=PU.sepWithSpc ";",
 		 back=(C PP.string ")"),
 		 pr=(fn _ => fn exp => ppExp'(exp,false,d-1)),
 		 style=PU.INCONSISTENT}

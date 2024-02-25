@@ -22,7 +22,10 @@ structure PackReal64Native : PACK_REAL =
 
     val bytesPerElem : int = 8
 
-    val isBigEndian : bool = true  (* place holder *)
+    (* place holder that overridden when the actual Basis structure is defined
+     * (see bind-pack-*.sml for details).
+     *)
+    val isBigEndian : bool = true
 
     val createW8Vec : int -> BV.vector = InlineT.cast Assembly.A.create_s
 
