@@ -95,6 +95,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/279["Unable to build LLVM" error with 2023.1]
 | [.bugid]#280#
 | {pull-base}/280[`DynamicArray.subArray` creates array with length bound+1]
+| [.bugid]#284#
+| {issue-base}/284[Incorrect printing of source code in error message]
 // | [.bugid]#@ID#
 // | @DESCRIPTION@
 |=======

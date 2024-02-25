@@ -109,6 +109,14 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 //== Recent updates
 
 //--------------------------------------------------------------------
+[2024/02/25]::
++
+Fixed {issue-base}/284[Issue #284 (Incorrect printing of source code
+in error message)].
++
+owner:cs.uchicago.edu/~dbm[Dave MacQueen]
+
+//--------------------------------------------------------------------
 [2024/02/05]::
 +
 The implementations of `PackWord64Little.update` and `PackWord64Big.update`
