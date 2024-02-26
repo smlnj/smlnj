@@ -107,6 +107,8 @@ repository):
 --
 * {legacy-issue-base}/286[Get "fgrep is obsolescent" when run *sml* on Fedora]
 
+* {legacy-issue-base}/297[Additional operations for the `MONO_HASH_TABLE` interface]
+
 * The implementations of `PackWord64Little.update` and `PackWord64Big.update`
   were swapped on 64-bit platforms.
 --

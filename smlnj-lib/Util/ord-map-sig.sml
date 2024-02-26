@@ -52,7 +52,7 @@ signature ORD_MAP =
     val findAndRemove : 'a map * Key.ord_key -> ('a map * 'a) option
         (* If an item with the specified key exists in the map, then it
          * is removed and the residual map and the item are returned.
-         * Otherwise, `None` is returned.
+         * Otherwise, `NONE` is returned.
          *)
 
     val remove : 'a map * Key.ord_key -> 'a map * 'a

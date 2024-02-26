@@ -32,11 +32,15 @@ val clear : ('a, 'b) hash_table -> unit
 
 val insert : ('a, 'b) hash_table -> ('a * 'b) -> unit
 
+val insertWith  : ('b * 'b -> 'b) -> ('a, 'b) hash_table -> 'a * 'b -> unit
+val insertWithi : ('a * 'b * 'b -> 'b) -> ('a, 'b) hash_table -> 'a * 'b -> unit
+
 val inDomain : ('a, 'b) hash_table -> 'a -> bool
 
 val lookup : ('a, 'b) hash_table -> 'a -> 'b
-
 val find : ('a, 'b) hash_table -> 'a -> 'b option
+
+val findAndRemove : ('a, 'b) hash_table -> 'a -> 'b option
 
 val remove : ('a, 'b) hash_table -> 'a -> 'b
 
@@ -84,6 +88,16 @@ val bucketSizes : ('a, 'b) hash_table -> int list
   `insert tbl (key, item)` inserts a mapping from `key` to `item` into `tbl`.
   Any existing mapping of `key` is discarded.
 
+`[.kw]#val# insertWith : ('b * 'b -> 'b) \-> ('a, 'b) hash_table \-> 'a * 'b \-> unit`::
+  `insertWith comb (tbl, key, v)` adds the mapping from `key` to `value` to `tbl`,
+  where `value = comb(v', v)`, if `tbl` already contained a mapping from `key`
+  to `v'`; otherwise, `value = v`.
+
+`[.kw]#val# insertWithi : ('a * 'b * 'b -> 'b) \-> ('a, 'b) hash_table \-> 'a * 'b \-> unit``::
+  `insertWithi comb (tbl, key, v)` adds the mapping from `key` to `value` to `tbl`,
+  where `value = comb(key, v', v)`, if `m` already contained a mapping from `key`
+  to `v'`; otherwise, `value = v`.
+
 `[.kw]#val# inDomain : ('a, 'b) hash_table \-> 'a \-> bool`::
   `inDomain tbl key` returns `true` if, and only if, `key` is in the
   domain of the table
@@ -96,6 +110,11 @@ val bucketSizes : ('a, 'b) hash_table -> int list
 `[.kw]#val# find : ('a, 'b) hash_table \-> 'a \-> 'b option`::
   `find tbl key` returns the `SOME v` if `key` is mapped to `v` in `tbl`.
   Otherwise, it returns `NONE`.
+
+`[.kw]#val# findAndRemove : ('a, 'b) hash_table -> 'a -> 'b option`::
+  `findAndRemove (tbl, key)` returns `SOME v` and removes `key` from the
+  table if `tbl` maps `key` to `v`.  If `key` is not in the domain of `tbl`,
+  then `NONE` is returned and `tbl` is unchanged.
 
 [[val:remove]]
 `[.kw]#val# remove : ('a, 'b) hash_table \-> 'a \-> 'b`::
@@ -168,4 +187,5 @@ map (fn x => x) tbl
 
 == See Also
 
+xref:sig-MONO_HASH_TABLE.adoc[`MONO_HASH_TABLE`],
 xref:smlnj-lib.adoc[__The Util Library__]

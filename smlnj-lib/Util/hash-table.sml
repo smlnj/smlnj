@@ -46,6 +46,32 @@ structure HashTable : HASH_TABLE =
   (* remove all elements from the table *)
     fun clear (HT{table, n_items, ...}) = (HTRep.clear(!table); n_items := 0)
 
+    fun insertWithi combine (tbl as HT{hash_fn, eq_pred, table, n_items, ...}) (key, item) = let
+	  val arr = !table
+	  val sz = Array.length arr
+	  val hash = hash_fn key
+	  val indx = index (hash, sz)
+	  fun look HTRep.NIL = (
+		Array.update(arr, indx,
+                  HTRep.B(hash, key, item, Array.sub(arr, indx)));
+		n_items := !n_items + 1;
+		HTRep.growTableIfNeeded (table, !n_items);
+		HTRep.NIL)
+	    | look (HTRep.B(h, k, v, r)) = if ((hash = h) andalso eq_pred(key, k))
+		then HTRep.B(hash, key, combine(k, v, item), r)
+		else (case (look r)
+		   of HTRep.NIL => HTRep.NIL
+		    | rest => HTRep.B(h, k, v, rest)
+		  (* end case *))
+	  in
+	    case (look (Array.sub (arr, indx)))
+	     of HTRep.NIL => ()
+	      | b => Array.update(arr, indx, b)
+	    (* end case *)
+	  end
+
+    fun insertWith combine = insertWithi (fn (_, v1, v2) => combine(v1, v2))
+
   (* Insert an item.  If the key already has an item associated with it,
    * then the old item is discarded.
    *)
@@ -111,6 +137,25 @@ structure HashTable : HASH_TABLE =
 	  in
 	    look (Array.sub (arr, indx))
 	  end
+
+    fun findAndRemove (HT{hash_fn, eq_pred, not_found, table, n_items}) key = let
+	  val arr = !table
+	  val sz = Array.length arr
+	  val hash = hash_fn key
+	  val indx = index (hash, sz)
+          fun look HTRep.NIL = raise not_found
+            | look (HTRep.B(h, k, v, r)) = if ((hash = h) andalso eq_pred(key, k))
+                then (v, r)
+                else let
+                  val (v', r') = look r
+                  in
+                    (v', HTRep.B(h, k, v, r'))
+                  end
+          val (v, bucket) = look (Array.sub (arr, indx))
+          in
+            Array.update (arr, indx, bucket); SOME v
+	  end
+            handle _ => NONE
 
   (* Remove an item.  The table's exception is raised if
    * the item doesn't exist.

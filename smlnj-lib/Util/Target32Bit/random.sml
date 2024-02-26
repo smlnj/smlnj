@@ -271,7 +271,7 @@ structure Random :> RANDOM =
           val w = randNativeWord rs
           val r = Real.fromLargeInt(W32.toLargeInt w)
           in
-            r * (1.0/9007199254740992.0)
+            r * (1.0/4294967296.0)
           end
 
     fun randRange (i, j) = if j < i

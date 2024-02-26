@@ -30,6 +30,22 @@ signature HASH_TABLE =
 	 * then the old item is discarded.
 	 *)
 
+    val insertWith  : ('b * 'b -> 'b)
+          -> ('a, 'b) hash_table
+          -> 'a * 'b
+          -> unit
+	(* Insert an item with a combining function to resolve collisions.
+	 * The first argument to the combining function is the existing value,
+	 * and the second argument is the value being inserted into the table.
+	 *)
+    val insertWithi : ('a * 'b * 'b -> 'b)
+          -> ('a, 'b) hash_table
+          -> 'a * 'b
+          -> unit
+	(* Like insertWith, except that the combining function also takes the
+	 * key as an argument.
+	 *)
+
     val inDomain : ('a, 'b) hash_table -> 'a -> bool
 	(* return true, if the key is in the domain of the table *)
 
@@ -38,6 +54,12 @@ signature HASH_TABLE =
 
     val find : ('a, 'b) hash_table -> 'a -> 'b option
 	(* Look for an item, return NONE if the item doesn't exist *)
+
+    val findAndRemove : ('a, 'b) hash_table -> 'a -> 'b option
+        (* If an item with the specified key exists in the table, then it
+         * is removed and the item is returned.  Otherwise, `NONE` is
+         * returned.
+         *)
 
     val remove : ('a, 'b) hash_table -> 'a -> 'b
 	(* Remove an item, returning the item.  The table's exception is raised if

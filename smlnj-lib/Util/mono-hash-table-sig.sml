@@ -30,6 +30,22 @@ signature MONO_HASH_TABLE =
 	 * then the old item is discarded.
 	 *)
 
+    val insertWith  : ('a * 'a -> 'a)
+          -> 'a hash_table
+          -> Key.hash_key * 'a
+          -> unit
+	(* Insert an item with a combining function to resolve collisions.
+	 * The first argument to the combining function is the existing value,
+	 * and the second argument is the value being inserted into the table.
+	 *)
+    val insertWithi : (Key.hash_key * 'a * 'a -> 'a)
+          -> 'a hash_table
+          -> Key.hash_key * 'a
+          -> unit
+	(* Like insertWith, except that the combining function also takes the
+	 * key as an argument.
+	 *)
+
     val inDomain : 'a hash_table -> Key.hash_key -> bool
 	(* return true, if the key is in the domain of the table *)
 
@@ -38,6 +54,12 @@ signature MONO_HASH_TABLE =
 
     val find : 'a hash_table -> Key.hash_key -> 'a option
 	(* Look for an item, return NONE if the item doesn't exist *)
+
+    val findAndRemove : 'a hash_table -> Key.hash_key -> 'a option
+        (* If an item with the specified key exists in the table, then it
+         * is removed and the item is returned.  Otherwise, `NONE` is
+         * returned.
+         *)
 
     val remove : 'a hash_table -> Key.hash_key -> 'a
 	(* Remove an item, returning the item.  The table's exception is raised if

@@ -39,10 +39,18 @@ val clear : 'a hash_table -> unit
 
 val insert : 'a hash_table -> (Key.hash_key * 'a) -> unit
 
+val insertWith  : ('a * 'a -> 'a) -> 'a hash_table -> Key.hash_key * 'a -> unit
+val insertWithi : (Key.hash_key * 'a * 'a -> 'a)
+      -> 'a hash_table
+      -> Key.hash_key * 'a
+      -> unit
+
 val inDomain : 'a hash_table -> Key.hash_key -> bool
 
 val lookup : 'a hash_table -> Key.hash_key -> 'a
 val find : 'a hash_table -> Key.hash_key -> 'a option
+
+val findAndRemove : 'a hash_table -> Key.hash_key -> 'a option
 
 val remove : 'a hash_table -> Key.hash_key -> 'a
 
@@ -93,6 +101,16 @@ val bucketSizes : 'a hash_table -> int list
   `insert tbl (key, item)` inserts a mapping from `key` to `item` into `tbl`.
   Any existing mapping of `key` is discarded.
 
+`[.kw]#val# insertWith : ('a * 'a -> 'a) \-> 'a hash_table \-> Key.hash_key * 'a \-> unit`::
+  `insertWith comb (tbl, key, v)` adds the mapping from `key` to `value` to `tbl`,
+  where `value = comb(v', v)`, if `tbl` already contained a mapping from `key`
+  to `v'`; otherwise, `value = v`.
+
+`[.kw]#val# insertWithi : (Key.hash_key * 'a * 'a -> 'a) \-> 'a hash_table \-> Key.hash_key * 'a \-> unit`::
+  `insertWithi comb (tbl, key, v)` adds the mapping from `key` to `value` to `tbl`,
+  where `value = comb(key, v', v)`, if `m` already contained a mapping from `key`
+  to `v'`; otherwise, `value = v`.
+
 `[.kw]#val# inDomain : 'a hash_table \-> Key.hash_key \-> bool`::
   `inDomain tbl key` returns `true` if, and only if, `key` is in the
   domain of the table
@@ -105,6 +123,11 @@ val bucketSizes : 'a hash_table -> int list
 `[.kw]#val# find : 'a hash_table \-> Key.hash_key \-> 'a option`::
   `find tbl key` returns the `SOME v` if `key` is mapped to `v` in `tbl`.
   Otherwise, it returns `NONE`.
+
+`[.kw]#val# findAndRemove : 'a hash_table -> Key.hash_key -> 'a option`::
+  `findAndRemove (tbl, key)` returns `SOME v` and removes `key` from the
+  table if `tbl` maps `key` to `v`.  If `key` is not in the domain of `tbl`,
+  then `NONE` is returned and `tbl` is unchanged.
 
 [[val:remove]]
 `[.kw]#val# remove : 'a hash_table \-> Key.hash_key \-> 'a`::
