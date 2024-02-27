@@ -1,0 +1,21 @@
+Library
+
+  signature JSON_DECODE
+
+  structure JSON
+  structure JSONUtil
+  structure JSONDecode
+
+  structure TestDecode
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  ../../../JSON/json-lib.cm
+
+  json-decode-sig.sml
+  json-decode.sml
+
+  test-decode.sml
+

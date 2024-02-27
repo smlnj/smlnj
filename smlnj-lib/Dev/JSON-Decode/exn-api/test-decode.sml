@@ -14,9 +14,11 @@ structure TestDecode : sig
     structure JD = JSONDecode
 
     datatype value = datatype JSON.value
-    datatype result = datatype JSONDecode.result
+    datatype 'a result = Ok of 'a | Err of exn
 
     fun pr l = print(concat l)
+
+    fun decode decoder jv = (Ok(JD.decode decoder jv) handle ex => Err ex)
 
     (* pipe operator for sequencing decode operations *)
     fun |> (x, f) = f x
@@ -36,11 +38,13 @@ structure TestDecode : sig
     val jv10 = OBJECT[]
     val jv11 = OBJECT[("fst", INT 1), ("snd", INT 2)]
     val jv12 = OBJECT[("name", STRING "Jane"), ("age", INT 42)]
+    val rv12 = {name = "Jane", age = 42}
     val jv13 = OBJECT[("name", STRING "Bob"), ("age", INT 17)]
+    val rv13 = {name = "Bob", age = 17}
     val jv14 = ARRAY[jv12, jv13]
 
     fun expect result (name, decoder, jv) = (
-          case (result, JD.decode decoder jv)
+          case (result, decode decoder jv)
            of (Ok x, Ok y) => if (x = y)
                 then pr ["# ", name, ": correct\n"]
                 else pr ["! ", name, ": wrong result\n"]
@@ -84,6 +88,17 @@ structure TestDecode : sig
           expectOk "Jane" ("t14a", JD.at [JU.SUB 0, JU.SEL "name"] JD.string, jv14);
           expectOk 42 ("t14b", JD.at [JU.SUB 0, JU.SEL "age"] JD.int, jv14);
           expectOk "Bob" ("t14c", JD.at [JU.SUB 1, JU.SEL "name"] JD.string, jv14);
-          expectOk 17 ("t14d", JD.sub 1 (JD.field "age" JD.int), jv14))
+          expectOk 17 ("t14d", JD.sub 1 (JD.field "age" JD.int), jv14);
+          (* required fields *)
+          expectOk rv12 ("t15a",
+            JD.succeed (fn (n : string) => fn (a : int) => {name=n, age=a})
+              |> JD.reqField "name" JD.string
+              |> JD.reqField "age" JD.int,
+            jv12);
+          (* map2 *)
+          expectOk rv12 ("t16a",
+            JD.map2 (fn (n, a) => {name=n, age=a})
+              (JD.field "name" JD.string, JD.field "age" JD.int),
+            jv12))
 
   end
