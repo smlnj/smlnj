@@ -5,6 +5,12 @@ correspond to SML/NJ releases.
 SML/NJ 2024.1
 -------------------
 
+[2024-02-26]
+        Added `insertWith`, `insertWithi`, and `findAndRemove` operations to the
+        `HASH_TABLE` and `MONO_HASH_TABLE` interfaces (and corresponding
+        implementations).  This addition was requested in Issue #297 (Additional
+        operations for the `MONO_HASH_TABLE` interface).
+
 [2023-12-22]
 	Fixed the error checking and documentation for the `subArray` function
 	in the `DynamicArray` structure and `DynamicArrayFn` functor.
