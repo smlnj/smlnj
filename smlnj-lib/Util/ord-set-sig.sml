@@ -74,7 +74,7 @@ signature ORD_SET =
 	(* are the two sets disjoint? *)
 
     val numItems : set ->  int
-	(* Return the number of items in the table *)
+	(* Return the number of items in the set *)
 
     val union : set * set -> set
         (* Union *)
