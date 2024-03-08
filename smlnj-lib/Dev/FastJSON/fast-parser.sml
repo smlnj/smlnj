@@ -159,7 +159,9 @@ structure FastJSONParser : sig
                 (* end case *))
           in
             case Real.fromString (String.concat frags)
-             of SOME f => (JSON.FLOAT f, inS)
+             of SOME f => if sign
+                  then (JSON.FLOAT(~f), inS)
+                  else (JSON.FLOAT f, inS)
               | NONE => raise Fail "impossible: ill-formed float"
             (* end case *)
           end
@@ -586,8 +588,8 @@ structure FastJSONParser : sig
                  *)
                 and scanExp (inS, whole, frac) = let
                       val (expSign, exp, seenDigit, inS) = (case next inS
-                             of (#"-", inS') => (~1, 0, false, inS)
-                              | (#"+", inS') => (1, 0, false, inS)
+                             of (#"-", inS) => (~1, 0, false, inS)
+                              | (#"+", inS) => (1, 0, false, inS)
                               | (#"0", inS) => (1, 0, true, inS)
                               | (#"1", inS) => (1, 1, true, inS)
                               | (#"2", inS) => (1, 2, true, inS)

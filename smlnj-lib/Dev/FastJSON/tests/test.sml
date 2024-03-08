@@ -1,5 +1,5 @@
-use "json.sml";
-use "fast-parser.sml";
+use "../json.sml";
+use "../fast-parser.sml";
 
 datatype strm = S of string * int;
 
@@ -21,7 +21,8 @@ fun error (ec, S(contents, n)) = let
       val i = Int.max(0, n-10)
       val j = Int.min(n+10, size contents)
       val msg = concat [
-            "Syntax error at ", Int.toString n, ": ...",
+            "Error (", FastJSONParser.errorMessage ec, ") at ",
+            Int.toString n, ": ...",
             String.toString(String.substring(contents, i, j-i)), "..."]
       in
         raise Fail msg
