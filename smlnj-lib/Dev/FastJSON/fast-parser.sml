@@ -18,6 +18,8 @@ structure FastJSONParser : sig
     datatype error_code
       = InvalidCharacter
       | InvalidLiteral
+      | NumberTooLarge
+      | InvalidNumber
       | InvalidArray
       | InvalidObject
       | ExpectedKey
@@ -40,10 +42,9 @@ structure FastJSONParser : sig
         (* flag to enable C-style comments in the input *)
         comments : bool,
         (* limit on the number of digits allowed in an integer literal (the default)
-         * is `SOME 16`, which is sufficient to handle the exact integer values that
-         * are representable as doubles).  If the limit is exceeded, then the literal
-         * is represented as an `INTLIT`.  This mechanism avoids a potential DOS
-         * attack.
+         * is `SOME 19`, which is sufficient to handle 64-bit integers.  If the
+         * limit is exceeded, then the `NumberToLarge` error code is returned.
+         * This mechanism avoids a potential DOS attack.
          *)
         maxDigits : int option,
         (* error handler; given the error code and stream at the point of the error *)
@@ -78,6 +79,8 @@ structure FastJSONParser : sig
     datatype error_code
       = InvalidCharacter
       | InvalidLiteral
+      | NumberTooLarge
+      | InvalidNumber
       | InvalidArray
       | InvalidObject
       | ExpectedKey
@@ -95,7 +98,9 @@ structure FastJSONParser : sig
     (* return a string representation of an error code *)
     fun errorMessage InvalidCharacter = "invalid character"
       | errorMessage InvalidLiteral = "invalid literal identifier"
-      | errorMessage InvalidArray = "invalid array syntax; expected ',' or '}'"
+      | errorMessage NumberTooLarge = "number exceeds maximum number of digits"
+      | errorMessage InvalidNumber = "invalid number syntax"
+      | errorMessage InvalidArray = "invalid array syntax; expected ',' or ']'"
       | errorMessage InvalidObject = "invalid object syntax; expected ',' or '}'"
       | errorMessage ExpectedKey = "invalid object syntax; expected key"
       | errorMessage ExpectedColon = "invalid object syntax; expected ':'"
@@ -118,7 +123,7 @@ structure FastJSONParser : sig
     exception SyntaxError of string
 
     (* a maximum number of digits used when `maxDigits` is `NONE` *)
-    val defaultMaxDigits = 1000000
+    val defaultMaxDigits = 19
 
     (* fast (no overflow checking) increment/decrement operations *)
     fun inc n = W.toIntX(W.fromInt n + 0w1)
@@ -130,6 +135,33 @@ structure FastJSONParser : sig
             | rev' (x::xs, ys) = rev' (xs, x::ys)
           in
             rev' (xs, [])
+          end
+
+(* TODO: In 110.99.5, this function can use Real.fromDecimal, but that function is not
+ * implemented in earlier versions.
+ *)
+    (* make a JSON `FLOAT` value from pieces.  The lists of digits are in reverse order
+     * and are in the range [0..9].
+     *)
+    fun mkFloat (false, [], [], _, inS) = (JSON.FLOAT 0.0, inS)
+      | mkFloat (true, [], [], _, inS) = (JSON.FLOAT ~0.0, inS)
+      | mkFloat (sign, whole, frac, exp, inS) = let
+          (* given a list of digits in reverse order, convert them to strings and append
+           * them onto `frags`.
+           *)
+          fun cvtAndAppend (digits, frags) =
+                List.foldl (fn (d, fs) => Int.toString d :: fs) frags digits
+          val frags = if (exp <> 0) then ["E", Int.toString exp] else []
+          val frags = (case (whole, frac)
+                 of ([], _) => "0." :: cvtAndAppend (frac, frags)
+                  | (_, []) => cvtAndAppend (whole, frags)
+                  | _ => cvtAndAppend (whole, "." :: cvtAndAppend (frac, frags))
+                (* end case *))
+          in
+            case Real.fromString (String.concat frags)
+             of SOME f => (JSON.FLOAT f, inS)
+              | NONE => raise Fail "impossible: ill-formed float"
+            (* end case *)
           end
 
     (* make a string from a list of characters in reverse order; the first argument
@@ -174,28 +206,28 @@ structure FastJSONParser : sig
                  of (#"[", inS) => parseArray inS
                   | (#"{", inS) => parseObject inS
                   | (#"-", inS) => (case next inS
-                       of (#"0", inS) => scanNumber(inS, true, #"0")
-                        | (#"1", inS) => scanNumber(inS, true, #"1")
-                        | (#"2", inS) => scanNumber(inS, true, #"2")
-                        | (#"3", inS) => scanNumber(inS, true, #"3")
-                        | (#"4", inS) => scanNumber(inS, true, #"4")
-                        | (#"5", inS) => scanNumber(inS, true, #"5")
-                        | (#"6", inS) => scanNumber(inS, true, #"6")
-                        | (#"7", inS) => scanNumber(inS, true, #"7")
-                        | (#"8", inS) => scanNumber(inS, true, #"8")
-                        | (#"9", inS) => scanNumber(inS, true, #"9")
-                        | _ => error'(InvalidCharacter, inS)
+                       of (#"0", inS') => scanNumber(inS, inS', true, 0)
+                        | (#"1", inS') => scanNumber(inS, inS', true, 1)
+                        | (#"2", inS') => scanNumber(inS, inS', true, 2)
+                        | (#"3", inS') => scanNumber(inS, inS', true, 3)
+                        | (#"4", inS') => scanNumber(inS, inS', true, 4)
+                        | (#"5", inS') => scanNumber(inS, inS', true, 5)
+                        | (#"6", inS') => scanNumber(inS, inS', true, 6)
+                        | (#"7", inS') => scanNumber(inS, inS', true, 7)
+                        | (#"8", inS') => scanNumber(inS, inS', true, 8)
+                        | (#"9", inS') => scanNumber(inS, inS', true, 9)
+                        | _ => error'(InvalidNumber, inS)
                       (* end case *))
-                  | (#"0", inS) => scanNumber(inS, false, #"0")
-                  | (#"1", inS) => scanNumber(inS, false, #"1")
-                  | (#"2", inS) => scanNumber(inS, false, #"2")
-                  | (#"3", inS) => scanNumber(inS, false, #"3")
-                  | (#"4", inS) => scanNumber(inS, false, #"4")
-                  | (#"5", inS) => scanNumber(inS, false, #"5")
-                  | (#"6", inS) => scanNumber(inS, false, #"6")
-                  | (#"7", inS) => scanNumber(inS, false, #"7")
-                  | (#"8", inS) => scanNumber(inS, false, #"8")
-                  | (#"9", inS) => scanNumber(inS, false, #"9")
+                  | (#"0", inS') => scanNumber(inS, inS', false, 0)
+                  | (#"1", inS') => scanNumber(inS, inS', false, 1)
+                  | (#"2", inS') => scanNumber(inS, inS', false, 2)
+                  | (#"3", inS') => scanNumber(inS, inS', false, 3)
+                  | (#"4", inS') => scanNumber(inS, inS', false, 4)
+                  | (#"5", inS') => scanNumber(inS, inS', false, 5)
+                  | (#"6", inS') => scanNumber(inS, inS', false, 6)
+                  | (#"7", inS') => scanNumber(inS, inS', false, 7)
+                  | (#"8", inS') => scanNumber(inS, inS', false, 8)
+                  | (#"9", inS') => scanNumber(inS, inS', false, 9)
                   | (#"\"", inS) => scanStringValue inS
                   | (#"f", inS) => let (* match "a" "l" "s" "e" *)
                       val inS = matchC (inS, #"a")
@@ -497,61 +529,106 @@ structure FastJSONParser : sig
                   (JSON.STRING s, inS)
                 end
           (* scan an integer or floating-point number.  If the number of digits
-           * for an integer literal exceeds the `maxDigits` limit, then we return
-           * an `INTLIT` value (instead of an `INT`).
+           * for an integer literal exceeds the `maxDigits` limit, then we signal
+           * a `NumberTooLarge` error.
            *)
-          and scanNumber (inS, isNeg, first) = let
+          and scanNumber (startInS, inS, isNeg, firstDigit) = let
                 (* scan an integer or the whole part of a float *)
-                fun scanWhole (inS, n, digits) = (case next inS
-                       of (#"0", inS) => scanWhole (inS, inc n, #"0"::digits)
-                        | (#"1", inS) => scanWhole (inS, inc n, #"1"::digits)
-                        | (#"2", inS) => scanWhole (inS, inc n, #"2"::digits)
-                        | (#"3", inS) => scanWhole (inS, inc n, #"3"::digits)
-                        | (#"4", inS) => scanWhole (inS, inc n, #"4"::digits)
-                        | (#"5", inS) => scanWhole (inS, inc n, #"5"::digits)
-                        | (#"6", inS) => scanWhole (inS, inc n, #"6"::digits)
-                        | (#"7", inS) => scanWhole (inS, inc n, #"7"::digits)
-                        | (#"8", inS) => scanWhole (inS, inc n, #"8"::digits)
-                        | (#"9", inS) => scanWhole (inS, inc n, #"9"::digits)
+                fun scanWhole (inS, digits) = (case next inS
+                       of (#"0", inS) => scanWhole (inS, 0::digits)
+                        | (#"1", inS) => scanWhole (inS, 1::digits)
+                        | (#"2", inS) => scanWhole (inS, 2::digits)
+                        | (#"3", inS) => scanWhole (inS, 3::digits)
+                        | (#"4", inS) => scanWhole (inS, 4::digits)
+                        | (#"5", inS) => scanWhole (inS, 5::digits)
+                        | (#"6", inS) => scanWhole (inS, 6::digits)
+                        | (#"7", inS) => scanWhole (inS, 7::digits)
+                        | (#"8", inS) => scanWhole (inS, 8::digits)
+                        | (#"9", inS) => scanWhole (inS, 9::digits)
                         | (#".", inS) => scanFrac (inS, digits)
                         | (#"e", inS) => scanExp (inS, digits, [])
                         | (#"E", inS) => scanExp (inS, digits, [])
-                        | _ => if (n < maxDigits)
-                              then let
-                                fun cvt ([], k) = (JSON.INT(if isNeg then ~k else k), inS)
-                                  | cvt (d::ds, k) =
-                                      cvt (ds, 10*k + IntInf.fromInt(ord d - ord #"0"))
-                                in
-                                  cvt (reverse digits, 0)
-                                end
-                            else if isNeg
-                              then let
-                                val s = mkString(inc n, digits)
-                                in
-                                  (* add the negative sign *)
-                                  Unsafe.CharVector.update(s, 0, #"-");
-                                  (JSON.INTLIT s, inS)
-                                end
-                              else (JSON.INTLIT(mkString(n, digits)), inS)
+                        | _ => let
+                            fun cvt ([], _, n) = if isNeg
+                                  then (JSON.INT(~n), inS)
+                                  else (JSON.INT n, inS)
+                              | cvt (d::ds, k, n) = if (k <= maxDigits)
+                                  then cvt (ds, inc k, 10*n + IntInf.fromInt d)
+                                  else error'(NumberTooLarge, startInS)
+                            in
+                              cvt (List.rev digits, 0, 0)
+                            end
                       (* end case *))
                 (* scan the fractional part of a real; the '.' has already been
                  * consumed.
                  *)
-                and scanFrac (inS, whole) = raise Fail "scanFrac"
+                and scanFrac (inS, wDigits) = let
+                      fun scanF (inS, fDigits) = (case next inS
+                             of (#"0", inS) => scanF (inS, 0::fDigits)
+                              | (#"1", inS) => scanF (inS, 1::fDigits)
+                              | (#"2", inS) => scanF (inS, 2::fDigits)
+                              | (#"3", inS) => scanF (inS, 3::fDigits)
+                              | (#"4", inS) => scanF (inS, 4::fDigits)
+                              | (#"5", inS) => scanF (inS, 5::fDigits)
+                              | (#"6", inS) => scanF (inS, 6::fDigits)
+                              | (#"7", inS) => scanF (inS, 7::fDigits)
+                              | (#"8", inS) => scanF (inS, 8::fDigits)
+                              | (#"9", inS) => scanF (inS, 9::fDigits)
+                              | (#"e", inS) => scanExp (inS, wDigits, fDigits)
+                              | (#"E", inS) => scanExp (inS, wDigits, fDigits)
+                              | _ => mkFloat (isNeg, wDigits, fDigits, 0, inS)
+                            (* end case *))
+                      in
+                        scanF (inS, [])
+                      end
                 (* scan the exponent part of a real; the "e"/"E" has already been
                  * consumed.
                  *)
-                and scanExp (inS, whole, frac) = raise Fail "scanExp"
+                and scanExp (inS, whole, frac) = let
+                      val (expSign, exp, seenDigit, inS) = (case next inS
+                             of (#"-", inS') => (~1, 0, false, inS)
+                              | (#"+", inS') => (1, 0, false, inS)
+                              | (#"0", inS) => (1, 0, true, inS)
+                              | (#"1", inS) => (1, 1, true, inS)
+                              | (#"2", inS) => (1, 2, true, inS)
+                              | (#"3", inS) => (1, 3, true, inS)
+                              | (#"4", inS) => (1, 4, true, inS)
+                              | (#"5", inS) => (1, 5, true, inS)
+                              | (#"6", inS) => (1, 6, true, inS)
+                              | (#"7", inS) => (1, 7, true, inS)
+                              | (#"8", inS) => (1, 8, true, inS)
+                              | (#"9", inS) => (1, 9, true, inS)
+                              | _ => error' (InvalidNumber, startInS)
+                            (* end case *))
+                      fun scanE (inS, seenDigit, exp) = (case next inS
+                             of (#"0", inS) => scanE (inS, true, 10 * exp)
+                              | (#"1", inS) => scanE (inS, true, 10 * exp + 1)
+                              | (#"2", inS) => scanE (inS, true, 10 * exp + 2)
+                              | (#"3", inS) => scanE (inS, true, 10 * exp + 3)
+                              | (#"4", inS) => scanE (inS, true, 10 * exp + 4)
+                              | (#"5", inS) => scanE (inS, true, 10 * exp + 5)
+                              | (#"6", inS) => scanE (inS, true, 10 * exp + 6)
+                              | (#"7", inS) => scanE (inS, true, 10 * exp + 7)
+                              | (#"8", inS) => scanE (inS, true, 10 * exp + 8)
+                              | (#"9", inS) => scanE (inS, true, 10 * exp + 9)
+                              | _ => if seenDigit
+                                  then mkFloat (isNeg, whole, frac, expSign * exp, inS)
+                                  else error' (InvalidNumber, startInS)
+                            (* end case *))
+                      in
+                        scanE (inS, seenDigit, exp)
+                          handle Overflow => error' (NumberTooLarge, startInS)
+                      end
                 in
-                  if (first = #"0")
+                  if (firstDigit = 0)
                     then (case next inS
-                       of (#".", inS) => scanFrac(inS, [#"0"])
-                        | (#"e", inS) => scanExp(inS, [#"0"], [])
-                        | (#"E", inS) => scanExp(inS, [#"0"], [])
+                       of (#".", inS) => scanFrac(inS, [])
+                        | (#"e", inS) => scanExp(inS, [], [])
+                        | (#"E", inS) => scanExp(inS, [], [])
                         | _ => (JSON.INT 0, inS)
                       (* end case *))
-                    else scanWhole (inS, 1, [first])
-                end
+                    else scanWhole (inS, [firstDigit])
+                end (* scanNumber *)
           (* skip over a C-style comment; the initial '/' has been consumed *)
           and skipComment inS = let
                 fun skip inS = (case getc inS
@@ -581,7 +658,7 @@ structure FastJSONParser : sig
 
     fun parse getc = parseWithOpts {
             comments=true,
-            maxDigits=SOME 16,
+            maxDigits=SOME defaultMaxDigits,
             error = fn (ec, _) => raise SyntaxError(errorMessage ec)
           } getc
 
