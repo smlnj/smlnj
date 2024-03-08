@@ -1,15 +1,18 @@
-(* int-set.sig
+(* pt-set.sig
  *
  * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
-signature INT_SET =
+signature PATRICIA_TREE_SET =
   sig
 
-    structure Key : ORD_KEY where type ord_key = word
+    structure Key : sig
+        type key
+        val hash : key -> word
+      end
 
-    type item = Key.ord_key
+    type item = Key.key
     type set
 
     (* The empty set *)
@@ -116,6 +119,8 @@ signature INT_SET =
     val find : (item -> bool) -> set -> item option
 
     (* for debugging *)
-    val dump : (item -> string) -> TextIO.outstream * set -> unit
+    val dump : (* (item -> string) -> *) TextIO.outstream * set -> unit
+
+    val check : set -> set
 
    end

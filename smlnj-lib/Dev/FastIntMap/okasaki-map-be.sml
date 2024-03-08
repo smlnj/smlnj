@@ -3,13 +3,21 @@
  * COPYRIGHT (c) 2023 John Reppy (http://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
- * This is the "big-endian" Patricia-tree implementation
- * from the "Fast Mergeable Integer Maps" paper by Chris Okasaki
+ * This is a "git-endian" Patricia-tree implementation of finite maps
+ * based on the paper "Fast Mergeable Integer Maps" by Chris Okasaki
  * and Andrew Gill.
+ *
+ * This module processes bits from the MSB to the LSB (i.e., it is
+ * a big-endian implementation).  Note that in the big-endian representation,
+ * the leaves are ordered in increasing key order (i.e., the tree can
+ * be viewed as a binary-search tree).
  *)
 
 structure OkasakiMapBig :> INT_MAP =
   struct
+
+    (* are we on a 64-bit system? *)
+    val is64Bit = (Word.wordSize > 32) (* (Unsafe.wordSize() = 64) *)
 
     datatype 'a tree
         (** The empty tree; this constructor never appears in a non-empty tree *)
@@ -27,8 +35,8 @@ structure OkasakiMapBig :> INT_MAP =
 
     (* Utility functions *)
 
-    (* given the key `k` and mask bit `m = (1 << n)`, this `mask(k, m)` clears
-     * returns a word w that has the same bits as k above the n'th bit, the n'th
+    (* given the key `k` and mask bit `m = (1 << n)`, `mask(k, m)` returns a
+     * word `w` that has the same bits as `k` above the n'th bit, the n'th
      * bit set to zero, and the bits below the n'th bit set to one.
      *)
     fun mask (k, m) = Word.andb(Word.orb(k, m-0w1), Word.notb m)
@@ -49,7 +57,8 @@ structure OkasakiMapBig :> INT_MAP =
           val w = Word.orb(w, Word.>>(w, 0w4))
           val w = Word.orb(w, Word.>>(w, 0w8))
           val w = Word.orb(w, Word.>>(w, 0w16))
-          val w = Word.orb(w, Word.>>(w, 0w32))
+          (* this step is conditional based on the size of words *)
+          val w = if is64Bit then Word.orb(w, Word.>>(w, 0w32)) else w
           in
             (* `w` is all ones from the highest bit down, so we mask out
              * the low bits by a shift and xor.

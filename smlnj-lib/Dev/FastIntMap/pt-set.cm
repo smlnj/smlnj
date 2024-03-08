@@ -1,0 +1,20 @@
+(* pt-set.cm
+ *
+ * COPYRIGHT (c) 2023 John Reppy (http://cs.uchicago.edu/~jhr)
+ * All rights reserved.
+ *)
+
+Library
+
+  signature PATRICIA_TREE_SET
+
+  structure PTSet
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  patricia-tree-set.sig
+  patricia-tree-set.sml
+

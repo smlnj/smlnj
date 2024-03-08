@@ -3,8 +3,8 @@
  * COPYRIGHT (c) 2023 John Reppy (http://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
- * This is the "little-endian" Patricia-tree implementation
- * from the "Fast Mergeable Integer Maps" paper by Chris Okasaki
+ * This is a "little-endian" Patricia-tree implementation of sets
+ * based on the paper "Fast Mergeable Integer Maps" by Chris Okasaki
  * and Andrew Gill.
  *
  * Patricia trees use the bits of the word/int key to select the
@@ -14,7 +14,7 @@
  * used to decide the branch (i.e., the value (1 << n) for the n'th
  * bit).  Leaves contain the full int/word key value.
  *
- * This module processes bits from the LSB to the MSB (i.e., it is
+* This module processes bits from the LSB to the MSB (i.e., it is
  * a little-endian implementation).
  *)
 
@@ -38,12 +38,19 @@ structure OkasakiSetLittle :> PATRICIA_TREE_SET where type item = word =
       | Br of word * word * tree * tree
 
     (* Utility functions *)
+
+    (* given the key `k` and mask bit `m = (1 << n)`, `mask(k, m)` returns a
+     * word `w` that has the same bits as `k` below the n'th bit, the n'th
+     * bit set to zero, and the bits above the n'th bit set to zero.
+     *)
     fun mask (k, m) = Word.andb(k, m-0w1)
+
     fun matchPrefix (k, p, m) = (mask (k, m) = p)
+
     fun zeroBit (k, m) = (Word.andb(k, m) = 0w0)
 
-    (* return the k = (1 << i), where bit i of w is set, but bits
-     * 0..i-1 are zero.
+    (* return the least k = (1 << i), such that bit i of w is set (i.e., bits
+     * 0..i-1 are zero).
      *)
     fun lowestBit w = Word.andb(w, Word.~ w)
 
@@ -53,6 +60,9 @@ structure OkasakiSetLittle :> PATRICIA_TREE_SET where type item = word =
      *)
     fun branchingBit (p0, p1) = lowestBit (Word.xorb(p0, p1))
 
+    (* join two trees by determining the least bit on which their prefixes
+     * disagree and then using that as the mask bit for a `Br` node.
+     *)
     fun join (p0, t0, p1, t1) = let
           val m = branchingBit (p0, p1)
           in
@@ -61,7 +71,8 @@ structure OkasakiSetLittle :> PATRICIA_TREE_SET where type item = word =
               else Br(mask(p0, m), m, t1, t0)
           end
 
-    datatype t = SET of word * tree
+    (* `SET(n, t)` is a set with `n` items represented by the tree `t`. *)
+    datatype set = SET of word * tree
 
     val empty = SET(0w0, Empty)
 
@@ -80,26 +91,47 @@ structure OkasakiSetLittle :> PATRICIA_TREE_SET where type item = word =
             toList (t, [])
           end
 
-    fun add (SET(n, t), item) = let
-          val n' = ref n
-          fun ins Empty = (n' := n+0w1; Lf item)
+    (* helper function for building sets by insertion.  The first argument is a
+     * reference to the number of items in the tree, the second argument is the
+     * tree representing the set, and the third argument is the item to insert.
+     *)
+    fun insertItemInTree (rNItems : word ref, t, item) = let
+          fun ins Empty = (rNItems' := !rNItems+0w1; Lf item)
             | ins (t as Lf k) = if (item = k)
                 then Lf item
-                else (n' := n+0w1; join(item, Lf item, k, t))
+                else (rNItems' := !rNItems+0w1; join(item, Lf item, k, t))
             | ins (t as Br(p, m, t0, t1)) =
                 if matchPrefix(item, p, m)
                   then if zeroBit(item, m)
                     then Br(p, m, ins t0, t1)
                     else Br(p, m, t0, ins t1)
-                  else (n' := n+0w1; join (item, Lf item, p, t))
-          val t' = ins t
+                  else (rNItems' := !rNItems+0w1; join (item, Lf item, p, t))
+          in
+            ins (t, item)
+          end
+
+    fun add (SET(n, t), item) = let
+          val n' = ref n
+          val t' = insertItemInTree (n', t, item)
           in
             SET(!n', t')
           end
 
-    fun add' (item, s) = add (s, item)
+    fun add' (item, s) = let
+          val n' = ref n
+          val t' = insertItemInTree (n', t, item)
+          in
+            SET(!n', t')
+          end
 
-    fun addList (SET(n, t), items) =
+    fun addList (SET(n, t), items) = let
+          val n' = ref n
+          fun lp ([], t) = t
+            | lp (item::r, t) = lp (r, insertItemInTree (n', t, item))
+          val t' = lp (items, t)
+          in
+            SET(!n', t')
+          end
 
     val subtract (SET(n, t), item) =
 
