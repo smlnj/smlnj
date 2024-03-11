@@ -15,6 +15,6 @@ is
   $/basis.cm
   $/smlnj-lib.cm
 
-  patricia-tree-set.sig
-  patricia-tree-set.sml
+  pt-set.sig
+  pt-set.sml
 

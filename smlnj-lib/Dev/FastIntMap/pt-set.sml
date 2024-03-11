@@ -1,4 +1,4 @@
-(* patricia-tree-set.sml
+(* pt-set.sml
  *
  * COPYRIGHT (c) 2024 John Reppy (http://cs.uchicago.edu/~jhr)
  * All rights reserved.
