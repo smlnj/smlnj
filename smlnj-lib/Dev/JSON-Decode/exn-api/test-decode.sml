@@ -93,11 +93,11 @@ structure TestDecode : sig
           expectOk 42 ("t04a", JD.int, jv04);
           expectOk 42 ("t04b", JD.intInf, jv04);
           expectOk "hello world" ("t06a", JD.string, jv06);
-          (* test lists *)
-          expectOk [] ("t07a", JD.list JD.int, jv07);
-          expectOk [false] ("t08a", JD.list JD.bool, jv08);
-          expectOk [0, 1, 2] ("t09a", JD.list JD.int, jv09);
-          expectOk [0, 1, 2] ("t09a", JD.list JD.intInf, jv09);
+          (* test arrays *)
+          expectOk [] ("t07a", JD.array JD.int, jv07);
+          expectOk [false] ("t08a", JD.array JD.bool, jv08);
+          expectOk [0, 1, 2] ("t09a", JD.array JD.int, jv09);
+          expectOk [0, 1, 2] ("t09a", JD.array JD.intInf, jv09);
           (* test object fields *)
           expectOk NONE ("t10a", JD.try (JD.field "fst" JD.int), jv10);
           expectOk 1 ("t11a", JD.field "fst" JD.int, jv11);
@@ -123,7 +123,7 @@ structure TestDecode : sig
           let fun comment () = JD.map2
                 (fn (msg, resp) => Comment{message=msg, responses=resp})
                 (JD.field "message" JD.string,
-                 JD.field "responses" (JD.list (JD.delay comment)))
+                 JD.field "responses" (JD.array (JD.delay comment)))
               in
                 expectOk rv15 ("t17", comment (), jv15)
               end)

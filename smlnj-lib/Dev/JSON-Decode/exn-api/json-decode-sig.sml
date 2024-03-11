@@ -19,6 +19,9 @@ signature JSON_DECODE =
     exception NotObject of JSON.value
     exception FieldNotFound of JSON.value * string
     exception NotArray of JSON.value
+    exception ArrayBounds of JSON.value * int
+
+    val exnMessage : exn -> string
 
     type 'a decoder
 
@@ -31,6 +34,7 @@ signature JSON_DECODE =
     val intInf : IntInf.int decoder
     val number : Real64.real decoder
     val string : string decoder
+
     val null : 'a -> 'a decoder
 
     (* returns the raw JSON value without further decoding *)
@@ -54,9 +58,6 @@ signature JSON_DECODE =
      *)
     val seq : 'a decoder -> ('a -> 'b) decoder -> 'b decoder
 
-    (* decodes a JSON ARRAY into a list of values *)
-    val list : 'a decoder -> 'a list decoder
-
     (* `field key d` returns a decoder that decodes the specified object field
      * using the decoder `d`.
      *)
@@ -71,6 +72,9 @@ signature JSON_DECODE =
     (* decode an optional field that has a default value *)
     val dfltField : string -> 'a decoder -> 'a -> ('a -> 'b) decoder -> 'b decoder
 
+    (* decodes a JSON ARRAY into a list of values *)
+    val array : 'a decoder -> 'a list decoder
+
     (* `sub i d` returns a decoder that when given a JSON array, decodes the i'th
      * array element.
      *)
@@ -84,7 +88,7 @@ signature JSON_DECODE =
     (* `succeed v` returns a decoder that always yields `v` for any JSON input *)
     val succeed : 'a -> 'a decoder
 
-    (* `fail msg` returns a decoder that returns `Err(Failure(msg, jv))` for
+    (* `fail msg` returns a decoder that raises `Failure(msg, jv)` for
      * any JSON input `jv`.
      *)
     val fail : string -> 'a decoder

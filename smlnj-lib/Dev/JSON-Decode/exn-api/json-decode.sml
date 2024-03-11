@@ -20,6 +20,7 @@ structure JSONDecode :> JSON_DECODE =
     exception NotObject = JSONUtil.NotObject
     exception FieldNotFound = JSONUtil.FieldNotFound
     exception NotArray = JSONUtil.NotArray
+    exception ArrayBounds = JSONUtil.ArrayBounds
 
     datatype 'a decoder = D of value -> 'a
 
@@ -77,11 +78,11 @@ structure JSONDecode :> JSON_DECODE =
             D decoder'
           end
 
-    fun list (D elemDecoder) = let
+    fun array (D elemDecoder) = let
           fun decodeList ([], elems) = List.rev elems
             | decodeList (jv::jvs, elems) = decodeList(jvs, elemDecoder jv :: elems)
           fun decoder (ARRAY elems) = decodeList (elems, [])
-            | decoder jv = raise JSONUtil.NotArray jv
+            | decoder jv = raise NotArray jv
           in
             D decoder
           end
@@ -130,7 +131,13 @@ structure JSONDecode :> JSON_DECODE =
           end
 
     fun sub i (D d) = D(fn jv => (case jv
-           of ARRAY arr => d (List.nth(arr, i))
+           of jv as ARRAY arr => let
+                fun get (0, item::_) = d item
+                  | get (_, []) = raise ArrayBounds(jv, i)
+                  | get (i, _::r) = get (i-1, r)
+                in
+                  if (i < 0) then ArrayBounds(jv, i) else get (i, arr)
+                end
             | _ => raise NotArray jv
           (* end case *)))
 
