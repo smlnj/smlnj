@@ -14,7 +14,7 @@
 
 structure FastJSONParser : sig
 
-    (* error codes *)
+    (* syntax-error codes *)
     datatype error_code
       = InvalidCharacter
       | InvalidLiteral
@@ -41,15 +41,21 @@ structure FastJSONParser : sig
     type 'a options = {
         (* flag to enable C-style comments in the input *)
         comments : bool,
-        (* limit on the number of digits allowed in an integer literal (the default)
-         * is `SOME 19`, which is sufficient to handle 64-bit integers.  If the
+        (* limit on the number of digits allowed in an integer literal.  If the
          * limit is exceeded, then the `NumberToLarge` error code is returned.
-         * This mechanism avoids a potential DOS attack.
+         * This mechanism avoids a potential DOS attack.  A value of NONE is
+         * effectively infinite.
          *)
         maxDigits : int option,
         (* error handler; given the error code and stream at the point of the error *)
         error : error_code * 'a -> unit
       }
+
+    (* the default options: `{comments=true, maxDigits=SOME 19, error=ef}`,
+     * where `ef` is a function that raises `SyntaxError`.  Note that
+     * 19 digits is sufficient to handle 64-bit integers.
+     *)
+    val defaultOptions : options
 
     exception SyntaxError of string
 
@@ -66,7 +72,7 @@ structure FastJSONParser : sig
           -> (JSON.value * 'strm)
 
     (* `parse getc strm` is equivalent to the expression
-     * `parse {comments=true, maxDigits=SOME 16} getc strm`
+     * `parse defaultOptions getc strm`
      *)
     val parse : (char, 'strm) StringCvt.reader -> 'strm -> (JSON.value * 'strm)
 
@@ -120,10 +126,19 @@ structure FastJSONParser : sig
         error : error_code * 'a -> unit
       }
 
+    val defaultOptions = {
+            comments=true,
+            maxDigits=SOME 19, (* enough for 64-bit signed integers *)
+            error = fn (ec, _) => raise SyntaxError(errorMessage ec)
+          }
+
     exception SyntaxError of string
 
     (* a maximum number of digits used when `maxDigits` is `NONE` *)
-    val defaultMaxDigits = 19
+    val defaultMaxDigits = (case Int.maxInt
+           of SOME n => n
+            | NONE => Word.toIntX(Word.<<(0w1, Word.fromInt(Word.wordSize-1))-0w1)
+          (* end case *))
 
     (* fast (no overflow checking) increment/decrement operations *)
     fun inc n = W.toIntX(W.fromInt n + 0w1)
@@ -135,35 +150,6 @@ structure FastJSONParser : sig
             | rev' (x::xs, ys) = rev' (xs, x::ys)
           in
             rev' (xs, [])
-          end
-
-(* TODO: In 110.99.5, this function can use Real.fromDecimal, but that function is not
- * implemented in earlier versions.
- *)
-    (* make a JSON `FLOAT` value from pieces.  The lists of digits are in reverse order
-     * and are in the range [0..9].
-     *)
-    fun mkFloat (false, [], [], _, inS) = (JSON.FLOAT 0.0, inS)
-      | mkFloat (true, [], [], _, inS) = (JSON.FLOAT ~0.0, inS)
-      | mkFloat (sign, whole, frac, exp, inS) = let
-          (* given a list of digits in reverse order, convert them to strings and append
-           * them onto `frags`.
-           *)
-          fun cvtAndAppend (digits, frags) =
-                List.foldl (fn (d, fs) => Int.toString d :: fs) frags digits
-          val frags = if (exp <> 0) then ["E", Int.toString exp] else []
-          val frags = (case (whole, frac)
-                 of ([], _) => "0." :: cvtAndAppend (frac, frags)
-                  | (_, []) => cvtAndAppend (whole, frags)
-                  | _ => cvtAndAppend (whole, "." :: cvtAndAppend (frac, frags))
-                (* end case *))
-          in
-            case Real.fromString (String.concat frags)
-             of SOME f => if sign
-                  then (JSON.FLOAT(~f), inS)
-                  else (JSON.FLOAT f, inS)
-              | NONE => raise Fail "impossible: ill-formed float"
-            (* end case *)
           end
 
     (* make a string from a list of characters in reverse order; the first argument
@@ -203,7 +189,7 @@ structure FastJSONParser : sig
                     then inS'
                     else error'(InvalidLiteral, inS)
                 end
-          (* skip white space *)
+          (* parse a JSON value *)
           fun parseValue inS = (case skipWS inS
                  of (#"[", inS) => parseArray inS
                   | (#"{", inS) => parseObject inS
@@ -435,7 +421,7 @@ structure FastJSONParser : sig
                           then scanLowSurrogate inS
                           else error'(InvalidUnicodeEscape, inS)
                       end (* scanUnicodeEscape *)
-                (* a simple state machine for getting a valid UTF-8 byte sequence.  See
+                (* a simple state machine for scanning a valid UTF-8 byte sequence.  See
                  * https://unicode.org/mail-arch/unicode-ml/y2003-m02/att-0467/01-The_Algorithm_to_Valide_an_UTF-8_String
                  * for a description of the state machine.
                  *)
@@ -535,6 +521,50 @@ structure FastJSONParser : sig
            * a `NumberTooLarge` error.
            *)
           and scanNumber (startInS, inS, isNeg, firstDigit) = let
+                (* make a JSON `FLOAT` value from pieces.  The lists of digits
+                 * are in reverse order and are in the range [0..9].
+                 *)
+(* TODO: In 110.99.5, we can use the following version of the mkFloat function *)
+(*
+                fun mkFloat (sign, whole, frac, exp, inS) = let
+                      val f = (Real.fromDecimal {
+                              class = IEEEReal.NORMAL,
+                              sign = sign,
+                              digits = List.revAppend(whole, reverse frac),
+                              exp = exp + List.length whole
+                            }) handle Overflow => if sign then Real.negInf else Real.posInf
+                      in
+                        if Real.isFinite f
+                          then (JSON.FLOAT f, inS)
+                          else error' (NumberTooLarge, startInS)
+                      end
+*)
+                fun mkFloat (false, [], [], _, inS) = (JSON.FLOAT 0.0, inS)
+                  | mkFloat (true, [], [], _, inS) = (JSON.FLOAT ~0.0, inS)
+                  | mkFloat (sign, whole, frac, exp, inS) = let
+                      (* given a list of digits in reverse order, convert them
+                       * to strings and append them onto `frags`.
+                       *)
+                      fun cvtAndAppend (digits, frags) =
+                            List.foldl (fn (d, fs) => Int.toString d :: fs)
+                              frags digits
+                      val frags = if (exp <> 0) then ["E", Int.toString exp] else []
+                      val frags = (case (whole, frac)
+                             of ([], _) => "0." :: cvtAndAppend (frac, frags)
+                              | (_, []) => cvtAndAppend (whole, frags)
+                              | _ => cvtAndAppend (whole,
+                                  "." :: cvtAndAppend (frac, frags))
+                            (* end case *))
+                      in
+                        case Real.fromString (String.concat frags)
+                         of SOME f => Real.isFinite f
+                              then if sign
+                                then (JSON.FLOAT(~f), inS)
+                                else (JSON.FLOAT f, inS)
+                              else error' (NumberTooLarge, startInS)
+                          | NONE => raise Fail "impossible: ill-formed float"
+                        (* end case *)
+                      end
                 (* scan an integer or the whole part of a float *)
                 fun scanWhole (inS, digits) = (case next inS
                        of (#"0", inS) => scanWhole (inS, 0::digits)
@@ -558,7 +588,7 @@ structure FastJSONParser : sig
                                   then cvt (ds, inc k, 10*n + IntInf.fromInt d)
                                   else error'(NumberTooLarge, startInS)
                             in
-                              cvt (List.rev digits, 0, 0)
+                              cvt (reverse digits, 0, 0)
                             end
                       (* end case *))
                 (* scan the fractional part of a real; the '.' has already been
@@ -658,10 +688,6 @@ structure FastJSONParser : sig
             parseValue
           end
 
-    fun parse getc = parseWithOpts {
-            comments=true,
-            maxDigits=SOME defaultMaxDigits,
-            error = fn (ec, _) => raise SyntaxError(errorMessage ec)
-          } getc
+    fun parse getc = parseWithOpts defaultOptions getc
 
   end

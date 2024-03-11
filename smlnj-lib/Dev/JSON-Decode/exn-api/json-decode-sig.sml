@@ -42,9 +42,6 @@ signature JSON_DECODE =
      *)
     val nullable : 'a decoder -> 'a option decoder
 
-    (* decodes a JSON ARRAY into a list of values *)
-    val list : 'a decoder -> 'a list decoder
-
     (* returns a decoder that attempts to decode a value and returns `NONE`
      * on failure (instead of an error result).
      *)
@@ -56,6 +53,9 @@ signature JSON_DECODE =
      *      (succeed (fn x => x*x))
      *)
     val seq : 'a decoder -> ('a -> 'b) decoder -> 'b decoder
+
+    (* decodes a JSON ARRAY into a list of values *)
+    val list : 'a decoder -> 'a list decoder
 
     (* `field key d` returns a decoder that decodes the specified object field
      * using the decoder `d`.

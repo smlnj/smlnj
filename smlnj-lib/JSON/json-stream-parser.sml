@@ -107,7 +107,6 @@ structure JSONStreamParser :> sig
 				| _ => err (ctx, span, "error parsing array", tok)
 			      (* end case *)
 			    end
-		      val ctx = #startArray cb ctx
 		      val (strm, ctx) = loop (strm, #startArray cb ctx)
 		      in
 			(strm, #endArray cb ctx)
@@ -137,7 +136,6 @@ structure JSONStreamParser :> sig
 			      err (ctx, span, "error parsing object", tok)
 			(* end case *)
 		      end
-		val ctx = #startObject cb ctx
 		val (strm, ctx) = loop (strm, #startObject cb ctx)
 		in
 		  (strm, #endObject cb ctx)
