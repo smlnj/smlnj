@@ -24,6 +24,12 @@ structure TestDecode : sig
     fun |> (x, f) = f x
     infix |>
 
+    (* recursive structure example from Elm *)
+    datatype comment = Comment of {
+        message : string,
+        responses : comment list
+      }
+
     (* test values *)
     val jv00 = NULL
     val jv01 = BOOL false
@@ -42,6 +48,19 @@ structure TestDecode : sig
     val jv13 = OBJECT[("name", STRING "Bob"), ("age", INT 17)]
     val rv13 = {name = "Bob", age = 17}
     val jv14 = ARRAY[jv12, jv13]
+    val jv15 = OBJECT[
+          ("message", STRING "hello"),
+          ("responses", ARRAY[
+              OBJECT[
+                  ("message", STRING "goodbye"),
+                  ("responses", ARRAY[])
+                ]
+            ])
+        ]
+    val rv15 = Comment{
+            message = "hello",
+            responses = [Comment{message = "goodbye", responses = []}]
+          }
 
     fun expect result (name, decoder, jv) = (
           case (result, decode decoder jv)
@@ -99,6 +118,14 @@ structure TestDecode : sig
           expectOk rv12 ("t16a",
             JD.map2 (fn (n, a) => {name=n, age=a})
               (JD.field "name" JD.string, JD.field "age" JD.int),
-            jv12))
+            jv12);
+          (* delay *)
+          let fun comment () = JD.map2
+                (fn (msg, resp) => Comment{message=msg, responses=resp})
+                (JD.field "message" JD.string,
+                 JD.field "responses" (JD.list (JD.delay comment)))
+              in
+                expectOk rv15 ("t17", comment (), jv15)
+              end)
 
   end

@@ -160,4 +160,6 @@ structure JSONDecode :> JSON_DECODE =
     fun tuple3 (d1, d2, d3) = map3 Fn.id (d1, d2, d3)
     fun tuple4 (d1, d2, d3, d4) = map4 Fn.id (d1, d2, d3, d4)
 
+    fun delay dd = andThen dd (succeed ())
+
   end

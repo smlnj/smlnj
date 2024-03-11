@@ -119,4 +119,7 @@ signature JSON_DECODE =
     val tuple4 : ('a decoder * 'b decoder * 'c decoder * 'd decoder)
           -> ('a * 'b * 'c * 'd) decoder
 
+    (* a delay combinator for defining recursive decoders *)
+    val delay : (unit -> 'a decoder) -> 'a decoder
+
   end
