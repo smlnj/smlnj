@@ -482,6 +482,11 @@ structure PrimopBindings : sig
 	    (wName ^ "_to_cptr", ar(addrTy, BT.pointerTy), P.WORD_TO_PTR)
 	  end
 
+  (* primops for host properties *)
+    val prims = prims :-:
+          ("host_word_size", ar(BT.unitTy, BT.intTy), P.HOST_WORD_SIZE) :-:
+          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.HOST_BIG_ENDIAN)
+
   (* primops for C FFI *)
     val prims = let
 	(* representation of pointers to raw values *)
@@ -493,12 +498,12 @@ structure PrimopBindings : sig
 	  val offsetTy = BT.word32Ty
 	(* The type of the RAW_CCALL primop (as far as the type checker is concerned)
 	 * is:
-	 *    adr * 'a * 'b -> 'd
+	 *    adr * 'a * 'b -> 'c
 	 * where adr is a word type that is the same size as the machine's pointer
 	 * type.  The primop cannot be used without having 'a, 'b, and 'c
 	 * monomorphically instantiated.  In particular, 'a will be the type of the
 	 * ML argument list, 'c will be the type of the result, and 'b
-	 * will be a type of a fake arguments.  The idea is that 'b will be
+	 * will be a type of a fake argument list.  The idea is that 'b will be
 	 * instantiated with some ML type that encodes the type of the actual
 	 * C function in order to be able to generate code according to the C
 	 * calling convention.

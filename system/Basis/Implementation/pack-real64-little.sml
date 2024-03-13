@@ -38,7 +38,7 @@ structure PackReal64Little =
           val bv = createW8Vec bytesPerElem
           fun update (i, w) = BV.update (bv, i, InlineT.Word8.fromLarge w)
           in
-            if false (* InlineT.isBigEndian() *)
+            if InlineT.isBigEndian()
               then (
                 (* big -> little *)
                 update (7, W64.rshiftl(w, 0w56));
@@ -66,7 +66,7 @@ structure PackReal64Little =
 	  then raise Subscript
 	  else let
             fun get i = InlineT.Word8.toLarge(BV.sub(bv, i))
-            val w = if false (* InlineT.isBigEndian() *)
+            val w = if InlineT.isBigEndian()
                   then (* little -> big *)
                     W64.orb(W64.lshift(get 7, 0w56),
                     W64.orb(W64.lshift(get 6, 0w48),
@@ -98,7 +98,7 @@ structure PackReal64Little =
 		then raise Subscript
 		else let
                   fun get i = InlineT.Word8.toLarge(BV.sub(bv, base ++ i))
-                  val w = if false (* InlineT.isBigEndian() *)
+                  val w = if InlineT.isBigEndian()
                         then (* little -> big *)
                           W64.orb(W64.lshift(get 7, 0w56),
                           W64.orb(W64.lshift(get 6, 0w48),
@@ -131,7 +131,7 @@ structure PackReal64Little =
 		then raise Subscript
 		else let
                   fun get i = InlineT.Word8.toLarge(BA.sub(ba, base ++ i))
-                  val w = if false (* InlineT.isBigEndian() *)
+                  val w = if InlineT.isBigEndian()
                         then (* little -> big *)
                           W64.orb(W64.lshift(get 7, 0w56),
                           W64.orb(W64.lshift(get 6, 0w48),
@@ -166,7 +166,7 @@ structure PackReal64Little =
                   fun update (i, w) = BA.update (ba, base ++ i, InlineT.Word8.fromLarge w)
                   val w = toBits r
                   in
-                    if false (* InlineT.isBigEndian() *)
+                    if InlineT.isBigEndian()
                       then (
                         (* big -> little *)
                         update (7, W64.rshiftl(w, 0w56));

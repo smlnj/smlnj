@@ -17,16 +17,16 @@
  *	  subtraction, negation, and the bit-wise operations.
  *)
 
-structure TransPrim :
-  sig
+structure TransPrim : sig
+
     val trans : {
 	    coreAcc : string -> PLambda.lexp,
 	    coreExn : string list -> PLambda.lexp option,
 	    mkv : unit -> LambdaVar.lvar,
 	    mkRaise : PLambda.lexp * Lty.lty -> PLambda.lexp
 	  } -> Primop.primop * Lty.lty * Lty.tyc list -> PLambda.lexp
-  end =
-struct
+
+  end = struct
 
     structure PO = Primop
     structure PL = PLambda
@@ -639,6 +639,15 @@ struct
 	      | PO.TEST_INF sz => inlFromInf ("TEST_INF", testInf sz, prim, lt)
 	      | PO.COPY_INF sz => inlToInf ("COPY", copyInf sz, prim, lt)
 	      | PO.EXTEND_INF sz => inlToInf ("EXTEND_INF", extendInf sz, prim, lt)
+            (* host properties *)
+              | PO.HOST_WORD_SIZE =>
+                  mkFn lt_unit (fn _ => PL.INT{
+                      ival = IntInf.fromInt Target.mlValueSz,
+                      ty = Target.defaultIntSz
+                    })
+              | PO.HOST_BIG_ENDIAN =>
+                  mkFn lt_unit (fn _ =>
+                    if Target.bigEndian then trueLexp else falseLexp)
 	    (* default handling for all other primops *)
 	      | _ => mkPrim(prim, lt, ts)
 	    (* end case *)

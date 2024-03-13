@@ -129,7 +129,9 @@ structure UnpickMod : UNPICKMOD = struct
 	  P.INTERN64,
 	  P.EXTERN64,
 	  P.PTR_TO_WORD,
-	  P.WORD_TO_PTR (* 54 *)
+	  P.WORD_TO_PTR,
+          P.HOST_WORD_SIZE,
+          P.HOST_BIG_ENDIAN (* 56 *)
         ]
 
     val arithop_table =

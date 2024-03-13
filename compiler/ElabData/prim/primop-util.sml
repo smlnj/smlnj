@@ -179,6 +179,8 @@ structure PrimopUtil : sig
       | toString P.UNWRAP = "unwrap"
       | toString P.PTR_TO_WORD = "cptr_to_word"
       | toString P.WORD_TO_PTR = "word_to_cptr"
+      | toString P.HOST_WORD_SIZE = "host_word_size"
+      | toString P.HOST_BIG_ENDIAN = "host_big_endian"
       | toString (P.REAL_TO_BITS sz) = "real_to_bits_" ^ cvtParam sz
 
   (* should return more than just a boolean:
