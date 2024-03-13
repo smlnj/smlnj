@@ -25,7 +25,7 @@ structure PackWord64Little : PACK_WORD =
     val bytesPerElem = 8
     val isBigEndian = false
 
-  (* convert the byte length into word64 length (n div 8), and check the index *)
+    (* convert the byte length into word64 length (n div 8), and check the index *)
     fun chkIndex (len, i) = let
 	  val len = Word.toIntX(Word.rshiftl(Word.fromInt len, 0w3))
 	  in

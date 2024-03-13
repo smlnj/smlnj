@@ -348,11 +348,7 @@ structure Date : DATE =
 	      }
 	  end
 
-    fun fromTimeLocal t = let
-	  val offset = localOffsetForTime (timeToNs t)
-	  in
-	    tm2date (localTime t, SOME offset)
-	  end
+    fun fromTimeLocal t = tm2date (localTime t, NONE)
 
     fun fromTimeUniv t = tm2date (gmTime t, SOME Time.zeroTime)
 

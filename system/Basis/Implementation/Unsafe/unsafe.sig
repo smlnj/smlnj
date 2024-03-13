@@ -13,6 +13,8 @@ signature UNSAFE =
     structure Object : UNSAFE_OBJECT
     structure Pointer : UNSAFE_POINTER
 
+    structure Real64 : UNSAFE_REAL64
+
     structure Vector : UNSAFE_VECTOR
     structure Array  : UNSAFE_ARRAY
 
@@ -55,9 +57,15 @@ signature UNSAFE =
 	val baseBits : int
       end
 
-  (* convert real to bits (experimental) *)
+    (* machine properties *)
+    val isBigEndian : unit -> bool
+    val wordSize : unit -> int
+
+    (* convert default real to bits *)
+(* NOTE: this function is depracated; use Real64.castToWord instead *)
     val realToBits : real -> Word64.word
-  (* assembly-code function for scaling reals *)
+
+    (* assembly-code function for scaling reals *)
     val scalb : real * int -> real
 
     val getHdlr : unit -> 'a Cont.cont

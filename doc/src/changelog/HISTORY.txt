@@ -106,7 +106,30 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
+
+//--------------------------------------------------------------------
+[2024/03/13]::
++
+Ported various fixes and improvements from the legacy version.  These
+include
++
+--
+* Fix for {legacy-issue-base}/194[Legacy Issue #194 (Incorrect
+  formatting of real number)]
+* Fix for {legacy-issue-base}/269[Legacy Issue #269 (`Real.realMod` and
+  `Real.split` produce incorrect result for values close to zero)]
+* Fix for {legacy-issue-base}/283[Legacy Issue #283 (`TextIO.inputAll`
+  segfaults when reading 980M file)].
+* Fix for {legacy-issue-base}/300[Legacy Issue #300 (
+  ``PackReal64``{``Big``,``Little``}``.update`` is not implemented)].
+* Added implementation of `Real64.nextAfter`.
+* Rewrite of the mechanisms used to implement conversions
+  between strings and reals.
+* Added `Unsafe.Real64` structure
+--
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2024/02/25]::
