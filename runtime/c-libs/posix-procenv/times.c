@@ -27,7 +27,7 @@ ml_val_t _ml_P_ProcEnv_times (ml_state_t *msp, ml_val_t arg)
 	return RAISE_SYSERR(msp, -1);
 
 /* FIXME: we should do the conversion to 64-bit nanoseconds here and then
- * return the result as a 64-bit value
+ * return the result as a tuple of 64-bit values
  */
     e = INT32_CtoML(msp, t);
     u = INT32_CtoML(msp, ts.tms_utime);
