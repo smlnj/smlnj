@@ -109,6 +109,23 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 == Recent updates
 
 //--------------------------------------------------------------------
+[2024/02/05]::
++
+Added `host_word_size` and `host_big_endian` primops.  These will expand
+into constant functions (e.g., `fn () => 64` for `host_word_size` on a
+64-bit system) that will be visible to the optimizer.  We can then use
+code like:
++
+[[source,sml]
+------------
+if InlineT.host_big_endian() then ... else ...
+------------
++
+where the `if` can be evaluated at compile time.  These primops are also
+available to user code via the `Unsafe` structure.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+//--------------------------------------------------------------------
 [2024/03/13]::
 +
 Ported various fixes and improvements from the legacy version.  These

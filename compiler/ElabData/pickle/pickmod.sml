@@ -416,6 +416,8 @@ in
 	      | P.EXTERN64 => %?52
 	      | P.PTR_TO_WORD => %?53
 	      | P.WORD_TO_PTR => %?54
+              | P.HOST_WORD_SIZE => %?55
+              | P.HOST_BIG_ENDIAN => %?56
 	      (** WARNING: last value must be < 80!! **)
     end
 

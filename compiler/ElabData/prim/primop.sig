@@ -165,7 +165,10 @@ signature PRIMOP =
       | UNWRAP				(* unbox a value by unwrapping it *)
       | PTR_TO_WORD			(* cast c_pointer to address-sized word type *)
       | WORD_TO_PTR			(* case address-sized word type to c_pointer *)
-      | REAL_TO_BITS of int		(* cast real of the given size to a word of
+    (* host machine properties *)
+      | HOST_WORD_SIZE                  (* E: the number of bits per word *)
+      | HOST_BIG_ENDIAN                 (* E: true if host is big-endian *)
+      | REAL_TO_BITS of int		(* E: cast real of the given size to a word of
 					 * the same size
 					 *)
 

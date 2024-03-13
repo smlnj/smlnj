@@ -161,7 +161,7 @@ ifndef ARCH_PPC \
 
 # raw memory support for FFI (but not when cross compiling)
 ifndef CMB_CROSS ifdef ARCH_X86 \
-	bind rawmem = rawmem.sml (core, primitive, xcore)
+	bind rawmem = target32-rawmem.sml (core, primitive, xcore)
 ifdef CMB_CROSS ifdef ARCH_X86 \
 	bind rawmem = rawmem-dummy.sml (core, primitive, xcore)
 ifndef CMB_CROSS ifdef ARCH_SPARC \

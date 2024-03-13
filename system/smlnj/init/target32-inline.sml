@@ -68,6 +68,10 @@ structure InlineT =
 
     val ptreql          : 'a * 'a -> bool = InLine.ptr_eql
 
+    (* machine properties *)
+    val isBigEndian : unit -> bool = InLine.host_big_endian
+    val wordSize : unit -> int = InLine.host_word_size
+
     structure Real64 =
       struct
         val op +   : real * real -> real = InLine.real64_add

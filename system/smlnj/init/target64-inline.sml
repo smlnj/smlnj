@@ -68,6 +68,10 @@ structure InlineT =
 
     val ptreql          : 'a * 'a -> bool = InLine.ptr_eql
 
+    (* machine properties *)
+    val isBigEndian : unit -> bool = InLine.host_big_endian
+    val wordSize : unit -> int = InLine.host_word_size
+
     structure Real64 =
       struct
         val op +   : real * real -> real = InLine.real64_add
@@ -153,8 +157,7 @@ structure InlineT =
 
   (* On 64-bit systems, Int32.int is represented as Int.int (i.e., as a tagged 63-bit
    * 2's complement number.  We manually check for overflow where necessary.
-   * TODO: once we have completely replaced MLRisc with LLVM in the backend, we can
-   * use hardware overflow detection for smaller integer precisions.
+   * TODO: use hardware overflow detection for smaller integer precisions.
    *)
     structure Int32 =
       struct
