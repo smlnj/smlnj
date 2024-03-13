@@ -49,6 +49,19 @@ FILES::
 
 === Basis Library
 
+* Complete rewrite of the mechanisms used to implement conversions
+  between strings and reals.  As part of this rewrite, we implemented the
+  support for the `StringCvt.EXACT` formatting mode and implemented the
+  missing `Real.toDecimal`/`fromDecimal` functions.  The real-string
+  conversions is based on the https://github.com/ulfjack/ryu[Ryu library]
+  and associated https://doi.org/10.1145/3296979.3192369[PLDI paper]
+  by Ulf Adams.
+
+* Added missing implementation of `Real64.nextAfter` function.
+
+* Added `Unsafe.Real64` structure that implements bit casts between
+  double-precision reals and 64-bit words.
+
 === SML/NJ Library
 
 === Successor ML
@@ -56,32 +69,6 @@ FILES::
 === ML-LPT
 
 === Documentation
-
-=== Installation
-
-=== 32-bit macOS issues
-
-While the {dist-dir}smlnj-x86-{version}.pkg[x86 installer]
-for {version} works on **macOs** 10.14 Mojave, building from source
-requires some extra steps because the version of **Xcode**
-distributed for Mojave does not include a 32-bit SDK.
-
-Another issue that you may encounter
-when building on **macOs** 10.14 Mojave is an error message for a shell
-script of the form
-
-.....
-  /bin/sh: bad interpreter: Operation not permitted
-.....
-
-This error arises because the `com.apple.quarantine` attribute is set on the
-shell script.  To fix the problem, remove the attribute using the command
-
-[source,shell]
------
-  xattr -d com.apple.quarantine shell-script
------
-and resume the build.
 
 == Bugs
 
@@ -105,9 +92,20 @@ We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 --
+* {legacy-issue-base}/194[Issue #194 (Incorrect formatting of real number)]
+
+* {legacy-issue-base}/269[Issue #269 (`Real.realMod` and
+  `Real.split` produce incorrect result for values close to zero)]
+
+* {legacy-issue-base}/283[Issue #283 (`TextIO.inputAll`
+  segfaults when reading 980M file)].
+
 * {legacy-issue-base}/286[Get "fgrep is obsolescent" when run *sml* on Fedora]
 
 * {legacy-issue-base}/297[Additional operations for the `MONO_HASH_TABLE` interface]
+
+* {legacy-issue-base}/300[Issue #300 (``PackReal64``{``Big``,``Little``}``.update``
+  is not implemented)].
 
 * The implementations of `PackWord64Little.update` and `PackWord64Big.update`
   were swapped on 64-bit platforms.
