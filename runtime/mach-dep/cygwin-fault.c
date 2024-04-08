@@ -193,7 +193,7 @@ PVT BOOL __stdcall ctrl_c_handler(DWORD type)
    }
 }
 
-void InitFaultHandlers(ml_state_t * msp)
+void InitFaultHandlers()
 {
    /* Install the control-C handler */
    if (! SetConsoleCtrlHandler(ctrl_c_handler, TRUE))
@@ -226,6 +226,7 @@ PVT int page_fault_handler
 	 * generates code to check for divide by zero.
 	 */
          /* Say("Overflow at %p\n", pc); */
+	msp->ml_faultExn = OverflowId;
 	msp->ml_faultPC  = pc;
 	c->Eip = (DWORD)request_fault;
 	break;

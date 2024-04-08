@@ -42,7 +42,7 @@ void EnableProfSignals ()
  */
 void DisableProfSignals ()
 {
-    SIG_SetHandler (SIGVTALRM, SIG_DFL);
+    SIG_SetDefault (SIGVTALRM);
 
 } /* end of DisableProfSignals */
 
