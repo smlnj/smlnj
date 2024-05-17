@@ -106,7 +106,29 @@ recent to oldest, I've edited back to release 110.46 (2004/06/17).
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-== Recent updates
+//== Recent updates
+
+//====================================================================
+== Version 2024.1; 2024/05/17
+
+//--------------------------------------------------------------------
+[2024/03/06]::
++
+Changed `Unsafe.Real64.toBits` to `Unsafe.Real64.castToWord` and
+`Unsafe.Real64.fromBits` to `Unsafe.Real64.castFromWord`.  These new
+names match MLton's names for these operations.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/03/05]::
++
+Reimplement the `PackReal64Big` and `PackReal64Big` structures to use
+the bit-casts between 64-bit reals and 64-bit words.  This change
+fixes {issue-base}/300[Issue #300 (``PackReal64``{``Big``,``Little``}``.update``
+is not implemented)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2024/02/05]::
@@ -145,6 +167,25 @@ include
   between strings and reals.
 * Added `Unsafe.Real64` structure
 --
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/03/03]::
++
+Expose the machine property functions as `Unsafe.isBigEndian` and
+`Unsafe.wordSize`.  These functions are inlined by the compiler, which
+allows one to expect tests of the form `if Unsafe.isBigEndian()` to
+be evaluated at compile time.  These primops are also available to
+user code via the `Unsafe` structure.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/03/01]::
++
+Improved the `Unsafe.Real64.fromBits` implementation to use a cast
+and a reference (instead of pack/unpack from a byte array).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 

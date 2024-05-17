@@ -5,6 +5,25 @@ correspond to SML/NJ releases.
 SML/NJ 2024.1
 -------------------
 
+[2024-03-24]
+	Fixed the reporting of field-not-found errors (the error message was
+	garbled).
+
+[2024-03-22]
+	Fixed some bugs in the new JSON parser.  The first byte of a UTF-8
+	sequence was being dropped and comments were only allowed immediately
+	in front of values.
+
+[2024-03-14]
+        Rewrote the JSON parsers to work directly on the input source (instead of
+        using a ML-ulex lexer.  This change fixes Issue #284 (ML-ULex's memoization
+        causes massive performance penalties for JSON parsing).  For the `data.json`
+        file mentioned in the issue, parsing is about eight times faster, while the
+        speedup is even greater for the `huge.json` file.
+
+[2024-03-11]
+	Added `JSONDecode` module.
+
 [2024-02-26]
         Added `insertWith`, `insertWithi`, and `findAndRemove` operations to the
         `HASH_TABLE` and `MONO_HASH_TABLE` interfaces (and corresponding
