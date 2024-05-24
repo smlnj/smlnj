@@ -286,7 +286,7 @@ structure Random :> RANDOM =
           then error ("randRange", "hi < lo")
           else let
             (* use IntInf arithmetic to avoid overflow *)
-            val n = W64.fromLargeInt(IntInf.fromInt j - IntInf.fromInt i)
+            val n = W64.fromLargeInt(IntInf.fromInt j - IntInf.fromInt i + 1)
             in
               fn rs => i + W64.toInt(W64.mod(randNativeWord rs, n))
             end

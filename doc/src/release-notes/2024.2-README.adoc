@@ -69,8 +69,10 @@ Here is a list of the issues that are fixed (or closed) with this release.
 |=======
 | Issue
 | Description
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
+| [.bugid]#287#
+| {issue-base}/287[`Random.randRange` when low = hi]
+// | [.bugid]#@ID#
+// | @DESCRIPTION@
 |=======
 
 We also fixed the following bugs that did not have issues

@@ -2,6 +2,13 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases.
 
 --------------------------------------------------------------------------------
+SML/NJ 2024.2
+-------------------
+
+[2024-05-24]
+	Fixed Issue #313 (Random.randRange when low = h).
+
+--------------------------------------------------------------------------------
 SML/NJ 2024.1
 -------------------
 
