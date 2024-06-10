@@ -26,7 +26,7 @@ Key : HASH_KEY
 == Functor Argument Description
 
 `Key : xref:sig:HASH_KEY.adoc[HASH_KEY]`::
-  A structure that implements the xref:sig:HASH_KEY.adoc[HASH_KEY]`
+  A structure that implements the xref:sig:HASH_KEY.adoc[`HASH_KEY`]
   signature, where xref:sig:HASH_KEY.adoc#type:hash_key[`Key.hash_key`]
   will be the type of the elements in the hash set.
 

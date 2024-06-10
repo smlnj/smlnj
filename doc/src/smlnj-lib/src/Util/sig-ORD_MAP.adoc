@@ -68,6 +68,7 @@ val listItemsi : 'a map -> (Key.ord_key * 'a) list
 val listKeys : 'a map -> Key.ord_key list
 
 val collate : ('a * 'a -> order) -> ('a map * 'a map) -> order
+val extends : ('a * 'b -> order) -> ('a map * 'b map) -> bool
 
 val unionWith  : ('a * 'a -> 'a) -> ('a map * 'a map) -> 'a map
 val unionWithi : (Key.ord_key * 'a * 'a -> 'a) -> ('a map * 'a map) -> 'a map
@@ -193,7 +194,7 @@ val alli : (Key.ord_key * 'a -> bool) -> 'a map -> bool
   `collate cmpV (m1, m2)` returns the order of the two maps, where `cmpV` is
   used to compare the values in the range of the maps.
 
-`[.kw]#val# extends : ('a * 'b \-> order) \-> ('a map * 'b map) \-> order`::
+`[.kw]#val# extends : ('a * 'b \-> order) \-> ('a map * 'b map) \-> bool`::
   `extends exV (m1, m2)` returns `true` if the domain of `m2` is a subset of the
   domain of `m1` and if, for all `x` in the domain of `m2`,
   `exV(lookup(m1, x), lookup(m2, x))` evaluates to `true`.
