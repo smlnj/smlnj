@@ -81,43 +81,40 @@ AC_SUBST(OUT_DIR)
 dnl
 dnl ******************** get SML/NJ release number and date ********************
 dnl
-SMLNJ_DATE=`date "+%B %d, %Y"`
-
 AC_ARG_WITH([version],
   AS_HELP_STRING([--with-version=VERS], [specify the SML/NJ release version]),
-  [SMLNJ_VERSION=$withval],
-  [SMLNJ_VERSION=none])
-if test x"$SMLNJ_VERSION" = xnone ; then
+  [SMLNJ_RELEASE_VERSION=$withval],
+  [SMLNJ_RELEASE_VERSION=none])
+if test x"$SMLNJ_RELEASE_VERSION" = xnone ; then
   if test -r $SMLNJ_ROOT/config/version ; then
-    SMLNJ_VERSION=`cat $SMLNJ_ROOT/config/version`
-    AC_MSG_NOTICE(["SML/NJ release version: $SMLNJ_VERSION"])
+    SMLNJ_RELEASE_VERSION=`cat $SMLNJ_ROOT/config/version`
   else
-    SMLNJ_VERSION="working"
-    AC_MSG_NOTICE(["SML/NJ working version"])
+    SMLNJ_RELEASE_VERSION="working"
   fi
 fi
-AC_SUBST(SMLNJ_VERSION)
+AC_MSG_NOTICE(["SML/NJ release version: $SMLNJ_RELEASE_VERSION"])
+AC_SUBST(SMLNJ_RELEASE_VERSION)
 
 AC_ARG_WITH([date],
   AS_HELP_STRING([--with-date=DATE], [specify the SML/NJ release date]),
-  [SMLNJ_DATE=$withval],
-  [SMLNJ_DATE=none])
-if test x"$SMLNJ_DATE" = xnone ; then
-  if test x"$SMLNJ_VERSION" = xworking ; then
+  [SMLNJ_RELEASE_DATE=$withval],
+  [SMLNJ_RELEASE_DATE=none])
+if test x"$SMLNJ_RELEASE_DATE" = xnone ; then
+  if test x"$SMLNJ_RELEASE_VERSION" = xworking ; then
     #
     # for working versions, we just use the current date
     #
-    SMLNJ_DATE=`date "+%B %d, %Y"`
+    SMLNJ_RELEASE_DATE=`date "+%B %d, %Y"`
   else
     if test -r $SMLNJ_ROOT/config/releasedate ; then
-      SMLNJ_DATE=`cat $SMLNJ_ROOT/config/releasedate`
+      SMLNJ_RELEASE_DATE=`cat $SMLNJ_ROOT/config/releasedate`
     else
-      SMLNJ_DATE=`date "+%B %d, %Y"`
+      SMLNJ_RELEASE_DATE=`date "+%B %d, %Y"`
     fi
   fi
 fi
-AC_MSG_NOTICE(["SML/NJ release date: $SMLNJ_DATE"])
-AC_SUBST(SMLNJ_DATE)
+AC_MSG_NOTICE(["SML/NJ release date: $SMLNJ_RELEASE_DATE"])
+AC_SUBST(SMLNJ_RELEASE_DATE)
 
 dnl
 dnl ******************** get SML/NJ info (for generation tools) ********************

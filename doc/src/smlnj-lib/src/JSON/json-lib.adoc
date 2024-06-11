@@ -28,6 +28,9 @@ streams using a "SAX-style" API.
   xref:str-JSONUtil.adoc[`[.kw]#structure# JSONUtil`]::
     A collection of utility functions for working with *JSON* values.
 
+  xref:str-JSONDecode.adoc[`[.kw]#structure# JSONDecode`]::
+    A collection of combinators for decoding *JSON* values.
+
 === Stream-based API
 
   xref:str-JSONStreamParser.adoc[`[.kw]#structure# JSONStreamParser`]::
@@ -62,6 +65,8 @@ include::str-JSONParser.adoc[]
 include::str-JSONPrinter.adoc[]
 
 include::str-JSONUtil.adoc[]
+
+include::str-JSONDecode.adoc[]
 
 include::str-JSONStreamParser.adoc[]
 
