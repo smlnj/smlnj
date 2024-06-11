@@ -19,24 +19,32 @@ As of the 2023.1 release, this version is known to work on AMD64
 
 ## Building From Source
 
-The process for building the system from source code has
-changed.
+The process for building the system from source code has changed from the
+legacy system.
 
-1. clone the repository
+1. Set `VERSION` to the version of **SML/NJ** that you want to build
+   ``` bash
+   VERSION=2024.1
+   ```
+
+2. Clone the repository
     ``` bash
-    git clone git@github.com:smlnj/smlnj.git
+    git clone --depth 1 --branch v$VERSION git@github.com:smlnj/smlnj.git
     ```
+    The `--depth` option limits the download to just one commit (*i.e.*, no
+    history) and the `--branch` option specifies the version of the source
+    code that you are requesting.
 
-2. `cd` to the cloned repository and get the boot files
+3. `cd` to the cloned repository and get the boot files
     ``` bash
     cd smlnj
     curl -O https://smlnj.org/dist/working/$VERSION/boot.amd64-unix.tgz
     ```
-    where `$VERSION` is the version that you are building (*e.g.*, `2023.1`).
 
-    We plan to incorporate this step into the [`build.sh`](build.sh) script in the near future.
+    We plan to incorporate this step into the [`build.sh`](build.sh) script
+    in the future.
 
-3. build the installation
+4. build the installation
     ``` bash
     ./build.sh
     ```
