@@ -48,10 +48,10 @@ while [ "$#" != "0" ] ; do
     -debug) INSTALL_DEBUG=yes ; QUIET=no ;;
     -dev)
       INSTALL_DEV=yes;
-      BUILD_LLVM_FLAGS="--all-targets $BUILD_LLVM_FLAGS"
+      BUILD_LLVM_FLAGS="-all-targets $BUILD_LLVM_FLAGS"
     ;;
     -doc) MAKE_DOC=yes ;;
-    -debug-llvm) BUILD_LLVM_FLAGS="--debug $BUILD_LLVM_FLAGS" ;;
+    -debug-llvm) BUILD_LLVM_FLAGS="-debug $BUILD_LLVM_FLAGS" ;;
     *) usage ;;
   esac
 done
@@ -109,7 +109,7 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 #
 CONFIGDIR=$SMLNJ_ROOT/config
 RUNTIMEDIR=$SMLNJ_ROOT/runtime
-LLVMDIR=$SMLNJ_ROOT/llvm
+LLVMDIR=$RUNTIMEDIR/llvm
 
 #
 # installation directories
@@ -333,10 +333,11 @@ if [ -x "$RUNDIR"/run.$ARCH-$OPSYS ]; then
   vsay $cmd: Run-time system already exists.
 else
   #
-  # first we configure and build the LLVM library.  Note that if the "-dev"
-  # option was given, then we rebuild LLVM even if it is already built, since
-  # we want to assure that the cross compiler is supported.
+  # first we configure and build the LLVM and CFGCodeGen libraries.  Note that
+  # if the "-dev" option was given, then we rebuild LLVM even if it is already
+  # built, since we want to assure that the cross compiler is supported.
   #
+  BUILD_LLVM_FLAGS="-install $RUNTIMEDIR $BUILD_LLVM_FLAGS"
   if [ x"$INSTALL_DEV" = xyes ] ; then
     vsay $cmd: Building LLVM for all targets
     cd "$LLVMDIR"

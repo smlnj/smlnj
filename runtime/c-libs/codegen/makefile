@@ -1,7 +1,7 @@
 #
 # the makefile for the LLVM code generator library
 #
-# COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
 
@@ -41,12 +41,13 @@ LIBRARY =	libcodegen.a
 VERSION =	v-dummy
 
 C_SRCS =	codegen-lib.c \
-		generate.c
+		generate.c \
+		list-targets.c \
+		set-target.c
 
-CXX_SRCS =	$(wildcard src/*.cxx)
-CXX_INCS =	$(wildcard include/*hxx src/*hxx)
+CXX_SRCS =	codegen.cpp
 
-OBJS =		$(C_SRCS:%.c=%.o) $(CXX_SRCS:src/%.cxx=%.o)
+OBJS =		$(C_SRCS:%.c=%.o) $(CXX_SRCS:%.cpp=%.o)
 
 $(LIBRARY)	: $(VERSION) $(OBJS)
 	rm -rf $(LIBRARY)
@@ -62,8 +63,8 @@ $(VERSION) :
 	$(CLIB_DIR)/ml-c.h cfun-proto-list.h cfun-list.h
 	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) -Iinclude -c $<
 
-%.o: src/%.cxx $(CXX_INCS)
-	$(CXX) -c $(CXX_FLAGS) $(LLVM_CXX_FLAGS) $(LLVM_CPP_FLAGS) $(DEFS) $<
+codegen.o:	codegen.cpp codegen.h
+	$(CXX) -c $(CXX_FLAGS) $(LLVM_CXX_FLAGS) $(LLVM_CPP_FLAGS) $(DEFS) codegen.cpp
 
 clean :
 	rm -f v-* *.o $(LIBRARY)

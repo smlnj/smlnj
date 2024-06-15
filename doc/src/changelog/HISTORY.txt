@@ -97,16 +97,22 @@ Use the following syntax for such updates:
 Here is an update to the entry
 ====
 
-NOTE: the original HISTORY file was converted to ASCIIDOC using a Perl
-script.  This script gets the basic structure for entries correct,
-but there still needs to be a fair bit of editing to add ASCIIDOC
-markup, fix indentation issues, nested lists, etc.  Working from most
-recent to oldest, I've edited back to release 110.46 (2004/06/17).
-
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
 //== Recent updates
+
+//--------------------------------------------------------------------
+[2024/06/15]::
++
+Restructured the repository so that the **LLVM** library is now
+a submodule (_e.g._, `git@github.com:smlnj/smlnj-llvm-10.git`).
+The `llvm` source tree has also moved from the top level to the
+runtime system.  Furthermore, the CFG code generator is now a
+static library that is built in the `llvm` tree as is the **cfgc**
+tool.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //====================================================================
 == Version 2024.1; 2024/05/17

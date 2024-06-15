@@ -1,0 +1,3 @@
+[submodule "runtime/llvm"]
+	path = runtime/llvm
+	url = https://github.com/smlnj/smlnj-llvm-10.git

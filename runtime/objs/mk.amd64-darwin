@@ -20,7 +20,7 @@ CXX =           c++ --std=c++14
 CXX_FLAGS =     -g -O2
 CPP =           cc -x assembler-with-cpp -E -P -std=c99
 XOBJS =
-XLIBS =         ../c-libs/dl/libunix-dynload.a ../c-libs/codegen/libcodegen.a
+XLIBS =         ../c-libs/dl/libunix-dynload.a
 LD_LIBS =
 XDEFS =
 #XDEFS =		-DDEBUG_TRACE_CCALL -DVERBOSE -DCHECK_HEAP -DASSERT_ON -DDEBUG_WEAK_PTRS

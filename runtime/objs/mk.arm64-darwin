@@ -18,7 +18,7 @@ CFLAGS =	-g -O2 -D_DARWIN_C_SOURCE
 CXX =           c++ --std=c++14
 CXX_FLAGS =     -g -O2
 XOBJS =
-XLIBS =         ../c-libs/dl/libunix-dynload.a ../c-libs/codegen/libcodegen.a
+XLIBS =         ../c-libs/dl/libunix-dynload.a
 LD_LIBS =
 XDEFS =
 BASE_DEFS =

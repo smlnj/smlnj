@@ -38,27 +38,3 @@ ml_val_t _ml_CodeGen_generate (ml_state_t *msp, ml_val_t arg)
     return llvm_codegen (msp, src, pkl, pklSzb);
 
 } /* end of _ml_CodeGen_generate */
-
-/* _ml_CodeGen_listTargets : unit -> string list
- */
-ml_val_t _ml_CodeGen_listTargets (ml_state_t *msp, ml_val_t arg)
-{
-    return llvm_listTargets (msp);
-
-} /* end of _ml_CodeGen_listTargets */
-
-/* _ml_CodeGen_setTarget : string option -> bool
- *
- * Sets the code generator target; use `NONE` to specify the host target.  Returns
- * `true` if there was an error in setting the target.
- */
-ml_val_t _ml_CodeGen_setTarget (ml_state_t *msp, ml_val_t arg)
-{
-    if (arg == OPTION_NONE) {
-        return llvm_setTarget(NIL(const char *));
-    }
-    else {
-        return llvm_setTarget (STR_MLtoC(OPTION_get(arg)));
-    }
-
-} /* end of _ml_CodeGen_setTarget */
