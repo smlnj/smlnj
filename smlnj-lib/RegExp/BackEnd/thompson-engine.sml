@@ -15,7 +15,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
     structure CSet = RE.CharSet
     structure M = MatchTree
 
-  (* a match specifies the position (as a stream) and the length of the match *)
+    (* a match specifies the position (as a stream) and the length of the match *)
     type 'a match = {pos : 'a, len : int} MatchTree.match_tree
 
   (* intermediate representation of states *)
@@ -33,12 +33,31 @@ structure ThompsonEngine : REGEXP_ENGINE =
     (* the intermediate representation of an NFA *)
     type frag = {start : state', out : state' ref list}
 
-  (* return the ID of a state *)
+(* +DEBUG **
+    fun state'ToString {id, kind} = let
+          fun kindToString (CHR'(c, out)) =
+                concat["CHR (#\"", Char.toString c, "\", -)"]
+            | kindToString (CSET'(cs, out)) = "CSET -"
+            | kindToString (NCSET'(cs, out)) = "NCSET -"
+            | kindToString (SPLIT'(out1, out2)) = "SPLIT -"
+            | kindToString (BOL' out) = "BOL -"
+            | kindToString (EOL' out) = "EOL -"
+            | kindToString FINAL' = "FINAL"
+          in
+            concat["(", Int.toString id, ": ", kindToString kind, ")"]
+          end
+    fun fragToString {start, out} = concat[
+            "{start = ", state'ToString start, ", out = [",
+            String.concatWithMap ", " (state'ToString o !) out, "]}"
+          ]
+** -DEBUG *)
+
+    (* return the ID of a state *)
     fun idOf {id, kind} = id
 
     val final = {id = 0, kind = FINAL'}
 
-  (* interpreter representation of states *)
+    (* interpreter representation of states *)
     datatype state
       = CHR of (char * int)
       | CSET of (CSet.set * int)
@@ -65,10 +84,10 @@ structure ThompsonEngine : REGEXP_ENGINE =
     datatype regexp = RE of {start : int, states : state vector}
 
     fun compile re = let
-	(* the list of states; state 0 is always the accepting state *)
+	  (* the list of states; state 0 is always the accepting state *)
 	  val nStates = ref 1
 	  val states = ref [final]
-	(* create new states *)
+	  (* create new states *)
 	  fun new kind = let
 		val id = !nStates
 		val s = {id = id, kind = kind}
@@ -83,9 +102,9 @@ structure ThompsonEngine : REGEXP_ENGINE =
 	  fun newSplit (out1, out2) = new (SPLIT'(out1, out2))
 	  fun newBOL out = new (BOL' out)
 	  fun newEOL out = new (EOL' out)
-	(* update the outputs of a fragment *)
+	  (* update the outputs of a fragment to the state s *)
 	  fun setOuts (f : frag, s : state') = List.app (fn r => r := s) (#out f)
-	(* compile an RE *)
+	  (* compile an RE *)
 	  fun reComp re = (case re
 		 of RE.Group re => reComp re
 		  | RE.Alt[] => raise RE.CannotCompile
@@ -114,14 +133,14 @@ structure ThompsonEngine : REGEXP_ENGINE =
                              of NONE => closure re
                               | SOME m => let
                                   val out = ref final
-                                  fun mkSuffix 0 = {start=final, out=[out]}
+                                  fun mkSuffix 1 = reComp re
                                     | mkSuffix i = let
                                         val f = reComp re
                                         val f' = mkSuffix(i-1)
                                         val s = newSplit(out, ref(#start f))
                                         in
                                           setOuts (f, #start f');
-                                          {start = s, out = [out]}
+                                          {start = s, out = out :: #out f'}
                                         end
                                   in
                                     if (m <= min) then raise RE.CannotCompile else ();
@@ -166,7 +185,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
 			{start = newEOL out, out = [out]}
 		      end
 		(* end case *))
-	(* compile re1 . re2 *)
+	  (* compile re1 . re2 *)
 	  and cat (re1, re2) = let
 		val f1 = reComp re1
 		val f2 = reComp re2
@@ -174,7 +193,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
 		  setOuts (f1, #start f2);
 		  {start = #start f1, out = #out f2}
 		end
-	(* compile re? *)
+	  (* compile re? *)
 	  and option re = let
 		val f = reComp re
 		val out = ref final
@@ -182,7 +201,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
 		in
 		  {start = s, out = out :: #out f}
 		end
-        (* compile re* *)
+          (* compile re* *)
 	  and closure re = let
 		val f = reComp re
 		val out = ref final
@@ -191,7 +210,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
 		  setOuts (f, s);
 		  {start = s, out = [out]}
 		end
-        (* compile re+ *)
+          (* compile re+ *)
 	  and posClosure re = let
 		val f = reComp re
 		val out = ref final
@@ -200,12 +219,12 @@ structure ThompsonEngine : REGEXP_ENGINE =
 		  setOuts (f, s);
 		  {start = #start f, out = [out]}
 		end
-	(* generate the intermediate state representation *)
+	  (* generate the intermediate state representation *)
 	  val frag = reComp re
 	  val _ = setOuts (frag, final)
-	(* convert the states to the final representation; note that we reverse the list
-	 * so that the states are now in increasing order.
-	 *)
+          (* convert the states to the final representation; note that we reverse the list
+           * so that the states are now in increasing order.
+           *)
 	  val states = List.foldl (fn (s, l) => cvtState s :: l) [] (!states)
 	  in
 	    RE{ start = idOf(#start frag), states = Vector.fromList states }
@@ -238,7 +257,6 @@ structure ThompsonEngine : REGEXP_ENGINE =
 
   (* scan the stream for the first occurrence of the regular expression *)
     fun scan (RE{start, states}, getc : (char,'a) StringCvt.reader) = let
-(* DEBUG val _ = dump (RE{start=start, states=states}) *)
 	(* to make elimination of duplicates in a state set cheap, we map state IDs
 	 * to a stamp of the last set that they were added to.
 	 *)
@@ -371,10 +389,10 @@ end;
 
     fun find re getc strm = let
           val scan = scan (re, getc)
-(* TODO: this is potentially expensive backtracking at the top level; is we had
-* support for groups, then we could modify the state machine to match ".*|(re)",
-* which would avoid backtracking.
-*)
+(* TODO: this is potentially expensive backtracking at the top level; if we had
+ * support for groups, then we could modify the state machine to match ".*|(re)",
+ * which would avoid backtracking.
+ *)
           fun loop (isFirst, s) = (case (scan (isFirst, s))
                  of NONE => (case (getc s)
                        of SOME(#"\n", s') => loop (true, s')

@@ -71,6 +71,9 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | Description
 | [.bugid]#287#
 | {issue-base}/287[`Random.randRange` when low = hi]
+| [.bugid]#289#
+| {issue-base}/289[Wrong description of brace syntax in RegExp Library in SML of NJ Library]
+| n.a.
 // | [.bugid]#@ID#
 // | @DESCRIPTION@
 |=======

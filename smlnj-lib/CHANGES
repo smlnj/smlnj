@@ -5,8 +5,12 @@ correspond to SML/NJ releases.
 SML/NJ 2024.2
 -------------------
 
+[2024-07-03]
+        Fixed Issue #289 (Wrong description of brace syntax in RegExp Library
+        in SML of NJ Library) and added some additional RE tests.
+
 [2024-05-24]
-	Fixed Issue #313 (Random.randRange when low = h).
+	Fixed Issue #287 (Random.randRange when low = h).
 
 --------------------------------------------------------------------------------
 SML/NJ 2024.1
@@ -23,10 +27,10 @@ SML/NJ 2024.1
 
 [2024-03-14]
         Rewrote the JSON parsers to work directly on the input source (instead of
-        using a ML-ulex lexer.  This change fixes Issue #284 (ML-ULex's memoization
-        causes massive performance penalties for JSON parsing).  For the `data.json`
-        file mentioned in the issue, parsing is about eight times faster, while the
-        speedup is even greater for the `huge.json` file.
+        using a ML-ulex lexer.  This change fixes Legacy Issue #284 (ML-ULex's
+        memoization causes massive performance penalties for JSON parsing).  For
+        the `data.json` file mentioned in the issue, parsing is about eight times
+        faster, while the speedup is even greater for the `huge.json` file.
 
 [2024-03-11]
 	Added `JSONDecode` module.

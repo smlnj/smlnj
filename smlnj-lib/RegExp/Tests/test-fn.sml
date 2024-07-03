@@ -63,6 +63,13 @@ functor TestFn (
 	  test ("14", "(abc){2,4}$", "abcabcabc");
 	  test ("15", "(abc){2,4}$", "abcabcabcabc");
           test ("16", "[true]+", "truexxx");
-          test ("17", "true", "truexxx"))
+          test ("17", "true", "truexxx");
+	  (* tests from https://github.com/smlnj/smlnj/issues/289 *)
+	  test ("18a", "BA{3,5}B", "BAAB"); (* should fail *)
+	  test ("18b", "BA{3,5}B", "BAAAB"); (* should match *)
+	  test ("18c", "BA{3,5}B", "BAAAAB"); (* should match *)
+	  test ("18d", "BA{3,5}B", "BAAAAAB"); (* should match *)
+	  test ("18e", "BA{3,5}B", "BAAAAAAB"); (* should fail *)
+          ())
 
   end
