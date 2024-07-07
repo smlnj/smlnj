@@ -17,7 +17,7 @@ Unix-like operating systems (including **Linux** and **macOS**).
 +
 [subs="+attributes"]
 ----
-   git clone --depth 1 --branch v{version} https://github.com/smlnj/smlnj.git
+   git clone --depth 1 --branch v{version} --recurse-submodules https://github.com/smlnj/smlnj.git
 ----
 +
 Note that you can also clone the entire repository and then switch to the
