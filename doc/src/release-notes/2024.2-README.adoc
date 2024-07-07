@@ -1,7 +1,5 @@
-// A template for creating release notes for a version
-//
-:version: @VERSION@
-:date: @DATE@
+:version: 2024.2
+:date: July 7, 2024
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -35,31 +33,10 @@ FILES::
 
 == Summary
 
-// **** summary description of release
-
-== Details
-
-// **** details: include those sections that are relevant
-
-=== Compiler
-
-=== CM
-
-=== MLRISC
-
-=== Runtime System
-
-=== Basis Library
-
-=== SML/NJ Library
-
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
-
-=== Installation
+The main purpose of this release is to create a checkpoint for a
+major reorganization of the source repository.  We have moved the
+*LLVM*-based code-generator library to a submodule.  This release
+also contains a couple of bug fixes.
 
 == Bugs
 
@@ -74,8 +51,6 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | [.bugid]#289#
 | {issue-base}/289[Wrong description of brace syntax in RegExp Library in SML of NJ Library]
 | n.a.
-// | [.bugid]#@ID#
-// | @DESCRIPTION@
 |=======
 
 We also fixed the following bugs that did not have issues
@@ -94,10 +69,10 @@ tested some of them:
 | Architecture | Operating System | Status
 | AMD64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) | Tested
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) | Tested
-| | Ubuntu 20.04.6 LTS | Tested
+| | Ubuntu 20.04.6 LTS |
 | | Ubuntu 22.04.2 LTS | Tested
 | {nbsp} | |
 |=======
