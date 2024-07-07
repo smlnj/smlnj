@@ -17,7 +17,8 @@ Unix-like operating systems (including **Linux** and **macOS**).
 +
 [subs="+attributes"]
 ----
-   git clone --depth 1 --branch v{version} --recurse-submodules https://github.com/smlnj/smlnj.git
+ git clone --depth 1 --branch v{version} --recurse-submodules \
+   https://github.com/smlnj/smlnj.git
 ----
 +
 Note that you can also clone the entire repository and then switch to the
@@ -28,15 +29,15 @@ Note that you can also clone the entire repository and then switch to the
 +
 [subs="+attributes"]
 ----
-   cd smlnj
-   curl -O {dist-dir}boot.amd64-unix.tgz
+ cd smlnj
+ curl -O {dist-dir}boot.amd64-unix.tgz
 ----
 We plan to incorporate this step into the `build.sh` script in the future.
 
 3. build the installation
 +
 ----
-   ./build.sh
+ ./build.sh
 ----
 Use `build.sh -h` to see the list of options accepted by the build script.
 +
