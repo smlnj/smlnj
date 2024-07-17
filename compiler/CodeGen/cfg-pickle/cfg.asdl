@@ -57,7 +57,7 @@ module CFG_Prim {
     alloc
     -- allocates a one-word special object, there the descriptor value may
     -- be computed by an expression (i.e., the first argument to the `ALLOC`
-    -- statement will be the descriptor value
+    -- statement will be the descriptor value)
       = SPECIAL
     -- allocates an initialized record object with the given descriptor.
     -- The `mut` field is true for mutable objects
@@ -119,7 +119,7 @@ module CFG_Prim {
       = DEREF
       | SUBSCRIPT
       | RAW_SUBSCRIPT (numkind kind, int sz)
-      | RAW_LOAD (numkind kind, int sz)		-- load raw value from base+offset
+      | RAW_LOAD (numkind kind, int sz)		-- load a raw value from base+offset
       | GET_HDLR | GET_VAR
 
   -- These operations all update mutable memory.
@@ -191,6 +191,7 @@ module CFG (
       | LOOKER (CFG_Prim.looker oper, exp* args)
       | PURE (CFG_Prim.pure oper, exp* args)
       | SELECT (int idx, exp arg)
+-- TODO: the CPS "OFFSET" constructor is never generated, so we do not need this either
       | OFFSET (int idx, exp arg)
 
     param = (LambdaVar.lvar name, ty ty)
@@ -283,99 +284,99 @@ view Cxx {
 
 -- alloc
     { CFG_Prim.alloc }  <= public_code %%
-        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+        virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 %%
     { CFG_Prim.alloc.* } <= public_code %%
-        Value *codegen (code_buffer *buf, Args_t const &args);
+        llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 %%
 
 -- arith
     { CFG_Prim.arith }  <= public_code %%
-        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+        virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 %%
     { CFG_Prim.arith.* } <= public_code %%
-        Value *codegen (code_buffer *buf, Args_t const &args);
+        llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 %%
 
 -- pure
     { CFG_Prim.pure }  <= public_code %%
-        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+        virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 %%
     { CFG_Prim.pure.* } <= public_code %%
-        Value *codegen (code_buffer *buf, Args_t const &args);
+        llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 %%
 
 -- looker
     { CFG_Prim.looker }  <= public_code %%
-        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+        virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 %%
     { CFG_Prim.looker.* } <= public_code %%
-        Value *codegen (code_buffer *buf, Args_t const &args);
+        llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 %%
 
 -- setter
     { CFG_Prim.setter }  <= public_code %%
-        virtual void codegen (code_buffer *buf, Args_t const &args) = 0;
+        virtual void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 %%
     { CFG_Prim.setter.* } <= public_code %%
-        void codegen (code_buffer *buf, Args_t const &args);
+        void codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 %%
 
 -- branch
     { CFG_Prim.branch }  <= public_code %%
-        virtual Value *codegen (code_buffer *buf, Args_t const &args) = 0;
+        virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
 %%
     { CFG_Prim.branch.* } <= public_code %%
-        Value *codegen (code_buffer *buf, Args_t const &args);
+        llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args);
 %%
 
 -- ty
     { CFG.ty } <= public_code %%
-	virtual Type *codegen (code_buffer *buf) = 0;
+	virtual llvm::Type *codegen (smlnj::cfgcg::Context *cxt) = 0;
 	bool isNUMt () { return this->_tag == _con_NUMt; }
 	bool isFLTt () { return this->_tag == _con_FLTt; }
 %%
     { CFG.ty.* } <= public_code %%
-	Type *codegen (code_buffer *buf);
+	llvm::Type *codegen (smlnj::cfgcg::Context *cxt);
 %%
 
 -- param
     { CFG.param } <= public_code %%
-	void bind (code_buffer *buf, Value *v) { buf->insertVal (this->_v_name, v); }
+	void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { buf->insertVal (this->_v_name, v); }
 %%
 
 -- exp
     { CFG.exp } <= public_code %%
-        virtual Value *codegen (code_buffer *buf) = 0;
+        virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt) = 0;
 	bool isLABEL () { return (this->_tag == _con_LABEL); }
 %%
     { CFG.exp.* } <= public_code %%
-        Value *codegen (code_buffer *buf);
+        llvm::Value *codegen (smlnj::cfgcg::Context *cxt);
 %%
 
 -- stm
     { CFG.stm } <= public_code %%
-        virtual void init (code_buffer *buf, bool blkEntry) = 0;
-        virtual void codegen (code_buffer *buf) = 0;
+        virtual void init (smlnj::cfgcg::Context *cxt, bool blkEntry) = 0;
+        virtual void codegen (smlnj::cfgcg::Context *cxt) = 0;
         llvm::BasicBlock *bb () { return this->_bb; }
 %%
     { CFG.stm } <= protected_code %%
         llvm::BasicBlock *_bb;  // for the first stm in a block
-	void _initBB (code_buffer *buf, bool blkEntry);
+	void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
 %%
 
     { CFG.stm.* } <= public_code %%
-        void init (code_buffer *buf, bool blkEntry);
-        void codegen (code_buffer *buf);
+        void init (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void codegen (smlnj::cfgcg::Context *cxt);
 %%
 
 -- frag
     { CFG.frag } <= public_code %%
-        void init (code_buffer *buf);
-        void codegen (code_buffer *buf, cluster *cluster);
+        void init (smlnj::cfgcg::Context *cxt);
+        void codegen (smlnj::cfgcg::Context *cxt, cluster *cluster);
 	llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
-	Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
-	void addIncoming (int i, Value *v, llvm::BasicBlock *bblk)
+	llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
+	void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
 	{
 	    this->_phiNodes[i]->addIncoming(v, bblk);
 	}
@@ -386,8 +387,8 @@ view Cxx {
 
 -- cluster
     { CFG.cluster } <= public_code %%
-        void init (code_buffer *buf, bool isFirst);
-        void codegen (code_buffer *buf, bool isFirst);
+        void init (smlnj::cfgcg::Context *cxt, bool isFirst);
+        void codegen (smlnj::cfgcg::Context *cxt, bool isFirst);
 	llvm::Function *fn () const { return this->_fn; }
 	frag *entry () const { return this->_v_frags[0]; }
 %%
@@ -397,7 +398,7 @@ view Cxx {
 
 -- comp_unit
     { CFG.comp_unit } <= public_code %%
-        void codegen (code_buffer *buf);
+        void codegen (smlnj::cfgcg::Context *cxt);
 %%
 
 }
