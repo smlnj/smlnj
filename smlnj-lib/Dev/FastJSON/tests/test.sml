@@ -1,5 +1,8 @@
+(*
 use "json.sml";
 use "fast-parser.sml";
+*)
+CM.autoload "$/json-lib.cm";
 
 datatype strm = S of string * int;
 
@@ -27,9 +30,13 @@ fun error (ec, S(contents, n)) = let
         raise Fail msg
       end;
 
+(*
 fun test file = let
       val inS = openIn file
       val options = {comments = true, maxDigits=SOME 16, error = error}
       in
         #1(FastJSONParser.parseWithOpts options getc inS) before close inS
       end;
+*)
+fun test file = JSONParser.parseFile file;
+

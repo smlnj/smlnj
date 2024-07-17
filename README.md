@@ -22,14 +22,15 @@ As of the 2023.1 release, this version is known to work on AMD64
 The process for building the system from source code has changed from the
 legacy system.
 
-1. Set `VERSION` to the version of **SML/NJ** that you want to build
+1. Set `VERSION` to the version of **SML/NJ** that you want to build;
+   for example
    ``` bash
-   VERSION=2024.1
+   VERSION=2024.2
    ```
 
 2. Clone the repository
     ``` bash
-    git clone --depth 1 --branch v$VERSION --recurse-submodules git@github.com:smlnj/smlnj.git
+    git clone --depth 1 --branch v$VERSION --recurse-submodules https://github.com/smlnj/smlnj.git
     ```
     The `--depth` option limits the download to just one commit (*i.e.*, no
     history), the `--branch` option specifies the version of the source

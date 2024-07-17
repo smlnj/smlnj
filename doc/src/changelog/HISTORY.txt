@@ -102,6 +102,9 @@ Here is an update to the entry
 //====================================================================
 //== Recent updates
 
+//====================================================================
+== Version 2024.2; 2024/07/07
+
 //--------------------------------------------------------------------
 [2024/06/15]::
 +
@@ -109,8 +112,8 @@ Restructured the repository so that the **LLVM** library is now
 a submodule (_e.g._, `git@github.com:smlnj/smlnj-llvm-10.git`).
 The `llvm` source tree has also moved from the top level to the
 runtime system.  Furthermore, the CFG code generator is now a
-static library that is built in the `llvm` tree as is the **cfgc**
-tool.
+static library that is built in the *LLVM* submodule.  Likewise,
+the **cfgc** tool is now located in the *LLVM* submodule.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
