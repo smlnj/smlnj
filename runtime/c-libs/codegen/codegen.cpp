@@ -1,17 +1,15 @@
-/*! \file codegen.cpp
- *
- * \author John Reppy
- *
- * SML callable wrapper for the LLVM code generator.  This code is C++, but the
- * exported functions are marked as "C" functions to avoid name mangling.
- */
+/// \file codegen.cpp
+///
+/// \copyright 2024 The Fellowship of SML/NJ (https://smlnj.org)
+/// All rights reserved.
+///
+/// SML callable wrapper for the LLVM code generator.  This code is C++, but the
+/// exported functions are marked as "C" functions to avoid name mangling.
+///
+/// \author John Reppy
+///
 
-/*
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
- * All rights reserved.
- */
-
-#include "code-buffer.hpp"
+#include "context.hpp"
 #include "cfg.hpp"
 #include "codegen.h"
 #include "cache-flush.h"
@@ -20,145 +18,86 @@
 
 #include "llvm/Support/TargetSelect.h"
 
+using Context_t = smlnj::cfgcg::Context;
+using TargetInfo_t = smlnj::cfgcg::TargetInfo;
+
+/* TODO: we should put the code buffer into the CMachine or the
+ *  Context structure.
+ */
 //! points to a dynamically allocated code buffer; this pointer gets
 //! reset if we change the target architecture.
 //
-static code_buffer *CodeBuf = nullptr;
+static Context_t *gContext = nullptr;
 
-// Some global flags for controlling the code generator.
-// These are just for testing purposes
-bool disableGC = false;
+// helper function for setting the target architecture and initializing
+// the gContext global
+//
+static bool _initTarget (TargetInfo_t const *target)
+{
+    if (gContext != nullptr) {
+	if (gContext->targetInfo() == target) {
+            // the requested target is the same as the current target
+            return false;
+	}
+        // remove the old code buffer object
+	delete gContext;
+    } else {
+        // initialize LLVM
+        target->initialize ();
+    }
 
-#if defined(TIME_CODEGEN)
-// timer support
-#include <time.h>
+    gContext = Context_t::create (target);
 
-class Timer {
-  public:
-    static Timer start ()
-    {
-	struct timespec ts;
-	clock_gettime (CLOCK_REALTIME, &ts);
-	return Timer (_cvtTimeSpec(ts));
-    }
-    void restart ()
-    {
-	struct timespec ts;
-	clock_gettime (CLOCK_REALTIME, &ts);
-	this->_ns100 = _cvtTimeSpec(ts);
-    }
-    double msec () const
-    {
-	struct timespec ts;
-	clock_gettime (CLOCK_REALTIME, &ts);
-	double t = double(_cvtTimeSpec(ts) - this->_ns100);
-	return t / 10000.0;
-    }
-  private:
-    uint64_t _ns100;	// track time in 100's of nanoseconds
-    static uint64_t _cvtTimeSpec (struct timespec &ts)
-    {
-	return (
-	    10000000 * static_cast<uint64_t>(ts.tv_sec)
-	    + static_cast<uint64_t>(ts.tv_nsec) / 100);
-    }
-    Timer (uint64_t t) : _ns100(t) { }
-};
-#endif // defined(TIME_CODEGEN)
+    return (gContext == nullptr);
 
+}
 
 ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t pklSzb)
 {
-#if defined(TIME_CODEGEN)
-    Timer totalTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-
-#if defined(TIME_CODEGEN)
-    Timer initTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-    if (CodeBuf == nullptr) {
-	if (llvm_setTarget(nullptr) == ML_true) {
+    if (gContext == nullptr) {
+	if (_initTarget(TargetInfo_t::native)) {
+/* FIXME: raise a SML exception instead of the fatal error */
 	    llvm::report_fatal_error ("initialization failure", true);
 	}
     }
-#if defined(TIME_CODEGEN)
-    double initT = initTimer.msec();
-#endif // defined(TIME_CODEGEN)
 
-  // unpickle the CFG
-#if defined(TIME_CODEGEN)
-    Timer unpklTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
+    // unpickle the CFG
 /* FIXME: using a std::string here probably results in extra data copying */
     asdl::memory_instream inS (std::string (pkl, pklSzb));
     CFG::comp_unit *cu = CFG::comp_unit::read (inS);
     if (cu == nullptr) {
+/* FIXME: raise a SML exception instead of the fatal error */
 	llvm::report_fatal_error ("unable to unpickle code", true);
     }
-#if defined(TIME_CODEGEN)
-    double unpklT = unpklTimer.msec();
-#endif // defined(TIME_CODEGEN)
 
-  // generate LLVM
-#if defined(TIME_CODEGEN)
-    Timer genTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-    cu->codegen (CodeBuf);
-#if defined(TIME_CODEGEN)
-    double genT = genTimer.msec();
-#endif // defined(TIME_CODEGEN)
+    // generate LLVM
+    cu->codegen (gContext);
 
 #ifdef VERIFY_LLVM
-#if defined(TIME_CODEGEN)
-    Timer verifyTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-    if (CodeBuf->verify ()) {
+    if (gContext->verify ()) {
+/* FIXME: raise a SML exception instead of the fatal error */
 	llvm::report_fatal_error ("LLVM verification error", true);
     }
-#if defined(TIME_CODEGEN)
-    double verifyT = verifyTimer.msec();
-#endif // defined(TIME_CODEGEN)
-#else
-#if defined(TIME_CODEGEN)
-    double verifyT = 0.0;
-#endif // defined(TIME_CODEGEN)
 #endif
 
-  // optimize the LLVM code
-#if defined(TIME_CODEGEN)
-    Timer optTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-    CodeBuf->optimize ();
-#if defined(TIME_CODEGEN)
-    double optT = optTimer.msec();
-#endif // defined(TIME_CODEGEN)
+    // optimize the LLVM code
+    gContext->optimize ();
 
 #ifdef VERIFY_LLVM
-#if defined(TIME_CODEGEN)
-    verifyTimer.restart();
-#endif // defined(TIME_CODEGEN)
-    if (CodeBuf->verify ()) {
+    if (gContext->verify ()) {
+/* FIXME: raise a SML exception instead of the fatal error */
 	llvm::report_fatal_error ("LLVM verification error after optimization", true);
     }
-#if defined(TIME_CODEGEN)
-    verifyT += optTimer.msec();
-#endif // defined(TIME_CODEGEN)
 #endif
 
-  // generate the in-memory object file
-#if defined(TIME_CODEGEN)
-    Timer objGenTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-    auto obj = CodeBuf->compile ();
-#if defined(TIME_CODEGEN)
-    double objGenT = objGenTimer.msec();
-#endif // defined(TIME_CODEGEN)
+    // generate the in-memory object file
+    auto obj = gContext->compile ();
 
 /* TODO: use arena allocation for the unpickler */
-  // deallocate the unpickled CFG IR
+    // deallocate the unpickled CFG IR
     delete cu;
 
-    if (obj != nullptr) {
+    if (obj) {
 #ifdef DUMP_LLVM_INFO
         obj->dump (false);
 #endif // DUMP_LLVM_INFO
@@ -173,26 +112,28 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
 //   compiler/CodeGen/cpscompile/smlnj-pseudoOps.sml and with the BO_GetCodeObjTag
 //   runtime function.
 
-#if defined(TIME_CODEGEN)
-	Timer relocTimer = Timer::start();
-#endif // defined(TIME_CODEGEN)
-
 	size_t codeSzb = obj->size();
-        // first we round the code size up to a multiple of the word size
-        size_t alignedCodeSzb = CodeBuf->roundToWordSzInBytes (codeSzb);
-        // compute the padded size of the source-file name; the computed length includes
-	// the nul terminator and the length byte
+
+        // round the code size up to a multiple of the word size
+        size_t alignedCodeSzb = gContext->roundToWordSzInBytes (codeSzb);
+
+        // compute the padded size of the source-file name; the computed
+	// length includes the nul terminator and the length byte
         size_t srcFileLen = strlen(src) + 2;
-        size_t paddedSrcFileLen = CodeBuf->roundToWordSzInBytes (srcFileLen);
-        if (paddedSrcFileLen > 255 * CodeBuf->wordSzInBytes()) {
+        size_t paddedSrcFileLen = gContext->roundToWordSzInBytes (srcFileLen);
+        if (paddedSrcFileLen > 255 * gContext->wordSzInBytes()) {
             // if the file name is too long, which is unexpected, omit it
             paddedSrcFileLen = 0;
         }
+
         // size of code-object with extras
         size_t codeObjSzb = alignedCodeSzb      // code + alignment padding
             + paddedSrcFileLen;                 // src name (including nul and length byte)
+
+        // allocate a heap object for the code
 	auto codeObj = ML_AllocCode (msp, codeObjSzb);
 	ENABLE_CODE_WRITE
+        // copy the code to the heap
 	obj->getCode (PTR_MLtoC(unsigned char, codeObj));
         // now add the source-file name to the end of the code object
         char *srcNameLoc = PTR_MLtoC(char, codeObj) + alignedCodeSzb;
@@ -200,28 +141,20 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
         strncpy (srcNameLoc, src, paddedSrcFileLen);
         // add the length in words at the end
         *reinterpret_cast<unsigned char *>(srcNameLoc + paddedSrcFileLen - 1) =
-            (paddedSrcFileLen / CodeBuf->wordSzInBytes());
+            (paddedSrcFileLen / gContext->wordSzInBytes());
 	DISABLE_CODE_WRITE
 
-#if defined(TIME_CODEGEN)
-	double relocT = relocTimer.msec();
-
-  /* report stats */
-llvm::dbgs() << "\"" << src << "\"," << pklSzb << "," << codeSzb << ","
-    << initT << "," << unpklT << "," << genT << "," << optT << "," << verifyT << "," << relocT
-    << "," << totalTimer.msec() << "\n";
-#endif // defined(TIME_CODEGEN)
-
-      /* create a pair of the code object and entry-point offset */
+        // create a pair of the code object and entry-point offset
 	ml_val_t arr, res;
-    /* FIXME: it appears (from experimentation) that the entry-point offset is always
-     * zero, but we should probably be a bit more careful in the final version.
-     */
+/* FIXME: it appears (from experimentation) that the entry-point offset is always
+ * zero, but we should probably be a bit more careful in the final version.
+ */
 	SEQHDR_ALLOC(msp, arr, DESC_word8arr, codeObj, codeSzb);
 	REC_ALLOC2(msp, res, arr, 0);
 	return res;
     }
     else {
+/* FIXME: raise a SML exception instead of the fatal error */
 	llvm::report_fatal_error ("unable to get code object", true);
     }
 
@@ -231,7 +164,7 @@ llvm::dbgs() << "\"" << src << "\"," << pklSzb << "," << codeSzb << ","
  */
 ml_val_t llvm_listTargets (ml_state_t *msp)
 {
-    auto targets = TargetInfo::targetNames();
+    auto targets = TargetInfo_t::targetNames();
 
   // construct a list of the target names
     ml_val_t lst = LIST_nil;
@@ -249,33 +182,23 @@ ml_val_t llvm_listTargets (ml_state_t *msp)
  */
 ml_val_t llvm_setTarget (const char *targetName)
 {
-    const TargetInfo *target;
+    TargetInfo_t const *target;
 
     if (targetName == nullptr) {
-        target = TargetInfo::native;
+        target = TargetInfo_t::native;
     }
     else {
-        target = TargetInfo::infoForTarget (targetName);
+        target = TargetInfo_t::infoForTarget (targetName);
     }
 
     if (target == nullptr) {
         return ML_true;
     }
 
-    if (CodeBuf != nullptr) {
-	if (CodeBuf->targetInfo() == target) {
-            // the requested target is the same as the current target
-	    return ML_false;
-	}
-        // remove the old code buffer object
-	delete CodeBuf;
+    if (_initTarget(target)) {
+        return ML_true;
     } else {
-      // initialize LLVM
-        target->initialize ();
+        return ML_false;
     }
-
-    CodeBuf = code_buffer::create (target);
-
-    return ((CodeBuf == nullptr) ? ML_true : ML_false);
 
 } /* llvm_setTarget */

@@ -11,8 +11,10 @@ RUNTIME_ROOT =	../..
 CLIB_DIR =	$(RUNTIME_ROOT)/c-libs
 INC_DIR =	$(RUNTIME_ROOT)/include
 OBJS_DIR =	$(RUNTIME_ROOT)/objs
+CFGCG_DIR =	$(RUNTIME_ROOT)/llvm/smlnj
 
 INCLUDES =	-I$(INC_DIR) -I$(CLIB_DIR) -I$(OBJS_DIR)
+CXX_INCLUDES =	-I$(CFGCG_DIR)/include
 
 MAKE =		make
 AR =		ar
