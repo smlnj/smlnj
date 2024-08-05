@@ -100,7 +100,19 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
+
+//--------------------------------------------------------------------
+[2024/08/05]::
++
+Renamed the *LLVM* submodule directory to include a version number
+(_e.g._, `llvm10` or `llvm18`).  The `build.sh` script has been modified
+to allow the path to the *LLVM* subdirectory to be overridden.  These
+changes will allow new versions of the *LLVM* submodule to be tested
+in parallel with the existing version and make it easier to switch
+versions.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //====================================================================
 == Version 2024.2; 2024/07/07

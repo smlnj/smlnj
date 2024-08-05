@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
 # Build and installation script for SML/NJ System.
@@ -28,9 +28,16 @@ usage() {
   echo "    -doc          generate documentation"
   echo "    -debug        debug installation (enables verbose mode)"
   echo "    -dev          developer install (includes cross compiler support)"
+  echo "developer options:"
   echo "    -debug-llvm   build a debug version of the LLVM libraries"
+  echo "    -llvmdir dir  specify the path to the LLVM directory"
   exit 1
 }
+
+# specifying the LLVM subdirectory (which is a submodule)
+#
+LLVM_DIRNAME=llvm10
+LLVMDIR_OPTION=
 
 # process options
 NOLIB=no
@@ -52,6 +59,12 @@ while [ "$#" != "0" ] ; do
     ;;
     -doc) MAKE_DOC=yes ;;
     -debug-llvm) BUILD_LLVM_FLAGS="-debug $BUILD_LLVM_FLAGS" ;;
+    -llvmdir)
+      if [[ $# -gt 0 ]] ; then
+        LLVMDIR_OPTION=$1; shift
+      else
+        usage
+      fi ;;
     *) usage ;;
   esac
 done
@@ -107,9 +120,17 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 #
 # set the various directory and file pathname variables
 #
-CONFIGDIR=$SMLNJ_ROOT/config
-RUNTIMEDIR=$SMLNJ_ROOT/runtime
-LLVMDIR=$RUNTIMEDIR/llvm
+CONFIGDIR="$SMLNJ_ROOT/config"
+RUNTIMEDIR="$SMLNJ_ROOT/runtime"
+if [[ x"$LLVMDIR_OPTION" != x ]] ; then
+  LLVMDIR="$LLVMDIR_OPTION"
+  # check the validity of the path specified by the user
+  if [[ ! -x "$LLVMDIR/build-llvm.sh" ]] ; then
+    complain "invalid LLVM directory: build-llvm.sh script is missing"
+  fi
+else
+  LLVMDIR="$RUNTIMEDIR/$LLVM_DIRNAME"
+fi
 
 #
 # installation directories
@@ -119,7 +140,7 @@ HEAPDIR=$BINDIR/.heap		# where heap images live
 RUNDIR=$BINDIR/.run		# where executables (i.e., the RTS) live
 LIBDIR=$INSTALLDIR/lib		# where libraries live
 
-export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR
+export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR LLVMDIR
 
 #
 # old root environment variable (for compatibility)
@@ -339,12 +360,12 @@ else
   #
   BUILD_LLVM_FLAGS="-install $RUNTIMEDIR $BUILD_LLVM_FLAGS"
   if [ x"$INSTALL_DEV" = xyes ] ; then
-    vsay $cmd: Building LLVM for all targets
+    vsay $cmd: Building LLVM for all targets in $LLVMDIR
     cd "$LLVMDIR"
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
-    vsay $cmd: Building LLVM
+    vsay $cmd: Building LLVM in $LLVMDIR
     cd "$LLVMDIR"
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
