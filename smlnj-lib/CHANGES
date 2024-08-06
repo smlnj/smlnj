@@ -1,14 +1,14 @@
 This is a list of changes to the SML/NJ Library; the version numbers
-correspond to SML/NJ releases.
+correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
 SML/NJ 2024.3
 -------------------
 
 [2024-08-06]
-	Further specialization of the `IntHashTable` implementation.  Since the
-	hash and key values are the same bit pattern, we do not need to test
-	keys for equality.
+        Further specialization of the `IntHashTable` implementation.  Since the
+        hash and key values are the same bit pattern, we do not need to test
+        keys for equality.
 
 --------------------------------------------------------------------------------
 SML/NJ 2024.2
@@ -19,20 +19,20 @@ SML/NJ 2024.2
         in SML of NJ Library) and added some additional RE tests.
 
 [2024-05-24]
-	Fixed Issue #287 (Random.randRange when low = h).
+        Fixed Issue #287 (Random.randRange when low = h).
 
 --------------------------------------------------------------------------------
 SML/NJ 2024.1
 -------------------
 
 [2024-03-24]
-	Fixed the reporting of field-not-found errors (the error message was
-	garbled).
+        Fixed the reporting of field-not-found errors in JSON library (the error
+        message was garbled).
 
 [2024-03-22]
-	Fixed some bugs in the new JSON parser.  The first byte of a UTF-8
-	sequence was being dropped and comments were only allowed immediately
-	in front of values.
+        Fixed some bugs in the new JSON parser.  The first byte of a UTF-8
+        sequence was being dropped and comments were only allowed immediately
+        in front of values.
 
 [2024-03-14]
         Rewrote the JSON parsers to work directly on the input source (instead of
@@ -42,7 +42,7 @@ SML/NJ 2024.1
         faster, while the speedup is even greater for the `huge.json` file.
 
 [2024-03-11]
-	Added `JSONDecode` module.
+        Added `JSONDecode` module.
 
 [2024-02-26]
         Added `insertWith`, `insertWithi`, and `findAndRemove` operations to the
@@ -51,8 +51,8 @@ SML/NJ 2024.1
         operations for the `MONO_HASH_TABLE` interface).
 
 [2023-12-22]
-	Fixed the error checking and documentation for the `subArray` function
-	in the `DynamicArray` structure and `DynamicArrayFn` functor.
+        Fixed the error checking and documentation for the `subArray` function
+        in the `DynamicArray` structure and `DynamicArrayFn` functor.
 
 [2023-12-20]
         Fixes to the `subArray` and `truncate` functions in the dynamic array
@@ -68,11 +68,11 @@ SML/NJ 2023.1
 -------------------
 
 [2023-12-10]
-	Modified the `JSON.json` datatype to include the `INTLIT of string`
-	constructor.  This constructor will be used as a fall-back for when
-	integer constants in a JSON file have a large number of digits.
-	Currently, the parser does not use this mechanism, but the `FastJSONParser`
-	implementation that is under development does so.
+        Modified the `JSON.json` datatype to include the `INTLIT of string`
+        constructor.  This constructor will be used as a fall-back for when
+        integer constants in a JSON file have a large number of digits.
+        Currently, the parser does not use this mechanism, but the `FastJSONParser`
+        implementation that is under development does so.
 
 [2023-11-04]
         Reworked the `UTF8` structure to impose stricter validation of the
@@ -83,23 +83,23 @@ SML/NJ 2023.1
         (`UTF8.getu` should validate that it's input is UTF-8).
 
 [2023-09-19]
-	Added modules for the representation of booleans, integers, and words
-	as hash-consed values to the HashCons library.
+        Added modules for the representation of booleans, integers, and words
+        as hash-consed values to the HashCons library.
 
 [2023-07-27]
-	Fixed a bug in the Thompson engine and also added support for "$"
-	(end-of-line assertions) and full interval support in the RegExp
-	library.
+        Fixed a bug in the Thompson engine and also added support for "$"
+        (end-of-line assertions) and full interval support in the RegExp
+        library.
 
         Also fixed legacy issue #258 (https://github.com/smlnj/legacy/issues/258)
         in the Thompson engine.
 
 [2023-06-14]
-	Reworked the code for determining the maximum hash-table size (used
-	in the `HashSetFn` and `HashTableRep` modules) so that it does not
-	depend on `Int.int` and `Word.word` being the same size (an issue
-	for MLton).  Also split that code out into the internal `MaxHashTableSize`
-	module.  These changes fix legacy issue #279 (https://github.com/smlnj/legacy/issues/279).
+        Reworked the code for determining the maximum hash-table size (used
+        in the `HashSetFn` and `HashTableRep` modules) so that it does not
+        depend on `Int.int` and `Word.word` being the same size (an issue
+        for MLton).  Also split that code out into the internal `MaxHashTableSize`
+        module.  These changes fix legacy issue #279 (https://github.com/smlnj/legacy/issues/279).
 
 [2023-01-01]
         Reimplementation of the `Random` structure to use the Mersenne Twister
@@ -124,7 +124,7 @@ SML/NJ 2022.1
 -------------------
 
 [2022-06-03]
-	More and improved comparisons for the `ORD_MAP` interface.  The type of
+        More and improved comparisons for the `ORD_MAP` interface.  The type of
         the `collate` function has been made more polymorphic to allow maps with
         different ranges to be compared.  We have also added the `equiv` function
         for testing the equivalence of two maps (again, the range types may be
@@ -132,8 +132,8 @@ SML/NJ 2022.1
         another.  These functions are linear in the size of the smaller map.
 
 [2022-06-01]
-	Fix for bug #307 (`SExpParser.parseFile` should return empty list on empty
-	file)
+        Fix for bug #307 (`SExpParser.parseFile` should return empty list on empty
+        file)
 
 [2022-06-01]
         Fix for bug #309 (SExp: parsing the output of the printer produces a
@@ -141,7 +141,7 @@ SML/NJ 2022.1
         literals.
 
 [2022-04-27]
-	Added `findAndRemove` function to `ORD_MAP` interface.
+        Added `findAndRemove` function to `ORD_MAP` interface.
 
 --------------------------------------------------------------------------------
 SML/NJ 2021.1
@@ -164,867 +164,867 @@ SML/NJ 110.99.1
 -------------------
 
 [2021-03-09]
-	Fixed bug #278 (ListMergeSort is documented as stable, but is not (esp.
-	since 110.78 rewrite!))
+        Fixed bug #278 (ListMergeSort is documented as stable, but is not (esp.
+        since 110.78 rewrite!))
 
 [2021-03-01]
-	Added some additional mechanism to the `JSONUtil` structure to make
-	writing robust queries easier.  The additions include the functions
-	`hasField` and `testField`, and the constructor `FIND` for
-	the `JSONUtil.edge` datatype, which supports indexing arrays by
-	value in a path.  Also added the `ElemNotFound` exception for when
-	`FIND` fails.
+        Added some additional mechanism to the `JSONUtil` structure to make
+        writing robust queries easier.  The additions include the functions
+        `hasField` and `testField`, and the constructor `FIND` for
+        the `JSONUtil.edge` datatype, which supports indexing arrays by
+        value in a path.  Also added the `ElemNotFound` exception for when
+        `FIND` fails.
 
 [2021-02-08]
-	Fixed the handling of the empty list in the `ANSITerm` structure.
-	Also updated the documentation.
+        Fixed the handling of the empty list in the `ANSITerm` structure.
+        Also updated the documentation.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.99
 -------------------
 
 [2020-12-23]
-	Split out the `CharBufferDev` structure from the `CharBufferPP`
-	structure.
+        Split out the `CharBufferDev` structure from the `CharBufferPP`
+        structure.
 
 [2020-12-21]
-	Significant improvements to the pretty printing library.
-	Added a number of device "properties" to the `PP_DEVICE`
-	signature (max indentation, max depth, ellipses, ...)
-	with functions to set the properties.  Also updated the
-	pretty printing engine to use the max depth and max
-	indentation properties when rendering.  Restructured
-	and cleaned up a bunch of code in the process.
+        Significant improvements to the pretty printing library.
+        Added a number of device "properties" to the `PP_DEVICE`
+        signature (max indentation, max depth, ellipses, ...)
+        with functions to set the properties.  Also updated the
+        pretty printing engine to use the max depth and max
+        indentation properties when rendering.  Restructured
+        and cleaned up a bunch of code in the process.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.98
 -------------------
 
 [2020-07-08]
-	Fixed bug #263 (JSON parser ignores suffixes).  To fix this
-	bug required changing the interface to the `JSONParser`
-	structure, including the type of the `parse` function.
-	The `JSONParser` structure now exports a `source` type,
-	which is an abstraction of a JSON input source.  Several
-	functions are included for creating sources from strings,
-	input streams, etc.
-	This mechanism has also been added to the JSONStreamParser
-	structure's interface too.
+        Fixed bug #263 (JSON parser ignores suffixes).  To fix this
+        bug required changing the interface to the `JSONParser`
+        structure, including the type of the `parse` function.
+        The `JSONParser` structure now exports a `source` type,
+        which is an abstraction of a JSON input source.  Several
+        functions are included for creating sources from strings,
+        input streams, etc.
+        This mechanism has also been added to the JSONStreamParser
+        structure's interface too.
 
 [2020-07-07]
-	Fixed bug #262, which was that the JSON parser didn't
-	handle empty objects correctly.
+        Fixed bug #262, which was that the JSON parser didn't
+        handle empty objects correctly.
 
 [2020-07-02]
-	Renamed the `HTMLDev` structure to `HTML3Dev`.  At some
-	point, the `HTML` library will also be renamed, since
-	"HTML" implies HTML5 these days.
+        Renamed the `HTMLDev` structure to `HTML3Dev`.  At some
+        point, the `HTML` library will also be renamed, since
+        "HTML" implies HTML5 these days.
 
 [2020-07-01]
-	Updated the `ANSITermDev` structure in the pretty-printing
-	library to use the new control modes that were introduced
-	in 110.97.  Also moved the `HTMLDev` structure into a new
-	`pp-extras-lib.cm` library.  Doing so eliminates a dependency
-	from the compiler to the HTML library.
+        Updated the `ANSITermDev` structure in the pretty-printing
+        library to use the new control modes that were introduced
+        in 110.97.  Also moved the `HTMLDev` structure into a new
+        `pp-extras-lib.cm` library.  Doing so eliminates a dependency
+        from the compiler to the HTML library.
 
 [2020-06-08]
-	Added several functions to the `MONO_HASH_SET` signature
-	(and `HashSetFn` functor) to make its interface closer
-	to that of the `ORD_SET` signature.  The new functions are
-	`subtractc`, `subtractList`, `mapPartial`, `partition`,
-	`filter`, `exists`, `all`, and `find`.
-	In addition, also added the `copy` function.
+        Added several functions to the `MONO_HASH_SET` signature
+        (and `HashSetFn` functor) to make its interface closer
+        to that of the `ORD_SET` signature.  The new functions are
+        `subtractc`, `subtractList`, `mapPartial`, `partition`,
+        `filter`, `exists`, `all`, and `find`.
+        In addition, also added the `copy` function.
 
 [2020-06-03]
-	Added the functions `delete` and `findAndRemove` to the
-	`MONO_PRIORITYQ` signature.
+        Added the functions `delete` and `findAndRemove` to the
+        `MONO_PRIORITYQ` signature.
 
 [2020-05-25]
-	Some cleanup and additions to the `RegExpSyntax` structure in
-	the *RegExp Library*.  Instead of having constructors for
-	the optional, closure, and positive-closure operators, we
-	now support them via functions.  This change is because the
-	constructors were redundant with the more general `Interval`
-	constructor.
-	We also added more support for character ranges.  The new
-	function `fromRange` constructs a character set for a range,
-	and pre-defined character sets are provided for the POSIX
-	character classes (plus ``[:ascii:]`` and ``[:word:]``.
+        Some cleanup and additions to the `RegExpSyntax` structure in
+        the *RegExp Library*.  Instead of having constructors for
+        the optional, closure, and positive-closure operators, we
+        now support them via functions.  This change is because the
+        constructors were redundant with the more general `Interval`
+        constructor.
+        We also added more support for character ranges.  The new
+        function `fromRange` constructs a character set for a range,
+        and pre-defined character sets are provided for the POSIX
+        character classes (plus ``[:ascii:]`` and ``[:word:]``.
 
 [2020-05-20]
-	Fixed bug in printing JSON strings that include characters
-	that need to be escaped.
+        Fixed bug in printing JSON strings that include characters
+        that need to be escaped.
 
 [2020-05-15]
-	Renamed `without` as `subtract` and `listItems` as `toList`
-	in the `MONO_HASH_SET` signature.  The old names are still
-	present, but are marked as deprecated.
+        Renamed `without` as `subtract` and `listItems` as `toList`
+        in the `MONO_HASH_SET` signature.  The old names are still
+        present, but are marked as deprecated.
 
 [2020-05-14]
-	Add `toList` function to `MONO_DYNAMIC_ARRAY` signature.
+        Add `toList` function to `MONO_DYNAMIC_ARRAY` signature.
 
 [2020-05-12]
-	Changed the `ListXProd` interface to follow the Basis Library
-	conventions (this module was written in the early 1990's
-	before the conventions had been established).  The function
-	names are now `app`, `map`, and `fold` and the types follow
-	the Basis Library conventions (`app` expects a `unit` return
-	type for its first argument and the initial value for `fold`
-	is the second argument, instead of the third).  The old
-	`appX`, `mapX`, and `foldX` functions are deprecated, but
-	remain for backward compatibility.
+        Changed the `ListXProd` interface to follow the Basis Library
+        conventions (this module was written in the early 1990's
+        before the conventions had been established).  The function
+        names are now `app`, `map`, and `fold` and the types follow
+        the Basis Library conventions (`app` expects a `unit` return
+        type for its first argument and the initial value for `fold`
+        is the second argument, instead of the third).  The old
+        `appX`, `mapX`, and `foldX` functions are deprecated, but
+        remain for backward compatibility.
 
 [2020-05-11]
-	Added `mapPartial` function to `ORD_SET` interface.
+        Added `mapPartial` function to `ORD_SET` interface.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.97
 -------------------
 
 [2020-04-21]
-	Removed the `version` and `banner` components from the `LibBase`
-	structure, since the library has been tracking SML/NJ release
-	versions for a very long time.
+        Removed the `version` and `banner` components from the `LibBase`
+        structure, since the library has been tracking SML/NJ release
+        versions for a very long time.
 
 [2020-04-19]
-	Added `implode`, `map`, `app`, `all`, and `exists` functions to
-	the `UTF8` signature. Also implemented the handling of 4-byte
-	encodings, which were previously not supported.
+        Added `implode`, `map`, `app`, `all`, and `exists` functions to
+        the `UTF8` signature. Also implemented the handling of 4-byte
+        encodings, which were previously not supported.
 
 [2020-04-16]
-	Renamed the `HASH_SET` signature to `MONO_HASH_SET`, which is
-	the correct name given the naming conventions.
+        Renamed the `HASH_SET` signature to `MONO_HASH_SET`, which is
+        the correct name given the naming conventions.
 
 [2020-04-14]
-	Added the `fromVector`, `toList`, and `toVector` functions to
-	the `DynamicArray:DYNAMIC_ARRAY` interface.
+        Added the `fromVector`, `toList`, and `toVector` functions to
+        the `DynamicArray:DYNAMIC_ARRAY` interface.
 
 [2020-04-14]
-	Updated the `BitArray:BIT_ARRAY` interface to follow standard patterns
-	(this interfaces was originally designed before the SML Basis Library,
-	so it did not follow the conventions).
-	The changes are to have the `fromString` function return `NONE`,
-	instead of raising an exception on bad input, and to deprecate the
-	`lshift` and `rshift` operations in favor of `>>` and `<<` (which
-	use `word` for the shift amount).
+        Updated the `BitArray:BIT_ARRAY` interface to follow standard patterns
+        (this interfaces was originally designed before the SML Basis Library,
+        so it did not follow the conventions).
+        The changes are to have the `fromString` function return `NONE`,
+        instead of raising an exception on bad input, and to deprecate the
+        `lshift` and `rshift` operations in favor of `>>` and `<<` (which
+        use `word` for the shift amount).
 
 [2020-04-13]
-	Added more modes to the `ANSITerm` command set.  Specifically, we added
-	the `Default` color specifier and the styles `DIM`, `NORMAL`, `UL_OFF`,
-	`BLINK_OFF`, `REV_OFF`, and `INVIS_OFF`.
+        Added more modes to the `ANSITerm` command set.  Specifically, we added
+        the `Default` color specifier and the styles `DIM`, `NORMAL`, `UL_OFF`,
+        `BLINK_OFF`, `REV_OFF`, and `INVIS_OFF`.
 
 [2020-04-13]
-	Made the `ControlUtil.Cvt.bool` converter case insensitive.  Also,
-	it now allows "yes"/"no" as values.
+        Made the `ControlUtil.Cvt.bool` converter case insensitive.  Also,
+        it now allows "yes"/"no" as values.
 
 [2020-04-11]
-	Replaced the "directional" fold functions (_e.g._, `foldl`, `foldri`)
-	with non-directional functions (_e.g., `fold`, `foldi`) in the
-	`HashConsSet` and `HashConsMap` structures.  The reason for this
-	change is that the order of objects is pretty arbitrary, so there
-	is not any usefulness to processing elements in increasing or
-	decreasing order.
-	For backward compatibility, the old names will continue to work,
-	but they are deprecated amd will be removed in some future release.
+        Replaced the "directional" fold functions (_e.g._, `foldl`, `foldri`)
+        with non-directional functions (_e.g., `fold`, `foldi`) in the
+        `HashConsSet` and `HashConsMap` structures.  The reason for this
+        change is that the order of objects is pretty arbitrary, so there
+        is not any usefulness to processing elements in increasing or
+        decreasing order.
+        For backward compatibility, the old names will continue to work,
+        but they are deprecated amd will be removed in some future release.
 
 [2020-04-10]
-	Added `insertWith` and `insertWithi` functions to the `ORD_MAP`
-	signature.
+        Added `insertWith` and `insertWithi` functions to the `ORD_MAP`
+        signature.
 
 [2020-04-10]
-	Added operations to the `HashConsSet` and `HashConsMap` structures
-	(and corresponding signatures) to bring them inline with the
-	`ORD_SET` and `ORD_MAP` interfaces.  Also reimplemented these
+        Added operations to the `HashConsSet` and `HashConsMap` structures
+        (and corresponding signatures) to bring them inline with the
+        `ORD_SET` and `ORD_MAP` interfaces.  Also reimplemented these
 
 [2020-04-10]
-	Added a `QUOTE` constructor to the `SExp.value` datatype and
-	cleaned up the details of the syntax of identifiers.  Also
-	added a `compare` function for the `SExp.value` datatype.
+        Added a `QUOTE` constructor to the `SExp.value` datatype and
+        cleaned up the details of the syntax of identifiers.  Also
+        added a `compare` function for the `SExp.value` datatype.
 
 [2020-04-09]
-	Reimplemented the `find` functions in `UnixPath` to use the
-	`PathUtil` implementation, rather than reimplementing it.
-	Also changed the result types of `findFile` and `findFileOfType`
-	to return `string option`, instead of raising an exception.
+        Reimplemented the `find` functions in `UnixPath` to use the
+        `PathUtil` implementation, rather than reimplementing it.
+        Also changed the result types of `findFile` and `findFileOfType`
+        to return `string option`, instead of raising an exception.
 
 [2020-04-08]
-	The `JSONStreamPrinter` implementation now raises the `Fail`
-	exception when printing is attempted on a closed printer.
+        The `JSONStreamPrinter` implementation now raises the `Fail`
+        exception when printing is attempted on a closed printer.
 
 [2020-04-08]
-	Changed the return type of the `error` call-back function in
-	the `JSONStreamParser.callbacks` type to `unit`.
+        Changed the return type of the `error` call-back function in
+        the `JSONStreamParser.callbacks` type to `unit`.
 
 [2020-04-01]
-	Added a new library for generating and manipulating "Universally
-	Unique Identifiers" (UUID/uuid-lib.cm).
+        Added a new library for generating and manipulating "Universally
+        Unique Identifiers" (UUID/uuid-lib.cm).
 
 [2020-04-01]
-	Added structure `FNVHash`, which implements the Fowler-Noll-Vo
-	hashing algorithm
+        Added structure `FNVHash`, which implements the Fowler-Noll-Vo
+        hashing algorithm
 
 [2020-02-27]
-	Added `RESET` as a command to the `ANSITerm` structure.
+        Added `RESET` as a command to the `ANSITerm` structure.
 
 [2020-01-02]
-	Added the `disjoint` function to the `ORD_SET` signature.
+        Added the `disjoint` function to the `ORD_SET` signature.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.94-96
 -------------------
 
-	No changes
+        No changes
 
 --------------------------------------------------------------------------------
 SML/NJ 110.93
 -------------------
 
 [2019-09-04]
-	Modified the `Rand` and `Random` structures to use the default `Word`
-	structure, instead of `Word31`.  This change should make no difference
-	on 32-bit targets, but we hopefully allow these modules to continue
-	working on 64-bit targets (once we have 64-bit support working).  In
-	the long run, we will want 64-bit specific implementations of these
-	modules.
+        Modified the `Rand` and `Random` structures to use the default `Word`
+        structure, instead of `Word31`.  This change should make no difference
+        on 32-bit targets, but we hopefully allow these modules to continue
+        working on 64-bit targets (once we have 64-bit support working).  In
+        the long run, we will want 64-bit specific implementations of these
+        modules.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.86-92
 -------------------
 
-	No changes
+        No changes
 
 --------------------------------------------------------------------------------
 SML/NJ 110.86
 -------------------
 
 [2019-01-07]
-	Renamed the function `CharBufferPP.openOut` to `openBuf`, and added the
-	`TextPP` structure that supports pretty printing to either an output
-	stream (like `TextIOPP`) or a character buffer (like `CharBufferPP`)
+        Renamed the function `CharBufferPP.openOut` to `openBuf`, and added the
+        `TextPP` structure that supports pretty printing to either an output
+        stream (like `TextIOPP`) or a character buffer (like `CharBufferPP`)
 
 --------------------------------------------------------------------------------
 SML/NJ 110.85
 -------------------
 
-	No changes
+        No changes
 
 --------------------------------------------------------------------------------
 SML/NJ 110.84
 -------------------
 
 [2018-12-12]
-	Added CharBufferPP to pretty-printing library.  This module can be used
-	to generate strings from a pretty-printer.
+        Added CharBufferPP to pretty-printing library.  This module can be used
+        to generate strings from a pretty-printer.
 
 [2018-09-26]
-	Minor cleanup in the way that hash-table sizes are determined.  We now
- 	place an upper bound on table size that is derived from Array.maxLen.
+        Minor cleanup in the way that hash-table sizes are determined.  We now
+        place an upper bound on table size that is derived from Array.maxLen.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.83
 -------------------
 
 [2018-08-20]
-	Added a pretty printer (SExpPP) to the SExp library.  The SExpPrinter
-	module does not layout the text with line breaks, which makes it hard
-	to read.
-	Also fixed a bug in the SExp.same function (lists of different lengths
-	would compare equal if the shorter list was a prefix of the longer list)
+        Added a pretty printer (SExpPP) to the SExp library.  The SExpPrinter
+        module does not layout the text with line breaks, which makes it hard
+        to read.
+        Also fixed a bug in the SExp.same function (lists of different lengths
+        would compare equal if the shorter list was a prefix of the longer list)
 
 [2018-08-20]
-	Added some documentation to the PP_STREAM signature.
+        Added some documentation to the PP_STREAM signature.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.82
 -------------------
 
 [2017-05-17]
-	Fixed a bug in the way that JSON string values were being printed.
-	The code previously assumed that C-style esaping will work, but
-	that is not true for "\'" (as well as for control and non-ASCII
-	characters).  The new implementation assumes that the string value
-	is UTF-8 and uses the "\\u" escape sequences for characters outside
-	the JSON escapes and printable ASCII characters.
+        Fixed a bug in the way that JSON string values were being printed.
+        The code previously assumed that C-style esaping will work, but
+        that is not true for "\'" (as well as for control and non-ASCII
+        characters).  The new implementation assumes that the string value
+        is UTF-8 and uses the "\\u" escape sequences for characters outside
+        the JSON escapes and printable ASCII characters.
 
-	NOTE: we should make sure that the input side of the JSON library
-	has the same semantics.
+        NOTE: we should make sure that the input side of the JSON library
+        has the same semantics.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.81
 -------------------
 
 [2017-04-12]
-	Added JSONUtil structure to JSON library.  This module supports processing
-	the in-memory representation of JSON values.
+        Added JSONUtil structure to JSON library.  This module supports processing
+        the in-memory representation of JSON values.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.80
 -------------------
 
 [2016-08-03]
-	Fixed bug #167 (Bug in handling of long options in GetOpt).  The new behavior
-	is to allow long-option prefixes to overlap with other long options, but to
-	favor an exact match over prefix matches.  For example, if the long options
-	are "--foo", "--foobar", and "--foobaz", then "--foo" will match the first,
-	but "--foob" will be flagged as ambiguous.
+        Fixed bug #167 (Bug in handling of long options in GetOpt).  The new behavior
+        is to allow long-option prefixes to overlap with other long options, but to
+        favor an exact match over prefix matches.  For example, if the long options
+        are "--foo", "--foobar", and "--foobaz", then "--foo" will match the first,
+        but "--foob" will be flagged as ambiguous.
 
 [2016-01-12]
-	Added minItem and maxItem to ORD_SET signature.
+        Added minItem and maxItem to ORD_SET signature.
 
 [2016-01-12]
-	Added toList to ORD_SET signature and marked listItems as
-	deprecated.
+        Added toList to ORD_SET signature and marked listItems as
+        deprecated.
 
 [2015-12-07]
-	Fixed bug #144 (Splay sets are broken).
+        Fixed bug #144 (Splay sets are broken).
 
 [2015-10-28]
-	Added the function `help` to the Controls module that returns a
-	control's help string.
+        Added the function `help` to the Controls module that returns a
+        control's help string.
 
 [2015-10-28]
-	Added the functions mkOptionFlag, mkOptionReqArg, and mkOption
-	to the Controls module to make it easier to package controls
-	as command-line options. These functions provide an alternative
-	to the usual approach of using a "--C<ctl>=<value> form for
-	all of the controls.
+        Added the functions mkOptionFlag, mkOptionReqArg, and mkOption
+        to the Controls module to make it easier to package controls
+        as command-line options. These functions provide an alternative
+        to the usual approach of using a "--C<ctl>=<value> form for
+        all of the controls.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.79
 -------------------
 
 [2015-09-21]
-	Added additional array operations toList, fromVector, and toVector to
-	BitArray module so that it matches the new proposed Basis Library
-	specification (Proposal 2015-003).
+        Added additional array operations toList, fromVector, and toVector to
+        BitArray module so that it matches the new proposed Basis Library
+        specification (Proposal 2015-003).
 
 --------------------------------------------------------------------------------
 SML/NJ 110.78
 -------------------
 
 [2014-12-07]
-	Added HTML4Entities structure to HTML4 library.  various
-	performance improvements to HTML4 parsing (but the code still
-	needs work).  Also rewrote the HTML4 pretty printer.
+        Added HTML4Entities structure to HTML4 library.  various
+        performance improvements to HTML4 parsing (but the code still
+        needs work).  Also rewrote the HTML4 pretty printer.
 
 [2014-12-07]
-	New implementation of ListMergeSort.  This implementation is
-	better on sorted data (both ascending and descending) and
-	faster on smaller lists.  It is slower than the previous
-	implementation on very large lists (e.g., 10^6 elements
-	or more).
+        New implementation of ListMergeSort.  This implementation is
+        better on sorted data (both ascending and descending) and
+        faster on smaller lists.  It is slower than the previous
+        implementation on very large lists (e.g., 10^6 elements
+        or more).
 
 [2014-11-17]
-	Added HTML4Attrs module to HTML4 library.  This module provides
-	utility functions for building attribute-value pairs.
+        Added HTML4Attrs module to HTML4 library.  This module provides
+        utility functions for building attribute-value pairs.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.77
 -------------------
 
 [2014-07-15]
-	Reimplementation of delete/remove operations in red-black-tree
-	versions of sets and maps.  The previous implementation could
-	result in violations of the data-structure invariants, which
-	was leading to unbalanced trees and loss of performance.  Note
-	that the order invariants were correctly maintained, so correctness
-	of the operations was not an issue.
+        Reimplementation of delete/remove operations in red-black-tree
+        versions of sets and maps.  The previous implementation could
+        result in violations of the data-structure invariants, which
+        was leading to unbalanced trees and loss of performance.  Note
+        that the order invariants were correctly maintained, so correctness
+        of the operations was not an issue.
 
 [2014-03-27]
-	Added XML library, which is a lightweight library for parsing XML
-	files.  The library does not support validation and will immediatly
-	raise an exception on syntax errors.  Its purpose is to ease the
-	writing of applications that must process data files that are
-	in XML syntax.
+        Added XML library, which is a lightweight library for parsing XML
+        files.  The library does not support validation and will immediatly
+        raise an exception on syntax errors.  Its purpose is to ease the
+        writing of applications that must process data files that are
+        in XML syntax.
 
 [2013-11-20]
-	Changes to S-expression parsing library.  Allow multiple top-level
-	values in a file (parsing now returns a list).  Handle LISP/Scheme-style
-	comments ("; ...").
+        Changes to S-expression parsing library.  Allow multiple top-level
+        values in a file (parsing now returns a list).  Handle LISP/Scheme-style
+        comments ("; ...").
 
 --------------------------------------------------------------------------------
 SML/NJ 110.76
 -------------------
 
 [2012-10-30]
-	Fixed bug in DynamicArray iterators because of bad slice dimensions
-	(bug #108).  Also switched to using Array.fromList to implement fromList
-	function.
+        Fixed bug in DynamicArray iterators because of bad slice dimensions
+        (bug #108).  Also switched to using Array.fromList to implement fromList
+        function.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.75
 -------------------
 
 [2012-09-24]
-	Added Base64 module to support encoding and decoding Word8 vectors as
-	base64 strings.
+        Added Base64 module to support encoding and decoding Word8 vectors as
+        base64 strings.
 
 [2012-09-23]
-	Added exists, existsi, all, and alli functions to ORD_MAP signature and
-	implementations.
+        Added exists, existsi, all, and alli functions to ORD_MAP signature and
+        implementations.
 
 [2012-09-23]
-	Added all function to ORD_SET signature and implementations.
+        Added all function to ORD_SET signature and implementations.
 
 [2012-03-26]
-	Added subtract, subtract', and subtractList functions to ORD_SET
-	interface and implementations.
+        Added subtract, subtract', and subtractList functions to ORD_SET
+        interface and implementations.
 
 [2012-03-09]
-	Modified PathUtil module to handle the case where the filename is an
-	absolute path.
+        Modified PathUtil module to handle the case where the filename is an
+        absolute path.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.74
 -------------------
 
 [2011-11-25]
-	Added hash-table-based implementation of sets (HASH_SET signature and
-	HashSetFn functor).
+        Added hash-table-based implementation of sets (HASH_SET signature and
+        HashSetFn functor).
 
 [2011-05-23]
-	Added new S-expression library (contributed by Damon Wang)
+        Added new S-expression library (contributed by Damon Wang)
 
 [2011-05-17]
-	Fixed bug in JSON scanner.  It didn't handle escaped backslash or double
-	quote correctly.
+        Fixed bug in JSON scanner.  It didn't handle escaped backslash or double
+        quote correctly.
 
 --------------------------------------------------------------------------------
 SML/NJ 110.73
 -------------------
 
 [2011-05-12]
-	Modified the implementation of GetOpt.usageInfo so that if the help
-	string has embedded newlines, then the extra lines are properly
-	indented.
+        Modified the implementation of GetOpt.usageInfo so that if the help
+        string has embedded newlines, then the extra lines are properly
+        indented.
 
 [2011-04-10]
-	Changed the interface of JSONStreamParser to support both parsing files
-	and TextIO.instreams.
+        Changed the interface of JSONStreamParser to support both parsing files
+        and TextIO.instreams.
 
 [2011-03-16]
-	Added findExe function to PathUtil module.
+        Added findExe function to PathUtil module.
 
 [2010-06-30]
-	Added HTML4 library.
+        Added HTML4 library.
 
 [2010-03-09]
-	Fixed bug in hashed cons library (bug #55).
+        Fixed bug in hashed cons library (bug #55).
 
 --------------------------------------------------------------------------------
 SML/NJ 110.72
 -------------------
 
 [2009-05-13]
-	Added array iterators to DynamicArray module.
+        Added array iterators to DynamicArray module.
 
 [2009-03-15]
-	Added support for the interval syntax to the AWK RE syntax parser (this
-	syntax was not part of the original version of AWK, but is supported by
-	modern variants and the POSIX standard).
+        Added support for the interval syntax to the AWK RE syntax parser (this
+        syntax was not part of the original version of AWK, but is supported by
+        modern variants and the POSIX standard).
 
 [2008-10-03]
-	Improved the error messages in the JSON parser.
+        Improved the error messages in the JSON parser.
 
 [2008-06-11]
-	Added support for begin marks to Thompson engine.
+        Added support for begin marks to Thompson engine.
 
 [2008-05-12]
-	Added parsing support to JSON library.
+        Added parsing support to JSON library.
 
 [2008-04-18]
-	First commit of JSON Library.  Printing works, but parsing still needs
-	to be implemented.
+        First commit of JSON Library.  Printing works, but parsing still needs
+        to be implemented.
 
 [2008-03-18]
-	Committed a major overhaul of the RegExp library.  There is now a new
-	engine that implements Ken Thompson's RE matching algorithm.  The result
-	type of the RE matches has also been simplified by removing an unecessary
+        Committed a major overhaul of the RegExp library.  There is now a new
+        engine that implements Ken Thompson's RE matching algorithm.  The result
+        type of the RE matches has also been simplified by removing an unecessary
         option type.
-	NOTE: the new RE engine is not complete in that it does not yet support
-	begin/end marks.
+        NOTE: the new RE engine is not complete in that it does not yet support
+        begin/end marks.
 
 [2007-12-13]
-	Also added list' and listg' which are parameterized over the delimiter-
-	and separator strings used for formatting lists.  (The default for "list" and
-	"listg" is the usual "[" ", " "]".)
+        Also added list' and listg' which are parameterized over the delimiter-
+        and separator strings used for formatting lists.  (The default for "list" and
+        "listg" is the usual "[" ", " "]".)
 
 [2007-12-13]
-	Added "elem" function as an inverse to "glue" to FormatComb module.
-	This makes writing extensions possible.  Also added "list" and "option"
-	combinators for formatting list- and option types.
+        Added "elem" function as an inverse to "glue" to FormatComb module.
+        This makes writing extensions possible.  Also added "list" and "option"
+        combinators for formatting list- and option types.
 
 [2007-11-02]
-	A collection of bug fixes for machine.sml in the Reactive library.
-	(Thanks to Timothy Bourke)
+        A collection of bug fixes for machine.sml in the Reactive library.
+        (Thanks to Timothy Bourke)
 
 [2007-05-15]
-	Made the UnixPath.path_list type concrete (= string list).
+        Made the UnixPath.path_list type concrete (= string list).
 
 [2007-04-24]
-	Added next function to Fifo and Queue modules.
+        Added next function to Fifo and Queue modules.
 
 [2007-02-15]
-	Removed vestigial IntInf and INT_INF definitions.
+        Removed vestigial IntInf and INT_INF definitions.
 
 [2007-02-14]
-	Changed the representation type of UTF8.wchar from Word32.word to word.
-	Also added the UTF8.maxCodePoint value.
+        Changed the representation type of UTF8.wchar from Word32.word to word.
+        Also added the UTF8.maxCodePoint value.
 
 [2007-01-30]
-	Added the lookup function to the ORD_MAP interface.
+        Added the lookup function to the ORD_MAP interface.
 
 [2007-01-30]
-	Added the fromList function to the ORD_SET interface.  For the red-black
-	tree and list based implementations, this operation is linear for ordered
-	inputs.
+        Added the fromList function to the ORD_SET interface.  For the red-black
+        tree and list based implementations, this operation is linear for ordered
+        inputs.
 
 [2007-01-28]
-	Added UTF8 signature and structure.
+        Added UTF8 signature and structure.
 
 [2005-11-07]
-	Internal change: replaced uses of the depreciated Substring.all
-	with the Substring.full
+        Internal change: replaced uses of the depreciated Substring.all
+        with the Substring.full
 
 [2005-11-05]
-	Tweaking of the interval set API.  Added iterators on items and
-	changed the iterators on intervals to have a "Int" suffix.
-	Changed addInterval to addInt, changed list to intervals.  Added
-	the items function.
+        Tweaking of the interval set API.  Added iterators on items and
+        changed the iterators on intervals to have a "Int" suffix.
+        Changed addInterval to addInt, changed list to intervals.  Added
+        the items function.
 
 [2005-10-31]
-	Fixed a bug in IntervalSetFn().intersect.
+        Fixed a bug in IntervalSetFn().intersect.
 
 [2005-10-25]
-	Added interval sets to utility library (signatures INTERVAL_DOMAIN
-	and INTERVAL_SET, and functor IntervalSetFn).
+        Added interval sets to utility library (signatures INTERVAL_DOMAIN
+        and INTERVAL_SET, and functor IntervalSetFn).
 
 [2005-08-04]
-	Renamed graph-scc.sml to graph-scc-fn.sml.
+        Renamed graph-scc.sml to graph-scc-fn.sml.
 
 [2005-07-23]
-	Fix PP library to export ANSITermDev, ANSITermPP, PPDescFn, and
-	PP_DESC.  Also add nbSpace to PP_DESC signature.
+        Fix PP library to export ANSITermDev, ANSITermPP, PPDescFn, and
+        PP_DESC.  Also add nbSpace to PP_DESC signature.
 
 [2005-07-12]
-	Added ANSITermDev device that uses ANSI terminal display attributes
-	and added a ANSITermPP for pretty printing to such a device.
+        Added ANSITermDev device that uses ANSI terminal display attributes
+        and added a ANSITermPP for pretty printing to such a device.
 
 [2005-07-06]
-	Added ANSITerm structure, which provides support for ANSI terminal
-	display attributes (e.g., red text).
+        Added ANSITerm structure, which provides support for ANSI terminal
+        display attributes (e.g., red text).
 
 [2005-07-06]
-	Refactored the pretty printing library.  The declarative way to
-	construct pretty-printing descriptions now sits on top of the
-	PP_STREAM interface.  Also removed "onNewline" function, which
-	was not implemented.
+        Refactored the pretty printing library.  The declarative way to
+        construct pretty-printing descriptions now sits on top of the
+        PP_STREAM interface.  Also removed "onNewline" function, which
+        was not implemented.
 
 [2005-05-05]
-	Added singleton function to MONO_PRIORITYQ interface.
+        Added singleton function to MONO_PRIORITYQ interface.
 
 [2005-05-04]
-	Added the "join" combinator to ParserComb.
+        Added the "join" combinator to ParserComb.
 
 [2005-03-21]
-	Fixed a bug in GetOpt.getOpt.  The argument processing functions
-	for ReqArg and OptArg, and the embedding function for ReturnInOrder
-	were getting applied to all arguments, even past a "--".
+        Fixed a bug in GetOpt.getOpt.  The argument processing functions
+        for ReqArg and OptArg, and the embedding function for ReturnInOrder
+        were getting applied to all arguments, even past a "--".
 
 [2005-02-11]
-	Added Atom.same and Atom.lexCompare to the Atom structure.  Eventually,
-	Atom.sameAtom will be removed.
+        Added Atom.same and Atom.lexCompare to the Atom structure.  Eventually,
+        Atom.sameAtom will be removed.
 
 [2004-12-15]
-	Change HashString.hashString' to hashSubstring.
+        Change HashString.hashString' to hashSubstring.
 
 [2004-12-09]
-	Added two simple statistics modules:
-	* RealOrderStats implements selection of arbitrary order
+        Added two simple statistics modules:
+        * RealOrderStats implements selection of arbitrary order
           statistics as well as the median of an array of reals
-	  in randomized linear time.
-	* UnivariateStats implements mean, variance, standard and average
-	  deviation, skew, kurtosis, and median of a univariate sample
-	  (i.e., a set of reals).
+          in randomized linear time.
+        * UnivariateStats implements mean, variance, standard and average
+          deviation, skew, kurtosis, and median of a univariate sample
+          (i.e., a set of reals).
 
 [2004-11-29]
-	Added HashString.hashString' for substrings.
-	Hand-inlined CharVector.fold into HashString for efficiency.
-	Modified atom.sml so that Atom.atom' first tries to find an
-	existing atom before turning its argument into a string. [-blume]
+        Added HashString.hashString' for substrings.
+        Hand-inlined CharVector.fold into HashString for efficiency.
+        Modified atom.sml so that Atom.atom' first tries to find an
+        existing atom before turning its argument into a string. [-blume]
 
 [2003-09-03]
-	Minor modifications to random.sml due to changes to some
-	Basis interfaces (slices).
-	Significant surgery on bit-array.sml to make it compile with
-	new signature MONO_ARRAY.  This will require further cleanup
-	in the future.
+        Minor modifications to random.sml due to changes to some
+        Basis interfaces (slices).
+        Significant surgery on bit-array.sml to make it compile with
+        new signature MONO_ARRAY.  This will require further cleanup
+        in the future.
 
 [2003-08-28]
-	Made compilation of int-inf* conditional.  (The Basis now has
-	a spec-conforming implementation of IntInf, so the one here is
-	no longer needed.)  [-blume]
+        Made compilation of int-inf* conditional.  (The Basis now has
+        a spec-conforming implementation of IntInf, so the one here is
+        no longer needed.)  [-blume]
 
 [2003-07-31]
-	Added getDevice function to PP_STREAM signature.
+        Added getDevice function to PP_STREAM signature.
 
 [2003-05-27]
-	Avoid poly-eq in Util/parser-comb.sml.
+        Avoid poly-eq in Util/parser-comb.sml.
 
 [2003-05-22]
-	More cleanup (all in the name of eliminating incomplete matches):
-	  - in HTML/html-attrs-fn.sml: fill in missing patterns in two
-	    case expressions
-	  - in HTML/html-gram: rewrote function groupDefListContents
-	    to avoid the (unnecessary) incomplete match
-	  - in PP/devices/html-dev.sml: made the implementation of popStyle
-	    agree with the comment above it (popStyle on an empty
-	    stack is supposed to be a nop)
-	  - in PP/src/pp-stream-fn.sml: function setSize: handle case of
-	    an empty scanStk
-	  - in Util/prime-sizes.sml: raise Fail exceptions instead of
-	    Match exceptions when reaching the end of a list
-	    (Perhaps this should eventually be rewritten using an on-demand
-	     prime-number generator that kicks when needed.)
+        More cleanup (all in the name of eliminating incomplete matches):
+          - in HTML/html-attrs-fn.sml: fill in missing patterns in two
+            case expressions
+          - in HTML/html-gram: rewrote function groupDefListContents
+            to avoid the (unnecessary) incomplete match
+          - in PP/devices/html-dev.sml: made the implementation of popStyle
+            agree with the comment above it (popStyle on an empty
+            stack is supposed to be a nop)
+          - in PP/src/pp-stream-fn.sml: function setSize: handle case of
+            an empty scanStk
+          - in Util/prime-sizes.sml: raise Fail exceptions instead of
+            Match exceptions when reaching the end of a list
+            (Perhaps this should eventually be rewritten using an on-demand
+             prime-number generator that kicks when needed.)
 
 [2003-05-22]
-	Cleanup logic in Scan.scanf function.
+        Cleanup logic in Scan.scanf function.
 
 [2002-10-03]
-	Fixed bug in formating reals with the %g format.
+        Fixed bug in formating reals with the %g format.
 
 [2002-06-18]
-	Fixed a bug in MatchTree.nth (regexp library).  Thanks to
-	Sami Nopanen.
+        Fixed a bug in MatchTree.nth (regexp library).  Thanks to
+        Sami Nopanen.
 
 [2002-05-20]
-	Fixed bug in IntInf module: scanning of hex literals was not
-	handling "0x" prefixes.
+        Fixed bug in IntInf module: scanning of hex literals was not
+        handling "0x" prefixes.
 
 [2002-05-20]
-	Added ControlUtil module and stringControls function.
+        Added ControlUtil module and stringControls function.
 
 [2002-05-17]
-	Added tyName field to ValueSyntax exception in Controls module
-	and path field to registry tree in ControlRegistry module.
+        Added tyName field to ValueSyntax exception in Controls module
+        and path field to registry tree in ControlRegistry module.
 
 [2002-05-17]
-	Added == and != operators to INT_INF interface.  These are a
-	placeholder until IntInf moves into the SML/NJ compiler.
+        Added == and != operators to INT_INF interface.  These are a
+        placeholder until IntInf moves into the SML/NJ compiler.
 
 [2002-05-16]
-	Added mergeWith function to ORD_MAP interface.
+        Added mergeWith function to ORD_MAP interface.
 
 [2002-05-15]
-	Revised Controls library.
+        Revised Controls library.
 
 [2002-04-17]
-	Added Matthias Blume's implementation of Danvey-style format
-	combinators to the Util library.
+        Added Matthias Blume's implementation of Danvey-style format
+        combinators to the Util library.
 
 [2002-03-14]
-	Merged in Matthias Blume's Controls library.  Warning: the API
-	to this library is likely to change as we get some experience
-	with it.
+        Merged in Matthias Blume's Controls library.  Warning: the API
+        to this library is likely to change as we get some experience
+        with it.
 
 [2002-03-11]
-	Added consR1 .. consR5 functions to HashCons library.  These
-	can be used to hash-cons record types.
+        Added consR1 .. consR5 functions to HashCons library.  These
+        can be used to hash-cons record types.
 
 [2002-02-21]
-	Fixed infinite loop in LeftPriorityQFn.fromList when given a
-	singleton list as input (Chris Okasaki provided the fix).
+        Fixed infinite loop in LeftPriorityQFn.fromList when given a
+        singleton list as input (Chris Okasaki provided the fix).
 
 [2002-02-12]
-	Added implementation of priority queues to Util library (using
-	Okasaki's leftist-tree implementation).
+        Added implementation of priority queues to Util library (using
+        Okasaki's leftist-tree implementation).
 
 [2001-10-19]
-	Added new HashCons library.
+        Added new HashCons library.
 
 [2001-10-19]
-	Added PrimeSizes module to Util library.
+        Added PrimeSizes module to Util library.
 
 [2001-09-27]
-	Fixed bug in UnixEnv module (reported by Leunga).
+        Fixed bug in UnixEnv module (reported by Leunga).
 
 [2001-05-05]
-	Added addrToString function to SockUtil module in INet library.
+        Added addrToString function to SockUtil module in INet library.
 
 [2001-05-04]
-	Modified GraphSCC module to support a list of roots (Blume).
-	The old interface still works, but will be dropped when we move
-	to the new Util library.
+        Modified GraphSCC module to support a list of roots (Blume).
+        The old interface still works, but will be dropped when we move
+        to the new Util library.
 
 [2001-04-06]
-	Added partition function to ORD_SET interface.
+        Added partition function to ORD_SET interface.
 
 [2001-04-05]
-	Added hasProps function to PropList module.
+        Added hasProps function to PropList module.
 
 [2001-03-16]
-	Minor bug fix in GetOpt: don't pad the help string, since it causes
-	line wraps when one of the help lines is longer than the screen
-	width.  It was also unneccesary.
+        Minor bug fix in GetOpt: don't pad the help string, since it causes
+        line wraps when one of the help lines is longer than the screen
+        width.  It was also unneccesary.
 
 [2001-02-23]
-	Added inDomain function to the various kinds of hash tables.
+        Added inDomain function to the various kinds of hash tables.
 
 [2001-02-22]
-	Fixed bug in {Int,Word}RedBlackMapFn.insert (bug 1591).
+        Fixed bug in {Int,Word}RedBlackMapFn.insert (bug 1591).
 
 [2000-12-13]
-	Added the bit operations to the IntInf module (Leung).
+        Added the bit operations to the IntInf module (Leung).
 
 [2000-11-17]
-	Added where clause to GraphSCCFn result signature (Blume).
+        Added where clause to GraphSCCFn result signature (Blume).
 
 [2000-10-20]
-	Made the result signature of the RegExpFn functor be opaque.
+        Made the result signature of the RegExpFn functor be opaque.
 
 [2000-09-28]
-	SML/NJ 110.0.7 release.
+        SML/NJ 110.0.7 release.
 
 [2000-09-02]
-	Added Word versions of hash tables (WordHashTable), finite
-	maps (WordRedBlackMap), and sets (WordRedBlackSet).
+        Added Word versions of hash tables (WordHashTable), finite
+        maps (WordRedBlackMap), and sets (WordRedBlackSet).
 
 [2000-09-02]
-	fixed bug in Format module (infinity caused infinite loop).
+        fixed bug in Format module (infinity caused infinite loop).
 
 [2000-07-19]
-	added anchored paths in CM files for NEW_CM.
+        added anchored paths in CM files for NEW_CM.
 
 [2000-06-30]
-	added implementation of LWORD in Format module.
+        added implementation of LWORD in Format module.
 
 [2000-05-16]
-	Fixed bug in dfa-engine.sml (bug number 1559).
+        Fixed bug in dfa-engine.sml (bug number 1559).
 
 [2000-05-08]
-	Added setFn to PList.newProp return type.
+        Added setFn to PList.newProp return type.
 
 [2000-05-05]
-	Added sameHolder function to PropList module.
+        Added sameHolder function to PropList module.
 
 [2000-04-05]
-	Fixed a bug in the filter/filteri hash table functions: the number
-	of items in the table was not being recomputed.
+        Fixed a bug in the filter/filteri hash table functions: the number
+        of items in the table was not being recomputed.
 
 [2000-04-04]
-	Added modify and modifyi iterators to hash tables.
+        Added modify and modifyi iterators to hash tables.
 
 [2000-03-28]
-	Added anchorLink style to HTMLDev structure in PP/devices.
+        Added anchorLink style to HTMLDev structure in PP/devices.
 
 [1999-12-03]
-	Added IntHashTable structure to Util library; this structure is
-	a specialization of hash tables to integer keys.
+        Added IntHashTable structure to Util library; this structure is
+        a specialization of hash tables to integer keys.
 
 [1999-12-03]
-	Added default cases to avoid "match not exhaustive" warnings.
+        Added default cases to avoid "match not exhaustive" warnings.
 
 [1999-12-03]
-	Added GraphSCCFn functor to Util library, which implements a
-	strongly-connected components algorithm on directed graphs (written
-	by Matthias Blume).
+        Added GraphSCCFn functor to Util library, which implements a
+        strongly-connected components algorithm on directed graphs (written
+        by Matthias Blume).
 
 [1999-11-10]
-	Fixed a benign type error in RegExp/BackEnd/fsm.sml that was exposed by
-	the previous change.
+        Fixed a benign type error in RegExp/BackEnd/fsm.sml that was exposed by
+        the previous change.
 
 [1999-11-7]
-	Made the result signatures of ListSetFn and ListMapFn opaque.
+        Made the result signatures of ListSetFn and ListMapFn opaque.
 
 [1999-11-1]
-	Fixed bug in PP/devices/sources.cm under new CM (missing smlnj-lib.cm).
+        Fixed bug in PP/devices/sources.cm under new CM (missing smlnj-lib.cm).
 
 [1999-10-20]
-	Fixed bug in RedBlack trees (the linear time construction of
-	trees from ordered sequences was producing backwards trees).
+        Fixed bug in RedBlack trees (the linear time construction of
+        trees from ordered sequences was producing backwards trees).
 
 [1999-10-18]
-	Changed UREF signature so that union, unify, and link operations
-	now return a boolean.
+        Changed UREF signature so that union, unify, and link operations
+        now return a boolean.
 
 [1999-10-18]
-	Added peekFn to PropList.newProp return result.
+        Added peekFn to PropList.newProp return result.
 
 [1999-10-14]
-	Added TextIOPP structure to pp-lib.cm (it was not being exported).
+        Added TextIOPP structure to pp-lib.cm (it was not being exported).
 
 [1999-09-21]
-	Changed the getOpt API.  Errors are now reported using a callback
-	and both usage and getOpt take records as arguments.  Also changed
-	the NoArg descriptor to take a function so that imperative argument
-	processing can be supported.
+        Changed the getOpt API.  Errors are now reported using a callback
+        and both usage and getOpt take records as arguments.  Also changed
+        the NoArg descriptor to take a function so that imperative argument
+        processing can be supported.
 
 [1999-09-20]
-	Changed CM files to be compatible with both the old (110.0.x) and
-	new (110.20+) versions of CM.
+        Changed CM files to be compatible with both the old (110.0.x) and
+        new (110.20+) versions of CM.
 
 [1999-09-17]
-	Added PropList:PROP_LIST structure.  This structure implements
-	property lists using Stephen Weeks's technique.
+        Added PropList:PROP_LIST structure.  This structure implements
+        property lists using Stephen Weeks's technique.
 
 [1999-09-17]
-	Improved the red-black tree implementations with linear-time union,
-	intersection, difference, and filter operations.  Also reimplemented
-	the delete function in a way that does not require an extra constructor.
+        Improved the red-black tree implementations with linear-time union,
+        intersection, difference, and filter operations.  Also reimplemented
+        the delete function in a way that does not require an extra constructor.
 
 [1999-09-09]
-	Added Red-Black-Tree implementation of sets and maps.  Two new
-	functors (RedBlackMapFn and RedBlackSetFn) and four new structures
-	(IntRedBlackMap, IntRedBlackSet, AtomIntRedBlackMap, and IntRedBlackSet).
-	Also added aliases AtomMap and AtomSet that for the RB implementations.
+        Added Red-Black-Tree implementation of sets and maps.  Two new
+        functors (RedBlackMapFn and RedBlackSetFn) and four new structures
+        (IntRedBlackMap, IntRedBlackSet, AtomIntRedBlackMap, and IntRedBlackSet).
+        Also added aliases AtomMap and AtomSet that for the RB implementations.
 
 [1999-09-03]
-	Added missing support for WORD and WORD8 format items to Format structure.
-	Still need to handle LWORD items!!
+        Added missing support for WORD and WORD8 format items to Format structure.
+        Still need to handle LWORD items!!
 
 [1999-08-17]
-	Added DynamicArray:DYNAMIC_ARRAY structure.
+        Added DynamicArray:DYNAMIC_ARRAY structure.
 
 [1999-07-06]
-	Added declarative representation of pretty-printing to PPStreamFn.
-	This replaces the PPDescFn and PP_DESC components (which were not
-	implemented anyway).
+        Added declarative representation of pretty-printing to PPStreamFn.
+        This replaces the PPDescFn and PP_DESC components (which were not
+        implemented anyway).
 
 [1999-07-02]
-	Moved SockUtil structure into a new INet library.  Also split out the
-	Unix-specific socket operations into a UnixSockUtil module.  (Sockets
-	are now supported on Win32).
+        Moved SockUtil structure into a new INet library.  Also split out the
+        Unix-specific socket operations into a UnixSockUtil module.  (Sockets
+        are now supported on Win32).
 
 [1999-06-17]
-	Added listKeys function to ORD_MAP API.
+        Added listKeys function to ORD_MAP API.
 
 [1999-06-14]
-	Added Riccardo Pucella's GetOpt structure to Util library.
+        Added Riccardo Pucella's GetOpt structure to Util library.
 
 [1999-06-14]
-	Added singleton and inDomain functions to ORD_MAP API.
+        Added singleton and inDomain functions to ORD_MAP API.
 
 [1999-06-02]
-	Merged in some bug fixes from the compiler's version of the IntInf
-	structure.
+        Merged in some bug fixes from the compiler's version of the IntInf
+        structure.
 
 [1999-05-05]
-	Fixed a couple of bugs in the PP library having to do with nesting
-	absolute and relative indentations.
+        Fixed a couple of bugs in the PP library having to do with nesting
+        absolute and relative indentations.
 
 [1999-04-21]
-	Added a way to pass control information to a PP device via the PP
-	stream (function control in PP_STREAM).
+        Added a way to pass control information to a PP device via the PP
+        stream (function control in PP_STREAM).
 
 [1999-04-16]
-	Added better style support to the HTML PP device.
+        Added better style support to the HTML PP device.
 
 [1998-09-04]
-	Added isEmpty predicate and first fucntion to ORD_MAP
-	signature (and to implementations).
+        Added isEmpty predicate and first fucntion to ORD_MAP
+        signature (and to implementations).
 
 [1998-06-23]
-	Fixed a bug in ParserComb.bind (reported by Andrew Kennedy).
+        Fixed a bug in ParserComb.bind (reported by Andrew Kennedy).
 
 --------------------------------------------------------------------------------
 [1998-04-15] 110 --> 110.5

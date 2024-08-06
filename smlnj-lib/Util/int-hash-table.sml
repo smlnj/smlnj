@@ -9,7 +9,8 @@
  *
  * Note that we could further specialize the representation of bucket items, since
  * the hash value and key are the same bit pattern, so we do not need to store
- * both!
+ * both!  Preliminary experiments, however, suggest that performance might not
+ * improve because of increased GC time (possibly a cache alignment issue).
  *
  * AUTHOR:  John Reppy
  *	    University of Chicago
