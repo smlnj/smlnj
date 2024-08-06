@@ -2,6 +2,15 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases.
 
 --------------------------------------------------------------------------------
+SML/NJ 2024.3
+-------------------
+
+[2024-08-06]
+	Further specialization of the `IntHashTable` implementation.  Since the
+	hash and key values are the same bit pattern, we do not need to test
+	keys for equality.
+
+--------------------------------------------------------------------------------
 SML/NJ 2024.2
 -------------------
 
