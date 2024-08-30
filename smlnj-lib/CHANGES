@@ -5,6 +5,10 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2024.3
 -------------------
 
+[2024-08-30]
+	Bug fixes for the handling of Unicode escape sequences in JSON strings
+	(thanks to Skye Soss for the fixes).
+
 [2024-08-06]
         Further specialization of the `IntHashTable` implementation.  Since the
         hash and key values are the same bit pattern, we do not need to test
