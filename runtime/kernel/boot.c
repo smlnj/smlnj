@@ -397,7 +397,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             ImportSelection (msp, file, fname, &importVecPos,
                              LookupPerID(&importPid));
         }
-        ML_AllocWrite(msp, importRecLen, ML_nil);
+        ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
         importRec = ML_Alloc(msp, importRecLen);
     }
 
@@ -453,7 +453,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     else {
         val = ML_unit;
     }
-  /* do a functional update of the last element of the importRec. */
+  /* do a functional update to set the last element of the importRec to the literals */
     for (i = 0;  i < importRecLen;  i++) {
         ML_AllocWrite(msp, i, PTR_MLtoC(ml_val_t, importRec)[i-1]);
     }
