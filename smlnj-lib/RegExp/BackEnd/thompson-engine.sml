@@ -18,7 +18,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
     (* a match specifies the position (as a stream) and the length of the match *)
     type 'a match = {pos : 'a, len : int} MatchTree.match_tree
 
-  (* intermediate representation of states *)
+    (* intermediate representation of states *)
     datatype state_kind
       = CHR' of (char * state' ref)
       | CSET' of (CSet.set * state' ref)

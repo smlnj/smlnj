@@ -5,7 +5,7 @@
 # build script for the print-cfg tool.
 #
 # options:
-#   -o image		-- specify the name of the heap image, "ml-burg"
+#   -o image		-- specify the name of the heap image, "print-cfg"
 #			   is the default.
 
 CMD=$0
