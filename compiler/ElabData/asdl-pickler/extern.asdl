@@ -1,0 +1,597 @@
+-- extern.asdl
+--
+-- COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+-- All rights reserved.
+--
+-- ASDL specification for pickling information about compilation units, etc.
+--
+
+-- primitive module for pickling lvars; note that this module is shared
+-- with the CFG pickler (compiler/CodeGen/cfg-pickle)
+--
+primitive module LambdaVar {
+    lvar
+}
+
+-- should agree with PrimCTypes
+--
+module CTypes {
+
+    c_type
+      = C_void
+      | C_float
+      | C_double
+      | C_long_double
+      | C_unsigned (c_int)
+      | C_signed (c_int)
+      | C_PTR
+      | C_ARRAY (c_type, int)
+      | C_STRUCT (c_type*)
+      | C_UNION (c_type*)
+
+    c_int
+      = I_char
+      | I_short
+      | I_int
+      | I_long
+      | I_long_long
+
+    calling_convention = string
+
+    c_proto = (calling_convention conv, c_type retTy, c_type* paramTys)
+
+}
+
+-- this module is isomorphic to the one in the compiler
+module PrimOp (import CTypes) {
+    numkind
+      = INT (int)
+      | UINT (int)
+      | FLOAT (int)
+
+    arithop = IADD | ISUB | IMUL | IDIV | IMOD | IQUOT | IREM | INEG
+
+    pureop
+      = ADD | SUB | MUL | QUOT | REM | NEG
+      | LSHIFT | RSHIFT | RSHIFTL
+      | ORB | XORB | ANDB | NOTB
+      | FDIV | FABS | FSQRT
+
+    cmpop = GT | GTE | LT | LTE | EQL | NEQ
+
+    ccall_type = CCI32 | CCI64 | CCR64 | CCML
+
+    primop
+      = IARITH (arithop oper, int sz)
+      | PURE_ARITH (pureop oper, numkind kind)
+      | INLDIV (numkind)
+      | INLMOD (numkind)
+      | INLQUOT (numkind)
+      | INLREM (numkind)
+      | INLLSHIFT (numkind)
+      | INLRSHIFT (numkind)
+      | INLRSHIFTL (numkind)
+      | CMP (cmpop oper, numkind kind)
+      | FSGN (int)
+      | INLCHR
+      | TESTU (int, int)
+      | TEST (int, int)
+      | TRUNC (int, int)
+      | EXTEND (int, int)
+      | COPY (int, int)
+      | TEST_INF (int)
+      | TRUNC_INF (int)
+      | EXTEND_INF (int)
+      | COPY_INF (int)
+      | REAL_TO_INT (bool floor, int from, int to)
+      | INT_TO_REAL (int from, int to)
+      | NUMSUBSCRIPT (numkind)
+      | NUMSUBSCRIPTV (numkind)
+      | NUMUPDATE (numkind)
+      | INLNUMSUBSCRIPT (numkind)
+      | INLNUMSUBSCRIPTV (numkind)
+      | INLNUMUPDATE (numkind)
+      | SUBSCRIPT
+      | SUBSCRIPTV
+      | INLSUBSCRIPT
+      | INLSUBSCRIPTV
+      | INLMKARRAY
+      | PTREQL | PTRNEQ
+      | POLYEQL | POLYNEQ
+      | BOXED | UNBOXED
+      | LENGTH
+      | OBJLENGTH
+      | CAST
+      | GETHDLR | SETHDLR
+      | GETVAR | SETVAR
+      | MAKEREF
+      | CALLCC | CAPTURE | THROW
+      | ISOLATE
+      | DEREF
+      | ASSIGN
+      | UPDATE
+      | INLUPDATE
+      | UNBOXEDUPDATE
+      | GETTAG
+      | MKSPECIAL
+      | SETSPECIAL
+      | GETSPECIAL
+      | INLMIN (numkind)
+      | INLMAX (numkind)
+      | INLABS (numkind)
+      | INLNOT
+      | INLCOMPOSE
+      | INLBEFORE
+      | INLIGNORE
+      | NEW_ARRAY0
+      | GET_SEQ_DATA
+      | SUBSCRIPT_REC
+      | SUBSCRIPT_RAW64
+      | INLIDENTITY
+      | INTERN64
+      | EXTERN64
+      | RAW_LOAD (numkind)
+      | RAW_STORE (numkind)
+      | RAW_CCALL (ccall_spec?)
+      | RAW_RECORD (bool align64)
+      | UNBOXEDASSIGN
+      | WCAST
+      | MARKEXN
+      | INL_ARRAY
+      | INL_VECTOR
+      | INL_MONOARRAY (numkind)
+      | INL_MONOVECTOR (numkind)
+      | MKETAG
+      | WRAP
+      | UNWRAP
+      | PTR_TO_WORD
+      | WORD_TO_PTR
+      | REAL_TO_BITS (int)
+      | HOST_WORD_SIZE => %?55
+      | HOST_BIG_ENDIAN => %?56
+
+  ccall_spec = (CTypes.c_proto c_proto, ccall_type* ml_args, ccall_type? ml_res_opt, bool reentrant)
+
+}
+
+-- primitive module for persistent stamps
+--
+primitive module PersStamps {
+    persstamp
+}
+
+-- stamps
+--
+-- see ElabData/basics/stamps.{sig,sml}
+--
+module ExtStamps (import PersStamps) {
+
+    stamp_rep
+      = Fresh (int)
+      | Global (PersStamps.persstamp pid, int cnt)
+      | Special (string)
+
+    -- we use shared values to represent stamps
+    stamp = stamp_rep!
+
+}
+
+module ExtAccess (
+  import PersStamps
+  import LambdaVar
+) {
+
+    access_rep
+      = LVAR (LambdaVar.lvar)
+      | EXTERN (PersStamps.persstamp)
+      | PATH (access_rep, int)
+	-- note that we represent `PATH(EXTERN pid, n)` as `LVAR(n)`, when `pid` is "local"
+      | NO_ACCESS
+
+    -- hash-consed access
+    access = access_rep!
+
+    access_pair = (access, access)
+
+    conrep_rep
+      = UNTAGGED
+      | TAGGED (int)
+      | TRANSPARENT
+      | CONSTANT (int)
+      | REF
+      | EXN (access)
+      | SUSP (access_pair?)
+      | LISTCONS
+      | LISTNIL
+
+    -- hash-consed conrep
+    conrep = conrep_rep!
+
+-- FIXME: should be equivalent to Access.consig
+    consig
+      = CSIG (int, int)
+      | CNIL
+
+}
+
+module ExtSymbol {
+    name_space
+      = VALspace | TYCspace | SIGspace | STRspace
+      | FCTspace | FSIGspace | FIXspace | LABspace | TYVspace
+
+    symbol_rep = (name_space, string)
+
+    symbol = symbol_rep!
+}
+
+module ExtEntPath (
+  import ExtStamps
+) {
+    -- EntPath.entVar = Stamp.stamp
+    ent_var = ExtStamps.stamp
+
+    -- EntPath.entPath = EntPath.entVar list
+    ent_path = ent_var*
+}
+
+module ExtInvPath (
+  import ExtSymbol
+) {
+    -- InvPath.path
+    path = IPATH (ExtSymbol.symbol*)
+}
+
+-- see ElabData/types/types.{sig,sml}
+module ExtTypes (
+  import PersStamps
+  import ExtSymbol
+  import ExtStamps
+  import ExtAccess
+  import ExtEntPath
+  import ExtInvPath
+) {
+
+    label = ExtSymbol.symbol
+
+    polysign = bool*
+
+    eqprop = YES | NO | IND | OBJ | DATA | ABS | UNDEF
+
+    -- Types.dtypeFamily with properties dropped
+    dt_family = (ExtStamps.stamp mkey, dt_member* members)
+
+    dt_member = (
+	ExtSymbol.symbol tycname,
+	int arity,
+	eqprop* eq,
+	bool lazyp,
+	dcon_desc* dcons,
+	ExtAccess.consig sign)
+
+    dcon_desc = (
+	ExtSymbol.symbol name,
+	ExtAccess.conrep rep,
+	ty? domain)
+
+    tyckind
+      = PRIMITIVE 			-- primitive tycons
+      | ABSTRACT (tycon)
+      | DATATYPE (
+	  int index,			-- index for RECtyc
+	  ExtStamps.stamp* stamps,
+	  ExtEntPath.ent_var? root,	-- the root field used by type spec only
+	  tycon* freetycs,		-- tycs derived from functor params
+	  dt_family family,
+	  bool stripped)		-- true if datatype has matched a simple type spec
+      | FLEXTYC          		-- instantiated formal type constructor
+      | FORMAL				-- used only inside signatures
+      | TEMP				-- used only during datatype elaborations
+
+    tycon
+      = GENtyc (gtrec)
+      | DEFtyc (
+	   ExtStamps.stamp stamp,
+	   tyfun tyfun,
+	   bool* strict,
+	   ExtInvPath.path path)
+      | PATHtyc (
+	   int arity,
+	   ExtEntPath.ent_path entPath,
+	   ExtInvPath.path path)
+      | RECORDtyc (label*)
+      | RECtyc (int)			-- used only in domain type of dconDesc
+      | FREEtyc (int)			-- used only in domain type of dconDesc
+      | ERRORtyc
+
+    -- the argument of a Types.GENtyc is a Types.gtrec, which has an optional
+    -- stub component.  When the stubinfo is present, then we use it to represent
+    -- the type, otherwise we use the other information
+    --
+    gtrec
+      = GenTycRec (
+	  ExtStamps.stamp stamp,
+	  int arity,
+	  eqprop eq,
+	  tyckind kind,
+	  ExtInvPath.path path)
+      | GenTycStub (stubinfo stub)
+
+    stubinfo = (PersStamps.persstamp owner, bool lib)
+
+    ty
+      = IBOUND (int)
+      | CONty (tycon, ty*)
+      | POLYty (polysign sign, tyfun tyfun)
+
+    tyfun = TYFUN (int arity, ty body)
+
+    datacon = DATACON (	-- data constructors
+      ExtSymbol.symbol name,
+      ty typ,
+      ExtAccess.conrep rep,
+      bool lazyp,		-- LAZY
+      bool const,
+      ExtAccess.consig sign)
+
+}
+
+module ExtPrimOpBind (
+  import PrimOp
+  import ExtTypes
+) {
+
+    primop_bind = (string, ExtTypes.ty, PrimOp.primop)
+
+}
+
+-- this module is isomorphic to the one in the compiler
+module ExtPrimOpId (import ExtPrimOpBind) {
+
+  prim_id
+    = Prim (ExtPrimOpBind.primop_bind)
+    | NonPrim
+
+  str_prim_elem
+    = PrimE (prim_id)
+    | StrE (str_prim_elem*)
+
+}
+
+module ExtSymPath (
+  import ExtSymbol
+) {
+
+    path = SPATH (ExtSymbol.symbol)
+
+}
+
+module ExtModules (
+  import PersStamps
+  import ExtStamps
+  import ExtAccess
+  import ExtSymbol
+  import ExtSymPath
+  import ExtEntPath
+  import ExtInvPath
+  import ExtTypes
+  import ExtPrimOpId
+) {
+
+    sharespec = ExtSymPath.path*
+
+    element = (ExtSymbol.symbol, spec)
+
+    -- in the compiler, stubinfo is an optional record that contains an owner PID.  The
+    -- pickler only pickles the PID when the pickling context is `LIBRARY`, so we use
+    -- a persstamp to represent stubinfo
+    stubinfo = PersStamps.persstamp
+
+    --- signatures
+    sigrec = (
+      ExtStamps.stamp stamp,
+      ExtSymbol.symbol? name,
+      bool closed,
+      bool fctflag,
+      element* elements,
+      sharespec* typsharing,
+      sharespec* strsharing,
+      stubinfo? stub)
+
+    sign = SIG (sigrec!)
+
+    spec
+      = TYCspec (ExtEntPath.ent_var entVar, tyc_spec_info info)
+      | STRspec (
+	  ExtEntPath.ent_var entVar,
+	  sign sign,
+	  str_def_with_int? def,
+	  int slot)
+      | FCTspec (ExtEntPath.ent_var entVar, fct_sig sign, int slot)
+      | VALspec (ExtTypes.ty spec, int slot)
+      | CONspec (ExtTypes.datacon spec, int? slot)
+
+    str_def_with_int = (str_def, int)
+
+    tyc_spec_info
+      = RegTycSpec ( -- normal signature
+	  ExtTypes.tycon spec,
+	  bool repl,
+	  int scope)
+      | InfTycSpec ( -- inferred signature
+	  ExtSymbol.symbol name,
+	  int arity)
+
+    fct_sig = FSIG (
+      ExtSymbol.symbol? kind,
+      sign paramsig,
+      ExtEntPath.ent_var paramvar,
+      ExtSymbol.symbol? paramsym,
+      sign bodysig)
+
+    str_def
+      = CONSTstrDef (strct)			-- constant
+      | VARstrDef (sign, ExtEntPath.ent_path)	-- relative
+
+    ------------------------- structures and functors ----------------------
+
+    str_entity = (
+      ExtStamps.stamp stamp,
+      entity_env entities,
+      ExtInvPath.path rpath,
+      stubinfo? stub)
+
+    str_rec = (
+      sign sign,
+      str_entity rlzn,
+      ExtAccess.access access,
+      ExtPrimOpId.str_prim_elem* prim)
+
+    strct
+      = STR (str_rec!)
+      | STRSIG (sign sign, ExtEntPath.ent_path entPath)
+
+    str_exp
+      = VARstr (ExtEntPath.ent_path)
+      | CONSTstr (str_entity)
+      | STRUCTURE (stamp_exp stamp, entity_dec entity)
+      | APPLY (fct_exp, str_exp)
+      | LETstr (entity_dec, str_exp)
+      | ABSstr (sign, str_exp)
+      | FORMstr (fct_sig)
+      | CONSTRAINstr (ExtEntPath.ent_var boundvar, str_exp raw, str_exp coercion)
+
+    fct_entity = (
+      ExtStamps.stamp stamp,
+      fct_closure closure,
+      ExtInvPath.path rpath,
+      stubinfo? stub)
+
+    fct_rec = (
+      fct_sig sign,
+      fct_entity rlzn,
+      ExtAccess.access access,
+      ExtPrimOpId.str_prim_elem* prim)
+
+    funct = FCT (fct_rec!)
+
+    fct_exp
+      = VARfct (ExtEntPath.ent_path)
+      | CONSTfct (fct_entity)
+      | LAMBDA (ExtEntPath.ent_var param, str_exp body)
+      | LAMBDA_TP (ExtEntPath.ent_var param, str_exp body, fct_sig sign)
+      | LETfct (entity_dec, fct_exp)
+
+    fct_closure -- realization for functors
+      = CLOSURE (ExtEntPath.ent_var param, str_exp body, entity_env env)
+
+    stamp_exp
+      = GETSTAMP (str_exp)
+      | NEW			-- generate a new stamp
+
+    tyc_exp -- expression evaluating to a TYCentity
+      = VARtyc (ExtEntPath.ent_path)	-- selection from current entityEnv
+      | CONSTtyc (ExtTypes.tycon)	-- actual tycon
+      | FORMtyc (ExtTypes.tycon)	-- formal tycon
+
+    envrec = (
+      ExtStamps.stamp stamp,
+      entity_env env,
+      stubinfo? stub)
+
+    entity_env
+      = MARKeenv (envrec)
+      | BINDeenv (entity_map_item*, entity_env)
+      | NILeenv
+
+    -- key-value pair from EntPath.EvDict.map
+    entity_map_item = (ExtEntPath.ent_var, entity)
+
+    entity_exp
+      = TYCexp (tyc_exp)
+      | STRexp (str_exp)
+      | FCTexp (fct_exp)
+      | DUMMYexp
+
+    entity_dec
+      = TYCdec (ExtEntPath.ent_var, tyc_exp)
+      | STRdec (ExtEntPath.ent_var, str_exp, ExtSymbol.symbol)
+      | FCTdec (ExtEntPath.ent_var, fct_exp)
+      | SEQdec (entity_dec*)
+      | LOCALdec (entity_dec, entity_dec)
+      | EMPTYdec
+
+    entity -- elements of a entityEnv
+      = TYCent (ExtTypes.tycon)
+      | STRent (str_entity)
+      | FCTent (fct_entity)
+	-- currently no entities for val, con, exn, but this may change
+
+} -- ExtModules
+
+module ExtVarCon (
+  import ExtSymbol
+  import ExtAccess
+  import ExtTypes
+  import ExtPrimOpId
+  import ExtSymPath
+) {
+
+    var
+      = VALvar (	-- ordinary variables
+	  ExtSymPath.path path,
+	  ExtTypes.ty typ,
+	  ExtAccess.access access,
+	  ExtPrimOpId.prim_id prim)
+      | OVLDvar (	-- overloaded identifier *)
+	  ExtSymbol.symbol name,	-- name of the overloaded operator
+	  var* variants)		-- variant variables (VALvars)
+
+    datacon = ExtTypes.datacon
+
+}
+
+-- isomorphic to the module in the compiler
+module Fixity {
+
+    fixity = NONfix | INfix (int, int)
+
+} -- Fixity
+
+module ExtBindings (
+  import ExtTypes
+  import ExtModules
+  import ExtVarCon
+  import Fixity
+) {
+
+    binding
+      = VALbind (ExtVarCon.var)
+      | CONbind (ExtVarCon.datacon)
+      | TYCbind (ExtTypes.tycon)
+      | SIGbind (ExtModules.sign)
+      | STRbind (ExtModules.strct)
+      | FSGbind (ExtModules.fct_sig)
+      | FCTbind (ExtModules.funct)
+      | FIXbind (Fixity.fixity)
+
+} -- ExtBindings
+
+module ExtStaticEnv (
+  import ExtSymbol
+  import ExtBindings)
+{
+
+  sym_binding_pair = (ExtSymbol.symbol, ExtBindings.binding)
+
+  env = sym_binding_pair*
+
+}
+
+-- tweak the generation of SML code
+view sml {
+  -- modules that are isomorphic to existing compiler modules
+  { module CTypes
+    module PrimOp
+    module Fixity
+  } <= suppress : types
+}
