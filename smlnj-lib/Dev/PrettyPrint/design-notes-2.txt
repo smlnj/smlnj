@@ -1,0 +1,68 @@
+New Pretty Printer Library (NPPL?)
+pp/doc/notes/design-notes-2.txt, 2023.12.16
+
+Summary of JHR discussion of 2023.12.15 (relative to the new prettyprint library)
+
+* Styles -- two versions:
+  - lstyle (logical styles)
+    These will be "designed" in conjunction with a particular prettyprinter (or maybe a
+    family of related prettyprinter?, or a particular logical style collection).
+
+  - pstyle (physical style)
+    These are styles that can be realized by a particular device, and may be specified
+    by a type associated with the device (e.g. ansiterm display modes).
+ 
+  - a particular formatter may use a particular collection of logical styles, designed
+    in conjunction with the design of the formatter.
+
+  - When rendering a format that uses a particular set of logical styles, using a particular
+    "device", a mapping must be supplied that maps logical style values to physical styles
+    particular to that device.
+
+  - The problem of the type for logical styles
+
+    The type of logical styles is mentioned in the definition of the format type (in the
+    argument of the STYLE format constructor). We don't want the format type to be dependent
+    on different style types defined for particular formatter functions (because we would
+    either have to (1) make format a "polymorphic" type constructor parameterized over a style
+    type (and the whole formatting interface will then be polymorphic over styles, like W-L
+    is over "annotation", or make Format be a functor over a style type parameter, in which
+    case everything else also has to be functorized over style. Since I assume that most
+    applications will not use styles (or styles are trivial), this would make the default
+    case too "heavy".
+
+    An alternative to parameterizing over a logical style type (which might vary for each
+    formatter) is to use a single "general" type like string (or atom) or even int. The
+    "interpreation" of such logical styles, a finite set of which might be used in any given
+    formatter, would be provided by a finite map from such style values to the physical
+    style type associated with a given device. This map would be provided as a parameter to
+    the render function (along with the corresponding device).  E.g. an abstract syntax
+    formatter might use styles represented by the strings "kw", "var", "type".
+
+        type style = string (* defined in the Format structure *)
+
+* Devices:
+  - See if the Reppy device abstraction is appropriate for use with the NPP library
+    At the lease, the "renderStyled" function or equivalent, needs to be a component of
+    particular devices.
+  - Device (family) will be a type, with particular devices (e.g. a particular ansiterm-flavored
+    output stream) as values of this type.
+  - Where does the physical style type belong? These would be defined, along with the device
+    type, in a module (e.g. ANSITerm) defining a "device family".
+
+* Name for the new Pretty Printer Library (-> name of library directory)
+  - was PrettyPrint (e.g. sml-lib/PrettyPrint)
+  - alternatives: NewPrettyPrint, New-PrettyPrint, NPP, NPPL
+
+* Location: where does the new prettyprint library live?
+  - smlnj-lib/NPP  (along side of smlnj-lib/PP, the old "stream-oriented" library)
+  - where else could it go?
+  - it has be easily and naturally available within the compiler as well as to use code.
+  
+* Potential future features:
+  - some kind of tabulation (perhaps based on Westrick's "scoped" tabs?)
+
+* Disagree on rendering to (e.g.) HTML
+  - DBM prefers treating this as a kind of homomorphism between formatting languages.
+  - JHR prefers thinking of this as implemented using a (wierd) kind of "device".
+  - At the least, this should be modernized to target HTML 5 + CSS rather than HTML 3.
