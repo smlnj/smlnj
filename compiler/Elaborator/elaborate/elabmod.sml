@@ -23,8 +23,9 @@ sig
 end (* signature ELABMOD *)
 
 
-(* functorized to factor out dependencies on FLINT... *)
-(* functor ElabModFn (structure SM : SIGMATCH) : ELABMOD = *)
+(* structure ElabMod -- used to be a functor because of FLINT, but FLINT
+ * dependencies have (mostly) been eliminated *) 
+
 structure ElabMod : ELABMOD =
 struct
 
@@ -92,7 +93,7 @@ fun showStr(msg,str,env) =
 		    PPModules.ppStructure pps env (str, 100)),
 		 str))
 
-fun showFct(msg,fct,env) =
+fun showFct (msg, fct, env) =
     ED.withInternals(fn () =>
       debugPrint(msg,
 		 (fn pps => fn fct' =>
@@ -117,19 +118,23 @@ fun showStrExpAst (msg, strexp: Ast.strexp, env) =
      in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppStrexp, strexp)
     end
 
-(*
+(* nonEmptyEntDec : M.entityDec -> bool
  * Check if an entity declaration is empty in order to avoid the unnecessary
- * recompilation bug reported by Matthias Blume (ZHONG)
+ * recompilation bug reported by Matthias Blume (ZHONG, DBM???)
  *)
 fun nonEmptyEntDec (M.EMPTYdec | M.SEQdec []) = false
   | nonEmptyEntDec _ = true
 
+(* seqEntDec : M.entityDec list -> M.entityDec
+ * filter out empty entityDecs from an entityDec list, producing a single entityDec *)
 fun seqEntDec ds =
   let val nds = List.filter nonEmptyEntDec ds
    in case nds of [] => M.EMPTYdec
                 | _ => M.SEQdec nds
   end
 
+(* localEntDec : M.entityDec * M.entityDec -> M.entityDec
+ * collapse a pair of entityDecs to a single entityDec, while eliminating empty entityDecs *)
 fun localEntDec(d1, d2) = seqEntDec [d1, d2]
 
 fun stripMarkSigb(MarkSigb(sigb',region'),region) =
@@ -154,7 +159,7 @@ fun inStr (EU.TOP) = EU.INSTR
 
 (*
  * Add modId to entPath mappings for all appropriate elements of a structure
- * that has just been elaborated.  If epc is the empty context (rigid), then
+ * that has just been elaborated. If epc is the empty context (rigid), then
  * this is an expensive no-op, so we test epc first. But, would this be
  * equivalent to context=INFCT _ ?
  *
@@ -238,20 +243,6 @@ and mapEPC(epc, sign as SIG { elements, ... }, rlzn: M.strEntity, flex) =
       end
 
   | mapEPC _ = ()
-
-(*
-fun bindReplTyc(EU.INFCT _, epctxt, mkStamp, dtyc) =
-     let val ev = mkStamp()
-         val tyc_id = MU.tycId dtyc
-         val texp =
-	     case EPC.lookPath(epContext,tyc_id)
-	       of NONE => (debugmsg "tyc not mapped 1"; M.CONSTtyc tyc)
-		| SOME entPath => M.VARtyc entPath
-      in EPC.bindPath(epctxt, tyc_id, ev);
-	 M.TYCdec(ev,texp)
-     end
-  | bindReplTyc _ = (EE.empty, M.EMPTYdec)
-*)
 
 
 (*
