@@ -147,8 +147,8 @@ module PrimOp (import CTypes) {
       | PTR_TO_WORD
       | WORD_TO_PTR
       | REAL_TO_BITS (int)
-      | HOST_WORD_SIZE => %?55
-      | HOST_BIG_ENDIAN => %?56
+      | HOST_WORD_SIZE
+      | HOST_BIG_ENDIAN
 
   ccall_spec = (CTypes.c_proto c_proto, ccall_type* ml_args, ccall_type? ml_res_opt, bool reentrant)
 
