@@ -33,7 +33,7 @@ signature PP_DEVICE_OPS =
     val popStyle     : t -> unit
 
     (* the default style for the device *)
-    val defaultStyle : t -> style
+    val defaultStyle : style
 
     (* ===== Output Operations ===== *)
 

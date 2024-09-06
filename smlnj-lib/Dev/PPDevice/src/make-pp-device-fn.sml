@@ -72,7 +72,15 @@ functor MakePPDeviceFn (D : PP_DEVICE_OPS) : sig
   (* style operations *)
     fun pushStyle (Dev{ops, ...}, sty) = D.pushStyle (ops, sty)
     fun popStyle (Dev{ops, ...}) = D.popStyle ops
-    fun defaultStyle (Dev{ops, ...}) = D.defaultStyle ops
+    fun withStyle (Dev{ops, ...}, sty, f) = let
+          val () = D.pushStyle (ops, sty)
+          val res = f ()
+          val () = D.popStyle ops
+          in
+            res
+          end
+    val defaultStyle = D.defaultStyle
+    fun defaultStyleMap _ = defaultStyle
 
   (* Output operations *)
     fun indent (Dev{ops, ...}, n) = D.indent (ops, n)

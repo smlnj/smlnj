@@ -148,7 +148,7 @@ structure ANSITermDev : sig
                   (* end case *))
                 else ()
 
-        fun defaultStyle _ = []
+        val defaultStyle = []
 
         (* Output operations *)
         fun space ({dst, ...} : t, n) = TextIO.output (dst, StringCvt.padLeft #" " n "")

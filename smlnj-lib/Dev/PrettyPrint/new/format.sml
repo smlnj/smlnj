@@ -10,12 +10,12 @@ structure Format =
     (* rendering styles are specified by application-specific atoms; these are
      * mapped to the device-specific styles by a user-defined mapping.
      *)
-    datatype style = STY of int
+    datatype style = STY of string
 
     (* tokens are bits of text whose size is not determined by the length
      * of the text (e.g., UTF-8 characters; images; etc.)
      *)
-    datatype token = TOK of {tok : Atom.atom, measure : int}
+    datatype token = TOK of {name : string, measure : int}
 
     (* datatype alignment: alignment modes for "aligned" blocks *)
     datatype alignment  (* the alignment property of "aligned" blocks *)
@@ -41,14 +41,14 @@ structure Format =
     datatype format
       (* format builders *)
       = EMPTY
-          (* empty format; rendering this produces no output, identity for format compositions *)
+          (*< empty format; rendering this produces no output, identity for format compositions *)
       | TEXT of string
-          (* unique form of atomic doc with content*)
+          (*< unique form of atomic doc with content*)
       | TOKEN of token
       | STYLE of style * format
-      | BLOCK of {content : element list, sz : int}
+      | BLOCK of {elements : element list, measure : int}
           (* blocks with explicit break (BRK) elements interleaved with format (FMT) elements *)
-      | ABLOCK of {content : format list, align : alignment, sz : int}
+      | ABLOCK of {formats : format list, align : alignment, measure : int}
           (* "aligned" blocks, with implicit breaks between formats determined by the alignment *)
 
       (* format modifiers *)

@@ -29,13 +29,11 @@ functor PrintFormatFn (D : sig
 
     val defaultLineWidth = 80
 
-    fun renderStdout {styleMap, tokenMap, width} fmt = let
-          val dev = D.openDev {dst = TextIO.stdOut, wid = width}
-          in
-            Render.render
-              {dev = dev, styleMap = styleMap, tokenMap = tokenMap}
-              fmt
-          end
+    fun renderStdout {styleMap, tokenMap, width} fmt =
+          Render.render
+            {styleMap = styleMap, tokenMap = tokenMap}
+            (D.openDev {dst = TextIO.stdOut, wid = width})
+            fmt
 
     val printFormat = renderStdout {
             styleMap = Device.defaultStyleMap,

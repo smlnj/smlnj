@@ -1,35 +1,47 @@
 (* pretty-print-lib.cm
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
 Library
 
-  signature PRETTY_PRINT
-  structure PrettyPrint
+  signature FORMATTING
+  signature RENDER
 
-  signature PP_DEVICE
+  structure Formatting
 
   functor RenderFn
 
   (* some simple renderers *)
+  structure ANSITermRenderer
   structure CharBufferRenderer
   structure TextIORenderer
-  structure TextRenderer
+
+  (* Print structures for TextIO and ANSI terminal devices *)
+  signature PRINT_FORMAT
+  structure PrintTextIO
+  structure PrintANSI
 
 is
 
   $/basis.cm
   $/smlnj-lib.cm
+(*
+  $/pp-device-lib.cm
+*)
+  ../../PPDevice/pp-device-lib.cm
 
-  format.sml
-  measure.sml
-  pp-device.sig
-  pretty-print.sig
-  pretty-print.sml
-  render-fn.sml
-
+  ansi-term-renderer.sml
   char-buffer-renderer.sml
+  format.sml
+  formatting.sig
+  formatting.sml
+  measure.sig
+  measure.sml
+  print-format.sig
+  print-format.sml
+  print-format-fn.fun
+  render.sig
+  render-fn.fun
   text-io-renderer.sml
-  text-renderer.sml

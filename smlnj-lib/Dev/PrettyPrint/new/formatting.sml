@@ -20,6 +20,10 @@ structure Formatting : FORMATTING =
     type elements = element list
     type formats = format list
 
+    (* styles *)
+    fun style s = STY s
+    val defaultStyle = style ""
+
     (* eliminate EMPTY format elements *)
     fun reduceFormats (formats : formats) : formats = let
           fun notEmpty EMPTY = false
@@ -36,37 +40,31 @@ structure Formatting : FORMATTING =
             List.filter notEmpty elements
           end
 
-    fun block (elements : elements) : format = (case reduceElements elements
+    fun block (elements : elements) = (case reduceElements elements
            of [] => EMPTY
               (* blocks consisting of a single (FMT fmt) element reduce to fmt *)
             | [FMT fmt] => fmt
-            | _ => BLOCK{content = elements, sz = M.measureElements elements}
+            | _ => BLOCK{elements = elements, measure = M.measureElements elements}
           (* end case *))
 
-    fun aBlock (align : alignment, formats : formats) : format = let
+    fun aBlock (align : alignment, formats : formats) = let
           val breaksize = (case align of C => 0 | _ => 1)
           in
             case reduceFormats formats
               of [] => EMPTY
-(* watch out for this probably obsolete (since bindent is gone) bug:
- * BUG! this is wrong if block is indented, since this loses the ABLOCK
- * that should carry the indentation (in its bindent field)!
- * E.g., iblock (HI 3) [text "aa"] ==> text "aa", indentation lost!
- *)
                | [fmt] => fmt
                | formats' => ABLOCK{
-                    content = formats',
+                    formats = formats',
                     align = align,
-                    sz = M.measureFormats (breaksize, formats')
+                    measure = M.measureFormats (breaksize, formats')
                   }
             (* end case *)
           end
 
-
     (*** block building functions for non-indenting blocks ***)
 
     (* constructing aligned blocks: common abbreviations *)
-    (* xblock : format list -> format, for x = h, v, p, c *)
+    (* xblock list -> format, for x = h, v, p, c *)
     fun hBlock fmts = aBlock (H, fmts)
     fun vBlock fmts = aBlock (V, fmts)
     fun pBlock fmts = aBlock (P, fmts)
@@ -74,43 +72,57 @@ structure Formatting : FORMATTING =
 
     (* "conditional" formats *)
 
-    fun tryFlat (fmt : format) : format = ALT(FLAT fmt, fmt)
+    fun tryFlat (fmt) = ALT(FLAT fmt, fmt)
 
-    (* alt : format * format -> format *)
+    (* alt * format -> format *)
     val alt = ALT
 
-    fun hvBlock (fmts : formats) : format = tryFlat (vBlock fmts)
+    fun hvBlock (fmts : formats) = tryFlat (vBlock fmts)
 
     (*** format-building utility functions for some primitive types ***)
 
     val empty = EMPTY
     fun text "" = EMPTY
       | text s = TEXT s
-    fun style _ EMPTY = EMPTY
-      | style sty fmt = STYLE(sty, fmt)
+    fun styled _ EMPTY = EMPTY
+      | styled sty fmt = STYLE(sty, fmt)
     val token = TOKEN
     fun lift toString v = TEXT(toString v)
-
+    val int = lift Int.toString
+    fun string s = TEXT(String.concat["\"", String.toString s, "\""])
+    fun char c = TEXT(String.concat["#\"", Char.toString c, "\""])
+    val bool = lift Bool.toString
+    val atom = lift Atom.toString
 
     (*** wrapping or closing formats, e.g., parenthesizing a format ***)
 
-    (* tight -- no space between left, right, and fmt *)
-    fun enclose {left : format, right : format} fmt =
-          aBlock (C, [left, fmt, right])
+    (* tight -- no space between front, back, and fmt *)
+    fun enclose {front, back} fmt =
+          aBlock (C, [front, fmt, back])
+
+    val parens = enclose {front=text "(", back=text ")"}
+    val brackets = enclose {front=text "[", back=text "]"}
+    val braces = enclose {front=text "{", back=text "}"}
+    val angleBrackets = enclose {front=text "<", back=text ">"}
+
+    fun appendNewLine fmt = block [FMT fmt, BRK Hard]
 
     (*** functions for formatting sequences of formats (format lists) ***)
 
     (* alignmentToBreak : alignment -> break
      * The virtual break associated with each alignment.
-     * This is a utility function used in functions sequence and sequenceWithMap *)
+     * This is a utility function used in functions sequence and sequenceWithMap
+     *)
     fun alignmentToBreak H = Space 1
       | alignmentToBreak V = Hard
       | alignmentToBreak P = Soft 1
       | alignmentToBreak C = Null
 
     (* sequence : alignement -> format -> format list -> format
-     *  The second argument (sep: format) is normally a symbol (TEXT) such as comma or semicolon *)
-    fun sequence (align : alignment) (sep : format) (formats : formats) =
+     * The second argument (sep: format) is normally a symbol (TEXT) such as
+     * comma or semicolon
+     *)
+    fun sequence (align : alignment) (sep) (formats : formats) =
         let val separate =
                 (case align
                    of C => (fn elems => FMT sep :: elems)  (* alignment = C *)
@@ -135,9 +147,16 @@ structure Formatting : FORMATTING =
     fun vSequence sep = sequence V sep
     fun cSequence sep = sequence C sep
 
+    fun smlTuple (formats: format list) = parens (pSequence (TEXT ",") formats)
+
+    fun smlList (formats: format list) = brackets (pSequence (TEXT ",") formats)
+
+    fun smlOption NONE = TEXT "NONE"
+      | smlOption (SOME fmt) = cBlock [TEXT "SOME(", fmt, TEXT ")"]
+
     (*** functions for formatting sequences of values (of homogeneous types, i.e. 'a lists) ***)
 
-    fun 'a sequenceWithMap {align : alignment, sep : format, fmt: 'a -> format}
+    fun 'a sequenceWithMap {align : alignment, sep, fmt: 'a -> format}
             (xs: 'a list) =
           let
           val separate = (case align
@@ -164,25 +183,25 @@ structure Formatting : FORMATTING =
 
     fun closedSequenceWithMap {
             align : alignment,
-            left : format, sep : format, right : format,
+            front, sep, back,
             fmt: 'a -> format
           }
           (xs: 'a list) =
-            enclose {left=left, right=right}
+            enclose {front=front, back=back}
               (sequenceWithMap {align=align, sep=sep, fmt=fmt} xs)
 
     (*** labeled lists *)
 
+    fun label' (lab, fmt) = hBlock [lab, fmt]
+
+    fun label lab fmt = label' (TEXT lab, fmt)
+
     fun fmtLabeledList (_, _, []) = empty
       | fmtLabeledList (first, rest, x::xs) =
-          vBlock (hBlock [first, x] :: map (fn x => hBlock [rest, x]) xs)
+          vBlock (label'(first, x) :: List.map (fn x => label'(rest, x)) xs)
 
-    fun vLabeledList {first : string, rest : string} = let
-          val first = text first
-          val rest = text rest
-          in
-            fn xs => fmtLabeledList (first, rest, xs)
-          end
+    fun vLabeledList {first : string, rest : string} xs =
+          fmtLabeledList (TEXT first, TEXT rest, xs)
 
     fun vLabeledListLAlign {first : string, rest : string} = let
           val n1 = size first and n2 = size rest
@@ -215,9 +234,24 @@ structure Formatting : FORMATTING =
     (* indent : int -> format -> format *)
     (* When applied to EMPTY, produces EMPTY
      * The resulting format soft-indents n spaces (iff following a line break) *)
-    fun indent (n: int) (fmt : format) = (case fmt
+    fun indent (n: int) (fmt) = (case fmt
            of EMPTY => EMPTY
             | _ => INDENT(n, fmt)
           (* end case *))
+
+    (*** "punctuation" characters and related symbols ***)
+    val comma     = TEXT ","
+    val colon     = TEXT ":"
+    val semicolon = TEXT ";"
+    val period    = TEXT "."
+    val lparen    = TEXT "("
+    val rparen    = TEXT ")"
+    val lbracket  = TEXT "["
+    val rbracket  = TEXT "]"
+    val lbrace    = TEXT "{"
+    val rbrace    = TEXT "}"
+    val langle    = TEXT "<"
+    val rangle    = TEXT ">"
+    val equal     = TEXT "="
 
   end (* structure PrettyPrint *)

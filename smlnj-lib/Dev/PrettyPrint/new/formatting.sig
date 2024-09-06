@@ -6,7 +6,7 @@
  * The main interface of the new Prettyprinter.
  *)
 
-signature PRETTY_PRINT =
+signature FORMATTING =
   sig
 
   (* types *)
@@ -14,15 +14,21 @@ signature PRETTY_PRINT =
     (* rendering styles are specified by application-specific atoms; these are
      * mapped to the device-specific styles by a user-defined mapping.
      *)
-    datatype style = STY of int
+    datatype style = STY of string
+
+    (* make a style from a string; use this function instead of the `STY` constructor.
+     * since we may want to change the representation of styles to use hashed
+     * strings.
+     *)
+    val style : string -> style
+
+    (* the default style, which is `style ""` *)
+    val defaultStyle : style
 
     (* tokens are bits of text whose measure is not determined by the length
      * of the text (e.g., UTF-8 characters; images; etc.)
      *)
-    datatype token = TOK of {tok : Atom.atom, measure : int}
-
-    (* the default style, which is `STY 0` *)
-    val defaultStyle : style
+    datatype token = TOK of {name : string, measure : int}
 
     (* specifies a formated term; the type variable is an application-specific
      * `style`.
@@ -77,7 +83,7 @@ signature PRETTY_PRINT =
     (* lift a `toString` function to a function for formating values as `text`. *)
     val lift : ('a -> string) -> 'a -> format
     (* == `lift Int.toString` *)
-    val integer : int -> format
+    val int : int -> format
     (* as SML string literal
      * == `enclose {front=text "\"", back = "\""} o (lift String.toString)`
      *)
@@ -87,7 +93,7 @@ signature PRETTY_PRINT =
     (* == `lift Bool.toString` *)
     val bool    : bool -> format
     (* == `lift Atom.toString` *)
-    val atom : Atom.atom -> format *)
+    val atom : Atom.atom -> format
 
     (* block-building functions, corresponding to SBLOCK and BLOCK data constructors *)
 
@@ -136,7 +142,7 @@ signature PRETTY_PRINT =
 
     (* wrapping or enclosing formats *)
 
-    val enclose : {left: format, right: format} -> format -> format
+    val enclose : {front: format, back: format} -> format -> format
         (* concatenates front and back to the front, respecively back, of the format *)
 
     (* == `enclose {front=text "(", back=text ")"}` *)
@@ -152,8 +158,8 @@ signature PRETTY_PRINT =
     (* == `enclose {front=text "<", back=text ">"}` *)
     val angleBrackets : format -> format
 
+    (* append a newline to the format -- normally used for "top-level" printing *)
     val appendNewLine : format -> format
-        (* append a newline to the format -- normally used for "top-level" printing *)
 
   (* composing lists of formats *)
 
@@ -171,17 +177,17 @@ signature PRETTY_PRINT =
     (* formats as a SML tuple
      * == `parens o (pSequence (text ","))`
      *)
-    val parenList : format list -> format
+    val smlTuple : format list -> format
 
     (* formats as a SML list
      * == `brackets o (pSequence (text ","))`
      *)
-    val bracketList : format list -> format
+    val smlList : format list -> format
 
-    (* `format f NONE` ==> `f`
-     * `format f1 (SOME f2)` ==> `f2`
+    (* `smlOption NONE` == `text "NONE"`
+     * `smlOption (SOME f2)` == `cBlock[text "SOME(", f, text ")"]`
      *)
-    val option : format -> format option -> format
+    val smlOption : format option -> format
 
   (* formating of lists of values of arbitrary type *)
 
@@ -207,7 +213,9 @@ signature PRETTY_PRINT =
 
   (** vertical lists with labels **)
 
-(* QUESTION: what does this function do? *)
+    (* `label lab fmt` prepends the string to the format as a label.  It is equivalent
+     * to the expression `hBlock [text lab, fmt]`
+     *)
     val label : string -> format -> format
 
     (* produces a vertical list where each line has a label prepended.  The string
@@ -226,11 +234,6 @@ signature PRETTY_PRINT =
      * label is padded on the left so that the labels are aligned on the right.
      *)
     val vLabeledListRAlign : {first : string, rest : string} -> format list -> format
-
-  (* vertical alignment with header strings *)
-
-(* QUESTION: what does this function do? *)
-    val vHeaders : {header1: string, header2: string} -> format list -> format
 
   (* indenting formats *)
 

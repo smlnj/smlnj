@@ -20,7 +20,7 @@ functor RenderFn (Dev : PP_DEVICE) : RENDER =
      *)
     type render_state = int * bool
 
-    (* initial render state: at the beginning of a line, assuming following a newline *)
+    (* the initial "context" of a render is a virtual newline + 0 indentation *)
     val renderState0 : render_state = (0, true)
 
     fun error msg = raise Fail("Render Error: " ^ msg)
@@ -51,7 +51,7 @@ functor RenderFn (Dev : PP_DEVICE) : RENDER =
      * In this version (Version 8), the render function also prints the content
      * and formatting, using the given device.
      *)
-    fun render {dev, styleMap, tokenMap} format = let
+    fun render {styleMap, tokenMap} dev = let
           (* get the current line width from the device *)
           val lw = Option.getOpt(Dev.lineWidth dev, maxInt)
           (* output n spaces *)
@@ -279,9 +279,9 @@ functor RenderFn (Dev : PP_DEVICE) : RENDER =
                   rend formats inputState
                 end (* fun renderABLOCK *)
         in
-          (* the initial "context" of a render is a vitrual newline + 0 indentation *)
-          ignore (render1 format renderState0);
-          Dev.flush dev
+          fn fmt => (
+              ignore (render1 fmt renderState0);
+              Dev.flush dev)
         end (* fun render *)
 
   end (* functor RenderFn *)

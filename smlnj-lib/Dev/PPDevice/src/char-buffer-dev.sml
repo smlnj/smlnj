@@ -35,7 +35,7 @@ structure CharBufferDev : sig
 	type style = unit
 	fun pushStyle _ = ()
 	fun popStyle _ = ()
-	fun defaultStyle _ = ()
+	val defaultStyle = ()
       (* trivial tokens *)
         type token = string
       (* output some number of spaces to the device *)

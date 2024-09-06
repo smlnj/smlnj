@@ -11,34 +11,44 @@
 signature PP_DEVICE =
   sig
 
+    (* an abstraction of attributes such as font and color information.
+     * For devices that support styled text, they should maintain a stack
+     * of styles, with the top of stack being the "current" style.
+     * Implementers of this signature should extend it with functions
+     * for creating style values.
+     *)
     type style
-	(* an abstraction of attributes such as font and color information.
-         * For devices that support styled text, they should maintain a stack
-         * of styles, with the top of stack being the "current" style.
-         * Implementers of this signature should extend it with functions
-         * for creating style values.
-	 *)
 
+    (* the device-specific representation of tokens *)
     type token
-        (* the device-specific representation of tokens *)
 
+    (* a device is an abstraction of an output stream.  Its type parameter
+     * specifies the application-specific style type.
+     *)
     type device
-	(* a device is an abstraction of an output stream.  Its type parameter
-         * specifies the application-specific style type.
-         *)
 
   (***** Style operations *****)
 
+    (* push/pop a style from the devices style stack.  A pop on an
+     * empty style stack is a nop.
+     *)
     val pushStyle : (device * style) -> unit
     val popStyle  : device -> unit
-	(* push/pop a style from the devices style stack.  A pop on an
-	 * empty style stack is a nop.
-	 *)
 
-    val defaultStyle : device -> style
-	(* the default style for the device (this is the current style,
-	 * if the style stack is empty).
-	 *)
+    (* `withStyle (dev, sty, f)` switches the device's style to `sty` and then
+     * executes `f()`, restores the device's style and returns the result of
+     * applying `f`.  Note that if `f()` raises an exception, the original style
+     * will **not** be restored.
+     *)
+    val withStyle : device * style * (unit -> 'a) -> 'a
+
+    (* the default style for the device, which should be the current style,
+     * if the style stack is empty.
+     *)
+    val defaultStyle : style
+
+    (* a constant function that always returns `defaultStyle` *)
+    val defaultStyleMap : 'a -> style
 
   (***** Device properties *****
    **
@@ -48,39 +58,35 @@ signature PP_DEVICE =
    ** case, the `set` functions are no-ops.
    **)
 
-  (* the width of the line for the device; `NONE` is infinite *)
+    (* the width of the line for the device; `NONE` is infinite *)
     val lineWidth : device -> int option
     val setLineWidth : device * int option -> unit
 
-  (* the suggested maximum width of indentation; `NONE` is interpreted as no limit. *)
+    (* the suggested maximum width of indentation; `NONE` is interpreted as no
+     * limit and is the default.
+     *)
     val maxIndent : device -> int option
     val setMaxIndent : device * int option -> unit
-
-  (* the suggested maximum width of text on a line (i.e., not counting indentation).
-   * `NONE` is interpreted as no limit.
-   * NOTE: the pretty printer currently ignores this value.
-   *)
-    val textWidth : device -> int option
-    val setTextWidth : device * int option -> unit
 
 
   (***** Output operations *****)
 
+    (* output an indentation of the given width to the device *)
     val indent : (device * int) -> unit
-	(* output an indentation of the given width to the device *)
 
+    (* output some number of spaces to the device *)
     val space : (device * int) -> unit
-	(* output some number of spaces to the device *)
 
+    (* output a new-line to the device *)
     val newline : device -> unit
-	(* output a new-line to the device *)
 
+    (* output a string in the current style to the device *)
     val string : (device * string) -> unit
-	(* output a string in the current style to the device *)
 
+    (* out put a device-supported token *)
     val token : device * token -> unit
 
+    (* if the device is buffered, then flush any buffered output *)
     val flush : device -> unit
-	(* if the device is buffered, then flush any buffered output *)
 
   end
