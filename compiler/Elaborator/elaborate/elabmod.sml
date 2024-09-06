@@ -31,11 +31,11 @@ struct
 
 local
   structure S  = Symbol
-  structure SS = SpecialSymbols
+  structure SS = SpecialSymbols  (* special symbols, to be eliminated *)
   structure IP = InvPath
   structure SP = SymPath
   structure EP = EntPath
-  structure EPC = EntPathContext
+  structure EPC = EntPathContext  (* ElabData/modules/epcontext.sml *)
   structure EE = EntityEnv
   structure T  = Types
   structure TU = TypesUtil
@@ -44,7 +44,7 @@ local
   structure MU = ModuleUtil
   structure MI = ModuleId
   structure L = Lookup
-  structure EU = ElabUtil
+  structure EU = ElabUtil  (* compiler/Elaborator/elaborate/elabutil.sml *)
   structure ET = ElabType
   structure EC = ElabCore
   structure ES = ElabSig
@@ -53,19 +53,22 @@ local
   structure SM = SigMatch
   structure INS = Instantiate
   structure SE = StaticEnv
+  structure SCM = SourceMap (* <- region *)
   structure EM = ErrorMsg
   structure PP = PrettyPrint
+  structure SY = Ast  (* syntax trees, produced by parser *)
   structure A  = Absyn
   structure DA = Access
   structure DI = DebIndex
   structure PPU = PPUtil
   structure ED = ElabDebug
 
+  (* ST -- symbol sets *)
   structure ST = RedBlackSetFn(type ord_key = S.symbol
 			       val compare = S.compare)
 
-  open Ast Modules
-  open SpecialSymbols (* special symbols *)
+(*  open Ast Modules *)
+(*  open SpecialSymbols (* special symbols *) *)
 
 in
 
@@ -118,6 +121,8 @@ fun showStrExpAst (msg, strexp: Ast.strexp, env) =
      in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppStrexp, strexp)
     end
 
+(* empty entDecs can be of the form EMPTYdec or SEQdec nil.  Do we need EMPTYdec? *)
+
 (* nonEmptyEntDec : M.entityDec -> bool
  * Check if an entity declaration is empty in order to avoid the unnecessary
  * recompilation bug reported by Matthias Blume (ZHONG, DBM???)
@@ -134,26 +139,33 @@ fun seqEntDec ds =
   end
 
 (* localEntDec : M.entityDec * M.entityDec -> M.entityDec
- * collapse a pair of entityDecs to a single entityDec, while eliminating empty entityDecs *)
+ * collapse a pair of entityDecs to a single entityDec, while absorbing empty entityDecs *)
 fun localEntDec(d1, d2) = seqEntDec [d1, d2]
 
-fun stripMarkSigb(MarkSigb(sigb',region'),region) =
+(* stripping region Marks from Ast binding forms *)
+
+(* stripMarkSigb : SY.sigb * SCM.region -> SY.sigb *)
+fun stripMarkSigb (SY.MarkSigb(sigb',region'), region) =
       stripMarkSigb(sigb',region')
   | stripMarkSigb x = x
 
-fun stripMarkFsigb(MarkFsigb(fsigb',region'),region) =
+(* stripMarkFsigb : SY.fsigb * SCM.region -> SY.sigb *)
+fun stripMarkFsigb (SY.MarkFsigb(fsigb',region'), region) =
       stripMarkFsigb(fsigb',region')
   | stripMarkFsigb x = x
 
-fun stripMarkFctb(MarkFctb(fctb',region'),region) =
+(* stripMarkFctb : SY.fctb * SCM.region -> SY.sigb *)
+fun stripMarkFctb (SY.MarkFctb(fctb',region'), region) =
       stripMarkFctb(fctb',region')
   | stripMarkFctb x = x
 
-fun stripMarkStrb(MarkStrb(strb',region'),region) =
+(* stripMarkStrb : SY.strb * SCM.region -> SY.sigb *)
+fun stripMarkStrb (SY.MarkStrb(strb',region'), region) =
       stripMarkStrb(strb',region')
   | stripMarkStrb x = x
 
-(* change of context on entering a structure *)
+(* inStr : EU.context -> EU.context *)
+(* change of ElabUtil context on entering a structure *)
 fun inStr (EU.TOP) = EU.INSTR
   | inStr z = z
 
@@ -173,14 +185,15 @@ fun inStr (EU.TOP) = EU.INSTR
  * structures and functors can be distributed into the signature matching
  * or the instantiation process. (ZHONG)
  *)
-(*
-val mapPathsPhase = (Stats.makePhase "Compiler 033 1-mapPaths")
-and mapPaths x = Stats.doPhase mapPathsPhase mapPaths0 x
-*)
 
 fun mapPaths(epc, STR { sign, rlzn, ... }, flex) =
     mapEPC(epc, sign, rlzn, flex)
   | mapPaths _ = ()
+
+(* We could make mapPaths into a measured "phase", below after this fun decl. *)
+val mapPathsPhase = (Stats.makePhase "Compiler 033 1-mapPaths")
+and mapPaths x = Stats.doPhase mapPathsPhase mapPaths0 x
+*)
 
 and mapEPC(epc, sign as SIG { elements, ... }, rlzn: M.strEntity, flex) =
       let val { entities, ... } = rlzn
@@ -191,7 +204,7 @@ and mapEPC(epc, sign as SIG { elements, ... }, rlzn: M.strEntity, flex) =
                  * new signature? Have to record even rigid strs and fcts in
                  * case they have new signatures
                  *)
-                (case EE.look(entities,ev)
+                (case EE.look (entities, ev)
 		   of TYCent tyc =>
 		       (case tyc
                           of T.ERRORtyc => ()

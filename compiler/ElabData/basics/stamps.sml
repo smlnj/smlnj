@@ -2,13 +2,18 @@
 (* Re-written by Matthias Blume (3/2000) *)
 (* stamps.sml *)
 
+(* the Stamps structure will match the KEY signature for passing directly to the library
+ * finite map and set functors. *)
+
 structure Stamps :> STAMPS =
 struct
 
-  type pid = PersStamps.persstamp	(* for global stamps *)
+  type pid = PersStamps.persstamp
+	(* for global stamps -- PersStamps will be renamed Pid, so this will be redundant
+         *  (i.e. we can use Pid.pid, which replaces PersStamps.persstamp.) *)
 
   datatype stamp
-    = Special of string
+    = Special of string  (* are there many of these, or just a few? *)
     | Global of { pid: pid, cnt: int }
     | Fresh of int
 

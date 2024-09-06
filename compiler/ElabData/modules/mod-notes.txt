@@ -11,6 +11,11 @@ Basic types (defined elsewhere)
   pid == PersStamp.persstamp ("pid" is just an alias for persstamp)
   SymPath.path, InvPath.paths: symbolic paths (simple and reversed) (ElabData/basics/sympaths.{sig,sml}
   Types.ty, Types.tycon, Types.gtrec: types
+  Access.access: dynamic access (e.g. lvar, access path)
+  PrimopId: primitive operators (identifiers)
+
+NOTE: PersStamps should become PID and PersStamps.perstamp should be renamed "pid", correcting a potentially
+confusing redundancy.
 
 * an ordinary structure (STR strrec : Structure)
    is a signature and a "realization" (in the form of a strEntity in the strrec)
@@ -31,15 +36,33 @@ Basic types (defined elsewhere)
       entityEnv of the latest structure
 
 ** entityEnv: entityEnv (defined in Modules, but see also entityenv.{sig,sml} for additional interface)
-   a finite mapping from the entVars to "entities" (realizations)
+   a finite mapping (environment) from entVars to "entities" (realizations)
      e.g. typically mapping the entvars of static element specs to corresponding "realization" entities
 
 ** a strEntity contains fields (components)
      stamp: Stampps.stamp
-     entities: entityEnv -- 
+     entities: entityEnv -- components of a structure identified by their entVars
+     rpath: InvPath.path -- (rev) symbolic path, the "name" of the structure, if declared
+     stub: stubinfo option, info for "stubification" ("isolation")
+     properties: PropList.holder -- FLINT stuff (can we remove it, leaving its function to FLINT?)
 
-** strrec, fctrec, sigrec, envrec -- records of info for basic forms of structure, functor, etc.
+** info records for (some) static constructs
+   - strrec, fctrec, sigrec, gtrec -- records of info for basic forms of structure, functor, signatures, types
+     plus an additional variant, envrec, for entityEnvs
+   - These records appear in modtrees, where they play what role.
 
+   strrec
+     sign: Signature
+     rlzn: strEntity (where strEntity carries a stamp)
+     access: Access.access 
+
+   envrec -- a "stubifiable" entity env?
+     stamp: Stamp.stamp
+     env : entityEnv
+     stub : stubinfo option
+
+
+------------------------------------------------------------------------------------------
 
 * entity expressions: type entityExp
   a simple functional language where expressions evaluate to entities
@@ -54,9 +77,23 @@ Pickling, isolation (stubs)
 
 * modtree : type modtree
   linkage information for pickling ???
-  defined in terms of gtrec, sigrec, strrec, envrec
+  defined in terms of gtrec, sigrec, strrec, fctrec, envrec (the representation records)
 
 * stubinfo: a pid, a modtree, a "lib" flag (CM, archive? library?)
+    How do these work?
+
+------------------------------------------------------------------------------------------
+
+* module Id : types tycId, sigId, strId, fctId, envId
+   5 kinds of "ids", for tycons, sigs, strs, fcts, and entityEnvs, derived from stamps occurring in
+     the corresponding static representations (e.g. the stamp field of envrec).
+   two kinds of finite map records over these keys, one (tmap) monomorphic with mapping for each key type
+   to a corresponding module representation construct for that key, and the other polymorphic ('a umap),
+   where all maps share a common range 'a.
+
+   Not sure yet exactly how ModuleId is used in elaboration + isolation/pickling.
+
+* entity path context : type EntPathContext.context
 
 
 ==========================================================================================
