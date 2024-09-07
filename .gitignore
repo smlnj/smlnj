@@ -149,3 +149,4 @@ doc/src/**/*.html
 package/macos/*.pkg
 *.pkl
 *.hpp
+runtime/include/asdl/config.h
