@@ -148,3 +148,4 @@ doc/src/man/*.7
 doc/src/**/*.html
 package/macos/*.pkg
 *.pkl
+*.hpp
