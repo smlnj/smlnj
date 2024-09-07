@@ -183,7 +183,7 @@ signature FORMATTING =
     val smlList : format list -> format
 
     (* `smlOption NONE` == `text "NONE"`
-     * `smlOption (SOME f2)` == `cBlock[text "SOME(", f, text ")"]`
+     * `smlOption (SOME f)` == `cBlock[text "SOME(", f, text ")"]`
      *)
     val smlOption : format option -> format
 
