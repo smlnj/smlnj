@@ -113,12 +113,12 @@ signature FORMATTING =
      *)
     val aBlock : alignment * format list -> format
 
-    (* xblock: functions (for x = p, h, v, c) for building aligned blocks
+    (* xBlock: functions (for x = p, h, v, c) for building aligned blocks
      * with a given alignment, the empty format acts like an identity element
      * for all these format concatenation operators, in that it does not
      * contribute anything to the result, and the associated implicit breaks
      * separating empty formats from other elements are also dropped. Also,
-     * xblock [fmt] ==> fmt.
+     * xBlock [fmt] ==> fmt.
      *)
 
     (* combines a list of formats in an H-aligned block, with an implicit
