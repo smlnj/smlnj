@@ -11,7 +11,7 @@ signature FORMATTING =
 
   (* types *)
 
-    (* rendering styles are specified by application-specific atoms; these are
+    (* rendering styles are specified by application-specific strings; these are
      * mapped to the device-specific styles by a user-defined mapping.
      *)
     datatype style = STY of string
@@ -30,9 +30,7 @@ signature FORMATTING =
      *)
     datatype token = TOK of {name : string, measure : int}
 
-    (* specifies a formated term; the type variable is an application-specific
-     * `style`.
-     *)
+    (* specifies a formated term *)
     type format
 
     (* the alignment property of "aligned" blocks *)
