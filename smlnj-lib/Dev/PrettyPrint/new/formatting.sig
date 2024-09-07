@@ -218,8 +218,7 @@ signature FORMATTING =
 
     (* produces a vertical list where each line has a label prepended.  The string
      * `first` is used as the label for the first line and `rest` is used as the
-     * label for subsequent lines.  If the labels have unequal sizes, then the shorter
-     * label is padded on the left so that the labels right edge is aligned.
+     * label for subsequent lines.
      *)
     val vLabeledList : {first : string, rest : string} -> format list -> format
 
