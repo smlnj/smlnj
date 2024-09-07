@@ -11,10 +11,12 @@ local
   structure F = Formatting
   fun styleMap (F.STY "kw") = [ANSITerm.BF, ANSITerm.FG ANSITerm.Blue]
     | styleMap _ = []
+  (* we assume single-character-wide UTF-8 tokens *)
+  fun tokenMap (F.TOK{name, ...}) = SOME name
 in
 fun printFormatLW n = PrintANSI.renderStdout {
         styleMap = styleMap,
-        tokenMap = fn _ => NONE,
+        tokenMap = tokenMap,
         width = n
       } o Formatting.appendNewLine
 end

@@ -12,6 +12,7 @@ CM.make "../../../PPDevice/pp-device-lib.cm";
 List.app use [
     "pp.sml",
     "expdecl.sml",
+    "lambda.sml",
     "strdecl.sml",
     "wadler-trees1.sml",
     "wadler-trees2.sml",
