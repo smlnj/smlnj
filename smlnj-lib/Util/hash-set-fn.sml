@@ -71,34 +71,31 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	    val sz = Array.length arr
 	    in
 	      if (nItems >= sz)
-		then (table := growTable (arr, sz+sz); true)
-		else false
+		then table := growTable (arr, sz+sz)
+		else ()
 	    end
 
   (* reverse-append for buckets *)
     fun revAppend (NIL, b) = b
       | revAppend (B(h, x, r), b) = revAppend(r, B(h, x, b))
 
+  (* look for an item with hash `h` in a bucket *)
+    fun findInBucket (NIL, h, item) = false
+      | findInBucket (B (h', item', r), h, item) =
+          ((h = h') andalso same (item, item')) orelse findInBucket (r, h, item)
+
     fun addWithHash (tbl as SET{table, nItems}, h, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
 	  val indx = index (h, sz)
-	  fun look NIL = (
-		Array.update(arr, indx, B(h, item, Array.sub(arr, indx)));
-		nItems := !nItems + 1;
-		growTableIfNeeded (table, !nItems);
-		NIL)
-	    | look (B(h', item', r)) = if ((h = h') andalso same(item, item'))
-		then NIL (* item already present *)
-		else (case (look r)
-		   of NIL => NIL
-		    | rest => B(h', item', rest)
-		  (* end case *))
+          val bucket = Array.sub (arr, indx)
 	  in
-	    case (look (Array.sub (arr, indx)))
-	     of NIL => ()
-	      | b => Array.update(arr, indx, b)
-	    (* end case *)
+            if findInBucket (bucket, h, item)
+              then ()
+              else (
+                Array.update (arr, indx, B (h, item, bucket));
+                nItems := !nItems + 1;
+                growTableIfNeeded (table, !nItems))
 	  end
 
   (* Add an item to a set *)
@@ -175,10 +172,8 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	  val sz = Array.length arr
 	  val h = hash item
 	  val indx = index (h, sz)
-	  fun look NIL = false
-	    | look (B(h', item', r)) = ((h = h') andalso same(item, item')) orelse look r
           in
-            look (Array.sub(arr, indx))
+            findInBucket (Array.sub(arr, indx), h, item)
           end
 
   (* Return true if and only if the set is empty *)

@@ -1,6 +1,7 @@
 (* int-binary-set.sml
  *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.  See COPYRIGHT file for details.
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  *
  * This code was adapted from Stephen Adams' binary tree implementation
  * of applicative integer sets.
@@ -385,6 +386,8 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
           in
             concat(difference(l2,l),difference(r2,r))
           end
+
+    fun combineWith pred (s1, s2) = raise Fail "TODO"
 
     fun subtract (s, item) = difference (s, singleton item)
     fun subtract' (item, s) = subtract (s, item)

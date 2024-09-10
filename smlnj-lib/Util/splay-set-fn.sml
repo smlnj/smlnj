@@ -1,6 +1,6 @@
 (* splay-set-fn.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * Functor implementing ordered sets using splay trees.
@@ -273,6 +273,8 @@ functor SplaySetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key =
           in
             SET{root = ref root, nobj = cnt}
           end
+
+    fun combineWith pred (s1, s2) = raise Fail "TODO"
 
     fun subtract (s, item) = difference (s, singleton item)
     fun subtract' (item, s) = subtract (s, item)

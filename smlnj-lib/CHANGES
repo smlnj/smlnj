@@ -5,6 +5,13 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2024.3
 -------------------
 
+[2024-09-09]
+	Merged legacy pull request #322 (Remove useless branches in `HashSetFn.insert`).
+
+[2024-09-02]
+        Added the `combineWith` function to the various implementations of the
+        `ORD_SET` signature.
+
 [2024-08-30]
 	Bug fixes for the handling of Unicode escape sequences in JSON strings
 	(thanks to Skye Soss for the fixes).

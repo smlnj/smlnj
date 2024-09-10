@@ -1,6 +1,6 @@
 (* redblack-set-fn.sml
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * This code is based on Chris Okasaki's implementation of
@@ -427,6 +427,30 @@ functor RedBlackSetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_ke
 	  in
 	    SET(n, linkAll result)
 	  end
+
+    (* general set combiner *)
+    fun combineWith pred (SET(_, s1), SET(_, s2)) = let
+          fun comb (t1, t2, n, result) = (case (next t1, next t2)
+		 of ((E, _), (E, _)) => (n, result)
+		  | ((E, _), (T(_, _, x, _), r2)) =>
+                      condAdd (x, false, true, t1, r2, n, result)
+		  | ((T(_, _, x, _), r1), (E, _)) =>
+                      condAdd (x, true, false, r1, t2, n, result)
+		  | ((T(_, _, x1, _), r1), (T(_, _, x2, _), r2)) => (
+		      case Key.compare(x1, x2)
+		       of LESS => condAdd (x1, true, false, r1, t2, n, result)
+			| EQUAL => condAdd (x1, true, true, r1, r2, n, result)
+			| GREATER => condAdd (x2, false, true, t1, r2, n, result)
+		      (* end case *))
+		(* end case *))
+          and condAdd (x, p1, p2, r1, r2, n, result) =
+                if pred (x, p1, p2)
+                  then comb (r1, r2, n+1, addItem(x, result))
+                  else comb (r1, r2, n, result)
+	  val (n, result) = comb (start s1, start s2, 0, ZERO)
+          in
+	    SET(n, linkAll result)
+          end
 
     fun subtract (s, item) = difference (s, singleton item)
     fun subtract' (item, s) = subtract (s, item)

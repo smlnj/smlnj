@@ -1,6 +1,7 @@
 (* int-list-set.sml
  *
- * COPYRIGHT (c) 1996 by AT&T Research.  See COPYRIGHT file for details.
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  *
  * An implementation of finite sets of integers, which uses a sorted list
  * representation.
@@ -70,6 +71,25 @@ structure IntListSet :> ORD_SET where type Key.ord_key = Int.int =
 	  in
 	    merge (s1, s2)
 	  end
+
+    (* general set combiner *)
+    fun combineWith pred (s1, s2) = let
+          fun comb ([], []) = []
+            | comb (x1::r1, []) = condAdd (x1, true, false, r1, [])
+            | comb ([], x2::r2) = condAdd (x2, false, true, [], r2)
+            | comb (s1 as x1::r1, s2 as x2::r2) =
+                if (x1 < x2)
+                  then condAdd (x1, true, false, r1, s2)
+                else if (x1 > x2)
+                  then condAdd (x2, false, true, s1, r2)
+                else condAdd (x1, true, true, r1, r2)
+          and condAdd (x, p1, p2, r1, r2) =
+                if pred (x, p1, p2)
+                  then x :: comb (r1, r2)
+                  else comb (r1, r2)
+          in
+            comb (s1, s2)
+          end
 
     fun addList (l, items) = let
 	  val items' = List.foldl (fn (x, set) => add(set, x)) [] items

@@ -1,6 +1,6 @@
 (* list-set-fn.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * An implementation of finite sets of ordered values, which uses a sorted list
@@ -67,6 +67,24 @@ functor ListSetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key =
 	  in
 	    merge (s1, s2)
 	  end
+
+    (* general set combiner *)
+    fun combineWith pred (s1, s2) = let
+          fun comb ([], []) = []
+            | comb (x1::r1, []) = condAdd (x1, true, false, r1, [])
+            | comb ([], x2::r2) = condAdd (x2, false, true, [], r2)
+            | comb (s1 as x1::r1, s2 as x2::r2) = (case Key.compare(x1, x2)
+		 of LESS => condAdd (x1, true, false, r1, s2)
+		  | EQUAL => condAdd (x1, true, true, r1, r2)
+		  | GREATER => condAdd (x2, false, true, s1, r2)
+		(* end case *))
+          and condAdd (x, p1, p2, r1, r2) =
+                if pred (x, p1, p2)
+                  then x :: comb (r1, r2)
+                  else comb (r1, r2)
+          in
+            comb (s1, s2)
+          end
 
     fun addList (l, items) = let
 	  val items' = List.foldl (fn (x, set) => add(set, x)) [] items

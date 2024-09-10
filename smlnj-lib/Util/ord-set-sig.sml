@@ -1,6 +1,7 @@
 (* ordset-sig.sml
  *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.  See COPYRIGHT file for details.
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  *
  * Signature for a set of values with an order relation.
  *)
@@ -84,6 +85,11 @@ signature ORD_SET =
 
     val difference : set * set -> set
         (* Difference *)
+
+    val combineWith : (item * bool * bool -> bool) -> set * set -> set
+        (* combine two sets using the given predicate; this function is a generalization
+         * of the `union`, `intersection`, and `difference` operations.
+         *)
 
     val map : (item -> item) -> set -> set
 	(* Create a new set by applying a map function to the elements
