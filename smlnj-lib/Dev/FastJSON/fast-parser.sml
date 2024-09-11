@@ -527,7 +527,7 @@ structure FastJSONParser : sig
 (* TODO: In 110.99.5, we can use the following version of the mkFloat function *)
 (*
                 fun mkFloat (sign, whole, frac, exp, inS) = let
-                      val f = (Real.fromDecimal {
+                      val f = valOf(Real.fromDecimal {
                               class = IEEEReal.NORMAL,
                               sign = sign,
                               digits = List.revAppend(whole, reverse frac),

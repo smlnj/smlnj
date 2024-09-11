@@ -1,5 +1,7 @@
+(*
 use "../json.sml";
 use "../fast-parser.sml";
+*)
 
 datatype strm = S of string * int;
 
