@@ -64,10 +64,11 @@ AC_ARG_ENABLE([c++],
 
 dnl enable Swift generator?
 dnl
-AC_ARG_ENABLE([swift],
-  AS_HELP_STRING([--enable-swift], [enable support for Swift]),
-  [ENABLE_SWIFT=yes],
-  [ENABLE_SWIFT=no])
+# TODO
+#AC_ARG_ENABLE([swift],
+#  AS_HELP_STRING([--enable-swift], [enable support for Swift]),
+#  [ENABLE_SWIFT=yes],
+#  [ENABLE_SWIFT=no])
 
 dnl check for a specified target size
 dnl
