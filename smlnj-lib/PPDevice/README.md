@@ -1,7 +1,7 @@
 # Pretty-Printing Device Library
 
 This library is an "internal" library that is meant to be shared by
-the two pretty-printer libraries (pp-lib.cm and prettyprint.cm).
+the two pretty-printer libraries (`pp-lib.cm` and `pretty-print-lib.cm`).
 
 ## The `PP_DEVICE` Signature
 
@@ -43,4 +43,3 @@ might want to define a style for comments or use a token to represent the
 gradient operation ∇).  The two pretty-printing libraries have different
 approaches to how to use styles and tokens in a pretty printer.  See the
 per-library documentation for more information.
-
