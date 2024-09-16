@@ -246,13 +246,13 @@ namespace asdl {
 	    return option<int>(read_int(is));
 	}
     }
-    inline option<uint> read_uint_option (instream & is)
+    inline option<unsigned int> read_uint_option (instream & is)
     {
 	unsigned int v = read_tag8(is);
 	if (v == 0) {
-	    return option<uint>();
+	    return option<unsigned int>();
 	} else {
-	    return option<uint>(read_uint(is));
+	    return option<unsigned int>(read_uint(is));
 	}
     }
     inline option<bool> read_bool_option (instream & is)
