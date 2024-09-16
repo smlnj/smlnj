@@ -1,0 +1,98 @@
+:version: 2024.3
+:date: @DATE@
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
+:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+// **** summary description of release
+
+== Details
+
+// **** details: include those sections that are relevant
+
+=== Compiler
+
+=== CM
+
+=== MLRISC
+
+=== Runtime System
+
+=== Basis Library
+
+=== SML/NJ Library
+
+=== Successor ML
+
+=== ML-LPT
+
+=== Documentation
+
+=== Installation
+
+== Bugs
+
+Here is a list of the issues that are fixed (or closed) with this release.
+
+[.buglist,cols="^1,<15",strips="none",options="header"]
+|=======
+| Issue
+| Description
+| [.bugid]#291#
+| {issue-base}/291[Can't build 2024.2 because of problem with ASDL C++ library]
+// | [.bugid]#@ID@#
+// | {issue-base}/@ID@[@DESCRIPTION@]
+|=======
+
+We also fixed the following bugs that did not have issues
+associated with them (or were bug fixes ported from the legacy
+repository):
+
+// ***** include a list of unnumbered/legacy bugs here *****
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) | Tested
+| | macOS 13 (Ventura) | Tested
+| | macOS 14 (Sonoma) | Tested
+| | Ubuntu 20.04.6 LTS | Tested
+| | Ubuntu 22.04.2 LTS | Tested
+| {nbsp} | |
+|=======
