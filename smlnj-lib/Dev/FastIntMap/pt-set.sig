@@ -1,6 +1,6 @@
 (* pt-set.sig
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -15,42 +15,42 @@ signature PATRICIA_TREE_SET =
     type item = Key.key
     type set
 
-    (* The empty set *)
+    (* the empty set *)
     val empty : set
 
-    (* Create a singleton set *)
+    (* create a singleton set *)
     val singleton : item -> set
 
     (* create a set from a list of items *)
     val fromList : item list -> set
 
-    (* Return an ordered list of the items in the set. *)
+    (* return an ordered list of the items in the set. *)
     val toList : set -> item list
 
-    (* Add an item. *)
+    (* add an item. *)
     val add  : set * item -> set
     val add' : (item * set) -> set
 
-    (* Add a list of items. *)
+    (* add a list of items. *)
     val addList : set * item list -> set
 
-    (* Subtract an item from a set; has no effect if the item is not in the set *)
+    (* subtract an item from a set; has no effect if the item is not in the set *)
     val subtract  : set * item -> set
     val subtract' : (item * set) -> set
 
-    (* Subtract a list of items from the set. *)
+    (* subtract a list of items from the set. *)
     val subtractList : set * item list -> set
 
-    (* Remove an item. Raise NotFound if not found. *)
+    (* delete an item from the set. Raise NotFound if not found. *)
     val delete : set * item -> set
 
-    (* Return true if and only if item is an element in the set *)
+    (* return true if and only if item is an element in the set *)
     val member : set * item -> bool
 
-    (* Return true if and only if the set is empty *)
+    (* return true if and only if the set is empty *)
     val isEmpty : set -> bool
 
-    (* Return true if and only if the two sets are equal *)
+    (* return true if and only if the two sets are equal *)
     val equal : (set * set) -> bool
 
     (* lexical comparison of two sets *)
@@ -62,33 +62,36 @@ signature PATRICIA_TREE_SET =
     (* are the two sets disjoint? *)
     val disjoint : set * set -> bool
 
-    (* Return the number of items in the set *)
+    (* return the number of items in the set *)
     val numItems : set ->  int
 
-    (* Union *)
+    (* return the union of two sets *)
     val union : set * set -> set
 
-    (* Intersection *)
+    (* return the intersection of two sets *)
     val intersection : set * set -> set
 
-    (* Difference *)
+    (* return the difference of two sets (i.e., the second subtracted from the first) *)
     val difference : set * set -> set
 
-    (* Create a new set by applying a map function to the elements of the set. *)
+    (* combine two sets using the given predicate; this function is a generalization
+     * of the `union`, `intersection`, and `difference` operations.
+     *)
+    val combineWith : (item * bool * bool -> bool) -> set * set -> set
+
+    (* create a new set by applying a map function to the elements of the set. *)
     val map : (item -> item) -> set -> set
 
-    (* Create a new set by mapping a partial function over the
-     * items in the set.
-     *)
+    (* create a new set by mapping a partial function over the items in the set. *)
     val mapPartial : (item -> item option) -> set -> set
 
-    (* Apply a function to the entries of the set in increasing order *)
+    (* apply a function to the entries of the set in increasing order *)
     val app : (item -> unit) -> set -> unit
 
-    (* Apply a folding function to the entries of the set in increasing order *)
+    (* apply a folding function to the entries of the set in increasing order *)
     val foldl : (item * 'b -> 'b) -> 'b -> set -> 'b
 
-    (* Apply a folding function to the entries of the set in decreasing order *)
+    (* apply a folding function to the entries of the set in decreasing order *)
     val foldr : (item * 'b -> 'b) -> 'b -> set -> 'b
 
     (* partition a set into two based using the given predicate.  Returns two
@@ -123,4 +126,4 @@ signature PATRICIA_TREE_SET =
 
     val check : set -> set
 
-   end
+   end (* PATRICIA_TREE_SET *)

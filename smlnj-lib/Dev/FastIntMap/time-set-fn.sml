@@ -7,11 +7,13 @@
 signature SET =
   sig
 
+    type item = word
     type set
 
     val empty : set
-    val add : set * word -> set
+    val add : set * item -> set
     val union : set * set -> set
+    val intersection : set * set -> set
     val numItems : set -> int
 
   end

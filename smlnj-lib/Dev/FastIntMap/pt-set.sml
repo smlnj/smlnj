@@ -30,7 +30,7 @@ structure PTSet :> PATRICIA_TREE_SET where type Key.key = word =
       end
 
     (* are we on a 64-bit system? *)
-    val is64Bit = (Word.wordSize > 32) (* (Unsafe.wordSize() = 64) *)
+    val is64Bit = (Unsafe.wordSize() = 64)
 
     type item = Key.key
 
@@ -53,6 +53,14 @@ structure PTSet :> PATRICIA_TREE_SET where type Key.key = word =
       | Br of word * word * tree * tree
 
     (* Utility functions *)
+
+    (* "smart" constructor for Br nodes, when the subtrees have unknown structure,
+     * but are known to have disjoint prefixes.
+     *)
+    fun mkBr (prefix, mask, Empty, Empty) = Empty
+      | mkBr (prefix, mask, Empty, t2) = t2
+      | mkBr (prefix, mask, t1, Empty) = t1
+      | mkBr (prefix, mask, t1, t2) = Br(prefix, mask, t1, t2)
 
     (* given the key `k` and mask bit `m = (1 << n)`, `mask(k, m)` returns a
      * word `w` that has the same bits as `k` above the n'th bit, the n'th
@@ -442,7 +450,7 @@ structure PTSet :> PATRICIA_TREE_SET where type Key.key = word =
               | merge' (t1 as Br(p1, m1, t10, t11), t2 as Br(p2, m2, t20, t21)) =
                   if (m1 = m2)
                     then if (p1 = p2)
-                      (* the trees have the same prefixes, so merge' the subtrees *)
+                      (* the trees have the same prefixes, so merge the subtrees *)
                       then Br(p1, m1, merge'(t10, t20), merge'(t11, t21))
                       (* the prefixes disagree *)
                       else join (p1, t1, p2, t2)
@@ -559,6 +567,38 @@ end
           val t' = diff (t1, t2)
           in
             SET(n1 - !n, t')
+          end
+
+    fun combineWith pred (SET(_, t1), SET(_, t2)) = let
+          val n = ref 0w0 (* counts number of elements in result *)
+          fun mkLf (b1, b2, x) = if pred (x, b1, b2)
+                then (n := !n + 0w1; Lf x)
+                else Empty
+          (* copy the elements of a tree that pass the predicate *)
+          fun copy (b1, b2, Lf x) = mkLf (b1, b2, x)
+            | copy (b1, b2, Br(prefix, mask, t0, t1)) =
+                merge' (copy (b1, b2, t0), copy (b1, b2, t1))
+          (* combine the trees *)
+          fun comb (Empty, t2) = copy (false, true, t2)
+            | comb (t1, Empty) = copy (true, false, t1)
+            | comb (Lf k1, Lf k2) = if (k1 = k2)
+                then mkLf(k1, true, true, k1)
+                else merge' (mkLf(true, false, k1), mkLf(false, true, k2))
+            | comb (Lf k1, t2) = if pred (k1, true, false)
+                then insertItemInTree (n, t2, k1)
+                else copy (false, true, t2)
+            | comb (t1, Lf k2) = if pred (k2, false, true)
+                then insertItemInTree (n, t1, k2)
+                else copy (true, false, t1)
+            | comb (t1 as Br(p1, m1, t10, t11), t2 as Br(p2, m2, t20, t21)) =
+                if (m1 = m2)
+                  then if (p1 = p2)
+                    (* the trees have the same prefixes, so combine the subtrees *)
+                    then mkBr(p1, m1, comb(t10, t20), comb(t11, t21))
+                    (* the prefixes disagree *)
+                    else join (p1, t1, p2, t2)
+          in
+raise Fail "TODO: combineWith"
           end
 
     end (* local *)
