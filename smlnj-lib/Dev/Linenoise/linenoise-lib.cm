@@ -1,0 +1,23 @@
+(* linenoise-lib.cm
+ *
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure ConsoleEdit
+  structure Terminal
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  cmd-strings.sml
+  console-edit.sml
+  edit-buffer.sml
+  edit-state.sml
+  editor.sml
+  emacs-mode.sml
+  terminal.sml

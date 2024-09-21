@@ -1,0 +1,18 @@
+(* example.cm
+ *
+ * COPYRIGHT (c) 2021 John Reppy (http://cs.uchicago.edu/~jhr)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure Example
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  sources.cm
+
+  example.sml
