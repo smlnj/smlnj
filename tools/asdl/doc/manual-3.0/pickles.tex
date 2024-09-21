@@ -107,7 +107,7 @@ As with product types, fields are packed left to right based on the order
 in the definition.
 If there are any attribute values associated with the type, they are packed left to right
 after the tag but before other constructor fields.
-  
+
 If the sum type has a single constructor with fields, then it is
 encoded without a tag (\ie{}, like a product type).
 
@@ -170,7 +170,7 @@ and the $v'_1,\,\ldots,\,v'_n$ are the encodings of the sub-values.
 \begin{description}
   \item[bool] \mbox{}\\
     Boolean values are mapped to the literals \lstinline!#t! and \lstinline!#f!.
-    
+
   \item[numbers] \mbox{}\\
     Values of the ASDL numeric types (\lstinline!int!, \lstinline!uint!, and
     \lstinline!integer!) are represented by decimal literals.
@@ -191,7 +191,7 @@ value.
 
 \subsection{Sum types}
 Nullary constructors are mapped to quoted symbols, while non-nullary constructors are mapped
-to an S-expression with the constructor name as the operator and the 
+to an S-expression with the constructor name as the operator and the
 
 \subsection{Sequence types}
 A sequence of values $v_1,\,\ldots,\,v_n$ is encoded as

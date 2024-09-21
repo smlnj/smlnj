@@ -6,26 +6,58 @@
  * The error exceptions used in JSONDecode and JSONUtil.
  *)
 
-structure Errors =
-  struct
+structure Errors : sig
+
+    val failure : string * JSON.value -> 'a
+    val notNull : JSON.value -> 'a
+    val notBool : JSON.value -> 'a
+    val notInt : JSON.value -> 'a
+    val notNumber : JSON.value -> 'a
+    val notString : JSON.value -> 'a
+    val notObject : JSON.value -> 'a
+    val fieldNotFound : string * JSON.value -> 'a
+    val notArray : JSON.value -> 'a
+    val arrayBounds : int * JSON.value -> 'a
+    val elemNotFound : JSON.value -> 'a
 
     (* exceptions used as errors *)
-    exception Failure of string * JSON.value
-    exception NotNull of JSON.value
-    exception NotBool of JSON.value
-    exception NotInt of JSON.value
-    exception NotNumber of JSON.value
-    exception NotString of JSON.value
-    exception NotObject of JSON.value
-    exception FieldNotFound of JSON.value * string
-    exception NotArray of JSON.value
-    exception ArrayBounds of JSON.value * int
-    exception ElemNotFound of JSON.value
+    exception JSONError of exn * JSON.value
+
+    (* specific errors that are used as the first argument to `JSONError` *)
+    exception NotNull
+    exception NotBool
+    exception NotInt
+    exception NotNumber
+    exception NotString
+    exception NotObject
+    exception FieldNotFound of string
+    exception NotArray
+    exception ArrayBounds of int
+    exception ElemNotFound
+
+    val exnMessage : exn -> string
+
+  end = struct
+
+    (* exceptions used as errors *)
+    exception JSONError of exn * JSON.value
+
+    (* specific errors that are used as the first argument to `JSONError` *)
+    exception NotNull
+    exception NotBool
+    exception NotInt
+    exception NotNumber
+    exception NotString
+    exception NotObject
+    exception FieldNotFound of string
+    exception NotArray
+    exception ArrayBounds of int
+    exception ElemNotFound
 
     (* map the above exceptions to a message string; we use `General.exnMessage`
      * for other exceptions.
      *)
-    fun exnMessage exn = let
+    fun exnMessage (JSONError(exn, v)) = let
 	  fun v2s (JSON.ARRAY _) = "array"
 	    | v2s (JSON.BOOL false) = "'false'"
 	    | v2s (JSON.BOOL true) = "'true'"
@@ -36,40 +68,53 @@ structure Errors =
 	    | v2s (JSON.STRING _) = "string"
 	  in
 	    case exn
-	     of Failure(msg, v) => String.concat["Failure: ", msg]
-              | NotNull v => String.concat[
+	     of Fail msg => String.concat["Failure: ", msg]
+              | Overflow => "integer too large"
+              | NotNull => String.concat[
 		    "expected 'null', but found ", v2s v
 		  ]
-              | NotBool v => String.concat[
+              | NotBool => String.concat[
 		    "expected boolean, but found ", v2s v
 		  ]
-	      | NotInt(JSON.FLOAT _) => "expected integer, but found floating-point number"
-	      | NotInt v => String.concat[
-		    "expected integer, but found ", v2s v
-		  ]
-	      | NotNumber v => String.concat[
-		    "expected number, but found ", v2s v
-		  ]
-	      | NotString v => String.concat[
+	      | NotInt => (case v
+                   of JSON.FLOAT _ => "expected integer, but found floating-point number"
+                    | _ => String.concat["expected integer, but found ", v2s v]
+                  (* end case *))
+	      | NotString => String.concat[
 		    "expected string, but found ", v2s v
 		  ]
-	      | NotObject v => String.concat[
+	      | NotObject => String.concat[
 		    "expected object, but found ", v2s v
 		  ]
-	      | FieldNotFound(v, fld) => String.concat[
+	      | FieldNotFound fld => String.concat[
 		    "no definition for field \"", fld, "\" in object"
 		  ]
-	      | NotArray v => String.concat[
+	      | NotArray => String.concat[
 		    "expected array, but found ", v2s v
 		  ]
-              | ArrayBounds(_, i) => String.concat[
+              | ArrayBounds i => String.concat[
                     "index ", Int.toString i, " out of bounds for array"
                   ]
-	      | ElemNotFound v => String.concat[
+	      | ElemNotFound => String.concat[
 		    "no matching element found in ", v2s v
 		  ]
-	      | _ => General.exnMessage exn
+	      | _ => String.concat[
+                    "Unknown JSON error (", General.exnMessage exn, ") on ", v2s v
+                  ]
 	    (* end case *)
 	  end
+    | exnMessage exn = General.exnMessage exn
+
+    fun failure (arg, v) = raise JSONError(Fail arg, v)
+    fun notNull v = raise JSONError(NotNull, v)
+    fun notBool v = raise JSONError(NotBool, v)
+    fun notInt v = raise JSONError(NotInt, v)
+    fun notNumber v = raise JSONError(NotNumber, v)
+    fun notString v = raise JSONError(NotString, v)
+    fun notObject v = raise JSONError(NotObject, v)
+    fun fieldNotFound (arg, v) = raise JSONError(FieldNotFound arg, v)
+    fun notArray v = raise JSONError(NotArray, v)
+    fun arrayBounds (arg, v) = raise JSONError(ArrayBounds arg, v)
+    fun elemNotFound v = raise JSONError(ElemNotFound, v)
 
   end

@@ -6,9 +6,9 @@ dnl COPYRIGHT (c) 2021 The Fellowship of SML/NJ
 dnl All rights reserved.
 dnl
 
-AC_INIT(asdl,3.0,)
+AC_INIT([asdl],[3.0],[])
 
-AC_PREREQ(2.60)
+AC_PREREQ([2.71])
 AC_COPYRIGHT([[COPYRIGHT (c) 2021 The Fellowship of SML/NJ]])
 AC_CONFIG_SRCDIR(src/lib/asdl/std-types.asdl)
 AC_CONFIG_AUX_DIR(config)
