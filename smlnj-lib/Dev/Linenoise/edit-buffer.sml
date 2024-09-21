@@ -1,6 +1,6 @@
 (* edit-buffer.sml
  *
- * COPYRIGHT (c) 2021 John Reppy (http://cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * Base definitions and utilities for managing the editor state.

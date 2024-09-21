@@ -1,6 +1,6 @@
 (* console-edit.sml
  *
- * COPYRIGHT (c) 2021 John Reppy (http://cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * Simple support for console I/O with line editing.  This implementation is based
