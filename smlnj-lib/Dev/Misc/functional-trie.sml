@@ -50,12 +50,21 @@ structure Trie :> sig
     (* returns the list of key-value pairs in the trie *)
     val completionsOf : 'a t -> (string * 'a) list
 
+    val statistics : 'a t -> {
+            nNodes : int,               (* total number of nodes in trie *)
+            nValues : int,              (* number of nodes with values *)
+            nLeaves : int,              (* number of nodes with zero out degree *)
+            avgOutDegree : real,        (* average out degree of no-leaf nodes *)
+            maxOutDegree : int,         (* maximum out degree *)
+            maxPathLen : int            (* longest path from root to leaf *)
+          }
+
   end = struct
 
     (* integer addition w/o overflow checking *)
     fun ++ (a, b) = Word.toIntX(Word.fromInt a + Word.fromInt b)
 
-    infix ++
+    infix 6 ++
 
     (* string subscript w/o bounds check *)
     val sub = Unsafe.CharVector.sub
@@ -206,5 +215,41 @@ structure Trie :> sig
           in
             walk ([], trie, [])
           end
+
+    fun statistics trie = let
+          fun inc (n : int ref) = (n := (!n ++ 1))
+          fun setMax (r : int ref, n) = if n > !r then r := n else ()
+          val nNodes = ref 0
+          val nValues = ref 0
+          val nLeaves = ref 0
+          val maxOutDegree = ref 0
+          val totOutDegree = ref 0
+          val maxPathLen = ref 0
+          fun walk (depth, tr) = (case tr
+                 of Empty => ()
+                  | Nd{value, kids} => (
+                      inc nNodes;
+                      if isSome value then inc nValues else ();
+                      if null kids
+                        then (
+                          inc nLeaves;
+                          setMax (maxPathLen, depth))
+                        else let
+                          val outDeg = length kids
+                          in
+                            setMax (maxOutDegree, outDeg);
+                            totOutDegree := !totOutDegree + outDeg;
+                            List.app (fn (_, kid) => walk (depth+1, kid)) kids
+                          end)
+                (* end case *))
+          val () = walk (0, trie)
+          in {
+            nNodes = !nNodes,
+            nValues = !nValues,
+            nLeaves = !nLeaves,
+            avgOutDegree = real(!totOutDegree) / real(!nNodes - !nLeaves),
+            maxOutDegree = !maxOutDegree,
+            maxPathLen = !maxPathLen
+          } end
 
   end
