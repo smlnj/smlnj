@@ -18,6 +18,12 @@
  *      <ret>   -- finish editing
  *      ^C      -- clear buffer and return the empty string
  *      ^L      -- clear buffer
+ *
+ * ANSI escape sequences for arrow keys
+ *      <esc> [ A       -- up arrow
+ *      <esc> [ B       -- down arrow
+ *      <esc> [ C       -- right arrow
+ *      <esc> [ D       -- left arrow
  *)
 
 structure EmacsMode : sig

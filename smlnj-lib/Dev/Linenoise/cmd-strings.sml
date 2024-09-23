@@ -18,7 +18,7 @@ structure CmdStrings : sig
     val moveRight : int -> string
 
   (* move to the specified position (which we do by moving
-   * to tg=he beginning and then right.
+   * to the beginning and then right.
    *)
     val moveTo : int -> string
 
