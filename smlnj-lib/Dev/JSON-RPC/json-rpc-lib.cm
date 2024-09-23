@@ -1,0 +1,23 @@
+(* json-rpc-lib.cm
+ *
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure JSONRPC
+  structure JSONRPCDecode
+  structure JSONRPCEncode
+  structure JSONRPCOutput
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  $/json-lib.cm
+
+  json-rpc.sml
+  json-rpc-decode.sml
+  json-rpc-encode.sml
+  json-rpc-output.sml

@@ -83,12 +83,15 @@ structure JSONRPCUtil : sig
 	    method : string,
 	    params : JSON.value option
 	  }
-      | InvalidReq
 
   (* `parseRequest v` parses the given JSON value as if it were a JSON request message
-   * and returns the parsed information (or `InvalidResp` if it was not valid).
+   * (or array of messages) and returns a list of requests.  There are three possible
+   * results:
+   *  1. an empty list, which signifies that there was an error in the input
+   *  2. a singleton request list
+   *  3. a list of two or more requests (this corresponds to "batch mode")
    *)
-    val parseRequest : JSON.value -> request
+    val parseRequest : JSON.value -> request list
 
   (* the different kinds of response messages *)
     datatype response
@@ -107,7 +110,7 @@ structure JSONRPCUtil : sig
   (* `parseResponse v` parses the given JSON value as if it were a JSON response message
    * and returns the parsed information (or `InvalidResp` if it was not valid).
    *)
-    val parseResponse : JSON.value -> response
+    val parseResponse : JSON.value -> response list
 
   end = struct
 
