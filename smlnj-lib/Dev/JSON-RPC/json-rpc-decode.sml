@@ -48,71 +48,110 @@ structure JSONRPCDecode : sig
             | NONE => [] (* invalid message *)
           (* end case *))
 
-    (* validate the version, which is assumed to be the first field and then parse
-     * the fields (or invoke the error handler).
-     *)
-    fun validateVers parse (OBJECT(("jsonrpc", STRING "2.0")::fields)) = parse fields
-      | validateVers _ _ = NONE
-
     (* decode a single request message *)
-    fun decodeRequest v = let
-	  fun err () = NONE
-	  fun parse1 (("method", STRING m)::flds) = parse2 (flds, m)
-	    | parse1 _ = NONE
-	  and parse2 (("params", v as ARRAY _)::flds, m) = parse3 (flds, m, SOME v)
-	    | parse2 (("params", v as OBJECT _)::flds, m) = parse3 (flds, m, SOME v)
-	    | parse2 _ = NONE
-	  and parse3 ([], m, params) = SOME(Notify{method = m, params = params})
-	    | parse3 ([("id", INT id)], m, params) = SOME(Request{
-		  method = m, params = params, id = IdNum(IntInf.toInt id)
-		})
-	    | parse3 ([("id", STRING id)], m, params) = SOME(Request{
-		  method = m, params = params, id = IdStr id
-		})
-	    | parse3 ([("id", NULL)], m, params) =
-                SOME(Notify{method = m, params = params})
-	    | parse3 _ = NONE
+    fun decodeRequest (OBJECT flds) = let
+          fun parse (("jsonrpc", STRING v)::flds, vers, id, method, params) =
+                setVersion (flds, v, vers, id, method, params)
+            | parse (("id", INT n)::flds, vers, id, method, params) =
+                setId (flds, IdNum(IntInf.toInt n), vers, id, method, params)
+            | parse (("id", STRING s)::flds, vers, id, method, params) =
+                setId (flds, IdStr s, vers, id, method, params)
+            | parse (("method", STRING m)::flds, vers, id, method, params) =
+                setMethod (flds, m, vers, id, method, params)
+	    | parse (("params", p as ARRAY _)::flds, vers, id, method, params) =
+                setParams (flds, p, vers, id, method, params)
+	    | parse (("params", p as OBJECT _)::flds, vers, id, method, params) =
+                setParams (flds, p, vers, id, method, params)
+            | parse ([], true, SOME id, SOME method, params) =
+                SOME(Request{method = method, params = params, id = id})
+            | parse ([], true, NONE, SOME method, params) =
+                SOME(Notify{method = method, params = params})
+            | parse _ = NONE
+          (* check and set the version field *)
+          and setVersion (flds, v, vers, id, method, params) = (
+                case (v, vers)
+                 of ("2.0", false) => parse (flds, true, id, method, params)
+                  | _ => NONE (* wrong version or multiple version fields *)
+                (* end case *))
+          (* set the ID field *)
+          and setId (flds, id, vers, NONE, method, params) =
+                parse (flds, vers, SOME id, method, params)
+            | setId _ = NONE (* multiple id fields *)
+          (* check the method field *)
+          and setMethod (flds, m, vers, id, NONE, params) =
+                parse (flds, vers, id, SOME m, params)
+            | setMethod _ = NONE (* multiple method fields *)
+          (* check the parameters field *)
+          and setParams (flds, params, vers, id, method, NONE) =
+                parse (flds, vers, id, method, SOME params)
+            | setParams _ = NONE (* multiple params fields *)
 	  in
-	    validateVers parse1 v
+	    parse (flds, false, NONE, NONE, NONE)
 	  end
+      | decodeRequest _ = NONE (* not an OBJECT *)
 
     (* decode one or more requests *)
     val request = batch decodeRequest
 
     (* decode a single response message *)
-    fun decodeResponse v = let
-	  fun err () = NONE
-	  fun parse1 (("result", v)::flds) = parseRes (flds, v)
-	    | parse1 ([("error", OBJECT errFlds), ("id", INT id)]) =
-		parseErr (errFlds, SOME(IdNum(IntInf.toInt id)))
-	    | parse1 ([("error", OBJECT errFlds), ("id", STRING id)]) =
-		parseErr (errFlds, SOME(IdStr id))
-	    | parse1 ([("error", OBJECT errFlds), ("id", NULL)]) =
-		parseErr (errFlds, NONE)
-	    | parse1 _ = NONE
-	  and parseRes ([("id", INT id)], res) = SOME(Response{
-		  result = res, id = IdNum(IntInf.toInt id)
-		})
-	    | parseRes ([("id", STRING id)], res) = SOME(Response{
-		  result = res, id = IdStr id
-		})
-	    | parseRes _ = NONE
-	  and parseErr (("code", INT n)::flds, id) =
-                parseErr1 (flds, IntInf.toInt n, id)
-	    | parseErr _ = NONE
-	  and parseErr1 (("message", STRING msg)::flds, code, id) =
-                parseErr2 (flds, code, msg, id)
-	    | parseErr1 _ = NONE
-	  and parseErr2 ([], code, msg, id) = SOME(Error{
-		  code = code, msg = msg, data = NONE, id = id
-		})
-	    | parseErr2 ([("data", v)], code, msg, id) = SOME(Error{
-		  code = code, msg = msg, data = SOME v, id = id
-		})
-	    | parseErr2 _ = NONE
+    fun decodeResponse (OBJECT flds) = let
+          fun parse (("jsonrpc", STRING v)::flds, vers, id, result, error) =
+                setVersion (flds, v, vers, id, result, error)
+            | parse (("id", INT n)::flds, vers, id, result, error) =
+                setId (flds, IdNum(IntInf.toInt n), vers, id, result, error)
+            | parse (("id", STRING s)::flds, vers, id, result, error) =
+                setId (flds, IdStr s, vers, id, result, error)
+            | parse (("result", jv)::flds, vers, id, result, error) =
+                setResult (flds, jv, vers, id, result, error)
+	    | parse (("error", OBJECT errFlds)::flds, vers, id, result, error) =
+                setError (flds, errFlds, vers, id, result, error)
+            | parse ([], true, SOME id, SOME result, NONE) =
+                SOME(Response{result = result, id = id})
+            | parse ([], true, id, NONE, SOME(code, msg, data)) =
+                SOME(Error{code = code, msg = msg, data = data, id = id})
+            | parse _ = NONE
+          (* check and set the version field *)
+          and setVersion (flds, v, vers, id, response, error) = (
+                case (v, vers)
+                 of ("2.0", false) => parse (flds, true, id, response, error)
+                  | _ => NONE (* wrong version or multiple version fields *)
+                (* end case *))
+          (* set the ID field *)
+          and setId (flds, id, vers, NONE, response, error) =
+                parse (flds, vers, SOME id, response, error)
+            | setId _ = NONE (* multiple ID fields *)
+          (* set the result field *)
+          and setResult (flds, result, vers, id, NONE, error) =
+                parse (flds, vers, id, SOME result, error)
+            | setResult _ = NONE (* multiple ID fields *)
+          (* parse and set the error field *)
+          and setError (flds, errFlds, vers, id, result, NONE) = let
+                fun parse' (("code", INT n)::eFlds, code, msg, data) =
+                      setCode (eFlds, IntInf.toInt n, code, msg, data)
+                  | parse' (("message", STRING s)::eFlds, code, msg, data) =
+                      setMessage (eFlds, s, code, msg, data)
+                  | parse' (("data", jv)::eFlds, code, msg, data) =
+                      setData (eFlds, jv, code, msg, data)
+                  | parse' ([], SOME code, SOME msg, data) =
+                      parse (flds, vers, id, result, SOME(code, msg, data))
+                  | parse' _ = NONE
+                and setCode (eFlds, code, NONE, msg, data) =
+                      parse' (eFlds, SOME code, msg, data)
+                  | setCode _ = NONE
+                and setMessage (eFlds, msg, code, NONE, data) =
+                      parse' (eFlds, code, SOME msg, data)
+                  | setMessage _ = NONE
+                and setData (eFlds, data, code, msg, NONE) =
+                      parse' (eFlds, code, msg, SOME data)
+                  | setData _ = NONE
+                in
+                  parse' (errFlds, NONE, NONE, NONE)
+                end
+            | setError _ = NONE (* duplicate error fields *)
 	  in
-	    validateVers parse1 v
+	    parse (flds, false, NONE, NONE, NONE)
 	  end
+      | decodeResponse _ = NONE (* not an OBJECT *)
 
     (* decode one or more responses *)
     val response = batch decodeResponse

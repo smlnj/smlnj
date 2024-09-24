@@ -6,9 +6,9 @@
 
 structure JSONRPCInput : sig
 
-    val parseRequest : substring -> JSONRPC.request list
+    val request : string -> JSONRPC.request list
 
-    val parseResponse : substring -> JSONRPC.response list
+    val response : string -> JSONRPC.response list
 
   end = struct
 
@@ -16,5 +16,11 @@ structure JSONRPCInput : sig
     datatype request = datatype JSONRPC.request
     datatype response = datatype JSONRPC.response
     datatype id = datatype JSONRPC.id
+
+    fun request content =
+          JSONRPCDecode.request(JSONParser.parse(JSONParser.openString content))
+
+    fun response content =
+          JSONRPCDecode.response(JSONParser.parse(JSONParser.openString content))
 
   end

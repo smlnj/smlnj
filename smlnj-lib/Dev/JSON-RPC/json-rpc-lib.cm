@@ -9,6 +9,7 @@ Library
   structure JSONRPC
   structure JSONRPCDecode
   structure JSONRPCEncode
+  structure JSONRPCInput
   structure JSONRPCOutput
 
 is
@@ -20,4 +21,5 @@ is
   json-rpc.sml
   json-rpc-decode.sml
   json-rpc-encode.sml
+  json-rpc-input.sml
   json-rpc-output.sml
