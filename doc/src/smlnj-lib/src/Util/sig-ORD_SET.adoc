@@ -79,6 +79,8 @@ val union : set * set -> set
 val intersection : set * set -> set
 val difference : set * set -> set
 
+val combineWith : (item * bool * bool -> bool) -> set * set -> set
+
 val map : (item -> item) -> set -> set
 val mapPartial : (item -> item option) -> set -> set
 val app : (item -> unit) -> set -> unit
@@ -193,6 +195,14 @@ val find : (item -> bool) -> set -> item option
   `difference (set1, set2)` returns the difference of the two sets;
   _i.e._, the set of items that are in `set1`, but not in
   `set2`.
+
+`[.kw]#val# combineWith : (item * bool * bool \-> bool) \-> set * set \-> set`::
+  `combineWith pred (set1, set2)` returns the combination of the two sets, where
+  the `pred` function is used to determine which elements from the input sets
+  are included in the output.  For each element `x` in the union of the two sets,
+  the `pred` function is called with the argument `(x, p1, p2)`, where `p1` is
+  true if `x` is a member of `set` and `p2` is true if `x` is a member of `set2`.
+  It the call to `pred` returns `true`, then `x` is included in the result set.
 
 `[.kw]#val# map : (item \-> item) \-> set \-> set`::
   `map f set` constructs a new set from the result of applying the

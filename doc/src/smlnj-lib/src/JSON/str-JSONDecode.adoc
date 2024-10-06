@@ -1,0 +1,354 @@
+= The `JSONDecode` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `JSONDecode` structure implements combinators for decoding *JSON* values.
+The design is based on https://package.elm-lang.org/packages/elm/json/latest/Json-Decode[
+*Elm*'s `JSON.Decode` module].
+
+== Synopsis
+
+[source,sml]
+------------
+signature JSON_DECODE
+structure JSONDecode : JSON_DECODE
+------------
+
+== Interface
+
+[source,sml]
+------------
+exception JSONError of exn * JSON.value
+
+exception NotBool
+exception NotInt
+exception NotNumber
+exception NotString
+
+exception NotObject
+exception FieldNotFound of string
+
+exception NotArray
+exception ArrayBounds of int
+
+val exnMessage : exn -> string
+
+type 'a decoder
+
+val decode : 'a decoder -> JSON.value -> 'a
+val decodeString : 'a decoder -> string -> 'a
+val decodeFile : 'a decoder -> string -> 'a
+
+val bool : bool decoder
+val int : int decoder
+val intInf : IntInf.int decoder
+val number : Real64.real decoder
+val string : string decoder
+val null : 'a -> 'a decoder
+
+val raw : JSON.value decoder
+
+val nullable : 'a decoder -> 'a option decoder
+
+val try : 'a decoder -> 'a option decoder
+
+val seq : 'a decoder -> ('a -> 'b) decoder -> 'b decoder
+
+val field : string -> 'a decoder -> 'a decoder
+
+val reqField : string -> 'a decoder -> ('a -> 'b) decoder -> 'b decoder
+
+val optField : string -> 'a decoder -> ('a option -> 'b) decoder -> 'b decoder
+
+val dfltField : string -> 'a decoder -> 'a -> ('a -> 'b) decoder -> 'b decoder
+
+val array : 'a decoder -> 'a list decoder
+val sub : int -> 'a decoder -> 'a decoder
+
+val at : JSONUtil.path -> 'a decoder -> 'a decoder
+
+val succeed : 'a -> 'a decoder
+
+val fail : string -> 'a decoder
+
+val andThen : ('a -> 'b decoder) -> 'a decoder -> 'b decoder
+
+val orElse : 'a decoder * 'a decoder -> 'a decoder
+
+val choose : 'a decoder list -> 'a decoder
+
+val map : ('a -> 'b) -> 'a decoder -> 'b decoder
+val map2 : ('a * 'b -> 'res)
+  -> ('a decoder * 'b decoder)
+  -> 'res decoder
+val map3 : ('a * 'b * 'c -> 'res)
+  -> ('a decoder * 'b decoder * 'c decoder)
+  -> 'res decoder
+val map4 : ('a * 'b * 'c * 'd -> 'res)
+  -> ('a decoder * 'b decoder * 'c decoder * 'd decoder)
+  -> 'res decoder
+
+val tuple2 : ('a decoder * 'b decoder) -> ('a * 'b) decoder
+val tuple3 : ('a decoder * 'b decoder * 'c decoder) -> ('a * 'b * 'c) decoder
+val tuple4 : ('a decoder * 'b decoder * 'c decoder * 'd decoder)
+  -> ('a * 'b * 'c * 'd) decoder
+
+val delay : (unit -> 'a decoder) -> 'a decoder
+------------
+
+== Description
+
+`[.kw]#exception# JSONError [.kw]#of# exn * JSON.value`::
+  [[exn:JSONError]]
+  raised when an error is detected during processing of a JSON value.
+  The first argument, which is one of the exceptions described below,
+  details the type of error and the second argument is the value that
+  was being processed at the point of the error.
+
+`[.kw]#exception# NotNull [.kw]#of# JSON.value`::
+  [[exn:NotNull]]
+  used by the xref:val:null[`null`] decoder when the argument
+  is not the *JSON* `null` value.
+
+`[.kw]#exception# NotBool [.kw]#of# JSON.value`::
+  [[exn:NotBool]]
+  used by the xref:val:bool[`bool`] decode when the argument
+  is not a *JSON* boolean.
+  This exception is the same as
+  xref:str-JSONUtil#exn:NotBool[`JSONUtil.NotBool`].
+
+`[.kw]#exception# NotInt [.kw]#of# JSON.value`::
+  [[exn:NotInt]]
+  used by the xref:val:int[`int`] and xref:val:intInf[`intInf`]
+  decoders when the argument is not a *JSON* integer number.
+  This exception is the same as
+  xref:str-JSONUtil#exn:NotInt[`JSONUtil.NotInt`].
+
+`[.kw]#exception# NotNumber [.kw]#of# JSON.value`::
+  [[exn:NotNumber]]
+  used by the xref:val:number[`number`] decoder when the argument
+  is not a *JSON* number.
+  This exception is the same as
+  xref:str-JSONUtil#exn:NotNumber[`JSONUtil.NotNumber`].
+
+`[.kw]#exception# NotString [.kw]#of# JSON.value`::
+  [[exn:NotString]]
+  used by the xref:val:string[`string`] decoder when the argument
+  is not a *JSON* string.
+  This exception is the same as
+  xref:str-JSONUtil#exn:NotString[`JSONUtil.NotString`].
+
+`[.kw]#exception# NotObject [.kw]#of# JSON.value`::
+  [[exn:NotObject]]
+  used by the xref:val:field[`field`] decoder when the
+  argument is not a *JSON* object.
+  This exception is the same as
+  xref:str-JSONUtil#exn:NotObject[`JSONUtil.NotObject`].
+
+`[.kw]#exception# FieldNotFound [.kw]#of# JSON.value * string`::
+  [[exn:FieldNotFound]]
+  This exception is used by the xref:val:field[`field`] decoder
+  when the given field is not found in an object.
+  This exception is the same as
+  xref:str-JSONUtil#exn:FieldNotFound[`JSONUtil.FieldNotFound`].
+
+`[.kw]#exception# NotArray [.kw]#of# JSON.value`::
+  [[exn:NotArray]]
+  This exception is used by the xref:val:array[`array`] decoder
+  when the argument is not a *JSON* array.
+  This exception is the same as
+  xref:str-JSONUtil#exn:NotArray[`JSONUtil.NotArray`].
+
+`[.kw]#exception# ArrayBounds [.kw]#of# JSON.value * int`::
+  [[exn:ArrayBounds]]
+  This exception is used when access to an array value is out of bounds.
+  This exception is the same as
+  xref:str-JSONUtil#exn:ArrayBounds[`JSONUtil.ArrayBounds`].
+
+`[.kw]#val# exnMessage : exn \-> string`::
+  `exnMessage exn` returns an error-message string for the exception value
+  `exn`.  This function produces specialized messages for the
+  xref:exn:JSONError[`JSONError`] wrapped around the other exceptions defined
+  in this structure (or the {sml-basis-url}/general.html#SIG:GENERAL.Fail:EXN[`Fail`]
+  exception).  It falls back to the
+  {sml-basis-url}/general.html#SIG:GENERAL.exnMessage:VAL[General.exnMessage]
+  function for other exceptions.
+
+`[.kw]#type# 'a decoder'`::
+  the type of a decoder that decodes a *JSON* value to a value of type ``'a``.
+
+`[.kw]#val# decode : 'a decoder \-> JSON.value \-> 'a`::
+  `decode d jv` decodes the *JSON* value `jv` using the decoder `d`.
+  Failure to decode will be signaled by raising an exception that depends on the
+  decoder and value.
+
+`[.kw]#val# decodeString : 'a decoder \-> string \-> 'a`::
+  `decode d s` decodes the *JSON* value that results from parsing the string `s`.
+
+`[.kw]#val# decodeFile : 'a decoder \-> string \-> 'a`::
+  `decode d f` decodes the *JSON* value that results from parsing the file `f`.
+
+`[.kw]#val# bool : bool decoder`::
+  decodes a *JSON* Boolean value.  This decoder raises the
+  exception value `JSONError(NotBool, jv)` if the value `jv`
+  is not a *JSON* Boolean.
+
+`[.kw]#val# int : int decoder`::
+  decodes a *JSON* integer value.  This decoder raises the
+  exception value `JSONError(NotInt, jv)` if the argument `jv` is not a
+  *JSON* integer value and the
+  {sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN[`Overflow`]
+  exception if the integer is too large to be represented as an `Int.int`.
+
+`[.kw]#val# intInf : IntInf.int decoder`::
+  decodes a *JSON* integer value.  This decoder raises the exception
+  value `JSONError(NotInt, jv)` if the argument `jv` is not a *JSON*
+  integer value.
+
+`[.kw]#val# number : Real64.real decoder`::
+  decodes a *JSON* number value.  This decoder raises the
+  exception value `JSONError(NotNumber, jv)` if the value `jv`
+  is not a *JSON* number.
+
+`[.kw]#val# string : string decoder`::
+  decodes a *JSON* string value.  This decoder raises the
+  exception value `JSONError(NotString, jv)` if the argument `jv` is not a
+  *JSON* string.
+
+`[.kw]#val# null : 'a \-> 'a decoder`::
+  `null v` returns a decoder for the *JSON* `null` value.  When used to decode
+  a `null` value, it will return its argument `v`; otherwise it will raise the
+  exception value `JSONError(NotNull, jv)` when the argument `jv` is not a
+  *JSON* null value.
+
+`[.kw]#val# raw : JSON.value decoder`::
+  this decoder returns the raw *JSON* value that it is applied to (_i.e._, it
+  is the identity decoder).
+
+`[.kw]#val# nullable : 'a decoder \-> 'a option decoder`::
+  `nullable d` returns a decoder that maps `null` to `NONE` and otherwise applies
+  `SOME` to the result of decoding the value using the decoder `d`.
+
+`[.kw]#val# try : 'a decoder \-> 'a option decoder`::
+  `try d` returns a decoder that attempts to decode its argument using the decoder
+  `d`.  If it fails, then `NONE` is returned.  Otherwise, `SOME` is applied to
+  the result od decoding the value.
+
+`[.kw]#val# seq : 'a decoder -> ('a \-> 'b) decoder \-> 'b decoder`::
+  `seq d k` sequences decoding operations in a continuation-passing style.
+
+`[.kw]#val# field : string \-> 'a decoder \-> 'a decoder`::
+  `field lab d` returns a decoder that decodes the object field with the
+  label `lab` using the decoder `d`.  It will raise the exception value
+  `JSONError(NotObject, v)` when the argument `v` is not a *JSON* object and the
+  exception value `JSONError(FieldNotFound lab, v)`, when `v` does not have
+  a field with the specified label.
+
+`[.kw]#val# reqField : string \-> 'a decoder \-> ('a \-> 'b) decoder \-> 'b decoder`::
+  `reqField lab d k` returns a decoder for a required object field that can be
+  sequenced in a continuation-passing style (it is equivalent to `seq (field lab d) k`).
+  It will raise the exception value `JSONError(NotObject, v)` when the argument `v`
+  is not a *JSON* object and the exception value  `JSONError(FieldNotFound lab, v)`
+  when `v` does not have a field with the specified label.
+
+`[.kw]#val# optField : string \-> 'a decoder \-> ('a option \-> 'b) decoder \-> 'b decoder`::
+  `optField lab d k` returns a decoder for an optional object field that can be
+  sequenced in a continuation-passing style.  If the field is not present in the
+  object, then `NONE` is passed to `k`.
+
+`[.kw]#val# dfltField : string \-> 'a decoder \-> 'a \-> ('a \-> 'b) decoder \-> 'b decoder`::
+  `dfltField lab d dflt k` returns a decoder for an optional object field that can be
+  sequenced in a continuation-passing style.  If the field is not present in the
+  object, then `dflt` is passed to `k`.
+
+`[.kw]#val# array : 'a decoder \-> 'a list decoder`::
+  `array d` returns a decoder that when applied to a *JSON* array, will decode
+  the elements of the array using the decoder `d` and return the result as a
+  list.  It raises the exception value `JSONError(NotArray, jv)` if the
+  argument `jv` is not a *JSON* array.
+
+`[.kw]#val# sub : int \-> 'a decoder \-> 'a decoder`::
+  `sub i d` returns a decoder that when given a *JSON* array, decodes the ``i``'th
+  element of the array using the decoder `d`.  This decoder will raise the
+  exception value `JSONError(NotArray, jv)` if the argument `jv` is not a *JSON* array,
+  and the exception value `JSONError(ArrayBounds i, jv)` if the index `i` is out of
+  bounds for the array.
+
+`[.kw]#val# at : JSONUtil.path \-> 'a decoder \-> 'a decoder`::
+  `at path d` returns a decoder that uses the path to select a value
+  from its argument (see xref:str-JSONUtil.adoc#val:get[`JSONUtil.get`])
+  and then decodes that value using the decoder `d`.
+
+`[.kw]#val# succeed : 'a \-> 'a decoder`::
+  `succeed v` returns a decoder that always yields `v` for any argument.
+
+`[.kw]#val# fail : string \-> 'a decoder`::
+  `fail msg` returns a decoder that raises `JSONError(Fail msg, jv)` for
+  any *JSON* input `jv`.
+
+`[.kw]#val# andThen : ('a \-> 'b decoder) \-> 'a decoder \-> 'b decoder`::
+  `andThen f d` returns a decoder that first uses `d` to decode a value `v`
+  from its argument and then returns the result of applying `f` to `v`.
+
+`[.kw]#val# orElse : 'a decoder * 'a decoder \-> 'a decoder`::
+  `orElse (d1, d2)` returns a decoder that tries to decode its argument using
+  the decoder d1` and, if that fails, tries to decode the argument using `d2`.
+
+`[.kw]#val# choose : 'a decoder list \-> 'a decoder`::
+  `choose ds` returns a decoder that tries to decode its argument
+  using each of the decoders in the list `ds`, returning the first successful result.
+  If all of the decoders fail, then the exception value
+  `JSONError(Fail "no choice", jv)` is raised, where `jv` is the *JSON* value being
+  decoded.  The expression `choose [d1, ..., dn]` is equivalent to
++
+[source,sml]
+------------
+orElse(d1, orElse(d2, ..., orElse(dn, fail "no choice") ... ))
+------------
+
+`[.kw]#val# map : ('a \-> 'b) \-> 'a decoder \-> 'b decoder`::
+  `map f d` returns a decoder that applies the function `f` to the result
+  of decoding a *JSON* value using the decoder `d`.
+
+`[.kw]#val# map2 : ('a * 'b \-> 'res) \-> ... \-> 'res decoder`::
+
+`[.kw]#val# map3 : ('a * 'b * 'c \-> 'res) \-> ... \-> 'res decoder`::
+
+`[.kw]#val# map4 : ('a * 'b * 'c * 'd \-> 'res) \-> ... \-> 'res decoder`::
+
+`[.kw]#val# tuple2 : ('a decoder * 'b decoder) \-> ('a * 'b) decoder`::
+  `tuple2 (d1, d2)` is equivalent to `map2 Fn.id (d1, d2)`.
+
+`[.kw]#val# tuple3 : ('a decoder * 'b decoder * 'c decoder) \-> ('a * 'b * 'c) decoder`::
+  `tuple3 (d1, d2, d3)` is equivalent to `map2 Fn.id (d1, d2, d3)`.
+
+`[.kw]#val# tuple4 : ('a decoder * 'b decoder * 'c decoder * 'd decoder) \-> ('a * 'b * 'c * 'd) decoder`::
+  `tuple4 (d1, d2, d3, d4)` is equivalent to `map4 Fn.id (d1, d2, d3, d4)`.
+
+`[.kw]#val# delay : (unit \-> 'a decoder) \-> 'a decoder`::
+  `delay f` returns a decoder that delays the application of `f` to produce the
+  decoder and can be used to define recursive decoders.
+  The expression `delay f` is equivalent to `andThen f (succeed ())`.
+
+== Discussion
+
+A number of these combinators work best when composed using a infix `pipe` operator.
+For example:
+[source,sml]
+------------
+fun |> (x, f) = f x
+infix |>
+
+val d = succeed (fn (n : string) => fn (a : int) => {name=n, age=a})
+        |> reqField "name" string
+        |> reqField "age" int
+------------
+
+== See Also
+
+xref:str-JSON.adoc[`JSON`],
+xref:str-JSON.adoc[`JSONUtil`],
+xref:json-lib.adoc[__The JSON Library__]
