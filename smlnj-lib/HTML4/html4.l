@@ -54,7 +54,7 @@ val scanHex = #1 o valOf o IntInf.scan StringCvt.HEX Substring.getc
 <COM2>">" => (addStr yytext; YYBEGIN INITIAL; COMMENT (getStr()));
 <COM2>\n => (addStr yytext; continue());
 <COM2>{ws}+ => (addStr yytext; continue());
-<COM2>. => (raise (Fail ("Unexpected text in comment: \"" ^ yytext ^ "\"")));
+<COM2>. => (raise Fail(concat["Unexpected text in comment: \"", yytext, "\""]));
 
 (* Doctype *)
 
@@ -78,6 +78,8 @@ val scanHex = #1 o valOf o IntInf.scan StringCvt.HEX Substring.getc
 <INITIAL>"&" => (PCDATA yytext);
 
 <INITIAL>[^<&]+ => (PCDATA yytext);
+
+<INITIAL>. => (raise Fail(concat["Unexpected character '", yytext, "'"]));
 
 (* ______________________________________________________________________
    End of html4.l
