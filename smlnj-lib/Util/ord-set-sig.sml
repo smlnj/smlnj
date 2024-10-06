@@ -15,133 +15,124 @@ signature ORD_SET =
     type item = Key.ord_key
     type set
 
+    (* the empty set *)
     val empty : set
-	(* The empty set *)
 
+    (* create a singleton set *)
     val singleton : item -> set
-	(* Create a singleton set *)
 
+    (* create a set from a list of items *)
     val fromList : item list -> set
-	(* create a set from a list of items *)
 
+    (* return an ordered list of the items in the set.
+     * Added in SML/NJ 110.80
+     *)
     val toList : set -> item list
-	(* Return an ordered list of the items in the set.
-         * Added in SML/NJ 110.80.
-         *)
 
+    (* add an item. *)
     val add  : set * item -> set
     val add' : (item * set) -> set
-	(* Add an item. *)
 
+    (* add a list of items. *)
     val addList : set * item list -> set
-	(* Add a list of items. *)
 
+    (* subtract an item from a set; has no effect if the item is not in the set *)
     val subtract  : set * item -> set
     val subtract' : (item * set) -> set
-	(* Subtract an item from a set; has no effect if the item is not in the set *)
 
+    (* subtract a list of items from the set. *)
     val subtractList : set * item list -> set
-	(* Subtract a list of items from the set. *)
 
+    (* delete an item from the set. Raise NotFound if not found. *)
     val delete : set * item -> set
-	(* Remove an item. Raise NotFound if not found. *)
 
+    (* return true if and only if item is an element in the set *)
     val member : set * item -> bool
-	(* Return true if and only if item is an element in the set *)
 
+    (* return true if and only if the set is empty *)
     val isEmpty : set -> bool
-	(* Return true if and only if the set is empty *)
 
+    (* return the smallest element of the set (raises Empty if the set is empty).
+     * Added in SML/NJ 110.80.
+     *)
     val minItem : set -> item
-	(* return the smallest element of the set (raises Empty if the set is empty).
-         * Added in SML/NJ 110.80.
-         *)
 
+    (* return the largest element of the set (raises Empty if the set is empty).
+     * Added in SML/NJ 110.80.
+     *)
     val maxItem : set -> item
-	(* return the largest element of the set (raises Empty if the set is empty).
-         * Added in SML/NJ 110.80.
-         *)
 
+    (* return true if and only if the two sets are equal *)
     val equal : (set * set) -> bool
-	(* Return true if and only if the two sets are equal *)
 
+    (* lexical comparison of two sets *)
     val compare : (set * set) -> order
-	(* does a lexical comparison of two sets *)
 
+    (* Return true if and only if the first set is a subset of the second *)
     val isSubset : (set * set) -> bool
-	(* Return true if and only if the first set is a subset of the second *)
 
+    (* are the two sets disjoint? *)
     val disjoint : set * set -> bool
-	(* are the two sets disjoint? *)
 
+    (* return the number of items in the set *)
     val numItems : set ->  int
-	(* Return the number of items in the set *)
 
+    (* return the union of two sets *)
     val union : set * set -> set
-        (* Union *)
 
+    (* return the intersection of two sets *)
     val intersection : set * set -> set
-        (* Intersection *)
 
+    (* return the difference of two sets (i.e., the second subtracted from the first) *)
     val difference : set * set -> set
-        (* Difference *)
 
+    (* combine two sets using the given predicate; this function is a generalization
+     * of the `union`, `intersection`, and `difference` operations.
+     * Added in SML/NJ 110.99.6
+     *)
     val combineWith : (item * bool * bool -> bool) -> set * set -> set
-        (* combine two sets using the given predicate; this function is a generalization
-         * of the `union`, `intersection`, and `difference` operations.
-         *)
 
+    (* create a new set by applying a map function to the elements of the set. *)
     val map : (item -> item) -> set -> set
-	(* Create a new set by applying a map function to the elements
-	 * of the set.
-         *)
 
+    (* create a new set by mapping a partial function over the items in the set. *)
     val mapPartial : (item -> item option) -> set -> set
-	(* Create a new set by mapping a partial function over the
-	 * items in the set.
-	 *)
 
+    (* apply a function to the entries of the set in increasing order *)
     val app : (item -> unit) -> set -> unit
-	(* Apply a function to the entries of the set
-         * in increasing order
-         *)
 
+    (* apply a folding function to the entries of the set in increasing order *)
     val foldl : (item * 'b -> 'b) -> 'b -> set -> 'b
-	(* Apply a folding function to the entries of the set
-         * in increasing order
-         *)
 
+    (* apply a folding function to the entries of the set in decreasing order *)
     val foldr : (item * 'b -> 'b) -> 'b -> set -> 'b
-	(* Apply a folding function to the entries of the set
-         * in decreasing order
-         *)
 
+    (* partition a set into two based using the given predicate.  Returns two
+     * sets, where the first contains those elements for which the predicate is
+     * true and the second contains those elements for which the predicate is
+     * false.
+     *)
     val partition : (item -> bool) -> set -> (set * set)
-	(* partition a set into two based using the given predicate.  Returns two
-	 * sets, where the first contains those elements for which the predicate is
-	 * true and the second contains those elements for which the predicate is
-	 * false.
-	 *)
 
+    (* filter a set by the given predicate returning only those elements for
+     * which the predicate is true.
+     *)
     val filter : (item -> bool) -> set -> set
-	(* filter a set by the given predicate returning only those elements for
-	 * which the predicate is true.
-	 *)
 
+    (* check the elements of a set with a predicate and return true if
+     * any element satisfies the predicate. Return false otherwise.
+     * Elements are checked in key order.
+     *)
     val exists : (item -> bool) -> set -> bool
-	(* check the elements of a set with a predicate and return true if
-	 * any element satisfies the predicate. Return false otherwise.
-	 * Elements are checked in key order.
-	 *)
 
+    (* check the elements of a set with a predicate and return true if
+     * they all satisfy the predicate. Return false otherwise.  Elements
+     * are checked in key order.
+     *)
     val all : (item -> bool) -> set -> bool
-	(* check the elements of a set with a predicate and return true if
-	 * they all satisfy the predicate. Return false otherwise.  Elements
-	 * are checked in key order.
-	 *)
 
+    (* find an element in the set for which the predicate is true *)
     val find : (item -> bool) -> set -> item option
-	(* find an element in the set for which the predicate is true *)
 
   (* DEPRECATED FUNCTIONS *)
     val listItems : set -> item list
