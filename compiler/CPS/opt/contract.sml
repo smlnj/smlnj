@@ -1,6 +1,6 @@
 (* contract.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -82,6 +82,7 @@ exception ConstFold
 
 fun map1 f (a,b) = (f a, b)
 
+(* propagate the LVar name of `y` (if any) to `x`` *)
 fun sameName (x, VAR y) = LV.sameName(x,y)
   | sameName (x, LABEL y) = LV.sameName(x,y)
   | sameName _ = ()
@@ -184,8 +185,8 @@ datatype info = datatype ContractPrim.info
       }
   | RECinfo of record_kind * (value * accesspath) list
   | SELinfo of int * value * cty
-  | OFFinfo of int * value
-  | WRPinfo of P.numkind * value				(* P.wrap of a value *)
+  | ARITHinfo of CPS.P.arith * value list
+  | PUREinfo of CPS.P.pureop * value list
   | IFIDIOMinfo of {body : (lvar * cexp * cexp) option ref}
   | MISCinfo of cty
 *)
@@ -200,22 +201,27 @@ val debug = !Control.CG.debugcps (* false *)
 fun debugprint s = if debug then Control.Print.say(s) else ()
 fun debugflush() = if debug then Control.Print.flush() else ()
 
-local exception UsageMap
-in  val m : {info: info, used : int ref, called : int ref}
-		LV.Tbl.hash_table =
-	        LV.Tbl.mkTable(128, UsageMap)
-    val get = fn i => LV.Tbl.lookup m i
-	        handle UsageMap => bug ("UsageMap on " ^ LV.prLvar i)
-    val enter = LV.Tbl.insert m
-    fun rmv i = ignore (LV.Tbl.remove m i) handle _ => ()
-end
+local
+  exception UsageMap
+  val m : {info: info, used : int ref, called : int ref} LV.Tbl.hash_table =
+        LV.Tbl.mkTable(128, UsageMap)
+  val find = LV.Tbl.find m
+in
+fun numLVars () = LV.Tbl.numItems m
+fun get lv = (case find lv
+       of NONE => bug(concat["UsageMap on v", LV.prLvar lv])
+        | SOME v => v
+      (* end case *))
+val enter = LV.Tbl.insert m
+fun rmv i = ignore (LV.Tbl.remove m i) handle _ => ()
+end (* local *)
 
 fun use (VAR v) = inc(#used(get v))
   | use (LABEL v) = inc(#used(get v))
   | use _ = ()
-fun use_less (VAR v) = if deadup then dec(#used(get v)) else ()
-  | use_less (LABEL v) = if deadup then dec(#used(get v)) else ()
-  | use_less _ = ()
+fun useLess (VAR v) = if deadup then dec(#used(get v)) else ()
+  | useLess (LABEL v) = if deadup then dec(#used(get v)) else ()
+  | useLess _ = ()
 fun usedOnce v = !(#used(get v)) = 1
 fun used v = !(#used(get v)) > 0
 
@@ -225,13 +231,13 @@ fun call(VAR v) =
     end
   | call(LABEL v) = call(VAR v)
   | call _ = ()
-fun call_less(VAR v) = if deadup then
+fun callLess(VAR v) = if deadup then
                          let val {called,used,...} = get v
 			 in  dec called; dec used
 			 end
 		       else ()
-  | call_less(LABEL v) = call_less(VAR v)
-  | call_less _ = ()
+  | callLess(LABEL v) = callLess(VAR v)
+  | callLess _ = ()
 fun call_and_clobber(VAR v) =
     let val {called,used,info} = get v
     in  inc called; inc used;
@@ -247,42 +253,46 @@ fun enterREC(w,kind,vl) = enter(w,{info=RECinfo(kind,vl), called=ref 0,used=ref 
 fun enterMISC (w,ct) = enter(w,{info=MISCinfo ct, called=ref 0, used=ref 0})
 val miscBOG = MISCinfo CPSUtil.BOGt
 fun enterMISC0 w = enter(w,{info=miscBOG, called=ref 0, used=ref 0})
-fun enterWRP (w, kind, u) = enter(w, {info=WRPinfo(kind, u), called=ref 0, used=ref 0})
-
-fun enterFN (_,f,vl,cl,cexp) =
-      (enter(f,{called=ref 0,used=ref 0,
-		info=FNinfo{args=vl,
-			    body=ref(if CGbetacontract then SOME cexp
-				     else NONE),
-			    specialuse=ref NONE,
-			    liveargs=ref NONE}});
-       ListPair.appEq enterMISC (vl, cl))
-
-(* for `w = CAST arg`, we treat it as identity if arg is interesting *)
-fun enterCAST (w, arg) = (case get arg
+fun enterARITH (w, p, vs) = enter(w, {info=ARITHinfo(p, vs), called=ref 0, used=ref 0})
+fun enterPURE (w, P.CAST, [VAR v]) = (
+    (* for `w = CAST arg`, we treat it as identity if `v` is interesting *)
+      case get v
        of {info=MISCinfo _, ...} => enterMISC0 w
 	| {info, ...} => enter(w, {info=info, called=ref 0, used=ref 0})
       (* end case *))
+  | enterPURE (w, p, vs) = enter(w, {info=PUREinfo(p, vs), called=ref 0, used=ref 0})
+
+fun enterFN (_,f,vl,cl,cexp) = (
+      enter (f, {
+          called=ref 0,used=ref 0,
+          info=FNinfo{
+              args=vl,
+              body=ref(if CGbetacontract then SOME cexp else NONE),
+              specialuse=ref NONE,
+              liveargs=ref NONE
+            }
+        });
+      ListPair.appEq enterMISC (vl, cl))
 
 (*********************************************************************
    checkFunction: used by pass1(FIX ...) to decide
    (1) whether a function will be inlined for the if idiom;
    (2) whether a function will drop some arguments.
  *********************************************************************)
-fun checkFunction(_,f,vl,_,_) =
- (case get f
-    of {called=ref 2,used=ref 2,
-	info=FNinfo{specialuse=ref(SOME(ref 1)),
-		    body as ref(SOME(BRANCH(_,_,c,a,b))),...},...} =>
-	   if not (!CG.ifidiom) then body:=NONE
-	   else (* NOTE: remapping f *)
-	        enter(f,{info=IFIDIOMinfo{body=ref(SOME(c,a,b))},
-			 called=ref 2, used=ref 2})
-     | {called=ref c,used=ref u,info=FNinfo{liveargs,...}} =>
-	   if u<>c (* escaping function *)
-	       orelse not(!CG.dropargs) then ()
-	   else liveargs := SOME(map used vl)
-     | _  => ())
+fun checkFunction(_, f, vl, _, _) = (case get f
+       of {called=ref 2,used=ref 2,
+           info=FNinfo{specialuse=ref(SOME(ref 1)),
+                       body as ref(SOME(BRANCH(_,_,c,a,b))),...},...} =>
+              if not (!CG.ifidiom) then body:=NONE
+              else (* NOTE: remapping f *)
+                   enter(f,{info=IFIDIOMinfo{body=ref(SOME(c,a,b))},
+                            called=ref 2, used=ref 2})
+        | {called=ref c,used=ref u,info=FNinfo{liveargs,...}} =>
+              if u<>c (* escaping function *)
+                  orelse not(!CG.dropargs) then ()
+              else liveargs := SOME(map used vl)
+        | _  => ()
+      (* end case *))
 
 
 (**************************************************************************)
@@ -299,7 +309,6 @@ fun pass1 cexp = let
 		  enter(w,{info=SELinfo(i,v,ct), called=ref 0, used=ref 0});
 		  use v; p1 noInline e)
 	      | OFFSET (i,v,w,e) => (
-		  enter(w,{info=OFFinfo(i,v), called=ref 0, used=ref 0});
 		  use v; p1 noInline e)
 	      | APP(f, vl) => (
 		  if noInline
@@ -344,14 +353,14 @@ fun pass1 cexp = let
 		  app use vl; p1 noInline e)
 	      | LOOKER(i,vl,w,_,e) => (
 		  app use vl; enterMISC0 w; p1 noInline e)
-	      | ARITH(i,vl,w,_,e) => (
-		  app use vl; enterMISC0 w; p1 noInline e)
-	      | PURE(P.CAST, [VAR x], w, _, e) => (
-		  inc(#used(get x)); enterCAST(w, x); p1 noInline e)
-	      | PURE(P.WRAP kind, [u], w, _, e) => (
-		  use u; enterWRP(w, kind, u); p1 noInline e)
-	      | PURE(i,vl,w,_,e) => (
-		  app use vl; enterMISC0 w; p1 noInline e)
+              | ARITH(p, vl, w, _, e) => (
+                  app use vl;
+                  enterARITH (w, p, vl);
+                  p1 noInline e)
+              | PURE(p, vl, w, _, e) => (
+                  app use vl;
+                  enterPURE (w, p, vl);
+                  p1 noInline e)
 	      | RCC(k,l,p,vl,wtl,e) => (
 		  app use vl; app (enterMISC0 o #1) wtl; p1 noInline e)
 	    (* end case *))
@@ -363,11 +372,11 @@ fun pass1 cexp = let
 local
   exception Beta
   val m2 : value LV.Tbl.hash_table = LV.Tbl.mkTable(32, Beta)
-  val mapm2 = LV.Tbl.lookup m2
+  val mapm2 = LV.Tbl.find m2
 in
 
-fun ren(v0 as VAR v) = (ren(mapm2 v) handle Beta => v0)
-  | ren(v0 as LABEL v) = (ren(mapm2 v) handle Beta => v0)
+fun ren (v0 as VAR v) = (case mapm2 v of SOME v' => ren v' | NONE => v0)
+  | ren (v0 as LABEL v) = (case mapm2 v of SOME v' => ren v' | NONE => v0)
   | ren x = x
 
 fun newname (vw as (v,w)) = let
@@ -395,21 +404,21 @@ fun newnames(v::vl, w::wl) = (newname(v,w); newnames(vl,wl))
 (* counts of the free variables of the function.                     *)
 (* This should match up closely with pass1 above.                    *)
 (*********************************************************************)
-local val use_less = use_less o ren
-      val call_less = call_less o ren
+local val useLess = useLess o ren
+      val callLess = callLess o ren
 in
-fun drop_body (APP(f,vl)) = (call_less f; app use_less vl)
-  | drop_body (SELECT(_,v,_,_,e)) = (use_less v; drop_body e)
-  | drop_body (OFFSET(_,v,_,e)) = (use_less v; drop_body e)
-  | drop_body (RECORD(_,vl,_,e)) = (app (use_less o #1) vl; drop_body e)
+fun drop_body (APP(f,vl)) = (callLess f; app useLess vl)
+  | drop_body (SELECT(_,v,_,_,e)) = (useLess v; drop_body e)
+  | drop_body (OFFSET(_,v,_,e)) = (useLess v; drop_body e)
+  | drop_body (RECORD(_,vl,_,e)) = (app (useLess o #1) vl; drop_body e)
   | drop_body (FIX(l,e)) = (app (drop_body o #5) l; drop_body e)
-  | drop_body (SWITCH(v,_,el)) = (use_less v; app drop_body el)
-  | drop_body (BRANCH(_,vl,_,e1,e2)) = (app use_less vl; drop_body e1; drop_body e2)
-  | drop_body (SETTER(_,vl,e)) = (app use_less vl; drop_body e)
-  | drop_body (LOOKER(_,vl,_,_,e)) = (app use_less vl; drop_body e)
-  | drop_body (ARITH(_,vl,_,_,e)) = (app use_less vl; drop_body e)
-  | drop_body (PURE(_,vl,_,_,e)) = (app use_less vl; drop_body e)
-  | drop_body (RCC(_,_,_,vl,_,e)) = (app use_less vl; drop_body e)
+  | drop_body (SWITCH(v,_,el)) = (useLess v; app drop_body el)
+  | drop_body (BRANCH(_,vl,_,e1,e2)) = (app useLess vl; drop_body e1; drop_body e2)
+  | drop_body (SETTER(_,vl,e)) = (app useLess vl; drop_body e)
+  | drop_body (LOOKER(_,vl,_,_,e)) = (app useLess vl; drop_body e)
+  | drop_body (ARITH(_,vl,_,_,e)) = (app useLess vl; drop_body e)
+  | drop_body (PURE(_,vl,_,_,e)) = (app useLess vl; drop_body e)
+  | drop_body (RCC(_,_,_,vl,_,e)) = (app useLess vl; drop_body e)
 end (* local *)
 
 fun setter (P.UPDATE, [_, _, NUM{ty={tag=true, ...}, ...}]) = P.UNBOXEDUPDATE
@@ -420,22 +429,8 @@ fun setter (P.UPDATE, [_, _, NUM{ty={tag=true, ...}, ...}]) = P.UNBOXEDUPDATE
 fun sameLvar(lvar, VAR lv) = lv = lvar
   | sameLvar _ = false
 
-(* precondition for fusing fixed-size conversions *)
-fun cvtPreCondition (n:int, n2, x, v2) =
-      n = n2 andalso usedOnce x andalso sameLvar(x, ren v2)
-(* precondition for fusing IntInf conversions *)
-fun cvtInfPrecondition (x, v2) =
-      usedOnce x andalso sameLvar(x, ren v2)
-(* precondition for fusing a TEST_INF conversion to produce a TEST.  If the source is
- * 64-bits and we are on a 32-bit target, then we cannot do the fusion, since we
- * do not have a handle on the Core function that actually does the 64-bit
- * test.
- *)
-fun test64On32 64 = Target.is64
-  | test64On32 _ = true
-
 (* contraction for primops *)
-val arith = ContractPrim.arith
+val arith = ContractPrim.arith get
 val pure = ContractPrim.pure get
 val branch = ContractPrim.branch get
 
@@ -448,7 +443,7 @@ and g hdlr = let
 		  val vl' = map (map1 ren) vl
 		  in
 		    if !used=0 andalso !CG.deadvars
-		      then (click "b"; app (use_less o #1) vl'; g' e)
+		      then (click "b"; app (useLess o #1) vl'; g' e)
 		      else let
 		      (* Check to see if this record is recreating an existing record.
 		       * We need to be careful that the existing record has the same
@@ -490,12 +485,12 @@ and g hdlr = let
 			        val e' = g' e
 				in
 				  if !used=0 andalso deadup
-				    then (click "B1"; app use_less vl''; e')
+				    then (click "B1"; app useLess vl''; e')
 				    else RECORD(kind, vl', w, e')
 				end
 			     | SOME z => (
 				newname(w,z); click "B2"; (*** ? ***)
-				app use_less vl''; g' e)
+				app useLess vl''; g' e)
 		       end
 		  end
 	      | SELECT(i,v,w,t,e) => let
@@ -505,7 +500,7 @@ and g hdlr = let
 		    if !used=0 andalso !CG.deadvars
 		      then (
 			click "c"; (* could rmv w here *)
-			use_less v';
+			useLess v';
 			g' e)
 		      else let
 			val z = if !CG.selectopt
@@ -530,13 +525,13 @@ and g hdlr = let
 				val e' = g' e
 				in
 				  if !used=0 andalso deadup
-				    then (click "s"; use_less v'; e')
+				    then (click "s"; useLess v'; e')
 				    else SELECT(i,v',w,t,e')
 				end
 			    | SOME z' => (
 				newname(w, z');
 				click "d"; (* could rmv w here *)
-				use_less v';
+				useLess v';
 				g' e)
 			  (* end case *)
 			end
@@ -566,8 +561,8 @@ and g hdlr = let
 				    case body
 				     of ref(SOME b) => (
 					  newnames(args, vl');
-					  call_less f';
-					  app use_less vl';
+					  callLess f';
+					  app useLess vl';
 					  body := NONE;
 					  g' b)
 				      | _ => APP(f',newvl(!liveargs))
@@ -682,7 +677,7 @@ and g hdlr = let
 		  else LOOKER(P.GETHDLR,[],w,t,g (SOME(VAR w)) e)
 	      | SETTER(P.SETHDLR,[v],e as SETTER(P.SETHDLR,_,_)) => (
                   (* the second set overwrites the first one *)
-                  click "J"; use_less (ren v); g' e)
+                  click "J"; useLess (ren v); g' e)
 	      | SETTER(P.SETHDLR,[v],e) => let
 		  val v' = ren v
 		  val e' = g (SOME v') e
@@ -692,7 +687,7 @@ and g hdlr = let
 		    if !CG.handlerfold
 		      then (case hdlr
 			 of SOME v'' => if sameVar (v', v'')
-			      then (click "k"; use_less v''; e')
+			      then (click "k"; useLess v''; e')
 			      else SETTER(P.SETHDLR,[v'],e')
 			  | _ => SETTER(P.SETHDLR,[v'],e')
 			(* end case *))
@@ -708,265 +703,16 @@ and g hdlr = let
 		  val {used,...} = get w
 		  in
 		    if !used=0 andalso !CG.deadvars
-		      then (click "m"; app use_less vl'; g' e)
+		      then (click "m"; app useLess vl'; g' e)
 		      else let
 			val e' = g' e
 			in
 			  if !used=0 andalso deadup
-			    then (click "*"; app use_less vl'; e')
+			    then (click "*"; app useLess vl'; e')
 			    else LOOKER(i, vl', w, t, e')
 			end
 		  end
-	    (***** TEST *****)
-	      | ARITH(P.TEST{from=m, to=n}, [v], x, t, e) => let
-		  fun skip () = doArith (P.TEST{from=m, to=n}, [v], x, t, e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then ARITH(P.TEST{from=m, to=p}, [ren v], x2, t2, g' e2)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	      | ARITH(P.TEST{from=m, to=n}, [v, f], x, t, e) => let
-		(* this case is for m=64 on 32-bit systems *)
-		  fun skip () = doArith (P.TEST{from=m, to=n}, [v, f], x, t, e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then ARITH(P.TEST{from=m, to=p}, [ren v, ren f], x2, t2, g' e2)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** TESTU : word -> int *****)
-	      | ARITH(P.TESTU{from=m, to=n}, [v], x, t, e) => let
-		  fun skip () = doArith (P.TESTU{from=m, to=n}, [v], x, t, e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then ARITH(P.TESTU{from=m, to=p}, [ren v], x2, t2, g' e2)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	      | ARITH(P.TESTU{from=m, to=n}, [v, f], x, t, e) => let
-		(* this case is for m=64 on 32-bit systems *)
-		  fun skip () = doArith (P.TESTU{from=m, to=n}, [v, f], x, t, e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then ARITH(P.TESTU{from=m, to=p}, [ren v, ren f], x2, t2, g' e2)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** TEST_INF : intinf -> int *****)
-	      | ARITH(P.TEST_INF n, [v, f], x, t, e) => let
-		  fun skip () = ARITH(P.TEST_INF n, [ren v, ren f], x, t, g' e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then ARITH(P.TEST_INF p, [ren v, ren f], x2, t2, g' e2)
-			    else skip ()
-		      | ARITH(P.TEST{from=n2, to=p}, [v2, f2], x2, t2, e2) => (* 64 on 32 bit *)
-			  if cvtPreCondition (n, n2, x, v2)
-			    then (
-			      use_less f2;
-			      ARITH(P.TEST_INF p, [ren v, ren f], x2, t2, g' e2))
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** other ARITH cases *****)
 	      | ARITH arg => doArith arg
-	    (***** COPY : word -> int *****)
-	      | PURE(P.COPY{from=m, to=n}, [v], x, t, e) => let
-		  fun mkCOPY (from, to, x, t, e) =
-			if (from = to)
-			  then (newname(x, ren v); g' e)
-			  else doPure (P.COPY{from=from, to=to}, [v], x, t, e)
-		  fun mkEXTEND (from, to, v, x, t, e) = if (from = to)
-			then (newname(x, v); g' e)
-			else doPure (P.EXTEND{from=from, to=to}, [v], x, t, e)
-		  fun skip () = mkCOPY(m, n, x, t, e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (m < p)
-			    then mkCOPY(m, p, x2, t2, e2)
-			    else ARITH(P.TESTU{from=m, to=p}, [ren v], x2, t2, g' e2)
-		      | ARITH(P.TESTU{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (m < p)
-			    then mkCOPY(m, p, x2, t2, e2)
-			    else ARITH(P.TESTU{from=m, to=p}, [ren v], x2, t2, g' e2)
-		      | PURE(P.COPY{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then mkCOPY(m, p, x2, t2, e2)
-			    else skip ()
-		      | PURE(P.EXTEND{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			    else mkEXTEND(m, p, ren v, x2, t2, e2)
-		      | PURE(P.TRUNC{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (m <= p)
-			    then mkCOPY(m, p, x2, t2, e2)
-			    else PURE(P.TRUNC{from=m, to=p}, [ren v], x2, t2, g' e2)
-		      | PURE(P.COPY_INF n2, [v2, f], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then PURE(P.COPY_INF m, [ren v, ren f], x2, t2, g' e2)
-			    else skip ()
-		      | PURE(P.EXTEND_INF n2, [v2, f], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (m = n)
-			    then PURE(P.EXTEND_INF m, [ren v, ren f], x2, t2, g' e2)
-			    else PURE(P.COPY_INF m, [ren v, ren f], x2, t2, g' e2)
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** EXTEND *****)
-	      | PURE(P.EXTEND{from=m, to=n}, [v], x, t, e) => let
-		  fun mkEXTEND (from, to, x, t, e) = if (from = to)
-			then (newname(x, ren v); g' e)
-			else doPure( P.EXTEND{from=from, to=to}, [v], x, t, e)
-		  fun skip () = doPure (P.EXTEND{from=m, to=n}, [v], x, t, e)
-		  in
-		    case e
-		     of ARITH(P.TEST{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (p >= n)
-			    then mkEXTEND(m, p, x2, t2, e2)
-			    else ARITH(P.TEST{from=m, to=p}, [v2], x2, t2, g' e2)
-		      | ARITH(P.TESTU{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (p > n)
-			    then PURE(P.EXTEND{from=m, to=n}, [ren v], x2, t2, g' e2)
-			    else ARITH(P.TEST{from=m, to=p}, [v2], x2, t2, g' e2)
-		      | PURE(P.COPY{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (n2 = p)
-			    then mkEXTEND(m, p, x2, t2, e2)
-			    else skip ()
-		      | PURE(P.EXTEND{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then mkEXTEND(m, p, x2, t2, e2)
-			    else skip ()
-		      | PURE(P.TRUNC{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if not (cvtPreCondition (n, n2, x, v2))
-			    then skip ()
-			  else if (p >= m)
-			    then mkEXTEND(m, p, x2, t2, e2)
-			    else PURE(P.TRUNC{from=m, to=p}, [ren v], x2, t2, g' e2)
-		      | PURE(P.EXTEND_INF n2, [v2, f], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then PURE(P.EXTEND_INF m, [ren v, ren f], x2, t2, g' e2)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** TRUNC : int -> word *****)
-	      | PURE(P.TRUNC{from=m, to=n}, [v], x, t, e) => let
-		  fun skip () = doPure (P.TRUNC{from=m, to=n}, [v], x, t, e)
-		  in
-		    case e
-		     of PURE(P.TRUNC{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then PURE(P.TRUNC{from=m, to=p}, [ren v], x2, t2, g' e2)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** COPY_INF : word -> intinf *****)
-	      | PURE(P.COPY_INF m, [v, f], x, t, e) => let
-		  fun skip () = PURE(P.COPY_INF m, [ren v, ren f], x, t, g' e)
-		  in
-		    case e
-		     of ARITH(P.TEST_INF p, [v2, f2], x2, t2, e2) =>
-			  if not (cvtInfPrecondition (x, v2))
-			    then skip ()
-			  else if (p > m)
-			    then (
-			      use_less f; use_less f2;
-			      PURE(P.COPY{from=m, to=p}, [ren v], x2, t2, g' e2))
-			  else if test64On32 m
-			    then (
-			      use_less f; use_less f2;
-			      ARITH(P.TESTU{from=m, to=p}, [ren v], x2, t2, g' e2))
-			    else skip ()
-		      | PURE(P.TRUNC_INF p, [v2, f2], x2, t2, e2) =>
-			  if not (cvtInfPrecondition (x, v2))
-			    then skip ()
-			    else if (p >= m)
-			      then (
-				use_less f; use_less f2;
-				PURE(P.COPY{from=m, to=p}, [ren v], x2, t2, g' e2))
-			    else if test64On32 m
-			      then (
-				use_less f; use_less f2;
-				PURE(P.TRUNC{from=m, to=p}, [ren v], x2, t2, g' e2))
-			      else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** EXTEND_INF *****)
-	      | PURE(P.EXTEND_INF m, [v, f], x, t, e) => let
-		  fun mkEXTEND (from, to, v, x, t, e) = if (from = to)
-			then (newname(x, v); g' e)
-			else PURE(P.EXTEND{from=from, to=to}, [v], x, t, g' e)
-		  fun skip () = PURE(P.EXTEND_INF m, [ren v, ren f], x, t, g' e)
-		  in
-		    case e
-		     of ARITH(P.TEST_INF p, [v2, f2], x2, t2, e2) =>
-			  if not (cvtInfPrecondition (x, v2))
-			    then skip ()
-			    else if (p >= m)
-			      then (
-				use_less f; use_less f2;
-				mkEXTEND(m, p, ren v, x2, t2, e2))
-			    else if test64On32 m
-			      then (
-				use_less f; use_less f2;
-				ARITH(P.TEST{from=m, to=p}, [ren v], x2, t2, g' e2))
-			      else skip ()
-		      | PURE(P.TRUNC_INF p, [v2, f2], x2, t2, e2) =>
-			  if not (cvtInfPrecondition (x, v2))
-			    then skip ()
-			    else (
-			      use_less f; use_less f2;
-			      if (p < m)
-				then PURE(P.TRUNC{from=m, to=p}, [ren v], x2, t2, g' e2)
-				else mkEXTEND(m, p, ren v, x2, t2, e2))
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** TRUNC_INF *****)
-	      | PURE(P.TRUNC_INF n, [v, f], x, t, e) => let
-		  fun skip () = PURE(P.TRUNC_INF n, [ren v, ren f], x, t, g' e)
-		  in
-		    case e
-		     of PURE(P.TRUNC{from=n2, to=p}, [v2], x2, t2, e2) =>
-			  if cvtPreCondition (n, n2, x, v2)
-			    then PURE(P.TRUNC_INF p, [ren v, ren f], x, t, g' e)
-			    else skip ()
-		      | _ => skip ()
-		    (* end case *)
-		  end
-	    (***** other PURE cases *****)
 	      | PURE arg => doPure arg
 	    (***** RCC *****)
 	      | RCC(k,l,p,vl,wtl,e) =>
@@ -978,7 +724,7 @@ and g hdlr = let
 		  fun skip () = if !CG.branchfold andalso equalUptoAlpha(e1, e2)
 			  then (
 			    click "z";
-			    app use_less vl';
+			    app useLess vl';
 			    newname(c,tagInt 0);
 			    drop_body e2;
 			    g' e1)
@@ -1009,7 +755,7 @@ and g hdlr = let
 			    | _ => skip()
 			  (* end case *))
 		      | SOME b => (
-			   List.app use_less vl';
+			   List.app useLess vl';
 			   newname(c, tagInt 0);
 			   if b then (drop_body e2; g' e1) else (drop_body e1; g' e2))
 		    (* end case *)
@@ -1022,17 +768,24 @@ and g hdlr = let
 	      if !CG.arithopt
 		then (case arith(rator, vl')
 		   of Val v => (
-			List.app use_less vl';
+                        (* NOTE: `newname` will rename `v`, so we do not need to do that here *)
+			List.app useLess vl';
 			newname (w, v);
 			g' e)
-		    | Arith(rator', vl'') => (
-			List.app use_less vl';
-			List.app use vl'';
-			ARITH(rator', vl'', w, t, g' e))
-		    | Pure(rator', vl'') => (
-			List.app use_less vl';
-			List.app use vl'';
-			PURE(rator', vl'', w, t, g' e))
+		    | Arith(rator', args) => let
+                        val args = List.map ren args
+                        in
+                          List.app useLess vl';
+                          List.app use args;
+                          ARITH(rator', args, w, t, g' e)
+                        end
+		    | Pure(rator', args) => let
+                        val args = List.map ren args
+                        in
+                          List.app useLess vl';
+                          List.app use args;
+                          PURE(rator', args, w, t, g' e)
+                        end
 		    | None => ARITH(rator, vl', w, t, g' e)
 		  (* end case *))
 		else ARITH(rator, vl', w, t, g' e)
@@ -1045,22 +798,33 @@ and g hdlr = let
 		  val e' = g' e
 		  in
 		    if !used=0 andalso deadup
-		      then (List.app use_less vl'; click "*"; e')
+		      then (List.app useLess vl'; click "*"; e')
 		      else PURE(rator, vl', w, t, e')
 		  end
 	    in
 	      if !used=0 andalso !CG.deadvars
-		then (click "m"; List.app use_less vl'; g' e)
+		then (click "m"; List.app useLess vl'; g' e)
 	      else if !CG.arithopt
 		then (case pure(rator, vl')
 		   of Val v => (
-			List.app use_less vl';
-			newname(w, v);
-			g' e)
-		    | Pure(rator', vl'') => (
-			List.app use_less vl';
-			List.app use vl'';
-			PURE(rator', vl'', w, t, g' e))
+                        (* NOTE: `newname` will rename `v`, so we do not need to do that here *)
+                        List.app useLess vl';
+                        newname (w, v);
+                        g' e)
+		    | Arith(rator', args) => let
+                        val args = List.map ren args
+                        in
+                          List.app useLess vl';
+                          List.app use args;
+                          ARITH(rator', args, w, t, g' e)
+                        end
+		    | Pure(rator', args) => let
+                        val args = List.map ren args
+                        in
+                          List.app useLess vl';
+                          List.app use args;
+                          PURE(rator', args, w, t, g' e)
+                        end
 		    | _ => rest()
 		 (* end case *))
 		else rest()
@@ -1074,7 +838,7 @@ and g hdlr = let
 in  debugprint "Contract: "; debugflush();
     enterMISC0 fvar; app enterMISC0 fargs;
     pass1 cexp;
-    cpssize := LV.Tbl.numItems m;
+    cpssize := numLVars();
     let val cexp' = reduce cexp
     in  debugprint "\n";
 	if debug
