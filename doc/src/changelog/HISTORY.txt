@@ -103,6 +103,43 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2024/10/11]::
+Changed the startup behavior so that if the `@SMLquiet` command-line
+option is specified, then the banner is not printed.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/11]::
+Taking advantage of the previous change by moving the fusion of
+integer/word conversions to the `ContractPrim` structure.  This
+change means that conversions do not have to be adjacent in the
+CPS IR to be composed.  Also added some missing identities for
+the conversions.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/11]::
++
+Improved the tracing of variable bindings in contraction by adding
+the `ARITHinfo` and `PUREinfo` constructors (the `WRPinfo` constructor
+is rendered obsolete).  This change was motivated by the desire to
+eliminate a redundant range test from the code
++
+[[source,sml]
+------------
+fun byte2char w = chr (Word8.toInt w)
+------------
++
+It also allows for `WRAP(UNWRAP ...)` fusion.  In the future, we can
+also use this mechanism to move the numeric-conversion fusion operations
+to the `ContractPrim` structure, which will allow us to fuse compositions
+that are not adjacent in the IR.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2024/08/05]::
 +
 Renamed the *LLVM* submodule directory to include a version number
