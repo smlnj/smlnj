@@ -31,6 +31,7 @@ usage() {
   echo "developer options:"
   echo "    -debug-llvm   build a debug version of the LLVM libraries"
   echo "    -llvmdir dir  specify the path to the LLVM directory"
+  echo "    -build-cfgc   build the cfgc compiler"
   exit 1
 }
 
@@ -65,6 +66,7 @@ while [ "$#" != "0" ] ; do
       else
         usage
       fi ;;
+    -build-cfgc) BUILD_LLVM_FLAGS="-build-cfgc $BUILD_LLVM_FLAGS" ;;
     *) usage ;;
   esac
 done
