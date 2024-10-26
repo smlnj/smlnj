@@ -33,6 +33,7 @@ structure Unsafe :> UNSAFE =
 	val sub = InlineT.PolyArray.sub
 	val update = InlineT.PolyArray.update
 	val create = Core.Assembly.A.array
+        val create0 = InlineT.PolyArray.newArray0
       end
 
     structure CharVector =

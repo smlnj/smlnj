@@ -110,23 +110,29 @@ structure StringToFRep : sig
            *   mSign    -- sign of the mantissa
            *   nWhole   -- number of whole digits (i.e., left of decimal)
            *   nFrac    -- number of fractional digits (i.e., right of decimal)
-           *   digits   -- the digits in reverse order
+           *   rDigits   -- the digits in reverse order
            *)
-          and mkNoExp (cs, mSign, nWhole, nFrac, digits) =
-                mk (cs, mSign, nWhole + nFrac, digits, nFrac)
+          and mkNoExp (cs, mSign, nWhole, nFrac, rDigits) =
+                mk (cs, mSign, nWhole + nFrac, rDigits, ~nFrac)
           (* make a number with an exponent.  The first five arguments are the same
            * as `mkNoExp`; the additional arguments are:
            *   eSign    -- the sign of the exponent
            *   eDigits  -- the exponent digits in reverse order
            *)
-          and mkWithExp (cs, mSign, nWhole, nFrac, digits, eSign, eDigits) = let
+          and mkWithExp (cs, mSign, nWhole, nFrac, rDigits, eSign, eDigits) = let
                 val exp = (List.foldr (fn (d, e) => 10*e + d) 0 eDigits
                             handle _ => infExp)
                 val exp = if eSign then ~exp else exp
                 in
-                  mk (cs, mSign, nWhole + nFrac, digits, exp+nFrac)
+                  mk (cs, mSign, nWhole + nFrac, rDigits, exp-nFrac)
                 end
-          (* make the result *)
+          (* make the result.  The arguments are:
+           *   cs       -- the remaing stream
+           *   mSign    -- sign of the mantissa
+           *   nDigits  -- the total number of digits (including excess zeros)
+           *   rDigits  -- the digits in reverse order
+           *   exp      -- the adjusted exponent
+           *)
           and mk (cs, sign, nDigits, rDigits, exp) = let
                 val (nz1, rDigits) = trimLeadingZeros (0, rDigits)
                 val (nz2, digits) = trimLeadingZeros (0, List.rev rDigits)

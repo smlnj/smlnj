@@ -76,8 +76,11 @@ Here is a list of the issues that are fixed (or closed) with this release.
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
+--
+* {legacy-issue-base}/305[`Date.date` incorrectly modifies local time with timezone offset]
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* {legacy-issue-base}/328[`Real.fromString` broken in 110.99.5 and 110.99.6]
+--
 
 == Supported systems
 

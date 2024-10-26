@@ -51,13 +51,10 @@ structure FloatRep : sig
   end = struct
 
     type decimal_rep = {
-        sign : bool,        (* sign bit; true for negative numbers *)
-        nDigits : int,      (* the length of the digit list *)
-        digits : int list,  (* the list of decimal digits; these are two the left
-                             * of the decimal point (unlike IEEEReal.decimal_approx,
-                             * where they are to the right).
-                             *)
-        exp : int           (* the signed exponent *)
+        sign : bool,
+        nDigits : int,
+        digits : int list,
+        exp : int
       }
 
     datatype float_rep

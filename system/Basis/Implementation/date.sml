@@ -316,18 +316,21 @@ structure Date : DATE =
 	  } end
 
     fun date {year, month, day, hour, minute, second, offset} = let
-	  val (secOffset, offset) = (case offset
+	  val (secAdjust, offset) = (case offset
 		 of NONE => (0, NONE)
 		  | SOME t => let
-		    (* normalize offset to range of ~86399..86399 (24 hours in seconds) *)
-		      val secs = IntInf.rem(Time.toSeconds t, 86400)
+		      (* normalize offset to +/- one day in seconds.  Note that it
+                       * it is necessary to use "quot/rem" so that we round toward
+                       * zero when `t` is negative!
+                       *)
+		      val (adjust, offset) = IntInf.quotRem(Time.toSeconds t, 24*60*60)
 		      in
-			(Int.fromLarge secs, SOME(Time.fromSeconds secs))
+			(Int.fromLarge adjust, SOME(Time.fromSeconds offset))
 		      end
 		(* end case *))
 	  val normDate = normalizeDate {
 		  year = year, month = monthToInt month, day = day,
-		  hour = hour, minute = minute, second = second + secOffset
+		  hour = hour, minute = minute, second = second + secAdjust
 		}
 	(* check that we are in AD at least *)
 	  val _ = if #year normDate < 0 then raise Date else ()

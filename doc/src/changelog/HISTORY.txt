@@ -103,6 +103,20 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2024/10/25]::
+Ported fix for {issue-base}/328[Issue #328 (`Real.fromString` broken in
+110.99.5 and 110.99.6)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/25]::
+Ported fix for {legacy-issue-base}/305[Legacy Issue #305 (`Date.date`
+incorrectly modifies local time with timezone offset)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2024/10/11]::
 Changed the startup behavior so that if the `@SMLquiet` command-line
 option is specified, then the banner is not printed.
