@@ -26,6 +26,7 @@ OBJS =		smlnj-date-lib.o \
 		strftime.o \
 		unix-date.o
 
+$(OBJS) : $(VERSION)
 $(LIBRARY)	: $(VERSION) $(OBJS)
 	rm -rf $(LIBRARY)
 	$(AR) $(ARFLAGS) $(LIBRARY) $(OBJS)

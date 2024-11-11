@@ -276,9 +276,9 @@ void InitHeap (ml_state_t *msp, bool_t isBoot, heap_params_t *params)
 	(void *)((Addr_t)heap->allocBase+params->allocSz), params->allocSz);
 #endif
 
-#ifdef GC_STATS
-    ClearGCStats (heap);
-#endif
+    /* reset the standard allocation/GC counters */
+    ResetGCStats (heap);
+
 #if defined(COLLECT_STATS)
     if (StatsFD > 0) {
 	stat_hdr_t	hdr;
@@ -318,19 +318,65 @@ void InitHeap (ml_state_t *msp, bool_t isBoot, heap_params_t *params)
 } /* end of InitHeap */
 
 
-#ifdef GC_STATS
-/* ClearGCStats:
+/* ResetGCStats:
  */
-void ClearGCStats (heap_t *heap)
+void ResetGCStats (heap_t *heap)
 {
     int		i, j;
 
+    heap->numMinorGCs = 0;
     CNTR_ZERO(&(heap->numAlloc));
-    for (i = 0;  i < MAX_NUM_GENS;  i++) {
+    CNTR_ZERO(&(heap->numAlloc1));
+    for (i = 0;  i < heap->numGens;  i++) {
+        heap->gen[i]->numGCs = 0;
 	for (j = 0;  j < NUM_ARENAS;  j++) {
 	    CNTR_ZERO(&(heap->numCopied[i][j]));
 	}
     }
 
-} /* end of ClearStats */
+} /* end of ResetGCStats */
+
+#if defined(SIZE_32)
+#define COUNT_SHIFT 10
+#else /* SIZE_64 */
+#define COUNT_SHIFT 3
 #endif
+#define BYTES_PER_COUNT (1 << COUNT_SHIFT)
+#define ROUND_COUNT(c) (Word_t)(((c)->cnt + (1 << (COUNT_SHIFT-1))) >> COUNT_SHIFT)
+
+/* GetGCStats:
+ *
+ */
+void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
+{
+    int i, j;
+
+    heap_t *heap = msp->ml_heap;
+
+    statsOut->bytesPerCnt = BYTES_PER_COUNT;
+
+    /* count the number of bytes allocated since the last GC or reset */
+    Addr_t nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
+    CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
+    statsOut->allocCnt = ROUND_COUNT(&heap->numAlloc);
+
+    statsOut->allocFirstCnt = ROUND_COUNT(&heap->numAlloc1);
+
+    statsOut->numGCs[0] = heap->numMinorGCs;
+    for (i = 0;  i < heap->numGens;  ++i) {
+        cntr_t nP;
+        CNTR_ZERO(&nP);
+        for (j = 0;  j < NUM_ARENAS;  ++j) {
+            CNTR_ADD(&nP, &(heap->numCopied[i][j]));
+        }
+        statsOut->promoteCnt[i] = ROUND_COUNT(&nP);
+        statsOut->numGCs[i+1] = heap->gen[i]->numGCs;
+    }
+
+    /* clear the rest of the entries */
+    for (i = heap->numGens;  i < MAX_NUM_GENS;  ++i) {
+        statsOut->promoteCnt[i] = 0;
+        statsOut->numGCs[i+1] = 0;
+    }
+
+}

@@ -171,9 +171,7 @@ void MajorGC (ml_state_t *msp, ml_val_t **roots, int level)
     int		i, j;
     int		maxCollectedGen;	/* the oldest generation being collected */
     int		maxSweptGen;
-#ifdef GC_STATS
     ml_val_t	*tospTop[NUM_ARENAS]; /* for counting # of bytes forwarded */
-#endif
 
 #ifndef PAUSE_STATS	/* don't do timing when collecting pause data */
     StartGCTimer(msp->ml_vproc);
@@ -186,11 +184,10 @@ numBO1 = numBO2 = numBO3 = 0;
     maxCollectedGen = Flip (heap, level);
     if (maxCollectedGen < heap->numGens) {
 	maxSweptGen = maxCollectedGen+1;
-#ifdef GC_STATS
       /* Remember the top of to-space for maxSweptGen */
-	for (i = 0;  i < NUM_ARENAS;  i++)
+	for (i = 0;  i < NUM_ARENAS;  i++) {
 	    tospTop[i] = heap->gen[maxSweptGen-1]->arena[i]->nextw;
-#endif /* GC_STATS */
+        }
     }
     else {
 	maxSweptGen = maxCollectedGen;
@@ -358,10 +355,9 @@ ScanMem((Word_t *)(gen->arena[ARRAY_INDX]->tospBase), (Word_t *)(gen->arena[ARRA
 
     HeapMon_UpdateHeap (heap, maxSweptGen);
 
-#ifdef GC_STATS
-  /* Count the number of forwarded bytes */
+    /* Count the number of forwarded bytes */
     if (maxSweptGen != maxCollectedGen) {
-	gen_t	*gen = heap->gen[maxSweptGen-1];
+	gen_t *gen = heap->gen[maxSweptGen-1];
 	for (j = 0;  j < NUM_ARENAS;  j++) {
 	    CNTR_INCR(&(heap->numCopied[maxSweptGen-1][j]),
 		gen->arena[j]->nextw - tospTop[j]);
@@ -375,7 +371,6 @@ ScanMem((Word_t *)(gen->arena[ARRAY_INDX]->tospBase), (Word_t *)(gen->arena[ARRA
 	    }
 	}
     }
-#endif
 
 #ifdef BO_REF_STATS
 SayDebug ("bigobj stats: %d seen, %d lookups, %d forwarded\n",

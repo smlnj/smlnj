@@ -31,6 +31,7 @@ OBJS =		smlnj-runt-lib.o \
 		dummy.o \
 		export-heap.o \
 		export-fun.o \
+		gc-counter.o \
 		gc-ctl.o \
 		itick.o \
 		mkexec.o \

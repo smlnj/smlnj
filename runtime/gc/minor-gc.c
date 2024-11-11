@@ -66,23 +66,19 @@ void MinorGC (ml_state_t *msp, ml_val_t **roots)
 {
     heap_t	*heap = msp->ml_heap;
     gen_t	*gen1 = heap->gen[0];
-#ifdef GC_STATS
-    long	nbytesAlloc, nbytesCopied, nUpdates=numUpdates;
     Addr_t	gen1Top[NUM_ARENAS];
-    int		i;
+
+    /* record the number of bytes allocated since the last GC and record the current
+     * tops of the first-generation arenas.
+     */
     {
-	nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
-	CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
-	for (i = 0;  i < NUM_ARENAS;  i++)
+	Addr_t nb = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
+        int i;
+	CNTR_INCR(&(heap->numAlloc), nb);
+	for (i = 0;  i < NUM_ARENAS;  i++) {
 	    gen1Top[i] = (Addr_t)(gen1->arena[i]->nextw);
+        }
     }
-#elif defined(VM_STATS)
-    {
-	Addr_t	    nbytesAlloc;
-	nbytesAlloc = ((Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase));
-	CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
-    }
-#endif
 
 #ifdef VERBOSE
 {
@@ -140,18 +136,16 @@ void MinorGC (ml_state_t *msp, ml_val_t **roots)
 }
 #endif
 
-#ifdef GC_STATS
+    /* update allocation and GC counters */
     {
-	int	nbytes;
+	int i;
+        Addr_t nbytes;
 
-	nbytesCopied = 0;
 	for (i = 0;  i < NUM_ARENAS;  i++) {
-	    nbytes = ((Word_t)(gen1->arena[i]->nextw) - gen1Top[i]);
-	    nbytesCopied += nbytes;
+	    nbytes = ((Addr_t)(gen1->arena[i]->nextw) - gen1Top[i]);
 	    CNTR_INCR(&(heap->numCopied[0][i]), nbytes);
 	}
     }
-#endif
 
 #ifdef CHECK_HEAP
     CheckHeap(heap, 1);

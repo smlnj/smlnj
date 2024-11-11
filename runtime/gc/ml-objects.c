@@ -22,6 +22,7 @@
 	if ((! isACTIVE(ap)) || (AVAIL_SPACE(ap) <= (szb)))
 
 #ifdef COLLECT_STATS
+/* FIXME: this is redundant, since we now always track allocation */
 #define COUNT_ALLOC(msp, nbytes)	{	\
 	heap_t		*__h = msp->ml_heap;	\
 	CNTR_INCR(&(__h->numAlloc), (nbytes));	\
@@ -135,6 +136,7 @@ ml_val_t ML_AllocRaw (ml_state_t *msp, Word_t nwords)
         res = PTR_CtoML(ap->nextw);
         ap->nextw += nwords;
         ASSERT(ap->nextw < ap->tospTop);
+        CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
 	COUNT_ALLOC(msp, szb);
     }
     else {
@@ -211,6 +213,7 @@ ml_val_t ML_AllocRaw64 (ml_state_t *msp, Word_t nelems)
         *(ap->nextw++) = desc;
         res = PTR_CtoML(ap->nextw);
         ap->nextw += nwords;
+        CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
 	COUNT_ALLOC(msp, szb);
     }
     else {
@@ -321,6 +324,7 @@ ml_val_t ML_AllocArrayData (ml_state_t *msp, Word_t len, ml_val_t initVal)
         res = PTR_CtoML(ap->nextw);
         ap->nextw += len;
         ap->sweep_nextw = ap->nextw;
+        CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
 	COUNT_ALLOC(msp, szb);
     }
     else {
@@ -385,6 +389,7 @@ ml_val_t ML_AllocVector (ml_state_t *msp, Word_t len, ml_val_t initVal)
         res = PTR_CtoML(ap->nextw);
         ap->nextw += len;
         ap->sweep_nextw = ap->nextw;
+        CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
 	COUNT_ALLOC(msp, szb);
     }
     else {
