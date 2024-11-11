@@ -146,7 +146,7 @@ structure StringToFRep : sig
                             sign = sign,
                             nDigits = nDigits,
                             digits = digits,
-                            exp = exp + nz1
+                            exp = exp
                           }
                 in
                   SOME(frep, cs)
