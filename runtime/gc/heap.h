@@ -57,6 +57,8 @@ struct heap {
 		    			/* allocation arena. */
     int		    numGens;		/* The number of active generations. */
     int		    cacheGen;		/* Cache the from-space for gens 1..cacheGen. */
+    int		    numMinorGCs;	/* The number of times the allocation space */
+					/* has been collected. */
     gen_t	    *gen[MAX_NUM_GENS]; /* generation #i is gen[i-1] */
     int		    numBORegions;	/* the number of active big-object regions */
     bigobj_region_t *bigRegions;	/* points to the list of big object regions. */
@@ -70,8 +72,10 @@ struct heap {
                                          */
     cntr_t	    numCopied[MAX_NUM_GENS][NUM_ARENAS];
                                         /* number of bytes copied into each arena */
-    int		    numMinorGCs;	/* The number of times the allocation space */
-					/* has been collected. */
+    int             numGCsAtReset[MAX_NUM_GENS+1];
+                                        /* the remembered number of GCs by generation
+                                         * at the last call to `ResetGCStats`.
+                                         */
 #ifdef HEAP_MONITOR
     struct monitor  *monitor;		/* The various graphical data structures */
 					/* for monitoring the heap. */

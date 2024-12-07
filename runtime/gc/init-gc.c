@@ -324,11 +324,11 @@ void ResetGCStats (heap_t *heap)
 {
     int		i, j;
 
-    heap->numMinorGCs = 0;
+    heap->numGCsAtReset[0] = heap->numMinorGCs;
     CNTR_ZERO(&(heap->numAlloc));
     CNTR_ZERO(&(heap->numAlloc1));
     for (i = 0;  i < heap->numGens;  i++) {
-        heap->gen[i]->numGCs = 0;
+        heap->numGCsAtReset[i+1] = heap->gen[i]->numGCs;
 	for (j = 0;  j < NUM_ARENAS;  j++) {
 	    CNTR_ZERO(&(heap->numCopied[i][j]));
 	}
@@ -362,7 +362,7 @@ void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
 
     statsOut->allocFirstCnt = ROUND_COUNT(&heap->numAlloc1);
 
-    statsOut->numGCs[0] = heap->numMinorGCs;
+    statsOut->numGCs[0] = heap->numMinorGCs - heap->numGCsAtReset[0];
     for (i = 0;  i < heap->numGens;  ++i) {
         cntr_t nP;
         CNTR_ZERO(&nP);
@@ -370,7 +370,7 @@ void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
             CNTR_ADD(&nP, &(heap->numCopied[i][j]));
         }
         statsOut->promoteCnt[i] = ROUND_COUNT(&nP);
-        statsOut->numGCs[i+1] = heap->gen[i]->numGCs;
+        statsOut->numGCs[i+1] = heap->gen[i]->numGCs - heap->numGCsAtReset[i+1];
     }
 
     /* clear the rest of the entries */
