@@ -177,7 +177,7 @@ void MajorGC (ml_state_t *msp, ml_val_t **roots, int level)
     StartGCTimer(msp->ml_vproc);
 #endif
 #ifdef BO_REF_STATS
-numBO1 = numBO2 = numBO3 = 0;
+    numBO1 = numBO2 = numBO3 = 0;
 #endif
 
   /* Flip to-space and from-space */
@@ -291,15 +291,16 @@ numBO1 = numBO2 = numBO3 = 0;
 	    gen->bigObjs[j] = forward;
 	}
     }
+
 #ifdef BO_DEBUG
-/** DEBUG **/
-for (i = 0;  i < heap->numGens;  i++) {
-gen_t	*gen = heap->gen[i];
-ScanMem((Word_t *)(gen->arena[RECORD_INDX]->tospBase), (Word_t *)(gen->arena[RECORD_INDX]->nextw), i+1, RECORD_INDX);
-ScanMem((Word_t *)(gen->arena[PAIR_INDX]->tospBase), (Word_t *)(gen->arena[PAIR_INDX]->nextw), i+1, PAIR_INDX);
-ScanMem((Word_t *)(gen->arena[ARRAY_INDX]->tospBase), (Word_t *)(gen->arena[ARRAY_INDX]->nextw), i+1, ARRAY_INDX);
-}
-/** DEBUG **/
+    /** DEBUG **/
+    for (i = 0;  i < heap->numGens;  i++) {
+        gen_t	*gen = heap->gen[i];
+        ScanMem((Word_t *)(gen->arena[RECORD_INDX]->tospBase), (Word_t *)(gen->arena[RECORD_INDX]->nextw), i+1, RECORD_INDX);
+        ScanMem((Word_t *)(gen->arena[PAIR_INDX]->tospBase), (Word_t *)(gen->arena[PAIR_INDX]->nextw), i+1, PAIR_INDX);
+        ScanMem((Word_t *)(gen->arena[ARRAY_INDX]->tospBase), (Word_t *)(gen->arena[ARRAY_INDX]->nextw), i+1, ARRAY_INDX);
+    }
+    /** DEBUG **/
 #endif
 
   /* relabel BIBOP entries for big-object regions to reflect promotions */
@@ -367,7 +368,8 @@ ScanMem((Word_t *)(gen->arena[ARRAY_INDX]->tospBase), (Word_t *)(gen->arena[ARRA
 	for (j = 0;  j < NUM_ARENAS;  j++) {
 	    arena_t	*ap = heap->gen[i]->arena[j];
 	    if (isACTIVE(ap)) {
-		CNTR_INCR(&(heap->numCopied[i][j]), ap->nextw - tospTop[j]);
+                Addr_t nbytes = (Addr_t)ap->nextw - (Addr_t)ap->tospBase;
+		CNTR_INCR(&(heap->numCopied[i][j]), nbytes);
 	    }
 	}
     }
