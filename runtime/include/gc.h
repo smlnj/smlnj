@@ -37,11 +37,14 @@ extern status_t HeapMon_Init (heap_t *heap);
 #define HeapMon_Init(A)
 #endif
 
-/* Allocation and GC statistics */
+/* Allocation-and-GC statistics */
 typedef struct {
     Word_t allocCnt;            /* count of allocation in nursery (includes store
                                  * list allocations).
                                  */
+#ifdef COUNT_STORE_LIST
+    Word_t storeCnt;            /* count of the number of store-list entries */
+#endif
     Word_t allocFirstCnt;       /* count of allocations in the first generation (i.e.,
                                  * for large sequences).
                                  */

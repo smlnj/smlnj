@@ -1,6 +1,6 @@
 /* cfun-list.h
  *
- * COPYRIGHT (c) 1994 AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2024 AT&T Bell Laboratories.
  *
  * This file lists the directory library of C functions that are callable by ML.
  */
@@ -22,7 +22,7 @@ CFUNC("dummy",		_ml_RunT_dummy,		"string -> unit")
 CFUNC("exportHeap",	_ml_RunT_export_heap,	"string -> bool")
 CFUNC("exportFn",	_ml_RunT_export_fun,	"(string * (string list -> unit)) -> unit")
 CFUNC("gcControl",	_ml_RunT_gc_ctl,	"(string * int ref) list -> unit")
-CFUNC("gcCounterReset", _ml_RunT_gc_counter_reset, "")
+CFUNC("gcCounterReset", _ml_RunT_gc_counter_reset, "bool -> unit")
 CFUNC("gcCounterRead",  _ml_RunT_gc_counter_read, "")
 CFUNC("itick",		_ml_RunT_itick,	"unit -> word64")
 CFUNC("allocCode",	_ml_RunT_alloc_code,	"")

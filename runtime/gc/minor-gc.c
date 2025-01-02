@@ -164,13 +164,13 @@ PVT void MinorGC_ScanStoreList (heap_t *heap, ml_val_t stl)
     ml_val_t	*addr, w;
     gen_t	*gen1 = heap->gen[0];
     bibop_t	bibop = BIBOP;
-#ifdef GC_STATS
+#ifdef COUNT_STORE_LIST
     int		nUpdates = 0;
 #endif
 
   /* Scan the store list */
     do {
-#ifdef GC_STATS
+#ifdef COUNT_STORE_LIST
 	nUpdates++;
 #endif
 	addr = STL_hd(stl);
@@ -226,8 +226,8 @@ PVT void MinorGC_ScanStoreList (heap_t *heap, ml_val_t stl)
 	}
     } while (stl != STL_nil);
 
-#ifdef GC_STATS
-    numUpdates += nUpdates;
+#ifdef COUNT_STORE_LIST
+    CNTR_INCR(&(heap->numStores), nUpdates);
 #endif
 
 } /* end MinorGC_ScanStoreList */

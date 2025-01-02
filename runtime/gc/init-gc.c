@@ -326,6 +326,9 @@ void ResetGCStats (heap_t *heap)
 
     heap->numGCsAtReset[0] = heap->numMinorGCs;
     CNTR_ZERO(&(heap->numAlloc));
+#ifdef COUNT_STORE_LIST
+    CNTR_ZERO(&(heap->numStores));
+#endif
     CNTR_ZERO(&(heap->numAlloc1));
     for (i = 0;  i < heap->numGens;  i++) {
         heap->numGCsAtReset[i+1] = heap->gen[i]->numGCs;
@@ -359,6 +362,9 @@ void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
     Addr_t nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
     CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
     statsOut->allocCnt = ROUND_COUNT(&heap->numAlloc);
+#ifdef COUNT_STORE_LIST
+    statsOut->storeCnt = heap->numStores.cnt;
+#endif
 
     statsOut->allocFirstCnt = ROUND_COUNT(&heap->numAlloc1);
 
