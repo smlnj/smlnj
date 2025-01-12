@@ -94,6 +94,9 @@ export-heap.obj: export-heap.c $(DEPENDENTS)
 export-fun.obj: export-fun.c $(DEPENDENTS)
 	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c export-fun.c
 
+gc-counter.obj: gc-counter.c $(DEPENDENTS)
+	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c gc-counter.c
+
 gc-ctl.obj: gc-ctl.c $(DEPENDENTS)
 	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c gc-ctl.c
 

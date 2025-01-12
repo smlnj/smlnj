@@ -27,6 +27,8 @@ PVT void AllGC (ml_state_t *msp, ml_val_t *next);
  *
  * Current control operations:
  *
+ *   ("NumGens", ref _)	        - returns the number of generations
+ *   ("NurserySize", ref _)     - returns the size of the nursery
  *   ("SetVMCache", ref n)	- sets VM cache level to n; returns old cache
  *				  level.
  *   ("DoGC", ref n)		- does a GC of the first "n" generations
@@ -44,24 +46,30 @@ ml_val_t _ml_RunT_gc_ctl (ml_state_t *msp, ml_val_t arg)
 
 	arg = LIST_tl(arg);
 
-	if (STREQ("SetVMCache", oper))
+        if (STREQ("NumGens", oper)) {
+            ASSIGN(cell, INT_CtoML(msp->ml_heap->numGens));
+        } else if (STREQ("NurserySize", oper)) {
+            ASSIGN(cell, INT_CtoML(msp->ml_heap->allocSzB));
+        } else if (STREQ("SetVMCache", oper)) {
 	    SetVMCache (msp, cell);
-	else if (STREQ("DoGC", oper))
+	} else if (STREQ("DoGC", oper)) {
 	    DoGC (msp, cell, &arg);
-	else if (STREQ("AllGC", oper))
+	} else if (STREQ("AllGC", oper)) {
 	    AllGC (msp, &arg);
-	else if (STREQ("Messages", oper)) {
-	    if (INT_MLtoC(DEREF(cell)) > 0)
+	} else if (STREQ("Messages", oper)) {
+	    if (INT_MLtoC(DEREF(cell)) > 0) {
 		GCMessages = TRUE;
-	    else
+	    } else {
 		GCMessages = FALSE;
+            }
 	}
 	else if (STREQ("LimitHeap", oper)) {
           /* NOTE: this control is not needed once we have dynamically sized areans! */
-	    if (INT_MLtoC(DEREF(cell)) > 0)
+	    if (INT_MLtoC(DEREF(cell)) > 0) {
 		UnlimitedHeap = FALSE;
-	    else
+	    } else {
 		UnlimitedHeap = TRUE;
+            }
 	}
         else if (STREQ("SigThreshold", oper)) {
             int threshold = INT_MLtoC(DEREF(cell));
@@ -84,16 +92,18 @@ PVT void SetVMCache (ml_state_t *msp, ml_val_t arg)
     int		level = INT_MLtoC(DEREF(arg));
     heap_t	*heap = msp->ml_heap;
 
-    if (level < 0)
+    if (level < 0) {
 	level = 0;
-    else if (level > MAX_NUM_GENS)
+    } else if (level > MAX_NUM_GENS) {
 	level = MAX_NUM_GENS;
+    }
 
     if (level < heap->cacheGen) {
       /* Free any cached memory objects. */
-	int		i;
-	for (i = level;  i < heap->cacheGen;  i++)
+	int i;
+	for (i = level;  i < heap->cacheGen;  i++) {
 	    MEM_FreeMemObj (heap->gen[i]->cacheObj);
+        }
     }
 
     ASSIGN(arg, INT_CtoML(heap->cacheGen));
