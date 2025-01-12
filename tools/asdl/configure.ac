@@ -1,15 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl This code is part of the SML/NJ system (http://smlnj.org)
+dnl This code is part of the SML/NJ system (https://smlnj.org)
 dnl
-dnl COPYRIGHT (c) 2021 The Fellowship of SML/NJ
+dnl COPYRIGHT (c) 2025 The Fellowship of SML/NJ
 dnl All rights reserved.
 dnl
 
 AC_INIT([asdl],[3.0],[])
 
 AC_PREREQ([2.71])
-AC_COPYRIGHT([[COPYRIGHT (c) 2021 The Fellowship of SML/NJ]])
+AC_COPYRIGHT([[COPYRIGHT (c) 2025 The Fellowship of SML/NJ]])
 AC_CONFIG_SRCDIR(src/lib/asdl/std-types.asdl)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
