@@ -15,7 +15,7 @@ AS =		/usr/bin/as -arch arm64
 CPP =           cc -x assembler-with-cpp -E -P -std=c99
 CC =		cc -m64 -std=c99
 CFLAGS =	-g -O2 -D_DARWIN_C_SOURCE
-CXX =           c++ --std=c++14
+CXX =           c++ --std=c++17
 CXX_FLAGS =     -g -O2
 XOBJS =
 XLIBS =         ../c-libs/dl/libunix-dynload.a

@@ -453,7 +453,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     else {
         val = ML_unit;
     }
-  /* do a functional update to set the last element of the importRec to the literals */
+  /* do a functional update of the last element of the importRec. */
     for (i = 0;  i < importRecLen;  i++) {
         ML_AllocWrite(msp, i, PTR_MLtoC(ml_val_t, importRec)[i-1]);
     }

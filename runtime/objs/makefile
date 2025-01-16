@@ -29,7 +29,7 @@ endif
 
 LLVM_LD_FLAGS =	$(shell $(LLVM_CONFIG) --ldflags)
 LLVM_LIBS =	-lCFGCodeGen \
-		$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT)) \
+		$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT) passes runtimedyld) \
 		$(shell $(LLVM_CONFIG) --system-libs)
 
 #

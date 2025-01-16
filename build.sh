@@ -37,7 +37,7 @@ usage() {
 
 # specifying the LLVM subdirectory (which is a submodule)
 #
-LLVM_DIRNAME=llvm10
+LLVM_DIRNAME=llvm18
 LLVMDIR_OPTION=
 
 # process options

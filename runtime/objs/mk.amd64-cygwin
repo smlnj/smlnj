@@ -6,7 +6,7 @@ SHELL =		/bin/sh
 MAKE =		make
 CC =		gcc -std=gnu99
 CFLAGS =	-O2
-CXX =           g++ --std=c++14
+CXX =           g++ --std=c++17
 CXX_FLAGS =     -g -O2
 CPP =		gcc -x assembler-with-cpp -E -P
 XOBJS =

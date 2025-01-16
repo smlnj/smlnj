@@ -3,8 +3,8 @@
 /// \copyright 2024 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
-/// SML callable wrapper for the LLVM code generator.  This code is C++, but the
-/// exported functions are marked as "C" functions to avoid name mangling.
+/// \brief SML callable wrapper for the LLVM code generator.  This code is C++,
+/// but the exported functions are marked as "C" functions to avoid name mangling.
 ///
 /// \author John Reppy
 ///
@@ -14,6 +14,8 @@
 #include "codegen.h"
 #include "cache-flush.h"
 #include "target-info.hpp"
+#include "object-file.hpp"
+#include <cstring>
 #include <iostream>
 
 #include "llvm/Support/TargetSelect.h"
@@ -129,12 +131,15 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
         // size of code-object with extras
         size_t codeObjSzb = alignedCodeSzb      // code + alignment padding
             + paddedSrcFileLen;                 // src name (including nul and length byte)
+#ifdef DEBUG_CODEGEN
+/*DEBUG*/SayDebug("# codeObjSzb = %d bytes\n", (int)codeObjSzb);
+#endif
 
         // allocate a heap object for the code
 	auto codeObj = ML_AllocCode (msp, codeObjSzb);
 	ENABLE_CODE_WRITE
         // copy the code to the heap
-	obj->getCode (PTR_MLtoC(unsigned char, codeObj));
+        ::memcpy(PTR_MLtoC(unsigned char, codeObj), obj->data(), codeSzb);
         // now add the source-file name to the end of the code object
         char *srcNameLoc = PTR_MLtoC(char, codeObj) + alignedCodeSzb;
         // copy the source-file name; note that `strncpy` pads with zeros
@@ -143,6 +148,23 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
         *reinterpret_cast<unsigned char *>(srcNameLoc + paddedSrcFileLen - 1) =
             (paddedSrcFileLen / gContext->wordSzInBytes());
 	DISABLE_CODE_WRITE
+
+#ifdef DEBUG_CODEGEN
+/*DEBUG*/ {
+        SayDebug("##### OBJECT FILE BITS: %d bytes (aligned size %d) #####\n",
+        codeSzb, alignedCodeSzb);
+        uint8_t const *bytes = PTR_MLtoC(unsigned char, codeObj);
+        for (size_t i = 0;  i < codeSzb; i += 16) {
+            size_t limit = ((i + 16 < codeSzb) ? i + 16 : codeSzb);
+            SayDebug("  %04x: ", (int)i);
+            for (int j = i;  j < limit;  j++) {
+                SayDebug(" %02x", bytes[j]);
+            }
+            SayDebug("\n");
+        }
+        SayDebug("#####\n");
+} /*DEBUG*/
+#endif
 
         // create a pair of the code object and entry-point offset
 	ml_val_t arr, res;
@@ -169,7 +191,7 @@ ml_val_t llvm_listTargets (ml_state_t *msp)
   // construct a list of the target names
     ml_val_t lst = LIST_nil;
     for (int i = targets.size() - 1;  0 <= i;  --i) {
-        ml_val_t name = ML_CString(msp, targets[i].c_str());
+        ml_val_t name = ML_CString(msp, std::string(targets[i]).c_str());
         LIST_cons(msp, lst, name, lst);
     }
 
