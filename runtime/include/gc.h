@@ -22,6 +22,8 @@
 /* typedef struct heap heap_t; */	/* from ml-base.h */
 
 extern void InitHeap (ml_state_t *msp, bool_t isBoot, heap_params_t *params);
+extern void FreeHeap (heap_t *heap);
+
 extern void InvokeGC (ml_state_t *msp, int level);
 extern void InvokeGCWithRoots (ml_state_t *msp, int level, ...);
 extern bool_t NeedGC (ml_state_t *msp, Word_t nbytes);

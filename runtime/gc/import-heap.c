@@ -447,6 +447,11 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	    }
 	}
     }
+    for (i = 0; i < hdr->numBORegions;  i++) {
+        if (boRelocInfo[i].objMap != NIL(bo_reloc_t **)) {
+            FREE (boRelocInfo[i].objMap);
+        }
+    }
     FreeAddrTbl (boRegionTbl, FALSE);
     FREE (boRelocInfo);
     FREE (arenaHdrs);

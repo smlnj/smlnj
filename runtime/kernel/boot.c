@@ -115,9 +115,12 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
                 rts_init = 1;   /* make sure we do this only once */
             }
         }
-        else
+        else {
             LoadBinFile (msp, fname);
+        }
     }
+
+    FreeMLState (msp);
 
 } /* end of BootML */
 

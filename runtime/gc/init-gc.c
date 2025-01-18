@@ -318,6 +318,19 @@ void InitHeap (ml_state_t *msp, bool_t isBoot, heap_params_t *params)
 } /* end of InitHeap */
 
 
+void FreeHeap (heap_t *heap)
+{
+    for (int i = 0;  i < MAX_NUM_GENS;  i++) {
+	for (int j = 0;  j < NUM_ARENAS;  j++) {
+	    FREE(heap->gen[i]->arena[j]);
+        }
+        FREE(heap->gen[i]);
+    }
+    FREE (heap->freeBigObjs);
+    FREE (heap);
+    FreeBibop(BIBOP);
+}
+
 /* ResetGCStats:
  */
 void ResetGCStats (heap_t *heap)
