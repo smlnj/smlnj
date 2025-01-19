@@ -66,6 +66,8 @@ structure PPCfg : sig
 	    | P.LIMIT n => concat["needGC(", Word.fmt StringCvt.DEC n, ")"]
 	  (* end case *))
 
+    fun rawTyToString {kind, sz} = numkindToString(kind, sz)
+
     fun allocToString P.SPECIAL = "special"
       | allocToString (P.RECORD{desc, mut=false}) =
 	  concat["record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
@@ -209,6 +211,21 @@ structure PPCfg : sig
 		case stm
 		 of C.LET(e, x, stm) => (
 		      say(expToString e); say " -> "; sayParam x; say "\n"; pr stm)
+		  | C.ALLOC(p as P.RAW_RECORD{fields, ...}, args, x, stm) => let
+                      fun sayArg (ty, e) = (
+                            say(expToString e); say ":"; say(rawTyToString ty))
+                      in
+                        say(allocToString p); say "(";
+                        case (fields, args)
+                         of ([ty], [e]) => sayArg (ty, e)
+                          | (ty::tys, e::es) => (
+                              sayArg (ty, e);
+                              ListPair.appEq (fn (ty, e) => (say ","; sayArg(ty, e)))
+                                (tys, es))
+                          | _ => raise Fail "bogus argument list for RAW_RECORD"
+                        (* end case *);
+                        say ") -> "; sayv x; say "\n"; pr stm
+                      end
 		  | C.ALLOC(p as P.RAW_ALLOC _, [], x, stm) => (
 		      say (allocToString p); say " -> "; sayv x; say "\n"; pr stm)
 		  | C.ALLOC(p, args, x, stm) => (
