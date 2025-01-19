@@ -131,10 +131,29 @@ extern void AssertFail (const char *a, const char *file, int line);
 /* extract the bitfield of width WID starting at position POS from I */
 #define XBITFIELD(I,POS,WID)		(((I) >> (POS)) & ((1<<(WID))-1))
 
-/* aliases for malloc/free, so that we can easily replace them */
+/* defining TRACE_MALLOC causes a object-by-object trace of date allocated
+ * in the C heap.
+ */
+#ifdef TRACE_MALLOC
+static inline void *_alloc_ (size_t sz, const char *file, int line)
+{
+    extern void Say (const char *fmt, ...);
+    void *addr = malloc(sz);
+    Say("[%s:%d]: alloc %d bytes @ %p\n", file, line, sz, addr);
+    return addr;
+}
+static inline void _free_ (void *obj, const char *file, int line)
+{
+    extern void Say (const char *fmt, ...);
+    Say("[%s:%d]: free %p\n", file, line,obj);
+    free(obj);
+}
+#define MALLOC(sz)	_alloc_(sz,__FILE__,__LINE__)
+#define FREE(p)		_free_(p,__FILE__,__LINE__)
+#else
 #define MALLOC(sz)	malloc(sz)
-#define _FREE		free
-#define FREE(p)		_FREE(p)
+#define FREE(p)		free(p)
+#endif /* TRACE_MALLOC */
 
 /* Allocate a new C object of type t. */
 #define NEW_OBJ(t)	((t *)MALLOC(sizeof(t)))
