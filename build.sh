@@ -22,16 +22,17 @@ complain() {
 usage() {
   echo "usage: build.sh [ options ]"
   echo "options:"
-  echo "    -h,-help      print this message and exit"
-  echo "    -nolib        skip building libraries/tools"
-  echo "    -verbose      emit feedback messages"
-  echo "    -doc          generate documentation"
-  echo "    -debug        debug installation (enables verbose mode)"
-  echo "    -dev          developer install (includes cross compiler support)"
+  echo "    -h,-help           print this message and exit"
+  echo "    -nolib             skip building libraries/tools"
+  echo "    -verbose           emit feedback messages"
+  echo "    -doc               generate documentation"
+  echo "    -debug             debug installation (enables verbose mode)"
+  echo "    -dev               developer install (includes cross compiler support)"
   echo "developer options:"
-  echo "    -debug-llvm   build a debug version of the LLVM libraries"
-  echo "    -llvmdir dir  specify the path to the LLVM directory"
-  echo "    -build-cfgc   build the cfgc compiler"
+  echo "    -debug-llvm        build a debug version of the LLVM libraries"
+  echo "    -sanitize-address  sanitize addresses to check for memory bugs"
+  echo "    -llvmdir dir       specify the path to the LLVM directory"
+  echo "    -build-cfgc        build the cfgc compiler"
   exit 1
 }
 
@@ -46,6 +47,7 @@ QUIET=yes
 INSTALL_DEBUG=no
 INSTALL_DEV=no
 MAKE_DOC=no
+SANITIZE_ADDRESS=no
 BUILD_LLVM_FLAGS=""
 while [ "$#" != "0" ] ; do
   arg=$1; shift
@@ -60,6 +62,10 @@ while [ "$#" != "0" ] ; do
     ;;
     -doc) MAKE_DOC=yes ;;
     -debug-llvm) BUILD_LLVM_FLAGS="-debug $BUILD_LLVM_FLAGS" ;;
+    -sanitize-address)
+      SANITIZE_ADDRESS=yes
+      BUILD_LLVM_FLAGS="-sanitize-address $BUILD_LLVM_FLAGS"
+      ;;
     -llvmdir)
       if [[ $# -gt 0 ]] ; then
         LLVMDIR_OPTION=$1; shift
@@ -328,18 +334,37 @@ ALLOC=1M
 # OS-specific things for building the runtime system
 #
 RT_MAKEFILE=mk.$ARCH-$OPSYS
+XDEFS=""
+EXTRA_DEFS=""
 case $OPSYS in
   darwin)
     EXTRA_DEFS="AS_ACCEPTS_SDK=yes"
     ;;
   linux)
-    EXTRA_DEFS=$("$CONFIGDIR/chk-global-names.sh")
+    XDEFS=$("$CONFIGDIR/chk-global-names.sh")
     if [ "$?" != "0" ]; then
       complain "Problems checking for underscores in asm names."
     fi
-    EXTRA_DEFS="XDEFS=$EXTRA_DEFS"
     ;;
 esac
+
+# add other runtime-system options
+#
+if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
+  if [ x"XDEFS" = x ] ; then
+    XDEFS="-fsanitize=address"
+  else
+    XDEFS="$XDEFS -fsanitize=address"
+  fi
+fi
+
+if [ x"XDEFS" != x ] ; then
+  if [ x"EXTRA_DEFS" = x ] ; then
+    EXTRA_DEFS="XDEFS=\"$XDEFS\""
+  else
+    EXTRA_DEFS="XDEFS=\"$XDEFS\" $EXTRA_DEFS"
+  fi
+fi
 
 #
 # the name of the bin files directory
