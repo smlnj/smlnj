@@ -194,6 +194,7 @@ extern heap_params_t *ParseHeapParams (char **argv);
 extern ml_state_t *AllocMLState (bool_t isBoot, heap_params_t *params);
 extern void BootML (const char *bootlist, heap_params_t *params);
 extern void LoadML (const char *loadImage, heap_params_t *params);
+extern void FreeMLState (ml_state_t *msp);
 
 extern bool_t QualifyImageName (char *buf);
 extern void InitMLState (ml_state_t *msp);
