@@ -67,7 +67,7 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char        *fname;
     int         rts_init = 0;
 
-/*DEBUG*/SilentLoad=TRUE;
+/*DEBUG SilentLoad=FALSE;*/
     msp = AllocMLState (TRUE, heapParams);
 
 #ifdef HEAP_MONITOR
