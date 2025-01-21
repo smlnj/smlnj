@@ -103,9 +103,15 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/01/21]::
+Fix for {issue-base}/294[Issue #294 (compiler bug aborts build of istari)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2024/10/25]::
-Ported fix for {issue-base}/328[Issue #328 (`Real.fromString` broken in
-110.99.5 and 110.99.6)].
+Ported fix for {legacy-issue-base}/328[Legacy Issue #328 (`Real.fromString`
+broken in 110.99.5 and 110.99.6)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 

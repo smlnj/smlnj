@@ -49,6 +49,8 @@ FILES::
 
 === Basis Library
 
+* Ported allocation/GC statistics support from legacy repository
+
 === SML/NJ Library
 
 === Successor ML
@@ -69,6 +71,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | Description
 | [.bugid]#291#
 | {issue-base}/291[Can't build 2024.2 because of problem with ASDL C++ library]
+| [.bugid]#294#
+| {issue-base}/294[compiler bug aborts build of istari]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

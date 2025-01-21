@@ -459,9 +459,9 @@ structure ContractPrim : sig
                 (* end case *))
             (***** EXTEND_INF *****)
             | (P.EXTEND_INF n, [VAR v, f]) => (case #info(get v)
-                 of PUREinfo(P.EXTEND{from=m, ...}, arg) =>
+                 of PUREinfo(P.EXTEND{from=m, ...}, [u]) =>
                       (* EXTEND(n,∞) o EXTEND(m,n) ==> EXTEND(m,∞) *)
-                      Pure(P.EXTEND_INF m, arg)
+                      Pure(P.EXTEND_INF m, [u, f])
                   | PUREinfo(P.COPY{from=m, ...}, [u]) => if (m < n)
                       (* EXTEND(n,∞) o COPY(m,n) ==> COPY(m,∞) when (m < n) *)
                       then Pure(P.COPY_INF m, [u, f])
