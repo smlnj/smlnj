@@ -1,6 +1,6 @@
 (* gc.sig
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Garbage collector control and stats.
@@ -8,6 +8,12 @@
 
 signature GC =
   sig
+
+    (* return the number of generations (not including the nursery) *)
+    val numGens : unit -> int
+
+    (* return the size of the nursery in bytes *)
+    val nurserySizeInBytes : unit -> int
 
     (* invoke GC; the argument specifies the minimum generation to collect *)
     val doGC : int -> unit

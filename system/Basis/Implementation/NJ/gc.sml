@@ -14,6 +14,20 @@ structure GC : GC =
     val gcCtl : ((string * int ref) list -> unit) =
 	  CI.c_function "SMLNJ-RunT" "gcControl"
 
+    fun numGens () = let
+          val r = ref 0
+          in
+            gcCtl [("NumGens", r)];
+            !r
+          end
+
+    fun nurserySizeInBytes () = let
+          val r = ref 0
+          in
+            gcCtl [("NurserySize", r)];
+            !r
+          end
+
     fun doGC n = gcCtl [("DoGC", ref n)]
 
     fun messages true = gcCtl [("Messages", ref 1)]
