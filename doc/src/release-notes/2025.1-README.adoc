@@ -1,4 +1,4 @@
-:version: 2024.3
+:version: 2025.1
 :date: @DATE@
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
