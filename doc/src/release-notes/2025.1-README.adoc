@@ -75,6 +75,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/291[Can't build 2024.2 because of problem with ASDL C++ library]
 | [.bugid]#294#
 | {issue-base}/294[compiler bug aborts build of istari]
+| [.bugid]#295#
+| {issue-base}/295[Incorrect constant folding of word equality]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

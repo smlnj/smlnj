@@ -103,8 +103,16 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/01/31]::
+Fix for {issue-base}/295[Issue #295 (Incorrect constant folding of
+word equality)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/01/21]::
-Fix for {issue-base}/294[Issue #294 (compiler bug aborts build of istari)].
+Fix for {issue-base}/294[Issue #294 (compiler bug aborts build of
+istari)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 

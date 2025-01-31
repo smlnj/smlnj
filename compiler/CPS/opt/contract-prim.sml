@@ -571,6 +571,8 @@ structure ContractPrim : sig
  *)
             | cond (P.CMP{oper=P.EQL, kind=P.FLOAT _}, _) = NONE (* in case of NaN's *)
             | cond (P.CMP{oper=P.EQL, ...}, [VAR v, VAR w]) = if v=w then SOME true else NONE
+            | cond (P.CMP{oper=P.EQL, kind=P.UINT k}, [NUM i, NUM j]) =
+                SOME(CA.uEq(k, #ival i, #ival j))
             | cond (P.CMP{oper=P.EQL, ...}, [NUM i, NUM j]) = SOME( #ival i = #ival j)
             | cond (P.CMP{oper=P.NEQ, kind}, vl) = notCond (P.CMP{oper=P.EQL, kind=kind}, vl)
             | cond (P.PEQL, [NUM i, NUM j]) = SOME(#ival i = #ival j)
