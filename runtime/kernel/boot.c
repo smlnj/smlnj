@@ -67,7 +67,7 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char        *fname;
     int         rts_init = 0;
 
-/*DEBUG SilentLoad=FALSE;*/
+/*DEBUG*/ SilentLoad=FALSE;/* */
     msp = AllocMLState (TRUE, heapParams);
 
 #ifdef HEAP_MONITOR
@@ -480,13 +480,20 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             Die ("format error (code size mismatch) in bin file \"%s\"", fname);
         }
 
-      /* allocate a code object and initialize with the code from the binfile */
-        ENABLE_CODE_WRITE
-        codeObj = ML_AllocCode (msp, thisSzB);
-        ReadBinFile (file, PTR_MLtoC(char, codeObj), thisSzB, fname);
-        DISABLE_CODE_WRITE
-
-        FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+        {
+            char *buffer = MALLOC(thisSzB);
+            ReadBinFile (file, buffer, thisSzB, fname);
+          /* allocate a code object and initialize with the code from the binfile */
+            ENABLE_CODE_WRITE
+            codeObj = ML_AllocCode (msp, thisSzB);
+            memcpy (PTR_MLtoC(char, codeObj), buffer, thisSzB);
+            DISABLE_CODE_WRITE
+            FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+            if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
+                Die("!!!!! code object corruption !!!!!\n");
+            }
+            FREE(buffer);
+        }
 
         if (!SilentLoad) {
             Say ("  [addr: %p, size: %d]\n", PTR_MLtoC(char, codeObj), thisSzB);
