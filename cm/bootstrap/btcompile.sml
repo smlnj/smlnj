@@ -39,6 +39,7 @@ struct
 				   val compile_there =
 				       Servers.compile o SrcPath.encode)
 
+    (* instantiate the binfile cache *)
     structure BFC = BfcFn (val arch = Backend.architecture)
 
     (* instantiate Stabilize... *)
@@ -191,7 +192,7 @@ struct
 		in
 		    { ie = (fn () => (NONE, n), dae, domain), domain = domain }
 		end
-		
+
 		fun add_exports (n, exports) = let
 		    val { ie, domain } = rt2ie (n, rt n)
 		    fun ins_ie (sy, m) = SymbolMap.insert (m, sy, ie)
@@ -231,7 +232,7 @@ struct
 		  | SOME (g as GG.GROUP { exports, ... }) => SOME g
 		  | SOME GG.ERRORGROUP => NONE
 	    end
-		    
+
 	    (* Don't try to load the stable init group. Instead, recompile
 	     * directly. *)
 	    fun dontLoadInitGroup () = let
@@ -259,7 +260,7 @@ struct
 		case loadInitGroup () of
 		    SOME g => g
 		  | NONE => dontLoadInitGroup ()
-			
+
 	    (* Ok, now, based on "paranoid" and stable verification,
 	     * call the appropriate function(s) to get the init group. *)
 	    val init_group =
