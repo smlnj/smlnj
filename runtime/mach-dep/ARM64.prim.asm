@@ -412,7 +412,7 @@ ALIGNED_ENTRY(array_a)
         ldr     xarg, MEM(xarg,8)                   /* arg := initial data value */
         /* build descriptor in tmp4 */
         mov     wtmp4, IM(MAKE_TAG(DTAG_arr_data))
-        orr     xtmp4, xtmp4, xtmp1, lsl IM(TAG_SHIFTW)
+        orr     xtmp4, xtmp4, xtmp2, lsl IM(TAG_SHIFTW)
         str     xtmp4, POSTINC(allocptr, WORD_SZB)  /* *allocptr++ = descriptor */
         mov     xtmp3, allocptr                     /* tmp3 = array data object */
 
@@ -451,19 +451,19 @@ ALIGNED_ENTRY(create_v_a)
         cmp     xtmp2, IM(SMALL_OBJ_SZW)        /* if (xtmp2 > SMALL_OBJ_SZW) */
         b.hi    L_vector_large                  /*    then goto vector_large */
 
-	ldr	xtmp2, MEM(xarg, WORD_SZB)	/* xtmp2 := initialization list */
+	ldr	xarg, MEM(xarg, WORD_SZB)	/* xarg := initialization list */
 
         /* build descriptor in tmp3 and then write it to the heap */
         mov     wtmp3, IM(MAKE_TAG(DTAG_vec_data))
-        orr     xtmp3, xtmp3, xtmp1, lsl IM(TAG_SHIFTW)
+        orr     xtmp3, xtmp3, xtmp2, lsl IM(TAG_SHIFTW)
         str     xtmp3, POSTINC(allocptr, WORD_SZB)	/* *allocptr++ = descriptor */
         mov     xtmp4, allocptr                 	/* tmp4 := array data object */
 
 L_vector_lp:
-	cmp	xtmp2, IM(ML_nil)			/* while (xtmp2 != NIL) do */
+	cmp	xarg, IM(ML_nil)			/* while (xarg != NIL) do */
 	b.eq	L_vector_lp_exit
-	ldp	xtmp3, xtmp2, MEM(xtmp2, 0)		/* xtmp3 = hd(xtmp2);
-							 * xtmp2 = tl(xtmp2) */
+	ldp	xtmp3, xarg, MEM(xarg, 0)		/* xtmp3 = hd(xarg);
+							 * xarg = tl(xarg) */
 	str	xtmp3, POSTINC(allocptr, WORD_SZB)	/* *allocptr++ = xtmp3 */
 	b	L_vector_lp
 
@@ -539,7 +539,8 @@ ALIGNED_ENTRY(create_s_a)
 
         /* build descriptor in tmp2 */
         mov     wtmp2, IM(MAKE_TAG(DTAG_raw))
-        orr     xtmp2, xtmp2, xarg, lsl IM(TAG_SHIFTW)
+        orr     xtmp2, xtmp2, xtmp1, lsl IM(TAG_SHIFTW)
+                                                /* xtmp2 = (len << TAG_SHIFTW) | DTAG_raw */
         str     xtmp2, POSTINC(allocptr, WORD_SZB)  /* *allocptr++ = descriptor */
         mov     xtmp3, allocptr                     /* tmp3 = data object */
         add     allocptr, allocptr, xtmp1, lsl IM(3) /* allocptr += length */
@@ -577,7 +578,7 @@ ALIGNED_ENTRY(create_r_a)
 
         /* build descriptor in tmp2 */
         mov     wtmp2, IM(MAKE_TAG(DTAG_raw64))
-        orr     xtmp2, xtmp2, xarg, lsl IM(TAG_SHIFTW)
+        orr     xtmp2, xtmp2, xtmp1, lsl IM(TAG_SHIFTW)
         str     xtmp2, POSTINC(allocptr, WORD_SZB)  /* *allocptr++ = descriptor */
         mov     xtmp3, allocptr                     /* tmp3 = data object */
         add     allocptr, allocptr, xtmp1, lsl IM(3) /* allocptr += length */
