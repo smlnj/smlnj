@@ -168,10 +168,6 @@ ml-options.o:	$(KERN_DIR)/error.c \
 error.o:	$(KERN_DIR)/error.c $(INC_DIR)/ml-base.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/error.c
 
-standalone.o:	$(KERN_DIR)/standalone.c \
-		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/ml-limits.h
-	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/standalone.c
-
 boot.o:		$(KERN_DIR)/boot.c \
 		$(INC_DIR)/ml-osdep.h $(INC_DIR)/cache-flush.h \
 		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/bin-file.h \
