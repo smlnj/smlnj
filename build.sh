@@ -351,15 +351,15 @@ esac
 # add other runtime-system options
 #
 if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
-  if [ x"XDEFS" = x ] ; then
+  if [ -z "$XDEFS" ] ; then
     XDEFS="-fsanitize=address"
   else
     XDEFS="$XDEFS -fsanitize=address"
   fi
 fi
 
-if [ x"XDEFS" != x ] ; then
-  if [ x"EXTRA_DEFS" = x ] ; then
+if [ -n "$XDEFS" ] ; then
+  if [ -z "$EXTRA_DEFS" ] ; then
     EXTRA_DEFS="XDEFS=\"$XDEFS\""
   else
     EXTRA_DEFS="XDEFS=\"$XDEFS\" $EXTRA_DEFS"
