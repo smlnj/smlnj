@@ -170,8 +170,12 @@ struct arena {
  * Currently, the only big objects are code objects.
  */
 
-/*#define BIGOBJ_PAGE_SHIFT	12*/ /* 4Kb */
+#ifdef ARCH_ARM64
+/* On Arm64, code sections are assumed to be 12-bit aligned */
+#define BIGOBJ_PAGE_SHIFT	12
+#else
 #define BIGOBJ_PAGE_SHIFT	10  /* 1Kb */
+#endif
 #define BIGOBJ_PAGE_SZB		(1 << BIGOBJ_PAGE_SHIFT)
 
 /* the minimum size of a big-object region should be at least 128K and be a multiple of
