@@ -191,8 +191,8 @@ ALIGNED_ENTRY(handle_a)
 ALIGNED_ENTRY(return_a)
         mov     wlink,IM(ML_unit)               /* stdlink = UNIT */
         mov     wclos,IM(ML_unit)               /* stdclos = UNIT */
-        mov     wpc,IM(ML_unit)         /* pc = UNIT */
-        mov     wreqId,IM(REQ_RETURN)   /* wreqId = REQ_RETURN */
+        mov     wpc,IM(ML_unit)                 /* pc = UNIT */
+        mov     wreqId,IM(REQ_RETURN)           /* wreqId = REQ_RETURN */
         b       CSYM(set_request)
 
 /* Request a fault. */
@@ -212,31 +212,34 @@ ALIGNED_LABEL(raise_overflow)
  */
 ALIGNED_ENTRY(bind_cfun_a)
 	cmp	allocptr, limitptr
-	b.hi	L_bind_cfun_nogc
-	bl	saveregs
-L_bind_cfun_nogc:
+	b.hi	L_bind_cfun_gc                  /* if (allocPtr > limitptr) then GC */
         mov     wreqId,IM(REQ_BIND_CFUN)        /* wreqId = REQ_BIND_CFUN */
         b       CSYM(set_request)
+L_bind_cfun_gc:
+        bl      saveregs
+        b       CSYM(bind_cfun_a)
 
 /* build_literals:
  */
 ALIGNED_ENTRY(build_literals_a)
 	cmp	allocptr, limitptr
-	b.hi	L_build_literals_nogc
-	bl	saveregs
-L_build_literals_nogc:
+	b.hi	L_build_literals_gc             /* if (allocPtr > limitptr) then GC */
         mov     wreqId,IM(REQ_BUILD_LITERALS)   /* wreqId = REQ_BUILD_LITERALS */
         b       CSYM(set_request)
+L_build_literals_gc:
+	bl	saveregs
+        b       CSYM(build_literals_a)
 
 /* callc:
  */
 ALIGNED_ENTRY(callc_a)
 	cmp	allocptr, limitptr
-	b.hi	L_callc_nogc
-	bl	saveregs
-L_callc_nogc:
+	b.hi	L_callc_gc                      /* if (allocPtr > limitptr) then GC */
         mov     wreqId,IM(REQ_CALLC)            /* wreqId = REQ_CALLC */
         b       CSYM(set_request)
+L_callc_gc:
+	bl	saveregs
+        b       CSYM(callc_a)
 
 /* saveregs:
  * Entry point for GC.  Control is transfered using a `call` instruction,
@@ -399,13 +402,12 @@ pending:
  */
 ALIGNED_ENTRY(array_a)
 	cmp	allocptr, limitptr
-	b.hi	L_array_nogc
-	bl	saveregs
-L_array_nogc:
+	b.hi	L_array_gc               /* if (allocPtr > limitptr) then GC */
+
         ldr     xtmp1, MEM(xarg, 0)      /* xtmp1 := length of array (tagged) */
         asr     xtmp2, xtmp1, IM(1)      /* xtmp2 := (xtmp1 >> 1) -- untag length */
-        cmp     xtmp2, IM(SMALL_OBJ_SZW) /* if (xtmp2 <= SMALL_OBJ_SZW) goto array_large */
-        b.hi    L_array_large
+        cmp     xtmp2, IM(SMALL_OBJ_SZW)
+        b.hi    L_array_large            /* if (xtmp2 > SMALL_OBJ_SZW) goto array_large */
 
         ldr     xarg, MEM(xarg,8)                   /* arg := initial data value */
         /* build descriptor in tmp4 */
@@ -433,17 +435,20 @@ L_array_large:                          /* else (xtmp2 > SMALL_OBJ_SZW) */
         mov     xpc,xlink
         b       CSYM(set_request)
 
+L_array_gc:
+        bl      saveregs
+        b       CSYM(array_a)
+
 /* create_v_a : (int * 'a list) -> 'a vector
  * Create a vector with elements taken from a non-null list.
  */
 ALIGNED_ENTRY(create_v_a)
 	cmp	allocptr, limitptr
-	b.hi	L_create_v_nogc
-	bl	saveregs
-L_create_v_nogc:
+	b.hi	L_create_v_gc                   /* if (allocPtr > limitptr) then GC */
+
         ldr     xtmp1, MEM(xarg, 0)      	/* xtmp1 := tagged length */
 	asr	xtmp2, xtmp1, IM(1)		/* xtmp2 := untagged length */
-        cmp     xtmp2, IM(SMALL_OBJ_SZW)        /* if (xtmp2 <= SMALL_OBJ_SZW) */
+        cmp     xtmp2, IM(SMALL_OBJ_SZW)        /* if (xtmp2 > SMALL_OBJ_SZW) */
         b.hi    L_vector_large                  /*    then goto vector_large */
 
 	ldr	xtmp2, MEM(xarg, WORD_SZB)	/* xtmp2 := initialization list */
@@ -476,19 +481,21 @@ L_vector_large:					/* else (xtmp2 > SMALL_OBJ_SZW) */
         mov     xpc,xlink
         b       CSYM(set_request)
 
+L_create_v_gc:
+        bl      saveregs
+        b       CSYM(create_v_a)
+
 /* create_b : int -> bytearray
  * Create an uninitialized byte array of the given length.
  */
 ALIGNED_ENTRY(create_b_a)
 	cmp	allocptr, limitptr
-	b.hi	L_create_b_nogc
-	bl	saveregs
+	b.hi	L_create_b_gc                   /* if (allocPtr > limitptr) then GC */
 
-L_create_b_nogc:
         asr     xtmp1, xarg, IM(1)              /* tmp1 := untagged length */
         add     xtmp1, xtmp1, IM(7)
         asr     xtmp1, xtmp1, IM(3)             /* tmp1 := length in words */
-        cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 <= SMALL_OBJ_SZW) */
+        cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 > SMALL_OBJ_SZW) */
         b.hi    L_create_b_large                /*    then goto create_b_large */
 
         /* build descriptor in tmp2 */
@@ -512,20 +519,22 @@ L_create_b_large:                                   /* else (xtmp1 > SMALL_OBJ_S
         mov     xpc,xlink
         b       CSYM(set_request)
 
+L_create_b_gc:
+        bl      saveregs
+        b       CSYM(create_b_a)
+
 /* create_s_a: int -> string
  * Create an uninitialized byte vector (aka string) of the given length.
  * This function includes an additional byte at the end to hold a null character.
  */
 ALIGNED_ENTRY(create_s_a)
 	cmp	allocptr, limitptr
-	b.hi	L_create_s_nogc
-	bl	saveregs
+	b.hi	L_create_s_gc                   /* if (allocPtr > limitptr) then GC */
 
-L_create_s_nogc:
         asr     xtmp1, xarg, IM(1)              /* tmp1 := untagged length */
         add     xtmp1, xtmp1, IM(8)
         asr     xtmp1, xtmp1, IM(3)             /* tmp1 := length in words (incl. null) */
-        cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 <= SMALL_OBJ_SZW) */
+        cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 > SMALL_OBJ_SZW) */
         b.hi    L_create_b_large                /*    then goto create_b_large */
 
         /* build descriptor in tmp2 */
@@ -550,15 +559,18 @@ L_create_s_large:                                   /* else (xtmp1 > SMALL_OBJ_S
         mov     xpc,xlink
         b       CSYM(set_request)
 
+L_create_s_gc:
+        bl      saveregs
+        b       CSYM(create_s_a)
+
 
 /* create_r : int -> real64array
  * Create an uninitialized real64 array of the given length.
  */
 ALIGNED_ENTRY(create_r_a)
 	cmp	allocptr, limitptr
-	b.hi	L_create_r_nogc
-	bl	saveregs
-L_create_r_nogc:
+	b.hi	L_create_r_gc                 /* if (allocPtr > limitptr) then GC */
+
         asr     xtmp1, xarg, IM(1)              /* tmp1 := untagged length */
         cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 <= SMALL_OBJ_SZW) */
         b.hi    L_create_r_large                /*    then goto create_r_large */
@@ -583,6 +595,10 @@ L_create_r_large:                                   /* else (xtmp1 > SMALL_OBJ_S
         mov     wreqId,IM(REQ_ALLOC_REALDARRAY)
         mov     xpc,xlink
         b       CSYM(set_request)
+
+L_create_r_gc:
+        bl      saveregs
+        b       CSYM(create_r_a)
 
 /* MP support is deprecated, but we need to these global symbols for linking */
 ALIGNED_ENTRY(try_lock_a)
