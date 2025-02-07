@@ -81,6 +81,9 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     /* construct the list of files to be loaded */
     BinFileList = BuildFileList (msp, bootlist, &max_boot_path_len);
 
+    if (BinFileList == LIST_nil)
+        goto cleanup;
+
     /* this space is ultimately wasted */
     if ((fname = MALLOC (max_boot_path_len)) == NULL) {
         Die ("unable to allocate space for boot file names");
@@ -120,6 +123,7 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
         }
     }
 
+cleanup:
     FreeMLState (msp);
 
 } /* end of BootML */
@@ -230,7 +234,8 @@ PVT FILE *OpenBinFile (const char *fname, bool_t isBinary)
  */
 PVT void ReadBinFile (FILE *file, void *buf, int nbytes, const char *fname)
 {
-    if (fread(buf, nbytes, 1, file) == -1) {
+    size_t r = fread(buf, nbytes, 1, file);
+    if (r == 0 && ferror(file)) {
         Die ("cannot read file \"%s\"", fname);
     }
 

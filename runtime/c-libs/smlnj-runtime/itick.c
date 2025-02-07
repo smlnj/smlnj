@@ -22,15 +22,16 @@
  */
 ml_val_t _ml_RunT_itick (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
 #if defined(HAS_CLOCK_GETRES)
     struct timespec ts;
 
     if (clock_getres(CLOCK_REALTIME, &ts) == 0) {
-	Unsigned64_t t = NS_PER_SEC * (Unsigned64_t)ts.tv_sec + (Unsigned64_t)ts.tv_nsec;
-	return ML_AllocWord64(msp, t);
+        Unsigned64_t t = NS_PER_SEC * (Unsigned64_t)ts.tv_sec + (Unsigned64_t)ts.tv_nsec;
+        return ML_AllocWord64(msp, t);
     }
     else {
-	return RAISE_SYSERR(msp, 0);
+        return RAISE_SYSERR(msp, 0);
     }
 
 #elif defined(HAS_SETITIMER)

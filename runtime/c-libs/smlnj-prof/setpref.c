@@ -21,37 +21,39 @@ extern void DisableProfSignals (void);
 ml_val_t _ml_Prof_setpref (ml_state_t *msp, ml_val_t arg)
 {
 #if defined(OPSYS_UNIX) || defined(OPSYS_WIN32)
-    bool_t	enabled = (ProfCntArray != ML_unit);
-    int	 i;
+    UNUSED(msp);
+    bool_t enabled = (ProfCntArray != ML_unit);
+    int i;
 
     if (arg != OPTION_NONE) {
-	ProfCntArray = OPTION_get(arg);
-	if (! enabled) {
-	  /* add ProfCntArray to the C roots */
-	    CRoots[NumCRoots++] = &ProfCntArray;
+        ProfCntArray = OPTION_get(arg);
+        if (! enabled) {
+          /* add ProfCntArray to the C roots */
+            CRoots[NumCRoots++] = &ProfCntArray;
 #ifdef OPSYS_UNIX
-	  /* enable profiling signals */
-	    EnableProfSignals ();
+          /* enable profiling signals */
+            EnableProfSignals ();
 #endif
-	}
+        }
     }
     else if (enabled) {
       /* remove ProfCntArray from the C roots */
-	for (i = 0;  i < NumCRoots;  i++) {
-	    if (CRoots[i] == &ProfCntArray) {
-		CRoots[i] = CRoots[--NumCRoots];
-		break;
-	    }
-	}
+        for (i = 0;  i < NumCRoots;  i++) {
+            if (CRoots[i] == &ProfCntArray) {
+                CRoots[i] = CRoots[--NumCRoots];
+                break;
+            }
+        }
 #ifdef OPSYS_UNIX
       /* disable profiling signals */
-	DisableProfSignals ();
+        DisableProfSignals ();
 #endif
-	ProfCntArray = ML_unit;
+        ProfCntArray = ML_unit;
     }
 
     return ML_unit;
 #else
+    UNUSED_UNIT_PARAM(arg);
     return RAISE_ERROR(msp, "time profiling not supported");
 #endif
 

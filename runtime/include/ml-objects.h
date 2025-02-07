@@ -155,6 +155,7 @@ STATIC_INLINE ml_val_t ML_AllocWord (ml_state_t *msp, Word_t w)
 STATIC_INLINE ml_val_t INT32_CtoML (ml_state_t *msp, Int32_t n)
 {
 #ifdef SIZE_64
+    (void)msp;
     return INT_CtoML(n); /* tagged representation on 64-bit systems */
 #else /* 32-bit ML values */
     ml_val_t *p = msp->ml_allocPtr;
@@ -182,6 +183,7 @@ STATIC_INLINE Int32_t REC_SELINT32 (ml_val_t p, int i)
 STATIC_INLINE ml_val_t WORD32_CtoML (ml_state_t *msp, Unsigned32_t n)
 {
 #ifdef SIZE_64
+    (void)msp;
     return INT_CtoML(n); /* tagged representation on 64-bit systems */
 #else /* 32-bit ML values */
     ml_val_t *p = msp->ml_allocPtr;

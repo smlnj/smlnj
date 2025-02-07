@@ -20,6 +20,8 @@
  */
 ml_val_t _ml_OS_tmpname (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
 #if defined(HAS_MKSTEMP) && defined(P_tmpdir)
 
   /* mkstemp was added to the IEEE Std 1003.1 in 2004, so most systems should support it */

@@ -23,6 +23,8 @@
  */
 ml_val_t _ml_P_FileSys_getcwd (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     char	path[MAXPATHLEN];
     char*	sts;
     ml_val_t    p;

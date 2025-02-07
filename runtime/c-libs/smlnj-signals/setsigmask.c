@@ -14,6 +14,7 @@
  */
 ml_val_t _ml_Sig_setsigmask (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
     SetSignalMask (arg);
 
     return ML_unit;

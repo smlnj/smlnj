@@ -17,15 +17,17 @@
  */
 ml_val_t _ml_P_ProcEnv_uname (ml_state_t *msp, ml_val_t arg)
 {
-    struct utsname      name;
-    int                 sts;
-    ml_val_t            l, p, s;
-    ml_val_t		field;
+    UNUSED_UNIT_PARAM(arg);
+
+    struct utsname  name;
+    int             sts;
+    ml_val_t        l, p, s;
+    ml_val_t        field;
 
     sts = uname (&name);
 
     if (sts == -1)
-	RAISE_SYSERR(msp, sts);
+        RAISE_SYSERR(msp, sts);
 
 /** NOTE: we should do something about possible GC!!! **/
 

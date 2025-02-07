@@ -25,10 +25,9 @@ ml_val_t _ml_RunT_mkexec (ml_state_t *msp, ml_val_t arg)
     ml_val_t    seq = REC_SEL(arg, 0);
     int         entrypoint = REC_SELINT(arg, 1);
     char	*code = GET_SEQ_DATAPTR(char, seq);
-    Word_t	nbytes = GET_SEQ_LEN(seq);
     ml_val_t	res;
 
-    FlushICache (code, nbytes);
+    FlushICache (code, GET_SEQ_LEN(seq));
 
     REC_ALLOC1(msp, res, PTR_CtoML(code + entrypoint));
 

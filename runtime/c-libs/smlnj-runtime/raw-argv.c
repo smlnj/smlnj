@@ -8,10 +8,11 @@
 #include "ml-objects.h"
 #include "cfun-proto-list.h"
 
-/* _ml_Proc_raw_argv:
+/* _ml_Proc_raw_argv : unit -> string list
  */
 ml_val_t _ml_Proc_raw_argv (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     return ML_CStringList (msp, RawArgs);
 
 } /* end of _ml_Proc_raw_argv */

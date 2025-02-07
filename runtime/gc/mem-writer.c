@@ -92,6 +92,7 @@ PVT void Flush (writer_t *wr)
 {
     wr_buffer_t	*bp = BufOf(wr);
 
+    UNUSED(bp);
     ASSERT(bp->next <= bp->top);
 
 } /* end of Flush */
@@ -100,6 +101,7 @@ PVT void Flush (writer_t *wr)
  */
 PVT off_t Tell (writer_t *wr)
 {
+    UNUSED(wr);
     Die ("Tell not supported on memory writers");
 
 } /* end of Tell */
@@ -108,6 +110,7 @@ PVT off_t Tell (writer_t *wr)
  */
 PVT void Seek (writer_t *wr, off_t offset)
 {
+    UNUSED(wr); UNUSED(offset);
     Die ("Tell not supported on memory writers");
 
 } /* end of Seek */
@@ -118,6 +121,7 @@ PVT void Free (writer_t *wr)
 {
     wr_buffer_t	*bp = BufOf(wr);
 
+    UNUSED(bp);
     ASSERT(bp->next == bp->top);
 
     FREE (BufOf(wr));

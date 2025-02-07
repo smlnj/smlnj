@@ -14,6 +14,8 @@
  */
 ml_val_t _ml_P_ProcEnv_getgid (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     ml_val_t	p;
 
     SYSWORD_ALLOC (msp, p, (SysWord_t)(getgid()));

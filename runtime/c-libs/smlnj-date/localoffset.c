@@ -70,6 +70,7 @@ PVT ml_val_t LocalOffset (ml_state_t *msp, time_t t)
  */
 ml_val_t _ml_Date_localOffset (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     return LocalOffset (msp, time (NIL(time_t *)));
 
 } /* end of _ml_Date_localoffset */

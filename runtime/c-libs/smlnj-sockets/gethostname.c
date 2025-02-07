@@ -19,11 +19,13 @@
  */
 ml_val_t _ml_NetDB_gethostname (ml_state_t *msp, ml_val_t arg)
 {
-    char	hostname[MAXHOSTNAMELEN];
+    UNUSED_UNIT_PARAM(arg);
+
+    char hostname[MAXHOSTNAMELEN];
 
     if (gethostname (hostname, MAXHOSTNAMELEN) == -1)
-	return RAISE_SYSERR(msp, sts);
+        return RAISE_SYSERR(msp, sts);
     else
-	return ML_CString(msp, hostname);
+        return ML_CString(msp, hostname);
 
 } /* end of _ml_NetDB_gethostname */

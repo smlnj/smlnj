@@ -17,7 +17,8 @@
  */
 ml_val_t _ml_P_TTY_tcgetpgrp (ml_state_t *msp, ml_val_t arg)
 {
-    int         fd = INT_MLtoC(arg);
+    UNUSED(msp);
+    int fd = INT_MLtoC(arg);
 
     return INT_CtoML(tcgetpgrp(fd));
 

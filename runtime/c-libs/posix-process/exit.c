@@ -16,6 +16,7 @@
  */
 ml_val_t _ml_P_Process_exit (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
     Exit (INT_MLtoC(arg));
 
     /*NOTREACHED*/

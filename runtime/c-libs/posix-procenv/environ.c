@@ -11,6 +11,8 @@
  */
 ml_val_t _ml_P_ProcEnv_environ (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     extern char         **environ;
 
     return ML_CStringList (msp, environ);

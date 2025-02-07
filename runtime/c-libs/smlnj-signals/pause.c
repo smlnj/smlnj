@@ -15,6 +15,7 @@
  */
 ml_val_t _ml_Sig_pause (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
 
     PauseUntilSignal (msp->ml_vproc);
 

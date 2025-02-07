@@ -16,9 +16,9 @@
  */
 ml_val_t _ml_P_ProcEnv_time (ml_state_t *msp, ml_val_t arg)
 {
-    time_t      t;
+    UNUSED_UNIT_PARAM(arg);
 
-    t = time (NIL(time_t*));
+    time_t t = time (NIL(time_t *));
 
     return INT32_CtoML(msp, t);
 

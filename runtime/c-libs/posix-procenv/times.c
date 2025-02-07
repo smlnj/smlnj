@@ -17,6 +17,8 @@
  */
 ml_val_t _ml_P_ProcEnv_times (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     clock_t      t;
     struct tms   ts;
     ml_val_t     v, e, u, s, cu, cs;

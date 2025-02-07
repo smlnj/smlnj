@@ -121,10 +121,10 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
         size_t alignedCodeSzb = gContext->roundToWordSzInBytes (codeSzb);
 
         // compute the padded size of the source-file name; the computed
-	// length includes the nul terminator and the length byte
+	    // length includes the nul terminator and the length byte
         size_t srcFileLen = strlen(src);
         size_t paddedSrcFileLen = gContext->roundToWordSzInBytes (srcFileLen + 2);
-        if (paddedSrcFileLen > 255 * gContext->wordSzInBytes()) {
+        if (paddedSrcFileLen > 255ul * gContext->wordSzInBytes()) {
             // if the file name is too long, which is unexpected, omit it
             paddedSrcFileLen = 0;
         }

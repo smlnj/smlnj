@@ -23,6 +23,7 @@
  */
 ml_val_t _ml_U_Dynload_dlclose (ml_state_t *msp, ml_val_t ml_handle)
 {
+    UNUSED(msp);
     void *handle = (void *) (WORD_MLtoC (ml_handle));
 
 #ifdef OPSYS_WIN32

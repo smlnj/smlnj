@@ -22,6 +22,7 @@
  */
 ml_val_t _ml_CodeGen_setTarget (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
     if (arg == OPTION_NONE) {
         return llvm_setTarget(NIL(const char *));
     }

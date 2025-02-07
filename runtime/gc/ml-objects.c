@@ -155,7 +155,7 @@ ml_val_t ML_AllocRaw (ml_state_t *msp, Word_t nwords)
  */
 void ML_ShrinkRaw (ml_state_t *msp, ml_val_t v, Word_t nWords)
 {
-    int		oldNWords = OBJ_LEN(v);
+    Word_t oldNWords = OBJ_LEN(v);
 
     if (nWords == oldNWords)
 	return;
@@ -310,7 +310,7 @@ ml_val_t ML_AllocArrayData (ml_state_t *msp, Word_t len, ml_val_t initVal)
 {
     ml_val_t	res, *p;
     ml_val_t	desc = MAKE_DESC(len, DTAG_arr_data);
-    int		i;
+    Word_t	i;
     Word_t	szb;
 
     if (len > SMALL_OBJ_SZW) {

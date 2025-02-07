@@ -23,8 +23,9 @@
  */
 ml_val_t _ml_Time_timeofday (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
 #if defined(OPSYS_UNIX)
-    struct timeval	t;
+    struct timeval t;
 
     gettimeofday (&t, NIL(struct timezone *));
 

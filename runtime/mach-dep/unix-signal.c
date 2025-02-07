@@ -54,6 +54,7 @@ ml_val_t ListSignals (ml_state_t *msp)
 void PauseUntilSignal (vproc_state_t *vsp)
 {
 /* FIXME: should use sigsuspend */
+    (void)vsp;
     pause ();
 
 } /* end of PauseUntilSignal */
@@ -128,6 +129,7 @@ PVT SigReturn_t CSigHandler (int sig, siginfo_t *si, void *c)
 {
     ucontext_t	    *scp = (ucontext_t *)c;
     vproc_state_t   *vsp = SELF_VPROC;
+    (void)si;
 
     vsp->vp_sigCounts[sig].nReceived++;
     vsp->vp_totalSigCount.nReceived++;

@@ -90,7 +90,7 @@ sig_info_t *SortSignalTbl ()
    * duplicates by mapping to the first name.  We need this because some
    * systems alias signals.
    */
-    for (i = 0, n = 0;  i < TABLE_SIZE;  i++) {
+    for (i = 0, n = 0;  i < (int)TABLE_SIZE;  i++) {
       /* invariant: signals[0..n-1] is sorted */
 	sig_desc_t	*p = &(SigTable[i]);
 	for (j = 0;  j < n;  j++) {
@@ -114,7 +114,7 @@ sig_info_t *SortSignalTbl ()
    */
 
   /* add the run-time system signals to the table */
-    for (i = 0, j = n;  i < NUM_RUN_SIGS;  i++, j++) {
+    for (i = 0, j = n;  i < (int)NUM_RUN_SIGS;  i++, j++) {
       signals[j] = &(RunTSignals[i]);
       signals[j]->sig = signals[n-1]->sig+i+1;
     }

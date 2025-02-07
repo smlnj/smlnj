@@ -117,6 +117,9 @@ PVT ml_val_t BlastHeap (ml_state_t *msp, ml_val_t obj, blast_res_t *info)
     ml_val_t	        blastedObj;
     writer_t		*wr;
 
+  /* FIXME: arenaHdrs is unused */
+    UNUSED(arenaHdrs);
+
   /* compute the arena offsets in the heap image */
     for (i = 0;  i < NUM_ARENAS; i++)
 	totArenaSzB[i] = 0;
@@ -229,7 +232,7 @@ PVT ml_val_t BlastHeap (ml_state_t *msp, ml_val_t obj, blast_res_t *info)
     }
 
   /* blast out the externals table */
-    if (HeapIO_WriteExterns(wr, info->exportTbl) == -1) {
+    if (HeapIO_WriteExterns(wr, info->exportTbl) == (Addr_t)-1) {
 	FREE (arenaHdrsBuf);
 	return BLAST_ERROR;
     }

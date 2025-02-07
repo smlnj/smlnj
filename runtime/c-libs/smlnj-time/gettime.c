@@ -19,9 +19,11 @@
  */
 ml_val_t _ml_Time_gettime (ml_state_t *msp, ml_val_t arg)
 {
-    Time_t		t, s;
-    ml_val_t		cpuT, sysT, gcT, res;
-    vproc_state_t	*vsp = msp->ml_vproc;
+    UNUSED_UNIT_PARAM(arg);
+
+    Time_t              t, s;
+    ml_val_t            cpuT, sysT, gcT, res;
+    vproc_state_t       *vsp = msp->ml_vproc;
 
     GetCPUTime (&t, &s);
 

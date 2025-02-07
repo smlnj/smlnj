@@ -181,6 +181,8 @@ blast_res_t BlastGC (ml_state_t *msp, ml_val_t *root, int gen)
  */
 Addr_t BlastGC_AssignLitAddrs (blast_res_t *res, int id, Addr_t offset)
 {
+    UNUSED(res);
+
     struct assignlits_clos closure;
 
     closure.offset = offset;
@@ -300,6 +302,7 @@ PVT void BlastGC_FinishGC (ml_state_t *msp, int maxGen)
     bool_t	dummy = FALSE;
     int		i, j;
     aid_t	maxAid;
+    UNUSED(dummy);
 
 #ifdef VERBOSE
 SayDebug ("Completing blast GC (maxGen = %d of %d)\n", maxGen, heap->numGens);
@@ -761,6 +764,9 @@ PVT bigobj_desc_t *BlastGC_ForwardBigObj (
     bigobj_desc_t   *dp;
     embobj_info_t   *codeInfo;
 
+  /* FIXME: Remove the unused parameter */
+    UNUSED(p);
+
   /* find the beginning of the region containing the code object */
     i = BIBOP_ADDR_TO_INDEX(obj);
     while (! BO_IS_HDR(aid)) {
@@ -854,6 +860,7 @@ PVT void BlastGC_AssignLits (Addr_t addr, void *_closure, void *_info)
 	closure->offset += objSzB;
     }
 #else
+UNUSED(addr); UNUSED(_closure); UNUSED(_info);
 Die ("BlastGC_AssignLits");
 #endif
 } /* end of BlastGC_AssignLits */

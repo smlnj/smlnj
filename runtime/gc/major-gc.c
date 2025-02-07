@@ -415,6 +415,7 @@ PVT void MajorGC_ScanRoots (
     aid_t	maxAid = MAKE_MAX_AID(maxCollectedGen);
     ml_val_t	*rp;
     int		i;
+    UNUSED(msp);
 
     while ((rp = *roots++) != NIL(ml_val_t *)) {
 	MajorGC_CheckWord(heap, bibop, maxAid, rp);
@@ -844,6 +845,7 @@ PVT bigobj_desc_t *MajorGC_ForwardBigObj (
     Addr_t	    i;
     bigobj_region_t *region;
     bigobj_desc_t   *dp;
+    UNUSED(heap);
 
 BO2_COUNT;
     i = BIBOP_ADDR_TO_INDEX(obj);

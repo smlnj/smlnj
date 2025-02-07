@@ -14,6 +14,7 @@
  */
 ml_val_t _ml_P_ProcEnv_isatty (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
     return (isatty(INT_MLtoC(arg)) ? ML_true : ML_false);
 
 } /* end of _ml_P_ProcEnv_isatty */

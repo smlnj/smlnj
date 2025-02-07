@@ -16,9 +16,9 @@
  */
 ml_val_t _ml_P_ProcEnv_setsid (ml_state_t *msp, ml_val_t arg)
 {
-    pid_t      pid;
+    UNUSED_UNIT_PARAM(arg);
 
-    pid = setsid ();
+    pid_t pid = setsid ();
 
     CHK_RETURN(msp, pid)
 

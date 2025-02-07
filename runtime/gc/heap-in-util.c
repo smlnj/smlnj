@@ -91,7 +91,8 @@ status_t HeapIO_ReadBlock (inbuf_t *bp, void *blk, off_t len)
 {
     status_t	sts = SUCCESS;
 
-    if (bp->nbytes >= len) {
+  /* FIXME: Why is len signed? Should the API use size_t */
+    if (bp->nbytes >= (size_t)len) {
 	memcpy (blk, bp->buf, len);
 	bp->nbytes -= len;
 	bp->buf += len;

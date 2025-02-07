@@ -48,6 +48,8 @@ PVT ml_val_t mkList (ml_state_t *msp, int ngrps, gid gidset[])
  */
 ml_val_t _ml_P_ProcEnv_getgroups (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     gid		gidset[NGROUPS_MAX];
     int		ngrps;
     ml_val_t	p;

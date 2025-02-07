@@ -25,7 +25,7 @@ ml_val_t _ml_Date_localtime (ml_state_t *msp, ml_val_t arg)
     struct tm	tmbuf;
 
     if (localtime_r (&t, &tmbuf) == NULL) {
-	RAISE_SYSERR(msp,0);
+	return RAISE_SYSERR(msp,0);
     }
     else {
 	return _ml_alloc_tm (msp, &tmbuf);

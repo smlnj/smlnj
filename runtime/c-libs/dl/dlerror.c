@@ -56,6 +56,7 @@ char *dlerror (void)
  */
 ml_val_t _ml_U_Dynload_dlerror (ml_state_t *msp, ml_val_t ml_handle)
 {
+    UNUSED(ml_handle);
     const char *e = dlerror ();
     ml_val_t r, s;
 

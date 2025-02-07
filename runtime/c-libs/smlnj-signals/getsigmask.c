@@ -12,6 +12,7 @@
  */
 ml_val_t _ml_Sig_getsigmask (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     return GetSignalMask (msp);
 
 } /* end of _ml_Sig_getsigmask */

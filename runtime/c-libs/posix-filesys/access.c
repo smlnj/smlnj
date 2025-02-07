@@ -20,6 +20,7 @@
  */
 ml_val_t _ml_P_FileSys_access (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
     ml_val_t	path = REC_SEL(arg, 0);
     ml_val_t	ml_mode = REC_SEL(arg, 1);
     mode_t	mode = SYSWORD_MLtoC(ml_mode);

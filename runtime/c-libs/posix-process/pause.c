@@ -16,6 +16,9 @@
  */
 ml_val_t _ml_P_Process_pause (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
+    UNUSED_UNIT_PARAM(arg);
+
     pause();
 
     return ML_unit;
