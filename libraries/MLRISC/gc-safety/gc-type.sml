@@ -8,7 +8,7 @@ struct
 
    type ty = int
 
-   datatype gctype = 
+   datatype gctype =
      CONST of int                 (* integer constant *)
    | NONREF of O.objtype ref      (* non-reference value *)
    | REF of O.objtype ref         (* a reference, pointer to a gc object *)

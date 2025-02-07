@@ -19,7 +19,7 @@ struct
    open Ast Comp.Util Comp.Error
 
    (* Change these definitions if the cell type has changed *)
-   fun howToRename cellkind = 
+   fun howToRename cellkind =
       $["fun rename r = if regmap r = rs then rt else r",
         "fun renamecellset cellset =",
         "    CellsBasis.CellSet.map C."^C.cellkindToString cellkind^" rename cellset"
@@ -30,7 +30,7 @@ struct
    let val md      = RTLComp.md compiled_rtls
 
         (* name of the structure/signature *)
-       val strName = Comp.strname md "Rewrite"  
+       val strName = Comp.strname md "Rewrite"
        val sigName = "REWRITE_INSTRUCTIONS"
 
        (* The instructions *)
@@ -49,23 +49,23 @@ struct
        (*
         * Make a rewrite function of type:
         *   regmap * instruction * fromReg * toReg -> instruction
-        * 
+        *
         *)
        fun mkFun(funName, rwOpnd, cellKind, defUse) =
        let fun mkRewriteBody{instr, rtl, const} =
            let fun apply(f,x) = SOME(APP(f,ID x))
-               fun rewrite(x,ty,T.$(_,c,_)) = 
+               fun rewrite(x,ty,T.$(_,c,_)) =
                      if c = cellKind then apply("rename",x) else NONE
-                 | rewrite(x,ty,T.ARG(_,ref(rep as T.REP k),_)) = 
-                     if MLRisc.isConst rep then NONE 
+                 | rewrite(x,ty,T.ARG(_,ref(rep as T.REP k),_)) =
+                     if MLRisc.isConst rep then NONE
                      else apply("rename"^k,x)
                  | rewrite(x,ty,_) = fail("bad argument "^x)
                fun nonRtlArg _ = NONE
-               fun rtlArg(name, ty, exp, RTL.IN _) = 
+               fun rtlArg(name, ty, exp, RTL.IN _) =
                     if defUse = USE then rewrite(name,ty,exp) else NONE
                  | rtlArg(name, ty, exp, RTL.OUT _) =
                     if defUse = DEF then rewrite(name,ty,exp) else NONE
-                 | rtlArg(name, ty, exp, RTL.IO _) = 
+                 | rtlArg(name, ty, exp, RTL.IO _) =
                     rewrite(name,ty,exp)
                val exp = RTLComp.mapInstr{instr=instr,
                                           rtl=rtl,
@@ -73,7 +73,7 @@ struct
                                           rtlArg=rtlArg}
            in  {exp=exp, casePats=[]}
            end
-           val decls = 
+           val decls =
                [$["fun rewriteoperand opnd = "^rwOpnd^"(regmap,rs,rt,opnd)"
                  ],
                 howToRename cellKind,
@@ -90,7 +90,7 @@ struct
        end
 
        (* The functor *)
-       val strBody = 
+       val strBody =
            [$ ["structure I  = Instr",
                "structure C  = I.C",
                ""

@@ -62,37 +62,37 @@ fun toList (M.MARKeenv { env, ... }) = toList env
 
 fun look(env,v) =
     let fun scan(M.MARKeenv { env, ... }) = scan env
-	  | scan(M.BINDeenv(d, rest)) = 
+          | scan(M.BINDeenv(d, rest)) =
               (case ED.find(d, v)
                 of SOME e => e
                  | NONE => scan rest)
 (*
-	      if EP.eqEntVar(v,v')
-	      then (debugmsg("$EE.look: found " ^ EP.entVarToString v); e)
-	      else (debugmsg("$EE.look: looking for " ^ EP.entVarToString v ^
-			     " saw " ^ EP.entVarToString v');
-		    scan rest)
+              if EP.eqEntVar(v,v')
+              then (debugmsg("$EE.look: found " ^ EP.entVarToString v); e)
+              else (debugmsg("$EE.look: looking for " ^ EP.entVarToString v ^
+                             " saw " ^ EP.entVarToString v');
+                    scan rest)
 *)
-	  | scan M.ERReenv = M.ERRORent
-	  | scan M.NILeenv = 
-	      (debugmsg ("$EE.look: didn't find "^EP.entVarToString v);
-	       raise Unbound)
+          | scan M.ERReenv = M.ERRORent
+          | scan M.NILeenv =
+              (debugmsg ("$EE.look: didn't find "^EP.entVarToString v);
+               raise Unbound)
      in scan env
     end
 
-fun lookStrEnt(entEnv,entVar) = 
+fun lookStrEnt(entEnv,entVar) =
     case look(entEnv,entVar)
      of M.STRent ent => ent
       | M.ERRORent => M.bogusStrEntity
       | _ => bug "lookStrEnt"
 
-fun lookTycEnt(entEnv,entVar) = 
+fun lookTycEnt(entEnv,entVar) =
     case look(entEnv,entVar)
      of M.TYCent ent => ent
       | M.ERRORent => Types.ERRORtyc
       | _ => bug "lookTycEnt"
 
-fun lookFctEnt(entEnv,entVar) = 
+fun lookFctEnt(entEnv,entVar) =
     case look(entEnv,entVar)
      of M.FCTent ent => ent
       | M.ERRORent => M.bogusFctEntity
@@ -102,31 +102,31 @@ fun lookEP(entEnv,[]) = bug "lookEP.1"
   | lookEP(entEnv,[v]) = look(entEnv,v)
   | lookEP(entEnv,ep as (v::rest)) =
      (case look(entEnv,v)
-	of M.STRent { entities, ... } => lookEP (entities,rest)
-	 | M.ERRORent => M.ERRORent
-	 | ent =>
-	     (say "lookEnt.1: expected STRent\n";
-	      say "found entity: ";
-	      case ent
-		of M.TYCent _ => say "TYCent\n"
-		 | M.FCTent _ => say "FCTent\n"
-		 | _ => say "ERRORent\n";
-	      say "entpath: "; say (EP.entPathToString(ep)); say "\n";
-	      bug "lookEnt.2"))
+        of M.STRent { entities, ... } => lookEP (entities,rest)
+         | M.ERRORent => M.ERRORent
+         | ent =>
+             (say "lookEnt.1: expected STRent\n";
+              say "found entity: ";
+              case ent
+                of M.TYCent _ => say "TYCent\n"
+                 | M.FCTent _ => say "FCTent\n"
+                 | _ => say "ERRORent\n";
+              say "entpath: "; say (EP.entPathToString(ep)); say "\n";
+              bug "lookEnt.2"))
 
-fun lookTycEP(entEnv,entPath) = 
+fun lookTycEP(entEnv,entPath) =
     case lookEP(entEnv,entPath)
      of M.TYCent tycon => tycon
       | M.ERRORent => T.ERRORtyc
       | _ => bug "lookTycEP: wrong entity"
 
-fun lookStrEP(entEnv,entPath) = 
+fun lookStrEP(entEnv,entPath) =
     case lookEP(entEnv,entPath)
      of M.STRent rlzn => rlzn
       | M.ERRORent => M.bogusStrEntity
       | _ => bug "lookStrEP: wrong entity"
 
-fun lookFctEP(entEnv,entPath) = 
+fun lookFctEP(entEnv,entPath) =
     case lookEP(entEnv,entPath)
      of M.FCTent rlzn => rlzn
       | M.ERRORent => M.bogusFctEntity

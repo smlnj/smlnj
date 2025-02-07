@@ -6,7 +6,7 @@ sig
 
    structure Ast : MDL_AST
 
-   type 'a rewriter = ('a -> 'a) -> ('a -> 'a) 
+   type 'a rewriter = ('a -> 'a) -> ('a -> 'a)
 
    type clients = {exp  : Ast.exp rewriter,
                    decl : Ast.decl rewriter,

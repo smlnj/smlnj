@@ -1,4 +1,4 @@
-(* 
+(*
  *  Spill heuristics should match the following signature.
  *)
 signature RA_SPILL_HEURISTICS =
@@ -11,7 +11,7 @@ sig
 
    val init : unit -> unit
 
-   val chooseSpillNode : 
+   val chooseSpillNode :
        { graph          : G.interferenceGraph,
          spillWkl       : G.node list,
          hasBeenSpilled : int -> bool

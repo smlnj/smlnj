@@ -8,14 +8,14 @@ signature UNION_GRAPH_VIEW =
 sig
 
    val union_view : ('g1 * 'g2 -> 'g3) ->
-               ('n,'e,'g1) Graph.graph * ('n,'e,'g2) Graph.graph -> 
+               ('n,'e,'g1) Graph.graph * ('n,'e,'g2) Graph.graph ->
                ('n,'e,'g3) Graph.graph
 
 end
 
 structure UnionGraphView : UNION_GRAPH_VIEW =
 struct
-   
+
    structure G = Graph
    structure Sort = ListMergeSort
 
@@ -26,9 +26,9 @@ struct
        fun merge_node_ids ns =
            Sort.uniqueSort (fn (i,j) => Int.compare(i,j)) ns
        fun merge_edges es =
-           Sort.uniqueSort (fn ((i,j,_),(m,n,_)) => 
+           Sort.uniqueSort (fn ((i,j,_),(m,n,_)) =>
                               if i < m then LESS
-                              else if i = m then 
+                              else if i = m then
                                  if j < n then LESS
                                  else if j = n then EQUAL
                                  else GREATER
@@ -93,10 +93,10 @@ struct
          exit_edges      = exit_edges,
          forall_nodes    = forall_nodes,
          forall_edges    = forall_edges
-	 (*
+         (*
          fold_nodes      = fold_nodes,
          fold_edges      = fold_edges
-	 *)
+         *)
        }
    end
 end

@@ -3,7 +3,7 @@
  * view of the implementation.
  *
  * DEBUG VERSION with CHECKED POINTER DEREFERENCING.
- * 
+ *
  *   (C) 2002, Lucent Technologies, Bell Laboratories
  *
  * author: Matthias Blume (blume@research.bell-labs.com)
@@ -18,7 +18,7 @@ structure C_Debug : C_DEBUG = struct
     (* ... which means that we have to re-implement some things: *)
     structure Ptr = struct
         open Ptr
-	val |*! = fn p => if isNull' p then raise NullPointer else |*! p
-	val |*| = fn p => if isNull p then raise NullPointer else |*| p
+        val |*! = fn p => if isNull' p then raise NullPointer else |*! p
+        val |*| = fn p => if isNull p then raise NullPointer else |*| p
     end
 end

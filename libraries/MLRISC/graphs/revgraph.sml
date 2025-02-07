@@ -13,7 +13,7 @@ end
 
 structure ReversedGraphView : REVERSED_GRAPH_VIEW =
 struct
-   
+
    structure G = Graph
 
    fun rev_view (G.GRAPH G) =
@@ -52,9 +52,9 @@ struct
          exit_edges      = #entry_edges G,
          forall_nodes    = #forall_nodes G,
          forall_edges    = fn f => #forall_edges G (swap f)
-	 (*
+         (*
          fold_nodes      = #fold_nodes G,
-         fold_edges      = fn f => fn u => 
+         fold_edges      = fn f => fn u =>
             #fold_edges G (fn ((i,j,e),l) => f((j,i,e),l)) u  *)
        }
    end

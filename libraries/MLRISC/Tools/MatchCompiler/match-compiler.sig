@@ -9,7 +9,7 @@
 signature MATCH_COMPILER =
 sig
    (* These are client defined types *)
-   structure Guard   : sig type guard 
+   structure Guard   : sig type guard
                            val toString : guard -> string
                        end
    structure Exp     : sig type exp
@@ -17,8 +17,8 @@ sig
                        end
    structure Action  : sig type action end
    structure Con     : sig type con val compare : con * con -> order end
-   structure Literal : sig type literal 
-                           val compare : literal * literal -> order 
+   structure Literal : sig type literal
+                           val compare : literal * literal -> order
                        end
    structure Var    : sig type var end
 
@@ -26,7 +26,7 @@ sig
    datatype index = INT of int | LABEL of Var.var
    datatype path  = PATH of index list
 
-   structure Path   : 
+   structure Path   :
       sig val compare : path * path -> order
           val toString : path -> string
           val toIdent : path -> string
@@ -37,8 +37,8 @@ sig
    datatype name = VAR of Var.var | PVAR of path
 
    structure Subst : ORD_MAP where type Key.ord_key = Var.var
-       
-   type pat 
+
+   type pat
    type subst = name Subst.map
 
    datatype decon =
@@ -48,14 +48,14 @@ sig
    exception MatchCompiler of string
 
    type compiled_dfa (* compiled pattern matching dfa *)
-   type compiled_rule 
+   type compiled_rule
    type rule_no = int
    type compiled_pat
 
    (* Compile a user pattern into internal pattern form;
     * This function abstracts out the computation of paths and bindings.
     *)
-   val rename : 
+   val rename :
        ( { idPat     : Var.var -> compiled_pat,
            asPat     : Var.var * 'pat -> compiled_pat,
            wildPat   : unit -> compiled_pat,
@@ -64,7 +64,7 @@ sig
            recordPat : (Var.var * 'pat) list -> compiled_pat,
            litPat    : Literal.literal -> compiled_pat,
 
-            (* logical connectives and other extensions to the standard *) 
+            (* logical connectives and other extensions to the standard *)
            orPat     : 'pat list -> compiled_pat,
            andPat    : 'pat list -> compiled_pat,
            notPat    : 'pat -> compiled_pat,
@@ -75,7 +75,7 @@ sig
       -> {number: rule_no,            (* rule number *)
           pats:   'pat list,          (* the pattern *)
           guard:  Guard.guard option, (* optional guard *)
-          cont:   Var.var option,     (* optional continuation *)  
+          cont:   Var.var option,     (* optional continuation *)
           action: Action.action       (* action *)
          }
       -> compiled_rule
@@ -94,12 +94,12 @@ sig
    (* Generate code for a compiled dfa.
     * Assuming an ML-like language.
     *)
-   val codeGen : 
+   val codeGen :
         { genFail : unit -> Exp.exp,
           genOk   : Action.action -> Exp.exp,
           genPath : path -> Exp.exp,
           genBind : (Var.var * Exp.exp) list -> 'decl list,
-          genCase : Var.var * (decon * path option list * Exp.exp) list * 
+          genCase : Var.var * (decon * path option list * Exp.exp) list *
                      Exp.exp option -> Exp.exp,
           genIf   : Guard.guard * Exp.exp * Exp.exp -> Exp.exp,
           genGoto : int * Var.var list -> Exp.exp, (* call a function *)

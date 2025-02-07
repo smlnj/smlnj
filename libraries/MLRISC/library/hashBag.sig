@@ -1,6 +1,6 @@
 (*
  * Bag datatype that uses hashing
- * 
+ *
  * -- Allen
  *)
 
@@ -12,7 +12,7 @@ sig
    val create : { order : 'a * 'a -> order,
                   hash  : 'a -> int,
                   exn   : exn
-                } -> int -> 'a bag 
+                } -> int -> 'a bag
 
    val size       : 'a bag -> int
    val bucketSize : 'a bag -> int

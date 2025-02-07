@@ -1,21 +1,21 @@
-(* 
+(*
  * This is a revamping of the Alpha32 instruction selection module
  * using the new MLTREE and instruction representation.   I've dropped
  * the suffix 32 since we now support 64 bit datatypes.
- * 
+ *
  * -- Allen
- * 
+ *
  * Notes: places with optimizations are marked ***OPT**n*
  *)
 
 
 functor Alpha
-   (structure AlphaInstr : ALPHAINSTR 
+   (structure AlphaInstr : ALPHAINSTR
     structure PseudoInstrs : ALPHA_PSEUDO_INSTR
-    			where I = AlphaInstr
+                        where I = AlphaInstr
     structure ExtensionComp : MLTREE_EXTENSION_COMP
-    			where I = AlphaInstr
-			  and T = AlphaInstr.T
+                        where I = AlphaInstr
+                          and T = AlphaInstr.T
 
       (* Cost of multiplication in cycles *)
     val multCost : int ref
@@ -23,10 +23,10 @@ functor Alpha
       (* Should we just use the native multiply by a constant? *)
     val useMultByConst : bool ref
 
-      (* Should we use SUD flags for floating point and generate DEFFREG? 
+      (* Should we use SUD flags for floating point and generate DEFFREG?
        * This should be set to false for C-like clients but true for SML/NJ.
        *)
-    val SMLNJfloatingPoint : bool 
+    val SMLNJfloatingPoint : bool
 
       (* Should we use generate special byte/word load instructions
        * like LDBU, LDWU, STB, STW.
@@ -85,7 +85,7 @@ struct
   to maximize portability of SML programs, we use the MULT/SU form.
   (and ADD/SU, SUB/SU, etc.)  But to use this form successfully,
   certain rules have to be followed.  Basically, d cannot be the same
-  register as s1 or s2, because the opsys needs to be able to 
+  register as s1 or s2, because the opsys needs to be able to
   recalculate the operation using the original contents of s1 and s2,
   and the MULT/SU instruction will overwrite d even if it traps.
 
@@ -122,9 +122,9 @@ struct
   At the moment, we do not group arithmetic operations into sequences;
   that is, each arithop will be preceded by a single DEFFREG and
   followed by a TRAPB.  To avoid the cost of all those TRAPB's, we
-  should improve this when we have time.  Warning:  Don't put more 
+  should improve this when we have time.  Warning:  Don't put more
   than 31 instructions in the sequence, because they're all required
-  to write to different destination registers!  
+  to write to different destination registers!
 
   What about multiple traps?  For example, suppose a sequence of
   instructions produces an Overflow and  a Divide-by-Zero exception?
@@ -147,49 +147,49 @@ struct
 
 
 
-		-------------------o*o----------------------
-			   LIVE/KILL instructions
-				 Nov 28, 2001
-				  Lal George
+                -------------------o*o----------------------
+                           LIVE/KILL instructions
+                                 Nov 28, 2001
+                                  Lal George
 
   The mechanism described above is now obsolete. We no longer use
-  the DEFFREG instruction but the zero length LIVE instruction. 
+  the DEFFREG instruction but the zero length LIVE instruction.
   Therefore the code that gets generated is something like;
 
-	f1 := f2 + f3
+        f1 := f2 + f3
         trap
-	LIVE f1, f2, f3
+        LIVE f1, f2, f3
 
   The live ranges for f1, f2, and f3 are extended by the LIVE
   instruction, and are live simultaneously and therefore cannot
-  be allocated to the same register. 
+  be allocated to the same register.
 
   Multiple floating point instructions should be surrounded
   by parallel copies. That is to say, if we have:
 
         f1 := f2 + f3
-	trapb
+        trapb
         LIVE f1, f2, f3
 
-	f4 := f1 * f2
-	trapb
-	LIVE f1, f2, f4
+        f4 := f1 * f2
+        trapb
+        LIVE f1, f2, f4
 
   Then the sequence above should be transformed to:
 
         [f2', f3'] := [f1, f2] ; parallel copy
         f1' := f2' + f3'
-	f4' := f1' * f2'
+        f4' := f1' * f2'
         trapb
-	LIVE f1', f2', f3', f4'
+        LIVE f1', f2', f3', f4'
         [f4] := [f4']  ; copy assuming f4 is the only value live.
 
-  The parallel copies are to ensure that the primed variables will 
+  The parallel copies are to ensure that the primed variables will
   not spill, and there should never be more than K reigsters in the LIVE
   instruction (K is the number of registers on the machine).
   ****************************************************************)
 
-  fun error msg = MLRiscErrorMsg.error("Alpha",msg) 
+  fun error msg = MLRiscErrorMsg.error("Alpha",msg)
 
   type instrStream = (I.instruction, C.cellset, CFG.cfg) TS.stream
   type mltreeStream = (T.stm, T.mlrisc list, CFG.cfg) TS.stream
@@ -198,7 +198,7 @@ struct
    * This module is used to simulate operations of non-standard widths.
    *)
   structure Gen = MLTreeGen(structure T = T
-			    structure Cells = C
+                            structure Cells = C
                             val intTy = 64
                             val naturalWidths = [32,64]
                             datatype rep = SE | ZE | NEITHER
@@ -212,7 +212,7 @@ struct
   val EQ      = op =
 
   (*
-   * Specialize the modules for multiplication/division 
+   * Specialize the modules for multiplication/division
    * by constant optimizations.
    *)
   functor Multiply32 = MLTreeMult
@@ -221,7 +221,7 @@ struct
      structure CB = CellsBasis
 
      val intTy = 32
-   
+
      type arg  = {r1:CB.cell,r2:CB.cell,d:CB.cell}
      type argi = {r:CB.cell,i:int,d:CB.cell}
 
@@ -233,13 +233,13 @@ struct
      fun slli{r,i=1,d} = [I.operate{oper=I.ADDL,ra=r,rb=I.REGop r,rc=d}]
        | slli{r,i=2,d} = [I.operate{oper=I.S4ADDL,ra=r,rb=zeroOpn,rc=d}]
        | slli{r,i=3,d} = [I.operate{oper=I.S8ADDL,ra=r,rb=zeroOpn,rc=d}]
-       | slli{r,i,d}   = 
+       | slli{r,i,d}   =
           let val tmp = C.newReg()
           in  [I.operate{oper=I.SLL,ra=r,rb=I.IMMop i,rc=tmp},
                I.operate{oper=I.ADDL,ra=tmp,rb=zeroOpn,rc=d}]
           end
 
-     (* 
+     (*
       * How to right shift (unsigned) by a constant (32bits)
       *)
      fun srli{r,i,d} =
@@ -248,21 +248,21 @@ struct
               I.operate{oper=I.SRL,ra=tmp,rb=I.IMMop i,rc=d}]
          end
 
-     (* 
+     (*
       * How to right shift (signed) by a constant (32bits)
       *)
-     fun srai{r,i,d} = 
+     fun srai{r,i,d} =
          let val tmp = C.newReg()
          in  [I.operate{oper=I.ADDL,ra=r,rb=zeroOpn,rc=tmp},
               I.operate{oper=I.SRA,ra=tmp,rb=I.IMMop i,rc=d}]
-         end 
+         end
     )
 
   functor Multiply64 = MLTreeMult
     (structure I = I
      structure T = T
      structure CB = CellsBasis
-   
+
      val intTy = 64
 
      type arg  = {r1:CB.cell, r2:CB.cell, d:CB.cell}
@@ -294,9 +294,9 @@ struct
      fun addv{r1,r2,d} = [I.operate{oper=I.ADDL,ra=r1,rb=I.REGop r2,rc=d}]
      fun subv{r1,r2,d} = [I.operate{oper=I.SUBL,ra=r1,rb=I.REGop r2,rc=d}]
      val sh1addv = NONE
-     val sh2addv = SOME(fn {r1,r2,d} => 
+     val sh2addv = SOME(fn {r1,r2,d} =>
                     [I.operate{oper=I.S4ADDL,ra=r1,rb=I.REGop r2,rc=d}])
-     val sh3addv = SOME(fn {r1,r2,d} => 
+     val sh3addv = SOME(fn {r1,r2,d} =>
                     [I.operate{oper=I.S8ADDL,ra=r1,rb=I.REGop r2,rc=d}])
     )
   structure Mulu32 = Mul32(val signed = false)
@@ -321,23 +321,23 @@ struct
      fun addv{r1,r2,d} = [I.operate{oper=I.ADDQ,ra=r1,rb=I.REGop r2,rc=d}]
      fun subv{r1,r2,d} = [I.operate{oper=I.SUBQ,ra=r1,rb=I.REGop r2,rc=d}]
      val sh1addv = NONE
-     val sh2addv = SOME(fn {r1,r2,d} => 
+     val sh2addv = SOME(fn {r1,r2,d} =>
                     [I.operate{oper=I.S4ADDQ,ra=r1,rb=I.REGop r2,rc=d}])
-     val sh3addv = SOME(fn {r1,r2,d} => 
+     val sh3addv = SOME(fn {r1,r2,d} =>
                     [I.operate{oper=I.S8ADDQ,ra=r1,rb=I.REGop r2,rc=d}])
     )
   structure Mulu64 = Mul64(val signed = false)
   structure Muls64 = Mul64(val signed = true)
 
-  (* 
+  (*
    * The main stuff
    *)
 
-  datatype times4or8 = TIMES1 | TIMES4 | TIMES8 
+  datatype times4or8 = TIMES1 | TIMES4 | TIMES8
   datatype zeroOne   = ZERO | ONE | OTHER
   datatype commutative = COMMUTE | NOCOMMUTE
 
-  val zeroFR = C.f31 
+  val zeroFR = C.f31
   val zeroEA = I.Direct zeroR
   val zeroT  = T.LI 0
   val trapb = [I.trapb]
@@ -374,7 +374,7 @@ struct
        * When this is set to true, we use the /SU rounding mode
        * (chopped towards zero) for floating point arithmetic.
        * This flag is only used to support the old alpha32x backend.
-       * 
+       *
        * Otherwise, we use /SUD.  This is the default for SML/NJ.
        *
        *)
@@ -382,72 +382,72 @@ struct
            (I.ADDTSUD,I.SUBTSUD,I.MULTSUD,I.DIVTSUD)
       val (ADDSX,SUBSX,MULSX,DIVSX) =
             (I.ADDSSUD,I.SUBSSUD,I.MULSSUD,I.DIVSSUD)
-  
+
       fun annotate(i, an) = List.foldl (fn (a, i) => I.ANNOTATION{i=i,a=a}) i an
       fun mark'(i, an) = emitInstruction(annotate(i,an))
       fun mark(i,an) = emitInstruction(annotate(I.INSTR i,an))
 
       (* Fit within 16 bits? *)
       fun literal16 n = ~32768 <= n andalso n < 32768
-      fun literal16w w = 
+      fun literal16w w =
           let val hi = W32.~>>(w,0wx16)
           in  hi = 0w0 orelse (W32.notb hi) = 0w0 end
 
       (* emit an LDA instruction; return the register that holds the value *)
       fun lda(base,I.IMMop 0) = base
-        | lda(base,offset) = 
+        | lda(base,offset) =
             let val r = newReg()
             in  emit(I.LDA{r=r, b=base, d=offset}); r end
 
       (* emit load immed *)
       fun loadImmed(n, base, rd, an) = let
-	val n = T.I.toInt32(32, n)
+        val n = T.I.toInt32(32, n)
       in
-	if n = 0 then move(base, rd, an)
-	else if ~32768 <= n andalso n < 32768 then
-	  mark(I.LDA{r=rd, b=base, d=I.IMMop(Int32.toInt n)}, an)
+        if n = 0 then move(base, rd, an)
+        else if ~32768 <= n andalso n < 32768 then
+          mark(I.LDA{r=rd, b=base, d=I.IMMop(Int32.toInt n)}, an)
         else loadImmed32(n, base, rd, an)
       end
 
       (* loadImmed32 is used to load int32 and word32 constants.
-       * In either case we sign extend the 32-bit value. This is compatible 
+       * In either case we sign extend the 32-bit value. This is compatible
        * with LDL which sign extends a 32-bit valued memory location.
        *)
-      (* TODO: 
+      (* TODO:
        *  Should handle 64 bits if immediate is not in the 32 bit range.
        *)
       and loadImmed32(n, base, rd, an) = let
-	fun immed(0, high) =
-	      mark(I.LDAH{r=rd, b=base, d=I.IMMop(high)}, an)
-	  | immed(low, 0) = 
-	      mark(I.LDA{r=rd, b=base, d=I.IMMop(low)}, an)
-	  | immed(low, high) = 
-	      (emit(I.LDA{r=rd, b=base, d=I.IMMop(low)});
-	       mark(I.LDAH{r=rd, b=rd, d=I.IMMop(high)}, an)
-	       )
-	val w = Word32.fromLargeInt(Int32.toLarge n)
-	val low = W32.andb(w, 0wxffff)
-	val high = W32.~>>(w, 0w16)
+        fun immed(0, high) =
+              mark(I.LDAH{r=rd, b=base, d=I.IMMop(high)}, an)
+          | immed(low, 0) =
+              mark(I.LDA{r=rd, b=base, d=I.IMMop(low)}, an)
+          | immed(low, high) =
+              (emit(I.LDA{r=rd, b=base, d=I.IMMop(low)});
+               mark(I.LDAH{r=rd, b=rd, d=I.IMMop(high)}, an)
+               )
+        val w = Word32.fromLargeInt(Int32.toLarge n)
+        val low = W32.andb(w, 0wxffff)
+        val high = W32.~>>(w, 0w16)
       in
-	if W32.<(low, 0wx8000) then 
-	  immed(W32.toInt low, W32.toIntX high)
-	else let
-	    val low = W32.toIntX(W32.-(low, 0wx10000))
-	    val high = W32.toIntX(W32.+(high, 0w1))
+        if W32.<(low, 0wx8000) then
+          immed(W32.toInt low, W32.toIntX high)
+        else let
+            val low = W32.toIntX(W32.-(low, 0wx10000))
+            val high = W32.toIntX(W32.+(high, 0w1))
           in
-	    if high <> 0x8000 then immed(low, high) 
-	    else let (* transition of high from pos to neg *)
-	        val tmpR1 = newReg() 
-		val tmpR2 = newReg() 
-		val tmpR3=newReg()
+            if high <> 0x8000 then immed(low, high)
+            else let (* transition of high from pos to neg *)
+                val tmpR1 = newReg()
+                val tmpR2 = newReg()
+                val tmpR3=newReg()
               in
-		(* you just gotta do, what you gotta do! *)
-		emit(I.LDA{r=tmpR3, b=base, d=I.IMMop(low)});
-		emit(I.OPERATE{oper=I.ADDQ, ra=zeroR, rb=I.IMMop 1, rc=tmpR1});
-		emit(I.OPERATE{oper=I.SLL, ra=tmpR1, rb=I.IMMop 31, rc=tmpR2});
-		mark(I.OPERATE{oper=I.ADDQ, ra=tmpR2, rb=I.REGop tmpR3, rc=rd},an)
+                (* you just gotta do, what you gotta do! *)
+                emit(I.LDA{r=tmpR3, b=base, d=I.IMMop(low)});
+                emit(I.OPERATE{oper=I.ADDQ, ra=zeroR, rb=I.IMMop 1, rc=tmpR1});
+                emit(I.OPERATE{oper=I.SLL, ra=tmpR1, rb=I.IMMop 31, rc=tmpR2});
+                mark(I.OPERATE{oper=I.ADDQ, ra=tmpR2, rb=I.REGop tmpR3, rc=rd},an)
               end
-	  end
+          end
       end
 
 
@@ -455,23 +455,23 @@ struct
       and loadLabexp(le,d,an) = mark(I.LDA{r=d,b=zeroR,d=I.LABop le},an)
 
       (* emit a copy *)
-      and copy(dst,src,an) = 
+      and copy(dst,src,an) =
           mark'(I.COPY{k=CB.GP, sz=32, dst=dst,src=src,
                       tmp=case dst of
                            [_] => NONE | _ => SOME(I.Direct(newReg()))},an)
 
       (* emit a floating point copy *)
-      and fcopy(dst,src,an) = 
+      and fcopy(dst,src,an) =
           mark'(I.COPY{k=CB.FP, sz=64, dst=dst,src=src,
                       tmp=case dst of
                            [_] => NONE | _ => SOME(I.FDirect(newFreg()))},an)
 
-      and move(s,d,an) = 
-          if CB.sameCell(s,d) orelse CB.sameCell(d,zeroR) then () else 
+      and move(s,d,an) =
+          if CB.sameCell(s,d) orelse CB.sameCell(d,zeroR) then () else
           mark'(I.COPY{k=CB.GP, sz=32, dst=[d],src=[s],tmp=NONE},an)
 
-      and fmove(s,d,an) = 
-          if CB.sameCell(s,d) orelse CB.sameCell(d,zeroFR) then () else 
+      and fmove(s,d,an) =
+          if CB.sameCell(s,d) orelse CB.sameCell(d,zeroFR) then () else
           mark'(I.COPY{k=CB.FP, sz=64, dst=[d],src=[s],tmp=NONE},an)
 
        (* emit an sign extension op *)
@@ -511,29 +511,29 @@ struct
       (* convert an operand into a register *)
       and reduceOpn(I.REGop r) = r
         | reduceOpn(I.IMMop 0) = zeroR
-        | reduceOpn opn = 
+        | reduceOpn opn =
            let val d = newReg()
            in  emit(I.OPERATE{oper=I.BIS,ra=zeroR,rb=opn,rc=d}); d end
 
       (* convert an expression into an operand *)
       and opn(T.REG(_,r)) = I.REGop r
-        | opn(e as T.LI n) = 
-	    if n <= 0xff andalso n >= 0 then 
-	      I.IMMop(toInt(n))
+        | opn(e as T.LI n) =
+            if n <= 0xff andalso n >= 0 then
+              I.IMMop(toInt(n))
             else let val tmpR = newReg()
                  in  loadImmed(n,zeroR,tmpR,[]); I.REGop tmpR end
         | opn(e as T.CONST _) = I.LABop e
         | opn(T.LABEXP x) = I.LABop x
         | opn e = I.REGop(expr e)
 
-      (* compute base+displacement from an expression 
+      (* compute base+displacement from an expression
        *)
       and addr exp =
           let fun toLexp(I.IMMop i) = T.LI(IntInf.fromInt i)
                 | toLexp(I.LABop le) = le
                 | toLexp _ = error "addr.toLexp"
 
-              fun add(t,n,I.IMMop m)  = 
+              fun add(t,n,I.IMMop m)  =
                    I.IMMop(toInt(T.I.ADD(t,n,IntInf.fromInt m)))
                 | add(t,n,I.LABop le) = I.LABop(T.ADD(t,T.LI n,le))
                 | add(t,n,_) = error "addr.add"
@@ -541,15 +541,15 @@ struct
               fun addLe(ty,le,I.IMMop 0) = I.LABop le
                 | addLe(ty,le,disp) = I.LABop(T.ADD(ty,le,toLexp disp))
 
-              fun sub(t,n,I.IMMop m) = 
+              fun sub(t,n,I.IMMop m) =
                   I.IMMop(toInt(T.I.SUB(t,IntInf.fromInt m,n)))
                 | sub(t,n,I.LABop le) = I.LABop(T.SUB(t,le,T.LI n))
                 | sub(t,n,_) = error "addr.sub"
 
               fun subLe(ty,le,I.IMMop 0) = I.LABop le
                 | subLe(ty,le,disp) = I.LABop(T.SUB(ty,le,toLexp disp))
-             
-              (* Should really take into account of the address width XXX *) 
+
+              (* Should really take into account of the address width XXX *)
               fun fold(T.ADD(t,e,T.LI n),disp) = fold(e,add(t,n,disp))
                 | fold(T.ADD(t,e,x as T.CONST _),disp) = fold(e,addLe(t,x,disp))
                 | fold(T.ADD(t,e,x as T.LABEL _),disp) = fold(e,addLe(t,x,disp))
@@ -571,7 +571,7 @@ struct
       and offset(base,disp as I.IMMop n,off) =
            let val n' = n+off
            in  if literal16 n' then (base,I.IMMop n')
-               else 
+               else
                let val tmp = newReg()
                in  emit(I.OPERATE{oper=I.ADDQ,ra=base,rb=disp,rc=tmp});
                    (tmp,I.IMMop off)
@@ -587,12 +587,12 @@ struct
 
       (* check if base offset fits within the field *)
       and makeEA(base, off as I.IMMop offset) =
-         if ~32768 <= offset andalso offset <= 32767 
+         if ~32768 <= offset andalso offset <= 32767
          then (base, off)
-         else 
+         else
          let val tmpR = newReg()
                 (* unsigned low 16 bits *)
-             val low = wtoi(Word.andb(itow offset, 0wxffff)) 
+             val low = wtoi(Word.andb(itow offset, 0wxffff))
              val high = offset div 65536
              val (lowsgn, highsgn) =                        (* Sign-extend *)
               if low <= 32767 then (low, high) else (low -65536, high+1)
@@ -604,8 +604,8 @@ struct
 
       (* look for multiply by 4 and 8 of the given type *)
       and times4or8(ty,e) =
-          let 
-	      fun f(t,a,n) = if t = ty then 
+          let
+              fun f(t,a,n) = if t = ty then
                                if EQ(n, 4) then (TIMES4,a)
                                else if EQ(n, 8) then (TIMES8,a)
                                else (TIMES1,e)
@@ -616,14 +616,14 @@ struct
                                else if EQ(n, 3) then (TIMES8,a)
                                else (TIMES1,e)
                              else (TIMES1,e)
-          in  case e of 
+          in  case e of
                 T.MULU(t,a,T.LI n)   => f(t,a,n)
               | T.MULS(t,T.LI n,a)   => f(t,a,n)
               | T.SLL(t,a,T.LI n)    => u(t,a,n)
               | _                    => (TIMES1,e)
           end
 
-      (* generate an add instruction 
+      (* generate an add instruction
        * ***OPT*** look for multiply by 4 and 8 and use the S4ADD and S8ADD
        * forms.
        *)
@@ -638,17 +638,17 @@ struct
            |  _          => commArith(add,a,b,d,an)
           )
 
-      (* generate a subtract instruction 
+      (* generate a subtract instruction
        * ***OPT*** look for multiply by 4 and 8
        *)
       and minus(ty,sub,s4sub,s8sub,a,b,d,an) =
           (case times4or8(ty,a) of
               (TIMES4,a) => arith(s4sub,a,b,d,an)
            |  (TIMES8,a) => arith(s8sub,a,b,d,an)
-           |  _          => 
+           |  _          =>
               if ty = 64 then
-              (case b of 
-                 (* use LDA to handle subtraction when possible 
+              (case b of
+                 (* use LDA to handle subtraction when possible
                   * Note: this may have sign extension problems later.
                   *)
                  T.LI i => (loadImmed(T.I.NEGT(32,i),expr a,d,an) handle _ =>
@@ -661,8 +661,8 @@ struct
       and wordOpn(T.LI n) = SOME(T.I.toWord32(32, n))
         | wordOpn e = NONE
 
-      (* look for special byte mask constants 
-       * IMPORTANT: we must ALWAYS keep the sign bit!      
+      (* look for special byte mask constants
+       * IMPORTANT: we must ALWAYS keep the sign bit!
        *)
       and byteMask(_,SOME 0wx00000000) = 0xff
         | byteMask(_,SOME 0wx000000ff) = 0xfe
@@ -682,7 +682,7 @@ struct
         | byteMask(ty,SOME 0wxffffffff) = if ty = 64 then 0xf0 else 0x00
         | byteMask _ = ~1
 
-      (* generate an and instruction 
+      (* generate an and instruction
        * look for special masks.
        *)
       and andb(ty,a,b,d,an) =
@@ -697,7 +697,7 @@ struct
       and sll32(a,b,d,an) =
           case wordOpn b of
             SOME 0w0 => doExpr(a,d,an)
-          | SOME 0w1 => 
+          | SOME 0w1 =>
             let val r = T.REG(32,expr a) in arith(I.ADDL,r,r,d,an) end
           | SOME 0w2 => arith(I.S4ADDL,a,zeroT,d,an)
           | SOME 0w3 => arith(I.S8ADDL,a,zeroT,d,an)
@@ -709,37 +709,37 @@ struct
       and sll64(a,b,d,an) =
           case wordOpn b of
             SOME 0w0 => doExpr(a,d,an)
-          | SOME 0w1 => 
+          | SOME 0w1 =>
             let val r = T.REG(64,expr a) in arith(I.ADDQ,r,r,d,an) end
           | SOME 0w2 => arith(I.S4ADDQ,a,zeroT,d,an)
           | SOME 0w3 => arith(I.S8ADDQ,a,zeroT,d,an)
           | _        => arith(I.SLL,a,b,d,an)
 
-       (* On the alpha, all 32 bit values are already sign extended. 
-        * So no sign extension is necessary.  We do the same for 
+       (* On the alpha, all 32 bit values are already sign extended.
+        * So no sign extension is necessary.  We do the same for
         * sra32 and sra64
         *)
-      and sra(a,b,d,an) = 
+      and sra(a,b,d,an) =
           mark(I.OPERATE{oper=I.SRA,ra=expr a,rb=opn b,rc=d},an)
 
-      and srl32(a,b,d,an) = 
-          let val ra = expr a 
-              val rb = opn b 
-              val t = newReg() 
+      and srl32(a,b,d,an) =
+          let val ra = expr a
+              val rb = opn b
+              val t = newReg()
           in  emit(I.OPERATE{oper=I.ZAP,ra=ra,rb=I.IMMop 0xf0,rc=t});
               mark(I.OPERATE{oper=I.SRL,ra=t,rb=rb,rc=d},an)
           end
 
-      and srl64(a,b,d,an) = 
+      and srl64(a,b,d,an) =
           mark(I.OPERATE{oper=I.SRL,ra=expr a,rb=opn b,rc=d},an)
 
       (*
-       * Generic multiply.  
+       * Generic multiply.
        * We first try to use the multiply by constant heuristic
        *)
-      and multiply(ty,gen,genConst,e1,e2,rd,trapb,an) = 
+      and multiply(ty,gen,genConst,e1,e2,rd,trapb,an) =
           let fun nonconst(e1,e2) =
-              let val instr = 
+              let val instr =
                 case (opn e1,opn e2) of
                   (i,I.REGop r) => gen{ra=r,rb=i,rc=rd}
                 | (I.REGop r,i) => gen{ra=r,rb=i,rc=rd}
@@ -748,17 +748,17 @@ struct
               fun const(e,i) =
                   let val r = expr e
                   in  if !useMultByConst andalso
-			 i >= 0 andalso i < 0x100 then
+                         i >= 0 andalso i < 0x100 then
                           annotate(gen{ra=r,rb=I.IMMop(toInt i),rc=rd},an)::trapb
-                      else    
+                      else
                          (genConst{r=r,i=toInt i,d=rd}@trapb
                           handle _ => nonconst(T.REG(ty,r),T.LI i))
                   end
               val instrs =
-		case (e1, e2) 
-		of (_, T.LI i) => const(e1, i)
-	         | (T.LI i, _) => const(e2, i)
-		 | _ => nonconst(e1, e2)
+                case (e1, e2)
+                of (_, T.LI i) => const(e1, i)
+                 | (T.LI i, _) => const(e2, i)
+                 | _ => nonconst(e1, e2)
           in  app emitInstruction instrs
           end
 
@@ -778,10 +778,10 @@ struct
        *)
 
       (*
-       * Generic division.  
+       * Generic division.
        * We first try to use the division by constant heuristic
        *)
-      and divide(ty,pseudo,genDiv,e1,e2,rd,an) = 
+      and divide(ty,pseudo,genDiv,e1,e2,rd,an) =
           let fun nonconst(e1,e2) =
                   pseudo({ra=expr e1,rb=opn e2,rc=rd},reduceOpn)
 
@@ -806,7 +806,7 @@ struct
           val MULV = fn {ra,rb,rc} => I.OPERATEV{oper=MULV,ra=ra,rb=rb,rc=rc}
       in  multiply(MULV,ADD,ADDV,e1,e2,rd,an);
           emit(I.TRAPB)
-      end 
+      end
 
       and mulu(MUL,ADD,e1,e2,rd,an) =  (* unsigned multiply *)
       let val ADD = fn {ra,rb,rc} => I.OPERATE{oper=ADD,ra=ra,rb=rb,rc=rc}
@@ -815,14 +815,14 @@ struct
       end
 
       (* Multiplication *)
-      and multiply(MULV, ADD, ADDV, e1, e2, rd, an) = 
+      and multiply(MULV, ADD, ADDV, e1, e2, rd, an) =
       let val reg = expr e1
           val opn = opn e2
           fun emitMulvImmed (reg, 0, rd) =
                 emit(I.LDA{r=rd, b=zeroR, d=I.IMMop 0})
             | emitMulvImmed (reg, 1, rd) =
                 emit(ADD{ra=reg, rb=zeroOpn, rc=rd})
-            | emitMulvImmed (reg, multiplier, rd) = 
+            | emitMulvImmed (reg, multiplier, rd) =
               let fun log2 0w1 = 0 | log2 n = 1 + (log2 (Word.>> (n, 0w1)))
                   fun exp2 n = Word.<<(0w1, n)
                   fun bitIsSet (x,n) = Word.andb(x,exp2 n) <> 0w0
@@ -838,12 +838,12 @@ struct
               in  emit(ADDV{ra=reg, rb=I.REGop reg, rc=rd});
                   loop ((log2 (itow multiplier)) - 1)
               end
-      in  case opn of 
+      in  case opn of
             (I.IMMop multiplier) => emitMulvImmed (reg, multiplier, rd)
           | _ => mark(MULV{ra=reg, rb=opn, rc=rd},an)
           (*esac*)
       end
-      *) 
+      *)
 
       (* generate pseudo instruction *)
       and pseudo(instr,e1,e2,rc) =
@@ -855,7 +855,7 @@ struct
           in  mark(I.LOAD{ldOp=ldOp,r=d,b=base,d=disp,mem=mem},an) end
 
       (* generate a load with zero extension *)
-      and loadZext(ea,rd,mem,EXT,an) = 
+      and loadZext(ea,rd,mem,EXT,an) =
           let val (b, d) = addr ea
               val t1 = newReg()
               val _  = mark(I.LOAD{ldOp=I.LDQ_U, r=t1, b=b, d=d, mem=mem},an);
@@ -863,7 +863,7 @@ struct
           in  emit(I.OPERATE{oper=EXT, ra=t1, rb=I.REGop t2, rc=rd}) end
 
       (* generate a load with sign extension *)
-      and loadSext(ea,rd,mem,off,EXT,shift,an) = 
+      and loadSext(ea,rd,mem,off,EXT,shift,an) =
           let val (b, d)  = addr ea
               val (b',d') = offset(b,d,off)
               val t1      = newReg()
@@ -876,23 +876,23 @@ struct
           end
 
       (* generate a load byte with zero extension (page 4-48) *)
-      and load8(ea,rd,mem,an) = 
+      and load8(ea,rd,mem,an) =
           if !byteWordLoadStores then load(I.LDBU,ea,rd,mem,an)
           else loadZext(ea,rd,mem,I.EXTBL,an)
 
       (* generate a load byte with sign extension (page 4-48) *)
-      and load8s(ea,rd,mem,an) = 
+      and load8s(ea,rd,mem,an) =
           if !byteWordLoadStores then load(I.LDB,ea,rd,mem,an)
           else loadSext(ea,rd,mem,1,I.EXTQH,56,an)
 
       (* generate a load 16 bit *)
-      and load16(ea,rd,mem,an) = 
+      and load16(ea,rd,mem,an) =
           if !byteWordLoadStores then load(I.LDWU,ea,rd,mem,an)
           else loadZext(ea,rd,mem,I.EXTWL,an)
 
       (* generate a load 16 bit with sign extension *)
-      and load16s(ea,rd,mem,an) = 
-          if !byteWordLoadStores then load(I.LDW,ea,rd,mem,an) 
+      and load16s(ea,rd,mem,an) =
+          if !byteWordLoadStores then load(I.LDW,ea,rd,mem,an)
           else loadSext(ea,rd,mem,2,I.EXTQH,48,an)
 
       (* generate a load 32 bit with sign extension *)
@@ -909,7 +909,7 @@ struct
           in  mark(I.STORE{stOp=stOp,r=expr data,b=base,d=disp,mem=mem},an) end
 
       (* generate an store8 or store16 *)
-      and storeUnaligned(ea,data,mem,INS,MSK,an) = 
+      and storeUnaligned(ea,data,mem,INS,MSK,an) =
           let val (base,disp) = addr ea
               val data = expr data
               val t1 = newReg()
@@ -925,35 +925,35 @@ struct
           end
 
       (* generate a store byte *)
-      and store8(ea,data,mem,an) = 
+      and store8(ea,data,mem,an) =
           if !byteWordLoadStores then store(I.STB, ea, data, mem, an)
-          else storeUnaligned(ea,data,mem,I.INSBL,I.MSKBL,an)  
+          else storeUnaligned(ea,data,mem,I.INSBL,I.MSKBL,an)
 
       (* generate a store16 *)
-      and store16(ea,data,mem,an) = 
+      and store16(ea,data,mem,an) =
           if !byteWordLoadStores then store(I.STW, ea, data, mem, an)
-          else storeUnaligned(ea,data,mem,I.INSWL,I.MSKWL,an)  
+          else storeUnaligned(ea,data,mem,I.INSWL,I.MSKWL,an)
 
       (* generate conversion from floating point to integer *)
-      and cvtf2i(pseudo,rounding,e,rd,an) = 
+      and cvtf2i(pseudo,rounding,e,rd,an) =
           app emitInstruction (pseudo{mode=rounding, fs=fexpr e, rd=rd})
 
       (* generate an expression and return the register that holds the result *)
       and expr(e) = let
-	fun comp() = let
-	  val r = newReg()
+        fun comp() = let
+          val r = newReg()
         in doExpr(e, r, []); r
-	end
+        end
       in
-	case e
-	of T.REG(_, r) => r
+        case e
+        of T.REG(_, r) => r
          | T.LI z => if z = 0 then zeroR else comp()
             (* On the alpha: all 32 bit values are already sign extended.
              * So no sign extension is necessary
              *)
          | T.SX(64, 32, e) => expr e
          | T.ZX(64, 32, e) => expr e
-	 | _ => comp()
+         | _ => comp()
       end
 
       (* generate an expression that targets register d *)
@@ -965,49 +965,49 @@ struct
           | T.CONST c  => loadLabexp(exp,d,an)
           | T.LABEXP le => loadLabexp(le,d,an)
 
-            (* special optimizations for additions and subtraction 
+            (* special optimizations for additions and subtraction
              * Question: using LDA for all widths is not really correct
              * since the result may not fit into the sign extension scheme.
              *)
           | T.ADD(64,e,T.LABEXP le) => mark(I.LDA{r=d,b=expr e,d=I.LABop le},an)
           | T.ADD(64,T.LABEXP le,e) => mark(I.LDA{r=d,b=expr e,d=I.LABop le},an)
-          | T.ADD(64,e,x as (T.CONST _ | T.LABEL _))  => 
+          | T.ADD(64,e,x as (T.CONST _ | T.LABEL _))  =>
                mark(I.LDA{r=d,b=expr e,d=I.LABop x},an)
-          | T.ADD(64,x as (T.CONST _ | T.LABEL _),e)  => 
+          | T.ADD(64,x as (T.CONST _ | T.LABEL _),e)  =>
                mark(I.LDA{r=d,b=expr e,d=I.LABop x},an)
           | T.ADD(64,e,T.LI i)     => loadImmed(i, expr e, d, an)
           | T.ADD(64,T.LI i,e)     => loadImmed(i, expr e, d, an)
-	  | T.SUB(sz, a, b as T.LI z)    =>
-	      if z = 0 then
-		doExpr(a,d,an) 
-	      else (case sz
-		of 32 => minus(32,I.SUBL,I.S4SUBL,I.S8SUBL,a,b,d,an)
-	         | 64 => minus(64,I.SUBQ,I.S4SUBQ,I.S8SUBQ,a,b,d,an)
-		 | _ =>  doExpr(Gen.compileRexp exp,d,an)
-		(*esac*))
+          | T.SUB(sz, a, b as T.LI z)    =>
+              if z = 0 then
+                doExpr(a,d,an)
+              else (case sz
+                of 32 => minus(32,I.SUBL,I.S4SUBL,I.S8SUBL,a,b,d,an)
+                 | 64 => minus(64,I.SUBQ,I.S4SUBQ,I.S8SUBQ,a,b,d,an)
+                 | _ =>  doExpr(Gen.compileRexp exp,d,an)
+                (*esac*))
 
             (* 32-bit support *)
           | T.ADD(32,a,b) => plus(32,I.ADDL,I.S4ADDL,I.S8ADDL,a,b,d,an)
           | T.SUB(32,a,b) => minus(32,I.SUBL,I.S4SUBL,I.S8SUBL,a,b,d,an)
           | T.ADDT(32,a,b) => commArithTrap(I.ADDLV,a,b,d,an)
           | T.SUBT(32,a,b) => arithTrap(I.SUBLV,a,b,d,an)
-          | T.MULT(32,a,b) => 
+          | T.MULT(32,a,b) =>
                multiply(32,
                  fn{ra,rb,rc} => I.operatev{oper=I.MULLV,ra=ra,rb=rb,rc=rc},
-                 Mult32.multiply,a,b,d,trapb,an) 
-          | T.MULU(32,a,b) => 
+                 Mult32.multiply,a,b,d,trapb,an)
+          | T.MULU(32,a,b) =>
                multiply(32,
                  fn{ra,rb,rc} => I.operate{oper=I.MULL,ra=ra,rb=rb,rc=rc},
-                 Mulu32.multiply,a,b,d,[],an) 
-          | T.MULS(32,a,b) => 
+                 Mulu32.multiply,a,b,d,[],an)
+          | T.MULS(32,a,b) =>
                multiply(32,
                  fn{ra,rb,rc} => I.operate{oper=I.MULL,ra=ra,rb=rb,rc=rc},
-                 Muls32.multiply,a,b,d,[],an) 
+                 Muls32.multiply,a,b,d,[],an)
           | T.DIVT(T.DIV_TO_ZERO,32,a,b) =>
-	                      divide(32,P.divlv,Mult32.divide,a,b,d,an)
+                              divide(32,P.divlv,Mult32.divide,a,b,d,an)
           | T.DIVU(32,a,b) => divide(32,P.divlu,Mulu32.divide,a,b,d,an)
           | T.DIVS(T.DIV_TO_ZERO,32,a,b) =>
-	                      divide(32,P.divl,Muls32.divide,a,b,d,an)
+                              divide(32,P.divl,Muls32.divide,a,b,d,an)
 (* FIXME: these two lines can go back in once the alphaMC can handle them:
           | T.REMU(32,a,b) => pseudo(P.remlu,a,b,d)
           | T.REMS(T.DIV_TO_ZERO,32,a,b) => pseudo(P.reml,a,b,d)
@@ -1025,20 +1025,20 @@ struct
           | T.MULT(64,a,b) =>
                multiply(64,
                  fn{ra,rb,rc} => I.operatev{oper=I.MULQV,ra=ra,rb=rb,rc=rc},
-                 Mult64.multiply,a,b,d,trapb,an) 
-          | T.MULU(64,a,b) => 
+                 Mult64.multiply,a,b,d,trapb,an)
+          | T.MULU(64,a,b) =>
                multiply(64,
                  fn{ra,rb,rc} => I.operate{oper=I.MULQ,ra=ra,rb=rb,rc=rc},
-                 Mulu64.multiply,a,b,d,[],an) 
-          | T.MULS(64,a,b) => 
+                 Mulu64.multiply,a,b,d,[],an)
+          | T.MULS(64,a,b) =>
                multiply(64,
                  fn{ra,rb,rc} => I.operate{oper=I.MULQ,ra=ra,rb=rb,rc=rc},
-                 Muls64.multiply,a,b,d,[],an) 
+                 Muls64.multiply,a,b,d,[],an)
           | T.DIVT(T.DIV_TO_ZERO,64,a,b) =>
-	                      divide(64,P.divqv,Mult64.divide,a,b,d,an)
+                              divide(64,P.divqv,Mult64.divide,a,b,d,an)
           | T.DIVU(64,a,b) => divide(64,P.divqu,Mulu64.divide,a,b,d,an)
           | T.DIVS(T.DIV_TO_ZERO,64,a,b) =>
-	                      divide(64,P.divq,Muls64.divide,a,b,d,an)
+                              divide(64,P.divq,Muls64.divide,a,b,d,an)
 (* FIXME: These two lines can go back in once the alphaMC can handle them:
           | T.REMU(64,a,b) => pseudo(P.remqu,a,b,d)
           | T.REMS(T.DIV_TO_ZERO,64,a,b) => pseudo(P.remq,a,b,d)
@@ -1073,7 +1073,7 @@ struct
           | T.LOAD(8,ea,mem) => load8(ea,d,mem,an)
           | T.LOAD(16,ea,mem) => load16(ea,d,mem,an)
           | T.LOAD(32,ea,mem) => load32s(ea,d,mem,an)
-          | T.LOAD(64,ea,mem) => load(I.LDQ,ea,d,mem,an) 
+          | T.LOAD(64,ea,mem) => load(I.LDQ,ea,d,mem,an)
 
            (* floating -> int conversion *)
           | T.CVTF2I(ty,rounding,fty,e) =>
@@ -1086,17 +1086,17 @@ struct
             )
 
            (* conversion to boolean *)
-	  | T.COND(_, T.CMP(ty,cond,e1,e2), x, y)  => 
-	     (case (x, y)
-	      of (T.LI n, T.LI m) =>
-		if EQ(n, 1) andalso EQ(m, 0) then 
-		  compare(ty,cond,e1,e2,d,an) 
-		else if EQ(n, 0) andalso EQ(m, 1) then
-		  compare(ty,T.Basis.negateCond cond,e1,e2,d,an)
-	        else
-		  cmove(ty,cond,e1,e2,x,y,d,an) 
-	      | _ => cmove(ty,cond,e1,e2,x,y,d,an) 
-	     (*esac*))
+          | T.COND(_, T.CMP(ty,cond,e1,e2), x, y)  =>
+             (case (x, y)
+              of (T.LI n, T.LI m) =>
+                if EQ(n, 1) andalso EQ(m, 0) then
+                  compare(ty,cond,e1,e2,d,an)
+                else if EQ(n, 0) andalso EQ(m, 1) then
+                  compare(ty,T.Basis.negateCond cond,e1,e2,d,an)
+                else
+                  cmove(ty,cond,e1,e2,x,y,d,an)
+              | _ => cmove(ty,cond,e1,e2,x,y,d,an)
+             (*esac*))
 
           | T.LET(s,e) => (doStmt s; doExpr(e, d, an))
           | T.MARK(e,A.MARKREG f) => (f d; doExpr(e,d,an))
@@ -1109,41 +1109,41 @@ struct
 
           | T.PRED(e, c) => doExpr(e, d, A.CTRLUSE c::an)
           | T.REXT e => ExtensionComp.compileRext (reducer()) {e=e, an=an, rd=d}
-    
-           (* Defaults *) 
+
+           (* Defaults *)
           | e => doExpr(Gen.compileRexp e,d,an)
 
        (* Hmmm...  this is the funky thing described in the comments
         * in at the top of the file.  This should be made parametrizable
-        * for other backends. 
+        * for other backends.
         *)
-      and farith(opcode,opcodeSMLNJ,a,b,d,an) = 
+      and farith(opcode,opcodeSMLNJ,a,b,d,an) =
           let val fa = fexpr a
               val fb = fexpr b
-          in  if SMLNJfloatingPoint then 
+          in  if SMLNJfloatingPoint then
                    ((* emit(I.DEFFREG d); *)
                     mark(I.FOPERATEV{oper=opcodeSMLNJ,fa=fa,fb=fb,fc=d},an);
                     emit(I.TRAPB);
-		    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [fa,fb,d],
-					   spilled=[]})
-		    
+                    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [fa,fb,d],
+                                           spilled=[]})
+
                    )
               else mark(I.FOPERATE{oper=opcode,fa=fa,fb=fb,fc=d},an)
           end
 
-      and farith'(opcode,a,b,d,an) = 
+      and farith'(opcode,a,b,d,an) =
             mark(I.FOPERATE{oper=opcode,fa=fexpr a,fb=fexpr b,fc=d},an)
 
       and funary(opcode,e,d,an) = mark(I.FUNARY{oper=opcode,fb=fexpr e,fc=d},an)
 
 
       (* generate an floating point expression
-       * return the register that holds the result 
+       * return the register that holds the result
        *)
       and fexpr(T.FREG(_,r)) = r
         | fexpr e = let val d = newFreg() in doFexpr(e,d,[]); d end
 
-      (* generate an external floating point operation *) 
+      (* generate an external floating point operation *)
       and fcvti2f(pseudo,e,fd,an) =
           let val opnd = opn e
           in  app emitInstruction (pseudo({opnd=opnd, fd=fd}, reduceOpn))
@@ -1152,7 +1152,7 @@ struct
       (* generate a floating point store *)
       and fstore(stOp,ea,data,mem,an) =
           let val (base,disp) = addr ea
-          in  mark(I.FSTORE{stOp=stOp,r=fexpr data,b=base,d=disp,mem=mem},an) 
+          in  mark(I.FSTORE{stOp=stOp,r=fexpr data,b=base,d=disp,mem=mem},an)
           end
 
       (* generate a floating point expression that targets register d *)
@@ -1179,9 +1179,9 @@ struct
           | T.FCOPYSIGN(_,a,b)           => farith'(I.CPYS,a,b,d,an)
 
             (* generic *)
-          | T.FABS(_,a)   => 
+          | T.FABS(_,a)   =>
                mark(I.FOPERATE{oper=I.CPYS,fa=zeroFR,fb=fexpr a,fc=d},an)
-          | T.FNEG(_,a)   => 
+          | T.FNEG(_,a)   =>
                let val fs = fexpr a
                in mark(I.FOPERATE{oper=I.CPYSN,fa=fs,fb=fs,fc=d},an) end
           | T.FSQRT(_,a)  => error "fsqrt"
@@ -1189,23 +1189,23 @@ struct
             (* loads *)
           | T.FLOAD(32,ea,mem) => fload(I.LDS,ea,d,mem,an)
           | T.FLOAD(64,ea,mem) => fload(I.LDT,ea,d,mem,an)
-         
-            (* floating/floating conversion 
+
+            (* floating/floating conversion
              * Note: it is not necessary to convert single precision
              * to double on the alpha.
              *)
           | T.CVTF2F(fty,fty',e) => (* ignore rounding mode for now *)
             (case (fty,fty') of
-               (64,64) => doFexpr(e,d,an) 
-             | (64,32) => doFexpr(e,d,an) 
-             | (32,32) => doFexpr(e,d,an) 
+               (64,64) => doFexpr(e,d,an)
+             | (64,32) => doFexpr(e,d,an)
+             | (32,32) => doFexpr(e,d,an)
              | (32,64) => funary(I.CVTTS,e,d,an) (* use normal rounding *)
              | _       => error "CVTF2F"
             )
 
             (* integer -> floating point conversion *)
-          | T.CVTI2F(fty,ty,e) => 
-            let val pseudo = 
+          | T.CVTI2F(fty,ty,e) =>
+            let val pseudo =
                 case (ty,fty) of
                   (ty,32) => if ty <= 32 then P.cvtls else P.cvtqs
                 | (ty,64) => if ty <= 32 then P.cvtlt else P.cvtqt
@@ -1220,62 +1220,62 @@ struct
 
           (* check whether an expression is andb(e,1) *)
       and isAndb1(e as T.ANDB(_, e1, e2)) = let
-	    fun isOne(n, ei) = 
-	      if EQ(n, 1) then (true, ei) else (false, e)
-	  in
-	    case(e1, e2) 
-	    of (T.LI n, _) => isOne(n, e2)
-	     | (_, T.LI n) => isOne(n, e1)
-	     | _ => (false, e)
-	  end
-	| isAndb1 e = (false, e)
+            fun isOne(n, ei) =
+              if EQ(n, 1) then (true, ei) else (false, e)
+          in
+            case(e1, e2)
+            of (T.LI n, _) => isOne(n, e2)
+             | (_, T.LI n) => isOne(n, e1)
+             | _ => (false, e)
+          end
+        | isAndb1 e = (false, e)
 
       and zeroOrOne(T.LI n) =
-	if n = 0 then ZERO 
-	else if EQ(n, 1) then ONE
-	     else OTHER
-	| zeroOrOne _ = OTHER
+        if n = 0 then ZERO
+        else if EQ(n, 1) then ONE
+             else OTHER
+        | zeroOrOne _ = OTHER
 
       (* compile a branch *)
-      and branch(e,lab,an) = 
+      and branch(e,lab,an) =
           case e of
-            T.CMP(ty,cc,e1 as T.LI _,e2) => 
+            T.CMP(ty,cc,e1 as T.LI _,e2) =>
                branchBS(ty,T.Basis.swapCond cc,e2,e1,lab,an)
           | T.CMP(ty,cc,e1,e2) => branchBS(ty,cc,e1,e2,lab,an)
             (* generate an floating point branch *)
           | T.FCMP(fty,cc,e1,e2) =>
             let val f1 = fexpr e1
                 val f2 = fexpr e2
-                fun bcc(cmp,br) = 
+                fun bcc(cmp,br) =
                 let val tmpR = C.newFreg()
                 in  (*emit(I.DEFFREG(tmpR));*)
                     emit(I.FOPERATE{oper=cmp,fa=f1,fb=f2,fc=tmpR});
                     emit(I.TRAPB);
-		    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [f1,f2,tmpR],
-				spilled=[]});
+                    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [f1,f2,tmpR],
+                                spilled=[]});
                     mark(I.FBRANCH{b=br,f=tmpR,lab=lab},an)
                 end
-                fun fall(cmp1, br1, cmp2, br2) = 
+                fun fall(cmp1, br1, cmp2, br2) =
                 let val tmpR1 = newFreg()
                     val tmpR2 = newFreg()
                     val fallLab = Label.anon()
                 in  (*emit(I.DEFFREG(tmpR1));*)
                     emit(I.FOPERATE{oper=cmp1, fa=f1, fb=f2, fc=tmpR1});
                     emit(I.TRAPB);
-		    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [f1,f2,tmpR1],
-				spilled=[]});
+                    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [f1,f2,tmpR1],
+                                spilled=[]});
                     mark(I.FBRANCH{b=br1, f=tmpR1, lab=fallLab},an);
                     (* emit(I.DEFFREG(tmpR2)); *)
                     emit(I.FOPERATE{oper=cmp2, fa=f1, fb=f2, fc=tmpR2});
                     emit(I.TRAPB);
-		    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [f1,f2,tmpR2],
-				spilled=[]});
+                    emitInstruction(I.LIVE{regs=List.foldl C.addFreg C.empty [f1,f2,tmpR2],
+                                spilled=[]});
                     mark(I.FBRANCH{b=br2, f=tmpR2, lab=lab},an);
                     defineLabel fallLab
                 end
-                fun bcc2(cmp1, br1, cmp2, br2) = 
+                fun bcc2(cmp1, br1, cmp2, br2) =
                      (bcc(cmp1, br1); bcc(cmp2, br2))
-            in  case cc of 
+            in  case cc of
                   T.==  => bcc(I.CMPTEQSU, I.FBNE)
                 | T.?<> => bcc(I.CMPTEQSU, I.FBEQ)
                 | T.?   => bcc(I.CMPTUNSU, I.FBNE)
@@ -1296,7 +1296,7 @@ struct
 
       and br(opcode,exp,lab,an) = mark(I.BRANCH{b=opcode,r=expr exp,lab=lab},an)
 
-            (* Use the branch on bit set/clear instruction when possible *) 
+            (* Use the branch on bit set/clear instruction when possible *)
       and branchBS(ty,cc,a,b,lab,an)  =
           (case (cc,isAndb1 a,zeroOrOne b) of
              (T.EQ,(true,e),ONE)  => br(I.BLBS,e,lab,an)
@@ -1305,17 +1305,17 @@ struct
            | (T.NE,(true,e),ONE)  => br(I.BLBC,e,lab,an)
            | (cc,_,_)             => branchIt(ty,cc,a,b,lab,an)
           )
- 
-          (* generate a branch instruction. 
-           * Check for branch on zero as a special case 
+
+          (* generate a branch instruction.
+           * Check for branch on zero as a special case
            *)
 
-      and branchIt(ty,cc,e1,e2 as T.LI z,lab,an) = 
-	   if z = 0 then branchIt0(cc,e1,lab,an)
-	   else branchItOther(ty,cc,e1,e2,lab,an)
+      and branchIt(ty,cc,e1,e2 as T.LI z,lab,an) =
+           if z = 0 then branchIt0(cc,e1,lab,an)
+           else branchItOther(ty,cc,e1,e2,lab,an)
         | branchIt(ty,cc,e1,e2,lab,an) = branchItOther(ty,cc,e1,e2,lab,an)
 
-          (* generate a branch instruction. 
+          (* generate a branch instruction.
            * This function optimizes the special case of comparison with zero.
            *)
       and branchIt0(T.EQ,e,lab,an) = br(I.BEQ,e,lab,an)
@@ -1330,13 +1330,13 @@ struct
         | branchIt0(T.LEU,e,lab,an) = br(I.BEQ,e,lab,an)  (* never < 0! *)
         | branchIt0 _               = error "brnachIt0"
 
-        (* Generate the operands for unsigned comparisons 
+        (* Generate the operands for unsigned comparisons
          * Mask out high order bits whenever necessary.
          *)
-      and unsignedCmpOpnds(ty,e1,e2) = 
-          let fun zapHi(r,mask) = 
+      and unsignedCmpOpnds(ty,e1,e2) =
+          let fun zapHi(r,mask) =
               let val d = newReg()
-              in  emit(I.OPERATE{oper=I.ZAP, ra=r, rb=I.IMMop mask,rc=d}); 
+              in  emit(I.OPERATE{oper=I.ZAP, ra=r, rb=I.IMMop mask,rc=d});
                   I.REGop d
               end
 
@@ -1345,22 +1345,22 @@ struct
                      8  => zapHi(r,0xfd)
                    | 16 => zapHi(r,0xfc)
                    | 32 => zapHi(r,0xf0)
-                   | 64 => opn 
-                   | _  => error "unsignedCmpOpnds" 
+                   | 64 => opn
+                   | _  => error "unsignedCmpOpnds"
                   )
-                | zap opn = opn 
+                | zap opn = opn
               val opn1 = opn e1
               val opn2 = opn e2
           in  (zap opn1,zap opn2) end
 
         (* Generate a branch *)
-      and branchItOther(ty,cond,e1,e2,lab,an) = 
+      and branchItOther(ty,cond,e1,e2,lab,an) =
           let val tmpR = newReg()
-              fun signedCmp(cmp,br) = 
+              fun signedCmp(cmp,br) =
                   (emit(I.OPERATE{oper=cmp, ra=expr e1, rb=opn e2, rc=tmpR});
                    mark(I.BRANCH{b=br, r=tmpR, lab=lab},an)
                   )
-              fun unsignedCmp(ty,cmp,br) = 
+              fun unsignedCmp(ty,cmp,br) =
                   let val (x,y) = unsignedCmpOpnds(ty,e1,e2)
                   in  emit(I.OPERATE{oper=cmp,ra=reduceOpn x,rb=y,rc=tmpR});
                       mark(I.BRANCH{b=br, r=tmpR, lab=lab},an)
@@ -1388,18 +1388,18 @@ struct
           let val tmp = newReg()
               val _ = doExpr(y,tmp,[]) (* evaluate false case *)
 
-              val (cond,a,b) = 
+              val (cond,a,b) =
                 (* move the immed operand to b *)
                 case a of
-                  (T.LI _ | T.CONST _ | T.LABEL _ | T.LABEXP _) => 
+                  (T.LI _ | T.CONST _ | T.LABEL _ | T.LABEXP _) =>
                     (T.Basis.swapCond cond,b,a)
                 | _ => (cond,a,b)
 
-              fun sub(a, T.LI z) = 
-		   if z = 0 then expr a else expr(T.SUB(ty,a,b))
+              fun sub(a, T.LI z) =
+                   if z = 0 then expr a else expr(T.SUB(ty,a,b))
                 | sub(a,b)       = expr(T.SUB(ty,a,b))
 
-              fun cmp(cond,e1,e2) = 
+              fun cmp(cond,e1,e2) =
                   let val flag = newReg()
                   in  compare(ty,cond,e1,e2,flag,[]); flag end
 
@@ -1429,33 +1429,33 @@ struct
           end
 
 
-        (* This function generates a comparion between e1 and e2 and writes 
+        (* This function generates a comparion between e1 and e2 and writes
          * the result to register d.
          * It'll mask out the high order 32-bits when performing
          * unsigned 32-bit integer comparisons.
          *)
-      and compare(ty,cond,e1,e2,d,an) = 
-          let fun signedCmp(oper,a,b,d) = 
+      and compare(ty,cond,e1,e2,d,an) =
+          let fun signedCmp(oper,a,b,d) =
                   mark(I.OPERATE{oper=oper,ra=expr a,rb=opn b,rc=d},an)
-              fun unsignedCmp(ty,oper,a,b,d) = 
+              fun unsignedCmp(ty,oper,a,b,d) =
                   let val (x,y) = unsignedCmpOpnds(ty,a,b)
                   in  mark(I.OPERATE{oper=oper,ra=reduceOpn x,rb=y,rc=d},an)
                   end
-              fun eq(a,b,d) = 
+              fun eq(a,b,d) =
                  (case (opn a,opn b) of
-                    (a,I.REGop r) => 
+                    (a,I.REGop r) =>
                       mark(I.OPERATE{oper=I.CMPEQ,ra=r,rb=a,rc=d},an)
                   | (a,b) =>
                       mark(I.OPERATE{oper=I.CMPEQ,ra=reduceOpn a,rb=b,rc=d},an)
                  )
-              fun neq(a,b,d) = 
-                  let val tmp = newReg()  
+              fun neq(a,b,d) =
+                  let val tmp = newReg()
                   in  eq(a,b,tmp);
                       emit(I.OPERATE{oper=I.CMPEQ,ra=tmp,rb=zeroOpn,rc=d})
                   end
               val (cond,e1,e2) =
-		  case e1 of
-                    (T.LI _ | T.CONST _ | T.LABEL _ | T.LABEXP _) => 
+                  case e1 of
+                    (T.LI _ | T.CONST _ | T.LABEL _ | T.LABEXP _) =>
                        (T.Basis.swapCond cond,e2,e1)
                   | _ => (cond,e1,e2)
           in  case cond of
@@ -1476,27 +1476,27 @@ struct
       and goto(lab,an) = mark(I.BRANCH{b=I.BR,r=zeroR,lab=lab},an)
 
          (* generate an call instruction *)
-      and call(ea,flow,defs,uses,mem,cutTo,an,0) = 
-	  let val defs=cellset defs
+      and call(ea,flow,defs,uses,mem,cutTo,an,0) =
+          let val defs=cellset defs
               val uses=cellset uses
-              val instr = 
-		  case (ea, flow) of
-                      (T.LABEL lab, [_]) => 
+              val instr =
+                  case (ea, flow) of
+                      (T.LABEL lab, [_]) =>
                       I.BSR{lab=lab,r=C.returnAddr,defs=defs,uses=uses,
                             cutsTo=cutTo,mem=mem}
-		    | _ => I.JSR{r=C.returnAddr,b=expr ea,
-				 d=0,defs=defs,uses=uses,cutsTo=cutTo,mem=mem}
-	  in  mark(instr,an)
-	  end
-	| call _ = error "pops<>0 not implemented"
+                    | _ => I.JSR{r=C.returnAddr,b=expr ea,
+                                 d=0,defs=defs,uses=uses,cutsTo=cutTo,mem=mem}
+          in  mark(instr,an)
+          end
+        | call _ = error "pops<>0 not implemented"
 
       and doCCexpr(T.CC(_,r),d,an) = move(r,d,an)
         | doCCexpr(T.FCC(_,r),d,an) = fmove(r,d,an)
-        | doCCexpr(T.CMP(ty,cond,e1,e2),d,an)  = compare(ty,cond,e1,e2,d,an) 
+        | doCCexpr(T.CMP(ty,cond,e1,e2),d,an)  = compare(ty,cond,e1,e2,d,an)
         | doCCexpr(T.FCMP(fty,cond,e1,e2),d,an) = error "doCCexpr"
         | doCCexpr(T.CCMARK(e,A.MARKREG f),d,an) = (f d; doCCexpr(e,d,an))
         | doCCexpr(T.CCMARK(e,a),d,an) = doCCexpr(e,d,a::an)
-        | doCCexpr(T.CCEXT e,d,an) = 
+        | doCCexpr(T.CCEXT e,d,an) =
              ExtensionComp.compileCCext (reducer()) {e=e, ccd=d, an=an}
         | doCCexpr _ = error "doCCexpr"
 
@@ -1516,7 +1516,7 @@ struct
           | T.JMP(T.LABEL lab,_) => goto(lab,an)
           | T.JMP(e,labs) => mark(I.JMPL({r=zeroR,b=expr e,d=0},labs),an)
           | T.BCC(cc,lab) => branch(cc,lab,an)
-          | T.CALL{funct,targets,defs,uses,region,pops,...} => 
+          | T.CALL{funct,targets,defs,uses,region,pops,...} =>
               call(funct,targets,defs,uses,region,[],an,pops)
           | T.FLOW_TO(T.CALL{funct,targets,defs,uses,region,pops,...},cutTo) =>
               call(funct,targets,defs,uses,region,cutTo,an,pops)
@@ -1530,8 +1530,8 @@ struct
           | T.DEFINE l => defineLabel l
           | T.ANNOTATION(s,a) => stmt(s,a::an)
           | T.EXT s => ExtensionComp.compileSext (reducer()) {stm=s,an=an}
-	  | T.LIVE rs => mark'(I.LIVE{regs=cellset rs, spilled=[]}, an)
-	  | T.KILL rs => mark'(I.KILL{regs=cellset rs, spilled=[]}, an)
+          | T.LIVE rs => mark'(I.LIVE{regs=cellset rs, spilled=[]}, an)
+          | T.KILL rs => mark'(I.KILL{regs=cellset rs, spilled=[]}, an)
           | s => doStmts (Gen.compileStm s)
 
       and reducer() =
@@ -1545,7 +1545,7 @@ struct
                      emit          = emitInstruction o annotate,
                      instrStream   = instrStream,
                      mltreeStream  = self()
-                    } 
+                    }
 
       and doStmt s = stmt(s,[])
       and doStmts ss = app doStmt ss
@@ -1562,7 +1562,7 @@ struct
                 | g(_::regs, acc) = g(regs, acc)
           in  g(mlrisc, C.empty) end
 
-      and self() = 
+      and self() =
           TS.S.STREAM
          { beginCluster   = beginCluster,
            endCluster     = endCluster,
@@ -1574,9 +1574,9 @@ struct
            annotation     = annotation,
            getAnnotations = getAnnotations,
            exitBlock      = fn regs => exitBlock(cellset regs)
-         } 
+         }
    in  self()
    end
- 
+
 end
 

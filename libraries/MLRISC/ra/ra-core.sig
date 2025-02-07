@@ -8,7 +8,7 @@
  * -- Allen
  *)
 
-signature RA_CORE = 
+signature RA_CORE =
 sig
 
    structure G  : RA_GRAPH = RAGraph
@@ -38,10 +38,10 @@ sig
    val addEdge : G.interferenceGraph -> G.node * G.node -> unit
 
    (*
-    * Function to create new nodes 
+    * Function to create new nodes
     *)
-   val newNodes : G.interferenceGraph -> 
-        {cost:real,pt:G.programPoint,defs:G.C.cell list,uses:G.C.cell list} -> 
+   val newNodes : G.interferenceGraph ->
+        {cost:real,pt:G.programPoint,defs:G.C.cell list,uses:G.C.cell list} ->
             G.node list (* defs *)
 
    (*
@@ -53,26 +53,26 @@ sig
    val markDeadCopiesAsSpilled : G.interferenceGraph -> unit
 
    (*
-    * Return the spill location id of the interference graph 
+    * Return the spill location id of the interference graph
     *)
    val spillLoc : G.interferenceGraph -> int -> int
    val spillLocToString : G.interferenceGraph -> int -> string
 
    (*
     * Create an initial set of worklists from a new interference graph
-    * and a list of moves 
+    * and a list of moves
     *)
-   val initWorkLists : G.interferenceGraph -> 
+   val initWorkLists : G.interferenceGraph ->
           { moves : G.move list
-          } -> 
-          { simplifyWkl : G.node list, 
-            moveWkl     : move_queue, 
-            freezeWkl   : freeze_queue, 
+          } ->
+          { simplifyWkl : G.node list,
+            moveWkl     : move_queue,
+            freezeWkl   : freeze_queue,
             spillWkl    : G.node list   (* high degreee nodes *)
           }
 
    (*
-    * Clear the interference graph but keep the nodes table intact 
+    * Clear the interference graph but keep the nodes table intact
     *)
    val clearGraph : G.interferenceGraph -> unit
 
@@ -81,23 +81,23 @@ sig
     *)
    val clearNodes : G.interferenceGraph -> unit
 
-   (* 
+   (*
     * Simplify, Coalease and Freeze until the work list is done
     *)
-   val iteratedCoalescing : 
-        G.interferenceGraph -> 
-           { simplifyWkl : G.node list, 
+   val iteratedCoalescing :
+        G.interferenceGraph ->
+           { simplifyWkl : G.node list,
              moveWkl     : move_queue,
              freezeWkl   : freeze_queue,
              stack       : G.node list
            } ->
-           { stack : G.node list 
+           { stack : G.node list
            }
 
-   (* 
+   (*
     * potentially spill a node.
     *)
-   val potentialSpillNode : 
+   val potentialSpillNode :
         G.interferenceGraph ->
            { node  : G.node,
              cost  : real,
@@ -109,12 +109,12 @@ sig
            }
 
    (*
-    * Color nodes on the stack, using Briggs' optimistic spilling.  
-    * Return a list of actual spills 
+    * Color nodes on the stack, using Briggs' optimistic spilling.
+    * Return a list of actual spills
     *)
-   val select : 
-        G.interferenceGraph -> 
-           { stack  : G.node list 
+   val select :
+        G.interferenceGraph ->
+           { stack  : G.node list
            } ->
            { spills : G.node list (* actual spills *)
            }

@@ -1,6 +1,6 @@
 (* mltree-check-ty.sml
- * 
- * Check that MLRISC programs have consistent types. 
+ *
+ * Check that MLRISC programs have consistent types.
  *)
 
 functor MLTreeCheckTy
@@ -28,7 +28,7 @@ functor MLTreeCheckTy
 
    and checkRexp (T.REG(ty,_)) = ty
      (* the type of a literal expression depends on its surrounding context *)
-     | checkRexp (T.LI _) = raise AmbiguousType  
+     | checkRexp (T.LI _) = raise AmbiguousType
      | checkRexp (T.LABEL _) = intTy
      (* the type of a literal expression depends on its surrounding context *)
      | checkRexp (T.CONST _) = raise AmbiguousType
@@ -101,37 +101,37 @@ functor MLTreeCheckTy
 
    and checkCCexpB cce = (case cce
           of T.NOT cce => checkCCexpB cce
-	   | ( T.AND (cce1, cce2) | T.OR (cce1, cce2) | T.XOR (cce1, cce2) | T.EQV (cce1, cce2) ) =>
-	     checkCCexpB cce1 andalso checkCCexpB cce2
-	   | T.CMP (ty, _, e1, e2) => ty = checkRexp e1 andalso ty = checkRexp e2
-	   | T.FCMP (fty, _, e1, e2) => fty = checkFexp e1 andalso fty = checkFexp e2
-	   | T.CCMARK (cce, _) => checkCCexpB cce
-	   | T.CCEXT (ty, ccext) => true
+           | ( T.AND (cce1, cce2) | T.OR (cce1, cce2) | T.XOR (cce1, cce2) | T.EQV (cce1, cce2) ) =>
+             checkCCexpB cce1 andalso checkCCexpB cce2
+           | T.CMP (ty, _, e1, e2) => ty = checkRexp e1 andalso ty = checkRexp e2
+           | T.FCMP (fty, _, e1, e2) => fty = checkFexp e1 andalso fty = checkFexp e2
+           | T.CCMARK (cce, _) => checkCCexpB cce
+           | T.CCEXT (ty, ccext) => true
           (* end case *))
 
     fun check stm = (case stm
-	   of T.MV (ty, d, e) => checkRexpB (ty, e)
-	    | T.CCMV (dst, cce) => checkCCexpB cce
-	    | T.FMV (fty, dst, e) => checkFexp e = fty
-	    | T.COPY _ => true
-	    | T.FCOPY _ => true
-	    | T.JMP (e, _) => checkRexpB (intTy, e)
-	    | T.BCC (cce, _) => checkCCexpB cce
-	    | T.CALL {funct, ...} => checkRexpB (intTy, funct)
-	    | T.FLOW_TO (stm, _) => check stm
-	    | T.RET _ => true
-	    | T.IF (cce, stm1, stm2) => checkCCexpB cce andalso check stm1 andalso check stm2
-	    | T.STORE (ty, e1, e2, _) => checkRexpB (intTy, e1) andalso checkRexpB(intTy, e2)
-	    | T.FSTORE (fty, e1, e2, _) => checkRexpB (intTy, e1) andalso fty = checkFexp e2
-	    | T.REGION (stm, _) => check stm
-	    | T.SEQ stms => List.all check stms
-	    | T.DEFINE _ => true
-	    | T.ANNOTATION (stm, _) => check stm
-	    | T.EXT _ => true
-	    | T.LIVE _ => true
-	    | T.KILL _ => true
-	    | _ => true
+           of T.MV (ty, d, e) => checkRexpB (ty, e)
+            | T.CCMV (dst, cce) => checkCCexpB cce
+            | T.FMV (fty, dst, e) => checkFexp e = fty
+            | T.COPY _ => true
+            | T.FCOPY _ => true
+            | T.JMP (e, _) => checkRexpB (intTy, e)
+            | T.BCC (cce, _) => checkCCexpB cce
+            | T.CALL {funct, ...} => checkRexpB (intTy, funct)
+            | T.FLOW_TO (stm, _) => check stm
+            | T.RET _ => true
+            | T.IF (cce, stm1, stm2) => checkCCexpB cce andalso check stm1 andalso check stm2
+            | T.STORE (ty, e1, e2, _) => checkRexpB (intTy, e1) andalso checkRexpB(intTy, e2)
+            | T.FSTORE (fty, e1, e2, _) => checkRexpB (intTy, e1) andalso fty = checkFexp e2
+            | T.REGION (stm, _) => check stm
+            | T.SEQ stms => List.all check stms
+            | T.DEFINE _ => true
+            | T.ANNOTATION (stm, _) => check stm
+            | T.EXT _ => true
+            | T.LIVE _ => true
+            | T.KILL _ => true
+            | _ => true
            (* end case *))
-	handle TypeError => false
+        handle TypeError => false
 
   end (* MLTreeCheckTy *)

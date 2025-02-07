@@ -2,7 +2,7 @@ structure TestDJGraph =
 struct
 structure Graph = Graph;
 val G as Graph.GRAPH g = DirectedGraph.graph("foo",(),10) :
-    (string,int,unit) Graph.graph 
+    (string,int,unit) Graph.graph
 structure Dom = DominatorTree(DirectedGraph)
 structure DJ  = DJGraph(Dom)
 val _ = app (#add_node g)
@@ -23,13 +23,13 @@ val _ = app (#add_edge g)
            (1,3,12),
            (2,4,14),
            (3,2,9),
-           (4,3,7), 
+           (4,3,7),
            (3,5,20),
            (4,5,4)
-          ] 
+          ]
 
 val dom  = Dom.makeDominator G
 val pdom = Dom.makePostdominator G
-val IDFs = DJ.IDFs dom 
+val IDFs = DJ.IDFs dom
 
 end

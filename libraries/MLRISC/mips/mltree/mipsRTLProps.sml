@@ -18,10 +18,10 @@ struct
    structure RTL = RTL
    structure T   = RTL.T
    structure OT  = OperandTable
-   
+
    datatype value = CELL of C.cell
                   | OPERAND of I.operand
-   
+
    fun error msg = MLRiscErrorMsg.error("MIPSRTLProps",msg)
    fun bug(msg,instr) =
    let val Asm.S.STREAM{emit, ...} = Asm.makeStream []
@@ -34,7 +34,7 @@ struct
    structure Arch = struct
       local
          val TMP0 = {rt=T.PARAM 0, b=T.PARAM 1, d=T.PARAM 0, mem=T.PARAM 0}
-      in 
+      in
          val LB = RTL.new (MIPSRTL.LB TMP0)
          val LBU = RTL.new (MIPSRTL.LBU TMP0)
          val LH = RTL.new (MIPSRTL.LH TMP0)
@@ -44,9 +44,9 @@ struct
       end
    end
 
-   fun rtl instr = 
+   fun rtl instr =
        let fun undefined() = bug("rtl",instr)
-           fun query (I.LOAD{l, rt, b, d, mem}) = 
+           fun query (I.LOAD{l, rt, b, d, mem}) =
                (case l of
                  I.LD => Arch.LD
                | I.LW => Arch.LW
@@ -59,7 +59,7 @@ struct
              | query _ = undefined ()
        in query instr
        end
-   fun defUse valueNumberingMethods instr = 
+   fun defUse valueNumberingMethods instr =
        let fun undefined() = bug("defUse",instr)
            (* methods for computing value numbers *)
            val OT.VALUE_NUMBERING
@@ -84,9 +84,9 @@ struct
            fun get_label'(x) = []
            fun get_cellset'(x) = map CELL (C.CellSet.toCellList x)
            fun get_operand'(x) = [OPERAND x]
-           fun query (I.LOAD{l, rt, b, d, mem}) = 
+           fun query (I.LOAD{l, rt, b, d, mem}) =
                (case l of
-                 (I.LD | I.LW | I.LH | I.LHU | I.LB | I.LBU) => (get_cell (rt, 
+                 (I.LD | I.LW | I.LH | I.LHU | I.LB | I.LBU) => (get_cell (rt,
                     []), get_operand (d, get_cell (b, [])))
                | _ => undefined ()
                )

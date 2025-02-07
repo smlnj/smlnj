@@ -1,6 +1,6 @@
 (*
  * This module rearranges and eliminate branches in a problem to
- * get better locality. 
+ * get better locality.
  *
  * -- Allen
  *)
@@ -56,16 +56,16 @@ struct
        fun flip_cond should_flip (i,CFG.BLOCK{insns,...}) =
           case (#out_edges cfg i,!insns) of
             ([e1 as (_,j,CFG.EDGE{w=w1,k=k1 as CFG.BRANCH b1,a=a1}),
-              e2 as (_,k,CFG.EDGE{w=w2,k=k2 as CFG.BRANCH b2,a=a2})], 
+              e2 as (_,k,CFG.EDGE{w=w2,k=k2 as CFG.BRANCH b2,a=a2})],
               branch::rest) =>
              if j = k then (* targets are the same *)
              let val a = ref(!a1 @ !a2)
-             in  #set_out_edges cfg 
+             in  #set_out_edges cfg
                     (i, [(i,j,CFG.EDGE{w=ref(!w1 + !w2),k=CFG.JUMP,a=a})]);
                  insns := InsnProps.jump(labelOf j)::rest;
                  changed := true
              end
-             else if should_flip(e1,e2) then 
+             else if should_flip(e1,e2) then
                 let val branch' = InsnProps.negateConditional branch
                 in  if b1 andalso not(can_fallsthru j) orelse
                        b2 andalso not(can_fallsthru k) then
@@ -78,12 +78,12 @@ struct
                     #add_edge cfg (i,k,CFG.EDGE{w=w2,k=k1,a=a2});
                     Util.updateJumpLabel CFG i;
                     changed := true
-                end 
+                end
              else ()
          | _ => ()
 
-       fun follow i = 
-       let fun chase j = 
+       fun follow i =
+       let fun chase j =
                case #out_edges cfg j of
                  [(_,k,_)] => if k = i then k else chase k
                | _ => j
@@ -117,7 +117,7 @@ struct
            in  app elim (#in_edges cfg j)
            end
 
-       (* 
+       (*
         * If a backedge is an unconditional jump,
         * Try to eliminate it by changing it into a fallsthru.
         *)
@@ -130,7 +130,7 @@ struct
              | find_best([],best_e) = best_e
        in  case find_best(es,e) of
               best_e as (i,j,CFG.EDGE{k=CFG.JUMP,w,a}) =>
-                  if i <> header then 
+                  if i <> header then
                   (let val _ = elim_fallsthru header
                        val _ = elim_fallsthru i
                        val CFG.BLOCK{insns,...} = #node_info cfg i
@@ -144,7 +144,7 @@ struct
                        changed := true
                    end handle _ => ())
                   else ()
-           | _ => () 
+           | _ => ()
        end
        else ()
 
@@ -153,7 +153,7 @@ struct
               flip_cond should_flip_forward_branches
 
    in  #forall_nodes cfg (fn x => restructure_conditionals x handle _ => ());
-       #forall_nodes loop restructure_loop; 
+       #forall_nodes loop restructure_loop;
        if !changed then IR.changed IR else ();
        Util.mergeAllEdges IR;
        IR

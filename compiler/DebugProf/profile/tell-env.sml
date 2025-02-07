@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
  *
  * This provides an abstract interface to the static environments for
- * the profiler to use. 
+ * the profiler to use.
  *
  *)
 
@@ -34,7 +34,7 @@ struct
   fun funTy _ = NONE
 
 (*
-  fun components e = 
+  fun components e =
    let val bindings = ref (nil: (symbol * binding) list)
        fun get x = bindings := x :: !bindings
     in Env.app get (Env.consolidate e);
@@ -42,7 +42,7 @@ struct
    end
 
   fun strBind(Modules.STRbind(Modules.STRvar{access,binding,...})) =
-	      SOME(ModuleUtil.makeEnv(binding,access))
+              SOME(ModuleUtil.makeEnv(binding,access))
     | strBind _ = NONE
 
   fun valBind(Modules.VARbind(Variables.VALvar{access=Access.INLINE _,...})) = NONE

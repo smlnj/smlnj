@@ -17,7 +17,7 @@
 #
  * Revision 1.1.1.1  1996/01/31  16:02:37  george
  * Version 109
- * 
+ *
  *)
 
 signature INET_SOCK =
@@ -38,16 +38,16 @@ signature INET_SOCK =
     val any  : int -> sock_addr
 
     structure UDP : sig
-	val socket  : unit -> dgram_sock
-	val socket' : int -> dgram_sock
+        val socket  : unit -> dgram_sock
+        val socket' : int -> dgram_sock
       end
 
     structure TCP : sig
-	val socket  : unit -> 'a stream_sock
-	val socket' : int -> 'a stream_sock
+        val socket  : unit -> 'a stream_sock
+        val socket' : int -> 'a stream_sock
       (* tcp control options *)
-	val getNODELAY : 'a stream_sock -> bool
-	val setNODELAY : ('a stream_sock * bool) -> unit
+        val getNODELAY : 'a stream_sock -> bool
+        val setNODELAY : ('a stream_sock * bool) -> unit
       end
   end
 

@@ -11,7 +11,7 @@ sig
   datatype storageClass = AUTO | EXTERN | REGISTER | STATIC | DEFAULT
 
   datatype qualifier = CONST | VOLATILE
-      
+
   datatype signedness = SIGNED | UNSIGNED
 
  (* signednessTag determines whether a type was declared signed or unsigned, or
@@ -25,7 +25,7 @@ sig
 
   datatype saturatedness = SATURATE | NONSATURATE (* SATURATE dominates NONSATURATE *)
   (* END D *)
- 
+
    (* note: definition of ctype appears later, is in the mutual recursive clump. *)
 
   (* IDENTIFIERS: preliminary definitions *)
@@ -40,14 +40,14 @@ sig
     = IMPLICIT (* used, but not yet declared or defined *)
     | DECLARED (* declared, but not yet defined *)
     | DEFINED  (* defined, i.e. there is a FunctionDef or
-		* initializer for this identifier *)
+                * initializer for this identifier *)
 
   (* identifiers - we call these "id"s *)
   datatype idKind
     = NONFUN       (* is not of functional type *)
     | FUNCTION of  (* is of functional type *)
        {hasFunctionDef: bool}  (* was defined by a FunctionDef *)
- 
+
   (* OPERATORS *)
   datatype binop
     = Plus | Minus | Times | Divide | Mod
@@ -56,7 +56,7 @@ sig
     | PlusAssign | MinusAssign | TimesAssign | DivAssign
     | ModAssign | XorAssign | OrAssign | AndAssign
     | LshiftAssign | RshiftAssign | BinopExt of AstExt.binopExt
-      
+
   datatype unop
     = Uplus | Not | Negate | BitNot
     | PreInc | PostInc | PreDec | PostDec | UnopExt of AstExt.unopExt
@@ -105,11 +105,11 @@ sig
     | QuestionColon of expression * expression * expression
     | Assign of expression * expression
     | Comma of expression * expression
-    | Sub of expression * expression          
+    | Sub of expression * expression
     | Member of expression * member
     | Arrow of expression * member
-    | Deref of expression                     
-    | AddrOf of expression                    
+    | Deref of expression
+    | AddrOf of expression
     | Binop of binop * expression * expression
     | Unop of unop * expression
     | Cast of ctype * expression
@@ -127,7 +127,7 @@ sig
     = Void
     | Ellipses
     | Qual of qualifier * ctype
-    | Numeric of (* D *) saturatedness * (* D *) fractionality * signedness * intKind 
+    | Numeric of (* D *) saturatedness * (* D *) fractionality * signedness * intKind
                                        * signednessTag
     | Array of (LargeInt.int * expression) option * ctype
     | Pointer of ctype
@@ -166,7 +166,7 @@ sig
      stClass: storageClass,
      status: declStatus,
      global: bool, (* defined at top level *)
-     kind: idKind}  
+     kind: idKind}
 
   (* the common fields of id and member could be factored out, but
    * this would increase space usage and access time, and require
@@ -178,7 +178,7 @@ sig
        kind: idKind}
   *)
 
- 
+
   (* top-level program elements *)
   datatype coreExternalDecl
     = ExternalDecl of declaration

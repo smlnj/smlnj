@@ -1,7 +1,7 @@
 (*
  * This module provides functions for computing the size MLTREE transformations.
  * Basically, we want to support various non built-in datatype widths.
- * This module handles the translation. 
+ * This module handles the translation.
  *
  * -- Allen
  *)

@@ -43,7 +43,7 @@ type entVar = ST.stamp
 type entPath = entVar list
 (* entPath has entVars in direct order, outer first *)
 
-type rEntPath = entVar list		(* reversed order; abstract *)
+type rEntPath = entVar list             (* reversed order; abstract *)
 
 val epnil = []
 val repnil = []
@@ -61,7 +61,7 @@ val cmpEntVar = ST.compare
 
 (* cmpEntPath: entPath * entPath -> order
  * lexicographic comparison of two entPaths *)
-fun cmpEntPath (ep1, ep2) = 
+fun cmpEntPath (ep1, ep2) =
   let fun f(a::ar, b::br) =
             (case ST.compare(a,b) of EQUAL => f(ar,br) | z => z)
         | f(a::ar, nil) = GREATER
@@ -71,7 +71,7 @@ fun cmpEntPath (ep1, ep2) =
   end
 
 structure EvDict =
-  RedBlackMapFn(struct type ord_key = entVar 
+  RedBlackMapFn(struct type ord_key = entVar
                        val compare = cmpEntVar
                 end)
 

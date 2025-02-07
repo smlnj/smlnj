@@ -1,13 +1,13 @@
 (*
- * This module counts the number of copies (in bytes)  
+ * This module counts the number of copies (in bytes)
  * generated after register allocation.  Mainly useful for fine-tuning.
  *)
 functor CFGCountCopies
    ( structure CFG : CONTROL_FLOW_GRAPH
      structure InsnProps : INSN_PROPERTIES
-     		where I = CFG.I
+                where I = CFG.I
      structure SdiJumps : SDI_JUMPS
-     		where I = CFG.I
+                where I = CFG.I
     ) : CFG_OPTIMIZATION =
 struct
    structure CFG = CFG
@@ -22,11 +22,11 @@ struct
      fun loc _ = 0
      fun count(CFG.BLOCK{insns, ...}, n) = let
        fun scan([], n) = n
-	 | scan(i::is, n) = 
-	    if InsnProps.moveInstr i then
-	      scan(is, n + SdiJumps.sdiSize(i, loc, 0)) 
-	    else scan(is, n)
-     in  scan(!insns, n) 
+         | scan(i::is, n) =
+            if InsnProps.moveInstr i then
+              scan(is, n + SdiJumps.sdiSize(i, loc, 0))
+            else scan(is, n)
+     in  scan(!insns, n)
      end
    in
        copies := !copies + foldr count 0 blocks;

@@ -1,5 +1,5 @@
 (*
- * This signature describes the interface to a gc type system. 
+ * This signature describes the interface to a gc type system.
  * This encapsulates everything dealing with GC safety analysis
  * into one single signature.
  *)
@@ -15,7 +15,7 @@ struct
 
    fun error msg = MLRiscErrorMsg.error("GCTypeSystem",msg)
 
-   fun typeOf lookup = 
+   fun typeOf lookup =
    let fun T(T.REG(t,r))      = lookup r
          | T(T.LI i)          = GC.CONST i
          | T(T.CONST c)       = GC.INT
@@ -45,25 +45,25 @@ struct
          | T(T.SRL(t,a,b))    = binaryArith(t,a,b)
          | T(T.NOTB(t,a))     = unaryArith(t,a)
          | T(T.LOAD(t,ea,_))  = GC.TOP
-         | T(T.COND(t,a,b,c)) = GC.TOP 
-         | T(T.SX _)          = GC.TOP 
-         | T(T.ZX _)          = GC.TOP 
+         | T(T.COND(t,a,b,c)) = GC.TOP
+         | T(T.SX _)          = GC.TOP
+         | T(T.ZX _)          = GC.TOP
          | T(T.PRED(e, _))    = T e
          (*| T(T.REXT(t,RTL.OP(misc_op,es))) = GC.INT
          | T(T.REXT(t,RTL.FETCH(RTL.AGG(_,_,RTL.CELL(k,ty,e,_))))) = GC.TOP*)
          | T(e) = error("typeOf: "^ RTL.expToString e)
- 
-       and binaryArith(t,a,b) = 
+
+       and binaryArith(t,a,b) =
            let val ta = T(a)
                val tb = T(b)
            in  GC.join(ta,tb) end
 
        and unaryArith(t,a) = T(a)
-   in  T 
+   in  T
    end
 
    (*
-    * Compute the effect    
+    * Compute the effect
     *)
    fun effectOf{lookup, update} {action, dst, src, effect} =
    let fun err() = error("effectOf: "^ RTL.rtlToString action)
@@ -74,7 +74,7 @@ struct
              | upd(d::dst,t::tys,e) = upd(dst, tys, update(d, t, e))
              | upd _ = error "copy"
        in  upd(dst, map lookup src, e) end
- 
+
        fun E(T.COPY _,e)         = copy(dst,src,e)
          | E(T.RTL{e=s,...},e)   = E(s,e)
          | E(T.REGION(s,_),e)    = E(s,e)
@@ -85,12 +85,12 @@ struct
          | E(T.MV(t,x,exp), e)   = update(x, typeOf lookup exp, e)
          | E(T.IF(x,y,z), e)     = e
          | E(T.STORE _, e)       = e
-         (*| E(T.EXT(RTL.ASSIGN(loc,exp)),e) = 
+         (*| E(T.EXT(RTL.ASSIGN(loc,exp)),e) =
             let val t = typeOf lookup exp
             in  case loc of
-                  RTL.AGG(_,_,RTL.CELL("FP",_,T.REG(_,x),_)) => 
+                  RTL.AGG(_,_,RTL.CELL("FP",_,T.REG(_,x),_)) =>
                       update(x, GC.REAL64, e)
-                | RTL.AGG(_,_,RTL.CELL(_,_,T.REG(_,x),_)) => 
+                | RTL.AGG(_,_,RTL.CELL(_,_,T.REG(_,x),_)) =>
                       update(x, GC.TOP, e)
                 | RTL.AGG(_,_,_) => e
             end

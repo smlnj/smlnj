@@ -82,7 +82,7 @@ struct
    val CELLKINDty = IDty(IDENT([],"CellsBasis.cellkind"))
    val CELLSETty = IDty(IDENT([],"cellset"))
 
-   fun DATATYPE(id,args,cbs) = 
+   fun DATATYPE(id,args,cbs) =
         DATATYPEbind{id=id,tyvars=args,mc=NONE,asm=false,field=NONE,cbs=cbs}
    fun CONS(id,arg) = CONSbind{id=id,ty=arg,mc=NONE,asm=NONE,rtl=NONE,
                                nop=FLAGoff,nullified=FLAGoff,
@@ -92,16 +92,16 @@ struct
    fun VAL(id,e) = VALdecl[VALbind(case id of "_" => WILDpat | _ => IDpat id,e)]
    fun FUN'(id,p,e) = FUNbind(id,[CLAUSE([p],NONE,e)])
    fun FUN(id,p,e) = FUNdecl [FUN'(id,p,e)]
-   fun LET([],e) = e 
+   fun LET([],e) = e
      | LET(d,e) = LETexp(d,[e])
 
 
    fun ERROR text = CLAUSE([WILDpat],NONE,APP("error",STRINGexp text))
-   fun ERRORfun name = 
+   fun ERRORfun name =
        $["fun error msg = MLRiscErrorMsg.error(\""^name^"\",msg)"]
-   fun DUMMYfun name = 
+   fun DUMMYfun name =
        $["fun "^name^" _ = error \""^name^"\""]
- 
+
 
    fun BITSLICE(e,ranges) =
    let val temp = ID "temp"
@@ -141,7 +141,7 @@ struct
    in  case (x, y) of
          (INTlit x,INTlit y) => Int.compare(x,y)
        | (INT32lit x,INT32lit y) => Int32.compare(x,y)
-       | (BOOLlit x,BOOLlit y) => if x = y then EQUAL 
+       | (BOOLlit x,BOOLlit y) => if x = y then EQUAL
                                   else if x = false then LESS else GREATER
        | (STRINGlit x,STRINGlit y) => String.compare(x,y)
        | (CHARlit x,CHARlit y) => Char.compare(x,y)

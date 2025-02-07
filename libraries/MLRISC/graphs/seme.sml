@@ -2,42 +2,42 @@
  * Single-entry-multiple exit view.  Add a new exit node to graph view.
  *
  * All exit edges are now directed into the exit node.
- * The unique node with entry edges becomes the new entry node.  
+ * The unique node with entry edges becomes the new entry node.
  *
  * -- Allen
  *)
 
-signature SINGLE_ENTRY_MULTIPLE_EXIT_VIEW = 
+signature SINGLE_ENTRY_MULTIPLE_EXIT_VIEW =
 sig
 
-   exception NoEntry 
+   exception NoEntry
    exception MultipleEntries of Graph.node_id list
 
-   val SEME : { exit : 'n Graph.node } -> 
-              ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph 
+   val SEME : { exit : 'n Graph.node } ->
+              ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
 end
 
-structure SingleEntryMultipleExit : SINGLE_ENTRY_MULTIPLE_EXIT_VIEW = 
+structure SingleEntryMultipleExit : SINGLE_ENTRY_MULTIPLE_EXIT_VIEW =
 struct
 
    structure G = Graph
 
-   exception NoEntry 
+   exception NoEntry
    exception MultipleEntries of Graph.node_id list
 
    fun SEME {exit=exit as (EXIT,ex)} (G.GRAPH G) =
-   let fun readonly _  = raise G.Readonly 
+   let fun readonly _  = raise G.Readonly
        fun get_nodes() = exit :: #nodes G ()
        fun order()     = #order G () + 1
        fun capacity()  = Int.max(EXIT+1,#capacity G ())
-       fun findEntry() =  
+       fun findEntry() =
            case #entries G () of
               [ENTRY] => ENTRY
-           |  [] => raise NoEntry 
+           |  [] => raise NoEntry
            |  nodes => raise MultipleEntries nodes
        val ENTRY = findEntry()
        fun exitEdges n = map (fn (i,j,e) => (i,EXIT,e)) (#exit_edges G n)
-       fun out_edges n = exitEdges n @ #out_edges G n 
+       fun out_edges n = exitEdges n @ #out_edges G n
        fun in_edges n  = if n = EXIT then exitEdges n
                          else #in_edges G n
        fun get_edges() = List.concat(map (fn (n,_) => out_edges n)
@@ -46,7 +46,7 @@ struct
        fun get_pred n  = map #1 (in_edges n)
        fun has_edge(i,j) = List.exists (fn (_,k,_) => j = k) (out_edges i)
        fun has_node n    = n = EXIT orelse #has_node G n
-       fun node_info n   = if n = EXIT then ex else #node_info G n 
+       fun node_info n   = if n = EXIT then ex else #node_info G n
        fun forall_nodes f = (#forall_nodes G f; f exit)
        fun forall_edges f = app f (get_edges())
        fun entries() = [ENTRY]

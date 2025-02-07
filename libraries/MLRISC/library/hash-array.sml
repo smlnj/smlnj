@@ -14,7 +14,7 @@ structure HashArray : sig
 
     val array' : int * (int -> 'a) -> 'a array
     val array'': int * (int -> 'a) -> 'a array
-    val clear  : 'a array -> unit 
+    val clear  : 'a array -> unit
     val remove : 'a array * int -> unit
     val dom    : 'a array -> int list
     val copy_array : 'a array -> 'a array
@@ -24,7 +24,7 @@ structure HashArray : sig
     structure A = Array
 
     datatype 'a default = V of 'a | F of int -> 'a | U of int -> 'a
-    datatype 'a array = 
+    datatype 'a array =
        ARRAY of (int * 'a) list A.array ref * 'a default * int ref * int ref
 
     type 'a vector = 'a Vector.vector
@@ -38,9 +38,9 @@ structure HashArray : sig
 
     fun roundsize n =
     let fun loop i = if i >= n then i else loop(i+i)
-    in  loop 1 end 
+    in  loop 1 end
 
-    fun copy_array(ARRAY(ref a,d,ref n,ref c)) = 
+    fun copy_array(ARRAY(ref a,d,ref n,ref c)) =
          let val a' = A.array(n,[])
              val _  = A.copy{src=a,dst=a',di=0}
          in  ARRAY(ref a',d,ref n,ref c)
@@ -54,7 +54,7 @@ structure HashArray : sig
     let val N = n*n+1
         val N = if N < 16 then 16 else roundsize N
         val a = A.array(N,[])
-        fun ins i = 
+        fun ins i =
             let val pos = index(a, i)
                 val x   = f i
             in  A.update(a,pos,(i,x)::A.sub(a,pos)); x
@@ -72,7 +72,7 @@ structure HashArray : sig
         val N = n*n+1
         val N = if N < 16 then 16 else roundsize N
         val a = A.array(N,[])
-        fun ins(i,x) = 
+        fun ins(i,x) =
             let val pos = index(a,i)
             in  A.update(a,pos,(i,x)::A.sub(a,pos)); x
             end
@@ -84,7 +84,7 @@ structure HashArray : sig
 
     fun length(ARRAY(_,_,ref n,_)) = n
 
-    fun sub(a' as ARRAY(ref a,d,_,_),i) = 
+    fun sub(a' as ARRAY(ref a,d,_,_),i) =
     let val pos = index(a,i)
         fun search [] = (case d of
                            V d => d
@@ -98,10 +98,10 @@ structure HashArray : sig
     and update(a' as ARRAY(ref a,_,n,s as ref size),i,x) =
     let val N   = A.length a
         val pos = index(a,i)
-        fun change([],l) = 
+        fun change([],l) =
               if size+size >= N then grow(a',i,x)
               else (s := size + 1; A.update(a,pos,(i,x)::l))
-          | change((y as (j,_))::l',l) = 
+          | change((y as (j,_))::l',l) =
               if j = i then A.update(a,pos,(i,x)::l'@l)
               else change(l',y::l)
     in
@@ -109,14 +109,14 @@ structure HashArray : sig
         if i >= !n then n := i+1 else ()
     end
 
-    and grow(ARRAY(a' as ref a,_,_,_),i,x) = 
+    and grow(ARRAY(a' as ref a,_,_,_),i,x) =
     let val N   = A.length a
         val N'  = N+N
         val a'' = A.array(N',[])
-        fun insert(i,x) = 
+        fun insert(i,x) =
             let val pos = index(a'',i)
             in  A.update(a'',pos,(i,x)::A.sub(a'',pos)) end
-    in  
+    in
         A.app (List.app insert) a;
         insert(i,x);
         a' := a''
@@ -126,7 +126,7 @@ structure HashArray : sig
     let val N   = A.length a
         val pos = index(a,i)
         fun change([],_) = ()
-          | change((y as (j,_))::l',l) = 
+          | change((y as (j,_))::l',l) =
               if j = i then (s := size - 1; A.update(a,pos,l'@l))
               else change(l',y::l)
     in  change(A.sub(a,pos),[])
@@ -137,16 +137,16 @@ structure HashArray : sig
     fun app f (ARRAY(ref a,_,_,_)) = A.app (List.app (fn (_,x) => f x)) a
 
     fun copy { src, dst, di } =
-	appi (fn (i, x) => update (dst, i, x)) src
+        appi (fn (i, x) => update (dst, i, x)) src
 
     fun copyVec { src, dst, di } =
-	Vector.appi (fn (i, x) => update (dst, di + i, x)) src
+        Vector.appi (fn (i, x) => update (dst, di + i, x)) src
 
     (* These seem bogus since they do not run in order *)
     fun foldli f e (ARRAY(ref a,_,_,_)) =
-	A.foldl (fn (l, e) => List.foldl (fn ((i,x),e) => f (i,x,e)) e l) e a
+        A.foldl (fn (l, e) => List.foldl (fn ((i,x),e) => f (i,x,e)) e l) e a
     fun foldri f e (ARRAY(ref a,_,_,_)) =
-	A.foldr (fn (l, e) => List.foldr (fn ((i,x),e) => f (i,x,e)) e l) e a
+        A.foldr (fn (l, e) => List.foldr (fn ((i,x),e) => f (i,x,e)) e l) e a
 
     fun foldl f e (ARRAY(ref a,_,_,_)) =
        A.foldl (fn (l,e) => List.foldl (fn ((_,x),e) => f(x,e)) e l) e a
@@ -154,34 +154,34 @@ structure HashArray : sig
        A.foldr (fn (l,e) => List.foldr (fn ((_,x),e) => f(x,e)) e l) e a
 
     fun modifyi f (ARRAY(ref a,_,_,_)) =
-	A.modify (List.map (fn (i,x) => (i, f (i, x)))) a
+        A.modify (List.map (fn (i,x) => (i, f (i, x)))) a
 
     fun modify f (ARRAY(ref a,_,_,_)) =
-       A.modify (List.map (fn (i,x) => (i,f x))) a 
+       A.modify (List.map (fn (i,x) => (i,f x))) a
 
-    fun dom(ARRAY(ref a,_,_,_)) = 
+    fun dom(ARRAY(ref a,_,_,_)) =
        A.foldl (fn (e,l) => List.foldr (fn ((i,_),l) => i::l) l e) [] a
 
     fun findi p (ARRAY(ref a,_,_,_)) = let
-	val len = A.length a
-	fun fnd i =
-	    if i >= len then NONE
-	    else case List.find p (A.sub (a, i)) of
-		     NONE => fnd (i + 1)
-		   | some => some
+        val len = A.length a
+        fun fnd i =
+            if i >= len then NONE
+            else case List.find p (A.sub (a, i)) of
+                     NONE => fnd (i + 1)
+                   | some => some
     in
-	fnd 0
+        fnd 0
     end
 
     fun find p (ARRAY(ref a,_,_,_)) = let
-	val len = A.length a
-	fun fnd i =
-	    if i >= len then NONE
-	    else case List.find (p o #2) (A.sub (a, i)) of
-		     NONE => fnd (i + 1)
-		   | SOME (_, x) => SOME x
+        val len = A.length a
+        fun fnd i =
+            if i >= len then NONE
+            else case List.find (p o #2) (A.sub (a, i)) of
+                     NONE => fnd (i + 1)
+                   | SOME (_, x) => SOME x
     in
-	fnd 0
+        fnd 0
     end
 
     fun exists p arr = isSome (find p arr)
@@ -194,23 +194,23 @@ structure HashArray : sig
     fun toList arr = foldr (op ::) [] arr
 
     fun fromVector v = let
-	  val n = Vector.length v
-	  val N = n*n+1
-	  val N = if N < 16 then 16 else roundsize N
-	  val a = A.array(N, [])
-	  fun ins (i, x) = let
-		val pos = index(a, i)
-		in
-		  A.update(a, pos, (i,x)::A.sub(a, pos)); x
-		end
-	  fun lp i = if (i < n)
-		  then (ins (i, Vector.sub(v, i)); lp(i+1))
-		else if (i = 0)
-		  then F(fn _ => raise Subscript)
-		  else V(Vector.sub(v, i-1))
-	  in
-	    ARRAY(ref a, lp 0, ref n, ref n)
-	  end
+          val n = Vector.length v
+          val N = n*n+1
+          val N = if N < 16 then 16 else roundsize N
+          val a = A.array(N, [])
+          fun ins (i, x) = let
+                val pos = index(a, i)
+                in
+                  A.update(a, pos, (i,x)::A.sub(a, pos)); x
+                end
+          fun lp i = if (i < n)
+                  then (ins (i, Vector.sub(v, i)); lp(i+1))
+                else if (i = 0)
+                  then F(fn _ => raise Subscript)
+                  else V(Vector.sub(v, i-1))
+          in
+            ARRAY(ref a, lp 0, ref n, ref n)
+          end
 
      val toVector = vector
 

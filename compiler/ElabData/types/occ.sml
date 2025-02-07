@@ -7,7 +7,7 @@
  * 8/18/92: cleaned up occ "state machine" some and fixed bug #612.
  *  Known behaviour of the attributes about the context that are kept:
  *  lamd = # of Abstr's entered so far.  Starts at 0 with Root.
- *  top = true iff have not entered the declaration part of 
+ *  top = true iff have not entered the declaration part of
  *  a Let (let, local (1st decl), structure let, functor let) yet.
  *  Q: Is OCC{lamb = 0, top = false} possible?  (yes?)
  *     Is OCC{lamb > 0, top = true} possible?

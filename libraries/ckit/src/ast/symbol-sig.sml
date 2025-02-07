@@ -9,7 +9,7 @@
  *
  * Member is (id * id), the first id is the id of the structure and the second is the
  * real member. Whenever you look up a Member, you must know the struct_ty. If you
- * know the struct_ty, you know the first id (see CTYPE), and then you can get a 
+ * know the struct_ty, you know the first id (see CTYPE), and then you can get a
  * unique mapping in the lookup.
  *
  *)

@@ -5,7 +5,7 @@ sig
 
    type flowgraph
 
-   (* Number of basic blocks in the flowgraph *) 
+   (* Number of basic blocks in the flowgraph *)
    val numberOfBlocks : flowgraph -> int
 
    (* Partition a flowgraph into smaller subgraphs and apply

@@ -1,6 +1,6 @@
 (* Copyright (c) 1998 by Lucent Technologies *)
 
-local 
+local
   type 'a pp =  Tables.tidtab -> OldPrettyPrint.ppstream -> 'a -> unit
 
   type ('aidinfo,'a,'b) adornment_pp = ('aidinfo -> 'a) -> 'aidinfo -> 'b

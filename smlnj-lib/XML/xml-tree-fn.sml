@@ -17,20 +17,20 @@ functor XMLTreeFn (Schema : XML_SCHEMA) : XML_TREE =
     and external_id
       = SYSTEM of string
       | PUBLIC of string * string
-	
+
     datatype content
       = TEXT of string
       | CDATA of string
       | ELEMENT of {
-	    name : Schema.element,
-	    attrs : Schema.attribute list,
-	    content : content list
-	  }
+            name : Schema.element,
+            attrs : Schema.attribute list,
+            content : content list
+          }
 
     type tree = {
-	xmlDecl : Schema.attribute list option,	(* NONE if there is no decl *)
-	doctype : doctype option,
-	content : content			(* will be an ELEMENT *)
+        xmlDecl : Schema.attribute list option, (* NONE if there is no decl *)
+        doctype : doctype option,
+        content : content                       (* will be an ELEMENT *)
       }
 
   end

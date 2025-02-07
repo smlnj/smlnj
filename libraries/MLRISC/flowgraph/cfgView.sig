@@ -1,4 +1,4 @@
-(* cfgView.sig -- graphical viewing utilities for cfg 
+(* cfgView.sig -- graphical viewing utilities for cfg
  *
  * Copyright (c) 2001 Bell Laboratories.
  *)

@@ -19,35 +19,35 @@ structure Unix : UNIX =
 
     fun protect f x = let
           val _ = Signals.maskSignals Signals.MASKALL
-          val y = (f x) handle ex => 
+          val y = (f x) handle ex =>
                     (Signals.unmaskSignals Signals.MASKALL; raise ex)
           in
             Signals.unmaskSignals Signals.MASKALL; y
           end
 
     fun fdReader (name : string, fd : PIO.file_desc) =
-	  PosixTextPrimIO.mkReader {
+          PosixTextPrimIO.mkReader {
               name = name,
               fd = fd
             }
 
     fun fdWriter (name, fd) =
           PosixTextPrimIO.mkWriter {
-	      appendMode = false,
+              appendMode = false,
               name = name,
               chunkSize=4096,
               fd = fd
             }
 
     fun openOutFD (name, fd) =
-	  TextIO.mkOutstream (
-	    TextIO.StreamIO.mkOutstream (
-	      fdWriter (name, fd), IO.BLOCK_BUF))
+          TextIO.mkOutstream (
+            TextIO.StreamIO.mkOutstream (
+              fdWriter (name, fd), IO.BLOCK_BUF))
 
     fun openInFD (name, fd) =
-	  TextIO.mkInstream (
-	    TextIO.StreamIO.mkInstream (
-	      fdReader (name, fd), ""))
+          TextIO.mkInstream (
+            TextIO.StreamIO.mkInstream (
+              fdReader (name, fd), ""))
 
     datatype proc = PROC of {
         pid : PP.pid,
@@ -60,42 +60,42 @@ structure Unix : UNIX =
           val p1 = PIO.pipe ()
           val p2 = PIO.pipe ()
           fun closep () = (
-                PIO.close (#outfd p1); 
+                PIO.close (#outfd p1);
                 PIO.close (#infd p1);
-                PIO.close (#outfd p2); 
+                PIO.close (#outfd p2);
                 PIO.close (#infd p2)
               )
           val base = SS.string(SS.taker (fn c => c <> #"/") (SS.full cmd))
           fun startChild () = (case protect PP.fork ()
-		 of SOME pid => pid           (* parent *)
+                 of SOME pid => pid           (* parent *)
                   | NONE => let
-		      val oldin = #infd p1
-		      val newin = Posix.FileSys.wordToFD 0w0
-		      val oldout = #outfd p2
-		      val newout = Posix.FileSys.wordToFD 0w1
+                      val oldin = #infd p1
+                      val newin = Posix.FileSys.wordToFD 0w0
+                      val oldout = #outfd p2
+                      val newout = Posix.FileSys.wordToFD 0w1
                       in
-			PIO.close (#outfd p1);
-			PIO.close (#infd p2);
-			if (oldin = newin) then ()
-			else (
+                        PIO.close (#outfd p1);
+                        PIO.close (#infd p2);
+                        if (oldin = newin) then ()
+                        else (
                           PIO.dup2{old = oldin, new = newin};
                           PIO.close oldin);
-			if (oldout = newout) then ()
-			else (
+                        if (oldout = newout) then ()
+                        else (
                           PIO.dup2{old = oldout, new = newout};
                           PIO.close oldout);
-			PP.exece (cmd, base::argv, env)
-			  handle ex => (
-			  (* the exec failed, so we need to shutdown the child *)
-			    PP.exit 0w128)
-		      end
-		(* end case *))
+                        PP.exece (cmd, base::argv, env)
+                          handle ex => (
+                          (* the exec failed, so we need to shutdown the child *)
+                            PP.exit 0w128)
+                      end
+                (* end case *))
           val _ = TextIO.flushOut TextIO.stdOut
           val pid = (
-		  S.stopTimer();
-		  startChild () before
-		  S.restartTimer())
-		handle ex => (S.restartTimer(); closep(); raise ex)
+                  S.stopTimer();
+                  startChild () before
+                  S.restartTimer())
+                handle ex => (S.restartTimer(); closep(); raise ex)
           val ins = openInFD (base^"_exec_in", #infd p2)
           val outs = openOutFD (base^"_exec_out", #outfd p1)
           in
@@ -115,7 +115,7 @@ structure Unix : UNIX =
     fun kill (PROC{pid, ...}, signal) = PP.kill (PP.K_PROC pid, signal)
 
     fun reapEvt (PROC{pid, ins, outs}) = (
-	  S.atomicBegin(); PM.addPid pid before S.atomicEnd())
+          S.atomicBegin(); PM.addPid pid before S.atomicEnd())
 
     val reap = Event.sync o reapEvt
 

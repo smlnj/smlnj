@@ -34,21 +34,21 @@ sig
    val fixedUse : C.cell list
 
    (* Extract the naming constraints on the operands *)
-   val namingConstraints :   
-        { instr : I.instruction, dst : C.cell list, src : C.cell list } -> 
+   val namingConstraints :
+        { instr : I.instruction, dst : C.cell list, src : C.cell list } ->
         { dst    : (RTL.T.var * C.cell) list,  (* destination is fixed *)
           src    : (RTL.T.var * C.cell) list,  (* source is fixed *)
           dstsrc : (RTL.T.var * RTL.T.var) list    (* dst = src *)
         }
 
    (* Rewrite the operands of an instruction *)
-   val rewriteOperands :   
+   val rewriteOperands :
         { const : int -> OT.const } ->
-        { instr : I.instruction, dst : C.cell list, src : C.cell list } -> 
+        { instr : I.instruction, dst : C.cell list, src : C.cell list } ->
         I.instruction
 
    (* Make copies *)
-   val copies : {kind: C.cellkind, dst:C.cell, src:C.cell} list -> 
+   val copies : {kind: C.cellkind, dst:C.cell, src:C.cell} list ->
                  I.instruction list
 end
 

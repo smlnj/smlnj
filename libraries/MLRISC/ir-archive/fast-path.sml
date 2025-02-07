@@ -11,11 +11,11 @@ struct
    structure G   = Graph
    structure A   = Array
 
-   datatype 'e pexp = 
+   datatype 'e pexp =
       NULLSET
-   |  LAMBDA 
+   |  LAMBDA
    |  EDGE of 'e Graph.edge
-   |  || of 'e pexp * 'e pexp 
+   |  || of 'e pexp * 'e pexp
    |  ++ of 'e pexp * 'e pexp
 
    type 'e pseq = ('e pexp * int * int) list
@@ -29,7 +29,7 @@ struct
      | simp (EMP ++ x) = x
      | simp x = x
 
-   fun solve P s = 
+   fun solve P s =
 
    fun decompose_and_sequence (G as G.GRAPH G,Dom as G.GRAPH dom) =
    let val N        = #capacity dom ()

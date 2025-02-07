@@ -1,7 +1,7 @@
 (*
  * Minimal cut of a graph.  The graph is treated as undirected.
  * Note: the graph must be simple!
- * 
+ *
  * -- Allen
  *)
 signature MIN_CUT =

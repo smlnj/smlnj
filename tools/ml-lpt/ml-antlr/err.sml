@@ -1,6 +1,6 @@
 (* err.sml
  *
- * COPYRIGHT (c) 2006 
+ * COPYRIGHT (c) 2006
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
  * All rights reserved.
@@ -9,7 +9,7 @@
  * and a flag to trigger halting of the tool.
  *)
 
-structure Err = 
+structure Err =
   struct
 
   (* signal that the program should be aborted with no further messages printed *)
@@ -31,22 +31,22 @@ structure Err =
     fun abortIfErr() = if !anyErrors then raise Abort else ()
 
     fun errMsg l = (
-	  anyErrors := true;
-	  TextIO.output(TextIO.stdErr, String.concat l ^ "\n"))
+          anyErrors := true;
+          TextIO.output(TextIO.stdErr, String.concat l ^ "\n"))
 
-    fun warning l = 
-	  TextIO.output(TextIO.stdErr, String.concat l ^ "\n")
+    fun warning l =
+          TextIO.output(TextIO.stdErr, String.concat l ^ "\n")
 
     local
       fun lc2str (l, c) = Int.toString l ^ "." ^ Int.toString c
     in
 
     fun pos2str  (fname, l, c) = "[" ^ fname ^ ":" ^ lc2str (l, c) ^ "]"
-    fun span2str ((fname, l1, c1), (_, l2, c2)) = 
-	  if l1 = l2 andalso c1 = c2 
-	  then pos2str (fname, l1, c1)
-	  else
-	    "[" ^ fname ^ ":" ^ lc2str (l1, c1) ^ "-" ^ lc2str (l2, c2) ^ "]"
+    fun span2str ((fname, l1, c1), (_, l2, c2)) =
+          if l1 = l2 andalso c1 = c2
+          then pos2str (fname, l1, c1)
+          else
+            "[" ^ fname ^ ":" ^ lc2str (l1, c1) ^ "-" ^ lc2str (l2, c2) ^ "]"
 (*
     fun pos2str _ = ""
     fun span2str _ = ""
@@ -60,12 +60,12 @@ structure Err =
     end
 
   (* left recursion detected *)
-    fun leftRecur name = 
-	if List.exists (fn n => (n = name)) (!leftRecurs)
-	then ()
-	else (
-	  leftRecurs := name::(!leftRecurs);
-	  warning ["Left recursion detected: ", name, " -> ", name, " ..."])
+    fun leftRecur name =
+        if List.exists (fn n => (n = name)) (!leftRecurs)
+        then ()
+        else (
+          leftRecurs := name::(!leftRecurs);
+          warning ["Left recursion detected: ", name, " -> ", name, " ..."])
 
     val printDebug = ref true
 

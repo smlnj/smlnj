@@ -5,7 +5,7 @@
  *)
 
 
-signature WEAK = 
+signature WEAK =
   sig
 
     type 'a weak

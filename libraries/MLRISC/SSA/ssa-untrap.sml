@@ -1,11 +1,11 @@
 (*
  * This module removes unnecessary overflow trapping arithmetic instructions.
- * 
- * There are two types of trapping arithmetic instructions generated in all the 
+ *
+ * There are two types of trapping arithmetic instructions generated in all the
  * architectures.  The first type of architectures have arithmetic instructions
- * that traps for overflow in one single instruction (PA-RISC, Alpha).  
+ * that traps for overflow in one single instruction (PA-RISC, Alpha).
  * Other architectures have instructions that sets an overflow flag and
- * require explicit tests (Sparc, x86, PowerPC).  
+ * require explicit tests (Sparc, x86, PowerPC).
  *
  * -- Allen (leunga@cs.nyu.edu)
  *)
@@ -16,7 +16,7 @@ struct
    structure SSA  = SSAInstrGen.SSA
    structure CFG  = SSA.CFG
    structure RTL  = SSA.RTL
-   structure T    = RTL.T  
+   structure T    = RTL.T
    structure T'   = SSA.MLTreeComp.T
    structure G    = Graph
    structure A    = Array
@@ -28,7 +28,7 @@ struct
    val untrapped = MLRiscControl.getCounter "ssa-untrapped"
 
    datatype interval = BOT | TOP | RANGE of int * int
-  
+
    fun meet(BOT,x) = x
      | meet(x,BOT) = x
      | meet(TOP,x) = TOP
@@ -48,14 +48,14 @@ struct
        val showVal = SSA.showVal SSA
        val {ops, ...} = SSA.nodes SSA
 
-       fun untrap(i, rtl, defs, uses) = 
-       let fun isConst x = List.nth(uses,x) < 0 
+       fun untrap(i, rtl, defs, uses) =
+       let fun isConst x = List.nth(uses,x) < 0
        in  case rtl of
              T.RTL{e,...} => untrap(i, e, defs, uses)
            | T.MV(ty, z, T.ADDT(_,T.REG(_,x), T.REG(_,y))) =>
                 if isConst x orelse isConst y then
                   let val t = T.MV(ty, z, T.ADD(ty, T.REG(ty,x), T.REG(ty,y)))
-                      val mltree = 
+                      val mltree =
                            Gen.translate SSA {defs=defs, uses=uses, rtl=t}
                   in  Gen.replace SSA {id=i, mltree=mltree}
                   end
@@ -63,7 +63,7 @@ struct
            | T.MV(ty, z, T.SUBT(_,T.REG(_,x), T.REG(_,y))) =>
                 if isConst x orelse isConst y then
                   let val t = T.MV(ty, z, T.SUB(ty, T.REG(ty,x), T.REG(ty,y)))
-                      val mltree = 
+                      val mltree =
                            Gen.translate SSA {defs=defs, uses=uses, rtl=t}
                   in  Gen.replace SSA {id=i, mltree=mltree}
                   end
@@ -71,21 +71,21 @@ struct
            | _ => false
        end
 
-       fun process i = 
-       let val rtl  = A.sub(rtlTbl, i) 
+       fun process i =
+       let val rtl  = A.sub(rtlTbl, i)
            val uses = A.sub(usesTbl, i)
            val defs = A.sub(defsTbl, i)
        in  if untrap(i, rtl, defs, uses) then
-              (untrapped := !untrapped + 1; 
+              (untrapped := !untrapped + 1;
                print("TRAP "^showOp i^"\n")
               )
            else ()
        end
 
-       fun walk X = 
+       fun walk X =
        let val ops = A.sub(ops, X)
            fun scan [] = ()
-             | scan(i::ops) = 
+             | scan(i::ops) =
                let val rtl = A.sub(rtlTbl, i)
                in  scan ops
                end

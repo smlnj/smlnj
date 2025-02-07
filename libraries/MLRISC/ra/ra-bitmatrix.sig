@@ -1,14 +1,14 @@
 
 signature RA_BITMATRIX = sig
 
-  datatype bucket = NIL | B of int * int * bucket 
-  datatype hashTable = 
+  datatype bucket = NIL | B of int * int * bucket
+  datatype hashTable =
       SMALL of word list Array.array ref * word
     | LARGE of bucket Array.array ref * word
  (* | BITMATRIX of Word8Array.array *)
 
-  datatype bitMatrix = 
-     BM of {table:hashTable, 
+  datatype bitMatrix =
+     BM of {table:hashTable,
             elems:int ref,
             edges:int}
 

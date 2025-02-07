@@ -8,13 +8,13 @@ sig
 
    structure I : INSTRUCTIONS
    structure C : CELLS
-   structure F : RA_FLOWGRAPH 
+   structure F : RA_FLOWGRAPH
       sharing F.I   = I
       sharing I.C   = C
    structure CB : CELLS_BASIS = CellsBasis
 
    type getreg = { pref  : CB.cell_id list,
-                   stamp : int, 
+                   stamp : int,
                    proh  : int Array.array
                  } -> CB.cell_id
 
@@ -32,7 +32,7 @@ sig
    val SPILL_COLORING       : mode
    val SPILL_COALESCING     : mode
    val SPILL_PROPAGATION    : mode
-   val HAS_PARALLEL_COPIES  : mode 
+   val HAS_PARALLEL_COPIES  : mode
        (* The above MUST be used when spill coloring is used and
         * you have parallel copies in the program. Otherwise, phathom
         * problems involving copy temporaries may appear.
@@ -44,7 +44,7 @@ sig
     * spillProh is a list of register ranges (inclusive) that cannot be spilled.
     *
     *)
-   type raClient = 
+   type raClient =
    { cellkind     : CB.cellkind,             (* kind of register *)
      spillProh    : CB.cell list,            (* don't spill these *)
      memRegs      : CB.cell list,            (* memory registers *)
@@ -59,7 +59,7 @@ sig
      reloadDst    : F.Spill.reloadDst,      (* reload callback *)
      renameSrc    : F.Spill.renameSrc,      (* rename callback *)
      mode         : mode                    (* mode *)
-   } 
+   }
 
    val ra : raClient list -> F.flowgraph -> F.flowgraph
 

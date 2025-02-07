@@ -52,14 +52,14 @@ in
 
 fun isDiffs (vs, us) =
     let fun h (VAR x) = List.all (fn y => (y<>x)) vs
-	  | h _ = true
+          | h _ = true
      in List.all h us
     end
 
 fun isEqs (vs, us) =
     let fun h (v::r, (VAR x)::z) = if v = x then h(r, z) else false
-	  | h ([], []) = true
-	  | h _ = false
+          | h ([], []) = true
+          | h _ = false
      in h(vs, us)
     end
 
@@ -75,52 +75,52 @@ exception LContPass1
 (* pass1 : F.fundec -> (LV.lvar -> bool) * (unit -> unit) *)
 fun pass1 fdec =
     let val tbl : (DI.depth option) M.hash_table = M.mkTable(32, LContPass1)
-	val add = M.insert tbl
-	val get = M.lookup tbl
-	fun rmv i = ignore (M.remove tbl i) handle LContPass1 => ()
-	fun enter (x, d) = add (x, SOME d)
-	fun kill (x: LV.lvar) = ((get x; rmv x) handle LContPass1 => ())
-	fun mark (x: LV.lvar) =
-	    let val s = get x
-	        val _ = rmv x
-	     in case s
-		  of NONE => ()
-		   | SOME _ => add(x, NONE)  (* depth no longer matters *)
-	    end
-	    handle LContPass1 => ()
+        val add = M.insert tbl
+        val get = M.lookup tbl
+        fun rmv i = ignore (M.remove tbl i) handle LContPass1 => ()
+        fun enter (x, d) = add (x, SOME d)
+        fun kill (x: LV.lvar) = ((get x; rmv x) handle LContPass1 => ())
+        fun mark (x: LV.lvar) =
+            let val s = get x
+                val _ = rmv x
+             in case s
+                  of NONE => ()
+                   | SOME _ => add(x, NONE)  (* depth no longer matters *)
+            end
+            handle LContPass1 => ()
 
         (* candidate : LV.lvar -> bool *)
-	fun candidate x = (get x; true) handle LContPass1 => false
+        fun candidate x = (get x; true) handle LContPass1 => false
 
         (* lpfd : DI.depth -> F.fundec -> unit *)
-	fun lpfd d (({isrec=SOME _,...}, _, _, e) : F.fundec) = lple d e
-	  | lpfd d (_, v, _, e) = (enter(v, d); lple d e)
+        fun lpfd d (({isrec=SOME _,...}, _, _, e) : F.fundec) = lple d e
+          | lpfd d (_, v, _, e) = (enter(v, d); lple d e)
 
         (* lple : DI.depth -> F.lexp -> unit *)
-	and lple d e =
-	    let fun psv (VAR x) = kill x
-		  | psv _ = ()
+        and lple d e =
+            let fun psv (VAR x) = kill x
+                  | psv _ = ()
 
-		and pse (RET vs) = app psv vs
-		  | pse (LET(vs, e1, e2)) = (pse e1; pse e2)
-		  | pse (FIX(fdecs, e)) = (app (lpfd d) fdecs; pse e)
-		  | pse (APP(VAR x, vs)) = (mark x; app psv vs)
-		  | pse (APP(v, vs)) = (psv v; app psv vs)
-		  | pse (TFN((_, _, _, e1): F.tfundec, e2)) = (lple (DI.next d) e1; pse e2)
-		  | pse (TAPP(v, _)) = psv v
-		  | pse (RECORD(_,vs,_,e)) = (app psv vs; pse e)
-		  | pse (SELECT(u,_,_,e)) = (psv u; pse e)
-		  | pse (CON(_,_,u,_,e)) = (psv u; pse e)
-		  | pse (SWITCH(u, _, ces, oe)) =
-		      (psv u; app (fn (_,x) => pse x) ces;
-		       case oe of NONE => () | SOME x => pse x)
-		  | pse (RAISE _) = ()
-		  | pse (HANDLE(e,v)) = (pse e; psv v)
-		  | pse (BRANCH(_, vs, e1, e2)) = (app psv vs; pse e1; pse e2)
-		  | pse (PRIMOP(_, vs, _, e)) = (app psv vs; pse e)
+                and pse (RET vs) = app psv vs
+                  | pse (LET(vs, e1, e2)) = (pse e1; pse e2)
+                  | pse (FIX(fdecs, e)) = (app (lpfd d) fdecs; pse e)
+                  | pse (APP(VAR x, vs)) = (mark x; app psv vs)
+                  | pse (APP(v, vs)) = (psv v; app psv vs)
+                  | pse (TFN((_, _, _, e1): F.tfundec, e2)) = (lple (DI.next d) e1; pse e2)
+                  | pse (TAPP(v, _)) = psv v
+                  | pse (RECORD(_,vs,_,e)) = (app psv vs; pse e)
+                  | pse (SELECT(u,_,_,e)) = (psv u; pse e)
+                  | pse (CON(_,_,u,_,e)) = (psv u; pse e)
+                  | pse (SWITCH(u, _, ces, oe)) =
+                      (psv u; app (fn (_,x) => pse x) ces;
+                       case oe of NONE => () | SOME x => pse x)
+                  | pse (RAISE _) = ()
+                  | pse (HANDLE(e,v)) = (pse e; psv v)
+                  | pse (BRANCH(_, vs, e1, e2)) = (app psv vs; pse e1; pse e2)
+                  | pse (PRIMOP(_, vs, _, e)) = (app psv vs; pse e)
 
-	     in pse e
-	    end
+             in pse e
+            end
 
      in lpfd DI.top fdec;
         (candidate, fn () => M.clear tbl)
@@ -204,15 +204,15 @@ fun swiInfo (VAR v, arms, defaultOp) =
       ((case get v
          of (_, SimpVal u) => swiInfo(u, arms, defaultOp)
           | (_, ConExp ((_,rep,_), _, value)) =>  (* subject is a Constr exp *)
-	    (case rep
-	       of DA.EXN _ => NONE
-	        | _ => 
-		  let fun check ((PL.DATAcon((_,nrep,_), _, lvar), e) :: rest) =
-			    if nrep = rep then SOME(LET([lvar], RET [value], e)) else check rest
-			| check (_::_) = bug "unexpected case in swiInfo"
-			| check [] = defaultOp (* none of the Constrs statically match the subject *)
-		   in check arms
-		  end)
+            (case rep
+               of DA.EXN _ => NONE
+                | _ =>
+                  let fun check ((PL.DATAcon((_,nrep,_), _, lvar), e) :: rest) =
+                            if nrep = rep then SOME(LET([lvar], RET [value], e)) else check rest
+                        | check (_::_) = bug "unexpected case in swiInfo"
+                        | check [] = defaultOp (* none of the Constrs statically match the subject *)
+                   in check arms
+                  end)
           | _ => NONE)
        handle LContract => NONE)
   | swiInfo _ = NONE
@@ -254,7 +254,7 @@ fun boolDcon((PL.DATAcon((_,DA.CONSTANT 1,lt1),[],v1), e1),
       boolDcon (ce2, ce1)
   | boolDcon _ = NONE
 
-(* ssplit : F.lexp -> (F.lexp -> F.Lexp) * F.lexp *) 
+(* ssplit : F.lexp -> (F.lexp -> F.Lexp) * F.lexp *)
 fun ssplit (LET(vs,e1,e2)) = (fn x => LET(vs,x,e2), e1)
   | ssplit e = ((fn x => x), e)
 
@@ -282,11 +282,11 @@ end (* branchopt local *)
      (* expects an LVAR and returns an LVAR *)
      fun lpacc (DA.LVAR v) =
          (case lpsv (VAR v)
-	    of VAR w => DA.LVAR w
+            of VAR w => DA.LVAR w
              | _ => bug "unexpected in lpacc")
        | lpacc da = (print "LContract.lpacc: "; print (DA.prAcc da);
-		     print "\n";
-		     bug "unexpected path in lpacc")
+                     print "\n";
+                     bug "unexpected path in lpacc")
 
      and lpdc (s, DA.EXN acc, t) = (s, DA.EXN(lpacc acc), t)
        | lpdc (s, rep, t) = (s, rep, t)
@@ -297,7 +297,7 @@ end (* branchopt local *)
      and lpdt {default=v, table=ws} =
            let fun h x =
                    case rename (VAR x)
-		     of VAR nv => nv
+                     of VAR nv => nv
                       | _ => bug "unexpected acse in lpdt"
             in (SOME {default=h v, table=map (fn (ts,w) => (ts,h w)) ws})
            end
@@ -305,10 +305,10 @@ end (* branchopt local *)
      and lpsv x = (case x of VAR v => rename x | _ => x)
 
      and lpfd ({isrec, known, inline, cconv}, v, vts, e) =
-	 (* The function body might have changed so we need to reset
-	  * the inlining hint *)
-	 ({isrec=isrec, known=known, inline=FR.IH_SAFE, cconv=cconv},
-	  v, vts, #1(loop e))
+         (* The function body might have changed so we need to reset
+          * the inlining hint *)
+         ({isrec=isrec, known=known, inline=FR.IH_SAFE, cconv=cconv},
+          v, vts, #1(loop e))
 
      and lplet (hdr: lexp -> lexp, pure, v: LV.lvar, info: info, e) =
        let val _ = chkIn(v, info)
@@ -429,7 +429,7 @@ end (* branchopt local *)
               let val (ne1, b1) = loop e1
                   val (ne2, b2) = loop e2
                in (BRANCH(case d of NONE => px
-				  | SOME d => (lpdt d, p, lt, ts),
+                                  | SOME d => (lpdt d, p, lt, ts),
                           map lpsv vs, ne1, ne2), false)
               end
           | PRIMOP(px as (dt, p, lt, ts), vs, v, e) =>

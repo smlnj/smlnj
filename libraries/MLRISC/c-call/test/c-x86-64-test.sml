@@ -1,4 +1,4 @@
-local 
+local
 (*
  * User defined constant type.  Dummy for now.
  * In practice, you'll want to use this type to implement constants with
@@ -8,20 +8,20 @@ local
 structure UserConst =
 struct
    type const = unit
-   fun toString() = ""  
-   fun hash() = 0w0  
+   fun toString() = ""
+   fun hash() = 0w0
    fun valueOf _ = 0
-   fun == _ = true  
+   fun == _ = true
 end
 
 (*
  * User defined datatype for representing aliasing.   Dummy for now.
- * You'll need this to represent aliasing information. 
+ * You'll need this to represent aliasing information.
  *)
 structure UserRegion =
 struct
    type region = unit
-   fun toString () = "" 
+   fun toString () = ""
    val memory = ()
    val stack = ()
    val readonly = ()
@@ -32,11 +32,11 @@ end
  * User defined datatype for representing pseudo assembly operators.
  * Dummy for now.
  *
- * You'll need this to represent assembler directives. 
+ * You'll need this to represent assembler directives.
  *)
 structure UserPseudoOps =
 struct
-   type pseudo_op = unit  
+   type pseudo_op = unit
    fun toString () = ""
    fun emitValue _ = ()
    fun sizeOf _ = 0
@@ -64,7 +64,7 @@ end
  * have any yet.  This is just a bunch of dummy routines.
  *)
 functor UserMLTreeExtComp
-	    (    structure I : AMD64INSTR where T.Extension = UserExtension
+            (    structure I : AMD64INSTR where T.Extension = UserExtension
     structure TS : MLTREE_STREAM where T = I.T
     structure CFG : CONTROL_FLOW_GRAPH where I = I and P = TS.S.P
    ) : MLTREE_EXTENSION_COMP =
@@ -81,7 +81,7 @@ struct
       structure CFG = CFG)
 
     type reducer =
-	  (I.instruction,C.cellset,I.operand,I.addressing_mode,CFG.cfg) TS.reducer
+          (I.instruction,C.cellset,I.operand,I.addressing_mode,CFG.cfg) TS.reducer
 
     val compileSext = CompInstrExt.compileSext
 
@@ -130,16 +130,16 @@ structure PseudoOps =
 
     structure Client =
       struct
-	structure AsmPseudoOps = AMD64PseudoOps
-	type pseudo_op = unit
-			 
-	fun toString () = ""
-  
-	fun emitValue _ = raise Fail "todo"
-	fun sizeOf _ = raise Fail "todo"
-	fun adjustLabels _ = raise Fail "todo"
+        structure AsmPseudoOps = AMD64PseudoOps
+        type pseudo_op = unit
+
+        fun toString () = ""
+
+        fun emitValue _ = raise Fail "todo"
+        fun sizeOf _ = raise Fail "todo"
+        fun adjustLabels _ = raise Fail "todo"
       end (* Client *)
-  
+
     structure PseudoOps = PseudoOps (structure Client = Client)
   end
 
@@ -160,20 +160,20 @@ structure AMD64Asm = AMD64AsmEmitter
     structure Shuffle = AMD64Shuffle
    )
 
-structure AMD64InsnProps = AMD64Props 
-			  (structure Instr = AMD64Instr
+structure AMD64InsnProps = AMD64Props
+                          (structure Instr = AMD64Instr
                            structure MLTreeHash = AMD64MLTreeHash
-			   structure MLTreeEval = AMD64MLTreeEval)
+                           structure MLTreeEval = AMD64MLTreeEval)
 
 structure AMD64CFG = ControlFlowGraph (
             structure I = AMD64Asm.I
-	    structure GraphImpl = DirectedGraph
-	    structure InsnProps = AMD64InsnProps
-	    structure Asm = AMD64Asm)
+            structure GraphImpl = DirectedGraph
+            structure InsnProps = AMD64InsnProps
+            structure Asm = AMD64Asm)
 
 structure AMD64MLTStream = MLTreeStream (
-		      structure T = AMD64MLTree
-		      structure S = AMD64Stream)
+                      structure T = AMD64MLTree
+                      structure S = AMD64Stream)
 
 structure CompInstrExt = AMD64CompInstrExt (
       structure I = AMD64Instr
@@ -193,7 +193,7 @@ structure AMD64MTC = struct
    val compileRext  = unimplemented
    val compileFext  = unimplemented
    val compileCCext = unimplemented
-		      
+
    structure AMD64MLTreeUtils : MLTREE_UTILS =
      struct
        structure T = AMD64MLTree
@@ -217,23 +217,23 @@ structure AMD64MTC = struct
 end
 
 structure AMD64 = AMD64Gen (
-		  structure I = AMD64Instr
-		  structure MLTreeUtils = AMD64MTC.AMD64MLTreeUtils
-		  structure ExtensionComp = AMD64MTC
-		  val floats16ByteAligned = floats16ByteAligned
-		  fun signBit _ = raise Fail "todo"
-		  fun negateSignBit _ = raise Fail "todo"
-		  )
+                  structure I = AMD64Instr
+                  structure MLTreeUtils = AMD64MTC.AMD64MLTreeUtils
+                  structure ExtensionComp = AMD64MTC
+                  val floats16ByteAligned = floats16ByteAligned
+                  fun signBit _ = raise Fail "todo"
+                  fun negateSignBit _ = raise Fail "todo"
+                  )
 
 structure AMD64Emit = CFGEmit (
              structure CFG = AMD64CFG
-             structure E = AMD64Asm) 
+             structure E = AMD64Asm)
 
 
-structure AMD64FlowGraph = BuildFlowgraph 
-	    (structure Props = AMD64InsnProps
+structure AMD64FlowGraph = BuildFlowgraph
+            (structure Props = AMD64InsnProps
              structure Stream = AMD64Stream
-	     structure CFG = AMD64CFG)
+             structure CFG = AMD64CFG)
 
 structure AMD64Expand = CFGExpandCopies (structure CFG=AMD64CFG
                                          structure Shuffle = AMD64Shuffle)
@@ -247,13 +247,13 @@ structure RASpill = RASpillWithRenaming (
 
 structure C = AMD64Cells
 
-datatype spill_operand_kind = SPILL_LOC 
+datatype spill_operand_kind = SPILL_LOC
                             | CONST_VAL
 
-datatype ra_phase = SPILL_PROPAGATION 
+datatype ra_phase = SPILL_PROPAGATION
                   | SPILL_COLORING
 
-structure IntRA = 
+structure IntRA =
   struct
     val dedicated = [C.rsp, C.rbp]
     val allRegs = C.Regs CellsBasis.GP {from=0, to=15, step=1}
@@ -264,7 +264,7 @@ structure IntRA =
           C.getReg availSet
         end
     fun spillInit _ = ()
-    fun spillLoc {info=frame, an, cell, id=loc} = 
+    fun spillLoc {info=frame, an, cell, id=loc} =
 raise Fail ""
 (*        {opnd = AMD64Instr.Immed 0, kind = SPILL_LOC}*)
     val phases = [SPILL_PROPAGATION, SPILL_COLORING]
@@ -287,7 +287,7 @@ structure AMD64RA = AMD64RegAlloc (
          structure SpillHeur = ChowHennessySpillHeur
          structure Spill = RASpill
          structure Props = AMD64InsnProps
-	 val floats16ByteAligned = floats16ByteAligned
+         val floats16ByteAligned = floats16ByteAligned
          type spill_info = unit
          fun beforeRA (Graph.GRAPH graph) = ()
          datatype spill_operand_kind = datatype spill_operand_kind
@@ -300,135 +300,135 @@ structure AMD64Expand = CFGExpandCopies (
     structure Shuffle = AMD64Shuffle)
 
 structure AMD64CCall = X86_64SVIDFn (
-		    structure T = AMD64MLTree)
+                    structure T = AMD64MLTree)
 
-structure RA2 = 
+structure RA2 =
     RISC_RA
     (structure I = AMD64Instr
      structure Asm = AMD64Asm
      structure CFG = AMD64CFG
      structure InsnProps = AMD64InsnProps
-     structure Rewrite = 
+     structure Rewrite =
        struct
          structure I = AMD64Instr
-	 structure C=I.C
-	 structure CB = CellsBasis
-	 fun error msg = MLRiscErrorMsg.error("X86Rewrite", msg)
-			 
-	 fun operand (rs,rt) opnd =
-	     (case opnd
-	       of I.Direct (sz, r) => if CB.sameColor(r,rs) then I.Direct (sz, rt) else opnd
-		| I.Displace{base, disp, mem} => 
-		  if CB.sameColor(base,rs) then I.Displace{base=rt, disp=disp, mem=mem} 
-		  else opnd
-		| I.Indexed{base as SOME b, index, scale, disp, mem} => let
-		      val base'= if CB.sameColor(b,rs) then SOME rt else base
-		      val index'=if CB.sameColor(index,rs) then rt else index
-		  in I.Indexed{base=base', index=index', scale=scale, disp=disp, mem=mem}
-		  end
-		| I.Indexed{base, index, scale, disp, mem=mem}  => 
-		  if CB.sameColor(index,rs) then 
-		      I.Indexed{base=base, index=rt, scale=scale, disp=disp, mem=mem}
-		  else opnd
-		| _ => opnd
+         structure C=I.C
+         structure CB = CellsBasis
+         fun error msg = MLRiscErrorMsg.error("X86Rewrite", msg)
+
+         fun operand (rs,rt) opnd =
+             (case opnd
+               of I.Direct (sz, r) => if CB.sameColor(r,rs) then I.Direct (sz, rt) else opnd
+                | I.Displace{base, disp, mem} =>
+                  if CB.sameColor(base,rs) then I.Displace{base=rt, disp=disp, mem=mem}
+                  else opnd
+                | I.Indexed{base as SOME b, index, scale, disp, mem} => let
+                      val base'= if CB.sameColor(b,rs) then SOME rt else base
+                      val index'=if CB.sameColor(index,rs) then rt else index
+                  in I.Indexed{base=base', index=index', scale=scale, disp=disp, mem=mem}
+                  end
+                | I.Indexed{base, index, scale, disp, mem=mem}  =>
+                  if CB.sameColor(index,rs) then
+                      I.Indexed{base=base, index=rt, scale=scale, disp=disp, mem=mem}
+                  else opnd
+                | _ => opnd
               (*end case*))
-	     
-
-	 fun rewriteDef (instr, rs, rt) = let
-	     fun operand(opnd as I.Direct (sz, r)) = 
-		 if CB.sameColor(r,rs) then I.Direct (sz, rt) else opnd
-	       | operand _ = error "operand: not I.Direct"
-	     fun replace r = if CB.sameColor(r,rs) then rt else r
-	     fun rewriteX86Def(instr) =
-		 (case instr 
-		   of I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} => 
-		      I.CALL{opnd=opnd, cutsTo=cutsTo, 
-			     return=CB.CellSet.map {from=rs,to=rt} return, pops=pops,
-			     defs=CB.CellSet.map {from=rs,to=rt} defs, uses=uses, mem=mem}
-		    | I.MOVE{mvOp, src, dst} => I.MOVE{mvOp=mvOp, src=src, dst=operand dst}
-		    | I.LEAL{r32, addr} => I.LEAL{r32=replace r32, addr=addr}
-		    | I.LEAQ{r64, addr} => I.LEAQ{r64=replace r64, addr=addr}
-		    | I.BINARY{binOp, src, dst} => 
-		      I.BINARY{binOp=binOp, src=src, dst=operand dst}
-		    | I.SHIFT{shiftOp, src, dst, count} => 
-		      I.SHIFT{shiftOp=shiftOp, src=src, count=count, dst=operand dst}
-		    | I.UNARY{unOp, opnd} => I.UNARY{unOp=unOp, opnd=operand opnd}
-		    | I.SET{cond, opnd} => I.SET{cond=cond, opnd=operand opnd}
-		    | _ => instr
-	        (* end case *))
-
-	     fun f (I.ANNOTATION{a,i}) =
-		 I.ANNOTATION{i=rewriteDef(i,rs,rt),
-			      a=(case a of
-				     CB.DEF_USE{cellkind=CB.GP,defs,uses} =>
-			             CB.DEF_USE{cellkind=CB.GP,uses=uses,
-				 		defs=map replace defs}
-				   | _ => a)}
-	       | f (I.INSTR i) = I.INSTR(rewriteX86Def(i))
-	       | f (I.COPY{k as CB.GP, sz, dst, src, tmp}) =
-		 I.COPY{k=k, sz=sz, dst=map replace dst, src=src, tmp=tmp}
-	 in 
-	     f(instr)
-	 end
 
 
-	 fun rewriteUse (instr, rs, rt) = let
-	     val operand = operand (rs, rt)
-	     fun replace r = if CB.sameColor(r,rs) then rt else r
-	     fun rewrite instr = (case instr
-                 of I.JMP(opnd, labs) => I.JMP(operand opnd, labs)
-		  | I.JCC{cond, opnd} => I.JCC{cond=cond, opnd = operand opnd}
-		  | I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} => 
-		    I.CALL{opnd=operand opnd, defs=defs, return=return,
-			   uses=CB.CellSet.map {from=rs,to=rt} uses, cutsTo=cutsTo,
-			   mem=mem, pops=pops}
-		  | I.MOVE{mvOp, src, dst as I.Direct _} => 
-		    I.MOVE{mvOp=mvOp, src=operand src, dst=dst}
-		  | I.MOVE{mvOp, src, dst} => 
-		    I.MOVE{mvOp=mvOp, src=operand src, dst=operand dst}
-		  | I.LEAL{r32, addr} => I.LEAL{r32=r32, addr=operand addr}
-		  | I.LEAQ{r64, addr} => I.LEAQ{r64=r64, addr=operand addr}
-		  | I.CMPL{lsrc, rsrc} => I.CMPL{lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.CMPW{lsrc, rsrc} => I.CMPW{lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.CMPB{lsrc, rsrc} => I.CMPB{lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.TESTL{lsrc, rsrc} => I.TESTL{lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.TESTW{lsrc, rsrc} => I.TESTW{lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.TESTB{lsrc, rsrc} => I.TESTB{lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.BITOP{bitOp, lsrc, rsrc} => 
-		    I.BITOP{bitOp=bitOp, lsrc=operand lsrc, rsrc=operand rsrc}
-		  | I.BINARY{binOp, src, dst} => 
-		    I.BINARY{binOp=binOp, src=operand src, dst=operand dst}
-		  | I.SHIFT{shiftOp, src, dst, count} => 
-		    I.SHIFT{shiftOp=shiftOp, src=operand src, dst=operand dst, 
-			    count=operand src}
+         fun rewriteDef (instr, rs, rt) = let
+             fun operand(opnd as I.Direct (sz, r)) =
+                 if CB.sameColor(r,rs) then I.Direct (sz, rt) else opnd
+               | operand _ = error "operand: not I.Direct"
+             fun replace r = if CB.sameColor(r,rs) then rt else r
+             fun rewriteX86Def(instr) =
+                 (case instr
+                   of I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} =>
+                      I.CALL{opnd=opnd, cutsTo=cutsTo,
+                             return=CB.CellSet.map {from=rs,to=rt} return, pops=pops,
+                             defs=CB.CellSet.map {from=rs,to=rt} defs, uses=uses, mem=mem}
+                    | I.MOVE{mvOp, src, dst} => I.MOVE{mvOp=mvOp, src=src, dst=operand dst}
+                    | I.LEAL{r32, addr} => I.LEAL{r32=replace r32, addr=addr}
+                    | I.LEAQ{r64, addr} => I.LEAQ{r64=replace r64, addr=addr}
+                    | I.BINARY{binOp, src, dst} =>
+                      I.BINARY{binOp=binOp, src=src, dst=operand dst}
+                    | I.SHIFT{shiftOp, src, dst, count} =>
+                      I.SHIFT{shiftOp=shiftOp, src=src, count=count, dst=operand dst}
+                    | I.UNARY{unOp, opnd} => I.UNARY{unOp=unOp, opnd=operand opnd}
+                    | I.SET{cond, opnd} => I.SET{cond=cond, opnd=operand opnd}
+                    | _ => instr
                 (* end case *))
 
-             fun f(I.ANNOTATION{a,i}) = 
-		 I.ANNOTATION{i=rewriteUse(i, rs, rt),
-			      a = case a of
-				      CB.DEF_USE{cellkind=CB.GP,defs,uses} =>
-				      CB.DEF_USE{cellkind=CB.GP,uses=map replace uses,
-						 defs=defs}
-				    | _ => a}
-	       | f(I.INSTR i) = I.INSTR(rewrite(i))
-	       | f(I.COPY{k as CB.GP, sz, dst, src, tmp}) = 
-		 I.COPY{k=k, sz=sz, dst=dst, src=List.map replace src, tmp=tmp}
-	 in 
-	     f (instr:I.instruction)
-	 end
+             fun f (I.ANNOTATION{a,i}) =
+                 I.ANNOTATION{i=rewriteDef(i,rs,rt),
+                              a=(case a of
+                                     CB.DEF_USE{cellkind=CB.GP,defs,uses} =>
+                                     CB.DEF_USE{cellkind=CB.GP,uses=uses,
+                                                defs=map replace defs}
+                                   | _ => a)}
+               | f (I.INSTR i) = I.INSTR(rewriteX86Def(i))
+               | f (I.COPY{k as CB.GP, sz, dst, src, tmp}) =
+                 I.COPY{k=k, sz=sz, dst=map replace dst, src=src, tmp=tmp}
+         in
+             f(instr)
+         end
 
-      
-	 fun frewriteDef _ = raise Fail ""
-	 fun frewriteUse _ = raise Fail ""
+
+         fun rewriteUse (instr, rs, rt) = let
+             val operand = operand (rs, rt)
+             fun replace r = if CB.sameColor(r,rs) then rt else r
+             fun rewrite instr = (case instr
+                 of I.JMP(opnd, labs) => I.JMP(operand opnd, labs)
+                  | I.JCC{cond, opnd} => I.JCC{cond=cond, opnd = operand opnd}
+                  | I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} =>
+                    I.CALL{opnd=operand opnd, defs=defs, return=return,
+                           uses=CB.CellSet.map {from=rs,to=rt} uses, cutsTo=cutsTo,
+                           mem=mem, pops=pops}
+                  | I.MOVE{mvOp, src, dst as I.Direct _} =>
+                    I.MOVE{mvOp=mvOp, src=operand src, dst=dst}
+                  | I.MOVE{mvOp, src, dst} =>
+                    I.MOVE{mvOp=mvOp, src=operand src, dst=operand dst}
+                  | I.LEAL{r32, addr} => I.LEAL{r32=r32, addr=operand addr}
+                  | I.LEAQ{r64, addr} => I.LEAQ{r64=r64, addr=operand addr}
+                  | I.CMPL{lsrc, rsrc} => I.CMPL{lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.CMPW{lsrc, rsrc} => I.CMPW{lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.CMPB{lsrc, rsrc} => I.CMPB{lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.TESTL{lsrc, rsrc} => I.TESTL{lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.TESTW{lsrc, rsrc} => I.TESTW{lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.TESTB{lsrc, rsrc} => I.TESTB{lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.BITOP{bitOp, lsrc, rsrc} =>
+                    I.BITOP{bitOp=bitOp, lsrc=operand lsrc, rsrc=operand rsrc}
+                  | I.BINARY{binOp, src, dst} =>
+                    I.BINARY{binOp=binOp, src=operand src, dst=operand dst}
+                  | I.SHIFT{shiftOp, src, dst, count} =>
+                    I.SHIFT{shiftOp=shiftOp, src=operand src, dst=operand dst,
+                            count=operand src}
+                (* end case *))
+
+             fun f(I.ANNOTATION{a,i}) =
+                 I.ANNOTATION{i=rewriteUse(i, rs, rt),
+                              a = case a of
+                                      CB.DEF_USE{cellkind=CB.GP,defs,uses} =>
+                                      CB.DEF_USE{cellkind=CB.GP,uses=map replace uses,
+                                                 defs=defs}
+                                    | _ => a}
+               | f(I.INSTR i) = I.INSTR(rewrite(i))
+               | f(I.COPY{k as CB.GP, sz, dst, src, tmp}) =
+                 I.COPY{k=k, sz=sz, dst=dst, src=List.map replace src, tmp=tmp}
+         in
+             f (instr:I.instruction)
+         end
+
+
+         fun frewriteDef _ = raise Fail ""
+         fun frewriteUse _ = raise Fail ""
        end
      structure SpillInstr = AMD64SpillInstr (
                structure I = I
                structure Props = AMD64InsnProps
-	       val floats16ByteAligned = true)
+               val floats16ByteAligned = true)
      structure SpillHeur = ChaitinSpillHeur
      structure Spill = RASpill (structure InsnProps = AMD64InsnProps
                                 structure Asm = AMD64Asm)
-     
+
      datatype spillOperandKind = SPILL_LOC | CONST_VAL
      type spill_info = unit
      fun beforeRA _ = ()
@@ -437,24 +437,24 @@ structure RA2 =
      fun pure _ = true
 
      structure Int =
-	struct
-	  val allRegs = C.Regs CellsBasis.GP {from=0, to=15, step=1}
-	  val allRegsSet = List.foldl C.addReg C.empty allRegs
-	  val dedicated = [C.rsp, C.rbp]
-	  val avail = C.getReg (List.foldl C.rmvReg allRegsSet dedicated)
-	  fun spillLoc _ = raise Fail ""
-	  val mode = RACore.NO_OPTIMIZATION
-	end
+        struct
+          val allRegs = C.Regs CellsBasis.GP {from=0, to=15, step=1}
+          val allRegsSet = List.foldl C.addReg C.empty allRegs
+          val dedicated = [C.rsp, C.rbp]
+          val avail = C.getReg (List.foldl C.rmvReg allRegsSet dedicated)
+          fun spillLoc _ = raise Fail ""
+          val mode = RACore.NO_OPTIMIZATION
+        end
      structure Float =
-	struct
-	  val avail = C.Regs CellsBasis.FP {from=0, to=15, step=1}
-	  val dedicated = []
-	  fun spillLoc _ = raise Fail ""
-	  val mode = Word.orb (RACore.HAS_PARALLEL_COPIES, RACore.DEAD_COPY_ELIM)
-	end
+        struct
+          val avail = C.Regs CellsBasis.FP {from=0, to=15, step=1}
+          val dedicated = []
+          fun spillLoc _ = raise Fail ""
+          val mode = Word.orb (RACore.HAS_PARALLEL_COPIES, RACore.DEAD_COPY_ELIM)
+        end
 
     )
-			   
+
 structure RA = RA2
 structure Cells = AMD64Instr.C
 structure T = AMD64MLTree
@@ -464,14 +464,14 @@ structure ChkTy = MLTreeCheckTy(structure T = T val intTy = 64)
     val wordTy = 64
 
 structure MC = AMD64MCFn(
-	         structure Instr = AMD64Instr
-		 structure Shuffle = AMD64Shuffle
-		 structure MLTreeEval = AMD64MLTreeEval
-	       )
+                 structure Instr = AMD64Instr
+                 structure Shuffle = AMD64Shuffle
+                 structure MLTreeEval = AMD64MLTreeEval
+               )
 
     fun gen (functionName, stms, result) = let
            val insnStrm = FlowGraph.build()
-	   val stream as AMD64Stream.STREAM
+           val stream as AMD64Stream.STREAM
            { beginCluster,  (* start a cluster *)
              endCluster,    (* end a cluster *)
              emit,          (* emit MLTREE stm *)
@@ -482,63 +482,63 @@ structure MC = AMD64MCFn(
              annotation,    (* add an annotation *)
              ... } =
              AMD64.selectInstructions insnStrm
-	fun doit () = (
-	    beginCluster 0;      (* start a new cluster *)
-            pseudoOp PseudoOpsBasisTyp.TEXT;		  
-	    pseudoOp (PseudoOpsBasisTyp.EXPORT [functionName]);    
+        fun doit () = (
+            beginCluster 0;      (* start a new cluster *)
+            pseudoOp PseudoOpsBasisTyp.TEXT;
+            pseudoOp (PseudoOpsBasisTyp.EXPORT [functionName]);
             entryLabel functionName; (* define the entry label *)
             List.app emit stms; (* emit all the statements *)
             exitBlock result;
             endCluster [])
-	val cfg = doit ()
-	val cfg = RA.run cfg
-	val cfg = AMD64Expand.run cfg
-        in  
+        val cfg = doit ()
+        val cfg = RA.run cfg
+        val cfg = AMD64Expand.run cfg
+        in
          (cfg, stream)        (* end the cluster *)
        end
 
     fun dumpOutput (cfg, stream) = let
-	val (cfg as Graph.GRAPH graph, blocks) = 
-		AMD64BlockPlacement.blockPlacement cfg
-	val CFG.INFO{annotations=an, data, decls, ...} = #graph_info graph
-	in
-	  AMD64Emit.asmEmit (cfg, blocks)
-	end (* dumpOutput *)
+        val (cfg as Graph.GRAPH graph, blocks) =
+                AMD64BlockPlacement.blockPlacement cfg
+        val CFG.INFO{annotations=an, data, decls, ...} = #graph_info graph
+        in
+          AMD64Emit.asmEmit (cfg, blocks)
+        end (* dumpOutput *)
 
-   
-    fun codegen (functionName, target, proto, initStms, args) = let 
+
+    fun codegen (functionName, target, proto, initStms, args) = let
         val _ = Label.reset()
 
-	val [functionName, target] = List.map Label.global [functionName, target]
+        val [functionName, target] = List.map Label.global [functionName, target]
 
-	(* construct the C call *)
-	val {result, callseq} = AMD64CCall.genCall {
-	           name=T.LABEL target,
-	           paramAlloc=fn _ => false,
-	           structRet=fn _ => T.REG (64, Cells.rax),
-	           saveRestoreDedicated=fn _ => {save=[], restore=[]},
-	           callComment=NONE,
-	           proto=proto,
-	           args=args}
+        (* construct the C call *)
+        val {result, callseq} = AMD64CCall.genCall {
+                   name=T.LABEL target,
+                   paramAlloc=fn _ => false,
+                   structRet=fn _ => T.REG (64, Cells.rax),
+                   saveRestoreDedicated=fn _ => {save=[], restore=[]},
+                   callComment=NONE,
+                   proto=proto,
+                   args=args}
 
-	fun wordLit i = T.LI (T.I.fromInt (wordTy, i))
+        fun wordLit i = T.LI (T.I.fromInt (wordTy, i))
 
-	val stms = List.concat [
-		   [T.EXT(AMD64InstrExt.PUSHQ(T.REG(64, Cells.rbp))),
-		    T.COPY (wordTy, [Cells.rbp], [Cells.rsp])],		   
-		   initStms,
-		   callseq, 
-		   [T.EXT(AMD64InstrExt.LEAVE)],
-		   [T.RET []]]
+        val stms = List.concat [
+                   [T.EXT(AMD64InstrExt.PUSHQ(T.REG(64, Cells.rbp))),
+                    T.COPY (wordTy, [Cells.rbp], [Cells.rsp])],
+                   initStms,
+                   callseq,
+                   [T.EXT(AMD64InstrExt.LEAVE)],
+                   [T.RET []]]
 
-(*	val _ = List.all (fn stm => ChkTy.check stm 
-				    orelse raise Fail ("typechecking error: "^AMD64MTC.AMD64MLTreeUtils.stmToString stm))
-		stms
+(*      val _ = List.all (fn stm => ChkTy.check stm
+                                    orelse raise Fail ("typechecking error: "^AMD64MTC.AMD64MLTreeUtils.stmToString stm))
+                stms
 *)
 
         in
-	   dumpOutput(gen (functionName, stms, result))
-	end
+           dumpOutput(gen (functionName, stms, result))
+        end
 
 
     fun lit i = T.LI (T.I.fromInt (wordTy, i))
@@ -553,17 +553,17 @@ structure MC = AMD64MCFn(
 
 in
 structure X86_64Test = GenTestFn (
-		  structure T = AMD64MLTree
-		  structure CCall = AMD64CCall
-		  structure Cells = AMD64Cells
-		  val codegen = codegen
-		  val param0 = param0
-		  val wordTy = 64)
+                  structure T = AMD64MLTree
+                  structure CCall = AMD64CCall
+                  structure Cells = AMD64Cells
+                  val codegen = codegen
+                  val param0 = param0
+                  val wordTy = 64)
 end (* local *)
 
 (*
 (* unit testing code *)
-structure Test = 
+structure Test =
   struct
 
     open CCall
@@ -582,38 +582,38 @@ structure Test =
     val ty9 = CTy.C_STRUCT [CTy.C_STRUCT[CTy.C_float,CTy.C_float,CTy.C_float,CTy.C_float,CTy.C_float]]
     val ty10 = CTy.C_STRUCT [CTy.C_STRUCT[CTy.C_float,CTy.C_float, CTy.C_STRUCT[CTy.C_float,CTy.C_unsigned CTy.I_int]]]
     val ty11 = CTy.C_STRUCT [CTy.C_PTR, CTy.C_float, CTy.C_float, CTy.C_float]
-	       
+
     fun kindOfEB () = let
-	fun test (eb, k) = (kindOfEightByte eb = k) orelse raise Fail "failed test"
-	fun eb1 ty = hd (eightBytesOfCTy ty)
-	fun eb2 ty = hd(tl (eightBytesOfCTy ty))
+        fun test (eb, k) = (kindOfEightByte eb = k) orelse raise Fail "failed test"
+        fun eb1 ty = hd (eightBytesOfCTy ty)
+        fun eb2 ty = hd(tl (eightBytesOfCTy ty))
         in
-	   List.all test [(eb1 ty1, K_GPR), (eb1 ty2, K_GPR), (eb2 ty3, K_GPR),
-			  (eb1 ty5, K_FPR), (eb1 ty6, K_FPR), (eb2 ty6, K_FPR),
-			  (eb1 ty7, K_FPR), (eb2 ty7, K_FPR),
-			  (eb1 ty8, K_GPR), (eb2 ty8, K_FPR)]
+           List.all test [(eb1 ty1, K_GPR), (eb1 ty2, K_GPR), (eb2 ty3, K_GPR),
+                          (eb1 ty5, K_FPR), (eb1 ty6, K_FPR), (eb2 ty6, K_FPR),
+                          (eb1 ty7, K_FPR), (eb2 ty7, K_FPR),
+                          (eb1 ty8, K_GPR), (eb2 ty8, K_FPR)]
         end
 
     fun slots () = let
-	fun test (lis : SA.slot list, ks2 : location_kind list) = let
-	    val ks1 = List.map li2k lis
+        fun test (lis : SA.slot list, ks2 : location_kind list) = let
+            val ks1 = List.map li2k lis
             in
-	        (List.length ks1 = List.length ks2) andalso (ListPair.all (op =) (ks1, ks2))
-	    end
-	    val tests = [
-	               (ty2, [K_GPR]), 
-		       (ty1, [K_GPR]), 
-		       (ty3, [K_GPR, K_GPR]), 
-		       (ty4, [K_GPR, K_GPR]), 
-		       (ty5, [K_FPR]), 
-		       (ty6, [K_FPR, K_FPR]),
-		       (ty7, [K_FPR, K_FPR]),
-		       (ty8, [K_GPR, K_FPR]),
-		       (ty11, [K_MEM, K_MEM, K_MEM])
-				       ]
-	    val (ts, anss) = ListPair.unzip tests
+                (List.length ks1 = List.length ks2) andalso (ListPair.all (op =) (ks1, ks2))
+            end
+            val tests = [
+                       (ty2, [K_GPR]),
+                       (ty1, [K_GPR]),
+                       (ty3, [K_GPR, K_GPR]),
+                       (ty4, [K_GPR, K_GPR]),
+                       (ty5, [K_FPR]),
+                       (ty6, [K_FPR, K_FPR]),
+                       (ty7, [K_FPR, K_FPR]),
+                       (ty8, [K_GPR, K_FPR]),
+                       (ty11, [K_MEM, K_MEM, K_MEM])
+                                       ]
+            val (ts, anss) = ListPair.unzip tests
             in
-	       ListPair.all test (List.map slotsOfCTy ts, anss) orelse raise Fail "failed test"
+               ListPair.all test (List.map slotsOfCTy ts, anss) orelse raise Fail "failed test"
             end
   end
 *)

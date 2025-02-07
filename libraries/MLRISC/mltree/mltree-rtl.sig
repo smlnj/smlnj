@@ -3,15 +3,15 @@
  * The internal representation differs from the user representation it that
  * it is lambda-lifted, i.e., instead of having references like REG(32,123),
  * it has references like PARAM i, which refers to the ith parameter.
- * 
+ *
  * This representation is chosen so that multiple instructions can
  * share the same rtl template.  Also, so that the templates can be
- * created once before compilation begins. 
+ * created once before compilation begins.
  *)
 signature MLTREE_RTL =
 sig
    structure T       : MLTREE
-   structure Util    : MLTREE_UTILS 
+   structure Util    : MLTREE_UTILS
    structure Rewrite : MLTREE_REWRITE
    structure Fold    : MLTREE_FOLD
       sharing Util.T = Rewrite.T = Fold.T = T
@@ -28,26 +28,26 @@ sig
    (*-----------------------------------------------------------------------
     * Basic Operations
     *-----------------------------------------------------------------------*)
-   val showRTL : {def:int->string, 
-                  use:int->string, 
-                  regionDef:T.Region.region->string, 
+   val showRTL : {def:int->string,
+                  use:int->string,
+                  regionDef:T.Region.region->string,
                   regionUse:T.Region.region->string} -> T.printer
    val rtlToString : rtl -> string
    val expToString : exp -> string
    val hashRTL     : rtl -> word
-   val eqRTL       : rtl * rtl -> bool 
+   val eqRTL       : rtl * rtl -> bool
 
    (*-----------------------------------------------------------------------
-    * Construction 
+    * Construction
     *-----------------------------------------------------------------------*)
    val newOp  : {name:string, attribs:T.Basis.attribs} -> T.Basis.misc_op
-   val new    : rtl -> rtl 
+   val new    : rtl -> rtl
    val pin    : rtl -> rtl
    val COPY   : rtl
-   val JMP    : rtl 
+   val JMP    : rtl
 
    (*-----------------------------------------------------------------------
-    * Type queries 
+    * Type queries
     *-----------------------------------------------------------------------*)
    val isConditionalBranch : rtl -> bool
    val isJump              : rtl -> bool
@@ -71,7 +71,7 @@ sig
    datatype arity = ZERO | ONE | MANY
    val arity               : exp -> arity (* number of values *)
    val nonConstArity       : exp -> arity (* number of non-constant values *)
- 
+
    (*-----------------------------------------------------------------------
     * Extract naming constraints, if any
     *-----------------------------------------------------------------------*)
@@ -82,7 +82,7 @@ sig
        }
 
    (*-----------------------------------------------------------------------
-    * Code motion queries 
+    * Code motion queries
     *-----------------------------------------------------------------------*)
    val can'tMoveUp    : rtl -> bool
    val can'tMoveDown  : rtl -> bool
@@ -90,4 +90,4 @@ sig
    val hasSideEffect  : rtl -> bool
    val can'tBeRemoved : rtl -> bool
 
-end 
+end

@@ -1,4 +1,4 @@
-
+
 (*---------------------------------------------------------------------------
  * First, some front-end dependent stuff.  Typically, you only need
  * one instance of these things for each source language.
@@ -13,27 +13,27 @@
 structure UserConst =
 struct
    type const = unit
-   fun toString() = ""  
-   fun hash() = 0w0  
+   fun toString() = ""
+   fun hash() = 0w0
    fun valueOf _ = 0
-   fun == _ = true  
+   fun == _ = true
 end
 
 (*
  * Instantiate label expressions with respect to user defined constants.
- * This type is somewhat misnamed; it is used to represent constant 
+ * This type is somewhat misnamed; it is used to represent constant
  * expressions.
  *)
 (* structure LabelExp = LabelExp(UserConst) *)
 
 (*
  * User defined datatype for representing aliasing.   Dummy for now.
- * You'll need this to represent aliasing information. 
+ * You'll need this to represent aliasing information.
  *)
 structure UserRegion =
 struct
    type region = unit
-   fun toString () = "" 
+   fun toString () = ""
    val memory = ()
    val stack = ()
    val readonly = ()
@@ -44,11 +44,11 @@ end
  * User defined datatype for representing pseudo assembly operators.
  * Dummy for now.
  *
- * You'll need this to represent assembler directives. 
+ * You'll need this to represent assembler directives.
  *)
 structure UserPseudoOps =
 struct
-   type pseudo_op = unit  
+   type pseudo_op = unit
    fun toString () = ""
    fun emitValue _ = ()
    fun sizeOf _ = 0
@@ -58,7 +58,7 @@ end
 
 (*
  * Instruction stream datatype.
- * This is just a simple record type used by MLRISC to represent 
+ * This is just a simple record type used by MLRISC to represent
  * instruction streams.
  *)
 (*structure Stream = InstructionStream(UserPseudoOps)*)
@@ -82,7 +82,7 @@ end
  * have any yet.  This is just a bunch of dummy routines.
  *)
 functor UserMLTreeExtComp
-	    (    structure I : AMD64INSTR where T.Extension = UserExtension
+            (    structure I : AMD64INSTR where T.Extension = UserExtension
     structure TS : MLTREE_STREAM where T = I.T
     structure CFG : CONTROL_FLOW_GRAPH where I = I and P = TS.S.P
    ) : MLTREE_EXTENSION_COMP =
@@ -99,7 +99,7 @@ struct
       structure CFG = CFG)
 
     type reducer =
-	  (I.instruction,C.cellset,I.operand,I.addressing_mode,CFG.cfg) TS.reducer
+          (I.instruction,C.cellset,I.operand,I.addressing_mode,CFG.cfg) TS.reducer
 
     val compileSext = CompInstrExt.compileSext
 

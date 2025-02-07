@@ -8,16 +8,16 @@ signature SORTING =
 sig
 
    val sort        : ('a * 'a -> bool) -> 'a list -> 'a list
-   val sort_uniq   : ('a * 'a -> bool) -> 
+   val sort_uniq   : ('a * 'a -> bool) ->
                      ('a * 'a -> bool) -> 'a list -> 'a list
    val merge       : ('a * 'a -> bool) -> 'a list * 'a list -> 'a list
-   val merge_uniq  : ('a * 'a -> bool) -> 
+   val merge_uniq  : ('a * 'a -> bool) ->
                      ('a * 'a -> bool) -> 'a list * 'a list -> 'a list
-   val merge_uniqs : ('a * 'a -> bool) -> 
+   val merge_uniqs : ('a * 'a -> bool) ->
                      ('a * 'a -> bool) -> 'a list list -> 'a list
    val uniq        : ('a * 'a -> bool) -> 'a list -> 'a list
 
-end 
+end
 
 structure Sorting : SORTING =
 struct
@@ -50,7 +50,7 @@ struct
          | m (a,[]) = uniq op== a
          | m (a as (u::v), b as (w::x)) =
             if u == w then m(a,x)
-            else if u < w then u::m(v,b) 
+            else if u < w then u::m(v,b)
             else w::m(a,x)
    in  m(a,b)
    end

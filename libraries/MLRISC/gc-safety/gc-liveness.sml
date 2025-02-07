@@ -26,13 +26,13 @@ struct
           val  bot     = R.empty
           val  ==      = R.==
           val join     = R.joins
-          type dataflow_info = 
-                (C.cell -> GC.gctype) * 
+          type dataflow_info =
+                (C.cell -> GC.gctype) *
                 { liveIn : R.typemap, liveOut : R.typemap } A.array
           fun mk(gcmap,regs) =
               R.fromList(map (fn r => (r,gcmap r)) regs)
 
-          fun liveOut(gcmap,b as CFG.BLOCK{id,...}) = 
+          fun liveOut(gcmap,b as CFG.BLOCK{id,...}) =
           let val cellset = CFG.liveOut(b)
               val regs    = C.CellSet.toCellList cellset
           in  mk(gcmap,regs)
@@ -41,11 +41,11 @@ struct
           val defUseR = InsnProps.defUse C.GP
           val defUseF = InsnProps.defUse C.FP
 
-          fun scan(gcmap,CFG.BLOCK{insns,...}) = 
+          fun scan(gcmap,CFG.BLOCK{insns,...}) =
           let fun loop([],def,use) = (def,use)
                 | loop(i::is,def,use) =
-                  let val (d1,u1) = defUseR i 
-                      val (d2,u2) = defUseF i 
+                  let val (d1,u1) = defUseR i
+                      val (d2,u2) = defUseF i
                       val d = mk(gcmap,d1 @ d2)
                       val u = mk(gcmap,u1 @ u2)
                       (* val _ = print("d="^R.toString d^" ")
@@ -55,7 +55,7 @@ struct
                       val def = R.kill(R.gen(def,d),u)
                       (*val _ = print("def="^R.toString def^" ")
                       val _ = print("use="^R.toString use^"\n") *)
-                  in  loop(is,def,use) 
+                  in  loop(is,def,use)
                   end
           in  loop(!insns,R.empty,R.empty) end
 
@@ -70,15 +70,15 @@ struct
                 transfer = fn liveOut => R.gen(R.kill(liveOut,def),use)
               }
           end
-          fun epilogue (_,(_,table)) 
-              {node=(b,_), input=liveOut, output=liveIn } = 
+          fun epilogue (_,(_,table))
+              {node=(b,_), input=liveOut, output=liveIn } =
                ((* print("Livein("^Int.toString b^")="^R.toString liveIn^"\n");
                 print("Liveout("^Int.toString b^")="^R.toString liveOut^"\n");*)
                 A.update(table,b,{liveIn=liveIn,liveOut=liveOut})
-               ) 
+               )
          )
 
-  fun liveness (IR as G.GRAPH cfg) = 
+  fun liveness (IR as G.GRAPH cfg) =
   let val an = !(CFG.annotations IR)
       val table = A.array(#capacity cfg (),{liveIn=R.empty,liveOut=R.empty})
       fun gclookup(C.CELL{an, ...}) = #lookup GC.GC_TYPE (!an)

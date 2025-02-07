@@ -1,4 +1,4 @@
-local 
+local
 
 val fast_floating_point = ref true
 
@@ -11,20 +11,20 @@ val fast_floating_point = ref true
 structure UserConst =
 struct
    type const = unit
-   fun toString() = ""  
-   fun hash() = 0w0  
+   fun toString() = ""
+   fun hash() = 0w0
    fun valueOf _ = 0
-   fun == _ = true  
+   fun == _ = true
 end
 
 (*
  * User defined datatype for representing aliasing.   Dummy for now.
- * You'll need this to represent aliasing information. 
+ * You'll need this to represent aliasing information.
  *)
 structure UserRegion =
 struct
    type region = unit
-   fun toString () = "" 
+   fun toString () = ""
    val memory = ()
    val stack = ()
    val readonly = ()
@@ -35,11 +35,11 @@ end
  * User defined datatype for representing pseudo assembly operators.
  * Dummy for now.
  *
- * You'll need this to represent assembler directives. 
+ * You'll need this to represent assembler directives.
  *)
 structure UserPseudoOps =
 struct
-   type pseudo_op = unit  
+   type pseudo_op = unit
    fun toString () = ""
    fun emitValue _ = ()
    fun sizeOf _ = 0
@@ -67,7 +67,7 @@ end
  * have any yet.  This is just a bunch of dummy routines.
  *)
 functor UserMLTreeExtComp
-	    (    structure I : X86INSTR where T.Extension = UserExtension
+            (    structure I : X86INSTR where T.Extension = UserExtension
     structure TS : MLTREE_STREAM where T = I.T
     structure CFG : CONTROL_FLOW_GRAPH where I = I and P = TS.S.P
    ) : MLTREE_EXTENSION_COMP =
@@ -84,7 +84,7 @@ struct
       structure CFG = CFG)
 
     type reducer =
-	  (I.instruction,C.cellset,I.operand,I.addressing_mode,CFG.cfg) TS.reducer
+          (I.instruction,C.cellset,I.operand,I.addressing_mode,CFG.cfg) TS.reducer
 
     val compileSext = CompInstrExt.compileSext
 
@@ -105,9 +105,9 @@ structure X86MLTreeEval =
     val eqRext = eq val eqFext = eq
     val eqCCext = eq val eqSext = eq)
 
-structure X86GasPseudoOps = 
+structure X86GasPseudoOps =
    X86GasPseudoOps(structure T=X86MLTree
-		   structure MLTreeEval=X86MLTreeEval)
+                   structure MLTreeEval=X86MLTreeEval)
 functor X86PseudoOpsFn (
     structure T : MLTREE
     structure MLTreeEval : MLTREE_EVAL where T = T
@@ -131,16 +131,16 @@ structure PseudoOps =
 
     structure Client =
       struct
-	structure AsmPseudoOps = X86PseudoOps
-	type pseudo_op = unit
-			 
-	fun toString () = ""
-  
-	fun emitValue _ = raise Fail "todo"
-	fun sizeOf _ = raise Fail "todo"
-	fun adjustLabels _ = raise Fail "todo"
+        structure AsmPseudoOps = X86PseudoOps
+        type pseudo_op = unit
+
+        fun toString () = ""
+
+        fun emitValue _ = raise Fail "todo"
+        fun sizeOf _ = raise Fail "todo"
+        fun adjustLabels _ = raise Fail "todo"
       end (* Client *)
-  
+
     structure PseudoOps = PseudoOps (structure Client = Client)
   end
 
@@ -173,20 +173,20 @@ structure X86Asm = X86AsmEmitter
     structure Shuffle = X86Shuffle
    )
 
-structure X86InsnProps = X86Props 
-			  (structure Instr = X86Instr
+structure X86InsnProps = X86Props
+                          (structure Instr = X86Instr
                            structure MLTreeHash = X86MLTreeHash
-			   structure MLTreeEval = X86MLTreeEval)
+                           structure MLTreeEval = X86MLTreeEval)
 
 structure X86CFG = ControlFlowGraph (
             structure I = X86Asm.I
-	    structure GraphImpl = DirectedGraph
-	    structure InsnProps = X86InsnProps
-	    structure Asm = X86Asm)
+            structure GraphImpl = DirectedGraph
+            structure InsnProps = X86InsnProps
+            structure Asm = X86Asm)
 
 structure X86MLTStream = MLTreeStream (
-		      structure T = X86MLTree
-		      structure S = X86Stream)
+                      structure T = X86MLTree
+                      structure S = X86Stream)
 
 structure CompInstrExt = X86CompInstrExt (
       structure I = X86Instr
@@ -206,7 +206,7 @@ structure X86MTC = struct
    val compileRext  = unimplemented
    val compileFext  = unimplemented
    val compileCCext = unimplemented
-		      
+
    structure X86MLTreeUtils : MLTREE_UTILS =
      struct
        structure T = X86MLTree
@@ -230,26 +230,26 @@ structure X86MTC = struct
 end
 
 structure X86 = X86 (
-		  structure X86Instr = X86Instr
-		  structure MLTreeUtils = X86MTC.X86MLTreeUtils
-		  structure ExtensionComp = X86MTC
-		  structure MLTreeStream = X86MLTStream
+                  structure X86Instr = X86Instr
+                  structure MLTreeUtils = X86MTC.X86MLTreeUtils
+                  structure ExtensionComp = X86MTC
+                  structure MLTreeStream = X86MLTStream
            datatype arch = Pentium | PentiumPro | PentiumII | PentiumIII
            val arch = ref Pentium (* Lowest common denominator *)
 
-		  fun cvti2f _ = raise Fail ""
-		  val fast_floating_point = fast_floating_point
-		  )
+                  fun cvti2f _ = raise Fail ""
+                  val fast_floating_point = fast_floating_point
+                  )
 
 structure X86Emit = CFGEmit (
              structure CFG = X86CFG
-             structure E = X86Asm) 
+             structure E = X86Asm)
 
 
-structure X86FlowGraph = BuildFlowgraph 
-	    (structure Props = X86InsnProps
+structure X86FlowGraph = BuildFlowgraph
+            (structure Props = X86InsnProps
              structure Stream = X86Stream
-	     structure CFG = X86CFG)
+             structure CFG = X86CFG)
 
 structure X86Expand = CFGExpandCopies (structure CFG=X86CFG
                                          structure Shuffle = X86Shuffle)
@@ -261,20 +261,20 @@ structure RASpill = RASpillWithRenaming (
     val max_dist = ref 4
     val keep_multiple_values = ref false)
 
-datatype spill_operand_kind = SPILL_LOC 
+datatype spill_operand_kind = SPILL_LOC
                             | CONST_VAL
 
-datatype ra_phase = SPILL_PROPAGATION 
+datatype ra_phase = SPILL_PROPAGATION
                   | SPILL_COLORING
 
   fun upto(from, to) = if from>to then [] else from::(upto (from+1,to))
-  infix upto 
+  infix upto
 
 structure CB = CellsBasis
 structure I = X86Instr
 structure C = X86Cells
 
-structure IntRA = 
+structure IntRA =
   struct
     val dedicated = [C.esp, C.ebp]
     val allRegs = C.Regs CellsBasis.GP {from=0, to=7, step=1}
@@ -287,12 +287,12 @@ structure IntRA =
     fun spillInit _ = ()
     val memRegs = C.Regs CB.GP {from=8,to=31,step=1}
     fun spillLoc {info=frame, an, cell, id=loc} = let
-	    val spillLoc = ~(loc*4)
-	    val opnd = I.Displace {
-		  base = C.ebp,
-		  disp = I.Immed (Int32.fromInt spillLoc),
-		  mem = ()
-		}
+            val spillLoc = ~(loc*4)
+            val opnd = I.Displace {
+                  base = C.ebp,
+                  disp = I.Immed (Int32.fromInt spillLoc),
+                  mem = ()
+                }
             in
               {opnd = opnd, kind = SPILL_LOC}
             end
@@ -314,7 +314,7 @@ structure FloatRA =
 (* register allocation *)
 structure X86RA = X86RA (
          structure I = X86Instr
-	 structure InsnProps = X86InsnProps
+         structure InsnProps = X86InsnProps
          structure CFG = X86CFG
          structure Asm = X86Asm
          structure SpillHeur = ChowHennessySpillHeur
@@ -323,8 +323,8 @@ structure X86RA = X86RA (
          type spill_info = unit
          fun beforeRA (Graph.GRAPH graph) = ()
          datatype spillOperandKind = datatype spill_operand_kind
-	 datatype raPhase = datatype ra_phase
-	 val fast_floating_point = fast_floating_point
+         datatype raPhase = datatype ra_phase
+         val fast_floating_point = fast_floating_point
          structure Int = IntRA
          structure Float = FloatRA)
 
@@ -336,7 +336,7 @@ structure X86Expand = CFGExpandCopies (
 structure CCall = X86SVIDFn (
            structure T = X86MLTree
            fun ix x = x
-	   val fast_floating_point = fast_floating_point
+           val fast_floating_point = fast_floating_point
            val abi = "Darwin")
 
 
@@ -369,49 +369,49 @@ structure X86MLRISCGen =
              annotation,    (* add an annotation *)
              ... } =
              X86.selectInstructions insnStrm
-   	fun doit () = (
-	    beginCluster 0;      (* start a new cluster *)
+        fun doit () = (
+            beginCluster 0;      (* start a new cluster *)
             pseudoOp PseudoOpsBasisTyp.TEXT;
-	    pseudoOp (PseudoOpsBasisTyp.EXPORT [functionName]);    
+            pseudoOp (PseudoOpsBasisTyp.EXPORT [functionName]);
             entryLabel functionName; (* define the entry label *)
             List.app emit stms; (* emit all the statements *)
             exitBlock result;
             endCluster [])
-	val cfg = doit ()
-	val cfg = X86RA.run cfg
-	val cfg = X86Expand.run cfg
+        val cfg = doit ()
+        val cfg = X86RA.run cfg
+        val cfg = X86Expand.run cfg
        in
-	(cfg, stream)
+        (cfg, stream)
        end (* codegen' *)
 
     fun dumpOutput (cfg, stream) = let
-	val (cfg as Graph.GRAPH graph, blocks) = 
-		X86BlockPlacement.blockPlacement cfg
-	val CFG.INFO{annotations=an, data, decls, ...} = #graph_info graph
-	in
-	  X86Emit.asmEmit (cfg, blocks)
-	end (* dumpOutput *)
+        val (cfg as Graph.GRAPH graph, blocks) =
+                X86BlockPlacement.blockPlacement cfg
+        val CFG.INFO{annotations=an, data, decls, ...} = #graph_info graph
+        in
+          X86Emit.asmEmit (cfg, blocks)
+        end (* dumpOutput *)
 
-    fun codegen (functionName, target, proto, initStms, args) = let 
-	val [functionName, target] = List.map Label.global [functionName, target]
-	(* construct the C call *)
-	val {result, callseq} = CCall.genCall {
-	           name=T.LABEL target,
-	           paramAlloc=fn _ => false,
-	           structRet=fn _ => T.REG (32, C.eax),
-	           saveRestoreDedicated=fn _ => {save=[], restore=[]},
-	           callComment=NONE,
-	           proto=proto,
-	           args=args}
-	fun wordLit i = T.LI (T.I.fromInt (wordTy, i))
-	val stms = List.concat [
-		   [T.EXT(X86InstrExt.PUSHL(T.REG(32, C.ebp))),
-		    T.COPY (wordTy, [C.ebp], [C.esp])],		   
-		   initStms,
-		   callseq, 
-		   [T.EXT(X86InstrExt.LEAVE)],
-		   [T.RET []]]
-        in  
+    fun codegen (functionName, target, proto, initStms, args) = let
+        val [functionName, target] = List.map Label.global [functionName, target]
+        (* construct the C call *)
+        val {result, callseq} = CCall.genCall {
+                   name=T.LABEL target,
+                   paramAlloc=fn _ => false,
+                   structRet=fn _ => T.REG (32, C.eax),
+                   saveRestoreDedicated=fn _ => {save=[], restore=[]},
+                   callComment=NONE,
+                   proto=proto,
+                   args=args}
+        fun wordLit i = T.LI (T.I.fromInt (wordTy, i))
+        val stms = List.concat [
+                   [T.EXT(X86InstrExt.PUSHL(T.REG(32, C.ebp))),
+                    T.COPY (wordTy, [C.ebp], [C.esp])],
+                   initStms,
+                   callseq,
+                   [T.EXT(X86InstrExt.LEAVE)],
+                   [T.RET []]]
+        in
            dumpOutput(codegen'(functionName, stms, result))
         end (* codegen *)
 
@@ -419,11 +419,11 @@ structure X86MLRISCGen =
 
 structure X86CCall = CCall
 structure X86Test = GenTestFn (
-		 structure T = X86MLTree
-		 structure CCall = CCall
-		 structure Cells = X86Cells
-		 val codegen = X86MLRISCGen.codegen
-		 val param0 = param0
-		 val wordTy = 32)
+                 structure T = X86MLTree
+                 structure CCall = CCall
+                 structure Cells = X86Cells
+                 val codegen = X86MLRISCGen.codegen
+                 val param0 = param0
+                 val wordTy = 32)
 
 end (* local *)

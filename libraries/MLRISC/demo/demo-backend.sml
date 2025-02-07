@@ -1,4 +1,4 @@
-(* 
+(*
  * This functor factors out the machine independent part of the register
  * allocator.   This works well for RISC machines; not applicable to x86.
  *)
@@ -8,13 +8,13 @@ functor BackEnd
    structure InsnProps  : INSN_PROPERTIES
    structure Asm        : INSTRUCTION_EMITTER
    structure RA         : CLUSTER_OPTIMIZATION
-      sharing InsnProps.I = Flowgraph.I = Asm.I = MLTreeComp.I 
+      sharing InsnProps.I = Flowgraph.I = Asm.I = MLTreeComp.I
       sharing Asm.P = Flowgraph.P = MLTreeComp.T.PseudoOp
       sharing RA.F = Flowgraph
   ) : sig
          structure T : MLTREE
          structure C : CELLS
-         val codegen : Label.label * T.stm list -> unit  
+         val codegen : Label.label * T.stm list -> unit
       end =
 struct
 
@@ -32,13 +32,13 @@ struct
                  )
 
    (* Assembly output *)
-   structure Assembler = 
+   structure Assembler =
       ClusterEmit(structure F = F
                   structure E = Asm)
 
    fun error msg = MLRiscErrorMsg.error("BackEnd",msg)
 
-   (* How to compile a cluster *) 
+   (* How to compile a cluster *)
    fun compile cluster =
    let val cluster = RA.run cluster (* just run register allocation *)
    in  Assembler.asmEmit cluster    (* and output the assembly *)
@@ -47,9 +47,9 @@ struct
    fun codegen(functionName, mltreeStms) =
    let val _ =
          (* initialize all hidden states first *)
-          Label.reset();  (* okay, just the label counters *) 
+          Label.reset();  (* okay, just the label counters *)
        (*
-        * Extract the methods from a stream 
+        * Extract the methods from a stream
         *)
        val stream as Stream.STREAM
           { beginCluster,  (* start a cluster *)
@@ -68,5 +68,5 @@ struct
        app emit mltreeStms; (* emit all the statements *)
          (* IMPORTANT: normally you'll have to call the other methods too *)
        endCluster []        (* end the cluster *)
-   end 
+   end
 end

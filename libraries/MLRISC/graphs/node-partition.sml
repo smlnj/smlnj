@@ -8,7 +8,7 @@
 signature NODE_PARTITION =
 sig
 
-   type 'n node_partition 
+   type 'n node_partition
 
    val node_partition : ('n,'e,'g) Graph.graph -> 'n node_partition
    val !!    : 'n node_partition -> Graph.node_id -> 'n Graph.node

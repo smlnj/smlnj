@@ -8,9 +8,9 @@ sig
    structure T : MLTREE
 
    type simplifier = T.rewriter
-   val simplify : 
+   val simplify :
        { addressWidth : int,  (* width of address in bits *)
          signedAddress : bool (* is the address computation signed? *)
        } -> simplifier
-   
+
 end

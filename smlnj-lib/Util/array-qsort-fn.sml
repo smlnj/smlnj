@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.  See COPYRIGHT file for details.
  *
  * Functor for in-place sorting of abstract arrays.
- * Uses an engineered version of quicksort due to 
+ * Uses an engineered version of quicksort due to
  * Bentley and McIlroy.
  *
  *)
@@ -15,7 +15,7 @@ functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT =
 
     fun isort (array, start, n, cmp) = let
           fun item i = A.sub(array,i)
-          fun swap (i,j) = let 
+          fun swap (i,j) = let
                 val tmp = A.sub(array,i)
                 in A.update(array,i,A.sub(array,j)); A.update(array,j,tmp) end
           fun vecswap (i,j,0) = ()
@@ -42,7 +42,7 @@ functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT =
 
     fun sortRange (array, start, n, cmp) = let
           fun item i = A.sub(array,i)
-          fun swap (i,j) = let 
+          fun swap (i,j) = let
                 val tmp = A.sub(array,i)
                 in A.update(array,i,A.sub(array,j)); A.update(array,j,tmp) end
           fun vecswap (i,j,0) = ()
@@ -67,18 +67,18 @@ functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT =
                 end
 
           fun med3(a,b,c) = let
-		val a' = item a and b' = item b and c' = item c
-		in
-		  case (cmp(a', b'),cmp(b', c'))
-		   of (LESS, LESS) => b
-		    | (LESS, _) => (
-			case cmp(a', c') of LESS => c | _ => a)
-		    | (_, GREATER) => b
+                val a' = item a and b' = item b and c' = item c
+                in
+                  case (cmp(a', b'),cmp(b', c'))
+                   of (LESS, LESS) => b
+                    | (LESS, _) => (
+                        case cmp(a', c') of LESS => c | _ => a)
+                    | (_, GREATER) => b
                     | _ => (case cmp(a', c') of LESS => a | _ => c)
-		  (* end case *)
-		end
+                  (* end case *)
+                end
 
-          fun getPivot (a,n) = 
+          fun getPivot (a,n) =
                 if n <= 7 then a + n div 2
                 else let
                   val p1 = a
@@ -95,7 +95,7 @@ functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT =
                         med3(p1,pm,pn)
                       end
                   end
-          
+
           fun quickSort (arg as (a, n)) = let
                 fun bottom limit = let
                       fun loop (arg as (pa,pb)) =
@@ -105,7 +105,7 @@ functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT =
                             | LESS => loop (pa,pb+1)
                             | _ => (swap arg; loop (pa+1,pb+1))
                       in loop end
-      
+
                 fun top limit = let
                       fun loop (arg as (pc,pd)) =
                             if limit > pc then arg
@@ -139,7 +139,7 @@ functor ArrayQSortFn (A : MONO_ARRAY) : MONO_ARRAY_SORT =
                 val _ = if n' > 1 then sort(pn-n',n') else ()
                 in () end
 
-          and sort (arg as (_, n)) = if n < 7 then insertSort arg 
+          and sort (arg as (_, n)) = if n < 7 then insertSort arg
                                      else quickSort arg
           in sort (start,n) end
 

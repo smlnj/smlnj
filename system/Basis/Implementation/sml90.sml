@@ -27,10 +27,10 @@ structure SML90 :> SML90 =
 
     fun sqrt x = if (x >= 0.0) then Math.sqrt x else raise Sqrt
     fun exp x = let
-	  val r = Math.exp x
-	  in 
-	    if (Real.isFinite r) then r else raise Exp
-	  end
+          val r = Math.exp x
+          in
+            if (Real.isFinite r) then r else raise Exp
+          end
     fun ln x = if (x > 0.0) then Math.ln x else raise Ln
     val sin = Math.sin
     val cos = Math.cos
@@ -48,9 +48,9 @@ structure SML90 :> SML90 =
     val open_in = wrapIO TextIO.openIn
     val input = wrapIO TextIO.inputN
     fun lookahead strm = (case wrapIO TextIO.lookahead strm
-	   of NONE => raise Io "end of file"
-	    | (SOME c) => String.str c
-	  (* end case *))
+           of NONE => raise Io "end of file"
+            | (SOME c) => String.str c
+          (* end case *))
     val close_in = wrapIO TextIO.closeIn
     val end_of_stream = wrapIO TextIO.endOfStream
     val std_out = TextIO.stdOut

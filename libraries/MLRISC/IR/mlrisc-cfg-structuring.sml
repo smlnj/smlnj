@@ -28,20 +28,20 @@ struct
           | ins_preheader{header,entries=[_]} = ()
           | ins_preheader{header=(h,h'),entries} =
             let fun sum_weights([],n) = n
-                  | sum_weights((_,_,CFG.EDGE{w,a,...})::es,n) = 
+                  | sum_weights((_,_,CFG.EDGE{w,a,...})::es,n) =
                       sum_weights(es,!w + n)
                 val w = sum_weights(entries,W.zero)
                 val CFG.BLOCK{annotations=old_an,...} = h'
                 val p = #new_id cfg ()
-                val (preheader as CFG.BLOCK{freq,annotations,...}, new_edge) = 
+                val (preheader as CFG.BLOCK{freq,annotations,...}, new_edge) =
                    if List.exists is_falls_thru entries then
-                     (CFG.empty_block(p,w), 
+                     (CFG.empty_block(p,w),
                      (p,h,CFG.EDGE{k=CFG.FALLSTHRU,w=ref w,a=a}))
                    else
                      (CFG.jump_block(p,CFG.define_label h',w),
                      (p,h,CFG.EDGE{k=CFG.JUMP,w=ref w,a=a}))
                 val new_entries = map (fn (i,j,e) => (i,p,e)) entries
-            in  annotations := !old_an; 
+            in  annotations := !old_an;
                 app (fn (i,j,_) => #remove_edge cfg (i,j)) entries;
                 app (#add_edge cfg) new_entries;
                 #add_node cfg (p,preheader);
@@ -50,7 +50,7 @@ struct
             end
 
     in  Reshape.restructure (CFG,loop)
-             { add_preheader   = if add_preheader then SOME ins_preheader 
+             { add_preheader   = if add_preheader then SOME ins_preheader
                                  else NONE,
                add_landing_pad = NONE
              };
@@ -58,4 +58,4 @@ struct
     end
 
 end
-    
+

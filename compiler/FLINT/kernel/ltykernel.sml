@@ -35,15 +35,15 @@ local
   fun dbPrint (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
       if (!debugging)
       then with_pp
-	    (fn ppstrm =>
-	      (PP.openHVBox ppstrm (PP.Rel 0);
-	       PP.string ppstrm msg;
-	       PP.newline ppstrm;
-	       PP.nbSpace ppstrm 2;
-	       PP.openHVBox ppstrm (PP.Rel 0);
-	       printfn ppstrm arg;
-	       PP.closeBox ppstrm;
-	       PP.closeBox ppstrm))
+            (fn ppstrm =>
+              (PP.openHVBox ppstrm (PP.Rel 0);
+               PP.string ppstrm msg;
+               PP.newline ppstrm;
+               PP.nbSpace ppstrm 2;
+               PP.openHVBox ppstrm (PP.Rel 0);
+               printfn ppstrm arg;
+               PP.closeBox ppstrm;
+               PP.closeBox ppstrm))
       else ()
 
   fun ppTyc0 (tyc: tyc) =
@@ -51,7 +51,7 @@ local
 
   fun ppTycs (tycs: tyc list) =
       with_pp (fn ppstrm =>
-		  PU.ppBracketedSequence ("[", "]", PPLty.ppTyc 100) ppstrm tycs)
+                  PU.ppBracketedSequence ("[", "]", PPLty.ppTyc 100) ppstrm tycs)
 
 in
 
@@ -105,25 +105,25 @@ fun tcc_env(x, ol, nl, tenv) =
             case (tc_out tyc)
               of TC_VAR(d,k) =>
                  (case teLookup(tenv,d)
-		   of SOME(Beta(_,ts,ks)) =>
+                   of SOME(Beta(_,ts,ks)) =>
                         if k >= length ts
-			then (print "tcc_env TC_VAR [Beta]: ";
-			      print (Int.toString k);
-			      print ", ts length = ";
-			      print (Int.toString (length ts));
+                        then (print "tcc_env TC_VAR [Beta]: ";
+                              print (Int.toString k);
+                              print ", ts length = ";
+                              print (Int.toString (length ts));
                               print "\n";
-			      bug "Bad TC_ENV TC_VAR [Beta]")
-			else ()
+                              bug "Bad TC_ENV TC_VAR [Beta]")
+                        else ()
                     | SOME(Lamb(_,ks)) =>
                         if k >= length ks
-			then (print "tcc_env TC_VAR [Lamb]: ";
-			      print (Int.toString k);
-			      print ", ks length = ";
-			      print (Int.toString (length ks));
+                        then (print "tcc_env TC_VAR [Lamb]: ";
+                              print (Int.toString k);
+                              print ", ks length = ";
+                              print (Int.toString (length ks));
                               print "\n";
-			      bug "Bad TC_ENV TC_VAR [Lamb]")
-			else ()
-		    | NONE => ())
+                              bug "Bad TC_ENV TC_VAR [Lamb]")
+                        else ()
+                    | NONE => ())
                | TC_ENV(tc, ol', nl', tenv')  => checkTCVAR(tc,ol',nl',tenv')
                | _ => ()
    in checkTCVAR(x,ol,nl,tenv);
@@ -165,49 +165,49 @@ fun tcc_app (fntyc, argtycs) =
     (* Check that parameter arity matches number of arguments
        supplied because type application must be saturated *)
     let fun checkParamArity (tc,tcs) =
-	    let fun getArity(tycEnv) =
-		    (case (tc_out tycEnv)
-		      of TC_PRIM(ptyc) => PT.pt_arity ptyc
-		       | TC_FN(params, _) => length params
-		       | TC_APP(tc, _) =>
-			 (case (tc_out tc)
-			   of (TC_FN(_, tc')) => getArity tc'
-			    | _ => 0)
-		       | TC_FIX{family={size,gen,params,...},index} =>
-			 (case (tc_out gen)
-			   of TC_FN (_,tc') => (* generator function *)
-			      (case tc_out tc'
-				of TC_SEQ tycs =>
-				     getArity (List.nth (tycs, index))
-				 | TC_FN (args, _) => length args
-				 | _ => bug "Malformed generator range")
-			    | _ =>
-			      (with_pp (fn s =>
-				 (PU.pps s "ERROR: checkParamArity - FIX";
-				  PP.newline s;
-				  PPLty.ppTyc (!dp) s gen;
-				  PP.newline s));
-			       bug "FIX without generator!" ))
-		       | _ => (with_pp (fn s =>
-				 (PU.pps s "getArity?:";
-				  PP.newline s;
-				  PPLty.ppTyc (!dp) s tc;
-				  PP.newline s));
-			       0))  (* giving up! *)
-		val arity = getArity tc
-	    in
-		if arity = (length tcs) then ()
-		else with_pp(fn s =>
-		       (PU.pps s "TC_APP arity mismatch"; PP.newline s;
-			PU.pps s "arity: "; PU.ppi s arity; PP.newline s;
-			PU.pps s "no. arguments: "; PU.ppi s (length tcs);
-			PP.newline s;
-			PU.pps s "operator:"; PP.newline s;
-			PPLty.ppTyc (!dp) s tc; PP.newline s) )
-	    end
+            let fun getArity(tycEnv) =
+                    (case (tc_out tycEnv)
+                      of TC_PRIM(ptyc) => PT.pt_arity ptyc
+                       | TC_FN(params, _) => length params
+                       | TC_APP(tc, _) =>
+                         (case (tc_out tc)
+                           of (TC_FN(_, tc')) => getArity tc'
+                            | _ => 0)
+                       | TC_FIX{family={size,gen,params,...},index} =>
+                         (case (tc_out gen)
+                           of TC_FN (_,tc') => (* generator function *)
+                              (case tc_out tc'
+                                of TC_SEQ tycs =>
+                                     getArity (List.nth (tycs, index))
+                                 | TC_FN (args, _) => length args
+                                 | _ => bug "Malformed generator range")
+                            | _ =>
+                              (with_pp (fn s =>
+                                 (PU.pps s "ERROR: checkParamArity - FIX";
+                                  PP.newline s;
+                                  PPLty.ppTyc (!dp) s gen;
+                                  PP.newline s));
+                               bug "FIX without generator!" ))
+                       | _ => (with_pp (fn s =>
+                                 (PU.pps s "getArity?:";
+                                  PP.newline s;
+                                  PPLty.ppTyc (!dp) s tc;
+                                  PP.newline s));
+                               0))  (* giving up! *)
+                val arity = getArity tc
+            in
+                if arity = (length tcs) then ()
+                else with_pp(fn s =>
+                       (PU.pps s "TC_APP arity mismatch"; PP.newline s;
+                        PU.pps s "arity: "; PU.ppi s arity; PP.newline s;
+                        PU.pps s "no. arguments: "; PU.ppi s (length tcs);
+                        PP.newline s;
+                        PU.pps s "operator:"; PP.newline s;
+                        PPLty.ppTyc (!dp) s tc; PP.newline s) )
+            end
     in
-	((* checkParamArity(fntyc, argtycs); *)
-	 (tc_inj o TC_APP) (fntyc, argtycs))
+        ((* checkParamArity(fntyc, argtycs); *)
+         (tc_inj o TC_APP) (fntyc, argtycs))
     end
 val tcc_seq  = tc_inj o TC_SEQ
 val tcc_proj = tc_inj o TC_PROJ
@@ -276,7 +276,7 @@ and tc_autoflat tyc =
              (true, [ntyc], false)
          | TC_TUPLE tycs =>
              if length tycs <= flatten_limit
-	     then (true, tycs, true)
+             then (true, tycs, true)
              else (true, [ntyc], false)
          | _ => (isKnown ntyc, [ntyc], false)
   end
@@ -288,7 +288,7 @@ and lt_autoflat lt =
             let val (raw, ts, flattenedp) = tc_autoflat tc
              in (raw, map ltc_tyc ts, flattenedp)
             end
-	| _ => (true, [lt], false))
+        | _ => (true, [lt], false))
 
 (* tcc_arrow : fflag * tyc list * tyc list -> tyc *)
 (** a special version of tcc_arrow that does automatic flattening *)
@@ -296,19 +296,19 @@ and tcc_arrow (x as (FF_FIXED, _, _)) = tc_inj (TC_ARROW x)
   | tcc_arrow (x as (FF_VAR (true, true), _, _)) = tc_inj (TC_ARROW x)
   | tcc_arrow (x as (FF_VAR (argflag, resflag), argtycs, restycs)) =
       let (* tcs_autoflat : tyc list -> (bool * tyc list) option *)
-	  fun tcs_autoflat (errmsg, tycs) =
-	      (case tycs
-		of [tyc] =>  (* tycs expected to be a singleton *)
-		   let val (flag, ntycs, _) = tc_autoflat (tc_whnm tyc)
-		   in (flag, ntycs)
-		   end
-		 | _ => bug "tcc_arrow - multiple tycs")
-	  val (argflag, argtycs) = 
-	      if argflag then (argflag, argtycs)   (* known argty rep *)
-	      else tcs_autoflat ("argtycs", argtycs)
+          fun tcs_autoflat (errmsg, tycs) =
+              (case tycs
+                of [tyc] =>  (* tycs expected to be a singleton *)
+                   let val (flag, ntycs, _) = tc_autoflat (tc_whnm tyc)
+                   in (flag, ntycs)
+                   end
+                 | _ => bug "tcc_arrow - multiple tycs")
+          val (argflag, argtycs) =
+              if argflag then (argflag, argtycs)   (* known argty rep *)
+              else tcs_autoflat ("argtycs", argtycs)
           val (resflag, restycs) =
-	      if resflag then (resflag, restycs)   (* known resty rep *)
-	      else tcs_autoflat ("restycs", restycs)
+              if resflag then (resflag, restycs)   (* known resty rep *)
+              else tcs_autoflat ("restycs", restycs)
        in tc_inj (TC_ARROW(FF_VAR(argflag, resflag), argtycs, restycs))
       end
 
@@ -327,7 +327,7 @@ and tc_lzrd(t: tyc) =
       and h (x, 0, 0, _) = g x  (* [KM ???] redundant call to g here? *)
         | h (x, ol, nl, tenv) =
             let fun prop z = tcc_env(z, ol, nl, tenv)
-		             handle TCENV =>
+                             handle TCENV =>
                                (with_pp(fn s =>
                                  (PU.pps s "tc_lzrd.prop:"; PP.newline s;
                                   PPLty.ppTyc (!dp) s z; PP.newline s));
@@ -351,22 +351,22 @@ and tc_lzrd(t: tyc) =
                                             (* kind/arity error! *)
                     (with_pp(fn s =>
                        let val {break,newline,openHVBox,openHOVBox,openVBox,
-				closeBox, pps, ppi} = PU.en_pp s
+                                closeBox, pps, ppi} = PU.en_pp s
                        in openHVBox 0;
                           pps "***Debugging***"; break{nsp=1,offset=0};
                           pps "tc_lzrd arg:"; newline();
                           PPLty.ppTyc (!dp) s t; break{nsp=1,offset=0};
-		          pps "n = "; ppi n; pps ", k = "; ppi k;
-			  newline();
+                          pps "n = "; ppi n; pps ", k = "; ppi k;
+                          newline();
                           pps "length(ts) = : "; ppi (length ts);
-			  newline();
+                          newline();
                           pps "ts elements: "; break{nsp=2,offset=2};
                           openHOVBox 2;
                           PPLty.ppList s {sep=",",pp=PPLty.ppTyc (!dp)} ts;
                           closeBox ();
                           closeBox ()
-			end);
-			raise TeUnbound)
+                        end);
+                        raise TeUnbound)
                                  in (* ASSERT: nl >= nl' *)
                                     if nl' > nl then
                                         (print ("ERROR: tc_lzrd (r6): nl ="^
@@ -381,8 +381,8 @@ and tc_lzrd(t: tyc) =
                    | TC_FN (ks, tc) =>
                        let val tenv' = teCons(Lamb(nl,ks),tenv)
                         in tcc_fn(ks,
-				  tcc_env(tc, ol+1, nl+1, tenv')  (* rule r10 *)
-				  handle TCENV => bug "tc_lzrd TC_FN")
+                                  tcc_env(tc, ol+1, nl+1, tenv')  (* rule r10 *)
+                                  handle TCENV => bug "tc_lzrd TC_FN")
                        end
                    | TC_APP (tc, tcs) =>
                        tcc_app(prop tc, map prop tcs) (* rule r9 *)
@@ -422,8 +422,8 @@ and lt_lzrd t =
             let fun prop z = ltc_env(z, ol, nl, tenv)
              in (case lt_out x
                   of LT_TYC tc => ltc_tyc (tcc_env(tc, ol, nl, tenv)
-					   handle TCENV =>
-						  bug "lt_lzrd LT_TYC")
+                                           handle TCENV =>
+                                                  bug "lt_lzrd LT_TYC")
                    | LT_STR ts => ltc_str (map prop ts)
                    | LT_FCT (ts1, ts2) => ltc_fct(map prop ts1, map prop ts2)
                    | LT_POLY (ks, ts) =>
@@ -440,64 +440,64 @@ and lt_lzrd t =
    in if ltp_norm(t) then t else g t
   end (* function lt_lzrd *)
 
-(* wrap_reduce : tyc -> tyc 
+(* wrap_reduce : tyc -> tyc
  *  used in TC_WRAP case of tc_whnm
  *  INVARIANT: tc itself is in whnm but wrap_is_whnm tc = false (why ???) *)
 and wrap_reduce tc =
   (case tc_out tc
     of TC_TUPLE ts =>
-	 let fun loop (x::r, nts, ukn) =
-		   let val nx = tc_whnm x
-		       val b1 = LT.unknown nx
-		       val nnx =
-			 (case tc_out nx
-			   of TC_WRAP t =>
-				(case tc_out t
-				   of TC_PRIM _ => t
-				    | _ => nx)
-			    | _ => nx)
-		    in loop (r, nnx::nts, b1 orelse ukn)
-		   end
-	       | loop ([], nts, ukn) =
-		   let val nt = tcc_tup (rev nts)
-		    in if ukn then tcc_wrap nt else nt
-		   end
-	  in loop (ts, [], false)
-	 end
+         let fun loop (x::r, nts, ukn) =
+                   let val nx = tc_whnm x
+                       val b1 = LT.unknown nx
+                       val nnx =
+                         (case tc_out nx
+                           of TC_WRAP t =>
+                                (case tc_out t
+                                   of TC_PRIM _ => t
+                                    | _ => nx)
+                            | _ => nx)
+                    in loop (r, nnx::nts, b1 orelse ukn)
+                   end
+               | loop ([], nts, ukn) =
+                   let val nt = tcc_tup (rev nts)
+                    in if ukn then tcc_wrap nt else nt
+                   end
+          in loop (ts, [], false)
+         end
      | TC_ARROW (FF_FIXED, [_,_], [_]) => tc
      | TC_ARROW (FF_FIXED, [t1], ts2 as [_]) =>
-	 let val nt1 = tc_whnm t1
-	     fun wrap_prim z =
-		 let val nz = tc_whnm z
-		  in (case tc_out nz
-		       of TC_PRIM pt =>
-			    if PT.unboxed pt then tcc_wrap nz
-			    else nz
-			| _ => nz)
-		 end
-	     val (wp, nts1) =
-		 (case tc_out nt1
-		   of TC_TUPLE [x,y] =>
-			(false, [wrap_prim x, wrap_prim y])
-		    | TC_WRAP tyc =>
-			(case (tc_out tyc)
-			  of TC_TUPLE [y, z] => (false, [wrap_prim y, wrap_prim z])
-			   | _ => (false, [nt1]))
-		    | _ => (LT.unknown nt1, [nt1]))
-	     val nt = tcc_arrow (FF_FIXED, nts1, ts2)
-	  in if wp then tcc_wrap nt else nt
-	 end
+         let val nt1 = tc_whnm t1
+             fun wrap_prim z =
+                 let val nz = tc_whnm z
+                  in (case tc_out nz
+                       of TC_PRIM pt =>
+                            if PT.unboxed pt then tcc_wrap nz
+                            else nz
+                        | _ => nz)
+                 end
+             val (wp, nts1) =
+                 (case tc_out nt1
+                   of TC_TUPLE [x,y] =>
+                        (false, [wrap_prim x, wrap_prim y])
+                    | TC_WRAP tyc =>
+                        (case (tc_out tyc)
+                          of TC_TUPLE [y, z] => (false, [wrap_prim y, wrap_prim z])
+                           | _ => (false, [nt1]))
+                    | _ => (LT.unknown nt1, [nt1]))
+             val nt = tcc_arrow (FF_FIXED, nts1, ts2)
+          in if wp then tcc_wrap nt else nt
+         end
      | TC_WRAP _ => tc
      | TC_PRIM pt =>
-	 if PT.unboxed pt then
-	   bug "calling wrap_reduce on an already-reduced whnm"
-	 else tc
+         if PT.unboxed pt then
+           bug "calling wrap_reduce on an already-reduced whnm"
+         else tc
      | TC_ARROW (FF_FIXED, _, _) =>
-	 bug "unexpected wrap_reduce on ill-formed FF_FIX arrow types"
+         bug "unexpected wrap_reduce on ill-formed FF_FIX arrow types"
      | TC_ARROW (FF_VAR(b1,b2), ts1, ts2) =>
-	 bug "calling wrap_reduce on FF_VAR arrow types"
+         bug "calling wrap_reduce on FF_VAR arrow types"
      | (TC_BOX _ | TC_PARROW _) =>
-	 bug "unexpected tc_box/abs/parrow in wrap_reduce"
+         bug "unexpected tc_box/abs/parrow in wrap_reduce"
      | TC_ENV _ => bug "unexpected TC_ENV in wrap_reduce"
      | TC_IND _ => bug "unexpected TC_IND in wrap_reduce"
      | _ => tc)
@@ -510,7 +510,7 @@ and tc_whnm t = if tcp_norm(t) then t else
       val nt = tc_lzrd t
    in case (tc_out nt)
        of TC_APP(tc, tcs) =>
-	    ((* print "\ntc_whnm: TC_APP\n"; *)
+            ((* print "\ntc_whnm: TC_APP\n"; *)
              let val tc' = tc_whnm tc
                            handle exn =>
                              (print "TC_APP in tc_whnm 1\n"; raise exn)
@@ -531,7 +531,7 @@ and tc_whnm t = if tcp_norm(t) then t else
                                        | _ => base())
                                 | _ => base())
                            val res = tc_whnm(tcc_env sp)
-			             handle exn =>
+                                     handle exn =>
                                        (print "TC_APP in tc_whnm 2\n";
                                         raise exn)
                         in tyc_upd(nt, res); res
@@ -541,8 +541,8 @@ and tc_whnm t = if tcp_norm(t) then t else
                    | _ => stripInd(tcc_app(tc', tcs))
              end)
         | TC_PROJ(tc, i) =>
-	    ((* print "\ntc_whnm: TC_PROJ\n"; *)
-	     let val tc' = tc_whnm tc
+            ((* print "\ntc_whnm: TC_PROJ\n"; *)
+             let val tc' = tc_whnm tc
               in case (tc_out tc')
                    of (TC_SEQ tcs) =>
                         let val res = List.nth(tcs, i)
@@ -557,8 +557,8 @@ and tc_whnm t = if tcp_norm(t) then t else
                     | _ => stripInd(tcc_proj(tc', i))
              end)
         | TC_WRAP tc  =>
-	    ((* print "\ntc_whnm: TC_WRAP\n"; *)
-	    (let val tc' = tc_whnm tc
+            ((* print "\ntc_whnm: TC_WRAP\n"; *)
+            (let val tc' = tc_whnm tc
               in if LT.wrap_is_whnm tc'
                  then let val xx = tcc_wrap tc' in stripInd xx end
                  else let val res = wrap_reduce tc'
@@ -713,10 +713,10 @@ and tc_eqv_gen (t1, t2) =
       | (TC_PRIM ptyc1, TC_PRIM ptyc2) =>
         PT.pt_eq(ptyc1,ptyc2)
       | _ => (if !debugging
-	      then with_pp(fn s =>
-			      (PU.pps s "%%%tc_eqv_gen DEFAULT";
-			       PP.newline s))
-	      else ();
+              then with_pp(fn s =>
+                              (PU.pps s "%%%tc_eqv_gen DEFAULT";
+                               PP.newline s))
+              else ();
               false)
 
 (** general equality for tycs *)
@@ -762,9 +762,9 @@ fun lt_eqv_gen (t1 : lty, t2: lty) =
        | (LT_STR s1, LT_STR s2) => eqlist lt_eqv (s1, s2)
        | (LT_CONT s1, LT_CONT s2) => eqlist lt_eqv (s1, s2)
        | _ => (dbPrint("LT_CONT",
-		       (fn s => fn () => PU.pps s "%%%lt_eqv_gen DEFAULT\n"),
-		       ());
-	       false))
+                       (fn s => fn () => PU.pps s "%%%lt_eqv_gen DEFAULT\n"),
+                       ());
+               false))
     (* function lt_eqv_gen *)
 
 and lt_eqv(x : lty, y: lty) : bool =

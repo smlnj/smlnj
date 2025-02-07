@@ -9,16 +9,16 @@ struct
 
   structure ParseControl : PARSECONTROL =
   struct
-    val symbolLength 		= 256
-    val typedefsScoped		= true
-    val prototypesAllowed 	= true
-    val templatesAllowed 	= false
-    val trailingCommaInEnum 	= {error=false,warning=true}
-    val newFundefsAllowed 	= true
-    val voidAllowed		= true
-    val voidStarAllowed		= true
-    val constAllowed		= true
-    val volatileAllowed		= true
+    val symbolLength            = 256
+    val typedefsScoped          = true
+    val prototypesAllowed       = true
+    val templatesAllowed        = false
+    val trailingCommaInEnum     = {error=false,warning=true}
+    val newFundefsAllowed       = true
+    val voidAllowed             = true
+    val voidStarAllowed         = true
+    val constAllowed            = true
+    val volatileAllowed         = true
     fun violation str =
         TextIO.output(TextIO.stdOut,"\nERROR: in ANSI C " ^ str ^ "\n")
     val Dkeywords               = false
@@ -27,7 +27,7 @@ struct
   end
 
   (* see type-check-control-sig.sml for description of these flags *)
-  structure TypeCheckControl : TYPECHECKCONTROL = 
+  structure TypeCheckControl : TYPECHECKCONTROL =
   struct
     val don't_convert_SHORT_to_INT = false             (* not doing dsp *)
     val don't_convert_DOUBLE_in_usual_unary_cnv = true (* ansic *)

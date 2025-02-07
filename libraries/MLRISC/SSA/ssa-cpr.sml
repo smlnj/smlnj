@@ -21,15 +21,15 @@ struct
    val name = "Critical Path Reduction"
 
    infix ||-
- 
+
    fun run(SSA as G.GRAPH ssa) =
    let val Dom as G.GRAPH dom = SSA.dom SSA
        val CFG as G.GRAPH cfg = SSA.cfg SSA
        val [ENTRY] = #entries dom ()
        val {sources, phis, ops, sinks, ...} = SSA.nodes SSA
 
-       fun walk X = 
-       let 
+       fun walk X =
+       let
        in  app walk (#succ dom X)
        end
 

@@ -11,14 +11,14 @@ functor SparcProps
 struct
   structure I = SparcInstr
   structure C = I.C
-  structure T = I.T 
+  structure T = I.T
   structure CB = CellsBasis
 
   exception NegateConditional
 
   fun error msg = MLRiscErrorMsg.error("SparcProps",msg)
 
-  datatype kind = IK_JUMP | IK_NOP | IK_INSTR | IK_COPY | IK_CALL 
+  datatype kind = IK_JUMP | IK_NOP | IK_INSTR | IK_COPY | IK_CALL
                 | IK_CALL_WITH_CUTS | IK_PHI | IK_SOURCE | IK_SINK
   datatype target = LABELLED of Label.label | FALLTHROUGH | ESCAPES
 
@@ -31,63 +31,63 @@ struct
    *========================================================================*)
   fun instrKind(I.ANNOTATION{i, ...}) = instrKind i
     | instrKind(I.COPY _)  = IK_COPY
-    | instrKind(I.INSTR instr) = 
+    | instrKind(I.INSTR instr) =
       (case instr
        of (I.Bicc _)  => IK_JUMP
-	| (I.FBfcc _) => IK_JUMP
-	| (I.JMP _)   => IK_JUMP
-	| (I.RET _)   => IK_JUMP
-	| (I.BR _)    => IK_JUMP
-	| (I.BP _)    => IK_JUMP
-	| (I.Ticc {t=I.BA, ...}) => IK_JUMP (* trap always *)
-	| (I.CALL{cutsTo=_::_,...})  => IK_CALL_WITH_CUTS
-	| (I.CALL _)  => IK_CALL
-	| (I.JMPL{cutsTo=_::_,...})  => IK_CALL_WITH_CUTS
-	| (I.JMPL _)  => IK_CALL
-	| (I.PHI _)    => IK_PHI
-	| (I.SOURCE _) => IK_SOURCE
-	| (I.SINK _)   => IK_SINK
-	|  _          => IK_INSTR
+        | (I.FBfcc _) => IK_JUMP
+        | (I.JMP _)   => IK_JUMP
+        | (I.RET _)   => IK_JUMP
+        | (I.BR _)    => IK_JUMP
+        | (I.BP _)    => IK_JUMP
+        | (I.Ticc {t=I.BA, ...}) => IK_JUMP (* trap always *)
+        | (I.CALL{cutsTo=_::_,...})  => IK_CALL_WITH_CUTS
+        | (I.CALL _)  => IK_CALL
+        | (I.JMPL{cutsTo=_::_,...})  => IK_CALL_WITH_CUTS
+        | (I.JMPL _)  => IK_CALL
+        | (I.PHI _)    => IK_PHI
+        | (I.SOURCE _) => IK_SOURCE
+        | (I.SINK _)   => IK_SINK
+        |  _          => IK_INSTR
       (*esac*))
     | instrKind _ = error "instrKind"
 
   fun branchTargets(I.ANNOTATION{i,...}) = branchTargets i
-    | branchTargets(I.INSTR(instr)) = 
-      (case instr 
-	of (I.Bicc{b=I.BA,label,...}) => [LABELLED label]
-	 | (I.Bicc{label,...}) => [LABELLED label, FALLTHROUGH] 
-	 | (I.FBfcc{b=I.FBA,label,...}) => [LABELLED label]
-	 | (I.FBfcc{label,...}) => [LABELLED label, FALLTHROUGH]
-	 | (I.BR{label,...}) => [LABELLED label, FALLTHROUGH]
-	 | (I.BP{label,...}) => [LABELLED label, FALLTHROUGH]
-	 | (I.JMP{labs=[],...}) => [ESCAPES] 
-	 | (I.RET _)   => [ESCAPES]
-	 | (I.JMP{labs,...})    => map LABELLED labs
-	 | (I.CALL{cutsTo,...}) => FALLTHROUGH::map LABELLED cutsTo
-	 | (I.JMPL{cutsTo,...}) => FALLTHROUGH::map LABELLED cutsTo
-	 | (I.Ticc{t=I.BA, ...}) => [ESCAPES]
-	 |  _ => error "branchTargets"
+    | branchTargets(I.INSTR(instr)) =
+      (case instr
+        of (I.Bicc{b=I.BA,label,...}) => [LABELLED label]
+         | (I.Bicc{label,...}) => [LABELLED label, FALLTHROUGH]
+         | (I.FBfcc{b=I.FBA,label,...}) => [LABELLED label]
+         | (I.FBfcc{label,...}) => [LABELLED label, FALLTHROUGH]
+         | (I.BR{label,...}) => [LABELLED label, FALLTHROUGH]
+         | (I.BP{label,...}) => [LABELLED label, FALLTHROUGH]
+         | (I.JMP{labs=[],...}) => [ESCAPES]
+         | (I.RET _)   => [ESCAPES]
+         | (I.JMP{labs,...})    => map LABELLED labs
+         | (I.CALL{cutsTo,...}) => FALLTHROUGH::map LABELLED cutsTo
+         | (I.JMPL{cutsTo,...}) => FALLTHROUGH::map LABELLED cutsTo
+         | (I.Ticc{t=I.BA, ...}) => [ESCAPES]
+         |  _ => error "branchTargets"
       (*esac*))
     | branchTargets _  = error "branchTargets"
 
 
   fun setJumpTarget(I.ANNOTATION{a,i}, l) = I.ANNOTATION{a=a, i=setJumpTarget(i,l)}
-    | setJumpTarget(I.INSTR(I.Bicc{b=I.BA,a,nop,...}), L) = 
+    | setJumpTarget(I.INSTR(I.Bicc{b=I.BA,a,nop,...}), L) =
           I.bicc{b=I.BA,a=a,label=L,nop=nop}
     | setJumpTarget _ = error "setJumpTarget"
 
 
-  fun setBranchTargets{i=I.ANNOTATION{a,i}, t, f} = 
+  fun setBranchTargets{i=I.ANNOTATION{a,i}, t, f} =
           I.ANNOTATION{a=a, i=setBranchTargets{i=i, t=t, f=f}}
-    | setBranchTargets{i=I.INSTR(I.Bicc{b=I.BA,a,nop,...}), ...} =  
+    | setBranchTargets{i=I.INSTR(I.Bicc{b=I.BA,a,nop,...}), ...} =
           error "setBranchTargets: Bicc"
     | setBranchTargets{i=I.INSTR(I.Bicc{b,a,nop,...}), t, f}  =
           I.bicc{b=b,a=a,label=t,nop=nop}
-    | setBranchTargets{i=I.INSTR(I.FBfcc{b,a,nop,...}), t=T, ...}  = 
+    | setBranchTargets{i=I.INSTR(I.FBfcc{b,a,nop,...}), t=T, ...}  =
           I.fbfcc{b=b, a=a, label=T, nop=nop}
-    | setBranchTargets{i=I.INSTR(I.BR{rcond,p,r,a,nop,...}), t=T, ...}   = 
+    | setBranchTargets{i=I.INSTR(I.BR{rcond,p,r,a,nop,...}), t=T, ...}   =
           I.br{rcond=rcond, p=p, r=r, a=a, label=T, nop=nop}
-    | setBranchTargets{i=I.INSTR(I.BP{b,cc,p,a,nop,...}), t=T, ...}   = 
+    | setBranchTargets{i=I.INSTR(I.BP{b,cc,p,a,nop,...}), t=T, ...}   =
           I.bp{b=b, cc=cc, p=p, a=a, label=T, nop=nop}
     | setBranchTargets _ = error "setBranchTargets"
 
@@ -138,12 +138,12 @@ struct
   fun negateConditional (I.INSTR(I.Bicc{b,a,nop,...}), lab) =
          I.bicc{b=revCond b,a=a,label=lab,nop=nop}
     | negateConditional (I.INSTR(I.FBfcc{b,a,nop,...}), lab) =
-         I.fbfcc{b=revFcond b,a=a,label=lab,nop=nop} 
+         I.fbfcc{b=revFcond b,a=a,label=lab,nop=nop}
     | negateConditional (I.INSTR(I.BR{p,r,rcond,a,nop,...}), lab) =
-         I.br{p=revP p,a=a,r=r,rcond=revRcond rcond,label=lab,nop=nop} 
+         I.br{p=revP p,a=a,r=r,rcond=revRcond rcond,label=lab,nop=nop}
     | negateConditional (I.INSTR(I.BP{b,cc,p,a,nop,...}), lab) =
-         I.bp{p=revP p,a=a,b=revCond b,cc=cc,label=lab,nop=nop} 
-    | negateConditional (I.ANNOTATION{i,a}, lab) = 
+         I.bp{p=revP p,a=a,b=revCond b,cc=cc,label=lab,nop=nop}
+    | negateConditional (I.ANNOTATION{i,a}, lab) =
          I.ANNOTATION{i=negateConditional(i, lab), a=a}
     | negateConditional _ = raise NegateConditional
 
@@ -151,14 +151,14 @@ struct
 
   val immedRange = {lo= ~4096, hi = 4095}
 
-  fun loadImmed{immed,t} = 
+  fun loadImmed{immed,t} =
       I.arith{a=I.OR,r=zeroR,i=
-              if #lo immedRange <= immed andalso immed <= #hi immedRange 
+              if #lo immedRange <= immed andalso immed <= #hi immedRange
               then I.IMMED immed else I.LAB(T.LI(IntInf.fromInt immed)),d=t}
   fun loadOperand{opn, t} = I.arith{a=I.OR,r=zeroR,i=opn, d=t}
 
   fun moveInstr(I.ANNOTATION{i,...}) = moveInstr i
-    | moveInstr(I.COPY _)	    = true
+    | moveInstr(I.COPY _)           = true
     | moveInstr(I.LIVE _)           = false
     | moveInstr(I.KILL _)           = false
     | moveInstr _          = false
@@ -168,11 +168,11 @@ struct
   (*========================================================================
    *  Parallel Move
    *========================================================================*)
-  fun moveTmpR(I.COPY{tmp, ...}) = 
-      (case tmp 
-	of SOME(I.Direct r) => SOME r
-	 | SOME(I.FDirect f) => SOME f
-	 | _ => NONE
+  fun moveTmpR(I.COPY{tmp, ...}) =
+      (case tmp
+        of SOME(I.Direct r) => SOME r
+         | SOME(I.FDirect f) => SOME f
+         | _ => NONE
       (*esac*))
     | moveTmpR(I.ANNOTATION{i,...}) = moveTmpR i
     | moveTmpR _ = NONE
@@ -201,44 +201,44 @@ struct
     fun oper (I.REG r,def,use) = (def,r::use)
       | oper (_,def,use)       = (def,use)
     fun sparcDU instr =
-      (case instr 
+      (case instr
        of  I.LOAD {r,d,i,...} => oper(i,[d],[r])
-	| I.STORE {r,d,i,...} => oper(i,[],[r,d])
-	| I.FLOAD {r,d,i,...} => oper(i,[],[r])
-	| I.FSTORE {r,d,i,...} => oper(i,[],[r])
-	| I.SETHI {d,...} => ([d],[])
-	| I.ARITH {r,i,d,...} => oper(i,[d],[r])
-	| I.SHIFT {r,i,d,...} => oper(i,[d],[r])
-	| I.JMPL{defs,uses,d,r,i,...} => 
-	     oper(i,d:: C.getReg defs,r:: C.getReg uses)
-	| I.BR{r,...} => ([],[r])
-	| I.MOVicc{i,d,...} => oper(i,[d],[d])
-	| I.MOVfcc{i,d,...} => oper(i,[d],[d])
-	| I.MOVR{r,i,d,...} => oper(i,[d],[r,d])
-	| I.CALL{defs,uses,...} => (r15 :: C.getReg defs, C.getReg uses)
-	| I.JMP{r,i,...} => oper(i,[],[r])
-	| I.RET{leaf=false,...} => ([],[r31])
-	| I.RET{leaf=true,...} => ([],[r15])
-	| I.SAVE{r,i,d} => oper(i,[d],[r])
-	| I.RESTORE{r,i,d} => oper(i,[d],[r])
-	| I.Ticc{r,i,...} => oper(i,[],[r]) 
-	| I.RDY{d,...} => ([d],[]) 
-	| I.WRY{r,i,...} => oper(i,[],[r]) 
-	| _ => ([],[])  
+        | I.STORE {r,d,i,...} => oper(i,[],[r,d])
+        | I.FLOAD {r,d,i,...} => oper(i,[],[r])
+        | I.FSTORE {r,d,i,...} => oper(i,[],[r])
+        | I.SETHI {d,...} => ([d],[])
+        | I.ARITH {r,i,d,...} => oper(i,[d],[r])
+        | I.SHIFT {r,i,d,...} => oper(i,[d],[r])
+        | I.JMPL{defs,uses,d,r,i,...} =>
+             oper(i,d:: C.getReg defs,r:: C.getReg uses)
+        | I.BR{r,...} => ([],[r])
+        | I.MOVicc{i,d,...} => oper(i,[d],[d])
+        | I.MOVfcc{i,d,...} => oper(i,[d],[d])
+        | I.MOVR{r,i,d,...} => oper(i,[d],[r,d])
+        | I.CALL{defs,uses,...} => (r15 :: C.getReg defs, C.getReg uses)
+        | I.JMP{r,i,...} => oper(i,[],[r])
+        | I.RET{leaf=false,...} => ([],[r31])
+        | I.RET{leaf=true,...} => ([],[r15])
+        | I.SAVE{r,i,d} => oper(i,[d],[r])
+        | I.RESTORE{r,i,d} => oper(i,[d],[r])
+        | I.Ticc{r,i,...} => oper(i,[],[r])
+        | I.RDY{d,...} => ([d],[])
+        | I.WRY{r,i,...} => oper(i,[],[r])
+        | _ => ([],[])
      (*esac*))
-  in 
+  in
       case instr
        of I.ANNOTATION{i, ...} => defUseR i
-	| I.LIVE{regs, ...} => ([], C.getReg regs)
-	| I.KILL{regs, ...} => (C.getReg regs, [])
-	| I.INSTR(i) => sparcDU(i)
-	| I.COPY{k, dst, src, tmp, ...} => let
-	    val (d,u) = case k of CB.GP => (dst, src) | _ => ([], [])
+        | I.LIVE{regs, ...} => ([], C.getReg regs)
+        | I.KILL{regs, ...} => (C.getReg regs, [])
+        | I.INSTR(i) => sparcDU(i)
+        | I.COPY{k, dst, src, tmp, ...} => let
+            val (d,u) = case k of CB.GP => (dst, src) | _ => ([], [])
           in
-	      case tmp 
-	      of SOME(I.Direct r) => (r::d, u)
-	       | SOME(I.Displace{base, ...}) => (d, base::u)
-	       | _ => (d,u)
+              case tmp
+              of SOME(I.Direct r) => (r::d, u)
+               | SOME(I.Displace{base, ...}) => (d, base::u)
+               | _ => (d,u)
           end
   end
 
@@ -263,11 +263,11 @@ struct
        | I.LIVE{regs, ...} => ([], C.getFreg regs)
        | I.KILL{regs, ...} => (C.getFreg regs, [])
        | I.COPY{k, dst, src, tmp, ...} => let
-	   val (d, u) = case k of CB.FP => (dst, src) | _ => ([],[])
+           val (d, u) = case k of CB.FP => (dst, src) | _ => ([],[])
          in
-	     case tmp
-	      of SOME(I.FDirect f) => (f::d, u)
-	       | _ => (d, u)
+             case tmp
+              of SOME(I.FDirect f) => (f::d, u)
+               | _ => (d, u)
          end
        | I.INSTR(i) => sparcDU(i)
   end
@@ -277,9 +277,9 @@ struct
     | defUse _    = error "defUse"
 
   (*========================================================================
-   *  Annotations 
+   *  Annotations
    *========================================================================*)
-  fun getAnnotations(I.ANNOTATION{i,a}) = 
+  fun getAnnotations(I.ANNOTATION{i,a}) =
        let val (i,an) = getAnnotations i in (i,a::an) end
     | getAnnotations i = (i,[])
   fun annotate(i,a) = I.ANNOTATION{i=i,a=a}
@@ -288,7 +288,7 @@ struct
    *  Replicate an instruction
    *========================================================================*)
   fun replicate(I.ANNOTATION{i,a}) = I.ANNOTATION{i=replicate i,a=a}
-    | replicate(I.COPY{k, sz, tmp=SOME _, dst, src}) =  
+    | replicate(I.COPY{k, sz, tmp=SOME _, dst, src}) =
         I.COPY{k=k, sz=sz, tmp=SOME(I.Direct(C.newReg())), dst=dst, src=src}
     | replicate i = i
 end

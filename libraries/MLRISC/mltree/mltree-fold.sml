@@ -9,7 +9,7 @@ functor MLTreeFold
 struct
    structure T = T
 
-   fun fold{rexp=doRexp, fexp=doFexp, ccexp=doCCexp, stm=doStm} = 
+   fun fold{rexp=doRexp, fexp=doFexp, ccexp=doCCexp, stm=doStm} =
    let fun stm(s,x) =
        let val x =
            case s of
@@ -20,10 +20,10 @@ struct
            | T.FCOPY _ => x
            | T.JMP(e,cf) => rexp(e,x)
            | T.BCC(cc,l) => ccexp(cc,x)
-           | T.CALL{funct,defs,uses,...} => 
+           | T.CALL{funct,defs,uses,...} =>
                mlriscs(uses,mlriscs(defs,rexp(funct,x)))
            | T.RET _ => x
-	   | T.FLOW_TO (s, _) => stm(s,x)
+           | T.FLOW_TO (s, _) => stm(s,x)
            | T.IF(cc,yes,no) => stm(no,stm(yes,ccexp(cc,x)))
            | T.STORE(ty,ea,d,r) => rexp(d,rexp(ea,x))
            | T.FSTORE(fty,ea,d,r) => fexp(d,rexp(ea,x))
@@ -31,25 +31,25 @@ struct
            | T.SEQ s => stms(s,x)
            | T.DEFINE _ => x
            | T.ANNOTATION(s,an) => stm(s,x)
-           | T.EXT s => 
+           | T.EXT s =>
                sext {stm=stm, rexp=rexp, fexp=fexp, ccexp=ccexp} (s,x)
-           | T.PHI _ => x 
+           | T.PHI _ => x
            | T.ASSIGN(_,a,b) => rexp(b,rexp(a,x))
-           | T.SOURCE => x 
-           | T.SINK => x 
+           | T.SOURCE => x
+           | T.SINK => x
            | T.RTL _ => x
-	   | T.LIVE ls => mlriscs (ls, x)
-	   | T.KILL ks => mlriscs (ks, x)
+           | T.LIVE ls => mlriscs (ls, x)
+           | T.KILL ks => mlriscs (ks, x)
       in doStm(s,x) end
-   
+
       and stms(ss,x) = foldr stm x ss
 
-      and rexp(e,x) = 
+      and rexp(e,x) =
       let val x = case e of
              T.REG _ => x
            | T.LI _ => x
-           | T.LABEL _ => x 
-           | T.LABEXP _ => x 
+           | T.LABEL _ => x
+           | T.LABEXP _ => x
            | T.CONST _ => x
            | T.NEG(ty,a) => rexp(a,x)
            | T.ADD(ty,a,b) => rexp2(a,b,x)
@@ -80,7 +80,7 @@ struct
            | T.LOAD(ty,ea,r) => rexp(ea,x)
            | T.PRED(e,ctrl) => rexp(e,x)
            | T.LET(s,e) => rexp(e,stm(s,x))
-           | T.REXT(t,e) => 
+           | T.REXT(t,e) =>
                 rext{stm=stm, rexp=rexp, fexp=fexp, ccexp=ccexp} (t,e,x)
            | T.MARK(e,an) => rexp(e,x)
            | T.OP(ty,oper,es) => rexps(es,x)
@@ -111,7 +111,7 @@ struct
            | T.CVTI2F(fty,ty,e) => rexp(e,x)
            | T.CVTF2F(fty,fty',e) => fexp(e,x)
            | T.FPRED(e,ctrl) => fexp(e,x)
-           | T.FEXT(t,e) => 
+           | T.FEXT(t,e) =>
                 fext {stm=stm, rexp=rexp, fexp=fexp, ccexp=ccexp} (t,e,x)
            | T.FMARK(e,an) => fexp(e,x)
       in doFexp(e,x) end
@@ -123,7 +123,7 @@ struct
       and ccexp(e,x) =
       let val x = case e of
              T.CC _ => x
-           | T.FCC _ => x 
+           | T.FCC _ => x
            | T.TRUE => x
            | T.FALSE => x
            | T.NOT e => ccexp(e,x)
@@ -134,7 +134,7 @@ struct
            | T.CMP(ty,cond,a,b) => rexp2(a,b,x)
            | T.FCMP(ty,fcond,a,b) => fexp2(a,b,x)
            | T.CCMARK(e,an) => ccexp(e,x)
-           | T.CCEXT(t,e) => 
+           | T.CCEXT(t,e) =>
               ccext{stm=stm, rexp=rexp, fexp=fexp, ccexp=ccexp}(t,e,x)
       in  doCCexp(e,x) end
 

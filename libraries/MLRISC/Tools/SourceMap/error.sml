@@ -5,7 +5,7 @@ struct
    val errorCount   = ref 0
    val warningCount = ref 0
 
-   fun init() = 
+   fun init() =
         (errorCount := 0; warningCount := 0; loc := SourceMapping.dummyLoc)
 
    fun status() =
@@ -16,13 +16,13 @@ struct
        val (w, t) = pr(!warningCount,"warning",t)
    in  "There "^t^" "^e^" and "^w
    end
-  
-   val logFileName = ref "" 
+
+   val logFileName = ref ""
    val logFileStream = ref NONE : TextIO.outstream option ref
 
    fun closeLogFile() =
        case !logFileStream of
-         SOME s => 
+         SOME s =>
            (TextIO.closeOut s; logFileStream := NONE; logFileName := "")
        | NONE => ()
    fun openLogFile filename =
@@ -32,7 +32,7 @@ struct
        )
    fun logfile() = !logFileName
 
-   fun printToLog text = 
+   fun printToLog text =
        case !logFileStream of
          NONE => ()
        | SOME s => TextIO.output(s,text)
@@ -50,17 +50,17 @@ struct
        y
    end
 
-   fun log msg = 
+   fun log msg =
    let val text = msg^"\n"
    in  TextIO.output(TextIO.stdErr,text);
        printToLog text
    end
 
-   fun error msg = (log(SourceMapping.toString (!loc)^": "^msg); 
+   fun error msg = (log(SourceMapping.toString (!loc)^": "^msg);
                     errorCount := !errorCount + 1)
    fun errorPos(l, msg) = (setLoc l; error msg)
    fun warning msg = (log(SourceMapping.toString (!loc)^": warning: "^msg);
-                      warningCount := !warningCount + 1) 
+                      warningCount := !warningCount + 1)
    fun warningPos(l, msg) = (setLoc l; warning msg)
    fun fail msg = (error msg; raise Error)
 end

@@ -1,6 +1,6 @@
 (* dump-output.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -8,7 +8,7 @@
  * Dump (to stderr) the complete DFA
  *)
 
-structure DumpOutput : OUTPUT = 
+structure DumpOutput : OUTPUT =
   struct
 
     structure RE = RegExp
@@ -21,24 +21,24 @@ structure DumpOutput : OUTPUT =
 
     fun prState (s as LO.State{id, label, final, next, ...}) = let
           val name = (case final
-		       of [] => nameOf s
-			| id::_ => concat[nameOf s, " (act ", Int.toString id, ")"]
-		      (* end case *))
-	  fun prEdge (symSet, st) = prl[
-		  "  -- ", RE.toString (RE.mkSymSet symSet), " --> ", nameOf st, "\n"
-		]
-	  fun prRE re = prl[" ", RE.toString re, "\n"]
+                       of [] => nameOf s
+                        | id::_ => concat[nameOf s, " (act ", Int.toString id, ")"]
+                      (* end case *))
+          fun prEdge (symSet, st) = prl[
+                  "  -- ", RE.toString (RE.mkSymSet symSet), " --> ", nameOf st, "\n"
+                ]
+          fun prRE re = prl[" ", RE.toString re, "\n"]
           in
             prl[name, ": "(*, RE.toString label*), "\n"];
-	    Vector.app prRE label;
-	    List.app prEdge (!next);
-	    pr "\n"
+            Vector.app prRE label;
+            List.app prEdge (!next);
+            pr "\n"
           end
 
-    fun dumpDFA states = 
-	  (List.app prState states;
-	   pr (Int.toString (List.length states));
-	   pr " states\n\n")
+    fun dumpDFA states =
+          (List.app prState states;
+           pr (Int.toString (List.length states));
+           pr " states\n\n")
 
 
     fun outSS (label, ss) = prl ["Start state: ", label, " => ", nameOf ss, "\n"]
@@ -47,8 +47,8 @@ structure DumpOutput : OUTPUT =
           val LO.Spec {dfa, startStates, ...} = spec
           in
             dumpDFA dfa;
-	    pr "\n";
-	    List.app outSS startStates
-	  end
+            pr "\n";
+            List.app outSS startStates
+          end
 
   end

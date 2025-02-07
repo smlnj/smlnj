@@ -14,7 +14,7 @@ sig
    val inst  : env -> Ast.exp * Ast.ty -> Ast.exp * Ast.ty
    val gen   : env -> Ast.exp * Ast.ty -> Ast.exp * Ast.ty
    val lambda: env -> Ast.ty -> Ast.ty
-   val elab  : env -> Ast.decl -> env 
+   val elab  : env -> Ast.decl -> env
 
    val VALbind  : Ast.id * Ast.exp * Ast.ty -> env
    val TYPEbind : Ast.id * Ast.ty -> env
@@ -28,10 +28,10 @@ sig
    val datatypeDefinitions : env -> Ast.datatypebind list
 
    (* Iterators *)
-   val foldVal : (Ast.id * Ast.exp * Ast.ty * 'a -> 'a) -> 'a -> env -> 'a 
+   val foldVal : (Ast.id * Ast.exp * Ast.ty * 'a -> 'a) -> 'a -> env -> 'a
 
    (* Lookup code from nested structures/signatures *)
-   val declOf   : env -> Ast.id -> Ast.decl 
+   val declOf   : env -> Ast.id -> Ast.decl
    val fctArgOf : env -> Ast.id -> Ast.decl
    val typeOf   : env -> Ast.id -> Ast.decl
 end

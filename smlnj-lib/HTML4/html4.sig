@@ -24,9 +24,9 @@ signature HTML4 =
     type col = attributes (* COL element is empty *)
 
     datatype html = HTML of {
-	version : string option,
-	head : head_content list,
-	content : body_or_frameset
+        version : string option,
+        head : head_content list,
+        content : body_or_frameset
       }
 
     and head_content
@@ -55,7 +55,7 @@ signature HTML4 =
     and noframes
       = NOFRAMES of attributes * body
 
-    and flow 
+    and flow
       = Flow_BLOCK of block
       | Flow_INLINE of inline
 

@@ -9,23 +9,23 @@ structure Iterate : ITERATE =
 
     fun badArg (f,msg) = LibBase.failure {module="Iterate",func=f,msg=msg}
 
-    fun iterate f cnt init = let 
+    fun iterate f cnt init = let
           fun iter (0,v) = v
             | iter (n,v) = iter(n-1,f v)
           in
-            if cnt < 0 
+            if cnt < 0
               then badArg ("iterate","count < 0")
               else iter (cnt,init)
           end
-        
-    fun repeat f cnt init = let 
+
+    fun repeat f cnt init = let
           fun iter (n,v) = if n = cnt then v else iter(n+1,f(n,v))
           in
-            if cnt < 0 
+            if cnt < 0
               then badArg ("repeat","count < 0")
               else iter (0,init)
           end
-        
+
     fun for f (start,stop,inc) = let
           fun up (n,v) = if n > stop then v else up(n+inc,f(n,v))
           fun down (n,v) = if n < stop then v else down(n+inc,f(n,v))

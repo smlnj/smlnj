@@ -8,9 +8,9 @@
 signature MLRISC_REGION =
 sig
 
-   type region 
+   type region
 
-   datatype mutability = 
+   datatype mutability =
      READONLY    (* readonly regions are never written to *)
    | IMMUTABLE   (* immutable region are never updated once it is initialized *)
    | MUTABLE     (* mutable regions can be updated *)
@@ -23,7 +23,7 @@ sig
    val readonly : region  (* read only data region *)
 
    val new      : string * mutability * region -> region
-   val union    : region list -> region 
+   val union    : region list -> region
 
    val toString : region -> string
 

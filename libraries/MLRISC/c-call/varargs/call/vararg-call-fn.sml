@@ -1,5 +1,5 @@
 (* vararg-call-fn.sml
- * 
+ *
  * COPYRIGHT (c) 2008 Michael Rainey (http://cs.uchicago.edu/~mrainey)
  * All rights reserved.
  *
@@ -8,7 +8,7 @@
  *  - convert the arguments to requests
  *  - convernt the requests to locations
  *  - marshal the locations for the interpreter
- *  - transfer control to the interpreter by using the compiler's 
+ *  - transfer control to the interpreter by using the compiler's
  *    standard C calling facility
  *)
 
@@ -16,7 +16,7 @@ functor VarargCallFn (
 
   (* machine-specific data for staged allocation *)
     structure SA : STAGED_ALLOCATION
-	where type reg_id = int
+        where type reg_id = int
         where type loc_kind = CLocKind.loc_kind
   (* parameter convention *)
     val params : SA.stage list
@@ -63,18 +63,18 @@ functor VarargCallFn (
 
   (* apply the variadic C function to args *)
     fun dispatchLowlevelCall (cFun, args) = let
-	    val reqs = List.map argToReq args
-	    val (locs, store) = SA.allocateSeq params (reqs, store0)
-	    val locdArgs = LocatedArgs.mkLocatedArgs (args, locs)
+            val reqs = List.map argToReq args
+            val (locs, store) = SA.allocateSeq params (reqs, store0)
+            val locdArgs = LocatedArgs.mkLocatedArgs (args, locs)
 (*val _ = print ((String.concatWith " " (List.map LocatedArgs.toString locdArgs))^"\n")*)
-	    val nLocdArgs = List.length locdArgs
-	    val {startLocdArgs, endLocdArgs} = Marshal.marshalLocdArgs locdArgs
+            val nLocdArgs = List.length locdArgs
+            val {startLocdArgs, endLocdArgs} = Marshal.marshalLocdArgs locdArgs
             in
-	     (* call the interpreter *)
-	       SMLNJPrimCCall.applyInterp(
-		     cFun, 
-		     startLocdArgs,
-		     endLocdArgs)
-	    end
+             (* call the interpreter *)
+               SMLNJPrimCCall.applyInterp(
+                     cFun,
+                     startLocdArgs,
+                     endLocdArgs)
+            end
 
   end

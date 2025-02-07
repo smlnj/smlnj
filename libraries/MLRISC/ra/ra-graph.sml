@@ -1,6 +1,6 @@
 (*
  * This is the new interference graph used by the new register allocator.
- * 
+ *
  * -- Allen
  *)
 
@@ -17,7 +17,7 @@ struct
 
   structure PPtHashTable = HashTableFn
      (type hash_key = programPoint
-      fun hashVal{block,insn} = 
+      fun hashVal{block,insn} =
              Word.<<(Word.fromInt block,0w7) + Word.fromInt insn
       fun sameKey(x:programPoint,y) = x = y
       )
@@ -25,9 +25,9 @@ struct
   type frame_offset = int
   type logical_spill_id = int
   datatype spillLoc = FRAME of logical_spill_id
-                    | MEM_REG of C.cell 
+                    | MEM_REG of C.cell
 
-  structure SpillLocHashTable = HashTableFn 
+  structure SpillLocHashTable = HashTableFn
      (type hash_key = spillLoc
       fun hashVal(FRAME i) = Word.fromInt i
         | hashVal(MEM_REG r) = C.hashCell r
@@ -40,15 +40,15 @@ struct
 
   type mode = word
 
-  datatype interferenceGraph = 
+  datatype interferenceGraph =
    GRAPH of { bitMatrix    : BM.bitMatrix ref,
               nodes        : node IntHashTable.hash_table,
               K            : int,
               firstPseudoR : int,
               dedicated    : int -> bool,
-              getreg       : 
+              getreg       :
                   {pref:int list, stamp:int, proh:int Array.array} -> int,
-              getpair       : 
+              getpair       :
                   {pref:int list, stamp:int, proh:int Array.array} -> int,
               proh         : int Array.array,
               stamp        : int ref,
@@ -61,7 +61,7 @@ struct
               showReg      : C.cell -> string,
               numRegs      : int,
               maxRegs      : unit -> int,
- 
+
               deadCopies   : C.cell list ref,
               copyTmps     : node list ref,
               memMoves     : move list ref,
@@ -76,14 +76,14 @@ struct
   and moveStatus = BRIGGS_MOVE | GEORGE_MOVE
                  | COALESCED | CONSTRAINED | LOST | WORKLIST
 
-  and move = 
-    MV of {src : node,			(* source register of move *)
-	   dst : node,			(* destination register of move *)
+  and move =
+    MV of {src : node,                  (* source register of move *)
+           dst : node,                  (* destination register of move *)
            (* kind: moveKind, *)        (* what kind of move *)
            cost : cost,                 (* cost *)
-	   status : moveStatus ref,	(* coalesced? *)
-	   hicount : int ref	        (* neighbors of high degree *)
-	  }
+           status : moveStatus ref,     (* coalesced? *)
+           hicount : int ref            (* neighbors of high degree *)
+          }
 
   and moveKind = REG_TO_REG      (* register to register *)
                | EVEN_TO_REG     (* even register in pair to register *)
@@ -98,17 +98,17 @@ struct
       | ALIASED of node       (* coalesced *)
       | COLORED of int        (* colored *)
       | MEMREG of int * C.cell(* register implemented in memory *)
-      | SPILLED		      (* spilled *)
+      | SPILLED               (* spilled *)
       | SPILL_LOC of int      (* spilled at logical location *)
 
-  and node = 
-    NODE of { number : int,  	        (* node number *)
+  and node =
+    NODE of { number : int,             (* node number *)
               cell   : C.cell,
-	      movecnt: int ref,		(* #moves this node is involved in *)
-	      movelist: move list ref,	(* moves associated with this node *)
-	      degree : int ref,		(* current degree *)
-	      color : nodeStatus ref,	(* status *)
-	      adj : node list ref,      (* adjacency list *)
+              movecnt: int ref,         (* #moves this node is involved in *)
+              movelist: move list ref,  (* moves associated with this node *)
+              degree : int ref,         (* current degree *)
+              color : nodeStatus ref,   (* status *)
+              adj : node list ref,      (* adjacency list *)
               pri : priority ref,       (* priority *)
               movecost : cost ref,      (* move cost *)
               (* pair : bool, *)        (* register pair? *)
@@ -125,27 +125,27 @@ struct
   val stampCounter = ref 0
 
   (* Create a new bitMatrix *)
-  fun roundSize size = 
+  fun roundSize size =
   let fun f(x, shift) =
         if x >= size then (x, Word.>>(shift, 0w1))
         else f(x+x, shift+0w1)
   in f(64, 0w6) end
 
-  val max = Word.<<(0w1,Word.>>(Word.fromInt Word.wordSize,0w1)) 
-  val _ = if max < Word.<<(0w1,0w15) 
+  val max = Word.<<(0w1,Word.>>(Word.fromInt Word.wordSize,0w1))
+  val _ = if max < Word.<<(0w1,0w15)
           then error "word size too small" else ()
 
   fun newBitMatrix{edges, maxRegs} =
-  let val table = 
+  let val table =
         (* if maxRegs < 1024 then
           let val denseBytes  = (maxRegs * (maxRegs + 1) + 15) div 16
           in  BITMATRIX(Word8Array.array(denseBytes,0w0))
-          end 
+          end
           else *)
           let val (tableSize, shift) = roundSize edges
           in  if Word.fromInt maxRegs < max then
                  BM.SMALL(ref(Array.array(tableSize,[])),shift)
-              else  
+              else
                  BM.LARGE(ref(Array.array(tableSize, BM.NIL)),shift)
           end
   in  BM.BM{table=table, elems=ref 0, edges=edges}
@@ -161,21 +161,21 @@ struct
 
       (* Make memory register nodes *)
       fun makeMemRegs [] = []
-        | makeMemRegs(cells) = 
+        | makeMemRegs(cells) =
           let val add = IntHashTable.insert nodes
               fun loop([], ns) = ns
-                | loop(cell::cells, ns) = 
+                | loop(cell::cells, ns) =
                   let val id = C.registerId cell
-                      val node = 
+                      val node =
                       NODE{number=id,
                            pri=ref 0.0,adj=ref [],degree=ref 0,movecnt=ref 0,
-                           color=ref(MEMREG(id,cell)), 
+                           color=ref(MEMREG(id,cell)),
                            defs=ref [], uses=ref [],
                            movecost=ref 0.0,movelist=ref [], cell=cell}
                   in  add(id, node); loop(cells, node::ns)
                   end
           in  loop(cells, [])
-          end 
+          end
 
       val memRegs = makeMemRegs memRegs
 
@@ -205,5 +205,5 @@ struct
              pseudoCount  = ref 0
            }
   end
-  
+
 end

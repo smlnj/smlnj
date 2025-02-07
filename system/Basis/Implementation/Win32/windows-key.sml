@@ -12,7 +12,7 @@ structure Windows_KEY : WINDOWS_KEY =
     in
       open BF
     end
-    
+
     val allAccess : flags = fromWord(0wxF003F)
     val createLink : flags = fromWord(0wx0020)
     val createSubKey : flags = fromWord(0wx0004)
@@ -23,6 +23,6 @@ structure Windows_KEY : WINDOWS_KEY =
     val read : flags = fromWord(0wx20019)
     val setValue : flags = fromWord(0wx0002)
     val write : flags = fromWord(0wx20006)
-  end 
+  end
 
 

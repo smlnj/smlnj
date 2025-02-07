@@ -13,13 +13,13 @@ structure Wff : WFF = struct
    | NOT of wff
 
 (*#line 9.4 "wff.gsml"*)
-   fun simplify e = 
-       let fun rewrite'wff redex = 
+   fun simplify e =
+       let fun rewrite'wff redex =
                (case redex of
                  FALSE => redex
                | TRUE => redex
                | VAR string => redex
-               | AND(wff1, wff2) => 
+               | AND(wff1, wff2) =>
                  (case (rewrite'wff wff1, rewrite'wff wff2) of
                    (TRUE, x) => x
                  | (x, TRUE) => x
@@ -27,7 +27,7 @@ structure Wff : WFF = struct
                  | (x, FALSE) => FALSE
                  | arg => AND arg
                  )
-               | OR(wff1, wff2) => 
+               | OR(wff1, wff2) =>
                  (case (rewrite'wff wff1, rewrite'wff wff2) of
                    (TRUE, x) => TRUE
                  | (x, TRUE) => TRUE
@@ -35,7 +35,7 @@ structure Wff : WFF = struct
                  | (x, FALSE) => x
                  | arg => OR arg
                  )
-               | NOT wff => 
+               | NOT wff =>
                  (case rewrite'wff wff of
                    FALSE => TRUE
                  | TRUE => FALSE
@@ -48,33 +48,33 @@ structure Wff : WFF = struct
 
 
 (*#line 27.4 "wff.gsml"*)
-   fun countNots e = 
-       let 
+   fun countNots e =
+       let
 (*#line 28.8 "wff.gsml"*)
            val count = ref 0
-       in 
-          let fun app'wff redex = 
-                  let val _ = 
+       in
+          let fun app'wff redex =
+                  let val _ =
                           (case redex of
                             FALSE => ()
                           | TRUE => ()
                           | VAR string => ()
-                          | AND(wff1, wff2) => 
-                            ( app'wff wff1; 
+                          | AND(wff1, wff2) =>
+                            ( app'wff wff1;
                               app'wff wff2 )
-                          | OR(wff1, wff2) => 
-                            ( app'wff wff1; 
+                          | OR(wff1, wff2) =>
+                            ( app'wff wff1;
                               app'wff wff2 )
                           | NOT wff => app'wff wff
                           )
-                  in 
+                  in
                      (case redex of
                        NOT _ => count := (( ! count) + 1)
                      | _ => ()
                      )
                   end
 
-          in app'wff e; 
+          in app'wff e;
              ! count
           end
 
@@ -82,9 +82,9 @@ structure Wff : WFF = struct
 
 
 (*#line 39.4 "wff.gsml"*)
-   fun countNots2 e = 
-       let fun fold'wff (redex, foldArg) = 
-               let val foldArg = 
+   fun countNots2 e =
+       let fun fold'wff (redex, foldArg) =
+               let val foldArg =
                        (case redex of
                          FALSE => foldArg
                        | TRUE => foldArg
@@ -93,7 +93,7 @@ structure Wff : WFF = struct
                        | OR(wff1, wff2) => fold'wff (wff2, fold'wff (wff1, foldArg))
                        | NOT wff => fold'wff (wff, foldArg)
                        )
-               in 
+               in
                   (case (redex, foldArg) of
                     (NOT _, n) => n + 1
                   | (_, n) => n
@@ -105,9 +105,9 @@ structure Wff : WFF = struct
 
 
 (*#line 48.4 "wff.gsml"*)
-   fun allVars e = 
-       let fun fold'wff (redex, foldArg) = 
-               let val foldArg = 
+   fun allVars e =
+       let fun fold'wff (redex, foldArg) =
+               let val foldArg =
                        (case redex of
                          FALSE => foldArg
                        | TRUE => foldArg
@@ -116,7 +116,7 @@ structure Wff : WFF = struct
                        | OR(wff1, wff2) => fold'wff (wff2, fold'wff (wff1, foldArg))
                        | NOT wff => fold'wff (wff, foldArg)
                        )
-               in 
+               in
                   (case (redex, foldArg) of
                     (VAR v, vs) => v :: vs
                   | (_, vs) => vs

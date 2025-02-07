@@ -37,45 +37,45 @@
  *
  * Revision 1.1.1.1  1996/01/31  16:01:25  george
  * Version 109
- * 
+ *
  *)
 structure Main = struct
 
     fun main (cmdName, argv) = let
-	  fun help () = (
-		TextIO.output (TextIO.stdErr, "usage: mlburg [<filename>.burg]\n");
-		OS.Process.failure)
+          fun help () = (
+                TextIO.output (TextIO.stdErr, "usage: mlburg [<filename>.burg]\n");
+                OS.Process.failure)
           in
-	    case argv
-	     of [] => (
-		  BurgEmit.emit (TextIO.stdIn, (fn () => TextIO.stdOut));
-		  OS.Process.success)
-	      | ("-h"::_) => help ()
-	      | ("-help"::_) => help ()
-	      | files => let
-		  fun findname file = let
-		        val {base, ext} = OS.Path.splitBaseExt file
-		        in
-		          case ext
-		           of (SOME("brg" | "burg")) =>
-			        OS.Path.joinBaseExt{base=base, ext=SOME "sml"}
-		            | _ => file ^ ".sml"
-		          (* end case *)
-		        end
-		  val names = map (fn n => (n,findname n)) files
-		  fun emit (inname, outname) = (let
-			val s_in = TextIO.openIn inname
-			in
-			  BurgEmit.emit (s_in, (fn () => (TextIO.openOut outname)))
-			end) 
-			  handle err => (TextIO.output (TextIO.stdErr,
-							General.exnMessage err^"\n");
-					 raise err)
-		  in
-		    app emit names;
-		    OS.Process.success
-		  end
-	  end
+            case argv
+             of [] => (
+                  BurgEmit.emit (TextIO.stdIn, (fn () => TextIO.stdOut));
+                  OS.Process.success)
+              | ("-h"::_) => help ()
+              | ("-help"::_) => help ()
+              | files => let
+                  fun findname file = let
+                        val {base, ext} = OS.Path.splitBaseExt file
+                        in
+                          case ext
+                           of (SOME("brg" | "burg")) =>
+                                OS.Path.joinBaseExt{base=base, ext=SOME "sml"}
+                            | _ => file ^ ".sml"
+                          (* end case *)
+                        end
+                  val names = map (fn n => (n,findname n)) files
+                  fun emit (inname, outname) = (let
+                        val s_in = TextIO.openIn inname
+                        in
+                          BurgEmit.emit (s_in, (fn () => (TextIO.openOut outname)))
+                        end)
+                          handle err => (TextIO.output (TextIO.stdErr,
+                                                        General.exnMessage err^"\n");
+                                         raise err)
+                  in
+                    app emit names;
+                    OS.Process.success
+                  end
+          end
 
   (*
    * This is the function to call in an interactive session.

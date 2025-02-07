@@ -10,14 +10,14 @@ functor SparcDelaySlots(structure I : SparcINSTR
                        ) : DELAY_SLOT_PROPERTIES =
 struct
    structure I = I
-   datatype delay_slot = D_NONE | D_ERROR | D_ALWAYS | D_TAKEN | D_FALLTHRU 
-   
+   datatype delay_slot = D_NONE | D_ERROR | D_ALWAYS | D_TAKEN | D_FALLTHRU
+
    fun error msg = MLRiscErrorMsg.error("SparcDelaySlots",msg)
    fun delaySlot {instr, backward} = let
-          fun delaySlot instr = 
+          fun delaySlot instr =
               (
                case instr of
-               I.Bicc{b, a, label, nop} => {nop=nop, n=a andalso 
+               I.Bicc{b, a, label, nop} => {nop=nop, n=a andalso
                (
                 case b of
                 I.BA => false
@@ -37,7 +37,7 @@ struct
    fun enableDelaySlot _ = error "enableDelaySlot"
    fun conflict _ = error "conflict"
    fun delaySlotCandidate {jmp, delaySlot} = let
-          fun delaySlotCandidate delaySlot = 
+          fun delaySlotCandidate delaySlot =
               (
                case delaySlot of
                I.Bicc{b, a, label, nop} => false

@@ -1,7 +1,7 @@
 (*
- * A top level functor and ties all the modules for global scheduling 
+ * A top level functor and ties all the modules for global scheduling
  * together.
- *) 
+ *)
 
 functor GlobalScheduler
    (structure IR         : MLRISC_IR
@@ -27,15 +27,15 @@ struct
 
    structure RegionBuilder = RegionBuilder(IR)
 
-   structure DDGBuilder = 
+   structure DDGBuilder =
      SchedulerDDGBuilder
      (structure DDG        = DDG
       structure CFG        = CFG
       structure InsnProps  = InsnProps
       structure RTLProps   = RTLProps
      )
-   
-   structure ListScheduler = 
+
+   structure ListScheduler =
      ListScheduler
        (structure IR         = IR
         structure DDG        = DDG
@@ -44,9 +44,9 @@ struct
         (* structure Rewrite    = Rewrite *)
        )
 
-   structure GlobalCP = GlobalCriticalPath(DDG) 
+   structure GlobalCP = GlobalCriticalPath(DDG)
 
-   structure DAGScheduling = 
+   structure DAGScheduling =
      DAGScheduling
        (structure ListScheduler = ListScheduler
         structure DDGBuilder    = DDGBuilder
@@ -63,10 +63,10 @@ struct
    val cpu = MLRiscControl.getString "cpu"
    val _ = cpu := "default"
 
-   fun computeLiveness(cpu_info,CFG as G.GRAPH cfg) = 
+   fun computeLiveness(cpu_info,CFG as G.GRAPH cfg) =
    let val SchedProps.CPU_INFO{defUse=insnDefUse, ...} = cpu_info
-       val regmap = I.C.lookup(CFG.regmap CFG) 
-       fun defUse(_,CFG.BLOCK{insns, ...}) = 
+       val regmap = I.C.lookup(CFG.regmap CFG)
+       fun defUse(_,CFG.BLOCK{insns, ...}) =
        let fun scan([], def, use) = (def, use)
              | scan(i::is, def, use) =
                let val (d,u) = insnDefUse i
@@ -81,17 +81,17 @@ struct
        in  scan(rev(!insns), [], [])
        end
 
-       fun liveOut(_, block) = 
+       fun liveOut(_, block) =
              map regmap (I.C.CellSet.toCellList (CFG.liveOut block))
 
-       fun result{block=(_,CFG.BLOCK{annotations, ...}), liveIn, liveOut} = 
+       fun result{block=(_,CFG.BLOCK{annotations, ...}), liveIn, liveOut} =
            annotations :=
               #set DDG.LIVENESS ({liveIn=liveIn, liveOut=liveOut}, !annotations)
-          
+
    in  Liveness.liveness{cfg=CFG,defUse=defUse,liveOut=liveOut, result=result}
    end
 
-   fun run IR = 
+   fun run IR =
    let val maxBlocks=100
        val maxInstrs=1000
        val minFreqRatio=0.01

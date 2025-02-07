@@ -3,12 +3,12 @@ struct
 
 local
    structure AstUtil = MDLAstUtil(MDLAst)
-   structure AstPP   = MDLAstPrettyPrinter(AstUtil) 
-   structure AstRewriter   = MDLAstRewriter(MDLAst) 
+   structure AstPP   = MDLAstPrettyPrinter(AstUtil)
+   structure AstRewriter   = MDLAstRewriter(MDLAst)
    structure MG =
       MatchGen(structure AstPP   = AstPP
                structure AstUtil = AstUtil
-               structure AstRewriter = AstRewriter 
+               structure AstRewriter = AstRewriter
               )
    structure MC = MG.MC
 
@@ -29,7 +29,7 @@ local
        ]
    val info = MG.compileTypes defs
 
-   fun test root rules =  
+   fun test root rules =
    let val clauses = map (fn (p, g, x) => CLAUSE([p],g,INTexp(x))) rules
        val _    = print(PP.text(AstPP.exp(CASEexp(root,clauses)))^"\n")
        val dfa  = MG.compile info clauses
@@ -47,7 +47,7 @@ local
 
 in
 
-   fun rule1() = 
+   fun rule1() =
        test
        (ID "B")
        [ (CONS("A",[WILD,WILD]), NONE, 0)
@@ -100,21 +100,21 @@ in
    fun rule8() =
        test
        (ID "B")
-       [ (CONS("D",[RECORDpat([("x",IDpat "x"),("y",CONS("B",[]))],false)]), 
+       [ (CONS("D",[RECORDpat([("x",IDpat "x"),("y",CONS("B",[]))],false)]),
                     SOME(APP("=",TUPLEexp[ID "x", ID "C"])), 0)
        ]
-         
+
    fun rule9() =
        test
        (ID "B")
-       [ (CONS("A",[IDpat "x", CONS("B",[])]), 
+       [ (CONS("A",[IDpat "x", CONS("B",[])]),
                   SOME(APP("=",TUPLEexp[ID "x", ID "C"])), 0),
-         (CONS("A",[CONS("B",[]), ASpat("z", CONS("C",[]))]), 
+         (CONS("A",[CONS("B",[]), ASpat("z", CONS("C",[]))]),
                   SOME(APP("=",TUPLEexp[ID "z", ID "C"])), 1),
          (CONS("A",[CONS("B",[]), CONS("C",[])]), NONE, 2),
          (CONS("A",[CONS("B",[]), CONS("B",[])]), NONE, 3),
          (IDpat "z", NONE, 4)
        ]
- 
+
 end
 end

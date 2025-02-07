@@ -7,7 +7,7 @@
 
 functor X86MCEmitter(structure Instr : X86INSTR
                      structure MLTreeEval : MLTREE_EVAL where T = Instr.T
-                     structure Stream : INSTRUCTION_STREAM 
+                     structure Stream : INSTRUCTION_STREAM
                      structure CodeString : CODE_STRING
                     ) : INSTRUCTION_EMITTER =
 struct
@@ -18,9 +18,9 @@ struct
    structure S = Stream
    structure P = S.P
    structure W = Word32
-   
+
    (* X86 is little endian *)
-   
+
    fun error msg = MLRiscErrorMsg.error("X86MC",msg)
    fun makeStream _ =
    let infix && || << >> ~>>
@@ -39,39 +39,39 @@ struct
        fun emit_const c = itow(Constant.valueOf c)
        val w32ToByte = Word8.fromLarge o Word32.toLarge
        val loc = ref 0
-   
+
        (* emit a byte *)
        fun eByte b =
          let val i = !loc in loc := i + 1; CodeString.update(i,b) end
-   
+
        (* emit the low order byte of a word *)
        (* note: fromLargeWord strips the high order bits! *)
        fun eByteW w =
          let val i = !loc
          in loc := i + 1; CodeString.update(i, w32ToByte w) end
-   
+
        fun doNothing _ = ()
        fun fail _ = raise Fail "MCEmitter"
        fun getAnnotations () = error "getAnnotations"
-   
+
        fun pseudoOp pOp = P.emitValue{pOp=pOp, loc= !loc,emit=eByte}
-   
+
        fun init n = (CodeString.init n; loc := 0)
-   
-   
-   fun eWord8 w = 
+
+
+   fun eWord8 w =
        let val b8 = w
        in eByteW b8
        end
-   and eWord16 w = 
+   and eWord16 w =
        let val b8 = w
            val w = w >> 0wx8
            val b16 = w
-       in 
-          ( eByteW b8; 
+       in
+          ( eByteW b8;
             eByteW b16 )
        end
-   and eWord32 w = 
+   and eWord32 w =
        let val b8 = w
            val w = w >> 0wx8
            val b16 = w
@@ -79,10 +79,10 @@ struct
            val b24 = w
            val w = w >> 0wx8
            val b32 = w
-       in 
-          ( eByteW b8; 
-            eByteW b16; 
-            eByteW b24; 
+       in
+          ( eByteW b8;
+            eByteW b16;
+            eByteW b24;
             eByteW b32 )
        end
    fun emit_GP r = itow (CellsBasis.physicalRegisterNum r)
@@ -148,20 +148,20 @@ struct
    and sib {ss, index, base} = eWord8 ((ss << 0wx6) + ((index << 0wx3) + base))
    and immed8 {imm} = eWord8 imm
    and immed32 {imm} = eWord32 imm
-   and immedOpnd {opnd} = 
+   and immedOpnd {opnd} =
        (case opnd of
          I.Immed i32 => i32
        | I.ImmedLabel le => lexp le
        | I.LabelEA le => lexp le
        | _ => error "immedOpnd"
        )
-   and extension {opc, opnd} = 
+   and extension {opc, opnd} =
        (case opnd of
          I.Direct r => modrm {mod=3, reg=opc, rm=r}
        | I.MemReg _ => extension {opc=opc, opnd=memReg opnd}
        | I.FDirect _ => extension {opc=opc, opnd=memReg opnd}
-       | I.Displace{base, disp, ...} => 
-         let 
+       | I.Displace{base, disp, ...} =>
+         let
 (*#line 475.13 "x86/x86.mdl"*)
              val immed = immedOpnd {opnd=disp}
          in ()
@@ -170,21 +170,21 @@ struct
        | I.Indexed{base=SOME b, index, scale, disp, ...} => ()
        | _ => error "immedExt"
        )
-   and encodeST {prefix, opc, st} = 
+   and encodeST {prefix, opc, st} =
        let val st = emit_FP st
        in eWord16 ((prefix << 0wx8) + ((opc << 0wx3) + st))
        end
-   and encodeReg {prefix, reg, opnd} = 
+   and encodeReg {prefix, reg, opnd} =
        let val reg = emit_GP reg
-       in 
-          ( emit prefix; 
+       in
+          ( emit prefix;
             immedExt {opc=reg, opnd=opnd})
        end
-   and arith {opc1, opc2, src, dst} = 
+   and arith {opc1, opc2, src, dst} =
        (case (src, dst) of
-         (I.ImmedLabel le, dst) => arith {opc1=opc1, opc2=opc2, src=I.Immed (lexp le), 
+         (I.ImmedLabel le, dst) => arith {opc1=opc1, opc2=opc2, src=I.Immed (lexp le),
             dst=dst}
-       | (I.LabelEA le, dst) => arith {opc1=opc1, opc2=opc2, src=I.Immed (lexp le), 
+       | (I.LabelEA le, dst) => arith {opc1=opc1, opc2=opc2, src=I.Immed (lexp le),
             dst=dst}
        | (I.Immed i, dst) => ()
        | (src, I.Direct r) => encodeReg {prefix=opc1 + op3, reg=reg, opnd=src}
@@ -275,13 +275,13 @@ struct
        in
            emitInstr instr
        end
-   
+
    fun emitInstruction(I.ANNOTATION{i, ...}) = emitInstruction(i)
      | emitInstruction(I.INSTR(i)) = emitter(i)
      | emitInstruction(I.LIVE _)  = ()
      | emitInstruction(I.KILL _)  = ()
    | emitInstruction _ = error "emitInstruction"
-   
+
    in  S.STREAM{beginCluster=init,
                 pseudoOp=pseudoOp,
                 emit=emitInstruction,

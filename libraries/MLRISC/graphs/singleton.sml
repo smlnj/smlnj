@@ -6,8 +6,8 @@
 
 signature SINGLETON_GRAPH_VIEW =
 sig
-  
-   val singleton_view : ('n,'e,'g) Graph.graph -> 
+
+   val singleton_view : ('n,'e,'g) Graph.graph ->
                           Graph.node_id -> ('n,'e,'g) Graph.graph
 
 end

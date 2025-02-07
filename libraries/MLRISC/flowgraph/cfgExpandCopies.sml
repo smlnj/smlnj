@@ -8,7 +8,7 @@
 functor CFGExpandCopies
    (structure CFG    : CONTROL_FLOW_GRAPH
     structure Shuffle : SHUFFLE
-    			where I = CFG.I
+                        where I = CFG.I
    ) : CFG_OPTIMIZATION =
   struct
     structure CFG = CFG
@@ -18,23 +18,23 @@ functor CFGExpandCopies
 
     fun run (cfg as Graph.GRAPH graph) = let
       fun expand(I.COPY{k,  dst, src, tmp, ...}) = let
-	    val shuffle = 
-		case k 
-                  of CellsBasis.GP => Shuffle.shuffle 
+            val shuffle =
+                case k
+                  of CellsBasis.GP => Shuffle.shuffle
                    | CellsBasis.FP => Shuffle.shufflefp
-		   | _ =>  MLRiscErrorMsg.error ("CFGExpandCopies", "shuffle")
+                   | _ =>  MLRiscErrorMsg.error ("CFGExpandCopies", "shuffle")
           in shuffle{dst=dst, src=src, tmp=tmp}
           end
-	| expand(I.ANNOTATION{i,a}) = 
-	    map (fn i => I.ANNOTATION{i=i, a=a}) (expand i)
-	| expand i = [i]
-      
-      fun expandInstrs(_, CFG.BLOCK{insns, ...}) = 
-	  insns := 
-	    List.foldr 
-	      (fn (i, rest) => List.revAppend(expand(i), rest))
-	      []
-	      (!insns)
+        | expand(I.ANNOTATION{i,a}) =
+            map (fn i => I.ANNOTATION{i=i, a=a}) (expand i)
+        | expand i = [i]
+
+      fun expandInstrs(_, CFG.BLOCK{insns, ...}) =
+          insns :=
+            List.foldr
+              (fn (i, rest) => List.revAppend(expand(i), rest))
+              []
+              (!insns)
     in
       #forall_nodes graph expandInstrs;
       cfg

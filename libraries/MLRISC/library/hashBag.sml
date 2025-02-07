@@ -1,6 +1,6 @@
 (*
  * Bag datatype that uses hashing
- * 
+ *
  * -- Allen
  *)
 
@@ -15,7 +15,7 @@ struct
 
    fun insert (bag,c) i =
       (S.update bag ((i,1),fn x => x + 1); c := !c + 1)
-  
+
    fun insertN (bag,c) (i,n:int) =
       (S.update bag ((i,n),fn x => x + n); c := !c + n)
 
@@ -25,14 +25,14 @@ struct
 
    fun isEmpty (_,c) = !c = 0
 
-   fun remove (bag,c) i = 
+   fun remove (bag,c) i =
       let val x = S.lookupOrElse bag 0 i
       in  if x > 0 then (S.insert bag (i,x-1); c := !c - 1) else ()
       end
 
-   fun removeN (bag,c) (i,n) =  
+   fun removeN (bag,c) (i,n) =
       let val x = S.lookupOrElse bag 0 i
-      in  if x > n then (S.insert bag (i,x-n); c := !c - n) 
+      in  if x > n then (S.insert bag (i,x-n); c := !c - n)
           else (c := !c - Int.min(x,n); S.remove bag i)
       end
 

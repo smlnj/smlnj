@@ -24,25 +24,25 @@ struct
    structure Util      = AstUtil
    structure TypeUtils = TypeUtils
    structure H         = HashTable
-      
+
    open Error Ast Util
 
    type filename = string
 
    infix ++
-  
+
    val op ++ = Env.++
 
-   datatype 'a slot = EMPTY of string | SLOT of string * 'a 
+   datatype 'a slot = EMPTY of string | SLOT of string * 'a
 
    (* machine description *)
-   datatype md = MD of 
+   datatype md = MD of
       {env       : Env.env ref,
-       endianess : Ast.endianess slot ref, 
+       endianess : Ast.endianess slot ref,
        archKind  : Ast.archKind slot ref,
        asmCase   : Ast.assemblycase slot ref,
        name      : string slot ref,
-       filename  : filename, 
+       filename  : filename,
        cells     : Ast.storagedecl list ref,
        locations : Ast.locbind list ref,
        formats   : (int option * Ast.formatbind) list ref,
@@ -54,7 +54,7 @@ struct
        latencies : Ast.latencybind list slot ref
       }
 
-   fun getSlot(ref(EMPTY name)) = Error.fail(name^" has not been declared") 
+   fun getSlot(ref(EMPTY name)) = Error.fail(name^" has not been declared")
      | getSlot(ref(SLOT(_,x))) = x
 
    fun getSlot'(ref(EMPTY _)) = []
@@ -78,7 +78,7 @@ struct
    fun locations(MD{locations, ...}) = !locations
    fun formats(MD{formats, ...}) = !formats
    fun instructions(MD{instructions, ...}) = getSlot instructions
-   fun debugging(MD{debug, ...}) x = List.exists (fn x' => x = x') (!debug) 
+   fun debugging(MD{debug, ...}) x = List.exists (fn x' => x = x') (!debug)
    fun resources(MD{resources, ...}) = getSlot' resources
    fun latencies(MD{latencies, ...}) = getSlot' latencies
    fun cpus(MD{cpus, ...}) = getSlot' cpus
@@ -92,7 +92,7 @@ struct
                            | CELLdecl _ => false) (!cells)
          )
 
-   fun cellSetsAliases(MD{cells, ...}) = 
+   fun cellSetsAliases(MD{cells, ...}) =
         ListMergeSort.sort
          (fn (CELLdecl{from=f1, ...}, CELLdecl{from=f2, ...}) => !f1 > !f2)
            (List.filter (fn CELLdecl{cellset=true, ...} => true
@@ -100,13 +100,13 @@ struct
                           | _ => false) (!cells))
  *)
 
-   fun lookupCellKind(MD{cells, ...}) k = 
+   fun lookupCellKind(MD{cells, ...}) k =
    let fun loop [] = fail("cellkind "^k^" not found")
          | loop((c as CELLdecl{id, nickname, ...})::cs) =
             if k = id orelse k = nickname then c else loop cs
    in  loop (!cells) end
 
-   fun lookupDatatype(MD{env, ...}) t = 
+   fun lookupDatatype(MD{env, ...}) t =
    let val instrEnv  = Env.lookupStr (!env) (IDENT([],"Instruction"))
        val datatypes = Env.datatypeDefinitions instrEnv
        fun loop [] = fail("datatype "^t^" not found")
@@ -136,24 +136,24 @@ struct
          | enterDty(DATATYPEEQbind{id, ...}) = H.insert typeTbl (id,())
        fun enterTy(TYPEbind(id, _, _)) = H.insert typeTbl (id,())
        fun enterFb(FUNbind(id, _)) = H.insert valueTbl (id,())
-         
-       fun decl _ (d as DATATYPEdecl(dts,ts)) = 
+
+       fun decl _ (d as DATATYPEdecl(dts,ts)) =
                  (app enterDty dts; app enterTy ts; d)
          | decl _ (d as FUNdecl fbs) = (app enterFb fbs; d)
          | decl _ d = d
        val NO = Rewriter.noRewrite
        val _ = #decl(Rewriter.rewrite{decl=decl, exp=NO, pat=NO,
                                       ty=NO, sexp=NO}) decls
-       fun check kind table id = 
+       fun check kind table id =
             (H.lookup table id)
              handle _ => warning("missing "^kind^" "^envName^"."^id)
    in  app (check "function" valueTbl) values;
-       app (check "type" typeTbl) types 
+       app (check "type" typeTbl) types
    end
 
    (* Compile an AST into a machine description *)
 
-   fun compile(filename, decls) = 
+   fun compile(filename, decls) =
    let val endianess   = ref(EMPTY "endianess")
        val archKind    = ref(EMPTY "architecture")
        val asmCase     = ref(EMPTY "assembly case")
@@ -204,9 +204,9 @@ struct
            | MARKdecl(l,d)   => (setLoc l; D d)
 
            (* MD Gen specific constructions *)
-           | FORMATdecl(bits,f) => formats :=  !formats @ 
+           | FORMATdecl(bits,f) => formats :=  !formats @
                                       map (fn f => (bits,f)) f
-           | STORAGEdecl d      => cells := !cells @ d 
+           | STORAGEdecl d      => cells := !cells @ d
            | LOCATIONSdecl d    => locations := !locations @ d
            | INSTRUCTIONdecl c  => (putSlot(instructions,c); decl d)
            | ARCHdecl(n,ds)     => (putSlot(name,n); Ds(ds))
@@ -227,7 +227,7 @@ struct
 
    in  Error.init();
        Ds decls;
-       md 
+       md
    end
 
 
@@ -251,7 +251,7 @@ struct
    fun fctname md suffix = name md^suffix
 
    fun mkSigCon "" = PP.nop
-     | mkSigCon sign = PP.sp ++ PP.! ":" ++ PP.! sign 
+     | mkSigCon sign = PP.sp ++ PP.! ":" ++ PP.! sign
 
    fun mkSig md name body =
        PP.line(PP.! "signature" ++ PP.! (signame md name) ++ PP.! "=") ++
@@ -270,7 +270,7 @@ struct
    fun mkFct md name args sign body = mkFct' md name ($ args) sign body
 
    fun mkStr md name sign body =
-       PP.line(PP.! "structure" ++ PP.! (strname md name) ++ 
+       PP.line(PP.! "structure" ++ PP.! (strname md name) ++
                mkSigCon sign ++ PP.!"=") ++
        PP.line(PP.! "struct") ++
        PP.block(AstPP.decls body) ++
@@ -280,12 +280,12 @@ struct
 
 
    fun pathName md module suffix =
-       let fun getName m = 
+       let fun getName m =
            OS.Path.concat(OS.Path.dir m,tolower(name md)^OS.Path.file m)
            val pathname = OS.Path.concat(
-                        OS.Path.dir(filename md),getName(module^suffix)) 
+                        OS.Path.dir(filename md),getName(module^suffix))
        in  pathname end
- 
+
    (* Emit text into a file *)
    fun outfile md module suffix text =
    if !errorCount > 0 then () else
@@ -303,17 +303,17 @@ struct
        " *)\n"^
        "\n\n"
        val newText = header^text
-   in  if !errorCount = 0 then 
+   in  if !errorCount = 0 then
           (print("   Generating module "^file^" ... ");
            if oldText <> newText then
-	   let val dir = OS.Path.dir file
-	       val _   = OS.FileSys.mkDir dir handle _ => ()
-	       val stream = TextIO.openOut file
-           in  
-	       TextIO.output(stream,newText);
-	       TextIO.closeOut stream;
-	       print("done\n")
-	   end
+           let val dir = OS.Path.dir file
+               val _   = OS.FileSys.mkDir dir handle _ => ()
+               val stream = TextIO.openOut file
+           in
+               TextIO.output(stream,newText);
+               TextIO.closeOut stream;
+               print("done\n")
+           end
            else print("file is unchanged\n")
           )
        else ()
@@ -332,7 +332,7 @@ struct
     *)
    fun mkQueryByCellKind md name =
    let val cellKinds = cells md
-       val clientDefined =  
+       val clientDefined =
            List.filter (fn CELLdecl{id, alias, ...} =>
               not(isSome alias) andalso
               not(MLRiscDefs.isPredefinedCellKind id) andalso
@@ -341,7 +341,7 @@ struct
        val newlyDefined =
            case clientDefined of
              [] => [CLAUSE([WILDpat],NONE,APP("error",STRINGexp name))]
-           | _  => 
+           | _  =>
               [CLAUSE([IDpat "k"],NONE,
                  foldr(fn (CELLdecl{id, alias, ...}, e) =>
                     IFexp(APP("=",TUPLEexp[ID "k",IDexp(IDENT(["C"],id))]),
@@ -352,16 +352,16 @@ struct
 
        val predefined =
           foldr (fn (CELLdecl{id, alias, ...}, c) =>
-                 if MLRiscDefs.isPredefinedCellKind id andalso 
-                    not(MLRiscDefs.isPseudoCellKind id) 
-                 then 
+                 if MLRiscDefs.isPredefinedCellKind id andalso
+                    not(MLRiscDefs.isPseudoCellKind id)
+                 then
                    CLAUSE([CONSpat(IDENT(["C"],id),NONE)],NONE,
-                          case alias of 
+                          case alias of
                             NONE       => ID(name^id)
                           | SOME alias => APP(name,IDexp(IDENT(["C"],alias)))
                          )::c
                  else c
-                ) newlyDefined cellKinds 
+                ) newlyDefined cellKinds
 
    in  FUNdecl[FUNbind(name, predefined)]
    end
@@ -369,7 +369,7 @@ struct
    (*
     * Do everything on user defined cellkinds
     *)
-   fun forallUserCellKinds md f = 
+   fun forallUserCellKinds md f =
         map f (List.filter (fn CELLdecl{id, alias, ...} =>
                not(MLRiscDefs.isPseudoCellKind id)
                andalso not(isSome alias)

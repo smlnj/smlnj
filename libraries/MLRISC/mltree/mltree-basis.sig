@@ -10,8 +10,8 @@ sig
 
   type misc_op = {name:string, hash:word, attribs:attribs ref}
 
-  datatype cond = LT | LTU | LE | LEU | EQ | NE | GE | GEU | GT | GTU 
-                | SETCC 
+  datatype cond = LT | LTU | LE | LEU | EQ | NE | GE | GEU | GT | GTU
+                | SETCC
                 | MISC_COND of {name:string, hash:word, attribs:word ref}
 
 (* Floating-point conditions; the semantics follow the IEEE specification and
@@ -19,22 +19,22 @@ sig
  * LT -- less than, UO -- unordered.  In the table below, we have a column
  * for each of these properties and one for the negation of the operator.
  *)
-  datatype fcond	(* GT   EQ   LT   UO   negation *)
-			(* ---  ---  ---  ---  -------- *)
-    = ==		(*  F    T    F    F      ?<>   *)
-    | ?<>		(*  T    F    T    T      ==    *)
-    | >			(*  T    F    F    F      ?<=   *)
-    | >=		(*  T    T    F    F      ?<    *)
-    | <			(*  F    F    F    F      ?>=   *)
-    | <=		(*  F    T    F    F      ?>    *)
-    | ?			(*  F    F    F    T      <=>   *)
-    | <>		(*  T    F    T    F      ?=    *)
-    | <=>		(*  T    T    T    F      ?     *)
-    | ?>		(*  T    F    F    T      <=    *)
-    | ?>=		(*  T    T    F    T      <     *)
-    | ?<		(*  F    F    F    T      >=    *)
-    | ?<=		(*  F    T    F    T      >     *)
-    | ?=		(*  F    T    F    T      <>    *)
+  datatype fcond        (* GT   EQ   LT   UO   negation *)
+                        (* ---  ---  ---  ---  -------- *)
+    = ==                (*  F    T    F    F      ?<>   *)
+    | ?<>               (*  T    F    T    T      ==    *)
+    | >                 (*  T    F    F    F      ?<=   *)
+    | >=                (*  T    T    F    F      ?<    *)
+    | <                 (*  F    F    F    F      ?>=   *)
+    | <=                (*  F    T    F    F      ?>    *)
+    | ?                 (*  F    F    F    T      <=>   *)
+    | <>                (*  T    F    T    F      ?=    *)
+    | <=>               (*  T    T    T    F      ?     *)
+    | ?>                (*  T    F    F    T      <=    *)
+    | ?>=               (*  T    T    F    T      <     *)
+    | ?<                (*  F    F    F    T      >=    *)
+    | ?<=               (*  F    T    F    T      >     *)
+    | ?=                (*  F    T    F    T      <>    *)
     | SETFCC
     | MISC_FCOND of {name:string, hash:word, attribs:word ref}
 
@@ -73,5 +73,5 @@ sig
   val condToString         : cond -> string
   val fcondToString        : fcond -> string
   val roundingModeToString : rounding_mode -> string
- 
+
 end

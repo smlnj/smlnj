@@ -28,16 +28,16 @@ structure Fifo : FIFO =
       | next (Q{rear,...}) = next(Q{front=rev rear,rear=[]})
 
     fun delete (Q{front, rear}, pred) = let
-	  fun doFront [] = {front = doRear(rev rear), rear = []}
-	    | doFront (x::r) = if (pred x)
-		then {front = r, rear = rear}
-		else let val {front, rear} = doFront r
-		  in {front =  x :: front, rear = rear} end
-	  and doRear [] = []
-	    | doRear (x::r) = if (pred x) then r else x :: (doRear r)
-	  in
-	    Q(doFront front)
-	  end
+          fun doFront [] = {front = doRear(rev rear), rear = []}
+            | doFront (x::r) = if (pred x)
+                then {front = r, rear = rear}
+                else let val {front, rear} = doFront r
+                  in {front =  x :: front, rear = rear} end
+          and doRear [] = []
+            | doRear (x::r) = if (pred x) then r else x :: (doRear r)
+          in
+            Q(doFront front)
+          end
 
     fun peek (Q{front=(hd::_), ...}) = SOME hd
       | peek (Q{rear=[], ...}) = NONE
@@ -52,7 +52,7 @@ structure Fifo : FIFO =
     fun contents (Q {rear, front}) = (front @ (rev rear))
 
     fun app f (Q{front,rear}) = (List.app f front; List.app f (List.rev rear))
-    fun map f (Q{front,rear}) = 
+    fun map f (Q{front,rear}) =
           Q{front = List.map f front, rear = rev(List.map f(rev rear))}
     fun foldl f b (Q{front,rear}) = List.foldr f (List.foldl f b front) rear
     fun foldr f b (Q{front,rear}) = List.foldr f (List.foldl f b rear) front

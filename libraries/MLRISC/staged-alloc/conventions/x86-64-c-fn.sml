@@ -1,7 +1,7 @@
 (* x86-64-c-fn.sml
- * 
+ *
  * C calling convention for the X86-64 using the System V ABI
- * 
+ *
  * Register conventions:
  *   %rax            return value             (caller save)
  *   %rbx            optional base pointer    (callee save)
@@ -20,7 +20,7 @@
  *   %xmm8-xmm15     scratch                  (caller save)
  *
  * Calling conventions:
- * 
+ *
  *    Return result:
  *      + Integer and pointer results are returned in %rax.
  *      + 128-bit integers returned in %rax/%rdx.
@@ -92,38 +92,38 @@ functor X86_64CConventionFn (
     val store0 = SA.init [cCallStk, cCallGpr, cCallFpr, cRetFpr, cRetGpr]
 
   (* rules for passing arguments *)
-    val params = [ 
+    val params = [
           SA.WIDEN (fn w => Int.max (64, w)),
-	  SA.CHOICE [
-	    (fn (w, k, store) => (k = GPR), SA.SEQ [
-		SA.BITCOUNTER cCallGpr,
-		SA.REGS_BY_BITS (cCallGpr, gprParamRegs) 
-	    ]),
-	    (fn (w, k, store) => (k = FPR), SA.SEQ [
-		SA.BITCOUNTER cCallFpr,
-		SA.REGS_BY_BITS (cCallFpr, fprParamRegs) 
-	    ]),
-	    (fn (w, k, store) => (k = STK orelse k = FSTK),
-	     SA.OVERFLOW {counter=cCallStk, 
-			  blockDirection=SA.UP, 
-			  maxAlign=maxAlign}) 
-	  ],
-	  SA.OVERFLOW {counter=cCallStk, 
-		       blockDirection=SA.UP, 
-		       maxAlign=maxAlign}
+          SA.CHOICE [
+            (fn (w, k, store) => (k = GPR), SA.SEQ [
+                SA.BITCOUNTER cCallGpr,
+                SA.REGS_BY_BITS (cCallGpr, gprParamRegs)
+            ]),
+            (fn (w, k, store) => (k = FPR), SA.SEQ [
+                SA.BITCOUNTER cCallFpr,
+                SA.REGS_BY_BITS (cCallFpr, fprParamRegs)
+            ]),
+            (fn (w, k, store) => (k = STK orelse k = FSTK),
+             SA.OVERFLOW {counter=cCallStk,
+                          blockDirection=SA.UP,
+                          maxAlign=maxAlign})
+          ],
+          SA.OVERFLOW {counter=cCallStk,
+                       blockDirection=SA.UP,
+                       maxAlign=maxAlign}
     ]
 
   (* rules for returning values *)
     val returns = [
-	  SA.WIDEN (fn w => Int.max (64, w)), 
-	  SA.CHOICE [
-	    (fn (w, k, store) => (k = GPR),
-	     SA.SEQ [
-		SA.BITCOUNTER cRetGpr,
-		SA.REGS_BY_BITS (cRetGpr, gprRetRegs)]),
-	    (fn (w, k, store) => (k = FPR),
-	     SA.SEQ [
-		SA.BITCOUNTER cRetFpr,
-	        SA.REGS_BY_BITS (cRetGpr, fprRetRegs)])]
-	  ]
+          SA.WIDEN (fn w => Int.max (64, w)),
+          SA.CHOICE [
+            (fn (w, k, store) => (k = GPR),
+             SA.SEQ [
+                SA.BITCOUNTER cRetGpr,
+                SA.REGS_BY_BITS (cRetGpr, gprRetRegs)]),
+            (fn (w, k, store) => (k = FPR),
+             SA.SEQ [
+                SA.BITCOUNTER cRetFpr,
+                SA.REGS_BY_BITS (cRetGpr, fprRetRegs)])]
+          ]
   end

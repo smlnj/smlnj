@@ -13,10 +13,10 @@ sig
 
    val cluster2cfg : F.cluster -> CFG.cfg
 
-end 
+end
 
 functor Cluster2CFG
-   (structure CFG       : CONTROL_FLOW_GRAPH 
+   (structure CFG       : CONTROL_FLOW_GRAPH
     structure Util      : CFG_UTIL
     structure Flowgraph : FLOWGRAPH
     structure InsnProps : INSN_PROPERTIES
@@ -58,11 +58,11 @@ struct
         val F.ENTRY{ blknum = ENTRY, ... } = entry
         val F.EXIT{ blknum = EXIT, ... }   = exit
 
-            (* Add a list of blocks into the CFG *) 
+            (* Add a list of blocks into the CFG *)
         fun add(F.ENTRY e::rest,Ps,Ls)     = add_entry(e,Ps,Ls,rest)
           | add(F.EXIT e::rest,Ps,Ls)      = add_exit(e,Ps,Ls,rest)
           | add(F.BBLOCK b::rest,Ps,Ls)    = add_block(b,rev Ps,Ls,rest)
-          | add((F.PSEUDO p)::rest,Ps,Ls)  = 
+          | add((F.PSEUDO p)::rest,Ps,Ls)  =
               add(rest,CFG.PSEUDO p::map CFG.LABEL Ls@Ps,[])
           | add((F.LABEL l)::rest,Ps,Ls)   = add(rest,Ps,l::Ls)
           | add([],Ps,Ls)                  = finish(Ps,Ls)
@@ -71,25 +71,25 @@ struct
         and add_entry({blknum, succ, freq}, [], [], rest) =
               ( #add_node cfg (blknum,CFG.newStart(blknum,freq));
                 #set_entries cfg [blknum];
-                app (fn (blk,w) => add_edge(blknum, id blk, CFG.JUMP, w)) 
+                app (fn (blk,w) => add_edge(blknum, id blk, CFG.JUMP, w))
                      (!succ);
                 add(rest, [], [])
               )
           | add_entry _ = error "add_entry"
 
             (* Insert an exit node *)
-        and add_exit({blknum, pred, freq}, [], [], rest) = 
+        and add_exit({blknum, pred, freq}, [], [], rest) =
               ( #add_node cfg (blknum, CFG.newStop(blknum,freq));
                 #set_exits cfg [blknum];
                 add(rest, [], [])
               )
-  
+
             (* Insert an normal basic block *)
        and add_block({blknum,annotations,
                       freq,liveIn,liveOut,succ,pred,insns},
                      Ps,Ls,rest) =
            let val an = !annotations
-               val an = 
+               val an =
                    case !succ of
                      ([(F.EXIT _,_)] | []) => #create CFG.LIVEOUT(!liveOut)::an
                    | _ => an
@@ -112,7 +112,7 @@ struct
 
             (* Finished insertion *)
        and finish([],[]) = ()
-         | finish(Ps,[]) = 
+         | finish(Ps,[]) =
                let val CFG.BLOCK{data,labels,...} = #node_info cfg EXIT
                in  data := Ps @ !data
                end
@@ -127,7 +127,7 @@ struct
            end
 
             (* Add edges into the flowgraph *)
-       and add_edges (i, succs, insns) = 
+       and add_edges (i, succs, insns) =
            let fun is_fallsthru (j,yes,no) =
                    if j = i + 1 then
                       (case insns of
@@ -152,7 +152,7 @@ struct
                    (add_edge(i,id j,CFG.SWITCH k,jw); add_switch(i,k+1,js))
            in  case succs of
                  []      => ()
-               | [(j,w)] => 
+               | [(j,w)] =>
                    let val j = id j
                    in  add_edge(i,j,is_fallsthru(j,CFG.FALLSTHRU,CFG.JUMP),w)
                    end
@@ -164,20 +164,20 @@ struct
                app (fn (i,j,e) =>
                      if j = EXIT then ()
                      else
-                     case #in_edges cfg j of 
+                     case #in_edges cfg j of
                         [_] => () (* only edge from ENTRY, okay *)
-                     |  _ => 
-                        error("entry "^Int.toString j^" has internal edges") 
+                     |  _ =>
+                        error("entry "^Int.toString j^" has internal edges")
                    ) (#out_edges cfg ENTRY)
 
            (* add edge from entry to exit *)
-           fun insert_entry_to_exit () = 
+           fun insert_entry_to_exit () =
                if #has_edge cfg (ENTRY,EXIT) then ()
                else add_edge (ENTRY,EXIT,CFG.JUMP,ref 0)
-    in 
+    in
         add(entry::exit::blocks,[],[]);
         check_for_bad_entries();
-        insert_entry_to_exit(); 
+        insert_entry_to_exit();
         CFG
     end
 

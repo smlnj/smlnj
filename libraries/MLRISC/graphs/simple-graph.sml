@@ -8,7 +8,7 @@ signature SIMPLE_GRAPH =
 sig
     val simple_graph :
        (Graph.node_id * Graph.node_id * 'e list -> 'e) ->
-           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph 
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
 end
 
 structure SimpleGraph =
@@ -17,7 +17,7 @@ struct
    structure G = Graph
    structure S = ListMergeSort
    fun simple_graph merge (G.GRAPH G) =
-   let val sort = S.sort (fn ((i,j,_),(i',j',_)) => 
+   let val sort = S.sort (fn ((i,j,_),(i',j',_)) =>
                       i > i' orelse i = i' andalso j > j')
        fun uniq([],_,_,[],es'') = es''
          | uniq([],i,j,[e],es'') = (i,j,e)::es''
@@ -29,7 +29,7 @@ struct
              else (case es' of
                      [e'] => uniq(es,i,j,[e],(i',j',e')::es'')
                     | _  => uniq(es,i,j,[e],(i',j',merge(i',j',es'))::es'')
-                  ) 
+                  )
        fun unique es = uniq(sort es,~1,~1,[],[])
        fun out_edges v = unique(#out_edges G v)
        fun in_edges v  = unique(#in_edges G v)

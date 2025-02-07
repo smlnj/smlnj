@@ -1,4 +1,4 @@
-structure 
+structure
 CalcParseTokens = struct
 
     datatype token = EOF
@@ -60,46 +60,46 @@ end
 functor CalcParseFn (Lex : ANTLR_LEXER) = struct
 
   local
-    structure Tok = 
+    structure Tok =
 CalcParseTokens
     structure UserCode =
       struct
 
-fun exp_PROD_1_ACT (EQ, ID, env, exp1, exp2, KW_in, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), exp1_SPAN : (Lex.pos * Lex.pos), exp2_SPAN : (Lex.pos * Lex.pos), KW_in_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
+fun exp_PROD_1_ACT (EQ, ID, env, exp1, exp2, KW_in, KW_let, EQ_SPAN : (Lex.pos * Lex.pos), ID_SPAN : (Lex.pos * Lex.pos), exp1_SPAN : (Lex.pos * Lex.pos), exp2_SPAN : (Lex.pos * Lex.pos), KW_in_SPAN : (Lex.pos * Lex.pos), KW_let_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) =
   ( vars := ID::(!vars); exp2 )
-fun addExp_PROD_1_ACT (SR, env, multExp, SR_SPAN : (Lex.pos * Lex.pos), multExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
+fun addExp_PROD_1_ACT (SR, env, multExp, SR_SPAN : (Lex.pos * Lex.pos), multExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) =
   ( List.foldl op+ multExp SR )
-fun multExp_PROD_1_ACT (SR, env, prefixExp, SR_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
+fun multExp_PROD_1_ACT (SR, env, prefixExp, SR_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) =
   ( List.foldl op* prefixExp SR )
-fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp, MINUS_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
+fun prefixExp_PROD_2_ACT (env, MINUS, prefixExp, MINUS_SPAN : (Lex.pos * Lex.pos), prefixExp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) =
   ( ~prefixExp )
-fun atomicExp_PROD_1_ACT (ID, env, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
+fun atomicExp_PROD_1_ACT (ID, env, ID_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) =
   ( valOf(AtomMap.find (env, Atom.atom ID)) )
-fun atomicExp_PROD_2_ACT (NUM, env, NUM_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) = 
+fun atomicExp_PROD_2_ACT (NUM, env, NUM_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos), nums, vars) =
   ( nums := NUM::(!nums); NUM )
-fun atomicExp_PROD_1_PRED (ID, env, nums, vars) = 
+fun atomicExp_PROD_1_PRED (ID, env, nums, vars) =
   ( AtomMap.inDomain (env, Atom.atom ID) )
-fun ARGS_4 (nums, vars) = 
+fun ARGS_4 (nums, vars) =
   (AtomMap.empty)
-fun ARGS_6 (EQ, ID, env, KW_let, nums, vars) = 
+fun ARGS_6 (EQ, ID, env, KW_let, nums, vars) =
   (env)
-fun ARGS_7 (EQ, ID, env, exp1, KW_in, KW_let, nums, vars) = 
+fun ARGS_7 (EQ, ID, env, exp1, KW_in, KW_let, nums, vars) =
   (AtomMap.insert(env, Atom.atom ID, exp1))
-fun ARGS_8 (env, nums, vars) = 
+fun ARGS_8 (env, nums, vars) =
   (env)
-fun ARGS_11 (env, PLUS, multExp, nums, vars) = 
+fun ARGS_11 (env, PLUS, multExp, nums, vars) =
   (env)
-fun ARGS_10 (env, nums, vars) = 
+fun ARGS_10 (env, nums, vars) =
   (env)
-fun ARGS_14 (env, TIMES, prefixExp, nums, vars) = 
+fun ARGS_14 (env, TIMES, prefixExp, nums, vars) =
   (env)
-fun ARGS_13 (env, nums, vars) = 
+fun ARGS_13 (env, nums, vars) =
   (env)
-fun ARGS_15 (env, nums, vars) = 
+fun ARGS_15 (env, nums, vars) =
   (env)
-fun ARGS_17 (env, MINUS, nums, vars) = 
+fun ARGS_17 (env, MINUS, nums, vars) =
   (env)
-fun ARGS_21 (LP, env, nums, vars) = 
+fun ARGS_21 (LP, env, nums, vars) =
   (env)
 fun mknums_REFC() : (int list) ref = ref ([])
 fun mkvars_REFC() : (string list) ref = ref ([])
@@ -110,8 +110,8 @@ fun mkvars_REFC() : (string list) ref = ref ([])
       structure Lex = Lex)
     structure EBNF = AntlrEBNF(
       struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
+        type strm = Err.wstream
+        val getSpan = Err.getSpan
       end)
 
     fun mk lexFn = let
@@ -120,12 +120,12 @@ val vars_REFC = UserCode.mkvars_REFC()
 fun getS() = {nums = !nums_REFC, vars = !vars_REFC}
 fun putS{nums, vars} = (nums_REFC := nums; vars_REFC := vars)
 fun unwrap (ret, strm, repairs) = (ret, strm, repairs, getS())        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
-	fun fail() = Err.failure eh
-	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) = 
-	        (Err.whileDisabled eh (fn() => prod strm)) 
-		handle Err.ParseError => try (prods)
+        fun fail() = Err.failure eh
+        fun tryProds (strm, prods) = let
+          fun try [] = fail()
+            | try (prod :: prods) =
+                (Err.whileDisabled eh (fn() => prod strm))
+                handle Err.ParseError => try (prods)
           in try prods end
 fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
@@ -180,7 +180,7 @@ fun matchKW_let strm = (case (lex(strm))
   | _ => fail()
 (* end case *))
 
-val (prog_NT, exp_NT) = 
+val (prog_NT, exp_NT) =
 let
 fun exp_NT (env_RES) (strm) = let
       fun exp_PROD_1 (strm) = let

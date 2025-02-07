@@ -17,19 +17,19 @@
  *
  * Revision 1.1.1.1  1996/01/31  16:01:24  george
  * Version 109
- * 
+ *
  *)
 
 structure ErrorMsg = struct
 
   exception Compiler
-  val anyErrors 	= ref false
+  val anyErrors         = ref false
 
-  fun say (msg:string) 	= (print msg; print "\n")
+  fun say (msg:string)  = (print msg; print "\n")
 
-  fun warning msg  	= say ("\tWarning: " ^ msg);
+  fun warning msg       = say ("\tWarning: " ^ msg);
 
-  fun complain msg 	= (say ("\tError: " ^ msg); anyErrors := true)
+  fun complain msg      = (say ("\tError: " ^ msg); anyErrors := true)
 
-  fun impossible msg 	= (complain("Internal bug: " ^ msg); raise Compiler)
+  fun impossible msg    = (complain("Internal bug: " ^ msg); raise Compiler)
 end

@@ -1,5 +1,5 @@
-(* 
- * This is a generic module for performing (forward) dataflow 
+(*
+ * This is a generic module for performing (forward) dataflow
  * analysis on the SSA graph.  It behavior is somewhat parameterizable.
  *
  * -- Allen (leunga@cs.nyu.edu)
@@ -19,7 +19,7 @@ struct
    fun error msg = MLRiscErrorMsg.error("SSADataflowAnalysis",msg)
 
    fun dataflowAnalysis
-       {ssa=SSA as G.GRAPH ssa, meet, bot, top, ==, transfer, const } = 
+       {ssa=SSA as G.GRAPH ssa, meet, bot, top, ==, transfer, const } =
    let val M          = #capacity ssa ()
        val values     = A.array(M, bot) (* flow values *)
        val onWorkList = W8A.array(M, 0w1) (* initially everything in on WL *)
@@ -34,7 +34,7 @@ struct
        val zeroR = case C.zeroReg C.GP of SOME r => r | NONE => ~1
 
        fun iterate [] = () (* done *)
-         | iterate(i::WL) =  
+         | iterate(i::WL) =
            let val _ = W8A.update(onWorkList, i, 0w0)
                val uses = A.sub(usesTbl, i)
                val defs = A.sub(defsTbl, i)
@@ -46,11 +46,11 @@ struct
                | T.SINK _ => iterate WL
                |  _ =>
                  let val outputs = transfer{rtl=rtl, inputs=inputs, defs=defs}
-                 in  process(i, defs, outputs, WL, false) 
+                 in  process(i, defs, outputs, WL, false)
                  end
            end
 
-       and phi(i, inputs, [t], WL) = 
+       and phi(i, inputs, [t], WL) =
            let val old = A.sub(values, t)
                val new = meet inputs
            in  if ==(old,new) then iterate WL
@@ -60,13 +60,13 @@ struct
 
        and source(i, [], [], WL) = propagate(i, WL)
          | source(i, v::vs, r::rs, WL) =
-           (A.update(values, v, if r = zeroR then const ~1 else top);   
+           (A.update(values, v, if r = zeroR then const ~1 else top);
                 (* XXX *)
             source(i, vs, rs, WL)
            )
          | source _ = error "source"
 
-       and process(i, [], [], WL, affected) = 
+       and process(i, [], [], WL, affected) =
              if affected then propagate(i, WL) else iterate WL
          | process(i, v::vs, d::ds, WL, affected) =
            let val old = A.sub(values, v)
@@ -80,14 +80,14 @@ struct
        and propagate(i, WL) = insert(A.sub(succTbl, i), WL)
 
        and insert([], WL) = iterate WL
-         | insert((_,j,_)::es, WL) = 
+         | insert((_,j,_)::es, WL) =
              if W8A.sub(onWorkList, j) <> 0w0 then insert(es, WL)
              else (W8A.update(onWorkList, j, 0w1); insert(es, j::WL))
-   
+
        val ops = map #1 (#nodes ssa ())
 
    in  iterate ops;
-       values        
+       values
    end
 
 end

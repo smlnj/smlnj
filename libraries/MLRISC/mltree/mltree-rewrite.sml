@@ -16,7 +16,7 @@ struct
          ccexp : T.ccexp -> T.ccexp
        }
 
-   fun rewrite{rexp=doRexp, fexp=doFexp, ccexp=doCCexp, stm=doStm} = 
+   fun rewrite{rexp=doRexp, fexp=doFexp, ccexp=doCCexp, stm=doStm} =
    let fun stm s =
        let val s =
            case s of
@@ -27,7 +27,7 @@ struct
            | T.FCOPY _ => s
            | T.JMP(e,cf) => T.JMP(rexp e,cf)
            | T.BCC(cc,l) => T.BCC(ccexp cc,l)
-           | T.CALL{funct,targets,defs,uses,region,pops} => 
+           | T.CALL{funct,targets,defs,uses,region,pops} =>
                T.CALL{funct=rexp funct,targets=targets,
                       defs=mlriscs defs,uses=mlriscs uses,
                       region=region,pops=pops}
@@ -40,25 +40,25 @@ struct
            | T.SEQ s => T.SEQ(stms s)
            | T.DEFINE _ => s
            | T.ANNOTATION(s,an) => T.ANNOTATION(stm s,an)
-           | T.EXT s => 
+           | T.EXT s =>
                 T.EXT(sext {rexp=rexp, fexp=fexp, ccexp=ccexp, stm=stm} s)
-           | T.PHI _ => s 
-           | T.SOURCE => s 
-           | T.SINK => s 
+           | T.PHI _ => s
+           | T.SOURCE => s
+           | T.SINK => s
            | T.RTL _ => s
            | T.ASSIGN(ty,x,y) => T.ASSIGN(ty,rexp x, rexp y)
-	   | T.LIVE ls => T.LIVE (mlriscs ls)
-	   | T.KILL ks => T.KILL (mlriscs ks)
+           | T.LIVE ls => T.LIVE (mlriscs ls)
+           | T.KILL ks => T.KILL (mlriscs ks)
       in doStm stm s end
-   
+
       and stms ss = map stm ss
 
-      and rexp e = 
+      and rexp e =
       let val e = case e of
              T.REG _ => e
            | T.LI _ => e
-           | T.LABEL _ => e 
-           | T.LABEXP _ => e 
+           | T.LABEL _ => e
+           | T.LABEXP _ => e
            | T.CONST _ => e
            | T.NEG(ty,x)   => T.NEG(ty,rexp x)
            | T.ADD(ty,x,y) => T.ADD(ty,rexp x,rexp y)
@@ -89,7 +89,7 @@ struct
            | T.LOAD(ty,ea,r) => T.LOAD(ty,rexp ea,r)
            | T.PRED(e,ctrl) => T.PRED(rexp e,ctrl)
            | T.LET(s,e) => T.LET(stm s,rexp e)
-           | T.REXT(ty,e) => 
+           | T.REXT(ty,e) =>
                 T.REXT(ty,rext {rexp=rexp, fexp=fexp, ccexp=ccexp, stm=stm} e)
            | T.MARK(e,an) => T.MARK(rexp e,an)
            | T.$(ty,k,e) => T.$(ty,k,rexp e)
@@ -118,7 +118,7 @@ struct
            | T.CVTI2F(fty,ty,e) => T.CVTI2F(fty,ty,rexp e)
            | T.CVTF2F(fty,fty',e) => T.CVTF2F(fty,fty',fexp e)
            | T.FPRED(e,ctrl) => T.FPRED(fexp e,ctrl)
-           | T.FEXT(fty,e) => 
+           | T.FEXT(fty,e) =>
                 T.FEXT(fty,fext {rexp=rexp, fexp=fexp, ccexp=ccexp, stm=stm} e)
            | T.FMARK(e,an) => T.FMARK(fexp e,an)
       in doFexp fexp e end
@@ -128,7 +128,7 @@ struct
       and ccexp e =
       let val e = case e of
              T.CC _ => e
-           | T.FCC _ => e 
+           | T.FCC _ => e
            | T.TRUE => e
            | T.FALSE => e
            | T.NOT e => T.NOT(ccexp e)
@@ -139,7 +139,7 @@ struct
            | T.CMP(ty,cond,x,y) => T.CMP(ty,cond,rexp x,rexp y)
            | T.FCMP(ty,fcond,x,y) => T.FCMP(ty,fcond,fexp x,fexp y)
            | T.CCMARK(e,an) => T.CCMARK(ccexp e,an)
-           | T.CCEXT(ty,e) => 
+           | T.CCEXT(ty,e) =>
                T.CCEXT(ty,ccext {rexp=rexp, fexp=fexp, ccexp=ccexp, stm=stm} e)
       in  doCCexp ccexp e end
 

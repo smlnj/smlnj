@@ -1,10 +1,10 @@
 (* Copyright (c) 1998 by Lucent Technologies *)
 
-local 
+local
   type 'a pp =  Tables.tidtab -> OldPrettyPrint.ppstream -> 'a -> unit
   type ('a, 'aidinfo) ppExt =
        (('aidinfo -> Ast.expression pp) * ('aidinfo -> Ast.statement pp) *
-	('aidinfo -> Ast.binop pp) * ('aidinfo -> Ast.unop pp))
+        ('aidinfo -> Ast.binop pp) * ('aidinfo -> Ast.unop pp))
        -> 'aidinfo
        -> Tables.tidtab -> OldPrettyPrint.ppstream -> 'a -> unit
 in

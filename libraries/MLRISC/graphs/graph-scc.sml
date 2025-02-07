@@ -26,7 +26,7 @@ struct
                      let val (num,stack,dfsnum_w,low_w,S) = dfs(w,num,stack,S)
                      in  f(es,num,stack,Int.min(low_v,low_w),S) end
                    else
-                     if dfsnum_w < dfsnum_v andalso 
+                     if dfsnum_w < dfsnum_v andalso
                         Word8Array.sub(onstack,w) = 0w1
                      then f(es,num,stack,Int.min(dfsnum_w,low_v),S)
                    else
@@ -34,16 +34,16 @@ struct
                end
            val _ = A.update(dfsnum,v,dfsnum_v)
            val _ = Word8Array.update(onstack,v,0w1)
-           val (num,stack,low_v,S) = 
+           val (num,stack,low_v,S) =
                   f(out_edges v,num+1,v::stack,dfsnum_v,S)
            fun pop([],SCC,S) = ([],S)
              | pop(x::stack,SCC,S) =
                  let val SCC = x::SCC
                      val _   = Word8Array.update(onstack,x,0w0)
-                 in  if x = v then (stack,process(SCC,S)) 
+                 in  if x = v then (stack,process(SCC,S))
                      else pop(stack,SCC,S)
                  end
-           val (stack,S) = if low_v = dfsnum_v then pop(stack,[],S) 
+           val (stack,S) = if low_v = dfsnum_v then pop(stack,[],S)
                            else (stack,S)
        in  (num,stack,dfsnum_v,low_v,S)
        end
@@ -57,7 +57,7 @@ struct
    end
 
    fun scc (G.GRAPH G) =
-       scc' {N = #capacity G (), nodes= map #1 (#nodes G ()), 
+       scc' {N = #capacity G (), nodes= map #1 (#nodes G ()),
              out_edges= #out_edges G}
 
 end

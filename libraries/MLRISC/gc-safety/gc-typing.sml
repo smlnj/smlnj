@@ -15,7 +15,7 @@ struct
    structure CFG = IR.CFG
    structure GC  = GCProps.GC
    structure G   = Graph
-   structure An  = Annotations 
+   structure An  = Annotations
 
    fun gcTyping(IR as G.GRAPH cfg) =
        case #get GCMap.GCMAP (CFG.getAnnotations IR)
@@ -23,13 +23,13 @@ struct
         | SOME gcmap =>
        let val lookup = Intmap.map gcmap
            val add    = Intmap.add gcmap
-           fun update(dst,ty) = 
+           fun update(dst,ty) =
                (lookup dst; ()) handle _ => add(dst,ty)
-           fun move(dst,src) = 
-               (lookup dst; ()) handle _ => 
+           fun move(dst,src) =
+               (lookup dst; ()) handle _ =>
                    (add(dst,lookup src) handle _ => ())
-           val prop = GCProps.propagate {lookup=lookup,update=update} 
-           fun process(b,CFG.BLOCK{insns,...}) = 
+           val prop = GCProps.propagate {lookup=lookup,update=update}
+           fun process(b,CFG.BLOCK{insns,...}) =
            let fun scan [] = ()
                  | scan(i::is) =
                    (case Props.instrKind i of
@@ -46,6 +46,6 @@ struct
            end
        in  #forall_nodes cfg process;
            IR
-       end 
+       end
 
 end

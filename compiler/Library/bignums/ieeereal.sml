@@ -1,4 +1,4 @@
-(* Copyright 1989 by AT&T Bell Laboratories 
+(* Copyright 1989 by AT&T Bell Laboratories
  *
  *)
 (* Support for IEEE floating-point constants
@@ -17,23 +17,23 @@ struct
     val wtoi = Word.toIntX
 
     fun transreal (sign, frac, exp) =
-	 if frac(0,1)=0 
+         if frac(0,1)=0
            then if sign=0 then "\000\000\000\000\000\000\000\000"
                           else "\128\000\000\000\000\000\000\000"
           else implode
-	        [Char.chr(wtoi 
-		   (Word.orb(Word.<<(itow sign, 0w7), 
-			     Word.>>(itow(exp+1022), 0w4)))),
-		 Char.chr(wtoi 
-		   (Word.andb(0w255, 
-			      Word.orb(Word.<<(itow(exp+1022), 0w4),
-				       itow (frac(1,4)))))),
-		 Char.chr(frac(5,8)),
-		 Char.chr(frac(13,8)),
-		 Char.chr(frac(21,8)),
-		 Char.chr(frac(29,8)),
-		 Char.chr(frac(37,8)),
-		 Char.chr(frac(45,8))]
+                [Char.chr(wtoi
+                   (Word.orb(Word.<<(itow sign, 0w7),
+                             Word.>>(itow(exp+1022), 0w4)))),
+                 Char.chr(wtoi
+                   (Word.andb(0w255,
+                              Word.orb(Word.<<(itow(exp+1022), 0w4),
+                                       itow (frac(1,4)))))),
+                 Char.chr(frac(5,8)),
+                 Char.chr(frac(13,8)),
+                 Char.chr(frac(21,8)),
+                 Char.chr(frac(29,8)),
+                 Char.chr(frac(37,8)),
+                 Char.chr(frac(45,8))]
 
 end)
 

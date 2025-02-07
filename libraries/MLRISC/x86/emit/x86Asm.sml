@@ -26,11 +26,11 @@ struct
    structure S  = S
    structure P  = S.P
    structure Constant = I.Constant
-   
+
    open AsmFlags
-   
+
    fun error msg = MLRiscErrorMsg.error("X86AsmEmitter",msg)
-   
+
    fun makeStream formatAnnotations =
    let val stream = !AsmStream.asmOutStream
        fun emit' s = TextIO.output(stream,s)
@@ -60,7 +60,7 @@ struct
        fun doNothing _ = ()
        fun fail _ = raise Fail "AsmEmitter"
        fun emit_region mem = comment(I.Region.toString mem)
-       val emit_region = 
+       val emit_region =
           if !show_region then emit_region else doNothing
        fun pseudoOp pOp = (emit(P.toString pOp); emit "\n")
        fun init size = (comment("Code Size = " ^ ms size); nl())
@@ -69,11 +69,11 @@ struct
        fun emitCell r = (emit(CellsBasis.toString r); emitCellInfo r)
        fun emit_cellset(title,cellset) =
          (nl(); comment(title^CellsBasis.CellSet.toString cellset))
-       val emit_cellset = 
+       val emit_cellset =
          if !show_cellset then emit_cellset else doNothing
        fun emit_defs cellset = emit_cellset("defs: ",cellset)
        fun emit_uses cellset = emit_cellset("uses: ",cellset)
-       val emit_cutsTo = 
+       val emit_cutsTo =
          if !show_cutsTo then AsmFormatUtil.emit_cutsTo emit
          else doNothing
        fun emitter instr =
@@ -277,8 +277,8 @@ struct
    fun memReg r = MemRegs.memReg {reg=r, base=Option.valOf memRegBase}
 
 (*#line 516.6 "x86/x86.mdl"*)
-   fun emitInt32 i = 
-       let 
+   fun emitInt32 i =
+       let
 (*#line 517.10 "x86/x86.mdl"*)
            val s = Int32.toString i
 
@@ -301,42 +301,42 @@ struct
    and eImmed (I.Immed i) = emitInt32 i
      | eImmed (I.ImmedLabel lexp) = emit_labexp lexp
      | eImmed _ = error "eImmed"
-   and emit_operand opn = 
+   and emit_operand opn =
        (case opn of
-         I.Immed i => 
-         ( emit "$"; 
+         I.Immed i =>
+         ( emit "$";
            emitInt32 i )
-       | I.ImmedLabel lexp => 
-         ( emit "$"; 
+       | I.ImmedLabel lexp =>
+         ( emit "$";
            emit_labexp lexp )
        | I.LabelEA le => emit_labexp le
        | I.Relative _ => error "emit_operand"
        | I.Direct r => emitCell r
        | I.MemReg r => emit_operand (memReg opn)
        | I.ST f => emitCell f
-       | I.FPR f => 
-         ( emit "%f"; 
+       | I.FPR f =>
+         ( emit "%f";
            emit (Int.toString (CellsBasis.registerNum f)))
        | I.FDirect f => emit_operand (memReg opn)
-       | I.Displace{base, disp, mem, ...} => 
-         ( emit_disp disp; 
-           emit "("; 
-           emitCell base; 
-           emit ")"; 
+       | I.Displace{base, disp, mem, ...} =>
+         ( emit_disp disp;
+           emit "(";
+           emitCell base;
+           emit ")";
            emit_region mem )
-       | I.Indexed{base, index, scale, disp, mem, ...} => 
-         ( emit_disp disp; 
-           emit "("; 
-           
+       | I.Indexed{base, index, scale, disp, mem, ...} =>
+         ( emit_disp disp;
+           emit "(";
+
            (case base of
              NONE => ()
            | SOME base => emitCell base
-           ); 
-           comma (); 
-           emitCell index; 
-           comma (); 
-           emitScale scale; 
-           emit ")"; 
+           );
+           comma ();
+           emitCell index;
+           comma ();
+           emitScale scale;
+           emit ")";
            emit_region mem )
        )
    and emit_operand8 (I.Direct r) = emit (CellsBasis.toStringWithSize (r, 8))
@@ -348,8 +348,8 @@ struct
 
 (*#line 568.7 "x86/x86.mdl"*)
    fun stupidGas (I.ImmedLabel lexp) = emit_labexp lexp
-     | stupidGas opnd = 
-       ( emit "*"; 
+     | stupidGas opnd =
+       ( emit "*";
          emit_operand opnd )
 
 (*#line 572.7 "x86/x86.mdl"*)
@@ -361,11 +361,11 @@ struct
      | isMemOpnd _ = false
 
 (*#line 578.7 "x86/x86.mdl"*)
-   fun chop fbinOp = 
-       let 
+   fun chop fbinOp =
+       let
 (*#line 579.15 "x86/x86.mdl"*)
            val n = size fbinOp
-       in 
+       in
           (case Char.toLower (String.sub (fbinOp, n - 1)) of
             (#"s" | #"l") => String.substring (fbinOp, 0, n - 1)
           | _ => fbinOp
@@ -378,20 +378,20 @@ struct
 
 (*#line 589.7 "x86/x86.mdl"*)
    fun emit_fbinaryOp (binOp, src, dst) = (if (isMemOpnd src)
-          then 
-          ( emit_fbinOp binOp; 
-            emit "\t"; 
+          then
+          ( emit_fbinOp binOp;
+            emit "\t";
             emit_operand src )
-          else 
-          ( emit (chop (asm_fbinOp binOp)); 
-            emit "\t"; 
-            
+          else
+          ( emit (chop (asm_fbinOp binOp));
+            emit "\t";
+
             (case (isST0 src, isST0 dst) of
-              (_, true) => 
-              ( emit_operand src; 
+              (_, true) =>
+              ( emit_operand src;
                 emit ", %st" )
-            | (true, _) => 
-              ( emit "%st, "; 
+            | (true, _) =>
+              ( emit "%st, ";
                 emit_operand dst )
             | _ => error "emit_fbinaryOp"
             )))
@@ -425,237 +425,237 @@ struct
 
 (*#line 608.7 "x86/x86.mdl"*)
    val emit_count = emit_operand
-   fun emitInstr' instr = 
+   fun emitInstr' instr =
        (case instr of
          I.NOP => emit "nop"
-       | I.JMP(operand, list) => 
-         ( emit "jmp\t"; 
+       | I.JMP(operand, list) =>
+         ( emit "jmp\t";
            stupidGas operand )
-       | I.JCC{cond, opnd} => 
-         ( emit "j"; 
-           emit_cond cond; 
-           emit "\t"; 
+       | I.JCC{cond, opnd} =>
+         ( emit "j";
+           emit_cond cond;
+           emit "\t";
            stupidGas opnd )
-       | I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} => 
-         ( emit "call\t"; 
-           stupidGas opnd; 
-           emit_region mem; 
-           emit_defs defs; 
-           emit_uses uses; 
-           emit_cellset ("return", return); 
+       | I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} =>
+         ( emit "call\t";
+           stupidGas opnd;
+           emit_region mem;
+           emit_defs defs;
+           emit_uses uses;
+           emit_cellset ("return", return);
            emit_cutsTo cutsTo )
-       | I.ENTER{src1, src2} => 
-         ( emit "enter\t"; 
-           emit_operand src1; 
-           emit ", "; 
+       | I.ENTER{src1, src2} =>
+         ( emit "enter\t";
+           emit_operand src1;
+           emit ", ";
            emit_operand src2 )
        | I.LEAVE => emit "leave"
-       | I.RET option => 
-         ( emit "ret"; 
-           
+       | I.RET option =>
+         ( emit "ret";
+
            (case option of
              NONE => ()
-           | SOME e => 
-             ( emit "\t"; 
+           | SOME e =>
+             ( emit "\t";
                emit_operand e )
            ))
-       | I.MOVE{mvOp, src, dst} => 
-         ( emit_move mvOp; 
-           emit "\t"; 
-           emit_src src; 
-           emit ", "; 
+       | I.MOVE{mvOp, src, dst} =>
+         ( emit_move mvOp;
+           emit "\t";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
-       | I.LEA{r32, addr} => 
-         ( emit "leal\t"; 
-           emit_addr addr; 
-           emit ", "; 
+       | I.LEA{r32, addr} =>
+         ( emit "leal\t";
+           emit_addr addr;
+           emit ", ";
            emitCell r32 )
-       | I.CMPL{lsrc, rsrc} => 
-         ( emit "cmpl\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPL{lsrc, rsrc} =>
+         ( emit "cmpl\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.CMPW{lsrc, rsrc} => 
-         ( emit "cmpb\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPW{lsrc, rsrc} =>
+         ( emit "cmpb\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.CMPB{lsrc, rsrc} => 
-         ( emit "cmpb\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPB{lsrc, rsrc} =>
+         ( emit "cmpb\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTL{lsrc, rsrc} => 
-         ( emit "testl\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTL{lsrc, rsrc} =>
+         ( emit "testl\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTW{lsrc, rsrc} => 
-         ( emit "testw\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTW{lsrc, rsrc} =>
+         ( emit "testw\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTB{lsrc, rsrc} => 
-         ( emit "testb\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTB{lsrc, rsrc} =>
+         ( emit "testb\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.BITOP{bitOp, lsrc, rsrc} => 
-         ( emit_bitOp bitOp; 
-           emit "\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.BITOP{bitOp, lsrc, rsrc} =>
+         ( emit_bitOp bitOp;
+           emit "\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.BINARY{binOp, src, dst} => 
+       | I.BINARY{binOp, src, dst} =>
          (case (src, binOp) of
-           (I.Direct _, (I.SARL | I.SHRL | I.SHLL | I.SARW | I.SHRW | I.SHLW | I.SARB | I.SHRB | I.SHLB)) => 
-              
-           ( emit_binaryOp binOp; 
-             emit "\t%cl, "; 
+           (I.Direct _, (I.SARL | I.SHRL | I.SHLL | I.SARW | I.SHRW | I.SHLW | I.SARB | I.SHRB | I.SHLB)) =>
+
+           ( emit_binaryOp binOp;
+             emit "\t%cl, ";
              emit_dst dst )
-         | _ => 
-           ( emit_binaryOp binOp; 
-             emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+         | _ =>
+           ( emit_binaryOp binOp;
+             emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst )
          )
-       | I.SHIFT{shiftOp, src, dst, count} => 
+       | I.SHIFT{shiftOp, src, dst, count} =>
          (case count of
-           I.Direct ecx => 
-           ( emit_shiftOp shiftOp; 
-             emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+           I.Direct ecx =>
+           ( emit_shiftOp shiftOp;
+             emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst )
-         | _ => 
-           ( emit_shiftOp shiftOp; 
-             emit "\t"; 
-             emit_src src; 
-             emit ", "; 
-             emit_count count; 
-             emit ", "; 
+         | _ =>
+           ( emit_shiftOp shiftOp;
+             emit "\t";
+             emit_src src;
+             emit ", ";
+             emit_count count;
+             emit ", ";
              emit_dst dst )
          )
-       | I.CMPXCHG{lock, sz, src, dst} => 
+       | I.CMPXCHG{lock, sz, src, dst} =>
          ( (if lock
               then (emit "lock\n\t")
-              else ()); 
-           emit "cmpxchg"; 
-           
+              else ());
+           emit "cmpxchg";
+
            (case sz of
              I.I8 => emit "b"
            | I.I16 => emit "w"
            | I.I32 => emit "l"
            | I.I64 => error "CMPXCHG: I64"
-           ); 
-           
-           ( emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+           );
+
+           ( emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst ) )
-       | I.MULTDIV{multDivOp, src} => 
-         ( emit_multDivOp multDivOp; 
-           emit "\t"; 
+       | I.MULTDIV{multDivOp, src} =>
+         ( emit_multDivOp multDivOp;
+           emit "\t";
            emit_src src )
-       | I.MUL3{dst, src2, src1} => 
-         ( emit "imull\t$"; 
-           emitInt32 src2; 
-           emit ", "; 
-           emit_src1 src1; 
-           emit ", "; 
+       | I.MUL3{dst, src2, src1} =>
+         ( emit "imull\t$";
+           emitInt32 src2;
+           emit ", ";
+           emit_src1 src1;
+           emit ", ";
            emitCell dst )
-       | I.UNARY{unOp, opnd} => 
-         ( emit_unaryOp unOp; 
-           emit "\t"; 
+       | I.UNARY{unOp, opnd} =>
+         ( emit_unaryOp unOp;
+           emit "\t";
            emit_opnd opnd )
-       | I.SET{cond, opnd} => 
-         ( emit "set"; 
-           emit_cond cond; 
-           emit "\t"; 
+       | I.SET{cond, opnd} =>
+         ( emit "set";
+           emit_cond cond;
+           emit "\t";
            emit_opnd8 opnd )
-       | I.CMOV{cond, src, dst} => 
-         ( emit "cmov"; 
-           emit_cond cond; 
-           emit "\t"; 
-           emit_src src; 
-           emit ", "; 
+       | I.CMOV{cond, src, dst} =>
+         ( emit "cmov";
+           emit_cond cond;
+           emit "\t";
+           emit_src src;
+           emit ", ";
            emitCell dst )
-       | I.PUSHL operand => 
-         ( emit "pushl\t"; 
+       | I.PUSHL operand =>
+         ( emit "pushl\t";
            emit_operand operand )
-       | I.PUSHW operand => 
-         ( emit "pushw\t"; 
+       | I.PUSHW operand =>
+         ( emit "pushw\t";
            emit_operand operand )
-       | I.PUSHB operand => 
-         ( emit "pushb\t"; 
+       | I.PUSHB operand =>
+         ( emit "pushb\t";
            emit_operand operand )
        | I.PUSHFD => emit "pushfd"
        | I.POPFD => emit "popfd"
-       | I.POP operand => 
-         ( emit "popl\t"; 
+       | I.POP operand =>
+         ( emit "popl\t";
            emit_operand operand )
        | I.CDQ => emit "cdq"
        | I.INTO => emit "into"
        | I.FBINARY{binOp, src, dst} => emit_fbinaryOp (binOp, src, dst)
-       | I.FIBINARY{binOp, src} => 
-         ( emit_fibinOp binOp; 
-           emit "\t"; 
+       | I.FIBINARY{binOp, src} =>
+         ( emit_fibinOp binOp;
+           emit "\t";
            emit_src src )
        | I.FUNARY funOp => emit_funOp funOp
-       | I.FUCOM operand => 
-         ( emit "fucom\t"; 
+       | I.FUCOM operand =>
+         ( emit "fucom\t";
            emit_operand operand )
-       | I.FUCOMP operand => 
-         ( emit "fucomp\t"; 
+       | I.FUCOMP operand =>
+         ( emit "fucomp\t";
            emit_operand operand )
        | I.FUCOMPP => emit "fucompp"
        | I.FCOMPP => emit "fcompp"
-       | I.FCOMI operand => 
-         ( emit "fcomi\t"; 
-           emit_operand operand; 
+       | I.FCOMI operand =>
+         ( emit "fcomi\t";
+           emit_operand operand;
            emit ", %st" )
-       | I.FCOMIP operand => 
-         ( emit "fcomip\t"; 
-           emit_operand operand; 
+       | I.FCOMIP operand =>
+         ( emit "fcomip\t";
+           emit_operand operand;
            emit ", %st" )
-       | I.FUCOMI operand => 
-         ( emit "fucomi\t"; 
-           emit_operand operand; 
+       | I.FUCOMI operand =>
+         ( emit "fucomi\t";
+           emit_operand operand;
            emit ", %st" )
-       | I.FUCOMIP operand => 
-         ( emit "fucomip\t"; 
-           emit_operand operand; 
+       | I.FUCOMIP operand =>
+         ( emit "fucomip\t";
+           emit_operand operand;
            emit ", %st" )
-       | I.FXCH{opnd} => 
-         ( emit "fxch\t"; 
+       | I.FXCH{opnd} =>
+         ( emit "fxch\t";
            emitCell opnd )
-       | I.FSTPL operand => 
+       | I.FSTPL operand =>
          (case operand of
-           I.ST _ => 
-           ( emit "fstp\t"; 
+           I.ST _ =>
+           ( emit "fstp\t";
              emit_operand operand )
-         | _ => 
-           ( emit "fstpl\t"; 
+         | _ =>
+           ( emit "fstpl\t";
              emit_operand operand )
          )
-       | I.FSTPS operand => 
-         ( emit "fstps\t"; 
+       | I.FSTPS operand =>
+         ( emit "fstps\t";
            emit_operand operand )
-       | I.FSTPT operand => 
-         ( emit "fstps\t"; 
+       | I.FSTPT operand =>
+         ( emit "fstps\t";
            emit_operand operand )
-       | I.FSTL operand => 
+       | I.FSTL operand =>
          (case operand of
-           I.ST _ => 
-           ( emit "fst\t"; 
+           I.ST _ =>
+           ( emit "fst\t";
              emit_operand operand )
-         | _ => 
-           ( emit "fstl\t"; 
+         | _ =>
+           ( emit "fstl\t";
              emit_operand operand )
          )
-       | I.FSTS operand => 
-         ( emit "fsts\t"; 
+       | I.FSTS operand =>
+         ( emit "fsts\t";
            emit_operand operand )
        | I.FLD1 => emit "fld1"
        | I.FLDL2E => emit "fldl2e"
@@ -664,83 +664,83 @@ struct
        | I.FLDLN2 => emit "fldln2"
        | I.FLDPI => emit "fldpi"
        | I.FLDZ => emit "fldz"
-       | I.FLDL operand => 
+       | I.FLDL operand =>
          (case operand of
-           I.ST _ => 
-           ( emit "fld\t"; 
+           I.ST _ =>
+           ( emit "fld\t";
              emit_operand operand )
-         | _ => 
-           ( emit "fldl\t"; 
+         | _ =>
+           ( emit "fldl\t";
              emit_operand operand )
          )
-       | I.FLDS operand => 
-         ( emit "flds\t"; 
+       | I.FLDS operand =>
+         ( emit "flds\t";
            emit_operand operand )
-       | I.FLDT operand => 
-         ( emit "fldt\t"; 
+       | I.FLDT operand =>
+         ( emit "fldt\t";
            emit_operand operand )
-       | I.FILD operand => 
-         ( emit "fild\t"; 
+       | I.FILD operand =>
+         ( emit "fild\t";
            emit_operand operand )
-       | I.FILDL operand => 
-         ( emit "fildl\t"; 
+       | I.FILDL operand =>
+         ( emit "fildl\t";
            emit_operand operand )
-       | I.FILDLL operand => 
-         ( emit "fildll\t"; 
+       | I.FILDLL operand =>
+         ( emit "fildll\t";
            emit_operand operand )
        | I.FNSTSW => emit "fnstsw"
-       | I.FENV{fenvOp, opnd} => 
-         ( emit_fenvOp fenvOp; 
-           emit "\t"; 
+       | I.FENV{fenvOp, opnd} =>
+         ( emit_fenvOp fenvOp;
+           emit "\t";
            emit_opnd opnd )
-       | I.FMOVE{fsize, src, dst} => 
-         ( emit "fmove"; 
-           emit_fsize fsize; 
-           emit "\t"; 
-           emit_src src; 
-           emit ", "; 
+       | I.FMOVE{fsize, src, dst} =>
+         ( emit "fmove";
+           emit_fsize fsize;
+           emit "\t";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
-       | I.FILOAD{isize, ea, dst} => 
-         ( emit "fiload"; 
-           emit_isize isize; 
-           emit "\t"; 
-           emit_ea ea; 
-           emit ", "; 
+       | I.FILOAD{isize, ea, dst} =>
+         ( emit "fiload";
+           emit_isize isize;
+           emit "\t";
+           emit_ea ea;
+           emit ", ";
            emit_dst dst )
-       | I.FBINOP{fsize, binOp, lsrc, rsrc, dst} => 
-         ( emit_fbinOp binOp; 
-           emit_fsize fsize; 
-           emit "\t"; 
-           emit_lsrc lsrc; 
-           emit ", "; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.FBINOP{fsize, binOp, lsrc, rsrc, dst} =>
+         ( emit_fbinOp binOp;
+           emit_fsize fsize;
+           emit "\t";
+           emit_lsrc lsrc;
+           emit ", ";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_dst dst )
-       | I.FIBINOP{isize, binOp, lsrc, rsrc, dst} => 
-         ( emit_fibinOp binOp; 
-           emit_isize isize; 
-           emit "\t"; 
-           emit_lsrc lsrc; 
-           emit ", "; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.FIBINOP{isize, binOp, lsrc, rsrc, dst} =>
+         ( emit_fibinOp binOp;
+           emit_isize isize;
+           emit "\t";
+           emit_lsrc lsrc;
+           emit ", ";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_dst dst )
-       | I.FUNOP{fsize, unOp, src, dst} => 
-         ( emit_funOp unOp; 
-           emit_fsize fsize; 
-           emit "\t"; 
-           emit_src src; 
-           emit ", "; 
+       | I.FUNOP{fsize, unOp, src, dst} =>
+         ( emit_funOp unOp;
+           emit_fsize fsize;
+           emit "\t";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
-       | I.FCMP{i, fsize, lsrc, rsrc} => 
+       | I.FCMP{i, fsize, lsrc, rsrc} =>
          ( (if i
               then (emit "fcmpi")
-              else (emit "fcmp")); 
-           
-           ( emit_fsize fsize; 
-             emit "\t"; 
-             emit_lsrc lsrc; 
-             emit ", "; 
+              else (emit "fcmp"));
+
+           ( emit_fsize fsize;
+             emit "\t";
+             emit_lsrc lsrc;
+             emit ", ";
              emit_rsrc rsrc ) )
        | I.SAHF => emit "sahf"
        | I.LFENCE => emit "lfence"
@@ -758,15 +758,15 @@ struct
       and emitInstrs instrs =
            app (if !indent_copies then emitInstrIndented
                 else emitInstr) instrs
-   
+
       and emitInstr(I.ANNOTATION{i,a}) =
            ( comment(Annotations.toString a);
               nl();
               emitInstr i )
-        | emitInstr(I.LIVE{regs, spilled})  = 
+        | emitInstr(I.LIVE{regs, spilled})  =
             comment("live= " ^ CellsBasis.CellSet.toString regs ^
                     "spilled= " ^ CellsBasis.CellSet.toString spilled)
-        | emitInstr(I.KILL{regs, spilled})  = 
+        | emitInstr(I.KILL{regs, spilled})  =
             comment("killed:: " ^ CellsBasis.CellSet.toString regs ^
                     "spilled:: " ^ CellsBasis.CellSet.toString spilled)
         | emitInstr(I.INSTR i) = emitter i
@@ -775,7 +775,7 @@ struct
         | emitInstr(I.COPY{k=CellsBasis.FP, sz, src, dst, tmp}) =
            emitInstrs(Shuffle.shufflefp{tmp=tmp, src=src, dst=dst})
         | emitInstr _ = error "emitInstr"
-   
+
    in  S.STREAM{beginCluster=init,
                 pseudoOp=pseudoOp,
                 emit=emitInstr,

@@ -1,5 +1,5 @@
 (* minimal-compiler.sml
- * 
+ *
  * (C) 2001 Lucent Technologies, Bell Labs
  *
  * This defines a minimal version of structure Compiler

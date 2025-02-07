@@ -5,8 +5,8 @@ functor InstrGen
    (structure I      : INSTRUCTIONS
     structure Stream : INSTRUCTION_STREAM
     structure CFG    : CONTROL_FLOW_GRAPH
-    			where I = I
-			  and P = Stream.P
+                        where I = I
+                          and P = Stream.P
    ) : INSTR_GEN =
 struct
    structure C   = I.C
@@ -16,7 +16,7 @@ struct
 
    (* Pretty stupid, eh? *)
    fun newStream(instrs) =
-   let fun emit i = instrs := i :: !instrs 
+   let fun emit i = instrs := i :: !instrs
        fun can'tUse _ = MLRiscErrorMsg.error("InstrGen","unimplemented")
    in  Stream.STREAM
        { beginCluster   = can'tUse,
@@ -30,6 +30,6 @@ struct
          getAnnotations = can'tUse,
          exitBlock      = can'tUse
        }
-   end 
+   end
 
 end

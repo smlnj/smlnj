@@ -7,7 +7,7 @@
 signature STATICPROF = sig
   val initfk : unit -> unit
   val incfk :  CPS.fun_kind * int -> unit
-  val incln : int -> unit 
+  val incln : int -> unit
   val reportfk : unit -> unit
 end
 
@@ -23,10 +23,10 @@ val esize = Array.array(lenlimit+1,0)
 val ksize = Array.array(lenlimit+1,0)
 val csize = Array.array(lenlimit+1,0)
 val links = Array.array(11,0)
-val numvars = ref 0 
+val numvars = ref 0
 val printf = app pr
 
-fun zeroArray(a) = 
+fun zeroArray(a) =
   let val len = Array.length a
       fun h(n) = if n >= len then ()
                  else (Array.update(a,n,0); h(n+1))
@@ -36,18 +36,18 @@ fun zeroArray(a) =
 fun initfk() = (numvars := 0;
                 app zeroArray [esize,ksize,csize,links])
 
-fun incfk(fk,sz) = 
+fun incfk(fk,sz) =
   let val a = case fk of ESCAPE => esize
                        | CONT => csize
                        | _ => ksize
-      val i = if (sz >= lenlimit) then lenlimit-1 else sz      
+      val i = if (sz >= lenlimit) then lenlimit-1 else sz
       val c = Array.sub(a,i)
       val s = Array.sub(a,lenlimit)
    in Array.update(a,i,c+1);
       Array.update(a,lenlimit,s+(sz+1))
   end
 
-fun incln(sz) = 
+fun incln(sz) =
   let val i = if (sz >= 10) then 10 else sz
       val n = !numvars
       val c = Array.sub(links,i)
@@ -67,11 +67,11 @@ fun ifield(i,w) = if i=0 then field(" ",w)
 
 fun fromto(m,n) = if m>n then [] else m::(fromto(m+1,n))
 
-fun reportsz(fk) = 
+fun reportsz(fk) =
   let val (a,s) = case fk of ESCAPE => (esize,"ESCAPE")
                            | CONT => (csize, "CALLEE")
                            | _ => (ksize,"KNOWN")
-      fun loop(n,k,j) = 
+      fun loop(n,k,j) =
         if (k >= j) then (printf ["\n"])
         else (printf [" | ",ifield(Array.sub(a,n+k),4)];
               loop(n,k+1,j))
@@ -95,7 +95,7 @@ fun reportsz(fk) =
       loop2(0)
   end
 
-fun reportfk() = 
+fun reportfk() =
   let val s = Array.sub(esize,lenlimit) +
               Array.sub(csize,lenlimit) +
               Array.sub(ksize,lenlimit)
@@ -107,7 +107,7 @@ fun reportfk() =
                 " Total Links = ",im(!numvars),
                 " for all variables: \n"];
         printf ["  "];
-        app (fn n => printf [" | ",ifield(Array.sub(links,n),4)]) 
+        app (fn n => printf [" | ",ifield(Array.sub(links,n),4)])
                                                        (fromto(1,10));
         pr "\n\n";
         reportsz(ESCAPE); pr "\n\n";

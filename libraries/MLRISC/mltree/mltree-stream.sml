@@ -6,16 +6,16 @@
 functor MLTreeStream
    ( structure T : MLTREE
      structure S : INSTRUCTION_STREAM
-    ) : MLTREE_STREAM = 
+    ) : MLTREE_STREAM =
 struct
   structure T = T
   structure S = S
   (*
    * Instruction streams
    *)
-  type ('i,'cellset, 'cfg) stream = ('i, T.an list, 'cellset, 'cfg) S.stream 
+  type ('i,'cellset, 'cfg) stream = ('i, T.an list, 'cellset, 'cfg) S.stream
 
-  (* 
+  (*
    * Extension mechanism
    *)
   datatype ('instr,'cellset,'operand,'addressing_mode, 'cfg) reducer =
@@ -31,6 +31,6 @@ struct
       instrStream   : ('instr,'cellset, 'cfg) stream,
       mltreeStream  : (T.stm,T.mlrisc list, 'cfg) stream
     }
-  
+
 end
 

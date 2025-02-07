@@ -29,7 +29,7 @@ sig
    val select   : (string -> pp) -> pp
    val sp       : pp
    val nl       : pp
-   val nl'      : int * int -> pp    
+   val nl'      : int * int -> pp
    val block    : pp -> pp
    val line     : pp -> pp
    val seq      : (pp * pp * pp) -> pp list -> pp

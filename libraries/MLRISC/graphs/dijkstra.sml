@@ -5,7 +5,7 @@
  * -- Allen
  *)
 
-functor Dijkstra(Num : ABELIAN_GROUP_WITH_INF) 
+functor Dijkstra(Num : ABELIAN_GROUP_WITH_INF)
      : SINGLE_SOURCE_SHORTEST_PATHS =
 struct
 
@@ -22,7 +22,7 @@ struct
        fun relax(e as (u,v,_)) =
        let val d_v = A.sub(dist,v)
            val d_x = Num.+(A.sub(dist,u),weight e)
-       in  if Num.<(d_x,d_v) then 
+       in  if Num.<(d_x,d_v) then
              (A.update(dist,v,d_x); A.update(pred,v,u); Q.decreaseWeight(Q,v))
            else ()
        end
@@ -35,5 +35,5 @@ struct
          pred = pred
        }
    end
-        
+
 end

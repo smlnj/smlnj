@@ -1,6 +1,6 @@
 (*
  * Rank functions used for scheduling.
- * 
+ *
  * -- Allen
  *)
 
@@ -12,7 +12,7 @@ sig
       sharing DDG.I = I
 
    type edge
-   val rank : ('node,edge) DDG.ddg -> 
+   val rank : ('node,edge) DDG.ddg ->
                 'node Graph.node * 'node Graph.node -> bool
 
 end

@@ -4,7 +4,7 @@
  *
  *)
 
-signature GRAPH_COMBINATIONS = 
+signature GRAPH_COMBINATIONS =
 sig
 
    (* disjoint union *)

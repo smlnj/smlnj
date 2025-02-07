@@ -2,10 +2,10 @@
  * This module constructs an SSA graph from an control flow graph.
  * The control flow graph is kept abstract so that we can specialize
  * this module to various representations.
- * 
+ *
  * -- Allen (leunga@cs.nyu.edu)
  *)
-signature CFG2SSA =  
+signature CFG2SSA =
 sig
    structure SSA : SSA
    structure CFG : SSA_FLOWGRAPH

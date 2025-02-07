@@ -2,7 +2,7 @@
  *
  * COPYRIGHT (c) 2001 Bell Labs, Lucent Technologies
  *
- * Interface to host assembler. 
+ * Interface to host assembler.
  * Will handle all constructors in PseudoOpsBasisTyp except for
  * client extensions (EXT)
  *)
@@ -10,7 +10,7 @@
 
 signature PSEUDO_OPS_BASIS = sig
   structure T : MLTREE
-  type 'a pseudo_op = (T.labexp, 'a) PseudoOpsBasisTyp.pseudo_op 
+  type 'a pseudo_op = (T.labexp, 'a) PseudoOpsBasisTyp.pseudo_op
 
   val toString  : 'a pseudo_op -> string
   val lexpToString : T.labexp -> string
@@ -24,7 +24,7 @@ signature PSEUDO_OPS_BASIS = sig
 
   val sizeOf : 'a pseudo_op * int -> int
     (* Size of the pseudo_op in bytes given the current location counter
-     * The location counter is provided in case some pseudo ops are 
+     * The location counter is provided in case some pseudo ops are
      * dependent on alignment considerations.
      *)
 

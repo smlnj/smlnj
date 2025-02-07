@@ -1,6 +1,6 @@
 (*
  * Partial redundancy elimination.
- * This is my own algorithm. 
+ * This is my own algorithm.
  *
  * -- Allen (leunga@cs.nyu.edu)
  *)
@@ -11,9 +11,9 @@ struct
    structure RTL  = SSA.RTL
    structure Dom  = SSA.Dom
    structure T    = RTL.T
-   structure G    = Graph 
+   structure G    = Graph
    structure A    = Array
-  
+
    type flowgraph = SSA.ssa
 
    fun error msg = MLRiscErrorMsg.error("SSAPRE",msg)
@@ -28,21 +28,21 @@ struct
     *
     *    t <- phi(t1, t2, ..., tn)
     *    ...
-    *    v <- f(t) 
+    *    v <- f(t)
     *
     * f(t) is partially redundant if it is cheaper to transform it
-    * into: 
+    * into:
     *
     *    v1 <- f(v1)
     *    v2 <- f(v2)
     *    ...
     *    vn <- f(vn)
-    * 
+    *
     *    v <- phi(v1, v2, ..., vn)
     *    t <- phi(t1, t2, ..., tn)
     *)
 
-   fun run(SSA as G.GRAPH ssa) = 
+   fun run(SSA as G.GRAPH ssa) =
    let val Dom as G.GRAPH dom = SSA.dom SSA
 
        val dominates = Dom.dominates Dom
@@ -53,12 +53,12 @@ struct
        val uses    = SSA.uses SSA
        val defs    = SSA.defs SSA
        val rtl     = SSA.rtl SSA
-       val freqTbl = SSA.freqTbl SSA 
+       val freqTbl = SSA.freqTbl SSA
 
        val showOp  = SSA.showOp SSA
        val showVal = SSA.showVal SSA
 
-       fun process i = 
+       fun process i =
            case rtl i of
              T.PHI{preds, ...} => hoistAllUses(i,preds)
            | _ => ()
@@ -72,7 +72,7 @@ struct
            in  if List.exists (fn v => v = t) uses_i then
                   print("PRE "^showOp i^"\n") else ()
            end
-          
+
    in  SSA.forallNodes SSA process;
        SSA
    end

@@ -5,7 +5,7 @@
  * -- Allen
  *)
 
-signature STATIC_BRANCH_PREDICTION = 
+signature STATIC_BRANCH_PREDICTION =
 sig
 
    structure IR : MLRISC_IR

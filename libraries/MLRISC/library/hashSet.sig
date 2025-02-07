@@ -11,7 +11,7 @@ sig
 
    val create : { order : 'a * 'a -> order,
                   hash  : 'a -> int
-                } -> int -> 'a set 
+                } -> int -> 'a set
 
    val size       : 'a set -> int
    val bucketSize : 'a set -> int

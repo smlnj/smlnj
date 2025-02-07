@@ -13,22 +13,22 @@ sig
       sharing OT.I           = I
       sharing RTL.T          = I.T
 
-   datatype value = 
+   datatype value =
      CELL    of C.cell    (* a single value *)
    | OPERAND of I.operand (* a complex operand *)
 
-   (* Return the RTL describing the semantics of an instruction 
+   (* Return the RTL describing the semantics of an instruction
     * The rtl returned is in lambda-lifted form, i.e. it contains
     * references to PARAM n, which refers to the nth input or output parameter.
     *)
-   val rtl : I.instruction -> RTL.rtl  
+   val rtl : I.instruction -> RTL.rtl
 
    (*
-    *  Return the input/ouput parameters of an instruction. 
+    *  Return the input/ouput parameters of an instruction.
     *  The input/output matches positionally with the info returned by
     *  the function rtl.
-    *) 
-   val defUse : OT.valueNumberMethods -> I.instruction 
+    *)
+   val defUse : OT.valueNumberMethods -> I.instruction
                    -> value list * value list
 
 end

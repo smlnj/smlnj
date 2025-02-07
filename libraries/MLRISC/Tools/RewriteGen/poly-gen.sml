@@ -12,16 +12,16 @@ struct
    fun bug msg = MLRiscErrorMsg.error("PolyGen",msg)
    exception PolyGen
    fun error msg = (MDLError.error msg; raise PolyGen)
- 
+
    datatype hook =
-      HOOK of 
+      HOOK of
       { name   : string,      (* name of function *)
         factor : bool,        (* factor rules by constructor? *)
         args   : string list, (* function arguments *)
         ret    : string,      (* return argument name *)
         unit   : Ast.exp -> Ast.exp,
         gen    : (Ast.ty * Ast.exp -> Ast.exp) * Ast.consbind -> Ast.exp
-      }  
+      }
 
    fun ID id = A.IDexp(A.IDENT([],id))
    val argExp = ID "arg"
@@ -31,30 +31,30 @@ struct
    let val redex = ID(hd args) (* the redex must be the first argument *)
 
        (*
-        * Given a type, returns the appropriate function that performs the  
+        * Given a type, returns the appropriate function that performs the
         * transformation
         *)
        val nullTrans = A.LAMBDAexp[A.CLAUSE([argPat],NONE,argExp)]
-       fun ty2Exp(A.IDty(A.IDENT(_,id))) = 
+       fun ty2Exp(A.IDty(A.IDENT(_,id))) =
               if isNonTerm id then SOME(ID(name^"'"^id)) else NONE
          | ty2Exp(A.APPty(A.IDENT(_,id),args)) =
-              if isNonTerm id then 
+              if isNonTerm id then
                  let val args = map ty2Exp args
                  in  if List.exists Option.isSome args then
                        SOME(A.APPexp(ID(name^"'"^id),
                          A.TUPLEexp(map (fn SOME f => f | NONE => nullTrans)
                                     args)))
-                     else NONE 
+                     else NONE
                  end
               else NONE
          | ty2Exp(A.TUPLEty tys) = (* create a functional *)
               let val args = map ty2Exp tys
                   fun bind([], i, pats, exps, some) = (rev pats, rev exps, some)
-                    | bind(arg::args, i, pats, exps, some) = 
+                    | bind(arg::args, i, pats, exps, some) =
                       let val v = "v_"^Int.toString i
                           val pat = A.IDpat v
                           val exp = ID v
-                          val (exp, some) = 
+                          val (exp, some) =
                              case arg of NONE => (exp, some)
                                        | SOME f => (A.APPexp(f,exp), true)
                       in  bind(args, i+1, pat::pats, exp::exps, some) end
@@ -64,13 +64,13 @@ struct
                                                 A.TUPLEexp exps)])
                   else NONE
               end
-         | ty2Exp(A.RECORDty ltys) = 
+         | ty2Exp(A.RECORDty ltys) =
               let val args = map (fn (l,t) => (l, ty2Exp t)) ltys
                   fun bind([], i, pats, exps, some) = (rev pats, rev exps, some)
-                    | bind((l,arg)::args, i, pats, exps, some) = 
+                    | bind((l,arg)::args, i, pats, exps, some) =
                       let val pat = (l, A.IDpat l)
                           val exp = ID l
-                          val (exp, some) = 
+                          val (exp, some) =
                              case arg of NONE => (exp, some)
                                        | SOME f => (A.APPexp(f,exp), true)
                       in  bind(args, i+1, pat::pats, (l,exp)::exps, some)
@@ -84,11 +84,11 @@ struct
          | ty2Exp(A.TYVARty(A.VARtv id)) = SOME(ID("param"^id))
          | ty2Exp t = error("Can't handle type "^PP.text(AstPP.ty t))
 
-       fun genOneRule(A.DATATYPEbind{id,tyvars,cbs, ...}, rules) =  
+       fun genOneRule(A.DATATYPEbind{id,tyvars,cbs, ...}, rules) =
        let val prefix = []
            val subTerm = ref false
            fun appTrans(ty,e) =
-               case ty2Exp ty of 
+               case ty2Exp ty of
                  NONE => unit e
                | SOME f => (subTerm := true; A.APPexp(f,e))
 
@@ -111,18 +111,18 @@ struct
                val caseExp = case caseExp of SOME e => e
                                            | NONE => A.TUPLEexp []
                val body =
-                   case (rules, !subTerm) of  
+                   case (rules, !subTerm) of
                      ([], false) => redex
                    | ([], true) => resultExp
                    | (_, _) =>
                      A.CASEexp
-                      (caseExp, 
+                      (caseExp,
                        rules @
                        [A.CLAUSE([argPat],NONE,
-                           case ty of 
+                           case ty of
                              SOME _ => A.CONSexp(A.IDENT([],id), SOME argExp)
                            | NONE => redex
-                         ) 
+                         )
                        ]
                       )
                fun mapPat{origName,newName,ty} = A.IDpat newName
@@ -130,9 +130,9 @@ struct
            end
 
            (* first factor all rules by their top level constructors *)
-           fun factorRules(rules) = 
-           let exception Bad  
-               val tbl = H.mkTable(HashString.hashString,op=)(32,Can'tFactor)   
+           fun factorRules(rules) =
+           let exception Bad
+               val tbl = H.mkTable(HashString.hashString,op=)(32,Can'tFactor)
                val _     = app (fn A.CONSbind{id,...} => H.insert tbl (id,[]))
                                cbs
                fun factor(r,A.CONSpat(A.IDENT([],id),arg),g,e) =
@@ -146,33 +146,33 @@ struct
                and enterRule(r, consName, arg, g, e) =
                   let val rs = H.lookup tbl consName
                       val r  = A.CLAUSE([case arg of NONE => A.WILDpat
-                                                   | SOME p => p],g,e)  
+                                                   | SOME p => p],g,e)
                   in  H.insert tbl (consName,r::rs)
-                  end 
+                  end
                val _ = app factorRule rules
-    
+
            in  map (fn c as A.CONSbind{id,...} => (c,rev(H.lookup tbl id))) cbs
            end
 
            fun factoredBody rules =
                 A.CASEexp(redex,map genFactoredTraversal (factorRules rules))
            fun nonfactoredBody rules =
-                A.LETexp([A.VALdecl[A.VALbind(A.IDpat ret, 
+                A.LETexp([A.VALdecl[A.VALbind(A.IDpat ret,
                           A.CASEexp(redex,map genNonFactoredTraversal cbs))]],
                          [A.CASEexp(A.TUPLEexp(map ID args), rules)]
                         )
 
-           val body = 
+           val body =
                if factor then (factoredBody rules handle Can'tFactor =>
                                nonfactoredBody rules)
                else nonfactoredBody rules
            fun curriedArg(A.VARtv id) = A.IDpat("param"^id)
              | curriedArg _ = bug "curriedArg"
-           val args = [A.TUPLEpat(map A.IDpat args)] 
+           val args = [A.TUPLEpat(map A.IDpat args)]
            val args = case tyvars of
                         []  => args
                       | vs  => A.TUPLEpat(map curriedArg vs)::args
-       in  A.FUNbind(name^"'"^id,[A.CLAUSE(args,NONE,body)]) 
+       in  A.FUNbind(name^"'"^id,[A.CLAUSE(args,NONE,body)])
        end
          | genOneRule _ = bug "genOneRule"
    in  A.FUNdecl(map genOneRule ruleSet)

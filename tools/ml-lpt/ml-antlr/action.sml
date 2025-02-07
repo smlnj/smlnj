@@ -25,11 +25,11 @@ structure Action :>
 
   end = struct
 
-    datatype action 
+    datatype action
       = ACT of {
-	  id : int,
-	  code : string,
-	  span : Err.span
+          id : int,
+          code : string,
+          span : Err.span
         }
 
     local
@@ -40,10 +40,10 @@ structure Action :>
 
     fun action (i, s) = ACT {id = nextId(), code = s, span = i}
     fun toString (ACT {code, span, ...}) = code
-(*	  if span = 1 then
-	    "(*#line " ^ Int.toString span ^ ".0*)" ^ code
-	  else
-	    "(*#line " ^ Int.toString (span - 1) ^ ".0*) \n" ^ code
+(*        if span = 1 then
+            "(*#line " ^ Int.toString span ^ ".0*)" ^ code
+          else
+            "(*#line " ^ Int.toString (span - 1) ^ ".0*) \n" ^ code
 *)
 
     fun name (ACT{id, ...}) = Int.toString id
@@ -53,9 +53,9 @@ structure Action :>
     fun code (ACT{code, ...}) = code
 
     val empty = action (Err.emptySpan, "")
-    fun concat (a, b) = 
-	  if same (a, empty) then b 
-	  else if same (b, empty) then a
-	  else action (span a, code a ^ code b)
+    fun concat (a, b) =
+          if same (a, empty) then b
+          else if same (b, empty) then a
+          else action (span a, code a ^ code b)
 
   end

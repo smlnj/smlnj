@@ -3,103 +3,103 @@ functor BurgLexFun(structure Tokens : Burg_TOKENS)  = struct
     structure yyInput : sig
 
         type stream
-	val mkStream : (int -> string) -> stream
-	val fromStream : TextIO.StreamIO.instream -> stream
-	val getc : stream -> (Char.char * stream) option
-	val getpos : stream -> int
-	val getlineNo : stream -> int
-	val subtract : stream * stream -> string
-	val eof : stream -> bool
-	val lastWasNL : stream -> bool
+        val mkStream : (int -> string) -> stream
+        val fromStream : TextIO.StreamIO.instream -> stream
+        val getc : stream -> (Char.char * stream) option
+        val getpos : stream -> int
+        val getlineNo : stream -> int
+        val subtract : stream * stream -> string
+        val eof : stream -> bool
+        val lastWasNL : stream -> bool
 
       end = struct
 
         structure TIO = TextIO
         structure TSIO = TIO.StreamIO
-	structure TPIO = TextPrimIO
+        structure TPIO = TextPrimIO
 
         datatype stream = Stream of {
             strm : TSIO.instream,
-	    id : int,  (* track which streams originated 
-			* from the same stream *)
-	    pos : int,
-	    lineNo : int,
-	    lastWasNL : bool
+            id : int,  (* track which streams originated
+                        * from the same stream *)
+            pos : int,
+            lineNo : int,
+            lastWasNL : bool
           }
 
-	local
-	  val next = ref 0
-	in
-	fun nextId() = !next before (next := !next + 1)
-	end
+        local
+          val next = ref 0
+        in
+        fun nextId() = !next before (next := !next + 1)
+        end
 
-	val initPos = 2 (* ml-lex bug compatibility *)
+        val initPos = 2 (* ml-lex bug compatibility *)
 
-	fun mkStream inputN = let
-              val strm = TSIO.mkInstream 
-			   (TPIO.RD {
-			        name = "lexgen",
-				chunkSize = 4096,
-				readVec = SOME inputN,
-				readArr = NONE,
-				readVecNB = NONE,
-				readArrNB = NONE,
-				block = NONE,
-				canInput = NONE,
-				avail = (fn () => NONE),
-				getPos = NONE,
-				setPos = NONE,
-				endPos = NONE,
-				verifyPos = NONE,
-				close = (fn () => ()),
-				ioDesc = NONE
-			      }, "")
-	      in 
-		Stream {strm = strm, id = nextId(), pos = initPos, lineNo = 1,
-			lastWasNL = true}
-	      end
+        fun mkStream inputN = let
+              val strm = TSIO.mkInstream
+                           (TPIO.RD {
+                                name = "lexgen",
+                                chunkSize = 4096,
+                                readVec = SOME inputN,
+                                readArr = NONE,
+                                readVecNB = NONE,
+                                readArrNB = NONE,
+                                block = NONE,
+                                canInput = NONE,
+                                avail = (fn () => NONE),
+                                getPos = NONE,
+                                setPos = NONE,
+                                endPos = NONE,
+                                verifyPos = NONE,
+                                close = (fn () => ()),
+                                ioDesc = NONE
+                              }, "")
+              in
+                Stream {strm = strm, id = nextId(), pos = initPos, lineNo = 1,
+                        lastWasNL = true}
+              end
 
-	fun fromStream strm = Stream {
-		strm = strm, id = nextId(), pos = initPos, lineNo = 1, lastWasNL = true
-	      }
+        fun fromStream strm = Stream {
+                strm = strm, id = nextId(), pos = initPos, lineNo = 1, lastWasNL = true
+              }
 
-	fun getc (Stream {strm, pos, id, lineNo, ...}) = (case TSIO.input1 strm
+        fun getc (Stream {strm, pos, id, lineNo, ...}) = (case TSIO.input1 strm
               of NONE => NONE
-	       | SOME (c, strm') => 
-		   SOME (c, Stream {
-			        strm = strm', 
-				pos = pos+1, 
-				id = id,
-				lineNo = lineNo + 
-					 (if c = #"\n" then 1 else 0),
-				lastWasNL = (c = #"\n")
-			      })
-	     (* end case*))
+               | SOME (c, strm') =>
+                   SOME (c, Stream {
+                                strm = strm',
+                                pos = pos+1,
+                                id = id,
+                                lineNo = lineNo +
+                                         (if c = #"\n" then 1 else 0),
+                                lastWasNL = (c = #"\n")
+                              })
+             (* end case*))
 
-	fun getpos (Stream {pos, ...}) = pos
+        fun getpos (Stream {pos, ...}) = pos
 
-	fun getlineNo (Stream {lineNo, ...}) = lineNo
+        fun getlineNo (Stream {lineNo, ...}) = lineNo
 
-	fun subtract (new, old) = let
-	      val Stream {strm = strm, pos = oldPos, id = oldId, ...} = old
-	      val Stream {pos = newPos, id = newId, ...} = new
+        fun subtract (new, old) = let
+              val Stream {strm = strm, pos = oldPos, id = oldId, ...} = old
+              val Stream {pos = newPos, id = newId, ...} = new
               val (diff, _) = if newId = oldId andalso newPos >= oldPos
-			      then TSIO.inputN (strm, newPos - oldPos)
-			      else raise Fail 
-				"BUG: yyInput: attempted to subtract incompatible streams"
-	      in 
-		diff 
-	      end
+                              then TSIO.inputN (strm, newPos - oldPos)
+                              else raise Fail
+                                "BUG: yyInput: attempted to subtract incompatible streams"
+              in
+                diff
+              end
 
-	fun eof (Stream {strm, ...}) = TSIO.endOfStream strm
+        fun eof (Stream {strm, ...}) = TSIO.endOfStream strm
 
-	fun lastWasNL (Stream {lastWasNL, ...}) = lastWasNL
+        fun lastWasNL (Stream {lastWasNL, ...}) = lastWasNL
 
       end
 
-    datatype yystart_state = 
+    datatype yystart_state =
 DUMP | POSTLUDE | COMMENT | INITIAL
-    structure UserDeclarations = 
+    structure UserDeclarations =
       struct
 
 (* burg-lex
@@ -109,127 +109,127 @@ DUMP | POSTLUDE | COMMENT | INITIAL
  * ML-Lex specification for ML-burg.
  *)
 
-structure T 		= Tokens
-structure E		= ErrorMsg
-type pos 		= int
-type svalue		= T.svalue
-type ('a,'b) token 	= ('a,'b) T.token
-type lexresult		= (svalue,pos) token
+structure T             = Tokens
+structure E             = ErrorMsg
+type pos                = int
+type svalue             = T.svalue
+type ('a,'b) token      = ('a,'b) T.token
+type lexresult          = (svalue,pos) token
 
-val comLevel		= ref 0
-val lineNum		= ref 0
-val verbatimLevel	= ref 0
-val percentCount	= ref 0
-val rawLine		= ref ""
-val rawNoNewLine	= ref false
+val comLevel            = ref 0
+val lineNum             = ref 0
+val verbatimLevel       = ref 0
+val percentCount        = ref 0
+val rawLine             = ref ""
+val rawNoNewLine        = ref false
 val raw:string list ref = ref []
-val reachedEop		= ref false
+val reachedEop          = ref false
 
-fun resetState()	= (comLevel      := 0;
-			   lineNum       := 0;
-			   verbatimLevel := 0;
-			   percentCount  := 0;
-			   rawLine	 := "";
-			   rawNoNewLine	 := false;
-			   raw		 := [];
-			   reachedEop	 := false)
-			   
+fun resetState()        = (comLevel      := 0;
+                           lineNum       := 0;
+                           verbatimLevel := 0;
+                           percentCount  := 0;
+                           rawLine       := "";
+                           rawNoNewLine  := false;
+                           raw           := [];
+                           reachedEop    := false)
+
 fun inc (ri as ref i) = (ri := i+1)
 fun dec (ri as ref i) = (ri := i-1)
 
-fun incVerbLvl()	= if !verbatimLevel <> 0 
-			  then E.impossible "nested verbatim levels"
-			  else inc verbatimLevel
+fun incVerbLvl()        = if !verbatimLevel <> 0
+                          then E.impossible "nested verbatim levels"
+                          else inc verbatimLevel
 
 fun outputRaw (s:string) = (rawLine := !rawLine^s; rawNoNewLine := true)
 
-fun rawNextLine ()	= (raw := !rawLine^"\n":: (!raw);
-			   rawLine := ""; rawNoNewLine := false)
+fun rawNextLine ()      = (raw := !rawLine^"\n":: (!raw);
+                           rawLine := ""; rawNoNewLine := false)
 
-fun rawStop ()		= if !rawNoNewLine then rawNextLine () else ()
+fun rawStop ()          = if !rawNoNewLine then rawNextLine () else ()
 
-fun eof()		= (if !comLevel > 0 then E.complain "unclosed comment"
-			   else if !verbatimLevel <> 0 then
-				   E.complain "unclosed user input"
-			        else ();
-			   if !reachedEop 
-			   then T.K_EOF(!lineNum,!lineNum)
-			   else	(rawStop ();
-				 T.PPERCENT(rev(!raw),!lineNum,!lineNum)
-				before (raw := [];
-				        reachedEop := true)))
+fun eof()               = (if !comLevel > 0 then E.complain "unclosed comment"
+                           else if !verbatimLevel <> 0 then
+                                   E.complain "unclosed user input"
+                                else ();
+                           if !reachedEop
+                           then T.K_EOF(!lineNum,!lineNum)
+                           else (rawStop ();
+                                 T.PPERCENT(rev(!raw),!lineNum,!lineNum)
+                                before (raw := [];
+                                        reachedEop := true)))
 
 
 
       end
 
-    datatype yymatch 
+    datatype yymatch
       = yyNO_MATCH
       | yyMATCH of yyInput.stream * action * yymatch
     withtype action = yyInput.stream * yymatch -> UserDeclarations.lexresult
 
     local
 
-    val yytable = 
+    val yytable =
 #[
 ]
 
     fun mk yyins = let
         (* current start state *)
         val yyss = ref INITIAL
-	fun YYBEGIN ss = (yyss := ss)
-	(* current input stream *)
+        fun YYBEGIN ss = (yyss := ss)
+        (* current input stream *)
         val yystrm = ref yyins
-	(* get one char of input *)
-	val yygetc = yyInput.getc
-	(* create yytext *)
-	fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
+        (* get one char of input *)
+        val yygetc = yyInput.getc
+        (* create yytext *)
+        fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
         open UserDeclarations
-        fun lex 
-(yyarg as ()) = let 
+        fun lex
+(yyarg as ()) = let
      fun continue() = let
             val yylastwasn = yyInput.lastWasNL (!yystrm)
             fun yystuck (yyNO_MATCH) = raise Fail "stuck state"
-	      | yystuck (yyMATCH (strm, action, old)) = 
-		  action (strm, old)
-	    val yypos = yyInput.getpos (!yystrm)
-	    val yygetlineNo = yyInput.getlineNo
-	    fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
-	      | yyactsToMatches (strm, act::acts, oldMatches) = 
-		  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
-	    fun yygo actTable = 
-		(fn (~1, _, oldMatches) => yystuck oldMatches
-		  | (curState, strm, oldMatches) => let
-		      val (transitions, finals') = Vector.sub (yytable, curState)
-		      val finals = map (fn i => Vector.sub (actTable, i)) finals'
-		      fun tryfinal() = 
-		            yystuck (yyactsToMatches (strm, finals, oldMatches))
-		      fun find (c, []) = NONE
-			| find (c, (c1, c2, s)::ts) = 
-		            if c1 <= c andalso c <= c2 then SOME s
-			    else find (c, ts)
-		      in case yygetc strm
-			  of SOME(c, strm') => 
-			       (case find (c, transitions)
-				 of NONE => tryfinal()
-				  | SOME n => 
-				      yygo actTable
-					(n, strm', 
-					 yyactsToMatches (strm, finals, oldMatches)))
-			   | NONE => tryfinal()
-		      end)
-	    in 
+              | yystuck (yyMATCH (strm, action, old)) =
+                  action (strm, old)
+            val yypos = yyInput.getpos (!yystrm)
+            val yygetlineNo = yyInput.getlineNo
+            fun yyactsToMatches (strm, [],        oldMatches) = oldMatches
+              | yyactsToMatches (strm, act::acts, oldMatches) =
+                  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
+            fun yygo actTable =
+                (fn (~1, _, oldMatches) => yystuck oldMatches
+                  | (curState, strm, oldMatches) => let
+                      val (transitions, finals') = Vector.sub (yytable, curState)
+                      val finals = map (fn i => Vector.sub (actTable, i)) finals'
+                      fun tryfinal() =
+                            yystuck (yyactsToMatches (strm, finals, oldMatches))
+                      fun find (c, []) = NONE
+                        | find (c, (c1, c2, s)::ts) =
+                            if c1 <= c andalso c <= c2 then SOME s
+                            else find (c, ts)
+                      in case yygetc strm
+                          of SOME(c, strm') =>
+                               (case find (c, transitions)
+                                 of NONE => tryfinal()
+                                  | SOME n =>
+                                      yygo actTable
+                                        (n, strm',
+                                         yyactsToMatches (strm, finals, oldMatches)))
+                           | NONE => tryfinal()
+                      end)
+            in
 let
 fun yyAction0 (strm, lastMatch : yymatch) = (yystrm := strm;
       (inc lineNum; continue()))
 fun yyAction1 (strm, lastMatch : yymatch) = (yystrm := strm;
       (incVerbLvl(); YYBEGIN DUMP; continue()))
 fun yyAction2 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (inc percentCount; 
-			    if !percentCount = 2 
-			    then (YYBEGIN POSTLUDE; continue())
-			    else T.PPERCENT(rev(!raw),!lineNum,!lineNum)
-					before raw := []))
+      (inc percentCount;
+                            if !percentCount = 2
+                            then (YYBEGIN POSTLUDE; continue())
+                            else T.PPERCENT(rev(!raw),!lineNum,!lineNum)
+                                        before raw := []))
 fun yyAction3 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction4 (strm, lastMatch : yymatch) = (yystrm := strm;
       (inc lineNum; continue()))
@@ -275,12 +275,12 @@ fun yyAction21 (strm, lastMatch : yymatch) = (yystrm := strm;
       (inc lineNum; continue()))
 fun yyAction22 (strm, lastMatch : yymatch) = (yystrm := strm;
       (dec comLevel;
-			    if !comLevel=0 then YYBEGIN INITIAL else ();
-			    continue()))
+                            if !comLevel=0 then YYBEGIN INITIAL else ();
+                            continue()))
 fun yyAction23 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction24 (strm, lastMatch : yymatch) = (yystrm := strm;
       (rawStop(); dec verbatimLevel;
-			    YYBEGIN INITIAL; continue()))
+                            YYBEGIN INITIAL; continue()))
 fun yyAction25 (strm, lastMatch : yymatch) = (yystrm := strm;
       (rawNextLine (); inc lineNum; continue()))
 fun yyAction26 (strm, lastMatch : yymatch) = let
@@ -752,12 +752,12 @@ in
   (* end case *))
 end
             end
-	  in 
-            continue() 	  
-	    handle IO.Io{cause, ...} => raise cause
+          in
+            continue()
+            handle IO.Io{cause, ...} => raise cause
           end
-        in 
-          lex 
+        in
+          lex
         end
     in
     fun makeLexer yyinputN = mk (yyInput.mkStream yyinputN)

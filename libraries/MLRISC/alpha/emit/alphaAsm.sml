@@ -20,11 +20,11 @@ struct
    structure S  = S
    structure P  = S.P
    structure Constant = I.Constant
-   
+
    open AsmFlags
-   
+
    fun error msg = MLRiscErrorMsg.error("AlphaAsmEmitter",msg)
-   
+
    fun makeStream formatAnnotations =
    let val stream = !AsmStream.asmOutStream
        fun emit' s = TextIO.output(stream,s)
@@ -54,7 +54,7 @@ struct
        fun doNothing _ = ()
        fun fail _ = raise Fail "AsmEmitter"
        fun emit_region mem = comment(I.Region.toString mem)
-       val emit_region = 
+       val emit_region =
           if !show_region then emit_region else doNothing
        fun pseudoOp pOp = (emit(P.toString pOp); emit "\n")
        fun init size = (comment("Code Size = " ^ ms size); nl())
@@ -63,24 +63,24 @@ struct
        fun emitCell r = (emit(CellsBasis.toString r); emitCellInfo r)
        fun emit_cellset(title,cellset) =
          (nl(); comment(title^CellsBasis.CellSet.toString cellset))
-       val emit_cellset = 
+       val emit_cellset =
          if !show_cellset then emit_cellset else doNothing
        fun emit_defs cellset = emit_cellset("defs: ",cellset)
        fun emit_uses cellset = emit_cellset("uses: ",cellset)
-       val emit_cutsTo = 
+       val emit_cutsTo =
          if !show_cutsTo then AsmFormatUtil.emit_cutsTo emit
          else doNothing
        fun emitter instr =
        let
    fun emit_operand (I.REGop GP) = emitCell GP
      | emit_operand (I.IMMop int) = emit_int int
-     | emit_operand (I.HILABop labexp) = 
-       ( emit "hi("; 
-         emit_labexp labexp; 
+     | emit_operand (I.HILABop labexp) =
+       ( emit "hi(";
+         emit_labexp labexp;
          emit ")" )
-     | emit_operand (I.LOLABop labexp) = 
-       ( emit "lo("; 
-         emit_labexp labexp; 
+     | emit_operand (I.LOLABop labexp) =
+       ( emit "lo(";
+         emit_labexp labexp;
          emit ")" )
      | emit_operand (I.LABop labexp) = emit_labexp labexp
    and asm_branch (I.BR) = "br"
@@ -278,130 +278,130 @@ struct
 (*#line 479.7 "alpha/alpha.mdl"*)
    fun isZero (I.LABop le) = (MLTreeEval.valueOf le) = 0
      | isZero _ = false
-   fun emitInstr' instr = 
+   fun emitInstr' instr =
        (case instr of
-         I.LDA{r, b, d} => (if ((isZero d) andalso (CellsBasis.sameCell (r, 
+         I.LDA{r, b, d} => (if ((isZero d) andalso (CellsBasis.sameCell (r,
             b)))
             then ()
-            else 
-            ( 
-              ( emit "lda\t"; 
-                emitCell r; 
-                emit ", "; 
-                emit_operand d ); 
+            else
+            (
+              ( emit "lda\t";
+                emitCell r;
+                emit ", ";
+                emit_operand d );
               (if ((CellsBasis.registerId b) = 31)
                  then ()
-                 else 
-                 ( emit "("; 
-                   emitCell b; 
+                 else
+                 ( emit "(";
+                   emitCell b;
                    emit ")" ))))
-       | I.LDAH{r, b, d} => 
-         ( 
-           ( emit "ldah\t"; 
-             emitCell r; 
-             emit ", "; 
-             emit_operand d ); 
+       | I.LDAH{r, b, d} =>
+         (
+           ( emit "ldah\t";
+             emitCell r;
+             emit ", ";
+             emit_operand d );
            (if ((CellsBasis.registerId b) = 31)
               then ()
-              else 
-              ( emit "("; 
-                emitCell b; 
+              else
+              ( emit "(";
+                emitCell b;
                 emit ")" )))
-       | I.LOAD{ldOp, r, b, d, mem} => 
-         ( emit_load ldOp; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_operand d; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.LOAD{ldOp, r, b, d, mem} =>
+         ( emit_load ldOp;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_operand d;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.STORE{stOp, r, b, d, mem} => 
-         ( emit_store stOp; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_operand d; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.STORE{stOp, r, b, d, mem} =>
+         ( emit_store stOp;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_operand d;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.FLOAD{ldOp, r, b, d, mem} => 
-         ( emit_fload ldOp; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_operand d; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.FLOAD{ldOp, r, b, d, mem} =>
+         ( emit_fload ldOp;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_operand d;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.FSTORE{stOp, r, b, d, mem} => 
-         ( emit_fstore stOp; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_operand d; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.FSTORE{stOp, r, b, d, mem} =>
+         ( emit_fstore stOp;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_operand d;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.JMPL({r, b, d}, list) => 
-         ( emit "jmp\t"; 
-           emitCell r; 
-           emit ", ("; 
-           emitCell b; 
+       | I.JMPL({r, b, d}, list) =>
+         ( emit "jmp\t";
+           emitCell r;
+           emit ", (";
+           emitCell b;
            emit ")" )
-       | I.JSR{r, b, d, defs, uses, cutsTo, mem} => 
-         ( emit "jsr\t"; 
-           emitCell r; 
-           emit ", ("; 
-           emitCell b; 
-           emit ")"; 
-           emit_region mem; 
-           emit_defs defs; 
-           emit_uses uses; 
+       | I.JSR{r, b, d, defs, uses, cutsTo, mem} =>
+         ( emit "jsr\t";
+           emitCell r;
+           emit ", (";
+           emitCell b;
+           emit ")";
+           emit_region mem;
+           emit_defs defs;
+           emit_uses uses;
            emit_cutsTo cutsTo )
-       | I.BSR{r, lab, defs, uses, cutsTo, mem} => 
-         ( emit "bsr\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_label lab; 
-           emit_region mem; 
-           emit_defs defs; 
-           emit_uses uses; 
+       | I.BSR{r, lab, defs, uses, cutsTo, mem} =>
+         ( emit "bsr\t";
+           emitCell r;
+           emit ", ";
+           emit_label lab;
+           emit_region mem;
+           emit_defs defs;
+           emit_uses uses;
            emit_cutsTo cutsTo )
-       | I.RET{r, b, d} => 
-         ( emit "ret\t"; 
-           emitCell r; 
-           emit ", ("; 
-           emitCell b; 
+       | I.RET{r, b, d} =>
+         ( emit "ret\t";
+           emitCell r;
+           emit ", (";
+           emitCell b;
            emit ")" )
-       | I.BRANCH{b, r, lab} => 
-         ( emit_branch b; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
+       | I.BRANCH{b, r, lab} =>
+         ( emit_branch b;
+           emit "\t";
+           emitCell r;
+           emit ", ";
            emit_label lab )
-       | I.FBRANCH{b, f, lab} => 
-         ( emit_fbranch b; 
-           emit "\t"; 
-           emitCell f; 
-           emit ", "; 
+       | I.FBRANCH{b, f, lab} =>
+         ( emit_fbranch b;
+           emit "\t";
+           emitCell f;
+           emit ", ";
            emit_label lab )
-       | I.OPERATE{oper, ra, rb, rc} => 
-         let 
+       | I.OPERATE{oper, ra, rb, rc} =>
+         let
 (*#line 568.15 "alpha/alpha.mdl"*)
-             fun disp () = 
-                 ( emit_operate oper; 
-                   emit "\t"; 
-                   emitCell ra; 
-                   emit ", "; 
-                   emit_operand rb; 
-                   emit ", "; 
+             fun disp () =
+                 ( emit_operate oper;
+                   emit "\t";
+                   emitCell ra;
+                   emit ", ";
+                   emit_operand rb;
+                   emit ", ";
                    emitCell rc )
-         in 
+         in
             (case (oper, CellsBasis.registerId ra, rb, CellsBasis.registerId rc) of
               (I.BIS, 27, I.REGop rb, 29) => (if ((CellsBasis.registerId rb) = 31)
                  then (emit "ldgp\t$29, 0($27)")
@@ -412,64 +412,64 @@ struct
             | _ => disp ()
             )
          end
-       | I.OPERATEV{oper, ra, rb, rc} => 
-         ( emit_operateV oper; 
-           emit "\t"; 
-           emitCell ra; 
-           emit ", "; 
-           emit_operand rb; 
-           emit ", "; 
+       | I.OPERATEV{oper, ra, rb, rc} =>
+         ( emit_operateV oper;
+           emit "\t";
+           emitCell ra;
+           emit ", ";
+           emit_operand rb;
+           emit ", ";
            emitCell rc )
-       | I.CMOVE{oper, ra, rb, rc} => 
-         ( emit_cmove oper; 
-           emit "\t"; 
-           emitCell ra; 
-           emit ", "; 
-           emit_operand rb; 
-           emit ", "; 
+       | I.CMOVE{oper, ra, rb, rc} =>
+         ( emit_cmove oper;
+           emit "\t";
+           emitCell ra;
+           emit ", ";
+           emit_operand rb;
+           emit ", ";
            emitCell rc )
-       | I.PSEUDOARITH{oper, ra, rb, rc, tmps} => 
-         ( emit_pseudo_op oper; 
-           emit "\t"; 
-           emitCell ra; 
-           emit ", "; 
-           emit_operand rb; 
-           emit ", "; 
-           emitCell rc; 
+       | I.PSEUDOARITH{oper, ra, rb, rc, tmps} =>
+         ( emit_pseudo_op oper;
+           emit "\t";
+           emitCell ra;
+           emit ", ";
+           emit_operand rb;
+           emit ", ";
+           emitCell rc;
            emit_cellset ("tmps", tmps))
-       | I.FUNARY{oper, fb, fc} => 
-         ( emit_funary oper; 
-           emit "\t"; 
-           emitCell fb; 
-           emit ", "; 
+       | I.FUNARY{oper, fb, fc} =>
+         ( emit_funary oper;
+           emit "\t";
+           emitCell fb;
+           emit ", ";
            emitCell fc )
-       | I.FOPERATE{oper, fa, fb, fc} => 
-         ( emit_foperate oper; 
-           emit "\t"; 
-           emitCell fa; 
-           emit ", "; 
-           emitCell fb; 
-           emit ", "; 
+       | I.FOPERATE{oper, fa, fb, fc} =>
+         ( emit_foperate oper;
+           emit "\t";
+           emitCell fa;
+           emit ", ";
+           emitCell fb;
+           emit ", ";
            emitCell fc )
-       | I.FOPERATEV{oper, fa, fb, fc} => 
-         ( emit_foperateV oper; 
-           emit "\t"; 
-           emitCell fa; 
-           emit ", "; 
-           emitCell fb; 
-           emit ", "; 
+       | I.FOPERATEV{oper, fa, fb, fc} =>
+         ( emit_foperateV oper;
+           emit "\t";
+           emitCell fa;
+           emit ", ";
+           emitCell fb;
+           emit ", ";
            emitCell fc )
-       | I.FCMOVE{oper, fa, fb, fc} => 
-         ( emit_fcmove oper; 
-           emit "\t"; 
-           emitCell fa; 
-           emit ", "; 
-           emitCell fb; 
-           emit ", "; 
+       | I.FCMOVE{oper, fa, fb, fc} =>
+         ( emit_fcmove oper;
+           emit "\t";
+           emitCell fa;
+           emit ", ";
+           emitCell fb;
+           emit ", ";
            emitCell fc )
        | I.TRAPB => emit "trapb"
-       | I.CALL_PAL{code, def, use} => 
-         ( emit "call_pal "; 
+       | I.CALL_PAL{code, def, use} =>
+         ( emit "call_pal ";
            emit_osf_user_palcode code )
        | I.SOURCE{} => emit "source"
        | I.SINK{} => emit "sink"
@@ -481,15 +481,15 @@ struct
       and emitInstrs instrs =
            app (if !indent_copies then emitInstrIndented
                 else emitInstr) instrs
-   
+
       and emitInstr(I.ANNOTATION{i,a}) =
            ( comment(Annotations.toString a);
               nl();
               emitInstr i )
-        | emitInstr(I.LIVE{regs, spilled})  = 
+        | emitInstr(I.LIVE{regs, spilled})  =
             comment("live= " ^ CellsBasis.CellSet.toString regs ^
                     "spilled= " ^ CellsBasis.CellSet.toString spilled)
-        | emitInstr(I.KILL{regs, spilled})  = 
+        | emitInstr(I.KILL{regs, spilled})  =
             comment("killed:: " ^ CellsBasis.CellSet.toString regs ^
                     "spilled:: " ^ CellsBasis.CellSet.toString spilled)
         | emitInstr(I.INSTR i) = emitter i
@@ -498,7 +498,7 @@ struct
         | emitInstr(I.COPY{k=CellsBasis.FP, sz, src, dst, tmp}) =
            emitInstrs(Shuffle.shufflefp{tmp=tmp, src=src, dst=dst})
         | emitInstr _ = error "emitInstr"
-   
+
    in  S.STREAM{beginCluster=init,
                 pseudoOp=pseudoOp,
                 emit=emitInstr,

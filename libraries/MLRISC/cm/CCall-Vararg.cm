@@ -1,13 +1,13 @@
 Library
 
-	structure Vararg
-	structure VarargConstants
+        structure Vararg
+        structure VarargConstants
 
 is
 
-	$/basis.cm
-	$/CCall.cm
-	$/StagedAlloc.cm
+        $/basis.cm
+        $/CCall.cm
+        $/StagedAlloc.cm
 
-	../c-call/varargs/call/vararg-constants.sml
-	../c-call/varargs/call/vararg.sml
+        ../c-call/varargs/call/vararg-constants.sml
+        ../c-call/varargs/call/vararg.sml

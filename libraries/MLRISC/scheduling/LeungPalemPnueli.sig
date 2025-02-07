@@ -14,7 +14,7 @@ sig
                 r   : 'n Graph.node -> int,   (* individual release times *)
                 d   : 'n Graph.node -> int,   (* individual deadlines *)
                 m   : int                     (* number of processors *)
-              } -> 
+              } ->
               { r' : int Array.array,    (* modified release times *)
                 d' : int Array.array     (* modified deadlines *)
               }

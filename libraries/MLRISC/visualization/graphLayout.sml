@@ -7,7 +7,7 @@
 structure GraphLayout =
 struct
 
-   datatype format = 
+   datatype format =
      LABEL of string
    | COLOR of string
    | NODE_COLOR of string
@@ -16,16 +16,16 @@ struct
    | ARROW_COLOR of string
    | BACKARROW_COLOR of string
    | BORDER_COLOR of string
-   | BORDERLESS 
-   | SHAPE of string 
+   | BORDERLESS
+   | SHAPE of string
    | ALGORITHM of string
    | EDGEPATTERN of string
    | DIR (* for internal use only! *)
 
-   val STYLE = Annotations.new(SOME(fn _ => "STYLE")) : 
-         format list Annotations.property 
+   val STYLE = Annotations.new(SOME(fn _ => "STYLE")) :
+         format list Annotations.property
 
-   type ('n,'e,'g) style = 
+   type ('n,'e,'g) style =
       { edge  : 'e Graph.edge -> format list,
         node  : 'n Graph.node -> format list,
         graph : 'g -> format list
@@ -33,7 +33,7 @@ struct
 
    type layout = (format list, format list, format list) Graph.graph
 
-   fun makeLayout {node,edge,graph} G = 
+   fun makeLayout {node,edge,graph} G =
        IsomorphicGraphView.map node edge graph G
 
    fun makeLayout' G =

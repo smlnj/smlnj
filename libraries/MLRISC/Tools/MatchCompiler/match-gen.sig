@@ -5,11 +5,11 @@ signature MATCH_GEN =
 sig
    structure Ast : MDL_AST
    structure MC  : MATCH_COMPILER
-   structure LitMap : ORD_MAP where type Key.ord_key = Ast.literal 
+   structure LitMap : ORD_MAP where type Key.ord_key = Ast.literal
 
    datatype conrep = CONREP of Ast.id list * Ast.consbind * Ast.datatypebind
-                   | EXN of Ast.id list * Ast.id * Ast.ty option 
-   
+                   | EXN of Ast.id list * Ast.id * Ast.ty option
+
    structure Env :
    sig
       type env
@@ -29,8 +29,8 @@ sig
    val compile : compiled_type_info -> Ast.clause list -> MC.compiled_dfa
 
    val report : {warning : string -> unit,
-                 error   : string -> unit, 
-                 log     : string -> unit, 
+                 error   : string -> unit,
+                 log     : string -> unit,
                  dfa     : MC.compiled_dfa,
                  rules   : Ast.clause list
                 } -> unit
@@ -38,8 +38,8 @@ sig
    val codeGen : {root : Ast.exp,
                   dfa  : MC.compiled_dfa,
                   fail : unit -> Ast.exp,
-                  literals : Ast.id LitMap.map ref 
-                 } -> Ast.exp     
+                  literals : Ast.id LitMap.map ref
+                 } -> Ast.exp
 
    val isComplex : Ast.clause list -> bool
 

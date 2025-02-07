@@ -1,6 +1,6 @@
 (*
  * SCC based global value numbering algorithm (L Taylor Simpson's algorithm)
- * 
+ *
  * -- Allen (leunga@cs.nyu.edu)
  *)
 
@@ -20,7 +20,7 @@ struct
    structure A    = Array
    structure H    = HashTable
 
-   fun error msg = MLRiscErrorMsg.error("SSAGlobalValueNumbering",msg) 
+   fun error msg = MLRiscErrorMsg.error("SSAGlobalValueNumbering",msg)
 
    val top = CF.top
 
@@ -43,15 +43,15 @@ struct
        val showOp     = SSA.showOp SSA
        val showVal    = SSA.showVal SSA
 
-         (* 
-          * Table mapping variables -> value numbers 
+         (*
+          * Table mapping variables -> value numbers
           *)
        val VN = A.array(V,CF.top) (* value numbers *)
        val DomN = A.array(N,~1) (* dominator numbers *)
        val visited = BitSet.create M
        fun walk(b,n) =
            let fun number([],n) = n
-                 | number(i::ops,n) = 
+                 | number(i::ops,n) =
                       (A.update(DomN,i,n); number(ops,n+1))
                val n = number(A.sub(sources,b),n)
                val n = number(A.sub(phis,b),n)
@@ -74,28 +74,28 @@ struct
        fun bad(T.PHI _,operands) = List.all (fn r => r = top) operands
          | bad(_,operands) = List.exists (fn r => r = top) operands
 
-       fun check(e,operands) = 
+       fun check(e,operands) =
           (if bad(e,operands) then
               print("Bad rtl: "^RTL.rtlToString e^" "^
                     String.concat(map (fn r => Int.toString r^" ") operands)
                     ^"\n")
-           else (); 
+           else ();
            (e,operands))
 
         (* lookup value number; create new vn if not found *)
-       val validSearch = CF.constantFolding SSA 
-             (fn (e,operands,p,t) => 
+       val validSearch = CF.constantFolding SSA
+             (fn (e,operands,p,t) =>
                  validLookup(e,operands,p) handle NotFound =>
                      (validInsert((e,operands,p),t); t))
-                     
-       val optimisticSearch = CF.constantFolding SSA 
+
+       val optimisticSearch = CF.constantFolding SSA
              (fn (e,operands,p,t) =>
                  optimisticLookup(e,operands,p) handle NotFound =>
                     (optimisticInsert((e,operands,p),t); t))
-  
-       fun dumpSCC ops = 
-       let fun printVN(i,rtl) = 
-           let fun pr(t) = 
+
+       fun dumpSCC ops =
+       let fun printVN(i,rtl) =
+           let fun pr(t) =
                let val vn = A.sub(VN,t)
                in  if vn <> t then print(" VN="^showVal vn^"\n") else ()
                end
@@ -105,36 +105,36 @@ struct
                |  _ => ();
                print "\n"
            end
-       in  print "SCC=\n"; 
+       in  print "SCC=\n";
            app printVN ops
        end
 
-       fun dumpVN() = 
+       fun dumpVN() =
        let fun pr(r,vn) =
-               if vn > top andalso vn <> r then 
+               if vn > top andalso vn <> r then
                let val i = A.sub(defSiteTbl, r)
                in  print("VN["^showVal r^"] = "^showVal vn^" "^showOp i^"\n")
                end
                else ()
        in  A.appi pr (VN,0,NONE)
        end
- 
-         (* 
-          * compute the fixpoint of an scc 
-          *) 
+
+         (*
+          * compute the fixpoint of an scc
+          *)
        fun unique ts = app (fn t => A.update(VN,t,t)) ts
 
        fun isVolatile r = List.exists (fn r' => r' = r) SP.volatile
 
        val zeroR = case I.C.zeroReg I.C.GP of
                      SOME zeroR => zeroR
-                   | NONE => CF.top 
+                   | NONE => CF.top
 
-       fun initSource(t,t') = 
-       let fun init(t::ts,t'::ts') = 
+       fun initSource(t,t') =
+       let fun init(t::ts,t'::ts') =
                (A.update(VN,t,
                  if t = zeroR then CF.zero
-                 else if isVolatile t' then CF.volatile 
+                 else if isVolatile t' then CF.volatile
                  else t); init(ts,ts'))
              | init _ = ()
        in  init(t,t') end
@@ -148,7 +148,7 @@ struct
                let val i' = A.sub(rtlTbl, i)
                    val t = A.sub(defsTbl, i)
                in  case i' of
-                      T.SOURCE{liveIn, ...} => initSource(t,liveIn) 
+                      T.SOURCE{liveIn, ...} => initSource(t,liveIn)
                    |  T.SINK _ => ()
                    |  T.COPY _ => inits t
                    |  T.PHI _ => inits t
@@ -163,18 +163,18 @@ struct
            fun loop([],look,more) = more
              | loop((_,T.SOURCE _)::ops,look,more) = loop(ops,look,more)
              | loop((_,T.SINK _)::ops,look,more) = loop(ops,look,more)
-             | loop((i,T.COPY _)::ops, look,more) = 
+             | loop((i,T.COPY _)::ops, look,more) =
                  loop(ops,look,
                     processCopy(A.sub(defsTbl,i),A.sub(usesTbl,i),more))
-             | loop((i,e)::ops,look,more) = 
+             | loop((i,e)::ops,look,more) =
                   loop(ops,look,
                      process(look,e,A.sub(defsTbl,i),A.sub(usesTbl,i),more))
 
            and compute_vn [] = []
-             | compute_vn (r::rs) = 
+             | compute_vn (r::rs) =
                  (if r < 0 then r else A.sub(VN,r))::compute_vn rs
 
-           and processOne(look,e,t,vns,p,changed) = 
+           and processOne(look,e,t,vns,p,changed) =
                let val n = look(e, vns, p, t)
                in  (* if RTL.isConditionalBranch e then
                       print(RTL.rtlToString e^" vn="^Int.toString n^"\n")
@@ -182,11 +182,11 @@ struct
                    if A.sub(VN,t) = n then changed
                    else (A.update(VN,t,n); true)
                end
- 
+
            and process(look,e,ts,ss,changed) =
                let val vns = compute_vn ss
                    fun processIth([],p,changed) = changed
-                     | processIth(t::ts,p,changed) = 
+                     | processIth(t::ts,p,changed) =
                        processIth(ts, p+1, processOne(look,e,t,vns,p,changed))
                in  processIth(ts,0,changed)
                end
@@ -218,19 +218,19 @@ struct
         *)
        fun initializeValueNumbers() =
        let val ENTRY = hd(#entries dom ())
-           fun init s = 
+           fun init s =
                let val T.SOURCE{block,...} = A.sub(rtlTbl,s)
                    val t = A.sub(defsTbl,s)
-               in  unique t; 
+               in  unique t;
                    if block = ENTRY then app initEdge(#out_edges ssa s) else ()
                end
            and initEdge(_,_,r) = A.update(VN,r,r)
        in  app init (#entries ssa ());
            case I.C.zeroReg I.C.GP of
-             SOME zeroR => A.update(VN,zeroR,CF.zero) 
+             SOME zeroR => A.update(VN,zeroR,CF.zero)
            | NONE => ()
        end
-          
+
    in  initializeValueNumbers();
        GraphSCC.scc (ReversedGraphView.rev_view SSA) processSCC ();
        if !dump then dumpVN() else ();

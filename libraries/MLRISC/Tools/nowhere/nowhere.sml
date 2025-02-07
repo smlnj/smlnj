@@ -20,7 +20,7 @@ local
 
    structure Ast     = MDLAst
    structure AstUtil = MDLAstUtil(MDLAst)
-   structure AstPP   = MDLAstPrettyPrinter(AstUtil) 
+   structure AstPP   = MDLAstPrettyPrinter(AstUtil)
    structure AstRewriter = MDLAstRewriter(MDLAst)
    structure MG = MatchGen(structure AstPP   = AstPP
                            structure AstUtil = AstUtil
@@ -48,27 +48,27 @@ in
        fun failure() = RAISEexp(ID "Match")
 
        val literals = ref MG.LitMap.empty
-     
+
        fun trans[LOCALdecl(defs, body)] =
            let val basis = Parser.parseString basis
                val dts = MG.compileTypes(basis @ defs)
 
                (* Translate a case statement *)
-               fun compileCase(root, clauses) = 
+               fun compileCase(root, clauses) =
                let val dfa = MG.compile dts clauses
                    val _   = MG.report{warning=warning, error=error,
                                        log=log, dfa=dfa, rules=clauses}
                    (* val _   = print(MG.MC.toString dfa) *)
-               in  MG.codeGen{root=root, dfa=dfa, fail=failure, 
+               in  MG.codeGen{root=root, dfa=dfa, fail=failure,
                               literals=literals}
-               end handle MC.MatchCompiler msg => 
+               end handle MC.MatchCompiler msg =>
                      (error msg; CASEexp(root,clauses)) (* just continue *)
- 
+
                fun exp _ (e as CASEexp(r,cs)) = (* case expr *)
                    if MG.isComplex cs then compileCase(r, cs) else e
                  | exp _ e = e
 
-               fun fbind (fb as FUNbind(f,cs as c::_)) = 
+               fun fbind (fb as FUNbind(f,cs as c::_)) =
                    if MG.isComplex cs then (* expand function *)
                    let val CLAUSE(args,_,_) = c
                        val arity = length args
@@ -79,13 +79,13 @@ in
                        val body  = compileCase(root, cs')
                    in  FUNbind(f, [CLAUSE(map IDpat vars, NONE, body)])
                    end
-                   else fb 
+                   else fb
                  | fbind fb = fb
 
-               fun decl _ (FUNdecl(fbs)) = FUNdecl(map fbind fbs) 
+               fun decl _ (FUNdecl(fbs)) = FUNdecl(map fbind fbs)
                  | decl _ d  = d
 
-               val prog = 
+               val prog =
                   #decl(rw{exp=exp,ty=NO,pat=NO,decl=decl,sexp=NO})
                        (SEQdecl body)
 
@@ -94,11 +94,11 @@ in
                      VALdecl(LitMap.foldri (fn (l,v,d) =>
                                VALbind(IDpat v,LITexp l)::d) []
                                   (!literals)) before literals := LitMap.empty
-                 | lit _ d = d 
-        
+                 | lit _ d = d
+
                val prog = #decl(rw{exp=NO,ty=NO,pat=NO,decl=lit,sexp=NO}) prog
            in  if LitMap.numItems(!literals) > 0 then
-                  fail "missing declaration val _ = \"literals\""  
+                  fail "missing declaration val _ = \"literals\""
                else ();
                prog
            end
@@ -107,11 +107,11 @@ in
         | trans _ = fail "program must be wrapped with local"
 
        val program = trans program
-       val text    = PP.text(PP.setmode "code" ++ 
-                             PP.textWidth 160 ++ 
+       val text    = PP.text(PP.setmode "code" ++
+                             PP.textWidth 160 ++
                              AstPP.decl program)
-   in  WARNING filename^text 
-   end 
+   in  WARNING filename^text
+   end
 
    fun main x =
        if GenFile.gen {program="nowhere", fileSuffix="sml", trans=gen } x = 0

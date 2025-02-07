@@ -2,12 +2,12 @@
  * This is a simple cache datatype.
  *
  * -- Allen
- *) 
+ *)
 
 signature CACHE_REF =
 sig
 
-   type 'a cache 
+   type 'a cache
 
    val cache : ('a -> 'b) -> 'a -> 'b cache
    val flush : 'a cache -> unit
@@ -30,5 +30,5 @@ struct
 
    val op := = fn((r, _),x) => r := SOME x
 
-end 
+end
 

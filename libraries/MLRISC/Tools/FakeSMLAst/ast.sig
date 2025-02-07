@@ -1,5 +1,5 @@
-(* 
- * Asbtract syntax for the MDGen language. 
+(*
+ * Asbtract syntax for the MDGen language.
  * It contains a large subset of SML (including SML/NJ extensions)
  *)
 
@@ -7,17 +7,17 @@ signature MDL_AST =
 sig
    type loc  = SourceMapping.location
 
-   datatype decl = 
+   datatype decl =
      DATATYPEdecl of datatypebind list * typebind list
    | EXCEPTIONdecl of exceptionbind list
    | FUNdecl of funbind list
    | RTLdecl of pat * exp * loc
    | RTLSIGdecl of id list * ty
    | VALdecl of valbind list
-   | VALSIGdecl of id list * ty 
+   | VALSIGdecl of id list * ty
    | TYPESIGdecl of id * tyvar list
    | LOCALdecl of decl list * decl list
-   | SEQdecl of decl list 
+   | SEQdecl of decl list
    | STRUCTUREdecl of id * decl list * sigconstraint option * structexp
    | FUNCTORdecl of id * decl list * sigconstraint option * structexp
    | STRUCTURESIGdecl of id * sigexp
@@ -35,11 +35,11 @@ sig
    | ARCHdecl of id * decl list            (* architecture spec *)
    | $ of string list                      (* verbatim code *)
    | BITSORDERINGdecl of range             (* declare bits ordering *)
-   | FORMATdecl of int option * formatbind list   
+   | FORMATdecl of int option * formatbind list
                                            (* declare instruction formats *)
    | ARCHKINDdecl of archKind              (* superscalar/vliw *)
    | ENDIANESSdecl of endianess            (* little/big endian *)
-   | STORAGEdecl of storagedecl list       (* cell declarations *) 
+   | STORAGEdecl of storagedecl list       (* cell declarations *)
    | LOCATIONSdecl of locbind list         (* location declarations *)
    | NAMEdecl of string                    (* name of architecture *)
    | VERSIONdecl of string                 (* version number *)
@@ -54,10 +54,10 @@ sig
    and   sigexp  = IDsig of ident
                  | WHEREsig of sigexp * ident * structexp
                  | WHERETYPEsig of sigexp * ident * ty
-		 | DECLsig of decl list
+                 | DECLsig of decl list
 
    and   share   = TYPEshare of ident list
-                 | STRUCTshare of ident list 
+                 | STRUCTshare of ident list
 
    and   literal = WORDlit of word
                  | WORD32lit of Word32.word
@@ -68,7 +68,7 @@ sig
                  | CHARlit of char
                  | BOOLlit of bool
                  | REALlit of string
-   
+
    and      exp  = LITexp of literal
                  | IDexp of ident
                  | CONSexp of ident * exp option
@@ -80,7 +80,7 @@ sig
                  | IFexp of exp * exp * exp
                  | LETexp of decl list * exp list
                  | SEQexp of exp list
-                 | RAISEexp of exp 
+                 | RAISEexp of exp
                  | HANDLEexp of exp * clause list
                  | CASEexp of exp * clause list
                  | TYPEDexp of exp * ty
@@ -132,16 +132,16 @@ sig
                     | NOTpat of pat
                     | ORpat of pat list
                     | ANDpat of pat list
-                    | WHEREpat of pat * exp 
+                    | WHEREpat of pat * exp
                     | NESTEDpat of pat * exp * pat
 
-   and  ident = IDENT of id list * id 
+   and  ident = IDENT of id list * id
 
    and  clause = CLAUSE of pat list * guard * exp
-  
+
    and  funbind = FUNbind of id * clause list
-   
-   and  storagedecl = 
+
+   and  storagedecl =
           CELLdecl of {id:id, nickname:id,
                        from:int ref,to:int ref,
                        alias:id option,
@@ -150,11 +150,11 @@ sig
                        defaults:(int*exp) list}
 
    and  locbind = LOCbind of id * pat option * exp
-   
+
    and         endianess = LITTLE | BIG
-   
+
    and         archKind = VLIW | SUPERSCALAR
- 
+
    and   formatbind = FORMATbind of id * field list * exp option
 
    and   field = FIELD of {id:id,width:width,sign:signedness,
@@ -166,7 +166,7 @@ sig
              | CELLcnv of id
              | FUNcnv of id
 
-   and   datatypebind = DATATYPEbind of 
+   and   datatypebind = DATATYPEbind of
              {id:id,tyvars:tyvar list,mc : opcodeencoding,asm : bool,
               field:id option,cbs:consbind list}
                       | DATATYPEEQbind of {id:id, tyvars:tyvar list, ty:ty}
@@ -174,7 +174,7 @@ sig
    and   exceptionbind = EXCEPTIONbind of id * ty option
                        | EXCEPTIONEQbind of id * ident
 
-   and   consbind     = 
+   and   consbind     =
          CONSbind of {id : id,ty:ty option,mc : mc option,
                       asm : assembly option,
                       rtl : exp option,
@@ -183,8 +183,8 @@ sig
                       delayslot : exp option,
                       delaycand : exp option,
                       sdi : exp option,
-                      latency : exp option,   
-                      pipeline : exp option,   
+                      latency : exp option,
+                      pipeline : exp option,
                       loc : loc
                      }
 
@@ -207,7 +207,7 @@ sig
                    | ASMasm of asm list
 
    and   asm       = TEXTasm of string
-                   | EXPasm of exp 
+                   | EXPasm of exp
 
    and   typebind  = TYPEbind of id * tyvar list * ty
 
@@ -222,7 +222,7 @@ sig
                      | IDrtl  of id
                      | COMPOSITErtl of id
 
-   and   cpubind    = CPUbind of {name:id, aliases:string list, maxIssues:int, 
+   and   cpubind    = CPUbind of {name:id, aliases:string list, maxIssues:int,
                                   resources: (int * id) list}
    and   pipelinebind = PIPELINEbind of id * (pat * pipelineexp) list
 
@@ -232,15 +232,15 @@ sig
 
    and   cycle        = ORcycle of cycle * cycle
                       | REPEATcycle of cycle * int
-                      | IDcycle of id 
+                      | IDcycle of id
 
 
    withtype range = int * int
    and      id    = string
    and      guard = exp option
-   and      opcodeencoding = int list option 
+   and      opcodeencoding = int list option
    and      cellset = bool
    and      rtl     = rtlterm list
    and      sigconstraint = {abstract: bool, sigexp:sigexp}
 
-end  
+end

@@ -1,7 +1,7 @@
 (*
  * Signature of a closed semi ring.  A closed semi ring has the
  * closure operation (star)
- * 
+ *
  * -- Allen
  *)
 

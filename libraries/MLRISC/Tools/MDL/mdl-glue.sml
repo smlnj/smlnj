@@ -52,21 +52,21 @@ structure MDLRTLComp = MDLRTLComp
     structure MLRiscTypes = MLRiscTypes
    )
 
-structure MDLParser = 
+structure MDLParser =
    MDLParserDriver
       (structure AstPP = MDLPP
        val MDLmode = true
        open MDLAst
-       fun newCell(id,nickname) = 
+       fun newCell(id,nickname) =
             CELLdecl{id=id,nickname=nickname,
                      from=ref 0,to=ref ~1, alias=NONE, count=NONE,
-                     bits=0, 
+                     bits=0,
                      print=LAMBDAexp[CLAUSE([WILDpat],NONE,
                                             LITexp(STRINGlit id))],
                      aggregable=false,
                      defaults=[]
                     }
-       val extraCells = 
+       val extraCells =
             [newCell("CELLSET","cellset")
             ]
       )

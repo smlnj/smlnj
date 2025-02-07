@@ -1,10 +1,10 @@
-(* mipsJumps.sml --- information to resolve jumps. 
+(* mipsJumps.sml --- information to resolve jumps.
  *
  *)
 functor MIPSJumps
   (structure Instr : MIPSINSTR
    structure Shuffle : MIPSSHUFFLE
-      sharing Shuffle.I = Instr) : SDI_JUMPS = 
+      sharing Shuffle.I = Instr) : SDI_JUMPS =
 struct
   structure I = Instr
   structure C = I.C
@@ -44,7 +44,7 @@ struct
   (* max Size is not used for the mips span dependency analysis. *)
   fun maxSize _ = error "maxSize"
 
-  fun sdiSize(instr, labMap, loc) = 
+  fun sdiSize(instr, labMap, loc) =
   let fun branchOffset lab = (labMap lab - loc - 8) div 4
       fun delay nop = if nop then 8 else 4
       fun branch(nop, label) = delay nop (* XXX *)

@@ -1,6 +1,6 @@
 (*
  * This gives a cluster a graph view so that all graph based algorithms
- * can be applied on the cluster.  The view is readonly though. 
+ * can be applied on the cluster.  The view is readonly though.
  *
  * -- Allen
  *)

@@ -21,13 +21,13 @@ Note that we treat symbol sets (\ie{}, character classes) as primitive; this mat
 The semantics of our RE language are given in the form of a function $\Ls{-} \ : \ \mathrm{RE} \rightarrow \Sigma^*$ from REs to their corresponding language over $\Sigma$:
 
 \begin{eqnarray*}
-\Ls{\epsilon} 	&=& 	\epsilon \\
-\Ls{\CS}		&=& 	\CS \\
-\Ls{r\cdot s}	&=& 	\Ls{r} \cdot \Ls{s} \\
-\Ls{r^*}		&=& 	\epsilon \cup \Ls{r}\cdot\Ls{r^*} \\
-\Ls{r \OR s}	&=&		\Ls{r} \cup \Ls{s} \\
-\Ls{r \AND s}	&=& 	\Ls{r} \cap \Ls{s} \\
-\Ls{\neg r}		&=& 	\Sigma \setminus \Ls{r}
+\Ls{\epsilon}   &=&     \epsilon \\
+\Ls{\CS}                &=&     \CS \\
+\Ls{r\cdot s}   &=&     \Ls{r} \cdot \Ls{s} \\
+\Ls{r^*}                &=&     \epsilon \cup \Ls{r}\cdot\Ls{r^*} \\
+\Ls{r \OR s}    &=&             \Ls{r} \cup \Ls{s} \\
+\Ls{r \AND s}   &=&     \Ls{r} \cap \Ls{s} \\
+\Ls{\neg r}             &=&     \Sigma \setminus \Ls{r}
 \end{eqnarray*}
 
 \section{Derivatives}\label{sec:derivatives}
@@ -35,7 +35,7 @@ The semantics of our RE language are given in the form of a function $\Ls{-} \ :
 Brzozowski introduced \emph{derivatives} of regular expressions as an alternative means of DFA construction \cite{derivatives}.  His approach is attrative because it easily allows the language of REs to be extended with arbitrary boolean operations.  Further, it is intuitive, relatively easy to implement, goes directly from an RE to a DFA, and with some care in implementation can be made competitive with other DFA construction approaches.  We begin by introducing the notion of a derivative of some language $\CL$.
 
 \begin{definition}  The \New{derivative} of a set of symbol sequences $\CL \subset \Sigma^*$ with respect to a finite symbol sequence $u$ is defined to be $D_u(\CL) = \{ v \ | \ u\cdot v \in \CL \}$.
-\end{definition} 
+\end{definition}
 
 Derivatives give a very natural algorithm for DFA construction.  Before giving that algorithm, however, we need a means of computing derivatives for regular expressions.
 
@@ -51,10 +51,10 @@ We also need the following function:
 \]
 The $\delta$ function takes REs to REs (recall that the empty set is a symbol set, which is an RE).  Intuitively, $\delta$ collapses an RE to the ``smallest'' RE with the same nullability.
 
-The following function, due to Brzozowski, gives the derivative of a regular expression with respect to a symbol $a$.  
+The following function, due to Brzozowski, gives the derivative of a regular expression with respect to a symbol $a$.
 \begin{eqnarray*}
 D_a (\epsilon)  &=& \emptyset \\
-D_a (\CS)         &=& 
+D_a (\CS)         &=&
     \begin{cases}
         \epsilon & \textrm{if} \ a \in \CS \\
         \emptyset & \textrm{if} \ a \notin \CS \\
@@ -130,8 +130,8 @@ Suppose we have two regular expressions $r$ and $s$ yielding factorings $\{ \CR_
     \bullet \ar@{-}[rrr]|{\Sigma} &&& \bullet \\
     \bullet \ar@{-}[rr]|{\CR_1} && \bullet \ar@{-}[r]|{\CR_2} & \bullet \\
     \bullet \ar@{-}[r]|{\CS_1} & \bullet \ar@{-}[rr]|{\CS_2} &&  \bullet \\
-    \bullet \ar@{-}[r]|{\CR_1 \cap \CS_1} & 
-    \bullet \ar@{-}[r]|{\CR_1 \cap \CS_2} & 
+    \bullet \ar@{-}[r]|{\CR_1 \cap \CS_1} &
+    \bullet \ar@{-}[r]|{\CR_1 \cap \CS_2} &
     \bullet \ar@{-}[r]|{\CR_2 \cap \CS_2} &
     \bullet
   }

@@ -1,6 +1,6 @@
 (*
  * Abstract view a flowgraph required by the new register allocator.
- * In order to allow different representation to share the same 
+ * In order to allow different representation to share the same
  * register allocator core, each representation should implement the
  * following interface to talk to the new RA.
  *
@@ -11,11 +11,11 @@ signature RA_FLOWGRAPH =
 sig
 
    structure I     : INSTRUCTIONS
-   structure C     : CELLS  
+   structure C     : CELLS
    structure G     : RA_GRAPH = RAGraph
    structure Spill : RA_SPILL
      sharing Spill.I = I
-     sharing I.C = C 
+     sharing I.C = C
 
    type flowgraph
 
@@ -34,7 +34,7 @@ sig
      * quickly.
      *)
    val services : flowgraph ->
-       { build   : G.interferenceGraph * CellsBasis.cellkind-> 
+       { build   : G.interferenceGraph * CellsBasis.cellkind->
                       G.move list, (* build the graph *)
          spill   : {copyInstr    : Spill.copyInstr,
                     spill        : Spill.spill,

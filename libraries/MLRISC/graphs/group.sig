@@ -1,12 +1,12 @@
 (*
  * Commutative groups.
- * 
+ *
  * -- Allen
  *)
 
 signature ABELIAN_GROUP =
 sig
-   type elem 
+   type elem
    val +    : elem * elem -> elem
    val -    : elem * elem -> elem
    val ~    : elem -> elem

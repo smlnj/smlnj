@@ -15,11 +15,11 @@ signature MONO_BUFFER =
 
     type buf
 
-    type elem		(* buffer element type *)
-    type vector		(* vectors of elements *)
-    type slice		(* vector-slices of elements *)
-    type array		(* mutable arrays of elements *)
-    type array_slice	(* array-slices of elements *)
+    type elem           (* buffer element type *)
+    type vector         (* vectors of elements *)
+    type slice          (* vector-slices of elements *)
+    type array          (* mutable arrays of elements *)
+    type array_slice    (* array-slices of elements *)
 
   (* maximum number of elements that a buffer can contain *)
     val maxLen : int

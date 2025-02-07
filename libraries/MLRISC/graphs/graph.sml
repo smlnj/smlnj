@@ -1,8 +1,8 @@
 (*
- *  A generic directed graph data structure.  
+ *  A generic directed graph data structure.
  *  Implemented in an ``object oriented style''
  *  All graphs are based on this interface.
- * 
+ *
  *  -- Allen
  *)
 
@@ -13,13 +13,13 @@ struct
    exception Subgraph
    exception NotFound
    exception Unimplemented
-   exception Readonly     
+   exception Readonly
    exception NotSingleEntry
    exception NotSingleExit
 
    fun unimplemented _ = raise Unimplemented
 
-   type node_id = int 
+   type node_id = int
    type 'n node = node_id * 'n
    type 'e edge = node_id * node_id * 'e
 
@@ -31,7 +31,7 @@ struct
           (* inserting/removing nodes and edges *)
           new_id          : unit -> node_id,
           add_node        : 'n node -> unit,
-          add_edge        : 'e edge -> unit, 
+          add_edge        : 'e edge -> unit,
           remove_node     : node_id -> unit,
           set_out_edges   : node_id * 'e edge list -> unit,
           set_in_edges    : node_id * 'e edge list -> unit,
@@ -64,16 +64,16 @@ struct
    fun remove_all_edges (GRAPH G) (i,j) =
         #set_out_edges G (i,List.filter (fn (_,k,_) => k = j) (#out_edges G i))
    fun remove_all_edges' (GRAPH G) (i,j,p) =
-        #set_out_edges G (i,List.filter (fn (_,k,e) => k = j andalso p e) 
+        #set_out_edges G (i,List.filter (fn (_,k,e) => k = j andalso p e)
                            (#out_edges G i))
    fun remove_edge (GRAPH G) (i,j) =
        let fun filter [] = []
-             | filter((e as (_,k,_))::es) = 
+             | filter((e as (_,k,_))::es) =
                if j = k then es else e::filter es
        in  #set_out_edges G (i,filter(#out_edges G i)) end
    fun remove_edge' (GRAPH G) (i,j,p) =
        let fun filter [] = []
-             | filter((e as (_,k,e'))::es) = 
+             | filter((e as (_,k,e'))::es) =
                if j = k andalso p e' then es else e::filter es
        in  #set_out_edges G (i,filter(#out_edges G i)) end
 

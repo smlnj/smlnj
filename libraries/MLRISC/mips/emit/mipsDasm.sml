@@ -11,7 +11,7 @@ struct
    structure C  = I.C
    structure LE = LabelExp
    structure Constant = I.Constant
-   
+
    fun error msg = MLRiscErrorMsg.error("MIPSDasm",msg)
 end
 

@@ -6,11 +6,11 @@
 signature POINTS_TO =
 sig
 
-   eqtype edgekind 
+   eqtype edgekind
    structure C : CELLS_BASIS = CellsBasis
 
-   datatype cell = 
-     LINK  of region                             
+   datatype cell =
+     LINK  of region
    | SREF  of C.cell * edges ref
    | WREF  of C.cell * edges ref
    | SCELL of C.cell * edges ref
@@ -23,15 +23,15 @@ sig
    val reset    : (unit -> C.cell) -> unit
 
    (* generate a new reference/immutable cell *)
-   val newSRef  : unit -> region  
-   val newWRef  : unit -> region  
-   val newSCell : unit -> region  
-   val newWCell : unit -> region  
+   val newSRef  : unit -> region
+   val newWRef  : unit -> region
+   val newSCell : unit -> region
+   val newWCell : unit -> region
 
    (* generate a new collapsed node *)
-   val newTop   : {mutable:bool,name:string} -> region  
+   val newTop   : {mutable:bool,name:string} -> region
 
-   (*  
+   (*
     * The following are methods for constructing the storage shape graph.
     *)
    val pi     : region * int -> region (* the ith projection *)
@@ -40,14 +40,14 @@ sig
    val ran    : region * int -> region (* the ith range *)
    val offset : region * int -> region (* the ith offset *)
 
-   val unify     : region * region -> unit 
-   val interfere : region * region -> bool (* do they interfere? *) 
+   val unify     : region * region -> unit
+   val interfere : region * region -> bool (* do they interfere? *)
 
-   (*   
+   (*
     * More complex methods
     *)
-   val mkRecord : region option * region list -> region    
-   val mkRef    : region option * region -> region        
+   val mkRecord : region option * region list -> region
+   val mkRef    : region option * region -> region
    val mkArray  : region option * region list -> region
    val mkVector : region option * region list -> region
    val mkLambda : region list -> region (* define a function *)
@@ -56,7 +56,7 @@ sig
    val ret      : region * region list -> unit (* binds the return values *)
 
    val strongUpdate    : region * int * region -> unit
-   val strongSubscript : region * int -> region 
+   val strongSubscript : region * int -> region
    val weakUpdate      : region * region -> unit
    val weakSubscript   : region -> region
 

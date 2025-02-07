@@ -1,6 +1,6 @@
 (*
  * This module provides few helper functions for annotating virtual registers
- * with gc type information. 
+ * with gc type information.
  *)
 
 signature GC_CELLS =

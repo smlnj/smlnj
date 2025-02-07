@@ -43,6 +43,6 @@ signature INTMAP =
     val clear : 'a intmap -> unit
 
          (* copy an intmap *)
-    val copy : 'a intmap -> 'a intmap 
+    val copy : 'a intmap -> 'a intmap
   end
 

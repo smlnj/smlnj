@@ -1,12 +1,12 @@
-(* 
+(*
  *  Common operations on MLTREE
  *
- * -- Allen 
+ * -- Allen
  *)
 signature MLTREE_UTILS =
 sig
 
-   structure T : MLTREE 
+   structure T : MLTREE
 
    (*
     * Hashing
@@ -26,13 +26,13 @@ sig
    val eqMlriscs : T.mlrisc list * T.mlrisc list -> bool
 
    (*
-    * Pretty printing 
+    * Pretty printing
     *)
-   val show : {def       : int -> string, 
+   val show : {def       : int -> string,
                use       : int -> string,
                regionDef : T.Region.region -> string,
                regionUse : T.Region.region -> string
-              } -> T.printer  
+              } -> T.printer
 
    val stmToString   : T.stm -> string
    val rexpToString  : T.rexp -> string

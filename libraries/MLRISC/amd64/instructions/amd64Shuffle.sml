@@ -15,13 +15,13 @@ functor AMD64Shuffle (I : AMD64INSTR) : AMD64SHUFFLE =
     structure CB = CellsBasis
     structure Shuffle = Shuffle (I)
 
-    type t = {tmp:I.operand option, dst:CellsBasis.cell list, 
-	      src:CellsBasis.cell list}
+    type t = {tmp:I.operand option, dst:CellsBasis.cell list,
+              src:CellsBasis.cell list}
 
     exception foo
     val shuffle = Shuffle.shuffle
-	   {mvInstr=fn{dst, src} => [I.move{mvOp=I.MOVQ, src=src, dst=dst}],
-		    ea=fn r => I.Direct (64, r)}
+           {mvInstr=fn{dst, src} => [I.move{mvOp=I.MOVQ, src=src, dst=dst}],
+                    ea=fn r => I.Direct (64, r)}
 
     fun shufflefp x = raise Fail "todo"
 

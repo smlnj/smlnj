@@ -6,9 +6,9 @@ SHELL =		/bin/sh
 MAKE =		make
 AS =		as --64
 CC =		gcc -std=gnu99 -Wall
-CFLAGS =	-O2 -m64 -no-pie
+CFLAGS =	-O2 -m64 -no-pie -Wall -Wextra -Werror -Wno-unknown-pragmas
 CXX =           g++ --std=c++17
-CXX_FLAGS =     -g -O2 -no-pie
+CXX_FLAGS =     -g -O2 -no-pie -Wall -Wextra -Werror -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function
 CPP =		gcc -x assembler-with-cpp -E -P
 XOBJS =
 XLIBS =		../c-libs/dl/libunix-dynload.a

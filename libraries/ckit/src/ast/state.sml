@@ -13,16 +13,16 @@ struct
   structure AT = Aidtab  (* was TypeAddornmentTab *)
 
   (* symbol table binary maps *)
-  structure ST = BinaryMapFn (struct 
-			        type ord_key = Sym.symbol
-			        val compare = Sym.compare 
-			      end)
+  structure ST = BinaryMapFn (struct
+                                type ord_key = Sym.symbol
+                                val compare = Sym.compare
+                              end)
 
   (* int binary maps *)
-  structure IT = BinaryMapFn (struct 
-			        type ord_key = LargeInt.int
-			        val compare = LargeInt.compare
-			      end)
+  structure IT = BinaryMapFn (struct
+                                type ord_key = LargeInt.int
+                                val compare = LargeInt.compare
+                              end)
 
 
   (* environments *)
@@ -55,7 +55,7 @@ struct
 
   (* for use in D *)
   type typeContext =
-    {typeCxts : Ast.ctype option list ref}  
+    {typeCxts : Ast.ctype option list ref}
 
   (* information for the current function def *)
   type funContext =
@@ -158,7 +158,7 @@ fun initLocal () : localState =
       {labelTab = ref ST.empty,
        gotos = ref [],
        returnTy = ref NONE},
-     switchContext = 
+     switchContext =
       {switchLabels = ref []},
      locContext =
       {locStack = ref [SourceMap.UNKNOWN]}}
@@ -186,8 +186,8 @@ fun initGlobal(INITIAL, errorState: Error.errorState) : globalState =
 
 (* provide packages of implicit state manipulation functions *)
 fun stateFuns(globalState as {uidTables, envContext, errorState} : globalState,
-	      localState as 
-	      {tidsContext, tmpVariables, funContext, switchContext, locContext,...}: localState)
+              localState as
+              {tidsContext, tmpVariables, funContext, switchContext, locContext,...}: localState)
     : stateFuns =
 let
 
@@ -239,7 +239,7 @@ in
   (* accesses: locStack *)
   fun getLoc () =
       case !locStack
-	of loc :: _ => loc
+        of loc :: _ => loc
          | nil => (bug "getLoc: empty location stack"; SourceMap.UNKNOWN)
 
   (* push the location stack, on entering a marked phrase *)
@@ -251,7 +251,7 @@ in
   (* affects: locStack *)
   fun popLoc () =
       case !locStack
-	of _ :: rest => locStack := rest
+        of _ :: rest => locStack := rest
          | nil => bug "popLoc: empty location stack"
 
 end (* locContext *)
@@ -262,8 +262,8 @@ local val {switchLabels} = switchContext in
   (* effects: switchLabels *)
   fun popSwitchLabels () =
       (case !switchLabels
-	 of _ :: swLabels => switchLabels := swLabels
-	  | nil => bug "State: can't pop empty switchlabels")
+         of _ :: swLabels => switchLabels := swLabels
+          | nil => bug "State: can't pop empty switchlabels")
 
   (* effects: switchLabels *)
   fun pushSwitchLabels () =
@@ -272,30 +272,30 @@ local val {switchLabels} = switchContext in
   (* effects: switchLabels *)
   fun addSwitchLabel (i: LargeInt.int) : string option =
       case !switchLabels
-	of {switchTab, default} :: rest =>
-	    (case IT.find(switchTab, i)
-	       of NONE =>
-		   let val switchTab = IT.insert(switchTab, i, ())
-		    in switchLabels := {switchTab=switchTab, default=default}::rest;
-		       NONE
-		   end
-		| SOME _ =>  (* error return *)
-		   SOME ("Duplicate case label " ^ (LargeInt.toString i) ^
-			 " in the same switch statement"))
-	 | nil => (* error return *)
-	    SOME ("Case label " ^ (LargeInt.toString i) ^
-		  " appears outside a switch statement")
-    
+        of {switchTab, default} :: rest =>
+            (case IT.find(switchTab, i)
+               of NONE =>
+                   let val switchTab = IT.insert(switchTab, i, ())
+                    in switchLabels := {switchTab=switchTab, default=default}::rest;
+                       NONE
+                   end
+                | SOME _ =>  (* error return *)
+                   SOME ("Duplicate case label " ^ (LargeInt.toString i) ^
+                         " in the same switch statement"))
+         | nil => (* error return *)
+            SOME ("Case label " ^ (LargeInt.toString i) ^
+                  " appears outside a switch statement")
+
   (* effects: switchLabels *)
   fun addDefaultLabel () : string option =
       case !switchLabels
         of {switchTab, default} :: rest =>
-	     if default then (* error return *)
-	        SOME "Duplicate default label in the same switch statement"
-	     else (switchLabels := {switchTab=switchTab, default=true} :: rest;
-		   NONE)
-	 | nil => (* error return *)
-	     SOME "Default label appears outside a switch statement"
+             if default then (* error return *)
+                SOME "Duplicate default label in the same switch statement"
+             else (switchLabels := {switchTab=switchTab, default=true} :: rest;
+                   NONE)
+         | nil => (* error return *)
+             SOME "Default label appears outside a switch statement"
 
 end (* switchContext *)
 
@@ -306,7 +306,7 @@ local val {ttab,atab,...} = uidTables in
   fun bindAid ty =
       let val aid = Aid.new ()
        in AT.insert(atab,aid,ty);
-	  aid
+          aid
       end
 
   fun lookAid aid = AT.find (atab,aid)
@@ -331,7 +331,7 @@ in
   (* accesses funContext *)
   fun getReturnTy () = !returnTy
 
-  (* accesses: ? 
+  (* accesses: ?
    * effects: labelTab *)
   (* DBM: labToPid called only with definition=false from addGoto,
    * so errorFl will always be returned false in that case.  On the
@@ -340,50 +340,50 @@ in
          : (Ast.label * bool) =
       case ST.find(!labelTab,labSym)
         of SOME(label, true) => (* previously defined *)
-	     if definition then (label, true) (* error, multiple defitions *)
-	     else (label, false) (* no error *)
-	 | SOME(label, false) => (* label has been seen previously but not defined *)
-	    (if definition
-	     then (labelTab := ST.insert(!labelTab, labSym, (label, true)))
-		   (* mark as defined, rebinding labSym in labelTab *)
+             if definition then (label, true) (* error, multiple defitions *)
+             else (label, false) (* no error *)
+         | SOME(label, false) => (* label has been seen previously but not defined *)
+            (if definition
+             then (labelTab := ST.insert(!labelTab, labSym, (label, true)))
+                   (* mark as defined, rebinding labSym in labelTab *)
              else ();
-	     (label, false)) (* no error *)
-	 | NONE => (* new label *)
-	     let val label = {name=labSym, uid = Pid.new (), location=loc}
-	      in labelTab := ST.insert(!labelTab, labSym, (label, definition));
-		 (label, false)
-	     end
+             (label, false)) (* no error *)
+         | NONE => (* new label *)
+             let val label = {name=labSym, uid = Pid.new (), location=loc}
+              in labelTab := ST.insert(!labelTab, labSym, (label, definition));
+                 (label, false)
+             end
 
   (* accesses: funContext
    * effects: labelTab, gotos *)
   fun addGoto (labSym, loc) =
       let val (label, _) = symbolToLabel(false, labSym, loc)
-	     (* discard error flag: no possibility of an error condition,
-	      * since not a defining occurrence of the label *)
+             (* discard error flag: no possibility of an error condition,
+              * since not a defining occurrence of the label *)
        in gotos := labSym :: !gotos;
-	  label
+          label
       end
-  
+
   (* global: funContext
    * effects: labelTab *)
   fun addLabel (labSym, loc) =
       let val (label, errorFlag) = symbolToLabel(true, labSym, loc)
        in if errorFlag then
-	    error("Repeated definition of label " ^ (Sym.name labSym))
-	  else ();
-	  label
+            error("Repeated definition of label " ^ (Sym.name labSym))
+          else ();
+          label
       end
 
   (* access: labelTab *)
   fun checkLabels () =
       let fun check(g :: gl) =
-	      (case ST.find(!labelTab,g)
-		 of SOME(pid, true) => check gl
-		  | SOME({name,location,...}, false) =>
-		      SOME(name, location)
-		      (* error in program -- label used but not defined *)
-		  | NONE => (bug "State: checkLabels: goto label not in table"; NONE))
-	    | check nil = NONE (* ok -- all goto target labels defined *)
+              (case ST.find(!labelTab,g)
+                 of SOME(pid, true) => check gl
+                  | SOME({name,location,...}, false) =>
+                      SOME(name, location)
+                      (* error in program -- label used but not defined *)
+                  | NONE => (bug "State: checkLabels: goto label not in table"; NONE))
+            | check nil = NONE (* ok -- all goto target labels defined *)
        in check (!gotos)
       end
 
@@ -404,18 +404,18 @@ in
   (* effects: localEnv *)
   fun popLocalEnv () =
       case !localEnv
-	of st :: env => localEnv := env
-	 | nil => bug "State: popping an empty local environment"
+        of st :: env => localEnv := env
+         | nil => bug "State: popping an empty local environment"
 
   (* lookSym: lookup a symbol in the full environment (localEnv over globalEnv) *)
   (* accesses: globalEnv, localEnv *)
   fun lookSym (sym: Sym.symbol) : Bindings.symBinding option =
-      let fun lookup [] = 
-	       ST.find(!globalEnv,sym)
-	    | lookup (st::rest) =
-	       (case ST.find (st, sym)
-		  of SOME x => SOME x
-		   | NONE => lookup rest)
+      let fun lookup [] =
+               ST.find(!globalEnv,sym)
+            | lookup (st::rest) =
+               (case ST.find (st, sym)
+                  of SOME x => SOME x
+                   | NONE => lookup rest)
        in lookup (!localEnv)
       end
 
@@ -428,10 +428,10 @@ in
    * affects: environment *)
   fun bindSym (sym, binding) =
       case !localEnv
-	of st :: outer => 
-	     localEnv := ST.insert(st,sym,binding) :: outer
-	 | nil =>
-	     globalEnv := ST.insert(!globalEnv,sym,binding)
+        of st :: outer =>
+             localEnv := ST.insert(st,sym,binding) :: outer
+         | nil =>
+             globalEnv := ST.insert(!globalEnv,sym,binding)
 
   (* forces entry into the global env (used for patching up undeclared
    * function calls).  WARNING: new pid/uid generated *)
@@ -443,8 +443,8 @@ in
   (* accesses: globalEnv *)
   fun lookLocalScope sym =
       case !localEnv
-	of nil => ST.find(!globalEnv,sym)
-	 | st :: _ => ST.find(st,sym)
+        of nil => ST.find(!globalEnv,sym)
+         | st :: _ => ST.find(st,sym)
 
   (* return the current global environment (symtab) *)
   fun getGlobalEnv (): symtab =

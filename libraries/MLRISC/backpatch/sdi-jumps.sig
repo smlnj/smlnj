@@ -1,4 +1,4 @@
-(* sdi-jumps.sig --- specification of target information to resolve jumps. 
+(* sdi-jumps.sig --- specification of target information to resolve jumps.
  *
  * COPYRIGHT (c) 1996 Bell Laboratories.
  *
@@ -14,8 +14,8 @@ signature SDI_JUMPS = sig
   val isSdi : I.instruction -> bool
   val minSize : I.instruction -> int
   val maxSize : I.instruction -> int
-      (* minSize and maxSize are not restricted to SDIs but 
-       * instructions that may require NOPs after them, etc. 
+      (* minSize and maxSize are not restricted to SDIs but
+       * instructions that may require NOPs after them, etc.
        *)
 
   val sdiSize : I.instruction * (Label.label -> int) * int -> int

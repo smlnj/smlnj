@@ -3,7 +3,7 @@
  *
  * -- Allen
  *)
-signature REDUCIBILITY = 
+signature REDUCIBILITY =
 sig
     structure Loop : LOOP_STRUCTURE
 

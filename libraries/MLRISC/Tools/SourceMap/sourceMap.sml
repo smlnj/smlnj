@@ -12,19 +12,19 @@ struct
                               endCol    : int
                              }
   datatype state = STATE of {lineNum : int,
-                             file    : UniqueSymbol.symbol, 
+                             file    : UniqueSymbol.symbol,
                              charPos : charpos
                             }
 
   datatype sourcemap = SOURCEMAP of
           { linePos  : charpos list ref,
-            filePos  : {linePos:charpos list, 
+            filePos  : {linePos:charpos list,
                         line   :int,
                         srcFile:UniqueSymbol.symbol} list ref,
             lineNum  : int ref
           }
 
-  val dummyLoc = LOC{srcFile=UniqueSymbol.fromString "???", 
+  val dummyLoc = LOC{srcFile=UniqueSymbol.fromString "???",
                      beginLine=1,beginCol=1,
                      endLine=1,endCol=1}
   fun newmap{srcFile} = SOURCEMAP
@@ -54,7 +54,7 @@ struct
   fun reset srcMap (STATE{file, lineNum, charPos}) =
      (print(UniqueSymbol.toString file^" "^Int.toString lineNum^"\n");
       resynch srcMap {pos=charPos,
-                      srcFile=UniqueSymbol.toString file, line=lineNum} 
+                      srcFile=UniqueSymbol.toString file, line=lineNum}
      )
 
   fun parseDirective sourceMap (pos,directive) =
@@ -66,7 +66,7 @@ struct
       in  case String.tokens sep directive of
             line::srcFile::_ =>
              (case Int.fromString line of
-                 SOME line => 
+                 SOME line =>
                     resynch sourceMap {pos=pos,srcFile=srcFile,line=line}
               |  _ => newline sourceMap pos
              )
@@ -82,13 +82,13 @@ struct
            else findPos(p,pos,currFile,rest,filePos,line-1)
         | findPos(p,currPos,currFile,[],{linePos,line,srcFile}::filePos,_) =
            findPos(p,currPos,srcFile,linePos,filePos,line)
-        | findPos(p,currPos,currFile,[],[],line) = 
+        | findPos(p,currPos,currFile,[],[],line) =
             {srcFile=currFile,line=line,column=0}
 
       val {srcFile=currFile,...} = hd(!filePos)
-      val {srcFile,line=l1,column=c1} = 
+      val {srcFile,line=l1,column=c1} =
              findPos(x,x,currFile,!linePos,!filePos,!lineNum)
-      val {srcFile,line=l2,column=c2} = 
+      val {srcFile,line=l2,column=c2} =
              findPos(y,y,currFile,!linePos,!filePos,!lineNum)
   in  LOC{srcFile   = srcFile,
           beginLine = l1,

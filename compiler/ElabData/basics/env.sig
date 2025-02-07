@@ -4,7 +4,7 @@
 signature ENV = sig
 
   type 'b env
-  exception Unbound  
+  exception Unbound
 
   val empty: 'b env
   val look: 'b env * Symbol.symbol -> 'b
@@ -21,7 +21,7 @@ signature ENV = sig
   val map: ('b -> 'b) -> 'b env -> 'b env
   val fold: ((Symbol.symbol * 'b) * 'a -> 'a) -> 'a -> 'b env -> 'a
 
-  val symbols : 'b env -> Symbol.symbol list 
+  val symbols : 'b env -> Symbol.symbol list
                                 (* may contain duplicate symbols *)
 
 end (* signature ENV *)

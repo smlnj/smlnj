@@ -7,7 +7,7 @@
  * Contributed by Adam Shaw.
  *)
 
-(* 
+(*
 signature BACK_END =
   sig
     val output : (LLKSpec.grammar * TextIO.outstream * string)
@@ -21,36 +21,36 @@ structure LaTeXOutput (* : BACK_END *) =
     structure S = LLKSpec
 
     (* containsChar : (char list) -> char -> bool *)
-    fun containsChar (cs : char list) (x : char) = 
+    fun containsChar (cs : char list) (x : char) =
           (case cs
             of [] => false
-	     | (ch :: chs) => (ch = x) orelse (containsChar chs x)
-	   (* end case *))
+             | (ch :: chs) => (ch = x) orelse (containsChar chs x)
+           (* end case *))
 
     (* removeChar : (char list) -> char -> (char list) *)
     fun removeChar (cs : char list) (x : char) =
           (case cs
-	    of [] => []
-	     | (ch :: chs) => if (ch = x) then chs else (removeChar chs x)
+            of [] => []
+             | (ch :: chs) => if (ch = x) then chs else (removeChar chs x)
            (* end case *))
 
     (* escape : char -> string -> string *)
     fun escape c = let
           fun backslash [] = []
-            | backslash (x::xs) = 
-                if x = c 
-		then #"\\" :: x :: (backslash xs)
-		else x :: (backslash xs)
+            | backslash (x::xs) =
+                if x = c
+                then #"\\" :: x :: (backslash xs)
+                else x :: (backslash xs)
           in
             (implode o backslash o explode)
           end
 
     (* backslashFirst : (char list) -> (char list) *)
     (* put backslash first if present, otherwise do nothing *)
-    fun backslashFirst cs = 
+    fun backslashFirst cs =
           if containsChar cs #"\\"
-	  then #"\\" :: (removeChar cs #"\\")
-	  else cs 
+          then #"\\" :: (removeChar cs #"\\")
+          else cs
 
     (* escapeL : (char list) -> string -> string *)
     (* escape the characters in cs by prepending backslashes *)
@@ -58,7 +58,7 @@ structure LaTeXOutput (* : BACK_END *) =
     fun escapeL cs s = let
           val cs' = backslashFirst cs
           fun escl ([], s) = s
-	    | escl (ch :: chs, s) = escl (chs, escape ch s)
+            | escl (ch :: chs, s) = escl (chs, escape ch s)
           in
             escl (cs', s)
           end
@@ -87,26 +87,26 @@ structure LaTeXOutput (* : BACK_END *) =
           if (size s) > (size s')
           then s'
           else if String.isPrefix s s'
-               then concat [wrap "$" s, 
-			    mathescape s (String.extract (s', String.size s, NONE))]
-               else concat [String.substring (s', 0, 1), 
-			    mathescape s (String.extract (s', 1, NONE))]
+               then concat [wrap "$" s,
+                            mathescape s (String.extract (s', String.size s, NONE))]
+               else concat [String.substring (s', 0, 1),
+                            mathescape s (String.extract (s', 1, NONE))]
 
     (* mathescapeL : (string list) -> string -> string *)
     fun mathescapeL ss s' =
         (case ss
           of [] => s'
            | (st :: sts) => mathescapeL sts (mathescape st s')
-	 (* end case *))
+         (* end case *))
 
     (* isID: string -> bool *)
     (* returns true if a string starts with _ or an alphabetic character *)
     (* TODO implement this less cheesily *)
     fun isID s = let
           fun f [] = false
-	    | f (p :: ps) = (String.isPrefix (Char.toString p) s) 
+            | f (p :: ps) = (String.isPrefix (Char.toString p) s)
                             orelse (f ps)
-          in 
+          in
             f (explode "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
           end
 
@@ -118,7 +118,7 @@ structure LaTeXOutput (* : BACK_END *) =
     fun prods nt = let
           val (S.NT {prods, ...}) = nt
           in
-	    !prods
+            !prods
           end
 
     val lhs = Prod.lhs
@@ -151,64 +151,64 @@ structure LaTeXOutput (* : BACK_END *) =
       val sym        = tag "sym"
       fun Grammar s = concat ["\\begin{Grammar}\n", s, "\n\n\\end{Grammar}\n"]
       fun Rules (nt, rhss) = concat (["\n\\begin{Rules}{", nt, "}\n"] @
-				     [catw "\n" rhss] @ 
-				     ["\n\\end{Rules}"])
+                                     [catw "\n" rhss] @
+                                     ["\n\\end{Rules}"])
     end
 
     structure G = GrammarSty
 
-    fun prod isSubrule = (if isSubrule then (fn x => x) else G.RHS) o 
-			 (catw " ") o (map (item isSubrule)) o rhs
+    fun prod isSubrule = (if isSubrule then (fn x => x) else G.RHS) o
+                         (catw " ") o (map (item isSubrule)) o rhs
 
     and nonterm isSubrule nt = let
           val ps = prods nt
           in
-            if isSubrule 
-	    then catw spacedPipe (map (prod true) ps)
-	    else let val nt' = nt2s nt
+            if isSubrule
+            then catw spacedPipe (map (prod true) ps)
+            else let val nt' = nt2s nt
                      in G.Rules (nt', map (prod isSubrule) ps)
                      end
           end
 
     and tok t = let
           val abbrev = Token.toString t
-	  val scrub = (escapeL (explode "_{}")) o
-		      (mathescapeL ["<", ">", "-", "|"]) o
-		      (stripquotes)
+          val scrub = (escapeL (explode "_{}")) o
+                      (mathescapeL ["<", ">", "-", "|"]) o
+                      (stripquotes)
           in
             if isID abbrev
-	    then (G.kw  o (* G.ITEM o *) scrub) abbrev
-	    else (G.sym o (* G.ITEM o *) scrub) abbrev
+            then (G.kw  o (* G.ITEM o *) scrub) abbrev
+            else (G.sym o (* G.ITEM o *) scrub) abbrev
           end
 
-    and item isSubrule i = 
+    and item isSubrule i =
           (case Item.sym i
-	    of S.TOK t => tok t
-	     | S.NONTERM (nt, _) => if Nonterm.isSubrule nt
-				    then (G.nt o G.GRP o (nonterm true)) nt
-				    else (G.nt o i2s) i
-	     | S.CLOS nt => (G.LISTGRP o (nonterm true)) nt
-	     | S.POSCLOS nt => (G.LISTONEGRP o (nonterm true)) nt
-	     | S.OPT nt => (G.OPTGRP o (nonterm true)) nt
+            of S.TOK t => tok t
+             | S.NONTERM (nt, _) => if Nonterm.isSubrule nt
+                                    then (G.nt o G.GRP o (nonterm true)) nt
+                                    else (G.nt o i2s) i
+             | S.CLOS nt => (G.LISTGRP o (nonterm true)) nt
+             | S.POSCLOS nt => (G.LISTONEGRP o (nonterm true)) nt
+             | S.OPT nt => (G.OPTGRP o (nonterm true)) nt
           (* end case *))
 
-    fun nonterms [] = "the null grammar" 
+    fun nonterms [] = "the null grammar"
       | nonterms ns = G.Grammar (catw "\n" (map (nonterm false) ns))
-            
+
     (* output grammar *)
     fun grammarHook spec strm = let
-	  val (S.Grammar {sortedTops, ...}, _) = spec
+          val (S.Grammar {sortedTops, ...}, _) = spec
           val nts = List.concat sortedTops
-	  val g = nonterms nts
+          val g = nonterms nts
           in
             TextIO.output (strm, g)
           end
 
     fun output (grm, pm, fname) = (print (" writing " ^ fname ^ ".tex\n");
           ExpandFile.expandTemplate {
-	      src = LaTeXTemplate.template,
-	      dst = fname ^ ".tex",
-	      hooks = [("grammar", grammarHook (grm, pm))]
-	    })
+              src = LaTeXTemplate.template,
+              dst = fname ^ ".tex",
+              hooks = [("grammar", grammarHook (grm, pm))]
+            })
 
   end

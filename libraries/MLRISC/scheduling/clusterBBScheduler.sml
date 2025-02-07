@@ -1,6 +1,6 @@
 (*
  * Simple minded basic block scheduling
- *) 
+ *)
 functor ClusterBasicBlockScheduler
    (structure Flowgraph : FLOWGRAPH
     structure BBSched   : BASIC_BLOCK_SCHEDULER
@@ -14,13 +14,13 @@ struct
 
    val name = "Basic Block Scheduling"
 
-   fun run(cluster as F.CLUSTER{blocks, annotations, ...}) = 
+   fun run(cluster as F.CLUSTER{blocks, annotations, ...}) =
    if #contains MLRiscAnnotations.NO_OPTIMIZATION (!annotations)
    then cluster
    else
    let val schedule = BBSched.schedule {cpu= !cpu}
-       fun sched(F.BBLOCK{annotations, insns, ...}) = 
-            if #contains MLRiscAnnotations.NO_OPTIMIZATION (!annotations) 
+       fun sched(F.BBLOCK{annotations, insns, ...}) =
+            if #contains MLRiscAnnotations.NO_OPTIMIZATION (!annotations)
             then ()
             else insns := schedule(! insns)
          | sched _ = ()

@@ -29,52 +29,52 @@ fun withPP (name, wid) ppFn = let
       val ppDev = HTMLDev.openDev{wid=wid, textWid=NONE}
       val ppStrm = PP.openStream ppDev
       in
-	PP.pushStyle(ppStrm, HTMLDev.styleTT);
-	ppFn ppStrm;
+        PP.pushStyle(ppStrm, HTMLDev.styleTT);
+        ppFn ppStrm;
         PP.popStyle ppStrm;
-	PP.closeStream ppStrm;
-	PrHTML.prHTML {
-	    putc = fn c => TextIO.output1 (TextIO.stdOut, c),
-	    puts = fn s => TextIO.output (TextIO.stdOut, s)
-	  } (HTML.HTML{
-	    version = NONE,
-	    head = [HTML.Head_TITLE name],
-	    body = HTML.BODY{
-		background = NONE, bgcolor = NONE, text = NONE,
-		link = NONE, vlink = NONE, alink = NONE,
-		content = HTML.TextBlock(HTMLDev.done ppDev)
-	      }
-	  });
-	TextIO.closeOut (!PP.debugStrm);
-	PP.debugStrm := saveStrm
+        PP.closeStream ppStrm;
+        PrHTML.prHTML {
+            putc = fn c => TextIO.output1 (TextIO.stdOut, c),
+            puts = fn s => TextIO.output (TextIO.stdOut, s)
+          } (HTML.HTML{
+            version = NONE,
+            head = [HTML.Head_TITLE name],
+            body = HTML.BODY{
+                background = NONE, bgcolor = NONE, text = NONE,
+                link = NONE, vlink = NONE, alink = NONE,
+                content = HTML.TextBlock(HTMLDev.done ppDev)
+              }
+          });
+        TextIO.closeOut (!PP.debugStrm);
+        PP.debugStrm := saveStrm
       end;
 
 local
   fun repeat c n = StringCvt.padLeft c n ""
   fun simple1 (name, w, n, openBox) () =
-	withPP (name, w) (fn strm => (
-	  openBox strm (PP.Rel 0);
-	    PP.string strm (repeat #"x" n);
-	    PP.cut strm;
-	    PP.string strm (repeat #"y" n);
-	    PP.cut strm;
-	    PP.string strm (repeat #"z" n);
-	  PP.closeBox strm))
+        withPP (name, w) (fn strm => (
+          openBox strm (PP.Rel 0);
+            PP.string strm (repeat #"x" n);
+            PP.cut strm;
+            PP.string strm (repeat #"y" n);
+            PP.cut strm;
+            PP.string strm (repeat #"z" n);
+          PP.closeBox strm))
   fun simple2 (name, w, n, openBox1, openBox2) () =
-	withPP (name, w) (fn strm => (
-	  openBox1 strm (PP.Rel 0);
-	    PP.string strm (repeat #"v" n);
-	    PP.cut strm;
-	    openBox2 strm (PP.Abs 2);
-	      PP.string strm (repeat #"w" n);
-	      PP.cut strm;
-	      PP.string strm (repeat #"x" n);
-	      PP.cut strm;
-	      PP.string strm (repeat #"y" n);
-	    PP.closeBox strm;
-	    PP.cut strm;
-	    PP.string strm (repeat #"z" n);
-	  PP.closeBox strm))
+        withPP (name, w) (fn strm => (
+          openBox1 strm (PP.Rel 0);
+            PP.string strm (repeat #"v" n);
+            PP.cut strm;
+            openBox2 strm (PP.Abs 2);
+              PP.string strm (repeat #"w" n);
+              PP.cut strm;
+              PP.string strm (repeat #"x" n);
+              PP.cut strm;
+              PP.string strm (repeat #"y" n);
+            PP.closeBox strm;
+            PP.cut strm;
+            PP.string strm (repeat #"z" n);
+          PP.closeBox strm))
 fun openHBox strm _ = PP.openHBox strm
 in
 val t01a = simple1 ("Test 01a [hbox]", 10, 2, openHBox)
@@ -164,33 +164,33 @@ val t35a = simple2 ("Test 35a [box/box]", 10, 2, PP.openBox, PP.openBox)
 val t35b = simple2 ("Test 35b [box/box]", 10, 3, PP.openBox, PP.openBox)
 val t35c = simple2 ("Test 35c [box/box]", 10, 4, PP.openBox, PP.openBox)
 end
- 
+
 fun t40 () = withPP ("Test 20 [C code]", 20) (fn strm => (
       PP.openHBox strm;
-	kw strm "if";
-	PP.space strm 1;
-	PP.string strm "(x < y)";
-	PP.space strm 1;
-	PP.string strm "{";
-	PP.openHVBox strm (PP.Abs 4);
-	  PP.space strm 1;
-	  PP.string strm "stmt1;"; PP.space strm 1;
-	  PP.openHBox strm;
-	    kw strm "if";
-	    PP.space strm 1;
-	    PP.string strm "(w < z)";
-	    PP.space strm 1;
-	    PP.string strm "{";
-	    PP.openHVBox strm (PP.Abs 4);
-	      PP.space strm 1; PP.string strm "stmt2;";
-	      PP.space strm 1; PP.string strm "stmt3;";
-	      PP.space strm 1; PP.string strm "stmt4;";
-	    PP.closeBox strm; PP.newline strm;
-	    PP.string strm "}";
-	  PP.closeBox strm;
-	  PP.space strm 1; PP.string strm "stmt5;";
-	  PP.space strm 1; PP.string strm "stmt6;";
-	PP.closeBox strm; PP.newline strm;
-	PP.string strm "}";
+        kw strm "if";
+        PP.space strm 1;
+        PP.string strm "(x < y)";
+        PP.space strm 1;
+        PP.string strm "{";
+        PP.openHVBox strm (PP.Abs 4);
+          PP.space strm 1;
+          PP.string strm "stmt1;"; PP.space strm 1;
+          PP.openHBox strm;
+            kw strm "if";
+            PP.space strm 1;
+            PP.string strm "(w < z)";
+            PP.space strm 1;
+            PP.string strm "{";
+            PP.openHVBox strm (PP.Abs 4);
+              PP.space strm 1; PP.string strm "stmt2;";
+              PP.space strm 1; PP.string strm "stmt3;";
+              PP.space strm 1; PP.string strm "stmt4;";
+            PP.closeBox strm; PP.newline strm;
+            PP.string strm "}";
+          PP.closeBox strm;
+          PP.space strm 1; PP.string strm "stmt5;";
+          PP.space strm 1; PP.string strm "stmt6;";
+        PP.closeBox strm; PP.newline strm;
+        PP.string strm "}";
       PP.closeBox strm));
 

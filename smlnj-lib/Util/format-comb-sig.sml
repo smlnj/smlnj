@@ -57,9 +57,9 @@
  *
  *  format (glue string "glue vs. " o string o glue int 42 o sp 5 o int)
  *         "ordinary text " 17
- *                                      ==> "glue vs. ordinary text 42     17" 
+ *                                      ==> "glue vs. ordinary text 42     17"
  *
- * Fragments can be padded, trimmed, or fitted to generate text pieces of 
+ * Fragments can be padded, trimmed, or fitted to generate text pieces of
  * specified sizes.  Padding/trimming/fitting may be nested.
  * The operations are parameterized by a place (left, center, right) and
  * a width. Padding never shrinks strings, trimming never extends
@@ -99,7 +99,7 @@ signature FORMAT_COMB =
    *)
     type 'a glue          = ('a, 'a) fragment
     type ('a, 't) element = ('a, 't -> 'a) fragment
-    type 'a gg			(* abstract helper type *)
+    type 'a gg                  (* abstract helper type *)
 
   (* Format execution... *)
   (*  1. Simple version, produce final result as a string: *)
@@ -117,24 +117,24 @@ signature FORMAT_COMB =
     val using : ('t -> string) -> ('a, 't) element
 
   (* Instantiate 'using' for a few types... *)
-    val int     : ('a, int) element	(* using Int.toString *)
-    val real    : ('a, real) element	(* using Real.toString *)
-    val bool    : ('a, bool) element	(* using Bool.toString *)
-    val string  : ('a, string) element	(* using (fn x => x) *)
-    val string' : ('a, string) element	(* using String.toString *)
-    val char    : ('a, char) element	(* using String.str *)
-    val char'   : ('a, char) element	(* using Char.toString *)
+    val int     : ('a, int) element     (* using Int.toString *)
+    val real    : ('a, real) element    (* using Real.toString *)
+    val bool    : ('a, bool) element    (* using Bool.toString *)
+    val string  : ('a, string) element  (* using (fn x => x) *)
+    val string' : ('a, string) element  (* using String.toString *)
+    val char    : ('a, char) element    (* using String.str *)
+    val char'   : ('a, char) element    (* using Char.toString *)
 
   (* Parameterized elements... *)
     val int'  : StringCvt.radix   -> ('a, int) element  (* using (Int.fmt r) *)
-    val real' : StringCvt.realfmt -> ('a, real) element	(* using(Real.fmt f) *)
+    val real' : StringCvt.realfmt -> ('a, real) element (* using(Real.fmt f) *)
 
   (* "polymorphic" elements *)
     val list   : ('a, 'x) element -> ('a, 'x list) element (* "[", ", ", "]" *)
     val option : ('a, 'x) element -> ('a, 'x option) element
     val seq    : (('x * 'a gg -> 'a gg) -> 'a gg -> 's -> 'a gg) -> (* foldr *)
-		 'a glue ->	(* separator *)
-		 ('a, 'x) element -> ('a, 's) element
+                 'a glue ->     (* separator *)
+                 ('a, 'x) element -> ('a, 's) element
 
   (* Generic "gluifier". *)
     val glue : ('a, 't) element -> 't -> 'a glue
@@ -143,20 +143,20 @@ signature FORMAT_COMB =
     val elem : ('t -> 'a glue) -> ('a, 't) element
 
   (* Other glue... *)
-    val nothing :           'a glue	(* null glue *)
-    val text    : string -> 'a glue	(* constant text glue *)
-    val sp      : int ->    'a glue	(* n spaces glue *)
-    val nl      :           'a glue	(* newline glue *)
-    val tab     :           'a glue	(* tabulator glue *)
+    val nothing :           'a glue     (* null glue *)
+    val text    : string -> 'a glue     (* constant text glue *)
+    val sp      : int ->    'a glue     (* n spaces glue *)
+    val nl      :           'a glue     (* newline glue *)
+    val tab     :           'a glue     (* tabulator glue *)
 
   (* glue generator constructors *)
     val listg   : ('t -> 'a glue) -> ('t list -> 'a glue)
     val optiong : ('t -> 'a glue) -> ('t option -> 'a glue)
 
     val seqg   : (('x * 'a gg -> 'a gg) -> 'a gg -> 's -> 'a gg) -> (* foldr *)
-		 'a glue ->	    (* separator *)
-		 ('x -> 'a glue) ->  (* glue maker *)
-		 's -> 'a glue	    (* glue maker for container *)
+                 'a glue ->         (* separator *)
+                 ('x -> 'a glue) ->  (* glue maker *)
+                 's -> 'a glue      (* glue maker for container *)
 
 
   (* "Places" say which side of a string to pad or trim... *)

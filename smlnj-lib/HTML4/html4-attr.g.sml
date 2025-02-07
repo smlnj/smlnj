@@ -40,18 +40,18 @@ HTML4AttrTokens
     structure UserCode =
       struct
 
-fun attr_PROD_1_SUBRULE_1_PROD_1_ACT (attr_value, EQUALS, NAME, attr_value_SPAN : (Lex.pos * Lex.pos), EQUALS_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun attr_PROD_1_SUBRULE_1_PROD_1_ACT (attr_value, EQUALS, NAME, attr_value_SPAN : (Lex.pos * Lex.pos), EQUALS_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   (attr_value)
-fun attr_PROD_1_ACT (SR, NAME, SR_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun attr_PROD_1_ACT (SR, NAME, SR_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ((NAME, SR))
-fun attr_value_PROD_2_SUBRULE_1_PROD_1_ACT (NAME, DOT, NAME_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun attr_value_PROD_2_SUBRULE_1_PROD_1_ACT (NAME, DOT, NAME_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   (NAME)
-fun attr_value_PROD_2_ACT (SR, NAME, SR_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun attr_value_PROD_2_ACT (SR, NAME, SR_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ((Atom.toString NAME) ^ (String.concatWith "."
                                          (map Atom.toString SR)))
-fun attr_value_PROD_3_SUBRULE_1_PROD_1_ACT (NUMBER, DOT, NUMBER_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun attr_value_PROD_3_SUBRULE_1_PROD_1_ACT (NUMBER, DOT, NUMBER_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   (NUMBER)
-fun attr_value_PROD_3_ACT (SR, NUMBER, SR_SPAN : (Lex.pos * Lex.pos), NUMBER_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun attr_value_PROD_3_ACT (SR, NUMBER, SR_SPAN : (Lex.pos * Lex.pos), NUMBER_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   (NUMBER ^ (String.concatWith "." SR))
       end (* UserCode *)
 
@@ -62,39 +62,39 @@ fun attr_value_PROD_3_ACT (SR, NUMBER, SR_SPAN : (Lex.pos * Lex.pos), NUMBER_SPA
 (* replace functor with inline structure for better optimization
     structure EBNF = AntlrEBNF(
       struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
+        type strm = Err.wstream
+        val getSpan = Err.getSpan
       end)
 *)
     structure EBNF =
       struct
-	fun optional (pred, parse, strm) =
-	      if pred strm
-		then let
-		  val (y, span, strm') = parse strm
-		  in
-		    (SOME y, span, strm')
-		  end
-		else (NONE, Err.getSpan strm, strm)
+        fun optional (pred, parse, strm) =
+              if pred strm
+                then let
+                  val (y, span, strm') = parse strm
+                  in
+                    (SOME y, span, strm')
+                  end
+                else (NONE, Err.getSpan strm, strm)
 
-	fun closure (pred, parse, strm) = let
-	      fun iter (strm, (left, right), ys) =
-		    if pred strm
-		      then let
-			val (y, (_, right'), strm') = parse strm
-			in iter (strm', (left, right'), y::ys)
-			end
-		      else (List.rev ys, (left, right), strm)
-	      in
-		iter (strm, Err.getSpan strm, [])
-	      end
+        fun closure (pred, parse, strm) = let
+              fun iter (strm, (left, right), ys) =
+                    if pred strm
+                      then let
+                        val (y, (_, right'), strm') = parse strm
+                        in iter (strm', (left, right'), y::ys)
+                        end
+                      else (List.rev ys, (left, right), strm)
+              in
+                iter (strm, Err.getSpan strm, [])
+              end
 
-	fun posclos (pred, parse, strm) = let
-	      val (y, (left, _), strm') = parse strm
-	      val (ys, (_, right), strm'') = closure (pred, parse, strm')
-	      in
-		(y::ys, (left, right), strm'')
-	      end
+        fun posclos (pred, parse, strm) = let
+              val (y, (left, _), strm') = parse strm
+              val (ys, (_, right), strm'') = closure (pred, parse, strm')
+              in
+                (y::ys, (left, right), strm'')
+              end
       end
 
     fun mk lexFn = let
@@ -102,12 +102,12 @@ fun getS() = {}
 fun putS{} = ()
 fun unwrap (ret, strm, repairs) = (ret, strm, repairs)
         val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
-	fun fail() = Err.failure eh
-	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) =
-	        (Err.whileDisabled eh (fn() => prod strm))
-		handle Err.ParseError => try (prods)
+        fun fail() = Err.failure eh
+        fun tryProds (strm, prods) = let
+          fun try [] = fail()
+            | try (prod :: prods) =
+                (Err.whileDisabled eh (fn() => prod strm))
+                handle Err.ParseError => try (prods)
           in try prods end
 fun matchNAME strm = (case (lex(strm))
  of (Tok.NAME(x), span, strm') => (x, span, strm')
@@ -134,7 +134,7 @@ fun matchEOF strm = (case (lex(strm))
   | _ => fail()
 (* end case *))
 
-val (attrs_NT) = 
+val (attrs_NT) =
 let
 fun attr_value_NT (strm) = let
       fun attr_value_PROD_1 (strm) = let

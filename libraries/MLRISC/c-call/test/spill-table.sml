@@ -1,10 +1,10 @@
 functor SpillTable
-   (val architecture : string  
+   (val architecture : string
     val initialSpillOffset : int
     val spillAreaSz : int
-   ) : 
+   ) :
 sig
-  
+
    val architecture : string
    val beginRA : unit -> unit
    val get     : RAGraph.spillLoc -> int
@@ -16,7 +16,7 @@ struct
    structure G = RAGraph
 
    fun error msg = MLRiscErrorMsg.error(architecture^".SpillTable",msg)
-  
+
    val itow = Word.fromInt
 
    val architecture = architecture

@@ -4,10 +4,10 @@
  *
  * These are some basic annotations understood by the MLRISC system.
  * The MLRISC client can create its own annotations and propagate them
- * to MLRISC.  Client-defined annotations are ignored by MLRISC. 
+ * to MLRISC.  Client-defined annotations are ignored by MLRISC.
  *
  * -- Allen
- * 
+ *
  * TODO: There should be comments to say that the annotations are block
  * or instruction annotations. -- Lal.
  *)
@@ -17,18 +17,18 @@ sig
 
     structure C : CELLS_BASIS = CellsBasis
 
-    (* 
-     * The branch probability of conditional branches. 
+    (*
+     * The branch probability of conditional branches.
      * The client can attach this with conditional branches.
-     * nnThis has no effect otherwise. 
+     * nnThis has no effect otherwise.
      *
      * Currently, the annotation is recognized by the static branch prediction
-     * mondule. 
+     * mondule.
      *)
    exception BRANCHPROB of Probability.prob
    val BRANCH_PROB : Probability.prob Annotations.property
 
-    (* The execution frequency of a basic block 
+    (* The execution frequency of a basic block
      * You can attach this at a basic block.
      *)
    exception EXECUTIONFREQ of int
@@ -40,7 +40,7 @@ sig
     (* Instructions in the block should not be reordered *)
    val NOREORDER : unit Annotations.property
 
-    (* 
+    (*
      * Control dependence definition and use.
      *
      * To use these, the client should generate
@@ -55,14 +55,14 @@ sig
    val CTRL_DEF : C.cell Annotations.property
    val CTRL_USE : C.cell Annotations.property
 
-    (* 
+    (*
      * Attach this annotation to assemblers for pretty printing
      * client defined cell informations.
      *)
    val PRINT_CELLINFO : (C.cell -> string) Annotations.property
 
     (*
-     * Does a compilation unit has GC information? 
+     * Does a compilation unit has GC information?
      *)
    val GC_INFO : unit Annotations.property
 
@@ -86,10 +86,10 @@ sig
     (*
      * This annotation inserts an empty basic block
      *)
-   exception EMPTYBLOCK 
+   exception EMPTYBLOCK
    val EMPTY_BLOCK : unit Annotations.property
 
-    (* 
+    (*
      * Enter information for a register.
      *)
    exception MARKREG of C.cell -> unit
@@ -105,7 +105,7 @@ sig
      *)
    val USES_VIRTUAL_FRAME_POINTER : unit Annotations.property
 
-    (* 
+    (*
      * Define return arguments of a call (hack for x86)
      *)
    val RETURN_ARG : C.cell Annotations.property

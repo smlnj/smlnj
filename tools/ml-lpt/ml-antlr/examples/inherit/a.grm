@@ -1,9 +1,9 @@
 %tokens
   : ID of string
   | INT of int
-  | LP ("(")	| RP (")")
+  | LP ("(")    | RP (")")
   | PLUS ("+")
-  | SEMI (";")	| EQ ("=")
+  | SEMI (";")  | EQ ("=")
   ;
 
 stmt

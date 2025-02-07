@@ -14,36 +14,36 @@ local
     structure M = SmlInfoMap
 in
     signature INDEGREE = sig
-	val indegrees : GG.group -> int M.map
+        val indegrees : GG.group -> int M.map
     end
 
     structure Indegree :> INDEGREE = struct
-	
-	fun indegrees GG.ERRORGROUP = M.empty
-	  | indegrees (GG.GROUP { exports, ... }) = let
-	    fun fsb sn ((_, DG.SB_SNODE n), m) = sn (n, m)
-	      | fsb _ (_, m) = m
 
-	    fun inc_sn (DG.SNODE { smlinfo = i, ... }, m) =
-		M.insert (m, i, 1 + getOpt (M.find (m, i), 0))
+        fun indegrees GG.ERRORGROUP = M.empty
+          | indegrees (GG.GROUP { exports, ... }) = let
+            fun fsb sn ((_, DG.SB_SNODE n), m) = sn (n, m)
+              | fsb _ (_, m) = m
 
-	    fun snode (DG.SNODE n, m) = let
-		val { smlinfo = i, localimports = li, globalimports = gi } = n
-		val m =
-		    case M.find (m, i) of
-			SOME _ => m
-		      | NONE => foldl snode
-			              (foldl (fsb snode)
-				             (M.insert (m, i, 0))
-					     gi)
-			              li
-	    in
-		foldl inc_sn (foldl (fsb inc_sn) m gi) li
-	    end
+            fun inc_sn (DG.SNODE { smlinfo = i, ... }, m) =
+                M.insert (m, i, 1 + getOpt (M.find (m, i), 0))
 
-	    fun impexp ((nth, _, _), m) = fsb snode (nth (), m)
-	in
-	    SymbolMap.foldl impexp M.empty exports
-	end
+            fun snode (DG.SNODE n, m) = let
+                val { smlinfo = i, localimports = li, globalimports = gi } = n
+                val m =
+                    case M.find (m, i) of
+                        SOME _ => m
+                      | NONE => foldl snode
+                                      (foldl (fsb snode)
+                                             (M.insert (m, i, 0))
+                                             gi)
+                                      li
+            in
+                foldl inc_sn (foldl (fsb inc_sn) m gi) li
+            end
+
+            fun impexp ((nth, _, _), m) = fsb snode (nth (), m)
+        in
+            SymbolMap.foldl impexp M.empty exports
+        end
     end
 end

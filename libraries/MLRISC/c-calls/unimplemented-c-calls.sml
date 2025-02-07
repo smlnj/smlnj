@@ -5,13 +5,13 @@
  * Copyright (c) 2004 by The Fellowship of SML/NJ
  *)
 functor UnimplementedCCallsFn
-	    (structure T: MLTREE
-	     val impossible: string -> 'a) :> C_CALLS where T = T =
+            (structure T: MLTREE
+             val impossible: string -> 'a) :> C_CALLS where T = T =
 struct
     structure T = T
 
-    datatype c_arg 
-      = ARG of T.rexp	
+    datatype c_arg
+      = ARG of T.rexp
       | FARG of T.fexp
       | ARGS of c_arg list
 

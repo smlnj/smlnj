@@ -1,7 +1,7 @@
 (*
  * This module performs global value numbering.
  * GVN also eliminates unnecessary branches.
- * 
+ *
  * -- Allen (leunga@cs.nyu.edu)
  *)
 signature SSA_GLOBAL_VALUE_NUMBERING =

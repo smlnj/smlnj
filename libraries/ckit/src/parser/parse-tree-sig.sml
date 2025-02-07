@@ -11,7 +11,7 @@ sig
   datatype storage
     = TYPEDEF
     | STATIC
-    | EXTERN 
+    | EXTERN
     | REGISTER
     | AUTO
 
@@ -25,8 +25,8 @@ sig
     | Not | Negate | BitNot | Assign
     | PlusAssign | MinusAssign | TimesAssign | DivAssign
     | ModAssign | XorAssign | OrAssign | AndAssign
-    | LshiftAssign | RshiftAssign 
-    | Uplus 
+    | LshiftAssign | RshiftAssign
+    | Uplus
     | SizeofType of ctype
     | OperatorExt of operatorExt
 
@@ -54,7 +54,7 @@ sig
     | Short
     | Int
     | Long
-    | Float 
+    | Float
     | Double
     | Fractional
     | Wholenum
@@ -63,21 +63,21 @@ sig
     | Array of expression * ctype
     | Pointer of ctype
     | Function of
-        {retType : ctype,  
-	 params : (decltype * declarator) list}
+        {retType : ctype,
+         params : (decltype * declarator) list}
     | Enum of
         {tagOpt : string option,
-	 enumerators : (string * expression) list,
-	 trailingComma : bool}  (* true if there was there a trailing comma in the declaration *)
+         enumerators : (string * expression) list,
+         trailingComma : bool}  (* true if there was there a trailing comma in the declaration *)
     | Struct of
         {isStruct : bool,   (* struct or union; true => struct *)
-	 tagOpt : string option,  (* optional tag *)
-	 members: (ctype * (declarator * expression) list) list} (* member specs *)
+         tagOpt : string option,  (* optional tag *)
+         members: (ctype * (declarator * expression) list) list} (* member specs *)
     | TypedefName of string
     | StructTag of
-	{isStruct : bool,   (* ??? *)
-	 name : string}
-    | EnumTag of string 
+        {isStruct : bool,   (* ??? *)
+         name : string}
+    | EnumTag of string
     | SpecExt of specifierExt
 
   and declarator  (* constructor suffix: "Decr" *)
@@ -94,7 +94,7 @@ sig
   (* supports extensions of C in which expressions contain statements *)
   and statement
     = Decl of declaration
-    | Expr of expression 
+    | Expr of expression
     | Compound of statement list
     | While of expression * statement
     | Do of expression * statement
@@ -122,7 +122,7 @@ sig
     = ExternalDecl of declaration
     | FunctionDef of
        {retType : decltype,      (* return type *)
-	funDecr : declarator,   (* function name declarator *)
+        funDecr : declarator,   (* function name declarator *)
         krParams : declaration list, (* K&R-style parameter declarations *)
         body : statement}        (* function body *)
     | MARKexternalDecl of (SourceMap.location * externalDecl)
@@ -137,19 +137,19 @@ sig
        storage : storage list}
 
   (* extension types for basic constructs *)
-  and externalDeclExt = 
+  and externalDeclExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.externalDeclExt
-  and declarationExt = 
+  and declarationExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.declarationExt
-  and statementExt = 
+  and statementExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.statementExt
   and declaratorExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.declaratorExt
-  and specifierExt = 
+  and specifierExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.specifierExt
   and expressionExt =
@@ -175,13 +175,13 @@ end (* signature PARSETREE *)
  * extensions.  The types of these variants, operatorExt, expressionExt, etc.
  * are defined by instantiating corresponding type operators defined in
  * the ParseTreeExt structure (see src/parser/extensions/c/parse-tree-ext*.sml
- * for the dummy definitions for ansi C).  In general, extensions for 
+ * for the dummy definitions for ansi C).  In general, extensions for
  * a construct may need to build on other constructs, which is why
  * the ParseTreeExt type constructors are parameterized by the collection
  * of syntax tree types.
- * 
+ *
  * A user-defined extension (call it x) would need it's own version of
  * ParseTreeExt defined in files parse-tree-ext-sig.sml and parse-tree-ext.sml
  * in a new directory src/parser/extensions/x/.
- * 
- *) 
+ *
+ *)

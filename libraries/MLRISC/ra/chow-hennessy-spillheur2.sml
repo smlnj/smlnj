@@ -1,5 +1,5 @@
 (*
- * This module implements a Chow-Hennessy-style spill heuristic 
+ * This module implements a Chow-Hennessy-style spill heuristic
  *)
 functor ImprovedChowHennessySpillHeur
    (val moveRatio : real) : RA_SPILL_HEURISTICS =
@@ -13,7 +13,7 @@ struct
    exception NoCandidate
 
    val mode = RACore.COMPUTE_SPAN
- 
+
    val cache = ref NONE : (G.node * real) Heap.priority_queue option ref
 
    fun init() = cache := NONE
@@ -29,14 +29,14 @@ struct
 
         (* Savings due to coalescing when a node is not spilled *)
         fun moveSavings(NODE{movecnt=ref 0, ...}) = 0.0
-          | moveSavings(NODE{movelist, ...}) = 
-            let fun loop([], savings) = 
+          | moveSavings(NODE{movelist, ...}) =
+            let fun loop([], savings) =
                      foldr (fn ((_,a),b) => Real.max(a,b)) 0.0 savings
                   | loop(MV{status=ref(WORKLIST | GEORGE_MOVE | BRIGGS_MOVE),
-                            dst, src, cost, ...}::mvs, savings) = 
+                            dst, src, cost, ...}::mvs, savings) =
                     let fun add(c,[]) = [(c,cost)]
                           | add(c,(x as (c':int,s))::savings) =
-                             if c = c' then (c',s+cost)::savings 
+                             if c = c' then (c',s+cost)::savings
                              else x::add(c,savings)
                         val savings =
                            case chase dst of
@@ -51,30 +51,30 @@ struct
 
         (* The spill worklist is maintained only lazily.  So we have
          * to prune away those nodes that are already removed from the
-         * interference graph.  After pruning the spillWkl, 
-         * it may be the case that there aren't anything to be 
+         * interference graph.  After pruning the spillWkl,
+         * it may be the case that there aren't anything to be
          * spilled after all.
          *)
         fun chowHennessy spills =
         let (* Compute savings due to moves *)
             val spillSavings = RACore.moveSavings graph
             val lookupSpan = IntHashTable.find (Option.valOf(!span))
-            val lookupSpan = 
+            val lookupSpan =
                 fn r => case lookupSpan r of SOME s => s | NONE => 0.0
             val _          = span := NONE
             fun loop([], L, pruned) = (L, pruned)
-              | loop(node::rest, L, pruned) = 
+              | loop(node::rest, L, pruned) =
                 (case chase node of
                   node as NODE{number, pri, defs, uses,
-                               degree=ref deg, color=ref PSEUDO,...} => 
-                  if hasBeenSpilled number 
+                               degree=ref deg, color=ref PSEUDO,...} =>
+                  if hasBeenSpilled number
                   then loop(rest, L, false)
                   else
                   let fun newnode() =
                       let val span = lookupSpan number
                           val savings =  spillSavings number
                           val spillCost = !pri
-                          val totalCost = spillCost - savings 
+                          val totalCost = spillCost - savings
                           (*val rank = ((real totalCost)+0.01) / real(span)*)
                           val rank = (totalCost + 0.5 + moveSavings(node))
                                         / (span+ real deg)
@@ -82,43 +82,43 @@ struct
                   in  case (!defs, !uses) of
                         (_, []) =>  (* one def no use *)
                           loop(rest, (node, ~1.0 - real(deg))::L, false)
-                      | ([d], [u]) => (* defs after use; don't use *)  
+                      | ([d], [u]) => (* defs after use; don't use *)
                         let fun plus({block,insn},n) = {block=block,insn=insn+n}
-                        in  if d = plus(u,1) orelse d = plus(u,2) then 
+                        in  if d = plus(u,1) orelse d = plus(u,2) then
                                loop(rest, L, false)
-                            else 
+                            else
                                newnode()
                         end
-                      | _ => newnode() 
-                  end 
+                      | _ => newnode()
+                  end
                 | _ => loop(rest, L, pruned) (* discard node *)
                 )
         in  loop(spills, [], true)
         end
 
         fun chooseNode heap =
-        let fun loop() = 
+        let fun loop() =
             let val (node,cost) = Heap.deleteMin heap
             in  case chase node of
                    node as NODE{color=ref PSEUDO, ...} =>
                       {node=SOME(node), cost=cost, spillWkl=spillWkl}
-                |  _ => loop()    
+                |  _ => loop()
             end
         in  loop()
         end handle _ => {node=NONE, cost=0.0, spillWkl=[]}
 
     in  case !cache of
           SOME heap => chooseNode heap
-        | NONE => 
+        | NONE =>
           let val (L, pruned) = chowHennessy(spillWkl)
-          in  if pruned then (* done *) 
+          in  if pruned then (* done *)
                  {node=NONE, cost=0.0, spillWkl=[]}
               else
                 (case L of
                   [] => raise NoCandidate
                 | _  => let fun rank((_,x), (_,y)) = Real.<(x, y)
                             val heap = Heap.fromList rank L
-                        in  cache := SOME heap; 
+                        in  cache := SOME heap;
                             chooseNode heap
                         end
                 )

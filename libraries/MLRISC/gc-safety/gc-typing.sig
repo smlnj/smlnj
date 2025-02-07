@@ -4,7 +4,7 @@
 signature GC_TYPING =
 sig
 
-   structure IR : MLRISC_IR 
+   structure IR : MLRISC_IR
    structure GC : GC_TYPE
 
    val gcTyping : IR.IR -> IR.IR

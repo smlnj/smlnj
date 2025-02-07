@@ -8,7 +8,7 @@
 
 
 functor PseudoOps(structure Client : CLIENT_PSEUDO_OPS) : PSEUDO_OPS = struct
-  structure Client = Client 
+  structure Client = Client
   structure Basis = Client.AsmPseudoOps
   structure T = Basis.T
   structure BT = PseudoOpsBasisTyp
@@ -21,7 +21,7 @@ functor PseudoOps(structure Client : CLIENT_PSEUDO_OPS) : PSEUDO_OPS = struct
   fun sizeOf(BT.EXT ext, loc) = Client.sizeOf(ext, loc)
     | sizeOf(pOp, loc) = Basis.sizeOf(pOp, loc)
 
-  fun emitValue(arg as {pOp, loc, emit}) = 
+  fun emitValue(arg as {pOp, loc, emit}) =
     (case pOp
       of BT.EXT ext => Client.emitValue{pOp=ext, loc=loc, emit=emit}
        | _ => Basis.emitValue arg

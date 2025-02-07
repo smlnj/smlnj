@@ -29,7 +29,7 @@ struct
    fun opt f NONE = NONE
      | opt f (SOME e) = SOME(f e)
 
-   fun rewrite{exp=rwExp, decl=rwDecl, pat=rwPat, sexp=rwSexp, ty=rwTy} = 
+   fun rewrite{exp=rwExp, decl=rwDecl, pat=rwPat, sexp=rwSexp, ty=rwTy} =
    let fun exp e =
        let val e = case e of
                      CONSexp(id,SOME e) => CONSexp(id,SOME(exp e))
@@ -38,7 +38,7 @@ struct
                    | VECTORexp es => VECTORexp(map exp es)
                    | RECORDexp es => RECORDexp(map (fn (l,e) => (l,exp e)) es)
                    | SEQexp es => SEQexp(map exp es)
-                   | APPexp(f,x) => APPexp(exp f, exp x) 
+                   | APPexp(f,x) => APPexp(exp f, exp x)
                    | IFexp(x,y,z) => IFexp(exp x, exp y, exp z)
                    | RAISEexp e => RAISEexp(exp e)
                    | HANDLEexp(e,c) => HANDLEexp(exp e,map clause c)
@@ -48,7 +48,7 @@ struct
                    | TYPEDexp(e,t) => TYPEDexp(exp e,ty t)
                    | MARKexp(l,e) => (Error.setLoc l; MARKexp(l,exp e))
                    | LOCexp(id,e,region) => LOCexp(id,exp e,region)
-                   | BITSLICEexp(e,slices) => BITSLICEexp(exp e,slices) 
+                   | BITSLICEexp(e,slices) => BITSLICEexp(exp e,slices)
                    | TYPEexp t => TYPEexp(ty t)
                    | CONTexp(e,x) => CONTexp(exp e,x)
                    | e => e
@@ -58,21 +58,21 @@ struct
         let val d = case d of
               DATATYPEdecl(dbs,tbs) => DATATYPEdecl(map dbind dbs,map tbind tbs)
             | FUNdecl(fbs) => FUNdecl(map fbind fbs)
-            | RTLdecl(p,e,l) => RTLdecl(pat p,exp e,l) 
+            | RTLdecl(p,e,l) => RTLdecl(pat p,exp e,l)
             | RTLSIGdecl(id,t) => RTLSIGdecl(id,ty t)
             | VALdecl(vbs) => VALdecl(map vbind vbs)
             | VALSIGdecl(id,t) => VALSIGdecl(id,ty t)
             | TYPESIGdecl(id,tvs) => TYPESIGdecl(id,tvs)
             | LOCALdecl(d1,d2) => LOCALdecl(map decl d1,map decl d2)
             | SEQdecl ds => SEQdecl(map decl ds)
-            | STRUCTUREdecl(id,ds,s,se) => 
+            | STRUCTUREdecl(id,ds,s,se) =>
                  STRUCTUREdecl(id,map decl ds,sigconopt s,sexp se)
-            | FUNCTORdecl(id,ds,s,se) => 
+            | FUNCTORdecl(id,ds,s,se) =>
                  FUNCTORdecl(id, map decl ds,sigconopt s, sexp se)
             | INCLUDESIGdecl s => INCLUDESIGdecl(sigexp s)
             | SIGNATUREdecl(id,s) => SIGNATUREdecl(id, sigexp s)
             | STRUCTURESIGdecl(id,s) => STRUCTURESIGdecl(id, sigexp s)
-            | OPENdecl ids => OPENdecl ids 
+            | OPENdecl ids => OPENdecl ids
             | FUNCTORARGdecl(id,se) => FUNCTORARGdecl(id,sigcon se)
             | EXCEPTIONdecl ebs => EXCEPTIONdecl(map ebind ebs)
             | MARKdecl(l,d) => (Error.setLoc l; MARKdecl(l,decl d))
@@ -87,10 +87,10 @@ struct
           | ebind(EXCEPTIONbind(id,SOME t)) = EXCEPTIONbind(id,SOME(ty t))
           | ebind(b as EXCEPTIONEQbind _) = b
 
-        and sigexp se = 
+        and sigexp se =
             let val se = case se of
                   IDsig _ => se
-                | WHEREsig(se,ident,s) => 
+                | WHEREsig(se,ident,s) =>
                      WHEREsig(sigexp se,ident,sexp s)
                 | WHERETYPEsig(se,ident,t) =>
                      WHERETYPEsig(sigexp se,ident,ty t)
@@ -105,7 +105,7 @@ struct
                 | IDsexp _ => se
             in  rwSexp sexp se end
 
-        and ty t = 
+        and ty t =
             let val t = case t of
                 IDty _ => t
               | TYVARty _ => t
@@ -113,14 +113,14 @@ struct
               | VARty(_,_,_,ref(SOME t)) => ty t
               | VARty(_,_,_,ref NONE) => t
               | APPty(f, ts) => APPty(f, map ty ts)
-              | FUNty(a,b) => FUNty(ty a, ty b) 
+              | FUNty(a,b) => FUNty(ty a, ty b)
               | TUPLEty ts => TUPLEty(map ty ts)
               | RECORDty lts => RECORDty(map (fn (l,t) => (l,ty t)) lts)
               | POLYty(ts,t) => POLYty(map ty ts, ty t)
               | LAMBDAty(ts, t) => LAMBDAty(map ty ts, ty t)
               | CELLty _ => t
             in  rwTy ty t end
-   
+
         and pat p =
             let val p = case p of
                   IDpat id => p
@@ -130,7 +130,7 @@ struct
                 | LISTpat(ps,p) => LISTpat(map pat ps,opt pat p)
                 | TUPLEpat ps => TUPLEpat(map pat ps)
                 | VECTORpat ps => VECTORpat(map pat ps)
-                | RECORDpat(lps,flex) => 
+                | RECORDpat(lps,flex) =>
                      RECORDpat(map (fn (l,p) => (l,pat p)) lps, flex)
                 | TYPEDpat(p,t) => TYPEDpat(pat p,ty t)
                 | CONSpat(id,NONE) => p

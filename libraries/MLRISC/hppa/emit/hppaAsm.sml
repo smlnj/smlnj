@@ -20,11 +20,11 @@ struct
    structure S  = S
    structure P  = S.P
    structure Constant = I.Constant
-   
+
    open AsmFlags
-   
+
    fun error msg = MLRiscErrorMsg.error("HppaAsmEmitter",msg)
-   
+
    fun makeStream formatAnnotations =
    let val stream = !AsmStream.asmOutStream
        fun emit' s = TextIO.output(stream,s)
@@ -54,7 +54,7 @@ struct
        fun doNothing _ = ()
        fun fail _ = raise Fail "AsmEmitter"
        fun emit_region mem = comment(I.Region.toString mem)
-       val emit_region = 
+       val emit_region =
           if !show_region then emit_region else doNothing
        fun pseudoOp pOp = (emit(P.toString pOp); emit "\n")
        fun init size = (comment("Code Size = " ^ ms size); nl())
@@ -63,11 +63,11 @@ struct
        fun emitCell r = (emit(CellsBasis.toString r); emitCellInfo r)
        fun emit_cellset(title,cellset) =
          (nl(); comment(title^CellsBasis.CellSet.toString cellset))
-       val emit_cellset = 
+       val emit_cellset =
          if !show_cellset then emit_cellset else doNothing
        fun emit_defs cellset = emit_cellset("defs: ",cellset)
        fun emit_uses cellset = emit_cellset("uses: ",cellset)
-       val emit_cutsTo = 
+       val emit_cutsTo =
          if !show_cutsTo then AsmFormatUtil.emit_cutsTo emit
          else doNothing
        fun emitter instr =
@@ -261,315 +261,315 @@ struct
 (*#line 648.7 "hppa/hppa.mdl"*)
    fun emit_nop false = ()
      | emit_nop true = emit "\n\tnop"
-   fun emitInstr' instr = 
+   fun emitInstr' instr =
        (case instr of
-         I.LOADI{li, r, i, t, mem} => 
-         ( emit_loadi li; 
-           emit "\t"; 
-           emit_operand i; 
-           emit "("; 
-           emitCell r; 
-           emit "), "; 
-           emitCell t; 
+         I.LOADI{li, r, i, t, mem} =>
+         ( emit_loadi li;
+           emit "\t";
+           emit_operand i;
+           emit "(";
+           emitCell r;
+           emit "), ";
+           emitCell t;
            emit_region mem )
-       | I.LOAD{l, r1, r2, t, mem} => 
-         ( emit_load l; 
-           emit "\t"; 
-           emitCell r2; 
-           emit "("; 
-           emitCell r1; 
-           emit "), "; 
-           emitCell t; 
+       | I.LOAD{l, r1, r2, t, mem} =>
+         ( emit_load l;
+           emit "\t";
+           emitCell r2;
+           emit "(";
+           emitCell r1;
+           emit "), ";
+           emitCell t;
            emit_region mem )
-       | I.STORE{st, b, d, r, mem} => 
-         ( emit_store st; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_operand d; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.STORE{st, b, d, r, mem} =>
+         ( emit_store st;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_operand d;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.ARITH{a, r1, r2, t} => 
-         ( emit_arith a; 
-           emit "\t"; 
-           emitCell r1; 
-           emit ", "; 
-           emitCell r2; 
-           emit ", "; 
+       | I.ARITH{a, r1, r2, t} =>
+         ( emit_arith a;
+           emit "\t";
+           emitCell r1;
+           emit ", ";
+           emitCell r2;
+           emit ", ";
            emitCell t )
-       | I.ARITHI{ai, i, r, t} => 
-         ( emit_arithi ai; 
-           emit "\t"; 
-           emit_operand i; 
-           emit ", "; 
-           emitCell r; 
-           emit ", "; 
+       | I.ARITHI{ai, i, r, t} =>
+         ( emit_arithi ai;
+           emit "\t";
+           emit_operand i;
+           emit ", ";
+           emitCell r;
+           emit ", ";
            emitCell t )
-       | I.COMCLR_LDO{cc, r1, r2, t1, i, b, t2} => 
-         ( 
-           ( emit "comclr,"; 
-             emit_bcond cc; 
-             emit "\t"; 
-             emitCell r1; 
-             emit ", "; 
-             emitCell r2; 
-             emit ", "; 
-             emitCell t1; 
-             emit "\n\t" ); 
-           
-           ( emit "ldo\t"; 
-             emit_int i; 
-             emit "("; 
-             emitCell b; 
-             emit "), "; 
+       | I.COMCLR_LDO{cc, r1, r2, t1, i, b, t2} =>
+         (
+           ( emit "comclr,";
+             emit_bcond cc;
+             emit "\t";
+             emitCell r1;
+             emit ", ";
+             emitCell r2;
+             emit ", ";
+             emitCell t1;
+             emit "\n\t" );
+
+           ( emit "ldo\t";
+             emit_int i;
+             emit "(";
+             emitCell b;
+             emit "), ";
              emitCell t2 ) )
-       | I.COMICLR_LDO{cc, i1, r2, t1, i2, b, t2} => 
-         ( 
-           ( emit "comiclr,"; 
-             emit_bcond cc; 
-             emit "\t"; 
-             emitCell r2; 
-             emit ", "; 
-             emit_operand i1; 
-             emit ", "; 
-             emitCell t1; 
-             emit "\n\t" ); 
-           
-           ( emit "ldo\t"; 
-             emit_int i2; 
-             emit "("; 
-             emitCell b; 
-             emit "), "; 
+       | I.COMICLR_LDO{cc, i1, r2, t1, i2, b, t2} =>
+         (
+           ( emit "comiclr,";
+             emit_bcond cc;
+             emit "\t";
+             emitCell r2;
+             emit ", ";
+             emit_operand i1;
+             emit ", ";
+             emitCell t1;
+             emit "\n\t" );
+
+           ( emit "ldo\t";
+             emit_int i2;
+             emit "(";
+             emitCell b;
+             emit "), ";
              emitCell t2 ) )
-       | I.SHIFTV{sv, r, len, t} => 
-         ( emit_shiftv sv; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_int len; 
-           emit ", "; 
+       | I.SHIFTV{sv, r, len, t} =>
+         ( emit_shiftv sv;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_int len;
+           emit ", ";
            emitCell t )
-       | I.SHIFT{s, r, p, len, t} => 
-         ( emit_shift s; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_int p; 
-           emit ", "; 
-           emit_int len; 
-           emit ", "; 
+       | I.SHIFT{s, r, p, len, t} =>
+         ( emit_shift s;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_int p;
+           emit ", ";
+           emit_int len;
+           emit ", ";
            emitCell t )
-       | I.BCOND{cmp, bc, r1, r2, n, nop, t, f} => 
-         ( emit_cmp cmp; 
-           emit ","; 
-           emit_bcond bc; 
-           emit_n n; 
-           emit "\t"; 
-           emitCell r1; 
-           emit ", "; 
-           emitCell r2; 
-           emit ", "; 
-           emit_label t; 
+       | I.BCOND{cmp, bc, r1, r2, n, nop, t, f} =>
+         ( emit_cmp cmp;
+           emit ",";
+           emit_bcond bc;
+           emit_n n;
+           emit "\t";
+           emitCell r1;
+           emit ", ";
+           emitCell r2;
+           emit ", ";
+           emit_label t;
            emit_nop nop )
-       | I.BCONDI{cmpi, bc, i, r2, n, nop, t, f} => 
-         ( emit_cmpi cmpi; 
-           emit ","; 
-           emit_bcond bc; 
-           emit_n n; 
-           emit "\t"; 
-           emit_int i; 
-           emit ", "; 
-           emitCell r2; 
-           emit ", "; 
-           emit_label t; 
+       | I.BCONDI{cmpi, bc, i, r2, n, nop, t, f} =>
+         ( emit_cmpi cmpi;
+           emit ",";
+           emit_bcond bc;
+           emit_n n;
+           emit "\t";
+           emit_int i;
+           emit ", ";
+           emitCell r2;
+           emit ", ";
+           emit_label t;
            emit_nop nop )
-       | I.BB{bc, r, p, n, nop, t, f} => 
-         ( emit "bb,"; 
-           emit_bitcond bc; 
-           emit_n n; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_int p; 
-           emit ", "; 
-           emit_label t; 
+       | I.BB{bc, r, p, n, nop, t, f} =>
+         ( emit "bb,";
+           emit_bitcond bc;
+           emit_n n;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_int p;
+           emit ", ";
+           emit_label t;
            emit_nop nop )
-       | I.B{lab, n} => 
-         ( emit "b"; 
-           emit_n n; 
-           emit "\t"; 
+       | I.B{lab, n} =>
+         ( emit "b";
+           emit_n n;
+           emit "\t";
            emit_label lab )
-       | I.LONGJUMP{lab, n, tmp, tmpLab} => 
-         ( 
-           ( emit "bl,n\t"; 
-             emit_label tmpLab; 
-             emit ", "; 
-             emitCell tmp; 
-             emit "\n" ); 
-           
-           ( emit_label tmpLab; 
-             emit ":\n\t" ); 
-           
-           ( emit "addil "; 
-             emit_label lab; 
-             emit "-("; 
-             emit_label tmpLab; 
-             emit "+4), "; 
-             emitCell tmp; 
-             emit "\n\t" ); 
-           
-           ( emit "bv"; 
-             emit_n n; 
-             emit "\t%r0("; 
-             emitCell tmp; 
+       | I.LONGJUMP{lab, n, tmp, tmpLab} =>
+         (
+           ( emit "bl,n\t";
+             emit_label tmpLab;
+             emit ", ";
+             emitCell tmp;
+             emit "\n" );
+
+           ( emit_label tmpLab;
+             emit ":\n\t" );
+
+           ( emit "addil ";
+             emit_label lab;
+             emit "-(";
+             emit_label tmpLab;
+             emit "+4), ";
+             emitCell tmp;
+             emit "\n\t" );
+
+           ( emit "bv";
+             emit_n n;
+             emit "\t%r0(";
+             emitCell tmp;
              emit ")" ) )
-       | I.BE{b, d, sr, n, labs} => 
-         ( emit "be"; 
-           emit_n n; 
-           emit "\t"; 
-           emit_operand d; 
-           emit "("; 
-           emit_int sr; 
-           emit ","; 
-           emitCell b; 
+       | I.BE{b, d, sr, n, labs} =>
+         ( emit "be";
+           emit_n n;
+           emit "\t";
+           emit_operand d;
+           emit "(";
+           emit_int sr;
+           emit ",";
+           emitCell b;
            emit ")" )
-       | I.BV{x, b, labs, n} => 
-         ( emit "bv"; 
-           emit_n n; 
-           emit "\t"; 
-           emitCell x; 
-           emit "("; 
-           emitCell b; 
+       | I.BV{x, b, labs, n} =>
+         ( emit "bv";
+           emit_n n;
+           emit "\t";
+           emitCell x;
+           emit "(";
+           emitCell b;
            emit ")" )
-       | I.BLR{x, t, labs, n} => 
-         ( emit "blr"; 
-           emit_n n; 
-           emit "\t"; 
-           emitCell x; 
-           emit "("; 
-           emitCell t; 
+       | I.BLR{x, t, labs, n} =>
+         ( emit "blr";
+           emit_n n;
+           emit "\t";
+           emitCell x;
+           emit "(";
+           emitCell t;
            emit ")" )
-       | I.BL{lab, t, defs, uses, cutsTo, mem, n} => 
-         ( emit "bl"; 
-           emit_n n; 
-           emit "\t"; 
-           emit_label lab; 
-           emit ", "; 
-           emitCell t; 
-           emit_region mem; 
-           emit_defs defs; 
-           emit_uses uses; 
+       | I.BL{lab, t, defs, uses, cutsTo, mem, n} =>
+         ( emit "bl";
+           emit_n n;
+           emit "\t";
+           emit_label lab;
+           emit ", ";
+           emitCell t;
+           emit_region mem;
+           emit_defs defs;
+           emit_uses uses;
            emit_cutsTo cutsTo )
-       | I.BLE{d, b, sr, t, defs, uses, cutsTo, mem} => 
-         ( emit "ble\t"; 
-           emit_operand d; 
-           emit "("; 
-           emit_int sr; 
-           emit ","; 
-           emitCell b; 
-           emit ")"; 
-           emit_region mem; 
-           emit_defs defs; 
-           emit_uses uses; 
+       | I.BLE{d, b, sr, t, defs, uses, cutsTo, mem} =>
+         ( emit "ble\t";
+           emit_operand d;
+           emit "(";
+           emit_int sr;
+           emit ",";
+           emitCell b;
+           emit ")";
+           emit_region mem;
+           emit_defs defs;
+           emit_uses uses;
            emit_cutsTo cutsTo )
-       | I.LDIL{i, t} => 
-         ( emit "ldil\t"; 
-           emit_operand i; 
-           emit ", "; 
+       | I.LDIL{i, t} =>
+         ( emit "ldil\t";
+           emit_operand i;
+           emit ", ";
            emitCell t )
-       | I.LDO{i, b, t} => 
-         ( emit "ldo\t"; 
-           emit_operand i; 
-           emit "("; 
-           emitCell b; 
-           emit "), "; 
+       | I.LDO{i, b, t} =>
+         ( emit "ldo\t";
+           emit_operand i;
+           emit "(";
+           emitCell b;
+           emit "), ";
            emitCell t )
-       | I.MTCTL{r, t} => 
-         ( emit "mtctl\t"; 
-           emitCell r; 
-           emit ", "; 
+       | I.MTCTL{r, t} =>
+         ( emit "mtctl\t";
+           emitCell r;
+           emit ", ";
            emitCell t )
-       | I.FSTORE{fst, b, d, r, mem} => 
-         ( emit_fstore fst; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emit_int d; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.FSTORE{fst, b, d, r, mem} =>
+         ( emit_fstore fst;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emit_int d;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.FSTOREX{fstx, b, x, r, mem} => 
-         ( emit_fstorex fstx; 
-           emit "\t"; 
-           emitCell r; 
-           emit ", "; 
-           emitCell x; 
-           emit "("; 
-           emitCell b; 
-           emit ")"; 
+       | I.FSTOREX{fstx, b, x, r, mem} =>
+         ( emit_fstorex fstx;
+           emit "\t";
+           emitCell r;
+           emit ", ";
+           emitCell x;
+           emit "(";
+           emitCell b;
+           emit ")";
            emit_region mem )
-       | I.FLOAD{fl, b, d, t, mem} => 
-         ( emit_fload fl; 
-           emit "\t"; 
-           emit_int d; 
-           emit "("; 
-           emitCell b; 
-           emit "), "; 
-           emitCell t; 
+       | I.FLOAD{fl, b, d, t, mem} =>
+         ( emit_fload fl;
+           emit "\t";
+           emit_int d;
+           emit "(";
+           emitCell b;
+           emit "), ";
+           emitCell t;
            emit_region mem )
-       | I.FLOADX{flx, b, x, t, mem} => 
-         ( emit_floadx flx; 
-           emit "\t"; 
-           emitCell x; 
-           emit "("; 
-           emitCell b; 
-           emit "), "; 
-           emitCell t; 
+       | I.FLOADX{flx, b, x, t, mem} =>
+         ( emit_floadx flx;
+           emit "\t";
+           emitCell x;
+           emit "(";
+           emitCell b;
+           emit "), ";
+           emitCell t;
            emit_region mem )
-       | I.FARITH{fa, r1, r2, t} => 
-         ( emit_farith fa; 
-           emit "\t"; 
-           emitCell r1; 
-           emit ", "; 
-           emitCell r2; 
-           emit ", "; 
+       | I.FARITH{fa, r1, r2, t} =>
+         ( emit_farith fa;
+           emit "\t";
+           emitCell r1;
+           emit ", ";
+           emitCell r2;
+           emit ", ";
            emitCell t )
-       | I.FUNARY{fu, f, t} => 
-         ( emit_funary fu; 
-           emit "\t"; 
-           emitCell f; 
-           emit ", "; 
+       | I.FUNARY{fu, f, t} =>
+         ( emit_funary fu;
+           emit "\t";
+           emitCell f;
+           emit ", ";
            emitCell t )
-       | I.FCNV{fcnv, f, t} => 
-         ( emit_fcnv fcnv; 
-           emit "\t"; 
-           emitCell f; 
-           emit ", "; 
+       | I.FCNV{fcnv, f, t} =>
+         ( emit_fcnv fcnv;
+           emit "\t";
+           emitCell f;
+           emit ", ";
            emitCell t )
-       | I.FBRANCH{cc, fmt, f1, f2, t, f, n, long} => 
-         ( 
-           ( emit "fcmp,"; 
-             emit_fmt fmt; 
-             emit ","; 
-             emit_fcond cc; 
-             emit "\t"; 
-             emitCell f1; 
-             emit ", "; 
-             emitCell f2; 
-             emit "\n\t" ); 
-           emit "ftest\n\t"; 
-           
-           ( emit "b"; 
-             emit_n n; 
-             emit "\t"; 
+       | I.FBRANCH{cc, fmt, f1, f2, t, f, n, long} =>
+         (
+           ( emit "fcmp,";
+             emit_fmt fmt;
+             emit ",";
+             emit_fcond cc;
+             emit "\t";
+             emitCell f1;
+             emit ", ";
+             emitCell f2;
+             emit "\n\t" );
+           emit "ftest\n\t";
+
+           ( emit "b";
+             emit_n n;
+             emit "\t";
              emit_label t ) )
-       | I.BREAK{code1, code2} => 
-         ( emit "break\t"; 
-           emit_int code1; 
-           emit ", "; 
+       | I.BREAK{code1, code2} =>
+         ( emit "break\t";
+           emit_int code1;
+           emit ", ";
            emit_int code2 )
        | I.NOP => emit "nop"
        | I.SOURCE{} => emit "source"
@@ -582,15 +582,15 @@ struct
       and emitInstrs instrs =
            app (if !indent_copies then emitInstrIndented
                 else emitInstr) instrs
-   
+
       and emitInstr(I.ANNOTATION{i,a}) =
            ( comment(Annotations.toString a);
               nl();
               emitInstr i )
-        | emitInstr(I.LIVE{regs, spilled})  = 
+        | emitInstr(I.LIVE{regs, spilled})  =
             comment("live= " ^ CellsBasis.CellSet.toString regs ^
                     "spilled= " ^ CellsBasis.CellSet.toString spilled)
-        | emitInstr(I.KILL{regs, spilled})  = 
+        | emitInstr(I.KILL{regs, spilled})  =
             comment("killed:: " ^ CellsBasis.CellSet.toString regs ^
                     "spilled:: " ^ CellsBasis.CellSet.toString spilled)
         | emitInstr(I.INSTR i) = emitter i
@@ -599,7 +599,7 @@ struct
         | emitInstr(I.COPY{k=CellsBasis.FP, sz, src, dst, tmp}) =
            emitInstrs(Shuffle.shufflefp{tmp=tmp, src=src, dst=dst})
         | emitInstr _ = error "emitInstr"
-   
+
    in  S.STREAM{beginCluster=init,
                 pseudoOp=pseudoOp,
                 emit=emitInstr,

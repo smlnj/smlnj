@@ -3,12 +3,12 @@
  *)
 signature MDL_RTL_TOOLS =
 sig
-   structure RTL : MLTREE_RTL 
+   structure RTL : MLTREE_RTL
    structure Ast : MDL_AST
 
    (* Simplify an RTL *)
    val simplify : RTL.rtl -> RTL.rtl
-     
+
    (* Translate an rtl into an expression *)
    val rtlToExp : RTL.rtl -> Ast.exp
 

@@ -4,7 +4,7 @@
  * -- Allen
  *)
 
-structure GraphBFS : GRAPH_BREATH_FIRST_SEARCH = 
+structure GraphBFS : GRAPH_BREATH_FIRST_SEARCH =
 struct
 
    structure G = Graph
@@ -24,7 +24,7 @@ struct
             if S.markAndTest(visited,j) then visitSucc(es,L,R)
             else (g e; visitSucc(es,L,j::R))
        and visitRoots([],L,R) = visit(L,R)
-         | visitRoots(n::ns,L,R) = 
+         | visitRoots(n::ns,L,R) =
             if S.markAndTest(visited,n) then visitRoots(ns,L,R)
             else (f n; visitRoots(ns,L,n::R))
    in  visitRoots(roots,[],[])
@@ -41,7 +41,7 @@ struct
             if A.sub(dist,j) >= 0 then visitSucc(es,L,R)
             else (A.update(dist,j,A.sub(dist,i)+1); visitSucc(es,L,j::R))
        and visitRoots([],L,R) = visit(L,R)
-         | visitRoots(n::ns,L,R) = 
+         | visitRoots(n::ns,L,R) =
             if A.sub(dist,n) >= 0 then visitRoots(ns,L,R)
             else (A.update(dist,n,0); visitRoots(ns,L,n::R))
    in  visitRoots(roots,[],[]); dist end

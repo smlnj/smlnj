@@ -2,8 +2,8 @@
  * This just provide a very simple pretty printing function.
  * It is used for visualization.
  *
- * -- Allen 
- * 
+ * -- Allen
+ *
  *)
 
 signature FORMAT_INSTRUCTION =
@@ -21,8 +21,8 @@ struct
    fun toString an insn =
    let val buffer = StringOutStream.mkStreamBuf()
        val S      = StringOutStream.openStringOut buffer
-       val ()     = AsmStream.withStream S 
-                     (fn insn => 
+       val ()     = AsmStream.withStream S
+                     (fn insn =>
                       let val Asm.S.STREAM{emit,...} = Asm.makeStream an
                       in emit insn
                       end) insn
@@ -35,12 +35,12 @@ struct
        fun stripNL "" = ""
          | stripNL s =
        let fun f(0) = ""
-             | f(i) = 
+             | f(i) =
                case String.sub(s,i) of
                  #"\n" => f(i-1)
                | #" "  => f(i-1)
                | _     => String.extract(s,0,SOME(i+1))
-       in  f(size s - 1) end  
+       in  f(size s - 1) end
    in  stripNL text end
 
 end

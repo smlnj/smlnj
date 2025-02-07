@@ -9,11 +9,11 @@ functor HppaShuffle(I:HPPAINSTR) : HPPASHUFFLE = struct
 
   val zeroR = Option.valOf(C.zeroReg CB.GP)
 
-  fun move{src=I.Direct rs, dst=I.Direct rt} = 
+  fun move{src=I.Direct rs, dst=I.Direct rt} =
        [I.arith{a=I.OR, r1=rs, r2=zeroR, t=rt}]
     | move{src=I.Displace{base, disp, mem}, dst=I.Direct rt} =
        [I.loadi{li=I.LDW, r=base, i=I.LabExp(disp,I.F), t=rt, mem=mem}]
-    | move{src=I.Direct rs, dst=I.Displace{base, disp, mem}} = 
+    | move{src=I.Direct rs, dst=I.Displace{base, disp, mem}} =
        [I.store{st=I.STW, b=base, d=I.LabExp(disp,I.F), r=rs, mem=mem}]
     | move _ = error "move"
 
@@ -22,14 +22,14 @@ functor HppaShuffle(I:HPPAINSTR) : HPPASHUFFLE = struct
     | fmove{src=I.Displace{base, disp, mem}, dst=I.FDirect ft} = let
         val tmp = I.C.newCell CB.GP ()
       in
-	[I.ldo{i=I.LabExp(disp,I.F), b=base, t=tmp},
-	 I.floadx{flx=I.FLDDX, b=tmp, x=zeroR, t=ft, mem=mem}]
+        [I.ldo{i=I.LabExp(disp,I.F), b=base, t=tmp},
+         I.floadx{flx=I.FLDDX, b=tmp, x=zeroR, t=ft, mem=mem}]
       end
     | fmove{src=I.FDirect fs, dst=I.Displace{base, disp, mem}} = let
-	val tmp = I.C.newCell CB.GP ()
+        val tmp = I.C.newCell CB.GP ()
       in
-	[I.ldo{i=I.LabExp(disp,I.F), b=base, t=tmp},
-	 I.fstorex{fstx=I.FSTDX, b=tmp, x=zeroR, r=fs, mem=mem}]
+        [I.ldo{i=I.LabExp(disp,I.F), b=base, t=tmp},
+         I.fstorex{fstx=I.FSTDX, b=tmp, x=zeroR, r=fs, mem=mem}]
       end
     | fmove _ = error "move"
 

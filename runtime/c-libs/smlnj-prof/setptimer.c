@@ -32,24 +32,24 @@ extern void Disable (void);
 ml_val_t _ml_Prof_setptimer (ml_state_t *msp, ml_val_t arg)
 {
 #ifdef HAS_SETITIMER
-    struct itimerval	new_itv;
-    int			sts;
+    struct itimerval    new_itv;
+    int                 sts;
 
 
     if (arg == ML_false) {
-	new_itv.it_interval.tv_sec	=
-	new_itv.it_value.tv_sec		=
-	new_itv.it_interval.tv_usec	=
-	new_itv.it_value.tv_usec	= 0;
+        new_itv.it_interval.tv_sec      =
+        new_itv.it_value.tv_sec         =
+        new_itv.it_interval.tv_usec     =
+        new_itv.it_value.tv_usec        = 0;
     }
     else if (ProfCntArray == ML_unit) {
-	return RAISE_ERROR(msp, "no count array set");
+        return RAISE_ERROR(msp, "no count array set");
     }
     else {
-	new_itv.it_interval.tv_sec	=
-	new_itv.it_value.tv_sec		= 0;
-	new_itv.it_interval.tv_usec	=
-	new_itv.it_value.tv_usec	= PROFILE_QUANTUM_US;
+        new_itv.it_interval.tv_sec      =
+        new_itv.it_value.tv_sec         = 0;
+        new_itv.it_interval.tv_usec     =
+        new_itv.it_value.tv_usec        = PROFILE_QUANTUM_US;
     }
 
     sts = setitimer (ITIMER_VIRTUAL, &new_itv, NIL(struct itimerval *));
@@ -80,7 +80,7 @@ ml_val_t _ml_Prof_setptimer (ml_state_t *msp, ml_val_t arg)
 /* The pointer to the heap allocated array of call counts.
 * When this pointer is ML_unit, then profiling is disabled.
 */
-ml_val_t	ProfCntArray = ML_unit;
+ml_val_t        ProfCntArray = ML_unit;
 HANDLE g_hTimer = NULL;
 HANDLE g_hPumpThread = NULL;
 HANDLE g_hQueryThread = NULL;
@@ -93,7 +93,7 @@ VOID CALLBACK TimerAPCProc(
                            DWORD dwTimerHighValue );    // Timer high value
 
 /* This thread exists to provide a spot for the APC messages to be run */
-DWORD WINAPI PumpThread( LPVOID lpParam ) 
+DWORD WINAPI PumpThread( LPVOID lpParam )
 {
     LARGE_INTEGER   liDueTime;
 
@@ -113,10 +113,10 @@ DWORD WINAPI PumpThread( LPVOID lpParam )
             FALSE );          // Do not restore a suspended system
     }
 
-    while(g_hTimer != NULL) 
+    while(g_hTimer != NULL)
     {
         SleepEx(TIMEOUT_VALUE, TRUE);
-    } 
+    }
     return 0;
 }
 
@@ -132,10 +132,10 @@ void Enable ()
         oldTime.LowPart = 0;
         oldTime.HighPart = 0;
 
-        DuplicateHandle(GetCurrentProcess(), 
-                    hThread, 
+        DuplicateHandle(GetCurrentProcess(),
+                    hThread,
                     GetCurrentProcess(),
-                    &g_hQueryThread, 
+                    &g_hQueryThread,
                     THREAD_QUERY_INFORMATION,
                     FALSE,
                     DUPLICATE_CLOSE_SOURCE);
@@ -179,8 +179,8 @@ VOID CALLBACK TimerAPCProc(
     // Have to divide by ten because the thread times are in 100-ns units, not 10us.
     if ((newTime.QuadPart - oldTime.QuadPart) > (PROFILE_QUANTUM_US/10))
     {
-        Word_t	*arr = GET_SEQ_DATAPTR(Word_t, ProfCntArray);
-        int		indx = INT_MLtoC(DEREF(ProfCurrent));
+        Word_t  *arr = GET_SEQ_DATAPTR(Word_t, ProfCntArray);
+        int             indx = INT_MLtoC(DEREF(ProfCurrent));
 
         arr[indx]++;
 

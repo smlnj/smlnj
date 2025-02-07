@@ -7,15 +7,15 @@
 signature REGISTER_SET =
 sig
 
-   type regset 
+   type regset
    type reg = int
 
    val empty          : regset
    val fromList       : reg list -> regset
    val sort           : reg list -> reg list
    val fromSortedList : reg list -> regset
-   val insert         : regset * reg -> regset 
-   val remove         : regset * reg -> regset 
+   val insert         : regset * reg -> regset
+   val remove         : regset * reg -> regset
    val insertChanged  : regset * reg -> regset * bool
    val removeChanged  : regset * reg -> regset * bool
    val ==             : regset * regset -> bool

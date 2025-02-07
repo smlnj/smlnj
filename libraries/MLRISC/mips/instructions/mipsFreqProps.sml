@@ -1,6 +1,6 @@
 (*
  * Extract frequency information from the MIPS architecture
- * 
+ *
  * -- Allen
  *)
 

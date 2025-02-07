@@ -1,9 +1,9 @@
 (* Copyright (c) 1998 by Lucent Technologies *)
 
-local 
-  type 'a type_util      = Tables.tidtab -> Ast.ctype               -> 'a 
-  type 'a type_mem_util  = Tables.tidtab -> Ast.ctype * Ast.member  -> 'a 
-  type 'a type_type_util = Tables.tidtab -> Ast.ctype * Ast.ctype -> 'a 
+local
+  type 'a type_util      = Tables.tidtab -> Ast.ctype               -> 'a
+  type 'a type_mem_util  = Tables.tidtab -> Ast.ctype * Ast.member  -> 'a
+  type 'a type_type_util = Tables.tidtab -> Ast.ctype * Ast.ctype -> 'a
 in
 
 signature TYPE_UTIL =
@@ -77,7 +77,7 @@ sig
 
   val lookupEnum : (LargeInt.int option) type_mem_util
   (* if type can be considered an enumerated type and id is a member of
-   * that enum, return the value of that member; 
+   * that enum, return the value of that member;
    * otherwise raise a type error
    *)
 
@@ -88,12 +88,12 @@ sig
 
   val isEquable : Tables.tidtab
                   -> {ty1:Ast.ctype, exp1Zero:bool,
-		      ty2:Ast.ctype, exp2Zero:bool}
+                      ty2:Ast.ctype, exp2Zero:bool}
                   -> Ast.ctype option
 
   val conditionalExp : Tables.tidtab
                        -> {ty1:Ast.ctype, exp1Zero:bool,
-			   ty2:Ast.ctype, exp2Zero:bool}
+                           ty2:Ast.ctype, exp2Zero:bool}
                        -> Ast.ctype option
 
   val isComparable: Tables.tidtab
@@ -110,7 +110,7 @@ sig
 
   val checkFn : Tables.tidtab
                 -> Ast.ctype * Ast.ctype list * bool list
-                -> Ast.ctype * string list (* for type error messages *) 
+                -> Ast.ctype * string list (* for type error messages *)
                    * Ast.ctype list
   (* type checking: function applied to args is well formed *)
 

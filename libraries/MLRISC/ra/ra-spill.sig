@@ -1,6 +1,6 @@
 (*
- * This module manages the spill/reload process. 
- * 
+ * This module manages the spill/reload process.
+ *
  * -- Allen
  *)
 signature RA_SPILL =
@@ -8,16 +8,16 @@ sig
 
    structure I : INSTRUCTIONS
    structure G : RA_GRAPH = RAGraph
-   structure C : CELLS 
+   structure C : CELLS
       sharing I.C = C
 
-   structure CB : CELLS_BASIS = CellsBasis 
+   structure CB : CELLS_BASIS = CellsBasis
    type copyInstr =
           (CB.cell list * CB.cell list) * I.instruction -> I.instruction list
 
    (*
     * Spill the value associated with reg into spillLoc.
-    * All definitions of instr should be renamed to a new temporary newReg. 
+    * All definitions of instr should be renamed to a new temporary newReg.
     *)
    type spill =
       {instr    : I.instruction,       (* instruction where spill is to occur *)
@@ -79,7 +79,7 @@ sig
        newReg   : CB.cell option        (* the renamed value is here *)
       }
 
-   (* Reload the register dst from spillLoc. 
+   (* Reload the register dst from spillLoc.
     * The value is originally from register reg.
     *)
    type reloadDst =
@@ -94,24 +94,24 @@ sig
     * spill and reload code around it.   The list of spill and reload
     * registers may have duplicates.
     *)
-   val spillRewrite : 
+   val spillRewrite :
         { graph        : G.interferenceGraph,
           spill        : spill,
           spillSrc     : spillSrc,
           spillCopyTmp : spillCopyTmp,
-          reload       : reload, 
-          reloadDst    : reloadDst, 
-          renameSrc    : renameSrc, 
+          reload       : reload,
+          reloadDst    : reloadDst,
+          renameSrc    : renameSrc,
           copyInstr    : copyInstr,
           cellkind     : CB.cellkind,
           spillSet     : CB.cell list G.PPtHashTable.hash_table,
           reloadSet    : CB.cell list G.PPtHashTable.hash_table,
           killSet      : CB.cell list G.PPtHashTable.hash_table
-        } -> 
+        } ->
         { pt          : G.programPoint,              (* starting program pt *)
           annotations : Annotations.annotations ref, (* annotations *)
           instrs      : I.instruction list           (* instructions to spill *)
-        } -> 
+        } ->
           I.instruction list (* instruction sequence after rewriting *)
           (* Note, instructions are in reverse order *)
 

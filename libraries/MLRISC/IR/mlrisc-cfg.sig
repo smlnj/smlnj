@@ -13,10 +13,10 @@ sig
    structure C : CELLS
    structure W : FREQ
       sharing I.C = C
-   
+
    type weight = W.freq
 
-   datatype block_kind = 
+   datatype block_kind =
        START          (* entry node *)
      | STOP           (* exit node *)
      | NORMAL         (* normal node *)
@@ -35,25 +35,25 @@ sig
     * iii) This also makes it easier to manipulate the branch/jump instruction
     *      at the end of the block.
     *)
-   
-   and block = 
+
+   and block =
       BLOCK of
       {  id          : int,                        (* block id *)
          kind        : block_kind,                 (* block kind *)
-         freq        : weight ref,                 (* execution frequency *) 
-         data        : data list ref,              (* data preceeding block *) 
-         labels      : Label.label list ref,       (* labels on blocks *) 
+         freq        : weight ref,                 (* execution frequency *)
+         data        : data list ref,              (* data preceeding block *)
+         labels      : Label.label list ref,       (* labels on blocks *)
          insns       : I.instruction list ref,     (* in rev order *)
          annotations : Annotations.annotations ref (* annotations *)
       }
 
 
-   and edge_kind = ENTRY           (* entry edge *) 
+   and edge_kind = ENTRY           (* entry edge *)
                  | EXIT            (* exit edge *)
                  | JUMP            (* unconditional jump *)
-                 | FALLSTHRU       (* falls through to next block *)  
-                 | BRANCH of bool  (* branch *) 
-                 | SWITCH of int   (* computed goto *)   
+                 | FALLSTHRU       (* falls through to next block *)
+                 | BRANCH of bool  (* branch *)
+                 | SWITCH of int   (* computed goto *)
                  | SIDEEXIT of int (* the ith side exit in a hyperblock *)
 
    and edge_info = EDGE of { k : edge_kind,                  (* edge kind *)
@@ -64,7 +64,7 @@ sig
    type edge = edge_info Graph.edge
    type node = block Graph.node
 
-   datatype info = 
+   datatype info =
        INFO of { annotations : Annotations.annotations ref,
                  firstBlock  : int ref, (* id of first block *)
                  reorder     : bool ref (* has the CFG been reordered? *)
@@ -96,19 +96,19 @@ sig
    val branchOf          : edge_info -> bool option
 
                (* emit assembly *)
-   val emit       : Annotations.annotations -> block -> unit  
-   val show_block : Annotations.annotations -> block -> string 
+   val emit       : Annotations.annotations -> block -> unit
+   val show_block : Annotations.annotations -> block -> string
 
   (*========================================================================
    *
    *  Methods for manipulating CFG
    *
    *========================================================================*)
-   val cfg      : info -> cfg      (* create a new cfg *) 
+   val cfg      : info -> cfg      (* create a new cfg *)
    val new      : unit -> cfg      (* create a new cfg *)
    val subgraph : cfg -> cfg       (* mark as subgraph *)
    val init     : cfg -> unit      (* add start/stop nodes *)
-   val changed  : cfg -> unit      (* mark cfg as changed *)  
+   val changed  : cfg -> unit      (* mark cfg as changed *)
 
    val annotations    : cfg -> Annotations.annotations ref
    val liveOut        : block -> C.cellset

@@ -5,8 +5,8 @@
  * -- Allen
  *)
 
-functor BellmanFord(Num : ABELIAN_GROUP_WITH_INF) : 
-    sig include SINGLE_SOURCE_SHORTEST_PATHS 
+functor BellmanFord(Num : ABELIAN_GROUP_WITH_INF) :
+    sig include SINGLE_SOURCE_SHORTEST_PATHS
         exception NegativeCycle
     end =
 struct
@@ -38,7 +38,7 @@ struct
                          relax(es,A,v::B))
                        else relax(es,A,B)
                    end
-           in  relax(#out_edges G u,A,B) 
+           in  relax(#out_edges G u,A,B)
            end
    in  A.update(dist,s,Num.zero);
        driver([s],[]);

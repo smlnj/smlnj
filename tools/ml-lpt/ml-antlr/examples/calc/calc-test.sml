@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-structure CalcTest = 
+structure CalcTest =
   struct
 
     structure Tok = CalcParseTokens
@@ -12,7 +12,7 @@ structure CalcTest =
     structure ListLex = struct
       type strm = Tok.token list
       fun lex [] = (Tok.EOF, (0, 0), [])
-	| lex (t::ts) = (t, (0, 0), ts)
+        | lex (t::ts) = (t, (0, 0), ts)
       type pos = AntlrStreamPos.pos
       type span = pos * pos
       fun getPos _ = 0
@@ -23,11 +23,11 @@ structure CalcTest =
     fun fragToToks (SMLofNJ.QUOTE s) = let
           val sref = ref true
           fun input _ = if !sref then
-			  (sref := false; s)
-			else ""
-	  val lex = CalcLex.lex (AntlrStreamPos.mkSourcemap())
+                          (sref := false; s)
+                        else ""
+          val lex = CalcLex.lex (AntlrStreamPos.mkSourcemap())
           fun loop ((Tok.EOF, _, _), accum) = rev accum
-	    | loop ((s, _, strm), accum) = loop (lex strm, s::accum)
+            | loop ((s, _, strm), accum) = loop (lex strm, s::accum)
           in
             loop (lex (CalcLex.streamify input), [])
           end

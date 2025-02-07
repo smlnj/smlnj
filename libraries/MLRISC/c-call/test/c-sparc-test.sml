@@ -1,4 +1,4 @@
-local 
+local
 
 (*---------------------------------------------------------------------------
  * First, some front-end dependent stuff.  Typically, you only need
@@ -15,26 +15,26 @@ structure UserConst =
 struct
    type const = int
    val toString = Int.toString
-   fun hash _ = 0w0  
+   fun hash _ = 0w0
    fun valueOf _ = 0
-   fun == _ = true  
+   fun == _ = true
 end
 
 (*
  * Instantiate label expressions with respect to user defined constants.
- * This type is somewhat misnamed; it is used to represent constant 
+ * This type is somewhat misnamed; it is used to represent constant
  * expressions.
  *)
 (* structure LabelExp = LabelExp(UserConst) *)
 
 (*
  * User defined datatype for representing aliasing.   Dummy for now.
- * You'll need this to represent aliasing information. 
+ * You'll need this to represent aliasing information.
  *)
 structure UserRegion =
 struct
    type region = unit
-   fun toString () = "" 
+   fun toString () = ""
    val memory = ()
    val stack = ()
    val readonly = ()
@@ -45,11 +45,11 @@ end
  * User defined datatype for representing pseudo assembly operators.
  * Dummy for now.
  *
- * You'll need this to represent assembler directives. 
+ * You'll need this to represent assembler directives.
  *)
 structure UserPseudoOps =
 struct
-   type pseudo_op = unit  
+   type pseudo_op = unit
    fun toString () = ""
    fun emitValue _ = ()
    fun sizeOf _ = 0
@@ -59,7 +59,7 @@ end
 
 (*
  * Instruction stream datatype.
- * This is just a simple record type used by MLRISC to represent 
+ * This is just a simple record type used by MLRISC to represent
  * instruction streams.
  *)
 (*structure Stream = InstructionStream(UserPseudoOps)*)
@@ -85,13 +85,13 @@ structure SparcMLTree =
 
 
 (*---------------------------------------------------------------------------
- * Backend specific stuff.  You'll need one instance of these things 
- * for each architecture.  
+ * Backend specific stuff.  You'll need one instance of these things
+ * for each architecture.
  *---------------------------------------------------------------------------*)
 
 (*
  * The Sparc instruction set, specialized with respect to the
- * user constant and region types.  
+ * user constant and region types.
  *)
 structure SparcInstr = SparcInstr
    (SparcMLTree
@@ -124,28 +124,28 @@ structure PseudoOps =
 
     structure Client =
       struct
-	structure AsmPseudoOps = SparcPseudoOps
-	type pseudo_op = unit
-			 
-	fun toString () = ""
-  
-	fun emitValue _ = raise Fail "todo"
-	fun sizeOf _ = raise Fail "todo"
-	fun adjustLabels _ = raise Fail "todo"
+        structure AsmPseudoOps = SparcPseudoOps
+        type pseudo_op = unit
+
+        fun toString () = ""
+
+        fun emitValue _ = raise Fail "todo"
+        fun sizeOf _ = raise Fail "todo"
+        fun adjustLabels _ = raise Fail "todo"
       end (* Client *)
-  
+
     structure PseudoOps = PseudoOps (structure Client = Client)
   end
 
 structure SparcStream = InstructionStream(PseudoOps.PseudoOps)
-structure SparcMLTreeStream = 
+structure SparcMLTreeStream =
     MLTreeStream
       (structure T = SparcMLTree
        structure S = SparcStream)
 
 (*
- * The assembler 
- *) 
+ * The assembler
+ *)
 structure SparcAsm = SparcAsmEmitter
    (structure Instr = SparcInstr
     structure Stream = SparcStream
@@ -155,7 +155,7 @@ structure SparcAsm = SparcAsmEmitter
     val V9 = false  (* we'll generate V8 instructions for now *)
    )
 
-structure SparcPseudoInstrs = 
+structure SparcPseudoInstrs =
 struct
   structure I = SparcInstr
   structure C = I.C
@@ -170,7 +170,7 @@ struct
 
   fun error msg = MLRiscErrorMsg.impossible ("SparcPseudoInstrs."^msg)
 
-  val delta = 0 (*SparcSpec.framesize*)	(* initial value of %fp - %sp *)
+  val delta = 0 (*SparcSpec.framesize*) (* initial value of %fp - %sp *)
 
   (* runtime system dependent; the numbers are relative to %sp but
    * we need offsets relative to %fp, hence the adjustment by delta *)
@@ -199,18 +199,18 @@ struct
            I.rdy{d=t2},
            I.arith{a=I.SUBCC,r=t1,i=I.REG t2,d=C.r0},
            TNE
-          ] 
+          ]
       end
 
   fun smul_native({r, i, d}, reduceOpnd) =
       [I.arith{a=I.SMUL,r=r,i=i,d=d}]
 
-  fun udiv_native({r,i,d},reduceOpnd) = 
+  fun udiv_native({r,i,d},reduceOpnd) =
       [I.wry{r=C.r0,i=I.REG C.r0},
        I.arith{a=I.UDIV,r=r,i=i,d=d}]
 
    (* May overflow if MININT div -1 *)
-  fun sdivt_native({r,i,d},reduceOpnd) = 
+  fun sdivt_native({r,i,d},reduceOpnd) =
       let val t1 = C.newReg()
       in  [I.shift{s=I.SRA,r=r,i=I.IMMED 31,d=t1},
            I.wry{r=t1,i=I.REG C.r0},
@@ -227,19 +227,19 @@ struct
           ]
       end
 
-  (* 
-   * Registers %o2, %o3 are used to pass arguments to ml_mul and ml_div 
+  (*
+   * Registers %o2, %o3 are used to pass arguments to ml_mul and ml_div
    * Result is returned in %o2.
    *)
   val r10 = C.GPReg 10
   val r11 = C.GPReg 11
 
-  fun callRoutine(offset,reduceOpnd,r,i,d) =   
+  fun callRoutine(offset,reduceOpnd,r,i,d) =
   let val addr = C.newReg()
-      val defs = C.addReg(r10,C.empty) 
+      val defs = C.addReg(r10,C.empty)
       val uses = C.addReg(r10,C.addReg(r11,C.empty))
-      fun copy{dst, src, tmp} = 
-	  I.COPY{k=CellsBasis.GP, sz=32, dst=dst, src=src, tmp=tmp}
+      fun copy{dst, src, tmp} =
+          I.COPY{k=CellsBasis.GP, sz=32, dst=dst, src=src, tmp=tmp}
   in
       [copy{src=[r,reduceOpnd i],dst=[r10,r11],tmp=SOME(I.Direct(C.newReg()))},
        I.load{l=I.LD,r=C.frameptrR,i=offset,d=addr,mem=stack},
@@ -254,7 +254,7 @@ struct
   fun udiv({r, i, d}, reduceOpnd) = callRoutine(udivOffset,reduceOpnd,r,i,d)
   fun sdivtrap({r, i, d}, reduceOpnd) = callRoutine(sdivOffset,reduceOpnd,r,i,d)
 
-  fun cvti2d({i, d}, reduceOpnd) = 
+  fun cvti2d({i, d}, reduceOpnd) =
       [I.store{s=I.ST,r=C.frameptrR,i=floatTmpOffset,d=reduceOpnd i,mem=stack},
        I.fload{l=I.LDF,r=C.frameptrR,i=floatTmpOffset,d=d,mem=stack},
        I.fpop1{a=I.FiTOd,r=d,d=d}
@@ -281,28 +281,28 @@ struct
 
 end
 
-structure SparcMLTreeHash = 
+structure SparcMLTreeHash =
     MLTreeHash
        (structure T = SparcMLTree
         fun h _ _ = 0w0
-        val hashRext = h	val hashFext = h
+        val hashRext = h        val hashFext = h
         val hashCCext = h       val hashSext = h)
 
-structure SparcProps = 
+structure SparcProps =
   SparcProps
     (structure SparcInstr = SparcInstr
      structure MLTreeEval = SparcMLTreeEval
      structure MLTreeHash = SparcMLTreeHash)
 
-structure SparcAsmEmitter = 
+structure SparcAsmEmitter =
   SparcAsmEmitter(structure Instr=SparcInstr
-		  structure Shuffle=SparcShuffle
+                  structure Shuffle=SparcShuffle
                   structure S = SparcStream
-		  structure MLTreeEval=SparcMLTreeEval
+                  structure MLTreeEval=SparcMLTreeEval
                   val V9 = false)
 
 
-structure SparcCFG = 
+structure SparcCFG =
   ControlFlowGraph
      (structure I = SparcInstr
       structure PseudoOps = SparcPseudoOps
@@ -310,10 +310,10 @@ structure SparcCFG =
       structure InsnProps = SparcProps
       structure Asm = SparcAsmEmitter)
 
-structure SparcFlowGraph = BuildFlowgraph 
-	    (structure Props = SparcProps
+structure SparcFlowGraph = BuildFlowgraph
+            (structure Props = SparcProps
              structure Stream = SparcStream
-	     structure CFG = SparcCFG)
+             structure CFG = SparcCFG)
 
 structure SparcExpand = CFGExpandCopies (structure CFG=SparcCFG
                                          structure Shuffle = SparcShuffle)
@@ -321,11 +321,11 @@ structure SparcBlockPlacement = DefaultBlockPlacement(SparcCFG)
 
 structure SparcEmit = CFGEmit (
              structure CFG = SparcCFG
-             structure E = SparcAsmEmitter) 
+             structure E = SparcAsmEmitter)
 
 structure SparcCCall = SparcCCallFn (
-		         structure T = SparcMLTree
-			 fun ix x = raise Fail "")
+                         structure T = SparcMLTree
+                         fun ix x = raise Fail "")
 
 (*
  * This module controls how we handle user extensions.  Since we don't
@@ -339,12 +339,12 @@ struct
    structure C = I.C
    structure Ext = UserExtension
    structure CFG = SparcCFG
-   structure SparcCompInstrExt = 
+   structure SparcCompInstrExt =
      SparcCompInstrExt(structure I = I structure CFG = CFG structure TS=SparcMLTreeStream)
 
-   type reducer = 
+   type reducer =
      (I.instruction,C.cellset,I.operand,I.addressing_mode, CFG.cfg) TS.reducer
-   fun unimplemented _ = MLRiscErrorMsg.impossible "SparcMLTreeExtComp" 
+   fun unimplemented _ = MLRiscErrorMsg.impossible "SparcMLTreeExtComp"
 
    val compileSext  = SparcCompInstrExt.compileSext
    val compileRext  = unimplemented
@@ -369,15 +369,15 @@ end
 
     structure InsnProps = SparcProps
 
-    structure RA = 
+    structure RA =
        RISC_RA
          (structure I         = SparcInstr
        structure C         = CellsBasis
        structure T = SparcMLTree
           structure CFG       = SparcCFG
-          structure InsnProps = InsnProps 
+          structure InsnProps = InsnProps
           structure Rewrite   = SparcRewrite(SparcInstr)
-	  structure SpillInstr= SparcSpillInstr(SparcInstr)
+          structure SpillInstr= SparcSpillInstr(SparcInstr)
           structure Asm       = SparcAsmEmitter
           structure SpillHeur = ChaitinSpillHeur
           structure Spill     = RASpill(structure InsnProps = InsnProps
@@ -388,12 +388,12 @@ end
             val architecture = "Sparc" )
           val fp = I.C.frameptrR
           val spill = UserRegion.spill
-	  datatype spillOperandKind = SPILL_LOC | CONST_VAL
-	  type spill_info = unit
+          datatype spillOperandKind = SPILL_LOC | CONST_VAL
+          type spill_info = unit
           fun beforeRA _ = SpillTable.beginRA()
 
           val architecture = "Sparc"
-         
+
           fun pure(I.ANNOTATION{i,...}) = pure i
             | pure(I.INSTR(I.LOAD _)) = true
             | pure(I.INSTR(I.FLOAD _)) = true
@@ -403,36 +403,36 @@ end
             | pure(I.INSTR(I.FPop2 _)) = true
             | pure _ = false
 
-          (* make copy *) 
-          structure Int = 
+          (* make copy *)
+          structure Int =
           struct
-	               val dedicated = [I.C.stackptrR, I.C.GPReg 0]
-             val avail     = 
-		 C.SortedCells.return
+                       val dedicated = [I.C.stackptrR, I.C.GPReg 0]
+             val avail     =
+                 C.SortedCells.return
               (C.SortedCells.difference(
                 C.SortedCells.uniq(
                    SparcCells.Regs C.GP {from=0, to=31, step=1}),
                 C.SortedCells.uniq dedicated)
               )
 
-	     fun mkDisp loc = T.LI(T.I.fromInt(32, SpillTable.get loc))
-             fun spillLoc{info, an, cell, id} = 
-		  {opnd=I.Displace{base=fp, disp=mkDisp(RAGraph.FRAME id), mem=spill},
-		   kind=SPILL_LOC}
+             fun mkDisp loc = T.LI(T.I.fromInt(32, SpillTable.get loc))
+             fun spillLoc{info, an, cell, id} =
+                  {opnd=I.Displace{base=fp, disp=mkDisp(RAGraph.FRAME id), mem=spill},
+                   kind=SPILL_LOC}
 
              val mode = RACore.NO_OPTIMIZATION
           end
 
-          structure Float = 
+          structure Float =
           struct
       fun fromto(n, m, inc) = if n>m then [] else n :: fromto(n+inc, m, inc)
-	  val avail =  SparcCells.Regs C.FP {from=0, to=30, step=2}
-	  val dedicated = []
+          val avail =  SparcCells.Regs C.FP {from=0, to=30, step=2}
+          val dedicated = []
 
-	      fun mkDisp loc = T.LI(T.I.fromInt(32, SpillTable.getF loc))
+              fun mkDisp loc = T.LI(T.I.fromInt(32, SpillTable.getF loc))
 
-             fun spillLoc(S, an, loc) = 
-		I.Displace{base=fp, disp=mkDisp(RAGraph.FRAME loc), mem=spill}
+             fun spillLoc(S, an, loc) =
+                I.Displace{base=fp, disp=mkDisp(RAGraph.FRAME loc), mem=spill}
 
              val mode = RACore.NO_OPTIMIZATION
           end
@@ -468,7 +468,7 @@ structure SparcMLRISCGen =
 
     fun gen (functionName, stms, result) = let
            val insnStrm = FlowGraph.build()
-	   val stream as SparcStream.STREAM
+           val stream as SparcStream.STREAM
            { beginCluster,  (* start a cluster *)
              endCluster,    (* end a cluster *)
              emit,          (* emit MLTREE stm *)
@@ -479,28 +479,28 @@ structure SparcMLRISCGen =
              annotation,    (* add an annotation *)
              ... } =
              MLTreeComp.selectInstructions insnStrm
-	fun doit () = (
-	    beginCluster 0;      (* start a new cluster *)
-            pseudoOp PseudoOpsBasisTyp.TEXT;		  
-	    pseudoOp (PseudoOpsBasisTyp.EXPORT [functionName]);    
+        fun doit () = (
+            beginCluster 0;      (* start a new cluster *)
+            pseudoOp PseudoOpsBasisTyp.TEXT;
+            pseudoOp (PseudoOpsBasisTyp.EXPORT [functionName]);
             entryLabel functionName; (* define the entry label *)
             List.app emit stms; (* emit all the statements *)
             exitBlock result;
             endCluster [])
-	val cfg = doit ()
-	val cfg = RA.run cfg
-	val cfg = SparcExpand.run cfg
-        in  
+        val cfg = doit ()
+        val cfg = RA.run cfg
+        val cfg = SparcExpand.run cfg
+        in
          (cfg, stream)        (* end the cluster *)
        end
 
     fun dumpOutput (cfg, stream) = let
-	val (cfg as Graph.GRAPH graph, blocks) = 
-		SparcBlockPlacement.blockPlacement cfg
-	val CFG.INFO{annotations=an, data, decls, ...} = #graph_info graph
-	in
-	  SparcEmit.asmEmit (cfg, blocks)
-	end (* dumpOutput *)
+        val (cfg as Graph.GRAPH graph, blocks) =
+                SparcBlockPlacement.blockPlacement cfg
+        val CFG.INFO{annotations=an, data, decls, ...} = #graph_info graph
+        in
+          SparcEmit.asmEmit (cfg, blocks)
+        end (* dumpOutput *)
 
     val GP = SparcCells.GPReg
     val FP = SparcCells.FPReg
@@ -512,51 +512,51 @@ structure SparcMLRISCGen =
     fun freg64 r = T.FREG (64, r)
     fun LI i = T.LI (T.I.fromInt (32, i))
     val sp = oreg 6
-   
-    fun codegen (functionName, target, proto, initStms, args) = let 
+
+    fun codegen (functionName, target, proto, initStms, args) = let
         val _ = Label.reset()
 
-	val [functionName, target] = List.map Label.global [functionName, target]
+        val [functionName, target] = List.map Label.global [functionName, target]
 
-	(* construct the C call *)
-	val {result, callseq} = SparcCCall.genCall {
-	           name=T.LABEL target,
-	           paramAlloc=fn _ => false,
+        (* construct the C call *)
+        val {result, callseq} = SparcCCall.genCall {
+                   name=T.LABEL target,
+                   paramAlloc=fn _ => false,
 (* FIXME *)
-	           structRet=fn _ => T.REG(32, SparcCells.GPReg 0),
-	           saveRestoreDedicated=fn _ => {save=[], restore=[]},
-	           callComment=NONE,
-	           proto=proto,
-	           args=args}
+                   structRet=fn _ => T.REG(32, SparcCells.GPReg 0),
+                   saveRestoreDedicated=fn _ => {save=[], restore=[]},
+                   callComment=NONE,
+                   proto=proto,
+                   args=args}
 
-	fun wordLit i = T.LI (T.I.fromInt (wordTy, i))
+        fun wordLit i = T.LI (T.I.fromInt (wordTy, i))
 
-	fun offp i = T.ADD(32, T.REG (32, ireg 6), LI i)
+        fun offp i = T.ADD(32, T.REG (32, ireg 6), LI i)
 
-	val stms = List.concat [
-		   [T.EXT(SparcInstrExt.SAVE(T.REG(32, sp), LI(~112), T.REG(32, sp)))],
-		   initStms,
-		   callseq, 
-		   [T.EXT(SparcInstrExt.RESTORE(T.REG(32, greg 0), T.REG(32, greg 0), T.REG(32, greg 0)))],
-		   [T.JMP(T.ADD(32, T.REG(32, oreg 7), LI 8), [])]
-		   ]
+        val stms = List.concat [
+                   [T.EXT(SparcInstrExt.SAVE(T.REG(32, sp), LI(~112), T.REG(32, sp)))],
+                   initStms,
+                   callseq,
+                   [T.EXT(SparcInstrExt.RESTORE(T.REG(32, greg 0), T.REG(32, greg 0), T.REG(32, greg 0)))],
+                   [T.JMP(T.ADD(32, T.REG(32, oreg 7), LI 8), [])]
+                   ]
 
-(*	val _ = List.all (fn stm => ChkTy.check stm 
-				    orelse raise Fail ("typechecking error: "^SparcMTC.SparcMLTreeUtils.stmToString stm))
-		stms
+(*      val _ = List.all (fn stm => ChkTy.check stm
+                                    orelse raise Fail ("typechecking error: "^SparcMTC.SparcMLTreeUtils.stmToString stm))
+                stms
 *)
 
         in
-	   dumpOutput(gen (functionName, stms, result))
-	end
+           dumpOutput(gen (functionName, stms, result))
+        end
 
   end
 
 structure SparcTest = GenTestFn (
-		  structure T = SparcMLTree
-		  structure CCall = SparcCCall
-		  structure Cells = SparcCells
-		  val codegen = SparcMLRISCGen.codegen
-		  val param0 = reg32(ireg 0)
-		  val wordTy = 32)
+                  structure T = SparcMLTree
+                  structure CCall = SparcCCall
+                  structure Cells = SparcCells
+                  val codegen = SparcMLRISCGen.codegen
+                  val param0 = reg32(ireg 0)
+                  val wordTy = 32)
 end

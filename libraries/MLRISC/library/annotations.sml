@@ -5,7 +5,7 @@
  *  the optimizer.
  *
  *  Idea is stolen from Stephen Weeks
- * 
+ *
  *  -- Allen
  *)
 
@@ -16,7 +16,7 @@ struct
    type annotations = annotation list
    type propList = annotations
    exception NoProperty
-   type 'a property = 
+   type 'a property =
          { get      : annotations -> 'a option,
            peek     : annotation -> 'a option,
            lookup   : annotations -> 'a,
@@ -27,7 +27,7 @@ struct
          }
    type flag = unit property
 
-   val prettyPrinters = ref [] : (annotation -> string) list ref 
+   val prettyPrinters = ref [] : (annotation -> string) list ref
 
    fun attachPrettyPrinter p = prettyPrinters := p :: !prettyPrinters
 
@@ -66,7 +66,7 @@ struct
        }
    end
 
-   fun 'a new'{create, toString, get=get'} = 
+   fun 'a new'{create, toString, get=get'} =
    let fun get [] = NONE
          | get (x::l) = SOME(get' x) handle _ => get l
        fun peek x = SOME(get' x) handle _ => NONE

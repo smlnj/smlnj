@@ -1,5 +1,5 @@
 (*
- * Type checking 
+ * Type checking
  *)
 signature MDL_TYPING =
 sig
@@ -7,7 +7,7 @@ sig
    structure TypeUtil : MDL_TYPE_UTILS
    structure Env      : MDL_ENV
    structure Comp     : MDL_COMPILE
-     sharing Env.Ast = TypeUtil.Ast = Ast 
+     sharing Env.Ast = TypeUtil.Ast = Ast
      sharing Comp.Env = Env
 
    val isPolymorphic : Ast.ty -> bool

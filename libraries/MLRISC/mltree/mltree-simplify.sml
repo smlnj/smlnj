@@ -59,105 +59,105 @@ struct
    val zeroT = T.LI zero
 
 (*#line 40.4 "mltree-simplify.in"*)
-   fun simplify {addressWidth, signedAddress} = 
-       let 
+   fun simplify {addressWidth, signedAddress} =
+       let
 (*#line 43.4 "mltree-simplify.in"*)
            fun dm (T.DIV_TO_ZERO) = I.DIV_TO_ZERO
              | dm (T.DIV_TO_NEGINF) = I.DIV_TO_NEGINF
 
 (*#line 46.4 "mltree-simplify.in"*)
-           fun sim ==> exp = 
+           fun sim ==> exp =
                   let val v_3 = exp
                       fun state_165 e = e
                       fun state_149 () = zeroT
                       fun state_158 () = zeroT
-                      fun state_180 v_3 = 
+                      fun state_180 v_3 =
                           let val exp = v_3
                           in exp
                           end
-                      fun state_118 (v_1, v_4) = 
+                      fun state_118 (v_1, v_4) =
                           let val b = v_4
                               and ty = v_1
                           in b
                           end
-                      fun state_15 (v_1, v_0) = 
+                      fun state_15 (v_1, v_0) =
                           let val a = v_0
                               and ty = v_1
                           in a
                           end
-                      fun state_148 v_1 = 
+                      fun state_148 v_1 =
                           let val ty = v_1
                           in zeroT
                           end
-                      fun state_140 v_1 = 
+                      fun state_140 v_1 =
                           let val ty = v_1
                           in zeroT
                           end
-                      fun state_157 v_1 = 
+                      fun state_157 v_1 =
                           let val ty = v_1
                           in zeroT
                           end
-                      fun state_109 v_4 = 
+                      fun state_109 v_4 =
                           let val b = v_4
                           in b
                           end
-                      fun state_45 (v_1, v_4) = 
+                      fun state_45 (v_1, v_4) =
                           let val ty = v_1
                               and x = v_4
                           in x
                           end
-                      fun state_43 v_1 = 
+                      fun state_43 v_1 =
                           let val ty = v_1
                           in zeroT
                           end
-                      fun state_47 (v_1, v_0) = 
+                      fun state_47 (v_1, v_0) =
                           let val ty = v_1
                               and x = v_0
                           in x
                           end
-                      fun state_85 (v_1, v_4) = 
+                      fun state_85 (v_1, v_4) =
                           let val ty = v_1
                               and x = v_4
                           in x
                           end
-                      fun state_83 v_1 = 
+                      fun state_83 v_1 =
                           let val ty = v_1
                           in zeroT
                           end
-                      fun state_87 (v_1, v_0) = 
+                      fun state_87 (v_1, v_0) =
                           let val ty = v_1
                               and x = v_0
                           in x
                           end
-                      fun state_23 (v_1, v_4) = 
+                      fun state_23 (v_1, v_4) =
                           let val ty = v_1
                               and x = v_4
                           in x
                           end
-                      fun state_21 v_1 = 
+                      fun state_21 v_1 =
                           let val ty = v_1
                           in zeroT
                           end
-                      fun state_25 (v_1, v_0) = 
+                      fun state_25 (v_1, v_0) =
                           let val ty = v_1
                               and x = v_0
                           in x
                           end
-                      fun state_127 (v_1, v_4) = 
+                      fun state_127 (v_1, v_4) =
                           let val b = v_4
                               and ty = v_1
                           in zeroT
                           end
-                      fun state_100 v_0 = 
+                      fun state_100 v_0 =
                           let val a = v_0
                           in a
                           end
-                      fun state_69 (v_1, v_0) = 
+                      fun state_69 (v_1, v_0) =
                           let val ty = v_1
                               and x = v_0
                           in x
                           end
-                      fun state_5 (v_1, v_0) = 
+                      fun state_5 (v_1, v_0) =
                           let val ty = v_1
                               and x = v_0
                           in x
@@ -207,29 +207,29 @@ struct
                       fun state_181 (v_3, v_1, v_0, v_2) = (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                              then (state_5 (v_1, v_0))
                              else (state_180 v_3))
-                      fun state_1451 (v_3, v_1, v_0, v_4) = 
+                      fun state_1451 (v_3, v_1, v_0, v_4) =
                           (case v_4 of
                             T.LI v_2 => state_1450 (v_3, v_1, v_0, v_2)
                           | _ => state_180 v_3
                           )
-                      fun state_182 (v_3, v_1, v_0, v_4) = 
+                      fun state_182 (v_3, v_1, v_0, v_4) =
                           (case v_4 of
                             T.LI v_2 => state_181 (v_3, v_1, v_0, v_2)
                           | _ => state_180 v_3
                           )
-                  in 
+                  in
                      (case v_3 of
-                       T.ADD v_5 => 
+                       T.ADD v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.ADD v_10 => 
+                            T.ADD v_10 =>
                             let val (v_7, v_9, v_13) = v_10
-                            in 
+                            in
                                (case v_13 of
-                                 T.LI v_12 => 
+                                 T.LI v_12 =>
                                  (case v_4 of
-                                   T.LI v_2 => 
+                                   T.LI v_2 =>
                                    let val a = v_9
                                        and ty = v_1
                                        and ty' = v_7
@@ -244,9 +244,9 @@ struct
                                | _ => state_182 (v_3, v_1, v_0, v_4)
                                )
                             end
-                          | T.LABEXP v_10 => 
+                          | T.LABEXP v_10 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -256,16 +256,16 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val ty = v_1
                                    and x = v_4
                                in x
                                end
-                               else 
+                               else
                                (case v_4 of
                                  T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                     then (state_5 (v_1, v_0))
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -276,13 +276,13 @@ struct
                           | _ => state_182 (v_3, v_1, v_0, v_4)
                           )
                        end
-                     | T.ADDT v_5 => 
+                     | T.ADDT v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -292,16 +292,16 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val ty = v_1
                                    and x = v_4
                                in x
                                end
-                               else 
+                               else
                                (case v_4 of
                                  T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                     then (state_69 (v_1, v_0))
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -310,20 +310,20 @@ struct
                                     end)
                                | _ => state_180 v_3
                                ))
-                          | _ => 
+                          | _ =>
                             (case v_4 of
                               T.LI v_2 => state_354 (v_3, v_1, v_0, v_2)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.ANDB v_5 => 
+                     | T.ANDB v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -333,15 +333,15 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val b = v_4
                                in b
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_100 v_0)
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -349,14 +349,14 @@ struct
                                     end)
                                | _ => state_180 v_3
                                ))
-                          | T.NOTB v_2 => 
+                          | T.NOTB v_2 =>
                             (case v_0 of
                               T.LI v_10 => state_441 (v_3, v_0, v_10)
-                            | T.NOTB v_10 => 
+                            | T.NOTB v_10 =>
                               let val (v_7, v_9) = v_10
-                              in 
+                              in
                                  let val (v_6, v_8) = v_2
-                                 in 
+                                 in
                                     let val a = v_9
                                         and b = v_8
                                         and ty = v_1
@@ -370,24 +370,24 @@ struct
                               end
                             | _ => state_180 v_3
                             )
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_441 (v_3, v_0, v_10)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.COND v_5 => 
+                     | T.COND v_5 =>
                        let val (v_1, v_0, v_4, v_18) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.FALSE => 
+                            T.FALSE =>
                             let val a = v_4
                                 and b = v_18
                                 and ty = v_1
                             in b
                             end
-                          | T.TRUE => 
+                          | T.TRUE =>
                             let val a = v_4
                                 and b = v_18
                                 and ty = v_1
@@ -396,13 +396,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.DIVS v_5 => 
+                     | T.DIVS v_5 =>
                        let val (v_1, v_0, v_4, v_18) = v_5
-                       in 
+                       in
                           (case v_18 of
-                            T.LABEXP v_17 => 
+                            T.LABEXP v_17 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val m = v_1
                                   and ty = v_0
                                   and x = v_2
@@ -412,15 +412,15 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_17 => (if ((IntInf.compare (v_17, lit_16)) = EQUAL)
-                               then 
+                               then
                                let val a = v_4
                                    and m = v_1
                                    and ty = v_0
                                in a
                                end
-                               else 
+                               else
                                (case v_4 of
-                                 T.LI v_2 => 
+                                 T.LI v_2 =>
                                  let val m = v_1
                                      and ty = v_0
                                      and x = v_2
@@ -434,13 +434,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.DIVT v_5 => 
+                     | T.DIVT v_5 =>
                        let val (v_1, v_0, v_4, v_18) = v_5
-                       in 
+                       in
                           (case v_18 of
-                            T.LABEXP v_17 => 
+                            T.LABEXP v_17 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val m = v_1
                                   and ty = v_0
                                   and x = v_2
@@ -450,15 +450,15 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_17 => (if ((IntInf.compare (v_17, lit_16)) = EQUAL)
-                               then 
+                               then
                                let val a = v_4
                                    and m = v_1
                                    and ty = v_0
                                in a
                                end
-                               else 
+                               else
                                (case v_4 of
-                                 T.LI v_2 => 
+                                 T.LI v_2 =>
                                  let val m = v_1
                                      and ty = v_0
                                      and x = v_2
@@ -472,13 +472,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.DIVU v_5 => 
+                     | T.DIVU v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -487,14 +487,14 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_16)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
-                                 T.LI v_10 => 
+                                 T.LI v_10 =>
                                  let val ty = v_1
                                      and x = v_10
                                      and y = v_2
@@ -507,13 +507,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.EQVB v_5 => 
+                     | T.EQVB v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -523,16 +523,16 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in zeroT
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_127 (v_1, v_4))
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -540,20 +540,20 @@ struct
                                     end)
                                | _ => state_180 v_3
                                ))
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_555 (v_3, v_1, v_10, v_4)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.MULS v_5 => 
+                     | T.MULS v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -563,12 +563,12 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val ty = v_1
                                in zeroT
                                end
                                else (if ((IntInf.compare (v_10, lit_16)) = EQUAL)
-                                  then 
+                                  then
                                   (case v_4 of
                                     T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                        then (state_21 v_1)
@@ -577,13 +577,13 @@ struct
                                           else (state_23 (v_1, v_4))))
                                   | _ => state_23 (v_1, v_4)
                                   )
-                                  else 
+                                  else
                                   (case v_4 of
                                     T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                        then (state_21 v_1)
                                        else (if ((IntInf.compare (v_2, lit_16)) = EQUAL)
                                           then (state_25 (v_1, v_0))
-                                          else 
+                                          else
                                           let val ty = v_1
                                               and x = v_10
                                               and y = v_2
@@ -591,20 +591,20 @@ struct
                                           end))
                                   | _ => state_180 v_3
                                   )))
-                          | _ => 
+                          | _ =>
                             (case v_4 of
                               T.LI v_2 => state_642 (v_3, v_1, v_0, v_2)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.MULT v_5 => 
+                     | T.MULT v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -614,12 +614,12 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val ty = v_1
                                in zeroT
                                end
                                else (if ((IntInf.compare (v_10, lit_16)) = EQUAL)
-                                  then 
+                                  then
                                   (case v_4 of
                                     T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                        then (state_83 v_1)
@@ -628,13 +628,13 @@ struct
                                           else (state_85 (v_1, v_4))))
                                   | _ => state_85 (v_1, v_4)
                                   )
-                                  else 
+                                  else
                                   (case v_4 of
                                     T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                        then (state_83 v_1)
                                        else (if ((IntInf.compare (v_2, lit_16)) = EQUAL)
                                           then (state_87 (v_1, v_0))
-                                          else 
+                                          else
                                           let val ty = v_1
                                               and x = v_10
                                               and y = v_2
@@ -643,20 +643,20 @@ struct
                                           end))
                                   | _ => state_180 v_3
                                   )))
-                          | _ => 
+                          | _ =>
                             (case v_4 of
                               T.LI v_2 => state_731 (v_3, v_1, v_0, v_2)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.MULU v_5 => 
+                     | T.MULU v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -666,12 +666,12 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val ty = v_1
                                in zeroT
                                end
                                else (if ((IntInf.compare (v_10, lit_16)) = EQUAL)
-                                  then 
+                                  then
                                   (case v_4 of
                                     T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                        then (state_43 v_1)
@@ -680,13 +680,13 @@ struct
                                           else (state_45 (v_1, v_4))))
                                   | _ => state_45 (v_1, v_4)
                                   )
-                                  else 
+                                  else
                                   (case v_4 of
                                     T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                        then (state_43 v_1)
                                        else (if ((IntInf.compare (v_2, lit_16)) = EQUAL)
                                           then (state_47 (v_1, v_0))
-                                          else 
+                                          else
                                           let val ty = v_1
                                               and x = v_10
                                               and y = v_2
@@ -694,23 +694,23 @@ struct
                                           end))
                                   | _ => state_180 v_3
                                   )))
-                          | _ => 
+                          | _ =>
                             (case v_4 of
                               T.LI v_2 => state_820 (v_3, v_1, v_0, v_2)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.NEGT v_5 => 
+                     | T.NEGT v_5 =>
                        let val (v_1, v_0) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             let val ty = v_1
                                 and x = v_10
                             in T.LABEXP (T.NEGT (ty, x))
                             end
-                          | T.LI v_10 => 
+                          | T.LI v_10 =>
                             let val ty = v_1
                                 and x = v_10
                             in ((T.LI (I.NEGT (ty, x))) handle Overflow => exp
@@ -719,23 +719,23 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.NOTB v_5 => 
+                     | T.NOTB v_5 =>
                        let val (v_1, v_0) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             let val ty = v_1
                                 and x = v_10
                             in T.LABEXP (T.NOTB (ty, x))
                             end
-                          | T.LI v_10 => 
+                          | T.LI v_10 =>
                             let val n = v_10
                                 and ty = v_1
                             in T.LI (I.NOTB (ty, n))
                             end
-                          | T.NOTB v_10 => 
+                          | T.NOTB v_10 =>
                             let val (v_7, v_9) = v_10
-                            in 
+                            in
                                let val a = v_9
                                    and ty = v_1
                                    and ty' = v_7
@@ -747,13 +747,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.ORB v_5 => 
+                     | T.ORB v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -763,15 +763,15 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_109 v_4)
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -779,14 +779,14 @@ struct
                                     end)
                                | _ => state_180 v_3
                                ))
-                          | T.NOTB v_2 => 
+                          | T.NOTB v_2 =>
                             (case v_0 of
                               T.LI v_10 => state_916 (v_3, v_10, v_4)
-                            | T.NOTB v_10 => 
+                            | T.NOTB v_10 =>
                               let val (v_7, v_9) = v_10
-                              in 
+                              in
                                  let val (v_6, v_8) = v_2
-                                 in 
+                                 in
                                     let val a = v_9
                                         and b = v_8
                                         and ty = v_1
@@ -800,20 +800,20 @@ struct
                               end
                             | _ => state_180 v_3
                             )
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_916 (v_3, v_10, v_4)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.REMS v_5 => 
+                     | T.REMS v_5 =>
                        let val (v_1, v_0, v_4, v_18) = v_5
-                       in 
+                       in
                           (case v_18 of
-                            T.LABEXP v_17 => 
+                            T.LABEXP v_17 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val m = v_1
                                   and ty = v_0
                                   and x = v_2
@@ -823,15 +823,15 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_17 => (if ((IntInf.compare (v_17, lit_16)) = EQUAL)
-                               then 
+                               then
                                let val a = v_4
                                    and m = v_1
                                    and ty = v_0
                                in zeroT
                                end
-                               else 
+                               else
                                (case v_4 of
-                                 T.LI v_2 => 
+                                 T.LI v_2 =>
                                  let val m = v_1
                                      and ty = v_0
                                      and x = v_2
@@ -845,13 +845,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.REMU v_5 => 
+                     | T.REMU v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -860,14 +860,14 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_16)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in zeroT
                                end
-                               else 
+                               else
                                (case v_0 of
-                                 T.LI v_10 => 
+                                 T.LI v_10 =>
                                  let val ty = v_1
                                      and x = v_10
                                      and y = v_2
@@ -880,13 +880,13 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.SLL v_5 => 
+                     | T.SLL v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -896,28 +896,28 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_157 v_1)
-                                    else 
+                                    else
                                     let val n = v_2
                                         and ty = v_1
                                     in (if (IntInf.<= (IntInf.fromInt ty, n))
                                           then (state_158 ())
-                                          else 
+                                          else
                                           let val ty = v_1
                                               and x = v_10
                                               and y = v_2
                                           in T.LI (I.SLL (ty, x, y))
                                           end)
                                     end)
-                               | _ => 
+                               | _ =>
                                  let val n = v_2
                                      and ty = v_1
                                  in (if (IntInf.<= (IntInf.fromInt ty, n))
@@ -925,20 +925,20 @@ struct
                                        else (state_180 v_3))
                                  end
                                ))
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_1021 (v_3, v_1, v_10)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.SRA v_5 => 
+                     | T.SRA v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -948,16 +948,16 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_140 v_1)
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -965,20 +965,20 @@ struct
                                     end)
                                | _ => state_180 v_3
                                ))
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_1192 (v_3, v_1, v_10)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.SRL v_5 => 
+                     | T.SRL v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -988,28 +988,28 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_148 v_1)
-                                    else 
+                                    else
                                     let val n = v_2
                                         and ty = v_1
                                     in (if (IntInf.<= (IntInf.fromInt ty, n))
                                           then (state_149 ())
-                                          else 
+                                          else
                                           let val ty = v_1
                                               and x = v_10
                                               and y = v_2
                                           in T.LI (I.SRL (ty, x, y))
                                           end)
                                     end)
-                               | _ => 
+                               | _ =>
                                  let val n = v_2
                                      and ty = v_1
                                  in (if (IntInf.<= (IntInf.fromInt ty, n))
@@ -1017,20 +1017,20 @@ struct
                                        else (state_180 v_3))
                                  end
                                ))
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_1279 (v_3, v_1, v_10)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.SUB v_5 => 
+                     | T.SUB v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_0 of
-                            T.LABEXP v_10 => 
+                            T.LABEXP v_10 =>
                             (case v_4 of
-                              T.LABEXP v_2 => 
+                              T.LABEXP v_2 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -1039,23 +1039,23 @@ struct
                             | T.LI v_2 => state_1450 (v_3, v_1, v_0, v_2)
                             | _ => state_180 v_3
                             )
-                          | T.LI v_10 => 
+                          | T.LI v_10 =>
                             (case v_4 of
                               T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
                                  then (state_15 (v_1, v_0))
-                                 else 
+                                 else
                                  let val ty = v_1
                                      and x = v_10
                                      and y = v_2
                                  in T.LI (I.SUB (ty, x, y))
                                  end)
-                            | T.SUB v_2 => 
+                            | T.SUB v_2 =>
                               let val (v_6, v_8, v_14) = v_2
                               in (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
-                                    then 
+                                    then
                                     (case v_8 of
                                       T.LI v_15 => (if ((IntInf.compare (v_15, lit_11)) = EQUAL)
-                                         then 
+                                         then
                                          let val a = v_14
                                              and ty = v_1
                                              and ty' = v_6
@@ -1070,13 +1070,13 @@ struct
                               end
                             | _ => state_180 v_3
                             )
-                          | T.SUB v_10 => 
+                          | T.SUB v_10 =>
                             let val (v_7, v_9, v_13) = v_10
-                            in 
+                            in
                                (case v_13 of
-                                 T.LI v_12 => 
+                                 T.LI v_12 =>
                                  (case v_4 of
-                                   T.LI v_2 => 
+                                   T.LI v_2 =>
                                    let val a = v_9
                                        and ty = v_1
                                        and ty' = v_7
@@ -1094,13 +1094,13 @@ struct
                           | _ => state_1451 (v_3, v_1, v_0, v_4)
                           )
                        end
-                     | T.SUBT v_5 => 
+                     | T.SUBT v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -1109,14 +1109,14 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
-                                 T.LI v_10 => 
+                                 T.LI v_10 =>
                                  let val ty = v_1
                                      and x = v_10
                                      and y = v_2
@@ -1128,42 +1128,42 @@ struct
                           | _ => state_180 v_3
                           )
                        end
-                     | T.SX v_5 => 
+                     | T.SX v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             let val e = v_4
                                 and ty = v_1
                                 and ty' = v_0
                             in (if (ty = ty')
                                   then (state_165 e)
-                                  else 
+                                  else
                                   let val ty = v_1
                                       and ty' = v_0
                                       and x = v_2
                                   in T.LABEXP (T.SX (ty, ty', x))
                                   end)
                             end
-                          | T.LI v_2 => 
+                          | T.LI v_2 =>
                             let val e = v_4
                                 and ty = v_1
                                 and ty' = v_0
                             in (if (ty = ty')
                                   then (state_165 e)
-                                  else 
+                                  else
                                   let val n = v_2
                                       and ty = v_1
                                       and ty' = v_0
                                   in T.LI (I.SX (ty, ty', n))
                                   end)
                             end
-                          | T.LOAD v_2 => 
+                          | T.LOAD v_2 =>
                             let val ty = v_1
                                 and ty' = v_0
                             in exp
                             end
-                          | _ => 
+                          | _ =>
                             let val e = v_4
                                 and ty = v_1
                                 and ty' = v_0
@@ -1173,13 +1173,13 @@ struct
                             end
                           )
                        end
-                     | T.XORB v_5 => 
+                     | T.XORB v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           (case v_4 of
-                            T.LABEXP v_2 => 
+                            T.LABEXP v_2 =>
                             (case v_0 of
-                              T.LABEXP v_10 => 
+                              T.LABEXP v_10 =>
                               let val ty = v_1
                                   and x = v_10
                                   and y = v_2
@@ -1189,16 +1189,16 @@ struct
                             | _ => state_180 v_3
                             )
                           | T.LI v_2 => (if ((IntInf.compare (v_2, lit_11)) = EQUAL)
-                               then 
+                               then
                                let val a = v_0
                                    and ty = v_1
                                in a
                                end
-                               else 
+                               else
                                (case v_0 of
                                  T.LI v_10 => (if ((IntInf.compare (v_10, lit_11)) = EQUAL)
                                     then (state_118 (v_1, v_4))
-                                    else 
+                                    else
                                     let val ty = v_1
                                         and x = v_10
                                         and y = v_2
@@ -1206,14 +1206,14 @@ struct
                                     end)
                                | _ => state_180 v_3
                                ))
-                          | T.NOTB v_2 => 
+                          | T.NOTB v_2 =>
                             (case v_0 of
                               T.LI v_10 => state_1717 (v_3, v_1, v_10, v_4)
-                            | T.NOTB v_10 => 
+                            | T.NOTB v_10 =>
                               let val (v_7, v_9) = v_10
-                              in 
+                              in
                                  let val (v_6, v_8) = v_2
-                                 in 
+                                 in
                                     let val a = v_9
                                         and b = v_8
                                         and ty = v_1
@@ -1227,30 +1227,30 @@ struct
                               end
                             | _ => state_180 v_3
                             )
-                          | _ => 
+                          | _ =>
                             (case v_0 of
                               T.LI v_10 => state_1717 (v_3, v_1, v_10, v_4)
                             | _ => state_180 v_3
                             )
                           )
                        end
-                     | T.ZX v_5 => 
+                     | T.ZX v_5 =>
                        let val (v_1, v_0, v_4) = v_5
-                       in 
+                       in
                           let val e = v_4
                               and ty = v_1
                               and ty' = v_0
                           in (if (ty = ty')
                                 then e
-                                else 
+                                else
                                 (case v_4 of
-                                  T.LABEXP v_2 => 
+                                  T.LABEXP v_2 =>
                                   let val ty = v_1
                                       and ty' = v_0
                                       and x = v_2
                                   in T.LABEXP (T.ZX (ty, ty', x))
                                   end
-                                | T.LI v_2 => 
+                                | T.LI v_2 =>
                                   let val n = v_2
                                       and ty = v_1
                                       and ty' = v_0
@@ -1267,20 +1267,20 @@ struct
              | simStm ==> (T.IF(T.FALSE, yes, no)) = no
              | simStm ==> (T.SEQ[x]) = x
              | simStm ==> s = s
-           and simF p_0 p_1 = 
+           and simF p_0 p_1 =
                let val v_29 = (p_0, p_1)
-                   fun state_8 (v_19, v_20) = 
+                   fun state_8 (v_19, v_20) =
                        let val ==> = v_19
                            and exp = v_20
                        in exp
                        end
-               in 
+               in
                   let val (v_19, v_20) = v_29
-                  in 
+                  in
                      (case v_20 of
-                       T.CVTF2F v_26 => 
+                       T.CVTF2F v_26 =>
                        let val (v_22, v_25, v_27) = v_26
-                       in 
+                       in
                           let val ==> = v_19
                               and e = v_27
                               and ty = v_22
@@ -1290,18 +1290,18 @@ struct
                                 else (state_8 (v_19, v_20)))
                           end
                        end
-                     | T.FCOND v_26 => 
+                     | T.FCOND v_26 =>
                        let val (v_22, v_25, v_27, v_28) = v_26
-                       in 
+                       in
                           (case v_25 of
-                            T.FALSE => 
+                            T.FALSE =>
                             let val ==> = v_19
                                 and no = v_28
                                 and ty = v_22
                                 and yes = v_27
                             in no
                             end
-                          | T.TRUE => 
+                          | T.TRUE =>
                             let val ==> = v_19
                                 and no = v_28
                                 and ty = v_22
@@ -1311,13 +1311,13 @@ struct
                           | _ => state_8 (v_19, v_20)
                           )
                        end
-                     | T.FNEG v_26 => 
+                     | T.FNEG v_26 =>
                        let val (v_22, v_25) = v_26
-                       in 
+                       in
                           (case v_25 of
-                            T.FNEG v_24 => 
+                            T.FNEG v_24 =>
                             let val (v_21, v_23) = v_24
-                            in 
+                            in
                                let val ==> = v_19
                                    and e = v_23
                                    and ty = v_22

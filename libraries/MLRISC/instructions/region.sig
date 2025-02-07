@@ -1,4 +1,4 @@
-signature REGION = 
+signature REGION =
 sig
    type region
    val stack : region

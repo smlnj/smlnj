@@ -33,7 +33,7 @@ signature PRE_GENERAL =
 
   end
 
-signature GENERAL = 
+signature GENERAL =
   sig
     include PRE_GENERAL
 

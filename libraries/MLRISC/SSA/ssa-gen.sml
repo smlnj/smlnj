@@ -6,7 +6,7 @@ functor SSAGen
    (structure MLTree : MLTREE
     structure CFG    : CONTROL_FLOW_GRAPH
     structure InsnProps : INSN_PROPERTIES
-    structure SSA    : SSA 
+    structure SSA    : SSA
       where CFG = CFG
       where I.Constant = MLTree.Constant
       sharing InsnProps.I = CFG.I
@@ -22,11 +22,11 @@ struct
        structure Stream = S
        structure InsnProps = InsnProps
       )
- 
+
    type flowgraph = CFG.cfg
 
    fun error msg = MLRiscErrorMsg.error("SSAGen",msg)
-   
+
    fun newStream{compile, flowgraph} =
    let val cfg = case flowgraph of
                    SOME cfg => cfg

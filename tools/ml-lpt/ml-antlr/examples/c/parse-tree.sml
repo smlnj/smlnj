@@ -7,9 +7,9 @@ struct
 
   datatype storage
     = TYPEDEF
-    | STATIC 
-    | EXTERN 
-    | REGISTER 
+    | STATIC
+    | EXTERN
+    | REGISTER
     | AUTO
 
   datatype operator
@@ -21,8 +21,8 @@ struct
     | Not | Negate | BitNot | Assign
     | PlusAssign | MinusAssign | TimesAssign | DivAssign
     | ModAssign | XorAssign | OrAssign | AndAssign
-    | LshiftAssign | RshiftAssign 
-    | Uplus 
+    | LshiftAssign | RshiftAssign
+    | Uplus
     | SizeofType of ctype
 (*
     | OperatorExt of operatorExt
@@ -54,7 +54,7 @@ struct
     | Short
     | Int
     | Long
-    | Float 
+    | Float
     | Double
     | Fractional
     | Wholenum
@@ -63,21 +63,21 @@ struct
     | Array of expression * ctype
     | Pointer of ctype
     | Function of
-        {retType : ctype, 
-	 params : (decltype * declarator) list}
+        {retType : ctype,
+         params : (decltype * declarator) list}
     | Enum of
         {tagOpt : string option,
-	 enumerators : (string * expression) list,
-	 trailingComma : bool}  (* true if there was there a trailing comma in the declaration *)
+         enumerators : (string * expression) list,
+         trailingComma : bool}  (* true if there was there a trailing comma in the declaration *)
     | Struct of
         {isStruct : bool,   (* struct or union; true => struct *)
-	 tagOpt : string option,  (* optional tag *)
-	 members: (ctype * (declarator * expression) list) list} (* member specs *)
+         tagOpt : string option,  (* optional tag *)
+         members: (ctype * (declarator * expression) list) list} (* member specs *)
     | TypedefName of string
     | StructTag of
-	{isStruct : bool,   (* ??? *)
-	 name : string}
-    | EnumTag of string 
+        {isStruct : bool,   (* ??? *)
+         name : string}
+    | EnumTag of string
 (*
     | SpecExt of specifierExt
 *)
@@ -98,7 +98,7 @@ struct
   (* supports extensions of C in which expressions contain statements *)
   and statement
     = Decl of declaration
-    | Expr of expression 
+    | Expr of expression
     | Compound of statement list
     | While of expression * statement
     | Do of expression * statement
@@ -129,7 +129,7 @@ struct
     = ExternalDecl of declaration
     | FunctionDef of (* record? *)
        {retType : decltype,      (* return type *)
-	funDecr : declarator,   (* function name declarator *)
+        funDecr : declarator,   (* function name declarator *)
         krParams : declaration list, (* K&R-style parameter declarations *)
         body : statement}        (* function body *)
 (*
@@ -139,26 +139,26 @@ struct
 
   withtype ctype =
            {qualifiers : qualifier list,
-	    specifiers : specifier list}
+            specifiers : specifier list}
   and decltype =
       {qualifiers : qualifier list,
        specifiers : specifier list,
-       storage : storage list}      
+       storage : storage list}
 
 (*
-  and externalDeclExt = 
+  and externalDeclExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.externalDeclExt
-  and declarationExt = 
+  and declarationExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.declarationExt
-  and statementExt = 
+  and statementExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.statementExt
   and declaratorExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.declaratorExt
-  and specifierExt = 
+  and specifierExt =
       (specifier, declarator, ctype, decltype, operator, expression, statement)
       ParseTreeExt.specifierExt
   and expressionExt =

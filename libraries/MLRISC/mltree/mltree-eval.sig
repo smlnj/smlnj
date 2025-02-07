@@ -19,14 +19,14 @@ signature MLTREE_EVAL = sig
   val ==       : T.labexp * T.labexp -> bool
 
 
-  (* 
+  (*
    * Value
    *)
   exception NonConst
-  val eval : 
+  val eval :
       {const:T.Constant.const -> IntInf.int,
-       label:Label.label -> int} 
-     -> 
+       label:Label.label -> int}
+     ->
       {rexp : T.rexp -> IntInf.int,
        ccexp : T.ccexp -> bool}
 

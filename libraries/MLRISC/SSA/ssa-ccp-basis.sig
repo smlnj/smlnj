@@ -12,5 +12,5 @@ sig
 
    type valueMap = CF.valnum Array.array (* SSA.value -> CF.valnum *)
 
-   val condConstProp : SSA.ssa -> valueMap 
+   val condConstProp : SSA.ssa -> valueMap
 end

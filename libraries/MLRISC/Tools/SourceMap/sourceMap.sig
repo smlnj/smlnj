@@ -1,13 +1,13 @@
 (*
- * This maps character position in the input stream to 
+ * This maps character position in the input stream to
  * the source file location(s).
  *)
-signature SOURCE_MAPPING = 
+signature SOURCE_MAPPING =
 sig
 
-  type charpos = int 
+  type charpos = int
 
-  type region = charpos * charpos 
+  type region = charpos * charpos
 
   datatype location = LOC of {srcFile   : UniqueSymbol.symbol,
                               beginLine : int,
@@ -16,10 +16,10 @@ sig
                               endCol    : int
                              }
 
-  type sourcemap 
+  type sourcemap
   type state
 
-  val dummyLoc : location 
+  val dummyLoc : location
   val newmap   : {srcFile : string} -> sourcemap
   val newline  : sourcemap -> charpos -> unit
   val resynch  : sourcemap -> {pos:charpos, srcFile:string, line:int} -> unit

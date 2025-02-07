@@ -1,7 +1,7 @@
 (*
  * This is a generic module for computing the control dependence graph
- * from a graph with an entry and an exit.  
- * The graph is treated as a control flow graph.  
+ * from a graph with an entry and an exit.
+ * The graph is treated as a control flow graph.
  * The edge predicate is used to determine whether an edge should be
  * treated as a branch edge.
  *
@@ -33,9 +33,9 @@ struct
 
         (* create the control dependence nodes *)
         val _ = #forall_nodes cfg (fn n => #add_node cdg (f_node n))
- 
+
         (* create the control dependence edges *)
-        val _ = #forall_nodes cfg 
+        val _ = #forall_nodes cfg
          (fn node as (X,bb) =>
              let val ipdom_X = ipdom X
                  fun loop (X,Z,L) =
@@ -47,7 +47,7 @@ struct
                         |  Z => loop (X,Z,L))
                      else ()
              in
-                 app (fn (X,Z,L) => 
+                 app (fn (X,Z,L) =>
                            (* Z is a successor of X on label L *)
                            if is_conditional L then loop(X,Z,L)
                            else ()
@@ -58,9 +58,9 @@ struct
     end
 
     fun control_dependence_graph is_conditional =
-          control_dependence_graph' 
-          (fn n => n) 
-          (fn e => e) 
+          control_dependence_graph'
+          (fn n => n)
+          (fn e => e)
           (fn g => g) is_conditional
 
 end

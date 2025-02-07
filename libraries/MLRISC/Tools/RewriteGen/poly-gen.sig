@@ -7,16 +7,16 @@ sig
    structure Ast : MDL_AST
 
    datatype hook =
-      HOOK of 
+      HOOK of
       { name  : string,      (* name of function *)
         factor: bool,        (* factor rules by constructor? *)
         args  : string list, (* function arguments *)
         ret   : string,      (* return argument name *)
                  (* what is the unit transform of this function *)
-        unit  : Ast.exp -> Ast.exp, 
+        unit  : Ast.exp -> Ast.exp,
                  (* how to generate code for a constructor *)
         gen   : (Ast.ty * Ast.exp -> Ast.exp) * Ast.consbind -> Ast.exp
-      }  
+      }
 
    (* translate a set of rules into an declaration *)
    val gen : hook ->              (* hook *)

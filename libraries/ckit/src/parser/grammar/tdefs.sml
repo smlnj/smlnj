@@ -2,15 +2,15 @@
 
 signature TYPEDEFS =
     sig
-	val addTdef: string -> unit    (* a string as a typename in current scope *)
-        val addNoTdef: string -> unit  (* a string is not a typename, 
-					* may hide typenames of outer scopes *)
-	val checkTdef: string -> bool  (* is this string a typename in current context ? *)
-	val reset: unit -> unit        (* clear all tables, needed if you are doing many files *)
-	val truncTo: int ref           (* limited-width names ? *)
-	val pushScope: unit -> unit    (* entering a new scope in C *)
-	val popScope: unit -> unit     (* exiting the last scope *)
-    end 
+        val addTdef: string -> unit    (* a string as a typename in current scope *)
+        val addNoTdef: string -> unit  (* a string is not a typename,
+                                        * may hide typenames of outer scopes *)
+        val checkTdef: string -> bool  (* is this string a typename in current context ? *)
+        val reset: unit -> unit        (* clear all tables, needed if you are doing many files *)
+        val truncTo: int ref           (* limited-width names ? *)
+        val pushScope: unit -> unit    (* entering a new scope in C *)
+        val popScope: unit -> unit     (* exiting the last scope *)
+    end
 
 (* We need a stack of tables to properly handle the scoping in typenames
  * Remember, there are four type of things competing in the namespace of
@@ -27,7 +27,7 @@ signature TYPEDEFS =
  *    };
  *)
 
-structure TypeDefs : TYPEDEFS = 
+structure TypeDefs : TYPEDEFS =
 struct
     structure ParseControl = Config.ParseControl
 
@@ -36,25 +36,25 @@ struct
     val truncTo: int ref = ref ParseControl.symbolLength;
 
     type item = bool (* true says typename, false says else *)
-	
+
     val sayTdefs : bool ref = ref true;
-	
+
     val tdefTable: (item AtomTable.hash_table list) ref = ref ([AtomTable.mkTable(1024, NotTdef)])
 
     fun checkTdef (str) =
-      let 
-	val s = substring(str,0,(!truncTo)) handle Substring => str
-	val name = Atom.atom s
-	fun lookup (n, nil) = NONE
-	  | lookup (n, fst::rst) = 
-	    (case (AtomTable.find (fst) n) of
-	       (SOME x) => SOME(x)
-	     | _ => (lookup(n,rst)))
+      let
+        val s = substring(str,0,(!truncTo)) handle Substring => str
+        val name = Atom.atom s
+        fun lookup (n, nil) = NONE
+          | lookup (n, fst::rst) =
+            (case (AtomTable.find (fst) n) of
+               (SOME x) => SOME(x)
+             | _ => (lookup(n,rst)))
       in
-	case lookup(name, (!tdefTable)) of
-	  (SOME true) => (if (!sayTdefs) then true else false)
-	| (SOME false) => false
-	| NONE => false
+        case lookup(name, (!tdefTable)) of
+          (SOME true) => (if (!sayTdefs) then true else false)
+        | (SOME false) => false
+        | NONE => false
       end;
 
 
@@ -62,49 +62,49 @@ struct
 
     fun popScope () =   (* was just tl(!tdefTable), but caused problems with ml-yacc error correction *)
       (case (!tdefTable)
-	 of [x] => ()  (* don't change *)
+         of [x] => ()  (* don't change *)
           | (_ :: l) => (tdefTable := l)
           | nil => ())
     (* don't change; but we are in trouble here! *)
-	
+
     val errorCount = ref 0
 
     fun reset() = (tdefTable := [AtomTable.mkTable(1024, NotTdef)];
-		   errorCount := 0)
+                   errorCount := 0)
 
     (* TBD: In the next two functions, it is an option to raise a syntax error,
      * if there is a redefinition in the same scope, i.e., the topmost table
      *)
-      
-    fun addTdef(str) = 
+
+    fun addTdef(str) =
       let
-	val s = substring(str,0,(!truncTo)) handle Substring => str
-	val name = Atom.atom s
+        val s = substring(str,0,(!truncTo)) handle Substring => str
+        val name = Atom.atom s
       in
-	(* insert name in the top of tdefTable as a typename *)
-	case !tdefTable of
-	  x :: _ => AtomTable.insert x (name, true)
-	| nil => (if !errorCount = 0
-                  then print "Error: empty type def table (lexer), probably caused by syntax error" 
-		        (* should be Error.error, but don't have an error stream handy. *)
-		  else ();
-		  errorCount := !errorCount + 1)
+        (* insert name in the top of tdefTable as a typename *)
+        case !tdefTable of
+          x :: _ => AtomTable.insert x (name, true)
+        | nil => (if !errorCount = 0
+                  then print "Error: empty type def table (lexer), probably caused by syntax error"
+                        (* should be Error.error, but don't have an error stream handy. *)
+                  else ();
+                  errorCount := !errorCount + 1)
       end
 
-    fun addNoTdef(str) = 
+    fun addNoTdef(str) =
       let
-	val s = substring(str,0,(!truncTo)) handle Substring => str
-	val name = Atom.atom s
+        val s = substring(str,0,(!truncTo)) handle Substring => str
+        val name = Atom.atom s
       in
-	(* insert name in the top of tdefTable as not a typename *)
-	case !tdefTable of
-	  x :: _ => AtomTable.insert x (name, false)
-	| nil => (if !errorCount = 0
-                  then print "Error: empty type def table (lexer), probably caused by syntax error" 
-		        (* should be Error.error, but don't have an error stream handy. *)
-		  else ();
-		  errorCount := !errorCount + 1)
+        (* insert name in the top of tdefTable as not a typename *)
+        case !tdefTable of
+          x :: _ => AtomTable.insert x (name, false)
+        | nil => (if !errorCount = 0
+                  then print "Error: empty type def table (lexer), probably caused by syntax error"
+                        (* should be Error.error, but don't have an error stream handy. *)
+                  else ();
+                  errorCount := !errorCount + 1)
       end
-    
+
 end
 

@@ -19,22 +19,22 @@ local
      n: int -- string length
      mkblock : format list -> format -- block making function *)
   fun simple1 (name: string, w: int, n: int, mkblock) () =
-	printFormatLW w
+        printFormatLW w
           (vcat
-	     (text name,   
-	      mkblock [text (repeat #"x" n), text (repeat #"y" n), text (repeat #"z" n)]))
+             (text name,
+              mkblock [text (repeat #"x" n), text (repeat #"y" n), text (repeat #"z" n)]))
 
 
   (* simple2 : string * int * int * (format list -> format) * (format list -> format) -> unit *)
   fun simple2 (name: string, w: int, n: int, outer, inner) () =
         printFormatLW w
-	  (vcat
-	     (text name,
-	      outer
-		[text (repeat #"v" n),
-		 indent 2 
-		   (inner [text (repeat #"w" n), text (repeat #"x" n), text (repeat #"y" n)]),
-		 text (repeat #"z" n)]))
+          (vcat
+             (text name,
+              outer
+                [text (repeat #"v" n),
+                 indent 2
+                   (inner [text (repeat #"w" n), text (repeat #"x" n), text (repeat #"y" n)]),
+                 text (repeat #"z" n)]))
 
 in
 
@@ -130,51 +130,51 @@ val t34c = simple2 ("Test 34c [cblock/pblock]", 10, 4, cblock, pblock)
 val t35a = simple2 ("Test 35a [cblock/cblock]", 10, 2, cblock, cblock)
 val t35b = simple2 ("Test 35b [cblock/cblock]", 10, 3, cblock, cblock)
 val t35c = simple2 ("Test 35c [cblock/cblock]", 10, 4, cblock, cblock)
- 
+
 fun t40 () =
-    printFormatLW 20 
+    printFormatLW 20
       (vcat
         (text "Test t40 [C code], width 20",
          pblock
-	   [hblock [text "if", text "(x < y)", text "{"],
-	    indent 4
-	      (hvblock
-	         [text "stmt1;",
-		  hvblock
-		    [hblock [text "if", text "(w < z)", text "{"],
-		     indent 4
-		       (hvblock [text "stmt2;" text "stmt3;", text "stmt4;"]),
-		     text "}"]]),
-	    text "stmt5;",
-	    text "stmt6;",
-	    text "}"]))
+           [hblock [text "if", text "(x < y)", text "{"],
+            indent 4
+              (hvblock
+                 [text "stmt1;",
+                  hvblock
+                    [hblock [text "if", text "(w < z)", text "{"],
+                     indent 4
+                       (hvblock [text "stmt2;" text "stmt3;", text "stmt4;"]),
+                     text "}"]]),
+            text "stmt5;",
+            text "stmt6;",
+            text "}"]))
 
 (* a test of vblock ??? *)
 fun t50 () =
-    printFormatLW 20 
+    printFormatLW 20
      (vcat
-	(text "Test t50 [vblock], width 20",
-	 let fun strings l = hblock (map text l)
-	  in vblock 
-	       [strings ["0:", "line", "1"],
-		strings ["0:", "line", "2"],
-		indent 2
-		  (vblock
-		     [strings ["2:", "line", "3"],
-		      strings ["2:", "line", "4"]]),
-		indent 2
-		  (vblock
-		     [strings ["2:", "line", "5"],
-		      strings ["2:", "line", "6"]]),
+        (text "Test t50 [vblock], width 20",
+         let fun strings l = hblock (map text l)
+          in vblock
+               [strings ["0:", "line", "1"],
+                strings ["0:", "line", "2"],
+                indent 2
+                  (vblock
+                     [strings ["2:", "line", "3"],
+                      strings ["2:", "line", "4"]]),
+                indent 2
+                  (vblock
+                     [strings ["2:", "line", "5"],
+                      strings ["2:", "line", "6"]]),
 
-		strings ["0:", "line", "7"],
-		strings ["0:", "line", "8"],
-		indent 4
-		  (vblock
-		     [strings ["4:", "line", "9"]
-		      strings ["4:", "line", "10"]]),
-		strings ["0:", "line", "11"],
-		strings ["0:", "line", "12"]]
-	 end))
+                strings ["0:", "line", "7"],
+                strings ["0:", "line", "8"],
+                indent 4
+                  (vblock
+                     [strings ["4:", "line", "9"]
+                      strings ["4:", "line", "10"]]),
+                strings ["0:", "line", "11"],
+                strings ["0:", "line", "12"]]
+         end))
 
 end (* local *)

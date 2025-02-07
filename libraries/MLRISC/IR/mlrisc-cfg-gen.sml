@@ -22,10 +22,10 @@ struct
 
    fun error msg = MLRiscErrorMsg.error("ControlFlowGraphGen",msg)
 
-   fun builder(CFG) = 
+   fun builder(CFG) =
    let val NOBLOCK      = CFG.newBlock(~1,ref 0)
-       val currentBlock = ref NOBLOCK 
-       val newBlocks    = ref [] : CFG.block list ref 
+       val currentBlock = ref NOBLOCK
+       val newBlocks    = ref [] : CFG.block list ref
        val blockNames   = ref [] : Annotations.annotations ref
        val entryLabels  = ref [] : Label.label list ref
        fun can'tUse _   = error "unimplemented"
@@ -39,7 +39,7 @@ struct
        fun init _ =
        let val G.GRAPH cfg = !CFG
        in  IntHashTable.clear labelMap;
-           #forall_nodes cfg 
+           #forall_nodes cfg
              (fn (blockId,CFG.BLOCK{labels, ...}) =>
                   app (fn Label.Label{id, ...} => newLabel(id,blockId))
                       (!labels));
@@ -47,24 +47,24 @@ struct
            newBlocks := [];
            blockNames := [];
            entryLabels := []
-       end   
+       end
 
        val _ = init()
 
        fun next cfg = CFG := cfg
 
-       fun newBlock() = 
+       fun newBlock() =
        let val G.GRAPH cfg = !CFG
            val id = #new_id cfg ()
            val b as CFG.BLOCK{annotations,...} = CFG.newBlock(id,ref 0)
-       in  currentBlock := b; 
+       in  currentBlock := b;
            annotations := !blockNames;
            newBlocks := b :: !newBlocks;
            #add_node cfg (id,b);
-           b 
+           b
        end
 
-       fun getBlock() = 
+       fun getBlock() =
            case !currentBlock of
               CFG.BLOCK{id= ~1,...} => newBlock()
            |  b => b
@@ -74,14 +74,14 @@ struct
                 CFG.BLOCK{id= ~1,...} => newBlock()
              |  b as CFG.BLOCK{insns=ref [],...} => b
              |  _ => newBlock()
-            )  
+            )
 
-       fun insertOp p = 
+       fun insertOp p =
        let val CFG.BLOCK{data,...} = newPseudoOpBlock()
        in  data := !data @ [p] end
 
        (* Add a new label *)
-       fun defineLabel(l as Label.Label{id=labelId,...}) = 
+       fun defineLabel(l as Label.Label{id=labelId,...}) =
        let val id = lookupLabel labelId
            val G.GRAPH cfg = !CFG
            val blk as CFG.BLOCK{insns, ...} = #node_info cfg id
@@ -107,24 +107,24 @@ struct
            |  b => currentBlock := NOBLOCK
 
        (* Add a new annotation *)
-       fun annotation a = 
+       fun annotation a =
            case a of
              MLRiscAnnotations.BLOCKNAMES names =>
                 (blockNames := names;
                  nextBlock()
                 )
            | MLRiscAnnotations.EMPTYBLOCK => nextBlock()
-           | a => 
+           | a =>
               let val CFG.BLOCK{annotations,...} = getBlock()
               in  annotations := a :: !annotations
               end
 
        (* Mark current block as exit *)
-       fun exitBlock liveOut = 
-       let fun setLiveOut(CFG.BLOCK{annotations,...}) = 
+       fun exitBlock liveOut =
+       let fun setLiveOut(CFG.BLOCK{annotations,...}) =
                  annotations := #create CFG.LIVEOUT liveOut :: !annotations
        in  case !currentBlock of
-              CFG.BLOCK{id= ~1,...} => 
+              CFG.BLOCK{id= ~1,...} =>
                 (case !newBlocks of
                    [] => error "exitBlock"
                  | b::_ => setLiveOut b
@@ -142,7 +142,7 @@ struct
            case InsnProps.instrKind i of
              (InsnProps.IK_JUMP | InsnProps.IK_CALL_WITH_CUTS) =>
                 currentBlock := NOBLOCK
-           | _ => () 
+           | _ => ()
        end
 
        (* End current cluster *)
@@ -157,8 +157,8 @@ struct
              | next _ = error "next"
 
            val lookupLabelMap = IntHashTable.find labelMap
-           val lookupLabelMap = 
-                fn l => case lookupLabelMap l of SOME b => b | NONE => EXIT 
+           val lookupLabelMap =
+                fn l => case lookupLabelMap l of SOME b => b | NONE => EXIT
            val TRUE = CFG.BRANCH true
            val FALSE = CFG.BRANCH false
            val addEdge = #add_edge cfg
@@ -170,7 +170,7 @@ struct
                (case !insns of
                   [] => fallsThru(id,blocks)
                 | instr::_ =>
-                   (case InsnProps.instrKind instr of 
+                   (case InsnProps.instrKind instr of
                       (InsnProps.IK_JUMP | InsnProps.IK_CALL_WITH_CUTS) =>
                         jump(id,InsnProps.branchTargets instr,blocks)
                    | _ => fallsThru(id,blocks)
@@ -203,14 +203,14 @@ struct
              | jump(i,targets,_) =
                let fun loop(n,[]) = ()
                      | loop(n,InsnProps.LABELLED L::targets) =
-                        (addEdge(i,target L, 
+                        (addEdge(i,target L,
                            CFG.EDGE{k=CFG.SWITCH n,w=ref 0,a=ref []});
                        loop(n+1,targets))
                      | loop _ = error "jump"
                in  loop(0,targets) end
           in  addEdges(rev(!newBlocks));
               app (fn l => addEdge(ENTRY,target l,
-                              CFG.EDGE{k=CFG.ENTRY,a=ref [],w=ref 0})) 
+                              CFG.EDGE{k=CFG.ENTRY,a=ref [],w=ref 0}))
                      (!entryLabels);
               let val an = CFG.annotations(!CFG);
               in  an := annotations @ (!an) end;
@@ -219,7 +219,7 @@ struct
 
        (* Start a new cluster *)
        fun beginCluster _ = init()
-  
+
        fun getAnnotations() = CFG.annotations(!CFG)
 
     in  {stream=S.STREAM
@@ -236,6 +236,6 @@ struct
            },
          next = next
         }
-    end  
+    end
 
 end

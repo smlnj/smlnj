@@ -14,12 +14,12 @@ struct
        val len      = A.array(N,0)
        val children = A.tabulate(N,fn i => length(#out_edges ddg i))
        fun process i =
-       let fun g((i,j,DDG.EDGE{l,...})::es,n) = 
+       let fun g((i,j,DDG.EDGE{l,...})::es,n) =
                  g(es,Int.max(A.sub(len,j) + l + 1,n))
              | g([],n) = n
        in  A.update(len,i,g(#out_edges ddg i,0))
-       end 
-       fun order((i,_),(j,_)) = 
+       end
+       fun order((i,_),(j,_)) =
            case Int.compare(A.sub(len,i),A.sub(len,j)) of
               EQUAL => A.sub(children,i) > A.sub(children,j)
            |  LESS  => false

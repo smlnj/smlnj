@@ -16,7 +16,7 @@ struct
    val counter = ref 0
 
    val memory = ROOT
-   fun new(name,mut,parent) = 
+   fun new(name,mut,parent) =
    let val id = !counter
    in  counter := id + 1;
        REGION(!counter,mut,name,parent)
@@ -31,7 +31,7 @@ struct
    fun toString ROOT = "root"
      | toString(REGION(_,_,name,ROOT)) = name
      | toString(REGION(_,_,name,parent)) = toString parent^"."^name
-     | toString(UNION rs) = 
+     | toString(UNION rs) =
          String.concat(foldr (fn (r,[]) => [toString r]
                                | (r,s)  => toString r::"+"::s) [] rs)
 

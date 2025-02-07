@@ -13,7 +13,7 @@ signature PROF_CONTROL =
   (* get the timer count array *)
     val getTimeArray : unit -> int array
 
-    val profMode : bool ref	(* controls profile instrumentation *)
+    val profMode : bool ref     (* controls profile instrumentation *)
     val current : int ref
 
   (* turn on/off profile signals.  These functions set/clear the profMode
@@ -28,12 +28,12 @@ signature PROF_CONTROL =
     val getQuantum : unit -> int
 
     datatype compunit = UNIT of {
-	base: int,
-	size: int,
-	counts: int Array.array,
-	names: string
+        base: int,
+        size: int,
+        counts: int Array.array,
+        names: string
       }
-			   
+
     val runTimeIndex : int
     val minorGCIndex : int
     val majorGCIndex : int
@@ -48,7 +48,7 @@ signature PROF_CONTROL =
   (* space profiling hooks *)
     val spaceProfiling : bool ref
     val spaceProfRegister :
-	  (Unsafe.Object.object * string -> Unsafe.Object.object) ref
+          (Unsafe.Object.object * string -> Unsafe.Object.object) ref
 
   end;
 

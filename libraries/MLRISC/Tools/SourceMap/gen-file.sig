@@ -1,5 +1,5 @@
 signature GENERATE_FILE =
-sig 
+sig
 
     val gen : {trans      : string -> string,
                fileSuffix : string,

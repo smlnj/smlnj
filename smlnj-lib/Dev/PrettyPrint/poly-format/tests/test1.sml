@@ -1,5 +1,5 @@
 local open PrettyPrint
-in 
+in
 
 val fx = text "xxxx"
 val fy = text "yyy"

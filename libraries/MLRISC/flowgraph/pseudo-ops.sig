@@ -23,7 +23,7 @@ signature PSEUDO_OPS = sig
     (* adjust the value of labels in the pseudo_op given the current
      * location counter.
      *)
-  
+
 
 end
 

@@ -19,7 +19,7 @@ sig
           new_dst     : 'n -> 'n node,
           add_src     : 'm node -> unit,
           add_dst     : 'n node -> unit,
-          add_edge    : 'e edge -> unit, 
+          add_edge    : 'e edge -> unit,
           remove_src  : node_id -> unit,
           remove_dst  : node_id -> unit,
           remove_edge : 'e edge -> unit,

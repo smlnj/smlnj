@@ -9,7 +9,7 @@ struct
 
    structure A = Array
 
-   datatype 'a set = 
+   datatype 'a set =
       SET of
       { table : 'a list Array.array ref,
         size  : int ref,
@@ -33,25 +33,25 @@ struct
 
    fun isEmpty (SET { size, ... }) = !size = 0
 
-   fun clear (SET { size, table, ... }) = 
+   fun clear (SET { size, table, ... }) =
        (table := A.array(A.length(!table),[]); size := 0)
 
    and insert (m as SET { size, table = ref T, order, hash,...}) x =
    let val pos = hash x mod A.length T
        val list = A.sub(T,pos)
-       fun ins [] = (size := !size + 1; 
+       fun ins [] = (size := !size + 1;
                      A.update(T,pos,x::list);
                      if !size > 6 * A.length T then grow m else ())
          | ins (x'::rest) =
            case order(x,x') of
               EQUAL => ()
            |  _     => ins rest
-   in  
+   in
        ins list
    end
 
    and grow (SET { size, table = table as ref T, order, hash, ... }) =
-   let val m2 as 
+   let val m2 as
            SET{table = ref T',...} = create{ order=order, hash=hash }
                    (!size * 2 + 10)
    in  A.app (app (insert m2)) T; table := T'
@@ -67,7 +67,7 @@ struct
                           A.update(T,pos,rest@list)
                          )
            |  _       => del (rest,x'::list)
- 
+
    in  del(list,[])
    end
 
@@ -85,7 +85,7 @@ struct
       fn (SET { table = ref T, ... }) =>
           A.foldl (fn (t,l) => List.foldl f l t) x T
 
-   fun app f = 
+   fun app f =
       fn (SET { table = ref T, ... }) =>
           A.app (List.app f) T
 
@@ -94,7 +94,7 @@ struct
    fun toString f set =
       "{" ^ fold (fn (x,"") => f x
                    | (x,l)  => f x ^ ", " ^ l
-                 ) "" set ^ "}"  
+                 ) "" set ^ "}"
 
 end
 

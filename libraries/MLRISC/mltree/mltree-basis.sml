@@ -10,8 +10,8 @@ struct
 
   type misc_op = {name:string, hash:word, attribs:attribs ref}
 
-  datatype cond = LT | LTU | LE | LEU | EQ | NE | GE | GEU | GT | GTU 
-                | SETCC 
+  datatype cond = LT | LTU | LE | LEU | EQ | NE | GE | GEU | GT | GTU
+                | SETCC
                 | MISC_COND of {name:string, hash:word, attribs:attribs ref}
 
 (* Floating-point conditions: see mltree-basis.sig for documentation *)
@@ -53,7 +53,7 @@ struct
 
   fun swapCond cond =
       case cond of
-        LT  => GT | LTU => GTU | LE  => GE | LEU => GEU | EQ  => EQ 
+        LT  => GT | LTU => GTU | LE  => GE | LEU => GEU | EQ  => EQ
       | NE  => NE | GE  => LE | GEU => LEU | GT  => LT | GTU => LTU
       | cond => error("swapCond",condToString cond)
 
@@ -105,15 +105,15 @@ struct
       | <=>   => 0w991 | ?<>   => 0w391
       | SETFCC => 0w94
       | MISC_FCOND{hash, ...} => hash
-  
+
   fun hashRoundingMode m =
       case m of
-        TO_NEAREST => 0w1 | TO_NEGINF => 0w10 
+        TO_NEAREST => 0w1 | TO_NEGINF => 0w10
       | TO_POSINF => 0w100 | TO_ZERO     => 0w1000
 
   fun roundingModeToString m =
       case m of
         TO_NEAREST  => "TO_NEAREST" | TO_NEGINF   => "TO_NEGINF"
       | TO_POSINF   => "TO_POSINF" | TO_ZERO     => "TO_ZERO"
- 
+
 end (* MLTreeBasis *)

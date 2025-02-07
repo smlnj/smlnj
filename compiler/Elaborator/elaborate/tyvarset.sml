@@ -4,8 +4,8 @@
  *
  *)
 
-signature TYVARSET = 
-sig 
+signature TYVARSET =
+sig
   type tyvarset
   val empty : tyvarset
   val singleton : Types.tyvar -> tyvarset
@@ -19,9 +19,9 @@ end (* signature TYVARSET *)
 structure TyvarSet :> TYVARSET =
 struct
 
-local 
+local
   structure EM = ErrorMsg
-  open Types 
+  open Types
   fun bug msg = ErrorMsg.impossible("TyvarSet: "^msg)
 in
 
@@ -32,26 +32,26 @@ fun singleton t = [t]
 fun mkTyvarset l = l
 fun elements s = s
 
-fun mem(a as ref(UBOUND{name=name_a,eq=eq_a,depth=depth_a}), 
-	(b as ref(UBOUND{name=name_b,eq=eq_b,depth=depth_b}))::rest,err) =
+fun mem(a as ref(UBOUND{name=name_a,eq=eq_a,depth=depth_a}),
+        (b as ref(UBOUND{name=name_b,eq=eq_b,depth=depth_b}))::rest,err) =
       if a=b then true
       else if Symbol.eq(name_a,name_b) then
-	    (if eq_a<>eq_b then
-		err EM.COMPLAIN ("type variable '" ^ (Symbol.name name_a) ^
-			      " occurs with different equality properties \
-			       \in the same scope")
-		    EM.nullErrorBody
-		else ();
-	     if depth_a<>depth_b then bug "mem - depths differ" else ();
-		(* UBOUND tyvars are created with depth infinity and
-		 * this should not change until type checking is done *)
-	     a := INSTANTIATED(VARty b);
-	     true)
+            (if eq_a<>eq_b then
+                err EM.COMPLAIN ("type variable '" ^ (Symbol.name name_a) ^
+                              " occurs with different equality properties \
+                               \in the same scope")
+                    EM.nullErrorBody
+                else ();
+             if depth_a<>depth_b then bug "mem - depths differ" else ();
+                (* UBOUND tyvars are created with depth infinity and
+                 * this should not change until type checking is done *)
+             a := INSTANTIATED(VARty b);
+             true)
       else mem(a,rest,err)
   | mem _ = false
 
-fun memP(a as ref(UBOUND{name=name_a,...}), 
-	 (b as ref(UBOUND{name=name_b,...}))::rest) =
+fun memP(a as ref(UBOUND{name=name_a,...}),
+         (b as ref(UBOUND{name=name_b,...}))::rest) =
       if a=b then true
       else if Symbol.eq(name_a,name_b) then true
       else memP(a,rest)

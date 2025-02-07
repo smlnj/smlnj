@@ -24,14 +24,14 @@ signature UNIX =
        *)
     val executeInEnv : string * string list * string list -> proc
 
-      (* execute (path, args) 
+      (* execute (path, args)
        *       = executeInEnv (path, args, Posix.ProcEnv.environ())
        *)
     val execute : string * string list -> proc
 
       (* streamsOf proc
        * returns an instream and outstream used to read
-       * from and write to the stdout and stdin of the 
+       * from and write to the stdout and stdin of the
        * executed process.
        *
        * The underlying files are set to be close-on-exec.

@@ -1,5 +1,5 @@
 (*
- * This module is reponsible for generating garbage collection 
+ * This module is reponsible for generating garbage collection
  * code for all gc-points in the program.  That is, we delay the generation
  * of garbage collection code until all optimizations have been performed.
  * The gc code to be generated is determined by a callback to the client.
@@ -11,7 +11,7 @@ functor GCGen
     structure GCCallBack : GC_CALLBACK
     structure InsnProps  : INSN_PROPERTIES
        sharing GCCallBack.T          = MLTreeComp.T
-       sharing GCCallBack.C          = IR.I.C 
+       sharing GCCallBack.C          = IR.I.C
        sharing MLTreeComp.T.Constant = IR.I.Constant
        sharing MLTreeComp.T.PseudoOp = IR.CFG.P
        sharing IR.I = InsnProps.I = MLTreeComp.I
@@ -25,7 +25,7 @@ struct
    structure GC  = GCCallBack.GC
    structure G   = Graph
    structure A   = Array
-   structure Liveness =   
+   structure Liveness =
       GCLiveness(structure IR = IR
                  structure GC = GC
                  structure InsnProps = InsnProps)
@@ -50,11 +50,11 @@ struct
         *)
        val table = Liveness.liveness IR
        val instrStream = Gen.newStream{compile=fn _ => (), flowgraph=SOME IR}
-       fun dummy _ = error "no extension" 
-       val stream as T.Stream.STREAM{beginCluster, endCluster, ...} = 
+       fun dummy _ = error "no extension"
+       val stream as T.Stream.STREAM{beginCluster, endCluster, ...} =
            MLTreeComp.selectInstructions instrStream
        val cfgAnnotations = CFG.annotations IR
- 
+
        (*
         * For each gc-point, invoke the callback to generate GC code.
         *)
@@ -75,7 +75,7 @@ struct
                  stream      = stream
                } handle _ => gc_bug := !gc_bug + 1 (* continue on error *)
            end
-           
+
    in  beginCluster 0;
        #forall_nodes cfg process;
        endCluster [];

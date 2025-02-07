@@ -14,7 +14,7 @@ struct
   fun eqQualifier(CONST, CONST) = true
     | eqQualifier(VOLATILE, VOLATILE) = true
     | eqQualifier _ = false
-      
+
   fun eqSignedness(SIGNED, SIGNED) = true
     | eqSignedness(UNSIGNED, UNSIGNED) = true
     | eqSignedness _ = false
@@ -50,7 +50,7 @@ struct
     | eqCType(TypeRef tid1, TypeRef tid2) = (tid1 = tid2)
     | eqCType(Error, Error) = true
     | eqCType _ = false
-  
+
  and eqCTypeList((ct1, _) :: ctl1, (ct2, _) :: ctl2) =
      eqCType(ct1, ct2) andalso eqCTypeList(ctl1, ctl2)
    | eqCTypeList(nil, nil) = true

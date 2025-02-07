@@ -1,6 +1,6 @@
 (* alphaPseudoInstr.sig --- alpha pseudo instructions *)
 
-signature ALPHA_PSEUDO_INSTR = 
+signature ALPHA_PSEUDO_INSTR =
 sig
    structure I : ALPHAINSTR
    structure T : MLTREE
@@ -8,7 +8,7 @@ sig
      sharing C = I.C
      sharing I.T = T
    structure CB: CELLS_BASIS = CellsBasis
-  
+
    type reduceOpnd = I.operand -> CB.cell
 
    val divlv : {ra:CB.cell, rb:I.operand, rc:CB.cell} * reduceOpnd -> I.instruction list
@@ -33,5 +33,5 @@ sig
    val cvttl : {mode:T.rounding_mode, fs:CB.cell, rd:CB.cell} -> I.instruction list
    val cvtsq : {mode:T.rounding_mode, fs:CB.cell, rd:CB.cell} -> I.instruction list
    val cvttq : {mode:T.rounding_mode, fs:CB.cell, rd:CB.cell} -> I.instruction list
-end 
+end
 

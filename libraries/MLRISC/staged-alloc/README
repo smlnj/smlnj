@@ -11,6 +11,6 @@ paper by Olinsky et. al.
 
  *  Staged allocation: a compositional technique for specifying and implementing procedure calling conventions - http://www.eecs.harvard.edu/~nr/pubs/staged-abstract.html
 
-Our library consists of two parts: 
+Our library consists of two parts:
  * allocator - follows the operational semantics given in the paper
  * conventions - several calling conventions

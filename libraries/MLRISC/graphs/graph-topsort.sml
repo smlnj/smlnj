@@ -4,7 +4,7 @@
  * -- Allen
  *)
 
-structure GraphTopsort : GRAPH_TOPOLOGICAL_SORT = 
+structure GraphTopsort : GRAPH_TOPOLOGICAL_SORT =
 struct
 
    structure G = Graph
@@ -12,7 +12,7 @@ struct
    (*
     * Topological sort
     *)
-   fun topsort (G.GRAPH G) roots = 
+   fun topsort (G.GRAPH G) roots =
    let val visited = Word8Array.array(#capacity G (),0w0)
        val succ    = #succ G
        fun dfs (n, list) =

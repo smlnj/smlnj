@@ -13,7 +13,7 @@ struct
 
    open Ast Comp.Util
 
-   val typeDefs = 
+   val typeDefs =
        $ ["(* classify instructions *)",
           "datatype kind = IK_JUMP   (* branches, including returns *)",
           "  | IK_NOP    (* no ops *)",
@@ -32,18 +32,18 @@ struct
           ""
          ]
 
-   val funDefs = 
+   val funDefs =
        $ ["fun getAnnotations(I.ANNOTATION{i,a}) =",
           "    let val (i,an) = getAnnotations i in (i,a::an) end",
           "  | getAnnotations i = (i,[])",
           "fun annotate(i,a) = I.ANNOTATION{i=i,a=a}"
          ]
- 
+
    fun gen compiled_rtls =
    let val md      = RTLComp.md compiled_rtls
 
        (* name of the structure/signature *)
-       val strName = Comp.strname md "Props"  
+       val strName = Comp.strname md "Props"
        val sigName = "INSN_PROPERTIES"
 
        (* The instructions *)
@@ -77,7 +77,7 @@ struct
        val eqOpn         = DUMMYfun "eqOpn"
        val hashOpn       = DUMMYfun "hashOpn"
 
-       fun mkDefUse(cellKind as CELLdecl{id, ...}) = 
+       fun mkDefUse(cellKind as CELLdecl{id, ...}) =
        let val {get, decl} = M.getOpnd
                 [("int", M.IGNORE),
                  ("int32", M.IGNORE),
@@ -91,11 +91,11 @@ struct
                  ("operand", M.IGNORE) (* XXX *)
                 ]
 
-           fun defUse(x,exp,L) = 
+           fun defUse(x,exp,L) =
                if M.ofCellKind(exp,cellKind) then SOME(get(x,exp,L))
                else NONE
 
-       in  RTLComp.mkDefUseQuery compiled_rtls 
+       in  RTLComp.mkDefUseQuery compiled_rtls
              {name="defUse"^id,
               decls=[decl],
               args=[["instr"]],
@@ -109,7 +109,7 @@ struct
        val defUse     = Comp.mkQueryByCellKind md "defUse"
 
        (* The functor *)
-       val strBody = 
+       val strBody =
            [$ ["structure I  = I",
                "structure C  = I.C",
                "structure LE = LabelExp",

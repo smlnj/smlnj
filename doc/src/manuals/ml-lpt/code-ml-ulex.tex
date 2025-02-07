@@ -3,7 +3,7 @@
 \section{Organization}
 
 %\ulex{} is a scanner generator written in Standard ML.  It replaces the older
-%ML-Lex tool.  For information about features and usage, see the \ulex{} 
+%ML-Lex tool.  For information about features and usage, see the \ulex{}
 %Release Notes.  This document describes the algorithms and code that make up
 %\ulex{}.
 
@@ -13,7 +13,7 @@ output formats, and a middle component responsible for DFA generation.  The
 \nm{Main} module drives the tool, while the \nm{RegExp} and \nm{LexGen} modules
 together provide DFA generation (see figure~\ref{fig:ml-flex}).  The DFA
 generation algorithm used in \ulex{} is somewhat nonstandard; it is based on
-Brzozowski's notion of regular expression derivatives~\cite{derivatives}. 
+Brzozowski's notion of regular expression derivatives~\cite{derivatives}.
 Chapter~\ref{ch:ulex-theory} describes the algorithm, as well as modifications
 necessary to support unicode.  This chapter gives more concrete
 details about the code, broken down by module.
@@ -127,7 +127,7 @@ described in section~\ref{sec:derivatives}.
 In general, we will be interested in the derivatives of a vector of REs
 (representing the rules in a lexer specification) with respect to \emph{every}
 symbol in the alphabet.  As section~\ref{sec:factorings} explains, the unicode
-alphabet is too large for us to literally test the derivative at each symbol. 
+alphabet is too large for us to literally test the derivative at each symbol.
 The \nm{derivatives} function will take a vector of REs and return a list of
 \nm{re~Vector.vector~*~sym\_set} \emph{pairs}.  In fact, \nm{derivatives}
 is just an implementation of the factor and compress algorithm given
@@ -196,7 +196,7 @@ configuration data.
 \end{figure}
 
 As Figure~\ref{fig:lex-output-spec} illustrates, the output of DFA generation is
-\emph{not} a DFA, but a collection of DFAs along with a vector of actions. 
+\emph{not} a DFA, but a collection of DFAs along with a vector of actions.
 Each \nm{machine} represents a start state for the lexer; that is, each start
 state has its own automaton.  However, since start states may use the same
 actions, we separate out the actions into a vector so that they are only
@@ -287,7 +287,7 @@ be used.  \nm{REJECT} information consists of (in essence) a list of all the
 previous matches.  A previous match could occur on the same DFA state if
 multiple REs matched the input at that state; otherwise, the previous match is
 a prefix of the \nm{REJECT}ed match.  Whenever a transition is made, the
-appropriate previous match information is passed up to the next state. 
+appropriate previous match information is passed up to the next state.
 However, if the current state is an accepting state that does not use
 \nm{REJECT}, then the history is \emph{truncated} at the \nm{REJECT}-free
 point, since it could never be used.  This determination is made statically and
@@ -317,6 +317,6 @@ allows a user to enter arbitrary strings and find out (1) if they matched and
 \section{\nm{Main}}
 
 The \nm{Main} module is the driver for \ulex{}: it is responsible for processing
-command-line arguments and hooking up the appropriate front and back ends. 
+command-line arguments and hooking up the appropriate front and back ends.
 Since it is very simple, it gives a nice overview of the system and is a good
 place to look first in trying to undertand the code.

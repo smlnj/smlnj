@@ -5,4 +5,4 @@ signature MC_EMIT = sig
   val emitInstr : I.instruction -> Word8Vector.vector
 end
 
-  
+

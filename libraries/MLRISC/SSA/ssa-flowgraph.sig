@@ -1,6 +1,6 @@
 (*
  * This signature abstracts out the capability of the flowgraph
- * used in the SSA infrastruture.  This way makes it easier to 
+ * used in the SSA infrastruture.  This way makes it easier to
  * substitute another CFG implementation in the future.
  *
  * -- Allen (leunga@cs.nyu.edu)
@@ -16,30 +16,30 @@ sig
    type edge_info (* edge information *)
    type cfg = (block, edge_info, info) Graph.graph (* the cfg *)
 
-   (* 
+   (*
     * Operations on the cfg
     *)
    val regmap         : cfg -> I.C.regmap
    val annotations    : cfg -> Annotations.annotations ref
 
-   (* 
+   (*
     * Operations on basic blocks
     *)
    val headerText     : block -> string
-   val insns          : block -> I.instruction list ref 
+   val insns          : block -> I.instruction list ref
    val freq           : block -> W.freq ref
-   val liveOut        : block -> I.C.cellset 
+   val liveOut        : block -> I.C.cellset
 
-   (* 
+   (*
     * Operations on edges
     *)
-   val setBranch      : cfg * Graph.node_id * bool -> I.instruction  
+   val setBranch      : cfg * Graph.node_id * bool -> I.instruction
    val branchOf       : edge_info -> bool option
 
-   (* 
+   (*
     * Viewing
     *)
-   val viewStyle      : cfg -> (block, edge_info, info) GraphLayout.style 
+   val viewStyle      : cfg -> (block, edge_info, info) GraphLayout.style
 
 end
 

@@ -25,7 +25,7 @@ struct
                      ]
 
    fun close dag =
-       TransitiveClosure.acyclic_transitive_closure2 
+       TransitiveClosure.acyclic_transitive_closure2
           {+   = fn(i,j) => i+j+1,
            max = Int.max
           } dag
@@ -38,7 +38,7 @@ struct
                         l   = fn(_,_,l) => l,
                         d   = fn _ => 10,
                         m   = 1
-                       } 
+                       }
    end
 
    structure View = GraphViewerFn(daVinci)

@@ -4,13 +4,13 @@
  * -- Allen
  *)
 functor MLTreeRTL
-   (structure Util    : MLTREE_UTILS 
+   (structure Util    : MLTREE_UTILS
     structure Rewrite : MLTREE_REWRITE
     structure Fold    : MLTREE_FOLD
        sharing Util.T = Rewrite.T = Fold.T
    ) : MLTREE_RTL =
 struct
- 
+
    structure T       = Util.T
    structure Util    = Util
    structure Rewrite = Rewrite
@@ -25,8 +25,8 @@ struct
 
    val itow = Word.fromInt
    infix ||
-   val op || = W.orb 
- 
+   val op || = W.orb
+
    type ty       = T.ty
    type rtl      = T.stm
    type exp      = T.rexp
@@ -57,7 +57,7 @@ struct
    fun isOn(a,flag) = Word.andb(a,flag) <> 0w0
 
    (*-----------------------------------------------------------------------
-    * Create new RTL operators 
+    * Create new RTL operators
     *-----------------------------------------------------------------------*)
    val hashCnt   = ref 0w0
    fun newHash() = let val h = !hashCnt in hashCnt := h + 0w124127; h end
@@ -67,14 +67,14 @@ struct
     *  Reduce a RTL to compiled internal form
     *-----------------------------------------------------------------------*)
    fun reduce rtl =
-   let 
+   let
    in  rtl
    end
 
    (*-----------------------------------------------------------------------
     * Collect attributes
     *-----------------------------------------------------------------------*)
-   fun attribsOf rtl = 
+   fun attribsOf rtl =
    let fun stm(T.STORE _,a)     = a || (A_SIDEEFFECT || A_MUTATOR)
          | stm(T.JMP _, a)      = a || (A_JUMP || A_SIDEEFFECT)
          | stm(T.IF _, a)       = a || (A_BRANCH || A_JUMP || A_SIDEEFFECT)
@@ -97,23 +97,23 @@ struct
 
 
    (*-----------------------------------------------------------------------
-    * Create a uniq RTL 
+    * Create a uniq RTL
     *-----------------------------------------------------------------------*)
-   fun new(rtl) = 
+   fun new(rtl) =
    let val rtl = reduce rtl
        val attribs = attribsOf(rtl, A_PURE)
-       val rtl = 
+       val rtl =
          case rtl of
            T.COPY _ => rtl
          | _ => T.RTL{e=rtl,hash=newHash(),attribs=ref attribs}
-   in  rtl 
+   in  rtl
    end
 
    val COPY = T.COPY(0,[],[])
    val JMP  = new(T.JMP(T.PARAM 0,[]))
 
 
-   fun pin(x as T.RTL{attribs, ...}) = 
+   fun pin(x as T.RTL{attribs, ...}) =
         (attribs := (!attribs || A_PINNED); x)
      | pin _ = error "pin"
 
@@ -133,20 +133,20 @@ struct
    (*-----------------------------------------------------------------------
     * Def/use queries
     *-----------------------------------------------------------------------*)
-   fun defUse rtl = 
+   fun defUse rtl =
    let fun contains x = List.exists(fn y => Util.eqRexp(x,y))
        fun diff(A,B) = List.filter (fn z => not(contains z B)) A
        fun uniq([], l) = rev l
          | uniq(x::xs, l) = if contains x l then uniq(xs,l) else uniq(xs,x::l)
 
-       fun stm(T.ASSIGN(_,x, y), d, u) = 
+       fun stm(T.ASSIGN(_,x, y), d, u) =
            let val (d, u) = lhs(x, d, u)
            in  rhs(y, d, u) end
          | stm(T.COPY _, d, u) = (d, u) (* XXX *)
          | stm(T.RET _, d, u) = (d, u)
-         | stm(T.RTL{e, ...}, d, u) = stm(e, d, u) 
+         | stm(T.RTL{e, ...}, d, u) = stm(e, d, u)
          | stm(T.JMP(e,_), d, u) = rhs(e, d, u)
-         | stm(T.IF(x,y,z), d, u) = 
+         | stm(T.IF(x,y,z), d, u) =
              let val (d, u)  = cond(x, d, u)
                  val (d1, u) = stm(y, [], u)
                  val (d2, u) = stm(z, [], u)
@@ -194,7 +194,7 @@ struct
          | rhs(x as T.$(_,_,e), d, u) = rhs(e, d, x::u)
          | rhs(T.CVTF2I(_,_,_,x), d, u) = fexp(x, d, u)
          | rhs(T.OP(_,_,es), d, u) = rexps(es, d, u)
-         | rhs(T.COND(_,x,y,z), d, u) = 
+         | rhs(T.COND(_,x,y,z), d, u) =
             let val (d, u) = cond(x, d, u)
             in  binOp(y, z, d, u) end
          | rhs(T.BITSLICE(_,_,e), d, u) = rhs(e, d, u)
@@ -223,7 +223,7 @@ struct
          | fexp(T.FMUL(_, x, y), d, u) = fbinOp(x, y, d, u)
          | fexp(T.FDIV(_, x, y), d, u) = fbinOp(x, y, d, u)
          | fexp(T.FCOPYSIGN(_, x, y), d, u) = fbinOp(x, y, d, u)
-         | fexp(T.FCOND(_, x, y, z), d, u) = 
+         | fexp(T.FCOND(_, x, y, z), d, u) =
            let val (d, u) = cond(x, d, u)
            in  fbinOp(y, z, d, u) end
          | fexp(T.FSQRT(_, x), d, u) = fexp(x, d, u)
@@ -257,18 +257,18 @@ struct
    end
 
    (*-----------------------------------------------------------------------
-    * Giving definitions and uses.  Find out the naming constraints. 
+    * Giving definitions and uses.  Find out the naming constraints.
     *-----------------------------------------------------------------------*)
    fun namingConstraints(defs, uses) =
    let fun collectFixed((x as T.$(_,_,T.LI r))::xs, fixed, rest) =
               collectFixed(xs, (x, IntInf.toInt r)::fixed, rest)
-         | collectFixed(x::xs, fixed, rest) = 
+         | collectFixed(x::xs, fixed, rest) =
               collectFixed(xs, fixed, x::rest)
          | collectFixed([], fixed, rest) = (fixed, rest)
        val (fixedUses, otherUses) = collectFixed(uses, [], [])
        val (fixedDefs, otherDefs) = collectFixed(defs, [], [])
-       val fixed = 
-          List.filter 
+       val fixed =
+          List.filter
              (fn x => List.exists (fn y => Util.eqRexp(x,y)) otherUses)
                       otherDefs
    in  {fixedUses=fixedUses,
@@ -299,15 +299,15 @@ struct
             if this = name then SOME x else find(this, xs)
          | find(this,_::xs) = find(this, xs)
          | find(this,[]) = NONE
-       fun lookup name = 
+       fun lookup name =
          case (find(name,defs), find(name,uses)) of
            (SOME(x,i),SOME(_,j)) => (x,IO(i,j))
          | (SOME(x, i), NONE) => (x,OUT i)
          | (NONE, SOME(x, i)) => (x,IN i)
          | (NONE, NONE) => raise NotAnArgument
-   in  lookup 
+   in  lookup
    end
- 
+
    (*-----------------------------------------------------------------------
     * Return the arity of an argument
     *-----------------------------------------------------------------------*)
@@ -324,7 +324,7 @@ struct
    (*-----------------------------------------------------------------------
     * Code motion queries
     *-----------------------------------------------------------------------*)
-   fun can'tMoveUp(T.RTL{attribs, ...}) = 
+   fun can'tMoveUp(T.RTL{attribs, ...}) =
           isOn(!attribs, A_SIDEEFFECT || A_TRAPPING || A_PINNED)
      | can'tMoveUp(T.PHI _) = true
      | can'tMoveUp(T.SOURCE) = true
@@ -334,22 +334,22 @@ struct
    fun can'tMoveDown(T.PHI _) = true
      | can'tMoveDown(T.SOURCE) = true
      | can'tMoveDown(T.SINK) = true
-     | can'tMoveDown(T.RTL{attribs, ...}) = 
+     | can'tMoveDown(T.RTL{attribs, ...}) =
           isOn(!attribs, A_SIDEEFFECT || A_BRANCH || A_JUMP || A_TRAPPING ||
                         A_PINNED ||
                         A_LOOKER (* can be avoided with pure loads! XXX *))
      | can'tMoveDown rtl = error("can'tMoveDown: "^rtlToString rtl)
 
-   fun pinned(T.RTL{attribs, ...}) = 
+   fun pinned(T.RTL{attribs, ...}) =
          isOn(!attribs, A_SIDEEFFECT || A_TRAPPING || A_PINNED)
      | pinned(T.PHI _) = true
      | pinned(T.SOURCE) = true
      | pinned(T.SINK) = true
      | pinned _ = false
-   fun can'tBeRemoved(T.RTL{attribs, ...}) = 
+   fun can'tBeRemoved(T.RTL{attribs, ...}) =
          isOn(!attribs, A_SIDEEFFECT || A_BRANCH || A_JUMP)
      | can'tBeRemoved(T.SOURCE) = true
      | can'tBeRemoved(T.SINK) = true
      | can'tBeRemoved _ = false
- 
+
 end

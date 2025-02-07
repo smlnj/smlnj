@@ -20,11 +20,11 @@ struct
    structure S  = S
    structure P  = S.P
    structure Constant = I.Constant
-   
+
    open AsmFlags
-   
+
    fun error msg = MLRiscErrorMsg.error("AMD64AsmEmitter",msg)
-   
+
    fun makeStream formatAnnotations =
    let val stream = !AsmStream.asmOutStream
        fun emit' s = TextIO.output(stream,s)
@@ -54,7 +54,7 @@ struct
        fun doNothing _ = ()
        fun fail _ = raise Fail "AsmEmitter"
        fun emit_region mem = comment(I.Region.toString mem)
-       val emit_region = 
+       val emit_region =
           if !show_region then emit_region else doNothing
        fun pseudoOp pOp = (emit(P.toString pOp); emit "\n")
        fun init size = (comment("Code Size = " ^ ms size); nl())
@@ -63,11 +63,11 @@ struct
        fun emitCell r = (emit(CellsBasis.toString r); emitCellInfo r)
        fun emit_cellset(title,cellset) =
          (nl(); comment(title^CellsBasis.CellSet.toString cellset))
-       val emit_cellset = 
+       val emit_cellset =
          if !show_cellset then emit_cellset else doNothing
        fun emit_defs cellset = emit_cellset("defs: ",cellset)
        fun emit_uses cellset = emit_cellset("uses: ",cellset)
-       val emit_cutsTo = 
+       val emit_cutsTo =
          if !show_cutsTo then AsmFormatUtil.emit_cutsTo emit
          else doNothing
        fun emitter instr =
@@ -263,8 +263,8 @@ struct
    and emit_isize x = emit (asm_isize x)
 
 (*#line 506.7 "amd64/amd64.mdl"*)
-   fun emitInt32 i = 
-       let 
+   fun emitInt32 i =
+       let
 (*#line 507.11 "amd64/amd64.mdl"*)
            val s = Int32.toString i
 
@@ -276,8 +276,8 @@ struct
        end
 
 (*#line 512.7 "amd64/amd64.mdl"*)
-   fun emitInt64 i = 
-       let 
+   fun emitInt64 i =
+       let
 (*#line 513.11 "amd64/amd64.mdl"*)
            val s = Int64.toString i
 
@@ -301,43 +301,43 @@ struct
      | eImmed (I.Immed64 i) = emitInt64 i
      | eImmed (I.ImmedLabel lexp) = emit_labexp lexp
      | eImmed _ = error "eImmed"
-   and emit_operand opn = 
+   and emit_operand opn =
        (case opn of
-         I.Immed i => 
-         ( emit "$"; 
+         I.Immed i =>
+         ( emit "$";
            emitInt32 i )
-       | I.Immed64 i => 
-         ( emit "$"; 
+       | I.Immed64 i =>
+         ( emit "$";
            emitInt64 i )
-       | I.ImmedLabel lexp => 
-         ( emit "$"; 
+       | I.ImmedLabel lexp =>
+         ( emit "$";
            emit_labexp lexp )
        | I.LabelEA le => emit_labexp le
        | I.Relative _ => error "emit_operand"
        | I.Direct(ty, r) => emit (CellsBasis.toStringWithSize (r, ty))
        | I.FDirect f => emit (CellsBasis.toString f)
-       | I.Displace{base, disp, mem, ...} => 
-         ( emit_disp disp; 
-           emit "("; 
-           emitCell base; 
-           emit ")"; 
+       | I.Displace{base, disp, mem, ...} =>
+         ( emit_disp disp;
+           emit "(";
+           emitCell base;
+           emit ")";
            emit_region mem )
-       | I.Indexed{base, index, scale, disp, mem, ...} => 
-         ( emit_disp disp; 
-           emit "("; 
-           
+       | I.Indexed{base, index, scale, disp, mem, ...} =>
+         ( emit_disp disp;
+           emit "(";
+
            (case base of
              NONE => ()
            | SOME base => emitCell base
-           ); 
-           comma (); 
-           emitCell index; 
-           comma (); 
-           emitScale scale; 
-           emit ")"; 
+           );
+           comma ();
+           emitCell index;
+           comma ();
+           emitScale scale;
+           emit ")";
            emit_region mem )
        )
-   and emit_operand8 (I.Direct(_, r)) = emit (CellsBasis.toStringWithSize (r, 
+   and emit_operand8 (I.Direct(_, r)) = emit (CellsBasis.toStringWithSize (r,
           8))
      | emit_operand8 opn = emit_operand opn
    and emit_cell (r, sz) = emit (CellsBasis.toStringWithSize (r, sz))
@@ -350,8 +350,8 @@ struct
 
 (*#line 569.7 "amd64/amd64.mdl"*)
    fun stupidGas (I.ImmedLabel lexp) = emit_labexp lexp
-     | stupidGas opnd = 
-       ( emit "*"; 
+     | stupidGas opnd =
+       ( emit "*";
          emit_operand opnd )
 
 (*#line 573.7 "amd64/amd64.mdl"*)
@@ -362,11 +362,11 @@ struct
      | isMemOpnd _ = false
 
 (*#line 578.7 "amd64/amd64.mdl"*)
-   fun chop fbinOp = 
-       let 
+   fun chop fbinOp =
+       let
 (*#line 579.15 "amd64/amd64.mdl"*)
            val n = size fbinOp
-       in 
+       in
           (case Char.toLower (String.sub (fbinOp, n - 1)) of
             (#"s" | #"l") => String.substring (fbinOp, 0, n - 1)
           | _ => fbinOp
@@ -404,108 +404,108 @@ struct
    val emit_count = emit_operand
 
 (*#line 595.7 "amd64/amd64.mdl"*)
-   fun emit_byte b = 
-       ( emit "$0x"; 
+   fun emit_byte b =
+       ( emit "$0x";
          emit (Word8.toString b))
-   fun emitInstr' instr = 
+   fun emitInstr' instr =
        (case instr of
          I.NOP => emit "nop"
-       | I.JMP(operand, list) => 
-         ( emit "jmp\t"; 
+       | I.JMP(operand, list) =>
+         ( emit "jmp\t";
            stupidGas operand )
-       | I.JCC{cond, opnd} => 
-         ( emit "j"; 
-           emit_cond cond; 
-           emit "\t"; 
+       | I.JCC{cond, opnd} =>
+         ( emit "j";
+           emit_cond cond;
+           emit "\t";
            stupidGas opnd )
-       | I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} => 
-         ( emit "call\t"; 
-           stupidGas opnd; 
-           emit_region mem; 
-           emit_defs defs; 
-           emit_uses uses; 
-           emit_cellset ("return", return); 
+       | I.CALL{opnd, defs, uses, return, cutsTo, mem, pops} =>
+         ( emit "call\t";
+           stupidGas opnd;
+           emit_region mem;
+           emit_defs defs;
+           emit_uses uses;
+           emit_cellset ("return", return);
            emit_cutsTo cutsTo )
-       | I.ENTER{src1, src2} => 
-         ( emit "enter\t"; 
-           emit_operand src1; 
-           emit ", "; 
+       | I.ENTER{src1, src2} =>
+         ( emit "enter\t";
+           emit_operand src1;
+           emit ", ";
            emit_operand src2 )
        | I.LEAVE => emit "leave"
-       | I.RET option => 
-         ( emit "ret"; 
-           
+       | I.RET option =>
+         ( emit "ret";
+
            (case option of
              NONE => ()
-           | SOME e => 
-             ( emit "\t"; 
+           | SOME e =>
+             ( emit "\t";
                emit_operand e )
            ))
-       | I.MOVE{mvOp, src, dst} => 
-         ( emit_move mvOp; 
-           emit "\t"; 
-           emit_src src; 
-           emit ", "; 
+       | I.MOVE{mvOp, src, dst} =>
+         ( emit_move mvOp;
+           emit "\t";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
-       | I.LEAL{r32, addr} => 
-         ( emit "leal\t"; 
-           emit_addr addr; 
-           emit ", "; 
+       | I.LEAL{r32, addr} =>
+         ( emit "leal\t";
+           emit_addr addr;
+           emit ", ";
            emit_cell (r32, 32))
-       | I.LEAQ{r64, addr} => 
-         ( emit "leaq\t"; 
-           emit_addr addr; 
-           emit ", "; 
+       | I.LEAQ{r64, addr} =>
+         ( emit "leaq\t";
+           emit_addr addr;
+           emit ", ";
            emit_cell (r64, 64))
-       | I.CMPQ{lsrc, rsrc} => 
-         ( emit "cmpq\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPQ{lsrc, rsrc} =>
+         ( emit "cmpq\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.CMPL{lsrc, rsrc} => 
-         ( emit "cmpl\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPL{lsrc, rsrc} =>
+         ( emit "cmpl\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.CMPW{lsrc, rsrc} => 
-         ( emit "cmpb\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPW{lsrc, rsrc} =>
+         ( emit "cmpb\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.CMPB{lsrc, rsrc} => 
-         ( emit "cmpb\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.CMPB{lsrc, rsrc} =>
+         ( emit "cmpb\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTQ{lsrc, rsrc} => 
-         ( emit "testq\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTQ{lsrc, rsrc} =>
+         ( emit "testq\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTL{lsrc, rsrc} => 
-         ( emit "testl\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTL{lsrc, rsrc} =>
+         ( emit "testl\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTW{lsrc, rsrc} => 
-         ( emit "testw\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTW{lsrc, rsrc} =>
+         ( emit "testw\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.TESTB{lsrc, rsrc} => 
-         ( emit "testb\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.TESTB{lsrc, rsrc} =>
+         ( emit "testb\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.BITOP{bitOp, lsrc, rsrc} => 
-         ( emit_bitOp bitOp; 
-           emit "\t"; 
-           emit_rsrc rsrc; 
-           emit ", "; 
+       | I.BITOP{bitOp, lsrc, rsrc} =>
+         ( emit_bitOp bitOp;
+           emit "\t";
+           emit_rsrc rsrc;
+           emit ", ";
            emit_lsrc lsrc )
-       | I.BINARY{binOp, src, dst} => 
+       | I.BINARY{binOp, src, dst} =>
          (case (src, binOp) of
-           (I.Direct _, 
+           (I.Direct _,
            ( I.SARQ |
            I.SHRQ |
            I.SHLQ |
@@ -517,164 +517,164 @@ struct
            I.SHLW |
            I.SARB |
            I.SHRB |
-           I.SHLB )) => 
-           ( emit_binaryOp binOp; 
-             emit "\t%cl, "; 
+           I.SHLB )) =>
+           ( emit_binaryOp binOp;
+             emit "\t%cl, ";
              emit_dst dst )
-         | _ => 
-           ( emit_binaryOp binOp; 
-             emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+         | _ =>
+           ( emit_binaryOp binOp;
+             emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst )
          )
-       | I.SHIFT{shiftOp, src, dst, count} => 
+       | I.SHIFT{shiftOp, src, dst, count} =>
          (case count of
-           I.Direct(ty, ecx) => 
-           ( emit_shiftOp shiftOp; 
-             emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+           I.Direct(ty, ecx) =>
+           ( emit_shiftOp shiftOp;
+             emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst )
-         | _ => 
-           ( emit_shiftOp shiftOp; 
-             emit "\t"; 
-             emit_src src; 
-             emit ", "; 
-             emit_count count; 
-             emit ", "; 
+         | _ =>
+           ( emit_shiftOp shiftOp;
+             emit "\t";
+             emit_src src;
+             emit ", ";
+             emit_count count;
+             emit ", ";
              emit_dst dst )
          )
-       | I.MULTDIV{multDivOp, src} => 
-         ( emit_multDivOp multDivOp; 
-           emit "\t"; 
+       | I.MULTDIV{multDivOp, src} =>
+         ( emit_multDivOp multDivOp;
+           emit "\t";
            emit_src src )
-       | I.MUL3{dst, src2, src1} => 
-         ( emit "imull\t$"; 
-           emitInt32 src2; 
-           emit ", "; 
-           emit_src1 src1; 
-           emit ", "; 
+       | I.MUL3{dst, src2, src1} =>
+         ( emit "imull\t$";
+           emitInt32 src2;
+           emit ", ";
+           emit_src1 src1;
+           emit ", ";
            emit_cell (dst, 32))
-       | I.MULQ3{dst, src2, src1} => 
-         ( emit "imulq\t$"; 
-           emitInt32 src2; 
-           emit ", "; 
-           emit_src1 src1; 
-           emit ", "; 
+       | I.MULQ3{dst, src2, src1} =>
+         ( emit "imulq\t$";
+           emitInt32 src2;
+           emit ", ";
+           emit_src1 src1;
+           emit ", ";
            emit_cell (dst, 64))
-       | I.UNARY{unOp, opnd} => 
-         ( emit_unaryOp unOp; 
-           emit "\t"; 
+       | I.UNARY{unOp, opnd} =>
+         ( emit_unaryOp unOp;
+           emit "\t";
            emit_opnd opnd )
-       | I.SET{cond, opnd} => 
-         ( emit "set"; 
-           emit_cond cond; 
-           emit "\t"; 
+       | I.SET{cond, opnd} =>
+         ( emit "set";
+           emit_cond cond;
+           emit "\t";
            emit_opnd8 opnd )
-       | I.CMOV{cond, src, dst} => 
-         ( emit "cmov"; 
-           emit_cond cond; 
-           emit "\t"; 
-           emit_src src; 
-           emit ", "; 
+       | I.CMOV{cond, src, dst} =>
+         ( emit "cmov";
+           emit_cond cond;
+           emit "\t";
+           emit_src src;
+           emit ", ";
            emitCell dst )
-       | I.PUSH operand => 
-         ( emit "pushq\t"; 
+       | I.PUSH operand =>
+         ( emit "pushq\t";
            emit_operand operand )
        | I.PUSHFQ => emit "pushfq"
        | I.POPFQ => emit "popfq"
-       | I.POP operand => 
-         ( emit "popq\t"; 
+       | I.POP operand =>
+         ( emit "popq\t";
            emit_operand operand )
        | I.CDQ => emit "cdq"
        | I.CDO => emit "cdo"
-       | I.INT byte => 
-         ( emit "int\t"; 
+       | I.INT byte =>
+         ( emit "int\t";
            emit_byte byte )
-       | I.FMOVE{fmvOp, dst, src} => 
-         ( emit_fmove_op fmvOp; 
-           emit "\t "; 
-           emit_src src; 
-           emit ", "; 
+       | I.FMOVE{fmvOp, dst, src} =>
+         ( emit_fmove_op fmvOp;
+           emit "\t ";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
-       | I.FBINOP{binOp, dst, src} => 
-         ( emit_fbin_op binOp; 
-           emit "\t "; 
-           emit_src src; 
-           emit ", "; 
+       | I.FBINOP{binOp, dst, src} =>
+         ( emit_fbin_op binOp;
+           emit "\t ";
+           emit_src src;
+           emit ", ";
            emitCell dst )
-       | I.FCOM{comOp, dst, src} => 
-         ( emit_fcom_op comOp; 
-           emit "\t "; 
-           emit_src src; 
-           emit ", "; 
+       | I.FCOM{comOp, dst, src} =>
+         ( emit_fcom_op comOp;
+           emit "\t ";
+           emit_src src;
+           emit ", ";
            emitCell dst )
-       | I.FSQRTS{dst, src} => 
-         ( emit "sqrtss\t "; 
-           emit_src src; 
-           emit ", "; 
+       | I.FSQRTS{dst, src} =>
+         ( emit "sqrtss\t ";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
-       | I.FSQRTD{dst, src} => 
-         ( emit "sqrtsd\t "; 
-           emit_src src; 
-           emit ", "; 
+       | I.FSQRTD{dst, src} =>
+         ( emit "sqrtsd\t ";
+           emit_src src;
+           emit ", ";
            emit_dst dst )
        | I.SAHF => emit "sahf"
        | I.LFENCE => emit "lfence"
        | I.MFENCE => emit "mfence"
        | I.SFENCE => emit "sfence"
        | I.PAUSE => emit "pause"
-       | I.XCHG{lock, sz, src, dst} => 
+       | I.XCHG{lock, sz, src, dst} =>
          ( (if lock
               then (emit "lock\n\t")
-              else ()); 
-           emit "xchg"; 
-           
+              else ());
+           emit "xchg";
+
            (case sz of
              I.I8 => emit "b"
            | I.I16 => emit "w"
            | I.I32 => emit "l"
            | I.I64 => emit "q"
-           ); 
-           
-           ( emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+           );
+
+           ( emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst ) )
-       | I.CMPXCHG{lock, sz, src, dst} => 
+       | I.CMPXCHG{lock, sz, src, dst} =>
          ( (if lock
               then (emit "lock\n\t")
-              else ()); 
-           emit "cmpxchg"; 
-           
+              else ());
+           emit "cmpxchg";
+
            (case sz of
              I.I8 => emit "b"
            | I.I16 => emit "w"
            | I.I32 => emit "l"
            | I.I64 => emit "q"
-           ); 
-           
-           ( emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+           );
+
+           ( emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst ) )
-       | I.XADD{lock, sz, src, dst} => 
+       | I.XADD{lock, sz, src, dst} =>
          ( (if lock
               then (emit "lock\n\t")
-              else ()); 
-           emit "xadd"; 
-           
+              else ());
+           emit "xadd";
+
            (case sz of
              I.I8 => emit "b"
            | I.I16 => emit "w"
            | I.I32 => emit "l"
            | I.I64 => emit "q"
-           ); 
-           
-           ( emit "\t"; 
-             emit_src src; 
-             emit ", "; 
+           );
+
+           ( emit "\t";
+             emit_src src;
+             emit ", ";
              emit_dst dst ) )
        | I.RDTSC => emit "rdtsc"
        | I.RDTSCP => emit "rdtscp"
@@ -689,15 +689,15 @@ struct
       and emitInstrs instrs =
            app (if !indent_copies then emitInstrIndented
                 else emitInstr) instrs
-   
+
       and emitInstr(I.ANNOTATION{i,a}) =
            ( comment(Annotations.toString a);
               nl();
               emitInstr i )
-        | emitInstr(I.LIVE{regs, spilled})  = 
+        | emitInstr(I.LIVE{regs, spilled})  =
             comment("live= " ^ CellsBasis.CellSet.toString regs ^
                     "spilled= " ^ CellsBasis.CellSet.toString spilled)
-        | emitInstr(I.KILL{regs, spilled})  = 
+        | emitInstr(I.KILL{regs, spilled})  =
             comment("killed:: " ^ CellsBasis.CellSet.toString regs ^
                     "spilled:: " ^ CellsBasis.CellSet.toString spilled)
         | emitInstr(I.INSTR i) = emitter i
@@ -706,7 +706,7 @@ struct
         | emitInstr(I.COPY{k=CellsBasis.FP, sz, src, dst, tmp}) =
            emitInstrs(Shuffle.shufflefp{tmp=tmp, src=src, dst=dst})
         | emitInstr _ = error "emitInstr"
-   
+
    in  S.STREAM{beginCluster=init,
                 pseudoOp=pseudoOp,
                 emit=emitInstr,

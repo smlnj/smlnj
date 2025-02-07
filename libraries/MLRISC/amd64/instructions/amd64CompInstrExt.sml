@@ -8,18 +8,18 @@
 signature AMD64COMP_INSTR_EXT = sig
   structure I : AMD64INSTR
   structure TS : MLTREE_STREAM
-		 where T = I.T
-  structure CFG : CONTROL_FLOW_GRAPH 
- 	         where I = I
+                 where T = I.T
+  structure CFG : CONTROL_FLOW_GRAPH
+                 where I = I
                    and P = TS.S.P
 
-  type reducer = 
+  type reducer =
     (I.instruction, I.C.cellset, I.operand, I.addressing_mode, CFG.cfg) TS.reducer
 
-  val compileSext : 
-     reducer 
-      -> {stm: (I.T.stm, I.T.rexp, I.T.fexp, I.T.ccexp) AMD64InstrExt.sext, 
-	  an: I.T.an list} 
+  val compileSext :
+     reducer
+      -> {stm: (I.T.stm, I.T.rexp, I.T.fexp, I.T.ccexp) AMD64InstrExt.sext,
+          an: I.T.an list}
         -> unit
 end
 
@@ -27,11 +27,11 @@ end
 functor AMD64CompInstrExt
   ( structure I : AMD64INSTR
     structure TS  : MLTREE_STREAM
-		   where T = I.T
-    structure CFG : CONTROL_FLOW_GRAPH 
-		   where P = TS.S.P
-		     and I = I
-   ) : AMD64COMP_INSTR_EXT = 
+                   where T = I.T
+    structure CFG : CONTROL_FLOW_GRAPH
+                   where P = TS.S.P
+                     and I = I
+   ) : AMD64COMP_INSTR_EXT =
 struct
   structure CFG = CFG
   structure T = TS.T
@@ -42,7 +42,7 @@ struct
 
   type stm = (T.stm, T.rexp, T.fexp, T.ccexp) X.sext
 
-  type reducer = 
+  type reducer =
     (I.instruction, I.C.cellset, I.operand, I.addressing_mode, CFG.cfg) TS.reducer
 
   val rsp = C.rsp
@@ -56,59 +56,59 @@ struct
     val TS.REDUCER{operand, emit, reduceFexp, instrStream, reduceOperand,
                   ...} = reducer
     val TS.S.STREAM{emit=emitI, ...} = instrStream
-    fun fstp(sz, fstpInstr, fexp) = 
+    fun fstp(sz, fstpInstr, fexp) =
       (case fexp
         of T.FREG(sz', f) =>
-	    if sz <> sz' then error "fstp: sz"
-	    else emitI(I.INSTR(fstpInstr(I.FDirect f)))
+            if sz <> sz' then error "fstp: sz"
+            else emitI(I.INSTR(fstpInstr(I.FDirect f)))
          | _ => error "fstp: fexp"
       (*esac*))
   in
     case stm
      of X.PUSHQ(rexp) => emit(I.push(operand rexp), an)
       | X.POP(rexp)   => emit(I.pop(operand rexp), an)
-      | X.LEAVE	     => emit(I.leave, an)
+      | X.LEAVE      => emit(I.leave, an)
       | X.RET(rexp)   => emit(I.ret(SOME(operand rexp)), an)
-      | X.LOCK_XADDL (src, dst) => 
-	   emit (I.xadd{
+      | X.LOCK_XADDL (src, dst) =>
+           emit (I.xadd{
                  (* src must be in a register *)
                  lock=true,sz=I.I32,
                  src=I.Direct(32,reduceOperand(operand src)),
                  dst=operand dst},
-	       an)
-      | X.LOCK_XADDQ (src, dst) => 
-	    emit (I.xadd{
-		  (* src must be in a register *)
+               an)
+      | X.LOCK_XADDQ (src, dst) =>
+            emit (I.xadd{
+                  (* src must be in a register *)
                   lock=true,sz=I.I64,
                   src=I.Direct(64,reduceOperand(operand src)),
                   dst=operand dst},
-		  an)
+                  an)
       | X.LOCK_CMPXCHGL(src, dst) =>
-	(* src must be in a register *)
-	  emit(I.cmpxchg{
-	      lock=true,sz=I.I32, 
-	      src=I.Direct(32,reduceOperand(operand src)), 
-	      dst=operand dst
-	    }, an)
+        (* src must be in a register *)
+          emit(I.cmpxchg{
+              lock=true,sz=I.I32,
+              src=I.Direct(32,reduceOperand(operand src)),
+              dst=operand dst
+            }, an)
       | X.LOCK_CMPXCHGQ(src, dst) =>
-	(* src must be in a register *)
-	  emit(I.cmpxchg{
-	      lock=true, sz=I.I64, 
-	      src=I.Direct(64,reduceOperand(operand src)), 
-	      dst=operand dst
-	    }, an)
+        (* src must be in a register *)
+          emit(I.cmpxchg{
+              lock=true, sz=I.I64,
+              src=I.Direct(64,reduceOperand(operand src)),
+              dst=operand dst
+            }, an)
       | X.LOCK_XCHGL(src, dst) =>
-	  emit(I.xchg{
-	      lock=true,sz=I.I32, 
-	      src=operand src,
-	      dst=operand dst
-	    }, an)
+          emit(I.xchg{
+              lock=true,sz=I.I32,
+              src=operand src,
+              dst=operand dst
+            }, an)
       | X.LOCK_XCHGQ(src, dst) =>
-	  emit(I.xchg{
-	      lock=true, sz=I.I64, 
-	      src=operand src,
-	      dst=operand dst
-	    }, an)
+          emit(I.xchg{
+              lock=true, sz=I.I64,
+              src=operand src,
+              dst=operand dst
+            }, an)
       | X.PAUSE => emit(I.pause, an)
       | X.MFENCE => emit(I.mfence, an)
       | X.LFENCE => emit(I.lfence, an)

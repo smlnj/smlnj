@@ -1,11 +1,11 @@
-(* 
+(*
  * This is Johnson's algorithm for computing all pairs shortest paths.
  * Good for sparse graphs.
  * -- Allen
  *)
 
-functor Johnson(Num : ABELIAN_GROUP_WITH_INF) : 
-    sig include ALL_PAIRS_SHORTEST_PATHS 
+functor Johnson(Num : ABELIAN_GROUP_WITH_INF) :
+    sig include ALL_PAIRS_SHORTEST_PATHS
         exception NegativeCycle
     end =
 struct
@@ -29,10 +29,10 @@ struct
        exception EDGE of 'e
        exception NODE of 'n
        exception Empty
-       fun arbEdge() = 
+       fun arbEdge() =
            (#forall_edges g (fn (_,_,e) => raise EDGE e); raise Empty)
                        handle EDGE e => e
-       fun arbNode() = 
+       fun arbNode() =
            (#forall_nodes g (fn (_,n) => raise NODE n); raise Empty)
                        handle NODE n => n
    in  let val e    = arbEdge()
@@ -59,5 +59,5 @@ struct
                end)
        end handle Empty => ();
        {dist=dist,pred=pred}
-   end 
+   end
 end

@@ -14,7 +14,7 @@ structure AntlrRepair :> sig
       = Insert of 'tok list
       | Delete of 'tok list
       | Subst of {
-          old : 'tok list, 
+          old : 'tok list,
           new : 'tok list
         }
       | FailureAt of 'tok
@@ -40,7 +40,7 @@ structure AntlrRepair :> sig
       = Insert of 'a list
       | Delete of 'a list
       | Subst of {
-          old : 'a list, 
+          old : 'a list,
           new : 'a list
         }
       | FailureAt of 'a
@@ -51,31 +51,31 @@ structure AntlrRepair :> sig
     datatype add_or_delete = ADD | DEL
 
     fun actionToString' tokToString repair = let
-	  val join = String.concatWith " "
+          val join = String.concatWith " "
           in
             case repair
              of Insert toks => join ("try inserting" :: List.map (tokToString ADD) toks)
               | Delete toks => join ("try deleting" :: List.map (tokToString DEL) toks)
               | Subst {old, new} => join(
-		  "try substituting" :: List.map (tokToString ADD) new @
-		  "for" :: List.map (tokToString DEL) old)
+                  "try substituting" :: List.map (tokToString ADD) new @
+                  "for" :: List.map (tokToString DEL) old)
               | FailureAt tok => "syntax error at " ^ tokToString DEL tok
             (* end case *)
           end
 
-    fun repairToString' tokToString sm (pos, repair) = 
+    fun repairToString' tokToString sm (pos, repair) =
           (AntlrStreamPos.toString sm pos ^ ": " ^ actionToString' tokToString repair)
 
     fun actionToString tokToString = let
-	  fun tok2s _ tok = tokToString tok
-	  in
-	    actionToString' tok2s
-	  end
+          fun tok2s _ tok = tokToString tok
+          in
+            actionToString' tok2s
+          end
 
     fun repairToString tokToString = let
-	  fun tok2s _ tok = tokToString tok
-	  in
-	    repairToString' tok2s
-	  end
+          fun tok2s _ tok = tokToString tok
+          in
+            repairToString' tok2s
+          end
 
   end

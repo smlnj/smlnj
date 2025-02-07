@@ -1,6 +1,6 @@
 (*
  * The Alpha instruction set, specialized with respect to the
- * user constant and region types.  
+ * user constant and region types.
  *)
 
 structure AlphaMLTree =
@@ -34,8 +34,8 @@ structure AlphaMLTreeHash =
 structure AlphaShuffle = AlphaShuffle(AlphaInstr)
 
 (*
- * The assembler 
- *) 
+ * The assembler
+ *)
 structure AlphaAsm = AlphaAsmEmitter
    (structure Instr = AlphaInstr
     structure Stream = Stream
@@ -44,11 +44,11 @@ structure AlphaAsm = AlphaAsmEmitter
    )
 
 (*
- * The flowgraph (cluster) representation specialized to the sparc instruction 
+ * The flowgraph (cluster) representation specialized to the sparc instruction
  * set.
  *)
-structure AlphaFlowGraph = 
-   FlowGraph(structure I = AlphaInstr 
+structure AlphaFlowGraph =
+   FlowGraph(structure I = AlphaInstr
              structure P = UserPseudoOps
             )
 (*
@@ -66,9 +66,9 @@ struct
 
   type reduceOpnd = I.operand -> C.cell
 
-  (* reduceOpnd moves the operand to a register if it's not in one 
+  (* reduceOpnd moves the operand to a register if it's not in one
      already (handy).
-     div*, rem* are assembler macros. The alpha/osf assembler accepts 
+     div*, rem* are assembler macros. The alpha/osf assembler accepts
         divl $1, 7, $1
      but the alpha/linux assembler insists that the operand be a register
      Sigh ...
@@ -169,9 +169,9 @@ struct
 end (* AlphaPseudoInstrs *)
 
 (*
- * Instruction selection module for Alpha.  
+ * Instruction selection module for Alpha.
  *)
-structure AlphaMLTreeComp = 
+structure AlphaMLTreeComp =
    Alpha(structure AlphaInstr = AlphaInstr
          structure AlphaMLTree = MLTree
          structure PseudoInstrs = AlphaPseudoInstrs
@@ -214,22 +214,22 @@ structure AlphaBackEnd =
        structure Spill      = RASpill(structure Asm = Asm
                                       structure InsnProps = InsnProps)
        structure SpillHeur  = ChaitinSpillHeur
-       structure SpillTable = 
-         SpillTable  
+       structure SpillTable =
+         SpillTable
          (val initialSpillOffset = 0 (* This is probably wrong!!!!! *)
           val spillAreaSz = 4000
           val architecture = "Alpha"
          )
 
        open SpillTable
-   
+
        fun pure _ = false
-   
+
        (* make copies *)
        structure Int =
        struct
           val dedicated  = [I.C.stackptrR, I.C.GPReg 31]
-          val avail  = 
+          val avail  =
                C.SortedCells.return(
                  C.SortedCells.difference(
                     C.SortedCells.uniq(
@@ -242,21 +242,21 @@ structure AlphaBackEnd =
               I.COPY{dst=rds, src=rss, impl=ref NONE, tmp=tmp}
           (* spill register *)
           fun spillInstr{an,src,spilledCell,spillLoc} =
-              [I.STORE{stOp=I.STL, b=sp, d=I.IMMop(get spillLoc), 
+              [I.STORE{stOp=I.STL, b=sp, d=I.IMMop(get spillLoc),
                        r=src, mem=spill}]
 
           (* spill copy temp *)
           fun spillCopyTmp(_,I.COPY{k,tmp,dst,src,impl},loc) =
               I.COPY{k=k,tmp=SOME(I.Displace{base=sp, disp=get loc}),
                      dst=dst,src=src,impl=impl}
-      
+
           (* reload register *)
            fun reloadInstr{an,dst,spilledCell,spillLoc} =
-               [I.LOAD{ldOp=I.LDL, b=sp, d=I.IMMop(get spillLoc), r=dst, 
+               [I.LOAD{ldOp=I.LDL, b=sp, d=I.IMMop(get spillLoc), r=dst,
                      mem=spill}]
        end
 
-       structure Float = 
+       structure Float =
        struct
           val dedicated = [I.C.FPReg 31]
           val avail = C.Regs C.FP {from=0, to=30, step=1}
@@ -265,13 +265,13 @@ structure AlphaBackEnd =
               I.FCOPY{dst=fds, src=fss, impl=ref NONE, tmp=NONE}
             | copy((fds, fss), I.FCOPY{tmp, ...}) =
               I.FCOPY{dst=fds, src=fss, impl=ref NONE, tmp=tmp}
-      
+
           fun spillCopyTmp(_,I.FCOPY{tmp,dst,src,impl},loc) =
               I.FCOPY{tmp=SOME(I.Displace{base=sp, disp=getF loc}),
                       dst=dst,src=src,impl=impl}
           fun spillInstr(_,r,loc) =
               [I.FSTORE{stOp=I.STT, b=sp, d=I.IMMop(getF loc), r=r, mem=spill}]
-      
+
           fun reloadInstr(_,r,loc) =
               [I.FLOAD{ldOp=I.LDT, b=sp, d=I.IMMop(getF loc), r=r, mem=spill}]
        end

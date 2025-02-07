@@ -17,11 +17,11 @@ struct
    structure A   = Array
    structure W8A = Word8Array
 
-   type valueMap = CF.valnum Array.array 
+   type valueMap = CF.valnum Array.array
 
    fun error msg = MLRiscErrorMsg.error("SSACondConstProp",msg)
 
-   fun condConstProp(SSA as G.GRAPH ssa) = 
+   fun condConstProp(SSA as G.GRAPH ssa) =
    let val CFG as G.GRAPH cfg = SSA.cfg SSA
        val N          = #capacity cfg ()
        val M          = #capacity ssa ()
@@ -34,7 +34,7 @@ struct
        val reachable  = W8A.array(N,0w0) (* blocks that are reachable *)
        val onWorkList = W8A.array(M,0w0) (* ssa ops that are on work list *)
        val bot        = CF.bot
-       val top        = CF.top 
+       val top        = CF.top
        val nodes      = SSA.nodes SSA
        val V          = SSA.maxVar SSA
        val values     = A.array(V,bot) (* current values *)
@@ -42,13 +42,13 @@ struct
        (* Add value v onto the worklist *)
        fun addWL(v,WL) =
            let val i = A.sub(defSiteTbl,v)
-           in  if W8A.sub(onWorkList,i) <> 0w0 then WL 
+           in  if W8A.sub(onWorkList,i) <> 0w0 then WL
                else (W8A.update(onWorkList,i,0w1); i::WL)
            end
 
        (* Add all operations onto the worklist *)
        fun addWLs([],WL) = WL
-         | addWLs(i::ops,WL) = 
+         | addWLs(i::ops,WL) =
             (W8A.update(onWorkList,i,0w1); addWLs(ops, i::WL))
 
        (* Constant folding function *)
@@ -64,35 +64,35 @@ struct
        (* Evaluate an SSA node *)
        and eval(i,T.PHI _,[t],s,WL) =
            let fun join([],v) = v
-                 | join(s::ss,v) = 
+                 | join(s::ss,v) =
                    let val x = A.sub(values,s)
                    in  if x = bot then join(ss,v)
                        else if v = bot then join(ss,x)
                        else if x = v then join(ss,v)
                        else top
                    end
-           in  update(t,join(s,bot),WL) 
+           in  update(t,join(s,bot),WL)
            end
          | eval(i,T.SOURCE _,t,_,WL) = updateTops(t,WL)
          | eval(i,T.SINK _,_,_,WL) = WL
          | eval(i,i',s,t,WL) =
            let fun getVal v = if v >= 0 then A.sub(values, v) else v
                val v = fold(i',map getVal s,0,())
-               val b = A.sub(blockTbl,i)  
+               val b = A.sub(blockTbl,i)
            in  case t of
                  [t] => let val WL = update(t,v,WL)
                             fun chase e =
-                            case (e,v) of 
+                            case (e,v) of
                               (T.IF _,~1) => enableSucc(b,false,WL)
                             | (T.IF _,~2) => enableSucc(b,true,WL)
                             | (T.IF _,_)  => enableAllSucc(b,WL)
                             | (T.JMP _,_)  => enableAllSucc(b,WL)
                             | (T.RTL{e,...},_) => chase e
                             | _ => WL
-                        in  chase i' 
+                        in  chase i'
                         end
                | _   => updateTops(t,WL)
-           end  
+           end
 
        (* Update the result *)
        and update(t,v,WL) =
@@ -101,14 +101,14 @@ struct
 
        (* Update top to all results *)
        and updateTops([],WL) = WL
-         | updateTops(t::ts,WL) = 
+         | updateTops(t::ts,WL) =
            if A.sub(values,t) = top then updateTops(ts,WL)
            else (A.update(values,t,top); updateTops(ts,addWL(t,WL)))
 
        (* Mark a basic block as reachable *)
        and enableNode(b,WL) =
            if W8A.sub(reachable,b) <> 0w0 then WL
-           else 
+           else
            let val _ = W8A.update(reachable,b,0w1)
                val WL = addWLs(A.sub(ops,b), WL)
                val WL = addWLs(A.sub(phis,b), WL)
@@ -124,24 +124,24 @@ struct
        (* Mark a successor of b as reachable *)
        and enableSucc(b,cond,WL) =
              foldr (fn ((_,b',_),WL) => enableNode(b',WL)) WL (#out_edges cfg b)
-              
+
        (* Mark all successors of b as reachable *)
        and enableAllSucc(b,WL) = foldr enableEdge WL (#out_edges cfg b)
 
        (* Initialize the table *)
-       fun init() = 
+       fun init() =
            (case SSA.C.zeroReg SSA.C.GP of
               SOME zeroR => A.update(values, zeroR, CF.zero)
             | NONE => ()
            )
 
        (* Constant propagation main driver *)
-       fun constantPropagation() = 
+       fun constantPropagation() =
            (init();
             propagate(enableAllSucc(hd(#entries cfg ()),[]))
            )
    in  constantPropagation();
-       values        
+       values
    end
 
 end

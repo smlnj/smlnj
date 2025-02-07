@@ -1,13 +1,13 @@
 (*
- * This module is responsible for generating new instructions from 
+ * This module is responsible for generating new instructions from
  * MLTREE and inserting them into the SSA graph.  This is useful for
  * patching in new instructions as the SSA graph is being transformed.
  *
- * Special MLRISC Magic(tm) for invoking the instruction selection 
+ * Special MLRISC Magic(tm) for invoking the instruction selection
  * module and ssa-ifying the output code are all hidden here.
- * 
+ *
  * -- Allen (leunga@cs.nyu.edu)
- * 
+ *
  *)
 signature SSA_INSTRGEN =
 sig

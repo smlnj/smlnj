@@ -11,23 +11,23 @@
 signature ARCH_SPILL_INSTR = sig
   structure I : INSTRUCTIONS
   structure CB : CELLS_BASIS = CellsBasis
-  
+
   val spillToEA :
       CB.cellkind ->
-         CB.cell * I.ea -> 
+         CB.cell * I.ea ->
             {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}
 
   val reloadFromEA :
       CB.cellkind ->
          CB.cell * I.ea ->
-            {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}	   
+            {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}
 
-  val spill : 
-      CB.cellkind -> 
-         I.instruction * CB.cell * I.ea -> 
-	    {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}
-  val reload : 
+  val spill :
       CB.cellkind ->
-         I.instruction * CB.cell * I.ea -> 
-		 {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}
+         I.instruction * CB.cell * I.ea ->
+            {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}
+  val reload :
+      CB.cellkind ->
+         I.instruction * CB.cell * I.ea ->
+                 {code:I.instruction list, proh:CB.cell list, newReg:CB.cell option}
 end

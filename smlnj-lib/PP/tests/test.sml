@@ -8,54 +8,54 @@ use "base.sml";
 local
   fun repeat c n = StringCvt.padLeft c n ""
   fun simple1 (name, w, n, openBox) () =
-	withPP (name, w) (fn strm => (
-	  openBox strm (PP.Rel 0);
-	    PP.string strm (repeat #"x" n);
-	    PP.cut strm;
-	    PP.string strm (repeat #"y" n);
-	    PP.cut strm;
-	    PP.string strm (repeat #"z" n);
-	  PP.closeBox strm))
+        withPP (name, w) (fn strm => (
+          openBox strm (PP.Rel 0);
+            PP.string strm (repeat #"x" n);
+            PP.cut strm;
+            PP.string strm (repeat #"y" n);
+            PP.cut strm;
+            PP.string strm (repeat #"z" n);
+          PP.closeBox strm))
 (**
   fun simple1 (name, w, n, openBox) () = let
-	val outS = TextIO.openAppend "out"
-	fun dump (lab, strm) = (TextIO.output(outS, lab^": "); PP.dump(outS, strm))
-	in
-	  TextIO.output(outS, concat["***** ", name, " *****\n"]);
-	  withPP (name, w) (fn strm => (
-	    dump ("1", strm);
-	    openBox strm (PP.Rel 0);
-	      dump ("2", strm);
-	      PP.string strm (repeat #"x" n);
-	      dump ("3", strm);
-	      PP.cut strm;
-	      dump ("4", strm);
-	      PP.string strm (repeat #"y" n);
-	      dump ("5", strm);
-	      PP.cut strm;
-	      dump ("6", strm);
-	      PP.string strm (repeat #"z" n);
-	      dump ("7", strm);
-	    PP.closeBox strm;
-	    dump ("8", strm)));
-	  TextIO.closeOut outS
-	end
+        val outS = TextIO.openAppend "out"
+        fun dump (lab, strm) = (TextIO.output(outS, lab^": "); PP.dump(outS, strm))
+        in
+          TextIO.output(outS, concat["***** ", name, " *****\n"]);
+          withPP (name, w) (fn strm => (
+            dump ("1", strm);
+            openBox strm (PP.Rel 0);
+              dump ("2", strm);
+              PP.string strm (repeat #"x" n);
+              dump ("3", strm);
+              PP.cut strm;
+              dump ("4", strm);
+              PP.string strm (repeat #"y" n);
+              dump ("5", strm);
+              PP.cut strm;
+              dump ("6", strm);
+              PP.string strm (repeat #"z" n);
+              dump ("7", strm);
+            PP.closeBox strm;
+            dump ("8", strm)));
+          TextIO.closeOut outS
+        end
 **)
   fun simple2 (name, w, n, openBox1, openBox2) () =
-	withPP (name, w) (fn strm => (
-	  openBox1 strm (PP.Rel 0);
-	    PP.string strm (repeat #"v" n);
-	    PP.cut strm;
-	    openBox2 strm (PP.Abs 2);
-	      PP.string strm (repeat #"w" n);
-	      PP.cut strm;
-	      PP.string strm (repeat #"x" n);
-	      PP.cut strm;
-	      PP.string strm (repeat #"y" n);
-	    PP.closeBox strm;
-	    PP.cut strm;
-	    PP.string strm (repeat #"z" n);
-	  PP.closeBox strm))
+        withPP (name, w) (fn strm => (
+          openBox1 strm (PP.Rel 0);
+            PP.string strm (repeat #"v" n);
+            PP.cut strm;
+            openBox2 strm (PP.Abs 2);
+              PP.string strm (repeat #"w" n);
+              PP.cut strm;
+              PP.string strm (repeat #"x" n);
+              PP.cut strm;
+              PP.string strm (repeat #"y" n);
+            PP.closeBox strm;
+            PP.cut strm;
+            PP.string strm (repeat #"z" n);
+          PP.closeBox strm))
 fun openHBox strm _ = PP.openHBox strm
 in
 val t01a = simple1 ("Test 01a [hbox]", 10, 2, openHBox)
@@ -145,68 +145,68 @@ val t35a = simple2 ("Test 35a [box/box]", 10, 2, PP.openBox, PP.openBox)
 val t35b = simple2 ("Test 35b [box/box]", 10, 3, PP.openBox, PP.openBox)
 val t35c = simple2 ("Test 35c [box/box]", 10, 4, PP.openBox, PP.openBox)
 end
- 
+
 fun t40 () = withPP ("Test 20 [C code]", 20) (fn strm => (
       PP.openHBox strm;
-	PP.string strm "if";
-	PP.space strm 1;
-	PP.string strm "(x < y)";
-	PP.space strm 1;
-	PP.string strm "{";
-	PP.openHVBox strm (PP.Abs 4);
-	  PP.space strm 1;
-	  PP.string strm "stmt1;"; PP.space strm 1;
-	  PP.openHBox strm;
-	    PP.string strm "if";
-	    PP.space strm 1;
-	    PP.string strm "(w < z)";
-	    PP.space strm 1;
-	    PP.string strm "{";
-	    PP.openHVBox strm (PP.Abs 4);
-	      PP.space strm 1; PP.string strm "stmt2;";
-	      PP.space strm 1; PP.string strm "stmt3;";
-	      PP.space strm 1; PP.string strm "stmt4;";
-	    PP.closeBox strm; PP.newline strm;
-	    PP.string strm "}";
-	  PP.closeBox strm;
-	  PP.space strm 1; PP.string strm "stmt5;";
-	  PP.space strm 1; PP.string strm "stmt6;";
-	PP.closeBox strm; PP.newline strm;
-	PP.string strm "}";
+        PP.string strm "if";
+        PP.space strm 1;
+        PP.string strm "(x < y)";
+        PP.space strm 1;
+        PP.string strm "{";
+        PP.openHVBox strm (PP.Abs 4);
+          PP.space strm 1;
+          PP.string strm "stmt1;"; PP.space strm 1;
+          PP.openHBox strm;
+            PP.string strm "if";
+            PP.space strm 1;
+            PP.string strm "(w < z)";
+            PP.space strm 1;
+            PP.string strm "{";
+            PP.openHVBox strm (PP.Abs 4);
+              PP.space strm 1; PP.string strm "stmt2;";
+              PP.space strm 1; PP.string strm "stmt3;";
+              PP.space strm 1; PP.string strm "stmt4;";
+            PP.closeBox strm; PP.newline strm;
+            PP.string strm "}";
+          PP.closeBox strm;
+          PP.space strm 1; PP.string strm "stmt5;";
+          PP.space strm 1; PP.string strm "stmt6;";
+        PP.closeBox strm; PP.newline strm;
+        PP.string strm "}";
       PP.closeBox strm));
 
 (* a test of VBox *)
 fun t50 () = withPP ("Test 40 [vbox]", 20) (fn strm => let
       fun pp l = let
-	    fun pp' [] = ()
-	      | pp' [s] = PP.string strm s
-	      | pp' (s::r) = (PP.string strm s; PP.space strm 1; pp' r)
-	    in
-	      PP.openHBox strm; pp' l; PP.closeBox strm
-	    end
+            fun pp' [] = ()
+              | pp' [s] = PP.string strm s
+              | pp' (s::r) = (PP.string strm s; PP.space strm 1; pp' r)
+            in
+              PP.openHBox strm; pp' l; PP.closeBox strm
+            end
       in
-	  PP.openVBox strm (PP.Abs 0);
-	    pp ["0:", "line", "1"]; PP.newline strm;
-	    pp ["0:", "line", "2"]; PP.newline strm;
-	    PP.openVBox strm (PP.Abs 2);
-	      pp ["2:", "line", "3"]; PP.newline strm;
-	      pp ["2:", "line", "4"];
-	    PP.closeBox strm;
-	    PP.newline strm;
-	    PP.openVBox strm (PP.Abs 2);
-	      pp ["2:", "line", "5"]; PP.newline strm;
-	      pp ["2:", "line", "6"];
-	    PP.closeBox strm;
-	    PP.newline strm;
-	    pp ["0:", "line", "7"]; PP.newline strm;
-	    pp ["0:", "line", "8"]; PP.newline strm;
-	    PP.openVBox strm (PP.Abs 4);
-	      pp ["4:", "line", "9"]; PP.newline strm;
-	      pp ["4:", "line", "10"];
-	    PP.closeBox strm;
-	    PP.newline strm;
-	    pp ["0:", "line", "11"]; PP.newline strm;
-	    pp ["0:", "line", "12"]; PP.newline strm;
-	  PP.closeBox strm
+          PP.openVBox strm (PP.Abs 0);
+            pp ["0:", "line", "1"]; PP.newline strm;
+            pp ["0:", "line", "2"]; PP.newline strm;
+            PP.openVBox strm (PP.Abs 2);
+              pp ["2:", "line", "3"]; PP.newline strm;
+              pp ["2:", "line", "4"];
+            PP.closeBox strm;
+            PP.newline strm;
+            PP.openVBox strm (PP.Abs 2);
+              pp ["2:", "line", "5"]; PP.newline strm;
+              pp ["2:", "line", "6"];
+            PP.closeBox strm;
+            PP.newline strm;
+            pp ["0:", "line", "7"]; PP.newline strm;
+            pp ["0:", "line", "8"]; PP.newline strm;
+            PP.openVBox strm (PP.Abs 4);
+              pp ["4:", "line", "9"]; PP.newline strm;
+              pp ["4:", "line", "10"];
+            PP.closeBox strm;
+            PP.newline strm;
+            pp ["0:", "line", "11"]; PP.newline strm;
+            pp ["0:", "line", "12"]; PP.newline strm;
+          PP.closeBox strm
       end)
 

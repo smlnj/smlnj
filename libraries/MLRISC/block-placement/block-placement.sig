@@ -5,9 +5,9 @@
 
 (* Perform code block placement *)
 
-(* When several blocks are successors to the unique entry node, 
+(* When several blocks are successors to the unique entry node,
  * then block with the lowest block id appears first.
- * This usually corresponds to what one wants when doing dynamic 
+ * This usually corresponds to what one wants when doing dynamic
  * code generation.
  *)
 signature BLOCK_PLACEMENT = sig

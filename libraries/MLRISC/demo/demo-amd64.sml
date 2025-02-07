@@ -15,10 +15,10 @@ structure AMD64PseudoOps  =
       struct
         datatype pseudo_op_ext = COMM of (Label.label * int)
         structure AsmPseudoOps = AMD64GasPseudoOps (
-			     structure T = AMD64MLTree
-			     structure MLTreeEval = AMD64MLTreeEval)
-        type pseudo_op = pseudo_op_ext        
-        fun toString (COMM(lab, sz)) = concat[         
+                             structure T = AMD64MLTree
+                             structure MLTreeEval = AMD64MLTreeEval)
+        type pseudo_op = pseudo_op_ext
+        fun toString (COMM(lab, sz)) = concat[
             "\t.comm\t"(*, P.lexpToString(P.T.LABEL lab)*),
             ",", Int.toString sz]
         fun emitValue {pOp, loc, emit} = raise Fail "emitValue"
@@ -57,21 +57,21 @@ structure AMD64Asm = AMD64AsmEmitter
     structure Shuffle = AMD64Shuffle
    )
 
-structure AMD64InsnProps = AMD64Props 
-			  (structure Instr = AMD64Instr
+structure AMD64InsnProps = AMD64Props
+                          (structure Instr = AMD64Instr
                            structure MLTreeHash = AMD64MLTreeHash
-			   structure MLTreeEval = AMD64MLTreeEval)
+                           structure MLTreeEval = AMD64MLTreeEval)
 
 structure AMD64CFG = ControlFlowGraph (
             structure I = AMD64Asm.I
-	    structure GraphImpl = DirectedGraph
-	    structure InsnProps = AMD64InsnProps
-	    structure Asm = AMD64Asm)
+            structure GraphImpl = DirectedGraph
+            structure InsnProps = AMD64InsnProps
+            structure Asm = AMD64Asm)
 
 structure AMD64Stream = InstructionStream(AMD64PseudoOps)
 structure AMD64MLTStream = MLTreeStream (
-		      structure T = AMD64MLTree
-		      structure S = AMD64Stream)
+                      structure T = AMD64MLTree
+                      structure S = AMD64Stream)
 
 structure AMD64MTC = struct
   structure T = AMD64MLTree
@@ -86,7 +86,7 @@ structure AMD64MTC = struct
    val compileRext  = unimplemented
    val compileFext  = unimplemented
    val compileCCext = unimplemented
-		      
+
    structure AMD64MLTreeUtils : MLTREE_UTILS =
      struct
        structure T = AMD64MLTree
@@ -110,23 +110,23 @@ structure AMD64MTC = struct
 end
 
 structure AMD64 = AMD64Gen (
-		  structure I = AMD64Instr
-		  structure MLTreeUtils = AMD64MTC.AMD64MLTreeUtils
-		  structure ExtensionComp = AMD64MTC
-		  fun signBit _ = raise Fail "todo"
-		  fun negateSignBit _ = raise Fail "todo"
-		  val floats16ByteAligned = true
-		  )
+                  structure I = AMD64Instr
+                  structure MLTreeUtils = AMD64MTC.AMD64MLTreeUtils
+                  structure ExtensionComp = AMD64MTC
+                  fun signBit _ = raise Fail "todo"
+                  fun negateSignBit _ = raise Fail "todo"
+                  val floats16ByteAligned = true
+                  )
 
 structure AMD64Emit = CFGEmit (
              structure CFG = AMD64CFG
-             structure E = AMD64Asm) 
+             structure E = AMD64Asm)
 
 
-structure AMD64FlowGraph = BuildFlowgraph 
-	    (structure Props = AMD64InsnProps
+structure AMD64FlowGraph = BuildFlowgraph
+            (structure Props = AMD64InsnProps
              structure Stream = AMD64Stream
-	     structure CFG = AMD64CFG)
+             structure CFG = AMD64CFG)
 
 structure AMD64Expand = CFGExpandCopies (structure CFG=AMD64CFG
                                          structure Shuffle = AMD64Shuffle)
@@ -140,13 +140,13 @@ structure RASpill = RASpillWithRenaming (
 
 structure C = AMD64Cells
 
-datatype spill_operand_kind = SPILL_LOC 
+datatype spill_operand_kind = SPILL_LOC
                             | CONST_VAL
 
-datatype ra_phase = SPILL_PROPAGATION 
+datatype ra_phase = SPILL_PROPAGATION
                   | SPILL_COLORING
 
-structure IntRA = 
+structure IntRA =
   struct
     val dedicated = [C.rsp, C.rbp]
     val allRegs = C.Regs CellsBasis.GP {from=0, to=15, step=1}
@@ -157,7 +157,7 @@ structure IntRA =
           C.getReg availSet
         end
     fun spillInit _ = ()
-    fun spillLoc {info=frame, an, cell, id=loc} = 
+    fun spillLoc {info=frame, an, cell, id=loc} =
         {opnd = AMD64Instr.Immed 0, kind = SPILL_LOC}
     val phases = [SPILL_PROPAGATION, SPILL_COLORING]
   end (* IntRA *)
@@ -185,7 +185,7 @@ structure AMD64RA = AMD64RegAlloc (
          datatype ra_phase = datatype ra_phase
          structure Int = IntRA
          structure Float = FloatRA
-	 val floats16ByteAligned = true)
+         val floats16ByteAligned = true)
 
 structure CCalls = X86_64SVIDFn (
         structure T = AMD64MLTree

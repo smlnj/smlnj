@@ -4,47 +4,47 @@
 
 SHELL =
 
-INC_DIR =	..\..\include
-CLIB_DIR =	..\
+INC_DIR =       ..\..\include
+CLIB_DIR =      ..\
 
-INCLUDES =	/I$(INC_DIR) /I$(CLIB_DIR) /I..\..\objs
+INCLUDES =      /I$(INC_DIR) /I$(CLIB_DIR) /I..\..\objs
 
-MAKEFILE = 	makefile.win32
-MAKE =		nmake /F$(MAKEFILE)
-AR =		lib
+MAKEFILE =      makefile.win32
+MAKE =          nmake /F$(MAKEFILE)
+AR =            lib
 ARFLAGS =
-RANLIB =	lib
+RANLIB =        lib
 
-LIBRARY =	libsmlnj-time.lib
+LIBRARY =       libsmlnj-time.lib
 
-VERSION =	v-dummy
+VERSION =       v-dummy
 
-OBJS =		smlnj-time-lib.obj \
-		gettime.obj \
-		timeofday.obj
+OBJS =          smlnj-time-lib.obj \
+                gettime.obj \
+                timeofday.obj
 
-$(LIBRARY)	: $(VERSION) $(OBJS)
-	del /F /Q $(LIBRARY)
-	$(AR) $(ARFLAGS) /out:$(LIBRARY) $(OBJS)
-	$(RANLIB) /out:$(LIBRARY)
+$(LIBRARY)      : $(VERSION) $(OBJS)
+        del /F /Q $(LIBRARY)
+        $(AR) $(ARFLAGS) /out:$(LIBRARY) $(OBJS)
+        $(RANLIB) /out:$(LIBRARY)
 
 $(VERSION) :
-	($(MAKE) MAKE="$(MAKE)" clean)
-	echo "$(VERSION)" > $(VERSION)
+        ($(MAKE) MAKE="$(MAKE)" clean)
+        echo "$(VERSION)" > $(VERSION)
 
 DEPENDENTS = $(INC_DIR)\ml-unixdep.h $(INC_DIR)\ml-base.h \
-	     $(INC_DIR)\ml-values.h \
-	     $(CLIB_DIR)\ml-c.h cfun-proto-list.h cfun-list.h
+             $(INC_DIR)\ml-values.h \
+             $(CLIB_DIR)\ml-c.h cfun-proto-list.h cfun-list.h
 
 smlnj-time-lib.obj: smlnj-time-lib.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c smlnj-time-lib.c
+        $(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c smlnj-time-lib.c
 
 gettime.obj: gettime.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c gettime.c
+        $(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c gettime.c
 
 timeofday.obj: timeofday.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c timeofday.c
+        $(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c timeofday.c
 
 clean :
-	del /F /Q v-* *.obj *.pdb $(LIBRARY)
+        del /F /Q v-* *.obj *.pdb $(LIBRARY)
 
