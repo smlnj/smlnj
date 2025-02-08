@@ -57,6 +57,13 @@ PVT void MinorGC_CheckWord (Addr_t allocBase, Addr_t allocSz, gen_t *g1, ml_val_
 }
 #endif
 
+#ifdef CHECK_HEAP
+inline int isValidWord (ml_val_t w)
+{
+    Word_t tag = (Word_t)w & 0x3;
+    return ((tag & 1) == 1) || (tag == 0);
+}
+#endif
 
 /* MinorGC:
  *
@@ -284,9 +291,22 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
     arena_t	*arena;
 
     desc = obj[-1];
+#ifdef CHECK_HEAP
+    if (! isDESC(desc)) {
+        Die("expected descriptor at %p, but found %p\n", obj, desc);
+    }
+#endif
     switch (GET_TAG(desc)) {
       case DTAG_record:
 	len = GET_LEN(desc);
+#ifdef CHECK_HEAP
+        for (int i = 0;  i < len;  ++i) {
+            if (! isValidWord(obj[i])) {
+                Die("ForwardObj: invalid record slot[%d/%d] = %p; base address = %p; desc = %p\n",
+                    i, len, obj[i], obj, desc);
+            }
+        }
+#endif
 #ifdef NO_PAIR_STRIP
 	arena = gen1->arena[RECORD_INDX];
 #else
@@ -309,10 +329,26 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
       case DTAG_vec_hdr:
       case DTAG_arr_hdr:
 	len = 2;
+#ifdef CHECK_HEAP
+        for (int i = 0;  i < len;  ++i) {
+            if (! isValidWord(obj[i])) {
+                Die("ForwardObj: invalid header slot[%d/%d] = %p; base address = %p; desc = %p\n",
+                    i, len, obj[i], obj, desc);
+            }
+        }
+#endif
 	arena = gen1->arena[RECORD_INDX];
 	break;
       case DTAG_arr_data:
 	len = GET_LEN(desc);
+#ifdef CHECK_HEAP
+        for (int i = 0;  i < len;  ++i) {
+            if (! isValidWord(obj[i])) {
+                Die("ForwardObj: invalid array-data slot[%d/%d] = %p; base address = %p; desc = %p\n",
+                    i, len, obj[i], obj, desc);
+            }
+        }
+#endif
 	arena = gen1->arena[ARRAY_INDX];
 	break;
 /* 64BIT: on 64-bit machines, we can treat DTAG_raw and DTAG_raw64 the same */
