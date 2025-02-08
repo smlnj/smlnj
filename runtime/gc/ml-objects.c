@@ -231,9 +231,14 @@ ml_val_t ML_AllocRaw64 (ml_state_t *msp, Word_t nelems)
 
 /* ML_AllocCode:
  *
+ * Allocate and initialize an executable ML code object.  We return the address
+ * of the object.
  * Allocate an uninitialized ML code object.  Assume that len > 1.
+ *
+ * NOTE: this function should only be called inside an
+ * ENABLE_CODE_WRITE/DISABLE_CODE_WRITE pair.
  */
-ml_val_t ML_AllocCode (ml_state_t *msp, Word_t len)
+ml_val_t ML_AllocCode (ml_state_t *msp, void *code, Word_t len)
 {
     heap_t	    *heap = msp->ml_heap;
     int		    allocGen = (heap->numGens < CODE_ALLOC_GEN)
@@ -242,12 +247,17 @@ ml_val_t ML_AllocCode (ml_state_t *msp, Word_t len)
     gen_t	    *gen = heap->gen[allocGen-1];
     bigobj_desc_t   *dp;
 
+    ASSERT ((len > 0) && (code != NIL(void *)));
+
     dp = BO_Alloc (heap, allocGen, len);
     ASSERT(dp->gen == allocGen);
     dp->next = gen->bigObjs[CODE_INDX];
     gen->bigObjs[CODE_INDX] = dp;
     dp->objc = CODE_INDX;
     COUNT_ALLOC(msp, len);
+
+    /* initialize the code object */
+    memcpy(PTR_MLtoC(void, dp->obj), code, len);
 
     return PTR_CtoML(dp->obj);
 

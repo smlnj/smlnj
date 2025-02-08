@@ -224,3 +224,26 @@ bool_t NeedGC (ml_state_t *msp, Word_t nbytes)
 	return FALSE;
 
 } /* end of NeedGC */
+
+/* StringArenaNeedsGC:
+ *
+ * Similar to `NeedGC` but handles the case where the object might need to be
+ * allocated in the first generation string arena.  It returns 0 if no GC is
+ * required, 1 if just a minor collection is required and 2 if the first generation
+ * also needs collection.
+ */
+int StringArenaNeedsGC (ml_state_t *msp, Word_t nbytes)
+{
+    if (BYTES_TO_WORDS(nbytes) > SMALL_OBJ_SZW) {
+        arena_t *arena = msp->ml_heap->gen[0]->arena[STRING_INDX];
+        if (!isACTIVE(arena) || (nbytes <= AVAIL_SPACE(arena))) {
+            arena->reqSizeB = nbytes;
+            return 2;
+        }
+    } else if (NeedGC(msp, nbytes)) {
+        return 1;
+    }
+
+    return 0;
+
+} /* end of NeedGC */

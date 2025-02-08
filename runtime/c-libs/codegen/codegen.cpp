@@ -9,6 +9,7 @@
 /// \author John Reppy
 ///
 
+#include "gc.h"
 #include "context.hpp"
 #include "cfg.hpp"
 #include "codegen.h"
@@ -121,8 +122,8 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
 
         // compute the padded size of the source-file name; the computed
 	// length includes the nul terminator and the length byte
-        size_t srcFileLen = strlen(src) + 2;
-        size_t paddedSrcFileLen = gContext->roundToWordSzInBytes (srcFileLen);
+        size_t srcFileLen = strlen(src);
+        size_t paddedSrcFileLen = gContext->roundToWordSzInBytes (srcFileLen + 2);
         if (paddedSrcFileLen > 255 * gContext->wordSzInBytes()) {
             // if the file name is too long, which is unexpected, omit it
             paddedSrcFileLen = 0;
@@ -135,25 +136,38 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
 /*DEBUG*/SayDebug("# codeObjSzb = %d bytes\n", (int)codeObjSzb);
 #endif
 
-        // allocate a heap object for the code
-	auto codeObj = ML_AllocCode (msp, codeObjSzb);
-	ENABLE_CODE_WRITE
+        // check that there is sufficient space for the code object
+        int n = StringArenaNeedsGC(msp, codeObjSzb+12);
+        if (n > 0) {
+            InvokeGCWithRoots (msp, n-1, &src, NIL(ml_val_t *));
+        }
+
+        // heap allocate a Word8Vector.vector to hold the code.  Note that this
+        // object is not a code object!
+        auto bVecData = ML_AllocRaw(msp, BYTES_TO_WORDS(codeObjSzb));
         // copy the code to the heap
-        ::memcpy(PTR_MLtoC(unsigned char, codeObj), obj->data(), codeSzb);
+        ::memcpy(PTR_MLtoC(void, bVecData), obj->data(), codeSzb);
         // now add the source-file name to the end of the code object
-        char *srcNameLoc = PTR_MLtoC(char, codeObj) + alignedCodeSzb;
+        char *srcNameLoc = PTR_MLtoC(char, bVecData) + alignedCodeSzb;
         // copy the source-file name; note that `strncpy` pads with zeros
-        strncpy (srcNameLoc, src, paddedSrcFileLen);
-        // add the length in words at the end
-        *reinterpret_cast<unsigned char *>(srcNameLoc + paddedSrcFileLen - 1) =
-            (paddedSrcFileLen / gContext->wordSzInBytes());
-	DISABLE_CODE_WRITE
+        char *p = srcNameLoc;
+        // first copy the file name
+        for (int i = 0;  i < srcFileLen;  ++i) {
+            *p++ = src[i];
+        }
+        // padding
+        int padAmt = paddedSrcFileLen - srcFileLen - 1;
+        for (int i = 0;  i < padAmt;  ++i) {
+            *p++ = '\0';
+        }
+        // length byte
+        *p++ = static_cast<unsigned char>(paddedSrcFileLen / gContext->wordSzInBytes());
 
 #ifdef DEBUG_CODEGEN
 /*DEBUG*/ {
         SayDebug("##### OBJECT FILE BITS: %d bytes (aligned size %d) #####\n",
         codeSzb, alignedCodeSzb);
-        uint8_t const *bytes = PTR_MLtoC(unsigned char, codeObj);
+        uint8_t const *bytes = PTR_MLtoC(unsigned char, bVecData);
         for (size_t i = 0;  i < codeSzb; i += 16) {
             size_t limit = ((i + 16 < codeSzb) ? i + 16 : codeSzb);
             SayDebug("  %04x: ", (int)i);
@@ -166,13 +180,15 @@ ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t
 } /*DEBUG*/
 #endif
 
+        // create the vector header
+        ml_val_t bVec;
+        SEQHDR_ALLOC (msp, bVec, DESC_word8vec, bVecData, codeObjSzb);
         // create a pair of the code object and entry-point offset
-	ml_val_t arr, res;
+	ml_val_t res;
 /* FIXME: it appears (from experimentation) that the entry-point offset is always
  * zero, but we should probably be a bit more careful in the final version.
  */
-	SEQHDR_ALLOC(msp, arr, DESC_word8arr, codeObj, codeSzb);
-	REC_ALLOC2(msp, res, arr, 0);
+	REC_ALLOC2(msp, res, bVec, 0);
 	return res;
     }
     else {

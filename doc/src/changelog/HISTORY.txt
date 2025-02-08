@@ -103,6 +103,15 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/02/07]::
+Reworked the implementation of code objects in both the compiler and
+runtime system.  The new design should make is easier to deal with
+the problems related to write protection for executable code on
+**macOS**/**arm64**.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/01/31]::
 Fix for {issue-base}/295[Issue #295 (Incorrect constant folding of
 word equality)].

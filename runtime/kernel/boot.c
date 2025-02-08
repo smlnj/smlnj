@@ -485,8 +485,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             ReadBinFile (file, buffer, thisSzB, fname);
           /* allocate a code object and initialize with the code from the binfile */
             ENABLE_CODE_WRITE
-            codeObj = ML_AllocCode (msp, thisSzB);
-            memcpy (PTR_MLtoC(char, codeObj), buffer, thisSzB);
+                codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
             DISABLE_CODE_WRITE
             FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
             if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
