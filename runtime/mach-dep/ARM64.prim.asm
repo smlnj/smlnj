@@ -133,11 +133,6 @@
 
 #define FRAME_SIZE      (C_SAVEREG_SIZE+ML_SPILL_SIZE+ML_AREA_SIZE)
 
-/* the amount to bump up the frame after the callee save registers have been
- * pushed onto the stack.
- */
-#define ML_FRAME_SIZE   (ML_SPILL_SIZE+ML_AREA_SIZE)
-
 /**********************************************************************/
         TEXT
 
@@ -150,7 +145,7 @@
 ALIGNED_ENTRY(sigh_return_a)
         mov     wlink,IM(ML_unit)               /* stdlink = UNIT */
         mov     wclos,IM(ML_unit)               /* stdclos = UNIT */
-        mov     wpc,IM(ML_unit)         /* pc = UNIT */
+        mov     wpc,IM(ML_unit)                 /* pc = UNIT */
         mov     wreqId,IM(REQ_SIG_RETURN)       /* wreqId = REQ_SIG_RETURN */
         b       CSYM(set_request)
 
@@ -168,7 +163,7 @@ ALIGNED_ENTRY(sigh_resume)
 ALIGNED_ENTRY(pollh_return_a)
         mov     w3,IM(ML_unit)                  /* stdlink = UNIT */
         mov     w2,IM(ML_unit)                  /* stdclos = UNIT */
-        mov     wpc,IM(ML_unit)         /* pc = UNIT */
+        mov     wpc,IM(ML_unit)                 /* pc = UNIT */
         mov     wreqId,IM(REQ_POLL_RETURN)      /* wreqId = REQ_POLL_RETURN */
         b       CSYM(set_request)
 
@@ -460,6 +455,9 @@ ALIGNED_ENTRY(create_v_a)
         mov     xtmp4, allocptr                 	/* tmp4 := array data object */
 
 L_vector_lp:
+/* FIXME: we could replace the next two instructions with the instruction
+        tbnz    warg, IM(0), L_vector_lp_exit
+*/
 	cmp	xarg, IM(ML_nil)			/* while (xarg != NIL) do */
 	b.eq	L_vector_lp_exit
 	ldp	xtmp3, xarg, MEM(xarg, 0)		/* xtmp3 = hd(xarg);
