@@ -1,6 +1,11 @@
-/* mkexec.c
+/*! \file mkexec.c
  *
- * COPYRIGHT (c) 1994 by AT&T Bell Laboratories.
+ * \author John Reppy
+ */
+
+/*
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  */
 
 #include "cache-flush.h"

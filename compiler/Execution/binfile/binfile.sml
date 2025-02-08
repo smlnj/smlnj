@@ -316,9 +316,10 @@ Control_Print.say (concat [
 	  val codeSz = readInt32 strm
 	  val ep = readInt32 strm
 	  val avail = avail - codeSz - 8
-	  val code = if avail < 0 then error "code size" else CodeObj.input(strm, codeSz)
+	  val code = if avail < 0
+                then error "code size"
+                else CodeObj.input(strm, codeSz, ep)
 	  in
-	    CodeObj.set_entrypoint (code, ep);
 	    { code = code, data = data }
 	  end
 

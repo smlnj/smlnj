@@ -31,22 +31,14 @@ signature CODE_OBJ =
             verifyLLVM : bool
           } -> code_object
 
-  (* Allocate an unintialized code object of the given number of bytes. *)
-    val alloc : int -> code_object
-
   (* Allocate a code object of the given size and initialize it
-   * from the input stream.
+   * from the input stream.  The third argument is the entrypoint
+   * offset.
    *)
-    val input : (BinIO.instream * int) -> code_object
+    val input : (BinIO.instream * int * int) -> code_object
 
   (* Output a code object to the given output stream *)
     val output : (BinIO.outstream * code_object) -> unit
-
-  (* View the code object as an updatable array of bytes. *)
-    val bytes : code_object -> Word8Array.array
-
-  (* Set the offset of the entrypoint of the code object (default: 0). *)
-    val set_entrypoint : code_object * int -> unit
 
   (* View the code object as an executable.  This has the side-effect
    * of flushing the instruction cache.

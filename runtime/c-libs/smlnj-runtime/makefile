@@ -20,7 +20,6 @@ LIBRARY =	libsmlnj-runt.a
 VERSION =	v-dummy
 
 OBJS =		smlnj-runt-lib.o \
-		alloc-code.o \
 		argv.o \
 		raw-argv.o \
 		shift-argv.o \
@@ -34,6 +33,7 @@ OBJS =		smlnj-runt-lib.o \
 		gc-counter.o \
 		gc-ctl.o \
 		itick.o \
+		mk-code-obj.o \
 		mkexec.o \
 		mkliterals.o \
 		record1.o \

@@ -1,9 +1,13 @@
-/* gc.h
- *
- * COPYRIGHT (c) 1992 AT&T Bell Laboratories
+/*! \file gc.h
  *
  * The external interface to the garbage collector.
  *
+ * \author John Reppy
+ */
+
+/*
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  */
 
 #ifndef _GC_
@@ -12,6 +16,11 @@
 #ifndef _ML_BASE_
 #include "ml-base.h"
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif // C++
+
 #ifndef _ML_LIMITS_
 #include "ml-limits.h"
 #endif
@@ -27,6 +36,7 @@ extern void FreeHeap (heap_t *heap);
 extern void InvokeGC (ml_state_t *msp, int level);
 extern void InvokeGCWithRoots (ml_state_t *msp, int level, ...);
 extern bool_t NeedGC (ml_state_t *msp, Word_t nbytes);
+extern int StringArenaNeedsGC (ml_state_t *msp, Word_t nbytes);
 
 extern int GetObjGen (ml_val_t obj);
 extern ml_val_t RecordConcat (ml_state_t *msp, ml_val_t r1, ml_val_t r2);
@@ -63,5 +73,9 @@ typedef struct {
 
 extern void ResetGCStats (heap_t *heap);
 extern void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut);
+
+#ifdef __cplusplus
+}
+#endif // C++
 
 #endif /* !_GC_ */

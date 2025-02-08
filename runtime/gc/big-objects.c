@@ -1,9 +1,15 @@
 /*! \file big-objects.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * Code for managing big-object regions.
+ * Code for managing big-object regions.  A big-object region consists of a sequence
+ * of one or more BIBOP pages and associated data structures.  The memory contained in
+ * the BIBOP pages is subdivided into big-object pages; page zero contains a pointer
+ * to the region header (`struct bigobj_region`) that describes the allocation of
+ * pages in the region to big objects.  The region header must be stored outside of
+ * the region memory, since the region memory is executable and thus write protected
+ * most of the time (on Arm64).
  */
 
 #include "ml-base.h"
@@ -11,6 +17,16 @@
 #include "heap.h"
 #include "heap-monitor.h"
 #include <string.h>
+
+/* cast the address of the start of a big-object region to a pointer to a
+ * region-header pointer (the first word of a big-object region is a pointer
+ * to the region header for the region).
+ */
+STATIC_INLINE bigobj_region_t **GetRegionHdrPtr (Addr_t addr)
+{
+    ASSERT ((addr & (BIBOP_PAGE_SZB-1)) == 0);
+    return (bigobj_region_t **)addr;
+}
 
 #ifdef BO_DEBUG
 /* PrintRegionMap:
@@ -28,7 +44,7 @@ void PrintRegionMap (bigobj_region_t *r)
 	    dq = dp;
 	}
 	if (BO_IS_FREE(dp))
-	    SayDebug ("_");
+	    SayDebug ("-");
 	else
 	    SayDebug ("X");
     }
@@ -54,57 +70,40 @@ bigobj_desc_t *BO_AllocRegion (heap_t *heap, Addr_t reqSzB)
     mem_obj_t	    *memObj;
     bigobj_desc_t   *desc;
 
-  /* Compute the memory-object size for the region.  A region consists of
-   * a header followed by big-object pages.  The size of the header depends
-   * on the number of pages and the number of pages should be rounded up
-   * to fill the memory object, which will be a multiple of BIBOP_PAGE_SZB
-   * bytes.  We use an iterative algorithm to determine the number of pages
-   * and the size of the memory object.
-   */
-    {
-	Addr_t szb;
-	int hdrSlop, slop;
-      /* minimum number of pages to hold requested size */
-	npages = ROUNDUP(reqSzB, BIGOBJ_PAGE_SZB) >> BIGOBJ_PAGE_SHIFT;
-      /* size of header for npages */
-	szb = BOREGION_HDR_SZB(npages);
-      /* round up to bigobject page size */
-	hdrSzB = ROUNDUP(szb, BIGOBJ_PAGE_SZB);
-      /* amount of slop in header (measured in per-page space cost) */
-	hdrSlop = (hdrSzB - szb) / sizeof(bigobj_desc_t *);
-      /* amount of memory needed to hold the header and pages */
-	szb = hdrSzB + npages*BIGOBJ_PAGE_SZB;
-      /* round up to BIBOP page size */
-	memObjSzB = ROUNDUP(szb, BIBOP_PAGE_SZB);
-      /* amount of slop in memory object (measured in per-page space cost) */
-	slop = (memObjSzB - szb) / BIGOBJ_PAGE_SZB;
-      /* while the page slop is bigger than the header slop, reallocate a page to the header */
-	while (hdrSlop < slop) {
-	    slop -= 1;
-	    hdrSlop += BIGOBJ_PAGE_SZB / sizeof(bigobj_desc_t *);
-	}
-      /* we can increase the number of pages without increasing the rounded
-       * size of the header.
-       */
-	npages += slop;
-      /* recompute the header and request sizes based on the actual number of
-       * big-object pages being allocated.
-       */
-	hdrSzB = ROUNDUP(BOREGION_HDR_SZB(npages), BIGOBJ_PAGE_SZB);
-	reqSzB = npages * BIGOBJ_PAGE_SZB;
+    if (reqSzB < MIN_BOREGION_SZB) {
+        reqSzB = MIN_BOREGION_SZB;
     }
 
-    if ((memObj = MEM_AllocMemObj (memObjSzB, TRUE)) == NIL(mem_obj_t *)) {
+    /* number of pages to hold requested size.  Since the first page does not
+     * hold data, we need one extra page.
+     */
+    npages = (ROUNDUP(reqSzB, BIGOBJ_PAGE_SZB) >> BIGOBJ_PAGE_SHIFT) + 1;
+    /* the amount of memory we need for the region */
+    memObjSzB = ROUNDUP(npages*BIGOBJ_PAGE_SZB, BIBOP_PAGE_SZB);
+    /* the actual number of big-object pages in the memory object (not counting
+     * the first page.
+     */
+    ASSERT (npages <= (memObjSzB >> BIGOBJ_PAGE_SHIFT) - 1);
+    npages = (memObjSzB >> BIGOBJ_PAGE_SHIFT) - 1;
+    /* size of header for npages */
+    hdrSzB = BOREGION_HDR_SZB(npages);
+
+    /* allocate memory */
+    if (((memObj = MEM_AllocMemObj (memObjSzB, TRUE)) == NIL(mem_obj_t *))
+    ||  ((region = (bigobj_region_t *)MALLOC(hdrSzB)) == NIL(bigobj_region_t *)))
+    {
 	Die ("unable to allocate memory object for bigobject region");
     }
-    region = (bigobj_region_t *)MEMOBJ_BASE(memObj);
 
     if ((desc = NEW_OBJ(bigobj_desc_t)) == NIL(bigobj_desc_t *)) {
 	Die ("unable to allocate big-object descriptor");
     }
 
+  /* initialize the first page with a pointer to the region structure */
+    GetRegionHdrPtr(MEMOBJ_BASE(memObj))[0] = region;
+
   /* initialize the region header */
-    region->firstPage	= ((Addr_t)region + hdrSzB);
+    region->firstPage	= MEMOBJ_BASE(memObj) + BIGOBJ_PAGE_SZB;
     region->nPages	= npages;
     region->nFree	= npages;
     region->minGen	= MAX_NUM_GENS;
@@ -118,12 +117,13 @@ bigobj_desc_t *BO_AllocRegion (heap_t *heap, Addr_t reqSzB)
 
   /* initialize the descriptor for the region's memory */
     desc->obj		= region->firstPage;
-    desc->sizeB		= reqSzB;
+    desc->sizeB		= npages * BIGOBJ_PAGE_SZB;
     desc->state		= BO_FREE;
     desc->region	= region;
 
 #ifdef BO_DEBUG
-SayDebug ("BO_AllocRegion: %d pages @ %p\n", npages, (void *)(region->firstPage));
+SayDebug ("BO_AllocRegion: %d pages @ %p; desc = %p\n",
+npages, (void *)(region->firstPage), desc);
 #endif
     return desc;
 
@@ -198,11 +198,11 @@ bigobj_desc_t *BO_Alloc (heap_t *heap, int gen, Addr_t objSzB)
     region->nFree	-= npages;
 
     if (region->minGen > gen) {
-      /* update the generation part of the descriptor */
+        /* update the generation part of the descriptor */
+        struct mem_obj_hdr *mObj = (struct mem_obj_hdr *)(region->memObj);
 	region->minGen = gen;
-	MarkRegion (BIBOP, (ml_val_t *)region, MEMOBJ_SZB(region->memObj),
-	    AID_BIGOBJ(gen));
-	ADDR_TO_PAGEID(BIBOP, region) = AID_BIGOBJ_HDR(gen);
+	MarkRegion (BIBOP, (ml_val_t *)(mObj->base), mObj->sizeB, AID_BIGOBJ(gen));
+	ADDR_TO_PAGEID(BIBOP, mObj->base) = AID_BIGOBJ_HDR(gen);
     }
 
 #ifdef BO_DEBUG
@@ -274,19 +274,19 @@ PrintRegionMap(region);
 bigobj_desc_t *BO_GetDesc (ml_val_t addr)
 {
     bibop_t	    bibop = BIBOP;
-    int		    i;
+    int		    indx;
     aid_t	    aid;
     bigobj_region_t *rp;
 
   /* find the beginning of the region containing the code object */
-    i = BIBOP_ADDR_TO_INDEX(addr);
-    aid = INDEX_TO_PAGEID(bibop, i);
+    indx = BIBOP_ADDR_TO_INDEX(addr);
+    aid = INDEX_TO_PAGEID(bibop, indx);
     while (! BO_IS_HDR(aid)) {
-	--i;
-	aid = INDEX_TO_PAGEID(bibop, i);
+	--indx;
+	aid = INDEX_TO_PAGEID(bibop, indx);
     }
 
-    rp = (bigobj_region_t *)BIBOP_INDEX_TO_ADDR(i);
+    rp = GetRegionHdrPtr(BIBOP_INDEX_TO_ADDR(indx))[0];
 
     return ADDR_TO_BODESC(rp, addr);
 
@@ -300,7 +300,7 @@ bigobj_desc_t *BO_GetDesc (ml_val_t addr)
  */
 Byte_t *BO_AddrToCodeObjTag (Word_t pc)
 {
-    bigobj_region_t	*region;
+    bigobj_region_t	*rp;
     aid_t		aid;
 
     aid = ADDR_TO_PAGEID(BIBOP, pc);
@@ -312,11 +312,12 @@ Byte_t *BO_AddrToCodeObjTag (Word_t pc)
 	    aid = INDEX_TO_PAGEID(BIBOP,indx);
 	    ASSERT(IS_BIGOBJ_AID(aid));
 	}
-	region = (bigobj_region_t *)BIBOP_INDEX_TO_ADDR(indx);
-	return BO_GetCodeObjTag (ADDR_TO_BODESC(region, pc));
+        rp = GetRegionHdrPtr(BIBOP_INDEX_TO_ADDR(indx))[0];
+	return BO_GetCodeObjTag (ADDR_TO_BODESC(rp, pc));
     }
-    else
+    else {
 	return NIL(Byte_t *);
+    }
 
 } /* end of BO_AddrToCodeObjTag */
 
