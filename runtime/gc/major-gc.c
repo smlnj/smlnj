@@ -80,7 +80,7 @@ PVT void ScanMem (Word_t *start, Word_t *stop, int gen, int objKind)
 		    indx--;
 		    id = INDEX_TO_PAGEID(bibop,indx);
 		}
-		region = (bigobj_region_t *)BIBOP_INDEX_TO_ADDR(indx);
+                region = *((bigobj_region_t **)BIBOP_INDEX_TO_ADDR(indx));
 		dp = ADDR_TO_BODESC(region, w);
 		if (dp->state == BO_FREE) {
 		    SayDebug ("** [%d/%d]: %p --> %p; unexpected free big-object\n",
@@ -323,10 +323,11 @@ void MajorGC (ml_state_t *msp, ml_val_t **roots, int level)
 		    i += BO_NUM_BOPAGES(dp);
 		}
 		if (rp->minGen != min) {
+                    struct mem_obj_hdr *mObj = (struct mem_obj_hdr *)(rp->memObj);
 		    rp->minGen = min;
-		    MarkRegion (bibop, (ml_val_t *)rp, MEMOBJ_SZB(rp->memObj),
+		    MarkRegion (bibop, (ml_val_t *)(mObj->base), mObj->sizeB,
 			AID_BIGOBJ(min));
-		    BIBOP_UPDATE(bibop, BIBOP_ADDR_TO_INDEX(rp), AID_BIGOBJ_HDR(min));
+		    BIBOP_UPDATE(bibop, BIBOP_ADDR_TO_INDEX(mObj->base), AID_BIGOBJ_HDR(min));
 		}
 	    }
 	} /* end for */
@@ -850,7 +851,7 @@ BO2_COUNT;
 	--i;
 	id = INDEX_TO_PAGEID(BIBOP,i);
     }
-    region = (bigobj_region_t *)BIBOP_INDEX_TO_ADDR(i);
+    region = *(bigobj_region_t **)BIBOP_INDEX_TO_ADDR(i);
     dp = ADDR_TO_BODESC(region, obj);
     if ((dp->gen <= maxGen) && BO_IS_FROM_SPACE(dp)) {
 BO3_COUNT;

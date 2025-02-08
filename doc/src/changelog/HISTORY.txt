@@ -103,6 +103,18 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/02/08]::
+Changed the representation of big-object regions in the heap to avoid
+issues with write protection for executable code on **macOS**/**arm64**.
+The old design put the region header into the first page of the region,
+which is write protected on **arm64**.  The new design allocates the
+region header in the *C* heap and puts a pointer to it into the first
+page of the region.  We only need to read that pointer during GC, so
+this avoids the write-protect issues.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/02/07]::
 Reworked the implementation of code objects in both the compiler and
 runtime system.  The new design should make is easier to deal with
