@@ -135,14 +135,14 @@ extern void AssertFail (const char *a, const char *file, int line);
  * in the C heap.
  */
 #ifdef TRACE_MALLOC
-static inline void *_alloc_ (size_t sz, const char *file, int line)
+STATIC_INLINE void *_alloc_ (size_t sz, const char *file, int line)
 {
     extern void Say (const char *fmt, ...);
     void *addr = malloc(sz);
     Say("[%s:%d]: alloc %d bytes @ %p\n", file, line, sz, addr);
     return addr;
 }
-static inline void _free_ (void *obj, const char *file, int line)
+STATIC_INLINE void _free_ (void *obj, const char *file, int line)
 {
     extern void Say (const char *fmt, ...);
     Say("[%s:%d]: free %p\n", file, line,obj);
