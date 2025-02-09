@@ -98,7 +98,7 @@
     LABEL(CFUNSYM(ID))
 
 #elif defined(ARCH_X86) || defined(ARCH_AMD64)
-#  error use x86-syntax.h instead if ml-base.h
+#  error use x86-syntax.h instead of ml-base.h
 
 #elif defined(ARCH_ARM64)
 #  if defined(OPSYS_DARWIN)
