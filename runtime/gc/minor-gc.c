@@ -58,7 +58,7 @@ PVT void MinorGC_CheckWord (Addr_t allocBase, Addr_t allocSz, gen_t *g1, ml_val_
 #endif
 
 #ifdef CHECK_HEAP
-inline int isValidWord (ml_val_t w)
+STATIC_INLINE int isValidWord (ml_val_t w)
 {
     Word_t tag = (Word_t)w & 0x3;
     return ((tag & 1) == 1) || (tag == 0);
