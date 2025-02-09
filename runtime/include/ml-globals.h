@@ -30,9 +30,6 @@ extern ml_val_t SysErr_id0[];
 #define SysErrId PTR_CtoML(SysErr_id0+1)
 
 extern ml_val_t RunTimeCompUnit;
-#ifdef ASM_MATH
-extern ml_val_t MathVec;
-#endif
 
 /* FIXME: we no longer need this reference! */
 extern ml_val_t _Div_id0[];
@@ -40,13 +37,6 @@ extern ml_val_t _Div_id0[];
 
 extern ml_val_t _Overflow_id0[];
 #define OverflowId	PTR_CtoML(_Overflow_id0+1)
-
-#if defined(ASM_MATH)
-extern ml_val_t _Ln_id0[];
-#define LnId PTR_CtoML(_Ln_id0+1)
-extern ml_val_t _Sqrt_id0[];
-#define SqrtId PTR_CtoML(_Sqrt_id0+1)
-#endif
 
 extern ml_val_t sigh_resume[];
 extern ml_val_t *sigh_return_c;
