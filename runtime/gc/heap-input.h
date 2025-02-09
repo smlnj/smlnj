@@ -1,7 +1,11 @@
-/* heap-input.h
+/*! \file heap-input.h
  *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.
- *
+ * \author John Reppy
+ */
+
+/*
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  */
 
 #ifndef _HEAP_INPUT_
@@ -19,9 +23,9 @@ typedef struct {	    /* An input source for reading heap data.  We need */
     bool_t	needsSwap;	/* true, if the input bytes need to be swapped */
     FILE	*file;		/* the file descriptor to read from, once the */
 				/* buffered characters are exhausted */
-    Byte_t	*base;		/* the start of the bufferec characters */
+    Byte_t	*base;		/* the start of the buffered characters */
     Byte_t	*buf;		/* the current position in the buffer */
-    size_t	nbytes;
+    size_t	nbytes;         /* the number of bytes remaining in the buffer */
 } inbuf_t;
 
 
