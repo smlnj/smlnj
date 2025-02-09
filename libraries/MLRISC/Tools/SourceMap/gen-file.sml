@@ -4,8 +4,8 @@ struct
    open MDLError
 
    val bufsize = 1024*1024
-           
-   fun gen {trans, program, fileSuffix} (_, [infile]) = 
+
+   fun gen {trans, program, fileSuffix} (_, [infile]) =
        (let val _ = init()
             val {base, ext} = OS.Path.splitBaseExt infile
             val outfile = OS.Path.joinBaseExt{base=base, ext=SOME fileSuffix}
@@ -19,7 +19,7 @@ struct
                 val t = TextIO.inputN(s, bufsize)
             in  TextIO.closeIn s;
                 t <> text
-            end handle _ => true 
+            end handle _ => true
         in  if !errorCount > 0 then
                (print("[Result not written to "^outfile^"]\n"); 1)
             else if changed() then
@@ -37,6 +37,6 @@ struct
              | exn => fail("Uncaught exception "^exnName exn)
        )
      | gen {program,...} _ = fail("usage: "^program^" <filename>")
-      
+
 
 end

@@ -6,7 +6,7 @@
 
 (* Lty: definition of "raw" (or internal) types ltyI and tycI and their
  * hash-consed version lty and tyc -- the basic types and "contstructors"
- * for PLambda/FLINT types. 
+ * for PLambda/FLINT types.
  * Hash-consing machinery for lty and tyc.
  * Nadathur closure machinery for type functions.
  * [DBM, 2021.10] *)
@@ -90,18 +90,18 @@ datatype aux_info
 local
   fun mergeLists cmp =
       let fun merge (l, []) = l
-	    | merge ([], l) = l
-	    | merge (xs as (x :: xr), ys as (y :: yr)) =
-	        (case cmp (x, y)
-		   of LESS => x :: merge (xr, ys)
-		    | EQUAL => x :: merge (xr, yr)
-		    | GREATER => y :: merge (xs, yr)
-		(* end case *))
+            | merge ([], l) = l
+            | merge (xs as (x :: xr), ys as (y :: yr)) =
+                (case cmp (x, y)
+                   of LESS => x :: merge (xr, ys)
+                    | EQUAL => x :: merge (xr, yr)
+                    | GREATER => y :: merge (xs, yr)
+                (* end case *))
        in merge
       end
 in
-val mergeTvs = mergeLists LambdaVar.compare	(* regular type variables *)
-val mergeEncTvs = mergeLists Int.compare	(* deBruijn encoded type variables *)
+val mergeTvs = mergeLists LambdaVar.compare     (* regular type variables *)
+val mergeEncTvs = mergeLists Int.compare        (* deBruijn encoded type variables *)
 end
 
 (* fmergeTvs : tvar list list -> tvar list
@@ -121,7 +121,7 @@ end (* local of hashconsing implementation basics *)
 
 (** definition of kinds for all the lambda tycs *)
 (* [KM???] TK_BOX does not appear to be used. TK_BOX and TK_MONO are "subkinds"
- * of one another, according to tkSubkind, defined below. Does this mean that 
+ * of one another, according to tkSubkind, defined below. Does this mean that
  * any tyc of kind TK_BOX is also of kind TK_MONO, and vice versa? *)
 datatype tkindI
   = TK_MONO                                    (* ground mono tycon *)
@@ -147,7 +147,7 @@ datatype tycI
   | TC_PROJ of tyc * int                       (* tyc projection *)
 
   | TC_SUM of tyc list                         (* sum tyc *)
-  | TC_FIX of				       (* datatype tyc *)
+  | TC_FIX of                                  (* datatype tyc *)
     {family :                                  (* recursive dt family *)
       {size : int,                             (* size of family *)
        names : string vector,                  (* datatype names for printing *)
@@ -207,25 +207,25 @@ fun unknown (tc: tyc) =
  *  used in LtyKernel for TC_WRAP case of tc_whnm *)
 fun wrap_is_whnm (tc: tyc) =
     let  (* flex_tuple : tyc list -> bool *)
-	fun flex_tuple (tycs: tyc list) =
-	    let fun loop (tyc::rest, ukn, wfree) =
-		    let fun iswp (tc: tyc) =
-			    (case #2(!tc)
-			      of TC_WRAP tc' =>
-				 (case #2(!tc')
-				   of TC_PRIM pt => false
-				    | _ => true)
-			       | _ => true)
-		    in loop (rest, (unknown tyc) orelse ukn, (iswp tyc) andalso wfree)
-		    end
-		  | loop ([], ukn, wfree) = ukn andalso wfree
-	    in loop (tycs, false, true)
-	    end
+        fun flex_tuple (tycs: tyc list) =
+            let fun loop (tyc::rest, ukn, wfree) =
+                    let fun iswp (tc: tyc) =
+                            (case #2(!tc)
+                              of TC_WRAP tc' =>
+                                 (case #2(!tc')
+                                   of TC_PRIM pt => false
+                                    | _ => true)
+                               | _ => true)
+                    in loop (rest, (unknown tyc) orelse ukn, (iswp tyc) andalso wfree)
+                    end
+                  | loop ([], ukn, wfree) = ukn andalso wfree
+            in loop (tycs, false, true)
+            end
     in case #2(!tc)
-	 of (TC_ARROW(FF_FIXED, [t], _)) => (unknown t)
-	  | (TC_TUPLE ts) => flex_tuple ts
-	  | (TC_PRIM pt) => PT.unboxed pt
-	  | _ => false
+         of (TC_ARROW(FF_FIXED, [t], _)) => (unknown t)
+          | (TC_TUPLE ts) => flex_tuple ts
+          | (TC_PRIM pt) => PT.unboxed pt
+          | _ => false
     end (* wrap_is_whnm *)
 
 (***************************************************************************
@@ -414,7 +414,7 @@ local (* hashconsing impl *)
         | (TC_BOX t) => getAux t
         | (TC_TUPLE ts) => fsmerge ts
         | (TC_ARROW(_, ts1, ts2)) => fsmerge (ts1@ts2)
-        | (TC_PARROW(t1, t2)) => fsmerge [t1, t2] 
+        | (TC_PARROW(t1, t2)) => fsmerge [t1, t2]
         | (TC_WRAP (ref(_, t, AX_NO))) => AX_NO
         | (TC_WRAP (tyc as ref(_, t, AX_REG(b,vs,nvs)))) =>
               AX_REG (wrap_is_whnm tyc andalso b, vs, nvs)
@@ -606,8 +606,8 @@ fun tk_eq (x: tkind, y) = (x = y)
 local
   fun stripIND tyc =
       (case tc_out tyc
-	of (TC_IND(new,_)) => stripIND new
-	 | _ => tyc)
+        of (TC_IND(new,_)) => stripIND new
+         | _ => tyc)
 
   fun verify(ref(_, TC_IND _, AX_REG(true,_,_))) =  bug "TC_IND is norm?!"
     | verify _ = ()

@@ -13,7 +13,7 @@ end
 
 structure UpdateGraphInfo : UPDATE_GRAPH_INFO =
 struct
-   
+
    structure G = Graph
 
    fun update (G.GRAPH G) info =

@@ -7,10 +7,10 @@ sig
    structure C : CELLS
      sharing I.C = C
 
-   (*  
+   (*
     * Note: the instructions are assumed to be in reverse order,
     * the same as in the cluster and the CFG representation.
-    *) 
+    *)
    val schedule : {cpu:string}
                    -> I.instruction list -> I.instruction list
 

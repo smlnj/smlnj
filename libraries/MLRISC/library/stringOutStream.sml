@@ -1,4 +1,4 @@
-(* 
+(*
  * The basis seems to be missing a string (out)stream type.
  * This is it.
  *
@@ -14,17 +14,17 @@ struct
 
    fun mkStreamBuf ()    = ref [] : streambuf
    fun getString (ref s) = String.concat(List.rev s)
-   fun setString (r,s)   = r := [s]     
+   fun setString (r,s)   = r := [s]
 
    fun openStringOut buffer =
    let fun writeVec sl =
-	   (buffer := CharVectorSlice.vector sl :: !buffer;
-	    CharVectorSlice.length sl)
+           (buffer := CharVectorSlice.vector sl :: !buffer;
+            CharVectorSlice.length sl)
        fun writeArr sl =
-	   (buffer := CharArraySlice.vector sl :: !buffer;
-	    CharArraySlice.length sl)
+           (buffer := CharArraySlice.vector sl :: !buffer;
+            CharArraySlice.length sl)
        val writer =
-           TextPrimIO.WR 
+           TextPrimIO.WR
                 { name       = "string stream",
                 chunkSize  = 512,
                 writeVec   = SOME writeVec,
@@ -40,7 +40,7 @@ struct
                 close      = fn () => (),
                 ioDesc     = NONE
               }
-       val outstream = TextIO.mkOutstream 
+       val outstream = TextIO.mkOutstream
               (TextIO.StreamIO.mkOutstream (writer,IO.NO_BUF))
    in  outstream
    end

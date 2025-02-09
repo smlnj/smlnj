@@ -53,10 +53,10 @@ sig
    val CELLKINDty : Ast.ty
    val CELLSETty  : Ast.ty
 
-   val DATATYPE : Ast.id * Ast.tyvar list * Ast.consbind list 
+   val DATATYPE : Ast.id * Ast.tyvar list * Ast.consbind list
         -> Ast.datatypebind
    val CONS : Ast.id * Ast.ty option -> Ast.consbind
-   val VAL : Ast.id * Ast.exp -> Ast.decl 
+   val VAL : Ast.id * Ast.exp -> Ast.decl
    val FUN : Ast.id * Ast.pat * Ast.exp -> Ast.decl
    val FUN': Ast.id * Ast.pat * Ast.exp -> Ast.funbind
    val LET : Ast.decl list * Ast.exp -> Ast.exp

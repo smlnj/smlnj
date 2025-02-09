@@ -205,23 +205,23 @@ sig
      L of {ld:load, rt:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region}
    | LF of {ld:fload, ft:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region}
    | ST of {st:store, rs:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region}
-   | STF of {st:fstore, fs:CellsBasis.cell, ra:CellsBasis.cell, d:operand, 
+   | STF of {st:fstore, fs:CellsBasis.cell, ra:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | UNARY of {oper:unary, rt:CellsBasis.cell, ra:CellsBasis.cell, Rc:bool, 
+   | UNARY of {oper:unary, rt:CellsBasis.cell, ra:CellsBasis.cell, Rc:bool,
         OE:bool}
-   | ARITH of {oper:arith, rt:CellsBasis.cell, ra:CellsBasis.cell, rb:CellsBasis.cell, 
+   | ARITH of {oper:arith, rt:CellsBasis.cell, ra:CellsBasis.cell, rb:CellsBasis.cell,
         Rc:bool, OE:bool}
    | ARITHI of {oper:arithi, rt:CellsBasis.cell, ra:CellsBasis.cell, im:operand}
-   | ROTATE of {oper:rotate, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:CellsBasis.cell, 
+   | ROTATE of {oper:rotate, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:CellsBasis.cell,
         mb:int, me:int option}
-   | ROTATEI of {oper:rotatei, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:operand, 
+   | ROTATEI of {oper:rotatei, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:operand,
         mb:int, me:int option}
    | COMPARE of {cmp:cmp, l:bool, bf:CellsBasis.cell, ra:CellsBasis.cell, rb:operand}
    | FCOMPARE of {cmp:fcmp, bf:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell}
    | FUNARY of {oper:funary, ft:CellsBasis.cell, fb:CellsBasis.cell, Rc:bool}
-   | FARITH of {oper:farith, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   | FARITH of {oper:farith, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell,
         Rc:bool}
-   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell,
         fc:CellsBasis.cell, Rc:bool}
    | CCARITH of {oper:ccarith, bt:cr_bit, ba:cr_bit, bb:cr_bit}
    | MCRF of {bf:CellsBasis.cell, bfa:CellsBasis.cell}
@@ -241,7 +241,7 @@ sig
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,
@@ -251,24 +251,24 @@ sig
    val l : {ld:load, rt:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region} -> instruction
    val lf : {ld:fload, ft:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region} -> instruction
    val st : {st:store, rs:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region} -> instruction
-   val stf : {st:fstore, fs:CellsBasis.cell, ra:CellsBasis.cell, d:operand, 
+   val stf : {st:fstore, fs:CellsBasis.cell, ra:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val unary : {oper:unary, rt:CellsBasis.cell, ra:CellsBasis.cell, Rc:bool, 
+   val unary : {oper:unary, rt:CellsBasis.cell, ra:CellsBasis.cell, Rc:bool,
       OE:bool} -> instruction
-   val arith : {oper:arith, rt:CellsBasis.cell, ra:CellsBasis.cell, rb:CellsBasis.cell, 
+   val arith : {oper:arith, rt:CellsBasis.cell, ra:CellsBasis.cell, rb:CellsBasis.cell,
       Rc:bool, OE:bool} -> instruction
    val arithi : {oper:arithi, rt:CellsBasis.cell, ra:CellsBasis.cell, im:operand} -> instruction
-   val rotate : {oper:rotate, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:CellsBasis.cell, 
+   val rotate : {oper:rotate, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:CellsBasis.cell,
       mb:int, me:int option} -> instruction
-   val rotatei : {oper:rotatei, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:operand, 
+   val rotatei : {oper:rotatei, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:operand,
       mb:int, me:int option} -> instruction
-   val compare : {cmp:cmp, l:bool, bf:CellsBasis.cell, ra:CellsBasis.cell, 
+   val compare : {cmp:cmp, l:bool, bf:CellsBasis.cell, ra:CellsBasis.cell,
       rb:operand} -> instruction
    val fcompare : {cmp:fcmp, bf:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell} -> instruction
    val funary : {oper:funary, ft:CellsBasis.cell, fb:CellsBasis.cell, Rc:bool} -> instruction
-   val farith : {oper:farith, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   val farith : {oper:farith, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell,
       Rc:bool} -> instruction
-   val farith3 : {oper:farith3, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   val farith3 : {oper:farith3, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell,
       fc:CellsBasis.cell, Rc:bool} -> instruction
    val ccarith : {oper:ccarith, bt:cr_bit, ba:cr_bit, bb:cr_bit} -> instruction
    val mcrf : {bf:CellsBasis.cell, bfa:CellsBasis.cell} -> instruction
@@ -486,23 +486,23 @@ struct
      L of {ld:load, rt:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region}
    | LF of {ld:fload, ft:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region}
    | ST of {st:store, rs:CellsBasis.cell, ra:CellsBasis.cell, d:operand, mem:Region.region}
-   | STF of {st:fstore, fs:CellsBasis.cell, ra:CellsBasis.cell, d:operand, 
+   | STF of {st:fstore, fs:CellsBasis.cell, ra:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | UNARY of {oper:unary, rt:CellsBasis.cell, ra:CellsBasis.cell, Rc:bool, 
+   | UNARY of {oper:unary, rt:CellsBasis.cell, ra:CellsBasis.cell, Rc:bool,
         OE:bool}
-   | ARITH of {oper:arith, rt:CellsBasis.cell, ra:CellsBasis.cell, rb:CellsBasis.cell, 
+   | ARITH of {oper:arith, rt:CellsBasis.cell, ra:CellsBasis.cell, rb:CellsBasis.cell,
         Rc:bool, OE:bool}
    | ARITHI of {oper:arithi, rt:CellsBasis.cell, ra:CellsBasis.cell, im:operand}
-   | ROTATE of {oper:rotate, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:CellsBasis.cell, 
+   | ROTATE of {oper:rotate, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:CellsBasis.cell,
         mb:int, me:int option}
-   | ROTATEI of {oper:rotatei, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:operand, 
+   | ROTATEI of {oper:rotatei, ra:CellsBasis.cell, rs:CellsBasis.cell, sh:operand,
         mb:int, me:int option}
    | COMPARE of {cmp:cmp, l:bool, bf:CellsBasis.cell, ra:CellsBasis.cell, rb:operand}
    | FCOMPARE of {cmp:fcmp, bf:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell}
    | FUNARY of {oper:funary, ft:CellsBasis.cell, fb:CellsBasis.cell, Rc:bool}
-   | FARITH of {oper:farith, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   | FARITH of {oper:farith, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell,
         Rc:bool}
-   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fa:CellsBasis.cell, fb:CellsBasis.cell,
         fc:CellsBasis.cell, Rc:bool}
    | CCARITH of {oper:ccarith, bt:cr_bit, ba:cr_bit, bb:cr_bit}
    | MCRF of {bf:CellsBasis.cell, bfa:CellsBasis.cell}
@@ -522,7 +522,7 @@ struct
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,

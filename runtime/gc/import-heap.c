@@ -495,7 +495,8 @@ PVT bigobj_desc_t *AllocBODesc (
     bigobj_region_t *region;
     bigobj_desc_t   *newObj;
     bo_reloc_t	    *relocInfo;
-    int		    i, totSzB, firstPage, npages;
+    int	            i, firstPage, npages;
+    Addr_t          totSzB;
 
     totSzB = ROUNDUP(objHdr->sizeB, BIGOBJ_PAGE_SZB);
     npages = (totSzB >> BIGOBJ_PAGE_SHIFT);

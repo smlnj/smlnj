@@ -479,6 +479,9 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
    */
     ml_val_t	saved;
 
+  /* For debugging only */
+    UNUSED(maxDepth);
+
 /* A check that the available space is sufficient for the literal object that
  * we are about to allocate.  Note that the cons cell has already been accounted
  * for in availSpace (but not in spaceReq).
@@ -572,6 +575,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 	    Word_t uArg;
 	    Int_t iArg;
 	} arg;
+        arg.uArg = 0;
         switch (InstrInfo[opcode].argKind) {
 	  case NO_ARG:
 	    break;

@@ -1,4 +1,4 @@
-(* 
+(*
  * Operator Strength Reduction.
  *
  * -- Allen (leunga@cs.nyu.edu)
@@ -54,15 +54,15 @@ struct
 
        (* Copy an instruction *)
        fun copyDef'(SSA.OP{b,i,e,s,p,...},t) = SSA.OP{b=b,i=i,e=e,s=s,p=p,t=[t]}
-         | copyDef'(SSA.PHI{b,s,t',preds,...},t) = 
+         | copyDef'(SSA.PHI{b,s,t',preds,...},t) =
              SSA.PHI{b=b,t'=t',s=s,preds=preds,t=t}
          | copyDef' _ = error "copyDef'"
 
-       fun copyDef(x,t) = 
+       fun copyDef(x,t) =
            let val i' = node_info x
                val i = #new_id ssa ()
-           in  #add_node ssa (i,copyDef'(i',t)); 
-               (i,i') 
+           in  #add_node ssa (i,copyDef'(i',t));
+               (i,i')
            end
 
        (* Process each scc *)
@@ -76,11 +76,11 @@ struct
                      in  DA.update(inSCC,i,witness);
                          findHeader(ops,(i,i')::scc,
                             case i' of
-                               SSA.PHI{b,...} => if h = ~1 orelse sdom(b,h) 
+                               SSA.PHI{b,...} => if h = ~1 orelse sdom(b,h)
                                                  then b else h
                             |  _ => h
                          )
-                     end 
+                     end
                val (scc,header) = findHeader(scc,[],~1)
 
                (* Check whether the scc is an inductive variable *)
@@ -90,7 +90,7 @@ struct
                (* is the operation a legal inductive cycle? *)
                and isIVOp(SSA.PHI{s,...}) = List.all isIVorRC s
                  | isIVOp(SSA.OP{e=T.COPY _,s=[s],...}) = isIVorRC s
-                 | isIVOp(SSA.OP{e=T.RTL{e, ...}, s=[a,b], ...}) = 
+                 | isIVOp(SSA.OP{e=T.RTL{e, ...}, s=[a,b], ...}) =
                    let fun f(T.MV(_,_,T.ADD(_,T.REG(_,0) ,T.REG(_,1)))) =
                              isIVRC(a,b) orelse isIVRC(b,a)
                          | f(T.MV(_,_,T.ADD(_,T.REG(_,1) ,T.REG(_,0)))) =
@@ -110,7 +110,7 @@ struct
                          | f _ = false
                    in f e end
                  | isIVOp _ = false
-               and isIV x = x >= 0 andalso DA.sub(inSCC,x) = witness 
+               and isIV x = x >= 0 andalso DA.sub(inSCC,x) = witness
                and isRC x = isRegionConstant(x,header)
                and isIVRC(a,b) = isIV a andalso isRC b
                and isIVorRC x = isIV x orelse isRC x
@@ -134,7 +134,7 @@ struct
            (* perform strength reduction *)
        and strengthReduce(n,n' as SSA.OP{e,t=[t],s=[a,b],...}) =
            (case isInReducibleForm(e,a,b) of
-               SOME(iv,rc) => replace(t,e,iv,rc) 
+               SOME(iv,rc) => replace(t,e,iv,rc)
             |  NONE => ())
          | strengthReduce _ = ()
 
@@ -144,12 +144,12 @@ struct
                    a >= 0 andalso
                    let val header_a = DA.sub(headers,a)
                    in  header_a <> ~1 andalso isRegionConstant(b,header_a)
-                   end 
-               fun addOrMul() = 
+                   end
+               fun addOrMul() =
                    if isIVRC(a,b) then SOME(a,b)
                    else if isIVRC(b,a) then SOME(b,a)
                    else NONE
-               fun sub() =  
+               fun sub() =
                    if isIVRC(a,b) then SOME(a,b) else NONE
                fun reducible rtl =
                case rtl of
@@ -162,14 +162,14 @@ struct
                | T.MV(_,_,T.SUBT(_,T.REG(_,0),T.REG(_,1))) => sub()
                | T.RTL{e, ...} => reducible e
                | _ => NONE
-           in  reducible rtl 
+           in  reducible rtl
            end
 
            (*
-            * Replace the current operation with a copy from its 
+            * Replace the current operation with a copy from its
             * reduced counterpart.
             *)
-       and replace(t,e,iv,rc) = 
+       and replace(t,e,iv,rc) =
            let val t' = reduce(e,iv,rc)
            in  replaceAllUses{from=t,to=t'};
                DA.update(headers,t,DA.sub(headers,iv))
@@ -204,37 +204,37 @@ struct
                       else ()
                in  app doOperand operands;
                    result
-               end 
+               end
            end
-                             
-       and apply(e,op1,op2) = 
+
+       and apply(e,op1,op2) =
            let val operands = [op1,op2]
            in  search(e,operands,0)
                handle _ =>
                   if op1 < 0 orelse
                      let val header_op1 = DA.sub(headers,op1)
-                     in  header_op1 <> ~1 andalso 
+                     in  header_op1 <> ~1 andalso
                          isRegionConstant(op2,header_op1)
                      end then
                      reduce(e,op1,op2)
-                  else if op2 < 0 orelse 
+                  else if op2 < 0 orelse
                      let val header_op2 = DA.sub(headers,op2)
-                     in  header_op2 <> ~1 andalso 
+                     in  header_op2 <> ~1 andalso
                          isRegionConstant(op1,header_op2)
                      end then
                      reduce(e,op2,op1)
-                  else 
+                  else
                      let val result = inventName()
                          val _ = add(e,operands,result)
-                     in  result 
+                     in  result
                      end
            end
-   
+
    in  (* process all loops *)
        GraphSCC.strong_components(ReversedGraphView.rev_view SSA) processSCC ();
        SSA.changed SSA;
        SSA
-   end   
+   end
    *)
-   
+
 end

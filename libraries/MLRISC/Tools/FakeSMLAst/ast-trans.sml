@@ -5,7 +5,7 @@ functor MDLAstTranslation
   (structure AstPP       : MDL_AST_PRETTY_PRINTER
    structure AstRewriter : MDL_AST_REWRITER
      sharing AstRewriter.Ast = AstPP.Ast
-  ) : MDL_AST_TRANSLATION = 
+  ) : MDL_AST_TRANSLATION =
 struct
 
    structure Ast = AstPP.Ast
@@ -29,14 +29,14 @@ struct
    exception NoName
 
    (*
-    * Treat a type expression as a pattern and compute its set of 
-    * variable bindings.  Duplicates are given unique suffixes.  
-    *) 
-   fun bindingsInTy ty = 
+    * Treat a type expression as a pattern and compute its set of
+    * variable bindings.  Duplicates are given unique suffixes.
+    *)
+   fun bindingsInTy ty =
    let val namesTable = H.mkTable (HashString.hashString,op =)(32,NoName)
        val variables = ref 0
 
-       fun enterName id = 
+       fun enterName id =
        let val _ = variables := !variables + 1
            val (_, totalCount) = H.lookup namesTable id
        in  totalCount := !totalCount + 1
@@ -49,12 +49,12 @@ struct
          | enter(A.TUPLEty tys) = app enter tys
          | enter(A.RECORDty ltys) = app (fn (id, _) => enterName id) ltys
          | enter t = error("bindingsInTy: "^PP.text(AstPP.ty t))
-       val stripTicks = String.map (fn #"'" => #"t" | c => c) 
-       fun getName id = 
+       val stripTicks = String.map (fn #"'" => #"t" | c => c)
+       fun getName id =
            let val (currentCount, totalCount) = H.lookup namesTable id
            in  stripTicks(
                  if !totalCount = 1 then id (* use the same name *)
-                 else 
+                 else
                  (currentCount := !currentCount + 1;
                   id^Int.toString(!currentCount)
                  )
@@ -99,7 +99,7 @@ struct
 
    fun foldCons f x (A.CONSbind{ty=NONE, ...}) = x
      | foldCons f x (A.CONSbind{ty=SOME ty, ...}) = foldTy f x ty
-       
+
    (*
     * Translate a type into an expression
     *)
@@ -115,16 +115,16 @@ struct
          | g(t, _) = error("tyToPat: "^PP.text(AstPP.ty t))
        and g' t = g(t,t)
        and h(lab, ty) = (lab, f(lab, ty))
-   in  g' ty 
+   in  g' ty
    end
 
    (*
-    * Translate a constructor into a pattern 
+    * Translate a constructor into a pattern
     *)
    fun mapConsToPat {prefix, id} (A.CONSbind{id=x, ty, ...}) =
        A.CONSpat(A.IDENT(prefix,x), Option.map (mapTyToPat id) ty)
    (*
-    * Translate a constructor into an expression  
+    * Translate a constructor into an expression
     *)
    fun mapConsToExp {prefix,id} (A.CONSbind{id=x, ty, ...}) =
        A.CONSexp(A.IDENT(prefix,x), Option.map (mapTyToExp id) ty)
@@ -132,33 +132,33 @@ struct
    fun mapConsArgToExp id (A.CONSbind{ty=NONE, ...}) = A.TUPLEexp []
      | mapConsArgToExp id (A.CONSbind{ty=SOME ty, ...}) = mapTyToExp id ty
 
-   fun mapConsToClause {prefix, pat, exp} cons = 
-       A.CLAUSE([pat(mapConsToPat 
-                     {prefix=prefix, id=fn {newName,...} => A.IDpat newName} 
+   fun mapConsToClause {prefix, pat, exp} cons =
+       A.CLAUSE([pat(mapConsToPat
+                     {prefix=prefix, id=fn {newName,...} => A.IDpat newName}
                      cons)],
                 NONE,
                 exp)
 
    fun consBindings cons =
    let fun enter({newName,origName,ty},bindings) = (newName, ty)::bindings
-       val bindings = foldCons enter [] cons 
+       val bindings = foldCons enter [] cons
        fun lookup(id : Ast.id) =
-       let fun find((b as (x,t))::bs) = if x = id then (ID x,t) else find bs 
+       let fun find((b as (x,t))::bs) = if x = id then (ID x,t) else find bs
              | find [] = raise NoName
        in  find bindings end
    in  lookup
    end
- 
+
    (* Simplification *)
    local
       val NIL = R.noRewrite
 
-      fun hasBindings ps = 
+      fun hasBindings ps =
       let val bindings = ref false
-          fun pat _ (p as A.IDpat x) = (bindings := true; p) 
+          fun pat _ (p as A.IDpat x) = (bindings := true; p)
             | pat _ p = p
-      in  app (fn p => 
-            (#pat(R.rewrite{pat=pat,decl=NIL,sexp=NIL,exp=NIL,ty=NIL}) p; 
+      in  app (fn p =>
+            (#pat(R.rewrite{pat=pat,decl=NIL,sexp=NIL,exp=NIL,ty=NIL}) p;
              ())) ps;
           !bindings
       end
@@ -167,18 +167,18 @@ struct
         | allTheSame (x::xs) = List.all (fn x' => x = x') xs
 
       exception Don'tApply
- 
+
       fun reduceExp ==> (exp as A.CASEexp(e,[])) = exp
         | reduceExp ==> (A.SEQexp es) =
              (A.SEQexp(foldr (fn (A.TUPLEexp [],es) => es
                            | (A.SEQexp [],es) => es
                            | (e,es) => e::es
                          ) [] es))
-        | reduceExp ==> 
-              (exp as A.CASEexp(e,allCs as (c as A.CLAUSE(p1,NONE,e1))::cs)) = 
-          let fun collect(A.CLAUSE([p],NONE,e),Ps) = 
+        | reduceExp ==>
+              (exp as A.CASEexp(e,allCs as (c as A.CLAUSE(p1,NONE,e1))::cs)) =
+          let fun collect(A.CLAUSE([p],NONE,e),Ps) =
                   let fun ins [] = [([p],e)]
-                        | ins((ps,e')::Ps) = 
+                        | ins((ps,e')::Ps) =
                           if e = e' then (p::ps,e)::Ps
                           else (ps,e')::ins Ps
                   in  ins Ps end
@@ -187,16 +187,16 @@ struct
                 | orPat ps =
                   if List.all (fn A.WILDpat => true | _ => false) ps then
                      A.WILDpat
-                  else A.ORpat ps  
+                  else A.ORpat ps
               fun tuplepat [p] = p
                 | tuplepat ps  = A.TUPLEpat ps
               fun join([p],e) = A.CLAUSE([p],NONE,e)
-                | join(ps,e)  = 
+                | join(ps,e)  =
                   let val xs = map (fn A.TUPLEpat(p::ps) => (p,ps)
                                           | _ => raise Don'tApply) ps
                       val firstPats = map #1 xs
                       val restPats  = map #2 xs
-                  in  if allTheSame (map tuplepat restPats) then 
+                  in  if allTheSame (map tuplepat restPats) then
                          A.CLAUSE([tuplepat(orPat firstPats::hd restPats)],
                                   NONE,e)
                       else raise Don'tApply
@@ -205,30 +205,30 @@ struct
           in  case cs of
                 [A.CLAUSE([A.TUPLEpat []],NONE,body)] => body
               | [A.CLAUSE([_],NONE,body as A.LISTexp([],NONE))] => body
-              | [A.CLAUSE([A.TUPLEpat(ps)],NONE,body)] => 
-                if hasBindings ps then 
+              | [A.CLAUSE([A.TUPLEpat(ps)],NONE,body)] =>
+                if hasBindings ps then
                 let fun elimOr(pat as A.ORpat p) =
                          if hasBindings p then pat else A.WILDpat
                       | elimOr pat = pat
                 in  A.CASEexp(e,
                       [A.CLAUSE([A.TUPLEpat(map elimOr ps)],NONE,body)])
-                end 
+                end
                 else body
-              | [A.CLAUSE(ps,NONE,body)] => 
+              | [A.CLAUSE(ps,NONE,body)] =>
                  if hasBindings ps then A.CASEexp(e,cs) else body
-              | _ => A.CASEexp(e,cs) 
+              | _ => A.CASEexp(e,cs)
           end
         | reduceExp ==> (exp as A.IFexp(a,b,c)) = if b = c then b else exp
         | reduceExp ==> e = e
 
-      val simplifier = 
+      val simplifier =
           R.rewrite{pat=NIL,decl=NIL,exp=reduceExp,sexp=NIL,ty=NIL}
    in
-      val simplifyExp = #exp simplifier 
-      val simplifyDecl = #decl simplifier 
-      val simplifyPat = #pat simplifier 
-      val simplifySexp = #sexp simplifier 
-      val simplifyTy = #ty simplifier 
+      val simplifyExp = #exp simplifier
+      val simplifyDecl = #decl simplifier
+      val simplifyPat = #pat simplifier
+      val simplifySexp = #sexp simplifier
+      val simplifyTy = #ty simplifier
 
       fun stripMarks d =
       let fun decl ==> (A.MARKdecl(_,d)) = d

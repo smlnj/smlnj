@@ -18,18 +18,18 @@ structure Queue :> QUEUE =
 
     fun enqueue (q,x) = q := (Fifo.enqueue (!q, x))
 
-    fun dequeue q = let 
-          val (newq, x) = Fifo.dequeue (!q) 
+    fun dequeue q = let
+          val (newq, x) = Fifo.dequeue (!q)
           in
             q := newq;
             x
           end
-  
+
     fun next q = (case Fifo.next (!q)
-	   of SOME(x, newq) => (q := newq; SOME x)
+           of SOME(x, newq) => (q := newq; SOME x)
             | NONE => NONE
-	  (* end case *))
-  
+          (* end case *))
+
     fun delete (q, pred) = (q := Fifo.delete (!q, pred))
     fun head q = Fifo.head (!q)
     fun peek q = Fifo.peek (!q)

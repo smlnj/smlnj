@@ -1,9 +1,9 @@
 (*
  * Global code motion algorithm in SSA form.
  * This is based on Cliff Click's algorithm.
- * I've generalized it to 
- * 
- *   1. Take into account of execution frequencies to find the ``best'' 
+ * I've generalized it to
+ *
+ *   1. Take into account of execution frequencies to find the ``best''
  *      position to move an instruction.
  *   2. Perform partial redundancy elimination.  (not finished)
  *
@@ -11,11 +11,11 @@
  *)
 
 signature SSA_GLOBAL_CODE_MOTION =
-sig 
-   include SSA_OPTIMIZATION 
+sig
+   include SSA_OPTIMIZATION
    val computeEarliest : SSA.ssa -> SSA.block Array.array
    val computeBest     : SSA.ssa * SSA.block Array.array -> SSA.ssa
-end 
+end
 
 functor SSAGCM(SSA : SSA) : SSA_GLOBAL_CODE_MOTION =
 struct
@@ -55,14 +55,14 @@ struct
        val entryPos    = Dom.entryPos Dom  (* block_id -> entry position *)
        val levels      = Dom.levelsMap Dom (* block id -> dominator level *)
 
-       (* 
+       (*
         * For each value, try to schedule it as early as possible.
         * This is constrained by the position of an instruction's operand.
         *)
-       fun scheduleEarly(i, i') = 
-           if A.sub(earliestTbl,i) >= 0 then () 
-           else if RTL.can'tMoveUp(i') then 
-                (A.update(earliestTbl, i, A.sub(blockTbl,i))) 
+       fun scheduleEarly(i, i') =
+           if A.sub(earliestTbl,i) >= 0 then ()
+           else if RTL.can'tMoveUp(i') then
+                (A.update(earliestTbl, i, A.sub(blockTbl,i)))
            else
            let val b = A.sub(blockTbl, i)
                val _ = A.update(earliestTbl,i,b) (* the initial position *)
@@ -87,7 +87,7 @@ struct
                (* print("Pass 1 "^showOp i^" orig="^i2s b^
                         " earliest="^i2s earliest^
                         "\n"); *)
-               (* if dominates(earliest, b) then () 
+               (* if dominates(earliest, b) then ()
                else error "WTF! earliest > b"; *)
                A.update(earliestTbl,i,earliest)
            end
@@ -96,7 +96,7 @@ struct
        fun pass1 i =
            if RTL.can'tMoveUp(A.sub(rtlTbl, i)) then
               (A.update(earliestTbl,i,A.sub(blockTbl, i));
-               app (fn (j,_,_) => scheduleEarly(j, A.sub(rtlTbl,j))) 
+               app (fn (j,_,_) => scheduleEarly(j, A.sub(rtlTbl,j)))
                   (#in_edges ssa i)
               )
            else ()
@@ -124,7 +124,7 @@ struct
        val showOp  = SSA.showOp SSA
        val showVal = SSA.showVal SSA
 
-       fun dump(i,b,earliest,latest,best) = 
+       fun dump(i,b,earliest,latest,best) =
            print(showOp i^" orig="^i2s b^
                  " earliest="^i2s earliest^
                  " latest="^i2s latest^
@@ -134,14 +134,14 @@ struct
        (*
         * Schedule an instruction as late as possible.
         * Visited nodes are indicated by earliest = ~1
-        *)  
+        *)
        fun scheduleLate i = scheduleLate'(i,A.sub(rtlTbl,i))
        and scheduleLate'(i,T.PHI _) = A.sub(blockTbl,i)
          | scheduleLate'(i,T.SINK _) = A.sub(blockTbl,i)
          | scheduleLate'(i,T.SOURCE _) = A.sub(blockTbl,i)
          | scheduleLate'(i,i') =
            if A.sub(earliestTbl,i) < 0 then A.sub(blockTbl, i)
-           else 
+           else
            let val earliest = A.sub(earliestTbl,i)
                val _ = A.update(earliestTbl,i,~1) (* mark node as visited *)
                val b = A.sub(blockTbl, i)
@@ -149,7 +149,7 @@ struct
                (* Find the least common ancestor of two nodes in the dominator*)
                fun LCA(~1,b) = b
                  | LCA(a,~1) = a
-                 | LCA(a,b) = 
+                 | LCA(a,b) =
                    let val la = A.sub(levels,a)
                        val lb = A.sub(levels,b)
                    in  if la > lb then LCA'(a,b,la-lb) else LCA'(b,a,lb-la) end
@@ -157,17 +157,17 @@ struct
                  | LCA'(a,b,l) = LCA'(A.sub(idoms,a),b,l-1)
                and LCA''(a,b) =
                    if a = b then a else LCA''(A.sub(idoms,a),A.sub(idoms,b))
-              
+
                fun scan([],~1,trivialUsesOnly) = (b,trivialUsesOnly)
                  | scan([],latest,trivialUsesOnly) = (latest,trivialUsesOnly)
-                 | scan((_,j,r)::es,latest,trivialUsesOnly) = 
+                 | scan((_,j,r)::es,latest,trivialUsesOnly) =
                    let val j' = A.sub(rtlTbl, j)
                        val pos_j = scheduleLate'(j, j')
-                       val (latest,trivialUsesOnly) = 
+                       val (latest,trivialUsesOnly) =
                            case j' of
                               T.PHI{preds,...} =>
                               let val s = A.sub(usesTbl,j)
-                                  fun loop(b::bs,s::ss,lca) = 
+                                  fun loop(b::bs,s::ss,lca) =
                                        if s = r then loop(bs,ss,LCA(lca,b))
                                        else loop(bs,ss,lca)
                                     | loop(_,_,bs') = bs'
@@ -175,44 +175,44 @@ struct
                            |  T.SINK _ => (LCA(latest,pos_j), trivialUsesOnly)
                            |  _ => (LCA(latest,pos_j), false)
                    in  scan(es,latest,trivialUsesOnly) end
-               val (latest,trivialUsesOnly) = 
+               val (latest,trivialUsesOnly) =
                         scan(A.sub(succTbl, i),
                              if RTL.can'tMoveDown i' then b else ~1,
                              true)
 
                (* if latest = ~1 then the instruction is dead *)
-               (* Performance hack: if the instruction is a constant 
+               (* Performance hack: if the instruction is a constant
                 * computation and if it is only used in a phi function,
                 * then DO NOT hoist them up because that will just increase
                 * register pressure!
                 *)
                fun find_best(pos,best_pos,best_freq) =
-                   let val w = A.sub(freqTbl,pos) handle _ => 
+                   let val w = A.sub(freqTbl,pos) handle _ =>
                                error(showOp i^
                                      " pos "^i2s pos^" earliest="^i2s earliest^
                                      " latest="^i2s latest^" orig="^i2s b^
                                      " pinned="^b2s(RTL.can'tMoveUp i'))
-                       val (best_pos,best_freq) = 
-                             if w < best_freq then (pos,w) 
+                       val (best_pos,best_freq) =
+                             if w < best_freq then (pos,w)
                              else (best_pos,best_freq)
                    in if pos = earliest then best_pos
                       else find_best(A.sub(idoms,pos),best_pos,best_freq)
                    end
 
-               fun isConstant i = 
+               fun isConstant i =
                    (case A.sub(usesTbl, i) of
-                     [v] => v < 0 
+                     [v] => v < 0
                    | _ => false
                    )
-               val best = if earliest = ~1 then ~1 
+               val best = if earliest = ~1 then ~1
                           else if latest = ~1 then ~1
-                          else if trivialUsesOnly andalso isConstant(i) 
+                          else if trivialUsesOnly andalso isConstant(i)
                           then latest
                           else find_best(latest,latest,A.sub(freqTbl,latest))
            in
                (* A.update(pos,i,best); *)
                if best = ~1 then ()
-               else if best <> b then 
+               else if best <> b then
                   (if !debug then dump(i,b,earliest,latest,best) else ();
                    (* dump(i,b,earliest,latest,best); *)
                  (*if dominates(best, latest) then () else error "best>latest";
@@ -225,7 +225,7 @@ struct
                best
            end
 
-       fun pass2 i = 
+       fun pass2 i =
              (* Warning: this must be pinned instead of can'tMoveDown
               * because an op that can't be moved down doesn't mean it
               * can't be moved up!   If this is not done the pos of i would
@@ -233,60 +233,60 @@ struct
               *)
              if RTL.pinned(A.sub(rtlTbl, i)) then
                  (A.update(earliestTbl,i,~1);
-                  app (fn (_,j,_) => (scheduleLate j;())) 
-                     (A.sub(succTbl,i)) 
+                  app (fn (_,j,_) => (scheduleLate j;()))
+                     (A.sub(succTbl,i))
                  )
              else ()
 
        fun pass3 i = (scheduleLate i; ())
-   
+
        (*
         * Now, try to perform partial redundancy elimination.
         * Given an instruction i, find its earliest position not constrained
         * by the closest dominating uses that are phi-nodes.
-        *)  
-       (* 
+        *)
+       (*
        val defsTbl = SSA.defsTbl SSA
-       fun pre i = 
+       fun pre i =
            if W8A.sub(visited,i) = 0w3 then ()
            else
            let val _     = W8A.update(visited, i, 0w3)
                val rtl_i = A.sub(rtlTbl,i)
-               val b_i   = A.sub(blockTbl, i)  
-           in  if RTL.can'tMoveUp rtl_i then () else 
+               val b_i   = A.sub(blockTbl, i)
+           in  if RTL.can'tMoveUp rtl_i then () else
                let val earliest_i = A.sub(earliestTbl, i)
                    val depth_i    = A.sub(levels, earliest_i)
                    val uses_i     = A.sub(usesTbl, i)
 
-                   fun moveable([], phis, preds, earliest, depth) = 
+                   fun moveable([], phis, preds, earliest, depth) =
                          (phis, preds, earliest)
-                     | moveable(v::uses, phis, preds, earliest, depth) = 
-                       if v < 0 then 
-                          moveable(uses, phis, preds, earliest, depth) 
+                     | moveable(v::uses, phis, preds, earliest, depth) =
+                       if v < 0 then
+                          moveable(uses, phis, preds, earliest, depth)
                        else
                        let val j     = A.sub(defSiteTbl,v)
                            val b_j   = A.sub(blockTbl, j)
                        in  if b_j = earliest_i then
                               case A.sub(rtlTbl, j) of
-                                T.PHI{preds, ...} => 
-                                   moveable(uses, j::phis, preds, 
+                                T.PHI{preds, ...} =>
+                                   moveable(uses, j::phis, preds,
                                             earliest, depth)
-                              | _ => ([], [], earliest) 
+                              | _ => ([], [], earliest)
                                       (* not hoistable *)
-                           else 
+                           else
                               let val d_j = A.sub(levels, b_j)
                               in  if d_j < depth_i then
                                     if d_j > depth then
                                        moveable(uses, phis, preds, b_j, d_j)
                                     else
-                                       moveable(uses, phis, preds, 
+                                       moveable(uses, phis, preds,
                                                 earliest, depth)
                                   else
-                                    ([], [], earliest) 
+                                    ([], [], earliest)
                               end
                        end
 
-                   (* Is the phi-node partially redundant? 
+                   (* Is the phi-node partially redundant?
                     * It is if is of the form t <- phi(...,t,...)
                     *)
                    fun replicationCost(newEarliest, preds, phi) =
@@ -294,35 +294,35 @@ struct
                            val uses = A.sub(usesTbl, phi)
 
                            fun search(~1, best, bestCost) = (best, bestCost)
-                             | search(X, best, bestCost) = 
+                             | search(X, best, bestCost) =
                                let val costX = A.sub(freqTbl, X)
                                    val (best, bestCost) =
                                       if costX < bestCost then
-                                         (X, costX) 
+                                         (X, costX)
                                       else
-                                         (best, bestCost) 
+                                         (best, bestCost)
                                in  if X = newEarliest then (best, bestCost)
                                    else search(A.sub(idoms, X), best, bestCost)
                                end
 
                            fun cost([], [], c) = c
-                             | cost(p::ps, v::vs, c) = 
-                               if v = t then 
+                             | cost(p::ps, v::vs, c) =
+                               if v = t then
                                   cost(ps, vs, c)
                                else
-                                  let val (best, bestCost) = 
+                                  let val (best, bestCost) =
                                           search(p, p, A.sub(freqTbl, p))
                                   in  cost(ps, vs, c + bestCost) end
                        in  cost(preds, uses, 0) end
 
-   
+
                    val start = A.sub(earliestTbl,i)
                    val d = A.sub(levels,start)
-                   val (phis, preds, newEarliest) = 
+                   val (phis, preds, newEarliest) =
                          moveable(uses_i, [], [], start, d)
                in  case phis of
                      [] => ()
-                   | [phi] => 
+                   | [phi] =>
                      let val cost  = A.sub(freqTbl,b_i)
                          val cost' = replicationCost(newEarliest, preds, phi)
                      in  if cost' < cost then
@@ -331,7 +331,7 @@ struct
                            print("Cost="^W.toString cost^
                                  " new cost="^W.toString cost'^"\n");
                            print("USES:\n");
-                           app (fn v => 
+                           app (fn v =>
                                 if v < 0 then ()
                                 else let val j   = A.sub(defSiteTbl, v)
                                          val b_j = A.sub(blockTbl, j)
@@ -339,16 +339,16 @@ struct
                                      in  print("\t["^i2s b_j^"] "^showOp j^
                                                " depth="^i2s d_j^"\n")
                                      end) uses_i
-                          ) 
+                          )
                          else ()
                      end
                    | _ => ()
                end
            end
 
-       fun pass4 i = 
+       fun pass4 i =
            if RTL.can'tMoveUp(A.sub(rtlTbl, i)) then
-              (W8A.update(visited,i,0w3); 
+              (W8A.update(visited,i,0w3);
                app (fn (j,_,_) => pre j) (#in_edges ssa i)
               )
            else ()

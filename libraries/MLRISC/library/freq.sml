@@ -1,7 +1,7 @@
 (*
  * Execution frequency
  *
- * -- Allen 
+ * -- Allen
  *)
 
 structure Freq : FREQ =
@@ -9,5 +9,5 @@ struct
 
    type freq = int
    open Int
- 
+
 end

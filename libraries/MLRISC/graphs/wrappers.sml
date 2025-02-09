@@ -1,5 +1,5 @@
 (*
- * These graph wrappers allow the client to attach triggers to 
+ * These graph wrappers allow the client to attach triggers to
  * various graph methods.
  *
  * -- Allen
@@ -8,57 +8,57 @@
 signature GRAPH_WRAPPERS =
 sig
 
-   val do_before_new_id : 
+   val do_before_new_id :
        (unit -> unit) -> ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_new_id : 
-       (Graph.node_id -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_add_node : 
-       ('n Graph.node -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_add_node : 
-       ('n Graph.node -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_add_edge : 
-       ('e Graph.edge -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_add_edge : 
-       ('e Graph.edge -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_remove_node : 
-       (Graph.node_id -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_remove_node : 
-       (Graph.node_id -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_set_in_edges : 
-       (Graph.node_id * 'e Graph.edge list -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_set_in_edges : 
-       (Graph.node_id * 'e Graph.edge list -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_set_out_edges : 
-       (Graph.node_id * 'e Graph.edge list -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_set_out_edges : 
-       (Graph.node_id * 'e Graph.edge list -> unit) -> 
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_set_entries : 
+   val do_after_new_id :
+       (Graph.node_id -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_add_node :
+       ('n Graph.node -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_add_node :
+       ('n Graph.node -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_add_edge :
+       ('e Graph.edge -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_add_edge :
+       ('e Graph.edge -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_remove_node :
+       (Graph.node_id -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_remove_node :
+       (Graph.node_id -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_set_in_edges :
+       (Graph.node_id * 'e Graph.edge list -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_set_in_edges :
+       (Graph.node_id * 'e Graph.edge list -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_set_out_edges :
+       (Graph.node_id * 'e Graph.edge list -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_set_out_edges :
+       (Graph.node_id * 'e Graph.edge list -> unit) ->
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_set_entries :
        (Graph.node_id list -> unit) ->
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_set_entries : 
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_set_entries :
        (Graph.node_id list -> unit) ->
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_before_set_exits : 
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_before_set_exits :
        (Graph.node_id list -> unit) ->
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
-   val do_after_set_exits : 
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+   val do_after_set_exits :
        (Graph.node_id list -> unit) ->
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
    val do_before_changed : (('n,'e,'g) Graph.graph -> unit) ->
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
    val do_after_changed : (('n,'e,'g) Graph.graph -> unit) ->
-	   ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
+           ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
 end
 
 structure GraphWrappers : GRAPH_WRAPPERS =

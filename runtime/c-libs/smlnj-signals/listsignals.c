@@ -13,6 +13,7 @@
  */
 ml_val_t _ml_Sig_listsigs (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     return ListSignals (msp);
 
 } /* end of _ml_Sig_pause */

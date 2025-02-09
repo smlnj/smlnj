@@ -1,4 +1,4 @@
-signature REWRITE_GEN = 
+signature REWRITE_GEN =
 sig
    structure Ast   : MDL_AST (* abstract syntax *)
 

@@ -6,7 +6,7 @@
 
 signature GRAPH_SNAPSHOT =
 sig
-   val snapshot : ('n,'e,'g) Graph.graph -> 
+   val snapshot : ('n,'e,'g) Graph.graph ->
         { picture : ('n,'e,'g) Graph.graph,
           button : unit -> unit
         }

@@ -4,7 +4,7 @@
  *
  *)
 
-signature EXPORT = 
+signature EXPORT =
   sig
     val exportML : string -> bool
     val exportFn : (string * ((string * string list) -> OS.Process.status)) -> unit

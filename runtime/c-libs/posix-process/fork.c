@@ -16,9 +16,9 @@
  */
 ml_val_t _ml_P_Process_fork (ml_state_t *msp, ml_val_t arg)
 {
-    int      sts;
+    UNUSED_UNIT_PARAM(arg);
 
-    sts = fork();
+    int sts = fork();
 
     CHK_RETURN (msp, sts)
 

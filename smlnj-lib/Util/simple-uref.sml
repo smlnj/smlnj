@@ -20,39 +20,39 @@ structure SimpleURef : UREF =
 
     fun find (p as ref(ECR _)) = p
       | find (p as ref(PTR p')) = let
-	  val p'' = find p'
+          val p'' = find p'
           in
-	    p := PTR p''; p''
+            p := PTR p''; p''
           end
 
     fun uRef x = ref (ECR x)
 
     fun !! p = (case !(find p)
-	   of ECR x => x
-	    | _ => raise Match
-	  (* end case *))
-      
+           of ECR x => x
+            | _ => raise Match
+          (* end case *))
+
     fun equal (p, p') = (find p = find p')
 
     fun update (p, x) = let val p' = find p
-	  in
-	    p' := ECR x
-	  end
+          in
+            p' := ECR x
+          end
 
     fun link (p, q) = let
-	  val p' = find p
+          val p' = find p
           val q' = find q
-	  in
-	    if p' = q' then false else (p' := PTR q'; true)
-	  end
- 
+          in
+            if p' = q' then false else (p' := PTR q'; true)
+          end
+
     val union = link
 
     fun unify f (p, q) = let
-	  val v = f(!!p, !!q)
-	  in
-	    union (p, q) before update (q, v)
-	  end
+          val v = f(!!p, !!q)
+          in
+            union (p, q) before update (q, v)
+          end
 
   end (* SimpleURef *)
 

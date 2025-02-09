@@ -25,9 +25,9 @@ struct
 
    val view_IR = MLRiscControl.getFlag "view-IR"
 
-   fun schedule cpu_info { ir, region, numberOfInstructions, blockIdTbl } = 
-   let val DDG as G.GRAPH ddg = 
-           DDGBuilder.buildDDG {cpu_info=cpu_info, 
+   fun schedule cpu_info { ir, region, numberOfInstructions, blockIdTbl } =
+   let val DDG as G.GRAPH ddg =
+           DDGBuilder.buildDDG {cpu_info=cpu_info,
                                 cfg=region, blockIdTbl=blockIdTbl,
                                 numberOfInstructions=numberOfInstructions}
        val _ = print("V(ddg)="^i2s(#order ddg ())^
@@ -35,13 +35,13 @@ struct
        val _ = if !view_IR then Viewer.view ir DDG else ()
        val ranking = Ranks.rank DDG
    in  ListScheduler.listScheduler
-          {cpu_info=cpu_info, 
+          {cpu_info=cpu_info,
            blockIdTbl=blockIdTbl,
-           cfg=ir, 
-           region=region, 
-           ddg=DDG, 
+           cfg=ir,
+           region=region,
+           ddg=DDG,
            ranking=ranking
-          } 
+          }
    end
 
 end

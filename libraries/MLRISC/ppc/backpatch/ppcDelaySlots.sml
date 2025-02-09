@@ -10,12 +10,12 @@ functor PPCDelaySlots(structure I : PPCINSTR
                      ) : DELAY_SLOT_PROPERTIES =
 struct
    structure I = I
-   datatype delay_slot = D_NONE | D_ERROR | D_ALWAYS | D_TAKEN | D_FALLTHRU 
-   
+   datatype delay_slot = D_NONE | D_ERROR | D_ALWAYS | D_TAKEN | D_FALLTHRU
+
    fun error msg = MLRiscErrorMsg.error("PPCDelaySlots",msg)
    val delaySlotSize = 4
    fun delaySlot {instr, backward} = let
-          fun delaySlot instr = 
+          fun delaySlot instr =
               (
                case instr of
                _ => {nop=true, n=false, nOn=D_ERROR, nOff=D_NONE}
@@ -26,7 +26,7 @@ struct
    fun enableDelaySlot _ = error "enableDelaySlot"
    fun conflict _ = error "conflict"
    fun delaySlotCandidate {jmp, delaySlot} = let
-          fun delaySlotCandidate delaySlot = 
+          fun delaySlotCandidate delaySlot =
               (
                case delaySlot of
                _ => true

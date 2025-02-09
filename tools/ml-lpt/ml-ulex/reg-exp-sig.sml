@@ -1,6 +1,6 @@
 (* reg-exp-sig.sml
  *
- * COPYRIGHT (c) 2005 
+ * COPYRIGHT (c) 2005
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (adrassi@gmail.com)
  * All rights reserved.
@@ -8,7 +8,7 @@
  * RE representation and manipulation
  *)
 
-signature REG_EXP = 
+signature REG_EXP =
   sig
 
     structure Sym : INTERVAL_DOMAIN
@@ -18,9 +18,9 @@ signature REG_EXP =
     type sym_set = SymSet.set
     type re
 
-    val any	  : re	(* wildcard *)
-    val none	  : re	(* EMPTY language *)
-    val epsilon	  : re	(* the nil character (of length 0) *)
+    val any       : re  (* wildcard *)
+    val none      : re  (* EMPTY language *)
+    val epsilon   : re  (* the nil character (of length 0) *)
 
     val mkSym     : symbol -> re
     val mkSymSet  : sym_set -> re
@@ -38,8 +38,8 @@ signature REG_EXP =
     val isNone    : re -> bool
     val nullable  : re -> bool
     val derivative : symbol -> re -> re
-    val derivatives : re Vector.vector -> 
-		      ((re Vector.vector) * sym_set) list
+    val derivatives : re Vector.vector ->
+                      ((re Vector.vector) * sym_set) list
 
     val symToString : symbol -> string
     val toString  : re -> string

@@ -66,10 +66,10 @@ end = struct
   fun assert' cond = if not cond then raise ERROR NONE else ()
 
   fun throws (msg, name, func) = let
-    fun wrongExn e = raise ERROR (SOME (String.concat [msg, 
+    fun wrongExn e = raise ERROR (SOME (String.concat [msg,
       "---expected exception '", name, "' but got '", exnName e, "' with msg\n",
       exnMessage e]))
-    fun noExn () = raise ERROR (SOME (String.concat [msg, 
+    fun noExn () = raise ERROR (SOME (String.concat [msg,
       "---expected exception '", name, "' but got nothing"]))
   in
     if (func (); true) handle e =>
@@ -85,27 +85,27 @@ end = struct
   local
     fun splitMsg msg = String.fields (fn c => EQUAL = Char.compare (#"\n", c)) msg
     fun indent lines = List.map (fn s => "\t" ^ s) lines
-    fun summary' (PASS name) : (string list * (int * int)) = 
+    fun summary' (PASS name) : (string list * (int * int)) =
         ([ String.concat ["     ", name, "\n"] ], (1, 1))
-      | summary' (FAIL (name, ERROR msg)) = 
-        (List.concat [ [ String.concat ["FAIL ", name ] ], 
-                      (case msg 
-                         of SOME msg => indent 
+      | summary' (FAIL (name, ERROR msg)) =
+        (List.concat [ [ String.concat ["FAIL ", name ] ],
+                      (case msg
+                         of SOME msg => indent
                            (List.concat [["\n"], (splitMsg msg), ["\n"] ])
-                          | NONE => ["\n"]) ], 
+                          | NONE => ["\n"]) ],
          (0, 1))
-      | summary' (FAIL (name, e)) = 
+      | summary' (FAIL (name, e)) =
         (List.concat [ [ String.concat ["FAIL ", name, " with external error ",
-                                        exnName e, "\n" ] ], 
-                      indent (splitMsg (exnMessage e)), 
-                      [ "\n"] ], 
+                                        exnName e, "\n" ] ],
+                      indent (splitMsg (exnMessage e)),
+                      [ "\n"] ],
          (0, 1))
       | summary' (PARTIAL (name, results)) = let
           val (lines, counts) = ListPair.unzip (List.map summary' results)
           val indented = indent (List.concat lines)
           val (n_passed, n_run) = List.foldl addVec (0, 0) counts
         in
-          (String.concat [ "[ ", Int.toString n_passed, " / ", Int.toString n_run, 
+          (String.concat [ "[ ", Int.toString n_passed, " / ", Int.toString n_run,
           " ] ", name, "\n"] :: indented, (n_passed, n_run))
         end
   in
@@ -161,7 +161,7 @@ end = struct
     TEST.SUITE{name="float", tests=[
       TEST.CASE{name="decimal", test=fn () =>
         assert' (S.same(pS "1.0", S.FLOAT 1.0))},
-      TEST.CASE{name="exponent", test=fn () => 
+      TEST.CASE{name="exponent", test=fn () =>
         assert' (S.same(pS "1e2", S.FLOAT 100.0))},
       TEST.CASE{name="decimal and exponent", test=fn () =>
         assert' (S.same(pS "1.2e2", S.FLOAT 120.0))},
@@ -175,7 +175,7 @@ end = struct
     TEST.SUITE{name="string", tests=[
       TEST.CASE{name="empty", test=fn () =>
         assert' (S.same(pS "\"\"", S.STRING "")) },
-      TEST.CASE{name="characters", test=fn () => 
+      TEST.CASE{name="characters", test=fn () =>
         assert' (S.same(pS "\"foo\"", S.STRING "foo")) },
       TEST.CASE{name="escapes", test=fn () =>
         assert' (S.same(pS "\" \\\\ \\\" \\/ \\b \\f \\n \\r \\t \"",
@@ -212,7 +212,7 @@ end = struct
       TEST.CASE{name="three elements", test=fn () =>
         assert' (S.same(pS "( 1 2 3 )", S.LIST [ S.INT 1, S.INT 2]))},
       TEST.CASE{name="mixed elements", test=fn () =>
-        assert' (S.same(pS "( 1 2.5 \"foo\" (2))", 
+        assert' (S.same(pS "( 1 2.5 \"foo\" (2))",
         S.LIST [ S.INT 1, S.FLOAT 2.5, S.STRING "foo", S.LIST [ S.INT 2 ] ]))},
       TEST.CASE{name="brackets", test=fn () =>
         assert' (S.same(pS "[ 1 2 3 ]", S.LIST [ S.INT 1, S.INT 2]))},
@@ -236,18 +236,18 @@ end = struct
     ]},
 
     TEST.SUITE{name="bugs", tests=[
-	TEST.CASE{name="bug01", test= fn () =>
-	    assert' (S.same(
-	      pS "(set pi 3.141592653589793 :documentation \"The value of $\\pi$.\")",
-	      S.LIST[
-		  S.SYMBOL(Atom.atom "set"), S.SYMBOL(Atom.atom "pi"),
-		  S.FLOAT 3.141592653589793, S.SYMBOL(Atom.atom ":documentation"),
-		  S.STRING "The value of $\\pi$."
-		]))
-	  }
+        TEST.CASE{name="bug01", test= fn () =>
+            assert' (S.same(
+              pS "(set pi 3.141592653589793 :documentation \"The value of $\\pi$.\")",
+              S.LIST[
+                  S.SYMBOL(Atom.atom "set"), S.SYMBOL(Atom.atom "pi"),
+                  S.FLOAT 3.141592653589793, S.SYMBOL(Atom.atom ":documentation"),
+                  S.STRING "The value of $\\pi$."
+                ]))
+          }
       ]}
   ]}
-    
+
   fun run () = TextIO.print (TEST.summary (TEST.run tests))
 end
 

@@ -1,6 +1,6 @@
-(* 
+(*
  * Signatures used by the iterative data flow analyzers.
- * 
+ *
  * -- Allen
  *)
 

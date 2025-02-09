@@ -1,7 +1,7 @@
 signature GC_MAP =
 sig
    structure GC : GC_TYPE
-   structure C  : CELLS_BASIS = CellsBasis 
+   structure C  : CELLS_BASIS = CellsBasis
 
    exception GCMap
 
@@ -9,9 +9,9 @@ sig
 
    val GCMAP       : gcmap Annotations.property
 
-   val GCLIVEIN    : (C.cell * GC.gctype) list Annotations.property 
+   val GCLIVEIN    : (C.cell * GC.gctype) list Annotations.property
 
-   val GCLIVEOUT   : (C.cell * GC.gctype) list Annotations.property 
+   val GCLIVEOUT   : (C.cell * GC.gctype) list Annotations.property
 
    val toString    : gcmap -> (C.cell -> string)
 

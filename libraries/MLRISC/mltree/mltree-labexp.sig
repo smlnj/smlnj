@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
  *
  *)
-signature LABELEXP = 
+signature LABELEXP =
 sig
   structure T  : MLTREE
   val valueOf  : T.labexp -> int
@@ -29,11 +29,11 @@ sig
    val eqMlriscs : T.mlrisc list * T.mlrisc list -> bool
 
    (*
-    * Value 
+    * Value
     *)
    exception NonConst
    val eval : {const:T.Constant.const -> IntInf.int,
-               label:Label.label -> int} -> 
+               label:Label.label -> int} ->
               {rexp : T.rexp -> IntInf.int,
                ccexp : T.ccexp -> bool
               }

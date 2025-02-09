@@ -8,7 +8,7 @@ functor GlobalSchedulerDDGViewer
     structure IR          : MLRISC_IR
     structure DDG         : SCHEDULER_DDG
     structure FormatInsn  : FORMAT_INSTRUCTION
-      sharing IR.I = FormatInsn.I = DDG.I 
+      sharing IR.I = FormatInsn.I = DDG.I
    ) : GLOBAL_SCHEDULER_DDG_VIEWER =
 struct
 
@@ -25,10 +25,10 @@ struct
    fun view IR ddg =
    let val regmap = IR.CFG.regmap IR
        val toString = FormatInsn.toString [] (I.C.lookup regmap)
-   in  GraphViewer.view 
+   in  GraphViewer.view
          (GraphLayout.makeLayout
            {graph = fn _ => [],
-            node  = fn (_,DDG.NODE{instr,b,...}) => 
+            node  = fn (_,DDG.NODE{instr,b,...}) =>
                          [L.LABEL("["^i2s b^"] "^toString instr)],
             edge  = fn (_,_,e) => [L.LABEL(DDG.edgeToString e), edgeColor]
            }

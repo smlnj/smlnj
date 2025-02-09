@@ -1,12 +1,12 @@
 (* power-pc-fn.sml
- * 
+ *
  * C calling convention for the OS X Power PC.
  *
  *)
 
 functor PowerPCCConventionFn (
     type reg_id
-	
+
   (* parameter GPRs *)
     val r3 : reg_id
     val r4 : reg_id
@@ -16,7 +16,7 @@ functor PowerPCCConventionFn (
     val r8 : reg_id
     val r9 : reg_id
     val r10 : reg_id
-  (* parameter FPRs *) 
+  (* parameter FPRs *)
     val f1 : reg_id
     val f2 : reg_id
     val f3 : reg_id
@@ -53,27 +53,27 @@ functor PowerPCCConventionFn (
     val cStack = SA.freshCounter()
     val cCallGpr = SA.freshCounter()
     val params = [
-	  SA.WIDEN (fn w => Int.max(32, w)),
-	  SA.BITCOUNTER cCallGpr,
-	  SA.CHOICE [
-	    (fn (w, k, store) => k = FPR,
-	     SA.SEQ [SA.WIDEN(fn w => 64), SA.USEREGS_RESERVE (List.map fpr paramFprs)])
-	    (fn (w, k, store) => true,
-	     SA.USEREGS_RESERVE (List.map gpr paramGprs))
-	  ]
+          SA.WIDEN (fn w => Int.max(32, w)),
+          SA.BITCOUNTER cCallGpr,
+          SA.CHOICE [
+            (fn (w, k, store) => k = FPR,
+             SA.SEQ [SA.WIDEN(fn w => 64), SA.USEREGS_RESERVE (List.map fpr paramFprs)])
+            (fn (w, k, store) => true,
+             SA.USEREGS_RESERVE (List.map gpr paramGprs))
+          ]
         ]
 
   (* rules for returning values *)
     val returns = [
-	  SA.CHOICE [
-	    (fn (w, k, store) => k = FPR, SA.SEQ [
+          SA.CHOICE [
+            (fn (w, k, store) => k = FPR, SA.SEQ [
                SA.WIDEN(fn w => 64), useRegs [fpr f1]
-	     ]),
-	    (fn (w, k, store) => true, SA.SEQ [
+             ]),
+            (fn (w, k, store) => true, SA.SEQ [
                SA.WIDEN(fn w => 32), useRegs [gpr r3, gpr r4]
-	     ])
+             ])
 
-	  ]
-	]
+          ]
+        ]
 
   end

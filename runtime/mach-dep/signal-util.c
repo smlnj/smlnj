@@ -55,6 +55,7 @@ void GCSignal (vproc_state_t *vsp, int nGen)
 void ChooseSignal (vproc_state_t *vsp)
 {
     int		i, j, delta;
+    (void)j;
 
   /* scan the signal counts looking for a signal that needs to be handled. */
     i = vsp->vp_nextPendingSig;

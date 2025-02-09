@@ -1,6 +1,6 @@
 (*
  * Generate the <arch>SSAProps functor.
- * This structure extracts semantics and dependence 
+ * This structure extracts semantics and dependence
  * information about the instruction set needed for SSA optimizations.
  *)
 
@@ -20,11 +20,11 @@ struct
 
      (* Insert copies *)
 
-   fun copyFuns hasImpl = 
-   let val (implInit,implPat,implCopy) = 
+   fun copyFuns hasImpl =
+   let val (implInit,implPat,implCopy) =
               if hasImpl then
                  ("impl=ref NONE,","impl,", "impl=impl,")
-              else 
+              else
                  ("", "", "")
    in
     $["fun copies cps =",
@@ -67,9 +67,9 @@ struct
        val md = RTLComp.md compiled_rtls
 
        (* name of the structure/signature *)
-       val strName = Comp.strname md "SSAProps"  
+       val strName = Comp.strname md "SSAProps"
        val sigName = "MLRISC_SSA_PROPERTIES"
- 
+
        (* query function *)
        val mkQuery = RTLComp.mkQuery compiled_rtls
 
@@ -79,28 +79,28 @@ struct
 
        (* Function for extracting naming constraints from an RTL *)
        val namingConstraints =
-       let 
-           fun body{instr,rtl,const} = 
+       let
+           fun body{instr,rtl,const} =
            let fun ignore p = conspat(WILDpat,p)
-               fun cell(k,r) = 
+               fun cell(k,r) =
                    const(
                       APPexp(APPexp(IDexp(IDENT(["C"],"Reg")),
                           IDexp(IDENT(["C"],C.cellkindToString k))),
                           INTexp(IntInf.toInt r)))
 
-               fun addSrc(id,r,(d,u,C)) = 
+               fun addSrc(id,r,(d,u,C)) =
                      (d,
                       conspat(IDpat(In id),u),
                       APP("USE",RECORDexp[("var",ID(In id)),("color",r)])::C
-                     ) 
+                     )
 
-               fun addDst(id,r,(d,u,C)) = 
+               fun addDst(id,r,(d,u,C)) =
                      (conspat(IDpat(Out id),d),
                       u,
                       APP("DEF",RECORDexp[("var",ID(Out id)),("color",r)])::C
-                     ) 
+                     )
 
-               fun addDstSrc(id,(d,u,C)) = 
+               fun addDstSrc(id,(d,u,C)) =
                      (conspat(IDpat(Out id),d),
                       conspat(IDpat(In id),u),
                       APP("SAME",RECORDexp[("x",ID(Out id)),("y",ID(In id))])::
@@ -110,10 +110,10 @@ struct
                fun ignoreUse(d,u,C) = (d, conspat(WILDpat,u), C)
 
                fun ignoreDef(d,u,C) = (conspat(WILDpat,d), u, C)
- 
-               fun f(id,ty,T.$(_,k,T.LI r),RTL.IN _,x) = 
+
+               fun f(id,ty,T.$(_,k,T.LI r),RTL.IN _,x) =
                       addSrc(id,cell(k,r),x)
-                 | f(id,ty,T.$(_,k,T.LI r),RTL.OUT _,x) = 
+                 | f(id,ty,T.$(_,k,T.LI r),RTL.OUT _,x) =
                       addDst(id,cell(k,r),x)
                  | f(id,ty,_,RTL.IO _,x) = addDstSrc(id, x)
                  | f(id,ty,_,RTL.IN _,x) = ignoreUse x
@@ -121,17 +121,17 @@ struct
 
                fun g(id,ty,x) = x
 
-               val (d,u,C) = 
+               val (d,u,C) =
                  RTLComp.forallArgs
                   {instr=instr,rtl=rtl,rtlArg=f,nonRtlArg=g} (nilpat,nilpat,[])
            in  {exp=LISTexp(C,NONE), casePats=[d,u]}
            end
-    
+
            val decls=[RTLComp.complexErrorHandler "namingConstraints",
                       $["val dst_list = dst and src_list = src"]
                      ]
        in  mkQuery
-             {name           = "namingConstraints",   
+             {name           = "namingConstraints",
               namedArguments = true,
               args           = [["instr","src","dst"]],
               caseArgs       = ["dst_list","src_list"],
@@ -142,7 +142,7 @@ struct
 
        (* Function for rewriting the operands of an RTL *)
        val substituteOperands =
-       let fun body {instr,rtl,const} = 
+       let fun body {instr,rtl,const} =
            let fun Ignore p = conspat(WILDpat, p)
 
                fun add(RTL.IN _,x,d,u)  = (d,conspat(IDpat(In x),u))
@@ -156,7 +156,7 @@ struct
 
                fun g(id,ty,(d,u)) = (Ignore d,Ignore u)
 
-               fun arg(T.$(_,k,_),name) = 
+               fun arg(T.$(_,k,_),name) =
                     if C.cellkindToString k = "CELLSET" then NONE
                     else SOME(ID name)
                  | arg(T.ARG _,name) = SOME(APP("get_operand",ID name))
@@ -171,11 +171,11 @@ struct
                val (d, u) =
                    RTLComp.forallArgs{instr=instr,rtl=rtl,rtlArg=f,nonRtlArg=g}
                      (nilpat,nilpat)
-               val exp = 
-                  RTLComp.mapInstr{instr=instr,rtl=rtl,rtlArg=f',nonRtlArg=g'} 
+               val exp =
+                  RTLComp.mapInstr{instr=instr,rtl=rtl,rtlArg=f',nonRtlArg=g'}
            in  {exp=exp, casePats=[d, u]}
            end
-                              
+
            val decls=[RTLComp.complexErrorHandler "substituteOperands",
                       $["fun get_operand x = error \"get_operand\"",
                         "val dst_list = dst and src_list = src"
@@ -197,7 +197,7 @@ struct
             "structure RegionProps : REGION_PROPERTIES ",
             "structure RTLProps : RTL_PROPERTIES where I = Instr",
             "structure InsnProps : INSN_PROPERTIES where I = Instr",
-            "structure Asm : INSTRUCTION_EMITTER where I = Instr", 
+            "structure Asm : INSTRUCTION_EMITTER where I = Instr",
             "structure OperandTable : OPERAND_TABLE where I = Instr",
             "  sharing RegionProps.Region = Instr.Region",
             "val volatile     : Instr.C.cell list",
@@ -208,7 +208,7 @@ struct
            ]
 
        (* The functor *)
-       val strBody = 
+       val strBody =
            [$ ["structure I         = Instr",
                "structure C         = I.C",
                "structure RTLProps  = RTLProps",
@@ -245,7 +245,7 @@ struct
            ]
 
    in  Comp.codegen md "SSA/SSAProps"
-         [Comp.mkFct md "SSAProps" args sigName 
+         [Comp.mkFct md "SSAProps" args sigName
               strBody
              (* (map Comp.Trans.simplifyDecl strBody) *)
          ]

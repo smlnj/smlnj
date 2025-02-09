@@ -16,12 +16,12 @@ end
 structure AsmStream : ASM_STREAM = struct
   val asmOutStream = ref TextIO.stdOut
   fun withStream stream body x = let
-     val s = !asmOutStream 
+     val s = !asmOutStream
      val _ = asmOutStream := stream
   in
     (body x before asmOutStream := s)
        handle e => (asmOutStream := s; raise e)
-  end   
+  end
 end
 
 

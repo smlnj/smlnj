@@ -7,11 +7,11 @@
 
 functor PseudoOpsBig
    ( structure T : MLTREE
-     structure MLTreeEval : MLTREE_EVAL 
-			     where T = T
-     val  icache_alignment : int	(* cache line size *)
-     val max_alignment : int option	(* maximum alignment for internal labels *)
-     val nop: {sz:int, en:Word32.word}	(* encoding for noop *)
+     structure MLTreeEval : MLTREE_EVAL
+                             where T = T
+     val  icache_alignment : int        (* cache line size *)
+     val max_alignment : int option     (* maximum alignment for internal labels *)
+     val nop: {sz:int, en:Word32.word}  (* encoding for noop *)
     ) : PSEUDO_OPS_ENDIAN =
 struct
   structure W = Word
@@ -39,21 +39,21 @@ struct
 
   fun bytesIn sz = Int.quot(sz, 8)
 
-  fun sizeOf(pOp, loc) = 
+  fun sizeOf(pOp, loc) =
     (case pOp
      of PB.ALIGN_SZ n => padding(loc, pow2(1, n))
       | PB.ALIGN_ENTRY => padding(loc, icache_alignment)
       | PB.ALIGN_LABEL => let
-	  val pad = padding(loc, icache_alignment)
-        in 
-	  case max_alignment 
-	   of NONE => pad
-	    | SOME m => if pad <= m then pad else 0
+          val pad = padding(loc, icache_alignment)
+        in
+          case max_alignment
+           of NONE => pad
+            | SOME m => if pad <= m then pad else 0
         end
 
       | PB.INT{sz, i} => length(i) * bytesIn sz
 
-      | PB.ASCII s => String.size s 
+      | PB.ASCII s => String.size s
       | PB.ASCIIZ s => String.size s + 1
 
       | PB.SPACE(sz)  => sz
@@ -75,22 +75,22 @@ struct
     in emitWord(w ~>> 0w16); emitWord(w & 0w65535)
     end
 
-    local 
-	val {sz, en} = nop
-	val toWord = W.fromLargeInt o Word32.toLargeIntX 
+    local
+        val {sz, en} = nop
+        val toWord = W.fromLargeInt o Word32.toLargeIntX
     in
-      fun emitNop () = 
-	case sz
-	 of 1 => emitByte (toWord en)
-	  | 2 => emitWord (toWord en)
-	  | 4 => (emitWord(toWord(Word32.andb(en, 0w65535))); 
-	 	  emitWord(toWord(Word32.>>(en, 0w16))))
-	  | n => error ("emitNop : sz = " ^ Int.toString n)
+      fun emitNop () =
+        case sz
+         of 1 => emitByte (toWord en)
+          | 2 => emitWord (toWord en)
+          | 4 => (emitWord(toWord(Word32.andb(en, 0w65535)));
+                  emitWord(toWord(Word32.>>(en, 0w16))))
+          | n => error ("emitNop : sz = " ^ Int.toString n)
 
       fun insertNops 0 = ()
-	| insertNops n = 
-	   if n >= sz then (emitNop(); insertNops(n-sz))
-	   else error "insertNops"
+        | insertNops n =
+           if n >= sz then (emitNop(); insertNops(n-sz))
+           else error "insertNops"
     end
 
     fun align(loc, bndry) = let
@@ -106,10 +106,10 @@ struct
       (*esac*)
     end
 
-    val {ccexp, rexp} = 
-      MLTreeEval.eval 
-	  {const = IntInf.fromInt o T.Constant.valueOf, 
-	   label = Label.addrOf}
+    val {ccexp, rexp} =
+      MLTreeEval.eval
+          {const = IntInf.fromInt o T.Constant.valueOf,
+           label = Label.addrOf}
   in
     case pOp
     of PB.ALIGN_SZ n => insertNops(sizeOf(pOp, loc))
@@ -120,10 +120,10 @@ struct
          val ints = map (IntInf.toInt o rexp) i
        in
          case sz
-	  of 8 => app (emitByte o itow)  ints
+          of 8 => app (emitByte o itow)  ints
            | 16 => app (emitWord o itow) ints
            | 32 => app emitLongX ints
-	   | _ => error "emitValue: INT 64"
+           | _ => error "emitValue: INT 64"
          (*esac*)
        end
 

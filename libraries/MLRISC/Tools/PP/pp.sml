@@ -21,11 +21,11 @@ struct
    fun (f ++ g) S = (f S; g S)
 
    fun nop S = ()
- 
+
    fun emit(PP{buf, col, tok, ...},s,t) =
        (buf := s :: !buf; col := !col + size s; tok := t)
 
-   fun spaceIf p (pps as PP{tok, ...}) = 
+   fun spaceIf p (pps as PP{tok, ...}) =
        if p (!tok) then emit(pps," ",SPACE) else ()
 
    val sp        = spaceIf(fn (SPACE | NEWLINE) => false | _ => true)
@@ -36,11 +36,11 @@ struct
    fun string s pps = emit(pps,"\""^String.toString s^"\"",STRING)
    fun char c pps   = emit(pps,"#\""^Char.toString c^"\"",STRING)
    fun num n pps = (space pps; emit(pps,n,NUM))
-   val int       = num o Int.toString 
-   val int32     = num o Int32.toString 
-   val real      = num o Real.toString 
-   val intinf    = num o IntInf.toString 
-   val word      = num o (fn w => "0wx"^Word.toString w) 
+   val int       = num o Int.toString
+   val int32     = num o Int32.toString
+   val real      = num o Real.toString
+   val intinf    = num o IntInf.toString
+   val word      = num o (fn w => "0wx"^Word.toString w)
    val word32    = num o (fn w => "0wx"^Word32.toString w)
    fun tab' offset (pps as PP{tabs, col, ...}) =
        let val at = (case !tabs of i::_ => i |  _ => 0) + offset
@@ -59,29 +59,29 @@ struct
    fun unsetmode (PP{modes as ref(_::m), ...}) = modes := m
      | unsetmode _ = raise Fail "unsetmode"
    fun select f (pps as PP{modes=ref(m::_), ...}) = f m pps
-     | select _ _ = raise Fail "select" 
-   fun nl (PP{buf, col, tok, ...}) = 
+     | select _ _ = raise Fail "select"
+   fun nl (PP{buf, col, tok, ...}) =
          (buf := "\n" :: !buf; col := 0; tok := NEWLINE)
    fun nl' (offset,indent) (pps as PP{col, width, ...}) =
-       if !col >= !width - offset 
+       if !col >= !width - offset
        then (nl pps; tab' indent pps)
        else ()
    fun textWidth w (PP{width, ...}) = width := w
 
-   fun seq (l,sep,r) pps = 
+   fun seq (l,sep,r) pps =
    let fun f [] = nop
          | f [a] = a
-         | f(a::b) = a ++ sep ++ f b 
+         | f(a::b) = a ++ sep ++ f b
    in  l ++ f pps ++ r end
    fun concat pps = foldr op++ nop pps
    fun block pp = indent ++ pp ++ unindent
    fun line pp  = tab ++ pp ++ nl
    fun paren pp = $$ "(" ++ pp ++ $$ ")"
-   fun group(l,r) pp = settab ++ $$ l ++ settab ++ pp ++ 
+   fun group(l,r) pp = settab ++ $$ l ++ settab ++ pp ++
                        unindent ++ tab ++ $$ r ++ unindent
-   fun text pp = 
+   fun text pp =
    let val buf = ref []
-       val pps = PP{buf=buf, tabs=ref [], modes=ref ["pretty"], 
+       val pps = PP{buf=buf, tabs=ref [], modes=ref ["pretty"],
                     col=ref 0, tok=ref NEWLINE, width=ref 80}
    in  pp pps;
        String.concat(rev(! buf))

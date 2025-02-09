@@ -2,7 +2,7 @@
  * Register set datatype. Implemented as sorted lists.
  *
  * -- Allen
- *) 
+ *)
 
 structure RegSet :> REGISTER_SET =
 struct
@@ -11,11 +11,11 @@ struct
 
    type regset = reg list
 
-   val empty = [] 
+   val empty = []
 
    fun sort [] = []
      | sort (l as [_]) = l
-     | sort (l as [x,y]) = if Int.<(x,y) then l else 
+     | sort (l as [x,y]) = if Int.<(x,y) then l else
                            if x = y then [x] else [y,x]
      | sort l =
        let val (a,b) = split (l,[],[])
@@ -52,7 +52,7 @@ struct
    fun intersects []  = []
      | intersects [a] = a
      | intersects (a::b) = intersect(a,intersects b)
-   
+
    fun ==([],[]) = true
      | ==(r::rs,r'::rs') = (r : int) = r' andalso ==(rs,rs')
      | ==(_,_)   = false
@@ -74,7 +74,7 @@ struct
          else if r' < r then r'::insert(rs,r)
          else r::set
 
-   fun insertChanged (set,r) = 
+   fun insertChanged (set,r) =
    let fun ins [] = ([r],true)
          | ins (set as r'::rs) =
              if r = r' then (set,false)
@@ -92,7 +92,7 @@ struct
          if r' = r then rs
          else if r' < r then r'::remove(rs,r)
          else set
-     
+
    fun removeChanged (set,r) =
    let fun rmv [] = ([],false)
          | rmv (set as r'::rs) =
@@ -114,9 +114,9 @@ struct
    fun toString set =
    let fun collect([],l) = l
          | collect(r::rs,l) = Int.toString r::collect'(rs,l)
-       and collect'(rs,l) = 
+       and collect'(rs,l) =
            let val l = collect(rs,l)
-           in  case l of [_] => l 
+           in  case l of [_] => l
                        | l  => ","::l
            end
    in  String.concat("{"::collect(set,["}"]))

@@ -43,7 +43,7 @@ struct
    let fun collect (x,[],l)   = l
          | collect (x,h::t,l) = (x,h)::collect(x,t,l)
    in
-       S.fold (fn ((x,ys),l) => collect (x,ys,l)) [] m 
+       S.fold (fn ((x,ys),l) => collect (x,ys,l)) [] m
    end
 
    fun clear (m,c) = (S.clear m; c := 0)
@@ -69,7 +69,7 @@ struct
    fun toString (f,g) m =
       "{" ^
           dupFold (fn ((x,y),"") => "(" ^ f x ^ ", " ^ g y ^ ")"
-                   | ((x,y),l)  => "(" ^ f x ^ ", " ^ g y ^ "), " ^ l) 
+                   | ((x,y),l)  => "(" ^ f x ^ ", " ^ g y ^ "), " ^ l)
                    "" m ^ "}"
 
 end

@@ -1,7 +1,7 @@
 (*---------------------------------------------------------------------------
  * Machine SSA representation.
  *
- * -- Allen (leunga@cs.nyu.edu) 
+ * -- Allen (leunga@cs.nyu.edu)
  *---------------------------------------------------------------------------*)
 functor SSA
   (structure SSAProps   : SSA_PROPERTIES
@@ -38,12 +38,12 @@ struct
    fun error msg = MLRiscErrorMsg.error("SSA",msg)
 
    (*------------------------------------------------------------------------
-    * Flags 
+    * Flags
     *------------------------------------------------------------------------*)
-   val showAsm   = MLRiscControl.getFlag "ssa-show-asm" 
+   val showAsm   = MLRiscControl.getFlag "ssa-show-asm"
    val showPos   = MLRiscControl.getFlag "ssa-show-pos"
-   val debug     = MLRiscControl.getFlag "ssa-debug"   
-   val listLimit = MLRiscControl.getInt  "ssa-list-limit"  
+   val debug     = MLRiscControl.getFlag "ssa-debug"
+   val listLimit = MLRiscControl.getInt  "ssa-list-limit"
    val _ = listLimit := 5
 
    (*------------------------------------------------------------------------
@@ -64,27 +64,27 @@ struct
    type rtl    = RTL.rtl         (* RTL *)
    type const  = OT.const        (* constants *)
    type cfg = CFG.cfg            (* control flow graph *)
-   type dom = (CFG.block,CFG.edge_info,CFG.info) Dom.dominator_tree  
-   type nameTbl = {oldName:C.cell, index:int} IntHashTable.hash_table 
+   type dom = (CFG.block,CFG.edge_info,CFG.info) Dom.dominator_tree
+   type nameTbl = {oldName:C.cell, index:int} IntHashTable.hash_table
 
    (*------------------------------------------------------------------------
-    * An SSA op is an instruction 
+    * An SSA op is an instruction
     *------------------------------------------------------------------------*)
    type ssa_op = I.instruction
 
    (*------------------------------------------------------------------------
-    * Information about the SSA graph 
+    * Information about the SSA graph
     *------------------------------------------------------------------------*)
-   datatype ssa_info = 
+   datatype ssa_info =
       INFO of
       {cfg             : cfg,
        dom             : cfg -> dom,
-       defSiteTbl      : ssa_id DA.array,       
+       defSiteTbl      : ssa_id DA.array,
        blockTbl        : block DA.array,
        posTbl          : pos DA.array,
        rtlTbl          : rtl DA.array,
        usesTbl         : value list DA.array,
-       defsTbl         : value list DA.array, 
+       defsTbl         : value list DA.array,
        succTbl         : value Graph.edge list DA.array,
        ssaOpTbl        : ssa_op DA.array,
        cellKindTbl     : C.cellkind IntHashTable.hash_table,
@@ -135,17 +135,17 @@ struct
    (*------------------------------------------------------------------------
     * How to create a new SSA graph
     *------------------------------------------------------------------------*)
-   fun newSSA{cfg, dom, gcmap, nameTbl} =  
+   fun newSSA{cfg, dom, gcmap, nameTbl} =
    let val nextImmed   = ref ~1
        val defSiteTbl  = DA.array(13, ~1)
-       val blockTbl    = DA.array(13, ~1) 
-       val posTbl      = DA.array(13, ~1) 
+       val blockTbl    = DA.array(13, ~1)
+       val posTbl      = DA.array(13, ~1)
        val rtlTbl      = DA.array(13, T.SEQ [])
        val usesTbl     = DA.array(13, [])
        val defsTbl     = DA.array(13, [])
        val succTbl     = DA.array(13, [])
        val ssaOpTbl    = DA.array(13, InsnProps.nop())
-       val cellKindTbl = IntHashTable.mkTable(13, NoCellKind) 
+       val cellKindTbl = IntHashTable.mkTable(13, NoCellKind)
        val operandTbl  = OT.create nextImmed
        val nodeCount   = ref 0
        val edgeCount   = ref 0
@@ -163,7 +163,7 @@ struct
                  succTbl         = succTbl,
                  ssaOpTbl        = ssaOpTbl,
                  cellKindTbl     = cellKindTbl,
-                 operandTbl      = operandTbl, 
+                 operandTbl      = operandTbl,
                  nameTbl         = nameTbl,
                  gcmap           = gcmap,
                  nextImmed       = nextImmed,
@@ -177,7 +177,7 @@ struct
                  freqTbl         = ref NONE
                }
        (*--------------------------------------------------------------------
-        * Graph methods 
+        * Graph methods
         *--------------------------------------------------------------------*)
        fun nop _ = ()
        fun unimplemented title = error("unimplemented: "^title)
@@ -187,30 +187,30 @@ struct
        fun order() = !nodeCount
        fun size()  = !edgeCount
        fun capacity() = DA.length ssaOpTbl
-       fun new_id() = 
-           case !newNodes of 
+       fun new_id() =
+           case !newNodes of
              []   => DA.length ssaOpTbl
            | h::t => (newNodes := t; h)
        fun garbage_collect () =
           (newNodes := (!newNodes) @ (!garbageNodes); garbageNodes := [])
-       fun add_edge(e as (i,j,r)) = 
+       fun add_edge(e as (i,j,r)) =
            (edgeCount := !edgeCount + 1;
             DA.update(succTbl, i, (i,j,r)::DA.sub(succTbl, i))
            )
-       fun set_out_edges(n,es) = unimplemented "set_out_edges" 
-       fun set_in_edges(n,es) = unimplemented "set_in_edges" 
-       fun add_node n = unimplemented "add_node" 
+       fun set_out_edges(n,es) = unimplemented "set_out_edges"
+       fun set_in_edges(n,es) = unimplemented "set_in_edges"
+       fun add_node n = unimplemented "add_node"
 
        (* Invariant: all uses of these nodes must have already been removed! *)
-       and remove_node n = 
+       and remove_node n =
        if DA.sub(blockTbl, n) < 0 then () (* already removed *)
        else let fun removeUses([], c) = c
-                  | removeUses(v::vs, c) = 
+                  | removeUses(v::vs, c) =
                     if v < 0 then removeUses(vs, c)
                     else
                     let val i = DA.sub(defSiteTbl, v)
                     in  if i = n then removeUses(vs, c)
-                        else 
+                        else
                         let fun filterEdges([], es', c) = (es', c)
                               | filterEdges((e as (i,j,_))::es, es', c) =
                                 if j = n then filterEdges(es, es', c-1)
@@ -220,48 +220,48 @@ struct
                         in  DA.update(succTbl, i, es);
                             removeUses(vs, c)
                         end
-                    end 
+                    end
                 val uses = DA.sub(usesTbl, n)
                 val size = removeUses(uses, !edgeCount)
             in  edgeCount := size - length (DA.sub(succTbl, n));
                 nodeCount := !nodeCount - 1;
-                garbageNodes := n :: !garbageNodes; 
+                garbageNodes := n :: !garbageNodes;
                 DA.update(blockTbl, n, ~1);
                 DA.update(usesTbl, n, []);
                 DA.update(defsTbl, n, []);
                 DA.update(succTbl, n, [])
-            end      
-       
+            end
+
        fun set_entries ns = entries := ns
        fun set_exits ns = exits := ns
        fun get_entries() = !entries
        fun get_exits() = !exits
        fun get_succ n = map #2 (DA.sub(succTbl, n))
-       fun get_pred n = 
+       fun get_pred n =
            let val defSite = DA.baseArray defSiteTbl
                fun collect([], preds) = preds
-                 | collect(v::vs, preds) = 
+                 | collect(v::vs, preds) =
                    if v < 0 then collect(vs, preds)
                    else let val n = A.sub(defSite, v)
                         in  collect(vs, n::preds) end
-           in  collect(DA.sub(usesTbl,n), []) end 
+           in  collect(DA.sub(usesTbl,n), []) end
        fun get_nodes() =
        let val block  = DA.baseArray blockTbl
            val ssaOps = DA.baseArray ssaOpTbl
            val n      = DA.length blockTbl
-           fun collect(i, nodes) =  
-               if i >= 0 then 
-                 collect(i-1, 
-                   if A.sub(block, i) >= 0 then 
+           fun collect(i, nodes) =
+               if i >= 0 then
+                 collect(i-1,
+                   if A.sub(block, i) >= 0 then
                      (i,A.sub(ssaOps,i))::nodes else nodes)
                else nodes
        in  collect(n-1, []) end
 
-       fun get_edges() =  
+       fun get_edges() =
        let val succ = DA.baseArray succTbl
            val n    = DA.length succTbl
-           fun collect(i, edges) = 
-               if i >= 0 then 
+           fun collect(i, edges) =
+               if i >= 0 then
                   collect(i-1, List.revAppend(A.sub(succ, i), edges))
                else edges
        in  collect(n-1, []) end
@@ -270,7 +270,7 @@ struct
        fun in_edges n =
        let val defSite = DA.baseArray defSiteTbl
            fun collect([], edges) = edges
-             | collect(v::vs, edges) = 
+             | collect(v::vs, edges) =
                if v < 0 then collect(vs, edges)
                else let val n' = A.sub(defSite, v)
                     in  collect(vs, (n',n,v)::edges) end
@@ -283,10 +283,10 @@ struct
        let val block  = DA.baseArray blockTbl
            val ssaOps = DA.baseArray ssaOpTbl
            val n      = A.length block
-           fun app i =  
+           fun app i =
                if i >= n then () else
                (if A.sub(block, i) >= 0 then f(i, A.sub(ssaOps,i)) else ();
-                app(i+1))  
+                app(i+1))
        in  app 0 end
 
        fun forall_edges f =
@@ -328,13 +328,13 @@ struct
           forall_nodes    = forall_nodes,
           forall_edges    = forall_edges
          }
-   end  
+   end
 
    (*------------------------------------------------------------------------
     * Extract info from the SSA graph
     *------------------------------------------------------------------------*)
    fun info(G.GRAPH ssa) = let val INFO info = #graph_info ssa in info end
-   fun dom SSA = 
+   fun dom SSA =
    let val {cfg, dom, ...} = info SSA   (* extracts the dominator *)
    in  dom cfg end
    fun cfg SSA = #cfg(info SSA)   (* extracts the CFG *)
@@ -351,8 +351,8 @@ struct
    (*------------------------------------------------------------------------
     * Reserve n nodes of storage in all the dynamic tables.
     *------------------------------------------------------------------------*)
-   fun reserve SSA n = 
-   let val {defsTbl, usesTbl, ssaOpTbl, rtlTbl, 
+   fun reserve SSA n =
+   let val {defsTbl, usesTbl, ssaOpTbl, rtlTbl,
             blockTbl, posTbl, succTbl, ...} = info SSA
    in  (* if !debug then
            print("[SSA: reserving "^i2s n^" nodes]\n")
@@ -367,10 +367,10 @@ struct
    end
 
    (*------------------------------------------------------------------------
-    * Extract the raw tables.  
+    * Extract the raw tables.
     * These should only be used when the optimization guarantees that
     * no new ssa ops are added to the graph, since that may involve resizing
-    * these tables, rendering them obsolete.  
+    * these tables, rendering them obsolete.
     *------------------------------------------------------------------------*)
    fun defSiteTbl SSA = DA.baseArray(#defSiteTbl(info SSA))
    fun blockTbl SSA = DA.baseArray(#blockTbl(info SSA))
@@ -388,9 +388,9 @@ struct
    (*------------------------------------------------------------------------
     * Lookup information (the safe way)
     *------------------------------------------------------------------------*)
-   fun defSite G = let val t = #defSiteTbl(info G) in fn v => DA.sub(t, v) end 
-   fun block G = let val t = #blockTbl(info G) in fn n => DA.sub(t, n) end 
-   fun rtl G = let val t = #rtlTbl(info G) in fn n => DA.sub(t, n) end 
+   fun defSite G = let val t = #defSiteTbl(info G) in fn v => DA.sub(t, v) end
+   fun block G = let val t = #blockTbl(info G) in fn n => DA.sub(t, n) end
+   fun rtl G = let val t = #rtlTbl(info G) in fn n => DA.sub(t, n) end
    fun uses G = let val t = #usesTbl(info G) in fn n => DA.sub(t, n) end
    fun defs G = let val t = #defsTbl(info G) in fn n => DA.sub(t, n) end
    fun freqTbl G =
@@ -410,20 +410,20 @@ struct
     * Pretty printing a value
     *------------------------------------------------------------------------*)
    fun prInt i = if i < 0 then "-"^i2s(~i) else i2s i
-   fun prIntInf i = if IntInf.sign i < 0 then 
-                       "-"^IntInf.toString(IntInf.~ i) 
+   fun prIntInf i = if IntInf.sign i < 0 then
+                       "-"^IntInf.toString(IntInf.~ i)
                     else IntInf.toString i
-   fun showVal SSA = 
+   fun showVal SSA =
    let val {nameTbl, cellKindTbl, gcmap, ...} = info SSA
        val const = const SSA
        val cellKind = IntHashTable.find cellKindTbl
-       val cellKind = fn r => case cellKind r of SOME k => k | NONE => C.GP 
+       val cellKind = fn r => case cellKind r of SOME k => k | NONE => C.GP
 
        (* Display gc type if a gc map is present *)
-       val showGC = 
+       val showGC =
            case gcmap of
              NONE => (fn r => "")
-           | SOME gcmap => 
+           | SOME gcmap =>
              let val look = IntHashTable.lookup gcmap
              in  fn r => ":"^GCMap.GC.toString(look r) handle _ => ":?" end
 
@@ -431,22 +431,22 @@ struct
        val translate =
            case nameTbl of
              NONE =>     (fn (k,v) => C.toString k v)
-           | SOME tbl => 
+           | SOME tbl =>
              let val look = IntHashTable.lookup tbl
-             in  fn (k,v) => 
+             in  fn (k,v) =>
                     let val {oldName,index} = look v
                     in  C.toString k oldName^"."^i2s index end
                     handle _ => (C.toString k v)
              end
 
        (* Lookup name *)
-       fun lookupName v = 
+       fun lookupName v =
        let val k = cellKind v
            val gcTy = if k = C.MEM orelse k = C.CTRL then "" else showGC v
        in  translate(k,v) ^ gcTy end
 
        (* Show a value *)
-       fun show v = 
+       fun show v =
            if v >= 0 then lookupName v
            else (case const v of
                   SP.OT.INT i => prInt i
@@ -457,12 +457,12 @@ struct
    in  show end
 
    (*------------------------------------------------------------------------
-    * Pretty printing an ssa op 
+    * Pretty printing an ssa op
     *------------------------------------------------------------------------*)
-   fun showOp SSA = 
-   let val {usesTbl, defsTbl, ssaOpTbl, rtlTbl, succTbl, 
+   fun showOp SSA =
+   let val {usesTbl, defsTbl, ssaOpTbl, rtlTbl, succTbl,
             blockTbl, posTbl, cellKindTbl, ...} = info SSA
-       val K       = !listLimit 
+       val K       = !listLimit
        val showVal = showVal SSA
        val cfg     = cfg SSA
        val regmap  = CFG.regmap cfg
@@ -471,8 +471,8 @@ struct
        fun block b = "b"^i2s b
        fun blockOf ssa_id = block(DA.sub(blockTbl,ssa_id))
        val cellKindOf = IntHashTable.find cellKindTbl
-       val cellKindOf = 
-           fn r => case cellKindOf r of SOME k => k | NONE => C.GP 
+       val cellKindOf =
+           fn r => case cellKindOf r of SOME k => k | NONE => C.GP
 
        fun listify(vs, rs) =
        let fun h r = C.toString (cellKindOf r) r
@@ -488,28 +488,28 @@ struct
          | listify2(b::bs,v::vs) = "["^block b^"]"^showVal v^","^listify2(bs,vs)
          | listify2 _ = ""
 
-       fun show ssa_id = 
-       let val ssa_op  = DA.sub(ssaOpTbl, ssa_id) 
+       fun show ssa_id =
+       let val ssa_op  = DA.sub(ssaOpTbl, ssa_id)
            val defs    = DA.sub(defsTbl,ssa_id)
            val uses    = DA.sub(usesTbl,ssa_id)
            val rtl     = DA.sub(rtlTbl,ssa_id)
        in  case rtl of
-             T.PHI{preds, ...} => 
+             T.PHI{preds, ...} =>
                showVal(hd defs)^" := phi("^listify2(preds,uses)^")"
-           | T.SINK{block=b,liveOut,...} => 
+           | T.SINK{block=b,liveOut,...} =>
                "sink["^block b^"]("^listify(uses, liveOut)^")"
-           | T.SOURCE{block=b,liveIn,...} => 
+           | T.SOURCE{block=b,liveIn,...} =>
                 (* Only pretty print the registers that are currently live *)
                let val edges = DA.sub(succTbl,ssa_id)
                    fun isLive r = List.exists (fn (_,_,r') => r = r') edges
-                   fun collect([], [], ds', rs') = (rev ds', rev rs') 
+                   fun collect([], [], ds', rs') = (rev ds', rev rs')
                      | collect(d::ds, r::rs, ds', rs') =
                        if isLive d then collect(ds, rs, d::ds', r::rs')
                        else collect(ds, rs, ds', rs')
                    val (defs, liveIn) = collect(defs, liveIn, [], [])
                in  "source["^block b^"]("^listify(defs, liveIn)^")"
                end
-           | _ => 
+           | _ =>
               let fun def v = showVal(List.nth(defs, v))
                   fun use v = showVal(List.nth(uses, v))
                   val ssa = RTL.rtlToString rtl
@@ -518,8 +518,8 @@ struct
                                             regionDef=def, regionUse=use}) rtl
                    *)
 
-                  val ssa = if !showPos then 
-                               ssa^" #"^prInt(DA.sub(posTbl, ssa_id))  
+                  val ssa = if !showPos then
+                               ssa^" #"^prInt(DA.sub(posTbl, ssa_id))
                             else ssa
               in  if !showAsm then asm ssa_op^" ["^ssa^"]" else ssa end
        end
@@ -534,17 +534,17 @@ struct
    (*------------------------------------------------------------------------
     * Generate a renamed variable.  Propagate cellkind and gc type information
     *------------------------------------------------------------------------*)
-   fun newRenamedVar SSA = 
+   fun newRenamedVar SSA =
    let val {nameTbl, cellKindTbl, gcmap, ...} = info SSA
        val lookupCellKind = IntHashTable.lookup cellKindTbl
        val addCellKind    = IntHashTable.insert cellKindTbl
        val updateGC =
            case gcmap of
              NONE   => (fn (r, r') => r')
-           | SOME m => 
+           | SOME m =>
              let val lookup = IntHashTable.lookup m
                  val add    = IntHashTable.insert m
-             in  fn (r,r') => (add(r', lookup r) handle _ => (); r') 
+             in  fn (r,r') => (add(r', lookup r) handle _ => (); r')
              end
        fun newVar r =
        let val r' = C.newVar r
@@ -560,27 +560,27 @@ struct
              val indexTbl  = IntHashTable.mkTable(31, NoIndex)
              val addIndex  = IntHashTable.insert indexTbl
              val findIndex = IntHashTable.find indexTbl
-             val findIndex = 
+             val findIndex =
                  fn r => case findIndex r of SOME i => i | NONE => 0
-             fun newVarKeepName r = 
+             fun newVarKeepName r =
              let val r' = newVar r
                  val i  = findIndex r
              in  addIndex(r,i+1);
                  enterName(r', {oldName=r, index=i});
                  r'
              end
-         in  newVarKeepName 
+         in  newVarKeepName
          end
    end
 
    (*------------------------------------------------------------------------
     * Generate variable.  Propagate gc type information only.
     *------------------------------------------------------------------------*)
-   fun newVar SSA = 
+   fun newVar SSA =
    let val {gcmap, ...} = info SSA
    in  case gcmap of
           NONE => C.newVar
-        | SOME m => 
+        | SOME m =>
           let val lookup = IntHashTable.lookup m
               val add    = IntHashTable.insert m
           in  fn r => let val r' = C.newVar r
@@ -593,18 +593,18 @@ struct
     *------------------------------------------------------------------------*)
    fun newOp SSA =
    let val {defSiteTbl, nodeCount, ...} = info SSA
-       val defsTbl  = defsTbl SSA 
+       val defsTbl  = defsTbl SSA
        val usesTbl  = usesTbl SSA
        val ssaOpTbl = ssaOpTbl SSA
        val blockTbl = blockTbl SSA
        val posTbl   = posTbl SSA
        val rtlTbl   = rtlTbl SSA
 
-       fun new{id, instr, rtl, defs, uses, block, pos} = 
+       fun new{id, instr, rtl, defs, uses, block, pos} =
        let fun addDefSite [] = ()
               | addDefSite(r::rs) =
                 ((*print("defSite["^showVal SSA r^"]="^i2s id^"\n");*)
-                 DA.update(defSiteTbl,r,id); 
+                 DA.update(defSiteTbl,r,id);
                  addDefSite rs
                 )
        in  nodeCount := !nodeCount + 1;
@@ -621,13 +621,13 @@ struct
    in  new end
 
    (*------------------------------------------------------------------------
-    * Iterators 
+    * Iterators
     *------------------------------------------------------------------------*)
    fun forallNodes SSA f =
    let val blockTbl = blockTbl SSA
-       val n = A.length blockTbl 
-       fun loop(i) = 
-           if i >= n then () else 
+       val n = A.length blockTbl
+       fun loop(i) =
+           if i >= n then () else
            (if A.sub(blockTbl,i) >= 0 then f i else (); loop(i+1))
    in  loop 0 end
 
@@ -639,7 +639,7 @@ struct
            if i < n then fold(i+1, if A.sub(blockTbl,i) >= 0 then f(i,x) else x)
            else x
    in  fold(0,x) end
-  
+
    (*------------------------------------------------------------------------
     * Insert edges
     *------------------------------------------------------------------------*)
@@ -654,7 +654,7 @@ struct
        let fun addEdges([], size) = size
              | addEdges(v::vs, size) =
                if v < 0 then addEdges(vs, size)
-               else let val j = A.sub(defSiteTbl, v) 
+               else let val j = A.sub(defSiteTbl, v)
                     in  (* print(i2s i^" -> "^i2s j^"\n"^
                               showOp SSA i^"->"^showOp SSA j^" ("^
                               showVal SSA v^" "^i2s v^")\n"); *)
@@ -715,7 +715,7 @@ struct
 
             (* Filter i from the use sites of i' *)
             fun filterI([], es_i', size) = (es_i', size)
-              | filterI((e as (i',k,_))::es, es_i', size) = 
+              | filterI((e as (i',k,_))::es, es_i', size) =
                 if k = i then filterI(es, es_i', size-1)
                 else filterI(es, e::es_i', size)
 
@@ -771,11 +771,11 @@ struct
        val defsTbl  = defsTbl SSA
        val usesTbl  = usesTbl SSA
        val blockTbl = blockTbl SSA
-       val {edgeCount, nodeCount, garbageNodes, ...} = info SSA 
-       fun removeAll([], nodes, edges, garbage) = 
+       val {edgeCount, nodeCount, garbageNodes, ...} = info SSA
+       fun removeAll([], nodes, edges, garbage) =
             (nodeCount := nodes; edgeCount := edges; garbageNodes := garbage)
          | removeAll(n::ns, nodes, edges, garbage) =
-           if A.sub(blockTbl, n) < 0 
+           if A.sub(blockTbl, n) < 0
            then removeAll(ns, nodes, edges, garbage)
            else
            let val outEdges = A.sub(succTbl, n)
@@ -785,10 +785,10 @@ struct
                A.update(defsTbl, n, []);
                A.update(succTbl, n, []);
                removeAll(ns, nodes-1, edges - length outEdges, n::garbage)
-           end      
-   in  removeAll(nodes,!nodeCount,!edgeCount,!garbageNodes) 
+           end
+   in  removeAll(nodes,!nodeCount,!edgeCount,!garbageNodes)
    end
- 
+
    (*------------------------------------------------------------------------
     * Replace all use of one value with another.  Return true iff
     * all uses of "from" has been replaced by "to".
@@ -808,7 +808,7 @@ struct
 
        fun isReplaceable k = k = C.GP orelse k = C.FP
 
-       fun replace{from, to, vn} = 
+       fun replace{from, to, vn} =
            isReplaceable(cellKind from) andalso
            let
                val old = A.sub(defSiteTbl, from)
@@ -818,28 +818,28 @@ struct
                              "("^showVal SSA from^") by "^
                              showOp SSA new^"( "^showVal SSA to^") vn="^
                              i2s vn^"\n") *)
-               (* 
+               (*
                 * We directly manipulate the graph structure here.
                 * Since the number of edges does not change, there is
                 * no need to update the edge count.
                 *)
                fun renameUses([], to) = []
-                 | renameUses(r::rs, to) = 
+                 | renameUses(r::rs, to) =
                     (if r = from then to else r)::renameUses(rs, to)
 
                fun removeUse([], es') = es'
-                 | removeUse((e as (_,j,r))::es,es') = 
+                 | removeUse((e as (_,j,r))::es,es') =
                    if r = from then
                     (* Rename an argument of j *)
                     (replacements := !replacements + 1;
                      if vn < 0 (* is a constant that we are replacing *)
-                        andalso 
+                        andalso
                          (case A.sub(rtlTbl, j) of
                            (T.PHI _ | T.SINK _ ) => true
                          | _ => false
                          ) then
                       (* phi or sink node *)
-                      (A.update(usesTbl, j, renameUses(A.sub(usesTbl,j), vn)); 
+                      (A.update(usesTbl, j, renameUses(A.sub(usesTbl,j), vn));
                        (* print("Replacing constant: "^showOp SSA j^"\n"); *)
                        edgeCount := !edgeCount - 1
                       )
@@ -849,14 +849,14 @@ struct
                       );
                      removeUse(es,es')
                     )
-                   else 
+                   else
                     removeUse(es, e::es')
 
-               val edges = removeUse(A.sub(succTbl, old), []) 
+               val edges = removeUse(A.sub(succTbl, old), [])
            in  A.update(succTbl, old, edges);
                true
            end
-           
+
    in  replace
    end
 
@@ -869,8 +869,8 @@ struct
    let val constOf = const SSA
        val showOp  = showOp SSA
        val {edgeCount, posTbl, defsTbl, usesTbl, succTbl, rtlTbl, ssaOpTbl,
-            defSiteTbl, minPos, blockTbl, ...} = info SSA 
-       fun fold{value, const} = 
+            defSiteTbl, minPos, blockTbl, ...} = info SSA
+       fun fold{value, const} =
            let val i    = DA.sub(defSiteTbl, value)
                val defs = DA.sub(defsTbl, i)
            in  case (defs, constOf const) of
@@ -881,13 +881,13 @@ struct
                   else
                   let (* Remove existing incoming edges *)
                       fun removeUses [] = ()
-                        | removeUses(v::vs) = 
+                        | removeUses(v::vs) =
                           if v < 0 then removeUses vs else
                           let val j = DA.sub(defSiteTbl, v)
                               fun rmv([], es') = es'
-                                | rmv((e as (j,k,_))::es, es') = 
-                                  if k = i then rmv(es, es') 
-                                  else (edgeCount := !edgeCount - 1; 
+                                | rmv((e as (j,k,_))::es, es') =
+                                  if k = i then rmv(es, es')
+                                  else (edgeCount := !edgeCount - 1;
                                         rmv(es, e::es'))
                               val succ_j = DA.sub(succTbl, j)
                           in  DA.update(succTbl, j, rmv(succ_j, []));
@@ -903,34 +903,34 @@ struct
                       val oldUses = DA.sub(usesTbl, i)
                   in  removeUses(oldUses);
                       (* now has only one input! *)
-                      DA.update(usesTbl, i, [const]); 
-                      
+                      DA.update(usesTbl, i, [const]);
+
                       (* If the instruction used to be a phi-node or
                        * a source node, find an appropriate place for
                        * this new instruction.
                        *)
                       case oldRtl of
                          (T.PHI _ | T.SOURCE _) =>
-                         let val newPos = !minPos 
+                         let val newPos = !minPos
                          in  minPos := !minPos - 128;
                              DA.update(posTbl, i, newPos)
                          end
                       | _ => () (* keep the same position *)
                       ;
                       (* print(showOp i^"\n");
-                      app (fn (_,j,_) => print ("\t"^showOp j^"\n")) 
+                      app (fn (_,j,_) => print ("\t"^showOp j^"\n"))
                            (DA.sub(succTbl, i)); *)
                       true
                   end
               | _ => false (* can't fold *)
            end
-   in  fold 
-   end 
+   in  fold
+   end
 
    (*------------------------------------------------------------------------
     * Move an instruction from one block to another
     *------------------------------------------------------------------------*)
-   fun moveOp SSA = 
+   fun moveOp SSA =
    let val posTbl     = posTbl SSA
        val blockTbl   = blockTbl SSA
        val defSiteTbl = defSiteTbl SSA
@@ -939,10 +939,10 @@ struct
        val rtlTbl     = rtlTbl SSA
        val showOp     = showOp SSA
        val showVal    = showVal SSA
-      
+
        val {maxPos, minPos, ...} = info SSA
 
-       fun mv{id, block} = 
+       fun mv{id, block} =
        let val _ = moved := !moved + 1
            fun earliest([], pos) = pos
              | earliest(v::vs, pos) =
@@ -977,7 +977,7 @@ struct
                    in  print("\t"^showOp j^" in block "^
                                     i2s b_j^":"^i2s pos_j^"\n")
                    end
-                   fun prUse v = 
+                   fun prUse v =
                        if v < 0 then print("\t"^showVal v^"\n")
                        else let val j = A.sub(defSiteTbl, v)
                             in  prOp j
@@ -987,7 +987,7 @@ struct
                    print "Defs=\n"; app prDef (A.sub(succTbl, id));
                    error("move "^showOp id^" lo="^i2s lo^
                             " hi="^i2s hi^" block="^i2s block)
-               end 
+               end
                else ()
 
 
@@ -996,7 +996,7 @@ struct
            val hi   = latest(A.sub(succTbl, id), !maxPos)
            val pos  = if !minPos = lo then (maxPos := !maxPos + 128; hi-1)
                       else if !maxPos = hi then (minPos := !minPos - 128; lo+1)
-                      else (minPos := !minPos - 128; 
+                      else (minPos := !minPos - 128;
                             maxPos := !maxPos + 128;
                             sanityCheck(lo, hi);
                             (lo + hi) div 2
@@ -1013,7 +1013,7 @@ struct
     *------------------------------------------------------------------------*)
    fun setBranch(SSA as G.GRAPH ssa) =
    let val {cfg, ssaOpTbl, blockTbl, nodeCount, ...} = info SSA
-       fun set{id, cond} = 
+       fun set{id, cond} =
        let val b = DA.sub(blockTbl,id)
            val jmp = CFG.setBranch(cfg, b, cond)
        in  #remove_node ssa id;
@@ -1022,7 +1022,7 @@ struct
            nodeCount := !nodeCount + 1;
            branchesFolded := !branchesFolded + 1
        end
-   in  set 
+   in  set
    end
 
    (*------------------------------------------------------------------------
@@ -1038,12 +1038,12 @@ struct
    in  let val y = f x in check(); y  end
        handle e => (check(); raise e)
    end
-    
+
 
    (*------------------------------------------------------------------------
     * Signal that an SSA has been changed
     *------------------------------------------------------------------------*)
-   fun changed SSA = 
+   fun changed SSA =
    let val {nodes, ...} = info SSA
    in  nodes := NONE end
 
@@ -1058,7 +1058,7 @@ struct
                  in  nodes := SOME n; n end
    end
 
-   and linearizeNodes SSA = 
+   and linearizeNodes SSA =
    let val G.GRAPH cfg = cfg SSA
        val N = #capacity cfg ()
 
@@ -1069,12 +1069,12 @@ struct
        val sinks   = A.array(N,[])
        val sources = A.array(N,[])
        val phis    = A.array(N,[])
-       val ops     = A.array(N,[]) 
+       val ops     = A.array(N,[])
 
-       fun ins(n) = 
-       let val b = A.sub(blockTbl,n) 
+       fun ins(n) =
+       let val b = A.sub(blockTbl,n)
        in  if b >= 0 then
-             let val tbl = 
+             let val tbl =
                  case A.sub(rtlTbl, n) of
                    T.PHI _ => phis
                  | T.SINK _ => sinks
@@ -1095,16 +1095,16 @@ struct
    (*------------------------------------------------------------------------
     * Graphical Viewing
     *------------------------------------------------------------------------*)
-   fun viewAsCFG SSA = 
+   fun viewAsCFG SSA =
    let val cfg = cfg SSA
        val {graph, node, edge} = CFG.viewStyle cfg
        val showOp = showOp SSA
        val {sinks, sources, phis, ops} = nodes SSA
-       fun node(b,b') = 
-       let val instrs = A.sub(sources, b) @ 
+       fun node(b,b') =
+       let val instrs = A.sub(sources, b) @
                         A.sub(phis, b) @
                         A.sub(ops, b) @
-                        A.sub(sinks, b) 
+                        A.sub(sinks, b)
            val text = String.concat (map (fn i => showOp i^"\n") instrs)
        in  [L.LABEL(CFG.headerText b' ^ text)]
        end
@@ -1115,7 +1115,7 @@ struct
          } cfg
    end
 
-   fun viewAsSSA SSA = 
+   fun viewAsSSA SSA =
    let val showOp  = showOp SSA
        val showVal = showVal SSA
        fun graph _    = []
@@ -1131,7 +1131,7 @@ struct
    (*------------------------------------------------------------------------
     * Consistency checking
     *------------------------------------------------------------------------*)
-   fun consistencyCheck(SSA as G.GRAPH ssa) = 
+   fun consistencyCheck(SSA as G.GRAPH ssa) =
    let val defSiteTbl = defSiteTbl SSA
        val usesTbl    = usesTbl SSA
        val defsTbl    = defsTbl SSA
@@ -1144,14 +1144,14 @@ struct
        val showVal    = showVal SSA
        val dominates  = Dom.dominates Dom
 
-       val hasError = ref false 
+       val hasError = ref false
 
-       fun posOf i = 
+       fun posOf i =
            case A.sub(rtlTbl,i) of
              T.PHI _ =>  ~10000000
            | _       => A.sub(posTbl,i)
- 
-       fun bug(i,msg) = 
+
+       fun bug(i,msg) =
           (print("ERROR [b"^i2s(A.sub(blockTbl,i))^":p"^i2s(posOf i)^
                  ":"^i2s i^"] "^showOp i^": "^msg^"\n");
            hasError := true
@@ -1159,36 +1159,36 @@ struct
 
        fun checkDefs i =
        let val defs = A.sub(defsTbl, i)
-       in  app (fn r => 
-                let val i' = A.sub(defSiteTbl,r) 
+       in  app (fn r =>
+                let val i' = A.sub(defSiteTbl,r)
                 in  if i <> i' then
                        bug(i,"wrong def site "^i2s i'^" for "^
-                           showVal r) 
+                           showVal r)
                     else ()
                 end)
                defs
        end
 
-       fun checkBlock(i, block) = 
+       fun checkBlock(i, block) =
            if A.sub(blockTbl,i) <> block then bug(i,"wrong block") else ()
 
        fun printEdge (i,j,r) =
            print("\t"^i2s i^" -> "^i2s j^" "^showVal r^"\n")
 
-       fun domTest(i,j,r) = 
+       fun domTest(i,j,r) =
        let val b_i = A.sub(blockTbl, i)
            val b_j = A.sub(blockTbl, j)
-       
-           val ok = 
+
+           val ok =
               case A.sub(rtlTbl,j) of
                 T.PHI{preds, ...} =>
-                 let fun scan(p::preds, v::vs) = 
+                 let fun scan(p::preds, v::vs) =
                          r = v andalso dominates(b_i,p) orelse scan(preds, vs)
                        | scan _ = false
                  in  scan(preds, A.sub(usesTbl,j)) end
               |  _ => if b_i = b_j then posOf i < posOf j
                       else dominates(b_i, b_j)
-       in  if ok then () 
+       in  if ok then ()
            else bug(i,showVal r^
                     " does not dominate "^showOp j^
                     " b"^i2s(A.sub(blockTbl,j))^" p"^i2s(posOf j))
@@ -1197,14 +1197,14 @@ struct
        fun checkEdges i =
            let val defs = A.sub(defsTbl, i)
                val edges = A.sub(succTbl, i)
-               fun checkEdge(i',j',r) = 
+               fun checkEdge(i',j',r) =
                    (if i' <> i then bug(i, "bad edge source") else ();
                     if A.sub(blockTbl,j') < 0 then
                       bug(i, "use in node "^i2s j'^" is dead") else ();
                     if not(List.exists (fn r' => r = r') defs) then
                       bug(i, showVal r^" is not a definition") else ();
-                    if not(List.exists (fn r' => r = r') 
-                              (A.sub(usesTbl,j'))) then 
+                    if not(List.exists (fn r' => r = r')
+                              (A.sub(usesTbl,j'))) then
                       bug(i, showOp j'^" has no use of "^showVal r) else ();
                     domTest(i',j',r)
                    )
@@ -1212,7 +1212,7 @@ struct
            end
 
        fun showVals(title,rs) =
-            print(title^"="^foldr (fn (r,"") => showVal r 
+            print(title^"="^foldr (fn (r,"") => showVal r
                                     | (r,s) => showVal r^","^s) "" rs^
                   " ("^i2s(length rs)^")\n")
 
@@ -1220,24 +1220,24 @@ struct
            let val defs = A.sub(defsTbl, i)
                val n    = length defs
                val m    = length liveIn
-           in  if n <> m then 
+           in  if n <> m then
                   (bug(i, "|liveIn| <> |defs|");
                    showVals("liveIn", liveIn);
                    showVals("defs", defs)
                   )
-               else () 
+               else ()
            end
 
        fun checkLiveOut(i, liveOut) =
            let val uses = A.sub(usesTbl, i)
                val n    = length uses
                val m    = length liveOut
-           in  if n <> m then 
+           in  if n <> m then
                   (bug(i, "|liveOut| <> |uses|");
                    showVals("liveOut", liveOut);
                    showVals("uses", uses)
                   )
-               else () 
+               else ()
            end
 
        fun checkNode(i, _) =
@@ -1247,7 +1247,7 @@ struct
            | T.SINK{liveOut, block} => checkSink(i, liveOut, block)
            | _ => checkOp i
 
-       and checkPhi(i, preds, block) = 
+       and checkPhi(i, preds, block) =
            (checkBlock(i,block);
             checkDefs i;
             checkEdges i;

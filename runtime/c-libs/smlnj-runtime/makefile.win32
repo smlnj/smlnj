@@ -5,122 +5,122 @@
 
 SHELL =
 
-INC_DIR =	..\..\include
+INC_DIR =       ..\..\include
 MACH_DIR =      ..\..\mach-dep
-CLIB_DIR =	..\
+CLIB_DIR =      ..\
 
-INCLUDES =	/I$(INC_DIR) /I$(CLIB_DIR) /I..\..\objs /I$(MACH_DIR)
-GC_INCLUDES =	$(INCLUDES) /I..\..\gc
+INCLUDES =      /I$(INC_DIR) /I$(CLIB_DIR) /I..\..\objs /I$(MACH_DIR)
+GC_INCLUDES =   $(INCLUDES) /I..\..\gc
 
-MAKEFILE = 	makefile.win32
-MAKE =		nmake /F$(MAKEFILE)
-AR =		lib
+MAKEFILE =      makefile.win32
+MAKE =          nmake /F$(MAKEFILE)
+AR =            lib
 ARFLAGS =
-RANLIB =	lib
+RANLIB =        lib
 
-LIBRARY =	libsmlnj-runt.lib
+LIBRARY =       libsmlnj-runt.lib
 
-VERSION =	v-dummy
+VERSION =       v-dummy
 
-OBJS =		smlnj-runt-lib.obj \
-		alloc-code.obj \
-		argv.obj \
-		raw-argv.obj \
-		cmd-name.obj \
-		shift-argv.obj \
-		blast-in.obj \
-		blast-out.obj \
-		debug.obj \
-		dummy.obj \
-		export-heap.obj \
-		export-fun.obj \
-		gc-counter.obj \
-		gc-ctl.obj \
-		itick.obj \
-		mkexec.obj \
-		mkliterals.obj \
-		record1.obj \
-		record-concat.obj \
-		sysinfo.obj \
-		setitimer.obj
+OBJS =          smlnj-runt-lib.obj \
+                alloc-code.obj \
+                argv.obj \
+                raw-argv.obj \
+                cmd-name.obj \
+                shift-argv.obj \
+                blast-in.obj \
+                blast-out.obj \
+                debug.obj \
+                dummy.obj \
+                export-heap.obj \
+                export-fun.obj \
+                gc-counter.obj \
+                gc-ctl.obj \
+                itick.obj \
+                mkexec.obj \
+                mkliterals.obj \
+                record1.obj \
+                record-concat.obj \
+                sysinfo.obj \
+                setitimer.obj
 
-$(LIBRARY)	: $(VERSION) $(OBJS)
-	del /Q /F $(LIBRARY)
-	$(AR) $(ARFLAGS) /out:$(LIBRARY) $(OBJS)
-	$(RANLIB) $(LIBRARY)
+$(LIBRARY)      : $(VERSION) $(OBJS)
+        del /Q /F $(LIBRARY)
+        $(AR) $(ARFLAGS) /out:$(LIBRARY) $(OBJS)
+        $(RANLIB) $(LIBRARY)
 
 $(VERSION) :
-	$(MAKE) MAKE="$(MAKE)" clean
-	echo "$(VERSION)" > $(VERSION)
+        $(MAKE) MAKE="$(MAKE)" clean
+        echo "$(VERSION)" > $(VERSION)
 
 DEPENDENTS=$(INC_DIR)\ml-unixdep.h $(INC_DIR)\ml-base.h \
-	   $(INC_DIR)\ml-values.h \
-	   $(INC_DIR)\ml-objects.h \
-	   $(CLIB_DIR)\ml-c.h cfun-proto-list.h cfun-list.h
+           $(INC_DIR)\ml-values.h \
+           $(INC_DIR)\ml-objects.h \
+           $(CLIB_DIR)\ml-c.h cfun-proto-list.h cfun-list.h
 
 smlnj-runt-lib.obj: smlnj-runt-lib.c $(DEPNEDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c smlnj-runt-lib.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c smlnj-runt-lib.c
 
 alloc-code.obj: alloc-code.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c alloc-code.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c alloc-code.c
 
 argv.obj: argv.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c argv.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c argv.c
 
 raw-argv.obj: raw-argv.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c raw-argv.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c raw-argv.c
 
 cmd-name.obj: cmd-name.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c cmd-name.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c cmd-name.c
 
 shift-argv.obj: shift-argv.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c shift-argv.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c shift-argv.c
 
 blast-in.obj: blast-in.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c blast-in.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c blast-in.c
 
 blast-out.obj: blast-out.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c blast-out.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c blast-out.c
 
 debug.obj: debug.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c debug.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c debug.c
 
 dummy.obj: dummy.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c dummy.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c dummy.c
 
 export-heap.obj: export-heap.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c export-heap.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c export-heap.c
 
 export-fun.obj: export-fun.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c export-fun.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c export-fun.c
 
 gc-counter.obj: gc-counter.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c gc-counter.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c gc-counter.c
 
 gc-ctl.obj: gc-ctl.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c gc-ctl.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c gc-ctl.c
 
 itick.obj: itick.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c itick.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c itick.c
 
 mkexec.obj: mkexec.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c mkexec.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c mkexec.c
 
 mkliterals.obj: mkliterals.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c mkliterals.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c mkliterals.c
 
 record1.obj: record1.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c record1.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c record1.c
 
 record-concat.obj: record-concat.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c record-concat.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c record-concat.c
 
 sysinfo.obj: sysinfo.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c sysinfo.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c sysinfo.c
 
 setitimer.obj: setitimer.c $(INC_DIR)\win32-timers.h $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c setitimer.c
+        $(CC) $(CFLAGS) $(DEFS) $(GC_INCLUDES) /c setitimer.c
 
 clean :
-	del /Q /F v-* *.obj *.pdb $(LIBRARY)
+        del /Q /F v-* *.obj *.pdb $(LIBRARY)
 

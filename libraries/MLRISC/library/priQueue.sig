@@ -11,8 +11,8 @@ sig
 
    exception EmptyPriorityQueue
 
-   val create    : ('a * 'a -> bool) -> 'a priority_queue 
-   val createN   : ('a * 'a -> bool) * int * 'a -> 'a priority_queue 
+   val create    : ('a * 'a -> bool) -> 'a priority_queue
+   val createN   : ('a * 'a -> bool) * int * 'a -> 'a priority_queue
    val isEmpty   : 'a priority_queue -> bool
    val clear     : 'a priority_queue -> unit
    val min       : 'a priority_queue -> 'a

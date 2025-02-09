@@ -1,17 +1,17 @@
 (*
  *  Graph minor.
- *  Allows contraction of nodes.  
- * 
+ *  Allows contraction of nodes.
+ *
  * -- Allen
- *) 
+ *)
 signature GRAPH_MINOR =
 sig
 
-   val minor : ('n,'e,'g) Graph.graph -> 
+   val minor : ('n,'e,'g) Graph.graph ->
        { view      : ('n,'e,'g) Graph.graph,
          merge     : Graph.node_id list * 'n -> unit,
          ==        : Graph.node_id * Graph.node_id -> bool,
-         partition : Graph.node_id -> Graph.node_id list 
+         partition : Graph.node_id -> Graph.node_id list
        }
 
 end
@@ -40,23 +40,23 @@ struct
        fun succ i = map (look o #2) (all (#out_edges G) i)
        fun entry_edges i = map edge (all (#entry_edges G) i)
        fun exit_edges i = map edge (all (#exit_edges G) i)
-       fun has_node n = 
+       fun has_node n =
            let val (_,_,_,x) = H.sub(uptree,n)
            in  x end handle NotThere => #has_node G n
        fun node_info n =
-           let val (_,_,n',x) = H.sub(uptree,n) 
+           let val (_,_,n',x) = H.sub(uptree,n)
            in  if x then n' else raise G.NotFound
            end handle NotThere => #node_info G n
        fun nodes() =
            List.foldr (fn (node as (n,_),ns) =>
                let val (n,_,n',x) = H.sub(uptree,n)
-               in  if x then (n,n')::ns else ns 
+               in  if x then (n,n')::ns else ns
                end handle NotThere => node::ns) [] (#nodes G ())
-       fun edges() = 
+       fun edges() =
            List.foldr (fn (node as (n,_),es) =>
                let val (n,_,n',x) = H.sub(uptree,n)
-               in  if x then map edge (#out_edges G n)@es else es 
-               end handle NotThere => map edge(#out_edges G n)@es) [] 
+               in  if x then map edge (#out_edges G n)@es else es
+               end handle NotThere => map edge(#out_edges G n)@es) []
                (#nodes G ())
        fun order() = length(nodes())
        fun size() = length(edges())
@@ -65,7 +65,7 @@ struct
        fun forall_nodes f = app f (nodes ())
        fun forall_edges f = app f (edges ())
        fun merge([],_) = ()
-         | merge(nodes as n::ns,n') = 
+         | merge(nodes as n::ns,n') =
            let val info  = (n,nodes,n',true)
                val info' = (n,nodes,n',false)
            in  H.update(uptree,n,info);

@@ -244,21 +244,21 @@ sig
    | LOAD of {l:load, rt:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
    | STORE of {s:store, rs:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
    | FLOAD of {l:fload, ft:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
-   | FSTORE of {s:fstore, fs:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | FSTORE of {s:fstore, fs:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | FCMP of {fcond:fcond, fmt:fmt, cc:CellsBasis.cell, fs1:CellsBasis.cell, 
+   | FCMP of {fcond:fcond, fmt:fmt, cc:CellsBasis.cell, fs1:CellsBasis.cell,
         fs2:CellsBasis.cell}
    | TRAP of {t:trap, rs:CellsBasis.cell, i:operand}
    | J of {lab:Label.label, nop:bool}
    | JR of {rs:CellsBasis.cell, labels:Label.label list, nop:bool}
-   | JAL of {lab:Label.label, defs:C.cellset, uses:C.cellset, cutsTo:Label.label list, 
+   | JAL of {lab:Label.label, defs:C.cellset, uses:C.cellset, cutsTo:Label.label list,
         mem:Region.region, nop:bool}
-   | JALR of {rt:CellsBasis.cell, rs:CellsBasis.cell, defs:C.cellset, uses:C.cellset, 
+   | JALR of {rt:CellsBasis.cell, rs:CellsBasis.cell, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region, nop:bool}
    | RET of {nop:bool}
-   | BRANCH of {likely:likely, cond:cond, rs:CellsBasis.cell, rt:CellsBasis.cell, 
+   | BRANCH of {likely:likely, cond:cond, rs:CellsBasis.cell, rt:CellsBasis.cell,
         lab:Label.label, nop:bool}
-   | FBRANCH of {likely:likely, fbranch:fbranch, cc:CellsBasis.cell, lab:Label.label, 
+   | FBRANCH of {likely:likely, fbranch:fbranch, cc:CellsBasis.cell, lab:Label.label,
         nop:bool}
    | ARITH of {oper:arith, rt:CellsBasis.cell, rs:CellsBasis.cell, i:operand}
    | UNARY of {oper:unary, rt:CellsBasis.cell, rs:CellsBasis.cell}
@@ -271,14 +271,14 @@ sig
    | BREAK of int
    | FARITH of {oper:farith, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell}
    | FUNARY of {oper:funary, ft:CellsBasis.cell, fs:CellsBasis.cell}
-   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell, 
+   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell,
         fs3:CellsBasis.cell}
    | FROUND of {oper:fround, ft:CellsBasis.cell, fs1:CellsBasis.cell, rs2:CellsBasis.cell}
    | CVTI2F of {cvt:cvti2f, rs:CellsBasis.cell, ft:CellsBasis.cell}
    | CVTF2I of {cvt:cvtf2i, fs:CellsBasis.cell, rt:CellsBasis.cell}
-   | COPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref, 
+   | COPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref,
         tmp:ea option}
-   | FCOPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref, 
+   | FCOPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref,
         tmp:ea option}
    | ANNOTATION of {i:instruction, a:Annotations.annotation}
    | PHI of {}
@@ -287,7 +287,7 @@ sig
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,
@@ -299,25 +299,25 @@ sig
    val la : {rt:CellsBasis.cell, b:CellsBasis.cell, d:operand} -> instruction
    val dla : {rt:CellsBasis.cell, b:CellsBasis.cell, d:operand} -> instruction
    val load : {l:load, rt:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region} -> instruction
-   val store : {s:store, rs:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val store : {s:store, rs:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val fload : {l:fload, ft:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val fload : {l:fload, ft:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val fstore : {s:fstore, fs:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val fstore : {s:fstore, fs:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val fcmp : {fcond:fcond, fmt:fmt, cc:CellsBasis.cell, fs1:CellsBasis.cell, 
+   val fcmp : {fcond:fcond, fmt:fmt, cc:CellsBasis.cell, fs1:CellsBasis.cell,
       fs2:CellsBasis.cell} -> instruction
    val trap : {t:trap, rs:CellsBasis.cell, i:operand} -> instruction
    val j : {lab:Label.label, nop:bool} -> instruction
    val jr : {rs:CellsBasis.cell, labels:Label.label list, nop:bool} -> instruction
-   val jal : {lab:Label.label, defs:C.cellset, uses:C.cellset, cutsTo:Label.label list, 
+   val jal : {lab:Label.label, defs:C.cellset, uses:C.cellset, cutsTo:Label.label list,
       mem:Region.region, nop:bool} -> instruction
-   val jalr : {rt:CellsBasis.cell, rs:CellsBasis.cell, defs:C.cellset, uses:C.cellset, 
+   val jalr : {rt:CellsBasis.cell, rs:CellsBasis.cell, defs:C.cellset, uses:C.cellset,
       cutsTo:Label.label list, mem:Region.region, nop:bool} -> instruction
    val ret : {nop:bool} -> instruction
-   val branch : {likely:likely, cond:cond, rs:CellsBasis.cell, rt:CellsBasis.cell, 
+   val branch : {likely:likely, cond:cond, rs:CellsBasis.cell, rt:CellsBasis.cell,
       lab:Label.label, nop:bool} -> instruction
-   val fbranch : {likely:likely, fbranch:fbranch, cc:CellsBasis.cell, lab:Label.label, 
+   val fbranch : {likely:likely, fbranch:fbranch, cc:CellsBasis.cell, lab:Label.label,
       nop:bool} -> instruction
    val arith : {oper:arith, rt:CellsBasis.cell, rs:CellsBasis.cell, i:operand} -> instruction
    val unary : {oper:unary, rt:CellsBasis.cell, rs:CellsBasis.cell} -> instruction
@@ -330,14 +330,14 @@ sig
    val break : int -> instruction
    val farith : {oper:farith, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell} -> instruction
    val funary : {oper:funary, ft:CellsBasis.cell, fs:CellsBasis.cell} -> instruction
-   val farith3 : {oper:farith3, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell, 
+   val farith3 : {oper:farith3, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell,
       fs3:CellsBasis.cell} -> instruction
    val fround : {oper:fround, ft:CellsBasis.cell, fs1:CellsBasis.cell, rs2:CellsBasis.cell} -> instruction
    val cvti2f : {cvt:cvti2f, rs:CellsBasis.cell, ft:CellsBasis.cell} -> instruction
    val cvtf2i : {cvt:cvtf2i, fs:CellsBasis.cell, rt:CellsBasis.cell} -> instruction
-   val copy : {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref, 
+   val copy : {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref,
       tmp:ea option} -> instruction
-   val fcopy : {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref, 
+   val fcopy : {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref,
       tmp:ea option} -> instruction
    val annotation : {i:instruction, a:Annotations.annotation} -> instruction
    val phi : {} -> instruction
@@ -583,21 +583,21 @@ struct
    | LOAD of {l:load, rt:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
    | STORE of {s:store, rs:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
    | FLOAD of {l:fload, ft:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
-   | FSTORE of {s:fstore, fs:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | FSTORE of {s:fstore, fs:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | FCMP of {fcond:fcond, fmt:fmt, cc:CellsBasis.cell, fs1:CellsBasis.cell, 
+   | FCMP of {fcond:fcond, fmt:fmt, cc:CellsBasis.cell, fs1:CellsBasis.cell,
         fs2:CellsBasis.cell}
    | TRAP of {t:trap, rs:CellsBasis.cell, i:operand}
    | J of {lab:Label.label, nop:bool}
    | JR of {rs:CellsBasis.cell, labels:Label.label list, nop:bool}
-   | JAL of {lab:Label.label, defs:C.cellset, uses:C.cellset, cutsTo:Label.label list, 
+   | JAL of {lab:Label.label, defs:C.cellset, uses:C.cellset, cutsTo:Label.label list,
         mem:Region.region, nop:bool}
-   | JALR of {rt:CellsBasis.cell, rs:CellsBasis.cell, defs:C.cellset, uses:C.cellset, 
+   | JALR of {rt:CellsBasis.cell, rs:CellsBasis.cell, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region, nop:bool}
    | RET of {nop:bool}
-   | BRANCH of {likely:likely, cond:cond, rs:CellsBasis.cell, rt:CellsBasis.cell, 
+   | BRANCH of {likely:likely, cond:cond, rs:CellsBasis.cell, rt:CellsBasis.cell,
         lab:Label.label, nop:bool}
-   | FBRANCH of {likely:likely, fbranch:fbranch, cc:CellsBasis.cell, lab:Label.label, 
+   | FBRANCH of {likely:likely, fbranch:fbranch, cc:CellsBasis.cell, lab:Label.label,
         nop:bool}
    | ARITH of {oper:arith, rt:CellsBasis.cell, rs:CellsBasis.cell, i:operand}
    | UNARY of {oper:unary, rt:CellsBasis.cell, rs:CellsBasis.cell}
@@ -610,14 +610,14 @@ struct
    | BREAK of int
    | FARITH of {oper:farith, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell}
    | FUNARY of {oper:funary, ft:CellsBasis.cell, fs:CellsBasis.cell}
-   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell, 
+   | FARITH3 of {oper:farith3, ft:CellsBasis.cell, fs1:CellsBasis.cell, fs2:CellsBasis.cell,
         fs3:CellsBasis.cell}
    | FROUND of {oper:fround, ft:CellsBasis.cell, fs1:CellsBasis.cell, rs2:CellsBasis.cell}
    | CVTI2F of {cvt:cvti2f, rs:CellsBasis.cell, ft:CellsBasis.cell}
    | CVTF2I of {cvt:cvtf2i, fs:CellsBasis.cell, rt:CellsBasis.cell}
-   | COPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref, 
+   | COPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref,
         tmp:ea option}
-   | FCOPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref, 
+   | FCOPY of {dst:(CellsBasis.cell) list, src:(CellsBasis.cell) list, impl:instruction list option ref,
         tmp:ea option}
    | ANNOTATION of {i:instruction, a:Annotations.annotation}
    | PHI of {}
@@ -626,7 +626,7 @@ struct
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,

@@ -9,24 +9,24 @@ sig
 
    val sort        : ('a * 'a -> bool) -> 'a list -> 'a list
    val uniq        : ('a * 'a -> bool) -> 'a list -> 'a list
-   val sort_uniq   : ('a * 'a -> bool) -> 
+   val sort_uniq   : ('a * 'a -> bool) ->
                      ('a * 'a -> bool) -> 'a list -> 'a list
 
-end 
+end
 
 structure Sorting : SORTING =
 struct
 
    infix ==
- 
+
    val SOME maxInt = Int.maxInt
 
    fun sort op< =
    let fun getRun [] = (0,[])
-         | getRun (h::t) = 
+         | getRun (h::t) =
            let fun loop(last,n,[])   = (n,[])
-                 | loop(last,n,l as h::t) = 
-                   if h < last then (n,l) else loop(h,n+1,t) 
+                 | loop(last,n,l as h::t) =
+                   if h < last then (n,l) else loop(h,n+1,t)
            in  loop(h,1,t) end
        fun head([],_) = []
          | head(_,0)  = []
@@ -41,20 +41,20 @@ struct
                else bh::loop(a,alen,bt,blen-1)
        in  loop(a,alen,b,blen) end
        fun iter(sorted,slen,[],want) = (sorted,slen,[])
-         | iter(sorted,slen,unsorted,want) = 
-           if slen >= want then (sorted,slen,unsorted) 
+         | iter(sorted,slen,unsorted,want) =
+           if slen >= want then (sorted,slen,unsorted)
            else
            let val (runlen,runtail) = getRun unsorted
                val (sorted',slen',unsorted) =
                   if runlen >= slen then
                       (unsorted,runlen,runtail)
-                  else 
+                  else
                       iter(unsorted,runlen,runtail,runlen)
            in  iter(merge(sorted,slen,sorted',slen'),
                     slen+slen',unsorted,want)
            end
-       fun main list = 
-       let val (sorted,_,_) = iter([],0,list,maxInt) 
+       fun main list =
+       let val (sorted,_,_) = iter([],0,list,maxInt)
        in  sorted end
    in  main end
 

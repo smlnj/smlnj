@@ -1,7 +1,7 @@
-(* 
+(*
  *  Common operations on MLTREE
  *
- * -- Allen 
+ * -- Allen
  *)
 functor MLTreeUtils
   (structure T : MLTREE
@@ -26,13 +26,13 @@ functor MLTreeUtils
 struct
 
    structure T          = T
-   structure I          = T.I 
+   structure I          = T.I
    structure Constant   = T.Constant
    structure Region     = T.Region
    structure B          = T.Basis
    structure C          = CellsBasis
    structure W          = Word
-   
+
 
    val w = W.fromInt
    val i2s = Int.toString
@@ -40,7 +40,7 @@ struct
 
    fun error msg = MLRiscErrorMsg.error("MLTreeUtils",msg)
    fun wv(C.CELL{id, ...}) = w id
-   fun wvs is = 
+   fun wvs is =
    let fun f([],h) = h
          | f(i::is,h) = f(is,wv i+h)
    in  f(is,0w0) end
@@ -49,11 +49,11 @@ struct
    (*
     * Hashing
     *)
-   val hashLabel = Label.hash 
+   val hashLabel = Label.hash
    fun hasher() = {stm=hashStm, rexp=hashRexp, fexp=hashFexp, ccexp=hashCCexp}
    and hashCtrl ctrl = wv ctrl
    and hashStm stm =
-      case stm of  
+      case stm of
       T.MV(t,dst,rexp) => 0w123 + w t + wv dst + hashRexp rexp
     | T.CCMV(dst,ccexp) => 0w1234 + wv dst + hashCCexp ccexp
     | T.FMV(fty,dst,fexp) => 0w12345 + w fty + wv dst + hashFexp fexp
@@ -61,28 +61,28 @@ struct
     | T.FCOPY(fty,dst,src) => 0w456 + w fty + wvs dst + wvs src
     | T.JMP(ea,labels) => 0w45 + hashRexp ea
     | T.CALL{funct,targets,defs,uses,region,pops} =>
-          hashRexp funct + hashMlriscs defs + hashMlriscs uses 
+          hashRexp funct + hashMlriscs defs + hashMlriscs uses
     | T.FLOW_TO(stm, _) => hashStm stm
     | T.RET _ => 0w567
-    | T.STORE(ty,ea,data,mem) => 0w888 + w ty + hashRexp ea + hashRexp data 
+    | T.STORE(ty,ea,data,mem) => 0w888 + w ty + hashRexp ea + hashRexp data
     | T.FSTORE(fty,ea,data,mem) => 0w7890 + w fty + hashRexp ea + hashFexp data
     | T.BCC(a,lab) => 0w233 + hashCCexp a + hashLabel lab
     | T.IF(a,b,c) => 0w233 + hashCCexp a + hashStm b + hashStm c
-    | T.ANNOTATION(stm, a) => hashStm stm 
-    | T.PHI{preds,block} => w block 
-    | T.SOURCE => 0w123 
-    | T.SINK => 0w423 
+    | T.ANNOTATION(stm, a) => hashStm stm
+    | T.PHI{preds,block} => w block
+    | T.SOURCE => 0w123
+    | T.SINK => 0w423
     | T.REGION(stm,ctrl) => hashStm stm + hashCtrl ctrl
     | T.RTL{hash,...} => hash
     | T.SEQ ss => hashStms(ss, 0w23)
     | T.ASSIGN(ty,lhs,rhs) => w ty + hashRexp lhs + hashRexp rhs
-    | _ => error "hashStm" 
+    | _ => error "hashStm"
 
    and hashStms([],h) = h
      | hashStms(s::ss,h) = hashStms(ss,hashStm s + h)
 
    and hashMlrisc(T.CCR ccexp) = hashCCexp ccexp
-     | hashMlrisc(T.GPR rexp) = hashRexp rexp 
+     | hashMlrisc(T.GPR rexp) = hashRexp rexp
      | hashMlrisc(T.FPR fexp) = hashFexp fexp
 
    and hashMlriscs [] = 0w123
@@ -95,7 +95,7 @@ struct
 
    and hash3(m,ty,x,y) = hashm m + w ty + hashRexp x + hashRexp y
 
-   and hashRexp rexp =  
+   and hashRexp rexp =
       case rexp of
       T.REG(ty, src) => w ty + wv src
     | T.LI i => I.hash i
@@ -120,14 +120,14 @@ struct
     | T.ORB x => hash2 x + 0w558
     | T.XORB x => hash2 x + 0w234
     | T.EQVB x => hash2 x + 0w734
-    | T.NOTB(ty, x) => w ty + hashRexp x  
-    | T.SRA x => hash2 x + 0w874 
+    | T.NOTB(ty, x) => w ty + hashRexp x
+    | T.SRA x => hash2 x + 0w874
     | T.SRL x => hash2 x + 0w223
     | T.SLL x => hash2 x + 0w499
     | T.COND(ty,e,e1,e2) => w ty + hashCCexp e + hashRexp e1 + hashRexp e2
     | T.SX(ty, ty', rexp) => 0w232 + w ty + w ty' + hashRexp rexp
     | T.ZX(ty, ty', rexp) => 0w737 + w ty + w ty' + hashRexp rexp
-    | T.CVTF2I(ty, round, ty', fexp) => 
+    | T.CVTF2I(ty, round, ty', fexp) =>
         w ty + B.hashRoundingMode round + w ty' + hashFexp fexp
     | T.LOAD(ty, ea, mem) => w ty + hashRexp ea + 0w342
     | T.LET(stm, rexp) => hashStm stm + hashRexp rexp
@@ -143,12 +143,12 @@ struct
 
   and hashOper(T.OPER{hash, ...}) = hash
 
-  and hashRexps([],h) = h 
+  and hashRexps([],h) = h
     | hashRexps(e::es,h) = hashRexps(es,hashRexp e + h)
 
   and hash2'(ty,x,y) = w ty + hashFexp x + hashFexp y
 
-  and hashFexp fexp =  
+  and hashFexp fexp =
       case fexp of
       T.FREG(fty, src) => w fty + wv src
     | T.FLOAD(fty, ea, mem) => w fty + hashRexp ea
@@ -162,7 +162,7 @@ struct
     | T.FNEG(fty, fexp) => w fty + hashFexp fexp + 0w23456
     | T.FSQRT(fty, fexp) => w fty + hashFexp fexp + 0w345
     | T.CVTI2F(fty, ty, rexp) => w fty + w ty + hashRexp rexp
-    | T.CVTF2F(fty, fty', fexp) => w fty + hashFexp fexp + w fty' 
+    | T.CVTF2F(fty, fty', fexp) => w fty + hashFexp fexp + w fty'
     | T.FMARK(e, _) => hashFexp e
     | T.FPRED(e, ctrl) => hashFexp e + hashCtrl ctrl
     | T.FEXT(fty, fext) => w fty + hashFext (hasher()) fext
@@ -174,11 +174,11 @@ struct
       case ccexp of
       T.CC(cc, src) => B.hashCond cc + wv src
     | T.FCC(fcc, src) => B.hashFcond fcc + wv src
-    | T.CMP(ty, cond, x, y) => 
+    | T.CMP(ty, cond, x, y) =>
         w ty + B.hashCond cond + hashRexp x + hashRexp y
-    | T.FCMP(fty, fcond, x, y) => 
+    | T.FCMP(fty, fcond, x, y) =>
         w fty + B.hashFcond fcond + hashFexp x + hashFexp y
-    | T.NOT x => 0w2321 + hashCCexp x 
+    | T.NOT x => 0w2321 + hashCCexp x
     | T.AND(x,y) => 0w2321 + hashCCexp x + hashCCexp y
     | T.OR(x,y) => 0w8721 + hashCCexp x + hashCCexp y
     | T.XOR(x,y) => 0w6178 + hashCCexp x + hashCCexp y
@@ -213,18 +213,18 @@ struct
   and eqStm(T.MV(a,b,c),T.MV(d,e,f)) =
           a=d andalso eqCell(b,e) andalso eqRexp(c,f)
     | eqStm(T.CCMV(a,b),T.CCMV(c,d)) = eqCell(a,c) andalso eqCCexp(b,d)
-    | eqStm(T.FMV(a,b,c),T.FMV(d,e,f)) = 
+    | eqStm(T.FMV(a,b,c),T.FMV(d,e,f)) =
           a=d andalso eqCell(b,e) andalso eqFexp(c,f)
     | eqStm(T.COPY x,T.COPY y) = eqCopy(x,y)
     | eqStm(T.FCOPY x,T.FCOPY y) = eqCopy(x,y)
     | eqStm(T.JMP(a,b),T.JMP(a',b')) = eqRexp(a,a')
     | eqStm(T.CALL{funct=a,defs=b,uses=c,...},
-            T.CALL{funct=d,defs=e,uses=f,...}) =  
+            T.CALL{funct=d,defs=e,uses=f,...}) =
          eqRexp(a,d) andalso eqMlriscs(b,e) andalso eqMlriscs(c,f)
     | eqStm(T.FLOW_TO(x,a), T.FLOW_TO(y,b)) =
          eqStm(x,y) andalso eqLabels(a,b)
     | eqStm(T.RET _,T.RET _) = true
-    | eqStm(T.STORE(a,b,c,_),T.STORE(d,e,f,_)) = 
+    | eqStm(T.STORE(a,b,c,_),T.STORE(d,e,f,_)) =
          a=d andalso eqRexp(b,e) andalso eqRexp(c,f)
     | eqStm(T.FSTORE(a,b,c,_),T.FSTORE(d,e,f,_)) =
          a=d andalso eqRexp(b,e) andalso eqFexp(c,f)
@@ -233,9 +233,9 @@ struct
     | eqStm(T.PHI x,T.PHI y) = x=y
     | eqStm(T.SOURCE,T.SOURCE) = true
     | eqStm(T.SINK,T.SINK) = true
-    | eqStm(T.BCC(b,c),T.BCC(b',c')) = 
+    | eqStm(T.BCC(b,c),T.BCC(b',c')) =
         eqCCexp(b,b') andalso eqLabel(c,c')
-    | eqStm(T.IF(b,c,d),T.IF(b',c',d')) = 
+    | eqStm(T.IF(b,c,d),T.IF(b',c',d')) =
         eqCCexp(b,b') andalso eqStm(c,c') andalso eqStm(d,d')
     | eqStm(T.RTL{attribs=x,...},T.RTL{attribs=y,...}) = x=y
     | eqStm(T.REGION(a,b),T.REGION(a',b')) = eqCtrl(b,b') andalso eqStm(a,a')
@@ -287,28 +287,28 @@ struct
     | eqRexp(T.SRA x,T.SRA y) = eq2(x,y)
     | eqRexp(T.SRL x,T.SRL y) = eq2(x,y)
     | eqRexp(T.SLL x,T.SLL y) = eq2(x,y)
-    | eqRexp(T.COND(a,b,c,d),T.COND(e,f,g,h)) = 
+    | eqRexp(T.COND(a,b,c,d),T.COND(e,f,g,h)) =
          a=e andalso eqCCexp(b,f) andalso eqRexp(c,g) andalso eqRexp(d,h)
-    | eqRexp(T.SX(a,b,c),T.SX(a',b',c')) = 
+    | eqRexp(T.SX(a,b,c),T.SX(a',b',c')) =
          a=a' andalso b=b' andalso eqRexp(c,c')
-    | eqRexp(T.ZX(a,b,c),T.ZX(a',b',c')) = 
+    | eqRexp(T.ZX(a,b,c),T.ZX(a',b',c')) =
          a=a' andalso b=b' andalso eqRexp(c,c')
-    | eqRexp(T.CVTF2I(a,b,c,d),T.CVTF2I(e,f,g,h)) = 
+    | eqRexp(T.CVTF2I(a,b,c,d),T.CVTF2I(e,f,g,h)) =
          a=e andalso b=f andalso c=g andalso eqFexp(d,h)
     | eqRexp(T.LOAD(a,b,_),T.LOAD(c,d,_)) = a=c andalso eqRexp(b,d)
     | eqRexp(T.LET(a,b),T.LET(c,d)) = eqStm(a,c) andalso eqRexp(b,d)
     | eqRexp(T.ARG x,T.ARG y) = x = y
     | eqRexp(T.PARAM x,T.PARAM y) = x = y
     | eqRexp(T.???,T.???) = true
-    | eqRexp(T.$(t1,k1,e1),T.$(t2,k2,e2)) = 
+    | eqRexp(T.$(t1,k1,e1),T.$(t2,k2,e2)) =
         t1=t2 andalso k1=k2 andalso eqRexp(e1,e2)
     | eqRexp(T.BITSLICE(t1,s1,e1),T.BITSLICE(t2,s2,e2)) =
         t1=t2 andalso s1=s2 andalso eqRexp(e1,e2)
     | eqRexp(T.MARK(a,_),b) = eqRexp(a,b)
     | eqRexp(a,T.MARK(b,_)) = eqRexp(a,b)
     | eqRexp(T.PRED(a,b),T.PRED(a',b')) = eqCtrl(b,b') andalso eqRexp(a,a')
-    | eqRexp(T.REXT(a,b),T.REXT(a',b')) =   
-          a=a' andalso eqRext (equality()) (b,b') 
+    | eqRexp(T.REXT(a,b),T.REXT(a',b')) =
+          a=a' andalso eqRext (equality()) (b,b')
     | eqRexp _ = false
 
   and eqRexps([],[]) = true
@@ -316,25 +316,25 @@ struct
     | eqRexps _ = false
 
   and eq2'((a,b,c),(d,e,f)) = a=d andalso eqFexp(b,e) andalso eqFexp(c,f)
-  and eq1'((a,b),(d,e)) = a=d andalso eqFexp(b,e) 
+  and eq1'((a,b),(d,e)) = a=d andalso eqFexp(b,e)
 
   and eqFexp(T.FREG(t1,x),T.FREG(t2,y)) = t1=t2 andalso eqCell(x,y)
     | eqFexp(T.FLOAD(a,b,_),T.FLOAD(c,d,_)) = a=c andalso eqRexp(b,d)
-    | eqFexp(T.FADD x,T.FADD y) = eq2'(x,y) 
+    | eqFexp(T.FADD x,T.FADD y) = eq2'(x,y)
     | eqFexp(T.FMUL x,T.FMUL y) = eq2'(x,y)
-    | eqFexp(T.FSUB x,T.FSUB y) = eq2'(x,y) 
+    | eqFexp(T.FSUB x,T.FSUB y) = eq2'(x,y)
     | eqFexp(T.FDIV x,T.FDIV y) = eq2'(x,y)
     | eqFexp(T.FCOPYSIGN x, T.FCOPYSIGN y) = eq2'(x,y)
-    | eqFexp(T.FCOND(t,x,y,z), T.FCOND(t',x',y',z')) = 
+    | eqFexp(T.FCOND(t,x,y,z), T.FCOND(t',x',y',z')) =
         t=t' andalso eqCCexp(x,x') andalso eqFexp(y,y') andalso eqFexp(z,z')
     | eqFexp(T.FABS x,T.FABS y) = eq1'(x,y)
     | eqFexp(T.FNEG x,T.FNEG y) = eq1'(x,y)
     | eqFexp(T.FSQRT x,T.FSQRT y) = eq1'(x,y)
-    | eqFexp(T.CVTI2F(a,b,c),T.CVTI2F(a',b',c')) = 
+    | eqFexp(T.CVTI2F(a,b,c),T.CVTI2F(a',b',c')) =
          a=a' andalso b=b' andalso eqRexp(c,c')
-    | eqFexp(T.CVTF2F(a,b,c),T.CVTF2F(a',b',c')) = 
+    | eqFexp(T.CVTF2F(a,b,c),T.CVTF2F(a',b',c')) =
          a=a' andalso b=b' andalso eqFexp(c,c')
-    | eqFexp(T.FEXT(a,f),T.FEXT(b,g)) = a=b andalso eqFext (equality()) (f,g) 
+    | eqFexp(T.FEXT(a,f),T.FEXT(b,g)) = a=b andalso eqFext (equality()) (f,g)
     | eqFexp(T.FMARK(a,_),b) = eqFexp(a,b)
     | eqFexp(a,T.FMARK(b,_)) = eqFexp(a,b)
     | eqFexp(T.FPRED(a,b),T.FPRED(a',b')) = eqCtrl(b,b') andalso eqFexp(a,a')
@@ -346,7 +346,7 @@ struct
 
   and eqCCexp(T.CC(c1,x),T.CC(c2,y)) = c1=c2 andalso eqCell(x,y)
     | eqCCexp(T.FCC(c1,x),T.FCC(c2,y)) = c1=c2 andalso eqCell(x,y)
-    | eqCCexp(T.CMP(x,a,b,c),T.CMP(y,d,e,f)) = 
+    | eqCCexp(T.CMP(x,a,b,c),T.CMP(y,d,e,f)) =
         a=d andalso eqRexp(b,e) andalso eqRexp(c,f) andalso x = y
     | eqCCexp(T.FCMP(x,a,b,c),T.FCMP(y,d,e,f)) =
         a=d andalso eqFexp(b,e) andalso eqFexp(c,f) andalso x = y
@@ -357,7 +357,7 @@ struct
     | eqCCexp(T.EQV x, T.EQV y) = eqCCexp2(x,y)
     | eqCCexp(T.CCMARK(a,_),b) = eqCCexp(a,b)
     | eqCCexp(a,T.CCMARK(b,_)) = eqCCexp(a,b)
-    | eqCCexp(T.CCEXT(t,a),T.CCEXT(t',b)) = 
+    | eqCCexp(T.CCEXT(t,a),T.CCEXT(t',b)) =
         t=t' andalso eqCCext (equality()) (a,b)
     | eqCCexp(T.TRUE, T.TRUE) = true
     | eqCCexp(T.FALSE, T.FALSE) = true
@@ -381,7 +381,7 @@ struct
 
       fun reg(t,v) = C.toString v^ty t
       fun freg(t,v) = C.toString v^fty t
-      fun ccreg v = C.toString v   
+      fun ccreg v = C.toString v
       fun ctrlreg v = C.toString v
 
       fun srcReg(t,v) = reg(t,v)
@@ -405,14 +405,14 @@ struct
 
       fun listify' f = (String.concatWith ",") o (List.map f)
 
-      val srcRegs = listify srcReg 
-      val dstRegs = listify dstReg 
-      val srcFregs = listify srcFreg 
-      val dstFregs = listify dstFreg 
-      val srcCCregs = listify' srcCCreg 
-      val dstCCregs = listify' dstCCreg 
-      val srcCtrlregs = listify' srcCtrlreg 
-      val dstCtrlregs = listify' dstCtrlreg 
+      val srcRegs = listify srcReg
+      val dstRegs = listify dstReg
+      val srcFregs = listify srcFreg
+      val dstFregs = listify dstFreg
+      val srcCCregs = listify' srcCCreg
+      val dstCCregs = listify' dstCCreg
+      val srcCtrlregs = listify' srcCtrlreg
+      val dstCtrlregs = listify' dstCtrlreg
       fun usectrl cr  = " ["^srcCtrlreg cr^"]"
       fun usectrls [] = ""
         | usectrls cr = " ["^srcCtrlregs cr^"]"
@@ -423,7 +423,7 @@ struct
       fun copy(t,dst,src) = dstRegs(t, dst)^" := "^srcRegs(t, src)
       fun fcopy(t,dst,src) = dstFregs(t, dst)^" := "^srcFregs(t, src)
 
-      fun shower() = {stm=stm, rexp=rexp, fexp=fexp, ccexp=ccexp, 
+      fun shower() = {stm=stm, rexp=rexp, fexp=fexp, ccexp=ccexp,
                       dstReg=dstReg, srcReg=srcReg}
           (* pretty print a statement *)
       and stm(T.MV(t,dst,e)) = dstReg(t,dst)^" := "^rexp e
@@ -432,9 +432,9 @@ struct
         | stm(T.COPY(ty,dst,src)) = copy(ty,dst,src)
         | stm(T.FCOPY(fty,dst,src)) = fcopy(fty,dst,src)
         | stm(T.JMP(ea,labels)) = "jmp "^rexp ea
-        | stm(T.BCC(a,lab)) = 
+        | stm(T.BCC(a,lab)) =
              "bcc "^ccexp a^" "^Label.toString lab
-        | stm(T.CALL{funct,targets,defs,uses,region,pops}) = 
+        | stm(T.CALL{funct,targets,defs,uses,region,pops}) =
               "call "^rexp funct
         | stm(T.FLOW_TO(s, targets)) =
               stm s^" ["^listify' Label.toString targets^"]"
@@ -446,11 +446,11 @@ struct
         | stm(T.REGION(s,cr)) = stm s^usectrl cr
         | stm(T.SEQ []) = "skip"
         | stm(T.SEQ s) = stms(";\n",s)
-	| stm(T.DEFINE lab) = Label.toString lab ^ ":"
-        | stm(T.ANNOTATION(s, a)) = stm s 
+        | stm(T.DEFINE lab) = Label.toString lab ^ ":"
+        | stm(T.ANNOTATION(s, a)) = stm s
         | stm(T.EXT x) = showSext (shower()) x
-	| stm(T.LIVE exps) = "live: " ^ mlriscs exps
-	| stm(T.KILL exps) = "kill: " ^ mlriscs exps
+        | stm(T.LIVE exps) = "live: " ^ mlriscs exps
+        | stm(T.KILL exps) = "kill: " ^ mlriscs exps
         | stm(T.PHI{preds, block}) = "phi["^i2s block^"]"
         | stm(T.ASSIGN(ty,lhs,T.???)) = "define "^rexp lhs
         | stm(T.ASSIGN(ty,T.???,rhs)) = "use "^rexp rhs
@@ -495,11 +495,11 @@ struct
         | rexp(T.SRA x) = binary("~>>",x)
         | rexp(T.SRL x) = binary(">>",x)
         | rexp(T.SLL x) = binary("<<",x)
-        | rexp(T.COND(t,cc,e1,e2)) = 
+        | rexp(T.COND(t,cc,e1,e2)) =
              "cond"^ty t^"("^ccexp cc^","^rexp e1^","^rexp e2^")"
         | rexp(T.SX(t, t', e)) = "sx"^ty t^ty t'^" "^rexp e
         | rexp(T.ZX(t, t', e)) = "zx"^ty t^ty t'^" "^rexp e
-        | rexp(T.CVTF2I(t, round, t', e)) = 
+        | rexp(T.CVTF2I(t, round, t', e)) =
              "cvtf2i"^ty t^toLower(B.roundingModeToString round)^
              fty t'^" "^fexp e
         | rexp(T.LOAD(ty, ea, mem)) = load(ty,"",ea,mem)
@@ -509,17 +509,17 @@ struct
         | rexp(T.REXT e) = showRext (shower()) e
         | rexp(T.???) = "???"
         | rexp(T.OP(t,opc,es)) = oper opc^ty t^" "^rexps es
-        | rexp(T.ARG(t,ref(T.REP kind),name)) = 
+        | rexp(T.ARG(t,ref(T.REP kind),name)) =
              name^":"^kind^(if t = 0 then "" else ty t)
         | rexp(T.PARAM n) = srcParam n
-        | rexp(T.$(ty,k,e)) =    
+        | rexp(T.$(ty,k,e)) =
              "$"^C.cellkindToNickname k^"["^rexp e^"]"
         | rexp(T.BITSLICE(ty,sl,e)) = rexp e^" at "^slices sl
 
-      and oper(T.OPER{name,...}) = name 
+      and oper(T.OPER{name,...}) = name
 
       and parenRexp
-            (e as (T.REG _ | T.LI _ | T.$ _ | T.ARG _)) = 
+            (e as (T.REG _ | T.LI _ | T.$ _ | T.ARG _)) =
               rexp e
         | parenRexp e = "("^rexp e^")"
 
@@ -536,7 +536,7 @@ struct
         | fexp(T.FABS x) = one'("fabs",x)
         | fexp(T.FNEG x) = one'("fneg",x)
         | fexp(T.FSQRT x) = one'("fsqrt",x)
-        | fexp(T.FCOND(t,cc,e1,e2)) = 
+        | fexp(T.FCOND(t,cc,e1,e2)) =
              "fcond"^fty t^ccexp cc^"("^fexp e1^","^fexp e2^")"
         | fexp(T.CVTI2F(t, t', e)) = "cvti2f"^ty t'^" "^rexp e
         | fexp(T.CVTF2F(t, t', e)) = "cvtf2f"^fty t^fty t'^" "^fexp e
@@ -547,10 +547,10 @@ struct
       and ccexp(T.CC(cc,r)) = srcCCreg r^toLower(B.condToString cc)
         | ccexp(T.FCC(fcc,r)) = srcCCreg r^toLower(B.fcondToString fcc)
         | ccexp(T.CMP(t,T.SETCC,x,y)) = "setcc"^ty t^pair(x,y)
-        | ccexp(T.CMP(t,cc,x,y)) = 
+        | ccexp(T.CMP(t,cc,x,y)) =
             "cmp"^toLower(B.condToString cc)^ty t^pair(x,y)
         | ccexp(T.FCMP(t,T.SETFCC,x,y)) = "setfcc"^ty t^pair'(x,y)
-        | ccexp(T.FCMP(t,fcc,x,y)) = 
+        | ccexp(T.FCMP(t,fcc,x,y)) =
                 "fcmp"^toLower(B.fcondToString fcc)^fty t^pair'(x,y)
         | ccexp(T.NOT x) = "not "^ccexp x
         | ccexp(T.AND(x,y)) = two''(" and ",x,y)
@@ -573,7 +573,7 @@ struct
       and two(opcode,(t,x,y)) = opcode^ty t^pair(x,y)
       and three(opcode,(m,t,x,y)) = opcode^dmr m^ty t^pair(x,y)
       and dmr T.DIV_TO_ZERO = "{0}"
-	| dmr T.DIV_TO_NEGINF = "{-inf}"
+        | dmr T.DIV_TO_NEGINF = "{-inf}"
       and binary(opcode,(t,x,y)) = parenRexp x^" "^opcode^ty t^" "^parenRexp y
       and unary(opcode,(t,x)) = opcode^ty t^" "^parenRexp x
       and pair(x,y) = "("^rexp x^","^rexp y^")"
@@ -593,7 +593,7 @@ struct
       and load(t,u,ea,m) = memuse(t,u,ea,m)
       and fload(t,u,ea,m) = fmemuse(t,u,ea,m)
       and ccload(u,ea,m) = ccmemuse(u,ea,m)
-      and addr(u,ea,m,show) = 
+      and addr(u,ea,m,show) =
           let val r = show m handle _ => Region.toString m
               val r = if r = "" then r else ":"^r
           in  u^"["^rexp ea^r^"]" end
@@ -619,4 +619,4 @@ struct
    fun fexpToString s  = #fexp(show dummy) s
    fun ccexpToString s = #ccexp(show dummy) s
 
-end 
+end

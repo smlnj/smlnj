@@ -14,7 +14,7 @@ struct
        dag
    end
 
-   val dag as Graph.GRAPH G = 
+   val dag as Graph.GRAPH G =
              makeDag [(1,(0,6)),
                       (2,(0,6)),
                       (3,(1,6)),
@@ -32,7 +32,7 @@ struct
                      ]
 
    fun close dag =
-       TransitiveClosure.acyclic_transitive_closure2 
+       TransitiveClosure.acyclic_transitive_closure2
           {+   = fn(i,j) => i+j+1,
            max = Int.max
           } dag
@@ -47,7 +47,7 @@ struct
                         d   = fn(_,(_,d)) => d,
                         r   = fn(_,(r,_)) => r,
                         m   = 1
-                       } 
+                       }
    end
 
    structure View = GraphViewerFn(daVinci)

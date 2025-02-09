@@ -12,7 +12,7 @@ functor MLTreeMult
    val intTy : int (* width of integer type *)
 
    type argi = {r:CB.cell, i:int, d:CB.cell}
-   type arg  = {r1:CB.cell, r2:CB.cell, d:CB.cell} 
+   type arg  = {r1:CB.cell, r2:CB.cell, d:CB.cell}
 
      (* these are always non-overflow trapping *)
    val mov   : {r:CB.cell, d:CB.cell} -> I.instruction
@@ -31,24 +31,24 @@ functor MLTreeMult
    val subv   : arg  -> I.instruction list
 
       (* some architectures, like the PA-RISC and the Alpha,
-       * have these types of special ops 
+       * have these types of special ops
        * if trapping = true, then the following MUST also trap on overflow
        *)
    val sh1addv  : (arg -> I.instruction list) option (* a*2 + b *)
-   val sh2addv  : (arg -> I.instruction list) option (* a*4 + b *)  
+   val sh2addv  : (arg -> I.instruction list) option (* a*4 + b *)
    val sh3addv  : (arg -> I.instruction list) option (* a*8 + b *)
-  )  
+  )
   (val signed   : bool (* signed? *)
   ) : MLTREE_MULT_DIV =
 struct
-   structure T = T 
-   structure I = I 
-   structure C = I.C 
+   structure T = T
+   structure I = I
+   structure C = I.C
    structure W = Word
    structure A = Array
 
    type arg       = argi
- 
+
    infix << >> ~>> || &&
    val itow   = W.fromInt
    val wtoi   = W.toIntX
@@ -62,25 +62,25 @@ struct
 
    fun error msg = MLRiscErrorMsg.error("MLTreeMult",msg)
 
-   val zeroR   = C.zeroReg CB.GP 
+   val zeroR   = C.zeroReg CB.GP
    val shiftri = if signed then srai else srli
 
    fun isPowerOf2 w = ((w - 0w1) && w) = 0w0
 
    fun log2 n =  (* n must be > 0!!! *)
-       let fun loop(0w1,pow) = pow 
+       let fun loop(0w1,pow) = pow
              | loop(w,pow) = loop(w >> 0w1,pow+1)
        in loop(n,0) end
 
-   fun zeroBits(w,lowZeroBits) = 
+   fun zeroBits(w,lowZeroBits) =
        if (w && 0w1) = 0w1 then (w,lowZeroBits)
        else zeroBits(w >> 0w1,lowZeroBits+0w1)
 
-     (* Non overflow trapping version of multiply: 
+     (* Non overflow trapping version of multiply:
       * We can use add, shadd, shift, sub to perform the multiplication
       *)
    fun multiplyNonTrap{r,i,d} =
-   let fun mult(r,w,maxCost,d) = 
+   let fun mult(r,w,maxCost,d) =
        if maxCost <= 0 then raise TooComplex
        else if isPowerOf2 w then slli{r=r,i=log2 w,d=d}
        else
@@ -104,7 +104,7 @@ struct
                        slli{r=tmp,i=wtoi lowZeroBits,d=d}
                    end
             end
-         ) 
+         )
    in  if i <= 0 then raise TooComplex
        else if i = 1 then [mov{r=r,d=d}]
        else mult(r,itow i,!multCost,d)
@@ -120,11 +120,11 @@ struct
                     T.COND(ty,T.CMP(ty,T.GE,reg, T.LI 0),reg,
                               T.ADD(ty,reg,T.LI(T.I.fromInt(intTy,i))))))
        end
- 
 
-   (* 
-    * Simulate rounding towards zero for signed division 
-    *)  
+
+   (*
+    * Simulate rounding towards zero for signed division
+    *)
    fun roundDiv{mode=T.TO_NEGINF,r,...} = ([],r) (* no rounding necessary *)
      | roundDiv{mode=T.TO_ZERO,stm,r,i} =
           if signed then
@@ -139,25 +139,25 @@ struct
                  in ([],d) end
           end
           else ([],r) (* no rounding for unsigned division *)
-     | roundDiv{mode,...} = 
+     | roundDiv{mode,...} =
           error("Integer rounding mode "^
                 T.Basis.roundingModeToString mode^" is not supported")
 
-   fun divideNonTrap{mode,stm}{r,i,d} = 
+   fun divideNonTrap{mode,stm}{r,i,d} =
        if i > 0 andalso isPowerOf2(itow i)
-       then 
+       then
        let val (code,r) = roundDiv{mode=mode,stm=stm,r=r,i=i}
        in  code@shiftri{r=r,i=log2(itow i),d=d} end (* won't overflow *)
        else raise TooComplex
 
-     (* Overflow trapping version of multiply: 
+     (* Overflow trapping version of multiply:
       *   We can use only add and shadd to perform the multiplication,
       *   because of overflow trapping problem.
       *)
    fun multiplyTrap{r,i,d} =
    let fun mult(r,w,maxCost,d) =
        if maxCost <= 0 then raise TooComplex
-       else 
+       else
           (case (w,sh1addv,sh2addv,sh3addv,zeroR) of
                (* some simple base cases *)
             (0w2,_,_,_,_)           => addv{r1=r,r2=r,d=d}
@@ -170,7 +170,7 @@ struct
             let val tmp = C.newReg()
             in  if (w && 0w1) = 0w1 then
                     mult(r,w - 0w1,maxCost-1,tmp) @ addv{r1=tmp,r2=r,d=d}
-                else 
+                else
                    case (w && 0w7, sh3addv, zeroR) of
                      (0w0, SOME f, SOME z) => (* times 8 *)
                       mult(r,w >> 0w3,maxCost-1,tmp) @ f{r1=tmp,r2=z,d=d}
@@ -181,10 +181,10 @@ struct
                    | _ =>
                       mult(r,w >> 0w1,maxCost-1,tmp) @ addv{r1=tmp,r2=tmp,d=d}
             end
-         ) 
+         )
    in  if i <= 0 then raise TooComplex
        else if i = 1 then [mov{r=r,d=d}]
-       else mult(r,itow i,!multCost,d) 
+       else mult(r,itow i,!multCost,d)
    end
 
    fun divideTrap{mode,stm}{r,i,d} =

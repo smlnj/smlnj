@@ -1,12 +1,12 @@
 (*
- * Constant time concatenable list.  
+ * Constant time concatenable list.
  *
  * -- Allen
  *)
 
 signature CATNETABLE_LIST =
 sig
-   type 'a catlist 
+   type 'a catlist
    val empty    : 'a catlist
    val null     : 'a catlist -> bool
    val length   : 'a catlist -> int
@@ -32,7 +32,7 @@ struct
 
     fun length empty    = 0
       | length (unit _) = 1
-      | length (a @ b)  = length a + length b 
+      | length (a @ b)  = length a + length b
 
     fun hd empty    = raise Empty
       | hd (unit a) = a
@@ -51,7 +51,7 @@ struct
       | append(a,empty) = a
       | append(a,b)     = a @ b
 
-    fun map f l = 
+    fun map f l =
     let fun g empty    = empty
           | g (unit a) = unit(f a)
           | g (a @ b)  = (g a) @ (g b)
@@ -66,7 +66,7 @@ struct
     fun fromList []     = empty
       | fromList (a::b) = cons(a,fromList b)
 
-    fun toList l = 
+    fun toList l =
     let fun g(empty,l)  = l
           | g(unit a,l) = a::l
           | g(a @ b, l) = g(a,g(b,l))

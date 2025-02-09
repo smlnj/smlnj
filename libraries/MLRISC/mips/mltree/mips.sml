@@ -1,14 +1,14 @@
-(* 
+(*
  * This is a revamping of the MIPS32 instruction selection module
  * using the new MLTREE and instruction representation.   I've dropped
  * the suffix 32 since we now support 64 bit datatypes.
  *
  * o How to simulate 32-bit in 64-mode
- *   All 32-bit values are sign extended to 64-bits. 
+ *   All 32-bit values are sign extended to 64-bits.
  *   The working is similar to the Alpha and the Sparc architecture.
  * o I'm using the native multiplication instructions for even simple
  *   multiply with a constant.  Too lazy to add the multiply module for now.
- * 
+ *
  * -- Allen
  *)
 
@@ -36,7 +36,7 @@ struct
   structure P   = PseudoInstrs
   structure A   = MLRiscAnnotations
 
-  fun error msg = MLRiscErrorMsg.error("MIPS",msg) 
+  fun error msg = MLRiscErrorMsg.error("MIPS",msg)
 
   type instrStream = (I.instruction,C.cellset) T.stream
   type mltreeStream = (T.stm,T.mlrisc list) T.stream
@@ -68,7 +68,7 @@ struct
 
       (* Add an overflow trap *)
       fun trap() = ()
- 
+
       val newReg = C.newReg
       val newFreg = C.newFreg
 
@@ -85,13 +85,13 @@ struct
           mark(I.FCOPY{dst=[d],src=[s],impl=ref NONE,tmp=NONE},an)
 
       (* emit a copy *)
-      fun copy(dst,src,an) = 
+      fun copy(dst,src,an) =
           mark(I.COPY{dst=dst,src=src,impl=ref NONE,
                       tmp=case dst of
                            [_] => NONE | _ => SOME(I.Direct(newReg()))},an)
 
       (* emit a floating point copy *)
-      fun fcopy(dst,src,an) = 
+      fun fcopy(dst,src,an) =
           mark(I.FCOPY{dst=dst,src=src,impl=ref NONE,
                       tmp=case dst of
                            [_] => NONE | _ => SOME(I.FDirect(newFreg()))},an)
@@ -162,7 +162,7 @@ struct
       and faddr exp =
           case !mipsVersion of
              IV =>
-              (case exp of 
+              (case exp of
                  T.ADD(_,T.REG(_,b),T.REG(_,i)) => (b, I.Reg i)
                | _ => addr exp
               )
@@ -172,11 +172,11 @@ struct
       and arith(oper,a,b,d,an) =
           mark(I.ARITH{oper=oper,rt=d,rs=expr a,i=I.Reg(expr b)},an)
 
-      (* generate a commutative arithmetic operator 
-       * that can take an immediate operand 
+      (* generate a commutative arithmetic operator
+       * that can take an immediate operand
        *)
       and commarithi(oper,a,b,d,an) =
-          let val (a, b) = 
+          let val (a, b) =
                 case b of
                   (T.LI _ | T.CONST _ | T.LABEXP _ | T.LABEL _) => (b, a)
                 | _ => (a, b)
@@ -200,7 +200,7 @@ struct
       (* generate multiply.
        * Note: low order result is in the LO register
        *)
-      and multiply(oper,a,b,d,an) = 
+      and multiply(oper,a,b,d,an) =
           (mark(I.MULTIPLY{oper=oper,rs=expr a,rt=expr b},an);
            emit(I.MFLO d)
           )
@@ -208,12 +208,12 @@ struct
       (* generate divide
        *  Note: quotient in LO; remainder is in HI
        *)
-      and divide(oper,a,b,d,an) = 
+      and divide(oper,a,b,d,an) =
           (mark(I.DIVIDE{oper=oper,rs=expr a,rt=expr b},an);
            emit(I.MFLO d)
           )
 
-      and rem(oper,a,b,d,an) = 
+      and rem(oper,a,b,d,an) =
           (mark(I.DIVIDE{oper=oper,rs=expr a,rt=expr b},an);
            emit(I.MFHI d)
           )
@@ -304,11 +304,11 @@ struct
             (* Extension *)
           | T.REXT e => ExtensionComp.compileRext (reducer()) {e=e, rd=d, an=an}
 
-           (* Defaults *) 
+           (* Defaults *)
           | e => doExpr(Gen.compileRexp e,d,an)
 
       (* generate a floating point expression
-       * return the register that holds the result 
+       * return the register that holds the result
        *)
       and fexpr(T.FREG(_,r)) = r
         | fexpr e = let val d = newFreg() in doFexpr(e,d,[]); d end
@@ -355,12 +355,12 @@ struct
             (* loads *)
           | T.FLOAD(32,ea,mem) => fload(I.LWC1,ea,d,mem,an)
           | T.FLOAD(64,ea,mem) => fload(I.LDC1,ea,d,mem,an)
-         
-            (* floating/floating conversion 
+
+            (* floating/floating conversion
              * Note: it is not necessary to convert single precision
              * to double on the alpha.
              *)
-          | T.CVTF2F(to,from,e) => 
+          | T.CVTF2F(to,from,e) =>
             if from = to then doFexpr(e, d, an)
             else
             (case (to,from) of
@@ -385,15 +385,15 @@ struct
       and jmp(e,labels,an) = mark(I.JR{rs=expr e,labels=labels,nop=true},an)
 
          (* generate a call instruction *)
-      and call(ea,flow,defs,uses,cutsTo,mem,an) = 
+      and call(ea,flow,defs,uses,cutsTo,mem,an) =
        let val defs=cellset defs
            val uses=cellset uses
-           val instr = 
+           val instr =
                case ea of
-                 (T.LABEL lab) => 
+                 (T.LABEL lab) =>
                       I.JAL{lab=lab,defs=defs,uses=uses,cutsTo=cutsTo,
                             mem=mem,nop=true}
-               | _ => I.JALR{rt=C.linkR, rs=expr ea, 
+               | _ => I.JALR{rt=C.linkR, rs=expr ea,
                             defs=defs,uses=uses,cutsTo=cutsTo,mem=mem,nop=true}
        in  mark(instr,an)
        end
@@ -409,11 +409,11 @@ struct
 
       and doCCexpr(T.CC(_,r),d,an) = move(r,d,an)
         | doCCexpr(T.FCC(_,r),d,an) = fmove(r,d,an)
-        | doCCexpr(T.CMP(ty,cond,e1,e2),d,an)  = cmp(ty,cond,e1,e2,d,an) 
+        | doCCexpr(T.CMP(ty,cond,e1,e2),d,an)  = cmp(ty,cond,e1,e2,d,an)
         | doCCexpr(T.FCMP(fty,cond,e1,e2),d,an) = error "doCCexpr.fcmp"
         | doCCexpr(T.CCMARK(e,A.MARKREG f),d,an) = (f d; doCCexpr(e,d,an))
         | doCCexpr(T.CCMARK(e,a),d,an) = doCCexpr(e,d,a::an)
-        | doCCexpr(T.CCEXT e,d,an) = 
+        | doCCexpr(T.CCEXT e,d,an) =
              ExtensionComp.compileCCext (reducer()) {e=e, ccd=d, an=an}
         | doCCexpr _ = error "doCCexpr"
 
@@ -433,7 +433,7 @@ struct
           | T.JMP(T.LABEL lab,_) => goto(lab,an)
           | T.JMP(e,labs) => jmp(e,labs,an)
           | T.BCC(cc,lab) => branch(cc,lab,an)
-          | T.CALL{funct,targets,defs,uses,region} => 
+          | T.CALL{funct,targets,defs,uses,region} =>
               call(funct,targets,defs,uses,[],region,an)
           | T.FLOW_TO(T.CALL{funct,targets,defs,uses,region},cuts)=>
               call(funct,targets,defs,uses,cuts,region,an)
@@ -462,7 +462,7 @@ struct
                     emit          = mark,
                     instrStream   = instrStream,
                     mltreeStream  = self()
-                   } 
+                   }
 
       and doStmt s = stmt(s,[])
       and doStmts ss = app doStmt ss
@@ -482,9 +482,9 @@ struct
       and beginCluster' n =
           (trapLabel := NONE;
            beginCluster n
-          ) 
+          )
 
-      and endCluster' a = 
+      and endCluster' a =
           (case !trapLabel of
              NONE => ()
            | SOME(_, lab) => (defineLabel lab) (* XXX *)
@@ -492,7 +492,7 @@ struct
            endCluster a
           )
 
-      and self() = 
+      and self() =
           S.STREAM
          { beginCluster   = beginCluster',
            endCluster     = endCluster',
@@ -504,9 +504,9 @@ struct
            annotation     = annotation,
            getAnnotations = getAnnotations,
            exitBlock      = fn regs => exitBlock(cellset regs)
-         } 
+         }
    in  self()
    end
- 
+
 end
 

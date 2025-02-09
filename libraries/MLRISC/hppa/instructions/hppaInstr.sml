@@ -219,45 +219,45 @@ sig
    | INDXSCALEDea of CellsBasis.cell * CellsBasis.cell
    datatype instr =
      LOADI of {li:loadi, r:CellsBasis.cell, i:operand, t:CellsBasis.cell, mem:Region.region}
-   | LOAD of {l:load, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell, 
+   | LOAD of {l:load, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell,
         mem:Region.region}
    | STORE of {st:store, b:CellsBasis.cell, d:operand, r:CellsBasis.cell, mem:Region.region}
    | ARITH of {a:arith, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell}
    | ARITHI of {ai:arithi, i:operand, r:CellsBasis.cell, t:CellsBasis.cell}
-   | COMCLR_LDO of {cc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, t1:CellsBasis.cell, 
+   | COMCLR_LDO of {cc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, t1:CellsBasis.cell,
         i:int, b:CellsBasis.cell, t2:CellsBasis.cell}
-   | COMICLR_LDO of {cc:bcond, i1:operand, r2:CellsBasis.cell, t1:CellsBasis.cell, 
+   | COMICLR_LDO of {cc:bcond, i1:operand, r2:CellsBasis.cell, t1:CellsBasis.cell,
         i2:int, b:CellsBasis.cell, t2:CellsBasis.cell}
    | SHIFTV of {sv:shiftv, r:CellsBasis.cell, len:int, t:CellsBasis.cell}
    | SHIFT of {s:shift, r:CellsBasis.cell, p:int, len:int, t:CellsBasis.cell}
-   | BCOND of {cmp:cmp, bc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, n:bool, 
+   | BCOND of {cmp:cmp, bc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, n:bool,
         nop:bool, t:Label.label, f:Label.label}
-   | BCONDI of {cmpi:cmpi, bc:bcond, i:int, r2:CellsBasis.cell, n:bool, nop:bool, 
+   | BCONDI of {cmpi:cmpi, bc:bcond, i:int, r2:CellsBasis.cell, n:bool, nop:bool,
         t:Label.label, f:Label.label}
-   | BB of {bc:bitcond, r:CellsBasis.cell, p:int, n:bool, nop:bool, t:Label.label, 
+   | BB of {bc:bitcond, r:CellsBasis.cell, p:int, n:bool, nop:bool, t:Label.label,
         f:Label.label}
    | B of {lab:Label.label, n:bool}
    | LONGJUMP of {lab:Label.label, n:bool, tmp:CellsBasis.cell, tmpLab:Label.label}
    | BE of {b:CellsBasis.cell, d:operand, sr:int, n:bool, labs:Label.label list}
    | BV of {x:CellsBasis.cell, b:CellsBasis.cell, labs:Label.label list, n:bool}
    | BLR of {x:CellsBasis.cell, t:CellsBasis.cell, labs:Label.label list, n:bool}
-   | BL of {lab:Label.label, t:CellsBasis.cell, defs:C.cellset, uses:C.cellset, 
+   | BL of {lab:Label.label, t:CellsBasis.cell, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region, n:bool}
-   | BLE of {d:operand, b:CellsBasis.cell, sr:int, t:CellsBasis.cell, defs:C.cellset, 
+   | BLE of {d:operand, b:CellsBasis.cell, sr:int, t:CellsBasis.cell, defs:C.cellset,
         uses:C.cellset, cutsTo:Label.label list, mem:Region.region}
    | LDIL of {i:operand, t:CellsBasis.cell}
    | LDO of {i:operand, b:CellsBasis.cell, t:CellsBasis.cell}
    | MTCTL of {r:CellsBasis.cell, t:CellsBasis.cell}
    | FSTORE of {fst:fstore, b:CellsBasis.cell, d:int, r:CellsBasis.cell, mem:Region.region}
-   | FSTOREX of {fstx:fstorex, b:CellsBasis.cell, x:CellsBasis.cell, r:CellsBasis.cell, 
+   | FSTOREX of {fstx:fstorex, b:CellsBasis.cell, x:CellsBasis.cell, r:CellsBasis.cell,
         mem:Region.region}
    | FLOAD of {fl:fload, b:CellsBasis.cell, d:int, t:CellsBasis.cell, mem:Region.region}
-   | FLOADX of {flx:floadx, b:CellsBasis.cell, x:CellsBasis.cell, t:CellsBasis.cell, 
+   | FLOADX of {flx:floadx, b:CellsBasis.cell, x:CellsBasis.cell, t:CellsBasis.cell,
         mem:Region.region}
    | FARITH of {fa:farith, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell}
    | FUNARY of {fu:funary, f:CellsBasis.cell, t:CellsBasis.cell}
    | FCNV of {fcnv:fcnv, f:CellsBasis.cell, t:CellsBasis.cell}
-   | FBRANCH of {cc:fcond, fmt:fmt, f1:CellsBasis.cell, f2:CellsBasis.cell, 
+   | FBRANCH of {cc:fcond, fmt:fmt, f1:CellsBasis.cell, f2:CellsBasis.cell,
         t:Label.label, f:Label.label, n:bool, long:bool}
    | BREAK of {code1:int, code2:int}
    | NOP
@@ -267,56 +267,56 @@ sig
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,
               tmp: ea option (* NONE if |dst| = {src| = 1 *)}
    | ANNOTATION of {i:instruction, a:Annotations.annotation}
    | INSTR of instr
-   val loadi : {li:loadi, r:CellsBasis.cell, i:operand, t:CellsBasis.cell, 
+   val loadi : {li:loadi, r:CellsBasis.cell, i:operand, t:CellsBasis.cell,
       mem:Region.region} -> instruction
-   val load : {l:load, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell, 
+   val load : {l:load, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell,
       mem:Region.region} -> instruction
-   val store : {st:store, b:CellsBasis.cell, d:operand, r:CellsBasis.cell, 
+   val store : {st:store, b:CellsBasis.cell, d:operand, r:CellsBasis.cell,
       mem:Region.region} -> instruction
    val arith : {a:arith, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell} -> instruction
    val arithi : {ai:arithi, i:operand, r:CellsBasis.cell, t:CellsBasis.cell} -> instruction
-   val comclr_ldo : {cc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, t1:CellsBasis.cell, 
+   val comclr_ldo : {cc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, t1:CellsBasis.cell,
       i:int, b:CellsBasis.cell, t2:CellsBasis.cell} -> instruction
-   val comiclr_ldo : {cc:bcond, i1:operand, r2:CellsBasis.cell, t1:CellsBasis.cell, 
+   val comiclr_ldo : {cc:bcond, i1:operand, r2:CellsBasis.cell, t1:CellsBasis.cell,
       i2:int, b:CellsBasis.cell, t2:CellsBasis.cell} -> instruction
    val shiftv : {sv:shiftv, r:CellsBasis.cell, len:int, t:CellsBasis.cell} -> instruction
    val shift : {s:shift, r:CellsBasis.cell, p:int, len:int, t:CellsBasis.cell} -> instruction
-   val bcond : {cmp:cmp, bc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, 
+   val bcond : {cmp:cmp, bc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell,
       n:bool, nop:bool, t:Label.label, f:Label.label} -> instruction
-   val bcondi : {cmpi:cmpi, bc:bcond, i:int, r2:CellsBasis.cell, n:bool, nop:bool, 
+   val bcondi : {cmpi:cmpi, bc:bcond, i:int, r2:CellsBasis.cell, n:bool, nop:bool,
       t:Label.label, f:Label.label} -> instruction
-   val bb : {bc:bitcond, r:CellsBasis.cell, p:int, n:bool, nop:bool, t:Label.label, 
+   val bb : {bc:bitcond, r:CellsBasis.cell, p:int, n:bool, nop:bool, t:Label.label,
       f:Label.label} -> instruction
    val b : {lab:Label.label, n:bool} -> instruction
    val longjump : {lab:Label.label, n:bool, tmp:CellsBasis.cell, tmpLab:Label.label} -> instruction
    val be : {b:CellsBasis.cell, d:operand, sr:int, n:bool, labs:Label.label list} -> instruction
    val bv : {x:CellsBasis.cell, b:CellsBasis.cell, labs:Label.label list, n:bool} -> instruction
-   val blr : {x:CellsBasis.cell, t:CellsBasis.cell, labs:Label.label list, 
+   val blr : {x:CellsBasis.cell, t:CellsBasis.cell, labs:Label.label list,
       n:bool} -> instruction
-   val bl : {lab:Label.label, t:CellsBasis.cell, defs:C.cellset, uses:C.cellset, 
+   val bl : {lab:Label.label, t:CellsBasis.cell, defs:C.cellset, uses:C.cellset,
       cutsTo:Label.label list, mem:Region.region, n:bool} -> instruction
-   val ble : {d:operand, b:CellsBasis.cell, sr:int, t:CellsBasis.cell, defs:C.cellset, 
+   val ble : {d:operand, b:CellsBasis.cell, sr:int, t:CellsBasis.cell, defs:C.cellset,
       uses:C.cellset, cutsTo:Label.label list, mem:Region.region} -> instruction
    val ldil : {i:operand, t:CellsBasis.cell} -> instruction
    val ldo : {i:operand, b:CellsBasis.cell, t:CellsBasis.cell} -> instruction
    val mtctl : {r:CellsBasis.cell, t:CellsBasis.cell} -> instruction
    val fstore : {fst:fstore, b:CellsBasis.cell, d:int, r:CellsBasis.cell, mem:Region.region} -> instruction
-   val fstorex : {fstx:fstorex, b:CellsBasis.cell, x:CellsBasis.cell, r:CellsBasis.cell, 
+   val fstorex : {fstx:fstorex, b:CellsBasis.cell, x:CellsBasis.cell, r:CellsBasis.cell,
       mem:Region.region} -> instruction
    val fload : {fl:fload, b:CellsBasis.cell, d:int, t:CellsBasis.cell, mem:Region.region} -> instruction
-   val floadx : {flx:floadx, b:CellsBasis.cell, x:CellsBasis.cell, t:CellsBasis.cell, 
+   val floadx : {flx:floadx, b:CellsBasis.cell, x:CellsBasis.cell, t:CellsBasis.cell,
       mem:Region.region} -> instruction
    val farith : {fa:farith, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell} -> instruction
    val funary : {fu:funary, f:CellsBasis.cell, t:CellsBasis.cell} -> instruction
    val fcnv : {fcnv:fcnv, f:CellsBasis.cell, t:CellsBasis.cell} -> instruction
-   val fbranch : {cc:fcond, fmt:fmt, f1:CellsBasis.cell, f2:CellsBasis.cell, 
+   val fbranch : {cc:fcond, fmt:fmt, f1:CellsBasis.cell, f2:CellsBasis.cell,
       t:Label.label, f:Label.label, n:bool, long:bool} -> instruction
    val break : {code1:int, code2:int} -> instruction
    val nop : instruction
@@ -538,45 +538,45 @@ struct
    | INDXSCALEDea of CellsBasis.cell * CellsBasis.cell
    datatype instr =
      LOADI of {li:loadi, r:CellsBasis.cell, i:operand, t:CellsBasis.cell, mem:Region.region}
-   | LOAD of {l:load, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell, 
+   | LOAD of {l:load, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell,
         mem:Region.region}
    | STORE of {st:store, b:CellsBasis.cell, d:operand, r:CellsBasis.cell, mem:Region.region}
    | ARITH of {a:arith, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell}
    | ARITHI of {ai:arithi, i:operand, r:CellsBasis.cell, t:CellsBasis.cell}
-   | COMCLR_LDO of {cc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, t1:CellsBasis.cell, 
+   | COMCLR_LDO of {cc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, t1:CellsBasis.cell,
         i:int, b:CellsBasis.cell, t2:CellsBasis.cell}
-   | COMICLR_LDO of {cc:bcond, i1:operand, r2:CellsBasis.cell, t1:CellsBasis.cell, 
+   | COMICLR_LDO of {cc:bcond, i1:operand, r2:CellsBasis.cell, t1:CellsBasis.cell,
         i2:int, b:CellsBasis.cell, t2:CellsBasis.cell}
    | SHIFTV of {sv:shiftv, r:CellsBasis.cell, len:int, t:CellsBasis.cell}
    | SHIFT of {s:shift, r:CellsBasis.cell, p:int, len:int, t:CellsBasis.cell}
-   | BCOND of {cmp:cmp, bc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, n:bool, 
+   | BCOND of {cmp:cmp, bc:bcond, r1:CellsBasis.cell, r2:CellsBasis.cell, n:bool,
         nop:bool, t:Label.label, f:Label.label}
-   | BCONDI of {cmpi:cmpi, bc:bcond, i:int, r2:CellsBasis.cell, n:bool, nop:bool, 
+   | BCONDI of {cmpi:cmpi, bc:bcond, i:int, r2:CellsBasis.cell, n:bool, nop:bool,
         t:Label.label, f:Label.label}
-   | BB of {bc:bitcond, r:CellsBasis.cell, p:int, n:bool, nop:bool, t:Label.label, 
+   | BB of {bc:bitcond, r:CellsBasis.cell, p:int, n:bool, nop:bool, t:Label.label,
         f:Label.label}
    | B of {lab:Label.label, n:bool}
    | LONGJUMP of {lab:Label.label, n:bool, tmp:CellsBasis.cell, tmpLab:Label.label}
    | BE of {b:CellsBasis.cell, d:operand, sr:int, n:bool, labs:Label.label list}
    | BV of {x:CellsBasis.cell, b:CellsBasis.cell, labs:Label.label list, n:bool}
    | BLR of {x:CellsBasis.cell, t:CellsBasis.cell, labs:Label.label list, n:bool}
-   | BL of {lab:Label.label, t:CellsBasis.cell, defs:C.cellset, uses:C.cellset, 
+   | BL of {lab:Label.label, t:CellsBasis.cell, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region, n:bool}
-   | BLE of {d:operand, b:CellsBasis.cell, sr:int, t:CellsBasis.cell, defs:C.cellset, 
+   | BLE of {d:operand, b:CellsBasis.cell, sr:int, t:CellsBasis.cell, defs:C.cellset,
         uses:C.cellset, cutsTo:Label.label list, mem:Region.region}
    | LDIL of {i:operand, t:CellsBasis.cell}
    | LDO of {i:operand, b:CellsBasis.cell, t:CellsBasis.cell}
    | MTCTL of {r:CellsBasis.cell, t:CellsBasis.cell}
    | FSTORE of {fst:fstore, b:CellsBasis.cell, d:int, r:CellsBasis.cell, mem:Region.region}
-   | FSTOREX of {fstx:fstorex, b:CellsBasis.cell, x:CellsBasis.cell, r:CellsBasis.cell, 
+   | FSTOREX of {fstx:fstorex, b:CellsBasis.cell, x:CellsBasis.cell, r:CellsBasis.cell,
         mem:Region.region}
    | FLOAD of {fl:fload, b:CellsBasis.cell, d:int, t:CellsBasis.cell, mem:Region.region}
-   | FLOADX of {flx:floadx, b:CellsBasis.cell, x:CellsBasis.cell, t:CellsBasis.cell, 
+   | FLOADX of {flx:floadx, b:CellsBasis.cell, x:CellsBasis.cell, t:CellsBasis.cell,
         mem:Region.region}
    | FARITH of {fa:farith, r1:CellsBasis.cell, r2:CellsBasis.cell, t:CellsBasis.cell}
    | FUNARY of {fu:funary, f:CellsBasis.cell, t:CellsBasis.cell}
    | FCNV of {fcnv:fcnv, f:CellsBasis.cell, t:CellsBasis.cell}
-   | FBRANCH of {cc:fcond, fmt:fmt, f1:CellsBasis.cell, f2:CellsBasis.cell, 
+   | FBRANCH of {cc:fcond, fmt:fmt, f1:CellsBasis.cell, f2:CellsBasis.cell,
         t:Label.label, f:Label.label, n:bool, long:bool}
    | BREAK of {code1:int, code2:int}
    | NOP
@@ -586,7 +586,7 @@ struct
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,

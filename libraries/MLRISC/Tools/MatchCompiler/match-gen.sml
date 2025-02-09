@@ -15,7 +15,7 @@ struct
    val NO = R.noRewrite
    val rw = R.rewrite
    val ++ = PP.++
-  
+
    infix ++
 
    val i2s = Int.toString
@@ -24,7 +24,7 @@ struct
      struct
         type guard = int * A.exp
         fun toString(_,e) = PP.text(AstPP.exp e)
-        fun compare((i,_),(j,_)) = Int.compare(i,j) 
+        fun compare((i,_),(j,_)) = Int.compare(i,j)
         val counter = ref 0
         fun guard e = (!counter,e) before counter := !counter + 1
         fun logicalAnd((_,x),(_,y)) = guard(AstUtil.ANDALSO(x,y))
@@ -43,20 +43,20 @@ struct
         val compare  = AstUtil.compareLiteral
         val bools = SOME{known=[A.BOOLlit false, A.BOOLlit true],others=false}
         fun variants(A.BOOLlit _) = bools
-          | variants _ = NONE 
+          | variants _ = NONE
         structure Map = RedBlackMapFn(type ord_key = literal
                                       val compare = compare)
      end
    structure LitMap = Literal.Map
 
-   datatype conrep = CONREP of A.id list * A.consbind * A.datatypebind 
-                   | EXN of A.id list * A.id * A.ty option 
+   datatype conrep = CONREP of A.id list * A.consbind * A.datatypebind
+                   | EXN of A.id list * A.id * A.ty option
 
    structure Con =
      struct
-        type con = conrep 
+        type con = conrep
 
-        fun toString(CONREP(path,A.CONSbind{id, ...},_)) = 
+        fun toString(CONREP(path,A.CONSbind{id, ...},_)) =
              PP.text(AstPP.ident(A.IDENT(path,id)))
           | toString(EXN(path,id,ty)) =
              PP.text(AstPP.ident(A.IDENT(path,id)))
@@ -80,11 +80,11 @@ struct
    structure Var =
      struct
         type var = A.id
-        val compare = String.compare 
+        val compare = String.compare
         fun toString x = x
-        structure Map = RedBlackMapFn(type ord_key = var 
+        structure Map = RedBlackMapFn(type ord_key = var
                                       val compare = compare)
-        structure Set = RedBlackSetFn(type ord_key = var 
+        structure Set = RedBlackSetFn(type ord_key = var
                                        val compare = compare)
      end
 
@@ -94,12 +94,12 @@ struct
         val toString = PP.text o AstPP.exp
         fun freeVars e =
         let val fvs = ref Var.Set.empty
-            fun exp _ (e as A.IDexp(A.IDENT([],x))) = 
+            fun exp _ (e as A.IDexp(A.IDENT([],x))) =
                  (fvs := Var.Set.add(!fvs,x); e)
               | exp _ e = e
         in  #exp(R.rewrite{pat=NO,exp=exp,decl=NO,sexp=NO,ty=NO}) e;
             Var.Set.listItems(!fvs)
-        end 
+        end
      end
 
    structure MC  =
@@ -127,11 +127,11 @@ struct
       fun lookupCons(ENV{cons, ...}, id) = Var.Map.find(cons,id)
       val empty = ENV{cons=Var.Map.empty,sigs=Var.Map.empty}
    end
-   type compiled_type_info = Env.env 
+   type compiled_type_info = Env.env
 
    (* enter all datatypes definitions into a list *)
    fun compileTypes ds =
-   let fun dbind(t as A.DATATYPEbind{cbs, ...}, env) = 
+   let fun dbind(t as A.DATATYPEbind{cbs, ...}, env) =
              List.foldr (fn (c as A.CONSbind{id,...},env) =>
                     Env.insertCons(env, id, CONREP([],c,t)))
                        env cbs
@@ -148,16 +148,16 @@ struct
          | decl(A.STRUCTUREdecl(id,_,_,A.DECLsexp ds),env) = nested(id,ds,env)
          | decl(A.SEQdecl ds, env) = decls(ds, env)
          | decl(_,env) = env
-       and decls(ds,env) = List.foldr decl env ds 
-       and nested(id,ds,env) = 
-           let val env' = decls(ds,Env.empty) 
+       and decls(ds,env) = List.foldr decl env ds
+       and nested(id,ds,env) =
+           let val env' = decls(ds,Env.empty)
            in  Env.insertSig(env,id,env')
            end
    in  decls(ds,Env.empty)
    end
 
-   fun prClause(p, g) = 
-       PP.text(AstPP.pat p ++ PP.sp ++ 
+   fun prClause(p, g) =
+       PP.text(AstPP.pat p ++ PP.sp ++
                (case g of NONE => PP.! "=> ..."
                         | SOME e => PP.! "where ... => ..."))
 
@@ -166,13 +166,13 @@ struct
 
        fun hasCon x = isSome(Env.lookupCons(env, x))
 
-       fun lookup(env,path,[],x) = 
+       fun lookup(env,path,[],x) =
            (case Env.lookupCons(env, x) of
               SOME(CONREP(_,c,t)) => CONREP(path,c,t)
             | SOME(EXN(_,id,t)) => EXN(path,id,t)
             | NONE => raise MatchCompiler("undefined constructor "^x)
            )
-         | lookup(env,path,p::ps,x) = 
+         | lookup(env,path,p::ps,x) =
            (case Env.lookupSig(env, p) of
               SOME env => lookup(env,path,ps,x)
             | NONE => raise MatchCompiler("undefined structure "^p^" in "^
@@ -181,7 +181,7 @@ struct
        fun lookupCon (A.IDENT(p,x)) = lookup(env,p,p,x)
 
        (* Rewrite list patterns *)
-       fun transListPat p = 
+       fun transListPat p =
        let fun Cons(x,y) = A.CONSpat(A.IDENT([],"::"), SOME(A.TUPLEpat[x,y]))
            val Nil = A.CONSpat(A.IDENT([],"nil"),NONE)
 
@@ -191,19 +191,19 @@ struct
            fun pat _ (A.LISTpat(ps, t)) = listify(ps, t)
              | pat _ p = p
        in  #pat(R.rewrite{pat=pat,exp=NO,decl=NO,sexp=NO,ty=NO}) p
-       end 
+       end
 
        val rule_no = ref 0
 
-       fun renameRule(c as A.CLAUSE([pat],guard,e)) = 
+       fun renameRule(c as A.CLAUSE([pat],guard,e)) =
        let val (e,cont) = case e of
                               A.CONTexp(e,x) => (e,SOME x)
                             | _ => (e, NONE)
        in  MC.rename
-               (fn {idPat, asPat, consPat, wildPat, 
-                    tuplePat, recordPat, litPat, 
+               (fn {idPat, asPat, consPat, wildPat,
+                    tuplePat, recordPat, litPat,
                     orPat, andPat, notPat, wherePat, nestedPat, ...} =>
-                   fn A.IDpat id => 
+                   fn A.IDpat id =>
                        if hasCon id then consPat(lookupCon(A.IDENT([],id)),[])
                        else idPat id
                     | A.ASpat(id,p) => asPat(id,p)
@@ -220,7 +220,7 @@ struct
                     | A.NESTEDpat(p,e,p') => nestedPat(p,Guard.guard e,p')
                     | p => raise MC.MatchCompiler("illegal pattern "^
                                        PP.text(AstPP.pat p))
-               ) {number= !rule_no, 
+               ) {number= !rule_no,
                   pats=[transListPat pat],
                   guard=Option.map Guard.guard guard,
                   cont=cont,
@@ -231,40 +231,40 @@ struct
               raise MC.MatchCompiler(msg^" in "^ prClause(pat,guard))
 
        val rules = map renameRule clauses
-       
+
        (* compile the rules into a dfa *)
        val dfa = MC.compile{compiled_rules=rules, compress=true}
    in  dfa
    end
 
    (* Report errors *)
-   fun report {warning, error, log, dfa, rules} =  
+   fun report {warning, error, log, dfa, rules} =
    let val red = MC.redundant dfa
        val ex  = MC.exhaustive dfa
        val bad = IntListSet.numItems red > 0
        val error = if bad then error else warning
-       val message = if ex then 
-                        if bad then "redundant matches" 
+       val message = if ex then
+                        if bad then "redundant matches"
                         else ""
-                     else 
-                        if bad then "non-exhaustive and redundant matches" 
+                     else
+                        if bad then "non-exhaustive and redundant matches"
                         else "non-exhaustive matches"
        fun dumpRules(i, []) = ()
          | dumpRules(i, r::rules) =
            let val tab = if IntListSet.member(red,i) then "---> " else "     "
-               val A.CLAUSE([p], g, _) = r 
+               val A.CLAUSE([p], g, _) = r
                val text = prClause(p, g)
            in  log(tab^text);
                dumpRules(i+1, rules)
            end
-   in  if not ex orelse bad then 
+   in  if not ex orelse bad then
           (error message;
            dumpRules(0, rules)
-          ) 
+          )
        else ()
    end
 
-   exception GenReal and GenIntInf 
+   exception GenReal and GenIntInf
 
    local
       val intInfCompare = A.IDexp(A.IDENT(["IntInf"],"compare"))
@@ -279,7 +279,7 @@ struct
                                             equal])
       fun makeRealEq(x,y)   = A.APPexp(realEq,A.TUPLEexp[x,y])
    end
-  
+
    val nameCounter = ref 0
    fun newName() = !nameCounter before nameCounter := !nameCounter + 1
    fun init() = nameCounter := 0
@@ -289,13 +289,13 @@ struct
    let (* make unique name for path variables *)
        val nameTbl = ref MC.Path.Map.empty
 
-       fun genLit (l as A.INTINFlit _) = 
-           (case Literal.Map.find(!literals, l) of 
-              SOME v => AstUtil.ID v  
+       fun genLit (l as A.INTINFlit _) =
+           (case Literal.Map.find(!literals, l) of
+              SOME v => AstUtil.ID v
             | NONE => let val v = "lit_"^i2s(newName())
                       in  literals := Literal.Map.insert(!literals, l, v);
                           AstUtil.ID v
-                      end 
+                      end
            )
          | genLit l = A.LITexp l
 
@@ -321,12 +321,12 @@ struct
        fun fromRep(CONREP(path,A.CONSbind{id, ...},_)) = A.IDENT(path,id)
          | fromRep(EXN(path,id,_)) = A.IDENT(path,id)
        fun genConPat(MC.CON con, []) = A.CONSpat(fromRep con,NONE)
-         | genConPat(MC.CON con, paths) = 
+         | genConPat(MC.CON con, paths) =
                 A.CONSpat(fromRep con, SOME(A.TUPLEpat(map arg paths)))
          | genConPat(MC.LIT(A.REALlit _), _) = raise GenReal
          | genConPat(MC.LIT(A.INTINFlit _), _) = raise GenIntInf
          | genConPat(MC.LIT lit, _) = A.LITpat lit
-       fun genCase(v, cases, default) = 
+       fun genCase(v, cases, default) =
            A.CASEexp(ID v,
               map (fn (con, paths, e) =>
                     A.CLAUSE([genConPat(con, paths)],NONE,e)) cases @
@@ -334,18 +334,18 @@ struct
                      NONE => []
                   |  SOME default => [A.CLAUSE([A.WILDpat], NONE, default)]
                   )
-              )   
+              )
            handle GenReal => genLitCmp(makeRealEq,v,cases, default)
              | GenIntInf => genLitCmp(makeIntInfEq, v,cases,default)
-       and genLitCmp(eq, v, cases, SOME default) = 
-           let val x = ID v 
+       and genLitCmp(eq, v, cases, SOME default) =
+           let val x = ID v
                fun equal lit = eq(x, genLit lit)
            in  List.foldr(fn ((MC.LIT lit, _, e),rest) =>
-                  A.IFexp(equal lit,e,rest)) default cases    
+                  A.IFexp(equal lit,e,rest)) default cases
            end
        fun genIf((_,e), y, n) = A.IFexp(e, y, n)
-       fun genGoto(f, args) = A.APPexp(ID(STATE f), A.TUPLEexp(map ID args)) 
-       fun genFun(f, args, body) = 
+       fun genGoto(f, args) = A.APPexp(ID(STATE f), A.TUPLEexp(map ID args))
+       fun genFun(f, args, body) =
            A.FUNdecl[A.FUNbind(STATE f,
                        [A.CLAUSE([A.TUPLEpat(map A.IDpat args)],NONE,body)])
                      ]
@@ -355,25 +355,25 @@ struct
        fun genProj(path, bindings) =
        let val pat = case bindings of
                        [] => A.WILDpat
-                     | (p, MC.INT _)::ps  => 
+                     | (p, MC.INT _)::ps  =>
                        A.TUPLEpat(map (fn (p,_) => arg p) bindings)
                      | (p, MC.LABEL _)::ps =>
-                       A.RECORDpat(map (fn (p,MC.LABEL l) => 
+                       A.RECORDpat(map (fn (p,MC.LABEL l) =>
                                         (l, arg p)) bindings, true)
        in  A.VALdecl[A.VALbind(pat,ID(getName path))]
        end
 
-       fun genCont(k, f, vars) = 
+       fun genCont(k, f, vars) =
            A.FUNdecl[A.FUNbind(k,[A.CLAUSE([A.TUPLEpat []], NONE,
                         A.APPexp(ID(STATE f),
                                  A.TUPLEexp(map ID vars)))])]
-                           
-   in  MC.codeGen 
+
+   in  MC.codeGen
          {genFail = genFail,
           genOk   = genOk,
           genPath = genPath,
           genBind = genBind,
-          genCase = genCase, 
+          genCase = genCase,
           genIf   = genIf,
           genGoto = genGoto,
           genCont = genCont,

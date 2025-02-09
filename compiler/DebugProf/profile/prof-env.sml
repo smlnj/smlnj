@@ -7,18 +7,18 @@
 signature PROF_ENV =
   sig
     type env
-    val prof: TellEnv.env -> string 
+    val prof: TellEnv.env -> string
     val replace: {
-	    get: unit -> env,
-	    set: env -> unit
-	  } -> unit
+            get: unit -> env,
+            set: env -> unit
+          } -> unit
   end
 
 functor ProfEnvFn (type env
-		   val staticPart : env -> StaticEnv.staticEnv
-		   val eval : string * env -> env
-		   val layer : env * env -> env)
-	:> PROF_ENV where type env = env =
+                   val staticPart : env -> StaticEnv.staticEnv
+                   val eval : string * env -> env
+                   val layer : env * env -> env)
+        :> PROF_ENV where type env = env =
 struct
 
   type env = env
@@ -31,20 +31,20 @@ struct
        val indentlev = ref 0
        val spaces = "                                            "
        fun nl () = (
-	      say "\n";
-	      say(substring(spaces,0,Int.min(size spaces, !indentlev))))
+              say "\n";
+              say(substring(spaces,0,Int.min(size spaces, !indentlev))))
 
        fun indent f x = (indentlev := !indentlev + 1;
-			 f x;
-			 indentlev := !indentlev - 1)
-		   
-  
+                         f x;
+                         indentlev := !indentlev - 1)
+
+
        fun any_in_env e = List.exists any_in_binding (T.components e)
        and any_in_binding(_,b) =
             case (T.strBind b, T.valBind b)
              of (SOME str, _) => any_in_env str
               | (_, SOME v) => any_in_ty v
-	      | _ => false
+              | _ => false
        and any_in_ty ty = case T.funTy ty of SOME _ => true | NONE => false
 
        fun pr_env (e: T.env) = app pr_binding (T.components e)
@@ -56,12 +56,12 @@ struct
              | _ => ()
 
        and pr_str(sym: T.symbol, e: T.env) =
-         if any_in_env e 
-	  then 
-           (say "structure "; say (T.name sym); 
-	    say " ="; nl(); say "struct open "; say (T.name sym);
+         if any_in_env e
+          then
+           (say "structure "; say (T.name sym);
+            say " ="; nl(); say "struct open "; say (T.name sym);
             indent (fn () => (nl(); pr_env e)) ();
-	    say "end;"; nl())
+            say "end;"; nl())
           else ()
 
        and pr_val(sym: T.symbol, ty: T.ty) =
@@ -69,13 +69,13 @@ struct
              case T.funTy ty
               of NONE => (say "op "; say funid; say " "; say argid)
                | SOME(_,ty') => (say "let val op f = op "; say funid;
-				 say " "; say argid; 
-				 indent (fn()=> (nl(); say "in fn x => ";
-						 curried("f","x",ty');
-						 nl(); say "end")) ())
+                                 say " "; say argid;
+                                 indent (fn()=> (nl(); say "in fn x => ";
+                                                 curried("f","x",ty');
+                                                 nl(); say "end")) ())
          in case T.funTy ty
             of SOME(_,ty') => (say "val op "; say (T.name sym); say " = fn x => ";
-			       curried(T.name sym,"x",ty'); nl())
+                               curried(T.name sym,"x",ty'); nl())
              | _ => ()
         end
 
@@ -83,7 +83,7 @@ struct
        concat(rev (!accum))
    end
 
-  fun replace {get,set} = 
+  fun replace {get,set} =
    let val e0 = get ()
        val s = prof (staticPart e0)
        val e1 = eval(s, e0)

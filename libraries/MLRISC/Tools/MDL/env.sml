@@ -3,7 +3,7 @@ sig
 
    type 'a env
    type 'a envir = 'a env ref
-   exception Env 
+   exception Env
    val env : string -> 'a env
    val envir : string -> 'a envir
    val look : 'a env -> string -> 'a
@@ -22,23 +22,23 @@ sig
 
 end
 
-structure Env :> ENV = 
+structure Env :> ENV =
 struct
 
    structure H = HashTable
-   datatype 'a env = EMPTY 
-                   | TABLE of (string,'a) H.hash_table 
+   datatype 'a env = EMPTY
+                   | TABLE of (string,'a) H.hash_table
                    | OVERRIDE of 'a env * 'a env
                    | BINDING of string * 'a
    type 'a envir = 'a env ref
 
-   exception Env 
+   exception Env
 
    fun env name = EMPTY
    fun envir name = ref EMPTY
    val empty = EMPTY
    fun look EMPTY _  = raise Env
-     | look(BINDING(k,v)) x = if x = k then v else raise Env 
+     | look(BINDING(k,v)) x = if x = k then v else raise Env
      | look(OVERRIDE(a,b)) x = (look b x handle _ => look a x)
      | look(TABLE t) x = H.lookup t x
    fun look' env default x = look env x handle _ => default
@@ -48,7 +48,7 @@ struct
      | union(a,b) = OVERRIDE(a,b)
    fun add env x = union(env,BINDING x)
    fun update env x = env := add (!env) x
-   fun flatten env = 
+   fun flatten env =
    let val t = H.mkTable (HashString.hashString,op =) (13,Env)
        val add = H.insert t
        fun f EMPTY = ()

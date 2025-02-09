@@ -26,16 +26,16 @@ sig
    val name      : md -> string           (* name of description *)
    val filename  : md -> string           (* filename *)
    val env       : md -> Env.env          (* environment *)
-   val cells     : md -> Ast.storagedecl list 
+   val cells     : md -> Ast.storagedecl list
 (*
    val cellSets  : md -> Ast.storagedecl list (* all cellkinds with cellsets *)
    val cellSetsAliases : md -> Ast.storagedecl list (* include all aliases *)
  *)
-   val locations : md -> Ast.locbind list 
-   val formats   : md -> (int option * Ast.formatbind) list 
+   val locations : md -> Ast.locbind list
+   val formats   : md -> (int option * Ast.formatbind) list
    val debugging : md -> string -> bool
-   val lookupCellKind : md -> string -> Ast.storagedecl 
-   val lookupDatatype : md -> string -> Ast.datatypebind 
+   val lookupCellKind : md -> string -> Ast.storagedecl
+   val lookupDatatype : md -> string -> Ast.datatypebind
    val hasCopyImpl : md -> bool
 
    val resources : md -> Ast.id list
@@ -49,11 +49,11 @@ sig
    (* Extract info from the environment *)
    val declOf    : md -> string -> Ast.decl  (* body of structure *)
    val fctArgOf  : md -> string -> Ast.decl  (* functor argument *)
-   val typeOf    : md -> string -> Ast.decl  (* type definitions *)  
-   val instructions : md -> Ast.consbind list 
+   val typeOf    : md -> string -> Ast.decl  (* type definitions *)
+   val instructions : md -> Ast.consbind list
 
    (* Require the definitions of these things *)
-   val require  : md -> string -> {values:Ast.id list,types:Ast.id list} 
+   val require  : md -> string -> {values:Ast.id list,types:Ast.id list}
                     -> unit
 
    (* Code generation functions *)
@@ -67,12 +67,12 @@ sig
    val errorHandler : md -> string -> Ast.decl
    val signame   : md -> module -> string
    val strname   : md -> module -> string
-   val mkCode    : Ast.decl list -> PP.pp 
+   val mkCode    : Ast.decl list -> PP.pp
    val mkStr     : md -> string -> signatureName -> Ast.decl list -> PP.pp
    val mkSig     : md -> module -> Ast.decl list -> PP.pp
-   val mkFct     : md -> module -> arguments -> signatureName -> 
+   val mkFct     : md -> module -> arguments -> signatureName ->
                     Ast.decl list -> PP.pp
-   val mkFct'    : md -> module -> Ast.decl -> signatureName ->  
+   val mkFct'    : md -> module -> Ast.decl -> signatureName ->
                     Ast.decl list -> PP.pp
    val outfile   : md -> module -> string -> string -> unit
    val pathName  : md -> module -> string -> string

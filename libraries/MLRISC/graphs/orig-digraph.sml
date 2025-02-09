@@ -7,14 +7,14 @@
  * -- Allen
  *)
 
-functor DirectedGraph(A : ARRAY) : 
-sig include GRAPH_IMPLEMENTATION 
+functor DirectedGraph(A : ARRAY) :
+sig include GRAPH_IMPLEMENTATION
 
     type 'e adjlist   = 'e Graph.edge list A.array
     type 'n nodetable = 'n option A.array
 
     (* This function exposes the internal representation! *)
-    val newGraph : 
+    val newGraph :
         { name  : string,
           info  : 'g,
           succ  : 'e adjlist,
@@ -48,19 +48,19 @@ struct
        fun size()  = !edge_count
        fun capacity() = A.length nodes
        fun add_node(i,n) =
-         (case A.sub(nodes,i) 
+         (case A.sub(nodes,i)
              of NONE => node_count := 1 + !node_count
-              | _    => (); 
+              | _    => ();
           A.update(nodes,i,SOME n)
          )
-       fun add_edge(e as (i,j,info)) = 
+       fun add_edge(e as (i,j,info)) =
          (A.update(succ,i,e :: A.sub(succ,i));
           A.update(pred,j,e :: A.sub(pred,j));
           edge_count := 1 + !edge_count)
 
        fun set_out_edges(i,edges) =
        let fun removePred([],j,es') = A.update(pred,j,es')
-             | removePred((e as (i',_,_))::es,j,es') = 
+             | removePred((e as (i',_,_))::es,j,es') =
                  removePred(es,j,if i' = i then es' else e::es')
            fun removeEdge(i',j,_) =
                 (if i <> i' then raise G.Graph "set_out_edges" else ();
@@ -75,7 +75,7 @@ struct
 
        fun set_in_edges(j,edges) =
        let fun removeSucc([],i,es') = A.update(succ,i,es')
-             | removeSucc((e as (_,j',_))::es,i,es') = 
+             | removeSucc((e as (_,j',_))::es,i,es') =
                  removeSucc(es,i,if j' = j then es' else e::es')
            fun removeEdge(i,j',_) =
                 (if j <> j' then raise G.Graph "set_in_edges" else ();
@@ -110,9 +110,9 @@ struct
        fun has_node n = case A.sub(nodes,n) of
                            SOME _ => true | NONE => false
        fun node_info n = case A.sub(nodes,n) of
-                            SOME x => x 
+                            SOME x => x
                           | NONE => raise G.NotFound
-       fun forall_nodes f = 
+       fun forall_nodes f =
            A.appi (fn (i,SOME x) => f(i,x) | _ => ()) (nodes,0,NONE)
        fun forall_edges f = A.app (List.app f) succ
 
@@ -147,9 +147,9 @@ struct
           forall_nodes    = forall_nodes,
           forall_edges    = forall_edges
        }
-   end 
+   end
 
-   fun graph(name,info,n) = 
+   fun graph(name,info,n) =
    let val succ  = A.array(n,[])
        val pred  = A.array(n,[])
        val nodes = A.array(n,NONE)

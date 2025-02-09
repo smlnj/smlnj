@@ -1,20 +1,20 @@
 (*
- * sparcPseudoInstr.sig --- Sparc pseudo instructions 
+ * sparcPseudoInstr.sig --- Sparc pseudo instructions
  *)
 
 signature SPARC_PSEUDO_INSTR = sig
    structure I : SPARCINSTR
 
-   type format1 = 
-       {r:CellsBasis.cell, i:I.operand, d:CellsBasis.cell} * 
+   type format1 =
+       {r:CellsBasis.cell, i:I.operand, d:CellsBasis.cell} *
        (I.operand -> CellsBasis.cell) -> I.instruction list
 
-   type format2 = 
-       {i:I.operand, d:CellsBasis.cell} * 
+   type format2 =
+       {i:I.operand, d:CellsBasis.cell} *
        (I.operand -> CellsBasis.cell) -> I.instruction list
-   (* 
+   (*
     * Signed and unsigned multiplications.
-    * These are all 32 bit operations 
+    * These are all 32 bit operations
     *)
    val umul32     : format1 (* unsigned/non-trapping *)
    val smul32     : format1 (* signed/non-trapping *)
@@ -30,7 +30,7 @@ signature SPARC_PSEUDO_INSTR = sig
 
        (* 32-bit overflow detection *)
    val overflowtrap32 : I.instruction list
- 
+
        (* 64-bit overflow detection *)
    val overflowtrap64 : I.instruction list
 

@@ -36,7 +36,7 @@ signature C_INT = sig
      * functions raw address, make a function pointer *)
     val mk_fptr : (addr -> 'a -> 'b) * addr -> ('a -> 'b) fptr
 
-    (* making normal and const-declared struct- or union-fields 
+    (* making normal and const-declared struct- or union-fields
      * given the field's type and its offset *)
     val mk_rw_field : 'm T.typ * int * ('s, 'c) su_obj -> ('m, 'c) obj
     val mk_ro_field : 'm T.typ * int * ('s, 'c) su_obj -> ('m, ro) obj
@@ -49,27 +49,27 @@ signature C_INT = sig
 
     (* making normal signed bitfields *)
     val mk_rw_sbf : int * word * word -> (* offset * bits * shift *)
-		    ('s, 'c) su_obj -> 'c sbf
+                    ('s, 'c) su_obj -> 'c sbf
     val mk_ro_sbf : int * word * word -> (* offset * bits * shift *)
-		    ('s, 'c) su_obj -> ro sbf
+                    ('s, 'c) su_obj -> ro sbf
 
     (* light versions *)
     val mk_rw_sbf' : int * word * word -> (* offset * bits * shift *)
-		     ('s, 'c) su_obj' -> 'c sbf
+                     ('s, 'c) su_obj' -> 'c sbf
     val mk_ro_sbf' : int * word * word -> (* offset * bits * shift *)
-		     ('s, 'c) su_obj' -> ro sbf
+                     ('s, 'c) su_obj' -> ro sbf
 
     (* making normal unsigned bitfields *)
     val mk_rw_ubf : int * word * word -> (* offset * bits * shift *)
-		    ('s, 'c) su_obj -> 'c ubf
+                    ('s, 'c) su_obj -> 'c ubf
     val mk_ro_ubf : int * word * word -> (* offset * bits * shift *)
-		    ('s, 'c) su_obj -> ro ubf
+                    ('s, 'c) su_obj -> ro ubf
 
     (* light versions *)
     val mk_rw_ubf' : int * word * word -> (* offset * bits * shift *)
-		     ('s, 'c) su_obj' -> 'c ubf
+                     ('s, 'c) su_obj' -> 'c ubf
     val mk_ro_ubf' : int * word * word -> (* offset * bits * shift *)
-		     ('s, 'c) su_obj' -> ro ubf
+                     ('s, 'c) su_obj' -> ro ubf
 
     (* reveal address behind void*; this is used to
      * implement the function-call protocol for functions that have
@@ -82,7 +82,7 @@ signature C_INT = sig
     val fcast : addr -> 'f fptr'
 
     (* unsafe low-level array subscript that does not require RTTI *)
-    val unsafe_sub : int ->		(* element size *)
-		     (('t, 'n) arr, 'c) obj' * int ->
-		     ('t, 'n) obj'
+    val unsafe_sub : int ->             (* element size *)
+                     (('t, 'n) arr, 'c) obj' * int ->
+                     ('t, 'n) obj'
 end

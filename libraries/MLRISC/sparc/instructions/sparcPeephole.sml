@@ -23,8 +23,8 @@ struct
    structure CB = CellsBasis
 
 (*#line 20.4 "sparcPeephole.peep"*)
-   fun peephole instrs = 
-       let 
+   fun peephole instrs =
+       let
 (*#line 21.8 "sparcPeephole.peep"*)
            fun isZero (I.LAB le) = (((Eval.valueOf le) = 0) handle _ => false
 )
@@ -33,32 +33,32 @@ struct
              | isZero _ = false
 
 (*#line 26.8 "sparcPeephole.peep"*)
-           fun removable p_0 = 
+           fun removable p_0 =
                let val v_9 = p_0
                    fun state_5 () = false
-                   fun state_2 (v_0, v_1, v_2) = 
+                   fun state_2 (v_0, v_1, v_2) =
                        let val d = v_0
                            and i = v_1
                            and r = v_2
                        in (CB.sameColor (r, d)) andalso (isZero i)
                        end
-               in 
+               in
                   let val v_8 = v_9
-                  in 
+                  in
                      (case v_8 of
-                       I.ANNOTATION v_5 => 
+                       I.ANNOTATION v_5 =>
                        let val {a=v_7, i=v_6, ...} = v_5
-                       in 
+                       in
                           let val a = v_7
                               and i = v_6
                           in removable i
                           end
                        end
-                     | I.INSTR v_5 => 
+                     | I.INSTR v_5 =>
                        (case v_5 of
-                         I.ARITH v_4 => 
+                         I.ARITH v_4 =>
                          let val {a=v_3, d=v_0, i=v_1, r=v_2, ...} = v_4
-                         in 
+                         in
                             (case v_3 of
                               I.ADD => state_2 (v_0, v_1, v_2)
                             | I.SUB => state_2 (v_0, v_1, v_2)
@@ -73,18 +73,18 @@ struct
                end
 
 (*#line 31.8 "sparcPeephole.peep"*)
-           fun loop (current, instrs) = 
+           fun loop (current, instrs) =
                let val v_13 = current
-               in 
+               in
                   (case v_13 of
-                    op :: v_12 => 
+                    op :: v_12 =>
                     let val (v_11, v_10) = v_12
-                    in 
+                    in
                        let val i = v_11
                            and rest = v_10
                        in (if (removable i)
                              then (loop (rest, instrs))
-                             else 
+                             else
                              let val i = v_11
                                  and rest = v_10
                              in loop (rest, i :: instrs)

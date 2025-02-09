@@ -2,11 +2,11 @@ functor BurgLrValsFun(structure Token : TOKEN)
  : sig structure ParserData : PARSER_DATA
        structure Tokens : Burg_TOKENS
    end
- = 
+ =
 struct
 structure ParserData=
 struct
-structure Header = 
+structure Header =
 struct
 (* burg-gram
 **
@@ -20,7 +20,7 @@ fun outputRaw s = print (s:string)
 end
 structure LrTable = Token.LrTable
 structure Token = Token
-local open LrTable in 
+local open LrTable in
 val table=let val actionRows =
 "\
 \\001\000\001\000\000\000\000\000\
@@ -133,7 +133,7 @@ val gotoT =
 val numstates = 47
 val numrules = 24
 val s = ref "" and index = ref 0
-val string_to_int = fn () => 
+val string_to_int = fn () =>
 let val i = !index
 in index := i+2; Char.ord(String.sub(!s,i)) + Char.ord(String.sub(!s,i+1)) * 256
 end
@@ -191,7 +191,7 @@ end
 local open Header in
 type pos = int
 type arg = unit
-structure MlyValue = 
+structure MlyValue =
 struct
 datatype svalue = VOID | ntVOID of unit | RAW of  (string list)
  | ID of  (string) | INT of  (int) | PPERCENT of  (string list)
@@ -214,9 +214,9 @@ infix 5 $$
 fun x $$ y = y::x
 val is_keyword =
 fn _ => false
-val preferred_change : (term list * term list) list = 
+val preferred_change : (term list * term list) list =
 nil
-val noShift = 
+val noShift =
 fn _ => false
 val showTerminal =
 fn (T 0) => "K_EOF"
@@ -242,24 +242,24 @@ val errtermvalue=
 fn _ => MlyValue.VOID
 end
 val terms : term list = nil
- $$ (T 12) $$ (T 11) $$ (T 10) $$ (T 9) $$ (T 8) $$ (T 7) $$ (T 6) $$ 
+ $$ (T 12) $$ (T 11) $$ (T 10) $$ (T 9) $$ (T 8) $$ (T 7) $$ (T 6) $$
 (T 5) $$ (T 4) $$ (T 3) $$ (T 2) $$ (T 1) $$ (T 0)end
 structure Actions =
-struct 
+struct
 exception mlyAction of int
 local open Header in
-val actions = 
+val actions =
 fn (i392,defaultPos,stack,
     (()):arg) =>
 case (i392,stack)
-of  ( 0, ( ( _, ( MlyValue.PPERCENT PPERCENT2, _, PPERCENT2right)) :: 
-( _, ( MlyValue.rules rules, _, _)) :: ( _, ( MlyValue.PPERCENT 
-PPERCENT1, _, _)) :: ( _, ( MlyValue.decls decls, decls1left, _)) :: 
+of  ( 0, ( ( _, ( MlyValue.PPERCENT PPERCENT2, _, PPERCENT2right)) ::
+( _, ( MlyValue.rules rules, _, _)) :: ( _, ( MlyValue.PPERCENT
+PPERCENT1, _, _)) :: ( _, ( MlyValue.decls decls, decls1left, _)) ::
 rest671)) => let val  result = MlyValue.full (
 A.SPEC{head=PPERCENT1,
-						decls=rev decls,
-						rules=rev rules,
-						tail=PPERCENT2}
+                                                decls=rev decls,
+                                                rules=rev rules,
+                                                tail=PPERCENT2}
 )
  in ( LrTable.NT 0, ( result, decls1left, PPERCENT2right), rest671)
 
@@ -267,29 +267,29 @@ end
 |  ( 1, ( rest671)) => let val  result = MlyValue.decls ([])
  in ( LrTable.NT 9, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 2, ( ( _, ( MlyValue.decl decl, _, decl1right)) :: ( _, ( 
+|  ( 2, ( ( _, ( MlyValue.decl decl, _, decl1right)) :: ( _, (
 MlyValue.decls decls, decls1left, _)) :: rest671)) => let val  result
  = MlyValue.decls (decl :: decls)
  in ( LrTable.NT 9, ( result, decls1left, decl1right), rest671)
 end
-|  ( 3, ( ( _, ( MlyValue.bindinglist bindinglist, _, 
+|  ( 3, ( ( _, ( MlyValue.bindinglist bindinglist, _,
 bindinglist1right)) :: ( _, ( _, K_TERM1left, _)) :: rest671)) => let
  val  result = MlyValue.decl (A.TERM (rev bindinglist))
  in ( LrTable.NT 2, ( result, K_TERM1left, bindinglist1right), rest671
 )
 end
-|  ( 4, ( ( _, ( MlyValue.ID ID, _, ID1right)) :: ( _, ( _, 
+|  ( 4, ( ( _, ( MlyValue.ID ID, _, ID1right)) :: ( _, ( _,
 K_START1left, _)) :: rest671)) => let val  result = MlyValue.decl (
 A.START ID)
  in ( LrTable.NT 2, ( result, K_START1left, ID1right), rest671)
 end
-|  ( 5, ( ( _, ( MlyValue.ID ID, _, ID1right)) :: ( _, ( _, 
+|  ( 5, ( ( _, ( MlyValue.ID ID, _, ID1right)) :: ( _, ( _,
 K_TERMPREFIX1left, _)) :: rest671)) => let val  result = MlyValue.decl
  (A.TERMPREFIX ID)
  in ( LrTable.NT 2, ( result, K_TERMPREFIX1left, ID1right), rest671)
 
 end
-|  ( 6, ( ( _, ( MlyValue.ID ID, _, ID1right)) :: ( _, ( _, 
+|  ( 6, ( ( _, ( MlyValue.ID ID, _, ID1right)) :: ( _, ( _,
 K_RULEPREFIX1left, _)) :: rest671)) => let val  result = MlyValue.decl
  (A.RULEPREFIX ID)
  in ( LrTable.NT 2, ( result, K_RULEPREFIX1left, ID1right), rest671)
@@ -304,33 +304,33 @@ end
  in ( LrTable.NT 12, ( result, binding1left, binding1right), rest671)
 
 end
-|  ( 9, ( ( _, ( MlyValue.binding binding, _, binding1right)) :: _ :: 
-( _, ( MlyValue.bindinglist bindinglist, bindinglist1left, _)) :: 
+|  ( 9, ( ( _, ( MlyValue.binding binding, _, binding1right)) :: _ ::
+( _, ( MlyValue.bindinglist bindinglist, bindinglist1left, _)) ::
 rest671)) => let val  result = MlyValue.bindinglist (
 binding :: bindinglist)
- in ( LrTable.NT 12, ( result, bindinglist1left, binding1right), 
+ in ( LrTable.NT 12, ( result, bindinglist1left, binding1right),
 rest671)
 end
 |  ( 10, ( ( _, ( MlyValue.ID ID, ID1left, ID1right)) :: rest671)) =>
  let val  result = MlyValue.binding ((ID, NONE))
  in ( LrTable.NT 3, ( result, ID1left, ID1right), rest671)
 end
-|  ( 11, ( ( _, ( MlyValue.ID ID2, _, ID2right)) :: _ :: ( _, ( 
-MlyValue.ID ID1, ID1left, _)) :: rest671)) => let val  result = 
+|  ( 11, ( ( _, ( MlyValue.ID ID2, _, ID2right)) :: _ :: ( _, (
+MlyValue.ID ID1, ID1left, _)) :: rest671)) => let val  result =
 MlyValue.binding ((ID1, SOME ID2))
  in ( LrTable.NT 3, ( result, ID1left, ID2right), rest671)
 end
 |  ( 12, ( rest671)) => let val  result = MlyValue.rules ([])
  in ( LrTable.NT 10, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 13, ( ( _, ( MlyValue.rule rule, _, rule1right)) :: ( _, ( 
+|  ( 13, ( ( _, ( MlyValue.rule rule, _, rule1right)) :: ( _, (
 MlyValue.rules rules, rules1left, _)) :: rest671)) => let val  result
  = MlyValue.rules (rule :: rules)
  in ( LrTable.NT 10, ( result, rules1left, rule1right), rest671)
 end
-|  ( 14, ( ( _, ( _, _, K_SEMICOLON1right)) :: ( _, ( MlyValue.cost 
+|  ( 14, ( ( _, ( _, _, K_SEMICOLON1right)) :: ( _, ( MlyValue.cost
 cost, _, _)) :: ( _, ( MlyValue.rulename rulename, _, _)) :: _ :: ( _,
- ( MlyValue.pattern pattern, _, _)) :: _ :: ( _, ( MlyValue.ID ID, 
+ ( MlyValue.pattern pattern, _, _)) :: _ :: ( _, ( MlyValue.ID ID,
 ID1left, _)) :: rest671)) => let val  result = MlyValue.rule (
 A.RULE(ID, pattern, rulename, cost))
  in ( LrTable.NT 11, ( result, ID1left, K_SEMICOLON1right), rest671)
@@ -344,8 +344,8 @@ end
  let val  result = MlyValue.pattern (A.PAT(ID, []))
  in ( LrTable.NT 7, ( result, ID1left, ID1right), rest671)
 end
-|  ( 17, ( ( _, ( _, _, K_RPAREN1right)) :: ( _, ( 
-MlyValue.patterntail patterntail, _, _)) :: ( _, ( MlyValue.pattern 
+|  ( 17, ( ( _, ( _, _, K_RPAREN1right)) :: ( _, (
+MlyValue.patterntail patterntail, _, _)) :: ( _, ( MlyValue.pattern
 pattern, _, _)) :: _ :: ( _, ( MlyValue.ID ID, ID1left, _)) :: rest671
 )) => let val  result = MlyValue.pattern (
 A.PAT(ID, pattern :: patterntail))
@@ -354,18 +354,18 @@ end
 |  ( 18, ( rest671)) => let val  result = MlyValue.patterntail ([])
  in ( LrTable.NT 8, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 19, ( ( _, ( MlyValue.patterntail patterntail, _, 
+|  ( 19, ( ( _, ( MlyValue.patterntail patterntail, _,
 patterntail1right)) :: ( _, ( MlyValue.pattern pattern, _, _)) :: ( _,
- ( _, K_COMMA1left, _)) :: rest671)) => let val  result = 
+ ( _, K_COMMA1left, _)) :: rest671)) => let val  result =
 MlyValue.patterntail (pattern :: patterntail)
- in ( LrTable.NT 8, ( result, K_COMMA1left, patterntail1right), 
+ in ( LrTable.NT 8, ( result, K_COMMA1left, patterntail1right),
 rest671)
 end
 |  ( 20, ( rest671)) => let val  result = MlyValue.cost ([])
  in ( LrTable.NT 4, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 21, ( ( _, ( _, _, K_RPAREN1right)) :: ( _, ( MlyValue.costtail 
-costtail, _, _)) :: ( _, ( MlyValue.INT INT, _, _)) :: ( _, ( _, 
+|  ( 21, ( ( _, ( _, _, K_RPAREN1right)) :: ( _, ( MlyValue.costtail
+costtail, _, _)) :: ( _, ( MlyValue.INT INT, _, _)) :: ( _, ( _,
 K_LPAREN1left, _)) :: rest671)) => let val  result = MlyValue.cost (
 INT :: costtail)
  in ( LrTable.NT 4, ( result, K_LPAREN1left, K_RPAREN1right), rest671)
@@ -375,7 +375,7 @@ end
  in ( LrTable.NT 5, ( result, defaultPos, defaultPos), rest671)
 end
 |  ( 23, ( ( _, ( MlyValue.costtail costtail, _, costtail1right)) :: (
- _, ( MlyValue.INT INT, _, _)) :: ( _, ( _, K_COMMA1left, _)) :: 
+ _, ( MlyValue.INT INT, _, _)) :: ( _, ( _, K_COMMA1left, _)) ::
 rest671)) => let val  result = MlyValue.costtail (INT :: costtail)
  in ( LrTable.NT 5, ( result, K_COMMA1left, costtail1right), rest671)
 
@@ -385,7 +385,7 @@ end
 val void = MlyValue.VOID
 val extract = fn a => (fn MlyValue.full x => x
 | _ => let exception ParseInternal
-	in raise ParseInternal end) a 
+        in raise ParseInternal end) a
 end
 end
 structure Tokens : Burg_TOKENS =

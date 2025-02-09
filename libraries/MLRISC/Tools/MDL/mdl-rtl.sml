@@ -1,7 +1,7 @@
 (*
- * RTL definitions 
+ * RTL definitions
  *)
-structure MDLConstant = 
+structure MDLConstant =
   struct
      type const = unit
      fun toString _ = ""
@@ -13,27 +13,27 @@ structure MDLConstant =
 structure MDLRegion   =
   struct
      type region = unit
-     val stack = () and readonly = () and memory = () 
+     val stack = () and readonly = () and memory = ()
      fun toString _ = ""
   end
 
 structure MDLExtension =
   struct
-     type ('s,'r,'f,'c) sx = unit 
-     type ('s,'r,'f,'c) rx = unit 
-     type ('s,'r,'f,'c) fx = unit 
-     type ('s,'r,'f,'c) ccx = unit 
+     type ('s,'r,'f,'c) sx = unit
+     type ('s,'r,'f,'c) rx = unit
+     type ('s,'r,'f,'c) fx = unit
+     type ('s,'r,'f,'c) ccx = unit
   end
 
 structure MDLMLTree   =
   MLTreeF(structure Constant=MDLConstant
           structure Region=MDLRegion
-          structure Extension=MDLExtension)      
+          structure Extension=MDLExtension)
 
 
-structure MDLClientPseudoOps = 
-  struct 
-     structure AsmPseudoOps = 
+structure MDLClientPseudoOps =
+  struct
+     structure AsmPseudoOps =
      struct
          structure T = MDLMLTree
          structure PB = PseudoOpsBasisTyp
@@ -41,23 +41,23 @@ structure MDLClientPseudoOps =
          fun toString _ = ""
          fun lexpToString _ = ""
          fun defineLabel _ = ""
-         fun emitValue _ = () 
+         fun emitValue _ = ()
          fun sizeOf _ = 0
          val wordSize = 0
       end
       type pseudo_op = unit
       fun toString _ = ""
-      fun emitValue _ = () 
-      fun sizeOf _ = 0 
+      fun emitValue _ = ()
+      fun sizeOf _ = 0
       fun adjustLabels _ = false
    end
 
-structure MDLPseudoOps = 
+structure MDLPseudoOps =
      PseudoOps(structure Client = MDLClientPseudoOps)
 
 structure MDLStream  = InstructionStream(MDLPseudoOps)
 
-structure MDLMLTreeUtil = 
+structure MDLMLTreeUtil =
   MLTreeUtils(structure T = MDLMLTree
               fun hashSext _ _ = 0w0
               fun hashRext _ _ = 0w0
@@ -73,7 +73,7 @@ structure MDLMLTreeUtil =
               fun showCCext _ _ = ""
              )
 
-structure MDLMLTreeRewrite = 
+structure MDLMLTreeRewrite =
   MLTreeRewrite(structure T = MDLMLTree
                 fun sext _ x = x
                 fun rext _ x = x
@@ -81,7 +81,7 @@ structure MDLMLTreeRewrite =
                 fun ccext _ x = x
                )
 
-structure MDLMLTreeFold = 
+structure MDLMLTreeFold =
   MLTreeFold(structure T = MDLMLTree
              fun sext _ (_,x) = x
              fun rext _ (_,_,x) = x
@@ -89,7 +89,7 @@ structure MDLMLTreeFold =
              fun ccext _ (_,_,x) = x
             )
 
-structure MDLMLTreeRTL = 
+structure MDLMLTreeRTL =
   MLTreeRTL(structure Util    = MDLMLTreeUtil
             structure Rewrite = MDLMLTreeRewrite
             structure Fold    = MDLMLTreeFold

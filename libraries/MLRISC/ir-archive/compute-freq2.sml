@@ -32,7 +32,7 @@ struct
        fun hash(i,j,_) = Word.<<(Word.fromInt i,0w16) + Word.fromInt j
        fun equal((a:int,b:int,_),(c,d,_)) = a = c andalso b = d
        exception NotThere
-       val edgeProbs = HT.mkTable (hash,equal) (10,NotThere) 
+       val edgeProbs = HT.mkTable (hash,equal) (10,NotThere)
        val addProb   = HT.insert edgeProbs
        val getProb   = HT.lookup edgeProbs
 
@@ -43,12 +43,12 @@ struct
                  | loop([e],w) = addProb(e,w)
                  | loop(e::es,w) = (addProb(e,W'); loop(es,w-W'))
            in  loop(edges,100) end
-           val edges = #out_edges cfg n 
+           val edges = #out_edges cfg n
        in  if n = ENTRY then divide_evenly edges else
            case edges of
              [] => ()
            | [e] => addProb(e,100)
-           | [e1,e2] =>  
+           | [e1,e2] =>
              let val prob = branchProb n'
                  val prob = if isTakenBranch e1 then prob else 100 - prob
              in  addProb(e1,prob);
@@ -62,29 +62,29 @@ struct
 
        val visited = A.array(N,~1)
 
-       fun process(scc as stamp::_,_) = 
+       fun process(scc as stamp::_,_) =
        let val _ = app (fn b => A.update(visited,b,stamp)) scc
            fun collect([],inFreq,isLoop) = (inFreq,isLoop)
              | collect(n::ns,inFreq,isLoop) =
                let fun loop([],inFreq,isLoop) = (inFreq,isLoop)
-                     | loop((i,j,e)::es,inFreq,isLoop) = 
+                     | loop((i,j,e)::es,inFreq,isLoop) =
                        if A.sub(visited,i) = stamp
                        then loop(es,inFreq,true)
-                       else loop(es,inFreq + 
+                       else loop(es,inFreq +
                               !(nodeFreq(#node_info cfg i)) * getProb e,
                                isLoop)
                    val (inFreq,isLoop) = loop(#in_edges dg n,inFreq,isLoop)
                in  collect(ns,inFreq,isLoop) end
            val (freq,isLoop) = collect(scc,0,false)
            val freq = if stamp = ENTRY then
-                         W.*(W.fromInt 100,length(#out_edges cfg ENTRY)) 
+                         W.*(W.fromInt 100,length(#out_edges cfg ENTRY))
                       else if isLoop then freq * loopMultiplier div 100
                       else freq div 100
        in  app (fn b => nodeFreq(#node_info cfg b) := freq) scc
        end
 
    in  GraphSCC.scc (ReversedGraphView.rev_view derived) process ();
-       HT.appi (fn ((i,_,e),w) => 
+       HT.appi (fn ((i,_,e),w) =>
                    edgeFreq e := (w * !(nodeFreq(#node_info cfg i))) div 100)
             edgeProbs
    end handle Overflow => ()

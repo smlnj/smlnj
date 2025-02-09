@@ -10,10 +10,10 @@ signature UNIX = sig
     type signal
 
     datatype exit_status =
-	     W_EXITED
-	   | W_EXITSTATUS of Word8.word
-	   | W_SIGNALED of signal
-	   | W_STOPPED of signal
+             W_EXITED
+           | W_EXITSTATUS of Word8.word
+           | W_SIGNALED of signal
+           | W_STOPPED of signal
 
     val fromStatus : OS.Process.status -> exit_status
 
@@ -32,14 +32,14 @@ signature UNIX = sig
      *)
     val executeInEnv : string * string list * string list -> ('a, 'b) proc
 
-    (* execute (path, args) 
+    (* execute (path, args)
      *       = executeInEnv (path, args, Posix.ProcEnv.environ())
      *)
     val execute : string * string list -> ('a, 'b) proc
 
     (* *{In,Out}treamOf proc
      * returns an instream and outstream used to read
-     * from and write to the stdout and stdin of the 
+     * from and write to the stdout and stdin of the
      * executed process.
      *
      * The underlying files are set to be close-on-exec.
@@ -50,7 +50,7 @@ signature UNIX = sig
     val binOutstreamOf  : ('a, BinIO.outstream) proc -> BinIO.outstream
 
     val streamsOf : (TextIO.instream, TextIO.outstream) proc ->
-		    TextIO.instream * TextIO.outstream
+                    TextIO.instream * TextIO.outstream
 
       (* reap proc
        * This closes the associated streams and waits for the

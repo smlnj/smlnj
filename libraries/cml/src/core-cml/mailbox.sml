@@ -48,8 +48,8 @@ structure Mailbox : sig
 
   (* given a transaction ID, get its thread ID and mark it cancelled. *)
     fun getIdFromTrans (transId as ref(R.TRANS tid)) = (
-	  transId := R.CANCEL;
-	  tid)
+          transId := R.CANCEL;
+          tid)
 
     datatype 'a q_item
       = NoItem
@@ -57,100 +57,100 @@ structure Mailbox : sig
 
     local
       fun clean [] = []
-	| clean ((ref R.CANCEL, _)::r) = clean r
-	| clean l = l
+        | clean ((ref R.CANCEL, _)::r) = clean r
+        | clean l = l
       fun cleanRev ([], l) = l
-	| cleanRev ((ref R.CANCEL, _)::r, l) = cleanRev (r, l)
-	| cleanRev (x::r, l) = cleanRev (r, x::l)
+        | cleanRev ((ref R.CANCEL, _)::r, l) = cleanRev (r, l)
+        | cleanRev (x::r, l) = cleanRev (r, x::l)
     in
     fun cleanAndRemove (q as {front, rear}) = let
-	  fun cleanFront [] = cleanRear rear
-	    | cleanFront f = (case (clean f)
-		 of [] => cleanRear rear
-		  | ((id, k)::rest) => Item(id, k, EMPTY{front=rest, rear=rear})
-		(* end case *))
-	  and cleanRear [] = NoItem
-	    | cleanRear r = (case (cleanRev (r, []))
-		 of [] => NoItem
-		  | ((id, k)::rest) => Item(id, k, EMPTY{front=rest, rear=[]})
-		(* end case *))
-	  in
-	    cleanFront front
-	  end
+          fun cleanFront [] = cleanRear rear
+            | cleanFront f = (case (clean f)
+                 of [] => cleanRear rear
+                  | ((id, k)::rest) => Item(id, k, EMPTY{front=rest, rear=rear})
+                (* end case *))
+          and cleanRear [] = NoItem
+            | cleanRear r = (case (cleanRev (r, []))
+                 of [] => NoItem
+                  | ((id, k)::rest) => Item(id, k, EMPTY{front=rest, rear=[]})
+                (* end case *))
+          in
+            cleanFront front
+          end
     end
 
     fun send (MB state, x) = (
-	  S.atomicBegin();
-	  case !state
-	   of (EMPTY q) => (case (cleanAndRemove q)
-		 of NoItem => (
-		      state := NONEMPTY(1, {front=[x], rear=[]});
-		      S.atomicEnd())
-		  | (Item(transId, recvK, state')) => callcc (fn k => (
-		      state := state';
-		      S.enqueueAndSwitchCurThread(k, getIdFromTrans transId);
-		      throw recvK x))
-		(* end case *))
-	    | NONEMPTY(p, q) => 
-	      (* we force a context switch here to prevent a producer from
-	       * outrunning a consumer.
-	       *)
-		callcc (fn k => (
-		  state := NONEMPTY(p, enqueue(q, x));
-		  S.atomicYield k))
-	  (* end case *))
+          S.atomicBegin();
+          case !state
+           of (EMPTY q) => (case (cleanAndRemove q)
+                 of NoItem => (
+                      state := NONEMPTY(1, {front=[x], rear=[]});
+                      S.atomicEnd())
+                  | (Item(transId, recvK, state')) => callcc (fn k => (
+                      state := state';
+                      S.enqueueAndSwitchCurThread(k, getIdFromTrans transId);
+                      throw recvK x))
+                (* end case *))
+            | NONEMPTY(p, q) =>
+              (* we force a context switch here to prevent a producer from
+               * outrunning a consumer.
+               *)
+                callcc (fn k => (
+                  state := NONEMPTY(p, enqueue(q, x));
+                  S.atomicYield k))
+          (* end case *))
 
     fun getMsg (state, q) = let
-	  val (q', msg) = dequeue q
-	  in
-	    case q'
-	     of {front=[], rear=[]} => state := EMPTY{front=[], rear=[]}
-	      | _ => state := NONEMPTY(1, q')
-	    (* end case *);
-	    S.atomicEnd();
-	    msg
-	  end
+          val (q', msg) = dequeue q
+          in
+            case q'
+             of {front=[], rear=[]} => state := EMPTY{front=[], rear=[]}
+              | _ => state := NONEMPTY(1, q')
+            (* end case *);
+            S.atomicEnd();
+            msg
+          end
 
     fun recv (MB state) = (
-	  S.atomicBegin();
-	  case !state
-	   of (EMPTY q) => let
-		val msg = callcc (fn recvK => (
-		      state := EMPTY(enqueue(q, (mkId(), recvK)));
-		      S.atomicDispatch()))
-		in
-		  S.atomicEnd(); msg
-		end
-	    | (NONEMPTY(priority, q)) => getMsg (state, q)
-	  (* end case *))
+          S.atomicBegin();
+          case !state
+           of (EMPTY q) => let
+                val msg = callcc (fn recvK => (
+                      state := EMPTY(enqueue(q, (mkId(), recvK)));
+                      S.atomicDispatch()))
+                in
+                  S.atomicEnd(); msg
+                end
+            | (NONEMPTY(priority, q)) => getMsg (state, q)
+          (* end case *))
 
     fun recvEvt (MB state) = let
-	  fun blockFn {transId, cleanUp, next} = let
-		val (EMPTY q) = !state
-		val msg = callcc (fn recvK => (
-		      state := EMPTY(enqueue(q, (transId, recvK)));
-		      next();
-		      raise Fail "Mailbox: impossible"))
-		in
-		  cleanUp();
-		  S.atomicEnd();
-		  msg
-		end
-	  fun pollFn () = (case !state
-		 of (EMPTY _) => R.BLOCKED blockFn
-		  | (NONEMPTY(priority, q)) => (
-		      state := NONEMPTY(priority+1, q);
-		      R.ENABLED{prio=priority, doFn=(fn () => getMsg(state, q))})
-		(* end case *))
-	  in
-	    R.BEVT[pollFn]
-	  end
+          fun blockFn {transId, cleanUp, next} = let
+                val (EMPTY q) = !state
+                val msg = callcc (fn recvK => (
+                      state := EMPTY(enqueue(q, (transId, recvK)));
+                      next();
+                      raise Fail "Mailbox: impossible"))
+                in
+                  cleanUp();
+                  S.atomicEnd();
+                  msg
+                end
+          fun pollFn () = (case !state
+                 of (EMPTY _) => R.BLOCKED blockFn
+                  | (NONEMPTY(priority, q)) => (
+                      state := NONEMPTY(priority+1, q);
+                      R.ENABLED{prio=priority, doFn=(fn () => getMsg(state, q))})
+                (* end case *))
+          in
+            R.BEVT[pollFn]
+          end
 
     fun recvPoll (MB state) = (
-	  S.atomicBegin();
-	  case !state
-	   of (EMPTY q) => (S.atomicEnd(); NONE)
-	    | (NONEMPTY(priority, q)) => SOME(getMsg (state, q))
-	  (* end case *))
+          S.atomicBegin();
+          case !state
+           of (EMPTY q) => (S.atomicEnd(); NONE)
+            | (NONEMPTY(priority, q)) => SOME(getMsg (state, q))
+          (* end case *))
 
   end (* Mailbox *)

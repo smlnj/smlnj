@@ -1,4 +1,4 @@
-(* overloadclasses.sml 
+(* overloadclasses.sml
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
@@ -14,20 +14,20 @@ local structure BT = BasicTypes in
 
 (* overload classes *)
     val intClass = [BT.intTy,
-		    BT.int32Ty,
-		    BT.int64Ty,
-		    BT.intinfTy]
+                    BT.int32Ty,
+                    BT.int64Ty,
+                    BT.intinfTy]
 
     val wordClass = [BT.wordTy,
-		     BT.word8Ty,
-		     BT.word32Ty,
-		     BT.word64Ty]
+                     BT.word8Ty,
+                     BT.word32Ty,
+                     BT.word64Ty]
 
     val int_wordClass = intClass @ wordClass
 
     val realClass = [BT.realTy]
 
-    val	int_realClass = intClass @ realClass
+    val int_realClass = intClass @ realClass
 
     val numClass = int_wordClass @ realClass
 
@@ -36,7 +36,7 @@ local structure BT = BasicTypes in
     val num_textClass = numClass @ textClass
 
     fun inClass (ty: Types.ty, class: class) =
-	List.exists (fn ty' => TypesUtil.equalType(ty', ty)) class
+        List.exists (fn ty' => TypesUtil.equalType(ty', ty)) class
 
 (* Note: realClass and textClass may be expanded in the future
 *  when new overloaded operations over multiple real and text

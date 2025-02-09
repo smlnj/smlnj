@@ -11,7 +11,7 @@ struct
    structure Num = Num
    structure G   = Graph
    structure A   = Array
-   structure Q   = NodePriorityQueue(A)  
+   structure Q   = NodePriorityQueue(A)
    structure L   = CatnetableList          (* for fast concatenation *)
 
    fun min_cut {graph=G.GRAPH G, weight} =
@@ -43,7 +43,7 @@ struct
            fun unmark v   = A.update(onQueue,v,~1)
            fun marked v   = A.sub(onQueue,v) = phase
            fun deleted v  = A.sub(onQueue,v) = ~2
-           fun relax(v,w) = (A.update(weights,v,Num.+(A.sub(weights,v),!w)); 
+           fun relax(v,w) = (A.update(weights,v,Num.+(A.sub(weights,v),!w));
                              Q.decreaseWeight(Q,v))
            fun loop(s,t) =
              if Q.isEmpty Q then (s,t,A.sub(weights,t))
@@ -52,9 +52,9 @@ struct
                       app (fn (v,w) => if marked v then relax(v,w) else ())
                           (A.sub(adj,t'));
                       loop(t,t')
-                  end  
+                  end
         in app (fn u => if deleted u then () else
-                         (A.update(weights,u,Num.zero); 
+                         (A.update(weights,u,Num.zero);
                           mark u; Q.insert(Q,u))) nodes;
            app relax (A.sub(adj,a));
            loop(~1,a)
@@ -66,12 +66,12 @@ struct
            A.update(group,s,L.append(A.sub(group,s),A.sub(group,t)));
             (* mark neighbors of s *)
            app (fn (u,w) => A.update(adjEdges,u,(s,w))) (A.sub(adj,s));
-            (* change t-v(w) and s-v(w') to s-v(w+w') 
-             * change t-v(w) to s-v(w) 
+            (* change t-v(w) and s-v(w') to s-v(w+w')
+             * change t-v(w) to s-v(w)
              *)
-           let fun rmv([],L) = L 
+           let fun rmv([],L) = L
                  | rmv((x as (u,_))::L,L') = rmv(L,if t = u then L' else x::L')
-           in app (fn (v,w) => 
+           in app (fn (v,w) =>
                    let val (s',w') = A.sub(adjEdges,v)
                    in  if s = s' then w' := Num.+(!w',!w)
                        else if s <> v then new_edge(s,v,w)
@@ -79,28 +79,28 @@ struct
                        A.update(adj,v,rmv(A.sub(adj,v),[]))
                    end) (A.sub(adj,t))
            end;
-           A.update(adj,t,[]); 
+           A.update(adj,t,[]);
            A.update(onQueue,t,~2) (* delete node t *)
           )
 
-       fun iterate(n,a,best_group,best_cut,best_weight,nodes) = 
-         if n >= 2 then 
+       fun iterate(n,a,best_group,best_cut,best_weight,nodes) =
+         if n >= 2 then
            let val (s,t,w) = find_cut(n,a,nodes)
-               val (best_group,best_cut,best_weight) = 
-                 if best_group < 0 orelse Num.<(w,best_weight) 
+               val (best_group,best_cut,best_weight) =
+                 if best_group < 0 orelse Num.<(w,best_weight)
                  then (t,A.sub(group,t),w)
-                 else (best_group,best_cut,best_weight) 
+                 else (best_group,best_cut,best_weight)
            in  coalesce(s,t);
-               iterate(n-1,a,best_group,best_cut,best_weight,nodes) 
+               iterate(n-1,a,best_group,best_cut,best_weight,nodes)
            end
          else (L.toList(best_cut),best_weight)
 
        val nodes = map #1 (#nodes G ())
-       
+
    in  case nodes of
          [] => ([],Num.zero)
        | [_] => ([],Num.zero)
-       | a::L => (initialize(nodes); 
+       | a::L => (initialize(nodes);
                   iterate(length nodes,a,~1,L.empty,Num.zero,L))
    end
 

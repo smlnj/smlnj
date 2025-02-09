@@ -6,17 +6,17 @@ sig
    structure RTL : MLTREE_RTL
    type ty = int
 
-   val map   : int -> ('a -> 'b) -> 'a list -> 'b list 
+   val map   : int -> ('a -> 'b) -> 'a list -> 'b list
 
    val fetch : ty -> RTL.loc -> RTL.exp
    val :=    : ty -> RTL.loc * RTL.exp -> RTL.action
-   val aggb  : ty * ty -> RTL.cell -> RTL.loc 
+   val aggb  : ty * ty -> RTL.cell -> RTL.loc
    val aggl  : ty * ty -> RTL.cell -> RTL.loc
    val idaggr: ty -> RTL.cell -> RTL.loc
    val copy  : ty -> 'a * 'a -> RTL.action
    val !     : ty * string * string -> RTL.exp
-   val $     : string * ty -> RTL.exp -> RTL.cell 
-   val $$    : string * ty -> RTL.exp * RTL.exp -> RTL.cell 
+   val $     : string * ty -> RTL.exp -> RTL.cell
+   val $$    : string * ty -> RTL.exp * RTL.exp -> RTL.cell
 
    val intConst   : ty -> int -> RTL.exp
    val wordConst  : ty -> Word32.word -> RTL.exp
@@ -57,7 +57,7 @@ sig
    val notb  : ty -> RTL.exp -> RTL.exp
    val <<    : ty -> RTL.exp * RTL.exp -> RTL.exp
    val >>    : ty -> RTL.exp * RTL.exp -> RTL.exp
-   val ~>>   : ty -> RTL.exp * RTL.exp -> RTL.exp  
+   val ~>>   : ty -> RTL.exp * RTL.exp -> RTL.exp
 
    (* Trapping operators *)
    val addt  : ty -> RTL.exp * RTL.exp -> RTL.exp
@@ -90,32 +90,32 @@ sig
    val fsqrt : ty -> RTL.exp -> RTL.exp
 
    (* Floating point comparisons *)
-   val |?|     : ty -> RTL.exp * RTL.exp -> RTL.cond  
-   val |!<=>|  : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |==|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |?=|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!<>|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!?>=|  : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |<|     : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |?<|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!>=|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
+   val |?|     : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!<=>|  : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |==|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |?=|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!<>|   : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!?>=|  : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |<|     : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |?<|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!>=|   : ty -> RTL.exp * RTL.exp -> RTL.cond
    val |!?>|   : ty -> RTL.exp * RTL.exp -> RTL.cond
-   val |<=|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |?<=|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!>|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!?<=|  : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |>|     : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |?>|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!<=|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!?<|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |>=|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
+   val |<=|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |?<=|   : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!>|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!?<=|  : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |>|     : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |?>|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!<=|   : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!?<|   : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |>=|    : ty -> RTL.exp * RTL.exp -> RTL.cond
    val |?>=|   : ty -> RTL.exp * RTL.exp -> RTL.cond
-   val |!<|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!?=|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |<>|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
-   val |!=|    : ty -> RTL.exp * RTL.exp -> RTL.cond 
+   val |!<|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!?=|   : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |<>|    : ty -> RTL.exp * RTL.exp -> RTL.cond
+   val |!=|    : ty -> RTL.exp * RTL.exp -> RTL.cond
    val |!?|    : ty -> RTL.exp * RTL.exp -> RTL.cond
-   val |<=>|   : ty -> RTL.exp * RTL.exp -> RTL.cond 
+   val |<=>|   : ty -> RTL.exp * RTL.exp -> RTL.cond
    val |?<>|   : ty -> RTL.exp * RTL.exp -> RTL.cond
 
    (* Action combinators *)

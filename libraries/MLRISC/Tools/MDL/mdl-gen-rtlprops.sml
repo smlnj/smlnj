@@ -1,6 +1,6 @@
 (*
  * Generate the <arch>RTLProps functor.
- * This structure extracts semantics and dependence 
+ * This structure extracts semantics and dependence
  * information about the instruction set needed for SSA optimizations.
  *)
 
@@ -36,11 +36,11 @@ struct
 
        val rtls = RTLComp.rtls compiled_rtls
 
-       val rtlStrName = Comp.strname md "RTL" 
+       val rtlStrName = Comp.strname md "RTL"
 
        val constTbl = Consts.newConstTable()
 
-       fun makeEntry(RTLComp.RTLDEF{id, args, rtl, ...}) =  
+       fun makeEntry(RTLComp.RTLDEF{id, args, rtl, ...}) =
        let val lookup = RTL.argOf rtl
 
            fun param i = APPexp(IDexp(IDENT(["T"],"PARAM")),INTexp i)
@@ -66,7 +66,7 @@ struct
                   ]
        end
 
-       val body = map makeEntry rtls  
+       val body = map makeEntry rtls
 
    in  STRUCTUREdecl("Arch",[],
                      NONE,DECLsexp
@@ -80,12 +80,12 @@ struct
     *
     *------------------------------------------------------------------------*)
    fun mkRtlQueryFun compiled_rtls =
-   let fun body{instr, rtl=RTLComp.RTLDEF{id,...}, const} = 
+   let fun body{instr, rtl=RTLComp.RTLDEF{id,...}, const} =
            {exp=IDexp(IDENT(["Arch"],id)), casePats=[]}
    in  RTLComp.mkQuery compiled_rtls
           {name          = "rtl",
            namedArguments= true,
-           args          = [["instr"]], 
+           args          = [["instr"]],
            decls         = [RTLComp.complexErrorHandler "rtl"],
            caseArgs      = [],
            body          = body
@@ -115,9 +115,9 @@ struct
               "   {int, int32, intinf, word, word32, operand, ...} =",
               "      valueNumberingMethods",
               "(* methods for type conversion *)"
-             ]       
+             ]
        fun gen x = SOME(get x)
-   in  RTLComp.mkDefUseQuery 
+   in  RTLComp.mkDefUseQuery
           compiled_rtls
           {name           = name,
            args           = [["valueNumberingMethods"], ["instr"]],
@@ -138,9 +138,9 @@ struct
        val md = RTLComp.md compiled_rtls
 
        (* name of the structure/signature *)
-       val strName = Comp.strname md "RTLProps"  
+       val strName = Comp.strname md "RTLProps"
        val sigName = "RTL_PROPERTIES"
- 
+
        (* Arguments to the instruction functor *)
        val args =
            ["structure Instr : "^Comp.signame md "INSTR",
@@ -152,7 +152,7 @@ struct
            ]
 
        (* The functor *)
-       val strBody = 
+       val strBody =
            [$ ["structure I   = Instr",
                "structure C   = I.C",
                "structure RTL = RTL",
@@ -175,7 +175,7 @@ struct
             ),
             genRTLTable compiled_rtls,
             mkRtlQueryFun compiled_rtls,
-            mkDefUseQueryFun compiled_rtls "defUse" 
+            mkDefUseQueryFun compiled_rtls "defUse"
            ]
 
    in  Comp.codegen md "mltree/RTLProps"

@@ -1,13 +1,13 @@
 (*
  * Dense set in bitvector format.
- * 
+ *
  * -- Allen
  *)
 
 signature BITSET =
 sig
 
-   type bitset 
+   type bitset
 
    val create        : int -> bitset
    val size          : bitset -> int

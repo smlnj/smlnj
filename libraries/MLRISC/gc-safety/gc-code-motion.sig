@@ -1,7 +1,7 @@
 (*
  * This module is for GC-safe code motion.
  * It generates the appropriate set of control dependences to limit
- * code motion that cannot be correctly repaired by subsequent passes.  
+ * code motion that cannot be correctly repaired by subsequent passes.
  *)
 signature GC_CODE_MOTION =
 sig

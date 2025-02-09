@@ -5,7 +5,7 @@
  * http://www.eecs.harvard.edu/~nr/pubs/staged-abstract.html
  *
  * Mike Rainey (mrainey@cs.uchicago.edu)
- * 
+ *
  *
  * Terminology for staged allocation (see the paper for more details):
  *   counter - stores of current the number of bits allocated to the call
@@ -17,7 +17,7 @@
  *
  *)
 
-signature STAGED_ALLOCATION = 
+signature STAGED_ALLOCATION =
   sig
 
     type loc_kind                                (* gprs, fprs, stack locations, etc. *)
@@ -30,36 +30,36 @@ signature STAGED_ALLOCATION =
    *)
     type reg_id
     type reg = (int * loc_kind * reg_id)
-    datatype loc 
+    datatype loc
       = REG of reg
       | BLOCK_OFFSET of (width * loc_kind * int)
-      | COMBINE of (loc * loc)  
+      | COMBINE of (loc * loc)
       | NARROW of (loc * width * loc_kind)          (* specifies a coercion to the given width and kind *)
 
     type counter                                 (* abstract counter for a convention *)
     type store                                   (* counter -> "bit offset" *)
 
     datatype block_direction = UP | DOWN         (* direction in which the overflow block grows *)
-			 
+
   (* language for specifying calling conventions *)
-    datatype stage 
+    datatype stage
       = OVERFLOW of {                                (* overflow block (usually corresponds to a runtime stack) *)
-	     counter : counter,
-	     blockDirection : block_direction,
-	     maxAlign : int 
+             counter : counter,
+             blockDirection : block_direction,
+             maxAlign : int
         }
-      | WIDEN of (width -> width)      
-      | CHOICE of ( (req -> bool) * stage) list      (* choose the first stage whose corresponding 
-						      * predicate is true. *)
+      | WIDEN of (width -> width)
+      | CHOICE of ( (req -> bool) * stage) list      (* choose the first stage whose corresponding
+                                                      * predicate is true. *)
       | REGS_BY_ARGS of (counter * reg list)         (* the first n arguments go into the first n
-						      * registers *)
+                                                      * registers *)
       | ARGCOUNTER of counter
-      | REGS_BY_BITS of (counter * reg list)         (* the first n bits arguments go into the first 
-						      * n bits of registers *)
-      | BITCOUNTER of counter                        
+      | REGS_BY_BITS of (counter * reg list)         (* the first n bits arguments go into the first
+                                                      * n bits of registers *)
+      | BITCOUNTER of counter
       | SEQ of stage list                            (* sequence of stages *)
-      | PAD of counter                               (* specifies an alignment (this rule applies even 
-						      * for registers) *)      
+      | PAD of counter                               (* specifies an alignment (this rule applies even
+                                                      * for registers) *)
       | ALIGN_TO of (width -> width)                 (* specifies an alignment *)
 
     exception StagedAlloc of string
@@ -71,8 +71,8 @@ signature STAGED_ALLOCATION =
     val freshCounter : unit -> counter
 
   (* helper function that creates a counter c, and returns the sequence:
-   * [BITCOUNTER c, REGS_BY_BITS (c, regs)] (this function is taken from 
-   * the paper). 
+   * [BITCOUNTER c, REGS_BY_BITS (c, regs)] (this function is taken from
+   * the paper).
    *)
     val useRegs : reg list -> (counter * stage)
 
@@ -84,21 +84,21 @@ signature STAGED_ALLOCATION =
 
   (* takes an spec and automaton and allocates a location *)
     val allocate : stage list -> (req * store)
-		       -> (loc * store)
+                       -> (loc * store)
 
   (* allocate lifted to sequences of requests *)
     val allocateSeq : stage list -> (req list * store)
-		       -> (loc list * store)
+                       -> (loc list * store)
 
   (* allocateSeq lifted to sequences of sequences of requests *)
     val allocateSeqs : stage list -> (req list list * store)
-		       -> (loc list list * store)
+                       -> (loc list list * store)
 
   (* takes an automaton (the first two parameters) and returns the overflow block and the set of
-   * registers used by previous calls to allocate 
+   * registers used by previous calls to allocate
    *)
-    val freeze : (stage list * store) 
-		     -> {overflowBlock : loc option, allocatedRegs : loc list}
+    val freeze : (stage list * store)
+                     -> {overflowBlock : loc option, allocatedRegs : loc list}
 
   (* extract the kind of a location *)
     val kindOfLoc : loc -> loc_kind

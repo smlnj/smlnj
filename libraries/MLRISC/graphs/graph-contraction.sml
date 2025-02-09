@@ -1,13 +1,13 @@
 (*
  *  Allows contraction of a set of nodes and replace it by a new node
- * 
+ *
  * -- Allen
  *)
 
 signature GRAPH_MINOR =
 sig
 
-   val minor_view : 
+   val minor_view :
       ('n,'e,'g) Graph.graph ->
       { minor    : ('n,'e,'g) Graph.graph,
         contract : Graph.node_id list * 'n Graph.node -> unit
@@ -19,7 +19,7 @@ struct
 
    structure G = Graph
 
-   datatype node = 
+   datatype node =
 
    fun minor_view(G.GRAPH G) =
    let fun get n =

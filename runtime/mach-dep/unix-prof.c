@@ -60,6 +60,10 @@ PVT SigReturn_t ProfSigHandler (int sig, SigInfo_t info, SigContext_t *scp)
 {
     Word_t	*arr = GET_SEQ_DATAPTR(Word_t, ProfCntArray);
     int		indx = INT_MLtoC(DEREF(ProfCurrent));
+    (void)sig; (void)scp;
+#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+    (void)info;
+#endif
 
     arr[indx]++;
 

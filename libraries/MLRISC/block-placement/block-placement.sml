@@ -3,10 +3,10 @@
  * COPYRIGHT (c) 2002 Bell Labs, Lucent Technologies
  *)
 
-functor BlockPlacement 
+functor BlockPlacement
    (structure CFG : CONTROL_FLOW_GRAPH
     structure Props : INSN_PROPERTIES
-	where I = CFG.I)
+        where I = CFG.I)
 
    : BLOCK_PLACEMENT =
 
@@ -15,18 +15,18 @@ struct
 
   structure DefaultPlacement = DefaultBlockPlacement(CFG)
 
-  structure WeightedPlacement = 
+  structure WeightedPlacement =
      WeightedBlockPlacementFn
-	  (structure CFG = CFG 
-	   structure InsnProps = Props)
+          (structure CFG = CFG
+           structure InsnProps = Props)
 
   val placementFlag = MLRiscControl.mkFlag
-			  ("weighted-block-placement",
-			   "whether MLRISC does weighted block placement")
+                          ("weighted-block-placement",
+                           "whether MLRISC does weighted block placement")
 
   fun blockPlacement(cfg as Graph.GRAPH G) =
-	if !placementFlag
-	  then WeightedPlacement.blockPlacement cfg
-	  else DefaultPlacement.blockPlacement cfg
+        if !placementFlag
+          then WeightedPlacement.blockPlacement cfg
+          else DefaultPlacement.blockPlacement cfg
 
 end

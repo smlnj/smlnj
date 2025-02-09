@@ -5,7 +5,7 @@ functor MDLRTLComp
    (structure Typing      : MDL_TYPING
     structure RTLTools    : MDL_RTL_TOOLS
     structure MLRiscTypes : MLRISC_TYPES
-      sharing Typing.Ast = RTLTools.Ast = MLRiscTypes.Ast 
+      sharing Typing.Ast = RTLTools.Ast = MLRiscTypes.Ast
       sharing MLRiscTypes.RTL = RTLTools.RTL
    ) : MDL_RTL_COMP =
 struct
@@ -25,14 +25,14 @@ struct
 
    open Ast Comp.Util Comp.Error
 
-   val t2s = PP.text o AstPP.ty 
-   val e2s = PP.text o AstPP.exp 
-   val p2s = PP.text o AstPP.pat 
+   val t2s = PP.text o AstPP.ty
+   val e2s = PP.text o AstPP.exp
+   val p2s = PP.text o AstPP.pat
    val d2s = PP.text o AstPP.decl
-   val re2s = RTL.Util.rexpToString 
+   val re2s = RTL.Util.rexpToString
 
    val rw  = R.rewrite
-   val NIL = R.noRewrite       
+   val NIL = R.noRewrite
    val i2s = Int.toString
 
    fun tuplepat [p] = p
@@ -43,14 +43,14 @@ struct
 
    exception NoRTL
 
-   datatype rtl_def = 
-      RTLDEF of {id   : Ast.id, 
-                 args : Ast.id list, 
+   datatype rtl_def =
+      RTLDEF of {id   : Ast.id,
+                 args : Ast.id list,
                  rtl  : RTL.rtl
                 }
-                   
 
-   datatype compiled_rtls = COMPILED_RTLs of 
+
+   datatype compiled_rtls = COMPILED_RTLs of
      { md       : Comp.md,
        env      : Env.env,
        rtls     : rtl_def list,
@@ -66,23 +66,23 @@ struct
 
    fun noError() = !errorCount = 0
 
-   (*------------------------------------------------------------------------  
+   (*------------------------------------------------------------------------
     *
     * Perform type interference and arity raising
     *
     *------------------------------------------------------------------------*)
-   fun typeInference(md, rtlDecls) = 
+   fun typeInference(md, rtlDecls) =
    let (* Perform typechecking + arity raising *)
-       val (semantics, env) = 
+       val (semantics, env) =
            (print "Typechecking...\n";
             Typing.typeCheck md rtlDecls)
 
-       (* Make sure that there are 
+       (* Make sure that there are
         * no unresolved type applications after
         * arity raising.
         *)
        fun checkSemantics semantics =
-       let fun checkUnresolvedTypeApplications(d,loc) = 
+       let fun checkUnresolvedTypeApplications(d,loc) =
            let val poly = ref false
                fun exp ==> (e as TYPEexp t) =
                    (if Typing.isPolymorphic t then poly := true else (); e)
@@ -94,38 +94,38 @@ struct
            end
 
             fun decl ==> d =
-            (case d of 
-              MARKdecl(l,d as VALdecl _) => 
+            (case d of
+              MARKdecl(l,d as VALdecl _) =>
                  checkUnresolvedTypeApplications(d, l)
             | RTLdecl(_,_,loc) => checkUnresolvedTypeApplications(d, loc)
             | _ => ();
-            d 
+            d
             )
        in  #decl (rw{exp=NIL,ty=NIL,decl=decl,sexp=NIL,pat=NIL}) semantics;
            ()
        end
 
    in  if noError() then checkSemantics semantics else ();
-       (semantics, env) 
+       (semantics, env)
    end
 
    (*------------------------------------------------------------------------
     * Translate the rtl declarations into an executable form.
     *------------------------------------------------------------------------*)
-   fun codeGen(md, env, rtlDecls) = 
-   let fun cellOf k = 
+   fun codeGen(md, env, rtlDecls) =
+   let fun cellOf k =
            let val CELLdecl{id, bits, ...} = Comp.lookupCellKind md k
-           in  TUPLEexp[IDexp(IDENT(["C"],id)),INTexp bits] 
+           in  TUPLEexp[IDexp(IDENT(["C"],id)),INTexp bits]
            end
 
        fun exp ==> (LOCexp(m,e,NONE)) = APPexp(APP("$",cellOf m),e)
-         | exp ==> (LOCexp(m,e,SOME r)) = 
+         | exp ==> (LOCexp(m,e,SOME r)) =
               APPexp(APP("Mem",cellOf m),TUPLEexp[e,ID r])
          | exp ==> (IFexp(a,b,c))   = APP("If",TUPLEexp[a,b,c])
          | exp ==> (TUPLEexp [])    = ID "Nop"
          | exp ==> (IDexp(IDENT([],"="))) = ID "=="
          | exp ==> (TYPEDexp(e,_)) = e
-         | exp ==> (APPexp(BITSLICEexp(e,r),t)) = 
+         | exp ==> (APPexp(BITSLICEexp(e,r),t)) =
               APPexp(APPexp(APP("BitSlice",t),
                  LISTexp(map (fn (a,b) => TUPLEexp[INTexp a,INTexp b]) r,
                          NONE)),e)
@@ -141,18 +141,18 @@ struct
        (* All rtl definitions *)
        val allRtls = ref []
 
-       fun addRtls(p, loc) = 
+       fun addRtls(p, loc) =
        let fun processBinding x =
            let val (_,t) = Env.lookupVal env (IDENT([],x))
                val t = #ty (rw{exp=NIL,pat=NIL,decl=NIL,sexp=NIL,ty=NIL}) t
            in  if Typing.isPolymorphic t then
                     errorPos(loc, "rtl "^x^" has polymorphic type "^
-                             t2s t) 
-               else 
-               case t of 
+                             t2s t)
+               else
+               case t of
                   FUNty(RECORDty lts,_) => (allRtls := (x,lts,loc) :: !allRtls)
-                | t => errorPos(loc, 
-                          "rtl "^x^" has a non-function type "^t2s t) 
+                | t => errorPos(loc,
+                          "rtl "^x^" has a non-function type "^t2s t)
            end
            fun pat ==> (p as IDpat x) = (processBinding x; p)
              | pat ==> p = p
@@ -169,7 +169,7 @@ struct
                          (pats,es))
          | decl ==> (VALdecl[VALbind(LISTpat(pats,NONE),LISTexp(es,NONE))]) =
               VALdecl(ListPair.map VALbind (pats,es))
-         | decl ==> (RTLdecl(pat,exp,loc)) = 
+         | decl ==> (RTLdecl(pat,exp,loc)) =
               (addRtls(pat,loc); ==>(VALdecl[VALbind(pat,exp)]))
          | decl ==> (MARKdecl(_,SEQdecl [])) = SEQdecl[]
          | decl ==> d = d
@@ -177,20 +177,20 @@ struct
       (* Define the cellkinds in a substructure C *)
       val cellKindDecls =
            VALdecl(map (fn CELLdecl{id, nickname, ...} =>
-                     VALbind(IDpat id, 
+                     VALbind(IDpat id,
                         APPexp(
                            IDexp(IDENT(["C"],"newCellKind")),
                            RECORDexp[("name",STRINGexp id),
                                      ("nickname",STRINGexp nickname)
                                     ])))
                         (Comp.cells md))
-       
-      val userRtlDecls = 
+
+      val userRtlDecls =
              #decl (rw{exp=exp,pat=NIL,sexp=NIL,decl=decl,ty=NIL}) rtlDecls
       val allDecls = SEQdecl[STRUCTUREdecl("C",[],NONE,
-                                 DECLsexp[cellKindDecls]), 
+                                 DECLsexp[cellKindDecls]),
                              userRtlDecls]
-   in (allDecls, rev(!allRtls)) 
+   in (allDecls, rev(!allRtls))
    end
 
    (*------------------------------------------------------------------------
@@ -221,10 +221,10 @@ struct
          | decl ==> (d as RTLSIGdecl(fs,ty)) = (error("bad type in "^d2s d); d)
          | decl ==> d = d
 
-       val rtlDecls = 
+       val rtlDecls =
             #decl (rw{exp=exp,pat=NIL,decl=decl,sexp=NIL,ty=NIL}) rtlDecls
 
-   in  rtlDecls 
+   in  rtlDecls
    end
 
    (*------------------------------------------------------------------------
@@ -232,16 +232,16 @@ struct
     * Turn off pattern matching warnings
     *------------------------------------------------------------------------*)
    fun compileFile filename =
-   let val warn     = Control.MC.bindNonExhaustiveWarn 
+   let val warn     = Control.MC.bindNonExhaustiveWarn
        val previous = !warn
-       fun reset() = warn := previous 
+       fun reset() = warn := previous
    in  warn := false;
-       (Backend.Interact.useFile filename; reset()) 
+       (Backend.Interact.useFile filename; reset())
          handle e => (reset(); raise e)
    end
 
    (*------------------------------------------------------------------------
-    * Process the rtl description 
+    * Process the rtl description
     ------------------------------------------------------------------------*)
    fun compile md =
    let (* The semantics environment *)
@@ -257,7 +257,7 @@ struct
        val (userRtlDecls, allRtls) = codeGen(md, env, semantics)
 
        (* Generate the rtl table *)
-       val rtlTable = 
+       val rtlTable =
        if !errorCount = 0 then
        let fun mkEntry (name,args,loc) =
            let fun mkArg(arg,ty) =
@@ -298,15 +298,15 @@ struct
                                    IDENT([],strname)]],
                         [rtlTable])
              ],
-             [ 
+             [
                $["val _ = MDLRTLComp.current_rtls := rtls"]
              ]
          )
 
        (* Compile RTL into internal form *)
-       fun elaborateRTL(code) = 
-       if !errorCount = 0 then 
-       let val _    = current_rtls := [] 
+       fun elaborateRTL(code) =
+       if !errorCount = 0 then
+       let val _    = current_rtls := []
            val name = "CompileRTL"
            val _    = print "Generating ML code for computing RTLs...\n";
            val _ = Comp.codegen md name [AstPP.decl code]
@@ -317,7 +317,7 @@ struct
        end
        else ()
 
- 
+
        (* Execute the code *)
        val _      = elaborateRTL(code)
        val newOps = MDLRTLBuilder.getNewOps()
@@ -326,7 +326,7 @@ struct
        (* Build a table of rtls *)
        val rtlTable = H.mkTable(HashString.hashString,op=) (32,NoRTL)
        val allRtls  = !current_rtls
-       val _        = 
+       val _        =
            app (fn def as RTLDEF{id,...} => H.insert rtlTable (id,def)) allRtls
 
    in  COMPILED_RTLs{md       = md,
@@ -338,18 +338,18 @@ struct
    end
 
    (*------------------------------------------------------------------------
-    * Pretty print RTL code 
+    * Pretty print RTL code
     *------------------------------------------------------------------------*)
-   fun dumpLog(COMPILED_RTLs{md, rtls, newOps, ...}) = 
-   let fun prNewOp{name, hash, attribs} = 
-           "New abstract operator "^name^"\n" 
+   fun dumpLog(COMPILED_RTLs{md, rtls, newOps, ...}) =
+   let fun prNewOp{name, hash, attribs} =
+           "New abstract operator "^name^"\n"
 
        fun prRTL(def as RTLDEF{id=f, args, rtl, ...}) =
        let fun listify es = foldr (fn (x,"") => x | (x,y) => x^", "^y) "" es
            fun prs es = listify(map RTL.expToString es)
-           fun prs' es = 
+           fun prs' es =
                listify(map (fn (e,r) => RTL.expToString e^"="^i2s r) es)
-           val pretty = String.translate (fn #"\n" => "\n\t" 
+           val pretty = String.translate (fn #"\n" => "\n\t"
                                            | #";"  => " ||"
                                            | c => Char.toString c)
            val (d, u) = RTL.defUse rtl
@@ -358,7 +358,7 @@ struct
            val rtl = RTLTools.simplify rtl
 
            fun line(title,"") = ""
-             | line(title,text) = "\t"^title^":\t"^text^"\n"   
+             | line(title,text) = "\t"^title^":\t"^text^"\n"
        in  "rtl "^f^
                 "{"^List.foldr(fn (x,"") => x | (x,y) => x^","^y) "" args^
                  "} =\n\t"^rtlText^"\n"^
@@ -375,18 +375,18 @@ struct
        end
 
        (* Sort them alphabetically *)
-       val rtls = 
-           ListMergeSort.sort 
+       val rtls =
+           ListMergeSort.sort
            (fn (RTLDEF{id=f,...},RTLDEF{id=g,...}) => String.>(f,g)) rtls
 
        val nRTLs = length rtls
        val nNewOps = length newOps
 
-       val text = 
+       val text =
            "There are a total of "::i2s nRTLs::" rtl templates defined.\n"::
            "There are a total of "::i2s nNewOps::" new abstract operators.\n"::
            "RTL information follows:\n\n"::
-           map prNewOp newOps @ 
+           map prNewOp newOps @
            ["\n\n"] @
            map prRTL rtls
 
@@ -394,22 +394,22 @@ struct
    end
 
    (*------------------------------------------------------------------------
-    * Gnerate code the ArchRTL functor 
+    * Gnerate code the ArchRTL functor
     *------------------------------------------------------------------------*)
-   fun genArchFunctor(COMPILED_RTLs{md, rtls, newOps, ...}) = 
+   fun genArchFunctor(COMPILED_RTLs{md, rtls, newOps, ...}) =
    let (* The ArchRTL functor *)
        val strname = Comp.strname md "RTL"
-    
+
        (* The main body are just the RTL constructor functions *)
-       val decls = 
+       val decls =
             $["structure T = RTL.T"
              ]::
              STRUCTUREdecl("P",[],NONE,
                DECLsexp(map RTLTools.createNewOp newOps))::
-             map (fn RTLDEF{id,args,rtl} => RTLTools.rtlToFun(id,args,rtl)) 
+             map (fn RTLDEF{id,args,rtl} => RTLTools.rtlToFun(id,args,rtl))
                  rtls
 
-       val archRTL = 
+       val archRTL =
              STRUCTUREdecl(
                 strname,
                 [$["structure RTL : MLTREE_RTL",
@@ -434,26 +434,26 @@ struct
     fun makeQuery warning (COMPILED_RTLs{rtls, md, rtlTable, ...}) =
     let (* The instructions *)
         val instructions = Comp.instructions md
- 
-        datatype rtlpat = LIT of string 
+
+        datatype rtlpat = LIT of string
                         | TYP of string * datatypebind
-   
+
         (* Lookup rtl *)
         fun lookupRTL name =
              H.lookup rtlTable name handle e =>
                (warning("Can't find definition for rtl "^name); raise e)
 
          (* error handler *)
-        val errorHandler = APP("undefined",TUPLEexp []) 
+        val errorHandler = APP("undefined",TUPLEexp [])
         val errorHandlingClause = CLAUSE([WILDpat],NONE,errorHandler)
 
         fun mkQueryFun{namedArguments, name, args, body, caseArgs, decls} =
-        let 
+        let
             val extraCaseArgs = map ID caseArgs
 
             (* Generate constants *)
             val constTbl = Consts.newConstTable()
-            val mkConst  = Consts.const constTbl  
+            val mkConst  = Consts.const constTbl
 
             (* Enumerate all rtl patterns and generate a case expression
              * that branch to different cases.
@@ -463,8 +463,8 @@ struct
                       | enum(LIT s::rest,pats,name) = enum(rest,pats,s^name)
                       | enum(TYP(_,DATATYPEbind{cbs, ...})::rest,pats,name) =
                         let val names =
-                            map (fn cb as CONSbind{id, ...} => 
-                                 let val pat = 
+                            map (fn cb as CONSbind{id, ...} =>
+                                 let val pat =
                                      Tr.mapConsToPat
                                         {prefix=["I"],
                                          id=fn{newName,...}=>IDpat newName
@@ -489,30 +489,30 @@ struct
 
                     (* Translate rtl definition *)
                     fun trans(TEXTasm s) = LIT s
-                      | trans(EXPasm(IDexp(IDENT([],x)))) = 
+                      | trans(EXPasm(IDexp(IDENT([],x)))) =
                         let val (_, ty) = E x handle _ =>
                                   fail("unknown identifier "^x^
                                        " in rtl expression: "^e2s rtlDef)
-                            val db = 
-                                case ty of   
+                            val db =
+                                case ty of
                                   IDty(IDENT([],t)) => Comp.lookupDatatype md t
                                 | t => fail("illegal type "^t2s t)
                         in  TYP(x,db) end
                       | trans(EXPasm e) = fail("illegal rtl expression "^e2s e)
-    
+
                     fun exp _ (e as RTLexp [COMPOSITErtl _]) = e
-                      | exp _ (ASMexp(ASMasm rtl)) = 
+                      | exp _ (ASMexp(ASMasm rtl)) =
                           foreachRtlPat (genCode(instr, E)) (map trans rtl)
                     val rw = rw{exp=exp,decl=NIL,pat=NIL,ty=NIL,sexp=NIL}
-                in  #exp rw rtlDef 
-                end  
+                in  #exp rw rtlDef
+                end
 
                 (* Call the user defined callback and generate code *)
             and genCode (instr, E) (pats, rtlName) =
                 let val rtl as RTLDEF{args,...} = lookupRTL rtlName
-                    val {casePats,exp} = 
+                    val {casePats,exp} =
                          body{const=mkConst,rtl=rtl,instr=instr}
-                    fun simpList(ps) = 
+                    fun simpList(ps) =
                     let fun loop [] = []
                           | loop (WILDpat::ps) =
                               (case loop ps of
@@ -543,35 +543,35 @@ struct
                                    pat=fn pat => pat,
                                    exp=doInstr instr
                                   } instr::
-                         foreachInstr(instrs, err)      
-                handle _ => foreachInstr(instrs, BAD) 
+                         foreachInstr(instrs, err)
+                handle _ => foreachInstr(instrs, BAD)
 
-            val clauses = foreachInstr(instructions, OK) 
+            val clauses = foreachInstr(instructions, OK)
 
-            val queryFun = FUNdecl[FUNbind("query", clauses)] 
+            val queryFun = FUNdecl[FUNbind("query", clauses)]
 
-           (* How to make an argument:  
+           (* How to make an argument:
             * If the argument has more than one
-            * name we'll first pack them into a record pattern. 
+            * name we'll first pack them into a record pattern.
             *)
            fun mkArg [x] = IDpat x
-             | mkArg xs  = 
+             | mkArg xs  =
                 if namedArguments then
                    RECORDpat(map (fn x => (x,IDpat x)) xs,false)
                 else
                    TUPLEpat(map IDpat xs)
 
-            val wrapper = 
-                [FUNdecl[FUNbind(name, 
-                     [CLAUSE(map mkArg args,  
+            val wrapper =
+                [FUNdecl[FUNbind(name,
+                     [CLAUSE(map mkArg args,
                              NONE,
-                             LETexp(decls @ [queryFun], 
+                             LETexp(decls @ [queryFun],
                                     [APP("query",ID "instr")]))
                      ])
                   ]
                 ]
 
-            val constants = Consts.genConsts constTbl 
+            val constants = Consts.genConsts constTbl
         in  Tr.simplifyDecl
             (case constants of
                [] => SEQdecl wrapper
@@ -586,14 +586,14 @@ struct
 
    (*------------------------------------------------------------------------
     *
-    * Generic routine that enumerates all arguments in an 
+    * Generic routine that enumerates all arguments in an
     * instruction constructor.
     *
     *------------------------------------------------------------------------*)
    fun forallArgs{instr, rtl=RTLDEF{rtl, ...}, rtlArg, nonRtlArg} unit =
    let val lookupArg = RTL.argOf rtl
-       fun every({origName,newName,ty},x) =  
-           let val (exp, pos) = lookupArg newName 
+       fun every({origName,newName,ty},x) =
+           let val (exp, pos) = lookupArg newName
            in  rtlArg(newName, ty, exp, pos, x)
            end handle RTL.NotAnArgument => nonRtlArg(newName, ty, x)
    in  Tr.foldCons every unit instr
@@ -601,10 +601,10 @@ struct
 
    (*------------------------------------------------------------------------
     *
-    * Generic routine for generating a query function on the operand type 
+    * Generic routine for generating a query function on the operand type
     *
     *------------------------------------------------------------------------*)
-   fun mkOperandQuery compiled_rtls = 
+   fun mkOperandQuery compiled_rtls =
    let val md = md compiled_rtls
    in  ()
    end
@@ -618,12 +618,12 @@ struct
    fun mapInstr{instr, rtl=RTLDEF{rtl, ...}, rtlArg, nonRtlArg} =
    let val lookupArg = RTL.argOf rtl
        val changed = ref false
-       fun mapArg{origName,newName,ty} =  
-           let val (exp, pos) = lookupArg newName 
+       fun mapArg{origName,newName,ty} =
+           let val (exp, pos) = lookupArg newName
            in  case rtlArg(newName, ty, exp, pos) of
                  SOME e => (changed := true; e)
                | NONE   => ID newName
-           end handle RTL.NotAnArgument => 
+           end handle RTL.NotAnArgument =>
                (case nonRtlArg(newName, ty) of
                  SOME e => (changed := true; e)
                | NONE   => ID newName
@@ -637,27 +637,27 @@ struct
     * Generate RTL code for def/use like queries
     *
     *------------------------------------------------------------------------*)
-   fun mkDefUseQuery compiled_rtls 
-        { name, decls, def, use, namedArguments, args } = 
+   fun mkDefUseQuery compiled_rtls
+        { name, decls, def, use, namedArguments, args } =
    let val md = md compiled_rtls
        val trivial = ref true
        val Nil = LISTexp([], NONE)
 
-       fun defUseBody{instr, rtl=RTLDEF{rtl, ...}, const} = 
+       fun defUseBody{instr, rtl=RTLDEF{rtl, ...}, const} =
        let val bindings =
                Tr.foldCons (fn({newName,ty,...},L) => (newName,ty)::L) [] instr
            fun lookup id = List.find (fn (x,_) => x=id) bindings
-           fun add(f, x, e, y) =     
+           fun add(f, x, e, y) =
                 case f(x, e, y) of
                   SOME e => e
                 | NONE => y
-               
+
            fun fold f (e as T.ARG(_,_,x),exp) = add(f, ID x, e, exp)
              | fold f (e as T.$(_,_,T.ARG(_,_,x)),exp) = add(f, ID x,e,exp)
              | fold f (e as T.$(_,k,T.LI i), exp) =
-               let val CELLdecl{id, ...} = 
+               let val CELLdecl{id, ...} =
                          Comp.lookupCellKind md (C.cellkindToString k)
-                   val cell = 
+                   val cell =
                           APPexp(APPexp(IDexp(IDENT(["C"],"Reg")),
                                         IDexp(IDENT(["C"],id))),
                                       INTexp(IntInf.toInt i))
@@ -675,11 +675,11 @@ struct
             casePats=[]
            }
        end
-       val decl = 
+       val decl =
          mkQuery compiled_rtls
           {name=name, namedArguments=namedArguments, args=args, decls=decls,
            caseArgs=[], body=defUseBody
-          } 
+          }
    in  if !trivial then FUN(name,WILDpat,TUPLEexp[Nil,Nil])
        else decl
    end
@@ -714,7 +714,7 @@ struct
    (*------------------------------------------------------------------------
     *
     * Do consistency checking on the RTL and instruction representation.
-    * Call mkQuery to test the entire process.  
+    * Call mkQuery to test the entire process.
     *
     *------------------------------------------------------------------------*)
    fun consistencyCheck compiled_rtls =
@@ -722,11 +722,11 @@ struct
 
        (* Check one instruction *)
        fun check{instr as CONSbind{id=instrName,...},
-                 rtl=RTLDEF{id=f,args,rtl,...},const} = 
+                 rtl=RTLDEF{id=f,args,rtl,...},const} =
        let (* Find all arguments in the instruction constructor *)
            val bindings =
-               Tr.foldCons 
-                  (fn({newName,ty,...},L) => 
+               Tr.foldCons
+                  (fn({newName,ty,...},L) =>
                      (newName,ref false,ty)::L) [] instr
 
            fun lookup id = List.find (fn (x,_,_) => x=id) bindings
@@ -734,24 +734,24 @@ struct
 
            fun checkIt(x,exp,pos,ty) =
            let fun err(why) =
-                (error("in instruction "^instrName^" (rtl "^f^"):");     
+                (error("in instruction "^instrName^" (rtl "^f^"):");
                  if why = "" then () else log(why);
                  log("rtl argument "^re2s exp^
                      " cannot be represented as "^t2s ty)
                 )
            in  MLRiscTypes.insertRepCoercion(exp,ty);
                case (exp,ty) of
-                 (T.$(_,k,T.ARG _),CELLty cellkind) => 
-                 let val CELLdecl{id, ...} = 
-                      Comp.lookupCellKind md cellkind 
+                 (T.$(_,k,T.ARG _),CELLty cellkind) =>
+                 let val CELLdecl{id, ...} =
+                      Comp.lookupCellKind md cellkind
                  in  if C.cellkindToString k = id then ()
                      else err("cellkind mismatched")
                  end
                | (exp, CELLty _) => err("rtl is not a register reference")
                | (T.$(_,_,T.ARG _),ty) => err ""
-               | (T.ARG(ty,ref(T.REP k),_),IDty(IDENT(_,typeName))) => 
+               | (T.ARG(ty,ref(T.REP k),_),IDty(IDENT(_,typeName))) =>
                    if k = typeName then ()
-                   else err("representation mismatch") 
+                   else err("representation mismatch")
                | (_, _) => err("")
            end handle _ => ()
 
@@ -776,10 +776,10 @@ struct
 
        in  app checkRTLArg args;
            app checkInstrArg bindings;
-           {casePats=[], exp=TUPLEexp []} 
+           {casePats=[], exp=TUPLEexp []}
        end
        val _ = print "Consistency checking...\n"
-       val _ = makeQuery warning compiled_rtls 
+       val _ = makeQuery warning compiled_rtls
                   {name="check",namedArguments=false,
                    args=[],decls=[],caseArgs=[], body=check}
    in  ()

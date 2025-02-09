@@ -6,7 +6,7 @@
 functor SSAGCInvariants
    (structure SSA     : SSA
     structure TypeSys : GC_TYPE_SYSTEM
-      sharing SSA.RTL = TypeSys.RTL 
+      sharing SSA.RTL = TypeSys.RTL
    ) : SSA_OPTIMIZATION =
 struct
    structure SSA   = SSA
@@ -48,7 +48,7 @@ struct
        val cellKind    = IntHashTable.find cellKindMap
        val cellKind    = fn r => case cellKind r of SOME k => k | NONE => C.GP
        val updateTy    = IntHashTable.insert gcmap
-       val zeroR       = case C.zeroReg C.GP of 
+       val zeroR       = case C.zeroReg C.GP of
                            SOME z => z
                          | NONE => ~1
 
@@ -61,29 +61,29 @@ struct
          | joins (x::xs) = GC.join(x, joins xs)
 
        fun initializeTypes() =
-           (IntHashTable.appi (fn (r,t) => 
+           (IntHashTable.appi (fn (r,t) =>
                (BitSet.set(hasType,r); A.update(gcTypes, r, t))) gcmap;
             if zeroR >= 0 then A.update(gcTypes, zeroR, GC.CONST 0) else ()
            )
 
-       fun enqueueInsn(j, WL) = 
-           if BitSet.markAndTest(onQueue, j) then WL 
+       fun enqueueInsn(j, WL) =
+           if BitSet.markAndTest(onQueue, j) then WL
            else j::WL
- 
-       fun enqueue(r, WL) = 
+
+       fun enqueue(r, WL) =
        let val i = A.sub(defSiteTbl,r)
            fun ins([], WL) = WL
              | ins((_,j,_)::es, WL) = ins(es, enqueueInsn(j, WL))
        in  ins(#out_edges ssa i, WL) end
 
-       fun update(r, t, WL) = 
-           if r = zeroR orelse BitSet.contains(hasType, r) 
+       fun update(r, t, WL) =
+           if r = zeroR orelse BitSet.contains(hasType, r)
            then WL
            else let val t' = A.sub(gcTypes, r)
-                in  if GC.==(t,t') then WL 
-                    else 
+                in  if GC.==(t,t') then WL
+                    else
                      ((* print("r"^Int.toString r^":"^GC.toString t^"\n");*)
-                      A.update(gcTypes, r, t); 
+                      A.update(gcTypes, r, t);
                       enqueue(r, WL))
                 end
 
@@ -92,12 +92,12 @@ struct
        val effectOf = TypeSys.effectOf {lookup=lookup, update=update}
 
        fun iterate([]) = ()
-         | iterate(i::WL) = 
+         | iterate(i::WL) =
            let val _  = BitSet.reset(onQueue,i)
            in  iterate(process(i, WL)) end
 
-       and process(i,WL) = 
-           let val rtl  = A.sub(rtlTbl,i) 
+       and process(i,WL) =
+           let val rtl  = A.sub(rtlTbl,i)
                val defs = A.sub(defsTbl,i)
                val uses = A.sub(usesTbl,i)
            in  case (rtl,defs,uses) of
@@ -105,17 +105,17 @@ struct
                | (T.SOURCE _,t,_) =>
                    let fun init([],WL) = WL
                          | init(t::ts,WL) = init(ts,setTop(t,WL))
-                       and setTop(t,WL) = 
+                       and setTop(t,WL) =
                            if BitSet.contains(hasType, t) then WL
                            else (update(t, GC.TOP, WL))
-                   in  init(t, WL) end  
+                   in  init(t, WL) end
                | (T.SINK _, _, _) => WL
                | (e, t, s) =>
-                 let fun lookupN n = 
-                     let val r = List.nth(s,n) 
+                 let fun lookupN n =
+                     let val r = List.nth(s,n)
                      in  if r < 0 then GC.INT else A.sub(gcTypes,r) end
                      fun updateN(n, ty, WL) = update(List.nth(t,n), ty, WL)
-                 in  TypeSys.effectOf{lookup=lookupN, update=updateN} 
+                 in  TypeSys.effectOf{lookup=lookupN, update=updateN}
                                      {action=e,src=s,dst=t,effect=WL}
                      handle e => (print("["^Int.toString i^"] "^
                                         SSA.showOp SSA i^"\n"); raise e)
@@ -129,7 +129,7 @@ struct
                 in  update(t, ty, WL) end
 
        fun updateTypes() =
-           A.appi (fn (r,t) => if GC.==(t,GC.TOP) then () 
+           A.appi (fn (r,t) => if GC.==(t,GC.TOP) then ()
                                else if GC.==(t,GC.BOT) then ()
                                else updateTy(r,t)) (gcTypes, 0, NONE)
 
@@ -151,9 +151,9 @@ struct
                   else ();
                   A.update(rtlTbl, i, RTL.pin(A.sub(rtlTbl, i)))
                  )
-               fun mark(i) = 
+               fun mark(i) =
                    let fun isRecoverable [] = true
-                         | isRecoverable(t::ts) = 
+                         | isRecoverable(t::ts) =
                            (cellKind t = C.MEM orelse
                             cellKind t = C.CTRL orelse
                            TypeSys.isRecoverable(A.sub(gcTypes,t))) andalso
@@ -167,7 +167,7 @@ struct
            in  app mark (A.sub(ops, b));
                app walk (#succ dom b)
            end
-     
+
        in  walk(hd(#entries dom ()))
        end
 

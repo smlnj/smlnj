@@ -10,7 +10,7 @@ struct
 
    (*
     * Spill the value associated with reg into spillLoc.
-    * All definitions of instr should be renamed to a new temporary newReg. 
+    * All definitions of instr should be renamed to a new temporary newReg.
     *)
    type spill =
       {instr    : I.instruction,       (* instruction where spill is to occur *)
@@ -72,7 +72,7 @@ struct
        newReg   : CB.cell option        (* the renamed value is here *)
       }
 
-   (* Reload the register dst from spillLoc. 
+   (* Reload the register dst from spillLoc.
     * The value is originally from register reg.
     *)
    type reloadDst =

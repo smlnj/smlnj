@@ -1,4 +1,4 @@
-(* 
+(*
  * This is my E-compressed DJ-graph data structure
  * --Allen
  *)
@@ -20,14 +20,14 @@ struct
 
    datatype tree = NODE of int * tree list
 
-   datatype ('n,'e,'g) dj_graph = 
+   datatype ('n,'e,'g) dj_graph =
       DJGRAPH of
         { dom    : ('n,'e,'g) Dom.dominator_tree,
           trees  : tree option A.array,
           jedges : int list A.array
         }
 
-   fun DJ(Dom as G.GRAPH dom) = 
+   fun DJ(Dom as G.GRAPH dom) =
    let val G.GRAPH cfg = Dom.cfg Dom
        val L           = Dom.max_levels Dom
        val N           = #capacity dom ()
@@ -37,39 +37,39 @@ struct
        val jedges      = A.array(N, [])
        val buckets     = A.array(L, [])
 
-       fun ExitTrees a =   
+       fun ExitTrees a =
        let fun foreachDedge [] = ()
              | foreachDedge((_,b,_)::es) = (ExitTrees b; foreachDedge es)
            val _     = foreachDedge (#out_edges dom a)
            val lvl_a = A.sub(levelsMap, a)
            fun foreachJedge([], rank) = A.update(rank_J,a,rank)
-             | foreachJedge((a,b,_)::es, rank) = 
-               let val lvl_b = A.sub(levelsMap, b)  
-               in  if lvl_b <= lvl_a then 
+             | foreachJedge((a,b,_)::es, rank) =
+               let val lvl_b = A.sub(levelsMap, b)
+               in  if lvl_b <= lvl_a then
                       foreachJedge(es, if lvl_b < rank then lvl_b else rank)
-                   else 
+                   else
                       foreachJedge(es, rank)
                end
            val _ = foreachJedge (#out_edges cfg a, L+1)
            fun buildTree([], succ) = NODE(a,succ)
-             | buildTree((_,b,_)::es, succ) = 
+             | buildTree((_,b,_)::es, succ) =
                (case A.sub(trees, b) of
                   NONE   => buildTree(es, succ)
                 | SOME t => buildTree(es, t::succ)
                )
-           val t_a = buildTree(#out_edges dom a, []) 
+           val t_a = buildTree(#out_edges dom a, [])
        in  A.update(trees, a, pruneTree(A.sub(levelsMap, a), t_a))
        end
 
        and pruneTree(lvl_a, NODE(x,succ)) =
            let fun foreachSucc([], subtrees) = subtrees
-                 | foreachSucc(t::ts, subtrees) = 
-                     foreachSucc(ts, 
-                        case pruneTree(lvl_a, t) of 
-                           NONE => subtrees 
+                 | foreachSucc(t::ts, subtrees) =
+                     foreachSucc(ts,
+                        case pruneTree(lvl_a, t) of
+                           NONE => subtrees
                          | SOME t => t::subtrees
                      )
-               val subtrees = foreachSucc(succ, []) 
+               val subtrees = foreachSucc(succ, [])
            in  case (A.sub(rank_J,x) <= lvl_a, subtrees) of
                  (false,[])  => NONE
                | (false,[t]) => SOME t
@@ -79,15 +79,15 @@ struct
        fun fillJedges l =
            if l < 0 then () else
            let fun fill [] = ()
-                 | fill ((a,b)::es) = 
-                    (A.update(jedges, a, b::A.sub(jedges, a)); fill es)   
+                 | fill ((a,b)::es) =
+                    (A.update(jedges, a, b::A.sub(jedges, a)); fill es)
            in  fill(A.sub(buckets, l));
                fillJedges(l-1)
            end
 
        val [ENTRY] = #entries dom ()
    in  ExitTrees ENTRY;
-       fillJedges(L-1); 
+       fillJedges(L-1);
        DJGRAPH{dom=Dom, trees=trees, jedges=jedges}
    end
 
@@ -98,7 +98,7 @@ struct
    fun IDFs _ = error "IDFs"
 
    (* Compute iterated dominance frontier with liveness *)
-   fun LiveIDFs(DJGRAPH{dom=Dom as G.GRAPH dom, jedges, trees}) = 
+   fun LiveIDFs(DJGRAPH{dom=Dom as G.GRAPH dom, jedges, trees}) =
    let val G.GRAPH cfg = Dom.cfg Dom
        val L           = Dom.max_levels Dom
        val N           = #capacity dom ()
@@ -117,12 +117,12 @@ struct
        let val stamp = new_stamp()
            val _ = if stats then idfCount := !idfCount + 1 else ()
            fun init([],l) = l
-             | init(x::xs,l) = 
+             | init(x::xs,l) =
                let val l_x = A.sub(levels,x)
                in  A.update(in_alpha,x,stamp);
                    A.update(piggybank,l_x,x::A.sub(piggybank,l_x));
                    init(xs,if l < l_x then l_x else l)
-               end 
+               end
 
            fun markLiveIn(b) =
            let fun markPred [] = ()
@@ -141,22 +141,22 @@ struct
            fun initLiveIn [] = ()
              | initLiveIn(x::xs) = (markLiveIn x; initLiveIn xs)
 
-           fun isLive b = A.sub(liveIn,b) = stamp 
+           fun isLive b = A.sub(liveIn,b) = stamp
 
-           fun visit(x,S) = 
+           fun visit(x,S) =
                case A.sub(trees,x) of
                  NONE => S
                | SOME t => walk(t,A.sub(levels,x),S)
 
-           and walk(NODE(y,succ_y),level_x,S) = 
+           and walk(NODE(y,succ_y),level_x,S) =
            if A.sub(visited,y) <> stamp then
            let val _ = A.update(visited,y,stamp)
                fun foreachJedge([],S) = S
                  | foreachJedge(z::zs,S) =
                    let val level_z = A.sub(levels,z)
-                   in  if level_z <= level_x then 
-                          if isLive z andalso A.sub(in_phi,z) <> stamp 
-                           (* z is a new IDF^+ candidate; 
+                   in  if level_z <= level_x then
+                          if isLive z andalso A.sub(in_phi,z) <> stamp
+                           (* z is a new IDF^+ candidate;
                             * make sure it is live.
                             *)
                           then (A.update(in_phi,z,stamp);
@@ -170,7 +170,7 @@ struct
                        else S
                    end
                fun foreachEedge([], S) = S
-                 | foreachEedge((t as NODE(z,_))::ts,S) = 
+                 | foreachEedge((t as NODE(z,_))::ts,S) =
                      foreachEedge(ts,if isLive z then walk(t,level_x,S) else S)
 
                val _ = if stats then visitCount := !visitCount + 1 else ();
@@ -185,7 +185,7 @@ struct
                | x::xs => (A.update(piggybank,l,xs);
                            visitAll(l,visit(x,S)))
 
-           val L   = init(xs,~1) 
+           val L   = init(xs,~1)
            val _   = initLiveIn localLiveIn
            val IDF = visitAll(L,[])
        in  if stats then idfSize := !idfSize + length IDF else ();

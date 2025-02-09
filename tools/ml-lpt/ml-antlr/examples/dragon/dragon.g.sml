@@ -1,4 +1,4 @@
-structure 
+structure
 Tokens = struct
 
     datatype token = EOF
@@ -120,7 +120,7 @@ end
 functor ParseFn(Lex : ANTLR_LEXER) = struct
 
   local
-    structure Tok = 
+    structure Tok =
 Tokens
     structure UserCode =
       struct
@@ -133,73 +133,73 @@ Tokens
   val catSemi = String.concatWith "; "
   val catSemiNl = String.concatWith ";\n"
 
-fun program_PROD_1_ACT (ID, LP, RP, DOT, SR1, SR2, SEMI, compound_statement, id_list, KW_program, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), compound_statement_SPAN : (Lex.pos * Lex.pos), id_list_SPAN : (Lex.pos * Lex.pos), KW_program_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
-  ( catNl [ 
-	 cat ["program ", ID, "(", id_list, ");"],
-	 catNl   SR1, catNlNl SR2,
-	 compound_statement ^ "."
+fun program_PROD_1_ACT (ID, LP, RP, DOT, SR1, SR2, SEMI, compound_statement, id_list, KW_program, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), DOT_SPAN : (Lex.pos * Lex.pos), SR1_SPAN : (Lex.pos * Lex.pos), SR2_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), compound_statement_SPAN : (Lex.pos * Lex.pos), id_list_SPAN : (Lex.pos * Lex.pos), KW_program_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
+  ( catNl [
+         cat ["program ", ID, "(", id_list, ");"],
+         catNl   SR1, catNlNl SR2,
+         compound_statement ^ "."
       ])
-fun id_list_PROD_1_ACT (ID, SR, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun id_list_PROD_1_ACT (ID, SR, ID_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catCm (ID::SR) )
-fun declaration_PROD_1_ACT (SEMI, id_list_type, KW_var, SEMI_SPAN : (Lex.pos * Lex.pos), id_list_type_SPAN : (Lex.pos * Lex.pos), KW_var_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun declaration_PROD_1_ACT (SEMI, id_list_type, KW_var, SEMI_SPAN : (Lex.pos * Lex.pos), id_list_type_SPAN : (Lex.pos * Lex.pos), KW_var_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat ["var ", id_list_type, ";"] )
-fun compound_type_PROD_2_ACT (LSB, RSB, DOT1, DOT2, INT1, INT2, KW_array, standard_type, KW_of, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), DOT1_SPAN : (Lex.pos * Lex.pos), DOT2_SPAN : (Lex.pos * Lex.pos), INT1_SPAN : (Lex.pos * Lex.pos), INT2_SPAN : (Lex.pos * Lex.pos), KW_array_SPAN : (Lex.pos * Lex.pos), standard_type_SPAN : (Lex.pos * Lex.pos), KW_of_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun compound_type_PROD_2_ACT (LSB, RSB, DOT1, DOT2, INT1, INT2, KW_array, standard_type, KW_of, LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), DOT1_SPAN : (Lex.pos * Lex.pos), DOT2_SPAN : (Lex.pos * Lex.pos), INT1_SPAN : (Lex.pos * Lex.pos), INT2_SPAN : (Lex.pos * Lex.pos), KW_array_SPAN : (Lex.pos * Lex.pos), standard_type_SPAN : (Lex.pos * Lex.pos), KW_of_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat ["array [", IntInf.toString INT1, "..", IntInf.toString INT2, "] of ", standard_type] )
-fun standard_type_PROD_1_ACT (KW_integer, KW_integer_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun standard_type_PROD_1_ACT (KW_integer, KW_integer_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "integer" )
-fun standard_type_PROD_2_ACT (KW_real, KW_real_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun standard_type_PROD_2_ACT (KW_real, KW_real_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "real" )
-fun id_list_type_PROD_1_ACT (compound_type, COLON, id_list, compound_type_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), id_list_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun id_list_type_PROD_1_ACT (compound_type, COLON, id_list, compound_type_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), id_list_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catSp [id_list, ":", compound_type] )
-fun subprogram_declaration_PROD_1_ACT (SR, SEMI, compound_statement, subprogram_head, SR_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), compound_statement_SPAN : (Lex.pos * Lex.pos), subprogram_head_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun subprogram_declaration_PROD_1_ACT (SR, SEMI, compound_statement, subprogram_head, SR_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), compound_statement_SPAN : (Lex.pos * Lex.pos), subprogram_head_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catNl [subprogram_head, catNl SR, compound_statement ^ ";"] )
-fun subprogram_head_PROD_1_ACT (ID, SEMI, standard_type, COLON, arguments, KW_function, ID_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), standard_type_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), arguments_SPAN : (Lex.pos * Lex.pos), KW_function_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun subprogram_head_PROD_1_ACT (ID, SEMI, standard_type, COLON, arguments, KW_function, ID_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), standard_type_SPAN : (Lex.pos * Lex.pos), COLON_SPAN : (Lex.pos * Lex.pos), arguments_SPAN : (Lex.pos * Lex.pos), KW_function_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat ["function ", ID, arguments, " : ", standard_type, ";"] )
-fun subprogram_head_PROD_2_ACT (ID, SEMI, KW_procedure, arguments, ID_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), KW_procedure_SPAN : (Lex.pos * Lex.pos), arguments_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun subprogram_head_PROD_2_ACT (ID, SEMI, KW_procedure, arguments, ID_SPAN : (Lex.pos * Lex.pos), SEMI_SPAN : (Lex.pos * Lex.pos), KW_procedure_SPAN : (Lex.pos * Lex.pos), arguments_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat ["procedure ", ID, arguments, ";"] )
-fun arguments_PROD_1_ACT (LP, RP, parameter_list, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), parameter_list_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun arguments_PROD_1_ACT (LP, RP, parameter_list, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), parameter_list_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "(" ^ parameter_list ^ ")" )
-fun arguments_PROD_2_ACT (FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun arguments_PROD_2_ACT (FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "" )
-fun parameter_list_PROD_1_ACT (SR, id_list_type, SR_SPAN : (Lex.pos * Lex.pos), id_list_type_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun parameter_list_PROD_1_ACT (SR, id_list_type, SR_SPAN : (Lex.pos * Lex.pos), id_list_type_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catSemi (id_list_type::SR) )
-fun compound_statement_PROD_1_SUBRULE_1_PROD_1_ACT (SR, KW_begin, statement, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun compound_statement_PROD_1_SUBRULE_1_PROD_1_ACT (SR, KW_begin, statement, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catSemiNl (statement::SR) )
-fun compound_statement_PROD_1_ACT (SR, KW_begin, KW_end, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), KW_end_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun compound_statement_PROD_1_ACT (SR, KW_begin, KW_end, SR_SPAN : (Lex.pos * Lex.pos), KW_begin_SPAN : (Lex.pos * Lex.pos), KW_end_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catNl ["begin", getOpt(SR, ""), "end"] )
-fun statement_PROD_1_ACT (exp, variable, ASSIGNOP, exp_SPAN : (Lex.pos * Lex.pos), variable_SPAN : (Lex.pos * Lex.pos), ASSIGNOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun statement_PROD_1_ACT (exp, variable, ASSIGNOP, exp_SPAN : (Lex.pos * Lex.pos), variable_SPAN : (Lex.pos * Lex.pos), ASSIGNOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat [variable, " := ", exp] )
-fun statement_PROD_4_ACT (exp, KW_else, KW_then, statement1, statement2, KW_if, exp_SPAN : (Lex.pos * Lex.pos), KW_else_SPAN : (Lex.pos * Lex.pos), KW_then_SPAN : (Lex.pos * Lex.pos), statement1_SPAN : (Lex.pos * Lex.pos), statement2_SPAN : (Lex.pos * Lex.pos), KW_if_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun statement_PROD_4_ACT (exp, KW_else, KW_then, statement1, statement2, KW_if, exp_SPAN : (Lex.pos * Lex.pos), KW_else_SPAN : (Lex.pos * Lex.pos), KW_then_SPAN : (Lex.pos * Lex.pos), statement1_SPAN : (Lex.pos * Lex.pos), statement2_SPAN : (Lex.pos * Lex.pos), KW_if_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat ["if ", exp, " then ", statement1, " else ", statement2] )
-fun statement_PROD_5_ACT (exp, KW_while, KW_do, statement, exp_SPAN : (Lex.pos * Lex.pos), KW_while_SPAN : (Lex.pos * Lex.pos), KW_do_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun statement_PROD_5_ACT (exp, KW_while, KW_do, statement, exp_SPAN : (Lex.pos * Lex.pos), KW_while_SPAN : (Lex.pos * Lex.pos), KW_do_SPAN : (Lex.pos * Lex.pos), statement_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat ["while ", exp, " do ", statement] )
-fun variable_PROD_2_ACT (ID, LSB, RSB, exp, ID_SPAN : (Lex.pos * Lex.pos), LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun variable_PROD_2_ACT (ID, LSB, RSB, exp, ID_SPAN : (Lex.pos * Lex.pos), LSB_SPAN : (Lex.pos * Lex.pos), RSB_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat [ID, "[", exp, "]"] )
-fun procedure_statement_PROD_2_ACT (ID, LP, RP, SR, exp, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun procedure_statement_PROD_2_ACT (ID, LP, RP, SR, exp, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat [ID, "(", catCm (exp::SR), ")" ] )
-fun exp_PROD_1_SUBRULE_1_PROD_1_ACT (simple_exp, RELOP, simple_exp_SPAN : (Lex.pos * Lex.pos), RELOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun exp_PROD_1_SUBRULE_1_PROD_1_ACT (simple_exp, RELOP, simple_exp_SPAN : (Lex.pos * Lex.pos), RELOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( RELOP ^ " " ^ simple_exp )
-fun exp_PROD_1_ACT (SR, simple_exp, SR_SPAN : (Lex.pos * Lex.pos), simple_exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun exp_PROD_1_ACT (SR, simple_exp, SR_SPAN : (Lex.pos * Lex.pos), simple_exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catSp [simple_exp, getOpt(SR, "")] )
-fun simple_exp_PROD_1_SUBRULE_1_PROD_1_ACT (signed_term, ADDOP, signed_term_SPAN : (Lex.pos * Lex.pos), ADDOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun simple_exp_PROD_1_SUBRULE_1_PROD_1_ACT (signed_term, ADDOP, signed_term_SPAN : (Lex.pos * Lex.pos), ADDOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( ADDOP ^ " " ^signed_term )
-fun simple_exp_PROD_1_ACT (SR, signed_term, SR_SPAN : (Lex.pos * Lex.pos), signed_term_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun simple_exp_PROD_1_ACT (SR, signed_term, SR_SPAN : (Lex.pos * Lex.pos), signed_term_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catSp (signed_term::SR) )
-fun signed_term_PROD_1_ACT (term, MINUS, term_SPAN : (Lex.pos * Lex.pos), MINUS_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun signed_term_PROD_1_ACT (term, MINUS, term_SPAN : (Lex.pos * Lex.pos), MINUS_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "-" ^ term )
-fun term_PROD_1_SUBRULE_1_PROD_1_ACT (factor, MULOP, factor_SPAN : (Lex.pos * Lex.pos), MULOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun term_PROD_1_SUBRULE_1_PROD_1_ACT (factor, MULOP, factor_SPAN : (Lex.pos * Lex.pos), MULOP_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( MULOP ^ " " ^ factor )
-fun term_PROD_1_ACT (SR, factor, SR_SPAN : (Lex.pos * Lex.pos), factor_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun term_PROD_1_ACT (SR, factor, SR_SPAN : (Lex.pos * Lex.pos), factor_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( catSp (factor::SR) )
-fun factor_PROD_2_ACT (ID, LP, RP, SR, exp, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun factor_PROD_2_ACT (ID, LP, RP, SR, exp, ID_SPAN : (Lex.pos * Lex.pos), LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), SR_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( cat [ID, "(", catCm (exp::SR), ")" ] )
-fun factor_PROD_3_ACT (INT, INT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun factor_PROD_3_ACT (INT, INT_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( IntInf.toString INT )
-fun factor_PROD_4_ACT (REAL, REAL_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun factor_PROD_4_ACT (REAL, REAL_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( Real.toString REAL )
-fun factor_PROD_5_ACT (LP, RP, exp, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun factor_PROD_5_ACT (LP, RP, exp, LP_SPAN : (Lex.pos * Lex.pos), RP_SPAN : (Lex.pos * Lex.pos), exp_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "(" ^ exp ^ ")" )
-fun factor_PROD_6_ACT (factor, KW_not, factor_SPAN : (Lex.pos * Lex.pos), KW_not_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+fun factor_PROD_6_ACT (factor, KW_not, factor_SPAN : (Lex.pos * Lex.pos), KW_not_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) =
   ( "not " ^ factor )
       end (* UserCode *)
 
@@ -208,20 +208,20 @@ fun factor_PROD_6_ACT (factor, KW_not, factor_SPAN : (Lex.pos * Lex.pos), KW_not
       structure Lex = Lex)
     structure EBNF = AntlrEBNF(
       struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
+        type strm = Err.wstream
+        val getSpan = Err.getSpan
       end)
 
     fun mk lexFn = let
 fun getS() = {}
 fun putS{} = ()
 fun unwrap (ret, strm, repairs) = (ret, strm, repairs)        val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
-	fun fail() = Err.failure eh
-	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) = 
-	        (Err.whileDisabled eh (fn() => prod strm)) 
-		handle Err.ParseError => try (prods)
+        fun fail() = Err.failure eh
+        fun tryProds (strm, prods) = let
+          fun try [] = fail()
+            | try (prod :: prods) =
+                (Err.whileDisabled eh (fn() => prod strm))
+                handle Err.ParseError => try (prods)
           in try prods end
 fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
@@ -356,7 +356,7 @@ fun matchKW_program strm = (case (lex(strm))
   | _ => fail()
 (* end case *))
 
-val (program_NT) = 
+val (program_NT) =
 let
 fun exp_NT (strm) = let
       val (simple_exp_RES, simple_exp_SPAN, strm') = simple_exp_NT(strm)

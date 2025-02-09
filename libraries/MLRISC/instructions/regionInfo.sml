@@ -7,8 +7,8 @@ sig
     *
     * Mutability: is the region writable?
     * This can be mutatble or immutable
-    * 
-    * A strong update to the same exact location always override the 
+    *
+    * A strong update to the same exact location always override the
     * previous action.
     *)
    datatype action = INIT | READ | UPDATE

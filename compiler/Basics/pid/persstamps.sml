@@ -17,12 +17,12 @@ struct
 
   fun toBytes (PS x) = x
 
-  fun fromBytes v = 
+  fun fromBytes v =
       if Word8Vector.length v = persStampSize then PS v
       else ErrorMsg.impossible "PersStamps.fromBytes"
 
   (* convert the persstamp to a printable representation (hex digits) *)
-  fun toHex (PS pid) = 
+  fun toHex (PS pid) =
       let fun cvtByte b = StringCvt.padLeft #"0" 2 (Word8.toString b)
           fun f (b, l) = cvtByte b :: l
       in String.concat (Word8Vector.foldr f [] pid)

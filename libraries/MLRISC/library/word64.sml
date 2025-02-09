@@ -2,7 +2,7 @@
  * 64-bit word datatype.
  * Word64.word is implemented as Word32.word * Word32.word
  * A constant of this type can be specified as a pair of 32-bit words.
- * Also pattern matching can also be applied in the same manner. 
+ * Also pattern matching can also be applied in the same manner.
  *
  * -- Allen
  *)
@@ -21,23 +21,23 @@ struct
    fun toLargeWordX(x,y) = y (* strip high order bits *)
    fun fromLargeWord w = (0w0 : W.word,w)
 
-   fun toLargeInt(x:W.word,y) = 
+   fun toLargeInt(x:W.word,y) =
         if x <> 0w0 orelse isNeg y then raise Overflow
         else W.toLargeInt y
 
-   fun toLargeIntX(x,y) = 
-         if x = 0w0 then 
+   fun toLargeIntX(x,y) =
+         if x = 0w0 then
            if isNeg y then raise Overflow else W.toLargeInt y
          else if (W.notb x) = 0w0 then
            if isNeg y then W.toLargeIntX y else raise Overflow
-         else raise Overflow    
+         else raise Overflow
 
    fun fromLargeInt i = (if i >= 0 then 0w0 else W.notb 0w0,W.fromLargeInt i)
 
-   fun toInt(x:W.word,y) = 
+   fun toInt(x:W.word,y) =
         if x <> 0w0 orelse isNeg y then raise Overflow else W.toInt y
 
-   fun toIntX(x,y) = 
+   fun toIntX(x,y) =
          if x = 0w0 then
             if isNeg y then raise Overflow else W.toInt y
          else if (W.notb x) = 0w0 then
@@ -55,7 +55,7 @@ struct
 
    fun notb(a,b) = (W.notb a,W.notb b)
 
-   fun plus((a,b),(c,d)) = 
+   fun plus((a,b),(c,d)) =
    let val y = W.+(b,d)
        val x = W.+(a,c)
        val x = if y < b then W.+(x,0w1) else x (* carry *)
@@ -72,7 +72,7 @@ struct
         * Split them into two pairs of 16 bit words in order to deal
         * with carries in a portable manner.  This is really annoying.
         *)
-       fun multiply(u,v) = 
+       fun multiply(u,v) =
        let val a = W.>>(u,0w16)
            val b = W.andb(u,0wxffff)
            val c = W.>>(v,0w16)
@@ -109,7 +109,7 @@ struct
        else EQUAL
 
    fun sll((a,b),c) =
-       if c >= 0w32 then  
+       if c >= 0w32 then
             let val x = W.<<(b,c-0w32)
             in  (x,0w0) end
        else let val x = W.<<(a,c)
@@ -117,7 +117,7 @@ struct
                 val z = W.>>(b,0w32-c)
             in  (W.orb(x,z),y) end
 
-   fun srl((a,b),c) = 
+   fun srl((a,b),c) =
        if c >= 0w32 then
             let val y = W.>>(a,c-0w32)
             in  (0w0,y) end
@@ -126,7 +126,7 @@ struct
                 val z = W.<<(W.andb(a,W.<<(0w1,c)-0w1),0w32-c)
             in  (x,W.orb(y,z)) end
 
-   fun sra((a,b),c) = 
+   fun sra((a,b),c) =
        if c >= 0w32 then
             let val y = W.~>>(a,c-0w32)
                 val x = if isNeg a then W.notb 0w0 else 0w0
@@ -140,7 +140,7 @@ struct
 
    fun max (w1, w2) = if gt(w1,w2) then w1 else w2
 
-   fun divide((a,b):word,(0w0,0w0):word) = raise Div 
+   fun divide((a,b):word,(0w0,0w0):word) = raise Div
      | divide((0w0,b),(0w0,d)) = (0w0:W.word,b div d)
      | divide((a,b),(c,d)) = raise Match
       (* okay, not yet supported, I'm lazy *)
@@ -155,7 +155,7 @@ struct
        in  a^padZero(b,8-size b) end
 
    fun bin(0w0,y) = W.fmt StringCvt.BIN y
-     | bin(x,y) = 
+     | bin(x,y) =
        let val a = W.fmt StringCvt.BIN x
            val b = W.fmt StringCvt.BIN y
        in  a^padZero(b,32-size b) end
@@ -168,7 +168,7 @@ struct
    val toString = hex
 
    val scan = fn _ => raise Match
-   fun fromString s = 
+   fun fromString s =
        case W.fromString s of
          SOME w => SOME(0w0:W.word,w)
        | NONE => NONE

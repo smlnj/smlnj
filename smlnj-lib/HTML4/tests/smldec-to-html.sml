@@ -272,7 +272,7 @@ fun ppHTMLParseStream' ppstrm istrm =
                 else PP.space ppstrm 1;
                 (!opens', openstk)
             end
-        val _ = H4U.stream_foldl visit (0,[]) istrm 
+        val _ = H4U.stream_foldl visit (0,[]) istrm
             handle BadStream => raise IllFormedHTMLParseStream istrm
     in () end
 

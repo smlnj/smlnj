@@ -15,7 +15,7 @@ struct
 
    fun visualize out (G.GRAPH G) =
    let val spaces = "                                           ";
-       fun int n  = out (Int.toString n) 
+       fun int n  = out (Int.toString n)
        fun tab t  = out(String.substring(spaces,0,t)) handle _ => out spaces
        fun semi() = out ";"
        fun name n = if n < 0 then (out "XX"; int(~n))
@@ -24,8 +24,8 @@ struct
 
        and doAttrib t comma (L.LABEL "")   = false
          | doAttrib t comma (L.LABEL l)    = (out comma; tab t; label l; true)
-	 | doAttrib t comma (L.COLOR c)    = 
-	     (out comma; tab t; out "color=\"";  out c;  out "\"";  true)
+         | doAttrib t comma (L.COLOR c)    =
+             (out comma; tab t; out "color=\"";  out c;  out "\"";  true)
          | doAttrib t comma _              = false
 
        and doAttribs t comma [] = ()
@@ -42,7 +42,7 @@ struct
    in  out("digraph " ^ #name G ^ " {\n");
        #forall_nodes G (doNode 2);
        #forall_edges G (doEdge 2);
-       out "}\n" 
+       out "}\n"
    end
 
 end

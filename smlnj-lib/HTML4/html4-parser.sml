@@ -67,21 +67,21 @@ fun expectEnterNTInDomain ntMap pstrm = let
       val pstrmHd = H4U.stream_hd pstrm
             handle _ => H4U.VisitT H4T.EOF
       fun expectationError () = let
-	    val expectedNTs = String.concatWith ", " (map Atom.toString (AtomMap.listKeys ntMap))
-	    val msg = String.concat [
+            val expectedNTs = String.concatWith ", " (map Atom.toString (AtomMap.listKeys ntMap))
+            val msg = String.concat [
                     "Expected entry of one of ", expectedNTs, "; got ",
-		    tokVisitationToString pstrmHd, " instead."
-		  ]
+                    tokVisitationToString pstrmHd, " instead."
+                  ]
             in
-	      IllFormedHTMLParseStream(pstrm, SOME msg)
-	    end
+              IllFormedHTMLParseStream(pstrm, SOME msg)
+            end
       in
-	case pstrmHd
-	 of H4U.EnterNT ntAtom =>
-	      if AtomMap.inDomain (ntMap, ntAtom)
-		then AtomMap.lookup (ntMap, ntAtom)
-		else raise (expectationError ())
-	  | _ => raise (expectationError ())
+        case pstrmHd
+         of H4U.EnterNT ntAtom =>
+              if AtomMap.inDomain (ntMap, ntAtom)
+                then AtomMap.lookup (ntMap, ntAtom)
+                else raise (expectationError ())
+          | _ => raise (expectationError ())
         (* end case *)
       end
 
@@ -269,20 +269,20 @@ fun htmlFromParseStream pstrm0 =
     in if not (isSome headDataListOpt)
       then (pstrm4, NONE)
       else (case bodyOrFramesetFromParseStream pstrm4
-	of (pstrm5, SOME content) => let
-	     val (pstrm6, _) = optVisitTok "ENDHTML" pstrm5
-	     val pstrm7 = (skipWhitespaceOrComment o
-			  (expectExitNT "DOCUMENT") o
-			  skipWhitespaceOrComment) pstrm6
-	     in (
-	       pstrm7,
-	       SOME (H4.HTML{
-		   version = theVersion,
-		   head = [],
-		   content = content
-		 })
-	     ) end
-	 | (pstrm5, NONE) => (pstrm5, NONE)
+        of (pstrm5, SOME content) => let
+             val (pstrm6, _) = optVisitTok "ENDHTML" pstrm5
+             val pstrm7 = (skipWhitespaceOrComment o
+                          (expectExitNT "DOCUMENT") o
+                          skipWhitespaceOrComment) pstrm6
+             in (
+               pstrm7,
+               SOME (H4.HTML{
+                   version = theVersion,
+                   head = [],
+                   content = content
+                 })
+             ) end
+         | (pstrm5, NONE) => (pstrm5, NONE)
        (* end case *))
     end
 and headFromParseStream pstrm0 =
@@ -314,19 +314,19 @@ and bodyFromParseStream pstrm0 =
     let val pstrm1 = expectEnterNT "BODY" pstrm0
         val (pstrm2, startbodyTokOpt) = optVisitTok "STARTBODY" pstrm1
         val attrs = (case startbodyTokOpt
-	       of SOME startbody => (case H4TU.tokGetAttrs startbody
-		     of SOME attrs => attrs
-		      | NONE => []
-		    (* end case *))
-		| NONE => []
-	      (* end case *))
+               of SOME startbody => (case H4TU.tokGetAttrs startbody
+                     of SOME attrs => attrs
+                      | NONE => []
+                    (* end case *))
+                | NONE => []
+              (* end case *))
         val (pstrm3, children) =
             streamConsumeUntil blockOrScriptFromParseStream
                                (isEither(isExitNT "BODY", isVisitT "ENDBODY"))
                                (skipWhitespaceOrComment pstrm2)
         val (pstrm4, _) = optVisitTok "ENDBODY" pstrm3
         val pstrm5 = expectExitNT "BODY" (skipWhitespaceOrComment pstrm4)
-    in (pstrm5, SOME (H4.BODY (attrs, listOfOptsToList children))) end 
+    in (pstrm5, SOME (H4.BODY (attrs, listOfOptsToList children))) end
 and framesetFromParseStream pstrm0 =
     let val pstrm1 = expectEnterNT "FRAMESET" pstrm0
         val pstrm2 = expectVisitT "STARTFRAMESET" pstrm1
@@ -414,11 +414,11 @@ and thOrTdFromParseStream pstrm =
 and optgroupOrOptionFromParseStream pstrm =
     if isEnterNT "OPTGROUP" pstrm
       then let
-	fun parseOpt pstrm = (case htmlOptionFromParseStream pstrm
-	       of (pstrm', SOME(H4.OPTION stuff)) => (pstrm', SOME stuff)
-		| (pstrm', _) => (pstrm', NONE)
-	      (* end case *))
-	in htmlNaryFromParseStream "OPTGROUP" H4.OPTGROUP parseOpt pstrm end
+        fun parseOpt pstrm = (case htmlOptionFromParseStream pstrm
+               of (pstrm', SOME(H4.OPTION stuff)) => (pstrm', SOME stuff)
+                | (pstrm', _) => (pstrm', NONE)
+              (* end case *))
+        in htmlNaryFromParseStream "OPTGROUP" H4.OPTGROUP parseOpt pstrm end
       else htmlOptionFromParseStream pstrm
 and htmlOptionFromParseStream pstrm =
     htmlNaryFromParseStream "OPTION" H4.OPTION cdataFromParseStream pstrm
@@ -696,7 +696,7 @@ fun fromParseTree pt =
 fun fromString str = let
     val pt_opt = parseStream (TextIO.openString str)
 in case pt_opt
-    of NONE => NONE 
+    of NONE => NONE
      | SOME pt => fromParseTree pt
 end
 

@@ -17,7 +17,7 @@
  *
  * Revision 1.1.1.1  1996/01/31  16:02:40  george
  * Version 109
- * 
+ *
  *)
 
 signature UNIX_SOCK =
@@ -36,11 +36,11 @@ signature UNIX_SOCK =
     val fromAddr : sock_addr -> string
 
     structure Strm : sig
-	val socket     : unit -> 'a stream_sock
-	val socketPair : unit -> ('a stream_sock * 'a stream_sock)
+        val socket     : unit -> 'a stream_sock
+        val socketPair : unit -> ('a stream_sock * 'a stream_sock)
       end
     structure DGrm : sig
-	val socket     : unit -> dgram_sock
-	val socketPair : unit -> (dgram_sock * dgram_sock)
+        val socket     : unit -> dgram_sock
+        val socketPair : unit -> (dgram_sock * dgram_sock)
       end
   end;

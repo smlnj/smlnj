@@ -45,17 +45,17 @@ structure Universal :> UNIVERSAL =
     type 'a tag = { inj : 'a -> universal, prj : universal -> 'a option }
 
     fun 'a tag () = let
-	  exception TAG of 'a
-	  in {
-	    inj = TAG,
-	    prj = fn (TAG x) => SOME x | _ => NONE
-	  } end
+          exception TAG of 'a
+          in {
+            inj = TAG,
+            prj = fn (TAG x) => SOME x | _ => NONE
+          } end
 
     fun tagInject (tag : 'a tag) = #inj tag
     fun tagIs (tag : 'a tag) univ = Option.isSome(#prj tag univ)
     fun tagProject (tag : 'a tag) univ = (case #prj tag univ
-	   of SOME x => x
-	    | NONE => raise Match
-	  (* end case *))
+           of SOME x => x
+            | NONE => raise Match
+          (* end case *))
 
   end

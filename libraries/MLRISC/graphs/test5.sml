@@ -1,11 +1,11 @@
 CM.make "../cm/Graphs.cm";
 
 (* page 556 in CLR *)
-functor TestAllPairsShortestPaths(AP : ALL_PAIRS_SHORTEST_PATHS 
+functor TestAllPairsShortestPaths(AP : ALL_PAIRS_SHORTEST_PATHS
                                       where type Num.elem = int) =
 struct
 val G as Graph.GRAPH g = DirectedGraph.graph("foo",(),10) :
-    (string,int,unit) Graph.graph 
+    (string,int,unit) Graph.graph
 val _ = app (#add_node g)
           [(1,"1"),
            (2,"2"),
@@ -18,11 +18,11 @@ val E =   [(1,2,3),
            (1,5,~4),
            (2,4,1),
            (2,5,7),
-           (3,2,4), 
+           (3,2,4),
            (4,1,2),
            (4,3,~5),
            (5,4,6)
-          ] 
+          ]
 val _ = app (#add_edge g) E
 (* val _ = app (fn (i,j,w) => #add_edge g (j,i,w)) E *)
 
@@ -46,10 +46,10 @@ let val N = 5
 in  g 1
 end
 
-fun test() = 
+fun test() =
     let fun weight(_,_,w) = w
         val {dist,pred} = AP.all_pairs_shortest_paths {graph=G,weight=weight}
-        val dist=toList dist 
+        val dist=toList dist
         val pred=toList pred
     in  if dist <> dist' orelse pred <> pred' then raise Match else ();
         {dist=dist,pred=pred}
@@ -60,14 +60,14 @@ end
 structure TestWarshall = TestAllPairsShortestPaths(
             FloydWarshall(struct type elem = int
                                    open Int
-                                   val zero = 0 
+                                   val zero = 0
                                    val == : int * int -> bool = op =
                                    val inf = 100000000
                                 end))
 structure TestJohnson = TestAllPairsShortestPaths(
              Johnson(struct type elem = int
                                    open Int
-                                   val zero = 0 
+                                   val zero = 0
                                    val == : int * int -> bool = op =
                                    val inf = 100000000
                                 end))

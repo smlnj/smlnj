@@ -1,4 +1,4 @@
-(* 
+(*
  * burg-ast.sml
  *
  * Abstract syntax trees for BURG specifications.
@@ -18,25 +18,25 @@
  *
  * Revision 1.1.1.1  1996/01/31  16:01:24  george
  * Version 109
- * 
+ *
  *)
 
 structure BurgAST =
   struct
 
     datatype decl_ast = START of string
-		      | TERM of (string * string option) list
-		      | TERMPREFIX of string
-		      | RULEPREFIX of string
-		      | SIG of string
+                      | TERM of (string * string option) list
+                      | TERMPREFIX of string
+                      | RULEPREFIX of string
+                      | SIG of string
 
     datatype pattern_ast = PAT of (string * pattern_ast list)
 
     datatype rule_ast = RULE of (string * pattern_ast * string * int list)
 
     datatype spec_ast = SPEC of {head : string list,
-				 decls : decl_ast list, 
-				 rules : rule_ast list,
-				 tail : string list}
+                                 decls : decl_ast list,
+                                 rules : rule_ast list,
+                                 tail : string list}
   end (* BurgAST *)
 

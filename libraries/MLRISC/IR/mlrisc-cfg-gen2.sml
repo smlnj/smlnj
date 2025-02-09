@@ -1,6 +1,6 @@
 (*
  * This module builds a CFG from a stream of instructions.
- * We use the FLOWGRPAH_GEN interface here, which is the 
+ * We use the FLOWGRPAH_GEN interface here, which is the
  * default interface used by the core MLRISC.
  *
  * -- Allen
@@ -12,7 +12,7 @@ functor CFGGen
    structure MLTree : MLTREE
      sharing CFG.I = InsnProps.I
      sharing MLTree.Constant = InsnProps.I.Constant
-     sharing MLTree.PseudoOp = CFG.P 
+     sharing MLTree.PseudoOp = CFG.P
   ) : FLOWGRAPH_GEN =
 struct
 
@@ -37,16 +37,16 @@ struct
        val {stream,next} = Builder.builder(!cfg)
        val S.STREAM{beginCluster,endCluster,pseudoOp,emit,exitBlock,
                     getAnnotations,comment,annotation,
-                    defineLabel,entryLabel,...} 
+                    defineLabel,entryLabel,...}
                       = stream
-       fun endCFG a = 
+       fun endCFG a =
        let val _      = endCluster a
            val oldCFG = !cfg
            val newCFG = CFG.new()
        in  cfg := newCFG;
            next newCFG;
            compile oldCFG
-       end 
+       end
 
    in  S.STREAM{beginCluster   = beginCluster,
                 endCluster     = endCFG,

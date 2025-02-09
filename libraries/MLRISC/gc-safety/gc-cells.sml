@@ -9,12 +9,12 @@ struct
    structure C  = C
    structure GC = GC
    structure CB = CellsBasis
-  
+
    (*
-    * Generate a new virtual register and update the gc information 
+    * Generate a new virtual register and update the gc information
     * at the same time.
     *)
-   fun newCell k = 
+   fun newCell k =
    let val new = C.newCell k
        val set = #set GC.GC_TYPE
        fun genVar gc =
@@ -26,11 +26,11 @@ struct
    fun getGCType(CB.CELL{an, ...}) = #lookup GC.GC_TYPE (!an)
    fun setGCType(CB.CELL{an, ...}, gc) = an := #set GC.GC_TYPE (gc, !an)
 
-   fun printType(CB.CELL{an, ...}) = 
+   fun printType(CB.CELL{an, ...}) =
        case #get GC.GC_TYPE (!an) of
          SOME ty => ":"^GC.toString ty
        | NONE    => ":?"
 
-   val GCLIVEOUT = Annotations.new(SOME(fn _ => "GCLIVEOUT")) 
+   val GCLIVEOUT = Annotations.new(SOME(fn _ => "GCLIVEOUT"))
                      : (CB.cell * GC.gctype) list Annotations.property
 end

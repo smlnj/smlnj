@@ -5,12 +5,12 @@
  * -- Allen
  *)
 
-signature NO_ENTRY_VIEW = 
+signature NO_ENTRY_VIEW =
 sig
     val no_entry_view : ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
 end
 
-signature NO_EXIT_VIEW = 
+signature NO_EXIT_VIEW =
 sig
     val no_exit_view : ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
 end

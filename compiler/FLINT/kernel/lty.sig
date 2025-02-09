@@ -1,14 +1,14 @@
 (* COPYRIGHT (c) 1997 YALE FLINT PROJECT *)
 (* lty.sig *)
 
-signature LTY = sig 
+signature LTY = sig
 
 (* definitions of kind and kind-environment *)
 type tkind
 
 datatype tkindI
   = TK_MONO                                   (* ground mono tycon *)
-  | TK_BOX				      (* boxed/tagged tycon *)
+  | TK_BOX                                    (* boxed/tagged tycon *)
   | TK_SEQ of tkind list                      (* sequence of tycons *)
   | TK_FUN of tkind list * tkind              (* tycon function *)
 
@@ -34,9 +34,9 @@ type tyc
 (* tycEnv is a sequence of tycEnvElems representing a substitution or
  * type environment produced by lazy beta-reductions or pushing through
  * a lambda abstraction. It is encoded as a tyc so that it can be hash-consed
- * using the tyc hash consing mechanism. 
+ * using the tyc hash consing mechanism.
  *)
-type tycEnv 
+type tycEnv
 
 (* tycEnvs are represented by an encoding as tycs. The abstract representation
  * of tycEnvs would be given by:
@@ -52,7 +52,7 @@ type tycEnv
  *   when reducing a beta-redex (rule r1), and they are always initially of
  *   of the form Beta(0,args,ks)::nil.
  *)
-             
+
 datatype teBinder
   = Beta of int * tyc list * tkind list
       (* Beta(j,args,ks):
@@ -85,7 +85,7 @@ datatype tycI
   | TC_PROJ of tyc * int                      (* tyc projection *)
 
   | TC_SUM of tyc list                        (* sum tyc *)
-  | TC_FIX of {family: {size: int,            (* recursive tyc *) 
+  | TC_FIX of {family: {size: int,            (* recursive tyc *)
                         names: string vector,
                         gen : tyc,
                         params : tyc list},
@@ -104,12 +104,12 @@ datatype tycI
 (* definition of lty (hashed) and ltyI (internal, raw) *)
 type lty
 
-datatype ltyI          
-  = LT_TYC of tyc                             (* monomorphic type *)  
+datatype ltyI
+  = LT_TYC of tyc                             (* monomorphic type *)
   | LT_STR of lty list                        (* structure type *)
   | LT_FCT of lty list * lty list             (* functor type *)
   | LT_POLY of tkind list * lty list          (* polymorphic type *)
-    
+
   | LT_CONT of lty list                       (* internal cont type *)
   | LT_IND of lty * ltyI                      (* indirect type thunk *)
   | LT_ENV of lty * int * int * tycEnv        (* type closure *)
@@ -119,7 +119,7 @@ val unknown : tyc -> bool
 val wrap_is_whnm : tyc -> bool
 
 (** injections and projections on tkind, tyc, and lty *)
-val tk_inj : tkindI -> tkind 
+val tk_inj : tkindI -> tkind
 val tc_inj : tycI -> tyc
 val lt_inj : ltyI -> lty
 
@@ -144,7 +144,7 @@ val teLookup : tycEnv * int -> teBinder option
 val teLength : tycEnv -> int
 
 (** utility functions on tkindEnv *)
-type tkindEnv 
+type tkindEnv
 exception tkUnbound
 val initTkEnv        : tkindEnv
 val tkLookup         : tkindEnv * int * int -> tkind

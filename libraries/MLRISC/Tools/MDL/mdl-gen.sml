@@ -18,30 +18,30 @@ functor MDLGen
     structure SSAProps   : MDL_GEN_MODULE2
   (*structure DelaySlots : MD_GEN_MODULE
     structure SchedProps : MD_GEN_MODULE2 *)
-      sharing Comp = 
-              Cells.Comp = 
+      sharing Comp =
+              Cells.Comp =
               Shuffle.Comp =
-              Instr.Comp = 
-              Asm.Comp = 
-              MC.Comp = 
-              Dasm.Comp = 
+              Instr.Comp =
+              Asm.Comp =
+              MC.Comp =
+              Dasm.Comp =
               Props.Comp =
-              Jumps.Comp = 
+              Jumps.Comp =
               Rewrite.Comp =
               RTLComp.Comp =
               RTLProps.Comp (* =
-              DelaySlots.Comp =  
+              DelaySlots.Comp =
               SSAProps.Comp =
               SchedProps.Comp*)
       sharing Parser.Ast = Comp.Ast
-      sharing RTLComp = Rewrite.RTLComp = 
+      sharing RTLComp = Rewrite.RTLComp =
               RTLProps.RTLComp = SSAProps.RTLComp = Props.RTLComp
    ) : MDL_GEN =
 struct
 
-   fun doIt f x = 
-       if !Comp.Error.errorCount = 0 then 
-          (f x handle Comp.Error.Error => ()) 
+   fun doIt f x =
+       if !Comp.Error.errorCount = 0 then
+          (f x handle Comp.Error.Error => ())
        else ()
 
    (* Generate code! *)
@@ -53,7 +53,7 @@ struct
        Asm.gen md;
        MC.gen md;
        Dasm.gen md;
-       Jumps.gen md; 
+       Jumps.gen md;
        (* DelaySlots.gen md; *)
        (*
        let val compiled_rtls = RTLComp.compile md
@@ -61,22 +61,22 @@ struct
            doIt Rewrite.gen compiled_rtls;
            doIt Props.gen compiled_rtls;
            doIt RTLProps.gen compiled_rtls;
-           doIt SSAProps.gen compiled_rtls; 
-           doIt SchedProps.gen compiled_rtls; 
+           doIt SSAProps.gen compiled_rtls;
+           doIt SchedProps.gen compiled_rtls;
            RTLComp.dumpLog compiled_rtls
        end;  *)
        Comp.Error.log(Comp.Error.status());
        Comp.Error.closeLogFile()
       )
 
-   fun gen file = 
+   fun gen file =
        (print("[Processing "^file^"]\n");
         Comp.Error.init();
         codegen(Comp.compile(file,Parser.load file)) (* build ast *)
        )
 
-   fun exit() = if !Comp.Error.errorCount > 0 then 
-                     OS.Process.failure 
-                else OS.Process.success 
+   fun exit() = if !Comp.Error.errorCount > 0 then
+                     OS.Process.failure
+                else OS.Process.success
 
 end

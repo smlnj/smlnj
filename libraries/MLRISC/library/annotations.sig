@@ -5,20 +5,20 @@
  *  the optimizer.
  *
  *  Idea is stolen from Stephen Weeks
- * 
+ *
  *  -- Allen
  *)
 
 signature ANNOTATIONS =
 sig
-   
-   type annotation 
+
+   type annotation
    type annotations = annotation list
    type propList = annotations
- 
+
    exception NoProperty
 
-   type 'a property = 
+   type 'a property =
         { get      : annotations -> 'a option,
           peek     : annotation  -> 'a option,
           lookup   : annotations -> 'a,
@@ -41,11 +41,11 @@ sig
 
    (*
     * Pretty print an annotation
-    *) 
+    *)
    val toString : annotation -> string
 
    (*
-    * Attach a pretty printer   
+    * Attach a pretty printer
     *)
    val attachPrettyPrinter : (annotation -> string) -> unit
 

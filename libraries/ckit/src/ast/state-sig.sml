@@ -16,7 +16,7 @@
  *   - a stack of tables of switch statement labels (switchContext.switchLabels)
  * --------------------------------------------------------------------
  *)
-      
+
 signature STATE =
 sig
 
@@ -99,7 +99,7 @@ sig
     {globalState : globalState,
      localState : localState,
        (* the state records, included in case direct access to the
-	* state is required (probably shouldn't be) *)
+        * state is required (probably shouldn't be) *)
 
      locFuns :
       {pushLoc : SourceMap.location -> unit,
@@ -173,10 +173,10 @@ sig
        popSwitchLabels : unit -> unit,  (* leave a switch statement *)
        addSwitchLabel : LargeInt.int -> string option,
          (* record a new switch label; returns SOME errormsg if duplicate
-	  * or not within a switch *)
+          * or not within a switch *)
        addDefaultLabel : unit -> string option}}
          (* record a default label; returns SOME errormsg if multiple defaults,
-	  * or not within a switch *)
+          * or not within a switch *)
 
   (* state initialization functions *)
   val initGlobal : (stateInfo * Error.errorState) -> globalState

@@ -88,7 +88,7 @@ PVT status_t ReadImage (ml_state_t *msp, inbuf_t *bp, ml_val_t *objRef)
     ml_blast_hdr_t	blastHdr;
     ml_val_t		*externs;
     heap_arena_hdr_t	*arenaHdrs[NUM_OBJ_KINDS], *arenaHdrsBuf;
-    int			arenaHdrsSize, i;
+    size_t		arenaHdrsSize, i;
     gen_t		*gen1 = msp->ml_heap->gen[0];
 
     if ((HeapIO_ReadBlock(bp, &blastHdr, sizeof(blastHdr)) == FAILURE)

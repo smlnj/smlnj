@@ -1,0 +1,19 @@
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+tab_width = 8
+
+[*.{sml,sig,fun}]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+[Makefile]
+indent_style = tab
+tab_width = 8
+
+[*.{win32,bat}]
+end_of_line = crlf

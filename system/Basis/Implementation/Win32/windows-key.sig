@@ -9,7 +9,7 @@
 signature WINDOWS_KEY =
   sig
     include BIT_FLAGS
-    
+
     val allAccess : flags
     val createLink : flags
     val createSubKey : flags
@@ -20,6 +20,6 @@ signature WINDOWS_KEY =
     val read : flags
     val setValue : flags
     val write : flags
-  end 
+  end
 
 

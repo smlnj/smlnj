@@ -60,7 +60,7 @@ val files =
  "HPPA-GC.cm",
  "IA32-GC.cm",
  "PPC-GC.cm",*)
-];                        
+];
 
 val _ =  (* Try to guess the version *)
 use (case #version_id(Compiler.version) of

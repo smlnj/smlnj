@@ -10,17 +10,17 @@ fun stringToLines (s, initpos) =
         val sizes = map size lines
      in case lines
           of [x] => [(x,initpos)]
-           | x::rest => 
-	     rev(foldl (fn (s,c as (s0,p)::_) => (s, p+size s0+1)::c) [(x,initpos)] rest)
+           | x::rest =>
+             rev(foldl (fn (s,c as (s0,p)::_) => (s, p+size s0+1)::c) [(x,initpos)] rest)
     end
 
-fun splitAt (s, p) = 
+fun splitAt (s, p) =
     let val pre = substring(s,0,p)
         val post = substring(s,p,size s - p)
      in (pre,post)
     end
 
-fun hlctrl (s,p,hlstr) = 
+fun hlctrl (s,p,hlstr) =
     let val (pre,post) = splitAt (s,p)
      in concat [pre,hlstr,post]
     end

@@ -1,23 +1,23 @@
 (*
- *  A really stupid but (hopefully) working precedence parser 
+ *  A really stupid but (hopefully) working precedence parser
  *
  *  --Allen Leung (leunga@cs.nyu.edu)
- *) 
+ *)
 
 signature PRECEDENCE_PARSER =
 sig
 
    type precedence_stack
 
-   datatype fixity = INFIX of int 
-                   | INFIXR of int 
-                   | NONFIX 
+   datatype fixity = INFIX of int
+                   | INFIXR of int
+                   | NONFIX
    datatype 'a token  = ID  of string
                       | EXP of 'a
 
    exception PrecedenceError
 
-   val empty : precedence_stack 
+   val empty : precedence_stack
    val declare : precedence_stack * string * fixity -> precedence_stack
    val parse   : { stack         : precedence_stack,
                    app           : 'a * 'a -> 'a,
@@ -33,9 +33,9 @@ structure PrecedenceParser : PRECEDENCE_PARSER =
 struct
 
 
-   datatype fixity = INFIX of int 
-                   | INFIXR of int 
-                   | NONFIX 
+   datatype fixity = INFIX of int
+                   | INFIXR of int
+                   | NONFIX
    datatype 'a token  = ID of string
                       | EXP of 'a
 
@@ -63,8 +63,8 @@ struct
               raise PrecedenceError)
        fun err'(msg, x) = err(msg^" "^toString x)
 
-       (* 
-        * Parse with precedence. 
+       (*
+        * Parse with precedence.
         *)
        fun scan(p, tokens) =
            case tokens of
@@ -74,7 +74,7 @@ struct
            | (x,INFIX _)::_ => err'("dangling infix symbol", x)
            | (x,INFIXR _)::_ => err'("dangling infixr symbol", x)
            | (left,NONFIX)::(rest as (f,INFIX q)::rest') =>
-                if p >= q then 
+                if p >= q then
                   (left, rest)
                 else
                    let val (right, rest) = scan(q,rest')
@@ -92,7 +92,7 @@ struct
        fun scanAll [(x,INFIX _)] = x
          | scanAll [(x,INFIXR _)] = x
          | scanAll tokens = #1(scan(~1,tokens))
-             
+
    in  scanAll toks end
 
 end

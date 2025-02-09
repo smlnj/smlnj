@@ -28,9 +28,9 @@ struct
                   {defs : var list, uses: var list}
    type copy    = {dst : var list, src : var list} -> unit
 
-   structure DJ = DJGraph(Dom)  
+   structure DJ = DJGraph(Dom)
 
-   fun app f = 
+   fun app f =
    let fun g [] = ()
          | g (x::xs) = (f x; g xs)
    in  g end
@@ -39,7 +39,7 @@ struct
     * Place join nodes at the iterated dominance frontier of def_sites(v)
     * that is live.
     *)
-   fun place_joins (Dom as G.GRAPH dom) 
+   fun place_joins (Dom as G.GRAPH dom)
        { max_var=V, defs, is_live } =
    let val N           = #capacity dom ()
        val G.GRAPH cfg = Dom.cfg Dom
@@ -55,12 +55,12 @@ struct
        (* compute phi placements for a variable *)
        val IDFs = DJ.IDFs Dom
        fun place_phi(v,[])        = ()
-         | place_phi(v,def_sites) = 
+         | place_phi(v,def_sites) =
            let fun place_all [] = ()
-                 | place_all(Y::Ys) = 
+                 | place_all(Y::Ys) =
                    (if is_live(v,Y) then
                        A.update(phis,Y,(v,v,[])::A.sub(phis,Y))
-                    else (); 
+                    else ();
                     place_all Ys)
            in   place_all (IDFs def_sites)
            end
@@ -72,7 +72,7 @@ struct
    (*
     *  Rename variables and compute the ssa form
     *)
-   fun compute_ssa (Dom as G.GRAPH dom) 
+   fun compute_ssa (Dom as G.GRAPH dom)
           { max_var=V, defs, is_live, rename_stmt, insert_phi, rename_var } =
    let val N           = #capacity dom ()
        val G.GRAPH cfg = Dom.cfg Dom
@@ -82,8 +82,8 @@ struct
        val in_edges    = A.array(N,[])
 
            (* Lookup the current renaming of v *)
-       fun lookup v = 
-           case A.sub(stacks,v) of 
+       fun lookup v =
+           case A.sub(stacks,v) of
              v'::_ => v'
            | _     => v
 
@@ -94,7 +94,7 @@ struct
        let val X' = #node_info cfg X
            val old_defs = ref []
 
-           fun rename_use v = 
+           fun rename_use v =
            if v < 0 then v
            else
            let val vs = A.sub(stacks,v)
@@ -125,8 +125,8 @@ struct
            fun copy {dst,src} =
                ListPair.app copy_def (dst,rename_uses src)
 
-               (* rename statement of the form defs := uses in block X 
-                * We must rename the uses first!!! 
+               (* rename statement of the form defs := uses in block X
+                * We must rename the uses first!!!
                 *)
            fun rename {defs,uses} =
            let val uses' = rename_uses uses
@@ -134,22 +134,22 @@ struct
            in  {defs=defs',uses=uses'}
            end
 
-               (* rename the definition of phi functions *) 
+               (* rename the definition of phi functions *)
            fun rename_phi_def X =
            let val X_phis = A.sub(phis,X)
                fun rn [] = []
                  | rn((v',v,uses)::rest) = (v',rename_def v,uses)::rn rest
                val X_phis = rn X_phis
-           in  A.update(phis,X,X_phis) 
+           in  A.update(phis,X,X_phis)
            end
 
-               (* rename the uses of phi functions *) 
+               (* rename the uses of phi functions *)
            fun rename_phi_use X =
            let val out_edges = #out_edges cfg X
                fun rename_phi_of_Y (e as (X,Y,_)) =
                let val Y_phis = A.sub(phis,Y)
                    fun insert_uses [] = []
-                     | insert_uses((v',v,uses)::rest) = 
+                     | insert_uses((v',v,uses)::rest) =
                          (v',v,rename_use v'::uses)::insert_uses rest
                in  A.update(in_edges,Y,e::A.sub(in_edges,Y));
                    A.update(phis,Y,insert_uses Y_phis)
@@ -159,20 +159,20 @@ struct
 
        in
            rename_phi_def X;
-           rename_stmt {rename=rename,copy=copy} (X,X');    
+           rename_stmt {rename=rename,copy=copy} (X,X');
            rename_phi_use X;
            app search (#succ dom X);
            app pop (!old_defs)
        end
-       
-          (* place phis *) 
-       fun place_phi (B as (b,_)) = 
+
+          (* place phis *)
+       fun place_phi (B as (b,_)) =
             insert_phi{block=B,in_edges=A.sub(in_edges,b),phis=A.sub(phis,b)}
-           
+
    in
        search ENTRY;
        #forall_nodes cfg place_phi
    end
-                         
+
 end
 

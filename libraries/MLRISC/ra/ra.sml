@@ -1,7 +1,7 @@
 (*
  * This is the new register allocator based on
- * the 'iterated register coalescing' scheme described 
- * in POPL'96, and TOPLAS v18 #3, pp 325-353. 
+ * the 'iterated register coalescing' scheme described
+ * in POPL'96, and TOPLAS v18 #3, pp 325-353.
  *
  * Now with numerous extensions:
  *
@@ -19,7 +19,7 @@
  *    http://cm.bell-labs.com/cm/cs/what/smlnj/compiler-notes/index.html
  *
  * The basic structure of this register allocator is as follows:
- *   1.  RAGraph.  This module enscapsulates the interference graph 
+ *   1.  RAGraph.  This module enscapsulates the interference graph
  *       datatype (adjacency list + interference graph + node table)
  *       and contains nothing architecture specific.
  *   2.  RACore.  This module implements the main part of the iterated
@@ -27,10 +27,10 @@
  *   3.  RA_FLOWGRAPH.  This register allocator is parameterized
  *       with respect to this signature.  This basically abstracts out
  *       the representation of the program flowgraph, and provide
- *       a few services to the main allocator, such as building the 
+ *       a few services to the main allocator, such as building the
  *       interference graph, rewriting the flowgraph after spilling,
- *       and rebuilding the interference graph after spilling.  
- *       This module is responsible for caching any information necessary 
+ *       and rebuilding the interference graph after spilling.
+ *       This module is responsible for caching any information necessary
  *       to make spilling fast.
  *   4.  This functor.  This functor drives the entire process.
  *
@@ -38,7 +38,7 @@
  *)
 
 functor RegisterAllocator
-   (SpillHeuristics : RA_SPILL_HEURISTICS) 
+   (SpillHeuristics : RA_SPILL_HEURISTICS)
    (Flowgraph : RA_FLOWGRAPH where C = CellsBasis) : RA =
 struct
 
@@ -73,7 +73,7 @@ struct
      reloadDst    : F.Spill.reloadDst,      (* reload callback *)
      renameSrc    : F.Spill.renameSrc,      (* rename callback *)
      mode         : mode                    (* mode *)
-   } 
+   }
 
    val debug = false
 
@@ -96,19 +96,19 @@ struct
     * Debugging flags + counters
     *)
    val cfg_before_ra     = MLRiscControl.mkFlag ("dump-cfg-before-ra",
-						 "whether CFG is shown before RA")
+                                                 "whether CFG is shown before RA")
    val cfg_after_ra      = MLRiscControl.mkFlag ("dump-cfg-after-ra",
-						 "whether CFG is shown after RA")
+                                                 "whether CFG is shown after RA")
    val cfg_after_spill   = MLRiscControl.mkFlag ("dump-cfg-after-spilling",
-						 "whether CFG is shown after spill phase")
+                                                 "whether CFG is shown after spill phase")
    val cfg_before_ras    = MLRiscControl.mkFlag ("dump-cfg-before-all-ra",
-						 "whether CFG is shown before all RA")
+                                                 "whether CFG is shown before all RA")
    val cfg_after_ras     = MLRiscControl.mkFlag ("dump-cfg-after-all-ra",
-						 "whether CFG is shown after all RA")
+                                                 "whether CFG is shown after all RA")
    val dump_graph        = MLRiscControl.mkFlag ("dump-interference-graph",
-						 "whether interference graph is shown")
+                                                 "whether interference graph is shown")
    val debug_spill       = MLRiscControl.mkFlag ("ra-debug-spilling",
-						 "debug mode for spill phase")
+                                                 "debug mode for spill phase")
    val ra_count          = MLRiscControl.mkCounter ("ra-count", "RA counter")
    val rebuild_count     = MLRiscControl.mkCounter ("ra-rebuild", "RA build counter")
 
@@ -130,23 +130,23 @@ struct
    val i2s = Int.toString
 
    (* This array is used for getreg.
-    * We allocate it once. 
-    *) 
+    * We allocate it once.
+    *)
    val proh = Array.array(C.firstPseudo, ~1)
 
    (*
-    * Register allocator.  
+    * Register allocator.
     *    spillProh is a list of registers that are not candidates for spills.
     *)
    fun ra params flowgraph =
-   let 
+   let
        (* Flowgraph methods *)
-       val {build=buildMethod, spill=spillMethod, ...} = F.services flowgraph 
+       val {build=buildMethod, spill=spillMethod, ...} = F.services flowgraph
 
        (* global spill location counter *)
        (* Note: spillLoc cannot be zero as negative locations are
         * returned to the client to indicate spill locations.
-	*)
+        *)
        val spillLoc=ref 1
 
        (* How to dump the flowgraph *)
@@ -156,19 +156,19 @@ struct
        (* Main function *)
        fun regalloc{getreg, K, dedicated, copyInstr,
                     spill, spillSrc, spillCopyTmp, renameSrc,
-                    reload, reloadDst, spillProh, cellkind, mode, 
+                    reload, reloadDst, spillProh, cellkind, mode,
                     memRegs} =
-       let val numCell = C.numCell cellkind () 
+       let val numCell = C.numCell cellkind ()
        in  if numCell = 0
        then ()
        else
        let (* the nodes table *)
-           val nodes  = IntHashTable.mkTable(numCell,NodeTable) 
+           val nodes  = IntHashTable.mkTable(numCell,NodeTable)
            val mode   = if isOn(HAS_PARALLEL_COPIES, mode) then
-                           Word.orb(Core.SAVE_COPY_TEMPS, mode) 
+                           Word.orb(Core.SAVE_COPY_TEMPS, mode)
                         else mode
            (* create an empty interference graph *)
-           val G      = G.newGraph{nodes=nodes, 
+           val G      = G.newGraph{nodes=nodes,
                                    K=K,
                                    dedicated=dedicated,
                                    numRegs=numCell,
@@ -184,41 +184,41 @@ struct
                                    memRegs=memRegs
                                   }
            val G.GRAPH{spilledRegs, pseudoCount, spillFlag, ...} = G
-    
+
            val hasBeenSpilled = IntHashTable.find spilledRegs
-           val hasBeenSpilled = 
+           val hasBeenSpilled =
                fn r => case hasBeenSpilled r of SOME _ => true | NONE => false
-    
-           fun logGraph(header,G) = 
+
+           fun logGraph(header,G) =
                if !dump_graph then
                    (TextIO.output(!debug_stream,
                         "-------------"^header^"-----------\n");
-                    Core.dumpGraph G (!debug_stream) 
+                    Core.dumpGraph G (!debug_stream)
                    )
                else ()
-    
+
            (*
-            * Build the interference graph 
-            *) 
-           fun buildGraph(G) = 
+            * Build the interference graph
+            *)
+           fun buildGraph(G) =
            let val _ = if debug then print "build..." else ()
                val moves = buildMethod(G,cellkind)
-               val worklists = 
-                   (Core.initWorkLists G) {moves=moves} 
+               val worklists =
+                   (Core.initWorkLists G) {moves=moves}
            in  logGraph("build",G);
                if debug then
                let val G.GRAPH{bitMatrix=ref(G.BM.BM{elems, ...}), ...} = G
-               in  print ("done: nodes="^i2s(IntHashTable.numItems nodes)^ 
+               in  print ("done: nodes="^i2s(IntHashTable.numItems nodes)^
                           " edges="^i2s(!elems)^
                           " moves="^i2s(length moves)^
                           "\n")
-               end else (); 
+               end else ();
                worklists
            end
-    
+
            (*
             * Potential spill phase
-            *) 
+            *)
            fun chooseVictim{spillWkl} =
            let fun dumpSpillCandidates(spillWkl) =
                    (print "Spill candidates:\n";
@@ -248,8 +248,8 @@ struct
                              )
                   ) else ();
                {node=node,cost=cost,spillWkl=spillWkl}
-           end 
-              
+           end
+
            (*
             * Mark spill nodes
             *)
@@ -268,25 +268,25 @@ struct
                 (color := col;
                  markMemRegs ns)
              | markMemRegs(_::ns) = markMemRegs ns
-      
+
            (*
-            * Actual spill phase.  
-            *   Insert spill node and incrementally 
-            *   update the interference graph. 
+            * Actual spill phase.
+            *   Insert spill node and incrementally
+            *   update the interference graph.
             *)
-           fun actualSpills{spills} = 
-           let val _ = if debug then print "spill..." else (); 
-               val _ = if isOn(mode, 
+           fun actualSpills{spills} =
+           let val _ = if debug then print "spill..." else ();
+               val _ = if isOn(mode,
                                SPILL_COALESCING+
                                SPILL_PROPAGATION+
                                SPILL_COLORING) then
                            markSpillNodes spills
                        else ()
-               val _ = if isOn(mode,SPILL_PROPAGATION+SPILL_COALESCING) then   
-                          Core.initMemMoves G 
+               val _ = if isOn(mode,SPILL_PROPAGATION+SPILL_COALESCING) then
+                          Core.initMemMoves G
                        else ()
                val _ = logGraph("actual spill",G);
-               val {simplifyWkl,freezeWkl,moveWkl,spillWkl} =  
+               val {simplifyWkl,freezeWkl,moveWkl,spillWkl} =
                     Core.initWorkLists G
                        {moves=spillMethod{graph=G, cellkind=cellkind,
                                           spill=spill, spillSrc=spillSrc,
@@ -299,22 +299,22 @@ struct
                val _ = dumpFlowgraph(cfg_after_spill,"after spilling")
            in  logGraph("rebuild",G);
                if debug then print "done\n" else ();
-	       rebuild_count := !rebuild_count + 1;
+               rebuild_count := !rebuild_count + 1;
                (simplifyWkl, moveWkl, freezeWkl, spillWkl, [])
            end
-           
+
            (*
             * Main loop of the algorithm
             *)
            fun main(G) =
-           let 
-                   
-               (* Main loop *) 
+           let
+
+               (* Main loop *)
                fun loop(simplifyWkl,moveWkl,freezeWkl,spillWkl,stack) =
                let val iteratedCoal = Core.iteratedCoalescing G
                    val potentialSpill = Core.potentialSpillNode G
-                   (* simplify/coalesce/freeze/potential spill phases 
-                    *    simplifyWkl -- non-move related nodes with low degree 
+                   (* simplify/coalesce/freeze/potential spill phases
+                    *    simplifyWkl -- non-move related nodes with low degree
                     *    moveWkl     -- moves to be considered for coalescing
                     *    freezeWkl   -- move related nodes (with low degree)
                     *    spillWkl    -- potential spill nodes
@@ -328,51 +328,51 @@ struct
                                                   stack=stack}
                    in  case spillWkl of
                          [] => stack (* nothing to spill *)
-                       |  _ => 
+                       |  _ =>
                          if !pseudoCount = 0 (* all nodes simplified *)
-                         then stack 
+                         then stack
                          else
-                         let val {node,cost,spillWkl} = 
+                         let val {node,cost,spillWkl} =
                                     chooseVictim{spillWkl=spillWkl}
-                         in  case node of  
+                         in  case node of
                                SOME node => (* spill node and continue *)
-                               let val _ = if debug then print "-" else () 
-                                   val {moveWkl,freezeWkl,stack} = 
+                               let val _ = if debug then print "-" else ()
+                                   val {moveWkl,freezeWkl,stack} =
                                        potentialSpill{node=node,
                                                       cost=cost,
                                                       stack=stack}
                                in  iterate([],moveWkl,freezeWkl,spillWkl,stack)
-                               end 
+                               end
                              | NONE => stack (* nothing to spill *)
                          end
                    end
 
-                   val {spills} = 
+                   val {spills} =
                        if K = 0 then
                          {spills=spillWkl}
-                       else 
+                       else
                          let (* simplify the nodes *)
                              val stack = iterate
                                 (simplifyWkl,moveWkl,freezeWkl,spillWkl,stack)
                              (* color the nodes *)
-                         in  (Core.select G) {stack=stack} 
+                         in  (Core.select G) {stack=stack}
                          end
                in  (* check for actual spills *)
                    case spills of
                      [] => ()
                    | spills => loop(actualSpills{spills=spills})
                end
-    
+
                val {simplifyWkl, moveWkl, freezeWkl, spillWkl} = buildGraph G
-    
+
            in  loop(simplifyWkl, moveWkl, freezeWkl, spillWkl, [])
            end
-    
-           fun initSpillProh(cells) = 
+
+           fun initSpillProh(cells) =
            let val markAsSpilled = IntHashTable.insert spilledRegs
                fun mark r = markAsSpilled(CellsBasis.registerId r,true)
            in  app mark cells end
-    
+
        in  dumpFlowgraph(cfg_before_ra,"before register allocation");
            initSpillProh spillProh;
            main(G); (* main loop *)
@@ -380,10 +380,10 @@ struct
            logGraph("done",G);
            Core.updateCellColors G;
            Core.markDeadCopiesAsSpilled G;
-	   ra_count := !ra_count + 1;
+           ra_count := !ra_count + 1;
            dumpFlowgraph(cfg_after_ra,"after register allocation");
            (* Clean up spilling *)
-           SpillHeuristics.init() 
+           SpillHeuristics.init()
        end
        end
 

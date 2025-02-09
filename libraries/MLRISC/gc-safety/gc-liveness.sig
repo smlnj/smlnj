@@ -1,5 +1,5 @@
 (*
- * This module is responsible for computing typed liveness 
+ * This module is responsible for computing typed liveness
  * information needed garbage collection-safe global optimizations.
  *)
 signature GC_LIVENESS =

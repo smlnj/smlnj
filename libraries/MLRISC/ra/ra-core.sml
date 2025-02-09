@@ -14,10 +14,10 @@
  *    first.  Since freeze disable moves, this tends to disable moves
  *    of low priority.
  *
- * 3. The simplify worklist is not kept explicitly during the 
+ * 3. The simplify worklist is not kept explicitly during the
  *    simplify/coalesce/freeze phases.  Instead, whenever a non-move
  *    related node with degree < K is discovered, we call simplify
- *    to remove it from the graph immediately.  
+ *    to remove it from the graph immediately.
  *
  *    I think this has a few advantages.
  *    (a) There is less bookkeeping.
@@ -34,18 +34,18 @@
  *      a. All nodes on the adjacency list are distinct
  *      b. nodes with color ALIASED or REMOVED are NOT consider to be
  *         on the adjacency list
- *      c. If a node x is COLORED, then we DON'T keep track of 
- *         its adjacency list 
+ *      c. If a node x is COLORED, then we DON'T keep track of
+ *         its adjacency list
  *      d. When a node has been removed, there aren't any moves associated
- *         with it.    
+ *         with it.
  *   2. Moves
  *      a. Moves marked WORKLIST are on the worklist.
  *      b. Moves marked MOVE are NOT on the worklist.
  *      c. Moves marked LOST are frozen and are in fact never considered again.
  *      d. Moves marked CONSTRAINED cannot be coalesced because the src and dst
  *         interfere
- *      e. Moves marked COALESCED have been coalesced.  
- *      f. The movecnt in a node is always the number of nodes 
+ *      e. Moves marked COALESCED have been coalesced.
+ *      f. The movecnt in a node is always the number of nodes
  *         currently marked as WORKLIST or MOVE, i.e. the moves that
  *         are associated with the node.  When this is zero, the node is
  *         considered to be non-move related.
@@ -59,7 +59,7 @@
 local
 
    val debug = false
-   val tally = false 
+   val tally = false
 
 in
 
@@ -74,16 +74,16 @@ struct
   structure C    = RAGraph.C
 
   (* For debugging, uncomment Unsafe. *)
-  structure UA   = Unsafe.Array 
+  structure UA   = Unsafe.Array
   structure UW8A = Unsafe.Word8Array
 
-  open G 
+  open G
 
   val verbose       = MLRiscControl.mkFlag ("ra-verbose", "RA chattiness")
   val ra_spill_coal = MLRiscControl.mkCounter ("ra-spill-coalescing",
-					       "RA spill coalescing counter")
+                                               "RA spill coalescing counter")
   val ra_spill_prop = MLRiscControl.mkCounter ("ra-spill-propagation",
-					       "RA spill propagation counter")
+                                               "RA spill propagation counter")
 
 (*
   val good_briggs   = MLRiscControl.getCounter "good-briggs"
@@ -98,12 +98,12 @@ struct
   val BIASED_SELECTION    = 0wx1
   val DEAD_COPY_ELIM      = 0wx2
   val COMPUTE_SPAN        = 0wx4
-  val SAVE_COPY_TEMPS     = 0wx8 
+  val SAVE_COPY_TEMPS     = 0wx8
   val HAS_PARALLEL_COPIES = 0wx10
   val SPILL_COALESCING       = 0wx100
   val SPILL_COLORING         = 0wx200
   val SPILL_PROPAGATION      = 0wx400
-  val MEMORY_COALESCING      = 
+  val MEMORY_COALESCING      =
       SPILL_COALESCING + SPILL_COLORING + SPILL_PROPAGATION
 
   val i2s = Int.toString
@@ -114,19 +114,19 @@ struct
   fun isOn(flag,mask) = Word.andb(flag,mask) <> 0w0
 
   fun error msg = MLRiscErrorMsg.error("RACore", msg)
- 
+
   fun concat([], b) = b
     | concat(x::a, b) = concat(a, x::b)
 
   in
 
-    
+
   structure FZ = RaPriQueue
-     (type elem=node 
+     (type elem=node
       fun less(NODE{movecost=ref p1,...}, NODE{movecost=ref p2,...}) = p1 <= p2
      )
   structure MV = RaPriQueue
-     (type elem=G.move 
+     (type elem=G.move
       fun less(MV{cost=p1,...}, MV{cost=p2,...}) = p1 >= p2
      )
 
@@ -134,7 +134,7 @@ struct
   type freeze_queue = FZ.pri_queue
 
 
-  (*  
+  (*
    * Utility functions
    *)
   fun chase(NODE{color=ref(ALIASED r), ...}) = chase r
@@ -154,7 +154,7 @@ struct
 
   fun node2s (NODE{cell, color, pri,...}) = i2s(cellId cell)^col2s(!color)
 
-  fun show G (node as NODE{pri,...}) = 
+  fun show G (node as NODE{pri,...}) =
       node2s node^(if !verbose then "("^r2s(!pri)^")" else "")
 
   (*
@@ -164,7 +164,7 @@ struct
   let fun pr s = TextIO.output(stream, s)
       val show = show G
       fun prMove(MV{src, dst, status=ref(WORKLIST | BRIGGS_MOVE | GEORGE_MOVE),
-                    cost,...}) = 
+                    cost,...}) =
             pr(node2s(chase dst)^" <- "^node2s(chase src)^
                "("^r2s(cost)^") ")
         | prMove _ = ()
@@ -178,16 +178,16 @@ struct
             | _ =>
               (pr(" <-->");
                app (fn n => (pr " "; pr(show n))) (!adj); pr "\n";
-               if !verbose andalso !movecnt > 0 then 
+               if !verbose andalso !movecnt > 0 then
                  (pr("\tmoves "^i2s(!movecnt)^": ");
                   app prMove (!movelist);
                   pr "\n"
-                 ) 
+                 )
                else ()
               )
            )
          )
- 
+
   in  pr("=========== K="^i2s K^" ===========\n");
       app prAdj (ListMergeSort.sort (fn ((x, _),(y, _)) => x > y)
                     (IntHashTable.listItemsi nodes))
@@ -203,46 +203,46 @@ struct
       val addnode = IntHashTable.insert nodes
 
       fun colorOf(C.CELL{col=ref(C.MACHINE r), ...}) = r
-	| colorOf(C.CELL{id, ...}) = id
+        | colorOf(C.CELL{id, ...}) = id
 
-      fun getNode(cell as C.CELL{col, ...}) = 
-	(getnode(colorOf cell))
-	  handle _ => let
-	       val reg = colorOf cell
-	       val col = 
-		 case !col 
-		  of C.MACHINE r => G.COLORED r
-		   | C.PSEUDO    => G.PSEUDO
-		   | C.ALIASED _ => error "getNode: ALIASED"
-		   | C.SPILLED   => error "getNode: SPILLED"
-	       val node = 	         
-		 NODE{number=reg,
-		      cell=cell, color= ref col, degree=ref 0,
-		      adj=ref[], movecnt=ref 0, movelist=ref[],
-		      movecost=ref 0.0, pri=ref 0.0, defs=ref[],
-		      uses=ref[]}
+      fun getNode(cell as C.CELL{col, ...}) =
+        (getnode(colorOf cell))
+          handle _ => let
+               val reg = colorOf cell
+               val col =
+                 case !col
+                  of C.MACHINE r => G.COLORED r
+                   | C.PSEUDO    => G.PSEUDO
+                   | C.ALIASED _ => error "getNode: ALIASED"
+                   | C.SPILLED   => error "getNode: SPILLED"
+               val node =
+                 NODE{number=reg,
+                      cell=cell, color= ref col, degree=ref 0,
+                      adj=ref[], movecnt=ref 0, movelist=ref[],
+                      movecost=ref 0.0, pri=ref 0.0, defs=ref[],
+                      uses=ref[]}
 
-	    in addnode(reg, node); node
-	    end
+            in addnode(reg, node); node
+            end
 
 
       fun defUse{defs, uses, pt, cost} = let
-	   fun def cell = let
-	     val node as NODE{pri, defs, ...} = getNode (cell)
-	   in
-	       pri := !pri + cost;
-	       defs := pt :: !defs;
-	       node
-	   end
-	   fun use cell = let
-	     val node as NODE{pri, uses, ...} = getNode(cell)
-	   in
-	       pri := !pri + cost;
-	       uses := pt :: !uses
-	   end
-      in  
-	  List.app use uses;
-	  List.map def defs     
+           fun def cell = let
+             val node as NODE{pri, defs, ...} = getNode (cell)
+           in
+               pri := !pri + cost;
+               defs := pt :: !defs;
+               node
+           end
+           fun use cell = let
+             val node as NODE{pri, uses, ...} = getNode(cell)
+           in
+               pri := !pri + cost;
+               uses := pt :: !uses
+           end
+      in
+          List.app use uses;
+          List.map def defs
       end
   in  defUse
   end
@@ -250,15 +250,15 @@ struct
   (*
    * Add an edge (x, y) to the interference graph.
    * Nop if the edge already exists.
-   * Note: adjacency lists of colored nodes are not stored 
+   * Note: adjacency lists of colored nodes are not stored
    *       within the interference graph to save space.
    * Now we allow spilled node to be added to the edge; these do not
-   * count toward the degree. 
+   * count toward the degree.
    *)
-  fun addEdge(GRAPH{bitMatrix,...}) = 
+  fun addEdge(GRAPH{bitMatrix,...}) =
   let val addBitMatrix = BM.add(!bitMatrix)
-  in  fn (x as NODE{number=xn, color=colx, adj=adjx, degree=degx, ...}, 
-          y as NODE{number=yn, color=coly, adj=adjy, degree=degy, ...}) => 
+  in  fn (x as NODE{number=xn, color=colx, adj=adjx, degree=degx, ...},
+          y as NODE{number=yn, color=coly, adj=adjy, degree=degy, ...}) =>
           if xn = yn then ()
           else if addBitMatrix(xn, yn) then
            (case (!colx, !coly) of
@@ -284,7 +284,7 @@ struct
            | (SPILL_LOC _, SPILL_LOC _) => () (* x<>y, can't alias *)
            | (SPILL_LOC _, SPILLED) => () (* x<>y, can't alias *)
            | (SPILLED,  _) => ()
-           | (colx, coly) => 
+           | (colx, coly) =>
                error("addEdge x="^i2s xn^col2s colx^" y="^i2s yn^col2s coly)
            )
           else () (* edge already there *)
@@ -296,23 +296,23 @@ struct
     | isFixedMem _ = false
 
   fun isFixed(COLORED _) = true
-    | isFixed c = isFixedMem(c) 
+    | isFixed c = isFixedMem(c)
 
   (*
    * Initialize a list of worklists
    *)
-  fun initWorkLists 
-        (GRAPH{nodes, K, bitMatrix, pseudoCount, 
+  fun initWorkLists
+        (GRAPH{nodes, K, bitMatrix, pseudoCount,
                firstPseudoR, deadCopies, memMoves, mode, ...}) {moves} =
-  let 
+  let
       (* Filter moves that already have an interference
        * Also initialize the movelist and movecnt fields at this time.
        *)
       val member = BM.member(!bitMatrix)
 
-      fun setInfo(NODE{color=ref PSEUDO, movecost, movecnt, movelist,...}, 
+      fun setInfo(NODE{color=ref PSEUDO, movecost, movecnt, movelist,...},
                   mv, cost) =
-           (movelist := mv :: !movelist; 
+           (movelist := mv :: !movelist;
             movecnt := !movecnt + 1;
             movecost := !movecost + cost
            )
@@ -322,35 +322,35 @@ struct
       (* filter moves that cannot be coalesced *)
       fun filter([], mvs', mem) = (mvs', mem)
         | filter((mv as MV{src as NODE{number=x, color=ref colSrc,...},
-                           dst as NODE{number=y, color=ref colDst,...}, 
-                           cost, ...})::mvs, 
+                           dst as NODE{number=y, color=ref colDst,...},
+                           cost, ...})::mvs,
                  mvs', mem) =
           if isFixed colSrc andalso isFixed colDst then
             filter(mvs, mvs', mem)
           else if isFixedMem colSrc orelse isFixedMem colDst then
             filter(mvs, mvs', mv::mem)
-          else if member(x, y) then  
-            filter(mvs, mvs', mem) 
-          else 
+          else if member(x, y) then
+            filter(mvs, mvs', mem)
+          else
             (setInfo(src, mv, cost);
              setInfo(dst, mv, cost);
              filter(mvs, MV.add(mv, mvs'), mem))
 
       (* like filter but does dead copy elimination *)
       fun filterDead([], mvs', mem, dead) = (mvs', mem, dead)
-        | filterDead((mv as 
-                  MV{src as NODE{number=x, color as ref colSrc, 
+        | filterDead((mv as
+                  MV{src as NODE{number=x, color as ref colSrc,
                                  pri, adj, uses,...},
-                     dst as NODE{number=y, cell=celly, color=ref colDst, 
+                     dst as NODE{number=y, cell=celly, color=ref colDst,
                                  defs=dstDefs, uses=dstUses,...},
-                     cost, ...})::mvs, 
-                 mvs', mem, dead) =  
+                     cost, ...})::mvs,
+                 mvs', mem, dead) =
           if (isFixed colSrc andalso isFixed colDst) then
             filterDead(mvs, mvs', mem, dead)
           else if isFixedMem colSrc orelse isFixedMem colDst then
             filterDead(mvs, mvs', mv::mem, dead)
-          else (case (colSrc, colDst, dstDefs, dstUses) 
-            of (_, PSEUDO, ref [pt], ref [])=> 
+          else (case (colSrc, colDst, dstDefs, dstUses)
+            of (_, PSEUDO, ref [pt], ref [])=>
                (* eliminate dead copy *)
                let fun decDegree [] = ()
                      | decDegree(NODE{color=ref PSEUDO, degree, ...}::adj) =
@@ -369,13 +369,13 @@ struct
                end
              | _ =>  (* normal moves *)
                if member(x, y)     (* moves that interfere *)
-               then filterDead(mvs, mvs', mem, dead) 
+               then filterDead(mvs, mvs', mem, dead)
                else (setInfo(src, mv, cost);
                      setInfo(dst, mv, cost);
                      filterDead(mvs, MV.add(mv, mvs'), mem, dead)
                     )
             )
-            
+
       (*
        * Scan all nodes in the graph and check which worklist they should
        * go into.
@@ -388,22 +388,22 @@ struct
            spillWkl    = spill
           }
          )
-        | collect(node::rest, simp, fz, moves, spill, pseudos) = 
+        | collect(node::rest, simp, fz, moves, spill, pseudos) =
           (case node of
               NODE{color=ref PSEUDO, movecnt, degree, ...} =>
                  if !degree >= K then
                     collect(rest, simp, fz, moves, node::spill, pseudos+1)
                  else if !movecnt > 0 then
-                    collect(rest, simp, FZ.add(node, fz), 
+                    collect(rest, simp, FZ.add(node, fz),
                             moves, spill, pseudos+1)
                  else
-                    collect(rest, node::simp, fz, moves, spill, 
-                            pseudos+1)  
+                    collect(rest, node::simp, fz, moves, spill,
+                            pseudos+1)
            |  _ => collect(rest, simp, fz, moves, spill, pseudos)
           )
 
       (* First build the move priqueue *)
-      val (mvs, mem) = 
+      val (mvs, mem) =
                 if isOn(mode, DEAD_COPY_ELIM) then
                 let val (mvs, mem, dead) = filterDead(moves, MV.EMPTY, [], [])
                 in  deadCopies := dead; (mvs, mem)
@@ -418,7 +418,7 @@ struct
    * Return a regmap that returns the current spill location
    * during spilling.
    *)
-  fun spillLoc(G.GRAPH{nodes,...}) = 
+  fun spillLoc(G.GRAPH{nodes,...}) =
   let val getnode = IntHashTable.lookup nodes
       fun num(NODE{color=ref(ALIASED n), ...}) = num n
         | num(NODE{color=ref(SPILLED), number, ...}) = number
@@ -426,25 +426,25 @@ struct
         | num(NODE{color=ref(MEMREG(m, _)), number, ...}) = m
         | num(NODE{number, ...}) = number
       fun lookup r = num(getnode r) handle _ => r
-  in  lookup 
+  in  lookup
   end
 
-  fun spillLocToString(G.GRAPH{nodes,...}) = 
+  fun spillLocToString(G.GRAPH{nodes,...}) =
   let val getnode = IntHashTable.lookup nodes
       fun num(NODE{color=ref(ALIASED n), ...}) = num n
         | num(NODE{color=ref(SPILLED), cell, ...}) = "spilled "^C.toString cell
         | num(NODE{color=ref(SPILL_LOC s), number, ...}) = "frame "^i2s s
-        | num(NODE{color=ref(MEMREG(_,m)), ...}) = "memreg "^C.toString m 
+        | num(NODE{color=ref(MEMREG(_,m)), ...}) = "memreg "^C.toString m
         | num(NODE{number, ...}) = "error "^i2s number
-      fun lookup r = num(getnode r) 
-  in  lookup 
+      fun lookup r = num(getnode r)
+  in  lookup
   end
 
   (*
    * Core phases:
    *   Simplify, coalesce, freeze.
    *
-   * NOTE: When a node's color is REMOVED or ALIASED, 
+   * NOTE: When a node's color is REMOVED or ALIASED,
    *       it is not considered to be part of the adjacency list
    *
    *  1.  The move list has no duplicate
@@ -468,7 +468,7 @@ struct
           fun forallAdj([], mv, fz, stack) = (mv, fz, stack)
             | forallAdj((n as NODE{color=ref PSEUDO, degree as ref d,...})::adj,
                         mv, fz, stack) =
-              if d = K then 
+              if d = K then
               let val (mv, fz, stack) = lowDegree(n, mv, fz, stack)
               in  forallAdj(adj, mv, fz, stack) end
               else (degree := d - 1; forallAdj(adj, mv, fz, stack))
@@ -496,10 +496,10 @@ struct
        *   stack -- stack of removed nodes
        *)
       and lowDegree(node as NODE{degree as ref d, movecnt, adj, color,...},
-                    (* false, *) mv, fz, stack) = 
+                    (* false, *) mv, fz, stack) =
            (* normal edge *)
-          (if debug then 
-           print("DecDegree "^show node^" d="^i2s(d-1)^"\n") else (); 
+          (if debug then
+           print("DecDegree "^show node^" d="^i2s(d-1)^"\n") else ();
            degree := K - 1;
            (* node is now low degree!!! *)
            let val mv = enableMoves(!adj, mv)
@@ -513,7 +513,7 @@ struct
         | decDegree(node as NODE{degree as ref d, movecnt, adj, color,...},
                     true, mv, fz, stack) = (* register pair edge *)
           (degree := d - 2;
-           if d >= K andalso !degree < K then 
+           if d >= K andalso !degree < K then
              (* node is now low degree!!! *)
              let val mv = enableMoves(node :: !adj, mv)
              in  if !movecnt > 0 then (* move related *)
@@ -539,9 +539,9 @@ struct
                *)
               fun addMv([], ns, mv) = enableMoves(ns, mv)
                 | addMv((m as MV{status, hicount as ref hi, ...})::rest,
-                        ns, mv) = 
+                        ns, mv) =
                   (case !status of
-                     (BRIGGS_MOVE | GEORGE_MOVE) => 
+                     (BRIGGS_MOVE | GEORGE_MOVE) =>
                        (* decrements hi, when hi <= 0 enable move *)
                        if hi <= 1 then
                          (status := WORKLIST; addMv(rest, ns, MV.add(m, mv)))
@@ -561,14 +561,14 @@ struct
 
      (*
       *  Brigg's conservative coalescing test:
-      *    given: an unconstrained move (x, y)  
+      *    given: an unconstrained move (x, y)
       *    return: true or false
       *)
      fun conservative(hicount,
                       x as NODE{degree=ref dx, adj=xadj, (* pair=px, *) ...},
                       y as NODE{degree=ref dy, adj=yadj, (* pair=py, *) ...}) =
          dx + dy < K orelse
-         let (*  
+         let (*
               *  hi -- is the number of nodes with deg > K (without duplicates)
               *  n -- the number of nodes that have deg = K but not neighbors
               *         of both x and y
@@ -576,13 +576,13 @@ struct
               *  a node has been visited.  A negative count is used to mark
               *  a visited node.
               *)
-             fun undo([], extraHi) = 
+             fun undo([], extraHi) =
                  extraHi <= 0 orelse (hicount := extraHi; false)
-               | undo(movecnt::tr, extraHi) = 
+               | undo(movecnt::tr, extraHi) =
                    (movecnt := ~1 - !movecnt; undo(tr, extraHi))
              fun loop([], [], hi, n, tr) = undo(tr, (hi + n) - K + 1)
                | loop([], yadj, hi, n, tr) = loop(yadj, [], hi, n, tr)
-               | loop(NODE{color, movecnt as ref m, degree=ref deg, ...}::vs, 
+               | loop(NODE{color, movecnt as ref m, degree=ref deg, ...}::vs,
                       yadj, hi, n, tr) =
                  (case !color of
                     COLORED _ =>
@@ -597,7 +597,7 @@ struct
                       else if m >= 0 then
                          (* node has never been visited before *)
                          (movecnt := ~1 - m;  (* mark as visited *)
-                          if deg = K 
+                          if deg = K
                           then loop(vs, yadj, hi, n+1, movecnt::tr)
                           else loop(vs, yadj, hi+1, n, movecnt::tr)
                          )
@@ -610,8 +610,8 @@ struct
          in loop(!xadj, !yadj, 0, 0, []) end
 
      (*
-      *  Heuristic used to determine whether a pseudo and machine register     
-      *  can be coalesced. 
+      *  Heuristic used to determine whether a pseudo and machine register
+      *  can be coalesced.
       *  Precondition:
       *     The two nodes are assumed not to interfere.
       *)
@@ -623,7 +623,7 @@ struct
                 * nodes that are removed, since removed nodes either have
                 * deg < K or else optimistic spilling must be in effect!
                 *)
-               NODE{degree,number,color=ref(PSEUDO | REMOVED), ...} => 
+               NODE{degree,number,color=ref(PSEUDO | REMOVED), ...} =>
                if !degree < K orelse member(reg, number) then loop(adj, hi)
                else loop(adj, hi+1)
              | _ => loop(adj, hi)
@@ -633,12 +633,12 @@ struct
      (*
       *  Decrement the active move count of a node.
       *  When the move count reaches 0 and the degree < K
-      *  simplify the node immediately.    
+      *  simplify the node immediately.
       *      Precondition: node must be a node in the interference graph
       *      The node can become a non-move related node.
       *)
      fun decMoveCnt
-         (node as NODE{movecnt, color=ref PSEUDO, degree, movecost,...}, 
+         (node as NODE{movecnt, color=ref PSEUDO, degree, movecost,...},
           cnt, cost, mv, fz, stack) =
          let val newCnt = !movecnt - cnt
          in  movecnt := newCnt;
@@ -651,7 +651,7 @@ struct
 
      (*
       * Combine two nodes u and v into one.
-      *   v is replaced by u  
+      *   v is replaced by u
       *   u is the new combined node
       *   Precondition: u <> v and u and v must be unconstrained
       *
@@ -672,24 +672,24 @@ struct
           * to prune the lists
           *)
          fun mergeMoveList([], mv) = mv
-           | mergeMoveList((m as MV{status,hicount,src,dst,...})::rest, mv) = 
+           | mergeMoveList((m as MV{status,hicount,src,dst,...})::rest, mv) =
               (case !status of
-                BRIGGS_MOVE =>  
+                BRIGGS_MOVE =>
                   (* if we are changing a copy from v <-> w to uv <-> w
                    * makes sure we reset its trigger count, so that it
                    * will be tested next.
                    *)
-                  (if coloringv then 
-                      (status := GEORGE_MOVE; 
+                  (if coloringv then
+                      (status := GEORGE_MOVE;
                        hicount := 0;
-                       if debug then 
+                       if debug then
                           print ("New george "^show src^"<->"^show dst^"\n")
                        else ()
                       )
                    else ();
                    mergeMoveList(rest, m::mv)
                   )
-              | GEORGE_MOVE => 
+              | GEORGE_MOVE =>
                   (* if u is colored and v is not, then the move v <-> w
                    * becomes uv <-> w where w is colored.  This can always
                    * be discarded.
@@ -703,27 +703,27 @@ struct
 
          (* Form combined node; add the adjacency list of v to u *)
          fun union([], mv, fz, stack) = (mv, fz, stack)
-           | union((t as NODE{color, degree, ...})::adj, 
+           | union((t as NODE{color, degree, ...})::adj,
                    mv, fz, stack) =
               (case !color of
-                 (COLORED _ | SPILL_LOC _ | MEMREG _ | SPILLED) => 
+                 (COLORED _ | SPILL_LOC _ | MEMREG _ | SPILLED) =>
                    (addEdge(t, u); union(adj, mv, fz, stack))
                | PSEUDO =>
                    (addEdge(t, u);
-                    let 
+                    let
                       val d = !degree
-                    in 
-                      if d = K then 
+                    in
+                      if d = K then
                         let val (mv, fz, stack) = lowDegree(t, mv, fz, stack)
-                        in  union(adj, mv, fz, stack) 
+                        in  union(adj, mv, fz, stack)
                         end
                       else (degree := d - 1; union(adj, mv, fz, stack))
                     end
-                   ) 
+                   )
                | _ => union(adj, mv, fz, stack)
-              )        
-     in  vcol    := ALIASED u; 
-                  (* combine the priority of both: 
+              )
+     in  vcol    := ALIASED u;
+                  (* combine the priority of both:
                    * note that since the mvcost has been counted twice
                    * in the original priority, we substract it twice
                    * from the new priority.
@@ -733,20 +733,20 @@ struct
                    * Strictly speaking, the def/use points of the move
                    * should also be removed.  But since we never spill
                    * a coalesced node and only spilling makes use of these
-                   * def/use points, we are safe for now.  
+                   * def/use points, we are safe for now.
                    *
                    * New comment: with spill propagation, it is necessary
                    * to keep track of the spilled program points.
                    *)
          if memoryCoalescingOn then
-           (defsu := concat(!defsu, !defsv); 
+           (defsu := concat(!defsu, !defsv);
             usesu := concat(!usesu, !usesv)
            )
          else ();
          case !ucol of
-           PSEUDO => 
-             (if !cntv > 0 then moveu := mergeMoveList(!movev, !moveu) 
-              else (); 
+           PSEUDO =>
+             (if !cntv > 0 then moveu := mergeMoveList(!movev, !moveu)
+              else ();
               movev := []; (* XXX kill the list to free space *)
               cntu  := !cntu + !cntv
              )
@@ -754,11 +754,11 @@ struct
          ;
          cntv := 0;
 
-         let val removingHi = !degv >= K andalso (!degu >= K orelse coloringv) 
+         let val removingHi = !degv >= K andalso (!degu >= K orelse coloringv)
              (* Update the move count of the combined node *)
              val (mv, fz, stack) = union(!adjv, mv, fz, stack)
-             val (mv, fz, stack) = 
-                 decMoveCnt(u, 2, mvcost + mvcost, mv, fz, stack)  
+             val (mv, fz, stack) =
+                 decMoveCnt(u, 2, mvcost + mvcost, mv, fz, stack)
              (* If either v or u are high degree then at least one high degree
               * node is removed from the neighbors of uv after coalescing
               *)
@@ -772,21 +772,21 @@ struct
       *    Repeat coalescing and simplification until mv is empty.
       *)
      and coalesce(MV.EMPTY, fz, stack) = (fz, stack)
-       | coalesce(MV.TREE(MV{src, dst, status, hicount, cost, ...}, _, l, r), 
-                  fz, stack) = 
+       | coalesce(MV.TREE(MV{src, dst, status, hicount, cost, ...}, _, l, r),
+                  fz, stack) =
          let (* val _ = coalesce_count := !coalesce_count + 1 *)
              val u = chase src
              val v as NODE{color=ref vcol, ...} = chase dst
                (* make u the colored one *)
              val (u as NODE{number=u', color=ref ucol, ...},
-                  v as NODE{number=v', color=ref vcol, ...}) = 
+                  v as NODE{number=v', color=ref vcol, ...}) =
                      case vcol of
                        COLORED _ => (v, u)
                      | _         => (u, v)
              val _ = if debug then print ("Coalescing "^show u^"<->"^show v
                          ^" ("^r2s cost^")") else ()
              val mv = MV.merge(l, r)
-             fun coalesceIt(status, v) = 
+             fun coalesceIt(status, v) =
                 (status := COALESCED;
                  if !spillFlag then trail := UNDO(v, status, !trail) else ()
                 )
@@ -795,40 +795,40 @@ struct
                     val _ = coalesceIt(status, v)
                 in  coalesce(decMoveCnt(u, 2, cost+cost, mv, fz, stack))
                 end
-             else 
+             else
                 (case vcol of
-                  COLORED _ => 
+                  COLORED _ =>
                       (* two colored nodes cannot be coalesced *)
                      (status := CONSTRAINED;
-                      if debug then print(" Both Colored\n") else (); 
+                      if debug then print(" Both Colored\n") else ();
                       coalesce(mv, fz, stack))
                 | _ =>
-                  if member(u', v') then 
+                  if member(u', v') then
                      (* u and v interfere *)
                     let val _ = status := CONSTRAINED
-                        val _ = if debug then print(" Interfere\n") else ();  
-                        val (mv, fz, stack) = 
+                        val _ = if debug then print(" Interfere\n") else ();
+                        val (mv, fz, stack) =
                                 decMoveCnt(u, 1, cost, mv, fz, stack)
                     in  coalesce(decMoveCnt(v, 1, cost, mv, fz, stack)) end
                   else
-                  case ucol of 
+                  case ucol of
                     COLORED _ =>  (* u is colored, v is not *)
-                    if safe(hicount, u', v) then 
-                      (if debug then print(" Safe\n") else (); 
+                    if safe(hicount, u', v) then
+                      (if debug then print(" Safe\n") else ();
                        (*if tally then good_george := !good_george+1 else ();*)
                        coalesceIt(status, v);
                        combine(u, v, true, cost, mv, fz, stack)
-                      ) 
+                      )
                     else
                       ((* remove it from the move list *)
                        status := GEORGE_MOVE;
                        (*if tally then bad_george := !bad_george + 1 else ();*)
-                       if debug then print(" Unsafe\n") else (); 
+                       if debug then print(" Unsafe\n") else ();
                        coalesce(mv, fz, stack)
                       )
                   |  _ => (* u, v are not colored *)
-                   if conservative(hicount, u, v) then 
-                      (if debug then print(" OK\n") else (); 
+                   if conservative(hicount, u, v) then
+                      (if debug then print(" OK\n") else ();
                        (*if tally then good_briggs := !good_briggs+1 else ();*)
                        coalesceIt(status, v);
                        combine(u, v, false, cost, mv, fz, stack)
@@ -837,13 +837,13 @@ struct
                       ((* remove it from the move list *)
                        status := BRIGGS_MOVE;
                        (*if tally then bad_briggs := !bad_briggs + 1 else ();*)
-                       if debug then print(" Non-conservative\n") else (); 
+                       if debug then print(" Non-conservative\n") else ();
                        coalesce(mv, fz, stack)
                       )
                 )
          end
 
-      (* mark a node n as frozen: 
+      (* mark a node n as frozen:
        *  Go thru all the moves (n, m), decrement the move count of m
        *  precondition: degree must be < K
        *                movecnt must be > 0
@@ -852,9 +852,9 @@ struct
        *    stack -- stack of removed nodes
        *)
       fun markAsFrozen(
-            node as NODE{number=me, degree, 
+            node as NODE{number=me, degree,
                          adj, movelist, movecnt as ref mc,...},
-            fz, stack) = 
+            fz, stack) =
       let val _ = if debug then print("Mark as frozen "^i2s me^"\n")
                   else ()
           (* eliminate all moves, return a list of nodes that
@@ -862,68 +862,68 @@ struct
            *)
           fun elimMoves([], simp) = simp
             | elimMoves(MV{status, src, dst, ...}::mvs, simp) =
-              case !status of 
+              case !status of
                 WORKLIST => error "elimMoves"
               | (BRIGGS_MOVE | GEORGE_MOVE) => (* mark move as lost *)
                 let val _ = status := LOST
                     val src as NODE{number=s,...} = chase src
                     val you = if s = me then chase dst else src
                 in  case you of
-                      NODE{color=ref(COLORED _),...} => 
+                      NODE{color=ref(COLORED _),...} =>
                         elimMoves(mvs, simp)
                     | NODE{movecnt as ref c, degree, ...} => (* pseudo *)
-                        (movecnt := c - 1; 
-                         if c = 1 andalso !degree < K then 
+                        (movecnt := c - 1;
+                         if c = 1 andalso !degree < K then
                             elimMoves(mvs, you::simp)
-                         else 
+                         else
                             elimMoves(mvs, simp)
                         )
                 end
               |  _   => elimMoves(mvs, simp)
 
           (* Note:
-           * We are removing a high degree node, so try to enable all moves 
+           * We are removing a high degree node, so try to enable all moves
            * associated with its neighbors.
            *)
 
-          val mv = if !degree >= K then enableMoves(!adj, MV.EMPTY) 
+          val mv = if !degree >= K then enableMoves(!adj, MV.EMPTY)
                    else MV.EMPTY
 
-      in  if mc = 0 
+      in  if mc = 0
           then simplify(node, mv, fz, stack)
-          else 
-             (movecnt := 0; 
-              simplifyAll(node::elimMoves(!movelist, []), mv, fz, stack) 
+          else
+             (movecnt := 0;
+              simplifyAll(node::elimMoves(!movelist, []), mv, fz, stack)
              )
       end
 
       (*
-       * FREEZE: 
-       *   Repeat picking 
+       * FREEZE:
+       *   Repeat picking
        *   a node with degree < K from the freeze list and freeze it.
-       *   fz    -- queue of freezable nodes 
+       *   fz    -- queue of freezable nodes
        *   stack -- stack of removed nodes
        *   undo  -- trail of coalesced moves after potential spill
        *)
-      fun freeze(fz, stack) = 
+      fun freeze(fz, stack) =
       let fun loop(FZ.EMPTY, FZ.EMPTY, stack) = stack
             | loop(FZ.EMPTY, newFz, _) = error "no freeze candidate"
             | loop(FZ.TREE(node, _, l, r), newFz, stack) =
               let val fz = FZ.merge(l, r)
               in  case node of
-                     (* This node has not been simplified 
+                     (* This node has not been simplified
                       * This must be a move-related node.
                       *)
                      NODE{color=ref PSEUDO, degree, ...} =>
                      if !degree >= K (* can't be frozen yet? *)
-                     then 
+                     then
                         ((*if tally then bad_freeze := !bad_freeze+1 else ();*)
                          loop(fz, FZ.add(node,newFz), stack))
                      else (* freeze node *)
-                     let val _ = 
+                     let val _ =
                             if debug then print("Freezing "^show node^"\n")
                             else ()
-                         (*val _ = 
+                         (*val _ =
                             if tally then good_freeze := !good_freeze + 1
                             else ()*)
                          val (mv, fz, stack) = markAsFrozen(node, fz, stack)
@@ -932,7 +932,7 @@ struct
                            i2s(!blocked)^"]"); *)
                            loop(FZ.merge(fz, newFz), FZ.EMPTY, stack))
                      end
-                  | _ => 
+                  | _ =>
                     ((*if tally then bad_freeze := !bad_freeze + 1 else ();*)
                      loop(fz, newFz, stack))
               end
@@ -940,11 +940,11 @@ struct
           loop(fz, FZ.EMPTY, stack)
       end
 
-      (* 
+      (*
        * Sort simplify worklist in increasing degree.
        * Matula and Beck suggests that we should always remove the
        * node with the lowest degree first.  This is an approximation of
-       * the idea. 
+       * the idea.
        *)
       (*
       val buckets = A.array(K, []) : G.node list A.array
@@ -954,7 +954,7 @@ struct
               (UA.update(buckets, deg, n::UA.sub(buckets, deg)); insert rest)
           fun collect(~1, L) = L
             | collect(deg, L) = collect(deg-1, concat(UA.sub(buckets, deg), L))
-      in  insert nodes; 
+      in  insert nodes;
           collect(K-1, [])
       end
        *)
@@ -964,8 +964,8 @@ struct
        *)
       fun iterate{simplifyWkl, moveWkl, freezeWkl, stack} =
       let (* simplify everything *)
-          val (mv, fz, stack) = 
-                 simplifyAll((* sortByDegree *) simplifyWkl, 
+          val (mv, fz, stack) =
+                 simplifyAll((* sortByDegree *) simplifyWkl,
                              moveWkl, freezeWkl, stack)
           val (fz, stack) = coalesce(mv, fz, stack)
           val stack       = freeze(fz, stack)
@@ -977,7 +977,7 @@ struct
   (*
    * The main entry point for the iterated coalescing algorithm
    *)
-  fun iteratedCoalescing G = 
+  fun iteratedCoalescing G =
   let val {iterate,...} = iteratedCoalescingPhases G
   in  iterate end
 
@@ -989,7 +989,7 @@ struct
    *)
   fun potentialSpillNode (G as G.GRAPH{spillFlag,...}) = let
       val {markAsFrozen,...} = iteratedCoalescingPhases G
-  in  fn {node, cost, stack} => 
+  in  fn {node, cost, stack} =>
       let val _ = spillFlag := true (* potential spill found *)
           val (mv, fz, stack) = markAsFrozen(node, FZ.EMPTY, stack)
       in  if cost < 0.0 then
@@ -1002,12 +1002,12 @@ struct
 
 
   (*
-   *  SELECT: 
+   *  SELECT:
    *    Using optimistic spilling
    *)
-  fun select(G as GRAPH{getreg, getpair, trail, firstPseudoR, stamp, 
+  fun select(G as GRAPH{getreg, getpair, trail, firstPseudoR, stamp,
                         spillFlag, proh, mode, ...}) {stack} =
-  let 
+  let
       fun undoCoalesced END = ()
         | undoCoalesced(UNDO(NODE{number, color, ...}, status, trail)) =
           (status := BRIGGS_MOVE;
@@ -1018,11 +1018,11 @@ struct
 
       (* Fast coloring, assume no spilling can occur *)
       fun fastcoloring([], stamp) = ([], stamp)
-        | fastcoloring((node as NODE{color, (* pair, *) adj, ...})::stack, 
+        | fastcoloring((node as NODE{color, (* pair, *) adj, ...})::stack,
                        stamp) =
           let (* set up the proh array *)
               fun neighbors [] = ()
-                | neighbors(r::rs) = 
+                | neighbors(r::rs) =
                   let fun mark(NODE{color=ref(COLORED c), ...}) =
                            (UA.update(proh, c, stamp); neighbors rs)
                         | mark(NODE{color=ref(ALIASED n), ...}) = mark n
@@ -1030,65 +1030,65 @@ struct
                   in  mark r end
               val _ = neighbors(!adj)
           in  color := COLORED(getreg{pref=[], proh=proh, stamp=stamp});
-              fastcoloring(stack, stamp+1) 
+              fastcoloring(stack, stamp+1)
           end
 
       (* Briggs' optimistic spilling heuristic *)
       fun optimistic([], spills, stamp) = (spills, stamp)
-        | optimistic((node as NODE{color=ref(SPILLED), ...})::stack,  
+        | optimistic((node as NODE{color=ref(SPILLED), ...})::stack,
                      spills, stamp) =
              optimistic(stack, node::spills, stamp)
-        | optimistic((node as NODE{color as ref REMOVED, (* pair, *) adj, ...})::stack, 
+        | optimistic((node as NODE{color as ref REMOVED, (* pair, *) adj, ...})::stack,
                      spills, stamp) = let
            (* set up the proh array *)
               fun neighbors [] = ()
-                | neighbors(r::rs) = 
+                | neighbors(r::rs) =
                   let fun mark(NODE{color=ref(COLORED c), ...}) =
                            (UA.update(proh, c, stamp); neighbors rs)
                         | mark(NODE{color=ref(ALIASED n), ...}) = mark n
                         | mark _ = neighbors rs
                   in  mark r end
               val _ = neighbors(!adj)
-              val spills = 
+              val spills =
                   let val col = getreg{pref=[], proh=proh, stamp=stamp}
                   in  color := COLORED col; spills
                   end handle _ => node::spills
-          in  optimistic(stack, spills, stamp+1) 
+          in  optimistic(stack, spills, stamp+1)
           end
         | optimistic _ = error "optimistic"
 
       (* Briggs' optimistic spilling heuristic, with biased coloring *)
       fun biasedColoring([], spills, stamp) = (spills, stamp)
-        | biasedColoring((node as NODE{color=ref(SPILLED), ...})::stack,  
+        | biasedColoring((node as NODE{color=ref(SPILLED), ...})::stack,
                          spills, stamp) =
              biasedColoring(stack, node::spills, stamp)
-        | biasedColoring((node as NODE{color=ref(SPILL_LOC _), ...})::stack,  
+        | biasedColoring((node as NODE{color=ref(SPILL_LOC _), ...})::stack,
                          spills, stamp) =
              biasedColoring(stack, node::spills, stamp)
-        | biasedColoring((node as NODE{color=ref(MEMREG _), ...})::stack,  
+        | biasedColoring((node as NODE{color=ref(MEMREG _), ...})::stack,
                          spills, stamp) =
              biasedColoring(stack, node::spills, stamp)
         | biasedColoring(
-             (node as NODE{number, color, adj, 
-                           (* pair, *) movecnt, movelist,...})::stack, 
+             (node as NODE{number, color, adj,
+                           (* pair, *) movecnt, movelist,...})::stack,
              spills, stamp) =
           let (* set up the proh array *)
               fun neighbors [] = ()
-                | neighbors(r::rs) = 
+                | neighbors(r::rs) =
                   (case chase r of
-                     NODE{color=ref(COLORED c), ...} => 
+                     NODE{color=ref(COLORED c), ...} =>
                         (UA.update(proh, c, stamp); neighbors rs)
                    | _ => neighbors rs
                   )
-              (* 
-               * Look at lost moves and see if it is possible to 
+              (*
+               * Look at lost moves and see if it is possible to
                * color the move with the same color
                *)
               fun getPref([], pref) = pref
-                | getPref(MV{status=ref(LOST | BRIGGS_MOVE | GEORGE_MOVE), 
+                | getPref(MV{status=ref(LOST | BRIGGS_MOVE | GEORGE_MOVE),
                              src, dst, ...}::mvs, pref) =
                   let val src as NODE{number=s,...} = chase src
-                      val other = if s = number then chase dst else src 
+                      val other = if s = number then chase dst else src
                   in  case other of
                         NODE{color=ref(COLORED c),...} => getPref(mvs, c::pref)
                       | _ => getPref(mvs, pref)
@@ -1097,13 +1097,13 @@ struct
 
               val _    = neighbors(!adj)
               val pref = getPref(!movelist,[])
-              val spills = 
+              val spills =
                   let val col = getreg{pref=[], proh=proh, stamp=stamp}
                   in  color := COLORED col; spills
                   end handle _ => node::spills
           in  biasedColoring(stack, spills, stamp+1) end
 
-      val (spills, st) = 
+      val (spills, st) =
         if isOn(mode, BIASED_SELECTION)  then
           biasedColoring(stack, [], !stamp)
         else if !spillFlag then
@@ -1114,7 +1114,7 @@ struct
   in  stamp := st;
       case spills of
         [] => {spills=[]}
-      | spills => 
+      | spills =>
         let fun undo [] = ()
               | undo(NODE{color,...}::nodes) = (color := PSEUDO; undo nodes)
         in  undo stack;
@@ -1128,16 +1128,16 @@ struct
    * Incorporate memory<->register moves into the interference graph
    *)
   fun initMemMoves(GRAPH{memMoves, ...}) =
-  let fun move(NODE{movelist, movecost, ...}, mv, cost) = 
+  let fun move(NODE{movelist, movecost, ...}, mv, cost) =
           (movelist := mv :: !movelist;
            movecost := cost + !movecost
           )
 
-      fun setMove(dst, src, mv, cost) = 
+      fun setMove(dst, src, mv, cost) =
           (move(dst, mv, cost); move(src, mv, cost))
 
       fun init [] = ()
-        | init((mv as MV{dst, src, cost, ...})::mvs) = 
+        | init((mv as MV{dst, src, cost, ...})::mvs) =
           let val dst as NODE{color=ref dstCol, ...} = chase dst
               val src as NODE{color=ref srcCol, ...} = chase src
           in
@@ -1145,20 +1145,20 @@ struct
               setMove(dst, src, mv, cost)
             else (case (srcCol, dstCol)
               of (PSEUDO, _) =>
-                 if isFixedMem dstCol then setMove(dst, src, mv, cost) 
+                 if isFixedMem dstCol then setMove(dst, src, mv, cost)
                  else error "initMemMoves"
-               | (_, PSEUDO) => 
-                 if isFixedMem srcCol then setMove(dst, src, mv, cost) 
+               | (_, PSEUDO) =>
+                 if isFixedMem srcCol then setMove(dst, src, mv, cost)
                  else error "initMemMoves"
-               | (COLORED _, _) => 
+               | (COLORED _, _) =>
                  if isFixedMem dstCol then () else error "initMemMoves"
-               | (_, COLORED _) => 
+               | (_, COLORED _) =>
                  if isFixedMem srcCol then () else error "initMemMoves"
                | _  => error "initMemMoves"
              (*esac*));
               init mvs
           end
-      val moves = !memMoves 
+      val moves = !memMoves
   in  memMoves := [];
       init moves
   end
@@ -1168,7 +1168,7 @@ struct
    * Compute savings due to memory<->register moves
    *)
   fun moveSavings(GRAPH{memMoves=ref [], ...}) = (fn node => 0.0)
-    | moveSavings(GRAPH{memMoves, bitMatrix, ...}) = 
+    | moveSavings(GRAPH{memMoves, bitMatrix, ...}) =
   let exception Savings
       val savingsMap = IntHashTable.mkTable(32, Savings)
                : {pinned:int,cost:cost} IntHashTable.hash_table
@@ -1187,10 +1187,10 @@ struct
         | computeSavings(MV{dst, src, cost, ...}::mvs) =
           let val src as NODE{number=u, color=cu, ...} = chase src
               val dst as NODE{number=v, color=cv, ...} = chase dst
-          in  case (!cu, !cv) 
-              of (cu, PSEUDO) => 
+          in  case (!cu, !cv)
+              of (cu, PSEUDO) =>
                  if isFixedMem (cu) then incSavings(v, u, cost) else ()
-               | (PSEUDO, cv) => 
+               | (PSEUDO, cv) =>
                  if isFixedMem (cv) then incSavings(u, v, cost) else ()
                | _ => ();
               computeSavings mvs
@@ -1200,20 +1200,20 @@ struct
   end
 
   (*
-   * Update the color of cells 
+   * Update the color of cells
    *)
-  fun updateCellColors(GRAPH{nodes, deadCopies, ...}) = 
+  fun updateCellColors(GRAPH{nodes, deadCopies, ...}) =
   let fun enter(C.CELL{col, ...},c) = col := c
       fun cellOf(NODE{cell, ...}) = cell
-      fun set(NODE{cell, color=ref(COLORED c),...}) = 
+      fun set(NODE{cell, color=ref(COLORED c),...}) =
             enter(cell, C.MACHINE c)
-        | set(NODE{cell, color=ref(ALIASED alias),...}) = 
+        | set(NODE{cell, color=ref(ALIASED alias),...}) =
             enter(cell, C.ALIASED(cellOf alias))
-        | set(NODE{cell, color=ref(SPILLED),...}) = 
+        | set(NODE{cell, color=ref(SPILLED),...}) =
             enter(cell, C.SPILLED)
-        | set(NODE{cell, color=ref(SPILL_LOC s),...}) = 
+        | set(NODE{cell, color=ref(SPILL_LOC s),...}) =
             enter(cell, C.SPILLED)
-        | set(NODE{cell, color=ref(MEMREG(m, _)),...})= 
+        | set(NODE{cell, color=ref(MEMREG(m, _)),...})=
             enter(cell, C.MACHINE m)
         | set(NODE{cell, color=ref PSEUDO, ...}) = ()
         | set(_) = error("updateCellColors")
@@ -1223,11 +1223,11 @@ struct
   (*
    * Update aliases before spill rewriting.
    *)
-  fun updateCellAliases(GRAPH{nodes, deadCopies, ...}) = 
+  fun updateCellAliases(GRAPH{nodes, deadCopies, ...}) =
   let fun enter(C.CELL{col, ...},c) = col := c
       fun cellOf(NODE{cell, ...}) = cell
       fun set(NODE{cell, color=ref(COLORED c),...}) = ()
-        | set(NODE{cell, color=ref(ALIASED alias),...}) = 
+        | set(NODE{cell, color=ref(ALIASED alias),...}) =
             enter(cell, C.ALIASED(cellOf alias))
         | set(NODE{cell, color=ref(SPILLED),...}) = ()
         | set(NODE{cell, color=ref(SPILL_LOC s),...}) = ()
@@ -1237,17 +1237,17 @@ struct
   in  IntHashTable.app set nodes
   end
 
-  fun markDeadCopiesAsSpilled(GRAPH{deadCopies, ...}) = 
+  fun markDeadCopiesAsSpilled(GRAPH{deadCopies, ...}) =
   let fun enter(C.CELL{col, ...},c) = col := c
   in  case !deadCopies of
         [] => ()
       | dead => app (fn r => enter(r, C.SPILLED)) dead
-  end 
+  end
 
   (*
-   * Clear the interference graph, but keep the nodes 
+   * Clear the interference graph, but keep the nodes
    *)
-  fun clearGraph(GRAPH{bitMatrix, maxRegs, trail, spillFlag, 
+  fun clearGraph(GRAPH{bitMatrix, maxRegs, trail, spillFlag,
                        deadCopies, memMoves, copyTmps, ...}) =
   let val edges = BM.edges(!bitMatrix)
   in  trail      := END;
@@ -1257,7 +1257,7 @@ struct
       copyTmps   := [];
       bitMatrix  := BM.empty;
       bitMatrix  := G.newBitMatrix{edges=edges, maxRegs=maxRegs()}
-  end 
+  end
 
   fun clearNodes(GRAPH{nodes,...}) =
   let fun init(_, NODE{pri, degree, adj, movecnt, movelist,
@@ -1269,6 +1269,6 @@ struct
 
   end (* local *)
 
-end 
+end
 
 end (* local *)

@@ -1,5 +1,5 @@
 (* constant.sml --- constants used to specialize MLRISC and the code generators.
- * 
+ *
  * COPYRIGHT (c) 1996 AT&T Bell Laboratories.
  *
  *)

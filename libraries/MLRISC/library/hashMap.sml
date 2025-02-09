@@ -9,9 +9,9 @@ struct
 
    structure A = Array
 
-   datatype 'a tree = NODE of 'a * 'a tree * 'a tree | EMPTY 
+   datatype 'a tree = NODE of 'a * 'a tree * 'a tree | EMPTY
 
-   datatype ('a,'b) map = 
+   datatype ('a,'b) map =
       MAP of
       { table : ('a * 'b) tree Array.array ref,
         size  : int ref,
@@ -37,11 +37,11 @@ struct
 
    fun isEmpty (MAP { size, ... }) = !size = 0
 
-   fun clear (MAP { size, table, ... }) = 
+   fun clear (MAP { size, table, ... }) =
        (table := A.array(A.length(!table),EMPTY); size := 0)
 
    and insert (m as MAP { size, table = ref T, order, hash, exn,...})
-              (e as (x,y)) = 
+              (e as (x,y)) =
    let val pos = hash x mod A.length T
        fun ins EMPTY = (size := !size + 1; NODE(e,EMPTY,EMPTY))
          | ins (NODE(e' as (x',y'),l,r)) =
@@ -56,17 +56,17 @@ struct
    end
 
    and grow (MAP { size, table = table as ref T, order, hash, exn, ... }) =
-   let val m2 as 
-           MAP{table = ref T',...} = create{ order=order, hash=hash, exn=exn } 
+   let val m2 as
+           MAP{table = ref T',...} = create{ order=order, hash=hash, exn=exn }
                    (!size * 2 + 10) (* : ('a,'b) map  *)
-       val ins = insert m2 
+       val ins = insert m2
        fun loop EMPTY = ()
          | loop (NODE(e,l,r)) = (ins e; loop l; loop r)
    in  A.app loop T; table := T'
    end
 
    and update (m as MAP { size, table = ref T, order, hash, exn,...})
-              (e as (x,y), f) = 
+              (e as (x,y), f) =
    let val pos = hash x mod A.length T
        fun ins EMPTY = (size := !size + 1; NODE(e,EMPTY,EMPTY))
          | ins (NODE(e' as (x',y'),l,r)) =
@@ -97,11 +97,11 @@ struct
            |  GREATER => NODE(e',l,del r)
        and delLeftMost EMPTY = raise exn
          | delLeftMost (NODE(e,EMPTY,r)) = (e,r)
-         | delLeftMost (NODE(e,l,r)) = 
+         | delLeftMost (NODE(e,l,r)) =
            let val (e',r') = delLeftMost r
            in  (e',NODE(e,l,r'))
            end
- 
+
    in  A.update(T,pos,del(A.sub(T,pos)))
    end
 
@@ -136,7 +136,7 @@ struct
       in  A.foldl (fn (t,l) => collect(t,l)) x T
       end
 
-   fun app f = 
+   fun app f =
       fn (MAP { table = ref T, ... }) =>
       let fun appTree EMPTY         = ()
             | appTree (NODE(e,l,r)) = (f e; appTree l; appTree r)
@@ -148,7 +148,7 @@ struct
    fun toString (f,g) map =
       "{" ^ fold (fn ((x,y),"") => "(" ^ f x ^ ", " ^ g y ^ ")"
                    | ((x,y),l)  => "(" ^ f x ^ ", " ^ g y ^ "), " ^ l
-                 ) "" map ^ "}"  
+                 ) "" map ^ "}"
 
 end
 

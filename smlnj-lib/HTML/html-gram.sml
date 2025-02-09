@@ -2,11 +2,11 @@
 
   functor HTMLLrValsFn (
     structure Token : TOKEN
-    structure HTMLAttrs : HTML_ATTRS) = 
+    structure HTMLAttrs : HTML_ATTRS) =
 struct
 structure ParserData=
 struct
-structure Header = 
+structure Header =
 struct
 (* html-gram
  *
@@ -24,7 +24,7 @@ fun blockList [blk] = blk
   | blockList l = HTML.BlockList l
 
 fun textBlock l = HTML.TextBlock(textList l)
-    
+
 (* The elements of a definition list (<DL>) are tags (<DT>) and items (<DD>).
  * To avoid shift/reduce problems, we parse them and then group them.
  *)
@@ -35,14 +35,14 @@ datatype deflist_item
 fun groupDefListContents [] = []
   | groupDefListContents (h :: t) = let
       fun gdlc (DL_tag tag, []) = ({dt=[tag], dd=HTML.BlockList[]}, [])
-	| gdlc (DL_tag tag, h :: t) = let
-	    val ({dt, dd}, r) = gdlc (h, t)
-	    in
-	      ({dt = tag :: dt, dd = dd}, r)
-	    end
-	| gdlc (DL_item blk, r) = ({dt=[],dd=blk}, groupDefListContents r)
+        | gdlc (DL_tag tag, h :: t) = let
+            val ({dt, dd}, r) = gdlc (h, t)
+            in
+              ({dt = tag :: dt, dd = dd}, r)
+            end
+        | gdlc (DL_item blk, r) = ({dt=[],dd=blk}, groupDefListContents r)
       in
-	op :: (gdlc (h, t))
+        op :: (gdlc (h, t))
       end
 
 (* A list of Text, paragraphs and blocks requires grouping the Text items and
@@ -61,26 +61,26 @@ fun consBlock (blk, BL_block bl :: r) = BL_block(blk::bl) :: r
 
 fun mkBlock blks = let
       fun f (BL_text tl) = textBlock tl
-	| f (BL_block bl) = blockList bl
+        | f (BL_block bl) = blockList bl
       in
-	blockList(List.map f blks)
+        blockList(List.map f blks)
       end
 
 fun mkBody blks = HTML.BODY{
-	background = NONE,
-	bgcolor = NONE,
-	text = NONE,
-	link = NONE,
-	vlink = NONE,
-	alink = NONE,
-	content = mkBlock blks
+        background = NONE,
+        bgcolor = NONE,
+        text = NONE,
+        link = NONE,
+        vlink = NONE,
+        alink = NONE,
+        content = mkBlock blks
       }
 
 
 end
 structure LrTable = Token.LrTable
 structure Token = Token
-local open LrTable in 
+local open LrTable in
 val table=let val actionRows =
 "\
 \\001\000\001\000\000\000\000\000\
@@ -883,7 +883,7 @@ val gotoT =
 val numstates = 283
 val numrules = 155
 val s = ref "" and index = ref 0
-val string_to_int = fn () => 
+val string_to_int = fn () =>
 let val i = !index
 in index := i+2; Char.ord(String.sub(!s,i)) + Char.ord(String.sub(!s,i+1)) * 256
 end
@@ -941,7 +941,7 @@ end
 local open Header in
 type pos = int
 type arg = int -> HTMLAttrs.context
-structure MlyValue = 
+structure MlyValue =
 struct
 datatype svalue = VOID | ntVOID of unit | ENTITY_REF of  (string)
  | CHAR_REF of  (string) | PCDATA of  (string)
@@ -1021,9 +1021,9 @@ infix 5 $$
 fun x $$ y = y::x
 val is_keyword =
 fn _ => false
-val preferred_change : (term list * term list) list = 
+val preferred_change : (term list * term list) list =
 nil
-val noShift = 
+val noShift =
 fn (T 0) => true | _ => false
 val showTerminal =
 fn (T 0) => "EOF"
@@ -1157,62 +1157,62 @@ fn (T 0) => "EOF"
   | _ => "bogus-term"
 local open Header in
 val errtermvalue=
-fn (T 1) => MlyValue.START_A(([])) | 
+fn (T 1) => MlyValue.START_A(([])) |
 (T 5) => MlyValue.START_APPLET((
 [
     ("CODE", HTMLAttrs.NAME ""),
     ("WIDTH", HTMLAttrs.NAME ""),
     ("HEIGHT", HTMLAttrs.NAME "")
   ]
-)) | 
-(T 7) => MlyValue.TAG_AREA(([("ALT", HTMLAttrs.NAME "")])) | 
-(T 10) => MlyValue.TAG_BASE(([("URL", HTMLAttrs.NAME "")])) | 
-(T 15) => MlyValue.START_BODY(([])) | 
-(T 17) => MlyValue.TAG_BR(([])) | 
-(T 18) => MlyValue.START_CAPTION(([])) | 
-(T 30) => MlyValue.START_DIR(([])) | 
-(T 32) => MlyValue.START_DIV(([])) | 
-(T 34) => MlyValue.START_DL(([])) | 
-(T 40) => MlyValue.START_FONT(([])) | 
-(T 42) => MlyValue.START_BASEFONT(([])) | 
-(T 44) => MlyValue.START_FORM(([])) | 
-(T 46) => MlyValue.START_H1(([])) | 
-(T 48) => MlyValue.START_H2(([])) | 
-(T 50) => MlyValue.START_H3(([])) | 
-(T 52) => MlyValue.START_H4(([])) | 
-(T 54) => MlyValue.START_H5(([])) | 
-(T 56) => MlyValue.START_H6(([])) | 
-(T 60) => MlyValue.TAG_HR(([])) | 
-(T 65) => MlyValue.TAG_IMG(([("SRC", HTMLAttrs.NAME "")])) | 
-(T 66) => MlyValue.TAG_INPUT(([])) | 
-(T 67) => MlyValue.TAG_ISINDEX(([])) | 
-(T 72) => MlyValue.TAG_LINK(([])) | 
-(T 73) => MlyValue.START_MAP(([])) | 
-(T 75) => MlyValue.START_MENU(([])) | 
-(T 77) => MlyValue.TAG_META(([("CONTENT", HTMLAttrs.NAME "")])) | 
-(T 78) => MlyValue.START_OL(([])) | 
-(T 80) => MlyValue.START_OPTION(([])) | 
-(T 82) => MlyValue.START_P(([])) | 
-(T 84) => MlyValue.TAG_PARAM(([("NAME", HTMLAttrs.NAME "")])) | 
-(T 85) => MlyValue.START_PRE(([])) | 
-(T 91) => MlyValue.START_SELECT(([("NAME", HTMLAttrs.NAME "")])) | 
-(T 105) => MlyValue.START_TABLE(([])) | 
-(T 107) => MlyValue.START_TD(([])) | 
+)) |
+(T 7) => MlyValue.TAG_AREA(([("ALT", HTMLAttrs.NAME "")])) |
+(T 10) => MlyValue.TAG_BASE(([("URL", HTMLAttrs.NAME "")])) |
+(T 15) => MlyValue.START_BODY(([])) |
+(T 17) => MlyValue.TAG_BR(([])) |
+(T 18) => MlyValue.START_CAPTION(([])) |
+(T 30) => MlyValue.START_DIR(([])) |
+(T 32) => MlyValue.START_DIV(([])) |
+(T 34) => MlyValue.START_DL(([])) |
+(T 40) => MlyValue.START_FONT(([])) |
+(T 42) => MlyValue.START_BASEFONT(([])) |
+(T 44) => MlyValue.START_FORM(([])) |
+(T 46) => MlyValue.START_H1(([])) |
+(T 48) => MlyValue.START_H2(([])) |
+(T 50) => MlyValue.START_H3(([])) |
+(T 52) => MlyValue.START_H4(([])) |
+(T 54) => MlyValue.START_H5(([])) |
+(T 56) => MlyValue.START_H6(([])) |
+(T 60) => MlyValue.TAG_HR(([])) |
+(T 65) => MlyValue.TAG_IMG(([("SRC", HTMLAttrs.NAME "")])) |
+(T 66) => MlyValue.TAG_INPUT(([])) |
+(T 67) => MlyValue.TAG_ISINDEX(([])) |
+(T 72) => MlyValue.TAG_LINK(([])) |
+(T 73) => MlyValue.START_MAP(([])) |
+(T 75) => MlyValue.START_MENU(([])) |
+(T 77) => MlyValue.TAG_META(([("CONTENT", HTMLAttrs.NAME "")])) |
+(T 78) => MlyValue.START_OL(([])) |
+(T 80) => MlyValue.START_OPTION(([])) |
+(T 82) => MlyValue.START_P(([])) |
+(T 84) => MlyValue.TAG_PARAM(([("NAME", HTMLAttrs.NAME "")])) |
+(T 85) => MlyValue.START_PRE(([])) |
+(T 91) => MlyValue.START_SELECT(([("NAME", HTMLAttrs.NAME "")])) |
+(T 105) => MlyValue.START_TABLE(([])) |
+(T 107) => MlyValue.START_TD(([])) |
 (T 109) => MlyValue.START_TEXTAREA((
 [
     ("NAME", HTMLAttrs.NAME ""),
     ("ROWS", HTMLAttrs.NAME "0"),
     ("COLS", HTMLAttrs.NAME "0")
   ]
-)) | 
-(T 111) => MlyValue.START_TH(([])) | 
-(T 115) => MlyValue.START_TR(([])) | 
-(T 121) => MlyValue.START_UL(([])) | 
+)) |
+(T 111) => MlyValue.START_TH(([])) |
+(T 115) => MlyValue.START_TR(([])) |
+(T 121) => MlyValue.START_UL(([])) |
 _ => MlyValue.VOID
 end
 val terms : term list = nil
- $$ (T 124) $$ (T 123) $$ (T 122) $$ (T 120) $$ (T 119) $$ (T 118) $$ 
-(T 117) $$ (T 116) $$ (T 114) $$ (T 113) $$ (T 112) $$ (T 110) $$ (T 
+ $$ (T 124) $$ (T 123) $$ (T 122) $$ (T 120) $$ (T 119) $$ (T 118) $$
+(T 117) $$ (T 116) $$ (T 114) $$ (T 113) $$ (T 112) $$ (T 110) $$ (T
 108) $$ (T 106) $$ (T 104) $$ (T 103) $$ (T 102) $$ (T 101) $$ (T 100)
  $$ (T 99) $$ (T 98) $$ (T 97) $$ (T 96) $$ (T 95) $$ (T 94) $$ (T 93)
  $$ (T 92) $$ (T 90) $$ (T 89) $$ (T 88) $$ (T 87) $$ (T 86) $$ (T 83)
@@ -1222,18 +1222,18 @@ val terms : term list = nil
  $$ (T 41) $$ (T 39) $$ (T 38) $$ (T 37) $$ (T 36) $$ (T 35) $$ (T 33)
  $$ (T 31) $$ (T 29) $$ (T 28) $$ (T 27) $$ (T 26) $$ (T 25) $$ (T 24)
  $$ (T 23) $$ (T 22) $$ (T 21) $$ (T 20) $$ (T 19) $$ (T 16) $$ (T 14)
- $$ (T 13) $$ (T 12) $$ (T 11) $$ (T 9) $$ (T 8) $$ (T 6) $$ (T 4) $$ 
+ $$ (T 13) $$ (T 12) $$ (T 11) $$ (T 9) $$ (T 8) $$ (T 6) $$ (T 4) $$
 (T 3) $$ (T 2) $$ (T 0)end
 structure Actions =
-struct 
+struct
 exception mlyAction of int
 local open Header in
-val actions = 
+val actions =
 fn (i392,defaultPos,stack,
     (ctx):arg) =>
 case (i392,stack)
 of  ( 0, ( ( _, ( _, _, EndHTML1right)) :: ( _, ( MlyValue.Body Body,
- _, _)) :: ( _, ( MlyValue.Head Head, _, _)) :: ( _, ( 
+ _, _)) :: ( _, ( MlyValue.Head Head, _, _)) :: ( _, (
 MlyValue.StartHTML StartHTML, StartHTML1left, _)) :: rest671)) => let
  val  result = MlyValue.Document (
 HTML.HTML{version=StartHTML, head=Head, body=Body})
@@ -1245,7 +1245,7 @@ end
 end
 |  ( 2, ( ( _, ( _, START_HTML1left, START_HTML1right)) :: rest671))
  => let val  result = MlyValue.StartHTML (NONE)
- in ( LrTable.NT 1, ( result, START_HTML1left, START_HTML1right), 
+ in ( LrTable.NT 1, ( result, START_HTML1left, START_HTML1right),
 rest671)
 end
 |  ( 3, ( rest671)) => let val  result = MlyValue.ntVOID ()
@@ -1267,7 +1267,7 @@ end
 end
 |  ( 7, ( ( _, ( _, START_HEAD1left, START_HEAD1right)) :: rest671))
  => let val  result = MlyValue.ntVOID ()
- in ( LrTable.NT 4, ( result, START_HEAD1left, START_HEAD1right), 
+ in ( LrTable.NT 4, ( result, START_HEAD1left, START_HEAD1right),
 rest671)
 end
 |  ( 8, ( rest671)) => let val  result = MlyValue.ntVOID ()
@@ -1278,69 +1278,69 @@ end
  in ( LrTable.NT 5, ( result, END_HEAD1left, END_HEAD1right), rest671)
 
 end
-|  ( 10, ( ( _, ( MlyValue.HeadElements HeadElements2, _, 
+|  ( 10, ( ( _, ( MlyValue.HeadElements HeadElements2, _,
 HeadElements2right)) :: _ :: ( _, ( MlyValue.PCData PCData, _, _)) ::
  _ :: ( _, ( MlyValue.HeadElements HeadElements1, HeadElements1left, _
 )) :: rest671)) => let val  result = MlyValue.HeadContents (
 HeadElements1 @ (HTML.Head_TITLE PCData :: HeadElements2))
- in ( LrTable.NT 6, ( result, HeadElements1left, HeadElements2right), 
+ in ( LrTable.NT 6, ( result, HeadElements1left, HeadElements2right),
 rest671)
 end
 |  ( 11, ( rest671)) => let val  result = MlyValue.HeadElements ([])
  in ( LrTable.NT 7, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 12, ( ( _, ( MlyValue.HeadElements HeadElements, _, 
-HeadElements1right)) :: ( _, ( MlyValue.HeadElement HeadElement, 
-HeadElement1left, _)) :: rest671)) => let val  result = 
+|  ( 12, ( ( _, ( MlyValue.HeadElements HeadElements, _,
+HeadElements1right)) :: ( _, ( MlyValue.HeadElement HeadElement,
+HeadElement1left, _)) :: rest671)) => let val  result =
 MlyValue.HeadElements (HeadElement :: HeadElements)
- in ( LrTable.NT 7, ( result, HeadElement1left, HeadElements1right), 
+ in ( LrTable.NT 7, ( result, HeadElement1left, HeadElements1right),
 rest671)
 end
-|  ( 13, ( ( _, ( MlyValue.TAG_META TAG_META, (TAG_METAleft as 
-TAG_META1left), TAG_META1right)) :: rest671)) => let val  result = 
+|  ( 13, ( ( _, ( MlyValue.TAG_META TAG_META, (TAG_METAleft as
+TAG_META1left), TAG_META1right)) :: rest671)) => let val  result =
 MlyValue.HeadElement (HTMLAttrs.mkMETA(ctx TAG_METAleft, TAG_META))
  in ( LrTable.NT 8, ( result, TAG_META1left, TAG_META1right), rest671)
 
 end
-|  ( 14, ( ( _, ( MlyValue.TAG_LINK TAG_LINK, (TAG_LINKleft as 
-TAG_LINK1left), TAG_LINK1right)) :: rest671)) => let val  result = 
+|  ( 14, ( ( _, ( MlyValue.TAG_LINK TAG_LINK, (TAG_LINKleft as
+TAG_LINK1left), TAG_LINK1right)) :: rest671)) => let val  result =
 MlyValue.HeadElement (HTMLAttrs.mkLINK(ctx TAG_LINKleft, TAG_LINK))
  in ( LrTable.NT 8, ( result, TAG_LINK1left, TAG_LINK1right), rest671)
 
 end
 |  ( 15, ( ( _, ( MlyValue.TAG_ISINDEX TAG_ISINDEX, (TAG_ISINDEXleft
- as TAG_ISINDEX1left), TAG_ISINDEX1right)) :: rest671)) => let val  
+ as TAG_ISINDEX1left), TAG_ISINDEX1right)) :: rest671)) => let val
 result = MlyValue.HeadElement (
 let val stuff =
-		    HTMLAttrs.mkISINDEX (ctx TAG_ISINDEXleft, TAG_ISINDEX)
-		  in HTML.Head_ISINDEX stuff end
-		
+                    HTMLAttrs.mkISINDEX (ctx TAG_ISINDEXleft, TAG_ISINDEX)
+                  in HTML.Head_ISINDEX stuff end
+
 )
- in ( LrTable.NT 8, ( result, TAG_ISINDEX1left, TAG_ISINDEX1right), 
+ in ( LrTable.NT 8, ( result, TAG_ISINDEX1left, TAG_ISINDEX1right),
 rest671)
 end
-|  ( 16, ( ( _, ( MlyValue.TAG_BASE TAG_BASE, (TAG_BASEleft as 
-TAG_BASE1left), TAG_BASE1right)) :: rest671)) => let val  result = 
+|  ( 16, ( ( _, ( MlyValue.TAG_BASE TAG_BASE, (TAG_BASEleft as
+TAG_BASE1left), TAG_BASE1right)) :: rest671)) => let val  result =
 MlyValue.HeadElement (HTMLAttrs.mkBASE(ctx TAG_BASEleft, TAG_BASE))
  in ( LrTable.NT 8, ( result, TAG_BASE1left, TAG_BASE1right), rest671)
 
 end
-|  ( 17, ( ( _, ( _, _, END_STYLE1right)) :: ( _, ( MlyValue.PCData 
+|  ( 17, ( ( _, ( _, _, END_STYLE1right)) :: ( _, ( MlyValue.PCData
 PCData, _, _)) :: ( _, ( _, START_STYLE1left, _)) :: rest671)) => let
  val  result = MlyValue.HeadElement (HTML.Head_STYLE(PCData))
- in ( LrTable.NT 8, ( result, START_STYLE1left, END_STYLE1right), 
+ in ( LrTable.NT 8, ( result, START_STYLE1left, END_STYLE1right),
 rest671)
 end
-|  ( 18, ( ( _, ( _, _, END_SCRIPT1right)) :: ( _, ( MlyValue.PCData 
+|  ( 18, ( ( _, ( _, _, END_SCRIPT1right)) :: ( _, ( MlyValue.PCData
 PCData, _, _)) :: ( _, ( _, START_SCRIPT1left, _)) :: rest671)) => let
  val  result = MlyValue.HeadElement (HTML.Head_SCRIPT(PCData))
- in ( LrTable.NT 8, ( result, START_SCRIPT1left, END_SCRIPT1right), 
+ in ( LrTable.NT 8, ( result, START_SCRIPT1left, END_SCRIPT1right),
 rest671)
 end
-|  ( 19, ( ( _, ( _, _, EndBODY1right)) :: ( _, ( 
+|  ( 19, ( ( _, ( _, _, EndBODY1right)) :: ( _, (
 MlyValue.BodyContent0 BodyContent0, BodyContent01left, _)) :: rest671)
 ) => let val  result = MlyValue.Body (BodyContent0)
- in ( LrTable.NT 9, ( result, BodyContent01left, EndBODY1right), 
+ in ( LrTable.NT 9, ( result, BodyContent01left, EndBODY1right),
 rest671)
 end
 |  ( 20, ( rest671)) => let val  result = MlyValue.ntVOID ()
@@ -1351,175 +1351,175 @@ end
  in ( LrTable.NT 11, ( result, END_BODY1left, END_BODY1right), rest671
 )
 end
-|  ( 22, ( ( _, ( MlyValue.BodyContent1 BodyContent1, 
-BodyContent11left, BodyContent11right)) :: rest671)) => let val  
+|  ( 22, ( ( _, ( MlyValue.BodyContent1 BodyContent1,
+BodyContent11left, BodyContent11right)) :: rest671)) => let val
 result = MlyValue.BodyContent (mkBlock BodyContent1)
  in ( LrTable.NT 12, ( result, BodyContent11left, BodyContent11right),
  rest671)
 end
-|  ( 23, ( ( _, ( MlyValue.BodyContent BodyContent, _, 
+|  ( 23, ( ( _, ( MlyValue.BodyContent BodyContent, _,
 BodyContent1right)) :: ( _, ( MlyValue.START_BODY START_BODY, (
-START_BODYleft as START_BODY1left), _)) :: rest671)) => let val  
+START_BODYleft as START_BODY1left), _)) :: rest671)) => let val
 result = MlyValue.BodyContent0 (
 HTMLAttrs.mkBODY(ctx START_BODYleft, START_BODY, BodyContent))
- in ( LrTable.NT 13, ( result, START_BODY1left, BodyContent1right), 
+ in ( LrTable.NT 13, ( result, START_BODY1left, BodyContent1right),
 rest671)
 end
-|  ( 24, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: ( _, ( MlyValue.TextWOScript TextWOScript, 
-TextWOScript1left, _)) :: rest671)) => let val  result = 
+|  ( 24, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: ( _, ( MlyValue.TextWOScript TextWOScript,
+TextWOScript1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent0 (mkBody(consText(TextWOScript, BodyContent1)))
  in ( LrTable.NT 13, ( result, TextWOScript1left, BodyContent11right),
  rest671)
 end
-|  ( 25, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: ( _, ( MlyValue.BodyElement BodyElement, 
-BodyElement1left, _)) :: rest671)) => let val  result = 
+|  ( 25, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: ( _, ( MlyValue.BodyElement BodyElement,
+BodyElement1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent0 (mkBody(consBlock(BodyElement, BodyContent1)))
- in ( LrTable.NT 13, ( result, BodyElement1left, BodyContent11right), 
+ in ( LrTable.NT 13, ( result, BodyElement1left, BodyContent11right),
 rest671)
 end
-|  ( 26, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: ( _, ( MlyValue.BlockWOIndex BlockWOIndex, 
-BlockWOIndex1left, _)) :: rest671)) => let val  result = 
+|  ( 26, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: ( _, ( MlyValue.BlockWOIndex BlockWOIndex,
+BlockWOIndex1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent0 (mkBody(consBlock(BlockWOIndex, BodyContent1)))
  in ( LrTable.NT 13, ( result, BlockWOIndex1left, BodyContent11right),
  rest671)
 end
-|  ( 27, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 27, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent0 (mkBody(consBlock(Paragraph, BodyContent1)))
- in ( LrTable.NT 13, ( result, Paragraph1left, BodyContent11right), 
+ in ( LrTable.NT 13, ( result, Paragraph1left, BodyContent11right),
 rest671)
 end
-|  ( 28, ( ( _, ( MlyValue.BodyContent2 BodyContent2, _, 
-BodyContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 28, ( ( _, ( MlyValue.BodyContent2 BodyContent2, _,
+BodyContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent0 (mkBody(consBlock(Paragraph, BodyContent2)))
- in ( LrTable.NT 13, ( result, Paragraph1left, BodyContent21right), 
+ in ( LrTable.NT 13, ( result, Paragraph1left, BodyContent21right),
 rest671)
 end
 |  ( 29, ( rest671)) => let val  result = MlyValue.BodyContent1 ([])
  in ( LrTable.NT 14, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 30, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: ( _, ( MlyValue.Text Text, Text1left, _)) :: 
+|  ( 30, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: ( _, ( MlyValue.Text Text, Text1left, _)) ::
 rest671)) => let val  result = MlyValue.BodyContent1 (
 consText(Text, BodyContent1))
  in ( LrTable.NT 14, ( result, Text1left, BodyContent11right), rest671
 )
 end
-|  ( 31, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: ( _, ( MlyValue.BodyElement BodyElement, 
-BodyElement1left, _)) :: rest671)) => let val  result = 
+|  ( 31, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: ( _, ( MlyValue.BodyElement BodyElement,
+BodyElement1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent1 (consBlock(BodyElement, BodyContent1))
- in ( LrTable.NT 14, ( result, BodyElement1left, BodyContent11right), 
+ in ( LrTable.NT 14, ( result, BodyElement1left, BodyContent11right),
 rest671)
 end
-|  ( 32, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
+|  ( 32, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
 BodyContent11right)) :: ( _, ( MlyValue.Block Block, Block1left, _))
  :: rest671)) => let val  result = MlyValue.BodyContent1 (
 consBlock(Block, BodyContent1))
- in ( LrTable.NT 14, ( result, Block1left, BodyContent11right), 
+ in ( LrTable.NT 14, ( result, Block1left, BodyContent11right),
 rest671)
 end
-|  ( 33, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 33, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent1 (consBlock(Paragraph, BodyContent1))
- in ( LrTable.NT 14, ( result, Paragraph1left, BodyContent11right), 
+ in ( LrTable.NT 14, ( result, Paragraph1left, BodyContent11right),
 rest671)
 end
-|  ( 34, ( ( _, ( MlyValue.BodyContent2 BodyContent2, _, 
-BodyContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 34, ( ( _, ( MlyValue.BodyContent2 BodyContent2, _,
+BodyContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent1 (consBlock(Paragraph, BodyContent2))
- in ( LrTable.NT 14, ( result, Paragraph1left, BodyContent21right), 
+ in ( LrTable.NT 14, ( result, Paragraph1left, BodyContent21right),
 rest671)
 end
 |  ( 35, ( rest671)) => let val  result = MlyValue.BodyContent2 ([])
  in ( LrTable.NT 15, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 36, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: ( _, ( MlyValue.BodyElement BodyElement, 
-BodyElement1left, _)) :: rest671)) => let val  result = 
+|  ( 36, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: ( _, ( MlyValue.BodyElement BodyElement,
+BodyElement1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent2 (consBlock(BodyElement, BodyContent1))
- in ( LrTable.NT 15, ( result, BodyElement1left, BodyContent11right), 
+ in ( LrTable.NT 15, ( result, BodyElement1left, BodyContent11right),
 rest671)
 end
-|  ( 37, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
+|  ( 37, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
 BodyContent11right)) :: ( _, ( MlyValue.Block Block, Block1left, _))
  :: rest671)) => let val  result = MlyValue.BodyContent2 (
 consBlock(Block, BodyContent1))
- in ( LrTable.NT 15, ( result, Block1left, BodyContent11right), 
+ in ( LrTable.NT 15, ( result, Block1left, BodyContent11right),
 rest671)
 end
-|  ( 38, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _, 
-BodyContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 38, ( ( _, ( MlyValue.BodyContent1 BodyContent1, _,
+BodyContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent2 (consBlock(Paragraph, BodyContent1))
- in ( LrTable.NT 15, ( result, Paragraph1left, BodyContent11right), 
+ in ( LrTable.NT 15, ( result, Paragraph1left, BodyContent11right),
 rest671)
 end
-|  ( 39, ( ( _, ( MlyValue.BodyContent2 BodyContent2, _, 
-BodyContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 39, ( ( _, ( MlyValue.BodyContent2 BodyContent2, _,
+BodyContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyContent2 (consBlock(Paragraph, BodyContent2))
- in ( LrTable.NT 15, ( result, Paragraph1left, BodyContent21right), 
+ in ( LrTable.NT 15, ( result, Paragraph1left, BodyContent21right),
 rest671)
 end
-|  ( 40, ( ( _, ( _, _, END_H11right)) :: ( _, ( MlyValue.TextList 
+|  ( 40, ( ( _, ( _, _, END_H11right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_H1 START_H1, (START_H1left
- as START_H11left), _)) :: rest671)) => let val  result = 
+ as START_H11left), _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (
 HTMLAttrs.mkHn(1, ctx START_H1left, START_H1, TextList))
  in ( LrTable.NT 16, ( result, START_H11left, END_H11right), rest671)
 
 end
-|  ( 41, ( ( _, ( _, _, END_H21right)) :: ( _, ( MlyValue.TextList 
+|  ( 41, ( ( _, ( _, _, END_H21right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_H2 START_H2, (START_H2left
- as START_H21left), _)) :: rest671)) => let val  result = 
+ as START_H21left), _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (
 HTMLAttrs.mkHn(2, ctx START_H2left, START_H2, TextList))
  in ( LrTable.NT 16, ( result, START_H21left, END_H21right), rest671)
 
 end
-|  ( 42, ( ( _, ( _, _, END_H31right)) :: ( _, ( MlyValue.TextList 
+|  ( 42, ( ( _, ( _, _, END_H31right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_H3 START_H3, (START_H3left
- as START_H31left), _)) :: rest671)) => let val  result = 
+ as START_H31left), _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (
 HTMLAttrs.mkHn(3, ctx START_H3left, START_H3, TextList))
  in ( LrTable.NT 16, ( result, START_H31left, END_H31right), rest671)
 
 end
-|  ( 43, ( ( _, ( _, _, END_H41right)) :: ( _, ( MlyValue.TextList 
+|  ( 43, ( ( _, ( _, _, END_H41right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_H4 START_H4, (START_H4left
- as START_H41left), _)) :: rest671)) => let val  result = 
+ as START_H41left), _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (
 HTMLAttrs.mkHn(4, ctx START_H4left, START_H4, TextList))
  in ( LrTable.NT 16, ( result, START_H41left, END_H41right), rest671)
 
 end
-|  ( 44, ( ( _, ( _, _, END_H51right)) :: ( _, ( MlyValue.TextList 
+|  ( 44, ( ( _, ( _, _, END_H51right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_H5 START_H5, (START_H5left
- as START_H51left), _)) :: rest671)) => let val  result = 
+ as START_H51left), _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (
 HTMLAttrs.mkHn(5, ctx START_H5left, START_H5, TextList))
  in ( LrTable.NT 16, ( result, START_H51left, END_H51right), rest671)
 
 end
-|  ( 45, ( ( _, ( _, _, END_H61right)) :: ( _, ( MlyValue.TextList 
+|  ( 45, ( ( _, ( _, _, END_H61right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_H6 START_H6, (START_H6left
- as START_H61left), _)) :: rest671)) => let val  result = 
+ as START_H61left), _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (
 HTMLAttrs.mkHn(6, ctx START_H6left, START_H6, TextList))
  in ( LrTable.NT 16, ( result, START_H61left, END_H61right), rest671)
 
 end
-|  ( 46, ( ( _, ( _, _, END_ADDRESS1right)) :: ( _, ( 
-MlyValue.AddressContent1 AddressContent1, _, _)) :: ( _, ( _, 
-START_ADDRESS1left, _)) :: rest671)) => let val  result = 
+|  ( 46, ( ( _, ( _, _, END_ADDRESS1right)) :: ( _, (
+MlyValue.AddressContent1 AddressContent1, _, _)) :: ( _, ( _,
+START_ADDRESS1left, _)) :: rest671)) => let val  result =
 MlyValue.BodyElement (HTML.ADDRESS(mkBlock AddressContent1))
  in ( LrTable.NT 16, ( result, START_ADDRESS1left, END_ADDRESS1right),
  rest671)
@@ -1528,23 +1528,23 @@ end
 )
  in ( LrTable.NT 17, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 48, ( ( _, ( MlyValue.AddressContent1 AddressContent1, _, 
+|  ( 48, ( ( _, ( MlyValue.AddressContent1 AddressContent1, _,
 AddressContent11right)) :: ( _, ( MlyValue.Text Text, Text1left, _))
  :: rest671)) => let val  result = MlyValue.AddressContent1 (
 consText(Text, AddressContent1))
- in ( LrTable.NT 17, ( result, Text1left, AddressContent11right), 
+ in ( LrTable.NT 17, ( result, Text1left, AddressContent11right),
 rest671)
 end
-|  ( 49, ( ( _, ( MlyValue.AddressContent1 AddressContent1, _, 
-AddressContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 49, ( ( _, ( MlyValue.AddressContent1 AddressContent1, _,
+AddressContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.AddressContent1 (consBlock(Paragraph, AddressContent1))
  in ( LrTable.NT 17, ( result, Paragraph1left, AddressContent11right),
  rest671)
 end
-|  ( 50, ( ( _, ( MlyValue.AddressContent2 AddressContent2, _, 
-AddressContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 50, ( ( _, ( MlyValue.AddressContent2 AddressContent2, _,
+AddressContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.AddressContent1 (consBlock(Paragraph, AddressContent2))
  in ( LrTable.NT 17, ( result, Paragraph1left, AddressContent21right),
  rest671)
@@ -1553,26 +1553,26 @@ end
 )
  in ( LrTable.NT 18, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 52, ( ( _, ( MlyValue.AddressContent1 AddressContent1, _, 
-AddressContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 52, ( ( _, ( MlyValue.AddressContent1 AddressContent1, _,
+AddressContent11right)) :: _ :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.AddressContent2 (consBlock(Paragraph, AddressContent1))
  in ( LrTable.NT 18, ( result, Paragraph1left, AddressContent11right),
  rest671)
 end
-|  ( 53, ( ( _, ( MlyValue.AddressContent2 AddressContent2, _, 
-AddressContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph, 
-Paragraph1left, _)) :: rest671)) => let val  result = 
+|  ( 53, ( ( _, ( MlyValue.AddressContent2 AddressContent2, _,
+AddressContent21right)) :: ( _, ( MlyValue.Paragraph Paragraph,
+Paragraph1left, _)) :: rest671)) => let val  result =
 MlyValue.AddressContent2 (consBlock(Paragraph, AddressContent2))
  in ( LrTable.NT 18, ( result, Paragraph1left, AddressContent21right),
  rest671)
 end
-|  ( 54, ( ( _, ( MlyValue.List List, List1left, List1right)) :: 
+|  ( 54, ( ( _, ( MlyValue.List List, List1left, List1right)) ::
 rest671)) => let val  result = MlyValue.BlockWOIndex (List)
  in ( LrTable.NT 19, ( result, List1left, List1right), rest671)
 end
-|  ( 55, ( ( _, ( MlyValue.Preformatted Preformatted, 
-Preformatted1left, Preformatted1right)) :: rest671)) => let val  
+|  ( 55, ( ( _, ( MlyValue.Preformatted Preformatted,
+Preformatted1left, Preformatted1right)) :: rest671)) => let val
 result = MlyValue.BlockWOIndex (Preformatted)
  in ( LrTable.NT 19, ( result, Preformatted1left, Preformatted1right),
  rest671)
@@ -1585,66 +1585,66 @@ HTMLAttrs.mkDIV(ctx START_DIVleft, START_DIV, BodyContent))
  in ( LrTable.NT 19, ( result, START_DIV1left, END_DIV1right), rest671
 )
 end
-|  ( 57, ( ( _, ( _, _, END_CENTER1right)) :: ( _, ( 
-MlyValue.BodyContent BodyContent, _, _)) :: ( _, ( _, 
-START_CENTER1left, _)) :: rest671)) => let val  result = 
+|  ( 57, ( ( _, ( _, _, END_CENTER1right)) :: ( _, (
+MlyValue.BodyContent BodyContent, _, _)) :: ( _, ( _,
+START_CENTER1left, _)) :: rest671)) => let val  result =
 MlyValue.BlockWOIndex (HTML.CENTER BodyContent)
- in ( LrTable.NT 19, ( result, START_CENTER1left, END_CENTER1right), 
+ in ( LrTable.NT 19, ( result, START_CENTER1left, END_CENTER1right),
 rest671)
 end
-|  ( 58, ( ( _, ( _, _, END_BLOCKQUOTE1right)) :: ( _, ( 
-MlyValue.BodyContent BodyContent, _, _)) :: ( _, ( _, 
-START_BLOCKQUOTE1left, _)) :: rest671)) => let val  result = 
+|  ( 58, ( ( _, ( _, _, END_BLOCKQUOTE1right)) :: ( _, (
+MlyValue.BodyContent BodyContent, _, _)) :: ( _, ( _,
+START_BLOCKQUOTE1left, _)) :: rest671)) => let val  result =
 MlyValue.BlockWOIndex (HTML.BLOCKQUOTE BodyContent)
- in ( LrTable.NT 19, ( result, START_BLOCKQUOTE1left, 
+ in ( LrTable.NT 19, ( result, START_BLOCKQUOTE1left,
 END_BLOCKQUOTE1right), rest671)
 end
-|  ( 59, ( ( _, ( _, _, END_FORM1right)) :: ( _, ( 
+|  ( 59, ( ( _, ( _, _, END_FORM1right)) :: ( _, (
 MlyValue.BodyContent BodyContent, _, _)) :: ( _, ( MlyValue.START_FORM
  START_FORM, (START_FORMleft as START_FORM1left), _)) :: rest671)) =>
  let val  result = MlyValue.BlockWOIndex (
 HTMLAttrs.mkFORM(ctx START_FORMleft, START_FORM, BodyContent))
- in ( LrTable.NT 19, ( result, START_FORM1left, END_FORM1right), 
+ in ( LrTable.NT 19, ( result, START_FORM1left, END_FORM1right),
 rest671)
 end
 |  ( 60, ( ( _, ( MlyValue.TAG_HR TAG_HR, (TAG_HRleft as TAG_HR1left),
- TAG_HR1right)) :: rest671)) => let val  result = 
+ TAG_HR1right)) :: rest671)) => let val  result =
 MlyValue.BlockWOIndex (HTMLAttrs.mkHR(ctx TAG_HRleft, TAG_HR))
  in ( LrTable.NT 19, ( result, TAG_HR1left, TAG_HR1right), rest671)
 
 end
-|  ( 61, ( ( _, ( _, _, END_TABLE1right)) :: ( _, ( 
-MlyValue.TableRowList TableRowList, _, _)) :: ( _, ( 
-MlyValue.optCaption optCaption, _, _)) :: ( _, ( MlyValue.START_TABLE 
+|  ( 61, ( ( _, ( _, _, END_TABLE1right)) :: ( _, (
+MlyValue.TableRowList TableRowList, _, _)) :: ( _, (
+MlyValue.optCaption optCaption, _, _)) :: ( _, ( MlyValue.START_TABLE
 START_TABLE, (START_TABLEleft as START_TABLE1left), _)) :: rest671))
  => let val  result = MlyValue.BlockWOIndex (
 HTMLAttrs.mkTABLE(
-		    ctx START_TABLEleft, START_TABLE,
-		    {caption = optCaption, body = TableRowList})
-		
+                    ctx START_TABLEleft, START_TABLE,
+                    {caption = optCaption, body = TableRowList})
+
 )
- in ( LrTable.NT 19, ( result, START_TABLE1left, END_TABLE1right), 
+ in ( LrTable.NT 19, ( result, START_TABLE1left, END_TABLE1right),
 rest671)
 end
-|  ( 62, ( ( _, ( MlyValue.BlockWOIndex BlockWOIndex, 
-BlockWOIndex1left, BlockWOIndex1right)) :: rest671)) => let val  
+|  ( 62, ( ( _, ( MlyValue.BlockWOIndex BlockWOIndex,
+BlockWOIndex1left, BlockWOIndex1right)) :: rest671)) => let val
 result = MlyValue.Block (BlockWOIndex)
  in ( LrTable.NT 20, ( result, BlockWOIndex1left, BlockWOIndex1right),
  rest671)
 end
 |  ( 63, ( ( _, ( MlyValue.TAG_ISINDEX TAG_ISINDEX, (TAG_ISINDEXleft
- as TAG_ISINDEX1left), TAG_ISINDEX1right)) :: rest671)) => let val  
+ as TAG_ISINDEX1left), TAG_ISINDEX1right)) :: rest671)) => let val
 result = MlyValue.Block (
 let val stuff =
-		    HTMLAttrs.mkISINDEX (ctx TAG_ISINDEXleft, TAG_ISINDEX)
-		  in HTML.ISINDEX stuff end
-		
+                    HTMLAttrs.mkISINDEX (ctx TAG_ISINDEXleft, TAG_ISINDEX)
+                  in HTML.ISINDEX stuff end
+
 )
- in ( LrTable.NT 20, ( result, TAG_ISINDEX1left, TAG_ISINDEX1right), 
+ in ( LrTable.NT 20, ( result, TAG_ISINDEX1left, TAG_ISINDEX1right),
 rest671)
 end
 |  ( 64, ( ( _, ( MlyValue.TextList TextList, _, TextList1right)) :: (
- _, ( MlyValue.START_P START_P, (START_Pleft as START_P1left), _)) :: 
+ _, ( MlyValue.START_P START_P, (START_Pleft as START_P1left), _)) ::
 rest671)) => let val  result = MlyValue.Paragraph (
 HTMLAttrs.mkP(ctx START_Pleft, START_P, TextList))
  in ( LrTable.NT 21, ( result, START_P1left, TextList1right), rest671)
@@ -1652,7 +1652,7 @@ HTMLAttrs.mkP(ctx START_Pleft, START_P, TextList))
 end
 |  ( 65, ( ( _, ( _, _, END_UL1right)) :: ( _, ( MlyValue.ListItemList
  ListItemList, _, _)) :: ( _, ( MlyValue.START_UL START_UL, (
-START_ULleft as START_UL1left), _)) :: rest671)) => let val  result = 
+START_ULleft as START_UL1left), _)) :: rest671)) => let val  result =
 MlyValue.List (
 HTMLAttrs.mkUL(ctx START_ULleft, START_UL, ListItemList))
  in ( LrTable.NT 22, ( result, START_UL1left, END_UL1right), rest671)
@@ -1660,36 +1660,36 @@ HTMLAttrs.mkUL(ctx START_ULleft, START_UL, ListItemList))
 end
 |  ( 66, ( ( _, ( _, _, END_OL1right)) :: ( _, ( MlyValue.ListItemList
  ListItemList, _, _)) :: ( _, ( MlyValue.START_OL START_OL, (
-START_OLleft as START_OL1left), _)) :: rest671)) => let val  result = 
+START_OLleft as START_OL1left), _)) :: rest671)) => let val  result =
 MlyValue.List (
 HTMLAttrs.mkOL(ctx START_OLleft, START_OL, ListItemList))
  in ( LrTable.NT 22, ( result, START_OL1left, END_OL1right), rest671)
 
 end
-|  ( 67, ( ( _, ( _, _, END_DIR1right)) :: ( _, ( 
-MlyValue.ListItemList ListItemList, _, _)) :: ( _, ( 
+|  ( 67, ( ( _, ( _, _, END_DIR1right)) :: ( _, (
+MlyValue.ListItemList ListItemList, _, _)) :: ( _, (
 MlyValue.START_DIR START_DIR, (START_DIRleft as START_DIR1left), _))
  :: rest671)) => let val  result = MlyValue.List (
 HTMLAttrs.mkDIR(ctx START_DIRleft, START_DIR, ListItemList))
  in ( LrTable.NT 22, ( result, START_DIR1left, END_DIR1right), rest671
 )
 end
-|  ( 68, ( ( _, ( _, _, END_MENU1right)) :: ( _, ( 
-MlyValue.ListItemList ListItemList, _, _)) :: ( _, ( 
+|  ( 68, ( ( _, ( _, _, END_MENU1right)) :: ( _, (
+MlyValue.ListItemList ListItemList, _, _)) :: ( _, (
 MlyValue.START_MENU START_MENU, (START_MENUleft as START_MENU1left), _
 )) :: rest671)) => let val  result = MlyValue.List (
 HTMLAttrs.mkMENU(ctx START_MENUleft, START_MENU, ListItemList))
- in ( LrTable.NT 22, ( result, START_MENU1left, END_MENU1right), 
+ in ( LrTable.NT 22, ( result, START_MENU1left, END_MENU1right),
 rest671)
 end
-|  ( 69, ( ( _, ( _, _, END_DL1right)) :: ( _, ( MlyValue.DLItemList 
+|  ( 69, ( ( _, ( _, _, END_DL1right)) :: ( _, ( MlyValue.DLItemList
 DLItemList, _, _)) :: ( _, ( MlyValue.START_DL START_DL, (START_DLleft
- as START_DL1left), _)) :: rest671)) => let val  result = 
+ as START_DL1left), _)) :: rest671)) => let val  result =
 MlyValue.List (
 HTMLAttrs.mkDL(
-		  ctx START_DLleft, START_DL,
-		  groupDefListContents DLItemList)
-		
+                  ctx START_DLleft, START_DL,
+                  groupDefListContents DLItemList)
+
 )
  in ( LrTable.NT 22, ( result, START_DL1left, END_DL1right), rest671)
 
@@ -1697,16 +1697,16 @@ end
 |  ( 70, ( rest671)) => let val  result = MlyValue.ListItemList ([])
  in ( LrTable.NT 23, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 71, ( ( _, ( MlyValue.ListItemList ListItemList, _, 
-ListItemList1right)) :: ( _, ( MlyValue.ListItem ListItem, 
-ListItem1left, _)) :: rest671)) => let val  result = 
+|  ( 71, ( ( _, ( MlyValue.ListItemList ListItemList, _,
+ListItemList1right)) :: ( _, ( MlyValue.ListItem ListItem,
+ListItem1left, _)) :: rest671)) => let val  result =
 MlyValue.ListItemList (ListItem :: ListItemList)
- in ( LrTable.NT 23, ( result, ListItem1left, ListItemList1right), 
+ in ( LrTable.NT 23, ( result, ListItem1left, ListItemList1right),
 rest671)
 end
 |  ( 72, ( ( _, ( _, _, EndLI1right)) :: ( _, ( MlyValue.Flow1 Flow1,
- _, _)) :: ( _, ( MlyValue.START_LI START_LI, (START_LIleft as 
-START_LI1left), _)) :: rest671)) => let val  result = 
+ _, _)) :: ( _, ( MlyValue.START_LI START_LI, (START_LIleft as
+START_LI1left), _)) :: rest671)) => let val  result =
 MlyValue.ListItem (
 HTMLAttrs.mkLI(ctx START_LIleft, START_LI, mkBlock Flow1))
  in ( LrTable.NT 24, ( result, START_LI1left, EndLI1right), rest671)
@@ -1721,14 +1721,14 @@ end
  in ( LrTable.NT 25, ( result, DLItem1left, DLItemList1right), rest671
 )
 end
-|  ( 75, ( ( _, ( _, _, EndDT1right)) :: ( _, ( MlyValue.TextList 
+|  ( 75, ( ( _, ( _, _, EndDT1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_DT1left, _)) :: rest671)) => let
  val  result = MlyValue.DLItem (DL_tag TextList)
  in ( LrTable.NT 26, ( result, START_DT1left, EndDT1right), rest671)
 
 end
 |  ( 76, ( ( _, ( _, _, EndDD1right)) :: ( _, ( MlyValue.Flow1 Flow1,
- _, _)) :: ( _, ( _, START_DD1left, _)) :: rest671)) => let val  
+ _, _)) :: ( _, ( _, START_DD1left, _)) :: rest671)) => let val
 result = MlyValue.DLItem (DL_item(mkBlock Flow1))
  in ( LrTable.NT 26, ( result, START_DD1left, EndDD1right), rest671)
 
@@ -1736,23 +1736,23 @@ end
 |  ( 77, ( rest671)) => let val  result = MlyValue.Flow1 ([])
  in ( LrTable.NT 27, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 78, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: ( _, ( 
-MlyValue.Text Text, Text1left, _)) :: rest671)) => let val  result = 
+|  ( 78, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: ( _, (
+MlyValue.Text Text, Text1left, _)) :: rest671)) => let val  result =
 MlyValue.Flow1 (consText(Text, Flow1))
  in ( LrTable.NT 27, ( result, Text1left, Flow11right), rest671)
 end
-|  ( 79, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: ( _, ( 
+|  ( 79, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: ( _, (
 MlyValue.Block Block, Block1left, _)) :: rest671)) => let val  result
  = MlyValue.Flow1 (consBlock(Block, Flow1))
  in ( LrTable.NT 27, ( result, Block1left, Flow11right), rest671)
 end
-|  ( 80, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: _ :: ( _, 
+|  ( 80, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: _ :: ( _,
 ( MlyValue.Paragraph Paragraph, Paragraph1left, _)) :: rest671)) =>
  let val  result = MlyValue.Flow1 (consBlock(Paragraph, Flow1))
  in ( LrTable.NT 27, ( result, Paragraph1left, Flow11right), rest671)
 
 end
-|  ( 81, ( ( _, ( MlyValue.Flow2 Flow2, _, Flow21right)) :: ( _, ( 
+|  ( 81, ( ( _, ( MlyValue.Flow2 Flow2, _, Flow21right)) :: ( _, (
 MlyValue.Paragraph Paragraph, Paragraph1left, _)) :: rest671)) => let
  val  result = MlyValue.Flow1 (consBlock(Paragraph, Flow2))
  in ( LrTable.NT 27, ( result, Paragraph1left, Flow21right), rest671)
@@ -1761,18 +1761,18 @@ end
 |  ( 82, ( rest671)) => let val  result = MlyValue.Flow2 ([])
  in ( LrTable.NT 28, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 83, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: ( _, ( 
+|  ( 83, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: ( _, (
 MlyValue.Block Block, Block1left, _)) :: rest671)) => let val  result
  = MlyValue.Flow2 (consBlock(Block, Flow1))
  in ( LrTable.NT 28, ( result, Block1left, Flow11right), rest671)
 end
-|  ( 84, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: _ :: ( _, 
+|  ( 84, ( ( _, ( MlyValue.Flow1 Flow1, _, Flow11right)) :: _ :: ( _,
 ( MlyValue.Paragraph Paragraph, Paragraph1left, _)) :: rest671)) =>
  let val  result = MlyValue.Flow2 (consBlock(Paragraph, Flow1))
  in ( LrTable.NT 28, ( result, Paragraph1left, Flow11right), rest671)
 
 end
-|  ( 85, ( ( _, ( MlyValue.Flow2 Flow2, _, Flow21right)) :: ( _, ( 
+|  ( 85, ( ( _, ( MlyValue.Flow2 Flow2, _, Flow21right)) :: ( _, (
 MlyValue.Paragraph Paragraph, Paragraph1left, _)) :: rest671)) => let
  val  result = MlyValue.Flow2 (consBlock(Paragraph, Flow2))
  in ( LrTable.NT 28, ( result, Paragraph1left, Flow21right), rest671)
@@ -1802,7 +1802,7 @@ end
  in ( LrTable.NT 31, ( result, END_DD1left, END_DD1right), rest671)
 
 end
-|  ( 92, ( ( _, ( _, _, END_PRE1right)) :: ( _, ( MlyValue.TextList 
+|  ( 92, ( ( _, ( _, _, END_PRE1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_PRE START_PRE, (
 START_PREleft as START_PRE1left), _)) :: rest671)) => let val  result
  = MlyValue.Preformatted (
@@ -1813,112 +1813,112 @@ end
 |  ( 93, ( rest671)) => let val  result = MlyValue.optCaption (NONE)
  in ( LrTable.NT 33, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 94, ( ( _, ( _, _, END_CAPTION1right)) :: ( _, ( 
-MlyValue.TextList TextList, _, _)) :: ( _, ( MlyValue.START_CAPTION 
-START_CAPTION, (START_CAPTIONleft as START_CAPTION1left), _)) :: 
+|  ( 94, ( ( _, ( _, _, END_CAPTION1right)) :: ( _, (
+MlyValue.TextList TextList, _, _)) :: ( _, ( MlyValue.START_CAPTION
+START_CAPTION, (START_CAPTIONleft as START_CAPTION1left), _)) ::
 rest671)) => let val  result = MlyValue.optCaption (
 SOME(HTMLAttrs.mkCAPTION(
-		  ctx START_CAPTIONleft, START_CAPTION, TextList))
+                  ctx START_CAPTIONleft, START_CAPTION, TextList))
 )
  in ( LrTable.NT 33, ( result, START_CAPTION1left, END_CAPTION1right),
  rest671)
 end
-|  ( 95, ( ( _, ( MlyValue.TableRow TableRow, TableRow1left, 
-TableRow1right)) :: rest671)) => let val  result = 
+|  ( 95, ( ( _, ( MlyValue.TableRow TableRow, TableRow1left,
+TableRow1right)) :: rest671)) => let val  result =
 MlyValue.TableRowList ([TableRow])
  in ( LrTable.NT 34, ( result, TableRow1left, TableRow1right), rest671
 )
 end
-|  ( 96, ( ( _, ( MlyValue.TableRowList TableRowList, _, 
-TableRowList1right)) :: ( _, ( MlyValue.TableRow TableRow, 
-TableRow1left, _)) :: rest671)) => let val  result = 
+|  ( 96, ( ( _, ( MlyValue.TableRowList TableRowList, _,
+TableRowList1right)) :: ( _, ( MlyValue.TableRow TableRow,
+TableRow1left, _)) :: rest671)) => let val  result =
 MlyValue.TableRowList (TableRow :: TableRowList)
- in ( LrTable.NT 34, ( result, TableRow1left, TableRowList1right), 
+ in ( LrTable.NT 34, ( result, TableRow1left, TableRowList1right),
 rest671)
 end
-|  ( 97, ( ( _, ( MlyValue.TableCellList TableCellList, _, 
+|  ( 97, ( ( _, ( MlyValue.TableCellList TableCellList, _,
 TableCellList1right)) :: ( _, ( MlyValue.START_TR START_TR, (
-START_TRleft as START_TR1left), _)) :: rest671)) => let val  result = 
+START_TRleft as START_TR1left), _)) :: rest671)) => let val  result =
 MlyValue.TableRow (
 HTMLAttrs.mkTR(ctx START_TRleft, START_TR, TableCellList))
- in ( LrTable.NT 35, ( result, START_TR1left, TableCellList1right), 
+ in ( LrTable.NT 35, ( result, START_TR1left, TableCellList1right),
 rest671)
 end
-|  ( 98, ( ( _, ( _, _, END_TR1right)) :: ( _, ( 
-MlyValue.TableCellList TableCellList, _, _)) :: ( _, ( 
-MlyValue.START_TR START_TR, (START_TRleft as START_TR1left), _)) :: 
+|  ( 98, ( ( _, ( _, _, END_TR1right)) :: ( _, (
+MlyValue.TableCellList TableCellList, _, _)) :: ( _, (
+MlyValue.START_TR START_TR, (START_TRleft as START_TR1left), _)) ::
 rest671)) => let val  result = MlyValue.TableRow (
 HTMLAttrs.mkTR(ctx START_TRleft, START_TR, TableCellList))
  in ( LrTable.NT 35, ( result, START_TR1left, END_TR1right), rest671)
 
 end
-|  ( 99, ( ( _, ( MlyValue.TableCell TableCell, TableCell1left, 
-TableCell1right)) :: rest671)) => let val  result = 
+|  ( 99, ( ( _, ( MlyValue.TableCell TableCell, TableCell1left,
+TableCell1right)) :: rest671)) => let val  result =
 MlyValue.TableCellList ([TableCell])
- in ( LrTable.NT 36, ( result, TableCell1left, TableCell1right), 
+ in ( LrTable.NT 36, ( result, TableCell1left, TableCell1right),
 rest671)
 end
-|  ( 100, ( ( _, ( MlyValue.TableCellList TableCellList, _, 
-TableCellList1right)) :: ( _, ( MlyValue.TableCell TableCell, 
-TableCell1left, _)) :: rest671)) => let val  result = 
+|  ( 100, ( ( _, ( MlyValue.TableCellList TableCellList, _,
+TableCellList1right)) :: ( _, ( MlyValue.TableCell TableCell,
+TableCell1left, _)) :: rest671)) => let val  result =
 MlyValue.TableCellList (TableCell :: TableCellList)
- in ( LrTable.NT 36, ( result, TableCell1left, TableCellList1right), 
+ in ( LrTable.NT 36, ( result, TableCell1left, TableCellList1right),
 rest671)
 end
 |  ( 101, ( ( _, ( _, _, END_TH1right)) :: ( _, ( MlyValue.BodyContent
  BodyContent, _, _)) :: ( _, ( MlyValue.START_TH START_TH, (
-START_THleft as START_TH1left), _)) :: rest671)) => let val  result = 
+START_THleft as START_TH1left), _)) :: rest671)) => let val  result =
 MlyValue.TableCell (
 HTMLAttrs.mkTH(ctx START_THleft, START_TH, BodyContent))
  in ( LrTable.NT 37, ( result, START_TH1left, END_TH1right), rest671)
 
 end
-|  ( 102, ( ( _, ( MlyValue.BodyContent BodyContent, _, 
+|  ( 102, ( ( _, ( MlyValue.BodyContent BodyContent, _,
 BodyContent1right)) :: ( _, ( MlyValue.START_TH START_TH, (
-START_THleft as START_TH1left), _)) :: rest671)) => let val  result = 
+START_THleft as START_TH1left), _)) :: rest671)) => let val  result =
 MlyValue.TableCell (
 HTMLAttrs.mkTH(ctx START_THleft, START_TH, BodyContent))
- in ( LrTable.NT 37, ( result, START_TH1left, BodyContent1right), 
+ in ( LrTable.NT 37, ( result, START_TH1left, BodyContent1right),
 rest671)
 end
 |  ( 103, ( ( _, ( _, _, END_TD1right)) :: ( _, ( MlyValue.BodyContent
  BodyContent, _, _)) :: ( _, ( MlyValue.START_TD START_TD, (
-START_TDleft as START_TD1left), _)) :: rest671)) => let val  result = 
+START_TDleft as START_TD1left), _)) :: rest671)) => let val  result =
 MlyValue.TableCell (
 HTMLAttrs.mkTD(ctx START_TDleft, START_TD, BodyContent))
  in ( LrTable.NT 37, ( result, START_TD1left, END_TD1right), rest671)
 
 end
-|  ( 104, ( ( _, ( MlyValue.BodyContent BodyContent, _, 
+|  ( 104, ( ( _, ( MlyValue.BodyContent BodyContent, _,
 BodyContent1right)) :: ( _, ( MlyValue.START_TD START_TD, (
-START_TDleft as START_TD1left), _)) :: rest671)) => let val  result = 
+START_TDleft as START_TD1left), _)) :: rest671)) => let val  result =
 MlyValue.TableCell (
 HTMLAttrs.mkTD(ctx START_TDleft, START_TD, BodyContent))
- in ( LrTable.NT 37, ( result, START_TD1left, BodyContent1right), 
+ in ( LrTable.NT 37, ( result, START_TD1left, BodyContent1right),
 rest671)
 end
-|  ( 105, ( ( _, ( MlyValue.TextList' TextList', TextList'1left, 
+|  ( 105, ( ( _, ( MlyValue.TextList' TextList', TextList'1left,
 TextList'1right)) :: rest671)) => let val  result = MlyValue.TextList
  (textList TextList')
- in ( LrTable.NT 38, ( result, TextList'1left, TextList'1right), 
+ in ( LrTable.NT 38, ( result, TextList'1left, TextList'1right),
 rest671)
 end
 |  ( 106, ( rest671)) => let val  result = MlyValue.TextList' ([])
  in ( LrTable.NT 39, ( result, defaultPos, defaultPos), rest671)
 end
 |  ( 107, ( ( _, ( MlyValue.TextList' TextList', _, TextList'1right))
- :: ( _, ( MlyValue.Text Text, Text1left, _)) :: rest671)) => let val 
+ :: ( _, ( MlyValue.Text Text, Text1left, _)) :: rest671)) => let val
  result = MlyValue.TextList' (Text :: TextList')
  in ( LrTable.NT 39, ( result, Text1left, TextList'1right), rest671)
 
 end
-|  ( 108, ( ( _, ( MlyValue.PCDataElem PCDataElem, PCDataElem1left, 
-PCDataElem1right)) :: rest671)) => let val  result = 
+|  ( 108, ( ( _, ( MlyValue.PCDataElem PCDataElem, PCDataElem1left,
+PCDataElem1right)) :: rest671)) => let val  result =
 MlyValue.TextWOScript (HTML.PCDATA PCDataElem)
- in ( LrTable.NT 40, ( result, PCDataElem1left, PCDataElem1right), 
+ in ( LrTable.NT 40, ( result, PCDataElem1left, PCDataElem1right),
 rest671)
 end
-|  ( 109, ( ( _, ( MlyValue.Font Font, Font1left, Font1right)) :: 
+|  ( 109, ( ( _, ( MlyValue.Font Font, Font1left, Font1right)) ::
 rest671)) => let val  result = MlyValue.TextWOScript (Font)
  in ( LrTable.NT 40, ( result, Font1left, Font1right), rest671)
 end
@@ -1927,60 +1927,60 @@ end
  in ( LrTable.NT 40, ( result, Phrase1left, Phrase1right), rest671)
 
 end
-|  ( 111, ( ( _, ( MlyValue.Special Special, Special1left, 
-Special1right)) :: rest671)) => let val  result = 
+|  ( 111, ( ( _, ( MlyValue.Special Special, Special1left,
+Special1right)) :: rest671)) => let val  result =
 MlyValue.TextWOScript (Special)
  in ( LrTable.NT 40, ( result, Special1left, Special1right), rest671)
 
 end
-|  ( 112, ( ( _, ( MlyValue.Form Form, Form1left, Form1right)) :: 
+|  ( 112, ( ( _, ( MlyValue.Form Form, Form1left, Form1right)) ::
 rest671)) => let val  result = MlyValue.TextWOScript (Form)
  in ( LrTable.NT 40, ( result, Form1left, Form1right), rest671)
 end
-|  ( 113, ( ( _, ( MlyValue.TextWOScript TextWOScript, 
-TextWOScript1left, TextWOScript1right)) :: rest671)) => let val  
+|  ( 113, ( ( _, ( MlyValue.TextWOScript TextWOScript,
+TextWOScript1left, TextWOScript1right)) :: rest671)) => let val
 result = MlyValue.Text (TextWOScript)
  in ( LrTable.NT 41, ( result, TextWOScript1left, TextWOScript1right),
  rest671)
 end
-|  ( 114, ( ( _, ( _, _, END_SCRIPT1right)) :: ( _, ( MlyValue.PCData 
+|  ( 114, ( ( _, ( _, _, END_SCRIPT1right)) :: ( _, ( MlyValue.PCData
 PCData, _, _)) :: ( _, ( _, START_SCRIPT1left, _)) :: rest671)) => let
  val  result = MlyValue.Text (HTML.SCRIPT PCData)
- in ( LrTable.NT 41, ( result, START_SCRIPT1left, END_SCRIPT1right), 
+ in ( LrTable.NT 41, ( result, START_SCRIPT1left, END_SCRIPT1right),
 rest671)
 end
-|  ( 115, ( ( _, ( _, _, END_TT1right)) :: ( _, ( MlyValue.TextList 
+|  ( 115, ( ( _, ( _, _, END_TT1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_TT1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.TT(TextList))
  in ( LrTable.NT 42, ( result, START_TT1left, END_TT1right), rest671)
 
 end
-|  ( 116, ( ( _, ( _, _, END_I1right)) :: ( _, ( MlyValue.TextList 
+|  ( 116, ( ( _, ( _, _, END_I1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_I1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.I(TextList))
  in ( LrTable.NT 42, ( result, START_I1left, END_I1right), rest671)
 
 end
-|  ( 117, ( ( _, ( _, _, END_B1right)) :: ( _, ( MlyValue.TextList 
+|  ( 117, ( ( _, ( _, _, END_B1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_B1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.B(TextList))
  in ( LrTable.NT 42, ( result, START_B1left, END_B1right), rest671)
 
 end
-|  ( 118, ( ( _, ( _, _, END_U1right)) :: ( _, ( MlyValue.TextList 
+|  ( 118, ( ( _, ( _, _, END_U1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_U1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.U(TextList))
  in ( LrTable.NT 42, ( result, START_U1left, END_U1right), rest671)
 
 end
-|  ( 119, ( ( _, ( _, _, END_STRIKE1right)) :: ( _, ( 
+|  ( 119, ( ( _, ( _, _, END_STRIKE1right)) :: ( _, (
 MlyValue.TextList TextList, _, _)) :: ( _, ( _, START_STRIKE1left, _))
  :: rest671)) => let val  result = MlyValue.Font (
 HTML.STRIKE(TextList))
- in ( LrTable.NT 42, ( result, START_STRIKE1left, END_STRIKE1right), 
+ in ( LrTable.NT 42, ( result, START_STRIKE1left, END_STRIKE1right),
 rest671)
 end
-|  ( 120, ( ( _, ( _, _, END_BIG1right)) :: ( _, ( MlyValue.TextList 
+|  ( 120, ( ( _, ( _, _, END_BIG1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_BIG1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.BIG(TextList))
  in ( LrTable.NT 42, ( result, START_BIG1left, END_BIG1right), rest671
@@ -1989,106 +1989,106 @@ end
 |  ( 121, ( ( _, ( _, _, END_SMALL1right)) :: ( _, ( MlyValue.TextList
  TextList, _, _)) :: ( _, ( _, START_SMALL1left, _)) :: rest671)) =>
  let val  result = MlyValue.Font (HTML.SMALL(TextList))
- in ( LrTable.NT 42, ( result, START_SMALL1left, END_SMALL1right), 
+ in ( LrTable.NT 42, ( result, START_SMALL1left, END_SMALL1right),
 rest671)
 end
-|  ( 122, ( ( _, ( _, _, END_SUB1right)) :: ( _, ( MlyValue.TextList 
+|  ( 122, ( ( _, ( _, _, END_SUB1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_SUB1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.SUB(TextList))
  in ( LrTable.NT 42, ( result, START_SUB1left, END_SUB1right), rest671
 )
 end
-|  ( 123, ( ( _, ( _, _, END_SUP1right)) :: ( _, ( MlyValue.TextList 
+|  ( 123, ( ( _, ( _, _, END_SUP1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_SUP1left, _)) :: rest671)) => let
  val  result = MlyValue.Font (HTML.SUP(TextList))
  in ( LrTable.NT 42, ( result, START_SUP1left, END_SUP1right), rest671
 )
 end
-|  ( 124, ( ( _, ( _, _, END_EM1right)) :: ( _, ( MlyValue.TextList 
+|  ( 124, ( ( _, ( _, _, END_EM1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_EM1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.EM(TextList))
  in ( LrTable.NT 43, ( result, START_EM1left, END_EM1right), rest671)
 
 end
-|  ( 125, ( ( _, ( _, _, END_STRONG1right)) :: ( _, ( 
+|  ( 125, ( ( _, ( _, _, END_STRONG1right)) :: ( _, (
 MlyValue.TextList TextList, _, _)) :: ( _, ( _, START_STRONG1left, _))
  :: rest671)) => let val  result = MlyValue.Phrase (
 HTML.STRONG(TextList))
- in ( LrTable.NT 43, ( result, START_STRONG1left, END_STRONG1right), 
+ in ( LrTable.NT 43, ( result, START_STRONG1left, END_STRONG1right),
 rest671)
 end
-|  ( 126, ( ( _, ( _, _, END_CODE1right)) :: ( _, ( MlyValue.TextList 
+|  ( 126, ( ( _, ( _, _, END_CODE1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_CODE1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.CODE(TextList))
- in ( LrTable.NT 43, ( result, START_CODE1left, END_CODE1right), 
+ in ( LrTable.NT 43, ( result, START_CODE1left, END_CODE1right),
 rest671)
 end
-|  ( 127, ( ( _, ( _, _, END_DFN1right)) :: ( _, ( MlyValue.TextList 
+|  ( 127, ( ( _, ( _, _, END_DFN1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_DFN1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.DFN(TextList))
  in ( LrTable.NT 43, ( result, START_DFN1left, END_DFN1right), rest671
 )
 end
-|  ( 128, ( ( _, ( _, _, END_SAMP1right)) :: ( _, ( MlyValue.TextList 
+|  ( 128, ( ( _, ( _, _, END_SAMP1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_SAMP1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.SAMP(TextList))
- in ( LrTable.NT 43, ( result, START_SAMP1left, END_SAMP1right), 
+ in ( LrTable.NT 43, ( result, START_SAMP1left, END_SAMP1right),
 rest671)
 end
-|  ( 129, ( ( _, ( _, _, END_KBD1right)) :: ( _, ( MlyValue.TextList 
+|  ( 129, ( ( _, ( _, _, END_KBD1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_KBD1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.KBD(TextList))
  in ( LrTable.NT 43, ( result, START_KBD1left, END_KBD1right), rest671
 )
 end
-|  ( 130, ( ( _, ( _, _, END_VAR1right)) :: ( _, ( MlyValue.TextList 
+|  ( 130, ( ( _, ( _, _, END_VAR1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_VAR1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.VAR(TextList))
  in ( LrTable.NT 43, ( result, START_VAR1left, END_VAR1right), rest671
 )
 end
-|  ( 131, ( ( _, ( _, _, END_CITE1right)) :: ( _, ( MlyValue.TextList 
+|  ( 131, ( ( _, ( _, _, END_CITE1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( _, START_CITE1left, _)) :: rest671)) => let
  val  result = MlyValue.Phrase (HTML.CITE(TextList))
- in ( LrTable.NT 43, ( result, START_CITE1left, END_CITE1right), 
+ in ( LrTable.NT 43, ( result, START_CITE1left, END_CITE1right),
 rest671)
 end
-|  ( 132, ( ( _, ( _, _, END_A1right)) :: ( _, ( MlyValue.TextList 
-TextList, _, _)) :: ( _, ( MlyValue.START_A START_A, (START_Aleft as 
+|  ( 132, ( ( _, ( _, _, END_A1right)) :: ( _, ( MlyValue.TextList
+TextList, _, _)) :: ( _, ( MlyValue.START_A START_A, (START_Aleft as
 START_A1left), _)) :: rest671)) => let val  result = MlyValue.Special
  (HTMLAttrs.mkA(ctx START_Aleft, START_A, TextList))
  in ( LrTable.NT 44, ( result, START_A1left, END_A1right), rest671)
 
 end
-|  ( 133, ( ( _, ( MlyValue.TAG_IMG TAG_IMG, (TAG_IMGleft as 
-TAG_IMG1left), TAG_IMG1right)) :: rest671)) => let val  result = 
+|  ( 133, ( ( _, ( MlyValue.TAG_IMG TAG_IMG, (TAG_IMGleft as
+TAG_IMG1left), TAG_IMG1right)) :: rest671)) => let val  result =
 MlyValue.Special (HTMLAttrs.mkIMG(ctx TAG_IMGleft, TAG_IMG))
  in ( LrTable.NT 44, ( result, TAG_IMG1left, TAG_IMG1right), rest671)
 
 end
-|  ( 134, ( ( _, ( _, _, END_APPLET1right)) :: ( _, ( 
-MlyValue.TextList TextList, _, _)) :: ( _, ( MlyValue.START_APPLET 
+|  ( 134, ( ( _, ( _, _, END_APPLET1right)) :: ( _, (
+MlyValue.TextList TextList, _, _)) :: ( _, ( MlyValue.START_APPLET
 START_APPLET, (START_APPLETleft as START_APPLET1left), _)) :: rest671)
 ) => let val  result = MlyValue.Special (
 HTMLAttrs.mkAPPLET(ctx START_APPLETleft, START_APPLET, TextList))
- in ( LrTable.NT 44, ( result, START_APPLET1left, END_APPLET1right), 
+ in ( LrTable.NT 44, ( result, START_APPLET1left, END_APPLET1right),
 rest671)
 end
-|  ( 135, ( ( _, ( _, _, END_FONT1right)) :: ( _, ( MlyValue.TextList 
+|  ( 135, ( ( _, ( _, _, END_FONT1right)) :: ( _, ( MlyValue.TextList
 TextList, _, _)) :: ( _, ( MlyValue.START_FONT START_FONT, (
-START_FONTleft as START_FONT1left), _)) :: rest671)) => let val  
+START_FONTleft as START_FONT1left), _)) :: rest671)) => let val
 result = MlyValue.Special (
 HTMLAttrs.mkFONT(ctx START_FONTleft, START_FONT, TextList))
- in ( LrTable.NT 44, ( result, START_FONT1left, END_FONT1right), 
+ in ( LrTable.NT 44, ( result, START_FONT1left, END_FONT1right),
 rest671)
 end
-|  ( 136, ( ( _, ( _, _, END_BASEFONT1right)) :: ( _, ( 
-MlyValue.TextList TextList, _, _)) :: ( _, ( MlyValue.START_BASEFONT 
-START_BASEFONT, (START_BASEFONTleft as START_BASEFONT1left), _)) :: 
+|  ( 136, ( ( _, ( _, _, END_BASEFONT1right)) :: ( _, (
+MlyValue.TextList TextList, _, _)) :: ( _, ( MlyValue.START_BASEFONT
+START_BASEFONT, (START_BASEFONTleft as START_BASEFONT1left), _)) ::
 rest671)) => let val  result = MlyValue.Special (
 HTMLAttrs.mkBASEFONT(
-		  ctx START_BASEFONTleft, START_BASEFONT, TextList)
-		
+                  ctx START_BASEFONTleft, START_BASEFONT, TextList)
+
 )
  in ( LrTable.NT 44, ( result, START_BASEFONT1left, END_BASEFONT1right
 ), rest671)
@@ -2099,7 +2099,7 @@ HTMLAttrs.mkBR(ctx TAG_BRleft, TAG_BR))
  in ( LrTable.NT 44, ( result, TAG_BR1left, TAG_BR1right), rest671)
 
 end
-|  ( 138, ( ( _, ( _, _, END_MAP1right)) :: ( _, ( MlyValue.AreaList 
+|  ( 138, ( ( _, ( _, _, END_MAP1right)) :: ( _, ( MlyValue.AreaList
 AreaList, _, _)) :: ( _, ( MlyValue.START_MAP START_MAP, (
 START_MAPleft as START_MAP1left), _)) :: rest671)) => let val  result
  = MlyValue.Special (
@@ -2107,44 +2107,44 @@ HTMLAttrs.mkMAP(ctx START_MAPleft, START_MAP, AreaList))
  in ( LrTable.NT 44, ( result, START_MAP1left, END_MAP1right), rest671
 )
 end
-|  ( 139, ( ( _, ( MlyValue.TAG_PARAM TAG_PARAM, (TAG_PARAMleft as 
-TAG_PARAM1left), TAG_PARAM1right)) :: rest671)) => let val  result = 
+|  ( 139, ( ( _, ( MlyValue.TAG_PARAM TAG_PARAM, (TAG_PARAMleft as
+TAG_PARAM1left), TAG_PARAM1right)) :: rest671)) => let val  result =
 MlyValue.Special (HTMLAttrs.mkPARAM(ctx TAG_PARAMleft, TAG_PARAM))
- in ( LrTable.NT 44, ( result, TAG_PARAM1left, TAG_PARAM1right), 
+ in ( LrTable.NT 44, ( result, TAG_PARAM1left, TAG_PARAM1right),
 rest671)
 end
 |  ( 140, ( rest671)) => let val  result = MlyValue.AreaList ([])
  in ( LrTable.NT 45, ( result, defaultPos, defaultPos), rest671)
 end
-|  ( 141, ( ( _, ( MlyValue.AreaList AreaList, _, AreaList1right)) :: 
+|  ( 141, ( ( _, ( MlyValue.AreaList AreaList, _, AreaList1right)) ::
 ( _, ( MlyValue.TAG_AREA TAG_AREA, (TAG_AREAleft as TAG_AREA1left), _)
 ) :: rest671)) => let val  result = MlyValue.AreaList (
 HTMLAttrs.mkAREA(ctx TAG_AREAleft, TAG_AREA) :: AreaList)
  in ( LrTable.NT 45, ( result, TAG_AREA1left, AreaList1right), rest671
 )
 end
-|  ( 142, ( ( _, ( MlyValue.TAG_INPUT TAG_INPUT, (TAG_INPUTleft as 
-TAG_INPUT1left), TAG_INPUT1right)) :: rest671)) => let val  result = 
+|  ( 142, ( ( _, ( MlyValue.TAG_INPUT TAG_INPUT, (TAG_INPUTleft as
+TAG_INPUT1left), TAG_INPUT1right)) :: rest671)) => let val  result =
 MlyValue.Form (HTMLAttrs.mkINPUT(ctx TAG_INPUTleft, TAG_INPUT))
- in ( LrTable.NT 46, ( result, TAG_INPUT1left, TAG_INPUT1right), 
+ in ( LrTable.NT 46, ( result, TAG_INPUT1left, TAG_INPUT1right),
 rest671)
 end
-|  ( 143, ( ( _, ( _, _, END_SELECT1right)) :: ( _, ( 
+|  ( 143, ( ( _, ( _, _, END_SELECT1right)) :: ( _, (
 MlyValue.OptionList OptionList, _, _)) :: ( _, ( MlyValue.START_SELECT
  START_SELECT, (START_SELECTleft as START_SELECT1left), _)) :: rest671
 )) => let val  result = MlyValue.Form (
 HTMLAttrs.mkSELECT(ctx START_SELECTleft, START_SELECT, OptionList))
- in ( LrTable.NT 46, ( result, START_SELECT1left, END_SELECT1right), 
+ in ( LrTable.NT 46, ( result, START_SELECT1left, END_SELECT1right),
 rest671)
 end
-|  ( 144, ( ( _, ( _, _, END_TEXTAREA1right)) :: ( _, ( 
-MlyValue.PCData PCData, _, _)) :: ( _, ( MlyValue.START_TEXTAREA 
-START_TEXTAREA, (START_TEXTAREAleft as START_TEXTAREA1left), _)) :: 
+|  ( 144, ( ( _, ( _, _, END_TEXTAREA1right)) :: ( _, (
+MlyValue.PCData PCData, _, _)) :: ( _, ( MlyValue.START_TEXTAREA
+START_TEXTAREA, (START_TEXTAREAleft as START_TEXTAREA1left), _)) ::
 rest671)) => let val  result = MlyValue.Form (
 HTMLAttrs.mkTEXTAREA(
-		  ctx START_TEXTAREAleft, START_TEXTAREA,
-		  PCData)
-		
+                  ctx START_TEXTAREAleft, START_TEXTAREA,
+                  PCData)
+
 )
  in ( LrTable.NT 46, ( result, START_TEXTAREA1left, END_TEXTAREA1right
 ), rest671)
@@ -2153,15 +2153,15 @@ end
  in ( LrTable.NT 47, ( result, defaultPos, defaultPos), rest671)
 end
 |  ( 146, ( ( _, ( MlyValue.OptionList OptionList, _, OptionList1right
-)) :: _ :: ( _, ( MlyValue.PCData PCData, _, _)) :: ( _, ( 
-MlyValue.START_OPTION START_OPTION, (START_OPTIONleft as 
-START_OPTION1left), _)) :: rest671)) => let val  result = 
+)) :: _ :: ( _, ( MlyValue.PCData PCData, _, _)) :: ( _, (
+MlyValue.START_OPTION START_OPTION, (START_OPTIONleft as
+START_OPTION1left), _)) :: rest671)) => let val  result =
 MlyValue.OptionList (
 HTMLAttrs.mkOPTION(ctx START_OPTIONleft, START_OPTION, PCData)
-		  :: OptionList
-		
+                  :: OptionList
+
 )
- in ( LrTable.NT 47, ( result, START_OPTION1left, OptionList1right), 
+ in ( LrTable.NT 47, ( result, START_OPTION1left, OptionList1right),
 rest671)
 end
 |  ( 147, ( rest671)) => let val  result = MlyValue.ntVOID ()
@@ -2169,23 +2169,23 @@ end
 end
 |  ( 148, ( ( _, ( _, END_OPTION1left, END_OPTION1right)) :: rest671))
  => let val  result = MlyValue.ntVOID ()
- in ( LrTable.NT 48, ( result, END_OPTION1left, END_OPTION1right), 
+ in ( LrTable.NT 48, ( result, END_OPTION1left, END_OPTION1right),
 rest671)
 end
-|  ( 149, ( ( _, ( MlyValue.PCDataList PCDataList, PCDataList1left, 
+|  ( 149, ( ( _, ( MlyValue.PCDataList PCDataList, PCDataList1left,
 PCDataList1right)) :: rest671)) => let val  result = MlyValue.PCData (
 concat PCDataList)
- in ( LrTable.NT 49, ( result, PCDataList1left, PCDataList1right), 
+ in ( LrTable.NT 49, ( result, PCDataList1left, PCDataList1right),
 rest671)
 end
 |  ( 150, ( rest671)) => let val  result = MlyValue.PCDataList ([])
  in ( LrTable.NT 50, ( result, defaultPos, defaultPos), rest671)
 end
 |  ( 151, ( ( _, ( MlyValue.PCDataList PCDataList, _, PCDataList1right
-)) :: ( _, ( MlyValue.PCDataElem PCDataElem, PCDataElem1left, _)) :: 
+)) :: ( _, ( MlyValue.PCDataElem PCDataElem, PCDataElem1left, _)) ::
 rest671)) => let val  result = MlyValue.PCDataList (
 PCDataElem :: PCDataList)
- in ( LrTable.NT 50, ( result, PCDataElem1left, PCDataList1right), 
+ in ( LrTable.NT 50, ( result, PCDataElem1left, PCDataList1right),
 rest671)
 end
 |  ( 152, ( ( _, ( MlyValue.PCDATA PCDATA, PCDATA1left, PCDATA1right))
@@ -2193,16 +2193,16 @@ end
  in ( LrTable.NT 51, ( result, PCDATA1left, PCDATA1right), rest671)
 
 end
-|  ( 153, ( ( _, ( MlyValue.CHAR_REF CHAR_REF, CHAR_REF1left, 
+|  ( 153, ( ( _, ( MlyValue.CHAR_REF CHAR_REF, CHAR_REF1left,
 CHAR_REF1right)) :: rest671)) => let val  result = MlyValue.PCDataElem
  (CHAR_REF)
  in ( LrTable.NT 51, ( result, CHAR_REF1left, CHAR_REF1right), rest671
 )
 end
-|  ( 154, ( ( _, ( MlyValue.ENTITY_REF ENTITY_REF, ENTITY_REF1left, 
-ENTITY_REF1right)) :: rest671)) => let val  result = 
+|  ( 154, ( ( _, ( MlyValue.ENTITY_REF ENTITY_REF, ENTITY_REF1left,
+ENTITY_REF1right)) :: rest671)) => let val  result =
 MlyValue.PCDataElem (ENTITY_REF)
- in ( LrTable.NT 51, ( result, ENTITY_REF1left, ENTITY_REF1right), 
+ in ( LrTable.NT 51, ( result, ENTITY_REF1left, ENTITY_REF1right),
 rest671)
 end
 | _ => raise (mlyAction i392)
@@ -2210,7 +2210,7 @@ end
 val void = MlyValue.VOID
 val extract = fn a => (fn MlyValue.Document x => x
 | _ => let exception ParseInternal
-	in raise ParseInternal end) a 
+        in raise ParseInternal end) a
 end
 end
 structure Tokens : HTML_TOKENS =

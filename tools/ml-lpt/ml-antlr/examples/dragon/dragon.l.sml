@@ -1,11 +1,11 @@
 structure Mlex  = struct
 
-    datatype yystart_state = 
+    datatype yystart_state =
 INITIAL
-    structure UserDeclarations = 
+    structure UserDeclarations =
       struct
 
- 
+
   open Tokens;
   fun eof() = EOF
   type lex_result = token
@@ -14,77 +14,77 @@ INITIAL
       end
 
     local
-    datatype yymatch 
+    datatype yymatch
       = yyNO_MATCH
       | yyMATCH of ULexBuffer.stream * action * yymatch
     withtype action = ULexBuffer.stream * yymatch -> UserDeclarations.lex_result
 
-    val yytable : ((UTF8.wchar * UTF8.wchar * int) list * int list) Vector.vector = 
+    val yytable : ((UTF8.wchar * UTF8.wchar * int) list * int list) Vector.vector =
 #[
 ]
 
     fun innerLex (yystrm_, yyss_, yysm) = let
         (* current start state *)
           val yyss = ref yyss_
-	  fun YYBEGIN ss = (yyss := ss)
-	(* current input stream *)
+          fun YYBEGIN ss = (yyss := ss)
+        (* current input stream *)
           val yystrm = ref yystrm_
-	  fun yygetPos() = ULexBuffer.getpos (!yystrm)
+          fun yygetPos() = ULexBuffer.getpos (!yystrm)
         (* start position of token -- can be updated via skip() *)
-	  val yystartPos = ref (yygetPos())
-	(* get one char of input *)
-	  fun yygetc strm = (case UTF8.getu ULexBuffer.getc strm
-                of (SOME (0w10, s')) => 
-		     (AntlrStreamPos.markNewLine yysm (ULexBuffer.getpos strm);
-		      SOME (0w10, s'))
-		 | x => x)
+          val yystartPos = ref (yygetPos())
+        (* get one char of input *)
+          fun yygetc strm = (case UTF8.getu ULexBuffer.getc strm
+                of (SOME (0w10, s')) =>
+                     (AntlrStreamPos.markNewLine yysm (ULexBuffer.getpos strm);
+                      SOME (0w10, s'))
+                 | x => x)
           fun yygetList getc strm = let
             val get1 = UTF8.getu getc
-            fun iter (strm, accum) = 
-	        (case get1 strm
-	          of NONE => rev accum
-	           | SOME (w, strm') => iter (strm', w::accum)
-	         (* end case *))
+            fun iter (strm, accum) =
+                (case get1 strm
+                  of NONE => rev accum
+                   | SOME (w, strm') => iter (strm', w::accum)
+                 (* end case *))
           in
             iter (strm, [])
           end
-	(* create yytext *)
-	  fun yymksubstr(strm) = ULexBuffer.subtract (strm, !yystrm)
-	  fun yymktext(strm) = Substring.string (yymksubstr strm)
-	  fun yymkunicode(strm) = yygetList Substring.getc (yymksubstr strm)
+        (* create yytext *)
+          fun yymksubstr(strm) = ULexBuffer.subtract (strm, !yystrm)
+          fun yymktext(strm) = Substring.string (yymksubstr strm)
+          fun yymkunicode(strm) = yygetList Substring.getc (yymksubstr strm)
           open UserDeclarations
           fun lex () = let
             fun yystuck (yyNO_MATCH) = raise Fail "lexer reached a stuck state"
-	      | yystuck (yyMATCH (strm, action, old)) = 
-		  action (strm, old)
-	    val yypos = yygetPos()
-	    fun yygetlineNo strm = AntlrStreamPos.lineNo yysm (ULexBuffer.getpos strm)
-	    fun yygetcolNo  strm = AntlrStreamPos.colNo  yysm (ULexBuffer.getpos strm)
-	    fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
-	      | yyactsToMatches (strm, act::acts, oldMatches) = 
-		  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
-	    fun yygo actTable = 
-		(fn (~1, _, oldMatches) => yystuck oldMatches
-		  | (curState, strm, oldMatches) => let
-		      val (transitions, finals') = Vector.sub (yytable, curState)
-		      val finals = map (fn i => Vector.sub (actTable, i)) finals'
-		      fun tryfinal() = 
-		            yystuck (yyactsToMatches (strm, finals, oldMatches))
-		      fun find (c, []) = NONE
-			| find (c, (c1, c2, s)::ts) = 
-		            if c1 <= c andalso c <= c2 then SOME s
-			    else find (c, ts)
-		      in case yygetc strm
-			  of SOME(c, strm') => 
-			       (case find (c, transitions)
-				 of NONE => tryfinal()
-				  | SOME n => 
-				      yygo actTable
-					(n, strm', 
-					 yyactsToMatches (strm, finals, oldMatches)))
-			   | NONE => tryfinal()
-		      end)
-	    fun continue() = 
+              | yystuck (yyMATCH (strm, action, old)) =
+                  action (strm, old)
+            val yypos = yygetPos()
+            fun yygetlineNo strm = AntlrStreamPos.lineNo yysm (ULexBuffer.getpos strm)
+            fun yygetcolNo  strm = AntlrStreamPos.colNo  yysm (ULexBuffer.getpos strm)
+            fun yyactsToMatches (strm, [],        oldMatches) = oldMatches
+              | yyactsToMatches (strm, act::acts, oldMatches) =
+                  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
+            fun yygo actTable =
+                (fn (~1, _, oldMatches) => yystuck oldMatches
+                  | (curState, strm, oldMatches) => let
+                      val (transitions, finals') = Vector.sub (yytable, curState)
+                      val finals = map (fn i => Vector.sub (actTable, i)) finals'
+                      fun tryfinal() =
+                            yystuck (yyactsToMatches (strm, finals, oldMatches))
+                      fun find (c, []) = NONE
+                        | find (c, (c1, c2, s)::ts) =
+                            if c1 <= c andalso c <= c2 then SOME s
+                            else find (c, ts)
+                      in case yygetc strm
+                          of SOME(c, strm') =>
+                               (case find (c, transitions)
+                                 of NONE => tryfinal()
+                                  | SOME n =>
+                                      yygo actTable
+                                        (n, strm',
+                                         yyactsToMatches (strm, finals, oldMatches)))
+                           | NONE => tryfinal()
+                      end)
+            fun continue() =
 let
 fun yyAction0 (strm, lastMatch : yymatch) = (yystrm := strm;  skip())
 fun yyAction1 (strm, lastMatch : yymatch) = (yystrm := strm;  skip())
@@ -144,7 +144,7 @@ fun yyAction33 (strm, lastMatch : yymatch) = let
       in
         yystrm := strm;
          print (concat ["Unexpected character: '", yytext,
-			           "'\n"]); continue()
+                                   "'\n"]); continue()
       end
 fun yyQ36 (strm, lastMatch : yymatch) = yyAction1(strm, yyNO_MATCH)
 fun yyQ35 (strm, lastMatch : yymatch) = (case (yygetc(strm))
@@ -2527,8 +2527,8 @@ in
   (* end case *))
 end
             and skip() = (yystartPos := yygetPos(); continue())
-	    in (continue(), (!yystartPos, yygetPos()), !yystrm, !yyss) end
-          in 
+            in (continue(), (!yystartPos, yygetPos()), !yystrm, !yyss) end
+          in
             lex()
           end
   in
@@ -2536,42 +2536,42 @@ end
     type span = AntlrStreamPos.span
     type tok = UserDeclarations.lex_result
 
-    datatype prestrm = STRM of ULexBuffer.stream * 
-		(yystart_state * tok * span * prestrm * yystart_state) option ref
+    datatype prestrm = STRM of ULexBuffer.stream *
+                (yystart_state * tok * span * prestrm * yystart_state) option ref
     type strm = (prestrm * yystart_state)
 
     fun lex sm (STRM (yystrm, memo), ss) = (case !memo
-	  of NONE => let
-	     val (tok, span, yystrm', ss') = innerLex (yystrm, ss, sm)
-	     val strm' = STRM (yystrm', ref NONE);
-	     in 
-	       memo := SOME (ss, tok, span, strm', ss');
-	       (tok, span, (strm', ss'))
-	     end
-	   | SOME (ss', tok, span, strm', ss'') => 
-	       if ss = ss' then
-		 (tok, span, (strm', ss''))
-	       else (
-		 memo := NONE;
-		 lex sm (STRM (yystrm, memo), ss))
+          of NONE => let
+             val (tok, span, yystrm', ss') = innerLex (yystrm, ss, sm)
+             val strm' = STRM (yystrm', ref NONE);
+             in
+               memo := SOME (ss, tok, span, strm', ss');
+               (tok, span, (strm', ss'))
+             end
+           | SOME (ss', tok, span, strm', ss'') =>
+               if ss = ss' then
+                 (tok, span, (strm', ss''))
+               else (
+                 memo := NONE;
+                 lex sm (STRM (yystrm, memo), ss))
          (* end case *))
 
-    fun streamify input = (STRM (ULexBuffer.mkStream input, ref NONE), 
-			   INITIAL)
+    fun streamify input = (STRM (ULexBuffer.mkStream input, ref NONE),
+                           INITIAL)
 
     fun streamifyReader readFn strm = let
           val s = ref strm
-	  fun iter(strm, n, accum) = 
-	        if n > 1024 then (String.implode (rev accum), strm)
-		else (case readFn strm
-		       of NONE => (String.implode (rev accum), strm)
-			| SOME(c, strm') => iter (strm', n+1, c::accum))
+          fun iter(strm, n, accum) =
+                if n > 1024 then (String.implode (rev accum), strm)
+                else (case readFn strm
+                       of NONE => (String.implode (rev accum), strm)
+                        | SOME(c, strm') => iter (strm', n+1, c::accum))
           fun input() = let
-	        val (data, strm) = iter(!s, 0, [])
-	        in
-	          s := strm;
-		  data
-	        end
+                val (data, strm) = iter(!s, 0, [])
+                in
+                  s := strm;
+                  data
+                end
           in
             streamify input
           end

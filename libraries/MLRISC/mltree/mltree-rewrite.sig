@@ -6,9 +6,9 @@ signature MLTREE_REWRITE =
 sig
    structure T : MLTREE
 
-   val rewrite : 
+   val rewrite :
        (* User supplied transformations *)
-       { rexp  : (T.rexp -> T.rexp) -> (T.rexp -> T.rexp), 
+       { rexp  : (T.rexp -> T.rexp) -> (T.rexp -> T.rexp),
          fexp  : (T.fexp -> T.fexp) -> (T.fexp -> T.fexp),
          ccexp : (T.ccexp -> T.ccexp) -> (T.ccexp -> T.ccexp),
          stm   : (T.stm -> T.stm) -> (T.stm -> T.stm)

@@ -23,10 +23,10 @@ fun parseAttrsFromStream inStream = let
       val lex = HTML4AttrLexer.lex sourceMap
       val stream = HTML4AttrLexer.streamifyInstream inStream
       in
-	case HTML4AttrParser.parse lex stream
-	 of (SOME result, _, _) => result
-	  | _ => []
-	(* end case *)
+        case HTML4AttrParser.parse lex stream
+         of (SOME result, _, _) => result
+          | _ => []
+        (* end case *)
       end
 
 fun parseAttrs inStr = parseAttrsFromStream (TextIO.openString inStr)
@@ -143,18 +143,18 @@ fun splitTagStart inStr =
 fun extractTag str = let
       val (tagNameChs, _) = splitTagStart str
       val tagNameChs = (case CharVectorSlice.getItem tagNameChs
-	     of SOME(#"<", r) => (case CharVectorSlice.getItem r
-		   of SOME(#"/", r) => r
-		    | _ => r
-		  (* end case *))
-	      | _ => tagNameChs
-	    (* end case *))
+             of SOME(#"<", r) => (case CharVectorSlice.getItem r
+                   of SOME(#"/", r) => r
+                    | _ => r
+                  (* end case *))
+              | _ => tagNameChs
+            (* end case *))
       in
-	Atom.atom (CharVectorSlice.map Char.toUpper tagNameChs)
+        Atom.atom (CharVectorSlice.map Char.toUpper tagNameChs)
       end
 
 fun extractAttrs str =
-    let 
+    let
         val (_, tagRest) = splitTagStart str
         val (tagRest', _) = Substring.splitr (fn c => c = #">") tagRest
     in

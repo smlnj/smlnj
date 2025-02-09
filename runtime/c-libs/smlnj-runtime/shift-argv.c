@@ -8,13 +8,15 @@
 #include "ml-objects.h"
 #include "cfun-proto-list.h"
 
-/* _ml_Proc_shift_argv:
+/* _ml_Proc_shift_argv : unit -> unit
  */
 ml_val_t _ml_Proc_shift_argv (ml_state_t *msp, ml_val_t arg)
 {
-  if (*CmdLineArgs != NIL(char *))
-    ++CmdLineArgs;
+    UNUSED(msp);
+    UNUSED_UNIT_PARAM(arg);
+    if (*CmdLineArgs != NIL(char *))
+        ++CmdLineArgs;
 
-  return ML_unit;
+    return ML_unit;
 
 } /* end of _ml_Proc_shift_argv */

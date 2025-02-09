@@ -8,20 +8,20 @@ structure Sizes : SIZES =
 struct
   type layout = {bits:int, align:int}
   type sizes = {char: layout,
-		short: layout,
-		int: layout,
-		long: layout,
-		longlong: layout,
-		float: layout,
-		double: layout,
-		longdouble: layout,
-		pointer: layout,
-		min_struct: layout,
-		min_union: layout,
-		onlyPackBitFields: bool,
-		ignoreUnnamedBitFieldAlignment: bool}
-    
-  val defaultSizes : sizes = 
+                short: layout,
+                int: layout,
+                long: layout,
+                longlong: layout,
+                float: layout,
+                double: layout,
+                longdouble: layout,
+                pointer: layout,
+                min_struct: layout,
+                min_union: layout,
+                onlyPackBitFields: bool,
+                ignoreUnnamedBitFieldAlignment: bool}
+
+  val defaultSizes : sizes =
     {char = {bits=8, align=8},
      short= {bits=16,align=16},
      int  = {bits=32,align=32},

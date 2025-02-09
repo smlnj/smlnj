@@ -19,7 +19,7 @@
  */
 ml_val_t _ml_P_FileSys_rewinddir (ml_state_t *msp, ml_val_t arg)
 {
-    
+    UNUSED(msp);
     rewinddir(PTR_MLtoC(DIR, arg));
 
     return ML_unit;

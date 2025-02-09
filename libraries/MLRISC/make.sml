@@ -10,8 +10,8 @@ fun set f = #set(CM.Anchor.anchor f) (SOME "cm");
 val _ = app set ["Control.cm", "Lib.cm", "Graphs.cm", "MLRISC.cm",
                  "MLTREE.cm"];
 
-fun b() = CM.make "Tools/MDL/sources.cm"; 
-val _ = b(); 
+fun b() = CM.make "Tools/MDL/sources.cm";
+val _ = b();
 fun c f = MDLGen.gen(f^"/"^f^".mdl");
 val _ = app c
 [ "x86"

@@ -30,7 +30,7 @@ sig
     *)
    val mapTyToPat   : Ast.pat map -> Ast.ty -> Ast.pat
 
-   (* Translate a type to an expression.  Apply the map function on 
+   (* Translate a type to an expression.  Apply the map function on
     * each identifier.
     *)
    val mapTyToExp   : Ast.exp map -> Ast.ty -> Ast.exp
@@ -58,12 +58,12 @@ sig
    (* Translate a constructor to a clause *)
    val mapConsToClause : {prefix : Ast.id list,        (* path prefix *)
                           pat    : Ast.pat -> Ast.pat,
-                          exp    : Ast.exp  
+                          exp    : Ast.exp
                          } -> Ast.consbind -> Ast.clause
 
    (* Given a constructor, return a function that looks up the pattern
     * variables and their types
-    *)  
+    *)
    val consBindings : Ast.consbind -> (Ast.id -> Ast.exp * Ast.ty)
 
 end

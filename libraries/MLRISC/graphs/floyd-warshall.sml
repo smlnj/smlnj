@@ -1,11 +1,11 @@
-(* 
+(*
  * This module implements the Floyd/Warshall algorithm for computing
  * all pairs shortest paths.
  *
  * -- Allen
  *)
 
-functor FloydWarshall(Num : ABELIAN_GROUP_WITH_INF) 
+functor FloydWarshall(Num : ABELIAN_GROUP_WITH_INF)
    : ALL_PAIRS_SHORTEST_PATHS =
 struct
 
@@ -30,7 +30,7 @@ struct
        end
        fun l1(k)   = if k < N then (l2(k,0); l1(k+1)) else ()
        and l2(k,i) = if i < N then (l3(k,i,0,A.sub(D,i,k)); l2(k,i+1)) else ()
-       and l3(k,i,j,d_ik) = if j < N then 
+       and l3(k,i,j,d_ik) = if j < N then
               let val d_ij = A.sub(D,i,j)
                   val d_kj = A.sub(D,k,j)
                   val x = Num.+(d_ik,d_kj)

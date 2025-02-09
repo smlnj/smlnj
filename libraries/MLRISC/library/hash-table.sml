@@ -8,16 +8,16 @@ struct
 
    structure A = Array
 
-   type ('a,'b) table = ('a -> word) * 
+   type ('a,'b) table = ('a -> word) *
                         ('a * 'a -> bool) *
                         exn *
-                        ('a * 'b) list A.array ref * 
+                        ('a * 'b) list A.array ref *
                         int ref
 
    infix ==
 
    fun create{hash,==,exn,size} = (hash,op==,exn,ref(A.array(size,[])),ref 0)
-   fun copy(hash,op==,exn,ref a,ref c) = 
+   fun copy(hash,op==,exn,ref a,ref c) =
          (hash,op==,exn,ref(A.tabulate(A.length a,fn i => A.sub(a,i))), ref c)
    fun size (_,_,_,_,ref n) = n
    fun clear (_,_,_,ref a,c) =
@@ -28,12 +28,12 @@ struct
    let val N  = A.length a
        val h  = Word.toIntX(hash k) mod N
        val es = A.sub(a,h)
-       fun ins ([],es') = (A.update(a,h,(k,v)::es'); 
+       fun ins ([],es') = (A.update(a,h,(k,v)::es');
                            c := !c + 1;
                            if !c >= N then grow(hash,A,N) else ()
                           )
-         | ins ((e as (k',_))::es,es') = 
-            if k == k' then A.update(a,h,(k,v)::es'@es) 
+         | ins ((e as (k',_))::es,es') =
+            if k == k' then A.update(a,h,(k,v)::es'@es)
             else ins(es,e::es')
    in  ins (es,[])
    end
@@ -53,12 +53,12 @@ struct
        val h  = Word.toIntX(hash k) mod N
        val es = A.sub(a,h)
        fun del ([],es') = ()
-         | del ((e as (k',_))::es,es') = 
+         | del ((e as (k',_))::es,es') =
             if k == k' then (A.update(a,h,es'@es); c := !c - 1)
             else del(es,e::es')
    in  del (es,[])
    end
- 
+
    fun lookup(hash,op==,exn,ref a,_) k =
    let val N  = A.length a
        val h  = Word.toIntX(hash k) mod N
@@ -74,7 +74,7 @@ struct
          | fl((k,v)::es,x) = f(k,v)::fl(es,x)
    in  A.foldr fl [] A end
 
-   fun fold f x (_,_,_,ref A,_) = 
+   fun fold f x (_,_,_,ref A,_) =
    let fun fl([],x) = x
          | fl((k,v)::es,x) = f(k,v,fl(es,x))
    in  A.foldr fl x A end

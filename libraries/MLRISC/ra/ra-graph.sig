@@ -3,11 +3,11 @@
  * COPYRIGHT (c) 2002 Bell Labs, Lucent Technologies.
  *
  * This is the new interference graph used by the new register allocator.
- * 
+ *
  * -- Allen
  *)
 
-signature RA_GRAPH = 
+signature RA_GRAPH =
 sig
 
   structure C : CELLS_BASIS
@@ -15,11 +15,11 @@ sig
   (*
    * The following are the data structures used in the register allocator.
    *)
-  
+
   exception Nodes
 
   type priority = real
-  type cost = real         
+  type cost = real
 
   (*
    * The following represent a program point in the program.
@@ -28,27 +28,27 @@ sig
    * numbering is in reverse.  The number 0 is reserved for "live-out".
    *
    *)
-  type programPoint = {block:int, insn:int} 
+  type programPoint = {block:int, insn:int}
 
   (* Hash table indexed by program point *)
-  structure PPtHashTable : MONO_HASH_TABLE 
+  structure PPtHashTable : MONO_HASH_TABLE
       where type Key.hash_key = programPoint
 
   type frame_offset = int
   type logical_spill_id = int
 
-  datatype spillLoc = 
+  datatype spillLoc =
      FRAME   of logical_spill_id  (* spill to a new frame location *)
    | MEM_REG of C.cell            (* spill to a memory register *)
 
   (* Hash table indexed by spill location *)
-  structure SpillLocHashTable : MONO_HASH_TABLE 
+  structure SpillLocHashTable : MONO_HASH_TABLE
       where type Key.hash_key = spillLoc
 
   type mode = word
 
-  datatype interferenceGraph = 
-     GRAPH of 
+  datatype interferenceGraph =
+     GRAPH of
      { bitMatrix    : BM.bitMatrix ref,
        nodes        : node IntHashTable.hash_table,
        K            : int,
@@ -62,7 +62,7 @@ sig
        (* Info to undo a spill when an optimistic spill has occurred *)
        spillFlag    : bool ref,
 
-       spilledRegs  : bool IntHashTable.hash_table, 
+       spilledRegs  : bool IntHashTable.hash_table,
                            (*registers that have been spilled*)
        trail        : trailInfo ref,
 
@@ -98,14 +98,14 @@ sig
                  | LOST                    (* frozen moves *)
                  | WORKLIST                (* on the move worklist *)
 
-  and move = 
-    MV of {src    : node,  		(* source register of move *)
-	   dst    : node,		(* destination register of move *)
+  and move =
+    MV of {src    : node,               (* source register of move *)
+           dst    : node,               (* destination register of move *)
 (*           kind   : moveKind,           (* kind of move *) *)
            cost   : cost,               (* cost *)
-	   status : moveStatus ref,     (* coalesced? *)
+           status : moveStatus ref,     (* coalesced? *)
            hicount: int ref             (* neighbors of high degree *)
-	  }
+          }
 
   and moveKind = REG_TO_REG      (* register to register *)
                | EVEN_TO_REG     (* even register in pair to register *)
@@ -113,9 +113,9 @@ sig
                | PAIR_TO_PAIR    (* register pair to register pair *)
                | REG_TO_EVEN     (* register to even register in pair *)
                | REG_TO_ODD      (* register to odd register in pair *)
-(*  and moveKind = REGmvk		 (* register-register move *)
+(*  and moveKind = REGmvk                (* register-register move *)
                | MEMREGmvk       (* move involving memReg  *)
- 
+
 *)
 
   and nodeStatus =
@@ -124,7 +124,7 @@ sig
       | ALIASED of node       (* coalesced *)
       | COLORED of int        (* colored *)
       | MEMREG of int * C.cell(* register implemented in memory *)
-      | SPILLED		      (* spilled *)
+      | SPILLED               (* spilled *)
       | SPILL_LOC of int      (* spilled at logical location *)
 
        (* Note on SPILLED:
@@ -134,18 +134,18 @@ sig
         *                    assigned by the register allocator
         *)
 
-  and node = 
-    NODE of { number : int, 	        (* node number *)
-	      cell:    C.cell,
-	      movecnt: int ref,		(* #moves this node is involved in *)
-	      movelist: move list ref,	(* moves associated with this node *)
-	      degree : int ref,		(* current degree *)
-	      color : nodeStatus ref,	(* status *)
-	      adj : node list ref,	(* adjacency list *)
+  and node =
+    NODE of { number : int,             (* node number *)
+              cell:    C.cell,
+              movecnt: int ref,         (* #moves this node is involved in *)
+              movelist: move list ref,  (* moves associated with this node *)
+              degree : int ref,         (* current degree *)
+              color : nodeStatus ref,   (* status *)
+              adj : node list ref,      (* adjacency list *)
               pri : priority ref,       (* priority *)
               movecost : cost ref,      (* move cost *)
               (* pair : bool, *)        (* register pair? *)
-              defs : programPoint list ref, 
+              defs : programPoint list ref,
               uses : programPoint list ref
             }
 
@@ -162,9 +162,9 @@ sig
                    firstPseudoR : int,
                    dedicated    : int -> bool,
                    showReg      : C.cell -> string,
-                   getreg       : 
+                   getreg       :
                      {pref:int list,stamp:int,proh:int Array.array} -> int,
-                   getpair      : 
+                   getpair      :
                      {pref:int list,stamp:int,proh:int Array.array} -> int,
                    proh         : int Array.array,
                    mode         : mode,

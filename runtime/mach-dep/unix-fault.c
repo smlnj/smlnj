@@ -78,6 +78,7 @@ PVT SigReturn_t FaultHandler (int signal, siginfo_t *si, void *uc)
     Addr_t	    pc = (Addr_t)SIG_GetPC(scp);
     ml_state_t	    *msp = SELF_VPROC->vp_state;
     extern Word_t   request_fault[];
+    (void)si;
 
 #ifdef SIGNAL_DEBUG
     SayDebug ("Fault handler: pc = %p, sig = %d, inML = %d\n",

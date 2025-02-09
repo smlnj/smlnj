@@ -15,7 +15,7 @@ sig
 
     val DF : ('n,'e,'g) dj_graph -> Graph.node_id -> Graph.node_id list
 
-    val IDFs : ('n,'e,'g) dj_graph -> 
+    val IDFs : ('n,'e,'g) dj_graph ->
               Graph.node_id list -> Graph.node_id list (* DF^+(S) *)
 
       (* For constructing pruned SSA, we actually need to compute
@@ -24,8 +24,8 @@ sig
        * The following function computes this with liveness incrementally.
        *)
     val LiveIDFs : ('n,'e,'g) dj_graph ->
-          {defs        : Graph.node_id list, (* blocks with definitions *) 
+          {defs        : Graph.node_id list, (* blocks with definitions *)
            localLiveIn : Graph.node_id list  (* blocks that are local live in *)
-          } -> Graph.node_id list  
+          } -> Graph.node_id list
 
 end

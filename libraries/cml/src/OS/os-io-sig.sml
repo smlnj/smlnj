@@ -8,45 +8,45 @@
 signature CML_OS_IO =
   sig
     eqtype iodesc
-	(* an iodesc is an abstract descriptor for an OS object that
-	 * supports I/O (e.g., file, tty device, socket, ...).
-	 *)
+        (* an iodesc is an abstract descriptor for an OS object that
+         * supports I/O (e.g., file, tty device, socket, ...).
+         *)
     eqtype iodesc_kind
 
     val hash : iodesc -> word
-	(* return a hash value for the I/O descriptor. *)
+        (* return a hash value for the I/O descriptor. *)
 
     val compare : (iodesc * iodesc) -> order
-	(* compare two I/O descriptors *)
+        (* compare two I/O descriptors *)
 
     val kind : iodesc -> iodesc_kind
-	(* return the kind of I/O descriptor. *)
+        (* return the kind of I/O descriptor. *)
 
     structure Kind : sig
-	val file : iodesc_kind
-	val dir : iodesc_kind 
-	val symlink : iodesc_kind 
-	val tty : iodesc_kind 
-	val pipe : iodesc_kind 
-	val socket : iodesc_kind 
-	val device : iodesc_kind 
+        val file : iodesc_kind
+        val dir : iodesc_kind
+        val symlink : iodesc_kind
+        val tty : iodesc_kind
+        val pipe : iodesc_kind
+        val socket : iodesc_kind
+        val device : iodesc_kind
       end
 
     type poll_desc
-	(* this is an abstract representation of a polling operation on
-	 * an I/O descriptor.
-	 *)
+        (* this is an abstract representation of a polling operation on
+         * an I/O descriptor.
+         *)
     type poll_info
-	(* this is an abstract representation of the per-descriptor
-	 * information returned by the poll operation.
-	 *)
+        (* this is an abstract representation of the per-descriptor
+         * information returned by the poll operation.
+         *)
 
     val pollDesc : iodesc -> poll_desc option
-	(* create a polling operation on the given descriptor; note that
-	 * not all I/O devices support polling.
-	 *)
+        (* create a polling operation on the given descriptor; note that
+         * not all I/O devices support polling.
+         *)
     val pollToIODesc : poll_desc -> iodesc
-	(* return the I/O descriptor that is being polled *)
+        (* return the I/O descriptor that is being polled *)
 
     exception Poll
 
@@ -59,15 +59,15 @@ signature CML_OS_IO =
 
   (* polling functions *)
     val poll : (poll_desc list * Time.time option) -> poll_info list
-	(* a timeout of NONE means wait indefinitely; a timeout of
-	 * (SOME Time.zeroTime) means do not block.
-	 *)
+        (* a timeout of NONE means wait indefinitely; a timeout of
+         * (SOME Time.zeroTime) means do not block.
+         *)
     val pollEvt : poll_desc list -> poll_info list Event.event
 
   (* check for conditions *)
-    val isIn 		: poll_info -> bool
-    val isOut		: poll_info -> bool
-    val isPri		: poll_info -> bool
+    val isIn            : poll_info -> bool
+    val isOut           : poll_info -> bool
+    val isPri           : poll_info -> bool
     val infoToPollDesc  : poll_info -> poll_desc
 
   end (* OS_IO *)

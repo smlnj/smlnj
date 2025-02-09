@@ -17,12 +17,12 @@ structure AtExit : sig
 
   (* Note that the semantics of atExit require that calls to exit
    * in an atExit action cause the remaining atExit actions to be
-   * performed.  
+   * performed.
    *)
     fun doAtExit () = (case !hooks
-	   of [] => ()
-	    | (f::r) => (hooks := r;  f() handle _ => (); doAtExit())
-	  (* end case *))
+           of [] => ()
+            | (f::r) => (hooks := r;  f() handle _ => (); doAtExit())
+          (* end case *))
 
     fun cleaner CU.AtExit = doAtExit()
       | cleaner CU.AtExportFn = hooks := []

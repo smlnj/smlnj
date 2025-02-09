@@ -1,5 +1,5 @@
 (*
- * This is a hack module for removing dead code that are discovered by 
+ * This is a hack module for removing dead code that are discovered by
  * the register allocator.  This module acts as a wrapper
  * for the generic RA flowgraph module.
  *
@@ -11,11 +11,11 @@ functor RADeadCodeElim
    (  (* check for dead code on these cellkinds only *)
     val cellkind : CellsBasis.cellkind -> bool
       (* Dead registers are stored here. *)
-    val deadRegs : bool IntHashTable.hash_table 
+    val deadRegs : bool IntHashTable.hash_table
       (* Affected blocks *)
-    val affectedBlocks : bool IntHashTable.hash_table 
-    val spillInit : Flowgraph.G.interferenceGraph * CellsBasis.cellkind 
-                      -> unit 
+    val affectedBlocks : bool IntHashTable.hash_table
+    val spillInit : Flowgraph.G.interferenceGraph * CellsBasis.cellkind
+                      -> unit
    ) : RA_FLOWGRAPH =
 struct
    structure F = Flowgraph
@@ -28,22 +28,22 @@ struct
    fun isOn(flag,mask) = Word.andb(flag,mask) <> 0w0
 
    (*
-    * New services that also removes dead code 
+    * New services that also removes dead code
     *)
    fun services f =
    let val {build, spill, blockNum, instrNum, programPoint} = F.services f
-       (* 
+       (*
         * The following build method marks all pseudo registers
         * that are dead, and record their definition points.
         *)
-       fun findDeadCode(G.GRAPH{nodes, copyTmps, mode, ...}) = 
-       let val dead     = IntHashTable.insert deadRegs 
+       fun findDeadCode(G.GRAPH{nodes, copyTmps, mode, ...}) =
+       let val dead     = IntHashTable.insert deadRegs
            val affected = IntHashTable.insert affectedBlocks
            val affectedList = app (fn d => affected(blockNum d, true))
 
            (* Mark all copy temporaries *)
            val marker = [{block=0,insn=0}]
-           fun markCopyTmps [] = ()  
+           fun markCopyTmps [] = ()
              | markCopyTmps(G.NODE{uses, ...}::tmps) =
                  (uses := marker; markCopyTmps tmps)
            fun unmarkCopyTmps [] = ()
@@ -67,13 +67,13 @@ struct
        (*
         * Build the graph, then remove dead code.
         *)
-       fun buildIt(graph, kind) =  
+       fun buildIt(graph, kind) =
        let val moves = build(graph, kind)
        in  if cellkind kind then findDeadCode(graph) else ();
            moves
        end
 
-       fun spillIt(arg as {graph, cellkind, ...}) = 
+       fun spillIt(arg as {graph, cellkind, ...}) =
            (spillInit(graph, cellkind); spill arg)
 
    in  {build=buildIt, spill=spillIt, programPoint=programPoint,

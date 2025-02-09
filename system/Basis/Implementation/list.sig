@@ -25,7 +25,7 @@ signature LIST_2004 =
 
     exception Empty
 
-    val null : 'a list -> bool 
+    val null : 'a list -> bool
     val hd   : 'a list -> 'a                (* raises Empty *)
     val tl   : 'a list -> 'a list           (* raises Empty *)
     val last : 'a list -> 'a                (* raises Empty *)
@@ -36,9 +36,9 @@ signature LIST_2004 =
     val take : 'a list * int -> 'a list  (* raises Subscript *)
     val drop : 'a list * int -> 'a list  (* raises Subscript *)
 
-    val length : 'a list -> int 
+    val length : 'a list -> int
 
-    val rev : 'a list -> 'a list 
+    val rev : 'a list -> 'a list
 
     val @         : 'a list * 'a list -> 'a list
     val concat    : 'a list list -> 'a list
@@ -75,27 +75,27 @@ signature LIST_2015 =
 
     val reduce         : ('a * 'a -> 'a) -> 'a -> 'a list -> 'a
 
-    val appi		: (int * 'a -> unit) -> 'a list -> unit
-    val mapi		: (int * 'a -> 'b) -> 'a list -> 'b list
-    val mapPartiali	: (int * 'a -> 'b option) -> 'a list -> 'b list
-    val foldli		: (int * 'a * 'b -> 'b) -> 'b -> 'a list -> 'b
-    val foldri		: (int * 'a * 'b -> 'b) -> 'b -> 'a list -> 'b
-    val findi		: (int * 'a -> bool) -> 'a list -> (int * 'a) option
+    val appi            : (int * 'a -> unit) -> 'a list -> unit
+    val mapi            : (int * 'a -> 'b) -> 'a list -> 'b list
+    val mapPartiali     : (int * 'a -> 'b option) -> 'a list -> 'b list
+    val foldli          : (int * 'a * 'b -> 'b) -> 'b -> 'a list -> 'b
+    val foldri          : (int * 'a * 'b -> 'b) -> 'b -> 'a list -> 'b
+    val findi           : (int * 'a -> bool) -> 'a list -> (int * 'a) option
 
-    val revMap		: ('a -> 'b) -> 'a list -> 'b list
-    val revMapi		: (int * 'a -> 'b) -> 'a list -> 'b list
-    val revMapPartial	: ('a -> 'b option) -> 'a list -> 'b list
-    val revMapPartiali	: (int * 'a -> 'b option) -> 'a list -> 'b list
+    val revMap          : ('a -> 'b) -> 'a list -> 'b list
+    val revMapi         : (int * 'a -> 'b) -> 'a list -> 'b list
+    val revMapPartial   : ('a -> 'b option) -> 'a list -> 'b list
+    val revMapPartiali  : (int * 'a -> 'b option) -> 'a list -> 'b list
 
-    val concatMap	: ('a -> 'b list) -> 'a list -> 'b list
-    val concatMapi	: (int * 'a -> 'b list) -> 'a list -> 'b list
+    val concatMap       : ('a -> 'b list) -> 'a list -> 'b list
+    val concatMapi      : (int * 'a -> 'b list) -> 'a list -> 'b list
 
-    val foldMapl	: ('b * 'c -> 'c) -> ('a -> 'b) -> 'c -> 'a list -> 'c
-    val foldMapr	: ('b * 'c -> 'c) -> ('a -> 'b) -> 'c -> 'a list -> 'c
+    val foldMapl        : ('b * 'c -> 'c) -> ('a -> 'b) -> 'c -> 'a list -> 'c
+    val foldMapr        : ('b * 'c -> 'c) -> ('a -> 'b) -> 'c -> 'a list -> 'c
 
-    val splitAt		: 'a list * int -> 'a list * 'a list
-    val update		: 'a list * int * 'a -> 'a list
-    val sub		: 'a list * int -> 'a
+    val splitAt         : 'a list * int -> 'a list * 'a list
+    val update          : 'a list * int * 'a -> 'a list
+    val sub             : 'a list * int -> 'a
 
   end
 

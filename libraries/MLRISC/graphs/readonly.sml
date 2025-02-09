@@ -6,7 +6,7 @@
 
 signature READONLY_GRAPH_VIEW =
 sig
-  
+
    val readonly_view : ('n,'e,'g) Graph.graph -> ('n,'e,'g) Graph.graph
 
 end

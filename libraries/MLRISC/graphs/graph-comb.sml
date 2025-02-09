@@ -4,7 +4,7 @@
  *
  *)
 
-structure GraphCombinations : GRAPH_COMBINATIONS = 
+structure GraphCombinations : GRAPH_COMBINATIONS =
 struct
 
    structure G       = Graph

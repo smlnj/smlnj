@@ -2,7 +2,7 @@
  *
  * COPYRIGHT (c) 1996 Bell Laboratories.
  *
- * IMPORTANT NOTE: 
+ * IMPORTANT NOTE:
  *   Integer registers are numbered from 0 - 31 (0-7 are physical)
  *   Floating point registers are numbered from 32-63 (32-39 are physical)
  *)
@@ -12,7 +12,7 @@ functor X86MCEmitter
    structure MLTreeEval : MLTREE_EVAL where T = Instr.T
    structure MemRegs : MEMORY_REGISTERS where I = Instr
    val memRegBase : CellsBasis.cell option
-   structure AsmEmitter : INSTRUCTION_EMITTER where I = Instr) : MC_EMIT = 
+   structure AsmEmitter : INSTRUCTION_EMITTER where I = Instr) : MC_EMIT =
 struct
   structure I = Instr
   structure C = I.C
@@ -21,7 +21,7 @@ struct
   structure W8 = Word8
   structure W = LargeWord
   structure CB = CellsBasis
-  structure LE = MLTreeEval 
+  structure LE = MLTreeEval
 
   val itow  = Word.fromInt
   val wtoi  = Word.toInt
@@ -32,9 +32,9 @@ struct
    * Sanity check!
    *)
 
-  val eax = 0   val esp = 4   
+  val eax = 0   val esp = 4
   val ecx = 1   val ebp = 5
-  val edx = 2   val esi = 6   
+  val edx = 2   val esi = 6
   val ebx = 3   val edi = 7
 
   val opnd16Prefix = 0x66
@@ -43,10 +43,10 @@ struct
   fun lexp le = Int32.fromInt(LE.valueOf le)
 
   val toWord8 = Word8.fromLargeWord o LargeWord.fromLargeInt o Int32.toLarge
-  val eBytes = Word8Vector.fromList 
+  val eBytes = Word8Vector.fromList
   fun eByte i = eBytes [W8.fromInt i]
-  local 
-    val toLWord = (W.fromLargeInt o Int32.toLarge) 
+  local
+    val toLWord = (W.fromLargeInt o Int32.toLarge)
     fun shift (w,cnt) = W8.fromLargeWord(W.>>(w, cnt))
   in
     fun eShort i16 = let
@@ -62,20 +62,20 @@ struct
   fun emitInstrs(instrs) = Word8Vector.concat(map emitInstr instrs)
 
   and emitX86Instr(instr: I.instr) = let
-    val error = 
+    val error =
         fn msg =>
            let val AsmEmitter.S.STREAM{emit,...} = AsmEmitter.makeStream []
            in  emit (I.INSTR instr); error msg end
 
-    val rNum = CB.physicalRegisterNum 
-    val fNum = CB.physicalRegisterNum 
+    val rNum = CB.physicalRegisterNum
+    val fNum = CB.physicalRegisterNum
 
     fun memReg r = MemRegs.memReg{reg=r, base=Option.valOf memRegBase}
 
     datatype size = Zero | Bits8 | Bits32
-    fun size i = 
+    fun size i =
       if i = 0 then Zero
-      else if Int32.<(i, 128) andalso Int32.<=(~128, i) then Bits8 
+      else if Int32.<(i, 128) andalso Int32.<=(~128, i) then Bits8
       else Bits32
 
     fun immedOpnd(I.Immed(i32)) = i32
@@ -83,7 +83,7 @@ struct
       | immedOpnd(I.LabelEA le) = lexp le
       | immedOpnd _ = error "immedOpnd"
 
-    nonfix mod    
+    nonfix mod
 
     fun scale(n, m) = Word.toIntX(Word.<<(Word.fromInt n, Word.fromInt m))
     fun modrm{mod, reg, rm} = W8.fromInt(scale(mod,6) + scale(reg,3) + rm)
@@ -95,44 +95,44 @@ struct
       | eImmedExt(opc, I.Displace{base, disp, ...}) = let
           val base = rNum base                (* XXX rNum may be done twice *)
           val immed = immedOpnd disp
-          fun displace(mod, eDisp) = 
-            if base=esp then 
+          fun displace(mod, eDisp) =
+            if base=esp then
               modrm{mod=mod, reg=opc, rm=4}::
               sib{ss=0, index=4, base=esp}::eDisp immed
             else
               modrm{mod=mod, reg=opc, rm=base} :: eDisp immed
         in
           case size immed
-          of Zero => 
-              if base=esp then 
+          of Zero =>
+              if base=esp then
                [modrm{mod=0, reg=opc, rm=4}, sib{ss=0,index=4,base=esp}]
              else if base=ebp then
                [modrm{mod=1, reg=opc, rm=ebp}, 0w0]
-             else 
+             else
                [modrm{mod=0, reg=opc, rm=base}]
            | Bits8 => displace(1, fn i => [toWord8 i])
            | Bits32 => displace(2, eLong)
           (*esac*)
         end
-      | eImmedExt(opc, I.Indexed{base=NONE, index, scale, disp, ...}) = 
+      | eImmedExt(opc, I.Indexed{base=NONE, index, scale, disp, ...}) =
          (modrm{mod=0, reg=opc, rm=4} ::
-          sib{base=5, ss=scale, index=rNum index} :: 
+          sib{base=5, ss=scale, index=rNum index} ::
           eLong(immedOpnd disp))
       | eImmedExt(opc, I.Indexed{base=SOME b, index, scale, disp, ...}) = let
           val index = rNum index
           val base = rNum b
           val immed = immedOpnd disp
-          fun indexed(mod, eDisp) = 
+          fun indexed(mod, eDisp) =
             modrm{mod=mod, reg=opc, rm=4} ::
               sib{ss=scale, index=index, base=base} :: eDisp immed
         in
           case size immed
-          of Zero => 
-             if base=ebp then 
+          of Zero =>
+             if base=ebp then
                [modrm{mod=1, reg=opc, rm=4},
                   sib{ss=scale, index=index, base=5}, 0w0]
              else
-               [modrm{mod=0, reg=opc, rm=4}, 
+               [modrm{mod=0, reg=opc, rm=4},
                   sib{ss=scale, index=index, base=base}]
            | Bits8 => indexed(1, fn i => [toWord8 i])
            | Bits32 => indexed(2, eLong)
@@ -149,7 +149,7 @@ struct
        (* Short hands for various encodings *)
     fun encode(byte1, opc, opnd) = eBytes(byte1 :: eImmedExt(opc, opnd))
     fun encodeST(byte1, opc, STn) = eBytes[byte1, reg{opc=opc,reg=fNum STn}]
-    fun encode2(byte1, byte2, opc, opnd) = 
+    fun encode2(byte1, byte2, opc, opnd) =
         eBytes(byte1 :: byte2 :: eImmedExt(opc, opnd))
     fun encodeReg(byte1, reg, opnd) = encode(byte1, rNum reg, opnd)
     fun encodeLongImm(byte1, opc, opnd, i) =
@@ -183,14 +183,14 @@ struct
     fun arith(opc1, opc2) = let
       fun f(I.ImmedLabel le, dst) = f(I.Immed(lexp le), dst)
         | f(I.LabelEA le, dst) = f(I.Immed(lexp le), dst)
-        | f(I.Immed(i), dst) = 
+        | f(I.Immed(i), dst) =
           (case size i
-            of Bits32 => 
+            of Bits32 =>
                (case dst
                 of I.Direct r =>
-                    if CB.physicalRegisterNum r = eax then 
+                    if CB.physicalRegisterNum r = eax then
                       eBytes(W8.fromInt(8*opc2 + 5) :: eLong(i))
-                    else 
+                    else
                       encodeLongImm(0wx81, opc2, dst, i)
                  | _ => encodeLongImm(0wx81, opc2, dst, i)
                (*esac*))
@@ -215,18 +215,18 @@ struct
     fun test(bits, I.ImmedLabel le, lsrc) = test(bits, I.Immed(lexp le), lsrc)
       | test(bits, I.LabelEA le, lsrc) = test(bits, I.Immed(lexp le), lsrc)
       | test(bits, I.Immed(i), lsrc) =
-         (case (lsrc, i >= 0 andalso i < 255) of 
-           (I.Direct r, false) => 
-             if CB.physicalRegisterNum r = eax then eBytes(0wxA9 :: eLong i) 
+         (case (lsrc, i >= 0 andalso i < 255) of
+           (I.Direct r, false) =>
+             if CB.physicalRegisterNum r = eax then eBytes(0wxA9 :: eLong i)
              else encodeLongImm(0wxF7, 0, lsrc, i)
          | (_, false)  => encodeLongImm(0wxF7, 0, lsrc, i)
          | (I.Direct r, true) =>  (* 8 bit *)
            let val r = CB.physicalRegisterNum r
            in  if r = eax then eBytes[0wxA8, toWord8 i]
-               else if r < 4 then 
+               else if r < 4 then
                     (* unfortunately, only CL, DL, BL can be encoded *)
                   encodeByteImm(0wxF6, 0, lsrc, i)
-               else if bits = 8 then error "test.8" 
+               else if bits = 8 then error "test.8"
                else encodeLongImm(0wxF7, 0, lsrc, i)
            end
          | (_, true) => encodeByteImm(0wxF6, 0, lsrc, i)
@@ -250,47 +250,47 @@ struct
        end
        ) handle e => (print "JMP\n"; raise e))
      | I.JMP(opnd, _) => encode(0wxff, 4, opnd)
-     | I.JCC{cond, opnd=I.Relative i} => 
+     | I.JCC{cond, opnd=I.Relative i} =>
        let val code = condCode cond
        in  case size (Int32.fromInt(i-2))
-            of Bits32 => 
+            of Bits32 =>
                eBytes(0wx0f :: Word8.+(0wx80,code) :: eLong(Int32.fromInt(i-6)))
-             | _ => 
+             | _ =>
                 eBytes[Word8.+(0wx70,code), Word8.fromInt(i-2)]
-       end 
+       end
      | I.CALL{opnd=I.Relative i,...} => eBytes(0wxe8::eLong(Int32.fromInt(i-5)))
      | I.CALL{opnd, ...} => encode(0wxff, 2, opnd)
      | I.RET NONE => eByte 0xc3
      (* integer *)
-     | I.MOVE{mvOp=I.MOVL, src, dst} => 
+     | I.MOVE{mvOp=I.MOVL, src, dst} =>
        let fun mv(I.Immed(i), I.Direct r) =
                  eBytes(Word8.+(0wxb8, Word8.fromInt(rNum r))::eLong(i))
              | mv(I.Immed(i), _) = encodeLongImm(0wxc7, 0, dst, i)
              | mv(I.ImmedLabel le,dst) = mv(I.Immed(lexp le),dst)
              | mv(I.LabelEA le,dst) = error "MOVL: LabelEA"
              | mv(src as I.MemReg _, dst) = mv(memReg src, dst)
-             | mv(src, dst as I.MemReg _) = mv(src, memReg dst)  
+             | mv(src, dst as I.MemReg _) = mv(src, memReg dst)
              | mv(src,dst) = arith(0wx88, 0) (src, dst)
        in  mv(src,dst) end
      | I.MOVE{mvOp=I.MOVW, src, dst} => let
-	  fun immed16 i = Int32.<(i, 32768) andalso Int32.<=(~32768, i)
-	  fun prefix v = Word8Vector.concat[eByte(opnd16Prefix), v]
-	  fun mv(I.Immed(i), _) = 
-	      (case dst
-	       of I.Direct r => 
-		  if immed16 i then 
-		    prefix(eBytes(W8.+(0wxb8, W8.fromInt(rNum r)):: eShort(i)))
-		  else error "MOVW: Immediate too large"
-		| _ => prefix(encodeShortImm(0wxc7, 0, dst, i))
-	      (*esac*))
-	    | mv(src as I.MemReg _, dst) = mv(memReg src, dst)
-	    | mv(src, dst as I.MemReg _) = mv(src, memReg dst)
-	    | mv(src, dst) = prefix(arith(0wx88, 0) (src, dst))
+          fun immed16 i = Int32.<(i, 32768) andalso Int32.<=(~32768, i)
+          fun prefix v = Word8Vector.concat[eByte(opnd16Prefix), v]
+          fun mv(I.Immed(i), _) =
+              (case dst
+               of I.Direct r =>
+                  if immed16 i then
+                    prefix(eBytes(W8.+(0wxb8, W8.fromInt(rNum r)):: eShort(i)))
+                  else error "MOVW: Immediate too large"
+                | _ => prefix(encodeShortImm(0wxc7, 0, dst, i))
+              (*esac*))
+            | mv(src as I.MemReg _, dst) = mv(memReg src, dst)
+            | mv(src, dst as I.MemReg _) = mv(src, memReg dst)
+            | mv(src, dst) = prefix(arith(0wx88, 0) (src, dst))
        in mv(src, dst)
        end
      | I.MOVE{mvOp=I.MOVB, dst, src=I.Immed(i)} =>
           encodeByteImm(0wxc6, 0, dst, i)
-       (* 2007/02/20 AKL: just store the low order 8 bits.  
+       (* 2007/02/20 AKL: just store the low order 8 bits.
           Forget about checking for the range.  This is because of
           sign-extension issues in sml/nj's code generator.
        (case size i
@@ -302,16 +302,16 @@ struct
      | I.MOVE{mvOp=I.MOVB, dst=I.Direct r, src} => encodeReg(0wx8a, r, src)
      | I.MOVE{mvOp, src=I.Immed _, ...} => error "MOVE: Immed"
      | I.MOVE{mvOp, src, dst=I.Direct r} =>
-       let val byte2 = 
+       let val byte2 =
                case mvOp of
-                 I.MOVZBL => 0wxb6 
-               | I.MOVZWL => 0wxb7 
-               | I.MOVSBL => 0wxbe 
-               | I.MOVSWL => 0wxbf 
+                 I.MOVZBL => 0wxb6
+               | I.MOVZWL => 0wxb7
+               | I.MOVSBL => 0wxbe
+               | I.MOVSWL => 0wxbf
                | _ => error "MOV[SZ]X"
        in  eBytes(0wx0f :: byte2 :: eImmedExt(rNum r, src)) end
      | I.MOVE _ => error "MOVE"
-     | I.CMOV{cond,src,dst} => 
+     | I.CMOV{cond,src,dst} =>
        let val cond = condCode cond
        in  eBytes(0wx0f :: Word8.+(cond,0wx40) :: eImmedExt(rNum dst, src))
        end
@@ -322,11 +322,11 @@ struct
      | I.TESTB{lsrc, rsrc} => test(8, rsrc, lsrc)
      | I.TESTW _ => error "TEST"
      | I.BINARY{binOp, src, dst} => let
-         fun shift(code, src) = 
+         fun shift(code, src) =
             (case src
              of I.Immed (1) => encode(0wxd1, code, dst)
               | I.Immed (n) => encodeByteImm(0wxc1, code, dst, n)
-              | I.Direct r => 
+              | I.Direct r =>
                  if rNum r <> ecx then  error "shift: Direct"
                  else encode(0wxd3, code, dst)
               | I.MemReg _ => shift(code, memReg src)
@@ -342,39 +342,39 @@ struct
            | I.SHLL => shift(4,src)
            | I.SARL => shift(7,src)
            | I.SHRL => shift(5,src)
-           | I.IMULL => 
-            (case (src, dst) 
+           | I.IMULL =>
+            (case (src, dst)
              of (I.Immed(i), I.Direct dstR) =>
                  (case size i
                   of Bits32 => encodeLongImm(0wx69, rNum dstR, dst, i)
                    | _ => encodeByteImm(0wx6b, rNum dstR, dst, i)
                  )
-              | (_, I.Direct dstR) => 
+              | (_, I.Direct dstR) =>
                  eBytes(0wx0f::0wxaf::(eImmedExt(rNum dstR, src)))
               | _ => error "imull"
             )
-	   | _ => error "binary"
+           | _ => error "binary"
        end
      | I.MULTDIV{multDivOp, src} => let
-         val mulOp = 
+         val mulOp =
              (case multDivOp of
-		  I.MULL1 => 4 | I.IDIVL1 => 7 | I.DIVL1 => 6
-		| I.IMULL1 => error "imull1")
+                  I.MULL1 => 4 | I.IDIVL1 => 7 | I.DIVL1 => 6
+                | I.IMULL1 => error "imull1")
        in encode(0wxf7, mulOp, src)
        end
-     | I.MUL3{dst, src1, src2=i} => 
-       (case src1 
+     | I.MUL3{dst, src1, src2=i} =>
+       (case src1
         of I.Immed _ => error "mul3: Immed"
          | I.ImmedLabel _ => error "mul3: ImmedLabel"
-         | _ => 
+         | _ =>
            (case size i
             of Bits32 => encodeLongImm(0wx69, rNum dst, src1, i)
              | _ => encodeByteImm(0wx6b, rNum dst, src1, i)
             (*esac*))
         (*esac*))
-     | I.UNARY{unOp, opnd} => 
+     | I.UNARY{unOp, opnd} =>
        (case unOp
-        of I.DECL => 
+        of I.DECL =>
             (case opnd
              of I.Direct d => eByte(0x48 + rNum d)
               | _ => encode(0wxff, 1, opnd)
@@ -386,12 +386,12 @@ struct
              (*esac*))
          | I.NEGL => encode(0wxf7, 3, opnd)
          | I.NOTL => encode(0wxf7, 2, opnd)
-	 | _ => error "UNARY is not in DECL/INCL/NEGL,NOTL"
+         | _ => error "UNARY is not in DECL/INCL/NEGL,NOTL"
         (*esac*))
-     | I.SET{cond,opnd} => 
+     | I.SET{cond,opnd} =>
          eBytes(0wx0f :: Word8.+(0wx90,condCode cond) :: eImmedExt(0, opnd))
-     | I.PUSHL(I.Immed(i)) => 
-       (case size i 
+     | I.PUSHL(I.Immed(i)) =>
+       (case size i
         of Bits32 => eBytes(0wx68 :: eLong(i))
          | _ => eBytes[0wx6a, toWord8 i]
         (*esac*))
@@ -403,13 +403,13 @@ struct
      | I.INTO => eByte(0xce)
 
      (* floating *)
-     | I.FBINARY{binOp, src=I.ST src, dst=I.ST dst} =>    
+     | I.FBINARY{binOp, src=I.ST src, dst=I.ST dst} =>
        let val src = W8.fromInt(fNum src)
            val dst = W8.fromInt(fNum dst)
            val (opc1, opc2) =
             case (src, dst) of
-              (_, 0w0) => 
-                (case binOp 
+              (_, 0w0) =>
+                (case binOp
                  of I.FADDL  => (0wxd8, 0wxc0 + src)
                   | I.FMULL  => (0wxd8, 0wxc8 + src)
                   | I.FSUBRL => (0wxd8, 0wxe8 + src)
@@ -434,30 +434,30 @@ struct
                   | I.FDIVRL => (0wxdc, 0wxf8 + dst) (* gas XXX *)
                   | I.FDIVL  => (0wxdc, 0wxf0 + dst)
 
-		  | _ => error "FBINARY (0w0,_)"
+                  | _ => error "FBINARY (0w0,_)"
                 )
             | (_, _) => error "FBINARY (src, dst) non %st(0)"
        in  eBytes[opc1, opc2]
        end
-     | I.FBINARY{binOp, src, dst=I.ST dst} => 
+     | I.FBINARY{binOp, src, dst=I.ST dst} =>
        if CB.physicalRegisterNum dst = 0 then
        let
-         val (opc, code) = 
-           (case binOp of 
-                I.FADDL  => (0wxdc, 0) 
-              | I.FMULL  => (0wxdc, 1) 
-              | I.FCOML  => (0wxdc, 2) 
-              | I.FCOMPL => (0wxdc, 3) 
-              | I.FSUBL  => (0wxdc, 4) 
-              | I.FSUBRL => (0wxdc, 5) 
+         val (opc, code) =
+           (case binOp of
+                I.FADDL  => (0wxdc, 0)
+              | I.FMULL  => (0wxdc, 1)
+              | I.FCOML  => (0wxdc, 2)
+              | I.FCOMPL => (0wxdc, 3)
+              | I.FSUBL  => (0wxdc, 4)
+              | I.FSUBRL => (0wxdc, 5)
               | I.FDIVL  => (0wxdc, 6)
               | I.FDIVRL => (0wxdc, 7)
-              | I.FADDS  => (0wxd8, 0) 
-              | I.FMULS  => (0wxd8, 1) 
-              | I.FCOMS  => (0wxd8, 2) 
-              | I.FCOMPS => (0wxd8, 3) 
-              | I.FSUBS  => (0wxd8, 4) 
-              | I.FSUBRS => (0wxd8, 5) 
+              | I.FADDS  => (0wxd8, 0)
+              | I.FMULS  => (0wxd8, 1)
+              | I.FCOMS  => (0wxd8, 2)
+              | I.FCOMPS => (0wxd8, 3)
+              | I.FSUBS  => (0wxd8, 4)
+              | I.FSUBRS => (0wxd8, 5)
               | I.FDIVS  => (0wxd8, 6)
               | I.FDIVRS => (0wxd8, 7)
               | _ =>  error "FBINARY:pop:dst=%st"
@@ -465,7 +465,7 @@ struct
        in encode(opc, code, src)
        end
        else error "FBINARY"
-     | I.FIBINARY{binOp, src} => 
+     | I.FIBINARY{binOp, src} =>
        let val (opc, code) =
              case binOp of
                I.FIADDL  => (0wxda, 0)
@@ -486,9 +486,9 @@ struct
              | I.FIDIVRS => (0wxde, 7)
        in  encode(opc, code, src) end
      | I.FUNARY unOp =>
-        eBytes[0wxd9, 
-             case unOp 
-               of I.FABS => 0wxe1 
+        eBytes[0wxd9,
+             case unOp
+               of I.FABS => 0wxe1
                 | I.FCHS => 0wxe0
                 | I.FSQRT => 0wxfa
                 | I.FSIN => 0wxfe
@@ -497,7 +497,7 @@ struct
                 | I.FPATAN => 0wxf3
                 | I.FDECSTP => 0wxf6
                 | I.FINCSTP => 0wxf7
-		| _ => error "FUNARY"
+                | _ => error "FUNARY"
                ]
      | I.FXCH{opnd} => encodeST(0wxd9, 25, opnd)
 
@@ -539,14 +539,14 @@ struct
      (* misc *)
      | I.SAHF => eByte(0x9e)
      | _ => error "emitInstr"
-  end 
+  end
   and emitInstr (I.LIVE _) = Word8Vector.fromList []
     | emitInstr (I.KILL _) = Word8Vector.fromList []
-    | emitInstr(I.COPY{k, dst, src, tmp, ...}) = 
-      (case k 
+    | emitInstr(I.COPY{k, dst, src, tmp, ...}) =
+      (case k
        of CB.GP => emitInstrs(Shuffle.shuffle {tmp=tmp, dst=dst, src=src})
-	| CB.FP => emitInstrs(Shuffle.shufflefp {tmp=tmp, dst=dst, src=src})
-	| _ => error "COPY"
+        | CB.FP => emitInstrs(Shuffle.shufflefp {tmp=tmp, dst=dst, src=src})
+        | _ => error "COPY"
       (*esac*))
     | emitInstr (I.INSTR instr) = emitX86Instr instr
     | emitInstr (I.ANNOTATION{i,...}) = emitInstr i

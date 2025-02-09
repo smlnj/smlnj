@@ -33,19 +33,19 @@ struct
    fun ! (t,x,y) =  T.REXT(t,RTL.ARG(x,y))
 
    (* Integer operators *)
-   fun unary f ty x = f(ty,x) 
+   fun unary f ty x = f(ty,x)
    fun binary f ty (x, y) = f(ty,x,y)
    fun ternary f ty (x, y, z) = f(ty, x, y, z)
 
-   fun operand ty opn = opn 
+   fun operand ty opn = opn
    fun label ty label = label
    fun immed ty imm   = imm
 
    datatype kind = GP | FP | CC
 
-   fun newOp name = 
-   let val oper = newOper name 
-   in  fn xs => T.REXT(32,RTL.OP(oper,xs)) : RTL.exp 
+   fun newOp name =
+   let val oper = newOper name
+   in  fn xs => T.REXT(32,RTL.OP(oper,xs)) : RTL.exp
    end
 
    val newCond = newOp
@@ -93,7 +93,7 @@ struct
    fun cond ty (x,y,z) = T.COND(ty, x, y, z)
 
    (* Integer comparisons *)
-   fun cmp cond ty (x,y) = T.CMP(ty,cond,x,y) 
+   fun cmp cond ty (x,y) = T.CMP(ty,cond,x,y)
 
    val ==    = cmp T.EQ
    val op <> = cmp T.NE
@@ -108,12 +108,12 @@ struct
 
    (* Floating point operators *)
    fun funary f =
-   let val oper = newOper f 
-   in  fn ty => fn x => T.REXT(ty,RTL.OP(oper,[x])) 
+   let val oper = newOper f
+   in  fn ty => fn x => T.REXT(ty,RTL.OP(oper,[x]))
    end
    fun fbinary f =
-   let val oper = newOper f 
-   in  fn ty => fn (x,y) => T.REXT(ty,RTL.OP(oper,[x, y])) 
+   let val oper = newOper f
+   in  fn ty => fn (x,y) => T.REXT(ty,RTL.OP(oper,[x, y]))
    end
 
    val fadd  = fbinary "FADD"
@@ -127,9 +127,9 @@ struct
    (* Floating point comparisons *)
    fun fcmp fcond =
    let val name = T.Basis.fcondToString fcond
-       val oper = newOper name    
+       val oper = newOper name
    in  fn ty => fn (x,y) =>
-          T.CMP(ty,T.NE,T.REXT(ty,RTL.OP(oper,[x,y])),T.LI 0) 
+          T.CMP(ty,T.NE,T.REXT(ty,RTL.OP(oper,[x,y])),T.LI 0)
    end
 
    val |?|     = fcmp T.?

@@ -14,6 +14,8 @@
  */
 ml_val_t _ml_P_ProcEnv_getpgrp (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
+    UNUSED_UNIT_PARAM(arg);
     return INT_CtoML(getpgrp());
 
 } /* end of _ml_P_ProcEnv_getpgrp */

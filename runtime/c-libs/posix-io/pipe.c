@@ -16,6 +16,7 @@
  */
 ml_val_t _ml_P_IO_pipe (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     int         fds[2];
 
     if (pipe(fds) == -1)

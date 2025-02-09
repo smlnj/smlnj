@@ -9,7 +9,7 @@ signature REGION_BUILDER =
 sig
     structure IR : MLRISC_IR
 
-    val regionBuilder : 
+    val regionBuilder :
         { maxBlocks         : int,
           maxInstrs         : int,
           minFreqRatio      : real,
@@ -18,7 +18,7 @@ sig
           internalBackEdges : bool,  (* can the region has internal back edges*)
           insertDummyBlocks : bool
         } ->
-        IR.IR -> 
+        IR.IR ->
         ({ir     : IR.IR,   (* The entire program *)
           region : IR.cfg,  (* The subregion in question *)
           numberOfInstructions : int,

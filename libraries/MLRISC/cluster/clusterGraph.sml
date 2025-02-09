@@ -27,7 +27,7 @@ struct
 
    (* In a cluster the basic blocks are numbered consecutively.
     *)
-   fun isTakenBranch(i,j,_) = i+1 <> j 
+   fun isTakenBranch(i,j,_) = i+1 <> j
 
    fun annotations(G.GRAPH{graph_info=INFO(F.CLUSTER{annotations=a, ...},_),
                       ...}) = a
@@ -40,7 +40,7 @@ struct
      | freq _ = error "freq"
 
    (*
-    * Extract the instructions 
+    * Extract the instructions
     *)
    fun insns(F.BBLOCK{insns, ...}) = insns
      | insns _ = error "insns"
@@ -61,15 +61,15 @@ struct
          | number _ = raise G.Graph "clusterGraph"
        fun fill([],size,order,entry,exit) = (size,order,entry,exit)
          | fill((b as F.ENTRY{blknum,succ,...})::rest,size,order,entry,exit) =
-             (A.update(table,blknum,b); 
+             (A.update(table,blknum,b);
               fill(rest,size+length(!succ),order+1,blknum,exit)
              )
          | fill((b as F.EXIT{blknum,...})::rest,size,order,entry,exit) =
-             (A.update(table,blknum,b); 
+             (A.update(table,blknum,b);
               fill(rest,size,order+1,entry,blknum)
              )
          | fill((b as F.BBLOCK{blknum,succ,...})::rest,size,order,entry,exit) =
-             (A.update(table,blknum,b); 
+             (A.update(table,blknum,b);
               fill(rest,size+length(!succ),order+1,entry,exit)
              )
          | fill(_::rest,size,order,entry,exit) =
@@ -77,16 +77,16 @@ struct
        val (size,order,entryId,exitId) = fill(entry::exit::blocks,0,0,~1,~1)
        fun nodes() = A.foldri(fn (_,F.LABEL _,rest) => rest
                                | (b,b',rest) => (b,b')::rest) [] (table,0,NONE)
-       fun edges() = 
-       let fun f(i,succ,es) = 
+       fun edges() =
+       let fun f(i,succ,es) =
               foldr (fn ((j,e),es) => (i,number j,e)::es) es (!succ)
        in  A.foldri
            (fn (i,F.BBLOCK{succ,...},es) => f(i,succ,es)
              | (i,F.ENTRY{succ,...},es) => f(i,succ,es)
              | (_,_,es) => es) [] (table,0,NONE)
-       end    
+       end
 
-       fun out_edges i = 
+       fun out_edges i =
        let fun f succ = map (fn (j,e) => (i,number j,e)) (!succ)
        in  case A.sub(table,i) of
                F.BBLOCK{succ,...} => f succ
@@ -94,7 +94,7 @@ struct
             |  _ => []
        end
 
-       fun in_edges j = 
+       fun in_edges j =
        let fun f pred = map (fn (i,e) => (number i,j,e)) (!pred)
        in  case A.sub(table,j) of
                F.BBLOCK{pred,...} => f pred
@@ -109,8 +109,8 @@ struct
             |  F.ENTRY{succ,...} => f succ
             |  _ => []
        end
-          
-       fun pred j = 
+
+       fun pred j =
        let fun f pred = map (fn (i,e) => number i) (!pred)
        in  case A.sub(table,j) of
                F.BBLOCK{pred,...} => f pred
@@ -144,7 +144,7 @@ struct
        fun forall_edges f =
        let fun g(_,[]) = ()
              | g(i,(j,e)::es) = (f(i,number j,e); g(i,es))
-       in  A.appi (fn (i,F.BBLOCK{succ,...}) => g(i,!succ) 
+       in  A.appi (fn (i,F.BBLOCK{succ,...}) => g(i,!succ)
                     | (i,F.ENTRY{succ,...}) => g(i,!succ)
                     | _ => ()) (table,0,NONE)
        end

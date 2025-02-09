@@ -17,6 +17,8 @@
  */
 ml_val_t _ml_P_ProcEnv_ctermid (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     char     name[L_ctermid];
     char     *sts;
 

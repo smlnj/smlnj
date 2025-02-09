@@ -2,9 +2,9 @@ CM.make "../cm/Graphs.cm";
 structure TestMaxFlow =
 struct
 val G as Graph.GRAPH g = DirectedGraph.graph("foo",(),10) :
-    (string,int,unit) Graph.graph 
+    (string,int,unit) Graph.graph
 structure MaxFlow = MaxFlow(struct type elem = int open Int
-                                   val zero = 0 
+                                   val zero = 0
                                    val == : int * int -> bool = op =
                             end)
 val _ = app (#add_node g)
@@ -23,16 +23,16 @@ val _ = app (#add_edge g)
            (1,3,12),
            (2,4,14),
            (3,2,9),
-           (4,3,7), 
+           (4,3,7),
            (3,5,20),
            (4,5,4)
-          ] 
-fun flows((i,j,c),f) = 
+          ]
+fun flows((i,j,c),f) =
     print(Int.toString i ^ " -> " ^ Int.toString j ^ " flow="^Int.toString f^
           " cap="^Int.toString c^"\n")
 fun cap(i,j,c) = c
 
-fun test() = 
+fun test() =
     let val flow = MaxFlow.max_flow{graph=G,s=0,t=5,capacity=cap,flows=flows}
     in  if flow <> 23 then raise Match else flow
     end

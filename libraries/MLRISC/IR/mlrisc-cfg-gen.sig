@@ -16,7 +16,7 @@ sig
    (*
     * This creates an emitter which can be used to build a CFG
     *)
-   val builder : CFG.cfg -> 
+   val builder : CFG.cfg ->
       { stream : (I.instruction,
                   Annotations.annotations,
                   I.C.cellset

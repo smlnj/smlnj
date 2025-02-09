@@ -10,7 +10,7 @@ sig
      errorCount: int,
      warningCount: int,
      auxiliaryInfo: {aidtab: Tables.aidtab,
-	             implicits: Tables.aidtab,
+                     implicits: Tables.aidtab,
                      env: State.symtab}}
 
   (* control of buildAst modes *)
@@ -34,9 +34,9 @@ sig
   val sourceToSourceMode: unit -> unit
 
   (* convert a parse tree to an ast and associated map from expression
-   * adornments to types 
+   * adornments to types
    *)
-  val makeAst : 
+  val makeAst :
     Sizes.sizes * State.stateInfo * Error.errorState
     -> ParseTree.externalDecl list
     -> astBundle

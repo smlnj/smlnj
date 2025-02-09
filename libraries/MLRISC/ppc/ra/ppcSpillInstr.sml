@@ -10,45 +10,45 @@ functor PPCSpillInstr(Instr : PPCINSTR) : ARCH_SPILL_INSTR = struct
   structure C = I.C
   structure Rewrite = PPCRewrite(I)
   structure CB = CellsBasis
-  
+
 
   fun error msg = MLRiscErrorMsg.error ("PPCSpillInstr", msg)
 
-  fun storeToEA CB.GP (reg, I.Displace{base, disp, mem}) = 
+  fun storeToEA CB.GP (reg, I.Displace{base, disp, mem}) =
         I.st{st=I.STW, rs=reg, ra=base, d=I.LabelOp disp, mem=mem}
-    | storeToEA CB.FP (freg, I.Displace{base, disp, mem}) = 
+    | storeToEA CB.FP (freg, I.Displace{base, disp, mem}) =
         I.stf{st=I.STFD, ra=base, d=I.LabelOp disp, fs=freg, mem=mem}
     | storeToEA _ _ = error "storeToEA"
 
-  fun loadFromEA CB.GP (reg, I.Displace{base, disp, mem}) = 
+  fun loadFromEA CB.GP (reg, I.Displace{base, disp, mem}) =
         I.l{ld=I.LWZ, ra=base, d=I.LabelOp disp, rt=reg, mem=mem}
-    | loadFromEA CB.FP (freg, I.Displace{base, disp, mem}) = 
+    | loadFromEA CB.FP (freg, I.Displace{base, disp, mem}) =
         I.lf{ld=I.LFD, ra=base, d=I.LabelOp disp, ft=freg, mem=mem}
     | loadFromEA _ _ = error "loadFromEA"
 
-  fun spillToEA ck reg_ea = 
+  fun spillToEA ck reg_ea =
       {code=[storeToEA ck reg_ea], proh=[], newReg=NONE}
 
-  fun reloadFromEA ck reg_ea = 
+  fun reloadFromEA ck reg_ea =
       {code=[loadFromEA ck reg_ea], proh=[], newReg=NONE}
 
  (* spill a register to spillLoc *)
   fun spillR (instr, reg, ea) = let
         val newR = C.newReg()
         val instr' = Rewrite.rewriteDef(instr, reg, newR)
-      in 
-        {code=[instr', storeToEA CB.GP (newR, ea)], 
-	 proh=[newR],
-	 newReg=SOME newR}
+      in
+        {code=[instr', storeToEA CB.GP (newR, ea)],
+         proh=[newR],
+         newReg=SOME newR}
       end
 
   fun spillF (instr, reg, ea) = let
-	val newR = C.newFreg()
-	val instr' = Rewrite.frewriteDef(instr, reg, newR)
-      in 
-	  {code=[instr', storeToEA CB.FP (newR, ea)],
-	   proh=[newR],
-	   newReg=SOME newR}
+        val newR = C.newFreg()
+        val instr' = Rewrite.frewriteDef(instr, reg, newR)
+      in
+          {code=[instr', storeToEA CB.FP (newR, ea)],
+           proh=[newR],
+           newReg=SOME newR}
       end
 
  (* reload a register from spillLoc *)

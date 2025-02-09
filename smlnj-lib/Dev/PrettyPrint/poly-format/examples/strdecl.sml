@@ -17,22 +17,22 @@ and decl
 
 (* formatStr : (decl -> format) -> str -> format *)
 fun formatStr _ (SVAR name) = text name
-  | formatStr fdecl (STRUCT decls) = 
+  | formatStr fdecl (STRUCT decls) =
       vblock [text "struct", indent 2 (vblock (map fdecl decls)), text "end"]
 
 (* formatDecl1 : decl -> format *)
 and formatDecl1 decl =
     (case decl
        of VALd (name, def) => pcat (hblock [text "val", text name, text "="], indent 2 (text def))
-	| TYPd (name, def) => pcat (hblock [text "type", text name, text "="], indent 2 (text def))
-	| STRd (name, str) => pcat (hblock [text "structure", text name, text "="],
-				    indent 2 (tryFlat (formatStr formatDecl1 str))))
+        | TYPd (name, def) => pcat (hblock [text "type", text name, text "="], indent 2 (text def))
+        | STRd (name, str) => pcat (hblock [text "structure", text name, text "="],
+                                    indent 2 (tryFlat (formatStr formatDecl1 str))))
 
 fun formatDecl2 (STRd (name, STRUCT decls)) =
       vblock
         [hblock [text "structure", text name, text "=", text "struct"],
-	 indent 2 (vblock (map formatDecl2 decls)),
-	 text "end"]
+         indent 2 (vblock (map formatDecl2 decls)),
+         text "end"]
   | formatDecl2 decl = formatDecl1 decl
 
 (* examples *)
@@ -77,7 +77,7 @@ val p = fn : int -> unit
 structure A = struct type t = int list val x = 3 end
 val it = () : unit
 - p 10;
-structure A = 
+structure A =
 struct
   type t = int list
   val x = 3

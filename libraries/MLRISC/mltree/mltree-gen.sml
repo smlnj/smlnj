@@ -5,9 +5,9 @@
  * This is a generic module for transforming MLTREE expressions:
  *   (1) expressions involving non-standard type widths are promoted when
  *       necessary.
- *   (2) operators that cannot be directly handled are expanded into 
+ *   (2) operators that cannot be directly handled are expanded into
  *       more complex instruction sequences when necessary.
- * 
+ *
  * -- Allen
  *)
 
@@ -17,10 +17,10 @@ functor MLTreeGen (
     val intTy : T.ty (* size of integer word *)
 
      (* This is a list of possible data widths to promote to.
-      * The list must be in increasing sizes.  
+      * The list must be in increasing sizes.
       * We'll try to promote to the next largest size.
       *)
-    val naturalWidths : T.ty list  
+    val naturalWidths : T.ty list
 
      (*
       * Are integers of widths less than the size of integer word.
@@ -54,34 +54,34 @@ functor MLTreeGen (
 
    val W = intTy
 
-   (* To compute f.ty(a,b) 
+   (* To compute f.ty(a,b)
     *
     * let r1 <- a << (intTy - ty)
     *     r2 <- b << (intTy - ty)
-    *     r3 <- f(a,b) 
+    *     r3 <- f(a,b)
     * in  r3 ~>> (intTy - ty) end
-    * 
+    *
     * Lal showed me this neat trick!
     *)
-   fun arith(rightShift,f,ty,a,b) = 
+   fun arith(rightShift,f,ty,a,b) =
        let val shift = LI(W-ty)
        in  rightShift(W,f(W,T.SLL(W,a,shift),T.SLL(W,b,shift)),shift)
        end
 
    fun promoteTy(ty) =
-   let fun loop([]) = 
+   let fun loop([]) =
            unsupported("can't promote integer width "^Int.toString ty)
          | loop(t::ts) = if t > ty then t else loop ts
    in  loop(naturalWidths) end
 
    fun promotable rightShift (e, f, ty, a, b) =
-       case naturalWidths of 
-         [] => arith(rightShift,f,ty,a,b) 
+       case naturalWidths of
+         [] => arith(rightShift,f,ty,a,b)
        | _  => f(promoteTy(ty), a, b)
 
    fun isNatural w = let
        fun loop [] = false
-	 | loop (h :: t) = h = w orelse w > h andalso loop t
+         | loop (h :: t) = h = w orelse w > h andalso loop t
    in
        loop naturalWidths
    end
@@ -109,25 +109,25 @@ functor MLTreeGen (
        val one = T.LI 1
    in
        T.LET
-	(T.SEQ
+        (T.SEQ
          [T.MV (ty, a, aexp),
-	  T.MV (ty, b, bexp),
-	  T.MV (ty, q, xdiv (T.DIV_TO_ZERO, ty, T.REG (ty, a), T.REG (ty, b))),
-	  T.IF (T.CMP (ty, T.Basis.GT, T.REG (ty, q), zero),
-		T.SEQ [],
-		T.SEQ
-		 [T.MV (ty, r, T.SUB (ty, T.REG (ty, a),
-				          T.MULS (ty, T.REG (ty, b),
-						      T.REG (ty, q)))),
-		  T.IF (T.CMP (ty, T.Basis.EQ, T.REG (ty, r), zero),
-			T.SEQ [],
-			T.IF (T.CMP (ty, T.Basis.GE,
-				     T.XORB (ty, T.REG (ty, b), T.REG (ty, r)),
-				     zero),
-			      T.SEQ [],
-			      T.MV (ty, q, T.SUB (ty, T.REG (ty, q),
-						      one))))])],
-	 T.REG (ty, q))
+          T.MV (ty, b, bexp),
+          T.MV (ty, q, xdiv (T.DIV_TO_ZERO, ty, T.REG (ty, a), T.REG (ty, b))),
+          T.IF (T.CMP (ty, T.Basis.GT, T.REG (ty, q), zero),
+                T.SEQ [],
+                T.SEQ
+                 [T.MV (ty, r, T.SUB (ty, T.REG (ty, a),
+                                          T.MULS (ty, T.REG (ty, b),
+                                                      T.REG (ty, q)))),
+                  T.IF (T.CMP (ty, T.Basis.EQ, T.REG (ty, r), zero),
+                        T.SEQ [],
+                        T.IF (T.CMP (ty, T.Basis.GE,
+                                     T.XORB (ty, T.REG (ty, b), T.REG (ty, r)),
+                                     zero),
+                              T.SEQ [],
+                              T.MV (ty, q, T.SUB (ty, T.REG (ty, q),
+                                                      one))))])],
+         T.REG (ty, q))
    end
 
    (* Same for rem when rounding to negative infinity.
@@ -146,22 +146,22 @@ functor MLTreeGen (
        val zero = T.LI 0
    in
        T.LET
-	(T.SEQ
-	 [T.MV (ty, a, aexp),
-	  T.MV (ty, b, bexp),
-	  T.MV (ty, q, T.DIVS (T.DIV_TO_ZERO, ty, T.REG (ty, a),
-			                          T.REG (ty, b))),
-	  T.MV (ty, r, T.SUB (ty, T.REG (ty, a),
-			          T.MULS (ty, T.REG (ty, q),
-					      T.REG (ty, b)))),
-	  T.IF (T.CMP (ty, T.Basis.EQ, T.REG (ty, r), zero),
-		T.SEQ [],
-		T.IF (T.CMP (ty, T.Basis.GE,
-			         T.XORB (ty, T.REG (ty, b), T.REG (ty, r)),
-				 zero),
-		      T.SEQ [],
-		      T.MV (ty, r, T.ADD (ty, T.REG (ty, r), T.REG (ty, b)))))],
-	 T.REG (ty, r))
+        (T.SEQ
+         [T.MV (ty, a, aexp),
+          T.MV (ty, b, bexp),
+          T.MV (ty, q, T.DIVS (T.DIV_TO_ZERO, ty, T.REG (ty, a),
+                                                  T.REG (ty, b))),
+          T.MV (ty, r, T.SUB (ty, T.REG (ty, a),
+                                  T.MULS (ty, T.REG (ty, q),
+                                              T.REG (ty, b)))),
+          T.IF (T.CMP (ty, T.Basis.EQ, T.REG (ty, r), zero),
+                T.SEQ [],
+                T.IF (T.CMP (ty, T.Basis.GE,
+                                 T.XORB (ty, T.REG (ty, b), T.REG (ty, r)),
+                                 zero),
+                      T.SEQ [],
+                      T.MV (ty, r, T.ADD (ty, T.REG (ty, r), T.REG (ty, b)))))],
+         T.REG (ty, r))
    end
 
    (* Same for rem when rounding to zero. *)
@@ -170,11 +170,11 @@ functor MLTreeGen (
        val b = Cells.newReg ()
    in
        T.LET (T.SEQ [T.MV (ty, a, aexp),
-		     T.MV (ty, b, bexp)],
-	      T.SUB (ty, T.REG (ty, a),
-		         xmul (ty, T.REG (ty, b),
-			           xdiv (T.DIV_TO_ZERO, ty, T.REG (ty, a),
-					                    T.REG (ty, b)))))
+                     T.MV (ty, b, bexp)],
+              T.SUB (ty, T.REG (ty, a),
+                         xmul (ty, T.REG (ty, b),
+                                   xdiv (T.DIV_TO_ZERO, ty, T.REG (ty, a),
+                                                            T.REG (ty, b)))))
    end
 
    (*
@@ -184,7 +184,7 @@ functor MLTreeGen (
 
    fun DIVREMz d (ty, a, b) = d (T.DIV_TO_ZERO, ty, a, b)
 
-   fun compileRexp(exp) = 
+   fun compileRexp(exp) =
        case exp of
          T.CONST c => T.LABEXP exp
 
@@ -194,18 +194,18 @@ functor MLTreeGen (
        | T.SUB(ty,a,b)  => promotable T.SRA (exp,T.SUB,ty,a,b)
        | T.MULS(ty,a,b) => promotable T.SRA (exp,T.MULS,ty,a,b)
        | T.DIVS(T.DIV_TO_ZERO,ty,a,b) =>
-	                   promotable T.SRA (exp,DIVREMz T.DIVS,ty,a,b)
+                           promotable T.SRA (exp,DIVREMz T.DIVS,ty,a,b)
        | T.DIVS(T.DIV_TO_NEGINF,ty,a,b) => divinf (T.DIVS,ty,a,b)
        | T.REMS(T.DIV_TO_ZERO,ty,a,b) =>
-	 if isNatural ty then remzero (T.DIVS,T.MULS,ty,a,b)
-	 else promotable T.SRA (exp,DIVREMz T.REMS,ty,a,b)
+         if isNatural ty then remzero (T.DIVS,T.MULS,ty,a,b)
+         else promotable T.SRA (exp,DIVREMz T.REMS,ty,a,b)
        | T.REMS(T.DIV_TO_NEGINF,ty,a,b) => reminf (ty,a,b)
        | T.MULU(ty,a,b) => promotable T.SRL (exp,T.MULU,ty,a,b)
        | T.DIVU(ty,a,b) => promotable T.SRL (exp,T.DIVU,ty,a,b)
        | T.REMU(ty,a,b) =>
-	 if isNatural ty then
-	     remzero (fn (_,ty,a,b) => T.DIVU (ty,a,b),T.MULU,ty,a,b)
-	 else promotable T.SRL (exp,T.REMU,ty,a,b)
+         if isNatural ty then
+             remzero (fn (_,ty,a,b) => T.DIVU (ty,a,b),T.MULU,ty,a,b)
+         else promotable T.SRL (exp,T.REMU,ty,a,b)
 
          (* for overflow trapping ops; we have to do the simulation *)
        | T.NEGT(ty,a)   => T.SUBT(ty,zeroT,a)
@@ -222,67 +222,67 @@ functor MLTreeGen (
 ***)
        | T.COND(ty,T.CCMARK(cc,a),x,y) => T.MARK(T.COND(ty,cc,x,y),a)
 (*** XXX: TODO
-       | T.COND(ty,T.CMP(t,cc,e1,e2),x as (T.LI 0 | T.LI32 0w0),y) => 
+       | T.COND(ty,T.CMP(t,cc,e1,e2),x as (T.LI 0 | T.LI32 0w0),y) =>
            T.COND(ty,T.CMP(t,T.Basis.negateCond cc,e1,e2),y,T.LI 0)
            (* we'll let others strength reduce the multiply *)
 ***)
        | T.COND(ty,cc as T.FCMP _, yes, no) => let
-	  val tmp = Cells.newReg()
-          in 
-	    T.LET(
-	      T.SEQ[T.MV(ty, tmp, no), T.IF(cc, T.MV(ty, tmp, yes), T.SEQ [])],
+          val tmp = Cells.newReg()
+          in
+            T.LET(
+              T.SEQ[T.MV(ty, tmp, no), T.IF(cc, T.MV(ty, tmp, yes), T.SEQ [])],
               T.REG(ty,tmp))
           end
 (*** XXX: TODO
-       | T.COND(ty,cc,e1,(T.LI 0 | T.LI32 0w0)) => 
+       | T.COND(ty,cc,e1,(T.LI 0 | T.LI32 0w0)) =>
            T.MULU(ty,T.COND(ty,cc,T.LI 1,T.LI 0),e1)
        | T.COND(ty,cc,T.LI m,T.LI n) =>
            T.ADD(ty,T.MULU(ty,T.COND(ty,cc,T.LI 1,T.LI 0),T.LI(m-n)),T.LI n)
 ***)
 
-       | T.COND(ty,cc,e1,e2) => 
+       | T.COND(ty,cc,e1,e2) =>
            T.ADD(ty,T.MULU(ty,T.COND(ty,cc,T.LI 1,zeroT),T.SUB(ty,e1,e2)),e2)
 
        (* ones-complement.
         * WARNING: we are assuming two's complement architectures here.
-        * Are there any architectures in use nowadays that doesn't use 
+        * Are there any architectures in use nowadays that doesn't use
         * two's complement for integer arithmetic?
         *)
        | T.NOTB(ty,e) => T.XORB(ty,e,T.LI ~1)
 
-       (* 
+       (*
         * Default ways of converting integers to integers
         *)
-       | T.SX(ty,fromTy,e) => 
+       | T.SX(ty,fromTy,e) =>
          if fromTy = ty then e
-         else if rep = SE andalso fromTy < ty andalso 
-              fromTy >= hd naturalWidths then e 
+         else if rep = SE andalso fromTy < ty andalso
+              fromTy >= hd naturalWidths then e
          else
              let val shift = T.LI(T.I.fromInt(intTy, W - fromTy))
-             in  T.SRA(W,T.SLL(W,e,shift),shift) 
-             end 
-       | T.ZX(ty,fromTy,e) => 
-         if fromTy <= ty then e else 
+             in  T.SRA(W,T.SLL(W,e,shift),shift)
+             end
+       | T.ZX(ty,fromTy,e) =>
+         if fromTy <= ty then e else
             (case ty of (* ty < fromTy *)
-                8  => T.ANDB(ty,e,T.LI 0xff) 
+                8  => T.ANDB(ty,e,T.LI 0xff)
               | 16 => T.ANDB(ty,e,T.LI 0xffff)
               | 32 => T.ANDB(ty,e,T.LI 0xffffffff)
               | 64 => e
               | _  => unsupported("unknown expression")
             )
 
-       (* 
+       (*
         * Converting floating point to integers.
         * The following rule handles the case when ty is not
         * one of the naturally supported widths on the machine.
         *)
-       | T.CVTF2I(ty,round,fty,e) => 
+       | T.CVTF2I(ty,round,fty,e) =>
          let val ty' = promoteTy(ty)
          in  T.SX(ty,ty',T.CVTF2I(ty',round,fty,e))
          end
 
          (* Promote to higher width and zero high bits *)
-       | T.SLL(ty, data, shift) => 
+       | T.SLL(ty, data, shift) =>
          let val ty' = promoteTy(ty)
          in  T.ZX(ty, ty', T.SLL(ty', data, shift)) end
 
@@ -294,9 +294,9 @@ functor MLTreeGen (
      | mark(s,a::an) = mark(T.ANNOTATION(s,a),an)
 
    fun compileStm (T.SEQ s) = s
-     | compileStm (T.IF(cond,T.JMP(T.LABEL L,_),T.SEQ [])) = 
+     | compileStm (T.IF(cond,T.JMP(T.LABEL L,_),T.SEQ [])) =
            [T.BCC(cond,L)]
-     | compileStm (T.IF(cond,yes,no)) = 
+     | compileStm (T.IF(cond,yes,no)) =
        let val L1 = Label.anon()
            val L2 = Label.anon()
        in  [T.BCC(cond,L1),
@@ -310,10 +310,10 @@ functor MLTreeGen (
      | compileStm stm = error "compileStm"
 
    (*
-    * This function translations conditional expressions into a 
-    * branch sequence.  
-    * Note: we'll actually take advantage of the fact that 
-    * e1 and e2 are allowed to be eagerly evaluated. 
+    * This function translations conditional expressions into a
+    * branch sequence.
+    * Note: we'll actually take advantage of the fact that
+    * e1 and e2 are allowed to be eagerly evaluated.
     *)
    fun compileCond{exp=(ty,ccexp,e1,e2),rd,an} =
    let val L1 = Label.anon()
@@ -331,5 +331,5 @@ functor MLTreeGen (
         T.DEFINE L1
        ]
    end
- 
+
 end

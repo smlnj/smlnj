@@ -10,17 +10,17 @@ sig
    type 'a rand_list
 
                  (* O(1) operations *)
-   val empty  : 'a rand_list           
+   val empty  : 'a rand_list
    val length : 'a rand_list -> int
    val null   : 'a rand_list -> bool
    val cons   : 'a * 'a rand_list -> 'a rand_list
    val hd     : 'a rand_list -> 'a
    val tl     : 'a rand_list -> 'a rand_list
-  
+
                  (* O(log n) operations *)
    val sub       : 'a rand_list * int -> 'a
    val update    : 'a rand_list * int * 'a -> 'a rand_list
-  
+
                  (* O(n) operations *)
    val fromList  : 'a list -> 'a rand_list
    val toList    : 'a rand_list -> 'a list
@@ -30,7 +30,7 @@ sig
    val app       : ('a -> unit) -> 'a rand_list -> unit
    val foldl     : ('a * 'b -> 'b) -> 'b -> 'a rand_list -> 'b
    val foldr     : ('a * 'b -> 'b) -> 'b -> 'a rand_list -> 'b
-end  
+end
 
 structure RandomAccessList :> RANDOM_ACCESS_LIST =
 struct
@@ -38,11 +38,11 @@ struct
    datatype 'a tree = LEAF of 'a | NODE of 'a tree * 'a * 'a tree
 
    type 'a rand_list = (int * 'a tree) list
-    
+
    fun tree_sub (LEAF x,0,_) = x
      | tree_sub (LEAF _,_,_) = raise Subscript
      | tree_sub (NODE(_,x,_),0,_) = x
-     | tree_sub (NODE(l,x,r),i,N) = 
+     | tree_sub (NODE(l,x,r),i,N) =
        let val N' = N div 2
        in  if i <= N' then tree_sub(l,i-1,N')
                       else tree_sub(r,i-1-N',N')
@@ -51,7 +51,7 @@ struct
    fun tree_update (LEAF _,0,x,_) = LEAF x
      | tree_update (LEAF _,_,_,_) = raise Subscript
      | tree_update (NODE(l,_,r),0,x,_) = NODE(l,x,r)
-     | tree_update (NODE(l,y,r),i,x,N) = 
+     | tree_update (NODE(l,y,r),i,x,N) =
        let val N' = N div 2
        in  if i <= N' then NODE(tree_update(l,i-1,x,N'),y,r)
                       else NODE(l,y,tree_update(r,i-1-N',x,N'))
@@ -67,7 +67,7 @@ struct
    in  f(rl,0)
    end
 
-   fun cons (x, rl as ((m,t)::(n,u)::l)) = 
+   fun cons (x, rl as ((m,t)::(n,u)::l)) =
         if m = n then (m+n+1,NODE(t,x,u))::l
                  else (1,LEAF x)::rl
      | cons (x, rl) = (1,LEAF x)::rl
@@ -77,12 +77,12 @@ struct
      | hd [] = raise Empty
 
    fun tl ((_,LEAF x)::rl) = rl
-     | tl ((n,NODE(l,x,r))::rl) = 
+     | tl ((n,NODE(l,x,r))::rl) =
        let val n' = n div 2
        in  (n',l)::(n',r)::rl
        end
      | tl [] = raise Empty
-         
+
    fun sub([],_)        = raise Subscript
      | sub((n,t)::rl,i) = if i < n then tree_sub(t,i,n)
                           else sub(rl,i-n)
@@ -92,7 +92,7 @@ struct
          if i < n then (n,tree_update(t,i,x,n))::rl
          else p::update(rl,i-n,x)
 
-   fun map f rl = 
+   fun map f rl =
    let fun g (LEAF x)      = LEAF(f x)
          | g (NODE(l,x,r)) = NODE(g l,f x,g r)
    in  List.map (fn (n,t) => (n,g t)) rl

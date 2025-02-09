@@ -1,7 +1,7 @@
 (*
  * This is the signature of a dominator tree.
  * The dominator tree includes lots of query methods.
- * 
+ *
  * -- Allen
  *)
 
@@ -14,23 +14,23 @@ sig
 
     type ('n,'e,'g) dom_info
 
-    (* Dominator/postdominator trees *) 
+    (* Dominator/postdominator trees *)
     type ('n,'e,'g) dominator_tree =
        ('n,unit,('n,'e,'g) dom_info) Graph.graph
-    type ('n,'e,'g) postdominator_tree = 
+    type ('n,'e,'g) postdominator_tree =
        ('n,unit,('n,'e,'g) dom_info) Graph.graph
 
     type node = Graph.node_id
 
        (* Compute the (post)dominator tree from a flowgraph *)
-    val makeDominator : ('n,'e,'g) Graph.graph -> ('n,'e,'g) dominator_tree 
-    val makePostdominator : ('n,'e,'g) Graph.graph -> 
-                                ('n,'e,'g) postdominator_tree 
+    val makeDominator : ('n,'e,'g) Graph.graph -> ('n,'e,'g) dominator_tree
+    val makePostdominator : ('n,'e,'g) Graph.graph ->
+                                ('n,'e,'g) postdominator_tree
 
     (* The following methods work on both dominator/postdominator trees.
      * When operating on a postdominator tree, the interpretation of these
      * methods are reversed in the obvious manner.
-     *) 
+     *)
 
         (* Extract the original CFG *)
     val cfg        : ('n,'e,'g) dominator_tree -> ('n,'e,'g) Graph.graph
@@ -70,20 +70,20 @@ sig
     val doms : ('n,'e,'g) dominator_tree -> node -> node list
 
         (* Return the level of a node in the tree *)
-    val level : ('n,'e,'g) dominator_tree -> node -> int 
+    val level : ('n,'e,'g) dominator_tree -> node -> int
 
         (* Return the least common ancestor of a pair of nodes *)
-    val lca : ('n,'e,'g) dominator_tree -> node * node -> node 
+    val lca : ('n,'e,'g) dominator_tree -> node * node -> node
 
     (* The following methods require both the dominator and postdominator trees.
-     *) 
+     *)
         (* Are two nodes control equivalent? *)
     val control_equivalent :
           ('n,'e,'g) dominator_tree * ('n,'e,'g) postdominator_tree ->
               node * node -> bool
 
         (* Compute the control equivalent partitions of a graph *)
-    val control_equivalent_partitions : 
+    val control_equivalent_partitions :
           ('n,'e,'g) dominator_tree * ('n,'e,'g) postdominator_tree ->
               node list list
 

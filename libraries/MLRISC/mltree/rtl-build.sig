@@ -1,5 +1,5 @@
 (*
- * How to build primitive RTL operators 
+ * How to build primitive RTL operators
  *)
 signature RTL_BUILD =
 sig
@@ -8,12 +8,12 @@ sig
    type cond  = T.cond
    type fcond = T.fcond
 
-   type effect 
-   type region 
+   type effect
+   type region
    type exp
    type bool
    type div_rounding_mode
-   
+
    val intConst  : ty -> int -> exp          (* integer constant *)
    val wordConst : ty -> Word32.word -> exp  (* word constant *)
    val ???       : ty -> exp                 (* an undefined value *)
@@ -21,9 +21,9 @@ sig
    val newOp     : string -> exp list -> exp   (* create new operator *)
 
    val immed     : ty -> exp -> exp          (* immediate value *)
-   val operand   : ty -> exp -> exp          
+   val operand   : ty -> exp -> exp
    val label     : ty -> exp -> exp
-   val $         : CellsBasis.cellkind * ty -> exp -> exp   
+   val $         : CellsBasis.cellkind * ty -> exp -> exp
    val Mem       : CellsBasis.cellkind * ty -> exp * region -> exp
    val Arg       : ty * string * string -> exp
 
@@ -35,26 +35,26 @@ sig
    val ~     : ty -> exp -> exp
    val +     : ty -> exp * exp -> exp
    val -     : ty -> exp * exp -> exp
-   val muls  : ty -> exp * exp -> exp 
-   val mulu  : ty -> exp * exp -> exp 
-   val divs  : ty -> div_rounding_mode * exp * exp -> exp 
-   val divu  : ty -> exp * exp -> exp 
-   val rems  : ty -> div_rounding_mode * exp * exp -> exp 
-   val remu  : ty -> exp * exp -> exp 
+   val muls  : ty -> exp * exp -> exp
+   val mulu  : ty -> exp * exp -> exp
+   val divs  : ty -> div_rounding_mode * exp * exp -> exp
+   val divu  : ty -> exp * exp -> exp
+   val rems  : ty -> div_rounding_mode * exp * exp -> exp
+   val remu  : ty -> exp * exp -> exp
 
-   val addt  : ty -> exp * exp -> exp 
-   val subt  : ty -> exp * exp -> exp 
-   val mult  : ty -> exp * exp -> exp 
-   val divt  : ty -> div_rounding_mode * exp * exp -> exp 
+   val addt  : ty -> exp * exp -> exp
+   val subt  : ty -> exp * exp -> exp
+   val mult  : ty -> exp * exp -> exp
+   val divt  : ty -> div_rounding_mode * exp * exp -> exp
 
    val notb  : ty -> exp -> exp
-   val andb  : ty -> exp * exp -> exp 
-   val orb   : ty -> exp * exp -> exp 
-   val xorb  : ty -> exp * exp -> exp 
-   val eqvb  : ty -> exp * exp -> exp 
-   val <<    : ty -> exp * exp -> exp 
-   val >>    : ty -> exp * exp -> exp 
-   val ~>>   : ty -> exp * exp -> exp 
+   val andb  : ty -> exp * exp -> exp
+   val orb   : ty -> exp * exp -> exp
+   val xorb  : ty -> exp * exp -> exp
+   val eqvb  : ty -> exp * exp -> exp
+   val <<    : ty -> exp * exp -> exp
+   val >>    : ty -> exp * exp -> exp
+   val ~>>   : ty -> exp * exp -> exp
    val BitSlice : ty -> (int * int) list -> exp -> exp
 
    (* Boolean operators *)
@@ -64,19 +64,19 @@ sig
    val Not      : bool -> bool
    val And      : bool * bool -> bool
    val Or       : bool * bool -> bool
-   val Cond     : ty -> bool * exp * exp -> exp 
+   val Cond     : ty -> bool * exp * exp -> exp
 
    (* Integer comparisons *)
-   val ==      : ty -> exp * exp -> bool 
-   val <>      : ty -> exp * exp -> bool 
-   val <       : ty -> exp * exp -> bool 
-   val >       : ty -> exp * exp -> bool 
-   val <=      : ty -> exp * exp -> bool 
-   val >=      : ty -> exp * exp -> bool 
-   val ltu     : ty -> exp * exp -> bool 
-   val leu     : ty -> exp * exp -> bool 
-   val gtu     : ty -> exp * exp -> bool 
-   val geu     : ty -> exp * exp -> bool 
+   val ==      : ty -> exp * exp -> bool
+   val <>      : ty -> exp * exp -> bool
+   val <       : ty -> exp * exp -> bool
+   val >       : ty -> exp * exp -> bool
+   val <=      : ty -> exp * exp -> bool
+   val >=      : ty -> exp * exp -> bool
+   val ltu     : ty -> exp * exp -> bool
+   val leu     : ty -> exp * exp -> bool
+   val gtu     : ty -> exp * exp -> bool
+   val geu     : ty -> exp * exp -> bool
    val setcc   : ty -> exp * exp -> bool
    val getcc   : ty -> exp * T.cond -> bool
 

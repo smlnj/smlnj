@@ -1,22 +1,22 @@
 (*
  * Some simple routines for performing depth first search.
- * 
+ *
  * -- Allen
  *)
 
-signature GRAPH_DEPTH_FIRST_SEARCH = 
+signature GRAPH_DEPTH_FIRST_SEARCH =
 sig
 
    (* depth first search *)
 
-   val dfs : ('n,'e,'g) Graph.graph  -> 
+   val dfs : ('n,'e,'g) Graph.graph  ->
              (Graph.node_id -> unit) ->
-             ('e Graph.edge -> unit) -> 
+             ('e Graph.edge -> unit) ->
              Graph.node_id list -> unit
 
-   val dfsfold : ('n,'e,'g) Graph.graph  -> 
+   val dfsfold : ('n,'e,'g) Graph.graph  ->
                  (Graph.node_id * 'a -> 'a) ->
-                 ('e Graph.edge * 'b -> 'b) -> 
+                 ('e Graph.edge * 'b -> 'b) ->
                  Graph.node_id list -> 'a * 'b -> 'a * 'b
    val dfsnum  : ('n,'e,'g) Graph.graph ->
                  Graph.node_id list ->

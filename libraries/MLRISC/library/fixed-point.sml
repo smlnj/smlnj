@@ -1,6 +1,6 @@
-(* 
+(*
  * A simple fixed point datatype
- * 
+ *
  * -- Allen
  *)
 
@@ -9,7 +9,7 @@ struct
 
    structure W = Word31
 
-   infix << >> 
+   infix << >>
    infix & ||
 
    val decimal_places = (decimal_bits + 2) div 3
@@ -52,8 +52,8 @@ struct
    fun scale(i,j)   = W.*(i, word j)
    fun i div j      = W.div(i,word j)
 
-   val min = W.min 
-   val max = W.max 
+   val min = W.min
+   val max = W.max
 
 end
 

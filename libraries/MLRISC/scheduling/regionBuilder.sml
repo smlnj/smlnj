@@ -23,30 +23,30 @@ struct
    val view_IR = MLRiscControl.getFlag "view-IR"
 
    val i2s = Int.toString
- 
+
    fun regionBuilder {maxBlocks, maxInstrs, sideEntries, minFreqRatio,
                       traceOnly, internalBackEdges, insertDummyBlocks
                      }  (IR as G.GRAPH cfg) schedule =
    let val N = #capacity cfg ()
-       val G.GRAPH loop = IR.loop IR 
+       val G.GRAPH loop = IR.loop IR
 
-       (* Note: tables must be dynamic because the cfg may be changed 
+       (* Note: tables must be dynamic because the cfg may be changed
         * while scheduling is being performed
         *)
        val processed = DA.array(N, false)
-       fun isProcessed i = DA.sub(processed, i) 
+       fun isProcessed i = DA.sub(processed, i)
        fun markAsProcessed i = DA.update(processed, i, true)
        val blockIdTbl = DA.array(N, 0)
 
-       (* A queue of all the blocks ranked by priority 
+       (* A queue of all the blocks ranked by priority
         * Give loop headers extra priority
         *)
-       fun freqOf(CFG.BLOCK{freq,...}) = !freq 
-       fun highestFreqFirst((i,i'),(j,j')) = 
+       fun freqOf(CFG.BLOCK{freq,...}) = !freq
+       fun highestFreqFirst((i,i'),(j,j')) =
            let val f_i = freqOf i'
                val f_j = freqOf j'
-           in  if f_i = f_j then #has_node loop i  
-               else f_i > f_j 
+           in  if f_i = f_j then #has_node loop i
+               else f_i > f_j
            end
        val seeds = PQ.fromList highestFreqFirst (#nodes cfg ())
 
@@ -61,18 +61,18 @@ struct
         *)
        fun newSeed() =
        let val (i,i') = PQ.deleteMin seeds
-       in  if isProcessed i then newSeed() 
+       in  if isProcessed i then newSeed()
            else if freqOf i' = 0 then raise PQ.EmptyPriorityQueue
            else (i,i')
        end
 
-       (* Grow a region according to the various parameters *) 
-       fun grow(seed as (s,s')) = 
+       (* Grow a region according to the various parameters *)
+       fun grow(seed as (s,s')) =
        let val freq    = real(freqOf s')
            val minFreq = freq * minFreqRatio
 
            (* Remove non candidates *)
-           fun prune(j,j') = isProcessed j orelse real(freqOf j') < minFreq 
+           fun prune(j,j') = isProcessed j orelse real(freqOf j') < minFreq
 
            fun pruneEdge(w) = real(!w) < minFreq
 
@@ -95,39 +95,39 @@ struct
            val enqueue = PQ.insert queue
 
            fun chooseBest [] = []
-             | chooseBest ((j,j')::rest) = 
+             | chooseBest ((j,j')::rest) =
                let val w = freqOf j'
                    fun find([],j,j',w) = [(j,j')]
-                     | find((k,k')::rest, j, j', w) = 
+                     | find((k,k')::rest, j, j', w) =
                        let val w' = freqOf k'
-                       in  if w' > w then find(rest, k, k', w') 
+                       in  if w' > w then find(rest, k, k', w')
                            else find(rest, j, j', w)
                        end
                in  find(rest, j, j', w) end
 
            fun add([], blocks, blockCount) = (blocks, blockCount)
-             | add((j,j')::rest, blocks, blockCount) = 
-               if isProcessed j then add(rest, blocks, blockCount) 
-               else (markAsProcessed j; 
-                     enqueue (j,j'); 
+             | add((j,j')::rest, blocks, blockCount) =
+               if isProcessed j then add(rest, blocks, blockCount)
+               else (markAsProcessed j;
+                     enqueue (j,j');
                      add(rest, j::blocks, blockCount+1)
                     )
 
            (* Find the region using best first search *)
            fun collect(front, back, blockCount) =
-           if PQ.isEmpty queue orelse blockCount >= maxBlocks then 
-               front @ rev back 
+           if PQ.isEmpty queue orelse blockCount >= maxBlocks then
+               front @ rev back
            else
            let val node as (j,j') = PQ.deleteMin queue
                val succs  = followSucc(#out_edges cfg j, [])
                val succs  = if traceOnly then chooseBest succs else succs
                val (back, blockCount) = add(succs, back, blockCount)
                (* val preds  = followPred(#in_edges cfg j, [])
-               val preds  = if traceOnly then chooseBest preds else preds 
+               val preds  = if traceOnly then chooseBest preds else preds
                val (front, blockCount) = add(preds, front, blockCount) *)
            in  collect(front, back, blockCount)
            end
-           
+
            val _ = markAsProcessed s (* mark the seed block as processed *)
            val blocks = collect([s], [], 1)
            (* The blocks collected are not in linear order *)
@@ -139,12 +139,12 @@ struct
            if traceOnly then TraceView.trace_view blocks IR
            else AcyclicSubgraphView.acyclic_view blocks IR
 
-       (* 
+       (*
         * Perform tail duplication if no side entries are allowed
         * BUG: make sure liveness information is kept up-to-date! XXX
         *)
        fun tailDuplication(root, subgraph) =
-       let val {nodes, edges} = Util.tailDuplicate IR 
+       let val {nodes, edges} = Util.tailDuplicate IR
                                   {subgraph=subgraph, root=root}
            val ins = PQ.insert seeds
            fun newNode (b,b') = (ins(b,b'); DA.update(blockIdTbl, b, 0))
@@ -155,10 +155,10 @@ struct
        end
 
 
-       (* Create a new region *) 
-       fun createRegion() = 
+       (* Create a new region *)
+       fun createRegion() =
        let val seed     = newSeed()
-           val blocks   = grow seed 
+           val blocks   = grow seed
            val subgraph = makeSubgraph blocks;
        in  if sideEntries then () else tailDuplication(hd blocks, subgraph);
            subgraph
@@ -169,12 +169,12 @@ struct
        let val size = ref 0
        in  #forall_nodes cfg (fn (_,CFG.BLOCK{insns, ...}) =>
                   size := !size + length(!insns));
-           !size 
+           !size
        end
 
        fun sizeOf(G.GRAPH cfg) = #order cfg ()
 
-       (* Main loop *) 
+       (* Main loop *)
        fun main() =
        let val region as G.GRAPH R = createRegion()
            val size = sizeOf region
@@ -183,21 +183,21 @@ struct
              let val numberOfInstructions = numberOfInstructions region
              in  if numberOfInstructions <= 2 then ()
                  else
-                   let val _ = 
+                   let val _ =
                        (print("REGION["^i2s(#order R ())^"] ");
                         app (fn (X,_) => print(i2s X^" ")) (#nodes R ());
                         print "\n")
 
                    in if !view_IR then IR.viewSubgraph IR region else ();
-                      schedule{ir=IR, region=region, 
+                      schedule{ir=IR, region=region,
                                blockIdTbl=DA.baseArray blockIdTbl,
                                numberOfInstructions=numberOfInstructions};
                       if !view_IR then IR.viewSubgraph IR region else ()
                    end
              end;
            main()
-       end 
- 
+       end
+
    in  initialization();
        main() handle PQ.EmptyPriorityQueue => ()
    end

@@ -1,6 +1,6 @@
 (*
  * This module allows use to bind a streambuf to an outstream.
- * We can use this to capture all the output to a stream as a single string.  
+ * We can use this to capture all the output to a stream as a single string.
  *)
 signature STRING_OUTSTREAM =
 sig

@@ -1,13 +1,13 @@
 (*
- * Build MLTree-based RTLs 
- *) 
+ * Build MLTree-based RTLs
+ *)
 
 functor RTLBuild(RTL : MLTREE_RTL) : RTL_BUILD =
-struct 
+struct
    structure RTL = RTL
    structure T = RTL.T
    structure I = T.I
-   
+
    type effect  = RTL.rtl
    type exp     = T.rexp
    type ty      = T.ty
@@ -27,7 +27,7 @@ struct
    fun getNewOps() = !newOpList
    fun clearNewOps() = newOpList := []
 
-   fun newOp name = 
+   fun newOp name =
    let val oper = newOper name
        val _    = newOpList := oper :: !newOpList;
        val oper = T.OPER oper
@@ -40,7 +40,7 @@ struct
 
    fun Mem (k,ty) (addr,mem) = T.$(ty,k,addr)
 
-   fun ??? ty = T.??? 
+   fun ??? ty = T.???
    fun Arg (ty,kind,name) = T.ARG(ty,ref(T.REP kind),name)
    fun BitSlice ty slice e = T.BITSLICE(ty,slice,e)
 
@@ -140,16 +140,16 @@ struct
 
    (* effects *)
    val Nop = T.SEQ []
-   fun Jmp ty addr = T.JMP(addr,[]) 
+   fun Jmp ty addr = T.JMP(addr,[])
    fun Call ty addr = T.CALL{funct=addr, targets=[],
-                             defs=[], uses=[], 
+                             defs=[], uses=[],
                              region=T.Region.memory,
-			     pops=0}
+                             pops=0}
    val Ret = T.RET([])
 
    fun If(T.TRUE, yes, no) = yes
      | If(T.FALSE, yes, no) = no
-     | If(T.CMP(ty,cc,x,y),T.SEQ [],no) = 
+     | If(T.CMP(ty,cc,x,y),T.SEQ [],no) =
          T.IF(T.CMP(ty,T.Basis.negateCond cc,x,y), no, Nop)
      | If(a,b,c) = T.IF(a,b,c)
 
@@ -158,7 +158,7 @@ struct
      | Par(T.SEQ xs,T.SEQ ys) = T.SEQ(xs@ys)
      | Par(T.SEQ xs,y)        = T.SEQ(xs@[y])
      | Par(x,T.SEQ ys)        = T.SEQ(x::ys)
-     | Par(x,y)               = T.SEQ[x,y] 
+     | Par(x,y)               = T.SEQ[x,y]
 
    val map = fn _ => List.map
 

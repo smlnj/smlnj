@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 2002 Bell Labs, Lucent Technologies
  *
  * Extract frequency information from the sparc architecture
- * 
+ *
  * -- Allen
  *)
 

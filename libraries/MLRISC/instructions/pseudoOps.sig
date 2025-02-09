@@ -1,5 +1,5 @@
 (* pseudo-ops.sml --- description of assembly pseudo-ops
- * 
+ *
  * COPYRIGHT (c) 1996 AT&T Bell Laboratories.
  *
  *)
@@ -17,7 +17,7 @@ signature PSEUDO_OPS = sig
 
   val sizeOf : pseudo_op * int -> int
     (* Size of the pseudo_op in bytes given the current location counter
-     * The location counter is provided in case some pseudo ops are 
+     * The location counter is provided in case some pseudo ops are
      * dependent on alignment considerations.
      *)
 
@@ -25,7 +25,7 @@ signature PSEUDO_OPS = sig
     (* adjust the value of labels in the pseudo_op given the current
      * location counter.
      *)
-  
+
 end
 
 

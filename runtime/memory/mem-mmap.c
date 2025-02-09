@@ -92,11 +92,12 @@ PVT status_t MapMemory (mem_obj_t *obj, Addr_t szb, bool_t isExec)
 #else
     int prot = PROT_ALL;
     int flgs = MMAP_FLGS;
+    (void)isExec;
 #endif
 
   /* we grab an extra BIBOP_PAGE_SZB bytes to give us some room for alignment */
     addr = (Addr_t) mmap (0, szb+BIBOP_PAGE_SZB, prot, flgs, fd, 0);
-    if (addr == -1) {
+    if (addr == (Addr_t)-1) {
 	Error ("unable to map %d bytes, errno = %d\n", szb, errno);
 #ifndef HAS_ANON_MMAP
 	close (fd); /* NOTE: this call clobbers errno */

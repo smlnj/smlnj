@@ -30,7 +30,7 @@ struct
    fun eq (x : 'a uref,y : 'a uref) = x = y
    fun find r =
    let fun look (r as ref(ROOT _))  = r
-         | look (r' as ref(LINK r)) = 
+         | look (r' as ref(LINK r)) =
            let val r'' = look r
            in  if r <> r'' then r' := LINK r'' else ();
                r''
@@ -40,7 +40,7 @@ struct
    fun == (x,y) = find x = find y
 
    fun !! r     = let val ROOT(x,_) = !(find r) in x end
-   fun ::=(r,x) = let val r as ref(ROOT(_,w)) = find r 
+   fun ::=(r,x) = let val r as ref(ROOT(_,w)) = find r
                   in  r := ROOT(x,w) end
    fun union f (x,y) =
    let val r  as ref(x as ROOT(i,w))  = find x

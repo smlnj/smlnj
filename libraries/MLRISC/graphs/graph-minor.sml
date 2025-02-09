@@ -1,10 +1,10 @@
 (*
  *  Graph minor.
- *  Allows contraction of nodes.  
- *  Remove self-edges during contraction. 
- *  
+ *  Allows contraction of nodes.
+ *  Remove self-edges during contraction.
+ *
  *  -- Allen
- *) 
+ *)
 signature GRAPH_MINOR_VIEW =
 sig
 
@@ -13,7 +13,7 @@ sig
             -> { view  : ('n,'e,'g) Graph.graph,
                  union : Graph.node_id * Graph.node_id -> bool,
                  ==    : Graph.node_id * Graph.node_id -> bool,
-                 partition : Graph.node_id -> Graph.node_id list 
+                 partition : Graph.node_id -> Graph.node_id list
                }
 
 end
@@ -25,7 +25,7 @@ struct
    structure U = URef
    structure H = HashArray
 
-   datatype ('n,'e) node = 
+   datatype ('n,'e) node =
       NODE of { key   : int,
                 data  : 'n,
                 nodes : Graph.node_id list,
@@ -38,8 +38,8 @@ struct
        val N     = #capacity G ()
        val table = H.array'(N,fn _ => raise G.NotFound)
        fun get n = let val NODE x = U.!!(H.sub(table,n)) in x end
-       val _ = #forall_nodes G 
-                (fn (n,n') => 
+       val _ = #forall_nodes G
+                (fn (n,n') =>
                     H.update(table,n,
                        U.uRef(NODE{key=n,
                                    data=n',
@@ -47,14 +47,14 @@ struct
                                    succ= #out_edges G n,
                                    pred= #in_edges G n})))
        fun same(i,j) = U.equal (H.sub(table,i),H.sub(table,j))
-       fun partition i = #nodes(get i) 
+       fun partition i = #nodes(get i)
        val size  = ref (#size G ())
        val order = ref (#order G ())
        fun out_edges n = #succ(get n)
        fun in_edges n = #pred(get n)
        fun succ n  = map #2 (out_edges n)
-       fun pred n  = map #1 (in_edges n) 
-       fun nodes() = 
+       fun pred n  = map #1 (in_edges n)
+       fun nodes() =
            let val found = H.array(10,false)
                fun collect((node as (n,_))::nodes,nodes') =
                    if H.sub(found,n) then collect(nodes,nodes')
@@ -68,7 +68,7 @@ struct
        fun edges() = List.concat (map (fn (n,_) => out_edges n) (nodes()))
        fun has_edge(i,j) =
            List.exists (fn (_,j',_) => j = j') (out_edges i)
-       fun has_node n = (H.sub(table,n);true) handle G.NotFound => false 
+       fun has_node n = (H.sub(table,n);true) handle G.NotFound => false
        fun node_info n = #data(get n)
        fun forall_nodes f = app f (nodes())
        fun forall_edges f = app f (edges())
@@ -79,19 +79,19 @@ struct
              | partition((e as (i,j,_))::es,others,self) =
                 let val k_i = key i
                     val k_j = key j
-                in   if (k_i = k1 orelse k_i = k2) andalso   
-                        (k_j = k1 orelse k_j = k2) then 
-                          partition(es,others,e::self)  
+                in   if (k_i = k1 orelse k_i = k2) andalso
+                        (k_j = k1 orelse k_j = k2) then
+                          partition(es,others,e::self)
                      else partition(es,e::others,self)
                 end
            val (s,s') = partition(s1@s2,[],[])
            val (p,p') = partition(p1@p2,[],[])
            val n = NODE{key=k1,
                         data=merge_nodes(d1,d2,s'),
-                        nodes=n1@n2, 
+                        nodes=n1@n2,
                         succ=s,
                         pred=p
-                       } 
+                       }
            val _ = order := !order - 1
            val _ = size  := !size - length s'
        in  n
@@ -126,7 +126,7 @@ struct
          exits           = #exits G,
          entry_edges     = #entry_edges G,
          exit_edges      = #exit_edges G,
-         forall_nodes    = forall_nodes, 
+         forall_nodes    = forall_nodes,
          forall_edges    = forall_edges
        }
    in  { view  = view,

@@ -3,7 +3,7 @@
  *
  * -- Allen
  *)
-signature INSN_PROPERTIES = 
+signature INSN_PROPERTIES =
 sig
    structure I : INSTRUCTIONS
    structure C : CELLS
@@ -22,13 +22,13 @@ sig
 
    val instrKind  : I.instruction -> kind
 
-      (* parallel moves *) 
+      (* parallel moves *)
    val moveInstr  : I.instruction -> bool
    val moveTmpR   : I.instruction -> CellsBasis.cell option
    val moveDstSrc : I.instruction -> CellsBasis.cell list * CellsBasis.cell list
 
       (* no op *)
-   val nop 	  : unit -> I.instruction
+   val nop        : unit -> I.instruction
 
       (* jump instruction *)
    val jump       : Label.label -> I.instruction
@@ -38,8 +38,8 @@ sig
    val loadImmed   : {immed:int, t:CellsBasis.cell} -> I.instruction
    val loadOperand : {opn:I.operand, t:CellsBasis.cell} -> I.instruction
 
-     (* 
-      * Targets of a branch instruction 
+     (*
+      * Targets of a branch instruction
       * precondition: instruction must be of type IK_JUMP.
       *)
    datatype target = LABELLED of Label.label | FALLTHROUGH | ESCAPES
@@ -50,7 +50,7 @@ sig
 
   (* Set the branch target; error if not a branch instruction, t=true, f=false case *)
    val setBranchTargets : {i:I.instruction, t:Label.label, f:Label.label} -> I.instruction
- 
+
       (* equality and hashing on operands *)
    val eqOpn      : I.operand * I.operand -> bool
    val hashOpn    : I.operand -> word
@@ -64,7 +64,7 @@ sig
     val negateConditional : (I.instruction * Label.label) -> I.instruction
 
      (* definition/use for the RA *)
-   val defUse     : CellsBasis.cellkind -> 
+   val defUse     : CellsBasis.cellkind ->
                       I.instruction -> (CellsBasis.cell list * CellsBasis.cell list)
 
      (* annotations *)

@@ -52,24 +52,24 @@ type varpaths = (V.var * P.path) list  (* association list mapping var to path *
  *  REQUIRES: pat is OR-free, so variable occurrences (& hence their paths) are unique. *)
 fun varPaths (pat: AS.pat) =
     let fun scan (AS.VARpat v, rpath) = [(v, P.rpathToPath rpath)]
-	  | scan (AS.CONSTRAINTpat(pat,_), rpath) = scan(pat, rpath)
-	  | scan (AS.LAYEREDpat(pat1, pat2), rpath) =
-	      scan(pat1, rpath) @ scan(pat2, rpath)
-	  | scan (AS.APPpat(dcon,tvs,pat), rpath) =
-	      scan(pat, P.DC(AS.DATAcon(dcon,tvs)) :: rpath)
-	  | scan (AS.RECORDpat{fields,...}, rpath) =
-	      let fun foldFields (n, (lap,pat), varpaths) =
-		      scan (pat, P.addLinkR (P.PI n, rpath)) @ varpaths
-	      in List.foldri foldFields nil fields
-	      end
-	  | scan (AS.VECTORpat(pats,ty), rpath) =
-	    let fun foldElement (n, pat, varpaths) =
-		    scan (pat, P.addLinkR (P.VI (n,ty), rpath)) @ varpaths
-	       in List.foldri foldElement nil pats
-	      end
-	  | scan (AS.MARKpat (pat,_), rpath) = scan (pat, rpath) (* MARKpat is tranparent *)
-	  | scan (AS.ORpat _, _) = bug "varPaths:scan - unexpected OR pattern"
-	  | scan _ = nil
+          | scan (AS.CONSTRAINTpat(pat,_), rpath) = scan(pat, rpath)
+          | scan (AS.LAYEREDpat(pat1, pat2), rpath) =
+              scan(pat1, rpath) @ scan(pat2, rpath)
+          | scan (AS.APPpat(dcon,tvs,pat), rpath) =
+              scan(pat, P.DC(AS.DATAcon(dcon,tvs)) :: rpath)
+          | scan (AS.RECORDpat{fields,...}, rpath) =
+              let fun foldFields (n, (lap,pat), varpaths) =
+                      scan (pat, P.addLinkR (P.PI n, rpath)) @ varpaths
+              in List.foldri foldFields nil fields
+              end
+          | scan (AS.VECTORpat(pats,ty), rpath) =
+            let fun foldElement (n, pat, varpaths) =
+                    scan (pat, P.addLinkR (P.VI (n,ty), rpath)) @ varpaths
+               in List.foldri foldElement nil pats
+              end
+          | scan (AS.MARKpat (pat,_), rpath) = scan (pat, rpath) (* MARKpat is tranparent *)
+          | scan (AS.ORpat _, _) = bug "varPaths:scan - unexpected OR pattern"
+          | scan _ = nil
     in scan (pat, nil)
     end
 
@@ -111,26 +111,26 @@ val emptyPathenv = nil
 fun lookPath (nil,_) = NONE
   | lookPath (pathenv, path) =
     let fun look (nil, best) = best
-	  | look ((p,m)::rest, best) =
-	    (case P.suffix (p, path)
-	      of NONE => look(rest,best) (* p is not a prefix of path *)
-	       | SOME suf =>
-		   let val len = length suf
-		    in case best
-			 of NONE => look (rest, SOME(len, suf, m))
-			  | SOME(len', suf', m') =>
-			      if len < len'
-			      then look (rest, SOME (len, suf, m)) (* bug: can't happen *)
-			      else best (* can't hope for shorter suffix, since pathenv paths are getting shorter *)
-		   end)
+          | look ((p,m)::rest, best) =
+            (case P.suffix (p, path)
+              of NONE => look(rest,best) (* p is not a prefix of path *)
+               | SOME suf =>
+                   let val len = length suf
+                    in case best
+                         of NONE => look (rest, SOME(len, suf, m))
+                          | SOME(len', suf', m') =>
+                              if len < len'
+                              then look (rest, SOME (len, suf, m)) (* bug: can't happen *)
+                              else best (* can't hope for shorter suffix, since pathenv paths are getting shorter *)
+                   end)
     in case look(pathenv, NONE)
-	 of NONE => NONE
-	  | SOME (_, suf, m) => SOME(m, suf)
+         of NONE => NONE
+          | SOME (_, suf, m) => SOME(m, suf)
     end
 
 (* bindPath : pathenv * P.path * mvar -> pathenv *)
 fun bindPath (nil, path, mvar) = [(path, mvar)]
-  | bindPath (pathenv as ((p,m)::rest), path, mvar) = 
+  | bindPath (pathenv as ((p,m)::rest), path, mvar) =
       if P.pathLength path < P.pathLength p
       then (p,m) :: bindPath (rest, path, mvar)
       else (path, mvar) :: pathenv

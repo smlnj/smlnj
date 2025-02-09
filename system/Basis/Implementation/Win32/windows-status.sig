@@ -1,7 +1,7 @@
 (* windows-status.sig
  *
  * COPYRIGHT (c) 2008 Fellowship of SML/NJ
- * 
+ *
  * Signature with the windows status constants
  *
  *)

@@ -23,18 +23,18 @@ struct
        fun nice l  =  String.toString (String.map (fn #"\t" => #" "
                                                        | c => c) l)
        fun quote s      = (out "\""; out s; out "\"")
-       fun comma()      = out ", "   
-       fun atom(a,b)    = (out "a("; quote a; comma(); quote b; out ")") 
+       fun comma()      = out ", "
+       fun atom(a,b)    = (out "a("; quote a; comma(); quote b; out ")")
        fun OBJECT l     = atom("OBJECT",nice l)
        fun FONTFAMILY f = atom("FONTFAMILY",f)
        fun FONTSTYLE s  = atom("FONTSTYLE",s)
        fun COLOR c      = atom("COLOR",c)
        fun EDGECOLOR c  = atom("EDGECOLOR",c)
        fun Dir ()       = atom("_DIR","none")
-       fun label l      = (OBJECT l;             comma(); 
+       fun label l      = (OBJECT l;             comma();
                            FONTFAMILY "courier"; comma();
                            FONTSTYLE "normal"
-                          ) 
+                          )
 
        exception FOUND of string
 
@@ -54,13 +54,13 @@ struct
          | edgeAttrib (L.ARROW_COLOR c) = EDGECOLOR c
          | edgeAttrib (L.EDGEPATTERN p) = atom("EDGEPATTERN",p)
          | edgeAttrib L.DIR = Dir()
-         | edgeAttrib _ = () 
+         | edgeAttrib _ = ()
 
        and isEdgeAttrib (L.COLOR c)       = true
          | isEdgeAttrib (L.ARROW_COLOR c) = true
          | isEdgeAttrib (L.EDGEPATTERN p) = true
          | isEdgeAttrib (L.DIR) = true
-         | isEdgeAttrib _ = false 
+         | isEdgeAttrib _ = false
 
        and findEdgeLabel ((L.LABEL "")::l) = findEdgeLabel l
          | findEdgeLabel ((L.LABEL l)::_) = raise FOUND l
@@ -78,7 +78,7 @@ struct
           )
 
        fun doNode t (n,a) =
-           ( tab t; 
+           ( tab t;
              out "l(\""; int n; out "\",n(\"\",\n";
              attribs (t+2) (isNodeAttrib,nodeAttrib) a;
              comma();
@@ -89,10 +89,10 @@ struct
 
        and doEdge t (i,j,a) =
           ((findEdgeLabel a;
-            tab t; out "l(\""; 
-            int i; out "->"; int j; 
+            tab t; out "l(\"";
+            int i; out "->"; int j;
             (* dummy label; daVinci chokes on duplicated edge names *)
-            out "-"; out(newLabel()); 
+            out "-"; out(newLabel());
             out "\",e(\"\",\n";
             attribs (t+2) (isEdgeAttrib,edgeAttrib) a;
             tab t; out ",r(\""; int j; out "\")))")
@@ -113,9 +113,9 @@ struct
 
    in  out "[\n";
        listify comma (doNode 2) (#nodes G ());
-       out "]\n" 
+       out "]\n"
    end
-   
+
 
 end
 

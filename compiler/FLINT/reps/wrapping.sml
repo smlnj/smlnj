@@ -16,7 +16,7 @@ local
   structure CO = Coerce
   structure DI = DebIndex
   structure PO = Primop
-  structure LV = LambdaVar 
+  structure LV = LambdaVar
   structure DA = Access
   structure LT = Lty
   structure FR = FunRecMeta
@@ -40,7 +40,7 @@ val ident = fn x => x
 
 (* mkLvars : int -> LV.lvar list) *)
 fun mkLvars n = List.tabulate (n, fn i => LV.mkLvar ())
-			      
+
 (****************************************************************************
  *                   MISC UTILITY FUNCTIONS                                 *
  ****************************************************************************)
@@ -74,13 +74,13 @@ val f64upd = PO.NUMUPDATE(PO.FLOAT 64)
 fun classPrim (px as (d, p, lt, ts)) =
     (case (p, ts)
        of ((PO.NUMSUBSCRIPT _ | PO.NUMUPDATE _), _) =>   (* overloaded primops, instantiate types *)
-	    ((d, p, LE.lt_pinst(lt, ts), []), true)
-	| (PO.ASSIGN, [tc]) =>			         (* special *)
-	   if (LE.tc_upd_prim tc = PO.UNBOXEDUPDATE)
-	     then ((d, PO.UNBOXEDASSIGN, lt, ts), false) (* avoid store-list allocation *)
-	     else ((d, p, lt, ts), false)
-	| (PO.UPDATE, [tc]) => ((d, LE.tc_upd_prim tc, lt, ts), false)
-	| _ => (px, false))
+            ((d, p, LE.lt_pinst(lt, ts), []), true)
+        | (PO.ASSIGN, [tc]) =>                           (* special *)
+           if (LE.tc_upd_prim tc = PO.UNBOXEDUPDATE)
+             then ((d, PO.UNBOXEDASSIGN, lt, ts), false) (* avoid store-list allocation *)
+             else ((d, p, lt, ts), false)
+        | (PO.UPDATE, [tc]) => ((d, LE.tc_upd_prim tc, lt, ts), false)
+        | _ => (px, false))
 
 val argbase = fn vs => (vs, ident)
 val resbase = fn v => (v, ident)
@@ -117,24 +117,24 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
         then let val (ks, t) = LD.ltd_ppoly lt
               in LD.ltc_ppoly(ks, ltyWrap t)
              end
-	else ltyWrap lt
+        else ltyWrap lt
 
     (* transform : CO.wpEnv * DI.depth -> (lexp -> lexp) *)
     fun transform (wenv, d) =
       let (* lpfd : fkind * v? * vts? * F.lexp -> fkind * v? * ? * lexp *)
-	  fun lpfd ({isrec,known,inline,cconv}, v, vts, e) =
-	      let val nisrec = case isrec
-				 of SOME(ts,l) => SOME(map ltyUnwrap ts, l)
-				  | NONE => NONE
-		  val ncconv = case cconv
-				 of FR.CC_FUN fixed => FR.CC_FUN LD.ffc_fixed
-				  | FR.CC_FCT => cconv
-	      in ({isrec=nisrec, known=known,
-		   cconv=ncconv, inline=inline},
-		  v,
-		  map (fn (x,t) => (x, ltyUnwrap t)) vts,
-		  loop e)
-	      end
+          fun lpfd ({isrec,known,inline,cconv}, v, vts, e) =
+              let val nisrec = case isrec
+                                 of SOME(ts,l) => SOME(map ltyUnwrap ts, l)
+                                  | NONE => NONE
+                  val ncconv = case cconv
+                                 of FR.CC_FUN fixed => FR.CC_FUN LD.ffc_fixed
+                                  | FR.CC_FCT => cconv
+              in ({isrec=nisrec, known=known,
+                   cconv=ncconv, inline=inline},
+                  v,
+                  map (fn (x,t) => (x, ltyUnwrap t)) vts,
+                  loop e)
+              end
 
           (* lpdc : dcon * tyc list * value * bool
                     -> dcon * tyc list * (lexp -> lexp) * value  *)
@@ -161,7 +161,7 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
                             (ndc, nts, fn xe => LET([z], hhh([u]), xe), nu)
                           else           (* DECON *)
                             let val x = case u
-					    of VAR q => q
+                                            of VAR q => q
                                              | _ => bug "unexpected case in lpdc"
                              in (ndc, nts,
                                  fn xe => LET([x], hhh([nu]), xe), nu)
@@ -233,48 +233,48 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
 
                | TAPP (v, ts) =>
                    let val _ = if !debugging
-			     then (say ">>> Wrapping.transform.loop#TAPP: v = ";
-				   PF.printValue v; say "\n")
-			     else ()
-		       val _ = if !debugging
-				then (say "ty: "; PF.printTycList ts; say "\n")
-				else ()
-		       val olt: LT.lty = getlty v
-		       val _ = if !debugging
-			       then (say "olt: "; PF.printLty olt; say "\n")
-			       else ()
+                             then (say ">>> Wrapping.transform.loop#TAPP: v = ";
+                                   PF.printValue v; say "\n")
+                             else ()
+                       val _ = if !debugging
+                                then (say "ty: "; PF.printTycList ts; say "\n")
+                                else ()
+                       val olt: LT.lty = getlty v
+                       val _ = if !debugging
+                               then (say "olt: "; PF.printLty olt; say "\n")
+                               else ()
                        val nts : LT.tyc list = map tycWrap ts
-		       val _ = if !debugging
-			       then (say "nts: "; PF.printTycList nts; say "\n")
-			       else ()
+                       val _ = if !debugging
+                               then (say "nts: "; PF.printTycList nts; say "\n")
+                               else ()
                        val nlts: LT.lty list = LE.lt_inst(ltyUnwrap olt, nts)
-		       val _ = if !debugging
-			       then (say "nlts: "; PF.printLtyList nlts; say "\n")
-			       else ()
+                       val _ = if !debugging
+                               then (say "nlts: "; PF.printLtyList nlts; say "\n")
+                               else ()
                        val olts: LT.lty list = map ltyUnwrap (LE.lt_inst(olt, ts))
-		       val _ = if !debugging
-			       then (say "olts: "; PF.printLtyList olts; say "\n")
-			       else ()
+                       val _ = if !debugging
+                               then (say "olts: "; PF.printLtyList olts; say "\n")
+                               else ()
                        val hdr = CO.unwrapOp (wenv, nlts, olts, d)
                     in case hdr
                         of NONE =>
-			     let val _ = dbsay "loop#TAPP: hdr = NONE\n";
-				 val result = TAPP(v, nts)
-			     in if !debugging
-				then (say "result:\n"; PF.printLexp result;
-				      say "<<<Wrapping.transform.loop#TAPP\n")
-				else ();
-				result
-			     end
+                             let val _ = dbsay "loop#TAPP: hdr = NONE\n";
+                                 val result = TAPP(v, nts)
+                             in if !debugging
+                                then (say "result:\n"; PF.printLexp result;
+                                      say "<<<Wrapping.transform.loop#TAPP\n")
+                                else ();
+                                result
+                             end
                          | SOME hhh =>
                              let val _ = dbsay "loop#tapp: hdr = SOME\n"
-			         val nvs = mkLvars (length nlts)
-				 val result = LET(nvs, TAPP(v, nts), hhh(map VAR nvs))
+                                 val nvs = mkLvars (length nlts)
+                                 val result = LET(nvs, TAPP(v, nts), hhh(map VAR nvs))
                               in if !debugging
-				 then (say "result:\n"; PF.printLexp result;
-				       say "<<<Wrapping.transform.loop#TAPP\n")
-				 else ();
-				 result
+                                 then (say "result:\n"; PF.printLexp result;
+                                       say "<<<Wrapping.transform.loop#TAPP\n")
+                                 else ();
+                                 result
                              end
                    end
 
@@ -294,9 +294,9 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
                          of NONE => RECORD(FR.RK_VECTOR ntc, vs, v, loop e)
                           | SOME hhh =>
                               let val f = LV.mkLvar () and x = LV.mkLvar ()
-				  val fkfun = {isrec = NONE, known = false,
-					       inline = FR.IH_ALWAYS,
-					       cconv = FR.CC_FUN LD.ffc_fixed}
+                                  val fkfun = {isrec = NONE, known = false,
+                                               inline = FR.IH_ALWAYS,
+                                               cconv = FR.CC_FUN LD.ffc_fixed}
                                   fun mh xe =
                                     FIX([(fkfun,f,[(x,ot)],hhh([VAR x]))], xe)
 

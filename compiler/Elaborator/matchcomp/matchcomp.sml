@@ -8,30 +8,30 @@ signature MATCH_COMP =
 sig
 
   val bindCompile :
-	(Absyn.pat * Absyn.exp) list     (* stripped (RULE) rules *)
-	* Types.ty                       (* lhs (pattern) type *)
-	* Types.ty                       (* rhs type *)
-	* ErrorMsg.errorFn               (* error function *)
-	* SourceMap.region               (* match region *)
+        (Absyn.pat * Absyn.exp) list     (* stripped (RULE) rules *)
+        * Types.ty                       (* lhs (pattern) type *)
+        * Types.ty                       (* rhs type *)
+        * ErrorMsg.errorFn               (* error function *)
+        * SourceMap.region               (* match region *)
         * StaticEnv.staticEnv            (* static environment (for printing in error messages) *)
-	-> Absyn.exp * Variable.var      (* var option or var ??? *)
+        -> Absyn.exp * Variable.var      (* var option or var ??? *)
 
   val matchCompile :
-	(Absyn.pat * Absyn.exp) list     (* stripped (RULE) rules *)
-	* Types.ty                       (* lhs (pattern) type *)
-	* Types.ty                       (* rhs type *)
-	* ErrorMsg.errorFn               (* error function *)
-	* SourceMap.region               (* match region *)
+        (Absyn.pat * Absyn.exp) list     (* stripped (RULE) rules *)
+        * Types.ty                       (* lhs (pattern) type *)
+        * Types.ty                       (* rhs type *)
+        * ErrorMsg.errorFn               (* error function *)
+        * SourceMap.region               (* match region *)
         * StaticEnv.staticEnv            (* static environment (for printing) *)
-	-> Absyn.exp * Variable.var        (* var option or var ??? *)
+        -> Absyn.exp * Variable.var        (* var option or var ??? *)
 
   val handlerCompile :
-	(Absyn.pat * Absyn.exp) list
-	* Types.ty                       (* rhsTy -- needed for RAISEexp; lhsTy = exnTy *)
-	* ErrorMsg.errorFn               (* error function *)
-	* SourceMap.region               (* match region *)
+        (Absyn.pat * Absyn.exp) list
+        * Types.ty                       (* rhsTy -- needed for RAISEexp; lhsTy = exnTy *)
+        * ErrorMsg.errorFn               (* error function *)
+        * SourceMap.region               (* match region *)
         * StaticEnv.staticEnv
-	-> Absyn.exp * Variable.var
+        -> Absyn.exp * Variable.var
 
 end (* signature MATCH_COMP *)
 
@@ -54,16 +54,16 @@ local
   structure MCP = MCPrint
   structure ST = MCStats
   structure MCC = MCControl (* match compiler control flags *)
- 
-  open MCCommon 
-		     
+
+  open MCCommon
+
   val mcdebugging = MCC.mcdebugging
   val stats = MCC.mcstats
   val timings = MCC.mcstats
   val printProtoAndor = MCC.printProtoAndor
   val printAndor = MCC.printAndor
   val printDectree = MCC.printDecisionTree
-		       
+
   fun bug s = EM.impossible ("MatchComp: " ^ s)
   fun say msg = (Control_Print.say msg; Control_Print.flush ())
   fun says msgs = say (concat msgs)
@@ -84,9 +84,9 @@ local
   fun ppExp (exp, msg) =
       PP.with_default_pp
           (fn ppstrm =>
-	      (PP.string ppstrm msg;
-	       PPAbsyn.ppExp (StaticEnv.empty, NONE) ppstrm (exp, db_printDepth);
-	       PP.newline ppstrm))
+              (PP.string ppstrm msg;
+               PPAbsyn.ppExp (StaticEnv.empty, NONE) ppstrm (exp, db_printDepth);
+               PP.newline ppstrm))
 
 in
 
@@ -95,9 +95,9 @@ val choiceTotalThreshold = 10
 fun reportStats (nodeCount: int, {rulesUsed, failures, choiceTotal, choiceDist}: DT.decTreeStats) =
     if !MCC.mcstats andalso choiceTotal > choiceTotalThreshold
     then (say "decTree Stats: \n";
-	  says ["  nodeCount =   ", Int.toString nodeCount];
-	  says ["  choiceTotal = ", Int.toString choiceTotal];
-	  newline())
+          says ["  nodeCount =   ", Int.toString nodeCount];
+          says ["  choiceTotal = ", Int.toString choiceTotal];
+          newline())
     else ()
 
 
@@ -119,7 +119,7 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
               ("matchComp: match = \n", MCPrint.ppMatch, rules)
 
     val (numExpandedRules, expandedPats, rhsFunBinders, ruleMap) =
-	Preprocessing.expandPats (rules, lhsTy, rhsTy)
+        Preprocessing.expandPats (rules, lhsTy, rhsTy)
 
     (* RS.set of rulenos after or-expansion. If there are or-patterns
      * in the match, numRulesExpanded > length hybridMatch. *)
@@ -131,17 +131,17 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
         timeIt ("makeProtoAndor", location, ProtoAndor.makeProtoAndor, expandedPats)
 
     val _ = MCPrint.debugPrint printProtoAndor
-	      ("** matchComp: protoAndor = ", MCPrint.ppProtoAndor, protoAndor)
+              ("** matchComp: protoAndor = ", MCPrint.ppProtoAndor, protoAndor)
 
     val andor: andor =
-	(* Andor.makeAndor (protoAndor, allRules) *)
-	timeIt ("Andor.makeAndor", location, Andor.makeAndor, (protoAndor, allRules))
+        (* Andor.makeAndor (protoAndor, allRules) *)
+        timeIt ("Andor.makeAndor", location, Andor.makeAndor, (protoAndor, allRules))
     val _ = if !stats then ST.collectAndorStats andor else ()
 
     val _ = MCPrint.debugPrint printAndor ("** matchComp: andor", MCPrint.ppAndor, andor)
 
     val dectree = (* DecisionTree.makeDectree (andor, allRules) *)
-	timeIt ("makeDectree", location, DT.makeDectree, (andor, allRules))
+        timeIt ("makeDectree", location, DT.makeDectree, (andor, allRules))
     val _ = ST.collectDectreeStats dectree  (* must collect dectree stats for rulesUsed and numFAIL *)
 
     val _ = MCPrint.debugPrint printDectree ("** matchComp: dectree = ", MCPrint.ppDectree, dectree)
@@ -159,19 +159,19 @@ let fun timeIt x = TimeIt.timeIt (!MCC.mcstats) x
 
     val (coreExp, rootVar) = (* Generate.generate (dectree, ruleMap, allRules, failExnOp, rhsTy) *)
         timeIt ("Generate.generate", location, Generate.generate,
-		(dectree, ruleMap, allRules, failExnOp, rhsTy))
+                (dectree, ruleMap, allRules, failExnOp, rhsTy))
 
     (* wrapping let-bindings of abstracted right-hand-sides around match code,
      * (corresponds to "genprelude" in newmc) *)
 
     val fullExp: AS.exp = foldl (fn (fbinder, body) => fbinder body) coreExp
-			      rhsFunBinders
+                              rhsFunBinders
 
     val _ = if !MCC.printMatchAbsyn then ppExp (fullExp, "** matchComp: match absyn = ")
-	    else ()
+            else ()
 
     val _ = ST.finalLvar := LV.nextLvar ()
-				    
+
     val _ = if !stats then ST.reportStats () else ()
 
     (* rudundant <=> not (null unusedOriginalRules) <=> not (null unusedExpandedRules) *)
@@ -216,27 +216,27 @@ end (* fun matchComp *)
  *  val _ = <exp>  and  val _:<ty> = <exp>.
  *)
 fun bindCompile (rules: (AS.pat * AS.exp) list, lhsTy: T.ty, rhsTy: T.ty, errorFn: ErrorMsg.errorFn,
-		 region: SourceMap.region, env: StaticEnv.staticEnv): (AS.exp * V.var) =
+                 region: SourceMap.region, env: StaticEnv.staticEnv): (AS.exp * V.var) =
     let val bindExn = EU.getBindExn ()
-	val (code, rootVar, _, _, nonexhaustive) =
-	      matchComp (rules, lhsTy, rhsTy, SOME bindExn, region)
+        val (code, rootVar, _, _, nonexhaustive) =
+              matchComp (rules, lhsTy, rhsTy, SOME bindExn, region)
 
-	val nonexhaustiveF =
-	    nonexhaustive andalso (!MCC.bindNonExhaustiveWarn orelse !MCC.bindNonExhaustiveError)
-	val noVarsF = !MCC.bindNoVariableWarn andalso AU.noVarsInPat (#1 (hd rules))
+        val nonexhaustiveF =
+            nonexhaustive andalso (!MCC.bindNonExhaustiveWarn orelse !MCC.bindNonExhaustiveError)
+        val noVarsF = !MCC.bindNoVariableWarn andalso AU.noVarsInPat (#1 (hd rules))
 
      in if nonexhaustiveF
         then errorFn region
-	       (if !MCC.bindNonExhaustiveError then EM.COMPLAIN else EM.WARN)
-	       ("binding not exhaustive" ^ (if noVarsF then " and contains no variables" else ""))
-	       (MatchPrint.bindPrint (env,rules))
+               (if !MCC.bindNonExhaustiveError then EM.COMPLAIN else EM.WARN)
+               ("binding not exhaustive" ^ (if noVarsF then " and contains no variables" else ""))
+               (MatchPrint.bindPrint (env,rules))
         else if noVarsF
         then errorFn region
-	       EM.WARN
-	       "binding contains no variables"
+               EM.WARN
+               "binding contains no variables"
                (MatchPrint.bindPrint(env,rules))
         else ();
-	(code, rootVar)
+        (code, rootVar)
     end
 
 (* handlerCompile: Entry point for compiling matches induced by exception handlers.
@@ -247,16 +247,16 @@ fun bindCompile (rules: (AS.pat * AS.exp) list, lhsTy: T.ty, rhsTy: T.ty, errorF
  *)
 fun handlerCompile (rules, rhsTy, errorFn, region, env): (AS.exp * V.var) =
     let val (code, rootVar, unused, redundant, _) =
-	      matchComp (rules, BT.exnTy, rhsTy, NONE, region)
-	val redundantF= !MCC.matchRedundantWarn andalso redundant
+              matchComp (rules, BT.exnTy, rhsTy, NONE, region)
+        val redundantF= !MCC.matchRedundantWarn andalso redundant
 
      in if redundantF
-	then errorFn region
-	     (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
-	     "redundant patterns in match"
+        then errorFn region
+             (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
+             "redundant patterns in match"
              (MatchPrint.matchPrint(env,rules,unused))
-	else ();
-	(code, rootVar)
+        else ();
+        (code, rootVar)
     end
 
 (*
@@ -270,30 +270,30 @@ fun handlerCompile (rules, rhsTy, errorFn, region, env): (AS.exp * V.var) =
  *)
 fun matchCompile (rules, lhsTy, rhsTy, errorFn, region, env): (AS.exp * V.var) =
     let val matchExn = EU.getMatchExn ()
-	val (matchExp, rootVar, unused, redundant, nonexhaustive) =
-	      matchComp (rules, lhsTy, rhsTy, SOME matchExn, region)
+        val (matchExp, rootVar, unused, redundant, nonexhaustive) =
+              matchComp (rules, lhsTy, rhsTy, SOME matchExn, region)
 
-	val nonexhaustiveF =
-	    nonexhaustive andalso (!MCC.matchNonExhaustiveError orelse !MCC.matchNonExhaustiveWarn)
-	val redundantF =
-	    redundant andalso (!MCC.matchRedundantError orelse !MCC.matchRedundantWarn)
+        val nonexhaustiveF =
+            nonexhaustive andalso (!MCC.matchNonExhaustiveError orelse !MCC.matchNonExhaustiveWarn)
+        val redundantF =
+            redundant andalso (!MCC.matchRedundantError orelse !MCC.matchRedundantWarn)
      in case (nonexhaustiveF,redundantF)
-	  of (true, true) =>
+          of (true, true) =>
              errorFn region
-	       (if !MCC.matchRedundantError orelse !MCC.matchNonExhaustiveError
-		then EM.COMPLAIN else EM.WARN)
-	       "match redundant and nonexhaustive"
-	       (MatchPrint.matchPrint(env, rules, unused))
+               (if !MCC.matchRedundantError orelse !MCC.matchNonExhaustiveError
+                then EM.COMPLAIN else EM.WARN)
+               "match redundant and nonexhaustive"
+               (MatchPrint.matchPrint(env, rules, unused))
            | (true, false) =>
              errorFn region
-	       (if !MCC.matchNonExhaustiveError then EM.COMPLAIN else EM.WARN)
+               (if !MCC.matchNonExhaustiveError then EM.COMPLAIN else EM.WARN)
                "match nonexhaustive"
-	       (MatchPrint.matchPrint(env, rules, unused))
+               (MatchPrint.matchPrint(env, rules, unused))
            | (false, true) =>
              errorFn region
-	       (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
-	       "match redundant"
-	       (MatchPrint.matchPrint(env, rules, unused))
+               (if !MCC.matchRedundantError then EM.COMPLAIN else EM.WARN)
+               "match redundant"
+               (MatchPrint.matchPrint(env, rules, unused))
            | _ => ();
         (matchExp, rootVar)
     end

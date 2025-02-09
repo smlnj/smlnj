@@ -11,11 +11,11 @@ struct
 
    val empty = []
 
-   fun fromList(l:typemap) = 
-       ListMergeSort.uniqueSort 
+   fun fromList(l:typemap) =
+       ListMergeSort.uniqueSort
           (fn ((r1,_),(r2,_)) => C.compareColor(r1,r2)) l
 
-   fun ==(a,b) = 
+   fun ==(a,b) =
    let fun loop([]:typemap,[]:typemap) = true
          | loop((r1,gc1)::a,(r2,gc2)::b) =
             C.sameColor(r1,r2) andalso GC.==(gc1,gc2) andalso loop(a,b)
@@ -53,7 +53,7 @@ struct
      | joins (a::l) = join(a,joins l)
 
    fun gen(a,b) =
-   let fun loop(a:typemap,[]:typemap) = a 
+   let fun loop(a:typemap,[]:typemap) = a
          | loop([],a) = a
          | loop(a as (x as (r1,_))::u,b as (y as (r2,_))::v) =
            let val cx = C.registerId r1 and cy = C.registerId r2
@@ -63,7 +63,7 @@ struct
            end
    in  loop(a,b) end
 
-   fun kill(a,b) = 
+   fun kill(a,b) =
    let fun loop(a : typemap,[] : typemap) = a
          | loop([],_) = []
          | loop(a as (x as (r1,_))::u,b as (y as (r2,_))::v) =
@@ -75,4 +75,4 @@ struct
    in  loop(a,b) end
 
 end
-        
+

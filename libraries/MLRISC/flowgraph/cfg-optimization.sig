@@ -11,5 +11,5 @@ signature CFG_OPTIMIZATION = sig
    val name : string                  (* name of optimization *)
    val run  : CFG.cfg -> CFG.cfg  (* run optimization *)
 
-end 
+end
 

@@ -19,19 +19,19 @@ end
 structure Unionfind :> UNION_FIND =
 struct
 
-   structure A = Array 
+   structure A = Array
    structure U = UnionFindRef
 
-   type 'a union_find = 'a U.uref A.array 
- 
+   type 'a union_find = 'a U.uref A.array
+
    fun union_find (n,f) = A.tabulate(n,(fn i => U.uref(f i)))
- 
+
    fun find U x = U.!!(A.sub(U,x))
 
    fun union' U (x,y) = U.union' (A.sub(U,x),A.sub(U,y))
 
    fun union  U f (x,y) = U.union f (A.sub(U,x),A.sub(U,y))
 
-   fun == U (x,y) = U.==(A.sub(U,x),A.sub(U,y)) 
+   fun == U (x,y) = U.==(A.sub(U,x),A.sub(U,y))
 
 end

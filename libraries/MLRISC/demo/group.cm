@@ -16,10 +16,10 @@ Group is
   ../cm/AMD64-Peephole.cm
   ../cm/CCall.cm
   ../cm/CCall-x86-64.cm
-      
-	spill-table.sml
 
-	demo-types.sml
+        spill-table.sml
 
-	demo-amd64.sml
-	eg-amd64.sml
+        demo-types.sml
+
+        demo-amd64.sml
+        eg-amd64.sml

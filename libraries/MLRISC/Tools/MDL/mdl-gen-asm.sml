@@ -1,5 +1,5 @@
-(* 
- * This module generates the assembler of an architecture 
+(*
+ * This module generates the assembler of an architecture
  * given a machine description.
  *
  *)
@@ -20,16 +20,16 @@ struct
 
        (* Arguments of the functor *)
        val args = ["structure S : INSTRUCTION_STREAM",
-		   "structure Instr : "^Comp.signame md "INSTR",
-		   "   where T = S.P.T",
+                   "structure Instr : "^Comp.signame md "INSTR",
+                   "   where T = S.P.T",
                    "structure Shuffle : "^Comp.signame md "SHUFFLE",
                    "   where I = Instr",
                    "structure MLTreeEval : MLTREE_EVAL",
-		   "   where T = Instr.T"
+                   "   where T = Instr.T"
                   ]
        val args = SEQdecl[$args,Comp.fctArgOf md "Assembly"]
 
-       (* Cellkinds declared by the user *)   
+       (* Cellkinds declared by the user *)
        val cellKinds = Comp.cells md
 
        (* Assembly case *)
@@ -58,7 +58,7 @@ struct
        (*
         * Find out which assembly mode a datatype should use
         *)
-       fun modeOf(DATATYPEbind{cbs, asm, ...}) = 
+       fun modeOf(DATATYPEbind{cbs, asm, ...}) =
            let val mode = if asm then ASM else NOTHING
                fun loop([], m) = m
                  | loop(_, EMIT) = EMIT
@@ -70,19 +70,19 @@ struct
                and loop2([], m) = m
                  | loop2(EXPasm _::_, _) = EMIT
                  | loop2(_::a, m) = loop2(a, m)
-           in  loop(cbs, mode) end 
+           in  loop(cbs, mode) end
 
 
        (*
-        * Names of emit and assembly functions. 
+        * Names of emit and assembly functions.
         * The assembly function converts something into a string.
         * The emit function prints that to the stream for side effect.
         *)
        fun emit id = "emit_"^id
-       fun asm  id = "asm_"^id 
+       fun asm  id = "asm_"^id
 
        (*
-        * How to emit special types 
+        * How to emit special types
         *)
        fun emitTy(id,IDty(IDENT(prefix,t)), e) =
             (case (prefix, t) of
@@ -93,8 +93,8 @@ struct
              | (["T"],"labexp") => APP(emit t, e)
              | (["Region"],"region") => APP(emit t, e)
              | _ =>
-                if List.exists(fn db as DATATYPEbind{id=id', ...}=> 
-                                 t = id' andalso modeOf db <> NOTHING) 
+                if List.exists(fn db as DATATYPEbind{id=id', ...}=>
+                                 t = id' andalso modeOf db <> NOTHING)
                    datatypeDefinitions then
                    APP(emit t, e)
                 else
@@ -104,11 +104,11 @@ struct
          | emitTy(_,CELLty k, e) = APP("emitCell", e)
          | emitTy(id, _, e) = APP(emit id, e)
 
-       (* 
-        * Functions to convert assembly annotations to code 
+       (*
+        * Functions to convert assembly annotations to code
         *)
-       fun mkAsms([], fbs) = rev fbs 
-         | mkAsms((db as DATATYPEbind{id, cbs, ...})::dbs, fbs) = 
+       fun mkAsms([], fbs) = rev fbs
+         | mkAsms((db as DATATYPEbind{id, cbs, ...})::dbs, fbs) =
            (case modeOf db of
               NOTHING => mkAsms(dbs, fbs)
             | EMIT    => mkAsms(dbs, FUNbind(emit id,mkAsm(EMIT,cbs))::fbs)
@@ -117,22 +117,22 @@ struct
            )
 
            (* fun emitXXX x = emit(asmXXX x) *)
-       and mkEmit id = 
+       and mkEmit id =
            FUNbind(emit id,[CLAUSE([IDpat "x"],NONE,
-                              APP("emit",APP(asm id,ID "x")))]) 
+                              APP("emit",APP(asm id,ID "x")))])
 
            (* Translate backquoted expression *)
-       and mkAsm(mode, cbs) = 
+       and mkAsm(mode, cbs) =
            let fun emitIt e =
                     if mode = EMIT then APP("emit",e) else e
-               fun asmToExp E (TEXTasm s) = emitIt(mkString s) 
-                 | asmToExp E (EXPasm(IDexp(IDENT([],x)))) = 
+               fun asmToExp E (TEXTasm s) = emitIt(mkString s)
+                 | asmToExp E (EXPasm(IDexp(IDENT([],x)))) =
                     (let val (e, ty) = E x
                      in  emitTy(x, ty, e) end
-                     handle e => 
+                     handle e =>
                         fail("unknown assembly field <"^x^">")
                     )
-                 | asmToExp E (EXPasm e) = 
+                 | asmToExp E (EXPasm e) =
                    let fun exp _ (ASMexp(STRINGasm s)) = emitIt(mkString s)
                          | exp _ (ASMexp(ASMasm a)) = SEQexp(map (asmToExp E) a)
                          | exp _ e = e
@@ -144,8 +144,8 @@ struct
                                     }
                           ) e
                    end
-               fun mkClause(cb as CONSbind{id, asm, ...}) = 
-               let val exp = 
+               fun mkClause(cb as CONSbind{id, asm, ...}) =
+               let val exp =
                      case asm of
                        NONE => emitIt(mkString id)
                      | SOME(STRINGasm s) => emitIt(mkString s)
@@ -154,9 +154,9 @@ struct
                        in  SEQexp(map (asmToExp consEnv) a) end
                in  T.mapConsToClause {prefix=["I"],pat=fn p=>p, exp=exp} cb
                end
-           in  map mkClause cbs end 
+           in  map mkClause cbs end
 
-       (* 
+       (*
         * For each datatype defined in the structure Instruction that
         * has pretty printing annotations attached, generate an assembly
         * function and an emit function.
@@ -164,9 +164,9 @@ struct
        val asmFuns = FUNdecl(mkAsms(datatypeDefinitions, []))
 
        (* Main function for emitting an instruction *)
-       val emitInstrFun = 
+       val emitInstrFun =
            let val instructions = Comp.instructions md
-           in  FUN("emitInstr'", IDpat "instr", 
+           in  FUN("emitInstr'", IDpat "instr",
                            CASEexp(ID "instr", mkAsm(EMIT, instructions))
                   )
            end
@@ -201,7 +201,7 @@ struct
           "                   else s",
           "               end",
           "    fun emit_label lab = emit(P.Client.AsmPseudoOps.lexpToString(T.LABEL lab))",
-	  "    fun emit_labexp le = emit(P.Client.AsmPseudoOps.lexpToString (T.LABEXP le))",
+          "    fun emit_labexp le = emit(P.Client.AsmPseudoOps.lexpToString (T.LABEXP le))",
           "    fun emit_const c = emit(Constant.toString c)",
           "    fun emit_int i = emit(ms i)",
           "    fun paren f = (emit \"(\"; f(); emit \")\")",
@@ -211,7 +211,7 @@ struct
           "    fun annotation a = comment(Annotations.toString a)",
           "    fun getAnnotations() = error \"getAnnotations\"",
           "    fun doNothing _ = ()",
-	  "    fun fail _ = raise Fail \"AsmEmitter\"",
+          "    fun fail _ = raise Fail \"AsmEmitter\"",
           "    fun emit_region mem = comment(I.Region.toString mem)",
           "    val emit_region = ",
           "       if !show_region then emit_region else doNothing",
@@ -243,22 +243,22 @@ struct
           "             else emitInstr) instrs",
           "",
           "   and emitInstr(I.ANNOTATION{i,a}) =",
-	  "        ( comment(Annotations.toString a);",
-	  "           nl();",
+          "        ( comment(Annotations.toString a);",
+          "           nl();",
           "           emitInstr i )",
           "     | emitInstr(I.LIVE{regs, spilled})  = ",
-	  "         comment(\"live= \" ^ CellsBasis.CellSet.toString regs ^",
-	  "                 \"spilled= \" ^ CellsBasis.CellSet.toString spilled)",
+          "         comment(\"live= \" ^ CellsBasis.CellSet.toString regs ^",
+          "                 \"spilled= \" ^ CellsBasis.CellSet.toString spilled)",
           "     | emitInstr(I.KILL{regs, spilled})  = ",
-	  "         comment(\"killed:: \" ^ CellsBasis.CellSet.toString regs ^",
-	  "                 \"spilled:: \" ^ CellsBasis.CellSet.toString spilled)",
-          "     | emitInstr(I.INSTR i) = emitter i",  
+          "         comment(\"killed:: \" ^ CellsBasis.CellSet.toString regs ^",
+          "                 \"spilled:: \" ^ CellsBasis.CellSet.toString spilled)",
+          "     | emitInstr(I.INSTR i) = emitter i",
           "     | emitInstr(I.COPY{k=CellsBasis.GP, sz, src, dst, tmp}) =",
-	  "        emitInstrs(Shuffle.shuffle{tmp=tmp, src=src, dst=dst})",
+          "        emitInstrs(Shuffle.shuffle{tmp=tmp, src=src, dst=dst})",
           "     | emitInstr(I.COPY{k=CellsBasis.FP, sz, src, dst, tmp}) =",
-	  "        emitInstrs(Shuffle.shufflefp{tmp=tmp, src=src, dst=dst})",
-	  "     | emitInstr _ = error \"emitInstr\"", 
-          "", 
+          "        emitInstrs(Shuffle.shufflefp{tmp=tmp, src=src, dst=dst})",
+          "     | emitInstr _ = error \"emitInstr\"",
+          "",
           "in  S.STREAM{beginCluster=init,",
           "             pseudoOp=pseudoOp,",
           "             emit=emitInstr,",
@@ -277,4 +277,4 @@ struct
    in  Comp.codegen md "emit/Asm"
          [Comp.mkFct' md "AsmEmitter" args sigName body]
    end
-end 
+end

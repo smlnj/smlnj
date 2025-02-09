@@ -19,6 +19,7 @@ extern sysconst_tbl_t	_ErrorNo;
  */
 ml_val_t _ml_P_Error_listerrors (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     return ML_SysConstList (msp, &_ErrorNo);
 
 } /* end of _ml_P_Error_listerrors */

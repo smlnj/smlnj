@@ -4,14 +4,14 @@
  * -- Allen
  *)
 
-signature SUBGRAPH_VIEW = 
+signature SUBGRAPH_VIEW =
 sig
 
      (* Node induced subgraph *)
    val subgraph_view : Graph.node_id list ->
                       ('e Graph.edge -> bool) ->
-                      ('n,'e,'g) Graph.graph -> 
-                      ('n,'e,'g) Graph.graph 
+                      ('n,'e,'g) Graph.graph ->
+                      ('n,'e,'g) Graph.graph
 end
 
 structure SubgraphView : SUBGRAPH_VIEW =
@@ -33,17 +33,17 @@ struct
        fun add_node (n as (i,_)) = (ins i; #add_node G n)
        fun add_edge (e as (i,j,_)) = (check i; check j; #add_edge G e)
        fun remove_node i = (check i; rmv i; #remove_node G i)
-       fun set_out_edges (i,es) = 
+       fun set_out_edges (i,es) =
            (check i; app check_edge es; #set_out_edges G (i,es))
        fun set_in_edges (j,es) =
            (check j; app check_edge es; #set_in_edges G (j,es))
-       fun get_nodes () = map (fn (i,_) => (i,#node_info G i)) 
+       fun get_nodes () = map (fn (i,_) => (i,#node_info G i))
                             (IntHashTable.listItemsi set)
-       fun get_edges () = 
+       fun get_edges () =
        let fun find_edges([],l) = l
              | find_edges(e::es,l) =
                  if edge_p e then find_edges(es,e::l) else find_edges(es,l)
-       in  foldr (fn ((i,_),l) => find_edges(#out_edges G i,l)) [] 
+       in  foldr (fn ((i,_),l) => find_edges(#out_edges G i,l)) []
                (IntHashTable.listItemsi set)
        end
        fun order () = IntHashTable.numItems set
@@ -51,7 +51,7 @@ struct
        let fun find_edges([],n) = n
              | find_edges(e::es,n) =
                  if edge_p e then find_edges(es,n+1) else find_edges(es,n)
-       in  foldr (fn ((i,_),n) => find_edges(#out_edges G i,n)) 0 
+       in  foldr (fn ((i,_),n) => find_edges(#out_edges G i,n)) 0
               (IntHashTable.listItemsi set)
        end
        fun out_edges i = (List.filter edge_p (#out_edges G i))
@@ -59,7 +59,7 @@ struct
        fun get_succ i = map #2 (out_edges i)
        fun get_pred i = map #1 (in_edges i)
        fun has_edge (i,j) = find i andalso find j
-       fun has_node i = find i 
+       fun has_node i = find i
        fun node_info i = (check i; #node_info G i)
 
        fun entry_edges i = (List.filter(fn (j,_,_) => not(find j))
@@ -67,12 +67,12 @@ struct
        fun exit_edges i = (List.filter(fn (_,j,_) => not(find j))
                                        (#out_edges G i))
        fun entries() =  foldr (fn ((i,_),l) =>
-                           if List.exists (fn (j,_,_) => not(find j)) 
-                                (#in_edges G i) then i::l else l) [] 
+                           if List.exists (fn (j,_,_) => not(find j))
+                                (#in_edges G i) then i::l else l) []
                             (IntHashTable.listItemsi set)
        fun exits() =  foldr (fn ((i,_),l) =>
-                           if List.exists (fn (_,j,_) => not(find j)) 
-                                (#out_edges G i) then i::l else l) [] 
+                           if List.exists (fn (_,j,_) => not(find j))
+                                (#out_edges G i) then i::l else l) []
                               (IntHashTable.listItemsi set)
        fun forall_nodes f = IntHashTable.appi (fn (i,_) => f(i,#node_info G i)) set
        fun forall_edges f = IntHashTable.appi (fn (i,_) => app (fn e =>
@@ -109,10 +109,10 @@ struct
          exit_edges      = exit_edges,
          forall_nodes    = forall_nodes,
          forall_edges    = forall_edges
-	 (*
+         (*
          fold_nodes      = fold_nodes,
          fold_edges      = fold_edges
-	 *)
+         *)
        }
    end
 

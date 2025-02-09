@@ -1,12 +1,12 @@
 (*
  * Perform elimination based dataflow analysis (from Sreedhar's work)
  *)
-signature DJ_DATAFLOW = 
+signature DJ_DATAFLOW =
 sig
 
    structure Dom : DOMINATOR_TREE
 
-   val analyze : 
+   val analyze :
        { closure   : {y:Graph.node_id} -> unit,
          var_elim  : {y:Graph.node_id, z:Graph.node_id} -> unit,
          fixpoint  : {scc:Graph.node_id list} -> unit,

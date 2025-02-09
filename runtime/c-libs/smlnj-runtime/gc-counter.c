@@ -22,7 +22,7 @@
  */
 ml_val_t _ml_RunT_gc_counter_reset (ml_state_t *msp, ml_val_t arg)
 {
-    heap_t	*heap = msp->ml_heap;
+    heap_t      *heap = msp->ml_heap;
 
     /* check if a full GC is requested */
     if (arg == ML_true) {
@@ -53,6 +53,8 @@ ml_val_t _ml_RunT_gc_counter_reset (ml_state_t *msp, ml_val_t arg)
  */
 ml_val_t _ml_RunT_gc_counter_read (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
+
     gc_stats_t  stats;
 
     GetGCStats (msp, &stats);

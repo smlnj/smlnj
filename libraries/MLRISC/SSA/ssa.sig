@@ -1,13 +1,13 @@
-(* 
+(*
  * Machine SSA representation.
  *
  * Some conventions
  * ----------------
  *  1.  Each machine instruction is mapped into an ssa_op.  Some exceptions:
- *      a.  live-out and live-in for each entry and exit are represented as 
+ *      a.  live-out and live-in for each entry and exit are represented as
  *          SINK and SOURCE nodes.
  *      b.  PHI functions may be inserted
- *      c.  COPYs may be propagated during construction of the ssa graph. 
+ *      c.  COPYs may be propagated during construction of the ssa graph.
  *  2.  Each instruction set must provide the pseudo instructions SINK, SOURCE
  *      and PHI.
  *  3.  Each ssa_op is numbered with its own ssa_id, starting from 0.
@@ -39,12 +39,12 @@
  *         ssaOpTbl     ssa_id -> ssa_op     ssa_op table
  *         cellKindTbl  value -> ssa_id      cellkind of a value
  *         operandTbl   value -> operand     operand table
- * 
+ *
  *     But in general, you should use the graph interface for traversal
  *     if are not sure how the internal tables work.
- * 
+ *
  * -- Allen (leunga@cs.nyu.edu)
- * 
+ *
  *)
 signature SSA =
 sig
@@ -62,7 +62,7 @@ sig
       sharing SP.I = CFG.I = MLTreeComp.I = I
       sharing SP.RTL = RTL
       sharing MLTreeComp.T = RTL.T
-      sharing I.C = SP.C = C 
+      sharing I.C = SP.C = C
       sharing Dom = DJ.Dom
       sharing CFG.W = W
 
@@ -77,18 +77,18 @@ sig
    type const  = SP.OT.const     (* constants *)
    type cfg    = CFG.cfg         (* control flow graph *)
                   (* dominator tree *)
-   type dom    = (CFG.block,CFG.edge_info,CFG.info) Dom.dominator_tree 
-   type nameTbl = {oldName:C.cell, index:int} IntHashTable.hash_table 
+   type dom    = (CFG.block,CFG.edge_info,CFG.info) Dom.dominator_tree
+   type nameTbl = {oldName:C.cell, index:int} IntHashTable.hash_table
 
    (*------------------------------------------------------------------------
-    * An SSA op is an instruction 
+    * An SSA op is an instruction
     *------------------------------------------------------------------------*)
    type ssa_op = I.instruction
 
    (*------------------------------------------------------------------------
-    * Information about the SSA graph 
+    * Information about the SSA graph
     *------------------------------------------------------------------------*)
-   type ssa_info 
+   type ssa_info
 
    (*------------------------------------------------------------------------
     * The graph structure
@@ -99,18 +99,18 @@ sig
     * How to create a new SSA graph
     *------------------------------------------------------------------------*)
                   (* create an empty SSA graph *)
-   val newSSA : {cfg:     cfg, 
-                 dom:     cfg -> dom, 
+   val newSSA : {cfg:     cfg,
+                 dom:     cfg -> dom,
                  gcmap:   GCMap.gcmap option,
                  nameTbl: nameTbl option
-                } -> ssa  
+                } -> ssa
    val newRenamedVar : ssa -> C.cell -> value   (* generate renamed variable *)
-   val newVar    : ssa -> C.cell -> C.cell      
+   val newVar    : ssa -> C.cell -> C.cell
 
    (* create a new op; but does not add edges *)
-   val newOp     : ssa -> {id   : ssa_id,        
-                           instr: I.instruction, 
-                           rtl  : rtl, 
+   val newOp     : ssa -> {id   : ssa_id,
+                           instr: I.instruction,
+                           rtl  : rtl,
                            defs : value list,
                            uses : value list,
                            block: block,
@@ -131,22 +131,22 @@ sig
    val const     : ssa -> value -> const      (* lookup const values *)
 
    (*------------------------------------------------------------------------
-    * Extract the raw tables.  
+    * Extract the raw tables.
     * These should only be used when the optimization guarantees that
     * no new ssa ops are added to the graph, since that may involve resizing
-    * these tables, rendering them obsolete.  
+    * these tables, rendering them obsolete.
     *------------------------------------------------------------------------*)
-   val defSiteTbl : ssa -> ssa_id Array.array    
+   val defSiteTbl : ssa -> ssa_id Array.array
    val blockTbl   : ssa -> block Array.array
    val posTbl     : ssa -> pos Array.array
-   val defsTbl    : ssa -> value list Array.array 
-   val usesTbl    : ssa -> value list Array.array 
+   val defsTbl    : ssa -> value list Array.array
+   val usesTbl    : ssa -> value list Array.array
    val rtlTbl     : ssa -> rtl Array.array
    val succTbl    : ssa -> value Graph.edge list Array.array (* out edges *)
-   val ssaOpTbl   : ssa -> ssa_op Array.array                (* node table *) 
+   val ssaOpTbl   : ssa -> ssa_op Array.array                (* node table *)
    val cellKindTbl: ssa -> C.cellkind IntHashTable.hash_table
                               (* cellkind table *)
-   val operandTbl : ssa -> SP.OT.operandTable       
+   val operandTbl : ssa -> SP.OT.operandTable
    val minPos     : ssa -> int ref
    val maxPos     : ssa -> int ref
 
@@ -178,18 +178,18 @@ sig
     *  Iterators
     *------------------------------------------------------------------------*)
    val forallNodes : ssa -> (ssa_id -> unit) -> unit
-   val foldNodes   : ssa -> (ssa_id * 'a -> 'a) -> 'a -> 'a 
+   val foldNodes   : ssa -> (ssa_id * 'a -> 'a) -> 'a -> 'a
 
    (*------------------------------------------------------------------------
-    * Remove all useless phi-functions from the graph.  
+    * Remove all useless phi-functions from the graph.
     * Useless phi-functions are self-loops of the form
     *    t <- phi(t, t, ..., t, s, t, ..., t)
     * This transformation removes this phi-function and replace all uses
-    * of t by s.  This process is worklist driven; removing a useless 
-    * phi-function can introduce other useless phi-functions. 
+    * of t by s.  This process is worklist driven; removing a useless
+    * phi-function can introduce other useless phi-functions.
     *------------------------------------------------------------------------*)
    val removeUselessPhiFunctions : ssa -> unit
- 
+
    (*------------------------------------------------------------------------
     * Remove all nodes from the graph.  Note that no uses should be
     * present after this transformation.
@@ -227,14 +227,14 @@ sig
    val changed : ssa -> unit
 
    (*------------------------------------------------------------------------
-    *  Pretty printing 
+    *  Pretty printing
     *------------------------------------------------------------------------*)
    val showOp  : ssa -> ssa_id -> string
    val showVal : ssa -> value -> string
    val showRTL : ssa -> rtl -> string
 
    (*------------------------------------------------------------------------
-    *  Graphical viewing 
+    *  Graphical viewing
     *------------------------------------------------------------------------*)
    val viewAsCFG : ssa -> GraphLayout.layout
    val viewAsSSA : ssa -> GraphLayout.layout

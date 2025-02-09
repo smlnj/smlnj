@@ -11,8 +11,8 @@ struct
    structure Loop = Loop
    structure G    = Graph
 
-   fun restructure (G.GRAPH cfg,G.GRAPH loop) 
-          { add_preheader, 
+   fun restructure (G.GRAPH cfg,G.GRAPH loop)
+          { add_preheader,
             add_landing_pad
           } =
    let val add_node = #add_node cfg
@@ -20,8 +20,8 @@ struct
            fn {header,backedges} =>
               let val in_edges = #in_edges cfg header
                   fun g([],entries) = entries
-                    | g((e as (i,j,_))::es,entries) = 
-                       if List.exists (fn (i',j',_) => i=i' andalso j=j') 
+                    | g((e as (i,j,_))::es,entries) =
+                       if List.exists (fn (i',j',_) => i=i' andalso j=j')
                             backedges then g(es,entries)
                                       else g(es,e::entries)
               in  f{header =(header,#node_info cfg header),
@@ -43,7 +43,7 @@ struct
           (insert_preheader{header=header,backedges=backedges};
            insert_landing_pads{exits=exits}
           )
-   in 
+   in
        #forall_nodes loop process_loop
    end
 

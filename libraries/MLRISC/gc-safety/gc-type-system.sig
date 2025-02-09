@@ -1,5 +1,5 @@
 (*
- * This signature describes the interface to a gc type system. 
+ * This signature describes the interface to a gc type system.
  * This encapsulates everything dealing with GC safety analysis
  * into one single signature.
  *)
@@ -12,10 +12,10 @@ sig
    val typeOf : (RTL.T.var -> GC.gctype) -> RTL.exp -> GC.gctype
 
    (* Given an RTL effect, return the change to gctype *)
-   val effectOf : 
+   val effectOf :
         {lookup : RTL.var -> GC.gctype,
          update : RTL.var * GC.gctype * 'e -> 'e
-        } -> 
+        } ->
         {action : RTL.rtl,
          dst    : RTL.var list,
          src    : RTL.var list,

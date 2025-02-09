@@ -1,6 +1,6 @@
 (* Copyright (c) 1998 by Lucent Technologies *)
 
-local 
+local
   type tidtab = Tables.tidtab
   type aidtab = Tables.aidtab
   type esctab = unit Pidtab.uidtab
@@ -9,10 +9,10 @@ local
                    AstExt.externalDeclExt
 
   type expExt = (Ast.expression, Ast.statement, Ast.binop, Ast.unop)
-                AstExt.expressionExt 
+                AstExt.expressionExt
 
-  type stmtExt = (Ast.expression, Ast.statement, Ast.binop, Ast.unop) 
-                 AstExt.statementExt 
+  type stmtExt = (Ast.expression, Ast.statement, Ast.binop, Ast.unop)
+                 AstExt.statementExt
 
   type expSimplifier =
        Ast.expression
@@ -26,19 +26,19 @@ signature SIMPLIFYASTEXT =
 sig
 
   val simplifyExtDeclExt  :
-      (tidtab * aidtab * aidtab) 
+      (tidtab * aidtab * aidtab)
       -> (expSimplifier * stmtSimplifier)
       -> extDeclExt
       -> Ast.coreExternalDecl
 
   val simplifyExpExt  :
-      (tidtab * aidtab * aidtab) 
+      (tidtab * aidtab * aidtab)
       -> (expSimplifier * stmtSimplifier)
       -> expExt
       -> {decs:Ast.declaration list, pre:Ast.statement list, coreExp:Ast.coreExpression}
 
   val simplifyStmtExt :
-      (tidtab * aidtab * aidtab) 
+      (tidtab * aidtab * aidtab)
       -> (expSimplifier * stmtSimplifier)
       -> stmtExt
       -> {decs:Ast.declaration list, coreStmt:Ast.coreStatement}

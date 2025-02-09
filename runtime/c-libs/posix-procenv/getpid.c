@@ -15,6 +15,8 @@
  */
 ml_val_t _ml_P_ProcEnv_getpid (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED(msp);
+    UNUSED_UNIT_PARAM(arg);
     return INT_CtoML(getpid());
 
 } /* end of _ml_P_ProcEnv_getpid */

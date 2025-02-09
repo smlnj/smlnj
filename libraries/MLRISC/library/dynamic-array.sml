@@ -21,7 +21,7 @@ structure DynArray : sig
   end = struct
      structure A = Array
      structure AS = ArraySlice
-     type 'a vector = 'a A.vector 
+     type 'a vector = 'a A.vector
      datatype 'a array = ARRAY of 'a A.array ref * 'a * int ref
 
      exception Subscript = General.Subscript
@@ -32,7 +32,7 @@ structure DynArray : sig
 
      val maxLen = A.maxLen
 
-     fun array (n,d) = ARRAY(ref(A.array (n,d)), d, ref 0) 
+     fun array (n,d) = ARRAY(ref(A.array (n,d)), d, ref 0)
      fun clear (ARRAY(a,def,cnt),n) = (a := A.array(n,def); cnt := n)
      fun fromArray(a,d,n) = ARRAY(ref a, d, ref n)
 
@@ -42,7 +42,7 @@ structure DynArray : sig
      fun length (ARRAY (ref a,_,ref n)) = n
 
      fun (ARRAY(ref a, d, _)) sub i = A.sub(a,i) handle _ => d
-    
+
      fun update (ARRAY(r as ref a, d, n), i, e) =
         (A.update(a,i,e); n := Int.max(!n,i+1)) handle _ =>
             let val new_size  = Int.max(i+1,!n*2)
@@ -56,7 +56,7 @@ structure DynArray : sig
 
      fun expandTo(arr as ARRAY(_, d, _), N) = update(arr, N-1, d)
 
-     fun tabulate (n, f) = 
+     fun tabulate (n, f) =
          let val array   = A.tabulate(n, f)
              val default = A.sub(array,0)
          in
@@ -76,10 +76,10 @@ structure DynArray : sig
      fun app f arr = AS.app f (slice arr)
 
      fun copy { src, dst, di } =
-	 appi (fn (i, x) => update (dst, i + di, x)) src
+         appi (fn (i, x) => update (dst, i + di, x)) src
 
      fun copyVec { src, dst, di } =
-	 Vector.appi (fn (i, x) => update (dst, i + di, x)) src
+         Vector.appi (fn (i, x) => update (dst, i + di, x)) src
 
      fun foldli f init arr = AS.foldli f init (slice arr)
      fun foldri f init arr = AS.foldri f init (slice arr)
@@ -98,12 +98,12 @@ structure DynArray : sig
      fun toList arr = foldr (op ::) [] arr
 
      fun fromVector v = let
-	    val arr = A.fromVector v
-	    val default = A.sub(arr, 0)
-	    in
-	      ARRAY(ref arr, default, ref (A.length arr))
-	    end
-	      handle _ => raise Size
+            val arr = A.fromVector v
+            val default = A.sub(arr, 0)
+            in
+              ARRAY(ref arr, default, ref (A.length arr))
+            end
+              handle _ => raise Size
 
      val toVector = vector
 

@@ -9,7 +9,7 @@ sig
     (* takes the fk of a function and returns the fk of the wrapper
      * along with the new fk of the actual body *)
     val fk_wrap : FunRecMeta.fkind * Lty.lty list option ->
-	              (FunRecMeta.fkind * FunRecMeta.fkind)
+                      (FunRecMeta.fkind * FunRecMeta.fkind)
 
     (* this is a known APL function, but I don't know its real name *)
     val filter : bool list -> 'a list -> 'a list
@@ -37,16 +37,16 @@ in
     datatype ('a,'b) either = A of 'a | B of 'b
 
     fun bug msg = ErrorMsg.impossible ("OptUtils: "^msg)
-				  
+
     fun fk_wrap ({inline,known,isrec,cconv},rtys') =
-	let val cconv' =
-		case cconv
-		 of FR.CC_FUN(LT.FF_VAR(f1,f2)) => FR.CC_FUN(LT.FF_VAR(true, f2))
-		  | (FR.CC_FCT | FR.CC_FUN(LT.FF_FIXED)) => cconv
-	    val isrec' = Option.map (fn ltys => (ltys, FR.LK_UNKNOWN)) rtys'
-	in ({isrec=isrec, known=known, cconv=cconv, inline=FR.IH_ALWAYS},
-	    {isrec=isrec', known=true, cconv=cconv', inline=inline})
-	end
+        let val cconv' =
+                case cconv
+                 of FR.CC_FUN(LT.FF_VAR(f1,f2)) => FR.CC_FUN(LT.FF_VAR(true, f2))
+                  | (FR.CC_FCT | FR.CC_FUN(LT.FF_FIXED)) => cconv
+            val isrec' = Option.map (fn ltys => (ltys, FR.LK_UNKNOWN)) rtys'
+        in ({isrec=isrec, known=known, cconv=cconv, inline=FR.IH_ALWAYS},
+            {isrec=isrec', known=true, cconv=cconv', inline=inline})
+        end
 
     (* filter : bool list -> 'a list -> 'a list *)
     fun filter [] [] = []
@@ -59,22 +59,22 @@ in
     exception Unbalanced
     fun transpose [] = []
       | transpose (xs::xss) =
-	let fun tr [] accs = accs
-	      | tr (xs::xss) accs =
-		let fun f [] [] = []
-		      | f (x::xs) (acc::accs) = (x::acc)::(f xs accs)
-		      | f _ _ = raise Unbalanced
-		in tr xss (f xs accs)
-		end
-	in tr xss (map (fn x => [x]) xs)
-	end
+        let fun tr [] accs = accs
+              | tr (xs::xss) accs =
+                let fun f [] [] = []
+                      | f (x::xs) (acc::accs) = (x::acc)::(f xs accs)
+                      | f _ _ = raise Unbalanced
+                in tr xss (f xs accs)
+                end
+        in tr xss (map (fn x => [x]) xs)
+        end
 
     fun foldl3 f =
-	let fun l s ([],[],[]) = s
-	      | l s (x1::x1s,x2::x2s,x3::x3s) = l (f(x1,x2,x3,s)) (x1s,x2s,x3s)
-	      | l _ _ = raise Unbalanced
-	in l
-	end
+        let fun l s ([],[],[]) = s
+              | l s (x1::x1s,x2::x2s,x3::x3s) = l (f(x1,x2,x3,s)) (x1s,x2s,x3s)
+              | l _ _ = raise Unbalanced
+        in l
+        end
 
 end
 end

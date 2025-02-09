@@ -4,7 +4,7 @@
  * -- Allen
  *)
 
-functor DominanceFrontiers (Dom : DOMINATOR_TREE) 
+functor DominanceFrontiers (Dom : DOMINATOR_TREE)
    : DOMINANCE_FRONTIERS =
 struct
 
@@ -22,7 +22,7 @@ struct
        fun computeDF X =
        let (* the successors in X that are not strictly dominated by X *)
            val S = foldr (fn ((_,Y,_),S) =>
-                          if immediately_dominates(X,Y) 
+                          if immediately_dominates(X,Y)
                           then S else Y::S) [] (#out_edges cfg X)
              (* Nodes in the dominance frontier of n that are not
               * dominated by n's immediate dominator
@@ -30,15 +30,15 @@ struct
            fun computeChild((_,Z,_),S) =
            let val DF_Z = computeDF Z
                val S    = foldr (fn (Y,S) =>
-                             if immediately_dominates(X,Y) 
+                             if immediately_dominates(X,Y)
                              then S else Y::S) S DF_Z
            in  S
            end
-           val S = foldl computeChild S (#out_edges dom X) 
+           val S = foldl computeChild S (#out_edges dom X)
        in
            A.update(DF,X,S);
            S
-       end 
+       end
 
        val [root] = #entries dom ()
        val _ = computeDF root

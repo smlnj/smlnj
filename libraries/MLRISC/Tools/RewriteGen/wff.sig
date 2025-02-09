@@ -3,7 +3,7 @@ sig
    datatype wff = FALSE | TRUE | VAR of string
                 | AND of wff * wff
                 | OR of wff * wff
-                | NOT of wff 
+                | NOT of wff
 
    val simplify   : wff -> wff
    val countNots  : wff -> int

@@ -15,13 +15,13 @@ struct
    fun timePhase name f =
    let val timing = MLRiscControl.timing name
        val { gc, usr, sys } = !timing
-       fun run x = 
+       fun run x =
        let val timer = Timer.startCPUTimer()
-           fun update timer = 
+           fun update timer =
            let val t = Timer.checkCPUTimes timer
-	       val gc' = #usr (#gc t)
-	       val usr' = #usr (#nongc t)
-	       val sys' = Time.+ (#sys (#gc t), #sys (#nongc t))
+               val gc' = #usr (#gc t)
+               val usr' = #usr (#nongc t)
+               val sys' = Time.+ (#sys (#gc t), #sys (#nongc t))
            in  timing := {gc=Time.+(gc,gc'),
                           usr=Time.+(usr,usr'),
                           sys=Time.+(sys,sys')}
@@ -30,5 +30,5 @@ struct
        in  update timer; y
        end
    in  run end
-  
+
 end

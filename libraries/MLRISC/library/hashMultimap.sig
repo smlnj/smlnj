@@ -12,7 +12,7 @@ sig
    val create : { order : 'a * 'a -> order,
                   hash  : 'a -> int,
                   exn   : exn
-                } -> int -> ('a,'b) multimap 
+                } -> int -> ('a,'b) multimap
 
    val size       : ('a,'b) multimap -> int
    val bucketSize : ('a,'b) multimap -> int
@@ -28,7 +28,7 @@ sig
    val count      : ('a,'b) multimap -> 'a -> int
    val app        : ('a * 'b list -> unit) -> ('a,'b) multimap -> unit
    val dupApp     : ('a * 'b -> unit) -> ('a,'b) multimap -> unit
-   val fold       : (('a * 'b list) * 'c -> 'c) -> 'c 
+   val fold       : (('a * 'b list) * 'c -> 'c) -> 'c
                         -> ('a,'b) multimap -> 'c
    val dupFold    : (('a * 'b) * 'c -> 'c) -> 'c -> ('a,'b) multimap -> 'c
    val toString   : (('a -> string) * ('b -> string)) -> ('a,'b) multimap

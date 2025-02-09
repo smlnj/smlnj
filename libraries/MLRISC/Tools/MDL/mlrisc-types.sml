@@ -2,7 +2,7 @@
  * MLRISC specific things are abstracted out here in this module.
  *)
 
-functor MLRiscTypes 
+functor MLRiscTypes
   (structure Comp : MDL_COMPILE
    structure RTL  : MLTREE_RTL
   ) : MLRISC_TYPES =
@@ -25,7 +25,7 @@ struct
    (* does this type has special meaning in an instruction representation?  *)
    fun isSpecialRepType t =
    let fun isSpecial t =
-       case TU.deref t of 
+       case TU.deref t of
          CELLty _                  => true  (* cell types are special *)
        | IDty(IDENT(_,"int"))      => true
        | IDty(IDENT([],"operand")) => true
@@ -33,8 +33,8 @@ struct
        | _ => false
 
        val found = ref false
- 
-       fun ty _ t = (if isSpecial t then found := true else (); t)  
+
+       fun ty _ t = (if isSpecial t then found := true else (); t)
        val _ = #ty(RW.rewrite{ty=ty,exp=SKIP,decl=SKIP,sexp=SKIP,pat=SKIP}) t
    in  !found
    end
@@ -54,7 +54,7 @@ struct
        | APPty(IDENT([],"bits"), [INTVARty n]) => (n, "bits")
        | ty => err()
    end
- 
+
    fun representationOf(rtlName, arg, loc, ty) =
    let fun err() =
           (errorPos(loc,
@@ -70,10 +70,10 @@ struct
        | ty => err()
    end
 
-   (* Given the actual represention of an rtl argument, 
+   (* Given the actual represention of an rtl argument,
     * insert coercion if possible.
     *)
-   fun insertRepCoercion(exp, ty) = 
+   fun insertRepCoercion(exp, ty) =
        (case (exp, TU.deref ty) of
          (T.ARG(_,k,_), IDty(IDENT([],"int")))     => k := T.REP "int"
        | (T.ARG(_,k,_), IDty(IDENT(_,"label")))    => k := T.REP "label"
@@ -82,10 +82,10 @@ struct
        | _ => ()
        )
 
-   fun ofCellKind(T.$(_,k,_),CELLdecl{id, ...}) = 
+   fun ofCellKind(T.$(_,k,_),CELLdecl{id, ...}) =
           (case C.cellkindToString k of
              "CELLSET" => true
-           | k => k = id 
+           | k => k = id
           )
      | ofCellKind(T.ARG _,CELLdecl{id, ...}) = false
      | ofCellKind(_, _) = false
@@ -94,39 +94,39 @@ struct
     (*
      * A database of all special types
      *)
-    datatype howto = 
-       HOWTO of 
+    datatype howto =
+       HOWTO of
         { rep           : string, (* name of representation *)
           isSSAValue    : bool,   (* is it a value in SSA form? *)
           mlType        : Ast.ty, (* type in ML *)
-          isConst       : bool,   (* if so, is it always a constant? *) 
+          isConst       : bool,   (* if so, is it always a constant? *)
           isMultiValued :         (* if a value can it take more than one *)
              Comp.md -> bool
-        } 
- 
+        }
+
      val howtos = ref [] : howto list ref
- 
+
      fun findRep r =
-         case List.find (fn HOWTO{rep, ...} => rep = r) (!howtos) of 
+         case List.find (fn HOWTO{rep, ...} => rep = r) (!howtos) of
            SOME(HOWTO howto) => howto
          | NONE => fail("bug: representation "^r^" not known")
- 
+
     (*---------------------------------------------------------------------
-     * 
+     *
      * Code generation magic
      *
      *---------------------------------------------------------------------*)
      fun isConst(T.REP rep) = #isConst(findRep rep)
 
     (*---------------------------------------------------------------------
-     * 
+     *
      * Okay, now specify all the types that we have to handle.
      *
      *---------------------------------------------------------------------*)
      fun no _ = false
      fun yes _ = true
      fun bug _ = fail("unimplemented")
- 
+
      val _ = howtos :=
        [HOWTO{rep           = "label",
               isSSAValue    = false,
@@ -134,21 +134,21 @@ struct
               isConst       = true,
               isMultiValued = no
              },
- 
+
         HOWTO{rep           = "int",
               isSSAValue    = true,
               mlType        = IDty(IDENT([],"int")),
               isConst       = true,
               isMultiValued = no
              },
- 
+
         HOWTO{rep           = "operand",
               isSSAValue    = true,
               mlType        = IDty(IDENT(["I"],"operand")),
               isConst       = false,
               isMultiValued = yes
              },
- 
+
         HOWTO{rep           = "cellset",
               isSSAValue    = true,
               mlType        = IDty(IDENT(["C"],"cellset")),
@@ -158,7 +158,7 @@ struct
        ]
 
    (*---------------------------------------------------------------------
-    * 
+    *
     * Generate an expression for performing the appropriate conversion
     *
     *---------------------------------------------------------------------*)
@@ -166,21 +166,21 @@ struct
 
    structure DescMap = RedBlackMapFn(type ord_key = string
                                      val compare = String.compare)
-   fun getOpnd desc = 
+   fun getOpnd desc =
    let val tbl =
            foldr (fn ((rep,conv), tbl) =>
                     DescMap.insert(tbl, rep, conv)) DescMap.empty desc
 
-       fun mkConvFun(rep,conv) = 
+       fun mkConvFun(rep,conv) =
            "fun get_"^rep^"(x,L) = "^
-             (case conv of 
+             (case conv of
                IGNORE => "L"
              | CONV f => f^"::L"
              | MULTI f => f^"@L"
              )
-       fun mkConvFun0(rep,conv) = 
+       fun mkConvFun0(rep,conv) =
            "fun get_"^rep^"'(x) = "^
-             (case conv of 
+             (case conv of
                IGNORE => "[]"
              | CONV f => "["^f^"]"
              | MULTI f => f
@@ -189,7 +189,7 @@ struct
 
        fun apply(rep, this, rest) = APP("get_"^rep,TUPLEexp[this,rest])
 
-       fun getIt(rep, this, rest) = 
+       fun getIt(rep, this, rest) =
            case (DescMap.find(tbl, rep), rest) of
              (NONE, _) => fail("getOpnd: "^rep^" is not defined")
            | (SOME IGNORE, _)   => rest
@@ -197,7 +197,7 @@ struct
            | (SOME(MULTI conv), LISTexp([],NONE)) => APP("get_"^rep^"'", this)
            | (SOME(MULTI _), rest) => apply(rep, this, rest)
 
-       fun get(this,T.$(_,k,_),rest) =  
+       fun get(this,T.$(_,k,_),rest) =
              if C.cellkindToString k = "CELLSET" then
                  getIt("cellset",this,rest)
              else
@@ -206,7 +206,7 @@ struct
           | get(_, e, _) = fail("MLRiscTypes.get: "^RTL.Util.rexpToString e)
 
    in  { decl= decl,
-         get = get 
+         get = get
        }
    end
 

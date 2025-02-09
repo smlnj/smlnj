@@ -2,10 +2,10 @@
 module Slp {
 
 stm = Compound(stm, stm)
-    | Assign(identifier, exp) 
+    | Assign(identifier, exp)
     | Print(exp_list)
 
-exp_list = ExpList(exp, exp_list) 
+exp_list = ExpList(exp, exp_list)
          | Nil
 
 exp = Id(identifier)

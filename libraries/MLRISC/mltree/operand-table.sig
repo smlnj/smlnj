@@ -36,7 +36,7 @@ sig
    val volatile : valueNumber
 
    (* Create a new table *)
-   val create  : int ref -> operandTable 
+   val create  : int ref -> operandTable
 
    (* Lookup methods *)
 

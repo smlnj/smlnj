@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-signature VECTOR_2004 = 
+signature VECTOR_2004 =
   sig
     eqtype 'a vector
 
@@ -14,7 +14,7 @@ signature VECTOR_2004 =
     val tabulate : int * (int -> 'a) -> 'a vector
 
     val length   : 'a vector -> int
-    val sub      : 'a vector * int -> 'a 
+    val sub      : 'a vector * int -> 'a
 
     val update   : 'a vector * int * 'a -> 'a vector
     val concat   : 'a vector list -> 'a vector

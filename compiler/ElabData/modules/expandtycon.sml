@@ -40,45 +40,45 @@ fun lookEntVar(ev,(_,s as (M.TYCspec{entVar,...} |
 
 fun findContext(ev,context as elements0::outer) =
       (case lookEntVar(ev, elements0)
-	 of SOME(M.STRspec{sign as M.SIG {elements,...},...}) =>
-	    elements :: context
-	  | NONE => findContext(ev,outer)
-	  | _ => bug "findContext - bad element")
+         of SOME(M.STRspec{sign as M.SIG {elements,...},...}) =>
+            elements :: context
+          | NONE => findContext(ev,outer)
+          | _ => bug "findContext - bad element")
   | findContext(ev,nil) = raise OUTER
 
 fun expandTycon(tycon,context,entEnv) =
     let fun expandTycVar(ev,context as elements::outer) : T.tycon =
-	      (case lookEntVar(ev, elements)
-		 of SOME(M.TYCspec{info=M.RegTycSpec{spec,...},...}) =>
-		     (case spec
-			of T.GENtyc _ => spec
-			 | T.DEFtyc{stamp,strict,path,tyfun} =>
-			     T.DEFtyc{stamp=stamp,strict=strict,path=path,
-				      tyfun=expandTyfun(tyfun,context)}
-			 | _ => bug "expandTycon 2")
-		  | NONE => (* try outer context *)
-		     expandTycVar(ev,outer)
-		  | _ => bug "expandTycon 1")
-	  | expandTycVar(ev,nil) = raise OUTER
+              (case lookEntVar(ev, elements)
+                 of SOME(M.TYCspec{info=M.RegTycSpec{spec,...},...}) =>
+                     (case spec
+                        of T.GENtyc _ => spec
+                         | T.DEFtyc{stamp,strict,path,tyfun} =>
+                             T.DEFtyc{stamp=stamp,strict=strict,path=path,
+                                      tyfun=expandTyfun(tyfun,context)}
+                         | _ => bug "expandTycon 2")
+                  | NONE => (* try outer context *)
+                     expandTycVar(ev,outer)
+                  | _ => bug "expandTycon 1")
+          | expandTycVar(ev,nil) = raise OUTER
 
-	and expandTyc context = 
-	     fn (tyc as T.PATHtyc{entPath,...}) =>
-	         (expandPath(entPath,context)
-		  handle OUTER => (* path outside current signature context *)
-		    MU.transTycon entEnv tyc)
-	      | tyc => tyc
+        and expandTyc context =
+             fn (tyc as T.PATHtyc{entPath,...}) =>
+                 (expandPath(entPath,context)
+                  handle OUTER => (* path outside current signature context *)
+                    MU.transTycon entEnv tyc)
+              | tyc => tyc
 
-	and expandTyfun(T.TYFUN{arity,body},context) = 
-	     T.TYFUN{arity=arity,
-		     body=TU.mapTypeFull (expandTyc context) body}
+        and expandTyfun(T.TYFUN{arity,body},context) =
+             T.TYFUN{arity=arity,
+                     body=TU.mapTypeFull (expandTyc context) body}
 
-	and expandPath(ep, context) =
-	    (case ep
-	       of nil => bug "expandPath 1"
-		| ev :: nil =>  (* tycon! *)
-		   expandTycVar(ev,context)
-		| ev :: rest => (* substructure! *)
-		   expandPath(rest,findContext(ev, context)))
+        and expandPath(ep, context) =
+            (case ep
+               of nil => bug "expandPath 1"
+                | ev :: nil =>  (* tycon! *)
+                   expandTycVar(ev,context)
+                | ev :: rest => (* substructure! *)
+                   expandPath(rest,findContext(ev, context)))
 
      in expandTyc context tycon
     end

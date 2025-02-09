@@ -220,16 +220,16 @@ sig
      LDA of {r:CellsBasis.cell, b:CellsBasis.cell, d:operand}
    | LDAH of {r:CellsBasis.cell, b:CellsBasis.cell, d:operand}
    | LOAD of {ldOp:load, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
-   | STORE of {stOp:store, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | STORE of {stOp:store, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | FLOAD of {ldOp:fload, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | FLOAD of {ldOp:fload, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | FSTORE of {stOp:fstore, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | FSTORE of {stOp:fstore, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
    | JMPL of {r:CellsBasis.cell, b:CellsBasis.cell, d:int} * Label.label list
-   | JSR of {r:CellsBasis.cell, b:CellsBasis.cell, d:int, defs:C.cellset, uses:C.cellset, 
+   | JSR of {r:CellsBasis.cell, b:CellsBasis.cell, d:int, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region}
-   | BSR of {r:CellsBasis.cell, lab:Label.label, defs:C.cellset, uses:C.cellset, 
+   | BSR of {r:CellsBasis.cell, lab:Label.label, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region}
    | RET of {r:CellsBasis.cell, b:CellsBasis.cell, d:int}
    | BRANCH of {b:branch, r:CellsBasis.cell, lab:Label.label}
@@ -237,11 +237,11 @@ sig
    | OPERATE of {oper:operate, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell}
    | OPERATEV of {oper:operateV, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell}
    | CMOVE of {oper:cmove, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell}
-   | PSEUDOARITH of {oper:pseudo_op, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell, 
+   | PSEUDOARITH of {oper:pseudo_op, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell,
         tmps:C.cellset}
    | FUNARY of {oper:funary, fb:CellsBasis.cell, fc:CellsBasis.cell}
    | FOPERATE of {oper:foperate, fa:CellsBasis.cell, fb:CellsBasis.cell, fc:CellsBasis.cell}
-   | FOPERATEV of {oper:foperateV, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   | FOPERATEV of {oper:foperateV, fa:CellsBasis.cell, fb:CellsBasis.cell,
         fc:CellsBasis.cell}
    | FCMOVE of {oper:fcmove, fa:CellsBasis.cell, fb:CellsBasis.cell, fc:CellsBasis.cell}
    | TRAPB
@@ -252,7 +252,7 @@ sig
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,
@@ -261,18 +261,18 @@ sig
    | INSTR of instr
    val lda : {r:CellsBasis.cell, b:CellsBasis.cell, d:operand} -> instruction
    val ldah : {r:CellsBasis.cell, b:CellsBasis.cell, d:operand} -> instruction
-   val load : {ldOp:load, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val load : {ldOp:load, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val store : {stOp:store, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val store : {stOp:store, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val fload : {ldOp:fload, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val fload : {ldOp:fload, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
-   val fstore : {stOp:fstore, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   val fstore : {stOp:fstore, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
       mem:Region.region} -> instruction
    val jmpl : {r:CellsBasis.cell, b:CellsBasis.cell, d:int} * Label.label list -> instruction
-   val jsr : {r:CellsBasis.cell, b:CellsBasis.cell, d:int, defs:C.cellset, 
+   val jsr : {r:CellsBasis.cell, b:CellsBasis.cell, d:int, defs:C.cellset,
       uses:C.cellset, cutsTo:Label.label list, mem:Region.region} -> instruction
-   val bsr : {r:CellsBasis.cell, lab:Label.label, defs:C.cellset, uses:C.cellset, 
+   val bsr : {r:CellsBasis.cell, lab:Label.label, defs:C.cellset, uses:C.cellset,
       cutsTo:Label.label list, mem:Region.region} -> instruction
    val ret : {r:CellsBasis.cell, b:CellsBasis.cell, d:int} -> instruction
    val branch : {b:branch, r:CellsBasis.cell, lab:Label.label} -> instruction
@@ -280,11 +280,11 @@ sig
    val operate : {oper:operate, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell} -> instruction
    val operatev : {oper:operateV, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell} -> instruction
    val cmove : {oper:cmove, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell} -> instruction
-   val pseudoarith : {oper:pseudo_op, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell, 
+   val pseudoarith : {oper:pseudo_op, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell,
       tmps:C.cellset} -> instruction
    val funary : {oper:funary, fb:CellsBasis.cell, fc:CellsBasis.cell} -> instruction
    val foperate : {oper:foperate, fa:CellsBasis.cell, fb:CellsBasis.cell, fc:CellsBasis.cell} -> instruction
-   val foperatev : {oper:foperateV, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   val foperatev : {oper:foperateV, fa:CellsBasis.cell, fb:CellsBasis.cell,
       fc:CellsBasis.cell} -> instruction
    val fcmove : {oper:fcmove, fa:CellsBasis.cell, fb:CellsBasis.cell, fc:CellsBasis.cell} -> instruction
    val trapb : instruction
@@ -508,16 +508,16 @@ struct
      LDA of {r:CellsBasis.cell, b:CellsBasis.cell, d:operand}
    | LDAH of {r:CellsBasis.cell, b:CellsBasis.cell, d:operand}
    | LOAD of {ldOp:load, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, mem:Region.region}
-   | STORE of {stOp:store, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | STORE of {stOp:store, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | FLOAD of {ldOp:fload, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | FLOAD of {ldOp:fload, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
-   | FSTORE of {stOp:fstore, r:CellsBasis.cell, b:CellsBasis.cell, d:operand, 
+   | FSTORE of {stOp:fstore, r:CellsBasis.cell, b:CellsBasis.cell, d:operand,
         mem:Region.region}
    | JMPL of {r:CellsBasis.cell, b:CellsBasis.cell, d:int} * Label.label list
-   | JSR of {r:CellsBasis.cell, b:CellsBasis.cell, d:int, defs:C.cellset, uses:C.cellset, 
+   | JSR of {r:CellsBasis.cell, b:CellsBasis.cell, d:int, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region}
-   | BSR of {r:CellsBasis.cell, lab:Label.label, defs:C.cellset, uses:C.cellset, 
+   | BSR of {r:CellsBasis.cell, lab:Label.label, defs:C.cellset, uses:C.cellset,
         cutsTo:Label.label list, mem:Region.region}
    | RET of {r:CellsBasis.cell, b:CellsBasis.cell, d:int}
    | BRANCH of {b:branch, r:CellsBasis.cell, lab:Label.label}
@@ -525,11 +525,11 @@ struct
    | OPERATE of {oper:operate, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell}
    | OPERATEV of {oper:operateV, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell}
    | CMOVE of {oper:cmove, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell}
-   | PSEUDOARITH of {oper:pseudo_op, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell, 
+   | PSEUDOARITH of {oper:pseudo_op, ra:CellsBasis.cell, rb:operand, rc:CellsBasis.cell,
         tmps:C.cellset}
    | FUNARY of {oper:funary, fb:CellsBasis.cell, fc:CellsBasis.cell}
    | FOPERATE of {oper:foperate, fa:CellsBasis.cell, fb:CellsBasis.cell, fc:CellsBasis.cell}
-   | FOPERATEV of {oper:foperateV, fa:CellsBasis.cell, fb:CellsBasis.cell, 
+   | FOPERATEV of {oper:foperateV, fa:CellsBasis.cell, fb:CellsBasis.cell,
         fc:CellsBasis.cell}
    | FCMOVE of {oper:fcmove, fa:CellsBasis.cell, fb:CellsBasis.cell, fc:CellsBasis.cell}
    | TRAPB
@@ -540,7 +540,7 @@ struct
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,

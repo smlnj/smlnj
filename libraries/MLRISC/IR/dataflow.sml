@@ -24,8 +24,8 @@ struct
        val outputs   = A.array(N, P.bot)
        val transfers = A.array(N, fn _ => P.bot)
        val prologue  = P.prologue(CFG,info)
-       val _         = #forall_nodes cfg  
-                          (fn (n,n') => 
+       val _         = #forall_nodes cfg
+                          (fn (n,n') =>
                            let val {input,output,transfer} = prologue(n,n')
                            in  A.update(inputs,n,input);
                                A.update(outputs,n,output);
@@ -34,12 +34,12 @@ struct
                           )
 
        abstype worklist = WL of int list * int list
-       with 
+       with
             exception EmptyQueue
             val on_queue = A.array(N,false)
             val empty = WL([],[])
             val empty = WL([],[])
-            fun enque(wl as WL(b,f),i)  = 
+            fun enque(wl as WL(b,f),i)  =
                 if A.sub(on_queue,i) then wl else
                 (A.update(on_queue,i,true); WL(i::b,f))
             fun deque(WL([],[]))  = raise EmptyQueue
@@ -47,13 +47,13 @@ struct
               | deque(WL(b,i::f)) = (A.update(on_queue,i,false); (WL(b,f),i))
            fun insert(wl,[]) = wl
              | insert(wl,(_,n,_)::es) = insert(enque(wl,n),es)
-           fun insert'(wl,[]) = wl 
+           fun insert'(wl,[]) = wl
              | insert'(wl,n::ns) = insert'(enque(wl,n),ns)
        end
 
        fun propagate worklist =
        let val (worklist, i) = deque worklist
-           val new_input   = 
+           val new_input   =
                case #in_edges cfg i of
                  [(p,_,_)] => if p = ENTRY then A.sub(inputs,i)
                               else A.sub(outputs,p)
@@ -66,7 +66,7 @@ struct
            else (A.update(outputs,i,new_output);
                  propagate(insert(worklist,#out_edges cfg i)))
        end
-      
+
        val nodes    = GraphTopsort.topsort G' (#entries cfg ())
        val _        = propagate(insert'(empty,nodes)) handle EmptyQueue => ()
        val epilogue = P.epilogue(CFG,info)
@@ -76,7 +76,7 @@ struct
                                                 node   = (n,n')})
    in
        info
-   end 
+   end
 
 end
 

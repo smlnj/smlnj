@@ -13,7 +13,7 @@ end
 
 structure UndirectedGraphView : UNDIRECTED_GRAPH_VIEW =
 struct
-   
+
    structure G = Graph
    structure Sort = ListMergeSort
 
@@ -23,8 +23,8 @@ struct
            val out_edges = #out_edges G i
        in
            Sort.uniqueSort (fn ((i,j,_),(i',j',_)) =>
-                              if i < i' then LESS 
-                              else if i = i' then 
+                              if i < i' then LESS
+                              else if i = i' then
                                    if j < j' then LESS
                                    else if j = j' then EQUAL
                                    else GREATER

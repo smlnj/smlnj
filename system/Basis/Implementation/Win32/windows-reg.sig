@@ -11,7 +11,7 @@ local
 in
 signature WINDOWS_REG = sig
     eqtype hkey
-    
+
     val classesRoot     : hkey
     val currentUser     : hkey
     val localMachine    : hkey
@@ -19,7 +19,7 @@ signature WINDOWS_REG = sig
     val performanceData : hkey
     val currentConfig   : hkey
     val dynData         : hkey
-    
+
     datatype create_result
       = CREATED_NEW_KEY of hkey
       | OPENED_EXISTING_KEY of hkey
@@ -31,7 +31,7 @@ signature WINDOWS_REG = sig
     val deleteValue : hkey * string -> unit
     val enumKeyEx : hkey * int -> string option
     val enumValueEx : hkey * int -> string option
-    
+
     datatype value
       = SZ of string
       | DWORD of SysWord.word

@@ -5,15 +5,15 @@
  *)
 signature TRANSITIVE_CLOSURE =
 sig
-   val acyclic_transitive_closure : 
+   val acyclic_transitive_closure :
          { + : 'e * 'e -> 'e,
            simple : bool
          } -> ('n,'e,'g) Graph.graph -> unit
-   val acyclic_transitive_closure2 : 
+   val acyclic_transitive_closure2 :
          { +   : 'e * 'e -> 'e,
            max : 'e * 'e -> 'e
          } -> ('n,'e,'g) Graph.graph -> unit
-   val transitive_closure : 
+   val transitive_closure :
          ('e * 'e -> 'e) -> ('n,'e,'g) Graph.graph -> unit
 end
 
@@ -23,7 +23,7 @@ struct
    structure G = Graph
    structure A = Array
 
-   (* 
+   (*
     * Transitive closure for an acyclic graph.
     * Should probably use a better algorithm.
     *)
@@ -53,13 +53,13 @@ struct
        val labels = A.array(N,[])  (* l in labels[v] iff v ->l u *)
        fun visit u =
        let fun ins(v,e,nodes) =
-               if A.sub(reach,v) = u then 
+               if A.sub(reach,v) = u then
                   (A.update(labels,v,e::A.sub(labels,v)); nodes)
                else (A.update(reach,v,u); A.update(labels,v,[e]); v::nodes)
            fun init([],nodes) = nodes
              | init((v,u,e)::es,nodes) = init(es,ins(v,e,nodes))
            fun addTrans([],nodes) = nodes
-             | addTrans((v,u,e)::es,nodes) = 
+             | addTrans((v,u,e)::es,nodes) =
                let fun trans([],nodes) = nodes
                      | trans((w,v,e')::es,nodes) = trans(es,ins(w,e + e',nodes))
                in  addTrans(es,trans(#in_edges G v,nodes)) end
@@ -73,7 +73,7 @@ struct
                  | [e] => foldAll(vs,(v,u,e)::es)
                  | e'::es' => foldAll(vs,(v,u,foldr max e' es')::es)
                 )
-       in  #set_in_edges G (u,foldAll(nodes,[])) 
+       in  #set_in_edges G (u,foldAll(nodes,[]))
        end
        val list = GraphTopsort.topsort G' (map #1 (#nodes G ()))
    in  app visit list

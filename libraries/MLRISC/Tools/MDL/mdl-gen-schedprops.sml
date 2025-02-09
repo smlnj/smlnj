@@ -1,6 +1,6 @@
 (*
  * Generate the <arch>SchedProps functor.
- * This structure extracts semantics and dependence 
+ * This structure extracts semantics and dependence
  * information about the instruction set needed for scheduling optimizations.
  *)
 
@@ -18,31 +18,31 @@ struct
    open Ast Comp.Util Comp.Error
 
    exception Undefined
-  
+
    (* Generate a call to the bug function *)
    fun bug funName = APP("bug",TUPLEexp[STRINGexp funName,ID "instr"])
 
    (* Expressions building utilities *)
    fun cons(x,LISTexp(a,b)) = LISTexp(x::a,b)
      | cons(x,y) = LISTexp([x],SOME y)
-   fun append(x,LISTexp([],NONE)) = x 
+   fun append(x,LISTexp([],NONE)) = x
      | append(x,y) = APP("@",TUPLEexp[x,y])
 
    val MAX_BIT = Word.wordSize - 1 (* Implementation specific!!!! *)
 
    (* Function to compile the reservation tables! *)
 
-   fun genRT md = 
+   fun genRT md =
    let val resources   = Comp.resources md
        val cpus        = Comp.cpus md
        val pipelines   = Comp.pipelines md
        val latencies   = Comp.latencies md
        val arch        = Comp.name md
-    
+
        type 'a table = 'a E.envir * string
        fun mkTbl name = (E.envir name, name)
 
-       fun enter(E,name) (x,y) = 
+       fun enter(E,name) (x,y) =
            (E.lookup E x; error(name^" "^x^" has been redefined\n"))
            handle _ => E.update E (x,y)
 
@@ -55,17 +55,17 @@ struct
        (* Enter info into tables *)
        val _ = app (fn id => enter resourceTbl (id,id) ) resources
        val _ = app (fn x as CPUbind{name,...} => enter cpuTbl (name,x)) cpus
-       val _ = app (fn x as PIPELINEbind(id, _) => enter pipelineTbl (id,x)) 
+       val _ = app (fn x as PIPELINEbind(id, _) => enter pipelineTbl (id,x))
                 pipelines
-       val _ = app (fn x as LATENCYbind(id, _) => enter latencyTbl (id,x)) 
+       val _ = app (fn x as LATENCYbind(id, _) => enter latencyTbl (id,x))
                 latencies
 
-       fun checkResource msg r = 
+       fun checkResource msg r =
             (E.lookup (#1 resourceTbl) r; ()) handle _ =>
               error(msg^" has undefined resource "^r)
- 
+
        (* Compile each CPU definition *)
-       fun compileCPU(CPUbind{name=cpuName, maxIssues, resources, ...}) = 
+       fun compileCPU(CPUbind{name=cpuName, maxIssues, resources, ...}) =
        let val _ =
            print ("[Generating reservation table for "^arch^"."^cpuName^"]\n")
 
@@ -102,7 +102,7 @@ struct
                        val mask   = addMask{word=word, bits=Word.<<(0w1,
                                                  Word.fromInt(bit+width)),
                                             mask=mask}
-                       val extra = addMask{word=word, 
+                       val extra = addMask{word=word,
                                            bits=Word.<<(Word.fromInt padding,
                                                 Word.fromInt bit),
                                            mask=extra}
@@ -118,85 +118,85 @@ struct
        (* Compile all cpu information *)
        val cpuInfo = map compileCPU cpus
 
-       (* number of words needed to represent the state in one cycle *) 
+       (* number of words needed to represent the state in one cycle *)
        val W = foldr (fn ({words, ...}, w) => Int.max(words, w)) 0 cpuInfo
 
        fun many f =
-       let fun g n = if n >= W then [] else f n::g(n+1) 
-       in  g 0 end  
+       let fun g n = if n >= W then [] else f n::g(n+1)
+       in  g 0 end
 
        (* type of resource *)
-       val resTy = DATATYPEdecl([], 
+       val resTy = DATATYPEdecl([],
                  [TYPEbind("resource",[],TUPLEty(many (fn _ => WORDty)))])
-       val cpuTy = 
+       val cpuTy =
              DATATYPEdecl(
               [DATATYPEbind
-                  {id="cpu",tyvars=[],mc=NONE,asm=false, field=NONE, 
+                  {id="cpu",tyvars=[],mc=NONE,asm=false, field=NONE,
                    cbs=map (fn CPUbind{name,...} => CONS(name,NONE)) cpus
                   }
               ],
               [])
 
        val getCPU =
-           FUNdecl[FUNbind("cpu", 
-             map (fn CPUbind{name,aliases,...} => 
+           FUNdecl[FUNbind("cpu",
+             map (fn CPUbind{name,aliases,...} =>
                  CLAUSE([ORpat(map STRINGpat (name::aliases))],
                         NONE, ID name)) cpus
-           @ [CLAUSE([IDpat "cpuName"], 
+           @ [CLAUSE([IDpat "cpuName"],
                 NONE,
                 APP("error",
                   APP("^",
                     TUPLEexp[STRINGexp "unknown architecture ",
-                             ID "cpuName"])))] 
+                             ID "cpuName"])))]
                   )]
 
-       val i2s = Int.toString 
+       val i2s = Int.toString
        fun w2s w = "0wx"^Word.toString w
 
        fun get(w, []) = 0w0
-         | get(w, {word, bits}::l) = 
-             if w = word then Word32.fromInt(Word.toIntX bits) 
+         | get(w, {word, bits}::l) =
+             if w = word then Word32.fromInt(Word.toIntX bits)
              else get(w,l)
- 
+
        (*
-        * Function to merge two reservation table entries  
+        * Function to merge two reservation table entries
         *)
-       val mergeRT = 
+       val mergeRT =
        let val arg1 = TUPLEpat(many(fn n => IDpat("x"^i2s n)))
            val arg2 = TUPLEpat(many(fn n => IDpat("y"^i2s n)))
            val arg  = TUPLEpat[arg1,arg2]
            val body = TUPLEexp(many(fn n =>
-                          APPexp(IDexp(IDENT(["Word"],"+")), 
+                          APPexp(IDexp(IDENT(["Word"],"+")),
                            TUPLEexp[ID("x"^i2s n), ID("y"^i2s n)])))
-       in  FUN("mergeRT", arg, body) 
+       in  FUN("mergeRT", arg, body)
        end
 
        val zeroRT = VAL("zeroRT",TUPLEexp(many(fn n => WORD32exp 0w0)))
 
        (* Generate code for each cpu *)
-       fun genCode{cpu, words, res, mask, extra, maxIssues} = 
-       let fun genRes{resource, count, word, bit} =   
-               (resource, 
-                  TUPLEexp(many(fn w => if w = word then 
-                               WORD32exp(Word32.<<(0w1,Word.fromInt bit)) else 
+       fun genCode{cpu, words, res, mask, extra, maxIssues} =
+       let fun genRes{resource, count, word, bit} =
+               (resource,
+                  TUPLEexp(many(fn w => if w = word then
+                               WORD32exp(Word32.<<(0w1,Word.fromInt bit)) else
                                WORD32exp 0w0)))
 
-           val mergeableRT = 
+           val mergeableRT =
            let val arg1 = TUPLEpat(many (fn n => IDpat("x"^i2s n)))
                val arg2 = TUPLEpat(many (fn n => IDpat("y"^i2s n)))
                val arg  = TUPLEpat[arg1,arg2]
                val body = many (fn n =>
                     let val maskBits = get(n, mask)
-                    in  APP("=", 
+                    in  APP("=",
                           TUPLEexp[
-                          APP("Word.andb", 
+                          APP("Word.andb",
                             TUPLEexp[PLUS(ID("x"^i2s n),ID("y"^i2s n)),
                                      WORD32exp maskBits]),
                           WORD32exp 0w0])
                     end)
            in  FUN("mergeableRT"^cpu, arg, foldr ANDALSO TRUE body)
            end
-       
+
            val emptyRT = VAL("emptyRT"^cpu,
                            TUPLEexp(many(fn n => WORD32exp(get(n,extra)))))
 
@@ -216,10 +216,10 @@ struct
        val resourcesPat = RECORDpat(map (fn id => (id,IDpat id)) resources,false)
 
        (* Generate a pipeline function *)
-       fun genPipelineFun(PIPELINEbind(name, clauses)) = 
+       fun genPipelineFun(PIPELINEbind(name, clauses)) =
        let val check = checkResource("pipeline "^name)
            fun trans [] = []
-             | trans(IDcycle res::ps) = 
+             | trans(IDcycle res::ps) =
                 (check res; ID res::trans ps)
              | trans(ORcycle(a,b)::ps) =
                 merge(trans[a], trans[b])@trans ps
@@ -231,31 +231,31 @@ struct
            and repeat(x,0) = []
              | repeat(x,n) = x@repeat(x,n-1)
 
-           fun genClause(pat,PIPELINE pe) = 
+           fun genClause(pat,PIPELINE pe) =
                CLAUSE([resourcesPat,pat],NONE,LISTexp(trans pe,NONE))
 
        in  FUNdecl[FUNbind("pipeline"^name,map genClause clauses)]
        end
 
        (* Generate a latency function *)
-       fun genLatencyFun(LATENCYbind(name, clauses)) = 
+       fun genLatencyFun(LATENCYbind(name, clauses)) =
        let fun genClause(pat,e) = CLAUSE([resourcesPat,pat],NONE,e)
        in  FUNdecl[FUNbind("latency"^name,map genClause clauses)]
        end
 
    in  SEQdecl(resTy::cpuTy::getCPU::zeroRT::mergeRT::
-               map genCode cpuInfo @ 
+               map genCode cpuInfo @
                map genPipelineFun pipelines @
                map genLatencyFun latencies
               )
    end
- 
+
    fun gen compiled_rtls =
    let (* The machine description *)
        val md = RTLComp.md compiled_rtls
 
        (* name of the structure/signature *)
-       val strName = Comp.strname md "SchedProps"  
+       val strName = Comp.strname md "SchedProps"
        val sigName = "SCHEDULING_PROPERTIES"
 
        val cpus      = Comp.cpus md
@@ -272,26 +272,26 @@ struct
        (* Arguments to the instruction functor *)
        val args =
            ["structure Instr : "^Comp.signame md "INSTR",
-            "structure RegionProps : REGION_PROPERTIES", 
+            "structure RegionProps : REGION_PROPERTIES",
             "structure Asm   : INSTRUCTION_EMITTER where I = Instr",
             "  sharing RegionProps.Region = Instr.Region"
            ]
 
        (* Definition of the reservation table type *)
-       val resTableDefinition = 
+       val resTableDefinition =
            $["structure A = DynArray",
              "type pipeline = resource list",
              "type reservation_table = (int * resource) A.array"
             ]
 
        (* Make the newTable (per cpu) *)
-       val newTable = 
+       val newTable =
            $["fun newTable emptyRT n = ",
              "  A.array(n,(0,emptyRT)) : reservation_table"
             ]
 
        (* Make the defUse query function (shared by all cpu types) *)
-       val defUse = 
+       val defUse =
        let val defaultLat = INTexp 0
            fun queryDefUse{instr,rtl,const} =
            let val CONSbind{latency,...} = instr
@@ -299,27 +299,27 @@ struct
                fun pair(e,l) = TUPLEexp[e,l]
 
                val (defs,uses) = L.defUse rtl
-               val def = 
-                    RTL.queryExp rtlmd 
+               val def =
+                    RTL.queryExp rtlmd
                     {name    = "defUse",
                      reg     = fn (r,_,l) => cons(pair(r,lat),l),
                      fixreg  = fn (r,_,l) => cons(pair(r,lat),l),
                      regs    = fn (rs,_,l) => append(APP("mkSet",rs),l),
-                     opnd    = fn (_,l) => l, 
-                     lab     = fn (_,l) => l, 
-                     imm     = fn (_,l) => l, 
+                     opnd    = fn (_,l) => l,
+                     lab     = fn (_,l) => l,
+                     imm     = fn (_,l) => l,
                      cellset = fn (c,l) => append(APP("getCellSetDef",c),l),
                      region  = fn (r,l) => append(APP("getRegionDef",r),l)
                     } (defs, LISTexp([],NONE))
                val use =
-                    RTL.queryExp rtlmd 
+                    RTL.queryExp rtlmd
                     {name    = "defUse",
                      reg     = fn (r,_,l) => cons(r,l),
                      fixreg  = fn (r,_,l) => cons(r,l),
                      regs    = fn (rs,_,l) => append(rs,l),
                      opnd    = fn (x,l) => APP("getOpnd",TUPLEexp[x,l]),
-                     lab     = fn (_,l) => l, 
-                     imm     = fn (_,l) => l, 
+                     lab     = fn (_,l) => l,
+                     imm     = fn (_,l) => l,
                      cellset = fn (c,l) => append(APP("getCellSetUse",c),l),
                      region  = fn (r,l) => append(APP("getRegionUse",r),l)
                     } (uses, LISTexp([],NONE))
@@ -327,7 +327,7 @@ struct
            in  {exp=TUPLEexp[def, use], pat=[]}
            end
            val getOpnd = RTL.queryOpnd rtlmd
-                         {name= "getOpnd",                   
+                         {name= "getOpnd",
                           extraArgs=["rest"],
                           reg = fn r => LISTexp([r],SOME(ID "rest")),
                           imm = fn r => raise Match,
@@ -357,7 +357,7 @@ struct
        in  FUN("defUse",TUPLEpat[IDpat "cpu", IDpat "resources"],
            LETexp([
              SEQdecl(map (fn LATENCYbind(id,_) =>
-                  VAL(id, APPexp(APP("latency"^id,ID "resources"), 
+                  VAL(id, APPexp(APP("latency"^id,ID "resources"),
                                   ID "cpu"))) latencies),
              queryFun{name="defUseQuery",
                     extraArgs=[],
@@ -370,7 +370,7 @@ struct
        end
 
        (* Make the pipeline query function (shared by all cpu types) *)
-       val pipelineOf = 
+       val pipelineOf =
        let val defaultPipeline = LISTexp([], NONE)
            fun queryPipeline{instr,rtl,const} =
            let val CONSbind{pipeline,...} = instr
@@ -380,28 +380,28 @@ struct
        in  FUN("pipelineOf",TUPLEpat[IDpat "cpu", IDpat "resources"],
             LETexp([
                SEQdecl(map (fn PIPELINEbind(id,_) =>
-                       VAL(id, APPexp(APP("pipeline"^id,ID "resources"), 
+                       VAL(id, APPexp(APP("pipeline"^id,ID "resources"),
                                       ID "cpu"))) pipelines),
                queryFun{name="pipelineQuery",
                         extraArgs=[],
                         args=["instr"],
                         extraExps=[],
                         localDecls=[],
-                        body=queryPipeline, 
+                        body=queryPipeline,
                         composite=composite}],
               [ID "pipelineQuery"]
             ))
        end
 
 
-       val findSlotBackward = 
+       val findSlotBackward =
            $["fun findSlotBackward(maxIssues, mergeable)",
              "                 (rt : reservation_table, time, pipeline) = ",
              "let fun search(t) = ",
              "    let fun fits([], t) = true",
-             "          | fits(r::rs, t) =", 
+             "          | fits(r::rs, t) =",
              "        mergeable(#2(A.sub(rt,~t)),r)",
-             "        andalso fits(rs, t+1)", 
+             "        andalso fits(rs, t+1)",
              "    in  if #1(A.sub(rt,~t)) < maxIssues",
              "        andalso fits(pipeline,t) then t else search(t-1)",
              "    end",
@@ -413,9 +413,9 @@ struct
              "                 (rt : reservation_table, time, pipeline) = ",
              "let fun search(t) = ",
              "    let fun fits([], t) = true",
-             "          | fits(r::rs, t) =", 
+             "          | fits(r::rs, t) =",
              "        mergeable(#2(A.sub(rt,t)),r)",
-             "        andalso fits(rs, t+1)", 
+             "        andalso fits(rs, t+1)",
              "    in  if #1(A.sub(rt,t)) < maxIssues",
              "        andalso fits(pipeline,t) then t else search(t+1)",
              "    end",
@@ -435,7 +435,7 @@ struct
              "in  A.update(rt, ~time, (n+1, r)) end"
             ]
 
-       val insertForward = 
+       val insertForward =
             $["fun insertForward(rt, time, pipeline) =",
              "let fun update([],t) = ()",
              "      | update(r::rs,t) =",
@@ -447,7 +447,7 @@ struct
              "    val (n, r) = A.sub(rt, time)",
              "in  A.update(rt, time, (n+1, r)) end"
             ]
- 
+
        (* Create the machine info for one architecture *)
        fun genMachineInfo cpu =
        let val cpuAndResources = TUPLEexp[ID cpu,ID("resources"^cpu)]
@@ -463,7 +463,7 @@ struct
               VAL("pipeline",     APP("pipelineOf", cpuAndResources))
              ],
              [VAL("forwardinfo"^cpu,
-                APP("CPU_INFO", 
+                APP("CPU_INFO",
                   RECORDexp[("maxIssues",maxIssues),
                             ("newTable",newTable),
                             ("pipeline",pipeline),
@@ -472,7 +472,7 @@ struct
                             ("defUse",defUse)
                             ])),
               VAL("backwardinfo"^cpu,
-                APP("CPU_INFO", 
+                APP("CPU_INFO",
                   RECORDexp[("maxIssues",maxIssues),
                             ("newTable",newTable),
                             ("pipeline",pipeline),
@@ -484,11 +484,11 @@ struct
            )
        end
 
-       val allMachineInfos = 
+       val allMachineInfos =
            SEQdecl(map (fn CPUbind{name,...} => genMachineInfo name) cpus)
 
        (* The info function *)
-       val infoFun = 
+       val infoFun =
           FUN("info",RECORDpat([("cpu",IDpat "cpu"),
                                 ("backward",IDpat "backward")],false),
              CASEexp(ID "cpu",
@@ -498,9 +498,9 @@ struct
                        IFexp(ID "backward",
                           ID("backwardinfo"^name),ID("forwardinfo"^name))))
                 cpus))
-               
-       (* The split copies function. 
-        * This must work before RA or after RA 
+
+       (* The split copies function.
+        * This must work before RA or after RA
         *)
        val impl = Comp.hasCopyImpl md
        val implInit = if impl then ", impl=ref NONE" else ""
@@ -521,7 +521,7 @@ struct
              ]
 
        (* The functor *)
-       val strBody = 
+       val strBody =
            [$ ["structure I = Instr",
                "structure C = I.C",
                "",
@@ -541,7 +541,7 @@ struct
             rtDecl,
             resTableDefinition,
             $[ "datatype cpu_info =",
-               "  CPU_INFO of", 
+               "  CPU_INFO of",
                "  { maxIssues : int,",
                "    pipeline : I.instruction -> pipeline,",
                "    defUse : I.instruction -> (I.C.cell * latency) list * I.C.cell list,",

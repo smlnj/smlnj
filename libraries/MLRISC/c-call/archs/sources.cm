@@ -1,16 +1,16 @@
 Library
 
-(*	functor X86_64SVIDFn *)
-	functor X86SVIDFn
+(*      functor X86_64SVIDFn *)
+        functor X86SVIDFn
 
 is
 
-	$/basis.cm
-	$/smlnj-lib.cm
+        $/basis.cm
+        $/smlnj-lib.cm
 
-	../gen/sources.cm
+        ../gen/sources.cm
 (*
-	../../staged-allocation/sources.cm
+        ../../staged-allocation/sources.cm
 *)
-(*	x86-64-svid-fn.sml*)
-	x86-svid-fn.sml
+(*      x86-64-svid-fn.sml*)
+        x86-svid-fn.sml

@@ -1,6 +1,6 @@
 (* Copyright (c) 1998 by Lucent Technologies *)
 
-local 
+local
   type tables = Tables.tidtab * Tables.tidtab
   type maps = Tid.uid Tidtab.uidtab * Pidtab.uid Pidtab.uidtab
 

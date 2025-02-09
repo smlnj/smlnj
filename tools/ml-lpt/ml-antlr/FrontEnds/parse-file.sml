@@ -1,6 +1,6 @@
 (* parse-file.sml
  *
- * COPYRIGHT (c) 2006 
+ * COPYRIGHT (c) 2006
  * John Reppy (http://www.cs.uchicago.edu/~jhr)
  * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
  * All rights reserved.
@@ -8,7 +8,7 @@
  * Driver for the parser.
  *)
 
-structure ParseFile = 
+structure ParseFile =
   struct
 
   (* glue together the lexer and parser *)
@@ -21,16 +21,16 @@ structure ParseFile =
 
   (* parse a file, returning a parse tree *)
     fun parse' (startGrm, filename) = let
-	  val _ = Err.status ("parsing " ^ filename)
-	  val file = TextIO.openIn filename
-	  fun get n = TextIO.inputN (file, n)
-	  val lexer = LLKParser.makeLexer get (Err.lexErr filename)
-	  in
-	    #1(LLKParser.parse
-		 (15, lexer, Err.parseErr filename, 
-		  (Err.parseErr filename, startGrm, parse')))
-	      before TextIO.closeIn file
-	  end
+          val _ = Err.status ("parsing " ^ filename)
+          val file = TextIO.openIn filename
+          fun get n = TextIO.inputN (file, n)
+          val lexer = LLKParser.makeLexer get (Err.lexErr filename)
+          in
+            #1(LLKParser.parse
+                 (15, lexer, Err.parseErr filename,
+                  (Err.parseErr filename, startGrm, parse')))
+              before TextIO.closeIn file
+          end
 
     fun parse filename = parse'(GrammarSyntax.mkGrammar(), filename)
 

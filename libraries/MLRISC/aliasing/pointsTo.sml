@@ -1,5 +1,5 @@
 (*
- * This module performs low-level flow insensitive points-to 
+ * This module performs low-level flow insensitive points-to
  * analysis for type-safe languages.
  *)
 structure PointsTo : POINTS_TO =
@@ -9,7 +9,7 @@ struct
 
    structure C = CellsBasis
 
-   datatype cell = 
+   datatype cell =
      LINK  of region
    | SREF  of C.cell * edges ref
    | WREF  of C.cell * edges ref
@@ -24,7 +24,7 @@ struct
    fun error msg = MLRiscErrorMsg.error("PointsTo",msg)
 
    (* PI > DOM > RAN > RECORD *)
-   fun greaterKind(PI,_) = false   
+   fun greaterKind(PI,_) = false
      | greaterKind(DOM,PI) = false
      | greaterKind(RAN,(PI | DOM)) = false
      | greaterKind(RECORD,(PI | DOM | RAN)) = false
@@ -33,8 +33,8 @@ struct
 
    fun less(k,i,k',i') = k=k' andalso i > i' orelse greaterKind(k,k')
 
-   val sort : (edgekind * int * region) list -> 
-              (edgekind * int * region) list = 
+   val sort : (edgekind * int * region) list ->
+              (edgekind * int * region) list =
       ListMergeSort.sort (fn ((k,i,_),(k',i',_)) => less(k,i,k',i'))
 
    val newMem = ref(fn _ => error "newMem") : (unit -> C.cell) ref
@@ -44,14 +44,14 @@ struct
    fun newWRef() = ref(WREF(!newMem(),ref []))
    fun newSCell() = ref(SCELL(!newMem(),ref []))
    fun newWCell() = ref(WCELL(!newMem(),ref []))
-   fun newTop{name,mutable} = 
+   fun newTop{name,mutable} =
      ref(TOP{mutable=mutable, id= !newMem(), name=name})
 
    fun find(ref(LINK x)) = find x
      | find x = x
 
    fun mut(ref(LINK x)) = mut x
-     | mut(r as ref(TOP{mutable=false, id, name})) = 
+     | mut(r as ref(TOP{mutable=false, id, name})) =
        (r := TOP{mutable=true, id=id, name=name})
      | mut(r as ref(SCELL x)) = r := SREF x
      | mut(r as ref(WCELL x)) = r := WREF x
@@ -63,7 +63,7 @@ struct
      | weak(r as ref(SREF x)) = (r := WREF x; mergePis x)
      | weak _ = ()
 
-   and mergePis(_,edges) = 
+   and mergePis(_,edges) =
        let val x = newSCell()
            fun merge([],es') = es'
              | merge((PI,_,y)::es,es') = (unify(x,y); merge(es, es'))
@@ -78,10 +78,10 @@ struct
      | getIth(k,i,ref(WCELL(_,edges))) = getIth'(k,i,edges)
 
    and getIth'(k,i,edges) =
-       let fun search((k',i',x)::es) = 
+       let fun search((k',i',x)::es) =
                  if k = k' andalso i = i' then find x else search es
-             | search [] = 
-               let val x = newSCell() 
+             | search [] =
+               let val x = newSCell()
                in edges := (k,i,x) :: !edges; x end
        in  search(!edges) end
 
@@ -92,7 +92,7 @@ struct
        fun linkMut(edges,x,y) = (x := LINK y; mut y; collapseAll(!edges,y))
        fun linky(ex,ey,x,y) = (x := LINK y; ey := unifyList(!ex,!ey))
        fun linkx(ex,ey,x,y) = (y := LINK x; ex := unifyList(!ex,!ey))
-       fun linkWREF(ex,ey,id,x,y) = 
+       fun linkWREF(ex,ey,id,x,y) =
        let val ey = unifyList(!ex,!ey)
            val n  = WREF(id,ref ey)
        in  x := LINK y; y := n end
@@ -136,12 +136,12 @@ struct
 
    and collapseAll([],_)    = ()
      | collapseAll((_,_,x)::xs,y) = (unify(x,y); collapseAll(xs,y))
-   
+
    and unifyList(l1,l2) =
        let fun merge([],l) = l
              | merge(l,[]) = l
              | merge(a as (c as (k,i,x))::u,b as (d as (k',i',y))::v) =
-                if k=k' andalso i=i' then (unify(x,y); c::merge(u,v)) 
+                if k=k' andalso i=i' then (unify(x,y); c::merge(u,v))
                 else if less(k,i,k',i') then d::merge(a,v) else c::merge(u,b)
        in merge(sort l1,sort l2) end
 
@@ -151,14 +151,14 @@ struct
    fun sub(x,i) = let val m = getIth(PI,i,x) in mut m; m end
 
    fun offset(x,i) = (unify(x,newTop{mutable=false,name=""}); find x)
-   
+
    and unifyAll(x,[]) = ()
-     | unifyAll(x,(_,_,y)::l) = (unify(x,y); unifyAll(x,l)) 
+     | unifyAll(x,(_,_,y)::l) = (unify(x,y); unifyAll(x,l))
 
    fun mkHeader(NONE,es) = es
      | mkHeader(SOME h,es) = (PI,~1,h)::es
 
-   fun mkAlloc(header, xs) = 
+   fun mkAlloc(header, xs) =
    let fun collect(_,[],l) = l
          | collect(i,x::xs,l) = collect(i+1,xs,(PI,i,x)::l)
    in  (!newMem(), ref(mkHeader(header,collect(0,xs,[])))) end
@@ -167,7 +167,7 @@ struct
    fun mkRef(header,x)     = ref(SREF(mkAlloc(header, [x])))
    fun mkArray(header,xs)  = ref(SREF(mkAlloc(header, xs)))
    fun mkVector(header,xs) = ref(SCELL(mkAlloc(header, xs)))
-   fun mkLambda(xs) = 
+   fun mkLambda(xs) =
    let fun collect(_,[],l) = l
          | collect(i,x::xs,l) = collect(i+1,xs,(DOM,i,x)::l)
    in  ref(SCELL(!newMem(), ref(collect(0,xs,[])))) end
@@ -184,40 +184,40 @@ struct
 
    fun strongUpdate(a,i,x) = unify(sub(a,i),x)
    fun strongSubscript(a,i) = sub(a,i)
-   fun weakUpdate(a,x) = 
+   fun weakUpdate(a,x) =
        let val elem = sub(a, 0)
        in  weak elem; unify(elem, x) end
-   fun weakSubscript(a) = 
+   fun weakSubscript(a) =
        let val elem = sub(a, 0)
        in  weak elem; elem end
 
    fun interfere(x,y) = find x = find y
 
    val maxLevels = MLRiscControl.mkInt ("points-to-show-max-levels",
-					"max # of level to show in pointsTo")
+                                        "max # of level to show in pointsTo")
    val _ = maxLevels := 3
 
    fun toString r = show(!r, !maxLevels)
 
    and show(LINK x, lvl) = show(!x, lvl)
      | show(SREF(id,es), lvl) = "sref"^C.toString id^edges(es, lvl)
-     | show(WREF(id,es), lvl) = "wref"^C.toString id^edges(es, lvl) 
-     | show(SCELL(id,es), lvl) = "s"^C.toString id^edges(es, lvl) 
-     | show(WCELL(id,es), lvl) = "w"^C.toString id^edges(es, lvl) 
+     | show(WREF(id,es), lvl) = "wref"^C.toString id^edges(es, lvl)
+     | show(SCELL(id,es), lvl) = "s"^C.toString id^edges(es, lvl)
+     | show(WCELL(id,es), lvl) = "w"^C.toString id^edges(es, lvl)
      | show(TOP{name="",mutable=true,id,...}, _) = "var"^C.toString id
      | show(TOP{name="",mutable=false,id,...}, _) = "const"^C.toString id
      | show(TOP{name,...}, _) = name
 
    and edges(es, ~1) = ""
-     | edges(es, lvl) = 
+     | edges(es, lvl) =
        let fun prInt i = if i < 0 then "-"^Int.toString(~i) else Int.toString i
            fun add(a,"") = a
              | add(a,b)  = a^","^b
            fun cnv((PI,i,x),s) = add(prInt i^"->"^show(!x, lvl-1),s)
              | cnv(_,s) = s
-       in  case foldr cnv "" (!es) of 
-             "" => "" 
-           | t  => if lvl = 0 then "..." else "["^t^"]" 
+       in  case foldr cnv "" (!es) of
+             "" => ""
+           | t  => if lvl = 0 then "..." else "["^t^"]"
        end
 
 end

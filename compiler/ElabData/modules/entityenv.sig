@@ -24,9 +24,9 @@ sig
   val lookFctEnt : entityEnv * entVar -> Modules.fctEntity
 
   val lookEP : entityEnv * entPath -> Modules.entity
-  val lookTycEP : entityEnv * entPath -> Modules.tycEntity 
-  val lookStrEP : entityEnv * entPath -> Modules.strEntity 
-  val lookFctEP : entityEnv * entPath -> Modules.fctEntity 
+  val lookTycEP : entityEnv * entPath -> Modules.tycEntity
+  val lookStrEP : entityEnv * entPath -> Modules.strEntity
+  val lookFctEP : entityEnv * entPath -> Modules.fctEntity
 
   val debugging : bool ref
 

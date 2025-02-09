@@ -49,7 +49,7 @@ signature SUBSTRING =
     val dropr  : (char -> bool) -> substring -> substring
     val takel  : (char -> bool) -> substring -> substring
     val taker  : (char -> bool) -> substring -> substring
-	
+
     val position : string -> substring -> (substring * substring)
 
     val span : (substring * substring) -> substring

@@ -25,7 +25,7 @@ ml_val_t _ml_win32_CONFIG_get_version_ex (ml_state_t *msp, ml_val_t arg)
 
     result = GetVersionEx((OSVERSIONINFO *)&versionInfo);
     if (result == 0) {
-	return RAISE_SYSERR(msp,-1);
+        return RAISE_SYSERR(msp,-1);
     }
 
     major = WORD32_CtoML(msp, versionInfo.dwMajorVersion);
@@ -62,10 +62,10 @@ ml_val_t _ml_win32_CONFIG_get_volume_information (ml_state_t *msp, ml_val_t arg)
     ml_val_t res, volume, system, serial, maxcomponent, vec1, vec2;
 
     if (!GetVolumeInformation(
-	subKey, szVolumeName, MAX_PATH+1, &serialNumber, &maxComponentLength,
-	&fileSystemFlags, szFilesystemName, MAX_PATH+1))
+        subKey, szVolumeName, MAX_PATH+1, &serialNumber, &maxComponentLength,
+        &fileSystemFlags, szFilesystemName, MAX_PATH+1))
     {
-	return RAISE_SYSERR(msp, -1);
+        return RAISE_SYSERR(msp, -1);
     }
 
     SYSWORD_ALLOC(msp, serial, serialNumber);
@@ -93,7 +93,7 @@ ml_val_t _ml_win32_CONFIG_get_windows_directory (ml_state_t *msp, ml_val_t arg)
     ml_val_t res, vec;
 
     if ((dwSize = GetWindowsDirectory(directory, dwSize)) == 0) {
-	return RAISE_SYSERR(msp,-1);
+        return RAISE_SYSERR(msp,-1);
     }
 
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS (dwSize+1));
@@ -110,7 +110,7 @@ ml_val_t _ml_win32_CONFIG_get_system_directory (ml_state_t *msp, ml_val_t arg)
     ml_val_t res, vec;
 
     if ((dwSize = GetSystemDirectory(directory, dwSize)) == 0) {
-	return RAISE_SYSERR(msp,-1);
+        return RAISE_SYSERR(msp,-1);
     }
 
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS (dwSize+1));
@@ -127,7 +127,7 @@ ml_val_t _ml_win32_CONFIG_get_computer_name(ml_state_t *msp, ml_val_t arg)
     ml_val_t res, vec;
 
     if (!GetComputerName(name, &dwSize)) {
-	return RAISE_SYSERR(msp,-1);
+        return RAISE_SYSERR(msp,-1);
     }
 
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS (dwSize+1));
@@ -144,7 +144,7 @@ ml_val_t _ml_win32_CONFIG_get_user_name(ml_state_t *msp, ml_val_t arg)
     ml_val_t res, vec;
 
     if (!GetUserName(name, &dwSize)) {
-	return RAISE_SYSERR(msp,-1);
+        return RAISE_SYSERR(msp,-1);
     }
 
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS (dwSize));

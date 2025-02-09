@@ -26,7 +26,7 @@ struct
   type tidBinding =
     {name: string option,
      ntype: namedCtype option,
-     global: bool, (* is it a top level definition? *)     
+     global: bool, (* is it a top level definition? *)
      location: SourceMap.location}
 
   (* info used in environment symbol tables *)

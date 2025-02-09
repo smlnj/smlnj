@@ -13,7 +13,7 @@ struct
    structure G   = Graph
    structure A   = Array
 
-   fun gcSafety(SSA as G.GRAPH ssa) = 
+   fun gcSafety(SSA as G.GRAPH ssa) =
    let val N = #capacity ssa
    in  SSA
    end

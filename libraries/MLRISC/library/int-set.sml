@@ -52,13 +52,13 @@ struct
    fun remove(SET{stack,pos,count},i) =
        let val j = A.sub(pos,i)
            val n = !count
-           val k = A.sub(stack,j) 
-       in  if j < n andalso i = k then 
+           val k = A.sub(stack,j)
+       in  if j < n andalso i = k then
              let val k' = A.sub(stack,n-1)
              in  A.update(stack,j,k');
                  A.update(pos,k',j);
                  count := n - 1
-             end 
+             end
            else ()
        end
 
@@ -74,13 +74,13 @@ struct
        let fun g(~1,x) = x
              | g(i,x)  = g(i-1,f(A.sub(stack,i),x))
        in  g(!count - 1,x) end
-   fun toList set = fold op:: [] set 
-   fun toString set = 
+   fun toList set = fold op:: [] set
+   fun toString set =
         String.concat(
             "{"::fold (fn (i,[x]) => [Int.toString i,x]
                         | (i,s)   => Int.toString i::","::s) ["}"] set)
 
-   fun copy (SET{stack,pos,count}) = 
+   fun copy (SET{stack,pos,count}) =
        let val N      = A.length stack
            val stack' = A.array(N,0)
            val pos'   = A.array(N,0)
@@ -104,8 +104,8 @@ struct
                          s1;
                      s3
                  end
-       
 
 
-end 
+
+end
 

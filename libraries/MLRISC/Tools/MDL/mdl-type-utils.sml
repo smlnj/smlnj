@@ -18,11 +18,11 @@ struct
    val newIVar = genVar INTkind
    val newVar = genVar TYPEkind
 
-   exception OccursCheck 
-   exception Unify 
+   exception OccursCheck
+   exception Unify
 
    fun init() = counter := 0
-  
+
    fun bug msg = MLRiscErrorMsg.error("MDTyping",msg)
 
    fun pr ty = PP.text(AstPP.ty ty)
@@ -48,14 +48,14 @@ struct
 
    val iboundvars = List.filter (fn VARty(INTkind,_,_,_) => true | _ => false)
 
-   fun inst lvl (e, POLYty(tvs,ty)) = 
-       let val tvs' = map (fn VARty(k,_,_,x) => 
+   fun inst lvl (e, POLYty(tvs,ty)) =
+       let val tvs' = map (fn VARty(k,_,_,x) =>
                            let val v = genVar k lvl
                            in  x := SOME v; v end) tvs
-           val ty = copy ty 
+           val ty = copy ty
            val _ = app (fn VARty(_,_,_,x) => x := NONE) tvs
            val ivars = iboundvars tvs'
-       in  case ivars of 
+       in  case ivars of
              [] => (e, ty)
            | _ => (APPexp(e, TUPLEexp(map TYPEexp ivars)), ty)
        end
@@ -67,10 +67,10 @@ struct
        val trail = ref []
        fun f(VARty(_,_,_,ref(SOME t))) = f t
          | f(t as VARty(k,i,ref l,r)) =
-               if i > mark orelse l < lvl then t 
+               if i > mark orelse l < lvl then t
                else let val v = genVar k 0
-                    in  r := SOME v; 
-                        bvs := (v,t) :: !bvs; trail := r :: !trail; v 
+                    in  r := SOME v;
+                        bvs := (v,t) :: !bvs; trail := r :: !trail; v
                     end
          | f(t as TYVARty _) = t
          | f(t as CELLty _) = t
@@ -86,7 +86,7 @@ struct
        fun arityRaise(bvs, e) =
            case iboundvars bvs of
              []  => e
-           | bvs => let val xs = 
+           | bvs => let val xs =
                             map (fn VARty(_,n,_,_) => "T"^Int.toString n) bvs
                         val args = map IDpat xs
                     in  case e of
@@ -116,9 +116,9 @@ struct
 
        fun f(VARty(_,_,_,ref(SOME x)),y) = f(x,y)
          | f(x,VARty(_,_,_,ref(SOME y))) = f(x,y)
-         | f(x as VARty(k1,_,m,u),y as VARty(k2,_,n,v)) = 
+         | f(x as VARty(k1,_,m,u),y as VARty(k2,_,n,v)) =
                if u = v then ()
-               else if k1 = INTkind then 
+               else if k1 = INTkind then
                        (v := SOME x; m := Int.max(!m,!n))
                     else
                        (u := SOME y; n := Int.max(!m,!n))
@@ -141,7 +141,7 @@ struct
          | g _ = raise Unify
 
        and h(ltys1,ltys2) =
-           let val sort = ListMergeSort.sort (fn ((a,_),(b,_)) => a > b) 
+           let val sort = ListMergeSort.sort (fn ((a,_),(b,_)) => a > b)
                val ltys1 = sort ltys1
                val ltys2 = sort ltys2
                fun merge((x,t)::m,(y,u)::n) =
@@ -153,8 +153,8 @@ struct
 
        and upd (t1 as (k,name,lvl,v)) t2 =
            let fun g(VARty(_,_,_,ref(SOME t))) = g t
-                 | g(VARty(k',n,l,y)) = 
-                     if y = v then raise OccursCheck 
+                 | g(VARty(k',n,l,y)) =
+                     if y = v then raise OccursCheck
                      else (l := Int.max(!lvl,!l))
                  | g(TUPLEty ts) = app g ts
                  | g(RECORDty lts) = app (fn (_,t) => g t) lts
@@ -175,7 +175,7 @@ struct
    end
 
    fun apply (msg,VARty(_,_,_,ref(SOME t)),args) = apply (msg,t,args)
-     | apply (msg,f as LAMBDAty(tvs,body),args) = 
+     | apply (msg,f as LAMBDAty(tvs,body),args) =
         let val arity1 = length tvs
             val arity2 = length args
         in  if arity1 <> arity2 then
@@ -197,11 +197,11 @@ struct
         end
      | apply (msg,t,args) =
         (Error.error("type "^pr t^" is not a type constructor"^msg); newVar 0)
- 
+
    fun poly([],t) = t
      | poly(tvs,t) = POLYty(tvs,t)
-         
-   fun newType(DATATYPEbind{id,tyvars,...}) = 
+
+   fun newType(DATATYPEbind{id,tyvars,...}) =
        let val ty = IDty(IDENT([],id))
        in  case tyvars of
               [] => ([],ty)

@@ -7,16 +7,16 @@
 
 signature LIVENESS_ANALYSIS =
 sig
-  
+
    structure CFG : CONTROL_FLOW_GRAPH
    structure I   : INSTRUCTIONS
        sharing CFG.I = I
 
-   val liveness : 
+   val liveness :
        { cfg      : CFG.cfg,
          liveOut  : CFG.block Graph.node -> I.C.cell list,
          defUse   : CFG.block Graph.node -> I.C.cell list * I.C.cell list,
-         result   : {block: CFG.block Graph.node, 
+         result   : {block: CFG.block Graph.node,
                      liveIn: I.C.cell list, liveOut: I.C.cell list} -> unit
        } -> unit
 
@@ -40,15 +40,15 @@ struct
               val  forward    = false
               val  bot        = SL.empty
               val  ==         = SL.eq
-              val  join       = List.foldr SL.union SL.empty 
+              val  join       = List.foldr SL.union SL.empty
               val  op +       = SL.union
               val  op -       = SL.difference
-              type dataflow_info = 
+              type dataflow_info =
                   { liveOut : CFG.block Graph.node -> C.cell list,
-                    defUse  : CFG.block Graph.node -> 
+                    defUse  : CFG.block Graph.node ->
                                 C.cell list * C.cell list,
-                    result  : {block: CFG.block Graph.node, 
-                               liveIn: I.C.cell list, 
+                    result  : {block: CFG.block Graph.node,
+                               liveIn: I.C.cell list,
                                liveOut: I.C.cell list} -> unit
                   }
 
@@ -58,19 +58,19 @@ struct
                       val use       = SL.uniq use
                       val live_out  = SL.uniq(liveOut(b,b'))
                   in  { input    = live_out,
-	                output   = (live_out - def) + use,
-	                transfer = fn live_out => (live_out - def) + use
+                        output   = (live_out - def) + use,
+                        transfer = fn live_out => (live_out - def) + use
                       }
                   end
 
               fun epilogue(cfg,{result, ...}:dataflow_info)
-                          { node, input=liveOut, output=liveIn } = 
-                  result{block=node, liveIn=SL.return liveIn, 
+                          { node, input=liveOut, output=liveIn } =
+                  result{block=node, liveIn=SL.return liveIn,
                                      liveOut=SL.return liveOut}
          end
         )
 
-   fun liveness {cfg,liveOut,defUse,result} = 
+   fun liveness {cfg,liveOut,defUse,result} =
        (Liveness.analyze(cfg, {liveOut=liveOut,defUse=defUse,result=result});
         ()
        )

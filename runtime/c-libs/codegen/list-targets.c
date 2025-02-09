@@ -19,6 +19,7 @@
  */
 ml_val_t _ml_CodeGen_listTargets (ml_state_t *msp, ml_val_t arg)
 {
+    UNUSED_UNIT_PARAM(arg);
     return llvm_listTargets (msp);
 
 } /* end of _ml_CodeGen_listTargets */

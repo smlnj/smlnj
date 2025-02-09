@@ -7,7 +7,7 @@ sig
    val parse        : string * TextIO.instream -> Ast.decl list
    val parse'       : bool -> string * TextIO.instream -> Ast.decl list
    val parseString  : string -> Ast.decl list
-   val parseString' : bool -> string -> Ast.decl list 
+   val parseString' : bool -> string -> Ast.decl list
    val load         : string -> Ast.decl list
    val load'        : bool -> string -> Ast.decl list
 
@@ -35,7 +35,7 @@ struct
    open PrecedenceParser
 
 
-   val defaultPrec = 
+   val defaultPrec =
        foldr (fn ((id,fixity),S) => declare(S,id,fixity)) empty
         [("+",INFIX 5),
          ("-",INFIX 5),
@@ -69,11 +69,11 @@ struct
    let val _      = Lex.UserDeclarations.init ()
        val srcMap = SourceMapping.newmap{srcFile=filename}
        val errCount = ref 0
-       fun err(a,b,msg) = 
-       if silent then raise ParseError 
+       fun err(a,b,msg) =
+       if silent then raise ParseError
        else
        let val loc = SourceMapping.location srcMap (a,b)
-       in  Error.setLoc loc; 
+       in  Error.setLoc loc;
            Error.error(msg);
            errCount := !errCount + 1;
            if !errCount > MAX_ERROR then raise ParseError else ()
@@ -84,16 +84,16 @@ struct
        fun parseError(msg,a,b) = err(a,b,msg)
        fun errPos msg = if silent then raise ParseError else Error.errorPos msg
        fun import (loc,filename) = (Error.setLoc loc; loadIt silent filename)
-       val (result,lexer) = 
+       val (result,lexer) =
              Parser.parse(15,lexer,parseError,
                (srcMap,errPos,import,ref defaultPrec,extraCells))
    in  if !Error.errorCount > 0 then raise ParseError else result end
 
    and loadIt silent filename =
    let val stream = TextIO.openIn filename
-   in  parseIt silent (filename,stream) before TextIO.closeIn stream 
+   in  parseIt silent (filename,stream) before TextIO.closeIn stream
           handle e => (TextIO.closeIn stream; raise e)
-   end handle IO.Io{function,name,cause,...} => 
+   end handle IO.Io{function,name,cause,...} =>
        (
         Error.error(function^" failed in \""^name^"\" ("^exnName cause^")");
         raise ParseError)

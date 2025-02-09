@@ -1,6 +1,6 @@
 (*
- * This module describes a DDG for acyclic global scheduling 
- * (for non-predicated architectures.) 
+ * This module describes a DDG for acyclic global scheduling
+ * (for non-predicated architectures.)
  * Hyperblock scheduling uses another data structure.
  *
  * -- Allen
@@ -15,7 +15,7 @@ struct
    structure GI         = DirectedGraph(A)
    structure G          = Graph
 
-   datatype dependence = 
+   datatype dependence =
         FLOW | OUTPUT | ANTI             (* register based dependence *)
       | MEM_FLOW | MEM_OUTPUT | MEM_ANTI (* memory based dependence *)
       | CTRL | CTRL_ANTI                 (* control dependence *)
@@ -50,9 +50,9 @@ struct
          blockMap   : blockMap
         }
 
-   datatype ('node,'edge) info = 
+   datatype ('node,'edge) info =
         INFO of {internalInfo: ('node,'edge) internalInfo,
-                 globalInfo  : globalInfo option ref 
+                 globalInfo  : globalInfo option ref
                 }
 
    withtype ('node,'edge) ddg  = ('node,'edge,('node,'edge) info) Graph.graph
@@ -72,7 +72,7 @@ struct
    let val INFO{internalInfo, ...} = #graph_info ddg
    in  internalInfo end
 
-   fun globalInfo(G.GRAPH ddg) = 
+   fun globalInfo(G.GRAPH ddg) =
    let val INFO{globalInfo, ...} = #graph_info ddg
    in  globalInfo end
 
@@ -80,9 +80,9 @@ struct
 
    (* Slow but pretty way of pretty printing registers *)
    fun showReg(prefix,r) = prefix^C.toString r
- 
+
    fun edgeToString(EDGE{l,d,r}) =
-   let val (dep,prefix) = 
+   let val (dep,prefix) =
            case d of
              FLOW       => ("","r")
            | OUTPUT     => ("out","r")
@@ -96,13 +96,13 @@ struct
            | LIVEOUT    => ("liveout","r")
        val lat = if l = 0 then "" else " "^latToString l
 
-       val reg = "("^showReg(prefix,r)^")" 
+       val reg = "("^showReg(prefix,r)^")"
    in  dep ^ lat ^ reg end
 
    fun cellsToString S =
    let fun pr r = showReg("r",r)
    in  LineBreak.lineBreak 50
-         (List.foldr (fn (r,l) => if l = "" then pr r else pr r^" "^l) "" S) 
+         (List.foldr (fn (r,l) => if l = "" then pr r else pr r^" "^l) "" S)
    end
 
    val LIVENESS = Annotations.new

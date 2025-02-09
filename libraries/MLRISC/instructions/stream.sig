@@ -26,12 +26,12 @@ sig
 
    (* Note:
     o  Each compilation unit should be wrapped between beginCluster/endCluster.
-     
+
     o  The method annotation adds an annotation to the current basic block,
-       not to the current instruction. 
-       
+       not to the current instruction.
+
     o  The method comment add a comment to the current basic block.
-       Usually comment(msg) is the same as 
+       Usually comment(msg) is the same as
           annotation(BasicAnnotations.COMMENT msg).
     *)
 

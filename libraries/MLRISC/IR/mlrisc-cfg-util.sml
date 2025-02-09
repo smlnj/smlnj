@@ -49,8 +49,8 @@ struct
    fun isMerge (G.GRAPH cfg) node = length(#in_edges cfg node) > 1
    fun isSplit (G.GRAPH cfg) node = length(#out_edges cfg node) > 1
 (*
-   fun hasSideExits (G.GRAPH cfg) node = 
-         List.exists (fn (_,_,CFG.EDGE{k=CFG.SIDEEXIT _,...}) => true 
+   fun hasSideExits (G.GRAPH cfg) node =
+         List.exists (fn (_,_,CFG.EDGE{k=CFG.SIDEEXIT _,...}) => true
                        | _ => false) (#out_edges cfg node)
 *)
    fun hasSideExits _ _ = false
@@ -72,7 +72,7 @@ struct
           CFG.BLOCK{insns=ref [],...} => ()
        |  CFG.BLOCK{kind=CFG.START,...} => ()
        |  CFG.BLOCK{kind=CFG.STOP,...} => ()
-       |  CFG.BLOCK{insns=insns as ref(jmp::rest),...} => 
+       |  CFG.BLOCK{insns=insns as ref(jmp::rest),...} =>
              (case #out_edges cfg node of
                 [] => ()
              |  [(_,_,CFG.EDGE{k=(CFG.ENTRY | CFG.EXIT),...})] => ()
@@ -83,7 +83,7 @@ struct
              |  [(_,i,CFG.EDGE{k=CFG.BRANCH x,...}),
                  (_,j,CFG.EDGE{k=CFG.BRANCH y,...})] =>
                   let val (i,j) = if x then (j,i) else (i,j)
-                  in  insns := 
+                  in  insns :=
                         InsnProps.setTargets(jmp,[labelOf i,labelOf j])::rest
                   end
              |  es =>
@@ -106,20 +106,20 @@ struct
     *  After merging blocks i and j will become block i.
     *
     *=====================================================================*)
-   fun mergeEdge (CFG as G.GRAPH cfg) (i,j,e as CFG.EDGE{w,k,...}) = 
+   fun mergeEdge (CFG as G.GRAPH cfg) (i,j,e as CFG.EDGE{w,k,...}) =
    let val _ = case k of
                   (CFG.ENTRY | CFG.EXIT) => raise Can'tMerge
-               |  _ => () 
+               |  _ => ()
        val _ = case (#out_edges cfg i,#in_edges cfg j) of
-                  ([(_,j',_)],[(i',_,_)]) => 
+                  ([(_,j',_)],[(i',_,_)]) =>
                      if j' <> j orelse i' <> i then raise Can'tMerge
                      else ()
-               |  _ => raise Can'tMerge  
+               |  _ => raise Can'tMerge
        val _ = if mustPreceed CFG (i,j) then raise Can'tMerge else ()
-       val CFG.BLOCK{data=d2,insns=i2,annotations=a2,...} = 
+       val CFG.BLOCK{data=d2,insns=i2,annotations=a2,...} =
               #node_info cfg j
        val _  = case !d2 of [] => () | _ => raise Can'tMerge
-       val CFG.BLOCK{data=d1,insns=i1,annotations=a1,...} = 
+       val CFG.BLOCK{data=d1,insns=i1,annotations=a1,...} =
               #node_info cfg i
           (* If both blocks have annotations then don't merge them.
            * But instead, just try to removed the jump instruction instead.
@@ -129,21 +129,21 @@ struct
                | _ => true
        val insns1 = case !i1 of
                       [] => []
-                    | insns as jmp::rest => 
-                        if InsnProps.instrKind jmp = InsnProps.IK_JUMP 
+                    | insns as jmp::rest =>
+                        if InsnProps.instrKind jmp = InsnProps.IK_JUMP
                         then rest else insns
    in  if canMerge then
         (i1 := !i2 @ insns1;
          a1 := !a1 @ !a2;
-         #set_out_edges cfg 
+         #set_out_edges cfg
            (i,map (fn (_,j',e) => (i,j',e)) (#out_edges cfg j));
          #remove_node cfg j;
          updateJumpLabel CFG i
         )
        else (* Just eliminate the jump instruction at the end *)
          (i1 := insns1;
-          #set_out_edges cfg 
-            (i,map (fn (i,j,CFG.EDGE{w,a,...}) => 
+          #set_out_edges cfg
+            (i,map (fn (i,j,CFG.EDGE{w,a,...}) =>
                   (i,j,CFG.EDGE{k=CFG.FALLSTHRU,w=w,a=a}))
                      (#out_edges cfg i))
          );
@@ -155,17 +155,17 @@ struct
     *  Eliminate the jump at the end of a basic block if feasible
     *
     *=====================================================================*)
-   fun eliminateJump (CFG as G.GRAPH cfg) i = 
+   fun eliminateJump (CFG as G.GRAPH cfg) i =
        (case #out_edges cfg i of
           [e as (i,j,CFG.EDGE{k,w,a})] =>
             (case CFG.fallsThruFrom(CFG,j) of
                 SOME _ => false
-             |  NONE => 
+             |  NONE =>
                 if mustPreceed CFG (j,i) then false
-                else 
+                else
                 let val CFG.BLOCK{insns,...} = #node_info cfg i
                     val CFG.BLOCK{data,...}  = #node_info cfg j
-                in  case (!data,!insns) of 
+                in  case (!data,!insns) of
                       ([],jmp::rest) =>
                        if InsnProps.instrKind jmp = InsnProps.IK_JUMP then
                         (insns := rest;
@@ -179,13 +179,13 @@ struct
             )
        |  _ => false
        )
-    
+
    (*=====================================================================
     *
     *  Insert a jump at the end of a basic block if feasible
     *
     *=====================================================================*)
-   fun insertJump (CFG as G.GRAPH cfg) i =   
+   fun insertJump (CFG as G.GRAPH cfg) i =
        (case #out_edges cfg i of
            [e as (i,j,CFG.EDGE{k=CFG.FALLSTHRU,w,a,...})] =>
               let val CFG.BLOCK{insns,...} = #node_info cfg i
@@ -199,19 +199,19 @@ struct
 
    (*=====================================================================
     *
-    *  Split a control flow edge, return a new edge and the new block 
+    *  Split a control flow edge, return a new edge and the new block
     *
     *=====================================================================*)
-   fun splitEdge (CFG as G.GRAPH cfg) 
-                 {kind, edge=(i,j,e as CFG.EDGE{w,...}),jump} = 
+   fun splitEdge (CFG as G.GRAPH cfg)
+                 {kind, edge=(i,j,e as CFG.EDGE{w,...}),jump} =
    let val k = #new_id cfg ()
        val jump = jump orelse i = j orelse
-              (case CFG.fallsThruFrom(CFG,j) of 
+              (case CFG.fallsThruFrom(CFG,j) of
                 NONE => false
               | SOME _ => true)
        val insns = ref(if jump then [InsnProps.jump(labelOf CFG j)] else [])
-       val node = 
-           CFG.BLOCK{id=k, kind=kind, 
+       val node =
+           CFG.BLOCK{id=k, kind=kind,
                      freq= ref(!w), data=ref [], labels = ref [],
                      insns=insns, annotations=ref []}
        val kind = if jump then CFG.JUMP else CFG.FALLSTHRU
@@ -222,7 +222,7 @@ struct
        #add_edge cfg edge;
        updateJumpLabel CFG i;
        {node=(k,node),edge=edge}
-   end 
+   end
 
    (*=====================================================================
     *
@@ -231,12 +231,12 @@ struct
     *=====================================================================*)
    fun splitAllCriticalEdges (CFG as G.GRAPH cfg) =
    let val changed = ref false
-   in  #forall_edges cfg 
+   in  #forall_edges cfg
          (fn e => if isCriticalEdge CFG e then
            (splitEdge CFG {edge=e,kind=CFG.NORMAL,jump=false}; changed := true)
             else ());
        if !changed then CFG.changed CFG else ()
-   end 
+   end
 
    (*=====================================================================
     *
@@ -244,7 +244,7 @@ struct
     *  entering into the region.  Return the set of new edges and nodes
     *
     *=====================================================================*)
-   fun tailDuplicate (CFG as G.GRAPH cfg : CFG.cfg) 
+   fun tailDuplicate (CFG as G.GRAPH cfg : CFG.cfg)
                      {subgraph=G.GRAPH subgraph : CFG.cfg,root} =
    let exception NotFound
        val blockMap = H.array'(10,fn v => raise NotFound)
@@ -271,15 +271,15 @@ struct
 
        and dupl([],Ns,Es,changed) = (Ns,Es,changed)
          | dupl(n::ns,Ns,Es,changed) =
-              redirect(#out_edges cfg n,ns,Ns,Es,changed)   
+              redirect(#out_edges cfg n,ns,Ns,Es,changed)
 
        and redirect([],ns,Ns,Es,changed) = dupl(ns,Ns,Es,changed)
          | redirect((u,v,e)::es,ns,Ns,Es,changed) =
             if v <> root andalso
                #has_edge cfg (u,v) andalso
-               #has_node subgraph v andalso 
+               #has_node subgraph v andalso
                not(#has_edge subgraph (u,v)) then
-               (* 
+               (*
                 * u -> v is a side entry edge, duplicate v
                 *)
             let val _ = print("[tail duplicating "^Int.toString u^" -> "^
@@ -292,13 +292,13 @@ struct
             end
             else redirect(es,ns,Ns,Es,changed)
 
-       fun iter(Ns,Es) = 
+       fun iter(Ns,Es) =
            let val (Ns,Es,changed) = process(#nodes subgraph (),[],Ns,Es)
            in  if changed then (CFG.changed CFG; iter(Ns,Es))
                else {nodes=Ns,edges=Es}
            end
 
-   in  iter([],[]) 
+   in  iter([],[])
    end
 
 
@@ -309,7 +309,7 @@ struct
     *=====================================================================*)
    fun removeUnreachableCode(CFG as G.GRAPH cfg) =
    let val N = #capacity cfg ()
-       val visited = S.create N 
+       val visited = S.create N
        fun mark n = if S.markAndTest(visited,n) then ()
                     else app mark (#succ cfg n)
        val changed = ref false
@@ -337,8 +337,8 @@ struct
    let val mergeEdge = mergeEdge CFG
        fun higherFreq((_,_,CFG.EDGE{w=x,...}),(_,_,CFG.EDGE{w=y,...}))= !x < !y
        fun mergeAll([],changed) = changed
-         | mergeAll(e::es,changed) = mergeAll(es,mergeEdge e orelse changed) 
-       (* note: sort expects the gt operator and sorts in ascending order *) 
+         | mergeAll(e::es,changed) = mergeAll(es,mergeEdge e orelse changed)
+       (* note: sort expects the gt operator and sorts in ascending order *)
        val changed = mergeAll(ListMergeSort.sort higherFreq (#edges cfg ()),
                               false)
    in  if changed then CFG.changed CFG else ()

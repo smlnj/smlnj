@@ -1,23 +1,23 @@
-(* printFlowgraph.sml -- print flowgraph of target machine instructions. 
+(* printFlowgraph.sml -- print flowgraph of target machine instructions.
  *
  * Copyright (c) 1997 Bell Laboratories.
  *)
-signature PRINT_FLOWGRAPH = 
+signature PRINT_FLOWGRAPH =
 sig
    structure Asm : INSTRUCTION_EMITTER
    structure CFG : CONTROL_FLOW_GRAPH
-		      where I = Asm.I 
-			and P = Asm.S.P
+                      where I = Asm.I
+                        and P = Asm.S.P
 
    val printCFG : TextIO.outstream -> string -> CFG.cfg -> unit
 end
 
 
-functor PrintFlowgraph 
+functor PrintFlowgraph
    (structure Asm : INSTRUCTION_EMITTER
     structure CFG : CONTROL_FLOW_GRAPH
-		    where I = Asm.I
-		      and P = Asm.S.P
+                    where I = Asm.I
+                      and P = Asm.S.P
    ) : PRINT_FLOWGRAPH =
 struct
    structure Asm = Asm
@@ -35,37 +35,37 @@ struct
    in iter list
    end
 
-   fun printCFG stream title (Cfg as Graph.GRAPH cfg) = 
+   fun printCFG stream title (Cfg as Graph.GRAPH cfg) =
    let fun pr str = TextIO.output(stream, str)
        val prList = printList stream
        val annotations = !(CFG.annotations Cfg)
-       val Asm.S.STREAM{emit,pseudoOp,defineLabel,annotation,...} = 
+       val Asm.S.STREAM{emit,pseudoOp,defineLabel,annotation,...} =
              AsmStream.withStream stream Asm.makeStream annotations
 
-       fun showFreq(ref w) = Fmt.format "[%f]" [Fmt.REAL w] 
-       fun showEdge(blknum,e) = 
-	   Fmt.format "%d:%s" [Fmt.INT blknum, Fmt.STR(CFG.show_edge e)]
+       fun showFreq(ref w) = Fmt.format "[%f]" [Fmt.REAL w]
+       fun showEdge(blknum,e) =
+           Fmt.format "%d:%s" [Fmt.INT blknum, Fmt.STR(CFG.show_edge e)]
        fun showSucc(_, x, e) = showEdge(x,e)
-       fun showPred(x, _, e) = showEdge(x,e) 
+       fun showPred(x, _, e) = showEdge(x,e)
        fun showSuccs b =
-            (pr "\tsucc:     "; 
-             prList (map showSucc (#out_edges cfg b)); 
+            (pr "\tsucc:     ";
+             prList (map showSucc (#out_edges cfg b));
              pr "\n")
        fun showPreds b =
-            (pr "\tpred:     "; 
-             prList (map showPred (#in_edges cfg b)); 
+            (pr "\tpred:     ";
+             prList (map showPred (#in_edges cfg b));
              pr "\n")
 
-       fun printBlock(_, CFG.BLOCK{kind=CFG.START, id, freq, ...}) = 
+       fun printBlock(_, CFG.BLOCK{kind=CFG.START, id, freq, ...}) =
            (pr (Fmt.format "ENTRY %d %s\n" [Fmt.INT id, Fmt.STR(showFreq freq)]);
             showSuccs id)
-         | printBlock(_, CFG.BLOCK{kind=CFG.STOP, id, freq, ...}) = 
-	   (pr (Fmt.format "EXIT %d %s\n" [Fmt.INT id, Fmt.STR(showFreq freq)]);
+         | printBlock(_, CFG.BLOCK{kind=CFG.STOP, id, freq, ...}) =
+           (pr (Fmt.format "EXIT %d %s\n" [Fmt.INT id, Fmt.STR(showFreq freq)]);
             showPreds id)
-         | printBlock(_, CFG.BLOCK{id, align, freq, insns, annotations, 
-                               labels, ...}) = 
-	   (pr (Fmt.format "BLOCK %d %s\n" [Fmt.INT id, Fmt.STR(showFreq freq)]);
-	    case !align of NONE => () | SOME p => (pr (CFG.P.toString p ^ "\n"));
+         | printBlock(_, CFG.BLOCK{id, align, freq, insns, annotations,
+                               labels, ...}) =
+           (pr (Fmt.format "BLOCK %d %s\n" [Fmt.INT id, Fmt.STR(showFreq freq)]);
+            case !align of NONE => () | SOME p => (pr (CFG.P.toString p ^ "\n"));
             app annotation (!annotations);
             app defineLabel (!labels);
             (*

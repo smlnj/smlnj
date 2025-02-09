@@ -1,5 +1,5 @@
 (*
- * This is the example I used in the PACT '98 paper 
+ * This is the example I used in the PACT '98 paper
  *)
 
 structure Test2 =
@@ -34,7 +34,7 @@ struct
                      ]
 
    fun close dag =
-       TransitiveClosure.acyclic_transitive_closure2 
+       TransitiveClosure.acyclic_transitive_closure2
           {+   = fn(i,j) => i+j+1,
            max = Int.max
           } dag
@@ -49,7 +49,7 @@ struct
                         d   = fn(_,(_,d)) => d,
                         r   = fn(_,(r,_)) => r,
                         m   = 1
-                       } 
+                       }
    end
 
    structure View = GraphViewerFn(daVinci)

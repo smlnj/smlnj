@@ -14,7 +14,7 @@ struct
    structure CFG   = CFG
    structure I     = CFG.I
    structure C     = I.C
-   structure G     = Graph 
+   structure G     = Graph
    structure IDefs = ComputeIDefs(I.C)
 
    fun idefs defUse cfg =
@@ -27,7 +27,7 @@ struct
            end
    in
        IDefs.compute_idefs {cfg=cfg,def_use=compute_def_use}
-   end 
+   end
 
 end
 

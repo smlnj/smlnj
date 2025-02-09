@@ -7,7 +7,7 @@
 
 functor MIPSMCEmitter(structure Instr : MIPSINSTR
                       structure MLTreeEval : MLTREE_EVAL where T = Instr.T
-                      structure Stream : INSTRUCTION_STREAM 
+                      structure Stream : INSTRUCTION_STREAM
                       structure CodeString : CODE_STRING
                      ) : INSTRUCTION_EMITTER =
 struct
@@ -18,9 +18,9 @@ struct
    structure S = Stream
    structure P = S.P
    structure W = Word32
-   
+
    (* MIPS is little endian *)
-   
+
    fun error msg = MLRiscErrorMsg.error("MIPSMC",msg)
    fun makeStream _ =
    let infix && || << >> ~>>
@@ -38,27 +38,27 @@ struct
        fun emit_labexp le = itow(MLTreeEval.valueOf le)
        fun emit_const c = itow(Constant.valueOf c)
        val loc = ref 0
-   
+
        (* emit a byte *)
        fun eByte b =
        let val i = !loc in loc := i + 1; CodeString.update(i,b) end
-   
+
        (* emit the low order byte of a word *)
        (* note: fromLargeWord strips the high order bits! *)
        fun eByteW w =
        let val i = !loc
        in loc := i + 1; CodeString.update(i,Word8.fromLargeWord w) end
-   
+
        fun doNothing _ = ()
        fun fail _ = raise Fail "MCEmitter"
        fun getAnnotations () = error "getAnnotations"
-   
+
        fun pseudoOp pOp = P.emitValue{pOp=pOp, loc= !loc,emit=eByte}
-   
+
        fun init n = (CodeString.init n; loc := 0)
-   
-   
-   fun eWord32 w = 
+
+
+   fun eWord32 w =
        let val b8 = w
            val w = w >> 0wx8
            val b16 = w
@@ -66,10 +66,10 @@ struct
            val b24 = w
            val w = w >> 0wx8
            val b32 = w
-       in 
-          ( eByteW b8; 
-            eByteW b16; 
-            eByteW b24; 
+       in
+          ( eByteW b8;
+            eByteW b16;
+            eByteW b24;
             eByteW b32 )
        end
    fun emit_GP r = itow (CellsBasis.physicalRegisterNum r)
@@ -81,12 +81,12 @@ struct
    and emit_MEM r = itow (CellsBasis.physicalRegisterNum r)
    and emit_CTRL r = itow (CellsBasis.physicalRegisterNum r)
    and emit_CELLSET r = itow (CellsBasis.physicalRegisterNum r)
-   fun Load {l, rt, b, offset} = 
+   fun Load {l, rt, b, offset} =
        let val rt = emit_GP rt
            val b = emit_GP b
        in eWord32 ((l << 0wx1a) + ((rt << 0wx15) + ((b << 0wx10) + (offset && 0wxffff))))
        end
-   and Special {rs, rt, opc} = 
+   and Special {rs, rt, opc} =
        let val rs = emit_GP rs
            val rt = emit_GP rt
        in eWord32 ((rs << 0wx15) + ((rt << 0wx10) + opc))
@@ -134,13 +134,13 @@ struct
        in
            emitInstr instr
        end
-   
+
    fun emitInstruction(I.ANNOTATION{i, ...}) = emitInstruction(i)
      | emitInstruction(I.INSTR(i)) = emitter(i)
      | emitInstruction(I.LIVE _)  = ()
      | emitInstruction(I.KILL _)  = ()
    | emitInstruction _ = error "emitInstruction"
-   
+
    in  S.STREAM{beginCluster=init,
                 pseudoOp=pseudoOp,
                 emit=emitInstruction,

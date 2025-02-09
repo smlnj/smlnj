@@ -12,11 +12,11 @@ struct
    type version    = int
    val version     = ref 0
    val log         = ref [] : (version * { rollback : version -> unit,
-					   commit   : version -> unit
-					 } list ref) list ref
+                                           commit   : version -> unit
+                                         } list ref) list ref
    fun add_object f =
        case !log of
-	  (ver,trail)::_ => trail := f :: !trail 
+          (ver,trail)::_ => trail := f :: !trail
        |  []             => raise TransactionLog
 
    fun init() = (version := 0; log := [])
@@ -30,20 +30,20 @@ struct
    fun abort () =
    let val old_ver = !version - 1
    in  case !log of
-	  (_,ref trail)::rest => 
-	     (app (fn {rollback,...} => rollback old_ver) trail;
+          (_,ref trail)::rest =>
+             (app (fn {rollback,...} => rollback old_ver) trail;
               version := old_ver;
-	      log := rest) 
+              log := rest)
        |  []                  => raise TransactionLog
    end
 
    fun commit () =
    let val old_ver = !version - 1
    in  case !log of
-	  (_,ref trail)::rest => 
-	     (app (fn {commit,...} => commit old_ver) trail;
+          (_,ref trail)::rest =>
+             (app (fn {commit,...} => commit old_ver) trail;
               version := old_ver;
-	      log := rest) 
+              log := rest)
        |  []      => raise TransactionLog
    end
 end

@@ -1,5 +1,5 @@
 (*
- * SSA optimizer for doing experiments 
+ * SSA optimizer for doing experiments
  *)
 
 functor SSAOptimizer
@@ -12,8 +12,8 @@ functor SSAOptimizer
     structure GCTypeSys : GC_TYPE_SYSTEM
     structure FreqProps : FREQUENCY_PROPERTIES
        sharing P.I = SP.I = Asm.I = F.I = OperandTable.I =
-               FreqProps.I = MLTreeComp.I 
-       sharing F.P = Asm.P = MLTreeComp.T.PseudoOp 
+               FreqProps.I = MLTreeComp.I
+       sharing F.P = Asm.P = MLTreeComp.T.PseudoOp
        sharing MLTreeComp.T.Constant = F.I.Constant
        sharing SP.RTL = GCTypeSys.RTL
     type sext and rext and fext and ccext
@@ -30,7 +30,7 @@ struct
    structure F = F
    structure I = F.I
 
-   val view_IR    = MLRiscControl.getFlag "view-IR" 
+   val view_IR    = MLRiscControl.getFlag "view-IR"
    val verbose    = MLRiscControl.getFlag "verbose"
    val min_blocks = MLRiscControl.getInt "min-blocks"
 
@@ -63,7 +63,7 @@ struct
        structure F    = F
        structure P    = P
       )
-       
+
    structure Dom = DominatorTree(DirectedGraph)
 
    structure CDG = ControlDependenceGraph
@@ -90,11 +90,11 @@ struct
       structure FreqProps = FreqProps
       val loopMultiplier=10
      )
-      
+
    structure Liveness = LivenessAnalysis(CFG)
 
    structure SSA = SSA
-      (structure CFG  = CFG 
+      (structure CFG  = CFG
        structure Dom  = Dom
        structure SP   = SP
        structure Props= P
@@ -103,7 +103,7 @@ struct
        structure GraphImpl = DirectedGraph
        structure GCMap = GCTypeSys.GCMap
       )
-      
+
    structure CFG2SSA = CFG2SSA
       (structure SSA = SSA
        structure Liveness = Liveness
@@ -125,15 +125,15 @@ struct
 
    structure CCP = SSACondConstProp(CF)
 
-   structure SSAGVN = SSAGVN(structure GVN = GVN 
+   structure SSAGVN = SSAGVN(structure GVN = GVN
                              val leaveBehindCopy = false
                              val foldGlobalConstants = true)
 
-   structure SSAGVNL = SSAGVN(structure GVN = GVN 
+   structure SSAGVNL = SSAGVN(structure GVN = GVN
                               val leaveBehindCopy = false
                               val foldGlobalConstants = false)
 
-   structure SSAGVN' = SSAGVN(structure GVN = GVN 
+   structure SSAGVN' = SSAGVN(structure GVN = GVN
                               val leaveBehindCopy = false
                               val foldGlobalConstants = true)
 
@@ -150,7 +150,7 @@ struct
        structure Liveness = SSALiveness
        structure Props    = P
        structure Util     = Util
-      ) 
+      )
 
    structure GCInvariants = GCInvariants
       (structure IR = IR
@@ -179,23 +179,23 @@ struct
                     | CLUSTER of F.cluster
                     | SSA of SSA.ssa
        fun doPhase "cluster->cfg" (CLUSTER c) = IR(Cluster2CFG.cluster2cfg c)
-         | doPhase "cfg->cluster" (IR cfg) = 
+         | doPhase "cfg->cluster" (IR cfg) =
             CLUSTER(CFG2Cluster.cfg2cluster{cfg=cfg,relayout=false})
          | doPhase "guess" (r as IR ir) = (Guess.run ir; r)
          | doPhase "reshape"   (r as IR ir) = (Reshape.run ir; r)
          | doPhase "branch-chaining" (r as IR ir) = (BranchChaining.run ir; r)
-         | doPhase "insert-preheaders" (r as IR ir) = 
+         | doPhase "insert-preheaders" (r as IR ir) =
              (InsertPreheaders.run ir; r)
-         | doPhase "split-critical-edges" (r as IR ir) = 
+         | doPhase "split-critical-edges" (r as IR ir) =
              (Util.splitAllCriticalEdges ir; r)
          | doPhase "view-cfg"  (r as IR ir) = (view "cfg" ir; r)
          | doPhase "view-dom"  (r as IR ir) = (view "dom" ir; r)
          | doPhase "view-doms" (r as IR ir) = (view "doms" ir; r)
          | doPhase "view-cdg"  (r as IR ir) = (view "cdg" ir; r)
          | doPhase "view-loop" (r as IR ir) = (view "loop" ir; r)
-         | doPhase "view-ssacfg"  (r as SSA ssa) = 
+         | doPhase "view-ssacfg"  (r as SSA ssa) =
             (if !view_IR then GraphViewer.view (SSA.viewAsCFG ssa) else (); r)
-         | doPhase "view-ssa"  (r as SSA ssa) = 
+         | doPhase "view-ssa"  (r as SSA ssa) =
             (if !view_IR then GraphViewer.view (SSA.viewAsSSA ssa) else (); r)
          | doPhase "cfg->ssa"  (IR ir)   = SSA(CFG2SSA.buildSSA(ir,IR.dom ir))
          | doPhase "ssa-dce"   (SSA ssa) = SSA(SSADCE.optimize ssa)
@@ -212,32 +212,32 @@ struct
               (GVN.computeValueNumbers ssa; r)
          | doPhase "ssa->cfg"  (SSA ssa) = IR(SSA2CFG.buildCFG ssa)
          | doPhase "gc-invariants" (r as IR ir) = (GCInvariants.run ir; r)
-         | doPhase "gc-gen"    (r as IR ir) = 
+         | doPhase "gc-gen"    (r as IR ir) =
               (GCGen.gcGen{callgc=callgc} ir; r)
          | doPhase phase _ = error(phase)
 
        fun doPhases [] (CLUSTER c) = c
          | doPhases [] _ = error "cluster needed"
-         | doPhases (phase::phases) ir = 
-            let fun pr msg = TextIO.output(TextIO.stdErr,msg) 
-                val _  = if !verbose then pr("[ start "^phase^"]") else (); 
+         | doPhases (phase::phases) ir =
+            let fun pr msg = TextIO.output(TextIO.stdErr,msg)
+                val _  = if !verbose then pr("[ start "^phase^"]") else ();
                 val timer = Timer.startCPUTimer()
                 val ir = doPhase phase ir handle e =>
                      (print("[ "^phase^": uncaught exception: "
                             ^exnName e^" ]\n"); raise e)
                 val {gc,sys,usr} = Timer.checkCPUTimer timer
-                val _  = if !verbose then 
+                val _  = if !verbose then
                          pr("[ end "^phase^" usr="^Time.toString usr^
                             " sys="^Time.toString sys^
                             " gc="^Time.toString gc^"]\n") else ();
             in  doPhases phases ir end
-       
+
        val F.CLUSTER{blocks,...} = cluster
        fun isAllGC([],gc,n) = (gc,n)
-         | isAllGC(F.BBLOCK{succ,pred,...}::bs,gc,n) =  
+         | isAllGC(F.BBLOCK{succ,pred,...}::bs,gc,n) =
                isAllGC(bs,gc andalso (case (!succ,!pred) of
                                         ([_],[_]) => true | _ => false),n+1)
-         | isAllGC(_::bs,gc,n) = isAllGC(bs,gc,n) 
+         | isAllGC(_::bs,gc,n) = isAllGC(bs,gc,n)
    in  case isAllGC(blocks,true,0) of
          (true,_) => cluster
        | (false,n) =>
@@ -247,7 +247,7 @@ struct
             cluster
    end
 
-   fun codegen cluster = 
+   fun codegen cluster =
        if !MLRiscControl.mlrisc then optimize cluster else cluster
 
 end

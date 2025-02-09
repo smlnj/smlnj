@@ -22,10 +22,10 @@ struct
     structure L = GraphLayout
     structure A = Annotations
     structure S = Asm.S
-   
+
     type weight = W.freq
 
-    datatype block_kind = 
+    datatype block_kind =
         START          (* entry node *)
       | STOP           (* exit node *)
       | NORMAL         (* normal node *)
@@ -33,26 +33,26 @@ struct
 
     and data = LABEL  of Label.label
              | PSEUDO of P.pseudo_op
- 
-    and block = 
+
+    and block =
        BLOCK of
        {  id          : int,                        (* block id *)
           kind        : block_kind,                 (* block kind *)
-          freq        : weight ref,                 (* execution frequency *) 
-          data        : data list ref,              (* data preceeding block *) 
-          labels      : Label.label list ref,       (* labels on blocks *) 
+          freq        : weight ref,                 (* execution frequency *)
+          data        : data list ref,              (* data preceeding block *)
+          labels      : Label.label list ref,       (* labels on blocks *)
           insns       : I.instruction list ref,     (* in rev order *)
           annotations : Annotations.annotations ref (* annotations *)
        }
 
-    and edge_kind = ENTRY           (* entry edge *) 
+    and edge_kind = ENTRY           (* entry edge *)
                   | EXIT            (* exit edge *)
                   | JUMP            (* unconditional jump *)
-                  | FALLSTHRU       (* falls through to next block *)  
-                  | BRANCH of bool  (* branch *) 
-                  | SWITCH of int   (* computed goto *)   
-                  | SIDEEXIT of int (* side exit *)   
-   
+                  | FALLSTHRU       (* falls through to next block *)
+                  | BRANCH of bool  (* branch *)
+                  | SWITCH of int   (* computed goto *)
+                  | SIDEEXIT of int (* side exit *)
+
     and edge_info = EDGE of { k : edge_kind,                  (* edge kind *)
                               w : weight ref,                 (* edge freq *)
                               a : Annotations.annotations ref (* annotations *)
@@ -61,7 +61,7 @@ struct
     type edge = edge_info Graph.edge
     type node = block Graph.node
 
-    datatype info = 
+    datatype info =
         INFO of { annotations : Annotations.annotations ref,
                   firstBlock  : int ref,
                   reorder     : bool ref
@@ -73,15 +73,15 @@ struct
 
    (*========================================================================
     *
-    *  Various kinds of annotations 
+    *  Various kinds of annotations
     *
     *========================================================================*)
               (* escaping live out information *)
-    val LIVEOUT = Annotations.new 
+    val LIVEOUT = Annotations.new
           (SOME(fn c => "Liveout: "^
-                        (LineBreak.lineBreak 75 
+                        (LineBreak.lineBreak 75
                             (C.CellSet.toString c))))
-    exception Changed of string * (unit -> unit) 
+    exception Changed of string * (unit -> unit)
     val CHANGED = Annotations.new'
           {create=Changed,
            get=fn Changed x => x | e => raise e,
@@ -116,7 +116,7 @@ struct
                data        = ref (!data),
                labels      = ref [],
                insns       = ref (!insns),
-               annotations = ref (!annotations) 
+               annotations = ref (!annotations)
              }
 
     fun newBlock(id,freq) = newBlock'(id,NORMAL,[],freq)
@@ -139,17 +139,17 @@ struct
 
     fun nl() = TextIO.output(!AsmStream.asmOutStream,"\n")
 
-    fun emitHeader (S.STREAM{comment,annotation,...}) 
-                   (BLOCK{id,kind,freq,annotations,...}) = 
+    fun emitHeader (S.STREAM{comment,annotation,...})
+                   (BLOCK{id,kind,freq,annotations,...}) =
        (comment(kindName kind ^"["^Int.toString id^
                     "] ("^W.toString (!freq)^")");
         nl();
         app annotation (!annotations)
-       ) 
+       )
 
-    fun emitFooter (S.STREAM{comment,...}) (BLOCK{annotations,...}) = 
+    fun emitFooter (S.STREAM{comment,...}) (BLOCK{annotations,...}) =
         (case #get LIVEOUT (!annotations) of
-            SOME s => 
+            SOME s =>
             let val regs = String.tokens Char.isSpace(C.CellSet.toString s)
                 val K = 7
                 fun f(_,[],s,l)    = s::l
@@ -162,9 +162,9 @@ struct
          |  NONE => ()
         ) handle Overflow => print("Bad footer\n")
 
-    fun emitStuff outline annotations 
+    fun emitStuff outline annotations
            (block as BLOCK{insns,data,labels,...}) =
-       let val S as S.STREAM{pseudoOp,defineLabel,emit,...} = 
+       let val S as S.STREAM{pseudoOp,defineLabel,emit,...} =
                Asm.makeStream annotations
        in  emitHeader S block;
            app (fn PSEUDO p => pseudoOp p
@@ -174,9 +174,9 @@ struct
            emitFooter S block
        end
 
-    val emit = emitStuff false 
+    val emit = emitStuff false
     val emitOutline = emitStuff true []
- 
+
    (*========================================================================
     *
     *  Methods for manipulating CFG
@@ -205,25 +205,25 @@ struct
                val _     = #add_node cfg (i,start)
                val j     = #new_id cfg ()
                val stop  = newStop(j,ref 0)
-               val _     = #add_node cfg (j,stop) 
+               val _     = #add_node cfg (j,stop)
            in  #add_edge cfg (i,j,EDGE{k=ENTRY,w=ref 0,a=ref []});
                #set_entries cfg [i];
                #set_exits cfg [j]
            end
-        |  _ => () 
+        |  _ => ()
         )
 
-    fun changed(G.GRAPH{graph_info=INFO{reorder,annotations,...},...}) = 
+    fun changed(G.GRAPH{graph_info=INFO{reorder,annotations,...},...}) =
         let fun signal [] = ()
               | signal(Changed(_,f)::an) = (f (); signal an)
               | signal(_::an) = signal an
         in  signal(!annotations);
             reorder := true
-        end 
+        end
 
     fun annotations(G.GRAPH{graph_info=INFO{annotations=a,...},...}) = a
 
-    fun liveOut (BLOCK{annotations, ...}) = 
+    fun liveOut (BLOCK{annotations, ...}) =
          case #get LIVEOUT (!annotations) of
             SOME s => s
          |  NONE => C.empty
@@ -246,7 +246,7 @@ struct
 
     fun setBranch (CFG as G.GRAPH cfg,b,cond) =
     let fun loop((i,j,EDGE{k=BRANCH cond',w,a})::es,es',x,y) =
-            if cond' = cond then 
+            if cond' = cond then
                loop(es, (i,j,EDGE{k=JUMP,w=w,a=a})::es',j,y)
             else
                loop(es, es', x, j)
@@ -255,13 +255,13 @@ struct
         val outEdges = #out_edges cfg b
         val (outEdges',target,elim) = loop(outEdges,[],~1,~1)
         val _ = if elim < 0 then error "setBranch: bad edges" else ();
-        val lab = defineLabel(#node_info cfg target) 
+        val lab = defineLabel(#node_info cfg target)
         val jmp = InsnProps.jump lab
-        val insns = insns(#node_info cfg b) 
+        val insns = insns(#node_info cfg b)
     in  #set_out_edges cfg (b,outEdges');
         case !insns of
           []      => error "setBranch: missing branch"
-        | branch::rest => 
+        | branch::rest =>
            case InsnProps.instrKind branch of
              InsnProps.IK_JUMP => insns := jmp::rest
            | _ => error "setBranch: bad branch instruction";
@@ -270,20 +270,20 @@ struct
 
    (*========================================================================
     *
-    *  Miscellaneous 
+    *  Miscellaneous
     *
     *========================================================================*)
-   fun cdgEdge(EDGE{k, ...}) = 
+   fun cdgEdge(EDGE{k, ...}) =
         case k of
            (JUMP | FALLSTHRU) => false
         |  _ => true
 
    (*========================================================================
     *
-    *  Pretty Printing and Viewing 
+    *  Pretty Printing and Viewing
     *
     *========================================================================*)
-   fun show_edge(EDGE{k,w,a,...}) = 
+   fun show_edge(EDGE{k,w,a,...}) =
        let val kind = case k of
                          JUMP      => ""
                       |  FALLSTHRU => "fallsthru"
@@ -293,24 +293,24 @@ struct
                       |  EXIT     => "exit"
                       |  SIDEEXIT i => "sideexit("^Int.toString i^")"
            val weight = "(" ^ W.toString (!w) ^ ")"
-       in  kind ^ weight 
-       end 
+       in  kind ^ weight
+       end
 
-   fun getString f x = 
+   fun getString f x =
    let val buffer = StringOutStream.mkStreamBuf()
        val S      = StringOutStream.openStringOut buffer
-       val _      = AsmStream.withStream S f x 
+       val _      = AsmStream.withStream S f x
    in  StringOutStream.getString buffer end
 
-   fun show_block an block = 
+   fun show_block an block =
    let val text = getString (emit an) block
    in  foldr (fn (x,"") => x | (x,y) => x^" "^y) ""
             (String.tokens (fn #" " => true | _ => false) text)
    end
 
-   fun headerText block = getString 
+   fun headerText block = getString
         (fn b => emitHeader (Asm.makeStream []) b) block
-   fun footerText block = getString 
+   fun footerText block = getString
         (fn b => emitFooter (Asm.makeStream []) b) block
 
    fun getStyle a = (case #get L.STYLE (!a) of SOME l => l | NONE => [])
@@ -319,19 +319,19 @@ struct
    val red   = L.COLOR "red"
    val yellow = L.COLOR "yellow"
 
-   fun edgeStyle(i,j,e as EDGE{k,a,...}) = 
+   fun edgeStyle(i,j,e as EDGE{k,a,...}) =
    let val a = L.LABEL(show_edge e) :: getStyle a
-   in  case k of 
+   in  case k of
          (ENTRY | EXIT) => green :: a
        | (FALLSTHRU | BRANCH false) => yellow :: a
        | _ => red :: a
-   end 
+   end
 
    val outline = MLRiscControl.getFlag "view-outline"
 
    fun viewStyle cfg =
    let val an     = !(annotations cfg)
-       fun node (n,b as BLOCK{annotations,...}) = 
+       fun node (n,b as BLOCK{annotations,...}) =
            if !outline then
               L.LABEL(getString emitOutline b) :: getStyle annotations
            else
@@ -339,19 +339,19 @@ struct
    in  { graph = fn _ => [],
          edge  = edgeStyle,
          node  = node
-       } 
+       }
    end
 
    fun viewLayout cfg = L.makeLayout (viewStyle cfg) cfg
 
    fun subgraphLayout {cfg,subgraph = G.GRAPH subgraph} =
    let val an     = !(annotations cfg)
-       fun node(n,b as BLOCK{annotations,...}) = 
+       fun node(n,b as BLOCK{annotations,...}) =
           if #has_node subgraph n then
              L.LABEL(show_block an b) :: getStyle annotations
           else
              L.COLOR "lightblue"::L.LABEL(headerText b) :: getStyle annotations
-       fun edge(i,j,e) = 
+       fun edge(i,j,e) =
             if #has_edge subgraph (i,j) then edgeStyle(i,j,e)
             else [L.EDGEPATTERN "dotted"]
    in  L.makeLayout {graph = fn _ => [],

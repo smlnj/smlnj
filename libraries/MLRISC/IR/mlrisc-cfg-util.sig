@@ -15,7 +15,7 @@ sig
 
    (*=======================================================================
     *  Update the label of the branch instruction in a block
-    *  to be consistent with the control flow edges.  
+    *  to be consistent with the control flow edges.
     *  This is an NOP if the CFG is already consistent.
     *=======================================================================*)
    val updateJumpLabel : CFG.cfg -> Graph.node_id -> unit
@@ -40,10 +40,10 @@ sig
 
    (*=======================================================================
     *  Split a control flow edge, return a new edge and the new block.
-    *  If the jump flag is true, then a jump is always placed in the 
+    *  If the jump flag is true, then a jump is always placed in the
     *  new block; otherwise, we try to eliminate the jump when feasible.
     *=======================================================================*)
-   val splitEdge  : CFG.cfg -> 
+   val splitEdge  : CFG.cfg ->
                       { kind : CFG.block_kind,
                         edge : CFG.edge,
                         jump : bool
@@ -52,7 +52,7 @@ sig
                         node : CFG.node
                       }
    (*=======================================================================
-    *  Test if an edge is critical.  An edge i->j is critical iff 
+    *  Test if an edge is critical.  An edge i->j is critical iff
     *  there are multiple entries into j and multiple exits out of i,
     *  i.e. it is both a merge and a split node.
     *=======================================================================*)
@@ -78,16 +78,16 @@ sig
     *  Return the set of new nodes and new edges.  The region is represented
     *  as a subgraph view.
     *=======================================================================*)
-    val tailDuplicate : CFG.cfg -> 
+    val tailDuplicate : CFG.cfg ->
                         { subgraph : CFG.cfg,
                           root     : Graph.node_id
-                        } -> 
-                        { nodes : CFG.node list, 
+                        } ->
+                        { nodes : CFG.node list,
                           edges : CFG.edge list
-                        } 
+                        }
 
    (*=======================================================================
-    *  Remove all unreachable code 
+    *  Remove all unreachable code
     *=======================================================================*)
     val removeUnreachableCode : CFG.cfg -> unit
 

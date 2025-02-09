@@ -6,11 +6,11 @@
 
 signature ISOMORPHIC_GRAPH_VIEW =
 sig
-   
+
     val map : ('n Graph.node -> 'N) ->
               ('e Graph.edge -> 'E) ->
               ('g -> 'G) ->
-              ('n,'e,'g) Graph.graph -> 
+              ('n,'e,'g) Graph.graph ->
               ('N,'E,'G) Graph.graph
 end
 
@@ -57,10 +57,10 @@ struct
          exit_edges      = fn i => rename_edges (#exit_edges G i),
          forall_nodes    = fn f => #forall_nodes G (rename_node f),
          forall_edges    = fn f => #forall_edges G (rename_edge f)
-	 (*
+         (*
          fold_nodes      = fold_nodes,
          fold_edges      = fold_edges
-	 *)
+         *)
        }
    end
 end

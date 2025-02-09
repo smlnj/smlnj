@@ -1,8 +1,8 @@
 (*
- * This is Reif and Tarjan's algorithm (SIAM J Computing 1981) 
- * for computing approximate birthpoints for expressions.   
+ * This is Reif and Tarjan's algorithm (SIAM J Computing 1981)
+ * for computing approximate birthpoints for expressions.
  * For each basic block B,
- *   idef(x) = { defs(v_i) | i = 1 ... n in all paths 
+ *   idef(x) = { defs(v_i) | i = 1 ... n in all paths
  *                           idom(x) v_1 v_2 ... v_n x where n >= 1 and
  *                                   v_i <> idom(x) for all 1 <= i <= n
  *             }
@@ -23,13 +23,13 @@ struct
    let val CFG as G.GRAPH cfg  = cfg
        val N                   = #capacity cfg ()
        val DU                  = A.array(N,([],[]))
-       val _ = #forall_nodes cfg 
+       val _ = #forall_nodes cfg
             (fn (b,b') => let val (d,u) = def_use(b,b')
                           in  A.update(DU,b,(SL.uniq d,SL.uniq u))
                           end)
        fun dump(name,a) =
           (print(name^"=");
-           A.appi (fn (i,v) => 
+           A.appi (fn (i,v) =>
                print(Int.toString i ^ "=" ^Int.toString v^" "))
                   (a,0,NONE);
            print "\n")
@@ -47,16 +47,16 @@ struct
            val treeparent = A.array(N,~1)
            val label      = A.array(N,~1)
            fun dfs(p,n,i) =
-               if A.sub(semi,i) <> ~1 then n 
+               if A.sub(semi,i) <> ~1 then n
                else
                (A.update(parent,i,p);
                 A.update(semi,i,n);
                 A.update(vertex,n,i);
                 A.update(label,i,i);
                 dfs'(i,n+1,#succ cfg i)
-               ) 
+               )
            and dfs'(p,n,[])    = n
-             | dfs'(p,n,i::is) = dfs'(p,dfs(p,n,i),is) 
+             | dfs'(p,n,i::is) = dfs'(p,dfs(p,n,i),is)
            val n = dfs(~1,0,ENTRY)
 
            fun COMPRESS v =
@@ -72,13 +72,13 @@ struct
                   A.update(ancestor,v,A.sub(ancestor,A.sub(ancestor,v)))
                  )
               else ()
-                    
+
            fun LINK(v,w) = (A.update(ancestor,w,v);
                             A.update(treeparent,w,v))
            fun EVAL v =
                if A.sub(ancestor,v) = ~1 then v
                else (COMPRESS v; A.sub(label,v))
-           fun EVALDEFUSE v = 
+           fun EVALDEFUSE v =
                let fun up(v,D,U) =
                    let val p = A.sub(treeparent,v)
                    in  if p = ~1 then (D,U)
@@ -92,15 +92,15 @@ struct
                    up(v,[],[])
                end
            fun step2_3 0 = ()
-             | step2_3 i = 
+             | step2_3 i =
                let val w = A.sub(vertex,i)
                    val parent_w = A.sub(parent,w)
                    fun step2 [] = ()
                      | step2 ((v,_,_)::vs) =
                        let val u      = EVAL v
                            val semi_u = A.sub(semi,u)
-                       in  if semi_u < A.sub(semi,w) then 
-                              A.update(semi,w,semi_u) 
+                       in  if semi_u < A.sub(semi,w) then
+                              A.update(semi,w,semi_u)
                            else ();
                            let val (d,u) = EVALDEFUSE v
                                val (d',u') = A.sub(sdefuse,w)
@@ -140,7 +140,7 @@ struct
            val _ = dump("ancestor",ancestor)
            val _ = dump("label",label)
            *)
-           fun step4 i = 
+           fun step4 i =
                if i = n then ()
                else let val w = A.sub(vertex,i)
                     in  if A.sub(dom,w) <> A.sub(vertex,A.sub(semi,w)) then
@@ -156,7 +156,7 @@ struct
            val _ = step4 1
        in  idefuse
        end
-   in 
+   in
        {idefuse     = fn _ => tarjan_lengauer(CFG),
         ipostdefuse = fn _ => tarjan_lengauer(Rev.rev_view CFG)
        }

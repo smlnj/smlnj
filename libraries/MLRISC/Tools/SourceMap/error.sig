@@ -1,5 +1,5 @@
 (*
- * Module for simple error handling with filenames/line numbers 
+ * Module for simple error handling with filenames/line numbers
  *)
 signature MDL_ERROR =
 sig

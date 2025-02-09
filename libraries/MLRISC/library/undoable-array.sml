@@ -11,7 +11,7 @@ struct
 
    structure A = Array
 
-   type 'a vector = 'a A.vector 
+   type 'a vector = 'a A.vector
    type 'a array =  'a A.array * Log.version ref
 
    infix 9 sub
@@ -23,7 +23,7 @@ struct
    fun get (a,_) = a
 
    fun commit (a,v) = fn ver => v := ver
-   fun rollback (a,v) = 
+   fun rollback (a,v) =
    let val N = A.length a
        val a' = A.array(N,A.sub(a,0))
    in  A.copy{src=a, si=0, len=NONE, dst = a', di = 0};
@@ -32,22 +32,22 @@ struct
 
    fun get' (A as (a,v)) =
    let val ver = !Log.version
-   in  if !v <> ver then 
-	 (Log.add_object {commit   = commit A, 
-	                  rollback = rollback A};
+   in  if !v <> ver then
+         (Log.add_object {commit   = commit A,
+                          rollback = rollback A};
           v := ver
          )
        else ();
        a
    end
-	   
+
    fun length a = A.length(get a)
-   fun a sub i = A.sub(get a,i) 
+   fun a sub i = A.sub(get a,i)
    fun update (a, i, e) = A.update(get' a, i, e)
    fun extract (a, i, j) = A.extract(get a, i, j)
    fun copy {src, si, len, dst, di } =
        A.copy{src=get src, si=si, len=len, dst=get' dst, di=di}
-   fun copyVec { src, si, len, dst, di } = 
+   fun copyVec { src, si, len, dst, di } =
        A.copyVec { src = src, si = si, len = len, dst = get' dst, di = di }
    fun tabulate (n, f) = (A.tabulate(n,f),ref(!Log.version))
    fun fromList l = (A.fromList l,ref(!Log.version))

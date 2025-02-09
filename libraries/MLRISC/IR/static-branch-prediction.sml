@@ -23,15 +23,15 @@ struct
 
    val name = "StaticBranchPrediction"
    fun run IR =
-   let fun branchProb(CFG.BLOCK{insns,...}) = 
+   let fun branchProb(CFG.BLOCK{insns,...}) =
            case !insns of
              [] => 100 (* the fallsthru edge is always taken *)
-           | jmp::_ => 
-              (case InsnProps.instrKind jmp of 
+           | jmp::_ =>
+              (case InsnProps.instrKind jmp of
                  InsnProps.IK_JUMP => FreqProps.branchProb jmp
                | _ => 100 (* the fallsthru edge is always taken *)
               )
-                  
+
 
        fun nodeFreq(CFG.BLOCK{freq,...}) = freq
        fun edgeFreq(CFG.EDGE{w,...}) = w

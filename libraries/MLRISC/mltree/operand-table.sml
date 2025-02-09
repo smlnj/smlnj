@@ -9,7 +9,7 @@ struct
    structure C  = I.C
    structure IH = IntHashTable
    structure H  = HashTable
-       
+
    type valueNumber = C.cell
 
    datatype const =
@@ -23,7 +23,7 @@ struct
                    )
 
    datatype operandTable =
-      TABLE of 
+      TABLE of
       {  intTable   : valueNumber IH.hash_table,
          miTable    : valueNumber IntInfMap.map ref,
          opnTable   : (I.operand,valueNumber) H.hash_table,
@@ -49,7 +49,7 @@ struct
 
    exception CONST of const
 
-   fun mkConst(vn, const) = 
+   fun mkConst(vn, const) =
        C.CELL{id=vn, an=ref [CONST const], col=ref C.PSEUDO, desc=gp}
 
    val bot = C.CELL{id= ~9999999, an=ref [], col=ref C.PSEUDO, desc=gp}
@@ -57,7 +57,7 @@ struct
    val volatile = C.CELL{id= ~9999997, an=ref [], col=ref C.PSEUDO, desc=gp}
 
    fun create(nextValueNumber) =
-   let 
+   let
        val opnTable = H.mkTable(Props.hashOpn,Props.eqOpn) (32,NoOperand)
        val intTable = IH.mkTable (32, NoInt)
        val miTable  = ref IntInfMap.empty
@@ -90,25 +90,25 @@ struct
    fun intToInt32 i     = Int32.fromInt i
    fun int32ToIntInf i  = Int32.toLarge i
    fun int32ToInt i     = Int32.toInt i
-   
+
    (* Lookup the value number of a constant *)
-   fun int(TABLE{intTable, ...}) = IH.lookup intTable  
+   fun int(TABLE{intTable, ...}) = IH.lookup intTable
 
    fun word(TABLE{intTable, ...}) w = IH.lookup intTable (wordToInt w)
 
-   fun word32(TABLE{intTable, miTable, ...}) w = 
+   fun word32(TABLE{intTable, miTable, ...}) w =
          IH.lookup intTable (word32ToInt w) handle Overflow =>
           case IntInfMap.find(!miTable, word32ToIntInf w) of
              SOME v => v
           |  NONE => raise NoIntInf
 
-   fun int32(TABLE{intTable, miTable, ...}) w = 
+   fun int32(TABLE{intTable, miTable, ...}) w =
          IH.lookup intTable (int32ToInt w) handle Overflow =>
           case IntInfMap.find(!miTable, int32ToIntInf w) of
              SOME v => v
           |  NONE => raise NoIntInf
 
-   fun intinf(TABLE{intTable, miTable, ...}) i = 
+   fun intinf(TABLE{intTable, miTable, ...}) i =
          IH.lookup intTable (intInfToInt i) handle Overflow =>
           case IntInfMap.find(!miTable,i) of
             SOME v => v
@@ -134,15 +134,15 @@ struct
        val insertOpn = H.insert opnTable
        val insertInt = IH.insert intTable
 
-       fun newConst(const) = 
+       fun newConst(const) =
        let val vn = !nextValueNumber
        in  nextValueNumber := vn - 1;
            mkConst(vn,const)
        end
 
-       fun mkOpn opn = 
+       fun mkOpn opn =
            case findOpn opn of
-             SOME v => v 
+             SOME v => v
            | NONE => let val v = newConst(OPERAND opn)
                      in  insertOpn(opn, v); v end
        fun mkInt i =
@@ -180,7 +180,7 @@ struct
    end
 
    (* value number -> const *)
-   fun const(C.CELL{an, ...}) = 
+   fun const(C.CELL{an, ...}) =
    let fun find(CONST c::_) = c
          | find(_::an) = find an
          | find [] = raise NoConst

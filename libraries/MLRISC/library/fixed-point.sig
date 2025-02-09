@@ -1,6 +1,6 @@
-(* 
+(*
  * A simple fixed point datatype
- * 
+ *
  * -- Allen
  *)
 

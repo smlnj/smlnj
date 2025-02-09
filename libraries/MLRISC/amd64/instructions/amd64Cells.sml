@@ -143,30 +143,30 @@ struct
    structure MyCells = Cells
       (exception Cells = AMD64Cells
        val firstPseudo = 256
-       val desc_GP = CellsBasis.DESC {low=0, high=15, kind=CellsBasis.GP, defaultValues=[], 
-              zeroReg=NONE, toString=showGP, toStringWithSize=showGPWithSize, 
+       val desc_GP = CellsBasis.DESC {low=0, high=15, kind=CellsBasis.GP, defaultValues=[],
+              zeroReg=NONE, toString=showGP, toStringWithSize=showGPWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       and desc_FP = CellsBasis.DESC {low=16, high=31, kind=CellsBasis.FP, 
-              defaultValues=[], zeroReg=NONE, toString=showFP, toStringWithSize=showFPWithSize, 
+       and desc_FP = CellsBasis.DESC {low=16, high=31, kind=CellsBasis.FP,
+              defaultValues=[], zeroReg=NONE, toString=showFP, toStringWithSize=showFPWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       and desc_EFLAGS = CellsBasis.DESC {low=32, high=32, kind=EFLAGS, defaultValues=[], 
-              zeroReg=NONE, toString=showEFLAGS, toStringWithSize=showEFLAGSWithSize, 
+       and desc_EFLAGS = CellsBasis.DESC {low=32, high=32, kind=EFLAGS, defaultValues=[],
+              zeroReg=NONE, toString=showEFLAGS, toStringWithSize=showEFLAGSWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       and desc_FFLAGS = CellsBasis.DESC {low=33, high=33, kind=FFLAGS, defaultValues=[], 
-              zeroReg=NONE, toString=showFFLAGS, toStringWithSize=showFFLAGSWithSize, 
+       and desc_FFLAGS = CellsBasis.DESC {low=33, high=33, kind=FFLAGS, defaultValues=[],
+              zeroReg=NONE, toString=showFFLAGS, toStringWithSize=showFFLAGSWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       and desc_MEM = CellsBasis.DESC {low=34, high=33, kind=CellsBasis.MEM, 
-              defaultValues=[], zeroReg=NONE, toString=showMEM, toStringWithSize=showMEMWithSize, 
+       and desc_MEM = CellsBasis.DESC {low=34, high=33, kind=CellsBasis.MEM,
+              defaultValues=[], zeroReg=NONE, toString=showMEM, toStringWithSize=showMEMWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       and desc_CTRL = CellsBasis.DESC {low=34, high=33, kind=CellsBasis.CTRL, 
-              defaultValues=[], zeroReg=NONE, toString=showCTRL, toStringWithSize=showCTRLWithSize, 
+       and desc_CTRL = CellsBasis.DESC {low=34, high=33, kind=CellsBasis.CTRL,
+              defaultValues=[], zeroReg=NONE, toString=showCTRL, toStringWithSize=showCTRLWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       and desc_CELLSET = CellsBasis.DESC {low=34, high=33, kind=CELLSET, defaultValues=[], 
-              zeroReg=NONE, toString=showCELLSET, toStringWithSize=showCELLSETWithSize, 
+       and desc_CELLSET = CellsBasis.DESC {low=34, high=33, kind=CELLSET, defaultValues=[],
+              zeroReg=NONE, toString=showCELLSET, toStringWithSize=showCELLSETWithSize,
               counter=ref 0, dedicated=ref 0, physicalRegs=ref CellsBasis.array0}
-       val cellKindDescs = [(CellsBasis.GP, desc_GP), (CellsBasis.FP, desc_FP), 
-              (CellsBasis.CC, desc_GP), (EFLAGS, desc_EFLAGS), (FFLAGS, desc_FFLAGS), 
-              (CellsBasis.MEM, desc_MEM), (CellsBasis.CTRL, desc_CTRL), (CELLSET, 
+       val cellKindDescs = [(CellsBasis.GP, desc_GP), (CellsBasis.FP, desc_FP),
+              (CellsBasis.CC, desc_GP), (EFLAGS, desc_EFLAGS), (FFLAGS, desc_FFLAGS),
+              (CellsBasis.MEM, desc_MEM), (CellsBasis.CTRL, desc_CTRL), (CELLSET,
               desc_CELLSET)]
        val cellSize = 8
       )

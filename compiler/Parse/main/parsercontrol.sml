@@ -11,7 +11,7 @@ signature PARSER_CONTROL =
     val secondaryPrompt : string ref
 
   (* turn on lazy keywords and lazy declaration processing *)
-    val lazysml : bool ref		(* default false *)
+    val lazysml : bool ref              (* default false *)
 
   (* controls "overload" as keyword *)
     val overloadKW : bool ref
@@ -20,7 +20,7 @@ signature PARSER_CONTROL =
     val quotation : bool ref
 
   (* controls printing of internal Ast info *)
-    val astInternals : bool ref			 
+    val astInternals : bool ref
 
   (* set/clear Successor ML mode *)
     val setSuccML : bool -> unit
@@ -57,52 +57,52 @@ structure ParserControl : sig
     val nextpri = ref 0
 
     fun new (c, n, h, d) = let
-	  val r = ref d
-	  val p = !nextpri
-	  val ctl = Controls.control {
-		  name = n,
-		  pri = [p],
-		  obscurity = obscurity,
-		  help = h,
-		  ctl = r
-		}
-	  in
-	    nextpri := p + 1;
-	    ControlRegistry.register registry {
-		ctl = Controls.stringControl c ctl,
-		envName = SOME (ControlUtil.EnvName.toUpper "PARSER_" n)
-	      };
-	    r
-	  end
+          val r = ref d
+          val p = !nextpri
+          val ctl = Controls.control {
+                  name = n,
+                  pri = [p],
+                  obscurity = obscurity,
+                  help = h,
+                  ctl = r
+                }
+          in
+            nextpri := p + 1;
+            ControlRegistry.register registry {
+                ctl = Controls.stringControl c ctl,
+                envName = SOME (ControlUtil.EnvName.toUpper "PARSER_" n)
+              };
+            r
+          end
 
 
     val primaryPrompt =
-	  new (string_cvt, "primary-prompt", "primary prompt", "- ")
+          new (string_cvt, "primary-prompt", "primary prompt", "- ")
 
     val secondaryPrompt =
-	  new (string_cvt, "secondary-prompt", "secondary prompt","= ")
+          new (string_cvt, "secondary-prompt", "secondary prompt","= ")
 
     val lazysml =
-	  new (flag_cvt, "lazy-keyword", "whether `lazy' is considered a keyword", false)
+          new (flag_cvt, "lazy-keyword", "whether `lazy' is considered a keyword", false)
 
     val overloadKW =
-	  new (flag_cvt, "overload", "whether (_)overload keyword is enabled", false)
+          new (flag_cvt, "overload", "whether (_)overload keyword is enabled", false)
 
     val quotation =
-	  new (flag_cvt, "quotations", "whether (anti-)quotations are recognized", false)
+          new (flag_cvt, "quotations", "whether (anti-)quotations are recognized", false)
 
     val astInternals =
-	  new (flag_cvt, "astInternals", "printing of ast internal info", false)
+          new (flag_cvt, "astInternals", "printing of ast internal info", false)
 
     val succML =
-	  new (flag_cvt, "succ-ml", "whether Successor-ML extensions are recognized", false)
+          new (flag_cvt, "succ-ml", "whether Successor-ML extensions are recognized", false)
 
     exception RESET_PARSER
 
   (* set/clear Successor ML mode *)
     fun setSuccML flg =
-	  if (!succML <> flg)
-	    then (succML := flg; raise RESET_PARSER)
-	    else ()
+          if (!succML <> flg)
+            then (succML := flg; raise RESET_PARSER)
+            else ()
 
   end

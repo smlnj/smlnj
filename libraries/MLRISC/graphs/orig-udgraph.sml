@@ -25,20 +25,20 @@ struct
           (new_nodes := (!new_nodes) @ (!garbage_nodes); garbage_nodes := [])
        fun get_nodes() =
           A.foldri(fn(i,SOME n,l) =>(i,n)::l|(_,_,l) => l) [] (nodes,0,NONE)
-       fun get_edges() = 
-          A.foldri(fn (i,es,L) => foldr (fn ((j,e),L) => 
+       fun get_edges() =
+          A.foldri(fn (i,es,L) => foldr (fn ((j,e),L) =>
                 if i <= j then (i,j,e)::L else L) L es)
               [] (adj,0,NONE)
        fun order() = !node_count
        fun size()  = !edge_count
        fun capacity() = A.length nodes
        fun add_node(i,n) =
-         (case A.sub(nodes,i) 
+         (case A.sub(nodes,i)
              of NONE => node_count := 1 + !node_count
-              | _    => (); 
+              | _    => ();
           A.update(nodes,i,SOME n)
          )
-       fun add_edge(i,j,e) = 
+       fun add_edge(i,j,e) =
          (A.update(adj,i,(j,e)::A.sub(adj,i));
           if i <> j then A.update(adj,j,(i,e)::A.sub(adj,j)) else ();
           edge_count := 1 + !edge_count)
@@ -74,11 +74,11 @@ struct
        fun has_node n = case A.sub(nodes,n) of
                            SOME _ => true | NONE => false
        fun node_info n = case A.sub(nodes,n) of
-                            SOME x => x 
+                            SOME x => x
                           | NONE => raise G.NotFound
-       fun forall_nodes f = 
+       fun forall_nodes f =
            A.appi (fn (i,SOME x) => f(i,x) | _ => ()) (nodes,0,NONE)
-       fun forall_edges f = A.appi (fn (i,es) => 
+       fun forall_edges f = A.appi (fn (i,es) =>
              app (fn (j,e) => if i <= j then f(i,j,e) else ()) es)
                                (adj,0,NONE)
        fun none _ = []
@@ -114,6 +114,6 @@ struct
           forall_nodes    = forall_nodes,
           forall_edges    = forall_edges
        }
-   end 
+   end
 
 end

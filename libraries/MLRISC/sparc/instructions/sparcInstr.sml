@@ -194,7 +194,7 @@ sig
      LOAD of {l:load, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, mem:Region.region}
    | STORE of {s:store, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, mem:Region.region}
    | FLOAD of {l:fload, r:CellsBasis.cell, i:operand, d:CellsBasis.cell, mem:Region.region}
-   | FSTORE of {s:fstore, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, 
+   | FSTORE of {s:fstore, d:CellsBasis.cell, r:CellsBasis.cell, i:operand,
         mem:Region.region}
    | UNIMP of {const22:int}
    | SETHI of {i:int, d:CellsBasis.cell}
@@ -207,13 +207,13 @@ sig
    | FMOVfcc of {sz:fsize, b:fbranch, r:CellsBasis.cell, d:CellsBasis.cell}
    | Bicc of {b:branch, a:bool, label:Label.label, nop:bool}
    | FBfcc of {b:fbranch, a:bool, label:Label.label, nop:bool}
-   | BR of {rcond:rcond, p:prediction, r:CellsBasis.cell, a:bool, label:Label.label, 
+   | BR of {rcond:rcond, p:prediction, r:CellsBasis.cell, a:bool, label:Label.label,
         nop:bool}
    | BP of {b:branch, p:prediction, cc:cc, a:bool, label:Label.label, nop:bool}
    | JMP of {r:CellsBasis.cell, i:operand, labs:Label.label list, nop:bool}
-   | JMPL of {r:CellsBasis.cell, i:operand, d:CellsBasis.cell, defs:C.cellset, 
+   | JMPL of {r:CellsBasis.cell, i:operand, d:CellsBasis.cell, defs:C.cellset,
         uses:C.cellset, cutsTo:Label.label list, nop:bool, mem:Region.region}
-   | CALL of {defs:C.cellset, uses:C.cellset, label:Label.label, cutsTo:Label.label list, 
+   | CALL of {defs:C.cellset, uses:C.cellset, label:Label.label, cutsTo:Label.label list,
         nop:bool, mem:Region.region}
    | Ticc of {t:branch, cc:cc, r:CellsBasis.cell, i:operand}
    | FPop1 of {a:farith1, r:CellsBasis.cell, d:CellsBasis.cell}
@@ -230,7 +230,7 @@ sig
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,
@@ -240,7 +240,7 @@ sig
    val load : {l:load, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, mem:Region.region} -> instruction
    val store : {s:store, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, mem:Region.region} -> instruction
    val fload : {l:fload, r:CellsBasis.cell, i:operand, d:CellsBasis.cell, mem:Region.region} -> instruction
-   val fstore : {s:fstore, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, 
+   val fstore : {s:fstore, d:CellsBasis.cell, r:CellsBasis.cell, i:operand,
       mem:Region.region} -> instruction
    val unimp : {const22:int} -> instruction
    val sethi : {i:int, d:CellsBasis.cell} -> instruction
@@ -253,13 +253,13 @@ sig
    val fmovfcc : {sz:fsize, b:fbranch, r:CellsBasis.cell, d:CellsBasis.cell} -> instruction
    val bicc : {b:branch, a:bool, label:Label.label, nop:bool} -> instruction
    val fbfcc : {b:fbranch, a:bool, label:Label.label, nop:bool} -> instruction
-   val br : {rcond:rcond, p:prediction, r:CellsBasis.cell, a:bool, label:Label.label, 
+   val br : {rcond:rcond, p:prediction, r:CellsBasis.cell, a:bool, label:Label.label,
       nop:bool} -> instruction
    val bp : {b:branch, p:prediction, cc:cc, a:bool, label:Label.label, nop:bool} -> instruction
    val jmp : {r:CellsBasis.cell, i:operand, labs:Label.label list, nop:bool} -> instruction
-   val jmpl : {r:CellsBasis.cell, i:operand, d:CellsBasis.cell, defs:C.cellset, 
+   val jmpl : {r:CellsBasis.cell, i:operand, d:CellsBasis.cell, defs:C.cellset,
       uses:C.cellset, cutsTo:Label.label list, nop:bool, mem:Region.region} -> instruction
-   val call : {defs:C.cellset, uses:C.cellset, label:Label.label, cutsTo:Label.label list, 
+   val call : {defs:C.cellset, uses:C.cellset, label:Label.label, cutsTo:Label.label list,
       nop:bool, mem:Region.region} -> instruction
    val ticc : {t:branch, cc:cc, r:CellsBasis.cell, i:operand} -> instruction
    val fpop1 : {a:farith1, r:CellsBasis.cell, d:CellsBasis.cell} -> instruction
@@ -463,7 +463,7 @@ struct
      LOAD of {l:load, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, mem:Region.region}
    | STORE of {s:store, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, mem:Region.region}
    | FLOAD of {l:fload, r:CellsBasis.cell, i:operand, d:CellsBasis.cell, mem:Region.region}
-   | FSTORE of {s:fstore, d:CellsBasis.cell, r:CellsBasis.cell, i:operand, 
+   | FSTORE of {s:fstore, d:CellsBasis.cell, r:CellsBasis.cell, i:operand,
         mem:Region.region}
    | UNIMP of {const22:int}
    | SETHI of {i:int, d:CellsBasis.cell}
@@ -476,13 +476,13 @@ struct
    | FMOVfcc of {sz:fsize, b:fbranch, r:CellsBasis.cell, d:CellsBasis.cell}
    | Bicc of {b:branch, a:bool, label:Label.label, nop:bool}
    | FBfcc of {b:fbranch, a:bool, label:Label.label, nop:bool}
-   | BR of {rcond:rcond, p:prediction, r:CellsBasis.cell, a:bool, label:Label.label, 
+   | BR of {rcond:rcond, p:prediction, r:CellsBasis.cell, a:bool, label:Label.label,
         nop:bool}
    | BP of {b:branch, p:prediction, cc:cc, a:bool, label:Label.label, nop:bool}
    | JMP of {r:CellsBasis.cell, i:operand, labs:Label.label list, nop:bool}
-   | JMPL of {r:CellsBasis.cell, i:operand, d:CellsBasis.cell, defs:C.cellset, 
+   | JMPL of {r:CellsBasis.cell, i:operand, d:CellsBasis.cell, defs:C.cellset,
         uses:C.cellset, cutsTo:Label.label list, nop:bool, mem:Region.region}
-   | CALL of {defs:C.cellset, uses:C.cellset, label:Label.label, cutsTo:Label.label list, 
+   | CALL of {defs:C.cellset, uses:C.cellset, label:Label.label, cutsTo:Label.label list,
         nop:bool, mem:Region.region}
    | Ticc of {t:branch, cc:cc, r:CellsBasis.cell, i:operand}
    | FPop1 of {a:farith1, r:CellsBasis.cell, d:CellsBasis.cell}
@@ -499,7 +499,7 @@ struct
    and instruction =
      LIVE of {regs: C.cellset, spilled: C.cellset}
    | KILL of {regs: C.cellset, spilled: C.cellset}
-   | COPY of {k: CellsBasis.cellkind, 
+   | COPY of {k: CellsBasis.cellkind,
               sz: int,          (* in bits *)
               dst: CellsBasis.cell list,
               src: CellsBasis.cell list,

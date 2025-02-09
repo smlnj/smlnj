@@ -5,7 +5,7 @@ in
 
 datatype tree = Node of string * tree list
 
-fun formatTree (Node (s, trees)) = 
+fun formatTree (Node (s, trees)) =
     ccat (text s, formatTrees trees)
 
 and formatTrees nil = empty
@@ -13,13 +13,13 @@ and formatTrees nil = empty
 
 val tree1 =
     Node ("aaa",
-	  [Node ("bbbbb",
-		 [Node ("ccc", nil),
-		  Node ("dd", nil)]),
-	   Node ("eee", nil),
-	   Node ("ffff",
-		 [Node ("gg", nil),
-		  Node ("hhh", nil),
-		  Node ("ii", nil)])]);
+          [Node ("bbbbb",
+                 [Node ("ccc", nil),
+                  Node ("dd", nil)]),
+           Node ("eee", nil),
+           Node ("ffff",
+                 [Node ("gg", nil),
+                  Node ("hhh", nil),
+                  Node ("ii", nil)])]);
 
 end

@@ -1,4 +1,4 @@
-(* mltree-stream.sig 
+(* mltree-stream.sig
  *
  * COPYRIGHT (c) 2001 Lucent Technologies, Bell Laboratories.
  *
@@ -11,9 +11,9 @@ signature MLTREE_STREAM = sig
   (*
    * Instruction streams
    *)
-  type ('i,'cellset, 'cfg) stream = ('i, T.an list, 'cellset, 'cfg) S.stream 
+  type ('i,'cellset, 'cfg) stream = ('i, T.an list, 'cellset, 'cfg) S.stream
 
-  (* 
+  (*
    * Extension mechanism
    *)
   datatype ('instr, 'cellset, 'operand, 'addressing_mode, 'cfg) reducer =

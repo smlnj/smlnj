@@ -12,7 +12,7 @@ sig
    val create : { order : 'a * 'a -> order,
                   hash  : 'a -> int,
                   exn   : exn
-                } -> int -> ('a,'b) map 
+                } -> int -> ('a,'b) map
 
    val size         : ('a,'b) map -> int
    val bucketSize   : ('a,'b) map -> int
@@ -27,7 +27,7 @@ sig
    val contains     : ('a,'b) map -> 'a -> bool
    val app          : ('a * 'b -> unit) -> ('a,'b) map -> unit
    val fold         : (('a * 'b) * 'c -> 'c) -> 'c -> ('a,'b) map -> 'c
-   val toString     : (('a -> string) * ('b -> string)) -> ('a,'b) map 
+   val toString     : (('a -> string) * ('b -> string)) -> ('a,'b) map
                       -> string
 
 end

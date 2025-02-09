@@ -49,7 +49,7 @@ fun rpathToPath (rp: rpath) : path = rev rp
 fun pathLength (p: path) = length p
 
 (* addLink : link * path -> path *)
-fun addLink (link: link, path: path) = 
+fun addLink (link: link, path: path) =
 (*    let val result = path @ [link]
     in print "addLink: "; print (pathToString result); print "\n";
        result
@@ -57,7 +57,7 @@ fun addLink (link: link, path: path) =
    path @ [link]
 
 (* addLinkR : link * rpath -> rpath *)
-fun addLinkR (link: link, rpath: rpath) = 
+fun addLinkR (link: link, rpath: rpath) =
 (*    let val result = link :: rpath
     in print "addLinkR: "; print (pathToString (rpathToPath result)); print "\n";
        result
@@ -70,27 +70,27 @@ fun eqLink (PI n1, PI n2) = (n1 = n2)
   | eqLink _ = false
 
 fun eqPath (nil, nil) = true
-  | eqPath (link1::rest1, link2::rest2) = 
+  | eqPath (link1::rest1, link2::rest2) =
       eqLink (link1, link2) andalso eqPath (rest1, rest2)
   | eqPath _ = false
 
 (* prefix : path * path -> bool *)
 fun prefix (nil, _) = true
   | prefix (_, nil) = false
-  | prefix (link1::rest1, link2::rest2) = 
+  | prefix (link1::rest1, link2::rest2) =
     eqLink (link1, link2) andalso prefix (rest1, rest2)
 
 (* suffix : path * path -> link list option *)
 (*  returns SOME links if path1 @ links = path2, implying path1 is a prefix of path2 *)
 fun suffix (path1: path, path2: path) =
     let fun strip (nil, path) = SOME (pathToList path)
-	  | strip (_, nil) = NONE
-	  | strip (link1::rest1, link2::rest2) = 
-	      if eqLink (link1, link2)
-	      then strip (rest1, rest2)
-	      else NONE
+          | strip (_, nil) = NONE
+          | strip (link1::rest1, link2::rest2) =
+              if eqLink (link1, link2)
+              then strip (rest1, rest2)
+              else NONE
     in strip (path1, path2)
-    end				 
+    end
 
 
 end (* top local *)

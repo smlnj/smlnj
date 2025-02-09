@@ -16,23 +16,23 @@ local
   structure LD = LtyDef
 
       (** common utility functions *)
-		   
+
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
   val say = Control.Print.say
 
   fun plist(p, []) = ""
     | plist(p, x::xs) =
-	(p x) ^ (String.concat (map (fn z => ("," ^ (p z))) xs))
+        (p x) ^ (String.concat (map (fn z => ("," ^ (p z))) xs))
 
   fun pfflag (LT.FF_VAR b) =
-	let fun pff (true, true) = "rr"  | pff (true, false) = "rc"
-	      | pff (false, true) = "cr" | pff (false, false) = "cc"
-	 in pff b
-	end
+        let fun pff (true, true) = "rr"  | pff (true, false) = "rc"
+              | pff (false, true) = "cr" | pff (false, false) = "cc"
+         in pff b
+        end
     | pfflag (LT.FF_FIXED) = "f"
 
   fun parw(p, (ff, t1, t2)) =
-	"<" ^ (p t1) ^ "> -" ^ pfflag ff ^ "-> <" ^ (p t2) ^ ">"
+        "<" ^ (p t1) ^ "> -" ^ pfflag ff ^ "-> <" ^ (p t2) ^ ">"
 
 (*  open Lty LtyDef *)
 
@@ -52,7 +52,7 @@ fun ffd_fspec (LT.FF_FIXED) = (true,true)
 (** utility functions for constructing tycs *)
 val tcc_int    = LD.tcc_prim PT.ptc_int
 val tcc_num    = LD.tcc_prim o PT.ptc_num
-val tcc_real   = LD.tcc_prim PT.ptc_real	(* REAL32: FIXME *)
+val tcc_real   = LD.tcc_prim PT.ptc_real        (* REAL32: FIXME *)
 val tcc_string = LD.tcc_prim PT.ptc_string
 val tcc_exn    = LD.tcc_prim PT.ptc_exn
 val tcc_void   = LD.tcc_prim PT.ptc_void
@@ -94,16 +94,16 @@ val ltc_bool   = LD.ltc_tyc tcc_bool
 val ltc_tv     = LD.ltc_tyc o tcc_tv
 
 fun ltc_ref x = LD.ltc_tyc (tcc_ref (LD.ltd_tyc x))
-		handle DeconExn => bug "ltc_ref on Poly"
+                handle DeconExn => bug "ltc_ref on Poly"
 
 fun ltc_array x = LD.ltc_tyc (tcc_array (LD.ltd_tyc x))
-		  handle DeconExn => bug "ltc_array on Poly"
+                  handle DeconExn => bug "ltc_array on Poly"
 
 fun ltc_vector x = LD.ltc_tyc (tcc_vector (LD.ltd_tyc x))
-		   handle DeconExn => bug "ltc_vector on Poly"
+                   handle DeconExn => bug "ltc_vector on Poly"
 
 fun ltc_etag x = LD.ltc_tyc (tcc_etag (LD.ltd_tyc x))
-		 handle DeconExn => bug "ltc_etag on Poly"
+                 handle DeconExn => bug "ltc_etag on Poly"
 
 val ltc_top = LD.ltc_ppoly([LD.tkc_mono], ltc_tv 0)
 
@@ -118,7 +118,7 @@ fun tk_print (x : LT.tkind) =
       of LT.TK_MONO => "K0"
        | LT.TK_BOX => "KB0"
        | LT.TK_FUN(ks, k) =>
-	   "<" ^ (plist(tk_print, ks)) ^ "->" ^ (tk_print k) ^ ">"
+           "<" ^ (plist(tk_print, ks)) ^ "->" ^ (tk_print k) ^ ">"
        | LT.TK_SEQ zs => "KS(" ^ (plist(tk_print, zs)) ^ ")")
 
 fun tc_print (x : LT.tyc) =
@@ -220,12 +220,12 @@ val initLtyEnv : ltyEnv = LV.Map.empty
 fun ltLookup (venv, lv, nd) =
     (case LambdaVar.Map.find (venv, lv)
        of NONE  =>
-	    (say ("ltLookup: unbound lvar: " ^ LambdaVar.prLvar lv ^ "\n");
-	     NONE)
-	| SOME (lty, d) =>
-	    if d=nd then SOME lty
-	    else if d > nd then bug "ltLookup: unexpected depth"
-	    else SOME (LK.ltc_env (lty, 0, nd - d, LT.teEmpty))
+            (say ("ltLookup: unbound lvar: " ^ LambdaVar.prLvar lv ^ "\n");
+             NONE)
+        | SOME (lty, d) =>
+            if d=nd then SOME lty
+            else if d > nd then bug "ltLookup: unexpected depth"
+            else SOME (LK.ltc_env (lty, 0, nd - d, LT.teEmpty))
     (*end case*))
 
 (* ltInsert : ltyEnv * LV.lvar * LT.lty * DI.depth -> ltyEnv *)

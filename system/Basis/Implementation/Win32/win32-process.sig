@@ -6,10 +6,10 @@
  *
  *)
 
-signature WIN32_PROCESS = 
+signature WIN32_PROCESS =
     sig
-	val system' : string -> Win32_General.word
-	val exitProcess : Win32_General.word -> 'a
-	val getEnvironmentVariable' : string -> string option
-	val sleep : Time.time -> unit
+        val system' : string -> Win32_General.word
+        val exitProcess : Win32_General.word -> 'a
+        val getEnvironmentVariable' : string -> string option
+        val sleep : Time.time -> unit
     end

@@ -17,7 +17,7 @@ sig
    val gen     : level -> Ast.exp * Ast.ty -> Ast.exp * Ast.ty
    val lambda  : level -> Ast.ty -> Ast.ty
    val apply   : string * Ast.ty * Ast.ty list -> Ast.ty
-   val poly    : Ast.ty list * Ast.ty -> Ast.ty  
+   val poly    : Ast.ty list * Ast.ty -> Ast.ty
    val newType : Ast.datatypebind -> Ast.ty list * Ast.ty
    val deref   : Ast.ty -> Ast.ty
 

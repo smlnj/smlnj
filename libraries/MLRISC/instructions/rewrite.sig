@@ -7,7 +7,7 @@ sig
 
    structure I : INSTRUCTIONS
 
-                                    (* from      to *) 
+                                    (* from      to *)
    val rewriteDef : I.instruction * CellsBasis.cell * CellsBasis.cell -> I.instruction
    val rewriteUse : I.instruction * CellsBasis.cell * CellsBasis.cell -> I.instruction
    val frewriteDef : I.instruction * CellsBasis.cell * CellsBasis.cell -> I.instruction

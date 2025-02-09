@@ -9,24 +9,24 @@ functor AlphaSpillInstr(Instr : ALPHAINSTR) : ARCH_SPILL_INSTR = struct
   structure I = Instr
   structure C = I.C
   structure CB = CellsBasis
- 
+
   structure Rewrite = AlphaRewrite(I)
 
   fun error msg = MLRiscErrorMsg.error ("AlphaSpillInstr", msg)
 
-  fun storeAtEA CB.GP (reg, I.Displace{base, disp, mem}) = 
+  fun storeAtEA CB.GP (reg, I.Displace{base, disp, mem}) =
        I.store{stOp=I.STL, b=base, d=I.LABop disp, r=reg, mem=mem}
-    | storeAtEA CB.FP (reg, I.Displace{base, disp, mem}) =  
+    | storeAtEA CB.FP (reg, I.Displace{base, disp, mem}) =
        I.fstore{stOp=I.STT, b=base, d=I.LABop disp, r=reg, mem=mem}
     | storeAtEA _ _ = error "storeAtEA"
 
   fun loadFromEA CB.GP (reg, I.Displace{base, disp, mem}) =
        I.load{ldOp=I.LDL, r=reg, b=base, d=I.LABop disp, mem=mem}
-    | loadFromEA CB.FP (reg, I.Displace{base, disp, mem}) = 
+    | loadFromEA CB.FP (reg, I.Displace{base, disp, mem}) =
        I.fload{ldOp=I.LDT, r=reg, b=base, d=I.LABop disp, mem=mem}
     | loadFromEA _ _ = error "loadFromEA"
 
-  fun spillToEA ck reg_ea = 
+  fun spillToEA ck reg_ea =
       {code=[storeAtEA ck reg_ea], proh=[], newReg=NONE}
 
   fun reloadFromEA ck reg_ea =
@@ -36,7 +36,7 @@ functor AlphaSpillInstr(Instr : ALPHAINSTR) : ARCH_SPILL_INSTR = struct
   fun spillR (instr, reg, spillLoc) = let
     val newR = C.newReg()
     val instr' = Rewrite.rewriteDef(instr, reg, newR)
-  in 
+  in
       {code=[instr', storeAtEA CB.GP (newR, spillLoc)],
        proh=[newR],
        newReg=SOME newR}
@@ -45,7 +45,7 @@ functor AlphaSpillInstr(Instr : ALPHAINSTR) : ARCH_SPILL_INSTR = struct
   fun spillF (instr, reg, spillLoc) = let
     val newR = C.newFreg()
     val instr' = Rewrite.frewriteDef(instr, reg, newR)
-  in 
+  in
       {code=[instr', storeAtEA CB.FP (newR, spillLoc)],
        proh=[newR],
        newReg=SOME newR}

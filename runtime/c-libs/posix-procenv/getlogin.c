@@ -16,9 +16,9 @@
  */
 ml_val_t _ml_P_ProcEnv_getlogin (ml_state_t *msp, ml_val_t arg)
 {
-    char*     name;
+    UNUSED_UNIT_PARAM(arg);
 
-    name = getlogin();
+    char *name = getlogin();
     if (name == NIL(char *))
         return RAISE_ERROR(msp, "no login name");
   

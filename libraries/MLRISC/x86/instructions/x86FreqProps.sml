@@ -24,10 +24,10 @@ struct
      | x86BranchProb(I.JCC{cond=I.P,...}) = p0_001 (* fp unordered test *)
      | x86BranchProb(I.JCC{cond=I.NP,...}) =  p100
      | x86BranchProb(I.JCC _) = p50 (* default *)
-     | x86BranchProb(I.JMP _) = p100 
+     | x86BranchProb(I.JMP _) = p100
      | x86BranchProb _ = Probability.never (* non-branch *)
 
-   and branchProb(I.ANNOTATION{a, i, ...}) = 
+   and branchProb(I.ANNOTATION{a, i, ...}) =
         (case #peek MLRiscAnnotations.BRANCH_PROB a of
            SOME b => b
          | NONE => branchProb i

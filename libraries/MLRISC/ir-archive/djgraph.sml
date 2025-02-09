@@ -1,7 +1,7 @@
-(* 
+(*
  * The algorithm for computing iterated dominance frontier.
- * This is the algorithm by Sreedhar, Gao and Lee.   
- * 
+ * This is the algorithm by Sreedhar, Gao and Lee.
+ *
  * --Allen
  *)
 
@@ -25,7 +25,7 @@ struct
    val totalBlockSize = MLRiscControl.getCounter "dj-total-block-size"
    val debug          = false
 
-   fun DJ x = x 
+   fun DJ x = x
 
    (* Compute dominance frontier *)
    fun DF (D as G.GRAPH dom) =
@@ -42,16 +42,16 @@ struct
            in  if s = stamp then false else (A.update(marked,i,stamp); true)
            end
 
-       (* 
+       (*
         * Compute the dominance frontiers of a node
-        * Dominance frontier of x: 
-        *   The set of all nodes y such that x dominates a predecessor 
+        * Dominance frontier of x:
+        *   The set of all nodes y such that x dominates a predecessor
         *   of y but x doesn't strictly dominates y.
         *)
        fun DF x =
        let val stamp = new_stamp()
            val level_x = A.sub(levels,x)
-           fun walk(z, S) = 
+           fun walk(z, S) =
                let fun scan((_,y,_)::es,S) =
                        if A.sub(levels,y) <= level_x andalso
                            unmarked(in_phi,y,stamp) then scan(es,y::S)
@@ -68,7 +68,7 @@ struct
    in  DF end
 
    (* Compute iterated dominance frontier *)
-   fun IDFs (D as G.GRAPH dom) = 
+   fun IDFs (D as G.GRAPH dom) =
    let val G.GRAPH cfg = Dom.cfg D
        val L           = Dom.max_levels D
        val N           = #capacity dom ()
@@ -87,40 +87,40 @@ struct
        val piggybank = A.array(L,[]) (* nodes in the piggy bank *)
 
        val n = ref 0
-       (* 
-        * This algorithm is described in POPL 95 
+       (*
+        * This algorithm is described in POPL 95
         *)
        fun IDFs xs =
        let val stamp = new_stamp()
-           val _ = if stats then (idfCount := !idfCount + 1; n := !visitCount) 
+           val _ = if stats then (idfCount := !idfCount + 1; n := !visitCount)
                    else ()
            fun init([],l) = l
-             | init(x::xs,l) = 
+             | init(x::xs,l) =
                let val l_x = A.sub(levels,x)
                in  A.update(in_alpha,x,stamp);
                    A.update(piggybank,l_x,x::A.sub(piggybank,l_x));
                    init(xs,if l < l_x then l_x else l)
-               end 
+               end
            fun visit(y,level_x,S) =
            let fun scan([],S) = S
                  | scan((_,z,_)::es,S) =
                    let val level_z = A.sub(levels,z)
-                   in  if level_z <= level_x andalso unmarked(in_phi,z,stamp) 
-                       then (if A.sub(in_alpha,z) <> stamp 
+                   in  if level_z <= level_x andalso unmarked(in_phi,z,stamp)
+                       then (if A.sub(in_alpha,z) <> stamp
                              then A.update(piggybank,level_z,
-                                           z::A.sub(piggybank,level_z)) 
+                                           z::A.sub(piggybank,level_z))
                              else ();
                              scan(es,z::S))
-                       else scan(es,S)  
+                       else scan(es,S)
                    end
                fun visitSucc([],S) = S
-                 | visitSucc((_,z,_)::es,S) = 
+                 | visitSucc((_,z,_)::es,S) =
                    visitSucc(es,if unmarked(visited,z,stamp)
                                 then visit(z,level_x,S) else S)
                val S = scan(#out_edges cfg y,S)
            in  if stats then visitCount := !visitCount + 1 else ();
-               visitSucc(#out_edges dom y,S) 
-           end 
+               visitSucc(#out_edges dom y,S)
+           end
 
            fun visitAll(~1,S) = S
              | visitAll(l,S) =
@@ -130,7 +130,7 @@ struct
                            A.update(piggybank,l,xs);
                            visitAll(l,visit(x,A.sub(levels,x),S)))
 
-           val L = init(xs,~1) 
+           val L = init(xs,~1)
            val IDF = visitAll(L,[])
        in  if stats then
                (idfSize := !idfSize + length IDF;
@@ -146,7 +146,7 @@ struct
    in  IDFs
    end
 
-   fun LiveIDFs(D as G.GRAPH dom) = 
+   fun LiveIDFs(D as G.GRAPH dom) =
    let val G.GRAPH cfg = Dom.cfg D
        val L           = Dom.max_levels D
        val N           = #capacity dom ()
@@ -167,7 +167,7 @@ struct
            end
 
        fun LiveIDFs {defs, localLiveIn=[]} = [] (* special case *)
-         | LiveIDFs {defs=xs, localLiveIn} = 
+         | LiveIDFs {defs=xs, localLiveIn} =
        let val stamp = new_stamp()
            val _ = if stats then idfCount := !idfCount + 1 else ()
            (* val n = ref 0
@@ -179,15 +179,15 @@ struct
                in  A.update(in_alpha,x,stamp);
                    A.update(piggybank,lvl_x,x::A.sub(piggybank,lvl_x));
                    initDefs(xs,if maxLvl < lvl_x then lvl_x else maxLvl)
-               end 
+               end
 
            fun markLiveIn(b) =
            let fun markPred [] = ()
-                 | markPred((j,_,_)::es) = 
+                 | markPred((j,_,_)::es) =
                     (if A.sub(liveIn,j) <> stamp andalso
                         A.sub(in_alpha,j) <> stamp then
-                       markLiveIn j 
-                     else (); 
+                       markLiveIn j
+                     else ();
                      markPred es
                     )
            in  (* m := !m + 1; *)
@@ -205,23 +205,23 @@ struct
            let fun scan([],S) = S
                  | scan((_,z,_)::es,S) =
                    let val level_z = A.sub(levels,z)
-                   in  if level_z <= level_x andalso 
+                   in  if level_z <= level_x andalso
                           isLive z andalso
-                          unmarked(in_phi,z,stamp) 
-                       then (if A.sub(in_alpha,z) <> stamp 
+                          unmarked(in_phi,z,stamp)
+                       then (if A.sub(in_alpha,z) <> stamp
                              then A.update(piggybank,level_z,
-                                           z::A.sub(piggybank,level_z)) 
+                                           z::A.sub(piggybank,level_z))
                              else ();
                              scan(es,z::S))
-                       else scan(es,S)  
+                       else scan(es,S)
                    end
                fun visitSucc([],S) = S
-                 | visitSucc((_,z,_)::es,S) = 
+                 | visitSucc((_,z,_)::es,S) =
                    visitSucc(es,if isLive z andalso unmarked(visited,z,stamp)
                                 then visit(z,level_x,S) else S)
                val S = scan(#out_edges cfg y,S)
-           in  visitSucc(#out_edges dom y,S) 
-           end 
+           in  visitSucc(#out_edges dom y,S)
+           end
 
            fun visitAll(~1,S) = S
              | visitAll(l,S) =
@@ -231,7 +231,7 @@ struct
                            A.update(piggybank,l,xs);
                            visitAll(l,visit(x,A.sub(levels,x),S)))
 
-           val L = initDefs(xs, ~1) 
+           val L = initDefs(xs, ~1)
        in  initLiveIn(localLiveIn);
            visitAll(L, [])
        end

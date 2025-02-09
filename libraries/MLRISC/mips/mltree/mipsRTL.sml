@@ -13,17 +13,17 @@ struct
    structure P = struct
    end
 
-   fun LB {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.SX (64, 8, 
+   fun LB {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.SX (64, 8,
           T.$ (8, C.MEM, T.ADD (64, T.$ (64, C.GP, b), d))))
-   fun LBU {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.ZX (64, 8, 
+   fun LBU {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.ZX (64, 8,
           T.$ (8, C.MEM, T.ADD (64, T.$ (64, C.GP, b), d))))
-   fun LH {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.SX (64, 16, 
+   fun LH {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.SX (64, 16,
           T.$ (8, C.MEM, T.ADD (64, T.$ (64, C.GP, b), d))))
-   fun LHU {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.ZX (64, 16, 
+   fun LHU {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.ZX (64, 16,
           T.$ (8, C.MEM, T.ADD (64, T.$ (64, C.GP, b), d))))
-   fun LW {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.SX (64, 32, 
+   fun LW {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.SX (64, 32,
           T.$ (8, C.MEM, T.ADD (64, T.$ (64, C.GP, b), d))))
-   fun LD {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.$ (8, C.MEM, 
+   fun LD {rt, b, d, mem} = T.ASSIGN (64, T.$ (64, C.GP, rt), T.$ (8, C.MEM,
           T.ADD (64, T.$ (64, C.GP, b), d)))
 end
 

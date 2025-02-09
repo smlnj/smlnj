@@ -37,11 +37,13 @@ STATIC_INLINE int _AddrHash (addr_tbl_t *tbl, Addr_t addr)
 addr_tbl_t *MakeAddrTbl (int ignoreBits, int size)
 {
     unsigned int    nBuckets;
-    int		    i;
+    unsigned int    i;
     addr_tbl_t	    *tbl;
 
+    ASSERT(size >= 0);
+
   /* find smallest power of 2 (but at least 16) that is greater than size */
-    for (nBuckets = 16;  nBuckets < size;  nBuckets <<= 1)
+    for (nBuckets = 16;  nBuckets < (unsigned)size;  nBuckets <<= 1)
 	continue;
 
     tbl			= NEW_OBJ(addr_tbl_t);

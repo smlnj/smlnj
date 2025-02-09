@@ -6,7 +6,7 @@ struct
 
    type gcmap = GC.gctype C.HashTable.hash_table
 
-   val GCMAP = Annotations.new(SOME(fn _ => "gcmap")) 
+   val GCMAP = Annotations.new(SOME(fn _ => "gcmap"))
                  : gcmap Annotations.property
 
    fun toString gcmap =

@@ -13,7 +13,7 @@ structure Real64Vector : MONO_VECTOR
   = struct
     type elem = Real64.real
     type vector = elem Vector.vector
-    
+
     val maxLen = Vector.maxLen
 
     val fromList = Vector.fromList

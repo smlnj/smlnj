@@ -3,7 +3,7 @@ CM.make "../cm/Graphs.cm";
 structure TestMatching =
 struct
 val G as Graph.GRAPH g = DirectedGraph.graph("foo",(),10) :
-    (string,int,unit) Graph.graph 
+    (string,int,unit) Graph.graph
 val _ = app (#add_node g)
           [(1,"1"),
            (2,"2"),
@@ -30,10 +30,10 @@ val _ = app (#add_edge g)
            (4,10,1),
            (5,6,1)
           ])
-fun matching((i,j,c),_) = 
+fun matching((i,j,c),_) =
     print(Int.toString i ^ " -> " ^ Int.toString j ^ "\n")
 
-fun test() = 
+fun test() =
     let val (_,card) = BipartiteMatching.matching G matching ()
     in  if card <> 5 then raise Match else card
     end

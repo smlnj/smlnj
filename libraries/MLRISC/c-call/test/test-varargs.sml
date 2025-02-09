@@ -7,15 +7,15 @@ structure TestVarargs =
   in
     structure X86GenInterp = X86GenFn(
                    fun push e = T.EXT(X86InstrExt.PUSHL e)
-		   val leave = T.EXT X86InstrExt.LEAVE
-		    structure MLRISCGen =
-		      struct
-		        structure T = T
-		        fun gen (l, stms, mlrs) =
-			      X86MLRISCGen.dumpOutput(X86MLRISCGen.codegen'(l, stms, mlrs))
-		      end
-		    structure Gen = X86CCall.Gen
-		  )
+                   val leave = T.EXT X86InstrExt.LEAVE
+                    structure MLRISCGen =
+                      struct
+                        structure T = T
+                        fun gen (l, stms, mlrs) =
+                              X86MLRISCGen.dumpOutput(X86MLRISCGen.codegen'(l, stms, mlrs))
+                      end
+                    structure Gen = X86CCall.Gen
+                  )
   end
 
   local
@@ -36,25 +36,25 @@ structure TestVarargs =
     val a_regs = List.take(o_regs, 6)
     val l_reg = oreg 7
     val f_regs = List.map freg
-		     [0, 2, 4, 6, 8, 10, 12, 14,
-		      16, 18, 20, 22, 24, 26, 28, 30]
+                     [0, 2, 4, 6, 8, 10, 12, 14,
+                      16, 18, 20, 22, 24, 26, 28, 30]
   in
     structure SparcGenInterp = SparcGenFn(
-			   structure Gen = SparcCCall.Gen
-			   structure MLRISCGen = 
-			     struct
-			       structure T = T
-			       fun gen (l, stms, mlrs) =
-				     SparcMLRISCGen.dumpOutput(SparcMLRISCGen.gen(l, stms, mlrs))
-			     end
-			     val gprs = g_regs
-			     val fprs = []
-			     val callerSaves = g_regs @ a_regs
-			     val calleeSaves = []
-			     val callerSavesF = f_regs
-			     val calleeSavesF = []
-			     val oRegs = o_regs
-			 )
+                           structure Gen = SparcCCall.Gen
+                           structure MLRISCGen =
+                             struct
+                               structure T = T
+                               fun gen (l, stms, mlrs) =
+                                     SparcMLRISCGen.dumpOutput(SparcMLRISCGen.gen(l, stms, mlrs))
+                             end
+                             val gprs = g_regs
+                             val fprs = []
+                             val callerSaves = g_regs @ a_regs
+                             val calleeSaves = []
+                             val callerSavesF = f_regs
+                             val calleeSavesF = []
+                             val oRegs = o_regs
+                         )
   end
 
     structure VC = VarargCall

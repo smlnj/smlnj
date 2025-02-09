@@ -24,15 +24,15 @@ struct
      | I.ANNOTATION{i,...} => delaySlot{instr=i,backward=backward}
      | _ => {n=false,nOn=D_ERROR,nOff=D_NONE,nop=false}
 
-   fun enableDelaySlot{instr, n=true, nop} = 
+   fun enableDelaySlot{instr, n=true, nop} =
          error "enableDelaySlot: can't nullify"
-     | enableDelaySlot{instr, n, nop} = 
+     | enableDelaySlot{instr, n, nop} =
        case instr of
          I.J{lab, ...} => I.J{lab=lab,nop=nop}
        | I.JR{rs, labels, ...} => I.JR{rs=rs,labels=labels,nop=nop}
-       | I.JAL{lab, defs, uses, cutsTo, mem, ...} => 
+       | I.JAL{lab, defs, uses, cutsTo, mem, ...} =>
          I.JAL{lab=lab, defs=defs, uses=uses, cutsTo=cutsTo, mem=mem, nop=nop}
-       | I.JALR{rs, rt, defs, uses, cutsTo, mem, ...} => 
+       | I.JALR{rs, rt, defs, uses, cutsTo, mem, ...} =>
          I.JALR{rs=rs, rt=rt,
                 defs=defs, uses=uses, cutsTo=cutsTo, mem=mem, nop=nop}
        | I.RET _ => I.RET{nop=nop}
@@ -40,7 +40,7 @@ struct
            I.BRANCH{likely=likely, cond=cond, rs=rs, rt=rt, lab=lab, nop=nop}
        | I.FBRANCH{likely, fbranch, cc, lab, ...} =>
            I.FBRANCH{likely=likely, fbranch=fbranch, cc=cc, lab=lab, nop=nop}
-       | I.ANNOTATION{i,a} => 
+       | I.ANNOTATION{i,a} =>
            I.ANNOTATION{i=enableDelaySlot{instr=i,n=n,nop=nop},a=a}
        | _ => error "enableDelaySlot"
 
@@ -50,11 +50,11 @@ struct
     fun conflict{src=i,dst=j} = error "conflict"
 
     fun delaySlotCandidate
-          {jmp, delaySlot=(I.J _ | I.JR _ | I.JAL _ | I.JALR _ 
+          {jmp, delaySlot=(I.J _ | I.JR _ | I.JAL _ | I.JALR _
                           | I.RET _ | I.BRANCH _ | I.FBRANCH _)} = false
-      | delaySlotCandidate{jmp=I.ANNOTATION{i,...},delaySlot} = 
+      | delaySlotCandidate{jmp=I.ANNOTATION{i,...},delaySlot} =
            delaySlotCandidate{jmp=i,delaySlot=delaySlot}
-      | delaySlotCandidate{jmp,delaySlot=I.ANNOTATION{i,...}} = 
+      | delaySlotCandidate{jmp,delaySlot=I.ANNOTATION{i,...}} =
            delaySlotCandidate{jmp=jmp,delaySlot=i}
       | delaySlotCandidate _ = true
 
