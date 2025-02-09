@@ -1,6 +1,6 @@
 /*! \file import-heap.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Routines to import an ML heap image.
@@ -63,7 +63,12 @@ PVT ml_val_t RepairWord (
 	addr_tbl_t *boRegionTbl, ml_val_t *externs);
 PVT bo_reloc_t *AddrToRelocInfo (bibop_t, addr_tbl_t *, aid_t, Addr_t);
 
-#define READ(bp,obj)	HeapIO_ReadBlock(bp, &(obj), sizeof(obj))
+#define READ(bp,obj,msg)	                                        \
+    do {                                                                \
+        if (HeapIO_ReadBlock(bp, &(obj), sizeof(obj)) == FAILURE) {     \
+            Die(msg);                                                   \
+        }                                                               \
+    } while (0)
 
 
 /* ImportHeapImage:
@@ -125,14 +130,14 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
 #endif
     }
 
-    READ(&inBuf, imHdr);
+    READ(&inBuf, imHdr, "failure reading image header\n");
     if (imHdr.byteOrder != ORDER)
 	Die ("incorrect byte order in heap image\n");
     if (imHdr.magic != IMAGE_MAGIC)
 	Die ("bad magic number (%#x) in heap image\n", imHdr.magic);
     if ((imHdr.kind != EXPORT_HEAP_IMAGE) && (imHdr.kind != EXPORT_FN_IMAGE))
 	Die ("bad image kind (%d) in heap image\n", imHdr.kind);
-    READ(&inBuf, heapHdr);
+    READ(&inBuf, heapHdr, "failure reading heap header\n");
 
   /* check for command-line overrides of heap parameters. */
     if (params->allocSz == 0) params->allocSz = heapHdr.allocSzB;
@@ -152,7 +157,7 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
     externs = HeapIO_ReadExterns (&inBuf);
 
   /* read and initialize the ML state info */
-    READ(&inBuf, image);
+    READ(&inBuf, image, "failure reading vproc header");
     if (imHdr.kind == EXPORT_HEAP_IMAGE) {
       /* Load the live registers */
 	ASSIGN(MLSignalHandler, image.sigHandler);
@@ -232,7 +237,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	boRegionTbl = MakeAddrTbl(BIBOP_PAGE_BITS+1, hdr->numBORegions);
 	sz = hdr->numBORegions * sizeof(bo_region_info_t);
 	boRgnHdr = NEW_VEC(bo_region_info_t, hdr->numBORegions);
-	HeapIO_ReadBlock (bp, boRgnHdr, sz);
+	if (HeapIO_ReadBlock (bp, boRgnHdr, sz) == FAILURE) {
+            Die("failure to read big-object region info\n");
+        }
 
 #ifdef VERBOSE
 	SayDebug ("Marking %d regions for imported big objects\n", hdr->numBORegions);
@@ -262,7 +269,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
   /* read the arena headers. */
     arenaHdrsSize = hdr->numGens * NUM_OBJ_KINDS * sizeof(heap_arena_hdr_t);
     arenaHdrs = (heap_arena_hdr_t *) MALLOC (arenaHdrsSize);
-    HeapIO_ReadBlock (bp, arenaHdrs, arenaHdrsSize);
+    if (HeapIO_ReadBlock (bp, arenaHdrs, arenaHdrsSize) == FAILURE) {
+        Die("failure to read arena info\n");
+    }
 
     for (i = 0;  i < NUM_ARENAS;  i++)
 	prevSzB[i] = heap->allocSzB;
@@ -302,7 +311,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	    if (p->info.o.sizeB > 0) {
 		addrOffset[i][j] = (Addr_t)(ap->tospBase) - (Addr_t)(p->info.o.baseAddr);
 		HeapIO_Seek (bp, (off_t)(p->offset));
-		HeapIO_ReadBlock(bp, (ap->tospBase), p->info.o.sizeB);
+                if (HeapIO_ReadBlock(bp, (ap->tospBase), p->info.o.sizeB) == FAILURE) {
+                    Die("failure to read heap data; gen = %d, arena = %d\n", i+1, j);
+                }
 		ap->nextw	= (ml_val_t *)((Addr_t)(ap->tospBase) + p->info.o.sizeB);
 		ap->oldTop	= ap->tospBase;
 	    }
@@ -325,6 +336,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	    bo_region_reloc_t   *region;
 
 	    if (p->info.bo.numBOPages > 0) {
+		ENABLE_CODE_WRITE
 		totSizeB = p->info.bo.numBOPages << BIGOBJ_PAGE_SHIFT;
 		freeObj = BO_AllocRegion (heap, totSizeB);
 		freeRegion = freeObj->region;
@@ -336,12 +348,14 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	      /* read in the big-object headers */
 		boHdrSizeB = p->info.bo.numBigObjs * sizeof(bigobj_hdr_t);
 		boHdrs = (bigobj_hdr_t *) MALLOC (boHdrSizeB);
-		HeapIO_ReadBlock (bp, boHdrs, boHdrSizeB);
+                if (HeapIO_ReadBlock (bp, boHdrs, boHdrSizeB) == FAILURE) {
+                    Die("failure to read big-object headers\n");
+                }
 
 	      /* read in the big-objects */
-		ENABLE_CODE_WRITE
-		HeapIO_ReadBlock (bp, (void *)(freeObj->obj), totSizeB);
-		DISABLE_CODE_WRITE
+		if (HeapIO_ReadBlock (bp, (void *)(freeObj->obj), totSizeB) == FAILURE) {
+                    Die("failure to read big-object data\n");
+                }
 		if (j == CODE_INDX) {
 		    FlushICache ((void *)(freeObj->obj), totSizeB);
 		}
@@ -382,6 +396,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		}
 
 		FREE (boHdrs);
+		DISABLE_CODE_WRITE
 	    }
 	    if (! SilentLoad) {
 		Say(".");
