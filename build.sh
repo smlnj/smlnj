@@ -115,14 +115,14 @@ dsay "$cmd: Using shell $SHELL."
 # set the SML root directory
 #
 
-cd $(dirname $cmd)
+cd $(dirname $cmd) || exit 1
 SMLNJ_ROOT=$(pwd)
 vsay "$cmd: SML root is $SMLNJ_ROOT."
 
-cd $here
-cd "${INSTALLDIR:=$SMLNJ_ROOT}"
+cd $here || exit 1
+cd "${INSTALLDIR:=$SMLNJ_ROOT}" || exit 1
 INSTALLDIR=`pwd`
-cd "$SMLNJ_ROOT"
+cd "$SMLNJ_ROOT" || exit 1
 vsay "$cmd: Installation directory is ${INSTALLDIR}."
 
 #
@@ -219,7 +219,7 @@ installdriver() {
 # a single subdirectory which is a CM metadata directory:
 #
 fish() {
-  cd "$1"
+  cd "$1" || exit 1
   ORIG_CM_DIR_ARC=unknown
   for i in * .[a-zA-Z0-9]* ; do
     if [ -d $i ] ; then
@@ -249,7 +249,7 @@ move() {
       fi
       mkdir "$2"
     fi
-    cd "$1"
+    cd "$1" || exit 1
     for i in * .[a-zA-Z0-9]* ; do
       move "$i" "$2"/"$i"
     done
@@ -271,7 +271,7 @@ dirarcs() {
       mv "$1" "$2"
       ln -s "$2" "$1"
     else
-      cd "$3"
+      cd "$3" || exit 1
       for d in * .[a-zA-Z0-9]* ; do
         dirarcs "$1" "$2" "$d"
       done
@@ -388,16 +388,16 @@ else
   BUILD_LLVM_FLAGS="-install $RUNTIMEDIR $BUILD_LLVM_FLAGS"
   if [ x"$INSTALL_DEV" = xyes ] ; then
     vsay $cmd: Building LLVM for all targets in $LLVMDIR
-    cd "$LLVMDIR"
+    cd "$LLVMDIR" || exit 1
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
     vsay $cmd: Building LLVM in $LLVMDIR
-    cd "$LLVMDIR"
+    cd "$LLVMDIR" || exit 1
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   fi
-  cd "$RUNTIMEDIR/objs"
+  cd "$RUNTIMEDIR/objs" || exit 1
   vsay $cmd: Compiling the run-time system.
   make -f $RT_MAKEFILE $EXTRA_DEFS
   if [ -x run.$ARCH-$OPSYS ]; then
@@ -416,7 +416,7 @@ else
     complain "Run-time system build failed for some reason."
   fi
 fi
-cd "$SMLNJ_ROOT"
+cd "$SMLNJ_ROOT" || exit 1
 
 #
 # boot the base SML system
@@ -430,14 +430,14 @@ if [ -r "$HEAPDIR"/sml.$HEAP_SUFFIX ]; then
   # now re-dump the heap image:
   vsay "$cmd: Re-creating a (customized) heap image..."
   "$BINDIR"/sml @CMredump "$SMLNJ_ROOT"/sml
-  cd "$SMLNJ_ROOT"
+  cd "$SMLNJ_ROOT" || exit 1
   if [ -r sml.$HEAP_SUFFIX ]; then
     mv sml.$HEAP_SUFFIX "$HEAPDIR"
   else
     complain "Unable to re-create heap image (sml.$HEAP_SUFFIX)."
   fi
 else
-  cd "$SMLNJ_ROOT"
+  cd "$SMLNJ_ROOT" || exit 1
 
   if [ ! -d "$BOOT_FILES"/smlnj/basis ] ; then
     if [ -f "$BOOT_ARCHIVE" ] ; then
@@ -462,21 +462,21 @@ else
     dirarcs "$ORIG_CM_DIR_ARC" "$CM_DIR_ARC" "$BOOT_FILES"
   fi
 
-  cd "$SMLNJ_ROOT"/"$BOOT_FILES"
+  cd "$SMLNJ_ROOT"/"$BOOT_FILES" || exit 1
 
   # now link (boot) the system and let it initialize itself...
   dsay "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc=$ALLOC
   if "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc=$ALLOC ; then
-    cd "$SMLNJ_ROOT"
+    cd "$SMLNJ_ROOT" || exit 1
     if [ -r sml.$HEAP_SUFFIX ]; then
       mv sml.$HEAP_SUFFIX "$HEAPDIR"
-      cd "$BINDIR"
+      cd "$BINDIR" || exit 1
       ln -s .run-sml sml
       #
       # Now move all stable libraries to $LIBDIR and generate
       # the pathconfig file.
       #
-      cd "$SMLNJ_ROOT"/"$BOOT_FILES"
+      cd "$SMLNJ_ROOT"/"$BOOT_FILES" || exit 1
       for anchor in * ; do
         if [ -d $anchor ] ; then
           dsay "move $anchor to $LIBDIR"
@@ -484,7 +484,7 @@ else
           move $anchor "$LIBDIR"/$anchor
         fi
       done
-      cd "$SMLNJ_ROOT"
+      cd "$SMLNJ_ROOT" || exit 1
       # $BOOT_FILES is now only an empty skeleton, let's get rid of it.
       rm -rf "$BOOT_FILES"
     else
@@ -533,7 +533,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
   export SMLNJ_HOME
   SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
-  cd doc
+  cd doc || exit 1
   if autoconf -Iconfig ; then
     :
   else
