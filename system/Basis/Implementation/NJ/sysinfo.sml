@@ -37,10 +37,7 @@ structure SysInfo : SYS_INFO =
 	   of NONE => getInfoStr(sysInfo "HOST_ARCH")	(* REMOVE in 110.97 *)
 	    | SOME arch => arch
 	  (* end case *))
-    fun getArchSize () = (case getArchName()
-	   of "AMD64" => 64
-	    | _ => 32
-	  (* end case *))
+    fun getArchSize () = Unsafe.wordSize()
 
   (* these functions are deprecated and will go away in 110.97 *)
     val getHostSize = getArchSize
