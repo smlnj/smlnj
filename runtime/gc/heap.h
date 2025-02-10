@@ -199,7 +199,7 @@ struct bigobj_region {	    /* A big-object region header */
 };
 
 struct bigobj_desc {	    /* A big-object descriptor. */
-    Addr_t	    obj;	/* the actual object */
+    Addr_t	    obj;	/* base address of the object */
     Addr_t	    sizeB;	/* the size of the object in bytes.  When the object */
 				/* is in the free list, this will be a multiple of */
 				/* BIGOBJ_PAGE_SZB, otherwise it is the exact size. */
@@ -241,7 +241,7 @@ struct bigobj_desc {	    /* A big-object descriptor. */
 #define BO_IS_FROM_SPACE(dp)	(((dp)->state & 0x1) != 0)
 #define BO_IS_FREE(dp)		((dp)->state == BO_FREE)
 
-/* remove a descriptor from a doubly linked list */
+/* remove a big-object descriptor from a doubly linked list */
 STATIC_INLINE void RemoveBODesc (bigobj_desc_t *dp)
 {
     ASSERT((dp->prev != dp) && (dp->next != dp));
@@ -251,7 +251,7 @@ STATIC_INLINE void RemoveBODesc (bigobj_desc_t *dp)
     n->prev = p;
 }
 
-/* add a descriptor to a doubly linked list */
+/* add a big-object descriptor to a doubly linked list */
 STATIC_INLINE void AddBODesc (bigobj_desc_t *hdr, bigobj_desc_t *dp)
 {
     bigobj_desc_t *n = hdr->next;

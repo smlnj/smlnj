@@ -103,6 +103,13 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/02/10]::
+A minor change to the heap-image layout (the new version number is
+`0x02102025`) and other improvements to heap import/export.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/02/08]::
 Changed the representation of big-object regions in the heap to avoid
 issues with write protection for executable code on **macOS**/**arm64**.
