@@ -11,6 +11,7 @@
 #include "ml-heap-image.h"
 #include "c-globals-tbl.h"
 #include "heap-output.h"
+#include "machine-id.h"
 #include <string.h>
 
 
@@ -26,8 +27,8 @@ status_t HeapIO_WriteImageHeader (writer_t *wr, int kind)
     hdr.magic	  = ((kind == EXPORT_HEAP_IMAGE) || (kind == EXPORT_FN_IMAGE))
 			? IMAGE_MAGIC : BLAST_MAGIC;
     hdr.kind	  = kind;
-    /* hdr.arch[] */
-    /* hdr.opsys[] */
+    strncpy (hdr.arch, MACHINE_ID, sizeof(hdr.arch));
+    strncpy (hdr.opsys, OPSYS_ID, sizeof(hdr.opsys));
 
     WR_Write(wr, &hdr, sizeof(hdr));
     if (WR_Error(wr))

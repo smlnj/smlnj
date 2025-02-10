@@ -149,9 +149,6 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
   /* get the run-time pointers into the heap */
     *PTR_MLtoC(ml_val_t, PervStruct) = heapHdr.pervStruct;
     RunTimeCompUnit = heapHdr.runTimeCompUnit;
-#ifdef ASM_MATH
-    MathVec = heapHdr.mathVec;
-#endif
 
   /* read the externals table */
     externs = HeapIO_ReadExterns (&inBuf);
@@ -253,9 +250,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		AID_BIGOBJ(MAX_NUM_GENS));
 	    ADDR_TO_PAGEID(oldBIBOP,boRgnHdr[i].baseAddr) = AID_BIGOBJ_HDR(MAX_NUM_GENS);
 	  /* set relocation info for the big-object region */
-	    boRelocInfo[i].firstPage = boRgnHdr[i].firstPage;
+	    boRelocInfo[i].firstPage = BO_REGION_FIRST_PAGE(boRgnHdr[i].baseAddr);
 	    boRelocInfo[i].nPages =
-		(boRgnHdr[i].sizeB - (boRgnHdr[i].firstPage - boRgnHdr[i].baseAddr))
+		(boRgnHdr[i].sizeB - (boRelocInfo[i].firstPage - boRgnHdr[i].baseAddr))
 		    >> BIGOBJ_PAGE_SHIFT;
 	    boRelocInfo[i].objMap = NEW_VEC(bo_reloc_t *, boRelocInfo[i].nPages);
 	    for (j = 0;  j < boRelocInfo[i].nPages;  j++) {
@@ -273,8 +270,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
         Die("failure to read arena info\n");
     }
 
-    for (i = 0;  i < NUM_ARENAS;  i++)
+    for (i = 0;  i < NUM_ARENAS;  i++) {
 	prevSzB[i] = heap->allocSzB;
+    }
 
   /* allocate the arenas and read in the heap image. */
     for (p = arenaHdrs, i = 0;  i < hdr->numGens;  i++) {
@@ -289,18 +287,21 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		RND_MEMOBJ_SZB(q->info.o.sizeB),
 		gen->arena[j]->id);
 	    sz = q->info.o.sizeB + prevSzB[j];
-	    if ((j == PAIR_INDX) && (sz > 0))
+	    if ((j == PAIR_INDX) && (sz > 0)) {
 		sz += 2*WORD_SZB;
+            }
 	    gen->arena[j]->tospSizeB = RND_MEMOBJ_SZB(sz);
 	    prevSzB[j] = q->info.o.sizeB;
 	    q++;
 	}
 
       /* Allocate space for the generation */
-	if (NewGeneration(gen) == FAILURE)
+	if (NewGeneration(gen) == FAILURE) {
 	    Die ("unable to allocated space for generation %d\n", i+1);
-	if (isACTIVE(gen->arena[ARRAY_INDX]))
+        }
+	if (isACTIVE(gen->arena[ARRAY_INDX])) {
 	    NewDirtyVector (gen);
+        }
 
       /* read in the arenas for this generation and initialize the
        * address offset table.
@@ -333,17 +334,21 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	    bigobj_hdr_t	*boHdrs;
 	    int			boHdrSizeB;
 	    Addr_t		indx;
-	    bo_region_reloc_t   *region;
+	    bo_region_reloc_t   *reloc;
 
 	    if (p->info.bo.numBOPages > 0) {
 		ENABLE_CODE_WRITE
 		totSizeB = p->info.bo.numBOPages << BIGOBJ_PAGE_SHIFT;
+/* QUESTION: does it make sense to allocate a single big-object region for all of the
+ * code objects in the heap?
+ */
+                /* allocate a region to hold the big objects of this generation */
 		freeObj = BO_AllocRegion (heap, totSizeB);
 		freeRegion = freeObj->region;
-		freeRegion->minGen = i;
-		MarkRegion (BIBOP, (ml_val_t *)freeRegion,
-		    MEMOBJ_SZB(freeRegion->memObj), AID_BIGOBJ(i));
-		ADDR_TO_PAGEID(BIBOP,freeRegion) = AID_BIGOBJ_HDR(i);
+		freeRegion->minGen = i+1;
+		MarkRegion (BIBOP, (ml_val_t *)MEMOBJ_BASE(freeRegion->memObj),
+		    MEMOBJ_SZB(freeRegion->memObj), AID_BIGOBJ(i+1));
+		ADDR_TO_PAGEID(BIBOP,MEMOBJ_BASE(freeRegion->memObj)) = AID_BIGOBJ_HDR(i+1);
 
 	      /* read in the big-object headers */
 		boHdrSizeB = p->info.bo.numBigObjs * sizeof(bigobj_hdr_t);
@@ -372,12 +377,12 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		    {
 			continue;
 		    }
-		    region = LookupBORegion (boRegionTbl, indx);
-		    ASSERT(region != NIL(bo_region_reloc_t *));
+		    reloc = LookupBORegion (boRegionTbl, indx);
+		    ASSERT(reloc != NIL(bo_region_reloc_t *));
 		  /* allocate the big-object descriptor for the object, and
 		   * link it into the list of big-objects for its generation.
 		   */
-		    bdp = AllocBODesc (freeObj, &(boHdrs[k]), region);
+		    bdp = AllocBODesc (freeObj, &(boHdrs[k]), reloc);
 		    bdp->next = gen->bigObjs[j];
 		    gen->bigObjs[j] = bdp;
 		    ASSERT(bdp->gen == i+1);
@@ -490,7 +495,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 PVT bigobj_desc_t *AllocBODesc (
     bigobj_desc_t   *free,
     bigobj_hdr_t    *objHdr,
-    bo_region_reloc_t *oldRegion)
+    bo_region_reloc_t *reloc)
 {
     bigobj_region_t *region;
     bigobj_desc_t   *newObj;
@@ -529,10 +534,10 @@ PVT bigobj_desc_t *AllocBODesc (
     relocInfo = NEW_OBJ(bo_reloc_t);
     relocInfo->oldAddr = objHdr->baseAddr;
     relocInfo->newObj = newObj;
-    firstPage = ADDR_TO_BOPAGE(oldRegion, objHdr->baseAddr);
-    ASSERT(firstPage + npages <= oldRegion->nPages);
+    firstPage = ADDR_TO_BOPAGE(reloc, objHdr->baseAddr);
+    ASSERT(firstPage + npages <= reloc->nPages);
     for (i = 0;  i < npages;  i++) {
-	oldRegion->objMap[firstPage+i] = relocInfo;
+	reloc->objMap[firstPage+i] = relocInfo;
     }
 
     return newObj;
