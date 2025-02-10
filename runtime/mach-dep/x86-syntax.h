@@ -313,7 +313,7 @@ ENDM
 #endif
 
 /* TODO: make this property a dynamic test */
-#if ((defined(OPSYS_FREEBSD) || defined(OPSYS_NETBSD2) || defined(OPSYS_OPENBSD)) && !defined(__ELF__)) || defined(OPSYS_WIN32) || defined(OPSYS_DARWIN) || defined(OPSYS_CYGWIN)
+#if ((defined(OPSYS_FREEBSD) || defined(OPSYS_NETBSD) || defined(OPSYS_OPENBSD)) && !defined(__ELF__)) || defined(OPSYS_WIN32) || defined(OPSYS_DARWIN) || defined(OPSYS_CYGWIN)
 #  define CSYM(ID)	CONCAT(_,ID)
 #else
 #  define CSYM(ID)	ID
