@@ -106,7 +106,8 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
 	}
 
 	inBuf.needsSwap = FALSE;
-	inBuf.buf	    = NIL(Byte_t *);
+	inBuf.base      = NIL(Byte_t *);
+	inBuf.buf       = NIL(Byte_t *);
 	inBuf.nbytes    = 0;
     } else {
       /* fname == NULL, so try to find an in-core heap image */
@@ -120,29 +121,32 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
 	    Die("unable to find length of in-core heap image\n");
 	}
 
-	inBuf.file = NULL;
+	inBuf.file      = NULL;
 	inBuf.needsSwap = FALSE;
-	inBuf.base = vimg;
-	inBuf.buf = inBuf.base;
-	inBuf.nbytes = *(long *)vimglenptr;
+	inBuf.base      = vimg;
+	inBuf.buf       = inBuf.base;
+	inBuf.nbytes    = *(long *)vimglenptr;
 #else
       Die("in-core heap images not implemented\n");
 #endif
     }
 
     READ(&inBuf, imHdr, "failure reading image header\n");
-    if (imHdr.byteOrder != ORDER)
+    if (imHdr.byteOrder != ORDER) {
 	Die ("incorrect byte order in heap image\n");
-    if (imHdr.magic != IMAGE_MAGIC)
+    }
+    if (imHdr.magic != IMAGE_MAGIC) {
 	Die ("bad magic number (%#x) in heap image\n", imHdr.magic);
-    if ((imHdr.kind != EXPORT_HEAP_IMAGE) && (imHdr.kind != EXPORT_FN_IMAGE))
+    }
+    if ((imHdr.kind != EXPORT_HEAP_IMAGE) && (imHdr.kind != EXPORT_FN_IMAGE)) {
 	Die ("bad image kind (%d) in heap image\n", imHdr.kind);
+    }
     READ(&inBuf, heapHdr, "failure reading heap header\n");
 
   /* check for command-line overrides of heap parameters. */
-    if (params->allocSz == 0) params->allocSz = heapHdr.allocSzB;
-    if (params->numGens < heapHdr.numGens) params->numGens = heapHdr.numGens;
-    if (params->cacheGen < 0) params->cacheGen = heapHdr.cacheGen;
+    if (params->allocSz == 0) { params->allocSz = heapHdr.allocSzB; }
+    if (params->numGens < heapHdr.numGens) { params->numGens = heapHdr.numGens; }
+    if (params->cacheGen < 0) { params->cacheGen = heapHdr.cacheGen; }
 
     msp = AllocMLState (FALSE, params);
 
@@ -311,7 +315,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 
 	    if (p->info.o.sizeB > 0) {
 		addrOffset[i][j] = (Addr_t)(ap->tospBase) - (Addr_t)(p->info.o.baseAddr);
-		HeapIO_Seek (bp, (off_t)(p->offset));
+		if (HeapIO_Seek (bp, (off_t)(p->offset)) == FAILURE) {
+                    Die("failure to seek on heap image\n");
+                }
                 if (HeapIO_ReadBlock(bp, (ap->tospBase), p->info.o.sizeB) == FAILURE) {
                     Die("failure to read heap data; gen = %d, arena = %d\n", i+1, j);
                 }
@@ -423,9 +429,6 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	oldBIBOP, addrOffset, boRegionTbl, externs);
     RunTimeCompUnit = RepairWord (
 	RunTimeCompUnit, oldBIBOP, addrOffset, boRegionTbl, externs);
-#ifdef ASM_MATH
-    MathVec = RepairWord (MathVec, oldBIBOP, addrOffset, boRegionTbl, externs);
-#endif
 
   /* Adjust the ML registers to the new address space */
     ASSIGN(MLSignalHandler, RepairWord (

@@ -75,7 +75,7 @@ status_t HeapIO_Seek (inbuf_t *bp, off_t offset)
 	}
     }
     else if (fseek (bp->file, offset, SEEK_SET) != 0) {
-	Die ("unable to seek on heap image\n");
+        return FAILURE;
     }
 
     bp->nbytes = 0;		/* just in case? */

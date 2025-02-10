@@ -17,9 +17,14 @@
 #include "addr-hash.h"
 #endif
 
-typedef struct {	    /* An input source for reading heap data.  We need */
-			    /* this because the blaster may need to read from a */
-			    /* stream that has already had characters read from it. */
+/* An input source for reading heap data.  This abstraction allows both reading
+ * from memory and/or a file.  When loading a heap image from the file system,
+ * the `nbytes` field will be 0 and all input will come from the file system.
+ * For standalone executables, we read from memory, so the `file` field will be
+ * `NULL`.  For reading blasted data, we might start from memory and then switch
+ * to the file system.
+ */
+typedef struct {
     bool_t	needsSwap;	/* true, if the input bytes need to be swapped */
     FILE	*file;		/* the file descriptor to read from, once the */
 				/* buffered characters are exhausted */

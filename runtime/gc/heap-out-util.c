@@ -1,8 +1,13 @@
-/* heap-out-util.c
- *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.
+/*! \file heap-out-util.c
  *
  * Utility routines to export (or blast) an ML heap image.
+ *
+ * \author John Reppy
+ */
+
+/*
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  */
 
 #include "ml-base.h"
@@ -31,10 +36,11 @@ status_t HeapIO_WriteImageHeader (writer_t *wr, int kind)
     strncpy (hdr.opsys, OPSYS_ID, sizeof(hdr.opsys));
 
     WR_Write(wr, &hdr, sizeof(hdr));
-    if (WR_Error(wr))
+    if (WR_Error(wr)) {
 	return FAILURE;
-    else
+    } else {
 	return SUCCESS;
+    }
 
 } /* end of HeapIO_WriteImageHeader */
 
