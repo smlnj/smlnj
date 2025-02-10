@@ -67,6 +67,9 @@ struct heap {
     ml_val_t	    *weakList;		/* A list of weak pointers forwarded*/
 					/* during GC. */
     cntr_t	    numAlloc;		/* Number of bytes allocated in the nursery */
+#ifdef COUNT_STORE_LIST
+    cntr_t          numStores;          /* Number of store-list items */
+#endif
     cntr_t          numAlloc1;          /* Number of bytes allocated directly in the
                                          * first generation (e.g., for large strings)
                                          */

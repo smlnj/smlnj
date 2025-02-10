@@ -17,12 +17,6 @@
 #include "tags.h"
 #include "copy-loop.h"
 
-#ifdef GC_STATS
-extern long	numUpdates;
-extern long	numBytesAlloc;
-extern long	numBytesCopied;
-#endif
-
 /** store list operations */
 #define STL_nil		ML_unit
 #define STL_hd(p)	REC_SELPTR(ml_val_t, p, 0)

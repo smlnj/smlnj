@@ -358,7 +358,7 @@ void ResetGCStats (heap_t *heap)
 #define COUNT_SHIFT 3
 #endif
 #define BYTES_PER_COUNT (1 << COUNT_SHIFT)
-#define ROUND_COUNT(c) (Word_t)(((c)->cnt + ((1 << COUNT_SHIFT)-1)) >> COUNT_SHIFT)
+#define ROUND_COUNT(c) (Word_t)(((c)->cnt + (BYTES_PER_COUNT-1)) >> COUNT_SHIFT)
 
 /* GetGCStats:
  *

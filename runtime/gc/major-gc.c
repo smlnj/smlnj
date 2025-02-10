@@ -25,13 +25,6 @@
 #include "ml-timer.h"
 #include "gc-stats.h"
 
-#ifdef GC_STATS
-long		lastMinorGC = 0;
-long		numUpdates = 0;
-long		numBytesAlloc = 0;
-long		numBytesCopied = 0;
-#endif
-
 #ifdef BO_REF_STATS
 PVT long numBO1, numBO2, numBO3;
 #define IFBO_COUNT1(aid)	{if (IS_BIGOBJ_AID(aid)) numBO1++;}

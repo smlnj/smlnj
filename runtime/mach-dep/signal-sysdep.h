@@ -318,17 +318,6 @@ extern void SetFSR(int);
 #    define SIG_IS_OVERFLOW_TRAP(sig,pc) \
         (((Byte_t*)pc)[-1] == 0xce)
 
-#  elif defined(OPSYS_NETBSD2)
-    /** x86, NetBSD (version 2.x) **/
-#    define SIG_OVERFLOW                SIGFPE  /* maybe this should be SIGBUS? */
-
-#    define SIG_GetCode(info, scp)      (info)
-#    define SIG_GetPC(scp)              ((scp)->sc_pc)
-#    define SIG_SetPC(scp, addr)        { (scp)->sc_pc = (Addr_t)(addr); }
-#    define SIG_ZeroLimitPtr(scp)       { ML_X86Frame[LIMITPTR_X86OFFSET] = 0; }
-
-     typedef void SigReturn_t;
-
 #  elif defined(OPSYS_NETBSD)
     /** x86, NetBSD (version 3.x) **/
 #    define SIG_OVERFLOW                SIGFPE  /* maybe this should be SIGBUS? */

@@ -246,4 +246,4 @@ int StringArenaNeedsGC (ml_state_t *msp, Word_t nbytes)
 
     return 0;
 
-} /* end of NeedGC */
+} /* end of StringArenaNeedsGC */

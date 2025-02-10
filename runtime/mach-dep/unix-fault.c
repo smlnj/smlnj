@@ -139,7 +139,7 @@ PVT SigReturn_t FaultHandler (
 #endif
 #endif /* SIG_OVERFLOW */
 
-#if ((defined(ARCH_RS6000) || defined(ARCH_PPC)) && defined(OPSYS_AIX))
+#if (defined(ARCH_PPC) && defined(OPSYS_AIX))
 
 /* SIG_GetCode:
  *
