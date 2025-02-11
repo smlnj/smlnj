@@ -33,7 +33,9 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release is a major milestone in the development of **SML/NJ**.  Thanks to the
+**LLVM** backend, we now have native support for the Arm64 (_a.k.a._ AArch64)
+architecture running **macOS**.
 
 == Details
 
@@ -49,9 +51,32 @@ FILES::
 
 === Basis Library
 
-* Ported allocation/GC statistics support from legacy repository
+* Added `numGens` and `nurserySizeInBytes` functions to the
+  `SMLofNJ.Internals.GC` structure, with corresponding runtime-system
+  support.
+
+* Added the `resetCounters` and `readCounters` functions to the
+  `SMLofNJ.Internals.GC` structure.  These functions can be used
+  to get the GC and allocation statistics maintained by the runtime
+  system.
+
+* Added `Unsafe.Array.create0` for creating zero-length polymorphic arrays.
 
 === SML/NJ Library
+
+The following changes were made to the Library:
+
+* Added the `combineWith` function to the various implementations of the
+  `ORD_SET` signature.
+
+* Some minor improvements to hash sets and integer hash tables.
+
+* Added the `decode_strategy` mechanism to the `UTF8` structure.  This
+  mechanism allows specifying how to handle incomplete/invalid multibyte
+  sequences.  See {pull-base}/334[Pull Request 334] for more discussion.
+
+* Added `rawArray` and `rawObject` decoders to the `JSONDecode` structure
+  in the SML/NJ Library.
 
 === Successor ML
 
@@ -86,6 +111,7 @@ associated with them (or were bug fixes ported from the legacy
 repository):
 --
 * {legacy-issue-base}/328[`Real.fromString` broken in 110.99.5 and 110.99.6]
+* {legacy-issue-base}/340[`Word.toInt` does not raise an exception when out of range]
 --
 
 == Supported systems

@@ -2,8 +2,13 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
-SML/NJ 2024.3
+SML/NJ 2025.2
 -------------------
+
+[2024-12-21]
+        Added the `decode_strategy` mechanism to the `UTF8` structure.  This
+        mechanism allows specifying how to handle incomplete/invalid multibyte
+        sequences.
 
 [2024-09-20]
         Added `rawArray` and `rawObject` decoders to the `JSONDecode` structure.
