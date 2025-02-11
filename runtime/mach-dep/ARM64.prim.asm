@@ -455,11 +455,7 @@ ALIGNED_ENTRY(create_v_a)
         mov     xtmp4, allocptr                 	/* tmp4 := array data object */
 
 L_vector_lp:
-/* FIXME: we could replace the next two instructions with the instruction
-        tbnz    warg, IM(0), L_vector_lp_exit
-*/
-	cmp	xarg, IM(ML_nil)			/* while (xarg != NIL) do */
-	b.eq	L_vector_lp_exit
+        tbnz    warg, IM(0), L_vector_lp_exit           /* while (isBoxed(xarg)) do */
 	ldp	xtmp3, xarg, MEM(xarg, 0)		/* xtmp3 = hd(xarg);
 							 * xarg = tl(xarg) */
 	str	xtmp3, POSTINC(allocptr, WORD_SZB)	/* *allocptr++ = xtmp3 */
