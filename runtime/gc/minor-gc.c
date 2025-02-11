@@ -84,9 +84,12 @@ void MinorGC (ml_state_t *msp, ml_val_t **roots)
 #ifdef VERBOSE
 {
   int i;
-  SayDebug ("Generation 1 before MinorGC:\n");
+  SayDebug ("Before MinorGC:\n");
+  SayDebug("  Nursery: [%p..%p]\n",
+        (void*)(heap->allocBase), (void*)((Addr_t)heap->allocBase + heap->allocSzB));
+  SayDebug ("  Generation 1:\n");
   for (i = 0;  i < NUM_ARENAS;  i++) {
-    SayDebug ("  %s: base = %p, oldTop = %p, nextw = %p\n",
+    SayDebug ("    %s: base = %p, oldTop = %p, nextw = %p\n",
       ArenaName[i+1], gen1->arena[i]->tospBase,
       gen1->arena[i]->oldTop, gen1->arena[i]->nextw);
   }
@@ -332,7 +335,7 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
         }
 #endif
 	arena = gen1->arena[RECORD_INDX];
-	break;
+        break;
       case DTAG_arr_data:
 	len = GET_LEN(desc);
 #ifdef CHECK_HEAP
