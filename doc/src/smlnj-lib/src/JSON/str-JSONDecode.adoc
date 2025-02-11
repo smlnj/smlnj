@@ -199,9 +199,8 @@ val delay : (unit -> 'a decoder) -> 'a decoder
 `[.kw]#val# int : int decoder`::
   decodes a *JSON* integer value.  This decoder raises the
   exception value `JSONError(NotInt, jv)` if the argument `jv` is not a
-  *JSON* integer value and the
-  {sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN[`Overflow`]
-  exception if the integer is too large to be represented as an `Int.int`.
+  *JSON* integer value and the exception value `JSONError(Overflow, jv)`
+  if the integer is too large to be represented as an `Int.int`.
 
 `[.kw]#val# intInf : IntInf.int decoder`::
   decodes a *JSON* integer value.  This decoder raises the exception
@@ -228,14 +227,24 @@ val delay : (unit -> 'a decoder) -> 'a decoder
   this decoder returns the raw *JSON* value that it is applied to (_i.e._, it
   is the identity decoder).
 
+`[.kw]#val# rawObject : (string * JSON.value) list decoder`::
+  this decoder returns the fields of a *JSON* object as a labelled list
+  of raw *JSON* values.  It will raise the exception value
+  `JSONError(NotObject, v)` when the argument `v` is not a *JSON* object.
+
+`[.kw]#val# rawArray : JSON.value vector decoder`::
+  this decoder returns the elements of a *JSON* array as a vector
+  of raw *JSON* values.  It will raise the exception value
+  `JSONError(NotArray, v)` when the argument `v` is not a *JSON* array.
+
 `[.kw]#val# nullable : 'a decoder \-> 'a option decoder`::
   `nullable d` returns a decoder that maps `null` to `NONE` and otherwise applies
   `SOME` to the result of decoding the value using the decoder `d`.
 
 `[.kw]#val# try : 'a decoder \-> 'a option decoder`::
   `try d` returns a decoder that attempts to decode its argument using the decoder
-  `d`.  If it fails, then `NONE` is returned.  Otherwise, `SOME` is applied to
-  the result od decoding the value.
+  `d`.  If the decoder `d` fails (_i.e._, raises a `JSONError` exception), then
+  `NONE` is returned.  Otherwise, `SOME` is applied to the result od decoding the value.
 
 `[.kw]#val# seq : 'a decoder -> ('a \-> 'b) decoder \-> 'b decoder`::
   `seq d k` sequences decoding operations in a continuation-passing style.
@@ -295,14 +304,16 @@ val delay : (unit -> 'a decoder) -> 'a decoder
 
 `[.kw]#val# orElse : 'a decoder * 'a decoder \-> 'a decoder`::
   `orElse (d1, d2)` returns a decoder that tries to decode its argument using
-  the decoder d1` and, if that fails, tries to decode the argument using `d2`.
+  the decoder d1` and, if that fails (_i.e._, raises the `JSONError` exception),
+  tries to decode the argument using `d2`.
 
 `[.kw]#val# choose : 'a decoder list \-> 'a decoder`::
   `choose ds` returns a decoder that tries to decode its argument
   using each of the decoders in the list `ds`, returning the first successful result.
-  If all of the decoders fail, then the exception value
-  `JSONError(Fail "no choice", jv)` is raised, where `jv` is the *JSON* value being
-  decoded.  The expression `choose [d1, ..., dn]` is equivalent to
+  If all of the decoders fail (_i.e._, they all raise the `JSONError` exception),
+  then the exception value `JSONError(Fail "no choice", jv)` is raised, where `jv`
+  is the *JSON* value being decoded.  The expression `choose [d1, ..., dn]` is
+  equivalent to
 +
 [source,sml]
 ------------

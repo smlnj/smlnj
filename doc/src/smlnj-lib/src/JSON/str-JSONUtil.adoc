@@ -144,8 +144,8 @@ val append : JSON.value * path * JSON.value list -> JSON.value
   `asInt (JSON.INT n)` returns the value `n` converted to `int`.
   This function raises the exception value `JSONError(NotInt, jv)` if the
   argument `jv` is not a *JSON* integer value.  It may also raise the
-  {sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN[`Overflow`]
-  exception if `n` is too large for the default `int` type.
+  exception value `JSONError(Overflow, jv)` if `n` is too large for the
+  default `int` type.
 
 `[.kw]#val# asIntInf : JSON.value \-> IntInf.int`::
   [[val:asIntInf]]
