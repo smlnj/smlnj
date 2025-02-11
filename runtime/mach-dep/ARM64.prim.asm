@@ -498,7 +498,7 @@ ALIGNED_ENTRY(create_b_a)
 
         /* build descriptor in tmp2 */
         mov     wtmp2, IM(MAKE_TAG(DTAG_raw))
-        orr     xtmp2, xtmp2, xarg, lsl IM(TAG_SHIFTW)
+        orr     xtmp2, xtmp2, xtmp1, lsl IM(TAG_SHIFTW)
         str     xtmp2, POSTINC(allocptr, WORD_SZB)  /* *allocptr++ = descriptor */
         mov     xtmp3, allocptr                     /* tmp3 = data object */
         add     allocptr, allocptr, xtmp1, lsl IM(3) /* allocptr += length */
