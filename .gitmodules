@@ -1,6 +1,3 @@
-[submodule "runtime/llvm"]
-	path = runtime/llvm10
-	url = https://github.com/smlnj/smlnj-llvm-10.git
 [submodule "runtime/llvm18"]
 	path = runtime/llvm18
 	url = git@github.com:smlnj/smlnj-llvm-18.1.git
