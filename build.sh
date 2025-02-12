@@ -201,6 +201,7 @@ installdriver() {
   rm -f "$BINDIR"/"$ddst"
   cat "$CONFIGDIR"/"$dsrc" | \
   sed -e "s,@SHELL@,$SHELL,g" \
+      -e "s,@INSTALLDIR@,$INSTALLDIR," \
       -e "s,@BINDIR@,$BINDIR," \
       -e "s,@LIBDIR@,$LIBDIR," \
       -e "s,@VERSION@,$VERSION," \
@@ -318,13 +319,8 @@ eval $ARCH_N_OPSYS
 installdriver _run-sml .run-sml
 installdriver _link-sml .link-sml
 installdriver _ml-makedepend ml-makedepend
-## TODO: install-sml-wrapper script
-
-#
-# we optimistically install heap2exec, but will remove it if heap2asm
-# is not installed
-#
 installdriver _heap2exec heap2exec
+## TODO: install-sml-wrapper script
 
 #
 # set allocation size; for the x86, this gets reset in .run-sml
@@ -509,12 +505,6 @@ if [ x"$NOLIB" = xno ] ; then
   CM_TOLERATE_TOOL_FAILURES=true
   export CM_TOLERATE_TOOL_FAILURES
   if "$BINDIR"/sml -m \$smlnj/installer.cm ; then
-    # because we create heap2exec without knowing if heap2asm is going
-    # to be installed, we need this hack to remove heap2exec when heap2asm
-    # is not available
-    if [ ! -x "$BINDIR"/heap2asm ] ; then
-      rm -f "$BINDIR"/heap2exec
-    fi
     vsay $cmd: Installation complete.
   else
     complain "Installation of libraries and programs failed."

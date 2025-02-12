@@ -103,6 +103,20 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/02/12]::
+Reimplementation of the `heap2exec` script to use the `heap2obj` program
+(instead of `heap2asm`).  The `heap2obj` program is part of the *LLVM*
+infrastructure and takes advantage of the fact the *LLVM* knows how to
+create object files for the host system.  Thus `heap2obj` is more portable
+than `heap2asm` and faster (since it does not have to produce a textual
+assembly file).
++
+In addition, I have added support to the `ml-build` script to produce an
+executable from the heap-image file that it normally generates.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/02/10]::
 A minor change to the heap-image layout (the new version number is
 `0x02102025`) and other improvements to heap import/export.

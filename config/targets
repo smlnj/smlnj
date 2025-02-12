@@ -187,14 +187,6 @@ request ml-burg
 #
 #request nowhere
 
-# Build and install 'heap2asm', which is used by 'heap2exec'
-# for producing self-contained (aka stand-alone) executables.
-# This facility is currently only supported on Linux and macOS
-#
-if UNIX
-#  request heap2asm
-endif
-
 # Download the documentation directory.
 #
 request doc

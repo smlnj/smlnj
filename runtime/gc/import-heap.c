@@ -24,6 +24,8 @@
 #include "heap-input.h"
 #include "heap-io.h"
 
+extern smlnj_heap_image_t smlnj_heap_image;
+
 #if defined(DLOPEN) && !defined(OPSYS_WIN32)
 #include <dlfcn.h>
 #endif
@@ -110,25 +112,15 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
 	inBuf.buf       = NIL(Byte_t *);
 	inBuf.nbytes    = 0;
     } else {
-      /* fname == NULL, so try to find an in-core heap image */
-#if defined(DLOPEN) && !defined(OPSYS_WIN32)
-	void *lib = dlopen (NULL, RTLD_LAZY);
-	void *vimg, *vimglenptr;
-	if ((vimg = dlsym(lib, HEAP_IMAGE_SYMBOL)) == NULL) {
-	    Die("no in-core heap image found\n");
-	}
-	if ((vimglenptr = dlsym(lib, HEAP_IMAGE_LEN_SYMBOL)) == NULL) {
-	    Die("unable to find length of in-core heap image\n");
-	}
-
+      /* fname == NULL, so load an in-memory heap image */
+        if (smlnj_heap_image.len == 0) {
+            Die("missing in-memory heap image\n");
+        }
 	inBuf.file      = NULL;
 	inBuf.needsSwap = FALSE;
-	inBuf.base      = vimg;
+	inBuf.base      = &(smlnj_heap_image.data[0]);
 	inBuf.buf       = inBuf.base;
-	inBuf.nbytes    = *(long *)vimglenptr;
-#else
-      Die("in-core heap images not implemented\n");
-#endif
+	inBuf.nbytes    = smlnj_heap_image.len;
     }
 
     READ(&inBuf, imHdr, "failure reading image header\n");

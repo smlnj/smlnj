@@ -243,6 +243,12 @@ extern bool_t	UnlimitedHeap;
 extern vproc_state_t	*VProc[];
 extern int		NumVProcs;
 
+/* the in-memory representation of a heap image used in "standalone" executables. */
+typedef struct {
+    Unsigned64_t        len;            /* length of `data` */
+    Byte_t              data[1];        /* the heap image data */
+} smlnj_heap_image_t;
+
 #ifdef __cplusplus
 }
 #endif // C++
@@ -256,11 +262,6 @@ extern int		NumVProcs;
 #define DLSYM_STRING(SYM)	DLSYM_AUX2(SYM)
 #else
 #define DLSYM_STRING(SYM)	#SYM
-#endif
-
-#ifndef HEAP_IMAGE_SYMBOL
-#define HEAP_IMAGE_SYMBOL	DLSYM_STRING(smlnj_heap_image)
-#define HEAP_IMAGE_LEN_SYMBOL	DLSYM_STRING(smlnj_heap_image_len)
 #endif
 
 #endif /* !_ML_BASE_ */
