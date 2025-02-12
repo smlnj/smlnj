@@ -1,5 +1,5 @@
 :version: 2025.1
-:date: @DATE@
+:date: February 14, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -59,6 +59,10 @@ See the manual pages in the documentation for details.
 
 === Runtime System
 
+* Collecting basic statistics about memory allocation and GC is now
+  enabled by default in the garbage collector.  Access to this information
+  is via the `SMLofNJ.Internals.GC` structure (see below).
+
 === Basis Library
 
 * Added `numGens` and `nurserySizeInBytes` functions to the
@@ -87,12 +91,6 @@ The following changes were made to the Library:
 
 * Added `rawArray` and `rawObject` decoders to the `JSONDecode` structure
   in the SML/NJ Library.
-
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
 
 === Installation
 
@@ -133,11 +131,12 @@ tested some of them:
 |=======
 | Architecture | Operating System | Status
 | AMD64 | |
-| | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) | Tested
-| | macOS 14 (Sonoma) | Tested
-| | Ubuntu 20.04.6 LTS | Tested
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) | Tested
+| | Ubuntu 20.04.6 LTS |
 | | Ubuntu 22.04.2 LTS | Tested
+| {nbsp} | |
+| Arm64  | |
+| | macOS 15 (Sequoia) | Tested
 | {nbsp} | |
 |=======
