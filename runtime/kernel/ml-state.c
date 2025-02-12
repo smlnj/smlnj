@@ -98,11 +98,6 @@ PVT void InitVProcState (vproc_state_t *vsp)
     vsp->vp_state->ml_calleeSave[1]	= ML_unit;
     vsp->vp_state->ml_calleeSave[2]	= ML_unit;
 
-#ifdef MP_SUPPORT
-    vsp->vp_mpSelf		= 0;
-    vsp->vp_mpState		= MP_PROC_NO_PROC;
-#endif
-
 } /* end of InitVProcState */
 
 /* InitMLState:

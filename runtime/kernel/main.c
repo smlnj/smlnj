@@ -54,10 +54,6 @@ int main (int argc, char **argv)
     RecordGlobals ();
     InitCFunList ();
 
-#ifdef MP_SUPPORT
-    MP_Init();
-#endif
-
   /* start ML */
     if (isBoot) {
 	BootML (BootFrom, heapParams);
