@@ -32,7 +32,8 @@ body:
       label: Version
       description: What version of SML/NJ are you using?
       options:
-        - "2024.2 (latest)"
+        - "2025.1 (latest)"
+        - "2024.2"
         - "2024.1"
         - "2023.1"
         - "2022.1"
@@ -65,8 +66,9 @@ body:
       description: What processor exhibits the bug? (You may specify more than one.)
       options:
         - label: "Any"
+        - label: "Arm (native)"
         - label: "Arm (using Rosetta)"
-        - label: "x86-64 (64-bit)"
+        - label: "x86-64"
         - label: "Other"
     validations:
       required: true

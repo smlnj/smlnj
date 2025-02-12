@@ -41,6 +41,16 @@ architecture running **macOS**.
 
 // **** details: include those sections that are relevant
 
+=== Command-line Tools
+
+The mechanism to create standalone executable programs has been updated to take
+advantage of the **LLVM** infrastructure.  Specifically, the `heap2asm` program
+has been replaced by the `heap2obj` program that directly converts an exported
+heap image to a native object file.  The `heap2exec` script has been modified to
+use `heap2obj`.  Currently we only support static linking of executables.
+We have also added support for creating executables to the `ml-build` script.
+See the manual pages in the documentation for details.
+
 === Compiler
 
 === CM
