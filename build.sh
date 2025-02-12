@@ -515,8 +515,9 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   # builds are not confused.
   #
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
-  export SMLNJ_HOME
+  export SMLNJ_HOME SML_CMD
   SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
+  SML_CMD=$here/bin/sml
   cd doc || exit 1
   if autoconf -Iconfig ; then
     :

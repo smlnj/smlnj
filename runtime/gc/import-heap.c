@@ -357,11 +357,16 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 
 	      /* read in the big-objects */
 #ifdef ARCH_ARM64
-                /* on Arm64, we read the code into memory and then copy to the
-                 * memory-mapped executable memory, since trying to read directly
-                 * into the executable memory does not work (at least on macOS).
-                 */
-                {
+                if (IS_MEMORY_INBUF(bp)) {
+                    if (HeapIO_ReadBlock (bp, (void *)freeObj->obj, totSizeB) == FAILURE) {
+                        Die("failure to read big-object data from memory\n");
+                    }
+                } else {
+                    /* on Arm64, we read the code into memory and then copy to the
+                     * memory-mapped executable memory, since trying to read directly
+                     * from a file into the executable memory does not work (at least
+                     * on macOS).
+                     */
                     char buffer[8*ONE_K];
                     off_t nb = totSizeB;
                     char *dst = (char *)freeObj->obj;
@@ -376,12 +381,12 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
                     }
                 }
 #else
-		if (HeapIO_ReadBlock (bp, (void *)(freeObj->obj), totSizeB) == FAILURE) {
+		if (HeapIO_ReadBlock (bp, (void *)freeObj->obj, totSizeB) == FAILURE) {
                     Die("failure to read big-object data\n");
                 }
 #endif
 		if (j == CODE_INDX) {
-		    FlushICache ((void *)(freeObj->obj), totSizeB);
+		    FlushICache ((void *)freeObj->obj, totSizeB);
 		}
 
 	      /* setup the big-object descriptors and per-object relocation info */

@@ -33,6 +33,7 @@ typedef struct {
     size_t	nbytes;         /* the number of bytes remaining in the buffer */
 } inbuf_t;
 
+#define IS_MEMORY_INBUF(bp)     ((bp)->file == NULL)
 
 /** Big-object relocation info **/
 
