@@ -124,7 +124,7 @@ clean:
 	(cd $(GC_DIR); $(MAKE) MAKE="$(MAKE)" clean)
 
 
-$(RUNTIME):	$(VERSION) main.o $(OBJS) $(ALL_LIBS)
+$(RUNTIME):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
 	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
 
 $(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
