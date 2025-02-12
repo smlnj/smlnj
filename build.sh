@@ -114,7 +114,6 @@ dsay "$cmd: Using shell $SHELL."
 #
 # set the SML root directory
 #
-
 cd $(dirname $cmd) || exit 1
 SMLNJ_ROOT=$(pwd)
 vsay "$cmd: SML root is $SMLNJ_ROOT."
@@ -184,6 +183,10 @@ vsay "$cmd: Installing version $VERSION."
 #
 SRCARCHIVEURL=https://smlnj.cs.uchicago.edu/dist/working/${VERSION}/
 vsay "$cmd: URL of source archive is $SRCARCHIVEURL."
+
+#
+# if necessary, fetch the boot files
+#
 
 ######################################################################
 ## UTILITY SCRIPTS
@@ -367,7 +370,7 @@ fi
 #
 # FIXME: should make these file names more consistent!!
 #
-BOOT_ARCHIVE=boot.$ARCH-unix.tgz
+BOOT_ARCHIVE=boot.$ARCH-unix
 BOOT_FILES=sml.boot.$ARCH-unix
 
 #
@@ -435,16 +438,7 @@ if [ -r "$HEAPDIR"/sml.$HEAP_SUFFIX ]; then
 else
   cd "$SMLNJ_ROOT" || exit 1
 
-  if [ ! -d "$BOOT_FILES"/smlnj/basis ] ; then
-    if [ -f "$BOOT_ARCHIVE" ] ; then
-      vsay "$cmd: unpacking the boot files"
-      tar -xzf "$BOOT_ARCHIVE"
-    else
-      complain "Missing $BOOT_ARCHIVE"
-    fi
-  else
-    vsay "$cmd: boot files are already unpacked"
-  fi
+  "$CONFIGDIR"/unpack "$SMLNJ_ROOT" "$BOOT_ARCHIVE"
 
   fish "$SMLNJ_ROOT"/"$BOOT_FILES"/smlnj/basis
 
