@@ -256,16 +256,16 @@ structure ContractPrim : sig
              * have an extra argument (the `w64ToInt32` function) when `from` is 64.
              *)
             | (P.TESTU{from, to}, NUM{ival, ...}::_) =>
-                Val(mkNum(to, CA.sNarrow(to, ival)))
+                Val(mkNum(to, CA.sNarrow(to, CA.toUnsigned(from, ival))))
             | (P.TESTU{to=p, ...}, VAR v::_) => (case #info(get v)
                  of ARITHinfo(P.TESTU{from=m, ...}, [u]) =>
                       (* TESTU(n,p) o TESTU(m,n) ==> TESTU(m, p) *)
                       Arith(P.TESTU{from=m, to=p}, [u])
                   | PUREinfo(P.COPY{from=m, ...}, [u]) =>
-                      if (p >= m)
-                        (* TESTU(n,p) o COPY(m,n) ==> COPY(m, p) if (p >= m) *)
+                      if (p > m)
+                        (* TESTU(n,p) o COPY(m,n) ==> COPY(m, p) if (p > m) *)
                         then mkCOPY(m, p, u)
-                        (* TESTU(n,p) o COPY(m,n) ==> TESTU(m, p) if (p < m) *)
+                        (* TESTU(n,p) o COPY(m,n) ==> TESTU(m, p) if (p <= m) *)
                         else Arith(P.TESTU{from=m, to=p}, [u])
                   | PUREinfo(P.EXTEND{from=m, ...}, [u]) =>
                       if (p >= m)
@@ -273,6 +273,24 @@ structure ContractPrim : sig
                         then Pure(P.EXTEND{from=m, to=p}, [u])
                         (* TESTU(n,p) o EXTEND(m,n) ==> TESTU(m, p) if (p < m) *)
                         else Arith(P.TESTU{from=m, to=p}, [u])
+                  | _ => None
+                (* end case *))
+            (***** TEST_INF *****
+             *
+             * Note that `TEST_INF` will have an extra argument (the
+             * `Core.testInf` function).
+             *)
+            | (P.TEST_INF p, VAR v::_) => (case #info(get v)
+                 of PUREinfo(P.COPY_INF m, u::_) => if (p >= m)
+                      (* TEST(∞,p) o COPY(m,∞) ==> COPY(m,p) when (p >= m) *)
+                      then mkCOPY(m, p, u)
+                      (* TEST(∞,p) o COPY(m,∞) ==> TEST(m,p) when (p < m) *)
+                      else Arith(P.TEST{from=m, to=p}, [u])
+                  | PUREinfo(P.EXTEND_INF m, u::_) => if (p >= m)
+                      (* TEST(∞,p) o EXTEND(m,∞) ==> EXTEND(m,p) when (p >= m) *)
+                      then Pure(P.EXTEND{from=m, to=p}, [u])
+                      (* TEST(∞,p) o EXTEND(m,∞) ==> TEST(m,p) when (p < m) *)
+                      else Arith(P.TEST{from=m, to=p}, [u])
                   | _ => None
                 (* end case *))
             | _ => None
@@ -537,8 +555,8 @@ structure ContractPrim : sig
                 (* end case *))
             | cond (P.CMP{oper=P.LT, ...}, [VAR v, VAR w]) =
                 if v=w then SOME false else NONE
-            | cond (P.CMP{oper=P.LT, kind=P.INT _}, [NUM i, NUM j]) =
-                SOME(#ival i < #ival j)
+            | cond (P.CMP{oper=P.LT, kind=P.INT sz}, [NUM i, NUM j]) =
+                SOME(CA.toSigned(sz, #ival i) < CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLess(sz, #ival i, #ival j))
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [_, NUM{ival=0, ...}]) =
@@ -554,8 +572,8 @@ structure ContractPrim : sig
                 (* end case *))
             | cond (P.CMP{oper=P.LTE, ...}, [VAR v, VAR w]) =
                 if v=w then SOME true else NONE
-            | cond (P.CMP{oper=P.LTE, kind=P.INT _}, [NUM i, NUM j]) =
-                SOME(#ival i <= #ival j)
+            | cond (P.CMP{oper=P.LTE, kind=P.INT sz}, [NUM i, NUM j]) =
+                SOME(CA.toSigned(sz, #ival i) <= CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLessEq(sz, #ival i, #ival j))
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM{ival=0, ...}, _]) =
@@ -571,11 +589,21 @@ structure ContractPrim : sig
  *)
             | cond (P.CMP{oper=P.EQL, kind=P.FLOAT _}, _) = NONE (* in case of NaN's *)
             | cond (P.CMP{oper=P.EQL, ...}, [VAR v, VAR w]) = if v=w then SOME true else NONE
-            | cond (P.CMP{oper=P.EQL, kind=P.UINT k}, [NUM i, NUM j]) =
+            | cond (P.CMP{oper=P.EQL, kind=P.INT k}, [NUM i, NUM j]) =
+                (* for equality tests, we want to test the bit patterns, so we use
+                 * the unsigned equality operator that converts negative numbers to
+                 * their unsigned value.
+                 *)
                 SOME(CA.uEq(k, #ival i, #ival j))
-            | cond (P.CMP{oper=P.EQL, ...}, [NUM i, NUM j]) = SOME( #ival i = #ival j)
+            | cond (P.CMP{oper=P.EQL, kind=P.UINT k}, [NUM i, NUM j]) =
+                (* for equality tests, we want to test the bit patterns, so we use
+                 * the unsigned equality operator that converts negative numbers to
+                 * their unsigned value.
+                 *)
+                SOME(CA.uEq(k, #ival i, #ival j))
             | cond (P.CMP{oper=P.NEQ, kind}, vl) = notCond (P.CMP{oper=P.EQL, kind=kind}, vl)
-            | cond (P.PEQL, [NUM i, NUM j]) = SOME(#ival i = #ival j)
+            | cond (P.PEQL, [NUM i, NUM j]) =
+                SOME(CA.uEq(Target.pointerSz, #ival i, #ival j))
             | cond (P.PNEQ, vl) = notCond(P.PEQL, vl)
             | cond _ = NONE
           and notCond arg = Option.map not (cond arg)
