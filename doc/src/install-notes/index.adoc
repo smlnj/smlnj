@@ -2,9 +2,9 @@
 :revnumber: {version}
 :revdate: {release-date}
 :source-highlighter: pygments
-:dist-dir: https://smlnj.org/dist/working/{version}/
-:history: {dist-dir}HISTORY.html
-:release-notes: {dist-dir}{version}-README.html
+:dist-dir: https://smlnj.org/dist/working/{version}
+:history: {dist-dir}/HISTORY.html
+:release-notes: {dist-dir}/{version}-README.html
 :stem: latexmath
 :source-highlighter: pygments
 
@@ -13,3 +13,7 @@
 * {history}[Change Log]
 
 * {dist-dir}/install.html[Installation Instructions]
+
+* {dist-dir}/smlnj-amd64-{version}.pkg[Installer for **macOS**/Intel x86-64]
+
+* {dist-dir}/smlnj-arm64-{version}.pkg[Installer for **macOS**/Arm64]
