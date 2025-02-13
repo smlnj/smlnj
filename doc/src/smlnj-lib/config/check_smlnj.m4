@@ -60,7 +60,6 @@ dnl normalize the ac_check_smlnj_version variable
 dnl
       case $ac_check_smlnj_version in
 	sml*) ac_check_smlnj_version=`echo $ac_check_smlnj_version | sed -e 's/sml //'` ;;
-	*) AC_MSG_ERROR([bogus SML/NJ version ($ac_check_smlnj_version) reported]);;
       esac
       SMLNJ_VERSION=$ac_check_smlnj_version
       case $ac_check_smlnj_version in
