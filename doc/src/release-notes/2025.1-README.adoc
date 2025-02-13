@@ -39,7 +39,10 @@ architecture running **macOS**.
 
 == Details
 
-// **** details: include those sections that are relevant
+* Ported several fixes and improvements from the legacy repository.
+  These include Legacy Issues {legacy-issue-base}/340[#340] and
+  {legacy-issue-base}/341[#341]), and the addition of some missing
+  fusion rules for conversions via the `IntInf.int` type.
 
 === Command-line Tools
 
@@ -93,6 +96,9 @@ The following changes were made to the Library:
   in the SML/NJ Library.
 
 === Installation
+
+* The installation process has been simplified; the `build.sh` script now fetches
+  the boot files from https://smlnj.org:[`smlnj.org`] if they are not present.
 
 == Bugs
 
