@@ -51,17 +51,6 @@ if [ $# != 0 ] ; then
   usage 1
 fi
 
-# you need a developer ID to sign the final package;
-#
-case x"$USER" in
-  xjhr) SIGN="Developer ID Installer: John Reppy" ;;
-  xnone) SIGN=none ;;
-  *)
-    echo "$CMD [Warning]: unknown user, so package will not be signed!"
-    SIGN=none
-  ;;
-esac
-
 # first we need to download the source from GitHub
 #
 if [ -d $DISTROOT ] ; then
@@ -121,6 +110,17 @@ echo "$CMD: building version $VERSION for $ARCH"
 
 ID=org.smlnj.$ARCH.pkg
 RSRC=Resources
+
+# you need a developer ID to sign the final package;
+#
+case x"$SIGNER" in
+  xjhr) SIGN="Developer ID Installer: John Reppy (8A296SNBSN)" ;;
+  xnone) SIGN=none ;;
+  *)
+    echo "$CMD [Warning]: unknown user, so package will not be signed!"
+    SIGN=none
+  ;;
+esac
 
 # build the distribution (note that this assumes that config/targets is what we want!)
 #
