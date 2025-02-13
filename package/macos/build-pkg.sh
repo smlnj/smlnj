@@ -3,44 +3,59 @@
 # Script to build the installer package for macOS
 #
 # usage:
-#	build-pkg.sh [ -verbose ] [ <version> ]
+#	build-pkg.sh [ -verbose ] [ -no-sign ] [ <version> ]
 #
 
 CMD="build-pkg.sh"
 GITHUB_URL="git@github.com:smlnj/smlnj.git"
 DISTROOT=smlnj
+VERBOSE=""
+SIGNER="$USER"
+VERSION=none
+
+usage() {
+  echo "usage: build-pkg.sh [ -verbose ] [ -no-sign ] [ <version> ]"
+  exit $1
+}
+
+complain() {
+    echo "$CMD [Error]: $@"
+    exit 1
+}
+
+vsay() {
+  if [ x"$VERBOSE" = x-verbose ] ; then
+    echo "$CMD: $@"
+  fi
+}
 
 # get the path to the script's directory and to the root of the source
 # distribution
 #
 HERE=$(pwd)
 
-if [ x"$1" = x-verbose ] ; then
-  VERBOSE="-verbose"
-  shift
-else
-  VERBOSE=""
-fi
-
-# get the version number
+# process command-line arguments
 #
-if [ x"$1" = x ] ; then
-  # get version from sources
-  VERSION=none
-else
-  VERSION=$1
-  shift
-fi
+while [ "$#" != "0" ] ; do
+  arg=$1; shift
+  case $arg in
+    -h) usage 0 ;;
+    -no-sign) SIGNER="none" ;;
+    -verbose) VERBOSE="-verbose" ;;
+    -*) usage 1 ;;
+    *) VERSION=$arg ; break ;;
+  esac
+done
 
 if [ $# != 0 ] ; then
-  echo "usage: $CMD [ -verbose ] [ <version> ]"
-  exit 1
+  usage 1
 fi
 
 # you need a developer ID to sign the final package;
 #
 case x"$USER" in
   xjhr) SIGN="Developer ID Installer: John Reppy" ;;
+  xnone) SIGN=none ;;
   *)
     echo "$CMD [Warning]: unknown user, so package will not be signed!"
     SIGN=none
@@ -53,7 +68,13 @@ if [ -d $DISTROOT ] ; then
   echo "$CMD [Error]: please remove $DISTROOT first"
   exit 1
 fi
-git clone $GITHUB_URL
+
+# clone the sources
+if [ x"$VERSION" != xnone ] ; then
+  BRANCH="-branch v$VERSION"
+fi
+vsay "git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL"
+git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL
 if [ "$?" != 0 ] ; then
   echo "$CMD [Error]: unable to download source from GitHub"
   exit 1
@@ -98,13 +119,8 @@ esac
 
 echo "$CMD: building version $VERSION for $ARCH"
 
-BOOTURL=http://smlnj.org/dist/working/$VERSION/boot.$ARCH-unix.tgz
 ID=org.smlnj.$ARCH.pkg
 RSRC=Resources
-
-# get the boot files
-#
-curl -s -S -O $BOOTURL
 
 # build the distribution (note that this assumes that config/targets is what we want!)
 #
@@ -147,7 +163,7 @@ if [ -d $RSRC ] ; then
   rm -rf $RSRC
 fi
 mkdir $RSRC
-sed -e "s/VERSION/$VERSION/g" components/distribution_xml.in > $RSRC/distribution.xml
+sed -e "s/VERSION/$VERSION/g" -e "s/ARCH/$ARCH/g" components/distribution_xml.in > $RSRC/distribution.xml
 cp -p components/smlnj-background.jpg $RSRC/background.jpg
 sed -e "s/VERSION/$VERSION/g" components/welcome_html.in > $RSRC/welcome.html
 cp -p components/license.html $RSRC/license.html
