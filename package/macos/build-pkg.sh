@@ -89,7 +89,7 @@ fi
 #
 case `uname -p` in
   i386) ARCH=amd64 ;;
-  arm) ARCH=arm ;;
+  arm) ARCH=arm64 ;;
   *)
     echo "$CMD [Error]: unknown architecture"
     exit 1
