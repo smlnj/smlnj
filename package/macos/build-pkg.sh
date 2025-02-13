@@ -60,7 +60,7 @@ fi
 
 # clone the sources
 if [ x"$VERSION" != xnone ] ; then
-  BRANCH="-branch v$VERSION"
+  BRANCH="--branch v$VERSION"
 fi
 vsay "git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL"
 git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL
