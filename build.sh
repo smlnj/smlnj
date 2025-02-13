@@ -24,10 +24,11 @@ usage() {
   echo "options:"
   echo "    -h,-help           print this message and exit"
   echo "    -nolib             skip building libraries/tools"
-  echo "    -verbose           emit feedback messages"
   echo "    -doc               generate documentation"
-  echo "    -debug             debug installation (enables verbose mode)"
+  echo "    -verbose           emit feedback messages"
+  echo "    -clean             remove existing executables and libraries before building"
   echo "    -dev               developer install (includes cross compiler support)"
+  echo "    -debug             enable installation debug messages (implies -verbose)"
   echo "developer options:"
   echo "    -debug-llvm        build a debug version of the LLVM libraries"
   echo "    -sanitize-address  sanitize addresses to check for memory bugs"
@@ -44,6 +45,7 @@ LLVMDIR_OPTION=
 # process options
 NOLIB=no
 QUIET=yes
+CLEAN_INSTALL=no
 INSTALL_DEBUG=no
 INSTALL_DEV=no
 MAKE_DOC=no
@@ -55,6 +57,7 @@ while [ "$#" != "0" ] ; do
     -help|-h) usage ;;
     -nolib) NOLIB=yes ;;
     -verbose) QUIET=no ;;
+    -clean) CLEAN_INSTALL=yes ;;
     -debug) INSTALL_DEBUG=yes ; QUIET=no ;;
     -dev)
       INSTALL_DEV=yes;
@@ -100,6 +103,12 @@ else
   CM_VERBOSE=true
 fi
 
+# pre-flight cleanup
+#
+if [ x${CLEAN_INSTALL} = xyes ] ; then
+  vsay "$cmd: remove existing executables and libraries"
+  rm -rf bin lib runtime/bin runtime/lib runtime/$LLVM_DIRNAME/build
+fi
 #
 # create the preloads.standard file
 #
