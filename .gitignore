@@ -144,6 +144,14 @@ doc/**/Makefile
 doc/doc
 doc/mk/doc-rules.gmk
 doc/src/changelog/HISTORY.html
+doc/src/manuals/asdl/manual.pdf
+doc/src/manuals/cm/btcomp.pdf
+doc/src/manuals/cm/manual.pdf
+doc/src/manuals/ml-burg/doc.pdf
+doc/src/manuals/ml-lex/ml-lex.pdf
+doc/src/manuals/ml-lpt/manual.pdf
+doc/src/manuals/ml-yacc/mlyacc.pdf
+doc/src/manuals/nlffi/nlffi.pdf
 doc/src/release-notes/110.86-README.html
 doc/src/release-notes/110.87-README.html
 doc/src/release-notes/110.88-README.html
