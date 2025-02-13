@@ -5,17 +5,34 @@ currently reworking many components of the system, so it is not
 very stable.  For most uses, we recommend the
 [legacy version](https://github.com/smlnj/legacy) of the system.
 
-As of the 2023.1 release, this version is known to work on AMD64
-(a.k.a. x86-64) hardware running **Linux** or **macOS**.
+As of the 2025.1 release, this version is known to work on AMD64
+(a.k.a. x86-64) hardware running **Linux** or **macOS**, and on
+Arm64 (a.k.a. AArch64) hardware running **macOS**.
 
 ---
 
 ## Contents
 
+- [Dependencies](#dependencies)
 - [Building From Source](#building-from-source)
 - [Recompiling the System](#recompiling-the-system)
 
 ---
+
+## Dependicies
+
+To build the system from sources, you must have several common software
+systems installed on your machine.[^1]
+
+* **C++17** -- You need a **C++** compiler, such as **clang** or **gcc**,
+  that can handle **C++17**.
+
+* **CMake** -- You need Version 3.23 or later of [CMake](https://cmake.org).
+
+* **Autoconf** -- Parts of the documentation and the **ASDL** tool require
+  the GNU **autoconf** tool (version 2.71 or later).
+
+[^1]: We provide installer packages for **macOS** that avoid these dependencies.
 
 ## Building From Source
 
@@ -25,7 +42,7 @@ legacy system.
 1. Set `VERSION` to the version of **SML/NJ** that you want to build;
    for example
    ``` bash
-   VERSION=2024.2
+   VERSION=2025.1
    ```
 
 2. Clone the repository
@@ -38,20 +55,14 @@ legacy system.
     necessary to fetch the customized version of the **LLVM** library that we
     use.
 
-3. `cd` to the cloned repository and get the boot files
-    ``` bash
-    cd smlnj
-    curl -O https://smlnj.org/dist/working/$VERSION/boot.amd64-unix.tgz
-    ```
-
-    We plan to incorporate this step into the [`build.sh`](build.sh) script
-    in the future.
-
-4. build the installation
+3. build the installation
     ``` bash
     ./build.sh
     ```
     Use `build.sh -h` to see the list of options accepted by the build script.
+
+    As of version 2025.1, the `build.sh` script will download the pre-compiled
+    boot files is they are not present.
 
     As before, you can modify the [`config/targets`](config/targets) file to
     add/remove components from the build.
