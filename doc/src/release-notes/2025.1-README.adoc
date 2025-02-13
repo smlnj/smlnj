@@ -35,14 +35,10 @@ FILES::
 
 This release is a major milestone in the development of **SML/NJ**.  Thanks to the
 **LLVM** backend, we now have native support for the Arm64 (_a.k.a._ AArch64)
-architecture running **macOS**.
+architecture running **macOS**.  In addition, this release includes bug fixes and
+improvements ported from the Legacy repository.
 
 == Details
-
-* Ported several fixes and improvements from the legacy repository.
-  These include Legacy Issues {legacy-issue-base}/340[#340] and
-  {legacy-issue-base}/341[#341]), and the addition of some missing
-  fusion rules for conversions via the `IntInf.int` type.
 
 === Command-line Tools
 
@@ -56,11 +52,29 @@ See the manual pages in the documentation for details.
 
 === Compiler
 
-=== CM
+* The code-object API has been changed to make is easier to manage JIT'd code
+  on **macOS**/**arm64**.  This change should also reduce the amount of data
+  copying when generating binfiles.
 
-=== MLRISC
+* Switched the backend code generator to use **LLVM** Version 18.1.8.  The
+  `llvm10` submodule has been removed.
+
+* The "Jump-with-Arguments" (JWA) calling convention that we added to **LLVM**
+  no longer requires that functions have the `naked` attribute.  Instead, we
+  have modified the prologue-epilogue-insertion pass to skip adding code to
+  functions.
+
+* Ported several fixes and improvements from the legacy repository.
+  These include Legacy Issues {legacy-issue-base}/340[#340] and
+  {legacy-issue-base}/341[#341]), and the addition of some missing
+  fusion rules for conversions via the `IntInf.int` type.
 
 === Runtime System
+
+* The heap-image format was modified and has a new version number.
+
+* The representation of big-object regions in the heap was changed to avoid
+  issues with write protection for executable code on **macOS**/**arm64**.
 
 * Collecting basic statistics about memory allocation and GC is now
   enabled by default in the garbage collector.  Access to this information
@@ -116,8 +130,6 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/294[compiler bug aborts build of istari]
 | [.bugid]#295#
 | {issue-base}/295[Incorrect constant folding of word equality]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
