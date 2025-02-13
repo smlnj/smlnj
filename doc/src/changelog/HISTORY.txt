@@ -200,7 +200,7 @@ the `ARITHinfo` and `PUREinfo` constructors (the `WRPinfo` constructor
 is rendered obsolete).  This change was motivated by the desire to
 eliminate a redundant range test from the code
 +
-[[source,sml]
+[source,sml]
 ------------
 fun byte2char w = chr (Word8.toInt w)
 ------------
