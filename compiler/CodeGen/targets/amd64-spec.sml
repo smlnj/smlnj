@@ -25,9 +25,10 @@ structure AMD64Spec : MACH_SPEC =
    *)
     val spillAreaSz = 8 * 1024
 
-    val numRegs = 10	(* length AMD64CpsRegs.miscregs + 3 *)
-    val numArgRegs = 4  (* non-callee-save misc regs *)
+    val numRegs = 10	        (* length AMD64CpsRegs.miscregs + 3 *)
+    val numArgRegs = 4          (* non-callee-save misc regs *)
     val numFloatRegs = 16
+    val numFloatArgRegs = 16
     val numFloatCalleeSaves = 0
 
   end
