@@ -28,6 +28,9 @@ structure BasicTypes : BASICTYPES =
     val nilSym		= Symbol.varSymbol "nil"
     val refTycSym	= Symbol.tycSymbol "ref"
     val refConSym	= Symbol.varSymbol "ref"
+    val optionTycSym    = Symbol.tycSymbol "option"
+    val noneConSym      = Symbol.varSymbol "NONE"
+    val someConSym      = Symbol.varSymbol "SOME"
     val fragSym		= Symbol.tycSymbol "frag"
     val antiquoteSym	= Symbol.varSymbol "ANTIQUOTE"
     val quoteSym	= Symbol.varSymbol "QUOTE"
@@ -340,6 +343,57 @@ structure BasicTypes : BASICTYPES =
 	 typ = T.POLYty {sign = [false],
 		       tyfun = T.TYFUN{arity=1,body=T.CONty(ulistTycon,[alpha])}},
 	 sign = ulistsign}
+
+  (* options *)
+    val optionStamp = Stamps.special "option"
+    val someDom = alpha
+    val optionSign = Access.CSIG(1,1)
+    val optionEq = ref T.YES
+    val optionKind = T.DATATYPE{
+            index=0, stamps= #[optionStamp], freetycs=[], root=NONE, stripped=false,
+            family = {
+                members = #[
+                    {tycname=optionTycSym, eq=optionEq, lazyp=false,
+                        arity=1, sign=optionSign,
+                        dcons=[
+                            {name=noneConSym, rep=Access.CONSTANT 0, domain=NONE},
+                            {name=someConSym, rep=Access.UNTAGGED, domain=SOME someDom}
+                          ]
+                      }
+                  ],
+                properties = PropList.newHolder (),
+                (* lambdatyc=ref NONE, *)
+                mkey=optionStamp
+              }
+          }
+    val optionTycon =
+	T.GENtyc{stamp = optionStamp, path = IP.IPATH[optionTycSym], arity = 1,
+	       eq = optionEq, kind = optionKind, stub = NONE}
+    val someDcon = T.DATACON{
+            name = someConSym,
+            const = false,
+            lazyp = false,
+            rep = Access.UNTAGGED,   (* was Access.LISTCONS *)
+            typ = T.POLYty{
+                 sign = [false],
+                 tyfun = T.TYFUN{
+                     arity = 1,
+                     body = T.CONty(arrowTycon,[alpha,T.CONty(optionTycon,[alpha])])
+                   }
+              },
+            sign = optionSign
+          }
+    val noneDcon = T.DATACON{
+            name = noneConSym,
+            const = true,
+            lazyp = false,
+            rep = Access.CONSTANT 0, (* was Access.LISTNIL *)
+            typ = T.POLYty {
+                 sign = [false],
+                 tyfun = T.TYFUN{arity=1,body=T.CONty(optionTycon,[alpha])}
+               },
+            sign = optionSign
+          }
 
   (* frags *)
 
