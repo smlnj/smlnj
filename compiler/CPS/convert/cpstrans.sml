@@ -55,13 +55,13 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
 	  val nregs = MachSpec.numRegs - MachSpec.numCalleeSaves
 	  val gpnum = Int.min(nregs - 3, MachSpec.numArgRegs)
 
-        (* analyze a list of arguments to determine if they fix in the available target-machine
-         * registers or if we need to spill some of them to the heap.  If we need to spill,
-         * we return `SOME(ovs, ots, gvs, gts, fts)`, where
+        (* analyze a list of arguments to determine if they fit in the available
+         * target-machine registers or if we need to spill some of them to the heap.
+         * If we need to spill, we return `SOME(ovs, ots, gvs, gts, fts)`, where
          *    ovs  original arguments
          *    ots  original argument types
          *    gvs  spilled general arguments
-         *    gts  spilled argument types
+         *    gts  spilled general-argument types
          *    fvs  spilled real arguments
          * If no spilling is necessary, return `NONE`
          *)
@@ -79,7 +79,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                  * The accumulators are all in reverse order.
                  * REAL32: need to track types of spilled real arguments too
                  *)
-(* QUESTION: if we spill floating-point arguments, that should increases the pressure
+(* QUESTION: if we spill floating-point arguments, that should increase the pressure
  * on the integer arguments by one, but this code does not seem to account for that.
  *)
 		fun h ([], [], ngp, nfp, ovs, ots, [], [], []) = NONE
