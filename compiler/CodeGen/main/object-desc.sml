@@ -25,7 +25,7 @@ structure ObjectDesc :> OBJECT_DESC =
 
     val bitsPerWord = Word.fromInt Target.mlValueSz
 
-    val wordsPerReal = Target.defaultRealSz div Target.mkValueSz
+    val wordsPerReal= IntInf.fromInt(Target.defaultRealSz div Target.mlValueSz)
 
   (* one greater than the maximum length field value (sign should be 0) *)
     val maxLength = II.<<(1, bitsPerWord - (tagWidth+0w1))
