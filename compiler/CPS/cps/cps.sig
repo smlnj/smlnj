@@ -108,9 +108,9 @@ signature CPS =
 	  | COPY of {from: int, to: int}
 	  | EXTEND of {from: int, to: int}
 	  | TRUNC of {from: int, to: int}
-	  | COPY_INF of int
-	  | EXTEND_INF of int
-	  | TRUNC_INF of int
+	  | COPY_INF of int                     (* zero extend: wordN -> IntInf.int *)
+	  | EXTEND_INF of int                   (* sign extend: intN -> IntInf.int *)
+	  | TRUNC_INF of int                    (* IntInf.int -> wordN *)
 	  | INT_TO_REAL of {from: int, to: int}
 	  | SUBSCRIPTV
 	  | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
