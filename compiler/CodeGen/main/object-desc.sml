@@ -25,6 +25,8 @@ structure ObjectDesc :> OBJECT_DESC =
 
     val bitsPerWord = Word.fromInt Target.mlValueSz
 
+    val wordsPerReal = Target.defaultRealSz div Target.mkValueSz
+
   (* one greater than the maximum length field value (sign should be 0) *)
     val maxLength = II.<<(1, bitsPerWord - (tagWidth+0w1))
 
@@ -63,7 +65,7 @@ structure ObjectDesc :> OBJECT_DESC =
   (* fixed descriptors *)
     val desc_pair = makeDesc(2, tag_record)
     val desc_ref = makeDesc(1, tag_ref)
-    val desc_real64 = makeDesc(2, tag_raw64)
+    val desc_real64 = makeDesc(wordsPerReal, tag_raw64)
     val desc_polyvec = makeDesc(seq_poly, tag_vec_hdr)
     val desc_polyarr = makeDesc(seq_poly, tag_arr_hdr)
     val desc_special = makeDesc(0, tag_special)
