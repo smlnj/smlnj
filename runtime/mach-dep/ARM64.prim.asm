@@ -567,7 +567,7 @@ ALIGNED_ENTRY(create_r_a)
 	b.hi	L_create_r_gc                 /* if (allocPtr > limitptr) then GC */
 
         asr     xtmp1, xarg, IM(1)              /* tmp1 := untagged length */
-        cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 <= SMALL_OBJ_SZW) */
+        cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 > SMALL_OBJ_SZW) */
         b.hi    L_create_r_large                /*    then goto create_r_large */
 
         /* build descriptor in tmp2 */
@@ -649,9 +649,9 @@ ALIGNED_ENTRY(scalb_a)
 L_scalb_alloc:
         /* here we have the result in xtmp1 */
         mov     xtmp2, IM(DESC_reald)
-        str     xtmp2, POSTINC(allocptr, 0) /* *allocptr++ = DESC_reald */
-        mov     xarg, allocptr              /* arg = allocptr */
-        str     xtmp1, POSTINC(allocptr, 0) /* *allocptr++ = tmp1 */
+        str     xtmp2, POSTINC(allocptr, WORD_SZB)      /* *allocptr++ = DESC_reald */
+        mov     xarg, allocptr                          /* arg = allocptr */
+        str     xtmp1, POSTINC(allocptr, WORD_SZB)      /* *allocptr++ = tmp1 */
 
 L_scalb_return:
         /* here the biased exponent was 0, which means that `x` is either 0.0 or
