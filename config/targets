@@ -187,6 +187,11 @@ request ml-burg
 #
 #request nowhere
 
+# The print-cfg tool is a debugging aid for the new LLVM-based backend
+# It prints the CFG pickle files in a human-readable form.
+# (Requires the asdl library!)
+#request print-cfg
+
 # Download the documentation directory.
 #
 request doc

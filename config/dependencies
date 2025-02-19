@@ -17,3 +17,4 @@ cml smlnj-lib
 ml-ulex smlnj-lib ml-lpt-lib
 ml-antlr smlnj-lib ml-lpt-lib
 ckit ml-yacc ml-ulex ml-ulex-mllex-ext
+print-cfg smlnj-lib asdl
