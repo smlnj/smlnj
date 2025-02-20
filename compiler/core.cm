@@ -263,6 +263,7 @@ CPS/opt/testcnv.sml
 CPS/opt/uncurry.sml
 CPS/main/cluster.sml    (* to be replaced by CodeGen/csp-to-cfg/cluster.sml *)
 CPS/main/cps-comp.sml
+CPS/main/dump-cluster-graph.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml
 CPS/main/literals.sml

@@ -23,10 +23,10 @@ structure NormalizeCluster : sig
 
     type cluster = CPS.function list
 
-  (* `transform cluster` normalizes `cluster`, if necessary, and returns a list of
-   * normalized clusters.
+  (* `transform clusters` normalizes the clusters in the list, returning the
+   * list of normalized clusters.
    *)
-    val transform : cluster * cluster list -> cluster list
+    val transform : cluster list -> cluster list
 
   end = struct
 
@@ -479,7 +479,7 @@ val _ = say(concat[
 			    val visited = ref entrySig
 			    fun walk predId (id, frags) =
 				  if BVSet.member(!visited, BVSet.fromInt id)
-				    then frags (* alread visited *)
+				    then frags (* already visited *)
 				    else let
 				      val idSig = Array.sub(idToSig, id)
 				      in
@@ -573,11 +573,13 @@ end
 	  (* end case *))
     val partition = List.partition isEscaping
 
-    fun transform ([frag], clusters) = [frag] :: clusters
-      | transform (cluster, clusters) = (case partition cluster
+    fun transformOne ([frag], clusters) = [frag] :: clusters
+      | transformOne (cluster, clusters) = (case partition cluster
 	   of ([], _) => error "NormalizeCluster.transform: no entry fragment"
 	    | ([entry], frags) => (entry::frags) :: clusters
 	    | (ents, frags) => normalize (ents, frags) @ clusters
 	  (* end case *))
+
+    fun transform clusters = List.foldr transformOne [] clusters
 
   end (* NormalizeCluster *)

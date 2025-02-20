@@ -103,6 +103,15 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/02/20]::
+Add a mechanism for dumping out the cluster graph as a ".dot" file
+before and after normalization of the clusters.  Have also restructured
+the handling of clusters to make normalization mandatory, since that
+is a requirement of the LLVM backend.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/02/19]::
 Fixed a bug in the arm64 assembly code for Assembly.A.scalb (bad
 allocation of the result).

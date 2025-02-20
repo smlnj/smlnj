@@ -8,16 +8,12 @@ structure Cluster : sig
 
     type cluster = CPS.function list
 
-  (* `cluster singleEntry fns` groups the functions `fns` into a list of *clusters*,
+  (* `cluster fns` groups the functions `fns` into a list of *clusters*,
    * where a cluster is a maximal graph where each node is a CPS function (from
    * the list `fns`) and the edges are defined by applications of known labels.
    * The first function in the first cluster will be the first function in `fns`.
-   *
-   * If the `singleEntry` flag is set, then a second pass is run, which splits
-   * clusters to guarantee that each cluster has exactly one entry, where an
-   * entry is defined as a function that has kind `ESCAPE` or `CONT`.
    *)
-    val cluster : bool * CPS.function list -> cluster list
+    val cluster : CPS.function list -> cluster list
 
   (* utility functions on clusters *)
     val map : (CPS.function -> CPS.function) -> cluster list -> cluster list
@@ -59,8 +55,8 @@ val print : cluster list -> cluster list
 	  end
 *-DEBUG*)
 
-    fun cluster (_, []) = raise List.Empty
-      | cluster (singleEntry, funcs) = let
+    fun cluster [] = raise List.Empty
+      | cluster funcs = let
 	(* We guarantee that the first function in `funcs` is the first
 	 * function in the first cluster by ensuring that the first
 	 * function is mapped to the smallest id in a dense enumeration.
@@ -142,37 +138,13 @@ val print : cluster list -> cluster list
 		fun finish (~1, acc) = acc
 		  | finish (n, acc) = (case Array.sub(clusters, n)
 		       of [] => finish (n-1, acc)
-			| cluster => let
-			    val clusters = if singleEntry
-				  then normalizeCluster (cluster, acc)
-				  else cluster :: acc
-			    in
-			      finish (n-1, clusters)
-			    end
+			| cl => finish (n-1, cl::acc)
 		      (* end case *))
+                (* the resulting clusters *)
+                val clusters = finish (numOfFuncs-1, [])
 		in
-		  finish (numOfFuncs-1, [])
+		  clusters
 		end
-(*+DEBUG*
-	  val extract = fn () => if singleEntry
-		then let (* check the results of normalization *)
-		  val clusters = extract ()
-		  val say = Control.Print.say
-		  in
-		    case List.find checkCluster clusters
-		     of SOME cluster => (
-			  say "********** BOGUS CLUSTERS AFTER NORMALIZE **********\n";
-			  say "*** INITIAL FUNCS ***\n";
-			    List.app PPCps.printcps0 funcs;
-			  say "*** BAD CLUSTER ***\n";
-			    List.app PPCps.printcps0 cluster;
-			  say "**********\n";
-			  error "bogus cluster")
-		      | NONE => clusters
-		    (* end case *)
-		  end
-		else extract ()
-*-DEBUG*)
 	  in
 	    build funcs;
 	    if !Control.CG.printClusters

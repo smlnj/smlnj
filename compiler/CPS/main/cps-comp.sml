@@ -65,13 +65,36 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 	    say "\n"; e)
 	  else e
 
-  (* generate the clusters a limit checks for a list of first-order CPS functions *)
-    fun clusters funcs = let
-	  val clusters = Cluster.cluster (true, funcs)
-	  in
-	  (* add heap-limit checks etc. *)
-	    allocChks clusters
-	  end
+    (* optionally dump the cluster graph to a file *)
+    fun dumpClusters (source, suffix, cl) = if !Control.CG.dumpClusters
+          then DumpClusterGraph.dumpWithSuffix {
+              file = source, suffix=suffix, clusters=cl
+            }
+          else ()
+
+    (* optionally print the CFG IR *)
+    fun printCFG cfg = if !Control.CG.printCFG
+          then (
+            say "***** CFG *****\n";
+            PPCfg.prCompUnit cfg;
+            say "***** END CFG *****\n")
+          else ()
+
+    (* optionally dump a pickle of the CFG IR to a file *)
+    fun dumpCFG (source, cfg) = if !Control.CG.dumpCFG
+          then let
+            val pklFile = if source = "stdin"
+                  then "out.pkl"
+                  else (case OS.Path.splitBaseExt source
+                     of {base, ext=SOME "sml"} =>
+                          OS.Path.joinBaseExt{base=base, ext=SOME "pkl"}
+                      | _ => source ^ ".pkl"
+                    (* end case *))
+            in
+              say (concat["## dump CFG pickle to ", pklFile, "\n"]);
+              CFGPickler.toFile (pklFile, cfg)
+            end
+          else ()
 
     fun compile {source, prog} = let
 	(* convert to CPS *)
@@ -94,41 +117,29 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 	(* spill excess live variables *)
 	  val funcs = spill funcs
 (* TODO: move clustering and limit checks to here *)
-	(* optional CFG generation to a file for debugging purposes *)
-	  val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
-		then let
-		(* form clusters *)
-		  val clusters = Cluster.cluster (true, funcs)
-		(* add heap-limit checks etc. *)
-		  val (clusters, maxAlloc) = allocChks clusters
-		  val cfg = toCFG {
+        (* form the clusters *)
+        val clusters = Cluster.cluster funcs
+        (* if requested, dump the pre-normalized clusters to a file *)
+        val () = dumpClusters (source, "before", clusters)
+        (* normalize the clusters to single-entry points *)
+        val clusters = NormalizeCluster.transform clusters
+        (* if requested, dump the post-normalized clusters to a file *)
+        val () = dumpClusters (source, "after", clusters)
+        (* add heap-limit checks etc. *)
+        val (clusters, maxAlloc) = allocChks clusters
+        (* optionally print and/or dump the CFG IR *)
+        val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
+                then let
+                  val cfg = toCFG {
 			  source = source, clusters = clusters, maxAlloc = maxAlloc
 			}
-		  val pklFile = if source = "stdin"
-			then "out.pkl"
-			else (case OS.Path.splitBaseExt source
-			   of {base, ext=SOME "sml"} =>
-				OS.Path.joinBaseExt{base=base, ext=SOME "pkl"}
-			    | _ => source ^ ".pkl"
-			  (* end case *))
-		  in
-		    if !Control.CG.printCFG
-		      then (
-			say "***** CFG *****\n";
-			PPCfg.prCompUnit cfg;
-			say "***** END CFG *****\n")
-		      else ();
-		    if !Control.CG.dumpCFG
-		      then (
-			say (concat["## dump CFG pickle to ", pklFile, "\n"]);
-			CFGPickler.toFile (pklFile, cfg))
-		      else ()
-		  end
-		else ()
-	(* redo the clusters for now, since we haven't integrated the LLVM code gen yet *)
-	  val (clusters, maxAlloc) = clusters funcs
-	  in
-	    {clusters = clusters, maxAlloc = maxAlloc, data = data}
-          end (* compile *)
+                  in
+                    printCFG cfg;
+                    dumpCFG (source, cfg)
+                  end
+                else ()
+        in
+          {clusters = clusters, maxAlloc = maxAlloc, data = data}
+        end (* compile *)
 
   end (* functor CPSCompFn *)
