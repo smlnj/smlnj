@@ -116,7 +116,6 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 	  val funcs = globalfix function
 	(* spill excess live variables *)
 	  val funcs = spill funcs
-(* TODO: move clustering and limit checks to here *)
         (* form the clusters *)
         val clusters = Cluster.cluster funcs
         (* if requested, dump the pre-normalized clusters to a file *)
