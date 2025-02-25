@@ -247,6 +247,7 @@ CPS/cps/cps.sig
 CPS/cps/cps.sml
 CPS/cps/ppcps.sml
 CPS/cps/cps-util.sml
+CPS/cps/check-cps.sml
 CPS/opt/contract.sml
 CPS/opt/contract-prim.sml
 CPS/opt/cpsopt.sml

@@ -59,11 +59,17 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 
   (** pretty printing for the CPS code *)
     fun prC s e = if !Control.CG.printit
-	  then (
-	    say (concat["\n[After ", s, " ...]\n\n"]);
-	    PPCps.printcps0 e;
-	    say "\n"; e)
-	  else e
+          then (
+            say (concat["\n[", s, " ...]\n\n"]);
+            PPCps.printcps0 e;
+            say "\n"; e)
+          else e
+
+    fun check s e = (
+          if !Control.CG.checkCPS
+            then CheckCPS.check (s, e)
+            else ();
+          prC s e)
 
     (* optionally dump the cluster graph to a file *)
     fun dumpClusters (source, suffix, cl) = if !Control.CG.dumpClusters
@@ -98,20 +104,18 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 
     fun compile {source, prog} = let
 	(* convert to CPS *)
-	  val function = convert prog
-	  val _ = prC "convert" function
-	  val function = (prC "cpstrans" o cpstrans) function
+	  val function = check "after convert" (convert prog)
+	  val function = check "after cpstrans" (cpstrans function)
 	(* optimize CPS *)
-	  val function = cpsopt (function, NONE, false)
-	  val _ = prC "cpsopt-code" function
+	  val function = check "after cpsopt-code" (cpsopt (function, NONE, false))
 	(* split out heap-allocated literals; litProg is the bytecode *)
 (* TODO: switch to newLiterals for all targets *)
 	  val (function, data) = if !Control.CG.newLiterals orelse Target.is64
 		then newlitsplit function
 		else litsplit function
-	  val _ = prC "lit-split" function
+	  val _ = check "after lit-split" function
 	(* convert CPS to closure-passing style *)
-	  val function = prC "closure" (closure function)
+	  val function = prC "after closure" (closure function)
 	(* flatten to 1st-order CPS *)
 	  val funcs = globalfix function
 	(* spill excess live variables *)

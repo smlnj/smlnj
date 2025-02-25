@@ -70,6 +70,7 @@ structure Control_CG : CGCONTROL =
     val staticprof = new (b, "staticprof", "?", false)
     val verbose = new (b, "verbose", "?", false)
     val debugcps = new (b, "debugcps", "?", false)
+    val checkCPS = new (b, "check-cps", "check CPS invariants after transformation passes", false)
     val bodysize = new (i, "bodysize", "?", 20)
     val reducemore = new (i, "reducemore", "?", 15)
     val comment = new (b, "comment", "?", false)

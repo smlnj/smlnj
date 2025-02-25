@@ -30,6 +30,7 @@ signature CGCONTROL =
     val staticprof : bool ref
     val unroll_recur : bool ref
     val debugcps : bool ref
+    val checkCPS : bool ref
     val bodysize : int ref
     val reducemore : int ref
     val comment : bool ref	(* used in CPS/clos/closure.sml to control debug messages *)
