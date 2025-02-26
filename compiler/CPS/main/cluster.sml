@@ -1,6 +1,6 @@
 (* cluster.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -12,6 +12,9 @@ structure Cluster : sig
    * where a cluster is a maximal graph where each node is a CPS function (from
    * the list `fns`) and the edges are defined by applications of known labels.
    * The first function in the first cluster will be the first function in `fns`.
+   *
+   * Functions that are not reachable from an entry-point (i.e., functions
+   * that have kind `CONT` or `ESCAPE`) are removed from the program.
    *)
     val cluster : CPS.function list -> cluster list
 
@@ -28,9 +31,10 @@ val print : cluster list -> cluster list
 
     type cluster = CPS.function list
 
+    val say = Control.Print.say
+
   (* print clusters if requested *)
     fun print clusters = let
-	  val say = Control.Print.say
 	  fun prCluster (fn1::fns) = (
 		say "***** CLUSTER START *****\n";
 		PPCps.printcps0 fn1;
@@ -43,16 +47,15 @@ val print : cluster list -> cluster list
 
     val normalizeCluster = NormalizeCluster.transform
 
+    (* is a function an entry? *)
+    fun isEntry (CPS.CONT, _, _, _, _) = true
+      | isEntry (CPS.ESCAPE, _, _, _, _) = true
+      | isEntry _ = false
+
 (*+DEBUG*
   (* returns true if there is an error *)
     fun checkCluster [] = raise Empty
-      | checkCluster (entry::frags) = let
-	  fun isEntry (CPS.CONT, _, _, _, _) = true
-	    | isEntry (CPS.ESCAPE, _, _, _, _) = true
-	    | isEntry _ = false
-	  in
-	    List.exists isEntry frags
-	  end
+      | checkCluster (entry::frags) = List.exists isEntry frags
 *-DEBUG*)
 
     fun cluster [] = raise List.Empty
@@ -75,7 +78,8 @@ val print : cluster list -> cluster list
 		val add = LambdaVar.Tbl.insert funcToIdTbl
 		in
 		  List.appi
-		    (fn (id, func as (_,f,_,_,_)) => (add(f, id); Array.update(tbl, id, func)))
+		    (fn (id, func as (_,f,_,_,_)) => (
+                        add(f, id); Array.update(tbl, id, func)))
 		      funcs;
 		  tbl
 		end
@@ -86,7 +90,7 @@ val print : cluster list -> cluster list
 		in
 		  if v = u then u else ascend(v)
 		end
-	  fun union(t1, t2) = let
+	  fun union (t1, t2) = let
 		val r1 = ascend t1
 		val r2 = ascend t2
 		in
@@ -96,25 +100,53 @@ val print : cluster list -> cluster list
 		    then Array.update(trees, r2, r1)
 		    else Array.update(trees, r1, r2)
 		end
-	(* build union-find structure *)
-	  fun build [] = ()
-	    | build ((_,f,_,_,body)::rest) = let
+	(* work-list algorithm to build union-find structure.  We start with
+         * with the escaping functions and continuations.  We add known functions
+         * to the work list as they are referenced by direct calls.  We are done
+         * when the worklist is empty.
+         * Known functions that are never referenced are identified and removed
+         * from the result.
+         *)
+          (* boolean flags for functions that have been added to the work list *)
+          val visitMarks = Array.array(numOfFuncs, false)
+          fun visit id = Array.update(visitMarks, id, true)
+          fun visited id = Array.sub(visitMarks, id)
+          (* the initial work list are the entry functions *)
+          val initialWL = let
+                fun f (id, func, wl) = if isEntry func
+                      then (visit id; func::wl)
+                      else wl
+                in
+                  List.rev (List.foldli f [] funcs)
+                end
+          (* the worklist algorithm *)
+          fun build [] = ()
+            | build ((_,f,_,_,body)::rest) = let
 		val fId = lookup f
-		fun calls (CPS.APP(CPS.LABEL l,_))  = union(fId, lookup l)
-		  | calls (CPS.APP _)		    = ()
-		  | calls (CPS.RECORD(_,_,_,e))     = calls e
-		  | calls (CPS.SELECT(_,_,_,_,e))   = calls e
-		  | calls (CPS.OFFSET(_,_,_,e))     = calls e
-		  | calls (CPS.SWITCH(_,_,es))      = List.app calls es
-		  | calls (CPS.BRANCH(_,_,_,e1,e2)) = (calls e1; calls e2)
-		  | calls (CPS.SETTER(_,_,e))       = calls e
-		  | calls (CPS.LOOKER(_,_,_,_,e))   = calls e
-		  | calls (CPS.ARITH(_,_,_,_,e))    = calls e
-		  | calls (CPS.PURE(_,_,_,_,e))     = calls e
-		  | calls (CPS.RCC(_,_,_,_,_,e))    = calls e
-		  | calls (CPS.FIX _)               = error "calls.f:FIX"
+		fun calls (CPS.APP(CPS.LABEL l,_), wl) = let
+                      val lId = lookup l
+                      in
+                        union(fId, lId);
+                        if visited lId
+                          then wl
+                          else (
+                            visit lId;
+                            Array.sub(idToFuncTbl, lId) :: wl)
+                      end
+		  | calls (CPS.APP _, wl) = wl
+		  | calls (CPS.RECORD(_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.SELECT(_,_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.OFFSET(_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.SWITCH(_,_,es), wl) = List.foldl calls wl es
+		  | calls (CPS.BRANCH(_,_,_,e1,e2), wl) = calls (e2, calls (e1, wl))
+		  | calls (CPS.SETTER(_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.LOOKER(_,_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.ARITH(_,_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.PURE(_,_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.RCC(_,_,_,_,_,e), wl) = calls (e, wl)
+		  | calls (CPS.FIX _, _) = error "calls.f:FIX"
 		in
-		  calls body; build rest
+		  build (calls (body, rest))
 		end (* build *)
 	(* extract the clusters.
 	 * The first func in the funcs list must be the first function
@@ -123,16 +155,19 @@ val print : cluster list -> cluster list
 	  fun extract () = let
 		val clusters = Array.array(numOfFuncs, [])
 	      (* group functions into clusters *)
-		fun collect n = if (0 <= n)
-		      then let
-			val root = ascend n
-			val func = Array.sub(idToFuncTbl, n)
-			val cluster = Array.sub(clusters, root)
-			in
-			  Array.update(clusters, root, func::cluster);
-			  collect (n-1)
-			end
-		      else ()
+		fun collect n = if (n < 0)
+                      then ()
+                      else (
+                        if visited n
+                          then let
+                            val root = ascend n
+                            val func = Array.sub(idToFuncTbl, n)
+                            val cluster = Array.sub(clusters, root)
+                            in
+                              Array.update(clusters, root, func::cluster)
+                            end
+                          else (); (* skip functions that were not visited *)
+                        collect (n-1))
 		val _ = collect (numOfFuncs-1)
 	      (* collect the clusters *)
 		fun finish (~1, acc) = acc
@@ -146,7 +181,7 @@ val print : cluster list -> cluster list
 		  clusters
 		end
 	  in
-	    build funcs;
+	    build initialWL;
 	    if !Control.CG.printClusters
 	      then print (extract())
 	      else extract()

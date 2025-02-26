@@ -103,6 +103,17 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/02/26]::
+Reworked the mechanism for grouping the first-order CPS functions into
+clusters.  The new implementation will remove unreachable known functions.
+Furthermore, the normalization pass will not signal an error if a cluster
+that has no entry is encountered (should be impossible with the other
+change).  Previously, normalization would get into an infinite loop
+in such situations.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/02/20]::
 Add a mechanism for dumping out the cluster graph as a ".dot" file
 before and after normalization of the clusters.  Have also restructured

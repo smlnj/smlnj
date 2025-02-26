@@ -67,11 +67,20 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
             say "\n"; e)
           else e
 
+    (* invariant checking for CPS *)
     fun check s e = (
           if !Control.CG.checkCPS
             then CheckCPS.check (s, e)
             else ();
           prC s e)
+
+    (* printing for the first-order CPS IR *)
+    fun prFuncs s funcs = if !Control.CG.printit
+          then (
+            say (concat["\n[", s, " ...]\n\n"]);
+            List.app PPCps.printcps0 funcs;
+            say "\n"; funcs)
+          else funcs
 
     (* optionally dump the cluster graph to a file *)
     fun dumpClusters (source, suffix, cl) = if !Control.CG.dumpClusters
@@ -119,9 +128,9 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 	  (* convert CPS to closure-passing style *)
 	  val function = prC "after closure" (closure function)
 	  (* flatten to 1st-order CPS *)
-	  val funcs = globalfix function
+	  val funcs = prFuncs "after globalfix" (globalfix function)
 	  (* spill excess live variables *)
-	  val funcs = spill funcs
+	  val funcs = prFuncs "after spill" (spill funcs)
           (* form the clusters *)
           val clusters = cluster funcs
           (* if requested, dump the pre-normalized clusters to a file *)
