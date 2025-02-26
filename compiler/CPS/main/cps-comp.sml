@@ -55,7 +55,9 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
     val closure   = phase "CPS 080 closure"  Closure.closeCPS
     val globalfix = phase "CPS 090 globalfix" GlobalFix.globalfix
     val spill     = phase "CPS 100 spill" Spill.spill
-    val allocChks = phase "CPS 110 limit" Limit.allocChecks
+    val cluster   = phase "CPS 110 clusters" Cluster.cluster
+    val normalize = phase "CPS 120 normalize" NormalizeCluster.transform
+    val allocChks = phase "CPS 130 alloc-chks" Limit.allocChecks
 
   (** pretty printing for the CPS code *)
     fun prC s e = if !Control.CG.printit
@@ -103,46 +105,46 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
           else ()
 
     fun compile {source, prog} = let
-	(* convert to CPS *)
+	  (* convert to CPS *)
 	  val function = check "after convert" (convert prog)
 	  val function = check "after cpstrans" (cpstrans function)
-	(* optimize CPS *)
+	  (* optimize CPS *)
 	  val function = check "after cpsopt-code" (cpsopt (function, NONE, false))
-	(* split out heap-allocated literals; litProg is the bytecode *)
+	  (* split out heap-allocated literals; litProg is the bytecode *)
 (* TODO: switch to newLiterals for all targets *)
 	  val (function, data) = if !Control.CG.newLiterals orelse Target.is64
 		then newlitsplit function
 		else litsplit function
 	  val _ = check "after lit-split" function
-	(* convert CPS to closure-passing style *)
+	  (* convert CPS to closure-passing style *)
 	  val function = prC "after closure" (closure function)
-	(* flatten to 1st-order CPS *)
+	  (* flatten to 1st-order CPS *)
 	  val funcs = globalfix function
-	(* spill excess live variables *)
+	  (* spill excess live variables *)
 	  val funcs = spill funcs
-        (* form the clusters *)
-        val clusters = Cluster.cluster funcs
-        (* if requested, dump the pre-normalized clusters to a file *)
-        val () = dumpClusters (source, "before", clusters)
-        (* normalize the clusters to single-entry points *)
-        val clusters = NormalizeCluster.transform clusters
-        (* if requested, dump the post-normalized clusters to a file *)
-        val () = dumpClusters (source, "after", clusters)
-        (* add heap-limit checks etc. *)
-        val (clusters, maxAlloc) = allocChks clusters
-        (* optionally print and/or dump the CFG IR *)
-        val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
-                then let
-                  val cfg = toCFG {
-			  source = source, clusters = clusters, maxAlloc = maxAlloc
-			}
-                  in
-                    printCFG cfg;
-                    dumpCFG (source, cfg)
-                  end
-                else ()
-        in
-          {clusters = clusters, maxAlloc = maxAlloc, data = data}
-        end (* compile *)
+          (* form the clusters *)
+          val clusters = cluster funcs
+          (* if requested, dump the pre-normalized clusters to a file *)
+          val () = dumpClusters (source, "before", clusters)
+          (* normalize the clusters to single-entry points *)
+          val clusters = normalize clusters
+          (* if requested, dump the post-normalized clusters to a file *)
+          val () = dumpClusters (source, "after", clusters)
+          (* add heap-limit checks etc. *)
+          val (clusters, maxAlloc) = allocChks clusters
+          (* optionally print and/or dump the CFG IR *)
+          val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
+                  then let
+                    val cfg = toCFG {
+                            source = source, clusters = clusters, maxAlloc = maxAlloc
+                          }
+                    in
+                      printCFG cfg;
+                      dumpCFG (source, cfg)
+                    end
+                  else ()
+          in
+            {clusters = clusters, maxAlloc = maxAlloc, data = data}
+          end (* compile *)
 
   end (* functor CPSCompFn *)

@@ -168,8 +168,11 @@ fun prCluster (fn1::fns) = (
        * and applies the function `f` to each reachable node as it is visited.
        *)
 	val dfsApp : t -> (int -> unit) -> int -> unit
-(*+DEBUG*
+      (* return the lvar name for the function ID; used for error reporting
+       * and debugging.
+       *)
 	val idToString : t -> int -> string
+(*+DEBUG*
 	val dump : t -> unit
 *-DEBUG*)
       end = struct
@@ -304,12 +307,13 @@ fun prCluster (fn1::fns) = (
 		dfs rootId
 	      end
 
-(*+DEBUG*
 	fun idToString ({nEntries, idToFunc, ...} : t) id = let
 	      val (_, f, _, _, _) = Array.sub(idToFunc, id)
 	      in
 		if (id < nEntries) then "*" ^ LV.lvarName f else LV.lvarName f
 	      end
+
+(*+DEBUG*
 	fun dump info = let
 	      val id2s = idToString info
 	      fun sayNd (id, {preds, succs}) = say(String.concat[
@@ -444,7 +448,11 @@ fun prCluster (fn1::fns) = (
 		newEntries := ISet.add(!newEntries, id);
 		List.app (fn id' => Info.removeEdge (info, id', id)) (predsOf id))
 	(* split the cluster; calls itself recursively until everything is normalized *)
-	  fun split (entryIds, fragIds) = let
+	  fun split ([], fragIds) = error (concat[
+                  "cluster without entries; frags = {",
+                  String.concatWithMap "," (Info.idToString info) fragIds, "}"
+                ])
+            | split (entryIds, fragIds) = let
 (*+DEBUG*
 val _ = say(concat[
 "### split: entries = {", String.concatWithMap "," (Info.idToString info) entryIds,
