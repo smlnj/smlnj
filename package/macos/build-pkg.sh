@@ -75,7 +75,7 @@ cd $DISTROOT
 
 # remove stuff that we do not need
 #
-rm -rf .gitignore .github package
+rm -rf .gitignore .gitmodules .github package
 
 # get the version from the source code
 #
@@ -165,7 +165,7 @@ fi
 mkdir $RSRC
 sed -e "s/VERSION/$VERSION/g" -e "s/ARCH/$ARCH/g" components/distribution_xml.in > $RSRC/distribution.xml
 cp -p components/smlnj-background.jpg $RSRC/background.jpg
-sed -e "s/VERSION/$VERSION/g" components/welcome_html.in > $RSRC/welcome.html
+sed -e "s/VERSION/$VERSION/g" -e "s/ARCH/$ARCH/g" components/welcome_html.in > $RSRC/welcome.html
 cp -p components/license.html $RSRC/license.html
 cp -p components/conclusion.html $RSRC/conclusion.html
 

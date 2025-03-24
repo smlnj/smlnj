@@ -27,11 +27,11 @@ SCRIPTDIR=`pwd`
 
 # switch to the installation destination
 #
-DST=$2
-cd $DST
+DST="$2"
+cd "$DST" || exit 1
 
-./build.sh -nolib
+./build.sh -nolib -verbose
 
-$SCRIPTDIR/copy-doc $DST
+"$SCRIPTDIR/copy-doc" "$DST" || exit 1
 
 exit 0
