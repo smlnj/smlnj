@@ -235,8 +235,8 @@ fish() {
   cd "$1" || exit 1
   ORIG_CM_DIR_ARC=unknown
   for i in * .[a-zA-Z0-9]* ; do
-    if [ -d $i ] ; then
-      ORIG_CM_DIR_ARC=$i
+    if [ -d "$i" ] ; then
+      ORIG_CM_DIR_ARC="$i"
       break
     fi
   done
