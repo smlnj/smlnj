@@ -172,6 +172,9 @@ doc/src/release-notes/110.99.2-README.html
 doc/src/release-notes/2021.1-README.html
 doc/src/release-notes/2022.1-README.html
 doc/src/release-notes/2023.1-README.html
+doc/src/smlnj-lib/bin/
+doc/src/smlnj-lib/index.json
+doc/src/smlnj-lib/tools/bin/
 doc/src/man/*.1
 doc/src/man/*.7
 doc/src/**/*.html
@@ -179,3 +182,6 @@ package/macos/*.pkg
 *.pkl
 v-amd64-*
 v-arm64-*
+*.amd64-darwin
+*.amd64-linux
+*.arm64-darwin
