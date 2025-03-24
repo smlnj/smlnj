@@ -12,9 +12,14 @@ DISTROOT=smlnj
 VERBOSE=""
 SIGNER="$USER"
 VERSION=none
+CLEANUP=yes
 
 usage() {
-  echo "usage: build-pkg.sh [ -verbose ] [ -no-sign ] [ <version> ]"
+  echo "usage: build-pkg.sh [ options ] [ <version> ]"
+  echo "  options:"
+  echo "    -verbose   -- enable messages that document the packaging process"
+  echo "    -no-sign   -- build an unsigned package"
+  echo "    -no-clean  -- do not remove the distribution tree after packaging"
   exit $1
 }
 
@@ -40,6 +45,7 @@ while [ "$#" != "0" ] ; do
   arg=$1; shift
   case $arg in
     -h) usage 0 ;;
+    -no-clean) CLEANUP="no" ;;
     -no-sign) SIGNER="none" ;;
     -verbose) VERBOSE="-verbose" ;;
     -*) usage 1 ;;
@@ -76,6 +82,7 @@ cd $DISTROOT
 # remove stuff that we do not need
 #
 rm -rf .gitignore .gitmodules .github package
+rm -rf runtime/llvm*/.gitignore runtime/llvm18/.github
 
 # get the version from the source code
 #
@@ -200,4 +207,8 @@ fi
 
 # cleanup
 #
-rm -rf $RSRC $DISTROOT smlnj.pkg
+if [ x"$CLEANUP" = xyes ] ; then
+  rm -rf $RSRC $DISTROOT smlnj.pkg
+else
+  rm -rf smlnj.pkg
+fi
