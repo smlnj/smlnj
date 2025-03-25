@@ -1,6 +1,4 @@
-// A template for creating release notes for a version
-//
-:version: @VERSION@
+:version: 2025.2
 :date: @DATE@
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
@@ -69,6 +67,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 |=======
 | Issue
 | Description
+| [.bugid]#297#
+| {issue-base}/297[macOS installer does not initialize CM paths correctly]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
@@ -78,6 +78,16 @@ associated with them (or were bug fixes ported from the legacy
 repository):
 
 // ***** include a list of unnumbered/legacy bugs here *****
+
+We also fixed the following bugs that did not have issues
+associated with them (or were bug fixes ported from the legacy
+repository):
+--
+* Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb`
+
+* Fixed an infinite loop that could occur when clustering the first-order
+  **CPS** functions prior to generating the **CFG** IR.
+--
 
 == Supported systems
 
