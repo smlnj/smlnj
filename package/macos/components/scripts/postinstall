@@ -30,7 +30,7 @@ SCRIPTDIR=`pwd`
 DST="$2"
 cd "$DST" || exit 1
 
-./build.sh -nolib -verbose
+./build.sh -nolib
 
 "$SCRIPTDIR/copy-doc" "$DST" || exit 1
 

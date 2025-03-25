@@ -7,10 +7,10 @@
     <readme file="readme.html" mime-type="text/html" />
     <license file="license.html" mime-type="text/html" />
     <conclusion file="conclusion.html" mime-type="text/html" />
-    <os-version min="10.6" />
-    <options customize="never" require-scripts="false"/>
+    <os-version min="11" />
+    <options customize="never" require-scripts="false" hostArchitectures="@PRODUCT_ARCH@"/>
     <choice id="choice8" customLocation="/usr/local/smlnj" customLocationAllowAlternateVolumes="true" visible="false">
-	<pkg-ref id="org.smlnj.ARCH.pkg" version="VERSION">smlnj.pkg</pkg-ref>
+	<pkg-ref id="org.smlnj.@ARCH@.pkg" version="@VERSION@">smlnj.pkg</pkg-ref>
     </choice>
     <choices-outline>
         <line choice="choice8" />

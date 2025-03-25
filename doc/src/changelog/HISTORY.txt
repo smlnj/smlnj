@@ -103,6 +103,16 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/03/25]::
+Fixed the **macOS** installation for **arm64** processors; these changes
+fix {issue-base}/297[Issue #297 (macOS installer does not initialize
+CM paths correctly)].  Also made the **macOS** install target consistent
+across the various places where it is specified.  It is now set to
+Version 11 (Big Sur).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/02/26]::
 Reworked the mechanism for grouping the first-order CPS functions into
 clusters.  The new implementation will remove unreachable known functions.

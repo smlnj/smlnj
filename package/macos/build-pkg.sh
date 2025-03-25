@@ -60,8 +60,7 @@ fi
 # first we need to download the source from GitHub
 #
 if [ -d $DISTROOT ] ; then
-  echo "$CMD [Error]: please remove $DISTROOT first"
-  exit 1
+  complain "please remove $DISTROOT first"
 fi
 
 # clone the sources
@@ -71,8 +70,7 @@ fi
 vsay "git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL"
 git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL
 if [ "$?" != 0 ] ; then
-  echo "$CMD [Error]: unable to download source from GitHub"
-  exit 1
+  complain "unable to download source from GitHub"
 fi
 
 # switch to the cloned source directory
@@ -87,8 +85,7 @@ rm -rf runtime/llvm*/.gitignore runtime/llvm18/.github
 # get the version from the source code
 #
 if [ ! -r config/version ] ; then
-  echo "$CMD [Error]: config/version is missing"
-  exit 1
+  complain "config/version is missing"
 fi
 CONFIG_VERSION=$(cat config/version)
 
@@ -105,11 +102,10 @@ fi
 # determine the architecture
 #
 case `uname -p` in
-  i386) ARCH=amd64 ;;
-  arm) ARCH=arm64 ;;
+  i386) ARCH=amd64 ; PRODUCT_ARCH=x86_64 ;;
+  arm) ARCH=arm64 ; PRODUCT_ARCH=arm64 ;;
   *)
-    echo "$CMD [Error]: unknown architecture"
-    exit 1
+    complain "unknown architecture"
   ;;
 esac
 
@@ -133,8 +129,7 @@ esac
 #
 ./build.sh -doc $VERBOSE
 if [ "$?" != 0 ] ; then
-  echo "$CMD [Error]: problem building SML/NJ"
-  exit 1
+  complain "problem building SML/NJ"
 fi
 
 #
@@ -143,8 +138,7 @@ fi
 mv doc/doc tmp-doc
 rm -rf doc
 if [ -d doc ] ; then
-  echo "$CMD [Error]: unable to remove documentation source"
-  exit 1
+  complain "unable to remove documentation source"
 fi
 mv tmp-doc doc
 
@@ -155,6 +149,15 @@ rm *tgz
 # back up to the root
 #
 cd $HERE
+
+# configure the distribution file
+#
+sed \
+  -e "s/@VERSION@/$VERSION/g" \
+  -e "s/@PRODUCT_ARCH@/$PRODUCT_ARCH/g" \
+  -e "s/@ARCH@/$ARCH/g" \
+  components/distribution_xml.in \
+    > distribution.xml
 
 # TODO: here is probably where we should use codesign to enable the hardened runtime
 # for the runtime executable.  Something like the following command:
@@ -170,9 +173,10 @@ if [ -d $RSRC ] ; then
   rm -rf $RSRC
 fi
 mkdir $RSRC
-sed -e "s/VERSION/$VERSION/g" -e "s/ARCH/$ARCH/g" components/distribution_xml.in > $RSRC/distribution.xml
 cp -p components/smlnj-background.jpg $RSRC/background.jpg
-sed -e "s/VERSION/$VERSION/g" -e "s/ARCH/$ARCH/g" components/welcome_html.in > $RSRC/welcome.html
+sed -e "s/@VERSION@/$VERSION/g" -e "s/@ARCH@/$ARCH/g" \
+  components/welcome_html.in \
+    > $RSRC/welcome.html
 cp -p components/license.html $RSRC/license.html
 cp -p components/conclusion.html $RSRC/conclusion.html
 
@@ -181,7 +185,7 @@ cp -p components/conclusion.html $RSRC/conclusion.html
 # font-size command in the README file (the others are relative)
 #
 if [ ! -f "$DISTROOT/doc/html/readme/$VERSION-README.html" ] ; then
-  echo "$CMD [Error]: cannot find $DISTROOT/doc/html/readme/$VERSION-README.html"
+  complain "cannot find $DISTROOT/doc/html/readme/$VERSION-README.html"
   exit 1
 fi
 sed -E 's/font-size: [0-9]+pt;/font-size: 9pt;/' \
@@ -191,24 +195,27 @@ sed -E 's/font-size: [0-9]+pt;/font-size: 9pt;/' \
 #
 PKG_OPTS="--identifier $ID --version $VERSION --scripts components/scripts/ \
   --install-location /usr/local/smlnj --root $DISTROOT"
+vsay "$CMD: pkgbuild $PKG_OPTS smlnj.pkg"
 pkgbuild $PKG_OPTS smlnj.pkg
 
 # build distribution package
 #
 BUILD_OPTS="--package-path components --resources $RSRC \
-  --distribution $RSRC/distribution.xml ./smlnj-$ARCH-$VERSION.pkg"
+  --distribution distribution.xml ./smlnj-$ARCH-$VERSION.pkg"
 if [ x"$SIGN" = xnone ] ; then
   echo "$CMD: building unsigned package smlnj-$ARCH-$VERSION.pkg"
+  vsay "$CMD: productbuild $BUILD_OPTS"
   productbuild $BUILD_OPTS
 else
   echo "$CMD: building signed package smlnj-$ARCH-$VERSION.pkg"
+  vsay "$CMD: productbuild --sign \"$SIGN\" $BUILD_OPTS"
   productbuild --sign "$SIGN" $BUILD_OPTS
 fi
 
 # cleanup
 #
 if [ x"$CLEANUP" = xyes ] ; then
-  rm -rf $RSRC $DISTROOT smlnj.pkg
+  rm -rf $RSRC $DISTROOT smlnj.pkg distribution.xml
 else
   rm -rf smlnj.pkg
 fi
