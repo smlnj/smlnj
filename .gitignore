@@ -173,7 +173,7 @@ doc/src/release-notes/2021.1-README.html
 doc/src/release-notes/2022.1-README.html
 doc/src/release-notes/2023.1-README.html
 doc/src/smlnj-lib/bin/
-doc/src/smlnj-lib/index.json
+doc/src/smlnj-lib/src/index.json
 doc/src/smlnj-lib/tools/bin/
 doc/src/man/*.1
 doc/src/man/*.7
