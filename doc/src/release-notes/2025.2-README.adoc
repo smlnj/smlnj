@@ -49,6 +49,9 @@ FILES::
 
 === Basis Library
 
+* removed deprecated functions from `SMLofNJ.SysInfo` structure and changed the
+  `WIN32` constructor to `WINDOWS`.
+
 === SML/NJ Library
 
 === Successor ML
@@ -87,6 +90,9 @@ repository):
 
 * Fixed an infinite loop that could occur when clustering the first-order
   **CPS** functions prior to generating the **CFG** IR.
+
+* Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
+  and `PackReal64Little` export internals)]
 --
 
 == Supported systems
