@@ -103,6 +103,13 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/03/26]::
+Removed deprecated fuctions from `SMLofNJ.SysInfo` module and changed
+the `WIN32` constructor to `WINDOWS`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/03/25]::
 Fixed the **macOS** installation for **arm64** processors; these changes
 fix {issue-base}/297[Issue #297 (macOS installer does not initialize
