@@ -23,3 +23,6 @@ Think about how to integrate into the **SML** stream IO APIs.  We might
 create `TextPrimIO.reader` and `TextPrimIO.writer` values from a terminal.
 These can then be used to create streams (we probably want to support
 those directly).
+
+Look at https://github.com/haskell/haskeline for ideas about API design.
+
