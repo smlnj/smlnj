@@ -484,7 +484,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                 (* NOTE: the `'a cont` type is actually represented as a CPS
                  * function, not a continuation.
                  *)
-	      | F.PRIMOP((_,p as (AP.CALLCC | AP.CAPTURE),_,_), [f], v, e) =>
+	      | F.PRIMOP((_,p as (AP.CALLCC | AP.CAPTURE),_,_), [f], v, e) => let
                   (* `F` is the continuation of the `callcc` application
                    * that evaluates `e`
                    *)
