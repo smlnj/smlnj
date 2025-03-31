@@ -281,7 +281,7 @@ structure GenericInstall : sig
 		       of "SIZE_32" => (SMLofNJ.SysInfo.getArchSize() = 32)
 			| "SIZE_64" => (SMLofNJ.SysInfo.getArchSize() = 64)
 			| "UNIX" => (SMLofNJ.SysInfo.getOSKind() = SMLofNJ.SysInfo.UNIX)
-			| "WINDOWS" => (SMLofNJ.SysInfo.getOSKind() = SMLofNJ.SysInfo.WIN32)
+			| "WINDOWS" => (SMLofNJ.SysInfo.getOSKind() = SMLofNJ.SysInfo.WINDOWS)
 			| _ => fail ["unknown symbol '", symb, "' in conditional\n"]
 		      (* end case *))
 		val (modules, srcReqs, allsrc) =
