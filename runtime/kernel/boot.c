@@ -22,6 +22,14 @@
 #include "gc.h"
 #include "ml-globals.h"
 
+/* llvm_codegen:
+ *
+ * Given the source-file name and ASDL pickle of the CFG IR, generate
+ * native machine code and return the corresponding ML code object and
+ * entry-point offset as a heap-allocated pair.
+ */
+ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t szb);
+
 #ifndef SEEK_SET
 #  define SEEK_SET      0
 #endif
@@ -282,6 +290,7 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->cmInfoSzB = BIGENDIAN_TO_HOST32(p->cmInfoSzB);
         info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
         info->pad       = BIGENDIAN_TO_HOST32(p->pad);
+        info->isNative  = TRUE;
         info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
         info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
     } else {
@@ -296,8 +305,10 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->cmInfoSzB = BIGENDIAN_TO_HOST32(p->cmInfoSzB);
         info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
         info->pad       = BIGENDIAN_TO_HOST32(p->pad);
+        info->isNative  = TRUE;
         info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
         info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
+//        Die ("invalid binfile kind in \"%s\"", fname);
     }
 
 } /* end of ReadHeader */
@@ -468,30 +479,64 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     }
 
     if (remainingCode > 0) {
-      /* read the size and entry point for the code object */
-        ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
-        thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-        ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
-        thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint);
-
-      /* how much more? */
-        remainingCode -= thisSzB + 2 * sizeof(Int32_t);
-        if (remainingCode != 0) {
-            Die ("format error (code size mismatch) in bin file \"%s\"", fname);
-        }
-
-        {
-            char *buffer = MALLOC(thisSzB);
-            ReadBinFile (file, buffer, thisSzB, fname);
-          /* allocate a code object and initialize with the code from the binfile */
-            ENABLE_CODE_WRITE
-                codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
-            DISABLE_CODE_WRITE
-            FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
-            if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
-                Die("!!!!! code object corruption !!!!!\n");
+        if (hdr.isNative) {
+            /* read the size and entry point for the code object */
+            ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
+            thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
+            ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
+            thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint);
+    
+            /* how much more? */
+            remainingCode -= thisSzB + 2 * sizeof(Int32_t);
+            if (remainingCode != 0) {
+                Die ("format error (code size mismatch) in bin file \"%s\"", fname);
             }
-            FREE(buffer);
+    
+            {
+                char *buffer = MALLOC(thisSzB);
+                ReadBinFile (file, buffer, thisSzB, fname);
+                /* allocate a code object and initialize with the code from the binfile */
+                ENABLE_CODE_WRITE
+                    codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
+                DISABLE_CODE_WRITE
+                FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+                if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
+                    Die("!!!!! code object corruption !!!!!\n");
+                }
+                FREE(buffer);
+            }
+        } else {
+            /* read the size of the CFG pickle */
+            ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
+            thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
+    
+            /* how much more? */
+            remainingCode -= thisSzB + sizeof(Int32_t);
+            if (remainingCode != 0) {
+                Die ("format error (code size mismatch) in bin file \"%s\"", fname);
+            }
+            {
+                /* get the CFG pickle from the binfile */
+                char *pkl = MALLOC(thisSzB);
+                ReadBinFile (file, pkl, thisSzB, fname);
+
+                if (!SilentLoad) {
+                    Say ("  [generate native code]\n");
+                }
+
+                /* generate code; we get a (WordVector.vector * int) value as a result */
+                ml_val_t pair = llvm_codegen (msp, objname, pkl, thisSzB);
+                ml_val_t code = GET_SEQ_DATA(REC_SEL(pair, 0));
+                thisEntryPoint = REC_SELINT(pair, 1);
+
+                /* allocate a code object and initialize with the generated code */
+                ENABLE_CODE_WRITE
+                    codeObj = ML_AllocCode (msp, PTR_MLtoC(void, code), thisSzB);
+                DISABLE_CODE_WRITE
+                FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+                
+                FREE(pkl);
+            }
         }
 
         if (!SilentLoad) {
