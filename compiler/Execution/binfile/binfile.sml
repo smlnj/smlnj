@@ -1,9 +1,9 @@
 (* binfile.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
- * author: Matthias Blume
+ * author: Matthias Blume and John Reppy
  *
  * See dev-notes/binfile.adoc for a description of the binfile format.
  * This file must be kept in sync with runtime/kernel/boot.c.
@@ -20,13 +20,11 @@ structure Binfile :> BINFILE =
 
     type pid = Pid.persstamp
 
-    type csegments = CodeObj.csegments
-
     type executable = CodeObj.executable
 
-    type stats = { env: int, data: int, code: int }
+    type stats = { env : int, data : int, code: int }
 
-    type pickle = { pid: pid, pickle: W8V.vector }
+    type pickle = { pid : pid, pickle : W8V.vector }
 
     type version_info = {
         bfVersion : word,       (* will be 0w0 for old versions *)
@@ -34,21 +32,31 @@ structure Binfile :> BINFILE =
         smlnjVersion : string
       }
 
-    val bfVersion = 0wx20211123         (* Bin File version 2021-11-23 *)
+    val bfVersion = 0wx20250401 (* Bin File version 2025-04-01 *)
 
     fun mkVersion {arch, smlnjVersion} : version_info = {
-            bfVersion = 0w0,        (* old binfile format for now *)
-            arch = arch, smlnjVersion = smlnjVersion
+            bfVersion = bfVersion,
+            arch = arch,
+            smlnjVersion = smlnjVersion
           }
 
-    datatype bfContents = BF of {
+    (* sections of a binfile.
+     * NOTE: eventually, we should generalize this type to cover the other
+     * parts of the file.
+     *)
+    datatype section
+      = Literals of Word8Vector.vector
+      | CFGPickle of Word8Vector.vector
+      | Code of CodeObj.t
+
+    datatype t = BF of {
         version : version_info,
-	imports: ImportTree.import list,
-	exportPid: pid option,
-	cmData: pid list,
-	senv: pickle,
-	guid: string,
-	csegments: csegments,
+	imports : ImportTree.import list,
+	exportPid : pid option,
+	cmData : pid list,
+	senv : pickle,
+	guid : string,
+	sections : section list,
 	executable: executable option ref
       }
 
@@ -253,14 +261,14 @@ structure Binfile :> BINFILE =
 	    pickleSize senv
 	  end
 
-    fun create { version, imports, exportPid, cmData, senv, csegments, guid } = BF{
+    fun create { version, imports, exportPid, cmData, senv, sections, guid } = BF{
             version = version,
 	    imports = imports,
 	    exportPid = exportPid,
 	    cmData = cmData,
 	    senv = senv,
 	    guid = guid,
-	    csegments = csegments,
+	    sections = sections,
 	    executable = ref NONE
 	  }
 

@@ -1,6 +1,6 @@
 (* code-obj.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ https://www.smlnj.org)
  * All rights reserved.
  *
  * An interface for manipulating code objects.
@@ -13,18 +13,13 @@ structure CodeObj :> CODE_OBJ =
     structure W8V = Word8Vector
     type object = Unsafe.Object.object
 
-    datatype code_object = C of {
+    datatype t = C of {
 (* QUESTION: it appears that the entrypoint is always going to be zero, so we might not
  * need it!
  *)
 	entrypoint : int,
         isExec : bool ref,
 	obj : W8V.vector ref
-      }
-
-    type csegments = {
-	code : code_object,
-	data : W8V.vector
       }
 
     type executable = object -> object
@@ -98,4 +93,4 @@ structure CodeObj :> CODE_OBJ =
 
     fun entrypoint (C c) = (#entrypoint c)
 
-  end;
+  end
