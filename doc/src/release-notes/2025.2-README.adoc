@@ -79,12 +79,6 @@ Here is a list of the issues that are fixed (or closed) with this release.
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
-
-// ***** include a list of unnumbered/legacy bugs here *****
-
-We also fixed the following bugs that did not have issues
-associated with them (or were bug fixes ported from the legacy
-repository):
 --
 * Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb`
 
@@ -93,6 +87,9 @@ repository):
 
 * Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
   and `PackReal64Little` export internals)]
+
+* Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
+  to return an object with `ByteVector` representation)]
 --
 
 == Supported systems

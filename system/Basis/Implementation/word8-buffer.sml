@@ -61,7 +61,7 @@ structure Word8Buffer :> MONO_BUFFER
 
     fun contents (BUF{len = ref 0, ...}) = emptyV
       | contents (BUF{content=ref arr, len=ref n, ...}) = let
-	  val v = InlineT.cast (Assembly.A.create_b n)
+	  val v = InlineT.cast (Assembly.A.create_s n)
 	  fun cpy i = if (i < n)
 		then (V.update(v, i, A.sub(arr, i)); cpy (i ++ 1))
 		else ()
