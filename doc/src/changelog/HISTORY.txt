@@ -102,6 +102,12 @@ Here is an update to the entry
 //====================================================================
 == Recent updates
 
+[2025/04/11]::
+Port fix for {legaccy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast`
+causes Compiler bug).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //--------------------------------------------------------------------
 [2025/03/26]::
 Removed deprecated fuctions from `SMLofNJ.SysInfo` module and changed
