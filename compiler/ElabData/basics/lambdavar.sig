@@ -51,6 +51,7 @@ signature LAMBDA_VAR =
     structure Map : ORD_MAP where type Key.ord_key = lvar
     structure Set : ORD_SET where type Key.ord_key = lvar
     structure Tbl : MONO_HASH_TABLE where type Key.hash_key = lvar
+    structure HSet : MONO_HASH_SET where type Key.hash_key = lvar
 
   (* sorted lists of LVars *)
     structure SortedList : sig
