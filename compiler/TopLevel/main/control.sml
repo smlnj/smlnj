@@ -42,7 +42,8 @@ structure Control_CG : CGCONTROL =
 
     val closureStrategy = new (i, "closure-strategy", "?", 0)	(* see CPS/clos/closure.sml *)
     val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [
-	    "first_contract", "eta", "zeroexpand", "last_contract"
+	    "first_contract", "eta", "zeroexpand", "vn", "check",
+            "last_contract"
 	  ])
     (* ["first_contract", "eta", "uncurry", "etasplit",
 	"cycle_expand", "eta", "last_contract" ] *)
@@ -81,6 +82,7 @@ structure Control_CG : CGCONTROL =
     val spillGen = new (i, "spill-gen", "?", 0)
     val etasplit = new (b, "etasplit", "?", true)
     val uncurry = new (b, "uncurry", "enable uncurrying optimization", true)
+    val enableVN = new (b, "vn", "enable redundant expression elimination using value numbering", true)
     val ifidiom = new (b, "if-idiom", "enable if-idiom optimization", true)
     val comparefold = new (b, "comparefold", "enable optimization of conditional tests", true)
     val debugLits = new (b, "debug-lits", "print results of literal lifting", false)

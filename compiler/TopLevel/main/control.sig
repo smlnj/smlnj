@@ -41,6 +41,7 @@ signature CGCONTROL =
     val spillGen : int ref
     val etasplit : bool ref
     val uncurry : bool ref
+    val enableVN : bool ref
     val ifidiom : bool ref
     val comparefold : bool ref
     val debugLits : bool ref
