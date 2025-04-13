@@ -18,6 +18,7 @@ usage() {
   echo "  options:"
   echo "    -h            -- print this message"
   echo "    -verbose      -- set CM's verbose mode to true"
+  echo "    -stats        -- report compiler statistics"
   echo "    -C<ctl>=<v>   -- control argument passed to compile command"
   echo "    -D<sym>=<v>   -- CM-define argument passed to compile command"
   exit 1
@@ -28,6 +29,7 @@ CM_VERBOSE=false
 
 SML=sml
 ARGS=""
+STATS="false"
 # Process command-line arguments
 #
 while [ "$#" != "0" ] ; do
@@ -35,6 +37,7 @@ while [ "$#" != "0" ] ; do
   case $arg in
     -h) usage ;;
     -verbose) CM_VERBOSE=true ;;
+    -stats) STATS=true ;;
     -32)
 	echo "cmb-make: 32-bits not supported anymore"
 	usage
@@ -73,5 +76,7 @@ if [ $SMLBIN != "." ] ; then
 fi
 
 exec $SML $ARGS $@ -DNO_PLUGINS '$smlnj/cmb.cm' <<XXXX
+(if $STATS then Stats.reset() else ();
 CMB.make();
+if $STATS then Stats.summary() else ());
 XXXX
