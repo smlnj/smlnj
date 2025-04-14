@@ -33,7 +33,8 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release is primarily a bug-fix release.  In particular, we have addressed some
+of the teething issues in the new ARM64 support.
 
 == Details
 
@@ -72,6 +73,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | Description
 | [.bugid]#297#
 | {issue-base}/297[macOS installer does not initialize CM paths correctly]
+| [.bugid]#303#
+| {issue-base}/303[The exception `IO.Io` is not accessible]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
@@ -84,6 +87,8 @@ repository):
 
 * Fixed an infinite loop that could occur when clustering the first-order
   **CPS** functions prior to generating the **CFG** IR.
+
+* Ported {legacy-issue}/347[Legacy Issue #347 (`Unsafe.cast` causes Compiler bug)]
 
 * Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
   and `PackReal64Little` export internals)]
@@ -111,9 +116,9 @@ tested some of them:
 | {nbsp} | |
 | ARM64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | 
-| | macOS 13 (Ventura) | 
-| | macOS 14 (Sonoma) | 
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
 | {nbsp} | |
 |=======
