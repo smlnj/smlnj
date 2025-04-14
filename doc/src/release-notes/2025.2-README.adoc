@@ -73,6 +73,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | Description
 | [.bugid]#297#
 | {issue-base}/297[macOS installer does not initialize CM paths correctly]
+| [.bugid]#302#
+| {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
 | [.bugid]#303#
 | {issue-base}/303[The exception `IO.Io` is not accessible]
 // | [.bugid]#@ID@#

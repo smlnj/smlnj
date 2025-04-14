@@ -217,34 +217,39 @@ and ppDconPat(env,ppstrm) =
 	      pps "("; ppPat env ppstrm (v,d); PP.break ppstrm {nsp=1,offset=2};
 	      pps " as "; ppPat env ppstrm (p,d-1); pps ")";
 	      closeBox ())
-	  | ppDconPat'(APPpat(DATACON{name,...}, _, argPat), l, r, d) =
-	      let val dname = S.name name
-		      (* should really have original path, like for VARexp *)
-		  val thisFix = lookFIX(env,name)
-		  val effFix = case thisFix of NONfix => infFix | x => x
-		  val atom = strongerR(effFix,r) orelse strongerL(l,effFix)
-	       in openHOVBox 2;
-		  lpcond(atom);
-		  case thisFix
-		    of INfix _ => 
-                         (case AU.headStripPat argPat
-			    of RECORDpat{fields=[(_,leftPat),(_,rightPat)],...} =>
-			       (* BUG? assuming field pairs are in the right order! *)
-				 let val (left,right) =
-					 if atom then (nullFix,nullFix)
-					 else (l,r)
-				  in ppDconPat' (leftPat,left,thisFix,d-1);
-				     PP.break ppstrm {nsp=1,offset=0};
-				     pps dname;
-				     PP.break ppstrm {nsp=1,offset=0};
-				     ppDconPat' (rightPat, thisFix, right, d-1)
-				 end
-		            | _ => bug "ppDconPat'")
-		     | NONfix =>
-		        (pps dname; PP.break ppstrm {nsp=1,offset=0};
-			 ppDconPat' (argPat, infFix, infFix, d-1));
-		  rpcond(atom);
-		  closeBox ()
+	  | ppDconPat'(APPpat(DATACON{name,...}, _, argPat), l, r, d) = let
+              val dname = S.name name
+		    (* should really have original path, like for VARexp *)
+              val thisFix = lookFIX(env,name)
+              val effFix = case thisFix of NONfix => infFix | x => x
+              val atom = strongerR(effFix,r) orelse strongerL(l,effFix)
+              fun pp name = (
+                    pps name;
+                    PP.break ppstrm {nsp=1,offset=0};
+                    ppDconPat' (argPat, infFix, infFix, d-1))
+              in
+                openHOVBox 2;
+                lpcond atom;
+                case thisFix
+                 of INfix _ => (case AU.headStripPat argPat
+                       of RECORDpat{fields=[(_,leftPat),(_,rightPat)],...} => let
+                            (* BUG? assuming field pairs are in the right order! *)
+                            val (left,right) = if atom
+                                  then (nullFix,nullFix)
+                                  else (l,r)
+                            in
+                              ppDconPat' (leftPat,left,thisFix,d-1);
+                              PP.break ppstrm {nsp=1,offset=0};
+                              pps dname;
+                              PP.break ppstrm {nsp=1,offset=0};
+                              ppDconPat' (rightPat, thisFix, right, d-1)
+                            end
+                        | _ => pp ("op "^dname) (* assume that there was an "op" prefix *)
+                      (* end case *))
+                  | NONfix => pp dname
+                (* end case *);
+                rpcond atom;
+                closeBox ()
 	      end
 	  | ppDconPat' (p,_,_,d) = ppPat env ppstrm (p,d)
      in ppDconPat'
