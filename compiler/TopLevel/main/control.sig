@@ -42,6 +42,11 @@ signature CGCONTROL =
     val etasplit : bool ref
     val uncurry : bool ref
     val enableVN : bool ref
+    val vnCondElim : bool ref
+    val vnRecordElim : bool ref
+    val vnSelectElim : bool ref
+    val vnPrimElim : bool ref
+
     val ifidiom : bool ref
     val comparefold : bool ref
     val debugLits : bool ref

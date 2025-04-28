@@ -26,6 +26,9 @@ structure ValueNumbering : sig
       | ARITH of P.arith * C.value list
       | PURE of P.pure * C.value list
 
+(* QUESTION: experiments suggest that redundant `SWITCH` expressions never actually
+ * happen (e.g., there are none in the 112k lines of SML code in the compiler).
+ *)
     datatype branch
       = SWITCH of C.value * int
       | BRANCH of P.branch * C.value list * bool
@@ -236,7 +239,7 @@ structure ValueNumbering : sig
       | cmpValue (C.VAR _, _) = LESS
       | cmpValue (_, C.VAR _) = GREATER
       | cmpValue (C.NUM{ival=i1, ty=ty1}, C.NUM{ival=i2, ty=ty2}) = let
-(* QUESTION: can we ignore the tag, since it is implied by the size? *)
+(* QUESTION: can we ignore the tag field, since it is implied by the size? *)
           fun cmpTy ({sz=sz1, tag=t1}, {sz=sz2, tag=t2}) =
                 if (t1 = t2) then cmpCode (sz1, sz2)
                 else if t1 then GREATER
@@ -333,6 +336,7 @@ structure ValueNumbering : sig
      * where `b` is the direction of the branch.
      *)
     fun matchBranch (bh, tst, vs) = let
+(* TODO: generalize this test for the negation of the branch using `CPSUtil.opp` *)
           fun match [] = NONE
             | match (BRANCH(tst', vs', b)::bh) =
                 if sameBranch(tst, tst')
@@ -391,6 +395,14 @@ structure ValueNumbering : sig
 
     fun transform {function, click} = let
           fun tick (s, cntr) = (click s; Stats.incCounter cntr)
+          (* controls *)
+          val condElim = !Ctl.vnCondElim
+          val recordElim = !Ctl.vnRecordElim
+          val selectElim = !Ctl.vnSelectElim
+          val primElim = !Ctl.vnPrimElim
+          (* conditional lookup of available expressions *)
+          fun findAvail (false, _, _) = NONE
+            | findAvail (true, avail, av) = AVMap.find(avail, av)
           (* transform a CPS expression. The parameters are:
            *   rn     -- a renaming map for lvars
            *   avail  -- a map from available values to their "numbers" (lvars)
@@ -402,7 +414,7 @@ structure ValueNumbering : sig
                       val flds' = List.map (rnField rn) flds
                       val av = RECORD(rk, flds')
                       in
-                        case AVMap.find(avail, av)
+                        case findAvail(recordElim, avail, av)
                          of SOME y => (
                               tick ("RedundantRecord", cntRedundantRecord);
                               xform (VMap.insert(rn, x, y), avail, bh, k))
@@ -414,7 +426,7 @@ structure ValueNumbering : sig
                       val v' = rnValue rn v
                       val av = SELECT(n, v')
                       in
-                        case AVMap.find(avail, av)
+                        case findAvail(selectElim, avail, av)
                          of SOME y => (
                               tick ("RedundantSelect", cntRedundantSelect);
                               xform (VMap.insert(rn, x, y), avail, bh, k))
@@ -429,31 +441,37 @@ structure ValueNumbering : sig
                       xform (rn, avail, bh, k))
                   | C.SWITCH(arg, id, cases) => let
                       val arg' = rnValue rn arg
+                      fun continue () = C.SWITCH(arg', id,
+                            List.mapi
+                              (fn (i, ce) => xform (rn, avail, SWITCH(arg', i)::bh, ce))
+                                cases)
                       in
-                        case matchSwitch (bh, arg')
-                         of SOME n => (
-                              tick ("RedundantSwitch", cntRedundantSwitch);
-                              xform (rn, avail, bh, List.nth(cases, n)))
-                          | NONE => C.SWITCH(arg', id,
-                              List.mapi
-                                (fn (i, ce) => xform (rn, avail, SWITCH(arg', i)::bh, ce))
-                                  cases)
-                        (* end case *)
+                        if condElim
+                          then (case matchSwitch (bh, arg')
+                             of SOME n => (
+                                  tick ("RedundantSwitch", cntRedundantSwitch);
+                                  xform (rn, avail, bh, List.nth(cases, n)))
+                              | NONE => continue ()
+                            (* end case *))
+                          else continue ()
                       end
                   | C.BRANCH(tst, args, id, trueK, falseK) => let
                       val args' = List.map (rnValue rn) args
+                      fun continue () = C.BRANCH(tst, args', id,
+                            xform (rn, avail, BRANCH(tst, args', true)::bh, trueK),
+                            xform (rn, avail, BRANCH(tst, args', false)::bh, falseK))
                       in
-                        case matchBranch (bh, tst, args')
-                         of SOME true => (
-                              tick ("RedundantBranch", cntRedundantBranch);
-                              xform (rn, avail, bh, trueK))
-                          | SOME false => (
-                              tick ("RedundantBranch", cntRedundantBranch);
-                              xform (rn, avail, bh, falseK))
-                          | NONE => C.BRANCH(tst, args', id,
-                              xform (rn, avail, BRANCH(tst, args', true)::bh, trueK),
-                              xform (rn, avail, BRANCH(tst, args', false)::bh, falseK))
-                        (* end case *)
+                        if condElim
+                          then (case matchBranch (bh, tst, args')
+                             of SOME true => (
+                                  tick ("RedundantBranch", cntRedundantBranch);
+                                  xform (rn, avail, bh, trueK))
+                              | SOME false => (
+                                  tick ("RedundantBranch", cntRedundantBranch);
+                                  xform (rn, avail, bh, falseK))
+                              | NONE => continue ()
+                            (* end case *))
+                          else continue ()
                       end
                   | C.SETTER(rator, args, k) =>
                       C.SETTER(rator, List.map (rnValue rn) args,
@@ -465,7 +483,7 @@ structure ValueNumbering : sig
                       val args' = List.map (rnValue rn) args
                       val av = ARITH(rator, args')
                       in
-                        case AVMap.find(avail, av)
+                        case findAvail(primElim, avail, av)
                          of SOME y => (
                               tick ("RedundantArith", cntRedundantArith);
                               xform (VMap.insert(rn, x, y), avail, bh, k))
@@ -487,7 +505,7 @@ structure ValueNumbering : sig
                           | _ => let
                               val av = PURE(rator, args')
                               in
-                                case AVMap.find(avail, av)
+                                case findAvail(primElim, avail, av)
                                  of SOME y => (
                                       tick ("RedundantPure", cntRedundantPure);
                                       xform (VMap.insert(rn, x, y), avail, bh, k))
