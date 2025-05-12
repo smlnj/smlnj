@@ -74,10 +74,9 @@ struct
 			concat (arc1 ::
 				foldr (fn (a, r) => "\\" :: a :: r) [] arcn)
 		in
-		    case os of
-			SMLofNJ.SysInfo.WIN32 => win32name ()
-		      | _ => P.toString { isAbs = false, vol = "",
-					  arcs = arc1 :: arcn }
+		    case os 
+                     of SMLofNJ.SysInfo.WINDOWS => win32name ()
+		      | _ => P.toString { isAbs = false, vol = "", arcs = arc1 :: arcn }
 		end
 	      | _ => raise Fail ("BootstrapCompile:listName: bad name: " ^ p)
     in

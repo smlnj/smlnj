@@ -12,6 +12,26 @@ These instructions are for installing the development version
 of **Standard ML of New Jersey** (**SML/NJ**) on **Unix** and
 Unix-like operating systems (including **Linux** and **macOS**).
 
+== Install from Sources
+
+=== Dependencies
+
+To build the system from sources, you must have several common software
+systems installed on your machine.
+
+* **{cpp}17** -- You need a **{cpp}** compiler, such as **clang** or **gcc**,
+  that can handle **{cpp}17**.
+
+* **CMake** -- You need Version 3.23 or later of https://cmake.org[CMake].
+
+* **Autoconf** -- Parts of the documentation and the **ASDL** tool require
+  the GNU **autoconf** tool (version 2.71 or later).
+
+=== Installation Steps
+
+Assuming that you have the necessary tools installed, the process for
+building the system from source code is as follows:
+
 --
 1. clone the repository for version {version}.
 +
@@ -43,3 +63,40 @@ from the build.
 
 After successful running of the `build.sh` script, `bin/sml` will be the interactive
 system.
+
+== macOS Installation Packages
+
+We provide installers for **macOS** running on both
+{dist-dir}smlnj-amd64-{version}.pkg[AMD64 (x86-64)] and
+{dist-dir}smlnj-arm64-{version}.pkg[Arm64 (AArch64)].
+
+=== Installing on macOS 15 Sequoia
+
+The installer packages work on macOS Sequoia, but they requires a more
+complicated process than for previous versions of macOS. Once you have
+downloaded the installer package, control-click on it and select
+"**Open With**" the Installer.  Assuming that you are installing the AMD64
+package, opening the package with the installer will cause a dialog
+window to pop up telling you that
+
+[subs="+attributes"]
+----
+"smlnj-amd64-{version}.pkg" Not Opened
+Apple could not verify "smlnj-amd64-{version}.pkg" is free of
+malware that that may harm your Mac or compromise your privacy.
+----
+
+Click the "**Done**" button, which will cause the popup window to disappear.
+Then open the "**Settings**" application and select the "**Privacy & Security**"
+tab. Scroll to the bottom and you should see a message that
+
+[subs="+attributes"]
+----
+"smlnj-amd64-{version}.pkg" was blocked to protect your Mac.
+----
+
+Click the "**Open Anyway**" button, which should cause another
+popup window to open from the installer application.
+Click "**Open Anyway**" in that popup, which will then require
+you to authenticate. Once you have done so, the installer
+should run normally.

@@ -1,6 +1,6 @@
 (* c-types.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * A representation of C Types for specifying the arguments and results
@@ -46,4 +46,35 @@ structure CTypes =
 	    | C_ARRAY (cTy, n) => List.tabulate (n, fn _ => cTy)
 	    | cTy => [cTy]
 	  (* end case *))
+
+  (* conversions to strings *)
+    local
+
+      fun ci I_char = "char"
+	| ci I_short = "short"
+	| ci I_int = "int"
+	| ci I_long = "long"
+	| ci I_long_long = "long long"
+
+      fun ct C_void = "void"
+	| ct C_float = "float"
+	| ct C_double = "double"
+	| ct C_long_double = "long double"
+	| ct (C_unsigned i) = "unsigned " ^ ci i
+	| ct (C_signed i) = ci i
+	| ct C_PTR = "T*"
+	| ct (C_ARRAY(t,i)) = concat [ct t, "[", Int.toString i, "]"]
+	| ct (C_STRUCT fl) = concat ["struct{", String.concatWithMap ";" ct fl, "}"]
+	| ct (C_UNION fl) = concat ["union{", String.concatWithMap ";" ct fl, "}"]
+    in
+
+    val toString = ct
+
+    fun protoToString { conv, retTy, paramTys = [] } = ct retTy ^ "(*)(void)"
+      | protoToString { conv, retTy, paramTys } = concat [
+            ct retTy, "(*)(", String.concatWithMap "," ct paramTys, ")"
+          ]
+
+    end (* local *)
+
   end

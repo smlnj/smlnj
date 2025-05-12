@@ -1,6 +1,4 @@
-// A template for creating release notes for a version
-//
-:version: @VERSION@
+:version: 2025.2
 :date: @DATE@
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
@@ -35,7 +33,8 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release is primarily a bug-fix release.  In particular, we have addressed some
+of the teething issues in the new ARM64 support.
 
 == Details
 
@@ -50,6 +49,9 @@ FILES::
 === Runtime System
 
 === Basis Library
+
+* removed deprecated functions from `SMLofNJ.SysInfo` structure and changed the
+  `WIN32` constructor to `WINDOWS`.
 
 === SML/NJ Library
 
@@ -69,6 +71,12 @@ Here is a list of the issues that are fixed (or closed) with this release.
 |=======
 | Issue
 | Description
+| [.bugid]#297#
+| {issue-base}/297[macOS installer does not initialize CM paths correctly]
+| [.bugid]#302#
+| {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
+| [.bugid]#303#
+| {issue-base}/303[The exception `IO.Io` is not accessible]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
@@ -76,8 +84,20 @@ Here is a list of the issues that are fixed (or closed) with this release.
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
+--
+* Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb`
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* Fixed an infinite loop that could occur when clustering the first-order
+  **CPS** functions prior to generating the **CFG** IR.
+
+* Ported {legacy-issue}/347[Legacy Issue #347 (`Unsafe.cast` causes Compiler bug)]
+
+* Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
+  and `PackReal64Little` export internals)]
+
+* Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
+  to return an object with `ByteVector` representation)]
+--
 
 == Supported systems
 
@@ -98,9 +118,9 @@ tested some of them:
 | {nbsp} | |
 | ARM64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | 
-| | macOS 13 (Ventura) | 
-| | macOS 14 (Sonoma) | 
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
 | {nbsp} | |
 |=======

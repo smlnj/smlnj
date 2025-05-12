@@ -49,7 +49,7 @@ end = struct
 	  val arch = String.map Char.toLower (SI.getArchName ())
 	  val (isUnix, oskind) = (case SI.getOSKind ()
 		 of SI.UNIX => (true, "unix")
-		  | SI.WIN32 => (false, "win32")
+		  | SI.WINDOWS => (false, "windows")
 		(* end case *))
 	  in {
 	    arch_oskind = concat [arch, "-", oskind],

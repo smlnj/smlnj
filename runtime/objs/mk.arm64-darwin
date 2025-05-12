@@ -2,11 +2,11 @@
 #
 # COPYRIGHT (c) 2021 The SML/NJ Fellowship
 #
-# Makefile for macOS 10.16+ (Big Sur or later) on 64-bit Arm (aka Apple Silicon)
+# Makefile for macOS 11 (Big Sur or later) on 64-bit Arm (aka Apple Silicon)
 # processors
 #
 
-SDK =		-mmacosx-version-min=10.16
+SDK =		-mmacosx-version-min=11
 
 SHELL =		/bin/sh
 

@@ -175,7 +175,7 @@ val find : (item -> bool) -> set -> item option
 
 `[.kw]#val# isSubset : (set * set) \-> bool`::
   `isSubset (set1, set2)` returns true if, and only if, `set1`
-  is a subset of `set2` (_i.e._, any element of `set1` is an
+  is a subset of `set2` (_i.e._, every element of `set1` is an
   element of `set2`).
 
 `[.kw]#val# disjoint : set * set \-> bool`::

@@ -14,19 +14,19 @@ if [ $# != 1 ] ; then
   exit 1
 fi
 
-DST=$1
-cd $DST
+DST="$1"
+cd "$DST" || exit 1
 
-MANDIR=$DST/../share/man	# e.g., /usr/local/share/man
+MANDIR="$DST/../share/man"	# e.g., /usr/local/share/man
 
-if test -d $MANDIR -a -d doc/man ; then
+if test -d "$MANDIR" -a -d doc/man ; then
 #
 # copy manual pages to their location
 #
-  cd doc/man
+  cd doc/man || exit 1
   for d in man* ; do
-    mkdir -p $MANDIR/$d || exit 1
-    cp -p $d/* $MANDIR/$d/
+    mkdir -p "$MANDIR/$d" || exit 1
+    cp -p $d/* "$MANDIR/$d/"
   done
 fi
 
@@ -34,4 +34,4 @@ fi
 # TODO: copy other documentation to $DST/../doc/smlnj/
 #
 
-exit 1
+exit 0

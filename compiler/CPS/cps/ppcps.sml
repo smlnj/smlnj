@@ -166,7 +166,7 @@ structure PPCps : PPCPS =
     fun vpathToString (v, p) = let
 	  fun toList (OFFp 0) = []
 	    | toList (OFFp n) = ["+", Int.toString n] (* assumes n > 0 *)
-	    | toList (SELp(i, p)) = "." :: toList p
+	    | toList (SELp(i, p)) = "." :: Int.toString i :: toList p
 	  in
 	    String.concat(value2str v :: toList p)
 	  end
@@ -254,7 +254,7 @@ structure PPCps : PPCPS =
 			space n;
 			if k then say "reentrant " else ();
 			if l = "" then () else (say l; say " ");
-			say "rcc("; sayvlist vl; say ") -> ";
+			say "rcc("; say(CTypes.protoToString p); say"; "; sayvlist vl; say ") -> ";
 			app (fn (w, t) => (sayv (VAR w); sayt(t))) wtl;
 			nl(); f e)
 		in

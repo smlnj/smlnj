@@ -247,6 +247,7 @@ CPS/cps/cps.sig
 CPS/cps/cps.sml
 CPS/cps/ppcps.sml
 CPS/cps/cps-util.sml
+CPS/cps/check-cps.sml
 CPS/opt/contract.sml
 CPS/opt/contract-prim.sml
 CPS/opt/cpsopt.sml
@@ -261,8 +262,10 @@ CPS/opt/num64cnv.sml
 CPS/opt/streqlcnv.sml
 CPS/opt/testcnv.sml
 CPS/opt/uncurry.sml
+CPS/opt/value-numbering.sml
 CPS/main/cluster.sml    (* to be replaced by CodeGen/csp-to-cfg/cluster.sml *)
 CPS/main/cps-comp.sml
+CPS/main/dump-cluster-graph.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml
 CPS/main/literals.sml

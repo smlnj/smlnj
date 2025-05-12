@@ -49,7 +49,7 @@ signature ACCESS =
       | LISTNIL
 
     datatype consig
-      = CSIG of int * int
+      = CSIG of int * int               (* # dcon tagged, # untagged *)
       | CNIL
 
   (** for printing the access *)

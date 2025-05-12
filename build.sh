@@ -235,8 +235,8 @@ fish() {
   cd "$1" || exit 1
   ORIG_CM_DIR_ARC=unknown
   for i in * .[a-zA-Z0-9]* ; do
-    if [ -d $i ] ; then
-      ORIG_CM_DIR_ARC=$i
+    if [ -d "$i" ] ; then
+      ORIG_CM_DIR_ARC="$i"
       break
     fi
   done
@@ -499,12 +499,16 @@ fi
 #
 installdriver _ml-build ml-build
 
+cd "$SMLNJ_ROOT" || exit 1
+
 #
 # Now do all the rest using the precompiled installer
 # (see system/smlnj/installer for details)
 #
 if [ x"$NOLIB" = xno ] ; then
   vsay "$cmd: Installing other libraries and programs:"
+  # export variables used by the installer
+  export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR
   CM_TOLERATE_TOOL_FAILURES=true
   export CM_TOLERATE_TOOL_FAILURES
   if "$BINDIR"/sml -m \$smlnj/installer.cm ; then

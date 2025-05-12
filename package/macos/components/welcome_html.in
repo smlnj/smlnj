@@ -14,13 +14,13 @@
 <body>
 <div class="smlnj-banner">
 Standard ML of New Jersey<br />
-Version VERSION
+Version @VERSION@ (@ARCH@)
 </div>
 
 <p>
 This installer will install at /usr/local/smlnj.  If you already have an older
 version of SML/NJ installed at that location, it will be updated to version
-VERSION.
+@VERSION@.
 </p>
 </body>
 </html>

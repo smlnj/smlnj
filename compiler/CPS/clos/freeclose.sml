@@ -495,6 +495,20 @@ structure FreeClose : FREECLOSE = struct
 	  in ((fk,f,vl,cl,ce'),nl,gsz',fsz')
 	 end
 
+    (* `freevars(n,sn,ce)` returns `(ce',free,wl,gsz,fsz)`, where the parameters are
+     *
+     *   n : int                -- SCC number
+     *   sn : int               -- stage number
+     *   ce : cexp              -- the CPS expression being analysed
+     *
+     * and the results are
+     *
+     *   ce' : cexp             -- the rewritten CPS expression
+     *   free :                 -- the free variables of `ce`
+     *   wl : lvar list option  --
+     *   gsz : int              --
+     *   fsz : int              --
+     *)
     and freevars(n,sn,ce) =
       case ce
        of FIX(fl,body) =>

@@ -95,14 +95,6 @@ signature BASICTYPES =
     val falseDcon : Types.datacon
     val trueDcon : Types.datacon
 
-(* NOTE: we might want to add option back in to allow inlining of valOf, etc. *)
-    (*
-     *  Unnecessary; removed by appel
-     *  val optionTycon : Types.tycon
-     *  val NONEDcon : Types.datacon
-     *  val SOMEDcon : Types.datacon
-     *)
-
     val refTycon : Types.tycon
     val refPatType : Types.ty
     val refDcon : Types.datacon
@@ -114,6 +106,10 @@ signature BASICTYPES =
     val ulistTycon : Types.tycon
     val unilDcon : Types.datacon
     val uconsDcon : Types.datacon
+
+    val optionTycon : Types.tycon
+    val noneDcon : Types.datacon
+    val someDcon : Types.datacon
 
     val fragTycon : Types.tycon
     val ANTIQUOTEDcon : Types.datacon

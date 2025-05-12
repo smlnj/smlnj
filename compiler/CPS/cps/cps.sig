@@ -101,6 +101,10 @@ signature CPS =
 	  | REAL_TO_INT of {floor: bool, from: int, to: int}
 
       (* These don't raise exceptions and don't access the store. *)
+(* TODO: we should probably split off the allocators into their own datatype (or
+ * at least those that allocate potentially mutable memory, since they are not
+ * really "pure"
+ *)
 	datatype pure
 	  = PURE_ARITH of {oper: pureop, kind: numkind}
 	  | PURE_NUMSUBSCRIPT of {kind: numkind}
@@ -108,9 +112,9 @@ signature CPS =
 	  | COPY of {from: int, to: int}
 	  | EXTEND of {from: int, to: int}
 	  | TRUNC of {from: int, to: int}
-	  | COPY_INF of int
-	  | EXTEND_INF of int
-	  | TRUNC_INF of int
+	  | COPY_INF of int                     (* zero extend: wordN -> IntInf.int *)
+	  | EXTEND_INF of int                   (* sign extend: intN -> IntInf.int *)
+	  | TRUNC_INF of int                    (* IntInf.int -> wordN *)
 	  | INT_TO_REAL of {from: int, to: int}
 	  | SUBSCRIPTV
 	  | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
@@ -133,7 +137,7 @@ signature CPS =
       | NUM of intty IntConst.t
       | REAL of int RealConst.t
       | STRING of string
-      | VOID
+      | VOID                            (* used in closure conversion *)
 
     datatype accesspath
       = OFFp of int

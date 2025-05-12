@@ -19,7 +19,7 @@ Arm64 (a.k.a. AArch64) hardware running **macOS**.
 
 ---
 
-## Dependicies
+## Dependencies
 
 To build the system from sources, you must have several common software
 systems installed on your machine.[^1]
@@ -57,6 +57,7 @@ legacy system.
 
 3. build the installation
     ``` bash
+    cd smlnj
     ./build.sh
     ```
     Use `build.sh -h` to see the list of options accepted by the build script.

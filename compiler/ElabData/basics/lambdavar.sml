@@ -11,6 +11,7 @@ structure LambdaVar :> LAMBDA_VAR =
     structure Map = IntRedBlackMap
     structure Set = IntRedBlackSet
     structure Tbl = IntHashTable
+    structure HSet = HashSetFn (Tbl.Key)
 
   (* if true, we remember the names of lambda vars *)
     val saveLvarNames = ElabDataControl.saveLvarNames

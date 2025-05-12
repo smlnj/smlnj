@@ -77,6 +77,8 @@ typedef struct {
     int	   	cmInfoSzB;	/* the size of the CM dependency information area */
     int 	guidSzB;	/* size of GUID area in bytes */
     int 	pad;	        /* size of padding for code segment alignment */
+    bool_t      isNative;       /* true if the code is native machine code; false if */
+                                /* it is a CFG pickle) */
     int	   	codeSzB;	/* the number of bytes of code */
     int	   	envSzB;		/* the size of the environment */
 } binfile_hdr_info_t;

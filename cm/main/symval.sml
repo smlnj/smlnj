@@ -22,7 +22,8 @@ signature SYMVAL = sig
 	-> env
 end
 
-structure SymVal :> SYMVAL = struct
+structure SymVal :> SYMVAL =
+  struct
 
     type env = int StringMap.map
 
@@ -39,29 +40,26 @@ structure SymVal :> SYMVAL = struct
 	val arch_sym = "ARCH_" ^ arch
 	val endian_sym = if big then "BIG_ENDIAN" else "LITTLE_ENDIAN"
 	val size_sym = "SIZE_" ^ Int.toString size
-	val os_sym = (case os
-	       of SMLofNJ.SysInfo.UNIX => "OPSYS_UNIX"
-		| SMLofNJ.SysInfo.WIN32 => "OPSYS_WIN32"
+	val os_syms = (case os
+	       of SMLofNJ.SysInfo.UNIX => [("OPSYS_UNIX", 1)]
+                  (* for backwards compatibility, we allow two symbols for windows *)
+		| SMLofNJ.SysInfo.WINDOWS => [("OPSYS_WIN32", 1), ("OPSYS_WINDOWS", 1)]
 	      (* end case *))
-	val (major, minor) =
-	    case version of
-		[] => (0, 0)
-	      | [major] => (major, 0)
-	      | major :: minor :: _ => (major, minor)
+	val (major, minor) = (case version
+               of [] => (0, 0)
+	        | [major] => (major, 0)
+                | major :: minor :: _ => (major, minor)
+              (* end case *))
 	val major_sym = "SMLNJ_VERSION"
 	val minor_sym = "SMLNJ_MINOR_VERSION"
 
-	val alldefs =
-	    foldr (fn (s, l) => (s, 1) :: l)
-		  [(arch_sym, 1),
-		   (endian_sym, 1),
-		   (size_sym, 1),
-		   (os_sym, 1),
-		   (major_sym, major),
-		   (minor_sym, minor),
-		   ("NEW_CM", 1)]
-		  extra_syms
-    in
-	foldl StringMap.insert' empty alldefs
-    end
-end
+	val alldefs = List.foldr (op ::) (
+              (arch_sym, 1) :: (endian_sym, 1) :: (size_sym, 1)
+                :: (major_sym, major) :: (minor_sym, minor)
+                :: ("NEW_CM", 1) :: os_syms)
+              (List.map (fn s => (s, 1)) extra_syms)
+        in
+          List.foldl StringMap.insert' empty alldefs
+        end
+
+  end

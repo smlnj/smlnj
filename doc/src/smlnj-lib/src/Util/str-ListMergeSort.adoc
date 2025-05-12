@@ -45,6 +45,6 @@ structure ListMergeSort : LIST_SORT
 
 == See Also
 
-sig-MONO_ARRAY_SORT.adoc[`MONO_ARRAY_SORT`],
-sig-ARRAY_SORT.adoc[`ARRAY_SORT`],
+xref:sig-MONO_ARRAY_SORT.adoc[`MONO_ARRAY_SORT`],
+xref:sig-ARRAY_SORT.adoc[`ARRAY_SORT`],
 xref:smlnj-lib.adoc[__The Util Library__]
