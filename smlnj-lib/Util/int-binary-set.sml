@@ -178,8 +178,8 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
 
     fun split_gt (E,x) = E
       | split_gt (T{elt=v,left=l,right=r,...},x) =
-          if (x < v) then split_gt(r,x)
-          else if (x > v) then concat3(split_gt(l,x),v,r)
+          if (x > v) then split_gt(r,x)
+          else if (x < v) then concat3(split_gt(l,x),v,r)
           else r
 
     fun min (T{elt=v,left=E,...}) = v
