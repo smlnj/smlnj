@@ -31,6 +31,9 @@ structure FRepToReal64 : sig
           in
             !r
           end
+(* TODO
+    val fromBits = InlineT.Real64.fromBits
+*)
 
 (* the following should be part of the WORD signature *)
     (* count the leading zeros in a Word64.word value *)
@@ -110,9 +113,9 @@ structure FRepToReal64 : sig
 
     (* powers of 5 from 5^0 to 5^25 *)
     val pow5TblSz = 26
-    val pow5Tbl = let
+    val pow5Tbl : Word64.word vector = let
           fun gen (0, _) = []
-            | gen (i, n) = n :: gen(i-1, 0w5 * n)
+            | gen (i, n : Word64.word) = n :: gen(i-1, 0w5 * n)
           in
             Vector.fromList(gen(pow5TblSz, 0w1))
           end
@@ -201,7 +204,7 @@ structure FRepToReal64 : sig
             if (offset = 0)
               then mul
               else let
-                val m = W.toLarge(Vector.sub(pow5Tbl, offset))
+                val m = Vector.sub(pow5Tbl, offset)
                 val (hi1, lo1) = umul128 (m, #1 mul)
                 val (hi2, lo2) = umul128 (m, #2 mul)
                 val sum = hi1 + lo2
@@ -229,7 +232,7 @@ structure FRepToReal64 : sig
             if offset = 0
               then mul
               else let
-                val m = W.toLarge(Vector.sub(pow5Tbl, offset))
+                val m = Vector.sub(pow5Tbl, offset)
                 val (hi1, lo1) = umul128(m, #1 mul - 0w1)
                 val (hi2, lo2) = umul128(m, #2 mul)
                 val sum = hi1 + lo2
