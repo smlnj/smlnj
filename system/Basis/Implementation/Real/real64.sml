@@ -26,6 +26,9 @@ structure Real64Imp : REAL =
           in
             !r
           end
+(* TODO
+    val fromBits = InlineT.Real64.fromBits
+*)
     val toBits = InlineT.Real64.toBits
 
     val op == = InlineT.Real64.==
