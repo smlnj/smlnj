@@ -337,6 +337,7 @@ where the `if` can be evaluated at compile time.  These primops are also
 available to user code via the `Unsafe` structure.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //--------------------------------------------------------------------
 [2024/03/13]::
 +
