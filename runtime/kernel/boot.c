@@ -22,6 +22,14 @@
 #include "gc.h"
 #include "ml-globals.h"
 
+/* llvm_codegen:
+ *
+ * Given the source-file name and ASDL pickle of the CFG IR, generate
+ * native machine code and return the corresponding ML code object and
+ * entry-point offset as a heap-allocated pair.
+ */
+ml_val_t llvm_codegen (ml_state_t *msp, const char *src, const char *pkl, size_t szb);
+
 #ifndef SEEK_SET
 #  define SEEK_SET      0
 #endif
@@ -67,7 +75,7 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char        *fname;
     int         rts_init = 0;
 
-/*DEBUG*/SilentLoad=TRUE;
+/*DEBUG*/ SilentLoad=FALSE;/* */
     msp = AllocMLState (TRUE, heapParams);
 
 #ifdef HEAP_MONITOR
@@ -81,16 +89,16 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     /* construct the list of files to be loaded */
     BinFileList = BuildFileList (msp, bootlist, &max_boot_path_len);
 
-  /* this space is ultimately wasted */
+    /* this space is ultimately wasted */
     if ((fname = MALLOC (max_boot_path_len)) == NULL) {
         Die ("unable to allocate space for boot file names");
     }
 
-  /* boot the system */
+    /* boot the system */
     while (BinFileList != LIST_nil) {
       /* need to make a copy of the path name because LoadBinFile is
        * going to scribble into it */
-        strcpy(fname, STR_MLtoC(LIST_hd(BinFileList)));
+        strncpy(fname, STR_MLtoC(LIST_hd(BinFileList)), max_boot_path_len);
         BinFileList = LIST_tl(BinFileList);
         if (fname[0] == '#') {
             if (rts_init) {
@@ -115,9 +123,12 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
                 rts_init = 1;   /* make sure we do this only once */
             }
         }
-        else
+        else {
             LoadBinFile (msp, fname);
+        }
     }
+
+    FreeMLState (msp);
 
 } /* end of BootML */
 
@@ -279,6 +290,7 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->cmInfoSzB = BIGENDIAN_TO_HOST32(p->cmInfoSzB);
         info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
         info->pad       = BIGENDIAN_TO_HOST32(p->pad);
+        info->isNative  = TRUE;
         info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
         info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
     } else {
@@ -293,8 +305,10 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->cmInfoSzB = BIGENDIAN_TO_HOST32(p->cmInfoSzB);
         info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
         info->pad       = BIGENDIAN_TO_HOST32(p->pad);
+        info->isNative  = TRUE;
         info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
         info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
+//        Die ("invalid binfile kind in \"%s\"", fname);
     }
 
 } /* end of ReadHeader */
@@ -397,7 +411,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             ImportSelection (msp, file, fname, &importVecPos,
                              LookupPerID(&importPid));
         }
-        ML_AllocWrite(msp, importRecLen, ML_nil);
+        ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
         importRec = ML_Alloc(msp, importRecLen);
     }
 
@@ -465,25 +479,65 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     }
 
     if (remainingCode > 0) {
-      /* read the size and entry point for the code object */
-        ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
-        thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-        ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
-        thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint);
+        if (hdr.isNative) {
+            /* read the size and entry point for the code object */
+            ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
+            thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
+            ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
+            thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint);
+    
+            /* how much more? */
+            remainingCode -= thisSzB + 2 * sizeof(Int32_t);
+            if (remainingCode != 0) {
+                Die ("format error (code size mismatch) in bin file \"%s\"", fname);
+            }
+    
+            {
+                char *buffer = MALLOC(thisSzB);
+                ReadBinFile (file, buffer, thisSzB, fname);
+                /* allocate a code object and initialize with the code from the binfile */
+                ENABLE_CODE_WRITE
+                    codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
+                DISABLE_CODE_WRITE
+                FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+                if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
+                    Die("!!!!! code object corruption !!!!!\n");
+                }
+                FREE(buffer);
+            }
+        } else {
+            /* read the size of the CFG pickle */
+            ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
+            thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
+    
+            /* how much more? */
+            remainingCode -= thisSzB + sizeof(Int32_t);
+            if (remainingCode != 0) {
+                Die ("format error (code size mismatch) in bin file \"%s\"", fname);
+            }
+            {
+                /* get the CFG pickle from the binfile */
+                char *pkl = MALLOC(thisSzB);
+                ReadBinFile (file, pkl, thisSzB, fname);
 
-      /* how much more? */
-        remainingCode -= thisSzB + 2 * sizeof(Int32_t);
-        if (remainingCode != 0) {
-            Die ("format error (code size mismatch) in bin file \"%s\"", fname);
+                if (!SilentLoad) {
+                    Say ("  [generate native code]\n");
+                }
+
+                /* generate code; we get a (WordVector.vector * int) value as a result */
+                ml_val_t pair = llvm_codegen (msp, objname, pkl, thisSzB);
+                ml_val_t code = GET_SEQ_DATA(REC_SEL(pair, 0));
+                thisEntryPoint = REC_SELINT(pair, 1);
+
+                /* allocate a code object and initialize with the generated code */
+                ENABLE_CODE_WRITE
+                    codeObj = ML_AllocCode (msp, PTR_MLtoC(void, code), thisSzB);
+                DISABLE_CODE_WRITE
+                FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+                
+                FREE(pkl);
+            }
         }
-
-      /* allocate a code object and initialize with the code from the binfile */
-        ENABLE_CODE_WRITE
-        codeObj = ML_AllocCode (msp, thisSzB);
-        ReadBinFile (file, PTR_MLtoC(char, codeObj), thisSzB, fname);
-        DISABLE_CODE_WRITE
-
-        FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
 
         if (!SilentLoad) {
             Say ("  [addr: %p, size: %d]\n", PTR_MLtoC(char, codeObj), thisSzB);

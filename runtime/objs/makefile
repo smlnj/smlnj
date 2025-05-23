@@ -1,13 +1,12 @@
 # makefile
 #
-# COPYRIGHT (c) 2021 The SML/NJ Fellowship
+# COPYRIGHT (c) 2024 The SML/NJ Fellowship
 #
 # this is the main makefile for the SML/NJ runtime system on Unix systems
 #
 
 SHELL =		/bin/sh
 MAKE =		make
-LD_LIBS =
 AS =		as
 AR =		ar
 ARFLAGS =	rcv
@@ -16,8 +15,9 @@ RANLIB =	ranlib
 #
 # LLVM configuration
 #
-LLVM_DIR =      ..
-LLVM_CONFIG =	$(LLVM_DIR)/bin/llvm-config
+LLVM_DIR =      ../llvm
+BIN_DIR =	../bin
+LLVM_CONFIG =	$(BIN_DIR)/llvm-config
 
 # the LLVM target architectures
 #
@@ -28,7 +28,8 @@ ifeq ($(findstring X86,$(TARGETS_BUILT)),X86)
 endif
 
 LLVM_LD_FLAGS =	$(shell $(LLVM_CONFIG) --ldflags)
-LLVM_LIBS =	$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT)) \
+LLVM_LIBS =	-lCFGCodeGen \
+		$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT)) \
 		$(shell $(LLVM_CONFIG) --system-libs)
 
 #
@@ -124,9 +125,9 @@ clean:
 
 
 $(RUNTIME):	$(VERSION) main.o $(OBJS) $(ALL_LIBS)
-	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) main.o $(OBJS) $(ALL_LIBS) $(LD_LIBS) $(LLVM_LIBS)
+	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
 
-$(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS)
+$(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
 	rm -f $(RUNTIME_A)
 	$(AR) rc $(RUNTIME_A) main.o $(OBJS)
 	rm -rf tmp
@@ -441,13 +442,5 @@ $(CLIB_DIR)/dl/libunix-dynload.a: FORCE
 $(CLIB_DIR)/smlnj-ccalls/libsmlnj-ccalls.a: FORCE
 	(cd $(CLIB_DIR)/smlnj-ccalls; $(MAKE) $(LIB_MK_ARGS) libsmlnj-ccalls.a)
 
-CODEGEN_MK_ARGS =	VERSION="$(VERSION)" \
-			MAKE="$(MAKE)" \
-			CC="$(CC)" CFLAGS="$(CFLAGS)" DEFS="$(DEFS)" \
-			AR="$(AR)" ARFLAGS="$(ARFLAGS)" \
-			RANLIB="$(RANLIB)" \
-			INCLUDES="$(LIB_INCLUDES)" \
-			LLVM_DIR="$(LLVM_DIR)"
-
 $(CLIB_DIR)/codegen/libcodegen.a: FORCE
-	(cd $(CLIB_DIR)/codegen; $(MAKE) $(CODEGEN_MK_ARGS) libcodegen.a)
+	(cd $(CLIB_DIR)/codegen; $(MAKE) $(LIB_MK_ARGS) libcodegen.a)

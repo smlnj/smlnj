@@ -557,6 +557,7 @@ ALIGNED_ENTRY(unlock_a)
 #define RND_TO_ZERO	IM(11)
 
 	TEXT
+	.align 8
 
 /* floor : real -> int
  * Return the nearest integer that is less or equal to the argument.
@@ -572,11 +573,13 @@ ALIGNED_ENTRY(floor_a)
 
 /* DEPRECATED, but required for linking */
 ALIGNED_ENTRY(logb_a)
+	/* DEPRECATED */
 	CONTINUE
 
 #define SIGN_MASK	IM(0x8000000000000000)
 #define EXP_MASK	IM(0x7ff0000000000000)
 #define NOT_EXP_MASK	IM(0x800fffffffffffff)
+#define INFINITY        EXP_MASK
 
 /* scalb : (real * int) -> real
  * Scale the first argument by 2 raised to the second argument.
@@ -589,13 +592,12 @@ ALIGNED_ENTRY(scalb_a)
 	MOV	(REGOFF(8,stdarg), temp)	/* get second arg */
 	SAR	(IM(1), temp)			/* untag second arg */
 	MOV	(REGIND(stdarg), stdarg)	/* put pointer to real in stdarg */
-#define temp1 misc3
-#define temp2 misc4
-#define temp3 misc5
-	MOV	(REGIND(stdarg), temp1)		/* put bits in temp1 */
-	MOV	(EXP_MASK, temp3)               /* temp3 := EXP_MASK */
-        MOV     (temp3, temp2)                  /* temp2 := temp3 */
+#define temp1 misc5
+#define temp2 misc6
+	MOV	(REGIND(stdarg), temp1)		/* put real bits in temp1 */
+	MOV	(EXP_MASK, temp2)
 	AND	(temp1, temp2)			/* temp2 has shifted exponent */
+	TEST	(temp2, temp2)
 	JE	(L_scalb_return)		/* if temp2 == 0 then return first arg */
 	SAR	(IM(52), temp2)
 	ADD	(temp, temp2)			/* temp2 = exponent + scale */
@@ -622,16 +624,14 @@ L_scalb_under:
 	XOR	(temp1,temp1)			/* temp1 = 0 */
 	JMP	(L_scalb_alloc)
 
-L_scalb_over:
-        /* here we have an overflow; temp1 contains the bits */
-        MOV     (SIGN_MASK, temp2)              /* temp2 := bits & SIGN_MASK */
-
-        AND     (temp2, temp1)                  /* temp1 := sign(bits) */
-        OR      (temp3, temp1)                  /* temp1 := temp1 | exponent(2047) */
-        JMP	(L_scalb_alloc)
+L_scalb_over:                                   /* Overflow, so return infinity */
+	MOV	(SIGN_MASK, temp)		/* temp1 := sign bit of temp1 */
+	AND	(temp, temp1)
+        MOV     (INFINITY, temp)                /* temp1 := sign | infinity */
+        OR      (temp, temp1)
+        JMP     L_scalb_alloc
 #undef temp1
 #undef temp2
-#undef temp3
 
 END
 

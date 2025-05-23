@@ -126,7 +126,7 @@ val append : JSON.value * path * JSON.value list -> JSON.value
   [[val:asBool]]
   `asBool (JSON.BOOL b)` returns the value `b`.  This function raises
   the xref:exn:NotBool[`NotBool`] exception if the value is not a
-  *JSON* boolean value.
+  *JSON* Boolean value.
 
 `[.kw]#val# asInt : JSON.value \-> int`::
   [[val:asInt]]
@@ -221,4 +221,5 @@ val append : JSON.value * path * JSON.value list -> JSON.value
 == See Also
 
 xref:str-JSON.adoc[`JSON`],
+xref:str-JSON.adoc[`JSONDecode`],
 xref:json-lib.adoc[__The JSON Library__]

@@ -108,40 +108,19 @@ structure JSONUtil : sig
 
     structure J = JSON
 
-    exception NotBool of J.value
-    exception NotInt of J.value
-    exception NotNumber of J.value
-    exception NotString of J.value
-
-    exception NotObject of J.value
-    exception FieldNotFound of J.value * string
-
-    exception NotArray of J.value
-    exception ArrayBounds of J.value * int
-    exception ElemNotFound of JSON.value
+    (* import the error exceptions and exnMessage *)
+    open Errors
 
     fun asBool (J.BOOL b) = b
       | asBool v = raise NotBool v
 
     fun asInt (J.INT n) = Int.fromLarge n
-      | asInt (v as J.INTLIT n) = (case Int.fromString n
-           of SOME n => n
-            | NONE => raise NotInt v (* should be impossible *)
-          (* end case *))
       | asInt v = raise NotInt v
 
     fun asIntInf (J.INT n) = n
-      | asIntInf (v as J.INTLIT n) = (case IntInf.fromString n
-           of SOME n => n
-            | NONE => raise NotInt v (* should be impossible *)
-          (* end case *))
       | asIntInf v = raise NotInt v
 
     fun asNumber (J.INT n) = Real.fromLargeInt n
-      | asNumber (v as J.INTLIT n) = (case IntInf.fromString n
-           of SOME n => Real.fromLargeInt n
-            | NONE => raise NotNumber v (* should be impossible *)
-          (* end case *))
       | asNumber (J.FLOAT f) = f
       | asNumber v = raise NotNumber v
 
@@ -160,7 +139,7 @@ structure JSONUtil : sig
 
     fun lookupField (v as J.OBJECT fields) = let
 	  fun find lab = (case List.find (fn (l, v) => (l = lab)) fields
-		 of NONE => raise FieldNotFound(v, concat["no definition for field \"", lab, "\""])
+		 of NONE => raise FieldNotFound(v, lab)
 		  | SOME(_, v) => v
 		(* end case *))
 	  in
@@ -183,50 +162,6 @@ structure JSONUtil : sig
 
     fun arrayMap f (J.ARRAY vs) = List.map f vs
       | arrayMap f v = raise NotArray v
-
-  (* map the above exceptions to a message string; we use General.exnMessage for other
-   * exceptions.
-   *)
-    fun exnMessage exn = let
-	  fun v2s (J.ARRAY _) = "array"
-	    | v2s (J.BOOL false) = "'false'"
-	    | v2s (J.BOOL true) = "'true'"
-	    | v2s (J.FLOAT _) = "number"
-	    | v2s (J.INT _) = "number"
-	    | v2s (J.INTLIT _) = "number"
-	    | v2s J.NULL = "'null'"
-	    | v2s (J.OBJECT _) = "object"
-	    | v2s (J.STRING _) = "string"
-	  in
-	    case exn
-	     of NotBool v => String.concat[
-		    "expected boolean, but found ", v2s v
-		  ]
-	      | NotInt(J.FLOAT _) => "expected integer, but found floating-point number"
-	      | NotInt v => String.concat[
-		    "expected integer, but found ", v2s v
-		  ]
-	      | NotNumber v => String.concat[
-		    "expected number, but found ", v2s v
-		  ]
-	      | NotString v => String.concat[
-		    "expected string, but found ", v2s v
-		  ]
-	      | NotObject v => String.concat[
-		    "expected object, but found ", v2s v
-		  ]
-	      | FieldNotFound(v, fld) => String.concat[
-		    "no definition for field \"", fld, "\" in object"
-		  ]
-	      | NotArray v => String.concat[
-		    "expected array, but found ", v2s v
-		  ]
-	      | ElemNotFound v => String.concat[
-		    "no matching element found in ", v2s v
-		  ]
-	      | _ => General.exnMessage exn
-	    (* end case *)
-	  end
 
   (* path specification for indexing into JSON values *)
     datatype edge

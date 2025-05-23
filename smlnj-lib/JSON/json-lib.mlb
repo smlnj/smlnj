@@ -31,7 +31,9 @@ local
 *)
     json-stream-printer.sml
     json-printer.sml
+    errors.sml
     json-util.sml
+    json-decode.sml
 
   end
 
@@ -41,6 +43,7 @@ in
   structure JSON
   structure JSONParser
   structure JSONPrinter
+  structure JSONDecode
   structure JSONUtil
 
 (* SAX-style API (event based) *)

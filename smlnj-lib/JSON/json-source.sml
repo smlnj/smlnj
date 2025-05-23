@@ -6,88 +6,73 @@
  * JSON input sources.  Note that this module is internal the the library.
  *)
 
-structure JSONSource : sig
+structure JSONSource =
+  struct
 
-    datatype source = Src of {
-	srcMap : AntlrStreamPos.sourcemap,
-	strm : JSONLexer.strm ref,
-	closeFn : unit -> unit,
-	closed : bool ref
-      }
+    (* the state of a source is a functional input stream and a count
+     * of lines (starting at 1)
+     *)
+    type state = (TextIO.StreamIO.instream * int)
 
-  (* open a text input stream as a source *)
-    val openStream : TextIO.instream -> source
+    type source = state option ref
 
-  (* open a text file as a source *)
-    val openFile : string -> source
+    (* open a text input stream as a source *)
+    fun openStream inS = ref(SOME(TextIO.getInstream inS, 1))
 
-  (* open a string as a source *)
-    val openString : string -> source
+    (* open a text file as a source *)
+    fun openFile file = openStream (TextIO.openIn file)
 
-  (* close a source *)
-    val close : source -> unit
+    (* open a string as a source *)
+    fun openString s = openStream (TextIO.openString s)
 
-    val errorMsg : source -> AntlrStreamPos.span * string * JSONTokens.token -> string
+    (* close a source *)
+    fun close (source as ref(SOME(inS, _))) = (
+          TextIO.StreamIO.closeIn inS;
+          source := NONE)
+      | close _ = ()
 
-  end = struct
+    (* syntax-error codes *)
+    datatype error_code
+      = InvalidCharacter
+      | InvalidLiteral
+      | NumberTooLarge
+      | InvalidNumber
+      | InvalidArray
+      | InvalidObject
+      | ExpectedKey
+      | ExpectedColon
+      | CommentsNotAllowed
+      | UnclosedComment
+      | UnclosedString
+      | InvalidEscape
+      | InvalidUTF8
+      | IncompleteUTF8
+      | InvalidUnicodeSurrogatePair
+      | InvalidUnicodeEscape
+      | NonPrintingASCII
 
-    structure Lex = JSONLexer
-    structure T = JSONTokens
-
-    datatype source = Src of {
-	srcMap : AntlrStreamPos.sourcemap,
-	strm : Lex.strm ref,
-	closeFn : unit -> unit,
-	closed : bool ref
-      }
-
-    fun openStream inS = let
-	  val closed = ref false
-	  in
-	    Src{
-		srcMap = AntlrStreamPos.mkSourcemap (),
-		strm = ref(Lex.streamifyInstream inS),
-		closeFn = fn () => (),
-		closed = closed
-	      }
-	  end
-
-    fun openFile file = let
-	  val closed = ref false
-	  val inStrm = TextIO.openIn file
-	  in
-	    Src{
-		srcMap = AntlrStreamPos.mkSourcemap (),
-		strm = ref(Lex.streamifyInstream inStrm),
-		closeFn = fn () => TextIO.closeIn inStrm,
-		closed = closed
-	      }
-	  end
-
-    fun openString s = let
-	  val closed = ref false
-	  val data = ref s
-	  fun input () = (!data before data := "")
-	  in
-	    Src{
-		srcMap = AntlrStreamPos.mkSourcemap (),
-		strm = ref(Lex.streamify input),
-		closeFn = fn () => (),
-		closed = closed
-	      }
-	  end
-
-    fun close (Src{closed = ref true, ...}) = ()
-      | close (Src{closed, closeFn, ...}) = (
-	  closed := true;
-	  closeFn())
-
-    fun errorMsg (Src{srcMap, ...}) (span, _, T.ERROR msg) = concat(
-	  "error " :: AntlrStreamPos.spanToString srcMap span :: ": " ::
-	    msg)
-      | errorMsg (Src{srcMap, ...}) (span, msg, tok) = concat[
-	    "error ", AntlrStreamPos.spanToString srcMap span, ": ",
-	    msg, ", found '", T.toString tok, "'"
-	  ]
+    fun errorMsg (src : state, ec) = let
+          val msg = (case ec
+                 of InvalidCharacter => "invalid character"
+                  | InvalidLiteral => "invalid literal identifier"
+                  | NumberTooLarge => "number exceeds maximum number of digits"
+                  | InvalidNumber => "invalid number syntax"
+                  | InvalidArray => "invalid array syntax; expected ',' or ']'"
+                  | InvalidObject => "invalid object syntax; expected ',' or '}'"
+                  | ExpectedKey => "invalid object syntax; expected key"
+                  | ExpectedColon => "invalid object syntax; expected ':'"
+                  | CommentsNotAllowed => "JSON comments not allowed"
+                  | UnclosedComment => "unclosed comment"
+                  | UnclosedString => "unclosed string"
+                  | InvalidEscape => "invalid escape sequence"
+                  | InvalidUTF8 => "invalid UTF-8"
+                  | IncompleteUTF8 => "incomplete UTF-8"
+                  | InvalidUnicodeSurrogatePair => "invalid Unicode surrogate pair"
+                  | InvalidUnicodeEscape => "invalid Unicode escape sequence"
+                  | NonPrintingASCII => "non-printing ASCII character"
+                (* end case *))
+          in
+            concat("Error at line " :: Int.toString(#2 src) :: ": " :: [msg])
+          end
 
   end

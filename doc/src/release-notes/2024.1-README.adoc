@@ -1,5 +1,5 @@
 :version: 2024.1
-:date: @DATE@
+:date: May 17, 2024
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -33,19 +33,21 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This patch release incorporates a large number of bug fixes and improvements
+from the "legacy" version , including implementing some missing features
+from the https://smlfamily.github.io/Basis/[*Standard ML Basis Library*] and
+improvements to the *SML/NJ Library*.
 
 == Details
 
 // **** details: include those sections that are relevant
 
-=== Compiler
-
 === CM
 
-=== MLRISC
-
-=== Runtime System
+* The *system/cmb-make* script now runs with the `CM_VERBOSE` environment variable
+  set to `false` by default (use the `-verbose` option for the old behavior).  It
+  also now sets the `PATH` environment variable to include the directory where the
+  *sml* command lives when it is given as an argument to *cmb-make*.
 
 === Basis Library
 
@@ -64,11 +66,35 @@ FILES::
 
 === SML/NJ Library
 
-=== Successor ML
+In addition to the bug fixes noted below, the following improvements
+made to the **SML/NJ Library**:
 
-=== ML-LPT
+* Rewrote the *JSON* parsers to work directly on the input source (instead of
+  using a ML-ulex lexer.  This change fixes {issue-base}/284[Issue #284 (ML-ULex's
+  memoization causes massive performance penalties for *JSON* parsing).  For
+  the `data.json` file mentioned in the issue, parsing is about eight times
+  faster, while the speedup is even greater for the `huge.json` file.
 
-=== Documentation
+* Added the `JSONDecode` structure to the *JSON* library.  This module implements
+  a set of combinators (inspired by the *Elm* `JSON.Decode` module)
+  for decoding *JSON* values.
+
+* Added `insertWith`, `insertWithi`, and `findAndRemove` operations to the
+  `HASH_TABLE` and `MONO_HASH_TABLE` interfaces (and corresponding
+  implementations).
+
+* Fixed the error checking and documentation for the `subArray` function
+  in the `DynamicArray` structure and `DynamicArrayFn` functor.
+
+* Fixes to the `subArray` and `truncate` functions in the dynamic array
+  implementation (both structure `DynamicArray` and functor `DynamicArrayFn`).
+
+* Add `EditDistance` module to utility library.
+
+* Reverted the change to the `JSON.json` datatype from 2023.1 by removing
+  the `INTLIT of string` constructor.  We decided to take a more general
+  approach to handling literals that will be included in a future version
+  of the JSON library.
 
 == Bugs
 
@@ -82,10 +108,10 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/279["Unable to build LLVM" error with 2023.1]
 | [.bugid]#280#
 | {pull-base}/280[`DynamicArray.subArray` creates array with length bound+1]
-| [.bugid]#284#
-| {issue-base}/284[Incorrect printing of source code in error message]
-// | [.bugid]#@ID#
-// | @DESCRIPTION@
+| [.bugid]#281#
+| {issue-base}/281[Support forward-slash ("/") as a separator in the Windows implementation of `OS.Path`]
+| [.bugid]#288#
+| {issue-base}/288[Incorrect printing of source code in error message]
 |=======
 
 We also fixed the following bugs that did not have issues
@@ -97,10 +123,33 @@ repository):
 * {legacy-issue-base}/269[Issue #269 (`Real.realMod` and
   `Real.split` produce incorrect result for values close to zero)]
 
+* {legacy-issue-base}/280[Support forward-slash ("/") as a separator in the Windows
+  implementation of `OS.Path`]
+
 * {legacy-issue-base}/283[Issue #283 (`TextIO.inputAll`
   segfaults when reading 980M file)].
 
+* {legacy-issue-base}/284[ML-ULex's memozation causes massive performance
+  penalties for JSON parsing]
+
+* {legacy-issue-base}/285[Unmatched specification in opaque signature ascription
+  causes uncaught exception]
+
 * {legacy-issue-base}/286[Get "fgrep is obsolescent" when run *sml* on Fedora]
+
+* {legacy-issue-base}/287[The word literal `0wx80000000` is incorrectly converted
+  to `0wx7FFFFFFF80000000`]
+
+* {legacy-issue-base}/289[Uncaught `Bind` exception in compiler with opaque
+  signature matching]
+
+* {legacy-issue-base}/290[`Random.realRand` returns far smaller value than unity]
+
+* {legacy-issue-base}/295[CM cannot find tools when using cmb-make to compile
+  the compiler]
+
+* {legacy-issue-base}/296[The `fromDecimal` and `toDecimal` functions in
+  the `Real` structure are not implemented]
 
 * {legacy-issue-base}/297[Additional operations for the `MONO_HASH_TABLE` interface]
 

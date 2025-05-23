@@ -12,8 +12,8 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
   struct
 
     structure Key = Key
-  (* NOTE: someday we will change the HASH_KEY signature to follow the naming conventions of
-   * the SML basis, so we use those names internally to ease future porting.
+  (* NOTE: someday we will change the HASH_KEY signature to follow the naming
+   * conventions of the SML basis, so we use those names internally to ease future porting.
    *)
     type item = Key.hash_key
     val hash = Key.hashVal
@@ -190,7 +190,7 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             then let
               val arr1 = !tbl1 and arr2 = !tbl2
               val sz1 = Array.length arr1 and sz2 = Array.length arr2
-              fun lp i = if (i <= sz1)
+              fun lp i = if (i < sz1)
                     then let
                     (* iterate over the items in bucket i *)
                       fun look1 NIL = lp(i+1)

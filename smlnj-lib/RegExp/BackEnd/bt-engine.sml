@@ -16,7 +16,7 @@ structure BackTrackEngine : REGEXP_ENGINE =
 
     type regexp = S.syntax
 
-  (* a match specifies the position (as a stream) and the length of the match *)
+    (* a match specifies the position (as a stream) and the length of the match *)
     type 'a match = {pos : 'a, len : int} MatchTree.match_tree
 
     fun compile r = r

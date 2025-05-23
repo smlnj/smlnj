@@ -22,7 +22,7 @@ PVT cfunc_binding_t CFunTable[] = {
 #undef CFUNC
 
 
-/* the Date library */
+/* the CodeGen library */
 c_library_t	    CodeGen_Library = {
 	CLIB_NAME,
 	CLIB_VERSION,
@@ -30,4 +30,3 @@ c_library_t	    CodeGen_Library = {
 	NIL(clib_init_fn_t),
 	CFunTable
     };
-

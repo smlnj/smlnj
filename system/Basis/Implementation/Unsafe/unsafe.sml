@@ -33,6 +33,7 @@ structure Unsafe :> UNSAFE =
 	val sub = InlineT.PolyArray.sub
 	val update = InlineT.PolyArray.update
 	val create = Core.Assembly.A.array
+        val create0 = InlineT.PolyArray.newArray0
       end
 
     structure CharVector =
@@ -105,13 +106,8 @@ structure Unsafe :> UNSAFE =
       end
 
     (* machine properties *)
-(*
     val isBigEndian : unit -> bool = InlineT.isBigEndian
     val wordSize : unit -> int = InlineT.wordSize
-*)
-(* placeholders for x86-64 *)
-    fun isBigEndian () = false
-    fun wordSize () = 64
 
   (* convert default real to bits *)
     val realToBits = InlineT.Real64.toBits

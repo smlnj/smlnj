@@ -14,4 +14,3 @@ signature REGEXP_PARSER =
 	 *)
 
   end
-

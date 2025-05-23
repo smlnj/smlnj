@@ -10,6 +10,7 @@ Library
   structure JSON
   structure JSONParser
   structure JSONPrinter
+  structure JSONDecode
   structure JSONUtil
 
 (* SAX-style API (event based) *)
@@ -22,16 +23,11 @@ is
 
   $/basis.cm
   $/smlnj-lib.cm
-  $/ml-lpt-lib.cm
 
-#if defined(NO_PLUGINS)
-  json.lex.sml
-#else
-  json.lex : ml-ulex
-#endif
-
+  errors.sml
   json.sml
   json-buffer-printer.sml
+  json-decode.sml
   json-parser.sml
   json-printer.sml
   json-source.sml
@@ -39,5 +35,4 @@ is
   json-stream-output.fun
   json-stream-parser.sml
   json-stream-printer.sml
-  json-tokens.sml
   json-util.sml
