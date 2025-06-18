@@ -55,6 +55,10 @@ of the teething issues in the new ARM64 support.
 
 === SML/NJ Library
 
+* moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
+  change was made to allow code to produce/consume JSON values without depending
+  on the *JSON* library.
+
 === Successor ML
 
 === ML-LPT
