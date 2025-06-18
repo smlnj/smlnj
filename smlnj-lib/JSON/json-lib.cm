@@ -6,8 +6,9 @@
 
 Library
 
+  structure JSON (* defined in smlnj-lib.cm *)
+
 (* DOM-style API (tree based) *)
-  structure JSON
   structure JSONParser
   structure JSONPrinter
   structure JSONDecode
@@ -25,7 +26,6 @@ is
   $/smlnj-lib.cm
 
   errors.sml
-  json.sml
   json-buffer-printer.sml
   json-decode.sml
   json-parser.sml

@@ -87,5 +87,4 @@ OBJECT[
 
 == See Also
 
-xref:str-JSONUtil.adoc[`JSONUtil`],
-xref:json-lib.adoc[__The JSON Library__]
+xref:../JSON/json-lib.adoc[__The JSON Library__]

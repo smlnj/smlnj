@@ -69,6 +69,7 @@ structure Fifo
 structure FNVHash
 structure Format
 structure FormatComb
+structure GetOpt
 structure HashString
 structure HashTable
 structure IntBinaryMap		(* to be removed *)
@@ -79,7 +80,7 @@ structure IntListSet
 structure IntRedBlackMap
 structure IntRedBlackSet
 structure IOUtil
-structure GetOpt
+structure JSON
 structure LibBase
 structure ListFormat
 structure ListMergeSort
