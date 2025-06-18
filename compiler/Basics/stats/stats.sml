@@ -68,10 +68,10 @@ structure Stats :> STATS =
     fun getCounter (C{c=ref c,...}) = c
 
     fun newStat (name,cs) = STAT{name=name,tot=cs}
-    fun registerStat (p as STAT{name,tot}) =
-	(case lookSt (name,!allStats)
+    fun registerStat (p as STAT{name,tot}) = (case lookSt (name,!allStats)
 	  of SOME p => ()
-	   | NONE => allStats := insert(p,!allStats))
+	   | NONE => allStats := insert(p,!allStats)
+	  (* end case *))
 
     fun makeStat name = (case lookSt (name,!allStats)
 	   of SOME p => p
