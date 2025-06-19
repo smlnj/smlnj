@@ -25,7 +25,7 @@ RUNTIME =	run.amd64-linux
 STANDALONE =	runx.amd64-linux
 STANDALONE_A =	runx.amd64-linux.a
 
-BUILD_TARGETS =	$(RUNTIME) $(STANDALONE_A)
+BUILD_TARGETS =	$(RUNTIME) $(STANDALONE)
 
 all:	        $(BUILD_TARGETS)
 
