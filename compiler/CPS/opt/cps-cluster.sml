@@ -2,13 +2,18 @@
  *
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
+ *
+ * Cluster functions into groups based on the first-order call graph.
  *)
 
 structure CPSCluster : sig
 
     type cluster = CPS.function list
 
-    type t
+    type t = {
+        clusters : cluster list,
+        lookup : LambdaVar.lvar -> cluster
+      }
 
   end = struct
 
