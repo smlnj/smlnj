@@ -133,7 +133,7 @@ MAIN_OBJ =	$(MAIN).o
 $(RUNTIME):	$(VERSION) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_DEPS)
 	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
 
-$(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
+$(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_DEPS)
 	rm -f $(RUNTIME_A)
 	$(AR) rc $(RUNTIME_A) main.o $(OBJS)
 	rm -rf tmp
