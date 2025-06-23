@@ -37,8 +37,7 @@ RUNTIME =	run.amd64-darwin
 STANDALONE =	runx.amd64-darwin
 STANDALONE_A =	runx.amd64-darwin.a
 
-BUILD_TARGETS =	$(RUNTIME) $(STANDALONE_A)
-# BUILD_TARGETS = $(RUNTIME) $(STANDALONE)
+BUILD_TARGETS =	$(RUNTIME) $(STANDALONE)
 
 all:		$(BUILD_TARGETS)
 
@@ -48,8 +47,11 @@ install:        $(BUILD_TARGETS)
 $(RUNTIME):
 	($(MAKE) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" AS="$(AS)" TARGET=$(TARGET) TARGET_ARCHS=$(TARGET_ARCHS) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
 
+# Overriding SYSTEM_LIBS is technically not necessary for Darwin, but it is done
+# here to be consistent across platforms. See mk.amd64-linux for details.
+#                                                                         -BZ
 $(STANDALONE):
-	($(MAKE) RUNTIME="$(STANDALONE)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-Xlinker -r" $(STANDALONE))
+	($(MAKE) RUNTIME="$(STANDALONE)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" SYSTEM_LIBS="" $(STANDALONE))
 
 $(STANDALONE_A):
-	($(MAKE) RUNTIME_A="$(STANDALONE_A)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-Xlinker -r" $(STANDALONE_A))
+	($(MAKE) RUNTIME_A="$(STANDALONE_A)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" $(STANDALONE_A))
