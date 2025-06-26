@@ -187,6 +187,7 @@ interval-set-fn.sml
 interval-set-sig.sml
 io-util-sig.sml
 io-util.sml
+json.sml
 getopt-sig.sml
 getopt.sml
 left-priorityq-fn.sml
