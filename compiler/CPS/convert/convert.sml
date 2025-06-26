@@ -1,6 +1,6 @@
 (* convert.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -177,6 +177,10 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 	    | AP.PURE_ARITH{oper, kind} => PKP(P.PURE_ARITH{oper=oper,kind=numkind kind})
 	    | AP.REAL_TO_INT arg => PKA(P.REAL_TO_INT arg)
 	    | AP.INT_TO_REAL arg => PKP(P.INT_TO_REAL arg)
+(* TODO: this code replaces the code below
+            | AP.REAL_TO_BITS sz => PKP(P.REAL_TO_BITS sz)
+            | AP.BITS_TO_REAL sz => PKP(P.BITS_TO_REAL sz)
+*)
 
 	    | AP.SUBSCRIPTV => PKP P.SUBSCRIPTV
 	    | AP.MAKEREF =>    PKP P.MAKEREF
