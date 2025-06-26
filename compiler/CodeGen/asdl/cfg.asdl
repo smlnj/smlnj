@@ -1,6 +1,6 @@
 -- cps.asdl
 --
--- COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
+-- COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
 -- All rights reserved.
 --
 -- ASDL description of the CFG IR.
@@ -82,7 +82,7 @@ module CFG_Prim {
   -- These operations might raise exceptions and do not access mutable memory.
     arith
       = ARITH (arithop oper, int sz)
-      | REAL_TO_INT (rounding_mode mode, int from, int to)
+      | FLOAT_TO_INT (rounding_mode mode, int from, int to)
 
   -- arithmetic operations that do not overflow; for the division operators,
   -- we assume that the second argument is never zero (i.e., an explicit
@@ -93,10 +93,15 @@ module CFG_Prim {
     -- that distinction; even though 2's-complement multiplication is sign agnostic
       | SMUL | SDIV | SREM
       | UMUL | UDIV | UREM
-      | LSHIFT | RSHIFT | RSHIFTL
-      | ORB | XORB | ANDB
-      | FADD | FSUB | FMUL | FDIV
-      | FNEG | FABS | FSQRT
+      | SHL | ASHR | LSHR               -- shifts: left, arithmetic right, and logical right
+      | ORB | XORB | ANDB               -- bitwise logical operations
+      | CNTPOP                          -- count ones
+      | CNTLZ | CNTTZ                   -- count leading/trailing zeros
+      | ROTL | ROTR                     -- rotations: left and right
+      | FADD | FSUB | FMUL | FDIV | FREM
+      | FMADD                           -- fused multiply-add
+      | FNEG | FABS | FCOPYSIGN
+      | FSQRT
 
   -- These operations do not raise exceptions and do not access mutable memory.
     pure
@@ -106,7 +111,9 @@ module CFG_Prim {
 						-- false) or the sign (signed is true)
       | TRUNC (int from, int to)		-- truncate a larger value to a smaller
 						-- one (from > to).
-      | INT_TO_REAL (int from, int to)		-- int to float conversion
+      | INT_TO_FLOAT (int from, int to)		-- int to float conversion
+      | FLOAT_TO_BITS (int sz)                  -- bitcast float to word
+      | BITS_TO_FLOAT (int sz)                  -- bitcast word to float
       | PURE_SUBSCRIPT				-- indexed load of ML value
       | PURE_RAW_SUBSCRIPT (numkind kind, int sz)
 						-- indexed load of raw value from
@@ -120,7 +127,8 @@ module CFG_Prim {
       | SUBSCRIPT
       | RAW_SUBSCRIPT (numkind kind, int sz)
       | RAW_LOAD (numkind kind, int sz)		-- load a raw value from base+offset
-      | GET_HDLR | GET_VAR
+      | GET_HDLR
+      | GET_VAR
 
   -- These operations all update mutable memory.
     setter
@@ -128,7 +136,8 @@ module CFG_Prim {
       | UNBOXED_ASSIGN | ASSIGN			-- reference assignment
       | RAW_UPDATE (numkind kind, int sz)	-- raw array update
       | RAW_STORE (numkind kind, int sz)	-- raw store to base+offset
-      | SET_HDLR | SET_VAR
+      | SET_HDLR
+      | SET_VAR
 
   -- comparison operators
   -- NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
@@ -191,8 +200,6 @@ module CFG (
       | LOOKER (CFG_Prim.looker oper, exp* args)
       | PURE (CFG_Prim.pure oper, exp* args)
       | SELECT (int idx, exp arg)
--- TODO: the CPS "OFFSET" constructor is never generated, so we do not need this either
-      | OFFSET (int idx, exp arg)
 
     param = (LambdaVar.lvar name, ty ty)
 
