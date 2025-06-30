@@ -1,6 +1,6 @@
 (* ast.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -38,10 +38,15 @@ in
 structure AST =
   struct
 
-    datatype module = Module of {
-	  isPrim : bool,			(* true for primitive modules *)
-	  id : ModuleId.t,
-	  decls : type_decl list ref
+    datatype file = File of {
+          modules : module list,                (**< the list of ASDL modules *)
+          shared : (ModuleId.t * TypeId.t) list (**< types that are shared *)
+        }
+
+    and module = Module of {
+	  isPrim : bool,                (* true for primitive modules *)
+	  id : ModuleId.t,              (* the name of the module *)
+	  decls : type_decl list ref    (* body of the module *)
 	}
 
     and type_decl = TyDcl of {
@@ -144,6 +149,15 @@ structure AST =
     fun idOfNamedTy (BaseTy id) = id
       | idOfNamedTy (ImportTy(_, id)) = id
       | idOfNamedTy (LocalTy(TyDcl{id, ...})) = id
+
+    (* compare named types for equality *)
+    fun sameNamedTy (BaseTy tyId1, BaseTy tyId2) =
+          TypeId.same(tyId1, tyId2)
+      | sameNamedTy (ImportTy(mId1, tyId1), ImportTy(mId2, tyId2)) =
+          ModuleId.same(mId1, mId2) andalso TypeId.same(tyId1, tyId2)
+      | sameNamedTy (LocalTy(TyDcl{id=id1, ...}), LocalTy(TyDcl{id=id2, ...})) =
+          TypeId.same(id1, id2)
+      | sameNamedTy _ = false
 
   (* debugging support *)
     fun tyToString (Typ(nty, tyc)) = let

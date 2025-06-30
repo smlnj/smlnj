@@ -10,51 +10,57 @@ structure Encoding : sig
 
     type tag = int
 
-  (* the pickle encoding of an ASDL type *)
+    (* the pickle encoding of an ASDL type *)
     datatype t
-    (* single-constructor enumeration *)
+      (* single-constructor enumeration *)
       = UNIT of AST.ConstrId.t
-    (* enumeration: constructors are indexed from 1 *)
+      (* enumeration: constructors are indexed from 1 *)
       | ENUM of int * (tag * AST.ConstrId.t) list
-    (* single-constructor non-enumeration sum type *)
+      (* single-constructor non-enumeration sum type *)
       | WRAP of AST.ConstrId.t * obj
-    (* non-enumeration sum type with optional attributes; the constructor encodings
-     * do not include the attributes.
-     *)
+      (* non-enumeration sum type with optional attributes; the constructor encodings
+       * do not include the attributes.
+       *)
       | SWITCH of obj option * int * (tag * AST.ConstrId.t * obj option) list
-    (* product type *)
+      (* product type *)
       | OBJ of obj
-    (* alias type *)
+      (* alias type *)
       | ALIAS of tyexp
 
-  (* encoding of product types *)
+    (* encoding of product types *)
     and obj
       = TUPLE of (int * tyexp) list		(* unlabeled fields; indexed from 0 *)
       | RECORD of (string * tyexp) list		(* labeled fields *)
 
-  (* type expressions *)
+    (* type expressions *)
     and tyexp
-      = OPTION of base
-      | SEQUENCE of base
-      | SHARED of base
-      | BASE of base
+      = OPTION of ty
+      | SEQUENCE of ty
+      | SHARED of ty
+      | TYP of ty
 
-  (* base type expression; the module ID will be NONE for ocally-defined types *)
-    withtype base = AST.ModuleId.t option * AST.TypeId.t
+    (* types *)
+    and ty
+      = BASE of AST.TypeId.t                    (* primitive type *)
+      | IMPORT of AST.ModuleId.t * AST.TypeId.t (* qualified type *)
+      | LOCAL of AST.ModuleId.t * AST.TypeId.t  (* module is owner of type *)
 
-  (* determine the encoding of an ASDL type *)
+    (* determine the encoding of an ASDL type *)
     val encoding : AST.type_decl -> AST.TypeId.t * t
 
-  (* is the number of constructors representable as a "small" (8-bit) tag? *)
+    (* is the number of constructors representable as a "small" (8-bit) tag? *)
     val smallTag : int -> bool
 
-  (* determine the pickle representation "type" of a tag for the given
-   * number of constructors
-   *)
+    (* determine the pickle representation "type" of a tag for the given
+     * number of constructors
+     *)
     val tagTyId : int -> AST.TypeId.t
 
-  (* prefix a constructor argument with optional attributes *)
-    and prefixWithAttribs : obj option * obj option -> obj option
+    (* prefix a constructor argument with optional attributes *)
+    val prefixWithAttribs : obj option * obj option -> obj option
+
+    (* the qualified name of an encoded type *)
+    val qualNameOf : ty -> AST.ModuleId.t * AST.TypeId.t
 
   end = struct
 
@@ -73,23 +79,30 @@ structure Encoding : sig
       | RECORD of (string * tyexp) list
 
     and tyexp
-      = OPTION of base
-      | SEQUENCE of base
-      | SHARED of base
-      | BASE of base
+      = OPTION of ty
+      | SEQUENCE of ty
+      | SHARED of ty
+      | TYP of ty
 
-    withtype base = AST.ModuleId.t option * AST.TypeId.t	(* NONE for locally-defined types *)
+    and ty
+      = BASE of AST.TypeId.t
+      | IMPORT of AST.ModuleId.t * AST.TypeId.t
+      | LOCAL of AST.ModuleId.t * AST.TypeId.t  (* module is owner of type *)
 
-    fun encoding (AST.TyDcl{id, def, ...}) = let
+    fun encoding (AST.TyDcl{id, def, owner}) = let
 	  fun encTyExp (AST.Typ(ty, tyc)) = let
 		val ty = (case ty
-		       of AST.BaseTy tyId => (SOME PrimTypes.primTypesId, tyId)
-			| AST.ImportTy(modId, tyId) => (SOME modId, tyId)
-			| AST.LocalTy(AST.TyDcl{id, ...}) => (NONE, id)
+		       of AST.BaseTy tyId => BASE tyId
+			| AST.ImportTy(modId, tyId) => IMPORT(modId, tyId)
+			| AST.LocalTy(AST.TyDcl{id, ...}) => let
+                            val AST.Module{id=modId, ...} = owner
+                            in
+                              LOCAL(modId, id)
+                            end
 		      (* end case *))
 		in
 		  case tyc
-		   of AST.NoTyc => BASE ty
+		   of AST.NoTyc => TYP ty
 		    | AST.OptTyc => OPTION ty
 		    | AST.SeqTyc => SEQUENCE ty
 		    | AST.SharedTyc => SHARED ty
@@ -130,14 +143,18 @@ structure Encoding : sig
     fun smallTag ncons = (ncons < 255)
 
     fun tagTyId ncons = if smallTag ncons
-	  then PrimTypes.tag8TyId
+	  then BaseTypes.tag8TyId
 	(* NOTE: we are assuming that ncons is <= 2^30-1 *)
-	  else PrimTypes.tagTyId
+	  else BaseTypes.tagTyId
 
     fun prefixWithAttribs (NONE, arg) = arg
       | prefixWithAttribs (attribs, NONE) = attribs
       | prefixWithAttribs (SOME(TUPLE flds1), SOME(TUPLE flds2)) = SOME(TUPLE(flds1 @ flds2))
       | prefixWithAttribs (SOME(RECORD flds1), SOME(RECORD flds2)) = SOME(RECORD(flds1 @ flds2))
       | prefixWithAttribs _ = raise Fail "Encoding.prefixWithAttribs: inconsistent product types"
+
+    fun qualNameOf (BASE tyId) = (BaseTypes.asdlTypesId, tyId)
+      | qualNameOf (IMPORT(modId, tyId)) = (modId, tyId)
+      | qualNameOf (LOCAL(modId, tyId)) = (modId, tyId)
 
   end

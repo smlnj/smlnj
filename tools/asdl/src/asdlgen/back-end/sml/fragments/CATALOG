@@ -1,4 +1,6 @@
 Fragments
-pickle-util.in		pickleUtil
+rd-util.in	        rdUtil
+wr-util.in		wrUtil
+share-rd-util.in	shareRdUtil
+share-wr-util.in	shareWrUtil
 sexp-util.in		sexpUtil
-streams.in		streams

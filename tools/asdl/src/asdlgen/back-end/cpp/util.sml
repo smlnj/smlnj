@@ -1,6 +1,6 @@
 (* util.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -45,37 +45,40 @@ structure Util : sig
     val fieldSetName : AST.label -> string
 
   (* return the representation type for a type expression *)
-    val tyexpToCxx : AST.ty_exp -> Cxx.ty
+    val tyexpToCxx : AST.ty_exp -> Cpp.ty
+
+  (* map an ASDL type expression and variable name to a C++ function parameter *)
+    val tyexpToParam : AST.ty_exp * string -> Cpp.param
 
   (* map a field to a C++ function parameter *)
-    val fieldParam : AST.label -> Cxx.exp
-    val fieldToParam : AST.field -> Cxx.param
+    val fieldParam : AST.label -> Cpp.exp
+    val fieldToParam : AST.field -> Cpp.param
 
   (* map a type to the C++ representation of optional values of the type.
    * Note that this typed is unqualified.
    *)
-    val optionTy : AST.TypeId.t -> Cxx.ty
+    val optionTy : AST.TypeId.t -> Cpp.ty
 
   (* map a type to the C++ representation of sequnce values of the type
    * Note that this typed is unqualified.
    *)
-    val seqTy : AST.TypeId.t -> Cxx.ty
+    val seqTy : AST.TypeId.t -> Cpp.ty
 
     val qualId : AST.ModuleId.t option * string -> string
 
-    val templateTy : string * AST.ModuleId.t option * AST.TypeId.t -> Cxx.ty
+    val templateTy : string * AST.ModuleId.t option * AST.TypeId.t -> Cpp.ty
 
   (* generate code to dynamically allocate an object using the appropriate allocation
    * mechanism.
    *)
-    val genNew : flags -> Cxx.ty * Cxx.exp list -> Cxx.exp
+    val genNew : flags -> Cpp.ty * Cpp.exp list -> Cpp.exp
 
   end = struct
 
-    structure V = CxxView
+    structure V = CppView
     structure ModV = V.Module
     structure TyV = V.Type
-    structure CL = Cxx
+    structure CL = Cpp
 
     type flags = {
 	suppress : {types : bool, pickler : bool, unpickler : bool},
@@ -140,7 +143,10 @@ structure Util : sig
     fun fieldSetName (AST.Pos i) = "set_" ^ Int.toString i
       | fieldSetName (AST.Lab lab) = "set_" ^ lab
 
-    fun tyexpToCxx (AST.Typ(ty, tyc)) = let
+    (* returns `(cty, byRef)`, where `cty` is the C++ type expression for the type
+     * and `byRef` is true if parameters of this type should be passed by reference.
+     *)
+    fun tyexpInfo (AST.Typ(ty, tyc)) = let
 	  val (isBoxed, tyName) = (case ty
 		 of AST.BaseTy tyId => (TyV.getBoxed tyId, TyV.getName tyId)
 		  | AST.ImportTy(modId, tyId) =>
@@ -157,22 +163,33 @@ structure Util : sig
 	  val cty = CL.T_Named tyName
 	  in
 	    case (isBoxed, tyc)
-	     of (false, AST.NoTyc) => cty
-	      | (true, AST.NoTyc) => CL.T_Ptr cty
-	      | (false, AST.OptTyc) => CL.T_Template("asdl::option", [cty])
-	      | (true, AST.OptTyc) => CL.T_Ptr cty
-	      | (false, AST.SeqTyc) => CL.T_Template("asdl::sequence", [cty])
-	      | (true, AST.SeqTyc) => CL.T_Template("asdl::sequence", [CL.T_Ptr cty])
+	     of (false, AST.NoTyc) => (cty, tyName = "std::string")
+	      | (true, AST.NoTyc) => (CL.T_Ptr cty, false)
+	      | (false, AST.OptTyc) => (CL.T_Template("std::optional", [cty]), false)
+	      | (true, AST.OptTyc) => (CL.T_Ptr cty, false)
+	      | (false, AST.SeqTyc) => (CL.T_Template("std::vector", [cty]), true)
+	      | (true, AST.SeqTyc) => (CL.T_Template("std::vector", [CL.T_Ptr cty]), true)
 	      | (_, AST.SharedTyc) => raise Fail "shared types are not yet supported"
 	    (* end case *)
 	  end
+
+    fun tyexpToCxx arg = #1 (tyexpInfo arg)
 
     fun fieldParamName (AST.Pos i) = "p" ^ Int.toString i
       | fieldParamName (AST.Lab lab) = "p_" ^ lab
 
     fun fieldParam label = CL.mkVar(fieldParamName label)
 
-    fun fieldToParam {label, ty} = CL.PARAM([], tyexpToCxx ty, fieldParamName label)
+    fun tyexpToParam (ty, name) = let
+          val (cty, byRef) = tyexpInfo ty
+          val cty = if byRef
+                then CL.T_Ref(CL.T_Const cty)
+                else cty
+          in
+            CL.PARAM([], cty, name)
+          end
+
+    fun fieldToParam {label, ty} = tyexpToParam (ty, fieldParamName label)
 
   (* map a type to the C++ representation of optional values of the type. *)
     fun optionTy tyId = let
@@ -183,7 +200,7 @@ structure Util : sig
  *)
 	    if isBoxed tyId
 	      then CL.T_Ptr cty
-	      else CL.T_Template("asdl::option", [cty])
+	      else CL.T_Template("std::optional", [cty])
 	  end
 
   (* map a type to the C++ representation of sequnce values of the type *)
@@ -191,8 +208,8 @@ structure Util : sig
 	  val cty = CL.T_Named(TyV.getName tyId)
 	  in
 	    if isBoxed tyId
-	      then CL.T_Template("asdl::sequence", [CL.T_Ptr cty])
-	      else CL.T_Template("asdl::sequence", [cty])
+	      then CL.T_Template("std::vector", [CL.T_Ptr cty])
+	      else CL.T_Template("std::vector", [cty])
 	  end
 
     fun qualId (NONE, id) = id
@@ -203,7 +220,8 @@ structure Util : sig
 
     fun genNew (flags : flags) (ty, args) = if #arenaAlloc flags
 	  then CL.mkNewAt(
-	    CL.mkQTemplateApply([CL.SC_Namespace "asdl", CL.SC_Namespace "alloc"],"alloc", [ty], []),
+	    CL.mkQTemplateApply(
+              [CL.SC_Namespace "asdl", CL.SC_Namespace "alloc"], "alloc", [ty], []),
 	    ty, args)
 	  else CL.mkNew(ty, args)
 

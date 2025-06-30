@@ -1,2 +1,0 @@
-    type instream = @PICKLER@.instream
-    type outstream = @PICKLER@.outstream

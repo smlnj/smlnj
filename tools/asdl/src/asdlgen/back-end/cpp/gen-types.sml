@@ -1,6 +1,6 @@
 (* gen-types.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * TODO:
@@ -13,15 +13,15 @@ structure GenTypes : sig
   (* generate the type definitions for an ASDL module.  The result will be
    * a namespace declaration enclosing the definitions.
    *)
-    val gen : Util.flags -> AST.module -> Cxx.decl
+    val gen : Util.flags -> AST.module -> Cpp.decl
 
   end = struct
 
-    structure V = CxxView
+    structure V = CppView
     structure ModV = V.Module
     structure TyV = V.Type
     structure ConV = V.Constr
-    structure CL = Cxx
+    structure CL = Cpp
     structure U = Util
 
   (* flags for controlling code generation *)
@@ -30,14 +30,14 @@ structure GenTypes : sig
     val isParam = CL.param(CL.T_Ref(CL.T_Named "asdl::instream"), "is")
 
   (* generate the inline access-methods for a field *)
-    fun genAccessMethods {label, ty} = let
+    fun genAccessMethods (fld as {label, ty}) = let
 	  val fieldTy = U.tyexpToCxx ty
 	  val field = CL.mkIndirect(CL.mkVar "this", U.fieldName label)
 	  val get = CL.mkInlineConstMethDcl(
 		fieldTy, U.fieldGetName label, [],
 		CL.mkReturn field)
 	  val set = CL.mkInlineMethDcl(
-		CL.voidTy, U.fieldSetName label, [CL.param(fieldTy, "v")],
+		CL.voidTy, U.fieldSetName label, [U.tyexpToParam(ty, "v")],
 		CL.mkAssign(field, CL.mkVar "v"))
 	  in
 	    [get, set]

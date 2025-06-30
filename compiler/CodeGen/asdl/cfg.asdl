@@ -279,10 +279,10 @@ module CFG (
 
 -- C++ specialization
 --
-view Cxx {
+view Cpp {
     <file> <= interface_prologue %%
-#include "code-buffer.hxx"
-#include "lambda-var.hxx"
+#include "context.hpp"
+#include "lambda-var.hpp"
 
 %%
     <file> <= suppress : pickler
@@ -347,7 +347,7 @@ view Cxx {
 
 -- param
     { CFG.param } <= public_code %%
-	void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { buf->insertVal (this->_v_name, v); }
+	void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { cxt->insertVal (this->_v_name, v); }
 %%
 
 -- exp

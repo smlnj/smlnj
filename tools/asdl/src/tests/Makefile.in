@@ -1,6 +1,6 @@
 # Makefile for ASDL tests
 #
-# COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # @configure_input@
@@ -9,7 +9,7 @@
 SHELL =			@SHELL@
 @SET_MAKE@
 
-BUILD_DIRS =		basics primitives
+BUILD_DIRS =		basics options primitives sharing sequences
 
 .PHONY:		build local-install install
 

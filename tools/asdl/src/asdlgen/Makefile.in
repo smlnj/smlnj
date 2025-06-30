@@ -1,8 +1,8 @@
 # Makefile for asdlgen tool (using SML/NJ)
 #
-# This code is part of the SML/NJ system (http://smlnj.org)
+# This code is part of the SML/NJ system (https://smlnj.org)
 #
-# COPYRIGHT (c) 2018 The Fellowship of SML/NJ
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ
 # All rights reserved.
 #
 # @configure_input@
@@ -47,7 +47,8 @@ MKFRAGS =		@ASDL_SRCDIR@/gen/fragments/mkfrags.sh
 PROGRAM =		asdlgen
 
 ROOT_CM =		driver/sources.cm
-CM_FILES =		back-end/sml/sources.cm \
+CM_FILES =		back-end/cpp/sources.cm \
+			back-end/sml/sources.cm \
 			back-end/sources.cm \
 			back-end/util/sources.cm \
 			common/sources.cm \
@@ -90,7 +91,7 @@ $(HEAP):  .depend $(CODE_FRAG_MKFILES)
 back-end/sml/fragments.gmk: back-end/sml/fragments/CATALOG $(wildcard back-end/sml/fragments/*in)
 	$(MKMK) back-end/sml
 
-back-end/sml/fragments.sml:
+back-end/sml/fragments.sml: back-end/sml/fragments/CATALOG $(wildcard back-end/sml/fragments/*in)
 	$(MKFRAGS) back-end/sml
 
 #

@@ -1,18 +1,19 @@
-(* prim-types.sml
+(* base-types.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Support for ASDL primitive types.
+ * Support for ASDL primitive types.  We call these the "base" types, since they are
+ * distinct from user-defined primitive types.
  *)
 
-structure PrimTypes : sig
+structure BaseTypes : sig
 
-  (* the implicit module that defines the primitive types *)
-    val primTypesId : AST.ModuleId.t
-    val primTypes   : AST.module
+  (* the implicit module that defines the ASDL primitive types (aka base types) *)
+    val asdlTypesId : AST.ModuleId.t
+    val asdlTypes   : AST.module
 
-  (* primitive type IDs *)
+  (* base type IDs *)
     val boolTyId	: AST.TypeId.t
     val intTyId		: AST.TypeId.t
     val uintTyId	: AST.TypeId.t
@@ -20,7 +21,7 @@ structure PrimTypes : sig
     val identifierTyId	: AST.TypeId.t
     val stringTyId	: AST.TypeId.t
 
-  (* primitive types *)
+  (* base types *)
     val boolTy		: AST.named_ty
     val intTy		: AST.named_ty
     val uintTy		: AST.named_ty
@@ -32,14 +33,14 @@ structure PrimTypes : sig
     val tag8TyId	: AST.TypeId.t		(* tag values in 0..255 *)
     val tagTyId		: AST.TypeId.t		(* tag values in 0.. *)
 
-  (* lookup a primitive type by name *)
+  (* lookup a base type by name *)
     val find : Atom.atom -> AST.named_ty option
 
   end = struct
 
     structure TId = AST.TypeId
 
-    val primTypesId = AST.ModuleId.new (Atom.atom "<primitive-types>")
+    val asdlTypesId = AST.ModuleId.new (Atom.atom "<asdl-primitive-types>")
 
     val boolTyId	= TId.new (Atom.atom "bool")
     val intTyId		= TId.new (Atom.atom "int")
@@ -61,14 +62,14 @@ structure PrimTypes : sig
     val tag8TyId	= TId.new (Atom.atom "tag8")
     val tagTyId		= TId.new (Atom.atom "tag")
 
-    val primTypes = let
+    val asdlTypes = let
 	  val decls = ref[]
 	  val module = AST.Module{
 		  isPrim = true,
-		  id = primTypesId,
+		  id = asdlTypesId,
 		  decls = decls
 		}
-	(* make a primitive type declaration and record the type's binding *)
+	  (* make a base type declaration and record the type's binding *)
 	  fun mkDcl id = let
 		val dcl = AST.TyDcl{id = id, def = ref AST.PrimTy, owner = module}
 		in
@@ -90,9 +91,9 @@ structure PrimTypes : sig
 	    module
 	  end
 
-  (* lookup a primitive type by name *)
+    (* lookup a base type by name *)
     val find = let
-	  val tbl = AtomTable.mkTable(8, Fail "prim-types")
+	  val tbl = AtomTable.mkTable(8, Fail "base-types")
 	  fun ins (ty as AST.BaseTy id) = AtomTable.insert tbl (TId.atomOf id, ty)
 	  in
 	    List.app ins [
