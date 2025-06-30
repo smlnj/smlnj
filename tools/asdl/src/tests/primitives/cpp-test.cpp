@@ -1,4 +1,4 @@
-/*! \file cxx-test.cxx
+/*! \file cpp-test.cpp
  *
  * \author John Reppy
  *
@@ -10,7 +10,7 @@
  * All rights reserved.
  */
 
-#include "asdl/asdl.hxx"
+#include "asdl/asdl.cpp"
 #include <iostream>
 #include <ctype.h>
 

@@ -3,7 +3,7 @@
 // to build:
 //	clang++ -g --std=c++14 -o read-test read-test.cxx -L../../../lib -lasdl
 
-#include "../../../../include/asdl/asdl.hxx"
+#include "../../../../include/asdl/asdl.hpp"
 #include <iostream>
 
 struct trial {

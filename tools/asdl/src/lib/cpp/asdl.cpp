@@ -1,4 +1,4 @@
-/*! \file asdl.cxx
+/*! \file asdl.cpp
  *
  * ASDL runtime support for C++
  *

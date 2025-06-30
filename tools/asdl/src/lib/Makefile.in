@@ -9,7 +9,7 @@
 SHELL =			@SHELL@
 @SET_MAKE@
 
-BUILD_DIRS =		cxx
+BUILD_DIRS =		cpp
 
 .PHONY:		build local-install install
 
