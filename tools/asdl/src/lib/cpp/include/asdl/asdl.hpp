@@ -1,4 +1,4 @@
-/*! \file asdl.hxx
+/*! \file asdl.hpp
  *
  * \author John Reppy
  */
@@ -8,8 +8,8 @@
  * All rights reserved.
  */
 
-#ifndef _ASDL_HXX_
-#define _ASDL_HXX_
+#ifndef _ASDL_HPP_
+#define _ASDL_HPP_
 
 #include "config.h"
 
@@ -17,9 +17,9 @@
 #include <vector>
 #include <memory>
 
-#include "asdl-stream.hxx"
-#include "asdl-integer.hxx"
-/* TODO: asdl-identifier.hxx */
+#include "asdl-stream.hpp"
+#include "asdl-integer.hpp"
+/* TODO: asdl-identifier.hpp */
 
 namespace asdl {
 
@@ -352,4 +352,4 @@ namespace asdl {
 
 } // namespace asdl
 
-#endif /* !_ASDL_HXX_ */
+#endif /* !_ASDL_HPP_ */

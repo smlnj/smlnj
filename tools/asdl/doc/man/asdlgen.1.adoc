@@ -73,7 +73,7 @@ C++ OPTIONS
 
 *--base-include='FILE'*::
   specify the header file that specifies the primitive ASDL types.
-  The default is `asdl/base.hxx`.
+  The default is `asdl/base.hpp`.
 
 
 SML OPTIONS

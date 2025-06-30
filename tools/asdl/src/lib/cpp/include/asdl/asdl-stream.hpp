@@ -1,6 +1,6 @@
-/// \file asdl-stream.hxx
+/// \file asdl-stream.hpp
 ///
-/// \copyright 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+/// \copyright 2025 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
 /// \brief Defines the input and output stream types for ASDL picklers.
@@ -8,11 +8,11 @@
 /// \author John Reppy
 ///
 
-#ifndef _ASDL_STREAM_HXX_
-#define _ASDL_STREAM_HXX_
+#ifndef _ASDL_STREAM_HPP_
+#define _ASDL_STREAM_HPP_
 
-#ifndef _ASDL_HXX_
-#  error do not include "asdl-stream.hxx" directly; instead include "asdl.hxx"
+#ifndef _ASDL_HPP_
+#  error do not include "asdl-stream.hpp" directly; instead include "asdl.hpp"
 #endif
 
 #include <istream>
@@ -151,4 +151,4 @@ namespace asdl {
 
 } // namespace asdl
 
-#endif //! _ASDL_STREAM_HXX_
+#endif //! _ASDL_STREAM_HPP_
