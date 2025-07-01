@@ -82,7 +82,7 @@ module CFG_Prim {
   -- These operations might raise exceptions and do not access mutable memory.
     arith
       = ARITH (arithop oper, int sz)
-      | REAL_TO_INT (rounding_mode mode, int from, int to)
+      | FLOAT_TO_INT (rounding_mode mode, int from, int to)
 
   -- arithmetic operations that do not overflow; for the division operators,
   -- we assume that the second argument is never zero (i.e., an explicit
@@ -96,7 +96,7 @@ module CFG_Prim {
       | LSHIFT | RSHIFT | RSHIFTL
       | ORB | XORB | ANDB
       | FADD | FSUB | FMUL | FDIV
-      | FNEG | FABS | FSQRT
+      | FNEG | FABS | FSQRT | FCOPYSIGN
 
   -- These operations do not raise exceptions and do not access mutable memory.
     pure
@@ -106,7 +106,9 @@ module CFG_Prim {
 						-- false) or the sign (signed is true)
       | TRUNC (int from, int to)		-- truncate a larger value to a smaller
 						-- one (from > to).
-      | INT_TO_REAL (int from, int to)		-- int to float conversion
+      | INT_TO_FLOAT (int from, int to)	        -- int to float conversion
+      | FLOAT_TO_BITS (int sz)                  -- bitcast from float to word
+      | BITS_TO_FLOAT (int sz)                  -- bitcast from word to float
       | PURE_SUBSCRIPT				-- indexed load of ML value
       | PURE_RAW_SUBSCRIPT (numkind kind, int sz)
 						-- indexed load of raw value from
@@ -274,7 +276,7 @@ module CFG (
 
 -- C++ specialization
 --
-view Cxx {
+view Cpp {
     <file> <= interface_prologue %%
 #include "code-buffer.hxx"
 #include "lambda-var.hxx"
@@ -342,7 +344,7 @@ view Cxx {
 
 -- param
     { CFG.param } <= public_code %%
-	void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { buf->insertVal (this->_v_name, v); }
+	void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { cxt->insertVal (this->_v_name, v); }
 %%
 
 -- exp
