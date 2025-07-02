@@ -101,35 +101,35 @@ module CFG_Prim {
   -- These operations do not raise exceptions and do not access mutable memory.
     pure
       = PURE_ARITH (pureop oper, int sz)
-      | EXTEND (bool signed, int from, int to)	-- extend a smaller value to a larger
-						-- one (from < to) by zeros (signed is
-						-- false) or the sign (signed is true)
-      | TRUNC (int from, int to)		-- truncate a larger value to a smaller
-						-- one (from > to).
-      | INT_TO_FLOAT (int from, int to)	        -- int to float conversion
+      | EXTEND (bool signed, int from, int to)  -- extend a smaller value to a larger
+                                                -- one (from < to) by zeros (signed is
+                                                -- false) or the sign (signed is true)
+      | TRUNC (int from, int to)                -- truncate a larger value to a smaller
+                                                -- one (from > to).
+      | INT_TO_FLOAT (int from, int to)         -- int to float conversion
       | FLOAT_TO_BITS (int sz)                  -- bitcast from float to word
       | BITS_TO_FLOAT (int sz)                  -- bitcast from word to float
-      | PURE_SUBSCRIPT				-- indexed load of ML value
+      | PURE_SUBSCRIPT                          -- indexed load of ML value
       | PURE_RAW_SUBSCRIPT (numkind kind, int sz)
-						-- indexed load of raw value from
-						-- packed numeric vector
+                                                -- indexed load of raw value from
+                                                -- packed numeric vector
       | RAW_SELECT (numkind kind, int sz, int offset)
-						-- select from RAW_RECORD
+                                                -- select from RAW_RECORD
 
   -- These operations fetch from mutable memory.
     looker
       = DEREF
       | SUBSCRIPT
       | RAW_SUBSCRIPT (numkind kind, int sz)
-      | RAW_LOAD (numkind kind, int sz)		-- load a raw value from base+offset
+      | RAW_LOAD (numkind kind, int sz)         -- load a raw value from base+offset
       | GET_HDLR | GET_VAR
 
   -- These operations all update mutable memory.
     setter
-      = UNBOXED_UPDATE | UPDATE			-- array update
-      | UNBOXED_ASSIGN | ASSIGN			-- reference assignment
-      | RAW_UPDATE (numkind kind, int sz)	-- raw array update
-      | RAW_STORE (numkind kind, int sz)	-- raw store to base+offset
+      = UNBOXED_UPDATE | UPDATE                 -- array update
+      | UNBOXED_ASSIGN | ASSIGN                 -- reference assignment
+      | RAW_UPDATE (numkind kind, int sz)       -- raw array update
+      | RAW_STORE (numkind kind, int sz)        -- raw store to base+offset
       | SET_HDLR | SET_VAR
 
   -- comparison operators
@@ -138,20 +138,20 @@ module CFG_Prim {
 
   -- fcmpop conforms to the IEEE std 754 predicates.
     fcmpop
-      = F_EQ	-- =
-      | F_ULG	-- ?<>
-      | F_UN	-- ?
-      | F_LEG	-- <=>
-      | F_GT	-- >
-      | F_GE	-- >=
-      | F_UGT	-- ?>
-      | F_UGE	-- ?>=
-      | F_LT	-- <
-      | F_LE	-- <=
-      | F_ULT	-- ?<
-      | F_ULE	-- ?<=
-      | F_LG	-- <>
-      | F_UE	-- ?=
+      = F_EQ    -- =
+      | F_ULG   -- ?<>
+      | F_UN    -- ?
+      | F_LEG   -- <=>
+      | F_GT    -- >
+      | F_GE    -- >=
+      | F_UGT   -- ?>
+      | F_UGE   -- ?>=
+      | F_LT    -- <
+      | F_LE    -- <=
+      | F_ULT   -- ?<
+      | F_ULE   -- ?<=
+      | F_LG    -- <>
+      | F_UE    -- ?=
 
   -- These operations are two-way branches dependent on pure inputs
     branch
@@ -177,11 +177,11 @@ module CFG (
   -- CFG types.
   --
     ty
-      = LABt		-- function and continuation code addresses
-      | PTRt		-- pointer or tagged value
-      | TAGt		-- native-size tagged integer value
-      | NUMt (int sz)	-- integers of given size
-      | FLTt (int sz) 	-- float of given size
+      = LABt            -- function and continuation code addresses
+      | PTRt            -- pointer or tagged value
+      | TAGt            -- native-size tagged integer value
+      | NUMt (int sz)   -- integers of given size
+      | FLTt (int sz)   -- float of given size
 
   -- expressions; note that reals and strings are represented by access into the
   -- literal table, so we do not include them here.
@@ -238,31 +238,31 @@ module CFG (
       | CALLGC (exp*, LambdaVar.lvar*, stm)
       -- "raw C call"
       | RCC (
-	  bool reentrant,		-- true for reentrant calls
-	  string linkage,		-- ??
-	  CTypes.c_proto proto,		-- function prototype
-	  exp* args,			-- arguments
-	  param* results,		-- result variables (with types)
-	  param* live,			-- live variables across call (with types)
-	  stm k)			-- the continuation
+          bool reentrant,               -- true for reentrant calls
+          string linkage,               -- ??
+          CTypes.c_proto proto,         -- function prototype
+          exp* args,                    -- arguments
+          param* results,               -- result variables (with types)
+          param* live,                  -- live variables across call (with types)
+          stm k)                        -- the continuation
 
     frag_kind = STD_FUN | STD_CONT | KNOWN_FUN | INTERNAL
 
   -- a cluster fragment is an extended basic block.  The fields are:
   --    kind            the kind of fragment, which determines its calling convention
-  --    lab		the fragment's label
-  --	params		the lvar parameters and parameter types
-  --	body		the root of the extended basic block
+  --    lab             the fragment's label
+  --    params          the lvar parameters and parameter types
+  --    body            the root of the extended basic block
   --
     frag = Frag (frag_kind kind, LambdaVar.lvar lab, param* params, stm body)
 
   -- meta data about a cluster
   --
     attrs = (
-	int alignHP,		-- alignment requirement for allocation pointer
-	bool needsBasePtr,	-- true if cluster does PC-relative addressing
-	bool hasTrapArith,	-- true if cluster has trapping arithmetic
-	bool hasRCC		-- true if cluster contains raw C Calls
+        int alignHP,            -- alignment requirement for allocation pointer
+        bool needsBasePtr,      -- true if cluster does PC-relative addressing
+        bool hasTrapArith,      -- true if cluster has trapping arithmetic
+        bool hasRCC             -- true if cluster contains raw C Calls
       )
 
   -- a cluster is a maximal flow graph where every known call is to a fragment in the
@@ -334,23 +334,23 @@ view Cpp {
 
 -- ty
     { CFG.ty } <= public_code %%
-	virtual llvm::Type *codegen (smlnj::cfgcg::Context *cxt) = 0;
-	bool isNUMt () { return this->_tag == _con_NUMt; }
-	bool isFLTt () { return this->_tag == _con_FLTt; }
+        virtual llvm::Type *codegen (smlnj::cfgcg::Context *cxt) = 0;
+        bool isNUMt () { return this->_tag == _con_NUMt; }
+        bool isFLTt () { return this->_tag == _con_FLTt; }
 %%
     { CFG.ty.* } <= public_code %%
-	llvm::Type *codegen (smlnj::cfgcg::Context *cxt);
+        llvm::Type *codegen (smlnj::cfgcg::Context *cxt);
 %%
 
 -- param
     { CFG.param } <= public_code %%
-	void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { cxt->insertVal (this->_v_name, v); }
+        void bind (smlnj::cfgcg::Context *cxt, llvm::Value *v) { cxt->insertVal (this->_v_name, v); }
 %%
 
 -- exp
     { CFG.exp } <= public_code %%
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt) = 0;
-	bool isLABEL () { return (this->_tag == _con_LABEL); }
+        bool isLABEL () { return (this->_tag == _con_LABEL); }
 %%
     { CFG.exp.* } <= public_code %%
         llvm::Value *codegen (smlnj::cfgcg::Context *cxt);
@@ -364,7 +364,7 @@ view Cpp {
 %%
     { CFG.stm } <= protected_code %%
         llvm::BasicBlock *_bb;  // for the first stm in a block
-	void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
+        void _initBB (smlnj::cfgcg::Context *cxt, bool blkEntry);
 %%
 
     { CFG.stm.* } <= public_code %%
@@ -376,12 +376,12 @@ view Cpp {
     { CFG.frag } <= public_code %%
         void init (smlnj::cfgcg::Context *cxt);
         void codegen (smlnj::cfgcg::Context *cxt, cluster *cluster);
-	llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
-	llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
-	void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
-	{
-	    this->_phiNodes[i]->addIncoming(v, bblk);
-	}
+        llvm::BasicBlock *bb() const { return this->_v_body->bb(); }
+        llvm::Type *paramTy (int i) const { return this->_phiNodes[i]->getType(); }
+        void addIncoming (int i, llvm::Value *v, llvm::BasicBlock *bblk)
+        {
+            this->_phiNodes[i]->addIncoming(v, bblk);
+        }
 %%
     { CFG.frag } <= private_code %%
         std::vector<llvm::PHINode *> _phiNodes;
@@ -391,8 +391,8 @@ view Cpp {
     { CFG.cluster } <= public_code %%
         void init (smlnj::cfgcg::Context *cxt, bool isFirst);
         void codegen (smlnj::cfgcg::Context *cxt, bool isFirst);
-	llvm::Function *fn () const { return this->_fn; }
-	frag *entry () const { return this->_v_frags[0]; }
+        llvm::Function *fn () const { return this->_fn; }
+        frag *entry () const { return this->_v_frags[0]; }
 %%
     { CFG.cluster } <= private_code %%
         llvm::Function *_fn;
