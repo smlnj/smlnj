@@ -278,8 +278,8 @@ module CFG (
 --
 view Cpp {
     <file> <= interface_prologue %%
-#include "code-buffer.hxx"
-#include "lambda-var.hxx"
+#include "context.hpp"
+#include "lambda-var.hpp"
 
 %%
     <file> <= suppress : pickler
