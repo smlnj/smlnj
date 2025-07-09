@@ -103,6 +103,15 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/07/09]::
+Added `charSize` and `realSize` functions to `Unsafe` module.  These
+are placeholders for eventual primops that can be used for compile-time
+tests for the sizes of the default `char` and `real` types (similar
+to the `wordSize` primop).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/04/11]::
 Add a pass to eliminate redundant computation in the CPS IR.  This
 pass does value numbering for most pure and arithmetic expressions
