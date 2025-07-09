@@ -103,6 +103,15 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/07/09]::
+Added `charSize` and `realSize` functions to `Unsafe` module.  These
+are placeholders for eventual primops that can be used for compile-time
+tests for the sizes of the default `char` and `real` types (similar
+to the `wordSize` primop).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/06/23]::
 Add build targets for a standalone runtime system library, `runx.<arch>-<os>`,
 for `arm64-darwin`, `amd64-darwin`, and `amd64-linux` to support `heap2exec`.
