@@ -30,9 +30,9 @@ endif
 LLVM_LD_FLAGS =	$(shell $(LLVM_CONFIG) --ldflags)
 LLVM_DEPS =	../lib/libCFGCodeGen.a \
 		$(shell $(LLVM_CONFIG) --libfiles $(TARGETS_BUILT) passes runtimedyld)
+SYSTEM_LIBS =	$(shell $(LLVM_CONFIG) --system-libs)
 LLVM_LIBS =	-lCFGCodeGen \
-		$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT) passes runtimedyld) \
-		$(shell $(LLVM_CONFIG) --system-libs)
+		$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT) passes runtimedyld)
 
 #
 # dummy version
@@ -131,11 +131,11 @@ MAIN =		main
 MAIN_OBJ =	$(MAIN).o
 
 $(RUNTIME):	$(VERSION) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_DEPS)
-	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
+	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_LIBS) $(SYSTEM_LIBS)
 
-$(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
+$(RUNTIME_A):	$(VERSION) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_DEPS)
 	rm -f $(RUNTIME_A)
-	$(AR) rc $(RUNTIME_A) main.o $(OBJS)
+	$(AR) rc $(RUNTIME_A) $(MAIN_OBJ) $(OBJS)
 	rm -rf tmp
 	mkdir tmp
 	for lib in $(ALL_LIBS) ; \

@@ -112,6 +112,13 @@ to the `wordSize` primop).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
+[2025/06/23]::
+Add build targets for a standalone runtime system library, `runx.<arch>-<os>`,
+for `arm64-darwin`, `amd64-darwin`, and `amd64-linux` to support `heap2exec`.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2025/04/11]::
 Add a pass to eliminate redundant computation in the CPS IR.  This
 pass does value numbering for most pure and arithmetic expressions
