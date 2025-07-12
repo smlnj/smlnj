@@ -8,7 +8,10 @@
 The `Random` structure implements a random number generator
 using the http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/emt.html[
 _Mersenne Twister_ algorithm].  The implementation is specialized
-to the native word size.
+to the native word size.  In the description below, we assume that
+the default word and integer types (`Word.word` and `Int.int`)
+have a representation that is smaller than the native size
+(_e.g._, 63 or 32 bits on a 64-bit machine).
 
 Note that prior to 2023.1 (and 110.99.4), this structure was implemented
 using a _subtract-with-borrow_ algorithm.
@@ -100,17 +103,17 @@ val randRange : (int * int) -> rand -> int
 `[.kw]#val# randInt : rand \-> int`::
   `randInt rand` generates a random integer with a uniform distribution in
   the range latexmath:[[-2^{k-1} .. 2^{k-1}-1]], where latexmath:[k]
-  is the host platform's default word size (__e.g.__, 31 or 63).
+  is the size of the `Int.int` type.
 
 `[.kw]#val# randWord : rand \-> word`::
   `randWord rand` generates a random word with a uniform distribution in
   the range latexmath:[[0 .. 2^k-1]], where latexmath:[k]
-  is the host platform's default word size (__e.g.__, 31 or 63).
+  is the number of bits in the `Word.word` type.
 
 `[.kw]#val# randNat : rand \-> int`::
   `randNat rand` generates a random integer with a uniform distribution in
   the range latexmath:[[0 .. 2^{k-1}-1]], where latexmath:[k]
-  is the host platform's default word size (__e.g.__, 31 or 63).
+  is the number of bits in the `Int.int` type.
 
 `[.kw]#val# randReal : rand \-> real`::
   `randReal rand` generates a random real number in the range `[0..1)`.

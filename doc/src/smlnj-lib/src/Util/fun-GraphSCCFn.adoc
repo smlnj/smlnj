@@ -41,9 +41,9 @@ datatype component
   = SIMPLE of node
   | RECURSIVE of node list
 
-val topOrder' : { roots: node list, follow: node \-> node list } -> component list
+val topOrder' : { roots: node list, follow: node -> node list } -> component list
 
-val topOrder : { root: node, follow: node \-> node list } -> component list
+val topOrder : { root: node, follow: node -> node list } -> component list
 ------------
 
 == Description
