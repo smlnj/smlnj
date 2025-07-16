@@ -1,13 +1,13 @@
 (* sources.cm
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
 Library
 
-  structure CxxView
-  structure GenCxx
+  structure CppView
+  structure GenCpp
 
 is
 
@@ -20,10 +20,10 @@ is
   ../../views/sources.cm
   ../util/sources.cm
 
-  cxx.sml
-  cxx-view.sml
-  gen-cxx.sml
+  cpp.sml
+  cpp-view.sml
+  gen-cpp.sml
   gen-pickle.sml
   gen-types.sml
-  print-cxx.sml
+  print-cpp.sml
   util.sml

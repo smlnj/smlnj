@@ -42,7 +42,7 @@ view sml {
   }
 }
 
-view cxx {
+view cpp {
   module IntMap <= {
     interface_prologue
 %%

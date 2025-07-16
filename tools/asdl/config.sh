@@ -24,9 +24,24 @@ if [ x"$1" = x ] ; then
     echo "           or define INSTALLDIR in the environment"
     echo "usage: config.sh [ -32 | -64 ] [ <install-dir> ]"
     exit 1
+  else
+    case "$INSTALLDIR" in
+      /*) ;;
+      *) echo "config.sh: INSTALLDIR should be set to an absolute path"
+        exit 1 ;;
+    esac
   fi
 else
-  INSTALLDIR=$1
+  INSTALLDIR="$1"
+  case "$INSTALLDIR" in
+    /*) ;;
+    *) # make absolute
+      HERE=$(pwd)
+      cd "$INSTALLDIR" || exit 1
+      INSTALLDIR=$(pwd)
+      cd "$HERE" || exit 1
+      ;;
+  esac
 fi
 
 # make sure that the configure script is present

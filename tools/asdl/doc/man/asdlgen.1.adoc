@@ -31,7 +31,7 @@ The first argument to the asdlgen(1) tool must be one of the following *commands
 *version*::
   print the version of of asdlgen to the standard output.
 
-*c++* or *cxx*::
+*c++*::
   generate a C++ implementation of the ASDL modules.
 
 *sml*::
@@ -73,7 +73,7 @@ C++ OPTIONS
 
 *--base-include='FILE'*::
   specify the header file that specifies the primitive ASDL types.
-  The default is `asdl/base.hxx`.
+  The default is `asdl/base.hpp`.
 
 
 SML OPTIONS

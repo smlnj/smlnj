@@ -1,18 +1,18 @@
-(* print-cxx.sml
+(* print-cpp.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Print C++ code.
  *)
 
-structure PrintCxx : sig
+structure PrintCpp : sig
 
-    val output : TextIOPP.stream * Cxx.decl -> unit
+    val output : TextIOPP.stream * Cpp.decl -> unit
 
   end = struct
 
-    structure CL = Cxx
+    structure CL = Cpp
     structure PP = TextIOPP
 
     val indent0 = (PP.Abs 0)

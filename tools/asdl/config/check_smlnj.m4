@@ -1,6 +1,6 @@
 dnl check_smlnj.m4
 dnl
-dnl COPYRIGHT (c) 2019 The The SML/NJ Fellowship (http://smlnj.org/)
+dnl COPYRIGHT (c) 2025 The The SML/NJ Fellowship (https://smlnj.org/)
 dnl
 dnl @synopsis CHECK_SMLNJ(ACTION-IF-UNKNOWN)
 dnl

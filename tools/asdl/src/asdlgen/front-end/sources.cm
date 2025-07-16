@@ -9,7 +9,7 @@
 Library
 
   structure FrontEnd
-  structure PrimTypes
+  structure BaseTypes
 
 is
 

@@ -72,7 +72,7 @@ DISTCLEAN_FILES +=	Makefile config.status config.log \
 			src/gen/fragments/Makefile \
 			src/gen/fragments/mkfrags.sh \
 			src/gen/fragments/mkmk.sh \
-			src/lib/cxx/include/asdl/config.h \
+			src/lib/cpp/include/asdl/config.h \
 			bin \
 			lib \
 			include

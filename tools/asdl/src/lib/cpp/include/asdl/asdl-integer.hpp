@@ -1,18 +1,18 @@
-/*! \file asdl-integer.hxx
+/*! \file asdl-integer.hpp
  *
  * \author John Reppy
  */
 
 /*
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
-#ifndef _ASDL_INTEGER_HXX_
-#define _ASDL_INTEGER_HXX_
+#ifndef _ASDL_INTEGER_HPP_
+#define _ASDL_INTEGER_HPP_
 
-#ifndef _ASDL_HXX_
-#  error do not include "asdl-integer.hxx" directly; instead include "asdl.hxx"
+#ifndef _ASDL_HPP_
+#  error do not include "asdl-integer.hpp" directly; instead include "asdl.hpp"
 #endif
 
 #if defined(ASDL_USE_GNU_MP)
@@ -200,4 +200,4 @@ namespace asdl {
 
 } // namespace asdl
 
-#endif //! _ASDL_INTEGER_HXX_
+#endif //! _ASDL_INTEGER_HPP_

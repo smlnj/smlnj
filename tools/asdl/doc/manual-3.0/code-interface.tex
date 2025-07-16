@@ -104,7 +104,7 @@ For an \asdl{} source file \texttt{f.asdl}, \asdlgen{} will produce four \sml{} 
 Shared types change the representation of a pickle from a tree to a DAG
 (Directed Acyclic Graph).
 If an ASDL specification includes shared types (\ie{}, uses of the ``\kw{!}''
-type operator, then a more complicated interface to the pickler/unpickler
+type operator), then a more complicated interface to the pickler/unpickler
 is required.
 Basically, we need to augment the input and output streams with sharing
 state that tracks repeated occurrences of the same value.
@@ -120,17 +120,36 @@ output.
 Since \asdlgen{} cannot easily determine what the key value might be, we
 require user-defined code.
 For each shared type $\tau$, the user must implement a function with the
-type ``\lstinline[language=sml,mathescape=true]@($\tau$, 'a) share_map@,''
-where
+type ``\lstinline[language=sml,mathescape=true]@$\tau$ -> int@.''
+The semantics of this function is to map values of type $\tau$ to unique integer
+identifiers.
+The \asdl{} library defines the \lstinline[language=sml]@ASDLShareMapFn@ functor
+that can be used to generate these maps or one can implement them directly.
+The generated pickler module will include the definition of a context type
+that is a record of the form:
 \begin{code}
-\begin{lstlisting}[language=sml]
-type ('key, 'a) share_map = unit -> {
-       insert : 'key * 'a -> unit,
-       find : 'key -> 'a option
-     }
+\begin{lstlisting}[language=sml,mathescape=true]
+type make_context = {
+    outS : 'a,
+    $\tau_1$_smap : unit -> $\tau_1$ ASDLShareMap.t,
+    $\cdots$
+    $\tau_n$_smap : unit -> $\tau_1$ ASDLShareMap.t
+  }
+type 'a context = {
+    out : 'a,
+    $\tau_1$_smap : $\tau_1$ ASDLShareMap.t,
+    $\cdots$
+    $\tau_n$_smap : $\tau_1$ ASDLShareMap.t
+  }
 \end{lstlisting}%
 \end{code}%
-
+where the ``\lstinline@outS@'' field is the output target (\eg{}, a
+\lstinline@TextIO.outstream@) and the $\tau_i$ are the shared types
+in the module.
+There are a couple of ways to implement the share maps.  We can either
+define an instance of the ``\lstinline@HASH_KEY@'' signature for the type
+and use the ``\lstinline@ASDLShareMapFn@'' functor to implement the map
+or we can use the `ASDLShareMap.mkShareMap` function.
 
 For example, say that we had the following \asdl{} specification fragment
 as part of a compiler's intermediate representation:
@@ -141,16 +160,40 @@ as part of a compiler's intermediate representation:
 \end{lstlisting}%
 \end{code}%
 where the ``\cd{id}'' field is a unique ID for each variable.
-Then we could implement the sharing map for variables using the
+Using the first method, we would define a structure that implements
+share maps for the ``\cd{var}'' type.
+\begin{code}
+\begin{lstlisting}[language=asdl]
+structure VarShareMap = ASDLShareMapFn (
+    struct
+      type hash_key = var
+      fun hashVal (x : var) = #id x
+      fun sameKey (x : var, y : var) = (#if x = #id y)
+    end)
+\end{lstlisting}%
+\end{code}%
+Alternatively, we could implement the sharing map for variables using the
 ``\cd{IntHashTable}'' module from the \smlnj{} Library:
 \begin{code}
 \begin{lstlisting}[language=sml]
-val var_sharemap = fn () => let
-      val tbl = IntHashTable.mkTable (32, Fail "var_sharemap")
-      in {
-        insert = fn (x : var, y) => IntHashTable.insert tbl (#id x, y),
-        find = fn (x : var) => IntHashTable.find tbl (#id x)
-      } end
+val mkVarShareMap : unit -> var ASDLShareMap.t =
+      ASDLShareMap.mkShareMap (fn () => let
+        val tbl = IntHashTable.mkTable (32, Fail "var_sharemap")
+        in {
+          insert = fn (x : var, y) => IntHashTable.insert tbl (#id x, y),
+          find = fn (x : var) => IntHashTable.find tbl (#id x)
+        } end
+\end{lstlisting}%
+\end{code}%
+%
+The pickle function for shared objects is implemented as follows
+\begin{code}
+\begin{lstlisting}[language=sml]
+fun write_shared wrFn (outS, sMap, item) = (
+      case ASDLShareMap.resolve (sMap, item)
+       of (true, id) => writeUInt (outS, Word.fromInt(id+1))
+        | (false, id) => (writeUInt (outS, 0); write_var (outS, item))
+      (* end case *))
 \end{lstlisting}%
 \end{code}%
 
@@ -204,16 +247,12 @@ a named type $T$ is described in the following table.
     \hline
       \textbf{\asdl{} type expression ($\tau$)} &  \textbf{\Cplusplus{} type $\widehat{\tau}$} \\[0.25em]
     \hline
+      \mbox{} & \\[-1em]
       \lstinline[language=ASDL,mathescape=true]@$T$@ & \lstinline[language=c++,mathescape=true]@$\widehat{T}$@ \\[0.5em]
       \lstinline[language=ASDL,mathescape=true]@$T$?@ &
-        $\left\{
-        \begin{array}{ll}
-          \text{\lstinline[language=c++,mathescape=true]@asdl::option< $\widehat{T}$ >@}
-            & \text{if $t$ is an \lstinline[language=c++]!enum! type} \\
-          \text{\lstinline[language=c++,mathescape=true]@$\widehat{T}$@} & otherwise \\[0.5em]
-        \end{array}
-        \right.$ \\[0.5em]
+        \lstinline[language=c++,mathescape=true]@std::optional< $\widehat{T}$ >@ \\[0.5em]
       \lstinline[language=ASDL,mathescape=true]@$T$*@ & \lstinline[language=c++,mathescape=true]@std::vector< $\widehat{T}$ >@ \\[0.5em]
+      \lstinline[language=ASDL,mathescape=true]@$T$!@ & \\[0.25em]
     \hline
   \end{tabular}%
 \end{center}%
@@ -222,10 +261,8 @@ Notice that the for option types, we use \lstinline[language=c++]@nullptr@ to
 represent the empty option for those \asdl{} types that are represented by
 \Cplusplus{} pointer types.
 For other \asdl{} types, which are not represented by pointers, we wrap the type
-with the template class ``\lstinline[language=c++]@option<>@''
-from the \asdl{} library.
-This class provides methods for testing if an option is empty (\lstinline[language=c++]@isEmpty@
-and for getting the value when it is not (\lstinline[language=c++]@valOf@).
+with the template class ``\lstinline[language=c++]@std::optional<>@''
+from the \Cplusplus{} STL.
 
 \subsection{Translation of type definitions}
 
@@ -289,7 +326,56 @@ The translation of product types is described by the following table:
 The code generator for the \Cplusplus{} view uses a mix of methods, static methods,
 and overloaded functions to implement the pickler and unpickler operations.
 
+\subsection{Error handling}
+ASDL does some validation of its input when unpickling a value.
+While the obvious solution to error handling in \Cplusplus{} is to use the exception
+mechanism, that choice is incompatible with some systems (\eg{}, the LLVM libraries).
+
+Error handling in \asdl{}/\Cplusplus{} is supported by the \cd{asdl::instream} class.
+There are two \kw{virtual} methods that are used to report errors:
+%
+\begin{quote}\begin{lstlisting}[language=c++]
+/// report an invalid enum/constructor tag
+[[noreturn]] virtual void invalidTag (
+    unsigned int tag,
+    std::string_view tyName);
+
+/// report an input error
+[[noreturn]] virtual void invalidIOState (std::iostate st);
+\end{lstlisting}
+\end{quote}%
+%
+The default behavior implemented by the \asdl{} library is to print an error message
+to \cd{std::cerr} and then exit the program.
+This behavior can be overridden by defining an input-stream subclass and overriding
+the error handler methods.\footnote{
+  In practice, one would define a subclass of either \cd{asdl::file_instream}
+  or \cd{asdl::memory_instream}, which are both subclasses of \cd{asdl::instream}.
+}
+
 \subsection{Memory management}
+
+The default behavior of the \Cplusplus{} code generator is to use the default allocation
+mechanisms (\eg{}, \kw{new} and \kw{delete}) when building the tree representation.
+For many applications, however, the tree representation of the pickle is a temporary
+data structure that is soon discarded.
+In such situations, a ``arena'' allocator can be significantly more
+efficient~\cite{arena-alloc}.
+Arena allocation is supported by \asdlgen{} using \Cplusplus{}17's \emph{polymorphic memory resource}
+mechanism.
+To enable this feature, include a specification of the \lstinline[language=ASDL]@arena_alloc@
+file property.
+%
+\begin{quote}\begin{lstlisting}[language=ASDL]
+<file> <= arena_alloc : true
+\end{lstlisting}\end{quote}%
+%
+This property has several effects on the generated code.
+\begin{itemize}
+  \item The STL classes \lstinline@string@,  \lstinline@vector@, \etc{} are replaced
+    with their  \lstinline@std::pmr@ equivalents.
+  \item ???
+\end{itemize}%
 
 \subsection{Makefile support}
 Currently there is no support for generating makefile dependencies or rules,
@@ -320,33 +406,33 @@ and in \Cplusplus{} it translates to
 \begin{quote}\begin{lstlisting}[language=c++]
 namespace M {
 
-    struct sexpr {
-        enum tag {
-            _Int, _String, _Symbol, _Cons, _Nil
-        };
-        tag _tag;
-        sexpr (tag t) : _tag(t) { }
-        virtual ~sexpr ();
+struct sexpr {
+    enum tag {
+        _Int, _String, _Symbol, _Cons, _Nil
     };
+    tag _tag;
+    sexpr (tag t) : _tag(t) { }
+    virtual ~sexpr ();
+};
 
-    struct Int : public sexpr {
-        int _v1;
-        Int (int v) : sexpr(sexpr::_Int), _v1(v) { }
-        ~Int () { }
-    };
+struct Int : public sexpr {
+    int _v1;
+    Int (int v) : sexpr(sexpr::_Int), _v1(v) { }
+    ~Int () { }
+};
 
-    struct String : public sexpr {
-        std::string _v1;
-        String (const char *v) : sexpr(sexpr::_String), _v1(v) { }
-        String (std::string const &v) : sexpr(sexpr::_String), _v1(v) { }
-        ~String () { }
-    };
+struct String : public sexpr {
+    std::string _v1;
+    String (const char *v) : sexpr(sexpr::_String), _v1(v) { }
+    String (std::string const &v) : sexpr(sexpr::_String), _v1(v) { }
+    ~String () { }
+};
 
-    struct Symbol : public sexpr { ... };
+struct Symbol : public sexpr { ... };
 
-    struct Cons : public sexpr { ... };
+struct Cons : public sexpr { ... };
 
-    struct Nil : public sexpr { ... };
+struct Nil : public sexpr { ... };
 
 }
 \end{lstlisting}\end{quote}%

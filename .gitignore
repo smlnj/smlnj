@@ -138,7 +138,7 @@ tools/asdl/src/asdlgen/back-end/sml/fragments.sml
 tools/asdl/src/asdlgen/common/config.sml
 tools/asdl/src/gen/fragments/mkfrags.sh
 tools/asdl/src/gen/fragments/mkmk.sh
-tools/asdl/src/lib/cxx/include/asdl/config.h
+tools/asdl/src/lib/cpp/include/asdl/config.h
 tools/cfgc/cfgc
 doc/**/Makefile
 doc/doc

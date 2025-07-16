@@ -1,6 +1,6 @@
 (* asdl-lib.cm
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -19,6 +19,9 @@ Library
   structure ASDLFileReadPickle
   structure ASDLFileWritePickle
   structure ASDLSExpPickle
+  structure ASDLShareMap
+
+  functor ASDLShareMapFn
 
 is
 
@@ -38,3 +41,6 @@ is
   asdl-file-read-pickle.sml
   asdl-file-write-pickle.sml
   asdl-sexp-pickle.sml
+  asdl-share-map-fn.sml
+  share-map.sml
+

@@ -1,6 +1,6 @@
-# Makefile for basic ASDL tests
+# Makefile for ASDL sharing tests
 #
-# COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
 # @configure_input@
@@ -18,8 +18,8 @@ CPPFLAGS =		@CPPFLAGS@ -I@ASDL_INCDIR@
 LDFLAGS =		@LDFLAGS@ -L$(ASDL_LIBDIR)
 LIBS =			@LIBS@ -lasdl
 
-CXX_SRCS =          	cpp-test.cpp test-spec.cpp
-CXX_OBJS =          	$(patsubst %.cpp,%.o,$(CXX_SRCS))
+CXX_SRCS =          	cxx-test.cxx test-spec.cxx
+CXX_OBJS =          	$(patsubst %.cxx,%.o,$(CXX_SRCS))
 
 build:		cxx-test sml-test
 
@@ -28,11 +28,11 @@ build:		cxx-test sml-test
 cxx-test:	$(CXX_OBJS)
 	$(CXX) -o $@ $(CXX_OBJS) $(LDFLAGS) $(LIBS)
 
-%.o : %.cpp
+%.o : %.cxx
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
 
-cpp-test.cpp:		cxx-files
-test-spec.cpp:		cxx-files
+cxx-test.cxx:		cxx-files
+test-spec.cxx:		cxx-files
 
 # generate the C++ implementation
 #

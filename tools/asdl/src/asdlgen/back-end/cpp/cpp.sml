@@ -1,12 +1,12 @@
-(* cxx.sml
+(* cpp.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A tree representation of C++ programs.
  *)
 
-structure Cxx =
+structure Cpp =
   struct
 
     type var = string
@@ -369,6 +369,7 @@ structure Cxx =
     fun mkDoWhile (b, e) = S_DoWhile(b, paren e)
     fun mkCall (f, args) = S_Exp(mkApply(f, args))
     fun mkCallExp (f, args) = S_Exp(mkApplyExp(f, args))
+    fun mkMethCall (obj, meth, args) = S_Exp(mkApplyExp(mkSelect(obj, meth), args))
     fun mkTemplateCall (f, tys, args) = S_Exp(mkTemplateApply(f, tys, args))
     val voidReturn = S_Return NONE
     fun mkReturn exp = S_Return(SOME exp)

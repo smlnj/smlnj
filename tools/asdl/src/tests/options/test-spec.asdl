@@ -16,5 +16,5 @@ module TestSpec {
        | NODE(string value, tree? left, tree? right)
 
 -- a tuple of optional things
-  everything = (color?, value?, tree?)
+  everything = (color?, value?, tree?, bool?, int?, string?)
 }

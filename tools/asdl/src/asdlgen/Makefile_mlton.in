@@ -1,6 +1,6 @@
 # Makefile for asdlgen tool using MLton
 #
-# This code is part of the SML/NJ system (http://smlnj.org)
+# This code is part of the SML/NJ system (https://smlnj.org)
 #
 # COPYRIGHT (c) 2018 The Fellowship of SML/NJ
 # All rights reserved.
@@ -10,3 +10,5 @@
 
 SHELL =			/bin/sh
 PREFIX =		@prefix@
+
+# TODO: write this makefile
