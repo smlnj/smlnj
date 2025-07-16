@@ -5,6 +5,14 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2025.2
 -------------------
 
+[2025-07-12]
+        Changed the implementation of the `randInt`, `randWord`, and `randNat`
+        functions to be more compatible with **MLton** (see Legacy Issue #363
+        ("default word size" in the documentation for Util/Random).  The change
+        is to use truncation of the high-order bits to convert from native words
+        to smaller types, instead of right shifts.  The documentation has also
+        been edited for clarity.
+
 [2025-06-18]
         Moved the `JSON` structure to the utility library.  This change is to
         make it possible for libraries to produce results as JSON values without

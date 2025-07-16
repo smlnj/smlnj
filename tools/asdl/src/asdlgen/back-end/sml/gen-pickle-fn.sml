@@ -52,9 +52,9 @@ functor GenPickleFn (
     val inSV = S.IDexp "inS"
 
     fun outS true = S.selectExp("outS", cxtSV)
-      | outS false = cxtSV
+      | outS false = outSV
     fun inS true = S.selectExp("inS", cxtSV)
-      | inS false = cxtSV
+      | inS false = inSV
 
     fun outP true = S.CONSTRAINTpat(S.IDpat "cxt", S.CONty([], "outstream"))
       | outP false = S.CONSTRAINTpat(S.IDpat "outS", S.CONty([], "outstream"))
@@ -302,16 +302,18 @@ functor GenPickleFn (
                   pairExp(outSV, arg))
             | genTyExp (arg, E.TYP ty) = S.appExp (tyWriter ty, pairExp(outSV, arg))
           and genTyExp' (x, ty) = genTyExp (S.IDexp x, ty)
-        (* generate the body of the writer; which may involve a conversion
-         * from the natural type.
-         *)
+          (* the pickler's arguments *)
+          val paramPat = S.TUPLEpat[outP anySharing, objP]
+          (* generate the body of the writer; which may involve a conversion
+           * from the natural type.
+           *)
           val body = (case TyV.getUnwrapper tyId
                  of NONE => gen(S.IDexp "obj", encoding)
                   | SOME f => S.simpleLet("pkl", funApp(qId f, [S.IDexp "obj"]),
                       gen(S.IDexp "pkl", encoding))
                 (* end case *))
           in
-            S.funBind(Util.picklerName tyId, [([outP anySharing, objP], body)])
+            S.funBind(Util.picklerName tyId, [([paramPat], body)])
           end
 
     and genReader (modId, anySharing, tyModName, tyId, encoding) = let

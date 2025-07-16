@@ -1,6 +1,6 @@
 /// \file asdl-stream.hpp
 ///
-/// \copyright 2025 The Fellowship of SML/NJ (https://smlnj.org)
+/// \copyright 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
 /// All rights reserved.
 ///
 /// \brief Defines the input and output stream types for ASDL picklers.
@@ -15,139 +15,149 @@
 #  error do not include "asdl-stream.hpp" directly; instead include "asdl.hpp"
 #endif
 
-#include <istream>
-#include <ostream>
-
 namespace asdl {
 
-  //! ASDL output stream
-    class outstream {
-      public:
-	explicit outstream (std::ostream *os) : _os(os) { }
+//! ASDL output stream
+class outstream {
+public:
+    explicit outstream (std::ostream *os) : _os(os) { }
 
-      // no copying allowed!
-	outstream (outstream const &) = delete;
-	outstream &operator= (outstream const &) = delete;
+  // no copying allowed!
+    outstream (outstream const &) = delete;
+    outstream &operator= (outstream const &) = delete;
 
-      // move operations
-	outstream (outstream &&os) noexcept
-	{
-	    this->_os = os._os;
-	    os._os = nullptr;
-	}
-	outstream &operator= (outstream &&rhs) noexcept
-	{
-	    if (this != &rhs) {
-		this->_os = rhs._os;
-		rhs._os = nullptr;
-	    }
-	    return *this;
-	}
+  // move operations
+    outstream (outstream &&os) noexcept
+    {
+        this->_os = os._os;
+        os._os = nullptr;
+    }
+    outstream &operator= (outstream &&rhs) noexcept
+    {
+        if (this != &rhs) {
+            this->_os = rhs._os;
+            rhs._os = nullptr;
+        }
+        return *this;
+    }
 
-	~outstream ()
-	{
-	    if (this->_os != nullptr) {
-		delete this->_os;
-	    }
-	}
+    ~outstream ()
+    {
+        if (this->_os != nullptr) {
+            delete this->_os;
+        }
+    }
 
-	void putc (char c) { this->_os->put(c); }
-	void putb (unsigned char c) { this->_os->put(c); }
+    void putc (char c) { this->_os->put(c); }
+    void putb (unsigned char c) { this->_os->put(c); }
 
-      protected:
-	std::ostream *_os;
-    };
+  protected:
+    std::ostream *_os;
+};
 
-  //! ASDL file outstream
-    class file_outstream : public outstream {
-      public:
-	explicit file_outstream (std::string const &file);
+//! ASDL file outstream
+class file_outstream : public outstream {
+public:
+    explicit file_outstream (std::string const &file);
 
-      // no copying allowed!
-	file_outstream (file_outstream const &) = delete;
-	file_outstream &operator= (file_outstream const &) = delete;
+  // no copying allowed!
+    file_outstream (file_outstream const &) = delete;
+    file_outstream &operator= (file_outstream const &) = delete;
 
-	void close () { this->_os->flush(); }
-    };
+    void close () { this->_os->flush(); }
+};
 
-  //! ASDL memory outstream
-    class memory_outstream : public outstream {
-      public:
-	explicit memory_outstream ();
+//! ASDL memory outstream
+class memory_outstream : public outstream {
+public:
+    explicit memory_outstream ();
 
-      // no copying allowed!
-	memory_outstream (memory_outstream const &) = delete;
-	memory_outstream &operator= (memory_outstream const &) = delete;
+  // no copying allowed!
+    memory_outstream (memory_outstream const &) = delete;
+    memory_outstream &operator= (memory_outstream const &) = delete;
 
-	std::string get_pickle () const;
-    };
+    std::string get_pickle () const;
+};
 
-  //! ASDL input stream
-    class instream {
-      public:
-	explicit instream (std::istream *is) : _is(is) { }
+//! ASDL input stream
+class instream {
+public:
+    explicit instream (std::string const &name, std::istream *is)
+    : _is(is), _name(name)
+    { }
 
-      // no copying allowed!
-	instream (instream const &) = delete;
-	instream &operator= (instream const &) = delete;
+  // no copying allowed!
+    instream (instream const &) = delete;
+    instream &operator= (instream const &) = delete;
 
-      // move operations
-	instream (instream &&is) noexcept
-	{
-	    this->_is = is._is;
-	    is._is = nullptr;
-	}
-	instream &operator= (instream &&rhs) noexcept
-	{
-	    if (this != &rhs) {
-		this->_is = rhs._is;
-		rhs._is = nullptr;
-	    }
-	    return *this;
-	}
+  // move operations
+    instream (instream &&is) noexcept
+    {
+        this->_is = is._is;
+        is._is = nullptr;
+    }
+    instream &operator= (instream &&rhs) noexcept
+    {
+        if (this != &rhs) {
+            this->_is = rhs._is;
+            rhs._is = nullptr;
+        }
+        return *this;
+    }
 
-	~instream ()
-	{
-	    if (this->_is != nullptr) {
-		delete this->_is;
-	    }
-	}
+    virtual ~instream ()
+    {
+        if (this->_is != nullptr) {
+            delete this->_is;
+        }
+    }
 
-	char getc () {
-	    if (this->_is->good())
-		return this->_is->get();
-	    throw std::ios_base::failure("decode error");
-	}
-	unsigned char getb ()
-	{
-	    if (this->_is->good())
-		return static_cast<unsigned char>(this->_is->get());
-	    throw std::ios_base::failure("decode error");
-	}
+    char getc () {
+        if (this->_is->good()) {
+            return this->_is->get();
+        } else {
+            this->invalidIOState (this->_is->rdstate());
+        }
+    }
+    unsigned char getb ()
+    {
+        if (this->_is->good()) {
+            return static_cast<unsigned char>(this->_is->get());
+        } else {
+            this->invalidIOState (this->_is->rdstate());
+        }
+    }
 
-      protected:
-	std::istream *_is;
-    };
+    /// report an invalid enum/constructor tag
+    [[noreturn]] virtual void invalidTag (unsigned int tag, std::string_view tyName);
 
-  //! ASDL file instream
-    class file_instream : public instream {
-      public:
-	explicit file_instream (std::string const &file);
+    /// report an input error
+    [[noreturn]] virtual void invalidIOState (std::ios_base::iostate st);
 
-      // no copying allowed!
-	file_instream (file_instream const &) = delete;
-	file_instream &operator= (file_instream const &) = delete;
-    };
+  protected:
+    std::string _name;
+    std::istream *_is;
+};
 
-  //! ASDL memory outstream
-    class memory_instream : public instream {
-      public:
-	explicit memory_instream (std::string const &data);
+//! ASDL file instream
+class file_instream : public instream {
+public:
+    explicit file_instream (std::string const &file);
 
-      // no copying allowed!
-	memory_instream (memory_instream const &) = delete;
-	memory_instream &operator= (memory_instream const &) = delete;
-    };
+  // no copying allowed!
+    file_instream (file_instream const &) = delete;
+    file_instream &operator= (file_instream const &) = delete;
+};
+
+//! ASDL memory instream
+class memory_instream : public instream {
+public:
+    explicit memory_instream (std::string const &data);
+
+  // no copying allowed!
+    memory_instream (memory_instream const &) = delete;
+    memory_instream &operator= (memory_instream const &) = delete;
+};
 
 } // namespace asdl
 

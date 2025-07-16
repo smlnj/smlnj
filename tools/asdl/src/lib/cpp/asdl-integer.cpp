@@ -4,7 +4,7 @@
  */
 
 /*
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
@@ -78,23 +78,31 @@ namespace asdl {
 	    digits.push_back(b & 0x7f);
 	};
 
+	b = digits[0];
+
+      // the number of significant bits in the first byte
+	int firstBits;
+	if (b > 0x1f) firstBits = 6;
+	else if (b > 0xf) firstBits = 5;
+	else if (b > 0x7) firstBits = 4;
+	else if (b > 0x3) firstBits = 3;
+	else if (b > 0x2) firstBits = 2;
+	else if (b > 0x0) firstBits = 1;
+	else firstBits = 0;
+
       // the total number of bits (not counting the sign) is computed
       // as 7 bits per continuation byte plus the bits required for the
       // first byte
-	int nbits = (digits.size() - 1) * 7;
-	b = digits[0];
-	if (b > 0x1f) nbits += 6;
-	else if (b > 0xf) nbits += 5;
-	else if (b > 0x7) nbits += 4;
-	else if (b > 0x3) nbits += 3;
-	else if (b > 0x2) nbits += 2;
-	else if (b > 0x0) nbits += 1;
+	int nbits = (digits.size() - 1) * 7 + firstBits;
 
 	if (nbits > 0) {
 	    this->_digits.reserve((nbits + 31) >> 5);
-	    uint32_t availBits = nbits % 32;	// tracks space avail in current target digit
+	  // the number of bits available in the current digit
+	    uint32_t availBits = nbits % 32;
 	    if (availBits == 0) { availBits = 32; }
+	  // initialize the current result digit to the first byte
 	    uint32_t w = digits[0];
+	    availBits -= firstBits;
 	    int idx = 1;
 	    while (idx < digits.size()) {
 		b = digits[idx];
@@ -103,7 +111,7 @@ namespace asdl {
 		    availBits -= 7;
 		} else {
 		    uint32_t excessBits = 7 - availBits;
-		  // first we extract
+		  // first we extract the high availBits from b
 		    w = (w << availBits) | (b >> excessBits);
 		    this->_digits.push_back(w);
 		    availBits = 32 - excessBits;
@@ -166,8 +174,8 @@ namespace asdl {
 	}
 	else if (this->_digits.size() == 1) {
 	    n = this->_sign
-		? static_cast<int64_t>(this->_digits[0])
-		: - static_cast<int64_t>(this->_digits[0]);
+		? - static_cast<int64_t>(this->_digits[0])
+		: static_cast<int64_t>(this->_digits[0]);
 	    return false;
 	}
 	else if (this->_digits.size() == 2) {

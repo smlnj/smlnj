@@ -53,6 +53,9 @@ of the teething issues in the new ARM64 support.
 * removed deprecated functions from `SMLofNJ.SysInfo` structure and changed the
   `WIN32` constructor to `WINDOWS`.
 
+* added `charSize` and `realSize` functions to `Unsafe` structure to enable
+  more compile-time feature tests.
+
 === SML/NJ Library
 
 * moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
@@ -83,6 +86,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/303[The exception `IO.Io` is not accessible]
 | [.bugid]#306#
 | {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
+| [.bugid]#311#
+| {pull-base}/311[Fix `heap2exec`]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
