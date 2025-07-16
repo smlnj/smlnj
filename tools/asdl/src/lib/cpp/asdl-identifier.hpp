@@ -1,4 +1,4 @@
-/*! \file asdl-identifier.hxx
+/*! \file asdl-identifier.hpp
  *
  * \author John Reppy
  *
@@ -7,18 +7,18 @@
  */
 
 /*
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
-#ifndef _ASDL_IDENTIFIER_HXX_
-#define _ASDL_IDENTIFIER_HXX_
+#ifndef _ASDL_IDENTIFIER_HPP_
+#define _ASDL_IDENTIFIER_HPP_
 
 #include <unordered_map>
 #include <memory>
 #include <string>
 
-#include "asdl-stream.hxx"
+#include "asdl-stream.hpp"
 
 namespace asdl {
 
@@ -122,4 +122,4 @@ namespace asdl {
 	return os << g._str
 }
 
-#endif // !_ASDL_IDENTIFIER_HXX_
+#endif // !_ASDL_IDENTIFIER_HPP_
