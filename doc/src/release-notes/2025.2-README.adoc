@@ -108,6 +108,15 @@ repository):
 
 * Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
   to return an object with `ByteVector` representation)]
+
+* Merged {legacy-issue-base}/360[Legacy Issue #360 (Incorrect values returned by
+  `Real.fromString` on strings with many digits)]
+
+* Merged {legacy-issue-base}/362[Legacy Issue #362 (`Real.fromString` on negative
+  inf/infinity returns positive infinity)]
+
+* Merged {legacy-issue-base}/363[Legacy Issue #363 ("default word size" in the
+  documentation for Util/Random)]
 --
 
 == Supported systems

@@ -1,6 +1,6 @@
 (* real64-to-frep.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Conversion of 64-bit IEEE floating-point numbers to the `FloatRep.float_rep`
