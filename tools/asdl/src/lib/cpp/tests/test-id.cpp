@@ -1,15 +1,15 @@
-/*! \file test-id.cxx
+/*! \file test-id.cpp
  *
  * \author John Reppy
  */
 
 /*
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
 #include <iostream>
-#include  "../asdl-identifier.hxx"
+#include  "../asdl-identifier.hpp"
 
 asdl::identifier::table_t asdl::identifier::_Tbl;
 
