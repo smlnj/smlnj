@@ -182,8 +182,8 @@ structure PrimopBindings : sig
 	    mk_rr_r("max", P.INLMAX nk) :-:
 	    arith_r_r("abs", P.FABS) :-:
 	    arith_r_r("sqrt", P.FSQRT) :-:
-	  (* note that the argument type is 'a to force boxing of the real *)
-	    mk("to_bits", p1(ar(tv1, wTy sz)), P.REAL_TO_BITS sz)
+	    mk("to_bits", ar(rty, wTy sz), P.REAL_TO_BITS sz) :-:
+	    mk("from_bits", ar(wTy sz, rty), P.BITS_TO_REAL sz)
 	  end
 
   (* utility functions for conversions *)

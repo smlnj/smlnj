@@ -758,7 +758,16 @@ structure Num64Cnv : sig
 		(fk, f, params, List.map cvtTy tys, cexp body)
 	  in
 	    if needsRewrite cfun
-	      then function cfun
+	      then let
+		val cfun' = function cfun
+		in
+		  if !Control.CG.debugcps
+		    then (
+		      Control.Print.say "[After Num64Cnv.elim ...]\n";
+		      PPCps.printcps0 cfun')
+		    else ();
+		  cfun'
+		end
 	      else cfun
 	  end (* elim *)
 

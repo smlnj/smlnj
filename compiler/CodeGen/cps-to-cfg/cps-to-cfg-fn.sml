@@ -586,7 +586,7 @@ C.NUMt{sz=sz}
 			  then zeroExtend(from, genV v)
 (* QUESTION: do we need to zero extend v before untagging it? *)
 			  else untagUnsigned v
-			else error [".genPure: ", PPCps.pureToString p]
+			else error ["genPure: ", PPCps.pureToString p]
 		  | (P.EXTEND{from, to}, [v]) =>
 		      if (from = to)
 			then genV v
@@ -606,7 +606,7 @@ C.NUMt{sz=sz}
 			    (* shift by one more bit to nuke the tag *)
 			      else pureOp (TP.ASHR, ity, [exp, num(sa+1)])
 			  end
-			else error [".genPure: ", PPCps.pureToString p]
+			else error ["genPure: ", PPCps.pureToString p]
 		  | (P.TRUNC{from, to}, [v]) =>
 		      if (from = to)
 			then genV v
@@ -636,6 +636,8 @@ C.NUMt{sz=sz}
 		      in
 			pure(TP.INT_TO_FLOAT{from=ity, to=to}, [e])
 		      end
+                  | (P.BITS_TO_REAL sz, [v]) => pure(TP.BITS_TO_FLOAT{sz=sz}, [genV v])
+                  | (P.REAL_TO_BITS sz, [v]) => pure(TP.FLOAT_TO_BITS{sz=sz}, [genV v])
 		  | (P.SUBSCRIPTV, [v1, v2]) =>
 		      pure(TP.PURE_SUBSCRIPT, [
 			  getSeqData (genV v1),
@@ -664,7 +666,7 @@ C.NUMt{sz=sz}
 (* REAL32: FIXME *)
 		      pure(TP.PURE_RAW_SUBSCRIPT{kind=TP.FLT, sz=64},
 			[genV v1, untagSigned v2])
-		  | _ => error[".genPure: ", PPCps.pureToString p]
+		  | _ => error["genPure: ", PPCps.pureToString p]
 		(* end case *))
 	(***** BRANCH *****)
 	  and genBranch (test, args, k1, k2) = let
