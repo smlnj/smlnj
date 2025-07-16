@@ -24,6 +24,7 @@ usage() {
   echo "options:"
   echo "    -h,-help           print this message and exit"
   echo "    -nolib             skip building libraries/tools"
+  echo "    -runtime           build the runtime system only"
   echo "    -doc               generate documentation"
   echo "    -verbose           emit feedback messages"
   echo "    -clean             remove existing executables and libraries before building"
@@ -48,6 +49,7 @@ QUIET=yes
 CLEAN_INSTALL=no
 INSTALL_DEBUG=no
 INSTALL_DEV=no
+ONLY_RUNTIME=no
 MAKE_DOC=no
 SANITIZE_ADDRESS=no
 BUILD_LLVM_FLAGS=""
@@ -63,6 +65,7 @@ while [ "$#" != "0" ] ; do
       INSTALL_DEV=yes;
       BUILD_LLVM_FLAGS="-all-targets $BUILD_LLVM_FLAGS"
     ;;
+    -runtime) ONLY_RUNTIME=yes ;;
     -doc) MAKE_DOC=yes ;;
     -debug-llvm) BUILD_LLVM_FLAGS="-debug $BUILD_LLVM_FLAGS" ;;
     -sanitize-address)
@@ -295,16 +298,26 @@ dirarcs() {
 
 ######################################################################
 
+mk_directory() {
+  if [ x"$QUIET" = xyes ] ; then
+    mkdir -p "$1" || exit 1
+  else
+    mkdir -p -v "$1" || exit 1
+  fi
+}
+
 #
 # create the various sub directories
 #
-for dir in "$BINDIR" "$HEAPDIR" "$RUNDIR" "$LIBDIR" ; do
-  if [ x"$QUIET" = xyes ] ; then
-    mkdir -p "$dir" || exit 1
-  else
-    mkdir -p -v "$dir" || exit 1
-  fi
-done
+if [ x"$ONLY_RUNTIME" = xyes ] ; then
+  for dir in "$BINDIR" "$RUNDIR" ; do
+    mk_directory "$dir"
+  done
+else
+  for dir in "$BINDIR" "$HEAPDIR" "$RUNDIR" "$LIBDIR" ; do
+    mk_directory "$dir"
+  done
+fi
 
 #
 # install the script that tests architecture and os...
@@ -328,11 +341,13 @@ eval $ARCH_N_OPSYS
 # now install most of the other driver scripts
 #  (except ml-build, since we don't know $CM_DIR_ARC yet)
 #
-installdriver _run-sml .run-sml
-installdriver _link-sml .link-sml
-installdriver _ml-makedepend ml-makedepend
-installdriver _heap2exec heap2exec
-## TODO: install-sml-wrapper script
+if [ x"$ONLY_RUNTIME" = xno ] ; then
+  installdriver _run-sml .run-sml
+  installdriver _link-sml .link-sml
+  installdriver _ml-makedepend ml-makedepend
+  installdriver _heap2exec heap2exec
+  ## TODO: install-sml-wrapper script
+fi
 
 #
 # set allocation size; for the x86, this gets reset in .run-sml
@@ -373,14 +388,6 @@ if [ x"XDEFS" != x ] ; then
     EXTRA_DEFS="XDEFS=\"$XDEFS\" $EXTRA_DEFS"
   fi
 fi
-
-#
-# the name of the bin files directory
-#
-# FIXME: should make these file names more consistent!!
-#
-BOOT_ARCHIVE=boot.$ARCH-unix
-BOOT_FILES=sml.boot.$ARCH-unix
 
 #
 # build the run-time system
@@ -425,6 +432,19 @@ else
   fi
 fi
 cd "$SMLNJ_ROOT" || exit 1
+
+vsay $cmd: runtime system built
+if [ x"$ONLY_RUNTIME" = xyes ] ; then
+  exit 1
+fi
+
+#
+# the name of the bin files directory
+#
+# FIXME: should make these file names more consistent!!
+#
+BOOT_ARCHIVE=boot.$ARCH-unix
+BOOT_FILES=sml.boot.$ARCH-unix
 
 #
 # boot the base SML system
