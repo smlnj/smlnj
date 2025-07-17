@@ -7,7 +7,7 @@ SML/NJ 2025.2
 
 [2025-07-17]
         Merged pull request #306, which fixed a bug in the `IntBinarySet`
-        structure.
+        structure (Issue #310).
 
 [2025-07-17]
         Added a number of operations to the `MONO_HASH_SET` interface to make

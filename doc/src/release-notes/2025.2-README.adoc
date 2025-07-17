@@ -88,6 +88,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
 | [.bugid]#308#
 | {pull-base}/308[Fix `IntBinarySet`'s comparison operators to be like `BinarySetFn`]
+| [.bugid]#310#
+| {issue-base}/310[`IntBinarySet`'s `union`, `intersection`, and `difference` functions do not work correctly]
 | [.bugid]#311#
 | {pull-base}/311[Fix `heap2exec`]
 // | [.bugid]#@ID@#
