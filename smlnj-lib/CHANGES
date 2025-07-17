@@ -6,6 +6,10 @@ SML/NJ 2025.2
 -------------------
 
 [2025-07-17]
+        Merged pull request #306, which fixed a bug in the `IntBinarySet`
+        structure.
+
+[2025-07-17]
         Added a number of operations to the `MONO_HASH_SET` interface to make
         it more compatible to the `ORD_SET` interface.
 

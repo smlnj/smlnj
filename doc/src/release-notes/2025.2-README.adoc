@@ -86,6 +86,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/303[The exception `IO.Io` is not accessible]
 | [.bugid]#306#
 | {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
+| [.bugid]#308#
+| {pull-base}/308[Fix `IntBinarySet`'s comparison operators to be like `BinarySetFn`]
 | [.bugid]#311#
 | {pull-base}/311[Fix `heap2exec`]
 // | [.bugid]#@ID@#
