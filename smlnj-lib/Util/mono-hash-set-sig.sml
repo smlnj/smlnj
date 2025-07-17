@@ -32,8 +32,11 @@ signature MONO_HASH_SET =
     val add' : item * set -> unit
     val addc : set -> item -> unit
 
-    (* Insert items from list. *)
+    (* add the items from the list to the set *)
     val addList : set * item list -> unit
+
+    (* add the elements of the second set to the first *)
+    val addSet : set * set -> unit
 
     (* Remove the item, if it is in the set.  Otherwise the set is unchanged. *)
     val subtract  : set * item -> unit
@@ -42,6 +45,9 @@ signature MONO_HASH_SET =
 
     (* Subtract a list of items from the set. *)
     val subtractList : set * item list -> unit
+
+    (* subtract the elements of the second set from the first *)
+    val subtractSet : set * set -> unit
 
     (* Remove an item.  Return false if the item was not present. *)
     val delete : set * item -> bool
@@ -60,6 +66,17 @@ signature MONO_HASH_SET =
 
     (* Return the number of items in the table *)
     val numItems : set ->  int
+
+    (* return a new set that is the union of two sets *)
+    val union : set * set -> set
+
+    (* return a new set that is the intersection of two sets *)
+    val intersection : set * set -> set
+
+    (* return a new set that is the difference of two sets (i.e., the second
+     * subtracted from the first)
+     *)
+    val difference : set * set -> set
 
     (* Create a new set by applying a map function to the elements
      * of the set.

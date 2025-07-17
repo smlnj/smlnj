@@ -84,7 +84,7 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
       | findInBucket (B (h', item', r), h, item) =
           ((h = h') andalso same (item, item')) orelse findInBucket (r, h, item)
 
-    fun addWithHash (tbl as SET{table, nItems}, h, item) = let
+    fun addWithHash (SET{table, nItems}, h, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
 	  val indx = index (h, sz)
@@ -99,8 +99,8 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	  end
 
   (* Add an item to a set *)
-    fun add (tbl, item) = addWithHash(tbl, hash item, item)
-    fun add' (item, tbl) = addWithHash(tbl, hash item, item)
+    fun add (set, item) = addWithHash(set, hash item, item)
+    fun add' (item, set) = addWithHash(set, hash item, item)
     fun addc set item = add(set, item)
 
   (* The empty set *)
@@ -144,22 +144,41 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
   (* Insert items from list. *)
     fun addList (set, items) = List.app (addc set) items
 
-  (* Remove an item. Raise NotFound if not found. *)
-    fun delete (SET{table, nItems}, item) = let
+    fun addSet (s1, SET{table=tbl2, nItems=n2}) = let
+          val arr2 = !tbl2
+          val sz2 = Array.length arr2
+          (* iterate over the items in `tbl2` adding them to `s1` *)
+          fun lp1 i = if (i < sz2)
+                then let
+                  fun lp2 NIL = lp1 (i + 1)
+                    | lp2 (B(h, item, r)) = (
+                        addWithHash (s1, h, item);
+                        lp2 r)
+                  in
+                    lp2 (Array.sub (arr2, i))
+                  end
+                else ()
+          in
+            lp1 0
+          end
+
+    fun rmvWithHash (SET{table, nItems}, h, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
-	  val h = hash item
 	  val indx = index (h, sz)
-	  fun look (_, NIL) = false
-	    | look (prefix, B(h', item', r)) = if ((h = h') andalso same(item, item'))
+	  fun rmv (_, NIL) = false
+	    | rmv (prefix, B(h', item', r)) = if ((h = h') andalso same(item, item'))
 		then (
                   Array.update(arr, indx, revAppend(prefix, r));
                   nItems := !nItems - 1;
                   true)
-		else look (B(h', item', prefix), r)
+		else rmv (B(h', item', prefix), r)
           in
-            look (NIL, Array.sub(arr, indx))
-          end
+            rmv (NIL, Array.sub(arr, indx))
+	  end
+
+  (* Remove an item *)
+    fun delete (set, item) = rmvWithHash (set, hash item, item)
 
   (* Remove the item, if it is in the set.  Otherwise the set is unchanged. *)
     fun subtract (set, item) = ignore(delete (set, item))
@@ -167,6 +186,24 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
     fun subtractc set item = subtract(set, item)
 
     fun subtractList (set, items) = List.app (subtractc set) items
+
+    fun subtractSet (s1, SET{table=tbl2, nItems=n2}) = let
+          val arr2 = !tbl2
+          val sz2 = Array.length arr2
+          (* iterate over the items in `tbl2` removing them from `s1` *)
+          fun lp1 i = if (i < sz2)
+                then let
+                  fun lp2 NIL = lp1 (i + 1)
+                    | lp2 (B(h, item, r)) = (
+                        ignore (rmvWithHash (s1, h, item));
+                        lp2 r)
+                  in
+                    lp2 (Array.sub (arr2, i))
+                  end
+                else ()
+          in
+            lp1 0
+          end
 
   (* Return true if and only if item is an element in the set *)
     fun member (SET{table, ...}, item) = let
@@ -243,12 +280,58 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             if (!n1 <= !n2) then noMember (tbl1, tbl2) else noMember (tbl2, tbl1)
           end
 
-  (* Return the number of items in the table *)
     fun numItems (SET{nItems, ...}) = !nItems
 
-  (* Create a new set by applying a map function to the elements
-   * of the set.
-   *)
+    fun union (s1 as SET{nItems=n1, ...}, s2 as SET{nItems=n2, ...}) = let
+          fun add (s1, s2) = let val s1 = copy s1 in addSet(s1, s2); s1 end
+          in
+            (* add the smaller set to a copy of the larger *)
+            if (!n1 < !n2) then add(s2, s1) else add(s1, s2)
+          end
+
+    fun intersection (SET{table=tbl1, nItems=n1}, SET{table=tbl2, nItems=n2}) = let
+          (* compute the intersection by iterating over the items in `tbl1` (which
+           * should be the smaller) and testing them for membership in `tbl2`.
+           *)
+          fun inter (arr1, arr2) = let
+                val sz1 = Array.length arr1 and sz2 = Array.length arr2
+                val newArr = Array.array(sz1, NIL)
+                fun lp1 (i, n) = if (i < sz1)
+                      then let
+                        (* iterate over the items in bucket `i` *)
+                        fun lp2 (NIL, n) = lp1(i+1, n)
+                          | lp2 (B(h, item, r), n) = let
+                              fun look NIL = lp2 (r, n)
+                                | look (B(h', item', r')) =
+                                    if (h = h') andalso same(item, item')
+                                      then (
+                                        Array.update(
+                                          newArr, i,
+                                          B(h, item, Array.sub(newArr, i)));
+                                        lp2 (r, n+1))
+                                      else look r'
+                              in
+                                look (Array.sub(arr2, index (h, sz2)))
+                              end
+                        in
+                          lp2 (Array.sub(arr1, i), n)
+                        end
+                      else SET{table = ref newArr, nItems = ref n}
+                in
+                  lp1 (0, 0)
+                end
+          in
+            if (!n1 < !n2)
+              then inter (!tbl1, !tbl2)
+              else inter (!tbl2, !tbl1)
+          end
+
+    fun difference (s1, s2) = let
+          val s1 = copy s1
+          in
+            subtractSet (s1, s2); s1
+          end
+
     fun map f (SET{nItems, table}) = let
           val s = mkEmpty (!nItems)
           fun mapf NIL = ()
