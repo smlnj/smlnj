@@ -31,14 +31,14 @@ signature ORD_SET =
 
     (* add an item. *)
     val add  : set * item -> set
-    val add' : (item * set) -> set
+    val add' : item * set -> set
 
     (* add a list of items. *)
     val addList : set * item list -> set
 
     (* subtract an item from a set; has no effect if the item is not in the set *)
     val subtract  : set * item -> set
-    val subtract' : (item * set) -> set
+    val subtract' : item * set -> set
 
     (* subtract a list of items from the set. *)
     val subtractList : set * item list -> set

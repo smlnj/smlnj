@@ -5,6 +5,10 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2025.2
 -------------------
 
+[2025-07-17]
+        Added `add'`, `subtract'`, and `disjoint` functions to the `MONO_HASH_SET`
+        interface to make it more compatible to the `ORD_SET` interface.
+
 [2025-07-12]
         Changed the implementation of the `randInt`, `randWord`, and `randNat`
         functions to be more compatible with **MLton** (see Legacy Issue #363

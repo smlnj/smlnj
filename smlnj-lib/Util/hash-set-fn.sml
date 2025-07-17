@@ -100,6 +100,7 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 
   (* Add an item to a set *)
     fun add (tbl, item) = addWithHash(tbl, hash item, item)
+    fun add' (item, tbl) = addWithHash(tbl, hash item, item)
     fun addc set item = add(set, item)
 
   (* The empty set *)
@@ -162,6 +163,7 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 
   (* Remove the item, if it is in the set.  Otherwise the set is unchanged. *)
     fun subtract (set, item) = ignore(delete (set, item))
+    fun subtract' (item, set) = ignore(delete (set, item))
     fun subtractc set item = subtract(set, item)
 
     fun subtractList (set, items) = List.app (subtractc set) items
@@ -207,6 +209,39 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
                 lp 0
               end
             else false
+
+    (* return true if the two sets are disjoint *)
+    fun disjoint (SET{table=tbl1, nItems=n1}, SET{table=tbl2, nItems=n2}) = let
+          (* is any element of tbl1 a member of tbl2? *)
+          fun noMember (tbl1, tbl2) = let
+                val arr1 = !tbl1 and arr2 = !tbl2
+                val sz1 = Array.length arr1 and sz2 = Array.length arr2
+                fun lp i = if (i < sz1)
+                      then let
+                      (* iterate over the items in bucket i testing them against tbl2 *)
+                        fun look1 NIL = lp(i+1)
+                          | look1 (B(h, item, r)) = let
+                            (* search `tbl2` for `item` *)
+                              fun look2 NIL = look1 r
+                                | look2 (B(h', item', r')) = if (h <> h')
+                                      then look2 r'
+                                    else if same(item, item')
+                                      then false
+                                      else look2 r'
+                              in
+                                look2 (Array.sub(arr2, index (h, sz2)))
+                              end
+                        in
+                          look1 (Array.sub(arr1, i))
+                        end
+                      else true
+                in
+                  lp 0
+                end
+          in
+            (* check each element of the smaller set for membership in the larger *)
+            if (!n1 <= !n2) then noMember (tbl1, tbl2) else noMember (tbl2, tbl1)
+          end
 
   (* Return the number of items in the table *)
     fun numItems (SET{nItems, ...}) = !nItems

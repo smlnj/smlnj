@@ -5,8 +5,8 @@
 :source-highlighter: pygments
 :VERSION: {smlnj-version}
 
-The `HashSetFn` functor provides a hash-table-based implementation
-of imperative sets parameterized over a `Key` structure.
+The `HashSetFn` functor provides an imperative, hash-table-based
+implementation of sets parameterized over a `Key` structure.
 
 == Synopsis
 
@@ -48,11 +48,13 @@ val mkFromList : item list -> set
 val toList : set -> item list
 
 val add  : set * item -> unit
+val add' : item * set -> unit
 val addc : set -> item -> unit
 
 val addList : set * item list -> unit
 
 val subtract  : set * item -> unit
+val subtract' : item * set -> unit
 val subtractc : set -> item -> unit
 
 val subtractList : set * item list -> unit
@@ -64,6 +66,8 @@ val member : set * item -> bool
 val isEmpty : set -> bool
 
 val isSubset : (set * set) -> bool
+
+val disjoint : set * set -> bool
 
 val numItems : set ->  int
 
@@ -114,6 +118,9 @@ val without : set * item -> unit
 `[.kw]#val# add  : set * item \-> unit`::
   `add (set, item)` destructively adds the item to the set.
 
+`[.kw]#val# add' : item * set  \-> unit`::
+  `add (item, set)` destructively adds the item to the set.
+
 `[.kw]#val# addc : set \-> item \-> unit`::
    `addc set item` destructively adds the item to the set.
 
@@ -123,6 +130,10 @@ val without : set * item -> unit
 [[val:subtract]]
 `[.kw]#val# subtract : set * item \-> unit`::
   `subtract (set, item)` removes the object `item` from `set`; it has no
+  effect if `item` is not in `set`.
+
+`[.kw]#val# subtract' : item * set \-> unit`::
+  `subtract (item, set)` removes the object `item` from `set`; it has no
   effect if `item` is not in `set`.
 
 `[.kw]#val# subtractc : set \-> item \-> unit`::
@@ -149,6 +160,10 @@ List.app (subtractc set) items
 
 `[.kw]#val# isEmpty : set \-> bool`::
   `isEmpty set` returns true if, and only if, `set` is empty.
+
+`[.kw]#val# disjoint : (set * set) \-> bool`::
+  `isSubset (set1, set2)` returns true if, and only if, the two
+  sets are disjoint.
 
 `[.kw]#val# isSubset : (set * set) \-> bool`::
   `isSubset (set1, set2)` returns true if, and only if, `set1`
