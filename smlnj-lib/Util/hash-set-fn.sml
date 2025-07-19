@@ -30,13 +30,13 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 
     fun index (i, sz) = Word.toIntX(Word.andb(i, Word.fromInt sz - 0w1))
 
-  (* minimum and maximum hash table sizes.  We use powers of two for hash table
-   * sizes, since that give efficient indexing, and assume a minimum size of 32.
-   *)
+    (* minimum and maximum hash table sizes.  We use powers of two for hash table
+     * sizes, since that give efficient indexing, and assume a minimum size of 32.
+     *)
     val minSize = 32
     val maxSize = MaxHashTableSize.maxSize
 
-  (* round up `n` to the next hash-table size *)
+    (* round up `n` to the next hash-table size *)
     fun roundUp n = if (n >= maxSize)
 	  then maxSize
 	  else let
@@ -45,12 +45,12 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	      f minSize
 	    end
 
-  (* Create a new table; the int is a size hint and the exception
-   * is to be raised by find.
-   *)
+    (* Create a new table; the int is a size hint and the exception
+     * is to be raised by find.
+     *)
     fun alloc sizeHint = Array.array(roundUp sizeHint, NIL)
 
-  (* grow a table to the specified size *)
+    (* grow a table to the specified size *)
     fun growTable (table, newSz) = let
 	  val newArr = Array.array (newSz, NIL)
 	  fun copy NIL = ()
@@ -65,7 +65,7 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	    newArr
 	  end
 
-  (* conditionally grow a table; return true if it grew. *)
+    (* conditionally grow a table; return true if it grew. *)
     fun growTableIfNeeded (table, nItems) = let
 	    val arr = !table
 	    val sz = Array.length arr
@@ -75,11 +75,11 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 		else ()
 	    end
 
-  (* reverse-append for buckets *)
+    (* reverse-append for buckets *)
     fun revAppend (NIL, b) = b
       | revAppend (B(h, x, r), b) = revAppend(r, B(h, x, b))
 
-  (* look for an item with hash `h` in a bucket *)
+    (* look for an item with hash `h` in a bucket *)
     fun findInBucket (NIL, h, item) = false
       | findInBucket (B (h', item', r), h, item) =
           ((h = h') andalso same (item, item')) orelse findInBucket (r, h, item)
@@ -98,18 +98,15 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
                 growTableIfNeeded (table, !nItems))
 	  end
 
-  (* Add an item to a set *)
     fun add (set, item) = addWithHash(set, hash item, item)
     fun add' (item, set) = addWithHash(set, hash item, item)
     fun addc set item = add(set, item)
 
-  (* The empty set *)
     fun mkEmpty sizeHint = SET{
 	    table = ref (alloc sizeHint),
 	    nItems = ref 0
 	  }
 
-  (* Create a singleton set *)
     fun mkSingleton item = let
           val set = mkEmpty minSize
           in
@@ -117,7 +114,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             set
           end
 
-  (* create a set from a list of items *)
     fun mkFromList items = let
           val set = mkEmpty(List.length items)
           in
@@ -130,7 +126,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	    nItems = ref(!nItems)
 	  }
 
-  (* Return a list of the items in the set *)
     fun toList (SET{table, nItems}) =
           if (!nItems = 0)
             then []
@@ -141,7 +136,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
                 Array.foldl f [] (!table)
               end
 
-  (* Insert items from list. *)
     fun addList (set, items) = List.app (addc set) items
 
     fun addSet (s1, SET{table=tbl2, nItems=n2}) = let
@@ -177,10 +171,8 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             rmv (NIL, Array.sub(arr, indx))
 	  end
 
-  (* Remove an item *)
     fun delete (set, item) = rmvWithHash (set, hash item, item)
 
-  (* Remove the item, if it is in the set.  Otherwise the set is unchanged. *)
     fun subtract (set, item) = ignore(delete (set, item))
     fun subtract' (item, set) = ignore(delete (set, item))
     fun subtractc set item = subtract(set, item)
@@ -205,7 +197,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             lp1 0
           end
 
-  (* Return true if and only if item is an element in the set *)
     fun member (SET{table, ...}, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
@@ -215,10 +206,8 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             findInBucket (Array.sub(arr, indx), h, item)
           end
 
-  (* Return true if and only if the set is empty *)
     fun isEmpty (SET{nItems, ...}) = (!nItems = 0)
 
-  (* Return true if and only if the first set is a subset of the second *)
     fun isSubset (SET{table=tbl1, nItems=n1}, s2 as SET{table=tbl2, nItems=n2}) =
           if (!n1 <= !n2)
             then let
@@ -247,7 +236,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
               end
             else false
 
-    (* return true if the two sets are disjoint *)
     fun disjoint (SET{table=tbl1, nItems=n1}, SET{table=tbl2, nItems=n2}) = let
           (* is any element of tbl1 a member of tbl2? *)
           fun noMember (tbl1, tbl2) = let
