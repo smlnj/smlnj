@@ -5,6 +5,10 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2025.2
 -------------------
 
+[2025-07-19]
+	Fix Issue #292 (`SockUtil.recvVec` behaviour does not match
+	documentation).
+
 [2025-07-17]
         Merged pull request #306, which fixed a bug in the `IntBinarySet`
         structure (Issue #310).
