@@ -47,11 +47,22 @@ of the teething issues in the new ARM64 support.
   This change results in significant shrinkage in the size of heap images and more
   closely matches the behavior of the old **MLRISC** code generator.
 
-=== CM
-
-=== MLRISC
+* A number of changes to the CFG IR:
+--
+* replaced the `UMUL` and `SMUL` operators with `MUL`, since the are
+  all the same
+* renamed the shift operators to `SHL`, `ASHR`, and `LSHR`
+* added bit-counting operators: `CNTPOP`, `CNTLZ`, and `CNTTZ`
+* added bit-rotation operators: `ROTL` and `ROTR`
+* added `BITS_TO_FLOAT` and `FLOAT_TO_BITS` primops
+* added `FREM` and `FMADD` primops
+* removed the `OFFSET` expression form, since it is never generated.
+--
 
 === Runtime System
+
+* changes to the LLVM code generator to match the **CFG** IR changes in the
+  compiler.
 
 === Basis Library
 
@@ -66,14 +77,6 @@ of the teething issues in the new ARM64 support.
 * moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
   change was made to allow code to produce/consume JSON values without depending
   on the *JSON* library.
-
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
-
-=== Installation
 
 == Bugs
 
@@ -91,6 +94,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
 | [.bugid]#303#
 | {issue-base}/303[The exception `IO.Io` is not accessible]
+| [.bugid]#304#
+| {issue-base}/304[ElabCore regression for invalid application patterns]
 | [.bugid]#306#
 | {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
 | [.bugid]#308#
@@ -99,8 +104,6 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/310[`IntBinarySet`'s `union`, `intersection`, and `difference` functions do not work correctly]
 | [.bugid]#311#
 | {pull-base}/311[Fix `heap2exec`]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
