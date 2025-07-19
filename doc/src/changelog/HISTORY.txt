@@ -104,6 +104,16 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/07/19]::
+Changed the way that GC invocation code is generated to not distinguish
+between different types that have uniform representation (*i.e.*, `LABt`,
+`PTRt` and `TAGt`). This change results in significant shrinkage in the
+size of heap images (*e.g.*, 78Kb for the compiler) and more closely
+matches the behavior of the old **MLRISC** code generator.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/07/16]::
 Ported various bug fixes for real/string conversions from the legacy
 repository.
@@ -130,7 +140,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2025/07/09]::
-Added `charSize` and `realSize` functions to `Unsafe` module.  These
+Added `charSize` and `realSize` functions to the `Unsafe` module.  These
 are placeholders for eventual primops that can be used for compile-time
 tests for the sizes of the default `char` and `real` types (similar
 to the `wordSize` primop).

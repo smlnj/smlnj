@@ -8,7 +8,6 @@ structure LambdaVarMemoryPickle : LAMBDA_VAR_PICKLE
   where type outstream = ASDLMemoryPickle.outstream = struct
     type instream = ASDLMemoryPickle.instream
     type outstream = ASDLMemoryPickle.outstream
-
     val read_lvar = LambdaVarPickle.read_lvar ASDLMemoryPickle.input1
     val write_lvar = LambdaVarPickle.write_lvar ASDLMemoryPickle.output1
   end

@@ -42,14 +42,38 @@ structure InvokeGC : sig
 *)
     structure D = ObjectDesc
 
+    (* a GC signature is a pair `(isCont, tys)`, where `isCont` is true
+     * for continuations and `tys` is a list of the CFG types for the
+     * parameters at the GC point.
+     *)
+    type gc_sig = bool * CFG.ty list
+
+    (* finite maps from GC signatures *)
     structure GCInfoMap = RedBlackMapFn (
       struct
-	type ord_key = bool * CFG.ty list
+	type ord_key = gc_sig
       (* lexical order on the GC root type signature *)
 	fun compare ((false, _), (true, _)) = LESS
 	  | compare ((true, _), (false, _)) = GREATER
-	  | compare ((_, tys1), (_, tys2)) =
-	      List.collate CFGUtil.compareTy (tys1, tys2)
+	  | compare ((_, tys1), (_, tys2)) = let
+              (* when comparing types, we treat `LABt`, `PTRt`, and `TAGt` as
+               * equal, since they all have "uniform" representation.
+               *)
+(* QUESTION: since we do not pack untagged numbers, it might be safe to ignore the
+ * size component of `NUMt` types.
+ *)
+              fun cmpTy (C.NUMt{sz=s1}, C.NUMt{sz=s2}) = Int.compare(s1, s2)
+                | cmpTy (C.FLTt{sz=s1}, C.FLTt{sz=s2}) = Int.compare(s1, s2)
+                | cmpTy (C.NUMt _, C.FLTt _) = LESS
+                | cmpTy (C.FLTt _, C.NUMt _) = GREATER
+                | cmpTy (_, C.NUMt _) = LESS
+                | cmpTy (_, C.FLTt _) = LESS
+                | cmpTy (C.NUMt _, _) = GREATER
+                | cmpTy (C.FLTt _, _) = GREATER
+                | cmpTy _ = EQUAL
+              in
+	        List.collate cmpTy (tys1, tys2)
+              end
       end)
 
     fun error msg = ErrorMsg.impossible(concat("InvokeGC." :: msg))

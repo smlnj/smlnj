@@ -8,9 +8,7 @@ structure LambdaVarFilePickle : LAMBDA_VAR_PICKLE
   where type outstream = ASDLFilePickle.outstream = struct
     type instream = ASDLFilePickle.instream
     type outstream = ASDLFilePickle.outstream
-(*---------- end streams.in ----------*)
 
-    val write_lvar = LambdaVarPickle.write_lvar ASDLFilePickle.output1
     val read_lvar = LambdaVarPickle.read_lvar ASDLFilePickle.input1
     val write_lvar = LambdaVarPickle.write_lvar ASDLFilePickle.output1
   end
