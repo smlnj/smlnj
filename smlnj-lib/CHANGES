@@ -10,7 +10,7 @@ SML/NJ 2025.2
 	documentation).
 
 [2025-07-17]
-        Merged pull request #306, which fixed a bug in the `IntBinarySet`
+        Merged pull request #308, which fixed a bug in the `IntBinarySet`
         structure (Issue #310).
 
 [2025-07-17]
