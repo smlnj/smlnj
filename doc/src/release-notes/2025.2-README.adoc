@@ -83,6 +83,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 |=======
 | Issue
 | Description
+| [.bugid]#292#
+| {issue-base}/292[`SockUtil.recvVec` behaviour does not match documentation]
 | [.bugid]#297#
 | {issue-base}/297[macOS installer does not initialize CM paths correctly]
 | [.bugid]#302#
