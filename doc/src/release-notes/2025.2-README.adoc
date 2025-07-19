@@ -42,6 +42,11 @@ of the teething issues in the new ARM64 support.
 
 === Compiler
 
+* changed the way that GC invocation code is generated to not distinguish between
+  different types that have uniform representation (*i.e.*, `LABt`, `PTRt` and `TAGt`).
+  This change results in significant shrinkage in the size of heap images and more
+  closely matches the behavior of the old **MLRISC** code generator.
+
 === CM
 
 === MLRISC
