@@ -105,6 +105,12 @@ Here is an update to the entry
 
 //--------------------------------------------------------------------
 [2025/07/19]::
+Changed the **CPS** IR to track the argument types of continuations.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/19]::
 Changed the way that GC invocation code is generated to not distinguish
 between different types that have uniform representation (*i.e.*, `LABt`,
 `PTRt` and `TAGt`). This change results in significant shrinkage in the

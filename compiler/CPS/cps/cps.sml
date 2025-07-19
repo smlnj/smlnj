@@ -23,11 +23,11 @@ structure CPS : CPS =
     type intty = {sz : int, tag : bool}
 
     datatype cty
-      = NUMt of intty	(* integers of the given type *)
-      | PTRt of pkind	(* pointer *)
-      | FUNt		(* function? *)
-      | FLTt of int 	(* float of given size *)
-      | CNTt		(* continuation *)
+      = NUMt of intty	        (* integers of the given type *)
+      | PTRt of pkind	        (* pointer *)
+      | FUNt		        (* function? *)
+      | FLTt of int 	        (* float of given size *)
+      | CNTt of cty list	(* continuation *)
 
     structure P =
       struct

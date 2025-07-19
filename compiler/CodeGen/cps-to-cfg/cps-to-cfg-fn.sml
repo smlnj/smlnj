@@ -85,7 +85,7 @@ C.NUMt{sz=sz}
 	    | CPS.FLTt sz => C.FLTt{sz=sz}
 	    | CPS.PTRt _ => C.PTRt
 	    | CPS.FUNt => C.LABt
-	    | CPS.CNTt => C.LABt
+	    | CPS.CNTt _ => C.LABt
 	  (* end case *))
 
   (* helpers for constructing expressions *)
@@ -234,7 +234,7 @@ C.NUMt{sz=sz}
 		      val argTys = List.map (cvtTy o typeOfVal) vs
 		      in
 			case typeOfVal f
-			 of CPS.CNTt => C.THROW(genV f, args, argTys)
+			 of CPS.CNTt _ => C.THROW(genV f, args, argTys)
 			  | _ => C.APPLY(genV f, args, argTys)
 			(* end case *)
 		      end

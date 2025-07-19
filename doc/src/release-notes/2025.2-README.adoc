@@ -1,5 +1,5 @@
-:version: 2025.2
-:date: @DATE@
+:version: 2025.2-rc1
+:date: July 20, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
