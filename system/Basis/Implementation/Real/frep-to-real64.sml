@@ -31,6 +31,9 @@ structure FRepToReal64 : sig
           in
             !r
           end
+(* TODO
+    val fromBits = InlineT.Real64.fromBits
+*)
 
 (* the following should be part of the WORD signature *)
     (* count the leading zeros in a Word64.word value *)
@@ -80,7 +83,8 @@ structure FRepToReal64 : sig
             0wx54544554, 0wx04055545, 0wx10041000, 0wx00400414, 0wx40010000,
             0wx41155555, 0wx00000454, 0wx00010044, 0wx40000000, 0wx44000041,
             0wx50454450, 0wx55550054, 0wx51655554, 0wx40004000, 0wx01000001,
-            0wx00010500, 0wx51515411, 0wx05555554, 0wx00000000
+            0wx00010500, 0wx51515411, 0wx05555554, 0wx50411500, 0wx40040000,
+            0wx05040110, 0wx00000000
           ]
 
     val pow5Split2Tbl : (Word64.word * Word64.word) vector = #[
@@ -109,9 +113,9 @@ structure FRepToReal64 : sig
 
     (* powers of 5 from 5^0 to 5^25 *)
     val pow5TblSz = 26
-    val pow5Tbl = let
+    val pow5Tbl : Word64.word vector = let
           fun gen (0, _) = []
-            | gen (i, n) = n :: gen(i-1, 0w5 * n)
+            | gen (i, n : Word64.word) = n :: gen(i-1, 0w5 * n)
           in
             Vector.fromList(gen(pow5TblSz, 0w1))
           end
@@ -200,7 +204,7 @@ structure FRepToReal64 : sig
             if (offset = 0)
               then mul
               else let
-                val m = W.toLarge(Vector.sub(pow5Tbl, offset))
+                val m = Vector.sub(pow5Tbl, offset)
                 val (hi1, lo1) = umul128 (m, #1 mul)
                 val (hi2, lo2) = umul128 (m, #2 mul)
                 val sum = hi1 + lo2
@@ -228,7 +232,7 @@ structure FRepToReal64 : sig
             if offset = 0
               then mul
               else let
-                val m = W.toLarge(Vector.sub(pow5Tbl, offset))
+                val m = Vector.sub(pow5Tbl, offset)
                 val (hi1, lo1) = umul128(m, #1 mul - 0w1)
                 val (hi2, lo2) = umul128(m, #2 mul)
                 val sum = hi1 + lo2

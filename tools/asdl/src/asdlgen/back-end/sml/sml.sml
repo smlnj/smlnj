@@ -1,6 +1,6 @@
 (* sml.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Syntax trees for a subset of SML.  Used to generate SML code.
@@ -12,7 +12,8 @@ structure SML =
     type id = string
 
     datatype top_decl
-      = SIGtop of id * sigexp
+      = SEQtop of top_decl list
+      | SIGtop of id * sigexp
       | STRtop of id * (bool * sigexp) option * strexp
       | VERBtop of string list
 
@@ -39,7 +40,7 @@ structure SML =
 
     and dec
       = VALdec of pat * exp
-      | FUNdec of fb list
+      | FUNdec of id list * fb list
       | TYPEdec of id list * id * ty
       | DATATYPEdec of db list * (id list * id * ty) list
       | EXCEPTIONdec of id * ty option
@@ -48,9 +49,9 @@ structure SML =
       | LOCALdec of dec list * dec list
       | VERBdec of string list
 
-  (* function binding *)
+  (* function binding with an optional return type constraint *)
     and fb
-      = FB of (id * (pat list * exp) list)
+      = FB of (id * (pat list * exp) list * ty option)
 
   (* datatype binding *)
     and db
@@ -63,7 +64,8 @@ structure SML =
       | CHARexp of string
       | RECORDexp of (id * exp) list
       | TUPLEexp of exp list
-      | SELECTexp of id * exp
+      | LISTexp of exp list
+      | SELECTORexp of id
       | APPexp of exp * exp
       | INFIXexp of exp * id * exp
       | HANDLEexp of exp * (pat * exp) list
@@ -87,6 +89,7 @@ structure SML =
       | INFIXpat of pat * id * pat
       | RECORDpat of {fields : (id * pat) list, flex : bool}
       | TUPLEpat of pat list
+      | LISTpat of pat list
       | CONSTRAINTpat of pat * ty
       | ASpat of id * pat
       | GRPpat of pat			(* '(' pat ')' *)
@@ -133,11 +136,13 @@ structure SML =
 	  end
 
   (* smart constructor for field-select *)
-    fun selectExp (proj, e) = SELECTexp(proj, grpArg e)
+    fun selectExp (proj, e) = APPexp(SELECTORexp proj, grpArg e)
 
   (* smart constructor for raise expression *)
     fun raiseExp e = RAISEexp(grpArg e)
     end (* local *)
+
+    fun failExp msg = raiseExp(APPexp(IDexp "Fail", STRINGexp msg))
 
     local
       fun grpAction e = (case e
@@ -159,7 +164,7 @@ structure SML =
 		(* end case *))
 	  fun mkRule (pats, e) = (List.map mkArgPat pats, grpAction e)
 	  in
-	    FB(f, List.map mkRule rules)
+	    FB(f, List.map mkRule rules, NONE)
 	  end
 
     fun caseExp (e, rules) = let
@@ -189,9 +194,15 @@ structure SML =
   (* construct a simple let binding of the form `let val x = e1 in e2` *)
     fun simpleLet (x, e1, e2) = letExp([simpleVB (x, e1)], e2)
 
-    fun tupleTy [] = CONty([], "unit")
+    val unitTy = CONty([], "unit")
+
+    fun tupleTy [] = unitTy
       | tupleTy [ty] = ty
       | tupleTy tys = TUPLEty tys
+
+    fun listTy ty = CONty([ty], "list")
+
+    fun refTy ty = CONty([ty], "ref")
 
     fun tupleExp [e] = e
       | tupleExp es = TUPLEexp es
@@ -202,6 +213,6 @@ structure SML =
     val unitPat = TUPLEpat[]
     val unitExp = TUPLEexp[]
 
+    fun typedIdPat (id, ty) = CONSTRAINTpat(IDpat id, ty)
+
   end
-
-

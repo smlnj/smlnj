@@ -33,13 +33,19 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release is primarily a bug-fix release.  In particular, we have addressed some
+of the teething issues in the new ARM64 support.
 
 == Details
 
 // **** details: include those sections that are relevant
 
 === Compiler
+
+* changed the way that GC invocation code is generated to not distinguish between
+  different types that have uniform representation (*i.e.*, `LABt`, `PTRt` and `TAGt`).
+  This change results in significant shrinkage in the size of heap images and more
+  closely matches the behavior of the old **MLRISC** code generator.
 
 === CM
 
@@ -52,7 +58,14 @@ FILES::
 * removed deprecated functions from `SMLofNJ.SysInfo` structure and changed the
   `WIN32` constructor to `WINDOWS`.
 
+* added `charSize` and `realSize` functions to `Unsafe` structure to enable
+  more compile-time feature tests.
+
 === SML/NJ Library
+
+* moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
+  change was made to allow code to produce/consume JSON values without depending
+  on the *JSON* library.
 
 === Successor ML
 
@@ -70,17 +83,25 @@ Here is a list of the issues that are fixed (or closed) with this release.
 |=======
 | Issue
 | Description
+| [.bugid]#292#
+| {issue-base}/292[`SockUtil.recvVec` behaviour does not match documentation]
 | [.bugid]#297#
 | {issue-base}/297[macOS installer does not initialize CM paths correctly]
+| [.bugid]#302#
+| {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
+| [.bugid]#303#
+| {issue-base}/303[The exception `IO.Io` is not accessible]
+| [.bugid]#306#
+| {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
+| [.bugid]#308#
+| {pull-base}/308[Fix `IntBinarySet`'s comparison operators to be like `BinarySetFn`]
+| [.bugid]#310#
+| {issue-base}/310[`IntBinarySet`'s `union`, `intersection`, and `difference` functions do not work correctly]
+| [.bugid]#311#
+| {pull-base}/311[Fix `heap2exec`]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
-
-We also fixed the following bugs that did not have issues
-associated with them (or were bug fixes ported from the legacy
-repository):
-
-// ***** include a list of unnumbered/legacy bugs here *****
 
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
@@ -91,8 +112,13 @@ repository):
 * Fixed an infinite loop that could occur when clustering the first-order
   **CPS** functions prior to generating the **CFG** IR.
 
+* Ported {legacy-issue}/347[Legacy Issue #347 (`Unsafe.cast` causes Compiler bug)]
+
 * Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
   and `PackReal64Little` export internals)]
+
+* Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
+  to return an object with `ByteVector` representation)]
 --
 
 == Supported systems
@@ -114,9 +140,9 @@ tested some of them:
 | {nbsp} | |
 | ARM64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | 
-| | macOS 13 (Ventura) | 
-| | macOS 14 (Sonoma) | 
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
 | {nbsp} | |
 |=======

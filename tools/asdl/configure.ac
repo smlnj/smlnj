@@ -49,7 +49,7 @@ dnl
 AC_PROG_CPP
 AC_PROG_CC([clang gcc cc])
 AC_PROG_CXX([clang++ g++ c++])
-AX_CXX_COMPILE_STDCXX(14,[],[mandatory])
+AX_CXX_COMPILE_STDCXX(17,[],[mandatory])
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
@@ -288,18 +288,19 @@ dnl ***** Makefiles *****
   src/asdlgen/Makefile$SRC_MAKEFILE_IN
   $FRAGMENTS_MAKEFILE
   src/lib/Makefile
-  src/lib/cxx/Makefile
+  src/lib/cpp/Makefile
   src/tests/Makefile
   src/tests/basics/Makefile
   src/tests/options/Makefile
   src/tests/primitives/Makefile
   src/tests/sequences/Makefile
+  src/tests/sharing/Makefile
 dnl
 dnl
   src/asdlgen/common/config.sml:src/asdlgen/common/config_sml.in
 )
 
-AC_CONFIG_HEADERS(src/lib/cxx/include/asdl/config.h:config/config_h.in)
+AC_CONFIG_HEADERS(src/lib/cpp/include/asdl/config.h:config/config_h.in)
 
 dnl
 dnl shell scripts

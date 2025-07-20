@@ -1,6 +1,6 @@
 (* sources.cm
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * CM sources file for asdlGen backend.
@@ -8,11 +8,11 @@
 
 Library
 
-  structure GenCxx
+  structure GenCpp
   structure GenSML
 
 (* views *)
-  structure CxxView
+  structure CppView
   structure SMLView
 
 is
@@ -20,6 +20,5 @@ is
   $/basis.cm
   $/smlnj-lib.cm
 
-  cxx/sources.cm
+  cpp/sources.cm
   sml/sources.cm
-

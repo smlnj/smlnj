@@ -1,0 +1,13 @@
+    (* write an option *)
+    fun writeOption wrFn (outS, NONE) = @PICKLER@.writeTag8(outS, 0w0)
+      | writeOption wrFn (outS, SOME obj) = (
+          @PICKLER@.writeTag8(outS, 0w1);
+          wrFn(outS, obj))
+    (* write a list of values as a sequence *)
+    fun writeSeq wrFn (outS, xs) = let
+          fun write [] = ()
+            | write (x::xr) = (wrFn(outS, x); write xr)
+          in
+            @PICKLER@.writeUInt(outS, Word.fromInt(length xs));
+            write xs
+          end

@@ -103,6 +103,47 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/07/19]::
+Changed the way that GC invocation code is generated to not distinguish
+between different types that have uniform representation (*i.e.*, `LABt`,
+`PTRt` and `TAGt`). This change results in significant shrinkage in the
+size of heap images (*e.g.*, 78Kb for the compiler) and more closely
+matches the behavior of the old **MLRISC** code generator.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/09]::
+Added `charSize` and `realSize` functions to the `Unsafe` module.  These
+are placeholders for eventual primops that can be used for compile-time
+tests for the sizes of the default `char` and `real` types (similar
+to the `wordSize` primop).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/06/23]::
+Add build targets for a standalone runtime system library, `runx.<arch>-<os>`,
+for `arm64-darwin`, `amd64-darwin`, and `amd64-linux` to support `heap2exec`.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2025/04/11]::
+Add a pass to eliminate redundant computation in the CPS IR.  This
+pass does value numbering for most pure and arithmetic expressions
+and also eliminates redundant conditional control flow.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/04/11]::
+Port fix for {legaccy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast`
+causes Compiler bug).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/03/26]::
 Removed deprecated fuctions from `SMLofNJ.SysInfo` module and changed
 the `WIN32` constructor to `WINDOWS`.
@@ -322,6 +363,7 @@ where the `if` can be evaluated at compile time.  These primops are also
 available to user code via the `Unsafe` structure.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //--------------------------------------------------------------------
 [2024/03/13]::
 +

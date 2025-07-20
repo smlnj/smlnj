@@ -80,7 +80,7 @@ is described in this section.
   \item[tags] \mbox{}\\
     Tags are an internal type that \asdl{} uses to represent enumerations and
     tagged sums.
-    If the number of distinct tags required for a type is less than 256, then
+    If the number of distinct tags required for a type is fewer than 256, then
     the tag is represented as a single byte.
     Otherwise, the tag value is encoded as a \lstinline!uint! value.
 \end{description}%
@@ -125,12 +125,14 @@ non-zero values are interpreted as the constructor's tag.
 For any other base type, there is an initial byte that is either one or zero.
 A zero indicates that the value is empty and no more data follows.
 A one indicates that the next value is the value of the optional value.
+For single-constructor enumerations or sum types, we use zero to denote
+the empty value and one to denote the presence of the value.
 
 \subsection{Shared types}
 \label{sec:shared-pickle-rep}
 
 Shared types change the representation of a pickle from a tree to a DAG
-(Directed Acyclic Graph).  A shared value is the pickle is
+(Directed Acyclic Graph).  A shared value in the pickle is
 either a \emph{definition} occurrence (\ie{}, the first occurrence of that
 value), or a \emph{back reference} (\ie{}, subsequent occurrences of the value).
 A shared value is represented by an integer followed by the encoding of the

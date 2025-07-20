@@ -63,7 +63,7 @@ legacy system.
     Use `build.sh -h` to see the list of options accepted by the build script.
 
     As of version 2025.1, the `build.sh` script will download the pre-compiled
-    boot files is they are not present.
+    boot files if they are not present.
 
     As before, you can modify the [`config/targets`](config/targets) file to
     add/remove components from the build.
@@ -83,7 +83,7 @@ to before.
     ```
 
     The "`../bin/sml`" argument is optional; if omitted, then the `sml`
-    command in the user's `PATH` will be used.  Once can also specify
+    command in the user's `PATH` will be used.  One can also specify
     a different path to an `sml` command, when appropriate.
 
 2. Bootstrap the system

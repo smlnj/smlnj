@@ -31,28 +31,28 @@ structure PrintSML : sig
           val str = PP.string strm
           fun sp () = PP.space strm 1
           fun nl () = PP.newline strm
+          fun pp (S.SEQtop decs) = List.app pp decs
+            | pp (S.SIGtop(id, sigExp)) = (
+                PP.openHBox strm;
+                  str "signature"; sp(); str id; sp(); str "="; sp();
+                PP.closeBox strm;
+                ppSigExp (strm, sigExp);
+                nl())
+            | pp (S.STRtop(id, optSig, strExp)) = (
+                PP.openHBox strm;
+                  str "structure"; sp(); str id; sp();
+                  case optSig
+                   of SOME(true, sigExp) => (str ":>"; sp(); ppSigExp(strm, sigExp); sp())
+                    | SOME(false, sigExp) => (str ":"; sp(); ppSigExp(strm, sigExp); sp())
+                    | NONE => ()
+                  (* end case *);
+                  str "="; sp();
+                PP.closeBox strm;
+                ppStrExp (strm, strExp);
+                nl())
+            | pp (S.VERBtop strs) = List.app str strs
 	  in
-	    case dcl
-	     of S.SIGtop(id, sigExp) => (
-		  PP.openHBox strm;
-		    str "signature"; sp(); str id; sp(); str "="; sp();
-		  PP.closeBox strm;
-		  ppSigExp (strm, sigExp);
-		  nl())
-	      | S.STRtop(id, optSig, strExp) => (
-		  PP.openHBox strm;
-		    str "structure"; sp(); str id; sp();
-		    case optSig
-		     of SOME(true, sigExp) => (str ":>"; sp(); ppSigExp(strm, sigExp); sp())
-		      | SOME(false, sigExp) => (str ":"; sp(); ppSigExp(strm, sigExp); sp())
-		      | NONE => ()
-		    (* end case *);
-		    str "="; sp();
-		  PP.closeBox strm;
-		  ppStrExp (strm, strExp);
-		  nl())
-	      | S.VERBtop strs => List.app str strs
-	    (* end case *)
+            pp dcl
 	  end
 
     and ppSigExp (strm, sigExp) = let
@@ -180,7 +180,13 @@ structure PrintSML : sig
 		str "("; ppPat p;
 		List.app (fn p => (str ","; sp(); ppPat p)) ps;
 		str ")"))
-	    | ppPat (S.CONSTRAINTpat(p, ty)) = raise Fail "FIXME: CONSTRAINTpat"
+            | ppPat (S.LISTpat[]) = str "[]"
+            | ppPat (S.LISTpat(p::ps)) = inHBox (fn () => (
+		str "["; ppPat p;
+		List.app (fn p => (str ","; sp(); ppPat p)) ps;
+		str "]"))
+	    | ppPat (S.CONSTRAINTpat(p, ty)) = inHBox (fn () => (
+                ppPat p; sp(); str ":"; sp(); ppTy(strm, ty)))
 	    | ppPat (S.ASpat(x, p)) = inHBox (fn () => (
 		str x; sp(); str "as"; sp(); ppPat p))
             | ppPat (S.GRPpat p) = inHBox (fn () => (str "("; ppPat p; str ")"))
@@ -195,6 +201,8 @@ structure PrintSML : sig
 		  | S.GRPpat _ => ppPat p
 		  | _ => ppPat (S.GRPpat p)
 		(* end case *))
+          fun ppParenPat (S.GRPpat p) = ppPat p
+            | ppParenPat p = ppPat (S.GRPpat p)
 	  fun ppExp (S.IDexp id) = str id
 	    | ppExp (S.NUMexp n) = str n
 	    | ppExp (S.STRINGexp s) = str(concat["\"", String.toString s, "\""])
@@ -221,10 +229,12 @@ structure PrintSML : sig
 		str "("; ppExp e;
 		List.app (fn e => (str ","; sp(); ppExp e)) es;
 		str ")"))
-	    | ppExp (S.SELECTexp(proj, e)) = inHBox (fn () => (
-		str "#"; str proj;
-		if isParenExp e then () else sp();
-		ppExp e))
+            | ppExp (S.LISTexp[]) = str "[]"
+            | ppExp (S.LISTexp(e::es)) = inHBox (fn () => (
+		str "["; ppExp e;
+		List.app (fn e => (str ","; sp(); ppExp e)) es;
+		str "]"))
+	    | ppExp (S.SELECTORexp proj) = inHBox (fn () => (str "#"; str proj))
 	    | ppExp (S.APPexp(e1, e2)) = (
 		PP.openHVBox strm indent2;
 		  ppExp e1; sp(); ppExp e2;
@@ -280,7 +290,7 @@ structure PrintSML : sig
 			      PP.closeBox strm
 			    end
 			| e => (
-			    PP.break strm {nsp=1, offset=2};
+			    PP.break strm {nsp=1, offset=0};
 			    inHBox (fn () => ppExp e))
 		      (* end case *))
 		in
@@ -291,7 +301,7 @@ structure PrintSML : sig
 			  PP.openHOVBox strm indent2;
 			    ppBody body;
 			  PP.closeBox strm;
-			  sp(); str "end";
+			  PP.break strm {nsp=1, offset=0}; str "end";
 			PP.closeBox strm)
 		    | decs => (
 			PP.openVBox strm indent0;
@@ -324,20 +334,50 @@ structure PrintSML : sig
 		  PP.openHBox strm;
 		    str "val"; sp(); ppPat pat; sp(); str "="; sp(); ppExp exp;
 		  PP.closeBox strm)
-	      | S.FUNdec fbs => let
-		  fun pp (prefix, S.FB(f, rules)) = let
-			fun ppRule (pats, rhs) = (
-			      PP.openHVBox strm indent4;
+	      | S.FUNdec(tyParams, fbs) => let
+                  (* this is a bit of a hack, but we assume that the number of type
+                   * parameters is always going to be small.
+                   *)
+                  val funPrefix = (case tyParams
+                         of [] => "fun"
+                          | [id] => "fun " ^ id
+                          | ids => concat["fun (", String.concatWith "," ids, ")"]
+                        (* end case *))
+                  fun ppRule (pats, rhs) = (
+                        PP.openHVBox strm indent4;
+                          inHBox (fn () => (
+                            List.app (fn p => (sp(); ppAtomicPat p)) pats;
+                            sp(); str "="; sp(); ppExp rhs));
+                        PP.closeBox strm)
+		  fun pp (prefix, S.FB(f, rules, NONE)) = (case rules
+                         of rule::rules => (
+                              PP.openVBox strm indent2;
+                                inHBox (fn () => (
+                                  str prefix; sp(); str f; ppRule rule));
+                                List.app
+                                  (fn rule => (
+                                      nl();
+                                      inHBox (fn () => (
+                                        str "|"; sp(); str f; ppRule rule))))
+                                    rules;
+                              PP.closeBox strm)
+                          | [] => raise Fail "empty rule list for function binding"
+                        (* end case *))
+                    | pp (prefix, S.FB(f, rules, SOME ty)) = let
+                        (* function with result-type constraint *)
+                        fun ppFirstRule (pats, rhs) = (
+                              PP.openHVBox strm indent4;
 				inHBox (fn () => (
-			          List.app (fn p => (sp(); ppAtomicPat p)) pats;
-			          sp(); str "="; sp() ;ppExp rhs));
+			          List.app (fn p => (sp(); ppParenPat p)) pats;
+                                  sp(); str ":"; sp(); ppTy (strm, ty);
+			          sp(); str "="; sp(); ppExp rhs));
 			      PP.closeBox strm)
 			in
 			  case rules
 			   of rule::rules => (
 				PP.openVBox strm indent2;
 				  inHBox (fn () => (
-				    str "fun"; sp(); str f; ppRule rule));
+				    str funPrefix; sp(); str f; ppFirstRule rule));
 				  List.app
 				    (fn rule => (
 					nl();
@@ -352,7 +392,7 @@ structure PrintSML : sig
 		    case fbs
 		     of fb::fbs => (
 			  PP.openVBox strm indent0;
-			    pp ("fun", fb);
+			    pp (funPrefix, fb);
 			    List.app (fn fb => (nl(); pp ("and", fb))) fbs;
 			  PP.closeBox strm)
 		      | [] => raise Fail "empty function-binding list"

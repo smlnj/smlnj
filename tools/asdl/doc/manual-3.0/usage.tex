@@ -15,7 +15,7 @@ Where \texttt{\textit{command}} is one of
       & Print information about the \asdlgen{} tool to the standard output. \\
     \texttt{version}
       & Print the version of of asdlgen to the standard output. \\
-    \texttt{c++} or \texttt{cxx}
+    \texttt{c++}
       & Generate \Cplusplus{} \\
     \texttt{sml}
       & Generate Standard ML \\
@@ -60,7 +60,7 @@ Options common to all the commands include
     no output is generated.  Specifying
     ``\texttt{none}'' is different than using the ``\texttt{-n}'' option, because
     it does not cause the list of files to be printed.
-    
+
     \textbf{Note:} currently the ``\texttt{--gen}'' option only affects the \sml{}
     command; it is ignored by the \Cplusplus{} command.
 \end{description}%
@@ -71,13 +71,13 @@ All the commands that produce source code as output offer a different
 command option to select the default base environment.
 The base environment is the set of the initial definitions available to the code.
 It defines the set of primitive types and functions used by the generated code.
-For example using the option \texttt{--base-include=my-base.hxx}
+For example using the option \texttt{--base-include=my-base.hpp}
 when generating \Cplusplus{} code will insert the directive
 \begin{quote}\begin{lstlisting}[language=c++]
-#include "my-base.hxx"
+#include "my-base.hpp"
 \end{lstlisting}\end{quote}%
 in the appropriate place so the resulting code will use the definitions found in
-\texttt{my-base.hxx} rather than the default set of primitive types.
+\texttt{my-base.hpp} rather than the default set of primitive types.
 Unless there is a need to globally redefine
 the primitive types changing the base environment should be avoided.
 The actual option names vary depending on the output language.
@@ -91,7 +91,7 @@ to the default set of primitive types and functions.
   \item[\normalfont\texttt{--base-include=}\textit{file}] \mbox{}\\
     Specify the name of the \Cplusplus{} header file that defines the primitive \asdl{} types
     and functions.
-    The default value is \texttt{asdl/asdl.hxx}.
+    The default value is \texttt{asdl/asdl.hpp}.
 \end{description}%
 
 \subsection*{Options for Standard ML}
@@ -112,4 +112,3 @@ to the default set of primitive types and functions.
     will be included in the list of exported structures, but the supporting source
     files will have to be added to the \mlb{} file by hand.
 \end{description}%
-

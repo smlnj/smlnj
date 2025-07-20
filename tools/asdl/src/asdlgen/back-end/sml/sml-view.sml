@@ -10,16 +10,20 @@ structure SMLView : sig
 
     val view : View.t
 
-    structure File : VIEW_FILE_BASE
+    structure File : sig
+        include VIEW_FILE_BASE
+      (* get the name of the sharing-context structure name *)
+        val getShareContextName : unit -> string
+      end
 
     structure Module : sig
-	include VIEW_MODULE_BASE
+        include VIEW_MODULE_BASE
       (* name of pickler signature *)
         val getPickleSigName : AST.ModuleId.t -> string
       (* name of memory pickler module *)
-	val getPickleName : AST.ModuleId.t -> string
+        val getPickleName : AST.ModuleId.t -> string
       (* name of file pickler module *)
-	val getIOName : AST.ModuleId.t -> string
+        val getIOName : AST.ModuleId.t -> string
       (* name of S-expression pickle module *)
         val getSExpName : AST.ModuleId.t -> string
       end
@@ -32,108 +36,115 @@ structure SMLView : sig
 
     structure CV = CommonView
     structure PN = PropNames
-    structure PTy = PrimTypes
+    structure BT = BaseTypes
 
     structure ViewBase = ViewBaseFn (
       struct
-	val viewName = "sml"
-	val template =  {
-		fileProps = #fileProps CV.template,
-		moduleProps =
-		  CV.prop(PN.memory_pickler_name, false) ::
-		  CV.prop(PN.file_pickler_name, false) ::
-		  CV.prop(PN.sexp_pickle_name, false) ::
-		  #moduleProps CV.template,
-		typeProps = #typeProps CV.template,
-		consProps = #consProps CV.template
-	      }
+        val viewName = "sml"
+        val template =  {
+                fileProps = #fileProps CV.template,
+                moduleProps =
+                  CV.prop(PN.memory_pickler_name, false) ::
+                  CV.prop(PN.file_pickler_name, false) ::
+                  CV.prop(PN.sexp_pickle_name, false) ::
+                  #moduleProps CV.template,
+                typeProps = #typeProps CV.template,
+                consProps = #consProps CV.template
+              }
       end)
 
     open ViewBase
 
+    structure File =
+      struct
+        open ViewBase.File
+(* TODO: add view support *)
+        fun getShareContextName () = "ShareContext"
+      end
+
     structure Module =
       struct
-	open ViewBase.Module
+        open ViewBase.Module
 
-	local
-	  fun getModName (prop, suffix) modId = (
-		case View.getOptValue prop (view, View.Module modId)
-		 of NONE => getName modId ^ suffix
-		  | SOME[name] => name
-		  | _ => raise Fail("unexpected multiple values for "^Atom.toString prop)
-		(* end case *))
-	in
+        local
+          fun getModName (prop, suffix) modId = (
+                case View.getOptValue prop (view, View.Module modId)
+                 of NONE => getName modId ^ suffix
+                  | SOME[name] => name
+                  | _ => raise Fail("unexpected multiple values for "^Atom.toString prop)
+                (* end case *))
+        in
         val getPickleSigName = getModName (PN.pickler_name, "PICKLE")
-	val getPickleName = getModName (PN.memory_pickler_name, "MemoryPickle")
-	val getIOName = getModName (PN.file_pickler_name, "FilePickle")
-	val getSExpName = getModName (PN.sexp_pickle_name, "SExpPickle")
-	end (* local *)
+        val getPickleName = getModName (PN.memory_pickler_name, "MemoryPickle")
+        val getIOName = getModName (PN.file_pickler_name, "FilePickle")
+        val getSExpName = getModName (PN.sexp_pickle_name, "SExpPickle")
+        end (* local *)
 
       end
 
   (* the default header template *)
     val header =
-	  "(* @FILENAME@\n\
-	  \ *\n\
-	  \ * Generated from @SRCFILE@ by asdlgen.\n\
-	  \ *)\n"
+          "(* @FILENAME@\n\
+          \ *\n\
+          \ * Generated from @SRCFILE@ by asdlgen.\n\
+          \ *)\n"
 
   (* set the default header property *)
     val () = let
-	  val SOME prop = View.findProp(view, View.File, Atom.atom "header")
-	  in
-	    View.Prop.setValue(prop, header)
-	  end
+          val SOME prop = View.findProp(view, View.File, Atom.atom "header")
+          in
+            View.Prop.setValue(prop, header)
+          end
 
   (* set the default properties for the ASDL primitive types *)
     val () = let
-	    fun set (id, propName, name) = let
-		  val SOME prop = View.findProp(view, View.Type id, propName)
-		  in
-		    View.Prop.setValue(prop, name)
-		  end
-	    in
-	      List.app set [
-		  (PTy.boolTyId,	PN.name,	"bool"),
-		  (PTy.boolTyId,	PN.reader,	"readBool"),
-		  (PTy.boolTyId,	PN.writer,	"writeBool"),
-		  (PTy.intTyId,		PN.name,	"int"),
-		  (PTy.intTyId,		PN.reader,	"readInt"),
-		  (PTy.intTyId,		PN.writer,	"writeInt"),
-		  (PTy.uintTyId,	PN.name,	"word"),
-		  (PTy.uintTyId,	PN.reader,	"readUInt"),
-		  (PTy.uintTyId,	PN.writer,	"writeUInt"),
-		  (PTy.integerTyId,	PN.name,	"IntInf.int"),
-		  (PTy.integerTyId,	PN.reader,	"readInteger"),
-		  (PTy.integerTyId,	PN.writer,	"writeInteger"),
-		  (PTy.identifierTyId,	PN.name,	"Atom.atom"),
-		  (PTy.identifierTyId,	PN.reader,	"readIdentifier"),
-		  (PTy.identifierTyId,	PN.writer,	"writeIdentifier"),
-		  (PTy.stringTyId,	PN.name,	"string"),
-		  (PTy.stringTyId,	PN.reader,	"readString"),
-		  (PTy.stringTyId,	PN.writer,	"writeString"),
-		  (PTy.tag8TyId,	PN.reader,	"readTag8"),
-		  (PTy.tag8TyId,	PN.writer,	"writeTag8"),
-		  (PTy.tagTyId,		PN.reader,	"readTag16"),
-		  (PTy.tagTyId,		PN.writer,	"writeTag16")
-		]
-	    end
+            fun set (id, propName, name) = let
+                  val SOME prop = View.findProp(view, View.Type id, propName)
+                  in
+                    View.Prop.setValue(prop, name)
+                  end
+            in
+              List.app set [
+                  (BT.boolTyId,        PN.name,        "bool"),
+                  (BT.boolTyId,        PN.reader,      "readBool"),
+                  (BT.boolTyId,        PN.writer,      "writeBool"),
+                  (BT.intTyId,         PN.name,        "int"),
+                  (BT.intTyId,         PN.reader,      "readInt"),
+                  (BT.intTyId,         PN.writer,      "writeInt"),
+                  (BT.uintTyId,        PN.name,        "word"),
+                  (BT.uintTyId,        PN.reader,      "readUInt"),
+                  (BT.uintTyId,        PN.writer,      "writeUInt"),
+                  (BT.integerTyId,     PN.name,        "IntInf.int"),
+                  (BT.integerTyId,     PN.reader,      "readInteger"),
+                  (BT.integerTyId,     PN.writer,      "writeInteger"),
+                  (BT.identifierTyId,  PN.name,        "Atom.atom"),
+                  (BT.identifierTyId,  PN.reader,      "readIdentifier"),
+                  (BT.identifierTyId,  PN.writer,      "writeIdentifier"),
+                  (BT.stringTyId,      PN.name,        "string"),
+                  (BT.stringTyId,      PN.reader,      "readString"),
+                  (BT.stringTyId,      PN.writer,      "writeString"),
+                  (BT.tag8TyId,        PN.reader,      "readTag8"),
+                  (BT.tag8TyId,        PN.writer,      "writeTag8"),
+                  (BT.tagTyId,         PN.reader,      "readTag16"),
+                  (BT.tagTyId,         PN.writer,      "writeTag16")
+                ]
+            end
 
   (* set the default names for the ASDL primitive-types module *)
     val () = let
-	    val primMod = View.Module PrimTypes.primTypesId
-	    fun set (propName, name) = let
-		  val SOME prop = View.findProp(view, primMod, propName)
-		  in
-		    View.Prop.setValue(prop, name)
-		  end
-	    in
-	      List.app set [
-		  (PN.name,			"ASDL"),
-		  (PN.memory_pickler_name,	"ASDLMemoryPickle"),
-		  (PN.file_pickler_name,	"ASDLFilePickle"),
-		  (PN.sexp_pickle_name,		"ASDLSExpPickle")
-		]
-	    end
+            val primMod = View.Module BT.asdlTypesId
+            fun set (propName, name) = let
+                  val SOME prop = View.findProp(view, primMod, propName)
+                  in
+                    View.Prop.setValue(prop, name)
+                  end
+            in
+              List.app set [
+                  (PN.name,                     "ASDL"),
+                  (PN.memory_pickler_name,      "ASDLMemoryPickle"),
+                  (PN.file_pickler_name,        "ASDLFilePickle"),
+                  (PN.sexp_pickle_name,         "ASDLSExpPickle")
+                ]
+            end
 
   end

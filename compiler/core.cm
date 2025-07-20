@@ -1,6 +1,6 @@
 (* core.cm
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the machine-independent "core" part of the compiler
@@ -262,6 +262,7 @@ CPS/opt/num64cnv.sml
 CPS/opt/streqlcnv.sml
 CPS/opt/testcnv.sml
 CPS/opt/uncurry.sml
+CPS/opt/value-numbering.sml
 CPS/main/cluster.sml    (* to be replaced by CodeGen/csp-to-cfg/cluster.sml *)
 CPS/main/cps-comp.sml
 CPS/main/dump-cluster-graph.sml

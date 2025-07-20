@@ -254,13 +254,7 @@ fun enterMISC (w,ct) = enter(w,{info=MISCinfo ct, called=ref 0, used=ref 0})
 val miscBOG = MISCinfo CPSUtil.BOGt
 fun enterMISC0 w = enter(w,{info=miscBOG, called=ref 0, used=ref 0})
 fun enterARITH (w, p, vs) = enter(w, {info=ARITHinfo(p, vs), called=ref 0, used=ref 0})
-fun enterPURE (w, P.CAST, [VAR v]) = (
-    (* for `w = CAST arg`, we treat it as identity if `v` is interesting *)
-      case get v
-       of {info=MISCinfo _, ...} => enterMISC0 w
-        | {info, ...} => enter(w, {info=info, called=ref 0, used=ref 0})
-      (* end case *))
-  | enterPURE (w, p, vs) = enter(w, {info=PUREinfo(p, vs), called=ref 0, used=ref 0})
+fun enterPURE (w, p, vs) = enter(w, {info=PUREinfo(p, vs), called=ref 0, used=ref 0})
 
 fun enterFN (_,f,vl,cl,cexp) = (
       enter (f, {

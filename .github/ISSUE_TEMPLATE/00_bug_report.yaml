@@ -8,9 +8,9 @@ body:
       value: >
         # Instructions
 
-        Please use this form to report problems in the **development** version (*e.g.*, 2021.1)
+        Please use this form to report problems in the **development** version (*e.g.*, 2025.2)
         of [**Standard ML of New Jersey**](https://smlnj.org).
-        To report bugs in the legacy version (*e.g.*, 110.99.2), use the
+        To report bugs in the legacy version (*e.g.*, 110.99.8), use the
         [legacy version form](https://github.com/smlnj/legacy/issues/new?template=bug_report.yaml).
 
         To request a feature, please use the
@@ -32,7 +32,8 @@ body:
       label: Version
       description: What version of SML/NJ are you using?
       options:
-        - "2025.1 (latest)"
+        - "2025.2 (latest)"
+        - "2025.1"
         - "2024.2"
         - "2024.1"
         - "2023.1"

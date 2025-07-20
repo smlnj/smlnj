@@ -105,13 +105,15 @@ structure Unsafe :> UNSAFE =
 	val baseBits = WordImp.toIntX CoreIntInf.baseBits
       end
 
-    (* machine properties *)
+    (***** machine/language properties *****)
     val isBigEndian : unit -> bool = InlineT.isBigEndian
     val wordSize : unit -> int = InlineT.wordSize
+    fun charSize () = 8 (* TODO: add to InlineT *)
+    fun realSize () = 64 (* TODO: add to InlineT *)
 
-  (* convert default real to bits *)
+    (* convert default real to bits *)
     val realToBits = InlineT.Real64.toBits
-  (* assembly-code function for scaling reals *)
+    (* assembly-code function for scaling reals *)
     val scalb = Core.Assembly.A.scalb
 
     val getVar = InlineT.getvar

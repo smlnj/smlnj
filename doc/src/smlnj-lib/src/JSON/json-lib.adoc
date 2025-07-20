@@ -6,18 +6,17 @@
 :VERSION: {smlnj-version}
 
 == Overview
-The *JSON Library* provides a representation of the
-https://www.json.org/json-en.html[JavaScript Object Notation (*JSON*)]
-with support for parsing, printing, and manipulating *JSON*
+The *JSON Library* provides operations on the datatype representation
+of https://www.json.org/json-en.html[*JSON* (JavaScript Object Notation)]
+values.  The datatype representation is defined in the xref:../Util/str-JSON.adoc[`JSON`]
+structure, which is part of the xref:util-lib.adoc[the __Util Library__].
+This library provides support for parsing, printing, and manipulating *JSON*
 values as trees.  There is also support for processing *JSON* data as
 streams using a "SAX-style" API.
 
 == Contents
 
 === Tree-based API
-
-  xref:str-JSON.adoc[`[.kw]#structure# JSON`]::
-    Defines the representation of *JSON* values as an *SML* datatype.
 
   xref:str-JSONParser.adoc[`[.kw]#structure# JSONParser`]::
     A parser for *JSON* input.

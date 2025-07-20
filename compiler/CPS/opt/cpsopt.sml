@@ -176,6 +176,18 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 		      f'
 		    end)
 
+          fun valueNumbering f = if !CG.enableVN
+                then let
+                  val () = clicked := 0;
+                  val f' = ValueNumbering.transform {function = f, click = click};
+                  in
+                    debugprint[
+                        "Value Numbering stats: clicks = ", Int.toString (!clicked), "\n"
+                      ];
+                    f'
+                  end
+                else f
+
 	  fun lambdaprop x = x
               (* if !CG.lambdaprop then (debugprint "\nLambdaprop:"; CfUse.hoist x) else x *)
 
@@ -222,7 +234,9 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 	    | apply ("flatten",f)        = flatten f
 	    | apply ("zeroexpand",f)     = zeroexpand f
 	    | apply ("expand",f)         = expand(f, bodysize, false)
+            | apply ("vn",f)             = valueNumbering f
 	    | apply ("print",f)          = (PPCps.printcps0 f; f)
+            | apply ("check",f)          = (CheckCPS.check("during cps-opt", f); f)
 	    | apply (p,f)                = (say["\n!! Unknown cps phase '", p, "' !!\n"]; f)
 	  in
 	    (if rounds < 0

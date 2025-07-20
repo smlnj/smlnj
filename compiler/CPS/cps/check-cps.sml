@@ -31,11 +31,16 @@ structure CheckCPS : sig
       | Unbound
 
     datatype context = C of {
-        env : binding LV.Map.map,
+        env : binding LV.Map.map,       (* lexically-scoped environment *)
+        outer : LV.lvar,                (* the current function *)
+        info : info                     (* additional information *)
+      }
+
+    and info = I of {
+        prefix : string,                (* the message prefix passed to `check` *)
+        vars : LV.HSet.set,             (* set of all bound variables *)
         arity : int LV.Tbl.hash_table,  (* map non-fix-bound functions to their arity *)
-        prefix : string,
-        outer : LV.lvar,
-        nErrors : int ref
+        nErrors : int ref               (* number of errors detected *)
       }
 
     val say = Control.Print.say
@@ -49,13 +54,16 @@ structure CheckCPS : sig
 
     fun new (prefix, outer) = C{
             env = LV.Map.empty,
-            arity = LV.Tbl.mkTable (32, Fail "arity tbl"),
-            prefix = prefix,
             outer = outer,
-            nErrors = ref 0
+            info = I{
+                prefix = prefix,
+                vars = LV.HSet.mkEmpty 32,
+                arity = LV.Tbl.mkTable (32, Fail "arity tbl"),
+                nErrors = ref 0
+              }
           }
 
-    fun error (C{prefix, outer, nErrors, ...}, msg) = let
+    fun error (C{outer, info=I{prefix, nErrors, ...}, ...}, msg) = let
           val n = !nErrors
           in
             if (n = 0)
@@ -65,25 +73,21 @@ structure CheckCPS : sig
             say (concat("## [" :: lv2s outer :: "] " :: msg @ ["\n"]))
           end
 
-    fun bind (cxt as C{env, arity, prefix, outer, nErrors, ...}, x, b) = (
-          if LV.Map.inDomain(env, x)
+    fun bind (cxt as C{env, outer, info as I{vars, ...}}, x, b) = (
+          if LV.HSet.member(vars, x)
             then error (cxt, ["duplicate binding of '", lv2s x, "'"])
             else ();
-          C{
-              env = LV.Map.insert (env, x, b),
-              arity = arity, prefix = prefix,
-              outer = outer, nErrors = nErrors
-            })
+          LV.HSet.add(vars, x);
+          C{ env = LV.Map.insert (env, x, b), outer = outer, info = info })
 
     fun bindParams (cxt, xs) =
           List.foldl (fn (x, cxt) => bind(cxt, x, Param)) cxt xs
 
-    fun getArity (C{arity, ...}, f) = LV.Tbl.find arity f
+    fun getArity (C{info=I{arity, ...}, ...}, f) = LV.Tbl.find arity f
 
-    fun setArity (C{arity, ...}, f, n) = LV.Tbl.insert arity (f, n)
+    fun setArity (C{info=I{arity, ...}, ...}, f, n) = LV.Tbl.insert arity (f, n)
 
-    fun enterScope (C{env, arity, prefix, nErrors, ...}, f) =
-          C{env=env, arity=arity, prefix=prefix, outer=f, nErrors=nErrors}
+    fun enterScope (C{env, info, ...}, f) = C{env=env, outer=f, info=info}
 
     fun lookup (C{env, ...}, x) = (case LV.Map.find(env, x)
            of SOME b => b
@@ -92,7 +96,7 @@ structure CheckCPS : sig
 
     fun isBound (C{env, ...}, x) = LV.Map.inDomain(env, x)
 
-    fun anyErrors (C{nErrors, ...}) = (!nErrors > 0)
+    fun anyErrors (C{info=I{nErrors, ...}, ...}) = (!nErrors > 0)
 
     fun nameOf (cxt, VAR x) = x
       | nameOf (cxt, LABEL x) = x
@@ -172,13 +176,16 @@ structure CheckCPS : sig
                   checkArg (cxt, fn () => "switch " ^ v2s v, v);
                   List.app (fn ce => checkExp (cxt', ce)) cases
                 end
-            | CPS.BRANCH(tst, args, id, ce1, ce2) => (
-                checkArgs (
-                  cxt,
-                  fn () => concat["if ", app2str (PP.branchToString tst, args)],
-                  args);
-                checkExp (bind(cxt, id, Label), ce1);
-                checkExp (bind(cxt, id, Label), ce2))
+            | CPS.BRANCH(tst, args, id, ce1, ce2) => let
+                val cxt' = bind(cxt, id, Label)
+                in
+                  checkArgs (
+                    cxt,
+                    fn () => concat["if ", app2str (PP.branchToString tst, args)],
+                    args);
+                  checkExp (cxt', ce1);
+                  checkExp (cxt', ce2)
+                end
             | CPS.SETTER(p, args, ce) => (
                 checkArgs (
                   cxt,

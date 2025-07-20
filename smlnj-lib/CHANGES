@@ -5,6 +5,36 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2025.2
 -------------------
 
+[2025-07-19]
+	Fix Issue #292 (`SockUtil.recvVec` behaviour does not match
+	documentation).
+
+[2025-07-17]
+        Merged pull request #308, which fixed a bug in the `IntBinarySet`
+        structure (Issue #310).
+
+[2025-07-17]
+        Added a number of operations to the `MONO_HASH_SET` interface to make
+        it more compatible to the `ORD_SET` interface.
+
+[2025-07-12]
+        Changed the implementation of the `randInt`, `randWord`, and `randNat`
+        functions to be more compatible with **MLton** (see Legacy Issue #363
+        ("default word size" in the documentation for Util/Random).  The change
+        is to use truncation of the high-order bits to convert from native words
+        to smaller types, instead of right shifts.  The documentation has also
+        been edited for clarity.
+
+[2025-06-18]
+        Moved the `JSON` structure to the utility library.  This change is to
+        make it possible for libraries to produce results as JSON values without
+        having to be dependent on the JSON library.  The structure is re-exported
+        from the JSON library, so this change should not affect existing code.
+
+--------------------------------------------------------------------------------
+SML/NJ 2025.1
+-------------------
+
 [2024-12-21]
         Added the `decode_strategy` mechanism to the `UTF8` structure.  This
         mechanism allows specifying how to handle incomplete/invalid multibyte

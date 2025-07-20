@@ -1,9 +1,16 @@
 (* stats.sml
  *
- * COPYRIGHT (c) 1994 AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  *)
-signature STATS = 
+
+signature STATS =
   sig
+(* TODO: the counter/stat part of this API is not used and should be redesigned
+ * to be more useful.  The use of counter lists does not seem useful.  Also,
+ * the separation of the "stat" and "counter" types does not seem to add any
+ * benefit.
+ *)
     type stat
     type counter
 
@@ -11,6 +18,7 @@ signature STATS =
     val newCounter : counter list -> counter
     val getCounter : counter -> int
     val addCounter : counter -> int -> unit
+    val incCounter : counter -> unit
 
     (* A stat contains the sum of the argument counters. *)
     val newStat : string * counter list -> stat
@@ -33,8 +41,8 @@ signature STATS =
     val summarySp : unit -> unit
     val reset : unit -> unit
   end;
-                
-structure Stats :> STATS = 
+
+structure Stats :> STATS =
   struct
 
     structure T = Time
@@ -47,7 +55,7 @@ structure Stats :> STATS =
     val allStats = ref (nil : stat list)
 
     fun lookSt(name,nil) = NONE
-      | lookSt(name,(p as STAT{name=n,...})::rest) = 
+      | lookSt(name,(p as STAT{name=n,...})::rest) =
             if name=n then SOME p else lookSt(name,rest)
 
     fun insert(p as STAT{name=pn,...}, (q as STAT{name=qn,...})::rest) =
@@ -56,13 +64,14 @@ structure Stats :> STATS =
 
     fun newCounter cs = C{c=ref 0, cs=cs}
     fun addCounter (C{c,cs}) n = (c := !c + n; app (fn c => addCounter c n) cs)
+    fun incCounter (C{c,cs}) = (c := !c + 1; app incCounter cs)
     fun getCounter (C{c=ref c,...}) = c
 
     fun newStat (name,cs) = STAT{name=name,tot=cs}
-    fun registerStat (p as STAT{name,tot}) = 
-	(case lookSt (name,!allStats)
+    fun registerStat (p as STAT{name,tot}) = (case lookSt (name,!allStats)
 	  of SOME p => ()
-	   | NONE => allStats := insert(p,!allStats))
+	   | NONE => allStats := insert(p,!allStats)
+	  (* end case *))
 
     fun makeStat name = (case lookSt (name,!allStats)
 	   of SOME p => p
@@ -85,7 +94,7 @@ structure Stats :> STATS =
     datatype phase = PHASE of {name : string, accum : times ref, this: times ref}
 
     fun lookPh(name,nil) = NONE
-      | lookPh(name,(p as PHASE{name=n,...})::rest) = 
+      | lookPh(name,(p as PHASE{name=n,...})::rest) =
           if name=n then SOME p else lookPh(name,rest)
 
     fun insert(p as PHASE{name=pn,...}, (q as PHASE{name=qn,...})::rest) =
@@ -103,7 +112,7 @@ structure Stats :> STATS =
 		  allPhases := insert(p,!allPhases); p
 		end
 	  (* end case *))
- 
+
     val current = ref (makePhase "Other")
 
     val keepTime = ref true
@@ -117,9 +126,9 @@ structure Stats :> STATS =
     infix 6 +++
     fun {usr,sys,gc}+++{usr=u,sys=s,gc=g} = {usr=usr++u,sys=sys++s,gc=gc++g}
     infix 6 ---
-    fun {usr,sys,gc}---{usr=u,sys=s,gc=g} = 
+    fun {usr,sys,gc}---{usr=u,sys=s,gc=g} =
           if (Time.<(usr, u))
-	      then zeros 
+	      then zeros
               else {usr=usr--u,sys=sys--s,gc=gc--g}
 
     local
@@ -133,10 +142,10 @@ structure Stats :> STATS =
 	    gc = #usr gc }
       end
       val last = ref (gettime())
-    in 
+    in
     fun reset() = (
 	  last := gettime();
-	  app (fn PHASE{this,accum,...} => (this := zeros; accum := zeros)) 
+	  app (fn PHASE{this,accum,...} => (this := zeros; accum := zeros))
             (!allPhases);
 	  app (fn STAT{tot,...} => app (fn C{c,...} => c:=0) tot) (!allStats))
 
@@ -198,7 +207,7 @@ structure Stats :> STATS =
 	    (f x handle e => (finish(); raise e))
               before finish()
           end
-  
+
     fun getStat (STAT{tot,...}) = foldl (fn (c,s) => getCounter c + s) 0 tot
     fun showStat(s as STAT{name,tot}) = (
 	  sayfield(40, name);
@@ -207,7 +216,7 @@ structure Stats :> STATS =
 
     fun showPhase(PHASE{name,this,accum}) = let
 	  val {usr,sys,gc} = !this +++ !accum
-          in sayfield(40,name); 
+          in sayfield(40,name);
 	    say(timeToStr usr); say "u  ";
 	    say(timeToStr sys); say "s  ";
 	    say(timeToStr gc); say "g  ";
@@ -217,7 +226,7 @@ structure Stats :> STATS =
     fun summary() = let
 	  val sum = foldr (fn(PHASE{accum,...},t)=> !accum+++t) zeros (!allPhases)
           in
-	    app showStat (!allStats); 
+	    app showStat (!allStats);
 	    app showPhase
 	      (!allPhases @ [PHASE{name="TOTAL",this=ref zeros, accum=ref sum}])
 	  end
@@ -226,8 +235,8 @@ structure Stats :> STATS =
 	  val {usr,sys,gc} = !this +++ !accum
           in case T.compare(usr++sys++gc, T.zeroTime)
 	     of EQUAL => ()
-	      | _ => 
-               (sayfield(40,name); 
+	      | _ =>
+               (sayfield(40,name);
     	        say(timeToStr (usr++sys)); say "u  ";
 (*	        say(timeToStr sys); say "s  "; *)
 	        say(timeToStr gc); say "g  ";
@@ -237,7 +246,7 @@ structure Stats :> STATS =
     fun summarySp() = let
 	  val sum = foldr (fn(PHASE{accum,...},t)=> !accum+++t) zeros (!allPhases)
           in
-	    app showStat (!allStats); 
+	    app showStat (!allStats);
 	    app showPhaseSp
 	      (!allPhases @ [PHASE{name="TOTAL",this=ref zeros, accum=ref sum}])
 	  end
