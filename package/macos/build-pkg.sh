@@ -99,6 +99,19 @@ elif [ x"$VERSION" != x"$CONFIG_VERSION" ] ; then
   exit 1
 fi
 
+# is this a release candidate?
+#
+case "$VERSION" in
+  *-rc*)
+    VERSION_STEM=$(echo $VERSION | sed -e 's/\([^-]*\)-\(.*\)/\1/')
+    RC=$(echo $VERSION | sed -e 's/\([^-]*\)-\(.*\)/\2/')
+    ;;
+  *)
+    VERSION_STEM=$VERSION
+    RC=""
+    ;;
+esac
+
 # determine the architecture
 #
 case `uname -p` in
@@ -109,7 +122,11 @@ case `uname -p` in
   ;;
 esac
 
-echo "$CMD: building version $VERSION for $ARCH"
+if [ x"$RC" = x ] ; then
+  echo "$CMD: building release $VERSION for $ARCH"
+else
+  echo "$CMD: building release-candidate $VERSION_STEM ($RC) for $ARCH"
+fi
 
 ID=org.smlnj.$ARCH.pkg
 RSRC=Resources
@@ -184,12 +201,12 @@ cp -p components/conclusion.html $RSRC/conclusion.html
 # NOTE: this command relies on the fact that there is only one absolute
 # font-size command in the README file (the others are relative)
 #
-if [ ! -f "$DISTROOT/doc/html/readme/$VERSION-README.html" ] ; then
-  complain "cannot find $DISTROOT/doc/html/readme/$VERSION-README.html"
+if [ ! -f "$DISTROOT/doc/html/readme/$VERSION_STEM-README.html" ] ; then
+  complain "cannot find $DISTROOT/doc/html/readme/$VERSION_STEM-README.html"
   exit 1
 fi
 sed -E 's/font-size: [0-9]+pt;/font-size: 9pt;/' \
-  $DISTROOT/doc/html/readme/$VERSION-README.html > $RSRC/readme.html
+  $DISTROOT/doc/html/readme/$VERSION_STEM-README.html > $RSRC/readme.html
 
 # build package
 #
