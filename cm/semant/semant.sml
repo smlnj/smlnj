@@ -1,7 +1,9 @@
-(*
- * semantic actions to go with the grammar for CM description files
+(* semant.sml
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * semantic actions to go with the grammar for CM description files
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
