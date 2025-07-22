@@ -103,7 +103,7 @@ int GetSignalState (vproc_state_t *vsp, int sigNum)
 	return vsp->vp_gcSigState;
       default:
 	if (IS_SYSTEM_SIG(sigNum)) {
-	    SigReturn_t		(*handler)();
+	    SigHandler_t handler;
 	    SIG_GetHandler (sigNum, handler);
 	    if (handler == SIG_IGN)
 		return ML_SIG_IGNORE;
