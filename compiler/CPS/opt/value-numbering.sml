@@ -38,7 +38,7 @@ structure ValueNumbering : sig
     (***** operator comparisons *****)
 
     local
-      fun cmpCode (c1, c2) = if (c1 < c2) then LESS
+      fun cmpCode (c1 : int, c2) = if (c1 < c2) then LESS
             else if (c1 > c2) then GREATER
             else EQUAL
 
@@ -184,6 +184,12 @@ structure ValueNumbering : sig
           cmpCode(f1, f2) ?=> (fn () => cmpCode(t1, t2))
       | cmpPure (P.INT_TO_REAL _, _) = LESS
       | cmpPure (_, P.INT_TO_REAL _) = GREATER
+      | cmpPure (P.BITS_TO_REAL sz1, P.BITS_TO_REAL sz2) = cmpCode(sz1, sz2)
+      | cmpPure (P.BITS_TO_REAL _, _) = LESS
+      | cmpPure (_, P.BITS_TO_REAL _) = GREATER
+      | cmpPure (P.REAL_TO_BITS sz1, P.REAL_TO_BITS sz2) = cmpCode(sz1, sz2)
+      | cmpPure (P.REAL_TO_BITS _, _) = LESS
+      | cmpPure (_, P.REAL_TO_BITS _) = GREATER
       | cmpPure (P.SUBSCRIPTV, P.SUBSCRIPTV) = EQUAL
       | cmpPure (P.SUBSCRIPTV, _) = LESS
       | cmpPure (_, P.SUBSCRIPTV) = GREATER

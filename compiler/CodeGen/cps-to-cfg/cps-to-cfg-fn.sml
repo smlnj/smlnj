@@ -85,7 +85,7 @@ C.NUMt{sz=sz}
 	    | CPS.FLTt sz => C.FLTt{sz=sz}
 	    | CPS.PTRt _ => C.PTRt
 	    | CPS.FUNt => C.LABt
-	    | CPS.CNTt => C.LABt
+	    | CPS.CNTt _ => C.LABt
 	  (* end case *))
 
   (* helpers for constructing expressions *)
@@ -132,7 +132,7 @@ C.NUMt{sz=sz}
 
   (* get length field of a heap object as tagged integer *)
     fun getObjLength obj =
-	  orTag (pureOp (TP.RSHIFTL, ity, [getDescriptor obj, w2Num(D.tagWidth - 0w1)]))
+	  orTag (pureOp (TP.LSHR, ity, [getDescriptor obj, w2Num(D.tagWidth - 0w1)]))
 
   (* get the data pointer of a sequence (vector, array, string, ...) *)
     fun getSeqData obj = select(0, obj)
@@ -221,8 +221,7 @@ C.NUMt{sz=sz}
 		      genCont (rawSelect(TP.FLT, sz, i, genV v), x, ty, k)
 		  | SELECT(i, v, x, ty, k) =>
 		      genCont (select(i, genV v), x, ty, k)
-		  | OFFSET(i, v, x, k) =>
-		      genCont (C.OFFSET{idx=i, arg=genV v}, x, BOGty, k)
+		  | OFFSET(i, v, x, k) => raise Fail "unexpected OFFSET"
 		  | APP(f as LABEL lab, vs) => let
 		      val args = List.map genV vs
 		      in
@@ -235,7 +234,7 @@ C.NUMt{sz=sz}
 		      val argTys = List.map (cvtTy o typeOfVal) vs
 		      in
 			case typeOfVal f
-			 of CPS.CNTt => C.THROW(genV f, args, argTys)
+			 of CPS.CNTt _ => C.THROW(genV f, args, argTys)
 			  | _ => C.APPLY(genV f, args, argTys)
 			(* end case *)
 		      end
@@ -320,7 +319,7 @@ C.NUMt{sz=sz}
 				  num (D.makeDesc(ival, D.tag_special))
 			      | _ => (* desc = (i << tagWidth) | desc_special *)
 				pureOp (TP.ORB, ity, [
-				    pureOp (TP.LSHIFT, ity, [untagSigned i, w2Num D.tagWidth]),
+				    pureOp (TP.SHL, ity, [untagSigned i, w2Num D.tagWidth]),
 				    num D.desc_special
 				  ])
 			    (* end case *))
@@ -474,7 +473,7 @@ C.NUMt{sz=sz}
 			 of NUM{ty={tag=true, ...}, ival} =>
 			      set (num (D.makeDesc(ival, D.tag_special)))
 			  | _ => set (pureOp(TP.ORB, ity, [
-				pureOp(TP.LSHIFT, ity, [untagSigned v, w2Num D.tagWidth]),
+				pureOp(TP.SHL, ity, [untagSigned v, w2Num D.tagWidth]),
 				num D.desc_special
 			      ]))
 			(* end case *)
@@ -520,12 +519,12 @@ C.NUMt{sz=sz}
                              of (P.NEG, [v]) => pureOp (TP.SUB, sz, [zero sz, genV v])
                               | (P.ADD, [v1, v2]) => binOp (TP.ADD, v1, v2)
                               | (P.SUB, [v1, v2]) => binOp (TP.SUB, v1, v2)
-                              | (P.MUL, [v1, v2]) => binOp (TP.SMUL, v1, v2)
+                              | (P.MUL, [v1, v2]) => binOp (TP.MUL, v1, v2)
                               | (P.QUOT, [v1, v2]) => binOp (TP.SDIV, v1, v2)
                               | (P.REM, [v1, v2]) => binOp (TP.SREM, v1, v2)
-                              | (P.LSHIFT, [v1, v2]) => shiftOp (TP.LSHIFT, v1, v2)
-                              | (P.RSHIFT, [v1, v2]) => shiftOp (TP.RSHIFT, v1, v2)
-                              | (P.RSHIFTL, [v1, v2]) => shiftOp (TP.RSHIFTL, v1, v2)
+                              | (P.LSHIFT, [v1, v2]) => shiftOp (TP.SHL, v1, v2)
+                              | (P.RSHIFT, [v1, v2]) => shiftOp (TP.ASHR, v1, v2)
+                              | (P.RSHIFTL, [v1, v2]) => shiftOp (TP.LSHR, v1, v2)
                               | (P.ORB, [v1, v2]) => binOp (TP.ORB, v1, v2)
                               | (P.XORB, [v1, v2]) => binOp (TP.XORB, v1, v2)
                               | (P.ANDB, [v1, v2]) => binOp (TP.ANDB, v1, v2)
@@ -546,12 +545,12 @@ C.NUMt{sz=sz}
                               | (P.NOTB, [v]) => pureOp (TP.XORB, sz, [genV v, allOnes sz])
                               | (P.ADD, [v1, v2]) => binOp (TP.ADD, v1, v2)
                               | (P.SUB, [v1, v2]) => binOp (TP.SUB, v1, v2)
-                              | (P.MUL, [v1, v2]) => binOp (TP.UMUL, v1, v2)
+                              | (P.MUL, [v1, v2]) => binOp (TP.MUL, v1, v2)
                               | (P.QUOT, [v1, v2]) => binOp (TP.UDIV, v1, v2)
                               | (P.REM, [v1, v2]) => binOp (TP.UREM, v1, v2)
-                              | (P.LSHIFT, [v1, v2]) => shiftOp (TP.LSHIFT, v1, v2)
-                              | (P.RSHIFT, [v1, v2]) => shiftOp (TP.RSHIFT, v1, v2)
-                              | (P.RSHIFTL, [v1, v2]) => shiftOp (TP.RSHIFTL, v1, v2)
+                              | (P.LSHIFT, [v1, v2]) => shiftOp (TP.SHL, v1, v2)
+                              | (P.RSHIFT, [v1, v2]) => shiftOp (TP.ASHR, v1, v2)
+                              | (P.RSHIFTL, [v1, v2]) => shiftOp (TP.LSHR, v1, v2)
                               | (P.ORB, [v1, v2]) => binOp (TP.ORB, v1, v2)
                               | (P.XORB, [v1, v2]) => binOp (TP.XORB, v1, v2)
                               | (P.ANDB, [v1, v2]) => binOp (TP.ANDB, v1, v2)
@@ -587,32 +586,32 @@ C.NUMt{sz=sz}
 			  then zeroExtend(from, genV v)
 (* QUESTION: do we need to zero extend v before untagging it? *)
 			  else untagUnsigned v
-			else error [".genPure: ", PPCps.pureToString p]
+			else error ["genPure: ", PPCps.pureToString p]
 		  | (P.EXTEND{from, to}, [v]) =>
 		      if (from = to)
 			then genV v
 		      else if (from = defaultIntSz) andalso (to = ity)
 		      (* shift right by one preserves sign and nukes tag bit *)
-			then pureOp (TP.RSHIFT, ity, [genV v, one])
+			then pureOp (TP.ASHR, ity, [genV v, one])
 		      else if (from < defaultIntSz)
 			then let
 (* QUESTION: do we need to zero-extend the argument to ity width? *)
 			(* shift left amount so that sign bit is leftmost bit *)
 			  val sa = IntInf.fromInt(defaultIntSz - from)
-			  val exp = pureOp (TP.LSHIFT, ity, [genV v, num sa])
+			  val exp = pureOp (TP.SHL, ity, [genV v, num sa])
 			  in
 			    if isTaggedInt to
 			    (* note that result already has its tag *)
-			      then pureOp (TP.RSHIFT, ity, [exp, num sa])
+			      then pureOp (TP.ASHR, ity, [exp, num sa])
 			    (* shift by one more bit to nuke the tag *)
-			      else pureOp (TP.RSHIFT, ity, [exp, num(sa+1)])
+			      else pureOp (TP.ASHR, ity, [exp, num(sa+1)])
 			  end
-			else error [".genPure: ", PPCps.pureToString p]
+			else error ["genPure: ", PPCps.pureToString p]
 		  | (P.TRUNC{from, to}, [v]) =>
 		      if (from = to)
 			then genV v
 		      else if (to = defaultIntSz) andalso (from = ity)
-			then orTag(pureOp(TP.LSHIFT, ity, [genV v, one]))
+			then orTag(pureOp(TP.SHL, ity, [genV v, one]))
 		      else if not (isTaggedInt to)
 			then pure(TP.TRUNC{from=from, to=to}, [genV v])
 		      else if isTaggedInt from
@@ -625,7 +624,7 @@ C.NUMt{sz=sz}
 			else let
 			  val mask = IntInf.<<(1, Word.fromInt to) - 1
 			  in
-			    addTag (pureOp (TP.LSHIFT, ity, [
+			    addTag (pureOp (TP.SHL, ity, [
 				pureOp(TP.ANDB, ity, [genV v, num mask]),
 				one
 			      ]))
@@ -637,6 +636,8 @@ C.NUMt{sz=sz}
 		      in
 			pure(TP.INT_TO_FLOAT{from=ity, to=to}, [e])
 		      end
+                  | (P.BITS_TO_REAL sz, [v]) => pure(TP.BITS_TO_FLOAT{sz=sz}, [genV v])
+                  | (P.REAL_TO_BITS sz, [v]) => pure(TP.FLOAT_TO_BITS{sz=sz}, [genV v])
 		  | (P.SUBSCRIPTV, [v1, v2]) =>
 		      pure(TP.PURE_SUBSCRIPT, [
 			  getSeqData (genV v1),
@@ -665,7 +666,7 @@ C.NUMt{sz=sz}
 (* REAL32: FIXME *)
 		      pure(TP.PURE_RAW_SUBSCRIPT{kind=TP.FLT, sz=64},
 			[genV v1, untagSigned v2])
-		  | _ => error[".genPure: ", PPCps.pureToString p]
+		  | _ => error["genPure: ", PPCps.pureToString p]
 		(* end case *))
 	(***** BRANCH *****)
 	  and genBranch (test, args, k1, k2) = let
@@ -724,16 +725,16 @@ C.NUMt{sz=sz}
 		  else genRawSubscript (TP.INT, sz, vec, idx)
 	  and untagSigned (NUM{ty={tag=true, ...}, ival, ...}) = num ival
 	    | untagSigned (NUM _) = error["unexpected untagged integer"]
-	    | untagSigned v = pureOp (TP.RSHIFT, ity, [genV v, one])
+	    | untagSigned v = pureOp (TP.ASHR, ity, [genV v, one])
 	  and untagUnsigned (NUM{ty={tag=true, ...}, ival, ...}) = num ival
 	    | untagUnsigned (NUM _) = error["unexpected untagged integer"]
-	    | untagUnsigned v = pureOp(TP.RSHIFTL, ity, [genV v, one])
+	    | untagUnsigned v = pureOp(TP.LSHR, ity, [genV v, one])
 	  and trunc (sz, _, NUM{ival, ...}) = C.NUM{iv=ival, sz=sz}
 	    | trunc (sz, true, v) = pure(TP.TRUNC{from=ity, to=sz}, [untagSigned v])
 	    | trunc (sz, false, v) = pure(TP.TRUNC{from=ity, to=sz}, [untagUnsigned v])
 	(* convert a raw integer value to a tagged integer w/o trapping *)
 	  and toMLWord exp = (* `(exp << 1) + 1` *)
-		pureOp(TP.ADD, ity, [pureOp(TP.LSHIFT, ity, [exp, one]), one])
+		pureOp(TP.ADD, ity, [pureOp(TP.SHL, ity, [exp, one]), one])
 	  in
 	    genE
 	  end

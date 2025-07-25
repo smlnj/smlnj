@@ -8,7 +8,6 @@ structure LambdaVarMemoryPickle : LAMBDA_VAR_PICKLE
   where type outstream = ASDLMemoryPickle.outstream = struct
     type instream = ASDLMemoryPickle.instream
     type outstream = ASDLMemoryPickle.outstream
-    
     val read_lvar = LambdaVarPickle.read_lvar ASDLMemoryPickle.input1
     val write_lvar = LambdaVarPickle.write_lvar ASDLMemoryPickle.output1
   end
@@ -261,26 +260,32 @@ structure CFG_PrimMemoryPickle : CFG__PRIM_PICKLE
     fun read_pureop (inS : instream) = (case ASDLMemoryPickle.readTag8 inS
            of 0w1 => CFG_Prim.ADD
             | 0w2 => CFG_Prim.SUB
-            | 0w3 => CFG_Prim.SMUL
+            | 0w3 => CFG_Prim.MUL
             | 0w4 => CFG_Prim.SDIV
             | 0w5 => CFG_Prim.SREM
-            | 0w6 => CFG_Prim.UMUL
-            | 0w7 => CFG_Prim.UDIV
-            | 0w8 => CFG_Prim.UREM
-            | 0w9 => CFG_Prim.LSHIFT
-            | 0w10 => CFG_Prim.RSHIFT
-            | 0w11 => CFG_Prim.RSHIFTL
-            | 0w12 => CFG_Prim.ORB
-            | 0w13 => CFG_Prim.XORB
-            | 0w14 => CFG_Prim.ANDB
-            | 0w15 => CFG_Prim.FADD
-            | 0w16 => CFG_Prim.FSUB
-            | 0w17 => CFG_Prim.FMUL
-            | 0w18 => CFG_Prim.FDIV
-            | 0w19 => CFG_Prim.FNEG
-            | 0w20 => CFG_Prim.FABS
-            | 0w21 => CFG_Prim.FSQRT
-            | 0w22 => CFG_Prim.FCOPYSIGN
+            | 0w6 => CFG_Prim.UDIV
+            | 0w7 => CFG_Prim.UREM
+            | 0w8 => CFG_Prim.SHL
+            | 0w9 => CFG_Prim.ASHR
+            | 0w10 => CFG_Prim.LSHR
+            | 0w11 => CFG_Prim.ORB
+            | 0w12 => CFG_Prim.XORB
+            | 0w13 => CFG_Prim.ANDB
+            | 0w14 => CFG_Prim.CNTPOP
+            | 0w15 => CFG_Prim.CNTLZ
+            | 0w16 => CFG_Prim.CNTTZ
+            | 0w17 => CFG_Prim.ROTL
+            | 0w18 => CFG_Prim.ROTR
+            | 0w19 => CFG_Prim.FADD
+            | 0w20 => CFG_Prim.FSUB
+            | 0w21 => CFG_Prim.FMUL
+            | 0w22 => CFG_Prim.FDIV
+            | 0w23 => CFG_Prim.FREM
+            | 0w24 => CFG_Prim.FMADD
+            | 0w25 => CFG_Prim.FNEG
+            | 0w26 => CFG_Prim.FABS
+            | 0w27 => CFG_Prim.FCOPYSIGN
+            | 0w28 => CFG_Prim.FSQRT
             | _ => raise ASDL.DecodeError)
     fun read_pure (inS : instream) = (case ASDLMemoryPickle.readTag8 inS
            of 0w1 => let
@@ -462,26 +467,32 @@ structure CFG_PrimMemoryPickle : CFG__PRIM_PICKLE
     fun write_pureop (outS : outstream, obj) = (case obj
            of CFG_Prim.ADD => ASDLMemoryPickle.writeTag8 (outS, 0w1)
             | CFG_Prim.SUB => ASDLMemoryPickle.writeTag8 (outS, 0w2)
-            | CFG_Prim.SMUL => ASDLMemoryPickle.writeTag8 (outS, 0w3)
+            | CFG_Prim.MUL => ASDLMemoryPickle.writeTag8 (outS, 0w3)
             | CFG_Prim.SDIV => ASDLMemoryPickle.writeTag8 (outS, 0w4)
             | CFG_Prim.SREM => ASDLMemoryPickle.writeTag8 (outS, 0w5)
-            | CFG_Prim.UMUL => ASDLMemoryPickle.writeTag8 (outS, 0w6)
-            | CFG_Prim.UDIV => ASDLMemoryPickle.writeTag8 (outS, 0w7)
-            | CFG_Prim.UREM => ASDLMemoryPickle.writeTag8 (outS, 0w8)
-            | CFG_Prim.LSHIFT => ASDLMemoryPickle.writeTag8 (outS, 0w9)
-            | CFG_Prim.RSHIFT => ASDLMemoryPickle.writeTag8 (outS, 0w10)
-            | CFG_Prim.RSHIFTL => ASDLMemoryPickle.writeTag8 (outS, 0w11)
-            | CFG_Prim.ORB => ASDLMemoryPickle.writeTag8 (outS, 0w12)
-            | CFG_Prim.XORB => ASDLMemoryPickle.writeTag8 (outS, 0w13)
-            | CFG_Prim.ANDB => ASDLMemoryPickle.writeTag8 (outS, 0w14)
-            | CFG_Prim.FADD => ASDLMemoryPickle.writeTag8 (outS, 0w15)
-            | CFG_Prim.FSUB => ASDLMemoryPickle.writeTag8 (outS, 0w16)
-            | CFG_Prim.FMUL => ASDLMemoryPickle.writeTag8 (outS, 0w17)
-            | CFG_Prim.FDIV => ASDLMemoryPickle.writeTag8 (outS, 0w18)
-            | CFG_Prim.FNEG => ASDLMemoryPickle.writeTag8 (outS, 0w19)
-            | CFG_Prim.FABS => ASDLMemoryPickle.writeTag8 (outS, 0w20)
-            | CFG_Prim.FSQRT => ASDLMemoryPickle.writeTag8 (outS, 0w21)
-            | CFG_Prim.FCOPYSIGN => ASDLMemoryPickle.writeTag8 (outS, 0w22))
+            | CFG_Prim.UDIV => ASDLMemoryPickle.writeTag8 (outS, 0w6)
+            | CFG_Prim.UREM => ASDLMemoryPickle.writeTag8 (outS, 0w7)
+            | CFG_Prim.SHL => ASDLMemoryPickle.writeTag8 (outS, 0w8)
+            | CFG_Prim.ASHR => ASDLMemoryPickle.writeTag8 (outS, 0w9)
+            | CFG_Prim.LSHR => ASDLMemoryPickle.writeTag8 (outS, 0w10)
+            | CFG_Prim.ORB => ASDLMemoryPickle.writeTag8 (outS, 0w11)
+            | CFG_Prim.XORB => ASDLMemoryPickle.writeTag8 (outS, 0w12)
+            | CFG_Prim.ANDB => ASDLMemoryPickle.writeTag8 (outS, 0w13)
+            | CFG_Prim.CNTPOP => ASDLMemoryPickle.writeTag8 (outS, 0w14)
+            | CFG_Prim.CNTLZ => ASDLMemoryPickle.writeTag8 (outS, 0w15)
+            | CFG_Prim.CNTTZ => ASDLMemoryPickle.writeTag8 (outS, 0w16)
+            | CFG_Prim.ROTL => ASDLMemoryPickle.writeTag8 (outS, 0w17)
+            | CFG_Prim.ROTR => ASDLMemoryPickle.writeTag8 (outS, 0w18)
+            | CFG_Prim.FADD => ASDLMemoryPickle.writeTag8 (outS, 0w19)
+            | CFG_Prim.FSUB => ASDLMemoryPickle.writeTag8 (outS, 0w20)
+            | CFG_Prim.FMUL => ASDLMemoryPickle.writeTag8 (outS, 0w21)
+            | CFG_Prim.FDIV => ASDLMemoryPickle.writeTag8 (outS, 0w22)
+            | CFG_Prim.FREM => ASDLMemoryPickle.writeTag8 (outS, 0w23)
+            | CFG_Prim.FMADD => ASDLMemoryPickle.writeTag8 (outS, 0w24)
+            | CFG_Prim.FNEG => ASDLMemoryPickle.writeTag8 (outS, 0w25)
+            | CFG_Prim.FABS => ASDLMemoryPickle.writeTag8 (outS, 0w26)
+            | CFG_Prim.FCOPYSIGN => ASDLMemoryPickle.writeTag8 (outS, 0w27)
+            | CFG_Prim.FSQRT => ASDLMemoryPickle.writeTag8 (outS, 0w28))
     fun write_pure (outS : outstream, obj) = (case obj
            of CFG_Prim.PURE_ARITH{oper, sz} => (
               ASDLMemoryPickle.writeTag8 (outS, 0w1);
@@ -669,12 +680,6 @@ structure CFGMemoryPickle : CFGPICKLE
               in
                 CFG.SELECT {idx = idx, arg = arg}
               end
-            | 0w7 => let
-              val idx = ASDLMemoryPickle.readInt inS
-              val arg = read_exp inS
-              in
-                CFG.OFFSET {idx = idx, arg = arg}
-              end
             | _ => raise ASDL.DecodeError)
     fun read_stm (inS : instream) = (case ASDLMemoryPickle.readTag8 inS
            of 0w1 => let
@@ -841,10 +846,6 @@ structure CFGMemoryPickle : CFGPICKLE
               writeSeq write_exp (outS, args))
             | CFG.SELECT{idx, arg} => (
               ASDLMemoryPickle.writeTag8 (outS, 0w6);
-              ASDLMemoryPickle.writeInt (outS, idx);
-              write_exp (outS, arg))
-            | CFG.OFFSET{idx, arg} => (
-              ASDLMemoryPickle.writeTag8 (outS, 0w7);
               ASDLMemoryPickle.writeInt (outS, idx);
               write_exp (outS, arg)))
     fun write_stm (outS : outstream, obj) = (case obj

@@ -16,11 +16,14 @@ structure Unsafe :> UNSAFE =
     structure Real64 =
       struct
         val castToWord = InlineT.Real64.toBits
+        val castFromWord = InlineT.Real64.fromBits
+(*
         fun castFromWord (b : Word64.word) : real = let
               val r : real ref = InlineT.cast(ref b)
               in
                 !r
               end
+*)
       end
 
     structure Vector =

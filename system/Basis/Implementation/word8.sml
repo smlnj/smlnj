@@ -28,7 +28,7 @@ structure Word8Imp : WORD =
     val toLargeWordX = toLargeX
     val fromLargeWord = fromLarge
 
-    val toLargeInt  : word -> LargeInt.int = LW.toLargeInt o toLarge
+    val toLargeInt  : word -> LargeInt.int = W8.toLargeInt
     val toLargeIntX : word -> LargeInt.int = W8.toLargeIntX
     val fromLargeInt: LargeInt.int -> word = W8.fromLargeInt
 

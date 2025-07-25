@@ -1,3 +1,4 @@
 [submodule "runtime/llvm18"]
 	path = runtime/llvm18
 	url = ../smlnj-llvm-18.1.git
+	branch = bitops

@@ -1,5 +1,5 @@
-:version: 2025.2
-:date: @DATE@
+:version: 2025.2-rc1
+:date: July 20, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -47,11 +47,26 @@ of the teething issues in the new ARM64 support.
   This change results in significant shrinkage in the size of heap images and more
   closely matches the behavior of the old **MLRISC** code generator.
 
-=== CM
+* A number of changes to the CFG IR:
++
+--
+* replaced the `UMUL` and `SMUL` operators with `MUL`, since the are
+  all the same
+* renamed the shift operators to `SHL`, `ASHR`, and `LSHR`
+* added bit-counting operators: `CNTPOP`, `CNTLZ`, and `CNTTZ`
+* added bit-rotation operators: `ROTL` and `ROTR`
+* added `BITS_TO_FLOAT` and `FLOAT_TO_BITS` primops
+* added `FREM` and `FMADD` primops
+* removed the `OFFSET` expression form, since it is never generated.
+--
 
-=== MLRISC
+* Add a pass to eliminate redundant computation in the CPS IR.  It needs
+  more tuning, however, and so is currently disabled by default.
 
 === Runtime System
+
+* changes to the LLVM code generator to match the **CFG** IR changes in the
+  compiler.
 
 === Basis Library
 
@@ -64,16 +79,8 @@ of the teething issues in the new ARM64 support.
 === SML/NJ Library
 
 * moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
-  change was made to allow code to produce/consume JSON values without depending
+  change was made to allow code to produce/consume *JSON* values without depending
   on the *JSON* library.
-
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
-
-=== Installation
 
 == Bugs
 
@@ -91,6 +98,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
 | [.bugid]#303#
 | {issue-base}/303[The exception `IO.Io` is not accessible]
+| [.bugid]#304#
+| {issue-base}/304[ElabCore regression for invalid application patterns]
 | [.bugid]#306#
 | {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
 | [.bugid]#308#
@@ -99,8 +108,6 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/310[`IntBinarySet`'s `union`, `intersection`, and `difference` functions do not work correctly]
 | [.bugid]#311#
 | {pull-base}/311[Fix `heap2exec`]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
@@ -112,13 +119,23 @@ repository):
 * Fixed an infinite loop that could occur when clustering the first-order
   **CPS** functions prior to generating the **CFG** IR.
 
-* Ported {legacy-issue}/347[Legacy Issue #347 (`Unsafe.cast` causes Compiler bug)]
+* Merged fix for {legacy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast` causes
+  Compiler bug)]
 
 * Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
   and `PackReal64Little` export internals)]
 
 * Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
   to return an object with `ByteVector` representation)]
+
+* Merged fix for {legacy-issue-base}/360[Legacy Issue #360 (Incorrect values
+  returned by `Real.fromString` on strings with many digits)]
+
+* Merged fix for {legacy-issue-base}/362[Legacy Issue #362 (`Real.fromString`
+  on negative inf/infinity returns positive infinity)]
+
+* Merged fix for {legacy-issue-base}/363[Legacy Issue #363 ("default word size"
+  in the documentation for Util/Random)]
 --
 
 == Supported systems
