@@ -105,9 +105,9 @@ int GetSignalState (vproc_state_t *vsp, int sigNum)
 	if (IS_SYSTEM_SIG(sigNum)) {
 	    SigHandler_t handler;
 	    SIG_GetHandler (sigNum, handler);
-	    if (handler == SIG_IGN)
+	    if (handler == (SigHandler_t)SIG_IGN)
 		return ML_SIG_IGNORE;
-	    else if (handler == SIG_DFL)
+	    else if (handler == (SigHandler_t)SIG_DFL)
 		return ML_SIG_DEFAULT;
 	    else
 		return ML_SIG_ENABLED;
