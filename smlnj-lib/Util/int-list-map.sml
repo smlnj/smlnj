@@ -123,7 +123,7 @@ structure IntListMap :> ORD_MAP where type Key.ord_key = Int.int =
 
     fun equiv rngEq = let
           fun cmp ([], []) = true
-            | cmp ((xk, x)::xr, (yk, y)::yr) =
+            | cmp ((xk : int, x)::xr, (yk, y)::yr) =
                 (xk = yk) andalso rngEq(x, y) andalso cmp(xr, yr)
             | cmp _ = false
           in
