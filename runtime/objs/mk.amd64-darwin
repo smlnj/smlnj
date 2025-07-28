@@ -1,22 +1,24 @@
 # mk.amd64-darwin
 #
-# COPYRIGHT (c) 2023 The SML/NJ Fellowship
+# COPYRIGHT (c) 2025 The SML/NJ Fellowship
 #
-# Makefile for macOS 10.14+ (Mojave or later) on 64-bit Intel processors
+# Makefile for macOS 11+ (Big Sur or later) on 64-bit Intel processors
 #
 
 # WARNING: the following should agree with the value of CMAKE_OSX_DEPLOYMENT_TARGET
 # that is set in the LLVM CMakePresets.json file
 #
-SDK =		-mmacosx-version-min=10.14
+SDK =		-mmacosx-version-min=11
 
 SHELL =		/bin/sh
 
 MAKE =		make
-AS =		/usr/bin/as -arch x86_64
-CC =		cc -m64 -std=c99
+# Explicitly stating the target to let Arm machines use x64 system headers
+# and assembler.
+AS =		/usr/bin/as -target x86_64-apple-darwin
+CC =		/usr/bin/clang -m64 -std=c99 -target x86_64-apple-darwin
 CFLAGS =	-g -O2 -D_DARWIN_C_SOURCE
-CXX =           c++ --std=c++14
+CXX =           c++ --std=c++17
 CXX_FLAGS =     -g -O2
 CPP =           cc -x assembler-with-cpp -E -P -std=c99
 XOBJS =
@@ -32,8 +34,24 @@ TARGET =	AMD64
 TARGET_ARCHS =	all
 VERSION =	v-amd64-darwin
 RUNTIME =	run.amd64-darwin
-RUNTIMEX =	runx.amd64-darwin
+STANDALONE =	runx.amd64-darwin
+STANDALONE_A =	runx.amd64-darwin.a
 
-all:
-	($(MAKE) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" AS="$(AS)" TARGET=$(TARGET) TARGET_ARCHS=all DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
-#	($(MAKE) RUNTIME="$(RUNTIMEX)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-Xlinker -r" $(RUNTIMEX))
+BUILD_TARGETS =	$(RUNTIME) $(STANDALONE)
+
+all:		$(BUILD_TARGETS)
+
+install:        $(BUILD_TARGETS)
+	mv $(BUILD_TARGETS) ../../bin/.run/
+
+$(RUNTIME):
+	($(MAKE) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" AS="$(AS)" TARGET=$(TARGET) TARGET_ARCHS=$(TARGET_ARCHS) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
+
+# Overriding SYSTEM_LIBS is technically not necessary for Darwin, but it is done
+# here to be consistent across platforms. See mk.amd64-linux for details.
+#                                                                         -BZ
+$(STANDALONE):
+	($(MAKE) RUNTIME="$(STANDALONE)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" SYSTEM_LIBS="" $(STANDALONE))
+
+$(STANDALONE_A):
+	($(MAKE) RUNTIME_A="$(STANDALONE_A)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" $(STANDALONE_A))

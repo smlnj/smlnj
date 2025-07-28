@@ -1,6 +1,6 @@
 (* binary-set-fn.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * This code was adapted from Stephen Adams' binary tree implementation
@@ -383,6 +383,40 @@ functor BinarySetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key 
           in
             concat(difference(l2,l),difference(r2,r))
           end
+
+    local
+      (* functions for walking the tree while keeping a stack of parents
+       * to be visited.
+       *)
+      fun next ((t as T{right, ...})::rest) = (t, goLeft(right, rest))
+        | next _ = (E, [])
+      and goLeft (E, rest) = rest
+        | goLeft (t as T{left, ...}, rest) = goLeft(left, t::rest)
+      fun start m = goLeft (m, [])
+    in
+    fun combineWith pred (s1, s2) = let
+          (* we do a merge on the iteration of the two sets *)
+          fun comb (t1, t2, result) = (case (next t1, next t2)
+                 of ((E, _), (E, _)) => result
+                  | ((E, _), (T{elt, ...}, r2)) =>
+                      condAdd (elt, false, true, t1, r2, result)
+                  | ((T{elt, ...}, r1), (E, _)) =>
+                      condAdd (elt, true, false, r1, t2, result)
+                  | ((T{elt=x1, ...}, r1), (T{elt=x2, ...}, r2)) => (
+                      case K.compare(x1, x2)
+                       of LESS => condAdd (x1, true, false, r1, t2, result)
+                        | EQUAL => condAdd (x1, true, true, r1, r2, result)
+                        | GREATER => condAdd (x2, false, true, t1, r2, result)
+                      (* end case *))
+                (* end case *))
+          and condAdd (x, p1, p2, r1, r2, result) =
+                if pred (x, p1, p2)
+                  then comb (r1, r2, add (result, x))
+                  else comb (r1, r2, result)
+          in
+            comb (start s1, start s2, E)
+          end
+    end (* local *)
 
     fun subtract (s, item) = difference (s, singleton item)
     fun subtract' (item, s) = subtract (s, item)

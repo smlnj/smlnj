@@ -3,7 +3,7 @@
  * Implements unsigned arithmetic.  Results that are out of range wrap (e.g.,
  * max-int + 1 = 0).
  *
- * COPYRIGHT (c) 2017 John Reppy (http://cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2025 John Reppy (http://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,9 +27,6 @@
  * This code is part of the SML Compiler Utilities, which can be found at
  *
  *      https://github.com/JohnReppy/sml-compiler-utils
- *
- * COPYRIGHT (c) 2017 John Reppy (http://cs.uchicago.edu/~jhr)
- * All rights reserved.
  *)
 
 structure UnsignedWrappingArith : UNSIGNED_CONST_ARITH =
@@ -71,6 +68,7 @@ structure UnsignedWrappingArith : UNSIGNED_CONST_ARITH =
             else uNarrow (wid, IntInf.~>>(a, Word.fromLargeInt b))
 
   (* unsigned comparisons *)
+    fun uEq (wid, a, b) = (toUnsigned(wid, a) = toUnsigned(wid, b))
     fun uLess (wid, a, b) = (toUnsigned(wid, a) < toUnsigned(wid, b))
     fun uLessEq (wid, a, b) = (toUnsigned(wid, a) <= toUnsigned(wid, b))
 

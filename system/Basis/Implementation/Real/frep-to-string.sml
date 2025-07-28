@@ -1,6 +1,6 @@
 (* frep-to-string.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Internal conversions for creating strings from IEEEReal.decimal_approx
@@ -95,14 +95,21 @@ structure FRepToString : sig
      *      rounding.
      *)
     fun roundAndNormalize (digits, m) = let
-          fun trim (0, [], ds) = (false, List.rev ds, 0)
+          (* given the list of digits in reverse order (lsd first), trim the zeros.
+           * we return the remaining digits in msd first order with the number of
+           * trimmed zeros.
+           *)
+          fun trimTrailingZeros ([], nz) = (false, [], nz)
+            | trimTrailingZeros (0::ds, nz) = trimTrailingZeros (ds, nz+1)
+            | trimTrailingZeros (ds, nz) = (false, List.rev ds, nz)
+          fun trim (0, [], ds) = trimTrailingZeros (ds, 0)
             | trim (_, [], _) = raise Fail "impossible"
             | trim (0, d::dr, ds) = if (d < 5)
-                  then (false, List.rev ds, 0)
+                  then trimTrailingZeros (ds, 0)
                 else if (d > 5)
                   then roundWithCarry (true, ds, [], 0)
                 else if null dr
-                  then (false, List.rev ds, 0) (* round down *)
+                  then trimTrailingZeros (ds, 0)  (* round down *)
                   else roundWithCarry (true, ds, [], 0)
             | trim (m, d::dr, ds) = trim (m-1, dr, d::ds)
           and roundWithCarry (carry, [], ds', nz) = (carry, ds', nz)

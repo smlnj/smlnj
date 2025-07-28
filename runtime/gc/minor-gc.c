@@ -17,12 +17,6 @@
 #include "tags.h"
 #include "copy-loop.h"
 
-#ifdef GC_STATS
-extern long	numUpdates;
-extern long	numBytesAlloc;
-extern long	numBytesCopied;
-#endif
-
 /** store list operations */
 #define STL_nil		ML_unit
 #define STL_hd(p)	REC_SELPTR(ml_val_t, p, 0)
@@ -57,6 +51,13 @@ PVT void MinorGC_CheckWord (Addr_t allocBase, Addr_t allocSz, gen_t *g1, ml_val_
 }
 #endif
 
+#ifdef CHECK_HEAP
+STATIC_INLINE int isValidWord (ml_val_t w)
+{
+    Word_t tag = (Word_t)w & 0x3;
+    return ((tag & 1) == 1) || (tag == 0);
+}
+#endif
 
 /* MinorGC:
  *
@@ -66,30 +67,29 @@ void MinorGC (ml_state_t *msp, ml_val_t **roots)
 {
     heap_t	*heap = msp->ml_heap;
     gen_t	*gen1 = heap->gen[0];
-#ifdef GC_STATS
-    long	nbytesAlloc, nbytesCopied, nUpdates=numUpdates;
     Addr_t	gen1Top[NUM_ARENAS];
-    int		i;
+
+    /* record the number of bytes allocated since the last GC and record the current
+     * tops of the first-generation arenas.
+     */
     {
-	nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
-	CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
-	for (i = 0;  i < NUM_ARENAS;  i++)
+	Addr_t nb = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
+        int i;
+	CNTR_INCR(&(heap->numAlloc), nb);
+	for (i = 0;  i < NUM_ARENAS;  i++) {
 	    gen1Top[i] = (Addr_t)(gen1->arena[i]->nextw);
+        }
     }
-#elif defined(VM_STATS)
-    {
-	Addr_t	    nbytesAlloc;
-	nbytesAlloc = ((Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase));
-	CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
-    }
-#endif
 
 #ifdef VERBOSE
 {
   int i;
-  SayDebug ("Generation 1 before MinorGC:\n");
+  SayDebug ("Before MinorGC:\n");
+  SayDebug("  Nursery: [%p..%p]\n",
+        (void*)(heap->allocBase), (void*)((Addr_t)heap->allocBase + heap->allocSzB));
+  SayDebug ("  Generation 1:\n");
   for (i = 0;  i < NUM_ARENAS;  i++) {
-    SayDebug ("  %s: base = %p, oldTop = %p, nextw = %p\n",
+    SayDebug ("    %s: base = %p, oldTop = %p, nextw = %p\n",
       ArenaName[i+1], gen1->arena[i]->tospBase,
       gen1->arena[i]->oldTop, gen1->arena[i]->nextw);
   }
@@ -140,18 +140,16 @@ void MinorGC (ml_state_t *msp, ml_val_t **roots)
 }
 #endif
 
-#ifdef GC_STATS
+    /* update allocation and GC counters */
     {
-	int	nbytes;
+	int i;
+        Addr_t nbytes;
 
-	nbytesCopied = 0;
 	for (i = 0;  i < NUM_ARENAS;  i++) {
-	    nbytes = ((Word_t)(gen1->arena[i]->nextw) - gen1Top[i]);
-	    nbytesCopied += nbytes;
+	    nbytes = ((Addr_t)(gen1->arena[i]->nextw) - gen1Top[i]);
 	    CNTR_INCR(&(heap->numCopied[0][i]), nbytes);
 	}
     }
-#endif
 
 #ifdef CHECK_HEAP
     CheckHeap(heap, 1);
@@ -170,13 +168,13 @@ PVT void MinorGC_ScanStoreList (heap_t *heap, ml_val_t stl)
     ml_val_t	*addr, w;
     gen_t	*gen1 = heap->gen[0];
     bibop_t	bibop = BIBOP;
-#ifdef GC_STATS
+#ifdef COUNT_STORE_LIST
     int		nUpdates = 0;
 #endif
 
   /* Scan the store list */
     do {
-#ifdef GC_STATS
+#ifdef COUNT_STORE_LIST
 	nUpdates++;
 #endif
 	addr = STL_hd(stl);
@@ -232,8 +230,8 @@ PVT void MinorGC_ScanStoreList (heap_t *heap, ml_val_t stl)
 	}
     } while (stl != STL_nil);
 
-#ifdef GC_STATS
-    numUpdates += nUpdates;
+#ifdef COUNT_STORE_LIST
+    CNTR_INCR(&(heap->numStores), nUpdates);
 #endif
 
 } /* end MinorGC_ScanStoreList */
@@ -290,9 +288,22 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
     arena_t	*arena;
 
     desc = obj[-1];
+#ifdef CHECK_HEAP
+    if (! isDESC(desc)) {
+        Die("expected descriptor at %p, but found %p\n", obj, desc);
+    }
+#endif
     switch (GET_TAG(desc)) {
       case DTAG_record:
 	len = GET_LEN(desc);
+#ifdef CHECK_HEAP
+        for (int i = 0;  i < len;  ++i) {
+            if (! isValidWord(obj[i])) {
+                Die("ForwardObj: invalid record slot[%d/%d] = %p; base address = %p; desc = %p\n",
+                    i, len, obj[i], obj, desc);
+            }
+        }
+#endif
 #ifdef NO_PAIR_STRIP
 	arena = gen1->arena[RECORD_INDX];
 #else
@@ -315,10 +326,26 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
       case DTAG_vec_hdr:
       case DTAG_arr_hdr:
 	len = 2;
+#ifdef CHECK_HEAP
+        for (int i = 0;  i < len;  ++i) {
+            if (! isValidWord(obj[i])) {
+                Die("ForwardObj: invalid header slot[%d/%d] = %p; base address = %p; desc = %p\n",
+                    i, len, obj[i], obj, desc);
+            }
+        }
+#endif
 	arena = gen1->arena[RECORD_INDX];
-	break;
+        break;
       case DTAG_arr_data:
 	len = GET_LEN(desc);
+#ifdef CHECK_HEAP
+        for (int i = 0;  i < len;  ++i) {
+            if (! isValidWord(obj[i])) {
+                Die("ForwardObj: invalid array-data slot[%d/%d] = %p; base address = %p; desc = %p\n",
+                    i, len, obj[i], obj, desc);
+            }
+        }
+#endif
 	arena = gen1->arena[ARRAY_INDX];
 	break;
 /* 64BIT: on 64-bit machines, we can treat DTAG_raw and DTAG_raw64 the same */

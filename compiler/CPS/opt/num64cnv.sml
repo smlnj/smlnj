@@ -1,6 +1,6 @@
 (* num64cnv.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This module supports the 64-bit int/word types on 32-bit machines
@@ -12,7 +12,7 @@ structure Num64Cnv : sig
 
   (* eliminate 64-bit literals and operations on a 32-bit machine.  This function
    * does not rewrite its argument if either the target is a 64-bit machine or
-   * the  no 64-bit operations were detected.
+   * no 64-bit operations were detected.
    *)
     val elim : CPS.function -> CPS.function
 
@@ -758,7 +758,16 @@ structure Num64Cnv : sig
 		(fk, f, params, List.map cvtTy tys, cexp body)
 	  in
 	    if needsRewrite cfun
-	      then function cfun
+	      then let
+		val cfun' = function cfun
+		in
+		  if !Control.CG.debugcps
+		    then (
+		      Control.Print.say "[After Num64Cnv.elim ...]\n";
+		      PPCps.printcps0 cfun')
+		    else ();
+		  cfun'
+		end
 	      else cfun
 	  end (* elim *)
 

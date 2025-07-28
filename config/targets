@@ -187,13 +187,10 @@ request ml-burg
 #
 #request nowhere
 
-# Build and install 'heap2asm', which is used by 'heap2exec'
-# for producing self-contained (aka stand-alone) executables.
-# This facility is currently only supported on Linux and macOS
-#
-if UNIX
-#  request heap2asm
-endif
+# The print-cfg tool is a debugging aid for the new LLVM-based backend
+# It prints the CFG pickle files in a human-readable form.
+# (Requires the asdl library!)
+#request print-cfg
 
 # Download the documentation directory.
 #

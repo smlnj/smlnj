@@ -14,13 +14,17 @@ structure CodeObj :> CODE_OBJ =
     type object = Unsafe.Object.object
 
     datatype code_object = C of {
-	entrypoint : int ref,
-	obj : Word8Array.array
+(* QUESTION: it appears that the entrypoint is always going to be zero, so we might not
+ * need it!
+ *)
+	entrypoint : int,
+        isExec : bool ref,
+	obj : W8V.vector ref
       }
 
     type csegments = {
 	code : code_object,
-	data : Word8Vector.vector
+	data : W8V.vector
       }
 
     type executable = object -> object
@@ -34,36 +38,33 @@ structure CodeObj :> CODE_OBJ =
   (* set the target architecture for the code generator *)
     val setTarget : string option -> bool = CI.c_function "CodeGen" "setTarget"
   (* interface to the LLVM code generator *)
-    val codegen : string * W8V.vector * bool -> W8A.array * int = CI.c_function "CodeGen" "generate"
-  (* allocate a code object in the heap (DEPRECATED) *)
-    val allocCode : int -> W8A.array = CI.c_function "SMLNJ-RunT" "allocCode"
+    val codegen : string * W8V.vector * bool -> W8V.vector * int
+          = CI.c_function "CodeGen" "generate"
+    (* build the in-heap literal data from a literal-byte-code program *)
     val mkLiterals : W8V.vector -> object = CI.c_function "SMLNJ-RunT" "mkLiterals"
-    val mkExec : W8A.array * int -> executable = CI.c_function "SMLNJ-RunT" "mkExec"
+    (* allocate and initialize a code object in the heap *)
+    val mkCodeObj : W8V.vector -> W8V.vector = CI.c_function "SMLNJ-RunT" "mkCodeObj"
+    (* package a code object as an executable function *)
+    val mkExec : W8V.vector * int -> executable = CI.c_function "SMLNJ-RunT" "mkExec"
     end (* local *)
+
+    fun newObj (code, offset) = C{
+            entrypoint = offset,
+            isExec = ref false,
+            obj = ref code
+          }
 
     fun generate {target, src, pkl, verifyLLVM} =
           if setTarget (SOME target)
             then raise Fail(concat[
                 "Internal error: ", target, " is not a supported codegen target"
               ])
-            else let
-              val (code, offset) = codegen (src, pkl, verifyLLVM)
-              in
-                C{entrypoint = ref offset, obj = code}
-              end
-
-  (* Allocate an uninitialized code object. *)
-    fun alloc n = (
-	  if (n <= 0) then raise Size else ();
-	  C{ entrypoint = ref 0, obj = allocCode n })
+            else newObj (codegen (src, pkl, verifyLLVM))
 
   (* Allocate a code object of the given size and initialize it
    * from the input stream.
-   * NOTE: someday, we might read the data directly into the code
-   * object, but this will require hacking around with the reader.
    *)
-    fun input (inStrm, sz) = let
-	  val (co as C{obj, ...}) = alloc sz
+    fun input (inStrm, sz, offset) = let
 	  val data = BinIO.inputN (inStrm, sz)
 	  in
 	    if (W8V.length data < sz)
@@ -74,28 +75,27 @@ structure CodeObj :> CODE_OBJ =
 		  ]);
 		raise FormatError)
 	      else ();
-	    W8A.copyVec{src=data, dst=obj, di=0};
-	    co
+            newObj(data, offset)
 	  end
 
   (* Output a code object to the given output stream *)
     fun output (outStrm, C{obj, ...}) = (
-	  BinIO.output(outStrm, Unsafe.cast obj);
+	  BinIO.output(outStrm, !obj);
 	  BinIO.flushOut outStrm)
-
-  (* View the code object as an updatable array of bytes. *)
-    fun bytes (C{obj, ...}) = obj
 
   (* View the code object as an executable.  This has the side-effect
    * of flushing the instruction cache.
    *)
-    fun exec (C{obj, entrypoint = ref ep}) = mkExec (obj, ep)
+    fun exec (C{obj, isExec, entrypoint}) = (
+          (* ensure that the code object is in executable memory *)
+          if not(!isExec)
+            then (obj := mkCodeObj(!obj); isExec := true)
+            else ();
+          mkExec (!obj, entrypoint))
 
   (* return the size of the code object *)
-    fun size (C{obj, ...}) = W8A.length obj
+    fun size (C{obj, ...}) = W8V.length(!obj)
 
-    fun entrypoint (C c) = !(#entrypoint c)
-
-    fun set_entrypoint (C c, ep) = #entrypoint c := ep
+    fun entrypoint (C c) = (#entrypoint c)
 
   end;

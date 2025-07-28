@@ -42,7 +42,8 @@ structure Control_CG : CGCONTROL =
 
     val closureStrategy = new (i, "closure-strategy", "?", 0)	(* see CPS/clos/closure.sml *)
     val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [
-	    "first_contract", "eta", "zeroexpand", "last_contract"
+	    "first_contract", "eta", "zeroexpand", "vn", "check",
+            "last_contract"
 	  ])
     (* ["first_contract", "eta", "uncurry", "etasplit",
 	"cycle_expand", "eta", "last_contract" ] *)
@@ -70,6 +71,7 @@ structure Control_CG : CGCONTROL =
     val staticprof = new (b, "staticprof", "?", false)
     val verbose = new (b, "verbose", "?", false)
     val debugcps = new (b, "debugcps", "?", false)
+    val checkCPS = new (b, "check-cps", "check CPS invariants after transformation passes", false)
     val bodysize = new (i, "bodysize", "?", 20)
     val reducemore = new (i, "reducemore", "?", 15)
     val comment = new (b, "comment", "?", false)
@@ -80,6 +82,11 @@ structure Control_CG : CGCONTROL =
     val spillGen = new (i, "spill-gen", "?", 0)
     val etasplit = new (b, "etasplit", "?", true)
     val uncurry = new (b, "uncurry", "enable uncurrying optimization", true)
+    val enableVN = new (b, "vn", "enable value-numbering optimization pass", false)
+    val vnCondElim = new (b, "vn-cond", "enable redundant conditional elimination", false)
+    val vnRecordElim = new (b, "vn-record", "enable redundant record-allocation elimination", false)
+    val vnSelectElim = new (b, "vn-select", "enable redundant record-selection elimination", false)
+    val vnPrimElim = new (b, "vn-prim", "enable redundant primop elimination", false)
     val ifidiom = new (b, "if-idiom", "enable if-idiom optimization", true)
     val comparefold = new (b, "comparefold", "enable optimization of conditional tests", true)
     val debugLits = new (b, "debug-lits", "print results of literal lifting", false)
@@ -88,6 +95,7 @@ structure Control_CG : CGCONTROL =
     val deadup = new (b, "deadup", "?", true)
     val printit = new (b, "printit", "whether to show CPS", false)
     val printClusters = new (b, "print-clusters", "whether to print clusters prior to codegen", false)
+    val dumpClusters = new (b, "dump-clusters", "whether to dump clusters as a '.dot' file", false)
     val printCFG = new (b, "print-cfg", "whether to convert to CFG and print it", false)
     val dumpCFG = new (b, "dump-cfg", "whether to convert to CFG and pickle it", false)
     val verifyLLVM = new (b, "verify-llvm", "enable verification of generated LLVM code", false)

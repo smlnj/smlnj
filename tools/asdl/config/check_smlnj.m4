@@ -1,6 +1,6 @@
 dnl check_smlnj.m4
 dnl
-dnl COPYRIGHT (c) 2019 The The SML/NJ Fellowship (http://smlnj.org/)
+dnl COPYRIGHT (c) 2025 The The SML/NJ Fellowship (https://smlnj.org/)
 dnl
 dnl @synopsis CHECK_SMLNJ(ACTION-IF-UNKNOWN)
 dnl
@@ -60,7 +60,6 @@ dnl normalize the ac_check_smlnj_version variable
 dnl
       case $ac_check_smlnj_version in
 	sml*) ac_check_smlnj_version=`echo $ac_check_smlnj_version | sed -e 's/sml //'` ;;
-	*) AC_MSG_ERROR([bogus SML/NJ version ($ac_check_smlnj_version) reported]);;
       esac
       SMLNJ_VERSION=$ac_check_smlnj_version
       case $ac_check_smlnj_version in

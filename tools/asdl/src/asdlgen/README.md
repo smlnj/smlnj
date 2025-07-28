@@ -42,7 +42,7 @@ This file gives an overview of the implementation architecture of **asdlgen**.
   This directory contains the  definitions of the views that control
   how the back-ends access process the specification.
      - `common-view.sml`
-     - `cxx-view.sml` -- implementes the C** view
+     - `cpp-view.sml` -- implementes the C** view
      - `prop-names.sml`
      - `sml-view.sml` -- implementes the SML view
      - `view-base-fn.sml`
@@ -60,16 +60,16 @@ subdirectories.
        order
     - `string-subst.sml` -- substitution expansion for code fragments
 
-* `cxx/` <br/>
+* `cpp/` <br/>
   The back-end for **C++** code generation.  The **C++** backend generates code
   that uses the ``std::instream` and `std::outstream` types, which means that
   memory and file pickling are supported by the same set of functions.
-    - `cxx.sml` -- a syntax-tree representation of a subset of the **C++** language
-    - `gen-cxx.sml` -- the main entrypoint for the **C++** backend
+    - `cpp.sml` -- a syntax-tree representation of a subset of the **C++** language
+    - `gen-cpp.sml` -- the main entrypoint for the **C++** backend
     - `gen-pickle.sml` -- code generation for pickling
     - `gen-types.sml` -- code generation for the **C++** types that represent
       the **ASDL** types in a module.
-    - `print-cxx.sml` -- printer for the representation defined in `cxx.sml`
+    - `print-cpp.sml` -- printer for the representation defined in `cpp.sml`
     - `util.sml` -- various utility functions
 
 * `sml/` <br/>

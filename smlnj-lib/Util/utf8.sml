@@ -25,6 +25,7 @@ structure UTF8 :> UTF8 =
     fun w2c w = Char.chr(W.toInt w)
 
     val maxCodePoint : wchar = 0wx0010FFFF
+    val replacementCodePoint : wchar = 0wxFFFD
 
   (* maximum values for the first byte for each encoding length *)
     val max1Byte : W.word = 0wx7f (* 0xxx xxxx *)
@@ -32,86 +33,77 @@ structure UTF8 :> UTF8 =
     val max3Byte : W.word = 0wxef (* 1110 xxxx *)
     val max4Byte : W.word = 0wxf7 (* 1111 0xxx *)
 
-  (* bit masks for the first byte for each encoding length *)
+    (* bit masks for the first byte for each encoding length *)
     val mask2Byte : W.word = 0wx1f
     val mask3Byte : W.word = 0wx0f
     val mask4Byte : W.word = 0wx07
 
-  (* bit mask for continuation bytes *)
+    (* bit mask for continuation bytes *)
     val maskContByte : W.word = 0wx3f
-
 
     exception Incomplete
     exception Invalid
+
+    (* what to do when there is an incomplete UTF-8 sequence *)
+    datatype decode_strategy
+      = STRICT
+      | REPLACE
 
     (* a simple state machine for getting a valid UTF8 byte sequence.
      * See https://unicode.org/mail-arch/unicode-ml/y2003-m02/att-0467/01-The_Algorithm_to_Valide_an_UTF-8_String
      * for a description of the state machine.
      *)
-    fun getu getc = let
-          fun getByte inS = (case getc inS
-                 of SOME(c, inS') => (Word.fromInt(ord c), inS')
-                  | NONE => raise Incomplete
+    fun getWC strategy getc = let
+          fun getByte (inS, k) = (case getc inS
+                 of SOME(c, inS') => k (Word.fromInt(ord c), inS')
+                  | NONE => (case strategy
+                       of STRICT => raise Incomplete
+                        | REPLACE => SOME(replacementCodePoint, inS)
+                     (* end case *))
                 (* end case *))
           fun inRange (minB : word, b, maxB) = ((b - minB) <= maxB - minB)
           (* add the bits of a continuation byte to the accumulator *)
           fun addContBits (accum, b) = W.orb(W.<<(accum, 0w6), W.andb(0wx3f, b))
+          (* handles an invalid byte in the input stream *)
+          fun invalid inS = (case strategy
+                 of STRICT => raise Invalid
+                  | REPLACE => SOME(replacementCodePoint, inS)
+                (* end case *))
           (* handles last byte for all multi-byte sequences *)
-          fun stateA (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          fun stateA (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wx80, b, 0wxbf)
-                    then SOME(addContBits(accum, b), inS)
-                    else raise Invalid
-                end
+                    then SOME(addContBits(accum, b), inS')
+                    else invalid inS)
           (* handles second/third byte for three/four-byte sequences *)
-          and stateB (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          and stateB (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wx80, b, 0wxbf)
-                    then stateA (inS, addContBits(accum, b))
-                    else raise Invalid
-                end
+                    then stateA (inS', addContBits(accum, b))
+                    else invalid inS)
           (* byte0 = 0b1110_0000 (3-byte sequence) *)
-          and stateC (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          and stateC (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wxa0, b, 0wxbf)
-                    then stateA (inS, addContBits(accum, b))
-                    else raise Invalid
-                end
+                    then stateA (inS', addContBits(accum, b))
+                    else invalid inS)
           (* byte0 = 0b1110_1101 (3-byte sequence) *)
-          and stateD (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          and stateD (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wx80, b, 0wx9f)
-                    then stateA (inS, addContBits(accum, b))
-                    else raise Invalid
-                end
+                    then stateA (inS', addContBits(accum, b))
+                    else invalid inS)
           (* byte0 = 0b1111_0001 .. 0b1111_0011 (4-byte sequence) *)
-          and stateE (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          and stateE (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wx80, b, 0wxbf)
-                    then stateB (inS, addContBits(accum, b))
-                    else raise Invalid
-                end
+                    then stateB (inS', addContBits(accum, b))
+                    else invalid inS)
           (* byte0 = 0b1111_0000 (4-byte sequence) *)
-          and stateF (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          and stateF (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wx90, b, 0wxbf)
-                    then stateB (inS, addContBits(accum, b))
-                    else raise Invalid
-                end
+                    then stateB (inS', addContBits(accum, b))
+                    else invalid inS)
           (* byte0 = 0b1111_1000 (4-byte sequence) *)
-          and stateG (inS, accum) = let
-                val (b, inS) = getByte inS
-                in
+          and stateG (inS, accum) = getByte (inS, fn (b, inS') =>
                   if inRange(0wx80, b, 0wx8f)
-                    then stateB (inS, addContBits(accum, b))
-                    else raise Invalid
-                end
+                    then stateB (inS', addContBits(accum, b))
+                    else invalid inS)
           and start inS = (case getc inS
                  of SOME(c, inS) => let
                       val byte0 = Word.fromInt(ord c)
@@ -133,13 +125,17 @@ structure UTF8 :> UTF8 =
                           then stateF (inS, W.andb(byte0, mask4Byte))
                         else if (byte0 = 0wxf4)
                           then stateG (inS, W.andb(byte0, mask4Byte))
-                          else raise Invalid
+                          else invalid inS
                       end
                   | NONE => NONE
                 (* end case *))
           in
             start
           end
+
+    fun getWCStrict getc = getWC STRICT getc
+
+    val getu = getWCStrict
 
     fun isAscii (wc : wchar) = (wc <= max1Byte)
     fun toAscii (wc : wchar) = w2c(W.andb(0wx7f, wc))
@@ -149,10 +145,10 @@ structure UTF8 :> UTF8 =
     fun toString wc =
 	  if isAscii wc
 	    then Char.toCString(toAscii wc)
-	  else if (wc <= max2Byte)
+	  else if (wc <= 0wxFFFF)
 	    then "\\u" ^ (StringCvt.padLeft #"0" 4 (W.toString wc))
-	  (* NOTE: the following is not really SML syntax *)
-	    else "\\u" ^ (StringCvt.padLeft #"0" 8 (W.toString wc))
+	    (* NOTE: the following is Successor ML syntax *)
+	    else "\\U" ^ (StringCvt.padLeft #"0" 8 (W.toString wc))
 
   (* return a list of characters that is the UTF8 encoding of a wide character *)
     fun encode' (wc, chrs) = if (wc <= 0wx7f)
@@ -277,10 +273,10 @@ structure UTF8 :> UTF8 =
     fun size s = size' (SS.full s)
 
     (* get wide characters from substrings *)
-    val getWC = getu SS.getc
+    val getWCFromSubstring = getWCStrict SS.getc
 
     fun map f s = let
-	  fun mapf (ss, chrs) = (case getWC ss
+	  fun mapf (ss, chrs) = (case getWCFromSubstring ss
 		 of NONE => String.implodeRev chrs
 		  | SOME(wc, ss) => mapf (ss, List.revAppend(encode'(wc, []), chrs))
 		(* end case *))
@@ -289,7 +285,7 @@ structure UTF8 :> UTF8 =
 	  end
 
     fun app f s = let
-	  fun appf ss = (case getWC ss
+	  fun appf ss = (case getWCFromSubstring ss
 		 of NONE => ()
 		  | SOME(wc, ss) => (f wc; appf ss)
 		(* end case *))
@@ -299,7 +295,7 @@ structure UTF8 :> UTF8 =
 
   (* fold a function over the Unicode characters in the string *)
     fun fold f = let
-	  fun foldf (ss, acc) = (case getWC ss
+	  fun foldf (ss, acc) = (case getWCFromSubstring ss
 		 of NONE => acc
 		  | SOME(wc, ss) => foldf (ss, f (wc, acc))
 		(* end case *))
@@ -308,7 +304,7 @@ structure UTF8 :> UTF8 =
 	  end
 
     fun all pred s = let
-	  fun allf ss = (case getWC ss
+	  fun allf ss = (case getWCFromSubstring ss
 		 of NONE => true
 		  | SOME(wc, ss) => pred wc andalso allf ss
 		(* end case *))
@@ -317,7 +313,7 @@ structure UTF8 :> UTF8 =
 	  end
 
     fun exists pred s = let
-	  fun existsf ss = (case getWC ss
+	  fun existsf ss = (case getWCFromSubstring ss
 		 of NONE => true
 		  | SOME(wc, ss) => pred wc orelse existsf ss
 		(* end case *))

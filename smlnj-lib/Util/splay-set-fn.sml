@@ -1,6 +1,6 @@
 (* splay-set-fn.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *
  * Functor implementing ordered sets using splay trees.
@@ -252,9 +252,9 @@ functor SplaySetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key =
                       (join(l',r'),lcnt+rcnt)
                     end
           in
-            case diff(!root,!root') of
-              (_,0) => EMPTY
-            | (root,cnt) => SET{root = ref root, nobj = cnt}
+            case diff(!root,!root')
+             of (_,0) => EMPTY
+              | (root,cnt) => SET{root = ref root, nobj = cnt}
           end
 
     fun union (EMPTY,s) = s
@@ -273,6 +273,41 @@ functor SplaySetFn (K : ORD_KEY) :> ORD_SET where type Key.ord_key = K.ord_key =
           in
             SET{root = ref root, nobj = cnt}
           end
+
+    local
+      (* functions for walking the tree while keeping a stack of parents
+       * to be visited.
+       *)
+      fun next ((t as SplayObj{right, ...})::rest) = (t, goLeft(right, rest))
+        | next _ = (SplayNil, [])
+      and goLeft (SplayNil, rest) = rest
+        | goLeft (t as SplayObj{left, ...}, rest) = goLeft(left, t::rest)
+      fun start EMPTY = []
+        | start (SET{root, ...}) = goLeft (!root, [])
+    in
+    fun combineWith pred (s1, s2) = let
+          (* we do a merge on the iteration of the two sets *)
+          fun comb (t1, t2, result) = (case (next t1, next t2)
+                 of ((SplayNil, _), (SplayNil, _)) => result
+                  | ((SplayNil, _), (SplayObj{value, ...}, r2)) =>
+                      condAdd (value, false, true, t1, r2, result)
+                  | ((SplayObj{value, ...}, r1), (SplayNil, _)) =>
+                      condAdd (value, true, false, r1, t2, result)
+                  | ((SplayObj{value=x1, ...}, r1), (SplayObj{value=x2, ...}, r2)) => (
+                      case K.compare(x1, x2)
+                       of LESS => condAdd (x1, true, false, r1, t2, result)
+                        | EQUAL => condAdd (x1, true, true, r1, r2, result)
+                        | GREATER => condAdd (x2, false, true, t1, r2, result)
+                      (* end case *))
+                (* end case *))
+          and condAdd (x, p1, p2, r1, r2, result) =
+                if pred (x, p1, p2)
+                  then comb (r1, r2, add (result, x))
+                  else comb (r1, r2, result)
+          in
+            comb (start s1, start s2, EMPTY)
+          end
+    end (* local *)
 
     fun subtract (s, item) = difference (s, singleton item)
     fun subtract' (item, s) = subtract (s, item)

@@ -41,6 +41,17 @@ ml_val_t _ml_Date_strftime (ml_state_t *msp, ml_val_t arg)
     tm.tm_yday	= REC_SELINT(date, 7);
     tm.tm_isdst	= REC_SELINT(date, 8);
 
+    if (tm.tm_isdst < 0) {
+/* FIXME: this code is a temporary fix for Issue #329.  We should use `mktime`
+ * as part of the date normalization process, but we will need a different API
+ * in the runtime system.
+ */
+        /* normalize the time structure */
+        if (mktime(&tm) < 0) {
+	    return RAISE_ERROR(msp, "strftime failed: invalid tm struct");
+        }
+    }
+
     sz = strftime (buf, sizeof(buf), STR_MLtoC(fmt), &tm);
     if (sz > 0) {
 	res = ML_AllocString(msp, sz);

@@ -1,5 +1,10 @@
 #!/bin/sh
 #
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
+# All rights reserved.
+#
+# post-upgrade script for 64-bit macOS installs
+#
 # usage:
 #
 #	postupgrade <pkg-path> <dst-path> <dst-vol> <root-dir>
@@ -7,7 +12,7 @@
 # where
 #
 #	<pkg-path>	Full path to the installation package the Installer application
-#			is processing. For example: /Volumes/Users/jhr/Desktop/smlnj-x86.pkg
+#			is processing. For example: /Volumes/Users/jhr/Desktop/smlnj-amd64.pkg
 #
 #	<dst-path>	Full path to the installation destination. For example: /usr/local/smlnj
 #
@@ -22,11 +27,11 @@ SCRIPTDIR=`pwd`
 
 # switch to the installation destination
 #
-DST=$2
-cd $DST
+DST="$2"
+cd "$DST" || exit 1
 
 ./build.sh -nolib
 
-$SCRIPTDIR/copy-doc $DST
+"$SCRIPTDIR/copy-doc" "$DST" || exit 1
 
 exit 0

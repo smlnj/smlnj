@@ -1,0 +1,174 @@
+:version: 2025.2
+:date: July 29, 2025
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
+:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release is primarily a bug-fix release.  In particular, we have addressed some
+of the teething issues in the new ARM64 support.
+
+== Details
+
+=== Compiler
+
+* changed the way that GC invocation code is generated to not distinguish between
+  different types that have uniform representation (*i.e.*, `LABt`, `PTRt` and `TAGt`).
+  This change results in significant shrinkage in the size of heap images and more
+  closely matches the behavior of the old **MLRISC** code generator.
+
+* A number of changes to the CFG IR:
++
+--
+* replaced the `UMUL` and `SMUL` operators with `MUL`, since the are
+  all the same
+* renamed the shift operators to `SHL`, `ASHR`, and `LSHR`
+* added bit-counting operators: `CNTPOP`, `CNTLZ`, and `CNTTZ`
+* added bit-rotation operators: `ROTL` and `ROTR`
+* added `BITS_TO_FLOAT` and `FLOAT_TO_BITS` primops
+* added `FREM` and `FMADD` primops
+* removed the `OFFSET` expression form, since it is never generated.
+--
+
+* Add a pass to eliminate redundant computation in the CPS IR.  It needs
+  more tuning, however, and so is currently disabled by default.
+
+* Changed the **CPS** IR to track the argument types of continuations.
+
+=== Runtime System
+
+* changes to the LLVM code generator to match the **CFG** IR changes in the
+  compiler.
+
+=== Basis Library
+
+* removed deprecated functions from `SMLofNJ.SysInfo` structure and changed the
+  `WIN32` constructor to `WINDOWS`.
+
+* added `charSize` and `realSize` functions to `Unsafe` structure to enable
+  more compile-time feature tests.
+
+=== SML/NJ Library
+
+In addition to several bug fixes (see below), the following changes were made to
+the **SML/NJ Library**:
+
+* Added a number of operations to the `MONO_HASH_SET` interface to make
+  it more compatible with the `ORD_SET` interface.
+
+* moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
+  change was made to allow code to produce/consume *JSON* values without depending
+  on the *JSON* library.
+
+== Bugs
+
+Here is a list of the issues that are fixed (or closed) with this release.
+
+[.buglist,cols="^1,<15",strips="none",options="header"]
+|=======
+| Issue
+| Description
+| [.bugid]#292#
+| {issue-base}/292[`SockUtil.recvVec` behaviour does not match documentation]
+| [.bugid]#297#
+| {issue-base}/297[macOS installer does not initialize CM paths correctly]
+| [.bugid]#302#
+| {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
+| [.bugid]#303#
+| {issue-base}/303[The exception `IO.Io` is not accessible]
+| [.bugid]#304#
+| {issue-base}/304[ElabCore regression for invalid application patterns]
+| [.bugid]#306#
+| {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
+| [.bugid]#308#
+| {pull-base}/308[Fix `IntBinarySet`'s comparison operators to be like `BinarySetFn`]
+| [.bugid]#310#
+| {issue-base}/310[`IntBinarySet`'s `union`, `intersection`, and `difference` functions do not work correctly]
+| [.bugid]#311#
+| {pull-base}/311[Fix `heap2exec`]
+| [.bugid]#312#
+| {pull-base}/312[Compile error on Fedora 40 64-bit]
+|=======
+
+We also fixed the following bugs that did not have issues
+associated with them (or were bug fixes ported from the legacy
+repository):
+--
+* Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb`
+
+* Fixed an infinite loop that could occur when clustering the first-order
+  **CPS** functions prior to generating the **CFG** IR.
+
+* Merged fix for {legacy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast` causes
+  Compiler bug)]
+
+* Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
+  and `PackReal64Little` export internals)]
+
+* Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
+  to return an object with `ByteVector` representation)]
+
+* Merged fix for {legacy-issue-base}/360[Legacy Issue #360 (Incorrect values
+  returned by `Real.fromString` on strings with many digits)]
+
+* Merged fix for {legacy-issue-base}/362[Legacy Issue #362 (`Real.fromString`
+  on negative inf/infinity returns positive infinity)]
+
+* Merged fix for {legacy-issue-base}/363[Legacy Issue #363 ("default word size"
+  in the documentation for Util/Random)]
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) | Tested
+| | Ubuntu 20.04.6 LTS |
+| | Ubuntu 22.04.2 LTS | Tested
+| | https://learn.microsoft.com/en-us/windows/wsl/[Windows WSL] |
+| {nbsp} | |
+| ARM64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) | Tested
+| {nbsp} | |
+|=======

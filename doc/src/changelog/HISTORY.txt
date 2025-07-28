@@ -8,6 +8,7 @@ The Fellowship of SML/NJ
 :note-caption: UPDATE
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
+:legacy-pull-base: https://github.com/smlnj/legacy/pull/
 
 This file documents changes to the *Standard ML of New Jersey* system
 since January of 2014 (Versions after 110.78).  Earlier changes are
@@ -100,7 +101,239 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-== Recent updates
+//== Recent updates
+
+//====================================================================
+== Version 2025.2; 2025/07/29
+
+//--------------------------------------------------------------------
+[2025/07/19]::
+Changed the **CPS** IR to track the argument types of continuations.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/19]::
+Changed the way that GC invocation code is generated to not distinguish
+between different types that have uniform representation (*i.e.*, `LABt`,
+`PTRt` and `TAGt`). This change results in significant shrinkage in the
+size of heap images (*e.g.*, 78Kb for the compiler) and more closely
+matches the behavior of the old **MLRISC** code generator.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/16]::
+Ported various bug fixes for real/string conversions from the legacy
+repository.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/16]::
+A number of changes to the CFG IR mostly affecting the *pure* primops:
++
+--
+* replaced the `UMUL` and `SMUL` operators with `MUL`, since the are
+  all the same
+* renamed the shift operators to `SHL`, `ASHR`, and `LSHR`
+* added bit-counting operators: `CNTPOP`, `CNTLZ`, and `CNTTZ`
+* added bit-rotation operators: `ROTL` and `ROTR`
+* added `BITS_TO_FLOAT` and `FLOAT_TO_BITS` primops
+* added `FREM` and `FMADD` primops
+* removed the `OFFSET` expression form, since it is never generated.
+--
++
+These changes affect both the **SML** and {cpp} sides of the code
+generator.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/09]::
+Added `charSize` and `realSize` functions to the `Unsafe` module.  These
+are placeholders for eventual primops that can be used for compile-time
+tests for the sizes of the default `char` and `real` types (similar
+to the `wordSize` primop).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/06/23]::
+Add build targets for a standalone runtime system library, `runx.<arch>-<os>`,
+for `arm64-darwin`, `amd64-darwin`, and `amd64-linux` to support `heap2exec`.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2025/04/11]::
+Add a pass to eliminate redundant computation in the CPS IR.  This
+pass does value numbering for most pure and arithmetic expressions
+and also eliminates redundant conditional control flow.  It needs
+more tuning, however, so it is currently disabled by default.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/04/11]::
+Port fix for {legacy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast`
+causes Compiler bug)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/03/26]::
+Removed deprecated fuctions from `SMLofNJ.SysInfo` module and changed
+the `WIN32` constructor to `WINDOWS`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/03/25]::
+Fixed the **macOS** installation for **arm64** processors; these changes
+fix {issue-base}/297[Issue #297 (macOS installer does not initialize
+CM paths correctly)].  Also made the **macOS** install target consistent
+across the various places where it is specified.  It is now set to
+Version 11 (Big Sur).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/02/26]::
+Reworked the mechanism for grouping the first-order CPS functions into
+clusters.  The new implementation will remove unreachable known functions.
+Furthermore, the normalization pass will not signal an error if a cluster
+that has no entry is encountered (should be impossible with the other
+change).  Previously, normalization would get into an infinite loop
+in such situations.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/02/20]::
+Add a mechanism for dumping out the cluster graph as a ".dot" file
+before and after normalization of the clusters.  Have also restructured
+the handling of clusters to make normalization mandatory, since that
+is a requirement of the LLVM backend.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/02/19]::
+Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb` (bad
+allocation of the result).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//====================================================================
+== Version 2025.1; 2025/02/14
+
+//--------------------------------------------------------------------
+[2025/02/12]::
+Reimplementation of the `heap2exec` script to use the `heap2obj` program
+(instead of `heap2asm`).  The `heap2obj` program is part of the *LLVM*
+infrastructure and takes advantage of the fact the *LLVM* knows how to
+create object files for the host system.  Thus `heap2obj` is more portable
+than `heap2asm` and faster (since it does not have to produce a textual
+assembly file).
++
+In addition, I have added support to the `ml-build` script to produce an
+executable from the heap-image file that it normally generates.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/02/10]::
+A minor change to the heap-image layout (the new version number is
+`0x02102025`) and other improvements to heap import/export.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/02/08]::
+Changed the representation of big-object regions in the heap to avoid
+issues with write protection for executable code on **macOS**/**arm64**.
+The old design put the region header into the first page of the region,
+which is write protected on **arm64**.  The new design allocates the
+region header in the *C* heap and puts a pointer to it into the first
+page of the region.  We only need to read that pointer during GC, so
+this avoids the write-protect issues.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/02/07]::
+Reworked the implementation of code objects in both the compiler and
+runtime system.  The new design should make is easier to deal with
+the problems related to write protection for executable code on
+**macOS**/**arm64**.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/01/31]::
+Fix for {issue-base}/295[Issue #295 (Incorrect constant folding of
+word equality)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/01/21]::
+Fix for {issue-base}/294[Issue #294 (compiler bug aborts build of
+istari)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/25]::
+Ported fix for {legacy-issue-base}/328[Legacy Issue #328 (`Real.fromString`
+broken in 110.99.5 and 110.99.6)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/25]::
+Ported fix for {legacy-issue-base}/305[Legacy Issue #305 (`Date.date`
+incorrectly modifies local time with timezone offset)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/11]::
+Changed the startup behavior so that if the `@SMLquiet` command-line
+option is specified, then the banner is not printed.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/11]::
+Taking advantage of the previous change by moving the fusion of
+integer/word conversions to the `ContractPrim` structure.  This
+change means that conversions do not have to be adjacent in the
+CPS IR to be composed.  Also added some missing identities for
+the conversions.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2024/10/11]::
++
+Improved the tracing of variable bindings in contraction by adding
+the `ARITHinfo` and `PUREinfo` constructors (the `WRPinfo` constructor
+is rendered obsolete).  This change was motivated by the desire to
+eliminate a redundant range test from the code
++
+[source,sml]
+------------
+fun byte2char w = chr (Word8.toInt w)
+------------
++
+It also allows for `WRAP(UNWRAP ...)` fusion.  In the future, we can
+also use this mechanism to move the numeric-conversion fusion operations
+to the `ContractPrim` structure, which will allow us to fuse compositions
+that are not adjacent in the IR.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2025/04/11]::

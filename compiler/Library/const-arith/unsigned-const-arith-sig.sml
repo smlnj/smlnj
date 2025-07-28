@@ -2,7 +2,7 @@
  *
  * Operations for constant-folding unsigned operations on constant integers.
  *
- * COPYRIGHT (c) 2017 John Reppy (http://cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2025 John Reppy (http://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,6 +58,7 @@ signature UNSIGNED_CONST_ARITH =
     val uNeg  : width * t -> t
 
   (* unsigned comparisons, which correctly handle negative arguments *)
+    val uEq     : width * t * t -> bool
     val uLess   : width * t * t -> bool
     val uLessEq : width * t * t -> bool
 

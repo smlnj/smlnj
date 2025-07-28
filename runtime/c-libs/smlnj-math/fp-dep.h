@@ -68,7 +68,7 @@ typedef int fe_rnd_mode_t;
 #  define fegetround()		fpgetround()
 #  define fesetround(RM)	fpsetround(RM)
 
-#elif (defined(OPSYS_NETBSD) || defined(OPSYS_NETBSD2) || defined(OPSYS_OPENBSD))
+#elif (defined(OPSYS_NETBSD) || defined(OPSYS_OPENBSD))
 #  include <ieeefp.h>
 #  define FE_TONEAREST		FP_RN
 #  define FE_TOWARDZERO		FP_RZ

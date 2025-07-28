@@ -31,6 +31,9 @@ char		**RawArgs;
 char		**CmdLineArgs;	/* does not include the command name (argv[0]) */
 char		*MLCmdName;	/* the command name used to invoke the runtime */
 
+/* dummy in-memory heap image; we need this to make the linker happy */
+smlnj_heap_image_t smlnj_heap_image = { 0, { 0 } };
+
 /* local variables */
 PVT bool_t	isBoot = FALSE;	/* true if we should bootstrap a system */
 PVT char	*LoadImage	/* the path name of the image file to load */
@@ -53,10 +56,6 @@ int main (int argc, char **argv)
     InitTimers ();
     RecordGlobals ();
     InitCFunList ();
-
-#ifdef MP_SUPPORT
-    MP_Init();
-#endif
 
   /* start ML */
     if (isBoot) {

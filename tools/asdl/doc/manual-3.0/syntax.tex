@@ -30,11 +30,11 @@ Module and field identifiers can be either upper or lower-case.
       <alpha-num> ::= <alpha> | `0' | ... | `9'
 
       <lc-id>     ::= <lower> \{ <alpha-num> \}
-      
+
       <uc-id>     ::= <upper> \{ <alpha-num> \}
 
       <id>        ::= <lc-id> | <uc-id>
-                  
+
       <typ-id>    ::= <lc-id>
 
       <con-id>    ::= <uc-id>
@@ -55,8 +55,8 @@ and continue to the end of the line.
 Verbatim text is denoted by \synt{text} and can be specified in one of two ways.
 Either by an initial \lit{:} followed by a sequence of \synt{text-character}s that
 continues to the end of the line or by a \lit{\%\%} terminated by a \lit{\%\%}
-at the beginning of a line by itself. 
-Text included using the `\lit{:} notation will have trailing and leading 
+at the beginning of a line by itself.
+Text included using the `\lit{:} notation will have trailing and leading
 whitespace removed.
 
 ASDL has the following keywords:
@@ -84,7 +84,7 @@ Also, included files will only be parsed once.
   \begin{quote}
     \begin{grammar}
       <file>  ::=  \{ `include' <text> \} <definition> \{ <definition> \}
-      
+
       <definition> ::= <module>
         \alt{} <primitive-module>
         \alt{} <view>
@@ -124,11 +124,11 @@ Imports cannot be recursive; for example, it is an error for \lstinline[language
 import \lstinline[language=ASDL]!C!, since \lstinline[language=ASDL]!C!
 imports \lstinline[language=ASDL]!B!.
 \begin{code}\begin{lstlisting}[language=ASDL]
- module A { ... } 
+ module A { ... }
  module B (import A) { ... }
- module C (import A 
+ module C (import A
            import B) { ... }
-\end{lstlisting}\end{code}% 
+\end{lstlisting}\end{code}%
 
 To refer to a type imported from another module the type must
 \emph{always} be qualified by the module name from which it is
@@ -139,9 +139,9 @@ The type ``\texttt{t}'' in module \texttt{B} defines a type ``\texttt{t}'' that
 recursively mentions itself and also references the type ``\texttt{t}'' imported
 from module \texttt{A}.
 \begin{code}\begin{lstlisting}[language=ASDL]
-module A { t = ... } 
+module A { t = ... }
 module B (import A) { t = T(A.t, t) | N  ... }
-\end{lstlisting}\end{code}% 
+\end{lstlisting}\end{code}%
 
 \section{Type Definitions}
 
@@ -162,7 +162,7 @@ is used to prefix all the globally exported identifiers.
       <type>         ::= <alias-type> | <sum-type> | <product-type>
 
       <alias-type>   ::= <typ-exp>
-      
+
       <product-type> ::= <fields>
 
       <sum-type>     ::= <constructor> \{ `|' <constructor> \} [ `attributes' <fields> ]
@@ -172,7 +172,7 @@ is used to prefix all the globally exported identifiers.
       <fields>       ::= `(' \{ <field>  `,' \} <field> `)'
 
       <field>        ::=  <typ-exp> [ <id> ]
-      
+
       <typ-exp>      ::= [ <id> `.' ] <typ-id> [ `?' | `*' | `!' ]
     \end{grammar}
   \end{quote}
@@ -252,13 +252,13 @@ descriptions and are used by \asdlgen{} to name the fields of records
 and classes for languages.
 
 For example, the declaration
-\begin{code}\begin{lstlisting}[language=ASDL] 
-pair_of_ints = (int, int) 
-\end{lstlisting}\end{code}% 
+\begin{code}\begin{lstlisting}[language=ASDL]
+pair_of_ints = (int, int)
+\end{lstlisting}\end{code}%
 defines the tuple type \lstinline[language=ASDL]!pair_of_ints! that consists of two integers,
 whereas the declaration
-\begin{code}\begin{lstlisting}[language=ASDL] 
-size = (int width, int height) 
+\begin{code}\begin{lstlisting}[language=ASDL]
+size = (int width, int height)
 \end{lstlisting}\end{code}%
 defines the record type \lstinline[language=ASDL]!size! that consists of two
 labeled fields: \lstinline[language=ASDL]@width@ and \lstinline[language=ASDL]@height@.
@@ -274,7 +274,7 @@ Sum types are the most useful types in ASDL. They provide concise notation
 used to describe a type that is the tagged union of a finite set of other
 types.  Sum types consists of a series of constructors separated by a
 vertical bar. Each constructor consist of a constructor identifier followed
-by an optional product type. 
+by an optional product type.
 
 Constructor names must be unique within the module in which they are
 declared. Constructors can be viewed as functions who take some number of
@@ -313,7 +313,7 @@ For example, the following \asdl{} specification:
 %
 \begin{code}\begin{lstlisting}[language=ASDL]
 module Op {
-  op = PLUS | MINUS | TIMES | DIVIDE 
+  op = PLUS | MINUS | TIMES | DIVIDE
 }
 \end{lstlisting}\end{code}%
 %
@@ -411,9 +411,9 @@ structure PrimPickle : sig
 
     val read_guid : (unit -> Word8.word) -> unit -> Prim.guid
     val write_guid : (Word8.word -> unit) -> Prim.guid -> unit
-    
+
   end = struct
-  
+
     val guidSize = 16
     fun read_guid getByte () =
           GUID.fromBytes(Word8Vector.tabulate(guidSize, fn _ => getByte()))
@@ -429,12 +429,12 @@ For \Cplusplus{}, a primitive module requires a corresponding header file that d
 the primitive types and instances of the overloaded \lstinline[language=c++]!<<! and
 \lstinline[language=c++]!>>! operators on the primitive types.  These declarations should
 all be in a \lstinline[language=c++]!namespace! with the type name of the primitive module.
-For example, the module from above would require the provision of a \texttt{Prim.hxx} header
+For example, the module from above would require the provision of a \texttt{Prim.hpp} header
 file that contained something like the following code:
 %
 \begin{code}\begin{lstlisting}[language=c++]
 #include <iostream>
-#include "guid.hxx"
+#include "guid.hpp"
 
 namespace Prim {
 
@@ -445,7 +445,7 @@ namespace Prim {
 
 }
 \end{lstlisting}\end{code}%
-(assuming that the \texttt{guid.hxx} header defines the application's representation
+(assuming that the \texttt{guid.hpp} header defines the application's representation
 of GUIDs).
 %For the \Cplusplus{} target, one should use string streams (in binary mode)
 %to support pickling/unpickling of to/from memory.
@@ -504,7 +504,7 @@ The meaning of an entry is to associate the specified view property with the spe
 %%%
 %  Types for representing LISP s-expressions.
 %%%
-%  M.sexpr  <= doc_string : s-expressions 
+%  M.sexpr  <= doc_string : s-expressions
 %  M.Int    <= doc_string : s-expression constructor
 %  M.Symbol <= doc_string : s-expression constructor
 %  M.Cons   <= doc_string : s-expression constructor
@@ -526,7 +526,7 @@ The meaning of an entry is to associate the specified view property with the spe
 %The view named \lstinline[language=ASDL]!Java! causes the type
 %\lstinline[language=ASDL]!M.sexpr! to be renamed \lstinline[language=ASDL]!Sexpr! when
 %generating Java output, and causes the abstract class normally generated to
-%inherit from \lstinline[language=ASDL]!MyClass!. 
+%inherit from \lstinline[language=ASDL]!MyClass!.
 
 There can be multiple views with the same name.
 The entries of two views with the same name are merged and consist of the
@@ -558,19 +558,19 @@ This suffix means that the entity specifies the set of all of the constructors o
 %below in their respective order.
 %\begin{code}\begin{lstlisting}[language=ASDL]
 %view Doc {
-% { M.Int  M.Symbol  
+% { M.Int  M.Symbol
 %   M.Cons M.Nil } <= doc_string : s-expression constructor
 %
 % <= doc_string {
-%  module  M 
+%  module  M
 %%%
 %  Types for representing LISP s-expressions.
 %%%
-%  M.sexpr : s-expressions 
+%  M.sexpr : s-expressions
 %  }
 %}
 %
-%view Cxx {
+%view Cpp {
 %  M.sexpr <= {
 %    source_name : Sexpr
 %    base_class  : MyClass

@@ -42,7 +42,7 @@ PVT SigReturn_t FaultHandler (int sig, SigInfo_t code, SigContext_t *scp);
 
 /* InitFaultHandlers:
  */
-void InitFaultHandlers (ml_state_t *msp)
+void InitFaultHandlers ()
 {
 
   /** Set up the Overflow fault(s).  Note that on some systems (e.g., arm64),
@@ -139,7 +139,7 @@ PVT SigReturn_t FaultHandler (
 #endif
 #endif /* SIG_OVERFLOW */
 
-#if ((defined(ARCH_RS6000) || defined(ARCH_PPC)) && defined(OPSYS_AIX))
+#if (defined(ARCH_PPC) && defined(OPSYS_AIX))
 
 /* SIG_GetCode:
  *

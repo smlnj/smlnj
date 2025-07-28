@@ -33,10 +33,6 @@ typedef struct mem_obj mem_obj_t;
 typedef struct card_map card_map_t;
 #endif
 
-#if ((defined(COLLECT_STATS) || defined(GC_STATS)) && (! defined(_CNTR_)))
-#include "cntr.h"
-#endif
-
 struct heap_params {
     Addr_t	allocSz;	/* the size of the allocation arena */
     int		numGens;
@@ -70,14 +66,19 @@ struct heap {
 					/* of big objects. */
     ml_val_t	    *weakList;		/* A list of weak pointers forwarded*/
 					/* during GC. */
-#if (defined(COLLECT_STATS) || defined(GC_STATS))
-    cntr_t	    numAlloc;		/* Keep track of the number of bytes */
-					/* allocated and the number copied into */
-#ifdef GC_STATS
-    cntr_t	    numCopied		/* each arena. */
-			[MAX_NUM_GENS][NUM_ARENAS];
+    cntr_t	    numAlloc;		/* Number of bytes allocated in the nursery */
+#ifdef COUNT_STORE_LIST
+    cntr_t          numStores;          /* Number of store-list items */
 #endif
-#endif
+    cntr_t          numAlloc1;          /* Number of bytes allocated directly in the
+                                         * first generation (e.g., for large strings)
+                                         */
+    cntr_t	    numCopied[MAX_NUM_GENS][NUM_ARENAS];
+                                        /* number of bytes copied into each arena */
+    int             numGCsAtReset[MAX_NUM_GENS+1];
+                                        /* the remembered number of GCs by generation
+                                         * at the last call to `ResetGCStats`.
+                                         */
 #ifdef HEAP_MONITOR
     struct monitor  *monitor;		/* The various graphical data structures */
 					/* for monitoring the heap. */
@@ -172,8 +173,12 @@ struct arena {
  * Currently, the only big objects are code objects.
  */
 
-/*#define BIGOBJ_PAGE_SHIFT	12*/ /* 4Kb */
+#ifdef ARCH_ARM64
+/* On Arm64, code sections are assumed to be 12-bit aligned */
+#define BIGOBJ_PAGE_SHIFT	12
+#else
 #define BIGOBJ_PAGE_SHIFT	10  /* 1Kb */
+#endif
 #define BIGOBJ_PAGE_SZB		(1 << BIGOBJ_PAGE_SHIFT)
 
 /* the minimum size of a big-object region should be at least 128K and be a multiple of
@@ -197,7 +202,7 @@ struct bigobj_region {	    /* A big-object region header */
 };
 
 struct bigobj_desc {	    /* A big-object descriptor. */
-    Addr_t	    obj;	/* the actual object */
+    Addr_t	    obj;	/* base address of the object */
     Addr_t	    sizeB;	/* the size of the object in bytes.  When the object */
 				/* is in the free list, this will be a multiple of */
 				/* BIGOBJ_PAGE_SZB, otherwise it is the exact size. */
@@ -239,7 +244,7 @@ struct bigobj_desc {	    /* A big-object descriptor. */
 #define BO_IS_FROM_SPACE(dp)	(((dp)->state & 0x1) != 0)
 #define BO_IS_FREE(dp)		((dp)->state == BO_FREE)
 
-/* remove a descriptor from a doubly linked list */
+/* remove a big-object descriptor from a doubly linked list */
 STATIC_INLINE void RemoveBODesc (bigobj_desc_t *dp)
 {
     ASSERT((dp->prev != dp) && (dp->next != dp));
@@ -249,7 +254,7 @@ STATIC_INLINE void RemoveBODesc (bigobj_desc_t *dp)
     n->prev = p;
 }
 
-/* add a descriptor to a doubly linked list */
+/* add a big-object descriptor to a doubly linked list */
 STATIC_INLINE void AddBODesc (bigobj_desc_t *hdr, bigobj_desc_t *dp)
 {
     bigobj_desc_t *n = hdr->next;

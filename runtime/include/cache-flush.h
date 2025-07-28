@@ -36,20 +36,8 @@ extern FlushICache (void *addr, int nbytes);
  */
 #include <pthread.h>
 #include <libkern/OSCacheControl.h>
-STATIC_INLINE void EnableCodeWrite ()
-{
-    Say("+++++ CODE WRITE\n");
-    pthread_jit_write_protect_np(0);
-}
-STATIC_INLINE void DisableCodeWrite ()
-{
-    Say("----- CODE WRITE\n");
-    pthread_jit_write_protect_np(1);
-}
-#define ENABLE_CODE_WRITE	EnableCodeWrite ();
-#define DISABLE_CODE_WRITE	DisableCodeWrite ();
-//#define ENABLE_CODE_WRITE	pthread_jit_write_protect_np(1);
-//#define DISABLE_CODE_WRITE	pthread_jit_write_protect_np(0);
+#define ENABLE_CODE_WRITE	pthread_jit_write_protect_np(FALSE);
+#define DISABLE_CODE_WRITE	pthread_jit_write_protect_np(TRUE);
 #define FlushICache(ADR, SZ)	sys_icache_invalidate(ADR, SZ)
 #else
 #  define FlushICache(addr, size)

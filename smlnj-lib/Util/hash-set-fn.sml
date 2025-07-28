@@ -30,13 +30,13 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 
     fun index (i, sz) = Word.toIntX(Word.andb(i, Word.fromInt sz - 0w1))
 
-  (* minimum and maximum hash table sizes.  We use powers of two for hash table
-   * sizes, since that give efficient indexing, and assume a minimum size of 32.
-   *)
+    (* minimum and maximum hash table sizes.  We use powers of two for hash table
+     * sizes, since that give efficient indexing, and assume a minimum size of 32.
+     *)
     val minSize = 32
     val maxSize = MaxHashTableSize.maxSize
 
-  (* round up `n` to the next hash-table size *)
+    (* round up `n` to the next hash-table size *)
     fun roundUp n = if (n >= maxSize)
 	  then maxSize
 	  else let
@@ -45,12 +45,12 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	      f minSize
 	    end
 
-  (* Create a new table; the int is a size hint and the exception
-   * is to be raised by find.
-   *)
+    (* Create a new table; the int is a size hint and the exception
+     * is to be raised by find.
+     *)
     fun alloc sizeHint = Array.array(roundUp sizeHint, NIL)
 
-  (* grow a table to the specified size *)
+    (* grow a table to the specified size *)
     fun growTable (table, newSz) = let
 	  val newArr = Array.array (newSz, NIL)
 	  fun copy NIL = ()
@@ -65,53 +65,48 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	    newArr
 	  end
 
-  (* conditionally grow a table; return true if it grew. *)
+    (* conditionally grow a table; return true if it grew. *)
     fun growTableIfNeeded (table, nItems) = let
 	    val arr = !table
 	    val sz = Array.length arr
 	    in
 	      if (nItems >= sz)
-		then (table := growTable (arr, sz+sz); true)
-		else false
+		then table := growTable (arr, sz+sz)
+		else ()
 	    end
 
-  (* reverse-append for buckets *)
+    (* reverse-append for buckets *)
     fun revAppend (NIL, b) = b
       | revAppend (B(h, x, r), b) = revAppend(r, B(h, x, b))
 
-    fun addWithHash (tbl as SET{table, nItems}, h, item) = let
+    (* look for an item with hash `h` in a bucket *)
+    fun findInBucket (NIL, h, item) = false
+      | findInBucket (B (h', item', r), h, item) =
+          ((h = h') andalso same (item, item')) orelse findInBucket (r, h, item)
+
+    fun addWithHash (SET{table, nItems}, h, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
 	  val indx = index (h, sz)
-	  fun look NIL = (
-		Array.update(arr, indx, B(h, item, Array.sub(arr, indx)));
-		nItems := !nItems + 1;
-		growTableIfNeeded (table, !nItems);
-		NIL)
-	    | look (B(h', item', r)) = if ((h = h') andalso same(item, item'))
-		then NIL (* item already present *)
-		else (case (look r)
-		   of NIL => NIL
-		    | rest => B(h', item', rest)
-		  (* end case *))
+          val bucket = Array.sub (arr, indx)
 	  in
-	    case (look (Array.sub (arr, indx)))
-	     of NIL => ()
-	      | b => Array.update(arr, indx, b)
-	    (* end case *)
+            if findInBucket (bucket, h, item)
+              then ()
+              else (
+                Array.update (arr, indx, B (h, item, bucket));
+                nItems := !nItems + 1;
+                growTableIfNeeded (table, !nItems))
 	  end
 
-  (* Add an item to a set *)
-    fun add (tbl, item) = addWithHash(tbl, hash item, item)
+    fun add (set, item) = addWithHash(set, hash item, item)
+    fun add' (item, set) = addWithHash(set, hash item, item)
     fun addc set item = add(set, item)
 
-  (* The empty set *)
     fun mkEmpty sizeHint = SET{
 	    table = ref (alloc sizeHint),
 	    nItems = ref 0
 	  }
 
-  (* Create a singleton set *)
     fun mkSingleton item = let
           val set = mkEmpty minSize
           in
@@ -119,7 +114,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
             set
           end
 
-  (* create a set from a list of items *)
     fun mkFromList items = let
           val set = mkEmpty(List.length items)
           in
@@ -132,7 +126,6 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 	    nItems = ref(!nItems)
 	  }
 
-  (* Return a list of the items in the set *)
     fun toList (SET{table, nItems}) =
           if (!nItems = 0)
             then []
@@ -143,48 +136,78 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
                 Array.foldl f [] (!table)
               end
 
-  (* Insert items from list. *)
     fun addList (set, items) = List.app (addc set) items
 
-  (* Remove an item. Raise NotFound if not found. *)
-    fun delete (SET{table, nItems}, item) = let
+    fun addSet (s1, SET{table=tbl2, nItems=n2}) = let
+          val arr2 = !tbl2
+          val sz2 = Array.length arr2
+          (* iterate over the items in `tbl2` adding them to `s1` *)
+          fun lp1 i = if (i < sz2)
+                then let
+                  fun lp2 NIL = lp1 (i + 1)
+                    | lp2 (B(h, item, r)) = (
+                        addWithHash (s1, h, item);
+                        lp2 r)
+                  in
+                    lp2 (Array.sub (arr2, i))
+                  end
+                else ()
+          in
+            lp1 0
+          end
+
+    fun rmvWithHash (SET{table, nItems}, h, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
-	  val h = hash item
 	  val indx = index (h, sz)
-	  fun look (_, NIL) = false
-	    | look (prefix, B(h', item', r)) = if ((h = h') andalso same(item, item'))
+	  fun rmv (_, NIL) = false
+	    | rmv (prefix, B(h', item', r)) = if ((h = h') andalso same(item, item'))
 		then (
                   Array.update(arr, indx, revAppend(prefix, r));
                   nItems := !nItems - 1;
                   true)
-		else look (B(h', item', prefix), r)
+		else rmv (B(h', item', prefix), r)
           in
-            look (NIL, Array.sub(arr, indx))
-          end
+            rmv (NIL, Array.sub(arr, indx))
+	  end
 
-  (* Remove the item, if it is in the set.  Otherwise the set is unchanged. *)
+    fun delete (set, item) = rmvWithHash (set, hash item, item)
+
     fun subtract (set, item) = ignore(delete (set, item))
+    fun subtract' (item, set) = ignore(delete (set, item))
     fun subtractc set item = subtract(set, item)
 
     fun subtractList (set, items) = List.app (subtractc set) items
 
-  (* Return true if and only if item is an element in the set *)
+    fun subtractSet (s1, SET{table=tbl2, nItems=n2}) = let
+          val arr2 = !tbl2
+          val sz2 = Array.length arr2
+          (* iterate over the items in `tbl2` removing them from `s1` *)
+          fun lp1 i = if (i < sz2)
+                then let
+                  fun lp2 NIL = lp1 (i + 1)
+                    | lp2 (B(h, item, r)) = (
+                        ignore (rmvWithHash (s1, h, item));
+                        lp2 r)
+                  in
+                    lp2 (Array.sub (arr2, i))
+                  end
+                else ()
+          in
+            lp1 0
+          end
+
     fun member (SET{table, ...}, item) = let
 	  val arr = !table
 	  val sz = Array.length arr
 	  val h = hash item
 	  val indx = index (h, sz)
-	  fun look NIL = false
-	    | look (B(h', item', r)) = ((h = h') andalso same(item, item')) orelse look r
           in
-            look (Array.sub(arr, indx))
+            findInBucket (Array.sub(arr, indx), h, item)
           end
 
-  (* Return true if and only if the set is empty *)
     fun isEmpty (SET{nItems, ...}) = (!nItems = 0)
 
-  (* Return true if and only if the first set is a subset of the second *)
     fun isSubset (SET{table=tbl1, nItems=n1}, s2 as SET{table=tbl2, nItems=n2}) =
           if (!n1 <= !n2)
             then let
@@ -213,12 +236,90 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
               end
             else false
 
-  (* Return the number of items in the table *)
+    fun disjoint (SET{table=tbl1, nItems=n1}, SET{table=tbl2, nItems=n2}) = let
+          (* is any element of tbl1 a member of tbl2? *)
+          fun noMember (tbl1, tbl2) = let
+                val arr1 = !tbl1 and arr2 = !tbl2
+                val sz1 = Array.length arr1 and sz2 = Array.length arr2
+                fun lp i = if (i < sz1)
+                      then let
+                      (* iterate over the items in bucket i testing them against tbl2 *)
+                        fun look1 NIL = lp(i+1)
+                          | look1 (B(h, item, r)) = let
+                            (* search `tbl2` for `item` *)
+                              fun look2 NIL = look1 r
+                                | look2 (B(h', item', r')) = if (h <> h')
+                                      then look2 r'
+                                    else if same(item, item')
+                                      then false
+                                      else look2 r'
+                              in
+                                look2 (Array.sub(arr2, index (h, sz2)))
+                              end
+                        in
+                          look1 (Array.sub(arr1, i))
+                        end
+                      else true
+                in
+                  lp 0
+                end
+          in
+            (* check each element of the smaller set for membership in the larger *)
+            if (!n1 <= !n2) then noMember (tbl1, tbl2) else noMember (tbl2, tbl1)
+          end
+
     fun numItems (SET{nItems, ...}) = !nItems
 
-  (* Create a new set by applying a map function to the elements
-   * of the set.
-   *)
+    fun union (s1 as SET{nItems=n1, ...}, s2 as SET{nItems=n2, ...}) = let
+          fun add (s1, s2) = let val s1 = copy s1 in addSet(s1, s2); s1 end
+          in
+            (* add the smaller set to a copy of the larger *)
+            if (!n1 < !n2) then add(s2, s1) else add(s1, s2)
+          end
+
+    fun intersection (SET{table=tbl1, nItems=n1}, SET{table=tbl2, nItems=n2}) = let
+          (* compute the intersection by iterating over the items in `tbl1` (which
+           * should be the smaller) and testing them for membership in `tbl2`.
+           *)
+          fun inter (arr1, arr2) = let
+                val sz1 = Array.length arr1 and sz2 = Array.length arr2
+                val newArr = Array.array(sz1, NIL)
+                fun lp1 (i, n) = if (i < sz1)
+                      then let
+                        (* iterate over the items in bucket `i` *)
+                        fun lp2 (NIL, n) = lp1(i+1, n)
+                          | lp2 (B(h, item, r), n) = let
+                              fun look NIL = lp2 (r, n)
+                                | look (B(h', item', r')) =
+                                    if (h = h') andalso same(item, item')
+                                      then (
+                                        Array.update(
+                                          newArr, i,
+                                          B(h, item, Array.sub(newArr, i)));
+                                        lp2 (r, n+1))
+                                      else look r'
+                              in
+                                look (Array.sub(arr2, index (h, sz2)))
+                              end
+                        in
+                          lp2 (Array.sub(arr1, i), n)
+                        end
+                      else SET{table = ref newArr, nItems = ref n}
+                in
+                  lp1 (0, 0)
+                end
+          in
+            if (!n1 < !n2)
+              then inter (!tbl1, !tbl2)
+              else inter (!tbl2, !tbl1)
+          end
+
+    fun difference (s1, s2) = let
+          val s1 = copy s1
+          in
+            subtractSet (s1, s2); s1
+          end
+
     fun map f (SET{nItems, table}) = let
           val s = mkEmpty (!nItems)
           fun mapf NIL = ()

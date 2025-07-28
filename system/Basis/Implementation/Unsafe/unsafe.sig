@@ -57,9 +57,20 @@ signature UNSAFE =
 	val baseBits : int
       end
 
-    (* machine properties *)
+    (***** machine/language properties *****
+     * These operations are implemented as primitive operations by
+     * the compiler, so they can be used to implement compile-time
+     * tests.
+     *)
+
+    (* returns true for big-endian machines, false for little-endian *)
     val isBigEndian : unit -> bool
+    (* returns the native word size in bits *)
     val wordSize : unit -> int
+    (* returns the size of the default `char` type in bits *)
+    val charSize : unit -> int
+    (* returns the size of the default `real` type in bits *)
+    val realSize : unit -> int
 
     (* convert default real to bits *)
 (* NOTE: this function is depracated; use Real64.castToWord instead *)

@@ -86,7 +86,7 @@ BOOL cntrl_c_handler (DWORD fdwCtrlType)
 
 /* InitFaultHandlers:
  */
-void InitFaultHandlers (ml_state_t *msp)
+void InitFaultHandlers ()
 {
   /* some basic win32 initialization is done here */
 

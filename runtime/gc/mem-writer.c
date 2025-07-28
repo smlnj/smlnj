@@ -10,10 +10,6 @@
 #include "writer.h"
 #include <string.h>
 
-#ifndef BUFSIZ
-#define BUFSIZ 4096
-#endif
-
 typedef struct buffer {
     Byte_t	*base;
     Byte_t	*next;

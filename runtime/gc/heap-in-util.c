@@ -13,6 +13,7 @@
 #include "c-globals-tbl.h"
 #include "heap-input.h"
 #include <string.h>
+#include <sys/errno.h>
 
 #ifndef SEEK_SET
 #  define SEEK_SET	0
@@ -75,7 +76,7 @@ status_t HeapIO_Seek (inbuf_t *bp, off_t offset)
 	}
     }
     else if (fseek (bp->file, offset, SEEK_SET) != 0) {
-	Die ("unable to seek on heap image\n");
+        return FAILURE;
     }
 
     bp->nbytes = 0;		/* just in case? */
@@ -125,9 +126,15 @@ PVT status_t ReadBlock (FILE *file, void *blk, size_t len)
 	sts = fread (bp, 1, len, file);
 	len -= sts;
 	bp += sts;
-	if ((sts < len) && (ferror(file) || feof(file))) {
-	    Error ("unable to read %d bytes from image\n", len);
-	    return FAILURE;
+        if (sts < len) {
+            if (ferror(file)) {
+                Error ("unable to read %d bytes from image [%s (%d)]\n",
+                    len, strerror(errno), errno);
+	        return FAILURE;
+            } else if (feof(file)) {
+                Error ("unexpected eof when attempting to read %d bytes from image\n", len);
+	        return FAILURE;
+            }
 	}
     }
 

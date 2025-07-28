@@ -25,7 +25,7 @@ TOOLS="$ROOT"/tools
 CONFIGDIR="$ROOT/config"
 
 VERSION=`cat "$CONFIGDIR"/version`
-#. "$CONFIGDIR"/srcarchiveurl
+. "$CONFIGDIR"/srcarchiveurl
 
 vsay() {
     if [ x${INSTALL_DEBUG} = xtrue ] ; then

@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-structure PackReal64Little =
+structure PackReal64Little : PACK_REAL =
   struct
 
     structure BV = InlineT.Word8Vector

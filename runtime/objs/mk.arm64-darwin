@@ -2,11 +2,11 @@
 #
 # COPYRIGHT (c) 2021 The SML/NJ Fellowship
 #
-# Makefile for macOS 10.16+ (Big Sur or later) on 64-bit Arm (aka Apple Silicon)
+# Makefile for macOS 11 (Big Sur or later) on 64-bit Arm (aka Apple Silicon)
 # processors
 #
 
-SDK =		-mmacosx-version-min=10.16
+SDK =		-mmacosx-version-min=11
 
 SHELL =		/bin/sh
 
@@ -15,7 +15,7 @@ AS =		/usr/bin/as -arch arm64
 CPP =           cc -x assembler-with-cpp -E -P -std=c99
 CC =		cc -m64 -std=c99
 CFLAGS =	-g -O2 -D_DARWIN_C_SOURCE
-CXX =           c++ --std=c++14
+CXX =           c++ --std=c++17
 CXX_FLAGS =     -g -O2
 XOBJS =
 XLIBS =         ../c-libs/dl/libunix-dynload.a
@@ -27,8 +27,24 @@ DEFS =		$(XDEFS) $(BASE_DEFS) -DARCH_ARM64 -DSIZE_64 \
 TARGET =	ARM64
 VERSION =	v-arm64-darwin
 RUNTIME =	run.arm64-darwin
-RUNTIMEX =	runx.arm64-darwin
+STANDALONE =	runx.arm64-darwin
+STANDALONE_A =	runx.arm64-darwin.a
 
-all:
+BUILD_TARGETS = $(RUNTIME) $(STANDALONE)
+
+all:	        $(BUILD_TARGETS)
+
+install:        $(BUILD_TARGETS)
+	mv $(BUILD_TARGETS) ../../bin/.run/
+
+$(RUNTIME):
 	($(MAKE) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" AS="$(AS)" TARGET=$(TARGET) TARGET_ARCHS=all DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
-#	($(MAKE) RUNTIME="$(RUNTIMEX)" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-Xlinker -r" $(RUNTIMEX))
+
+# Overriding SYSTEM_LIBS is technically not necessary for Darwin, but it is done
+# here to be consistent across platforms. See mk.amd64-linux for details.
+#                                                                         -BZ
+$(STANDALONE):
+	($(MAKE) RUNTIME="$(STANDALONE)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" SYSTEM_LIBS="" $(STANDALONE))
+
+$(STANDALONE_A):
+	($(MAKE) RUNTIME_A="$(STANDALONE_A)" MAIN="standalone" VERSION="$(VERSION)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" SYSTEM_LIBS="" $(STANDALONE_A))

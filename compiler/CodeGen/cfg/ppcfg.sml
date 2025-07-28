@@ -66,6 +66,8 @@ structure PPCfg : sig
 	    | P.LIMIT n => concat["needGC(", Word.fmt StringCvt.DEC n, ")"]
 	  (* end case *))
 
+    fun rawTyToString {kind, sz} = numkindToString(kind, sz)
+
     fun allocToString P.SPECIAL = "special"
       | allocToString (P.RECORD{desc, mut=false}) =
 	  concat["record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
@@ -119,26 +121,32 @@ structure PPCfg : sig
     fun pureopToString rator = (case rator
 	   of P.ADD => "add"
 	    | P.SUB => "sub"
-	    | P.SMUL => "smul"
+	    | P.MUL => "mul"
 	    | P.SDIV => "sdiv"
 	    | P.SREM => "srem"
-	    | P.UMUL => "umul"
 	    | P.UDIV => "udiv"
 	    | P.UREM => "urem"
-	    | P.LSHIFT => "lshift"
-	    | P.RSHIFT => "rshift"
-	    | P.RSHIFTL => "rshiftl"
+	    | P.SHL => "shl"
+	    | P.ASHR => "ashr"
+	    | P.LSHR => "lshr"
 	    | P.ORB => "orb"
 	    | P.XORB => "xorb"
 	    | P.ANDB => "andb"
+            | P.CNTPOP => "cntpop"
+            | P.CNTLZ => "cntlz"
+            | P.CNTTZ => "cnttz"
+            | P.ROTL => "rotl"
+            | P.ROTR => "rotr"
 	    | P.FADD => "fadd"
 	    | P.FSUB => "fsub"
 	    | P.FMUL => "fmul"
 	    | P.FDIV => "fdiv"
+	    | P.FREM => "frem"
+            | P.FMADD => "fmadd"
 	    | P.FNEG => "fneg"
 	    | P.FABS => "fabs"
-	    | P.FSQRT => "fsqrt"
 	    | P.FCOPYSIGN => "fcopysign"
+	    | P.FSQRT => "fsqrt"
 	  (* end case *))
 
     fun pureToString (P.PURE_ARITH{oper, sz}) = pureopToString oper ^ i2s sz
@@ -168,7 +176,6 @@ structure PPCfg : sig
 	    | C.LOOKER{oper, args} => appToS(lookerToString oper, args)
 	    | C.PURE{oper, args} => appToS(pureToString oper, args)
 	    | C.SELECT{idx, arg} => appToS("#" ^ i2s idx, [arg])
-	    | C.OFFSET{idx, arg} => appToS("@" ^ i2s idx, [arg])
 	  (* end case *))
 
     and appToS (prefix, es) = String.concat[
@@ -209,6 +216,21 @@ structure PPCfg : sig
 		case stm
 		 of C.LET(e, x, stm) => (
 		      say(expToString e); say " -> "; sayParam x; say "\n"; pr stm)
+		  | C.ALLOC(p as P.RAW_RECORD{fields, ...}, args, x, stm) => let
+                      fun sayArg (ty, e) = (
+                            say(expToString e); say ":"; say(rawTyToString ty))
+                      in
+                        say(allocToString p); say "(";
+                        case (fields, args)
+                         of ([ty], [e]) => sayArg (ty, e)
+                          | (ty::tys, e::es) => (
+                              sayArg (ty, e);
+                              ListPair.appEq (fn (ty, e) => (say ","; sayArg(ty, e)))
+                                (tys, es))
+                          | _ => raise Fail "bogus argument list for RAW_RECORD"
+                        (* end case *);
+                        say ") -> "; sayv x; say "\n"; pr stm
+                      end
 		  | C.ALLOC(p as P.RAW_ALLOC _, [], x, stm) => (
 		      say (allocToString p); say " -> "; sayv x; say "\n"; pr stm)
 		  | C.ALLOC(p, args, x, stm) => (

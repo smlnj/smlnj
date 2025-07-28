@@ -1,6 +1,6 @@
 (* sock-util.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Various utility functions for programming with sockets.
@@ -94,15 +94,15 @@ structure SockUtil : SOCK_UTIL =
 	    sock
 	  end
 
-(** If the server closes the connection, do we get 0 bytes or an error??? **)
   (* read exactly n bytes from a stream socket *)
     fun recvVec (sock, n) = let
-	  fun get (0, data) = Word8Vector.concat(rev data)
+          fun finish data = Word8Vector.concat(rev data)
+	  fun get (0, data) = finish data
 	    | get (n, data) = let
 		val v = Socket.recvVec (sock, n)
 		in
 		  if (Word8Vector.length v = 0)
-		    then raise OS.SysErr("closed socket", NONE)
+		    then finish data
 		    else get (n - Word8Vector.length v, v::data)
 		end
 	  in

@@ -21,41 +21,46 @@
 
 #define SELF_VPROC	(VProc[0])
 
-/* for computing times */
-PVT struct _timeb start_timeb;
-
 /* for interval timers */
 #define WIN32_TIMER_DONE 0
 #define WIN32_TIMER_COUNTING 1
 #define WIN32_TIMER_HALTED 2
 
 typedef struct {
-    HANDLE handle;
-    DWORD id;
-    int milli_secs;
+    HANDLE handle;      /* handle for the thread that is waiting for the timer */
+    DWORD id;           /* the timer thread's ID */
+    int mSecs;          /* wait time in milliseconds */
     void (*action)();
 } win32_timer_t;
 
+/* global timer */
+PVT struct _timeb start_timeb;
+PVT win32_timer_t wt;
 
 PVT void timer (win32_timer_t *ct)
 {
     while (1) {
+        /* wait for the requested time */
+	Sleep (ct->mSecs);
 	(*ct->action)();
-	Sleep(ct->milli_secs);
     }
 }
 
 PVT BOOL create_win32_timer (win32_timer_t *ct, void (*f)(), int mSec, BOOL suspend)
 {
   /* create a thread */
-    ct->milli_secs = mSec;
+    ct->mSecs = mSec;
     ct->action = f;
-    return ((ct->handle = CreateThread(NULL,
-				       0,     /* default stack size */
-				       (LPTHREAD_START_ROUTINE) timer,
-				       ct,
-				       suspend ? CREATE_SUSPENDED : 0,
-				       &ct->id)) != NULL);
+    ct->handle = CreateThread(
+        NULL,
+        0,     /* default stack size */
+        (LPTHREAD_START_ROUTINE) timer,
+        ct,
+        suspend ? CREATE_SUSPENDED : 0,
+        &ct->id);
+
+    return (ct->handle != NULL);
+
 }
 
 PVT BOOL destroy_win32_timer (win32_timer_t *ct)
@@ -73,8 +78,6 @@ PVT BOOL resume_win32_timer (win32_timer_t *ct)
     return ResumeThread(ct->handle) != -1;
 }
 
-PVT win32_timer_t wt;
-
 bool_t win32StopTimer ()
 {
     return halt_win32_timer (&wt);
@@ -82,7 +85,7 @@ bool_t win32StopTimer ()
 
 bool_t win32StartTimer (int mSec)
 {
-    wt.milli_secs = mSec;
+    wt.mSecs = mSec;
     return resume_win32_timer (&wt);
 }
 
@@ -94,7 +97,7 @@ PVT void win32_fake_sigalrm()
 	Die ("win32_fake_sigalrm: unable to suspend ML thread");
     }
 
-    win32_generic_handler(SIGALRM);
+    win32_generic_handler (SIGALRM);
 
     if (ResumeThread (win32_ML_thread_handle) == -1) {
 	Die ("win32_fake_sigalrm: unable to resume ML thread");
@@ -108,10 +111,10 @@ PVT void win32_fake_sigalrm()
  */
 void InitTimers ()
 {
-    if (!create_win32_timer (&wt,win32_fake_sigalrm, 0, TRUE)) {
+    if (!create_win32_timer (&wt, win32_fake_sigalrm, 0, TRUE)) {
 	Die("InitTimers: unable to create_win32_timer");
     }
-    _ftime(&start_timeb);
+    _ftime (&start_timeb);
 
 } /* end of InitTimers */
 

@@ -82,9 +82,6 @@ REFCELL(_PollFreq0);            /* DEPRECATED */
 REFCELL(_ActiveProcs0);         /* DEPRECATED */
 
 ml_val_t		RunTimeCompUnit = ML_unit;
-#ifdef ASM_MATH
-ml_val_t		MathVec = ML_unit;
-#endif
 
 /* aggregate structures of length zero */
 const char _ML_string0_data[1]  = {0};
@@ -97,29 +94,14 @@ ML_EXNID(SysErr, "SysErr");
 
 extern ml_val_t externlist0[];
 
-#ifdef ASM_MATH
-ML_EXNID(_Ln,"Ln");
-ML_EXNID(_Sqrt,"Sqrt");
-#endif
-
-
 /* A table of pointers to global C variables that are potential roots. */
 ml_val_t	*CRoots[MAX_C_ROOTS] = {
     &RunTimeCompUnit,
     _PervStruct+1,
     _MLSignalHandler+1,
-#ifdef ASM_MATH
-    &MathVec,
-#else
-    NIL(ml_val_t *),
-#endif
-    NIL(ml_val_t *), NIL(ml_val_t *), NIL(ml_val_t *)
+    NIL(ml_val_t *), NIL(ml_val_t *), NIL(ml_val_t *), NIL(ml_val_t *)
 };
-#ifdef ASM_MATH
-int		NumCRoots = 4;
-#else
 int		NumCRoots = 3;
-#endif
 
 
 /* AllocGlobals:
@@ -165,20 +147,6 @@ void AllocGlobals (ml_state_t *msp)
 
   /* allocate 1-elem SRECORD just containing the CStruct */
     REC_ALLOC1(msp, RunTimeCompUnit, CStruct);
-
-#ifdef ASM_MATH
-#define MATHVEC_SZ	8
-    ML_AllocWrite(msp,  0, MAKE_DESC(MATHVEC_SZ, DTAG_record));
-    ML_AllocWrite(msp,  1, LnId);
-    ML_AllocWrite(msp,  2, SqrtId);
-    ML_AllocWrite(msp,  3, PTR_CtoML(arctan_v+1));
-    ML_AllocWrite(msp,  4, PTR_CtoML(cos_v+1));
-    ML_AllocWrite(msp,  5, PTR_CtoML(exp_v+1));
-    ML_AllocWrite(msp,  6, PTR_CtoML(ln_v+1));
-    ML_AllocWrite(msp,  7, PTR_CtoML(sin_v+1));
-    ML_AllocWrite(msp,  8, PTR_CtoML(sqrt_v+1));
-    MathVec = ML_Alloc(msp, MATHVEC_SZ);
-#endif
 
 } /* end of AllocGlobals */
 
@@ -226,17 +194,5 @@ void RecordGlobals ()
 
   /* null string */
     RecordCSymbol ("string0",			ML_string0);
-
-#if defined(ASM_MATH)
-  /* MathVec */
-    RecordCSymbol ("MathVec.LnId",	LnId);
-    RecordCSymbol ("MathVec.SqrtId",	SqrtId);
-    RecordCSymbol ("MathVec.arctan",	PTR_CtoML(arctan_v+1));
-    RecordCSymbol ("MathVec.cos",	PTR_CtoML(cos_v+1));
-    RecordCSymbol ("MathVec.exp",	PTR_CtoML(exp_v+1));
-    RecordCSymbol ("MathVec.ln",	PTR_CtoML(ln_v+1));
-    RecordCSymbol ("MathVec.sin",	PTR_CtoML(sin_v+1));
-    RecordCSymbol ("MathVec.sqrt",	PTR_CtoML(sqrt_v+1));
-#endif
 
 } /* end of RecordGlobals. */

@@ -197,7 +197,7 @@ structure SocketImp : SOCKET =
      * On Windows, sockets returned from accept inherit their parents' non-blocking
      * status, unlike normal UNIX sockets, which are always set to blocking.
      *)
-      val sockIsNB = (SysInfo.WIN32 = SysInfo.getOSKind())
+      val sockIsNB = (SysInfo.WINDOWS = SysInfo.getOSKind())
     in
     fun acceptNB s = let
           val result = wrapNB_o (accept0 (sockB, fdNB)) s

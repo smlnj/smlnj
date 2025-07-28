@@ -7,7 +7,7 @@ MAKE =		make
 AS =		as --64
 CC =		gcc -std=gnu99 -Wall
 CFLAGS =	-O2 -m64 -no-pie
-CXX =           g++ --std=c++14
+CXX =           g++ --std=c++17
 CXX_FLAGS =     -g -O2 -no-pie
 CPP =		gcc -x assembler-with-cpp -E -P
 XOBJS =
@@ -22,10 +22,33 @@ DEFS =		$(XDEFS) $(BASE_DEFS) -DARCH_AMD64 -DSIZE_64 \
 TARGET =	AMD64
 VERSION =	v-amd64-linux
 RUNTIME =	run.amd64-linux
-RUNTIME_SO =	run.amd64-linux.so
-RUNTIME_A =	run.amd64-linux.a
+STANDALONE =	runx.amd64-linux
+STANDALONE_A =	runx.amd64-linux.a
 
-all:
+BUILD_TARGETS =	$(RUNTIME) $(STANDALONE)
+
+all:	        $(BUILD_TARGETS)
+
+install:        $(BUILD_TARGETS)
+	mv $(BUILD_TARGETS) ../../bin/.run/
+
+$(RUNTIME):
 	($(MAKE) CHECK_HEAP=$(CHECK_HEAP) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
-#	($(MAKE) RUNTIME="$(RUNTIME_SO)" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-shared" $(RUNTIME_SO))
-#	($(MAKE) RUNTIME_A="$(RUNTIME_A)" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="" $(RUNTIME_A))
+
+# Overriding SYSTEM_LIBS is necessary primarily because we don't want -lm to be
+# pulled into the archive. On Linux, libm and glibc are interdependent
+# (in particular, libm depends on '_dl_x86_cpu_features' from glibc;
+#  see https://bugzilla.redhat.com/show_bug.cgi?id=1433347),
+# so either both libraries are packaged statically, or they both should be
+# left undefined. Statically linking libc is troublesome because functions like
+# `getaddrinfo` in SML's socket implementation require dynamic linkage
+# (via libnss). So it makes sense to pick the latter, packing none of the system
+# libs into the object file and deferring the linking of libm and libc to when
+# we have the heap image of the actual program.
+#                                                                         -BZ
+$(STANDALONE):
+	($(MAKE) RUNTIME="$(STANDALONE)" MAIN="standalone" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" SYSTEM_LIBS="" $(STANDALONE))
+
+$(STANDALONE_A):
+	($(MAKE) RUNTIME_A="$(STANDALONE_A)" MAIN="standalone" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(STANDALONE_A))
+

@@ -25,20 +25,20 @@ signature ORD_SET =
     val fromList : item list -> set
 
     (* return an ordered list of the items in the set.
-     * Added in SML/NJ 110.80.
+     * Added in SML/NJ 110.80
      *)
     val toList : set -> item list
 
     (* add an item. *)
     val add  : set * item -> set
-    val add' : (item * set) -> set
+    val add' : item * set -> set
 
     (* add a list of items. *)
     val addList : set * item list -> set
 
     (* subtract an item from a set; has no effect if the item is not in the set *)
     val subtract  : set * item -> set
-    val subtract' : (item * set) -> set
+    val subtract' : item * set -> set
 
     (* subtract a list of items from the set. *)
     val subtractList : set * item list -> set
@@ -85,6 +85,12 @@ signature ORD_SET =
 
     (* return the difference of two sets (i.e., the second subtracted from the first) *)
     val difference : set * set -> set
+
+    (* combine two sets using the given predicate; this function is a generalization
+     * of the `union`, `intersection`, and `difference` operations.
+     * Added in SML/NJ 110.99.6
+     *)
+    val combineWith : (item * bool * bool -> bool) -> set * set -> set
 
     (* create a new set by applying a map function to the elements of the set. *)
     val map : (item -> item) -> set -> set

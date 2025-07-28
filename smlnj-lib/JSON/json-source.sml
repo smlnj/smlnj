@@ -1,6 +1,6 @@
 (* json-source.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * JSON input sources.  Note that this module is internal the the library.
