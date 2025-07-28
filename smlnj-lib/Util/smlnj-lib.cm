@@ -31,6 +31,7 @@ signature LIST_SORT
 signature LIST_XPROD
 signature MONO_ARRAY_SORT
 signature MONO_DYNAMIC_ARRAY
+signature MONO_HASH_MAP
 signature MONO_HASH_SET
 signature MONO_HASH_TABLE
 signature MONO_HASH2_TABLE
@@ -112,6 +113,7 @@ functor BinaryMapFn
 functor BinarySetFn
 functor DynamicArrayFn
 functor GraphSCCFn
+functor HashMapFn
 functor HashSetFn
 functor HashTableFn
 functor Hash2TableFn
@@ -168,6 +170,7 @@ graph-scc-sig.sml
 graph-scc-fn.sml
 hash-key-sig.sml
 hash-string.sml
+hash-map-fn.sml
 hash-set-fn.sml
 hash-table-rep.sml
 hash-table-sig.sml
@@ -205,6 +208,7 @@ max-hash-table-size.sml         (* internal *)
 mono-array-fn.sml
 mono-array-sort-sig.sml
 mono-dynamic-array-sig.sml
+mono-hash-map-sig.sml
 mono-hash-set-sig.sml
 mono-hash-table-sig.sml
 mono-hash2-table-sig.sml
