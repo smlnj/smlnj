@@ -27,7 +27,7 @@ structure SMLNJVersion : sig
     val size = Int.toString(SMLofNJ.SysInfo.getArchSize())
 
     (* use buildDate (i.e., boot time) if no release date *)
-    val releaseDate = (case "July 19, 2025"
+    val releaseDate = (case "July 29, 2025"
            of "" => Date.toString (Date.fromTimeLocal (Time.now ()))
             | d => d
           (* end case *))
@@ -35,7 +35,7 @@ structure SMLNJVersion : sig
     val version = {
 	    system = "Standard ML of New Jersey",
 	    version_id = [2025, 2],
-	    suffix = "rc1",
+	    suffix = "",
 	    releaseDate = releaseDate
           }
 
