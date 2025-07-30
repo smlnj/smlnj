@@ -1,6 +1,6 @@
 (* convert.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -58,6 +58,11 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
   (* address-sized words *)
     val addrTy = boxIntTy Target.pointerSz
     end
+
+    (* some continuations are just placeholders and are never invoked
+     * (e.g, `bogus_cont`); we use a unit continuation for them.
+     *)
+    val bogCNTt = CNTt[CU.BOGt]
 
     (* testing if two values are equivalent lvar values *)
     fun veq (VAR x, VAR y) = (x = y)
@@ -177,6 +182,8 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 	    | AP.PURE_ARITH{oper, kind} => PKP(P.PURE_ARITH{oper=oper,kind=numkind kind})
 	    | AP.REAL_TO_INT arg => PKA(P.REAL_TO_INT arg)
 	    | AP.INT_TO_REAL arg => PKP(P.INT_TO_REAL arg)
+            | AP.REAL_TO_BITS sz => PKP(P.REAL_TO_BITS sz)
+            | AP.BITS_TO_REAL sz => PKP(P.BITS_TO_REAL sz)
 
 	    | AP.SUBSCRIPTV => PKP P.SUBSCRIPTV
 	    | AP.MAKEREF =>    PKP P.MAKEREF
@@ -355,8 +362,11 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 		(* lpfd : F.fundec -> function *)
 		let fun lpfd ((fk, f, vts, e) : F.fundec) =
 			let val k = mkv()
-			    val cl = CNTt::(map (CU.ctype o #2) vts)
-			    val kont = makmc (fn vs => APP(VAR k, vs), res_ctys f)
+                            val resTys = res_ctys f
+                            (* type of `f`'s return continuation *)
+                            val kontTy = CNTt resTys
+			    val cl = kontTy :: (map (CU.ctype o #2) vts)
+			    val kont = makmc (fn vs => APP(VAR k, vs), resTys)
 			    val (vl,body) =
 				case fk
 				 of {isrec=SOME(_,FR.LK_TAIL),...} => let
@@ -473,7 +483,10 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                         val k = mkv() (* the new handler's return cont *)
                         val v = mkv() (* the new handler's exn argument *)
                         in
-                          FIX([(ESCAPE, h', [k, v], [CNTt, CU.BOGt],
+                          (* NOTE: `k` will be bound to `bogus_cont`, so we give
+                           * it a bogus continuation type.
+                           *)
+                          FIX([(ESCAPE, h', [k, v], [bogCNTt, CU.BOGt],
                               SETTER(P.SETHDLR, [VAR h], APP(lpvar u, [F, VAR v])))],
                             SETTER(P.SETHDLR, [VAR h'], loop(e, kont)))
 			end
@@ -513,7 +526,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 			val k = mkv() (* captured continuation *)
                         val x = mkv()
                         in
-                          ([(ESCAPE, k, [mkv(), x], [CNTt, CU.BOGt],
+                          ([(ESCAPE, k, [mkv(), x], [bogCNTt, CU.BOGt],
                               hdr1(APP(F, [VAR x])))
                             ], k)
 			end
@@ -539,13 +552,13 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 		  val (exndecs, exnvar) = let
 			val h = mkv() and x = mkv()
                         in
-                          ([(ESCAPE, h, [mkv(), x], [CNTt, CU.BOGt],
+                          ([(ESCAPE, h, [mkv(), x], [bogCNTt, CU.BOGt],
                             APP(VAR bogus_cont, [VAR x]))], h)
 			end
                   val newfdecs = let
 			val nf = v and x = mkv()
                         in
-                          [(ESCAPE, v, [mkv(), x], [CNTt, CU.BOGt],
+                          [(ESCAPE, v, [mkv(), x], [bogCNTt, CU.BOGt],
                             SETTER(P.SETHDLR, [VAR exnvar],
                               APP(lpvar f, [VAR bogus_cont, VAR x])))]
 			end
@@ -686,38 +699,6 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 		  PURE(P.CAST, [lpvar arg], res, PTRt VPT,
 		    loop(e, c))
 
-	    (* bitcast from real to word *)
-	      | F.PRIMOP((_, AP.REAL_TO_BITS sz, _, _), args, res, e) => (
-		  case (Target.is64, sz)
-		   of (false, 64) => let
-			val [arg] = lpvars args
-			val asWord = LV.mkLvar()
-			val num32Ty = boxIntTy 32
-			val hi = LV.mkLvar() and lo = LV.mkLvar()
-		      (* word64 values are [hi, lo], so we need to swap order
-		       * on little-endian targets
-		       *)
-			val rawPair = if Target.bigEndian
-			      then [(VAR hi, OFFp0), (VAR lo, OFFp0)]
-			      else [(VAR lo, OFFp0), (VAR hi, OFFp0)]
-			in
-			  PURE(P.CAST, [arg], asWord, boxIntTy sz,
-			  SELECT(0, VAR asWord, hi, num32Ty,
-			  SELECT(1, VAR asWord, lo, num32Ty,
-			  RECORD(RK_RAWBLOCK, rawPair, res,
-			    loop(e, c)))))
-			end
-		    | (true, 64) => let
-			val [arg] = lpvars args
-			val asWord = LV.mkLvar()
-			in
-			  PURE(P.CAST, [arg], asWord, PTRt VPT,
-			  unwrapInt (sz, VAR asWord, res,
-			    loop(e, c)))
-			end
-		    | _ => raise Fail "invalid size for REAL_TO_BITS" (* REAL32: FIXME *)
-		  (* end case *))
-
 	      | F.PRIMOP(po as (_,p,lt,ts), ul, v, e) =>
 		  let val ct =
 			case (#3(LD.ltd_arrow(LE.lt_pinst (lt, ts))))
@@ -744,11 +725,13 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 	(* processing the top-level fundec *)
 	val (fk, f, vts, be) = fdec
 	val k = mkv()    (* top-level return continuation *)
+        val resTys = res_ctys f
+        val kontTy = CNTt resTys
 	val kont = makmc (fn vs => APP(VAR k, vs), res_ctys f)
 	val body = loop' M.empty (be, kont)
 
 	val vl = k::(map #1 vts)
-	val cl = CNTt::(map (CU.ctype o #2) vts)
+	val cl = kontTy::(map (CU.ctype o #2) vts)
      in (ESCAPE, f, vl, cl, bogus_header body)
     end (* function convert *)
 

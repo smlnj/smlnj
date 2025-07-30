@@ -35,20 +35,11 @@ structure GC : GC =
 
     fun signalThreshold n = gcCtl [("SigThreshold", ref n)]
 
-(* for now (pre-version 2025.1), we handle the case where the runtime
- * does not support the function.
- *)
     val resetCounters : bool -> unit =
-          (CI.c_function "SMLNJ-RunT" "gcCounterReset")
-            handle CI.CFunNotFound _ => (
-              TextIO.output(TextIO.stdErr, "Warning: gcCounterReset not found\n");
-              fn _ => raise Fail "GC.resetCounters not supported")
+          CI.c_function "SMLNJ-RunT" "gcCounterReset"
 
     val read' : unit -> word * word * word option * word * word * word list =
-          (CI.c_function "SMLNJ-RunT" "gcCounterRead")
-            handle CI.CFunNotFound _ => (
-              TextIO.output(TextIO.stdErr, "Warning: gcCounterRead not found\n");
-              fn _ => raise Fail "GC.readCounters not supported")
+          CI.c_function "SMLNJ-RunT" "gcCounterRead"
 
     fun readCounters () = let
           (* results are:

@@ -353,6 +353,7 @@ in
 	      | P.EXTEND_INF i => ?115 $ [int i]
 	      | P.COPY_INF i => ?116 $ [int i]
 	      | P.REAL_TO_BITS i => ?117 $ [int i]
+	      | P.BITS_TO_REAL i => ?118 $ [int i]
 	      (** WARNING: last value must be < 128!! **)
 
            (* primop_table elements on unpickling *)

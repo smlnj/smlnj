@@ -15,7 +15,7 @@ SML/NJ 2025.2
 
 [2025-07-17]
         Added a number of operations to the `MONO_HASH_SET` interface to make
-        it more compatible to the `ORD_SET` interface.
+        it more compatible with the `ORD_SET` interface.
 
 [2025-07-12]
         Changed the implementation of the `randInt`, `randWord`, and `randNat`

@@ -525,10 +525,10 @@ structure Literals : LITERALS =
       end
 
  (* the main function *)
-    fun split (fk, f, vl as [_,x], [CNTt, t as PTRt(RPT n)], body) = let
+    fun split (fk, f, vl as [_,x], [kontTy, t as PTRt(RPT n)], body) = let
 	  val nt = PTRt(RPT (n+1))
 	  val (nbody, lit) = liftlits(body, VAR x, n)
-	  val nfn = (fk, f, vl, [CNTt, nt], nbody)
+	  val nfn = (fk, f, vl, [kontTy, nt], nbody)
 	  in
 	    if !debugFlg
 	      then (

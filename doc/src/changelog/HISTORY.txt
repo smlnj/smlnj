@@ -8,6 +8,7 @@ The Fellowship of SML/NJ
 :note-caption: UPDATE
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
+:legacy-pull-base: https://github.com/smlnj/legacy/pull/
 
 This file documents changes to the *Standard ML of New Jersey* system
 since January of 2014 (Versions after 110.78).  Earlier changes are
@@ -100,7 +101,16 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-== Recent updates
+//== Recent updates
+
+//====================================================================
+== Version 2025.2; 2025/07/29
+
+//--------------------------------------------------------------------
+[2025/07/19]::
+Changed the **CPS** IR to track the argument types of continuations.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2025/07/19]::
@@ -109,6 +119,33 @@ between different types that have uniform representation (*i.e.*, `LABt`,
 `PTRt` and `TAGt`). This change results in significant shrinkage in the
 size of heap images (*e.g.*, 78Kb for the compiler) and more closely
 matches the behavior of the old **MLRISC** code generator.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/16]::
+Ported various bug fixes for real/string conversions from the legacy
+repository.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/07/16]::
+A number of changes to the CFG IR mostly affecting the *pure* primops:
++
+--
+* replaced the `UMUL` and `SMUL` operators with `MUL`, since the are
+  all the same
+* renamed the shift operators to `SHL`, `ASHR`, and `LSHR`
+* added bit-counting operators: `CNTPOP`, `CNTLZ`, and `CNTTZ`
+* added bit-rotation operators: `ROTL` and `ROTR`
+* added `BITS_TO_FLOAT` and `FLOAT_TO_BITS` primops
+* added `FREM` and `FMADD` primops
+* removed the `OFFSET` expression form, since it is never generated.
+--
++
+These changes affect both the **SML** and {cpp} sides of the code
+generator.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
@@ -132,14 +169,15 @@ owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 [2025/04/11]::
 Add a pass to eliminate redundant computation in the CPS IR.  This
 pass does value numbering for most pure and arithmetic expressions
-and also eliminates redundant conditional control flow.
+and also eliminates redundant conditional control flow.  It needs
+more tuning, however, so it is currently disabled by default.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2025/04/11]::
-Port fix for {legaccy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast`
-causes Compiler bug).
+Port fix for {legacy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast`
+causes Compiler bug)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
@@ -182,7 +220,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2025/02/19]::
-Fixed a bug in the arm64 assembly code for Assembly.A.scalb (bad
+Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb` (bad
 allocation of the result).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]

@@ -893,7 +893,7 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 	  end
 
  (* the main function *)
-    fun split (func as (fk, f, vl as [_,x], [C.CNTt, t as C.PTRt(C.RPT n)], body)) = let
+    fun split (func as (fk, f, vl as [_,x], [kontTy, t as C.PTRt(C.RPT n)], body)) = let
 	(* new argument type has an additional argument for the literals *)
 	  val nt = C.PTRt(C.RPT(n+1))
 	  val _ = if !debugFlg
@@ -919,7 +919,7 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 		  in
 		    (nbody, code)
 		  end
-	  val nfunc = (fk, f, vl, [C.CNTt, nt], nbody)
+	  val nfunc = (fk, f, vl, [kontTy, nt], nbody)
 	  in
 	    if !debugFlg
 	      then (

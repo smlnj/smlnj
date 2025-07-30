@@ -6,6 +6,7 @@
  * O.S. and machine dependent signal definitions for UNIX systems:
  *
  *   typedef SigReturn_t        the return type of a signal handler.
+ *   typedef SigHandler_t       the type of a signal handler.
  *   typedef SigInfo_t          the signal generation information passed to a
  *                              a signal handler.
  *   typedef SigContext_t       the context info passed to a signal handler.
@@ -87,43 +88,44 @@ typedef struct sigcontext SigContext_t;
 
 #if defined(HAS_POSIX_SIGS)
 /** POSIX signals **/
+typedef SigReturn_t (*SigHandler_t)(int, siginfo_t *, void *);
 #  if defined(HAS_UCONTEXT)
 #    define SIG_SetHandler(sig, h)      {                       \
-            struct sigaction __svec;                            \
-            sigfillset(&(__svec.sa_mask));                      \
-            __svec.sa_flags = SA_SIGINFO;                       \
-            __svec.sa_sigaction = (h);                          \
-            sigaction ((sig), &__svec, 0);                      \
+            struct sigaction __sact;                            \
+            sigfillset(&(__sact.sa_mask));                      \
+            __sact.sa_flags = SA_SIGINFO;                       \
+            __sact.sa_sigaction = (SigHandler_t)(h);            \
+            sigaction ((sig), &__sact, 0);                      \
         }
 #    define SIG_SetIgnore(sig)          {                       \
-            struct sigaction __svec;                            \
-            sigfillset(&(__svec.sa_mask));                      \
-            __svec.sa_flags = 0;                                \
-            __svec.sa_handler = SIG_IGN;                        \
-            sigaction ((sig), &__svec, 0);                      \
+            struct sigaction __sact;                            \
+            sigfillset(&(__sact.sa_mask));                      \
+            __sact.sa_flags = 0;                                \
+            __sact.sa_handler = SIG_IGN;                        \
+            sigaction ((sig), &__sact, 0);                      \
         }
 #    define SIG_SetDefault(sig)         {                       \
-            struct sigaction __svec;                            \
-            sigfillset(&(__svec.sa_mask));                      \
-            __svec.sa_flags = 0;                                \
-            __svec.sa_handler = SIG_DFL;                        \
-            sigaction ((sig), &__svec, 0);                      \
+            struct sigaction __sact;                            \
+            sigfillset(&(__sact.sa_mask));                      \
+            __sact.sa_flags = 0;                                \
+            __sact.sa_handler = SIG_DFL;                        \
+            sigaction ((sig), &__sact, 0);                      \
         }
 #  else
 #    define SIG_SetHandler(sig, h)      {                       \
-            struct sigaction __svec;                            \
-            sigfillset(&(__svec.sa_mask));                      \
-            __svec.sa_flags = 0;                                \
-            __svec.sa_handler = (h);                            \
-            sigaction ((sig), &__svec, 0);                      \
+            struct sigaction __sact;                            \
+            sigfillset(&(__sact.sa_mask));                      \
+            __sact.sa_flags = 0;                                \
+            __sact.sa_sigaction = (SigHandler_t)(h);            \
+            sigaction ((sig), &__sact, 0);                      \
         }
 #    define SIG_SetIgnore(sig)  SIG_SetHandler(sig, SIG_IGN)
 #    define SIG_SetDefault(sig) SIG_SetHandler(sig, SIG_DFL)
 #endif
 #define SIG_GetHandler(sig, h)  {                               \
-        struct sigaction __svec;                                \
-        sigaction ((sig), NIL(struct sigaction *), &__svec);    \
-        (h) = __svec.sa_handler;                                \
+        struct sigaction __sact;                                \
+        sigaction ((sig), NIL(struct sigaction *), &__sact);    \
+        (h) = __sact.sa_sigaction;                                \
     }
 typedef sigset_t SigMask_t;
 #define SIG_ClearMask(mask)     sigemptyset(&(mask))
@@ -134,6 +136,7 @@ typedef sigset_t SigMask_t;
 
 #elif defined(HAS_BSD_SIGS)
 /** BSD signals **/
+typedef SigReturn_t (*SigHandler_t)();
 #define SIG_SetHandler(sig, h)  {                       \
         struct sigvec __svec;                           \
         __svec.sv_mask = 0xFFFFFFFF;                    \

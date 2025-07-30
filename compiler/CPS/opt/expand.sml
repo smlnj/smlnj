@@ -238,6 +238,8 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
 	 (notereal w; incsave(v,1); 4+(pass1 level e))
 (* REAL32: FIXME *)
      | PURE(P.INT_TO_REAL{to=64,...},vl,w,_,e) => (notereal w; prim(level,vl,e))
+     | PURE(P.BITS_TO_REAL _,vl,w,_,e) => (notereal w; prim(level,vl,e))
+     | PURE(P.REAL_TO_BITS _,vl,w,_,e) => (notereal w; prim(level,vl,e))
      | PURE(_,vl,w,_,e) => (noteother w; prim(level,vl,e))
      | RCC(k,l,p,vl,wtl,e) =>
          (app (noteother o #1) wtl; prim(level,vl,e)) (* ? *)

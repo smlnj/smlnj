@@ -512,6 +512,26 @@ structure ContractPrim : sig
             | (P.INT_TO_REAL{to, ...}, [NUM{ival, ...}]) =>
                 (* NOTE: this conversion might lose precision *)
                 Val(REAL{rval = RealLit.fromInt ival, ty=to})
+(* REAL32: FIXME *)
+            | (P.BITS_TO_REAL _, [NUM{ival, ...}]) => None (* TODO: needs RealLit support *)
+            | (P.BITS_TO_REAL _, [VAR v]) => (case #info(get v)
+                 of PUREinfo(P.REAL_TO_BITS _, [u]) => Val u
+                  | _ => None
+                 (* end case *))
+(* REAL32: FIXME *)
+            | (P.REAL_TO_BITS 64, [REAL{rval, ...}]) => let
+                val (bv, _) = Real64ToBits.toBits rval
+                (* convert bytes to literal value *)
+                val w = Word8Vector.foldl
+                      (fn (b, w) => IntInf.orb(IntInf.<<(w, 0w8), Word8.toLargeInt b))
+                        0 bv
+                in
+                  Val(mkNum(64, w))
+                end
+            | (P.REAL_TO_BITS _, [VAR v]) => (case #info(get v)
+                 of PUREinfo(P.BITS_TO_REAL _, [u]) => Val u
+                  | _ => None
+                 (* end case *))
             | (P.BOX, [VAR v]) => (case #info(get v)
                  of PUREinfo(P.UNBOX, [u]) => Val u
                   | _ => None

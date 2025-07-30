@@ -121,26 +121,32 @@ structure PPCfg : sig
     fun pureopToString rator = (case rator
 	   of P.ADD => "add"
 	    | P.SUB => "sub"
-	    | P.SMUL => "smul"
+	    | P.MUL => "mul"
 	    | P.SDIV => "sdiv"
 	    | P.SREM => "srem"
-	    | P.UMUL => "umul"
 	    | P.UDIV => "udiv"
 	    | P.UREM => "urem"
-	    | P.LSHIFT => "lshift"
-	    | P.RSHIFT => "rshift"
-	    | P.RSHIFTL => "rshiftl"
+	    | P.SHL => "shl"
+	    | P.ASHR => "ashr"
+	    | P.LSHR => "lshr"
 	    | P.ORB => "orb"
 	    | P.XORB => "xorb"
 	    | P.ANDB => "andb"
+            | P.CNTPOP => "cntpop"
+            | P.CNTLZ => "cntlz"
+            | P.CNTTZ => "cnttz"
+            | P.ROTL => "rotl"
+            | P.ROTR => "rotr"
 	    | P.FADD => "fadd"
 	    | P.FSUB => "fsub"
 	    | P.FMUL => "fmul"
 	    | P.FDIV => "fdiv"
+	    | P.FREM => "frem"
+            | P.FMADD => "fmadd"
 	    | P.FNEG => "fneg"
 	    | P.FABS => "fabs"
-	    | P.FSQRT => "fsqrt"
 	    | P.FCOPYSIGN => "fcopysign"
+	    | P.FSQRT => "fsqrt"
 	  (* end case *))
 
     fun pureToString (P.PURE_ARITH{oper, sz}) = pureopToString oper ^ i2s sz
@@ -170,7 +176,6 @@ structure PPCfg : sig
 	    | C.LOOKER{oper, args} => appToS(lookerToString oper, args)
 	    | C.PURE{oper, args} => appToS(pureToString oper, args)
 	    | C.SELECT{idx, arg} => appToS("#" ^ i2s idx, [arg])
-	    | C.OFFSET{idx, arg} => appToS("@" ^ i2s idx, [arg])
 	  (* end case *))
 
     and appToS (prefix, es) = String.concat[

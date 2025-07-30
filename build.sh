@@ -141,10 +141,10 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 #
 CONFIGDIR="$SMLNJ_ROOT/config"
 RUNTIMEDIR="$SMLNJ_ROOT/runtime"
-if [[ x"$LLVMDIR_OPTION" != x ]] ; then
+if [ x"$LLVMDIR_OPTION" != x ] ; then
   LLVMDIR="$LLVMDIR_OPTION"
   # check the validity of the path specified by the user
-  if [[ ! -x "$LLVMDIR/build-llvm.sh" ]] ; then
+  if [ ! -x "$LLVMDIR/build-llvm.sh" ] ; then
     complain "invalid LLVM directory: build-llvm.sh script is missing"
   fi
 else
