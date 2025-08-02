@@ -21,6 +21,7 @@
 #include <ios>
 #include <istream>
 #include <ostream>
+#include <cstdint>
 
 #include "asdl-stream.hpp"
 #include "asdl-integer.hpp"
