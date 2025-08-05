@@ -103,6 +103,20 @@ Here is an update to the entry
 //====================================================================
 //== Recent updates
 
+//--------------------------------------------------------------------
+[2025/08/05]::
+Changed the way external references are passed during translation to
+PLambda. Previously, the external references are grouped by the PIDs
+of their compilation units, and the units are sorted by the PIDs. As a
+result, the input order is a property of the external module. This
+change sorts the units by the order of their appearances in the source
+code; modules that are referenced earlier are put before those
+referenced later. This makes the input order a property of the code
+itself.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+
 //====================================================================
 == Version 2025.2; 2025/07/29
 
