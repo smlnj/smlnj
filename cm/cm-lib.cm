@@ -126,4 +126,5 @@ is
 
 	(* auxiliary libraries *)
 	$smlnj/ml-yacc/ml-yacc-lib.cm
+        $smlnj/asdl/asdl-lib.cm
 	$/pgraph.cm
