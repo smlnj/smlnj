@@ -5,6 +5,7 @@
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 signature SKELIO = sig
     val read : string * TStamp.t -> Skeleton.decl option
     val write : string * Skeleton.decl * TStamp.t -> unit

@@ -1,0 +1,31 @@
+-- skeleton-rep.asdl
+--
+-- COPYRIGHT (c) 2025 The Fellowship (SML/NJ (https://smlnj.org))
+-- All rights reserved.
+--
+-- ASDL description (SML Skeletons)
+--
+
+module SkeletonRep {
+
+
+    space = VAL | TYC | SIG | STR | FCT | FSIG | FIX | LAB | TYV
+
+    symbol = (space, string)
+    sympath = symbol*
+
+    decl
+      = Bind (symbol, modExp)
+      | Local (decl, decl)
+      | Par (decl*)
+      | Seq (decl*)
+      | Open (modExp)
+      | Ref (symbol*)
+
+    modExp
+      = Var (sympath)
+      | Decl (decl*)
+      | Let (decl*, modExp)
+      | Ign1 (modExp, modExp)
+
+}
