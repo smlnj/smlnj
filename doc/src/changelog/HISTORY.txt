@@ -101,7 +101,7 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
 
 //--------------------------------------------------------------------
 [2025/08/05]::
@@ -113,6 +113,9 @@ change sorts the units by the order of their appearances in the source
 code; modules that are referenced earlier are put before those
 referenced later. This makes the input order a property of the code
 itself.
++
+This change fixes {issue-base}/319[Issue #319 (Nondeterministic import
+order)].
 +
 owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
@@ -800,6 +803,7 @@ owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 +
 Switched over to the *LLVM* version of the compiler.  Doing so has
 two major consequences:
++
 --
 * The **MLRISC** code generator that we have used for over 25 years
   has been replaced with one based on the https:llvm.org[**LLVM Libraries**].
