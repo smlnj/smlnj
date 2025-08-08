@@ -1,0 +1,40 @@
+    (* wrapper for reading primitive types *)
+    fun readPrim rdFn (cxt : outstream) = rdFn (#outS cxt)
+    (* read an option *)
+    fun readOption rdFn (cxt : instream) = (
+          case @PICKLER@.readTag8 (#inS cxt)
+           of 0w0 => NONE
+            | 0w1 => let val obj = rdFn cxt in SOME obj end
+            | _ => raise ASDL.DecodeError
+          (* end case *))
+    (* read a sequence into a sequence of values *)
+    fun readSeq rdFn (cxt : instream) = let
+          val len = @PICKLER@.readUInt (#inS cxt)
+          fun read (0w0, xs) = reverse (xs, [])
+            | read (n, xs) = let
+                val x = rdFn cxt
+                in
+                  read (n-0w1, x::xs)
+                end
+          and reverse ([], xs) = xs
+            | reverse (x::xr, xs) = reverse (xr, x::xs)
+          in
+            read (len, [])
+          end
+    (* read a shared value *)
+    fun readShared (rdFn, stk) (cxt : instream) = (
+          case @PICKLER@.readUInt (#inS cxt)
+           of 0w0 => let val obj = rdFn cxt
+                in
+                  stk cxt := obj :: !(stk cxt);
+                  obj
+                end
+            | n => let
+                fun get (_, []) = raise Subscript
+                  | get (x::_, 0w0) = x
+                  | get (_::xs, n) = get (xs, n-0w1)
+                in
+                  get (!(stk cxt), n)
+                end
+          (* end case *))
+        (* end case *))

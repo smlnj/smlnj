@@ -86,8 +86,9 @@ PVT status_t ExportImage (ml_state_t *msp, int kind, FILE *file)
 
 #define SAVE_REG(dst, src)	{				\
 	    ml_val_t	__src = (src);				\
-	    if (isEXTERN(BIBOP, __src))				\
+	    if (isEXTERN(BIBOP, __src))	{			\
 		__src = ExportCSymbol(exportTbl, __src);	\
+            }                                                   \
 	    (dst) = __src;					\
 	}
 
@@ -113,11 +114,6 @@ PVT status_t ExportImage (ml_state_t *msp, int kind, FILE *file)
 
 	SAVE_REG(heapHdr.pervStruct, *PTR_MLtoC(ml_val_t, PervStruct));
 	SAVE_REG(heapHdr.runTimeCompUnit, RunTimeCompUnit);
-#ifdef ASM_MATH
-	SAVE_REG(heapHdr.mathVec, MathVec);
-#else
-	heapHdr.mathVec = ML_unit;
-#endif
 
 	HeapIO_WriteImageHeader(wr, kind);
 	WR_Write(wr, &heapHdr, sizeof(heapHdr));
@@ -238,7 +234,6 @@ SayDebug("%d bigobject regions\n", heap->numBORegions);
 PrintRegionMap(rp);
 #endif
 	    hdr[i].baseAddr	= MEMOBJ_BASE(rp->memObj);
-	    hdr[i].firstPage	= rp->firstPage;
 	    hdr[i].sizeB	= MEMOBJ_SZB(rp->memObj);
 	}
 
@@ -256,6 +251,7 @@ PrintRegionMap(rp);
     arenaHdrs = (heap_arena_hdr_t *) MALLOC (arenaHdrsSize);
     offset = WR_Tell(wr) + arenaHdrsSize;
     offset = ROUNDUP(offset, pagesize);
+    /* initialize the arena headers for this generation */
     for (p = arenaHdrs, i = 0;  i < heap->numGens;  i++) {
 	for (j = 0;  j < NUM_ARENAS;  j++, p++) {
 	    arena_t		*ap = heap->gen[i]->arena[j];
@@ -269,6 +265,9 @@ PrintRegionMap(rp);
 	}
 	for (j = 0;  j < NUM_BIGOBJ_KINDS;  j++, p++) {
 	    int			nObjs, nBOPages;
+            /* count the number of big-objects and big-object pages
+             * in this generation.
+             */
 	    bdp = heap->gen[i]->bigObjs[j];
 	    for (nObjs = nBOPages = 0;  bdp != NIL(bigobj_desc_t *);  bdp = bdp->next) {
 		nObjs++;

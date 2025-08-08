@@ -11,7 +11,7 @@
  */
 
 #ifdef OPSYS_UNIX
-#  include "ml-unixdep.h"	/* for the HAS_POSIX_LIBRARIES option flag */
+#  include "ml-unixdep.h"       /* for the HAS_POSIX_LIBRARIES option flag */
 #endif
 #include "ml-base.h"
 #include "ml-values.h"
@@ -23,11 +23,11 @@
 #include "clib-list.h"
 #undef C_LIBRARY
 
-PVT c_library_t	*CLibs[] = {
-#define C_LIBRARY(lib)	&lib,
-#	include "clib-list.h"
+PVT c_library_t *CLibs[] = {
+#define C_LIBRARY(lib)  &lib,
+#       include "clib-list.h"
 #undef C_LIBRARY
-	NIL(c_library_t *)
+        NIL(c_library_t *)
     };
 
 /* InitCFunList:
@@ -36,28 +36,29 @@ PVT c_library_t	*CLibs[] = {
 void InitCFunList ()
 {
     int             i, j, libNameLen;
-    char	    *nameBuf;
+    char            *nameBuf;
 
     for (i = 0;  CLibs[i] != NIL(c_library_t *);  i++) {
-	c_library_t	*clib = CLibs[i];
-	cfunc_binding_t	*cfuns = CLibs[i]->cfuns;
+        c_library_t     *clib = CLibs[i];
+        cfunc_binding_t *cfuns = CLibs[i]->cfuns;
 
-	if (clib->initFn != NIL(clib_init_fn_t)) {
-	  /* call the libraries initialization function */
-	    (*(clib->initFn)) (0, 0/** argc, argv **/);
-	}
+        if (clib->initFn != NIL(clib_init_fn_t)) {
+          /* call the libraries initialization function */
+            (*(clib->initFn)) (0, 0/** argc, argv **/);
+        }
 
       /* register the C functions in the C symbol table */
-	libNameLen = strlen(clib->libName) + 2; /* incl "." and "\0" */
-	for (j = 0;  cfuns[j].name != NIL(char *);  j++) {
-	    nameBuf = NEW_VEC(char, strlen(cfuns[j].name) + libNameLen);
-	    sprintf (nameBuf, "%s.%s", clib->libName, cfuns[j].name);
+        libNameLen = strlen(clib->libName) + 2; /* incl "." and "\0" */
+        for (j = 0;  cfuns[j].name != NIL(char *);  j++) {
+            size_t bufSzb = strlen(cfuns[j].name) + libNameLen;
+            nameBuf = NEW_VEC(char, bufSzb);
+            snprintf (nameBuf, bufSzb, "%s.%s", clib->libName, cfuns[j].name);
 #ifdef INDIRECT_CFUNC
-	    RecordCSymbol (nameBuf, PTR_CtoML(&(cfuns[j])));
+            RecordCSymbol (nameBuf, PTR_CtoML(&(cfuns[j])));
 #else
-	    RecordCSymbol (nameBuf, PTR_CtoML(cfuns[j].cfunc));
+            RecordCSymbol (nameBuf, PTR_CtoML(cfuns[j].cfunc));
 #endif
-	}
+        }
     }
 
 } /* end of InitCFunList */
@@ -70,25 +71,25 @@ void InitCFunList ()
  */
 ml_val_t BindCFun (char *moduleName, char *funName)
 {
-    int		i, j;
+    int         i, j;
 
 #ifdef DEBUG_TRACE_CCALL
     SayDebug("BindCFun: %s.%s\n", moduleName, funName);
 #endif
     for (i = 0;  CLibs[i] != NIL(c_library_t *);  i++) {
-	if (strcmp(CLibs[i]->libName, moduleName) == 0) {
-	    cfunc_binding_t	*cfuns = CLibs[i]->cfuns;
-	    for (j = 0;  cfuns[j].name != NIL(char *);  j++) {
-		if (strcmp(cfuns[j].name, funName) == 0)
+        if (strcmp(CLibs[i]->libName, moduleName) == 0) {
+            cfunc_binding_t     *cfuns = CLibs[i]->cfuns;
+            for (j = 0;  cfuns[j].name != NIL(char *);  j++) {
+                if (strcmp(cfuns[j].name, funName) == 0)
 #ifdef INDIRECT_CFUNC
-		    return PTR_CtoML(&(cfuns[j]));
+                    return PTR_CtoML(&(cfuns[j]));
 #else
-		    return PTR_CtoML(cfuns[j].cfunc);
+                    return PTR_CtoML(cfuns[j].cfunc);
 #endif
-	    }
-	  /* here, we didn't find the library so we return ML_unit */
-	    return ML_unit;
-	}
+            }
+          /* here, we didn't find the library so we return ML_unit */
+            return ML_unit;
+        }
     }
 
   /* here, we didn't find the library so we return ML_unit */

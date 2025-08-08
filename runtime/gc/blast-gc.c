@@ -511,18 +511,6 @@ SayDebug ("Completing blast GC (maxGen = %d of %d)\n", maxGen, heap->numGens);
 
     HeapMon_UpdateHeap (heap, maxSweptGen);
 
-#ifdef GC_STATS
-  /* Count the number of forwarded bytes */
-    for (i = 0;  i < maxGen;  i++) {
-	for (j = 0;  j < NUM_ARENAS;  j++) {
-	    arena_t	*ap = heap->gen[i]->arena[j];
-	    if (isACTIVE(ap)) {
-		CNTR_INCR(&(heap->numCopied[i][j]), ap->nextw - ap->tospBase);
-	    }
-	}
-    }
-#endif
-
 } /* end of BlastGC_FinishGC */
 
 

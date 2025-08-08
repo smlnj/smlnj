@@ -33,7 +33,7 @@ typedef void *sockoptval_t;	/* The pointer type used to pass values to */
 #    define SOCKADDR_HAS_LEN	/* socket address has a length field */
 #  endif
 
-#  if (defined(OPSYS_FREEBSD) || defined (OPSYS_NETBSD) || defined (OPSYS_NETBSD2))
+#  if (defined(OPSYS_FREEBSD) || defined (OPSYS_NETBSD))
 #    define i386		1	/* to avoid a bug in system header files */
 #    define INCLUDE_RPCENT_H	<rpc/rpc.h>
 #  endif

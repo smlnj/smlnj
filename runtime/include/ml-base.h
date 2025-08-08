@@ -131,10 +131,29 @@ extern void AssertFail (const char *a, const char *file, int line);
 /* extract the bitfield of width WID starting at position POS from I */
 #define XBITFIELD(I,POS,WID)		(((I) >> (POS)) & ((1<<(WID))-1))
 
-/* aliases for malloc/free, so that we can easily replace them */
+/* defining TRACE_MALLOC causes a object-by-object trace of date allocated
+ * in the C heap.
+ */
+#ifdef TRACE_MALLOC
+STATIC_INLINE void *_alloc_ (size_t sz, const char *file, int line)
+{
+    extern void Say (const char *fmt, ...);
+    void *addr = malloc(sz);
+    Say("[%s:%d]: alloc %d bytes @ %p\n", file, line, sz, addr);
+    return addr;
+}
+STATIC_INLINE void _free_ (void *obj, const char *file, int line)
+{
+    extern void Say (const char *fmt, ...);
+    Say("[%s:%d]: free %p\n", file, line,obj);
+    free(obj);
+}
+#define MALLOC(sz)	_alloc_(sz,__FILE__,__LINE__)
+#define FREE(p)		_free_(p,__FILE__,__LINE__)
+#else
 #define MALLOC(sz)	malloc(sz)
-#define _FREE		free
-#define FREE(p)		_FREE(p)
+#define FREE(p)		free(p)
+#endif /* TRACE_MALLOC */
 
 /* Allocate a new C object of type t. */
 #define NEW_OBJ(t)	((t *)MALLOC(sizeof(t)))
@@ -194,6 +213,7 @@ extern heap_params_t *ParseHeapParams (char **argv);
 extern ml_state_t *AllocMLState (bool_t isBoot, heap_params_t *params);
 extern void BootML (const char *bootlist, heap_params_t *params);
 extern void LoadML (const char *loadImage, heap_params_t *params);
+extern void FreeMLState (ml_state_t *msp);
 
 extern bool_t QualifyImageName (char *buf);
 extern void InitMLState (ml_state_t *msp);
@@ -223,6 +243,12 @@ extern bool_t	UnlimitedHeap;
 extern vproc_state_t	*VProc[];
 extern int		NumVProcs;
 
+/* the in-memory representation of a heap image used in "standalone" executables. */
+typedef struct {
+    Unsigned64_t        len;            /* length of `data` */
+    Byte_t              data[1];        /* the heap image data */
+} smlnj_heap_image_t;
+
 #ifdef __cplusplus
 }
 #endif // C++
@@ -236,11 +262,6 @@ extern int		NumVProcs;
 #define DLSYM_STRING(SYM)	DLSYM_AUX2(SYM)
 #else
 #define DLSYM_STRING(SYM)	#SYM
-#endif
-
-#ifndef HEAP_IMAGE_SYMBOL
-#define HEAP_IMAGE_SYMBOL	DLSYM_STRING(smlnj_heap_image)
-#define HEAP_IMAGE_LEN_SYMBOL	DLSYM_STRING(smlnj_heap_image_len)
 #endif
 
 #endif /* !_ML_BASE_ */

@@ -47,7 +47,7 @@ functor HashTableFn (Key : HASH_KEY) : MONO_HASH_TABLE =
 	  fun look HTRep.NIL = (
 		Array.update(arr, indx, HTRep.B(hash, key, item, Array.sub(arr, indx)));
 		n_items := !n_items + 1;
-		HTRep.growTableIfNeeded (table, !n_items);
+		ignore (HTRep.growTableIfNeeded (table, !n_items));
 		HTRep.NIL)
 	    | look (HTRep.B(h, k, v, r)) = if ((hash = h) andalso sameKey(key, k))
 		then HTRep.B(hash, key, combine(k, v, item), r)
@@ -75,7 +75,7 @@ functor HashTableFn (Key : HASH_KEY) : MONO_HASH_TABLE =
 	  fun look HTRep.NIL = (
 		Array.update(arr, indx, HTRep.B(hash, key, item, Array.sub(arr, indx)));
 		n_items := !n_items + 1;
-		HTRep.growTableIfNeeded (table, !n_items);
+		ignore (HTRep.growTableIfNeeded (table, !n_items));
 		HTRep.NIL)
 	    | look (HTRep.B(h, k, v, r)) = if ((hash = h) andalso sameKey(key, k))
 		then HTRep.B(hash, key, item, r)

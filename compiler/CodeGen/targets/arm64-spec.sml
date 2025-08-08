@@ -20,8 +20,9 @@ structure Arm64Spec : MACH_SPEC =
     val llvmTargetName = "aarch64"
     val bigEndian = false
 
-    val numRegs = 20	                (* #misc regs + 3 *)
-    val numArgRegs = 14                 (* non-callee-save misc regs *)
+    val numRegs = 21	                (* #misc regs + 3 *)
+    val numArgRegs = 15                 (* non-callee-save misc regs *)
     val numFloatRegs = 32               (* number of floating-point registers *)
+    val numFloatArgRegs = 32            (* number of floating-point argument registers *)
 
   end

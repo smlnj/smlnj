@@ -8,36 +8,44 @@
 
 structure JSONUtil : sig
 
+    (* exceptions used as errors; note that most of these come from the
+     * JSONUtil module.  The standard practice is to raise `JSONError(ex, v)`
+     * for an error on JSON value `v`, where `ex` specifies more detail about
+     * the actual error.
+     *)
+    exception JSONError of exn * JSON.value
+
     (* exceptions for conversion functions *)
-    exception NotBool of JSON.value
-    exception NotInt of JSON.value
-    exception NotNumber of JSON.value
-    exception NotString of JSON.value
+    exception NotBool
+    exception NotInt
+    exception NotNumber
+    exception NotString
 
     (* exception that is raised when trying to process a non-object value as an object *)
-    exception NotObject of JSON.value
+    exception NotObject
 
     (* exception that is raised when the given field is not found in an object *)
-    exception FieldNotFound of JSON.value * string
+    exception FieldNotFound of string
 
     (* exception that is raised when trying to process a non-array value as an array *)
-    exception NotArray of JSON.value
+    exception NotArray
 
     (* exception that is raised when access to an array value is out of bounds *)
-    exception ArrayBounds of JSON.value * int
+    exception ArrayBounds of int
 
     (* exception that is raised when a `FIND` edge does not match any array element *)
-    exception ElemNotFound of JSON.value
+    exception ElemNotFound
 
     (* map the above exceptions to a message string; we use General.exnMessage
      * for other exceptions.
      *)
     val exnMessage : exn -> string
 
-    (* conversion functions for atomic values.  These raise the corresponding
-     * "NotXXX" exceptions when their argument has the wrong shape.  Also note
-     * that asNumber will accept both integers and floats and asInt may raise
-     * Overflow if the number is too large.
+    (* conversion functions for atomic values.  These raise the JSONError exception
+     * wrapped around the corresponding "NotXXX" exceptions when their argument
+     * has the wrong shape.  Also note that asNumber will accept both integers and
+     * floats and asInt may raise `JSONError(Overflow, ...)` if the number is too
+     * large.
      *)
     val asBool : JSON.value -> bool
     val asInt : JSON.value -> Int.int
@@ -112,20 +120,20 @@ structure JSONUtil : sig
     open Errors
 
     fun asBool (J.BOOL b) = b
-      | asBool v = raise NotBool v
+      | asBool v = notBool v
 
     fun asInt (J.INT n) = Int.fromLarge n
-      | asInt v = raise NotInt v
+      | asInt v = notInt v
 
     fun asIntInf (J.INT n) = n
-      | asIntInf v = raise NotInt v
+      | asIntInf v = notInt v
 
     fun asNumber (J.INT n) = Real.fromLargeInt n
       | asNumber (J.FLOAT f) = f
-      | asNumber v = raise NotNumber v
+      | asNumber v = notNumber v
 
     fun asString (J.STRING s) = s
-      | asString v = raise NotString v
+      | asString v = notString v
 
     fun findField (J.OBJECT fields) = let
 	  fun find lab = (case List.find (fn (l, v) => (l = lab)) fields
@@ -135,17 +143,17 @@ structure JSONUtil : sig
 	  in
 	    find
 	  end
-      | findField v = raise NotObject v
+      | findField v = notObject v
 
     fun lookupField (v as J.OBJECT fields) = let
 	  fun find lab = (case List.find (fn (l, v) => (l = lab)) fields
-		 of NONE => raise FieldNotFound(v, lab)
+		 of NONE => fieldNotFound(lab, v)
 		  | SOME(_, v) => v
 		(* end case *))
 	  in
 	    find
 	  end
-      | lookupField v = raise NotObject v
+      | lookupField v = notObject v
 
     fun hasField lab (J.OBJECT fields) = List.exists (fn (lab', _) => lab = lab') fields
       | hasField _ _ = false
@@ -158,10 +166,10 @@ structure JSONUtil : sig
       | testField _ _ _ = false
 
     fun asArray (J.ARRAY vs) = Vector.fromList vs
-      | asArray v = raise NotArray v
+      | asArray v = notArray v
 
     fun arrayMap f (J.ARRAY vs) = List.map f vs
-      | arrayMap f v = raise NotArray v
+      | arrayMap f v = notArray v
 
   (* path specification for indexing into JSON values *)
     datatype edge
@@ -175,25 +183,25 @@ structure JSONUtil : sig
     fun get (v, []) = v
       | get (v as J.OBJECT fields, SEL lab :: rest) =
 	  (case List.find (fn (l, v) => (l = lab)) fields
-	   of NONE => raise FieldNotFound(v, lab)
+	   of NONE => fieldNotFound(lab, v)
 	    | SOME(_, v) => get (v, rest)
 	  (* end case *))
-      | get (v, SEL _ :: _) = raise NotObject v
+      | get (v, SEL _ :: _) = notObject v
       | get (v as J.ARRAY vs, SUB i :: rest) = let
-	  fun nth ([], _) = raise ArrayBounds(v, i)
+	  fun nth ([], _) = arrayBounds(i, v)
 	    | nth (elem::_, 0) = elem
 	    | nth (_::r, i) = nth(r, i-1)
 	  in
 	    if (i < 0)
-	      then raise ArrayBounds(v, i)
+	      then arrayBounds(i, v)
 	      else get (nth(vs, i), rest)
 	  end
-      | get (v, SUB _ :: _) = raise (NotArray v)
+      | get (v, SUB _ :: _) = notArray v
       | get (v as J.ARRAY vs, FIND pred :: rest) = (case List.find pred vs
-	   of NONE => raise ElemNotFound v
+	   of NONE => elemNotFound v
 	    | SOME v => get (v, rest)
 	  (* end case *))
-      | get (v, FIND _ :: _) = raise (NotArray v)
+      | get (v, FIND _ :: _) = notArray v
 
   (* top-down zipper to support functional editing *)
     datatype zipper
@@ -213,7 +221,7 @@ structure JSONUtil : sig
   (* follow a path into a JSON value while constructing a zipper *)
     fun unzip (v, []) = (ZNIL, v)
       | unzip (v as J.OBJECT fields, SEL lab :: rest) = let
-          fun find (_, []) = raise FieldNotFound(v, lab)
+          fun find (_, []) = fieldNotFound(lab, v)
             | find (pre, (l, v)::flds) = if (l = lab)
                 then let
 		  val (zipper, v) = unzip (v, rest)
@@ -224,9 +232,9 @@ structure JSONUtil : sig
           in
             find ([], fields)
           end
-      | unzip (v, SEL _ :: _) = raise NotObject v
+      | unzip (v, SEL _ :: _) = notObject v
       | unzip (v as J.ARRAY vs, SUB i :: rest) = let
-          fun sub (_, [], _) = raise ArrayBounds(v, i)
+          fun sub (_, [], _) = arrayBounds(i, v)
             | sub (prefix, v::vs, 0) = let
 		val (zipper, v) = unzip (v, rest)
 		in
@@ -236,9 +244,9 @@ structure JSONUtil : sig
 	  in
 	    sub ([], vs, i)
 	  end
-      | unzip (v, SUB _ :: _) = raise NotArray v
+      | unzip (v, SUB _ :: _) = notArray v
       | unzip (v as J.ARRAY vs, FIND pred :: rest) = let
-          fun find (_, []) = raise ElemNotFound v
+          fun find (_, []) = elemNotFound v
             | find (prefix, v::vs) = if pred v
                 then let
                   val (zipper, v) = unzip (v, rest)
@@ -249,7 +257,7 @@ structure JSONUtil : sig
           in
             find ([], vs)
           end
-      | unzip (v, FIND _ :: _) = raise (NotArray v)
+      | unzip (v, FIND _ :: _) = notArray v
 
   (* zip up a zipper *)
     fun zip (zipper, v) = let
@@ -266,12 +274,12 @@ structure JSONUtil : sig
 
     fun insert (jv, path, label, v) = (case unzip (jv, path)
 	   of (zipper, J.OBJECT fields) => zip (zipper, J.OBJECT((label, v)::fields))
-	    | (_, v) => raise NotObject v
+	    | (_, v) => notObject v
 	  (* end case *))
 
     fun append (jv, path, vs) = (case unzip (jv, path)
 	   of (zipper, J.ARRAY jvs) => zip (zipper, J.ARRAY(jvs @ vs))
-	    | (_, v) => raise NotArray v
+	    | (_, v) => notArray v
 	  (* end case *))
 
   end

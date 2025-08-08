@@ -9,7 +9,7 @@ MAKE =		make
 AS =		as --64
 CC =		cc -std=gnu99
 CFLAGS =	-O2 -m64
-CXX =           c++ --std=c++14
+CXX =           c++ --std=c++17
 CXX_FLAGS =     -g -O2
 CPP =		cc -x assembler-with-cpp -E -P
 XOBJS =

@@ -97,8 +97,8 @@ structure RealLit :> sig
   (* reveal the representation of the literal *)
     val toRep : t -> rep
 
-  (* return a string representation of a literal.  Note that this conversion uses "-" to
-   * denote negative numbers (not "~").
+  (* return a string representation of a literal.  Note that this conversion
+   * uses "-" to denote negative numbers (not "~").
    *)
     val toString : t -> string
 

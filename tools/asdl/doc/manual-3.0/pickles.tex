@@ -80,7 +80,7 @@ is described in this section.
   \item[tags] \mbox{}\\
     Tags are an internal type that \asdl{} uses to represent enumerations and
     tagged sums.
-    If the number of distinct tags required for a type is less than 256, then
+    If the number of distinct tags required for a type is fewer than 256, then
     the tag is represented as a single byte.
     Otherwise, the tag value is encoded as a \lstinline!uint! value.
 \end{description}%
@@ -107,7 +107,7 @@ As with product types, fields are packed left to right based on the order
 in the definition.
 If there are any attribute values associated with the type, they are packed left to right
 after the tag but before other constructor fields.
-  
+
 If the sum type has a single constructor with fields, then it is
 encoded without a tag (\ie{}, like a product type).
 
@@ -125,12 +125,14 @@ non-zero values are interpreted as the constructor's tag.
 For any other base type, there is an initial byte that is either one or zero.
 A zero indicates that the value is empty and no more data follows.
 A one indicates that the next value is the value of the optional value.
+For single-constructor enumerations or sum types, we use zero to denote
+the empty value and one to denote the presence of the value.
 
 \subsection{Shared types}
 \label{sec:shared-pickle-rep}
 
 Shared types change the representation of a pickle from a tree to a DAG
-(Directed Acyclic Graph).  A shared value is the pickle is
+(Directed Acyclic Graph).  A shared value in the pickle is
 either a \emph{definition} occurrence (\ie{}, the first occurrence of that
 value), or a \emph{back reference} (\ie{}, subsequent occurrences of the value).
 A shared value is represented by an integer followed by the encoding of the
@@ -170,7 +172,7 @@ and the $v'_1,\,\ldots,\,v'_n$ are the encodings of the sub-values.
 \begin{description}
   \item[bool] \mbox{}\\
     Boolean values are mapped to the literals \lstinline!#t! and \lstinline!#f!.
-    
+
   \item[numbers] \mbox{}\\
     Values of the ASDL numeric types (\lstinline!int!, \lstinline!uint!, and
     \lstinline!integer!) are represented by decimal literals.
@@ -191,7 +193,7 @@ value.
 
 \subsection{Sum types}
 Nullary constructors are mapped to quoted symbols, while non-nullary constructors are mapped
-to an S-expression with the constructor name as the operator and the 
+to an S-expression with the constructor name as the operator and the
 
 \subsection{Sequence types}
 A sequence of values $v_1,\,\ldots,\,v_n$ is encoded as

@@ -24,6 +24,7 @@ is
   gen-pickle-fn.sml
   gen-pickle-sig.sml
   gen-sexp-pickle.sml
+  gen-sharing-context.sml
   gen-sml.sml
   gen-types.sml
   print-sml.sml

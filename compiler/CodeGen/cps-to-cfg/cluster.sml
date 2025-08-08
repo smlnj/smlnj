@@ -8,12 +8,12 @@ structure Cluster : sig
 
   (* `cluster (singleEntry, fns)` groups the functions `fns` of a compilation
    * unit into "clusters" using a union-find data structure.  A cluster is
-   * a maximal graph of CPS functions connects by `APPLY(LABEL lab, ...)`
+   * a maximal graph of CPS functions connected by `APPLY(LABEL lab, ...)`
    * edges.
    *
    * If `singleEntry` is true, then each cluster will have a single entry
-   * point.  This restriction may require introducing additional CPS
-   * functions to act as join points.
+   * point.  Satisfying this restriction may require introducing additional
+   * CPS functions to act as join points.
    *
    * The first function in `fns` must be the first function in the first
    * result cluster. This is achieved by ensuring that the first function
@@ -140,7 +140,6 @@ structure Cluster : sig
 	    build funcs;
 	    extract()
 	  end (* group *)
-
 
   (* if a cluster has multiple entry points, then split it into one function
    * per entry-point, plus additional functions for shared code.  We also

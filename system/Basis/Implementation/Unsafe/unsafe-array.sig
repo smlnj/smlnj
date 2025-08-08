@@ -10,5 +10,6 @@ signature UNSAFE_ARRAY =
     val sub : ('a array * int) -> 'a
     val update : ('a array * int * 'a) -> unit
     val create : (int * 'a) -> 'a array
+    val create0 : unit -> 'a array
 
   end;

@@ -1,6 +1,6 @@
 /*! \file import-heap.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * Routines to import an ML heap image.
@@ -23,6 +23,8 @@
 #include "addr-hash.h"
 #include "heap-input.h"
 #include "heap-io.h"
+
+extern smlnj_heap_image_t smlnj_heap_image;
 
 #if defined(DLOPEN) && !defined(OPSYS_WIN32)
 #include <dlfcn.h>
@@ -63,7 +65,12 @@ PVT ml_val_t RepairWord (
 	addr_tbl_t *boRegionTbl, ml_val_t *externs);
 PVT bo_reloc_t *AddrToRelocInfo (bibop_t, addr_tbl_t *, aid_t, Addr_t);
 
-#define READ(bp,obj)	HeapIO_ReadBlock(bp, &(obj), sizeof(obj))
+#define READ(bp,obj,msg)	                                        \
+    do {                                                                \
+        if (HeapIO_ReadBlock(bp, &(obj), sizeof(obj)) == FAILURE) {     \
+            Die(msg);                                                   \
+        }                                                               \
+    } while (0)
 
 
 /* ImportHeapImage:
@@ -101,58 +108,49 @@ ml_state_t *ImportHeapImage (const char *fname, heap_params_t *params)
 	}
 
 	inBuf.needsSwap = FALSE;
-	inBuf.buf	    = NIL(Byte_t *);
+	inBuf.base      = NIL(Byte_t *);
+	inBuf.buf       = NIL(Byte_t *);
 	inBuf.nbytes    = 0;
     } else {
-      /* fname == NULL, so try to find an in-core heap image */
-#if defined(DLOPEN) && !defined(OPSYS_WIN32)
-	void *lib = dlopen (NULL, RTLD_LAZY);
-	void *vimg, *vimglenptr;
-	if ((vimg = dlsym(lib, HEAP_IMAGE_SYMBOL)) == NULL) {
-	    Die("no in-core heap image found\n");
-	}
-	if ((vimglenptr = dlsym(lib, HEAP_IMAGE_LEN_SYMBOL)) == NULL) {
-	    Die("unable to find length of in-core heap image\n");
-	}
-
-	inBuf.file = NULL;
+      /* fname == NULL, so load an in-memory heap image */
+        if (smlnj_heap_image.len == 0) {
+            Die("missing in-memory heap image\n");
+        }
+	inBuf.file      = NULL;
 	inBuf.needsSwap = FALSE;
-	inBuf.base = vimg;
-	inBuf.buf = inBuf.base;
-	inBuf.nbytes = *(long *)vimglenptr;
-#else
-      Die("in-core heap images not implemented\n");
-#endif
+	inBuf.base      = &(smlnj_heap_image.data[0]);
+	inBuf.buf       = inBuf.base;
+	inBuf.nbytes    = smlnj_heap_image.len;
     }
 
-    READ(&inBuf, imHdr);
-    if (imHdr.byteOrder != ORDER)
+    READ(&inBuf, imHdr, "failure reading image header\n");
+    if (imHdr.byteOrder != ORDER) {
 	Die ("incorrect byte order in heap image\n");
-    if (imHdr.magic != IMAGE_MAGIC)
+    }
+    if (imHdr.magic != IMAGE_MAGIC) {
 	Die ("bad magic number (%#x) in heap image\n", imHdr.magic);
-    if ((imHdr.kind != EXPORT_HEAP_IMAGE) && (imHdr.kind != EXPORT_FN_IMAGE))
+    }
+    if ((imHdr.kind != EXPORT_HEAP_IMAGE) && (imHdr.kind != EXPORT_FN_IMAGE)) {
 	Die ("bad image kind (%d) in heap image\n", imHdr.kind);
-    READ(&inBuf, heapHdr);
+    }
+    READ(&inBuf, heapHdr, "failure reading heap header\n");
 
   /* check for command-line overrides of heap parameters. */
-    if (params->allocSz == 0) params->allocSz = heapHdr.allocSzB;
-    if (params->numGens < heapHdr.numGens) params->numGens = heapHdr.numGens;
-    if (params->cacheGen < 0) params->cacheGen = heapHdr.cacheGen;
+    if (params->allocSz == 0) { params->allocSz = heapHdr.allocSzB; }
+    if (params->numGens < heapHdr.numGens) { params->numGens = heapHdr.numGens; }
+    if (params->cacheGen < 0) { params->cacheGen = heapHdr.cacheGen; }
 
     msp = AllocMLState (FALSE, params);
 
   /* get the run-time pointers into the heap */
     *PTR_MLtoC(ml_val_t, PervStruct) = heapHdr.pervStruct;
     RunTimeCompUnit = heapHdr.runTimeCompUnit;
-#ifdef ASM_MATH
-    MathVec = heapHdr.mathVec;
-#endif
 
   /* read the externals table */
     externs = HeapIO_ReadExterns (&inBuf);
 
   /* read and initialize the ML state info */
-    READ(&inBuf, image);
+    READ(&inBuf, image, "failure reading vproc header");
     if (imHdr.kind == EXPORT_HEAP_IMAGE) {
       /* Load the live registers */
 	ASSIGN(MLSignalHandler, image.sigHandler);
@@ -232,7 +230,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	boRegionTbl = MakeAddrTbl(BIBOP_PAGE_BITS+1, hdr->numBORegions);
 	sz = hdr->numBORegions * sizeof(bo_region_info_t);
 	boRgnHdr = NEW_VEC(bo_region_info_t, hdr->numBORegions);
-	HeapIO_ReadBlock (bp, boRgnHdr, sz);
+	if (HeapIO_ReadBlock (bp, boRgnHdr, sz) == FAILURE) {
+            Die("failure to read big-object region info\n");
+        }
 
 #ifdef VERBOSE
 	SayDebug ("Marking %d regions for imported big objects\n", hdr->numBORegions);
@@ -246,9 +246,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		AID_BIGOBJ(MAX_NUM_GENS));
 	    ADDR_TO_PAGEID(oldBIBOP,boRgnHdr[i].baseAddr) = AID_BIGOBJ_HDR(MAX_NUM_GENS);
 	  /* set relocation info for the big-object region */
-	    boRelocInfo[i].firstPage = boRgnHdr[i].firstPage;
+	    boRelocInfo[i].firstPage = BO_REGION_FIRST_PAGE(boRgnHdr[i].baseAddr);
 	    boRelocInfo[i].nPages =
-		(boRgnHdr[i].sizeB - (boRgnHdr[i].firstPage - boRgnHdr[i].baseAddr))
+		(boRgnHdr[i].sizeB - (boRelocInfo[i].firstPage - boRgnHdr[i].baseAddr))
 		    >> BIGOBJ_PAGE_SHIFT;
 	    boRelocInfo[i].objMap = NEW_VEC(bo_reloc_t *, boRelocInfo[i].nPages);
 	    for (j = 0;  j < boRelocInfo[i].nPages;  j++) {
@@ -262,10 +262,13 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
   /* read the arena headers. */
     arenaHdrsSize = hdr->numGens * NUM_OBJ_KINDS * sizeof(heap_arena_hdr_t);
     arenaHdrs = (heap_arena_hdr_t *) MALLOC (arenaHdrsSize);
-    HeapIO_ReadBlock (bp, arenaHdrs, arenaHdrsSize);
+    if (HeapIO_ReadBlock (bp, arenaHdrs, arenaHdrsSize) == FAILURE) {
+        Die("failure to read arena info\n");
+    }
 
-    for (i = 0;  i < NUM_ARENAS;  i++)
+    for (i = 0;  i < NUM_ARENAS;  i++) {
 	prevSzB[i] = heap->allocSzB;
+    }
 
   /* allocate the arenas and read in the heap image. */
     for (p = arenaHdrs, i = 0;  i < hdr->numGens;  i++) {
@@ -280,18 +283,21 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		RND_MEMOBJ_SZB(q->info.o.sizeB),
 		gen->arena[j]->id);
 	    sz = q->info.o.sizeB + prevSzB[j];
-	    if ((j == PAIR_INDX) && (sz > 0))
+	    if ((j == PAIR_INDX) && (sz > 0)) {
 		sz += 2*WORD_SZB;
+            }
 	    gen->arena[j]->tospSizeB = RND_MEMOBJ_SZB(sz);
 	    prevSzB[j] = q->info.o.sizeB;
 	    q++;
 	}
 
       /* Allocate space for the generation */
-	if (NewGeneration(gen) == FAILURE)
+	if (NewGeneration(gen) == FAILURE) {
 	    Die ("unable to allocated space for generation %d\n", i+1);
-	if (isACTIVE(gen->arena[ARRAY_INDX]))
+        }
+	if (isACTIVE(gen->arena[ARRAY_INDX])) {
 	    NewDirtyVector (gen);
+        }
 
       /* read in the arenas for this generation and initialize the
        * address offset table.
@@ -301,8 +307,12 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 
 	    if (p->info.o.sizeB > 0) {
 		addrOffset[i][j] = (Addr_t)(ap->tospBase) - (Addr_t)(p->info.o.baseAddr);
-		HeapIO_Seek (bp, (off_t)(p->offset));
-		HeapIO_ReadBlock(bp, (ap->tospBase), p->info.o.sizeB);
+		if (HeapIO_Seek (bp, (off_t)(p->offset)) == FAILURE) {
+                    Die("failure to seek on heap image\n");
+                }
+                if (HeapIO_ReadBlock(bp, (ap->tospBase), p->info.o.sizeB) == FAILURE) {
+                    Die("failure to read heap data; gen = %d, arena = %d\n", i+1, j);
+                }
 		ap->nextw	= (ml_val_t *)((Addr_t)(ap->tospBase) + p->info.o.sizeB);
 		ap->oldTop	= ap->tospBase;
 	    }
@@ -322,28 +332,61 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	    bigobj_hdr_t	*boHdrs;
 	    int			boHdrSizeB;
 	    Addr_t		indx;
-	    bo_region_reloc_t   *region;
+	    bo_region_reloc_t   *reloc;
 
 	    if (p->info.bo.numBOPages > 0) {
+		ENABLE_CODE_WRITE
 		totSizeB = p->info.bo.numBOPages << BIGOBJ_PAGE_SHIFT;
+/* QUESTION: does it make sense to allocate a single big-object region for all of the
+ * code objects in the heap?
+ */
+                /* allocate a region to hold the big objects of this generation */
 		freeObj = BO_AllocRegion (heap, totSizeB);
 		freeRegion = freeObj->region;
-		freeRegion->minGen = i;
-		MarkRegion (BIBOP, (ml_val_t *)freeRegion,
-		    MEMOBJ_SZB(freeRegion->memObj), AID_BIGOBJ(i));
-		ADDR_TO_PAGEID(BIBOP,freeRegion) = AID_BIGOBJ_HDR(i);
+		freeRegion->minGen = i+1;
+		MarkRegion (BIBOP, (ml_val_t *)MEMOBJ_BASE(freeRegion->memObj),
+		    MEMOBJ_SZB(freeRegion->memObj), AID_BIGOBJ(i+1));
+		ADDR_TO_PAGEID(BIBOP,MEMOBJ_BASE(freeRegion->memObj)) = AID_BIGOBJ_HDR(i+1);
 
 	      /* read in the big-object headers */
 		boHdrSizeB = p->info.bo.numBigObjs * sizeof(bigobj_hdr_t);
 		boHdrs = (bigobj_hdr_t *) MALLOC (boHdrSizeB);
-		HeapIO_ReadBlock (bp, boHdrs, boHdrSizeB);
+                if (HeapIO_ReadBlock (bp, boHdrs, boHdrSizeB) == FAILURE) {
+                    Die("failure to read big-object headers\n");
+                }
 
 	      /* read in the big-objects */
-		ENABLE_CODE_WRITE
-		HeapIO_ReadBlock (bp, (void *)(freeObj->obj), totSizeB);
-		DISABLE_CODE_WRITE
+#ifdef ARCH_ARM64
+                if (IS_MEMORY_INBUF(bp)) {
+                    if (HeapIO_ReadBlock (bp, (void *)freeObj->obj, totSizeB) == FAILURE) {
+                        Die("failure to read big-object data from memory\n");
+                    }
+                } else {
+                    /* on Arm64, we read the code into memory and then copy to the
+                     * memory-mapped executable memory, since trying to read directly
+                     * from a file into the executable memory does not work (at least
+                     * on macOS).
+                     */
+                    char buffer[8*ONE_K];
+                    off_t nb = totSizeB;
+                    char *dst = (char *)freeObj->obj;
+                    while (nb > 0) {
+                        off_t readSz = (nb > sizeof(buffer)) ? sizeof(buffer) : nb;
+                        if (HeapIO_ReadBlock (bp, buffer, readSz) == FAILURE) {
+                            Die("failure to read big-object data\n");
+                        }
+                        memcpy (dst, buffer, readSz);
+                        dst += readSz;
+                        nb -= readSz;
+                    }
+                }
+#else
+		if (HeapIO_ReadBlock (bp, (void *)freeObj->obj, totSizeB) == FAILURE) {
+                    Die("failure to read big-object data\n");
+                }
+#endif
 		if (j == CODE_INDX) {
-		    FlushICache ((void *)(freeObj->obj), totSizeB);
+		    FlushICache ((void *)freeObj->obj, totSizeB);
 		}
 
 	      /* setup the big-object descriptors and per-object relocation info */
@@ -358,12 +401,12 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		    {
 			continue;
 		    }
-		    region = LookupBORegion (boRegionTbl, indx);
-		    ASSERT(region != NIL(bo_region_reloc_t *));
+		    reloc = LookupBORegion (boRegionTbl, indx);
+		    ASSERT(reloc != NIL(bo_region_reloc_t *));
 		  /* allocate the big-object descriptor for the object, and
 		   * link it into the list of big-objects for its generation.
 		   */
-		    bdp = AllocBODesc (freeObj, &(boHdrs[k]), region);
+		    bdp = AllocBODesc (freeObj, &(boHdrs[k]), reloc);
 		    bdp->next = gen->bigObjs[j];
 		    gen->bigObjs[j] = bdp;
 		    ASSERT(bdp->gen == i+1);
@@ -382,6 +425,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 		}
 
 		FREE (boHdrs);
+		DISABLE_CODE_WRITE
 	    }
 	    if (! SilentLoad) {
 		Say(".");
@@ -403,9 +447,6 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	oldBIBOP, addrOffset, boRegionTbl, externs);
     RunTimeCompUnit = RepairWord (
 	RunTimeCompUnit, oldBIBOP, addrOffset, boRegionTbl, externs);
-#ifdef ASM_MATH
-    MathVec = RepairWord (MathVec, oldBIBOP, addrOffset, boRegionTbl, externs);
-#endif
 
   /* Adjust the ML registers to the new address space */
     ASSIGN(MLSignalHandler, RepairWord (
@@ -447,6 +488,11 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	    }
 	}
     }
+    for (i = 0; i < hdr->numBORegions;  i++) {
+        if (boRelocInfo[i].objMap != NIL(bo_reloc_t **)) {
+            FREE (boRelocInfo[i].objMap);
+        }
+    }
     FreeAddrTbl (boRegionTbl, FALSE);
     FREE (boRelocInfo);
     FREE (arenaHdrs);
@@ -470,7 +516,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 PVT bigobj_desc_t *AllocBODesc (
     bigobj_desc_t   *free,
     bigobj_hdr_t    *objHdr,
-    bo_region_reloc_t *oldRegion)
+    bo_region_reloc_t *reloc)
 {
     bigobj_region_t *region;
     bigobj_desc_t   *newObj;
@@ -509,10 +555,10 @@ PVT bigobj_desc_t *AllocBODesc (
     relocInfo = NEW_OBJ(bo_reloc_t);
     relocInfo->oldAddr = objHdr->baseAddr;
     relocInfo->newObj = newObj;
-    firstPage = ADDR_TO_BOPAGE(oldRegion, objHdr->baseAddr);
-    ASSERT(firstPage + npages <= oldRegion->nPages);
+    firstPage = ADDR_TO_BOPAGE(reloc, objHdr->baseAddr);
+    ASSERT(firstPage + npages <= reloc->nPages);
     for (i = 0;  i < npages;  i++) {
-	oldRegion->objMap[firstPage+i] = relocInfo;
+	reloc->objMap[firstPage+i] = relocInfo;
     }
 
     return newObj;

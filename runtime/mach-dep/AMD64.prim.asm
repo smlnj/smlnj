@@ -75,10 +75,14 @@
 /* size of stack-frame region where ML stuff is stored. */
 #define ML_AREA_SIZE	80
 
+#define ML_PADDING_SIZE 72
+
 /* the amount to bump up the frame after the callee save registers have been
- * pushed onto the stack.
+ * pushed onto the stack.  The total size of the stack frame is this value +
+ * 48 bytes for the callee-save registers + 8 bytes for the return address.
+ * == 8400, which is 64-byte aligned.
  */
-#define ML_FRAME_SIZE	(ML_SPILL_SIZE+ML_AREA_SIZE)
+#define ML_FRAME_SIZE	(ML_SPILL_SIZE+ML_PADDING_SIZE+ML_AREA_SIZE)
 
 /* we put the request code in tempmem before jumping to set_request */
 #define request_w	tempmem0

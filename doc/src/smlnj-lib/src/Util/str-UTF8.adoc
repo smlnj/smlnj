@@ -46,10 +46,16 @@ structure UTF8 :> UTF8
 type wchar = word
 
 val maxCodePoint : wchar
+val replacementCodePoint : wchar
 
 exception Incomplete
 exception Invalid
 
+datatype decode_strategy = STRICT | REPLACE
+
+val getWC : decode_strategy -> (char, 'strm) StringCvt.reader -> (wchar, 'strm) StringCvt.reader
+
+val getWCStrict : (char, 'strm) StringCvt.reader -> (wchar, 'strm) StringCvt.reader
 val getu : (char, 'strm) StringCvt.reader -> (wchar, 'strm) StringCvt.reader
 
 val encode : wchar -> string
@@ -85,6 +91,11 @@ val exists : (wchar -> bool) -> string -> bool
 `[.kw]#val# maxCodePoint : wchar`::
   The maximum code point in the *Unicode* character set (`0wx10FFFF`).
 
+[[val:replacementCodePoint]]
+`[.kw]#val# replacementCodePoint : wchar`::
+  The replacement code point (`0wx00FFFD`) for invalid or incomplete
+  sequences when using the xref:#con:REPLACE[`REPLACE`] decode strategy.
+
 [[exn:Incomplete]]
 `[.kw]#exception# Incomplete`::
   This exception is raised when certain operations are applied to incomplete
@@ -96,11 +107,41 @@ val exists : (wchar -> bool) -> string -> bool
   This exception is raised when invalid UTF-8 encodings, such as
   non-shortest-length encodings, are encountered.
 
-`[.kw]#val# getu : (char, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader] \-> (wchar, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader]`::
+`[.kw]#datatype# decode_strategy =` ...::
+  This datatype is used to specify the strategy for handling incomplete or
+  incorrect UTF-8 sequences.
+  The constructors are interpreted as follows:
++
+--
+[[con:STRICT]]
+`STRICT`::
+  Raise the xref:#exn:Incomplete[`Incomplete`] exception when the end of
+  input is encountered in the middle of an otherwise acceptable multi-byte
+  encoding and raise the xref:#exn:Invalid[`Invalid`] exception when an
+  invalid byte is encountered. `STRICT` is the default decoding option.
+
+[[con:REPLACE]]
+`REPLACE`::
+  Replace invalid input with the xref:#val:replacementCodePoint[`replacementCodePoint`]
+  using the https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-3/#G66453[
+  W3C standard substitution of maximal subparts algorithm].
+--
+
+`[.kw]#val# getWC : decode_strategy -> (char, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader] \-> (wchar, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader]`::
+  `getWC strategy getc` returns a wide-character reader for the character reader `getc`.
+  The resulting reader handles incomplete and invalid encodings according the the
+  `strategy` argument.
+
+`[.kw]#val# getWCStrict : (char, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader] \-> (wchar, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader]`::
   `getu getc` returns a wide-character reader for the character reader `getc`.
   The resulting reader raises the xref:#exn:Incomplete[`Incomplete`] exception
   if it encounters an incomplete *UTF-8* character and it raises the
   xref:#exn:Invalid[`Invalid`] exception if it encounters an invalid encoding.
+  This function is equivalent to the expression `getWC STRICT`.
+
+`[.kw]#val# getu : (char, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader] \-> (wchar, 'strm) {sml-basis-url}/string-cvt.html#SIG:STRING_CVT.reader:TY[StringCvt.reader]`::
+  This function is equivalent to `getWCStrict`.  It is included for backwards
+  compatibility.
 
 `[.kw]#val# encode : wchar \-> string`::
   `encode wc` returns the *UTF-8* encoding of the wide character `wc`.

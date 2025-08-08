@@ -82,9 +82,12 @@ structure InteractiveSystem : sig end =
             Control.Print.say "Generating heap image...\n";
 	    if SMLofNJ.exportML f
               then (
+                if List.exists (fn "@SMLquiet" => true | _ => false) (SMLofNJ.getAllArgs())
+                  then ()
+                  else (
+                    print SMLNJVersion.banner;
+                    print "\n");
                 establishSignalHandlers ();
-	        print SMLNJVersion.banner;
-		print "\n";
 		getOpt (procCmdLine, fn () => ()) ();
 		Backend.Interact.interact ())
 	      else (

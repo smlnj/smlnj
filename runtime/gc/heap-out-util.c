@@ -1,8 +1,13 @@
-/* heap-out-util.c
- *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.
+/*! \file heap-out-util.c
  *
  * Utility routines to export (or blast) an ML heap image.
+ *
+ * \author John Reppy
+ */
+
+/*
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  */
 
 #include "ml-base.h"
@@ -11,6 +16,7 @@
 #include "ml-heap-image.h"
 #include "c-globals-tbl.h"
 #include "heap-output.h"
+#include "machine-id.h"
 #include <string.h>
 
 
@@ -26,14 +32,15 @@ status_t HeapIO_WriteImageHeader (writer_t *wr, int kind)
     hdr.magic	  = ((kind == EXPORT_HEAP_IMAGE) || (kind == EXPORT_FN_IMAGE))
 			? IMAGE_MAGIC : BLAST_MAGIC;
     hdr.kind	  = kind;
-    /* hdr.arch[] */
-    /* hdr.opsys[] */
+    strncpy (hdr.arch, MACHINE_ID, sizeof(hdr.arch));
+    strncpy (hdr.opsys, OPSYS_ID, sizeof(hdr.opsys));
 
     WR_Write(wr, &hdr, sizeof(hdr));
-    if (WR_Error(wr))
+    if (WR_Error(wr)) {
 	return FAILURE;
-    else
+    } else {
 	return SUCCESS;
+    }
 
 } /* end of HeapIO_WriteImageHeader */
 

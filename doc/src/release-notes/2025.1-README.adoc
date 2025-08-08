@@ -1,0 +1,160 @@
+:version: 2025.1
+:date: February 14, 2025
+:dist-dir: https://smlnj.org/dist/working/{version}/
+:history: {dist-dir}HISTORY.html
+:issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
+:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-dir}index.html[[.tt]#{dist-dir}#]
+--
+''''''''
+
+== Summary
+
+This release is a major milestone in the development of **SML/NJ**.  Thanks to the
+**LLVM** backend, we now have native support for the Arm64 (_a.k.a._ AArch64)
+architecture running **macOS**.  In addition, this release includes bug fixes and
+improvements ported from the Legacy repository.
+
+== Details
+
+=== Command-line Tools
+
+The mechanism to create standalone executable programs has been updated to take
+advantage of the **LLVM** infrastructure.  Specifically, the `heap2asm` program
+has been replaced by the `heap2obj` program that directly converts an exported
+heap image to a native object file.  The `heap2exec` script has been modified to
+use `heap2obj`.  Currently we only support static linking of executables.
+We have also added support for creating executables to the `ml-build` script.
+See the manual pages in the documentation for details.
+
+=== Compiler
+
+* The code-object API has been changed to make is easier to manage JIT'd code
+  on **macOS**/**arm64**.  This change should also reduce the amount of data
+  copying when generating binfiles.
+
+* Switched the backend code generator to use **LLVM** Version 18.1.8.  The
+  `llvm10` submodule has been removed.
+
+* The "Jump-with-Arguments" (JWA) calling convention that we added to **LLVM**
+  no longer requires that functions have the `naked` attribute.  Instead, we
+  have modified the prologue-epilogue-insertion pass to skip adding code to
+  functions.
+
+* Ported several fixes and improvements from the legacy repository.
+  These include Legacy Issues {legacy-issue-base}/340[#340] and
+  {legacy-issue-base}/341[#341]), and the addition of some missing
+  fusion rules for conversions via the `IntInf.int` type.
+
+=== Runtime System
+
+* The heap-image format was modified and has a new version number.
+
+* The representation of big-object regions in the heap was changed to avoid
+  issues with write protection for executable code on **macOS**/**arm64**.
+
+* Collecting basic statistics about memory allocation and GC is now
+  enabled by default in the garbage collector.  Access to this information
+  is via the `SMLofNJ.Internals.GC` structure (see below).
+
+=== Basis Library
+
+* Added `numGens` and `nurserySizeInBytes` functions to the
+  `SMLofNJ.Internals.GC` structure, with corresponding runtime-system
+  support.
+
+* Added the `resetCounters` and `readCounters` functions to the
+  `SMLofNJ.Internals.GC` structure.  These functions can be used
+  to get the GC and allocation statistics maintained by the runtime
+  system.
+
+* Added `Unsafe.Array.create0` for creating zero-length polymorphic arrays.
+
+=== SML/NJ Library
+
+The following changes were made to the Library:
+
+* Added the `combineWith` function to the various implementations of the
+  `ORD_SET` signature.
+
+* Some minor improvements to hash sets and integer hash tables.
+
+* Added the `decode_strategy` mechanism to the `UTF8` structure.  This
+  mechanism allows specifying how to handle incomplete/invalid multibyte
+  sequences.  See {pull-base}/334[Pull Request 334] for more discussion.
+
+* Added `rawArray` and `rawObject` decoders to the `JSONDecode` structure
+  in the SML/NJ Library.
+
+=== Installation
+
+* The installation process has been simplified; the `build.sh` script now fetches
+  the boot files from https://smlnj.org:[`smlnj.org`] if they are not present.
+
+== Bugs
+
+Here is a list of the issues that are fixed (or closed) with this release.
+
+[.buglist,cols="^1,<15",strips="none",options="header"]
+|=======
+| Issue
+| Description
+| [.bugid]#285#
+| {issue-base}/285[`Date.date` incorrectly modifies local time with timezone offset]
+| [.bugid]#291#
+| {issue-base}/291[Can't build 2024.2 because of problem with ASDL C++ library]
+| [.bugid]#294#
+| {issue-base}/294[compiler bug aborts build of istari]
+| [.bugid]#295#
+| {issue-base}/295[Incorrect constant folding of word equality]
+|=======
+
+We also fixed the following bugs that did not have issues
+associated with them (or were bug fixes ported from the legacy
+repository):
+--
+* {legacy-issue-base}/328[`Real.fromString` broken in 110.99.5 and 110.99.6]
+* {legacy-issue-base}/340[`Word.toInt` does not raise an exception when out of range]
+--
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) | Tested
+| | Ubuntu 20.04.6 LTS |
+| | Ubuntu 22.04.2 LTS | Tested
+| {nbsp} | |
+| Arm64  | |
+| | macOS 15 (Sequoia) | Tested
+| {nbsp} | |
+|=======

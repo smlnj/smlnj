@@ -11,9 +11,9 @@
 #include "cfun-proto-list.h"
 
 /* _ml_P_IO_writebuf : (int * Word8Array.array * int * int) -> int
- *                      fd     data              nbytes start              
+ *                      fd     data              nbytes start
  *
- * Write nbytes of data from the given array to the specified file, 
+ * Write nbytes of data from the given array to the specified file,
  * starting at the given offset. Assume bounds have been checked.
  */
 ml_val_t _ml_P_IO_writebuf (ml_state_t *msp, ml_val_t arg)

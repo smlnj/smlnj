@@ -352,23 +352,39 @@ fun mergePidInfo (pi, lty, l, nameOp) =
   end (* mergePidInfo *)
 
 (** a map that stores information about external references *)
-val persmap = ref (PersMap.empty : pidInfo PersMap.map)
+val persmap = ref (PersMap.empty : (int * pidInfo) PersMap.map)
+
+(** a counter that is incremented every time it encounters an external
+ * reference, this gives a canonical order for the imports in persmap. *)
+val useOccur = ref 0
+
+(** post-increment a ref cell *)
+fun inc (cell as ref orig) = orig before cell := orig + 1
+
+(** put the import list in canonical order *)
+fun canonImport (imports: (pid * (int * pidInfo)) list) : (pid * pidInfo) list =
+  let fun gt ((_, (o1, _)), (_, (o2, _))) = o1 > o2
+      fun strip (pid, (_, info)) = (pid, info)
+   in map strip (ListMergeSort.sort gt imports)
+  end
 
 (* mkPid : pid * lty * int list * symbol option -> lvar *)
 fun mkPid (pid, lty, l, nameOp) =
     case PersMap.find (!persmap, pid)
       of NONE =>
 	  let val (pinfo, var) = mkPidInfo (lty, l, nameOp)
-	   in persmap := PersMap.insert(!persmap, pid, pinfo);
+              val occur = inc useOccur
+	   in persmap := PersMap.insert(!persmap, pid, (occur, pinfo));
 	      var
 	  end
-       | SOME pinfo =>
+       | SOME (occur, pinfo) =>
 	  let val (newPinfo, var) = mergePidInfo (pinfo, lty, l, nameOp)
 	      fun rmv (key, map) = (* clear the old pinfo for pid *)
 		  let val (newMap, _) = PersMap.remove(map, key)
 		  in newMap
 		  end handle e => map
-	   in persmap := PersMap.insert(rmv (pid, !persmap), pid, newPinfo);
+              val newEntry = (occur, newPinfo)
+	   in persmap := PersMap.insert(rmv (pid, !persmap), pid, newEntry);
 	      var
 	  end
 
@@ -1637,7 +1653,8 @@ val _ = if CompInfo.anyErrors compInfo
 val body = wrapII body
 
 (** wrapping up the body with the imported variables *)
-val (plexp, imports) = wrapPidInfo (body, PersMap.listItemsi (!persmap))
+val (plexp, imports) =
+  wrapPidInfo (body, canonImport (PersMap.listItemsi (!persmap)))
 
 (** type check body (including kind check) **)
 val ltyerrors = if !FLINT_Control.checkPLambda

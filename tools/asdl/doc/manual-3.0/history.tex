@@ -17,6 +17,19 @@ Here is a history of changes to \asdl{}, \asdlgen{}, and this manual.
 The changes are indexed by SML/NJ release numbers.
 
 \begin{description}
+  \item[SML/NJ 2025.2]
+    \mbox{}\\[0.5em]
+    Changed the file suffixes for \Cplusplus{} code to ``\texttt{.cpp}'' and ``\texttt{.hpp}''
+    (from ``\texttt{.cxx}'' and ``\texttt{.hxx}'') to match the more common naming convention.
+    This change also involved renaming a number of source files, modules, and directories.
+
+    Replaced the ``\texttt{option<>}'' template type with the STL ``\texttt{std::optional<>}''
+    template.  This change means that we now only support \Cplusplus{} 2017 or later.
+
+    Defined the interface for error-handling functions for unpickling and added more checks
+    for invalid input.
+% TODO: memory management support
+
   \item[SML/NJ 2021.1]
     \mbox{}\\[0.5em]
     Reorganized the \sml{} library to separate input and output into separate

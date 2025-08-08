@@ -1,6 +1,6 @@
 (* ppcps.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -134,7 +134,9 @@ structure PPCps : PPCPS =
       | pureToString (P.COPY_INF i) = concat ["copy_", cvtParam i, "_inf"]
       | pureToString (P.EXTEND_INF i) =  concat ["extend_", cvtParam i, "_inf"]
       | pureToString (P.INT_TO_REAL{from, to}) =
-	  concat ["real", cvtParam from, "_", cvtParam to]
+	  concat ["int", cvtParam from, "_to_real", cvtParam to]
+      | pureToString (P.BITS_TO_REAL sz) = "bits_to_real" ^ cvtParam sz
+      | pureToString (P.REAL_TO_BITS sz) = concat ["real", cvtParam sz, "_to_bits"]
       | pureToString P.SUBSCRIPTV = "subscriptv"
       | pureToString (P.PURE_NUMSUBSCRIPT{kind}) = "numsubscriptv" ^ numkindToString kind
       | pureToString P.GETTAG = "gettag"
@@ -166,7 +168,7 @@ structure PPCps : PPCPS =
     fun vpathToString (v, p) = let
 	  fun toList (OFFp 0) = []
 	    | toList (OFFp n) = ["+", Int.toString n] (* assumes n > 0 *)
-	    | toList (SELp(i, p)) = "." :: toList p
+	    | toList (SELp(i, p)) = "." :: Int.toString i :: toList p
 	  in
 	    String.concat(value2str v :: toList p)
 	  end
@@ -254,7 +256,7 @@ structure PPCps : PPCPS =
 			space n;
 			if k then say "reentrant " else ();
 			if l = "" then () else (say l; say " ");
-			say "rcc("; sayvlist vl; say ") -> ";
+			say "rcc("; say(CTypes.protoToString p); say"; "; sayvlist vl; say ") -> ";
 			app (fn (w, t) => (sayv (VAR w); sayt(t))) wtl;
 			nl(); f e)
 		in

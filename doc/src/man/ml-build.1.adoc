@@ -20,6 +20,9 @@ files using the Compilation Manager and SML/NJ compiler.
 OPTIONS
 -------
 
+*-h*::
+  print a help message and exit.
+
 *-C*'ctl'='value'::
   set the control 'ctl' to 'value'.
 
@@ -36,25 +39,33 @@ OPTIONS
   load and execute the code specified by the CM file 'setup.cm' prior to the main
   build process.  This option allows one to customize the compiler via side-effect.
 
+*-standalone*::
+  use the *heap2exec*(1) tool to create a standalone executable program.
+
 EXAMPLES
 --------
 
 `ml-build foo.cm`::
-  builds the program `foo` assuming a main function named `Test.main`.
+  builds the program `foo.<arch>-<opsys>` assuming a main function named `Main.main`.
 
-`ml-build foo.cm Main.main`::
-  builds the program `foo` with main function named `Main.main`.
+`ml-build foo.cm Foo.main`::
+  builds the heap-image file `foo.<arch>-<opsys>` with main function named `Foo.main`.
+
+`ml-build sources.cm Foo.main prog`::
+  builds the heap-image file `prog.<arch>-<opsys>` with main
+  function named `Foo.main`.  This file can be loaded using the `@SMLload`
+  option to the *sml*(1) command.
 
 `ml-build sources.cm Main.main prog`::
-  builds the program `prog` with main function named `Main.main`.
+  builds the executable program `prog` with main function named `Main.main`.
 
 AUTHOR
 ------
-*ML-Build* was written by Matthias Blume.
+*ML-Build* was written by Matthias Blume with modifications by John Reppy.
 
 SEE-ALSO
 --------
-*ml-makedepend*(1), *sml*(1), *smlnj*(7)
+*heap2exec*(1), *ml-makedepend*(1), *sml*(1), *smlnj*(7)
 
 COPYING
 -------

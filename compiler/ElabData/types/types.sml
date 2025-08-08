@@ -68,7 +68,7 @@ and tycpath
 and tyckind
   = PRIMITIVE		          (* primitive tycons *)
   | DATATYPE of
-     {index: int,
+     {index: int,                 (* index for RECtyc *)
       stamps: ST.stamp vector,
       root : EP.entVar option,    (* the root field used by type spec only *)
       freetycs: tycon list,       (* tycs derived from functor params *)

@@ -2,7 +2,7 @@
  *
  * !!! DO NOT EDIT --- GENERATED FROM version.template !!!
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -26,18 +26,15 @@ structure SMLNJVersion : sig
 
     val size = Int.toString(SMLofNJ.SysInfo.getArchSize())
 
-    (* generate buildDate string at boot time *)
-    val buildDate = Date.toString (Date.fromTimeLocal (Time.now ()))
-
     (* use buildDate (i.e., boot time) if no release date *)
-    val releaseDate = (case "July 7, 2024"
+    val releaseDate = (case "July 29, 2025"
            of "" => Date.toString (Date.fromTimeLocal (Time.now ()))
             | d => d
           (* end case *))
 
     val version = {
 	    system = "Standard ML of New Jersey",
-	    version_id = [2024, 2],
+	    version_id = [2025, 2],
 	    suffix = "",
 	    releaseDate = releaseDate
           }

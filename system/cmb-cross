@@ -142,7 +142,8 @@ MODE="@SMLrebuild=${architecture}"
 CM_PATHCONFIG=${CM_PATHCONFIG:-$ROOT/lib/pathconfig}
 export CM_PATHCONFIG
 
-cd $CROSS_BOOT_DIR
+echo "$this: cd $CROSS_BOOT_DIR"
+cd "$CROSS_BOOT_DIR"
 
 echo $this: $LINK @SMLboot=BOOTLIST @SMLheap=sml $MODE $CTL_FLAGS
 if $LINK @SMLboot=BOOTLIST @SMLheap=sml $MODE $CTL_FLAGS ; then

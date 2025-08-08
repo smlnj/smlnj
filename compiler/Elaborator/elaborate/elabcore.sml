@@ -427,41 +427,51 @@ let
 		 | foldOr (p, p'::r) = ORpat(p, foldOr(p', r))
 	    in (foldOr(pat, pats), tyv)
 	   end
-       | AppPat {constr, argument} =>
-	   let fun getPath (MarkPat(pat,region'), _) = getPath (pat, SOME region')
-		 | getPath (VarPat path, regionOp) = (path, regionOp)
-                 | getPath _ = bug "getPath: unexpected constructor pattern for AppPat"
-	       val (path, regionOp) = getPath (constr, NONE)
-	       val region = getOpt (regionOp, SM.nullRegion)
-	    in case LU.lookIdPath (env, SP.SPATH path, error region)
-		 of AS.CON dcon =>
-		      (case dcon
-			 of T.DATACON{const=false, lazyp, ...} =>
-			      let val (argpat,tyvars) = elabPat(argument, env, region)
-				  val pat0 = APPpat(dcon, [], argpat)
-				  val pat1 =
-				      if lazyp (* LAZY *)
-				      then APPpat(BT.dollarDcon, [], pat0)
-				      else pat0
-			       in case regionOp
-				    of NONE => (pat1, tyvars)
-				     | SOME region => (MARKpat(pat1, region), tyvars)
-			      end
-			  | _ => (* constant datacon applied *)
-			      (error region EM.COMPLAIN
-				   ("constant constructor applied in pattern:"
-				    ^ SP.toString (SP.SPATH path))
-				   EM.nullErrorBody;
-			       (AS.WILDpat, TS.empty)))  (* should be NOpat? *)
-		  | AS.VAR _ => (* constructor path bound to variable *)
-		      (error region EM.COMPLAIN
-			   ("undefined constructor applied in pattern:"
-			    ^ SP.toString (SP.SPATH path))
-			   EM.nullErrorBody;
-			   (WILDpat, TS.empty))  (* should be NOpat? *)
-		  | AS.ERRORid => (AS.WILDpat, TS.empty)
-		      (* lookIdPath will have complained about the unbound path *)
-	   end
+       | AppPat{constr, argument} => let
+          fun go (path, optRegion) = let
+                val region = getOpt (optRegion, SM.nullRegion)
+                in
+                  case LU.lookIdPath (env, SP.SPATH path, error region)
+                   of AS.CON dcon => (case dcon
+                         of T.DATACON{const=false, lazyp, ...} => let
+                              val (argpat,tyvars) = elabPat(argument, env, region)
+                              val pat0 = APPpat(dcon, [], argpat)
+                              val pat1 = if lazyp (* LAZY *)
+                                    then APPpat(BT.dollarDcon, [], pat0)
+                                    else pat0
+                              in
+                                case optRegion
+                                 of NONE => (pat1, tyvars)
+                                  | SOME region => (MARKpat(pat1, region), tyvars)
+                                (* end case *)
+                              end
+                          | _ => ((* constant datacon applied *)
+                              error region EM.COMPLAIN
+                                ("constant constructor applied in pattern: "
+                                  ^ SP.toString (SP.SPATH path))
+                                EM.nullErrorBody;
+                              (AS.WILDpat, TS.empty))  (* should be NOpat? *)
+                        (* end case *))
+                    | AS.VAR _ => ((* constructor path bound to variable *)
+                        error region EM.COMPLAIN
+                          ("undefined constructor applied in pattern: "
+                            ^ SP.toString (SP.SPATH path))
+                          EM.nullErrorBody;
+                          (WILDpat, TS.empty))  (* should be NOpat? *)
+                    | AS.ERRORid => (AS.WILDpat, TS.empty)
+                        (* lookIdPath will have complained about the unbound path *)
+                  (* end case *)
+                end
+          fun getPath (MarkPat(pat,region'), _) = getPath(pat, SOME region')
+            | getPath (VarPat path, optRegion) = go(path, optRegion)
+            | getPath (rator, optRegion) = (
+                error (getOpt (optRegion, SM.nullRegion)) EM.COMPLAIN
+                  "non-constructor applied to argument in pattern"
+                  EM.nullErrorBody;
+                (WILDpat, TS.empty)) (* should be NOpat? *)
+          in
+            getPath (constr, NONE)
+          end
        | ConstraintPat {pattern=pat,constraint=ty} =>
 	   let val (p1,tv1) = elabPat(pat, env, region)
 	       val (t2,tv2) = ET.elabType(ty,env,error,region)

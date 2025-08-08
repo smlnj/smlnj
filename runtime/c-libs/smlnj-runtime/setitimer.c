@@ -42,7 +42,7 @@ ml_val_t _ml_RunT_setitimer (ml_state_t *msp, ml_val_t arg)
     else {
       /* turn the timer on */
 	Unsigned64_t t = WORD64_MLtoC(OPTION_get(arg));
-      /* converto to microseconds */
+      /* convert to microseconds */
 	t /= 1000;
 	new_itv.it_interval.tv_sec	=
 	new_itv.it_value.tv_sec		= t / 1000000;
@@ -59,7 +59,7 @@ ml_val_t _ml_RunT_setitimer (ml_state_t *msp, ml_val_t arg)
 	if (win32StopTimer()) {
 	    return ML_unit;
 	} else {
-	    return RAISE_ERROR(msp,"win32 setitimer: couldn't stop timer");
+	    return RAISE_ERROR(msp, "win32 setitimer: couldn't stop timer");
 	}
     }
     else {

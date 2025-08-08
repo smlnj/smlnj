@@ -164,6 +164,9 @@ structure Primop : PRIMOP =
       | REAL_TO_BITS of int		(* E: cast real of the given size to a word of
 					 * the same size
 					 *)
+      | BITS_TO_REAL of int		(* E: cast word of the given size to a real of
+					 * the same size
+					 *)
 
     and ccall_type =
 	CCI32 |				(* passed as int32 *)

@@ -23,10 +23,10 @@ structure NormalizeCluster : sig
 
     type cluster = CPS.function list
 
-  (* `transform cluster` normalizes `cluster`, if necessary, and returns a list of
-   * normalized clusters.
+  (* `transform clusters` normalizes the clusters in the list, returning the
+   * list of normalized clusters.
    *)
-    val transform : cluster * cluster list -> cluster list
+    val transform : cluster list -> cluster list
 
   end = struct
 
@@ -168,8 +168,11 @@ fun prCluster (fn1::fns) = (
        * and applies the function `f` to each reachable node as it is visited.
        *)
 	val dfsApp : t -> (int -> unit) -> int -> unit
-(*+DEBUG*
+      (* return the lvar name for the function ID; used for error reporting
+       * and debugging.
+       *)
 	val idToString : t -> int -> string
+(*+DEBUG*
 	val dump : t -> unit
 *-DEBUG*)
       end = struct
@@ -304,12 +307,13 @@ fun prCluster (fn1::fns) = (
 		dfs rootId
 	      end
 
-(*+DEBUG*
 	fun idToString ({nEntries, idToFunc, ...} : t) id = let
 	      val (_, f, _, _, _) = Array.sub(idToFunc, id)
 	      in
 		if (id < nEntries) then "*" ^ LV.lvarName f else LV.lvarName f
 	      end
+
+(*+DEBUG*
 	fun dump info = let
 	      val id2s = idToString info
 	      fun sayNd (id, {preds, succs}) = say(String.concat[
@@ -444,7 +448,11 @@ fun prCluster (fn1::fns) = (
 		newEntries := ISet.add(!newEntries, id);
 		List.app (fn id' => Info.removeEdge (info, id', id)) (predsOf id))
 	(* split the cluster; calls itself recursively until everything is normalized *)
-	  fun split (entryIds, fragIds) = let
+	  fun split ([], fragIds) = error (concat[
+                  "cluster without entries; frags = {",
+                  String.concatWithMap "," (Info.idToString info) fragIds, "}"
+                ])
+            | split (entryIds, fragIds) = let
 (*+DEBUG*
 val _ = say(concat[
 "### split: entries = {", String.concatWithMap "," (Info.idToString info) entryIds,
@@ -479,7 +487,7 @@ val _ = say(concat[
 			    val visited = ref entrySig
 			    fun walk predId (id, frags) =
 				  if BVSet.member(!visited, BVSet.fromInt id)
-				    then frags (* alread visited *)
+				    then frags (* already visited *)
 				    else let
 				      val idSig = Array.sub(idToSig, id)
 				      in
@@ -573,11 +581,13 @@ end
 	  (* end case *))
     val partition = List.partition isEscaping
 
-    fun transform ([frag], clusters) = [frag] :: clusters
-      | transform (cluster, clusters) = (case partition cluster
+    fun transformOne ([frag], clusters) = [frag] :: clusters
+      | transformOne (cluster, clusters) = (case partition cluster
 	   of ([], _) => error "NormalizeCluster.transform: no entry fragment"
 	    | ([entry], frags) => (entry::frags) :: clusters
 	    | (ents, frags) => normalize (ents, frags) @ clusters
 	  (* end case *))
+
+    fun transform clusters = List.foldr transformOne [] clusters
 
   end (* NormalizeCluster *)

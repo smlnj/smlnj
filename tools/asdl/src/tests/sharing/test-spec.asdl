@@ -1,0 +1,14 @@
+-- test-spec.asdl
+--
+-- This specification tests the sharing structure
+--
+
+module TestSpec {
+
+-- a DAG
+  node = LF (int id)
+       | ND (int id, node_ref* kids)
+
+  node_ref = node!
+
+}

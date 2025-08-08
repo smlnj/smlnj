@@ -1,6 +1,7 @@
 (* int-binary-set.sml
  *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.  See COPYRIGHT file for details.
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  *
  * This code was adapted from Stephen Adams' binary tree implementation
  * of applicative integer sets.
@@ -155,12 +156,10 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
           else mkT(v,ln+rn+1,l,r)
 
     fun add (E,x) = mkT(x,1,E,E)
-      | add (set as T{elt=v,left=l,right=r,cnt},x) = (
-          case Key.compare(x,v)
-	   of LESS => T'(v,add(l,x),r)
-	    | GREATER => T'(v,l,add(r,x))
-	    | EQUAL => mkT(x,cnt,l,r)
-	  (* end case *))
+      | add (set as T{elt=v,left=l,right=r,cnt},x) =
+          if (x < v) then T'(v,add(l,x),r)
+          else if (x > v) then T'(v,l,add(r,x))
+          else mkT(x,cnt,l,r)
     fun add' (s, x) = add(x, s)
 
     fun concat3 (E,v,r) = add(r,v)
@@ -173,17 +172,15 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
 
     fun split_lt (E,x) = E
       | split_lt (T{elt=v,left=l,right=r,...},x) =
-          case Key.compare(v,x) of
-            GREATER => split_lt(l,x)
-          | LESS => concat3(l,v,split_lt(r,x))
-          | _ => l
+          if (x < v) then split_lt(l,x)
+          else if (x > v) then concat3(l,v,split_lt(r,x))
+          else l
 
     fun split_gt (E,x) = E
       | split_gt (T{elt=v,left=l,right=r,...},x) =
-          case Key.compare(v,x) of
-            LESS => split_gt(r,x)
-          | GREATER => concat3(split_gt(l,x),v,r)
-          | _ => r
+          if (x > v) then split_gt(r,x)
+          else if (x < v) then concat3(split_gt(l,x),v,r)
+          else r
 
     fun min (T{elt=v,left=E,...}) = v
       | min (T{left=l,...}) = min l
@@ -230,15 +227,11 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
 
       fun trim_lo (_, E) = E
         | trim_lo (lo,s as T{elt=v,right=r,...}) =
-            case Key.compare(v,lo) of
-              GREATER => s
-            | _ => trim_lo(lo,r)
+            if (v > lo) then s else trim_lo(lo,r)
 
       fun trim_hi (_, E) = E
         | trim_hi (hi,s as T{elt=v,left=l,...}) =
-            case Key.compare(v,hi) of
-              LESS => s
-            | _ => trim_hi(hi,l)
+            if (v < hi) then s else trim_hi(hi,l)
 
       fun uni_hi (s,E,_) = s
         | uni_hi (E,T{elt=v,left=l,right=r,...},hi) =
@@ -287,12 +280,10 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
 
     fun member (set, x) = let
 	  fun pk E = false
-	    | pk (T{elt=v, left=l, right=r, ...}) = (
-		case Key.compare(x,v)
-		 of LESS => pk l
-		  | EQUAL => true
-		  | GREATER => pk r
-		(* end case *))
+	    | pk (T{elt=v, left=l, right=r, ...}) =
+                if (x < v) then pk l
+                else if (x > v) then pk r
+                else true
 	  in
 	    pk set
 	  end
@@ -359,10 +350,9 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
 
     fun delete (E,x) = raise LibBase.NotFound
       | delete (set as T{elt=v,left=l,right=r,...},x) =
-          case Key.compare(x,v) of
-            LESS => T'(v,delete(l,x),r)
-          | GREATER => T'(v,l,delete(r,x))
-          | _ => delete'(l,r)
+          if (x < v) then T'(v,delete(l,x),r)
+          else if (x > v) then T'(v,l,delete(r,x))
+          else delete'(l,r)
 
     val union = hedge_union
 
@@ -385,6 +375,38 @@ structure IntBinarySet :> ORD_SET where type Key.ord_key = Int.int =
           in
             concat(difference(l2,l),difference(r2,r))
           end
+
+    local
+      (* functions for walking the tree while keeping a stack of parents
+       * to be visited.
+       *)
+      fun next ((t as T{right, ...})::rest) = (t, goLeft(right, rest))
+        | next _ = (E, [])
+      and goLeft (E, rest) = rest
+        | goLeft (t as T{left, ...}, rest) = goLeft(left, t::rest)
+      fun start m = goLeft (m, [])
+    in
+    fun combineWith pred (s1, s2) = let
+          (* we do a merge on the iteration of the two sets *)
+          fun comb (t1, t2, result) = (case (next t1, next t2)
+                 of ((E, _), (E, _)) => result
+                  | ((E, _), (T{elt, ...}, r2)) =>
+                      condAdd (elt, false, true, t1, r2, result)
+                  | ((T{elt, ...}, r1), (E, _)) =>
+                      condAdd (elt, true, false, r1, t2, result)
+                  | ((T{elt=x1, ...}, r1), (T{elt=x2, ...}, r2)) =>
+                      if (x1 < x2) then condAdd (x1, true, false, r1, t2, result)
+                      else if (x1 > x2) then condAdd (x2, false, true, t1, r2, result)
+                      else condAdd (x1, true, true, r1, r2, result)
+                (* end case *))
+          and condAdd (x, p1, p2, r1, r2, result) =
+                if pred (x, p1, p2)
+                  then comb (r1, r2, add (result, x))
+                  else comb (r1, r2, result)
+          in
+            comb (start s1, start s2, E)
+          end
+    end (* local *)
 
     fun subtract (s, item) = difference (s, singleton item)
     fun subtract' (item, s) = subtract (s, item)

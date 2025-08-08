@@ -1,11 +1,11 @@
 (* cfg.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * CFG IR for SML/NJ code generation.
  *
- * Note: this file must match the generated file cfg-pickle/cfg.sml.
+ * Note: this file must match the generated file asdl/cfg.sml.
  *)
 
 structure CFG_Prim =
@@ -46,14 +46,17 @@ structure CFG_Prim =
    * done before the operation).
    *)
     datatype pureop
-      = ADD | SUB
-      | SMUL | SDIV | SREM
-      | UMUL | UDIV | UREM
-      | LSHIFT | RSHIFT | RSHIFTL
+      = ADD | SUB | MUL
+      | SDIV | SREM
+      | UDIV | UREM
+      | SHL | ASHR | LSHR
       | ORB | XORB | ANDB
-      | FADD | FSUB | FMUL | FDIV
-      | FNEG | FABS | FSQRT
-      | FCOPYSIGN
+      | CNTPOP | CNTLZ | CNTTZ
+      | ROTL | ROTR
+      | FADD | FSUB | FMUL | FDIV | FREM
+      | FMADD
+      | FNEG | FABS | FCOPYSIGN
+      | FSQRT
 
     datatype pure
       = PURE_ARITH of {oper : pureop, sz : int}
@@ -71,14 +74,16 @@ structure CFG_Prim =
       | SUBSCRIPT
       | RAW_SUBSCRIPT of {kind : numkind, sz : int}
       | RAW_LOAD of {kind : numkind, sz : int}
-      | GET_HDLR | GET_VAR
+      | GET_HDLR
+      | GET_VAR
 
     datatype setter
       = UNBOXED_UPDATE | UPDATE				(* array update *)
       | UNBOXED_ASSIGN | ASSIGN				(* reference assignment *)
       | RAW_UPDATE of {kind : numkind, sz : int}	(* raw array update *)
       | RAW_STORE of {kind : numkind, sz : int}		(* raw store to base+offset *)
-      | SET_HDLR | SET_VAR
+      | SET_HDLR
+      | SET_VAR
 
   (* fcmpop conforms to the IEEE std 754 predicates. *)
     datatype fcmpop = datatype CPS.P.fcmpop
@@ -123,7 +128,6 @@ structure CFG =
       | LOOKER of {oper : CFG_Prim.looker, args : exp list}
       | PURE of {oper : CFG_Prim.pure, args : exp list}
       | SELECT of {idx : int, arg : exp}
-      | OFFSET of {idx : int, arg : exp}
 
     datatype stm
       = LET of exp * param * stm

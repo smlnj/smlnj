@@ -1,0 +1,4 @@
+#
+# It is ok to use $VERSION as part of the URL specification...
+#
+SRCARCHIVEURL=https://smlnj.cs.uchicago.edu/dist/working/${VERSION}/

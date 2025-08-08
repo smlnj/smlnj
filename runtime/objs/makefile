@@ -15,22 +15,24 @@ RANLIB =	ranlib
 #
 # LLVM configuration
 #
-LLVM_DIR =      ../llvm
+LLVM_DIR =	../llvm
 BIN_DIR =	../bin
 LLVM_CONFIG =	$(BIN_DIR)/llvm-config
 
 # the LLVM target architectures
 #
-TARGETS_BUILT =	$(shell $(LLVM_CONFIG) --targets-built)
+TARGETS_BUILT = $(shell $(LLVM_CONFIG) --targets-built)
 ifeq ($(findstring AArch64,$(TARGETS_BUILT)),AArch64)
 endif
 ifeq ($(findstring X86,$(TARGETS_BUILT)),X86)
 endif
 
-LLVM_LD_FLAGS =	$(shell $(LLVM_CONFIG) --ldflags)
-LLVM_LIBS =	-lCFGCodeGen \
-		$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT)) \
-		$(shell $(LLVM_CONFIG) --system-libs)
+LLVM_LD_FLAGS =		$(shell $(LLVM_CONFIG) --ldflags)
+LLVM_DEPS =		../lib/libCFGCodeGen.a \
+			$(shell $(LLVM_CONFIG) --libfiles $(TARGETS_BUILT) passes runtimedyld)
+LLVM_SYSTEM_LIBS =	$(shell $(LLVM_CONFIG) --system-libs)
+LLVM_LIBS =		-lCFGCodeGen \
+			$(shell $(LLVM_CONFIG) --libs $(TARGETS_BUILT) passes runtimedyld)
 
 #
 # dummy version
@@ -123,13 +125,17 @@ clean:
 	(cd $(CLIB_DIR); $(MAKE) MAKE="$(MAKE)" clean)
 	(cd $(GC_DIR); $(MAKE) MAKE="$(MAKE)" clean)
 
+# the name of the main program; this is overridden to "standalone" for building the
+# runtime library
+MAIN =		main
+MAIN_OBJ =	$(MAIN).o
 
-$(RUNTIME):	$(VERSION) main.o $(OBJS) $(ALL_LIBS)
-	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
+$(RUNTIME):	$(VERSION) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_DEPS)
+	$(CXX) -o $(RUNTIME) $(CXX_FLAGS) $(LDFLAGS) $(LLVM_LD_FLAGS) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_LIBS) $(LLVM_SYSTEM_LIBS)
 
-$(RUNTIME_A):	$(VERSION) main.o $(OBJS) $(ALL_LIBS) $(LLVM_LIBS)
+$(RUNTIME_A):	$(VERSION) $(MAIN_OBJ) $(OBJS) $(ALL_LIBS) $(LLVM_DEPS)
 	rm -f $(RUNTIME_A)
-	$(AR) rc $(RUNTIME_A) main.o $(OBJS)
+	$(AR) rc $(RUNTIME_A) $(MAIN_OBJ) $(OBJS)
 	rm -rf tmp
 	mkdir tmp
 	for lib in $(ALL_LIBS) ; \
@@ -169,7 +175,8 @@ error.o:	$(KERN_DIR)/error.c $(INC_DIR)/ml-base.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/error.c
 
 standalone.o:	$(KERN_DIR)/standalone.c \
-		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/ml-limits.h
+		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/ml-options.h \
+		$(INC_DIR)/ml-limits.h $(INC_DIR)/ml-objects.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/standalone.c
 
 boot.o:		$(KERN_DIR)/boot.c \
@@ -183,7 +190,6 @@ load-ml.o:	$(KERN_DIR)/load-ml.c \
 		ml-sizes.h system-signals.h \
 		$(INC_DIR)/ml-base.h $(INC_DIR)/ml-limits.h $(INC_DIR)/ml-state.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/load-ml.c
-#	$(CC) -c $(CFLAGS) $(DEFS) $(GC_INCLUDES) $(KERN_DIR)/load-ml.c
 
 run-ml.o:	$(KERN_DIR)/run-ml.c \
 		ml-sizes.h system-signals.h \
@@ -218,7 +224,7 @@ unix-timers.o:	$(KERN_DIR)/unix-timers.c \
 		$(INC_DIR)/vproc-state.h $(INC_DIR)/ml-timer.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/unix-timers.c
 
-qualify-name.o:	$(KERN_DIR)/qualify-name.c \
+qualify-name.o: $(KERN_DIR)/qualify-name.c \
 		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/machine-id.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/qualify-name.c
 
@@ -318,7 +324,7 @@ $(MEM_DIR)/libmem.a:	FORCE
 #
 # C functions library
 #
-$(CLIB_DIR)/libcfuns.a:	FORCE
+$(CLIB_DIR)/libcfuns.a: FORCE
 	(cd $(CLIB_DIR); $(MAKE) $(MK_ARGS) libcfuns.a)
 
 
@@ -364,7 +370,7 @@ gen-unix-sigtbl:	$(CONFIG_DIR)/gen-unix-sigtbl.c \
 gen-common.o:	$(CONFIG_DIR)/gen-common.c $(CONFIG_DIR)/gen.h
 	$(CC) -c $(CFLAGS) $(GEN_INCLUDES) $(CONFIG_DIR)/gen-common.c
 
-unix-signals.o:	$(CONFIG_DIR)/unix-signals.c $(CONFIG_DIR)/gen.h
+unix-signals.o: $(CONFIG_DIR)/unix-signals.c $(CONFIG_DIR)/gen.h
 	$(CC) -c $(CFLAGS) $(GEN_INCLUDES) $(DEFS) $(CONFIG_DIR)/unix-signals.c
 
 

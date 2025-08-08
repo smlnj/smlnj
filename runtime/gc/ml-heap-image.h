@@ -35,7 +35,7 @@
 #define ORDER		0x00112233
 
 /* heap image version identifier (date in mmddyyyy form) */
-#define IMAGE_MAGIC	0x09082004
+#define IMAGE_MAGIC	0x02102025
 
 /* blasted heap image version identifier (date in 00mmddyy form) */
 #define BLAST_MAGIC	0x00070995
@@ -56,18 +56,17 @@ typedef struct {	    /* The magic number, and other version info */
 
 
 typedef struct {	    /* The header for a heap image */
-    int		numVProcs;	/* The number of virtual processors */
-    int		numGens;	/* The number of heap generations */
-    int		numArenas;	/* The number of small-object arenas (one per kind) */
-    int		numBOKinds;	/* The number of big-object kinds */
-    int		numBORegions;	/* The number of big-object regions in the */
+    Unsigned32_t numVProcs;	/* The number of virtual processors */
+    Unsigned32_t numGens;	/* The number of heap generations */
+    Unsigned32_t numArenas;	/* The number of small-object arenas (one per kind) */
+    Unsigned32_t numBOKinds;	/* The number of big-object kinds */
+    Unsigned32_t numBORegions;	/* The number of big-object regions in the */
 				/* exporting address space. */
-    int		cacheGen;	/* The oldest cached generation */
+    Unsigned32_t cacheGen;	/* The oldest cached generation */
     Addr_t	allocSzB;	/* The size of the allocation arena */
 			    /* heap objects that are referred to by the runtime */
     ml_val_t	pervStruct;	/* the contents of PervStruct */
     ml_val_t	runTimeCompUnit; /* The run-time system compilation unit root */
-    ml_val_t	mathVec;	/* The Math structure root (if defined) */
 } ml_heap_hdr_t;
 
 typedef struct {	    /* The header for a blasted object image */
@@ -80,8 +79,8 @@ typedef struct {	    /* The header for a blasted object image */
 } ml_blast_hdr_t;
 
 typedef struct {	    /* The header for the extern table */
-    int		numExterns;	/* The number of external symbols */
-    int		externSzB;	/* The size (in bytes) of the string table area. */
+    Unsigned32_t numExterns;	/* The number of external symbols */
+    Unsigned32_t externSzB;	/* The size (in bytes) of the string table area. */
 } extern_tbl_hdr_t;
 
 
@@ -107,8 +106,8 @@ typedef struct {	    /* The image of an ML virtual processor.  The live */
 
 typedef struct {	    /* An arena header.  This is used for both the regular */
 			    /* arenas and the big-object arena of a generation. */
-    int		gen;		/* the generation of this arena */
-    int		objKind;	/* the kind of objects in this arena */
+    Unsigned32_t gen;		/* the generation of this arena */
+    Unsigned32_t objKind;	/* the kind of objects in this arena */
     Addr_t	offset;		/* the file position at which this arena starts. */
     union {			/* additional info */
 	struct {		    /* info for regular arenas */
@@ -119,9 +118,9 @@ typedef struct {	    /* An arena header.  This is used for both the regular */
 					/* image file */
 	}	    o;
 	struct {		    /* info for the big-object arena */
-	    int		numBigObjs;	/* the number of big-objects in this */
+	    Unsigned32_t numBigObjs;	/* the number of big-objects in this */
 					/* generation. */
-	    int		numBOPages;	/* the number of big-object pages required. */
+	    Unsigned32_t numBOPages;	/* the number of big-object pages required. */
 	}	    bo;
     }		info;
 } heap_arena_hdr_t;
@@ -132,15 +131,16 @@ typedef struct {	    /* a descriptor of a big-object region in the */
 				/* the exporting address space.  Note that this */
 				/* is the address of the header, not of the */
 				/* first page. */
-    Addr_t	firstPage;	/* the address of the first page of the region in */
-				/* the exporting address space. */
     Addr_t	sizeB;		/* the total size of this big-object region */
 				/* (including the header). */
 } bo_region_info_t;
 
+/* given the base address of a big-object region, get the address of its first page */
+#define BO_REGION_FIRST_PAGE(addr)      ((addr) + BIGOBJ_PAGE_SZB)
+
 typedef struct {	    /* a header for a big-object */
-    int		gen;		/* the generation of this big-object */
-    int		objKind;	/* the class of this big-object */
+    Unsigned32_t gen;		/* the generation of this big-object */
+    Unsigned32_t objKind;	/* the class of this big-object */
     Addr_t	baseAddr;	/* the base address of this big-object in the */
 				/* exporting address space */
     Addr_t	sizeB;		/* the size of this big-object */

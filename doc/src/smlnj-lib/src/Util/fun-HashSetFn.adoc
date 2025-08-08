@@ -5,8 +5,8 @@
 :source-highlighter: pygments
 :VERSION: {smlnj-version}
 
-The `HashSetFn` functor provides a hash-table-based implementation
-of imperative sets parameterized over a `Key` structure.
+The `HashSetFn` functor provides an imperative, hash-table-based
+implementation of sets parameterized over a `Key` structure.
 
 == Synopsis
 
@@ -48,14 +48,20 @@ val mkFromList : item list -> set
 val toList : set -> item list
 
 val add  : set * item -> unit
+val add' : item * set -> unit
 val addc : set -> item -> unit
 
 val addList : set * item list -> unit
 
+val addSet : set * set -> unit
+
 val subtract  : set * item -> unit
+val subtract' : item * set -> unit
 val subtractc : set -> item -> unit
 
 val subtractList : set * item list -> unit
+
+val subtractSet : set * set -> unit
 
 val delete : set * item -> bool
 
@@ -65,7 +71,13 @@ val isEmpty : set -> bool
 
 val isSubset : (set * set) -> bool
 
+val disjoint : set * set -> bool
+
 val numItems : set ->  int
+
+val union : set * set -> set
+val intersection : set * set -> set
+val difference : set * set -> set
 
 val map : (item -> item) -> set -> set
 val mapPartial : (item -> item option) -> set -> set
@@ -114,29 +126,42 @@ val without : set * item -> unit
 `[.kw]#val# add  : set * item \-> unit`::
   `add (set, item)` destructively adds the item to the set.
 
+`[.kw]#val# add' : item * set  \-> unit`::
+  `add (item, set)` destructively adds the item to the set.
+
 `[.kw]#val# addc : set \-> item \-> unit`::
    `addc set item` destructively adds the item to the set.
 
 `[.kw]#val# addList : set * item list \-> unit`::
   `addList (set, items)` destructively adds the list of items to the set.
 
+`[.kw]#val# addSet : set * set \-> unit`::
+  `addSet (set1, set2)` destructively adds the items of `set2` to `set1`.
+
 [[val:subtract]]
 `[.kw]#val# subtract : set * item \-> unit`::
   `subtract (set, item)` removes the object `item` from `set`; it has no
+  effect if `item` is not in `set`.
+
+`[.kw]#val# subtract' : item * set \-> unit`::
+  `subtract (item, set)` removes the object `item` from `set`; it has no
   effect if `item` is not in `set`.
 
 `[.kw]#val# subtractc : set \-> item \-> unit`::
   `subtractc set item` removes the object `item` from `set`; it has no
   effect if `item` is not in `set`.
 
-`[.kw]#val# subtractList : set \-> item list \-> unit`::
-  `subtractList set items` removes the `items` from `set`.  This expression
+`[.kw]#val# subtractList : set * item list \-> unit`::
+  `subtractList (set, items)` removes the `items` from `set`.  This expression
   is equivalent to
 +
 [source,sml]
 ------------
 List.app (subtractc set) items
 ------------
+
+`[.kw]#val# subtractSet : set * set \-> unit`::
+  `subtractSet (set1, set2)` removes the `items` that are in `set2` from `set1`.
 
 `[.kw]#val# delete : set * item \-> bool`::
   `subtract (set, item)` removes the object `item` from `set` (if present)
@@ -150,6 +175,10 @@ List.app (subtractc set) items
 `[.kw]#val# isEmpty : set \-> bool`::
   `isEmpty set` returns true if, and only if, `set` is empty.
 
+`[.kw]#val# disjoint : (set * set) \-> bool`::
+  `isSubset (set1, set2)` returns true if, and only if, the two
+  sets are disjoint.
+
 `[.kw]#val# isSubset : (set * set) \-> bool`::
   `isSubset (set1, set2)` returns true if, and only if, `set1`
   is a subset of `set2` (_i.e._, any element of `set1` is an
@@ -157,6 +186,18 @@ List.app (subtractc set) items
 
 `[.kw]#val# numItems : set \->  int`::
   `numItems set` returns the number of items in the `set`.
+
+`[.kw]#val# union : set * set \-> set`::
+  `union (set1, set2)` returns a new set that is the union of the two sets.
+
+`[.kw]#val# intersection : set * set \-> set`::
+  `intersection (set1, set2)` returns a new set that is  the intersection
+  of the two sets.
+
+`[.kw]#val# difference : set * set \-> set`::
+  `difference (set1, set2)` returns a new set that is  the difference
+  of the two sets; _i.e._, the set of items that are in `set1`, but not in
+  `set2`.
 
 `[.kw]#val# map : (item \-> item) \-> set \-> set`::
   `map f set` creates a new set from the result of applying the

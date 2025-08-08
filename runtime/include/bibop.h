@@ -96,6 +96,15 @@ extern l2_bibop_t	UnmappedL2;
 #define BIBOP_UPDATE(bibop, ix, aid)	\
 	do { bibop[BIBOP_INDEX_TO_L1_INDEX(ix)]->tbl[BIBOP_INDEX_TO_L2_INDEX(ix)] = (aid); } while (0)
 
+#ifdef ASSERT_ON
+STATIC_INLINE bool_t isHeapAddr (Addr_t adr)
+{
+    page_id_t id = ADDR_TO_PAGEID(BIBOP, adr);
+    return (id != PAGEID_unmapped);
+}
+#define VALID_HEAP_ADDR(p)      isHeapAddr((Addr_t)(p))
+#endif
+
 #else /* SIZE_32 */
 
 #define BIBOP_PAGE_BITS		16		/* log2(BIBOP_PAGE_SZB) */

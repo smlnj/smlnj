@@ -1,15 +1,15 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl This code is part of the SML/NJ system (http://smlnj.org)
+dnl This code is part of the SML/NJ system (https://smlnj.org)
 dnl
-dnl COPYRIGHT (c) 2021 The Fellowship of SML/NJ
+dnl COPYRIGHT (c) 2025 The Fellowship of SML/NJ
 dnl All rights reserved.
 dnl
 
-AC_INIT(asdl,3.0,)
+AC_INIT([asdl],[3.0],[])
 
-AC_PREREQ(2.60)
-AC_COPYRIGHT([[COPYRIGHT (c) 2021 The Fellowship of SML/NJ]])
+AC_PREREQ([2.71])
+AC_COPYRIGHT([[COPYRIGHT (c) 2025 The Fellowship of SML/NJ]])
 AC_CONFIG_SRCDIR(src/lib/asdl/std-types.asdl)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
@@ -49,7 +49,7 @@ dnl
 AC_PROG_CPP
 AC_PROG_CC([clang gcc cc])
 AC_PROG_CXX([clang++ g++ c++])
-AX_CXX_COMPILE_STDCXX(14,[],[mandatory])
+AX_CXX_COMPILE_STDCXX(17,[],[mandatory])
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
@@ -64,10 +64,11 @@ AC_ARG_ENABLE([c++],
 
 dnl enable Swift generator?
 dnl
-AC_ARG_ENABLE([swift],
-  AS_HELP_STRING([--enable-swift], [enable support for Swift]),
-  [ENABLE_SWIFT=yes],
-  [ENABLE_SWIFT=no])
+# TODO
+#AC_ARG_ENABLE([swift],
+#  AS_HELP_STRING([--enable-swift], [enable support for Swift]),
+#  [ENABLE_SWIFT=yes],
+#  [ENABLE_SWIFT=no])
 
 dnl check for a specified target size
 dnl
@@ -287,18 +288,19 @@ dnl ***** Makefiles *****
   src/asdlgen/Makefile$SRC_MAKEFILE_IN
   $FRAGMENTS_MAKEFILE
   src/lib/Makefile
-  src/lib/cxx/Makefile
+  src/lib/cpp/Makefile
   src/tests/Makefile
   src/tests/basics/Makefile
   src/tests/options/Makefile
   src/tests/primitives/Makefile
   src/tests/sequences/Makefile
+  src/tests/sharing/Makefile
 dnl
 dnl
   src/asdlgen/common/config.sml:src/asdlgen/common/config_sml.in
 )
 
-AC_CONFIG_HEADERS(src/lib/cxx/include/asdl/config.h:config/config_h.in)
+AC_CONFIG_HEADERS(src/lib/cpp/include/asdl/config.h:config/config_h.in)
 
 dnl
 dnl shell scripts

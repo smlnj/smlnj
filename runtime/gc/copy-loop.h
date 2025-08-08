@@ -1,55 +1,24 @@
-/* copy-loop.h
+/*! \file copy-loop.h
  *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.
- *
- * A dirty, but quick, copy loop for the GC.
+ * \author John Reppy
+ */
+
+/*
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * All rights reserved.
  */
 
 #ifndef _COPY_LOOP_
 #define _COPY_LOOP_
 
-#ifdef HAS_INCREMENT
-
-#define COPYLOOP(SRC,DST,LEN)	{			\
-	Word_t	*__src = (Word_t *)(SRC);		\
-	Word_t	*__dst = (Word_t *)(DST);		\
-	int	__len = (LEN);				\
-	int	__m;					\
-	switch (__len & 0x3) {				\
-	  case 3: *__dst++ = *__src++;			\
-	  case 2: *__dst++ = *__src++;			\
-	  case 1: *__dst++ = *__src++;			\
-	  case 0: break;				\
-	}						\
-	__m = __len >> 2;				\
-	while (--__m >= 0) {				\
-	    *__dst++ = *__src++; *__dst++ = *__src++;	\
-	    *__dst++ = *__src++; *__dst++ = *__src++;	\
-	}						\
+/* a simple loop, since the optimizer will unroll it */
+STATIC_INLINE void Copy (ml_val_t *src, ml_val_t *dst, int len)
+{
+    for (int i = 0;  i < len;  ++i) {
+	dst[i] = src[i];
     }
+}
 
-#else
-
-#define COPYLOOP(SRC,DST,LEN)	{			\
-	Word_t	*__src = (Word_t *)(SRC);		\
-	Word_t	*__dst = (Word_t *)(DST);		\
-	int	__len = (LEN);				\
-	int	__m;					\
-	switch (__len & 0x3) {				\
-	  case 3: *__dst++ = *__src++;			\
-	  case 2: *__dst++ = *__src++;			\
-	  case 1: *__dst++ = *__src++;			\
-	  case 0: break;				\
-	}						\
-	__m = __len >> 2;				\
-	while (--__m >= 0) {				\
-	    __dst[0] = __src[0]; __dst[1] = __src[1];	\
-	    __dst[2] = __src[2]; __dst[3] = __src[3];	\
-	    __dst += 4; __src += 4;			\
-	}						\
-    }
-
-#endif
+#define COPYLOOP(SRC,DST,LEN)	Copy(SRC,DST,LEN)
 
 #endif /* !_COPY_LOOP_ */
-

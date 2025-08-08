@@ -22,29 +22,36 @@ complain() {
 usage() {
   echo "usage: build.sh [ options ]"
   echo "options:"
-  echo "    -h,-help      print this message and exit"
-  echo "    -nolib        skip building libraries/tools"
-  echo "    -verbose      emit feedback messages"
-  echo "    -doc          generate documentation"
-  echo "    -debug        debug installation (enables verbose mode)"
-  echo "    -dev          developer install (includes cross compiler support)"
+  echo "    -h,-help           print this message and exit"
+  echo "    -nolib             skip building libraries/tools"
+  echo "    -runtime           build the runtime system only"
+  echo "    -doc               generate documentation"
+  echo "    -verbose           emit feedback messages"
+  echo "    -clean             remove existing executables and libraries before building"
+  echo "    -dev               developer install (includes cross compiler support)"
+  echo "    -debug             enable installation debug messages (implies -verbose)"
   echo "developer options:"
-  echo "    -debug-llvm   build a debug version of the LLVM libraries"
-  echo "    -llvmdir dir  specify the path to the LLVM directory"
+  echo "    -debug-llvm        build a debug version of the LLVM libraries"
+  echo "    -sanitize-address  sanitize addresses to check for memory bugs"
+  echo "    -llvmdir dir       specify the path to the LLVM directory"
+  echo "    -build-cfgc        build the cfgc compiler"
   exit 1
 }
 
 # specifying the LLVM subdirectory (which is a submodule)
 #
-LLVM_DIRNAME=llvm10
+LLVM_DIRNAME=llvm18
 LLVMDIR_OPTION=
 
 # process options
 NOLIB=no
 QUIET=yes
+CLEAN_INSTALL=no
 INSTALL_DEBUG=no
 INSTALL_DEV=no
+ONLY_RUNTIME=no
 MAKE_DOC=no
+SANITIZE_ADDRESS=no
 BUILD_LLVM_FLAGS=""
 while [ "$#" != "0" ] ; do
   arg=$1; shift
@@ -52,19 +59,26 @@ while [ "$#" != "0" ] ; do
     -help|-h) usage ;;
     -nolib) NOLIB=yes ;;
     -verbose) QUIET=no ;;
+    -clean) CLEAN_INSTALL=yes ;;
     -debug) INSTALL_DEBUG=yes ; QUIET=no ;;
     -dev)
       INSTALL_DEV=yes;
       BUILD_LLVM_FLAGS="-all-targets $BUILD_LLVM_FLAGS"
     ;;
+    -runtime) ONLY_RUNTIME=yes ;;
     -doc) MAKE_DOC=yes ;;
     -debug-llvm) BUILD_LLVM_FLAGS="-debug $BUILD_LLVM_FLAGS" ;;
+    -sanitize-address)
+      SANITIZE_ADDRESS=yes
+      BUILD_LLVM_FLAGS="-sanitize-address $BUILD_LLVM_FLAGS"
+      ;;
     -llvmdir)
       if [[ $# -gt 0 ]] ; then
         LLVMDIR_OPTION=$1; shift
       else
         usage
       fi ;;
+    -build-cfgc) BUILD_LLVM_FLAGS="-build-cfgc $BUILD_LLVM_FLAGS" ;;
     *) usage ;;
   esac
 done
@@ -92,6 +106,12 @@ else
   CM_VERBOSE=true
 fi
 
+# pre-flight cleanup
+#
+if [ x${CLEAN_INSTALL} = xyes ] ; then
+  vsay "$cmd: remove existing executables and libraries"
+  rm -rf bin lib runtime/bin runtime/lib runtime/$LLVM_DIRNAME/build
+fi
 #
 # create the preloads.standard file
 #
@@ -106,15 +126,14 @@ dsay "$cmd: Using shell $SHELL."
 #
 # set the SML root directory
 #
-
-cd $(dirname $cmd)
+cd $(dirname $cmd) || exit 1
 SMLNJ_ROOT=$(pwd)
 vsay "$cmd: SML root is $SMLNJ_ROOT."
 
-cd $here
-cd "${INSTALLDIR:=$SMLNJ_ROOT}"
+cd $here || exit 1
+cd "${INSTALLDIR:=$SMLNJ_ROOT}" || exit 1
 INSTALLDIR=`pwd`
-cd "$SMLNJ_ROOT"
+cd "$SMLNJ_ROOT" || exit 1
 vsay "$cmd: Installation directory is ${INSTALLDIR}."
 
 #
@@ -122,10 +141,10 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 #
 CONFIGDIR="$SMLNJ_ROOT/config"
 RUNTIMEDIR="$SMLNJ_ROOT/runtime"
-if [[ x"$LLVMDIR_OPTION" != x ]] ; then
+if [ x"$LLVMDIR_OPTION" != x ] ; then
   LLVMDIR="$LLVMDIR_OPTION"
   # check the validity of the path specified by the user
-  if [[ ! -x "$LLVMDIR/build-llvm.sh" ]] ; then
+  if [ ! -x "$LLVMDIR/build-llvm.sh" ] ; then
     complain "invalid LLVM directory: build-llvm.sh script is missing"
   fi
 else
@@ -177,6 +196,10 @@ vsay "$cmd: Installing version $VERSION."
 SRCARCHIVEURL=https://smlnj.cs.uchicago.edu/dist/working/${VERSION}/
 vsay "$cmd: URL of source archive is $SRCARCHIVEURL."
 
+#
+# if necessary, fetch the boot files
+#
+
 ######################################################################
 ## UTILITY SCRIPTS
 ######################################################################
@@ -193,6 +216,7 @@ installdriver() {
   rm -f "$BINDIR"/"$ddst"
   cat "$CONFIGDIR"/"$dsrc" | \
   sed -e "s,@SHELL@,$SHELL,g" \
+      -e "s,@INSTALLDIR@,$INSTALLDIR," \
       -e "s,@BINDIR@,$BINDIR," \
       -e "s,@LIBDIR@,$LIBDIR," \
       -e "s,@VERSION@,$VERSION," \
@@ -211,11 +235,11 @@ installdriver() {
 # a single subdirectory which is a CM metadata directory:
 #
 fish() {
-  cd "$1"
+  cd "$1" || exit 1
   ORIG_CM_DIR_ARC=unknown
   for i in * .[a-zA-Z0-9]* ; do
-    if [ -d $i ] ; then
-      ORIG_CM_DIR_ARC=$i
+    if [ -d "$i" ] ; then
+      ORIG_CM_DIR_ARC="$i"
       break
     fi
   done
@@ -241,7 +265,7 @@ move() {
       fi
       mkdir "$2"
     fi
-    cd "$1"
+    cd "$1" || exit 1
     for i in * .[a-zA-Z0-9]* ; do
       move "$i" "$2"/"$i"
     done
@@ -263,7 +287,7 @@ dirarcs() {
       mv "$1" "$2"
       ln -s "$2" "$1"
     else
-      cd "$3"
+      cd "$3" || exit 1
       for d in * .[a-zA-Z0-9]* ; do
         dirarcs "$1" "$2" "$d"
       done
@@ -274,16 +298,26 @@ dirarcs() {
 
 ######################################################################
 
+mk_directory() {
+  if [ x"$QUIET" = xyes ] ; then
+    mkdir -p "$1" || exit 1
+  else
+    mkdir -p -v "$1" || exit 1
+  fi
+}
+
 #
 # create the various sub directories
 #
-for dir in "$BINDIR" "$HEAPDIR" "$RUNDIR" "$LIBDIR" ; do
-  if [ x"$QUIET" = xyes ] ; then
-    mkdir -p "$dir" || exit 1
-  else
-    mkdir -p -v "$dir" || exit 1
-  fi
-done
+if [ x"$ONLY_RUNTIME" = xyes ] ; then
+  for dir in "$BINDIR" "$RUNDIR" ; do
+    mk_directory "$dir"
+  done
+else
+  for dir in "$BINDIR" "$HEAPDIR" "$RUNDIR" "$LIBDIR" ; do
+    mk_directory "$dir"
+  done
+fi
 
 #
 # install the script that tests architecture and os...
@@ -307,16 +341,13 @@ eval $ARCH_N_OPSYS
 # now install most of the other driver scripts
 #  (except ml-build, since we don't know $CM_DIR_ARC yet)
 #
-installdriver _run-sml .run-sml
-installdriver _link-sml .link-sml
-installdriver _ml-makedepend ml-makedepend
-## TODO: install-sml-wrapper script
-
-#
-# we optimistically install heap2exec, but will remove it if heap2asm
-# is not installed
-#
-installdriver _heap2exec heap2exec
+if [ x"$ONLY_RUNTIME" = xno ] ; then
+  installdriver _run-sml .run-sml
+  installdriver _link-sml .link-sml
+  installdriver _ml-makedepend ml-makedepend
+  installdriver _heap2exec heap2exec
+  ## TODO: install-sml-wrapper script
+fi
 
 #
 # set allocation size; for the x86, this gets reset in .run-sml
@@ -326,26 +357,37 @@ ALLOC=1M
 # OS-specific things for building the runtime system
 #
 RT_MAKEFILE=mk.$ARCH-$OPSYS
+XDEFS=""
+EXTRA_DEFS=""
 case $OPSYS in
   darwin)
     EXTRA_DEFS="AS_ACCEPTS_SDK=yes"
     ;;
   linux)
-    EXTRA_DEFS=$("$CONFIGDIR/chk-global-names.sh")
+    XDEFS=$("$CONFIGDIR/chk-global-names.sh")
     if [ "$?" != "0" ]; then
       complain "Problems checking for underscores in asm names."
     fi
-    EXTRA_DEFS="XDEFS=$EXTRA_DEFS"
     ;;
 esac
 
+# add other runtime-system options
 #
-# the name of the bin files directory
-#
-# FIXME: should make these file names more consistent!!
-#
-BOOT_ARCHIVE=boot.$ARCH-unix.tgz
-BOOT_FILES=sml.boot.$ARCH-unix
+if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
+  if [ x"XDEFS" = x ] ; then
+    XDEFS="-fsanitize=address"
+  else
+    XDEFS="$XDEFS -fsanitize=address"
+  fi
+fi
+
+if [ x"XDEFS" != x ] ; then
+  if [ x"EXTRA_DEFS" = x ] ; then
+    EXTRA_DEFS="XDEFS=\"$XDEFS\""
+  else
+    EXTRA_DEFS="XDEFS=\"$XDEFS\" $EXTRA_DEFS"
+  fi
+fi
 
 #
 # build the run-time system
@@ -361,16 +403,16 @@ else
   BUILD_LLVM_FLAGS="-install $RUNTIMEDIR $BUILD_LLVM_FLAGS"
   if [ x"$INSTALL_DEV" = xyes ] ; then
     vsay $cmd: Building LLVM for all targets in $LLVMDIR
-    cd "$LLVMDIR"
+    cd "$LLVMDIR" || exit 1
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
     vsay $cmd: Building LLVM in $LLVMDIR
-    cd "$LLVMDIR"
+    cd "$LLVMDIR" || exit 1
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   fi
-  cd "$RUNTIMEDIR/objs"
+  cd "$RUNTIMEDIR/objs" || exit 1
   vsay $cmd: Compiling the run-time system.
   make -f $RT_MAKEFILE $EXTRA_DEFS
   if [ -x run.$ARCH-$OPSYS ]; then
@@ -378,18 +420,31 @@ else
     if [ -f runx.$ARCH-$OPSYS ]; then
       mv runx.$ARCH-$OPSYS "$RUNDIR"
     fi
-    if [ -f run.$ARCH-$OPSYS.so ]; then
-      mv run.$ARCH-$OPSYS.so "$RUNDIR"
+    if [ -f runx.$ARCH-$OPSYS.so ]; then
+      mv runx.$ARCH-$OPSYS.so "$RUNDIR"
     fi
-    if [ -f run.$ARCH-$OPSYS.a ]; then
-      mv run.$ARCH-$OPSYS.a "$RUNDIR"
+    if [ -f runx.$ARCH-$OPSYS.a ]; then
+      mv runx.$ARCH-$OPSYS.a "$RUNDIR"
     fi
     make MAKE=make clean
   else
     complain "Run-time system build failed for some reason."
   fi
 fi
-cd "$SMLNJ_ROOT"
+cd "$SMLNJ_ROOT" || exit 1
+
+vsay $cmd: runtime system built
+if [ x"$ONLY_RUNTIME" = xyes ] ; then
+  exit 1
+fi
+
+#
+# the name of the bin files directory
+#
+# FIXME: should make these file names more consistent!!
+#
+BOOT_ARCHIVE=boot.$ARCH-unix
+BOOT_FILES=sml.boot.$ARCH-unix
 
 #
 # boot the base SML system
@@ -403,25 +458,16 @@ if [ -r "$HEAPDIR"/sml.$HEAP_SUFFIX ]; then
   # now re-dump the heap image:
   vsay "$cmd: Re-creating a (customized) heap image..."
   "$BINDIR"/sml @CMredump "$SMLNJ_ROOT"/sml
-  cd "$SMLNJ_ROOT"
+  cd "$SMLNJ_ROOT" || exit 1
   if [ -r sml.$HEAP_SUFFIX ]; then
     mv sml.$HEAP_SUFFIX "$HEAPDIR"
   else
     complain "Unable to re-create heap image (sml.$HEAP_SUFFIX)."
   fi
 else
-  cd "$SMLNJ_ROOT"
+  cd "$SMLNJ_ROOT" || exit 1
 
-  if [ ! -d "$BOOT_FILES"/smlnj/basis ] ; then
-    if [ -f "$BOOT_ARCHIVE" ] ; then
-      vsay "$cmd: unpacking the boot files"
-      tar -xzf "$BOOT_ARCHIVE"
-    else
-      complain "Missing $BOOT_ARCHIVE"
-    fi
-  else
-    vsay "$cmd: boot files are already unpacked"
-  fi
+  "$CONFIGDIR"/unpack "$SMLNJ_ROOT" "$BOOT_ARCHIVE"
 
   fish "$SMLNJ_ROOT"/"$BOOT_FILES"/smlnj/basis
 
@@ -435,21 +481,21 @@ else
     dirarcs "$ORIG_CM_DIR_ARC" "$CM_DIR_ARC" "$BOOT_FILES"
   fi
 
-  cd "$SMLNJ_ROOT"/"$BOOT_FILES"
+  cd "$SMLNJ_ROOT"/"$BOOT_FILES" || exit 1
 
   # now link (boot) the system and let it initialize itself...
   dsay "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc=$ALLOC
   if "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc=$ALLOC ; then
-    cd "$SMLNJ_ROOT"
+    cd "$SMLNJ_ROOT" || exit 1
     if [ -r sml.$HEAP_SUFFIX ]; then
       mv sml.$HEAP_SUFFIX "$HEAPDIR"
-      cd "$BINDIR"
+      cd "$BINDIR" || exit 1
       ln -s .run-sml sml
       #
       # Now move all stable libraries to $LIBDIR and generate
       # the pathconfig file.
       #
-      cd "$SMLNJ_ROOT"/"$BOOT_FILES"
+      cd "$SMLNJ_ROOT"/"$BOOT_FILES" || exit 1
       for anchor in * ; do
         if [ -d $anchor ] ; then
           dsay "move $anchor to $LIBDIR"
@@ -457,7 +503,7 @@ else
           move $anchor "$LIBDIR"/$anchor
         fi
       done
-      cd "$SMLNJ_ROOT"
+      cd "$SMLNJ_ROOT" || exit 1
       # $BOOT_FILES is now only an empty skeleton, let's get rid of it.
       rm -rf "$BOOT_FILES"
     else
@@ -473,21 +519,19 @@ fi
 #
 installdriver _ml-build ml-build
 
+cd "$SMLNJ_ROOT" || exit 1
+
 #
 # Now do all the rest using the precompiled installer
 # (see system/smlnj/installer for details)
 #
 if [ x"$NOLIB" = xno ] ; then
   vsay "$cmd: Installing other libraries and programs:"
+  # export variables used by the installer
+  export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR
   CM_TOLERATE_TOOL_FAILURES=true
   export CM_TOLERATE_TOOL_FAILURES
   if "$BINDIR"/sml -m \$smlnj/installer.cm ; then
-    # because we create heap2exec without knowing if heap2asm is going
-    # to be installed, we need this hack to remove heap2exec when heap2asm
-    # is not available
-    if [ ! -x "$BINDIR"/heap2asm ] ; then
-      rm -f "$BINDIR"/heap2exec
-    fi
     vsay $cmd: Installation complete.
   else
     complain "Installation of libraries and programs failed."
@@ -504,9 +548,10 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   # builds are not confused.
   #
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
-  export SMLNJ_HOME
+  export SMLNJ_HOME SML_CMD
   SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
-  cd doc
+  SML_CMD=$here/bin/sml
+  cd doc || exit 1
   if autoconf -Iconfig ; then
     :
   else

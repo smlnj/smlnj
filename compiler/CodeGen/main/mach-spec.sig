@@ -42,6 +42,10 @@ signature MACH_SPEC =
   (* the number of floating-point registers available to SML code *)
     val numFloatRegs : int
   (* the number of FP registers used for args. *)
+(* FIXME: currently this variable is not used; instead numFloatRegs-2 is used as
+ * the number of FP arguments/live vars (see closure.sml, cpstrans.sml, and
+ * uncurry.sml).
+ *)
     val numFloatArgRegs : int
   (* number of general-purpose callee-save registers; this should be three
    * (changing it will break everything!!!).

@@ -37,6 +37,11 @@ local
 
   val OFFp0 = OFFp 0
 
+  (* for now, we do not try to preserve accurate continuation types; instead
+   * we just use a continuation with no arguments.
+   *)
+  val contTy = CNTt[]
+
   val dumcs = NONE              (* dummy callee-save reg contents *)
   val zip = ListPair.zip
   val pr = Control.Print.say
@@ -1254,13 +1259,13 @@ fun isUntaggedInt (v,_,_) = (case get_cty v
 fun isFltCty (FLTt _) = unboxedfloat
   | isFltCty _ = false
 
-fun numgp (m,CNTt::z) = numgp(m-numCSgpregs-1,z)
-  | numgp (m,x::z) = if isFltCty(x) then numgp(m,z) else numgp(m-1,z)
-  | numgp (m,[]) = m
+fun numgp (m, CNTt _ :: z) = numgp(m-numCSgpregs-1,z)
+  | numgp (m, x :: z) = if isFltCty(x) then numgp(m,z) else numgp(m-1,z)
+  | numgp (m, []) = m
 
-fun numfp (m,CNTt::z) = numfp(m-numCSfpregs,z)
-  | numfp (m,x::z) = if isFltCty(x) then numfp(m-1,z) else numfp(m,z)
-  | numfp (m,[]) = m
+fun numfp (m, CNTt _ :: z) = numfp(m-numCSfpregs,z)
+  | numfp (m, x :: z) = if isFltCty(x) then numfp(m-1,z) else numfp(m,z)
+  | numfp (m, []) = m
 
 (****************************************************************************
  * adjustArgs checks the formal arguments of a function, replace the        *
@@ -1270,22 +1275,22 @@ fun numfp (m,CNTt::z) = numfp(m-numCSfpregs,z)
 
 val adjustArgs =
   let fun adjust1(args,l,env) =
-        let fun g((a,t),(al,cl,cg,cf,rt,env)) =
-              if (t = CNTt) then
-                (let val w = dupLvar a
+        let fun g((a,t),(al,cl,cg,cf,rt,env)) = (case t
+               of CNTt _ => let val w = dupLvar a
                      val (csg,clg) = extraLvar(numCSgpregs,U.BOGt)
                      val (csf,clf) = extraLvar(numCSfpregs,FLTt 64)  (* REAL32: FIXME *)
                      val csgv = map VAR csg
                      val csfv = map VAR csf
                      val env = augCallee(a,VAR w,csgv,csfv,env)
                      val nargs = w::(csg@csf)
-                     val ncl = CNTt::(clg@clf)
+                     val ncl = contTy::(clg@clf)
                      val env = faugValue(nargs,ncl,env)
-                  in case rt
-                      of NONE => (nargs@al,ncl@cl,csgv,csfv,SOME a,env)
-                       | SOME _ => bug "closure/adjustArgs: >1 cont"
-                 end)
-              else (a::al,t::cl,cg,cf,rt,augValue(a,t,env))
+                     in case rt
+                        of NONE => (nargs@al,ncl@cl,csgv,csfv,SOME a,env)
+                         | SOME _ => bug "closure/adjustArgs: >1 cont"
+                     end
+                | _ => (a::al,t::cl,cg,cf,rt,augValue(a,t,env))
+              (* end case *))
 
          in foldr g (nil,nil,nil,nil,NONE,env) (zip(args,l))
         end
@@ -1581,8 +1586,8 @@ val (calleeB,calleeFree,gpn,fpn,pF) =
              of KNOWN_CONT =>
                  if gsz > 0 then (0,0,false)   (* a temporary gross hack *)
                  else
-                  (let val x = numgp(maxgpregs-1,CNTt::cl)
-                       val y = numfp(maxfpregs-1,CNTt::cl)
+                  (let val x = numgp(maxgpregs-1,contTy::cl)
+                       val y = numfp(maxfpregs-1,contTy::cl)
                     in (Int.min(x,gx),Int.min(y,fx),false)
                    end)
               | _ => (0,0,sn = (bsn+1))

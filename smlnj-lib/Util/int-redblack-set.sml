@@ -1,9 +1,7 @@
 (* int-redblack-set.sml
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
- *
- * COPYRIGHT (c) 1999 Bell Labs, Lucent Technologies.
  *
  * This code is based on Chris Okasaki's implementation of
  * red-black trees.  The linear-time tree construction code is
@@ -422,6 +420,50 @@ structure IntRedBlackSet :> ORD_SET where type Key.ord_key = int =
 			else diff (t1, r2, n, result)
 		(* end case *))
 	  val (n, result) = diff (start s1, start s2, 0, ZERO)
+	  in
+	    SET(n, linkAll result)
+	  end
+
+    (* general set combiner *)
+    fun combineWith pred (SET(_, s1), SET(_, s2)) = let
+          fun comb (t1, t2, n, result) = (case (next t1, next t2)
+		 of ((E, _), (E, _)) => (n, result)
+		  | ((E, _), (T(_, _, x, _), r2)) =>
+                      condAdd (x, false, true, t1, r2, n, result)
+		  | ((T(_, _, x, _), r1), (E, _)) =>
+                      condAdd (x, true, false, r1, t2, n, result)
+		  | ((T(_, _, x1, _), r1), (T(_, _, x2, _), r2)) =>
+		      if (x1 < x2)
+			then condAdd (x1, true, false, r1, t2, n, result)
+		      else if (x1 > x2)
+                        then condAdd (x2, false, true, t1, r2, n, result)
+                      else condAdd (x1, true, true, r1, r2, n, result)
+		(* end case *))
+          and condAdd (x, p1, p2, r1, r2, n, result) =
+                if pred (x, p1, p2)
+                  then comb (r1, r2, n+1, addItem(x, result))
+                  else comb (r1, r2, n, result)
+	  val (n, result) = comb (start s1, start s2, 0, ZERO)
+          in
+	    SET(n, linkAll result)
+          end
+
+    fun union (SET(_, s1), SET(_, s2)) = let
+	  fun ins ((E, _), n, result) = (n, result)
+	    | ins ((T(_, _, x, _), r), n, result) =
+		ins(next r, n+1, addItem(x, result))
+	  fun union' (t1, t2, n, result) = (case (next t1, next t2)
+		 of ((E, _), (E, _)) => (n, result)
+		  | ((E, _), t2) => ins(t2, n, result)
+		  | (t1, (E, _)) => ins(t1, n, result)
+		  | ((T(_, _, x, _), r1), (T(_, _, y, _), r2)) =>
+		      if (x < y)
+			then union' (r1, t2, n+1, addItem(x, result))
+		      else if (x = y)
+			then union' (r1, r2, n+1, addItem(x, result))
+			else union' (t1, r2, n+1, addItem(y, result))
+		(* end case *))
+	  val (n, result) = union' (start s1, start s2, 0, ZERO)
 	  in
 	    SET(n, linkAll result)
 	  end

@@ -3,8 +3,32 @@
 # COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
 # All rights reserved.
 #
+# usage: ml-build [options] root-group [main-function [heapfile]]
+#   options:
+#       -hack           print this message
+#       -S setup
+#       -standalone
 # usage: ml-build [-S setup] root-group [main-function [heapfile]]
 #
+
+thisscript=$0
+
+usage() {
+  echo "usage: ml-build [options] root-group [main-function [heapfile]]"
+  echo "  options:"
+  echo "    -h            -- print this message"
+  echo "    -S setup      -- "
+  echo "    -standalone   -- build standalone executable"
+  echo "    -C<ctl>=<v>   -- compiler control argument (passed to compile command)"
+  echo "    -D<sym>=<v>   -- CM-define argument (passed to compile command)"
+  echo "    -U<sym>       -- undefine CM argument (passed to compile command)"
+  exit $1
+}
+
+error() {
+  echo ${thisscript}: $*
+  usage 1
+}
 
 if [ x${SMLNJ_HOME} = x ] ; then
   BIN_DIR="@BINDIR@"
@@ -22,8 +46,6 @@ fi
 SML=$BIN_DIR/sml
 LINK=$BIN_DIR/.link-sml
 
-thisscript=$0
-
 xx=$$
 smlfile=$xx-export.sml
 cmfile=$xx-export.cm
@@ -34,13 +56,8 @@ dulist=''
 
 trap 'rm -rf $smlfile $cmfile $listfile $linkargsfile @CMDIRARC@/*/$smlfile' 0 1 2 3 15
 
-usage() {
-  echo ${thisscript}: $*
-  echo Usage: $thisscript '[-32 | -64] [-S setup] root-group [main-function [heapfile]]'
-  exit 1
-}
-
 setup=
+build_exec=no
 
 while [ $# != 0 ] ; do
   case $1 in
@@ -56,22 +73,17 @@ while [ $# != 0 ] ; do
     setup=$1
     shift
     ;;
+  -standalone)
+    build_exec=yes
+    shift
+    ;;
   *)
     break
     ;;
   esac
 done
 
-if [ $# = 4 ] ; then
-  # assume that first argument is setup; e.g., "$smlnj-tdp/back-trace.cm"
-  if [ x"$setup" != x ] ; then
-    usage setup was already specified
-  fi
-  setup=$1
-  root=$2
-  main=$3
-  heap=$4
-elif [ $# = 3 ] ; then
+if [ $# = 3 ] ; then
   root=$1
   main=$2
   heap=$3
@@ -81,8 +93,7 @@ elif [ $# = 2 ] ; then
   heap=`basename "$root" .cm`
 elif [ $# = 1 ] ; then
   root=$1
-  # quick hack for now:
-  main=Test.main
+  main=Main.main
   heap=`basename "$root" .cm`
 else
   usage no CM description file specified
@@ -109,4 +120,8 @@ then
   fi
 else
     exit $?
+fi
+
+if [ x"$build_exec" = xyes ] ; then
+  $BIN_DIR/heap2exec "$heap"
 fi

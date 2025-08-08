@@ -1,0 +1,22 @@
+    (* wrapper for writing primitive types *)
+    fun writePrim wrFn (cxt : outstream, obj) = wrFn (#outS cxt, obj)
+    (* write an option *)
+    fun writeOption wrFn (cxt : outstream, NONE) =
+          @PICKLER@.writeTag8(#outS cxt, 0w0)
+      | writeOption wrFn (cxt : outstream, SOME obj) = (
+          @PICKLER@.writeTag8(#outS cxt, 0w1);
+          wrFn(cxt, obj))
+    (* write a list of values as a sequence *)
+    fun writeSeq wrFn (cxt : outstream, xs) = let
+          fun write [] = ()
+            | write (x::xr) = (wrFn(cxt, x); write xr)
+          in
+            @PICKLER@.writeUInt(#outS cxt, Word.fromInt(length xs));
+            write xs
+          end
+    (* write a shared value *)
+    fun writeShared (wrFn, sMap) (cxt : outstream, obj) = (
+          case ASDLShareMap.resolve (sMap cxt, item)
+           of (true, id) => @PICKLER@.writeUInt (#outS cxt, Word.fromInt(id+1))
+            | (false, id) => (@PICKLER@.writeUInt (#outS cxt, 0); wrFn (cxt, obj))
+          (* end case *))

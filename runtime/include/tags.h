@@ -26,17 +26,6 @@
 
 #define MAJOR_MASK	HEXLIT(3)	/* bits 0-1 are the major tag */
 
-#ifdef BOXED1
-					/* Major tag: */
-#define TAG_boxed	HEXLIT(1)	/*   01 - pointers */
-#define TAG_desc	HEXLIT(3)	/*   11 - descriptors */
-#define TAG_unboxed_b0	HEXLIT(0)	/*   00, 10 - unboxed (bit 0 is 0) */
-
-/* mark/unmark an ML pointer to make it look like an unboxed object */
-#define MARK_PTR(p)	((ml_val_t)((Addr_t)(p) ANDOP ~HEXLIT(1)))
-#define UNMARK_PTR(p)	((ml_val_t)((Addr_t)(p)  OROP  HEXLIT(1)))
-
-#else /* BOXED1 */
 					/* Major tag: */
 #define TAG_boxed	HEXLIT(0)	/*   00 - pointers */
 #define TAG_desc	HEXLIT(2)	/*   10 - descriptors */
@@ -45,8 +34,6 @@
 /* mark/unmark an ML pointer to make it look like an unboxed object */
 #define MARK_PTR(p)	((ml_val_t)((Addr_t)(p) OROP HEXLIT(1)))
 #define UNMARK_PTR(p)	((ml_val_t)((Addr_t)(p) ANDOP ~HEXLIT(1)))
-
-#endif /* BOXED1 */
 
 /* Descriptors have five more tag bits (defined below). */
 #define DTAG_SHIFTW	2

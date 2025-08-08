@@ -55,7 +55,7 @@ LIB_DIR="${HEAP_IMAGE}.lib"
 LPC="${LIB_DIR}/local_pathconfig"
 
 rm -f "$LPC"
-cp ../../config/extrapathconfig "$LPC"
+cp ../config/extrapathconfig "$LPC"
 
 CM_PATHCONFIG="$LIB_DIR/pathconfig" CM_LOCAL_PATHCONFIG="$LPC" \
     "$bindir/sml" @SMLload="$HEAP_IMAGE" "$@"

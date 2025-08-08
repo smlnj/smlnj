@@ -109,7 +109,7 @@ while [ "$#" != "0" ]; do
       shift
       ;;
     @SMLversion)
-      echo "$CMD @VERSION@"
+      echo "@VERSION@"
       exit 0
       ;;
     @SMLwordsize)

@@ -18,7 +18,7 @@
 #include "cfun-proto-list.h"
 #include "codegen.h"
 
-/* _ml_CodeGen_generate : string * Word8Vector.vector -> Word8Vector.vector * int
+/* _ml_CodeGen_generate : string * Word8Vector.vector * bool -> Word8Vector.vector * int
  *
  * Given the source-file name and ASDL pickle of the CFG IR, generate
  * native machine code and return the corresponding code object and
@@ -34,6 +34,8 @@ ml_val_t _ml_CodeGen_generate (ml_state_t *msp, ml_val_t arg)
     ml_val_t mlPkl = REC_SEL(arg, 1);
     char *pkl = GET_SEQ_DATAPTR(char, mlPkl);
     size_t pklSzb = GET_SEQ_LEN(mlPkl);
+
+/* TODO: get the verifyLLVM flag */
 
     return llvm_codegen (msp, src, pkl, pklSzb);
 

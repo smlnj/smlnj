@@ -17,7 +17,8 @@ structure SortDecls : sig
     structure DclOrd : ORD_KEY =
       struct
 	type ord_key = AST.type_decl
-	fun compare (AST.TyDcl{id=a, ...}, AST.TyDcl{id=b, ...}) = AST.TypeId.compare(a, b)
+	fun compare (AST.TyDcl{id=a, ...}, AST.TyDcl{id=b, ...}) =
+              AST.TypeId.compare(a, b)
       end
 
     structure DS = RedBlackSetFn (DclOrd)
@@ -35,7 +36,9 @@ structure SortDecls : sig
 	     of AST.EnumTy _ => []
 	      | AST.SumTy{cons, ...} => DS.toList (List.foldl doCons DS.empty cons)
 	      | AST.ProdTy{fields} => DS.toList (List.foldl doField DS.empty fields)
-	      | PrimTy => []
+              | AST.AliasTy(AST.Typ(AST.LocalTy td, _)) => [td]
+              | AST.AliasTy _ => []
+	      | AST.PrimTy => []
 	    (* end case *)
 	  end
 

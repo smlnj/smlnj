@@ -234,7 +234,7 @@ module CPS_Rep (
 
 -- C++ specialization
 --
-view Cxx {
+view Cpp {
     { CPS_Rep.value CPS_Rep.cexp } <= public_code %%
     virtual codegen (code_buffer &buf) = 0;
 %%

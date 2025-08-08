@@ -30,6 +30,7 @@ signature CGCONTROL =
     val staticprof : bool ref
     val unroll_recur : bool ref
     val debugcps : bool ref
+    val checkCPS : bool ref
     val bodysize : int ref
     val reducemore : int ref
     val comment : bool ref	(* used in CPS/clos/closure.sml to control debug messages *)
@@ -40,6 +41,12 @@ signature CGCONTROL =
     val spillGen : int ref
     val etasplit : bool ref
     val uncurry : bool ref
+    val enableVN : bool ref
+    val vnCondElim : bool ref
+    val vnRecordElim : bool ref
+    val vnSelectElim : bool ref
+    val vnPrimElim : bool ref
+
     val ifidiom : bool ref
     val comparefold : bool ref
     val debugLits : bool ref
@@ -48,6 +55,7 @@ signature CGCONTROL =
     val deadup : bool ref
     val printit : bool ref
     val printClusters : bool ref
+    val dumpClusters : bool ref
     val printCFG : bool ref
     val dumpCFG : bool ref
     val verifyLLVM : bool ref

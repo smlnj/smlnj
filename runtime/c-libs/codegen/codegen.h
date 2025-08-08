@@ -24,7 +24,7 @@ extern "C" {
  */
 ml_val_t llvm_listTargets (ml_state_t *msp);
 
-/*  set the target architecture.  This call returns `true` when there
+/* set the target architecture.  This call returns `true` when there
  * is an error and `false` otherwise.
  */
 ml_val_t llvm_setTarget (const char *target);

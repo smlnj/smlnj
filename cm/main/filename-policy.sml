@@ -43,7 +43,7 @@ functor FilenamePolicyFn (val cmdir : string
     type policyMaker = { arch: string, os: SMLofNJ.SysInfo.os_kind } -> policy
 
     fun kind2name SMLofNJ.SysInfo.UNIX = "unix"
-      | kind2name SMLofNJ.SysInfo.WIN32 = "win32"
+      | kind2name SMLofNJ.SysInfo.WINDOWS = "windows"
 
     fun mkPolicy (shiftbin, shiftstable, ignoreversion) { arch, os } = let
         fun subDir (sd, d) = OS.Path.joinDirFile { dir = d, file = sd }

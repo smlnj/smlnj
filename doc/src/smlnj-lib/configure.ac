@@ -59,12 +59,16 @@ AC_ARG_WITH([smlnj-root],
   [SMLNJ_ROOT=none])
 if test x"$SMLNJ_ROOT" = xnone ; then
   if test -d "$ROOT_DIR/../../../compiler" ; then
-    SMLNJ_ROOT="$ROOT_DIR/../../.."
+    SMLNJ_ROOT=$(cd "$ROOT_DIR/../../.."; pwd)
   else
     AC_MSG_ERROR([please specify the SML/NJ root directory path])
   fi
 fi
 AC_SUBST(SMLNJ_ROOT)
+if test -x "$SMLNJ_ROOT/bin/sml" ; then
+  export SML_CMD
+  SML_CMD="$SMLNJ_ROOT/bin/sml"
+fi
 
 dnl
 dnl ******************** get the output directory ********************
@@ -74,7 +78,7 @@ AC_ARG_WITH([output-dir],
   [OUT_DIR=$withval],
   [OUT_DIR=none])
 if test x"$OUT_DIR" = xnone ; then
-  OUT_DIR=$ROOT_DIR/doc/html
+  OUT_DIR="$ROOT_DIR/doc/html"
 fi
 AC_SUBST(OUT_DIR)
 

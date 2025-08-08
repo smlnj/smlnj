@@ -58,7 +58,7 @@ build:
 
 CLEAN_FILES =		cxx-test \
 			$(CXX_OBJS) \
-			test-spec.hxx test-spec.cxx
+			test-spec.hpp test-spec.cpp
 
 DISTCLEAN_FILES +=      Makefile
 

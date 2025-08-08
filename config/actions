@@ -215,10 +215,10 @@ ml-burg prog    ml-burg         -               tools/ml-burg
 ml-burg lib     mlburg-tool.cm  mlburg-tool.cm  tools/ml-burg/tool
 ml-burg lib     burg-ext.cm     burg-ext.cm     tools/ml-burg/tool
 
-# utility program for use by heap2exec:
-heap2asm        prog heap2asm - tools/heap2asm
-
 # NLFFI foreign function interface generator:
 ml-nlffigen dprog ml-nlffigen - tools/nlffi/gen
 
 #nowhere        dprog nowhere - libraries/MLRISC/Tools/nowhere
+
+# tool to print CFG files
+print-cfg dprog print-cfg       -               tools/print-cfg

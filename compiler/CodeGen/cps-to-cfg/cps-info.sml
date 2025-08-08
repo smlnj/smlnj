@@ -252,7 +252,7 @@ structure CPSInfo : sig
 	    fn lv => (case lFind lv
 		 of NONE => (case gFind lv
 		       of NONE => raise Fail("unbound lvar " ^ LambdaVar.lvarName lv)
-			| SOME CPS.CONT => CPS.CNTt
+			| SOME CPS.CONT => CPS.CNTt[]
 			| SOME _ => CPS.FUNt
 		      (* end case *))
 		  | SOME ty => ty
