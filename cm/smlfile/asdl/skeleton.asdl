@@ -34,6 +34,8 @@ module SkeletonRep {
 
 view SML {
   module SkeletonRep <= {
+    file_pickler_name : SkeletonFilePickle
+    pickler_name : SKELETON_PICKLE
     implementation_prologue
 %%
     type symbol = Symbol.symbol
