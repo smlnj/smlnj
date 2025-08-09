@@ -187,9 +187,59 @@ target languages is as follows:
     or structure body.
 \end{description}%
 
-\subsection{Choosing a Different Representation}
+\subsection{Pickling Existing Types}
 
-The \asdl{} module
+\asdlgen{} provides several mechanisms to support integrating existing
+\sml{} types into an \asdl{} specification.
+The first of these is to use a primitive module (see \secref{sec:primitive-syntax})
+to define the representation of a type.
+This approach has the disadvantage that the user must supply all of the
+pickling and unpickling code for the type.
+
+A second mechanism, which is only supported by the \sml{} view, for using existing types
+in an \asdl{} specification is the \lstinline!is_datatype! property.
+\begin{description}
+  \PROP{is\char`\_datatype}{identifier}{\texttt{sml}}{Type}
+    Specifies that the \asdl{} type should be defined using
+    a datatype-replication declaration, where the identifier
+    specifies the datatype being replicated.
+\end{description}
+For example, assume that we had an existing structure
+%
+\begin{code}\begin{lstlisting}[language=SML]
+structure Color = struct
+    datatype t = RED | GREEN | BLUE
+  end
+\end{lstlisting}\end{code}%
+%
+and that our \asdl{} specification contains the equivalent type declaration
+%
+\begin{code}\begin{lstlisting}[language=ASDL]
+module ColorPkl {
+  color = RED | GREEN | BLUE
+}
+view SML {
+  ColorPkl.color <= is_datatype : Color.t
+}
+\end{lstlisting}\end{code}%
+By including the \lstinline!is_datatype! property, the generated type
+definitions will be
+%
+\begin{code}\begin{lstlisting}[language=SML]
+structure ColorPkl = struct
+    datatype color = datatype Color.t
+  end
+\end{lstlisting}\end{code}%
+%
+While the definition of the \lstinline!color! type is replicated, \asdlgen{} will still
+generate the pickling and unpickling code for the type as it is defined in the \asdl{}
+specification.
+
+The third mechanism provides a way to translate between a program's internal representation
+of a type and its \asdl{} representation.
+For example, consider the following \asdl{} specification for finite maps between
+integers:
+%
 \begin{code}\begin{lstlisting}[language=ASDL]
 module IntMap {
   int_map = (int size, entries map)
@@ -198,6 +248,7 @@ module IntMap {
   map_pair = (int_map, int_map)
 }
 \end{lstlisting}\end{code}%
+%
 is one possible abstract description of a mapping from integers to
 integers.
 Such an implementation is not particularly efficient; we might prefer to
@@ -223,12 +274,13 @@ to allow clients to use a specialized representation for ASDL types.\footnote{
 }
 \begin{description}
   \PROP{natural\char`\_type}{identifier}{\texttt{c++},\texttt{sml}}{Type}
-    The type to use in place of the original type in all the resulting code.
+    Specifies the type to use in place of the original type in all of the
+    generated code.
     Supported by all output languages.
 
   \PROP{natural\char`\_type\char`\_con}{identifier}{\texttt{c++},\texttt{sml}}{Type}
     A unary type constructor to apply to the old type to get a new type to
-    use in all the resulting code; \eg{}, \lstinline@ref@ in \sml to make a type
+    use in all the resulting code; \eg{}, \lstinline@ref@ in \sml{} to make a type
     mutable.
     \emph{Support for \Cplusplus{} templates will be added in the near future.}
 
@@ -256,8 +308,10 @@ is achieved by appropriately coercing the new type to the old type and vice
 versa with functions specified by \lstinline!wrapper! and \lstinline!unwrapper!
 properties.
 
-For example, we could use the \smlnj{} Library's \lstinline@IntRedBlackMap@ structure
-to implement the \lstinline!int_map! type as follows:
+For example, we can use the \smlnj{} Library's \lstinline@IntRedBlackMap@ structure
+to implement the \lstinline!int_map! type by adding the following view declaration
+for the \lstinline!IntMap! module:
+%
 \begin{code}\begin{lstlisting}[language=ASDL]
 view sml {
   module IntMap <= {
@@ -270,14 +324,11 @@ view sml {
     implementation_epilogue
 %%
     fun wrap_int_map ({map={entries}, ...} : int_map_pkl) =
-          List.foldl
-            (fn ({key, value}, imap) => IntMap.insert(imap, key, value))
-              IntMap.empty
-                entries
+          List.foldl IntMap.insert' IntMap.empty entries
     fun unwrap_int_map (imap : int_map) = {
             size = IntMap.numItems imap,
             map = {entries = IntMap.foldri
-              (fn (k, v, entries) => {key = k, value = v} :: entries)
+              (fn (k, v, ents) => {key = k, value = v} :: ents)
                 []
                   imap}
           }
@@ -291,6 +342,7 @@ view sml {
   }
 }
 \end{lstlisting}\end{code}%
+%
 In this view, we rename \lstinline@int_map@ to \lstinline@int_map_pkl@ and add a type
 definition for \lstinline!int_map! to both the interface
 (signature) and implementation (structure).

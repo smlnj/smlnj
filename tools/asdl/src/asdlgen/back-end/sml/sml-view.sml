@@ -28,7 +28,11 @@ structure SMLView : sig
         val getSExpName : AST.ModuleId.t -> string
       end
 
-    structure Type : VIEW_TYPE_BASE
+    structure Type : sig
+        include VIEW_TYPE_BASE
+        (* get the name of the equivalent datatype *)
+        val getIsDatatype : AST.TypeId.t -> string option
+      end
 
     structure Constr : VIEW_CONSTR_BASE
 
@@ -48,12 +52,14 @@ structure SMLView : sig
                   CV.prop(PN.file_pickler_name, false) ::
                   CV.prop(PN.sexp_pickle_name, false) ::
                   #moduleProps CV.template,
-                typeProps = #typeProps CV.template,
+                typeProps =
+                  CV.prop(PN.is_datatype, false) ::
+                  #typeProps CV.template,
                 consProps = #consProps CV.template
               }
       end)
 
-    open ViewBase
+    val view = ViewBase.view
 
     structure File =
       struct
@@ -81,6 +87,19 @@ structure SMLView : sig
         end (* local *)
 
       end
+
+    structure Type =
+      struct
+        open ViewBase.Type
+        fun getIsDatatype tyId = (
+              case View.getOptValue PN.is_datatype (view, View.Type tyId)
+               of NONE => NONE
+                | SOME[name] => SOME name
+                | _ => raise Fail("unexpected multiple values for 'is_datatype'")
+              (* end case *))
+      end
+
+    structure Constr = ViewBase.Constr
 
   (* the default header template *)
     val header =

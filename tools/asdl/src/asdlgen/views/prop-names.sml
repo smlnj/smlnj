@@ -23,6 +23,7 @@ structure PropNames =
     val interface_prologue = Atom.atom "interface_prologue"
     val memory_pickler_name = Atom.atom "memory_pickler_name"
     val name = Atom.atom "name"
+    val is_datatype = Atom.atom "is_datatype"
     val natural_type = Atom.atom "natural_type"
     val natural_type_con = Atom.atom "natural_type_con"
     val pickler_name = Atom.atom "pickler_name"
