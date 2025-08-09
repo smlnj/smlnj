@@ -55,6 +55,10 @@ FILES::
 
 === ML-LPT
 
+=== ASDL
+
+* Added the `is_datatype` property
+
 === Documentation
 
 === Installation
