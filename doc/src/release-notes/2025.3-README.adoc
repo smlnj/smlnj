@@ -43,6 +43,8 @@ FILES::
 
 === CM
 
+* We are now using **ASDL** to implement the pickling/unpickling of skeleton files.
+
 === MLRISC
 
 === Runtime System

@@ -1,33 +1,53 @@
 (* skeleton.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
- * All rights reserved.
- *
- * SML source skeletons.
- *
- * The idea of skeletons is taken from the original SC (where they were
- * called "decl"s after one of the datatypes involved).
- * The new definitions used here are a lot simpler than the original ones;
- * they allow for a more succinct dependency analysis, and are easier to
- * pickle/unpickle.  Moreover, the ast->skeleton converter has been made
- * smarter -- resulting in smaller skeletons.
- *
- * author: Matthias Blume (blume@cs.princeton.edu)
- *
- * The copyright notices of the earlier versions are:
- *   Copyright (c) 1999 by Bell Laboratories, Lucent Technologies
- *   Copyright (c) 1995 by AT&T Bell Laboratories
- *   Copyright (c) 1993 by Carnegie Mellon University,
- *                         School of Computer Science
- *                         contact: Gene Rollins (rollins+@cs.cmu.edu)
+ * Generated from skeleton.asdl by asdlgen.
  *)
 
-structure Skeleton =
-  struct
-
+structure SkeletonRep = struct
     type symbol = Symbol.symbol
     type sympath = SymPath.path
 
+    datatype namespace = datatype Symbol.namespace
+    type symbol_pkl = namespace * string
+    type symset_pkl = symbol list
+    type sympath_pkl = symbol list
+    datatype modExp
+      = Var of sympath
+      | Decl of decl list
+      | Let of decl list * modExp
+      | Ign1 of modExp * modExp
+    and decl
+      = Bind of symbol * modExp
+      | Local of decl * decl
+      | Par of decl list
+      | Seq of decl list
+      | Open of modExp
+      | Ref of SymbolSet.set
+    (* convert a pickled symbol to a `Symbol.symbol` *)
+    fun symbolFromPkl ((ns, n) : symbol_pkl) = (case ns
+           of VALspace => Symbol.varSymbol n
+            | TYCspace => Symbol.tycSymbol n
+            | SIGspace => Symbol.sigSymbol n
+            | STRspace => Symbol.strSymbol n
+            | FCTspace => Symbol.fctSymbol n
+            | FIXspace => Symbol.fixSymbol n
+            | LABspace => Symbol.labSymbol n
+            | TYVspace => Symbol.tyvSymbol n
+            | FSIGspace => Symbol.fsigSymbol n
+          (* end case *))
+    (* convert a `Symbol.symbol` to the pickled symbol *)
+    fun symbolToPkl sym = (Symbol.nameSpace sym, Symbol.name sym)
+    fun spathFromPkl syms = SymPath.SPATH syms
+    fun spathToPkl (SymPath.SPATH syms) = syms
+    fun symsetFromPkl syms = SymbolSet.fromList syms
+    fun symsetToPkl symSet = SymbolSet.listItems symSet
+
+  end
+
+(* hide the pickling-related types and code *)
+structure Skeleton : sig
+    type symbol = Symbol.symbol
+    type sympath = SymPath.path
     datatype decl
       = Bind of symbol * modExp
       | Local of decl * decl
@@ -35,11 +55,10 @@ structure Skeleton =
       | Seq of decl list
       | Open of modExp
       | Ref of SymbolSet.set
-
     and modExp
       = Var of sympath
-      | Decl of decl list               (* implicit Seq *)
-      | Let of decl list * modExp       (* implicit Seq *)
+      | Decl of decl list
+      | Let of decl list * modExp
       | Ign1 of modExp * modExp
+  end = SkeletonRep
 
-  end

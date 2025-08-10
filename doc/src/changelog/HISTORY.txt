@@ -104,6 +104,16 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/08/10]::
+Replaced the pickler for skeleton files in **CM** with one that is
+generated from an **ASDL** specification.  This change is a first step
+in replacing the pickler-combinators with **ASDL** picklers.  See
+`cm/smlfile/skel-io.sml` and `cm/smlfile/asdl/skeleton.asdl` for more
+details.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/08/05]::
 Changed the way external references are passed during translation to
 PLambda. Previously, the external references are grouped by the PIDs
@@ -118,7 +128,6 @@ This change fixes {issue-base}/319[Issue #319 (Nondeterministic import
 order)].
 +
 owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
-
 
 //====================================================================
 == Version 2025.2; 2025/07/29
