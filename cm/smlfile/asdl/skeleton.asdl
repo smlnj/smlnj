@@ -44,7 +44,7 @@ view SML {
     implementation_epilogue
 %%
     (* convert a pickled symbol to a `Symbol.symbol` *)
-    fun symbolFromPkl ((ns, n) : symbol) = (case ns
+    fun symbolFromPkl ((ns, n) : symbol_pkl) = (case ns
            of VALspace => Symbol.varSymbol n
             | TYCspace => Symbol.tycSymbol n
             | SIGspace => Symbol.sigSymbol n
@@ -57,9 +57,9 @@ view SML {
           (* end case *))
     (* convert a `Symbol.symbol` to the pickled symbol *)
     fun symbolToPkl sym = (Symbol.nameSpace sym, Symbol.name sym)
-    fun spathFromPkl syms = SymPath.SPATH(symsFromRep syms)
-    fun spathToPkl (SymPath.SPATH syms) = symsToRep syms
-    fun symsetFromPkl syms = SymbolSet.fromList(symsFromRep syms)
+    fun spathFromPkl syms = SymPath.SPATH syms
+    fun spathToPkl (SymPath.SPATH syms) = syms
+    fun symsetFromPkl syms = SymbolSet.fromList syms
     fun symsetToPkl symSet = SymbolSet.listItems symSet
 %%
   }
