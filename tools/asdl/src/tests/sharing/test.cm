@@ -1,0 +1,26 @@
+(* test.cm
+ *
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  signature TEST_SPEC_PICKLE
+
+  structure NodeContext
+  structure TestSpec
+  structure TestSpecFilePickle
+  structure TestSpecMemoryPickle
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+  ../../../src/lib/sml/asdl-lib.cm
+
+  test-spec-file-pickle.sml
+  test-spec-memory-pickle.sml
+  test-spec-pickle.sig
+  test-spec-sharing.sml
+  test-spec.sml

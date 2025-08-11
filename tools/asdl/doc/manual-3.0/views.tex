@@ -109,10 +109,10 @@ default names used for modules and functions in the generated code.
   \PROP{pickler_name}{identifier}{\texttt{c++},\texttt{sml}}{Module}
     Specifies the name to give to the target module that implements both file
     and memory pickling.
-    For the \sml{} target, this affects the name of the pickler signature, but
+    For the \sml{} view, this specifies the name of the pickler signature, but
     not the pickler structures, since different modules are generated
     for memory and file pickling.
-  \PROP{sexp_pickle_name}{identifier}{\texttt{sml}}{Module}
+  \PROP{sexp_pickler_name}{identifier}{\texttt{sml}}{Module}
     Specifies the name to give to the target module that implements S-Expression pickling.
 \end{description}%
 
