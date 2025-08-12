@@ -178,8 +178,12 @@ fun occurCheck (tyvar, ty) =
     (* scan : T.ty -> unit; raises Occur *)
     let fun scan WILDCARDty = ()
 	  | scan (MARKty(ty,_)) = scan ty
-	  | scan (VARty tyvar') =
-	      if TU.eqTyvar (tyvar, tyvar') then raise Occurs else ()
+	  | scan (VARty (tyvar' as ref tvkind)) =
+              (case tvkind
+                 of INSTANTIATED ty =>
+                      scan ty
+                  | _ =>
+                      if TU.eqTyvar (tyvar, tyvar') then raise Occurs else ())
 	  | scan (CONty(tycon,args)) =
 	      app scan args
 	  | scan _ = ()
@@ -375,17 +379,7 @@ fun unifyTy(type1, type2, reg1, reg2) =
 	       | (ty1,ty2) => raise Unify (TYP(ty1,ty2,reg1,reg2)));
 	    dbsaynl "<<< unifyRaw")
 
-     in (* first try unifying without reducing CONty(DEFtycs) *)
-        unifyRaw(type1, type2, reg1, reg2)
-        handle Unify _ =>
-          (* try head reducing type1 *)
-          let val type1' = TU.headReduceType type1
-          in unifyRaw(type1', type2, reg1, reg2)   (* regions? *)
-             handle Unify _ => (* try head reducing type2 *)
-                    unifyRaw(type1', TU.headReduceType type2, reg1,reg2) (* regions? *)
-                    (* if unification still fails, then type1 and type2
-                       really cannot be made to be equal *)
-          end
+     in unifyRaw(type1, type2, reg1, reg2)
     end (* unifyTy *)
 
 and unifyTyvars (var1: tyvar, var2: tyvar, reg1, reg2) =
@@ -605,9 +599,12 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
           | _ => (* check if ty reduces to same tyvar *)
 	     (case TU.headReduceType ty
 	       of VARty tyvar' =>
- 		    if TU.eqTyvar (tyvar, tyvar') then ()  (* tyvar cannot be instantiated *)
-		    else (dbsaynl "instTyvar[UBOUND]: raising Unify";
-			  raise Unify (UBV (i, ty, reg1, reg2)))
+ 		    if TU.eqTyvar (tyvar, tyvar') then ()  (* immediate success *)
+		    else
+                      (* Although a UBOUND tyvar can't be instantiated as
+                       * another tyvar', tyvar' may be able to instantiated as
+                       * tyvar. Use unityTyvars to handle the cases. *)
+                      unifyTyvars (tyvar, tyvar', reg1, reg2)
 	        | ty' => raise Unify (UBV (i, ty', reg1, reg2))))
               (* could return the ty for error msg*)
 
