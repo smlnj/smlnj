@@ -83,7 +83,7 @@ signature ABSYN =
       | ORpat of pat * pat
       | VECTORpat of pat list * Types.ty
       | MARKpat of pat * region
-      | NOpat
+      | NOpat (* Error pattern *)
 
     and dec
       = VALdec of vb list
