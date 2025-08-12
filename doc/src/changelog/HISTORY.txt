@@ -104,6 +104,33 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/08/11]::
+Reworked type unification. When unifying two types, sometimes the
+types cannot be unified directly, but their head-reduced forms can.
+Because eagerly head-reducing all types can lead to an explosion of
+terms, the legacy branch head-reduces either types when a unification
+error occurs and retries unification. This leads to an exponential
+blowup when type-checking functions with a large number of curried
+arguments. The development branch handles the lazy head-reduction more
+directly, but the previous implementation ignores a few cases where
+the direction of tyvar unifications matters. For example, a UBOUND
+tyvar cannot be instantiated as an OPEN tyvar, but the opposite
+direction works; OVLD tyvars have metadata that needs to be maintained
+for overload resolution to work. This change patches the missing
+cases.
++
+In addition, the NOpat pattern, signaling an elaboration error on a
+pattern, is handled in the typechecker.
++
+This change fixes {issue-base}/137[Issue #137 (Typechecker hangs with
+a large number of curried arguments)], {issue-base}/262[Issue #262
+(Compiler bug in type checker: unexpected pattern)], and
+{issue-base}/317[Issue #317 (Bug in type checking/inference with type
+abbreviations through transparent functor application)].
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2025/08/10]::
 Replaced the pickler for skeleton files in **CM** with one that is
 generated from an **ASDL** specification.  This change is a first step
