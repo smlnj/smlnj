@@ -450,15 +450,15 @@ let
                                 ("constant constructor applied in pattern: "
                                   ^ SP.toString (SP.SPATH path))
                                 EM.nullErrorBody;
-                              (AS.WILDpat, TS.empty))  (* should be NOpat? *)
+                              (AS.NOpat, TS.empty))
                         (* end case *))
                     | AS.VAR _ => ((* constructor path bound to variable *)
                         error region EM.COMPLAIN
                           ("undefined constructor applied in pattern: "
                             ^ SP.toString (SP.SPATH path))
                           EM.nullErrorBody;
-                          (WILDpat, TS.empty))  (* should be NOpat? *)
-                    | AS.ERRORid => (AS.WILDpat, TS.empty)
+                          (AS.NOpat, TS.empty))
+                    | AS.ERRORid => (AS.NOpat, TS.empty)
                         (* lookIdPath will have complained about the unbound path *)
                   (* end case *)
                 end
@@ -468,7 +468,7 @@ let
                 error (getOpt (optRegion, SM.nullRegion)) EM.COMPLAIN
                   "non-constructor applied to argument in pattern"
                   EM.nullErrorBody;
-                (WILDpat, TS.empty)) (* should be NOpat? *)
+                (AS.NOpat, TS.empty))
           in
             getPath (constr, NONE)
           end
