@@ -375,7 +375,17 @@ fun unifyTy(type1, type2, reg1, reg2) =
 	       | (ty1,ty2) => raise Unify (TYP(ty1,ty2,reg1,reg2)));
 	    dbsaynl "<<< unifyRaw")
 
-     in unifyRaw(type1, type2, reg1, reg2)
+     in (* first try unifying without reducing CONty(DEFtycs) *)
+        unifyRaw(type1, type2, reg1, reg2)
+        handle Unify _ =>
+          (* try head reducing type1 *)
+          let val type1' = TU.headReduceType type1
+          in unifyRaw(type1', type2, reg1, reg2)   (* regions? *)
+             handle Unify _ => (* try head reducing type2 *)
+                    unifyRaw(type1', TU.headReduceType type2, reg1,reg2) (* regions? *)
+                    (* if unification still fails, then type1 and type2
+                       really cannot be made to be equal *)
+          end
     end (* unifyTy *)
 
 and unifyTyvars (var1: tyvar, var2: tyvar, reg1, reg2) =
@@ -542,24 +552,12 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 		     (debugPPType("instTyvar[OVLD] OK: ",ty');
 		      if eq then adjustType(tyvar, T.infinity, eq, ty', reg1, reg2) else ();
 		      instantiate (tyvar, ty'))
-		 | ty' as VARty tyvar' =>
-		     (case !tyvar'
-		       of OPEN _ =>
-			    (dbsaynl "### instTyvar[OVLDV/OPEN]";
-			     instantiate (tyvar', VARty tyvar))  (* was: tyvar' := !tyvar *)
-			| (OVLDI _ | OVLDW _) => (* eq = true for these *)
-			    (dbsaynl "### instTyvar[OVLDV/OPEN]";
-			     instantiate (tyvar, ty'))  (* was: tyvar := !tyvar' *)
-		        | OVLDV _ => dbsaynl "### instTyvar[OVLDV/OVLDV]"
-			    (* do nothing?  Leave original OVLDV in alone?
-			     * likely same tyvar, so instantiating may create a cycle *)
-		        | UBOUND {name,...} =>
-			    bug ("instTyvar[OVLDV/UBOUND]: " ^ S.name name)
-			    (* can't unify a UBOUND with an overload tyvar *)
-		        | LBOUND _ => bug "instTyvar[OVLDV/LBOUND]" (* not relevant *)
-		        | INSTANTIATED _ => bug "instTyvar[OVLDV/INSTANTIATED]")
-			    (* headReduceType cannot return an instantiated tyvar, it prunes *)
-		     (* POLICY: literal overloads take priority over function overloads (?) *)
+		 | VARty tyvar' =>
+                     (* When `ty` is not a TyVar but is head-reduced to a TyVar,
+                      * this is the same case as unifyTyvars. The call could be
+                      * inlined, but the direction of instantiation matters
+                      * for overload resolution. *)
+                     unifyTyvars (tyvar, tyvar', reg1, reg2)
 		 | ty' => (* incompatible ty *)
 		     (debugPPType ("instTyvar[OVLDV] Fail: ", ty');
 		      raise Unify (OVLD_F "OVLDV tyvar unified with incompatible type"))))
@@ -577,7 +575,7 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 		      if OLC.inClass(ty', OLC.intClass)
 		      then instantiate (tyvar, ty')
 		      else raise Unify (OVLD_F "INT tyvar instantiated to non-int type"))
-		 | VARty (tyvar' as ref (OPEN _ | OVLDI _ | OVLDV _)) => tyvar' := !tyvar  (* ok *)
+		 | VARty tyvar' => unifyTyvars (tyvar, tyvar', reg1, reg2)
 		 | ty' =>  (* incompatible reduced ty *)
 		     (debugPPType ("instTyvar[OVLDI] Fail: ", ty');
 		      raise Unify (OVLD_F "INT tyvar unified with incompatible type"))))
@@ -595,7 +593,7 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 		      if OLC.inClass(ty', OLC.wordClass)
 		      then instantiate (tyvar, ty')
 		      else raise Unify (OVLD_F "WORD tyvar unified with non-word type"))
-		 | VARty (tyvar' as ref (OPEN _ | OVLDW _ | OVLDV _)) => tyvar' := !tyvar  (* ok *)
+		 | VARty tyvar' => unifyTyvars (tyvar, tyvar', reg1, reg2)
 		 | ty' => (* incompatible reduced ty *)
 		     (debugPPType ("instTyvar[OVLDW] Fail: ", ty');
 		      raise Unify (OVLD_F "WORD tyvar unified with incompatible type"))))
