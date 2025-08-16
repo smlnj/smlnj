@@ -61,8 +61,11 @@ is
 	smlfile/smlinfomap.sml
 	smlfile/skeleton.sml
 	smlfile/skel-cvt.sml
-	smlfile/skel-io.sml
 	smlfile/skel-exports.sml
+        (* skeleton pickle I/O *)
+	smlfile/skel-io.sml
+	smlfile/skeleton-file-pickle.sml
+	smlfile/skeleton-pickle.sig
 
 	(* handling stable groups *)
 	stable/bininfo.sml
@@ -121,9 +124,10 @@ is
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/execute.cm
 	$smlnj/viscomp/core.cm
-	
+
 	$/pickle-lib.cm
 
 	(* auxiliary libraries *)
 	$smlnj/ml-yacc/ml-yacc-lib.cm
+        $smlnj/asdl/asdl-lib.cm
 	$/pgraph.cm

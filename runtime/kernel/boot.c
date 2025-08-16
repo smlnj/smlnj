@@ -507,13 +507,13 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
             ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
             thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint);
-    
+
             /* how much more? */
             remainingCode -= thisSzB + 2 * sizeof(Int32_t);
             if (remainingCode != 0) {
                 Die ("format error (code size mismatch) in bin file \"%s\"", fname);
             }
-    
+
             {
                 char *buffer = MALLOC(thisSzB);
                 ReadBinFile (file, buffer, thisSzB, fname);
@@ -531,7 +531,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             /* read the size of the CFG pickle */
             ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
             thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-    
+
             /* how much more? */
             remainingCode -= thisSzB + sizeof(Int32_t);
             if (remainingCode != 0) {
@@ -556,7 +556,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
                     codeObj = ML_AllocCode (msp, PTR_MLtoC(void, code), thisSzB);
                 DISABLE_CODE_WRITE
                 FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
-                
+
                 FREE(pkl);
             }
         }

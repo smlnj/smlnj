@@ -193,7 +193,7 @@ fun ppPat env ppstrm =
 	      ppType env ppstrm t;
 	      closeBox ())
           | ppPat' (MARKpat(p,region), d) = ppPat' (p,d)
-	  | ppPat' _ = bug "ppPat'"
+          | ppPat' (NOpat, d) = pps "<error_pat>"
      in ppPat'
     end (* fun ppPat *)
 

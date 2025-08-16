@@ -12,3 +12,7 @@ module TestSpec {
   node_ref = node!
 
 }
+
+view SML {
+  <file> <= share_context_name : NodeContext
+}

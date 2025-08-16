@@ -178,8 +178,12 @@ fun occurCheck (tyvar, ty) =
     (* scan : T.ty -> unit; raises Occur *)
     let fun scan WILDCARDty = ()
 	  | scan (MARKty(ty,_)) = scan ty
-	  | scan (VARty tyvar') =
-	      if TU.eqTyvar (tyvar, tyvar') then raise Occurs else ()
+	  | scan (VARty (tyvar' as ref tvkind)) =
+              (case tvkind
+                 of INSTANTIATED ty =>
+                      scan ty
+                  | _ =>
+                      if TU.eqTyvar (tyvar, tyvar') then raise Occurs else ())
 	  | scan (CONty(tycon,args)) =
 	      app scan args
 	  | scan _ = ()
@@ -542,24 +546,12 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 		     (debugPPType("instTyvar[OVLD] OK: ",ty');
 		      if eq then adjustType(tyvar, T.infinity, eq, ty', reg1, reg2) else ();
 		      instantiate (tyvar, ty'))
-		 | ty' as VARty tyvar' =>
-		     (case !tyvar'
-		       of OPEN _ =>
-			    (dbsaynl "### instTyvar[OVLDV/OPEN]";
-			     instantiate (tyvar', VARty tyvar))  (* was: tyvar' := !tyvar *)
-			| (OVLDI _ | OVLDW _) => (* eq = true for these *)
-			    (dbsaynl "### instTyvar[OVLDV/OPEN]";
-			     instantiate (tyvar, ty'))  (* was: tyvar := !tyvar' *)
-		        | OVLDV _ => dbsaynl "### instTyvar[OVLDV/OVLDV]"
-			    (* do nothing?  Leave original OVLDV in alone?
-			     * likely same tyvar, so instantiating may create a cycle *)
-		        | UBOUND {name,...} =>
-			    bug ("instTyvar[OVLDV/UBOUND]: " ^ S.name name)
-			    (* can't unify a UBOUND with an overload tyvar *)
-		        | LBOUND _ => bug "instTyvar[OVLDV/LBOUND]" (* not relevant *)
-		        | INSTANTIATED _ => bug "instTyvar[OVLDV/INSTANTIATED]")
-			    (* headReduceType cannot return an instantiated tyvar, it prunes *)
-		     (* POLICY: literal overloads take priority over function overloads (?) *)
+		 | VARty tyvar' =>
+                     (* When `ty` is not a TyVar but is head-reduced to a TyVar,
+                      * this is the same case as unifyTyvars. The call could be
+                      * inlined, but the direction of instantiation matters
+                      * for overload resolution. *)
+                     unifyTyvars (tyvar, tyvar', reg1, reg2)
 		 | ty' => (* incompatible ty *)
 		     (debugPPType ("instTyvar[OVLDV] Fail: ", ty');
 		      raise Unify (OVLD_F "OVLDV tyvar unified with incompatible type"))))
@@ -577,7 +569,7 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 		      if OLC.inClass(ty', OLC.intClass)
 		      then instantiate (tyvar, ty')
 		      else raise Unify (OVLD_F "INT tyvar instantiated to non-int type"))
-		 | VARty (tyvar' as ref (OPEN _ | OVLDI _ | OVLDV _)) => tyvar' := !tyvar  (* ok *)
+		 | VARty tyvar' => unifyTyvars (tyvar, tyvar', reg1, reg2)
 		 | ty' =>  (* incompatible reduced ty *)
 		     (debugPPType ("instTyvar[OVLDI] Fail: ", ty');
 		      raise Unify (OVLD_F "INT tyvar unified with incompatible type"))))
@@ -595,7 +587,7 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 		      if OLC.inClass(ty', OLC.wordClass)
 		      then instantiate (tyvar, ty')
 		      else raise Unify (OVLD_F "WORD tyvar unified with non-word type"))
-		 | VARty (tyvar' as ref (OPEN _ | OVLDW _ | OVLDV _)) => tyvar' := !tyvar  (* ok *)
+		 | VARty tyvar' => unifyTyvars (tyvar, tyvar', reg1, reg2)
 		 | ty' => (* incompatible reduced ty *)
 		     (debugPPType ("instTyvar[OVLDW] Fail: ", ty');
 		      raise Unify (OVLD_F "WORD tyvar unified with incompatible type"))))
@@ -607,9 +599,12 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
           | _ => (* check if ty reduces to same tyvar *)
 	     (case TU.headReduceType ty
 	       of VARty tyvar' =>
- 		    if TU.eqTyvar (tyvar, tyvar') then ()  (* tyvar cannot be instantiated *)
-		    else (dbsaynl "instTyvar[UBOUND]: raising Unify";
-			  raise Unify (UBV (i, ty, reg1, reg2)))
+ 		    if TU.eqTyvar (tyvar, tyvar') then ()  (* immediate success *)
+		    else
+                      (* Although a UBOUND tyvar can't be instantiated as
+                       * another tyvar', tyvar' may be able to instantiated as
+                       * tyvar. Use unityTyvars to handle the cases. *)
+                      unifyTyvars (tyvar, tyvar', reg1, reg2)
 	        | ty' => raise Unify (UBV (i, ty', reg1, reg2))))
               (* could return the ty for error msg*)
 

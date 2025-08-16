@@ -27,10 +27,12 @@ structure CommonView : sig
 		(PN.implementation_prologue, true),
 		(PN.interface_epilogue, true),
 		(PN.interface_prologue, true),
+                (PN.share_context_name, true),
 		(PN.suppress, false)
 	      ],
 	    moduleProps = List.map prop [
 		(PN.name, false),
+                (PN.pickler_name, false),
 		(PN.interface_prologue, true),
 		(PN.interface_epilogue, true),
 		(PN.implementation_prologue, true),

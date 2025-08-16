@@ -24,11 +24,12 @@ structure SkelIO :> SKELIO =
           in
             if vers = version
               then SkeletonFilePickle.read_decl inS
-(* FIXME: print an error message *)
-              else raise Fail(concat[
-                  "SkelIO: incorrect version string \"", String.toString vers,
-                  "\", expected \"", String.toString version, "\""
-                ])
+              else (
+                ErrorMsg.warn (concat[
+                    "SkelIO.read: incorrect version string \"", String.toString vers,
+                    "\", expected \"", String.toString version, "\""
+                  ]);
+                raise Fail "bad version")
           end
 
     fun read (s, ts) = if TStamp.needsUpdate { target = TStamp.fmodTime s, source = ts }

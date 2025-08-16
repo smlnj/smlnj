@@ -333,7 +333,7 @@ functor GenPickleFn (
                   getPklModName modId, ".", Util.unpicklerName tyId
                 ])
             | tyReader (E.LOCAL(_, tyId)) = S.IDexp(Util.unpicklerName tyId)
-          fun genTag tagTyId = S.APPexp(primReader tagTyId, inSV)
+          fun genTag tagTyId = S.appExp(primReader tagTyId, inS)
           val dfltRule = (S.WILDpat, S.raiseExp(S.IDexp "ASDL.DecodeError"))
           fun gen (E.UNIT conId) = S.IDexp(getConName conId)
             | gen (E.ENUM(nCons, cons)) = let
@@ -382,16 +382,16 @@ functor GenPickleFn (
           and genTyExp (E.OPTION ty) =
                 S.appExp(
                   funApp ("readOption", [tyReader ty]),
-                  inS)
+                  inSV)
             | genTyExp (E.SEQUENCE ty) =
                 S.appExp(
                   funApp ("readSeq", [tyReader ty]),
-                  inS)
+                  inSV)
             | genTyExp (E.SHARED ty) =
                 S.appExp(
                   funApp ("readShared", [tyReader ty, GenShCxt.selector ty]),
-                  inS)
-            | genTyExp (E.TYP ty) = S.appExp (tyReader ty, inS)
+                  inSV)
+            | genTyExp (E.TYP ty) = S.appExp (tyReader ty, inSV)
         (* generate the body of the reader; which may involve a conversion
          * to the natural type.
          *)
