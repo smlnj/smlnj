@@ -73,14 +73,21 @@ Here is a list of the issues that are fixed (or closed) with this release.
 |=======
 | Issue
 | Description
+| [.bugid]#137#
+| {issue-base}/137[Typechecker hangs with a large number of curried arguments]
+| [.bugid]#262#
+| {issue-base}/262[Compiler bug in type checker: unexpected pattern]
 | [.bugid]#314#
-| {issue-base}/@314[LLVM fails to build using the `build.sh` script]
+| {issue-base}/314[LLVM fails to build using the `build.sh` script]
 | [.bugid]#315#
 | {issue-base}/315[Run-time system fails to build using the `build.sh` script]
 | [.bugid]#316#
 | {issue-base}/316[asdlgen fails to build with gcc 15]
+| {.bugid}#317#
+| {issue-base}/317[Bug in type checking/inference with type abbreviations through transparent functor application]
 | [.bugid]#319#
 | {issue-base}/319[Nondeterministic import order]
+//| [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
