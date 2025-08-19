@@ -68,6 +68,7 @@ SayDebug ("  %#x:  [%p, %p)\n", ap->id, ap->nextw, p);
 	}
 	else {
 	    ap->tospBase	= NIL(ml_val_t *);
+	    ap->frspBase	= NIL(ml_val_t *);
 	    ap->nextw		= NIL(ml_val_t *);
 	    ap->sweep_nextw	= NIL(ml_val_t *);
 	    ap->tospTop		= NIL(ml_val_t *);
@@ -76,10 +77,11 @@ SayDebug ("  %#x:  [%p, %p)\n", ap->id, ap->nextw, p);
 
     ap = gen->arena[PAIR_INDX];
     if (isACTIVE(ap)) {
-      /* The first slot of pair-space cannot be used, so that poly-equal won't fault */
+      /* The first slot of pair-space cannot be used, so that poly-equal won't
+       * fault. We do not move the tospBase because functions like `ExportHeap`
+       * and `MarkRegion` assume the base to be page-aligned. */
 	*(ap->nextw++) = ML_unit;
 	*(ap->nextw++) = ML_unit;
-	ap->tospBase = ap->nextw;
 	ap->sweep_nextw = ap->nextw;
     }
 
@@ -169,7 +171,8 @@ void NewDirtyVector (gen_t *gen)
 /* MarkRegion:
  *
  * Mark the BIBOP entries corresponding to the range [baseAddr, baseAddr+szB)
- * with aid.  The `szb` parameter should be a multiple of the BIBOP page size
+ * with aid.  The `baseAddr` parameter should be page-aligned, and the `szb`
+ * parameter should be a multiple of the BIBOP page size
  */
 void MarkRegion (bibop_t bibop, ml_val_t *baseAddr, Addr_t szB, aid_t aid)
 {
