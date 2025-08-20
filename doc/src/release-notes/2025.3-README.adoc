@@ -87,6 +87,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/317[Bug in type checking/inference with type abbreviations through transparent functor application]
 | [.bugid]#319#
 | {issue-base}/319[Nondeterministic import order]
+| [.bugid]#322#
+| {pull-base}/322[Fix heap export inconsistency caused by pair arena offsets]
 //| [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
