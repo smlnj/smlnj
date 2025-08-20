@@ -104,6 +104,20 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/08/19]::
+Changed the base pointer of a pair arena to be page-aligned,
+consistent with the base pointers of all other arenas.
+Previously, the convention is to make the base pointer offset by two
+words because `polyEqual` expects a header word before all objects.
+But when the size of the pair arena is exactly the size of a page,
+`MarkRegion` erroneously ignores the first two words of the last page.
++
+See https://github.com/smlnj/smlnj/pull/322[Pull Request #322] for
+details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2025/08/11]::
 Reworked type unification. When unifying two types, sometimes the
 types cannot be unified directly, but their head-reduced forms can.
