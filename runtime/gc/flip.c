@@ -1,9 +1,12 @@
-/* flip.c
- *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.
+/*! \file flip.c
  *
  * This code determines which generations to flip and what the
  * to-space sizes should be.
+ *
+ * \author John Reppy
+ *
+ * COPYRIGHT (c) 2025 John Reppy (https://cs.uchicago.edu/~jhr)
+ * All rights reserved.
  */
 
 #include "ml-base.h"
@@ -137,6 +140,7 @@ SayDebug ("    alloc %d\n", ap->tospSizeB);
 	    }
 	    else {
 		ap->nextw = NIL(ml_val_t *);
+                ap->sweep_nextw = NIL(ml_val_t *);
 		ap->tospTop = NIL(ml_val_t *);
 		ap->tospSizeB = 0;
 	    }
