@@ -7,8 +7,9 @@ The Fellowship of SML/NJ
 :tabsize: 8
 :note-caption: UPDATE
 :issue-base: https://github.com/smlnj/smlnj/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
-:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
 
 This file documents changes to the *Standard ML of New Jersey* system
 since January of 2014 (Versions after 110.78).  Earlier changes are
@@ -102,6 +103,20 @@ Here is an update to the entry
 
 //====================================================================
 == Recent updates
+
+//--------------------------------------------------------------------
+[2025/08/19]::
+Changed the base pointer of a pair arena to be page-aligned,
+consistent with the base pointers of all other arenas.
+Previously, the convention is to make the base pointer offset by two
+words because `polyEqual` expects a header word before all objects.
+But when the size of the pair arena is exactly the size of a page,
+`MarkRegion` erroneously ignores the first two words of the last page.
++
+See {pull-base}/322[Pull Request #322 (Fix heap export inconsistency
+caused by pair arena offsets)] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
 //--------------------------------------------------------------------
 [2025/08/11]::
