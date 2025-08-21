@@ -21,6 +21,14 @@ structure BaseTypes : sig
     val identifierTyId	: AST.TypeId.t
     val stringTyId	: AST.TypeId.t
 
+  (* tests for base types *)
+    val isBoolTyId      : AST.TypeId.t -> bool
+    val isIntTyId       : AST.TypeId.t -> bool
+    val isUIntTyId      : AST.TypeId.t -> bool
+    val isIntegerTyId   : AST.TypeId.t -> bool
+    val isIdentifierTyId : AST.TypeId.t -> bool
+    val isStringTyId    : AST.TypeId.t -> bool
+
   (* base types *)
     val boolTy		: AST.named_ty
     val intTy		: AST.named_ty
@@ -48,6 +56,13 @@ structure BaseTypes : sig
     val integerTyId	= TId.new (Atom.atom "integer")
     val identifierTyId	= TId.new (Atom.atom "identifier")
     val stringTyId	= TId.new (Atom.atom "string")
+
+    fun isBoolTyId id = TId.same(boolTyId, id)
+    fun isIntTyId id = TId.same(intTyId, id)
+    fun isUIntTyId id = TId.same(uintTyId, id)
+    fun isIntegerTyId id = TId.same(integerTyId, id)
+    fun isIdentifierTyId id = TId.same(identifierTyId, id)
+    fun isStringTyId id = TId.same(stringTyId, id)
 
     val boolTy		= AST.BaseTy boolTyId
     val intTy		= AST.BaseTy intTyId
