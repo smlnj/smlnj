@@ -49,6 +49,8 @@ FILES::
 
 === Runtime System
 
+* fixed some space leaks in the ASDL generated code
+
 === Basis Library
 
 === SML/NJ Library
@@ -60,6 +62,8 @@ FILES::
 === ASDL
 
 * Added the `is_datatype` property
+
+* Fixed the generation of destructors for sequences
 
 === Documentation
 
