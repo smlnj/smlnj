@@ -312,6 +312,7 @@ void FreeExportTbl (export_table_t *tbl)
     if (tbl->itemMap != NIL(item_t **))
 	FREE (tbl->itemMap);
 
+    FREE (tbl->table);
     FREE (tbl);
 
 } /* end of FreeExportTbl */
