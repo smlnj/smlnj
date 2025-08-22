@@ -118,6 +118,7 @@ PVT status_t ExportImage (ml_state_t *msp, int kind, FILE *file)
 	HeapIO_WriteImageHeader(wr, kind);
 	WR_Write(wr, &heapHdr, sizeof(heapHdr));
 	if (WR_Error(wr)) {
+            FreeExportTbl(exportTbl);
 	    WR_Free(wr);
 	    return FAILURE;
 	}
@@ -159,6 +160,7 @@ PVT status_t ExportImage (ml_state_t *msp, int kind, FILE *file)
     if (kind != EXPORT_FN_IMAGE)
 	RepairHeap (exportTbl, heap);
 
+    FreeExportTbl(exportTbl);
     WR_Free(wr);
 
     return status;
@@ -387,7 +389,5 @@ PVT void RepairHeap (export_table_t *tbl, heap_t *heap)
 	RepairArena(PAIR_INDX);
 	RepairArena(ARRAY_INDX);
     }
-
-    FreeExportTbl (tbl);
 
 } /* end of RepairHeap */
