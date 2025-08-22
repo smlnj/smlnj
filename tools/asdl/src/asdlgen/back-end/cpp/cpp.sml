@@ -142,6 +142,8 @@ structure Cpp =
       | S_DoWhile of stm * exp          (* 'do' stm 'while' exp *)
       | S_For of ty * (var * exp) list * exp * exp list * stm
                                         (* 'for' '(' decl ';' exp ';' incrs ')' stm *)
+      | S_ForRange of ty * var * exp * stm
+                                        (* 'for' '(' ty x ':' exp ')' stm *)
       | S_Return of exp option          (* 'return' [ exp ] ';' *)
       | S_Break                         (* 'break' ';' *)
       | S_Continue                      (* 'continue' ';' *)

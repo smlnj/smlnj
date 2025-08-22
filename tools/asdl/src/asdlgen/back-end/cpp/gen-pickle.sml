@@ -138,16 +138,25 @@ structure GenPickle : sig
             (* end case *)
           end
 
+(* FIXME: when arena-allocation is enabled, the destructors should be empty *)
   (* return a list of delete statements for boxed fields of an object *)
     fun deleteStms obj = let
           fun field label = CL.mkIndirect(CL.mkVar "this", U.fieldName label)
           fun delete (label, E.OPTION ty, stms) =
+(* FIXME: we should generate something like
+ *
+ *      if (this->label.has_value()) { delete this->label.value(); }
+ *)
                 if isBoxed ty
                   then CL.mkIfThen(
                     CL.mkBinOp(field label, CL.#!=, CL.mkVar "nullptr"),
                     CL.mkDelete(field label)) :: stms
                   else stms
-            | delete (_, E.SEQUENCE _, stms) = stms (* std::vector is unboxed *)
+            | delete (label, E.SEQUENCE ty, stms) =
+                if isBoxed ty
+                  then CL.S_ForRange(CL.autoTy, "item", field label,
+                    CL.mkDelete(CL.mkVar "item")) :: stms
+                else stms
             | delete (_, E.SHARED _, _) = raise Fail "shared types not supported"
             | delete (label, E.TYP ty, stms) =
                 if isBoxed ty
