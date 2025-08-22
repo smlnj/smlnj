@@ -478,12 +478,9 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 	int 		nPages = boRelocInfo[i].nPages;
 	for (j = 0;  j < nPages;  j++) {
 	    if ((boRelocInfo[i].objMap[j] != NIL(bo_reloc_t *))
+	    /* skip over all entries that map to previous `p` */
 	    && (boRelocInfo[i].objMap[j] != p)) {
 		p = boRelocInfo[i].objMap[j];
-	      /* skip over all entries that map to `p` */
-		while ((j < nPages) && (boRelocInfo[i].objMap[j] == p)) {
-		    j++;
-		}
 		FREE (p);
 	    }
 	}
