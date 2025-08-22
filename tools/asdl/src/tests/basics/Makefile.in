@@ -21,11 +21,11 @@ LIBS =			@LIBS@ -lasdl
 CXX_SRCS =          	cpp-test.cpp test-spec.cpp
 CXX_OBJS =          	$(patsubst %.cpp,%.o,$(CXX_SRCS))
 
-build:		cxx-test sml-test
+build:		cpp-test sml-test
 
 ##### C++ test
 #
-cxx-test:	$(CXX_OBJS)
+cpp-test:	$(CXX_OBJS)
 	$(CXX) -o $@ $(CXX_OBJS) $(LDFLAGS) $(LIBS)
 
 %.o : %.cpp
@@ -56,7 +56,7 @@ build:
 
 #################### Cleanup ####################
 
-CLEAN_FILES =		cxx-test \
+CLEAN_FILES =		cpp-test \
 			$(CXX_OBJS) \
 			test-spec.hpp test-spec.cpp
 
