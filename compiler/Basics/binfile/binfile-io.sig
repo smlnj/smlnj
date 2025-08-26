@@ -49,19 +49,66 @@ signature BINFILE_IO =
             sects : sect_desc vector
           }
 
+        (* is the binfile an archive? *)
+        val isArchive : hdr -> bool
+
         (* the current version *)
         val version : word
 
+        (* return the size (in bytes) of a header *)
+        val sizeOfHdr : t -> int
+
+        (* return the size (in bytes) of the binfile described by the header *)
+        val sizeOfBinfile : t -> int
+
       end
 
-    val size : sect -> int
+    (***** Section input *****)
+    structure In : sig
+        type t
+        type sect
 
-    (** Section output *)
-    val outInt32 : sect * Int32.int -> unit
-    val outWord32 : sect * Word32.int -> unit
-    val outString : sect * string -> unit
-    val outBytes : sect * Word8Vector.vector -> unit
-    val outBytes' : sect * Word8VectorSlice.slice -> unit
-    val finish : sect -> unit
+        val openFile : string -> t
+        val openStream : BinIO.instream -> t
+
+        val header : t -> Hdr.t
+
+        val section : t * SectId.t -> sect
+
+        val bytes : sect * int -> Word8Vector.vector
+        val string : sect * int -> string
+        val int32 : sect -> Int32.int
+        val word32 : sect -> Word32.int
+        val pid : sect -> PersStamps.persstamp
+
+      end
+
+    (***** Section output *****)
+    structure Out : sig
+        type t
+        type sect
+
+        val openFile : string -> t
+        val openStream : BinIO.outstream -> t
+
+        val finish : t -> unit
+
+        (* `section (bf, id, sz, outFn)` adds a section with the given `id`
+         * and size `sz` in bytes.  The `outFn` is used to output the contents
+         * of the section using the functions below.
+         *)
+        val section : t * SectId.t * int * (sect -> unit) -> unit
+
+        val bytes : sect * Word8Vector.vector -> unit
+        val bytes' : sect * Word8VectorSlice.slice -> unit
+        val int32 : sect * Int32.int -> unit
+        val word32 : sect * Word32.int -> unit
+        val string : sect * string -> unit
+        val pid : sect * PersStamps.persstamp -> unit
+
+      end
+
+    (* error messages for Binfile I/O *)
+    val error : string -> 'a
 
   end

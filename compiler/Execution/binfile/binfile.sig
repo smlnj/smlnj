@@ -1,9 +1,9 @@
 (* binfile.sig
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
- * author: Matthias Blume and John Reppy
+ * author: Matthias Blume
  *
  * This revised version of signature BINFILE is now machine-independent.
  * Moreover, it deals with the file format only and does not know how to
@@ -16,17 +16,8 @@
 
 signature BINFILE = sig
 
-    (* the contents of a binfile *)
-    type t
-
-    (* sections of a binfile.
-     * NOTE: eventually, we should generalize this type to cover the other
-     * parts of the file.
-     *)
-    datatype section
-      = Literals of Word8Vector.vector
-      | CFGPickle of Word8Vector.vector
-      | Code of CodeObj.t
+  (* the contents of a binfile *)
+    type bfContents
 
     type version_info = {
         bfVersion : word,       (* the binfile version; this will be 0w0 for
@@ -46,21 +37,21 @@ signature BINFILE = sig
     exception FormatError
 
     type pid = PersStamps.persstamp
-    type stats = { env : int, data : int, code : int }
-    type pickle = { pid : pid, pickle : Word8Vector.vector }
+    type stats = { env: int, data: int, code: int }
+    type pickle = { pid: pid, pickle: Word8Vector.vector }
 
-    val staticPidOf    : t -> pid
-    val exportPidOf    : t -> pid option
-    val cmDataOf       : t -> pid list
+    val staticPidOf    : bfContents -> pid
+    val exportPidOf    : bfContents -> pid option
+    val cmDataOf       : bfContents -> pid list
 
-    val senvPickleOf   : t -> pickle
+    val senvPickleOf   : bfContents -> pickle
 
-    val guidOf         : t -> string
+    val guidOf         : bfContents -> string
 
-    (* calculate the size in bytes occupied by some binfile contents *)
-    val size : { contents : t, nopickle : bool } -> int
+  (* calculate the size in bytes occupied by some binfile contents *)
+    val size : { contents: bfContents, nopickle: bool } -> int
 
-    (* create the abstract binfile contents *)
+  (* create the abstract binfile contents *)
     val create : {
             version : version_info,
 	    imports: ImportTree.import list,
@@ -68,28 +59,28 @@ signature BINFILE = sig
 	    cmData: pid list,
 	    senv: pickle,
 	    guid: string,
-            sections : section list
-	  } -> t
+	    csegments: CodeObj.csegments
+	  } -> bfContents
 
-    (* read just the guid *)
+  (* read just the guid *)
     val readGUid : BinIO.instream -> string
 
-    (* read binfile contents from an IO stream *)
+  (* read binfile contents from an IO stream *)
     val read : {
-            version : version_info,             (* expected binfile version *)
+            version : version_info,                     (* expected binfile version *)
 	    stream: BinIO.instream
-	  } -> { contents : t, stats : stats }
+	  } -> { contents: bfContents, stats: stats }
 
-    (* write binfile contents to an IO stream *)
+  (* write binfile contents to an IO stream *)
     val write : {
-	    stream : BinIO.outstream,
-	    contents : t, nopickle : bool
+	    stream: BinIO.outstream,
+	    contents: bfContents, nopickle: bool
 	  } -> stats
 
-    (* Given a dynamic environment, link the code object contained in
-     * some given binfile contents. The result is the delta environment
-     * containing the bindings (if any) resulting from this link operation.
-     *)
-    val exec : t * DynamicEnv.env * (exn -> exn) -> DynamicEnv.env
+  (* Given a dynamic environment, link the code object contained in
+   * some given binfile contents. The result is the delta environment
+   * containing the bindings (if any) resulting from this link operation.
+   *)
+    val exec : bfContents * DynamicEnv.env * (exn -> exn) -> DynamicEnv.env
 
   end

@@ -1,17 +1,20 @@
 (* binfile.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
  *
  * author: Matthias Blume and John Reppy
  *
- * See dev-notes/binfile.adoc for a description of the binfile format.
- * This file must be kept in sync with runtime/kernel/boot.c.
+ * This file is an implementation of the old `BINFILE` signature using the new
+ * binfile format, which is described in
+ *
+ *      https://github.com/smlnj/.github/wiki/New-Binfile-Format
  *)
 
 structure Binfile :> BINFILE =
   struct
 
+    structure BFIO = BinfileIO
     structure Pid = PersStamps
     structure W8V = Word8Vector
     structure SS = Substring
@@ -20,11 +23,13 @@ structure Binfile :> BINFILE =
 
     type pid = Pid.persstamp
 
+    type csegments = CodeObj.csegments
+
     type executable = CodeObj.executable
 
-    type stats = { env : int, data : int, code: int }
+    type stats = { env: int, data: int, code: int }
 
-    type pickle = { pid : pid, pickle : W8V.vector }
+    type pickle = { pid: pid, pickle: W8V.vector }
 
     type version_info = {
         bfVersion : word,       (* will be 0w0 for old versions *)
@@ -32,49 +37,166 @@ structure Binfile :> BINFILE =
         smlnjVersion : string
       }
 
-    val bfVersion = 0wx20250401 (* Bin File version 2025-04-01 *)
-
-    fun mkVersion {arch, smlnjVersion} : version_info = {
-            bfVersion = bfVersion,
-            arch = arch,
-            smlnjVersion = smlnjVersion
-          }
-
-    (* sections of a binfile.
-     * NOTE: eventually, we should generalize this type to cover the other
-     * parts of the file.
-     *)
-    datatype section
-      = Literals of Word8Vector.vector
-      | CFGPickle of Word8Vector.vector
-      | Code of CodeObj.t
-
-    datatype t = BF of {
+    datatype bfContents = BF of {
         version : version_info,
-	imports : ImportTree.import list,
-	exportPid : pid option,
-	cmData : pid list,
-	senv : pickle,
-	guid : string,
-	sections : section list,
+	imports: ImportTree.import list,
+	exportPid: pid option,
+	cmData: pid list,
+	senv: pickle,
+	guid: string,
+	csegments: csegments,
 	executable: executable option ref
       }
 
     fun unBF (BF x) = x
 
     val version = #version o unBF
-
-    val bytesPerPid = Pid.persStampSize
-    val oldVersInfoSzb = 16
-    val newVersInfoSzb = 40     (* post 2021.1 *)
-
-    val binFileKind = "BinFile "
-
+    val staticPidOf = #pid o senvPickleOf
     val exportPidOf = #exportPid o unBF
     val cmDataOf = #cmData o unBF
     val senvPickleOf = #senv o unBF
-    val staticPidOf = #pid o senvPickleOf
+    val guidOf = #guid o unBF
 
+    fun create { version, imports, exportPid, cmData, senv, csegments, guid } = BF{
+            version = version,
+	    imports = imports,
+	    exportPid = exportPid,
+	    cmData = cmData,
+	    senv = senv,
+	    guid = guid,
+	    csegments = csegments,
+	    executable = ref NONE
+	  }
+
+(* mapping from old binfile format to sections:
+        header info                             ==> "INFO"
+        imports                                 ==> "IMPT"
+        export pid list                         ==> "EXPT"
+        static pid + environment pids           ==> "PIDS" (static pid is in "SENV")
+        guid                                    ==> "GUID"
+        literal data segment                    ==> "LITS"
+        code segments                           ==> "CODE"
+        static environment (conditional)        ==> "SENV" (includes pid)
+ *)
+
+    (***** SECTIONS *****)
+
+    type info_sect = {
+        arch : string,
+        opsys : string
+      }
+
+    (***** INPUT OPERATIONS *****)
+
+    fun readGUid s = let
+
+(* FIXME: instead of passing the `version_info`, we should just pass the expected
+ * SML/NJ version and architecture.
+ *)
+    fun read { version : version_info, stream } = let
+          val inS = BFIO.openInstream stream
+          val hdr = BFIO.getHeader inS
+          (* check that we have a Binfile and not an archive *)
+          val _ = if (BFIO.Hdr.isArchive hdr)
+                then BFIO.error "unexpected stable archive"
+                else ()
+          (* helper function to get a section *)
+          fun getSection sectId = (case BFIO.findSection(inS, sectId)
+                 of SOME sect => sect
+                  | NONE => BFIO.error(concat[
+                        "missing '", BFIO.SectId.toString sectId, "' section"
+                      ])
+                (* end case *))
+          (* get the `info` section *)
+          val {arch, opsys} = let
+                val sect = getSection BFIO.SectId.info
+                in
+                  BFIO.checkSectionSize (sect, 16);
+                  {arch = BFIO.inString(sect, 8), opsys = BFIO.inString(sect, 8)}
+                end
+          (* compute the old-style version info for the binfile *)
+          val version' = let
+                val smlnjVers = let
+                      val vn = String.concatWithMap "." Int.toString
+                            (#id (#smlnjVersion hdr))
+                      val v = if (#suffix(#smlnjVersion hdr) = "")
+                            then vn
+                            else concat[vn, "-", suffix]
+                      in
+                        (* the SML/NJ version string in the old binfile format is 16 bytes *)
+                        if (size v > 16)
+                          then substring (v, 0, 16)
+                        else if (size v < 16)
+                          then StringCvt.padRight #" " 16 v
+                          else v
+                      end
+                in
+                  { bfVersion = #version hdr, arch = arch, smlnjVersion = smlnjVers }
+                end
+(* TODO: check version *)
+(* TODO: read contents from sections *)
+	  in {
+	    contents = create {
+                version = version',
+		imports = imports,
+		exportPid = exportPid,
+		cmData = cmData,
+		senv = { pid = staticPid, pickle = penv },
+		guid = guid,
+		csegments = code
+	      },
+	    stats = {
+		env = es, code = cs,
+		data = W8V.length (#data code)
+	      }
+	  } end
+
+    (***** OUTPUT OPERATIONS *****)
+
+    fun size { contents, nopickle } = let
+          in
+          end
+
+    fun write { stream, contents, nopickle } = let
+          val container = BFIO.new P
+          in
+          end
+
+
+
+
+
+
+
+
+    fun mkSMLNJVersion (hdr : Hdr.t) = let
+          val vn = String.concatWithMap "." Int.toString (#id (#smlnjVersion hdr))
+          val v = if (#suffix(#smlnjVersion hdr) = "")
+                then vn
+                else concat[vn, "-", suffix]
+          in
+            (* the SML/NJ version string in the old binfile format is 16 bytes *)
+            if (size v > 16)
+              then substring (v, 0, 16)
+            else if (size v < 16)
+              then StringCvt.padRight #" " 16 v
+              else v
+          end
+
+    fun version (BF{hdr, ...}) = let
+          val {arch, opsys} = (* get info section *)
+          in {
+            bfVersion = #version hdr,
+            arch = arch,
+            smlnjVersion = mkSMLNJVersion hdr
+          } end
+
+    val bytesPerPid = Pid.persStampSize
+
+    val staticPidOf = #pid o senvPickleOf
+    val exportPidOf = #exportPid o unBF
+    val cmDataOf = #cmData o unBF
+    val senvPickleOf = #senv o unBF
     val guidOf = #guid o unBF
 
     fun error msg = (
@@ -115,7 +237,7 @@ structure Binfile :> BINFILE =
 	  end
 
     fun readPid s = Pid.fromBytes (bytesIn (s, bytesPerPid))
-    fun readPidList (s, n) = List.tabulate (n, fn _ => readPid s)
+    fun readPidList (s, n) = List.tabulate (n , fn _ => readPid s)
 
     fun readImportTree s = (case readPackedInt32 s
 	   of 0 => (ImportTree.ITNODE [], 1)
@@ -261,14 +383,14 @@ structure Binfile :> BINFILE =
 	    pickleSize senv
 	  end
 
-    fun create { version, imports, exportPid, cmData, senv, sections, guid } = BF{
+    fun create { version, imports, exportPid, cmData, senv, csegments, guid } = BF{
             version = version,
 	    imports = imports,
 	    exportPid = exportPid,
 	    cmData = cmData,
 	    senv = senv,
 	    guid = guid,
-	    sections = sections,
+	    csegments = csegments,
 	    executable = ref NONE
 	  }
 

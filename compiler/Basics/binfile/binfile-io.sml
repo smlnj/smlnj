@@ -5,12 +5,17 @@
  *
  * Basic I/O support for containerized binfiles (see
  * https://github.com/smlnj/.github/wiki/New-Binfile-Format)
+ * This file must be kept in sync with runtime/kernel/boot.c.
  *)
 
 structure BinfileIO :> BINFILE_IO =
   struct
 
     structure W = Word
+
+    fun error msg = (
+	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
+	  raise FormatError)
 
     (* section IDs are represented as words internally, and as four-character
      * little-endian codes externally.
@@ -70,6 +75,29 @@ structure BinfileIO :> BINFILE_IO =
             sects : sect_desc vector
           }
 
+        (* is the binfile an archive? *)
+        fun isArchive ({kind = StableArchive, ...} : t) = true
+          | isArchive _ = false
+
+        fun sizeOfHdr (hdr : t) = 32 + 16 * Vector.length(#sects hdr)
+
+        fun sizeOfFile (hdr : t) =
+              Vector.foldl
+                (fn ({size, ...}, acc) => acc + 8 * size)
+                  (sizeOfHdr hdr)
+                    (#sects hdr)
+
+        fun findSection (hdr : t, id : SectId.t) =
+              Vector.find (fn {kind, ...} => id = kind) (#sects hdr)
+
+      end
+
+    structure In =
+      struct
+      end
+
+    structure Out =
+      struct
       end
 
 
