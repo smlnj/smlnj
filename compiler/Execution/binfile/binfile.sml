@@ -68,6 +68,8 @@ structure Binfile :> BINFILE =
 	    executable = ref NONE
 	  }
 
+    val bytesPerPid = Pid.persStampSize
+
 (* mapping from old binfile format to sections:
         header info                             ==> "INFO"
         imports                                 ==> "IMPT"
@@ -153,12 +155,91 @@ structure Binfile :> BINFILE =
 
     (***** OUTPUT OPERATIONS *****)
 
+    local
+      structure B = Word8Buffer
+      structure IT = ImportTree
+      (* compute the size of the tree and the number of leaves *)
+      fun importTreeSize trees = let
+            (* packed ints use one byte per seven bits of source data *)
+            fun packedIntSz (n, sz) = let
+                  val n = LargeWord.fromInt i
+                  in
+                    if (n < 0wx80) then sz + 1
+                    else if (n < 0wx4000) then sz + 2
+                    else if (n < 0wx200000) then sz + 3
+                    else if (n < 0wx10000000) then sz + 4
+                    else sz + 5
+                  end
+            fun itreeSz (IT.ITNODE[], (nl, sz)) =
+                  (nl + 1, sz + 1)
+              | itreeSz (IT.ITNODE l, (nl, sz))) =
+                  List.foldl specSz (nl, packedIntSz (length l, sz)) l
+            and specSz ((selector, tree), (nl, sz)) =
+                  itreeSz (tree, (nl, packedIntSz (selector, sz)))
+            and importSz ((pid, tree), (nl, sz)) = itreeSz (tree, (nl, sz + bytesPerPid))
+            val (nLeaves, sz) = List.foldl importSz (0, 0) trees
+            in
+              (nLeaves, packedIntSz(nLeaves, sz))
+            end
+      (* encode a 32-bit integer as a little-endian sequence of 7-bit digits
+       * with an extension bit
+       *)
+      fun emitPackedInt32 (buf, 0) = B.add1(bud, 0w0)
+        | emitPackedInt32 (buf, i) = let
+            val // = LargeWord.div
+            val %% = LargeWord.mod
+            val !! = LargeWord.orb
+            infix // %% !!
+            val toW8 = Word8.fromLargeWord
+            fun emit 0w0 = ()
+              | emit n = (
+                  B.add1 (buf, toW8(n %% 0w128) !! 0w128);
+                  emit (n // 0w128))
+            in
+              emit (LargeWord.fromInt i)
+            end
+      fun emitImportSpec ((selector, tree), (n, p)) = (
+            emitPackedInt32 selector;
+            emitImportTree tree)
+      and emitImportTree (IT.ITNODE [], (n, p)) = emitPackedInt32 0
+	| emitImportTree (IT.ITNODE l, (n, p)) = (
+            emitPackedInt32 (List.length l);
+            List.app emitImportSpec l)
+      fun emitImport (pid, tree) = (
+            B.addVec (buf, Pid.toBytes pid);
+            emitImportTree tree)
+    in
+    fun pickleImports l = let
+          val (nLeaves, sz) = importTreeSize l
+          val buf = B.new sz
+          val () = (
+                emitPackedInt32 nLeaves;
+                List.app emitImport l)
+          in
+
+	  val (n, p) = foldr pickleImport (0, []) l
+	  in
+	    (n, W8V.concat p)
+	  end
+    end (* local *)
+
     fun size { contents, nopickle } = let
           in
           end
 
     fun write { stream, contents, nopickle } = let
-          val container = BFIO.new P
+	  val BF{ version, imports, exportPid, cmData, senv, csegments, guid, ... } =
+                contents
+	  val { pickle = senvP, pid = staticPid } = senv
+          val bf = BFIO.Out.openStream stream
+          (* output 'INFO' section *)
+          (* output 'IMPT' section *)
+          (* output 'EXPT' section *)
+          (* output 'PIDS' section *)
+          (* output 'GUID' section *)
+          (* output 'LITS' section *)
+          (* output 'CODE' section *)
+          (* output 'SENV' section *)
           in
           end
 
