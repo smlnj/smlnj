@@ -35,17 +35,19 @@ signature BINFILE_IO =
 
         datatype kind = BinFile | StableArchive
 
+        type smlnj_version = {id : int list, suffix : string}
+
         type sect_desc = {
-            kind : SectId.t,
-            flags : word,
-            offset : Position.int,
-            size : int
+            kind : SectId.t,            (* section ID *)
+            flags : word,               (* per-section flag bits; reserved for future *)
+            offset : Position.int,      (* offset from beginning of containing binfile *)
+            size : int                  (* size in bytes of section *)
           }
 
         type t = {
             kind : kind,
             version : word,
-            smlnjVersion : {id : int list, suffix : string},
+            smlnjVersion : smlnj_version,
             sects : sect_desc vector
           }
 
@@ -55,8 +57,10 @@ signature BINFILE_IO =
         (* the current version *)
         val version : word
 
-        (* return the size (in bytes) of a header *)
-        val sizeOfHdr : t -> int
+        (* `sizeOfHdr nSects` returns the size of a header that has `nSects`
+         * sections.
+         *)
+        val sizeOfHdr : int -> int
 
         (* return the size (in bytes) of the binfile described by the header *)
         val sizeOfBinfile : t -> int
@@ -73,13 +77,19 @@ signature BINFILE_IO =
 
         val header : t -> Hdr.t
 
-        val section : t * SectId.t -> sect
+        (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
+         * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
+         * the section is missing and `SOME contents` when the section is present
+         * and `inFn` returns `contents`.
+         *)
+        val section : t * SectId.t * (sect * int -> 'a) -> 'a option
 
         val bytes : sect * int -> Word8Vector.vector
         val string : sect * int -> string
         val int32 : sect -> Int32.int
         val word32 : sect -> Word32.int
         val pid : sect -> PersStamps.persstamp
+        val codeobj : sect * int -> CodeObj.code_object
 
       end
 
@@ -88,8 +98,8 @@ signature BINFILE_IO =
         type t
         type sect
 
-        val openFile : string -> t
-        val openStream : BinIO.outstream -> t
+        val openFile : string * Hdr.kind * smlnj_version -> t
+        val openStream : BinIO.outstream * Hdr.kind * smlnj_version -> t
 
         val finish : t -> unit
 
@@ -105,6 +115,7 @@ signature BINFILE_IO =
         val word32 : sect * Word32.int -> unit
         val string : sect * string -> unit
         val pid : sect * PersStamps.persstamp -> unit
+        val codeobj : sect * CodeObj.code_object -> unit
 
       end
 

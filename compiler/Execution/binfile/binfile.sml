@@ -96,25 +96,32 @@ structure Binfile :> BINFILE =
  * SML/NJ version and architecture.
  *)
     fun read { version : version_info, stream } = let
-          val inS = BFIO.openInstream stream
-          val hdr = BFIO.getHeader inS
+          val bf = BFIO.openInstream stream
+          val hdr = BFIO.getHeader bf
           (* check that we have a Binfile and not an archive *)
           val _ = if (BFIO.Hdr.isArchive hdr)
                 then BFIO.error "unexpected stable archive"
                 else ()
           (* helper function to get a section *)
-          fun getSection sectId = (case BFIO.findSection(inS, sectId)
-                 of SOME sect => sect
+          fun readSection (id, inFn) = (case BFIO.In.section(bf, id, inFn)
+                 of SOME contents => contents
                   | NONE => BFIO.error(concat[
                         "missing '", BFIO.SectId.toString sectId, "' section"
                       ])
                 (* end case *))
           (* get the `info` section *)
           val {arch, opsys} = let
-                val sect = getSection BFIO.SectId.info
+                fun inFn (sect, 16) = let
+                      val arch = BFIO.In.string(sect, 8)
+                      val opsys = BFIO.In.string(sect, 8)
+                      in
+                        {arch = arch, opsys = opsys}
+                      end
+                  | inFn (_, sz) = BFIO.error(concat[
+                        "invalid size (", Int.toString sz, " bytes) for info section"
+                      ])
                 in
-                  BFIO.checkSectionSize (sect, 16);
-                  {arch = BFIO.inString(sect, 8), opsys = BFIO.inString(sect, 8)}
+                  readSection (BFIO.SectId.info, inFn)
                 end
           (* compute the old-style version info for the binfile *)
           val version' = let
@@ -145,42 +152,38 @@ structure Binfile :> BINFILE =
 		cmData = cmData,
 		senv = { pid = staticPid, pickle = penv },
 		guid = guid,
-		csegments = code
+		csegments = {data = data, code = code}
 	      },
 	    stats = {
-		env = es, code = cs,
-		data = W8V.length (#data code)
+		env = W8V.length penv,
+                code = W8V.length code,
+		data = W8V.length data
 	      }
 	  } end
 
     (***** OUTPUT OPERATIONS *****)
 
+    (* pad/trim a string to fixed length *)
+    fun padString (s, n) = if (size s > n)
+            then substring (s, 0, n)
+          else if (size s < n)
+            then StringCvt.padLeft #" " n s
+            else s
+
+    (** info ('INFO') section **)
+    val infoSize = 16
+    fun addInfoSection (bf, arch, opsys) = let
+          fun outFn sect = (
+                BFIO.string(sect, padString(arch, 8));
+                BFIO.string(sect, padString(opsys, 8)))
+          in
+            BFIO.Out.section (bf, BFIO.SectId.info, infoSize, outFn)
+          end
+
+    (** imports ('IMPT') section **)
     local
       structure B = Word8Buffer
       structure IT = ImportTree
-      (* compute the size of the tree and the number of leaves *)
-      fun importTreeSize trees = let
-            (* packed ints use one byte per seven bits of source data *)
-            fun packedIntSz (n, sz) = let
-                  val n = LargeWord.fromInt i
-                  in
-                    if (n < 0wx80) then sz + 1
-                    else if (n < 0wx4000) then sz + 2
-                    else if (n < 0wx200000) then sz + 3
-                    else if (n < 0wx10000000) then sz + 4
-                    else sz + 5
-                  end
-            fun itreeSz (IT.ITNODE[], (nl, sz)) =
-                  (nl + 1, sz + 1)
-              | itreeSz (IT.ITNODE l, (nl, sz))) =
-                  List.foldl specSz (nl, packedIntSz (length l, sz)) l
-            and specSz ((selector, tree), (nl, sz)) =
-                  itreeSz (tree, (nl, packedIntSz (selector, sz)))
-            and importSz ((pid, tree), (nl, sz)) = itreeSz (tree, (nl, sz + bytesPerPid))
-            val (nLeaves, sz) = List.foldl importSz (0, 0) trees
-            in
-              (nLeaves, packedIntSz(nLeaves, sz))
-            end
       (* encode a 32-bit integer as a little-endian sequence of 7-bit digits
        * with an extension bit
        *)
@@ -209,39 +212,178 @@ structure Binfile :> BINFILE =
             B.addVec (buf, Pid.toBytes pid);
             emitImportTree tree)
     in
-    fun pickleImports l = let
-          val (nLeaves, sz) = importTreeSize l
-          val buf = B.new sz
-          val () = (
-                emitPackedInt32 nLeaves;
-                List.app emitImport l)
+    (* compute the size of the tree and the number of leaves *)
+    fun importTreeSize trees = let
+          (* packed ints use one byte per seven bits of source data *)
+          fun packedIntSz (n, sz) = let
+                val n = LargeWord.fromInt i
+                in
+                  if (n < 0wx80) then sz + 1
+                  else if (n < 0wx4000) then sz + 2
+                  else if (n < 0wx200000) then sz + 3
+                  else if (n < 0wx10000000) then sz + 4
+                  else sz + 5
+                end
+          fun itreeSz (IT.ITNODE[], (nl, sz)) =
+                (nl + 1, sz + 1)
+            | itreeSz (IT.ITNODE l, (nl, sz))) =
+                List.foldl specSz (nl, packedIntSz (length l, sz)) l
+          and specSz ((selector, tree), (nl, sz)) =
+                itreeSz (tree, (nl, packedIntSz (selector, sz)))
+          and importSz ((pid, tree), (nl, sz)) = itreeSz (tree, (nl, sz + bytesPerPid))
+          val (nLeaves, sz) = List.foldl importSz (0, 0) trees
           in
-
-	  val (n, p) = foldr pickleImport (0, []) l
-	  in
-	    (n, W8V.concat p)
-	  end
+            (nLeaves, packedIntSz(nLeaves, sz))
+          end
+    (* add an import tree section to the binfile *)
+    fun addImportTreeSection (bf, l) = let
+          val (nLeaves, sz) = importTreeSize l
+          fun outFn sect = let
+                val buf = B.new sz
+                val () = (
+                      emitPackedInt32 nLeaves;
+                      List.app emitImport l)
+                val res = B.contents buf
+                in
+                  if (W8V.length res <> sz)
+                    then raise Fail "Internal error: incorrect size for imports"
+                    else ();
+                  BFIO.Out.bytes (sect, res)
+                end
+          in
+            BFIO.Out.section (bf, BFIO.SectId.import, sz, outFn)
+          end
     end (* local *)
 
-    fun size { contents, nopickle } = let
+    (** export ('EXPT') section **)
+    fun exportSize NONE = 0
+      | exportSize (SOME _) = bytesPerPid
+    fun addExportSection (bf, optExportPid) = let
+          val (sz, outFn) = (case optExportPid
+                 of NONE => (0, fn _ => ())
+                  | SOME pid => (bytesPerPid, fn sect => BFIO.pid(sect, pid))
+                (* end case *))
           in
+            BFIO.Out.section (bf, BFIO.SectId.export, sz, outFn)
+          end
+
+    (** pids ('PIDS') section *)
+    fun pidsSize pids = bytesPerPid * List.length pids
+    fun addPidsSection (bf, pids) = let
+          val sz = pidsSize pids
+          fun outFn sect = List.app (fn pid => BFIO.pid(sect, pid)) pids
+          in
+            BFIO.Out.section (bf, BFIO.SectId.pids, sz, outFn)
+          end
+
+    (** Guid ('GUID') section *)
+    fun guidSz guid = String.size guid
+    fun addGuidSection (bf, guid) = let
+          val sz = guidSz guid
+          fun outFn sect = BFIO.string(sect, guid)
+          in
+            BFIO.Out.section (bf, BFIO.SectId.guid, sz, outFn)
+          end
+
+    (** literal ('LITS') section **)
+    fun literalSize data = W8V.length data
+    fun addLiteralSection (bf, data) = let
+          val sz = literalSize data
+          fun outFn sect = BFIO.Out.bytes(sect, data)
+          in
+            BFIO.Out.section (bf, BFIO.SectId.literals, sz, outFn)
+          end
+
+    (** code ('CODE') section **)
+    fun codeSize code = CodeObject.size code
+    fun addCodeSection (bf, code) = let
+          val sz = codeSize code
+          fun outFn sect = (
+                BFIO.Out.int32(sect, CodeObj.entrypoint code);
+                BFIO.Out.codeobj(sect, code))
+          in
+            BFIO.Out.section (bf, BFIO.SectId.code, sz, outFn)
+          end
+
+    (** static environment ('SENV') section **)
+    fun staticEnvSize (_, _, false) = bytesPerPid
+      | staticEnvSize (_, pkl, true) = bytesPerPid + W8V.length pkl
+    fun addStaticEnvSection (bf, pid, pkl, nopickle) = let
+          val sz = staticEnvSize (bf, pid, pkl, nopickle)
+          fun outFn sect = (
+                BFIO.Out.pid (sect, pid);
+                if nopickle
+                  then ()
+                  else BFIO.Out.bytes (bf, pkl))
+          in
+            BFIO.Out.section (bf, BFIO.SectId.staticEnv, sz, outFn)
+          end
+
+    fun size { contents, nopickle } = let
+	  val BF{ version, imports, exportPid, cmData, senv, csegments, guid, ... } =
+                contents
+          val { bfVersion, arch, smlnjVersion } = version
+	  val { pickle = senvPkl, pid = staticPid } = senv
+          val { code, data } = csegments
+          (* pad section sizes to a multiple of 8 bytes *)
+          fun padSize sz = Word.toIntX(Word.andb(Word.fromInt sz + 0w7, Word.notb 0w7))
+          in
+            BFIO.Hdr.sizeOfHdr 8
+              + infoSize
+              + padSize (importTreeSize imports)
+              + padSize (exportSize exportPid)
+              + padSize (pidsSize cmData)
+              + padSize (guidSize guid)
+              + padSize (literalSize data)
+              + padSize (codeSize code)
+              + padSize (staticEnvSize (staticPid, senvPkl, nopickle))
           end
 
     fun write { stream, contents, nopickle } = let
 	  val BF{ version, imports, exportPid, cmData, senv, csegments, guid, ... } =
                 contents
-	  val { pickle = senvP, pid = staticPid } = senv
-          val bf = BFIO.Out.openStream stream
-          (* output 'INFO' section *)
-          (* output 'IMPT' section *)
-          (* output 'EXPT' section *)
-          (* output 'PIDS' section *)
-          (* output 'GUID' section *)
-          (* output 'LITS' section *)
-          (* output 'CODE' section *)
-          (* output 'SENV' section *)
+          val { bfVersion, arch, smlnjVersion } = version
+	  val { pickle = senvPkl, pid = staticPid } = senv
+          val { code, data } = csegments
+          val bf = BFIO.Out.openStream (stream, BFIO.Hdr.BinFile, smlnjVersion)
+          val stats = {
+                    env = if nopickle then 0 else W8V.length senvPkl,
+                    data = W8V.length data,
+                    code = CodeObject.size code
+                  }
           in
+(* FIXME: eventually, we should include useful OS info in the info section *)
+            addInfoSection (bf, arch, "");
+            addImportTreeSection (bf, imports);
+            addExportSection (bf, exportPid);
+            addPidsSection (bf, cmData);
+            addGuidSection (bf, guid);
+            addLiteralSection (bf, data);
+            addCodeSection (bf, code);
+            addStaticEnvSection (bf, staticPid, senvPkl, nopickle);
+            BFIO.Out.finish bf;
+	    stats
           end
+
+    fun exec (bf, dynEnv, exnWrapper) = let
+          val BF{ imports, exportPid, executable, csegments, ... } = bf
+	  val executable = (case !executable
+		 of SOME e => e
+		  | NONE => let
+		      val e = Isolate.isolate (
+			        Execute.mkExec { cs = csegments, exnWrapper = exnWrapper })
+		      in
+			executable := SOME e; e
+		      end
+		(* end case *))
+	  in
+	    Execute.execute {
+		executable = executable,
+		imports = imports,
+		exportPid = exportPid,
+		dynEnv = dynEnv
+	      }
+	  end
 
 
 
@@ -347,59 +489,6 @@ structure Binfile :> BINFILE =
 	      (pid, tree) :: rest
 	    end
 
-    fun pickleInt32 i = let
-	  val w = fromInt i
-	  fun out w = toByte w
-	  in
-	    W8V.fromList [
-		toByte (w >> 0w24), toByte (w >> 0w16),
-		toByte (w >> 0w8), toByte w
-	      ]
-	  end
-    fun writeInt32 s i = BinIO.output (s, pickleInt32 i)
-
-    fun picklePackedInt32 i = let
-	  val n = LargeWord.fromInt i
-	  val // = LargeWord.div
-	  val %% = LargeWord.mod
-	  val !! = LargeWord.orb
-	  infix // %% !!
-	  val toW8 = Word8.fromLargeWord
-	  fun r (0w0, l) = W8V.fromList l
-	    | r (n, l) = r (n // 0w128, toW8 ((n %% 0w128) !! 0w128) :: l)
-	  in
-	    r (n // 0w128, [toW8 (n %% 0w128)])
-	  end
-
-    fun writePid (s, pid) = BinIO.output (s, Pid.toBytes pid)
-    fun writePidList (s, l) = app (fn p => writePid (s, p)) l
-
-    local
-      fun pickleImportSpec ((selector, tree), (n, p)) = let
-	    val sp = picklePackedInt32 selector
-	    val (n', p') = pickleImportTree (tree, (n, p))
-	    in
-	      (n', sp :: p')
-	    end
-      and pickleImportTree (ImportTree.ITNODE [], (n, p)) = (n + 1, picklePackedInt32 0 :: p)
-	| pickleImportTree (ImportTree.ITNODE l, (n, p)) = let
-	    val (n', p') = foldr pickleImportSpec (n, p) l
-	    in
-	      (n', picklePackedInt32 (length l) :: p')
-	    end
-
-      fun pickleImport ((pid, tree), (n, p)) = let
-	    val (n', p') = pickleImportTree (tree, (n, p))
-	    in
-	      (n', Pid.toBytes pid :: p')
-	    end
-    in
-    fun pickleImports l = let
-	  val (n, p) = foldr pickleImport (0, []) l
-	  in
-	    (n, W8V.concat p)
-	  end
-    end (* local *)
 
     fun mkVersionInfo {bfVersion=0w0, arch, smlnjVersion} = let
         (* old-style binfile.  The version info is a 16-byte string formed from the
@@ -622,80 +711,5 @@ Control_Print.say (concat [
 	      }
 	  } end
 
-    fun writeCSegs (s, {code, data}) = (
-	  writeInt32 s (W8V.length data);
-	  writeInt32 s 0;  (* dummy entry point for data segment *)
-	  BinIO.output(s, data);
-	  writeInt32 s (CodeObj.size code);
-	  writeInt32 s (CodeObj.entrypoint code);
-	  CodeObj.output (s, code))
-
-    fun write { stream = s, contents, nopickle } = let
-	(* Keep this in sync with "size" (see above). *)
-	  val { version, imports, exportPid, cmData, senv, csegments, guid, ... } = unBF contents
-          val oldFormat = (#bfVersion version = 0w0)
-	  val { pickle = senvP, pid = staticPid } = senv
-          val envPids = if oldFormat
-                then staticPid :: staticPid :: cmData (* second PID is unused lambdaPid *)
-                else staticPid :: cmData
-	  val (leni, picki) = pickleImports imports
-	  val importSzB = W8V.length picki
-	  val (ne, epl) = (case exportPid
-		 of NONE => (0, [])
-	          | SOME p => (1, [p])
-		(* end case *))
-	  val nei = length envPids
-	  val cmInfoSzB = nei * bytesPerPid
-	  fun pickleSize { pid, pickle } = if nopickle then 0 else W8V.length pickle
-	  val g = String.size guid
-	  val pad = 0			(* currently no padding *)
-	  val cs = codeSize csegments
-	  val es = pickleSize senv
-	  val writeEnv = if nopickle
-		then fn () => ()
-		else fn () => BinIO.output (s, senvP)
-	  val datasz = W8V.length (#data csegments)
-        (* the various length fields; the `lambdaSz` field is omitted in newer versions *)
-          val fields = let
-                val flds = [g, pad, cs, es]
-                val flds = if oldFormat
-                      then 0 :: flds    (* include 0 for unused lambda size *)
-                      else flds
-                in
-                  leni :: ne :: importSzB :: cmInfoSzB :: flds
-                end
-	  in
-	    BinIO.output (s, Byte.stringToBytes (mkVersionInfo version));
-	    app (writeInt32 s) fields;
-	    BinIO.output (s, picki);
-	    writePidList (s, epl);
-	    (* arena1 *)
-	    writePidList (s, envPids);
-	    (* GUID area *)
-	    BinIO.output (s, Byte.stringToBytes guid);
-	    (* padding area is currently empty *)
-	    writeCSegs (s, csegments);
-	    writeEnv ();
-	    { env = es, data = datasz, code = cs }
-	  end
-
-    fun exec (BF {imports, exportPid, executable, csegments, ... }, dynEnv, exnWrapper) = let
-	  val executable = (case !executable
-		 of SOME e => e
-		  | NONE => let
-		      val e = Isolate.isolate (
-			        Execute.mkExec { cs = csegments, exnWrapper = exnWrapper })
-		      in
-			executable := SOME e; e
-		      end
-		(* end case *))
-	  in
-	    Execute.execute {
-		executable = executable,
-		imports = imports,
-		exportPid = exportPid,
-		dynEnv = dynEnv
-	      }
-	  end
 
   end (* structure Binfile *)

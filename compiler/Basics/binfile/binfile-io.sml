@@ -98,14 +98,48 @@ structure BinfileIO :> BINFILE_IO =
 
     structure Out =
       struct
+
+    fun mkSMLNJVersion (hdr : Hdr.t) = let
+          val vn = String.concatWithMap "." Int.toString (#id (#smlnjVersion hdr))
+          val v = if (#suffix(#smlnjVersion hdr) = "")
+                then vn
+                else concat[vn, "-", suffix]
+          in
+            (* the SML/NJ version string in the old binfile format is 16 bytes *)
+            if (size v > 16)
+              then substring (v, 0, 16)
+            else if (size v < 16)
+              then StringCvt.padRight #" " 16 v
+              else v
+          end
+
+    fun pickleInt32 i = let
+	  val w = fromInt i
+	  fun out w = toByte w
+	  in
+	    W8V.fromList [
+		toByte (w >> 0w24), toByte (w >> 0w16),
+		toByte (w >> 0w8), toByte w
+	      ]
+	  end
+    fun writeInt32 s i = BinIO.output (s, pickleInt32 i)
+
+    fun picklePackedInt32 i = let
+	  val n = LargeWord.fromInt i
+	  val // = LargeWord.div
+	  val %% = LargeWord.mod
+	  val !! = LargeWord.orb
+	  infix // %% !!
+	  val toW8 = Word8.fromLargeWord
+	  fun r (0w0, l) = W8V.fromList l
+	    | r (n, l) = r (n // 0w128, toW8 ((n %% 0w128) !! 0w128) :: l)
+	  in
+	    r (n // 0w128, [toW8 (n %% 0w128)])
+	  end
+
+    fun writePid (s, pid) = BinIO.output (s, Pid.toBytes pid)
+    fun writePidList (s, l) = app (fn p => writePid (s, p)) l
+
       end
-
-
-    type output = {
-        outV : Word64Vector.vector -> unit
-      }
-
-    type input = {
-      }
 
   end
