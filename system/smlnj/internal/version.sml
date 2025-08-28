@@ -22,6 +22,11 @@ structure SMLNJVersion : sig
 
     val banner : string
 
+    (* encode the version number and suffix as a string *)
+    val toString : {version_id : int list, suffix : string} -> string
+    (* decode a string into version number and suffix *)
+    val fromString : string -> {version_id : int list, suffix : string} option
+
   end = struct
 
     val size = Int.toString(SMLofNJ.SysInfo.getArchSize())
@@ -39,11 +44,32 @@ structure SMLNJVersion : sig
 	    releaseDate = releaseDate
           }
 
-    val version' = let
-	  val vn = String.concatWithMap "." Int.toString (#version_id version)
+    fun toString {version_id, suffix} = let
+	  val vn = String.concatWithMap "." Int.toString version_id
 	  in
-	    if #suffix version = "" then vn else concat[vn, "-", #suffix version]
+	    if suffix = "" then vn else concat[vn, "-", suffix]
 	  end
+
+    fun fromString s = let
+          fun decodeId ([], [], suffix) = NONE
+            | decodeId ([], ids, suffix) = SOME{version_id = List.rev ids, suffix=suffix}
+            | decodeId (n::ns, ids, suffix) = (case Int.fromString n
+                 of SOME id => if (id >= 0)
+                      then decodeId (ns, id::ids, suffix)
+                      else NONE
+                  | NONE => NONE
+                (* end case *))
+          in
+            case String.fields (fn #"-" => true | _ => false) s
+             of [versId, suffix] => decodeId (
+                  String.fields (fn #"." => true | _ => false) versId,
+                  [],
+                  suffix)
+              | _ => NONE
+            (* end case *)
+          end
+
+    val version' = toString {version_id = #version_id version, suffix = #suffix version}
 
     val banner = concat [
 	    #system version,
