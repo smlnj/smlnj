@@ -17,15 +17,16 @@ structure BinfileIO :> BINFILE_IO =
 	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
 	  raise FormatError)
 
-    (* section IDs are represented as words internally, and as four-character
+    (* section IDs are represented as words internally and as four-character
      * little-endian codes externally.
      *)
     structure SectId =
       struct
 
-        eqtype t= Word.word
+        type t = Word.word
 
-        val fromString : string -> t
+        (* ID from its word representation; we mask out the high bits *)
+        fun fromWord (w) : t = Word.andb(w, 0wxffffffff)
 
         fun fromString s = (case explode s
                of [c1, c2, c3, c4] =>
@@ -36,7 +37,16 @@ structure BinfileIO :> BINFILE_IO =
                 | _ => raise Size
               (* end case *))
 
-        fun toString (id : t) = ??
+        fun toString (id : t) = let
+              fun toChr w = chr(Word.toInt(Word.andb(w, 0wxff)))
+              in
+                CharVector.fromList [
+                    toChr id,
+                    toChr(Word.>>(id, 0w8),
+                    toChr(Word.>>(id, 0w16),
+                    toChr(Word.>>(id, 0w24)
+                  ]
+              end
 
         val binfile : section_id = sectionID "BINF"
         val info : section_id = sectionID "INFO"
@@ -59,6 +69,8 @@ structure BinfileIO :> BINFILE_IO =
 
         datatype kind = BinFile | StableArchive
 
+        type smlnj_version = {version_id : int list, suffix : string}
+
         type sect_desc = {
             kind : SectId.t,
             flags : word,
@@ -67,11 +79,17 @@ structure BinfileIO :> BINFILE_IO =
           }
 
         val version = 0wx20250801
+        (* size of header exclusive of the section table *)
+        val fixedSize = 32
+        (* size of an entry in the section table *)
+        val sectDescSize = 16
+        (* maximum number of sections in a binfile *)
+        val maxNSects = 32 * 1024
 
         type t = {
             kind : kind,
             version : word,
-            smlnjVersion : {id : int list, suffix : string},
+            smlnjVersion : smlnj_version,
             sects : sect_desc vector
           }
 
@@ -79,7 +97,7 @@ structure BinfileIO :> BINFILE_IO =
         fun isArchive ({kind = StableArchive, ...} : t) = true
           | isArchive _ = false
 
-        fun sizeOfHdr (hdr : t) = 32 + 16 * Vector.length(#sects hdr)
+        fun sizeOfHdr (hdr : t) = fixedSize + sectDescSize * Vector.length(#sects hdr)
 
         fun sizeOfFile (hdr : t) =
               Vector.foldl
@@ -94,6 +112,111 @@ structure BinfileIO :> BINFILE_IO =
 
     structure In =
       struct
+        datatype t = IN of {
+            hdr : Hdr.t,
+            file : string option,
+            inS : BinIO.instream,
+            base : Position.int
+          }
+
+        datatype sect = SECT of {
+            bf : t,
+            desc : Hdr.sect_desc
+          }
+
+        fun getChar (bv, i) = chr (Word8.toInt (W8V.sub(bv, i)))
+
+        fun getString (bv, base, n) = CharVector.tabulate(n, fn i => getChar (bv, base+i))
+
+        (* get a little-endian 32-bit signed integer from the byte vector `bv`
+         * at offset `i`.  We assume that the offset is 4-byte aligned.
+         *)
+        fun getInt32 (bv, i) = LargeWord.toIntX(PackWord32Little.subVecX(bv, i div 4))
+
+        (* get a little-endian 32-bit unsigned integer from the byte vector `bv`
+         * at offset `i`.  We assume that the offset is 4-byte aligned.
+         *)
+        fun getUInt32 (bv, i) = Word.fromLarge(PackWord32Little.subVec(bv, i div 4))
+
+        (* read and decode the header from a binary input stream *)
+        fun header inS = let
+              val hdrData = BinIO.inputN(inS, Hdr.fixedSize)
+              val () = if (W8V.length hdrData <> Hdr.fixedSize)
+                    then (* error *)
+                    else ()
+              (* decode the header *)
+              val kind = (case getString(hdrData, 0, 8)
+                     of "BinFile " => Hdr.BinFile
+                      | "StabArch" => Hdr.StableArchive
+                      | s => (* error *)
+                    (* end case *))
+              val vers = getUInt32(hdrData, 8)
+              val () = if vers <> Hdr.version
+                    then (* error *)
+                    else ()
+              val smlnjVers = (case SMLNJVersion.fromString (getString(hdrData, 12, 16))
+                     of SOME v => v
+                      | NONE => (* error *)
+                    (* end case *))
+(* TODO: decode SML/NJ version *)
+              val nSects = getInt32(hdrData, 28)
+              val () = if (nSects < 0) orelse (Hdr.maxNSects < nSects)
+                    then (* error *)
+                    else ()
+              (* read a section descriptor *)
+              fun getSectDesc () = let
+                    val descData = BinIO.inputN(inS, Hdr.sectDescSize)
+                    val () = if (W8V.length descData <> Hdr.sectDescSize)
+                          then (* error *)
+                          else ()
+                    val kind = SectId.fromWord(getUInt32(descData, 0))
+                    val flags = getUInt32(descData, 4)
+                    val offset = Position.fromLarge(
+                          Word.toLargeInt(getUInt32(descData, 8)))
+                    val sz = Word.toIntX(getUInt32(descData, 12))
+                    in {
+                      kind = kind,
+                      flags = flags,
+                      offset = offset,
+                      size = sz
+                    } end
+              val sectTbl = Vector.tabulate (nSects, fn _ => getSectDesc())
+(* TODO: validate the table *)
+              in {
+                kind = kind,
+                version = vers,
+                smlnjVersion = smlnjVers,
+                sects = sectTbl
+              } end
+
+        fun create (name, inS, base) =
+              IN{hdr = header inS, file = name, inS = inS, base = base}
+
+        fun openFile file = let
+              val inS = BinIO.openIn file
+                    handle ex => (* error opening file *)
+              in
+                create (file, inS, 0)
+              end
+
+        fun openStream inS = create ("<stream>", inS, 0)
+
+        fun header (IN{hdr, ...}) = hdr
+
+        (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
+         * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
+         * the section is missing and `SOME contents` when the section is present
+         * and `inFn` returns `contents`.
+         *)
+        val section : t * SectId.t * (sect * int -> 'a) -> 'a option
+
+        val bytes : sect * int -> Word8Vector.vector
+        val string : sect * int -> string
+        val int32 : sect -> Int32.int
+        val word32 : sect -> Word32.int
+        val pid : sect -> PersStamps.persstamp
+        val codeobj : sect * int -> CodeObj.code_object
+
       end
 
     structure Out =
