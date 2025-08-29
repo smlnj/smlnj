@@ -201,14 +201,23 @@ structure BinfileIO :> BINFILE_IO =
 
         fun openStream inS = create ("<stream>", inS, 0)
 
-        fun header (IN{hdr, ...}) = hdr
+        (* is the binfile an archive? *)
+        fun isArchive (IN{hdr={kind = StableArchive, ...}, ...}) = true
+          | isArchive _ = false
+
+        fun findSection (hdr : Hdr.t, id : SectId.t) =
+              Vector.find (fn {kind, ...} => id = kind) (#sects hdr)
 
         (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
          * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
          * the section is missing and `SOME contents` when the section is present
          * and `inFn` returns `contents`.
          *)
-        val section : t * SectId.t * (sect * int -> 'a) -> 'a option
+        fun section (IN{hdr, ...}, sectId, inFn) = (case findSection (hdr, sectId)
+               of SOME{offset, size, ...} =>
+(* TODO: seek to the `offset` file position; then read `size` bytes *)
+                | NONE => (* error *)
+              (* end case *))
 
         val bytes : sect * int -> Word8Vector.vector
         val string : sect * int -> string

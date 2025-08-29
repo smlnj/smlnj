@@ -91,12 +91,16 @@ structure Binfile :> BINFILE =
     (***** INPUT OPERATIONS *****)
 
     fun readGUid s = let
+          val bf = BFIO.openInstream stream
+          val hdr = BFIO.getHeader bf
+          in
+          end
 
 (* FIXME: instead of passing the `version_info`, we should just pass the expected
  * SML/NJ version and architecture.
  *)
     fun read { version : version_info, stream } = let
-          val bf = BFIO.openInstream stream
+          val bf = BFIO.In.openStream stream
           val hdr = BFIO.getHeader bf
           (* check that we have a Binfile and not an archive *)
           val _ = if (BFIO.Hdr.isArchive hdr)

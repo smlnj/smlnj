@@ -44,18 +44,13 @@ signature BINFILE_IO =
             size : int                  (* size in bytes of section *)
           }
 
+(* QUESTION: should this type be abstract? *)
         type t = {
             kind : kind,
             version : word,
             smlnjVersion : smlnj_version,
             sects : sect_desc vector
           }
-
-        (* is the binfile an archive? *)
-        val isArchive : hdr -> bool
-
-        (* the current version *)
-        val version : word
 
         (* `sizeOfHdr nSects` returns the size of a header that has `nSects`
          * sections.
@@ -75,7 +70,14 @@ signature BINFILE_IO =
         val openFile : string -> t
         val openStream : BinIO.instream -> t
 
-        val header : t -> Hdr.t
+        (* is the binfile an archive? *)
+        val isArchive : t -> bool
+
+        (* the binfile's format version *)
+        val version : t -> word
+
+        (* the version of SML/NJ used to generate the binfile *)
+        val smlnjVersion : t -> Hdr.smlnj_version
 
         (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
          * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
@@ -84,11 +86,17 @@ signature BINFILE_IO =
          *)
         val section : t * SectId.t * (sect * int -> 'a) -> 'a option
 
+        (* read the specified number of bytes from the section *)
         val bytes : sect * int -> Word8Vector.vector
+        (* read a string of the specified length from the section *)
         val string : sect * int -> string
+        (* read a 32-bit signed integer from the section *)
         val int32 : sect -> Int32.int
+        (* read a 32-bit unsigned integer from the section *)
         val word32 : sect -> Word32.int
+        (* read a PID from the section *)
         val pid : sect -> PersStamps.persstamp
+        (* read a code object from the section *)
         val codeobj : sect * int -> CodeObj.code_object
 
       end
