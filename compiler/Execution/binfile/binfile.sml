@@ -90,10 +90,39 @@ structure Binfile :> BINFILE =
 
     (***** INPUT OPERATIONS *****)
 
+    (* read the import tree *)
+    fun getImports (sect, _) = let
+          val nLeaves = BFIO.In.packedInt sect
+(* TODO: verify that getTree and addImportTreeSection are inverses *)
+          fun getTree () = (case BFIO.In.packedInt sect
+                 of 0 => (ImportTree.ITNODE [], 1)
+                  | cnt => let
+                      fun readImportList (0, kids, n) = (List.rev kids, n)
+                        | readImportList (cnt, kids, n) = let
+                            val selector = BFIO.In.packedInt sect
+                            val (tree, n') = getTree ()
+                            in
+                              readImportList (cnt-1, (selector, tree)::kids, n+n')
+                            end
+                      val (l, n) = readImportList (cnt, [], 0)
+                      in
+                        (ImportTree.ITNODE l, n)
+                      end
+                (* end case *))
+
+          in
+            getTree ()
+          end
+
+    fun getGuid (sect, sz) = BFIO.string (sect, sz)
+
     fun readGUid s = let
           val bf = BFIO.openInstream stream
-          val hdr = BFIO.getHeader bf
           in
+            case BFIO.section (bf, BFIO.SectId.guid, getGuid)
+             of SOME guid => guid
+              | NONE => BFIO.error "missing 'GUID' section"
+            (* end case *)
           end
 
 (* FIXME: instead of passing the `version_info`, we should just pass the expected
@@ -147,7 +176,14 @@ structure Binfile :> BINFILE =
                   { bfVersion = #version hdr, arch = arch, smlnjVersion = smlnjVers }
                 end
 (* TODO: check version *)
-(* TODO: read contents from sections *)
+          val (
+(* TODO: imports *)
+(* TODO: exports *)
+(* TODO: pids *)
+          val guid = readSection (BFIO.SectId.guid, getGuid)
+(* TODO: lits *)
+(* TODO: code *)
+(* TODO: senv *)
 	  in {
 	    contents = create {
                 version = version',
@@ -164,6 +200,14 @@ structure Binfile :> BINFILE =
 		data = W8V.length data
 	      }
 	  } end
+
+    val readGUid = fn arg => if isNewFormat(BinIO.getInstream (#stream arg))
+          then readGUid arg
+          else OldBinfile.readGUid arg
+
+    val read = fn arg => if isNewFormat(BinIO.getInstream (#stream arg))
+          then read arg
+          else OldBinfile.read arg
 
     (***** OUTPUT OPERATIONS *****)
 

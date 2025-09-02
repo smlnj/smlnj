@@ -12,6 +12,9 @@ structure BinfileIO :> BINFILE_IO =
   struct
 
     structure W = Word
+    structure W8V = Word8Vector
+    structure W8B = Word8Buffer
+    structure Pid = PersStamps
 
     fun error msg = (
 	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
@@ -23,10 +26,10 @@ structure BinfileIO :> BINFILE_IO =
     structure SectId =
       struct
 
-        type t = Word.word
+        type t = W.word
 
         (* ID from its word representation; we mask out the high bits *)
-        fun fromWord (w) : t = Word.andb(w, 0wxffffffff)
+        fun fromWord (w) : t = W.andb(w, 0wxffffffff)
 
         fun fromString s = (case explode s
                of [c1, c2, c3, c4] =>
@@ -42,9 +45,9 @@ structure BinfileIO :> BINFILE_IO =
               in
                 CharVector.fromList [
                     toChr id,
-                    toChr(Word.>>(id, 0w8),
-                    toChr(Word.>>(id, 0w16),
-                    toChr(Word.>>(id, 0w24)
+                    toChr(W.>>(id, 0w8),
+                    toChr(W.>>(id, 0w16),
+                    toChr(W.>>(id, 0w24)
                   ]
               end
 
@@ -67,16 +70,7 @@ structure BinfileIO :> BINFILE_IO =
     structure Hdr =
       struct
 
-        datatype kind = BinFile | StableArchive
-
         type smlnj_version = {version_id : int list, suffix : string}
-
-        type sect_desc = {
-            kind : SectId.t,
-            flags : word,
-            offset : Position.int,
-            size : int
-          }
 
         val version = 0wx20250801
         (* size of header exclusive of the section table *)
@@ -86,27 +80,41 @@ structure BinfileIO :> BINFILE_IO =
         (* maximum number of sections in a binfile *)
         val maxNSects = 32 * 1024
 
+        (* the fixed part of the section header *)
         type t = {
-            kind : kind,
+            isArchive : bool,
             version : word,
-            smlnjVersion : smlnj_version,
-            sects : sect_desc vector
+            smlnjVersion : smlnj_version
           }
 
+        (* initialize a header *)
+        fun mkHeader (isArchive, smlnjVers) =
+              { isArchive = isArchive, version = version, smlnjVersion = smlnjVers }
+
         (* is the binfile an archive? *)
-        fun isArchive ({kind = StableArchive, ...} : t) = true
-          | isArchive _ = false
+        fun isArchive ({isArchive, ...} : t) = isArchive
 
-        fun sizeOfHdr (hdr : t) = fixedSize + sectDescSize * Vector.length(#sects hdr)
+        fun smlnjVersion (hdr : t) = #smlnjVersion hdr
 
-        fun sizeOfFile (hdr : t) =
+        fun sizeOfHdr nSects = fixedSize + sectDescSize * nSects
+
+        type sect_desc = {
+            kind : SectId.t,
+            flags : word,
+            offset : Position.int,
+            size : int
+          }
+
+        type sect_tbl = sect_desc Vector.vector
+
+        fun sizeOfFile (hdr : t, sects : sect_tbl) =
               Vector.foldl
                 (fn ({size, ...}, acc) => acc + 8 * size)
                   (sizeOfHdr hdr)
-                    (#sects hdr)
+                    sects
 
-        fun findSection (hdr : t, id : SectId.t) =
-              Vector.find (fn {kind, ...} => id = kind) (#sects hdr)
+        fun findSection (sects : sect_tbl, id : SectId.t) =
+              Vector.find (fn {kind, ...} => id = kind) sects hdr
 
       end
 
@@ -115,8 +123,9 @@ structure BinfileIO :> BINFILE_IO =
         datatype t = IN of {
             hdr : Hdr.t,
             file : string option,
-            inS : BinIO.instream,
-            base : Position.int
+            inS : BinIO.instream,       (* the original input stream for the binfile *)
+            base : Position.int,
+            sects : Hdr.sect_tbl
           }
 
         datatype sect = SECT of {
@@ -145,9 +154,9 @@ structure BinfileIO :> BINFILE_IO =
                     then (* error *)
                     else ()
               (* decode the header *)
-              val kind = (case getString(hdrData, 0, 8)
-                     of "BinFile " => Hdr.BinFile
-                      | "StabArch" => Hdr.StableArchive
+              val isArchive = (case getString(hdrData, 0, 8)
+                     of "BinFile " => false
+                      | "StabArch" => true
                       | s => (* error *)
                     (* end case *))
               val vers = getUInt32(hdrData, 8)
@@ -158,7 +167,7 @@ structure BinfileIO :> BINFILE_IO =
                      of SOME v => v
                       | NONE => (* error *)
                     (* end case *))
-(* TODO: decode SML/NJ version *)
+              (* get the number of sections *)
               val nSects = getInt32(hdrData, 28)
               val () = if (nSects < 0) orelse (Hdr.maxNSects < nSects)
                     then (* error *)
@@ -196,10 +205,12 @@ structure BinfileIO :> BINFILE_IO =
               val inS = BinIO.openIn file
                     handle ex => (* error opening file *)
               in
-                create (file, inS, 0)
+                create (SOME file, inS, 0)
               end
 
-        fun openStream inS = create ("<stream>", inS, 0)
+        fun openStream inS = create (NONE, inS, 0)
+
+        fun header (IN{hdr, ...}) = hdr
 
         (* is the binfile an archive? *)
         fun isArchive (IN{hdr={kind = StableArchive, ...}, ...}) = true
@@ -208,69 +219,209 @@ structure BinfileIO :> BINFILE_IO =
         fun findSection (hdr : Hdr.t, id : SectId.t) =
               Vector.find (fn {kind, ...} => id = kind) (#sects hdr)
 
+        (* seek to the specified file position, which is relative to the start of
+         * the binfile
+         *)
+        fun seek (IN{inS, base, ...}, pos) = let
+              val newPos = base + pos
+              val inS' = BinIO.getInstream inS
+              in
+                if BinIO.StreamIO.filePosIn inS' = newPos
+                  then () (* the input stream is at the correct position *)
+                  else (case (BinIO.StreamIO.getReader inS')
+                     of rd as BinPrimIO.RD{setPos=SOME setPos, ...} => (
+                          (* seek to the new position and then reset the input stream *)
+                          setPos newPos;
+                          BinIO.setInstream (
+                            inS,
+                            BinIO.StreamIO.mkInstream (rd, W8V.fromList[])))
+                      | _ => (* error: inS does not support random access! *)
+                    (* end case *))
+              end
+
         (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
          * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
          * the section is missing and `SOME contents` when the section is present
          * and `inFn` returns `contents`.
          *)
-        fun section (IN{hdr, ...}, sectId, inFn) = (case findSection (hdr, sectId)
-               of SOME{offset, size, ...} =>
-(* TODO: seek to the `offset` file position; then read `size` bytes *)
-                | NONE => (* error *)
+        fun section (bf, sectId, inFn) = (
+            case findSection (header bf, sectId)
+               of SOME desc => let
+                    val () = seek (bf, base + #offset desc)
+                    val sect = SECT{bf = bf, desc = desc}
+                    in
+                      SOME(inFn (sect, #size desc))
+                    end
+                | NONE => NONE
               (* end case *))
 
-        val bytes : sect * int -> Word8Vector.vector
-        val string : sect * int -> string
-        val int32 : sect -> Int32.int
-        val word32 : sect -> Word32.int
-        val pid : sect -> PersStamps.persstamp
-        val codeobj : sect * int -> CodeObj.code_object
+        fun bytesIn (_, 0) = Byte.stringToBytes ""
+          | bytesIn (SECT{bf=IN{inS, ...}, ...}, n) = let
+              val bv = BinIO.inputN (s, n)
+              in
+                if n = W8V.length bv
+                  then bv
+                  else error (concat[
+                      "expected ", Int.toString n, " bytes, but found ",
+                      Int.toString(W8V.length bv)
+                    ])
+              end
+
+        fun bytes (sect, n) = bytesIn (inStrm sect, n)
+
+        fun string (sect, n) = Byte.bytesToString (bytesIn (sect, n))
+
+        fun int32 s = getInt32 (bytesIn(s, 4), 0)
+        fun word32 s = getWord32 (bytesIn(s, 4), 0)
+
+        fun packedInt (SECT{bf=IN{inS, ...}, ...}) = let
+              fun loop n = (case BinIO.input1 inS
+                     of NONE => error "unable to read a packed int32"
+                      | SOME w8 => let
+                          val n' = n * 0w128 + Word8.toLargeWord (Word8.andb (w8, 0w127))
+                          in
+                            if Word8.andb (w8, 0w128) = 0w0 then n' else loop n'
+                          end
+                    (* end case *))
+              in
+                LargeWord.toIntX (loop 0w0)
+              end
+
+        fun pid s = Pid.fromBytes (bytesIn (s, bytesPerPid))
+
+(* NOTE: we are assuming an entry-point of 0, since that is always the value *)
+        fun codeobj (sect, sz) = CodeObj.input(strm, codeSz, 0)
 
       end
 
     structure Out =
       struct
 
-    fun mkSMLNJVersion (hdr : Hdr.t) = let
-          val vn = String.concatWithMap "." Int.toString (#id (#smlnjVersion hdr))
-          val v = if (#suffix(#smlnjVersion hdr) = "")
-                then vn
-                else concat[vn, "-", suffix]
-          in
-            (* the SML/NJ version string in the old binfile format is 16 bytes *)
-            if (size v > 16)
-              then substring (v, 0, 16)
-            else if (size v < 16)
-              then StringCvt.padRight #" " 16 v
-              else v
-          end
+        datatype t = OUT of {
+            hdr : Hdr.t,
+            file : string option,
+            outS : BinIO.outstream,
+            sects : sect_data list ref
+          }
 
-    fun pickleInt32 i = let
-	  val w = fromInt i
-	  fun out w = toByte w
-	  in
-	    W8V.fromList [
-		toByte (w >> 0w24), toByte (w >> 0w16),
-		toByte (w >> 0w8), toByte w
-	      ]
-	  end
-    fun writeInt32 s i = BinIO.output (s, pickleInt32 i)
+        and sect_data = SD of {
+            kind : SectId.t,                    (* the section kind *)
+            szW : word,                         (* size of the section in 8-byte words *)
+            outFn : BinIO.outstream -> unit     (* output function *)
+          }
 
-    fun picklePackedInt32 i = let
-	  val n = LargeWord.fromInt i
-	  val // = LargeWord.div
-	  val %% = LargeWord.mod
-	  val !! = LargeWord.orb
-	  infix // %% !!
-	  val toW8 = Word8.fromLargeWord
-	  fun r (0w0, l) = W8V.fromList l
-	    | r (n, l) = r (n // 0w128, toW8 ((n %% 0w128) !! 0w128) :: l)
-	  in
-	    r (n // 0w128, [toW8 (n %% 0w128)])
-	  end
+        (* for the section output functions, we pass in the output stream for
+         * the binfile.
+         *)
+        datatype sect =  SECT of BinIO.outstream
 
-    fun writePid (s, pid) = BinIO.output (s, Pid.toBytes pid)
-    fun writePidList (s, l) = app (fn p => writePid (s, p)) l
+        fun create (isArchive, smlnjVers, name, outS) = OUT{
+                hdr = Hdr.mkHeader (isArchive, smlnjVers),
+                file = name,
+                outS = outS,
+                sects = ref []
+              }
+
+        fun openFile (file, isArchive, smlnjVers) = let
+              val outS = BinIO.openOut file
+                    handle ex => (* error opening file *)
+              in
+                create (isArchive, smlnjVers, SOME file, outS)
+              end
+
+        fun openStream (outS, isArchive, smlnjVers) =
+              create (isArchive, smlnjVers, NONE, outS)
+
+        fun finish (OUT{hdr, outS, sects, ...}) = let
+              (* reverse the list of sections and count them *)
+              val (nSects, sections) = List.foldl
+                    (fn (sect, (n, sects)) => (n+1, sect::sects))
+                      (0, [])
+                        (!sects)
+              (* size of header including the section table in 8-byte words *)
+              val hdrSzW = W.>>(W.fromInt(Hdr.sizeOfHdr nSects), 0w3)
+              (* output a section descriptor *)
+              fun outputSectDesc (SD{kind, szW, ...}, offset) = (
+                    outputW32 (outS, kind);
+                    outputW32 (outS, 0w0); (* reserved for future use *)
+                    outputW32 (outS, offset);
+                    outputW32 (outS, szW);
+                    offset + szW)
+              (* output the contents of a section *)
+              fun outSect (SD{outFn, ...}) = let
+                    val () = outFn outS;
+                    val pos = W.fromLargeInt(Position.toLargeInt(BinIO.getPosOut outS))
+                    val excess = W.andb(pos, 0w7)
+                    in
+                      (* add padding (if necessary) to ensure 8-byte alignment *)
+                      if excess <> 0w0
+                        then lp (0w8 - excess)
+                        else ()
+                    end
+              in
+                (* output the fixed part of the header *)
+                if #isArchive hdr
+                  then outputString(outS, "StabArch")
+                  else outputString(outS, "BinFile ");
+                outputW32 (outS, #version hdr);
+                outputString (outS, #smlnjVersion hdr);
+                outputI32 (outS, nSects);
+                (* output the section table *)
+                ignore (List.foldl outputSectDesc hdrSzW sections;
+                (* output the sections *)
+                List.app outSect sections;
+                (* discard the sections *)
+                sects := []
+              end
+
+        (* `section (bf, id, szb, outFn)` adds a section with the given `id`
+         * and size `szb` in bytes.  The `outFn` is used to output the contents
+         * of the section using the functions below.
+         *)
+        fun section (OUT{sects, ...}, sectId, szb, outFn) = let
+              (* round size up and convert to number of 8-byte words *)
+              val szW = W.>>(W.fromInt szb + 0w7, 0w3)
+              in
+                sects := SD{kind = sectId, szW = szW, outFn = outFn} :: !sects
+              end
+
+(* do we need this function? *)
+        fun mkSMLNJVersion () = let
+              val v = SMLNJVersion.toString (#smlnjVersion hdr)
+              in
+                (* the SML/NJ version string is limited to 16 bytes *)
+                if (size v > 16)
+                  then substring (v, 0, 16)
+                else if (size v < 16)
+                  then StringCvt.padRight #" " 16 v
+                  else v
+              end
+
+        fun pickleInt32 i = let
+              val w = fromInt i
+              fun out w = toByte w
+              in
+                W8V.fromList [
+                    toByte (w >> 0w24), toByte (w >> 0w16),
+                    toByte (w >> 0w8), toByte w
+                  ]
+              end
+        fun writeInt32 s i = BinIO.output (s, pickleInt32 i)
+
+        fun picklePackedInt32 i = let
+              val n = LargeWord.fromInt i
+              val // = LargeWord.div
+              val %% = LargeWord.mod
+              val !! = LargeWord.orb
+              infix // %% !!
+              val toW8 = Word8.fromLargeWord
+              fun r (0w0, l) = W8V.fromList l
+                | r (n, l) = r (n // 0w128, toW8 ((n %% 0w128) !! 0w128) :: l)
+              in
+                r (n // 0w128, [toW8 (n %% 0w128)])
+              end
+
+        fun pid (SECT outS, pid) = BinIO.output (outS, Pid.toBytes pid)
 
       end
 

@@ -33,32 +33,13 @@ signature BINFILE_IO =
 
     structure Hdr : sig
 
-        datatype kind = BinFile | StableArchive
+        (* the fixed-size part of the header *)
+        type t
 
         type smlnj_version = {id : int list, suffix : string}
 
-        type sect_desc = {
-            kind : SectId.t,            (* section ID *)
-            flags : word,               (* per-section flag bits; reserved for future *)
-            offset : Position.int,      (* offset from beginning of containing binfile *)
-            size : int                  (* size in bytes of section *)
-          }
-
-(* QUESTION: should this type be abstract? *)
-        type t = {
-            kind : kind,
-            version : word,
-            smlnjVersion : smlnj_version,
-            sects : sect_desc vector
-          }
-
-        (* `sizeOfHdr nSects` returns the size of a header that has `nSects`
-         * sections.
-         *)
-        val sizeOfHdr : int -> int
-
-        (* return the size (in bytes) of the binfile described by the header *)
-        val sizeOfBinfile : t -> int
+        val isArchive : t -> bool
+        val smlnjVersion : t -> smlnj_version
 
       end
 
@@ -70,14 +51,8 @@ signature BINFILE_IO =
         val openFile : string -> t
         val openStream : BinIO.instream -> t
 
-        (* is the binfile an archive? *)
-        val isArchive : t -> bool
-
-        (* the binfile's format version *)
-        val version : t -> word
-
-        (* the version of SML/NJ used to generate the binfile *)
-        val smlnjVersion : t -> Hdr.smlnj_version
+        (* the header info for the binfile *)
+        val header : t -> Hdr.t
 
         (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
          * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
@@ -90,6 +65,8 @@ signature BINFILE_IO =
         val bytes : sect * int -> Word8Vector.vector
         (* read a string of the specified length from the section *)
         val string : sect * int -> string
+        (* read a packed integer from the section *)
+        val packedInt : sect -> int
         (* read a 32-bit signed integer from the section *)
         val int32 : sect -> Int32.int
         (* read a 32-bit unsigned integer from the section *)
@@ -119,6 +96,8 @@ signature BINFILE_IO =
 
         val bytes : sect * Word8Vector.vector -> unit
         val bytes' : sect * Word8VectorSlice.slice -> unit
+        (* write a packed integer to the section *)
+        val packedInt : sect * int -> unit
         val int32 : sect * Int32.int -> unit
         val word32 : sect * Word32.int -> unit
         val string : sect * string -> unit
