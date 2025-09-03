@@ -14,6 +14,12 @@
 
 structure OldBinfile :> sig
 
+    type version_info = {
+        bfVersion : word,       (* will be 0w0 for old versions *)
+        arch : string,
+        smlnjVersion : string
+      }
+
     type pid = Pid.persstamp
 
     type csegments = CodeObj.csegments
