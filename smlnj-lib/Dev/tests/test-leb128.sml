@@ -110,8 +110,25 @@ structure TestLEB128 =
             [0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wx3F],
             RESULT 4611686018427387903);
           (* the maximum 63-bit integer + 1 *)
-          testInt ("",
+          testInt ("decodeInt-009",
             [0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wxC0,0wx0],
+            OVERFLOW);
+          ())
+    fun decodeInt64Tests () = (
+          testInt64 ("decodeInt64-001", [0w0], RESULT 0);
+          testInt64 ("decodeInt64-002", [0wx3F], RESULT 63);
+          testInt64 ("decodeInt64-003", [0wxC0, 0wx0], RESULT 64);
+          testInt64 ("decodeInt64-004", [0wx7F], RESULT ~1);
+          testInt64 ("decodeInt64-005", [0wxC0, 0wxBB, 0wx78], RESULT ~123456);
+          testInt64 ("decodeInt64-006", [], NO_RESULT);
+          testInt64 ("decodeInt64-007", [0wxC0, 0wxBB], NO_RESULT);
+          (* the maximum 64-bit integer *)
+          testInt64 ("decodeInt64-008",
+            [0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wxFF,0wx0],
+            RESULT 9223372036854775807);
+          (* the maximum 64-bit integer + 1 *)
+          testInt64 ("decodeInt64-009",
+            [0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wx80,0wx1],
             OVERFLOW);
           ())
     end (* local *)
