@@ -175,7 +175,9 @@ void RunML (ml_state_t *msp)
               case REQ_RAISE_OVERFLOW: { /* a request for raising Overflow */
                     ml_val_t    loc, traceStk, exn;
                     char *namestring;
+#ifdef DEBUG_OVERFLOW
                     SayDebug("RunML: raise Overflow request: pc = %p\n", msp->ml_pc);
+#endif
                     if ((namestring = (char *)BO_AddrToCodeObjTag((Word_t)(msp->ml_pc))) != NIL(char *))
                     {
                         char    buf2[192];
