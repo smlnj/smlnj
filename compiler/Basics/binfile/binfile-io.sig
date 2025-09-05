@@ -68,13 +68,13 @@ signature BINFILE_IO =
         (* read a packed integer from the section *)
         val packedInt : sect -> int
         (* read a 32-bit signed integer from the section *)
-        val int32 : sect -> Int32.int
+        val int32 : sect -> int
         (* read a 32-bit unsigned integer from the section *)
-        val word32 : sect -> Word32.int
+        val word32 : sect -> word
         (* read a PID from the section *)
         val pid : sect -> PersStamps.persstamp
         (* read a code object from the section *)
-        val codeobj : sect * int -> CodeObj.code_object
+        val codeObject : sect * int -> CodeObj.code_object
 
       end
 
@@ -94,15 +94,15 @@ signature BINFILE_IO =
          *)
         val section : t * SectId.t * int * (sect -> unit) -> unit
 
+        (* write a vector of bytes to the section *)
         val bytes : sect * Word8Vector.vector -> unit
-        val bytes' : sect * Word8VectorSlice.slice -> unit
+        val string : sect * string -> unit
         (* write a packed integer to the section *)
         val packedInt : sect * int -> unit
-        val int32 : sect * Int32.int -> unit
-        val word32 : sect * Word32.int -> unit
-        val string : sect * string -> unit
+        val int32 : sect * int -> unit
+        val word32 : sect * word -> unit
         val pid : sect * PersStamps.persstamp -> unit
-        val codeobj : sect * CodeObj.code_object -> unit
+        val codeObject : sect * CodeObj.code_object -> unit
 
       end
 

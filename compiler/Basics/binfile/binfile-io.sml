@@ -272,25 +272,25 @@ structure BinfileIO :> BINFILE_IO =
         fun string (sect, n) = Byte.bytesToString (bytesIn (sect, n))
 
         fun int32 s = getInt32 (bytesIn(s, 4), 0)
-        fun word32 s = getWord32 (bytesIn(s, 4), 0)
+        fun word32 s = getUInt32 (bytesIn(s, 4), 0)
+
+        val decodePackedInt = LEB128.decodeInt BinIO.StreamIO.input1
 
         fun packedInt (SECT{bf=IN{inS, ...}, ...}) = let
-              fun loop n = (case BinIO.input1 inS
-                     of NONE => error "unable to read a packed int32"
-                      | SOME w8 => let
-                          val n' = n * 0w128 + Word8.toLargeWord (Word8.andb (w8, 0w127))
-                          in
-                            if Word8.andb (w8, 0w128) = 0w0 then n' else loop n'
-                          end
-                    (* end case *))
+              val inS' = BinIO.getInstream
               in
-                LargeWord.toIntX (loop 0w0)
+                case decodePackedInt (BinIO.getInstream inS)
+                 of SOME(n, inS') => (
+                      BinIO.setInstream (inS, inS');
+                      n)
+                  | NONE => error "unable to read a packed int32"
+                (* end case *)
               end
 
         fun pid s = Pid.fromBytes (bytesIn (s, bytesPerPid))
 
 (* NOTE: we are assuming an entry-point of 0, since that is always the value *)
-        fun codeobj (sect, sz) = CodeObj.input(strm, codeSz, 0)
+        fun codeObject (sect, sz) = CodeObj.input(strm, codeSz, 0)
 
       end
 
@@ -385,7 +385,7 @@ structure BinfileIO :> BINFILE_IO =
                 sects := SD{kind = sectId, szW = szW, outFn = outFn} :: !sects
               end
 
-(* do we need this function? *)
+(* do we need this function?
         fun mkSMLNJVersion () = let
               val v = SMLNJVersion.toString (#smlnjVersion hdr)
               in
@@ -396,32 +396,29 @@ structure BinfileIO :> BINFILE_IO =
                   then StringCvt.padRight #" " 16 v
                   else v
               end
+*)
 
-        fun pickleInt32 i = let
-              val w = fromInt i
-              fun out w = toByte w
-              in
-                W8V.fromList [
-                    toByte (w >> 0w24), toByte (w >> 0w16),
-                    toByte (w >> 0w8), toByte w
-                  ]
-              end
-        fun writeInt32 s i = BinIO.output (s, pickleInt32 i)
+        fun bytes (SECT outS, v) = BinIO.output (outS, v)
 
-        fun picklePackedInt32 i = let
-              val n = LargeWord.fromInt i
-              val // = LargeWord.div
-              val %% = LargeWord.mod
-              val !! = LargeWord.orb
-              infix // %% !!
-              val toW8 = Word8.fromLargeWord
-              fun r (0w0, l) = W8V.fromList l
-                | r (n, l) = r (n // 0w128, toW8 ((n %% 0w128) !! 0w128) :: l)
+        fun string (SECT outS, s) = BinIO.output (outS, Byte.stringToBytes s)
+
+        fun packedInt (SECT outS, n) =
+              BinIO.output (outS, LEB128.encodeInt n)
+
+        fun word32 (SECT outS, w) = let
+              fun outB w = BinIO.output1 (outS, Word8.fromWord w)
               in
-                r (n // 0w128, [toW8 (n %% 0w128)])
+                outB w;
+                outB (Word.>>(w, 0w8));
+                outB (Word.>>(w, 0w16));
+                outB (Word.>>(w, 0w24))
               end
+
+        fun int32 (sect, n) = word32 (sect, Word.fromInt n)
 
         fun pid (SECT outS, pid) = BinIO.output (outS, Pid.toBytes pid)
+
+        fun codeObject (SECT outS, code) = CodeObj.output (outS, code)
 
       end
 
