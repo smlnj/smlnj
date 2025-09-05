@@ -130,6 +130,10 @@ xref:fun-KeywordFn.adoc[`[.kw]#functor# KeywordFn`]::
 
 // 30
 
+xref:str-LEB128.adoc[`[.kw]#structure# LEB128`]::
+  Provides binary encoding/decoding of integer and word types using the
+  https://en.wikipedia.org/wiki/LEB128[Little-Endian-Base-128 (LEB128)] format.
+
 xref:fun-LeftPriorityQFn.adoc[`[.kw]#functor# LeftPriorityQFn`]::
   Provides a functional implementation of priority
   queues using leaftist heaps.
@@ -163,10 +167,10 @@ xref:fun-MonoArrayFn.adoc[`[.kw]#functor# MonoArrayFn`]::
 xref:sig-MONO_HASH_TABLE.adoc[`[.kw]#signature# MONO_HASH_TABLE`]::
   Defines an interface to imperative hash tables with monomorphic keys.
 
+// 40
+
 xref:str-Native.adoc[`[.kw]#structure# NativeInt`]::
   An alias to the native-sized integer structure (_e.g._, `Int64`).
-
-// 40
 
 xref:str-Native.adoc[`[.kw]#structure# NativeWord`]::
   An alias to the native-sized word structure (_e.g._, `Word64`).
@@ -198,12 +202,12 @@ xref:str-Queue.adoc[`[.kw]#structure# Queue`]::
 xref:str-Rand.adoc[`[.kw]#structure# Rand`]::
   Provides a simple random number generator.
 
+// 50
+
 xref:str-Random.adoc[`[.kw]#structure# Random`]::
   Pseudo-random-number generation using the
   http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/emt.html[_Mersenne Twister_
   algorithm].
-
-// 50
 
 xref:str-RealOrderStats.adoc[`[.kw]#structure# RealOrderStats`]::
   **To be written**
@@ -237,13 +241,13 @@ xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
 xref:str-URef.adoc[`[.kw]#structure# URef`]::
   Provides mutable references with __Union-Find__ semantics.
 
-xref:str-UTF8.adoc[`[.kw]#structure# UTF8`]::
-  Provides support for working with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
-  encoded strings.
-
 // 60
 
 == Usage
+
+xref:str-UTF8.adoc[`[.kw]#structure# UTF8`]::
+  Provides support for working with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
+  encoded strings.
 
 By default, the *Util Library* is autoloaded by *CM*, which means that it is
 immediately available to interactive use in the *SML/NJ* REPL.
@@ -325,6 +329,8 @@ include::fun-KeywordFn.adoc[]
 
 // 30
 
+include::str-LEB128.adoc[]
+
 include::fun-LeftPriorityQFn.adoc[]
 
 include::str-LibBase.adoc[]
@@ -343,9 +349,9 @@ include::fun-MonoArrayFn.adoc[]
 
 include::sig-MONO_HASH_TABLE.adoc[]
 
-include::str-Native.adoc[]
-
 // 40
+
+include::str-Native.adoc[]
 
 include::sig-ORD_KEY.adoc[]
 
@@ -365,9 +371,9 @@ include::str-Rand.adoc[]
 
 include::str-Random.adoc[]
 
-include::str-RealOrderStats.adoc[]
-
 // 50
+
+include::str-RealOrderStats.adoc[]
 
 include::fun-RedBlackMapFn.adoc[]
 
@@ -387,7 +393,7 @@ include::str-URef.adoc[]
 
 include::str-UTF8.adoc[]
 
-// 59 -- note that `str-Native.adoc` is referenced twice by the HTML,
+// 60 -- note that `str-Native.adoc` is referenced twice by the HTML,
 // but only once by the PDF
 
 // Return to normal title levels.
