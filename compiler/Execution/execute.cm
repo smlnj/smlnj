@@ -1,6 +1,6 @@
 (* execute.cm
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Library containing code related to code objects, binfile contents, and
@@ -32,6 +32,7 @@ is
 
 	binfile/binfile.sig
 	binfile/binfile.sml
+	binfile/old-binfile.sml
 
 	$smlnj/viscomp/basics.cm
 	$smlnj/basis/basis.cm
