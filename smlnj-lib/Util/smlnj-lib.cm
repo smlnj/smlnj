@@ -81,6 +81,7 @@ structure IntRedBlackMap
 structure IntRedBlackSet
 structure IOUtil
 structure JSON
+structure LEB128
 structure LibBase
 structure ListFormat
 structure ListMergeSort
@@ -250,6 +251,7 @@ utf8.sml
   Target32Bit/random.sml
   Target32Bit/prime-sizes.sml
 #else
+  Target64Bit/leb128.sml
   Target64Bit/native.sml
   Target64Bit/random.sml
   Target64Bit/prime-sizes.sml

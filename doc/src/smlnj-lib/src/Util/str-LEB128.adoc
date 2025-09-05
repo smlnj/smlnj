@@ -1,0 +1,122 @@
+= The `LEB128` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `LEB128` structure provides binary encoding/decoding of integer and word types
+using the https://en.wikipedia.org/wiki/LEB128[Little-Endian-Base-128 (LEB128)]
+format.  It supports signed encodings and decodings for several different integer
+types, unsigned encodings and decodings for two word types, and functions to
+precompute the size of an encoding.
+
+== Synopsis
+
+[source,sml]
+------------
+structure @LEB128@
+------------
+
+== Interface
+
+[source,sml]
+------------
+val decodeInt    : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int.int * 'a) option
+val decodeInt64  : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int64.int * 'a) option
+val decodeIntInf : (Word8.word, 'a) StringCvt.reader -> 'a -> (IntInf.int * 'a) option
+
+val decodeWord   : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word.word * 'a) option
+val decodeWord64 : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word64.word * 'a) option
+
+val encodeInt    : Int.int -> Word8Vector.vector
+val encodeInt64  : Int64.int -> Word8Vector.vector
+val encodeIntInf : IntInf.int -> Word8Vector.vector
+
+val encodeWord   : Word.word -> Word8Vector.vector
+val encodeWord64 : Word64.word -> Word8Vector.vector
+
+val sizeOfInt    : Int.int -> int
+val sizeOfInt64  : Int64.int -> int
+val sizeOfIntInf : IntInf.int -> int
+
+val sizeOfWord   : Word.word -> int
+val sizeOfWord64 : Word64.word -> int
+------------
+
+== Description
+
+The `LEB128` structure provides three kinds of operations: decoders, encoders,
+and size functions.
+
+=== Decoding
+
+The decoding functions take a reader and input source and return an optional result.
+These functions normally return `SOME(value, rest)`, where `value` is the decoded
+number and `rest` is the residual input source.  There are two possible error
+conditions for decoding.  If the input is incomplete (_i.e._, empty or a ends
+with a byte that has the continuation bit set), then `NONE` is returned.  If the
+decoded value is too large for the type, then the link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`]
+exception is raised.
+
+`[.kw]#val# decodeInt : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int.int * 'a) option`::
+  `decodeInt getb src` decodes an LEB128 encoded integer from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeInt64 : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int64.int * 'a) option`::
+  `decodeInt64 getb src` decodes an LEB128 encoded integer from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeIntInf : (Word8.word, 'a) StringCvt.reader -> 'a -> (IntInf.int * 'a) option`::
+  `decodeIntInf getb src` decodes an LEB128 encoded integer from `src` using `getb` to
+  read bytes from the `src`.  Note that this decoder does not raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`] exception.
+
+`[.kw]#val# decodeWord : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word.word * 'a) option`::
+  `decodeWord getb src` decodes an LEB128 encoded word from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeWord64 : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word64.word * 'a) option`::
+  `decodeWord64 getb src` decodes an LEB128 encoded word from `src` using `getb` to
+  read bytes from the `src`.
+
+=== Encoding
+
+`[.kw]#val# encodeInt : Int.int -> Word8Vector.vector`::
+  `encodeInt n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# encodeInt64 : Int64.int -> Word8Vector.vector`::
+  `encodeInt64 n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# encodeIntInf : IntInf.int -> Word8Vector.vector`::
+  `encodeIntInf n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# encodeWord : Word.word -> Word8Vector.vector`::
+  `encodeWord w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# encodeWord64 : Word64.word -> Word8Vector.vector`::
+  `encodeWord64 w` returns the LEB128 encoding of the word `w`.
+
+=== Encoding Size
+
+The remaining operations compute the number of bytes required to encode a
+number.
+
+`[.kw]#val# sizeOfInt : Int.int -> int`::
+  `sizeOfInt n` returns the size in bytes of the LEB128 encoding of the integer `n`.
+
+`[.kw]#val# sizeOfInt64 : Int64.int -> int`::
+  `sizeOfInt64 n` returns the size in bytes of the LEB128 encoding of the integer `n`.
+
+`[.kw]#val# sizeOfIntInf : IntInf.int -> int`::
+  `sizeOfIntInf n` returns the size in bytes of the LEB128 encoding of the integer `n`.
+
+`[.kw]#val# sizeOfWord : Word.word -> int`::
+  `sizeOfWord w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
+`[.kw]#val# sizeOfWord64 : Word64.word -> int`::
+  `sizeOfWord64 w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]
