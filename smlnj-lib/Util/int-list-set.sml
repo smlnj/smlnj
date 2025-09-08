@@ -1,6 +1,6 @@
 (* int-list-set.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * An implementation of finite sets of integers, which uses a sorted list

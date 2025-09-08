@@ -1,6 +1,6 @@
 (* utf8.sml
  *
- * COPYRIGHT (c) 2020 John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Routines for working with UTF8 encoded strings.

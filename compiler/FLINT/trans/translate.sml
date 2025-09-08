@@ -107,7 +107,7 @@ fun ppTycArgs tycs =
       (fn ppstrm =>
 	  PPUtil.ppBracketedSequence ("[", "]", (PPLty.ppTyc 50)) ppstrm tycs)
 
-	
+
 (****************************************************************************
  *                   TRANSLATING NUMBER LITERALS                            *
  ****************************************************************************)
@@ -213,7 +213,7 @@ fun toDconLty d ty =
 	| _ => if BT.isArrowType ty then toLty d ty
                else toLty d (BT.-->(BT.unitTy, ty)))
 
-(* CON' : Plambda.dataconstr * PlambdType.tyc list * lexp -> lexp *) 
+(* CON' : Plambda.dataconstr * PlambdType.tyc list * lexp -> lexp *)
 (* version of CON with special translation of ref and susp pseudo datacons *)
 fun CON' ((_, DA.REF, lt), ts, e) = APP (PRIM (PO.MAKEREF, lt, ts), e)
   | CON' ((_, DA.SUSP (SOME(DA.LVAR d, _)), lt), ts, e) =
@@ -268,7 +268,7 @@ end (* markexn-local *)
 (* _Dependent_ or _secondary_ lvars are defined in terms of a base lvar via
  * an access path (int list). These will be bound to a nested SELECT expression
  * rooted at the base lvar. "Variables" with access of the form, e.g.,
- * PATH(PATH(LVAR lv, i1),i2) are translated to the lexp 
+ * PATH(PATH(LVAR lv, i1),i2) are translated to the lexp
  * SELECT(i2, SELECT(i1, VAR lv)).  A given base lvar may have several
  * dependent lvars defined by paths based on that lvar. These are registered
  * in a "dependentLvarsTable" lvar hash table. Each dependent variable is
@@ -281,7 +281,7 @@ type depLvar = (key * accesspath * LV.lvar)
 (* "Dependent lvars and their accesspaths off the base lvar mapping to the depLvar,
  * where the key is the hash of the accesspath *)
 
-(** dependentLvarsTable: lvar --> depLvar list 
+(** dependentLvarsTable: lvar --> depLvar list
     or lvar -> (<hashkey(accesspath)>: int * <accesspath> : int list * lvar) list *)
 val dependentLvarsTable : depLvar list LambdaVar.Tbl.hash_table =
     LambdaVar.Tbl.mkTable (32, DEP_LVAR_TABLE)
@@ -792,7 +792,7 @@ fun setBoundTyvars (TFNdepth, boundtvs, transfn) =
 	    (tv := T.LBOUND {depth=TFNdepth, eq=TU.tyvarIsEq tv, index=i})
 	val _ = List.appi setLBOUND boundtvs
         (* assign LBOUNDs to the boundtvs to mark them as type
-         * parameter variables _locally_ during translation of exp *)		    
+         * parameter variables _locally_ during translation of exp *)
 	val result = transfn ()
 	(* perform and encapsulated translation with the new boundtvs context*)
 	val _ = ListPair.app (op :=) (boundtvs, savedtvkinds)
@@ -811,7 +811,7 @@ fun setBoundTyvars (TFNdepth, boundtvs, transfn) =
  *      The expression is assumed to be the rhs of a simple var binding (val v = exp)
  * -- depth : int, the current depth of TFN abstractions (0-based)
  * -- boundtvs : tyvar list (3rd arg), the generalized tmvs of the expression
- * QUESTION: Can this happen?  If so, what is an example? 
+ * QUESTION: Can this happen?  If so, what is an example?
  * CONJECTURE: a metatyvar can only be generalized at one declaration level, though
  * it may be generalized in parallel multiple times in a single declaration (e.g. RVB).
  * So scopes of a single metatyvar will not be "nested". If so, is the "restoration" of
@@ -868,14 +868,14 @@ and transVBs (vbs, d) =
 
 (* transRVBs : rvb list * int -> lexp -> lexp *)
 (* mkRVB is rewritten to achieve the effect of the former ElabUtil.wrapRECdec, but post type
-   checking. 
+   checking.
 
        rvbs ==>
 
-       local 
-         val fns = let rvbs in (f0, f1, ...)  
+       local
+         val fns = let rvbs in (f0, f1, ...)
        in
-         val f0' = fns.0      -- TFN((_), SELECT(0, TAPP(fns, f0_tyargs))), 
+         val f0' = fns.0      -- TFN((_), SELECT(0, TAPP(fns, f0_tyargs))),
 	 val f1' = fns.1
 	 ...
        end
@@ -913,7 +913,7 @@ and transRVBs (nil, _) = bug "transRVBs - no rbv"
 		val numBoundTvs = length boundTvs  (* ??? *)
 		val poly = numBoundTvs > 0
 		fun mkTyArgs (nil, i, tyargs) = rev tyargs
-		  | mkTyArgs (tv::tvs, i, tyargs) = 
+		  | mkTyArgs (tv::tvs, i, tyargs) =
 		    mkTyArgs (tvs, i+1, T.VARty(ref(T.LBOUND{depth = d, eq = TU.tyvarIsEq tv, index = i}))::tyargs)
 		val polyTyArgs = mkTyArgs (boundTvs, 0, nil)    (* null boundTvs => null polyTyArgs *)
 		val monoType = TU.applyPoly (!typ, polyTyArgs)  (* de-polymorphize !typ, instantiating with LBOUNDS *)
@@ -958,7 +958,7 @@ and transRVBs (nil, _) = bug "transRVBs - no rbv"
 	fun argTys btvs =
 	    mkTyargs (btvs, boundTvs, T.UNDEFty,
 		      (fn (k,tv) => T.VARty(ref(T.LBOUND{depth=d, index=k, eq=TU.tyvarIsEq tv}))))
-				  
+
         (* argLtcs : T.tyvar list -> LD.tyc list *)
         fun argLtcs btvs =
 	    mkTyargs (boundTvs, btvs, LB.tcc_void, (fn (k,_) => LD.tcc_var(1,k)))
@@ -976,7 +976,7 @@ and transRVBs (nil, _) = bug "transRVBs - no rbv"
 			     (typs, btvss)
 	        val fixLexp = FIX(newLvars, ltys, lexps, fntupleLexp)
 	     in if isPoly
-		then TFN (LD.tkc_arg numBoundTvs, fixLexp) 
+		then TFN (LD.tkc_arg numBoundTvs, fixLexp)
 		else fixLexp
 	    end
 
@@ -1145,7 +1145,7 @@ and mkStrbs (sbs, d) =
   in foldr' transSTRB sbs
   end
 *)
-      
+
 and mkFctbs (fbs, d) =
   let fun transFCTB (FCTB{fct=M.FCT { access, ... }, def, ... }, b) =
 	  (case access
@@ -1260,7 +1260,7 @@ and mkExp (exp, d) =
 		  end
 	      | NUMpat (_, lit) => transNum lit
 	      | STRINGpat s => STRINGcon s
-	      | CHARpat c => bug "patToCon: CHARpat found (should be NUMpat)" 
+	      | CHARpat c => bug "patToCon: CHARpat found (should be NUMpat)"
 	      | pat => (ppPat pat;
 			bug "patToCon: unexpected pattern")
 	    (* end case *))
@@ -1408,7 +1408,7 @@ and mkExp (exp, d) =
 	      * (i.e. should not be POLYty). *)
 	  let val _ = dbsaynl ">>> mkExp0[FNexp]: "
 	      val _ = if !debugging then (ppType "### mkExp0[FNexp]" argty; newline()) else ()
-	      val result = 
+	      val result =
              (case rules
 	        of [RULE(pat, rhs)] =>  (* expect single rule, produced by match compilation *)
 		     (case pat
@@ -1483,8 +1483,8 @@ and mkExp (exp, d) =
              end
 
         (* VSWITCHexp:
-	 *  srules for vector switches are of the form SRULE(INTcon n, NONE, exp) *)  
-	| mkExp0 (VSWITCHexp (scrutinee: exp, elemType, srules, default)) = 
+	 *  srules for vector switches are of the form SRULE(INTcon n, NONE, exp) *)
+	| mkExp0 (VSWITCHexp (scrutinee: exp, elemType, srules, default)) =
 	    let val scrutineeLexp = mkExp0 scrutinee  (* V.varToLvar scrutinee *)
 		val lengthLvar = mkv()  (* fresh lvar to be bound to the length of the vector *)
 (*                val scrutTy = V.varType scrutinee
@@ -1503,7 +1503,7 @@ and mkExp (exp, d) =
 		    SWITCH(VAR lengthLvar, DA.CNIL, map transSRULE srules, SOME(mkExp0 default)))
 	    end
 
-	| mkExp0 (LETVexp (var, definiens, body)) = 
+	| mkExp0 (LETVexp (var, definiens, body)) =
 	    let val _ = dbsaysnl [">>> mkExp0[LETVexp]: ", V.toString var]
 		val result  = LET(V.varToLvar var, mkExp0 definiens, mkExp0 body)
 	     in dbsaynl "<<< mkExp0[LETVexp]";
