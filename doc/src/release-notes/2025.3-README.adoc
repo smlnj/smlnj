@@ -97,6 +97,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {pull-base}/322[Fix heap export inconsistency caused by pair arena offsets]
 | [.bugid]#323#
 | {pull-base}/323[Fix memory leaks in the runtime system]
+| {.bugid}#324#
+| {issue-base}/324[The `Bind` exception is raised in the compiler when an undefined signature name is encountered]
 //| [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
