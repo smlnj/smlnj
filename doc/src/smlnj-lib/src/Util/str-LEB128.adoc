@@ -7,41 +7,55 @@
 
 The `LEB128` structure provides binary encoding/decoding of integer and word types
 using the https://en.wikipedia.org/wiki/LEB128[Little-Endian-Base-128 (LEB128)]
-format.  It supports signed encodings and decodings for several different integer
-types, unsigned encodings and decodings for two word types, and functions to
-precompute the size of an encoding.
+format.  It supports signed and unsigned encodings, decodings, and functions to
+precompute encoding sizes.
 
 == Synopsis
 
 [source,sml]
 ------------
-structure @LEB128@
+signature LEB128
+structure LEB128 : LEB128
 ------------
 
 == Interface
 
 [source,sml]
 ------------
-val decodeInt    : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int.int * 'a) option
-val decodeInt64  : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int64.int * 'a) option
-val decodeIntInf : (Word8.word, 'a) StringCvt.reader -> 'a -> (IntInf.int * 'a) option
+type ('ty, 'src) decoder =
+      (Word8.word, 'src) StringCvt.reader -> 'src -> ('ty * 'src) option
 
-val decodeWord   : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word.word * 'a) option
-val decodeWord64 : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word64.word * 'a) option
+val decodeInt       : (Int.int, 'a) decoder
+val decodeNativeInt : (NativeInt.int, 'a) decoder
+val decodeInt64     : (Int64.int, 'a) decoder
+val decodeIntInf    : (IntInf.int, 'a) decoder
 
-val encodeInt    : Int.int -> Word8Vector.vector
-val encodeInt64  : Int64.int -> Word8Vector.vector
-val encodeIntInf : IntInf.int -> Word8Vector.vector
+val decodeWord       : (Word.word, 'src) decoder
+val decodeNativeWord : (NativeWord.word, 'src) decoder
+val decodeWord64     : (Word64.word, 'src) decoder
+val decodeUIntInf    : (IntInf.int, 'src) decoder
 
-val encodeWord   : Word.word -> Word8Vector.vector
-val encodeWord64 : Word64.word -> Word8Vector.vector
+type 'ty encoder = 'ty -> Word8Vector.vector
 
-val sizeOfInt    : Int.int -> int
-val sizeOfInt64  : Int64.int -> int
-val sizeOfIntInf : IntInf.int -> int
+val encodeInt       : Int.int encoder
+val encodeNativeInt : Int64.int encoder
+val encodeInt64     : Int64.int encoder
+val encodeIntInf    : IntInf.int encoder
 
-val sizeOfWord   : Word.word -> int
-val sizeOfWord64 : Word64.word -> int
+val encodeWord       : Word.word encoder
+val encodeNativeWord : Word64.word encoder
+val encodeWord64     : Word64.word encoder
+val encodeUIntInf    : IntInf.int encoder
+
+val sizeOfInt       : Int.int -> int
+val sizeOfNativeInt : NativeInt.int -> int
+val sizeOfInt64     : Int64.int -> int
+val sizeOfIntInf    : IntInf.int -> int
+
+val sizeOfWord       : Word.word -> int
+val sizeOfNativeWord : NativeWord.word -> int
+val sizeOfWord64     : Word64.word -> int
+val sizeOfUIntInf    : IntInf.int -> int
 ------------
 
 == Description
@@ -59,43 +73,76 @@ with a byte that has the continuation bit set), then `NONE` is returned.  If the
 decoded value is too large for the type, then the link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`]
 exception is raised.
 
-`[.kw]#val# decodeInt : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int.int * 'a) option`::
+`[.kw]#type# ('ty, 'src) decoder`
+  the type of a decoder that decodes values of type `'ty` from a byte
+  source of type `src`.
+
+`[.kw]#val# decodeInt : (Int.int, 'a) decoder`::
   `decodeInt getb src` decodes an LEB128 encoded integer from `src` using `getb` to
   read bytes from the `src`.
 
-`[.kw]#val# decodeInt64 : (Word8.word, 'a) StringCvt.reader -> 'a -> (Int64.int * 'a) option`::
+`[.kw]#val# decodeNativeInt : (NativeInt.int, 'a) decoder`::
+  `decodeNativeInt getb src` decodes an LEB128 encoded native-machine integer
+  from `src` using `getb` to read bytes from the `src`.
+
+`[.kw]#val# decodeInt64 : (Int64.int, 'a) decoder`::
   `decodeInt64 getb src` decodes an LEB128 encoded integer from `src` using `getb` to
   read bytes from the `src`.
 
-`[.kw]#val# decodeIntInf : (Word8.word, 'a) StringCvt.reader -> 'a -> (IntInf.int * 'a) option`::
+`[.kw]#val# decodeIntInf : (IntInf.int, 'a) decoder`::
   `decodeIntInf getb src` decodes an LEB128 encoded integer from `src` using `getb` to
   read bytes from the `src`.  Note that this decoder does not raise the
   link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`] exception.
 
-`[.kw]#val# decodeWord : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word.word * 'a) option`::
+`[.kw]#val# decodeWord : (Word.word, 'src) decoder`::
   `decodeWord getb src` decodes an LEB128 encoded word from `src` using `getb` to
   read bytes from the `src`.
 
-`[.kw]#val# decodeWord64 : (Word8.word, 'a) StringCvt.reader -> 'a -> (Word64.word * 'a) option`::
+`[.kw]#val# decodeNativeWord : (NativeWord.word, 'src) decoder`::
+  `decodeNativeWord getb src` decodes an LEB128 encoded word from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeWord64 : (IntInf.int, 'src) decoder`::
   `decodeWord64 getb src` decodes an LEB128 encoded word from `src` using `getb` to
   read bytes from the `src`.
 
+`[.kw]#val# decodeUIntInf : (IntInf.int, 'src) decoder`::
+  `decodeUIntInf getb src` decodes an LEB128 encoded unsigned integer from `src`
+  using `getb` to read bytes from the `src`.  Note that this decoder does not raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`]
+  exception.
+
 === Encoding
 
-`[.kw]#val# encodeInt : Int.int -> Word8Vector.vector`::
+`[.kw]#type# 'ty encoder`::
+  the type of a encoder for values of type `'ty`.
+
+`[.kw]#val# encodeInt : Int.int encoder`::
   `encodeInt n` returns the LEB128 encoding of the signed integer `n`.
 
-`[.kw]#val# encodeInt64 : Int64.int -> Word8Vector.vector`::
+`[.kw]#val# encodeNativeInt : NativeInt.int encoder`::
+  `encodeNativeInt n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# encodeInt64 : Int64.int encoder`::
   `encodeInt64 n` returns the LEB128 encoding of the signed integer `n`.
 
-`[.kw]#val# encodeIntInf : IntInf.int -> Word8Vector.vector`::
+`[.kw]#val# encodeIntInf : IntInf.int encoder`::
   `encodeIntInf n` returns the LEB128 encoding of the signed integer `n`.
 
-`[.kw]#val# encodeWord : Word.word -> Word8Vector.vector`::
+`[.kw]#val# encodeWord : Word.word encoder`::
   `encodeWord w` returns the LEB128 encoding of the word `w`.
 
-`[.kw]#val# encodeWord64 : Word64.word -> Word8Vector.vector`::
+`[.kw]#val# encodeNativeWord : NativeWord.word encoder`::
+  `encodeNativeWord w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# encodeWord64 : Word64.word encoder`::
   `encodeWord64 w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# encodeUIntInf : IntInf.int encoder`::
+  `encodeUIntInf n` returns the LEB128 encoding of the unsigned integer `n`.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
 
 === Encoding Size
 
@@ -103,19 +150,36 @@ The remaining operations compute the number of bytes required to encode a
 number.
 
 `[.kw]#val# sizeOfInt : Int.int -> int`::
-  `sizeOfInt n` returns the size in bytes of the LEB128 encoding of the integer `n`.
+  `sizeOfInt n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
+
+`[.kw]#val# sizeOfNativeInt : NativeInt.int -> int`::
+  `sizeOfNativeInt n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
 
 `[.kw]#val# sizeOfInt64 : Int64.int -> int`::
-  `sizeOfInt64 n` returns the size in bytes of the LEB128 encoding of the integer `n`.
+  `sizeOfInt64 n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
 
 `[.kw]#val# sizeOfIntInf : IntInf.int -> int`::
-  `sizeOfIntInf n` returns the size in bytes of the LEB128 encoding of the integer `n`.
+  `sizeOfIntInf n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
 
 `[.kw]#val# sizeOfWord : Word.word -> int`::
   `sizeOfWord w` returns the size in bytes of the LEB128 encoding of the word `w`.
 
+`[.kw]#val# sizeOfNativeWord : NativeWord.word -> int`::
+  `sizeOfNativeWord w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
 `[.kw]#val# sizeOfWord64 : Word64.word -> int`::
   `sizeOfWord64 w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
+`[.kw]#val# sizeOfUIntInf : IntInf.int -> int`::
+  `sizeOfUIntInf n` returns the size in bytes of the LEB128 encoding of the
+  unsigned integer `n`.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
 
 == See Also
 

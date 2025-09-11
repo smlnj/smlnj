@@ -25,6 +25,7 @@ signature INTERVAL_DOMAIN
 signature INTERVAL_SET
 signature IO_UTIL
 signature GET_OPT
+signature LEB128
 signature LIB_BASE
 signature LIST_FORMAT
 signature LIST_SORT
@@ -191,6 +192,7 @@ io-util.sml
 json.sml
 getopt-sig.sml
 getopt.sml
+leb128-sig.sml
 left-priorityq-fn.sml
 lib-base-sig.sml
 lib-base.sml
