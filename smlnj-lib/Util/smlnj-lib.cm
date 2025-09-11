@@ -249,6 +249,7 @@ utf8-sig.sml
 utf8.sml
 
 #if defined(SIZE_32)
+  Target32Bit/leb128.sml
   Target32Bit/native.sml
   Target32Bit/random.sml
   Target32Bit/prime-sizes.sml
