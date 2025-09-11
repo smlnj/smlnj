@@ -57,8 +57,6 @@ ifdef::backend-pdf[]
 // Push titles down one level.
 :leveloffset: 1
 
-include::str-JSON.adoc[]
-
 include::str-JSONParser.adoc[]
 
 include::str-JSONPrinter.adoc[]

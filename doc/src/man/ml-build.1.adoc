@@ -69,7 +69,7 @@ SEE-ALSO
 
 COPYING
 -------
-Copyright (C) 2020 The Fellowship of SML/NJ
+Copyright (C) 2025 The Fellowship of SML/NJ
 
 This is free software; see the source for copying  conditions.   There  is  NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

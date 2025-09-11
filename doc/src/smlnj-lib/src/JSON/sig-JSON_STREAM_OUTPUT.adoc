@@ -152,7 +152,7 @@ val value : printer * JSON.value -> unit
 
 == See Also
 
-xref:str-JSON.adoc[`JSON`],
+xref:../Util/str-JSON.adoc[`JSON`],
 xref:str-JSONBufferPrinter.adoc[`JSONBufferPrinter`],
 xref:str-JSONPrinter.adoc[`JSONPrinter`],
 xref:str-JSONStreamParser.adoc[`JSONStreamParser`],

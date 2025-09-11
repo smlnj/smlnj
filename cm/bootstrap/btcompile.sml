@@ -74,7 +74,7 @@ struct
 			concat (arc1 ::
 				foldr (fn (a, r) => "\\" :: a :: r) [] arcn)
 		in
-		    case os 
+		    case os
                      of SMLofNJ.SysInfo.WINDOWS => win32name ()
 		      | _ => P.toString { isAbs = false, vol = "", arcs = arc1 :: arcn }
 		end
