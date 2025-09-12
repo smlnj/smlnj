@@ -93,6 +93,7 @@ struct
 			sn = SmlInfoMap.insert (sn, #smlinfo k, v),
 			pm = pm } }
 
+(* BEGIN IO *)
     fun fetch_pickle s = let
 	fun bytesIn n = let
 	    val bv = BinIO.inputN (s, n)
@@ -111,12 +112,15 @@ struct
         in
           { size = dg_sz, pickle = dg_pickle }
         end
+(* END IO *)
 
+(* BEGIN IO *)
     fun mkPickleFetcher mksname () =
 	SafeIO.perform { openIt = BinIO.openIn o mksname,
 			 closeIt = BinIO.closeIn,
 			 work = #pickle o fetch_pickle,
 			 cleanup = fn _ => () }
+(* END IO *)
 
     fun mkInverseMap sublibs = let
 	(* Here we build a mapping that maps each BNODE to the
@@ -223,12 +227,14 @@ struct
 	val newStamp = Byte.bytesToString (Pid.toBytes (libStampOf a))
 	val policy = #fnpolicy (#param gp)
 	val sname = FilenamePolicy.mkStableName policy (grouppath, version)
+(* BEGIN IO *)
 	fun work s = let
 	    val oldStamp =
 		Byte.bytesToString (BinIO.inputN (s, libstamp_nbytes))
 	in
 	    oldStamp = newStamp
 	end
+(* END IO *)
     in
 	SafeIO.perform { openIt = fn () => BinIO.openIn sname,
 			 closeIt = BinIO.closeIn,
@@ -263,7 +269,9 @@ struct
 				    " (", SrcPath.osstring p, ")"];
 			     raise Format)
 
+(* BEGIN IO *)
 	    val { size = dg_sz, pickle = dg_pickle } = fetch_pickle s
+(* END IO *)
 	    val offset_adjustment = dg_sz + 4 + libstamp_nbytes
 	    val { getter, dropper } =
 		UU.stringGetter' (SOME dg_pickle, mkPickleFetcher mksname)
@@ -979,6 +987,7 @@ struct
 		    if Word8Vector.length libstamp_bytes <> libstamp_nbytes
 		    then EM.impossible "stabilize: libstamp size wrong"
 		    else ()
+(* BEGIN IO *)
 		fun work outs =
 		    (BinIO.output (outs, libstamp_bytes);
 		     writeInt32 (outs, dg_sz);
@@ -987,6 +996,7 @@ struct
 			     foldl (writeBFC outs)
 				   { code = 0, data = 0, env = 0 }
 				   memberlist
+(* END IO *)
 		     in
 			 Say.vsay ["[code: ", Int.toString code,
 				   ", data: ", Int.toString data,
