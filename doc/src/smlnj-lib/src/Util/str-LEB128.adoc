@@ -35,18 +35,6 @@ val decodeNativeWord : (NativeWord.word, 'src) decoder
 val decodeWord64     : (Word64.word, 'src) decoder
 val decodeUIntInf    : (IntInf.int, 'src) decoder
 
-type 'ty encoder = 'ty -> Word8Vector.vector
-
-val encodeInt       : Int.int encoder
-val encodeNativeInt : Int64.int encoder
-val encodeInt64     : Int64.int encoder
-val encodeIntInf    : IntInf.int encoder
-
-val encodeWord       : Word.word encoder
-val encodeNativeWord : Word64.word encoder
-val encodeWord64     : Word64.word encoder
-val encodeUIntInf    : IntInf.int encoder
-
 val sizeOfInt       : Int.int -> int
 val sizeOfNativeInt : NativeInt.int -> int
 val sizeOfInt64     : Int64.int -> int
@@ -56,6 +44,29 @@ val sizeOfWord       : Word.word -> int
 val sizeOfNativeWord : NativeWord.word -> int
 val sizeOfWord64     : Word64.word -> int
 val sizeOfUIntInf    : IntInf.int -> int
+
+type ('ty, 'dst) encoder =
+       ('dst * Word8.word -> 'dst) -> ('dst * 'ty) -> 'dst
+
+val encodeInt       : (Int.int, 'dst) encoder
+val encodeNativeInt : (Int64.int, 'dst) encoder
+val encodeInt64     : (Int64.int, 'dst) encoder
+val encodeIntInf    : (IntInf.int, 'dst) encoder
+
+val encodeWord       : (Word.word, 'dst) encoder
+val encodeNativeWord : (Word64.word, 'dst) encoder
+val encodeWord64     : (Word64.word, 'dst) encoder
+val encodeUIntInf    : (IntInf.int, 'dst) encoder
+
+val intToBytes       : Int.int -> Word8Vector.vector
+val nativeIntToBytes : Int64.int -> Word8Vector.vector
+val int64ToBytes     : Int64.int -> Word8Vector.vector
+val intInfToBytes    : IntInf.int -> Word8Vector.vector
+
+val wordToBytes       : Word.word -> Word8Vector.vector
+val nativeWordToBytes : Word64.word -> Word8Vector.vector
+val word64ToBytes     : Word64.word -> Word8Vector.vector
+val uIntInfToBytes    : IntInf.int -> Word8Vector.vector
 ------------
 
 == Description
@@ -112,42 +123,12 @@ exception is raised.
   link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`]
   exception.
 
-=== Encoding
-
-`[.kw]#type# 'ty encoder`::
-  the type of a encoder for values of type `'ty`.
-
-`[.kw]#val# encodeInt : Int.int encoder`::
-  `encodeInt n` returns the LEB128 encoding of the signed integer `n`.
-
-`[.kw]#val# encodeNativeInt : NativeInt.int encoder`::
-  `encodeNativeInt n` returns the LEB128 encoding of the signed integer `n`.
-
-`[.kw]#val# encodeInt64 : Int64.int encoder`::
-  `encodeInt64 n` returns the LEB128 encoding of the signed integer `n`.
-
-`[.kw]#val# encodeIntInf : IntInf.int encoder`::
-  `encodeIntInf n` returns the LEB128 encoding of the signed integer `n`.
-
-`[.kw]#val# encodeWord : Word.word encoder`::
-  `encodeWord w` returns the LEB128 encoding of the word `w`.
-
-`[.kw]#val# encodeNativeWord : NativeWord.word encoder`::
-  `encodeNativeWord w` returns the LEB128 encoding of the word `w`.
-
-`[.kw]#val# encodeWord64 : Word64.word encoder`::
-  `encodeWord64 w` returns the LEB128 encoding of the word `w`.
-
-`[.kw]#val# encodeUIntInf : IntInf.int encoder`::
-  `encodeUIntInf n` returns the LEB128 encoding of the unsigned integer `n`.
-  This expression will raise the
-  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
-  exception when `n < 0`.
-
 === Encoding Size
 
-The remaining operations compute the number of bytes required to encode a
-number.
+The encoding-size functions compute the number of bytes required to encode a
+number.  These functions are provided at the same types as the decoding and
+encoding functions, but note that the encoding size only depends on the value
+being encoded, not on the type of the value.
 
 `[.kw]#val# sizeOfInt : Int.int -> int`::
   `sizeOfInt n` returns the size in bytes of the LEB128 encoding of the
@@ -180,6 +161,118 @@ number.
   This expression will raise the
   link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
   exception when `n < 0`.
+
+=== Encoding
+
+The encoding functions provide an interface designed to support a variety of
+different output targets.  The first argument is a function for outputting
+bytes to an abstract destination, followed by a pair of the destination and
+number to be encoded.  The final destination is returned as the result.
+See the <<Examples>> section below for examples of how to use the general encoding
+functions.
+
+`[.kw]#type# 'ty encoder`::
+  the type of a encoder for values of type `'ty`.
+
+`[.kw]#val# encodeInt : Int.int encoder`::
+  `encodeInt putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeNativeInt : NativeInt.int encoder`::
+  `encodeNativeInt putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeInt64 : Int64.int encoder`::
+  `encodeInt64 putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeIntInf : IntInf.int encoder`::
+  `encodeIntInf putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeWord : Word.word encoder`::
+  `encodeWord putB (dst, w)` outputs the LEB128 encoding of the unsigned integer `w`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeNativeWord : NativeWord.word encoder`::
+  `encodeNativeWord putB (dst, w)` outputs the LEB128 encoding of the unsigned integer `w`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeWord64 : Word64.word encoder`::
+  `encodeWord64 putB (dst, w)` outputs the LEB128 encoding of the unsigned integer `w`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeUIntInf : IntInf.int encoder`::
+  `encodeUIntInf putB (dst, n)` outputs the LEB128 encoding of the unsigned integer `n`
+  to the destination `dst` using `putB` to output bytes.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
+
+=== Encoding to Byte Vectors
+
+In addition to the general encoding functions above, specialized versions
+are provided that convert numbers to their LEB128 byte-vector encoding.
+
+`[.kw]#val# intToBytes : Int.int \-> Word8Vector.vector`::
+  `intToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# nativeIntToBytes : NativeInt.int \-> Word8Vector.vector`::
+  `nativeIntToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# int64ToBytes : Int64.int \-> Word8Vector.vector`::
+  `int64ToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# intInfToBytes : IntInf.int \-> Word8Vector.vector`::
+  `intInfToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# wordToBytes : Word.word \-> Word8Vector.vector`::
+  `wordToBytes w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# nativeWordToBytes : NativeWord.word \-> Word8Vector.vector`::
+  `nativeWordToBytes w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# word64ToBytes : Word64.word \-> Word8Vector.vector`::
+  `word64ToBytes w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# uIntInfToBytes : IntInf.int \-> Word8Vector.vector`::
+  `uIntInfToBytes n` returns the LEB128 encoding of the unsigned integer `n`.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
+
+== Examples
+
+As an example of using the decoding functions, the following function
+decodes integers from vector slices:
+
+[source,sml]
+------------
+fun fromSlice slice = decodeInt Word8VectorSlice.getItem slice
+------------
+
+As an example of using the encoding functions, the following function
+encodes a word into a byte buffer.
+
+[source,sml]
+------------
+fun toBuffer (buf, w) =
+      encodeWord
+        (fn (buf, b) => (Word8Buffer.add1(buf, b); buf))
+        (buf, w)
+------------
+
+For the `toBuffer` function, the buffer keeps track of where the next byte
+goes, but if we want to write the bytes into an array, we need to keep track
+of the index in the first argument.
+
+[source,sml]
+------------
+fun toArray (arr, idx, w) =
+      encodeWord
+        (fn (i, b) => (Word8Array.update(arr, i, b); i+1))
+        (idx, w)
+------------
 
 == See Also
 

@@ -17,6 +17,7 @@ structure LEB128 : LEB128 = struct
     structure W8 = Word8
     structure NW = NativeWord   (* = Word32 *)
     structure W64 = Word64
+    structure NInt = NativeInt  (* = Int32 *)
 
     type ('ty, 'src) decoder =
           (Word8.word, 'src) StringCvt.reader -> 'src -> ('ty * 'src) option
@@ -35,10 +36,11 @@ structure LEB128 : LEB128 = struct
     fun byteFromW64 b = W8.fromLarge(W64.toLarge b)
 
 (* TODO: need to figure out overflow and sign extension
-    fun decodeInt getB = ??
+    fun decodeNativeInt getB = ??
+
+    fun decodeInt getB inS = NInt.toInt (decodeNativeInt getB inS)
 
     fun decodeInt64 getB = let
-          fun toInt64 w = Int64.fromLarge(Word64.toIntX w)
           fun lp (inS, n, shift) = (case getB inS
                  of SOME(b, rest) => let
                       val slice = W64.andb(byteToW64 b, 0wx7f)
@@ -83,7 +85,7 @@ fun decodeInt getB inS = (case decodeIntInf getB inS
         | NONE => NONE
       (* end case *))
 fun decodeNativeInt getB inS = (case decodeIntInf getB inS
-       of SOME(n, inS') => SOME(NativeInt.fromLarge n, inS')
+       of SOME(n, inS') => SOME(NInt.fromLarge n, inS')
         | NONE => NONE
       (* end case *))
 fun decodeInt64 getB inS = (case decodeIntInf getB inS
@@ -164,7 +166,7 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
           end
 
     fun sizeOfNativeInt (n : Int.int) = let
-          val value = NW.fromLargeInt(NativeInt.toLarge n)
+          val value = NW.fromLargeInt(NInt.toLarge n)
           val sign = if (n < 0) then NW.fromInt ~1 else 0w0
           fun lp (value, sz) = let
                 val b = NW.andb(value, 0wx7f)
@@ -179,7 +181,7 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
             lp (value, 1)
           end
 
-    fun sizeOfInt (n : Int.int) = sizeOfNativeInt (NativeInt.fromInt n)
+    fun sizeOfInt (n : Int.int) = sizeOfNativeInt (NInt.fromInt n)
 
     fun sizeOfInt64 (n : Int64.int) = let
           val value = Word64.fromLargeInt(Int64.toLarge n)
@@ -237,94 +239,113 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
               lp (IntInf.~>>(n, 0w7), 1)
             end
 
-    fun encodeInt64 (n : Int64.int) = let
-          val sz = sizeOfInt64 n
-          val buf = Unsafe.Word8Vector.create sz
-          fun encode (n, idx) = let
+    fun encodeNativeInt putB (outS, n : NInt.int) = let
+          fun encode (n, outS) = let
+                val b = byteFromNW(NW.andb(n, 0wx7f))
+                val n = NW.~>>(n, 0w7)
+                val noMore = ((n = 0w0) andalso (W8.andb(b, 0wx40) = 0w0))
+                      orelse ((n = NW.notb 0w0) andalso (W8.andb(b, signBit) <> 0w0))
+                val b = if noMore then b else W8.orb(b, contBit)
+                val outS = putB (outS, b)
+                in
+                  if noMore then outS else encode (n, outS)
+                end
+          in
+            encode (n, outS)
+          end
+
+    fun encodeInt putB (outS, n : Int.int) = encodeNativeInt putB (outS, NInt.fromInt n)
+
+    fun encodeInt64 putB (outS, n : Int64.int) = let
+          fun encode (n, outS) = let
                 val b = byteFromW64(W64.andb(n, 0wx7f))
                 val n = W64.~>>(n, 0w7)
                 val noMore = ((n = 0w0) andalso (W8.andb(b, 0wx40) = 0w0))
                       orelse ((n = W64.notb 0w0) andalso (W8.andb(b, signBit) <> 0w0))
                 val b = if noMore then b else W8.orb(b, contBit)
+                val outS = putB (outS, b)
                 in
-                  Unsafe.Word8Vector.update(buf, idx, b);
-                  if noMore then buf else encode (n, idx+1)
+                  if noMore then outS else encode (n, outS)
                 end
           in
-            encode (W64.fromLargeInt(Int64.toLarge n), 0)
+            encode (W64.fromLargeInt(Int64.toLarge n), outS)
           end
 
-    fun encodeInt (n : Int.int) = encodeInt64 (Int64.fromInt n)
-
-    fun encodeIntInf (n : IntInf.int) = let
-          val sz = sizeOfIntInf n
-          val buf = Unsafe.Word8Vector.create sz
-          fun encode (n, idx) = let
+    fun encodeIntInf putB (outS, n : IntInf.int) = let
+          fun encode (n, outS) = let
                 val b = Word8.fromLargeInt(IntInf.andb(n, 0x7f))
                 val n = IntInf.~>>(n, 0w7)
                 val noMore = ((n = 0) andalso (W8.andb(b, 0wx40) = 0w0))
                       orelse ((n = ~1) andalso (W8.andb(b, signBit) <> 0w0))
                 val b = if noMore then b else W8.orb(b, contBit)
+                val outS = putB (outS, b)
                 in
-                  Unsafe.Word8Vector.update(buf, idx, b);
-                  if noMore then buf else encode (n, idx+1)
+                  if noMore then outS else encode (n, outS)
                 end
           in
-            encode (n, 0)
+            encode (n, outS)
           end
 
-    fun encodeNativeWord (w : NW.word) = let
-          val sz = sizeOfNativeWord w
-          val buf = Unsafe.Word8Vector.create sz
-          fun encode (n, idx) = let
+    fun encodeNativeWord putB (outS, w : NW.word) = let
+          fun encode (n, outS) = let
+                val b = byteFromNW(NW.andb(n, 0wx7f))
+                val n = NW.>>(n, 0w7)
+                in
+                  if (n = 0w0)
+                    then putB(outS, b)
+                    else encode (n, putB (outS, W8.orb(b, contBit)))
+                end
+          in
+            encode (w, outS)
+          end
+
+    fun encodeWord putB (outS, w : word) =
+          encodeNativeWord putB (outS, NW.fromLarge (Word.toLarge w))
+
+    fun encodeWord64 putB (outS, w : W64.word) = let
+          fun encode (n, outS) = let
                 val b = byteFromW64(W64.andb(n, 0wx7f))
                 val n = W64.>>(n, 0w7)
                 in
                   if (n = 0w0)
-                    then (Unsafe.Word8Vector.update(buf, idx, b); buf)
-                    else (
-                      Unsafe.Word8Vector.update(buf, idx, W8.orb(b, contBit));
-                      encode (n, idx+1))
+                    then putB(outS, b)
+                    else encode (n, putB (outS, W8.orb(b, contBit)))
                 end
           in
-            encode (w, 0)
+            encode (w, outS)
           end
 
-    fun encodeWord (w : word) = encodeWord64 (W64.fromLarge (Word.toLarge w))
-
-    fun encodeWord64 (w : W64.word) = let
-          val sz = sizeOfWord64 w
-          val buf = Unsafe.Word8Vector.create sz
-          fun encode (n, idx) = let
-                val b = byteFromW64(W64.andb(n, 0wx7f))
-                val n = W64.>>(n, 0w7)
-                in
-                  if (n = 0w0)
-                    then (Unsafe.Word8Vector.update(buf, idx, b); buf)
-                    else (
-                      Unsafe.Word8Vector.update(buf, idx, W8.orb(b, contBit));
-                      encode (n, idx+1))
-                end
-          in
-            encode (w, 0)
-          end
-
-    fun encodeUIntInf (n : IntInf.int) = let
-          (* note that `sizeOfUIntInf` raises `Domain` if `n < 0` *)
-          val sz = sizeOfUIntInf n
-          val buf = Unsafe.Word8Vector.create sz
-          fun encode (n, idx) = let
+    fun encodeUIntInf putB (outS, n : IntInf.int) = let
+          fun encode (n, outS) = let
                 val b = Word8.fromLargeInt(IntInf.andb(n, 0x7f))
                 val n = IntInf.~>>(n, 0w7)
                 in
-                  if (n = 0w0)
-                    then (Unsafe.Word8Vector.update(buf, idx, b); buf)
-                    else (
-                      Unsafe.Word8Vector.update(buf, idx, W8.orb(b, contBit));
-                      encode (n, idx+1))
+                  if (n = 0)
+                    then putB(outS, b)
+                    else encode (n, putB (outS, W8.orb(b, contBit)))
                 end
           in
-            encode (n, 0)
+            if (n < 0) then raise Domain else encode (n, outS)
           end
+
+    (* encode as bytes *)
+    local
+      fun toBytes (sizeOf : 'ty -> int, encoder : ('ty, int) encoder) (n : 'ty) = let
+            val sz = sizeOf n
+            val buf = Unsafe.Word8Vector.create sz
+            fun putB (idx, b) = (Unsafe.Word8Vector.update(buf, idx, b); idx+1)
+            in
+              ignore (encoder putB (0, n)); buf
+            end
+    in
+    val intToBytes = toBytes (sizeOfInt, encodeInt)
+    val nativeIntToBytes = toBytes (sizeOfNativeInt, encodeNativeInt)
+    val int64ToBytes = toBytes (sizeOfInt64, encodeInt64)
+    val intInfToBytes = toBytes (sizeOfIntInf, encodeIntInf)
+    val wordToBytes = toBytes (sizeOfWord, encodeWord)
+    val nativeWordToBytes = toBytes (sizeOfNativeWord, encodeNativeWord)
+    val word64ToBytes = toBytes (sizeOfWord64, encodeWord64)
+    val uIntInfToBytes = toBytes (sizeOfUIntInf, encodeUIntInf)
+    end (* local *)
 
   end
