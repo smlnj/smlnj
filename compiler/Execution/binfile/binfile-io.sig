@@ -65,7 +65,7 @@ signature BINFILE_IO =
         val bytes : sect * int -> Word8Vector.vector
         (* read a string of the specified length from the section *)
         val string : sect * int -> string
-        (* read a packed integer from the section *)
+        (* read a packed integer from the section using the LEB128 encoding *)
         val packedInt : sect -> int
         (* read a 32-bit signed integer from the section *)
         val int32 : sect -> int
@@ -97,7 +97,7 @@ signature BINFILE_IO =
         (* write a vector of bytes to the section *)
         val bytes : sect * Word8Vector.vector -> unit
         val string : sect * string -> unit
-        (* write a packed integer to the section *)
+        (* write a packed integer to the section using the LEB128 encoding *)
         val packedInt : sect * int -> unit
         val int32 : sect * int -> unit
         val word32 : sect * word -> unit
@@ -105,6 +105,11 @@ signature BINFILE_IO =
         val codeObject : sect * CodeObj.code_object -> unit
 
       end
+
+    (* given the number of bytes in a section, return it padded size.  Currently
+     * sections are padded to a multiple of 8 bytes.
+     *)
+    val padSize : int -> int
 
     (* error messages for Binfile I/O *)
     val error : string -> 'a

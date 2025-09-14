@@ -95,7 +95,7 @@ structure Binfile :> BINFILE =
 
     (* read the import tree. *)
     fun getImportSection (sect, _) = let
-          (* first we get the number of leaves in all of the trees *)
+          (* first we get the number of leaves (imports) in all of the trees *)
           val nLeaves = BFIO.In.packedInt sect
           (* read a tree from the section *)
           fun getTree () = (case BFIO.In.packedInt sect
@@ -263,73 +263,42 @@ structure Binfile :> BINFILE =
 
     (** imports ('IMPT') section **)
     local
-      structure B = Word8Buffer
       structure IT = ImportTree
-      (* encode a 32-bit integer as a little-endian sequence of 7-bit digits
-       * with an extension bit
-       *)
-      fun emitPackedInt32 (buf, 0) = B.add1(bud, 0w0)
-        | emitPackedInt32 (buf, i) = let
-            val // = LargeWord.div
-            val %% = LargeWord.mod
-            val !! = LargeWord.orb
-            infix // %% !!
-            val toW8 = Word8.fromLargeWord
-            fun emit 0w0 = ()
-              | emit n = (
-                  B.add1 (buf, toW8(n %% 0w128) !! 0w128);
-                  emit (n // 0w128))
-            in
-              emit (LargeWord.fromInt i)
-            end
-      fun emitImportSpec ((selector, tree), (n, p)) = (
-            emitPackedInt32 selector;
-            emitImportTree tree)
-      and emitImportTree (IT.ITNODE [], (n, p)) = emitPackedInt32 0
-	| emitImportTree (IT.ITNODE l, (n, p)) = (
-            emitPackedInt32 (List.length l);
-            List.app emitImportSpec l)
-      fun emitImport (pid, tree) = (
-            B.addVec (buf, Pid.toBytes pid);
-            emitImportTree tree)
+      val sizePackedInt = LEB128.sizeOfInt
     in
-    (* compute the size of the tree and the number of leaves *)
+    (* compute the size of the tree and the number of leaves (imports) *)
     fun importTreeSize trees = let
-          (* packed ints use one byte per seven bits of source data *)
-          fun packedIntSz (n, sz) = let
-                val n = LargeWord.fromInt i
-                in
-                  if (n < 0wx80) then sz + 1
-                  else if (n < 0wx4000) then sz + 2
-                  else if (n < 0wx200000) then sz + 3
-                  else if (n < 0wx10000000) then sz + 4
-                  else sz + 5
-                end
           fun itreeSz (IT.ITNODE[], (nl, sz)) =
                 (nl + 1, sz + 1)
             | itreeSz (IT.ITNODE l, (nl, sz))) =
-                List.foldl specSz (nl, packedIntSz (length l, sz)) l
+                List.foldl specSz (nl, sz + sizePackedInt(length l)) l
           and specSz ((selector, tree), (nl, sz)) =
-                itreeSz (tree, (nl, packedIntSz (selector, sz)))
+                itreeSz (tree, (nl, sz + sizePackedInt selector))
           and importSz ((pid, tree), (nl, sz)) = itreeSz (tree, (nl, sz + bytesPerPid))
           val (nLeaves, sz) = List.foldl importSz (0, 0) trees
           in
-            (nLeaves, packedIntSz(nLeaves, sz))
+            (nLeaves, sizePackedInt nLeaves + sz))
           end
     (* add an import tree section to the binfile *)
     fun addImportTreeSection (bf, l) = let
           val (nLeaves, sz) = importTreeSize l
-          fun outFn sect = let
-                val buf = B.new sz
-                val () = (
-                      emitPackedInt32 nLeaves;
-                      List.app emitImport l)
-                val res = B.contents buf
+      (* add a PID+tree to the buf *)
+          fun emitPidAndTree (buf, (pid, tree)) = let
+                fun emitImportSpec (selector, tree) = (
+                      BF.Out.packedInt (sect, selector);
+                      emitImportTree tree)
+                and emitImportTree (IT.ITNODE []) = BF.Out.packedInt (sect, 0)
+                  | emitImportTree (IT.ITNODE l) = (
+                      BF.Out.packedInt (sect, List.length l);
+                      List.app emitImportSpec l)
                 in
-                  if (W8V.length res <> sz)
-                    then raise Fail "Internal error: incorrect size for imports"
-                    else ();
-                  BFIO.Out.bytes (sect, res)
+                  B.addVec (buf, Pid.toBytes pid);
+                  emitImportTree tree
+                end
+          fun outFn sect = let
+                in
+                  BF.Out.packedInt (sect, nLeaves);
+                  List.app emitPidAndTree l
                 end
           in
             BFIO.Out.section (bf, BFIO.SectId.import, sz, outFn)
@@ -406,18 +375,16 @@ structure Binfile :> BINFILE =
           val { bfVersion, arch, smlnjVersion } = version
 	  val { pickle = senvPkl, pid = staticPid } = senv
           val { code, data } = csegments
-          (* pad section sizes to a multiple of 8 bytes *)
-          fun padSize sz = Word.toIntX(Word.andb(Word.fromInt sz + 0w7, Word.notb 0w7))
           in
-            BFIO.Hdr.sizeOfHdr 8
+            BFIO.Hdr.sizeOfHdr 8 (* there are eight sections *)
               + infoSize
-              + padSize (importTreeSize imports)
-              + padSize (exportSize exportPid)
-              + padSize (pidsSize cmData)
-              + padSize (guidSize guid)
-              + padSize (literalSize data)
-              + padSize (codeSize code)
-              + padSize (staticEnvSize (staticPid, senvPkl, nopickle))
+              + BF.padSize (importTreeSize imports)
+              + BF.padSize (exportSize exportPid)
+              + BF.padSize (pidsSize cmData)
+              + BF.padSize (guidSize guid)
+              + BF.padSize (literalSize data)
+              + BF.padSize (codeSize code)
+              + BF.padSize (staticEnvSize (staticPid, senvPkl, nopickle))
           end
 
     fun write { stream, contents, nopickle } = let
@@ -452,7 +419,7 @@ structure Binfile :> BINFILE =
 		 of SOME e => e
 		  | NONE => let
 		      val e = Isolate.isolate (
-			        Execute.mkExec { cs = csegments, exnWrapper = exnWrapper })
+                            Execute.mkExec { cs = csegments, exnWrapper = exnWrapper })
 		      in
 			executable := SOME e; e
 		      end

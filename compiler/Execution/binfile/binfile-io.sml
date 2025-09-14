@@ -20,6 +20,9 @@ structure BinfileIO :> BINFILE_IO =
 	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
 	  raise FormatError)
 
+    (* pad section sizes to a multiple of 8 bytes *)
+    fun padSize sz = Word.toIntX(Word.andb(Word.fromInt sz + 0w7, Word.notb 0w7))
+
     (* section IDs are represented as words internally and as four-character
      * little-endian codes externally.
      *)
@@ -45,9 +48,9 @@ structure BinfileIO :> BINFILE_IO =
               in
                 CharVector.fromList [
                     toChr id,
-                    toChr(W.>>(id, 0w8),
-                    toChr(W.>>(id, 0w16),
-                    toChr(W.>>(id, 0w24)
+                    toChr(W.>>(id, 0w8)),
+                    toChr(W.>>(id, 0w16)),
+                    toChr(W.>>(id, 0w24))
                   ]
               end
 
@@ -151,32 +154,38 @@ structure BinfileIO :> BINFILE_IO =
         fun header inS = let
               val hdrData = BinIO.inputN(inS, Hdr.fixedSize)
               val () = if (W8V.length hdrData <> Hdr.fixedSize)
-                    then (* error *)
+                    then error "incomplete binfile header"
                     else ()
               (* decode the header *)
               val isArchive = (case getString(hdrData, 0, 8)
                      of "BinFile " => false
                       | "StabArch" => true
-                      | s => (* error *)
+                      | s => error(concat[
+                            "unknown binfile file kind '", String.toString s, "'"
+                          ])
                     (* end case *))
               val vers = getUInt32(hdrData, 8)
               val () = if vers <> Hdr.version
-                    then (* error *)
+                    then error(concat[
+                        "invalid version number 0x", Word.toString vers
+                      ])
                     else ()
               val smlnjVers = (case SMLNJVersion.fromString (getString(hdrData, 12, 16))
                      of SOME v => v
-                      | NONE => (* error *)
+                      | NONE => error "malformed SML/NJ version in header"
                     (* end case *))
               (* get the number of sections *)
               val nSects = getInt32(hdrData, 28)
               val () = if (nSects < 0) orelse (Hdr.maxNSects < nSects)
-                    then (* error *)
+                    then error(concat [
+                        "invalid number of sections (", Int.toString nSects, ")"
+                      ])
                     else ()
               (* read a section descriptor *)
               fun getSectDesc () = let
                     val descData = BinIO.inputN(inS, Hdr.sectDescSize)
                     val () = if (W8V.length descData <> Hdr.sectDescSize)
-                          then (* error *)
+                          then error "incomplete section description"
                           else ()
                     val kind = SectId.fromWord(getUInt32(descData, 0))
                     val flags = getUInt32(descData, 4)
@@ -201,9 +210,9 @@ structure BinfileIO :> BINFILE_IO =
         fun create (name, inS, base) =
               IN{hdr = header inS, file = name, inS = inS, base = base}
 
+(* TODO: check that the file exists *)
         fun openFile file = let
               val inS = BinIO.openIn file
-                    handle ex => (* error opening file *)
               in
                 create (SOME file, inS, 0)
               end
@@ -235,7 +244,7 @@ structure BinfileIO :> BINFILE_IO =
                           BinIO.setInstream (
                             inS,
                             BinIO.StreamIO.mkInstream (rd, W8V.fromList[])))
-                      | _ => (* error: inS does not support random access! *)
+                      | _ => error "binfile does not support random access"
                     (* end case *))
               end
 
@@ -283,7 +292,7 @@ structure BinfileIO :> BINFILE_IO =
                  of SOME(n, inS') => (
                       BinIO.setInstream (inS, inS');
                       n)
-                  | NONE => error "unable to read a packed int32"
+                  | NONE => error "unable to read a packed int"
                 (* end case *)
               end
 
@@ -324,7 +333,6 @@ structure BinfileIO :> BINFILE_IO =
 
         fun openFile (file, isArchive, smlnjVers) = let
               val outS = BinIO.openOut file
-                    handle ex => (* error opening file *)
               in
                 create (isArchive, smlnjVers, SOME file, outS)
               end
@@ -367,7 +375,7 @@ structure BinfileIO :> BINFILE_IO =
                 outputString (outS, #smlnjVersion hdr);
                 outputI32 (outS, nSects);
                 (* output the section table *)
-                ignore (List.foldl outputSectDesc hdrSzW sections;
+                ignore (List.foldl outputSectDesc hdrSzW sections);
                 (* output the sections *)
                 List.app outSect sections;
                 (* discard the sections *)
@@ -402,8 +410,7 @@ structure BinfileIO :> BINFILE_IO =
 
         fun string (SECT outS, s) = BinIO.output (outS, Byte.stringToBytes s)
 
-        fun packedInt (SECT outS, n) =
-              BinIO.output (outS, LEB128.encodeInt n)
+        fun packedInt (SECT outS, n) = BinIO.output (outS, LEB128.intToBytes n)
 
         fun word32 (SECT outS, w) = let
               fun outB w = BinIO.output1 (outS, Word8.fromWord w)

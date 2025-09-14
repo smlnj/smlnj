@@ -8,31 +8,40 @@
  *)
 
 Group
-	signature CODE_OBJ
-	signature DYNAMICENV
-	signature BINFILE
 
-	structure CodeObj
-	structure DynamicEnv
-	structure Binfile
+  signature BINFILE
+  signature BINFILE_IO
+  signature CODE_OBJ
+  signature DYNAMICENV
 
-	structure ImportTree
-	structure Execute
-	structure Isolate
+  structure Binfile
+  structure BinfileIO
+  structure CodeObj
+  structure DynamicEnv
+
+  structure ImportTree
+  structure Execute
+  structure Isolate
+
 is
-	main/importtree.sml
-	main/isolate.sml
-	main/execute.sml
 
-	codeobj/code-obj.sig
-	codeobj/code-obj.sml
+  $smlnj/viscomp/basics.cm
+  $smlnj/basis/basis.cm
 
-	dynenv/dynenv.sig
-	dynenv/dynenv.sml
+  main/importtree.sml
+  main/isolate.sml
+  main/execute.sml
 
-	binfile/binfile.sig
-	binfile/binfile.sml
-	binfile/old-binfile.sml
+  codeobj/code-obj.sig
+  codeobj/code-obj.sml
 
-	$smlnj/viscomp/basics.cm
-	$smlnj/basis/basis.cm
+  dynenv/dynenv.sig
+  dynenv/dynenv.sml
+
+  binfile/binfile.sig
+  binfile/binfile.sml
+  binfile/old-binfile.sml
+
+  (* binfile I/O *)
+  binfile/binfile-io.sig
+  binfile/binfile-io.sml
