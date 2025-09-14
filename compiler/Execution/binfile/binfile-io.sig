@@ -36,7 +36,8 @@ signature BINFILE_IO =
         (* the fixed-size part of the header *)
         type t
 
-        type smlnj_version = {id : int list, suffix : string}
+        (* the SML/NJ version (see the `SMLNJVersion` structure) *)
+        type smlnj_version = {version_id : int list, suffix : string}
 
         val isArchive : t -> bool
         val smlnjVersion : t -> smlnj_version
@@ -74,7 +75,7 @@ signature BINFILE_IO =
         (* read a PID from the section *)
         val pid : sect -> PersStamps.persstamp
         (* read a code object from the section *)
-        val codeObject : sect * int -> CodeObj.code_object
+        val codeObject : sect * int -> CodeObj.t
 
       end
 
@@ -83,8 +84,10 @@ signature BINFILE_IO =
         type t
         type sect
 
-        val openFile : string * Hdr.kind * smlnj_version -> t
-        val openStream : BinIO.outstream * Hdr.kind * smlnj_version -> t
+        (* `openFile (file, isArchive, version)` *)
+        val openFile : string * bool * Hdr.smlnj_version -> t
+        (* `openStream (outS, isArchive, version)` *)
+        val openStream : BinIO.outstream * bool * Hdr.smlnj_version -> t
 
         val finish : t -> unit
 
@@ -102,7 +105,7 @@ signature BINFILE_IO =
         val int32 : sect * int -> unit
         val word32 : sect * word -> unit
         val pid : sect * PersStamps.persstamp -> unit
-        val codeObject : sect * CodeObj.code_object -> unit
+        val codeObject : sect * CodeObj.t -> unit
 
       end
 

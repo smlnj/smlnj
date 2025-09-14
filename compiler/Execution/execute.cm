@@ -25,8 +25,10 @@ Group
 
 is
 
-  $smlnj/viscomp/basics.cm
   $smlnj/basis/basis.cm
+  $smlnj/smlnj-lib/smlnj-lib.cm
+  $smlnj/viscomp/basics.cm
+  $smlnj/internal/smlnj-version.cm
 
   main/importtree.sml
   main/isolate.sml

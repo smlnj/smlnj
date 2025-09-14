@@ -270,14 +270,14 @@ structure Binfile :> BINFILE =
     fun importTreeSize trees = let
           fun itreeSz (IT.ITNODE[], (nl, sz)) =
                 (nl + 1, sz + 1)
-            | itreeSz (IT.ITNODE l, (nl, sz))) =
+            | itreeSz (IT.ITNODE l, (nl, sz)) =
                 List.foldl specSz (nl, sz + sizePackedInt(length l)) l
           and specSz ((selector, tree), (nl, sz)) =
                 itreeSz (tree, (nl, sz + sizePackedInt selector))
           and importSz ((pid, tree), (nl, sz)) = itreeSz (tree, (nl, sz + bytesPerPid))
           val (nLeaves, sz) = List.foldl importSz (0, 0) trees
           in
-            (nLeaves, sizePackedInt nLeaves + sz))
+            (nLeaves, sizePackedInt nLeaves + sz)
           end
     (* add an import tree section to the binfile *)
     fun addImportTreeSection (bf, l) = let

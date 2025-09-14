@@ -20,15 +20,18 @@ structure OldBinfile :> sig
         smlnjVersion : string
       }
 
-    type pid = Pid.persstamp
+    type pid = PersStamps.persstamp
 
-    type csegments = CodeObj.csegments
+    type csegments = {
+	code : CodeObj.t,
+	data : Word8Vector.vector       (* literals *)
+      }
 
     type executable = CodeObj.executable
 
     type stats = { env: int, data: int, code: int }
 
-    type pickle = { pid: pid, pickle: W8V.vector }
+    type pickle = { pid: pid, pickle: Word8Vector.vector }
 
     datatype bfContents = BF of {
         version : version_info,
@@ -60,7 +63,10 @@ structure OldBinfile :> sig
 
     type pid = Pid.persstamp
 
-    type csegments = CodeObj.csegments
+    type csegments = {
+	code : CodeObj.t,
+	data : Word8Vector.vector       (* literals *)
+      }
 
     type executable = CodeObj.executable
 
