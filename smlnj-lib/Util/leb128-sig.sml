@@ -22,19 +22,19 @@ signature LEB128 =
     val decodeWord64     : (Word64.word, 'src) decoder
     val decodeUIntInf    : (IntInf.int, 'src) decoder
 
-    type 'ty encoder = 'ty -> Word8Vector.vector
+    type ('ty, 'dst) encoder = ('dst * Word8.word -> 'dst) -> ('dst * 'ty) -> 'dst
 
     (* signed encodings *)
-    val encodeInt       : Int.int encoder
-    val encodeNativeInt : Int64.int encoder
-    val encodeInt64     : Int64.int encoder
-    val encodeIntInf    : IntInf.int encoder
+    val encodeInt       : (Int.int, 'dst) encoder
+    val encodeNativeInt : (Int64.int, 'dst) encoder
+    val encodeInt64     : (Int64.int, 'dst) encoder
+    val encodeIntInf    : (IntInf.int, 'dst) encoder
 
     (* unsigned encodings *)
-    val encodeWord       : Word.word encoder
-    val encodeNativeWord : Word64.word encoder
-    val encodeWord64     : Word64.word encoder
-    val encodeUIntInf    : IntInf.int encoder
+    val encodeWord       : (Word.word, 'dst) encoder
+    val encodeNativeWord : (Word64.word, 'dst) encoder
+    val encodeWord64     : (Word64.word, 'dst) encoder
+    val encodeUIntInf    : (IntInf.int, 'dst) encoder
 
     (* return the size of the signed encodings *)
     val sizeOfInt       : Int.int -> int
@@ -47,5 +47,17 @@ signature LEB128 =
     val sizeOfNativeWord : NativeWord.word -> int
     val sizeOfWord64     : Word64.word -> int
     val sizeOfUIntInf    : IntInf.int -> int
+
+    (* encode as byte vector *)
+    val intToBytes       : Int.int -> Word8Vector.vector
+    val nativeIntToBytes : Int64.int -> Word8Vector.vector
+    val int64ToBytes     : Int64.int -> Word8Vector.vector
+    val intInfToBytes    : IntInf.int -> Word8Vector.vector
+
+    (* encode as byte vector *)
+    val wordToBytes       : Word.word -> Word8Vector.vector
+    val nativeWordToBytes : Word64.word -> Word8Vector.vector
+    val word64ToBytes     : Word64.word -> Word8Vector.vector
+    val uIntInfToBytes    : IntInf.int -> Word8Vector.vector
 
   end
