@@ -169,6 +169,7 @@ structure Binfile :> BINFILE =
  * SML/NJ version and architecture.
  *)
     fun read { version : version_info, stream } = let
+(* DEBUG *)val () = Control_Print.say "**** read new-format binfile\n"
           val bf = BFIO.In.openStream stream
           val hdr = BFIO.In.header bf
           (* check that we have a Binfile and not an archive *)
@@ -414,7 +415,12 @@ structure Binfile :> BINFILE =
           val { bfVersion, arch, smlnjVersion } = version
 	  val { pickle = senvPkl, pid = staticPid } = senv
           val { code, lits } = csegments
-          val SOME smlnjVersion = SMLNJVersion.fromString smlnjVersion
+          val smlnjVersion = (case SMLNJVersion.fromString smlnjVersion
+                 of SOME vers => vers
+                  | NONE => BFIO.error(concat[
+                        "bogus SML/NJ version \"", smlnjVersion, "\""
+                      ])
+                (* end case *))
           val bf = BFIO.Out.openStream (stream, false, smlnjVersion)
           val stats = {
                     env = if nopickle then 0 else W8V.length senvPkl,

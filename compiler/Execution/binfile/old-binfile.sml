@@ -256,6 +256,7 @@ Control_Print.say (concat [
 	  end
 
     fun read { version : version_info, stream = s } = let
+(* DEBUG *)val () = Control_Print.say "**** read old-format binfile\n"
 	  val version' = readVersionInfo s
           val oldFormat = (#bfVersion version = 0w0) orelse (#bfVersion version' = 0w0)
         (* trim the SML/NJ version string to the maximum length supported by the

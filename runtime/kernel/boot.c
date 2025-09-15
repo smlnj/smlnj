@@ -22,21 +22,6 @@
 #include "gc.h"
 #include "ml-globals.h"
 
-/* the useful information contained in the header */
-typedef struct {
-    Int32_t     version;        /* binfile version; will be 0 for old format files */
-    int         hdrSzB;         /* the size of the binfile header in bytes */
-    int	        importCnt;	/* the number of imported PerIDs. */
-    int	   	exportCnt;	/* the number of exported PerIDs. */
-    int	   	importSzB;	/* size of import tree area */
-    int	   	cmInfoSzB;	/* the size of the CM dependency information area */
-    int 	guidSzB;	/* size of GUID area in bytes */
-    bool_t      isNative;       /* true if the code is native machine code; false if */
-                                /* it is a CFG pickle) */
-    blk_desc_t  lits;           /* the literals section */
-    blk_desc_t  code;           /* the code or CFG pickle section (depending on `isNative`) */
-} binfile_hdr_info_t;
-
 /* llvm_codegen:
  *
  * Given the source-file name and ASDL pickle of the CFG IR, generate
@@ -321,14 +306,7 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
         info->pad       = BIGENDIAN_TO_HOST32(p->pad);
         info->isNative  = TRUE;
-        info->lits.offset = info->hdrSzB
-                + info->importSzB
-                + sizeof(pers_id_t) * info->exportCnt
-                + info->cmInfoSzB
-                + info->guidSzB
-                + BIGENDIAN_TO_HOST32(p->pad);
-
-        info->code.szB  = BIGENDIAN_TO_HOST32(p->codeSzB);
+        info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
         info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
 //        Die ("invalid binfile kind in \"%s\"", fname);
     }
