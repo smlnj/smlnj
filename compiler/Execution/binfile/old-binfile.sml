@@ -22,11 +22,6 @@ structure OldBinfile :> sig
 
     type pid = PersStamps.persstamp
 
-    type csegments = {
-	code : CodeObj.t,
-	data : Word8Vector.vector       (* literals *)
-      }
-
     type executable = CodeObj.executable
 
     type stats = { env: int, data: int, code: int }
@@ -35,13 +30,13 @@ structure OldBinfile :> sig
 
     datatype bfContents = BF of {
         version : version_info,
-	imports: ImportTree.import list,
-	exportPid: pid option,
-	cmData: pid list,
-	senv: pickle,
-	guid: string,
-	csegments: csegments,
-	executable: executable option ref
+	imports : ImportTree.import list,
+	exportPid : pid option,
+	cmData : pid list,
+	senv : pickle,
+	guid : string,
+	csegments : CodeObj.csegments,
+	executable : executable option ref
       }
 
   (* read just the guid *)
@@ -63,10 +58,7 @@ structure OldBinfile :> sig
 
     type pid = Pid.persstamp
 
-    type csegments = {
-	code : CodeObj.t,
-	data : Word8Vector.vector       (* literals *)
-      }
+    type csegments = CodeObj.csegments
 
     type executable = CodeObj.executable
 
@@ -89,13 +81,13 @@ structure OldBinfile :> sig
 
     datatype bfContents = BF of {
         version : version_info,
-	imports: ImportTree.import list,
-	exportPid: pid option,
-	cmData: pid list,
-	senv: pickle,
-	guid: string,
-	csegments: csegments,
-	executable: executable option ref
+	imports : ImportTree.import list,
+	exportPid : pid option,
+	cmData : pid list,
+	senv : pickle,
+	guid : string,
+	csegments : csegments,
+	executable : executable option ref
       }
 
     fun unBF (BF x) = x
@@ -232,10 +224,10 @@ Control_Print.say (concat [
 
   (* must be called with second arg >= 0 *)
     fun readCSegs (strm, nbytes) = let
-	  val dataSz = readInt32 strm
+	  val litsSz = readInt32 strm
 	  val _ = readInt32 strm (* ignore entry point field for data segment *)
-	  val avail = nbytes - dataSz - 8
-	  val data = if avail < 0 then error "data size" else bytesIn (strm, dataSz)
+	  val avail = nbytes - litsSz - 8
+	  val lits = if avail < 0 then error "literals size" else bytesIn (strm, litsSz)
 	  val codeSz = readInt32 strm
 	  val ep = readInt32 strm
 	  val avail = avail - codeSz - 8
@@ -243,7 +235,7 @@ Control_Print.say (concat [
                 then error "code size"
                 else CodeObj.input(strm, codeSz, ep)
 	  in
-	    { code = code, data = data }
+	    { code = code, lits = lits }
 	  end
 
     fun readGUid s = let
@@ -330,7 +322,7 @@ Control_Print.say (concat [
 	      },
 	    stats = {
 		env = es, code = cs,
-		data = W8V.length (#data code)
+		data = W8V.length (#lits code)
 	      }
 	  } end
 

@@ -1,6 +1,6 @@
 (* code-gen-fn.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Final machine code generation.  This module wraps up the post-FLINT phases
@@ -35,7 +35,7 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
                   verifyLLVM = !Control.CG.verifyLLVM
                 }
 	  in
-	    {code = code, data = data}
+	    {code = code, lits = data}
 	  end
 
   end

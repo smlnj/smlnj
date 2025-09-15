@@ -39,8 +39,17 @@ signature BINFILE_IO =
         (* the SML/NJ version (see the `SMLNJVersion` structure) *)
         type smlnj_version = {version_id : int list, suffix : string}
 
+        val bfVersion : t -> word
         val isArchive : t -> bool
         val smlnjVersion : t -> smlnj_version
+
+        (* the Binfile version tag for this implementation *)
+        val version : word
+
+        (* `sizeOfHdr nsects` returns the size of a header (including the
+         * section table) for a binfile with the given number of sections.
+         *)
+        val sizeOfHdr : int -> int
 
       end
 

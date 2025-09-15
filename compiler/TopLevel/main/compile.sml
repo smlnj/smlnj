@@ -1,6 +1,6 @@
 (* compile.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -124,7 +124,7 @@ functor CompileF (
 	  val csegs = M.compile {prog = flint, source = sourceName}
 	(* Obey the nosplit directive used during bootstrapping.  *)
 	(* val inlineExp = if isSome splitting then inlineExp else NONE *)
-	  val codeSz = (CodeObj.size(#code csegs) + Word8Vector.length(#data csegs))
+	  val codeSz = (CodeObj.size(#code csegs) + Word8Vector.length(#lits csegs))
 	  in
 	    addCode codeSz;
 	    { csegments=csegs, imports = imports }

@@ -40,10 +40,10 @@ structure Execute : sig
     val say = Control_Print.say
     fun bug s = ErrorMsg.impossible ("Execute: " ^ s)
 
-    fun mkExec { cs = {code, data}, exnWrapper } = let
+    fun mkExec { cs = {code, lits}, exnWrapper } = let
 	  val exec = CodeObj.exec code
-	  val nex = if (Word8Vector.length data > 0)
-		then (fn ivec => exec (Obj.mkTuple (Obj.toTuple ivec @ [CodeObj.mkLiterals data])))
+	  val nex = if (Word8Vector.length lits > 0)
+		then (fn ivec => exec (Obj.mkTuple (Obj.toTuple ivec @ [CodeObj.mkLiterals lits])))
 	        else (fn ivec => exec ivec)
           in
 	    fn args => (nex args handle exn => raise exnWrapper exn)

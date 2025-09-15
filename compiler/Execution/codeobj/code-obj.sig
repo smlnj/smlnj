@@ -11,6 +11,13 @@ signature CODE_OBJ =
 
     type t
 
+    type literals = Word8Vector.vector
+
+    type csegments = {
+        code : t,
+        lits : literals
+      }
+
     type executable = Unsafe.Object.object -> Unsafe.Object.object
 
     (* raised by input when there are insufficient bytes *)
@@ -49,6 +56,6 @@ signature CODE_OBJ =
     (* use the run-time system interpreter to generate a literals
      * vector from a literal bytecode program.
      *)
-    val mkLiterals : Word8Vector.vector -> Unsafe.Object.object
+    val mkLiterals : literals -> Unsafe.Object.object
 
   end

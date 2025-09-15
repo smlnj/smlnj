@@ -54,12 +54,12 @@ signature BINFILE = sig
   (* create the abstract binfile contents *)
     val create : {
             version : version_info,
-	    imports: ImportTree.import list,
-	    exportPid: pid option,
-	    cmData: pid list,
-	    senv: pickle,
-	    guid: string,
-	    csegments: CodeObj.csegments
+	    imports : ImportTree.import list,
+	    exportPid : pid option,
+	    cmData : pid list,
+	    senv : pickle,
+	    guid : string,
+	    csegments : CodeObj.csegments
 	  } -> bfContents
 
   (* read just the guid *)
@@ -68,13 +68,14 @@ signature BINFILE = sig
   (* read binfile contents from an IO stream *)
     val read : {
             version : version_info,                     (* expected binfile version *)
-	    stream: BinIO.instream
+	    stream : BinIO.instream
 	  } -> { contents: bfContents, stats: stats }
 
   (* write binfile contents to an IO stream *)
     val write : {
-	    stream: BinIO.outstream,
-	    contents: bfContents, nopickle: bool
+	    stream : BinIO.outstream,
+	    contents : bfContents,
+            nopickle: bool
 	  } -> stats
 
   (* Given a dynamic environment, link the code object contained in

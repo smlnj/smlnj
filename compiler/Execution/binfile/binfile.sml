@@ -17,13 +17,11 @@ structure Binfile :> BINFILE =
     structure BFIO = BinfileIO
     structure Pid = PersStamps
     structure W8V = Word8Vector
-    structure SS = Substring
+    structure W8VS = Word8VectorSlice
 
     exception FormatError = CodeObj.FormatError
 
     type pid = Pid.persstamp
-
-    type csegments = CodeObj.csegments
 
     type executable = CodeObj.executable
 
@@ -51,9 +49,16 @@ structure Binfile :> BINFILE =
       }
 *)
 
+    fun mkVersion {arch, smlnjVersion} = {
+            bfVersion = BinfileIO.Hdr.version,
+            arch = arch,
+            smlnjVersion = smlnjVersion
+          }
+
     fun unBF (BF x) = x
 
     val version = #version o unBF
+    val senvPickleOf = #senv o unBF
     val staticPidOf = #pid o senvPickleOf
     val exportPidOf = #exportPid o unBF
     val cmDataOf = #cmData o unBF
@@ -126,24 +131,26 @@ structure Binfile :> BINFILE =
             getImports nLeaves
           end
 
+    fun getPidSection (sect, sz) = BFIO.In.pid sect
+
     fun getPidsSection (sect, _) = let
-          val nPids = BFIO.int32 sect
+          val nPids = BFIO.In.int32 sect
           in
             List.tabulate (nPids, fn _ => BFIO.In.pid sect)
           end
 
-    fun getGuidSection (sect, sz) = BFIO.string (sect, sz)
+    fun getGuidSection (sect, sz) = BFIO.In.string (sect, sz)
 
     fun readGUid s = let
-          val bf = BFIO.openInstream stream
+          val bf = BFIO.In.openStream s
           in
-            case BFIO.section (bf, BFIO.SectId.guid, getGuidSection)
+            case BFIO.In.section (bf, BFIO.SectId.guid, getGuidSection)
              of SOME guid => guid
               | NONE => BFIO.error "missing 'GUID' section"
             (* end case *)
           end
 
-    fun getLiteralsSection (sect, sz) = BFIO.bytes (sect, sz)
+    fun getLiteralsSection (sect, sz) = BFIO.In.bytes (sect, sz)
 
     fun getCodeSection (sect, sz) = let
           val entryPt = BFIO.In.packedInt sect
@@ -163,7 +170,7 @@ structure Binfile :> BINFILE =
  *)
     fun read { version : version_info, stream } = let
           val bf = BFIO.In.openStream stream
-          val hdr = BFIO.getHeader bf
+          val hdr = BFIO.In.header bf
           (* check that we have a Binfile and not an archive *)
           val _ = if (BFIO.Hdr.isArchive hdr)
                 then BFIO.error "unexpected stable archive"
@@ -172,7 +179,7 @@ structure Binfile :> BINFILE =
           fun readSection (id, inFn) = (case BFIO.In.section(bf, id, inFn)
                  of SOME contents => contents
                   | NONE => BFIO.error(concat[
-                        "missing '", BFIO.SectId.toString sectId, "' section"
+                        "missing '", BFIO.SectId.toString id, "' section"
                       ])
                 (* end case *))
           (* get the `info` section *)
@@ -192,11 +199,9 @@ structure Binfile :> BINFILE =
           (* compute the old-style version info for the binfile *)
           val version' = let
                 val smlnjVers = let
-                      val vn = String.concatWithMap "." Int.toString
-                            (#id (#smlnjVersion hdr))
-                      val v = if (#suffix(#smlnjVersion hdr) = "")
-                            then vn
-                            else concat[vn, "-", suffix]
+                      val {version_id, suffix} = BFIO.Hdr.smlnjVersion hdr
+                      val vn = String.concatWithMap "." Int.toString version_id
+                      val v = if (suffix = "") then vn else concat[vn, "-", suffix]
                       in
                         (* the SML/NJ version string in the old binfile format is 16 bytes *)
                         if (size v > 16)
@@ -205,18 +210,20 @@ structure Binfile :> BINFILE =
                           then StringCvt.padRight #" " 16 v
                           else v
                       end
-                in
-                  { bfVersion = #version hdr, arch = arch, smlnjVersion = smlnjVers }
-                end
+                in {
+                    bfVersion = BFIO.Hdr.bfVersion hdr,
+                    arch = arch,
+                    smlnjVersion = smlnjVers
+                } end
 (* TODO: check version *)
           val imports = readSection (BFIO.SectId.import, getImportSection)
           (* get the optional export Pid *)
-          val exportPid = BFIO.section (bf, BFIO.SectId.export, BFIO.In.pid)
+          val exportPid = BFIO.In.section (bf, BFIO.SectId.export, getPidSection)
           val cmData = readSection (BFIO.SectId.pids, getPidsSection)
           val guid = readSection (BFIO.SectId.guid, getGuidSection)
           val literals = readSection (BFIO.SectId.literals, getLiteralsSection)
           val code = readSection (BFIO.SectId.code, getCodeSection)
-          val senv = readSection (BFIO.SectId.senv, getStaticEnvSection)
+          val senv = readSection (BFIO.SectId.staticEnv, getStaticEnvSection)
 	  in {
 	    contents = create {
                 version = version',
@@ -225,20 +232,34 @@ structure Binfile :> BINFILE =
 		cmData = cmData,
 		senv = senv,
 		guid = guid,
-		csegments = {data = literals, code = code}
+		csegments = {lits = literals, code = code}
 	      },
 	    stats = {
 		env = W8V.length(#pickle senv),
-                code = W8V.length code,
+                code = CodeObj.size code,
 		data = W8V.length literals
 	      }
 	  } end
 
-    val readGUid = fn arg => if isNewFormat(BinIO.getInstream (#stream arg))
-          then readGUid arg
-          else OldBinfile.readGUid arg
+    (* determine if a binfile has the old format. *)
+    fun isNewFormat (inS : BinIO.StreamIO.instream) = let
+          val (bv, _) = BinIO.StreamIO.inputN (inS, 12)
+          in
+            (W8V.length bv = 12) andalso let
+              val data = W8VS.full bv
+              val kind = Byte.unpackStringVec(W8VS.subslice(data, 0, SOME 8))
+              val vers = PackWord32Little.subVec(bv, 2)
+              in
+                (kind = "BinFile " orelse kind = "StabArch")
+                  andalso (vers >= 0wx20250801)
+              end
+          end
 
-    val read = fn arg => if isNewFormat(BinIO.getInstream (#stream arg))
+    val readGUid = fn inS => if isNewFormat(BinIO.getInstream inS)
+          then readGUid inS
+          else OldBinfile.readGUid inS
+
+    val read = fn (arg as {stream, version}) => if isNewFormat(BinIO.getInstream stream)
           then read arg
           else OldBinfile.read arg
 
@@ -255,8 +276,8 @@ structure Binfile :> BINFILE =
     val infoSize = 16
     fun addInfoSection (bf, arch, opsys) = let
           fun outFn sect = (
-                BFIO.string(sect, padString(arch, 8));
-                BFIO.string(sect, padString(opsys, 8)))
+                BFIO.Out.string(sect, padString(arch, 8));
+                BFIO.Out.string(sect, padString(opsys, 8)))
           in
             BFIO.Out.section (bf, BFIO.SectId.info, infoSize, outFn)
           end
@@ -275,29 +296,29 @@ structure Binfile :> BINFILE =
           and specSz ((selector, tree), (nl, sz)) =
                 itreeSz (tree, (nl, sz + sizePackedInt selector))
           and importSz ((pid, tree), (nl, sz)) = itreeSz (tree, (nl, sz + bytesPerPid))
-          val (nLeaves, sz) = List.foldl importSz (0, 0) trees
+          val (nl, sz) = List.foldl importSz (0, 0) trees
           in
-            (nLeaves, sizePackedInt nLeaves + sz)
+            {nLeaves = nl, sz = sizePackedInt nl + sz}
           end
     (* add an import tree section to the binfile *)
     fun addImportTreeSection (bf, l) = let
-          val (nLeaves, sz) = importTreeSize l
-      (* add a PID+tree to the buf *)
-          fun emitPidAndTree (buf, (pid, tree)) = let
-                fun emitImportSpec (selector, tree) = (
-                      BF.Out.packedInt (sect, selector);
-                      emitImportTree tree)
-                and emitImportTree (IT.ITNODE []) = BF.Out.packedInt (sect, 0)
-                  | emitImportTree (IT.ITNODE l) = (
-                      BF.Out.packedInt (sect, List.length l);
-                      List.app emitImportSpec l)
-                in
-                  B.addVec (buf, Pid.toBytes pid);
-                  emitImportTree tree
-                end
+          val {nLeaves, sz} = importTreeSize l
           fun outFn sect = let
+                (* add a PID+tree to the buf *)
+                fun emitPidAndTree (pid, tree) = let
+                      fun emitImportSpec (selector, tree) = (
+                            BFIO.Out.packedInt (sect, selector);
+                            emitImportTree tree)
+                      and emitImportTree (IT.ITNODE []) = BFIO.Out.packedInt (sect, 0)
+                        | emitImportTree (IT.ITNODE l) = (
+                            BFIO.Out.packedInt (sect, List.length l);
+                            List.app emitImportSpec l)
+                      in
+                        BFIO.Out.pid (sect, pid);
+                        emitImportTree tree
+                      end
                 in
-                  BF.Out.packedInt (sect, nLeaves);
+                  BFIO.Out.packedInt (sect, nLeaves);
                   List.app emitPidAndTree l
                 end
           in
@@ -311,7 +332,7 @@ structure Binfile :> BINFILE =
     fun addExportSection (bf, optExportPid) = let
           val (sz, outFn) = (case optExportPid
                  of NONE => (0, fn _ => ())
-                  | SOME pid => (bytesPerPid, fn sect => BFIO.pid(sect, pid))
+                  | SOME pid => (bytesPerPid, fn sect => BFIO.Out.pid(sect, pid))
                 (* end case *))
           in
             BFIO.Out.section (bf, BFIO.SectId.export, sz, outFn)
@@ -321,7 +342,7 @@ structure Binfile :> BINFILE =
     fun pidsSize pids = bytesPerPid * List.length pids
     fun addPidsSection (bf, pids) = let
           val sz = pidsSize pids
-          fun outFn sect = List.app (fn pid => BFIO.pid(sect, pid)) pids
+          fun outFn sect = List.app (fn pid => BFIO.Out.pid(sect, pid)) pids
           in
             BFIO.Out.section (bf, BFIO.SectId.pids, sz, outFn)
           end
@@ -330,27 +351,27 @@ structure Binfile :> BINFILE =
     fun guidSz guid = String.size guid
     fun addGuidSection (bf, guid) = let
           val sz = guidSz guid
-          fun outFn sect = BFIO.string(sect, guid)
+          fun outFn sect = BFIO.Out.string(sect, guid)
           in
             BFIO.Out.section (bf, BFIO.SectId.guid, sz, outFn)
           end
 
     (** literal ('LITS') section **)
-    fun literalSize data = W8V.length data
-    fun addLiteralSection (bf, data) = let
-          val sz = literalSize data
-          fun outFn sect = BFIO.Out.bytes(sect, data)
+    fun literalSize lits = W8V.length lits
+    fun addLiteralSection (bf, lits) = let
+          val sz = literalSize lits
+          fun outFn sect = BFIO.Out.bytes(sect, lits)
           in
             BFIO.Out.section (bf, BFIO.SectId.literals, sz, outFn)
           end
 
     (** code ('CODE') section **)
-    fun codeSize code = CodeObject.size code
+    fun codeSize code = CodeObj.size code
     fun addCodeSection (bf, code) = let
           val sz = codeSize code
           fun outFn sect = (
                 BFIO.Out.int32(sect, CodeObj.entrypoint code);
-                BFIO.Out.codeobj(sect, code))
+                BFIO.Out.codeObject(sect, code))
           in
             BFIO.Out.section (bf, BFIO.SectId.code, sz, outFn)
           end
@@ -359,12 +380,12 @@ structure Binfile :> BINFILE =
     fun staticEnvSize (_, _, false) = bytesPerPid
       | staticEnvSize (_, pkl, true) = bytesPerPid + W8V.length pkl
     fun addStaticEnvSection (bf, pid, pkl, nopickle) = let
-          val sz = staticEnvSize (bf, pid, pkl, nopickle)
+          val sz = staticEnvSize (pid, pkl, nopickle)
           fun outFn sect = (
                 BFIO.Out.pid (sect, pid);
                 if nopickle
                   then ()
-                  else BFIO.Out.bytes (bf, pkl))
+                  else BFIO.Out.bytes (sect, pkl))
           in
             BFIO.Out.section (bf, BFIO.SectId.staticEnv, sz, outFn)
           end
@@ -374,17 +395,17 @@ structure Binfile :> BINFILE =
                 contents
           val { bfVersion, arch, smlnjVersion } = version
 	  val { pickle = senvPkl, pid = staticPid } = senv
-          val { code, data } = csegments
+          val { code, lits } = csegments
           in
             BFIO.Hdr.sizeOfHdr 8 (* there are eight sections *)
               + infoSize
-              + BF.padSize (importTreeSize imports)
-              + BF.padSize (exportSize exportPid)
-              + BF.padSize (pidsSize cmData)
-              + BF.padSize (guidSize guid)
-              + BF.padSize (literalSize data)
-              + BF.padSize (codeSize code)
-              + BF.padSize (staticEnvSize (staticPid, senvPkl, nopickle))
+              + BFIO.padSize (#sz (importTreeSize imports))
+              + BFIO.padSize (exportSize exportPid)
+              + BFIO.padSize (pidsSize cmData)
+              + BFIO.padSize (String.size guid)
+              + BFIO.padSize (literalSize lits)
+              + BFIO.padSize (codeSize code)
+              + BFIO.padSize (staticEnvSize (staticPid, senvPkl, nopickle))
           end
 
     fun write { stream, contents, nopickle } = let
@@ -392,12 +413,13 @@ structure Binfile :> BINFILE =
                 contents
           val { bfVersion, arch, smlnjVersion } = version
 	  val { pickle = senvPkl, pid = staticPid } = senv
-          val { code, data } = csegments
-          val bf = BFIO.Out.openStream (stream, BFIO.Hdr.BinFile, smlnjVersion)
+          val { code, lits } = csegments
+          val SOME smlnjVersion = SMLNJVersion.fromString smlnjVersion
+          val bf = BFIO.Out.openStream (stream, false, smlnjVersion)
           val stats = {
                     env = if nopickle then 0 else W8V.length senvPkl,
-                    data = W8V.length data,
-                    code = CodeObject.size code
+                    data = W8V.length lits,
+                    code = CodeObj.size code
                   }
           in
 (* FIXME: eventually, we should include useful OS info in the info section *)
@@ -406,7 +428,7 @@ structure Binfile :> BINFILE =
             addExportSection (bf, exportPid);
             addPidsSection (bf, cmData);
             addGuidSection (bf, guid);
-            addLiteralSection (bf, data);
+            addLiteralSection (bf, lits);
             addCodeSection (bf, code);
             addStaticEnvSection (bf, staticPid, senvPkl, nopickle);
             BFIO.Out.finish bf;

@@ -96,6 +96,8 @@ structure BinfileIO :> BINFILE_IO =
         fun mkHeader (isArchive, smlnjVers) =
               { isArchive = isArchive, version = version, smlnjVersion = smlnjVers }
 
+        fun bfVersion (h : t) = #version h
+
         (* is the binfile an archive? *)
         fun isArchive ({isArchive, ...} : t) = isArchive
 

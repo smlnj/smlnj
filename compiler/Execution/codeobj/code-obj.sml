@@ -22,6 +22,13 @@ structure CodeObj :> CODE_OBJ =
 	obj : W8V.vector ref
       }
 
+    type literals = Word8Vector.vector
+
+    type csegments = {
+        code : t,
+        lits : literals
+      }
+
     type executable = object -> object
 
   (* raised by input when there are insufficient bytes *)
