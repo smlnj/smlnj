@@ -34,7 +34,7 @@ signature COMPILE0 =
 	    pickle: pickle
 	  }
 
-    (** elaborate as above, then keep on to compile into the binary code *)
+    (** elaborate as above, then keep on to compile to the binary code *)
     val compile : {
 	    source: Source.inputSource,
 	    ast: Ast.dec,

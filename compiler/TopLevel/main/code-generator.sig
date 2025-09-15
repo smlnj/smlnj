@@ -10,10 +10,18 @@
 signature CODE_GENERATOR =
   sig
 
-    val compile : {
-	    source : string,
-	    prog : FLINT.prog
-	  } -> CodeObj.csegments
+    (* compile FLINT IR to the CFG IR *)
+    val compileToCFG : { source : string, prog : FLINT.prog } -> {
+            code : CFG.comp_unit,
+            lits : CodeObj.literals
+          }
+
+    (* compile CFG IR to native code *)
+    val compileCFG : { code : CFG.comp_unit, lits : CodeObj.literals }
+          -> CodeObj.csegments
+
+    (* compile FLINT IR to native code *)
+    val compile : { source : string, prog : FLINT.prog } -> CodeObj.csegments
 
   (* the following are used by CM *)
     val architecture : string

@@ -18,24 +18,33 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
 
     fun phase x = Stats.doPhase (Stats.makePhase x)
 
-    fun compile {source, prog} = let
-	(* CPS compilation *)
+    (* compile FLINT IR to the CFG IR *)
+    fun compileToCFG {source, prog} = let
+	  (* CPS compilation *)
 	  val {clusters, maxAlloc, data} = CPSGen.compile {source=source, prog=prog}
-        (* convert to CFG IR *)
+          (* convert to CFG IR *)
           val cfg = CPSGen.toCFG {
                   source = source, clusters = clusters, maxAlloc = maxAlloc
                 }
-        (* pickle the IR into a vector *)
-          val pkl = CFGPickler.toBytes cfg
-        (* invoke the LLVM code generator to generate machine code *)
+          in
+            {code = cfg, lits = data}
+          end
+
+    (* compile CFG IR to native code *)
+    fun compileCFG {code, lits} = let
+          (* pickle the IR into a vector *)
+          val pkl = CFGPickler.toBytes code
+          (* invoke the LLVM code generator to generate machine code *)
           val code = CodeObj.generate {
                   target = MachSpec.llvmTargetName,
-                  src = source,
+                  src = #srcFile code,
                   pkl = pkl,
                   verifyLLVM = !Control.CG.verifyLLVM
                 }
 	  in
-	    {code = code, lits = data}
+	    {code = code, lits = lits}
 	  end
+
+    val compile = compileCFG o compileToCFG
 
   end
