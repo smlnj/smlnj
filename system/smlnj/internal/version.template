@@ -51,20 +51,22 @@ structure SMLNJVersion : sig
 	  end
 
     fun fromString s = let
-          fun decodeId ([], [], suffix) = NONE
-            | decodeId ([], ids, suffix) = SOME{version_id = List.rev ids, suffix=suffix}
-            | decodeId (n::ns, ids, suffix) = (case Int.fromString n
-                 of SOME id => if (id >= 0)
-                      then decodeId (ns, id::ids, suffix)
-                      else NONE
-                  | NONE => NONE
-                (* end case *))
+          fun decodeId (versId, suffix) = let
+                fun decode ([], []) = NONE
+                  | decode ([], ids) = SOME{version_id = List.rev ids, suffix=suffix}
+                  | decode (n::ns, ids) = (case Int.fromString n
+                       of SOME id => if (id >= 0)
+                            then decode (ns, id::ids)
+                            else NONE
+                        | NONE => NONE
+                      (* end case *))
+                in
+                  decode (String.fields (fn #"." => true | _ => false) versId, [])
+                end
           in
             case String.fields (fn #"-" => true | _ => false) s
-             of [versId, suffix] => decodeId (
-                  String.fields (fn #"." => true | _ => false) versId,
-                  [],
-                  suffix)
+             of [versId, suffix] => decodeId (versId, suffix)
+              | [versId] => decodeId (versId, "")
               | _ => NONE
             (* end case *)
           end
