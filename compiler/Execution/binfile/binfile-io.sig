@@ -106,6 +106,8 @@ signature BINFILE_IO =
          *)
         val section : t * SectId.t * int * (sect -> unit) -> unit
 
+        (* write the specified number of padding bytes (0w0) to the section *)
+        val pad : sect * int -> unit
         (* write a vector of bytes to the section *)
         val bytes : sect * Word8Vector.vector -> unit
         val string : sect * string -> unit

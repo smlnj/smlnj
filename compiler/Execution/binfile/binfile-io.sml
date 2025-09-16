@@ -259,15 +259,19 @@ structure BinfileIO :> BINFILE_IO =
                     val () = seek (bf, toAlignedPos(#offsetW desc))
                     val sect = SECT{bf = bf, desc = desc}
                     in
-                      SOME(inFn (sect, toPaddedSzb(#szW desc)))
-handle ex => (
-Control_Print.say(concat["** Exception: ", General.exnMessage ex, "\n"]);
+(* +DEBUG *)
 Control_Print.say(concat[
-"  in `section (-, '", String.toString(SectId.toString sectId), "', -)`; pos = 0x",
+"# section (-, '", String.toString(SectId.toString sectId), "', -): pos = 0x",
 Position.fmt StringCvt.HEX (toAlignedPos(#offsetW desc)), "; szb = ",
 Int.toString(toPaddedSzb(#szW desc)), "\n"
 ]);
+(* -DEBUG *)
+                      SOME(inFn (sect, toPaddedSzb(#szW desc)))
+(* +DEBUG *)
+handle ex => (
+Control_Print.say(concat["## Exception: ", General.exnMessage ex, "\n"]);
 raise ex)
+(* -DEBUG *)
                     end
                 | NONE => NONE
               (* end case *))
@@ -423,18 +427,11 @@ raise ex)
         fun section (OUT{sects, ...}, sectId, szb, outFn) =
               sects := SD{kind = sectId, szW = padSize' szb, outFn = outFn} :: !sects
 
-(* do we need this function?
-        fun mkSMLNJVersion () = let
-              val v = SMLNJVersion.toString (#smlnjVersion hdr)
+        fun pad (SECT outS, n) = let
+              fun lp n = if (n <= 0) then () else (BIO.output1(outS, 0w0); lp(n-1))
               in
-                (* the SML/NJ version string is limited to 16 bytes *)
-                if (size v > 16)
-                  then substring (v, 0, 16)
-                else if (size v < 16)
-                  then StringCvt.padRight #" " 16 v
-                  else v
+                lp n
               end
-*)
 
         fun bytes (SECT outS, v) = BIO.output (outS, v)
 

@@ -160,8 +160,13 @@ structure Binfile :> BINFILE =
 
     fun getStaticEnvSection (sect, sz) = let
           val staticPid = BFIO.In.pid sect
-          val pkl = BFIO.In.bytes (sect, sz - bytesPerPid)
+          val pklSz = if (sz > bytesPerPid)
+                then BFIO.In.packedInt sect
+                else 0
+          val pkl = BFIO.In.bytes (sect, pklSz)
           in
+            (* read and discard the padding *)
+            ignore (BFIO.In.bytes (sect, sz - pklSz - bytesPerPid));
             { pid = staticPid, pickle = pkl }
           end
 
@@ -378,15 +383,24 @@ structure Binfile :> BINFILE =
           end
 
     (** static environment ('SENV') section **)
-    fun staticEnvSize (_, _, false) = bytesPerPid
-      | staticEnvSize (_, pkl, true) = bytesPerPid + W8V.length pkl
+    fun trueStaticEnvSize (_, _, true) = bytesPerPid
+      | trueStaticEnvSize (_, pkl, false) = let
+          val n = W8V.length pkl
+          in
+            bytesPerPid + LEB128.sizeOfInt n + n
+          end
+    fun staticEnvSize arg = BFIO.padSize(trueStaticEnvSize arg)
     fun addStaticEnvSection (bf, pid, pkl, nopickle) = let
-          val sz = staticEnvSize (pid, pkl, nopickle)
+          val trueSz = trueStaticEnvSize (pid, pkl, nopickle)
+          val sz = BFIO.padSize trueSz
           fun outFn sect = (
                 BFIO.Out.pid (sect, pid);
                 if nopickle
                   then ()
-                  else BFIO.Out.bytes (sect, pkl))
+                  else (
+                    BFIO.Out.packedInt (sect, LEB128.sizeOfInt(W8V.length pkl));
+                    BFIO.Out.bytes (sect, pkl);
+                    BFIO.Out.pad (sect, sz - trueSz)))
           in
             BFIO.Out.section (bf, BFIO.SectId.staticEnv, sz, outFn)
           end
