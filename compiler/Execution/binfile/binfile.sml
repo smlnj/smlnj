@@ -133,8 +133,8 @@ structure Binfile :> BINFILE =
 
     fun getPidSection (sect, sz) = BFIO.In.pid sect
 
-    fun getPidsSection (sect, _) = let
-          val nPids = BFIO.In.int32 sect
+    fun getPidsSection (sect, sz) = let
+          val nPids = sz div bytesPerPid
           in
             List.tabulate (nPids, fn _ => BFIO.In.pid sect)
           end

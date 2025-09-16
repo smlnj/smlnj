@@ -13,7 +13,6 @@ structure BinfileIO :> BINFILE_IO =
 
     structure W = Word
     structure W8V = Word8Vector
-    structure W8B = Word8Buffer
     structure Pid = PersStamps
     structure BIO = BinIO
     structure SIO = BIO.StreamIO
@@ -22,8 +21,15 @@ structure BinfileIO :> BINFILE_IO =
 	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
 	  raise CodeObj.FormatError)
 
-    (* pad section sizes to a multiple of 8 bytes *)
-    fun padSize sz = Word.toIntX(Word.andb(Word.fromInt sz + 0w7, Word.notb 0w7))
+    (* convert a 8-byte-word offset to a byte file position *)
+    fun toAlignedPos i = 8 * Position.fromInt i
+
+    (* convert a 8-byte-word size to a byte size *)
+    fun toPaddedSzb i = 8 * i
+
+    (* convert a size in bytes to a padded size in 8-byte words *)
+    fun padSize' szb = W.>>(W.fromInt szb + 0w7, 0w3)
+    fun padSize szb = W.toInt(padSize' szb)
 
     (* section IDs are represented as words internally and as four-character
      * little-endian codes externally.
@@ -46,7 +52,7 @@ structure BinfileIO :> BINFILE_IO =
               (* end case *))
 
         fun toString (id : t) = let
-              fun toChr w = chr(Word.toInt(Word.andb(w, 0wxff)))
+              fun toChr w = chr(W.toInt(W.andb(w, 0wxff)))
               in
                 CharVector.fromList [
                     toChr id,
@@ -106,10 +112,10 @@ structure BinfileIO :> BINFILE_IO =
         fun sizeOfHdr nSects = fixedSize + sectDescSize * nSects
 
         type sect_desc = {
-            kind : SectId.t,
-            flags : word,
-            offset : Position.int,
-            size : int
+            kind : SectId.t,            (* 4-byte section ID *)
+            flags : word,               (* flags (for future use) *)
+            offsetW : int,              (* 8-byte word offset from start of binfile *)
+            szW : int                   (* size in 8-byte words *)
           }
 
         type sect_tbl = sect_desc Vector.vector
@@ -134,49 +140,18 @@ structure BinfileIO :> BINFILE_IO =
             desc : Hdr.sect_desc
           }
 
-        fun getChar (bv, i) = chr (Word8.toInt (W8V.sub(bv, i)))
-
-        fun getString (bv, base, n) = CharVector.tabulate(n, fn i => getChar (bv, base+i))
+        fun getString (bv, base, n) =
+              Byte.unpackStringVec (Word8VectorSlice.slice(bv, base, SOME n))
 
         (* get a little-endian 32-bit signed integer from the byte vector `bv`
-         * at offset `i`.  We assume that the offset is 4-byte aligned.
+         * at byte offset `i`.  We assume that the offset is 4-byte aligned.
          *)
         fun getInt32 (bv, i) = LargeWord.toIntX(PackWord32Little.subVecX(bv, i div 4))
 
         (* get a little-endian 32-bit unsigned integer from the byte vector `bv`
-         * at offset `i`.  We assume that the offset is 4-byte aligned.
+         * at byte offset `i`.  We assume that the offset is 4-byte aligned.
          *)
         fun getUInt32 (bv, i) = Word.fromLarge(PackWord32Little.subVec(bv, i div 4))
-
-        (* read and decode the fixed part of the header from a binary input stream *)
-        fun header inS = let
-              val hdrData = BIO.inputN(inS, Hdr.fixedSize)
-              val () = if (W8V.length hdrData <> Hdr.fixedSize)
-                    then error "incomplete binfile header"
-                    else ()
-              (* decode the header *)
-              val isArchive = (case getString(hdrData, 0, 8)
-                     of "BinFile " => false
-                      | "StabArch" => true
-                      | s => error(concat[
-                            "unknown binfile file kind '", String.toString s, "'"
-                          ])
-                    (* end case *))
-              val vers = getUInt32(hdrData, 8)
-              val () = if vers <> Hdr.version
-                    then error(concat[
-                        "invalid version number 0x", Word.toString vers
-                      ])
-                    else ()
-              val smlnjVers = (case SMLNJVersion.fromString (getString(hdrData, 12, 16))
-                     of SOME v => v
-                      | NONE => error "malformed SML/NJ version in header"
-                    (* end case *))
-              in {
-                isArchive = isArchive,
-                version = vers,
-                smlnjVersion = smlnjVers
-              } end
 
         fun create (name, inS, base) = let
               (* get the header *)
@@ -222,14 +197,13 @@ structure BinfileIO :> BINFILE_IO =
                           else ()
                     val kind = SectId.fromWord(getUInt32(descData, 0))
                     val flags = getUInt32(descData, 4)
-                    val offset = Position.fromLarge(
-                          Word.toLargeInt(getUInt32(descData, 8)))
-                    val sz = Word.toIntX(getUInt32(descData, 12))
+                    val offset = Word.toInt(getUInt32(descData, 8))
+                    val sz = Word.toInt(getUInt32(descData, 12))
                     in {
                       kind = kind,
                       flags = flags,
-                      offset = offset,
-                      size = sz
+                      offsetW = offset,
+                      szW = sz
                     } end
 (* TODO: validate the table *)
               val sects = Vector.tabulate (nSects, fn _ => getSectDesc())
@@ -282,10 +256,18 @@ structure BinfileIO :> BINFILE_IO =
         fun section (bf, sectId, inFn) = (
             case findSection (bf, sectId)
                of SOME desc => let
-                    val () = seek (bf, #offset desc)
+                    val () = seek (bf, toAlignedPos(#offsetW desc))
                     val sect = SECT{bf = bf, desc = desc}
                     in
-                      SOME(inFn (sect, #size desc))
+                      SOME(inFn (sect, toPaddedSzb(#szW desc)))
+handle ex => (
+Control_Print.say(concat["** Exception: ", General.exnMessage ex, "\n"]);
+Control_Print.say(concat[
+"  in `section (-, '", String.toString(SectId.toString sectId), "', -)`; pos = 0x",
+Position.fmt StringCvt.HEX (toAlignedPos(#offsetW desc)), "; szb = ",
+Int.toString(toPaddedSzb(#szW desc)), "\n"
+]);
+raise ex)
                     end
                 | NONE => NONE
               (* end case *))
@@ -388,14 +370,14 @@ structure BinfileIO :> BINFILE_IO =
                       (0, [])
                         (!sects)
               (* size of header including the section table in 8-byte words *)
-              val hdrSzW = W.>>(W.fromInt(Hdr.sizeOfHdr nSects), 0w3)
+              val hdrSzW = padSize'(Hdr.sizeOfHdr nSects)
               (* output a section descriptor *)
-              fun outputSectDesc (SD{kind, szW, ...}, offset) = (
+              fun outputSectDesc (SD{kind, szW, ...}, offsetW) = (
                     outputW32 (outS, kind);
                     outputW32 (outS, 0w0); (* reserved for future use *)
-                    outputW32 (outS, offset);
+                    outputW32 (outS, offsetW);
                     outputW32 (outS, szW);
-                    offset + szW)
+                    offsetW + szW)
               (* output the contents of a section *)
               fun outSect (sect as SD{outFn, ...}) = let
                     val () = outFn (SECT outS);
@@ -438,12 +420,8 @@ structure BinfileIO :> BINFILE_IO =
          * and size `szb` in bytes.  The `outFn` is used to output the contents
          * of the section using the functions below.
          *)
-        fun section (OUT{sects, ...}, sectId, szb, outFn) = let
-              (* round size up and convert to number of 8-byte words *)
-              val szW = W.>>(W.fromInt szb + 0w7, 0w3)
-              in
-                sects := SD{kind = sectId, szW = szW, outFn = outFn} :: !sects
-              end
+        fun section (OUT{sects, ...}, sectId, szb, outFn) =
+              sects := SD{kind = sectId, szW = padSize' szb, outFn = outFn} :: !sects
 
 (* do we need this function?
         fun mkSMLNJVersion () = let
