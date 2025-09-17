@@ -115,12 +115,14 @@ extern void AssertFail (const char *a, const char *file, int line);
 #define ASSERT(A)	do { } while(0)
 #endif
 
-/* Convert a bigendian 32-bit quantity into the host machine's representation. */
+/* Convert endianess */
 #if defined(BYTE_ORDER_BIG)
-#  define BIGENDIAN_TO_HOST32(x)	(x)
+#  define BIG_TO_HOST32(x)      (x)
+#  define LITTLE_TO_HOST32(x)   SwapBytes32(x)
 #elif defined(BYTE_ORDER_LITTLE)
    extern Unsigned32_t SwapBytes32 (Unsigned32_t x);
-#  define BIGENDIAN_TO_HOST32(x)	SwapBytes32(x)
+#  define BIG_TO_HOST32(x)      SwapBytes32(x)
+#  define LITTLE_TO_HOST32(x)   (x)
 #else
 #  error must define endianess
 #endif

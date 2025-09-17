@@ -22,6 +22,38 @@
 #include "gc.h"
 #include "ml-globals.h"
 
+/* a section-table entry */
+typedef struct {
+    Unsigned32_t id;
+    off_t offset;
+    size_t szb;
+} sect_desc_t;
+
+/* the useful information contained in the header */
+typedef struct {
+    Int32_t     version;        /* binfile version; will be 0 for old format files */
+    bool_t      isArchive;      /* true for archive containers */
+    int         numSects;       /* the number of sections in the section table */
+    sect_desc_t sects[1];       /* the section table */
+} binfile_t;
+
+/* the on-disk file header */
+typedef struct {
+    char        kind[8];        /* file kind (either "BinFile " or "StabArch" */
+    Unsigned32_t version;       /* file version (little endian) */
+    char        smlnjVersion[16]; /* SML/NJ compiler version */
+    Unsigned32_t numSects;      /* size of the section table */
+} binfile_hdr_t;
+
+/* the on-disk section descriptor layout */
+typedef struct {
+    Unsigned32_t id;
+    Unsigned32_t flags;
+    Unsigned32_t offsetW;
+    Unsigned32_t szW;
+} binfile_sect_desc_t;
+
+
 /* llvm_codegen:
  *
  * Given the source-file name and ASDL pickle of the CFG IR, generate
@@ -244,6 +276,67 @@ PVT void ReadBinFile (FILE *file, void *buf, int nbytes, const char *fname)
 
 } /* end of ReadBinFile */
 
+/* ReadLEB128Signed:
+ *
+ * Read a signed packed integer in LEB128 format.
+ */
+PVT Int32_t ReadLEB128Signed (FILE *file, const char *fname)
+{
+    Int32_t n = 0;
+    Unsigned32_t shift = 0;
+    Unsigned32_t slice;
+    Byte_t c;
+
+    do {
+        ReadBinFile (file, &c, sizeof(c), fname);
+        slice = c & 0x7f;
+        if ((shift >= 31) &&
+        && ((shift == 31 && slice != 0 && slice != 0x7f)
+           || (shift > 31 && slice != (Value < 0 ? 0x7f : 0x00))))
+        {
+/* TODO: overflow */
+        }
+        n |= slice << shift;
+        shift += 7;
+    } while ((c & 0x80) != 0);
+
+    // sign extend negative numbers
+    if (shift < 32 && ((c & 0x40) != 0)) {
+        n |= (0xffffffff << shift);
+    }
+
+    return n;
+
+} /* end of ReadLEB128Signed */
+
+/* ReadLEB128Unsigned:
+ *
+ * Read an unsigned packed integer in LEB128 format.
+ */
+PVT Unsigned32_t ReadLEB128Unsigned (FILE *file, const char *fname)
+{
+    Unsigned32_t n = 0;
+    Unsigned32_t shift = 0;
+    Unsigned32_t slice;
+    Byte_t       c;
+
+    do {
+        ReadBinFile (file, &c, sizeof(c), fname);
+        slice = c & 0x7f;
+        if ((shift >= 31)
+        && ((shift == 31 && (slice << shift >> shift) != slice)
+            || (shift > 31 && slice != 0)))
+        {
+/* TODO: overflow */
+        }
+        n += slice << shift;
+        shift += 7;
+    } while ((c & 0x80) != 0);
+
+    return n;
+
+} /* end of ReadLEB128Unsigned */
+
 /* ReadPackedInt32:
  *
  * Read an integer in "packed" format.  (Small numbers only require 1 byte.)
@@ -306,7 +399,14 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->guidSzB   = BIG_TO_HOST32(p->guidSzB);
         info->pad       = BIG_TO_HOST32(p->pad);
         info->isNative  = TRUE;
-        info->codeSzB   = BIG_TO_HOST32(p->codeSzB);
+        info->lits.offset = info->hdrSzB
+                + info->importSzB
+                + sizeof(pers_id_t) * info->exportCnt
+                + info->cmInfoSzB
+                + info->guidSzB
+                + BIG_TO_HOST32(p->pad);
+
+        info->code.szB  = BIG_TO_HOST32(p->codeSzB);
         info->envSzB    = BIG_TO_HOST32(p->envSzB);
 //        Die ("invalid binfile kind in \"%s\"", fname);
     }
