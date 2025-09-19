@@ -21,6 +21,7 @@ signature FORMAT_COMB
 signature GRAPH_SCC
 signature HASH_KEY
 signature HASH_TABLE
+signature HASHING
 signature INTERVAL_DOMAIN
 signature INTERVAL_SET
 signature IO_UTIL
@@ -71,6 +72,7 @@ structure FNVHash
 structure Format
 structure FormatComb
 structure GetOpt
+structure Hash
 structure HashString
 structure HashTable
 structure IntBinaryMap		(* to be removed *)
@@ -168,6 +170,7 @@ format-comb-sig.sml
 format-comb.sml
 graph-scc-sig.sml
 graph-scc-fn.sml
+hash.sml
 hash-key-sig.sml
 hash-string.sml
 hash-set-fn.sml
