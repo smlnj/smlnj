@@ -26,6 +26,8 @@ structure LEB128 : LEB128 = struct
     val mask : W8.word = 0wx7f
     val signBit : W8.word = 0wx40
     val contBit : W8.word = 0wx80
+    val wBits : word = 0w31     (* number of bits in the default word type *)
+    val nwBits : word = 0w32    (* number of bits in the native word type *)
 
     (* conversions to/from native (32-bit) words and bytes *)
     fun byteToNW b = NW.fromLarge(W8.toLarge b)
@@ -96,8 +98,8 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
     fun decodeWord getB = let
           (* check for too-large inputs *)
           fun chkOverflow (shift, slice) =
-                if (shift < 0w63) then ()
-                else if (shift = 0w63)
+                if (shift < wBits-0w1) then ()
+                else if (shift = wBits-0w1)
                   then if (W.>>(W.<<(slice, shift), shift) <> slice)
                     then raise Overflow
                     else ()
@@ -120,7 +122,32 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
             fn inS => lp (inS, 0w0, 0w0)
           end
 
-    fun decodeNativeWord getB = ??
+    fun decodeNativeWord getB = let
+          (* check for too-large inputs *)
+          fun chkOverflow (shift, slice) =
+                if (shift < nwBits-0w1) then ()
+                else if (shift = nwBits-0w1)
+                  then if (NW.>>(NW.<<(slice, shift), shift) <> slice)
+                    then raise Overflow
+                    else ()
+                else if (slice <> 0w0)
+                  then raise Overflow
+                  else ()
+          fun lp (inS, w, shift) = (case getB inS
+                 of SOME(b, rest) => let
+                      val slice = W.andb(NW.fromLarge(Word8.toLarge b), 0wx7f)
+                      val w = NW.orb(w, NW.<<(slice, shift))
+                      in
+                        chkOverflow (shift, slice);
+                        if b >= contBit
+                          then lp (rest, w, shift + 0w7)
+                          else SOME(w, rest)
+                      end
+                  | NONE => NONE
+                (* end case *))
+          in
+            fn inS => lp (inS, 0w0, 0w0)
+          end
 
     fun decodeWord64 getB = let
           (* check for too-large inputs *)

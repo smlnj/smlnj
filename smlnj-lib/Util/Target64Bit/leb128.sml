@@ -26,6 +26,8 @@ structure LEB128 : LEB128 = struct
     val mask : W8.word = 0wx7f
     val signBit : W8.word = 0wx40
     val contBit : W8.word = 0wx80
+    val wBits : word = 0w63     (* number of bits in the default word type *)
+    val nwBits : word = 0w64    (* number of bits in the native word type *)
 
     (* conversions to/from native (32-bit) words and bytes *)
     fun byteToNW b = NW.fromLarge(W8.toLarge b)
@@ -93,8 +95,8 @@ val decodeInt64 = decodeNativeInt
     fun decodeWord getB = let
           (* check for too-large inputs *)
           fun chkOverflow (shift, slice) =
-                if (shift < 0w63) then ()
-                else if (shift = 0w63)
+                if (shift < wBits-0w1) then ()
+                else if (shift = wBits-0w1)
                   then if (W.>>(W.<<(slice, shift), shift) <> slice)
                     then raise Overflow
                     else ()
