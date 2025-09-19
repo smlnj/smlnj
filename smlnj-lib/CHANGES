@@ -2,6 +2,14 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
+SML/NJ 2025.3
+-------------------
+
+[2025-09-13]
+        Added `LEB128` module, which implements packed encoding and decoding
+        of integer and word types using the Little Endian Base 128 encoding.
+
+--------------------------------------------------------------------------------
 SML/NJ 2025.2
 -------------------
 
