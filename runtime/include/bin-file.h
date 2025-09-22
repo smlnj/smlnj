@@ -67,20 +67,4 @@ typedef struct {	    /* The header of a .bin file; note that the fields */
     Int32_t	envSzB;		/* the size of the environment */
 } new_binfile_hdr_t;
 
-/* the useful information contained in the header */
-typedef struct {
-    Int32_t     version;        /* binfile version; will be 0 for old format files */
-    int         hdrSzB;         /* the size of the binfile header in bytes */
-    int	        importCnt;	/* the number of imported PerIDs. */
-    int	   	exportCnt;	/* the number of exported PerIDs. */
-    int	   	importSzB;	/* size of import tree area */
-    int	   	cmInfoSzB;	/* the size of the CM dependency information area */
-    int 	guidSzB;	/* size of GUID area in bytes */
-    int 	pad;	        /* size of padding for code segment alignment */
-    bool_t      isNative;       /* true if the code is native machine code; false if */
-                                /* it is a CFG pickle) */
-    int	   	codeSzB;	/* the number of bytes of code */
-    int	   	envSzB;		/* the size of the environment */
-} binfile_hdr_info_t;
-
 #endif /* !_BIN_FILE_ */

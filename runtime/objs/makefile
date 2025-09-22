@@ -64,7 +64,7 @@ GC_INCLUDES =	$(INCLUDES) -I$(GC_DIR)
 GEN_INCLUDES =	-I$(CONFIG_DIR) $(INCLUDES)
 
 OBJS =		c-libraries.o unix-raise-syserr.o ml-options.o \
-		boot.o load-ml.o run-ml.o globals.o ml-state.o \
+		new-boot.o load-ml.o run-ml.o globals.o ml-state.o \
 		error.o timers.o unix-timers.o \
 		qualify-name.o swap-bytes.o \
 		unix-fault.o signal-util.o unix-signal.o unix-prof.o prim.o \
@@ -185,6 +185,13 @@ boot.o:		$(KERN_DIR)/boot.c \
 		$(INC_DIR)/ml-objects.h $(INC_DIR)/ml-globals.h $(INC_DIR)/gc.h \
 		$(INC_DIR)/ml-limits.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/boot.c
+
+new-boot.o:	$(KERN_DIR)/new-boot.c \
+		$(INC_DIR)/ml-osdep.h $(INC_DIR)/cache-flush.h \
+		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/bin-file.h \
+		$(INC_DIR)/ml-objects.h $(INC_DIR)/ml-globals.h $(INC_DIR)/gc.h \
+		$(INC_DIR)/ml-limits.h
+	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/new-boot.c
 
 load-ml.o:	$(KERN_DIR)/load-ml.c \
 		ml-sizes.h system-signals.h \
