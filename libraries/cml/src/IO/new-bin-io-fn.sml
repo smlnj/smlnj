@@ -648,7 +648,7 @@ functor BinIOFn (
 	fun setPosOut (OUTP{pos, strm=strmMV}) = let
 	      val (strm as OSTRM{writer, ...}) =
 		    lockAndChkClosedOut (strmMV, "setPosOut")
-	      fun release () = (SV.mPut(strmMV, strm); strmMV)
+	      fun release () = SV.mPut(strmMV, strm)
 	      in
 		case writer
 		 of PIO.WR{setPos=SOME f, ...} => (
@@ -658,7 +658,8 @@ functor BinIOFn (
 		      release();
 		      outputExn(strm, "getPosOut", IO.RandomAccessNotSupported))
 		(* end case *);
-		release()
+		release();
+		strmMV
 	      end
 
 	fun setBufferMode (strmMV, mode) = let
