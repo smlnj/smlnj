@@ -545,8 +545,8 @@ functor BinIOFn (
 	       of PIO.WR{setPos=SOME f, ...} => (
 		    (f pos)
 		      handle ex => outputExn(strm, "setPosOut", ex))
-		| _ => outputExn(strm, "getPosOut", IO.RandomAccessNotSupported)
-	      (* end case *))
+		| _ => outputExn(strm, "setPosOut", IO.RandomAccessNotSupported);
+		strm (* end case *))
 
 	fun setBufferMode (strm as OSTRM{bufferMode, ...}, IO.NO_BUF) = (
 	      flushBuffer (strm, "setBufferMode");
@@ -610,7 +610,7 @@ functor BinIOFn (
     fun closeOut strm = StreamIO.closeOut(!strm)
     fun getPosOut strm = StreamIO.getPosOut(!strm)
     fun setPosOut (strm, p as StreamIO.OUTP{strm=strm', ...}) = (
-	  strm := strm'; StreamIO.setPosOut p)
+	  strm := strm'; ignore (StreamIO.setPosOut p))
 
     fun mkInstream (strm : StreamIO.instream) = ref strm
     fun getInstream (strm : instream) = !strm
