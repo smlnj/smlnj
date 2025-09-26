@@ -1,6 +1,6 @@
 (* bin-io-fn.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * QUESTION: what operations should raise exceptions when the stream is
@@ -543,10 +543,10 @@ functor BinIOFn (
 	      isClosedOut (strm, "setPosOut");
 	      case writer
 	       of PIO.WR{setPos=SOME f, ...} => (
-		    (f pos)
+		    (f pos; strm)
 		      handle ex => outputExn(strm, "setPosOut", ex))
-		| _ => outputExn(strm, "setPosOut", IO.RandomAccessNotSupported);
-		strm (* end case *))
+		| _ => outputExn(strm, "setPosOut", IO.RandomAccessNotSupported)
+	      (* end case *))
 
 	fun setBufferMode (strm as OSTRM{bufferMode, ...}, IO.NO_BUF) = (
 	      flushBuffer (strm, "setBufferMode");
