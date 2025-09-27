@@ -57,6 +57,9 @@ FILES::
 
 === SML/NJ Library
 
+* Added `LEB128` module, which implements packed encoding and decoding
+  of integer and word types using the _Little Endian Base 128_ encoding.
+
 === Successor ML
 
 === ML-LPT
@@ -99,6 +102,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {pull-base}/323[Fix memory leaks in the runtime system]
 | {.bugid}#324#
 | {issue-base}/324[The `Bind` exception is raised in the compiler when an undefined signature name is encountered]
+| {.bugid}#325#
+| {pull-base}/325[`setPosOut` should return an `outstream`]
 //| [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

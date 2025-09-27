@@ -620,7 +620,8 @@ functor BinIOFn (
 		      release();
 		      outputExn(strm, "getPosOut", IO.RandomAccessNotSupported))
 		(* end case *);
-		release()
+		release();
+		strmMV
 	      end
 
 	fun setBufferMode (strmMV, mode) = let
@@ -693,7 +694,7 @@ functor BinIOFn (
     fun closeOut strm = StreamIO.closeOut(SV.mGet strm)
     fun getPosOut strm = StreamIO.getPosOut(SV.mGet strm)
     fun setPosOut (strm, p as StreamIO.OUTP{strm=strm', ...}) = (
-	  mUpdate(strm, strm'); StreamIO.setPosOut p)
+	  mUpdate(strm, strm'); ignore (StreamIO.setPosOut p))
 
     fun mkInstream (strm : StreamIO.instream) = SV.mVarInit strm
     fun getInstream (strm : instream) = SV.mGet strm
