@@ -455,14 +455,14 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
             info->litsSect.size = BIG_TO_HOST32(tmp);
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname); /* ignored */
+            info->litsSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             /* get the code offset and size */
-            info->codeSect.offset = info->litsSect.offset
-                + info->litsSect.size
-                + 2 * sizeof(Int32_t);
+            info->codeSect.offset = info->litsSect.offset + info->litsSect.size;
             Seek(file, base + info->codeSect.offset, fname);
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
             info->codeSect.size = BIG_TO_HOST32(tmp);
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+            info->codeSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             info->entry = BIG_TO_HOST32(tmp);
             info->isNative = TRUE;
         }
