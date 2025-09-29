@@ -308,6 +308,16 @@ PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
         info->isNative  = TRUE;
         info->codeSzB   = BIG_TO_HOST32(p->codeSzB);
         info->envSzB    = BIG_TO_HOST32(p->envSzB);
+/*DEBUG*/
+Say("# ReadHeader: old-style\n");
+Say("## imports: cnt = %d, size = %d\n", info->importCnt, info->importSzB);
+Say("## exports: cnt = %d\n", info->exportCnt);
+Say("## cmInfo: size = %d\n", info->cmInfoSzB);
+Say("## GUID: size = %d\n", info->guidSzB);
+Say("## pad: size = %d\n", info->pad);
+Say("## code: size = %d\n", info->codeSzB);
+Say("## senv: size = %d\n", info->envSzB);
+/*DEBUG*/
 //        Die ("invalid binfile kind in \"%s\"", fname);
     }
 
@@ -350,6 +360,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     char            *atptr, *colonptr;
     char            *objname = fname;
 
+/*DEBUG*/Say("# LoadBinFile: fname = \"%s\"\n", fname);
     /* an entry in the boot-file list should have the following syntax:
      *
      *  <filename> [ '@' <offset> [ ':' <objname> ] ]
@@ -387,6 +398,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
    * the binfile
    */
     if (archiveOffset != 0) {
+/*DEBUG*/Say("## Seek (-, %0#x, \"%s\")\n", (int)archiveOffset, fname);
         if (fseek (file, archiveOffset, SEEK_SET) == -1)
             Die ("cannot seek on archive file \"%s@%ul\"",
                  fname, (unsigned long) archiveOffset);
@@ -434,6 +446,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
                         + hdr.guidSzB
                         + hdr.pad;
 
+/*DEBUG*/Say("## Code offset = %#0x\n", (int)off);
         if (fseek(file, off, SEEK_SET) == -1) {
             Die ("cannot seek on bin file \"%s\"", fname);
         }
@@ -448,6 +461,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the size and the dummy entry point for the data object */
     ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
     thisSzB = BIG_TO_HOST32(thisSzB);
+/*DEBUG*/Say("## Literals size = %d\n", (int)thisSzB);
     ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname); /* ignored */
 
     remainingCode -= thisSzB + 2 * sizeof(Int32_t);
@@ -483,6 +497,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             /* read the size and entry point for the code object */
             ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
             thisSzB = BIG_TO_HOST32(thisSzB);
+/*DEBUG*/Say("## Code object size = %d\n", (int)thisSzB);
             ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
             thisEntryPoint = BIG_TO_HOST32(thisEntryPoint);
 
