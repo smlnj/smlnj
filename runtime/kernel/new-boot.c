@@ -396,7 +396,7 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             ReadBinFile (file, &(buf[12]), sizeof(new_binfile_hdr_t) - 12, fname);
             info->version = BIG_TO_HOST32(bfVersion);
             info->importSect.offset = sizeof(new_binfile_hdr_t);
-            info->importSect.size = sizeof(pers_id_t) * BIG_TO_HOST32(p->importCnt);
+            info->importSect.size = BIG_TO_HOST32(p->importSzB);
             info->exportSect.offset = info->importSect.offset + info->importSect.size;
             info->exportSect.size = sizeof(pers_id_t) * BIG_TO_HOST32(p->exportCnt);
             /* for the literals and code, we need to read the lengths */
@@ -437,7 +437,7 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
         ReadBinFile (file, &(buf[8]), sizeof(old_binfile_hdr_t) - 8, fname);
         info->version = 0;
         info->importSect.offset = sizeof(old_binfile_hdr_t);
-        info->importSect.size = sizeof(pers_id_t) * BIG_TO_HOST32(p->importCnt);
+        info->importSect.size = BIG_TO_HOST32(p->importSzB);
         info->exportSect.offset = info->importSect.offset + info->importSect.size;
         info->exportSect.size = sizeof(pers_id_t) * BIG_TO_HOST32(p->exportCnt);
         /* for the literals and code, we need to read the lengths */
@@ -454,7 +454,6 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             /* get the literals size */
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
             info->litsSect.size = BIG_TO_HOST32(tmp);
-            ReadBinFile (file, &tmp, sizeof(Int32_t), fname); /* ignored */
             info->litsSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             /* get the code offset and size */
             info->codeSect.offset = info->litsSect.offset + info->litsSect.size;
@@ -462,8 +461,8 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
             info->codeSect.size = BIG_TO_HOST32(tmp);
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
-            info->codeSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             info->entry = BIG_TO_HOST32(tmp);
+            info->codeSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             info->isNative = TRUE;
         }
 /*DEBUG*/
@@ -566,6 +565,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the import PerIDs, and create the import vector */
     {
+/*DEBUG*/Say("## read import PIDS\n");
         Seek (file, archiveOffset + hdr.importSect.offset, fname);
 
         int     importVecPos;
@@ -579,8 +579,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         for (importVecPos = 1; importVecPos < importRecLen; ) {
             pers_id_t   importPid;
             ReadBinFile (file, &importPid, sizeof(pers_id_t), fname);
-            ImportSelection (msp, file, fname, &importVecPos,
-                             LookupPerID(&importPid));
+            ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
         }
         ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
         importRec = ML_Alloc(msp, importRecLen);
@@ -588,6 +587,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the export PerID */
     if (hdr.exportSect.size == sizeof(pers_id_t)) {
+/*DEBUG*/Say("## read export PID\n");
         Seek (file, archiveOffset + hdr.exportSect.offset, fname);
         ReadBinFile (file, &exportPerID, sizeof(pers_id_t), fname);
     }
@@ -598,6 +598,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the literals */
     if (hdr.litsSect.size > 0) {
+/*DEBUG*/Say("## read literals\n");
         Seek (file, archiveOffset + hdr.litsSect.offset, fname);
         Byte_t *dataObj = NEW_VEC(Byte_t, hdr.litsSect.size);
         ReadBinFile (file, dataObj, hdr.litsSect.size, fname);
@@ -623,6 +624,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the code */
     if (hdr.codeSect.size > 0) {
         Int32_t thisSzB, thisEntryPoint;
+/*DEBUG*/Say("## read code\n");
         Seek (file, archiveOffset + hdr.codeSect.offset, fname);
         if (hdr.isNative) {
             thisSzB = hdr.codeSect.size;

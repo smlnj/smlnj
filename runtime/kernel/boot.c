@@ -446,7 +446,8 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
                         + hdr.guidSzB
                         + hdr.pad;
 
-/*DEBUG*/Say("## Code offset = %#0x\n", (int)off);
+/*DEBUG*/Say("## Code section offset = %d\n", (int)(off-archiveOffset));
+/*DEBUG*/Say("## Seek (-, %0#x, \"%s\")\n", (int)off, fname);
         if (fseek(file, off, SEEK_SET) == -1) {
             Die ("cannot seek on bin file \"%s\"", fname);
         }
