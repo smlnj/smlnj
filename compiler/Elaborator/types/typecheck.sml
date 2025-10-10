@@ -534,6 +534,7 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		     else (pat,WILDCARDty)
 		 end)
        | NOpat => (pat, mkMETAtyBounded depth) (* allow error *)
+       | VARpat V.ERRORvar => (pat, mkMETAtyBounded depth) (* allow error *)
        | p => bug "patType -- unexpected pattern"
 
 (* expType : exp * OC.occ * region -> exp * ty *)

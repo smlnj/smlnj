@@ -114,6 +114,9 @@ repository):
 
 // ***** include a list of unnumbered/legacy bugs here *****
 
+* Fixed a situation where an error in a pattern caused an internal
+  compiler error.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
