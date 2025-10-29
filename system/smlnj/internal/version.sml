@@ -2,7 +2,7 @@
  *
  * !!! DO NOT EDIT --- GENERATED FROM version.template !!!
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -22,12 +22,17 @@ structure SMLNJVersion : sig
 
     val banner : string
 
+    (* encode the version number and suffix as a string *)
+    val toString : {version_id : int list, suffix : string} -> string
+    (* decode a string into version number and suffix *)
+    val fromString : string -> {version_id : int list, suffix : string} option
+
   end = struct
 
     val size = Int.toString(SMLofNJ.SysInfo.getArchSize())
 
     (* use buildDate (i.e., boot time) if no release date *)
-    val releaseDate = (case "July 19, 2025"
+    val releaseDate = (case "July 29, 2025"
            of "" => Date.toString (Date.fromTimeLocal (Time.now ()))
             | d => d
           (* end case *))
@@ -35,15 +40,38 @@ structure SMLNJVersion : sig
     val version = {
 	    system = "Standard ML of New Jersey",
 	    version_id = [2025, 2],
-	    suffix = "rc1",
+	    suffix = "",
 	    releaseDate = releaseDate
           }
 
-    val version' = let
-	  val vn = String.concatWithMap "." Int.toString (#version_id version)
+    fun toString {version_id, suffix} = let
+	  val vn = String.concatWithMap "." Int.toString version_id
 	  in
-	    if #suffix version = "" then vn else concat[vn, "-", #suffix version]
+	    if suffix = "" then vn else concat[vn, "-", suffix]
 	  end
+
+    fun fromString s = let
+          fun decodeId (versId, suffix) = let
+                fun decode ([], []) = NONE
+                  | decode ([], ids) = SOME{version_id = List.rev ids, suffix=suffix}
+                  | decode (n::ns, ids) = (case Int.fromString n
+                       of SOME id => if (id >= 0)
+                            then decode (ns, id::ids)
+                            else NONE
+                        | NONE => NONE
+                      (* end case *))
+                in
+                  decode (String.fields (fn #"." => true | _ => false) versId, [])
+                end
+          in
+            case String.fields (fn #"-" => true | _ => false) s
+             of [versId, suffix] => decodeId (versId, suffix)
+              | [versId] => decodeId (versId, "")
+              | _ => NONE
+            (* end case *)
+          end
+
+    val version' = toString {version_id = #version_id version, suffix = #suffix version}
 
     val banner = concat [
 	    #system version,

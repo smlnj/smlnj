@@ -47,6 +47,7 @@ signature LAMBDA_VAR =
     val < : lvar * lvar -> bool
     val > : lvar * lvar -> bool
     val compare : lvar * lvar -> order
+    val hash : lvar -> word
 
     structure Map : ORD_MAP where type Key.ord_key = lvar
     structure Set : ORD_SET where type Key.ord_key = lvar

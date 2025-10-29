@@ -142,6 +142,8 @@ structure Cpp =
       | S_DoWhile of stm * exp          (* 'do' stm 'while' exp *)
       | S_For of ty * (var * exp) list * exp * exp list * stm
                                         (* 'for' '(' decl ';' exp ';' incrs ')' stm *)
+      | S_ForRange of ty * var * exp * stm
+                                        (* 'for' '(' ty x ':' exp ')' stm *)
       | S_Return of exp option          (* 'return' [ exp ] ';' *)
       | S_Break                         (* 'break' ';' *)
       | S_Continue                      (* 'continue' ';' *)
@@ -317,8 +319,10 @@ structure Cpp =
     fun mkIndirect (e, f) = if prec e < postP
           then E_Indirect(E_Grp e, f)
           else E_Indirect(e, f)
+    fun mkThisSelect f = mkIndirect(E_Var "this", f)
     fun mkDispatch (e, meth, args) = mkApplyExp(mkSelect(e, meth), args)
     fun mkIndirectDispatch (e, meth, args) = mkApplyExp(mkIndirect(e, meth), args)
+    fun mkThisDispatch (meth, args) = mkIndirectDispatch(E_Var "this", meth, args)
     fun mkCast (ty, e) = if prec e < castP
           then E_Cast(ty, E_Grp e)
           else E_Cast(ty, e)

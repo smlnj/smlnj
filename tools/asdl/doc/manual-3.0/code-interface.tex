@@ -149,7 +149,7 @@ in the module.
 There are a couple of ways to implement the share maps.  We can either
 define an instance of the ``\lstinline@HASH_KEY@'' signature for the type
 and use the ``\lstinline@ASDLShareMapFn@'' functor to implement the map
-or we can use the `ASDLShareMap.mkShareMap` function.
+or we can use the ``\lstinline@ASDLShareMap.mkShareMap@'' function.
 
 For example, say that we had the following \asdl{} specification fragment
 as part of a compiler's intermediate representation:
@@ -168,7 +168,7 @@ structure VarShareMap = ASDLShareMapFn (
     struct
       type hash_key = var
       fun hashVal (x : var) = #id x
-      fun sameKey (x : var, y : var) = (#if x = #id y)
+      fun sameKey (x : var, y : var) = (#id x = #id y)
     end)
 \end{lstlisting}%
 \end{code}%
@@ -182,7 +182,7 @@ val mkVarShareMap : unit -> var ASDLShareMap.t =
         in {
           insert = fn (x : var, y) => IntHashTable.insert tbl (#id x, y),
           find = fn (x : var) => IntHashTable.find tbl (#id x)
-        } end
+        } end)
 \end{lstlisting}%
 \end{code}%
 %

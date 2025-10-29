@@ -1,6 +1,6 @@
 (* list-set-fn.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * An implementation of finite sets of ordered values, which uses a sorted list

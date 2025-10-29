@@ -1,5 +1,8 @@
 #!/bin/sh
 #
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
+#
 # helper script for copying the SML/NJ documentation to a public place.
 #
 # usage:

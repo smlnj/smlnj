@@ -138,16 +138,25 @@ structure GenPickle : sig
             (* end case *)
           end
 
-  (* return a list of delete statements for boxed fields of an object *)
+    (* return a list of delete statements for boxed fields of an object; note that
+     * this function is only called when the `arenaAlloc` flag is false.
+     *)
     fun deleteStms obj = let
-          fun field label = CL.mkIndirect(CL.mkVar "this", U.fieldName label)
+          fun field label = CL.mkThisSelect(U.fieldName label)
           fun delete (label, E.OPTION ty, stms) =
+                (* we use null pointers to represent the `NONE` case for an optional
+                 * pointer.
+                 *)
                 if isBoxed ty
                   then CL.mkIfThen(
                     CL.mkBinOp(field label, CL.#!=, CL.mkVar "nullptr"),
                     CL.mkDelete(field label)) :: stms
                   else stms
-            | delete (_, E.SEQUENCE _, stms) = stms (* std::vector is unboxed *)
+            | delete (label, E.SEQUENCE ty, stms) =
+                if isBoxed ty
+                  then CL.S_ForRange(CL.autoTy, "item", field label,
+                    CL.mkDelete(CL.mkVar "item")) :: stms
+                else stms
             | delete (_, E.SHARED _, _) = raise Fail "shared types not supported"
             | delete (label, E.TYP ty, stms) =
                 if isBoxed ty
@@ -280,22 +289,20 @@ structure GenPickle : sig
           fun mkUnitFns () = raise Fail "Unimplemented"
         (* make the pickler/unpickler for an enumerations with ncons constructors *)
           fun mkEnumFns ncons = let
-                val tagTy = AST.TypeId.nameOf(E.tagTyId ncons)
-                val pickler = mkPickler (fn () =>
-                      CL.mkCall("asdl::write_" ^ tagTy, [
-                          osArg,
-                          CL.mkStaticCast(CL.uintTy, CL.mkDispatch(argArg, "valOf", []))
-                        ]))
-                val unpickler = mkUnpickler (fn () => CL.mkBlock[
-                        CL.mkDeclInit(CL.autoTy, "optV",
-                          CL.mkApply("asdl::read_" ^ tagTy, [isArg])),
-                        CL.mkIfThenElse(
-                          CL.mkBinOp(CL.E_Var "optV", CL.#==, CL.mkInt 0),
-                          CL.mkReturn(CL.mkCons(optCTy, [])),
-                          CL.mkReturn(CL.mkCons(optCTy, [
-                              CL.mkStaticCast(CL.T_Named tyName, CL.E_Var "optV")
-                            ])))
-                      ])
+                val pickler = mkPickler (fn () => let
+                      val wrFn = if E.smallTag ncons
+                            then "asdl::write_small_enum_option"
+                            else "asdl::write_big_enum_option"
+                      in
+                        CL.mkTemplateCall(wrFn, [CL.T_Named tyName], [osArg, argArg])
+                      end)
+                val unpickler = mkUnpickler (fn () => let
+                      val rdFn =if E.smallTag ncons
+                            then "asdl::read_small_enum_option"
+                            else "asdl::read_big_enum_option"
+                      in
+                        CL.mkReturn(CL.mkTemplateApply(rdFn, [CL.T_Named tyName], [isArg]))
+                      end)
                 in
                   (pickler, unpickler)
                 end
@@ -440,9 +447,10 @@ structure GenPickle : sig
                 val payload = E.prefixWithAttribs(attribs, optArg)
               (* destructor *)
                 val destr = CL.mkDestrDcl(name,
-                      case payload
-                       of NONE => CL.mkBlock[]
-                        | SOME obj => CL.mkBlock(deleteStms obj))
+                      case (#arenaAlloc flgs, payload)
+                       of (false, SOME obj) => CL.mkBlock(deleteStms obj)
+                        | _ => CL.mkBlock[]
+                      (* end case *))
                 val dcls = destr :: dcls
               (* pickler *)
                 fun mkPickler () = let
@@ -487,7 +495,9 @@ structure GenPickle : sig
                     SOME(CL.mkBlock body))
                 end
         (* destructor *)
-          val destr = CL.mkDestrDcl(name, CL.mkBlock(deleteStms obj))
+          val destr = if (#arenaAlloc flgs)
+                then CL.mkDestrDcl(name, CL.mkBlock[])
+                else CL.mkDestrDcl(name, CL.mkBlock(deleteStms obj))
           val dcls = [destr]
           val dcls = if #unpickler(#suppress flgs) then dcls else mkUnpickler() :: dcls
           val dcls = if #pickler(#suppress flgs) then dcls else mkPickler() :: dcls

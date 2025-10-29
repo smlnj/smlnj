@@ -37,6 +37,6 @@ val print' : {strm : TextIO.outstream, pretty : bool} -> JSON.value -> unit
 
 == See Also
 
-xref:str-JSON.adoc[`JSON`],
+xref:../Util/str-JSON.adoc[`JSON`],
 xref:sig-JSON_STREAM_OUTPUT.adoc[`JSON_STREAM_OUTPUT`],
 xref:json-lib.adoc[__The JSON Library__]

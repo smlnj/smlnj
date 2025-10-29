@@ -25,15 +25,18 @@ structure Util : sig
   end = struct
 
   (* character classification *)
-    datatype cc = UC | LC | OTHER
+    datatype cc = UC | LC | US | OTHER
 
-    fun classify c = if Char.isUpper c then UC
+    fun classify #"_" = US
+      | classify c = if Char.isUpper c then UC
 	  else if Char.isLower c then LC
 	  else OTHER
 
     fun sigName (name, suffix) = let
 	  fun f (preCC, c2::cs, acc) = (case (preCC, classify c2)
-		 of (UC, LC) => f (LC, cs, Char.toUpper c2 :: acc)
+		 of (_, US) => f (US, cs, #"_" :: acc)
+                  | (US, cc) => f (cc, cs, Char.toUpper c2 :: acc)
+                  | (UC, LC) => f (LC, cs, Char.toUpper c2 :: acc)
 		  | (LC, UC) => f (UC, cs, c2 :: #"_" :: acc)
 		  | (OTHER, UC) => f (UC, cs, c2 :: #"_" :: acc)
 		  | (_, cc) => f (cc, cs, Char.toUpper c2 :: acc)

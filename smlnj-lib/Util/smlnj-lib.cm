@@ -1,6 +1,6 @@
 (* smlnj-lib.cm
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The sources specification for the SML/NJ Utility library; part of the
@@ -21,10 +21,12 @@ signature FORMAT_COMB
 signature GRAPH_SCC
 signature HASH_KEY
 signature HASH_TABLE
+signature HASHING
 signature INTERVAL_DOMAIN
 signature INTERVAL_SET
 signature IO_UTIL
 signature GET_OPT
+signature LEB128
 signature LIB_BASE
 signature LIST_FORMAT
 signature LIST_SORT
@@ -71,6 +73,7 @@ structure FNVHash
 structure Format
 structure FormatComb
 structure GetOpt
+structure Hash
 structure HashString
 structure HashTable
 structure IntBinaryMap		(* to be removed *)
@@ -82,6 +85,7 @@ structure IntRedBlackMap
 structure IntRedBlackSet
 structure IOUtil
 structure JSON
+structure LEB128
 structure LibBase
 structure ListFormat
 structure ListMergeSort
@@ -168,6 +172,7 @@ format-comb-sig.sml
 format-comb.sml
 graph-scc-sig.sml
 graph-scc-fn.sml
+hash.sml
 hash-key-sig.sml
 hash-string.sml
 hash-map-fn.sml
@@ -193,6 +198,7 @@ io-util.sml
 json.sml
 getopt-sig.sml
 getopt.sml
+leb128-sig.sml
 left-priorityq-fn.sml
 lib-base-sig.sml
 lib-base.sml
@@ -250,10 +256,12 @@ utf8-sig.sml
 utf8.sml
 
 #if defined(SIZE_32)
+  Target32Bit/leb128.sml
   Target32Bit/native.sml
   Target32Bit/random.sml
   Target32Bit/prime-sizes.sml
 #else
+  Target64Bit/leb128.sml
   Target64Bit/native.sml
   Target64Bit/random.sml
   Target64Bit/prime-sizes.sml

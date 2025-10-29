@@ -7,8 +7,9 @@ The Fellowship of SML/NJ
 :tabsize: 8
 :note-caption: UPDATE
 :issue-base: https://github.com/smlnj/smlnj/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
-:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
 
 This file documents changes to the *Standard ML of New Jersey* system
 since January of 2014 (Versions after 110.78).  Earlier changes are
@@ -101,7 +102,81 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
+
+//--------------------------------------------------------------------
+[2025/08/19]::
+Remove `preserveLvarNames` control from `Control` structure, since it
+is not used and can be confused with `Control.ElabData.saveLvarNames`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/08/19]::
+Changed the base pointer of a pair arena to be page-aligned,
+consistent with the base pointers of all other arenas.
+Previously, the convention is to make the base pointer offset by two
+words because `polyEqual` expects a header word before all objects.
+But when the size of the pair arena is exactly the size of a page,
+`MarkRegion` erroneously ignores the first two words of the last page.
++
+See {pull-base}/322[Pull Request #322 (Fix heap export inconsistency
+caused by pair arena offsets)] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2025/08/11]::
+Reworked type unification. When unifying two types, sometimes the
+types cannot be unified directly, but their head-reduced forms can.
+Because eagerly head-reducing all types can lead to an explosion of
+terms, the legacy branch head-reduces either types when a unification
+error occurs and retries unification. This leads to an exponential
+blowup when type-checking functions with a large number of curried
+arguments. The development branch handles the lazy head-reduction more
+directly, but the previous implementation ignores a few cases where
+the direction of tyvar unifications matters. For example, a UBOUND
+tyvar cannot be instantiated as an OPEN tyvar, but the opposite
+direction works; OVLD tyvars have metadata that needs to be maintained
+for overload resolution to work. This change patches the missing
+cases.
++
+In addition, the NOpat pattern, signaling an elaboration error on a
+pattern, is handled in the typechecker.
++
+This change fixes {issue-base}/137[Issue #137 (Typechecker hangs with
+a large number of curried arguments)], {issue-base}/262[Issue #262
+(Compiler bug in type checker: unexpected pattern)], and
+{issue-base}/317[Issue #317 (Bug in type checking/inference with type
+abbreviations through transparent functor application)].
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2025/08/10]::
+Replaced the pickler for skeleton files in **CM** with one that is
+generated from an **ASDL** specification.  This change is a first step
+in replacing the pickler-combinators with **ASDL** picklers.  See
+`cm/smlfile/skel-io.sml` and `cm/smlfile/asdl/skeleton.asdl` for more
+details.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/08/05]::
+Changed the way external references are passed during translation to
+PLambda. Previously, the external references are grouped by the PIDs
+of their compilation units, and the units are sorted by the PIDs. As a
+result, the input order is a property of the external module. This
+change sorts the units by the order of their appearances in the source
+code; modules that are referenced earlier are put before those
+referenced later. This makes the input order a property of the code
+itself.
++
+This change fixes {issue-base}/319[Issue #319 (Nondeterministic import
+order)].
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
 //====================================================================
 == Version 2025.2; 2025/07/29
@@ -955,6 +1030,7 @@ owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 +
 Switched over to the *LLVM* version of the compiler.  Doing so has
 two major consequences:
++
 --
 * The **MLRISC** code generator that we have used for over 25 years
   has been replaced with one based on the https:llvm.org[**LLVM Libraries**].

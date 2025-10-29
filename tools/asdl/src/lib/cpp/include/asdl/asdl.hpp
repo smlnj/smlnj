@@ -21,6 +21,7 @@
 #include <ios>
 #include <istream>
 #include <ostream>
+#include <cstdint>
 
 #include "asdl-stream.hpp"
 #include "asdl-integer.hpp"
@@ -127,6 +128,26 @@ namespace asdl {
 	}
     }
     void write_integer_option (outstream & os, std::optional<integer> const & optB);
+  // generic pickler for optional enumerations with fewer than 256 constructors
+    template <typename T>
+    inline void write_small_enum_option (outstream & os, std::optional<T> & opt)
+    {
+        if (opt.has_value()) {
+            write_tag8 (os, static_cast<unsigned int>(opt.value()));
+        } else {
+	    write_tag8 (os, 0);
+	}
+    }
+  // generic pickler for optional enumerations with more than 255 constructors
+    template <typename T>
+    inline void write_big_enum_option (outstream & os, std::optional<T> & opt)
+    {
+        if (opt.has_value()) {
+            write_uint (os, static_cast<unsigned int>(opt.value()));
+        } else {
+	    write_uint (os, 0);
+	}
+    }
   // generic pickler for boxed options
     template <typename T>
     inline void write_option (outstream & os, T *v)
@@ -147,7 +168,7 @@ namespace asdl {
 	    write_tag8 (os, static_cast<unsigned int>(*it));
 	}
     }
-  // generic pickler for enumeration sequences with more than 256 constructors
+  // generic pickler for enumeration sequences with more than 255 constructors
     template <typename T>
     inline void write_big_enum_seq (outstream & os, std::vector<T> & seq)
     {
@@ -261,6 +282,28 @@ namespace asdl {
             case 1: return std::optional<integer>(read_integer(is));
             default: is.invalidTag(tag, "integer?");
         }
+    }
+  // generic pickler for optional enumerations with fewer than 256 constructors
+    template <typename T>
+    inline std::optional<T> read_small_enum_option (instream & is)
+    {
+	unsigned int tag = read_tag8(is);
+        if (tag != 0) {
+            return std::optional<T>(static_cast<T>(tag));
+        } else {
+	    return std::optional<T>();
+	}
+    }
+  // generic pickler for optional enumerations with more than 255 constructors
+    template <typename T>
+    inline std::optional<T> read_big_enum_option (instream & is)
+    {
+	unsigned int tag = read_uint(is);
+        if (tag != 0) {
+            return std::optional<T>(static_cast<T>(tag));
+        } else {
+	    return std::optional<T>();
+	}
     }
   // generic unpickler for boxed options
     template <typename T>

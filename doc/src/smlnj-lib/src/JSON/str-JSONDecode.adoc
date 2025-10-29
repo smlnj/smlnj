@@ -360,6 +360,6 @@ val d = succeed (fn (n : string) => fn (a : int) => {name=n, age=a})
 
 == See Also
 
-xref:str-JSON.adoc[`JSON`],
+xref:../Util/str-JSON.adoc[`JSON`],
 xref:str-JSON.adoc[`JSONUtil`],
 xref:json-lib.adoc[__The JSON Library__]

@@ -96,10 +96,10 @@ signature CONTROL =
        (* turn on printing of progress messages at end of major stages in evalloop *)
 
     val saveLambda : bool ref
-    val preserveLvarNames : bool ref
     val trackExn : bool ref
     val polyEqWarn : bool ref
 
+    (* these are the same as ElabData.saveLvarNames *)
     val saveit : bool ref
     val saveAbsyn : bool ref
     val saveConvert : bool ref

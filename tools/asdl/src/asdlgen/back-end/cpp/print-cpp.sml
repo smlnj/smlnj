@@ -495,6 +495,11 @@ structure PrintCpp : sig
                       ppList {pp = ppExp, sep = fn () => str ",", l = incrs};
                       str ")";
                       ppStmAsBlock blk))
+                  | CL.S_ForRange(ty, x, rng, blk) => inHBox (fn () => (
+                      str "for"; sp(); str "(";
+                      ppTyAndVar(ty, ([], x)); sp(); str ":"; sp(); ppExp rng;
+                      str ")";
+                      ppStmAsBlock blk))
                   | CL.S_Return(SOME e) => inHBox (fn () => (str "return"; sp(); ppExp e; str ";"))
                   | CL.S_Return _ => str "return;"
                   | CL.S_Break => str "break;"

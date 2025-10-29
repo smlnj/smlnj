@@ -43,6 +43,7 @@ structure SML =
       | FUNdec of id list * fb list
       | TYPEdec of id list * id * ty
       | DATATYPEdec of db list * (id list * id * ty) list
+      | DATATYPEREPdec of id * id       (* datatype replication *)
       | EXCEPTIONdec of id * ty option
       | STRdec of id * sigexp option * strexp
       | OPENdec of id list
