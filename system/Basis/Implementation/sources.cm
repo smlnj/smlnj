@@ -1,6 +1,6 @@
 (* sources.cm
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The implementation of the Basis.  Also see the file
@@ -390,8 +390,6 @@ is
         char.sml
         list.sml
         scan-util.sml
-        num-scan32.sml
-        num-format32.sml
         num-scan64.sml
         num-format64.sml
         bool.sml

@@ -1,6 +1,6 @@
 (* word8.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -60,7 +60,11 @@ structure Word8Imp : WORD =
     val min : word * word -> word = W8.min
     val max : word * word -> word = W8.max
 
-    fun fmt radix = (NumFormat32.fmtWord radix) o InlineT.Word32.fromLarge o toLargeWord
+    fun fmt radix = let
+	  val fmt' = NumFormat.fmtWord radix
+	  in
+	    fn b => fmt' (InlineT.Word.fromLarge (InlineT.Word8.toLarge b))
+	  end
     val toString = fmt StringCvt.HEX
 
     fun scan radix = let

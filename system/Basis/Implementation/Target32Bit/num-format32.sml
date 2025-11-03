@@ -1,10 +1,11 @@
 (* num-format32.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * The word to string conversion for the largest word and int types.
- * These are used for fixed-precision types that have 32 or fewer bits.
+ * The word to string conversion for the 32-bit word and int types
+ * on 32-bit machines.  These are used for fixed-precision types that
+ * have 32 or fewer bits.
  *)
 
 structure NumFormat32 : sig
