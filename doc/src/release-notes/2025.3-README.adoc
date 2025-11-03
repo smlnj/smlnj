@@ -112,7 +112,8 @@ We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* Merged fix for {legacy-issue-base}/372[Legacy Issue #372
+  (`Int32.toString` can generate an `Overflow` exception)]
 
 * Fixed a situation where an error in a pattern caused an internal
   compiler error.
