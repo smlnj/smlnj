@@ -112,6 +112,9 @@ We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
+* Merged fix for {legacy-issue-base}/370[Legacy Issu #370
+  (`Int32` operations do not properly raise `Overflow`)]
+
 * Merged fix for {legacy-issue-base}/372[Legacy Issue #372
   (`Int32.toString` can generate an `Overflow` exception)]
 
