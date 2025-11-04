@@ -42,7 +42,7 @@ structure LEB128 : LEB128 = struct
           fun lp (inS, n, shift) = (case getB inS
                  of SOME(b, rest) => let
                       val slice = NW.andb(byteToNW b, 0wx7f)
-                      val n = n + NInt.fromLarge(NW.toLargeIntX(W64.<<(slice, shift)))
+                      val n = n + NInt.fromLarge(NW.toLargeIntX(NW.<<(slice, shift)))
                       in
                         if b >= contBit
                           then lp (rest, n, shift + 0w7)
