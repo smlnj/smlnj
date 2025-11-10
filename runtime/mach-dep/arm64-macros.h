@@ -11,7 +11,11 @@
 #ifndef _ARM64_MACROS_H_
 #define _ARM64_MACROS_H_
 
+#if defined(OPSYS_DARWIN)
 #define TEXT		.section __TEXT,__text,regular,pure_instructions
+#elif defined(OPSYS_LINUX)
+#define TEXT        .text
+#endif
 
 /* global symbols have a leading "_" */
 #  define CSYM(ID)	CONCAT(_,ID)
