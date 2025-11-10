@@ -465,6 +465,12 @@ extern void SetFSR(int);
 #    define SIG_SetPC(scp, addr)        { (scp)->uc_mcontext->__ss.__pc = (Addr_t) addr; }
 #    define SIG_ZeroLimitPtr(scp)       { (scp)->uc_mcontext->__ss.__x[25] = 0; }
 
+#  elif defined(OPSYS_LINUX)
+    /** arm64, LINUX **/
+#    define SIG_GetPC(scp)              ((scp)->uc_mcontext.pc)
+#    define SIG_SetPC(scp,addr)         { (scp)->uc_mcontext.pc = (Addr_t)(addr); }
+#    define SIG_ZeroLimitPtr(scp)       { (scp)->uc_mcontext.regs[25] = 0; }
+
 #  else
 #    error "unknown OPSYS for arm64"
 #  endif
