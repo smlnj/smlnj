@@ -17,8 +17,12 @@
 #define TEXT        .text
 #endif
 
+#if ((defined(OPSYS_FREEBSD) || defined(OPSYS_NETBSD) || defined(OPSYS_OPENBSD)) && !defined(__ELF__)) || defined(OPSYS_WIN32) || defined(OPSYS_DARWIN) || defined(OPSYS_CYGWIN)
 /* global symbols have a leading "_" */
 #  define CSYM(ID)	CONCAT(_,ID)
+#else
+#  define CSYM(ID)	ID
+#endif
 
 /* syntax of immediate values */
 #define IM(x)	CONCAT(#,x)
