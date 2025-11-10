@@ -196,6 +196,27 @@ extern char	*sys_errlist[];
 
 #include <features.h>
 
+#elif (defined(ARCH_ARM64) && defined(OPSYS_LINUX))
+#  define OS_NAME	"Linux"
+#  define HAS_POSIX_LIBRARIES
+#  define HAS_POSIX_SIGS
+#  define HAS_GETRUSAGE
+#  define HAS_SETITIMER
+#  define HAS_CLOCK_GETRES
+#  define HAS_ANON_MMAP
+#  define HAS_PARTIAL_MUNMAP
+#  define HAS_SELECT
+#  define HAS_UCONTEXT
+#  define HAS_STRERROR
+#  define HAS_MKSTEMP
+#  ifndef __USE_GNU
+#    define __USE_GNU
+#  endif
+#  define STAT_HAS_TIMESPEC
+#  define HAS_NANOSLEEP
+
+#include <features.h>
+
 #elif defined(OPSYS_FREEBSD)
 #  define OS_NAME	"BSD"
 #  define HAS_POSIX_LIBRARIES
