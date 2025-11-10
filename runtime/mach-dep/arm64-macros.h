@@ -43,6 +43,11 @@
 	L_\addr\()_adr:		add \reg\(), \reg\(), \addr\()@PAGEOFF
 				.loh AdrpAdd L_\addr\()_adrp, L_\addr\()_adr
 .endm
+#elif defined(OPSYS_LINUX)
+.macro  m_load_addr reg:req, addr:req
+    L_\addr\()_adrp:    adrp \reg\(), \addr\()
+    L_\addr\()_adr:     add \reg\(), \reg\(), #:lo12:\addr\()
+.endm
 #else
 #  error unsupported system for Arm64
 #endif
