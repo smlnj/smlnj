@@ -11,7 +11,7 @@
 #
 
 export PATH
-PATH="/bin:/usr/bin"
+PATH="/bin:/usr/bin:$PATH"
 
 HEAP_OPSYS=""
 case `uname -s` in
