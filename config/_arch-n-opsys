@@ -10,8 +10,8 @@
 #                          by $HEAP_OPSYS
 #
 
-export PATH
-PATH="/bin:/usr/bin"
+#export PATH
+#PATH="/bin:/usr/bin"
 
 HEAP_OPSYS=""
 case `uname -s` in
