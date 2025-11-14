@@ -56,3 +56,18 @@ include(smlnj-actions)
 #    7) ml-build?
 #    8) execute the "actions"
 #    9) optionally generate the docs
+
+# add the source subdirectories
+#
+add_subdirectory(runtime)
+add_subdirectory(cm)
+add_subdirectory(smlnj-lib)
+add_subdirectory(system)
+add_subdirectory(libraries)
+add_subdirectory(tools)
+
+# should these be conditional?
+add_subdirectory(compiler)
+add_subdirectory(package)
+add_subdirectory(doc)
+
