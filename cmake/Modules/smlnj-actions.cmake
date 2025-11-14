@@ -8,10 +8,21 @@
 # file.
 
 # TODO: write CMake code to implement the various kinds of actions
-# See the
+# We need the following commands:
+#
+#       smlnj_add_library(<target>
+#           ANCHOR <anchor.cm>
+#           [ UNIX | WINDOWS ]
+#           [ ALT_ANCHOR <anchor.cm> ]
+#           [ DEPENDS <targets> ])
+#       smlnj_add_prog(<target> DEPENDS <targets>)
 
 # QUESTION: should we check that the smlnj-targets.cmake file has been
 # processed first?
+
+# QUESTION: should these be distributed across the CMakeLists.txt files in the
+# source tree or can we split things into code to specify which targets to build
+# in this directory and then info on how to build them in the CMakeLists.txt files?
 
 # Backwards compatible views of the SML Basis Library
 #
@@ -43,6 +54,8 @@ if (SMLNJ_TOOL_ML_ULEX)
   ml-ulex-mllex-tool    lib 	mllex-tool.cm   mllex-tool.cm   tools/ml-lpt/ml-ulex/mllex-tool
   #ml-ulex-lex-ext      lib 	lex-ext.cm      lex-ext.cm      tools/ml-lpt/ml-ulex/tool
   ml-ulex-mllex-ext     lib 	lex-ext.cm      lex-ext.cm      tools/ml-lpt/ml-ulex/mllex-tool
+  # dependencies (from config/dependencies)
+  ml-ulex smlnj-lib ml-lpt-lib
 endif()
 
 # LALR(1) parser generator:
@@ -51,6 +64,8 @@ if (SMLNJ_TOOL_ML_YACC)
   ml-yacc         prog    ml-yacc         src             tools/ml-yacc
   ml-yacc         lib     mlyacc-tool.cm  mlyacc-tool.cm  tools/ml-yacc/tool
   ml-yacc-grm-ext lib     grm-ext.cm      grm-ext.cm      tools/ml-yacc/tool
+  # dependencies (from config/dependencies)
+  ml-yacc ml-ulex
 endif()
 
 # LL(k) parser generator:
@@ -59,6 +74,8 @@ if (SMLNJ_TOOL_ML_ANTLR)
   ml-antlr                dprog   ml-antlr         -                      tools/ml-lpt/ml-antlr
   ml-antlr                lib     ml-antlr-tool.cm ml-antlr-tool.cm       tools/ml-lpt/ml-antlr/tool
   ml-antlr-grm-ext        lib     grm-ext.cm       grm-ext.cm             tools/ml-lpt/ml-antlr/tool
+  # dependencies (from config/dependencies)
+  ml-antlr smlnj-lib ml-lpt-lib
 endif()
 
 # support library for ml-ulex and ml-antlr:
@@ -74,6 +91,8 @@ if (SMLNJ_TOOL_ASDLGEN)
   asdl    dprog   asdlgen         src/asdlgen     tools/asdl
   asdl    lib     asdlgen-tool.cm asdlgen-tool.cm tools/asdl/tool
   asdl    lib     asdl-ext.cm     asdl-ext.cm     tools/asdl/tool
+  # dependencies (from config/dependencies)
+  asdl smlnj-lib ml-lpt-lib
 endif()
 
 # ASDL support library
@@ -102,6 +121,8 @@ if (SMLNJ_TOOL_ML_BURG)
   ml-burg prog    ml-burg         -               tools/ml-burg
   ml-burg lib     mlburg-tool.cm  mlburg-tool.cm  tools/ml-burg/tool
   ml-burg lib     burg-ext.cm     burg-ext.cm     tools/ml-burg/tool
+  # dependencies (from config/dependencies)
+  ml-burg ml-yacc ml-ulex
 endif()
 
 # MLRISC libraries:
@@ -159,12 +180,16 @@ endif()
 #
 if (SMLNJ_LIB_CKIT)
   ckit lib ckit-lib.cm ckit-lib.cm libraries/ckit/src
+  # dependencies (from config/dependencies)
+  ckit ml-yacc ml-ulex ml-ulex-mllex-ext
 endif()
 
 # NLFFI foreign function interface generator:
 #
 if (SMLNJ_TOOL_ML_NLFFIGEN)
   ml-nlffigen dprog ml-nlffigen - tools/nlffi/gen
+  # dependencies (from config/dependencies)
+  ml-nlffigen ckit smlnj-lib
 endif()
 
 # NLFFI foreign function interface library
@@ -189,6 +214,9 @@ if (SMLNJ_ENABLE_CML)
   cml-lib  lib cml          inet-lib.cm  libraries/cml/src
   cml-lib ulib cml          unix-lib.cm  libraries/cml/src
   cml-lib  lib cml          cml-lib.cm   libraries/cml/src
+  # dependencies (from config/dependencies)
+  cml-lib cml
+  cml smlnj-lib
 endif()
 
 #
@@ -203,4 +231,6 @@ endif()
 #
 if (SMLNJ_TOOL_PRINT_CFG)
   print-cfg dprog print-cfg       -               tools/print-cfg
+  # dependencies (from config/dependencies)
+  print-cfg smlnj-lib asdl
 endif()

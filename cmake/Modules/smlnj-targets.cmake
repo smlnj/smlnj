@@ -12,7 +12,6 @@ include(CMakeDependentOption)
 # option(<variable> "<help_text>" [value])
 # cmake_dependent_option(<variable> <help> <value> <condition> <else-value>)
 
-
 option(
   SMLNJ_LIB_OLD_BASIS
   "include backward-compatible versions of the SML Basis Library"

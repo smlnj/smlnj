@@ -11,26 +11,10 @@ cmake_minimum_required(VERSION 3.24.0)
 
 # The SML/NJ Version
 #
-if(NOT DEFINED SMLNJ_VERSION_MAJOR)
-  set(SMLNJ_VERSION_MAJOR 2023)
-endif()
-if(NOT DEFINED SMLNJ_VERSION_MINOR)
-  set(SMLNJ_VERSION_MINOR 1)
-endif()
-if(NOT DEFINED SMLNJ_VERSION_PATCH)
-  set(SMLNJ_VERSION_PATCH 0)
-endif()
-if(NOT DEFINED SMLNJ_VERSION_SUFFIX)
-  set(SMLNJ_VERSION_SUFFIX "")
-endif()
-
-if (NOT PACKAGE_VERSION)
-  set(PACKAGE_VERSION
-    "${SMLNJ_VERSION_MAJOR}.${SMLNJ_VERSION_MINOR}.${SMLNJ_VERSION_PATCH}${SMLNJ_VERSION_SUFFIX}")
-endif()
+include(smlnj-version)
 
 project(smlnj
-  VERSION ${SMLNJ_VERSION_MAJOR}.${SMLNJ_VERSION_MINOR}.${SMLNJ_VERSION_PATCH}
+  VERSION ${SMLNJ_VERSION}
   DESCRIPTION "Standard ML of New Jersey"
   HOMEPAGE_URL "https://smlnj.org"
   LANGUAGES C CXX ASM)  # note that we need C for feature tests
@@ -59,3 +43,16 @@ list(APPEND CMAKE_MODULE_PATH
 
 include(smlnj-targets)
 include(smlnj-actions)
+
+
+# the build process has the following steps:
+#
+#    1) download the boot files (if necessary)
+#    2) build the LLVM libraries
+#    3) build the runtime system
+#    4) bootstrap the basic system
+#    5) move stable libraries to lib directory
+#    6) generate pathconfig file
+#    7) ml-build?
+#    8) execute the "actions"
+#    9) optionally generate the docs
