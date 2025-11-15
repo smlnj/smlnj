@@ -11,10 +11,18 @@
 #ifndef _ARM64_MACROS_H_
 #define _ARM64_MACROS_H_
 
+#if defined(OPSYS_DARWIN)
 #define TEXT		.section __TEXT,__text,regular,pure_instructions
+#elif defined(OPSYS_LINUX)
+#define TEXT        .text
+#endif
 
+#if ((defined(OPSYS_FREEBSD) || defined(OPSYS_NETBSD) || defined(OPSYS_OPENBSD)) && !defined(__ELF__)) || defined(OPSYS_WIN32) || defined(OPSYS_DARWIN) || defined(OPSYS_CYGWIN)
 /* global symbols have a leading "_" */
 #  define CSYM(ID)	CONCAT(_,ID)
+#else
+#  define CSYM(ID)	ID
+#endif
 
 /* syntax of immediate values */
 #define IM(x)	CONCAT(#,x)
@@ -34,6 +42,11 @@
 	L_\addr\()_adrp:	adrp \reg\(), \addr\()@PAGE
 	L_\addr\()_adr:		add \reg\(), \reg\(), \addr\()@PAGEOFF
 				.loh AdrpAdd L_\addr\()_adrp, L_\addr\()_adr
+.endm
+#elif defined(OPSYS_LINUX)
+.macro  m_load_addr reg:req, addr:req
+    L_\addr\()_adrp:    adrp \reg\(), \addr\()
+    L_\addr\()_adr:     add \reg\(), \reg\(), #:lo12:\addr\()
 .endm
 #else
 #  error unsupported system for Arm64
