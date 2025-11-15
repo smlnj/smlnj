@@ -39,6 +39,8 @@ FILES::
 
 // **** details: include those sections that are relevant
 
+Linux Arm support (thanks poz)
+
 === Compiler
 
 === CM
@@ -104,6 +106,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/324[The `Bind` exception is raised in the compiler when an undefined signature name is encountered]
 | {.bugid}#325#
 | {pull-base}/325[`setPosOut` should return an `outstream`]
+| {.bugid}#331#
+| {pull-base}/331[AArch64 Linux support]
 //| [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
@@ -144,5 +148,7 @@ tested some of them:
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Sequoia) | Tested
+| | Linux |
 | {nbsp} | |
 |=======
