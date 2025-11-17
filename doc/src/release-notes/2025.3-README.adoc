@@ -39,6 +39,8 @@ FILES::
 
 // **** details: include those sections that are relevant
 
+Linux Arm support (thanks poz)
+
 === Compiler
 
 === CM
@@ -104,6 +106,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/324[The `Bind` exception is raised in the compiler when an undefined signature name is encountered]
 | {.bugid}#325#
 | {pull-base}/325[`setPosOut` should return an `outstream`]
+| {.bugid}#331#
+| {pull-base}/331[AArch64 Linux support]
 //| [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
@@ -112,7 +116,14 @@ We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* Merged fix for {legacy-issue-base}/370[Legacy Issu #370
+  (`Int32` operations do not properly raise `Overflow`)]
+
+* Merged fix for {legacy-issue-base}/372[Legacy Issue #372
+  (`Int32.toString` can generate an `Overflow` exception)]
+
+* Fixed a situation where an error in a pattern caused an internal
+  compiler error.
 
 == Supported systems
 
@@ -137,5 +148,7 @@ tested some of them:
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Sequoia) | Tested
+| | Linux |
 | {nbsp} | |
 |=======

@@ -26,13 +26,13 @@ signature LEB128 =
 
     (* signed encodings *)
     val encodeInt       : (Int.int, 'dst) encoder
-    val encodeNativeInt : (Int64.int, 'dst) encoder
+    val encodeNativeInt : (NativeInt.int, 'dst) encoder
     val encodeInt64     : (Int64.int, 'dst) encoder
     val encodeIntInf    : (IntInf.int, 'dst) encoder
 
     (* unsigned encodings *)
     val encodeWord       : (Word.word, 'dst) encoder
-    val encodeNativeWord : (Word64.word, 'dst) encoder
+    val encodeNativeWord : (NativeWord.word, 'dst) encoder
     val encodeWord64     : (Word64.word, 'dst) encoder
     val encodeUIntInf    : (IntInf.int, 'dst) encoder
 
@@ -50,13 +50,13 @@ signature LEB128 =
 
     (* encode as byte vector *)
     val intToBytes       : Int.int -> Word8Vector.vector
-    val nativeIntToBytes : Int64.int -> Word8Vector.vector
+    val nativeIntToBytes : NativeInt.int -> Word8Vector.vector
     val int64ToBytes     : Int64.int -> Word8Vector.vector
     val intInfToBytes    : IntInf.int -> Word8Vector.vector
 
     (* encode as byte vector *)
     val wordToBytes       : Word.word -> Word8Vector.vector
-    val nativeWordToBytes : Word64.word -> Word8Vector.vector
+    val nativeWordToBytes : NativeWord.word -> Word8Vector.vector
     val word64ToBytes     : Word64.word -> Word8Vector.vector
     val uIntInfToBytes    : IntInf.int -> Word8Vector.vector
 

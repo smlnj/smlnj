@@ -1,6 +1,6 @@
 (* num-format64.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The word to string conversion for 64-bit word and int types.

@@ -11,7 +11,7 @@
 
 # redefine PATH so that we get the right versions of the various tools
 #
-PATH=/bin:/usr/bin
+#PATH=/bin:/usr/bin
 
 # set locale variables so that sort works right
 #

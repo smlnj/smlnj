@@ -1,6 +1,6 @@
 (* char.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -159,10 +159,10 @@ structure Char : sig
 	  fun next (x::r) = SOME(x, r)
 	    | next [] = NONE
 	  in
-	    case (NumScan32.scanInt radix next l)
+	    case (NumScan.scanInt radix next l)
 	     of NONE => NONE
-	      | SOME(i, _) => if InlineT.Int32.<(i, 256)
-		  then SOME(chr(InlineT.Int32.toInt i), strm)
+	      | SOME(i, _) => if InlineT.Int.<(i, 256)
+		  then SOME(chr i, strm)
 		  else NONE
 	    (* end case *)
 	  end
@@ -245,7 +245,7 @@ structure Char : sig
 
     val fromString = StringCvt.scanString scan
 
-    val itoa = (NumFormat32.fmtInt StringCvt.DEC) o InlineT.Int32.fromInt
+    val itoa = NumFormat.fmtInt StringCvt.DEC
 
     fun toString #"\a" = "\\a"
       | toString #"\b" = "\\b"
@@ -321,14 +321,14 @@ structure Char : sig
       | toCString c = if (isPrint c)
 	  then InlineT.PolyVector.sub (PreString.chars, ord c)
 	  else let
-	    val i = InlineT.Int32.fromInt(ord c)
-	    val prefix = if InlineT.Int32.<(i, 8)
+	    val i = ord c
+	    val prefix = if InlineT.Int.<(i, 8)
 		    then "\\00"
-		  else if InlineT.Int32.<(i, 64)
+		  else if InlineT.Int.<(i, 64)
 		    then "\\0"
 		    else "\\"
 	    in
-	      PreString.concat2(prefix, NumFormat32.fmtInt StringCvt.OCT i)
+	      PreString.concat2(prefix, NumFormat.fmtInt StringCvt.OCT i)
 	    end
 
   end (* Char *)

@@ -168,14 +168,18 @@ structure InlineT =
 	val fromLarge = InLine.intinf_to_int32
 
 	local
+          (* we need a cast here because the `toInt` conversion sets the high
+           * bits to either all zeros or all ones.
+           *)
+          val castToInt : int32 -> int = InLine.cast
 	(* wrapper that checks the result for Overflow.  Note that
          * this wrapper breaks the inlining of Int32 arithmetic!
 	 *)
 	  fun i32chk oper args = let
 		val res = oper args
 		in
-		  if InLine.int_lt(toInt res, ~2147483648)
-		  orelse InLine.int_lt(2147483647, toInt res)
+		  if InLine.int_lt(castToInt res, ~2147483648)
+		  orelse InLine.int_lt(2147483647, castToInt res)
 		    then raise Assembly.Overflow
 		    else res
 		end
