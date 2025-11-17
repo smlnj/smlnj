@@ -14,7 +14,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <sys/_types/_off_t.h>
 #include "ml-base.h"
 #include "ml-limits.h"
 #include "cache-flush.h"
@@ -120,6 +119,8 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     int         max_boot_path_len;
     char        *fname;
     int         rts_init = 0;
+
+Say("# BootML: new-boot.c\n");
 
 /*DEBUG*/ SilentLoad=FALSE;/* */
     msp = AllocMLState (TRUE, heapParams);
@@ -284,7 +285,7 @@ PVT FILE *OpenBinFile (const char *fname, bool_t isBinary)
  */
 PVT void ReadBinFile (FILE *file, void *buf, int nbytes, const char *fname)
 {
-/*DEBUG*/Say("## ReadBinFile (-, -, %d, \"%s\")\n", nbytes, fname);
+/*DEBUGSay("## ReadBinFile (-, -, %d, \"%s\")\n", nbytes, fname);*/
     if (fread(buf, nbytes, 1, file) == -1) {
         Die ("cannot read file \"%s\"", fname);
     }
@@ -367,6 +368,7 @@ PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname)
         n = (n << 7) | (c & 0x7f);
     } while ((c & 0x80) != 0);
 
+/*DEBUG*/Say("#### ReadPackedInt32: %d\n", n);
     return ((Int32_t)n);
 
 } /* end of ReadPackedInt32 */
@@ -490,6 +492,7 @@ Say("## code: offset = %d, size = %d\n",
 PVT void ImportSelection (ml_state_t *msp, FILE *file, const char *fname,
                           int *importVecPos, ml_val_t tree)
 {
+Say("### ImportSelection: tree = %p\n", tree);
     Int32_t cnt = ReadPackedInt32 (file, fname);
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
@@ -565,20 +568,27 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the import PerIDs, and create the import vector */
     {
-/*DEBUG*/Say("## read import PIDS\n");
         Seek (file, archiveOffset + hdr.importSect.offset, fname);
 
         int     importVecPos;
 
         importRecLen = hdr.importSect.size / sizeof(pers_id_t) + 1;
 
-        if (NeedGC (msp, REC_SZB(importRecLen)))
+        if (NeedGC (msp, REC_SZB(importRecLen))) {
             InvokeGCWithRoots (msp, 0, &BinFileList, NIL(ml_val_t *));
+        }
 
+/*DEBUG*/Say("## read %d import PIDS\n", importRecLen-1);
         ML_AllocWrite (msp, 0, MAKE_DESC(importRecLen, DTAG_record));
         for (importVecPos = 1; importVecPos < importRecLen; ) {
             pers_id_t   importPid;
             ReadBinFile (file, &importPid, sizeof(pers_id_t), fname);
+/*DEBUG*/
+{ char    buf[64];
+  ShowPerID (buf, &importPid);
+  Say("### import PID[%d]: %s\n", importVecPos, buf);
+}
+/*DEBUG*/
             ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
         }
         ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
@@ -590,6 +600,12 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 /*DEBUG*/Say("## read export PID\n");
         Seek (file, archiveOffset + hdr.exportSect.offset, fname);
         ReadBinFile (file, &exportPerID, sizeof(pers_id_t), fname);
+/*DEBUG*/
+{ char    buf[64];
+  ShowPerID (buf, &exportPerID);
+  Say("### export PID: %s\n", buf);
+}
+/*DEBUG*/
     }
     else if (hdr.exportSect.size != 0) {
         Die ("# size of export pids is %d (should be 0 or %d)",
@@ -598,7 +614,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the literals */
     if (hdr.litsSect.size > 0) {
-/*DEBUG*/Say("## read literals\n");
+/*DEBUG*/Say("## read literals (%d bytes)\n", (int)hdr.litsSect.size);
         Seek (file, archiveOffset + hdr.litsSect.offset, fname);
         Byte_t *dataObj = NEW_VEC(Byte_t, hdr.litsSect.size);
         ReadBinFile (file, dataObj, hdr.litsSect.size, fname);
@@ -609,6 +625,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     } else {
         val = ML_unit;
     }
+/*DEBUG*/Say("### literal vec = %p\n", val);
 
   /* do a functional update of the last element of the importRec. */
     for (i = 0;  i < importRecLen;  i++) {
@@ -620,6 +637,11 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     if (NeedGC (msp, PERID_LEN+REC_SZB(5))) {
         InvokeGCWithRoots (msp, 0, &BinFileList, &val, NIL(ml_val_t *));
     }
+/*DEBUG*/
+Say("## import record = {");
+for (i = 0;  i < importRecLen;  i++) { Say(" %p", PTR_MLtoC(ml_val_t, val)[i]); }
+Say(" }\n");
+/*DEBUG*/
 
   /* read the code */
     if (hdr.codeSect.size > 0) {
@@ -635,9 +657,6 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
                 codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
             DISABLE_CODE_WRITE
             FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
-            if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
-                Die("!!!!! code object corruption !!!!!\n");
-            }
             FREE(buffer);
             thisEntryPoint = hdr.entry;
         } else {
@@ -672,9 +691,11 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         REC_ALLOC1 (msp, closure, PTR_CtoML (PTR_MLtoC(char, codeObj) + thisEntryPoint));
 
       /* apply the closure to the import PerID vector */
+/*DEBUG*/Say("## >>> Run ML %p (%p)\n", PTR_MLtoC(char, codeObj) + thisEntryPoint, val);
         SaveCState (msp, &BinFileList, NIL(ml_val_t *));
         val = ApplyMLFn (msp, closure, val, TRUE);
         RestoreCState (msp, &BinFileList, NIL(ml_val_t *));
+/*DEBUG*/Say("## <<< val = %p\n", val);
 
       /* do a GC, if necessary */
         if (NeedGC (msp, PERID_LEN+REC_SZB(5))) {

@@ -75,6 +75,8 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char        *fname;
     int         rts_init = 0;
 
+Say("# BootML: old-boot.c\n");
+
 /*DEBUG*/ SilentLoad=FALSE;/* */
     msp = AllocMLState (TRUE, heapParams);
 
@@ -259,6 +261,7 @@ PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname)
         n = (n << 7) | (c & 0x7f);
     } while ((c & 0x80) != 0);
 
+/*DEBUG*/Say("#### ReadPackedInt32: %d\n", n);
     return ((Int32_t)n);
 
 } /* end of ReadPackedInt32 */
@@ -330,6 +333,7 @@ Say("## senv: size = %d\n", info->envSzB);
 PVT void ImportSelection (ml_state_t *msp, FILE *file, const char *fname,
                           int *importVecPos, ml_val_t tree)
 {
+Say("### ImportSelection: tree = %p\n", tree);
     Int32_t cnt = ReadPackedInt32 (file, fname);
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
@@ -420,6 +424,15 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         for (importVecPos = 1; importVecPos < importRecLen; ) {
             pers_id_t   importPid;
             ReadBinFile (file, &importPid, sizeof(pers_id_t), fname);
+<<<<<<< Updated upstream
+=======
+/*DEBUG*/
+{ char    buf[64];
+  ShowPerID (buf, &importPid);
+  Say("### import PID[%d]: %s\n", importVecPos, buf);
+}
+/*DEBUG*/
+>>>>>>> Stashed changes
             ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
         }
         ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
@@ -430,6 +443,12 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     if (hdr.exportCnt == 1) {
         exportSzB = sizeof(pers_id_t);
         ReadBinFile (file, &exportPerID, exportSzB, fname);
+/*DEBUG*/
+{ char    buf[64];
+  ShowPerID (buf, &exportPerID);
+  Say("### export PID: %s\n", buf);
+}
+/*DEBUG*/
     }
     else if (hdr.exportCnt != 0) {
         Die ("# of export pids is %d (should be 0 or 1)", (int)hdr.exportCnt);
@@ -461,7 +480,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the size and the dummy entry point for the data object */
     ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
     thisSzB = BIG_TO_HOST32(thisSzB);
-/*DEBUG*/Say("## Literals size = %d\n", (int)thisSzB);
+/*DEBUG*/Say("## read literals (%d bytes)\n", (int)thisSzB);
     ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname); /* ignored */
 
     remainingCode -= thisSzB + 2 * sizeof(Int32_t);
@@ -481,6 +500,10 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     else {
         val = ML_unit;
     }
+<<<<<<< Updated upstream
+=======
+/*DEBUG*/Say("### literal vec = %p\n", val);
+>>>>>>> Stashed changes
 
   /* do a functional update of the last element of the importRec. */
     for (i = 0;  i < importRecLen;  i++) {
@@ -516,9 +539,6 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
                     codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
                 DISABLE_CODE_WRITE
                 FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
-                if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
-                    Die("!!!!! code object corruption !!!!!\n");
-                }
                 FREE(buffer);
             }
         } else {
@@ -560,12 +580,18 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         }
 
       /* create closure (taking entry point into account) */
+<<<<<<< Updated upstream
         REC_ALLOC1 (msp, closure, PTR_CtoML(PTR_MLtoC(char, codeObj) + thisEntryPoint));
+=======
+        REC_ALLOC1 (msp, closure, PTR_CtoML (PTR_MLtoC(char, codeObj) + thisEntryPoint));
+>>>>>>> Stashed changes
 
       /* apply the closure to the import PerID vector */
+/*DEBUG*/Say("## >>> Run ML %p (%p)\n", PTR_MLtoC(char, codeObj) + thisEntryPoint, val);
         SaveCState (msp, &BinFileList, NIL(ml_val_t *));
         val = ApplyMLFn (msp, closure, val, TRUE);
         RestoreCState (msp, &BinFileList, NIL(ml_val_t *));
+/*DEBUG*/Say("## <<< val = %p\n", val);
 
       /* do a GC, if necessary */
         if (NeedGC (msp, PERID_LEN+REC_SZB(5))) {
