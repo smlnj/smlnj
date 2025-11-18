@@ -6,7 +6,7 @@
 
 MAKE =		nmake
 AR =		lib
-ARFLAGS =	
+ARFLAGS =
 RANLIB =	lib
 
 VERSION =	v-dummy
@@ -14,8 +14,6 @@ VERSION =	v-dummy
 LIB =		libmem.lib
 
 MMAP_OBJS =	mem-mmap.obj
-
-MACH_OBJS =	mem-mach.obj
 
 BRK_OBJS =	mem-brk.obj malloc.obj
 
@@ -29,15 +27,12 @@ $(VERSION) :
 	$(MAKE) MAKE="$(MAKE)" clean
 	echo "$(VERSION)" > $(VERSION)
 
-mem-mmap.obj mem-mach.obj mem-brk.obj mem-win32.obj:	mem-common.ins
+mem-mmap.obj mem-brk.obj mem-win32.obj:	mem-common.ins
 
 DEPENDENTS = ..\include\ml-base.h ..\include\ml-unixdep.h ..\include\bibop.h
 
 mem-mmap.obj : mem-mmap.c $(DEPENDENTS)
 	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c mem-mmap.c
-
-mem-mach.obj : mem-mach.c $(DEPENDENTS)
-	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c mem-mach.c
 
 mem-brk.obj : mem-brk.c $(DEPENDENTS)
 	$(CC) $(CFLAGS) $(DEFS) $(INCLUDES) /c mem-brk.c
