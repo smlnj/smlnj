@@ -31,7 +31,7 @@ extern void Disable (void);
  */
 ml_val_t _ml_Prof_setptimer (ml_state_t *msp, ml_val_t arg)
 {
-#ifdef HAS_SETITIMER
+#ifdef HAVE_SETITIMER
     struct itimerval	new_itv;
     int			sts;
 
@@ -93,7 +93,7 @@ VOID CALLBACK TimerAPCProc(
                            DWORD dwTimerHighValue );    // Timer high value
 
 /* This thread exists to provide a spot for the APC messages to be run */
-DWORD WINAPI PumpThread( LPVOID lpParam ) 
+DWORD WINAPI PumpThread( LPVOID lpParam )
 {
     LARGE_INTEGER   liDueTime;
 
@@ -113,10 +113,10 @@ DWORD WINAPI PumpThread( LPVOID lpParam )
             FALSE );          // Do not restore a suspended system
     }
 
-    while(g_hTimer != NULL) 
+    while(g_hTimer != NULL)
     {
         SleepEx(TIMEOUT_VALUE, TRUE);
-    } 
+    }
     return 0;
 }
 
@@ -132,10 +132,10 @@ void Enable ()
         oldTime.LowPart = 0;
         oldTime.HighPart = 0;
 
-        DuplicateHandle(GetCurrentProcess(), 
-                    hThread, 
+        DuplicateHandle(GetCurrentProcess(),
+                    hThread,
                     GetCurrentProcess(),
-                    &g_hQueryThread, 
+                    &g_hQueryThread,
                     THREAD_QUERY_INFORMATION,
                     FALSE,
                     DUPLICATE_CLOSE_SOURCE);

@@ -31,7 +31,7 @@
 
 /* local routines */
 #ifdef SIG_OVERFLOW
-#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+#if defined(HAVE_POSIX_SIGS) && defined(HAVE_STRUCT_UCONTEXT)
 PVT SigReturn_t FaultHandler (int sig, SigInfo_t code, void *scp);
 #elif (defined(ARCH_PPC) && defined(OPSYS_LINUX))
 PVT SigReturn_t FaultHandler (int sig, SigContext_t *scp);
@@ -70,7 +70,7 @@ void InitFaultHandlers ()
  * explicitly test for division by zero, and arithmetic trap should be
  * mapped to Overflow.
  */
-#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+#if defined(HAVE_POSIX_SIGS) && defined(HAVE_STRUCT_UCONTEXT)
 
 PVT SigReturn_t FaultHandler (int signal, siginfo_t *si, void *uc)
 {

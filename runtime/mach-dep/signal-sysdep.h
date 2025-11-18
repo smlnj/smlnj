@@ -65,7 +65,7 @@
 #  include <signal.h>
 #endif
 
-#if defined(HAS_UCONTEXT)
+#if defined(HAVE_STRUCT_UCONTEXT)
 #ifdef __APPLE__
 #  include <sys/ucontext.h>
 #else
@@ -79,17 +79,17 @@ typedef void SigReturn_t;
 typedef siginfo_t *SigInfo_t;
 typedef ucontext_t SigContext_t;
 
-#elif defined(HAS_SIGCONTEXT)
+#elif defined(HAVE_STRUCT_SIGCONTEXT)
 
 typedef int SigInfo_t;
 typedef struct sigcontext SigContext_t;
 #endif
 
 
-#if defined(HAS_POSIX_SIGS)
+#if defined(HAVE_POSIX_SIGS)
 /** POSIX signals **/
 typedef SigReturn_t (*SigHandler_t)(int, siginfo_t *, void *);
-#  if defined(HAS_UCONTEXT)
+#  if defined(HAVE_STRUCT_UCONTEXT)
 #    define SIG_SetHandler(sig, h)      {                       \
             struct sigaction __sact;                            \
             sigfillset(&(__sact.sa_mask));                      \
@@ -134,7 +134,7 @@ typedef sigset_t SigMask_t;
 #define SIG_SetMask(mask)       sigprocmask(SIG_SETMASK, &(mask), NIL(sigset_t *))
 #define SIG_GetMask(mask)       sigprocmask(SIG_SETMASK, NIL(sigset_t *), &(mask))
 
-#elif defined(HAS_BSD_SIGS)
+#elif defined(HAVE_BSD_SIGS)
 /** BSD signals **/
 typedef SigReturn_t (*SigHandler_t)();
 #define SIG_SetHandler(sig, h)  {                       \

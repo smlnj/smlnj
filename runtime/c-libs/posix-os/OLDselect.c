@@ -4,10 +4,10 @@
  */
 
 #include "ml-osdep.h"
-#if defined(HAS_SELECT)
+#if defined(HAVE_SELECT)
 #include <sys/types.h>
 #include <sys/time.h>
-#elif defined(HAS_POLL)
+#elif defined(HAVE_POLL)
 #include <stropts.h>
 #include <poll.h>
 #endif
@@ -22,7 +22,7 @@
 #include "ml-c.h"
 #include "cfun-proto-list.h"
 
-#ifdef HAS_SELECT
+#ifdef HAVE_SELECT
 PVT fd_set *ListToFDSet (ml_val_t fdl, fd_set *fds, int *width);
 PVT ml_val_t FDSetToList (ml_state_t *msp, fd_set *fds, int width);
 #endif
@@ -35,14 +35,14 @@ PVT ml_val_t FDSetToList (ml_state_t *msp, fd_set *fds, int width);
  */
 ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
 {
-#if ((! defined(HAS_SELECT)) && (! defined(HAS_POLL)))
+#if ((! defined(HAVE_SELECT)) && (! defined(HAVE_POLL)))
     return RAISE_ERROR (msp, "SMLNJ-IO.select unsupported");
 #else
     ml_val_t	    rl = REC_SEL(arg, 0);
     ml_val_t	    wl = REC_SEL(arg, 1);
     ml_val_t	    el = REC_SEL(arg, 2);
     ml_val_t	    timeout = REC_SEL(arg, 3);
-#ifdef HAS_SELECT
+#ifdef HAVE_SELECT
     fd_set	    rset, wset, eset;
     fd_set	    *rfds, *wfds, *efds;
     int		    width = 0, sts;
@@ -61,7 +61,7 @@ ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
     else
 	tp = 0;
 
-#else /* HAS_POLL */
+#else /* HAVE_POLL */
     struct pollfd   *fds;
     int		    nr, nw, ne, nfds, i, t, sts;
 
@@ -109,15 +109,15 @@ ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
     || ((! SETJMP (msp->ml_syscallEnv)) &&
 	(((msp->ml_ioWaitFlag = TRUE), (msp->ml_numPendingSigs == 0)))))
     {
-#ifdef HAS_SELECT
+#ifdef HAVE_SELECT
 	DO_SYSCALL (select (width, rfds, wfds, efds, tp), sts);
-#else /* HAS_POLL */
+#else /* HAVE_POLL */
 	DO_SYSCALL (poll (fds, nfds, t), sts);
 #endif
 	msp->ml_ioWaitFlag = FALSE;
     }
     else {
-#ifdef HAS_POLL
+#ifdef HAVE_POLL
 	FREE (fds);
 #endif
 	BackupMLCont(msp);
@@ -127,7 +127,7 @@ ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
     }
 
     if (sts == -1) {
-#ifdef HAS_POLL
+#ifdef HAVE_POLL
 	FREE (fds);
 #endif
 	return RAISE_SYSERR (msp, sts);
@@ -138,11 +138,11 @@ ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
 	if (sts == 0)
 	    rfdl = wfdl = efdl = LIST_nil;
 	else {
-#ifdef HAS_SELECT
+#ifdef HAVE_SELECT
 	    rfdl = FDSetToList (msp, rfds, width);
 	    wfdl = FDSetToList (msp, wfds, width);
 	    efdl = FDSetToList (msp, efds, width);
-#else /* HAS_POLL */
+#else /* HAVE_POLL */
 #define BUILD_RESULT(l,n)	{				\
 	l = LIST_nil;						\
 	while ((sts > 0) && (n > 0)) {				\
@@ -161,7 +161,7 @@ ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
 	}
 	REC_ALLOC3 (msp, res, rfdl, wfdl, efdl);
 
-#ifdef HAS_POLL
+#ifdef HAVE_POLL
 	FREE (fds);
 #endif
 
@@ -171,7 +171,7 @@ ml_val_t _ml_IO_select (ml_state_t *msp, ml_val_t arg)
 } /* end of _ml_IO_select */
 
 
-#ifdef HAS_SELECT
+#ifdef HAVE_SELECT
 
 /* ListToFDSet:
  *
@@ -221,4 +221,4 @@ PVT ml_val_t FDSetToList (ml_state_t *msp, fd_set *fds, int width)
 
 } /* end of FDSetToList */
 
-#endif /* HAS_SELECT */
+#endif /* HAVE_SELECT */

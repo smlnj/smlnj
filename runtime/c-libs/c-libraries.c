@@ -10,9 +10,6 @@
  * of libcfuns.a).
  */
 
-#ifdef OPSYS_UNIX
-#  include "ml-unixdep.h"       /* for the HAS_POSIX_LIBRARIES option flag */
-#endif
 #include "ml-base.h"
 #include "ml-values.h"
 #include "c-library.h"

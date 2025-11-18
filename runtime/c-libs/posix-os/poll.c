@@ -13,10 +13,10 @@
  */
 
 #include "ml-unixdep.h"
-#if defined(HAS_SELECT)
+#if defined(HAVE_SELECT)
 #  include INCLUDE_TYPES_H
 #  include INCLUDE_TIME_H
-#elif defined(HAS_POLL)
+#elif defined(HAVE_POLL)
 #  include <stropts.h>
 #  include <poll.h>
 #else
@@ -59,7 +59,7 @@ ml_val_t _ml_OS_poll (ml_state_t *msp, ml_val_t arg)
 } /* end of _ml_OS_poll */
 
 
-#ifdef HAS_POLL
+#ifdef HAVE_POLL
 
 #ifdef POLLMSG
 #define POLL_ERROR	(POLLRDBAND|POLLPRI|POLLHUP|POLLMSG)
@@ -132,7 +132,7 @@ PVT ml_val_t ML_Poll (ml_state_t *msp, ml_val_t pollList, struct timeval *timeou
 
 } /* end of ML_Poll */
 
-#else /* HAS_SELECT */
+#else /* HAVE_SELECT */
 
 /* ML_Poll:
  *

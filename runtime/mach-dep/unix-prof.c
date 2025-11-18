@@ -21,7 +21,7 @@
 ml_val_t	ProfCntArray = ML_unit;
 
 /* local routines */
-#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+#if defined(HAVE_POSIX_SIGS) && defined(HAVE_STRUCT_UCONTEXT)
 PVT SigReturn_t ProfSigHandler (int sig, SigInfo_t info, void *scp);
 #elif (defined(ARCH_PPC) && defined(OPSYS_LINUX))
 PVT SigReturn_t ProfSigHandler (int sig, SigContext_t *scp);
@@ -50,7 +50,7 @@ void DisableProfSignals ()
  *
  * The handler for SIGVTALRM signals.
  */
-#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+#if defined(HAVE_POSIX_SIGS) && defined(HAVE_STRUCT_UCONTEXT)
 PVT SigReturn_t ProfSigHandler (int sig, SigInfo_t info, void *scp)
 #elif (defined(ARCH_PPC) && defined(OPSYS_LINUX))
 PVT SigReturn_t ProfSigHandler (int sig, SigContext_t *scp)

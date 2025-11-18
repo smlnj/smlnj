@@ -22,7 +22,7 @@
  */
 ml_val_t _ml_RunT_itick (ml_state_t *msp, ml_val_t arg)
 {
-#if defined(HAS_CLOCK_GETRES)
+#if defined(HAVE_CLOCK_GETRES)
     struct timespec ts;
 
     if (clock_getres(CLOCK_REALTIME, &ts) == 0) {
@@ -33,7 +33,7 @@ ml_val_t _ml_RunT_itick (ml_state_t *msp, ml_val_t arg)
 	return RAISE_SYSERR(msp, 0);
     }
 
-#elif defined(HAS_SETITIMER)
+#elif defined(HAVE_SETITIMER)
   /* we guess at 10ms, since that is what is documented.  It might be smaller than
    * that, but there doesn't seem to be a way to tell.
    */

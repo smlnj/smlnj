@@ -28,7 +28,7 @@
  */
 ml_val_t _ml_RunT_setitimer (ml_state_t *msp, ml_val_t arg)
 {
-#ifdef HAS_SETITIMER
+#ifdef HAVE_SETITIMER
     struct itimerval	new_itv;
     int			sts;
 

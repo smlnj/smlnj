@@ -30,7 +30,7 @@ extern		ZeroLimitPtr[];
 #endif
 
 /* local routines */
-#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+#if defined(HAVE_POSIX_SIGS) && defined(HAVE_STRUCT_UCONTEXT)
 PVT SigReturn_t CSigHandler (int sig, SigInfo_t info, void *scp);
 #elif (defined(ARCH_PPC) && defined(OPSYS_LINUX))
 PVT SigReturn_t CSigHandler (int sig, SigContext_t *scp);
@@ -122,7 +122,7 @@ int GetSignalState (vproc_state_t *vsp, int sigNum)
  *
  * The C signal handler for signals that are to be passed to the ML handler.
  */
-#if defined(HAS_POSIX_SIGS) && defined(HAS_UCONTEXT)
+#if defined(HAVE_POSIX_SIGS) && defined(HAVE_STRUCT_UCONTEXT)
 
 PVT SigReturn_t CSigHandler (int sig, siginfo_t *si, void *c)
 {

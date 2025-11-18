@@ -10,7 +10,7 @@
 #include "ml-state.h"
 #include "ml-timer.h"
 
-#ifdef HAS_GETRUSAGE
+#ifdef HAVE_GETRUSAGE
 
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -20,7 +20,7 @@ typedef struct rusage time_struct_t;
 #define USR_TIME(t)		((t).ru_utime)
 #define SET_TIME(tp, t)		do { tp->seconds = t.tv_sec; tp->uSeconds = t.tv_usec; } while(0)
 
-#else /* !HAS_GETRUSAGE */
+#else /* !HAVE_GETRUSAGE */
 
 #include <sys/times.h>
 PVT long	ClksPerSec = 0;
@@ -35,7 +35,7 @@ typedef struct tms time_struct_t;
 	__tp->seconds  = (__t / ClksPerSec);				\
     } while(0)
 
-#endif /* HAS_GETRUSAGE */
+#endif /* HAVE_GETRUSAGE */
 
 
 
@@ -58,7 +58,7 @@ void InitTimers ()
     lastU.seconds = lastU.uSeconds = 0;
     lastS.seconds = lastS.uSeconds = 0;
 
-#ifndef HAS_GETRUSAGE
+#ifndef HAVE_GETRUSAGE
     if (ClksPerSec == 0)
 	ClksPerSec = sysconf(_SC_CLK_TCK);
 #endif

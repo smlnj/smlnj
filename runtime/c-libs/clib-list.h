@@ -18,7 +18,7 @@ C_LIBRARY(SMLNJ_Date_Library)
 C_LIBRARY(SMLNJ_Math_Library)
 C_LIBRARY(SMLNJ_Sock_Library)
 
-#ifdef HAS_POSIX_LIBRARIES
+#ifdef OPSYS_UNIX
 C_LIBRARY(POSIX_Error_Library)
 C_LIBRARY(POSIX_FileSys_Library)
 C_LIBRARY(POSIX_IO_Library)

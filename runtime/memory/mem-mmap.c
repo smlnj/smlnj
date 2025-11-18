@@ -13,15 +13,15 @@
 #include "ml-base.h"
 #include "memory.h"
 
-#if !(defined(HAS_MMAP) || defined(HAS_ANON_MMAP))
-#  error expected HAS_MMAP or HAS_ANON_MMAP
+#if !(defined(HAVE_MMAP) || defined(HAVE_ANON_MMAP))
+#  error expected HAVE_MMAP or HAVE_ANON_MMAP
 #endif
 
 /* protection mode for mmap memory */
 #define PROT_ALL	(PROT_READ|PROT_WRITE|PROT_EXEC)
 
 /* flags for mmap */
-#if defined(HAS_ANON_MMAP)
+#if defined(HAVE_ANON_MMAP)
 #  define MMAP_FLGS	(MAP_ANONYMOUS|MAP_PRIVATE)
 #else
 #  define MMAP_FLGS	MAP_PRIVATE
@@ -30,7 +30,7 @@
 struct mem_obj {
     Word_t	*base;	  /* the base address of the object. */
     Addr_t	sizeB;	  /* the object's size (in bytes) */
-#ifdef HAS_PARTIAL_MUNMAP
+#ifdef HAVE_PARTIAL_MUNMAP
 #   define	mapBase		base
 #   define	mapSizeB	sizeB
 #else
@@ -67,7 +67,7 @@ PVT status_t MapMemory (mem_obj_t *obj, Addr_t szb, bool_t isExec)
     int		fd;
     Addr_t	addr, offset;
 
-#ifdef HAS_ANON_MMAP
+#ifdef HAVE_ANON_MMAP
     fd = -1;
 #else
   /* Note: we use O_RDONLY, because some OS are configured such that /dev/zero
@@ -98,18 +98,18 @@ PVT status_t MapMemory (mem_obj_t *obj, Addr_t szb, bool_t isExec)
     addr = (Addr_t) mmap (0, szb+BIBOP_PAGE_SZB, prot, flgs, fd, 0);
     if (addr == -1) {
 	Error ("unable to map %d bytes, errno = %d\n", szb, errno);
-#ifndef HAS_ANON_MMAP
+#ifndef HAVE_ANON_MMAP
 	close (fd); /* NOTE: this call clobbers errno */
 #endif
 	return FAILURE;
     }
-#ifndef HAS_ANON_MMAP
+#ifndef HAVE_ANON_MMAP
     close (fd);
 #endif
 
   /* insure BIBOP_PAGE_SZB alignment */
     offset = BIBOP_PAGE_SZB - (addr & (BIBOP_PAGE_SZB-1));
-#ifdef HAS_PARTIAL_MUNMAP
+#ifdef HAVE_PARTIAL_MUNMAP
     if (offset != BIBOP_PAGE_SZB) {
       /* align addr and discard unused portions of memory */
 	munmap ((void *)addr, offset);
