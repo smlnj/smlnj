@@ -1,4 +1,4 @@
-# CMake configuration for CKit
+# CMake configuration for the CKit library
 #
 # COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.

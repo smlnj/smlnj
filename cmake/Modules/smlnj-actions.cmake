@@ -85,9 +85,24 @@ endfunction()
 #       smlnj_add_executable(<target>
 #           [ STANDALONE ]
 #           [ CM_FILE <prog.cm> ]
+#           [ MAIN <Main.main> ]
 #           [ DEPENDS <targets> ... ])
 #
 function(smlnj_add_executable)
+
+  # parse the arguments
+  #
+  if (${argc} EQUAL 0)
+    message(FATAL_ERROR "missing arguments to smlnj_add_executable")
+  endif()
+  set(target ${arg0})
+  set(options STANDALONE)
+  set(oneValueArgs CM_FILE MAIN)
+  set(multiValueArgs DEPENDS)
+  cmake_parse_arguments(PARSE_ARGV 1 arg
+    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+  )
+
 endfunction()
 
 
