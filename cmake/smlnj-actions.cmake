@@ -8,6 +8,10 @@
 # file as implemented by the system/smlnj/installer program.
 #
 
+# QUESTION: what is the factor the building process?  We could put everything
+# into a `smlnj_add_executable` function, or we could break it up into several
+# functions.  Also, how much should we rely on shell scripts vs. CMake scripts?
+
 # smlnj_build_library
 #
 function(smlnj_build_library)
@@ -27,9 +31,13 @@ function(smlnj_build_executable)
   # parse the arguments
   #
   if (${argc} EQUAL 0)
-    message(FATAL_ERROR "missing arguments to smlnj_build_executable")
+    message(FATAL_ERROR "
+ERROR: smlnj_add_executable expects arguments
+  usage: smlnj_add_executable(<name> [...])
+")
   endif()
-  set(target ${arg0})
+  # parse the named arguments
+  set(arg_NAME ${arg0})
   set(options STANDALONE)
   set(oneValueArgs CM_FILE MAIN)
   set(multiValueArgs DEPENDS)
@@ -53,6 +61,14 @@ function(smlnj_build_executable)
   # define the dependencies
   #
   string(CONCAT dependencies ${arg_CM_FILE} $arg_DEPENDS)
+
+  # the name of the target depends on the type of build
+  #
+  if(arg_STANDALONE)
+    set(target "${arg_NAME}${CMAKE_EXECUTABLE_SUFFIX}")
+  else()
+    set(target "${arg_NAME}.${SMLNJ_HEAP_SUFFIX}")
+  endif()
 
 # TODO: what is the path to ml-build?
   (string JOIN "." ${heap_image} ${target} ${SMLNJ_HEAP_SUFFIX})
