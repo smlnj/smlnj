@@ -122,6 +122,12 @@ static void Seek (FILE *file, off_t offset, const char *fname)
     }
 }
 
+static void ReadBinFileAt (FILE *file, void *buf, int nbytes, off_t offset, const char *fname)
+{
+    Seek (file, offset, fname);
+    ReadBinFile (file, buf, nbytes, fname);
+}
+
 
 /* BootML:
  *
@@ -416,7 +422,7 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
         ReadBinFile (file, &bfVersion, 4, fname);
         if (LITTLE_TO_HOST32(bfVersion) == 0x20250801) {
           /* this is the new, container-style, binfile format */
-            new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
+            binfile_hdr_t *p = (binfile_hdr_t *)buf;
             p->version = bfVersion;
             info->version = LITTLE_TO_HOST32(bfVersion);
             /* read the rest of the header */
@@ -439,7 +445,14 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                         seenImports = TRUE;
                         info->importSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
                         info->importSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
-                        info->nImports = ??; /* TODO: read from section */
+                        ReadBinFileAt(
+                            file,
+                            &info->nImports, sizeof(Int32_t),
+                            base + info->importSect.offset,
+                            fname);
+                        info->nImports = LITTLE_TO_HOST32(info->nImports);
+                        info->importSect.offset += sizeof(Int32_t);
+                        info->importSect.size -= sizeof(Int32_t);
                     }
                     break;
                 case BF_EXPT:
@@ -468,7 +481,14 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                         info->codeSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
                         info->codeSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
                         info->isNative = TRUE;
-                        info->entry = ??; /* TODO: read from section */
+                        ReadBinFileAt(
+                            file,
+                            &info->entry, sizeof(Int32_t),
+                            base + info->codeSect.offset,
+                            fname);
+                        info->entry = LITTLE_TO_HOST32(info->entry);
+                        info->codeSect.offset += sizeof(Int32_t);
+                        info->codeSect.size -= sizeof(Int32_t);
                     }
                     break;
                 case BF_CFGP:
@@ -509,9 +529,8 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                     + BIG_TO_HOST32(p->cmInfoSzB)
                     + BIG_TO_HOST32(p->guidSzB)
                     + BIG_TO_HOST32(p->pad);
-                Seek (file, codeOff, fname);
                 /* get the literals offset and size */
-                ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+                ReadBinFileAt (file, &tmp, sizeof(Int32_t), codeOff, fname);
                 info->litsSect.size = BIG_TO_HOST32(tmp);
                 ReadBinFile (file, &tmp, sizeof(Int32_t), fname); /* ignored */
                 info->litsSect.offset = info->exportSect.offset
@@ -551,15 +570,13 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                 + BIG_TO_HOST32(p->guidSzB)
                 + BIG_TO_HOST32(p->pad);
             /* seek to the start of the literals+code section in the file */
-            Seek(file, base + info->litsSect.offset, fname);
             /* get the literals size */
-            ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+            ReadBinFileAt (file, &tmp, sizeof(Int32_t), base + info->litsSect.offset, fname);
             info->litsSect.size = BIG_TO_HOST32(tmp);
             info->litsSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             /* get the code offset and size */
             info->codeSect.offset = info->litsSect.offset + info->litsSect.size;
-            Seek(file, base + info->codeSect.offset, fname);
-            ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+            ReadBinFileAt (file, &tmp, sizeof(Int32_t), base + info->codeSect.offset, fname);
             info->codeSect.size = BIG_TO_HOST32(tmp);
             ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
             info->entry = BIG_TO_HOST32(tmp);
@@ -697,8 +714,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the export PerID */
     if (hdr.exportSect.size == sizeof(pers_id_t)) {
 /*DEBUG*/Say("## read export PID\n");
-        Seek (file, archiveOffset + hdr.exportSect.offset, fname);
-        ReadBinFile (file, &exportPerID, sizeof(pers_id_t), fname);
+        ReadBinFileAt (file, &exportPerID, sizeof(pers_id_t), archiveOffset + hdr.exportSect.offset, fname);
 /*DEBUG*/
 { char    buf[64];
   ShowPerID (buf, &exportPerID);
@@ -714,9 +730,8 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   /* read the literals */
     if (hdr.litsSect.size > 0) {
 /*DEBUG*/Say("## read literals (%d bytes)\n", (int)hdr.litsSect.size);
-        Seek (file, archiveOffset + hdr.litsSect.offset, fname);
         Byte_t *dataObj = NEW_VEC(Byte_t, hdr.litsSect.size);
-        ReadBinFile (file, dataObj, hdr.litsSect.size, fname);
+        ReadBinFileAt (file, dataObj, hdr.litsSect.size, archiveOffset + hdr.litsSect.offset, fname);
         SaveCState (msp, &BinFileList, &importRec, NIL(ml_val_t *));
         val = BuildLiterals (msp, dataObj, hdr.litsSect.size);
         FREE(dataObj);
